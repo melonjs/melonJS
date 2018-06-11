@@ -39,7 +39,9 @@
              * @name gl
              * @memberOf me.WebGLRenderer
              */
-            this.gl = this.getContextGL(c, !this.transparent);
+            this.gl = this.getContextGL(c, this.transparent);
+
+            this.setBlendMode(this.gl, this.blendMode);
 
             /**
              * @ignore
@@ -363,10 +365,10 @@
          * @memberOf me.WebGLRenderer
          * @function
          * @param {Canvas} canvas
-         * @param {Boolean} [opaque=false] Use true to disable transparency
+         * @param {Boolean} [transparent=false] use true to disable transparency
          * @return {WebGLRenderingContext}
          */
-        getContextGL : function (c, opaque) {
+        getContextGL : function (c, transparent) {
             if (typeof c === "undefined" || c === null) {
                 throw new me.video.Error(
                     "You must pass a canvas element in order to create " +
@@ -381,10 +383,12 @@
             }
 
             var attr = {
+                alpha : !!transparent,
                 antialias : this.antiAlias,
-                failIfMajorPerformanceCaveat : this.failIfMajorPerformanceCaveat,
-                alpha : !opaque
+                premultipliedAlpha: this.blendMode === "multiply",
+                failIfMajorPerformanceCaveat : this.failIfMajorPerformanceCaveat
             };
+
             return (
                 c.getContext("webgl", attr) ||
                 c.getContext("experimental-webgl", attr)
@@ -401,6 +405,27 @@
          */
         getContext : function () {
             return this.gl;
+        },
+
+        /**
+         * set a blend mode for the given context
+         * @name setBlendMode
+         * @memberOf me.WebGLRenderer
+         * @function
+         * @param {Context2d} context
+         * @param {String} [mode="normal"] blend mode : "normal", "multiply"
+         */
+        setBlendMode : function (gl, mode) {
+            gl.enable(gl.BLEND);
+            switch (mode) {
+                case "multiply" :
+                    gl.blendFunc(gl.DST_COLOR, gl.ONE_MINUS_SRC_ALPHA);
+                    break;
+
+                default :
+                    gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
+                    break;
+            }
         },
 
         /**
@@ -532,11 +557,11 @@
         },
 
         /**
-         * return the current global alpha
-         * @name globalAlpha
+         * Sets the global alpha
+         * @name setGlobalAlpha
          * @memberOf me.WebGLRenderer
          * @function
-         * @return {Number}
+         * @param {Number} alpha 0.0 to 1.0 values accepted.
          */
         setGlobalAlpha : function (a) {
             this.currentColor.glArray[3] = a;

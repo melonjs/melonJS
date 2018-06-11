@@ -21,6 +21,7 @@
      * @param {Boolean} [options.antiAlias=false] Whether to enable anti-aliasing, use false (default) for a pixelated effect.
      * @param {Boolean} [options.failIfMajorPerformanceCaveat=true] If true, the renderer will switch to CANVAS mode if the performances of a WebGL context would be dramatically lower than that of a native application making equivalent OpenGL calls.
      * @param {Boolean} [options.transparent=false] Whether to enable transparency on the canvas (performance hit when enabled)
+     * @param {Boolean} [options.blendMode="normal"] the default blend mode to use ("normal", "multiply")
      * @param {Boolean} [options.subPixel=false] Whether to enable subpixel rendering (performance hit when enabled)
      * @param {Boolean} [options.verbose=false] Enable the verbose mode that provides additional details as to what the renderer is doing
      * @param {Number} [options.zoomX=width] The actual width of the canvas with scaling applied
@@ -40,6 +41,7 @@
             this.doubleBuffering = !!(options.doubleBuffering);
             this.antiAlias = !!(options.antiAlias);
             this.failIfMajorPerformanceCaveat = typeof options.failIfMajorPerformanceCaveat === "undefined" ? true : !!(options.failIfMajorPerformanceCaveat);
+            this.blendMode = typeof options.blendMode !== "string" ? "normal" : options.blendMode;
             this.subPixel = !!(options.subPixel);
             this.verbose = !!(options.verbose);
 
@@ -108,15 +110,15 @@
 
         /**
          * Returns the 2D Context object of the given Canvas<br>
-         * Also configures anti-aliasing based on constructor options.
+         * Also configures anti-aliasing and blend modes based on constructor options.
          * @name getContext2d
          * @memberOf me.Renderer
          * @function
          * @param {HTMLCanvasElement} canvas
-         * @param {Boolean} [opaque=false] True to disable transparency
+         * @param {Boolean} [transparent=false] True to enable` transparency
          * @return {Context2d}
          */
-        getContext2d : function (c, opaque) {
+        getContext2d : function (c, transparent) {
             if (typeof c === "undefined" || c === null) {
                 throw new me.video.Error(
                     "You must pass a canvas element in order to create " +
@@ -135,12 +137,12 @@
                 // cocoonJS specific extension
                 _context = c.getContext("2d", {
                     "antialias" : this.antiAlias,
-                    "alpha" : !opaque
+                    "alpha" : !!transparent
                 });
             }
             else {
                 _context = c.getContext("2d", {
-                    "alpha" : !opaque
+                    "alpha" : !!transparent
                 });
             }
             if (!_context.canvas) {

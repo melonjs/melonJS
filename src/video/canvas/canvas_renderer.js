@@ -36,12 +36,16 @@
             this._super(me.Renderer, "init", [c, width, height, options]);
 
             // defined the 2d context
-            this.context = this.getContext2d(this.canvas, !this.transparent);
+            this.context = this.getContext2d(this.canvas, this.transparent);
+
+            this.setBlendMode(this.context, this.blendMode);
 
             // create the back buffer if we use double buffering
             if (this.doubleBuffering) {
                 this.backBufferCanvas = me.video.createCanvas(width, height, false);
                 this.backBufferContext2D = this.getContext2d(this.backBufferCanvas);
+
+                this.setBlendMode(this.backBufferContext2D, this.blendMode);
 
                 if (this.transparent) {
                     // Clears the front buffer for each frame blit
@@ -65,6 +69,26 @@
             }
 
             return this;
+        },
+
+        /**
+         * set a blend mode for the given context
+         * @name setBlendMode
+         * @memberOf me.CanvasRenderer
+         * @function
+         * @param {Context2d} context
+         * @param {String} [mode="normal"] blend mode : "normal", "multiply"
+         */
+        setBlendMode : function (context, mode) {
+            switch (mode) {
+                case "multiply" :
+                    context.globalCompositeOperation = "multiply";
+                    break;
+
+                default : // normal
+                    context.globalCompositeOperation = "source-over";
+                    break;
+            }
         },
 
         /**

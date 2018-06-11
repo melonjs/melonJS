@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>melonJS - WebGL  Bug</title>
+  <link rel="stylesheet" type="text/css" media="screen" href="index.css">
+</head>
+<body bgcolor="white">
+  <!-- Canvas placeholder -->
+  <div id="screen"></div>
+  <!-- melonJS Library -->
+  <script type="text/javascript" src="../../build/melonjs.js"></script>
+  <script type="text/javascript" src="../../plugins/debug/debugPanel.js"></script>
+
+  <!-- script -->
+  <script type="text/javascript">
+      me.device.onReady(function onReady() {
+          // Initialize the video.
+          if (!me.video.init(320, 240, {wrapper : "screen", scale : "auto"})) {
+              alert("Your browser does not support HTML5 canvas.");
+              return;
+          }
+
+          var r = new me.Color (255, 0, 0, 0.5);
+          var g = new me.Color (0, 255, 0, 0.5);
+          var b = new me.Color (0, 0, 255, 0.5);
+
+          me.video.renderer.clearRect("#ffffff");
+
+          me.video.renderer.setColor(r);
+          me.video.renderer.fillRect(60, 20, 100 ,100);
+          //me.video.renderer.setColor(r.darken(1.0));
+          me.video.renderer.strokeRect(65, 25, 90 , 90);
+
+          me.video.renderer.setColor(g);
+          me.video.renderer.fillRect(110, 70, 100 ,100);
+          //me.video.renderer.setColor(g.darken(1.0));
+          me.video.renderer.strokeRect(115, 75, 90 , 90);
+
+          me.video.renderer.setColor(b);
+          me.video.renderer.fillRect(160, 120, 100 ,100);
+          //me.video.renderer.setColor(b.darken(1.0));
+          me.video.renderer.strokeRect(165, 125, 90 , 90);
+      });
+  </script>
+</body>
+</html>
