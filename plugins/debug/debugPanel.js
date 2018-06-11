@@ -154,7 +154,7 @@
         /** @private */
         init : function (debugToggle) {
             // call the super constructor
-            this._super(me.Renderable, "init", [ 0, 0, me.game.viewport.width, DEBUG_HEIGHT ]);
+            this._super(me.Renderable, "init", [ 0, 0, me.video.renderer.getWidth(), DEBUG_HEIGHT ]);
 
             // enable collision and event detection
             this.isKinematic = false;
