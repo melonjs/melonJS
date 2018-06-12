@@ -288,7 +288,7 @@
             }
 
             // adjust CSS style for High-DPI devices
-            var ratio = me.device.getPixelRatio();
+            var ratio = this.renderer.getPixelRatio();
             if (ratio > 1) {
                 canvas.style.width = (canvas.width / ratio) + "px";
                 canvas.style.height = (canvas.height / ratio) + "px";
@@ -314,7 +314,7 @@
                 console.log(
                     renderType + " | " +
                     audioType + " | " +
-                    "pixel ratio " + me.device.getPixelRatio() + " | " +
+                    "pixel ratio " + this.renderer.getPixelRatio() + " | " +
                     (me.device.isMobile ? "mobile" : "desktop") + " | " +
                     me.device.getScreenOrientation() + " | " +
                     me.device.language
@@ -497,8 +497,8 @@
                 }
 
                 // adjust scaling ratio based on the device pixel ratio
-                scaleX *= me.device.getPixelRatio();
-                scaleY *= me.device.getPixelRatio();
+                scaleX *= this.renderer.getPixelRatio();
+                scaleY *= this.renderer.getPixelRatio();
 
                 if (deferResizeId) {
                     // cancel any previous pending resize

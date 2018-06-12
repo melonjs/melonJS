@@ -542,7 +542,7 @@
     api.globalToLocal = function (x, y, v) {
         v = v || new me.Vector2d();
         var offset = me.video.getPos();
-        var pixelRatio = me.device.getPixelRatio();
+        var pixelRatio = me.video.renderer.getPixelRatio();
         x -= offset.left;
         y -= offset.top;
         var scale = me.sys.scale;

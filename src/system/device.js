@@ -16,7 +16,6 @@
         // private properties
         var accelInitialized = false;
         var deviceOrientationInitialized = false;
-        var devicePixelRatio = null;
 
         // swipe utility fn & flag
         var swipeEnabled = true;
@@ -636,28 +635,6 @@
             if (this.hasFullscreenSupport) {
                 document.exitFullscreen();
             }
-        };
-
-        /**
-         * return the device pixel ratio
-         * @name getPixelRatio
-         * @memberOf me.device
-         * @function
-         */
-        api.getPixelRatio = function () {
-
-            if (devicePixelRatio === null) {
-                var _context;
-                if (typeof me.video.renderer !== "undefined") {
-                    _context = me.video.renderer.getScreenContext();
-                } else {
-                    _context = me.Renderer.prototype.getContext2d(document.createElement("canvas"));
-                }
-                var _devicePixelRatio = window.devicePixelRatio || 1,
-                    _backingStoreRatio = me.agent.prefixed("backingStorePixelRatio", _context) || 1;
-                devicePixelRatio = _devicePixelRatio / _backingStoreRatio;
-            }
-            return devicePixelRatio;
         };
 
         /**

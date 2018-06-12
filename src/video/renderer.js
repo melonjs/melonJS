@@ -44,6 +44,7 @@
             this.blendMode = typeof options.blendMode !== "string" ? "normal" : options.blendMode;
             this.subPixel = !!(options.subPixel);
             this.verbose = !!(options.verbose);
+            this.devicePixelRatio = null;
 
             this.gameWidthZoom = options.zoomX || width;
             this.gameHeightZoom = options.zoomY || height;
@@ -73,6 +74,21 @@
             this.resetTransform();
             this.setBlendMode(this.context, this.blendMode);
             this.cache.reset();
+        },
+
+        /**
+         * return the currrent renderer pixel ratio
+         * @name getPixelRatio
+         * @memberOf me.Renderer
+         * @function
+         */
+        getPixelRatio : function () {
+            if (this.devicePixelRatio === null) {
+                var _devicePixelRatio = window.devicePixelRatio || 1,
+                    _backingStoreRatio = me.agent.prefixed("backingStorePixelRatio", this.getScreenContext()) || 1;
+                this.devicePixelRatio = _devicePixelRatio / _backingStoreRatio;
+            }
+            return this.devicePixelRatio;
         },
 
         /**
@@ -221,10 +237,8 @@
         setAntiAlias : function (context, enable) {
             var canvas = context.canvas;
 
-            if (typeof(context) !== "undefined") {
-                // enable/disable antialis on the given Context2d object
-                me.agent.setPrefixed("imageSmoothingEnabled", enable === true, context);
-            }
+            // enable/disable antialis on the given Context2d object
+            me.agent.setPrefixed("imageSmoothingEnabled", enable === true, context);
 
             // set antialias CSS property on the main canvas
             if (enable !== true) {
