@@ -71,6 +71,7 @@
          */
         reset : function () {
             this.resetTransform();
+            this.setBlendMode(this.context, this.blendMode);
             this.cache.reset();
         },
 

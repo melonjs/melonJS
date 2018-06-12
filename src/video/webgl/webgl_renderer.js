@@ -41,8 +41,6 @@
              */
             this.gl = this.getContextGL(c, this.transparent);
 
-            this.setBlendMode(this.gl, this.blendMode);
-
             /**
              * @ignore
              */
@@ -70,6 +68,12 @@
              * @memberOf me.WebGLRenderer
              */
             this.currentTransform = new me.Matrix2d();
+
+            // enable blending
+            this.gl.enable(this.gl.BLEND);
+
+            // set default mode
+            this.setBlendMode(this.gl, this.blendMode);
 
             // Create a compositor
             var Compositor = options.compositor || me.WebGLRenderer.Compositor;
@@ -416,7 +420,6 @@
          * @param {String} [mode="normal"] blend mode : "normal", "multiply"
          */
         setBlendMode : function (gl, mode) {
-            gl.enable(gl.BLEND);
             switch (mode) {
                 case "multiply" :
                     gl.blendFunc(gl.DST_COLOR, gl.ONE_MINUS_SRC_ALPHA);

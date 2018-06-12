@@ -15,7 +15,7 @@
   <script type="text/javascript">
       me.device.onReady(function onReady() {
           // Initialize the video.
-          if (!me.video.init(320, 240, {wrapper : "screen", scale : "auto"})) {
+          if (!me.video.init(320, 240, {wrapper : "screen", scale : "auto", blendMode: "normal"})) {
               alert("Your browser does not support HTML5 canvas.");
               return;
           }
@@ -24,7 +24,7 @@
           var g = new me.Color (0, 255, 0, 0.5);
           var b = new me.Color (0, 0, 255, 0.5);
 
-          me.video.renderer.clearRect("#ffffff");
+          me.video.renderer.clearColor("#FFFFFF80");
 
           me.video.renderer.setColor(r);
           me.video.renderer.fillRect(60, 20, 100 ,100);

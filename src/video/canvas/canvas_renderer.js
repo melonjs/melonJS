@@ -342,6 +342,8 @@
             if (this.doubleBuffering && this.transparent) {
                 // Clears the front buffer for each frame blit
                 this.context.globalCompositeOperation = "copy";
+            } else {
+                this.setBlendMode(this.context, this.blendMode);
             }
             this.setAntiAlias(this.context, this.antiAlias);
             this.flush();
