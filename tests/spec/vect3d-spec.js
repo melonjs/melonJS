@@ -86,6 +86,22 @@ describe("me.Vector3d", function () {
         expect( a.length2() ).toEqual(( x*x + y*y + z*z ));
     });
 
+    it("lerp functions", function () {
+        a.set(x, 0, z);
+        b.set(0, -y, 0);
+
+        expect(a.clone().lerp(a, 0)).toEqual(a.lerp(a, 0.5));
+        expect(a.clone().lerp(a, 0)).toEqual(a.lerp(a, 1));
+
+        expect(a.clone().lerp(b, 0).equals(a)).toEqual(true);
+
+        expect(a.clone().lerp(b, 0.5).x).toEqual(x * 0.5);
+        expect(a.clone().lerp(b, 0.5).y).toEqual(-y * 0.5);
+        expect(a.clone().lerp(b, 0.5).z).toEqual(z * 0.5);
+
+        expect(a.clone().lerp(b, 1).equals(b)).toEqual(true);
+    });
+
     it("normalize function", function () {
         a.set( x, 0, 0 );
         b.set( 0, -y, 0 );

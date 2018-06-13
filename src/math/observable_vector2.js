@@ -388,11 +388,26 @@
          * @name dotProduct
          * @memberOf me.ObservableVector2d
          * @function
-         * @param {me.ObservableVector2d} v
+         * @param {me.Vector2d|me.ObservableVector2d} v
          * @return {Number} The dot product.
          */
         dotProduct : function (v) {
             return this._x * v.x + this._y * v.y;
+        },
+
+        /**
+         * Linearly interpolate between this vector and the given one.
+         * @name lerp
+         * @memberOf me.ObservableVector2d
+         * @function
+         * @param {me.Vector2d|me.ObservableVector2d} v
+         * @param {Number} alpha distance along the line (alpha = 0 will be this vector, and alpha = 1 will be the given one).
+         * @return {me.ObservableVector2d} Reference to this object for method chaining
+         */
+        lerp : function (v, alpha) {
+            this._x += ( v.x - this._x ) * alpha;
+            this._y += ( v.y - this._y ) * alpha;
+            return this;
         },
 
         /**

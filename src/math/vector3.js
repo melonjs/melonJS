@@ -417,6 +417,22 @@
         },
 
         /**
+         * Linearly interpolate between this vector and the given one.
+         * @name lerp
+         * @memberOf me.Vector3d
+         * @function
+         * @param {me.Vector3d} v
+         * @param {Number} alpha distance along the line (alpha = 0 will be this vector, and alpha = 1 will be the given one).
+         * @return {me.Vector3d} Reference to this object for method chaining
+         */
+        lerp : function (v, alpha) {
+            this.x += ( v.x - this.x ) * alpha;
+            this.y += ( v.y - this.y ) * alpha;
+            this.z += ( v.z - this.z ) * alpha;
+            return this;
+        },
+
+        /**
          * return the distance between this vector and the passed one
          * @name distance
          * @memberOf me.Vector3d
