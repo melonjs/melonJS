@@ -7,6 +7,7 @@ Version History
 * Color : fix the me.Color.toHex8() function
 * Audio : latest Howler core update to fix HTML5 Audio issue with FB Instant Games, and Chrome API deprecation
 * Font : fix a regression where drawing a web font was not restoring the renderer context properly
+* Math : new vector linear interpolation functions
 * Physic : gravity property for solid bodies is now a vector object, allowing to defined gravity for both axis
 * Physic : new mass property for solid bodies
 * Physic : new me.Body.force property allowing to automatically apply a force or acceleration to a solid body
@@ -16,6 +17,7 @@ Version History
 * Renderable : fix animation not cycling when using GUI_Object(s)
 * Renderable : fix a regression when using Texture Packer
 * Renderer : use prefixed "image-rendering" CSS properties for non standard browsers
+* Viewport : new damping feature to enable smooth camera movement
 * WebGLRenderer : enable `failIfMajorPerformanceCaveat` by default when attempting to create a GL Context
 
 5.1.0

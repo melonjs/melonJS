@@ -14,8 +14,8 @@ game.PlayerEntity = me.Entity.extend({
 
         this.mutipleJump = 1;
 
-        // set the display around our position
-        me.game.viewport.follow(this, me.game.viewport.AXIS.BOTH);
+        // set the viewport to follow this renderable on both axis, and enable damping
+        me.game.viewport.follow(this, me.game.viewport.AXIS.BOTH, 0.1);
 
         // enable keyboard
         me.input.bindKey(me.input.KEY.LEFT,  "left");

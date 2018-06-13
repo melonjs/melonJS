@@ -9,6 +9,8 @@
     // some ref shortcut
     var MIN = Math.min, MAX = Math.max;
 
+    var targetV = new me.Vector2d();
+
     /**
      * a camera/viewport Object
      * @class
@@ -48,12 +50,33 @@
             /**
              * Camera bounds
              * @public
-             * @constant
              * @type me.Rect
              * @name bounds
              * @memberOf me.Viewport
              */
             this.bounds = new me.Rect(-Infinity, -Infinity, Infinity, Infinity);
+
+            /**
+             * [IMTERNAL] enable or disable damping
+             * @private
+             * @type {Boolean}
+             * @name smoothFollow
+             * @see me.Viewport.damping
+             * @default true
+             * @memberOf me.Viewport
+             */
+            this.smoothFollow = true;
+
+            /**
+             * viewport damping for smooth transition [0 .. 1].
+             * 1 being the maximum value and will snap the viewport to the target position
+             * @public
+             * @type {Number}
+             * @name damping
+             * @default 1.0
+             * @memberOf me.Viewport
+             */
+            this.damping = 1.0;
 
             // offset for shake effect
             this.offset = new me.Vector2d();
@@ -97,26 +120,27 @@
 
         /** @ignore */
         _followH : function (target) {
-            var _x = this.pos.x;
+            var targetX = this.pos.x;
             if ((target.x - this.pos.x) > (this.deadzone.right)) {
-                this.pos.x = MIN((target.x) - (this.deadzone.right), this.bounds.width - this.width);
+                targetX = MIN((target.x) - (this.deadzone.right), this.bounds.width - this.width);
             }
             else if ((target.x - this.pos.x) < (this.deadzone.pos.x)) {
-                this.pos.x = MAX((target.x) - this.deadzone.pos.x, this.bounds.pos.x);
+                targetX = MAX((target.x) - this.deadzone.pos.x, this.bounds.pos.x);
             }
-            return (_x !== this.pos.x);
+            return targetX;
+
         },
 
         /** @ignore */
         _followV : function (target) {
-            var _y = this.pos.y;
+            var targetY = this.pos.y;
             if ((target.y - this.pos.y) > (this.deadzone.bottom)) {
-                this.pos.y = MIN((target.y) - (this.deadzone.bottom),    this.bounds.height - this.height);
+                targetY = MIN((target.y) - (this.deadzone.bottom), this.bounds.height - this.height);
             }
             else if ((target.y - this.pos.y) < (this.deadzone.pos.y)) {
-                this.pos.y = MAX((target.y) - this.deadzone.pos.y, this.bounds.pos.y);
+                targetY = MAX((target.y) - this.deadzone.pos.y, this.bounds.pos.y);
             }
-            return (_y !== this.pos.y);
+            return targetY;
         },
 
         // -- public function ---
@@ -136,6 +160,10 @@
 
             // reset the target
             this.unfollow();
+
+            // damping default value
+            this.smoothFollow = true;
+            this.damping = 1.0;
 
             // reset the transformation matrix
             this.currentTransform.identity();
@@ -164,8 +192,12 @@
             );
             this.deadzone.resize(w, h);
 
+            this.smoothFollow = false;
+
             // force a camera update
             this.updateTarget();
+
+            this.smoothFollow = true;
         },
 
 
@@ -179,19 +211,27 @@
          * @return {me.Viewport} this viewport
         */
         resize : function (w, h) {
+            // parent consctructor, resize viewport rect
             this._super(me.Renderable, "resize", [w, h]);
-            var level = me.levelDirector.getCurrentLevel();
 
+            // disable damping while resizing
+            this.smoothFollow = false;
+
+            // update bounds
+            var level = me.levelDirector.getCurrentLevel();
             this.setBounds(
                 0, 0,
                 Math.max(w, level ? level.width : 0),
                 Math.max(h, level ? level.height : 0)
             );
 
+            // reset everthing
             this.setDeadzone(w / 6, h / 6);
-            this.moveTo(0, 0);
             this.update();
+            this.smoothFollow = true;
+
             me.event.publish(me.event.VIEWPORT_ONRESIZE, [ this.width, this.height ]);
+
             return this;
         },
 
@@ -207,9 +247,12 @@
          * @param {Number} h world height limit
          */
         setBounds : function (x, y, w, h) {
+            this.smoothFollow = false;
             this.bounds.pos.set(x, y);
             this.bounds.resize(w, h);
             this.moveTo(this.pos.x, this.pos.y);
+            this.update();
+            this.smoothFollow = true;
         },
 
         /**
@@ -218,11 +261,14 @@
          * @name follow
          * @memberOf me.Viewport
          * @function
-         * @param {me.Renderable|me.Vector2d} target renderable or position
-         * Vector to follow
+         * @param {me.Renderable|me.Vector2d} target renderable or position vector to follow
          * @param {me.Viewport.AXIS} [axis=this.AXIS.BOTH] Which axis to follow
+         * @param {Number} [damping=1] default damping value
+         * @example
+         * // set the viewport to follow this renderable on both axis, and enable damping
+         * me.game.viewport.follow(this, me.game.viewport.AXIS.BOTH, 0.1);
          */
-        follow : function (target, axis) {
+        follow : function (target, axis, damping) {
             if (target instanceof me.Renderable) {
                 this.target = target.pos;
             }
@@ -236,8 +282,19 @@
             this.follow_axis = (
                 typeof(axis) === "undefined" ? this.AXIS.BOTH : axis
             );
+
+            this.smoothFollow = false;
+
+            if (typeof damping !== "number") {
+                this.damping = 1;
+            } else {
+                this.damping = me.Math.clamp(damping, 0.0, 1.0);
+            }
+
             // force a camera update
             this.updateTarget();
+
+            this.smoothFollow = true;
         },
 
         /**
@@ -268,7 +325,7 @@
         },
 
         /**
-         * move the viewport  upper-left position to the specified coordinates
+         * move the viewport upper-left position to the specified coordinates
          * @name moveTo
          * @memberOf me.Viewport
          * @see me.Viewport.focusOn
@@ -294,38 +351,49 @@
 
         /** @ignore */
         updateTarget : function () {
-            var updated = false;
-
             if (this.target) {
+
+                targetV.setV(this.pos);
+
                 switch (this.follow_axis) {
                     case this.AXIS.NONE:
                         //this.focusOn(this.target);
                         break;
 
                     case this.AXIS.HORIZONTAL:
-                        updated = this._followH(this.target);
+                        targetV.x = this._followH(this.target);
                         break;
 
                     case this.AXIS.VERTICAL:
-                        updated = this._followV(this.target);
+                        targetV.y = this._followV(this.target);
                         break;
 
                     case this.AXIS.BOTH:
-                        updated = this._followH(this.target);
-                        updated = this._followV(this.target) || updated;
+                        targetV.x = this._followH(this.target);
+                        targetV.y = this._followV(this.target);
                         break;
 
                     default:
                         break;
                 }
+
+                if (!this.pos.equals(targetV)) {
+                    // update the camera position
+                    if (this.smoothFollow === true && this.damping < 1.0) {
+                        this.pos.lerp(targetV, this.damping);
+                    } else {
+                        this.pos.setV(targetV);
+                    }
+                    return true;
+                }
             }
 
-            return updated;
+            return false;
         },
 
         /** @ignore */
         update : function (dt) {
-            var updated = this.updateTarget();
+            var updated = this.updateTarget(dt);
 
             if (this._shake.duration > 0) {
                 this._shake.duration -= dt;
