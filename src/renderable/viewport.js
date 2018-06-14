@@ -465,6 +465,13 @@
          * @param {me.Color|String} color a CSS color value
          * @param {Number} [duration=1000] expressed in milliseconds
          * @param {Function} [onComplete] callback once effect is over
+         * @example
+         * // fade the viewport to white upon dying, reload the level, and then fade out back
+         * me.game.viewport.fadeIn("#fff", 150, function() {
+         *     me.audio.play("die", false);
+         *     me.levelDirector.reloadLevel();
+         *     me.game.viewport.fadeOut("#fff", 150);
+         * });
          */
         fadeOut : function (color, duration, onComplete) {
             this._fadeOut.color = me.pool.pull("me.Color").copy(color);
@@ -484,6 +491,9 @@
          * @param {me.Color|String} color a CSS color value
          * @param {Number} [duration=1000] expressed in milliseconds
          * @param {Function} [onComplete] callback once effect is over
+         * @example
+         * // flash  the viewport to white for 75ms
+         * me.game.viewport.fadeIn("#FFFFFF", 75);
          */
         fadeIn : function (color, duration, onComplete) {
             this._fadeIn.color = me.pool.pull("me.Color").copy(color);
