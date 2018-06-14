@@ -69,15 +69,12 @@
              */
             this.currentTransform = new me.Matrix2d();
 
-            // enable blending
-            this.gl.enable(this.gl.BLEND);
-
-            // set default mode
-            this.setBlendMode(this.gl, this.blendMode);
-
             // Create a compositor
             var Compositor = options.compositor || me.WebGLRenderer.Compositor;
             this.compositor = new Compositor(this);
+
+            // set default mode
+            this.setBlendMode(this.gl, this.blendMode);
 
             // Create a texture cache
             this.cache = new me.Renderer.TextureCache(
@@ -425,8 +422,8 @@
                     gl.blendFunc(gl.DST_COLOR, gl.ONE_MINUS_SRC_ALPHA);
                     break;
 
-                default :
-                    gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
+                default : // XXX SRC_ALPHA?
+                    gl.blendFunc(gl.ONE, gl.ONE_MINUS_SRC_ALPHA);
                     break;
             }
         },

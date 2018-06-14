@@ -192,6 +192,7 @@
             gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, rt);
             gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, filter);
             gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, filter);
+            gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, 1); // TODO last one to be a param to this func
             if (w || h || b) {
                 gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, w, h, b, gl.RGBA, gl.UNSIGNED_BYTE, image);
             }

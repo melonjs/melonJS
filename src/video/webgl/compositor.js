@@ -192,11 +192,11 @@
             this.reset();
             this.setProjection(gl.canvas.width, gl.canvas.height);
 
-            // Initialize clear color and blend function
+            // Initialize clear color
             gl.clearColor(0.0, 0.0, 0.0, 1.0);
+
+            // enable blending function
             gl.enable(gl.BLEND);
-            gl.blendFunc(gl.ONE, gl.ONE_MINUS_SRC_ALPHA);
-            gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, 1);
         },
 
         /**
