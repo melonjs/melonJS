@@ -113,12 +113,21 @@
 
         /**
          * Initialize the "video" system (create a canvas based on the given arguments, and the related renderer). <br>
-         * melonJS support various scaling mode : <br>
-         *  - <i>`fit`</i> : Letterboxed; content is scaled to design aspect ratio <br>
-         *  - <i>`fill-max`</i> : Canvas is resized to fit maximum design resolution; content is scaled to design aspect ratio <br>
-         *  - <i>`flex-height`</i> : Canvas height is resized to fit; content is scaled to design aspect ratio <br>
-         *  - <i>`flex-width`</i> : Canvas width is resized to fit; content is scaled to design aspect ratio <br>
-         *  - <i>`stretch`</i> : Canvas is resized to fit; content is scaled to screen aspect ratio
+         * melonJS support various scaling mode, that can be enabled <u>once the scale option is set to <b>`auto`</b></u> : <br>
+         *  - <i><b>`fit`</b></i> : Letterboxed; content is scaled to design aspect ratio <br>
+         * <center><img src="images/scale-fit.png"/></center><br>
+         *  - <i><b>`fill-min`</b></i> : Canvas is resized to fit minimum design resolution; content is scaled to design aspect ratio <br>
+         * <center><img src="images/scale-fill-min.png"/></center><br>
+         *  - <i><b>`fill-max`</b></i> : Canvas is resized to fit maximum design resolution; content is scaled to design aspect ratio <br>
+         * <center><img src="images/scale-fill-max.png"/></center><br>
+         *  - <i><b>`flex`</b><</i> : Canvas width & height is resized to fit; content is scaled to design aspect ratio <br>
+         * <center><img src="images/scale-flex.png"/></center><br>
+         *  - <i><b>`flex-width`</b></i> : Canvas width is resized to fit; content is scaled to design aspect ratio <br>
+         * <center><img src="images/scale-flex-width.png"/></center><br>
+         *  - <i><b>`flex-height`</b></i> : Canvas height is resized to fit; content is scaled to design aspect ratio <br>
+         * <center><img src="images/scale-flex-height.png"/></center><br>
+         *  - <i><b>`stretch`</b></i> : Canvas is resized to fit; content is scaled to screen aspect ratio
+         * <center><img src="images/scale-stretch.png"/></center><br>
          * @name init
          * @memberOf me.video
          * @function
@@ -129,7 +138,7 @@
          * @param {Number} [options.renderer=me.video.CANVAS] renderer to use.
          * @param {Boolean} [options.doubleBuffering=false] enable/disable double buffering
          * @param {Number|String} [options.scale=1.0] enable scaling of the canvas ('auto' for automatic scaling)
-         * @param {String} [options.scaleMethod="fit"] ('fit','fill-min','fill-max','flex','flex-width','flex-height','stretch') screen scaling modes
+         * @param {String} [options.scaleMethod="fit"] screen scaling modes ('fit','fill-min','fill-max','flex','flex-width','flex-height','stretch')
          * @param {Boolean} [options.useParentDOMSize=false] on browser devices, limit the canvas width and height to its parent container dimensions as returned by getBoundingClientRect(),
          *                                                   as opposed to the browser window dimensions
          * @param {Boolean} [options.transparent=false] whether to allow transparent pixels in the front buffer (screen)
