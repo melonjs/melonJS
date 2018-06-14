@@ -247,6 +247,33 @@
         }
 
         /**
+         * preload Binary files
+         * @ignore
+         */
+        function preloadJavascript(data, onload, onerror) {
+            var script = document.createElement("script");
+
+            script.src = data.src;
+            script.type = "text/javascript";
+            if (typeof (api.crossOrigin) === "string") {
+                script.crossOrigin = api.crossOrigin;
+            }
+            script.defer = true;
+
+            script.onload = function() {
+                // callback
+                onload();
+            };
+
+            script.onerror = function() {
+                // callback
+                onerror();
+            };
+
+            document.getElementsByTagName("body")[0].appendChild(script);
+        }
+
+        /**
          * to enable/disable caching
          * @ignore
          */
@@ -395,6 +422,7 @@
                 baseURL["binary"] = url;
                 baseURL["image"] = url;
                 baseURL["json"] = url;
+                baseURL["js"] = url;
                 baseURL["tmx"] = url;
                 baseURL["tsx"] = url;
             }
@@ -409,7 +437,7 @@
          * @function
          * @param {Object[]} resources
          * @param {String} resources.name internal name of the resource
-         * @param {String} resources.type  "audio", binary", "image", "json", "tmx", "tsx"
+         * @param {String} resources.type  "audio", binary", "image", "json", ,"js", "tmx", "tsx"
          * @param {String} resources.src  path and/or file name of the resource (for audio assets only the path is required)
          * @param {Boolean} [resources.stream] Set to true to force HTML5 Audio, which allows not to wait for large file to be downloaded before playing.
          * @param {function} [onload=me.loader.onload] function to be called when all resources are loaded
@@ -433,7 +461,9 @@
          *   // binary file
          *   {name: "ymTrack", type: "binary", src: "data/audio/main.ym"},
          *   // JSON file (used for texturePacker)
-         *   {name: "texture", type: "json", src: "data/gfx/texture.json"}
+         *   {name: "texture", type: "json", src: "data/gfx/texture.json"},
+         *   // JavaScript file
+         *   {name: "plugin", type: "js", src: "data/js/plugin.js"}
          * ];
          * ...
          * // set all resources to be loaded
@@ -509,6 +539,10 @@
                     preloadJSON.call(this, res, onload, onerror);
                     return 1;
 
+                case "js":
+                    preloadJavascript.call(this, res, onload, onerror);
+                    return 1;
+
                 case "tmx":
                 case "tsx":
                     preloadTMX.call(this, res, onload, onerror);
@@ -561,6 +595,10 @@
                     }
 
                     delete jsonList[res.name];
+                    return true;
+
+                case "js":
+                    // ??
                     return true;
 
                 case "tmx":
