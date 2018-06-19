@@ -38,14 +38,14 @@
             // defined the 2d context
             this.context = this.getContext2d(this.canvas, this.transparent);
 
-            this.setBlendMode(this.context, this.blendMode);
+            this.setBlendMode(this.context, options.blendMode);
 
             // create the back buffer if we use double buffering
             if (this.doubleBuffering) {
                 this.backBufferCanvas = me.video.createCanvas(width, height, false);
                 this.backBufferContext2D = this.getContext2d(this.backBufferCanvas);
 
-                this.setBlendMode(this.backBufferContext2D, this.blendMode);
+                this.setBlendMode(this.backBufferContext2D, options.blendMode);
 
                 if (this.transparent) {
                     // Clears the front buffer for each frame blit
@@ -80,6 +80,7 @@
          * @param {String} [mode="normal"] blend mode : "normal", "multiply"
          */
         setBlendMode : function (context, mode) {
+            this.blendMode = mode;
             switch (mode) {
                 case "multiply" :
                     context.globalCompositeOperation = "multiply";
@@ -87,9 +88,10 @@
 
                 default : // normal
                     context.globalCompositeOperation = "source-over";
+                    this.blendMode = "normal";
                     break;
             }
-        },
+    },
 
         /**
          * prepare the framebuffer for drawing a new frame

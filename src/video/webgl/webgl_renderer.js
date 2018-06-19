@@ -74,7 +74,7 @@
             this.compositor = new Compositor(this);
 
             // set default mode
-            this.setBlendMode(this.gl, this.blendMode);
+            this.setBlendMode(this.gl, options.blendMode);
 
             // Create a texture cache
             this.cache = new me.Renderer.TextureCache(
@@ -107,6 +107,9 @@
                 image,
                 cache
             );
+
+            // XXX better way to disable this
+            this.fillTexture.premultipliedAlpha = false;
 
             this.compositor.uploadTexture(
                 this.fillTexture,
@@ -383,10 +386,14 @@
                 );
             }
 
+            if (typeof transparent !== "boolean") {
+                transparent = this.transparent;
+            }
+
             var attr = {
-                alpha : !!transparent,
+                alpha : transparent,
                 antialias : this.antiAlias,
-                premultipliedAlpha: this.blendMode === "multiply",
+                premultipliedAlpha: transparent,
                 failIfMajorPerformanceCaveat : this.failIfMajorPerformanceCaveat
             };
 
@@ -417,13 +424,16 @@
          * @param {String} [mode="normal"] blend mode : "normal", "multiply"
          */
         setBlendMode : function (gl, mode) {
+            this.blendMode = mode;
+            gl.enable(gl.BLEND);
             switch (mode) {
                 case "multiply" :
-                    gl.blendFunc(gl.DST_COLOR, gl.ONE_MINUS_SRC_ALPHA);
+                    gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
                     break;
 
-                default : // XXX SRC_ALPHA?
+                default :
                     gl.blendFunc(gl.ONE, gl.ONE_MINUS_SRC_ALPHA);
+                    this.blendMode = "normal";
                     break;
             }
         },

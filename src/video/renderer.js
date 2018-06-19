@@ -41,7 +41,7 @@
             this.doubleBuffering = !!(options.doubleBuffering);
             this.antiAlias = !!(options.antiAlias);
             this.failIfMajorPerformanceCaveat = typeof options.failIfMajorPerformanceCaveat === "undefined" ? true : !!(options.failIfMajorPerformanceCaveat);
-            this.blendMode = typeof options.blendMode !== "string" ? "normal" : options.blendMode;
+            this.blendMode = "normal"; // will be properly set upon the first call to setBlendMode
             this.subPixel = !!(options.subPixel);
             this.verbose = !!(options.verbose);
             this.devicePixelRatio = null;
@@ -123,6 +123,17 @@
          */
         getScreenContext : function () {
             return this.context;
+        },
+
+        /**
+         * returns the current blend mode for this renderer
+         * @name getBlendMode
+         * @memberOf me.Renderer
+         * @function
+         * @return {String} blend mode
+         */
+        getBlendMode : function () {
+            return this.blendMode;
         },
 
         /**

@@ -170,9 +170,11 @@
          * @param {Number} [w] Source image width (Only use with UInt8Array[] or Float32Array[] source image)
          * @param {Number} [h] Source image height (Only use with UInt8Array[] or Float32Array[] source image)
          * @param {Number} [b] Source image border (Only use with UInt8Array[] or Float32Array[] source image)
+         * @param {Number} [b] Source image border (Only use with UInt8Array[] or Float32Array[] source image)
+         * @param {number} [premultipliedAlpha=true] Multiplies the alpha channel into the other color channels
          * @return {WebGLTexture} A texture object
          */
-        api.createTexture = function (gl, unit, image, filter, repeat, w, h, b) {
+        api.createTexture = function (gl, unit, image, filter, repeat, w, h, b, premultipliedAlpha) {
             repeat = repeat || "no-repeat";
 
             if (!me.Math.isPowerOfTwo(w || image.width) || !me.Math.isPowerOfTwo(h || image.height)) {
@@ -192,7 +194,7 @@
             gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, rt);
             gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, filter);
             gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, filter);
-            gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, 1); // TODO last one to be a param to this func
+            gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, (typeof premultipliedAlpha === "boolean") ? premultipliedAlpha : true);
             if (w || h || b) {
                 gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, w, h, b, gl.RGBA, gl.UNSIGNED_BYTE, image);
             }

@@ -20,6 +20,8 @@ Version History
 * Renderer : use prefixed "image-rendering" CSS properties for non standard browsers
 * Viewport : new damping feature to enable smooth camera movement
 * WebGLRenderer : enable `failIfMajorPerformanceCaveat` by default when attempting to create a GL Context
+* WebGLRenderer : feature to change the blending mode (experimental and limited to "normal" and "multiply" for now)
+* WebGLRenderer : fix a deprecation warning in Firefox
 
 5.1.0
 * Audio : Howler core update (2.0.8)

@@ -194,9 +194,6 @@
 
             // Initialize clear color
             gl.clearColor(0.0, 0.0, 0.0, 1.0);
-
-            // enable blending function
-            gl.enable(gl.BLEND);
         },
 
         /**
@@ -234,7 +231,8 @@
                     texture.repeat,
                     w,
                     h,
-                    b
+                    b,
+                    texture.premultipliedAlpha // @see createFillTexture
                 );
             }
 
