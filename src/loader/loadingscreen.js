@@ -73,7 +73,7 @@
                 me.Math.nextPowerOfTwo(this.height),
             false);
 
-            var context = me.video.renderer.getContext2d(this.iconCanvas, true);
+            var context = me.video.renderer.getContext2d(this.iconCanvas);
 
             context.beginPath();
             context.moveTo(0.7, 48.9);
@@ -121,7 +121,7 @@
 
             // offscreen cache canvas
             this.fontCanvas = me.video.createCanvas(256, 64);
-            this.drawFont(me.video.renderer.getContext2d(this.fontCanvas, true));
+            this.drawFont(me.video.renderer.getContext2d(this.fontCanvas));
 
             this.anchorPoint.set(0.0, 0.0);
         },
