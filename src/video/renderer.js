@@ -142,7 +142,7 @@
          * @memberOf me.Renderer
          * @function
          * @param {HTMLCanvasElement} canvas
-         * @param {Boolean} [transparent=false] True to enable` transparency
+         * @param {Boolean} [transparent=true] use false to disable transparency
          * @return {Context2d}
          */
         getContext2d : function (c, transparent) {
@@ -159,17 +159,21 @@
                 );
             }
 
+            if (typeof transparent !== "boolean") {
+                transparent = true;
+            }
+
             var _context;
             if (me.device.cocoon) {
                 // cocoonJS specific extension
                 _context = c.getContext("2d", {
                     "antialias" : this.antiAlias,
-                    "alpha" : !!transparent
+                    "alpha" : transparent
                 });
             }
             else {
                 _context = c.getContext("2d", {
-                    "alpha" : !!transparent
+                    "alpha" : transparent
                 });
             }
             if (!_context.canvas) {

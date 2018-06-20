@@ -372,7 +372,7 @@
          * @memberOf me.WebGLRenderer
          * @function
          * @param {Canvas} canvas
-         * @param {Boolean} [transparent=false] use true to disable transparency
+         * @param {Boolean} [transparent=true] use false to disable transparency
          * @return {WebGLRenderingContext}
          */
         getContextGL : function (c, transparent) {
@@ -390,7 +390,7 @@
             }
 
             if (typeof transparent !== "boolean") {
-                transparent = this.transparent;
+                transparent = true;
             }
 
             var attr = {
