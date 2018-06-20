@@ -76,6 +76,9 @@
             // set default mode
             this.setBlendMode(this.gl, options.blendMode);
 
+            // disable DEPTH testing
+            this.gl.disable(this.gl.DEPTH_TEST);
+
             // Create a texture cache
             this.cache = new me.Renderer.TextureCache(
                 this.compositor.maxTextures
@@ -393,6 +396,7 @@
             var attr = {
                 alpha : transparent,
                 antialias : this.antiAlias,
+                depth : false,
                 premultipliedAlpha: transparent,
                 failIfMajorPerformanceCaveat : this.failIfMajorPerformanceCaveat
             };
