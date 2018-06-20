@@ -4,7 +4,7 @@ var game = {
     // Run on page load.
     onload: function () {
         // init the video
-        if (!me.video.init(800, 600, {wrapper : "screen", scale : me.device.getPixelRatio()})) {
+        if (!me.video.init(800, 600, {wrapper : "screen", scale : me.device.devicePixelRatio})) {
             alert("Your browser does not support HTML5 canvas.");
             return;
         }

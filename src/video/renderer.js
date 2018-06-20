@@ -84,9 +84,8 @@
          */
         getPixelRatio : function () {
             if (this.devicePixelRatio === null) {
-                var _devicePixelRatio = window.devicePixelRatio || 1,
-                    _backingStoreRatio = me.agent.prefixed("backingStorePixelRatio", this.getScreenContext()) || 1;
-                this.devicePixelRatio = _devicePixelRatio / _backingStoreRatio;
+                var _backingStoreRatio = me.agent.prefixed("backingStorePixelRatio", this.getScreenContext()) || 1;
+                this.devicePixelRatio = me.device.devicePixelRatio / _backingStoreRatio;
             }
             return this.devicePixelRatio;
         },

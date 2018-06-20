@@ -231,6 +231,9 @@
             me.device.cocoon = navigator.isCocoonJS ||  // former cocoonJS
                                (typeof window.Cocoon !== "undefined"); // new cocoon
 
+            // device Pixel Ratio
+            me.device.devicePixelRatio = window.devicePixelRatio || 1;
+
         };
 
 
@@ -248,6 +251,16 @@
          * @memberOf me.device
          */
         api.ua = navigator.userAgent;
+
+
+        /**
+         * Ratio of the resolution in physical pixels to the resolution in CSS pixels for the current display device.
+         * @type Number
+         * @readonly
+         * @name devicePixelRatio
+         * @memberOf me.device
+         */
+        api.devicePixelRatio = 1;
 
         /**
          * Browser Local Storage capabilities <br>
