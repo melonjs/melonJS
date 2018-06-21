@@ -40,8 +40,7 @@
             this.transparent = !!(options.transparent);
             this.doubleBuffering = !!(options.doubleBuffering);
             this.antiAlias = !!(options.antiAlias);
-            this.failIfMajorPerformanceCaveat = typeof options.failIfMajorPerformanceCaveat === "undefined" ? true : !!(options.failIfMajorPerformanceCaveat);
-            this.blendMode = "normal"; // will be properly set upon the first call to setBlendMode
+            this.failIfMajorPerformanceCaveat = !!(options.failIfMajorPerformanceCaveat);
             this.subPixel = !!(options.subPixel);
             this.verbose = !!(options.verbose);
 

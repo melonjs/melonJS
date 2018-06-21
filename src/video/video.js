@@ -37,7 +37,9 @@
             scale : 1.0,
             scaleMethod : "fit",
             transparent : false,
+            blendMode : "normal",
             antiAlias : false,
+            failIfMajorPerformanceCaveat : true,
             subPixel : false,
             verbose : false
         };
