@@ -41,7 +41,8 @@
             antiAlias : false,
             failIfMajorPerformanceCaveat : true,
             subPixel : false,
-            verbose : false
+            verbose : false,
+            consoleHeader : true
         };
 
 
