@@ -336,9 +336,9 @@
             this.canvas.height = this.gameHeightZoom = this.backBufferCanvas.height * scaleY;
 
             // adjust CSS style for High-DPI devices
-            if (this.getPixelRatio() > 1) {
-                this.canvas.style.width = (this.canvas.width / this.getPixelRatio()) + "px";
-                this.canvas.style.height = (this.canvas.height / this.getPixelRatio()) + "px";
+            if (me.device.devicePixelRatio > 1) {
+                this.canvas.style.width = (this.canvas.width / me.device.devicePixelRatio) + "px";
+                this.canvas.style.height = (this.canvas.height / me.device.devicePixelRatio) + "px";
             }
 
             if (this.doubleBuffering && this.transparent) {

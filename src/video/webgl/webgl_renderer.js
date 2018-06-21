@@ -493,9 +493,9 @@
             var h = this.canvas.height * scaleY;
 
             // adjust CSS style for High-DPI devices
-            if (this.getPixelRatio() > 1) {
-                this.canvas.style.width = (w / this.getPixelRatio()) + "px";
-                this.canvas.style.height = (h / this.getPixelRatio()) + "px";
+            if (me.device.devicePixelRatio > 1) {
+                this.canvas.style.width = (w / me.device.devicePixelRatio) + "px";
+                this.canvas.style.height = (h / me.device.devicePixelRatio) + "px";
             }
             else {
                 this.canvas.style.width = w + "px";

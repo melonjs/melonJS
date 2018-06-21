@@ -44,7 +44,6 @@
             this.blendMode = "normal"; // will be properly set upon the first call to setBlendMode
             this.subPixel = !!(options.subPixel);
             this.verbose = !!(options.verbose);
-            this.devicePixelRatio = null;
 
             this.gameWidthZoom = options.zoomX || width;
             this.gameHeightZoom = options.zoomY || height;
@@ -74,20 +73,6 @@
             this.resetTransform();
             this.setBlendMode(this.context, this.blendMode);
             this.cache.reset();
-        },
-
-        /**
-         * return the currrent renderer pixel ratio
-         * @name getPixelRatio
-         * @memberOf me.Renderer
-         * @function
-         */
-        getPixelRatio : function () {
-            if (this.devicePixelRatio === null) {
-                var _backingStoreRatio = me.agent.prefixed("backingStorePixelRatio", this.getScreenContext()) || 1;
-                this.devicePixelRatio = me.device.devicePixelRatio / _backingStoreRatio;
-            }
-            return this.devicePixelRatio;
         },
 
         /**
