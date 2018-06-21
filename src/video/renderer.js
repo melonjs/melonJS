@@ -52,7 +52,7 @@
             this.context = null;
 
             // global color
-            this.currentColor = new me.Color(255, 255, 255, 1.0);
+            this.currentColor = new me.Color(0, 0, 0, 1.0);
 
             // default uvOffset
             this.uvOffset = 0;
