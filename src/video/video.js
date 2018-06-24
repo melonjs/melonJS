@@ -437,7 +437,7 @@
                         parentNodeWidth = rect.width || (rect.right - rect.left);
                         parentNodeHeight = rect.height || (rect.bottom - rect.top);
                     } else {
-                        // for cased where DOM is not implemented and so parentNode (e.g. Ejecta)
+                        // for cased where DOM is not implemented and so parentNode (e.g. Ejecta, Weixin)
                         parentNodeWidth = parentNode.width;
                         parentNodeHeight = parentNode.height;
                     }

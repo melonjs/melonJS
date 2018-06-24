@@ -21,7 +21,9 @@
         var swipeEnabled = true;
         var disableSwipeFn = function (e) {
             e.preventDefault();
-            window.scroll(0, 0);
+            if (typeof window.scroll === "function") {
+                window.scroll(0, 0);
+            }
             return false;
         };
 
@@ -227,6 +229,9 @@
             // ejecta
             me.device.ejecta = (typeof window.ejecta !== "undefined");
 
+            // Wechat
+            me.device.isWeixin = /MicroMessenger/i.test(me.device.ua);
+
             // cocoon/cocoonJS
             me.device.cocoon = navigator.isCocoonJS ||  // former cocoonJS
                                (typeof window.Cocoon !== "undefined"); // new cocoon
@@ -381,6 +386,15 @@
         * @memberOf me.device
         */
         api.ejecta = false;
+
+        /**
+         * equals to true if the game is running under Wechat.
+         * @type Boolean
+         * @readonly
+         * @name isWeixin
+         * @memberOf me.device
+         */
+         api.isWeixin = false;
 
         /**
          * equals to true if the game is running under cocoon/cocoonJS.
