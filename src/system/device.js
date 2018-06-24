@@ -249,16 +249,6 @@
          */
         api.ua = navigator.userAgent;
 
-
-        /**
-         * Ratio of the resolution in physical pixels to the resolution in CSS pixels for the current display device.
-         * @type Number
-         * @readonly
-         * @name devicePixelRatio
-         * @memberOf me.device
-         */
-        api.devicePixelRatio = window.devicePixelRatio || 1;
-
         /**
          * Browser Local Storage capabilities <br>
          * (this flag will be set to false if cookies are blocked)
@@ -959,6 +949,24 @@
 
         return api;
     })();
+
+    /**
+     * Ratio of the resolution in physical pixels to the resolution in CSS pixels for the current display device.
+     * @name devicePixelRatio
+     * @memberOf me.device
+     * @public
+     * @type Number
+     * @readonly
+     * @return {Number}
+     */
+    Object.defineProperty(me.device, "devicePixelRatio", {
+        /**
+         * @ignore
+         */
+        get: function () {
+            return (window.devicePixelRatio || 1);
+        }
+    });
 
     /**
      * Returns true if the browser/device is in full screen mode.
