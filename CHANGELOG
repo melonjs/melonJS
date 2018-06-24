@@ -8,6 +8,7 @@ Version History
 * Color : fix the me.Color.toHex8() function
 * Debug : fix "undefined width error" when instantiating the debug panel
 * Font : fix a regression where drawing a web font was not restoring the renderer context properly
+* Input : fix an issue where the focus is sometimes lost when using an integrated WebView (e.g. Instant Games)
 * Loader : new loader feature to allow preloading of javascript files
 * Math : new vector linear interpolation functions
 * Physic : gravity property for solid bodies is now a vector object, allowing to defined gravity for both axis

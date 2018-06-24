@@ -136,6 +136,18 @@
                 // set the default value
                 api.throttlingInterval = ~~(1000 / me.sys.fps);
             }
+
+            if (me.sys.autoFocus && typeof (window.focus) === "function") {
+                window.focus();
+                me.video.renderer.getScreenCanvas().addEventListener(
+                    activeEventList[2], // MOUSE/POINTER DOWN
+                    function () {
+                        window.focus();
+                        return true;
+                    }
+                );
+            }
+
             // if time interval <= 16, disable the feature
             var i;
             var events = findAllActiveEvents(activeEventList, POINTER_MOVE);

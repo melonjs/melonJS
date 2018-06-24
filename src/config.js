@@ -95,6 +95,14 @@
         resumeOnFocus : true,
 
         /**
+         * Specify whether to automatically bring the window to the front.<br>
+         * @type {Boolean}
+         * @default true
+         * @memberOf me.sys
+         */
+        autoFocus : true,
+
+        /**
          * Specify whether to stop the game when losing focus or not<br>
          * The engine restarts on focus if this is enabled.
          * @type {boolean}
