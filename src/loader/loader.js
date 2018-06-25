@@ -726,7 +726,10 @@
          * @return {HTMLImageElement}
          */
         api.getImage = function (image) {
-            if ((image instanceof HTMLImageElement) || (image instanceof HTMLCanvasElement)) {
+            if ((image instanceof HTMLImageElement) ||
+                (image instanceof HTMLCanvasElement) ||
+                // weixin Image are just standard Object
+                (me.device.isWeixin && typeof image === "object")) {
                 // if the given parameter is already an Image object
                 return image;
             } else {
