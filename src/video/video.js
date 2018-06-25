@@ -260,6 +260,9 @@
             if (me.device.ejecta === true) {
                 // a main canvas is already automatically created by Ejecta
                 canvas = document.getElementById("canvas");
+            } else if (typeof window.canvas !== "undefined") {
+                // a global canvas is available, e.g. webapp adapter for wechat
+                canvas = window.canvas;
             } else {
                 canvas = api.createCanvas(game_width_zoom, game_height_zoom, true);
             }
