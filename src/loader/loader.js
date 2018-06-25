@@ -405,10 +405,10 @@
          * @memberOf me.loader
          * @public
          * @function
-         * @param {String} type  "*", "audio", binary", "image", "json", "tmx", "tsx"
+         * @param {String} type  "*", "audio", binary", "image", "json", "js", "tmx", "tsx"
          * @param {String} [url="./"] default base URL
          * @example
-         * // change the base URL relative address
+         * // change the base URL relative address for audio assets
          * me.loader.setBaseURL("audio", "data/audio/");
          * // change the base URL absolute address for all object types
          * me.loader.setBaseURL("*", "http://myurl.com/")
