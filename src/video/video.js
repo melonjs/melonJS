@@ -15,9 +15,6 @@
         // hold public stuff in our apig
         var api = {};
 
-        // internal variables
-        var canvas = null;
-
         var deferResizeId = 0;
 
         var designRatio = 1;
@@ -257,6 +254,8 @@
             );
 
             // create the main screen canvas
+            var canvas;
+
             if (me.device.ejecta === true) {
                 // a main canvas is already automatically created by Ejecta
                 canvas = document.getElementById("canvas");
@@ -401,8 +400,8 @@
                 _canvas.screencanvas = true;
             }
 
-            _canvas.width = width || canvas.width;
-            _canvas.height = height || canvas.height;
+            _canvas.width = width;
+            _canvas.height = height;
 
             return _canvas;
         };
