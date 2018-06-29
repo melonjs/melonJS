@@ -26,7 +26,7 @@
      * @name Texture
      * @constructor
      * @param {Object} atlas atlas information. See {@link me.loader.getJSON}
-     * @param {HTMLImageElement|HTMLCanvasElement} [source=atlas.meta.image] Image source
+     * @param {HTMLImageElement|HTMLCanvasElement|String} [source=atlas.meta.image] Image source
      * @param {Boolean} [cached=false] Use true to skip caching this Texture
      * @example
      * // create a texture atlas from a JSON Object
@@ -56,7 +56,7 @@
 
             /**
              * the texture source itself
-             * @type {HTMLImageElement|HTMLCanvasElement}
+             * @type {HTMLImageElement|HTMLCanvasElement|}
              * @ignore
              */
             this.source = source || null;

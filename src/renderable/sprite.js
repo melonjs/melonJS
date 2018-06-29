@@ -15,7 +15,7 @@
      * @param {Number} x the x coordinates of the sprite object
      * @param {Number} y the y coordinates of the sprite object
      * @param {Object} settings Contains additional parameters for the animation sheet
-     * @param {me.video.renderer.Texture|Image|String} settings.image reference to a texture, spritesheet image or to a texture atlas
+     * @param {me.video.renderer.Texture|HTMLImageElement|HTMLCanvasElement|String} settings.image reference to a texture, spritesheet image or to a texture atlas
      * @param {Number} [settings.framewidth] Width of a single frame within the spritesheet
      * @param {Number} [settings.frameheight] Height of a single frame within the spritesheet
      * @param {Number} [settings.flipX] flip the sprite on the horizontal axis
@@ -104,23 +104,22 @@
                     if (region) {
                         // set the sprite region within the texture
                         this.setRegion(region);
-                        settings.framewidth = settings.framewidth || region.width;
-                        settings.frameheight = settings.frameheight || region.height;
+                        // update the default "current" frame size
+                        this.current.width  = settings.framewidth || region.width;
+                        this.current.height = settings.frameheight || region.height;
                     } else {
                         // throw an error
                         throw new me.Renderable.Error("Texture - region for " + settings.region + " not found");
                     }
                 }
             } else {
-               // standard image or spritesheet
-               this.image = me.loader.getImage(settings.image);
-               settings.framewidth = settings.framewidth || this.image.width;
-               settings.frameheight = settings.frameheight || this.image.height;
-               this.textureAtlas = me.video.renderer.cache.get(this.image, settings).getAtlas();
+                // HTMLImageElement/Canvas or String
+                this.image = (typeof settings.image === "object") ? settings.image : me.loader.getImage(settings.image);
+                // update the default "current" frame size
+                this.current.width = settings.framewidth || this.image.width;
+                this.current.height = settings.frameheight || this.image.height;
+                this.textureAtlas = me.video.renderer.cache.get(this.image, settings).getAtlas();
             }
-            // update the default "current" size
-            this.current.width = settings.framewidth;
-            this.current.height = settings.frameheight;
 
             // store/reset the current atlas information if specified
             if (typeof(settings.atlas) !== "undefined") {

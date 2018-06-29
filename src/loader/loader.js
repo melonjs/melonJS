@@ -680,7 +680,7 @@
          * @public
          * @function
          * @param {String} tmx name of the tmx/tsx element ("map1");
-         * @return {XML|Object}
+         * @return {XML|Object} requested element or null if not found
          */
         api.getTMX = function (elt) {
             // force as string
@@ -688,10 +688,7 @@
             if (elt in tmxList) {
                 return tmxList[elt];
             }
-            else {
-                //console.log ("warning %s resource not yet loaded!",name);
-                return null;
-            }
+            return null;
         };
 
         /**
@@ -701,7 +698,7 @@
          * @public
          * @function
          * @param {String} name of the binary object ("ymTrack");
-         * @return {Object}
+         * @return {Object} requested element or null if not found
          */
         api.getBinary = function (elt) {
             // force as string
@@ -709,11 +706,7 @@
             if (elt in binList) {
                 return binList[elt];
             }
-            else {
-                //console.log ("warning %s resource not yet loaded!",name);
-                return null;
-            }
-
+            return null;
         };
 
         /**
@@ -723,27 +716,16 @@
          * @public
          * @function
          * @param {String} image name of the Image element ("tileset-platformer");
-         * @return {HTMLImageElement}
+         * @return {HTMLImageElement} requested element or null if not found
          */
         api.getImage = function (image) {
-            if ((image instanceof HTMLImageElement) ||
-                (image instanceof HTMLCanvasElement) ||
-                // weixin Image are just standard Object
-                (me.device.isWeixin && typeof image === "object")) {
-                // if the given parameter is already an Image object
-                return image;
-            } else {
-                // force as string and extract the base name
-                image = me.utils.file.getBasename("" + image);
-                if (image in imgList) {
-                    // return the corresponding Image object
-                    return imgList[image];
-                }
-                else {
-                    //console.log ("warning %s resource not yet loaded!",name);
-                    return null;
-                }
+            // force as string and extract the base name
+            image = me.utils.file.getBasename("" + image);
+            if (image in imgList) {
+                // return the corresponding Image object
+                return imgList[image];
             }
+            return null;
         };
 
         /**
@@ -761,9 +743,7 @@
             if (elt in jsonList) {
                 return jsonList[elt];
             }
-            else {
-                return null;
-            }
+            return null;
         };
 
         /**
