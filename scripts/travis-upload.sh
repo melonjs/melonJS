@@ -1,7 +1,7 @@
 #!/bin/bash
 set -ev
 
-if [ "${TRAVIS_NODE_VERSION}" = "6" ] ; then
+if [ "${TRAVIS_NODE_VERSION}" = "8" ] ; then
     artifacts upload \
         --bucket melonjs-builds \
         --s3-region us-east-1 \
