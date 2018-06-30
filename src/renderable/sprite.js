@@ -116,8 +116,8 @@
                 // HTMLImageElement/Canvas or String
                 this.image = (typeof settings.image === "object") ? settings.image : me.loader.getImage(settings.image);
                 // update the default "current" frame size
-                this.current.width = settings.framewidth || this.image.width;
-                this.current.height = settings.frameheight || this.image.height;
+                this.current.width = settings.framewidth = settings.framewidth || this.image.width;
+                this.current.height = settings.frameheight = settings.frameheight || this.image.height;
                 this.textureAtlas = me.video.renderer.cache.get(this.image, settings).getAtlas();
             }
 
