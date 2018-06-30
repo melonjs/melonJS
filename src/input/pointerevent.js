@@ -395,7 +395,7 @@
         var pointer;
 
         // PointerEvent or standard Mouse event
-        if (me.device.TouchEvent && event instanceof TouchEvent) {
+        if (me.device.TouchEvent && event.changedTouches) {
             // iOS/Android Touch event
             for (var i = 0, l = event.changedTouches.length; i < l; i++) {
                 var touchEvent = event.changedTouches[i];
