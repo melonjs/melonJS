@@ -33,7 +33,7 @@
 
         /**
          * Rate at which the game updates;<br>
-         * must be equal to or lower than the fps
+         * may be greater than or lower than the fps
          * @see me.timer.tick
          * @type {Number}
          * @default 60
