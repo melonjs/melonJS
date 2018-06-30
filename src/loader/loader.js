@@ -180,11 +180,11 @@
                 }
             };
             // send the request
-            xmlhttp.send(null);
+            xmlhttp.send();
         }
 
         /**
-         * preload TMX files
+         * preload JSON files
          * @ignore
          */
         function preloadJSON(data, onload, onerror) {
@@ -215,7 +215,7 @@
                 }
             };
             // send the request
-            xmlhttp.send(null);
+            xmlhttp.send();
         }
 
         /**
