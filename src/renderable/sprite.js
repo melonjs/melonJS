@@ -114,11 +114,19 @@
                 }
             } else {
                 // HTMLImageElement/Canvas or String
-                this.image = (typeof settings.image === "object") ? settings.image : me.loader.getImage(settings.image);
-                // update the default "current" frame size
-                this.current.width = settings.framewidth = settings.framewidth || this.image.width;
-                this.current.height = settings.frameheight = settings.frameheight || this.image.height;
-                this.textureAtlas = me.video.renderer.cache.get(this.image, settings).getAtlas();
+				if(typeof settings.image === "object"){
+					this.image = settings.image;
+					// update the default "current" frame size
+					this.current.width = this.image.width;
+					this.current.height = this.image.height;
+					this.textureAtlas = me.video.renderer.cache.get(this.image, null).getAtlas();
+				}else{
+					this.image = me.loader.getImage(settings.image);
+					// update the default "current" frame size
+					this.current.width = settings.framewidth;
+					this.current.height = settings.frameheight;
+					this.textureAtlas = me.video.renderer.cache.get(this.image, settings).getAtlas();
+				}
             }
 
             // store/reset the current atlas information if specified
