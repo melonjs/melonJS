@@ -16,6 +16,28 @@ describe("Shape : me.Rect", function () {
             expect(rect1.width).toEqual(100);
             expect(rect1.height).toEqual(100);
         });
+
+        it("center scaled rect1", function () {
+            expect(rect1.centerX).toEqual(50);
+            expect(rect1.centerY).toEqual(50);
+        });
+
+        it("move rect1 center", function () {
+            // default position
+            expect(rect1.pos.x).toEqual(0);
+            expect(rect1.pos.y).toEqual(0);
+            // move the rect
+            rect1.centerX = 200;
+            rect1.centerY = 400;
+            expect(rect1.pos.x).toEqual(150);
+            expect(rect1.pos.y).toEqual(350);
+            // move it back
+            rect1.centerX = 50;
+            rect1.centerY = 50;
+            expect(rect1.pos.x).toEqual(0);
+            expect(rect1.pos.y).toEqual(0);
+        });
+
         it("rect 1 overlaps rect2", function () {
             expect(rect1.overlaps(rect2)).toEqual(true);
         });

@@ -397,4 +397,50 @@
         configurable : true
     });
 
+    /**
+     * absolute center of this rectangle on the horizontal axis
+     * @public
+     * @type {Number}
+     * @name centerX
+     * @memberOf me.Rect
+     */
+    Object.defineProperty(me.Rect.prototype, "centerX", {
+        /**
+         * @ignore
+         */
+        get : function () {
+            return this.pos.x + (this._width / 2);
+        },
+        /**
+         * @ignore
+         */
+        set : function (value) {
+            this.pos.x = value - (this._width / 2);
+        },
+        configurable : true
+    });
+
+    /**
+     * absolute center of this rectangle on the vertical axis
+     * @public
+     * @type {Number}
+     * @name centerY
+     * @memberOf me.Rect
+     */
+    Object.defineProperty(me.Rect.prototype, "centerY", {
+        /**
+         * @ignore
+         */
+        get : function () {
+            return this.pos.y + (this._height / 2);
+        },
+        /**
+         * @ignore
+         */
+        set : function (value) {
+            this.pos.y = value - (this._height / 2);
+        },
+        configurable : true
+    });
+
 })();
