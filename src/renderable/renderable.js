@@ -295,27 +295,31 @@
         },
 
         /**
-         * flip the renderable on the horizontal axis, using negative transform scale
+         * flip the renderable on the horizontal axis (around the center of the renderable)
          * @see me.Matrix2d.scaleX
          * @name flipX
          * @memberOf me.Renderable
          * @function
-         * @param {Boolean} flip enable/disable flip
+         * @param {Boolean} [flip=false] `true` to flip this renderable.
+         * @return {me.Renderable} Reference to this object for method chaining
          */
         flipX : function (flip) {
-            this._flip.x = flip;
+            this._flip.x = !!flip;
+            return this;
         },
 
         /**
-         * flip the renderable on the vertical axis, using negative transform scale
+         * flip the renderable on the vertical axis (around the center of the renderable)
          * @see me.Matrix2d.scaleY
          * @name flipY
          * @memberOf me.Renderable
          * @function
-         * @param {Boolean} flip enable/disable flip
+         * @param {Boolean} [flip=false] `true` to flip this renderable.
+         * @return {me.Renderable} Reference to this object for method chaining
          */
         flipY : function (flip) {
-            this._flip.y = flip;
+            this._flip.y = !!flip;
+            return this;
         },
 
         /**
@@ -445,19 +449,11 @@
 
             // apply flip
             if (this._flip.x || this._flip.y) {
-                var dx = 0, dy = 0,
-                    scaleX = 1, scaleY = 1;
-                if (this._flip.x) {
-                    dx = this.pos.x + bounds.width/2 - ax;
-                    scaleX = -1;
-                }
-                if (this._flip.y) {
-                    dy = this.pos.y + bounds.height/2 - ay;
-                    scaleY = -1;
-                }
+                var dx = this._flip.x ? this.centerX - ax : 0,
+                    dy = this._flip.y ? this.centerY - ay : 0;
 
                 renderer.translate(dx, dy);
-                renderer.scale(scaleX, scaleY)
+                renderer.scale(this._flip.x  ? -1 : 1, this._flip.y  ? -1 : 1)
                 renderer.translate(-dx, -dy);
             }
 
