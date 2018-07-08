@@ -56,7 +56,7 @@
 
             /**
              * the texture source itself
-             * @type {HTMLImageElement|HTMLCanvasElement|}
+             * @type {HTMLImageElement|HTMLCanvasElement}
              * @ignore
              */
             this.source = source || null;
