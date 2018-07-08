@@ -245,8 +245,8 @@
 
             // keep track of when we flip
             this._flip = {
-                lastX : false,
-                lastY : false
+                x : false,
+                y : false
             };
 
             this.shapeType = "Rectangle";
@@ -303,11 +303,7 @@
          * @param {Boolean} flip enable/disable flip
          */
         flipX : function (flip) {
-            if (flip !== this._flip.lastX) {
-                this._flip.lastX = flip;
-                // invert the scale.x value
-                this.currentTransform.scaleX(-1);
-            }
+            this._flip.x = flip;
         },
 
         /**
@@ -319,11 +315,7 @@
          * @param {Boolean} flip enable/disable flip
          */
         flipY : function (flip) {
-            if (flip !== this._flip.lastY) {
-                this._flip.lastY = flip;
-                // invert the scale.x value
-                this.currentTransform.scaleY(-1);
-            }
+            this._flip.y = flip;
         },
 
         /**
@@ -450,6 +442,24 @@
             renderer.save();
             // apply the defined alpha value
             renderer.setGlobalAlpha(renderer.globalAlpha() * this.getOpacity());
+
+            // apply flip
+            if (this._flip.x || this._flip.y) {
+                var dx = 0, dy = 0,
+                    scaleX = 1, scaleY = 1;
+                if (this._flip.x) {
+                    dx = this.pos.x + bounds.width/2 - ax;
+                    scaleX = -1;
+                }
+                if (this._flip.y) {
+                    dy = this.pos.y + bounds.height/2 - ay;
+                    scaleY = -1;
+                }
+
+                renderer.translate(dx, dy);
+                renderer.scale(scaleX, scaleY)
+                renderer.translate(-dx, -dy);
+            }
 
             if ((this.autoTransform === true) && (!this.currentTransform.isIdentity())) {
                 this.currentTransform.translate(-ax, -ay);
