@@ -289,22 +289,16 @@
              * @name renderer
              * @type {me.Renderer|me.CanvasRenderer|me.WebGLRenderer}
              */
-
-            if (me.device.isWeixin === true) {
-                // see https://github.com/melonjs/melonJS/issues/933
-                this.renderer = new me.CanvasRenderer(canvas, game_width, game_height, settings);
-            } else {
-                switch (settings.renderer) {
-                    case api.WEBGL:
-                        this.renderer = new me.WebGLRenderer(canvas, game_width, game_height, settings);
-                        break;
-                    case api.AUTO:
-                        this.renderer = autoDetectRenderer(canvas, game_width, game_height, settings);
-                        break;
-                    default:
-                        this.renderer = new me.CanvasRenderer(canvas, game_width, game_height, settings);
-                        break;
-                }
+            switch (settings.renderer) {
+                case api.WEBGL:
+                    this.renderer = new me.WebGLRenderer(canvas, game_width, game_height, settings);
+                    break;
+                case api.AUTO:
+                    this.renderer = autoDetectRenderer(canvas, game_width, game_height, settings);
+                    break;
+                default:
+                    this.renderer = new me.CanvasRenderer(canvas, game_width, game_height, settings);
+                    break;
             }
 
             // adjust CSS style for High-DPI devices
