@@ -131,15 +131,12 @@
          * @param {Boolean} [opaque=false] Allow transparency [default] or clear the surface completely [true]
          */
         clearColor : function (col, opaque) {
-            var _ctx = this.backBufferContext2D;
-            var _canvas = _ctx.canvas;
-
-            _ctx.save();
-            _ctx.setTransform(1, 0, 0, 1, 0, 0);
-            _ctx.globalCompositeOperation = opaque ? "copy" : "source-over";
-            _ctx.fillStyle = (col instanceof me.Color) ? col.toRGBA() : col;
-            _ctx.fillRect(0, 0, _canvas.width, _canvas.height);
-            _ctx.restore();
+            this.save();
+            this.resetTransform();
+            this.backBufferContext2D.globalCompositeOperation = opaque ? "copy" : "source-over";
+            this.backBufferContext2D.fillStyle = (col instanceof me.Color) ? col.toRGBA() : col;
+            this.fillRect(0, 0, this.backBufferCanvas.width, this.backBufferCanvas.height);
+            this.restore();
         },
 
         /**
@@ -652,6 +649,26 @@
             } else {
                 this.backBufferContext2D.translate(x, y);
             }
+        },
+
+        /**
+         * clip the given region from the original canvas. Once a region is clipped,
+         * all future drawing will be limited to the clipped region.
+         * You can however save the current region using the save(),
+         * and restore it (with the restore() method) any time in the future.
+         * (<u>this is an experimental feature !</u>)
+         * @name clip
+         * @memberOf me.CanvasRenderer
+         * @function
+         * @param {Number} x
+         * @param {Number} y
+         * @param {Number} width
+         * @param {Number} height
+         */
+        clip : function (x, y, width, height) {
+            this.backBufferContext2D.beginPath();
+            this.backBufferContext2D.rect(x, y, width, height);
+            this.backBufferContext2D.clip();
         }
 
     });

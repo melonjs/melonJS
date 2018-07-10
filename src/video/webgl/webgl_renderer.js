@@ -54,6 +54,12 @@
             /**
              * @ignore
              */
+            this._scissorStack = [];
+
+
+            /**
+             * @ignore
+             */
             this._linePoints = [
                 new me.Vector2d(),
                 new me.Vector2d(),
@@ -73,11 +79,14 @@
             var Compositor = options.compositor || me.WebGLRenderer.Compositor;
             this.compositor = new Compositor(this);
 
+
+            // default WebGL state(s)
+            this.gl.disable(this.gl.DEPTH_TEST);
+            this.gl.disable(this.gl.SCISSOR_TEST);
+            this.gl.enable(this.gl.BLEND);
+
             // set default mode
             this.setBlendMode(this.gl, options.blendMode);
-
-            // disable DEPTH testing
-            this.gl.disable(this.gl.DEPTH_TEST);
 
             // Create a texture cache
             this.cache = new me.Renderer.TextureCache(
@@ -476,6 +485,7 @@
             this.resetTransform();
             this.cache.reset();
             this.compositor.reset();
+            this.gl.disable(this.gl.SCISSOR_TEST);
             this.createFillTexture();
             if (typeof (this.fontContext2D) !== "undefined" ) {
                 this.createFontTexture();
@@ -525,6 +535,12 @@
                 me.pool.push(color);
                 me.pool.push(matrix);
             }
+
+            if (this.gl.isEnabled(this.gl.SCISSOR_TEST) && this._scissorStack.length !== 0) {
+                var scissor = this._scissorStack.pop();
+                // FIXME : prevent `scissor` object realloc and GC
+                this.clip(scissor[0], scissor[1], scissor[2], scissor[3]);
+            }
         },
 
         /**
@@ -536,6 +552,9 @@
         save : function () {
             this._colorStack.push(this.currentColor.clone());
             this._matrixStack.push(this.currentTransform.clone());
+            if (this.gl.isEnabled(this.gl.SCISSOR_TEST)) {
+                this._scissorStack.push(this.gl.getParameter(this.gl.SCISSOR_BOX));
+            }
         },
 
         /**
@@ -780,6 +799,27 @@
             } else {
                 this.currentTransform.translate(x, y);
             }
+        },
+
+        /**
+         * clip the given region from the original canvas. Once a region is clipped,
+         * all future drawing will be limited to the clipped region.
+         * You can however save the current region using the save(),
+         * and restore it (with the restore() method) any time in the future.
+         * (<u>this is an experimental feature !</u>)
+         * @name clip
+         * @memberOf me.WebGLRenderer
+         * @function
+         * @param {Number} x
+         * @param {Number} y
+         * @param {Number} width
+         * @param {Number} height
+         */
+        clip : function (x, y, width, height) {
+            // turn on scissor test
+            this.gl.enable(this.gl.SCISSOR_TEST);
+            // set the scissor rectangle
+            this.gl.scissor(x, y, width, height);
         }
     });
 

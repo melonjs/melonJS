@@ -815,6 +815,18 @@
             // adjust position if required (e.g. canvas/window centering)
             renderer.translate(this.pos.x, this.pos.y);
 
+            // clip the containter children to the container bounds
+            /* FIXME
+            if (this.childBounds.isFinite() === true) {
+                renderer.clip(
+                    this.childBounds.pos.x,
+                    this.childBounds.pos.y,
+                    this.childBounds.width,
+                    this.childBounds.height
+                );
+            }
+            */
+
             for (var i = this.children.length, obj; i--, (obj = this.children[i]);) {
                 if (obj.isRenderable) {
 
