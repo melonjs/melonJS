@@ -9,8 +9,15 @@ describe("Shape : me.Rect", function () {
     var rect4 = new me.Rect(500, 500, 50, 50);
     // rect 5 is the merge of rect 2 and rect 4
     var rect5 = rect2.clone().union(rect4);
+    // rect 6 is an infinite plane
+    var rect6 = new me.Rect(-Infinity, -Infinity, Infinity, Infinity);
 
     describe("rect1", function () {
+
+        it("rect 1 has finite coordinates", function () {
+            expect(rect1.isFinite()).toEqual(true);
+        });
+
         it("scale rect1", function () {
             rect1.scale(4, 2);
             expect(rect1.width).toEqual(100);
@@ -109,6 +116,12 @@ describe("Shape : me.Rect", function () {
             expect(rect5.contains(rect4)).toEqual(true);
         });
 
+    });
+
+    describe("rect6", function () {
+        it("rect 6 is an infinite plane", function () {
+            expect(rect6.isFinite()).toEqual(false);
+        });
     });
 
 });

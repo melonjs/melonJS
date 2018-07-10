@@ -262,6 +262,17 @@
         },
 
         /**
+         * determines whether all coordinates of this rectangle are finite numbers.
+         * @name isFinite
+         * @memberOf me.Rect
+         * @function
+         * @return {boolean} false if all coordinates are positive or negative Infinity or NaN; otherwise, true.
+         */
+        isFinite: function () {
+            return (isFinite(this.pos.x) && isFinite(this.pos.y) && isFinite(this._width) && isFinite(this._height));
+        },
+
+        /**
          * Returns a polygon whose edges are the same as this box.
          * @name toPolygon
          * @memberOf me.Rect
