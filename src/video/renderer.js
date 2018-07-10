@@ -52,7 +52,8 @@
             this.context = null;
 
             // global color
-            this.currentColor = new me.Color(0, 0, 0, 1.0);
+            // FIXME : setting this to black, breaks the WebGL Renderer
+            this.currentColor = new me.Color(255, 255, 255, 1.0);
 
             // default uvOffset
             this.uvOffset = 0;
