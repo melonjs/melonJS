@@ -58,6 +58,11 @@
             // default uvOffset
             this.uvOffset = 0;
 
+            // reset the instantiated renderer on game reset
+            me.event.subscribe(me.event.RESET, function () {
+                me.video.renderer.reset();
+            });
+
             return this;
         },
 

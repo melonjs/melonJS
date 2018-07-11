@@ -184,24 +184,14 @@
          * @function
          */
         api.reset = function () {
-
             // clear the quadtree
             me.collision.quadTree.clear();
 
             // remove all objects
             api.world.destroy();
 
-
             // reset the anchorPoint
             api.world.anchorPoint.set(0, 0);
-
-            // reset the viewport to zero ?
-            if (api.viewport) {
-                api.viewport.reset();
-            }
-
-            // reset the renderer
-            renderer.reset();
 
             // publish reset notification
             me.event.publish(me.event.GAME_RESET);

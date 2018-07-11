@@ -114,6 +114,11 @@
 
             // enable event detection on the viewport
             this.isKinematic = false;
+
+            // subscribe to the game reset event
+            me.event.subscribe(me.event.RESET, function () {
+                this.reset.bind(this);
+            });
         },
 
         // -- some private function ---
