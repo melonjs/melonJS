@@ -15,6 +15,8 @@
          * @ignore
          */
         init : function (max_size) {
+            this.cache = new Map();
+            this.units = new Map();
             this.max_size = max_size || Infinity;
             this.reset();
         },
@@ -23,8 +25,8 @@
          * @ignore
          */
         reset : function () {
-            this.cache = new Map();
-            this.units = new Map();
+            this.cache.clear();
+            this.units.clear();
             this.length = 0;
         },
 
