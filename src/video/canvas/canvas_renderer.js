@@ -72,6 +72,28 @@
         },
 
         /**
+         * Reset context state
+         * @name reset
+         * @memberOf me.WebGLRenderer
+         * @function
+         */
+        reset : function () {
+            this._super(me.Renderer, "reset");
+            // clip back to the canvas size (is this necessary as context is restored at the end of each draw loop)
+            //this.clip(0, 0, this.backBufferCanvas.width, this.backBufferCanvas.height);
+        },
+
+        /**
+         * resets the canvas transform to identity
+         * @name resetTransform
+         * @memberOf me.CanvasRenderer
+         * @function
+         */
+        resetTransform : function () {
+            this.backBufferContext2D.setTransform(1, 0, 0, 1, 0, 0);
+        },
+
+        /**
          * set a blend mode for the given context
          * @name setBlendMode
          * @memberOf me.CanvasRenderer
@@ -310,16 +332,6 @@
         getFontContext : function () {
             // in canvas more we can directly use the 2d context
             return this.getContext();
-        },
-
-        /**
-         * resets the canvas transform to identity
-         * @name resetTransform
-         * @memberOf me.CanvasRenderer
-         * @function
-         */
-        resetTransform : function () {
-            this.backBufferContext2D.setTransform(1, 0, 0, 1, 0, 0);
         },
 
         /**

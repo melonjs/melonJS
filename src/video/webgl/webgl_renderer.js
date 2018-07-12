@@ -39,7 +39,7 @@
              * @name gl
              * @memberOf me.WebGLRenderer
              */
-            this.gl = this.getContextGL(c, this.transparent);
+            this.context = this.gl = this.getContextGL(c, this.transparent);
 
             /**
              * @ignore
@@ -55,6 +55,12 @@
              * @ignore
              */
             this._scissorStack = [];
+
+            /**
+            * @ignore
+            */
+            this.currentScissor = [0, 0, width, height];
+
 
 
             /**
@@ -99,6 +105,32 @@
             this.scaleCanvas(1, 1);
 
             return this;
+        },
+
+        /**
+         * Reset context state
+         * @name reset
+         * @memberOf me.WebGLRenderer
+         * @function
+         */
+        reset : function () {
+            this._super(me.Renderer, "reset");
+            this.compositor.reset();
+            this.gl.disable(this.gl.SCISSOR_TEST);
+            this.createFillTexture();
+            if (typeof (this.fontContext2D) !== "undefined" ) {
+                this.createFontTexture();
+            }
+        },
+
+        /**
+         * resets the gl transform to identity
+         * @name resetTransform
+         * @memberOf me.WebGLRenderer
+         * @function
+         */
+        resetTransform : function () {
+            this.currentTransform.identity();
         },
 
         /**
@@ -466,33 +498,6 @@
         },
 
         /**
-         * resets the gl transform to identity
-         * @name resetTransform
-         * @memberOf me.WebGLRenderer
-         * @function
-         */
-        resetTransform : function () {
-            this.currentTransform.identity();
-        },
-
-        /**
-         * Reset context state
-         * @name reset
-         * @memberOf me.WebGLRenderer
-         * @function
-         */
-        reset : function () {
-            this.resetTransform();
-            this.cache.reset();
-            this.compositor.reset();
-            this.gl.disable(this.gl.SCISSOR_TEST);
-            this.createFillTexture();
-            if (typeof (this.fontContext2D) !== "undefined" ) {
-                this.createFontTexture();
-            }
-        },
-
-        /**
          * scales the canvas & GL Context
          * @name scaleCanvas
          * @memberOf me.WebGLRenderer
@@ -553,7 +558,8 @@
             this._colorStack.push(this.currentColor.clone());
             this._matrixStack.push(this.currentTransform.clone());
             if (this.gl.isEnabled(this.gl.SCISSOR_TEST)) {
-                this._scissorStack.push(this.gl.getParameter(this.gl.SCISSOR_BOX));
+                // FIXME avoid slice and object realloc
+                this._scissorStack.push(this.currentScissor.slice());
             }
         },
 
@@ -816,10 +822,22 @@
          * @param {Number} height
          */
         clip : function (x, y, width, height) {
+            if (this.gl.isEnabled(this.gl.SCISSOR_TEST)) {
+                // if same as the current scissor box do nothing
+                if (this.currentScissor[0] === x  && this.currentScissor[1] === y &&
+                    this.currentScissor[2] === width && this.currentScissor[3] === height) {
+                        return;
+                }
+            }
             // turn on scissor test
             this.gl.enable(this.gl.SCISSOR_TEST);
-            // set the scissor rectangle
-            this.gl.scissor(x, y, width, height);
+            // set the scissor rectangle (note : coordinates are left/bottom)
+            this.gl.scissor(x, this.backBufferCanvas.height -y -height, width, height);
+            // save the new currentScissor box
+            this.currentScissor[0] = x;
+            this.currentScissor[1] = y;
+            this.currentScissor[2] = width;
+            this.currentScissor[3] = height;
         }
     });
 
