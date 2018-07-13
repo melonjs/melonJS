@@ -110,10 +110,7 @@
             this._super(me.Renderer, "reset");
             this.compositor.reset();
             this.gl.disable(this.gl.SCISSOR_TEST);
-            this.createFillTexture();
-            if (typeof (this.fontContext2D) !== "undefined" ) {
-                this.createFontTexture();
-            }
+            this.createFillTexture(this.cache);
         },
 
         /**
@@ -130,23 +127,26 @@
          * @ignore
          */
         createFillTexture : function (cache) {
-            // Create a 1x1 white texture for fill operations
-            var image = new Uint8Array([255, 255, 255, 255]);
-
-            /**
-             * @ignore
-             */
-            this.fillTexture = new this.Texture(
-                this.Texture.prototype.createAtlas.apply(
-                    this.Texture.prototype,
-                    [ 1, 1, "fillTexture"]
-                ),
-                image,
-                cache
-            );
-
-            // XXX better way to disable this
-            this.fillTexture.premultipliedAlpha = false;
+            if (typeof this.fillTexture === "undefined") {
+                // Create a 1x1 white texture for fill operations
+                var image = new Uint8Array([255, 255, 255, 255]);
+                /**
+                 * @ignore
+                 */
+                this.fillTexture = new this.Texture(
+                    this.Texture.prototype.createAtlas.apply(
+                        this.Texture.prototype,
+                        [ 1, 1, "fillTexture"]
+                    ),
+                    image,
+                    cache
+                );
+                // XXX better way to disable this
+                this.fillTexture.premultipliedAlpha = false;
+            } else {
+                // fillTexture was already created, just add it back into the cache
+                cache.put(this.fillTexture.source, this.fillTexture);
+            }
 
             this.compositor.uploadTexture(
                 this.fillTexture,
