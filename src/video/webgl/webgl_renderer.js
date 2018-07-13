@@ -57,13 +57,6 @@
             this._scissorStack = [];
 
             /**
-            * @ignore
-            */
-            this.currentScissor = [0, 0, width, height];
-
-
-
-            /**
              * @ignore
              */
             this._linePoints = [
@@ -292,7 +285,7 @@
             var fontContext = this.getFontContext();
 
             // Flush the compositor so we can upload a new texture
-            this.compositor.flush();
+            this.flush();
 
             // Force-upload the new texture
             this.compositor.uploadTexture(this.fontTexture, 0, 0, 0, true);
@@ -541,10 +534,14 @@
                 me.pool.push(matrix);
             }
 
-            if (this.gl.isEnabled(this.gl.SCISSOR_TEST) && this._scissorStack.length !== 0) {
-                var scissor = this._scissorStack.pop();
+            if (this._scissorStack.length !== 0) {
                 // FIXME : prevent `scissor` object realloc and GC
-                this.clip(scissor[0], scissor[1], scissor[2], scissor[3]);
+                this.currentScissor.set(this._scissorStack.pop());
+            } else {
+                this.currentScissor[0] = 0;
+                this.currentScissor[1] = 0;
+                this.currentScissor[2] = this.backBufferCanvas.width;
+                this.currentScissor[3] = this.backBufferCanvas.height;
             }
         },
 
@@ -557,6 +554,7 @@
         save : function () {
             this._colorStack.push(this.currentColor.clone());
             this._matrixStack.push(this.currentTransform.clone());
+
             if (this.gl.isEnabled(this.gl.SCISSOR_TEST)) {
                 // FIXME avoid slice and object realloc
                 this._scissorStack.push(this.currentScissor.slice());
@@ -813,7 +811,7 @@
          * You can however save the current region using the save(),
          * and restore it (with the restore() method) any time in the future.
          * (<u>this is an experimental feature !</u>)
-         * @name clip
+         * @name clipRect
          * @memberOf me.WebGLRenderer
          * @function
          * @param {Number} x
@@ -821,23 +819,34 @@
          * @param {Number} width
          * @param {Number} height
          */
-        clip : function (x, y, width, height) {
-            if (this.gl.isEnabled(this.gl.SCISSOR_TEST)) {
-                // if same as the current scissor box do nothing
-                if (this.currentScissor[0] === x  && this.currentScissor[1] === y &&
-                    this.currentScissor[2] === width && this.currentScissor[3] === height) {
-                        return;
+        clipRect : function (x, y, width, height) {
+            var gl = this.gl;
+            var canvas = this.backBufferCanvas;
+            var currentScissor = this.currentScissor;
+            // if requested box is different from the current canvas size
+            if (x !== 0 || y !== 0 || width !== canvas.width || height !== canvas.height) {
+                if (gl.isEnabled(gl.SCISSOR_TEST)) {
+                    // if same as the current scissor box do nothing
+                    if (currentScissor[0] === x && currentScissor[1] === y &&
+                        currentScissor[2] === width && currentScissor[3] === height) {
+                            // flush the compositor
+                            return;
+                    }
+                } else {
+                    // turn on scissor test
+                    gl.enable(this.gl.SCISSOR_TEST);
                 }
+                // set the scissor rectangle (note : coordinates are left/bottom)
+                gl.scissor(x, canvas.height -y -height, width, height);
+                // save the new currentScissor box
+                currentScissor[0] = x;
+                currentScissor[1] = y;
+                currentScissor[2] = width;
+                currentScissor[3] = height;
+            } else {
+                // turn on scissor test
+                gl.disable(gl.SCISSOR_TEST);
             }
-            // turn on scissor test
-            this.gl.enable(this.gl.SCISSOR_TEST);
-            // set the scissor rectangle (note : coordinates are left/bottom)
-            this.gl.scissor(x, this.backBufferCanvas.height -y -height, width, height);
-            // save the new currentScissor box
-            this.currentScissor[0] = x;
-            this.currentScissor[1] = y;
-            this.currentScissor[2] = width;
-            this.currentScissor[3] = height;
         }
     });
 

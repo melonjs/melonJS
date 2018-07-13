@@ -93,6 +93,17 @@
             this.autoDepth = true;
 
             /**
+             * Specify if the container draw operation should clip his children to its own bounds
+             * XXX : HIDDEN PROPERTY FOR NOW, UNTIL IT PROPERLY WORKS!
+             * @private
+             * @type Boolean
+             * @default false
+             * @name clipping
+             * @memberOf me.Container
+             */
+            this.clipping = false;
+
+            /**
              * a callback to be extended, triggered when a child is added or removed
              * @name onChildChange
              * @memberOf me.Container
@@ -816,16 +827,14 @@
             renderer.translate(this.pos.x, this.pos.y);
 
             // clip the containter children to the container bounds
-            /* FIXME
-            if (this.childBounds.isFinite() === true) {
-                renderer.clip(
+            if (this._root === false && this.clipping === true && this.childBounds.isFinite() === true) {
+                renderer.clipRect(
                     this.childBounds.pos.x,
                     this.childBounds.pos.y,
                     this.childBounds.width,
                     this.childBounds.height
                 );
             }
-            */
 
             for (var i = this.children.length, obj; i--, (obj = this.children[i]);) {
                 if (obj.isRenderable) {

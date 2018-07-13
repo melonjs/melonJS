@@ -79,8 +79,6 @@
          */
         reset : function () {
             this._super(me.Renderer, "reset");
-            // clip back to the canvas size (is this necessary as context is restored at the end of each draw loop)
-            //this.clip(0, 0, this.backBufferCanvas.width, this.backBufferCanvas.height);
         },
 
         /**
@@ -379,6 +377,10 @@
         restore : function () {
             this.backBufferContext2D.restore();
             this.currentColor.glArray[3] = this.backBufferContext2D.globalAlpha;
+            this.currentScissor[0] = 0;
+            this.currentScissor[1] = 0;
+            this.currentScissor[2] = this.backBufferCanvas.width;
+            this.currentScissor[3] = this.backBufferCanvas.height;
         },
 
         /**
@@ -669,7 +671,7 @@
          * You can however save the current region using the save(),
          * and restore it (with the restore() method) any time in the future.
          * (<u>this is an experimental feature !</u>)
-         * @name clip
+         * @name clipRect
          * @memberOf me.CanvasRenderer
          * @function
          * @param {Number} x
@@ -677,10 +679,25 @@
          * @param {Number} width
          * @param {Number} height
          */
-        clip : function (x, y, width, height) {
-            this.backBufferContext2D.beginPath();
-            this.backBufferContext2D.rect(x, y, width, height);
-            this.backBufferContext2D.clip();
+        clipRect : function (x, y, width, height) {
+            var canvas = this.backBufferCanvas;
+            var currentScissor = this.currentScissor;
+            // if requested box is different from the current canvas size;
+            if (x !== 0 || y !== 0 || width !== canvas.width || height !== canvas.height) {
+                // if different from the current scissor box
+                if (currentScissor[0] !== x || currentScissor[1] !== y ||
+                    currentScissor[2] !== width || currentScissor[3] !== height) {
+                    var context = this.backBufferContext2D;
+                    context.beginPath();
+                    context.rect(x, y, width, height);
+                    context.clip();
+                    // save the new currentScissor box
+                    currentScissor[0] = x;
+                    currentScissor[1] = y;
+                    currentScissor[2] = width;
+                    currentScissor[3] = height;
+                }
+            }
         }
 
     });

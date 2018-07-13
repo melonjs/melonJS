@@ -36,6 +36,11 @@
         init : function (c, width, height, options) {
             options = options || {};
 
+            /**
+            * @ignore
+            */
+            this.currentScissor = new Int32Array([ 0, 0, this.width, this.height ]);
+
             // rendering options
             this.transparent = !!(options.transparent);
             this.doubleBuffering = !!(options.doubleBuffering);
@@ -78,6 +83,10 @@
             this.resetTransform();
             this.setBlendMode(this.context, this.blendMode);
             this.cache.reset();
+            this.currentScissor[0] = 0;
+            this.currentScissor[1] = 0;
+            this.currentScissor[2] = this.backBufferCanvas.width;
+            this.currentScissor[3] = this.backBufferCanvas.height;
         },
 
         /**
@@ -228,6 +237,10 @@
         resize : function (width, height) {
             this.backBufferCanvas.width = width;
             this.backBufferCanvas.height = height;
+            this.currentScissor[0] = 0;
+            this.currentScissor[1] = 0;
+            this.currentScissor[2] = width;
+            this.currentScissor[3] = height;
         },
 
         /**
