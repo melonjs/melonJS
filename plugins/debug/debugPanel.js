@@ -563,8 +563,6 @@
 
         /** @private */
         drawQuadTree : function (renderer) {
-            // save the current globalAlpha value
-            var _alpha = renderer.globalAlpha();
             var x = me.game.viewport.pos.x;
             var y = me.game.viewport.pos.y;
 
@@ -573,8 +571,6 @@
             this.drawQuadTreeNode(renderer, me.collision.quadTree);
 
             renderer.translate(x, y);
-
-            renderer.setGlobalAlpha(_alpha);
         },
 
         /** @private */
