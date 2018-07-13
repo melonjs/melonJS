@@ -184,11 +184,11 @@
             // The edges here are the direction of the `n`th edge of the polygon, relative to
             // the `n`th point. If you want to draw a given edge from the edge value, you must
             // first translate to the position of the starting point.
-            var edges = this.edges = [];
+            var edges = this.edges = this.edges || [];
             // The normals here are the direction of the normal for the `n`th edge of the polygon, relative
             // to the position of the `n`th point. If you want to draw an edge normal, you must first
             // translate to the position of the starting point.
-            var normals = this.normals = [];
+            var normals = this.normals = this.normals || [];
             // Copy the original points array and apply the offset/angle
             var points = this.points;
             var len = points.length;
@@ -199,10 +199,20 @@
 
             // Calculate the edges/normals
             for (i = 0; i < len; i++) {
-                var e = new me.Vector2d().copy(points[(i + 1) % len]).sub(points[i]);
-                edges.push(e);
-                normals.push(new me.Vector2d().copy(e).perp().normalize());
+                if (edges[i] === undefined) {
+                    edges[i] = new me.Vector2d();
+                }
+                edges[i].copy(points[(i + 1) % len]).sub(points[i]);
+
+                if (normals[i] === undefined) {
+                    normals[i] = new me.Vector2d();
+                }
+                normals[i].copy(edges[i]).perp().normalize();
             }
+            // trunc array
+            edges.length = len;
+            normals.length = len;
+
             return this;
         },
 
