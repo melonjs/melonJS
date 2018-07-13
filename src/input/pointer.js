@@ -54,17 +54,17 @@
             * the button property indicates which button was pressed on the mouse to trigger the event.
             * @public
             * @type {Number}
-            * @name width
+            * @name button
             * @see https://developer.mozilla.org/en-US/docs/Web/API/MouseEvent/button
             * @memberOf me.Pointer
             */
             this.button = 0;
 
            /**
-            * indicates whether or not the pointer device that created the event is the primary pointe.
+            * indicates whether or not the pointer device that created the event is the primary pointer.
             * @public
             * @type {Boolean}
-            * @name width
+            * @name isPrimary
             * @see https://developer.mozilla.org/en-US/docs/Web/API/PointerEvent/isPrimary
             * @memberOf me.Pointer
             */
