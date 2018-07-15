@@ -242,21 +242,16 @@
          * @param {Boolean} [opaque=false] Allow transparency [default] or clear the surface completely [true]
          */
         clearColor : function (col, opaque) {
-            var color = this.currentColor.clone();
-            var matrix = this.currentTransform.clone();
+            this.save();
+            this.resetTransform();
             this.currentColor.copy(col);
-            this.currentTransform.identity();
-
             if (opaque) {
                 this.compositor.clear();
             }
             else {
                 this.fillRect(0, 0, this.canvas.width, this.canvas.height);
             }
-
-            this.currentTransform.copy(matrix);
-            this.currentColor.copy(color);
-            me.pool.push(color);
+            this.restore();
         },
 
         /**
@@ -538,6 +533,8 @@
                 // FIXME : prevent `scissor` object realloc and GC
                 this.currentScissor.set(this._scissorStack.pop());
             } else {
+                // turn off scissor test
+                this.gl.disable(this.gl.SCISSOR_TEST);
                 this.currentScissor[0] = 0;
                 this.currentScissor[1] = 0;
                 this.currentScissor[2] = this.backBufferCanvas.width;
@@ -829,13 +826,13 @@
                     // if same as the current scissor box do nothing
                     if (currentScissor[0] === x && currentScissor[1] === y &&
                         currentScissor[2] === width && currentScissor[3] === height) {
-                            // flush the compositor
                             return;
                     }
-                } else {
-                    // turn on scissor test
-                    gl.enable(this.gl.SCISSOR_TEST);
                 }
+                // flush the compositor
+                this.flush();
+                // turn on scissor test
+                gl.enable(this.gl.SCISSOR_TEST);
                 // set the scissor rectangle (note : coordinates are left/bottom)
                 gl.scissor(x, canvas.height -y -height, width, height);
                 // save the new currentScissor box
@@ -844,7 +841,7 @@
                 currentScissor[2] = width;
                 currentScissor[3] = height;
             } else {
-                // turn on scissor test
+                // turn off scissor test
                 gl.disable(gl.SCISSOR_TEST);
             }
         }
