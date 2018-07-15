@@ -817,11 +817,11 @@
          * @param {Number} height
          */
         clipRect : function (x, y, width, height) {
-            var gl = this.gl;
             var canvas = this.backBufferCanvas;
-            var currentScissor = this.currentScissor;
             // if requested box is different from the current canvas size
             if (x !== 0 || y !== 0 || width !== canvas.width || height !== canvas.height) {
+                var gl = this.gl;
+                var currentScissor = this.currentScissor;
                 if (gl.isEnabled(gl.SCISSOR_TEST)) {
                     // if same as the current scissor box do nothing
                     if (currentScissor[0] === x && currentScissor[1] === y &&

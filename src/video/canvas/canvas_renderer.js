@@ -681,9 +681,9 @@
          */
         clipRect : function (x, y, width, height) {
             var canvas = this.backBufferCanvas;
-            var currentScissor = this.currentScissor;
             // if requested box is different from the current canvas size;
             if (x !== 0 || y !== 0 || width !== canvas.width || height !== canvas.height) {
+                var currentScissor = this.currentScissor;
                 // if different from the current scissor box
                 if (currentScissor[0] !== x || currentScissor[1] !== y ||
                     currentScissor[2] !== width || currentScissor[3] !== height) {
