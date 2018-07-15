@@ -2,6 +2,7 @@ Version History
 ---------------
 6.0.0
 * Audio : latest audio core update to fix HTML5 Audio issue with FB Instant Games, and Chrome API deprecation
+* Container : new `clipping` feature to automatically clip childrens to their parent container bounds (disable by default)
 * Core : Removed unnecessary ES6 polyfill (based on melonJS 5.x minimum browser version)
 * Core : API update to sandbox all previous language extension under the `me` namespace
 * Core : added console debug information (melonJS version & basic device capabilities)
@@ -21,6 +22,7 @@ Version History
 * Renderable : fix animation not cycling when using GUI_Object(s)
 * Renderable : fix a regression when using Texture Packer
 * Renderer : use prefixed "image-rendering" CSS properties for non standard browsers
+* Renderer : new clipRect function to clip the specified rectangle area
 * Viewport : new damping feature to enable smooth camera movement
 * WebGLRenderer : enable `failIfMajorPerformanceCaveat` by default when attempting to create a GL Context
 * WebGLRenderer : feature to change the blending mode (experimental and limited to "normal" and "multiply" for now)
