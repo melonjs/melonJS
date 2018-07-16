@@ -1,8 +1,13 @@
 describe("me.Camera2d", function () {
 
-    beforeAll(function () {
+    beforeEach(function () {
         // update position so that it's not just 0
         me.game.viewport.move(100, 100);
+    });
+
+    afterEach(function () {
+        // move back to default 0,0 position
+        me.game.viewport.moveTo(0, 0);
     });
 
     it("convert between local and World coords without transforms", function () {
