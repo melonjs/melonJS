@@ -55,9 +55,9 @@
          */
 
         /**
-         * a reference to the game viewport.
+         * a reference to the game main viewport.
          * @public
-         * @type {me.Viewport}
+         * @type {me.Camera2d}
          * @name viewport
          * @memberOf me.game
          */
@@ -146,7 +146,7 @@
                 height = height || me.video.renderer.getHeight();
 
                 // create a defaut viewport of the same size
-                api.viewport = new me.Viewport(0, 0, width, height);
+                api.viewport = new me.Camera2d(0, 0, width, height);
 
                 // the root object of our world is an entity container
                 api.world = new me.Container(0, 0, width, height);
@@ -310,7 +310,7 @@
          * @private
          * @ignore
          * @function
-         * @param {me.Viewport} viewport viewport object
+         * @param {me.Camera2d} viewport viewport object
          */
         api.draw = function (viewport) {
             if (isDirty || isAlwaysDirty) {

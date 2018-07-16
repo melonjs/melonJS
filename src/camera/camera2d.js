@@ -12,7 +12,7 @@
     var targetV = new me.Vector2d();
 
     /**
-     * a camera/viewport Object
+     * a 2D orthographic camera
      * @class
      * @extends me.Renderable
      * @memberOf me
@@ -22,8 +22,8 @@
      * @param {Number} maxX end x offset
      * @param {Number} maxY end y offset
      */
-    me.Viewport = me.Renderable.extend(
-    /** @scope me.Viewport.prototype */ {
+    me.Camera2d = me.Renderable.extend(
+    /** @scope me.Camera2d.prototype */ {
         /** @ignore */
         init : function (minX, minY, maxX, maxY) {
             this._super(me.Renderable, "init", [minX, minY, maxX - minX, maxY - minY]);
@@ -38,7 +38,7 @@
              * @constant
              * @enum {Number}
              * @name AXIS
-             * @memberOf me.Viewport
+             * @memberOf me.Camera2d
              */
             this.AXIS = {
                 NONE : 0,
@@ -52,7 +52,7 @@
              * @public
              * @type me.Rect
              * @name bounds
-             * @memberOf me.Viewport
+             * @memberOf me.Camera2d
              */
             this.bounds = new me.Rect(-Infinity, -Infinity, Infinity, Infinity);
 
@@ -61,20 +61,20 @@
              * @private
              * @type {Boolean}
              * @name smoothFollow
-             * @see me.Viewport.damping
+             * @see me.Camera2d.damping
              * @default true
-             * @memberOf me.Viewport
+             * @memberOf me.Camera2d
              */
             this.smoothFollow = true;
 
             /**
-             * viewport damping for smooth transition [0 .. 1].
-             * 1 being the maximum value and will snap the viewport to the target position
+             * Camera damping for smooth transition [0 .. 1].
+             * 1 being the maximum value and will snap the camera to the target position
              * @public
              * @type {Number}
              * @name damping
              * @default 1.0
-             * @memberOf me.Viewport
+             * @memberOf me.Camera2d
              */
             this.damping = 1.0;
 
@@ -112,7 +112,7 @@
             // for backward "compatiblity" (in terms of behavior)
             this.anchorPoint.set(0, 0);
 
-            // enable event detection on the viewport
+            // enable event detection on the camera
             this.isKinematic = false;
 
             var self = this;
@@ -152,15 +152,15 @@
         // -- public function ---
 
         /**
-         * reset the viewport to specified coordinates
+         * reset the camera position to specified coordinates
          * @name reset
-         * @memberOf me.Viewport
+         * @memberOf me.Camera2d
          * @function
          * @param {Number} [x=0]
          * @param {Number} [y=0]
          */
         reset : function (x, y) {
-            // reset the initial viewport position to 0,0
+            // reset the initial camera position to 0,0
             this.pos.x = x || 0;
             this.pos.y = y || 0;
 
@@ -177,11 +177,11 @@
 
         /**
          * change the deadzone settings.
-         * the "deadzone" defines an area within the current viewport in which
-         * the followed renderable can move without scrolling the viewport.
+         * the "deadzone" defines an area within the current camera in which
+         * the followed renderable can move without scrolling the camera.
          * @name setDeadzone
-         * @see me.Viewport.follow
-         * @memberOf me.Viewport
+         * @see me.Camera2d.follow
+         * @memberOf me.Camera2d
          * @function
          * @param {Number} w deadzone width
          * @param {Number} h deadzone height
@@ -208,16 +208,16 @@
 
 
         /**
-         * resize the viewport
+         * resize the camera
          * @name resize
-         * @memberOf me.Viewport
+         * @memberOf me.Camera2d
          * @function
-         * @param {Number} w new width of the viewport
-         * @param {Number} h new height of the viewport
-         * @return {me.Viewport} this viewport
+         * @param {Number} w new width of the camera
+         * @param {Number} h new height of the camera
+         * @return {me.Camera2d} this camera
         */
         resize : function (w, h) {
-            // parent consctructor, resize viewport rect
+            // parent consctructor, resize camera rect
             this._super(me.Renderable, "resize", [w, h]);
 
             // disable damping while resizing
@@ -242,10 +242,10 @@
         },
 
         /**
-         * set the viewport boundaries (set to the world limit by default).
-         * the viewport is bound to the given coordinates and cannot move/be scrolled outside of it.
+         * set the camera boundaries (set to the world limit by default).
+         * the camera is bound to the given coordinates and cannot move/be scrolled outside of it.
          * @name setBounds
-         * @memberOf me.Viewport
+         * @memberOf me.Camera2d
          * @function
          * @param {Number} x world left limit
          * @param {Number} y world top limit
@@ -262,16 +262,16 @@
         },
 
         /**
-         * set the viewport to follow the specified renderable. <br>
-         * (this will put the viewport center around the given target)
+         * set the camera to follow the specified renderable. <br>
+         * (this will put the camera center around the given target)
          * @name follow
-         * @memberOf me.Viewport
+         * @memberOf me.Camera2d
          * @function
          * @param {me.Renderable|me.Vector2d} target renderable or position vector to follow
-         * @param {me.Viewport.AXIS} [axis=this.AXIS.BOTH] Which axis to follow
+         * @param {me.Camera2d.AXIS} [axis=this.AXIS.BOTH] Which axis to follow
          * @param {Number} [damping=1] default damping value
          * @example
-         * // set the viewport to follow this renderable on both axis, and enable damping
+         * // set the camera to follow this renderable on both axis, and enable damping
          * me.game.viewport.follow(this, me.game.viewport.AXIS.BOTH, 0.1);
          */
         follow : function (target, axis, damping) {
@@ -282,7 +282,7 @@
                 this.target = target;
             }
             else {
-                throw new me.Renderable.Error("invalid target for viewport.follow");
+                throw new me.Renderable.Error("invalid target for me.Camera2d.follow");
             }
             // if axis is null, camera is moved on target center
             this.follow_axis = (
@@ -306,7 +306,7 @@
         /**
          * unfollow the current target
          * @name unfollow
-         * @memberOf me.Viewport
+         * @memberOf me.Camera2d
          * @function
          */
         unfollow : function () {
@@ -315,15 +315,15 @@
         },
 
         /**
-         * move the viewport upper-left position by the specified offset.
+         * move the camera upper-left position by the specified offset.
          * @name move
-         * @memberOf me.Viewport
-         * @see me.Viewport.focusOn
+         * @memberOf me.Camera2d
+         * @see me.Camera2d.focusOn
          * @function
          * @param {Number} x
          * @param {Number} y
          * @example
-         * // Move the viewport up by four pixels
+         * // Move the camera up by four pixels
          * me.game.viewport.move(0, -4);
          */
         move : function (x, y) {
@@ -331,10 +331,10 @@
         },
 
         /**
-         * move the viewport upper-left position to the specified coordinates
+         * move the camera upper-left position to the specified coordinates
          * @name moveTo
-         * @memberOf me.Viewport
-         * @see me.Viewport.focusOn
+         * @memberOf me.Camera2d
+         * @see me.Camera2d.focusOn
          * @function
          * @param {Number} x
          * @param {Number} y
@@ -440,12 +440,12 @@
         /**
          * shake the camera
          * @name shake
-         * @memberOf me.Viewport
+         * @memberOf me.Camera2d
          * @function
          * @param {Number} intensity maximum offset that the screen can be moved
          * while shaking
          * @param {Number} duration expressed in milliseconds
-         * @param {me.Viewport.AXIS} [axis=this.AXIS.BOTH] specify on which axis you
+         * @param {me.Camera2d.AXIS} [axis=this.AXIS.BOTH] specify on which axis you
          *   want the shake effect
          * @param {Function} [onComplete] callback once shaking effect is over
          * @param {Boolean} [force] if true this will override the current effect
@@ -466,13 +466,13 @@
          * fadeOut(flash) effect<p>
          * screen is filled with the specified color and slowly goes back to normal
          * @name fadeOut
-         * @memberOf me.Viewport
+         * @memberOf me.Camera2d
          * @function
          * @param {me.Color|String} color a CSS color value
          * @param {Number} [duration=1000] expressed in milliseconds
          * @param {Function} [onComplete] callback once effect is over
          * @example
-         * // fade the viewport to white upon dying, reload the level, and then fade out back
+         * // fade the camera to white upon dying, reload the level, and then fade out back
          * me.game.viewport.fadeIn("#fff", 150, function() {
          *     me.audio.play("die", false);
          *     me.levelDirector.reloadLevel();
@@ -492,13 +492,13 @@
          * fadeIn effect <p>
          * fade to the specified color
          * @name fadeIn
-         * @memberOf me.Viewport
+         * @memberOf me.Camera2d
          * @function
          * @param {me.Color|String} color a CSS color value
          * @param {Number} [duration=1000] expressed in milliseconds
          * @param {Function} [onComplete] callback once effect is over
          * @example
-         * // flash  the viewport to white for 75ms
+         * // flash the camera to white for 75ms
          * me.game.viewport.fadeIn("#FFFFFF", 75);
          */
         fadeIn : function (color, duration, onComplete) {
@@ -513,9 +513,9 @@
         },
 
         /**
-         * return the viewport width
+         * return the camera width
          * @name getWidth
-         * @memberOf me.Viewport
+         * @memberOf me.Camera2d
          * @function
          * @return {Number}
          */
@@ -524,9 +524,9 @@
         },
 
         /**
-         * return the viewport height
+         * return the camera height
          * @name getHeight
-         * @memberOf me.Viewport
+         * @memberOf me.Camera2d
          * @function
          * @return {Number}
          */
@@ -535,9 +535,9 @@
         },
 
         /**
-         * set the viewport position around the specified object
+         * set the camera position around the specified object
          * @name focusOn
-         * @memberOf me.Viewport
+         * @memberOf me.Camera2d
          * @function
          * @param {me.Renderable}
          */
@@ -550,9 +550,9 @@
         },
 
         /**
-         * check if the specified rectangle is in the viewport
+         * check if the specified rectangle is in the camera
          * @name isVisible
-         * @memberOf me.Viewport
+         * @memberOf me.Camera2d
          * @function
          * @param {me.Rect} rect
          * @return {Boolean}
@@ -564,7 +564,7 @@
         /**
          * convert the given "local" (screen) coordinates into world coordinates
          * @name localToWorld
-         * @memberOf me.Viewport
+         * @memberOf me.Camera2d
          * @function
          * @param {Number} x
          * @param {Number} y
@@ -585,7 +585,7 @@
         /**
          * convert the given world coordinates into "local" (screen) coordinates
          * @name worldToLocal
-         * @memberOf me.Viewport
+         * @memberOf me.Camera2d
          * @function
          * @param {Number} x
          * @param {Number} y

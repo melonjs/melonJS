@@ -1,4 +1,4 @@
-describe("me.Viewport", function () {
+describe("me.Camera2d", function () {
 
     beforeAll(function () {
         // update position so that it's not just 0
