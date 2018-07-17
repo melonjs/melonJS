@@ -49,7 +49,7 @@
              * @example
              * // add a physic body on this renderable
              * myRenderable.body = new me.Body(this);
-             * myRenderable.body.setShape(new me.Rect(0, 0, width, height));
+             * myRenderable.body.addShape(new me.Rect(0, 0, width, height));
              * // enable physic collision (off by default for basic me.Renderable)
              * myRenderable.isKinematic = false;
              */
