@@ -14,7 +14,7 @@
      * @constructor
      * @param {Number} x the x coordinates of the sprite object
      * @param {Number} y the y coordinates of the sprite object
-     * @param {Object} settings Contains additional parameters for the animation sheet
+     * @param {Object} settings Configuration parameters for the Sprite object
      * @param {me.video.renderer.Texture|HTMLImageElement|HTMLCanvasElement|String} settings.image reference to a texture, spritesheet image or to a texture atlas
      * @param {Number} [settings.framewidth] Width of a single frame within the spritesheet
      * @param {Number} [settings.frameheight] Height of a single frame within the spritesheet
@@ -221,6 +221,8 @@
          * @example
          * // walking animation
          * this.addAnimation("walk", [ 0, 1, 2, 3, 4, 5 ]);
+         * // standing animation
+         * this.addAnimation("stand", [ 11, 12 ]);
          * // eating animation
          * this.addAnimation("eat", [ 6, 6 ]);
          * // rolling animation
@@ -233,6 +235,8 @@
          * this.addAnimation("turn", [{ name: "turnone", delay: 200 }, { name: "turntwo", delay: 100 }])
          * // define an dying animation that stop on the last frame
          * this.addAnimation("die", [{ name: 3, delay: 200 }, { name: 4, delay: 100 }, { name: 5, delay: Infinity }])
+         * // set the standing animation as default
+         * this.setCurrentAnimation("stand");
          */
         addAnimation : function (name, index, animationspeed) {
             this.anim[name] = {

@@ -44,14 +44,43 @@
              * the renderable physic body
              * @public
              * @type {me.Body}
+             * @see me.Body
+             * @see me.collision.check
              * @name body
              * @memberOf me.Renderable
              * @example
-             * // add a physic body on this renderable
-             * myRenderable.body = new me.Body(this);
-             * myRenderable.body.addShape(new me.Rect(0, 0, width, height));
-             * // enable physic collision (off by default for basic me.Renderable)
-             * myRenderable.isKinematic = false;
+             *  // define a new Player Class
+             *  game.PlayerEntity = me.Sprite.extend({
+             *      // constructor
+             *      init:function (x, y, settings) {
+             *          // call the parent constructor
+             *          this._super(me.Sprite, 'init', [x, y , settings]);
+             *
+             *          // define a basic walking animation
+             *          this.addAnimation("walk",  [...]);
+             *          // define a standing animation (using the first frame)
+             *          this.addAnimation("stand",  [...]);
+             *          // set the standing animation as default
+             *          this.setCurrentAnimation("stand");
+             *
+             *          // add a physic body
+             *          this.body = new me.Body(this);
+             *          // add a default collision shape
+             *          this.body.addShape(new me.Rect(0, 0, this.width, this.height));
+             *          // configure max speed and friction
+             *          this.body.setMaxVelocity(3, 15);
+             *          this.body.setFriction(0.4, 0);
+             *
+             *          // enable physic collision (off by default for basic me.Renderable)
+             *          this.isKinematic = false;
+             *
+             *          // set the display to follow our position on both axis
+             *          me.game.viewport.follow(this.pos, me.game.viewport.AXIS.BOTH);
+             *      },
+             *
+             *      ...
+             *
+             * }
              */
             this.body = undefined;
 
