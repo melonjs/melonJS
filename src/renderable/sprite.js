@@ -510,7 +510,7 @@
                 newY - (this.anchorPoint.y * bounds.height)
             );
             // XXX: This is called from the constructor, before it gets an ancestor
-            if (this.ancestor) {
+            if (this.ancestor && !this.floating) {
                 bounds.pos.add(this.ancestor._absPos);
             }
             return bounds;
