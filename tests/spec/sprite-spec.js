@@ -37,21 +37,20 @@ describe("me.Sprite", function () {
         expect(sprite.addAnimation("reverse_test", [ 1, 0, 1, 0 ], 60)).toEqual(4);
         sprite.setCurrentAnimation("test");
         expect(sprite.isCurrentAnimation("test")).toEqual(true);
-        sprite.setCurrentAnimation("reverse_test");
+        sprite.setCurrentAnimation("reverse_test", "test");
         expect(sprite.isCurrentAnimation("test")).toEqual(false);
         expect(sprite.isCurrentAnimation("reverse_test")).toEqual(true);
-        sprite.update(16);
+        for (var i = -1; i < 8; i++) {
+            sprite.update(16);
+        }
+        // at this point we half way though the "reverse_test" animation
         expect(sprite.isCurrentAnimation("reverse_test")).toEqual(true);
-        sprite.update(16);
-        expect(sprite.isCurrentAnimation("reverse_test")).toEqual(true);
-        sprite.update(16);
-        expect(sprite.isCurrentAnimation("reverse_test")).toEqual(true);
-        sprite.update(16);
-        expect(sprite.isCurrentAnimation("reverse_test")).toEqual(true);
-        sprite.update(16);
-        expect(sprite.isCurrentAnimation("reverse_test")).toEqual(true);
-        sprite.update(16);
-        expect(sprite.isCurrentAnimation("reverse_test")).toEqual(true);
+        for (var j = -1; j < 8; j++) {
+            sprite.update(16);
+        }
+        // at this point "reverse_test" is finished and we switched to test
+        expect(sprite.isCurrentAnimation("reverse_test")).toEqual(false);
+        expect(sprite.isCurrentAnimation("test")).toEqual(true);
     });
 
     it("me.Sprite bounds should be updated when the sprite is scaled", function () {
@@ -105,5 +104,4 @@ describe("me.Sprite", function () {
             sprite.update(16);
         }
     });
-
-});  
+});

@@ -67,7 +67,7 @@
             this.anim = {};
 
             // a flag to reset animation
-            this.resetAnim = null;
+            this.resetAnim = undefined;
 
             // current frame information
             // (reusing current, any better/cleaner place?)
@@ -348,7 +348,13 @@
         setCurrentAnimation : function (name, resetAnim, _preserve_dt) {
             if (this.anim[name]) {
                 this.current = this.anim[name];
-                this.resetAnim = resetAnim || null;
+                if (typeof resetAnim === "string") {
+                    this.resetAnim = this.setCurrentAnimation.bind(this, resetAnim, null, true);
+                } else if (typeof resetAnim === "function") {
+                    this.resetAnim = resetAnim;
+                } else {
+                    this.resetAnim = undefined;
+                }
                 this.setAnimationFrame(this.current.idx);
                 // XXX this should not be overwritten
                 this.current.name = name;
@@ -464,13 +470,9 @@
                     this.setAnimationFrame(nextFrame);
 
                     // Switch animation if we reach the end of the strip and a callback is defined
-                    if (this.current.idx === 0 && this.resetAnim)  {
-                        // If string, change to the corresponding animation
-                        if (typeof this.resetAnim === "string") {
-                            this.setCurrentAnimation(this.resetAnim, null, true);
-                        }
+                    if (this.current.idx === 0 && typeof this.resetAnim === "function")  {
                         // Otherwise is must be callable
-                        else if (this.resetAnim() === false) {
+                        if (this.resetAnim() === false) {
                             // Reset to last frame
                             this.setAnimationFrame(this.current.length - 1);
 
