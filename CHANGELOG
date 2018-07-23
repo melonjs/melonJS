@@ -18,9 +18,11 @@ Version History
 * Physic : new me.Body.force property allowing to automatically apply a force or acceleration to a solid body
 * Physic : me.Body.accel and me.Body.setVelocity are now deprecated and to be replaced by me.Body.force
 * Physic : automatically apply any defined physic properties when importing a physic editor JSON file
-* Renderable : fix onComplete not being called for single animation frame (@Adrian)
+* Renderable : fix onComplete not being called for me.Sprite single animation frame (@Adrian)
 * Renderable : fix animation not cycling when using GUI_Object(s)
-* Renderable : fix a regression when using Texture Packer
+* Renderable : fix a regression in Sprite when using Texture Packer
+* Renderable : fix floating renderable's bounds following its parent container position (@YosuaHamonangan)
+* Renderable : fix a potential parameter mismatch in me.Sprite for an animation `onComplete` callback
 * Renderer : use prefixed "image-rendering" CSS properties for non standard browsers
 * Renderer : new clipRect function to clip the specified rectangle area
 * Viewport : new damping feature to enable smooth camera movement
