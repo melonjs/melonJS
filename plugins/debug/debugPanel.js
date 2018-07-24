@@ -576,8 +576,8 @@
         /** @private */
         drawMemoryGraph : function (renderer, endX) {
             if (window.performance && window.performance.memory) {
-                var usedHeap  = Number.prototype.round(window.performance.memory.usedJSHeapSize / 1048576, 2);
-                var totalHeap =  Number.prototype.round(window.performance.memory.totalJSHeapSize / 1048576, 2);
+                var usedHeap  =  me.Math.round(window.performance.memory.usedJSHeapSize / 1048576, 2);
+                var totalHeap =  me.Math.round(window.performance.memory.totalJSHeapSize / 1048576, 2);
                 var maxLen = ~~(endX - this.memoryPositionX - 5);
                 var len = maxLen * (usedHeap / totalHeap);
 
