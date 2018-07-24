@@ -369,7 +369,7 @@
             QT_ARRAY_PUSH(this.nodes[i]);
         }
         // empty the array
-        this.nodes = [];
+        this.nodes.length = 0;
 
         // resize the root bounds if required
         if (typeof bounds !== "undefined") {

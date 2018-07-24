@@ -40,7 +40,9 @@
              * @name shapes
              * @memberOf me.Body
              */
-            this.shapes = [];
+            if (typeof(this.shapes) === "undefined") {
+                this.shapes = [];
+            }
 
             /**
              * The body collision mask, that defines what should collide with what.<br>
@@ -628,7 +630,7 @@
         destroy : function () {
             this.onBodyUpdate = null;
             this.ancestor = null;
-            this.shapes = [];
+            this.shapes.length = 0;
         }
     });
 

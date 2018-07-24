@@ -172,9 +172,13 @@
             // tilesets for this map
             this.tilesets = null;
             // layers
-            this.layers = [];
+            if (typeof this.layers === "undefined") {
+                this.layers = [];
+            }
             // group objects
-            this.objectGroups = [];
+            if (typeof this.objectGroups === "undefined") {
+                this.objectGroups = [];
+            }
 
             // tilemap version
             this.version = data.version;
@@ -506,8 +510,8 @@
          */
         destroy : function () {
             this.tilesets = undefined;
-            this.layers = [];
-            this.objectGroups = [];
+            this.layers.length = 0;
+            this.objectGroups.length = 0;
             this.initialized = false;
         }
     });
