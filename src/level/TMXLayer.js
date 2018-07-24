@@ -65,8 +65,8 @@
             this._super(me.Renderable, "init", [0, 0, 0, 0]);
 
             // tile width & height
-            this.tilewidth  = tilewidth;
-            this.tileheight = tileheight;
+            this.tilewidth  = tilewidth || data.tilewidth;
+            this.tileheight = tileheight || data.tilewidth;
 
             // layer orientation
             this.orientation = orientation;
