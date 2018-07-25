@@ -320,7 +320,7 @@
             // reset the collision detection engine if a TMX level is loaded
             me.event.subscribe(me.event.LEVEL_LOADED, function () {
                 // default bounds to game world
-                api.bounds = me.game.world.clone();
+                api.bounds.copy(me.game.world);
                 // reset the quadtree
                 api.quadTree.clear(api.bounds);
             });
