@@ -55,6 +55,8 @@ describe("me.Matrix2d", function () {
         matA.translate(2, 3);
 
         expect(matA.toString() === result).toEqual(true);
+        expect(matA.tx === 16).toEqual(true);
+        expect(matA.ty === 22).toEqual(true);
     });
 
     it("should transpose the matrix properly", function () {

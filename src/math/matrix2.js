@@ -405,4 +405,43 @@
             ")";
         }
     });
+
+    /**
+     * tx component of the matrix
+     * @public
+     * @type {Number}
+     * @readonly
+     * @see me.Matrix2d.translate
+     * @name tx
+     * @memberOf me.Matrix2d
+     */
+    Object.defineProperty(me.Matrix2d.prototype, "tx", {
+        /**
+         * @ignore
+         */
+        get : function () {
+            return this.val[6];
+        },
+        configurable : true
+    });
+
+    /**
+     * ty component of the matrix
+     * @public
+     * @type {Number}
+     * @readonly
+     * @see me.Matrix2d.translate
+     * @name ty
+     * @memberOf me.Matrix2d
+     */
+    Object.defineProperty(me.Matrix2d.prototype, "ty", {
+        /**
+         * @ignore
+         */
+        get : function () {
+            return this.val[7];
+        },
+        configurable : true
+    });
+
 })();

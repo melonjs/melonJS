@@ -829,8 +829,6 @@
                             return;
                     }
                 }
-                // XXX create a Matrix2d tx and ty property ?
-                var mat = this.currentTransform.val;
                 // flush the compositor
                 this.flush();
                 // turn on scissor test
@@ -838,8 +836,10 @@
                 // set the scissor rectangle (note : coordinates are left/bottom)
                 gl.scissor(
                     // scissor does not account for currentTransform, so manually adjust
-                    x + mat[6], canvas.height -height -y -mat[7],
-                    width, height
+                    x + this.currentTransform.tx,
+                    canvas.height -height -y -this.currentTransform.ty,
+                    width,
+                    height
                 );
                 // save the new currentScissor box
                 currentScissor[0] = x;
