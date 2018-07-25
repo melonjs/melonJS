@@ -583,7 +583,4 @@
             );
         }
     });
-
-    // for backward compatiblity
-    me.AnimationSheet = me.Sprite;
 })();
