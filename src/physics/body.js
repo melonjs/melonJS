@@ -240,9 +240,9 @@
             }
 
             // parses the given shapes array and add them
-            if (typeof shapes !== "undefined") {
+            if (Array.isArray(shapes)) {
                 for (var s = 0; s < shapes.length; s++) {
-                    this.addShape(shapes[s].clone(), true);
+                    this.addShape(shapes[s], true);
                 }
                 this.updateBounds();
             }
@@ -256,6 +256,7 @@
          * @public
          * @function
          * @param {me.Rect|me.Polygon|me.Line|me.Ellipse} shape a shape object
+         * @param {Boolean} batchInsert if true the body bounds won't be updated after adding a shape
          * @return {Number} the shape array length
          */
         addShape : function (shape, batchInsert) {
