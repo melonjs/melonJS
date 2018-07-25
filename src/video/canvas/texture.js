@@ -199,7 +199,7 @@
             var height = image.height;
 
             // calculate the sprite count (line, col)
-            var spritecount = new me.Vector2d(
+            var spritecount = me.pool.pull("me.Vector2d",
                 ~~((width - margin + spacing) / (data.framewidth + spacing)),
                 ~~((height - margin + spacing) / (data.frameheight + spacing))
             );
@@ -233,6 +233,8 @@
                     angle: 0
                 };
             }
+
+            me.pool.push(spritecount);
 
             return atlas;
         },
