@@ -176,25 +176,12 @@
             else {
                 if (typeof(tmxObj.ellipse) !== "undefined") {
                     this.isEllipse = true;
-                }
-                else {
-                    var points = tmxObj.polygon;
-                    if (typeof(points) !== "undefined") {
-                        this.isPolygon = true;
-                    }
-                    else {
-                        points = tmxObj.polyline;
-                        if (typeof(points) !== "undefined") {
-                            this.isPolyLine = true;
-                        }
-                    }
-                    if (typeof(points) !== "undefined") {
-                        this.points = [];
-                        var self = this;
-                        points.forEach(function (point) {
-                            self.points.push(new me.Vector2d(point.x, point.y));
-                        });
-                    }
+                } else if (typeof(tmxObj.polygon) !== "undefined") {
+                    this.points = tmxObj.polygon;
+                    this.isPolygon = true;
+                } else if (typeof(tmxObj.polyline) !== "undefined") {
+                    this.points = tmxObj.polyline;
+                    this.isPolyLine = true;
                 }
             }
 
@@ -241,6 +228,14 @@
             var i = 0;
             var shapes = [];
 
+            // convert point for polygon & polyline
+            if (typeof(this.points) !== "undefined") {
+                var points = [];
+                this.points.forEach(function (point) {
+                     points.push(new me.Vector2d(point.x, point.y));
+                });
+            }
+
             // add an ellipse shape
             if (this.isEllipse === true) {
                 // ellipse coordinates are the center position, so set default to the corresonding radius
@@ -254,12 +249,12 @@
 
             // add a polygon
             else if (this.isPolygon === true) {
-                shapes.push((new me.Polygon(0, 0, this.points)).rotate(this.rotation));
+                shapes.push((new me.Polygon(0, 0, points)).rotate(this.rotation));
             }
 
             // add a polyline
             else if (this.isPolyLine === true) {
-                var p = this.points;
+                var p = points;
                 var p1, p2;
                 var segments = p.length - 1;
                 for (i = 0; i < segments; i++) {
