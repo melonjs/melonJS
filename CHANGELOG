@@ -10,9 +10,10 @@ Version History
 * Color : fix the me.Color.toHex8() function
 * Debug : fix "undefined width error" when instantiating the debug panel
 * Font : fix a regression where drawing a web font was not restoring the renderer context properly
-* Input : fix an issue where the focus is sometimes lost when using an integrated WebView (e.g. Instant Games)
+* Input : fix an issue where the focus was sometimes lost when using an integrated WebView (e.g. Instant Games)
 * Loader : new loader feature to allow preloading of javascript files
 * Math : new vector linear interpolation functions
+* Physic : avoid duplicating the given collision shape through addShape, and directly use the object references
 * Physic : gravity property for solid bodies is now a vector object, allowing to defined gravity for both axis
 * Physic : new mass property for solid bodies
 * Physic : new me.Body.force property allowing to automatically apply a force or acceleration to a solid body
@@ -25,6 +26,8 @@ Version History
 * Renderable : fix a potential parameter mismatch in me.Sprite for an animation `onComplete` callback
 * Renderer : use prefixed "image-rendering" CSS properties for non standard browsers
 * Renderer : new clipRect function to clip the specified rectangle area
+* TMX : allows different tile size per layer (not supported by Tiled, only works with "manually" generated maps) (@YosuaHamonangan)
+* TMX : optimised object allocation to lower memory usage (and later GC) when loading a level
 * Viewport : new damping feature to enable smooth camera movement
 * WebGLRenderer : enable `failIfMajorPerformanceCaveat` by default when attempting to create a GL Context
 * WebGLRenderer : feature to change the blending mode (experimental and limited to "normal" and "multiply" for now)
