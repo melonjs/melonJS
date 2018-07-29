@@ -262,6 +262,23 @@
         },
 
         /**
+         * check if this rectangle is identical to the specified one
+         * @name equals
+         * @memberOf me.Rect
+         * @function
+         * @param  {me.Rect} rect
+         * @return {boolean} true if equals
+         */
+        equals: function (r) {
+            return (
+                r.left === this.left &&
+                r.right === this.right &&
+                r.top === this.top &&
+                r.bottom === this.bottom
+            );
+        },
+
+        /**
          * determines whether all coordinates of this rectangle are finite numbers.
          * @name isFinite
          * @memberOf me.Rect

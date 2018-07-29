@@ -116,6 +116,14 @@ describe("Shape : me.Rect", function () {
             expect(rect5.contains(rect4)).toEqual(true);
         });
 
+        it("rect 5 does not equal rect4", function () {
+            expect(rect5.equals(rect4)).toEqual(false);
+        });
+
+        it("a cloned rect 5 equal rect5", function () {
+            expect(rect5.clone().equals(rect5)).toEqual(true);
+        });
+
     });
 
     describe("rect6", function () {

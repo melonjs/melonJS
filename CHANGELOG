@@ -13,6 +13,7 @@ Version History
 * Input : fix an issue where the focus was sometimes lost when using an integrated WebView (e.g. Instant Games)
 * Loader : new loader feature to allow preloading of javascript files
 * Math : new vector linear interpolation functions
+* Math : new `equals` function for me.Rect shape
 * Physic : avoid duplicating the given collision shape through addShape, and directly use the object references
 * Physic : gravity property for solid bodies is now a vector object, allowing to defined gravity for both axis
 * Physic : new mass property for solid bodies
