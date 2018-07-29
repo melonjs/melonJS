@@ -53,6 +53,22 @@
              */
             this.points = null;
 
+            /**
+             * The edges here are the direction of the `n`th edge of the polygon, relative to
+             * the `n`th point. If you want to draw a given edge from the edge value, you must
+             * first translate to the position of the starting point.
+             * @ignore
+             */
+            this.edges = [];
+
+            /**
+             * The normals here are the direction of the normal for the `n`th edge of the polygon, relative
+             * to the position of the `n`th point. If you want to draw an edge normal, you must first
+             * translate to the position of the starting point.
+             * @ignore
+             */
+            this.normals = [];
+
             // the shape type
             this.shapeType = "Polygon";
             this.setShape(x, y, points);
@@ -181,14 +197,9 @@
          */
         recalc : function () {
             var i;
-            // The edges here are the direction of the `n`th edge of the polygon, relative to
-            // the `n`th point. If you want to draw a given edge from the edge value, you must
-            // first translate to the position of the starting point.
-            var edges = this.edges = this.edges || [];
-            // The normals here are the direction of the normal for the `n`th edge of the polygon, relative
-            // to the position of the `n`th point. If you want to draw an edge normal, you must first
-            // translate to the position of the starting point.
-            var normals = this.normals = this.normals || [];
+            var edges = this.edges;
+            var normals = this.normals;
+
             // Copy the original points array and apply the offset/angle
             var points = this.points;
             var len = points.length;

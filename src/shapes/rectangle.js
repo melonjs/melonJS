@@ -21,17 +21,13 @@
 
         /** @ignore */
         init : function (x, y, w, h) {
-
-            this.pos = new me.Vector2d();
-
-            this.shapeType = "Rectangle";
-
-            this.setShape(x, y, [
+            this._super(me.Polygon, "init", [x, y, [
                 new me.Vector2d(0, 0), // 0, 0
                 new me.Vector2d(w, 0), // 1, 0
                 new me.Vector2d(w, h), // 1, 1
                 new me.Vector2d(0, h)  // 0, 1
-            ]);
+            ]]);
+            this.shapeType = "Rectangle";
         },
 
         /**
