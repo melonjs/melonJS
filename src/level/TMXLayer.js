@@ -12,9 +12,9 @@
      */
     function initArray(layer) {
         // initialize the array
-        layer.layerData = [];
+        layer.layerData = new Array(layer.cols);
         for (var x = 0; x < layer.cols; x++) {
-            layer.layerData[x] = [];
+            layer.layerData[x] = new Array(layer.rows);
             for (var y = 0; y < layer.rows; y++) {
                 layer.layerData[x][y] = null;
             }
