@@ -18,7 +18,7 @@
      * @extends me.Object
      * @memberOf me
      * @constructor
-     * @param {Object} tileset tileset JSON definition
+     * @param {Object} tileset tileset data in JSON format ({@link http://docs.mapeditor.org/en/stable/reference/tmx-map-format/#tileset})
      */
     me.TMXTileset = me.Object.extend({
         /**

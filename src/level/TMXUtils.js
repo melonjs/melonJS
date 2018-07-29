@@ -119,7 +119,7 @@
          * decompress zlib/gzip data (NOT IMPLEMENTED)
          * @ignore
          * @function
-         * @memberOf me.utils
+         * @memberOf me.TMXUtils
          * @name decompress
          * @param  {Number[]} data Array of bytes
          * @param  {String} format compressed data format ("gzip","zlib")
@@ -133,7 +133,7 @@
          * Decode a CSV encoded array into a binary array
          * @ignore
          * @function
-         * @memberOf me.utils
+         * @memberOf me.TMXUtils
          * @name decodeCSV
          * @param  {String} input CSV formatted data (only numbers, everything else will be converted to NaN)
          * @return {Number[]} Decoded data
@@ -152,11 +152,11 @@
          * Decode a base64 encoded string into a byte array
          * @ignore
          * @function
-         * @memberOf me.utils
+         * @memberOf me.TMXUtils
          * @name decodeBase64AsArray
          * @param {String} input Base64 encoded data
          * @param {Number} [bytes] number of bytes per array entry
-         * @return {Number[]} Decoded data
+         * @return {Uint32Array} Decoded data
          */
         api.decodeBase64AsArray = function (input, bytes) {
             bytes = bytes || 1;

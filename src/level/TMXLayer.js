@@ -50,6 +50,7 @@
      * @extends me.Renderable
      * @memberOf me
      * @constructor
+     * @param {Object} data layer data in JSON format ({@link http://docs.mapeditor.org/en/stable/reference/tmx-map-format/#layer})
      * @param {Number} tilewidth width of each tile in pixels
      * @param {Number} tileheight height of each tile in pixels
      * @param {String} orientation "isometric" or "orthogonal"

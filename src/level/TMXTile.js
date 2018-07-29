@@ -66,7 +66,7 @@
             /**
              * tileId
              * @public
-             * @type int
+             * @type Number
              * @name me.Tile#tileId
              */
             this.tileId = gid;

@@ -25,9 +25,9 @@
         init :  function (map, tmxObj, z) {
 
             /**
-             * object point list (for Polygon and PolyLine)
+             * point list in JSON format
              * @public
-             * @type Vector2d[]
+             * @type Object[]
              * @name points
              * @memberOf me.TMXObject
              */
