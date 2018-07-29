@@ -317,10 +317,10 @@
             // initializa the quadtree
             api.quadTree = new me.QuadTree(api.bounds, api.maxChildren, api.maxDepth);
 
-            // reset the collision detection engine if a TMX level is loaded
+            // reset the collision detection engine if a new level is loaded
             me.event.subscribe(me.event.LEVEL_LOADED, function () {
-                // default bounds to game world
-                api.bounds.copy(me.game.world);
+                // align default bounds to the game world bounds
+                api.bounds.copy(me.game.world.getBounds());
                 // reset the quadtree
                 api.quadTree.clear(api.bounds);
             });
