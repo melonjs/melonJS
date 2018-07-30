@@ -185,7 +185,12 @@
 
             // map type (orthogonal or isometric)
             this.orientation = data.orientation;
-            if (this.orientation === "isometric") {
+
+            // manually defined level size
+            if (data.levelWidth && data.levelHeight) {
+                this.width = data.levelWidth;
+                this.height = data.levelHeight;
+            } else if (this.orientation === "isometric") {
                 this.width = (this.cols + this.rows) * (this.tilewidth / 2);
                 this.height = (this.cols + this.rows) * (this.tileheight / 2);
             } else {
