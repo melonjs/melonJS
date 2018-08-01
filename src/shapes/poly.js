@@ -85,9 +85,25 @@
          */
         setShape : function (x, y, points) {
             this.pos.set(x, y);
-            this.points = points;
+
+            if (!Array.isArray(points)) {
+                return this;
+            }
+
+            // convert given points to me.Vector2d if required
+            if (!(points[0] instanceof me.Vector2d)) {
+                var _points = this.points = [];
+                points.forEach(function (point) {
+                   _points.push(new me.Vector2d(point.x, point.y));
+                });
+            } else {
+                // array of me.Vector2d
+                this.points = points;
+            }
+
             this.recalc();
             this.updateBounds();
+
             return this;
         },
 
@@ -335,7 +351,7 @@
         clone : function () {
             var copy = [];
             this.points.forEach(function (point) {
-                copy.push(new me.Vector2d(point.x, point.y));
+                copy.push(point.clone());
             });
             return new me.Polygon(this.pos.x, this.pos.y, copy);
         }
