@@ -131,6 +131,9 @@
             // vibration API poyfill
             navigator.vibrate = me.agent.prefixed("vibrate", navigator);
 
+            // web Audio detection
+            this.hasWebAudio = !!(window.AudioContext || window.webkitAudioContext);
+
             try {
                 api.localStorage = !!window.localStorage;
             } catch (e) {
@@ -301,6 +304,16 @@
         api.hasPointerLockSupport = false;
 
         /**
+        * Device WebAudio Support
+        * @type Boolean
+        * @readonly
+        * @name hasWebAudio
+        * @memberOf me.device
+        */
+       api.hasWebAudio = false;
+
+
+        /**
          * Browser Base64 decoding capability
          * @type Boolean
          * @readonly
@@ -310,7 +323,7 @@
         api.nativeBase64 = (typeof(window.atob) === "function");
 
         /**
-         * Return  the maximum number of simultaneous touch contact points are supported by the current device.
+         * Return the maximum number of simultaneous touch contact points are supported by the current device.
          * @type Number
          * @readonly
          * @name maxTouchPoints
