@@ -39,15 +39,27 @@ describe("Shape : me.Line", function () {
             expect(line.containsPoint(14, 30)).toEqual(true);
         });
 
+        it("contains the point (60, -28) after rotating the line by -90 degrees", function () {
+            line.rotate(-Math.PI / 2);
+            expect(line.points[1].x).toBeCloseTo(60, 3);
+            // value is 27.99999996 after rotation
+            expect(line.points[1].y).toBeCloseTo(-28, 3);
+        });
+
+        it("does not contain the point (60, 28) after rotating back", function () {
+            line.rotate(Math.PI / 2);
+            expect(line.containsPoint(60, 28)).toEqual(false);
+        });
+
         it("contains the point (28, 60)", function () {
             expect(line.containsPoint(28, 60)).toEqual(true);
         });
 
-        it("does not contains the point (15, 30)", function () {
+        it("does not contain the point (15, 30)", function () {
             expect(line.containsPoint(15, 30)).toEqual(false);
         });
 
-        it("does not contains the point (29, 61)", function () {
+        it("does not contain the point (29, 61)", function () {
             expect(line.containsPoint(29, 61)).toEqual(false);
         });
 
@@ -66,4 +78,5 @@ describe("Shape : me.Line", function () {
             expect(boundingRect.pos.equals({x: 0, y: 0})).toEqual(true);
         });
     });
+
 });
