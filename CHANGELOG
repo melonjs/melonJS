@@ -1,5 +1,7 @@
 Version History
 ---------------
+6.1.0
+
 6.0.0
 * Audio : latest audio core update to fix HTML5 Audio issue with FB Instant Games, and Chrome API deprecation
 * Container : new `clipping` feature to automatically clip childrens to their parent container bounds (disable by default)
