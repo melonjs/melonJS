@@ -103,8 +103,13 @@
         }
 
         // Apply syntactic sugar for accessing methods on super classes
-        Object.defineProperty(Class.prototype, "_super", {
-            "value" : _super
+        Object.defineProperties(Class.prototype, {
+            "_super": {
+                "value" : _super
+            },
+            "_superClass": {
+                "value" : this
+            }
         });
 
         // Create a hidden property on the class itself
@@ -146,6 +151,11 @@
      * @ignore
      */
     function _super(superClass, method, args) {
+        if (typeof superClass === "string") {
+            args = method;
+            method = superClass;
+            superClass = this._superClass;
+        }
         return superClass.prototype[method].apply(this, args);
     }
 
