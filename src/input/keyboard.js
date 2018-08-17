@@ -59,7 +59,7 @@
 
         if (action) {
             if (!keyLocked[action]) {
-                var trigger = (typeof mouseButton !== undefined) ? mouseButton : keyCode;
+                var trigger = (typeof mouseButton !== "undefined") ? mouseButton : keyCode;
                 if (!keyRefs[action][trigger]) {
                     keyStatus[action]++;
                     keyRefs[action][trigger] = true;
@@ -90,7 +90,7 @@
         me.event.publish(me.event.KEYUP, [ action, keyCode ]);
 
         if (action) {
-            var trigger = (typeof mouseButton !== undefined) ? mouseButton : keyCode;
+            var trigger = (typeof mouseButton !== "undefined") ? mouseButton : keyCode;
             keyRefs[action][trigger] = undefined;
 
             if (keyStatus[action] > 0) {

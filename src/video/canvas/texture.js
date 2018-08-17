@@ -109,7 +109,7 @@
                     if (typeof(atlas.framewidth) !== "undefined" &&
                         typeof(atlas.frameheight) !== "undefined") {
                         this.format = "Spritesheet (fixed cell size)";
-                        if (typeof(this.source) !== undefined) {
+                        if (typeof(this.source) !== "undefined") {
                             // overwrite if specified
                             atlas.image = this.source;
                         }
