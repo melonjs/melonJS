@@ -213,15 +213,16 @@
             // Android Device ?
             me.device.android = /Android/i.test(me.device.ua);
             me.device.android2 = /Android 2/i.test(me.device.ua);
+            // Linux platform
+            me.device.linux = /Linux/i.test(me.device.ua);
             // Chrome OS ?
             me.device.chromeOS = /CrOS/.test(me.device.ua);
             // Windows Device ?
             me.device.wp = /Windows Phone/i.test(me.device.ua);
-            // Kindle device ?
+            // Blackberry device ?
             me.device.BlackBerry = /BlackBerry/i.test(me.device.ua);
             // Kindle device ?
             me.device.Kindle = /Kindle|Silk.*Mobile Safari/i.test(me.device.ua);
-
             // Mobile platform
             me.device.isMobile = /Mobi/i.test(me.device.ua) ||
                                  me.device.iOS ||
@@ -231,10 +232,8 @@
                                  me.device.Kindle || false;
             // ejecta
             me.device.ejecta = (typeof window.ejecta !== "undefined");
-
             // Wechat
             me.device.isWeixin = /MicroMessenger/i.test(me.device.ua);
-
             // cocoon/cocoonJS
             me.device.cocoon = navigator.isCocoonJS ||  // former cocoonJS
                                (typeof window.Cocoon !== "undefined"); // new cocoon
@@ -389,6 +388,15 @@
          * @memberOf me.device
          */
         api.android2 = false;
+
+        /**
+         * equals to true if the device is a Linux platform.
+         * @type Boolean
+         * @readonly
+         * @name linux
+         * @memberOf me.device
+         */
+        api.linux = false;
 
        /**
         * equals to true if the game is running under Ejecta.
