@@ -111,7 +111,7 @@
                     this.blendMode = "normal";
                     break;
             }
-    },
+        },
 
         /**
          * prepare the framebuffer for drawing a new frame
@@ -175,7 +175,7 @@
         },
 
         /**
-         * Create a pattern with the specified repition
+         * Create a pattern with the specified repetition
          * @name createPattern
          * @memberOf me.CanvasRenderer
          * @function
@@ -220,29 +220,32 @@
                 return;
             }
 
-            if (this.subPixel === false) {
-                if (typeof sw === "undefined") {
-                    sw = dw = image.width;
-                    sh = dh = image.height;
-                    dx = sx;
-                    dy = sy;
-                    sx = 0;
-                    sy = 0;
-                }
-                else if (typeof dx === "undefined") {
-                    dx = sx;
-                    dy = sy;
-                    dw = sw;
-                    dh = sh;
-                    sw = image.width;
-                    sh = image.height;
-                    sx = 0;
-                    sy = 0;
-                }
-                this.backBufferContext2D.drawImage(image, sx, sy, sw, sh, ~~dx, ~~dy, dw, dh);
-            } else {
-                this.backBufferContext2D.drawImage.apply(this.backBufferContext2D, arguments);
+            if (typeof sw === "undefined") {
+                sw = dw = image.width;
+                sh = dh = image.height;
+                dx = sx;
+                dy = sy;
+                sx = 0;
+                sy = 0;
             }
+            else if (typeof dx === "undefined") {
+                dx = sx;
+                dy = sy;
+                dw = sw;
+                dh = sh;
+                sw = image.width;
+                sh = image.height;
+                sx = 0;
+                sy = 0;
+            }
+
+            if (this.subPixel === false) {
+                // clamp to pixel grid
+                dx = ~~dx;
+                dy = ~~dy;
+            }
+            
+            this.backBufferContext2D.drawImage(image, sx, sy, sw, sh, ~~dx, ~~dy, dw, dh);
         },
 
         /**
