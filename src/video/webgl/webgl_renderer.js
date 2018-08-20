@@ -203,8 +203,9 @@
         createPattern : function (image, repeat) {
 
             if (!me.Math.isPowerOfTwo(image.width) || !me.Math.isPowerOfTwo(image.height)) {
+                var src = typeof image.src !== "undefined" ? image.src : image;
                 throw new me.video.Error(
-                    "[WebGL Renderer] " + image + " is not a POT texture " +
+                    "[WebGL Renderer] " + src + " is not a POT texture " +
                     "(" + image.width + "x" + image.height + ")"
                 );
             }
@@ -305,25 +306,24 @@
          * @name drawImage
          * @memberOf me.WebGLRenderer
          * @function
-         * @param {Image} image Source image
-         * @param {Number} sx Source x-coordinate
-         * @param {Number} sy Source y-coordinate
-         * @param {Number} sw Source width
-         * @param {Number} sh Source height
-         * @param {Number} dx Destination x-coordinate
-         * @param {Number} dy Destination y-coordinate
-         * @param {Number} dw Destination width
-         * @param {Number} dh Destination height
+         * @param {Image} image An element to draw into the context. The specification permits any canvas image source (CanvasImageSource), specifically, a CSSImageValue, an HTMLImageElement, an SVGImageElement, an HTMLVideoElement, an HTMLCanvasElement, an ImageBitmap, or an OffscreenCanvas.
+         * @param {Number} sx The X coordinate of the top left corner of the sub-rectangle of the source image to draw into the destination context.
+         * @param {Number} sy The Y coordinate of the top left corner of the sub-rectangle of the source image to draw into the destination context.
+         * @param {Number} sw The width of the sub-rectangle of the source image to draw into the destination context. If not specified, the entire rectangle from the coordinates specified by sx and sy to the bottom-right corner of the image is used.
+         * @param {Number} sh The height of the sub-rectangle of the source image to draw into the destination context.
+         * @param {Number} dx The X coordinate in the destination canvas at which to place the top-left corner of the source image.
+         * @param {Number} dy The Y coordinate in the destination canvas at which to place the top-left corner of the source image.
+         * @param {Number} dWidth The width to draw the image in the destination canvas. This allows scaling of the drawn image. If not specified, the image is not scaled in width when drawn.
+         * @param {Number} dHeight The height to draw the image in the destination canvas. This allows scaling of the drawn image. If not specified, the image is not scaled in height when drawn.
          * @example
-         * // Can be used in three ways:
+         * // Position the image on the canvas:
          * renderer.drawImage(image, dx, dy);
-         * renderer.drawImage(image, dx, dy, dw, dh);
-         * renderer.drawImage(image, sx, sy, sw, sh, dx, dy, dw, dh);
-         * // dx, dy, dw, dh being the destination target & dimensions. sx, sy, sw, sh being the position & dimensions to take from the image
+         * // Position the image on the canvas, and specify width and height of the image:
+         * renderer.drawImage(image, dx, dy, dWidth, dHeight);
+         * // Clip the image and position the clipped part on the canvas:
+         * renderer.drawImage(image, sx, sy, sWidth, sHeight, dx, dy, dWidth, dHeight);
          */
         drawImage : function (image, sx, sy, sw, sh, dx, dy, dw, dh) {
-            // TODO: Replace the function signature with:
-            // drawImage(Image|Object, sx, sy, sw, sh, dx, dy, dw, dh)
             if (typeof sw === "undefined") {
                 sw = dw = image.width;
                 sh = dh = image.height;
@@ -404,17 +404,11 @@
          * @param {Boolean} [transparent=true] use false to disable transparency
          * @return {WebGLRenderingContext}
          */
-        getContextGL : function (c, transparent) {
-            if (typeof c === "undefined" || c === null) {
+        getContextGL : function (canvas, transparent) {
+            if (typeof canvas === "undefined" || canvas === null) {
                 throw new me.video.Error(
                     "You must pass a canvas element in order to create " +
                     "a GL context"
-                );
-            }
-
-            if (typeof c.getContext === "undefined") {
-                throw new me.video.Error(
-                    "Your browser does not support WebGL."
                 );
             }
 
@@ -430,10 +424,15 @@
                 failIfMajorPerformanceCaveat : this.failIfMajorPerformanceCaveat
             };
 
-            return (
-                c.getContext("webgl", attr) ||
-                c.getContext("experimental-webgl", attr)
-            );
+            var gl = canvas.getContext("webgl", attr) || canvas.getContext("experimental-webgl", attr);
+
+            if (!gl) {
+                throw new me.video.Error(
+                    "A WebGL context could not be created."
+                );
+            }
+
+            return gl;
         },
 
         /**

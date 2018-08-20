@@ -278,7 +278,7 @@
             settings.wrapper.appendChild(canvas);
 
             // stop here if not supported
-            if (!canvas.getContext) {
+            if (typeof canvas.getContext === "undefined") {
                 return false;
             }
 
@@ -290,10 +290,8 @@
              * @type {me.Renderer|me.CanvasRenderer|me.WebGLRenderer}
              */
             switch (settings.renderer) {
-                case api.WEBGL:
-                    this.renderer = new me.WebGLRenderer(canvas, game_width, game_height, settings);
-                    break;
                 case api.AUTO:
+                case api.WEBGL:
                     this.renderer = autoDetectRenderer(canvas, game_width, game_height, settings);
                     break;
                 default:

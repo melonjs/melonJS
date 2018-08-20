@@ -194,25 +194,26 @@
         },
 
         /**
-         * Draw an image using the canvas api
+         * Draw an image onto the main using the canvas api
          * @name drawImage
          * @memberOf me.CanvasRenderer
          * @function
-         * @param {image} image Source image
-         * @param {Number} sx Source x-coordinate
-         * @param {Number} sy Source y-coordinate
-         * @param {Number} sw Source width
-         * @param {Number} sh Source height
-         * @param {Number} dx Destination x-coordinate
-         * @param {Number} dy Destination y-coordinate
-         * @param {Number} dw Destination width
-         * @param {Number} dh Destination height
+         * @param {Image} image An element to draw into the context. The specification permits any canvas image source (CanvasImageSource), specifically, a CSSImageValue, an HTMLImageElement, an SVGImageElement, an HTMLVideoElement, an HTMLCanvasElement, an ImageBitmap, or an OffscreenCanvas.
+         * @param {Number} sx The X coordinate of the top left corner of the sub-rectangle of the source image to draw into the destination context.
+         * @param {Number} sy The Y coordinate of the top left corner of the sub-rectangle of the source image to draw into the destination context.
+         * @param {Number} sw The width of the sub-rectangle of the source image to draw into the destination context. If not specified, the entire rectangle from the coordinates specified by sx and sy to the bottom-right corner of the image is used.
+         * @param {Number} sh The height of the sub-rectangle of the source image to draw into the destination context.
+         * @param {Number} dx The X coordinate in the destination canvas at which to place the top-left corner of the source image.
+         * @param {Number} dy The Y coordinate in the destination canvas at which to place the top-left corner of the source image.
+         * @param {Number} dWidth The width to draw the image in the destination canvas. This allows scaling of the drawn image. If not specified, the image is not scaled in width when drawn.
+         * @param {Number} dHeight The height to draw the image in the destination canvas. This allows scaling of the drawn image. If not specified, the image is not scaled in height when drawn.
          * @example
-         * // Can be used in three ways:
+         * // Position the image on the canvas:
          * renderer.drawImage(image, dx, dy);
-         * renderer.drawImage(image, dx, dy, dw, dh);
-         * renderer.drawImage(image, sx, sy, sw, sh, dx, dy, dw, dh);
-         * // dx, dy, dw, dh being the destination target & dimensions. sx, sy, sw, sh being the position & dimensions to take from the image
+         * // Position the image on the canvas, and specify width and height of the image:
+         * renderer.drawImage(image, dx, dy, dWidth, dHeight);
+         * // Clip the image and position the clipped part on the canvas:
+         * renderer.drawImage(image, sx, sy, sWidth, sHeight, dx, dy, dWidth, dHeight);
          */
         drawImage : function (image, sx, sy, sw, sh, dx, dy, dw, dh) {
             if (this.backBufferContext2D.globalAlpha < 1 / 255) {
@@ -244,7 +245,7 @@
                 dx = ~~dx;
                 dy = ~~dy;
             }
-            
+
             this.backBufferContext2D.drawImage(image, sx, sy, sw, sh, ~~dx, ~~dy, dw, dh);
         },
 

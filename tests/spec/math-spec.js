@@ -78,4 +78,21 @@ describe("me.Math", function () {
             expect(a).toEqual(3.1416);
         });
     });
+
+    describe("POT", function () {
+        it("32 is a Power of 2", function () {
+            expect(me.Math.isPowerOfTwo(32)).toEqual(true);
+        });
+        it("1027 is not a Power of 2", function () {
+            expect(me.Math.isPowerOfTwo(1027)).toEqual(false);
+        });
+
+        it("next Power of 2 for 1000", function () {
+            expect(me.Math.nextPowerOfTwo(1000)).toEqual(1024);
+        });
+        it("next Power of 2 for 32", function () {
+            expect(me.Math.nextPowerOfTwo(32)).toEqual(32);
+        });
+    });
+
 });

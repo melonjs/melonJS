@@ -63,6 +63,18 @@
          * @ignore
          */
         put : function (image, texture) {
+            var width = image.width;
+            var height = image.height;
+
+            // warn if a non POT texture is added to the cache
+            if (!me.Math.isPowerOfTwo(width) || !me.Math.isPowerOfTwo(height)) {
+                var src = typeof image.src !== "undefined" ? image.src : image;
+                console.warn(
+                    "[Texture] " + src + " is not a POT texture " +
+                    "(" + width + "x" + height + ")"
+                );
+            }
+
             this.validate();
             this.cache.set(image, texture);
             this.units.set(texture, this.length++);

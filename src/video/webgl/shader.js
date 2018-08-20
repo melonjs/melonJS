@@ -177,16 +177,10 @@
         api.createTexture = function (gl, unit, image, filter, repeat, w, h, b, premultipliedAlpha) {
             repeat = repeat || "no-repeat";
 
-            if (!me.Math.isPowerOfTwo(w || image.width) || !me.Math.isPowerOfTwo(h || image.height)) {
-                console.warn(
-                    "[WebGL Renderer] " + image + " is not a POT texture " +
-                    "(" + (w || image.width) + "x" + (h || image.height) + ")"
-                );
-            }
-
-            var texture = gl.createTexture(),
-                rs = (repeat.search(/^repeat(-x)?$/) === 0) ? gl.REPEAT : gl.CLAMP_TO_EDGE,
-                rt = (repeat.search(/^repeat(-y)?$/) === 0) ? gl.REPEAT : gl.CLAMP_TO_EDGE;
+            var isPOT = me.Math.isPowerOfTwo(w || image.width) && me.Math.isPowerOfTwo(h || image.height);
+            var texture = gl.createTexture();
+            var rs = (repeat.search(/^repeat(-x)?$/) === 0) && isPOT ? gl.REPEAT : gl.CLAMP_TO_EDGE;
+            var rt = (repeat.search(/^repeat(-y)?$/) === 0) && isPOT ? gl.REPEAT : gl.CLAMP_TO_EDGE;
 
             gl.activeTexture(gl.TEXTURE0 + unit);
             gl.bindTexture(gl.TEXTURE_2D, texture);
