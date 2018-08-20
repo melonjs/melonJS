@@ -246,7 +246,7 @@
                 dy = ~~dy;
             }
 
-            this.backBufferContext2D.drawImage(image, sx, sy, sw, sh, ~~dx, ~~dy, dw, dh);
+            this.backBufferContext2D.drawImage(image, sx, sy, sw, sh, dx, dy, dw, dh);
         },
 
         /**
