@@ -170,10 +170,14 @@
             settings.doubleBuffering = !!(settings.doubleBuffering);
             settings.useParentDOMSize = !!(settings.useParentDOMSize);
             settings.autoScale = (settings.scale === "auto") || false;
+            settings.transparent = !!(settings.transparent);
+            settings.antiAlias = !!(settings.antiAlias);
+            settings.failIfMajorPerformanceCaveat = !!(settings.failIfMajorPerformanceCaveat);
+            settings.subPixel = !!(settings.subPixel);
+            settings.verbose = !!(settings.verbose);
             if (settings.scaleMethod.search(/^(fill-(min|max)|fit|flex(-(width|height))?|stretch)$/) !== 0) {
                 settings.scaleMethod = "fit";
             }
-            settings.transparent = !!(settings.transparent);
 
             // override renderer settings if &webgl is defined in the URL
             if (me.game.HASH.webgl === true) {

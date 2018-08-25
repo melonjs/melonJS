@@ -36,18 +36,14 @@
             this._super(me.Renderer, "init", [c, width, height, options]);
 
             // defined the 2d context
-            this.context = this.getContext2d(this.canvas, this.transparent);
-
-            this.setBlendMode(this.context, options.blendMode);
+            this.context = this.getContext2d(this.canvas, this.settings.transparent);
 
             // create the back buffer if we use double buffering
-            if (this.doubleBuffering) {
+            if (this.settings.doubleBuffering) {
                 this.backBufferCanvas = me.video.createCanvas(width, height, false);
                 this.backBufferContext2D = this.getContext2d(this.backBufferCanvas);
 
-                this.setBlendMode(this.backBufferContext2D, options.blendMode);
-
-                if (this.transparent) {
+                if (this.settings.transparent) {
                     // Clears the front buffer for each frame blit
                     this.context.globalCompositeOperation = "copy";
                 }
@@ -57,13 +53,15 @@
                 this.backBufferContext2D = this.context;
             }
 
+            this.setBlendMode(this.settings.blendMode);
+
             // apply the default color to the 2d context
             this.setColor(this.currentColor);
 
             // create a texture cache
             this.cache = new me.Renderer.TextureCache();
 
-            if (options.textureSeamFix !== false  && !this.antiAlias) {
+            if (this.settings.textureSeamFix !== false  && !this.settings.antiAlias) {
                 // enable the tile texture seam fix with the canvas renderer
                 this.uvOffset = 1;
             }
@@ -96,11 +94,12 @@
          * @name setBlendMode
          * @memberOf me.CanvasRenderer
          * @function
-         * @param {Context2d} context
          * @param {String} [mode="normal"] blend mode : "normal", "multiply"
+         * @param {Context2d} [context]
          */
-        setBlendMode : function (context, mode) {
-            this.blendMode = mode;
+        setBlendMode : function (mode, context) {
+            context = context || this.getContext();
+            this.currentBlendMode = mode;
             switch (mode) {
                 case "multiply" :
                     context.globalCompositeOperation = "multiply";
@@ -108,7 +107,7 @@
 
                 default : // normal
                     context.globalCompositeOperation = "source-over";
-                    this.blendMode = "normal";
+                    this.currentBlendMode = "normal";
                     break;
             }
         },
@@ -120,7 +119,7 @@
          * @function
          */
         clear : function () {
-            if (this.transparent) {
+            if (this.settings.transparent) {
                 this.clearColor("rgba(0,0,0,0)", true);
             }
         },
@@ -132,7 +131,7 @@
          * @function
          */
         flush : function () {
-            if (this.doubleBuffering) {
+            if (this.settings.doubleBuffering) {
                 this.context.drawImage(
                     this.backBufferCanvas, 0, 0,
                     this.backBufferCanvas.width, this.backBufferCanvas.height,
@@ -240,7 +239,7 @@
                 sy = 0;
             }
 
-            if (this.subPixel === false) {
+            if (this.settings.subPixel === false) {
                 // clamp to pixel grid
                 dx = ~~dx;
                 dy = ~~dy;
@@ -352,13 +351,13 @@
                 this.canvas.style.height = (this.canvas.height / me.device.devicePixelRatio) + "px";
             }
 
-            if (this.doubleBuffering && this.transparent) {
+            if (this.settings.doubleBuffering && this.settings.transparent) {
                 // Clears the front buffer for each frame blit
                 this.context.globalCompositeOperation = "copy";
             } else {
-                this.setBlendMode(this.context, this.blendMode);
+                this.setBlendMode(this.settings.blendMode, this.context);
             }
-            this.setAntiAlias(this.context, this.antiAlias);
+            this.setAntiAlias(this.context, this.settings.antiAlias);
             this.flush();
         },
 
@@ -638,7 +637,7 @@
             var tx = a[6],
                 ty = a[7];
 
-            if (this.subPixel === false) {
+            if (this.settings.subPixel === false) {
                 tx = ~~tx;
                 ty = ~~ty;
             }
@@ -662,7 +661,7 @@
          * @param {Number} y
          */
         translate : function (x, y) {
-            if (this.subPixel === false) {
+            if (this.settings.subPixel === false) {
                 this.backBufferContext2D.translate(~~x, ~~y);
             } else {
                 this.backBufferContext2D.translate(x, y);

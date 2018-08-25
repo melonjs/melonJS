@@ -34,23 +34,28 @@
          * @ignore
          */
         init : function (c, width, height, options) {
-            options = options || {};
+            /**
+             * The given constructor options
+             * @public
+             * @name settings
+             * @memberOf me.Renderer
+             * @enum {Object}
+             */
+            this.settings = options;
 
             /**
-            * @ignore
-            */
+             * @ignore
+             */
             this.currentScissor = new Int32Array([ 0, 0, this.width, this.height ]);
 
-            // rendering options
-            this.transparent = !!(options.transparent);
-            this.doubleBuffering = !!(options.doubleBuffering);
-            this.antiAlias = !!(options.antiAlias);
-            this.failIfMajorPerformanceCaveat = !!(options.failIfMajorPerformanceCaveat);
-            this.subPixel = !!(options.subPixel);
-            this.verbose = !!(options.verbose);
+            /**
+             * @ignore
+             */
+            this.currentBlendMode = "normal";
 
-            this.gameWidthZoom = options.zoomX || width;
-            this.gameHeightZoom = options.zoomY || height;
+            // canvas size after scaling
+            this.gameWidthZoom = this.settings.zoomX || width;
+            this.gameHeightZoom = this.settings.zoomY || height;
 
             // canvas object and context
             this.canvas = this.backBufferCanvas = c;
@@ -81,7 +86,7 @@
          */
         reset : function () {
             this.resetTransform();
-            this.setBlendMode(this.context, this.blendMode);
+            this.setBlendMode(this.settings.blendMode);
             this.cache.reset();
             this.currentScissor[0] = 0;
             this.currentScissor[1] = 0;
@@ -131,7 +136,7 @@
          * @return {String} blend mode
          */
         getBlendMode : function () {
-            return this.blendMode;
+            return this.currentBlendMode;
         },
 
         /**
@@ -166,7 +171,7 @@
             if (me.device.cocoon) {
                 // cocoonJS specific extension
                 _context = c.getContext("2d", {
-                    "antialias" : this.antiAlias,
+                    "antialias" : this.settings.antiAlias,
                     "alpha" : transparent
                 });
             }
@@ -178,7 +183,7 @@
             if (!_context.canvas) {
                 _context.canvas = c;
             }
-            this.setAntiAlias(_context, this.antiAlias);
+            this.setAntiAlias(_context, this.settings.antiAlias);
             return _context;
         },
 

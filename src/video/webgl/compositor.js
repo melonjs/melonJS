@@ -227,7 +227,7 @@
                     this.gl,
                     unit,
                     texture.source,
-                    this.renderer.antiAlias ? this.gl.LINEAR : this.gl.NEAREST,
+                    this.renderer.settings.antiAlias ? this.gl.LINEAR : this.gl.NEAREST,
                     texture.repeat,
                     w,
                     h,
@@ -381,7 +381,7 @@
             var region = texture.getRegion(key);
             if (typeof(region) === "undefined") {
                 // TODO: Require proper atlas regions instead of caching arbitrary region keys
-                if (me.video.renderer.verbose === true) {
+                if (this.renderer.settings.verbose === true) {
                     console.warn("Adding texture region", key, "for texture", texture);
                 }
 

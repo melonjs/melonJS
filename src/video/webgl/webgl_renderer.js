@@ -39,7 +39,7 @@
              * @name gl
              * @memberOf me.WebGLRenderer
              */
-            this.context = this.gl = this.getContextGL(c, this.transparent);
+            this.context = this.gl = this.getContextGL(c, this.settings.transparent);
 
             /**
              * @ignore
@@ -75,7 +75,7 @@
             this.currentTransform = new me.Matrix2d();
 
             // Create a compositor
-            var Compositor = options.compositor || me.WebGLRenderer.Compositor;
+            var Compositor = this.settings.compositor || me.WebGLRenderer.Compositor;
             this.compositor = new Compositor(this);
 
 
@@ -85,7 +85,7 @@
             this.gl.enable(this.gl.BLEND);
 
             // set default mode
-            this.setBlendMode(this.gl, options.blendMode);
+            this.setBlendMode(this.settings.blendMode);
 
             // Create a texture cache
             this.cache = new me.Renderer.TextureCache(
@@ -343,7 +343,7 @@
                 sy = 0;
             }
 
-            if (this.subPixel === false) {
+            if (this.settings.subPixel === false) {
                 // clamp to pixel grid
                 dx = ~~dx;
                 dy = ~~dy;
@@ -418,10 +418,10 @@
 
             var attr = {
                 alpha : transparent,
-                antialias : this.antiAlias,
+                antialias : this.settings.antiAlias,
                 depth : false,
                 premultipliedAlpha: transparent,
-                failIfMajorPerformanceCaveat : this.failIfMajorPerformanceCaveat
+                failIfMajorPerformanceCaveat : this.settings.failIfMajorPerformanceCaveat
             };
 
             var gl = canvas.getContext("webgl", attr) || canvas.getContext("experimental-webgl", attr);
@@ -452,20 +452,22 @@
          * @name setBlendMode
          * @memberOf me.WebGLRenderer
          * @function
-         * @param {Context2d} context
          * @param {String} [mode="normal"] blend mode : "normal", "multiply"
+         * @param {WebGLRenderingContext} [gl]
          */
-        setBlendMode : function (gl, mode) {
-            this.blendMode = mode;
+        setBlendMode : function (mode, gl) {
+            gl = gl || this.gl;
+
             gl.enable(gl.BLEND);
             switch (mode) {
                 case "multiply" :
                     gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
+                    this.currentBlendMode = mode;
                     break;
 
                 default :
                     gl.blendFunc(gl.ONE, gl.ONE_MINUS_SRC_ALPHA);
-                    this.blendMode = "normal";
+                    this.currentBlendMode = "normal";
                     break;
             }
         },
@@ -777,7 +779,7 @@
          */
         transform : function (mat2d) {
             this.currentTransform.multiply(mat2d);
-            if (this.subPixel === false) {
+            if (this.settings.subPixel === false) {
                 // snap position values to pixel grid
                 var a = this.currentTransform.val;
                 a[6] = ~~a[6];
@@ -794,7 +796,7 @@
          * @param {Number} y
          */
         translate : function (x, y) {
-            if (this.subPixel === false) {
+            if (this.settings.subPixel === false) {
                 this.currentTransform.translate(~~x, ~~y);
             } else {
                 this.currentTransform.translate(x, y);
