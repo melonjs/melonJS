@@ -1,6 +1,7 @@
 Version History
 ---------------
 6.1.0
+* Audio : latest audio core update (2.0.15)
 * Core : new linux detection flag under me.device
 * Renderer : now systematically warn when using non POT texture in both Canvas and WebGL mode
 * CanvasRenderer : fix drawImage sub-pixel rendering in Canvas mode when using the short notation (2 or 4 parameters)
