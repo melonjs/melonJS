@@ -330,7 +330,7 @@
 
                 api.world.preDraw(renderer);
 
-                // update all objects,
+                // draw all objects,
                 // specifying the viewport as the rectangle area to redraw
                 api.world.draw(renderer, viewport);
 
