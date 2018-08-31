@@ -6,7 +6,7 @@ Version History
 * Renderer : now systematically warn when using non POT texture in both Canvas and WebGL mode
 * CanvasRenderer : fix drawImage sub-pixel rendering in Canvas mode when using the short notation (2 or 4 parameters)
 * WebGLRenderer : only throw an exception (e.g. stop execution) when using repeat/wrap mode with a non POT texture
-* WebGLRenderer : properly fallback to Canvas mode in AUTO and WEBGL mode if the renderer fails at creating a WebGL Context
+* WebGLRenderer : properly fallback to Canvas mode in AUTO and WEBGL mode when failing at creating a valid WebGL Context
 
 6.0.0
 * Audio : latest audio core update to fix HTML5 Audio issue with FB Instant Games, and Chrome API deprecation
