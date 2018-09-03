@@ -51,14 +51,7 @@
                         settings.height]);
 
             if (settings.image) {
-                this.renderable = new me.Sprite(0, 0, {
-                    "image" : settings.image,
-                    "framewidth" : ~~(settings.framewidth || settings.width),
-                    "frameheight" : ~~(settings.frameheight || settings.height),
-                    "spacing" : ~~settings.spacing,
-                    "margin" : ~~settings.margin,
-                    "anchorPoint" : settings.anchorPoint
-                });
+                this.renderable = new me.Sprite(0, 0, settings);
             }
 
             // Update anchorPoint
