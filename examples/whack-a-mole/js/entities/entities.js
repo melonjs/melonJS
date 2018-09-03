@@ -123,7 +123,7 @@ game.MoleEntity = me.Sprite.extend(
     {
         if (this.isVisible) {
             // call the super function to manage animation
-            this._super(me.AnimationSheet, "update", [dt] );
+            this._super(me.Sprite, "update", [dt] );
 
             // hide the mode after 1/2 sec
             if (this.isOut===true) {
