@@ -11,7 +11,7 @@ game.PlayScreen = me.ScreenObject.extend({
         // add a few shapes
         me.game.world.addChild(new game.Square(50, 50, {width: rectSize, height: rectSize}), 1);
         me.game.world.addChild(new game.Square(50, 400, {width: rectSize, height: rectSize}), 1);
-        me.game.world.addChild(new game.Square(300, 150, {width: rectSize, height: rectSize}), 1);
+        me.game.world.addChild(new game.Square(300, 125, {width: rectSize, height: rectSize}), 1);
         me.game.world.addChild(new game.Square(300, 350, {width: rectSize, height: rectSize}), 1);
         me.game.world.addChild(new game.Square(600, 200, {width: rectSize, height: rectSize}), 1);
         me.game.world.addChild(new game.Square(600, 400, {width: rectSize, height: rectSize}), 1);
@@ -53,13 +53,14 @@ game.PlayScreen = me.ScreenObject.extend({
         me.game.world.addChild(new (me.Renderable.extend({
             init: function() {
                 this._super(me.Renderable, 'init', [0, 0, 10, 10]);
-                this.line = new me.Line(0, 0, [
+                this.line = new me.Line(me.game.viewport.width / 2, me.game.viewport.height / 2, [
                     new me.Vector2d(0, 0),
-                    new me.Vector2d(me.game.viewport.width, me.game.viewport.height)
+                    new me.Vector2d(me.game.viewport.width / 2, me.game.viewport.height / 2)
                 ]);
 
             },
             update : function (dt) {
+                this.line.rotate(0.0125);
                 var result = me.collision.rayCast(this.line);
 
                 if (result.length > 0) {
