@@ -17,7 +17,7 @@ before_install:
   - "travis_wait npm install -g grunt-cli"
 
 before_script:
-  - "curl -sL https://raw.githubusercontent.com/travis-ci/artifacts/v0.7.8/install | bash"
+  - "curl -sL https://raw.githubusercontent.com/travis-ci/artifacts/master/install | bash"
 
 after_success:
   - "./scripts/travis-upload.sh"
