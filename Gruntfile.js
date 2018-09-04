@@ -164,12 +164,27 @@ module.exports = function (grunt) {
       }
     },
 
+    babel: {
+        options: {
+            sourceMap: false,
+            retainLines: true,
+            compact: false,
+            presets: ["env"]
+        },
+        dist: {
+            files: {
+                "<%= path.main %>": "<%= path.main %>"
+            }
+        }
+    },
+
     clean : {
       dist : [
         "<%= path.main %>",
         "<%= path.min %>"
       ],
       jsdoc : [
+        "build/*.map",
         "build/docs",
         "build/glsl/*.glsl",
         "./docs/**/*.*",
@@ -254,6 +269,7 @@ module.exports = function (grunt) {
   grunt.loadNpmTasks("grunt-jsdoc");
   grunt.loadNpmTasks("grunt-karma");
   grunt.loadNpmTasks("grunt-replace");
+  grunt.loadNpmTasks("grunt-babel");
 
   // Custom Tasks
   grunt.loadTasks("tasks");
@@ -269,6 +285,7 @@ module.exports = function (grunt) {
     "replace:dist",
     "eslint:afterConcat"
   ]);
+  grunt.registerTask("es2015", ["babel"]);
   grunt.registerTask("doc", [ "replace:docs", "jsdoc" ]);
   grunt.registerTask("test", [ "lint", "karma" ]);
   grunt.registerTask("serve", [ "connect:keepalive" ]);
