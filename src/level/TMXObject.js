@@ -186,7 +186,7 @@
             }
 
             // Adjust the Position to match Tiled
-            if (map.isTiled) {
+            if (!map.isEditor) {
                 map.getRenderer().adjustPosition(this);
             }
 
