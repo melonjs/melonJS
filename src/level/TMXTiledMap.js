@@ -182,6 +182,7 @@
 
             // tilemap version
             this.version = data.version;
+            this.isTiled = !!data.tiledversion;
 
             // map type (orthogonal or isometric)
             this.orientation = data.orientation;
