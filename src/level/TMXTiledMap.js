@@ -183,6 +183,9 @@
             // tilemap version
             this.version = data.version;
 
+            // Check if map is from melon editor
+            this.isEditor = data.editor === "melon-editor";
+
             // map type (orthogonal or isometric)
             this.orientation = data.orientation;
             if (this.orientation === "isometric") {

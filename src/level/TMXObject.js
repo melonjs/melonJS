@@ -186,7 +186,9 @@
             }
 
             // Adjust the Position to match Tiled
-            map.getRenderer().adjustPosition(this);
+            if (!map.isEditor) {
+                map.getRenderer().adjustPosition(this);
+            }
 
             // set the object properties
             me.TMXUtils.applyTMXProperties(this, tmxObj);
