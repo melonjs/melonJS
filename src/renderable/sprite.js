@@ -184,6 +184,7 @@
          * @function
          * @param {Number} duration expressed in milliseconds
          * @param {Function} callback Function to call when flickering ends
+         * @return {me.Sprite} Reference to this object for method chaining
          * @example
          * // make the object flicker for 1 second
          * // and then remove it
@@ -201,6 +202,7 @@
                 this._flicker.callback = callback;
                 this._flicker.isFlickering = true;
             }
+            return this;
         },
 
         /**
@@ -215,8 +217,7 @@
          * @param {Number[]|String[]|Object[]} index list of sprite index or name
          * defining the animation. Can also use objects to specify delay for each frame, see below
          * @param {Number} [animationspeed] cycling speed for animation in ms
-         * @return {Number} frame amount of frame added to the animation
-         * (delay between each frame).
+         * @return {Number} frame amount of frame added to the animation (delay between each frame).
          * @see me.Sprite#animationspeed
          * @example
          * // walking animation
@@ -313,8 +314,8 @@
          * @memberOf me.Sprite
          * @function
          * @param {String} name animation id
-         * @param {String|Function} [onComplete] animation id to switch to when
-         * complete, or callback
+         * @param {String|Function} [onComplete] animation id to switch to when complete, or callback
+         * @return {me.Sprite} Reference to this object for method chaining
          * @example
          * // set "walk" animation
          * this.setCurrentAnimation("walk");
@@ -364,6 +365,25 @@
             } else {
                 throw new me.Renderable.Error("animation id '" + name + "' not defined");
             }
+            return this;
+        },
+
+        /**
+         * reverse the given or current animation if none is specified
+         * @name reverseAnimation
+         * @memberOf me.Sprite
+         * @function
+         * @param {String} [name] animation id
+         * @return {me.Sprite} Reference to this object for method chaining
+         * @see me.Sprite#animationspeed
+         */
+        reverseAnimation : function (name) {
+            if (typeof name !== "undefined" && typeof this.anim[name] !== "undefined") {
+                this.anim[name].frames.reverse();
+            } else {
+                this.current.frames.reverse();
+            }
+            return this;
         },
 
         /**
@@ -389,6 +409,7 @@
          * @memberOf me.Sprite
          * @function
          * @param {Object} region typically returned through me.Texture.getRegion()
+         * @return {me.Sprite} Reference to this object for method chaining
          * @example
          * // change the sprite to "shadedDark13.png";
          * mySprite.setRegion(game.texture.getRegion("shadedDark13.png"));
@@ -401,6 +422,8 @@
             // update the default "current" size
             this.current.width = region.width;
             this.current.height = region.height;
+
+            return this;
         },
 
         /**
@@ -409,6 +432,7 @@
          * @memberOf me.Sprite
          * @function
          * @param {Number} [index=0] animation frame index
+         * @return {me.Sprite} Reference to this object for method chaining
          * @example
          * // reset the current animation to the first frame
          * this.setAnimationFrame();
@@ -428,6 +452,7 @@
             if (frame.anchorPoint) {
                 this.anchorPoint.setV(frame.anchorPoint);
             }
+            return this;
         },
 
         /**

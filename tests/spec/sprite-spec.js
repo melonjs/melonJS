@@ -30,26 +30,41 @@ describe("me.Sprite", function () {
 
     it("me.Sprite addAnimation should return the correct amount of frame", function () {
         expect(sprite.addAnimation("test", [ 0, 1 ])).toEqual(2);
-        expect(sprite.addAnimation("test2", [ 0, 0, 0, 0, 0 ])).toEqual(5);
+        expect(sprite.addAnimation("test2", [ 0, 1, 0, 1, 0 ])).toEqual(5);
+    });
+
+    it("me.Sprite reverseAnimation should return the correct amount of frame", function () {
+        expect(sprite.addAnimation("test", [ 0, 1])).toEqual(2);
+        sprite.setCurrentAnimation("test");
+        // XXX how to test the current animation sequence without using private objects
+        expect(sprite.anim["test"].frames[0].name).toEqual(0);
+        expect(sprite.anim["test"].frames[1].name).toEqual(1);
+        sprite.reverseAnimation("test");
+        expect(sprite.anim["test"].frames[0].name).toEqual(1);
+        expect(sprite.anim["test"].frames[1].name).toEqual(0);
+        sprite.reverseAnimation();
+        expect(sprite.current.frames[0].name).toEqual(0);
+        expect(sprite.current.frames[1].name).toEqual(1);
     });
 
     it("me.Sprite isCurrentAnimation allows to verify which animation is set", function () {
-        expect(sprite.addAnimation("reverse_test", [ 1, 0, 1, 0 ], 60)).toEqual(4);
+        expect(sprite.addAnimation("test", [ 0, 1 ])).toEqual(2);
+        expect(sprite.addAnimation("yoyo", [ 1, 0, 1, 0 ], 60)).toEqual(4);
         sprite.setCurrentAnimation("test");
         expect(sprite.isCurrentAnimation("test")).toEqual(true);
-        sprite.setCurrentAnimation("reverse_test", "test");
+        sprite.setCurrentAnimation("yoyo", "test");
         expect(sprite.isCurrentAnimation("test")).toEqual(false);
-        expect(sprite.isCurrentAnimation("reverse_test")).toEqual(true);
+        expect(sprite.isCurrentAnimation("yoyo")).toEqual(true);
         for (var i = -1; i < 8; i++) {
             sprite.update(16);
         }
         // at this point we half way though the "reverse_test" animation
-        expect(sprite.isCurrentAnimation("reverse_test")).toEqual(true);
+        expect(sprite.isCurrentAnimation("yoyo")).toEqual(true);
         for (var j = -1; j < 8; j++) {
             sprite.update(16);
         }
         // at this point "reverse_test" is finished and we switched to test
-        expect(sprite.isCurrentAnimation("reverse_test")).toEqual(false);
+        expect(sprite.isCurrentAnimation("yoyo")).toEqual(false);
         expect(sprite.isCurrentAnimation("test")).toEqual(true);
     });
 
