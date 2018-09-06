@@ -5,7 +5,7 @@ Version History
 * Core : new linux detection flag under me.device
 * Renderer : now systematically warn when using non POT texture in both Canvas and WebGL mode
 * Sprite : new function to allow reversing a given or current animation
-* TMX : support for the Tiled 1.2 beta JSON property format (backward compatible with previous 1.1 version
+* TMX : support for the Tiled 1.2 beta JSON property format (backward compatible with previous 1.1 version)
 * CanvasRenderer : fix drawImage sub-pixel rendering in Canvas mode when using the short notation (2 or 4 parameters)
 * WebGLRenderer : only throw an exception (e.g. stop execution) when using repeat/wrap mode with a non POT texture
 * WebGLRenderer : properly fallback to Canvas mode in AUTO and WEBGL mode when failing at creating a valid WebGL Context
