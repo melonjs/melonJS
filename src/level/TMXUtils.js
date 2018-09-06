@@ -354,14 +354,25 @@
             var properties = data.properties;
             var types = data.propertytypes;
             if (typeof(properties) !== "undefined") {
-                for (var name in properties) {
-                    if (properties.hasOwnProperty(name)) {
+                for (var property in properties) {
+                    if (properties.hasOwnProperty(property)) {
                         var type = "string";
+                        var name = property;
+                        var value = properties[property];
+                        // proof-check for new and old JSON format
+                        if (typeof properties[property].name !== "undefined") {
+                            name = properties[property].name;
+                        }
                         if (typeof(types) !== "undefined") {
-                            type = types[name];
+                            type = types[property];
+                        } else if (typeof properties[property].type !== "undefined") {
+                            type = properties[property].type;
+                        }
+                        if (typeof properties[property].value !== "undefined") {
+                            value = properties[property].value;
                         }
                         // set the value
-                        obj[name] = setTMXValue(name, type, properties[name]);
+                        obj[name] = setTMXValue(name, type, value);
                     }
                 }
             }
