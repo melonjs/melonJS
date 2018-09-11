@@ -1,5 +1,7 @@
 Version History
 ---------------
+6.2.0
+
 6.1.0
 * Audio : latest audio core update (2.0.15)
 * Core : new linux detection flag under me.device
