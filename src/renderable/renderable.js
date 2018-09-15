@@ -109,15 +109,20 @@
             this.GUID = undefined;
 
             /**
-             * Whether the renderable object is visible and within the viewport<br>
+             * an event handler that is called when the renderable leave or enter a camera viewport
              * @public
-             * @readonly
-             * @type Boolean
-             * @default false
-             * @name inViewport
+             * @type function
+             * @default undefined
+             * @name onVisibilityChange
              * @memberOf me.Renderable
+             * @example
+             * this.onVisibilityChange = function(inViewport) {
+             *     if (inViewport === true) {
+             *         console.log("object has entered the in a camera viewport!");
+             *     }
+             * };
              */
-            this.inViewport = false;
+            this.onVisibilityChange = undefined;
 
             /**
              * Whether the renderable object will always update, even when outside of the viewport<br>
@@ -277,6 +282,9 @@
                 x : false,
                 y : false
             };
+
+            // viewport flag
+            this._inViewport = false;
 
             this.shapeType = "Rectangle";
 
@@ -552,6 +560,36 @@
         onDestroyEvent : function () {
             // to be extended !
         }
+    });
+
+    /**
+     * Whether the renderable object is visible and within the viewport
+     * @public
+     * @readonly
+     * @type Boolean
+     * @default false
+     * @name inViewport
+     * @memberOf me.Renderable
+     */
+    Object.defineProperty(me.Renderable.prototype, "inViewport", {
+        /**
+         * @ignore
+         */
+        get : function () {
+            return this._inViewport;
+        },
+        /**
+         * @ignore
+         */
+        set : function (value) {
+            if (this._inViewport !== value) {
+                this._inViewport = value;
+                if (typeof this.onVisibilityChange === "function") {
+                    this.onVisibilityChange.call(this, value);
+                }
+            }
+        },
+        configurable : true
     });
 
     /**

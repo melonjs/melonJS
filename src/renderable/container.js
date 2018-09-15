@@ -793,8 +793,8 @@
                     if (isFloating) {
                         globalFloatingCounter++;
                     }
-                    // check if object is visible
-                    obj.inViewport = isFloating || viewport.isVisible(obj.getBounds());
+                    // check if object is in the viewport
+                    obj.inViewport = isFloating || viewport.isVisible(obj);
 
                     // update our object
                     isDirty = ((obj.inViewport || obj.alwaysUpdate) && obj.update(dt)) || isDirty;

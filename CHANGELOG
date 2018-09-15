@@ -1,6 +1,7 @@
 Version History
 ---------------
 6.2.0
+* Renderable : added a onVisibilityChange handler that is called when leaving or entering a camera viewport
 
 6.1.0
 * Audio : latest audio core update (2.0.15)

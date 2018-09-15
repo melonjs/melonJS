@@ -68,7 +68,7 @@
             var viewport = me.game.viewport;
             for (var i = this.children.length - 1; i >= 0; --i) {
                 var particle = this.children[i];
-                particle.inViewport = this.floating || viewport.isVisible(particle.getBounds());
+                particle.inViewport = this.floating || viewport.isVisible(particle);
                 if (!particle.update(dt)) {
                     this.removeChildNow(particle);
                 }

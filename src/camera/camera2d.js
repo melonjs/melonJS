@@ -550,15 +550,15 @@
         },
 
         /**
-         * check if the specified rectangle is in the camera
+         * check if the specified renderable is in the camera
          * @name isVisible
          * @memberOf me.Camera2d
          * @function
-         * @param {me.Rect} rect
+         * @param {me.Renderable} object
          * @return {Boolean}
          */
-        isVisible : function (rect) {
-            return rect.overlaps(this);
+        isVisible : function (obj) {
+            return obj.getBounds().overlaps(this);
         },
 
         /**
