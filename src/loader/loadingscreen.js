@@ -166,7 +166,7 @@
      * @ignore
      * @constructor
      */
-    me.DefaultLoadingScreen = me.ScreenObject.extend({
+    me.DefaultLoadingScreen = me.Stage.extend({
         /**
          * call when the loader is resetted
          * @ignore

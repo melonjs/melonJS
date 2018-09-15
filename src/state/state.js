@@ -8,68 +8,6 @@
  */
 
 (function () {
-    /**
-     * A class skeleton for "Screen" Object <br>
-     * every "screen" object (title screen, credits, ingame, etc...) to be managed <br>
-     * through the state manager must inherit from this base class.
-     * @class
-     * @extends me.Object
-     * @memberOf me
-     * @constructor
-     * @see me.state
-     */
-    me.ScreenObject = me.Object.extend(
-    /** @scope me.ScreenObject.prototype */
-    {
-        /** @ignore */
-        init: function () {},
-
-        /**
-         * Object reset function
-         * @ignore
-         */
-        reset : function () {
-            // reset the game manager
-            me.game.reset();
-            // call the onReset Function
-            this.onResetEvent.apply(this, arguments);
-        },
-
-        /**
-         * destroy function
-         * @ignore
-         */
-        destroy : function () {
-            // notify the object
-            this.onDestroyEvent.apply(this, arguments);
-        },
-
-        /**
-         * onResetEvent function<br>
-         * called by the state manager when reseting the object<br>
-         * this is typically where you will load a level, etc...
-         * to be extended
-         * @name onResetEvent
-         * @memberOf me.ScreenObject
-         * @function
-         * @param {} [arguments...] optional arguments passed when switching state
-         * @see me.state#change
-         */
-        onResetEvent : function () {
-            // to be extended
-        },
-
-        /**
-         * onDestroyEvent function<br>
-         * called by the state manager before switching to another state<br>
-         * @name onDestroyEvent
-         * @memberOf me.ScreenObject
-         * @function
-         */
-        onDestroyEvent : function () {
-            // to be extended
-        }
-    });
 
     /**
      * a State Manager (state machine)<p>
@@ -94,8 +32,8 @@
         // whether the game state is "paused"
         var _isPaused = false;
 
-        // list of screenObject
-        var _screenObject = {};
+        // list of stages
+        var _stages = {};
 
         // fading transition parameters between screen
         var _fade = {
@@ -184,18 +122,18 @@
             // clear previous interval if any
             _stopRunLoop();
 
-            // call the screen object destroy method
-            if (_screenObject[_state]) {
+            // call the stage destroy method
+            if (_stages[_state]) {
                 // just notify the object
-                _screenObject[_state].screen.destroy();
+                _stages[_state].screen.destroy();
             }
 
-            if (_screenObject[state]) {
+            if (_stages[state]) {
                 // set the global variable
                 _state = state;
 
                 // call the reset function with _extraArgs as arguments
-                _screenObject[_state].screen.reset.apply(_screenObject[_state].screen, _extraArgs);
+                _stages[_state].screen.reset.apply(_stages[_state].screen, _extraArgs);
 
                 // and start the main loop of the
                 // new requested state
@@ -486,13 +424,13 @@
         };
 
         /**
-         * associate the specified state with a screen object
+         * associate the specified state with a Stage
          * @name set
          * @memberOf me.state
          * @public
          * @function
          * @param {Number} state State ID (see constants)
-         * @param {me.ScreenObject} so Instantiated ScreenObject to associate
+         * @param {me.Stage} so Instantiated Stage to associate
          * with state ID
          * @example
          * var MenuButton = me.GUI_Object.extend({
@@ -503,7 +441,7 @@
          *     }
          * });
          *
-         * var MenuScreen = me.ScreenObject.extend({
+         * var MenuScreen = me.Stage.extend({
          *     onResetEvent: function() {
          *         // Load background image
          *         me.game.world.addChild(
@@ -532,12 +470,12 @@
          * me.state.set(me.state.MENU, new MenuScreen());
          */
         api.set = function (state, so) {
-            if (!(so instanceof me.ScreenObject)) {
-                throw new me.Error(so + " is not an instance of me.ScreenObject");
+            if (!(so instanceof me.Stage)) {
+                throw new me.Error(so + " is not an instance of me.Stage");
             }
-            _screenObject[state] = {};
-            _screenObject[state].screen = so;
-            _screenObject[state].transition = true;
+            _stages[state] = {};
+            _stages[state].screen = so;
+            _stages[state].transition = true;
         };
 
         /**
@@ -547,10 +485,10 @@
          * @memberOf me.state
          * @public
          * @function
-         * @return {me.ScreenObject}
+         * @return {me.Stage}
          */
         api.current = function () {
-            return _screenObject[_state].screen;
+            return _stages[_state].screen;
         };
 
         /**
@@ -580,7 +518,7 @@
          * @param {Boolean} enable
          */
         api.setTransition = function (state, enable) {
-            _screenObject[state].transition = enable;
+            _stages[state].transition = enable;
         };
 
         /**
@@ -597,9 +535,9 @@
          * me.state.change(me.state.PLAY, "level_1", 3);
          */
         api.change = function (state) {
-            // Protect against undefined ScreenObject
-            if (typeof(_screenObject[state]) === "undefined") {
-                throw new me.Error("Undefined ScreenObject for state '" + state + "'");
+            // Protect against undefined Stage
+            if (typeof(_stages[state]) === "undefined") {
+                throw new me.Error("Undefined Stage for state '" + state + "'");
             }
 
             if (api.isCurrent(state)) {
@@ -613,7 +551,7 @@
                 _extraArgs = Array.prototype.slice.call(arguments, 1);
             }
             // if fading effect
-            if (_fade.duration && _screenObject[state].transition) {
+            if (_fade.duration && _stages[state].transition) {
                 /** @ignore */
                 _onSwitchComplete = function () {
                     me.game.viewport.fadeOut(_fade.color, _fade.duration);

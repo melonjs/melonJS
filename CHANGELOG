@@ -1,7 +1,8 @@
 Version History
 ---------------
 6.2.0
-* Renderable : added a onVisibilityChange handler that is called when leaving or entering a camera viewport
+* Core : renamed `me.ScreenObject` to `me.Stage` (with an alias to me.ScreenObject for Backward compatibility)
+* Renderable : new onVisibilityChange event handler that is called when leaving or entering a camera viewport
 
 6.1.0
 * Audio : latest audio core update (2.0.15)
