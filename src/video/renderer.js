@@ -246,6 +246,8 @@
             this.currentScissor[1] = 0;
             this.currentScissor[2] = width;
             this.currentScissor[3] = height;
+            // publish the corresponding event
+            me.event.publish(me.event.CANVAS_ONRESIZE, [ width, height ]);
         },
 
         /**

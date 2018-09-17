@@ -246,6 +246,18 @@
         api.WINDOW_ONRESIZE = "window.onresize";
 
         /**
+         * Channel Constant for when the canvas is resized <br>
+         * (this usually follows a WINDOW_ONRESIZE event).<br>
+         * Data passed : {Number} canvas width <br>
+         * Data passed : {Number} canvas height <br>
+         * @public
+         * @constant
+         * @type String
+         * @name me.event#CANVAS_ONRESIZE
+         */
+        api.CANVAS_ONRESIZE = "canvas.onresize";
+
+        /**
          * Channel Constant for when the viewport is resized <br>
          * (this usually follows a WINDOW_ONRESIZE event, when using the `flex` scaling mode is used and after the viewport was updated).<br>
          * Data passed : {Number} viewport width <br>
