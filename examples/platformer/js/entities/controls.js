@@ -44,10 +44,10 @@ game.HUD.VirtualJoypad = me.Container.extend({
         // size/orientation change
         var self = this;
         me.event.subscribe(
-            me.event.WINDOW_ONRESIZE, function () {
+            me.event.VIEWPORT_ONRESIZE, function (width, height) {
                 self.button.pos.set(
-                    me.game.viewport.width - 150,
-                    me.game.viewport.height - 150,
+                    width - 150,
+                    height - 150,
                     self.button.pos.z
                 )
             }
