@@ -282,7 +282,7 @@
             // patch timer.js
             me.plugin.patch(me.timer, "update", function (dt) {
                 // call the original me.timer.update function
-                this._patched(dt);
+                this._patched.apply(this, arguments);
 
                 // call the FPS counter
                 me.timer.countFPS();
@@ -292,7 +292,7 @@
             me.plugin.patch(me.game, "update", function (dt) {
                 var frameUpdateStartTime = window.performance.now();
 
-                this._patched(dt);
+                this._patched.apply(this, arguments);
 
                 // calculate the update time
                 _this.frameUpdateTime = window.performance.now() - frameUpdateStartTime;
@@ -304,7 +304,7 @@
 
                 _this.counters.reset();
 
-                this._patched();
+                this._patched.apply(this, arguments);
 
                 // calculate the drawing time
                 _this.frameDrawTime = window.performance.now() - frameDrawStartTime;
@@ -354,7 +354,7 @@
             // patch font.js
             me.plugin.patch(me.Font, "draw", function (renderer, text, x, y) {
                 // call the original me.Sprite.draw function
-                this._patched(renderer, text, x, y);
+                this._patched.apply(this, arguments);
 
                 // draw the font rectangle
                 if (me.debug.renderHitBox) {
@@ -369,7 +369,7 @@
             // patch font.js
             me.plugin.patch(me.Font, "drawStroke", function (renderer, text, x, y) {
                 // call the original me.Sprite.draw function
-                this._patched(renderer, text, x, y);
+                this._patched.apply(this, arguments);
 
                 // draw the font rectangle
                 if (me.debug.renderHitBox) {
@@ -442,13 +442,13 @@
                     }
                 }
                 // call the original me.Entity.postDraw function
-                this._patched(renderer);
+                this._patched.apply(this, arguments);
             });
 
             // patch container.js
             me.plugin.patch(me.Container, "draw", function (renderer, rect) {
                 // call the original me.Container.draw function
-                this._patched(renderer, rect);
+                this._patched.apply(this, arguments);
 
                 // check if debug mode is enabled
                 if (!_this.visible) {
