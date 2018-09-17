@@ -336,7 +336,7 @@
                     me.device.language
                 );
                 console.log( "resolution: " + "requested " + game_width + "x" + game_height +
-                    ", got " + me.game.viewport.width + "x" + me.game.viewport.height
+                    ", got " + me.video.renderer.getWidth() + "x" + me.video.renderer.getHeight()
                 );
             }
             return true;
@@ -462,7 +462,6 @@
                     scaleX = scaleY = _max_width / sWidth;
                     sWidth = ~~(sWidth + 0.5);
                     this.renderer.resize(sWidth, designHeight);
-                    me.game.viewport.resize(sWidth, designHeight);
                     /*
                      * XXX: Workaround for not updating container child-bounds
                      * automatically (it's expensive!)
@@ -479,7 +478,6 @@
                     scaleX = scaleY = _max_height / sHeight;
                     sHeight = ~~(sHeight + 0.5);
                     this.renderer.resize(designWidth, sHeight);
-                    me.game.viewport.resize(designWidth, sHeight);
                     /*
                      * XXX: Workaround for not updating container child-bounds
                      * automatically (it's expensive!)
@@ -489,7 +487,6 @@
                 else if (settings.scaleMethod === "flex") {
                     // resize the display canvas to fill the parent container
                     this.renderer.resize(_max_width, _max_height);
-                    me.game.viewport.resize(_max_width, _max_height);
                     /*
                      * XXX: Workaround for not updating container child-bounds
                      * automatically (it's expensive!)
