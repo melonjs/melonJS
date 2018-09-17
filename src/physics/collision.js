@@ -312,8 +312,8 @@
          * @ignore
          */
         api.init = function () {
-            // default bounds to the game viewport
-            api.bounds = me.game.viewport.clone();
+            // default bounds to the game world size
+            api.bounds = me.game.world.getBounds().clone();
             // initializa the quadtree
             api.quadTree = new me.QuadTree(api.bounds, api.maxChildren, api.maxDepth);
 
