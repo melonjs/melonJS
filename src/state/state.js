@@ -125,7 +125,7 @@
             // call the stage destroy method
             if (_stages[_state]) {
                 // just notify the object
-                _stages[_state].screen.destroy();
+                _stages[_state].stage.destroy();
             }
 
             if (_stages[state]) {
@@ -133,7 +133,7 @@
                 _state = state;
 
                 // call the reset function with _extraArgs as arguments
-                _stages[_state].screen.reset.apply(_stages[_state].screen, _extraArgs);
+                _stages[_state].stage.reset.apply(_stages[_state].stage, _extraArgs);
 
                 // and start the main loop of the
                 // new requested state
@@ -430,7 +430,7 @@
          * @public
          * @function
          * @param {Number} state State ID (see constants)
-         * @param {me.Stage} so Instantiated Stage to associate
+         * @param {me.Stage} stage Instantiated Stage to associate
          * with state ID
          * @example
          * var MenuButton = me.GUI_Object.extend({
@@ -469,12 +469,12 @@
          *
          * me.state.set(me.state.MENU, new MenuScreen());
          */
-        api.set = function (state, so) {
-            if (!(so instanceof me.Stage)) {
-                throw new me.Error(so + " is not an instance of me.Stage");
+        api.set = function (state, stage) {
+            if (!(stage instanceof me.Stage)) {
+                throw new me.Error(stage + " is not an instance of me.Stage");
             }
             _stages[state] = {};
-            _stages[state].screen = so;
+            _stages[state].stage = stage;
             _stages[state].transition = true;
         };
 
@@ -488,7 +488,7 @@
          * @return {me.Stage}
          */
         api.current = function () {
-            return _stages[_state].screen;
+            return _stages[_state].stage;
         };
 
         /**
