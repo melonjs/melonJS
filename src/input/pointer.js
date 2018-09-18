@@ -225,7 +225,9 @@
             this.gameScreenY = this.pos.y;
 
             // get the current screen to world offset
-            me.game.viewport.localToWorld(this.gameScreenX, this.gameScreenY, viewportOffset);
+            if (typeof me.game.viewport !== "undefined") {
+                me.game.viewport.localToWorld(this.gameScreenX, this.gameScreenY, viewportOffset);
+            }
 
             /* Initialize the two coordinate space properties. */
             this.gameWorldX = viewportOffset.x;

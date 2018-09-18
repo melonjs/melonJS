@@ -774,7 +774,6 @@
             var isDirty = false;
             var isFloating = false;
             var isPaused = me.state.isPaused();
-            var viewport = me.game.viewport;
 
             // Update container's absolute position
             this._absPos.setV(this.pos);
@@ -793,8 +792,13 @@
                     if (isFloating) {
                         globalFloatingCounter++;
                     }
-                    // check if object is in the viewport
-                    obj.inViewport = isFloating || viewport.isVisible(obj);
+
+                    // check if object is in any active cameras
+                    obj.inViewport = false;
+                    // iterate through all cameras
+                    me.state.current().cameras.forEach(function(camera) {
+                        obj.inViewport |= isFloating || camera.isVisible(obj);
+                    });
 
                     // update our object
                     isDirty = ((obj.inViewport || obj.alwaysUpdate) && obj.update(dt)) || isDirty;

@@ -2,8 +2,9 @@ Version History
 ---------------
 6.2.0
 * Core : renamed `me.ScreenObject` to `me.Stage` (with an alias to me.ScreenObject for Backward compatibility)
+* Camera : Camera2d objects are now defined under Stage objects, rather than having one static global camera under me.game
 * Renderable : new onVisibilityChange event handler that is called when leaving or entering a camera viewport
-* WebGLRenderer : fix a bug when clipping is disabled due to the clipping area being equal to the canvas size  
+* WebGLRenderer : fix a bug when clipping is disabled due to the clipping area being equal to the canvas size
 
 
 6.1.0

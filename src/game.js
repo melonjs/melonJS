@@ -55,13 +55,13 @@
          */
 
         /**
-         * a reference to the game main viewport.
+         * a reference to the current active stage "default" camera
          * @public
          * @type {me.Camera2d}
          * @name viewport
          * @memberOf me.game
          */
-        api.viewport = null;
+        api.viewport = undefined;
 
         /**
          * a reference to the game world, <br>
@@ -145,9 +145,6 @@
                 width  = width  || me.video.renderer.getWidth();
                 height = height || me.video.renderer.getHeight();
 
-                // create a defaut viewport of the same size
-                api.viewport = new me.Camera2d(0, 0, width, height);
-
                 // the root object of our world is an entity container
                 api.world = new me.Container(0, 0, width, height);
                 api.world.name = "rootContainer";
@@ -192,6 +189,9 @@
 
             // reset the anchorPoint
             api.world.anchorPoint.set(0, 0);
+
+            // point to the current active stage "default" camera
+            api.viewport = me.state.current().cameras.get("default");
 
             // publish reset notification
             me.event.publish(me.event.GAME_RESET);
@@ -257,8 +257,9 @@
          * @ignore
          * @function
          * @param {Number} time current timestamp as provided by the RAF callback
+         * @param {me.Stage} stage the current stage
          */
-        api.update = function (time) {
+        api.update = function (time, stage) {
             // handle frame skipping if required
             if ((++frameCounter % frameRate) === 0) {
                 // reset the frame counter
@@ -289,7 +290,10 @@
                     isDirty = api.world.update(updateDelta) || isDirty;
 
                     // update the camera/viewport
-                    isDirty = api.viewport.update(updateDelta) || isDirty;
+                    // iterate through all cameras
+                    stage.cameras.forEach(function(camera) {
+                        isDirty |= camera.update(updateDelta);
+                    });
 
                     me.timer.lastUpdate = window.performance.now();
                     updateAverageDelta = me.timer.lastUpdate - lastUpdateStart;
@@ -310,46 +314,25 @@
          * @private
          * @ignore
          * @function
-         * @param {me.Camera2d} viewport viewport object
+         * @param {me.Stage} stage the current stage
          */
-        api.draw = function (viewport) {
+        api.draw = function (stage) {
             if (isDirty || isAlwaysDirty) {
-                viewport = viewport || api.viewport;
-                // cache the viewport rendering position, so that other object
-                // can access it later (e,g. entityContainer when drawing floating objects)
-                var translateX = viewport.pos.x + viewport.offset.x;
-                var translateY = viewport.pos.y + viewport.offset.y;
-
-                // translate the world coordinates by default to screen coordinates
-                api.world.currentTransform.translate(-translateX, -translateY);
 
                 // prepare renderer to draw a new frame
                 renderer.clear();
 
-                viewport.preDraw(renderer);
+                // iterate through all cameras
+                stage.cameras.forEach(function(camera) {
+                    // render the root container
+                    camera.draw(renderer, me.game.world);
+                });
 
-                api.world.preDraw(renderer);
+                isDirty = false;
 
-                // draw all objects,
-                // specifying the viewport as the rectangle area to redraw
-                api.world.draw(renderer, viewport);
-
-                // draw the viewport/camera effects
-                viewport.draw(renderer);
-
-                api.world.postDraw(renderer);
-
-                viewport.postDraw(renderer);
-
-                // translate the world coordinates by default to screen coordinates
-                api.world.currentTransform.translate(translateX, translateY);
-
+                // flush/render our frame
+                renderer.flush();
             }
-
-            isDirty = false;
-
-            // flush/render our frame
-            renderer.flush();
         };
 
         // return our object

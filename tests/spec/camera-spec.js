@@ -1,36 +1,34 @@
 describe("me.Camera2d", function () {
 
-    beforeEach(function () {
-        // update position so that it's not just 0
-        me.game.viewport.move(100, 100);
-    });
-
-    afterEach(function () {
-        // move back to default 0,0 position
-        me.game.viewport.moveTo(0, 0);
-    });
-
     it("convert between local and World coords without transforms", function () {
+        // default camera
+        var camera = new me.Camera2d(0, 0, 1000, 1000);
         var result = new me.Vector2d();
+
+        // update position so that it's not just 0
+        camera.move(100, 100);
         // convert to word coordinates
-        me.game.viewport.localToWorld(250, 150, result);
+        camera.localToWorld(250, 150, result);
         // convert back to local coordinates
-        me.game.viewport.worldToLocal(result.x, result.y, result);
+        camera.worldToLocal(result.x, result.y, result);
 
         expect( result.x ).toBeCloseTo(250);
         expect( result.y ).toBeCloseTo(150);
     });
 
     it("convert between local and World coords with transforms", function () {
+        // default camera
+        var camera = new me.Camera2d(0, 0, 1000, 1000);
         var result = new me.Vector2d();
 
+        // update position so that it's not just 0
+        camera.move(100, 100);
         // rotate the viewport
-        me.game.viewport.currentTransform.rotate(0.5);
-
+        camera.currentTransform.rotate(0.5);
         // convert to word coordinates
-        me.game.viewport.localToWorld(250, 150, result);
+        camera.localToWorld(250, 150, result);
         // convert back to local coordinates
-        me.game.viewport.worldToLocal(result.x, result.y, result);
+        camera.worldToLocal(result.x, result.y, result);
 
         expect( result.x ).toBeCloseTo(250);
         expect( result.y ).toBeCloseTo(150);

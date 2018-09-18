@@ -94,10 +94,11 @@
          * @ignore
          */
         function _renderFrame(time) {
+            var stage = _stages[_state].stage;
             // update all game objects
-            me.game.update(time);
+            me.game.update(time, stage);
             // render all game objects
-            me.game.draw();
+            me.game.draw(stage);
             // schedule the next frame update
             if (_animFrameId !== -1) {
                 _animFrameId = window.requestAnimationFrame(_renderFrame);

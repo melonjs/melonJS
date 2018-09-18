@@ -78,6 +78,16 @@
              */
             this.damping = 1.0;
 
+            /**
+             * the name of this camera
+             * @public
+             * @type {String}
+             * @name name
+             * @default "default"
+             * @memberOf me.Camera2d
+             */
+            this.name = "default";
+
             // offset for shake effect
             this.offset = new me.Vector2d();
 
@@ -115,11 +125,10 @@
             // enable event detection on the camera
             this.isKinematic = false;
 
-            var self = this;
             // subscribe to the game reset event
-            me.event.subscribe(me.event.GAME_RESET, function () {
-                self.reset.bind(self);
-            });
+            me.event.subscribe(me.event.GAME_RESET, this.reset.bind(this));
+            // subscribe to the canvas resize event
+            me.event.subscribe(me.event.CANVAS_ONRESIZE, this.resize.bind(this));
         },
 
         // -- some private function ---
@@ -607,7 +616,7 @@
          * render the camera effects
          * @ignore
          */
-        draw : function (renderer) {
+        drawFX : function (renderer) {
             // fading effect
             if (this._fadeIn.tween) {
                 renderer.clearColor(this._fadeIn.color);
@@ -629,6 +638,44 @@
                     this._fadeOut.color = null;
                 }
             }
+        },
+
+        /**
+         * draw all object visibile in this viewport
+         * @ignore
+         */
+        draw : function (renderer, container) {
+            var translateX = this.pos.x + this.offset.x;
+            var translateY = this.pos.y + this.offset.y;
+
+            // translate the world coordinates by default to screen coordinates
+            container.currentTransform.translate(-translateX, -translateY);
+
+            // clip to camera bounds
+            renderer.clipRect(
+                0,
+                0,
+                this.width,
+                this.height
+            );
+
+            this.preDraw(renderer);
+
+            container.preDraw(renderer);
+
+            // draw all objects,
+            // specifying the viewport as the rectangle area to redraw
+            container.draw(renderer, this);
+
+            // draw the viewport/camera effects
+            this.drawFX(renderer);
+
+            container.postDraw(renderer);
+
+            this.postDraw(renderer);
+
+            // translate the world coordinates by default to screen coordinates
+            container.currentTransform.translate(translateX, translateY);
         }
     });
 })();
