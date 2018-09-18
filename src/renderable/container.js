@@ -94,8 +94,7 @@
 
             /**
              * Specify if the container draw operation should clip his children to its own bounds
-             * XXX : HIDDEN PROPERTY FOR NOW, UNTIL IT PROPERLY WORKS!
-             * @private
+             * @public
              * @type Boolean
              * @default false
              * @name clipping
