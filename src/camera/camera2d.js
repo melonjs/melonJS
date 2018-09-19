@@ -395,14 +395,20 @@
                 if (!this.pos.equals(targetV)) {
                     // update the camera position
                     if (this.smoothFollow === true && this.damping < 1.0) {
-                        this.pos.lerp(targetV, this.damping);
+                        // account for floating precision and check if we are close "enough"
+                        if (me.Math.toBeCloseTo(targetV.x, this.pos.x, 2) &&
+                            me.Math.toBeCloseTo(targetV.y, this.pos.y, 2)) {
+                            this.pos.setV(targetV);
+                            return false;
+                        } else {
+                            this.pos.lerp(targetV, this.damping);
+                        }
                     } else {
                         this.pos.setV(targetV);
                     }
                     return true;
                 }
             }
-
             return false;
         },
 
