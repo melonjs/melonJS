@@ -175,6 +175,29 @@
             return (~~(0.5 + num * powres) / powres);
         };
 
+        /**
+         * check if the given value is close to the expected one
+         * @public
+         * @function
+         * @memberOf me.Math
+         * @name toBeCloseTo
+         * @param {number} expected value to be compared with.
+         * @param {number} actual actual value to compare
+         * @param {number} [precision=2] float precision for the comparison
+         * @return {boolean} if close to
+         * @example
+         * // test if the given value is close to 10
+         * if (me.Math.toBeCloseTo(10, value)) {
+         *     // do something
+         * }
+         */
+        api.toBeCloseTo = function (expected, actual, precision) {
+            if (typeof precision !== "number") {
+                precision = 2;
+            }
+            return Math.abs(expected - actual) < (Math.pow(10, -precision) / 2)
+        };
+
         // return our object
         return api;
     })();

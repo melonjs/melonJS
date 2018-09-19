@@ -95,4 +95,24 @@ describe("me.Math", function () {
         });
     });
 
+    describe("toBeCloseTo", function () {
+
+        it("4.3546731 is closed to 4.3547", function () {
+            var value = 4.3546731;
+            expect(me.Math.toBeCloseTo(4.3547, value, 0)).toEqual(true);
+            expect(me.Math.toBeCloseTo(4.3547, value, 1)).toEqual(true);
+            expect(me.Math.toBeCloseTo(4.3547, value, 2)).toEqual(true);
+            expect(me.Math.toBeCloseTo(4.3547, value, 3)).toEqual(true);
+            expect(me.Math.toBeCloseTo(4.3547, value, 4)).toEqual(true);
+            expect(me.Math.toBeCloseTo(4.3547, value, 5)).toEqual(false);
+            expect(me.Math.toBeCloseTo(4.3547, value, 6)).toEqual(false);
+        });
+
+        it("4.8 is closed to 5 but not to 4", function () {
+            var value = 4.8;
+            expect(me.Math.toBeCloseTo(5, value, 0)).toEqual(true);
+            expect(me.Math.toBeCloseTo(4, value, 0)).toEqual(false);
+        });
+    });
+
 });
