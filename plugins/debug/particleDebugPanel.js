@@ -90,19 +90,19 @@
 
             // patch me.ParticleEmitter.init
             me.plugin.patch(me.ParticleEmitter, "init", function (x, y, image) {
-                this._patched(x, y, image);
+                this._patched.apply(this, arguments);
                 _this.emitterCount++;
             });
 
             // patch me.ParticleEmitter.destroy
             me.plugin.patch(me.ParticleEmitter, "destroy", function () {
-                this._patched();
+                this._patched.apply(this, arguments);
                 _this.emitterCount--;
             });
 
             // patch me.Particle.init
             me.plugin.patch(me.Particle, "init", function (emitter) {
-                this._patched(emitter);
+                this._patched.apply(this, arguments);
                 _this.particleCount++;
             });
 
@@ -114,7 +114,7 @@
             // patch me.game.update
             me.plugin.patch(me.game, "update", function (dt) {
                 var startTime = now();
-                this._patched(dt);
+                this._patched.apply(this, arguments);
                 // calculate the update time (can't we use [dt] here ?)
                 _this.frameUpdateTimeSamples.push(now() - startTime);
             });
@@ -122,7 +122,7 @@
             // patch me.game.draw
             me.plugin.patch(me.game, "draw", function () {
                 var startTime = now();
-                this._patched();
+                this._patched.apply(this, arguments);
                 // calculate the drawing time
                 _this.frameDrawTimeSamples.push(now() - startTime);
             });
@@ -130,7 +130,7 @@
             // patch me.ParticleContainer.update
             me.plugin.patch(me.ParticleContainer, "update", function (dt) {
                 var startTime = now();
-                var value = this._patched(dt);
+                var value = this._patched.apply(this, arguments);
                 // calculate the update time (can't we use [dt] here ?)
                 _this.updateTime += now() - startTime;
                 return value;
@@ -139,7 +139,7 @@
             // patch me.ParticleContainer.draw
             me.plugin.patch(me.ParticleContainer, "draw", function (renderer, rect) {
                 var startTime = now();
-                this._patched(renderer, rect);
+                this._patched.apply(this, arguments);
                 // calculate the drawing time
                 _this.drawTime += now() - startTime;
             });
