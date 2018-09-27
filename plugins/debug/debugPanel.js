@@ -351,6 +351,22 @@
             });
 
             /*
+            me.plugin.patch(me.BitmapFont, "draw", function (renderer, text, x, y) {
+                // call the original me.Sprite.draw function
+                this._patched.apply(this, arguments);
+
+                // draw the font rectangle
+                if (me.debug.renderHitBox) {
+                    renderer.save();
+                    renderer.setColor("green");
+                    renderer.drawShape(this.getBounds());
+                    _this.counters.inc("bounds");
+                    renderer.restore();
+                }
+            });
+            */
+
+            /*
             // patch font.js
             me.plugin.patch(me.Font, "draw", function (renderer, text, x, y) {
                 // call the original me.Sprite.draw function

@@ -4,6 +4,7 @@ Version History
 * Core : renamed `me.ScreenObject` to `me.Stage` (with an alias to me.ScreenObject for Backward compatibility)
 * Camera : `me.Camera2d` objects are now defined under `Stage` objects, rather than having one static global camera under `me.game`
 * Camera : fix infinite generation of the VIEWPORT_ONCHANGE event when using camera damping
+* Font : fix bounds calculation for bitmap font objects
 * Math : new `toBeCloseTo` function to determine if two values are closed "enough" to eachother
 * Renderable : new onVisibilityChange event handler that is called when leaving or entering a camera viewport
 * Renderable : fix documentation for the container `clipping` flag (was accidently left private)

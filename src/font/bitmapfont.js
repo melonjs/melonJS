@@ -10,7 +10,7 @@
 (function () {
 
     /**
-     * Measures a single line of text, does not account for \n
+     * Measures the width of a single line of text, does not account for \n
      * @ignore
      */
     var measureTextWidth = function(font, text) {
@@ -26,6 +26,14 @@
         }
 
         return width;
+    };
+
+    /**
+     * Measures the height of a single line of text, does not account for \n
+     * @ignore
+     */
+    var measureTextHeight = function(font) {
+        return font.bitmapFontData.capHeight * font.lineHeight * font.fontScale.y;
     };
 
     /**
@@ -70,7 +78,7 @@
             this.fontScale = me.pool.pull("me.Vector2d", 1, 1);
 
             this.charCount = 0;
-            this._super(me.Renderable, "init", [0, 0, 0, 0, 0, 0]);
+            this._super(me.Renderable, "init", [0, 0, 0, 0]);
 
             // set a default alignement
             this.textAlign = textAlign || "left";
@@ -80,6 +88,9 @@
             if (scale) {
                 this.resize(scale);
             }
+
+            // the text displayed by this bitmapFont object
+            this.text = "";
         },
 
         /**
@@ -107,6 +118,8 @@
          */
         resize : function (scale) {
             this.fontScale.set(scale, scale);
+            // clear the cache text to recalculate bounds
+            this.text = "";
         },
 
 
@@ -118,17 +131,23 @@
          * @param {String} text
          * @returns {Object} an object with two properties: `width` and `height`, defining the output dimensions
          */
-        measureText : function (text) {
+        measureText : function (text, ret) {
             var strings = ("" + text).split("\n");
             var width = 0;
             var height = 0;
-            var stringHeight = this.bitmapFontData.capHeight * this.lineHeight;
+            var stringHeight = measureTextHeight(this);
             for (var i = 0; i < strings.length; i++) {
                 width = Math.max(measureTextWidth(this, strings[i]), width);
                 height += stringHeight;
             }
 
-            return {width: width, height: height * this.fontScale.y};
+            if (typeof ret !== "undefined") {
+                ret.width = width;
+                ret.height = height;
+                return ret;
+            }
+
+            return {width: width, height: height};
         },
 
         /**
@@ -144,14 +163,21 @@
         draw : function (renderer, text, x, y) {
             var strings = ("" + text).split("\n");
             var lX = x;
-            var stringHeight = this.bitmapFontData.capHeight * this.lineHeight * this.fontScale.y;
+            var stringHeight = measureTextHeight(this);
+            var maxWidth = 0;
+            var newString = false;
 
             // save the previous global alpha value
             var _alpha = renderer.globalAlpha();
             renderer.setGlobalAlpha(_alpha * this.getOpacity());
 
-            // update initial position
-            this.pos.set(x, y, this.pos.z); // TODO : z ?
+            // update the text bounds
+            if (text !== this.text) {
+                newString = true;
+                this.text = text;
+                this.measureText(text, this.getBounds());
+            }
+
             for (var i = 0; i < strings.length; i++) {
                 x = lX;
                 var string = me.utils.string.trimRight(strings[i]);
@@ -184,6 +210,17 @@
 
                     default :
                         break;
+                }
+
+                // update initial position if required
+                if (newString === true) {
+                    if (i === 0) {
+                        this.pos.y = y;
+                    }
+                    if (maxWidth < stringWidth) {
+                        maxWidth = stringWidth;
+                        this.pos.x = x;
+                    }
                 }
 
                 // x *= this.fontScale.x;
