@@ -573,7 +573,12 @@
          * @return {Boolean}
          */
         isVisible : function (obj) {
-            return obj.getBounds().overlaps(this);
+            if (obj.floating === true) {
+                // #943
+                return true;
+            } else {
+                return obj.getBounds().overlaps(this);
+            }
         },
 
         /**

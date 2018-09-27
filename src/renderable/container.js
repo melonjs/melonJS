@@ -796,7 +796,7 @@
                     obj.inViewport = false;
                     // iterate through all cameras
                     me.state.current().cameras.forEach(function(camera) {
-                        obj.inViewport |= isFloating || camera.isVisible(obj);
+                        obj.inViewport |= camera.isVisible(obj);
                     });
 
                     // update our object
