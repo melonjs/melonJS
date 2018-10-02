@@ -194,7 +194,7 @@
                     // arg[0] can take different types in howler 2.0
                     sound.loop(loop, id);
                 }
-                sound.volume(typeof(volume) === "number" ? volume.clamp(0.0, 1.0) : Howler.volume(), id);
+                sound.volume(typeof(volume) === "number" ? me.Math.clamp(volume, 0.0, 1.0) : Howler.volume(), id);
                 if (typeof(onend) === "function") {
                     if (loop === true) {
                         sound.on("end", onend, id);
