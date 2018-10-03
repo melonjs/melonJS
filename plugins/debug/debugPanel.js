@@ -351,20 +351,35 @@
             });
 
             /*
-            me.plugin.patch(me.BitmapFont, "draw", function (renderer, text, x, y) {
+            me.plugin.patch(me.BitmapFont, "draw", function (renderer) {
                 // call the original me.Sprite.draw function
                 this._patched.apply(this, arguments);
 
                 // draw the font rectangle
                 if (me.debug.renderHitBox) {
-                    renderer.save();
+                    var bounds = this.getBounds();
+
+                    if (typeof this.ancestor !== "undefined") {
+                        var ax = this.anchorPoint.x * bounds.width,
+                            ay = this.anchorPoint.y * bounds.height;
+                        // translate back as the bounds position
+                        // is already adjusted to the anchor Point
+                        renderer.translate(ax, ay);
+                    } else {
+                        renderer.save();
+                    }
+
                     renderer.setColor("green");
-                    renderer.drawShape(this.getBounds());
+                    renderer.drawShape(bounds);
                     _this.counters.inc("bounds");
-                    renderer.restore();
+
+                    if (typeof this.ancestor === "undefined") {
+                        renderer.restore();
+                    }
                 }
             });
             */
+
 
             /*
             // patch font.js

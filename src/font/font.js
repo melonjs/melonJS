@@ -98,10 +98,6 @@
 
             // font name and type
             this.setFont(font, size, fillStyle, textAlign);
-
-            if (!this.gid) {
-                this.gid = me.utils.createGUID();
-            }
         },
 
         /**
@@ -109,9 +105,11 @@
          * @name bold
          * @memberOf me.Font
          * @function
+         * @return this object for chaining
          */
         bold : function () {
             this.font = "bold " + this.font;
+            return this;
         },
 
         /**
@@ -119,9 +117,11 @@
          * @name italic
          * @memberOf me.Font
          * @function
+         * @return this object for chaining
          */
         italic : function () {
             this.font = "italic " + this.font;
+            return this;
         },
 
         /**
@@ -133,6 +133,7 @@
          * @param {Number|String} size size, or size + suffix (px, em, pt)
          * @param {me.Color|String} [fillStyle] a CSS color value
          * @param {String} [textAlign="left"] horizontal alignment
+         * @return this object for chaining
          * @example
          * font.setFont("Arial", 20, "white");
          * font.setFont("Arial", "1.5em", "white");
@@ -169,6 +170,7 @@
             if (textAlign) {
                 this.textAlign = textAlign;
             }
+            return this;
         },
 
         /**
@@ -178,10 +180,12 @@
          * @function
          * @param {me.CanvasRenderer|me.WebGLRenderer} renderer Reference to the destination renderer instance
          * @param {String} text
-         * @return {Object} returns an object, with two attributes: width (the width of the text) and height (the height of the text).
+         * @param {Object} [ret] a object in which to store the text metrics
+         * @returns {TextMetrics} a TextMetrics object with two properties: `width` and `height`, defining the output dimensions
          */
-        measureText : function (renderer, text) {
+        measureText : function (renderer, text, ret) {
             var context = renderer.getFontContext();
+            var textMetrics = ret || {};
 
             // draw the text
             context.font = this.font;
@@ -196,10 +200,10 @@
                 this.width = Math.max(context.measureText(me.utils.string.trimRight(strings[i])).width, this.width);
                 this.height += this.fontSize.y * this.lineHeight;
             }
-            return {
-                width : this.width,
-                height : this.height
-            };
+            textMetrics.width = this.width;
+            textMetrics.height = this.height;
+
+            return textMetrics;
         },
 
         /**
