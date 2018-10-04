@@ -21,7 +21,8 @@ game.UI.Container = me.Container.extend({
         // make sure our object is always draw first
         this.z = Infinity;
 
-        this.floating = true;
+        // causes conflict with game.PlayerEntity
+        // this.floating = true;
 
         // give a name
         this.name = "UIPanel";
