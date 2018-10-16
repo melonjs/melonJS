@@ -137,14 +137,13 @@
                 api.throttlingInterval = ~~(1000 / me.sys.fps);
             }
 
-            if (me.sys.autoFocus && typeof (window.focus) === "function") {
-                window.focus();
+            if (me.sys.autoFocus === true) {
+                me.device.focus();
                 me.video.renderer.getScreenCanvas().addEventListener(
                     activeEventList[2], // MOUSE/POINTER DOWN
                     function () {
-                        window.focus();
-                        return true;
-                    }
+                        me.device.focus();
+                    }, { passive: true }
                 );
             }
 

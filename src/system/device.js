@@ -158,6 +158,10 @@
                 if (me.sys.resumeOnFocus) {
                     me.state.resume(true);
                 }
+                // force focus if autofocus is on
+                if (me.sys.autoFocus) {
+                    me.device.focus();
+                }
             }, false);
 
 
@@ -786,6 +790,23 @@
                     throw new me.Error("storage type " + type + " not supported");
             }
         };
+
+        /**
+         * Makes a request to bring this device window to the front.
+         * @name focus
+         * @memberOf me.device
+         * @function
+         * @example
+         *  if (clicked) {
+         *    me.device.focus();
+         *  }
+         */
+        api.focus = function () {
+            if (typeof (window.focus) === "function") {
+                window.focus();
+            }
+        };
+
 
         /**
          * event management (Accelerometer)

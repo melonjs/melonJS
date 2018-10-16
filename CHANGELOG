@@ -3,8 +3,10 @@ Version History
 6.2.0
 * Audio : fixed a regression when passing an initial volume value to the play function (thanks @PLAYERKILLERS)
 * Core : renamed `me.ScreenObject` to `me.Stage` (with an alias to me.ScreenObject for Backward compatibility)
+* Core : cleaned and improved the window auto focus feature
 * Camera : `me.Camera2d` objects are now defined under `Stage` objects, rather than having one static global camera under `me.game`
 * Camera : fix infinite generation of the VIEWPORT_ONCHANGE event when using camera damping
+* Device : added a me.device.focus() function
 * Font : fix bounds calculation for bitmap font objects
 * Font : fix missing documentation on properties for BitmapFont Object.
 * Font : BitmapFont objects can now be directly added to a container like any other renderables.
