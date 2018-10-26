@@ -579,9 +579,10 @@
          */
         isVisible : function (obj) {
             if (obj.floating === true) {
-                // #943
-                return true;
+                // check against screen coordinates
+                return me.video.renderer.overlaps(obj.getBounds());
             } else {
+                // check if within the current camera
                 return obj.getBounds().overlaps(this);
             }
         },

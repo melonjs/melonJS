@@ -155,8 +155,8 @@
             this.isPersistent = false;
 
             /**
-             * Define if a renderable follows screen coordinates (floating)<br>
-             * or the world coordinates (not floating)<br>
+             * If true, this renderable will be rendered using screen coordinates,
+             * as opposed to world coordinates. Use this, for example, to define UI elements.
              * @public
              * @type Boolean
              * @default false

@@ -232,6 +232,22 @@
         },
 
         /**
+         * check if the given rectangle overlaps with the renderer screen coordinates
+         * @name overlaps
+         * @memberOf me.Renderer
+         * @function
+         * @param  {me.Rect} rect
+         * @return {boolean} true if overlaps
+         */
+        overlaps : function (rect)    {
+            var bounds = rect.getBounds();
+            return (
+                bounds.left < this.getWidth() && bounds.right >= 0 &&
+                bounds.top < this.getHeight() && bounds.bottom >= 0
+            );
+        },
+
+        /**
          * resizes the system canvas
          * @name resize
          * @memberOf me.Renderer

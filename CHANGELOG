@@ -13,6 +13,7 @@ Version History
 * Math : new `toBeCloseTo` function to determine if two values are closed "enough" to eachother
 * Renderable : new onVisibilityChange event handler that is called when leaving or entering a camera viewport
 * Renderable : fix documentation for the container `clipping` flag (was accidently left private)
+* Renderable : update visibility flag for floating objects using actual screen coordinates
 * WebGLRenderer : fix a bug when clipping is disabled due to the clipping area being equal to the canvas size
 
 
