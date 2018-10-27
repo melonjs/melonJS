@@ -358,7 +358,7 @@
                 this._patched.apply(this, arguments);
 
                 // draw the font rectangle
-                if (me.debug.renderHitBox && this.name !== "debugPanelFont") {
+                if (_this.visible && me.debug.renderHitBox && this.name !== "debugPanelFont") {
                     var bounds = this.getBounds();
 
                     if (typeof this.ancestor !== "undefined") {
@@ -395,7 +395,7 @@
                 renderer.drawFont(this._drawFont(renderer.getFontContext(), text, ~~x, ~~y, false));
 
                 // call the original me.Sprite.draw function
-                if (me.debug.renderHitBox) {
+                if (_this.visible && me.debug.renderHitBox) {
                     renderer.save();
                     renderer.setColor("orange");
                     renderer.drawShape(this.getBounds());
@@ -416,7 +416,7 @@
                 this._patched.apply(this, arguments);
 
                 // draw the font rectangle
-                if (me.debug.renderHitBox) {
+                if (_this.visible && me.debug.renderHitBox) {
                     renderer.save();
                     renderer.setColor("orange");
                     renderer.drawShape(this.getBounds());
