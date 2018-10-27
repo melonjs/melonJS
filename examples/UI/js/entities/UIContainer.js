@@ -121,6 +121,7 @@ game.UI.Container = me.Container.extend({
 
     // update function
     update : function(dt) {
-        return this._super(me.Container, "update", [ dt ]) || this.hover;
+        this._super(me.Container, "update", [ dt ]);
+        return true;
     }
 });
