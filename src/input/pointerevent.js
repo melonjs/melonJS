@@ -685,6 +685,10 @@
             throw new me.Error("invalid event type : " + eventType);
         }
 
+        if (typeof region === "undefined") {
+            throw new me.Error("registerPointerEvent: region for " + region + " event is undefined ");
+        }
+
         var eventTypes = findAllActiveEvents(activeEventList, pointerEventMap[eventType]);
 
         // register the event
