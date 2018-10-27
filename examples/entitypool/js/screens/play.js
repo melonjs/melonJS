@@ -1,6 +1,6 @@
 (function() {
 
-game.PlayScreen = me.ScreenObject.extend({
+game.PlayScreen = me.Stage.extend({
     onResetEvent: function() {
         var main;
         var renderable;

@@ -29,7 +29,7 @@ var game = {
      * callback when everything is loaded
      */
     loaded: function () {
-        var PlayScreen = me.ScreenObject.extend({
+        var PlayScreen = me.Stage.extend({
             // on reset event function
             onResetEvent : function() {
                 // black background

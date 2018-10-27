@@ -30,7 +30,7 @@ var game = {
     }
 };
 
-var PlayScreen = me.ScreenObject.extend( {
+var PlayScreen = me.Stage.extend( {
     onResetEvent: function() {
          // clear the background
         me.game.world.addChild(new me.ColorLayer("background", "#5E3F66", 0), 0);
