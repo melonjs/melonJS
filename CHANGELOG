@@ -2,6 +2,7 @@ Version History
 ---------------
 6.2.0
 * Audio : fixed a regression when passing an initial volume value to the play function (thanks @PLAYERKILLERS)
+* Container : new `getNextChild` function that returns the next child within the container
 * Core : renamed `me.ScreenObject` to `me.Stage` (with an alias to me.ScreenObject for Backward compatibility)
 * Core : cleaned and improved the window auto focus feature
 * Camera : `me.Camera2d` objects are now defined under `Stage` objects, rather than having one static global camera under `me.game`
