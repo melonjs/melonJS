@@ -380,21 +380,34 @@
             });
             */
 
-
             /*
             // patch font.js
             me.plugin.patch(me.Font, "draw", function (renderer, text, x, y) {
-                // call the original me.Sprite.draw function
-                this._patched.apply(this, arguments);
+                // save the previous global alpha value
+                var _alpha = renderer.globalAlpha();
 
-                // draw the font rectangle
+                renderer.setGlobalAlpha(_alpha * this.getOpacity());
+
+                // save the previous context
+                renderer.save();
+
+                // draw the text
+                renderer.drawFont(this._drawFont(renderer.getFontContext(), text, ~~x, ~~y, false));
+
+                // call the original me.Sprite.draw function
                 if (me.debug.renderHitBox) {
                     renderer.save();
-                    renderer.setColor("orange");
+                    renderer.setColor("green");
                     renderer.drawShape(this.getBounds());
                     _this.counters.inc("bounds");
                     renderer.restore();
                 }
+
+                // restore previous context
+                renderer.restore();
+
+                // restore the previous global alpha value
+                renderer.setGlobalAlpha(_alpha);
             });
 
             // patch font.js
