@@ -18,14 +18,15 @@ game.TextEntity = me.Renderable.extend({
 
     onActivateEvent: function () {
         var self = this;
-        this.pointerDown = me.event.subscribe("pointermove", function (event) {
+        // register on mouse event
+        me.input.registerPointerEvent("pointermove", me.game.viewport, function (event) {
             self.text = "?,?";
             var layer = me.game.world.getChildByName("Ground")[0];
             var tile = layer.getTile(event.gameWorldX, event.gameWorldY);
             if (tile) {
                 self.text = tile.col + "," + tile.row;
             }
-        });
+        }, false);
     },
 
     draw : function (renderer) {
