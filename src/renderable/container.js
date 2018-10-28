@@ -314,7 +314,7 @@
         },
 
         /**
-         * Returns the next child within the container or undefined if none 
+         * Returns the next child within the container or undefined if none
          * @name getNextChild
          * @memberOf me.Container
          * @function
@@ -811,7 +811,7 @@
                     obj.inViewport = false;
                     // iterate through all cameras
                     me.state.current().cameras.forEach(function(camera) {
-                        obj.inViewport |= camera.isVisible(obj);
+                        obj.inViewport |= camera.isVisible(obj, isFloating);
                     });
 
                     // update our object

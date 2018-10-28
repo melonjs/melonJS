@@ -239,10 +239,10 @@
          * @param  {me.Rect} rect
          * @return {boolean} true if overlaps
          */
-        overlaps : function (rect)    {
+        overlaps : function (rect) {
             return (
-                rect.left < this.getWidth() && rect.right >= 0 &&
-                rect.top < this.getHeight() && rect.bottom >= 0
+                rect.left < this.getWidth() && rect.right > 0 &&
+                rect.top < this.getHeight() && rect.bottom > 0
             );
         },
 

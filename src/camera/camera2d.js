@@ -575,10 +575,11 @@
          * @memberOf me.Camera2d
          * @function
          * @param {me.Renderable} object
+         * @param {Boolean} [floating===object.floating] if visibility check should be done against screen coordinates
          * @return {Boolean}
          */
-        isVisible : function (obj) {
-            if (obj.floating === true) {
+        isVisible : function (obj, floating) {
+            if (floating === true || obj.floating === true) {
                 // check against screen coordinates
                 return me.video.renderer.overlaps(obj.getBounds());
             } else {
