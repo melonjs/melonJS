@@ -35,6 +35,20 @@ game.UI.ButtonUI = me.GUI_Object.extend({
     },
 
     /**
+     * function called when the pointer is over the object
+     */
+    onOver : function (/* event */) {
+        this.setOpacity(1.0);
+    },
+
+    /**
+     * function called when the pointer is leaving the object area
+     */
+    onOut : function (/* event */) {
+        this.setOpacity(0.5);
+    },
+
+    /**
      * function called when the object is clicked on
      */
     onClick : function (/* event */) {
@@ -144,19 +158,10 @@ game.UI.CheckBoxUI = me.GUI_Object.extend({
 
     draw: function(renderer) {
         this._super(me.GUI_Object, "draw", [ renderer ]);
-
-        // save global alpha
-        var alpha = renderer.globalAlpha();
-        // sprite alpha value
-        renderer.setGlobalAlpha(alpha * this.getOpacity());
-
         this.font.draw(renderer,
             " " + (this.isSelected ? this.label_on : this.label_off),
             this.pos.x + this.width,
             this.pos.y + this.height / 2
         );
-
-        // restore global alpha
-        renderer.setGlobalAlpha(alpha);
     }
 });

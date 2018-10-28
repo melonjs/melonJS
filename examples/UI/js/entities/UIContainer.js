@@ -16,9 +16,7 @@ game.UI.Container = me.Container.extend({
         // persistent across level change
         this.isPersistent = true;
 
-        // make sure our object is always draw first
-        this.z = Infinity;
-
+        // use screen coordinates
         this.floating = true;
 
         // give a name
