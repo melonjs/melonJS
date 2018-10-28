@@ -407,6 +407,8 @@
                 pointer = T_POINTERS.pop();
                 pointer.setEvent(
                     event,
+                    touchEvent.pageX,
+                    touchEvent.pageY,
                     touchEvent.clientX,
                     touchEvent.clientY,
                     touchEvent.identifier
@@ -418,6 +420,8 @@
             pointer = T_POINTERS.pop();
             pointer.setEvent(
                 event,
+                event.pageX,
+                event.pageY,
                 event.clientX,
                 event.clientY,
                 event.pointerId
