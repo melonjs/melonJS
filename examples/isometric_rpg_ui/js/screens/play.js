@@ -62,7 +62,7 @@ game.PlayScreen = me.ScreenObject.extend({
         ));
 
         // add the panel to word (root) container
-        me.game.world.addChild(this.panel, 1);
+        me.game.world.addChild(this.panel, 10);
 
     },
 

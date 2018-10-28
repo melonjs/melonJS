@@ -30,38 +30,19 @@ game.UI.Container = me.Container.extend({
         // back panel sprite
         this.panelSprite = game.texture.createSpriteFromName("grey_panel");
         this.panelSprite.anchorPoint.set(0, 0);
-
         // scale to match the container size
         this.panelSprite.scale(
             this.width / this.panelSprite.width,
             this.height / this.panelSprite.height
         );
-
         this.addChild(this.panelSprite);
 
-        // Panel Label
-        this.LabelText = new (me.Renderable.extend({
-            init: function() {
-                this._super(me.Renderable, 'init', [0, 0, 10, 10]);
-                this.font = new me.Font("kenpixel", 20, "black");
-                this.font.textAlign = "center";
-                this.font.textBaseline = "top";
-                this.font.bold();
-            },
-            draw: function(renderer){
-                this.font.draw (
-                    renderer,
-                    label,
-                    this.pos.x,
-                    this.pos.y);
-            }
-        }));
-        this.LabelText.pos.set(
-            this.width / 2,
-            16, // panel border
-            this.z
-        )
-        this.addChild(this.LabelText, 10);
+
+        this.font = new me.Font("kenpixel", 20, "black");
+        this.font.textAlign = "center";
+        this.font.textBaseline = "top";
+        this.font.bold();
+        this.label = label;
 
         // input status flags
         this.selected = false;
@@ -126,6 +107,18 @@ game.UI.Container = me.Container.extend({
 
     // update function
     update : function(dt) {
-        return this._super(me.Container, "update", [ dt ]) || this.hover;
+        this._super(me.Container, "update", [ dt ]);
+        return true;
+    },
+
+    draw: function(renderer) {
+        this._super(me.Container, "draw", [ renderer ]);
+        this.font.draw(
+            renderer,
+            this.label,
+            this.width / 2,
+            16, // panel border
+        );
     }
+
 });
