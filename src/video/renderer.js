@@ -239,13 +239,13 @@
          * @param  {me.Rect} rect
          * @return {boolean} true if overlaps
          */
-        overlaps : function (rect)    {
-            var bounds = rect.getBounds();
+        overlaps : function (rect) {
             return (
-                bounds.left < this.getWidth() && bounds.right >= 0 &&
-                bounds.top < this.getHeight() && bounds.bottom >= 0
+                rect.left < this.getWidth() && rect.right > 0 &&
+                rect.top < this.getHeight() && rect.bottom > 0
             );
         },
+
 
         /**
          * resizes the system canvas

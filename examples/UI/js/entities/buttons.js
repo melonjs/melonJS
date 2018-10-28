@@ -99,6 +99,9 @@ game.UI.CheckBoxUI = me.GUI_Object.extend({
         this.font.textAlign = "left";
         this.font.textBaseline = "middle";
 
+        // extend the button Bounding Box to include the label size
+        this.getBounds().width = 140;
+
         // only the parent container is a floating object
         this.floating = false;
     },
