@@ -1,15 +1,23 @@
 Version History
 ---------------
 6.2.0
-* Core : renamed `me.ScreenObject` to `me.Stage` (with an alias to me.ScreenObject for Backward compatibility)
-* Camera : `me.Camera2d` objects are now defined under `Stage` objects, rather than having one static global camera under `me.game`
+* Audio : fixed a regression when passing an initial volume value to the play function (thanks @PLAYERKILLERS)
+* Container : new `getNextChild` function that returns the next child within the container
+* Core : renamed `me.ScreenObject` to `me.Stage` (with an alias to `me.ScreenObject` for Backward compatibility)
+* Core : cleaned and improved the window auto focus feature
+* Camera : `me.Camera2d` objects can now be defined per Stage, rather than having one static global camera under `me.game`
 * Camera : fix infinite generation of the VIEWPORT_ONCHANGE event when using camera damping
-* Font : fix bounds calculation for bitmap font objects
+* Device : added a me.device.focus() function
+* Entity : fix "DRAGEND" event triggering for Draggable Entity, when pointer is moved outside of the screen area
+* Font : fix bounds calculation for BitmapFont objects
+* Font : enable Font & BitmapFont bounding box drawing through the Debug Panel
+* Font : fix missing documentation on properties for BitmapFont Object.
+* Font : BitmapFont objects can now be directly added to a container like any other renderables.
 * Math : new `toBeCloseTo` function to determine if two values are closed "enough" to eachother
 * Renderable : new onVisibilityChange event handler that is called when leaving or entering a camera viewport
-* Renderable : fix documentation for the container `clipping` flag (was accidently left private)
+* Renderable : fix documentation for the container `clipping` flag (was accidentally left private)
+* Renderable : update visibility flag for floating objects using actual screen coordinates
 * WebGLRenderer : fix a bug when clipping is disabled due to the clipping area being equal to the canvas size
-
 
 6.1.0
 * Audio : latest audio core update (2.0.15)

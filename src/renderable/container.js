@@ -314,6 +314,21 @@
         },
 
         /**
+         * Returns the next child within the container or undefined if none 
+         * @name getNextChild
+         * @memberOf me.Container
+         * @function
+         * @param {me.Renderable} child
+         */
+        getNextChild : function (child) {
+            var index = this.children.indexOf(child) - 1;
+            if (index >= 0 && index < this.children.length) {
+                return this.getChildAt(index);
+            }
+            return undefined;
+        },
+
+        /**
          * Returns true if contains the specified Child
          * @name hasChild
          * @memberOf me.Container

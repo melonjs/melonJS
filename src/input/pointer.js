@@ -71,6 +71,26 @@
             this.isPrimary = false;
 
            /**
+            * the horizontal coordinate at which the event occurred, relative to the left edge of the entire document.
+            * @public
+            * @type {Number}
+            * @name pageX
+            * @see https://developer.mozilla.org/en-US/docs/Web/API/MouseEvent/pageX
+            * @memberOf me.Pointer
+            */
+            this.pageX = undefined;
+
+           /**
+            * the vertical coordinate at which the event occurred, relative to the left edge of the entire document.
+            * @public
+            * @type {Number}
+            * @name pageY
+            * @see https://developer.mozilla.org/en-US/docs/Web/API/MouseEvent/pageY
+            * @memberOf me.Pointer
+            */
+            this.pageY = undefined;
+
+           /**
             * the horizontal coordinate within the application's client area at which the event occurred
             * @public
             * @type {Number}
@@ -184,22 +204,26 @@
          * @private
          * @function
          * @param {Event} event the original Event object
+         * @param {Number} pageX the horizontal coordinate at which the event occurred, relative to the left edge of the entire document
+         * @param {Number} pageY the vertical coordinate at which the event occurred, relative to the left edge of the entire document
          * @param {Number} clientX the horizontal coordinate within the application's client area at which the event occurred
          * @param {Number} clientX the vertical coordinate within the application's client area at which the event occurred
          * @param {Number} pointedId the Pointer, Touch or Mouse event Id
          */
-        setEvent : function (event, clientX, clientY, pointerId) {
+        setEvent : function (event, pageX, pageY, clientX, clientY, pointerId) {
             var width = 1;
             var height = 1;
 
             // the original event object
             this.event = event;
 
+            this.pageX = pageX || 0;
+            this.pageY = pageY || 0;
             this.clientX = clientX || 0;
             this.clientY = clientY || 0;
 
             // translate to local coordinates
-            me.input.globalToLocal(clientX, clientY, this.pos);
+            me.input.globalToLocal(this.clientX, this.clientY, this.pos);
 
             // true if not originally a pointer event
             this.isNormalized = !me.device.PointerEvent || (me.device.PointerEvent && !(event instanceof window.PointerEvent));

@@ -137,14 +137,13 @@
                 api.throttlingInterval = ~~(1000 / me.sys.fps);
             }
 
-            if (me.sys.autoFocus && typeof (window.focus) === "function") {
-                window.focus();
+            if (me.sys.autoFocus === true) {
+                me.device.focus();
                 me.video.renderer.getScreenCanvas().addEventListener(
                     activeEventList[2], // MOUSE/POINTER DOWN
                     function () {
-                        window.focus();
-                        return true;
-                    }
+                        me.device.focus();
+                    }, { passive: true }
                 );
             }
 
@@ -258,9 +257,16 @@
                 pointer.height
             );
 
+            // trigger a global event for pointer move
+            if (POINTER_MOVE.includes(pointer.type)) {
+                pointer.gameX = pointer.gameLocalX = pointer.gameScreenX;
+                pointer.gameY = pointer.gameLocalY = pointer.gameScreenY;
+                me.event.publish(me.event.POINTERMOVE, [pointer]);
+            }
+
             var candidates = me.collision.quadTree.retrieve(currentPointer, me.Container.prototype._sortReverseZ);
 
-            // add the viewport to the list of candidates
+            // add the main viewport to the list of candidates
             candidates = candidates.concat([ me.game.viewport ]);
 
             for (var c = candidates.length, candidate; c--, (candidate = candidates[c]);) {
@@ -305,7 +311,6 @@
                             // if the given target is another shape than me.Rect
                             region.containsPoint(pointer.gameLocalX, pointer.gameLocalY));
                     }
-
 
                     switch (pointer.type) {
                         case POINTER_MOVE[0]:
@@ -402,6 +407,8 @@
                 pointer = T_POINTERS.pop();
                 pointer.setEvent(
                     event,
+                    touchEvent.pageX,
+                    touchEvent.pageY,
                     touchEvent.clientX,
                     touchEvent.clientY,
                     touchEvent.identifier
@@ -413,6 +420,8 @@
             pointer = T_POINTERS.pop();
             pointer.setEvent(
                 event,
+                event.pageX,
+                event.pageY,
                 event.clientX,
                 event.clientY,
                 event.pointerId
@@ -486,7 +495,7 @@
 
         // check if mapped to a key
         if (keycode) {
-            if (POINTER_DOWN.indexOf(e.type) !== -1) {
+            if (POINTER_DOWN.includes(e.type)) {
                 return api._keydown(e, keycode, button + 1);
             }
             else { // 'mouseup' or 'touchend'
@@ -680,6 +689,10 @@
             throw new me.Error("invalid event type : " + eventType);
         }
 
+        if (typeof region === "undefined") {
+            throw new me.Error("registerPointerEvent: region for " + region + " event is undefined ");
+        }
+
         var eventTypes = findAllActiveEvents(activeEventList, pointerEventMap[eventType]);
 
         // register the event
@@ -749,19 +762,4 @@
         }
     };
 
-    /**
-     * Will translate global (frequently used) pointer events
-     * which should be catched at root level, into minipubsub system events
-     * @name _translatePointerEvents
-     * @memberOf me.input
-     * @ignore
-     * @function
-     */
-    api._translatePointerEvents = function () {
-        // listen to mouse move (and touch move) events on the viewport
-        // and convert them to a system event by default
-        api.registerPointerEvent("pointermove", me.game.viewport, function (e) {
-            me.event.publish(me.event.POINTERMOVE, [e]);
-        });
-    };
 })(me.input);

@@ -349,6 +349,9 @@
          * @param {Number} y
          */
         moveTo : function (x, y) {
+            var _x = this.pos.x;
+            var _y = this.pos.y;
+
             this.pos.x = me.Math.clamp(
                 x,
                 this.bounds.pos.x,
@@ -360,8 +363,10 @@
                 this.bounds.height - this.height
             );
 
-            //publish the corresponding message
-            me.event.publish(me.event.VIEWPORT_ONCHANGE, [this.pos]);
+            //publish the VIEWPORT_ONCHANGE event if necessary
+            if (_x !== this.pos.x || _y !== this.pos.y) {
+                me.event.publish(me.event.VIEWPORT_ONCHANGE, [this.pos]);
+            }
         },
 
         /** @ignore */
@@ -574,9 +579,10 @@
          */
         isVisible : function (obj) {
             if (obj.floating === true) {
-                // #943
-                return true;
+                // check against screen coordinates
+                return me.video.renderer.overlaps(obj.getBounds());
             } else {
+                // check if within the current camera
                 return obj.getBounds().overlaps(this);
             }
         },

@@ -116,10 +116,5 @@
             // to be extended
         }
     });
-
-    /**
-     * @ignore
-     */
-    me.ScreenObject = me.Stage;
-
+    
 })();

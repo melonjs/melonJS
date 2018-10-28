@@ -55,18 +55,20 @@
      * ])
      * // Then create an instance of your bitmap font:
      * var myFont = new me.BitmapFont(me.loader.getBinary("arial"), me.loader.getImage("arial"));
-     * // And draw it inside your Renderable, just like me.Font
+     * // two possibilities for using "myFont"
+     * // either call the draw function from your Renderable draw function
      * myFont.draw(renderer, "Hello!", 0, 0);
+     * // or add it to the word container
+     * myFont.pos.set(0, 0);
+     * myFont.setText("Hello");
+     * me.game.world.addChild(myFont);
      */
     me.BitmapFont = me.Renderable.extend(
     /** @scope me.BitmapFont.prototype */ {
         /** @ignore */
         init : function (data, fontImage, scale, textAlign, textBaseline) {
-            /** @ignore */
-            // scaled font size;
-            this.sSize = me.pool.pull("me.Vector2d", 0, 0);
-
-            this.fontImage = fontImage;
+            // call the parent constructor
+            this._super(me.Renderable, "init", [0, 0, 0, 0]);
 
             /**
              * The instance of me.BitmapFontData
@@ -75,15 +77,48 @@
              * @memberOf me.BitmapFont
              */
             this.bitmapFontData = new me.BitmapFontData(data);
+
+            /**
+             * Set the default text alignment (or justification),<br>
+             * possible values are "left", "right", and "center".
+             * @public
+             * @type String
+             * @default "left"
+             * @name textAlign
+             * @memberOf me.BitmapFont
+             */
+            this.textAlign = textAlign || "left";
+
+            /**
+             * Set the text baseline (e.g. the Y-coordinate for the draw operation), <br>
+             * possible values are "top", "hanging, "middle, "alphabetic, "ideographic, "bottom"<br>
+             * @public
+             * @type String
+             * @default "top"
+             * @name textBaseline
+             * @memberOf me.BitmapFont
+             */
+            this.textBaseline = textBaseline || "top";
+
+            /**
+             * Set the line spacing height (when displaying multi-line strings). <br>
+             * Current font height will be multiplied with this value to set the line height.
+             * @public
+             * @type Number
+             * @default 1.0
+             * @name lineHeight
+             * @memberOf me.BitmapFont
+             */
+            this.lineHeight = 1;
+
+            /** @ignore */
+            // scaled font size;
+            this.sSize = me.pool.pull("me.Vector2d", 0, 0);
             this.fontScale = me.pool.pull("me.Vector2d", 1, 1);
 
+            this.fontImage = fontImage;
             this.charCount = 0;
-            this._super(me.Renderable, "init", [0, 0, 0, 0]);
 
-            // set a default alignement
-            this.textAlign = textAlign || "left";
-            this.textBaseline = textBaseline || "top";
-            this.lineHeight = 1;
             // resize if necessary
             if (scale) {
                 this.resize(scale);
@@ -91,6 +126,9 @@
 
             // the text displayed by this bitmapFont object
             this.text = "";
+
+            // bounds will be recalcutated when true
+            this.isDirty = true;
         },
 
         /**
@@ -100,6 +138,7 @@
          * @function
          * @param {String} textAlign ("left", "center", "right")
          * @param {Number} [scale]
+         * @return this object for chaining
          */
         set : function (textAlign, scale) {
             this.textAlign = textAlign;
@@ -107,6 +146,33 @@
             if (scale) {
                 this.resize(scale);
             }
+            this.isDirty = true;
+
+            return this;
+        },
+
+        /**
+         * change the text to be displayed
+         * @name setText
+         * @memberOf me.BitmapFont
+         * @function
+         * @param {(string|string[])} value a string, or an array of strings
+         * @return this object for chaining
+         */
+        setText : function (value) {
+            if (this.text !== value) {
+                if (typeof value !== "undefined") {
+                    if (Array.isArray(value)) {
+                        value = value.join("\n");
+                    } else {
+                        this.text = "" + value;
+                    }
+                } else {
+                    value = "";
+                }
+                this.isDirty = true;
+            }
+            return this;
         },
 
         /**
@@ -115,11 +181,14 @@
          * @memberOf me.BitmapFont
          * @function
          * @param {Number} scale ratio
+         * @return this object for chaining
          */
         resize : function (scale) {
             this.fontScale.set(scale, scale);
             // clear the cache text to recalculate bounds
-            this.text = "";
+            this.isDirty = true;
+
+            return this;
         },
 
 
@@ -129,54 +198,65 @@
          * @memberOf me.BitmapFont
          * @function
          * @param {String} text
-         * @returns {Object} an object with two properties: `width` and `height`, defining the output dimensions
+         * @param {Object} [ret] a object in which to store the text metrics
+         * @returns {TextMetrics} a TextMetrics object with two properties: `width` and `height`, defining the output dimensions
          */
         measureText : function (text, ret) {
             var strings = ("" + text).split("\n");
-            var width = 0;
-            var height = 0;
             var stringHeight = measureTextHeight(this);
+            var textMetrics  = ret || {};
+
+            textMetrics.height = textMetrics.width = 0;
+
             for (var i = 0; i < strings.length; i++) {
-                width = Math.max(measureTextWidth(this, strings[i]), width);
-                height += stringHeight;
+                textMetrics.width = Math.max(measureTextWidth(this, strings[i]), textMetrics.width);
+                textMetrics.height += stringHeight;
             }
-
-            if (typeof ret !== "undefined") {
-                ret.width = width;
-                ret.height = height;
-                return ret;
-            }
-
-            return {width: width, height: height};
+            return textMetrics;
         },
 
         /**
-         * draw a text at the specified coord
+         * @ignore
+         */
+        update : function (/* dt */) {
+            if (this.isDirty === true) {
+                this.measureText(this.text, this.getBounds());
+            }
+            return this.isDirty;
+        },
+
+        /**
+         * draw the bitmap font
          * @name draw
          * @memberOf me.BitmapFont
          * @function
          * @param {me.CanvasRenderer|me.WebGLRenderer} renderer Reference to the destination renderer instance
-         * @param {String} text
-         * @param {Number} x
-         * @param {Number} y
+         * @param {String} [text]
+         * @param {Number} [x]
+         * @param {Number} [y]
          */
         draw : function (renderer, text, x, y) {
+            // allows to provide backward compatibility when
+            // adding Bitmap Font to an object container
+            if (typeof this.ancestor === "undefined") {
+                // update cache
+                this.setText(text);
+                // force update bounds
+                this.update(0);
+                // save the previous global alpha value
+                var _alpha = renderer.globalAlpha();
+                renderer.setGlobalAlpha(_alpha * this.getOpacity());
+            } else {
+                // added directly to an object container
+                text = this.text;
+                x = this.pos.x;
+                y = this.pos.y;
+            }
+
             var strings = ("" + text).split("\n");
             var lX = x;
             var stringHeight = measureTextHeight(this);
             var maxWidth = 0;
-            var newString = false;
-
-            // save the previous global alpha value
-            var _alpha = renderer.globalAlpha();
-            renderer.setGlobalAlpha(_alpha * this.getOpacity());
-
-            // update the text bounds
-            if (text !== this.text) {
-                newString = true;
-                this.text = text;
-                this.measureText(text, this.getBounds());
-            }
 
             for (var i = 0; i < strings.length; i++) {
                 x = lX;
@@ -213,7 +293,7 @@
                 }
 
                 // update initial position if required
-                if (newString === true) {
+                if (this.isDirty === true && typeof this.ancestor === "undefined") {
                     if (i === 0) {
                         this.pos.y = y;
                     }
@@ -223,26 +303,25 @@
                     }
                 }
 
-                // x *= this.fontScale.x;
-                // y *= this.fontScale.y;
-
                 // draw the string
                 var lastGlyph = null;
                 for (var c = 0, len = string.length; c < len; c++) {
                     // calculate the char index
                     var ch = string.charCodeAt(c);
                     var glyph = this.bitmapFontData.glyphs[ch];
+                    var glyphWidth = glyph.width;
+                    var glyphHeight = glyph.height;
                     var kerning = (lastGlyph && lastGlyph.kerning) ? lastGlyph.getKerning(ch) : 0;
 
                     // draw it
-                    if (glyph.width !== 0 && glyph.height !== 0) {
+                    if (glyphWidth !== 0 && glyphHeight !== 0) {
                         // some browser throw an exception when drawing a 0 width or height image
                         renderer.drawImage(this.fontImage,
                             glyph.src.x, glyph.src.y,
-                            glyph.width, glyph.height,
+                            glyphWidth, glyphHeight,
                             x + glyph.offset.x,
                             y + glyph.offset.y * this.fontScale.y,
-                            glyph.width * this.fontScale.x, glyph.height * this.fontScale.y
+                            glyphWidth * this.fontScale.x, glyphHeight * this.fontScale.y
                         );
                     }
 
@@ -253,8 +332,14 @@
                 // increment line
                 y += stringHeight;
             }
-            // restore the previous global alpha value
-            renderer.setGlobalAlpha(_alpha);
+
+            if (typeof this.ancestor === "undefined") {
+                // restore the previous global alpha value
+                renderer.setGlobalAlpha(_alpha);
+            }
+
+            // clear the dirty flag
+            this.isDirty = false;
         }
     });
 })();

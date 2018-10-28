@@ -225,6 +225,8 @@
                 fontDataSource,
                 fontImage
             );
+            this.font.name = "debugPanelFont";
+
 
             // free static ressources
             fontImageSource = null;
@@ -350,36 +352,62 @@
                 }
             });
 
-            /*
-            me.plugin.patch(me.BitmapFont, "draw", function (renderer, text, x, y) {
+
+            me.plugin.patch(me.BitmapFont, "draw", function (renderer) {
                 // call the original me.Sprite.draw function
                 this._patched.apply(this, arguments);
 
                 // draw the font rectangle
-                if (me.debug.renderHitBox) {
-                    renderer.save();
-                    renderer.setColor("green");
-                    renderer.drawShape(this.getBounds());
+                if (_this.visible && me.debug.renderHitBox && this.name !== "debugPanelFont") {
+                    var bounds = this.getBounds();
+
+                    if (typeof this.ancestor !== "undefined") {
+                        var ax = this.anchorPoint.x * bounds.width,
+                            ay = this.anchorPoint.y * bounds.height;
+                        // translate back as the bounds position
+                        // is already adjusted to the anchor Point
+                        renderer.translate(ax, ay);
+                    } else {
+                        renderer.save();
+                    }
+
+                    renderer.setColor("orange");
+                    renderer.drawShape(bounds);
                     _this.counters.inc("bounds");
-                    renderer.restore();
+
+                    if (typeof this.ancestor === "undefined") {
+                        renderer.restore();
+                    }
                 }
             });
-            */
 
-            /*
             // patch font.js
             me.plugin.patch(me.Font, "draw", function (renderer, text, x, y) {
-                // call the original me.Sprite.draw function
-                this._patched.apply(this, arguments);
+                // save the previous global alpha value
+                var _alpha = renderer.globalAlpha();
 
-                // draw the font rectangle
-                if (me.debug.renderHitBox) {
+                renderer.setGlobalAlpha(_alpha * this.getOpacity());
+
+                // save the previous context
+                renderer.save();
+
+                // draw the text
+                renderer.drawFont(this._drawFont(renderer.getFontContext(), text, ~~x, ~~y, false));
+
+                // call the original me.Sprite.draw function
+                if (_this.visible && me.debug.renderHitBox) {
                     renderer.save();
                     renderer.setColor("orange");
                     renderer.drawShape(this.getBounds());
                     _this.counters.inc("bounds");
                     renderer.restore();
                 }
+
+                // restore previous context
+                renderer.restore();
+
+                // restore the previous global alpha value
+                renderer.setGlobalAlpha(_alpha);
             });
 
             // patch font.js
@@ -388,7 +416,7 @@
                 this._patched.apply(this, arguments);
 
                 // draw the font rectangle
-                if (me.debug.renderHitBox) {
+                if (_this.visible && me.debug.renderHitBox) {
                     renderer.save();
                     renderer.setColor("orange");
                     renderer.drawShape(this.getBounds());
@@ -396,7 +424,6 @@
                     renderer.restore();
                 }
             });
-            */
 
             // patch entities.js
             me.plugin.patch(me.Entity, "postDraw", function (renderer) {
