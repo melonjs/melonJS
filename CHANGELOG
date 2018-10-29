@@ -32,6 +32,7 @@ Version History
 
 6.0.0
 * Audio : latest audio core update to fix HTML5 Audio issue with FB Instant Games, and Chrome API deprecation
+* Camera : renamed `me.Viewport` to `me.Camera2d` and move it to its own folder
 * Container : new `clipping` feature to automatically clip childrens to their parent container bounds (disable by default)
 * Core : Removed unnecessary ES6 polyfill (based on melonJS 5.x minimum browser version)
 * Core : API update to sandbox all previous language extension under the `me` namespace
