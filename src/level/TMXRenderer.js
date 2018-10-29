@@ -234,6 +234,8 @@
          * @ignore
          */
         drawTileLayer : function (renderer, layer, rect) {
+            var incX = 1, incY = 1;
+
             // get top-left and bottom-right tile position
             var start = this.pixelToTileCoords(
                 Math.max(rect.pos.x - (layer.maxTileSize.width - layer.tilewidth), 0),
@@ -251,9 +253,32 @@
             end.x = end.x > this.cols ? this.cols : end.x;
             end.y = end.y > this.rows ? this.rows : end.y;
 
+            switch (layer.renderorder) {
+                case "right-up" :
+                    // swapping start.y and end.y
+                    end.y = start.y + (start.y = end.y) - end.y;
+                    incY = -1;
+                    break;
+                case "left-down" :
+                    // swapping start.x and end.x
+                    end.x = start.x + (start.x = end.x) - end.x;
+                    incX = -1;
+                    break;
+                case "left-up" :
+                    // swapping start.x and end.x
+                    end.x = start.x + (start.x = end.x) - end.x;
+                    // swapping start.y and end.y
+                    end.y = start.y + (start.y = end.y) - end.y;
+                    incX = -1;
+                    incY = -1;
+                    break;
+                default: // right-down
+                    break;
+            }
+
             // main drawing loop
-            for (var y = start.y; y < end.y; y++) {
-                for (var x = start.x; x < end.x; x++) {
+            for (var y = start.y; y !== end.y; y+= incY) {
+                for (var x = start.x; x !== end.x; x+= incX) {
                     var tmxTile = layer.layerData[x][y];
                     if (tmxTile) {
                         this.drawTile(renderer, x, y, tmxTile);

@@ -173,25 +173,45 @@
              * is the map an infinite map
              * @public
              * @type {Number}
+             * @default 0
              * @name me.TMXTileMap#infinite
              */
             this.infinite = +data.infinite;
 
             /**
-             * the map orientation type (orthogonal, isometric, hexagonal)
+             * the map orientation type. melonJS supports “orthogonal”, “isometric”, “staggered” and “hexagonal”.
              * @public
              * @type {String}
+             * @default "orthogonal"
              * @name me.TMXTileMap#orientation
              */
             this.orientation = data.orientation;
 
             /**
-             * the tilemap version
+            * the order in which tiles on orthogonal tile layers are rendered.
+            * (valid values are "left-down", "left-up", "right-down", "right-up")
              * @public
              * @type {String}
-             * @name me.TMXTileMap#orientation
+             * @default "right-down"
+             * @name me.TMXTileMap#renderorder
+             */
+            this.renderorder = data.renderorder || "right-down";
+
+            /**
+             * the TMX format version
+             * @public
+             * @type {String}
+             * @name me.TMXTileMap#version
              */
             this.version = data.version;
+
+            /**
+             * The Tiled version used to save the file (since Tiled 1.0.1).
+             * @public
+             * @type {String}
+             * @name me.TMXTileMap#tiledversion
+             */
+            this.tiledversion = data.tiledversion;
 
             // tilesets for this map
             this.tilesets = null;

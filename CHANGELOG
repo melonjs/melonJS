@@ -17,6 +17,7 @@ Version History
 * Renderable : new onVisibilityChange event handler that is called when leaving or entering a camera viewport
 * Renderable : fix documentation for the container `clipping` flag (was accidentally left private)
 * Renderable : update visibility flag for floating objects using actual screen coordinates
+* TMX : add support for orthogonal tile rendering order
 * WebGLRenderer : fix a bug when clipping is disabled due to the clipping area being equal to the canvas size
 
 6.1.0
