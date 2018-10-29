@@ -125,30 +125,30 @@
         init: function (levelId, data) {
 
             /**
-             * name of the tilemap
-             * @public
-             * @type String
-             * @name me.TMXTileMap#name
-             */
-            this.name = levelId;
-
-            /**
              * the level data (JSON)
              * @ignore
              */
             this.data = data;
 
             /**
+             * name of the tilemap
+             * @public
+             * @type {String}
+             * @name me.TMXTileMap#name
+             */
+            this.name = levelId;
+
+            /**
              * width of the tilemap in tiles
              * @public
-             * @type Int
+             * @type {Number}
              * @name me.TMXTileMap#cols
              */
             this.cols = +data.width;
             /**
              * height of the tilemap in tiles
              * @public
-             * @type Int
+             * @type {Number}
              * @name me.TMXTileMap#rows
              */
             this.rows = +data.height;
@@ -156,7 +156,7 @@
             /**
              * Tile width
              * @public
-             * @type Int
+             * @type {Number}
              * @name me.TMXTileMap#tilewidth
              */
             this.tilewidth = +data.tilewidth;
@@ -164,13 +164,38 @@
             /**
              * Tile height
              * @public
-             * @type Int
+             * @type {Number}
              * @name me.TMXTileMap#tileheight
              */
             this.tileheight = +data.tileheight;
 
+            /**
+             * is the map an infinite map
+             * @public
+             * @type {Number}
+             * @name me.TMXTileMap#infinite
+             */
+            this.infinite = +data.infinite;
+
+            /**
+             * the map orientation type (orthogonal, isometric, hexagonal)
+             * @public
+             * @type {String}
+             * @name me.TMXTileMap#orientation
+             */
+            this.orientation = data.orientation;
+
+            /**
+             * the tilemap version
+             * @public
+             * @type {String}
+             * @name me.TMXTileMap#orientation
+             */
+            this.version = data.version;
+
             // tilesets for this map
             this.tilesets = null;
+
             // layers
             if (typeof this.layers === "undefined") {
                 this.layers = [];
@@ -180,14 +205,9 @@
                 this.objectGroups = [];
             }
 
-            // tilemap version
-            this.version = data.version;
-
             // Check if map is from melon editor
             this.isEditor = data.editor === "melon-editor";
 
-            // map type (orthogonal or isometric)
-            this.orientation = data.orientation;
             if (this.orientation === "isometric") {
                 this.width = (this.cols + this.rows) * (this.tilewidth / 2);
                 this.height = (this.cols + this.rows) * (this.tileheight / 2);
@@ -196,13 +216,8 @@
                 this.height = this.rows * this.tileheight;
             }
 
-
-            // objects minimum z order
-            this.z = 0;
-
             // object id
             this.nextobjectid = +data.nextobjectid || undefined;
-
 
             // hex/iso properties
             this.hexsidelength = +data.hexsidelength || undefined;
@@ -218,6 +233,11 @@
             // internal flag
             this.initialized = false;
 
+            if (this.infinite === 1) {
+                // #956 Support for Infinite map
+                // see as well in me.TMXUtils
+                throw new me.Error("Tiled Infinite Map not supported!");
+            }
         },
 
         /**
@@ -255,7 +275,7 @@
             }
 
             // to automatically increment z index
-            var zOrder = this.z;
+            var zOrder = 0;
             var self = this;
 
             // Tileset information

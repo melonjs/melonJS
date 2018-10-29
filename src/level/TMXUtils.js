@@ -215,6 +215,9 @@
             switch (nodeName) {
                 case "data":
                     var data = api.parse(item);
+                    // #956 Support for Infinite map
+                    // workaround to prevent the parsing code from crashing
+                    data.text = data.text || data.chunk.text;
                     // When no encoding is given, the tiles are stored as individual XML tile elements.
                     data.encoding = data.encoding || "xml";
                     obj.data = api.decode(data.text, data.encoding, data.compression);
