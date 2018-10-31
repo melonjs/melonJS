@@ -9,6 +9,9 @@
 
 (function () {
 
+    // a default camera instance to use across all stages
+    var default_camera;
+
     // default stage settings
     var default_settings = {
         cameras : []
@@ -66,11 +69,13 @@
 
             // empty or no default camera
             if (this.cameras.has("default") === false) {
-                this.cameras.set("default", new me.Camera2d(
-                    0, 0,
-                    me.video.renderer.getWidth(),
-                    me.video.renderer.getHeight()
-                ));
+                if (typeof default_camera === "undefined") {
+                    var width = me.video.renderer.getWidth();
+                    var height = me.video.renderer.getHeight();
+                    // new default camera instance
+                    default_camera = new me.Camera2d(0, 0, width, height);
+                }
+                this.cameras.set("default", default_camera);
             }
 
             // reset the game manager
@@ -116,5 +121,5 @@
             // to be extended
         }
     });
-    
+
 })();
