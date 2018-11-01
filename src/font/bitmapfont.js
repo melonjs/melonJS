@@ -198,13 +198,13 @@
          * @memberOf me.BitmapFont
          * @function
          * @param {String} text
-         * @param {Object} [ret] a object in which to store the text metrics
+         * @param {me.Rect} [ret] a object in which to store the text metrics
          * @returns {TextMetrics} a TextMetrics object with two properties: `width` and `height`, defining the output dimensions
          */
         measureText : function (text, ret) {
             var strings = ("" + text).split("\n");
             var stringHeight = measureTextHeight(this);
-            var textMetrics  = ret || {};
+            var textMetrics  = ret || this.getBounds();
 
             textMetrics.height = textMetrics.width = 0;
 

@@ -12,7 +12,8 @@ Version History
 * Font : fix bounds calculation for BitmapFont objects
 * Font : enable Font & BitmapFont bounding box drawing through the Debug Panel
 * Font : fix missing documentation on properties for BitmapFont Object.
-* Font : BitmapFont objects can now be directly added to a container like any other renderables.
+* Font : Font & BitmapFont objects can now be directly added to a container like any other me.Renderable
+* Font : Improved performances when drawing regular me.Font objects
 * Input : fix a potential issue with "undefined" pointer location upon loading
 * Math : new `toBeCloseTo` function to determine if two values are closed "enough" to eachother
 * Renderable : new onVisibilityChange event handler that is called when leaving or entering a camera viewport

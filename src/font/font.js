@@ -32,9 +32,8 @@
 
         /** @ignore */
         init : function (font, size, fillStyle, textAlign) {
-            // private font properties
-            /** @ignore */
-            this.fontSize = new me.Vector2d();
+            // call the parent constructor
+            this._super(me.Renderable, "init", [0, 0, 0, 0]);
 
             /**
              * defines the color used to draw the font.<br>
@@ -93,11 +92,17 @@
              */
             this.lineHeight = 1.0;
 
-            // super constructor
-            this._super(me.Renderable, "init", [0, 0, 0, 0]);
+            // private font properties
+            this.fontSize = new me.Vector2d();
 
             // font name and type
             this.setFont(font, size, fillStyle, textAlign);
+
+            // the text displayed by this bitmapFont object
+            this.text = "";
+
+            // bounds will be recalcutated when true
+            this.isDirty = true;
         },
 
         /**
@@ -109,6 +114,7 @@
          */
         bold : function () {
             this.font = "bold " + this.font;
+            this.isDirty = true;
             return this;
         },
 
@@ -121,6 +127,7 @@
          */
         italic : function () {
             this.font = "italic " + this.font;
+            this.isDirty = true;
             return this;
         },
 
@@ -170,6 +177,31 @@
             if (textAlign) {
                 this.textAlign = textAlign;
             }
+            this.isDirty = true;
+            return this;
+        },
+
+        /**
+         * change the text to be displayed
+         * @name setText
+         * @memberOf me.Font
+         * @function
+         * @param {(string|string[])} value a string, or an array of strings
+         * @return this object for chaining
+         */
+        setText : function (value) {
+            if (this.text !== value) {
+                if (typeof value !== "undefined") {
+                    if (Array.isArray(value)) {
+                        value = value.join("\n");
+                    } else {
+                        this.text = "" + value;
+                    }
+                } else {
+                    value = "";
+                }
+                this.isDirty = true;
+            }
             return this;
         },
 
@@ -180,30 +212,56 @@
          * @function
          * @param {me.CanvasRenderer|me.WebGLRenderer} renderer Reference to the destination renderer instance
          * @param {String} text
-         * @param {Object} [ret] a object in which to store the text metrics
+         * @param {me.Rect} [ret] a object in which to store the text metrics
          * @returns {TextMetrics} a TextMetrics object with two properties: `width` and `height`, defining the output dimensions
          */
         measureText : function (renderer, text, ret) {
             var context = renderer.getFontContext();
-            var textMetrics = ret || {};
+            var textMetrics = ret || this.getBounds();
+            var lineHeight = this.fontSize.y * this.lineHeight;
+            var strings = ("" + text).split("\n");
 
-            // draw the text
+            // save the font context
+            context.save();
+
+            // set the context font properties
             context.font = this.font;
             context.fillStyle = this.fillStyle.toRGBA();
             context.textAlign = this.textAlign;
             context.textBaseline = this.textBaseline;
 
+            // compute the bounding box size
             this.height = this.width = 0;
-
-            var strings = ("" + text).split("\n");
             for (var i = 0; i < strings.length; i++) {
                 this.width = Math.max(context.measureText(me.utils.string.trimRight(strings[i])).width, this.width);
-                this.height += this.fontSize.y * this.lineHeight;
+                this.height += lineHeight;
             }
             textMetrics.width = this.width;
             textMetrics.height = this.height;
 
+            // compute the bounding box position
+            this.pos.x = (this.textAlign === "right" ? this.pos.x - this.width : (
+                this.textAlign === "center" ? this.pos.x - (this.width / 2) : this.pos.x
+            ));
+            this.pos.y = (this.textBaseline.search(/^(top|hanging)$/) === 0) ? this.pos.y : (
+                this.textBaseline === "middle" ? this.pos.y - (this.height / 2) : this.pos.y - this.height
+            );
+
+            // restore the font context
+            context.restore();
+
+            // returns the Font bounds me.Rect by default
             return textMetrics;
+        },
+
+        /**
+         * @ignore
+         */
+        update : function (/* dt */) {
+            if (this.isDirty === true) {
+                this.measureText(me.video.renderer, this.text, this.getBounds());
+            }
+            return this.isDirty;
         },
 
         /**
@@ -212,27 +270,59 @@
          * @memberOf me.Font
          * @function
          * @param {me.CanvasRenderer|me.WebGLRenderer} renderer Reference to the destination renderer instance
-         * @param {String} text
-         * @param {Number} x
-         * @param {Number} y
+         * @param {String} [text]
+         * @param {Number} [x]
+         * @param {Number} [y]
          */
-        draw : function (renderer, text, x, y) {
-            // save the previous global alpha value
-            var _alpha = renderer.globalAlpha();
+        draw : function (renderer, text, x, y, stroke) {
+            // "hacky patch" for backward compatibilty
+            if (typeof this.ancestor === "undefined") {
+                // update text cache
+                this.setText(text);
 
-            renderer.setGlobalAlpha(_alpha * this.getOpacity());
+                // update position if changed
+                if (this.pos.x !== x || this.pos.y !== y) {
+                    this.pos.x = x;
+                    this.pos.y = y;
+                    this.isDirty = true;
+                }
 
-            // save the previous context
-            renderer.save();
+                // force update bounds
+                this.update(0);
+
+                // save the previous global alpha value
+                var _alpha = renderer.globalAlpha();
+
+                renderer.setGlobalAlpha(_alpha * this.getOpacity());
+
+                // save the previous context
+                renderer.save();
+            } else {
+                // added directly to an object container
+                text = this.text;
+                x = this.pos.x;
+                y = this.pos.y;
+            }
+
+            if (renderer.settings.subPixel === false) {
+                // clamp to pixel grid if required
+                x = ~~x;
+                y = ~~y;
+            }
 
             // draw the text
-            renderer.drawFont(this._drawFont(renderer.getFontContext(), text, ~~x, ~~y, false));
+            renderer.drawFont(this._drawFont(renderer.getFontContext(), text, x, y, stroke || false));
 
-            // restore previous context
-            renderer.restore();
+            // for backward compatibilty
+            if (typeof this.ancestor === "undefined") {
+                // restore previous context
+                renderer.restore();
+                // restore the previous global alpha value
+                renderer.setGlobalAlpha(_alpha);
+            }
 
-            // restore the previous global alpha value
-            renderer.setGlobalAlpha(_alpha);
+            // clear the dirty flag
+            this.isDirty = false;
         },
 
         /**
@@ -248,22 +338,14 @@
          * @param {Number} y
          */
         drawStroke : function (renderer, text, x, y) {
-            // save the previous global alpha value
-            var _alpha = renderer.globalAlpha();
-
-            renderer.setGlobalAlpha(_alpha * this.getOpacity());
-
-            // draw the text
-            renderer.drawFont(this._drawFont(renderer.getFontContext(), text, ~~x, ~~y, true));
-
-            // restore the previous global alpha value
-            renderer.setGlobalAlpha(_alpha);
+            this.draw.call(this, renderer, text, x, y, true);
         },
 
         /**
          * @ignore
          */
         _drawFont : function (context, text, x, y, stroke) {
+            context.save();
             context.font = this.font;
             context.fillStyle = this.fillStyle.toRGBA();
             if (stroke) {
@@ -273,36 +355,17 @@
             context.textAlign = this.textAlign;
             context.textBaseline = this.textBaseline;
 
-            var strings = ("" + text).split("\n"), string = "";
-            var dw = 0;
-            var dy = y;
+            var strings = ("" + text).split("\n");
             var lineHeight = this.fontSize.y * this.lineHeight;
             for (var i = 0; i < strings.length; i++) {
-                string = me.utils.string.trimRight(strings[i]);
-                // measure the string
-                dw = Math.max(dw, context.measureText(string).width);
+                var string = me.utils.string.trimRight(strings[i]);
                 // draw the string
                 context[stroke ? "strokeText" : "fillText"](string, x, y);
                 // add leading space
                 y += lineHeight;
             }
-
-            // compute bounds
-            // TODO : memoize me !
-            var dx = (this.textAlign === "right" ? x - dw : (
-                this.textAlign === "center" ? x - ~~(dw / 2) : x
-            ));
-            dy = (this.textBaseline.search(/^(top|hanging)$/) === 0) ? dy : (
-                this.textBaseline === "middle" ? dy - ~~(lineHeight / 2) : dy - lineHeight
-            );
-
-            // update the renderable bounds
-            return this.getBounds().setShape(
-                ~~dx,
-                ~~dy,
-                ~~(dw + 0.5),
-                ~~(strings.length * lineHeight + 0.5)
-            );
+            context.restore();
+            return this.getBounds();
         }
     });
 })();

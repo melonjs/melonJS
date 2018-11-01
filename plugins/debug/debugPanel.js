@@ -383,45 +383,39 @@
 
             // patch font.js
             me.plugin.patch(me.Font, "draw", function (renderer, text, x, y) {
-                // save the previous global alpha value
-                var _alpha = renderer.globalAlpha();
-
-                renderer.setGlobalAlpha(_alpha * this.getOpacity());
-
-                // save the previous context
-                renderer.save();
-
-                // draw the text
-                renderer.drawFont(this._drawFont(renderer.getFontContext(), text, ~~x, ~~y, false));
+                // call the original me.Font.draw function
+                this._patched.apply(this, arguments);
 
                 // call the original me.Sprite.draw function
                 if (_this.visible && me.debug.renderHitBox) {
-                    renderer.save();
+                    if (typeof this.ancestor === "undefined") {
+                        renderer.save();
+                    }
                     renderer.setColor("orange");
                     renderer.drawShape(this.getBounds());
                     _this.counters.inc("bounds");
-                    renderer.restore();
+                    if (typeof this.ancestor === "undefined") {
+                        renderer.restore();
+                    }
                 }
-
-                // restore previous context
-                renderer.restore();
-
-                // restore the previous global alpha value
-                renderer.setGlobalAlpha(_alpha);
             });
 
             // patch font.js
             me.plugin.patch(me.Font, "drawStroke", function (renderer, text, x, y) {
-                // call the original me.Sprite.draw function
+                // call the original me.Font.drawStroke function
                 this._patched.apply(this, arguments);
 
                 // draw the font rectangle
                 if (_this.visible && me.debug.renderHitBox) {
-                    renderer.save();
+                    if (typeof this.ancestor === "undefined") {
+                        renderer.save();
+                    }
                     renderer.setColor("orange");
                     renderer.drawShape(this.getBounds());
                     _this.counters.inc("bounds");
-                    renderer.restore();
+                    if (typeof this.ancestor === "undefined") {
+                        renderer.restore();
+                    }
                 }
             });
 
