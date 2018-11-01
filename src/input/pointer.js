@@ -78,7 +78,7 @@
             * @see https://developer.mozilla.org/en-US/docs/Web/API/MouseEvent/pageX
             * @memberOf me.Pointer
             */
-            this.pageX = undefined;
+            this.pageX = 0;
 
            /**
             * the vertical coordinate at which the event occurred, relative to the left edge of the entire document.
@@ -88,7 +88,7 @@
             * @see https://developer.mozilla.org/en-US/docs/Web/API/MouseEvent/pageY
             * @memberOf me.Pointer
             */
-            this.pageY = undefined;
+            this.pageY = 0;
 
            /**
             * the horizontal coordinate within the application's client area at which the event occurred
@@ -98,7 +98,7 @@
             * @see https://developer.mozilla.org/en-US/docs/Web/API/MouseEvent/clientX
             * @memberOf me.Pointer
             */
-            this.clientX = undefined;
+            this.clientX = 0;
 
            /**
             * the vertical coordinate within the application's client area at which the event occurred
@@ -108,7 +108,7 @@
             * @see https://developer.mozilla.org/en-US/docs/Web/API/MouseEvent/clientY
             * @memberOf me.Pointer
             */
-            this.clientY = undefined;
+            this.clientY = 0;
 
           /**
             * Event normalized X coordinate within the game canvas itself<br>
@@ -118,7 +118,7 @@
             * @name gameX
             * @memberOf me.Pointer
             */
-            this.gameX = undefined;
+            this.gameX = 0;
 
            /**
             * Event normalized Y coordinate within the game canvas itself<br>
@@ -128,7 +128,7 @@
             * @name gameY
             * @memberOf me.Pointer
             */
-            this.gameY = undefined;
+            this.gameY = 0;
 
            /**
             * Event X coordinate relative to the viewport
@@ -137,7 +137,7 @@
             * @name gameScreenX
             * @memberOf me.Pointer
             */
-            this.gameScreenX = undefined;
+            this.gameScreenX = 0;
 
            /**
             * Event Y coordinate relative to the viewport
@@ -146,7 +146,7 @@
             * @name gameScreenY
             * @memberOf me.Pointer
             */
-            this.gameScreenY = undefined;
+            this.gameScreenY = 0;
 
            /**
             * Event X coordinate relative to the map
@@ -155,7 +155,7 @@
             * @name gameWorldX
             * @memberOf me.Pointer
             */
-            this.gameWorldX = undefined;
+            this.gameWorldX = 0;
 
            /**
             * Event Y coordinate relative to the map
@@ -164,7 +164,7 @@
             * @name gameWorldY
             * @memberOf me.Pointer
             */
-            this.gameWorldY = undefined;
+            this.gameWorldY = 0;
 
            /**
             * Event X coordinate relative to the holding container
@@ -173,7 +173,7 @@
             * @name gameLocalX
             * @memberOf me.Pointer
             */
-            this.gameLocalX = undefined;
+            this.gameLocalX = 0;
 
            /**
             * Event Y coordinate relative to the holding container
@@ -182,7 +182,7 @@
             * @name gameLocalY
             * @memberOf me.Pointer
             */
-            this.gameLocalY = undefined;
+            this.gameLocalY = 0;
 
            /**
             * The unique identifier of the contact for a touch, mouse or pen
