@@ -19,7 +19,7 @@
         var lastGlyph = null;
         for (var i = 0; i < characters.length; i++) {
             var ch = characters[i].charCodeAt(0);
-            var glyph = font.bitmapFontData.glyphs[ch];
+            var glyph = font.fontData.glyphs[ch];
             var kerning = (lastGlyph && lastGlyph.kerning) ? lastGlyph.getKerning(ch) : 0;
             width += (glyph.xadvance + kerning) * font.fontScale.x;
             lastGlyph = glyph;
@@ -33,7 +33,7 @@
      * @ignore
      */
     var measureTextHeight = function(font) {
-        return font.bitmapFontData.capHeight * font.lineHeight * font.fontScale.y;
+        return font.fontData.capHeight * font.lineHeight * font.fontScale.y;
     };
 
     /**
@@ -42,11 +42,16 @@
      * @extends me.Renderable
      * @memberOf me
      * @constructor
-     * @param {Object} font the font object data. Should be retrieved from the loader
-     * @param {Image} image the font image itself Should be retrieved from the loader
      * @param {Number} [scale=1.0]
-     * @param {String} [textAlign="left"]
-     * @param {String} [textBaseline="top"]
+     * @param {Object} settings the text configuration
+     * @param {String|Image} settings.font a font name to identify the corresponing source image
+     * @param {String} [settings.fontData=settings.font] the bitmap font data corresponding name, or the bitmap font data itself
+     * @param {Number} [settings.size] size a scaling ratio
+     * @param {Number} [settings.lineWidth=1] line width, in pixels, when drawing stroke
+     * @param {String} [settings.textAlign="left"] horizontal text alignment
+     * @param {String} [settings.textBaseline="top"] the text baseline
+     * @param {Number} [settings.lineHeight=1.0] line spacing height
+     * @param {(string|string[])} [settings.text=] a string, or an array of strings
      * @example
      * // Use me.loader.preload or me.loader.load to load assets
      * me.loader.preload([
@@ -54,29 +59,19 @@
      * { name: "arial", type: "image" src: "data/font/arial.png" },
      * ])
      * // Then create an instance of your bitmap font:
-     * var myFont = new me.BitmapFont(me.loader.getBinary("arial"), me.loader.getImage("arial"));
+     * var myFont = new me.BitmapText(x, y, {font:"arial", text:"Hello"});
      * // two possibilities for using "myFont"
      * // either call the draw function from your Renderable draw function
      * myFont.draw(renderer, "Hello!", 0, 0);
-     * // or add it to the word container
-     * myFont.pos.set(0, 0);
-     * myFont.setText("Hello");
+     * // or just add it to the word container
      * me.game.world.addChild(myFont);
      */
-    me.BitmapFont = me.Renderable.extend(
-    /** @scope me.BitmapFont.prototype */ {
+    me.BitmapText = me.Renderable.extend(
+    /** @scope me.BitmapText.prototype */ {
         /** @ignore */
-        init : function (data, fontImage, scale, textAlign, textBaseline) {
+        init : function (x, y, settings) {
             // call the parent constructor
-            this._super(me.Renderable, "init", [0, 0, 0, 0]);
-
-            /**
-             * The instance of me.BitmapFontData
-             * @type {me.BitmapFontData}
-             * @name bitmapFontData
-             * @memberOf me.BitmapFont
-             */
-            this.bitmapFontData = new me.BitmapFontData(data);
+            this._super(me.Renderable, "init", [x, y, settings.width || 0, settings.height || 0]);
 
             /**
              * Set the default text alignment (or justification),<br>
@@ -85,9 +80,9 @@
              * @type String
              * @default "left"
              * @name textAlign
-             * @memberOf me.BitmapFont
+             * @memberOf me.BitmapText
              */
-            this.textAlign = textAlign || "left";
+            this.textAlign = settings.textAlign || "left";
 
             /**
              * Set the text baseline (e.g. the Y-coordinate for the draw operation), <br>
@@ -96,9 +91,9 @@
              * @type String
              * @default "top"
              * @name textBaseline
-             * @memberOf me.BitmapFont
+             * @memberOf me.BitmapText
              */
-            this.textBaseline = textBaseline || "top";
+            this.textBaseline = settings.textBaseline || "top";
 
             /**
              * Set the line spacing height (when displaying multi-line strings). <br>
@@ -107,34 +102,40 @@
              * @type Number
              * @default 1.0
              * @name lineHeight
-             * @memberOf me.BitmapFont
+             * @memberOf me.BitmapText
              */
-            this.lineHeight = 1;
+            this.lineHeight = settings.lineHeight || 1;
 
             /** @ignore */
             // scaled font size;
-            this.sSize = me.pool.pull("me.Vector2d", 0, 0);
             this.fontScale = me.pool.pull("me.Vector2d", 1, 1);
 
-            this.fontImage = fontImage;
-            this.charCount = 0;
+            // get the corresponding image
+            this.fontImage = (typeof settings.font === "object") ? settings.font : me.loader.getImage(settings.font);
+
+            if (typeof settings.fontData !== "string") {
+                // use settings.font to retreive the data from the loader
+                this.fontData = new me.BitmapTextData(me.loader.getBinary(settings.font));
+            } else {
+                this.fontData = new me.BitmapTextData(
+                    // if starting/includes "info face" the whole data string was passed as parameter
+                    (settings.fontData.includes("info face")) ? settings.fontData : me.loader.getBinary(settings.fontData)
+                );
+            };
 
             // resize if necessary
-            if (scale) {
-                this.resize(scale);
+            if (typeof settings.size === "number" && settings.size !== 1.0) {
+                this.resize(settings.size);
             }
 
-            // the text displayed by this bitmapFont object
-            this.text = "";
-
-            // bounds will be recalcutated when true
-            this.isDirty = true;
+            // set the text
+            this.setText(settings.text);
         },
 
         /**
          * change the font settings
          * @name set
-         * @memberOf me.BitmapFont
+         * @memberOf me.BitmapText
          * @function
          * @param {String} textAlign ("left", "center", "right")
          * @param {Number} [scale]
@@ -154,18 +155,18 @@
         /**
          * change the text to be displayed
          * @name setText
-         * @memberOf me.BitmapFont
+         * @memberOf me.BitmapText
          * @function
          * @param {(string|string[])} value a string, or an array of strings
          * @return this object for chaining
          */
         setText : function (value) {
-            if (this.text !== value) {
+            if (this._text!== value) {
                 if (typeof value !== "undefined") {
                     if (Array.isArray(value)) {
                         value = value.join("\n");
                     } else {
-                        this.text = "" + value;
+                        this._text= "" + value;
                     }
                 } else {
                     value = "";
@@ -178,7 +179,7 @@
         /**
          * change the font display size
          * @name resize
-         * @memberOf me.BitmapFont
+         * @memberOf me.BitmapText
          * @function
          * @param {Number} scale ratio
          * @return this object for chaining
@@ -195,13 +196,15 @@
         /**
          * measure the given text size in pixels
          * @name measureText
-         * @memberOf me.BitmapFont
+         * @memberOf me.BitmapText
          * @function
-         * @param {String} text
+         * @param {String} [text]
          * @param {me.Rect} [ret] a object in which to store the text metrics
          * @returns {TextMetrics} a TextMetrics object with two properties: `width` and `height`, defining the output dimensions
          */
         measureText : function (text, ret) {
+            text = text || this._text;
+
             var strings = ("" + text).split("\n");
             var stringHeight = measureTextHeight(this);
             var textMetrics  = ret || this.getBounds();
@@ -220,7 +223,7 @@
          */
         update : function (/* dt */) {
             if (this.isDirty === true) {
-                this.measureText(this.text, this.getBounds());
+                this.measureText();
             }
             return this.isDirty;
         },
@@ -228,7 +231,7 @@
         /**
          * draw the bitmap font
          * @name draw
-         * @memberOf me.BitmapFont
+         * @memberOf me.BitmapText
          * @function
          * @param {me.CanvasRenderer|me.WebGLRenderer} renderer Reference to the destination renderer instance
          * @param {String} [text]
@@ -248,7 +251,7 @@
                 renderer.setGlobalAlpha(_alpha * this.getOpacity());
             } else {
                 // added directly to an object container
-                text = this.text;
+                text = this._text;
                 x = this.pos.x;
                 y = this.pos.y;
             }
@@ -308,7 +311,7 @@
                 for (var c = 0, len = string.length; c < len; c++) {
                     // calculate the char index
                     var ch = string.charCodeAt(c);
-                    var glyph = this.bitmapFontData.glyphs[ch];
+                    var glyph = this.fontData.glyphs[ch];
                     var glyphWidth = glyph.width;
                     var glyphHeight = glyph.height;
                     var kerning = (lastGlyph && lastGlyph.kerning) ? lastGlyph.getKerning(ch) : 0;

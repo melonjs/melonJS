@@ -221,10 +221,10 @@
             var fontImage = new Image();
             fontImage.src = fontImageSource;
 
-            this.font = new me.BitmapFont(
-                fontDataSource,
-                fontImage
-            );
+            this.font = new me.BitmapText(0, 0, {
+                fontData: fontDataSource,
+                font: fontImage
+            });
             this.font.name = "debugPanelFont";
 
 
@@ -353,7 +353,7 @@
             });
 
 
-            me.plugin.patch(me.BitmapFont, "draw", function (renderer) {
+            me.plugin.patch(me.BitmapText, "draw", function (renderer) {
                 // call the original me.Sprite.draw function
                 this._patched.apply(this, arguments);
 

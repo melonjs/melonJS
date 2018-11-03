@@ -7,12 +7,12 @@
 (function() {
     /**
      * Class for storing relevant data from the font file.
-     * @class me.BitmapFontData
+     * @class me.BitmapTextData
      * @memberOf me
      * @param data {String} - The bitmap font data pulled from the resource loader using me.loader.getBinary()
      * @constructor
      */
-    me.BitmapFontData = me.Object.extend({
+    me.BitmapTextData = me.Object.extend({
         /**
          * @ignore
          */
@@ -32,7 +32,7 @@
              * The map of glyphs, each key is a char code.
              * @name glyphs
              * @type {Object}
-             * @memberOf me.BitmapFontData
+             * @memberOf me.BitmapTextData
              */
             this.glyphs = {};
 
@@ -49,7 +49,7 @@
          * Creates a glyph to use for the space character
          * @private
          * @name _createSpaceGlyph
-         * @memberOf me.BitmapFontData
+         * @memberOf me.BitmapTextData
          * @function
          */
         _createSpaceGlyph: function () {
@@ -67,7 +67,7 @@
          * Gets the first glyph in the map that is not a space character
          * @private
          * @name _getFirstGlyph
-         * @memberOf me.BitmapFontData
+         * @memberOf me.BitmapTextData
          * @function
          * @returns {me.Glyph}
          */
@@ -86,7 +86,7 @@
          * and returns the value of d
          * @private
          * @name _getValueFromPair
-         * @memberOf me.BitmapFontData
+         * @memberOf me.BitmapTextData
          * @function
          * @returns {String}
          */
@@ -102,7 +102,7 @@
         /**
          * This parses the font data text and builds a map of glyphs containing the data for each character
          * @name parse
-         * @memberOf me.BitmapFontData
+         * @memberOf me.BitmapTextData
          * @function
          * @param {String} fontData
          */

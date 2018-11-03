@@ -148,7 +148,11 @@ game.HUD.ScoreItem = me.Renderable.extend({
         ]);
 
         // create a font
-        this.font = new me.BitmapFont(me.loader.getBinary('PressStart2P'), me.loader.getImage('PressStart2P'), 1.0, "right", "bottom");
+        this.font = new me.BitmapText(0, 0, {
+            font : "PressStart2P",
+            textAlign : "right",
+            textBaseline : "bottom"
+        });
 
         // local copy of the global score
         this.score = -1;
@@ -174,7 +178,7 @@ game.HUD.ScoreItem = me.Renderable.extend({
      * draw the score
      */
     draw : function (renderer) {
-        this.font.draw (renderer, game.data.score, this.pos.x, this.pos.y);
+        this.font.draw(renderer, game.data.score, this.pos.x, this.pos.y);
     }
 
 });

@@ -52,3 +52,28 @@ me.Font = me.Text.extend({
         return this._super(me.Text, "setFont", [font, size]);
     }
 });
+
+/**
+ * @ignore
+ */
+me.BitmapFontData = me.BitmapTextData;
+/**
+ * @ignore
+ */
+
+me.BitmapFont = me.BitmapText.extend({
+    /** @ignore */
+    init: function (data, fontImage, scale, textAlign, textBaseline) {
+        var settings = {
+            font: fontImage,
+            fontData: data,
+            size: scale,
+            textAlign: textAlign,
+            textBaseline: textBaseline
+        }
+        // super constructor
+        this._super(me.BitmapText, "init", [0, 0, settings]);
+        // deprecation warning
+        console.log("me.BitmapFont is deprecated, please use me.BitmapText");
+    }
+});
