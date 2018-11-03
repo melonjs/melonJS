@@ -160,7 +160,7 @@
             this.isKinematic = false;
 
             // minimum melonJS version expected
-            this.version = "6.0.0";
+            this.version = "6.2.0";
 
             // to hold the debug options
             // clickable rect area
@@ -382,8 +382,8 @@
             });
 
             // patch font.js
-            me.plugin.patch(me.Font, "draw", function (renderer, text, x, y) {
-                // call the original me.Font.draw function
+            me.plugin.patch(me.Text, "draw", function (renderer, text, x, y) {
+                // call the original me.Text.draw function
                 this._patched.apply(this, arguments);
 
                 // call the original me.Sprite.draw function
@@ -401,7 +401,7 @@
             });
 
             // patch font.js
-            me.plugin.patch(me.Font, "drawStroke", function (renderer, text, x, y) {
+            me.plugin.patch(me.Text, "drawStroke", function (renderer, text, x, y) {
                 // call the original me.Font.drawStroke function
                 this._patched.apply(this, arguments);
 
