@@ -48,7 +48,7 @@
      * @param {String} [settings.textAlign="left"] horizontal text alignment
      * @param {String} [settings.textBaseline="top"] the text baseline
      * @param {Number} [settings.lineHeight=1.0] line spacing height
-     * @param {Number} [settings.z] [z] position order in the parent container
+     * @param {(string|string[])} [settings.text=] a string, or an array of strings
      */
     me.Text = me.Renderable.extend(
     /** @scope me.Font.prototype */ {
