@@ -14,12 +14,14 @@ Version History
 * Font : fix missing documentation on properties for BitmapFont Object.
 * Font : Font & BitmapFont objects can now be directly added to a container like any other me.Renderable
 * Font : Improved performances when drawing regular me.Font objects
+* Font : new me.Text and me.BitmapText generic object replacing me.Font and me.BitmapFont (now deprecated)
 * Input : fix a potential issue with "undefined" pointer location upon loading
 * Math : new `toBeCloseTo` function to determine if two values are closed "enough" to eachother
 * Renderable : new onVisibilityChange event handler that is called when leaving or entering a camera viewport
 * Renderable : fix documentation for the container `clipping` flag (was accidentally left private)
 * Renderable : update visibility flag for floating objects using actual screen coordinates
 * TMX : add support for orthogonal tile rendering order
+* TMX : add support for Text object, allowing to add me.Text or me.BitmapText directly from Tiled
 * WebGLRenderer : fix a bug when clipping is disabled due to the clipping area being equal to the canvas size
 
 6.1.0
