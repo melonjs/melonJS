@@ -463,7 +463,11 @@
                         obj = settings;
                         // z value set already
                     } else if (typeof settings.text === "object") {
-                        obj = new me.Text(settings.x, settings.y, settings.text);
+                        if (settings.text.bitmap === true) {
+                            obj = new me.BitmapText(settings.x, settings.y, settings.text);
+                        } else {
+                            obj = new me.Text(settings.x, settings.y, settings.text);
+                        }
                         // set the obj z order
                         obj.pos.z = settings.z;
                     } else {

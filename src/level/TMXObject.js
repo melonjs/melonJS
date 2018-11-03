@@ -195,11 +195,11 @@
                 }
             }
 
-            // set the object properties
-            me.TMXUtils.applyTMXProperties(this, settings);
+
 
             // check for text information
             if (typeof settings.text !== "undefined") {
+                // a text object
                 this.text = settings.text;
                 // normalize field name and default value the melonjs way
                 this.text.font = settings.text.fontfamily || "sans-serif";
@@ -209,9 +209,16 @@
                 this.text.textBaseline = settings.text.valign || "top";
                 this.text.width = this.width;
                 this.text.height = this.height;
-            } else if (!this.shapes) {
-                // else define the object shapes if required
-                this.shapes = this.parseTMXShapes();
+                // set the object properties
+                me.TMXUtils.applyTMXProperties(this.text, settings);
+            } else {
+                // set the object properties
+                me.TMXUtils.applyTMXProperties(this, settings);
+                // a standard object
+                if (!this.shapes) {
+                    // else define the object shapes if required
+                    this.shapes = this.parseTMXShapes();
+                }
             }
 
             // Adjust the Position to match Tiled
