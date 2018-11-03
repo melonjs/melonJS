@@ -457,11 +457,15 @@
                         settings.anchorPoint = {x : 0, y : 0};
                     }
 
-                    // groups can contains either objects or layers
+                    // groups can contains either text, objects or layers
                     if (settings instanceof me.TMXLayer) {
-                        // layers are alerady instantiated & initialized
+                        // layers are already instantiated & initialized
                         obj = settings;
                         // z value set already
+                    } else if (typeof settings.text === "object") {
+                        obj = new me.Text(settings.x, settings.y, settings.text);
+                        // set the obj z order
+                        obj.pos.z = settings.z;
                     } else {
                         // pull the corresponding entity from the object pool
                         obj = me.pool.pull(

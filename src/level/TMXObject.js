@@ -22,7 +22,7 @@
         /**
          * @ignore
          */
-        init :  function (map, tmxObj, z) {
+        init :  function (map, settings, z) {
 
             /**
              * point list in JSON format
@@ -40,7 +40,7 @@
              * @name name
              * @memberOf me.TMXObject
              */
-            this.name = tmxObj.name;
+            this.name = settings.name;
 
             /**
              * object x position
@@ -49,7 +49,7 @@
              * @name x
              * @memberOf me.TMXObject
              */
-            this.x = +tmxObj.x;
+            this.x = +settings.x;
 
             /**
              * object y position
@@ -58,7 +58,7 @@
              * @name y
              * @memberOf me.TMXObject
              */
-            this.y = +tmxObj.y;
+            this.y = +settings.y;
 
             /**
              * object z order
@@ -76,7 +76,7 @@
              * @name width
              * @memberOf me.TMXObject
              */
-            this.width = +tmxObj.width || 0;
+            this.width = +settings.width || 0;
 
             /**
              * object height
@@ -85,7 +85,7 @@
              * @name height
              * @memberOf me.TMXObject
              */
-            this.height = +tmxObj.height || 0;
+            this.height = +settings.height || 0;
 
             /**
              * object gid value
@@ -95,7 +95,7 @@
              * @name gid
              * @memberOf me.TMXObject
              */
-            this.gid = +tmxObj.gid || null;
+            this.gid = +settings.gid || null;
 
             /**
              * object type
@@ -104,7 +104,17 @@
              * @name type
              * @memberOf me.TMXObject
              */
-            this.type = tmxObj.type;
+            this.type = settings.type;
+
+            /**
+             * object text
+             * @public
+             * @type Object
+             * @see http://docs.mapeditor.org/en/stable/reference/tmx-map-format/#text
+             * @name type
+             * @memberOf me.TMXObject
+             */
+            this.type = settings.type;
 
             /**
              * The rotation of the object in radians clockwise (defaults to 0)
@@ -113,7 +123,7 @@
              * @name rotation
              * @memberOf me.TMXObject
              */
-            this.rotation = me.Math.degToRad(+tmxObj.rotation || 0);
+            this.rotation = me.Math.degToRad(+settings.rotation || 0);
 
             /**
              * object unique identifier per level (Tiled 0.11.x+)
@@ -122,7 +132,7 @@
              * @name id
              * @memberOf me.TMXObject
              */
-            this.id = +tmxObj.id || undefined;
+            this.id = +settings.id || undefined;
 
             /**
              * object orientation (orthogonal or isometric)
@@ -174,15 +184,34 @@
                 this.setTile(map.tilesets);
             }
             else {
-                if (typeof(tmxObj.ellipse) !== "undefined") {
+                if (typeof(settings.ellipse) !== "undefined") {
                     this.isEllipse = true;
-                } else if (typeof(tmxObj.polygon) !== "undefined") {
-                    this.points = tmxObj.polygon;
+                } else if (typeof(settings.polygon) !== "undefined") {
+                    this.points = settings.polygon;
                     this.isPolygon = true;
-                } else if (typeof(tmxObj.polyline) !== "undefined") {
-                    this.points = tmxObj.polyline;
+                } else if (typeof(settings.polyline) !== "undefined") {
+                    this.points = settings.polyline;
                     this.isPolyLine = true;
                 }
+            }
+
+            // set the object properties
+            me.TMXUtils.applyTMXProperties(this, settings);
+
+            // check for text information
+            if (typeof settings.text !== "undefined") {
+                this.text = settings.text;
+                // normalize field name and default value the melonjs way
+                this.text.font = settings.text.fontfamily || "sans-serif";
+                this.text.size = settings.text.pixelsize || 16;
+                this.text.fillStyle = settings.text.color || "#000000";
+                this.text.textAlign = settings.text.halign || "left";
+                this.text.textBaseline = settings.text.valign || "top";
+                this.text.width = this.width;
+                this.text.height = this.height;
+            } else if (!this.shapes) {
+                // else define the object shapes if required
+                this.shapes = this.parseTMXShapes();
             }
 
             // Adjust the Position to match Tiled
@@ -190,13 +219,7 @@
                 map.getRenderer().adjustPosition(this);
             }
 
-            // set the object properties
-            me.TMXUtils.applyTMXProperties(this, tmxObj);
 
-            // define the object shapes if required
-            if (!this.shapes) {
-                this.shapes = this.parseTMXShapes();
-            }
         },
 
         /**
