@@ -408,6 +408,17 @@
             }
             context.restore();
             return this.getBounds();
+        },
+
+        /**
+         * Destroy function
+         * @ignore
+         */
+        destroy : function () {
+            me.pool.push(this.fillStyle);
+            me.pool.push(this.strokeStyle);
+            this.fillStyle = this.strokeStyle = undefined;
+            this._super(me.Renderable, "destroy");
         }
     });
 })();

@@ -343,6 +343,17 @@
 
             // clear the dirty flag
             this.isDirty = false;
+        },
+
+
+        /**
+         * Destroy function
+         * @ignore
+         */
+        destroy : function () {
+            me.pool.push(this.fontScale);
+            this.fontScale = undefined;
+            this._super(me.Renderable, "destroy");
         }
     });
 })();
