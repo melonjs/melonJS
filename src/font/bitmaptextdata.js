@@ -5,6 +5,65 @@
  *
  */
 (function() {
+
+    // bitmap constants
+    var LOG2_PAGE_SIZE = 9;
+    var PAGE_SIZE = 1 << LOG2_PAGE_SIZE;
+    var xChars = ["x", "e", "a", "o", "n", "s", "r", "c", "u", "m", "v", "w", "z"];
+    var capChars = ["M", "N", "B", "D", "C", "E", "F", "K", "A", "G", "H", "I", "J", "L", "O", "P", "Q", "R", "S", "T", "U", "V", "W", "X", "Y", "Z"];
+
+    /**
+     * a glyph representing a single character in a font
+     */
+    var Glyph = me.Object.extend({
+        /**
+         * @ignore
+         */
+        init: function () {
+            this.id = 0;
+            this.x = 0;
+            this.y = 0;
+            this.width = 0;
+            this.height = 0;
+            this.u = 0;
+            this.v = 0;
+            this.u2 = 0;
+            this.v2 = 0;
+            this.xoffset = 0;
+            this.yoffset = 0;
+            this.xadvance = 0;
+            this.fixedWidth = false;
+        },
+
+        /**
+         * @ignore
+         */
+        getKerning: function (ch) {
+            if (this.kerning) {
+                var page = this.kerning[ch >>> LOG2_PAGE_SIZE];
+                if (page) {
+                    return page[ch & PAGE_SIZE - 1] || 0;
+                }
+            }
+            return 0;
+        },
+
+        /**
+         * @ignore
+         */
+        setKerning: function (ch, value) {
+            if (!this.kerning) {
+                this.kerning = {};
+            }
+            var page = this.kerning[ch >>> LOG2_PAGE_SIZE];
+            if (typeof page === "undefined") {
+                this.kerning[ch >>> LOG2_PAGE_SIZE] = {};
+                page = this.kerning[ch >>> LOG2_PAGE_SIZE];
+            }
+            page[ch & PAGE_SIZE - 1] = value;
+        }
+    });
+
     /**
      * Class for storing relevant data from the font file.
      * @class me.BitmapTextData
@@ -36,11 +95,6 @@
              */
             this.glyphs = {};
 
-
-            this.xChars = ["x", "e", "a", "o", "n", "s", "r", "c", "u", "m", "v", "w", "z"];
-            this.capChars = ["M", "N", "B", "D", "C", "E", "F", "K", "A", "G", "H", "I", "J", "L", "O", "P", "Q", "R", "S",
-                "T", "U", "V", "W", "X", "Y", "Z"];
-
             // parse the data
             this.parse(data);
         },
@@ -56,7 +110,7 @@
             var spaceCharCode = " ".charCodeAt(0);
             var glyph = this.glyphs[spaceCharCode];
             if (!glyph) {
-                glyph = me.pool.pull("me.Glyph");
+                glyph = new Glyph();
                 glyph.id = spaceCharCode;
                 glyph.xadvance = this._getFirstGlyph().xadvance;
                 this.glyphs[spaceCharCode] = glyph;
@@ -145,7 +199,7 @@
                         glyph.setKerning(second, amount);
                     }
                 } else {
-                    glyph = me.pool.pull("me.Glyph");
+                    glyph = new Glyph();
 
                     var ch = parseFloat(characterValues[2]);
                     glyph.id = ch;
@@ -170,8 +224,8 @@
             this._createSpaceGlyph();
 
             var xGlyph = null;
-            for (i = 0; i < this.xChars.length; i++) {
-                var xChar = this.xChars[i];
+            for (i = 0; i < xChars.length; i++) {
+                var xChar = xChars[i];
                 xGlyph = this.glyphs[xChar.charCodeAt(0)];
                 if (xGlyph) {
                     break;
@@ -182,8 +236,8 @@
             }
 
             var capGlyph = null;
-            for (i = 0; i < this.capChars.length; i++) {
-                var capChar = this.capChars[i];
+            for (i = 0; i < capChars.length; i++) {
+                var capChar = capChars[i];
                 capGlyph = this.glyphs[capChar.charCodeAt(0)];
                 if (capGlyph) {
                     break;

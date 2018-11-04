@@ -39,7 +39,6 @@
   "src/font/text.js",
   "src/font/bitmaptext.js",
   "src/font/bitmaptextdata.js",
-  "src/font/glyph.js",
   "src/audio/audio.js",
   "src/video/video.js",
   "src/video/renderer.js",
