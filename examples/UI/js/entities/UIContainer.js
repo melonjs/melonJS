@@ -32,11 +32,15 @@ game.UI.Container = me.Container.extend({
         );
         this.addChild(this.panelSprite);
 
+        this.font = new me.Text(0, 0 ,{
+            font: "kenpixel",
+            size: 20,
+            fillStyle: "black",
+            textAlign: "center",
+            textBaseline: "top",
+            bold: true
+        });
 
-        this.font = new me.Font("kenpixel", 20, "black");
-        this.font.textAlign = "center";
-        this.font.textBaseline = "top";
-        this.font.bold();
         this.label = label;
 
         // input status flags

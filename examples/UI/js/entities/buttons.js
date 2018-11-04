@@ -24,9 +24,13 @@ game.UI.ButtonUI = me.GUI_Object.extend({
         this.anchorPoint.set(0, 0);
         this.setOpacity(0.5);
 
-        this.font = new me.Font("kenpixel", 12, "black");
-        this.font.textAlign = "center";
-        this.font.textBaseline = "middle";
+        this.font = new me.Text(0, 0 ,{
+            font: "kenpixel",
+            size: 12,
+            fillStyle: "black",
+            textAlign: "center",
+            textBaseline: "middle"
+        });
 
         this.label = label;
 
@@ -109,12 +113,17 @@ game.UI.CheckBoxUI = me.GUI_Object.extend({
         this.label_on = on_label;
         this.label_off = off_label;
 
-        this.font = new me.Font("kenpixel", 12, "black");
-        this.font.textAlign = "left";
-        this.font.textBaseline = "middle";
+        this.font = new me.Text(0, 0 ,{
+            font: "kenpixel",
+            size: 12,
+            fillStyle: "black",
+            textAlign: "left",
+            textBaseline: "middle",
+            text: this.label_off
+        });
 
         // extend the button Bounding Box to include the label size
-        this.getBounds().width = 140;
+        this.getBounds().width += this.font.measureText().width;
 
         // only the parent container is a floating object
         this.floating = false;

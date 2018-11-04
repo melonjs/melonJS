@@ -16,6 +16,7 @@ Version History
 * Font : Improved performances when drawing regular me.Font objects
 * Font : new me.Text and me.BitmapText generic object replacing me.Font and me.BitmapFont (now deprecated)
 * Input : fix a potential issue with "undefined" pointer location upon loading
+* Loader : added support for Font Face preloading
 * Math : new `toBeCloseTo` function to determine if two values are closed "enough" to eachother
 * Renderable : new onVisibilityChange event handler that is called when leaving or entering a camera viewport
 * Renderable : fix documentation for the container `clipping` flag (was accidentally left private)
