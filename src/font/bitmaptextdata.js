@@ -149,12 +149,12 @@
 
                     var ch = parseFloat(characterValues[2]);
                     glyph.id = ch;
-                    glyph.src.set(parseFloat(characterValues[4]), parseFloat(characterValues[6]));
+                    glyph.x = parseFloat(characterValues[4])
+                    glyph.y = parseFloat(characterValues[6]);
                     glyph.width = parseFloat(characterValues[8]);
                     glyph.height = parseFloat(characterValues[10]);
-                    var y = parseFloat(characterValues[14]);
-                    glyph.offset.set(parseFloat(characterValues[12]), y);
-
+                    glyph.xoffset = parseFloat(characterValues[12]);
+                    glyph.yoffset = parseFloat(characterValues[14]);
                     glyph.xadvance = parseFloat(characterValues[16]);
 
                     if (glyph.width > 0 && glyph.height > 0) {

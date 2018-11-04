@@ -150,12 +150,12 @@ describe("me.BitmapFontData", function () {
 
         it("glyph by character 33 should have set data", function () {
             var glyph = bitmapFontData.glyphs[33];
-            expect(glyph.src.x).toEqual(192);
-            expect(glyph.src.y).toEqual(38);
+            expect(glyph.x).toEqual(192);
+            expect(glyph.y).toEqual(38);
             expect(glyph.width).toEqual(8);
             expect(glyph.height).toEqual(16);
-            expect(glyph.offset.x).toEqual(2);
-            expect(glyph.offset.y).toEqual(3);
+            expect(glyph.xoffset).toEqual(2);
+            expect(glyph.yoffset).toEqual(3);
             expect(glyph.xadvance).toEqual(6);
         });
 

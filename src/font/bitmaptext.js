@@ -320,10 +320,10 @@
                     if (glyphWidth !== 0 && glyphHeight !== 0) {
                         // some browser throw an exception when drawing a 0 width or height image
                         renderer.drawImage(this.fontImage,
-                            glyph.src.x, glyph.src.y,
+                            glyph.x, glyph.y,
                             glyphWidth, glyphHeight,
-                            x + glyph.offset.x,
-                            y + glyph.offset.y * this.fontScale.y,
+                            x + glyph.xoffset,
+                            y + glyph.yoffset * this.fontScale.y,
                             glyphWidth * this.fontScale.x, glyphHeight * this.fontScale.y
                         );
                     }

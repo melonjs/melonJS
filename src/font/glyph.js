@@ -20,8 +20,6 @@
          * @ignore
          */
         init: function () {
-            this.src = me.pool.pull("me.Vector2d", 0, 0);
-            this.offset = me.pool.pull("me.Vector2d", 0, 0);
             this.onResetEvent();
         },
 
@@ -30,14 +28,16 @@
          */
         onResetEvent: function () {
             this.id = 0;
-            this.src.set(0, 0);
+            this.x = 0;
+            this.y = 0;
             this.width = 0;
             this.height = 0;
             this.u = 0;
             this.v = 0;
             this.u2 = 0;
             this.v2 = 0;
-            this.offset.set(0, 0);
+            this.xoffset = 0;
+            this.yoffset = 0;
             this.xadvance = 0;
             this.fixedWidth = false;
         },
