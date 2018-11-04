@@ -146,6 +146,11 @@
                 this.anchorPoint.set(0, 0);
             }
 
+            // if floating was specified through settings
+            if (typeof settings.floating !== "undefined") {
+                this.floating = !!settings.floating;
+            }
+
             // font name and type
             this.setFont(settings.font, settings.size);
 

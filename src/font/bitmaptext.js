@@ -123,6 +123,11 @@
                 );
             };
 
+            // if floating was specified through settings
+            if (typeof settings.floating !== "undefined") {
+                this.floating = !!settings.floating;
+            }
+
             // resize if necessary
             if (typeof settings.size === "number" && settings.size !== 1.0) {
                 this.resize(settings.size);
