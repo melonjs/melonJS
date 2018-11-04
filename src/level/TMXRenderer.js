@@ -417,13 +417,13 @@
                 rect.pos.y - tileset.tileheight,
                 me.pool.pull("me.Vector2d")
             ).floorSelf();
-            var TileEnd = this.pixelToTileCoords(
+            var tileEnd = this.pixelToTileCoords(
                 rect.pos.x + rect.width + tileset.tilewidth,
                 rect.pos.y + rect.height + tileset.tileheight,
                 me.pool.pull("me.Vector2d")
             ).ceilSelf();
 
-            var rectEnd = this.tileToPixelCoords(TileEnd.x, TileEnd.y, me.pool.pull("me.Vector2d"));
+            var rectEnd = this.tileToPixelCoords(tileEnd.x, tileEnd.y, me.pool.pull("me.Vector2d"));
 
             // Determine the tile and pixel coordinates to start at
             var startPos = this.tileToPixelCoords(rowItr.x, rowItr.y, me.pool.pull("me.Vector2d"));
@@ -500,7 +500,7 @@
             }
 
             me.pool.push(rowItr);
-            me.pool.push(TileEnd);
+            me.pool.push(tileEnd);
             me.pool.push(rectEnd);
             me.pool.push(startPos);
         }
