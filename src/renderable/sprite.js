@@ -450,7 +450,10 @@
             this.height = frame.height;
             // set global anchortPoint if defined
             if (frame.anchorPoint) {
-                this.anchorPoint.setV(frame.anchorPoint);
+                this.anchorPoint.set(
+                    this._flip.x ? 1 - frame.anchorPoint.x : frame.anchorPoint.x,
+                    this._flip.y ? 1 - frame.anchorPoint.y : frame.anchorPoint.y
+                );
             }
             return this;
         },
