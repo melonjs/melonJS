@@ -24,14 +24,32 @@ game.UI.ButtonUI = me.GUI_Object.extend({
         this.anchorPoint.set(0, 0);
         this.setOpacity(0.5);
 
-        this.font = new me.Font("kenpixel", 12, "black");
-        this.font.textAlign = "center";
-        this.font.textBaseline = "middle";
+        this.font = new me.Text(0, 0 ,{
+            font: "kenpixel",
+            size: 12,
+            fillStyle: "black",
+            textAlign: "center",
+            textBaseline: "middle"
+        });
 
         this.label = label;
 
         // only the parent container is a floating object
         this.floating = false;
+    },
+
+    /**
+     * function called when the pointer is over the object
+     */
+    onOver : function (/* event */) {
+        this.setOpacity(1.0);
+    },
+
+    /**
+     * function called when the pointer is leaving the object area
+     */
+    onOut : function (/* event */) {
+        this.setOpacity(0.5);
     },
 
     /**
@@ -95,9 +113,17 @@ game.UI.CheckBoxUI = me.GUI_Object.extend({
         this.label_on = on_label;
         this.label_off = off_label;
 
-        this.font = new me.Font("kenpixel", 12, "black");
-        this.font.textAlign = "left";
-        this.font.textBaseline = "middle";
+        this.font = new me.Text(0, 0 ,{
+            font: "kenpixel",
+            size: 12,
+            fillStyle: "black",
+            textAlign: "left",
+            textBaseline: "middle",
+            text: this.label_off
+        });
+
+        // extend the button Bounding Box to include the label size
+        this.getBounds().width += this.font.measureText().width;
 
         // only the parent container is a floating object
         this.floating = false;
@@ -141,19 +167,10 @@ game.UI.CheckBoxUI = me.GUI_Object.extend({
 
     draw: function(renderer) {
         this._super(me.GUI_Object, "draw", [ renderer ]);
-
-        // save global alpha
-        var alpha = renderer.globalAlpha();
-        // sprite alpha value
-        renderer.setGlobalAlpha(alpha * this.getOpacity());
-
         this.font.draw(renderer,
             " " + (this.isSelected ? this.label_on : this.label_off),
             this.pos.x + this.width,
             this.pos.y + this.height / 2
         );
-
-        // restore global alpha
-        renderer.setGlobalAlpha(alpha);
     }
 });

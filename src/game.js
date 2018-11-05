@@ -161,9 +161,6 @@
                 // publish init notification
                 me.event.publish(me.event.GAME_INIT);
 
-                // translate global pointer events
-                me.input._translatePointerEvents();
-
                 // make display dirty by default
                 isDirty = true;
 

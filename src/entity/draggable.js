@@ -65,6 +65,7 @@ me.DraggableEntity = (function (Entity, Input, Event, Vector) {
             };
             this.onPointerEvent("pointerdown", this, this.mouseDown.bind(this));
             this.onPointerEvent("pointerup", this, this.mouseUp.bind(this));
+            this.onPointerEvent("pointercancel", this, this.mouseUp.bind(this));
             Event.subscribe(Event.POINTERMOVE, this.dragMove.bind(this));
             Event.subscribe(Event.DRAGSTART, function (e, draggable) {
                 if (draggable === self) {

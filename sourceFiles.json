@@ -36,10 +36,9 @@
   "src/state/state.js",
   "src/loader/loadingscreen.js",
   "src/loader/loader.js",
-  "src/font/font.js",
-  "src/font/bitmapfont.js",
-  "src/font/bitmapfontdata.js",
-  "src/font/glyph.js",
+  "src/font/text.js",
+  "src/font/bitmaptext.js",
+  "src/font/bitmaptextdata.js",
   "src/audio/audio.js",
   "src/video/video.js",
   "src/video/renderer.js",
@@ -81,5 +80,6 @@
   "src/entity/level_entity.js",
   "src/particles/emitter.js",
   "src/particles/particlecontainer.js",
-  "src/particles/particle.js"
+  "src/particles/particle.js",
+  "src/lang/deprecated.js"
 ]

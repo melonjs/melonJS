@@ -60,6 +60,16 @@
                 rect.width, rect.height
             );
             renderer.setColor(color);
+        },
+
+        /**
+         * Destroy function
+         * @ignore
+         */
+        destroy : function () {
+            me.pool.push(this.color);
+            this.color = undefined;
+            this._super(me.Renderable, "destroy");
         }
     });
 

@@ -83,6 +83,29 @@
         }
 
         /**
+         * load a font face
+         * @example
+         * preloadFontFace(
+         *     name: "'kenpixel'", type: "fontface",  src: "url('data/font/kenvector_future.woff2')"
+         * ]);
+         * @ignore
+         */
+        function preloadFontFace(data, onload, onerror) {
+            var font = new FontFace(data.name, data.src);
+            // loading promise
+            font.load().then(function() {
+                // apply the font after the font has finished downloading
+                document.fonts.add(font);
+                document.body.style.fontFamily = data.name;
+                // onloaded callback
+                onload();
+            }, function (e) {
+                // rejected
+                onerror(data.name);
+            });
+        }
+
+        /**
          * preload TMX files
          * @ignore
          */
@@ -175,7 +198,7 @@
                         onload();
                     }
                     else {
-                        onerror();
+                        onerror(tmxData.name);
                     }
                 }
             };
@@ -210,7 +233,7 @@
                         onload();
                     }
                     else {
-                        onerror();
+                        onerror(data.name);
                     }
                 }
             };
@@ -267,7 +290,7 @@
 
             script.onerror = function() {
                 // callback
-                onerror();
+                onerror(data.name);
             };
 
             document.getElementsByTagName("body")[0].appendChild(script);
@@ -425,6 +448,8 @@
                 baseURL["js"] = url;
                 baseURL["tmx"] = url;
                 baseURL["tsx"] = url;
+                // XXX ?
+                //baseURL["fontface"] = url;
             }
         };
 
@@ -437,7 +462,7 @@
          * @function
          * @param {Object[]} resources
          * @param {String} resources.name internal name of the resource
-         * @param {String} resources.type  "audio", binary", "image", "json", ,"js", "tmx", "tsx"
+         * @param {String} resources.type  "audio", binary", "image", "json","js", "tmx", "tsx", "fontface"
          * @param {String} resources.src  path and/or file name of the resource (for audio assets only the path is required)
          * @param {Boolean} [resources.stream] Set to true to force HTML5 Audio, which allows not to wait for large file to be downloaded before playing.
          * @param {function} [onload=me.loader.onload] function to be called when all resources are loaded
@@ -463,7 +488,9 @@
          *   // JSON file (used for texturePacker)
          *   {name: "texture", type: "json", src: "data/gfx/texture.json"},
          *   // JavaScript file
-         *   {name: "plugin", type: "js", src: "data/js/plugin.js"}
+         *   {name: "plugin", type: "js", src: "data/js/plugin.js"},
+         *   // Font Face
+         *   { name: "'kenpixel'", type: "fontface",  src: "url('data/font/kenvector_future.woff2')" }
          * ];
          * ...
          * // set all resources to be loaded
@@ -552,6 +579,10 @@
                     me.audio.load(res, !!res.stream, onload, onerror);
                     return 1;
 
+                case "fontface":
+                    preloadFontFace.call(this, res, onload, onerror);
+                    return 1;
+
                 default:
                     throw new api.Error("load : unknown or invalid resource type : " + res.type);
             }
@@ -598,6 +629,10 @@
                     return true;
 
                 case "js":
+                    // ??
+                    return true;
+
+                case "fontface":
                     // ??
                     return true;
 

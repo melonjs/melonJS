@@ -141,7 +141,7 @@
                     this.holdTimeout = me.timer.setTimeout(this.hold.bind(this), this.holdThreshold, false);
                     this.released = false;
                 }
-                return this.onClick(event);
+                return this.onClick.call(this, event);
             }
         },
 
@@ -165,7 +165,7 @@
          */
         enter : function (event) {
             this.hover = true;
-            return this.onOver(event);
+            return this.onOver.call(this, event);
         },
 
         /**
@@ -185,7 +185,7 @@
         leave : function (event) {
             this.hover = false;
             this.release.call(this, event);
-            return this.onOut(event);
+            return this.onOut.call(this, event);
         },
 
         /**
@@ -206,7 +206,7 @@
             if (this.released === false) {
                 this.released = true;
                 me.timer.clearTimeout(this.holdTimeout);
-                return this.onRelease(event);
+                return this.onRelease.call(this, event);
             }
         },
 
@@ -231,7 +231,7 @@
         hold : function () {
             me.timer.clearTimeout(this.holdTimeout);
             if (!this.released) {
-                this.onHold();
+                this.onHold.call(this);
             }
         },
 

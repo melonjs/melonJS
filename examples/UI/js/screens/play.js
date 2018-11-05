@@ -1,4 +1,4 @@
-game.PlayScreen = me.ScreenObject.extend({
+game.PlayScreen = me.Stage.extend({
     /**
      *  action to perform on state change
      */
@@ -48,22 +48,24 @@ game.PlayScreen = me.ScreenObject.extend({
         me.game.world.addChild(panel, 1);
 
         // display the current pointer coordinates on top of the pointer arrow
-        me.game.world.addChild(new (me.Renderable.extend({
-            init: function() {
-                this._super(me.Renderable, 'init', [0, 0, 10, 10]);
-                this.font = new me.Font("Arial", 10, "#FFFFFF");
-                this.font.textAlign = "center";
-                this.fontHeight = this.font.measureText(me.video.renderer, "DUMMY").height;
-            },
-            draw: function(renderer){
-                var x = Math.round(me.input.pointer.pos.x);
-                var y = Math.round(me.input.pointer.pos.y);
-                this.font.draw (
-                    renderer,
-                    "( " + x + "," + y + " )",
-                    x,
-                    y - this.fontHeight);
-            }
-        })), 10);
+        this.font = new me.Text(0, 0 ,{
+            font: "Arial",
+            size: 10,
+            fillStyle: "white",
+            textAlign: "center",
+            textBaseline: "top",
+            text: "(xxx, xxx)"
+        });
+        me.game.world.addChild(this.font, Infinity);
+
+        // display the current pointer coordinates on top of the pointer arrow
+        var self = this;
+        me.event.subscribe(me.event.POINTERMOVE, function(event) {
+            var x = Math.round(event.gameScreenX);
+            var y = Math.round(event.gameScreenY);
+            self.font.pos.set(x, y - self.font.height, self.font.pos.z);
+            self.font.setText( "( " + x + "," + y + " )");
+        });
+
     }
 });

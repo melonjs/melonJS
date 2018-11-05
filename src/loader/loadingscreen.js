@@ -127,24 +127,31 @@
         },
 
         drawFont : function (context) {
-            var logo1 = new me.Font("century gothic", 32, "white", "middle");
-            var logo2 = new me.Font("century gothic", 32, "#55aa00", "middle");
-            var logo1_width = 0;
+            var logo1 = new me.Text(0, 0, {
+                font: "century gothic",
+                size: 32,
+                fillStyle: "white",
+                textAlign: "middle",
+                textBaseline : "top",
+                text: "melon"
+            });
+            var logo2 = new me.Text(0, 0, {
+                font: "century gothic",
+                size: 32,
+                fillStyle: "#55aa00",
+                textAlign: "middle",
+                textBaseline : "top",
+                bold: true,
+                text: "JS"
+            });
 
-            // configure the font
-            logo2.bold();
-            logo1.textBaseline = logo2.textBaseline = "top";
-
-            // measure the logo size (using standard 2d context)
-            context.font = logo1.font;
-            context.fillStyle = logo1.fillStyle.toRGBA();
-            context.textAlign = logo1.textAlign;
-            context.textBaseline = logo1.textBaseline;
-            logo1_width = context.measureText("melon").width;
+            // compute both logo respective size
+            var logo1_width = logo1.measureText().width;
+            var logo2_width = logo2.measureText().width;
 
             // calculate the final rendering position
-            this.pos.x = Math.round((this.width - logo1_width - context.measureText("JS").width) / 2);
-            this.pos.y = this.height / 2 + 16;
+            this.pos.x = Math.round((this.width - logo1_width - logo2_width) / 2);
+            this.pos.y = Math.round(this.height / 2 + 16);
 
             // use the private _drawFont method to directly draw on the canvas context
             logo1._drawFont(context, "melon", 0, 0);

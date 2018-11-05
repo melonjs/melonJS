@@ -71,6 +71,26 @@
             this.isPrimary = false;
 
            /**
+            * the horizontal coordinate at which the event occurred, relative to the left edge of the entire document.
+            * @public
+            * @type {Number}
+            * @name pageX
+            * @see https://developer.mozilla.org/en-US/docs/Web/API/MouseEvent/pageX
+            * @memberOf me.Pointer
+            */
+            this.pageX = 0;
+
+           /**
+            * the vertical coordinate at which the event occurred, relative to the left edge of the entire document.
+            * @public
+            * @type {Number}
+            * @name pageY
+            * @see https://developer.mozilla.org/en-US/docs/Web/API/MouseEvent/pageY
+            * @memberOf me.Pointer
+            */
+            this.pageY = 0;
+
+           /**
             * the horizontal coordinate within the application's client area at which the event occurred
             * @public
             * @type {Number}
@@ -78,7 +98,7 @@
             * @see https://developer.mozilla.org/en-US/docs/Web/API/MouseEvent/clientX
             * @memberOf me.Pointer
             */
-            this.clientX = undefined;
+            this.clientX = 0;
 
            /**
             * the vertical coordinate within the application's client area at which the event occurred
@@ -88,7 +108,7 @@
             * @see https://developer.mozilla.org/en-US/docs/Web/API/MouseEvent/clientY
             * @memberOf me.Pointer
             */
-            this.clientY = undefined;
+            this.clientY = 0;
 
           /**
             * Event normalized X coordinate within the game canvas itself<br>
@@ -98,7 +118,7 @@
             * @name gameX
             * @memberOf me.Pointer
             */
-            this.gameX = undefined;
+            this.gameX = 0;
 
            /**
             * Event normalized Y coordinate within the game canvas itself<br>
@@ -108,7 +128,7 @@
             * @name gameY
             * @memberOf me.Pointer
             */
-            this.gameY = undefined;
+            this.gameY = 0;
 
            /**
             * Event X coordinate relative to the viewport
@@ -117,7 +137,7 @@
             * @name gameScreenX
             * @memberOf me.Pointer
             */
-            this.gameScreenX = undefined;
+            this.gameScreenX = 0;
 
            /**
             * Event Y coordinate relative to the viewport
@@ -126,7 +146,7 @@
             * @name gameScreenY
             * @memberOf me.Pointer
             */
-            this.gameScreenY = undefined;
+            this.gameScreenY = 0;
 
            /**
             * Event X coordinate relative to the map
@@ -135,7 +155,7 @@
             * @name gameWorldX
             * @memberOf me.Pointer
             */
-            this.gameWorldX = undefined;
+            this.gameWorldX = 0;
 
            /**
             * Event Y coordinate relative to the map
@@ -144,7 +164,7 @@
             * @name gameWorldY
             * @memberOf me.Pointer
             */
-            this.gameWorldY = undefined;
+            this.gameWorldY = 0;
 
            /**
             * Event X coordinate relative to the holding container
@@ -153,7 +173,7 @@
             * @name gameLocalX
             * @memberOf me.Pointer
             */
-            this.gameLocalX = undefined;
+            this.gameLocalX = 0;
 
            /**
             * Event Y coordinate relative to the holding container
@@ -162,7 +182,7 @@
             * @name gameLocalY
             * @memberOf me.Pointer
             */
-            this.gameLocalY = undefined;
+            this.gameLocalY = 0;
 
            /**
             * The unique identifier of the contact for a touch, mouse or pen
@@ -184,22 +204,26 @@
          * @private
          * @function
          * @param {Event} event the original Event object
+         * @param {Number} pageX the horizontal coordinate at which the event occurred, relative to the left edge of the entire document
+         * @param {Number} pageY the vertical coordinate at which the event occurred, relative to the left edge of the entire document
          * @param {Number} clientX the horizontal coordinate within the application's client area at which the event occurred
          * @param {Number} clientX the vertical coordinate within the application's client area at which the event occurred
          * @param {Number} pointedId the Pointer, Touch or Mouse event Id
          */
-        setEvent : function (event, clientX, clientY, pointerId) {
+        setEvent : function (event, pageX, pageY, clientX, clientY, pointerId) {
             var width = 1;
             var height = 1;
 
             // the original event object
             this.event = event;
 
+            this.pageX = pageX || 0;
+            this.pageY = pageY || 0;
             this.clientX = clientX || 0;
             this.clientY = clientY || 0;
 
             // translate to local coordinates
-            me.input.globalToLocal(clientX, clientY, this.pos);
+            me.input.globalToLocal(this.clientX, this.clientY, this.pos);
 
             // true if not originally a pointer event
             this.isNormalized = !me.device.PointerEvent || (me.device.PointerEvent && !(event instanceof window.PointerEvent));

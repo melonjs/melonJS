@@ -125,30 +125,30 @@
         init: function (levelId, data) {
 
             /**
-             * name of the tilemap
-             * @public
-             * @type String
-             * @name me.TMXTileMap#name
-             */
-            this.name = levelId;
-
-            /**
              * the level data (JSON)
              * @ignore
              */
             this.data = data;
 
             /**
+             * name of the tilemap
+             * @public
+             * @type {String}
+             * @name me.TMXTileMap#name
+             */
+            this.name = levelId;
+
+            /**
              * width of the tilemap in tiles
              * @public
-             * @type Int
+             * @type {Number}
              * @name me.TMXTileMap#cols
              */
             this.cols = +data.width;
             /**
              * height of the tilemap in tiles
              * @public
-             * @type Int
+             * @type {Number}
              * @name me.TMXTileMap#rows
              */
             this.rows = +data.height;
@@ -156,7 +156,7 @@
             /**
              * Tile width
              * @public
-             * @type Int
+             * @type {Number}
              * @name me.TMXTileMap#tilewidth
              */
             this.tilewidth = +data.tilewidth;
@@ -164,13 +164,58 @@
             /**
              * Tile height
              * @public
-             * @type Int
+             * @type {Number}
              * @name me.TMXTileMap#tileheight
              */
             this.tileheight = +data.tileheight;
 
+            /**
+             * is the map an infinite map
+             * @public
+             * @type {Number}
+             * @default 0
+             * @name me.TMXTileMap#infinite
+             */
+            this.infinite = +data.infinite;
+
+            /**
+             * the map orientation type. melonJS supports “orthogonal”, “isometric”, “staggered” and “hexagonal”.
+             * @public
+             * @type {String}
+             * @default "orthogonal"
+             * @name me.TMXTileMap#orientation
+             */
+            this.orientation = data.orientation;
+
+            /**
+            * the order in which tiles on orthogonal tile layers are rendered.
+            * (valid values are "left-down", "left-up", "right-down", "right-up")
+             * @public
+             * @type {String}
+             * @default "right-down"
+             * @name me.TMXTileMap#renderorder
+             */
+            this.renderorder = data.renderorder || "right-down";
+
+            /**
+             * the TMX format version
+             * @public
+             * @type {String}
+             * @name me.TMXTileMap#version
+             */
+            this.version = data.version;
+
+            /**
+             * The Tiled version used to save the file (since Tiled 1.0.1).
+             * @public
+             * @type {String}
+             * @name me.TMXTileMap#tiledversion
+             */
+            this.tiledversion = data.tiledversion;
+
             // tilesets for this map
             this.tilesets = null;
+
             // layers
             if (typeof this.layers === "undefined") {
                 this.layers = [];
@@ -180,14 +225,9 @@
                 this.objectGroups = [];
             }
 
-            // tilemap version
-            this.version = data.version;
-
             // Check if map is from melon editor
             this.isEditor = data.editor === "melon-editor";
 
-            // map type (orthogonal or isometric)
-            this.orientation = data.orientation;
             if (this.orientation === "isometric") {
                 this.width = (this.cols + this.rows) * (this.tilewidth / 2);
                 this.height = (this.cols + this.rows) * (this.tileheight / 2);
@@ -196,13 +236,8 @@
                 this.height = this.rows * this.tileheight;
             }
 
-
-            // objects minimum z order
-            this.z = 0;
-
             // object id
             this.nextobjectid = +data.nextobjectid || undefined;
-
 
             // hex/iso properties
             this.hexsidelength = +data.hexsidelength || undefined;
@@ -218,6 +253,11 @@
             // internal flag
             this.initialized = false;
 
+            if (this.infinite === 1) {
+                // #956 Support for Infinite map
+                // see as well in me.TMXUtils
+                throw new me.Error("Tiled Infinite Map not supported!");
+            }
         },
 
         /**
@@ -255,7 +295,7 @@
             }
 
             // to automatically increment z index
-            var zOrder = this.z;
+            var zOrder = 0;
             var self = this;
 
             // Tileset information
@@ -417,11 +457,19 @@
                         settings.anchorPoint = {x : 0, y : 0};
                     }
 
-                    // groups can contains either objects or layers
+                    // groups can contains either text, objects or layers
                     if (settings instanceof me.TMXLayer) {
-                        // layers are alerady instantiated & initialized
+                        // layers are already instantiated & initialized
                         obj = settings;
                         // z value set already
+                    } else if (typeof settings.text === "object") {
+                        if (settings.text.bitmap === true) {
+                            obj = new me.BitmapText(settings.x, settings.y, settings.text);
+                        } else {
+                            obj = new me.Text(settings.x, settings.y, settings.text);
+                        }
+                        // set the obj z order
+                        obj.pos.z = settings.z;
                     } else {
                         // pull the corresponding entity from the object pool
                         obj = me.pool.pull(

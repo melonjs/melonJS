@@ -41,7 +41,11 @@ describe("me.Camera2d", function () {
 
         // check if obj is visible
         expect(camera.isVisible(obj)).toEqual(true);
-        // update position so that it's not just 0
+        // move the object half-way over the camera origin point
+        obj.pos.set(-5, -5, 0);
+        // check if obj is visible
+        expect(camera.isVisible(obj)).toEqual(true);
+        // change camera position so that the object is not visible anymore
         camera.move(100, 100);
         // check if obj is visible
         expect(camera.isVisible(obj)).toEqual(false);

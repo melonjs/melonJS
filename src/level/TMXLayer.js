@@ -111,6 +111,16 @@
              */
             this.isAnimated = false;
 
+            /**
+             * the order in which tiles on orthogonal tile layers are rendered.
+             * (valid values are "left-down", "left-up", "right-down", "right-up")
+             * @public
+             * @type {String}
+             * @default "right-down"
+             * @name me.TMXLayer#renderorder
+             */
+            this.renderorder = data.renderorder || "right-down";
+
             // for displaying order
             this.pos.z = z;
 

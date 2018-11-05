@@ -202,7 +202,7 @@
         api.GAMEPAD_UPDATE = "gamepad.update";
 
         /**
-         * Channel Constant for pointermove events on the viewport area <br>
+         * Channel Constant for pointermove events on the screen area <br>
          * Data passed : {me.Pointer} a Pointer object
          * @public
          * @constant

@@ -328,8 +328,8 @@
 
         /**
          * An object representing the result of an intersection.
-         * @property {me.Entity} a The first object participating in the intersection
-         * @property {me.Entity} b The second object participating in the intersection
+         * @property {me.Renderable} a The first object participating in the intersection
+         * @property {me.Renderable} b The second object participating in the intersection
          * @property {Number} overlap Magnitude of the overlap on the shortest colliding axis
          * @property {me.Vector2d} overlapV The overlap vector (i.e. `overlapN.scale(overlap, overlap)`). If this vector is subtracted from the position of a, a and b will no longer be colliding
          * @property {me.Vector2d} overlapN The shortest colliding axis (unit-vector)
@@ -391,8 +391,8 @@
          * @memberOf me.collision
          * @public
          * @function
-         * @param {me.Entity} a a reference to the object A.
-         * @param {me.Entity} b a reference to the object B.
+         * @param {me.Renderable} a a reference to the object A.
+         * @param {me.Renderable} b a reference to the object B.
          * @return {Boolean} true if they should collide, false otherwise
          */
         api.shouldCollide = function (a, b) {
@@ -410,7 +410,7 @@
          * @memberOf me.collision
          * @public
          * @function
-         * @param {me.Entity} obj entity to be tested for collision
+         * @param {me.Renderable} obj entity to be tested for collision
          * @param {me.collision.ResponseObject} [respObj=me.collision.response] a user defined response object that will be populated if they intersect.
          * @return {Boolean} in case of collision, false otherwise
          * @example
@@ -581,9 +581,9 @@
         /**
          * Checks whether polygons collide.
          * @ignore
-         * @param {me.Entity} a a reference to the object A.
+         * @param {me.Renderable} a a reference to the object A.
          * @param {me.Polygon} polyA a reference to the object A Polygon to be tested
-         * @param {me.Entity} b a reference to the object B.
+         * @param {me.Renderable} b a reference to the object B.
          * @param {me.Polygon} polyB a reference to the object B Polygon to be tested
          * @param {Response=} response Response object (optional) that will be populated if they intersect.
          * @return {boolean} true if they intersect, false if they don't.
@@ -635,9 +635,9 @@
         /**
          * Check if two Ellipse collide.
          * @ignore
-         * @param {me.Entity} a a reference to the object A.
+         * @param {me.Renderable} a a reference to the object A.
          * @param {me.Ellipse} ellipseA a reference to the object A Ellipse to be tested
-         * @param {me.Entity} b a reference to the object B.
+         * @param {me.Renderable} b a reference to the object B.
          * @param {me.Ellipse} ellipseB a reference to the object B Ellipse to be tested
          * @param {Response=} response Response object (optional) that will be populated if
          *   the circles intersect.
@@ -676,9 +676,9 @@
         /**
          * Check if a polygon and an ellipse collide.
          * @ignore
-         * @param {me.Entity} a a reference to the object A.
+         * @param {me.Renderable} a a reference to the object A.
          * @param {me.Polygon} polyA a reference to the object A Polygon to be tested
-         * @param {me.Entity} b a reference to the object B.
+         * @param {me.Renderable} b a reference to the object B.
          * @param {me.Ellipse} ellipseB a reference to the object B Ellipse to be tested
          * @param {Response=} response Response object (optional) that will be populated if they intersect.
          * @return {boolean} true if they intersect, false if they don't.
@@ -842,9 +842,9 @@
          * **NOTE:** This is slightly less efficient than testPolygonEllipse as it just
          * runs testPolygonEllipse and reverses the response at the end.
          * @ignore
-         * @param {me.Entity} a a reference to the object A.
+         * @param {me.Renderable} a a reference to the object A.
          * @param {me.Ellipse} ellipseA a reference to the object A Ellipse to be tested
-         * @param {me.Entity} a a reference to the object B.
+         * @param {me.Renderable} a a reference to the object B.
          * @param {me.Polygon} polyB a reference to the object B Polygon to be tested
          * @param {Response=} response Response object (optional) that will be populated if
          *   they intersect.

@@ -282,9 +282,6 @@
             this._drag = this.drag.bind(this);
 
             this.onDrag = function() {};
-
-            me.input.registerPointerEvent("pointerup", me.game.viewport, this._stopDrag);
-            me.input.registerPointerEvent("pointermove", me.game.viewport, this._drag);
         },
         createGradients : function(color, size) {
             var context = me.video.renderer.getContext();
@@ -307,6 +304,9 @@
         },
         enable : function(container) {
             me.input.registerPointerEvent("pointerdown", this, this._startDrag);
+            me.input.registerPointerEvent("pointerup", this, this._stopDrag);
+            this.moveHandler = me.event.subscribe(me.event.POINTERMOVE, this._drag.bind(this));
+            //me.input.registerPointerEvent("pointermove", me.game.viewport, this._drag);
             (container || me.game.world).addChild(this);
         },
         disable : function(container) {
@@ -314,6 +314,8 @@
                 this.stopDrag();
             }
             me.input.releasePointerEvent("pointerdown", this, this._startDrag);
+            me.input.releasePointerEvent("pointerup", this, this._stopDrag);
+            me.event.unsubscribe(this.moveHandler);
             (container || this.ancestor || me.game.world).removeChild(this);
         },
         setPosition : function(x, y) {

@@ -160,7 +160,7 @@
             this.isKinematic = false;
 
             // minimum melonJS version expected
-            this.version = "6.0.0";
+            this.version = "6.2.0";
 
             // to hold the debug options
             // clickable rect area
@@ -221,10 +221,12 @@
             var fontImage = new Image();
             fontImage.src = fontImageSource;
 
-            this.font = new me.BitmapFont(
-                fontDataSource,
-                fontImage
-            );
+            this.font = new me.BitmapText(0, 0, {
+                fontData: fontDataSource,
+                font: fontImage
+            });
+            this.font.name = "debugPanelFont";
+
 
             // free static ressources
             fontImageSource = null;
@@ -350,13 +352,13 @@
                 }
             });
 
-            /*
-            me.plugin.patch(me.BitmapFont, "draw", function (renderer) {
+
+            me.plugin.patch(me.BitmapText, "draw", function (renderer) {
                 // call the original me.Sprite.draw function
                 this._patched.apply(this, arguments);
 
                 // draw the font rectangle
-                if (me.debug.renderHitBox) {
+                if (_this.visible && me.debug.renderHitBox && this.name !== "debugPanelFont") {
                     var bounds = this.getBounds();
 
                     if (typeof this.ancestor !== "undefined") {
@@ -369,7 +371,7 @@
                         renderer.save();
                     }
 
-                    renderer.setColor("green");
+                    renderer.setColor("orange");
                     renderer.drawShape(bounds);
                     _this.counters.inc("bounds");
 
@@ -378,40 +380,44 @@
                     }
                 }
             });
-            */
 
-
-            /*
             // patch font.js
-            me.plugin.patch(me.Font, "draw", function (renderer, text, x, y) {
-                // call the original me.Sprite.draw function
+            me.plugin.patch(me.Text, "draw", function (renderer, text, x, y) {
+                // call the original me.Text.draw function
                 this._patched.apply(this, arguments);
 
-                // draw the font rectangle
-                if (me.debug.renderHitBox) {
-                    renderer.save();
+                // call the original me.Sprite.draw function
+                if (_this.visible && me.debug.renderHitBox) {
+                    if (typeof this.ancestor === "undefined") {
+                        renderer.save();
+                    }
                     renderer.setColor("orange");
                     renderer.drawShape(this.getBounds());
                     _this.counters.inc("bounds");
-                    renderer.restore();
+                    if (typeof this.ancestor === "undefined") {
+                        renderer.restore();
+                    }
                 }
             });
 
             // patch font.js
-            me.plugin.patch(me.Font, "drawStroke", function (renderer, text, x, y) {
-                // call the original me.Sprite.draw function
+            me.plugin.patch(me.Text, "drawStroke", function (renderer, text, x, y) {
+                // call the original me.Font.drawStroke function
                 this._patched.apply(this, arguments);
 
                 // draw the font rectangle
-                if (me.debug.renderHitBox) {
-                    renderer.save();
+                if (_this.visible && me.debug.renderHitBox) {
+                    if (typeof this.ancestor === "undefined") {
+                        renderer.save();
+                    }
                     renderer.setColor("orange");
                     renderer.drawShape(this.getBounds());
                     _this.counters.inc("bounds");
-                    renderer.restore();
+                    if (typeof this.ancestor === "undefined") {
+                        renderer.restore();
+                    }
                 }
             });
-            */
 
             // patch entities.js
             me.plugin.patch(me.Entity, "postDraw", function (renderer) {
