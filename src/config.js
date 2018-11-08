@@ -167,7 +167,8 @@
     function parseHash() {
         var hash = {};
 
-        if (document.location.hash) {
+        // No "document.location" exist for Wechat mini game platform.
+        if (document.location && document.location.hash) {
             document.location.hash.substr(1).split("&").filter(function (value) {
                 return (value !== "");
             }).forEach(function (value) {
