@@ -279,9 +279,10 @@
             var lineHeight = this._fontSize * this.lineHeight;
             var strings = ("" + (text)).split("\n");
 
-            // save the font context
-            context.save();
+            // save the previous context
+            renderer.save();
 
+            // apply the style font
             setContextStyle(context, this);
 
             // compute the bounding box size
@@ -301,8 +302,8 @@
                 this.textBaseline === "middle" ? this.pos.y - (textMetrics.height / 2) : this.pos.y - textMetrics.height
             );
 
-            // restore the font context
-            context.restore();
+            // restore the context
+            renderer.restore();
 
             // returns the Font bounds me.Rect by default
             return textMetrics;
@@ -344,13 +345,12 @@
                 // force update bounds
                 this.update(0);
 
-                // save the previous global alpha value
-                var _alpha = renderer.globalAlpha();
-
-                renderer.setGlobalAlpha(_alpha * this.getOpacity());
-
                 // save the previous context
                 renderer.save();
+
+                // apply the defined alpha value
+                renderer.setGlobalAlpha(renderer.globalAlpha() * this.getOpacity());
+
             } else {
                 // added directly to an object container
                 text = this._text;
@@ -371,8 +371,6 @@
             if (typeof this.ancestor === "undefined") {
                 // restore previous context
                 renderer.restore();
-                // restore the previous global alpha value
-                renderer.setGlobalAlpha(_alpha);
             }
 
             // clear the dirty flag
@@ -399,7 +397,6 @@
          * @ignore
          */
         _drawFont : function (context, text, x, y, stroke) {
-            context.save();
             setContextStyle(context, this, stroke);
 
             var strings = ("" + text).split("\n");
@@ -411,7 +408,6 @@
                 // add leading space
                 y += lineHeight;
             }
-            context.restore();
             return this.getBounds();
         },
 
