@@ -291,16 +291,16 @@
                 this.width = Math.max(context.measureText(me.utils.string.trimRight(strings[i])).width, this.width);
                 this.height += lineHeight;
             }
-            textMetrics.width = this.width;
-            textMetrics.height = this.height;
+            textMetrics.width = Math.ceil(this.width);
+            textMetrics.height = Math.ceil(this.height);
 
             // compute the bounding box position
-            textMetrics.pos.x = (this.textAlign === "right" ? this.pos.x - this.width : (
+            textMetrics.pos.x = Math.floor((this.textAlign === "right" ? this.pos.x - this.width : (
                 this.textAlign === "center" ? this.pos.x - (this.width / 2) : this.pos.x
-            ));
-            textMetrics.pos.y = (this.textBaseline.search(/^(top|hanging)$/) === 0) ? this.pos.y : (
+            )));
+            textMetrics.pos.y = Math.floor((this.textBaseline.search(/^(top|hanging)$/) === 0) ? this.pos.y : (
                 this.textBaseline === "middle" ? this.pos.y - (textMetrics.height / 2) : this.pos.y - textMetrics.height
-            );
+            ));
 
             // restore the context
             renderer.restore();
