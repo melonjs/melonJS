@@ -9,6 +9,7 @@ Version History
 * Camera : fix infinite generation of the VIEWPORT_ONCHANGE event when using camera damping
 * Device : added a me.device.focus() function
 * Entity : fix "DRAGEND" event triggering for Draggable Entity, when pointer is moved outside of the screen area
+* Entity : fix a regression introduced in 6.0 on optional me.Entity constructor parameters
 * Font : fix bounds calculation for BitmapFont objects
 * Font : enable Font & BitmapFont bounding box drawing through the Debug Panel
 * Font : fix missing documentation on properties for BitmapFont Object.

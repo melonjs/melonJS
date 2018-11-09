@@ -22,8 +22,8 @@
      * @param {String} [settings.name] object entity name
      * @param {String} [settings.id] object unique IDs
      * @param {Image|String} [settings.image] resource name of a spritesheet to use for the entity renderable component
-     * @param {Number} [settings.framewidth] width of a single frame in the given spritesheet
-     * @param {Number} [settings.frameheight] height of a single frame in the given spritesheet
+     * @param {Number} [settings.framewidth=settings.width] width of a single frame in the given spritesheet
+     * @param {Number} [settings.frameheight=settings.width] height of a single frame in the given spritesheet
      * @param {String} [settings.type] object type
      * @param {Number} [settings.collisionMask] Mask collision detection for this object
      * @param {me.Rect[]|me.Polygon[]|me.Line[]|me.Ellipse[]} [settings.shapes] the initial list of collision shapes (usually populated through Tiled)
@@ -46,11 +46,12 @@
             }
 
             // call the super constructor
-            this._super(me.Renderable, "init", [x, y,
-                        settings.width,
-                        settings.height]);
+            this._super(me.Renderable, "init", [x, y, settings.width, settings.height]);
 
             if (settings.image) {
+                // set the frame size to the given entity size, if not defined in settings
+                settings.framewidth = settings.framewidth || settings.width;
+                settings.frameheight = settings.frameheight || settings.height;
                 this.renderable = new me.Sprite(0, 0, settings);
             }
 
