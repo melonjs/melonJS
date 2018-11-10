@@ -146,8 +146,8 @@
             });
 
             // compute both logo respective size
-            var logo1_width = logo1.measureText().width;
-            var logo2_width = logo2.measureText().width;
+            var logo1_width = logo1.measureText(context).width;
+            var logo2_width = logo2.measureText(context).width;
 
             // calculate the final rendering position
             this.pos.x = Math.round((this.width - logo1_width - logo2_width) / 2);
