@@ -182,7 +182,7 @@
             me.collision.quadTree.clear();
 
             // remove all objects
-            api.world.destroy();
+            api.world.reset();
 
             // reset the anchorPoint
             api.world.anchorPoint.set(0, 0);

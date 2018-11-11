@@ -47,7 +47,8 @@
                     } else {
                         this._x = value
                     }
-                }
+                },
+                configurable : true
             });
 
             /**
@@ -74,7 +75,8 @@
                     } else {
                         this._y = value
                     }
-                }
+                },
+                configurable : true
             });
 
             /**
@@ -101,8 +103,8 @@
                     } else {
                         this._z = value
                     }
-
-                }
+                },
+                configurable : true
             });
 
             if (typeof(settings) === "undefined") {

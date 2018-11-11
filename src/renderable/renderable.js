@@ -91,11 +91,10 @@
              * @name currentTransform
              * @memberOf me.Renderable
              */
-            if (typeof this.currentTransform !== "undefined") {
-                this.currentTransform.identity();
-            } else {
+            if (typeof this.currentTransform === "undefined") {
                 this.currentTransform = me.pool.pull("me.Matrix2d");
             }
+            this.currentTransform.identity();
 
            /**
             * (G)ame (U)nique (Id)entifier" <br>
@@ -179,7 +178,7 @@
             if (this.anchorPoint instanceof me.ObservableVector2d) {
                 this.anchorPoint.setMuted(0.5, 0.5).setCallback(this.onAnchorUpdate.bind(this));
             } else {
-                this.anchorPoint = new me.ObservableVector2d(0.5, 0.5, { onUpdate: this.onAnchorUpdate.bind(this) });
+                this.anchorPoint = me.pool.pull("me.ObservableVector2d", 0.5, 0.5, { onUpdate: this.onAnchorUpdate.bind(this) });
             }
 
             /**
@@ -240,11 +239,10 @@
              * @name _bounds
              * @memberOf me.Renderable
              */
-            if (this._bounds) {
+            if (this._bounds instanceof me.Rect) {
                 this._bounds.setShape(x, y, width, height);
-            }
-            else {
-                this._bounds = new me.Rect(x, y, width, height);
+            } else {
+                this._bounds = me.pool.pull("me.Rect", x, y, width, height);
             }
 
             /**
@@ -254,11 +252,11 @@
              * @name _absPos
              * @memberOf me.Renderable
              */
-            if (this._absPos) {
+            if (this._absPos instanceof me.Vector2d) {
                 this._absPos.set(x, y);
             }
             else {
-                this._absPos = new me.Vector2d(x, y);
+                this._absPos = me.pool.pull("me.Vector2d", x, y);
             }
 
             /**
@@ -271,7 +269,7 @@
             if (this.pos instanceof me.ObservableVector3d) {
                 this.pos.setMuted(x, y, 0).setCallback(this.updateBoundsPos.bind(this));
             } else {
-                this.pos = new me.ObservableVector3d(x, y, 0, { onUpdate: this.updateBoundsPos.bind(this) });
+                this.pos = me.pool.pull("me.ObservableVector3d", x, y, 0, { onUpdate: this.updateBoundsPos.bind(this) });
             }
 
             this._width = width;
@@ -290,6 +288,12 @@
 
             // ensure it's fully opaque by default
             this.setOpacity(1.0);
+        },
+
+        /** @ignore */
+        onResetEvent : function (x, y, width, height) {
+            // re-run the whole constructor
+            this.init(x, y, width, height);
         },
 
         /**
@@ -538,8 +542,23 @@
          * @ignore
          */
         destroy : function () {
-            // reset currentTransform
-            this.currentTransform.identity();
+            // allow recycling object properties
+            me.pool.push(this.currentTransform);
+            this.currentTransform = undefined;
+
+            me.pool.push(this.anchorPoint);
+            this.anchorPoint = undefined;
+
+            me.pool.push(this.pos);
+            this.pos = undefined;
+
+            me.pool.push(this._absPos);
+            this._absPos = undefined;
+
+            me.pool.push(this._bounds);
+            this._bounds = undefined;
+
+            this.onVisibilityChange = undefined;
 
             // destroy the physic body if defined
             if (typeof this.body !== "undefined") {

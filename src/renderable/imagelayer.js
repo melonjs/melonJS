@@ -54,7 +54,7 @@
             // displaying order
             this.pos.z = settings.z || 0;
 
-            this.offset = new me.Vector2d(x, y);
+            this.offset = me.pool.pull("me.Vector2d", x, y);
 
             /**
              * Define the image scrolling ratio<br>
@@ -68,7 +68,7 @@
              * @default <1.0,1.0>
              * @name me.ImageLayer#ratio
              */
-            this.ratio = new me.Vector2d(1.0, 1.0);
+            this.ratio = me.pool.pull("me.Vector2d", 1.0, 1.0);
 
             if (typeof(settings.ratio) !== "undefined") {
                 // little hack for backward compatiblity
@@ -296,7 +296,18 @@
             me.event.unsubscribe(this.vpChangeHdlr);
             me.event.unsubscribe(this.vpResizeHdlr);
             me.event.unsubscribe(this.vpLoadedHdlr);
-        }
+        },
 
+        /**
+         * Destroy function<br>
+         * @ignore
+         */
+        destroy : function () {
+            me.pool.push(this.offset);
+            this.offset = undefined;
+            me.pool.push(this.ratio);
+            this.ratio = undefined;
+            this._super(me.Renderable, "destroy");
+        }
     });
 })();

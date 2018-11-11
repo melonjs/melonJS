@@ -628,6 +628,7 @@
                 // Heap Memory information not available
                 this.font.draw(renderer, "Heap : ??/?? MB", this.memoryPositionX, 2 * this.mod);
             }
+            this.font.draw(renderer, "Pool : " + me.pool.getInstanceCount(), this.memoryPositionX, 10 * this.mod);
         },
 
         /** @private */
