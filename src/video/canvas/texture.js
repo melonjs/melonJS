@@ -176,6 +176,7 @@
                         name         : frame.filename, // frame name
                         offset       : new me.Vector2d(s.x, s.y),
                         anchorPoint  : (hasTextureAnchorPoint) ? new me.Vector2d(originX / s.w, originY / s.h) : null,
+                        trimmed      : frame.trimmed,
                         width        : s.w,
                         height       : s.h,
                         angle        : (frame.rotated === true) ? nhPI : 0
