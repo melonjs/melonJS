@@ -74,6 +74,11 @@
             this.setShape(x, y, points);
         },
 
+        /** @ignore */
+        onResetEvent : function (x, y, points) {
+            this.setShape(x, y, points);
+        },
+
         /**
          * set new value to the Polygon
          * @name setShape

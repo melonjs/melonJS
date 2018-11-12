@@ -51,7 +51,7 @@
      * @param {String} [settings.textAlign="left"] horizontal text alignment
      * @param {String} [settings.textBaseline="top"] the text baseline
      * @param {Number} [settings.lineHeight=1.0] line spacing height
-     * @param {(string|string[])} [settings.text=] a string, or an array of strings
+     * @param {(String|String[])} [settings.text] a string, or an array of strings
      * @example
      * // Use me.loader.preload or me.loader.load to load assets
      * me.loader.preload([
@@ -162,19 +162,16 @@
          * @name setText
          * @memberOf me.BitmapText
          * @function
-         * @param {(string|string[])} value a string, or an array of strings
+         * @param {(Number|String|String[])} value a string, or an array of strings
          * @return this object for chaining
          */
         setText : function (value) {
-            if (this._text!== value) {
-                if (typeof value !== "undefined") {
-                    if (Array.isArray(value)) {
-                        value = value.join("\n");
-                    } else {
-                        this._text= "" + value;
-                    }
+            value = "" + value;
+            if (this._text !== value) {
+                if (Array.isArray(value)) {
+                    this._text = value.join("\n");
                 } else {
-                    value = "";
+                    this._text = value;
                 }
                 this.isDirty = true;
             }
@@ -256,12 +253,11 @@
                 renderer.setGlobalAlpha(_alpha * this.getOpacity());
             } else {
                 // added directly to an object container
-                text = this._text;
                 x = this.pos.x;
                 y = this.pos.y;
             }
 
-            var strings = ("" + text).split("\n");
+            var strings = ("" + this._text).split("\n");
             var lX = x;
             var stringHeight = measureTextHeight(this);
             var maxWidth = 0;

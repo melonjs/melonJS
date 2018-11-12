@@ -167,7 +167,8 @@
     function parseHash() {
         var hash = {};
 
-        if (document.location.hash) {
+        // No "document.location" exist for Wechat mini game platform.
+        if (document.location && document.location.hash) {
             document.location.hash.substr(1).split("&").filter(function (value) {
                 return (value !== "");
             }).forEach(function (value) {
@@ -215,6 +216,9 @@
         // check the device capabilites
         me.device._check();
 
+        // init the object Pool
+        me.pool.init();
+
         // initialize me.save
         me.save._init();
 
@@ -231,9 +235,6 @@
 
         // init the App Manager
         me.state.init();
-
-        // init the Entity Pool
-        me.pool.init();
 
         // automatically enable keyboard events if on desktop
         if (me.device.isMobile === false) {

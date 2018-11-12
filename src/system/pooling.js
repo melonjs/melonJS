@@ -6,11 +6,9 @@
  */
 (function () {
     /**
-     * A pool of Object entity <br>
-     * This object is used for object pooling - a technique that might speed up your game
-     * if used properly. <br>
+     * This object is used for object pooling - a technique that might speed up your game if used properly.<br>
      * If some of your classes will be instantiated and removed a lot at a time, it is a
-     * good idea to add the class to this entity pool. A separate pool for that class
+     * good idea to add the class to this object pool. A separate pool for that class
      * will be created, which will reuse objects of the class. That way they won't be instantiated
      * each time you need a new one (slowing your game), but stored into that pool and taking one
      * already instantiated when you need it.<br><br>
@@ -25,7 +23,9 @@
         // hold public stuff in our singleton
         var api = {};
 
-        var entityClass = {};
+        var objectClass = {};
+
+        var instance_counter = 0;
 
         /*
          * PUBLIC STUFF
@@ -36,7 +36,6 @@
          * @ignore
          */
         api.init = function () {
-            // add default entity object
             api.register("me.Entity", me.Entity);
             api.register("me.CollectableEntity", me.CollectableEntity);
             api.register("me.LevelEntity", me.LevelEntity);
@@ -45,7 +44,14 @@
             api.register("me.Particle", me.Particle, true);
             api.register("me.Sprite", me.Sprite);
             api.register("me.Vector2d", me.Vector2d, true);
+            api.register("me.Vector3d", me.Vector3d, true);
+            api.register("me.ObservableVector2d", me.ObservableVector2d, true);
+            api.register("me.ObservableVector3d", me.ObservableVector3d, true);
             api.register("me.Matrix2d", me.Matrix2d, true);
+            api.register("me.Rect", me.Rect, true);
+            api.register("me.Polygon", me.Polygon, true);
+            api.register("me.Line", me.Line, true);
+            api.register("me.Ellipse", me.Ellipse, true);
         };
 
         /**
@@ -62,7 +68,7 @@
          * @param {Boolean} [objectPooling=false] enables object pooling for the specified class
          * - speeds up the game by reusing existing objects
          * @example
-         * // add our users defined entities in the entity pool
+         * // add our users defined entities in the object pool
          * me.pool.register("playerspawnpoint", PlayerEntity);
          * me.pool.register("cherryentity", CherryEntity, true);
          * me.pool.register("heartentity", HeartEntity, true);
@@ -70,7 +76,7 @@
          */
          api.register = function (className, classObj, pooling) {
              if (typeof (classObj) !== "undefined") {
-                 entityClass[className] = {
+                 objectClass[className] = {
                      "class" : classObj,
                      "pool" : (pooling ? [] : undefined)
                  };
@@ -112,7 +118,7 @@
             for (var i = 0; i < arguments.length; i++) {
                 args[i] = arguments[i];
             }
-            var entity = entityClass[name];
+            var entity = objectClass[name];
             if (entity) {
                 var proto = entity["class"],
                     pool = entity.pool,
@@ -127,6 +133,7 @@
                     else {
                         obj.init.apply(obj, args);
                     }
+                    instance_counter--;
                 }
                 else {
                     args[0] = proto;
@@ -138,11 +145,11 @@
                 return obj;
             }
 
-            throw new me.Error("Cannot instantiate entity of type '" + name + "'");
+            throw new me.Error("Cannot instantiate object of type '" + name + "'");
         };
 
         /**
-         * purge the entity pool from any inactive object <br>
+         * purge the object pool from any inactive object <br>
          * Object pooling must be enabled for this function to work<br>
          * note: this will trigger the garbage collector
          * @name purge
@@ -151,15 +158,16 @@
          * @function
          */
         api.purge = function () {
-            for (var className in entityClass) {
-                if (entityClass[className]) {
-                    entityClass[className].pool = [];
+            for (var className in objectClass) {
+                if (objectClass[className]) {
+                    objectClass[className].pool = [];
                 }
             }
+            instance_counter = 0;
         };
 
         /**
-         * Push back an object instance into the entity pool <br>
+         * Push back an object instance into the object pool <br>
          * Object pooling for the object class must be enabled,
          * and object must have been instantiated using {@link me.pool#pull},
          * otherwise this function won't work
@@ -171,12 +179,13 @@
          */
         api.push = function (obj) {
             var name = obj.className;
-            if (typeof(name) === "undefined" || !entityClass[name]) {
+            if (typeof(name) === "undefined" || !objectClass[name]) {
                 // object is not registered, don't do anything
                 return;
             }
             // store back the object instance for later recycling
-            entityClass[name].pool.push(obj);
+            objectClass[name].pool.push(obj);
+            instance_counter++;
         };
 
         /**
@@ -189,7 +198,19 @@
          * @return {Boolean} true if the classname is registered
          */
         api.exists = function (name) {
-            return name in entityClass;
+            return name in objectClass;
+        };
+
+        /**
+         * returns the amount of object instance currently in the pool
+         * @name exists
+         * @memberOf me.pool
+         * @public
+         * @function
+         * @return {Number} amount of object instance
+         */
+        api.getInstanceCount = function (name) {
+            return instance_counter;
         };
 
         // return our object

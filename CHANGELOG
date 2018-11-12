@@ -5,10 +5,12 @@ Version History
 * Container : new `getNextChild` function that returns the next child within the container
 * Core : renamed `me.ScreenObject` to `me.Stage` (with an alias to `me.ScreenObject` for Backward compatibility)
 * Core : cleaned and improved the window auto focus feature
+* Core : improve automatic object instance collection & recycling of base components like vectors and shapes.
 * Camera : `me.Camera2d` objects can now be defined per Stage, rather than having one static global camera under `me.game`
 * Camera : fix infinite generation of the VIEWPORT_ONCHANGE event when using camera damping
 * Device : added a me.device.focus() function
 * Entity : fix "DRAGEND" event triggering for Draggable Entity, when pointer is moved outside of the screen area
+* Entity : fix a regression introduced in 6.0 on optional me.Entity constructor parameters
 * Font : fix bounds calculation for BitmapFont objects
 * Font : enable Font & BitmapFont bounding box drawing through the Debug Panel
 * Font : fix missing documentation on properties for BitmapFont Object.

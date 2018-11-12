@@ -331,7 +331,7 @@
          * @ignore
          */
         getFontContext : function () {
-            // in canvas more we can directly use the 2d context
+            // in canvas mode we can directly use the 2d context
             return this.getContext();
         },
 

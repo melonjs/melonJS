@@ -64,7 +64,7 @@ game.PlayScreen = me.Stage.extend({
                 var result = me.collision.rayCast(this.line);
 
                 if (result.length > 0) {
-                    for (i = 0; i < result.length; i++) {
+                    for (var i = 0; i < result.length; i++) {
                         // update the object isColliding flag
                         result[i].isColliding = true;
                     }

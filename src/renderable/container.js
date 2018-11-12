@@ -135,6 +135,31 @@
             this.isKinematic = false;
         },
 
+        /**
+         * reset the container, removing all childrens, and reseting transforms.
+         * @name reset
+         * @memberOf me.Container
+         * @function
+         */
+        reset : function () {
+            // cancel any sort operation
+            if (this.pendingSort) {
+                clearTimeout(this.pendingSort);
+                this.pendingSort = null;
+            }
+
+            // delete all children
+            for (var i = this.children.length, obj; i >= 0; (obj = this.children[--i])) {
+                // don't remove it if a persistent object
+                if (obj && !obj.isPersistent) {
+                    this.removeChildNow(obj);
+                }
+            }
+
+            // just reset some variables
+            this.currentTransform.identity();
+        },
+
 
         /**
          * Add a child to the container <br>
@@ -762,20 +787,8 @@
          * @ignore
          */
         destroy : function () {
-            // cancel any sort operation
-            if (this.pendingSort) {
-                clearTimeout(this.pendingSort);
-                this.pendingSort = null;
-            }
-
-            // delete all children
-            for (var i = this.children.length, obj; i >= 0; (obj = this.children[--i])) {
-                // don't remove it if a persistent object
-                if (obj && !obj.isPersistent) {
-                    this.removeChildNow(obj);
-                }
-            }
-
+            // empty the container
+            this.reset();
             // call the parent destroy method
             this._super(me.Renderable, "destroy", arguments);
         },

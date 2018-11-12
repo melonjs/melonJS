@@ -48,7 +48,7 @@
      * @param {String} [settings.textAlign="left"] horizontal text alignment
      * @param {String} [settings.textBaseline="top"] the text baseline
      * @param {Number} [settings.lineHeight=1.0] line spacing height
-     * @param {(string|string[])} [settings.text=] a string, or an array of strings
+     * @param {(String|String[])} [settings.text] a string, or an array of strings
      */
     me.Text = me.Renderable.extend(
     /** @scope me.Font.prototype */ {
@@ -241,19 +241,16 @@
          * @name setText
          * @memberOf me.Text
          * @function
-         * @param {(string|string[])} value a string, or an array of strings
+         * @param {(Number|String|String[])}} value a string, or an array of strings
          * @return this object for chaining
          */
         setText : function (value) {
+            value = "" + value;
             if (this._text !== value) {
-                if (typeof value !== "undefined") {
-                    if (Array.isArray(value)) {
-                        value = value.join("\n");
-                    } else {
-                        this._text = "" + value;
-                    }
+                if (Array.isArray(value)) {
+                    this._text = value.join("\n");
                 } else {
-                    value = "";
+                    this._text = value;
                 }
                 this.isDirty = true;
             }
@@ -271,17 +268,27 @@
          * @returns {TextMetrics} a TextMetrics object with two properties: `width` and `height`, defining the output dimensions
          */
         measureText : function (renderer, text, ret) {
-            renderer = renderer || me.video.renderer;
             text = text || this._text;
 
-            var context = renderer.getFontContext();
+            var context;
+
+            if (typeof renderer === "undefined") {
+                context = me.video.renderer.getFontContext()
+            } else if (renderer instanceof me.Renderer) {
+                context = renderer.getFontContext();
+            } else {
+                // else it's a 2d rendering context object
+                context = renderer;
+            }
+
             var textMetrics = ret || this.getBounds();
             var lineHeight = this._fontSize * this.lineHeight;
             var strings = ("" + (text)).split("\n");
 
-            // save the font context
+            // save the previous context
             context.save();
 
+            // apply the style font
             setContextStyle(context, this);
 
             // compute the bounding box size
@@ -290,18 +297,18 @@
                 this.width = Math.max(context.measureText(me.utils.string.trimRight(strings[i])).width, this.width);
                 this.height += lineHeight;
             }
-            textMetrics.width = this.width;
-            textMetrics.height = this.height;
+            textMetrics.width = Math.ceil(this.width);
+            textMetrics.height = Math.ceil(this.height);
 
             // compute the bounding box position
-            textMetrics.pos.x = (this.textAlign === "right" ? this.pos.x - this.width : (
+            textMetrics.pos.x = Math.floor((this.textAlign === "right" ? this.pos.x - this.width : (
                 this.textAlign === "center" ? this.pos.x - (this.width / 2) : this.pos.x
-            ));
-            textMetrics.pos.y = (this.textBaseline.search(/^(top|hanging)$/) === 0) ? this.pos.y : (
+            )));
+            textMetrics.pos.y = Math.floor((this.textBaseline.search(/^(top|hanging)$/) === 0) ? this.pos.y : (
                 this.textBaseline === "middle" ? this.pos.y - (textMetrics.height / 2) : this.pos.y - textMetrics.height
-            );
+            ));
 
-            // restore the font context
+            // restore the context
             context.restore();
 
             // returns the Font bounds me.Rect by default
@@ -344,16 +351,14 @@
                 // force update bounds
                 this.update(0);
 
-                // save the previous global alpha value
-                var _alpha = renderer.globalAlpha();
-
-                renderer.setGlobalAlpha(_alpha * this.getOpacity());
-
                 // save the previous context
                 renderer.save();
+
+                // apply the defined alpha value
+                renderer.setGlobalAlpha(renderer.globalAlpha() * this.getOpacity());
+
             } else {
                 // added directly to an object container
-                text = this._text;
                 x = this.pos.x;
                 y = this.pos.y;
             }
@@ -365,14 +370,12 @@
             }
 
             // draw the text
-            renderer.drawFont(this._drawFont(renderer.getFontContext(), text, x, y, stroke || false));
+            renderer.drawFont(this._drawFont(renderer.getFontContext(), this._text, x, y, stroke || false));
 
             // for backward compatibilty
             if (typeof this.ancestor === "undefined") {
                 // restore previous context
                 renderer.restore();
-                // restore the previous global alpha value
-                renderer.setGlobalAlpha(_alpha);
             }
 
             // clear the dirty flag
@@ -399,7 +402,6 @@
          * @ignore
          */
         _drawFont : function (context, text, x, y, stroke) {
-            context.save();
             setContextStyle(context, this, stroke);
 
             var strings = ("" + text).split("\n");
@@ -411,7 +413,6 @@
                 // add leading space
                 y += lineHeight;
             }
-            context.restore();
             return this.getBounds();
         },
 

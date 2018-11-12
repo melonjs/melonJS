@@ -111,6 +111,10 @@
             this.compositor.reset();
             this.gl.disable(this.gl.SCISSOR_TEST);
             this.createFillTexture(this.cache);
+            if (typeof this.fontContext2D !== "undefined" ) {
+                this.createFontTexture(this.cache);
+            }
+
         },
 
         /**
@@ -160,29 +164,37 @@
          * @ignore
          */
         createFontTexture : function (cache) {
-            var image = me.video.createCanvas(
-                me.Math.nextPowerOfTwo(this.backBufferCanvas.width),
-                me.Math.nextPowerOfTwo(this.backBufferCanvas.height)
-            );
+            if (typeof this.fontTexture === "undefined") {
+                var image = me.video.createCanvas(
+                    me.Math.nextPowerOfTwo(this.backBufferCanvas.width),
+                    me.Math.nextPowerOfTwo(this.backBufferCanvas.height)
+                );
 
-            /**
-             * @ignore
-             */
-            this.fontContext2D = this.getContext2d(image);
+                /**
+                 * @ignore
+                 */
+                this.fontContext2D = this.getContext2d(image);
 
-            /**
-             * @ignore
-             */
-            this.fontTexture = new this.Texture(
-                this.Texture.prototype.createAtlas.apply(
-                    this.Texture.prototype,
-                    [ this.backBufferCanvas.width, this.backBufferCanvas.height, "fontTexture"]
-                ),
-                image,
-                cache
-            );
+                /**
+                 * @ignore
+                 */
+                this.fontTexture = new this.Texture(
+                    this.Texture.prototype.createAtlas.apply(
+                        this.Texture.prototype,
+                        [ this.backBufferCanvas.width, this.backBufferCanvas.height, "fontTexture"]
+                    ),
+                    image,
+                    cache
+                );
+            }
+            else {
+               // fillTexture was already created, just add it back into the cache
+               cache.put(this.fontContext2D.canvas, this.fontTexture);
+           }
+           this.compositor.uploadTexture(this.fontTexture, 0, 0, 0);
 
-            this.compositor.uploadTexture(this.fontTexture);
+
+
         },
 
         /**
@@ -298,7 +310,12 @@
             );
 
             // Clear font context2D
-            fontContext.clearRect(0, 0, this.backBufferCanvas.width, this.backBufferCanvas.height);
+            fontContext.clearRect(
+                bounds.pos.x,
+                bounds.pos.y,
+                bounds.width,
+                bounds.height
+            );
         },
 
         /**
@@ -477,9 +494,9 @@
          * @ignore
          */
         getFontContext : function () {
-            if (typeof (this.fontContext2D) === "undefined" ) {
+            if (typeof this.fontContext2D === "undefined" ) {
                 // warn the end user about performance impact
-                console.warn("[WebGL Renderer] WARNING : Using Standard me.Font with WebGL will severly impact performances !");
+                console.warn("[WebGL Renderer] WARNING : Using Standard me.Text with WebGL will severly impact performances !");
                 // create the font texture if not done yet
                 this.createFontTexture(this.cache);
             }
