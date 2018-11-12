@@ -451,8 +451,8 @@
             // set global anchortPoint if defined
             if (frame.anchorPoint) {
                 this.anchorPoint.set(
-                    this._flip.x && frame.flippedAnchorPoint ? frame.flippedAnchorPoint.x : frame.anchorPoint.x,
-                    this._flip.y && frame.flippedAnchorPoint ? frame.flippedAnchorPoint.y : frame.anchorPoint.y
+                    this._flip.x && frame.trimmed ? 1 - frame.anchorPoint.x : frame.anchorPoint.x,
+                    this._flip.y && frame.trimmed ? 1 - frame.anchorPoint.y : frame.anchorPoint.y
                 );
             }
             return this;
