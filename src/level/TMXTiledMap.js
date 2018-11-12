@@ -72,7 +72,7 @@
         me.TMXUtils.applyTMXProperties(data.properties, data);
 
         // create the layer
-        var imageLayer = new me.ImageLayer(
+        var imageLayer = me.pool.pull("me.ImageLayer",
             +data.x || 0,
             +data.y || 0,
             Object.assign({
@@ -316,7 +316,7 @@
             // check if a user-defined background color is defined
             if (this.backgroundcolor) {
                 this.layers.push(
-                    new me.ColorLayer(
+                    me.pool.pull("me.ColorLayer",
                         "background_color",
                         this.backgroundcolor,
                         zOrder++
@@ -327,12 +327,13 @@
             // check if a background image is defined
             if (this.background_image) {
                 // add a new image layer
-                this.layers.push(new me.ImageLayer(
-                    0, 0, {
-                        name : "background_image",
-                        image : this.background_image,
-                        z : zOrder++
-                    }
+                this.layers.push(
+                    me.pool.pull("me.ImageLayer",
+                        0, 0, {
+                            name : "background_image",
+                            image : this.background_image,
+                            z : zOrder++
+                        }
                 ));
             }
 
@@ -464,9 +465,9 @@
                         // z value set already
                     } else if (typeof settings.text === "object") {
                         if (settings.text.bitmap === true) {
-                            obj = new me.BitmapText(settings.x, settings.y, settings.text);
+                            obj = me.pool.pull("me.BitmapText", settings.x, settings.y, settings.text);
                         } else {
-                            obj = new me.Text(settings.x, settings.y, settings.text);
+                            obj = me.pool.pull("me.Text", settings.x, settings.y, settings.text);
                         }
                         // set the obj z order
                         obj.pos.z = settings.z;

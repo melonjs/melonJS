@@ -115,9 +115,9 @@
 
             if (typeof settings.fontData !== "string") {
                 // use settings.font to retreive the data from the loader
-                this.fontData = new me.BitmapTextData(me.loader.getBinary(settings.font));
+                this.fontData = me.pool.pull("me.BitmapTextData", me.loader.getBinary(settings.font));
             } else {
-                this.fontData = new me.BitmapTextData(
+                this.fontData = me.pool.pull("me.BitmapTextData",
                     // if starting/includes "info face" the whole data string was passed as parameter
                     (settings.fontData.includes("info face")) ? settings.fontData : me.loader.getBinary(settings.fontData)
                 );
@@ -354,6 +354,8 @@
         destroy : function () {
             me.pool.push(this.fontScale);
             this.fontScale = undefined;
+            me.pool.push(this.fontData);
+            this.fontData = undefined;
             this._super(me.Renderable, "destroy");
         }
     });

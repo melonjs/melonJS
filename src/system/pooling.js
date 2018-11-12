@@ -43,6 +43,11 @@
             api.register("me.Color", me.Color, true);
             api.register("me.Particle", me.Particle, true);
             api.register("me.Sprite", me.Sprite);
+            api.register("me.Text", me.Text, true);
+            api.register("me.BitmapText", me.BitmapText, true);
+            api.register("me.BitmapTextData", me.BitmapTextData, true);
+            api.register("me.ImageLayer", me.ImageLayer, true);
+            api.register("me.ColorLayer", me.ColorLayer, true);
             api.register("me.Vector2d", me.Vector2d, true);
             api.register("me.Vector3d", me.Vector3d, true);
             api.register("me.ObservableVector2d", me.ObservableVector2d, true);

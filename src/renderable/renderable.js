@@ -291,9 +291,8 @@
         },
 
         /** @ignore */
-        onResetEvent : function (x, y, width, height) {
-            // re-run the whole constructor
-            this.init(x, y, width, height);
+        onResetEvent : function () {
+            this.init.apply(this, arguments);
         },
 
         /**

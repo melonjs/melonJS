@@ -151,7 +151,8 @@
                     }
                     this.resize(me.game.viewport.width, me.game.viewport.height);
                     this.createPattern();
-                }
+                },
+                configurable: true
             });
 
             this.repeat = settings.repeat || "repeat";

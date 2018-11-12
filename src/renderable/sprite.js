@@ -61,7 +61,7 @@
              * @name offset
              * @memberOf me.Sprite
              */
-            this.offset = new me.Vector2d();
+            this.offset = me.pool.pull("me.Vector2d", 0, 0);
 
             // hold all defined animation
             this.anim = {};
@@ -563,6 +563,16 @@
             this.anchorPoint.setMuted(newX, newY);
             // then call updateBouds
             this.updateBoundsPos(this.pos.x, this.pos.y);
+        },
+
+        /**
+         * Destroy function<br>
+         * @ignore
+         */
+        destroy : function () {
+            me.pool.push(this.offset);
+            this.offset = undefined;
+            this._super(me.Renderable, "destroy");
         },
 
         /**

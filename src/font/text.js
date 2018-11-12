@@ -73,7 +73,7 @@
                     this.fillStyle = me.pool.pull("me.Color").parseCSS(settings.fillStyle);
                 }
             } else {
-                this.fillStyle = new me.Color(0, 0, 0);
+                this.fillStyle = me.pool.pull("me.Color", 0, 0, 0);
             }
 
             /**
@@ -91,7 +91,7 @@
                      this.strokeStyle = me.pool.pull("me.Color").parseCSS(settings.strokeStyle);
                  }
              } else {
-                 this.strokeStyle = new me.Color(0, 0, 0);
+                 this.strokeStyle = me.pool.pull("me.Color", 0, 0, 0);
              }
 
             /**

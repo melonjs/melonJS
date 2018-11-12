@@ -127,7 +127,7 @@
         },
 
         drawFont : function (context) {
-            var logo1 = new me.Text(0, 0, {
+            var logo1 = me.pool.pull("me.Text", 0, 0, {
                 font: "century gothic",
                 size: 32,
                 fillStyle: "white",
@@ -135,7 +135,7 @@
                 textBaseline : "top",
                 text: "melon"
             });
-            var logo2 = new me.Text(0, 0, {
+            var logo2 = me.pool.pull("me.Text", 0, 0, {
                 font: "century gothic",
                 size: 32,
                 fillStyle: "#55aa00",
@@ -156,6 +156,10 @@
             // use the private _drawFont method to directly draw on the canvas context
             logo1._drawFont(context, "melon", 0, 0);
             logo2._drawFont(context, "JS", logo1_width, 0);
+
+            // put them back into the object pool
+            me.pool.push(logo1);
+            me.pool.push(logo2);
         },
 
         /**
