@@ -133,6 +133,11 @@
                 this.resize(settings.size);
             }
 
+            // update anchorPoint
+            if (settings.anchorPoint) {
+                this.anchorPoint.set(settings.anchorPoint.x, settings.anchorPoint.y);
+            }
+
             // set the text
             this.setText(settings.text);
         },
