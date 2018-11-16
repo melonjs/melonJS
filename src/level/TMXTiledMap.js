@@ -464,6 +464,10 @@
                         obj = settings;
                         // z value set already
                     } else if (typeof settings.text === "object") {
+                        // Tiled uses 0,0 by default
+                        if (typeof (settings.text.anchorPoint) === "undefined") {
+                            settings.text.anchorPoint = settings.anchorPoint;
+                        }
                         if (settings.text.bitmap === true) {
                             obj = me.pool.pull("me.BitmapText", settings.x, settings.y, settings.text);
                         } else {

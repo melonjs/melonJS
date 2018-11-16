@@ -48,6 +48,7 @@
      * @param {String} [settings.textAlign="left"] horizontal text alignment
      * @param {String} [settings.textBaseline="top"] the text baseline
      * @param {Number} [settings.lineHeight=1.0] line spacing height
+     * @param {me.Vector2d} [settings.anchorPoint={x:0.0, y:0.0}] anchor point to draw the text at
      * @param {(String|String[])} [settings.text] a string, or an array of strings
      */
     me.Text = me.Renderable.extend(

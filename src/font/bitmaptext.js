@@ -51,6 +51,7 @@
      * @param {String} [settings.textAlign="left"] horizontal text alignment
      * @param {String} [settings.textBaseline="top"] the text baseline
      * @param {Number} [settings.lineHeight=1.0] line spacing height
+     * @param {me.Vector2d} [settings.anchorPoint={x:0.0, y:0.0}] anchor point to draw the text at
      * @param {(String|String[])} [settings.text] a string, or an array of strings
      * @example
      * // Use me.loader.preload or me.loader.load to load assets
@@ -133,9 +134,11 @@
                 this.resize(settings.size);
             }
 
-            // update anchorPoint
-            if (settings.anchorPoint) {
+            // update anchorPoint if provided
+            if (typeof settings.anchorPoint !== "undefined") {
                 this.anchorPoint.set(settings.anchorPoint.x, settings.anchorPoint.y);
+            } else {
+                this.anchorPoint.set(0, 0);
             }
 
             // set the text
