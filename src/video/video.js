@@ -322,6 +322,17 @@
             // trigger an initial resize();
             me.video.onresize();
 
+            // add an observer to detect when the dom tree is modified
+            if ("MutationObserver" in window) {
+                // Create an observer instance linked to the callback function
+                var observer = new MutationObserver(me.video.onresize.bind(me.video));
+
+                // Start observing the target node for configured mutations
+                observer.observe(settings.wrapper, {
+                    attributes: false, childList: true, subtree: true
+                });
+            }
+
             if (options.consoleHeader !== false) {
                 var renderType = (me.video.renderer instanceof me.CanvasRenderer) ? "CANVAS" : "WebGL";
                 var audioType = me.device.hasWebAudio ? "Web Audio" : "HTML5 Audio";

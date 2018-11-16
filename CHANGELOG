@@ -6,6 +6,7 @@ Version History
 * Core : renamed `me.ScreenObject` to `me.Stage` (with an alias to `me.ScreenObject` for Backward compatibility)
 * Core : cleaned and improved the window auto focus feature
 * Core : improve automatic object instance collection & recycling of base components like vectors and shapes.
+* Core : ensure the internal coordinates system is updated when the DOM tree structure is modified
 * Camera : `me.Camera2d` objects can now be defined per Stage, rather than having one static global camera under `me.game`
 * Camera : fix infinite generation of the VIEWPORT_ONCHANGE event when using camera damping
 * Device : added a me.device.focus() function
