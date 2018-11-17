@@ -16,10 +16,18 @@
      * @param {Number} y y coordinate
      * @param {Object} settings ImageLayer properties
      * @param {HTMLImageElement|HTMLCanvasElement|String} settings.image Image reference. See {@link me.loader.getImage}
-     * @param {String} [settings.name="me.ImageLayer"] Layer name
+     * @param {String} [settings.name="me.ImageLayer"] layer name
      * @param {Number} [settings.z=0] z-index position
-     * @param {Number|me.Vector2d} [settings.ratio=1.0] Scrolling ratio to be applied
+     * @param {Number|me.Vector2d} [settings.ratio=1.0] Scrolling ratio to be applied. See {@link me.ImageLayer#ratio}
+     * @param {String} [settings.repeat='repeat'] define if and how an Image Layer should be repeated (accepted values are 'repeat',
+ 'repeat-x', 'repeat-y', 'no-repeat'). See {@link me.ImageLayer#repeat}
      * @param {Number|me.Vector2d} [settings.anchorPoint=0.0] Image origin. See {@link me.ImageLayer#anchorPoint}
+     * @example
+     * // create a repetitive background pattern on the X axis using the citycloud image asset
+     * me.game.world.addChild(new me.ImageLayer(0, 0, {
+     *     image:"citycloud",
+     *     repeat :"repeat-x"
+     * }), 1);
      */
     me.ImageLayer = me.Renderable.extend({
         /**
@@ -111,12 +119,13 @@
              * Define if and how an Image Layer should be repeated.<br>
              * By default, an Image Layer is repeated both vertically and horizontally.<br>
              * Acceptable values : <br>
-             * * 'repeat' - The background image will be repeated both vertically and horizontally. (default) <br>
+             * * 'repeat' - The background image will be repeated both vertically and horizontally <br>
              * * 'repeat-x' - The background image will be repeated only horizontally.<br>
              * * 'repeat-y' - The background image will be repeated only vertically.<br>
              * * 'no-repeat' - The background-image will not be repeated.<br>
              * @public
              * @type String
+             * @default 'repeat'
              * @name me.ImageLayer#repeat
              */
             Object.defineProperty(this, "repeat", {
