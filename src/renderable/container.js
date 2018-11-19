@@ -156,8 +156,10 @@
                 }
             }
 
-            // just reset some variables
-            this.currentTransform.identity();
+            if (typeof this.currentTransform !== "undefined") {
+                // just reset some variables
+                this.currentTransform.identity();
+            }
         },
 
 
