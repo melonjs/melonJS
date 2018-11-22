@@ -27,6 +27,7 @@ Version History
 * Sprite : fix an issue when flipping trimmed sprite textures (@YosuaHamonangan)
 * TMX : add support for orthogonal tile rendering order
 * TMX : add support for Text object, allowing to add me.Text or me.BitmapText directly from Tiled
+* TMX : optimized the getTile function to avoid duplicate calls to the pixel to tile coordinates functions
 * WebGLRenderer : fix a bug when clipping is disabled due to the clipping area being equal to the canvas size
 
 6.1.0
