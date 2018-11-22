@@ -89,28 +89,6 @@
         },
 
         /**
-         * return the tile position corresponding for the given X coordinate
-         * @name me.TMXRenderer#pixelToTileX
-         * @public
-         * @function
-         * @param {Number} x X coordinate
-         * @return {Number} tile vertical position
-         */
-        pixelToTileX : function (x) {
-        },
-
-        /**
-         * return the tile position corresponding for the given Y coordinates
-         * @name me.TMXRenderer#pixelToTileY
-         * @public
-         * @function
-         * @param {Number} y Y coordinate
-         * @return {Number} tile horizontal position
-         */
-        pixelToTileY : function (y) {
-        },
-
-        /**
          * draw the given tile at the specified layer
          * @name me.TMXRenderer#drawTile
          * @public
@@ -167,26 +145,11 @@
         pixelToTileCoords : function (x, y, v) {
             var ret = v || new me.Vector2d();
             return ret.set(
-                this.pixelToTileX(x),
-                this.pixelToTileY(y)
+                x / this.tilewidth,
+                y / this.tileheight
             );
         },
 
-        /**
-         * return the tile position corresponding for the given X coordinate
-         * @ignore
-         */
-        pixelToTileX : function (x) {
-            return x / this.tilewidth;
-        },
-
-        /**
-         * return the tile position corresponding for the given Y coordinates
-         * @ignore
-         */
-        pixelToTileY : function (y) {
-            return y / this.tileheight;
-        },
 
         /**
          * return the pixel position corresponding of the specified tile
@@ -336,25 +299,9 @@
         pixelToTileCoords : function (x, y, v) {
             var ret = v || new me.Vector2d();
             return ret.set(
-                this.pixelToTileX(x, y),
-                this.pixelToTileY(y, x)
+                (y / this.tileheight) + ((x - this.originX) / this.tilewidth),
+                (y / this.tileheight) - ((x - this.originX) / this.tilewidth)
             );
-        },
-
-        /**
-         * return the tile position corresponding for the given X coordinate
-         * @ignore
-         */
-        pixelToTileX : function (x, y) {
-            return (y / this.tileheight) + ((x - this.originX) / this.tilewidth);
-        },
-
-        /**
-         * return the tile position corresponding for the given Y coordinates
-         * @ignore
-         */
-        pixelToTileY : function (y, x) {
-            return (y / this.tileheight) - ((x - this.originX) / this.tilewidth);
         },
 
         /**
@@ -651,28 +598,6 @@
             me.pool.push(rel);
 
             return ret.set(q, r);
-        },
-
-        /**
-         * return the tile position corresponding for the given X coordinate
-         * @ignore
-         */
-        pixelToTileX : function (x, y) {
-            var ret = me.pool.pull("me.Vector2d");
-            this.pixelToTileCoords(x, y, ret);
-            me.pool.push(ret);
-            return ret.x;
-        },
-
-        /**
-         * return the tile position corresponding for the given Y coordinates
-         * @ignore
-         */
-        pixelToTileY : function (y, x) {
-            var ret = me.pool.pull("me.Vector2d");
-            this.pixelToTileCoords(x, y, ret);
-            me.pool.push(ret);
-            return ret.y;
         },
 
         /**
