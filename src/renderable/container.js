@@ -24,7 +24,7 @@
      * @param {Number} [x=0] position of the container
      * @param {Number} [y=0] position of the container
      * @param {Number} [w=me.game.viewport.width] width of the container
-     * @param {number} [h=me.game.viewport.height] height of the container
+     * @param {Number} [h=me.game.viewport.height] height of the container
      */
     me.Container = me.Renderable.extend(
     /** @scope me.Container.prototype */
@@ -33,19 +33,13 @@
          * constructor
          * @ignore
          */
-        init : function (x, y, width, height) {
+        init : function (x, y, width, height, root) {
             /**
              * keep track of pending sort
              * @ignore
              */
             this.pendingSort = null;
 
-            /**
-             * whether the container is the root of the scene
-             * @private
-             * @ignore
-             */
-            this._root = false;
 
             // call the _super constructor
             this._super(me.Renderable,
@@ -54,6 +48,16 @@
                 width || Infinity,
                 height || Infinity]
             );
+
+            /**
+             * whether the container is the root of the scene
+             * @public
+             * @type Boolean
+             * @default false
+             * @name root
+             * @memberOf me.Container
+             */
+            this.root = root || false;
 
             /**
              * The array of children of this container.
@@ -133,6 +137,12 @@
 
             // enable collision and event detection
             this.isKinematic = false;
+
+            // subscribe on the canvas resize event
+            if (this.root === true) {
+                // XXX: Workaround for not updating container child-bounds automatically (it's expensive!)
+                me.event.subscribe(me.event.CANVAS_ONRESIZE, this.updateChildBounds.bind(this));
+            }
         },
 
         /**
@@ -504,7 +514,7 @@
         },
 
         /**
-         * Checks if this container is root or if ti's attached to the root container.
+         * Checks if this container is root or if it's attached to the root container.
          * @private
          * @name isAttachedToRoot
          * @memberOf me.Container
@@ -512,12 +522,12 @@
          * @returns Boolean
          */
         isAttachedToRoot : function () {
-            if (this._root) {
+            if (this.root === true) {
                 return true;
             } else {
                 var ancestor = this.ancestor;
                 while (ancestor) {
-                    if (ancestor._root === true) {
+                    if (ancestor.root === true) {
                         return true;
                     }
                     ancestor = ancestor.ancestor;
@@ -860,7 +870,7 @@
             renderer.translate(this.pos.x, this.pos.y);
 
             // clip the containter children to the container bounds
-            if (this._root === false && this.clipping === true && this.childBounds.isFinite() === true) {
+            if (this.root === false && this.clipping === true && this.childBounds.isFinite() === true) {
                 renderer.clipRect(
                     this.childBounds.pos.x,
                     this.childBounds.pos.y,

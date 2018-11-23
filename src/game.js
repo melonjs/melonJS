@@ -146,9 +146,8 @@
                 height = height || me.video.renderer.getHeight();
 
                 // the root object of our world is an entity container
-                api.world = new me.Container(0, 0, width, height);
+                api.world = new me.Container(0, 0, width, height, true);
                 api.world.name = "rootContainer";
-                api.world._root = true;
 
                 // to mimic the previous behavior
                 api.world.anchorPoint.set(0, 0);

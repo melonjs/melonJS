@@ -258,7 +258,7 @@
             this.memoryPositionX = 325 * this.mod;
 
             // resize the panel if the browser is resized
-            me.event.subscribe(me.event.VIEWPORT_ONRESIZE, function (w) {
+            me.event.subscribe(me.event.CANVAS_ONRESIZE, function (w) {
                 self.resize(w, DEBUG_HEIGHT);
             });
 

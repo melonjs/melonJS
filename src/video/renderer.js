@@ -256,14 +256,16 @@
          * @param {Number} height new height of the canvas
          */
         resize : function (width, height) {
-            this.backBufferCanvas.width = width;
-            this.backBufferCanvas.height = height;
-            this.currentScissor[0] = 0;
-            this.currentScissor[1] = 0;
-            this.currentScissor[2] = width;
-            this.currentScissor[3] = height;
-            // publish the corresponding event
-            me.event.publish(me.event.CANVAS_ONRESIZE, [ width, height ]);
+            if (width !== this.backBufferCanvas.width || height !== this.backBufferCanvas.height) {
+                this.backBufferCanvas.width = width;
+                this.backBufferCanvas.height = height;
+                this.currentScissor[0] = 0;
+                this.currentScissor[1] = 0;
+                this.currentScissor[2] = width;
+                this.currentScissor[3] = height;
+                // publish the corresponding event
+                me.event.publish(me.event.CANVAS_ONRESIZE, [ width, height ]);
+            }
         },
 
         /**
