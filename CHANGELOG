@@ -1,5 +1,7 @@
 Version History
 ---------------
+6.3.0
+
 6.2.0
 * Audio : fixed a regression when passing an initial volume value to the play function (thanks @PLAYERKILLERS)
 * Container : new `getNextChild` function that returns the next child within the container
