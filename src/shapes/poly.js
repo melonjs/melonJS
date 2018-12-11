@@ -62,6 +62,12 @@
             this.edges = [];
 
             /**
+             * a list of indices for all vertices composing this polygon (@see earcut)
+             * @ignore
+             */
+            this.indices = [];
+
+            /**
              * The normals here are the direction of the normal for the `n`th edge of the polygon, relative
              * to the position of the `n`th point. If you want to draw an edge normal, you must first
              * translate to the position of the starting point.
@@ -220,6 +226,7 @@
             var i;
             var edges = this.edges;
             var normals = this.normals;
+            var indices = this.indices;
 
             // Copy the original points array and apply the offset/angle
             var points = this.points;
@@ -244,8 +251,35 @@
             // trunc array
             edges.length = len;
             normals.length = len;
+            // do not do anything here, indices will be computed by
+            // toIndices if array is empty upon function call
+            indices.length = 0;
 
             return this;
+        },
+
+        /**
+         * returns a list of indices for all triangles defined in this polygon
+         * @name toIndices
+         * @memberOf me.Polygon
+         * @function
+         * @param {Vector2d[]} a list of vector
+         * @return {me.Polygon} this Polygon
+         */
+        getIndices : function (x, y) {
+            if (this.indices.length === 0) {
+                var points = this.points;
+                var data = [];
+
+                // flatten the points vector array
+                for (var i = 0; i < points.length; i++) {
+                    // XXX Optimize me
+                    data.push(points[i].x);
+                    data.push(points[i].y);
+                }
+                this.indices = me.earcut(data);
+            }
+            return this.indices;
         },
 
         /**

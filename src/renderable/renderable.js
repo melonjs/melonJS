@@ -246,6 +246,32 @@
             }
 
             /**
+             * A mask limits rendering elements to the shape and position of the given mask object.
+             * So, if the renderable is larger than the mask, only the intersecting part of the renderable will be visible.
+             * @public
+             * @type {me.Rect[]|me.Polygon[]|me.Ellipse[]}
+             * @name mask
+             * @default undefined
+             * @memberOf me.Renderable
+             * @example
+             * // apply a mask in the shape of a Star
+             * myNPCSprite.mask = new me.Polygon(myNPCSprite.width / 2, 0, [
+             *    // draw a star
+             *    {x: 0, y: 0},
+             *    {x: 14, y: 30},
+             *    {x: 47, y: 35},
+             *    {x: 23, y: 57},
+             *    {x: 44, y: 90},
+             *    {x: 0, y: 62},
+             *    {x: -44, y: 90},
+             *    {x: -23, y: 57},
+             *    {x: -47, y: 35},
+             *    {x: -14, y: 30}
+             * ]);
+             */
+            this.mask = undefined;
+
+            /**
              * Absolute position in the game world
              * @ignore
              * @type {me.Vector2d}
@@ -507,6 +533,10 @@
                 renderer.translate(-ax, -ay);
             }
 
+            if (typeof this.mask !== "undefined") {
+                renderer.setMask(this.mask);
+            }
+
         },
 
         /**
@@ -532,6 +562,9 @@
          * @param {me.CanvasRenderer|me.WebGLRenderer} renderer a renderer object
          **/
         postDraw : function (renderer) {
+            if (typeof this.mask !== "undefined") {
+                renderer.clearMask();
+            }
             // restore the context
             renderer.restore();
         },
@@ -558,6 +591,11 @@
             this._bounds = undefined;
 
             this.onVisibilityChange = undefined;
+
+            if (typeof this.mask !== "undefined") {
+                me.pool.push(this.mask);
+                this.mask = undefined;
+            }
 
             // destroy the physic body if defined
             if (typeof this.body !== "undefined") {

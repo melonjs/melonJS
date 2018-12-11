@@ -297,6 +297,75 @@
         },
 
         /**
+         * stroke the given shape
+         * @name stroke
+         * @memberOf me.Renderer
+         * @function
+         * @param {me.Rect|me.Polygon|me.Line|me.Ellipse} shape a shape object to stroke
+         */
+        stroke : function (shape, fill) {
+            if (shape.shapeType === "Rectangle") {
+                this.strokeRect(shape.left, shape.top, shape.width, shape.height, fill);
+            } else if (shape instanceof me.Line || shape instanceof me.Polygon) {
+                this.strokePolygon(shape, fill);
+            } else if (shape instanceof me.Ellipse) {
+                if (shape.radiusV.x === shape.radiusV.y) {
+                    // it's a circle
+                    this.strokeArc(
+                        shape.pos.x - shape.radius,
+                        shape.pos.y - shape.radius,
+                        shape.radius,
+                        0,
+                        2 * Math.PI,
+                        false,
+                        fill
+                    );
+                } else {
+                    // it's an ellipse
+                    this.strokeEllipse(
+                        shape.pos.x,
+                        shape.pos.y,
+                        shape.radiusV.x,
+                        shape.radiusV.y,
+                        false,
+                        fill
+                    );
+                }
+            }
+        },
+
+        /**
+         * fill the given shape
+         * @name fill
+         * @memberOf me.Renderer
+         * @function
+         * @param {me.Rect|me.Polygon|me.Line|me.Ellipse} shape a shape object to fill
+         */
+        fill : function (shape) {
+            this.stroke(shape, true);
+        },
+
+        /**
+         * A mask limits rendering elements to the shape and position of the given mask object.
+         * So, if the renderable is larger than the mask, only the intersecting part of the renderable will be visible.
+         * Mask are not preserved through renderer context save and restore.
+         * @name setMask
+         * @memberOf me.Renderer
+         * @function
+         * @param {me.Rect[]|me.Polygon[]|me.Ellipse[]} [mask] the shape defining the mask to be applied
+         */
+        setMask : function (mask) {},
+
+        /**
+         * disable (remove) the rendering mask set through setMask.
+         * @name clearMask
+         * @see setMask
+         * @memberOf me.Renderer
+         * @function
+         */
+        clearMask : function() {},
+
+        /**
          * @ignore
          */
         drawFont : function (/*bounds*/) {}

@@ -6,10 +6,10 @@ module.exports = function (grunt) {
   var sourceFiles = grunt.file.readJSON("sourceFiles.json");
   var testSpecs = "tests/spec/**/*.js";
 
-  var quadFragment = "<%= grunt.file.read('build/glsl/quad-fragment.glsl') %>";
-  var quadVertex = "<%= grunt.file.read('build/glsl/quad-vertex.glsl') %>";
-  var lineFragment = "<%= grunt.file.read('build/glsl/line-fragment.glsl') %>";
-  var lineVertex = "<%= grunt.file.read('build/glsl/line-vertex.glsl') %>";
+  var quadFragment      = "<%= grunt.file.read('build/glsl/quad-fragment.glsl') %>";
+  var primitiveFragment = "<%= grunt.file.read('build/glsl/primitive-fragment.glsl') %>";
+  var quadVertex        = "<%= grunt.file.read('build/glsl/quad-vertex.glsl') %>";
+  var primitiveVertex   = "<%= grunt.file.read('build/glsl/primitive-vertex.glsl') %>";
 
   // Project configuration.
   grunt.initConfig({
@@ -30,11 +30,11 @@ module.exports = function (grunt) {
       dist : {
         options : {
           variables : {
-            "__VERSION__"     : "<%= pkg.version %>",
-            "__QUAD_FRAGMENT__" : quadFragment,
-            "__QUAD_VERTEX__"   : quadVertex,
-            "__LINE_FRAGMENT__" : lineFragment,
-            "__LINE_VERTEX__"   : lineVertex
+            "__VERSION__"            : "<%= pkg.version %>",
+            "__PRIMITIVE_FRAGMENT__" : primitiveFragment,
+            "__QUAD_FRAGMENT__"      : quadFragment,
+            "__PRIMITIVE_VERTEX__"   : primitiveVertex,
+            "__QUAD_VERTEX__"        : quadVertex
           },
           usePrefix : false,
           force : true,

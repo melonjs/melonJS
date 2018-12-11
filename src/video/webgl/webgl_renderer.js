@@ -268,7 +268,7 @@
         },
 
         /**
-         * Sets all pixels in the given rectangle to transparent black, <br>
+         * Sets all pixels in the given rectangle to transparent black,
          * erasing any previously drawn content.
          * @name clearRect
          * @memberOf me.WebGLRenderer
@@ -387,19 +387,6 @@
             this.compositor.addQuad(pattern, key, x, y, width, height);
         },
 
-        /**
-         * Draw a filled rectangle at the specified coordinates
-         * @name fillRect
-         * @memberOf me.WebGLRenderer
-         * @function
-         * @param {Number} x
-         * @param {Number} y
-         * @param {Number} width
-         * @param {Number} height
-         */
-        fillRect : function (x, y, width, height) {
-            this.compositor.addQuad(this.fillTexture, "default", x, y, width, height);
-        },
 
         /**
          * return a reference to the screen canvas corresponding WebGL Context
@@ -437,6 +424,7 @@
                 alpha : transparent,
                 antialias : this.settings.antiAlias,
                 depth : false,
+                stencil: true,
                 premultipliedAlpha: transparent,
                 failIfMajorPerformanceCaveat : this.settings.failIfMajorPerformanceCaveat
             };
@@ -656,7 +644,23 @@
          * @param {Boolean} [antiClockwise=false] draw arc anti-clockwise
          */
         strokeArc : function (/*x, y, radius, start, end, antiClockwise*/) {
-            // TODO
+            console.warn("strokeArc() is not implemented");
+        },
+
+        /**
+         * Fill an arc at the specified coordinates with given radius, start and end points
+         * @name fillArc
+         * @memberOf me.WebGLRenderer
+         * @function
+         * @param {Number} x arc center point x-axis
+         * @param {Number} y arc center point y-axis
+         * @param {Number} radius
+         * @param {Number} start start angle in radians
+         * @param {Number} end end angle in radians
+         * @param {Boolean} [antiClockwise=false] draw arc anti-clockwise
+         */
+        fillArc : function (x, y, radius, start, end, antiClockwise) {
+            this.strokeArc(x, y, radius, start, end, antiClockwise || false, true);
         },
 
         /**
@@ -670,7 +674,21 @@
          * @param {Number} h vertical radius of the ellipse
          */
         strokeEllipse : function (/*x, y, w, h*/) {
-            // TODO
+            console.warn("strokeEllipse() is not implemented");
+        },
+
+        /**
+         * Fill an ellipse at the specified coordinates with given radius, start and end points
+         * @name fillEllipse
+         * @memberOf me.WebGLRenderer
+         * @function
+         * @param {Number} x arc center point x-axis
+         * @param {Number} y arc center point y-axis
+         * @param {Number} w horizontal radius of the ellipse
+         * @param {Number} h vertical radius of the ellipse
+         */
+        fillEllipse : function (x, y, w, h) {
+            this.strokeEllipse(x, y, w, h, true);
         },
 
         /**
@@ -692,29 +710,69 @@
             this.compositor.drawLine(points, true);
         },
 
+
         /**
-         * Strokes a me.Polygon on the screen with a specified color
+         * Fill a line of the given two points
+         * @name fillLine
+         * @memberOf me.WebGLRenderer
+         * @function
+         * @param {Number} startX the start x coordinate
+         * @param {Number} startY the start y coordinate
+         * @param {Number} endX the end x coordinate
+         * @param {Number} endY the end y coordinate
+         */
+        fillLine : function (startX, startY, endX, endY) {
+            this.strokeLine(startX, startY, endX, endY);
+        },
+
+        /**
+         * Stroke a me.Polygon on the screen with a specified color
          * @name strokePolygon
          * @memberOf me.WebGLRenderer
          * @function
          * @param {me.Polygon} poly the shape to draw
          */
-        strokePolygon : function (poly) {
-            var len = poly.points.length,
-                points,
-                i;
+        strokePolygon : function (poly, fill) {
+            if (fill === true ) {
+                this.fillPolygon(poly);
+            } else {
+                var len = poly.points.length,
+                    points,
+                    i;
 
-            // Grow internal points buffer if necessary
-            for (i = this._linePoints.length; i < len; i++) {
-                this._linePoints.push(new me.Vector2d());
-            }
+                // Grow internal points buffer if necessary
+                for (i = this._linePoints.length; i < len; i++) {
+                    this._linePoints.push(new me.Vector2d());
+                }
 
-            points = this._linePoints.slice(0, len);
-            for (i = 0; i < len; i++) {
-                points[i].x = poly.pos.x + poly.points[i].x;
-                points[i].y = poly.pos.y + poly.points[i].y;
+                points = this._linePoints.slice(0, len);
+                for (i = 0; i < len; i++) {
+                    points[i].x = poly.pos.x + poly.points[i].x;
+                    points[i].y = poly.pos.y + poly.points[i].y;
+                }
+                this.compositor.drawLine(points);
             }
-            this.compositor.drawLine(points);
+        },
+
+        /**
+         * Fill a me.Polygon on the screen
+         * @name fillPolygon
+         * @memberOf me.WebGLRenderer
+         * @function
+         * @param {me.Polygon} poly the shape to draw
+         */
+        fillPolygon : function (poly) {
+            var points = poly.points;
+            var indices = poly.getIndices();
+            var x = poly.pos.x, y = poly.pos.y;
+
+            for ( var i = 0; i < indices.length; i += 3 ) {
+                this.compositor.drawTriangle(
+                    x + points[indices[i]].x, y + points[indices[i]].y,
+                    x + points[indices[i+1]].x, y + points[indices[i+1]].y,
+                    x + points[indices[i+2]].x, y + points[indices[i+2]].y
+                );
+            }
         },
 
         /**
@@ -741,41 +799,21 @@
         },
 
         /**
-         * draw the given shape
-         * @name drawShape
+         * Draw a filled rectangle at the specified coordinates
+         * @name fillRect
          * @memberOf me.WebGLRenderer
          * @function
-         * @param {me.Rect|me.Polygon|me.Line|me.Ellipse} shape a shape object
+         * @param {Number} x
+         * @param {Number} y
+         * @param {Number} width
+         * @param {Number} height
          */
-        drawShape : function (shape) {
-            if (shape.shapeType === "Rectangle") {
-                this.strokeRect(shape.left, shape.top, shape.width, shape.height);
-            } else if (shape instanceof me.Line || shape instanceof me.Polygon) {
-                this.strokePolygon(shape);
-            } else if (shape instanceof me.Ellipse) {
-                if (shape.radiusV.x === shape.radiusV.y) {
-                    // it's a circle
-                    this.strokeArc(
-                        shape.pos.x - shape.radius,
-                        shape.pos.y - shape.radius,
-                        shape.radius,
-                        0,
-                        2 * Math.PI
-                    );
-                } else {
-                    // it's an ellipse
-                    this.strokeEllipse(
-                        shape.pos.x,
-                        shape.pos.y,
-                        shape.radiusV.x,
-                        shape.radiusV.y
-                    );
-                }
-            }
+        fillRect : function (x, y, width, height) {
+            this.compositor.addQuad(this.fillTexture, "default", x, y, width, height);
         },
 
         /**
-         * Resets (overrides) the renderer transformation matrix to the
+         * Reset (overrides) the renderer transformation matrix to the
          * identity one, and then apply the given transformation matrix.
          * @name setTransform
          * @memberOf me.WebGLRenderer
@@ -868,6 +906,52 @@
                 // turn off scissor test
                 gl.disable(gl.SCISSOR_TEST);
             }
+        },
+
+        /**
+         * A mask limits rendering elements to the shape and position of the given mask object.
+         * So, if the renderable is larger than the mask, only the intersecting part of the renderable will be visible.
+         * Mask are not preserved through renderer context save and restore.
+         * @name setMask
+         * @memberOf me.WebGLRenderer
+         * @function
+         * @param {me.Rect[]|me.Polygon[]} [mask] the shape defining the mask to be applied
+         */
+        setMask : function (mask) {
+            var gl = this.gl;
+
+            // flush the compositor
+            this.flush();
+
+            // Enable and setup GL state to write to stencil buffer
+            gl.enable(gl.STENCIL_TEST);
+            gl.clear(gl.STENCIL_BUFFER_BIT);
+            gl.colorMask(false, false, false, false);
+            gl.stencilFunc(gl.NOTEQUAL, 1, 1);
+            gl.stencilOp(gl.REPLACE, gl.REPLACE, gl.REPLACE);
+
+            this.fillPolygon(mask);
+
+            // flush the compositor
+            this.flush();
+
+            // Use stencil buffer to affect next rendering object
+            gl.colorMask(true, true, true, true);
+            gl.stencilFunc(gl.EQUAL, 1, 1);
+            gl.stencilOp(gl.KEEP, gl.KEEP, gl.KEEP);
+        },
+
+        /**
+         * disable (remove) the rendering mask set through setMask.
+         * @name clearMask
+         * @see setMask
+         * @memberOf me.WebGLRenderer
+         * @function
+         */
+        clearMask : function() {
+            // flush the compositor
+            this.flush();
+            this.gl.disable(this.gl.STENCIL_TEST);
         }
     });
 

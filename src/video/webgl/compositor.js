@@ -114,13 +114,15 @@
 
             // Load and create shader programs
             /* eslint-disable */
-            this.lineShader = me.video.shader.createShader(
+            this.primitiveShader = me.video.shader.createShader(
                 this.gl,
-                (__LINE_VERTEX__)(),
-                (__LINE_FRAGMENT__)({
+                (__PRIMITIVE_VERTEX__)(),
+                (__PRIMITIVE_FRAGMENT__)({
                     "precision"     : precision
                 })
             );
+
+
             this.quadShader = me.video.shader.createShader(
                 this.gl,
                 (__QUAD_VERTEX__)(),
@@ -441,6 +443,105 @@
         },
 
         /**
+         * Draw a triangle
+         * @name drawTriangle
+         * @memberOf me.WebGLRenderer.Compositor
+         * @function
+         * @param {Number} x0 x coordinates of the first vertex
+         * @param {Number} y0 y coordinates of the first vertex
+         * @param {Number} x1 x coordinates of the second vertex
+         * @param {Number} y1 y coordinates of the second vertex
+         * @param {Number} x2 x coordinates of the third vertex
+         * @param {Number} y2 y coordinates of the third vertex
+         */
+        drawTriangle : function (x0, y0, x1, y1, x2, y2) {
+            var gl = this.gl;
+            var m = this.matrix;
+
+            this.useShader(this.primitiveShader.handle);
+
+            var v0 = this.v[0].set(x0, y0),
+                v1 = this.v[1].set(x1, y1),
+                v2 = this.v[2].set(x2, y2);
+
+            if (!m.isIdentity()) {
+                m.multiplyVector(v0);
+                m.multiplyVector(v1);
+                m.multiplyVector(v2);
+            }
+
+            // Put vertex data into the stream buffer
+            this.stream[0] = v0.x;
+            this.stream[1] = v0.y;
+            this.stream[2] = v1.x;
+            this.stream[3] = v1.y;
+            this.stream[4] = v2.x;
+            this.stream[5] = v2.y;
+
+            // FIXME
+            this.primitiveShader.uniforms.uMatrix = this.uMatrix.val;
+
+            // Set the line color
+            this.primitiveShader.uniforms.uColor = this.color.glArray;
+
+            // Copy data into the stream buffer
+            gl.bufferData(
+                gl.ARRAY_BUFFER,
+                this.stream.subarray(0, 3 * 2),
+                gl.STREAM_DRAW
+            );
+
+            // FIXME: Configure vertex attrib pointers in `useShader`
+            gl.vertexAttribPointer(
+                this.primitiveShader.attributes.aVertex,
+                VERTEX_SIZE,
+                gl.FLOAT,
+                false,
+                0,
+                0
+            );
+
+            // Draw the stream buffer
+            gl.drawArrays(gl.TRIANGLES, 0, 3);
+
+            // FIXME: Configure vertex attrib pointers in `useShader`
+            gl.vertexAttribPointer(
+                this.quadShader.attributes.aVertex,
+                VERTEX_SIZE,
+                gl.FLOAT,
+                false,
+                ELEMENT_OFFSET,
+                VERTEX_OFFSET
+            );
+            gl.vertexAttribPointer(
+                this.quadShader.attributes.aColor,
+                COLOR_SIZE,
+                gl.FLOAT,
+                false,
+                ELEMENT_OFFSET,
+                COLOR_OFFSET
+            );
+
+            gl.vertexAttribPointer(
+                this.quadShader.attributes.aTexture,
+                TEXTURE_SIZE,
+                gl.FLOAT,
+                false,
+                ELEMENT_OFFSET,
+                TEXTURE_OFFSET
+            );
+            gl.vertexAttribPointer(
+                this.quadShader.attributes.aRegion,
+                REGION_SIZE,
+                gl.FLOAT,
+                false,
+                ELEMENT_OFFSET,
+                REGION_OFFSET
+            );
+
+        },
+
+        /**
          * Draw a line
          * @name drawLine
          * @memberOf me.WebGLRenderer.Compositor
@@ -449,7 +550,9 @@
          * @param {Boolean} [open=false] Whether the line is open (true) or closed (false)
          */
         drawLine : function (points, open) {
-            this.useShader(this.lineShader.handle);
+            var gl = this.gl;
+
+            this.useShader(this.primitiveShader.handle);
 
             // Put vertex data into the stream buffer
             var j = 0;
@@ -461,13 +564,11 @@
                 this.stream[j++] = points[i].y;
             }
 
-            var gl = this.gl;
-
             // FIXME
-            this.lineShader.uniforms.uMatrix = this.uMatrix.val;
+            this.primitiveShader.uniforms.uMatrix = this.uMatrix.val;
 
             // Set the line color
-            this.lineShader.uniforms.uColor = this.color.glArray;
+            this.primitiveShader.uniforms.uColor = this.color.glArray;
 
             // Copy data into the stream buffer
             gl.bufferData(
@@ -478,7 +579,7 @@
 
             // FIXME: Configure vertex attrib pointers in `useShader`
             gl.vertexAttribPointer(
-                this.lineShader.attributes.aVertex,
+                this.primitiveShader.attributes.aVertex,
                 VERTEX_SIZE,
                 gl.FLOAT,
                 false,

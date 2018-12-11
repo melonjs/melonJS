@@ -57,6 +57,7 @@ me.Font = me.Text.extend({
  * @ignore
  */
 me.BitmapFontData = me.BitmapTextData;
+
 /**
  * @ignore
  */
@@ -77,3 +78,11 @@ me.BitmapFont = me.BitmapText.extend({
         console.log("me.BitmapFont is deprecated, please use me.BitmapText");
     }
 });
+
+/**
+ * @ignore
+ */
+me.Renderer.prototype.drawShape = function () {
+    console.log("drawShape() is deprecated, please use the stroke() or fill() function");
+    me.Renderer.prototype.stroke.apply(this, arguments);
+}

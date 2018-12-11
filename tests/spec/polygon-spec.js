@@ -71,6 +71,14 @@ describe("Shape : me.Polygon", function () {
         });
     });
 
+    describe("earcut indices", function () {
+        it("decompose a polygon to vertex indices", function () {
+            // TODO check against the star shape "real" indices
+            var indices = me.earcut([10, 0, 0, 50, 60, 60, 70, 10]);
+            expect(indices).toEqual([1, 0, 3, 3, 2, 1]);
+        });
+    });
+
     describe("Isometric transformation", function () {
         var shape = new me.Polygon(0, 0, [
             // draw a square

@@ -160,7 +160,7 @@
             this.isKinematic = false;
 
             // minimum melonJS version expected
-            this.version = "6.2.0";
+            this.version = "6.3.0";
 
             // to hold the debug options
             // clickable rect area
@@ -335,16 +335,22 @@
                         renderer.translate(ax, ay);
 
                         renderer.setColor("green");
-                        renderer.drawShape(bounds);
+                        renderer.stroke(bounds);
 
                         renderer.translate(-ax, -ay);
 
-                        if (this.body) {
+                        // the sprite mask if defined
+                        if (typeof this.mask !== "undefined") {
+                            renderer.setColor("orange");
+                            renderer.stroke(this.mask);
+                        }
+
+                        if (typeof this.body !== "undefined") {
                             renderer.translate(this.pos.x, this.pos.y);
                             // draw all defined shapes
                             renderer.setColor("red");
                             for (var i = this.body.shapes.length, shape; i--, (shape = this.body.shapes[i]);) {
-                                renderer.drawShape(shape);
+                                renderer.stroke(shape);
                                 _this.counters.inc("shapes");
                             }
                         }
@@ -372,7 +378,7 @@
                     }
 
                     renderer.setColor("orange");
-                    renderer.drawShape(bounds);
+                    renderer.stroke(bounds);
                     _this.counters.inc("bounds");
 
                     if (typeof this.ancestor === "undefined") {
@@ -392,7 +398,7 @@
                         renderer.save();
                     }
                     renderer.setColor("orange");
-                    renderer.drawShape(this.getBounds());
+                    renderer.stroke(this.getBounds());
                     _this.counters.inc("bounds");
                     if (typeof this.ancestor === "undefined") {
                         renderer.restore();
@@ -411,7 +417,7 @@
                         renderer.save();
                     }
                     renderer.setColor("orange");
-                    renderer.drawShape(this.getBounds());
+                    renderer.stroke(this.getBounds());
                     _this.counters.inc("bounds");
                     if (typeof this.ancestor === "undefined") {
                         renderer.restore();
@@ -444,7 +450,7 @@
 
                         // draw the bounding rect shape
                         renderer.setColor("orange");
-                        renderer.drawShape(this.getBounds());
+                        renderer.stroke(this.getBounds());
 
                         renderer.translate(
                             this.pos.x + this.ancestor._absPos.x,
@@ -454,7 +460,7 @@
                         // draw all defined shapes
                         renderer.setColor("red");
                         for (var i = this.body.shapes.length, shape; i--, (shape = this.body.shapes[i]);) {
-                            renderer.drawShape(shape);
+                            renderer.stroke(shape);
                             _this.counters.inc("shapes");
                         }
                         renderer.restore();
@@ -507,7 +513,7 @@
                     if (this.ancestor) {
                         bounds.pos.sub(this.ancestor._absPos);
                     }
-                    renderer.drawShape(bounds);
+                    renderer.stroke(bounds);
 
                     // draw the children bounding rect shape
                     renderer.setColor("purple");
@@ -515,7 +521,7 @@
                     if (this.ancestor) {
                         bounds.pos.sub(this.ancestor._absPos);
                     }
-                    renderer.drawShape(bounds);
+                    renderer.stroke(bounds);
 
                     renderer.restore();
                 }

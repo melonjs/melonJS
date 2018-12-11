@@ -3,7 +3,7 @@
  * Copyright (C) 2011 - 2018 Olivier Biot
  * http://www.melonjs.org
  *
- * WebGL Fragment shader for line compositing
+ * WebGL Fragment shader for primitive compositing
  */
 
 precision {{= ctx.precision }} float;

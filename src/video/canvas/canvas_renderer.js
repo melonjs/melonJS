@@ -272,6 +272,33 @@
         },
 
         /**
+         * Stroke an arc at the specified coordinates with given radius, start and end points
+         * @name strokeArc
+         * @memberOf me.CanvasRenderer
+         * @function
+         * @param {Number} x arc center point x-axis
+         * @param {Number} y arc center point y-axis
+         * @param {Number} radius
+         * @param {Number} start start angle in radians
+         * @param {Number} end end angle in radians
+         * @param {Boolean} [antiClockwise=false] draw arc anti-clockwise
+         */
+        strokeArc : function (x, y, radius, start, end, antiClockwise, fill) {
+            var context = this.backBufferContext2D;
+
+            if (context.globalAlpha < 1 / 255) {
+                // Fast path: don't draw fully transparent
+                return;
+            }
+            this.translate(x + radius, y + radius);
+            context.beginPath();
+            context.arc(0, 0, radius, start, end, antiClockwise || false);
+            context[fill === true ? "fill" : "stroke"]();
+            context.closePath();
+            this.translate(-(x + radius), -(y + radius));
+        },
+
+        /**
          * Fill an arc at the specified coordinates with given radius, start and end points
          * @name fillArc
          * @memberOf me.CanvasRenderer
@@ -284,17 +311,158 @@
          * @param {Boolean} [antiClockwise=false] draw arc anti-clockwise
          */
         fillArc : function (x, y, radius, start, end, antiClockwise) {
-            if (this.backBufferContext2D.globalAlpha < 1 / 255) {
+            this.strokeArc(x, y, radius, start, end, antiClockwise || false, true);
+        },
+
+        /**
+         * Stroke an ellipse at the specified coordinates with given radius, start and end points
+         * @name strokeEllipse
+         * @memberOf me.CanvasRenderer
+         * @function
+         * @param {Number} x arc center point x-axis
+         * @param {Number} y arc center point y-axis
+         * @param {Number} w horizontal radius of the ellipse
+         * @param {Number} h vertical radius of the ellipse
+         */
+        strokeEllipse : function (x, y, w, h, fill) {
+            var context = this.backBufferContext2D;
+
+            if (context.globalAlpha < 1 / 255) {
                 // Fast path: don't draw fully transparent
                 return;
             }
 
-            this.translate(x + radius, y + radius);
-            this.backBufferContext2D.beginPath();
-            this.backBufferContext2D.arc(0, 0, radius, start, end, antiClockwise || false);
-            this.backBufferContext2D.fill();
-            this.backBufferContext2D.closePath();
-            this.translate(- (x + radius), -(y + radius));
+            var hw = w,
+                hh = h,
+                lx = x - hw,
+                rx = x + hw,
+                ty = y - hh,
+                by = y + hh;
+
+            var xmagic = hw * 0.551784,
+                ymagic = hh * 0.551784,
+                xmin = x - xmagic,
+                xmax = x + xmagic,
+                ymin = y - ymagic,
+                ymax = y + ymagic;
+
+            context.beginPath();
+            context.moveTo(x, ty);
+            context.bezierCurveTo(xmax, ty, rx, ymin, rx, y);
+            context.bezierCurveTo(rx, ymax, xmax, by, x, by);
+            context.bezierCurveTo(xmin, by, lx, ymax, lx, y);
+            context.bezierCurveTo(lx, ymin, xmin, ty, x, ty);
+            context[fill === true ? "fill" : "stroke"]();
+        },
+
+        /**
+         * Fill an ellipse at the specified coordinates with given radius, start and end points
+         * @name fillEllipse
+         * @memberOf me.CanvasRenderer
+         * @function
+         * @param {Number} x arc center point x-axis
+         * @param {Number} y arc center point y-axis
+         * @param {Number} w horizontal radius of the ellipse
+         * @param {Number} h vertical radius of the ellipse
+         */
+        fillEllipse : function (x, y, w, h) {
+            this.strokeEllipse(x, y, w, h, true);
+        },
+
+        /**
+         * Stroke a line of the given two points
+         * @name strokeLine
+         * @memberOf me.CanvasRenderer
+         * @function
+         * @param {Number} startX the start x coordinate
+         * @param {Number} startY the start y coordinate
+         * @param {Number} endX the end x coordinate
+         * @param {Number} endY the end y coordinate
+         */
+        strokeLine : function (startX, startY, endX, endY) {
+            var context = this.backBufferContext2D;
+
+            if (context < 1 / 255) {
+                // Fast path: don't draw fully transparent
+                return;
+            }
+
+            context.beginPath();
+            context.moveTo(startX, startY);
+            context.lineTo(endX, endY);
+            context.stroke();
+        },
+
+        /**
+         * Fill a line of the given two points
+         * @name fillLine
+         * @memberOf me.CanvasRenderer
+         * @function
+         * @param {Number} startX the start x coordinate
+         * @param {Number} startY the start y coordinate
+         * @param {Number} endX the end x coordinate
+         * @param {Number} endY the end y coordinate
+         */
+        fillLine : function (startX, startY, endX, endY) {
+            this.strokeLine(startX, startY, endX, endY);
+        },
+
+        /**
+         * Stroke the given me.Polygon on the screen
+         * @name strokePolygon
+         * @memberOf me.CanvasRenderer
+         * @function
+         * @param {me.Polygon} poly the shape to draw
+         */
+        strokePolygon : function (poly, fill) {
+            var context = this.backBufferContext2D;
+
+            if (context.globalAlpha < 1 / 255) {
+                // Fast path: don't draw fully transparent
+                return;
+            }
+
+            this.translate(poly.pos.x, poly.pos.y);
+            context.beginPath();
+            context.moveTo(poly.points[0].x, poly.points[0].y);
+            var point;
+            for (var i = 1; i < poly.points.length; i++) {
+                point = poly.points[i];
+                context.lineTo(point.x, point.y);
+            }
+            context.lineTo(poly.points[0].x, poly.points[0].y);
+            context[fill === true ? "fill" : "stroke"]();
+            context.closePath();
+            this.translate(-poly.pos.x, -poly.pos.y);
+        },
+
+        /**
+         * Fill the given me.Polygon on the screen
+         * @name fillPolygon
+         * @memberOf me.CanvasRenderer
+         * @function
+         * @param {me.Polygon} poly the shape to draw
+         */
+        fillPolygon : function (poly) {
+            this.strokePolygon(poly, true);
+        },
+
+        /**
+         * Stroke a rectangle at the specified coordinates
+         * @name strokeRect
+         * @memberOf me.CanvasRenderer
+         * @function
+         * @param {Number} x
+         * @param {Number} y
+         * @param {Number} width
+         * @param {Number} height
+         */
+        strokeRect : function (x, y, width, height) {
+            if (this.backBufferContext2D.globalAlpha < 1 / 255) {
+                // Fast path: don't draw fully transparent
+                return;
+            }
+            this.backBufferContext2D.strokeRect(x, y, width, height);
         },
 
         /**
@@ -314,6 +482,7 @@
             }
             this.backBufferContext2D.fillRect(x, y, width, height);
         },
+
 
         /**
          * return a reference to the system 2d Context
@@ -448,171 +617,6 @@
         },
 
         /**
-         * Stroke an arc at the specified coordinates with given radius, start and end points
-         * @name strokeArc
-         * @memberOf me.CanvasRenderer
-         * @function
-         * @param {Number} x arc center point x-axis
-         * @param {Number} y arc center point y-axis
-         * @param {Number} radius
-         * @param {Number} start start angle in radians
-         * @param {Number} end end angle in radians
-         * @param {Boolean} [antiClockwise=false] draw arc anti-clockwise
-         */
-        strokeArc : function (x, y, radius, start, end, antiClockwise) {
-            if (this.backBufferContext2D.globalAlpha < 1 / 255) {
-                // Fast path: don't draw fully transparent
-                return;
-            }
-            this.translate(x + radius, y + radius);
-            this.backBufferContext2D.beginPath();
-            this.backBufferContext2D.arc(0, 0, radius, start, end, antiClockwise || false);
-            this.backBufferContext2D.stroke();
-            this.backBufferContext2D.closePath();
-            this.translate(-(x + radius), -(y + radius));
-        },
-
-        /**
-         * Stroke an ellipse at the specified coordinates with given radius, start and end points
-         * @name strokeEllipse
-         * @memberOf me.CanvasRenderer
-         * @function
-         * @param {Number} x arc center point x-axis
-         * @param {Number} y arc center point y-axis
-         * @param {Number} w horizontal radius of the ellipse
-         * @param {Number} h vertical radius of the ellipse
-         */
-        strokeEllipse : function (x, y, w, h) {
-            if (this.backBufferContext2D.globalAlpha < 1 / 255) {
-                // Fast path: don't draw fully transparent
-                return;
-            }
-
-            var hw = w,
-                hh = h,
-                lx = x - hw,
-                rx = x + hw,
-                ty = y - hh,
-                by = y + hh;
-
-            var xmagic = hw * 0.551784,
-                ymagic = hh * 0.551784,
-                xmin = x - xmagic,
-                xmax = x + xmagic,
-                ymin = y - ymagic,
-                ymax = y + ymagic;
-
-            this.backBufferContext2D.beginPath();
-            this.backBufferContext2D.moveTo(x, ty);
-            this.backBufferContext2D.bezierCurveTo(xmax, ty, rx, ymin, rx, y);
-            this.backBufferContext2D.bezierCurveTo(rx, ymax, xmax, by, x, by);
-            this.backBufferContext2D.bezierCurveTo(xmin, by, lx, ymax, lx, y);
-            this.backBufferContext2D.bezierCurveTo(lx, ymin, xmin, ty, x, ty);
-            this.backBufferContext2D.stroke();
-        },
-
-        /**
-         * Stroke a line of the given two points
-         * @name strokeLine
-         * @memberOf me.CanvasRenderer
-         * @function
-         * @param {Number} startX the start x coordinate
-         * @param {Number} startY the start y coordinate
-         * @param {Number} endX the end x coordinate
-         * @param {Number} endY the end y coordinate
-         */
-        strokeLine : function (startX, startY, endX, endY) {
-            if (this.backBufferContext2D.globalAlpha < 1 / 255) {
-                // Fast path: don't draw fully transparent
-                return;
-            }
-
-            this.backBufferContext2D.beginPath();
-            this.backBufferContext2D.moveTo(startX, startY);
-            this.backBufferContext2D.lineTo(endX, endY);
-            this.backBufferContext2D.stroke();
-        },
-
-        /**
-         * Strokes a me.Polygon on the screen with a specified color
-         * @name strokePolygon
-         * @memberOf me.CanvasRenderer
-         * @function
-         * @param {me.Polygon} poly the shape to draw
-         */
-        strokePolygon : function (poly) {
-            if (this.backBufferContext2D.globalAlpha < 1 / 255) {
-                // Fast path: don't draw fully transparent
-                return;
-            }
-
-            this.translate(poly.pos.x, poly.pos.y);
-            this.backBufferContext2D.beginPath();
-            this.backBufferContext2D.moveTo(poly.points[0].x, poly.points[0].y);
-            var point;
-            for (var i = 1; i < poly.points.length; i++) {
-                point = poly.points[i];
-                this.backBufferContext2D.lineTo(point.x, point.y);
-            }
-            this.backBufferContext2D.lineTo(poly.points[0].x, poly.points[0].y);
-            this.backBufferContext2D.stroke();
-            this.backBufferContext2D.closePath();
-            this.translate(-poly.pos.x, -poly.pos.y);
-        },
-
-        /**
-         * Stroke a rectangle at the specified coordinates with a given color
-         * @name strokeRect
-         * @memberOf me.CanvasRenderer
-         * @function
-         * @param {Number} x
-         * @param {Number} y
-         * @param {Number} width
-         * @param {Number} height
-         */
-        strokeRect : function (x, y, width, height) {
-            if (this.backBufferContext2D.globalAlpha < 1 / 255) {
-                // Fast path: don't draw fully transparent
-                return;
-            }
-            this.backBufferContext2D.strokeRect(x, y, width, height);
-        },
-
-        /**
-         * draw the given shape
-         * @name drawShape
-         * @memberOf me.CanvasRenderer
-         * @function
-         * @param {me.Rect|me.Polygon|me.Line|me.Ellipse} shape a shape object
-         */
-        drawShape : function (shape) {
-            if (shape.shapeType === "Rectangle") {
-                this.strokeRect(shape.left, shape.top, shape.width, shape.height);
-            } else if (shape instanceof me.Line || shape instanceof me.Polygon) {
-                this.strokePolygon(shape);
-            } else if (shape instanceof me.Ellipse) {
-                if (shape.radiusV.x === shape.radiusV.y) {
-                    // it's a circle
-                    this.strokeArc(
-                        shape.pos.x - shape.radius,
-                        shape.pos.y - shape.radius,
-                        shape.radius,
-                        0,
-                        2 * Math.PI
-                    );
-                } else {
-                    // it's an ellipse
-                    this.strokeEllipse(
-                        shape.pos.x,
-                        shape.pos.y,
-                        shape.radiusV.x,
-                        shape.radiusV.y
-                    );
-                }
-            }
-        },
-
-        /**
          * Resets (overrides) the renderer transformation matrix to the
          * identity one, and then apply the given transformation matrix.
          * @name setTransform
@@ -701,6 +705,43 @@
                     currentScissor[3] = height;
                 }
             }
+        },
+
+        /**
+         * A mask limits rendering elements to the shape and position of the given mask object.
+         * So, if the renderable is larger than the mask, only the intersecting part of the renderable will be visible.
+         * Mask are not preserved through renderer context save and restore.
+         * @name setMask
+         * @memberOf me.CanvasRenderer
+         * @function
+         * @param {me.Rect[]|me.Polygon[]} [mask] the shape defining the mask to be applied
+         */
+        setMask : function (mask) {
+            var context = this.backBufferContext2D;
+
+            var _x = mask.pos.x, _y = mask.pos.y;
+
+            context.save();
+            context.beginPath();
+            context.moveTo(_x + mask.points[0].x, _y + mask.points[0].y);
+            var point;
+            for (var i = 1; i < mask.points.length; i++) {
+                point = mask.points[i];
+                context.lineTo(_x + point.x, _y + point.y);
+            }
+            context.closePath();
+            context.clip();
+        },
+
+        /**
+         * disable (remove) the rendering mask set through setMask.
+         * @name clearMask
+         * @see setMask
+         * @memberOf me.CanvasRenderer
+         * @function
+         */
+        clearMask : function() {
+            this.backBufferContext2D.restore();
         }
 
     });

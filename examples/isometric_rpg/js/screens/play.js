@@ -78,7 +78,7 @@ game.PlayScreen = me.Stage.extend({
                     // draw our diamond shape
                     renderer.save();
                     renderer.setColor("#FF0000");
-                    renderer.drawShape(this.diamondShape);
+                    renderer.stroke(this.diamondShape);
 
                     renderer.setColor("#FFFFFF");
                     // draw the tile col/row in the middle

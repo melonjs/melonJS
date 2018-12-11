@@ -3,7 +3,7 @@
  * Copyright (C) 2011 - 2018 Olivier Biot
  * http://www.melonjs.org
  *
- * WebGL Vertex shader for line compositing
+ * WebGL Vertex shader for primitive compositing
  */
 
 precision highp float;

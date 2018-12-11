@@ -73,7 +73,7 @@ game.PlayScreen = me.Stage.extend({
             },
             draw: function(renderer) {
                 renderer.setColor("red");
-                renderer.drawShape(this.line);
+                renderer.stroke(this.line);
             }
         })), 10);
     }
