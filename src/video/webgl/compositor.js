@@ -547,10 +547,13 @@
          * @memberOf me.WebGLRenderer.Compositor
          * @function
          * @param {me.Vector2d[]} points Line vertices
+         * @param {Number} [len=points.length] amount of points defined in the points array
          * @param {Boolean} [open=false] Whether the line is open (true) or closed (false)
          */
-        drawLine : function (points, open) {
+        drawLine : function (points, len, open) {
             var gl = this.gl;
+
+            len = len || points.length;
 
             this.useShader(this.primitiveShader.handle);
 
@@ -573,7 +576,7 @@
             // Copy data into the stream buffer
             gl.bufferData(
                 gl.ARRAY_BUFFER,
-                this.stream.subarray(0, points.length * 2),
+                this.stream.subarray(0, len * 2),
                 gl.STREAM_DRAW
             );
 
@@ -588,7 +591,7 @@
             );
 
             // Draw the stream buffer
-            gl.drawArrays(open ? gl.LINE_STRIP : gl.LINE_LOOP, 0, points.length);
+            gl.drawArrays(open ? gl.LINE_STRIP : gl.LINE_LOOP, 0, len);
 
             // FIXME: Configure vertex attrib pointers in `useShader`
             gl.vertexAttribPointer(

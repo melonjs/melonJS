@@ -315,12 +315,12 @@
         },
 
         /**
-         * Stroke an ellipse at the specified coordinates with given radius, start and end points
+         * Stroke an ellipse at the specified coordinates with given radius
          * @name strokeEllipse
          * @memberOf me.CanvasRenderer
          * @function
-         * @param {Number} x arc center point x-axis
-         * @param {Number} y arc center point y-axis
+         * @param {Number} x ellipse center point x-axis
+         * @param {Number} y ellipse center point y-axis
          * @param {Number} w horizontal radius of the ellipse
          * @param {Number} h vertical radius of the ellipse
          */
@@ -356,12 +356,12 @@
         },
 
         /**
-         * Fill an ellipse at the specified coordinates with given radius, start and end points
+         * Fill an ellipse at the specified coordinates with given radius
          * @name fillEllipse
          * @memberOf me.CanvasRenderer
          * @function
-         * @param {Number} x arc center point x-axis
-         * @param {Number} y arc center point y-axis
+         * @param {Number} x ellipse center point x-axis
+         * @param {Number} y ellipse center point y-axis
          * @param {Number} w horizontal radius of the ellipse
          * @param {Number} h vertical radius of the ellipse
          */

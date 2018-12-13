@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>melonJS - alpha blending</title>
+  <title>melonJS - Graphics drawing</title>
   <link rel="stylesheet" type="text/css" media="screen" href="index.css">
 </head>
 <body bgcolor="white">
@@ -43,6 +43,7 @@
           me.video.renderer.setColor(r);
           mask.pos.set(60 + 50, 25);
           me.video.renderer.fill(mask);
+          me.video.renderer.stroke(mask);
           me.video.renderer.fillRect(60, 20, 100 ,100);
           me.video.renderer.strokeRect(65, 25, 90 , 90);
 
@@ -56,8 +57,9 @@
 
           me.video.renderer.setColor(b);
           mask.pos.set(160 + 50, 125);
-          me.video.renderer.fill(mask);
           me.video.renderer.fillRect(160, 120, 100 ,100);
+          me.video.renderer.fillEllipse(160 + 50, 120 + 50, 35, 35);
+          me.video.renderer.strokeEllipse(160 + 50, 120 + 50, 30, 30);
           me.video.renderer.strokeRect(165, 125, 90 , 90);
       });
   </script>

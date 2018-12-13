@@ -59,7 +59,7 @@
             /**
              * @ignore
              */
-            this._linePoints = [
+            this._glPoints = [
                 new me.Vector2d(),
                 new me.Vector2d(),
                 new me.Vector2d(),
@@ -643,8 +643,12 @@
          * @param {Number} end end angle in radians
          * @param {Boolean} [antiClockwise=false] draw arc anti-clockwise
          */
-        strokeArc : function (/*x, y, radius, start, end, antiClockwise*/) {
-            console.warn("strokeArc() is not implemented");
+        strokeArc : function (x, y, radius, start, end, antiClockwise, fill) {
+            if (fill === true ) {
+                this.fillArc(x, y, radius, start, end, antiClockwise);
+            } else {
+                console.warn("strokeArc() is not implemented");
+            }
         },
 
         /**
@@ -660,35 +664,71 @@
          * @param {Boolean} [antiClockwise=false] draw arc anti-clockwise
          */
         fillArc : function (x, y, radius, start, end, antiClockwise) {
-            this.strokeArc(x, y, radius, start, end, antiClockwise || false, true);
+            console.warn("fillArc() is not implemented");
         },
 
         /**
-         * Stroke an ellipse at the specified coordinates with given radius, start and end points
+         * Stroke an ellipse at the specified coordinates with given radius
          * @name strokeEllipse
          * @memberOf me.WebGLRenderer
          * @function
-         * @param {Number} x arc center point x-axis
-         * @param {Number} y arc center point y-axis
+         * @param {Number} x ellipse center point x-axis
+         * @param {Number} y ellipse center point y-axis
          * @param {Number} w horizontal radius of the ellipse
          * @param {Number} h vertical radius of the ellipse
          */
-        strokeEllipse : function (/*x, y, w, h*/) {
-            console.warn("strokeEllipse() is not implemented");
+        strokeEllipse : function (x, y, w, h, fill) {
+            if (fill === true ) {
+                this.fillEllipse(x, y, w, h);
+            } else {
+                // XXX to be optimzed using a specific shader
+                var len = Math.floor(24 * Math.sqrt(w)) ||
+                          Math.floor(12 * Math.sqrt(w + h));
+                var segment = (Math.PI * 2) / len;
+                var points = this._glPoints,
+                    i;
+
+                // Grow internal points buffer if necessary
+                for (i = points.length; i < len; i++) {
+                    points.push(new me.Vector2d());
+                }
+
+                // calculate and draw all segments
+                for (i = 0; i < len; i++) {
+                    points[i].x = x + (Math.sin(segment * -i) * w);
+                    points[i].y = y + (Math.cos(segment * -i) * h);
+                }
+                this.compositor.drawLine(points, len);
+            }
+
         },
 
         /**
-         * Fill an ellipse at the specified coordinates with given radius, start and end points
+         * Fill an ellipse at the specified coordinates with given radius
          * @name fillEllipse
          * @memberOf me.WebGLRenderer
          * @function
-         * @param {Number} x arc center point x-axis
-         * @param {Number} y arc center point y-axis
+         * @param {Number} x ellipse center point x-axis
+         * @param {Number} y ellipse center point y-axis
          * @param {Number} w horizontal radius of the ellipse
          * @param {Number} h vertical radius of the ellipse
          */
         fillEllipse : function (x, y, w, h) {
-            this.strokeEllipse(x, y, w, h, true);
+            // XXX to be optimzed using a specific shader
+            var len = Math.floor(24 * Math.sqrt(w)) ||
+                      Math.floor(12 * Math.sqrt(w + h));
+            var segment = (Math.PI * 2) / len;
+
+            // draw all vertices vertex coordinates
+            for (var i = 0; i < len; i++) {
+                this.compositor.drawTriangle(
+                    x,  y,
+                    x + (Math.sin(segment * i) * w),
+                    y + (Math.cos(segment * i) * h),
+                    x + (Math.sin(segment * (i + 1)) * w),
+                    y + (Math.cos(segment * (i + 1)) * h)
+                );
+            }
         },
 
         /**
@@ -702,12 +742,12 @@
          * @param {Number} endY the end y coordinate
          */
         strokeLine : function (startX, startY, endX, endY) {
-            var points = this._linePoints.slice(0, 2);
+            var points = this._glPoints;
             points[0].x = startX;
             points[0].y = startY;
             points[1].x = endX;
             points[1].y = endY;
-            this.compositor.drawLine(points, true);
+            this.compositor.drawLine(points, 2, true);
         },
 
 
@@ -737,20 +777,20 @@
                 this.fillPolygon(poly);
             } else {
                 var len = poly.points.length,
-                    points,
+                    points = this._glPoints,
                     i;
 
                 // Grow internal points buffer if necessary
-                for (i = this._linePoints.length; i < len; i++) {
-                    this._linePoints.push(new me.Vector2d());
+                for (i = points.length; i < len; i++) {
+                    points.push(new me.Vector2d());
                 }
 
-                points = this._linePoints.slice(0, len);
+                // calculate and draw all segments
                 for (i = 0; i < len; i++) {
                     points[i].x = poly.pos.x + poly.points[i].x;
                     points[i].y = poly.pos.y + poly.points[i].y;
                 }
-                this.compositor.drawLine(points);
+                this.compositor.drawLine(points, len);
             }
         },
 
@@ -786,7 +826,7 @@
          * @param {Number} height
          */
         strokeRect : function (x, y, width, height) {
-            var points = this._linePoints.slice(0, 4);
+            var points = this._glPoints;
             points[0].x = x;
             points[0].y = y;
             points[1].x = x + width;
@@ -795,7 +835,7 @@
             points[2].y = y + height;
             points[3].x = x;
             points[3].y = y + height;
-            this.compositor.drawLine(points);
+            this.compositor.drawLine(points, 4);
         },
 
         /**

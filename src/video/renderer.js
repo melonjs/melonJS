@@ -309,28 +309,14 @@
             } else if (shape instanceof me.Line || shape instanceof me.Polygon) {
                 this.strokePolygon(shape, fill);
             } else if (shape instanceof me.Ellipse) {
-                if (shape.radiusV.x === shape.radiusV.y) {
-                    // it's a circle
-                    this.strokeArc(
-                        shape.pos.x - shape.radius,
-                        shape.pos.y - shape.radius,
-                        shape.radius,
-                        0,
-                        2 * Math.PI,
-                        false,
-                        fill
-                    );
-                } else {
-                    // it's an ellipse
-                    this.strokeEllipse(
-                        shape.pos.x,
-                        shape.pos.y,
-                        shape.radiusV.x,
-                        shape.radiusV.y,
-                        false,
-                        fill
-                    );
-                }
+                this.strokeEllipse(
+                    shape.pos.x,
+                    shape.pos.y,
+                    shape.radiusV.x,
+                    shape.radiusV.y,
+                    false,
+                    fill
+                );
             }
         },
 

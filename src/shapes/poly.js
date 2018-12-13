@@ -260,7 +260,7 @@
 
         /**
          * returns a list of indices for all triangles defined in this polygon
-         * @name toIndices
+         * @name getIndices
          * @memberOf me.Polygon
          * @function
          * @param {Vector2d[]} a list of vector
