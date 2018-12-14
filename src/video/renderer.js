@@ -314,7 +314,6 @@
                     shape.pos.y,
                     shape.radiusV.x,
                     shape.radiusV.y,
-                    false,
                     fill
                 );
             }

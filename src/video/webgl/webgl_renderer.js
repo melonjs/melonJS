@@ -955,7 +955,7 @@
          * @name setMask
          * @memberOf me.WebGLRenderer
          * @function
-         * @param {me.Rect[]|me.Polygon[]} [mask] the shape defining the mask to be applied
+         * @param {me.Rect|me.Polygon|me.Line|me.Ellipse} [mask] the shape defining the mask to be applied
          */
         setMask : function (mask) {
             var gl = this.gl;
@@ -970,7 +970,7 @@
             gl.stencilFunc(gl.NOTEQUAL, 1, 1);
             gl.stencilOp(gl.REPLACE, gl.REPLACE, gl.REPLACE);
 
-            this.fillPolygon(mask);
+            this.fill(mask);
 
             // flush the compositor
             this.flush();

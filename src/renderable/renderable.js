@@ -249,7 +249,7 @@
              * A mask limits rendering elements to the shape and position of the given mask object.
              * So, if the renderable is larger than the mask, only the intersecting part of the renderable will be visible.
              * @public
-             * @type {me.Rect[]|me.Polygon[]|me.Ellipse[]}
+             * @type {me.Rect|me.Polygon|me.Line|me.Ellipse}
              * @name mask
              * @default undefined
              * @memberOf me.Renderable

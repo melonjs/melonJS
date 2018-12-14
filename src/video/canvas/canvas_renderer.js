@@ -714,22 +714,45 @@
          * @name setMask
          * @memberOf me.CanvasRenderer
          * @function
-         * @param {me.Rect[]|me.Polygon[]} [mask] the shape defining the mask to be applied
+         * @param {me.Rect|me.Polygon|me.Line|me.Ellipse} [mask] the shape defining the mask to be applied
          */
         setMask : function (mask) {
             var context = this.backBufferContext2D;
-
             var _x = mask.pos.x, _y = mask.pos.y;
 
-            context.save();
-            context.beginPath();
-            context.moveTo(_x + mask.points[0].x, _y + mask.points[0].y);
-            var point;
-            for (var i = 1; i < mask.points.length; i++) {
-                point = mask.points[i];
-                context.lineTo(_x + point.x, _y + point.y);
+            // https://github.com/melonjs/melonJS/issues/648
+            if (mask instanceof me.Ellipse) {
+                var hw = mask.radiusV.x,
+                    hh = mask.radiusV.y,
+                    lx = _x - hw,
+                    rx = _x + hw,
+                    ty = _y - hh,
+                    by = _y + hh;
+
+                var xmagic = hw * 0.551784,
+                    ymagic = hh * 0.551784,
+                    xmin = _x - xmagic,
+                    xmax = _x + xmagic,
+                    ymin = _y - ymagic,
+                    ymax = _y + ymagic;
+
+                context.beginPath();
+                context.moveTo(_x, ty);
+                context.bezierCurveTo(xmax, ty, rx, ymin, rx, _y);
+                context.bezierCurveTo(rx, ymax, xmax, by, _x, by);
+                context.bezierCurveTo(xmin, by, lx, ymax, lx, _y);
+                context.bezierCurveTo(lx, ymin, xmin, ty, _x, ty);
+            } else {
+                context.save();
+                context.beginPath();
+                context.moveTo(_x + mask.points[0].x, _y + mask.points[0].y);
+                var point;
+                for (var i = 1; i < mask.points.length; i++) {
+                    point = mask.points[i];
+                    context.lineTo(_x + point.x, _y + point.y);
+                }
+                context.closePath();
             }
-            context.closePath();
             context.clip();
         },
 

@@ -2,7 +2,7 @@ Version History
 ---------------
 6.3.0
 * Audio : audio core update (2.1.0) that mostly improve auto audio unlock on latest (non-mobile) browser versions
-* Renderable : added support for rendering mask (in both Canvas and WebGL mode), allowing to use any polygon based Shape as a mask
+* Renderable : added support for rendering mask (in both Canvas and WebGL mode), allowing to use any me.Shape object as a mask
 * Renderer : `drawShape()` is deprecated and has been replaced by a `fill()` and `stroke() methods
 * Renderer : cleaned and aligned drawing APIs between the Canvas and WebGL Renderer
 * WebGLRenderer : added stroke and fill operations for all me.Shape objects
