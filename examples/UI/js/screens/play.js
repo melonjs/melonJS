@@ -4,7 +4,7 @@ game.PlayScreen = me.Stage.extend({
      */
     onResetEvent: function() {
         // clear the background
-        me.game.world.addChild(new me.ColorLayer("background", "rgba(248, 194, 40, 255)"), 0);
+        me.game.world.addChild(new me.ColorLayer("background", "rgba(248, 194, 40, 1.0)"), 0);
 
         // add the UI elements
         var panel = new game.UI.Container(150, 100, 450, 325, "OPTIONS");
