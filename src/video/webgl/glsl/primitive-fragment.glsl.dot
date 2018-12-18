@@ -15,9 +15,9 @@ precision {{= ctx.precision }} float;
  * Fragment color
  * @ignore
  */
-uniform vec4 uColor;
+varying vec4 vColor;
 
 
 void main(void) {
-    gl_FragColor = uColor;
+    gl_FragColor = vColor;
 }

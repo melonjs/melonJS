@@ -92,8 +92,6 @@
                 this.compositor.maxTextures
             );
 
-            this.createFillTexture(this.cache);
-
             // Configure the WebGL viewport
             this.scaleCanvas(1, 1);
 
@@ -110,7 +108,6 @@
             this._super(me.Renderer, "reset");
             this.compositor.reset();
             this.gl.disable(this.gl.SCISSOR_TEST);
-            this.createFillTexture(this.cache);
             if (typeof this.fontContext2D !== "undefined" ) {
                 this.createFontTexture(this.cache);
             }
@@ -125,39 +122,6 @@
          */
         resetTransform : function () {
             this.currentTransform.identity();
-        },
-
-        /**
-         * @ignore
-         */
-        createFillTexture : function (cache) {
-            if (typeof this.fillTexture === "undefined") {
-                // Create a 1x1 white texture for fill operations
-                var image = new Uint8Array([255, 255, 255, 255]);
-                /**
-                 * @ignore
-                 */
-                this.fillTexture = new this.Texture(
-                    this.Texture.prototype.createAtlas.apply(
-                        this.Texture.prototype,
-                        [ 1, 1, "fillTexture"]
-                    ),
-                    image,
-                    cache
-                );
-                // XXX better way to disable this
-                this.fillTexture.premultipliedAlpha = false;
-            } else {
-                // fillTexture was already created, just add it back into the cache
-                cache.put(this.fillTexture.source, this.fillTexture);
-            }
-
-            this.compositor.uploadTexture(
-                this.fillTexture,
-                1,
-                1,
-                0
-            );
         },
 
         /**
@@ -188,7 +152,7 @@
                 );
             }
             else {
-               // fillTexture was already created, just add it back into the cache
+               // fontTexture was already created, just add it back into the cache
                cache.put(this.fontContext2D.canvas, this.fontTexture);
            }
            this.compositor.uploadTexture(this.fontTexture, 0, 0, 0);
@@ -463,6 +427,7 @@
         setBlendMode : function (mode, gl) {
             gl = gl || this.gl;
 
+
             gl.enable(gl.BLEND);
             switch (mode) {
                 case "multiply" :
@@ -698,6 +663,7 @@
                     points[i].x = x + (Math.sin(segment * -i) * w);
                     points[i].y = y + (Math.cos(segment * -i) * h);
                 }
+                // batch draw all lines
                 this.compositor.drawLine(points, len);
             }
 
@@ -718,17 +684,28 @@
             var len = Math.floor(24 * Math.sqrt(w)) ||
                       Math.floor(12 * Math.sqrt(w + h));
             var segment = (Math.PI * 2) / len;
+            var points = this._glPoints;
+
+            // Grow internal points buffer if necessary
+            for (i = points.length; i < len * 3; i++) {
+                points.push(new me.Vector2d());
+            }
 
             // draw all vertices vertex coordinates
-            for (var i = 0; i < len; i++) {
-                this.compositor.drawTriangle(
-                    x,  y,
+            for (var i = 0; i < len * 3; i+=3) {
+                // XXX : Optimize using Triangle Strip
+                points[i].set(x, y);
+                points[i+1].set(
                     x + (Math.sin(segment * i) * w),
-                    y + (Math.cos(segment * i) * h),
+                    y + (Math.cos(segment * i) * h)
+                );
+                points[i+2].set(
                     x + (Math.sin(segment * (i + 1)) * w),
                     y + (Math.cos(segment * (i + 1)) * h)
                 );
             }
+            // batch draw all triangles
+            this.compositor.drawTriangle(points, len * 3);
         },
 
         /**
@@ -800,19 +777,25 @@
          * @memberOf me.WebGLRenderer
          * @function
          * @param {me.Polygon} poly the shape to draw
-         */
+        */
         fillPolygon : function (poly) {
             var points = poly.points;
+            var glPoints = this._glPoints;
             var indices = poly.getIndices();
             var x = poly.pos.x, y = poly.pos.y;
 
-            for ( var i = 0; i < indices.length; i += 3 ) {
-                this.compositor.drawTriangle(
-                    x + points[indices[i]].x, y + points[indices[i]].y,
-                    x + points[indices[i+1]].x, y + points[indices[i+1]].y,
-                    x + points[indices[i+2]].x, y + points[indices[i+2]].y
-                );
+            // Grow internal points buffer if necessary
+            for (i = glPoints.length; i < indices.length; i++) {
+                glPoints.push(new me.Vector2d());
             }
+
+            // calculate all vertices
+            for ( var i = 0; i < indices.length; i ++ ) {
+                glPoints[i].set(x + points[indices[i]].x, y + points[indices[i]].y);
+            }
+
+            // draw all triangle
+            this.compositor.drawTriangle(glPoints, indices.length);
         },
 
         /**
@@ -849,7 +832,16 @@
          * @param {Number} height
          */
         fillRect : function (x, y, width, height) {
-            this.compositor.addQuad(this.fillTexture, "default", x, y, width, height);
+            var glPoints = this._glPoints;
+            glPoints[0].x = x + width;
+            glPoints[0].y = y;
+            glPoints[1].x = x;
+            glPoints[1].y = y;
+            glPoints[2].x = x + width;
+            glPoints[2].y = y + height;
+            glPoints[3].x = x;
+            glPoints[3].y = y + height;
+            this.compositor.drawTriangle(glPoints, 4, true)
         },
 
         /**

@@ -234,7 +234,7 @@
                     w,
                     h,
                     b,
-                    texture.premultipliedAlpha // @see createFillTexture
+                    texture.premultipliedAlpha
                 );
             }
 
@@ -443,40 +443,32 @@
         },
 
         /**
-         * Draw a triangle
+         * Draw triangle(s)
          * @name drawTriangle
          * @memberOf me.WebGLRenderer.Compositor
          * @function
-         * @param {Number} x0 x coordinates of the first vertex
-         * @param {Number} y0 y coordinates of the first vertex
-         * @param {Number} x1 x coordinates of the second vertex
-         * @param {Number} y1 y coordinates of the second vertex
-         * @param {Number} x2 x coordinates of the third vertex
-         * @param {Number} y2 y coordinates of the third vertex
+         * @param {me.Vector2d[]} points vertices
+         * @param {Number} [len=points.length] amount of points defined in the points array
+         * @param {Boolean} [strip=false] Whether the array defines a serie of connected triangles, sharing vertices
          */
-        drawTriangle : function (x0, y0, x1, y1, x2, y2) {
+        drawTriangle : function (points, len, strip) {
             var gl = this.gl;
-            var m = this.matrix;
+
+            len = len || points.length;
 
             this.useShader(this.primitiveShader.handle);
 
-            var v0 = this.v[0].set(x0, y0),
-                v1 = this.v[1].set(x1, y1),
-                v2 = this.v[2].set(x2, y2);
-
-            if (!m.isIdentity()) {
-                m.multiplyVector(v0);
-                m.multiplyVector(v1);
-                m.multiplyVector(v2);
-            }
-
             // Put vertex data into the stream buffer
-            this.stream[0] = v0.x;
-            this.stream[1] = v0.y;
-            this.stream[2] = v1.x;
-            this.stream[3] = v1.y;
-            this.stream[4] = v2.x;
-            this.stream[5] = v2.y;
+            var j = 0;
+            var m = this.matrix;
+            var m_isIdentity = m.isIdentity();
+            for (var i = 0; i < points.length; i++) {
+                if (!m_isIdentity) {
+                    m.multiplyVector(points[i]);
+                }
+                this.stream[j++] = points[i].x;
+                this.stream[j++] = points[i].y;
+            }
 
             // FIXME
             this.primitiveShader.uniforms.uMatrix = this.uMatrix.val;
@@ -487,7 +479,7 @@
             // Copy data into the stream buffer
             gl.bufferData(
                 gl.ARRAY_BUFFER,
-                this.stream.subarray(0, 3 * 2),
+                this.stream.subarray(0, len * 2),
                 gl.STREAM_DRAW
             );
 
@@ -502,7 +494,7 @@
             );
 
             // Draw the stream buffer
-            gl.drawArrays(gl.TRIANGLES, 0, 3);
+            gl.drawArrays(strip === true ? gl.TRIANGLE_STRIP : gl.TRIANGLES, 0, len);
 
             // FIXME: Configure vertex attrib pointers in `useShader`
             gl.vertexAttribPointer(
@@ -559,9 +551,11 @@
 
             // Put vertex data into the stream buffer
             var j = 0;
+            var m = this.matrix;
+            var m_isIdentity = m.isIdentity();
             for (var i = 0; i < points.length; i++) {
-                if (!this.matrix.isIdentity()) {
-                    this.matrix.multiplyVector(points[i]);
+                if (!m_isIdentity) {
+                    m.multiplyVector(points[i]);
                 }
                 this.stream[j++] = points[i].x;
                 this.stream[j++] = points[i].y;
@@ -591,7 +585,7 @@
             );
 
             // Draw the stream buffer
-            gl.drawArrays(open ? gl.LINE_STRIP : gl.LINE_LOOP, 0, len);
+            gl.drawArrays(open === true ? gl.LINE_STRIP : gl.LINE_LOOP, 0, len);
 
             // FIXME: Configure vertex attrib pointers in `useShader`
             gl.vertexAttribPointer(
