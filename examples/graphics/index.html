@@ -15,7 +15,7 @@
   <script type="text/javascript">
       me.device.onReady(function onReady() {
           // Initialize the video.
-          if (!me.video.init(320, 240, {wrapper : "screen", scale : "auto", renderer : me.video.CANVAS, blendMode: "normal"})) {
+          if (!me.video.init(320, 240, {wrapper : "screen", scale : "auto", renderer : me.video.AUTO, blendMode: "normal"})) {
               alert("Your browser does not support HTML5 canvas.");
               return;
           }
