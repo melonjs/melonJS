@@ -106,6 +106,9 @@
             // Uniform projection matrix
             this.uMatrix = new me.Matrix2d();
 
+            // reference to the active shader
+            this.activeShader = null;
+
             // Detect GPU capabilities
             var precision = (gl.getShaderPrecisionFormat(
                 gl.FRAGMENT_SHADER,
@@ -122,7 +125,6 @@
                 })
             );
 
-
             this.quadShader = me.video.shader.createShader(
                 this.gl,
                 (__QUAD_VERTEX__)(),
@@ -133,7 +135,7 @@
             );
             /* eslint-enable */
 
-            this.shader = this.quadShader.handle;
+            this.useShader(this.quadShader);
 
             // Stream buffer
             this.sb = gl.createBuffer();
@@ -214,8 +216,6 @@
                 0,      -2 / h, 0,
                 -1,     1,      1
             );
-            // FIXME: Configure the projection matrix in `useShader`
-            this.quadShader.uniforms.uMatrix = this.uMatrix.val;
         },
 
         /**
@@ -255,8 +255,7 @@
                 this.units[i] = false;
                 samplers[i] = i;
             }
-
-            this.quadShader.uniforms.uSampler = samplers;
+            this.activeShader.uniforms.uSampler = samplers;
         },
 
         /**
@@ -293,15 +292,17 @@
         /**
          * Select the shader to use for compositing
          * @name useShader
+         * @see me.video.shader.createShader
          * @memberOf me.WebGLRenderer.Compositor
          * @function
-         * @param {WebGLProgram} shader The shader program to use
+         * @param {Object} a reference to a WebGL Shader Program
          */
         useShader : function (shader) {
-            if (this.shader !== shader) {
+            if (this.activeShader !== shader) {
                 this.flush();
-                this.shader = shader;
-                this.gl.useProgram(this.shader);
+                this.activeShader = shader;
+                this.gl.useProgram(this.activeShader.handle);
+                this.activeShader.uniforms.uMatrix = this.uMatrix.val;
             }
         },
 
@@ -325,7 +326,8 @@
                 return;
             }
 
-            this.useShader(this.quadShader.handle);
+            this.useShader(this.quadShader);
+
             if (this.length >= MAX_LENGTH) {
                 this.flush();
             }
@@ -456,7 +458,7 @@
 
             len = len || points.length;
 
-            this.useShader(this.primitiveShader.handle);
+            this.useShader(this.primitiveShader);
 
             // Put vertex data into the stream buffer
             var j = 0;
@@ -469,9 +471,6 @@
                 this.stream[j++] = points[i].x;
                 this.stream[j++] = points[i].y;
             }
-
-            // FIXME
-            this.primitiveShader.uniforms.uMatrix = this.uMatrix.val;
 
             // Set the line color
             this.primitiveShader.uniforms.uColor = this.color.glArray;
@@ -547,7 +546,7 @@
 
             len = len || points.length;
 
-            this.useShader(this.primitiveShader.handle);
+            this.useShader(this.primitiveShader);
 
             // Put vertex data into the stream buffer
             var j = 0;
@@ -560,9 +559,6 @@
                 this.stream[j++] = points[i].x;
                 this.stream[j++] = points[i].y;
             }
-
-            // FIXME
-            this.primitiveShader.uniforms.uMatrix = this.uMatrix.val;
 
             // Set the line color
             this.primitiveShader.uniforms.uColor = this.color.glArray;
