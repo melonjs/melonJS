@@ -133,6 +133,7 @@
                     "maxTextures"   : this.maxTextures
                 })
             );
+            /* eslint-enable */
 
             // Stream buffer
             this.sb = gl.createBuffer();
