@@ -133,9 +133,6 @@
                     "maxTextures"   : this.maxTextures
                 })
             );
-            /* eslint-enable */
-
-            this.useShader(this.quadShader);
 
             // Stream buffer
             this.sb = gl.createBuffer();
@@ -194,6 +191,7 @@
             );
 
             this.reset();
+
             this.setProjection(gl.canvas.width, gl.canvas.height);
 
             // Initialize clear color
@@ -255,7 +253,9 @@
                 this.units[i] = false;
                 samplers[i] = i;
             }
-            this.activeShader.uniforms.uSampler = samplers;
+            // set the quad shader as the default program
+            this.useShader(this.quadShader);
+            this.quadShader.uniforms.uSampler = samplers;
         },
 
         /**
