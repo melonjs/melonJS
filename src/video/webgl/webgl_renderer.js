@@ -685,27 +685,24 @@
                       Math.floor(12 * Math.sqrt(w + h));
             var segment = (Math.PI * 2) / len;
             var points = this._glPoints;
+            var index = 0;
 
             // Grow internal points buffer if necessary
-            for (i = points.length; i < len * 3; i++) {
+            for (i = points.length; i < (len + 1) * 2; i++) {
                 points.push(new me.Vector2d());
             }
 
             // draw all vertices vertex coordinates
-            for (var i = 0; i < len * 3; i+=3) {
-                // XXX : Optimize using Triangle Strip
-                points[i].set(x, y);
-                points[i+1].set(
+            for (var i = 0; i < len + 1; i++) {
+                points[index++].set(x, y);
+                points[index++].set(
                     x + (Math.sin(segment * i) * w),
                     y + (Math.cos(segment * i) * h)
                 );
-                points[i+2].set(
-                    x + (Math.sin(segment * (i + 1)) * w),
-                    y + (Math.cos(segment * (i + 1)) * h)
-                );
             }
+
             // batch draw all triangles
-            this.compositor.drawTriangle(points, len * 3);
+            this.compositor.drawTriangle(points, index, true);
         },
 
         /**
