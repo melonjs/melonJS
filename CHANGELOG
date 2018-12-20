@@ -13,6 +13,7 @@ Version History
 * WebGLRenderer : optimized memory usage for shape drawing operations
 * WebGLRenderer : enable batching of triangle vertices to speed up shape drawing (when applicable)
 * WebGLRenderer : fixed a clipping issue with nested containers
+* WebGLRenderer : fixed the clearRect method
 
 6.2.0
 * Audio : fixed a regression when passing an initial volume value to the play function (thanks @PLAYERKILLERS)

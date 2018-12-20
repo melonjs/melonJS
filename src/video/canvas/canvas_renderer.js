@@ -159,8 +159,7 @@
         },
 
         /**
-         * Sets all pixels in the given rectangle to transparent black, <br>
-         * erasing any previously drawn content.
+         * Erase the pixels in the given rectangular area by setting them to transparent black (rgba(0,0,0,0)).
          * @name clearRect
          * @memberOf me.CanvasRenderer
          * @function

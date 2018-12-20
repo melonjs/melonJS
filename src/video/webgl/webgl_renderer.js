@@ -232,8 +232,7 @@
         },
 
         /**
-         * Sets all pixels in the given rectangle to transparent black,
-         * erasing any previously drawn content.
+         * Erase the pixels in the given rectangular area by setting them to transparent black (rgba(0,0,0,0)).
          * @name clearRect
          * @memberOf me.WebGLRenderer
          * @function
@@ -244,7 +243,7 @@
          */
         clearRect : function (x, y, width, height) {
             var color = this.currentColor.clone();
-            this.currentColor.copy("#0000");
+            this.currentColor.copy("#000000");
             this.fillRect(x, y, width, height);
             this.currentColor.copy(color);
             me.pool.push(color);
