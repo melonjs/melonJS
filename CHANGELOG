@@ -3,6 +3,7 @@ Version History
 6.3.0
 * Audio : audio core update (2.1.0) that mostly improve auto audio unlock on latest (non-mobile) browser versions
 * Color : fix alpha value not being properly clamped (leading to issue in WebGL mode when passing the glArray buffer)
+* Debug : fix wrong bounding box drawing position for nested containers
 * Renderable : added support for rendering mask (in both Canvas and WebGL mode), allowing to use any me.Shape object as a mask
 * Renderer : `drawShape()` is deprecated and has been replaced by a `fill()` and `stroke() methods
 * Renderer : cleaned and aligned drawing APIs between the Canvas and WebGL Renderer
@@ -10,6 +11,7 @@ Version History
 * WebGLRenderer : fillRect() now use newly added fill method, instead of creating/using a fill texture
 * WebGLRenderer : optimized memory usage for shape drawing operations
 * WebGLRenderer : enable batching of triangle vertices to speed up shape drawing (when applicable)
+* WebGLRenderer : fixed a clipping issue with nested containers
 
 6.2.0
 * Audio : fixed a regression when passing an initial volume value to the play function (thanks @PLAYERKILLERS)
