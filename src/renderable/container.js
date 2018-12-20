@@ -866,9 +866,6 @@
 
             this.drawCount = 0;
 
-            // adjust position if required (e.g. canvas/window centering)
-            renderer.translate(this.pos.x, this.pos.y);
-
             // clip the containter children to the container bounds
             if (this.root === false && this.clipping === true && this.childBounds.isFinite() === true) {
                 renderer.clipRect(
@@ -878,6 +875,9 @@
                     this.childBounds.height
                 );
             }
+
+            // adjust position if required (e.g. canvas/window centering)
+            renderer.translate(this.pos.x, this.pos.y);
 
             for (var i = this.children.length, obj; i--, (obj = this.children[i]);) {
                 if (obj.isRenderable) {
