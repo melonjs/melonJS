@@ -330,6 +330,11 @@
                         var ax = this.anchorPoint.x * bounds.width,
                             ay = this.anchorPoint.y * bounds.height;
 
+                        if (this.ancestor && this.ancestor.root === false) {
+                            ax -= this.ancestor._absPos.x;
+                            ay -= this.ancestor._absPos.y;
+                        }
+
                         // translate back as the bounds position
                         // is already adjusted to the anchor Point
                         renderer.translate(ax, ay);
@@ -507,21 +512,20 @@
                     renderer.save();
                     renderer.setLineWidth(1);
 
+                    if (!this.root) {
+                        renderer.translate(
+                            -this._absPos.x,
+                            -this._absPos.y
+                        );
+                    }
+
                     // draw the bounding rect shape
                     renderer.setColor("orange");
-                    bounds.copy(this.getBounds());
-                    if (this.ancestor) {
-                        bounds.pos.sub(this.ancestor._absPos);
-                    }
-                    renderer.stroke(bounds);
+                    renderer.stroke(this.getBounds());
 
                     // draw the children bounding rect shape
                     renderer.setColor("purple");
-                    bounds.copy(this.childBounds);
-                    if (this.ancestor) {
-                        bounds.pos.sub(this.ancestor._absPos);
-                    }
-                    renderer.stroke(bounds);
+                    renderer.stroke(this.childBounds);
 
                     renderer.restore();
                 }
