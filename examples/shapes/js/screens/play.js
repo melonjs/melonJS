@@ -11,7 +11,6 @@ game.PlayScreen = me.Stage.extend({
         // physic-editor
         var physicEditorContainer = new me.Container(25, 75, 350, 600);
         physicEditorContainer.anchorPoint.set(0, 0);
-        physicEditorContainer.clipping = true;
         physicEditorContainer.addChild(new game.Poly(10, 75, {width: 200, height: 200, sprite:"hamburger"}), 1);
         physicEditorContainer.addChild(new game.Poly(200, 100, {width: 200, height: 200, sprite:"icecream3"}), 1);
         physicEditorContainer.addChild(new game.Poly(275, 0, {width: 200, height: 200, sprite:"icecream2"}), 1);
