@@ -171,7 +171,7 @@
          * @param {Number} [h] Source image height (Only use with UInt8Array[] or Float32Array[] source image)
          * @param {Number} [b] Source image border (Only use with UInt8Array[] or Float32Array[] source image)
          * @param {Number} [b] Source image border (Only use with UInt8Array[] or Float32Array[] source image)
-         * @param {number} [premultipliedAlpha=true] Multiplies the alpha channel into the other color channels
+         * @param {Boolean} [premultipliedAlpha=true] Multiplies the alpha channel into the other color channels
          * @return {WebGLTexture} A texture object
          */
         api.createTexture = function (gl, unit, image, filter, repeat, w, h, b, premultipliedAlpha) {

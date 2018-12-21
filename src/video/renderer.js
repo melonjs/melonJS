@@ -337,7 +337,7 @@
          * @name setMask
          * @memberOf me.Renderer
          * @function
-         * @param {me.Rect[]|me.Polygon[]|me.Ellipse[]} [mask] the shape defining the mask to be applied
+         * @param {me.Rect|me.Polygon|me.Line|me.Ellipse} [mask] the shape defining the mask to be applied
          */
         setMask : function (mask) {},
 
