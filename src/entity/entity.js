@@ -372,6 +372,7 @@
         set : function (value) {
             if (value instanceof me.Renderable) {
                 this.children[0] = value;
+                this.children[0].ancestor = this;
             } else {
                 throw new me.Entity.Error(value + "should extend me.Renderable");
             }

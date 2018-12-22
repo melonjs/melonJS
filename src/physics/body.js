@@ -629,8 +629,8 @@
          * @ignore
          */
         destroy : function () {
-            this.onBodyUpdate = null;
-            this.ancestor = null;
+            this.onBodyUpdate = undefined;
+            this.ancestor = undefined;
             this.shapes.length = 0;
         }
     });

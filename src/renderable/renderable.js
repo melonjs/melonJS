@@ -223,8 +223,7 @@
             this.alpha = 1.0;
 
             /**
-             * a reference to the parent object that contains this renderable,
-             * or undefined if it has not been added to one.
+             * a reference to the parent object that contains this renderable
              * @public
              * @type me.Container|me.Entity
              * @default undefined
@@ -463,7 +462,7 @@
             var bounds = this.getBounds();
             bounds.pos.set(newX, newY, bounds.pos.z);
             // XXX: This is called from the constructor, before it gets an ancestor
-            if (this.ancestor && !this.floating) {
+            if (this.ancestor instanceof me.Container && !this.floating) {
                 bounds.pos.add(this.ancestor._absPos);
             }
             return bounds;
@@ -596,6 +595,8 @@
                 me.pool.push(this.mask);
                 this.mask = undefined;
             }
+
+            this.ancestor = undefined;
 
             // destroy the physic body if defined
             if (typeof this.body !== "undefined") {

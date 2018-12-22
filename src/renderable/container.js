@@ -548,7 +548,7 @@
 
             // Update container's absolute position
             this._absPos.set(newX, newY);
-            if (this.ancestor && !this.floating) {
+            if (this.ancestor instanceof me.Container && !this.floating) {
                 this._absPos.add(this.ancestor._absPos);
             }
 

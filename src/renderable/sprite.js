@@ -58,6 +58,7 @@
              * global offset for the position to draw from on the source image.
              * @public
              * @type me.Vector2d
+             * @default <0.0,0.0>
              * @name offset
              * @memberOf me.Sprite
              */
@@ -544,7 +545,7 @@
                 newY - (this.anchorPoint.y * bounds.height)
             );
             // XXX: This is called from the constructor, before it gets an ancestor
-            if (this.ancestor && !this.floating) {
+            if (this.ancestor instanceof me.Container && !this.floating) {
                 bounds.pos.add(this.ancestor._absPos);
             }
             return bounds;
