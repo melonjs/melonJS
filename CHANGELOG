@@ -1,8 +1,7 @@
 Version History
 ---------------
 6.3.0
-* Audio : audio core update (2.1.0) that mostly improve auto audio unlock on latest (non-mobile) browser versions
-* Audio : fix a regression that broke simple play/pause usage
+* Audio : audio core update (2.1.1), mostly improve auto audio unlock on latest (non-mobile) browser versions
 * Color : fix alpha value not being properly clamped (leading to issue in WebGL mode when passing the glArray buffer)
 * Debug : fix wrong bounding box drawing position for nested containers
 * Renderable : added support for rendering mask (in both Canvas and WebGL mode), allowing to use any me.Shape object as a mask

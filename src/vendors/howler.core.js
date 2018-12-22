@@ -1,5 +1,5 @@
 /*!
- *  howler.js v2.1.0
+ *  howler.js v2.1.1
  *  howlerjs.com
  *
  *  (c) 2013-2018, James Simpson of GoldFire Studios
@@ -719,7 +719,7 @@
       } else if (typeof sprite === 'undefined') {
         // Use the default sound sprite (plays the full audio length).
         sprite = '__default';
-         
+
         // Check if there is a single paused sound that isn't ended.
         // If there is, play that sound. If not, continue as usual.
         if (!self._playLock) {
@@ -1730,7 +1730,7 @@
       // Delete this sound from the cache (if no other Howl is using it).
       var remCache = true;
       for (i=0; i<Howler._howls.length; i++) {
-        if (Howler._howls[i]._src === self._src) {
+        if (Howler._howls[i]._src === self._src || self._src.indexOf(Howler._howls[i]._src) >= 0) {
           remCache = false;
           break;
         }
