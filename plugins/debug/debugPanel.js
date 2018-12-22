@@ -330,9 +330,16 @@
                         var ax = this.anchorPoint.x * bounds.width,
                             ay = this.anchorPoint.y * bounds.height;
 
-                        if (this.ancestor && this.ancestor.root === false) {
-                            ax -= this.ancestor._absPos.x;
-                            ay -= this.ancestor._absPos.y;
+                        var ancestor = this.ancestor;
+                        if (ancestor instanceof me.Container && ancestor.root === false) {
+                            ax -= ancestor._absPos.x;
+                            ay -= ancestor._absPos.y;
+                        } else if (ancestor instanceof me.Entity) {
+                            ancestor = ancestor.ancestor;
+                            if (ancestor instanceof me.Container && ancestor.root === false) {
+                                // is this correct ???
+                                ax = ay = 0;
+                            }
                         }
 
                         // translate back as the bounds position
