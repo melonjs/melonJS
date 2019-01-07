@@ -17,7 +17,7 @@
      * @constructor
      * @param {Number} x the x coordinate of the GUI Object
      * @param {Number} y the y coordinate of the GUI Object
-     * @param {Object} settings See {@link me.Entity}
+     * @param {Object} settings See {@link me.Sprite}
      * @example
      *
      * // create a basic GUI Object
