@@ -62,8 +62,10 @@
             this.context = null;
 
             // global color
-            // FIXME : setting this to black, breaks the WebGL Renderer
-            this.currentColor = new me.Color(255, 255, 255, 1.0);
+            this.currentColor = new me.Color(0, 0, 0, 1.0);
+
+            // global tint color
+            this.currentTint = new me.Color(255, 255, 255, 1.0);
 
             // default uvOffset
             this.uvOffset = 0;
@@ -349,6 +351,30 @@
          * @function
          */
         clearMask : function() {},
+
+        /**
+         * set a rendering tint (WebGL only) for sprite based renderables.
+         * @name setTint
+         * @memberOf me.Renderer
+         * @function
+         * @param {me.Color} [tint] the tint color
+         */
+        setTint : function (tint) {
+            // global tint color
+            this.currentTint.copy(tint);
+        },
+
+        /**
+         * clear the rendering tint set through setTint.
+         * @name clearTint
+         * @see setTint
+         * @memberOf me.Renderer
+         * @function
+         */
+        clearTint : function() {
+            // reset to default
+            this.currentTint.setColor(255, 255, 255, 1.0);
+        },
 
         /**
          * @ignore

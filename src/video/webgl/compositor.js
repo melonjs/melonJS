@@ -100,8 +100,10 @@
             // Global transformation matrix
             this.matrix = renderer.currentTransform;
 
-            // Global color
+            // Global fill color
             this.color = renderer.currentColor;
+            // Global tint color
+            this.tint = renderer.currentTint;
 
             // Uniform projection matrix
             this.uMatrix = new me.Matrix2d();
@@ -321,10 +323,14 @@
          */
         addQuad : function (texture, key, x, y, w, h) {
             var color = this.color.toGL();
+            var tint = this.tint.toGL();
 
             if (color[3] < 1 / 255) {
                 // Fast path: don't send fully transparent quads
                 return;
+            } else {
+                // use the global alpha
+                tint[3] = color[3];
             }
 
             this.useShader(this.quadShader);
@@ -369,10 +375,10 @@
 
             // Fill color buffer
             // FIXME: Pack color vector into single float
-            this.stream.set(color, idx0 + COLOR_ELEMENT);
-            this.stream.set(color, idx1 + COLOR_ELEMENT);
-            this.stream.set(color, idx2 + COLOR_ELEMENT);
-            this.stream.set(color, idx3 + COLOR_ELEMENT);
+            this.stream.set(tint, idx0 + COLOR_ELEMENT);
+            this.stream.set(tint, idx1 + COLOR_ELEMENT);
+            this.stream.set(tint, idx2 + COLOR_ELEMENT);
+            this.stream.set(tint, idx3 + COLOR_ELEMENT);
 
             // Fill texture index buffer
             // FIXME: Can the texture index be packed into another element?

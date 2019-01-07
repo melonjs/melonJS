@@ -1,5 +1,9 @@
 Version History
 ---------------
+6.4.0
+* Renderable : added a basic color tint feature (WebGL mode only)
+* Renderer : fixed default color to match standard canvas fill style (black)
+
 6.3.0
 * Audio : audio core update (2.1.1), mostly improve auto audio unlock on latest (non-mobile) browser versions
 * Color : fixed alpha value not being properly clamped (leading to issue in WebGL mode when passing the glArray buffer)

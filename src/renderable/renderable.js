@@ -271,6 +271,21 @@
             this.mask = undefined;
 
             /**
+             * apply a tint to this renderable (WebGL Only)
+             * @public
+             * @type {me.Color}
+             * @name tint
+             * @default undefined
+             * @memberOf me.Renderable
+             * @example
+             * // add a red tint to this renderable
+             * this.renderable.tint = new me.Color(255, 128, 128);
+             * // disable the tint
+             * this.renderable.setColor(255, 255, 255);
+             */
+            this.tint = undefined;
+
+            /**
              * Absolute position in the game world
              * @ignore
              * @type {me.Vector2d}
@@ -536,6 +551,10 @@
                 renderer.setMask(this.mask);
             }
 
+            if (typeof this.tint !== "undefined") {
+                renderer.setTint(this.tint);
+            }
+
         },
 
         /**
@@ -563,6 +582,9 @@
         postDraw : function (renderer) {
             if (typeof this.mask !== "undefined") {
                 renderer.clearMask();
+            }
+            if (typeof this.tint !== "undefined") {
+                renderer.clearTint();
             }
             // restore the context
             renderer.restore();
@@ -594,6 +616,11 @@
             if (typeof this.mask !== "undefined") {
                 me.pool.push(this.mask);
                 this.mask = undefined;
+            }
+
+            if (typeof this.tint !== "undefined") {
+                me.pool.push(this.tint);
+                this.tint = undefined;
             }
 
             this.ancestor = undefined;
