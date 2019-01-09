@@ -80,7 +80,7 @@
         },
 
         /**
-         * resets the canvas transform to identity
+         * Reset the canvas transform to identity
          * @name resetTransform
          * @memberOf me.CanvasRenderer
          * @function
@@ -90,7 +90,7 @@
         },
 
         /**
-         * set a blend mode for the given context
+         * Set a blend mode for the given context
          * @name setBlendMode
          * @memberOf me.CanvasRenderer
          * @function
@@ -578,7 +578,8 @@
         },
 
         /**
-         * Sets the fill & stroke style colors for the context.
+         * Set the current fill & stroke style color.
+         * By default, or upon reset, the value is set to #000000.
          * @name setColor
          * @memberOf me.CanvasRenderer
          * @function
@@ -594,7 +595,7 @@
         },
 
         /**
-         * Sets the global alpha on the canvas context
+         * Set the global alpha on the canvas context
          * @name setGlobalAlpha
          * @memberOf me.CanvasRenderer
          * @function
@@ -605,7 +606,7 @@
         },
 
         /**
-         * sets the line width on the context
+         * Set the line width on the context
          * @name setLineWidth
          * @memberOf me.CanvasRenderer
          * @function
@@ -616,7 +617,7 @@
         },
 
         /**
-         * Resets (overrides) the renderer transformation matrix to the
+         * Reset (overrides) the renderer transformation matrix to the
          * identity one, and then apply the given transformation matrix.
          * @name setTransform
          * @memberOf me.CanvasRenderer

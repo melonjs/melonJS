@@ -115,7 +115,7 @@
         },
 
         /**
-         * resets the gl transform to identity
+         * Reset the gl transform to identity
          * @name resetTransform
          * @memberOf me.WebGLRenderer
          * @function
@@ -561,7 +561,7 @@
         },
 
         /**
-         * Sets the global alpha
+         * Set the global alpha
          * @name setGlobalAlpha
          * @memberOf me.WebGLRenderer
          * @function
@@ -572,7 +572,8 @@
         },
 
         /**
-         * Sets the color for further draw calls
+         * Set the current fill & stroke style color.
+         * By default, or upon reset, the value is set to #000000.
          * @name setColor
          * @memberOf me.WebGLRenderer
          * @function
