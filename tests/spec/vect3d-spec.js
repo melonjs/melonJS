@@ -90,8 +90,8 @@ describe("me.Vector3d", function () {
         a.set(x, 0, z);
         b.set(0, -y, 0);
 
-        expect(a.clone().lerp(a, 0)).toEqual(a.lerp(a, 0.5));
-        expect(a.clone().lerp(a, 0)).toEqual(a.lerp(a, 1));
+        expect(a.clone().lerp(a, 0).equals(a.lerp(a, 0.5))).toEqual(true);
+        expect(a.clone().lerp(a, 0).equals(a.lerp(a, 1))).toEqual(true);
 
         expect(a.clone().lerp(b, 0).equals(a)).toEqual(true);
 

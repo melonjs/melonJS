@@ -432,8 +432,7 @@
          * @return {me.ObservableVector2d} new me.ObservableVector2d
          */
         clone : function () {
-            // shall we return a cloned me.ObservableVector2d here ?
-            return new me.ObservableVector2d(this._x, this._y, {onUpdate: this.onUpdate});
+            return me.pool.pull("me.ObservableVector2d", this._x, this._y, {onUpdate: this.onUpdate});
         },
 
         /**
@@ -444,7 +443,7 @@
          * @return {me.Vector2d} new me.Vector2d
          */
         toVector2d : function () {
-            return new me.Vector2d(this._x, this._y);
+            return me.pool.pull("me.Vector2d", this._x, this._y);
         },
 
         /**
