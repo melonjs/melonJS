@@ -446,6 +446,7 @@
                 }
             }
 
+            me.pool.push(columnItr);
             me.pool.push(rowItr);
             me.pool.push(tileEnd);
             me.pool.push(rectEnd);
