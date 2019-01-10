@@ -792,6 +792,26 @@
         };
 
         /**
+         * return the highest precision format supported by this device for GL Shaders
+         * @name getMaxShaderPrecision
+         * @memberOf me.device
+         * @function
+         * @param {WebGLRenderingContext} gl
+         * @return {Boolean} "lowp", "mediump", or "highp"
+         */
+        api.getMaxShaderPrecision = function (gl) {
+            if (gl.getShaderPrecisionFormat(gl.VERTEX_SHADER, gl.HIGH_FLOAT ).precision > 0 &&
+                gl.getShaderPrecisionFormat(gl.FRAGMENT_SHADER, gl.HIGH_FLOAT ).precision > 0) {
+                    return "highp";
+            }
+            if (gl.getShaderPrecisionFormat(gl.VERTEX_SHADER, gl.MEDIUM_FLOAT ).precision > 0 &&
+                gl.getShaderPrecisionFormat(gl.FRAGMENT_SHADER, gl.MEDIUM_FLOAT ).precision > 0) {
+                    return "mediump";
+            }
+            return "lowp";
+        };
+
+        /**
          * Makes a request to bring this device window to the front.
          * @name focus
          * @memberOf me.device

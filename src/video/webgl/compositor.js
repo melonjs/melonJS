@@ -111,19 +111,13 @@
             // reference to the active shader
             this.activeShader = null;
 
-            // Detect GPU capabilities
-            var precision = (gl.getShaderPrecisionFormat(
-                gl.FRAGMENT_SHADER,
-                gl.HIGH_FLOAT
-            ).precision < 16) ? "mediump" : "highp";
-
             // Load and create shader programs
             /* eslint-disable */
             this.primitiveShader = me.video.shader.createShader(
                 this.gl,
                 (__PRIMITIVE_VERTEX__)(),
                 (__PRIMITIVE_FRAGMENT__)({
-                    "precision"     : precision
+                    "precision"     : me.device.getMaxShaderPrecision(this.gl)
                 })
             );
 
@@ -131,7 +125,7 @@
                 this.gl,
                 (__QUAD_VERTEX__)(),
                 (__QUAD_FRAGMENT__)({
-                    "precision"     : precision,
+                    "precision"     : me.device.getMaxShaderPrecision(this.gl),
                     "maxTextures"   : this.maxTextures
                 })
             );
