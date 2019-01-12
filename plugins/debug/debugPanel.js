@@ -160,7 +160,7 @@
             this.isKinematic = false;
 
             // minimum melonJS version expected
-            this.version = "6.0.0";
+            this.version = "6.3.0";
 
             // to hold the debug options
             // clickable rect area
@@ -221,10 +221,10 @@
             var fontImage = new Image();
             fontImage.src = fontImageSource;
 
-            this.font = new me.BitmapFont(
-                fontDataSource,
-                fontImage
-            );
+            this.font = new me.BitmapText(0, 0, {
+                fontData: fontDataSource,
+                font: fontImage
+            });
             this.font.name = "debugPanelFont";
 
 
@@ -258,7 +258,7 @@
             this.memoryPositionX = 325 * this.mod;
 
             // resize the panel if the browser is resized
-            me.event.subscribe(me.event.VIEWPORT_ONRESIZE, function (w) {
+            me.event.subscribe(me.event.CANVAS_ONRESIZE, function (w) {
                 self.resize(w, DEBUG_HEIGHT);
             });
 
@@ -330,21 +330,39 @@
                         var ax = this.anchorPoint.x * bounds.width,
                             ay = this.anchorPoint.y * bounds.height;
 
+                        var ancestor = this.ancestor;
+                        if (ancestor instanceof me.Container && ancestor.root === false) {
+                            ax -= ancestor._absPos.x;
+                            ay -= ancestor._absPos.y;
+                        } else if (ancestor instanceof me.Entity) {
+                            ancestor = ancestor.ancestor;
+                            if (ancestor instanceof me.Container && ancestor.root === false) {
+                                // is this correct ???
+                                ax = ay = 0;
+                            }
+                        }
+
                         // translate back as the bounds position
                         // is already adjusted to the anchor Point
                         renderer.translate(ax, ay);
 
                         renderer.setColor("green");
-                        renderer.drawShape(bounds);
+                        renderer.stroke(bounds);
 
                         renderer.translate(-ax, -ay);
 
-                        if (this.body) {
+                        // the sprite mask if defined
+                        if (typeof this.mask !== "undefined") {
+                            renderer.setColor("orange");
+                            renderer.stroke(this.mask);
+                        }
+
+                        if (typeof this.body !== "undefined") {
                             renderer.translate(this.pos.x, this.pos.y);
                             // draw all defined shapes
                             renderer.setColor("red");
                             for (var i = this.body.shapes.length, shape; i--, (shape = this.body.shapes[i]);) {
-                                renderer.drawShape(shape);
+                                renderer.stroke(shape);
                                 _this.counters.inc("shapes");
                             }
                         }
@@ -353,7 +371,7 @@
             });
 
 
-            me.plugin.patch(me.BitmapFont, "draw", function (renderer) {
+            me.plugin.patch(me.BitmapText, "draw", function (renderer) {
                 // call the original me.Sprite.draw function
                 this._patched.apply(this, arguments);
 
@@ -372,7 +390,7 @@
                     }
 
                     renderer.setColor("orange");
-                    renderer.drawShape(bounds);
+                    renderer.stroke(bounds);
                     _this.counters.inc("bounds");
 
                     if (typeof this.ancestor === "undefined") {
@@ -382,46 +400,40 @@
             });
 
             // patch font.js
-            me.plugin.patch(me.Font, "draw", function (renderer, text, x, y) {
-                // save the previous global alpha value
-                var _alpha = renderer.globalAlpha();
-
-                renderer.setGlobalAlpha(_alpha * this.getOpacity());
-
-                // save the previous context
-                renderer.save();
-
-                // draw the text
-                renderer.drawFont(this._drawFont(renderer.getFontContext(), text, ~~x, ~~y, false));
+            me.plugin.patch(me.Text, "draw", function (renderer, text, x, y) {
+                // call the original me.Text.draw function
+                this._patched.apply(this, arguments);
 
                 // call the original me.Sprite.draw function
                 if (_this.visible && me.debug.renderHitBox) {
-                    renderer.save();
+                    if (typeof this.ancestor === "undefined") {
+                        renderer.save();
+                    }
                     renderer.setColor("orange");
-                    renderer.drawShape(this.getBounds());
+                    renderer.stroke(this.getBounds());
                     _this.counters.inc("bounds");
-                    renderer.restore();
+                    if (typeof this.ancestor === "undefined") {
+                        renderer.restore();
+                    }
                 }
-
-                // restore previous context
-                renderer.restore();
-
-                // restore the previous global alpha value
-                renderer.setGlobalAlpha(_alpha);
             });
 
             // patch font.js
-            me.plugin.patch(me.Font, "drawStroke", function (renderer, text, x, y) {
-                // call the original me.Sprite.draw function
+            me.plugin.patch(me.Text, "drawStroke", function (renderer, text, x, y) {
+                // call the original me.Font.drawStroke function
                 this._patched.apply(this, arguments);
 
                 // draw the font rectangle
                 if (_this.visible && me.debug.renderHitBox) {
-                    renderer.save();
+                    if (typeof this.ancestor === "undefined") {
+                        renderer.save();
+                    }
                     renderer.setColor("orange");
-                    renderer.drawShape(this.getBounds());
+                    renderer.stroke(this.getBounds());
                     _this.counters.inc("bounds");
-                    renderer.restore();
+                    if (typeof this.ancestor === "undefined") {
+                        renderer.restore();
+                    }
                 }
             });
 
@@ -450,7 +462,7 @@
 
                         // draw the bounding rect shape
                         renderer.setColor("orange");
-                        renderer.drawShape(this.getBounds());
+                        renderer.stroke(this.getBounds());
 
                         renderer.translate(
                             this.pos.x + this.ancestor._absPos.x,
@@ -460,7 +472,7 @@
                         // draw all defined shapes
                         renderer.setColor("red");
                         for (var i = this.body.shapes.length, shape; i--, (shape = this.body.shapes[i]);) {
-                            renderer.drawShape(shape);
+                            renderer.stroke(shape);
                             _this.counters.inc("shapes");
                         }
                         renderer.restore();
@@ -507,21 +519,20 @@
                     renderer.save();
                     renderer.setLineWidth(1);
 
+                    if (!this.root) {
+                        renderer.translate(
+                            -this._absPos.x,
+                            -this._absPos.y
+                        );
+                    }
+
                     // draw the bounding rect shape
                     renderer.setColor("orange");
-                    bounds.copy(this.getBounds());
-                    if (this.ancestor) {
-                        bounds.pos.sub(this.ancestor._absPos);
-                    }
-                    renderer.drawShape(bounds);
+                    renderer.stroke(this.getBounds());
 
                     // draw the children bounding rect shape
                     renderer.setColor("purple");
-                    bounds.copy(this.childBounds);
-                    if (this.ancestor) {
-                        bounds.pos.sub(this.ancestor._absPos);
-                    }
-                    renderer.drawShape(bounds);
+                    renderer.stroke(this.childBounds);
 
                     renderer.restore();
                 }
@@ -634,6 +645,7 @@
                 // Heap Memory information not available
                 this.font.draw(renderer, "Heap : ??/?? MB", this.memoryPositionX, 2 * this.mod);
             }
+            this.font.draw(renderer, "Pool : " + me.pool.getInstanceCount(), this.memoryPositionX, 10 * this.mod);
         },
 
         /** @private */

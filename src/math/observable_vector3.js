@@ -47,7 +47,8 @@
                     } else {
                         this._x = value
                     }
-                }
+                },
+                configurable : true
             });
 
             /**
@@ -74,7 +75,8 @@
                     } else {
                         this._y = value
                     }
-                }
+                },
+                configurable : true
             });
 
             /**
@@ -101,8 +103,8 @@
                     } else {
                         this._z = value
                     }
-
-                }
+                },
+                configurable : true
             });
 
             if (typeof(settings) === "undefined") {
@@ -514,8 +516,7 @@
          * @return {me.ObservableVector3d} new me.ObservableVector3d
          */
         clone : function () {
-            // shall we return a cloned me.ObservableVector3d here ?
-            return new me.ObservableVector3d(
+            return me.pool.pull("me.ObservableVector3d",
                 this._x,
                 this._y,
                 this._z,
@@ -531,7 +532,7 @@
          * @return {me.Vector3d} new me.Vector3d
          */
         toVector3d : function () {
-            return new me.Vector3d(this._x, this._y, this._z);
+            return me.pool.pull("me.Vector3d", this._x, this._y, this._z);
         },
 
         /**

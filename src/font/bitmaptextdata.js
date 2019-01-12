@@ -5,14 +5,73 @@
  *
  */
 (function() {
+
+    // bitmap constants
+    var LOG2_PAGE_SIZE = 9;
+    var PAGE_SIZE = 1 << LOG2_PAGE_SIZE;
+    var xChars = ["x", "e", "a", "o", "n", "s", "r", "c", "u", "m", "v", "w", "z"];
+    var capChars = ["M", "N", "B", "D", "C", "E", "F", "K", "A", "G", "H", "I", "J", "L", "O", "P", "Q", "R", "S", "T", "U", "V", "W", "X", "Y", "Z"];
+
+    /**
+     * a glyph representing a single character in a font
+     */
+    var Glyph = me.Object.extend({
+        /**
+         * @ignore
+         */
+        init: function () {
+            this.id = 0;
+            this.x = 0;
+            this.y = 0;
+            this.width = 0;
+            this.height = 0;
+            this.u = 0;
+            this.v = 0;
+            this.u2 = 0;
+            this.v2 = 0;
+            this.xoffset = 0;
+            this.yoffset = 0;
+            this.xadvance = 0;
+            this.fixedWidth = false;
+        },
+
+        /**
+         * @ignore
+         */
+        getKerning: function (ch) {
+            if (this.kerning) {
+                var page = this.kerning[ch >>> LOG2_PAGE_SIZE];
+                if (page) {
+                    return page[ch & PAGE_SIZE - 1] || 0;
+                }
+            }
+            return 0;
+        },
+
+        /**
+         * @ignore
+         */
+        setKerning: function (ch, value) {
+            if (!this.kerning) {
+                this.kerning = {};
+            }
+            var page = this.kerning[ch >>> LOG2_PAGE_SIZE];
+            if (typeof page === "undefined") {
+                this.kerning[ch >>> LOG2_PAGE_SIZE] = {};
+                page = this.kerning[ch >>> LOG2_PAGE_SIZE];
+            }
+            page[ch & PAGE_SIZE - 1] = value;
+        }
+    });
+
     /**
      * Class for storing relevant data from the font file.
-     * @class me.BitmapFontData
+     * @class me.BitmapTextData
      * @memberOf me
      * @param data {String} - The bitmap font data pulled from the resource loader using me.loader.getBinary()
      * @constructor
      */
-    me.BitmapFontData = me.Object.extend({
+    me.BitmapTextData = me.Object.extend({
         /**
          * @ignore
          */
@@ -32,14 +91,9 @@
              * The map of glyphs, each key is a char code.
              * @name glyphs
              * @type {Object}
-             * @memberOf me.BitmapFontData
+             * @memberOf me.BitmapTextData
              */
             this.glyphs = {};
-
-
-            this.xChars = ["x", "e", "a", "o", "n", "s", "r", "c", "u", "m", "v", "w", "z"];
-            this.capChars = ["M", "N", "B", "D", "C", "E", "F", "K", "A", "G", "H", "I", "J", "L", "O", "P", "Q", "R", "S",
-                "T", "U", "V", "W", "X", "Y", "Z"];
 
             // parse the data
             this.parse(data);
@@ -49,14 +103,14 @@
          * Creates a glyph to use for the space character
          * @private
          * @name _createSpaceGlyph
-         * @memberOf me.BitmapFontData
+         * @memberOf me.BitmapTextData
          * @function
          */
         _createSpaceGlyph: function () {
             var spaceCharCode = " ".charCodeAt(0);
             var glyph = this.glyphs[spaceCharCode];
             if (!glyph) {
-                glyph = me.pool.pull("me.Glyph");
+                glyph = new Glyph();
                 glyph.id = spaceCharCode;
                 glyph.xadvance = this._getFirstGlyph().xadvance;
                 this.glyphs[spaceCharCode] = glyph;
@@ -67,7 +121,7 @@
          * Gets the first glyph in the map that is not a space character
          * @private
          * @name _getFirstGlyph
-         * @memberOf me.BitmapFontData
+         * @memberOf me.BitmapTextData
          * @function
          * @returns {me.Glyph}
          */
@@ -86,7 +140,7 @@
          * and returns the value of d
          * @private
          * @name _getValueFromPair
-         * @memberOf me.BitmapFontData
+         * @memberOf me.BitmapTextData
          * @function
          * @returns {String}
          */
@@ -102,7 +156,7 @@
         /**
          * This parses the font data text and builds a map of glyphs containing the data for each character
          * @name parse
-         * @memberOf me.BitmapFontData
+         * @memberOf me.BitmapTextData
          * @function
          * @param {String} fontData
          */
@@ -145,16 +199,16 @@
                         glyph.setKerning(second, amount);
                     }
                 } else {
-                    glyph = me.pool.pull("me.Glyph");
+                    glyph = new Glyph();
 
                     var ch = parseFloat(characterValues[2]);
                     glyph.id = ch;
-                    glyph.src.set(parseFloat(characterValues[4]), parseFloat(characterValues[6]));
+                    glyph.x = parseFloat(characterValues[4])
+                    glyph.y = parseFloat(characterValues[6]);
                     glyph.width = parseFloat(characterValues[8]);
                     glyph.height = parseFloat(characterValues[10]);
-                    var y = parseFloat(characterValues[14]);
-                    glyph.offset.set(parseFloat(characterValues[12]), y);
-
+                    glyph.xoffset = parseFloat(characterValues[12]);
+                    glyph.yoffset = parseFloat(characterValues[14]);
                     glyph.xadvance = parseFloat(characterValues[16]);
 
                     if (glyph.width > 0 && glyph.height > 0) {
@@ -170,8 +224,8 @@
             this._createSpaceGlyph();
 
             var xGlyph = null;
-            for (i = 0; i < this.xChars.length; i++) {
-                var xChar = this.xChars[i];
+            for (i = 0; i < xChars.length; i++) {
+                var xChar = xChars[i];
                 xGlyph = this.glyphs[xChar.charCodeAt(0)];
                 if (xGlyph) {
                     break;
@@ -182,8 +236,8 @@
             }
 
             var capGlyph = null;
-            for (i = 0; i < this.capChars.length; i++) {
-                var capChar = this.capChars[i];
+            for (i = 0; i < capChars.length; i++) {
+                var capChar = capChars[i];
                 capGlyph = this.glyphs[capChar.charCodeAt(0)];
                 if (capGlyph) {
                     break;

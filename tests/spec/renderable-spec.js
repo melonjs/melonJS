@@ -32,13 +32,12 @@ describe("me.Renderable", function () {
         var childContainer;
         var renderable;
         beforeAll(function () {
-            rootContainer = new me.Container(0, 0, 1000, 1000);
+            rootContainer = new me.Container(0, 0, 1000, 1000, true);
             childContainer = new me.Container(100, 100, 500, 500);
             renderable = new me.Renderable(50, 50, 50, 50);
         });
 
         it("create and add a child container to the root container", function () {
-            rootContainer._root = true;
             rootContainer.addChild(childContainer);
             expect(childContainer.isAttachedToRoot()).toEqual(true);
         });

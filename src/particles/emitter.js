@@ -473,7 +473,7 @@
             Object.assign(this, defaults, settings);
 
             // reset particle container values
-            this.container.destroy();
+            this.container.reset();
         },
 
         // Add count particles in the game world

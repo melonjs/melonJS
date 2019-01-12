@@ -16,18 +16,29 @@
      * @param {Number} y the y coordinates of the sprite object
      * @param {Object} settings Configuration parameters for the Sprite object
      * @param {me.video.renderer.Texture|HTMLImageElement|HTMLCanvasElement|String} settings.image reference to a texture, spritesheet image or to a texture atlas
+     * @param {String} [settings.region] region name of a specific region to use when using a texture atlas, see {@link me.CanvasRenderer.Texture}
      * @param {Number} [settings.framewidth] Width of a single frame within the spritesheet
      * @param {Number} [settings.frameheight] Height of a single frame within the spritesheet
      * @param {Number} [settings.flipX] flip the sprite on the horizontal axis
      * @param {Number} [settings.flipY] flip the sprite on the vertical axis
      * @param {me.Vector2d} [settings.anchorPoint={x:0.5, y:0.5}] Anchor point to draw the frame at (defaults to the center of the frame).
      * @example
-     * // create a standalone sprite, with anchor in the center
+     * // create a single sprite from a standalone image, with anchor in the center
      * var sprite = new me.Sprite(0, 0, {
      *     image : "PlayerTexture",
      *     framewidth : 64,
      *     frameheight : 64,
      *     anchorPoint : new me.Vector2d(0.5, 0.5)
+     * });
+     *
+     * // create a single sprite from a packed texture
+     * game.texture = new me.video.renderer.Texture(
+     *     me.loader.getJSON("texture"),
+     *     me.loader.getImage("texture")
+     * );
+     * var sprite = new me.Sprite(0, 0, {
+     *     image : game.texture,
+     *     region : "npc2.png",
      * });
      */
     me.Sprite = me.Renderable.extend(
@@ -58,10 +69,11 @@
              * global offset for the position to draw from on the source image.
              * @public
              * @type me.Vector2d
+             * @default <0.0,0.0>
              * @name offset
              * @memberOf me.Sprite
              */
-            this.offset = new me.Vector2d();
+            this.offset = me.pool.pull("me.Vector2d", 0, 0);
 
             // hold all defined animation
             this.anim = {};
@@ -450,7 +462,10 @@
             this.height = frame.height;
             // set global anchortPoint if defined
             if (frame.anchorPoint) {
-                this.anchorPoint.setV(frame.anchorPoint);
+                this.anchorPoint.set(
+                    this._flip.x && frame.trimmed === true ? 1 - frame.anchorPoint.x : frame.anchorPoint.x,
+                    this._flip.y && frame.trimmed === true ? 1 - frame.anchorPoint.y : frame.anchorPoint.y
+                );
             }
             return this;
         },
@@ -541,7 +556,7 @@
                 newY - (this.anchorPoint.y * bounds.height)
             );
             // XXX: This is called from the constructor, before it gets an ancestor
-            if (this.ancestor && !this.floating) {
+            if (this.ancestor instanceof me.Container && !this.floating) {
                 bounds.pos.add(this.ancestor._absPos);
             }
             return bounds;
@@ -560,6 +575,16 @@
             this.anchorPoint.setMuted(newX, newY);
             // then call updateBouds
             this.updateBoundsPos(this.pos.x, this.pos.y);
+        },
+
+        /**
+         * Destroy function<br>
+         * @ignore
+         */
+        destroy : function () {
+            me.pool.push(this.offset);
+            this.offset = undefined;
+            this._super(me.Renderable, "destroy");
         },
 
         /**

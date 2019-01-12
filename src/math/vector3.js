@@ -490,7 +490,7 @@
          * @return {me.Vector3d} new me.Vector3d
          */
         clone : function () {
-            return new me.Vector3d(this.x, this.y, this.z);
+            return me.pool.pull("me.Vector3d", this.x, this.y, this.z);
         },
 
         /**

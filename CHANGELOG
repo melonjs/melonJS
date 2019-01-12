@@ -1,22 +1,52 @@
 Version History
 ---------------
+6.4.0
+* Renderable : added a basic color tint feature (WebGL mode only)
+* Renderer : fixed default color to match standard canvas fill style (black)
+
+6.3.0
+* Audio : audio core update (2.1.1), mostly improve auto audio unlock on latest (non-mobile) browser versions
+* Color : fixed alpha value not being properly clamped (leading to issue in WebGL mode when passing the glArray buffer)
+* Debug : fixed wrong bounding box drawing position for nested containers and entity childs
+* Entity : fixed ancestor value for renderable component
+* Renderable : added support for rendering mask (in both Canvas and WebGL mode), allowing to use any me.Shape object as a mask
+* Renderer : `drawShape()` is deprecated and has been replaced by a `fill()` and `stroke() methods
+* Renderer : cleaned and aligned drawing APIs between the Canvas and WebGL Renderer
+* WebGLRenderer : added stroke and fill operations for all me.Shape objects
+* WebGLRenderer : fillRect() now use newly added fill method, instead of creating/using a fill texture
+* WebGLRenderer : optimized memory usage for shape drawing operations
+* WebGLRenderer : enable batching of triangle vertices to speed up shape drawing (when applicable)
+* WebGLRenderer : fixed a clipping issue with nested containers
+* WebGLRenderer : fixed the clearRect method
+
 6.2.0
 * Audio : fixed a regression when passing an initial volume value to the play function (thanks @PLAYERKILLERS)
 * Container : new `getNextChild` function that returns the next child within the container
 * Core : renamed `me.ScreenObject` to `me.Stage` (with an alias to `me.ScreenObject` for Backward compatibility)
 * Core : cleaned and improved the window auto focus feature
+* Core : improve automatic object instance collection & recycling of base components like vectors and shapes.
+* Core : ensure the internal coordinates system is updated when the DOM tree structure is modified
 * Camera : `me.Camera2d` objects can now be defined per Stage, rather than having one static global camera under `me.game`
 * Camera : fix infinite generation of the VIEWPORT_ONCHANGE event when using camera damping
 * Device : added a me.device.focus() function
 * Entity : fix "DRAGEND" event triggering for Draggable Entity, when pointer is moved outside of the screen area
+* Entity : fix a regression introduced in 6.0 on optional me.Entity constructor parameters
 * Font : fix bounds calculation for BitmapFont objects
 * Font : enable Font & BitmapFont bounding box drawing through the Debug Panel
 * Font : fix missing documentation on properties for BitmapFont Object.
-* Font : BitmapFont objects can now be directly added to a container like any other renderables.
+* Font : Font & BitmapFont objects can now be directly added to a container like any other me.Renderable
+* Font : Improved performances when drawing regular me.Font objects
+* Font : new me.Text and me.BitmapText generic object replacing me.Font and me.BitmapFont (now deprecated)
+* Input : fix a potential issue with "undefined" pointer location upon loading
+* Loader : added support for Font Face preloading
 * Math : new `toBeCloseTo` function to determine if two values are closed "enough" to eachother
 * Renderable : new onVisibilityChange event handler that is called when leaving or entering a camera viewport
 * Renderable : fix documentation for the container `clipping` flag (was accidentally left private)
 * Renderable : update visibility flag for floating objects using actual screen coordinates
+* Sprite : fix an issue when flipping trimmed sprite textures (@YosuaHamonangan)
+* TMX : add support for orthogonal tile rendering order
+* TMX : add support for Text object, allowing to add me.Text or me.BitmapText directly from Tiled
+* TMX : optimized the getTile function to avoid duplicate calls to the pixel to tile coordinates functions
 * WebGLRenderer : fix a bug when clipping is disabled due to the clipping area being equal to the canvas size
 
 6.1.0
@@ -31,6 +61,7 @@ Version History
 
 6.0.0
 * Audio : latest audio core update to fix HTML5 Audio issue with FB Instant Games, and Chrome API deprecation
+* Camera : renamed `me.Viewport` to `me.Camera2d` and move it to its own folder
 * Container : new `clipping` feature to automatically clip childrens to their parent container bounds (disable by default)
 * Core : Removed unnecessary ES6 polyfill (based on melonJS 5.x minimum browser version)
 * Core : API update to sandbox all previous language extension under the `me` namespace

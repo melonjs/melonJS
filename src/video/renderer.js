@@ -62,8 +62,10 @@
             this.context = null;
 
             // global color
-            // FIXME : setting this to black, breaks the WebGL Renderer
-            this.currentColor = new me.Color(255, 255, 255, 1.0);
+            this.currentColor = new me.Color(0, 0, 0, 1.0);
+
+            // global tint color
+            this.currentTint = new me.Color(255, 255, 255, 1.0);
 
             // default uvOffset
             this.uvOffset = 0;
@@ -87,6 +89,8 @@
         reset : function () {
             this.resetTransform();
             this.setBlendMode(this.settings.blendMode);
+            this.setColor("#000000");
+            this.currentTint.setColor(255, 255, 255, 1.0);
             this.cache.reset();
             this.currentScissor[0] = 0;
             this.currentScissor[1] = 0;
@@ -256,14 +260,16 @@
          * @param {Number} height new height of the canvas
          */
         resize : function (width, height) {
-            this.backBufferCanvas.width = width;
-            this.backBufferCanvas.height = height;
-            this.currentScissor[0] = 0;
-            this.currentScissor[1] = 0;
-            this.currentScissor[2] = width;
-            this.currentScissor[3] = height;
-            // publish the corresponding event
-            me.event.publish(me.event.CANVAS_ONRESIZE, [ width, height ]);
+            if (width !== this.backBufferCanvas.width || height !== this.backBufferCanvas.height) {
+                this.backBufferCanvas.width = width;
+                this.backBufferCanvas.height = height;
+                this.currentScissor[0] = 0;
+                this.currentScissor[1] = 0;
+                this.currentScissor[2] = width;
+                this.currentScissor[3] = height;
+                // publish the corresponding event
+                me.event.publish(me.event.CANVAS_ONRESIZE, [ width, height ]);
+            }
         },
 
         /**
@@ -292,6 +298,84 @@
             } else {
                 canvas.style["image-rendering"] = "auto";
             }
+        },
+
+        /**
+         * stroke the given shape
+         * @name stroke
+         * @memberOf me.Renderer
+         * @function
+         * @param {me.Rect|me.Polygon|me.Line|me.Ellipse} shape a shape object to stroke
+         */
+        stroke : function (shape, fill) {
+            if (shape.shapeType === "Rectangle") {
+                this.strokeRect(shape.left, shape.top, shape.width, shape.height, fill);
+            } else if (shape instanceof me.Line || shape instanceof me.Polygon) {
+                this.strokePolygon(shape, fill);
+            } else if (shape instanceof me.Ellipse) {
+                this.strokeEllipse(
+                    shape.pos.x,
+                    shape.pos.y,
+                    shape.radiusV.x,
+                    shape.radiusV.y,
+                    fill
+                );
+            }
+        },
+
+        /**
+         * fill the given shape
+         * @name fill
+         * @memberOf me.Renderer
+         * @function
+         * @param {me.Rect|me.Polygon|me.Line|me.Ellipse} shape a shape object to fill
+         */
+        fill : function (shape) {
+            this.stroke(shape, true);
+        },
+
+        /**
+         * A mask limits rendering elements to the shape and position of the given mask object.
+         * So, if the renderable is larger than the mask, only the intersecting part of the renderable will be visible.
+         * Mask are not preserved through renderer context save and restore.
+         * @name setMask
+         * @memberOf me.Renderer
+         * @function
+         * @param {me.Rect|me.Polygon|me.Line|me.Ellipse} [mask] the shape defining the mask to be applied
+         */
+        setMask : function (mask) {},
+
+        /**
+         * disable (remove) the rendering mask set through setMask.
+         * @name clearMask
+         * @see setMask
+         * @memberOf me.Renderer
+         * @function
+         */
+        clearMask : function() {},
+
+        /**
+         * set a rendering tint (WebGL only) for sprite based renderables.
+         * @name setTint
+         * @memberOf me.Renderer
+         * @function
+         * @param {me.Color} [tint] the tint color
+         */
+        setTint : function (tint) {
+            // global tint color
+            this.currentTint.copy(tint);
+        },
+
+        /**
+         * clear the rendering tint set through setTint.
+         * @name clearTint
+         * @see setTint
+         * @memberOf me.Renderer
+         * @function
+         */
+        clearTint : function() {
+            // reset to default
+            this.currentTint.setColor(255, 255, 255, 1.0);
         },
 
         /**

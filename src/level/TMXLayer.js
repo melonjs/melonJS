@@ -111,6 +111,16 @@
              */
             this.isAnimated = false;
 
+            /**
+             * the order in which tiles on orthogonal tile layers are rendered.
+             * (valid values are "left-down", "left-up", "right-down", "right-up")
+             * @public
+             * @type {String}
+             * @default "right-down"
+             * @name me.TMXLayer#renderorder
+             */
+            this.renderorder = data.renderorder || "right-down";
+
             // for displaying order
             this.pos.z = z;
 
@@ -260,14 +270,14 @@
         getTile : function (x, y) {
             if (this.containsPoint(x, y)) {
                 var renderer = this.renderer;
-                var col = ~~renderer.pixelToTileX(x, y);
-                var row = ~~renderer.pixelToTileY(y, x);
-                if ((col >= 0 && col < renderer.cols) && (row >= 0 && row < renderer.rows)) {
-                    return this.layerData[col][row];
+                var tile = null;
+                var coord = renderer.pixelToTileCoords(x, y, me.pool.pull("me.Vector2d"));
+                if ((coord.x >= 0 && coord.x < renderer.cols) && ( coord.y >= 0 && coord.y < renderer.rows)) {
+                    tile = this.layerData[~~coord.x][~~coord.y];
                 }
+                me.pool.push(coord);
             }
-            // return null if no corresponding tile
-            return null;
+            return tile;
         },
 
         /**

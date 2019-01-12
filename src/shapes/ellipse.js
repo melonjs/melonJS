@@ -80,6 +80,11 @@
             this.setShape(x, y, w, h);
         },
 
+        /** @ignore */
+        onResetEvent : function (x, y, w, h) {
+            this.setShape(x, y, w, h);
+        },
+
         /**
          * set new value to the Ellipse shape
          * @name setShape

@@ -30,6 +30,11 @@
             this.shapeType = "Rectangle";
         },
 
+        /** @ignore */
+        onResetEvent : function (x, y, w, h) {
+            this.setShape(x, y, w, h);
+        },
+
         /**
          * set new value to the rectangle shape
          * @name setShape

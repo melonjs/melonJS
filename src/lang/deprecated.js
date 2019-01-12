@@ -19,3 +19,70 @@ me.ScreenObject = me.Stage.extend({
         console.log("me.ScreenObject is deprecated, please use me.Stage");
     }
 });
+
+/**
+ * @ignore
+ */
+me.Font = me.Text.extend({
+    /** @ignore */
+    init: function (font, size, fillStyle, textAlign) {
+        var settings = {
+            font:font,
+            size:size,
+            fillStyle:fillStyle,
+            textAlign:textAlign
+        }
+        // super constructor
+        this._super(me.Text, "init", [0, 0, settings]);
+        // deprecation warning
+        console.log("me.Font is deprecated, please use me.Text");
+    },
+
+    /** @ignore */
+    setFont : function (font, size, fillStyle, textAlign) {
+        // apply fillstyle if defined
+        if (typeof(fillStyle) !== "undefined") {
+            this.fillStyle.copy(fillStyle);
+        }
+        // h alignement if defined
+        if (typeof(textAlign) !== "undefined") {
+            this.textAlign = textAlign;
+        }
+        // super constructor
+        return this._super(me.Text, "setFont", [font, size]);
+    }
+});
+
+/**
+ * @ignore
+ */
+me.BitmapFontData = me.BitmapTextData;
+
+/**
+ * @ignore
+ */
+
+me.BitmapFont = me.BitmapText.extend({
+    /** @ignore */
+    init: function (data, fontImage, scale, textAlign, textBaseline) {
+        var settings = {
+            font: fontImage,
+            fontData: data,
+            size: scale,
+            textAlign: textAlign,
+            textBaseline: textBaseline
+        }
+        // super constructor
+        this._super(me.BitmapText, "init", [0, 0, settings]);
+        // deprecation warning
+        console.log("me.BitmapFont is deprecated, please use me.BitmapText");
+    }
+});
+
+/**
+ * @ignore
+ */
+me.Renderer.prototype.drawShape = function () {
+    console.log("drawShape() is deprecated, please use the stroke() or fill() function");
+    me.Renderer.prototype.stroke.apply(this, arguments);
+}

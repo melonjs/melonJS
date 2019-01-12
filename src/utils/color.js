@@ -587,7 +587,7 @@
         /**
          * @ignore
          */
-        set : function (value) { this.glArray[3] = typeof(value) === "undefined" ? 1.0 : me.Math.clamp(+value, 0, 255); },
+        set : function (value) { this.glArray[3] = typeof(value) === "undefined" ? 1.0 : me.Math.clamp(+value, 0, 1.0); },
         enumerable : true,
         configurable : true
     });

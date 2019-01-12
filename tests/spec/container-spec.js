@@ -2,8 +2,7 @@ describe("me.Container", function () {
     var container;
 
     beforeEach(function () {
-        container = new me.Container(0, 0, 100, 100);
-        container._root = true;
+        container = new me.Container(0, 0, 100, 100, true);
     });
 
     describe("isAttachedToRoot", function () {

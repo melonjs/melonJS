@@ -59,7 +59,7 @@
             /**
              * @ignore
              */
-            this._linePoints = [
+            this._glPoints = [
                 new me.Vector2d(),
                 new me.Vector2d(),
                 new me.Vector2d(),
@@ -92,8 +92,6 @@
                 this.compositor.maxTextures
             );
 
-            this.createFillTexture(this.cache);
-
             // Configure the WebGL viewport
             this.scaleCanvas(1, 1);
 
@@ -110,11 +108,14 @@
             this._super(me.Renderer, "reset");
             this.compositor.reset();
             this.gl.disable(this.gl.SCISSOR_TEST);
-            this.createFillTexture(this.cache);
+            if (typeof this.fontContext2D !== "undefined" ) {
+                this.createFontTexture(this.cache);
+            }
+
         },
 
         /**
-         * resets the gl transform to identity
+         * Reset the gl transform to identity
          * @name resetTransform
          * @memberOf me.WebGLRenderer
          * @function
@@ -126,63 +127,38 @@
         /**
          * @ignore
          */
-        createFillTexture : function (cache) {
-            if (typeof this.fillTexture === "undefined") {
-                // Create a 1x1 white texture for fill operations
-                var image = new Uint8Array([255, 255, 255, 255]);
+        createFontTexture : function (cache) {
+            if (typeof this.fontTexture === "undefined") {
+                var image = me.video.createCanvas(
+                    me.Math.nextPowerOfTwo(this.backBufferCanvas.width),
+                    me.Math.nextPowerOfTwo(this.backBufferCanvas.height)
+                );
+
                 /**
                  * @ignore
                  */
-                this.fillTexture = new this.Texture(
+                this.fontContext2D = this.getContext2d(image);
+
+                /**
+                 * @ignore
+                 */
+                this.fontTexture = new this.Texture(
                     this.Texture.prototype.createAtlas.apply(
                         this.Texture.prototype,
-                        [ 1, 1, "fillTexture"]
+                        [ this.backBufferCanvas.width, this.backBufferCanvas.height, "fontTexture"]
                     ),
                     image,
                     cache
                 );
-                // XXX better way to disable this
-                this.fillTexture.premultipliedAlpha = false;
-            } else {
-                // fillTexture was already created, just add it back into the cache
-                cache.put(this.fillTexture.source, this.fillTexture);
             }
+            else {
+               // fontTexture was already created, just add it back into the cache
+               cache.put(this.fontContext2D.canvas, this.fontTexture);
+           }
+           this.compositor.uploadTexture(this.fontTexture, 0, 0, 0);
 
-            this.compositor.uploadTexture(
-                this.fillTexture,
-                1,
-                1,
-                0
-            );
-        },
 
-        /**
-         * @ignore
-         */
-        createFontTexture : function (cache) {
-            var image = me.video.createCanvas(
-                me.Math.nextPowerOfTwo(this.backBufferCanvas.width),
-                me.Math.nextPowerOfTwo(this.backBufferCanvas.height)
-            );
 
-            /**
-             * @ignore
-             */
-            this.fontContext2D = this.getContext2d(image);
-
-            /**
-             * @ignore
-             */
-            this.fontTexture = new this.Texture(
-                this.Texture.prototype.createAtlas.apply(
-                    this.Texture.prototype,
-                    [ this.backBufferCanvas.width, this.backBufferCanvas.height, "fontTexture"]
-                ),
-                image,
-                cache
-            );
-
-            this.compositor.uploadTexture(this.fontTexture);
         },
 
         /**
@@ -256,8 +232,7 @@
         },
 
         /**
-         * Sets all pixels in the given rectangle to transparent black, <br>
-         * erasing any previously drawn content.
+         * Erase the pixels in the given rectangular area by setting them to transparent black (rgba(0,0,0,0)).
          * @name clearRect
          * @memberOf me.WebGLRenderer
          * @function
@@ -268,7 +243,7 @@
          */
         clearRect : function (x, y, width, height) {
             var color = this.currentColor.clone();
-            this.currentColor.copy("#0000");
+            this.currentColor.copy("#000000");
             this.fillRect(x, y, width, height);
             this.currentColor.copy(color);
             me.pool.push(color);
@@ -298,7 +273,12 @@
             );
 
             // Clear font context2D
-            fontContext.clearRect(0, 0, this.backBufferCanvas.width, this.backBufferCanvas.height);
+            fontContext.clearRect(
+                bounds.pos.x,
+                bounds.pos.y,
+                bounds.width,
+                bounds.height
+            );
         },
 
         /**
@@ -370,19 +350,6 @@
             this.compositor.addQuad(pattern, key, x, y, width, height);
         },
 
-        /**
-         * Draw a filled rectangle at the specified coordinates
-         * @name fillRect
-         * @memberOf me.WebGLRenderer
-         * @function
-         * @param {Number} x
-         * @param {Number} y
-         * @param {Number} width
-         * @param {Number} height
-         */
-        fillRect : function (x, y, width, height) {
-            this.compositor.addQuad(this.fillTexture, "default", x, y, width, height);
-        },
 
         /**
          * return a reference to the screen canvas corresponding WebGL Context
@@ -420,6 +387,7 @@
                 alpha : transparent,
                 antialias : this.settings.antiAlias,
                 depth : false,
+                stencil: true,
                 premultipliedAlpha: transparent,
                 failIfMajorPerformanceCaveat : this.settings.failIfMajorPerformanceCaveat
             };
@@ -458,6 +426,7 @@
         setBlendMode : function (mode, gl) {
             gl = gl || this.gl;
 
+
             gl.enable(gl.BLEND);
             switch (mode) {
                 case "multiply" :
@@ -477,9 +446,9 @@
          * @ignore
          */
         getFontContext : function () {
-            if (typeof (this.fontContext2D) === "undefined" ) {
+            if (typeof this.fontContext2D === "undefined" ) {
                 // warn the end user about performance impact
-                console.warn("[WebGL Renderer] WARNING : Using Standard me.Font with WebGL will severly impact performances !");
+                console.warn("[WebGL Renderer] WARNING : Using Standard me.Text with WebGL will severly impact performances !");
                 // create the font texture if not done yet
                 this.createFontTexture(this.cache);
             }
@@ -592,7 +561,7 @@
         },
 
         /**
-         * Sets the global alpha
+         * Set the global alpha
          * @name setGlobalAlpha
          * @memberOf me.WebGLRenderer
          * @function
@@ -603,7 +572,8 @@
         },
 
         /**
-         * Sets the color for further draw calls
+         * Set the current fill & stroke style color.
+         * By default, or upon reset, the value is set to #000000.
          * @name setColor
          * @memberOf me.WebGLRenderer
          * @function
@@ -638,22 +608,101 @@
          * @param {Number} end end angle in radians
          * @param {Boolean} [antiClockwise=false] draw arc anti-clockwise
          */
-        strokeArc : function (/*x, y, radius, start, end, antiClockwise*/) {
-            // TODO
+        strokeArc : function (x, y, radius, start, end, antiClockwise, fill) {
+            if (fill === true ) {
+                this.fillArc(x, y, radius, start, end, antiClockwise);
+            } else {
+                console.warn("strokeArc() is not implemented");
+            }
         },
 
         /**
-         * Stroke an ellipse at the specified coordinates with given radius, start and end points
-         * @name strokeEllipse
+         * Fill an arc at the specified coordinates with given radius, start and end points
+         * @name fillArc
          * @memberOf me.WebGLRenderer
          * @function
          * @param {Number} x arc center point x-axis
          * @param {Number} y arc center point y-axis
+         * @param {Number} radius
+         * @param {Number} start start angle in radians
+         * @param {Number} end end angle in radians
+         * @param {Boolean} [antiClockwise=false] draw arc anti-clockwise
+         */
+        fillArc : function (x, y, radius, start, end, antiClockwise) {
+            console.warn("fillArc() is not implemented");
+        },
+
+        /**
+         * Stroke an ellipse at the specified coordinates with given radius
+         * @name strokeEllipse
+         * @memberOf me.WebGLRenderer
+         * @function
+         * @param {Number} x ellipse center point x-axis
+         * @param {Number} y ellipse center point y-axis
          * @param {Number} w horizontal radius of the ellipse
          * @param {Number} h vertical radius of the ellipse
          */
-        strokeEllipse : function (/*x, y, w, h*/) {
-            // TODO
+        strokeEllipse : function (x, y, w, h, fill) {
+            if (fill === true ) {
+                this.fillEllipse(x, y, w, h);
+            } else {
+                // XXX to be optimzed using a specific shader
+                var len = Math.floor(24 * Math.sqrt(w)) ||
+                          Math.floor(12 * Math.sqrt(w + h));
+                var segment = (Math.PI * 2) / len;
+                var points = this._glPoints,
+                    i;
+
+                // Grow internal points buffer if necessary
+                for (i = points.length; i < len; i++) {
+                    points.push(new me.Vector2d());
+                }
+
+                // calculate and draw all segments
+                for (i = 0; i < len; i++) {
+                    points[i].x = x + (Math.sin(segment * -i) * w);
+                    points[i].y = y + (Math.cos(segment * -i) * h);
+                }
+                // batch draw all lines
+                this.compositor.drawLine(points, len);
+            }
+
+        },
+
+        /**
+         * Fill an ellipse at the specified coordinates with given radius
+         * @name fillEllipse
+         * @memberOf me.WebGLRenderer
+         * @function
+         * @param {Number} x ellipse center point x-axis
+         * @param {Number} y ellipse center point y-axis
+         * @param {Number} w horizontal radius of the ellipse
+         * @param {Number} h vertical radius of the ellipse
+         */
+        fillEllipse : function (x, y, w, h) {
+            // XXX to be optimzed using a specific shader
+            var len = Math.floor(24 * Math.sqrt(w)) ||
+                      Math.floor(12 * Math.sqrt(w + h));
+            var segment = (Math.PI * 2) / len;
+            var points = this._glPoints;
+            var index = 0;
+
+            // Grow internal points buffer if necessary
+            for (i = points.length; i < (len + 1) * 2; i++) {
+                points.push(new me.Vector2d());
+            }
+
+            // draw all vertices vertex coordinates
+            for (var i = 0; i < len + 1; i++) {
+                points[index++].set(x, y);
+                points[index++].set(
+                    x + (Math.sin(segment * i) * w),
+                    y + (Math.cos(segment * i) * h)
+                );
+            }
+
+            // batch draw all triangles
+            this.compositor.drawTriangle(points, index, true);
         },
 
         /**
@@ -667,37 +716,83 @@
          * @param {Number} endY the end y coordinate
          */
         strokeLine : function (startX, startY, endX, endY) {
-            var points = this._linePoints.slice(0, 2);
+            var points = this._glPoints;
             points[0].x = startX;
             points[0].y = startY;
             points[1].x = endX;
             points[1].y = endY;
-            this.compositor.drawLine(points, true);
+            this.compositor.drawLine(points, 2, true);
+        },
+
+
+        /**
+         * Fill a line of the given two points
+         * @name fillLine
+         * @memberOf me.WebGLRenderer
+         * @function
+         * @param {Number} startX the start x coordinate
+         * @param {Number} startY the start y coordinate
+         * @param {Number} endX the end x coordinate
+         * @param {Number} endY the end y coordinate
+         */
+        fillLine : function (startX, startY, endX, endY) {
+            this.strokeLine(startX, startY, endX, endY);
         },
 
         /**
-         * Strokes a me.Polygon on the screen with a specified color
+         * Stroke a me.Polygon on the screen with a specified color
          * @name strokePolygon
          * @memberOf me.WebGLRenderer
          * @function
          * @param {me.Polygon} poly the shape to draw
          */
-        strokePolygon : function (poly) {
-            var len = poly.points.length,
-                points,
-                i;
+        strokePolygon : function (poly, fill) {
+            if (fill === true ) {
+                this.fillPolygon(poly);
+            } else {
+                var len = poly.points.length,
+                    points = this._glPoints,
+                    i;
+
+                // Grow internal points buffer if necessary
+                for (i = points.length; i < len; i++) {
+                    points.push(new me.Vector2d());
+                }
+
+                // calculate and draw all segments
+                for (i = 0; i < len; i++) {
+                    points[i].x = poly.pos.x + poly.points[i].x;
+                    points[i].y = poly.pos.y + poly.points[i].y;
+                }
+                this.compositor.drawLine(points, len);
+            }
+        },
+
+        /**
+         * Fill a me.Polygon on the screen
+         * @name fillPolygon
+         * @memberOf me.WebGLRenderer
+         * @function
+         * @param {me.Polygon} poly the shape to draw
+        */
+        fillPolygon : function (poly) {
+            var points = poly.points;
+            var glPoints = this._glPoints;
+            var indices = poly.getIndices();
+            var x = poly.pos.x, y = poly.pos.y;
 
             // Grow internal points buffer if necessary
-            for (i = this._linePoints.length; i < len; i++) {
-                this._linePoints.push(new me.Vector2d());
+            for (i = glPoints.length; i < indices.length; i++) {
+                glPoints.push(new me.Vector2d());
             }
 
-            points = this._linePoints.slice(0, len);
-            for (i = 0; i < len; i++) {
-                points[i].x = poly.pos.x + poly.points[i].x;
-                points[i].y = poly.pos.y + poly.points[i].y;
+            // calculate all vertices
+            for ( var i = 0; i < indices.length; i ++ ) {
+                glPoints[i].set(x + points[indices[i]].x, y + points[indices[i]].y);
             }
-            this.compositor.drawLine(points);
+
+            // draw all triangle
+            this.compositor.drawTriangle(glPoints, indices.length);
         },
 
         /**
@@ -711,7 +806,7 @@
          * @param {Number} height
          */
         strokeRect : function (x, y, width, height) {
-            var points = this._linePoints.slice(0, 4);
+            var points = this._glPoints;
             points[0].x = x;
             points[0].y = y;
             points[1].x = x + width;
@@ -720,45 +815,34 @@
             points[2].y = y + height;
             points[3].x = x;
             points[3].y = y + height;
-            this.compositor.drawLine(points);
+            this.compositor.drawLine(points, 4);
         },
 
         /**
-         * draw the given shape
-         * @name drawShape
+         * Draw a filled rectangle at the specified coordinates
+         * @name fillRect
          * @memberOf me.WebGLRenderer
          * @function
-         * @param {me.Rect|me.Polygon|me.Line|me.Ellipse} shape a shape object
+         * @param {Number} x
+         * @param {Number} y
+         * @param {Number} width
+         * @param {Number} height
          */
-        drawShape : function (shape) {
-            if (shape.shapeType === "Rectangle") {
-                this.strokeRect(shape.left, shape.top, shape.width, shape.height);
-            } else if (shape instanceof me.Line || shape instanceof me.Polygon) {
-                this.strokePolygon(shape);
-            } else if (shape instanceof me.Ellipse) {
-                if (shape.radiusV.x === shape.radiusV.y) {
-                    // it's a circle
-                    this.strokeArc(
-                        shape.pos.x - shape.radius,
-                        shape.pos.y - shape.radius,
-                        shape.radius,
-                        0,
-                        2 * Math.PI
-                    );
-                } else {
-                    // it's an ellipse
-                    this.strokeEllipse(
-                        shape.pos.x,
-                        shape.pos.y,
-                        shape.radiusV.x,
-                        shape.radiusV.y
-                    );
-                }
-            }
+        fillRect : function (x, y, width, height) {
+            var glPoints = this._glPoints;
+            glPoints[0].x = x + width;
+            glPoints[0].y = y;
+            glPoints[1].x = x;
+            glPoints[1].y = y;
+            glPoints[2].x = x + width;
+            glPoints[2].y = y + height;
+            glPoints[3].x = x;
+            glPoints[3].y = y + height;
+            this.compositor.drawTriangle(glPoints, 4, true)
         },
 
         /**
-         * Resets (overrides) the renderer transformation matrix to the
+         * Reset (overrides) the renderer transformation matrix to the
          * identity one, and then apply the given transformation matrix.
          * @name setTransform
          * @memberOf me.WebGLRenderer
@@ -851,6 +935,52 @@
                 // turn off scissor test
                 gl.disable(gl.SCISSOR_TEST);
             }
+        },
+
+        /**
+         * A mask limits rendering elements to the shape and position of the given mask object.
+         * So, if the renderable is larger than the mask, only the intersecting part of the renderable will be visible.
+         * Mask are not preserved through renderer context save and restore.
+         * @name setMask
+         * @memberOf me.WebGLRenderer
+         * @function
+         * @param {me.Rect|me.Polygon|me.Line|me.Ellipse} [mask] the shape defining the mask to be applied
+         */
+        setMask : function (mask) {
+            var gl = this.gl;
+
+            // flush the compositor
+            this.flush();
+
+            // Enable and setup GL state to write to stencil buffer
+            gl.enable(gl.STENCIL_TEST);
+            gl.clear(gl.STENCIL_BUFFER_BIT);
+            gl.colorMask(false, false, false, false);
+            gl.stencilFunc(gl.NOTEQUAL, 1, 1);
+            gl.stencilOp(gl.REPLACE, gl.REPLACE, gl.REPLACE);
+
+            this.fill(mask);
+
+            // flush the compositor
+            this.flush();
+
+            // Use stencil buffer to affect next rendering object
+            gl.colorMask(true, true, true, true);
+            gl.stencilFunc(gl.EQUAL, 1, 1);
+            gl.stencilOp(gl.KEEP, gl.KEEP, gl.KEEP);
+        },
+
+        /**
+         * disable (remove) the rendering mask set through setMask.
+         * @name clearMask
+         * @see setMask
+         * @memberOf me.WebGLRenderer
+         * @function
+         */
+        clearMask : function() {
+            // flush the compositor
+            this.flush();
+            this.gl.disable(this.gl.STENCIL_TEST);
         }
     });
 

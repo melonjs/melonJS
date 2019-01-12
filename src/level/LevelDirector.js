@@ -31,7 +31,7 @@
 
         function safeLoadLevel(levelId, options, restart) {
             // clean the destination container
-            options.container.destroy();
+            options.container.reset();
 
             // reset the renderer
             me.game.reset();

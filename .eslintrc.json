@@ -13,10 +13,10 @@
 
       // melonJS
       "me"                    : false,
+      "__PRIMITIVE_VERTEX__"  : false,
       "__QUAD_VERTEX__"       : false,
+      "__PRIMITIVE_FRAGMENT__": false,
       "__QUAD_FRAGMENT__"     : false,
-      "__LINE_VERTEX__"       : false,
-      "__LINE_FRAGMENT__"     : false,
 
       // Howler
       "AudioContext"          : false,

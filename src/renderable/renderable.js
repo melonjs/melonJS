@@ -91,11 +91,10 @@
              * @name currentTransform
              * @memberOf me.Renderable
              */
-            if (typeof this.currentTransform !== "undefined") {
-                this.currentTransform.identity();
-            } else {
+            if (typeof this.currentTransform === "undefined") {
                 this.currentTransform = me.pool.pull("me.Matrix2d");
             }
+            this.currentTransform.identity();
 
            /**
             * (G)ame (U)nique (Id)entifier" <br>
@@ -179,7 +178,7 @@
             if (this.anchorPoint instanceof me.ObservableVector2d) {
                 this.anchorPoint.setMuted(0.5, 0.5).setCallback(this.onAnchorUpdate.bind(this));
             } else {
-                this.anchorPoint = new me.ObservableVector2d(0.5, 0.5, { onUpdate: this.onAnchorUpdate.bind(this) });
+                this.anchorPoint = me.pool.pull("me.ObservableVector2d", 0.5, 0.5, { onUpdate: this.onAnchorUpdate.bind(this) });
             }
 
             /**
@@ -224,8 +223,7 @@
             this.alpha = 1.0;
 
             /**
-             * a reference to the parent object that contains this renderable,
-             * or undefined if it has not been added to one.
+             * a reference to the parent object that contains this renderable
              * @public
              * @type me.Container|me.Entity
              * @default undefined
@@ -240,12 +238,52 @@
              * @name _bounds
              * @memberOf me.Renderable
              */
-            if (this._bounds) {
+            if (this._bounds instanceof me.Rect) {
                 this._bounds.setShape(x, y, width, height);
+            } else {
+                this._bounds = me.pool.pull("me.Rect", x, y, width, height);
             }
-            else {
-                this._bounds = new me.Rect(x, y, width, height);
-            }
+
+            /**
+             * A mask limits rendering elements to the shape and position of the given mask object.
+             * So, if the renderable is larger than the mask, only the intersecting part of the renderable will be visible.
+             * @public
+             * @type {me.Rect|me.Polygon|me.Line|me.Ellipse}
+             * @name mask
+             * @default undefined
+             * @memberOf me.Renderable
+             * @example
+             * // apply a mask in the shape of a Star
+             * myNPCSprite.mask = new me.Polygon(myNPCSprite.width / 2, 0, [
+             *    // draw a star
+             *    {x: 0, y: 0},
+             *    {x: 14, y: 30},
+             *    {x: 47, y: 35},
+             *    {x: 23, y: 57},
+             *    {x: 44, y: 90},
+             *    {x: 0, y: 62},
+             *    {x: -44, y: 90},
+             *    {x: -23, y: 57},
+             *    {x: -47, y: 35},
+             *    {x: -14, y: 30}
+             * ]);
+             */
+            this.mask = undefined;
+
+            /**
+             * apply a tint to this renderable (WebGL Only)
+             * @public
+             * @type {me.Color}
+             * @name tint
+             * @default undefined
+             * @memberOf me.Renderable
+             * @example
+             * // add a red tint to this renderable
+             * this.renderable.tint = new me.Color(255, 128, 128);
+             * // disable the tint
+             * this.renderable.setColor(255, 255, 255);
+             */
+            this.tint = undefined;
 
             /**
              * Absolute position in the game world
@@ -254,11 +292,11 @@
              * @name _absPos
              * @memberOf me.Renderable
              */
-            if (this._absPos) {
+            if (this._absPos instanceof me.Vector2d) {
                 this._absPos.set(x, y);
             }
             else {
-                this._absPos = new me.Vector2d(x, y);
+                this._absPos = me.pool.pull("me.Vector2d", x, y);
             }
 
             /**
@@ -271,7 +309,7 @@
             if (this.pos instanceof me.ObservableVector3d) {
                 this.pos.setMuted(x, y, 0).setCallback(this.updateBoundsPos.bind(this));
             } else {
-                this.pos = new me.ObservableVector3d(x, y, 0, { onUpdate: this.updateBoundsPos.bind(this) });
+                this.pos = me.pool.pull("me.ObservableVector3d", x, y, 0, { onUpdate: this.updateBoundsPos.bind(this) });
             }
 
             this._width = width;
@@ -290,6 +328,11 @@
 
             // ensure it's fully opaque by default
             this.setOpacity(1.0);
+        },
+
+        /** @ignore */
+        onResetEvent : function () {
+            this.init.apply(this, arguments);
         },
 
         /**
@@ -434,7 +477,7 @@
             var bounds = this.getBounds();
             bounds.pos.set(newX, newY, bounds.pos.z);
             // XXX: This is called from the constructor, before it gets an ancestor
-            if (this.ancestor && !this.floating) {
+            if (this.ancestor instanceof me.Container && !this.floating) {
                 bounds.pos.add(this.ancestor._absPos);
             }
             return bounds;
@@ -504,6 +547,14 @@
                 renderer.translate(-ax, -ay);
             }
 
+            if (typeof this.mask !== "undefined") {
+                renderer.setMask(this.mask);
+            }
+
+            if (typeof this.tint !== "undefined") {
+                renderer.setTint(this.tint);
+            }
+
         },
 
         /**
@@ -529,6 +580,12 @@
          * @param {me.CanvasRenderer|me.WebGLRenderer} renderer a renderer object
          **/
         postDraw : function (renderer) {
+            if (typeof this.mask !== "undefined") {
+                renderer.clearMask();
+            }
+            if (typeof this.tint !== "undefined") {
+                renderer.clearTint();
+            }
             // restore the context
             renderer.restore();
         },
@@ -538,8 +595,35 @@
          * @ignore
          */
         destroy : function () {
-            // reset currentTransform
-            this.currentTransform.identity();
+            // allow recycling object properties
+            me.pool.push(this.currentTransform);
+            this.currentTransform = undefined;
+
+            me.pool.push(this.anchorPoint);
+            this.anchorPoint = undefined;
+
+            me.pool.push(this.pos);
+            this.pos = undefined;
+
+            me.pool.push(this._absPos);
+            this._absPos = undefined;
+
+            me.pool.push(this._bounds);
+            this._bounds = undefined;
+
+            this.onVisibilityChange = undefined;
+
+            if (typeof this.mask !== "undefined") {
+                me.pool.push(this.mask);
+                this.mask = undefined;
+            }
+
+            if (typeof this.tint !== "undefined") {
+                me.pool.push(this.tint);
+                this.tint = undefined;
+            }
+
+            this.ancestor = undefined;
 
             // destroy the physic body if defined
             if (typeof this.body !== "undefined") {

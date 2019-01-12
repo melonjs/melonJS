@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>melonJS - WebGL  Bug</title>
+  <title>melonJS - Graphics drawing</title>
   <link rel="stylesheet" type="text/css" media="screen" href="index.css">
 </head>
 <body bgcolor="white">
@@ -15,7 +15,7 @@
   <script type="text/javascript">
       me.device.onReady(function onReady() {
           // Initialize the video.
-          if (!me.video.init(320, 240, {wrapper : "screen", scale : "auto", blendMode: "normal"})) {
+          if (!me.video.init(320, 240, {wrapper : "screen", scale : "auto", renderer : me.video.AUTO, blendMode: "normal"})) {
               alert("Your browser does not support HTML5 canvas.");
               return;
           }
@@ -24,22 +24,46 @@
           var g = new me.Color (0, 255, 0, 0.5);
           var b = new me.Color (0, 0, 255, 0.5);
 
+          var starMask = new me.Polygon(0, 0, [
+            // draw a star
+            {x: 0, y: 0},
+            {x: 14, y: 30},
+            {x: 47, y: 35},
+            {x: 23, y: 57},
+            {x: 44, y: 90},
+            {x: 0, y: 62},
+            {x: -44, y: 90},
+            {x: -23, y: 57},
+            {x: -47, y: 35},
+            {x: -14, y: 30}
+          ])
+
+          var circleMask = new me.Ellipse(160 + 50, 120 + 50, 100, 100);
+
           me.video.renderer.clearColor("#FFFFFF80");
 
           me.video.renderer.setColor(r);
+          starMask.pos.set(60 + 50, 25);
+          me.video.renderer.fill(starMask);
+          me.video.renderer.stroke(starMask);
           me.video.renderer.fillRect(60, 20, 100 ,100);
-          //me.video.renderer.setColor(r.darken(1.0));
           me.video.renderer.strokeRect(65, 25, 90 , 90);
 
           me.video.renderer.setColor(g);
+          starMask.pos.set(110 + 50, 75);
+          me.video.renderer.setMask(starMask);
+          me.video.renderer.stroke(starMask);
           me.video.renderer.fillRect(110, 70, 100 ,100);
-          //me.video.renderer.setColor(g.darken(1.0));
           me.video.renderer.strokeRect(115, 75, 90 , 90);
+          me.video.renderer.clearMask();
 
           me.video.renderer.setColor(b);
+          //starMask.pos.set(160 + 50, 125);
+          me.video.renderer.setMask(circleMask);
           me.video.renderer.fillRect(160, 120, 100 ,100);
-          //me.video.renderer.setColor(b.darken(1.0));
+          me.video.renderer.strokeEllipse(160 + 50, 120 + 50, 30, 30);
           me.video.renderer.strokeRect(165, 125, 90 , 90);
+          me.video.renderer.clearMask();
       });
   </script>
 </body>
