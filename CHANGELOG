@@ -2,6 +2,8 @@ Version History
 ---------------
 6.4.0
 * Renderable : added a basic color tint feature (WebGL mode only)
+* Renderable : added support for Texture Packer multipack textures
+* Sprite : cleaned up/simplified animation data handling
 * Renderer : fixed default color to match standard canvas fill style (black)
 
 6.3.0

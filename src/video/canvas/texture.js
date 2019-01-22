@@ -25,19 +25,29 @@
      * @memberOf me.CanvasRenderer
      * @name Texture
      * @constructor
-     * @param {Object} atlas atlas information. See {@link me.loader.getJSON}
-     * @param {HTMLImageElement|HTMLCanvasElement|String} [source=atlas.meta.image] Image source
+     * @param {Object|Object[]} atlas atlas information. See {@link me.loader.getJSON}
+     * @param {HTMLImageElement|HTMLCanvasElement|String|HTMLImageElement[]|HTMLCanvasElement[]|String[]} [source=atlas.meta.image] Image source
      * @param {Boolean} [cached=false] Use true to skip caching this Texture
      * @example
      * // create a texture atlas from a JSON Object
-     * texture = new me.video.renderer.Texture(
-     *     me.loader.getJSON("texture"),
-     *     me.loader.getImage("texture")
+     * game.texture = new me.video.renderer.Texture(
+     *     me.loader.getJSON("texture")
      * );
      *
-     * // create a texture atlas for a spritesheet, with (optional) an anchorPoint in the center of each frame
-     * texture = new me.video.renderer.Texture(
-     *     { framewidth : 32, frameheight : 32, anchorPoint : new me.Vector2d(0.5, 0.5) },
+     * // create a texture atlas from a multipack JSON Object
+     * game.texture = new me.video.renderer.Texture([
+     *     me.loader.getJSON("texture-0"),
+     *     me.loader.getJSON("texture-1"),
+     *     me.loader.getJSON("texture-2")
+     * ]);
+     *
+     * // create a texture atlas for a spritesheet with an anchorPoint in the center of each frame
+     * game.texture = new me.video.renderer.Texture(
+     *     {
+     *         framewidth : 32,
+     *         frameheight : 32,
+     *         anchorPoint : new me.Vector2d(0.5, 0.5)
+     *     },
      *     me.loader.getImage("spritesheet")
      * );
      */
@@ -47,7 +57,7 @@
         /**
          * @ignore
          */
-        init : function (atlas, source, cache) {
+        init : function (atlases, src, cache) {
             /**
              * to identify the atlas format (e.g. texture packer)
              * @ignore
@@ -55,81 +65,100 @@
             this.format = null;
 
             /**
-             * the texture source itself
-             * @type {HTMLImageElement|HTMLCanvasElement}
+             * the texture source(s) itself
+             * @type Map
              * @ignore
              */
-            this.source = source || null;
+            this.sources = new Map();
 
             /**
-             * the atlas dictionnary
+             * the atlas dictionnaries
+             * @type Map
              * @ignore
              */
-            this.atlas = null;
+            this.atlases = new Map();
 
-            if (typeof (atlas) !== "undefined") {
+            // parse given atlas(es) paremeters
+            if (typeof (atlases) !== "undefined") {
+                // normalize to array to keep the following code generic
+                atlases = Array.isArray(atlases) ? atlases : [atlases];
+                for (var i in atlases) {
+                    var atlas = atlases[i];
 
-                if (typeof(atlas.meta) !== "undefined") {
-                    // Texture Packer
-                    if (atlas.meta.app.includes("texturepacker")) {
-                        this.format = "texturepacker";
-                        // set the texture
-                        if (typeof(source) === "undefined") {
-                            var image = atlas.meta.image;
-                            this.source = me.loader.getImage(image);
-                            if (!this.source) {
+                    if (typeof(atlas.meta) !== "undefined") {
+                        // Texture Packer
+                        if (atlas.meta.app.includes("texturepacker")) {
+                            this.format = "texturepacker";
+                            // set the texture
+                            if (typeof(src) === "undefined") {
+                                // get the texture name from the atlas meta data
+                                var image = me.loader.getImage(atlas.meta.image);
+                                if (!image) {
+                                    throw new me.video.renderer.Texture.Error(
+                                        "Atlas texture '" + image + "' not found"
+                                    );
+                                }
+                                this.sources.set(atlas.meta.image, image);
+                            } else {
+                                this.sources.set(atlas.meta.image || "default", typeof src === "string" ? me.loader.getImage(src) : src);
+                            }
+                            this.repeat = "no-repeat";
+                        }
+                        // ShoeBox
+                        else if (atlas.meta.app.includes("ShoeBox")) {
+                            if (!atlas.meta.exporter || !atlas.meta.exporter.includes("melonJS")) {
                                 throw new me.video.renderer.Texture.Error(
-                                    "Atlas texture '" + image + "' not found"
+                                    "ShoeBox requires the JSON exporter : " +
+                                    "https://github.com/melonjs/melonJS/tree/master/media/shoebox_JSON_export.sbx"
                                 );
                             }
+                            this.format = "ShoeBox";
+                            this.repeat = "no-repeat";
+                            this.sources.set("default", typeof src === "string" ? me.loader.getImage(src) : src);
                         }
-                        this.repeat = "no-repeat";
-                    }
-                    // ShoeBox
-                    else if (atlas.meta.app.includes("ShoeBox")) {
-                        if (!atlas.meta.exporter || !atlas.meta.exporter.includes("melonJS")) {
-                            throw new me.video.renderer.Texture.Error(
-                                "ShoeBox requires the JSON exporter : " +
-                                "https://github.com/melonjs/melonJS/tree/master/media/shoebox_JSON_export.sbx"
-                            );
-                        }
-                        this.format = "ShoeBox";
-                        this.repeat = "no-repeat";
-                    }
-                    // Internal texture atlas
-                    else if (atlas.meta.app.includes("melonJS")) {
-                        this.format = "melonJS";
-                        this.repeat = atlas.meta.repeat || "no-repeat";
-                    }
-                    // initialize the atlas
-                    this.atlas = this.parse(atlas);
-
-                } else {
-                    // a regular spritesheet ?
-                    if (typeof(atlas.framewidth) !== "undefined" &&
-                        typeof(atlas.frameheight) !== "undefined") {
-                        this.format = "Spritesheet (fixed cell size)";
-                        if (typeof(this.source) !== "undefined") {
-                            // overwrite if specified
-                            atlas.image = this.source;
+                        // Internal texture atlas
+                        else if (atlas.meta.app.includes("melonJS")) {
+                            this.format = "melonJS";
+                            this.repeat = atlas.meta.repeat || "no-repeat";
+                            this.sources.set("default", typeof src === "string" ? me.loader.getImage(src) : src);
                         }
                         // initialize the atlas
-                        this.atlas = this.parseFromSpriteSheet(atlas);
-                        this.repeat = "no-repeat";
+                        this.atlases.set(atlas.meta.image || "default", this.parse(atlas));
+
+                    } else {
+                        // a regular spritesheet
+                        if (typeof(atlas.framewidth) !== "undefined" &&
+                            typeof(atlas.frameheight) !== "undefined") {
+                            this.format = "Spritesheet (fixed cell size)";
+                            this.repeat = "no-repeat";
+
+                            if (typeof(src) !== "undefined") {
+                                // overwrite if specified
+                                atlas.image = typeof src === "string" ? me.loader.getImage(src) : src;
+                            }
+                            // initialize the atlas
+                            this.atlases.set("default", this.parseFromSpriteSheet(atlas));
+                            this.sources.set("default", atlas.image);
+
+                        }
                     }
-                }
+                } // end forEach
             }
+
             // if format not recognized
-            if (!this.atlas) {
+            if (this.atlases.length === 0) {
                 throw new me.video.renderer.Texture.Error("texture atlas format not supported");
             }
 
             // Add self to TextureCache if cache !== false
             if (cache !== false) {
-                if (cache instanceof me.Renderer.TextureCache) {
-                    cache.put(this.source, this);
-                } else {
-                    me.video.renderer.cache.put(this.source, this);
+                src = Array.isArray(src) ? src : [src];
+                for (var source of this.sources) {
+                    if (cache instanceof me.Renderer.TextureCache) {
+                        cache.put(source, this);
+                    } else {
+                        me.video.renderer.cache.put(source, this);
+                    }
                 }
             }
         },
@@ -143,7 +172,8 @@
                 "meta" : {
                     "app" : "melonJS",
                     "size" : { "w" : width, "h" : height },
-                    "repeat" : repeat || "no-repeat"
+                    "repeat" : repeat || "no-repeat",
+                    "image" : "default"
                 },
                 "frames" : [{
                     "filename" : name || "default",
@@ -174,9 +204,10 @@
 
                     atlas[frame.filename] = {
                         name         : frame.filename, // frame name
+                        texture      : data.meta.image || "default", // the source texture
                         offset       : new me.Vector2d(s.x, s.y),
                         anchorPoint  : (hasTextureAnchorPoint) ? new me.Vector2d(originX / s.w, originY / s.h) : null,
-                        trimmed      : frame.trimmed,
+                        trimmed      : !!frame.trimmed,
                         width        : s.w,
                         height       : s.h,
                         angle        : (frame.rotated === true) ? nhPI : 0
@@ -223,15 +254,17 @@
             // build the local atlas
             for (var frame = 0, count = spritecount.x * spritecount.y; frame < count; frame++) {
                 atlas["" + frame] = {
-                    name: "" + frame,
-                    offset: new me.Vector2d(
+                    name        : "" + frame,
+                    texture     : "default", // the source texture
+                    offset      : new me.Vector2d(
                         margin + (spacing + data.framewidth) * (frame % spritecount.x),
                         margin + (spacing + data.frameheight) * ~~(frame / spritecount.x)
                     ),
-                    anchorPoint: (data.anchorPoint || null),
-                    width: data.framewidth,
-                    height: data.frameheight,
-                    angle: 0
+                    anchorPoint : (data.anchorPoint || null),
+                    trimmed     : false,
+                    width       : data.framewidth,
+                    height      : data.frameheight,
+                    angle       : 0
                 };
             }
 
@@ -241,37 +274,60 @@
         },
 
         /**
-         * return the Atlas dictionnary
+         * return the default or specified atlas dictionnary
          * @name getAtlas
          * @memberOf me.CanvasRenderer.Texture
          * @function
+         * @param {String} [name] atlas name in case of multipack textures
          * @return {Object}
          */
-        getAtlas : function () {
-            return this.atlas;
+        getAtlas : function (key) {
+            if (typeof key === "string") {
+                return this.atlases.get(key);
+            } else {
+                return this.atlases.values().next().value;
+            }
         },
 
         /**
-         * return the Atlas texture
+         * return the source texture for the given region (or default one if none specified)
          * @name getTexture
          * @memberOf me.CanvasRenderer.Texture
          * @function
+         * @param {Object} [region] region name in case of multipack textures
          * @return {HTMLImageElement|HTMLCanvasElement}
          */
-        getTexture : function () {
-            return this.source;
+        getTexture : function (region) {
+            if ((typeof region === "object") && (typeof region.texture === "string")) {
+                return this.sources.get(region.texture);
+            } else {
+                return this.sources.values().next().value;
+            }
         },
 
         /**
-         * return a normalized region/frame information for the specified sprite name
+         * return a normalized region (or frame) information for the specified sprite name
          * @name getRegion
          * @memberOf me.CanvasRenderer.Texture
          * @function
          * @param {String} name name of the sprite
-         * @return {Object}
+         * @param {String} [atlas] name of a specific atlas, if not the default one
+         * @return {Object} if the requested region was found
          */
-        getRegion : function (name) {
-            return this.atlas[name];
+        getRegion : function (name, atlas) {
+            var region;
+            if (typeof atlas === "string") {
+                region = this.getAtlas(atlas)[name];
+            } else {
+                // look for the given region in each existing atlas
+                this.atlases.forEach(function (atlas) {
+                    if (typeof atlas[name] !== "undefined") {
+                        // there should be only one
+                        region = atlas[name];
+                    }
+                });
+            }
+            return region;
         },
 
         /**
@@ -283,7 +339,7 @@
          * @param {Object} [settings] Additional settings passed to the {@link me.Sprite} contructor
          * @return {me.Sprite}
          * @example
-         * // create a new texture atlas object under the `game` namespace
+         * // create a new texture object under the `game` namespace
          * game.texture = new me.video.renderer.Texture(
          *    me.loader.getJSON("texture"),
          *    me.loader.getImage("texture")
@@ -317,7 +373,7 @@
          * @param {Object} [settings] Additional settings passed to the {@link me.Sprite} contructor
          * @return {me.Sprite}
          * @example
-         * // create a new texture atlas object under the `game` namespace
+         * // create a new texture object under the `game` namespace
          * game.texture = new me.video.renderer.Texture(
          *     me.loader.getJSON("texture"),
          *     me.loader.getImage("texture")

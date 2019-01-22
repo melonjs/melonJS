@@ -223,7 +223,7 @@
                 me.video.shader.createTexture(
                     this.gl,
                     unit,
-                    texture.source,
+                    texture.getTexture(),
                     this.renderer.settings.antiAlias ? this.gl.LINEAR : this.gl.NEAREST,
                     texture.repeat,
                     w,

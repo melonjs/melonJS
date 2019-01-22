@@ -75,6 +75,15 @@
              */
             this.offset = me.pool.pull("me.Vector2d", 0, 0);
 
+            /**
+             * The source texture object this sprite object is using
+             * @public
+             * @type me.video.renderer.Texture
+             * @name source
+             * @memberOf me.Sprite
+             */
+            this.source = null;
+
             // hold all defined animation
             this.anim = {};
 
@@ -84,13 +93,19 @@
             // current frame information
             // (reusing current, any better/cleaner place?)
             this.current = {
+                // the current animation name
+                name : "default",
+                // length of the current animation name
+                length : 0,
                 //current frame texture offset
                 offset : new me.Vector2d(),
                 // current frame size
                 width : 0,
                 height : 0,
                 // Source rotation angle for pre-rotating the source image
-                angle : 0
+                angle : 0,
+                // current frame index
+                idx : 0
             };
 
             // animation frame delta
@@ -104,15 +119,18 @@
                 state : false
             };
 
+            // call the super constructor
+            this._super(me.Renderable, "init", [ x, y, 0, 0 ]);
+
             // set the proper image/texture to use
             if (settings.image instanceof me.CanvasRenderer.prototype.Texture) {
-                // use the texture from the texture Atlas
-                this.image = settings.image.getTexture();
+                this.source = settings.image;
+                this.image = this.source.getTexture();
                 this.textureAtlas = settings.image;
                 // check for defined region
                 if (typeof (settings.region) !== "undefined") {
                     // use a texture atlas
-                    var region = settings.image.getRegion(settings.region);
+                    var region = this.source.getRegion(settings.region);
                     if (region) {
                         // set the sprite region within the texture
                         this.setRegion(region);
@@ -130,7 +148,8 @@
                 // update the default "current" frame size
                 this.current.width = settings.framewidth = settings.framewidth || this.image.width;
                 this.current.height = settings.frameheight = settings.frameheight || this.image.height;
-                this.textureAtlas = me.video.renderer.cache.get(this.image, settings).getAtlas();
+                this.source = me.video.renderer.cache.get(this.image, settings);
+                this.textureAtlas = this.source.getAtlas();
             }
 
             // store/reset the current atlas information if specified
@@ -141,12 +160,9 @@
                 this.atlasIndices = null;
             }
 
-            // call the super constructor
-            this._super(me.Renderable, "init", [
-                x, y,
-                this.current.width,
-                this.current.height
-            ]);
+            // resize based on the active frame
+            this.width = this.current.width;
+            this.height = this.current.height;
 
             // apply flip flags if specified
             if (typeof (settings.flipX) !== "undefined") {
@@ -155,7 +171,6 @@
             if (typeof (settings.flipY) !== "undefined") {
                 this.flipY(!!settings.flipY);
             }
-
 
             // set the default rotation angle is defined in the settings
             // * WARNING: rotating sprites decreases performance with Canvas Renderer
@@ -360,7 +375,8 @@
          **/
         setCurrentAnimation : function (name, resetAnim, _preserve_dt) {
             if (this.anim[name]) {
-                this.current = this.anim[name];
+                this.current.name = name;
+                this.current.length = this.anim[this.current.name].length;
                 if (typeof resetAnim === "string") {
                     this.resetAnim = this.setCurrentAnimation.bind(this, resetAnim, null, true);
                 } else if (typeof resetAnim === "function") {
@@ -369,8 +385,6 @@
                     this.resetAnim = undefined;
                 }
                 this.setAnimationFrame(this.current.idx);
-                // XXX this should not be overwritten
-                this.current.name = name;
                 if (!_preserve_dt) {
                     this.dt = 0;
                 }
@@ -393,7 +407,7 @@
             if (typeof name !== "undefined" && typeof this.anim[name] !== "undefined") {
                 this.anim[name].frames.reverse();
             } else {
-                this.current.frames.reverse();
+                this.anim[this.current.name].frames.reverse();
             }
             return this;
         },
@@ -427,14 +441,24 @@
          * mySprite.setRegion(game.texture.getRegion("shadedDark13.png"));
          */
         setRegion : function (region) {
+            if (this.source !== null) {
+                // set the source texture for the given region
+                this.image = this.source.getTexture(region);
+            }
             // set the sprite offset within the texture
             this.current.offset.setV(region.offset);
             // set angle if defined
             this.current.angle = region.angle;
             // update the default "current" size
-            this.current.width = region.width;
-            this.current.height = region.height;
-
+            this.width = this.current.width = region.width;
+            this.height = this.current.height = region.height;
+            // set global anchortPoint if defined
+            if (region.anchorPoint) {
+                this.anchorPoint.set(
+                    this._flip.x && region.trimmed === true ? 1 - region.anchorPoint.x : region.anchorPoint.x,
+                    this._flip.y && region.trimmed === true ? 1 - region.anchorPoint.y : region.anchorPoint.y
+                );
+            }
             return this;
         },
 
@@ -451,23 +475,7 @@
          */
         setAnimationFrame : function (idx) {
             this.current.idx = (idx || 0) % this.current.length;
-            // XXX this should not be overwritten
-            var name = this.current.name;
-            var frame = this.getAnimationFrameObjectByIndex(this.current.idx);
-            // copy all properties of the current frame into current
-            Object.assign(this.current, frame);
-            // XXX this should not be overwritten
-            this.current.name = name;
-            this.width = frame.width;
-            this.height = frame.height;
-            // set global anchortPoint if defined
-            if (frame.anchorPoint) {
-                this.anchorPoint.set(
-                    this._flip.x && frame.trimmed === true ? 1 - frame.anchorPoint.x : frame.anchorPoint.x,
-                    this._flip.y && frame.trimmed === true ? 1 - frame.anchorPoint.y : frame.anchorPoint.y
-                );
-            }
-            return this;
+            return this.setRegion(this.getAnimationFrameObjectByIndex(this.current.idx));
         },
 
         /**
@@ -490,7 +498,7 @@
          * @return {Number} if using number indices. Returns {Object} containing frame data if using texture atlas
          */
         getAnimationFrameObjectByIndex : function (id) {
-            return this.current.frames[id];
+            return this.anim[this.current.name].frames[id];
         },
 
         /**

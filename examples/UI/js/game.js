@@ -22,10 +22,11 @@ var game = {
 
         // load the texture atlas file
         // this will be used by object entities later
-        game.texture = new me.video.renderer.Texture(
-            me.loader.getJSON("UI_Assets"),
-            me.loader.getImage("UI_Assets")
-        );
+        game.texture = new me.video.renderer.Texture([
+            me.loader.getJSON("UI_Assets-0"),
+            me.loader.getJSON("UI_Assets-1"),
+            me.loader.getJSON("UI_Assets-2")
+        ]);
 
         // set the "Play/Ingame" Screen Object
         me.state.set(me.state.PLAY, new game.PlayScreen());
