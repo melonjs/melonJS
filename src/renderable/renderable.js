@@ -694,8 +694,10 @@
          * @ignore
          */
         set : function (value) {
-            this.getBounds().width = value;
-            this._width = value;
+            if (this._width !== value) {
+                this.getBounds().width = value;
+                this._width = value;
+            }
         },
         configurable : true
     });
@@ -718,8 +720,10 @@
          * @ignore
          */
         set : function (value) {
-            this.getBounds().height = value;
-            this._height = value;
+            if (this._height !== value) {
+                this.getBounds().height = value;
+                this._height = value;
+            }
         },
         configurable : true
     });
