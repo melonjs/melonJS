@@ -264,7 +264,7 @@ module.exports = function (grunt) {
   grunt.loadNpmTasks("grunt-contrib-connect");
   grunt.loadNpmTasks("grunt-contrib-copy");
   grunt.loadNpmTasks("grunt-eslint");
-  grunt.loadNpmTasks("grunt-contrib-uglify");
+  grunt.loadNpmTasks("grunt-contrib-uglify-es");
   grunt.loadNpmTasks("grunt-build-gh-pages");
   grunt.loadNpmTasks("grunt-jsdoc");
   grunt.loadNpmTasks("grunt-karma");

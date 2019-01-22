@@ -40,9 +40,9 @@
     "grunt-contrib-concat": "^1.0.1",
     "grunt-contrib-connect": "^1.0.2",
     "grunt-contrib-copy": "^1.0.0",
-    "grunt-contrib-uglify": "^3.4.0",
+    "grunt-contrib-uglify-es": "^3.3.0",
     "grunt-eslint": "^21.0.0",
-    "grunt-jsdoc": "^2.2.1",
+    "grunt-jsdoc": "^2.3.0",
     "grunt-karma": "^2.0.0",
     "grunt-replace": "^1.0.1",
     "grunt-shell": "^2.1.0",
@@ -50,11 +50,11 @@
     "karma": "^2.0.5",
     "karma-chrome-launcher": "2.2.0",
     "karma-coverage": "^1.1.2",
-    "karma-html-detailed-reporter": "^1.1.21",
+    "karma-html-detailed-reporter": "^1.1.38",
     "karma-jasmine": "^1.1.1",
     "karma-nyan-reporter": "0.2.5",
     "q": "^1.4.1",
-    "shelljs": "^0.8.2"
+    "shelljs": "^0.8.3"
   },
   "scripts": {
     "release": "grunt release",
