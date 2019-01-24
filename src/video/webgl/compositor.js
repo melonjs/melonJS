@@ -382,33 +382,17 @@
             this.stream[idx2 + TEXTURE_ELEMENT] =
             this.stream[idx3 + TEXTURE_ELEMENT] = unit;
 
-            // Get the source texture region
-            var region = texture.getRegion(key);
-            if (typeof(region) === "undefined") {
-                // TODO: Require proper atlas regions instead of caching arbitrary region keys
-                if (this.renderer.settings.verbose === true) {
-                    console.warn("Adding texture region", key, "for texture", texture);
-                }
-
-                var keys = key.split(","),
-                    sx = +keys[0],
-                    sy = +keys[1],
-                    sw = +keys[2],
-                    sh = +keys[3];
-                region = texture._insertRegion(key, sx, sy, sw, sh);
-            }
-
             // Fill texture coordinates buffer
+            var uvs = texture.getUVs(key);
             // FIXME: Pack each texture coordinate into single floats
-            var stMap = region.stMap;
-            this.stream[idx0 + REGION_ELEMENT + 0] = stMap[0];
-            this.stream[idx0 + REGION_ELEMENT + 1] = stMap[1];
-            this.stream[idx1 + REGION_ELEMENT + 0] = stMap[2];
-            this.stream[idx1 + REGION_ELEMENT + 1] = stMap[1];
-            this.stream[idx2 + REGION_ELEMENT + 0] = stMap[0];
-            this.stream[idx2 + REGION_ELEMENT + 1] = stMap[3];
-            this.stream[idx3 + REGION_ELEMENT + 0] = stMap[2];
-            this.stream[idx3 + REGION_ELEMENT + 1] = stMap[3];
+            this.stream[idx0 + REGION_ELEMENT + 0] = uvs[0];
+            this.stream[idx0 + REGION_ELEMENT + 1] = uvs[1];
+            this.stream[idx1 + REGION_ELEMENT + 0] = uvs[2];
+            this.stream[idx1 + REGION_ELEMENT + 1] = uvs[1];
+            this.stream[idx2 + REGION_ELEMENT + 0] = uvs[0];
+            this.stream[idx2 + REGION_ELEMENT + 1] = uvs[3];
+            this.stream[idx3 + REGION_ELEMENT + 0] = uvs[2];
+            this.stream[idx3 + REGION_ELEMENT + 1] = uvs[3];
 
             this.sbIndex += ELEMENT_SIZE * ELEMENTS_PER_QUAD;
             this.length++;

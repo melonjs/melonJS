@@ -12,17 +12,14 @@
     var nhPI = -(Math.PI / 2);
 
     /**
-     * A Texture atlas object <br>
-     * For portability, a global reference to this class is available through the default renderer: {@link me.video.renderer}.Texture <br>
-     * <br>
-     * Currently supports : <br>
-     * - [TexturePacker]{@link http://www.codeandweb.com/texturepacker/} : through JSON export <br>
+     * A Texture atlas object, currently supports : <br>
+     * - [TexturePacker]{@link http://www.codeandweb.com/texturepacker/} : through JSON export (standard and multipack texture atlas) <br>
      * - [ShoeBox]{@link http://renderhjs.net/shoebox/} : through JSON export using the
      * melonJS setting [file]{@link https://github.com/melonjs/melonJS/raw/master/media/shoebox_JSON_export.sbx} <br>
      * - Standard (fixed cell size) spritesheet : through a {framewidth:xx, frameheight:xx, anchorPoint:me.Vector2d} object
      * @class
      * @extends me.Object
-     * @memberOf me.CanvasRenderer
+     * @memberOf me.Renderer
      * @name Texture
      * @constructor
      * @param {Object|Object[]} atlas atlas information. See {@link me.loader.getJSON}
@@ -51,7 +48,7 @@
      *     me.loader.getImage("spritesheet")
      * );
      */
-    me.CanvasRenderer.prototype.Texture = me.Object.extend(
+    me.Renderer.prototype.Texture = me.Object.extend(
     /** @scope me.video.renderer.Texture.prototype */
     {
         /**
@@ -188,6 +185,7 @@
          */
         parse : function (data) {
             var atlas = {};
+            var self = this;
             data.frames.forEach(function (frame) {
                 // fix wrongly formatted JSON (e.g. last dummy object in ShoeBox)
                 if (frame.hasOwnProperty("filename")) {
@@ -212,6 +210,7 @@
                         height       : s.h,
                         angle        : (frame.rotated === true) ? nhPI : 0
                     };
+                    self.addUvsMap(atlas, frame.filename, data.meta.size.w, data.meta.size.h);
                 }
             });
             return atlas;
@@ -253,8 +252,9 @@
 
             // build the local atlas
             for (var frame = 0, count = spritecount.x * spritecount.y; frame < count; frame++) {
-                atlas["" + frame] = {
-                    name        : "" + frame,
+                var name = "" + frame;
+                atlas[name] = {
+                    name        : name,
                     texture     : "default", // the source texture
                     offset      : new me.Vector2d(
                         margin + (spacing + data.framewidth) * (frame % spritecount.x),
@@ -266,6 +266,7 @@
                     height      : data.frameheight,
                     angle       : 0
                 };
+                this.addUvsMap(atlas, name, width, height);
             }
 
             me.pool.push(spritecount);
@@ -274,9 +275,61 @@
         },
 
         /**
+         * @ignore
+         */
+        addUvsMap : function (atlas, frame, w, h) {
+            // ignore if using the Canvas Renderer
+            if (me.video.renderer instanceof me.Renderer) {
+                // Source coordinates
+                var s = atlas[frame].offset;
+                var sw = atlas[frame].width;
+                var sh = atlas[frame].height;
+
+                atlas[frame].uvs = new Float32Array([
+                    s.x / w,        // Left
+                    s.y / h,        // Top
+                    (s.x + sw) / w, // Right
+                    (s.y + sh) / h  // Bottom
+                ]);
+                // Cache source coordinates
+                // TODO: Remove this when the Batcher only accepts a region name
+                var key = s.x + "," + s.y + "," + w + "," + h;
+                atlas[key] = atlas[frame];
+            }
+            return atlas[frame];
+        },
+
+        /**
+         * @ignore
+         */
+        addQuadRegion : function (name, x, y, w, h) {
+            // TODO: Require proper atlas regions instead of caching arbitrary region keys
+            if (me.video.renderer.settings.verbose === true) {
+                console.warn("Adding texture region", name, "for texture", this);
+            }
+
+            var source = this.getTexture();
+            var atlas = this.getAtlas();
+            var dw = source.width;
+            var dh = source.height;
+
+            atlas[name] = {
+                name    : name,
+                offset  : new me.Vector2d(x, y),
+                width   : w,
+                height  : h,
+                angle   : 0
+            };
+
+            this.addUvsMap(atlas, name, dw, dh);
+
+            return atlas[name];
+        },
+
+        /**
          * return the default or specified atlas dictionnary
          * @name getAtlas
-         * @memberOf me.CanvasRenderer.Texture
+         * @memberOf me.Renderer.Texture
          * @function
          * @param {String} [name] atlas name in case of multipack textures
          * @return {Object}
@@ -292,7 +345,7 @@
         /**
          * return the source texture for the given region (or default one if none specified)
          * @name getTexture
-         * @memberOf me.CanvasRenderer.Texture
+         * @memberOf me.Renderer.Texture
          * @function
          * @param {Object} [region] region name in case of multipack textures
          * @return {HTMLImageElement|HTMLCanvasElement}
@@ -308,11 +361,11 @@
         /**
          * return a normalized region (or frame) information for the specified sprite name
          * @name getRegion
-         * @memberOf me.CanvasRenderer.Texture
+         * @memberOf me.Renderer.Texture
          * @function
          * @param {String} name name of the sprite
-         * @param {String} [atlas] name of a specific atlas, if not the default one
-         * @return {Object} if the requested region was found
+         * @param {String} [atlas] name of a specific atlas where to search for the region
+         * @return {Object}
          */
         getRegion : function (name, atlas) {
             var region;
@@ -331,9 +384,33 @@
         },
 
         /**
+         * return the uvs mapping for the given region
+         * @name getUVs
+         * @memberOf me.Renderer.Texture
+         * @function
+         * @param {Object} region region (or frame) name
+         * @return {Float32Array} region Uvs
+         */
+        getUVs : function (name) {
+            // Get the source texture region
+            var region = this.getRegion(name);
+
+            if (typeof(region) === "undefined") {
+                // TODO: Require proper atlas regions instead of caching arbitrary region keys
+                var keys = name.split(","),
+                    sx = +keys[0],
+                    sy = +keys[1],
+                    sw = +keys[2],
+                    sh = +keys[3];
+                region = this.addQuadRegion(name, sx, sy, sw, sh);
+            }
+            return region.uvs;
+        },
+
+        /**
          * Create a sprite object using the first region found using the specified name
          * @name createSpriteFromName
-         * @memberOf me.CanvasRenderer.Texture
+         * @memberOf me.Renderer.Texture
          * @function
          * @param {String} name name of the sprite
          * @param {Object} [settings] Additional settings passed to the {@link me.Sprite} contructor
@@ -366,7 +443,7 @@
         /**
          * Create an animation object using the first region found using all specified names
          * @name createAnimationFromName
-         * @memberOf me.CanvasRenderer.Texture
+         * @memberOf me.Renderer.Texture
          * @function
          * @param {String[]|Number[]} names list of names for each sprite
          * (when manually creating a Texture out of a spritesheet, only numeric values are authorized)
@@ -432,17 +509,17 @@
      * Base class for Texture exception handling.
      * @name Error
      * @class
-     * @memberOf me.CanvasRenderer.Texture
+     * @memberOf me.Renderer.Texture
      * @constructor
      * @param {String} msg Error message.
      */
-    me.CanvasRenderer.prototype.Texture.Error = me.Error.extend({
+    me.Renderer.prototype.Texture.Error = me.Error.extend({
         /**
          * @ignore
          */
         init : function (msg) {
             this._super(me.Error, "init", [ msg ]);
-            this.name = "me.CanvasRenderer.Texture.Error";
+            this.name = "me.Renderer.Texture.Error";
         }
     });
 })();

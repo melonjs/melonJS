@@ -16,7 +16,7 @@
      * @param {Number} y the y coordinates of the sprite object
      * @param {Object} settings Configuration parameters for the Sprite object
      * @param {me.video.renderer.Texture|HTMLImageElement|HTMLCanvasElement|String} settings.image reference to a texture, spritesheet image or to a texture atlas
-     * @param {String} [settings.region] region name of a specific region to use when using a texture atlas, see {@link me.CanvasRenderer.Texture}
+     * @param {String} [settings.region] region name of a specific region to use when using a texture atlas, see {@link me.Renderer.Texture}
      * @param {Number} [settings.framewidth] Width of a single frame within the spritesheet
      * @param {Number} [settings.frameheight] Height of a single frame within the spritesheet
      * @param {Number} [settings.flipX] flip the sprite on the horizontal axis
@@ -123,7 +123,7 @@
             this._super(me.Renderable, "init", [ x, y, 0, 0 ]);
 
             // set the proper image/texture to use
-            if (settings.image instanceof me.CanvasRenderer.prototype.Texture) {
+            if (settings.image instanceof me.Renderer.prototype.Texture) {
                 this.source = settings.image;
                 this.image = this.source.getTexture();
                 this.textureAtlas = settings.image;
