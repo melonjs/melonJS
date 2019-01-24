@@ -1,6 +1,7 @@
 Version History
 ---------------
 6.4.0
+* Math : new PI related constants under me.Math (TAU, ETA, etc..)
 * Renderable : added a basic color tint feature (WebGL mode only)
 * Renderable : added support for Texture Packer multipack textures
 * Sprite : cleaned up/simplified animation data handling

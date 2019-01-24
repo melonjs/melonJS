@@ -649,7 +649,7 @@
                 // XXX to be optimzed using a specific shader
                 var len = Math.floor(24 * Math.sqrt(w)) ||
                           Math.floor(12 * Math.sqrt(w + h));
-                var segment = (Math.PI * 2) / len;
+                var segment = (me.Math.TAU) / len;
                 var points = this._glPoints,
                     i;
 
@@ -683,7 +683,7 @@
             // XXX to be optimzed using a specific shader
             var len = Math.floor(24 * Math.sqrt(w)) ||
                       Math.floor(12 * Math.sqrt(w + h));
-            var segment = (Math.PI * 2) / len;
+            var segment = (me.Math.TAU) / len;
             var points = this._glPoints;
             var index = 0;
 

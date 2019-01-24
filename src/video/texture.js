@@ -5,11 +5,6 @@
  *
  */
 (function () {
-    /**
-     * a local constant for the -(Math.PI / 2) value
-     * @ignore
-     */
-    var nhPI = -(Math.PI / 2);
 
     /**
      * A Texture atlas object, currently supports : <br>
@@ -208,7 +203,7 @@
                         trimmed      : !!frame.trimmed,
                         width        : s.w,
                         height       : s.h,
-                        angle        : (frame.rotated === true) ? nhPI : 0
+                        angle        : (frame.rotated === true) ? -me.Math.ETA : 0
                     };
                     self.addUvsMap(atlas, frame.filename, data.meta.size.w, data.meta.size.h);
                 }
