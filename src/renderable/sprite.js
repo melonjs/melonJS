@@ -35,6 +35,8 @@
     {
         /** @ignore */
         init : function (x, y, settings) {
+            // layer name
+            this.name = settings.name || "me.Sprite";
 
             /**
              * pause and resume animation
