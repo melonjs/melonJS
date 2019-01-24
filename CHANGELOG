@@ -4,7 +4,7 @@ Version History
 * Renderable : added a basic color tint feature (WebGL mode only)
 * Renderable : added support for Texture Packer multipack textures
 * Sprite : cleaned up/simplified animation data handling
-* Renderer : fixed default color to match standard canvas fill style (black)
+* Renderer : fixed stroke and fill default color to match standard W3C canvas stroke and fill style (black)
 
 6.3.0
 * Audio : audio core update (2.1.1), mostly improve auto audio unlock on latest (non-mobile) browser versions
