@@ -35,8 +35,8 @@
          * @ignore
          */
         init: function (x, y, settings) {
-            // layer name
-            this.name = settings.name || "me.ImageLayer";
+            // call the constructor
+            this._super(me.Renderable, "init", [x, y, Infinity, Infinity]);
 
             // get the corresponding image
             this.image = (typeof settings.image === "object") ? settings.image : me.loader.getImage(settings.image);
@@ -53,8 +53,10 @@
             this.imagewidth = this.image.width;
             this.imageheight = this.image.height;
 
-            // call the constructor
-            this._super(me.Renderable, "init", [x, y, Infinity, Infinity]);
+            // set the sprite name if specified
+            if (typeof (settings.name) === "string") {
+                this.name = settings.name;
+            }
 
             // render in screen coordinates
             this.floating = true;

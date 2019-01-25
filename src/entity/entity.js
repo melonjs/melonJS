@@ -60,15 +60,10 @@
                 this.anchorPoint.set(settings.anchorPoint.x, settings.anchorPoint.y);
             }
 
-            /**
-             * Entity name<br>
-             * as defined in the Tiled Object Properties
-             * @public
-             * @type String
-             * @name name
-             * @memberOf me.Entity
-             */
-            this.name = settings.name || "";
+            // set the sprite name if specified
+            if (typeof (settings.name) === "string") {
+                this.name = settings.name;
+            }
 
             /**
              * object type (as defined in Tiled)

@@ -78,16 +78,6 @@
              */
             this.damping = 1.0;
 
-            /**
-             * the name of this camera
-             * @public
-             * @type {String}
-             * @name name
-             * @default "default"
-             * @memberOf me.Camera2d
-             */
-            this.name = "default";
-
             // offset for shake effect
             this.offset = new me.Vector2d();
 
@@ -115,6 +105,9 @@
                 color : null,
                 tween : null
             };
+
+            // default camera name
+            this.name = "default";
 
             // set a default deadzone
             this.setDeadzone(this.width / 6, this.height / 6);

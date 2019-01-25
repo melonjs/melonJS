@@ -286,6 +286,16 @@
             this.tint = undefined;
 
             /**
+             * The name of the renderable
+             * @public
+             * @type {String}
+             * @name name
+             * @default ""
+             * @memberOf me.Renderable
+             */
+            this.name = "";
+
+            /**
              * Absolute position in the game world
              * @ignore
              * @type {me.Vector2d}
