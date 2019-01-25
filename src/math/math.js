@@ -32,7 +32,7 @@
          * constant to convert from radians to degrees
          * @public
          * @type {Number}
-         * @name DEG_TO_RAD
+         * @name RAD_TO_DEG
          * @memberOf me.Math
          */
         api.RAD_TO_DEG = 180.0 / Math.PI;

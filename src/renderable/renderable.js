@@ -281,7 +281,7 @@
              * // add a red tint to this renderable
              * this.renderable.tint = new me.Color(255, 128, 128);
              * // disable the tint
-             * this.renderable.setColor(255, 255, 255);
+             * this.renderable.tint.setColor(255, 255, 255);
              */
             this.tint = undefined;
 
