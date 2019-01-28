@@ -292,7 +292,7 @@
          * @see me.video.shader.createShader
          * @memberOf me.WebGLRenderer.Compositor
          * @function
-         * @param {Object} a reference to a WebGL Shader Program
+         * @param {Object} shader a reference to a WebGL Shader Program
          */
         useShader : function (shader) {
             if (this.activeShader !== shader) {
