@@ -16,7 +16,7 @@
     "email": "contact@melonjs.org"
   },
   "engines": {
-    "node": ">= 6"
+    "node": ">= 8"
   },
   "main": "build/melonjs.js",
   "files": [
