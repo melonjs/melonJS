@@ -67,6 +67,8 @@ For your first time using melonJS, follow these tutorials :
 - [Platformer](http://melonjs.github.io/tutorial-platformer/) Step by Step Tutorial.
 - [Space Invaders](http://melonjs.github.io/tutorial-space-invaders/) Step by Step Tutorial.
 
+You may find it usefull to skim the overview found at the wiki [Details & Usage](https://github.com/melonjs/melonJS/wiki#details--usage)
+
 When starting your own projects, checkout the [boilerplate](https://github.com/melonjs/boilerplate)
 
 **Note** that due to the _cross-origin request_ policy implemented in most browsers
