@@ -47,7 +47,7 @@
          * @public
          * @function
          * @memberOf me.utils.string
-         * @name isBoolean
+         * @name isNumeric
          * @param {String} string the string to be tested
          * @return {Boolean} true if string contains only digits
          */
