@@ -204,6 +204,7 @@ module.exports = function (grunt) {
           configure : "jsdoc_conf.json",
           destination : "docs",
           template : "tasks/jsdoc-template/template"
+          //template : "tasks/jsdoc-template/tui-jsdoc-template"
         }
       }
     },

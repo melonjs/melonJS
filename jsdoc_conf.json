@@ -1,5 +1,9 @@
 {
-  "plugins": [],
+  "plugins": ["plugins/markdown"],
+  "markdown": {
+      "parser": "gfm",
+      "hardwrap": true
+  },
   "templates": {
     "systemName": "melonJS",
     "copyright": "Copyright &copy; 2011 - 2019 Olivier Biot",
@@ -7,5 +11,15 @@
     "monospaceLinks": false,
     "outputSourcePath": true,
     "outputSourceFiles": false
+  },
+  "source": {
+    "include": ["./src/"],
+    "exclude": [],
+    "includePattern": ".+\\.js(doc|x)?$",
+    "excludePattern": "(^|\\/|\\\\)_"
+  },
+  "opts": {
+  "encoding": "utf8",
+  "recurse": true
   }
 }
