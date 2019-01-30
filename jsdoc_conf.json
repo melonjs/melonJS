@@ -10,16 +10,17 @@
     "cleverLinks": false,
     "monospaceLinks": false,
     "outputSourcePath": true,
-    "outputSourceFiles": false
+    "outputSourceFiles": false,
+    "useCollapsibles": true
   },
   "source": {
-    "include": ["./src/"],
+    "include": ["./README.md", "./build/melonjs.js" ],
     "exclude": [],
     "includePattern": ".+\\.js(doc|x)?$",
     "excludePattern": "(^|\\/|\\\\)_"
   },
   "opts": {
-  "encoding": "utf8",
-  "recurse": true
+    "encoding": "utf8",
+    "recurse": true
   }
 }

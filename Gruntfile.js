@@ -197,9 +197,6 @@ module.exports = function (grunt) {
 
     jsdoc : {
       dist : {
-        src : sourceFiles.map(function (value) {
-          return value.replace("src/", "build/docs/src/");
-        }).concat([ "README.md" ]),
         options : {
           configure : "jsdoc_conf.json",
           destination : "docs",
@@ -287,7 +284,7 @@ module.exports = function (grunt) {
     "eslint:afterConcat"
   ]);
   grunt.registerTask("es2015", ["babel"]);
-  grunt.registerTask("doc", [ "replace:docs", "jsdoc" ]);
+  grunt.registerTask("doc", [ "concat", "replace:docs", "jsdoc" ]);
   grunt.registerTask("test", [ "lint", "karma" ]);
   grunt.registerTask("serve", [ "connect:keepalive" ]);
   grunt.registerTask("gh-pages", [
