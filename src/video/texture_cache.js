@@ -18,13 +18,13 @@
             this.cache = new Map();
             this.units = new Map();
             this.max_size = max_size || Infinity;
-            this.reset();
+            this.clear();
         },
 
         /**
          * @ignore
          */
-        reset : function () {
+        clear : function () {
             this.cache.clear();
             this.units.clear();
             this.length = 0;
@@ -54,7 +54,7 @@
                         [image.width, image.height, image.src ? me.utils.file.getBasename(image.src) : undefined]
                     );
                 }
-                this.put(image, new me.video.renderer.Texture(atlas, image, false));
+                this.set(image, new me.video.renderer.Texture(atlas, image, false));
             }
             return this.cache.get(image);
         },
@@ -62,7 +62,7 @@
         /**
          * @ignore
          */
-        put : function (image, texture) {
+        set : function (image, texture) {
             var width = image.width;
             var height = image.height;
 

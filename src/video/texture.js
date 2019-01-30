@@ -44,7 +44,7 @@
      * );
      */
     me.Renderer.prototype.Texture = me.Object.extend(
-    /** @scope me.video.renderer.Texture.prototype */
+    /** @scope me.Rendere.Texture.prototype */
     {
         /**
          * @ignore
@@ -147,9 +147,9 @@
                 src = Array.isArray(src) ? src : [src];
                 for (var source of this.sources) {
                     if (cache instanceof me.Renderer.TextureCache) {
-                        cache.put(source, this);
+                        cache.set(source, this);
                     } else {
-                        me.video.renderer.cache.put(source, this);
+                        me.video.renderer.cache.set(source, this);
                     }
                 }
             }

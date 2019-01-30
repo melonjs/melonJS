@@ -153,7 +153,7 @@
             }
             else {
                // fontTexture was already created, just add it back into the cache
-               cache.put(this.fontContext2D.canvas, this.fontTexture);
+               cache.set(this.fontContext2D.canvas, this.fontTexture);
            }
            this.compositor.uploadTexture(this.fontTexture, 0, 0, 0);
 
