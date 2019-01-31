@@ -1,0 +1,31 @@
+﻿@import url(http://fonts.googleapis.com/css?family=Droid+Sans);
+
+body {
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+    font-family: "Droid Sans", Tahoma, "Lucida Grande", sans-serif;
+    font-size: 16px;
+    color: #666;
+}
+
+/* Navigation - LNB */
+.lnb {
+    width: 290px;
+    position: absolute;
+    bottom: 0px;
+    top: 0;
+    overflow: auto;
+    left: 0;
+    background-color: #666;
+    padding: 0 20px;
+}
+
+#resizer {
+    width: 7px;
+    position: fixed;
+    left: 290px;
+    height: 100%;
+    background-color: #5a0;
+    cursor: col-resize;
+}

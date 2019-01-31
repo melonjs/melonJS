@@ -4,9 +4,18 @@
         "copyright": "Copyright &copy; 2011 - 2019 Olivier Biot",
         "cleverLinks": false,
         "monospaceLinks": false,
-        "outputSourcePath": true,
+        "outputSourcePath": false,
         "outputSourceFiles": false,
-        "useCollapsibles": true
+        "useCollapsibles": true,
+        "logo": {
+            "url": "./images/logo.png",
+            "width": "100px",
+            "height": "85px",
+            "link": "index.html"
+        },
+        "name": "melonJS API documentation",
+        "css" : ["styles/melonjs.css"],
+        "footerText": " "
     },
     "plugins": ["plugins/markdown"],
         "markdown": {

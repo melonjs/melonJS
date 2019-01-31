@@ -12,7 +12,7 @@ ul, ol, li {list-style:none; padding-left:0; margin-left:0;}
     top: 0;
     overflow: auto;
     left: 0;
-    background-color: #161b1d;
+    background-color: #5a0;
     padding: 0 20px;
 }
 .lnb .logo {
@@ -25,17 +25,18 @@ ul, ol, li {list-style:none; padding-left:0; margin-left:0;}
 }
 .lnb .title .link {
     color: #fff;
+    font-size: 16px;
     font-style: italic;
 }
 .lnb h3 {
     font-size: 1.5em;
-    color: #fa3282;
+    color: #fff;
 }
 .lnb h3 a {
-    color: #fa3282;
+    color: #fff;
 }
 .lnb h3 a:hover {
-    color: #9a3282;
+    color: #fff;
 }
 .lnb .lnb-api li,
 .lnb .lnb-examples li {
@@ -128,7 +129,7 @@ ul, ol, li {list-style:none; padding-left:0; margin-left:0;}
     bottom: 0;
     position: absolute;
     overflow: auto;
-    margin-bottom: 35px;
+    margin-bottom: 0px;
 }
 .main article ol,
 .main article ul {
@@ -267,19 +268,6 @@ ul, ol, li {list-style:none; padding-left:0; margin-left:0;}
     color: #777;
     display: inline-block;
     width: 40px;
-}
-
-/* FOOTER */
-footer {
-    padding-top: 3px;
-    line-height: 35px;
-    height: 35px;
-    position: fixed;
-    width: 100%;
-    bottom: 0;
-    background-color: #00beaa;
-    color: #ebf8ff;
-    text-align: center;
 }
 
 /* README*/
@@ -442,9 +430,9 @@ footer {
 #resizer {
     width: 7px;
     position: fixed;
-    left: 290px;
+    left: 250px;
     height: 100%;
-    background-color: #00beaa;
+    background-color: #666;
     cursor: col-resize;
 }
 span.param-type {
