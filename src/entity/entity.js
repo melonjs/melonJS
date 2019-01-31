@@ -28,10 +28,10 @@
      * @param {Number} [settings.collisionMask] Mask collision detection for this object
      * @param {me.Rect[]|me.Polygon[]|me.Line[]|me.Ellipse[]} [settings.shapes] the initial list of collision shapes (usually populated through Tiled)
      */
-    me.Entity = me.Renderable.extend(
-    /** @scope me.Entity.prototype */
-    {
-        /** @ignore */
+    me.Entity = me.Renderable.extend({
+        /**
+         * @ignore
+         */
         init : function (x, y, settings) {
 
             /**

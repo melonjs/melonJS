@@ -51,8 +51,7 @@
      * @param {me.Vector2d} [settings.anchorPoint={x:0.0, y:0.0}] anchor point to draw the text at
      * @param {(String|String[])} [settings.text] a string, or an array of strings
      */
-    me.Text = me.Renderable.extend(
-    /** @scope me.Font.prototype */ {
+    me.Text = me.Renderable.extend({
 
         /** @ignore */
         init : function (x, y, settings) {

@@ -1,5 +1,5 @@
 /**
- * @preserve MinPubSub
+ * MinPubSub
  * a micro publish/subscribe messaging framework
  * @see https://github.com/daniellmb/MinPubSub
  * @author Daniel Lamb <daniellmb.com>

@@ -38,9 +38,7 @@
      * @constructor
      * @param {me.WebGLRenderer} renderer the current WebGL renderer session
      */
-    me.WebGLRenderer.Compositor = me.Object.extend(
-    /** @scope me.WebGLRenderer.Compositor.prototype */
-    {
+    me.WebGLRenderer.Compositor = me.Object.extend({
         /**
          * @ignore
          */

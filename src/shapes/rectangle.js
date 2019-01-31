@@ -16,10 +16,10 @@
      * @param {Number} w width of the rectangle
      * @param {Number} h height of the rectangle
      */
-    me.Rect = me.Polygon.extend(
-    /** @scope me.Rect.prototype */ {
-
-        /** @ignore */
+    me.Rect = me.Polygon.extend({
+        /**
+         * @ignore
+         */
         init : function (x, y, w, h) {
             this._super(me.Polygon, "init", [x, y, [
                 new me.Vector2d(0, 0), // 0, 0

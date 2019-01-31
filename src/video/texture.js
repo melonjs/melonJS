@@ -43,9 +43,7 @@
      *     me.loader.getImage("spritesheet")
      * );
      */
-    me.Renderer.prototype.Texture = me.Object.extend(
-    /** @scope me.Rendere.Texture.prototype */
-    {
+    me.Renderer.prototype.Texture = me.Object.extend({
         /**
          * @ignore
          */

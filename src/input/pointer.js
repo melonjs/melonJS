@@ -19,9 +19,7 @@
      * @memberOf me
      * @constructor
      */
-    me.Pointer = me.Rect.extend(
-    /** @scope me.Pointer.prototype */
-    {
+    me.Pointer = me.Rect.extend({
         /**
          * @ignore
          */

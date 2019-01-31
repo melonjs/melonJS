@@ -29,10 +29,10 @@
      * @param {Boolean} [options.cameras=[new me.Camera2d()]] a list of cameras (experimental)
      * @see me.state
      */
-    me.Stage = me.Object.extend(
-    /** @scope me.Stage.prototype */
-    {
-        /** @ignore */
+    me.Stage = me.Object.extend({
+        /**
+         * @ignore
+         */
         init: function (settings) {
             /**
              * The list of active cameras in this stage.

@@ -22,9 +22,10 @@
      * @param {Number} maxX end x offset
      * @param {Number} maxY end y offset
      */
-    me.Camera2d = me.Renderable.extend(
-    /** @scope me.Camera2d.prototype */ {
-        /** @ignore */
+    me.Camera2d = me.Renderable.extend({
+        /**
+         * @ignore
+         */
         init : function (minX, minY, maxX, maxY) {
             this._super(me.Renderable, "init", [minX, minY, maxX - minX, maxY - minY]);
 

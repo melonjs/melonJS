@@ -14,10 +14,10 @@
      * @param {Number} [x=0] x value of the vector
      * @param {Number} [y=0] y value of the vector
      */
-    me.Vector2d = me.Object.extend(
-    /** @scope me.Vector2d.prototype */
-    {
-        /** @ignore */
+    me.Vector2d = me.Object.extend({
+        /**
+         * @ignore
+         */
         init : function (x, y) {
             return this.set(x || 0, y || 0);
         },

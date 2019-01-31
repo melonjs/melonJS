@@ -67,8 +67,8 @@
      * // or just add it to the word container
      * me.game.world.addChild(myFont);
      */
-    me.BitmapText = me.Renderable.extend(
-    /** @scope me.BitmapText.prototype */ {
+    me.BitmapText = me.Renderable.extend({
+        
         /** @ignore */
         init : function (x, y, settings) {
             // call the parent constructor

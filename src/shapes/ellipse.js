@@ -16,10 +16,10 @@
      * @param {Number} w width (diameter) of the ellipse
      * @param {Number} h height (diameter) of the ellipse
      */
-    me.Ellipse = me.Object.extend(
-    {
-        /** @scope me.Ellipse.prototype */
-        /** @ignore */
+    me.Ellipse = me.Object.extend({
+        /**
+         * @ignore
+         */
         init : function (x, y, w, h) {
             /**
              * the center coordinates of the ellipse

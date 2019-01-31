@@ -1,26 +1,34 @@
 {
-  "plugins": ["plugins/markdown"],
-  "markdown": {
-      "parser": "gfm",
-      "hardwrap": true
-  },
-  "templates": {
-    "systemName": "melonJS",
-    "copyright": "Copyright &copy; 2011 - 2019 Olivier Biot",
-    "cleverLinks": false,
-    "monospaceLinks": false,
-    "outputSourcePath": true,
-    "outputSourceFiles": false,
-    "useCollapsibles": true
-  },
-  "source": {
-    "include": ["./README.md", "./build/melonjs.js" ],
-    "exclude": [],
-    "includePattern": ".+\\.js(doc|x)?$",
-    "excludePattern": "(^|\\/|\\\\)_"
-  },
-  "opts": {
-    "encoding": "utf8",
-    "recurse": true
-  }
+    "templates": {
+        "systemName": "melonJS",
+        "copyright": "Copyright &copy; 2011 - 2019 Olivier Biot",
+        "cleverLinks": false,
+        "monospaceLinks": false,
+        "outputSourcePath": true,
+        "outputSourceFiles": false,
+        "useCollapsibles": true
+    },
+    "plugins": ["plugins/markdown"],
+        "markdown": {
+        "parser": "gfm",
+        "hardwrap": false
+    },
+    "tags": {
+        "allowUnknownTags": false,
+        "dictionaries": ["jsdoc","closure"]
+    },
+    "source": {
+        "include": ["./README.md", "./build/melonjs.js" ],
+        "exclude": [],
+        "includePattern": ".+\\.js(doc|x)?$",
+        "excludePattern": "(^|\\/|\\\\)_"
+    },
+    "opts": {
+        "encoding"      : "utf8",
+        "recurse"       : false,
+        "lenient"       : false,
+        "destination"   : "docs",
+        "template"      : "tasks/jsdoc-template/template",
+        "new_template"  : "tasks/jsdoc-template/tui-jsdoc-template"
+    }
 }

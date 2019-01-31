@@ -17,9 +17,7 @@
      * @param {Number} width object width
      * @param {Number} height object height
      */
-    me.Renderable = me.Rect.extend(
-    /** @scope me.Renderable.prototype */
-    {
+    me.Renderable = me.Rect.extend({
         /**
          * @ignore
          */

@@ -14,7 +14,7 @@
      * note : object definition are translated into the virtual `me.game.world` using `me.Entity`.
      * @see me.Entity
      * @class
-     * @extends Object
+     * @extends me.Object
      * @memberOf me
      * @constructor
      */

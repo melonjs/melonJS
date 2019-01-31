@@ -15,8 +15,7 @@
      * @param {Number} y origin point of the Line
      * @param {me.Vector2d[]} points array of vectors defining the Line
      */
-    me.Line = me.Polygon.extend(
-    /** @scope me.Line.prototype */ {
+    me.Line = me.Polygon.extend({
 
         /**
          * check if this line segment contains the specified point

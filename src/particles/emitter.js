@@ -326,9 +326,7 @@
      * me.game.world.removeChild(emitter);
      *
      */
-    me.ParticleEmitter = me.Rect.extend(
-    /** @scope me.ParticleEmitter.prototype */
-    {
+    me.ParticleEmitter = me.Rect.extend({
         /**
          * @ignore
          */

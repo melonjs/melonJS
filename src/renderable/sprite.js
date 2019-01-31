@@ -42,10 +42,10 @@
      *     region : "npc2.png",
      * });
      */
-    me.Sprite = me.Renderable.extend(
-    /** @scope .prototype */
-    {
-        /** @ignore */
+    me.Sprite = me.Renderable.extend({
+        /**
+         * @ignore
+         */
         init : function (x, y, settings) {
 
             /**

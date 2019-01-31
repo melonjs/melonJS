@@ -6,7 +6,8 @@
 
 /**
  * melonJS base class for exception handling.
- * @name Error
+ * @class
+ * @extends me.Object
  * @memberOf me
  * @constructor
  * @param {String} msg Error message.

@@ -50,8 +50,6 @@
      *
      */
     me.GUI_Object = me.Sprite.extend({
-    /** @scope me.GUI_Object.prototype */
-
         /**
          * @ignore
          */

@@ -13,9 +13,7 @@
      * @constructor
      * @param {me.ParticleEmitter} emitter the emitter which owns this container
      */
-    me.ParticleContainer = me.Container.extend(
-    /** @scope ParticleContainer */
-    {
+    me.ParticleContainer = me.Container.extend({
         /**
          * @ignore
          */

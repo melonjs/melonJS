@@ -13,9 +13,7 @@
      * @constructor
      * @param {me.ParticleEmitter} particle emitter
      */
-    me.Particle = me.Renderable.extend(
-    /** @scope me.Particle.prototype */
-    {
+    me.Particle = me.Renderable.extend({
         /**
          * @ignore
          */

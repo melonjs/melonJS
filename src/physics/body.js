@@ -17,10 +17,10 @@
      * @param {me.Rect[]|me.Polygon[]|me.Line[]|me.Ellipse[]} [shapes] the initial list of shapes
      * @param {Function} [onBodyUpdate] callback for when the body is updated (e.g. add/remove shapes)
      */
-    me.Body = me.Rect.extend(
-    /** @scope me.Body.prototype */
-    {
-        /** @ignore */
+    me.Body = me.Rect.extend({
+        /**
+         * @ignore
+         */
         init : function (parent, shapes, onBodyUpdate) {
 
             /**

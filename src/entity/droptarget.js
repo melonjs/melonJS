@@ -15,11 +15,7 @@
  * @param {Object} settings Entity properties (see {@link me.Entity})
  */
 me.DroptargetEntity = (function (Entity, Event) {
-    "use strict";
-
-    return Entity.extend(
-    /** @scope me.DroptargetEntity.prototype */
-    {
+    return Entity.extend({
         /**
          * Constructor
          * @name init

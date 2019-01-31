@@ -17,8 +17,6 @@
      * @param {Function} settings.onUpdate the callback to be executed when the vector is changed
      */
     me.ObservableVector3d = me.Vector3d.extend({
-    /** @scope me.ObservableVector3d.prototype */
-
         /**
          * @ignore
          */

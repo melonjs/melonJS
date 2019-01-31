@@ -16,10 +16,10 @@
      * @param {Number} y the y coordinates of the entity object
      * @param {Object} settings See {@link me.Entity}
      */
-    me.CollectableEntity = me.Entity.extend(
-    /** @scope me.CollectableEntity.prototype */
-    {
-        /** @ignore */
+    me.CollectableEntity = me.Entity.extend({
+        /**
+         * @ignore
+         */
         init : function (x, y, settings) {
             // call the super constructor
             this._super(me.Entity, "init", [x, y, settings]);

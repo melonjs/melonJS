@@ -26,11 +26,8 @@
      * @param {Number} [w=me.game.viewport.width] width of the container
      * @param {Number} [h=me.game.viewport.height] height of the container
      */
-    me.Container = me.Renderable.extend(
-    /** @scope me.Container.prototype */
-    {
+    me.Container = me.Renderable.extend({
         /**
-         * constructor
          * @ignore
          */
         init : function (x, y, width, height, root) {

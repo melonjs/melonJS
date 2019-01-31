@@ -1,6 +1,6 @@
 /**
- * @preserve Tween JS
- * https://github.com/sole/Tween.js
+ * Tween.js - Licensed under the MIT license
+ * https://github.com/tweenjs/tween.js
  */
 
 /* eslint-disable quotes, keyword-spacing, comma-spacing, no-return-assign */

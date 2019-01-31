@@ -31,7 +31,6 @@
      */
     me.ImageLayer = me.Renderable.extend({
         /**
-         * constructor
          * @ignore
          */
         init: function (x, y, settings) {

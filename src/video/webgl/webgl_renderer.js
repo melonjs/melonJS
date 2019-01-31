@@ -25,9 +25,7 @@
      * @param {Number} [options.zoomY=height] The actual height of the canvas with scaling applied
      * @param {me.WebGLRenderer.Compositor} [options.compositor] A class that implements the compositor API
      */
-    me.WebGLRenderer = me.Renderer.extend(
-    /** @scope me.WebGLRenderer.prototype */
-    {
+    me.WebGLRenderer = me.Renderer.extend({
         /**
          * @ignore
          */

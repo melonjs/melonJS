@@ -18,7 +18,6 @@
      */
     me.ColorLayer = me.Renderable.extend({
         /**
-         * Constructor
          * @ignore
          */
         init: function (name, color, z) {
