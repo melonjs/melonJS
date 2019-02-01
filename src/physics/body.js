@@ -640,6 +640,7 @@
      * @name Error
      * @class
      * @memberOf me.Body
+     * @private
      * @constructor
      * @param {String} msg Error message.
      */

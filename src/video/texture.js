@@ -503,6 +503,7 @@
      * @name Error
      * @class
      * @memberOf me.Renderer.Texture
+     * @private
      * @constructor
      * @param {String} msg Error message.
      */

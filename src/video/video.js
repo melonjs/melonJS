@@ -65,6 +65,7 @@
          * @name Error
          * @class
          * @constructor
+         * @private
          * @memberOf me.video
          * @param {String} msg Error message.
          */

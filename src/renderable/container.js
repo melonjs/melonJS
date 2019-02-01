@@ -915,6 +915,7 @@
      * @name Error
      * @class
      * @memberOf me.Container
+     * @private
      * @constructor
      * @param {String} msg Error message.
      */

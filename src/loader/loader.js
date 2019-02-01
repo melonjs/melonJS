@@ -375,6 +375,7 @@
          * @name Error
          * @class
          * @memberOf me.loader
+         * @private
          * @constructor
          * @param {String} msg Error message.
          */

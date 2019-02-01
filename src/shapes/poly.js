@@ -401,6 +401,7 @@
      * @name Error
      * @class
      * @memberOf me.Polygon
+     * @private
      * @constructor
      * @param {String} msg Error message.
      */

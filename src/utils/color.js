@@ -594,6 +594,7 @@
      * @name Error
      * @class
      * @memberOf me.Color
+     * @private
      * @constructor
      * @param {String} msg Error message.
      */

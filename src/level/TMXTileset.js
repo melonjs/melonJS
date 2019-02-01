@@ -387,6 +387,7 @@
      * @name Error
      * @class
      * @memberOf me.TMXTileset
+     * @private
      * @constructor
      * @param {String} msg Error message.
      */

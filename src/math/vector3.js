@@ -510,6 +510,7 @@
      * @name Error
      * @class
      * @memberOf me.Vector3d
+     * @private
      * @constructor
      * @param {String} msg Error message.
      */

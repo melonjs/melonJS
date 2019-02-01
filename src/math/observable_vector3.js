@@ -550,6 +550,7 @@
      * @name Error
      * @class
      * @memberOf me.ObservableVector3d
+     * @private
      * @constructor
      * @param {String} msg Error message.
      */

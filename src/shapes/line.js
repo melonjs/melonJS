@@ -101,6 +101,7 @@
      * @name Error
      * @class
      * @memberOf me.Line
+     * @private
      * @constructor
      * @param {String} msg Error message.
      */

@@ -381,6 +381,7 @@
      * @class
      * @memberOf me.Entity
      * @constructor
+     * @private
      * @param {String} msg Error message.
      */
     me.Entity.Error = me.Renderable.Error.extend({

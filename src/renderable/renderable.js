@@ -741,6 +741,7 @@
      * @name Error
      * @class
      * @memberOf me.Renderable
+     * @private
      * @constructor
      * @param {String} msg Error message.
      */

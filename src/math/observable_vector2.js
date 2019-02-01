@@ -463,6 +463,7 @@
      * @name Error
      * @class
      * @memberOf me.ObservableVector2d
+     * @private
      * @constructor
      * @param {String} msg Error message.
      */

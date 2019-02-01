@@ -492,6 +492,7 @@
      * @name Error
      * @class
      * @memberOf me.Vector2d
+     * @private
      * @constructor
      * @param {String} msg Error message.
      */

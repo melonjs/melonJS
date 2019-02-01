@@ -884,6 +884,7 @@
      * @name Error
      * @class
      * @memberOf me.Tween
+     * @private
      * @constructor
      * @param {String} msg Error message.
      */

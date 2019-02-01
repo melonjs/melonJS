@@ -8,9 +8,9 @@
         "outputSourceFiles": false,
         "useCollapsibles": true,
         "logo": {
-            "url": "./images/logo.png",
-            "width": "100px",
-            "height": "85px",
+            "url": "./images/melonjs-logo.png",
+            "width": "125px",
+            "height": "125px",
             "link": "index.html"
         },
         "name": "melonJS API documentation",
@@ -37,7 +37,7 @@
         "recurse"       : false,
         "lenient"       : false,
         "destination"   : "docs",
-        "template"      : "tasks/jsdoc-template/template",
-        "new_template"  : "tasks/jsdoc-template/tui-jsdoc-template"
+        "old_template"  : "tasks/jsdoc-template/template",
+        "template"      : "tasks/jsdoc-template/tui-jsdoc-template"
     }
 }

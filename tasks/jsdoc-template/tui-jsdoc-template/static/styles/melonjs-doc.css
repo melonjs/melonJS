@@ -1,6 +1,10 @@
 body {
-    font-size: 12px;
-    font-family: Helvetica Neue, Helvetica, Arial, Malgun gothic, '돋움', AppleSDGothicNeo;
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+    font-family: "Droid Sans", Tahoma, "Lucida Grande", sans-serif, Helvetica Neue, Helvetica, Arial, Malgun gothic, '돋움', AppleSDGothicNeo;
+    font-size: 16px;
+    color: #666;
 }
 ul, ol, li {list-style:none; padding-left:0; margin-left:0;}
 
@@ -8,11 +12,11 @@ ul, ol, li {list-style:none; padding-left:0; margin-left:0;}
 .lnb {
     width: 290px;
     position: absolute;
-    bottom: 30px;
+    bottom: 0px;
     top: 0;
     overflow: auto;
     left: 0;
-    background-color: #5a0;
+    background-color: #202020;
     padding: 0 20px;
 }
 .lnb .logo {
@@ -30,19 +34,19 @@ ul, ol, li {list-style:none; padding-left:0; margin-left:0;}
 }
 .lnb h3 {
     font-size: 1.5em;
-    color: #fff;
+    color: #5a0;
 }
 .lnb h3 a {
-    color: #fff;
+    color: #5a0;
 }
 .lnb h3 a:hover {
-    color: #fff;
+    color: #5a0;
 }
 .lnb .lnb-api li,
 .lnb .lnb-examples li {
     padding-top: 5px;
     padding-bottom: 5px;
-    border-bottom: 1px solid #1f292e;
+    border-bottom: 1px solid #666;
 }
 .lnb .lnb-api h3 a {
     color: #fa3282;
@@ -53,7 +57,7 @@ ul, ol, li {list-style:none; padding-left:0; margin-left:0;}
 }
 .lnb .lnb-api a,
 .lnb .lnb-examples a {
-    color: #7cafc2;
+    color: #fff;
 }
 .lnb .lnb-api a:hover,
 .lnb .lnb-examples a:hover {
@@ -420,8 +424,9 @@ ul, ol, li {list-style:none; padding-left:0; margin-left:0;}
 .hidden {
     display: none;
 }
-.footer-text {
+.footer {
     padding-left: 3px;
+    font-size: 12px;
     display: inline-block;
 }
 #example-nav {
@@ -430,9 +435,9 @@ ul, ol, li {list-style:none; padding-left:0; margin-left:0;}
 #resizer {
     width: 7px;
     position: fixed;
-    left: 250px;
+    left: 290px;
     height: 100%;
-    background-color: #666;
+    background-color: #5a0;
     cursor: col-resize;
 }
 span.param-type {

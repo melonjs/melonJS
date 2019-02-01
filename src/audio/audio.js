@@ -595,6 +595,7 @@
      * @class
      * @memberOf me.audio
      * @constructor
+     * @private
      * @param {String} msg Error message.
      */
     me.audio.Error = me.Error.extend({
