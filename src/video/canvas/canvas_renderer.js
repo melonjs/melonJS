@@ -70,7 +70,7 @@
         /**
          * Reset context state
          * @name reset
-         * @memberOf me.WebGLRenderer
+         * @memberOf me.CanvasRenderer
          * @function
          */
         reset : function () {

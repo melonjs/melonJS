@@ -208,7 +208,7 @@
 
         /**
          * returns the amount of object instance currently in the pool
-         * @name exists
+         * @name getInstanceCount
          * @memberOf me.pool
          * @public
          * @function

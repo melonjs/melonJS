@@ -191,7 +191,7 @@
          * @public
          * @function
          * @memberOf me.Math
-         * @name weightedRandom
+         * @name round
          * @param {number} num value to be rounded.
          * @param {number} [dec=0] number of decimal digit to be rounded to.
          * @return {number} rounded value

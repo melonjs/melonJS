@@ -337,8 +337,8 @@
         },
 
         /**
-         * Returns the index of the Child
-         * @name getChildAt
+         * Returns the index of the given Child
+         * @name getChildIndex
          * @memberOf me.Container
          * @function
          * @param {me.Renderable} child
