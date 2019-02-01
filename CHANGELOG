@@ -6,6 +6,7 @@ Version History
 * Renderable : added a basic color tint feature (WebGL mode only)
 * Renderable : added support for Texture Packer multipack textures
 * Renderable : moved the name property definition at the me.Renderable level (prevent mostly all deriving objects from re-defining one)
+* Renderable : fixed an issue where a non Boolean value was passed to the onVisibilityChange callback
 * Sprite : cleaned up/simplified animation data handling
 * Renderer : fixed stroke and fill default color to match standard W3C canvas stroke and fill style (black)
 
