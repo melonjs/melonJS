@@ -55,23 +55,6 @@ module.exports = function (grunt) {
         ]
       },
 
-      docs : {
-        options : {
-          variables : {
-            "__VERSION__" : "<%= pkg.version %>"
-          },
-          usePrefix : false,
-          force : true
-        },
-        files : [
-          {
-            expand : true,
-            src : sourceFiles.concat([ "README.md" ]),
-            dest : "build/docs/"
-          }
-        ]
-      },
-
       glsl : {
         options : {
           preserveOrder : true,
@@ -281,7 +264,7 @@ module.exports = function (grunt) {
     "eslint:afterConcat"
   ]);
   grunt.registerTask("es2015", ["babel"]);
-  grunt.registerTask("doc", [ "concat", "replace:docs", "jsdoc" ]);
+  grunt.registerTask("doc", [ "jsdoc" ]);
   grunt.registerTask("test", [ "lint", "karma" ]);
   grunt.registerTask("serve", [ "connect:keepalive" ]);
   grunt.registerTask("gh-pages", [

@@ -4,8 +4,10 @@
         "copyright": "Copyright &copy; 2011 - 2019 Olivier Biot",
         "cleverLinks": false,
         "monospaceLinks": false,
-        "outputSourcePath": false,
-        "outputSourceFiles": false,
+        "default" : {
+            "outputSourcePath": false,
+            "outputSourceFiles": false
+        },
         "useCollapsibles": true,
         "logo": {
             "url": "./images/melonjs-logo.png",
@@ -27,17 +29,16 @@
         "dictionaries": ["jsdoc","closure"]
     },
     "source": {
-        "include": ["./README.md", "./build/melonjs.js" ],
+        "include": ["./README.md", "./src/" ],
         "exclude": [],
         "includePattern": ".+\\.js(doc|x)?$",
         "excludePattern": "(^|\\/|\\\\)_"
     },
     "opts": {
         "encoding"      : "utf8",
-        "recurse"       : false,
+        "recurse"       : true,
         "lenient"       : false,
         "destination"   : "docs",
-        "old_template"  : "tasks/jsdoc-template/template",
         "template"      : "tasks/jsdoc-template/tui-jsdoc-template"
     }
 }
