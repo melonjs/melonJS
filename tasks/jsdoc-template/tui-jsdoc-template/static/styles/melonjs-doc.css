@@ -3,8 +3,8 @@ body {
     flex-direction: column;
     min-height: 100vh;
     font-family: "Droid Sans", Tahoma, "Lucida Grande", sans-serif, Helvetica Neue, Helvetica, Arial, Malgun gothic, '돋움', AppleSDGothicNeo;
-    font-size: 16px;
-    color: #666;
+    font-size: 14px;
+    color: #4d4d4d;
 }
 ul, ol, li {list-style:none; padding-left:0; margin-left:0;}
 
@@ -16,8 +16,9 @@ ul, ol, li {list-style:none; padding-left:0; margin-left:0;}
     top: 0;
     overflow: auto;
     left: 0;
-    background-color: #202020;
+    background-color: #4d4d4d;
     padding: 0 20px;
+    font-size: 16px;
 }
 .lnb .logo {
     height: 13px;
@@ -147,7 +148,7 @@ ul, ol, li {list-style:none; padding-left:0; margin-left:0;}
     font-size:18px;
     font-weight:bold;
     padding-left : 5px;
-    border-left: 5px solid #dc9656;
+    border-left: 5px solid #5a0;
 }
 .main section article {
     padding: 10px;
@@ -168,15 +169,17 @@ ul, ol, li {list-style:none; padding-left:0; margin-left:0;}
     font-weight: bold;
 }
 .main section article dl h4 .signature {
-    font-size: 9pt;
+    font-size: 12pt;
 }
+
 .main section article dl h4 .type-signature {
-    font-size: 9pt;
+    font-size: 12pt;
     color: #31708f;
     font-weight: normal;
 }
 .main section article dl dt .name {
     padding: 3px 10px;
+    font-size: 12pt;
     background-color: #f4f7f8;
 }
 .main section article dl dd {
@@ -226,9 +229,9 @@ ul, ol, li {list-style:none; padding-left:0; margin-left:0;}
 .main section article table td.type,
 .main section article table td.attributes,
 .main section article table td.default {
-    max-width: 100px;
+    max-width: 250px;
     min-width: 80px;
-    word-break: break-all;
+    word-break: normal;
 }
 .main section article table td.type,
 .main section article table td.attributes {

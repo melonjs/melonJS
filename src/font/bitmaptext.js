@@ -56,8 +56,8 @@
      * @example
      * // Use me.loader.preload or me.loader.load to load assets
      * me.loader.preload([
-     * { name: "arial", type: "binary" src: "data/font/arial.fnt" },
-     * { name: "arial", type: "image" src: "data/font/arial.png" },
+     *     { name: "arial", type: "binary" src: "data/font/arial.fnt" },
+     *     { name: "arial", type: "image" src: "data/font/arial.png" },
      * ])
      * // Then create an instance of your bitmap font:
      * var myFont = new me.BitmapText(x, y, {font:"arial", text:"Hello"});
@@ -68,7 +68,7 @@
      * me.game.world.addChild(myFont);
      */
     me.BitmapText = me.Renderable.extend({
-        
+
         /** @ignore */
         init : function (x, y, settings) {
             // call the parent constructor
