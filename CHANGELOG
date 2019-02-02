@@ -8,6 +8,7 @@ Version History
 * Renderable : moved the name property definition at the me.Renderable level (prevent mostly all deriving objects from re-defining one)
 * Renderable : fixed an issue where a non Boolean value was passed to the onVisibilityChange callback
 * Sprite : cleaned up/simplified animation data handling
+* TMX : small memory optimization in the isometric renderer, where one temporary vector object was not properly recycled
 * Renderer : fixed stroke and fill default color to match standard W3C canvas stroke and fill style (black)
 
 6.3.0
