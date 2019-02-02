@@ -288,7 +288,9 @@
                     // update the camera/viewport
                     // iterate through all cameras
                     stage.cameras.forEach(function(camera) {
-                        isDirty |= camera.update(updateDelta);
+                        if (camera.update(updateDelta)) {
+                            isDirty = true;
+                        };
                     });
 
                     me.timer.lastUpdate = window.performance.now();
