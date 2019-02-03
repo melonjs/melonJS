@@ -20,8 +20,8 @@ and currently features :
 - A fresh & lightweight 2D sprite-based engine
 - Standalone library (does not rely on anything else, except a HTML5 capable browser)
 - Compatible with most major browsers (Chrome, Safari, Firefox, Opera, IE) and mobile devices
-- Device motion & accelerometer support
-- High DPI & auto scaling
+- Fast Canvas and WebGL rendering on desktop and mobile devices
+- High DPI resolution & canvas auto scaling
 - Multi-channel HTML5 audio support and Web Audio on supported devices
 - Lightweight physics implementation to ensure low cpu requirements
 - Polygon (SAT) based collision algorithm for accurate detection and response
@@ -34,11 +34,11 @@ and currently features :
 - Object Pooling
 - Basic Particle System
 - Basic animation management
-- Standard spritesheet and Packed Textures (Texture Packer, ShoeBox) support
+- Standard spritesheet, single and multiple Packed Textures (Texture Packer, ShoeBox) support
 - A state manager (to easily manage loading, menu, options, in-game state)
 - Tiled map format version +0.9.x integration for easy level design
     - Uncompressed Plain, Base64, CSV and JSON encoded XML tilemap loading
-    - Orthogonal, Isometric and Perspective tilemap support
+    - Orthogonal, Isometric, Orthogonal and Perspective tilemap support
     - Multiple layers (multiple background/foreground, collision and Image layers)
     - Multiple Tileset support
     - Tileset Transparency settings
@@ -51,6 +51,7 @@ and currently features :
     - Shape based Tile collision support
 - System & bitmap fonts
 - Mouse and Touch device support (with mouse emulation)
+- Device motion & accelerometer support
 - Built-in support for [CocoonJS](https://www.ludei.com/cocoonjs/) and [Ejecta](https://github.com/melonjs/melonJS/wiki/How-to-build-your-game-for-tvOS-(or-iOS)-using-Ejecta)
 - Asynchronous messaging support (minPubSub)
 - Basic GUI elements included
@@ -78,6 +79,8 @@ like the `grunt connect` task that is used for building melonJS (see below for b
 
 Building melonJS
 -------------------------------------------------------------------------------
+For most users, all you probably want is to use melonJS, and all you need then is just to download the latest pre-built [release](https://github.com/melonjs/melonJS/releases) to get started. The only time you should need to build melonJS is if you want to contribute to the project and start developing on it.
+
 To build your own version of melonJS you will need to install :
 
 - The [Node.js](http://nodejs.org/) JavaScript runtime and [npm](https://npmjs.org/) package manager
