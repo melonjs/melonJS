@@ -63,7 +63,7 @@
              * @public
              * @type me.Color
              * @default black
-             * @name me.Font#fillStyle
+             * @name me.Text#fillStyle
              */
             if (typeof settings.fillStyle !== "undefined") {
                 if (settings.fillStyle instanceof me.Color) {
@@ -81,7 +81,7 @@
              * @public
              * @type me.Color
              * @default black
-             * @name me.Font#strokeStyle
+             * @name me.Text#strokeStyle
              */
              if (typeof settings.strokeStyle !== "undefined") {
                  if (settings.strokeStyle instanceof me.Color) {
@@ -99,7 +99,7 @@
              * @public
              * @type Number
              * @default 1
-             * @name me.Font#lineWidth
+             * @name me.Text#lineWidth
              */
             this.lineWidth = settings.lineWidth || 1;
 
@@ -109,7 +109,7 @@
              * @public
              * @type String
              * @default "left"
-             * @name me.Font#textAlign
+             * @name me.Text#textAlign
              */
             this.textAlign = settings.textAlign || "left";
 
@@ -119,7 +119,7 @@
              * @public
              * @type String
              * @default "top"
-             * @name me.Font#textBaseline
+             * @name me.Text#textBaseline
              */
             this.textBaseline = settings.textBaseline || "top";
 
@@ -129,7 +129,7 @@
              * @public
              * @type Number
              * @default 1.0
-             * @name me.Font#lineHeight
+             * @name me.Text#lineHeight
              */
             this.lineHeight = settings.lineHeight || 1.0;
 
@@ -241,7 +241,7 @@
          * @name setText
          * @memberOf me.Text
          * @function
-         * @param {(Number|String|String[])}} value a string, or an array of strings
+         * @param {Number|String|String[]} value a string, or an array of strings
          * @return this object for chaining
          */
         setText : function (value) {

@@ -170,7 +170,7 @@
          * @name setText
          * @memberOf me.BitmapText
          * @function
-         * @param {(Number|String|String[])} value a string, or an array of strings
+         * @param {Number|String|String[]} value a string, or an array of strings
          * @return this object for chaining
          */
         setText : function (value) {
