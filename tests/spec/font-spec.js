@@ -1,9 +1,13 @@
-describe("Shape : me.Font", function () {
+describe("Font : me.Text", function () {
 
     // define a font object
     var font;
     beforeAll(function () {
-        font = new me.Font("Arial", 8, "white");
+        font = new me.Text(0, 0, {
+            font:"Arial",
+            size:8,
+            fillStyle:"white"
+        });
     });
 
     describe("font set Size", function () {
