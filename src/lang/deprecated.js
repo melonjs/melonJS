@@ -8,7 +8,9 @@
 // and corresponding alias for backward compatibility
 
 /**
- * @ignore
+ * @class me.ScreenObject
+ * @deprecated since 6.2.0
+ * @see me.Stage
  */
 me.ScreenObject = me.Stage.extend({
     /** @ignore */
@@ -21,7 +23,9 @@ me.ScreenObject = me.Stage.extend({
 });
 
 /**
- * @ignore
+ * @class me.Font
+ * @deprecated since 6.1.0
+ * @see me.Text
  */
 me.Font = me.Text.extend({
     /** @ignore */
@@ -59,9 +63,10 @@ me.Font = me.Text.extend({
 me.BitmapFontData = me.BitmapTextData;
 
 /**
- * @ignore
+ * @class me.BitmapFont
+ * @deprecated since 6.1.0
+ * @see me.BitmapText
  */
-
 me.BitmapFont = me.BitmapText.extend({
     /** @ignore */
     init: function (data, fontImage, scale, textAlign, textBaseline) {
@@ -80,7 +85,9 @@ me.BitmapFont = me.BitmapText.extend({
 });
 
 /**
- * @ignore
+ * @function me.Renderer.drawShape
+ * @deprecated since 6.3.0
+ * @see me.Renderer.stroke
  */
 me.Renderer.prototype.drawShape = function () {
     console.log("drawShape() is deprecated, please use the stroke() or fill() function");
