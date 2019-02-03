@@ -28,7 +28,9 @@
     "LICENSE",
     "CHANGELOG"
   ],
-  "dependencies": {},
+  "dependencies": {
+    "cheerio": "^1.0.0-rc.2"
+  },
   "devDependencies": {
     "babel-core": "^6.26.3",
     "babel-preset-env": "^1.7.0",
@@ -54,8 +56,7 @@
     "karma-jasmine": "^1.1.1",
     "karma-nyan-reporter": "0.2.5",
     "q": "^1.4.1",
-    "shelljs": "^0.8.3",
-    "tui-jsdoc-template": "^1.2.2"
+    "shelljs": "^0.8.3"
   },
   "scripts": {
     "release": "grunt release",
