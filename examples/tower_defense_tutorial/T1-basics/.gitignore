@@ -1,5 +1,0 @@
-# ignore all intelliJ/Webstorm Project files
-**/.idea
-./js/melonjs6.1.0.js
-./js/melonjs.js
-./js/melonjs6.3.0.min.js.bak
