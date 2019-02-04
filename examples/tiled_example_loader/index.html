@@ -1,52 +1,42 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>melonJS - tiled example loader</title>
-  <meta name="description" content="melonJS homepage" />
-  <meta name="keywords" content="melonJS, HTML5, javascript, game, engine, framework" />
-  <meta http-equiv="content-type" content="text/html; charset=windows-1252" />
-  <link rel="stylesheet" type="text/css" href="style/style.css" title="style" />
+  <title>melonJS - Tiled example loader</title>
+  <link rel="stylesheet" type="text/css" media="screen" href="index.css">
+  <meta id="viewport" name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black">
 </head>
 <body>
-  <div id="main">
-    <div id="header">
-      <div id="logo">
-        <div id="logo_text">
-          <!-- class="logo_colour", allows you to change the colour of the text -->
-          <h1><a href="http://www.melonjs.org">melon<span class="logo_colour">JS</span></a></h1>
-          <h2>A lightweight HTML5 game engine</h2>
-        </div>
-      </div>
+    <!-- Canvas placeholder -->
+    <div id="screen">
+      <!-- melonJS Library -->
+      <script type="text/javascript" src="../../build/melonjs.js"></script>
+
+      <!-- Plugin(s) -->
+      <script type="text/javascript" src="../../plugins/debug/debugPanel.js"></script>
+
+      <!-- Game Scripts -->
+      <script type="text/javascript" src="js/ressources.js"></script>
+      <script type="text/javascript" src="js/main.js"></script>
+      <script type="text/javascript" src="js/play.js"></script>
     </div>
-    <div id="site_content">
-      <div id="content">
-        <h1>Tiled Map Loader</h1>
-        <p> you can scroll the selected map using the arrow keys</p>
-        <div id="jsapp">
-          <script type="text/javascript" src="./../../build/melonjs.js"></script>
-          <script type="text/javascript" src="js/ressources.js"></script>
-          <script type="text/javascript" src="js/main.js"></script>
-          <script type="text/javascript" src="js/play.js"></script>
-        </div>
-        <div id="info" style="width: 800px;">
-          <div id="map" style="float: right;">
-            <label for="tmx_map">Tiled Example map:</label>
-            <select id="level_name" onchange="game.changelevel()">
-              <option value=1>village</option>
-              <option value=2>desert</option>
-              <option value=3>sewers</option>
-              <option value=4>lostgarden</option>
-              <option value=5>isometric</option>
-              <option value=6>perspective</option>
-            </select>
-          </div>
-        </div>
-      </div>
+
+    <div id="map" style="float: left;">
+    <label for="tmx_map">Tiled Example map:</label>
+    <select id="level_name" onchange="game.changelevel()">
+        <option value=1>village</option>
+        <option value=2>desert</option>
+        <option value=3>sewers</option>
+        <option value=4>isometric</option>
+        <option value=5>perspective</option>
+    </select>
     </div>
-    <div id="content_footer"></div>
-    <div id="footer">
-      Copyright &copy; melonJS 2011-2015
-    </div>
-  </div>
+    <!-- Bootstrap -->
+    <script type="text/javascript">
+      me.device.onReady(function onReady() {
+          game.onload();
+      });
+    </script>
 </body>
 </html>
