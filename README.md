@@ -38,7 +38,7 @@ and currently features :
 - A state manager (to easily manage loading, menu, options, in-game state)
 - Tiled map format version +0.9.x integration for easy level design
     - Uncompressed Plain, Base64, CSV and JSON encoded XML tilemap loading
-    - Orthogonal, Isometric, Orthogonal and Perspective tilemap support
+    - Orthogonal, Isometric, Hexagonal and Perspective tilemap support
     - Multiple layers (multiple background/foreground, collision and Image layers)
     - Multiple Tileset support
     - Tileset Transparency settings
