@@ -3,7 +3,7 @@ body {
     flex-direction: column;
     min-height: 100vh;
     font-family: "Droid Sans", Tahoma, "Lucida Grande", sans-serif, Helvetica Neue, Helvetica, Arial, Malgun gothic, '돋움', AppleSDGothicNeo;
-    font-size: 14px;
+    font-size: 13px;
     color: #4d4d4d;
 }
 ul, ol, li {list-style:none; padding-left:0; margin-left:0;}

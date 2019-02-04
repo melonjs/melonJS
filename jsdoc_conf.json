@@ -16,7 +16,7 @@
             "link": "index.html"
         },
         "name": "melonJS API documentation",
-        "css" : ["styles/melonjs.css"],
+        "css" : ["styles/melonjs-doc.css", "styles/prettify-tomorrow-night-eighties.css"],
         "footerText": " "
     },
     "plugins": ["plugins/markdown"],
@@ -39,6 +39,6 @@
         "recurse"       : true,
         "lenient"       : false,
         "destination"   : "docs",
-        "template"      : "tasks/jsdoc-template/tui-jsdoc-template"
+        "template"      : "tasks/jsdoc-template"
     }
 }
