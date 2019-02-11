@@ -32,7 +32,9 @@
          * @public
          * @constant
          * @type String
-         * @name me.event#STATE_PAUSE
+         * @name STATE_PAUSE
+         * @memberOf me.event
+         * @see me.event.subscribe
          */
         api.STATE_PAUSE = "me.state.onPause";
 
@@ -42,7 +44,9 @@
          * @public
          * @constant
          * @type String
-         * @name me.event#STATE_RESUME
+         * @name STATE_RESUME
+         * @memberOf me.event
+         * @see me.event.subscribe
          */
         api.STATE_RESUME = "me.state.onResume";
 
@@ -52,7 +56,9 @@
          * @public
          * @constant
          * @type String
-         * @name me.event#STATE_STOP
+         * @name STATE_STOP
+         * @memberOf me.event
+         * @see me.event.subscribe
          */
         api.STATE_STOP = "me.state.onStop";
 
@@ -62,7 +68,9 @@
          * @public
          * @constant
          * @type String
-         * @name me.event#STATE_RESTART
+         * @name STATE_RESTART
+         * @memberOf me.event
+         * @see me.event.subscribe
          */
         api.STATE_RESTART = "me.state.onRestart";
 
@@ -72,7 +80,9 @@
          * @public
          * @constant
          * @type String
-         * @name me.event#GAME_INIT
+         * @name GAME_INIT
+         * @memberOf me.event
+         * @see me.event.subscribe
          */
         api.GAME_INIT = "me.game.onInit";
 
@@ -82,7 +92,9 @@
          * @public
          * @constant
          * @type String
-         * @name me.event#GAME_RESET
+         * @name GAME_RESET
+         * @memberOf me.event
+         * @see me.event.subscribe
          */
         api.GAME_RESET = "me.game.onReset";
 
@@ -92,7 +104,9 @@
          * @public
          * @constant
          * @type String
-         * @name me.event#LEVEL_LOADED
+         * @name LEVEL_LOADED
+         * @memberOf me.event
+         * @see me.event.subscribe
          */
         api.LEVEL_LOADED = "me.game.onLevelLoaded";
 
@@ -102,7 +116,9 @@
          * @public
          * @constant
          * @type String
-         * @name me.event#LOADER_COMPLETE
+         * @name LOADER_COMPLETE
+         * @memberOf me.event
+         * @see me.event.subscribe
          */
         api.LOADER_COMPLETE = "me.loader.onload";
 
@@ -112,7 +128,9 @@
          * @public
          * @constant
          * @type String
-         * @name me.event#LOADER_PROGRESS
+         * @name LOADER_PROGRESS
+         * @memberOf me.event
+         * @see me.event.subscribe
          */
         api.LOADER_PROGRESS = "me.loader.onProgress";
 
@@ -127,7 +145,9 @@
          * @public
          * @constant
          * @type String
-         * @name me.event#KEYDOWN
+         * @name KEYDOWN
+         * @memberOf me.event
+         * @see me.event.subscribe
          * @example
          * me.input.bindKey(me.input.KEY.X, "jump", true); // Edge-triggered
          * me.input.bindKey(me.input.KEY.Z, "shoot"); // Level-triggered
@@ -147,11 +167,13 @@
 
         /**
          * Channel Constant for releasing a binded key <br>
-         * Data passed : {String} user-defined action, {Number} keyCode <br>
+         * Data passed : {String} user-defined action, {Number} keyCode
          * @public
          * @constant
          * @type String
-         * @name me.event#KEYUP
+         * @name KEYUP
+         * @memberOf me.event
+         * @see me.event.subscribe
          * @example
          * me.event.subscribe(me.event.KEYUP, function (action, keyCode) {
          *   // Checking unbound keys
@@ -173,7 +195,9 @@
          * @public
          * @constant
          * @type String
-         * @name me.event#GAMEPAD_CONNECTED
+         * @name GAMEPAD_CONNECTED
+         * @memberOf me.event
+         * @see me.event.subscribe
          */
         api.GAMEPAD_CONNECTED = "gamepad.connected";
 
@@ -183,7 +207,9 @@
          * @public
          * @constant
          * @type String
-         * @name me.event#GAMEPAD_DISCONNECTED
+         * @name GAMEPAD_DISCONNECTED
+         * @memberOf me.event
+         * @see me.event.subscribe
          */
         api.GAMEPAD_DISCONNECTED = "gamepad.disconnected";
 
@@ -193,11 +219,13 @@
          * Data passed : {String} type : "axes" or "buttons" <br>
          * Data passed : {Number} button <br>
          * Data passed : {Number} current.value <br>
-         * Data passed : {Boolean} current.pressed <br>
+         * Data passed : {Boolean} current.pressed
          * @public
          * @constant
          * @type String
-         * @name me.event#GAMEPAD_UPDATE
+         * @name GAMEPAD_UPDATE
+         * @memberOf me.event
+         * @see me.event.subscribe
          */
         api.GAMEPAD_UPDATE = "gamepad.update";
 
@@ -207,7 +235,9 @@
          * @public
          * @constant
          * @type String
-         * @name me.event#POINTERMOVE
+         * @name POINTERMOVE
+         * @memberOf me.event
+         * @see me.event.subscribe
          */
         api.POINTERMOVE = "me.event.pointermove";
 
@@ -215,11 +245,13 @@
          * Channel Constant for dragstart events on a Draggable entity <br>
          * Data passed:
          * {Object} the drag event <br>
-         * {Object} the Draggable entity <br>
+         * {Object} the Draggable entity
          * @public
          * @constant
          * @type String
-         * @name me.event#DRAGSTART
+         * @name DRAGSTART
+         * @memberOf me.event
+         * @see me.event.subscribe
          */
         api.DRAGSTART = "me.game.dragstart";
 
@@ -227,21 +259,25 @@
          * Channel Constant for dragend events on a Draggable entity <br>
          * Data passed:
          * {Object} the drag event <br>
-         * {Object} the Draggable entity <br>
+         * {Object} the Draggable entity
          * @public
          * @constant
          * @type String
-         * @name me.event#DRAGEND
+         * @name DRAGEND
+         * @memberOf me.event
+         * @see me.event.subscribe
          */
         api.DRAGEND = "me.game.dragend";
 
         /**
          * Channel Constant for when the (browser) window is resized <br>
-         * Data passed : {Event} Event object <br>
+         * Data passed : {Event} Event object
          * @public
          * @constant
          * @type String
-         * @name me.event#WINDOW_ONRESIZE
+         * @name WINDOW_ONRESIZE
+         * @memberOf me.event
+         * @see me.event.subscribe
          */
         api.WINDOW_ONRESIZE = "window.onresize";
 
@@ -249,11 +285,13 @@
          * Channel Constant for when the canvas is resized <br>
          * (this usually follows a WINDOW_ONRESIZE event).<br>
          * Data passed : {Number} canvas width <br>
-         * Data passed : {Number} canvas height <br>
+         * Data passed : {Number} canvas height
          * @public
          * @constant
          * @type String
-         * @name me.event#CANVAS_ONRESIZE
+         * @name CANVAS_ONRESIZE
+         * @memberOf me.event
+         * @see me.event.subscribe
          */
         api.CANVAS_ONRESIZE = "canvas.onresize";
 
@@ -261,11 +299,13 @@
          * Channel Constant for when the viewport is resized <br>
          * (this usually follows a WINDOW_ONRESIZE event, when using the `flex` scaling mode is used and after the viewport was updated).<br>
          * Data passed : {Number} viewport width <br>
-         * Data passed : {Number} viewport height <br>
+         * Data passed : {Number} viewport height
          * @public
          * @constant
          * @type String
-         * @name me.event#VIEWPORT_ONRESIZE
+         * @name VIEWPORT_ONRESIZE
+         * @memberOf me.event
+         * @see me.event.subscribe
          */
         api.VIEWPORT_ONRESIZE = "viewport.onresize";
 
@@ -275,33 +315,40 @@
          * @public
          * @constant
          * @type String
-         * @name me.event#WINDOW_ONORIENTATION_CHANGE
+         * @name WINDOW_ONORIENTATION_CHANGE
+         * @memberOf me.event
+         * @see me.event.subscribe
          */
         api.WINDOW_ONORIENTATION_CHANGE = "window.orientationchange";
 
         /**
          * Channel Constant for when the (browser) window is scrolled <br>
-         * Data passed : {Event} Event object <br>
+         * Data passed : {Event} Event object
          * @public
          * @constant
          * @type String
-         * @name me.event#WINDOW_ONSCROLL
+         * @name WINDOW_ONSCROLL
+         * @memberOf me.event
+         * @see me.event.subscribe
          */
         api.WINDOW_ONSCROLL = "window.onscroll";
 
         /**
          * Channel Constant for when the viewport position is updated <br>
-         * Data passed : {me.Vector2d} viewport position vector <br>
+         * Data passed : {me.Vector2d} viewport position vector
          * @public
          * @constant
          * @type String
-         * @name me.event#VIEWPORT_ONCHANGE
+         * @name VIEWPORT_ONCHANGE
+         * @memberOf me.event
+         * @see me.event.subscribe
          */
         api.VIEWPORT_ONCHANGE = "viewport.onchange";
 
         /**
          * Publish some data on a channel
-         * @name me.event#publish
+         * @name publish
+         * @memberOf me.event
          * @public
          * @function
          * @param {String} channel The channel to publish on
@@ -326,7 +373,8 @@
 
         /**
          * Register a callback on a named channel.
-         * @name me.event#subscribe
+         * @name subscribe
+         * @memberOf me.event
          * @public
          * @function
          * @param {String} channel The channel to subscribe to
@@ -349,7 +397,9 @@
 
         /**
          * Disconnect a subscribed function for a channel.
-         * @name me.event#unsubscribe
+         * @name unsubscribe
+         * @memberOf me.event
+         * @see me.event.subscribe
          * @public
          * @function
          * @param {Array|String} handle The return value from a subscribe call or the
