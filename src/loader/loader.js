@@ -397,8 +397,10 @@
             // increment the loading counter
             loadCount++;
 
-            // callback ?
-            var progress = api.getLoadProgress();
+            // currrent progress
+            var progress = loadCount / resourceCount;
+
+            // call callback if defined
             if (api.onProgress) {
                 // pass the load progress in percent, as parameter
                 api.onProgress(progress, res);
@@ -789,6 +791,8 @@
          * @public
          * @function
          * @deprecated use callback instead
+         * @see me.loader.onProgress
+         * @see me.event.LOADER_PROGRESS
          * @return {Number}
          */
         api.getLoadProgress = function () {
