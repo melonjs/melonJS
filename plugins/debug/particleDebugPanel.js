@@ -277,9 +277,7 @@
      * @memberOf me
      * @constructor
      */
-    me.debug.ParticlePanel = me.plugin.Base.extend(
-    /** @scope me.debug.ParticlePanel.prototype */
-    {
+    me.debug.ParticlePanel = me.plugin.Base.extend({
 
         /** @private */
         init : function () {
