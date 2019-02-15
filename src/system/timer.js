@@ -136,7 +136,7 @@
         };
 
         /**
-         * Calls a function once after a specified delay.
+         * Calls a function once after a specified delay. See me.timer.setInterval to repeativly call a function.
          * @name setTimeout
          * @memberOf me.timer
          * @param {Function} fn the function you want to execute after delay milliseconds.
@@ -158,7 +158,7 @@
         };
 
         /**
-         * Calls a function at specified interval.
+         * Calls a function continously at the specified interval.  See setTimeout to call function a single time.
          * @name setInterval
          * @memberOf me.timer
          * @param {Function} fn the function to execute
