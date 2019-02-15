@@ -496,8 +496,9 @@
         },
 
         /**
-         * set the body default velocity<br>
-         * note : velocity is by default limited to the same value, see
+         * Sets accel to Velocity if x or y is not 0.  Net effect is to set the maxVel.x/y to the passed values for x/y<br>
+         * note: This does not set the vel member of the body object. This is identical to the setMaxVelocity call except that the
+         * accel property is updated to match the passed x and y. 
          * setMaxVelocity if needed<br>
          * @name setVelocity
          * @memberOf me.Body
@@ -517,7 +518,7 @@
         },
 
         /**
-         * cap the body velocity to the specified value<br>
+         * cap the body velocity (body.maxVel property) to the specified value<br>
          * @name setMaxVelocity
          * @memberOf me.Body
          * @function
