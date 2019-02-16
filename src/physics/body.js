@@ -79,7 +79,8 @@
             this.collisionType = me.collision.types.ENEMY_OBJECT;
 
             /**
-             * body velocity
+             * body velocity<br>
+             * 
              * @public
              * @type me.Vector2d
              * @default <0,0>
@@ -92,7 +93,8 @@
             this.vel.set(0, 0);
 
             /**
-             * body acceleration
+             * body acceleration <br>
+             * Not fully implemented yet.  At this time accel is used to set the MaximumVelocity allowed.
              * @public
              * @type me.Vector2d
              * @default <0,0>
