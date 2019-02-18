@@ -33,9 +33,9 @@
              * the layer color component
              * @public
              * @type me.Color
-             * @name me.ColorLayer#color
+             * @name color
+             * @memberOf me.ColorLayer
              */
-
             // parse the given color
             if (color instanceof me.Color) {
                 this.color = color;
