@@ -7,7 +7,7 @@
 (function () {
 
     /**
-     * a generic Color Layer Object
+     * a generic Color Layer Object.  Fills the entire Canvas with the color not just the container the object belongs to. 
      * @class
      * @extends me.Renderable
      * @memberOf me
