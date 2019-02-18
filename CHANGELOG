@@ -2,6 +2,7 @@ Version History
 ---------------
 7.0.0
 * Core : removed support for CocoonJS (following service shutdown)
+* Renderer : renderer selection now set to AUTO by default (Attempt WebGL first, with fallback to Canvas)
 
 6.4.0
 * Documentation : new documentation format, including a search feature

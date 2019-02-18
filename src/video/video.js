@@ -28,7 +28,7 @@
         // default video settings
         var settings = {
             wrapper : undefined,
-            renderer : 0, // canvas
+            renderer : 2, // AUTO
             doubleBuffering : false,
             autoScale : false,
             scale : 1.0,
@@ -136,7 +136,7 @@
          * @param {Number} height the height of the canvas viewport
          * @param {Object} [options] The optional video/renderer parameters.<br> (see Renderer(s) documentation for further specific options)
          * @param {String} [options.wrapper=document.body] the "div" element name to hold the canvas in the HTML file
-         * @param {Number} [options.renderer=me.video.CANVAS] renderer to use.
+         * @param {Number} [options.renderer=me.video.AUTO] renderer to use.
          * @param {Boolean} [options.doubleBuffering=false] enable/disable double buffering
          * @param {Number|String} [options.scale=1.0] enable scaling of the canvas ('auto' for automatic scaling)
          * @param {String} [options.scaleMethod="fit"] screen scaling modes ('fit','fill-min','fill-max','flex','flex-width','flex-height','stretch')
@@ -152,7 +152,7 @@
          * // init the video with a 640x480 canvas
          * me.video.init(640, 480, {
          *     wrapper : "screen",
-         *     renderer : me.video.CANVAS,
+         *     renderer : me.video.AUTO,
          *     scale : "auto",
          *     scaleMethod : "fit",
          *     doubleBuffering : true
