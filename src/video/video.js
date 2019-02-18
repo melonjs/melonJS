@@ -268,7 +268,7 @@
                 // a global canvas is available, e.g. webapp adapter for wechat
                 canvas = window.canvas;
             } else {
-                canvas = api.createCanvas(game_width_zoom, game_height_zoom, true);
+                canvas = api.createCanvas(game_width_zoom, game_height_zoom);
             }
 
             // add our canvas
@@ -399,20 +399,14 @@
          * @function
          * @param {Number} width width
          * @param {Number} height height
-         * @param {Boolean} [screencanvas=false] set to true if this canvas renders directly to the screen
          * @return {Canvas}
          */
-        api.createCanvas = function (width, height, screencanvas) {
+        api.createCanvas = function (width, height) {
             if (width === 0 || height === 0)  {
                 throw new api.Error("width or height was zero, Canvas could not be initialized !");
             }
 
             var _canvas = document.createElement("canvas");
-
-            if ((screencanvas === true) && (me.device.cocoon) && (me.device.android2 !== true)) {
-                // http://docs.cocoon.io/article/screencanvas/
-                _canvas.screencanvas = true;
-            }
 
             _canvas.width = width;
             _canvas.height = height;

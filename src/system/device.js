@@ -75,7 +75,7 @@
             me.device._detectDevice();
 
             // Mobile browser hacks
-            if (me.device.isMobile && !me.device.cocoon) {
+            if (me.device.isMobile) {
                 // Prevent the webview from moving on a swipe
                 api.enableSwipe(false);
             }
@@ -86,7 +86,7 @@
             window.gesture = me.agent.prefixed("gesture");
 
             // detect touch capabilities
-            me.device.touch = (me.device.cocoon) || me.device.TouchEvent || me.device.PointerEvent;
+            me.device.touch = me.device.TouchEvent || me.device.PointerEvent;
 
             // max amount of touch points ; always at least return 1 (e.g. headless chrome will return 0)
             me.device.maxTouchPoints = me.device.touch ? (me.device.PointerEvent ? navigator.maxTouchPoints || 1 : 10) : 1;
@@ -238,10 +238,6 @@
             me.device.ejecta = (typeof window.ejecta !== "undefined");
             // Wechat
             me.device.isWeixin = /MicroMessenger/i.test(me.device.ua);
-            // cocoon/cocoonJS
-            me.device.cocoon = navigator.isCocoonJS ||  // former cocoonJS
-                               (typeof window.Cocoon !== "undefined"); // new cocoon
-
         };
 
 
@@ -420,16 +416,6 @@
          * @memberOf me.device
          */
          api.isWeixin = false;
-
-        /**
-         * equals to true if the game is running under cocoon/cocoonJS.
-         * @type Boolean
-         * @readonly
-         * @see https://cocoon.io
-         * @name cocoon
-         * @memberOf me.device
-         */
-         api.cocoon = false;
 
         /**
          * equals to true if the device is running on ChromeOS.

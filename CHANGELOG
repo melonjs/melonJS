@@ -1,6 +1,7 @@
 Version History
 ---------------
-6.5.0
+7.0.0
+* Core : removed support for CocoonJS (following service shutdown)
 
 6.4.0
 * Documentation : new documentation format, including a search feature

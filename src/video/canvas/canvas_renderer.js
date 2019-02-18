@@ -38,7 +38,7 @@
 
             // create the back buffer if we use double buffering
             if (this.settings.doubleBuffering) {
-                this.backBufferCanvas = me.video.createCanvas(width, height, false);
+                this.backBufferCanvas = me.video.createCanvas(width, height);
                 this.backBufferContext2D = this.getContext2d(this.backBufferCanvas);
 
                 if (this.settings.transparent) {

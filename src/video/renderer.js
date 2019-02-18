@@ -169,19 +169,10 @@
                 transparent = true;
             }
 
-            var _context;
-            if (me.device.cocoon) {
-                // cocoonJS specific extension
-                _context = c.getContext("2d", {
-                    "antialias" : this.settings.antiAlias,
+            var _context = c.getContext("2d", {
                     "alpha" : transparent
-                });
-            }
-            else {
-                _context = c.getContext("2d", {
-                    "alpha" : transparent
-                });
-            }
+            });
+
             if (!_context.canvas) {
                 _context.canvas = c;
             }

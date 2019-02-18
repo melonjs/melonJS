@@ -615,11 +615,6 @@
                     if (!(res.name in imgList)) {
                         return false;
                     }
-                    if (typeof(imgList[res.name].dispose) === "function") {
-                        // cocoonJS implements a dispose function to free
-                        // corresponding allocated texture in memory
-                        imgList[res.name].dispose();
-                    }
                     delete imgList[res.name];
                     return true;
 
