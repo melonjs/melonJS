@@ -13,7 +13,7 @@
      * @memberOf me
      * @constructor
      * @param {Number} x position of the renderable object (accessible through inherited pos.x property)
-     * @param {Number} y position of the renderable object (accessible through inherited pos.x property)
+     * @param {Number} y position of the renderable object (accessible through inherited pos.y property)
      * @param {Number} width object width
      * @param {Number} height object height
      */
