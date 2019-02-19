@@ -272,7 +272,7 @@
          */
         addUvsMap : function (atlas, frame, w, h) {
             // ignore if using the Canvas Renderer
-            if (me.video.renderer instanceof me.Renderer) {
+            if (me.video.renderer instanceof me.WebGLRenderer) {
                 // Source coordinates
                 var s = atlas[frame].offset;
                 var sw = atlas[frame].width;
