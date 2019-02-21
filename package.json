@@ -34,7 +34,6 @@
   "devDependencies": {
     "babel-core": "^6.26.3",
     "babel-preset-env": "^1.7.0",
-    "dot": "git+https://github.com/parasyte/doT.git#bug/replace-ext",
     "grunt": "^1.0.3",
     "grunt-babel": "^7.0.0",
     "grunt-build-gh-pages": "^1.0.5",

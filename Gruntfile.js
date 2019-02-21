@@ -6,11 +6,6 @@ module.exports = function (grunt) {
   var sourceFiles = grunt.file.readJSON("sourceFiles.json");
   var testSpecs = "tests/spec/**/*.js";
 
-  var quadFragment      = "<%= grunt.file.read('build/glsl/quad-fragment.glsl') %>";
-  var primitiveFragment = "<%= grunt.file.read('build/glsl/primitive-fragment.glsl') %>";
-  var quadVertex        = "<%= grunt.file.read('build/glsl/quad-vertex.glsl') %>";
-  var primitiveVertex   = "<%= grunt.file.read('build/glsl/primitive-vertex.glsl') %>";
-
   // Project configuration.
   grunt.initConfig({
     pkg : grunt.file.readJSON("package.json"),
@@ -30,11 +25,7 @@ module.exports = function (grunt) {
       dist : {
         options : {
           variables : {
-            "__VERSION__"            : "<%= pkg.version %>",
-            "__PRIMITIVE_FRAGMENT__" : primitiveFragment,
-            "__QUAD_FRAGMENT__"      : quadFragment,
-            "__PRIMITIVE_VERTEX__"   : primitiveVertex,
-            "__QUAD_VERTEX__"        : quadVertex
+            "__VERSION__" : "<%= pkg.version %>"
           },
           usePrefix : false,
           force : true,
@@ -51,56 +42,6 @@ module.exports = function (grunt) {
             flatten : true,
             src : [ "<%= path.main %>" ],
             dest : "build/"
-          }
-        ]
-      },
-
-      glsl : {
-        options : {
-          preserveOrder : true,
-          patterns : [
-            {
-              // Remove comments
-              match : /(\/\/.*?\\n)|(\/\*(.|\\n)*?\*\/)/g,
-              replacement : ""
-            },
-            {
-              // Remove leading and trailing whitespace from lines
-              match : /(\\n\s+)|(\s+\\n)/g,
-              replacement : ""
-            },
-            {
-              // Remove line breaks
-              match : /(\\r|\\n)+/g,
-              replacement : ""
-            },
-            {
-              // Remove unnecessary whitespace
-              match : /\s*([;,[\](){}\\\/\-+*|^&!=<>?~%])\s*/g,
-              replacement : "$1"
-            }
-          ]
-        },
-        files : [
-          {
-            expand : true,
-            flatten : true,
-            src : [ "build/glsl/*.glsl" ],
-            dest : "build/glsl/"
-          }
-        ]
-      }
-    },
-
-    dot : {
-      glsl : {
-        options : {
-          strip : false
-        },
-        files : [
-          {
-            src : "src/video/webgl/glsl/",
-            dest : "build/glsl/"
           }
         ]
       }
@@ -169,7 +110,6 @@ module.exports = function (grunt) {
       jsdoc : [
         "build/*.map",
         "build/docs",
-        "build/glsl/*.glsl",
         "./docs/**/*.*",
         "./docs/scripts",
         "./docs/styles",
@@ -255,10 +195,8 @@ module.exports = function (grunt) {
   // Default task.
   grunt.registerTask("default", [ "test", "uglify" ]);
   grunt.registerTask("build", [ "lint", "uglify" ]);
-  grunt.registerTask("glsl", [ "dot:glsl", "replace:glsl" ]);
   grunt.registerTask("lint", [
     "eslint:beforeConcat",
-    "glsl",
     "concat",
     "replace:dist",
     "eslint:afterConcat"
