@@ -428,7 +428,11 @@
         },
 
         /**
-         * scale the renderable around his anchor point
+         * scale the renderable around his anchor point.  Scaling actually applies changes
+         * to the currentTransform member wich is used by the renderer to scale the object
+         * when rendering.  It does not scale the object itself.  For example if the renderable
+         * is an image, the image.width and image.height properties are unaltered but the currentTransform
+         * member will be changed.
          * @name scale
          * @memberOf me.Renderable.prototype
          * @function
