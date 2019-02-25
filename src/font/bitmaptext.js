@@ -148,7 +148,7 @@
         /**
          * change the font settings
          * @name set
-         * @memberOf me.BitmapText
+         * @memberOf me.BitmapText.prototype
          * @function
          * @param {String} textAlign ("left", "center", "right")
          * @param {Number} [scale]
@@ -168,7 +168,7 @@
         /**
          * change the text to be displayed
          * @name setText
-         * @memberOf me.BitmapText
+         * @memberOf me.BitmapText.prototype
          * @function
          * @param {Number|String|String[]} value a string, or an array of strings
          * @return this object for chaining
@@ -189,7 +189,7 @@
         /**
          * change the font display size
          * @name resize
-         * @memberOf me.BitmapText
+         * @memberOf me.BitmapText.prototype
          * @function
          * @param {Number} scale ratio
          * @return this object for chaining
@@ -206,7 +206,7 @@
         /**
          * measure the given text size in pixels
          * @name measureText
-         * @memberOf me.BitmapText
+         * @memberOf me.BitmapText.prototype
          * @function
          * @param {String} [text]
          * @param {me.Rect} [ret] a object in which to store the text metrics
@@ -241,7 +241,7 @@
         /**
          * draw the bitmap font
          * @name draw
-         * @memberOf me.BitmapText
+         * @memberOf me.BitmapText.prototype
          * @function
          * @param {me.CanvasRenderer|me.WebGLRenderer} renderer Reference to the destination renderer instance
          * @param {String} [text]

@@ -26,7 +26,7 @@
              * @public
              * @type {me.Vector2d}
              * @name pos
-             * @memberOf me.Ellipse
+             * @memberOf me.Ellipse#
              */
             this.pos = new me.Vector2d();
 
@@ -35,7 +35,7 @@
              * @private
              * @type {me.Rect}
              * @name _bounds
-             * @memberOf me.Ellipse
+             * @memberOf me.Ellipse#
              */
             this._bounds = undefined;
 
@@ -53,7 +53,7 @@
              * @public
              * @type {me.Vector2d}
              * @name radiusV
-             * @memberOf me.Ellipse
+             * @memberOf me.Ellipse#
              */
             this.radiusV = new me.Vector2d();
 
@@ -62,7 +62,7 @@
              * @public
              * @type {me.Vector2d}
              * @name radiusSq
-             * @memberOf me.Ellipse
+             * @memberOf me.Ellipse#
              */
             this.radiusSq = new me.Vector2d();
 
@@ -71,7 +71,7 @@
              * @public
              * @type {me.Vector2d}
              * @name ratio
-             * @memberOf me.Ellipse
+             * @memberOf me.Ellipse#
              */
             this.ratio = new me.Vector2d();
 
@@ -88,7 +88,7 @@
         /**
          * set new value to the Ellipse shape
          * @name setShape
-         * @memberOf me.Ellipse
+         * @memberOf me.Ellipse.prototype
          * @function
          * @param {Number} x position of the ellipse
          * @param {Number} y position of the ellipse
@@ -111,7 +111,7 @@
         /**
          * Rotate this Ellipse (counter-clockwise) by the specified angle (in radians).
          * @name rotate
-         * @memberOf me.Ellipse
+         * @memberOf me.Ellipse.prototype
          * @function
          * @param {Number} angle The angle to rotate (in radians)
          * @return {me.Ellipse} Reference to this object for method chaining
@@ -124,7 +124,7 @@
         /**
          * Scale this Ellipse by the specified scalar.
          * @name scale
-         * @memberOf me.Ellipse
+         * @memberOf me.Ellipse.prototype
          * @function
          * @param {Number} x
          * @param {Number} [y=x]
@@ -143,7 +143,7 @@
         /**
          * Scale this Ellipse by the specified vector.
          * @name scale
-         * @memberOf me.Ellipse
+         * @memberOf me.Ellipse.prototype
          * @function
          * @param {me.Vector2d} v
          * @return {me.Ellipse} Reference to this object for method chaining
@@ -155,7 +155,7 @@
         /**
          * apply the given transformation matrix to this ellipse
          * @name transform
-         * @memberOf me.Ellipse
+         * @memberOf me.Ellipse.prototype
          * @function
          * @param {me.Matrix2d} matrix the transformation matrix
          * @return {me.Polygon} Reference to this object for method chaining
@@ -168,7 +168,7 @@
         /**
          * translate the circle/ellipse by the specified offset
          * @name translate
-         * @memberOf me.Ellipse
+         * @memberOf me.Ellipse.prototype
          * @function
          * @param {Number} x x offset
          * @param {Number} y y offset
@@ -184,7 +184,7 @@
         /**
          * translate the circle/ellipse by the specified vector
          * @name translateV
-         * @memberOf me.Ellipse
+         * @memberOf me.Ellipse.prototype
          * @function
          * @param {me.Vector2d} v vector offset
          * @return {me.Rect} this ellipse
@@ -198,7 +198,7 @@
         /**
          * check if this circle/ellipse contains the specified point
          * @name containsPointV
-         * @memberOf me.Ellipse
+         * @memberOf me.Ellipse.prototype
          * @function
          * @param  {me.Vector2d} point
          * @return {boolean} true if contains
@@ -210,7 +210,7 @@
         /**
          * check if this circle/ellipse contains the specified point
          * @name containsPoint
-         * @memberOf me.Ellipse
+         * @memberOf me.Ellipse.prototype
          * @function
          * @param  {Number} x x coordinate
          * @param  {Number} y y coordinate
@@ -230,7 +230,7 @@
         /**
          * returns the bounding box for this shape, the smallest Rectangle object completely containing this shape.
          * @name getBounds
-         * @memberOf me.Ellipse
+         * @memberOf me.Ellipse.prototype
          * @function
          * @return {me.Rect} this shape bounding box Rectangle object
          */
@@ -241,7 +241,7 @@
         /**
          * update the bounding box for this shape.
          * @name updateBounds
-         * @memberOf me.Ellipse
+         * @memberOf me.Ellipse.prototype
          * @function
          * @return {me.Rect} this shape bounding box Rectangle object
          */
@@ -264,7 +264,7 @@
         /**
          * clone this Ellipse
          * @name clone
-         * @memberOf me.Ellipse
+         * @memberOf me.Ellipse.prototype
          * @function
          * @return {me.Ellipse} new Ellipse
          */

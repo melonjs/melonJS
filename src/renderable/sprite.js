@@ -72,7 +72,7 @@
              * @type me.Vector2d
              * @default <0.0,0.0>
              * @name offset
-             * @memberOf me.Sprite
+             * @memberOf me.Sprite#
              */
             this.offset = me.pool.pull("me.Vector2d", 0, 0);
 
@@ -81,7 +81,7 @@
              * @public
              * @type me.video.renderer.Texture
              * @name source
-             * @memberOf me.Sprite
+             * @memberOf me.Sprite#
              */
             this.source = null;
 
@@ -202,7 +202,7 @@
         /**
          * return the flickering state of the object
          * @name isFlickering
-         * @memberOf me.Sprite
+         * @memberOf me.Sprite.prototype
          * @function
          * @return {Boolean}
          */
@@ -213,7 +213,7 @@
         /**
          * make the object flicker
          * @name flicker
-         * @memberOf me.Sprite
+         * @memberOf me.Sprite.prototype
          * @function
          * @param {Number} duration expressed in milliseconds
          * @param {Function} callback Function to call when flickering ends
@@ -244,7 +244,7 @@
          * logic as per the following example :<br>
          * <img src="images/spritesheet_grid.png"/>
          * @name addAnimation
-         * @memberOf me.Sprite
+         * @memberOf me.Sprite.prototype
          * @function
          * @param {String} name animation id
          * @param {Number[]|String[]|Object[]} index list of sprite index or name
@@ -344,7 +344,7 @@
          * set the current animation
          * this will always change the animation & set the frame to zero
          * @name setCurrentAnimation
-         * @memberOf me.Sprite
+         * @memberOf me.Sprite.prototype
          * @function
          * @param {String} name animation id
          * @param {String|Function} [onComplete] animation id to switch to when complete, or callback
@@ -403,7 +403,7 @@
         /**
          * reverse the given or current animation if none is specified
          * @name reverseAnimation
-         * @memberOf me.Sprite
+         * @memberOf me.Sprite.prototype
          * @function
          * @param {String} [name] animation id
          * @return {me.Sprite} Reference to this object for method chaining
@@ -421,7 +421,7 @@
         /**
          * return true if the specified animation is the current one.
          * @name isCurrentAnimation
-         * @memberOf me.Sprite
+         * @memberOf me.Sprite.prototype
          * @function
          * @param {String} name animation id
          * @return {Boolean}
@@ -438,7 +438,7 @@
          * change the current texture atlas region for this sprite
          * @see me.Texture.getRegion
          * @name setRegion
-         * @memberOf me.Sprite
+         * @memberOf me.Sprite.prototype
          * @function
          * @param {Object} region typically returned through me.Texture.getRegion()
          * @return {me.Sprite} Reference to this object for method chaining
@@ -471,7 +471,7 @@
         /**
          * force the current animation frame index.
          * @name setAnimationFrame
-         * @memberOf me.Sprite
+         * @memberOf me.Sprite.prototype
          * @function
          * @param {Number} [index=0] animation frame index
          * @return {me.Sprite} Reference to this object for method chaining
@@ -487,7 +487,7 @@
         /**
          * return the current animation frame index.
          * @name getCurrentAnimationFrame
-         * @memberOf me.Sprite
+         * @memberOf me.Sprite.prototype
          * @function
          * @return {Number} current animation frame index
          */
@@ -498,7 +498,7 @@
         /**
          * Returns the frame object by the index.
          * @name getAnimationFrameObjectByIndex
-         * @memberOf me.Sprite
+         * @memberOf me.Sprite.prototype
          * @function
          * @private
          * @return {Number} if using number indices. Returns {Object} containing frame data if using texture atlas
@@ -560,7 +560,7 @@
          * update the renderable's bounding rect (private)
          * @ignore
          * @name updateBoundsPos
-         * @memberOf me.Sprite
+         * @memberOf me.Sprite.prototype
          * @function
          */
         updateBoundsPos : function (newX, newY) {
@@ -580,7 +580,7 @@
          * called when the anchor point value is changed
          * @private
          * @name onAnchorUpdate
-         * @memberOf me.Sprite
+         * @memberOf me.Sprite.prototype
          * @function
          */
         onAnchorUpdate : function (newX, newY) {

@@ -38,7 +38,7 @@
         /**
          * set new value to the rectangle shape
          * @name setShape
-         * @memberOf me.Rect
+         * @memberOf me.Rect.prototype
          * @function
          * @param {Number} x position of the Rectangle
          * @param {Number} y position of the Rectangle
@@ -69,7 +69,7 @@
         /**
          * resize the rectangle
          * @name resize
-         * @memberOf me.Rect
+         * @memberOf me.Rect.prototype
          * @function
          * @param {Number} w new width of the rectangle
          * @param {Number} h new height of the rectangle
@@ -84,7 +84,7 @@
         /**
          * returns the bounding box for this shape, the smallest rectangle object completely containing this shape.
          * @name getBounds
-         * @memberOf me.Rect
+         * @memberOf me.Rect.prototype
          * @function
          * @return {me.Rect} this shape bounding box Rectangle object
          */
@@ -95,7 +95,7 @@
         /**
          * resize the rectangle to contain all the given points coordinates.
          * @name setPoints
-         * @memberOf me.Rect
+         * @memberOf me.Rect.prototype
          * @function
          * @param {me.Vector2d[]} points array of vector defining a shape
          * @return {me.Rect} this shape bounding box Rectangle object
@@ -117,7 +117,7 @@
          * This **must** be called if the `points` array is modified manually.
          * @ignore
          * @name recalc
-         * @memberOf me.Rect
+         * @memberOf me.Rect.prototype
          * @function
          */
         recalc : function () {
@@ -130,7 +130,7 @@
         /**
          * update the bounding box for this shape.
          * @name updateBounds
-         * @memberOf me.Rect
+         * @memberOf me.Rect.prototype
          * @function
          * @return {me.Rect} this shape bounding box Rectangle object
          */
@@ -141,7 +141,7 @@
         /**
          * clone this rectangle
          * @name clone
-         * @memberOf me.Rect
+         * @memberOf me.Rect.prototype
          * @function
          * @return {me.Rect} new rectangle
          */
@@ -152,7 +152,7 @@
         /**
          * copy the position and size of the given rectangle into this one
          * @name copy
-         * @memberOf me.Rect
+         * @memberOf me.Rect.prototype
          * @function
          * @param {me.Rect} rect Source rectangle
          * @return {me.Rect} new rectangle
@@ -164,7 +164,7 @@
         /**
          * translate the rect by the specified offset
          * @name translate
-         * @memberOf me.Rect
+         * @memberOf me.Rect.prototype
          * @function
          * @param {Number} x x offset
          * @param {Number} y y offset
@@ -179,7 +179,7 @@
         /**
          * translate the rect by the specified vector
          * @name translateV
-         * @memberOf me.Rect
+         * @memberOf me.Rect.prototype
          * @function
          * @param {me.Vector2d} v vector offset
          * @return {me.Rect} this rectangle
@@ -191,7 +191,7 @@
         /**
          * merge this rectangle with another one
          * @name union
-         * @memberOf me.Rect
+         * @memberOf me.Rect.prototype
          * @function
          * @param {me.Rect} rect other rectangle to union with
          * @return {me.Rect} the union(ed) rectangle
@@ -213,7 +213,7 @@
         /**
          * check if this rectangle is intersecting with the specified one
          * @name overlaps
-         * @memberOf me.Rect
+         * @memberOf me.Rect.prototype
          * @function
          * @param  {me.Rect} rect
          * @return {boolean} true if overlaps
@@ -230,7 +230,7 @@
         /**
          * check if this rectangle contains the specified one
          * @name contains
-         * @memberOf me.Rect
+         * @memberOf me.Rect.prototype
          * @function
          * @param  {me.Rect} rect
          * @return {boolean} true if contains
@@ -247,7 +247,7 @@
         /**
          * check if this rectangle contains the specified point
          * @name containsPoint
-         * @memberOf me.Rect
+         * @memberOf me.Rect.prototype
          * @function
          * @param  {Number} x x coordinate
          * @param  {Number} y y coordinate
@@ -265,7 +265,7 @@
         /**
          * check if this rectangle is identical to the specified one
          * @name equals
-         * @memberOf me.Rect
+         * @memberOf me.Rect.prototype
          * @function
          * @param  {me.Rect} rect
          * @return {boolean} true if equals
@@ -282,7 +282,7 @@
         /**
          * determines whether all coordinates of this rectangle are finite numbers.
          * @name isFinite
-         * @memberOf me.Rect
+         * @memberOf me.Rect.prototype
          * @function
          * @return {boolean} false if all coordinates are positive or negative Infinity or NaN; otherwise, true.
          */
@@ -293,7 +293,7 @@
         /**
          * Returns a polygon whose edges are the same as this box.
          * @name toPolygon
-         * @memberOf me.Rect
+         * @memberOf me.Rect.prototype
          * @function
          * @return {me.Polygon} a new Polygon that represents this rectangle.
          */

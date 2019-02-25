@@ -34,7 +34,7 @@
              * @public
              * @type me.Color
              * @name color
-             * @memberOf me.ColorLayer
+             * @memberOf me.ColorLayer#
              */
             // parse the given color
             if (color instanceof me.Color) {

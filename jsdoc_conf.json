@@ -2,7 +2,7 @@
     "templates": {
         "systemName": "melonJS",
         "copyright": "Copyright &copy; 2011 - 2019 Olivier Biot",
-        "cleverLinks": false,
+        "cleverLinks": true,
         "monospaceLinks": false,
         "default" : {
             "outputSourcePath": false,

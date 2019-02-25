@@ -45,7 +45,7 @@
              * @see me.Body
              * @see me.collision.check
              * @name body
-             * @memberOf me.Renderable
+             * @memberOf me.Renderable#
              * @example
              *  // define a new Player Class
              *  game.PlayerEntity = me.Sprite.extend({
@@ -87,7 +87,7 @@
              * @public
              * @type me.Matrix2d
              * @name currentTransform
-             * @memberOf me.Renderable
+             * @memberOf me.Renderable#
              */
             if (typeof this.currentTransform === "undefined") {
                 this.currentTransform = me.pool.pull("me.Matrix2d");
@@ -111,7 +111,7 @@
              * @type function
              * @default undefined
              * @name onVisibilityChange
-             * @memberOf me.Renderable
+             * @memberOf me.Renderable#
              * @example
              * this.onVisibilityChange = function(inViewport) {
              *     if (inViewport === true) {
@@ -171,7 +171,7 @@
              * @type me.ObservableVector2d
              * @default <0.5,0.5>
              * @name anchorPoint
-             * @memberOf me.Renderable
+             * @memberOf me.Renderable#
              */
             if (this.anchorPoint instanceof me.ObservableVector2d) {
                 this.anchorPoint.setMuted(0.5, 0.5).setCallback(this.onAnchorUpdate.bind(this));
@@ -249,7 +249,7 @@
              * @type {me.Rect|me.Polygon|me.Line|me.Ellipse}
              * @name mask
              * @default undefined
-             * @memberOf me.Renderable
+             * @memberOf me.Renderable#
              * @example
              * // apply a mask in the shape of a Star
              * myNPCSprite.mask = new me.Polygon(myNPCSprite.width / 2, 0, [
@@ -274,7 +274,7 @@
              * @type {me.Color}
              * @name tint
              * @default undefined
-             * @memberOf me.Renderable
+             * @memberOf me.Renderable#
              * @example
              * // add a red tint to this renderable
              * this.renderable.tint = new me.Color(255, 128, 128);
@@ -298,7 +298,7 @@
              * @ignore
              * @type {me.Vector2d}
              * @name _absPos
-             * @memberOf me.Renderable
+             * @memberOf me.Renderable#
              */
             if (this._absPos instanceof me.Vector2d) {
                 this._absPos.set(x, y);
@@ -312,7 +312,7 @@
              * @public
              * @type {me.ObservableVector3d}
              * @name pos
-             * @memberOf me.Renderable
+             * @memberOf me.Renderable#
              */
             if (this.pos instanceof me.ObservableVector3d) {
                 this.pos.setMuted(x, y, 0).setCallback(this.updateBoundsPos.bind(this));
@@ -346,7 +346,7 @@
         /**
          * returns the bounding box for this renderable
          * @name getBounds
-         * @memberOf me.Renderable
+         * @memberOf me.Renderable.prototype
          * @function
          * @return {me.Rect} bounding box Rectangle object
          */
@@ -357,7 +357,7 @@
         /**
          * get the renderable alpha channel value<br>
          * @name getOpacity
-         * @memberOf me.Renderable
+         * @memberOf me.Renderable.prototype
          * @function
          * @return {Number} current opacity value between 0 and 1
          */
@@ -368,7 +368,7 @@
         /**
          * set the renderable alpha channel value<br>
          * @name setOpacity
-         * @memberOf me.Renderable
+         * @memberOf me.Renderable.prototype
          * @function
          * @param {Number} alpha opacity value between 0.0 and 1.0
          */
@@ -386,7 +386,7 @@
          * flip the renderable on the horizontal axis (around the center of the renderable)
          * @see me.Matrix2d.scaleX
          * @name flipX
-         * @memberOf me.Renderable
+         * @memberOf me.Renderable.prototype
          * @function
          * @param {Boolean} [flip=false] `true` to flip this renderable.
          * @return {me.Renderable} Reference to this object for method chaining
@@ -400,7 +400,7 @@
          * flip the renderable on the vertical axis (around the center of the renderable)
          * @see me.Matrix2d.scaleY
          * @name flipY
-         * @memberOf me.Renderable
+         * @memberOf me.Renderable.prototype
          * @function
          * @param {Boolean} [flip=false] `true` to flip this renderable.
          * @return {me.Renderable} Reference to this object for method chaining
@@ -413,7 +413,7 @@
         /**
          * multiply the renderable currentTransform with the given matrix
          * @name transform
-         * @memberOf me.Renderable
+         * @memberOf me.Renderable.prototype
          * @see me.Renderable#currentTransform
          * @function
          * @param {me.Matrix2d} matrix the transformation matrix
@@ -430,7 +430,7 @@
         /**
          * scale the renderable around his anchor point
          * @name scale
-         * @memberOf me.Renderable
+         * @memberOf me.Renderable.prototype
          * @function
          * @param {Number} x a number representing the abscissa of the scaling vector.
          * @param {Number} [y=x] a number representing the ordinate of the scaling vector.
@@ -450,7 +450,7 @@
         /**
          * scale the renderable around his anchor point
          * @name scaleV
-         * @memberOf me.Renderable
+         * @memberOf me.Renderable.prototype
          * @function
          * @param {me.Vector2d} vector scaling vector
          * @return {me.Renderable} Reference to this object for method chaining
@@ -464,7 +464,7 @@
          * update function. <br>
          * automatically called by the game manager {@link me.game}
          * @name update
-         * @memberOf me.Renderable
+         * @memberOf me.Renderable.prototype
          * @function
          * @protected
          * @param {Number} dt time since the last update in milliseconds.
@@ -478,7 +478,7 @@
          * update the renderable's bounding rect (private)
          * @ignore
          * @name updateBoundsPos
-         * @memberOf me.Renderable
+         * @memberOf me.Renderable.prototype
          * @function
          */
         updateBoundsPos : function (newX, newY) {
@@ -495,7 +495,7 @@
          * called when the anchor point value is changed
          * @private
          * @name onAnchorUpdate
-         * @memberOf me.Renderable
+         * @memberOf me.Renderable.prototype
          * @function
          */
         onAnchorUpdate : function () {
@@ -507,7 +507,7 @@
          * @private
          * @deprecated
          * @name updateBounds
-         * @memberOf me.Renderable
+         * @memberOf me.Renderable.prototype
          * @function
          */
         updateBounds : function () {
@@ -520,7 +520,7 @@
          * (apply defined transforms, anchor point). <br>
          * automatically called by the game manager {@link me.game}
          * @name preDraw
-         * @memberOf me.Renderable
+         * @memberOf me.Renderable.prototype
          * @function
          * @protected
          * @param {me.CanvasRenderer|me.WebGLRenderer} renderer a renderer object
@@ -569,7 +569,7 @@
          * object draw. <br>
          * automatically called by the game manager {@link me.game}
          * @name draw
-         * @memberOf me.Renderable
+         * @memberOf me.Renderable.prototype
          * @function
          * @protected
          * @param {me.CanvasRenderer|me.WebGLRenderer} renderer a renderer object
@@ -582,7 +582,7 @@
          * restore the rendering context after drawing. <br>
          * automatically called by the game manager {@link me.game}
          * @name postDraw
-         * @memberOf me.Renderable
+         * @memberOf me.Renderable.prototype
          * @function
          * @protected
          * @param {me.CanvasRenderer|me.WebGLRenderer} renderer a renderer object

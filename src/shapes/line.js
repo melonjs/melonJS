@@ -20,7 +20,7 @@
         /**
          * check if this line segment contains the specified point
          * @name containsPointV
-         * @memberOf me.Line
+         * @memberOf me.Line.prototype
          * @function
          * @param  {me.Vector2d} point
          * @return {boolean} true if contains
@@ -32,7 +32,7 @@
         /**
          * check if this line segment contains the specified point
          * @name containsPoint
-         * @memberOf me.Line
+         * @memberOf me.Line.prototype
          * @function
          * @param  {Number} x x coordinate
          * @param  {Number} y y coordinate
@@ -54,7 +54,7 @@
          * Computes the calculated collision edges and normals.
          * This **must** be called if the `points` array, `angle`, or `offset` is modified manually.
          * @name recalc
-         * @memberOf me.Line
+         * @memberOf me.Line.prototype
          * @function
          */
         recalc : function () {
@@ -83,7 +83,7 @@
         /**
          * clone this line segment
          * @name clone
-         * @memberOf me.Line
+         * @memberOf me.Line.prototype
          * @function
          * @return {me.Line} new Line
          */

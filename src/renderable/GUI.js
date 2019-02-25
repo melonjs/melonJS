@@ -148,7 +148,7 @@
          * to be extended <br>
          * return false if we need to stop propagating the event
          * @name onClick
-         * @memberOf me.GUI_Object
+         * @memberOf me.GUI_Object.prototype
          * @public
          * @function
          * @param {Event} event the event object
@@ -169,7 +169,7 @@
         /**
          * function called when the pointer is over the object
          * @name onOver
-         * @memberOf me.GUI_Object
+         * @memberOf me.GUI_Object.prototype
          * @public
          * @function
          * @param {Event} event the event object
@@ -189,7 +189,7 @@
         /**
          * function called when the pointer is leaving the object area
          * @name onOut
-         * @memberOf me.GUI_Object
+         * @memberOf me.GUI_Object.prototype
          * @public
          * @function
          * @param {Event} event the event object
@@ -213,7 +213,7 @@
          * to be extended <br>
          * return false if we need to stop propagating the event
          * @name onRelease
-         * @memberOf me.GUI_Object
+         * @memberOf me.GUI_Object.prototype
          * @public
          * @function
          * @param {Event} event the event object
@@ -237,7 +237,7 @@
          * function called when the object is pressed and held<br>
          * to be extended <br>
          * @name onHold
-         * @memberOf me.GUI_Object
+         * @memberOf me.GUI_Object.prototype
          * @public
          * @function
          */

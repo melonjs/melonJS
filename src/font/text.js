@@ -169,7 +169,7 @@
         /**
          * make the font bold
          * @name bold
-         * @memberOf me.Text
+         * @memberOf me.Text.prototype
          * @function
          * @return this object for chaining
          */
@@ -182,7 +182,7 @@
         /**
          * make the font italic
          * @name italic
-         * @memberOf me.Text
+         * @memberOf me.Text.prototype
          * @function
          * @return this object for chaining
          */
@@ -195,7 +195,7 @@
         /**
          * set the font family and size
          * @name setFont
-         * @memberOf me.Text
+         * @memberOf me.Text.prototype
          * @function
          * @param {String} font a CSS font name
          * @param {Number|String} size size, or size + suffix (px, em, pt)
@@ -239,7 +239,7 @@
         /**
          * change the text to be displayed
          * @name setText
-         * @memberOf me.Text
+         * @memberOf me.Text.prototype
          * @function
          * @param {Number|String|String[]} value a string, or an array of strings
          * @return this object for chaining
@@ -260,7 +260,7 @@
         /**
          * measure the given text size in pixels
          * @name measureText
-         * @memberOf me.Text
+         * @memberOf me.Text.prototype
          * @function
          * @param {me.CanvasRenderer|me.WebGLRenderer} [renderer] reference a renderer instance
          * @param {String} [text] the text to be measured
@@ -328,7 +328,7 @@
         /**
          * draw a text at the specified coord
          * @name draw
-         * @memberOf me.Text
+         * @memberOf me.Text.prototype
          * @function
          * @param {me.CanvasRenderer|me.WebGLRenderer} renderer Reference to the destination renderer instance
          * @param {String} [text]
@@ -387,7 +387,7 @@
          * by the `lineWidth` and `fillStroke` properties. <br>
          * Note : using drawStroke is not recommended for performance reasons
          * @name drawStroke
-         * @memberOf me.Text
+         * @memberOf me.Text.prototype
          * @function
          * @param {me.CanvasRenderer|me.WebGLRenderer} renderer Reference to the destination renderer instance
          * @param {String} text

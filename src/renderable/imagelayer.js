@@ -192,7 +192,7 @@
         /**
          * resize the Image Layer to match the given size
          * @name resize
-         * @memberOf me.ImageLayer
+         * @memberOf me.ImageLayer.prototype
          * @function
          * @param {Number} w new width
          * @param {Number} h new height

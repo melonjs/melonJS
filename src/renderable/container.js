@@ -106,7 +106,7 @@
             /**
              * a callback to be extended, triggered when a child is added or removed
              * @name onChildChange
-             * @memberOf me.Container
+             * @memberOf me.Container#
              * @function
              * @param {Number} index added or removed child index
              */
@@ -125,7 +125,7 @@
              * @public
              * @type me.Rect
              * @name childBounds
-             * @memberOf me.Container
+             * @memberOf me.Container#
              */
             this.childBounds = this.getBounds().clone();
 
@@ -174,7 +174,7 @@
          * Add a child to the container <br>
          * if auto-sort is disable, the object will be appended at the bottom of the list
          * @name addChild
-         * @memberOf me.Container
+         * @memberOf me.Container.prototype
          * @function
          * @param {me.Renderable} child
          * @param {number} [z] forces the z index of the child to the specified value
@@ -222,7 +222,7 @@
          * Add a child to the container at the specified index<br>
          * (the list won't be sorted after insertion)
          * @name addChildAt
-         * @memberOf me.Container
+         * @memberOf me.Container.prototype
          * @function
          * @param {me.Renderable} child
          * @param {Number} index
@@ -265,7 +265,7 @@
          *    - the element index <br>
          *    - the array being traversed <br>
          * @name forEach
-         * @memberOf me.Container
+         * @memberOf me.Container.prototype
          * @function
          * @param {Function} callback
          * @param {Object} [thisArg] value to use as this(i.e reference Object) when executing callback.
@@ -297,7 +297,7 @@
         /**
          * Swaps the position (z-index) of 2 children
          * @name swapChildren
-         * @memberOf me.Container
+         * @memberOf me.Container.prototype
          * @function
          * @param {me.Renderable} child
          * @param {me.Renderable} child2
@@ -323,7 +323,7 @@
         /**
          * Returns the Child at the specified index
          * @name getChildAt
-         * @memberOf me.Container
+         * @memberOf me.Container.prototype
          * @function
          * @param {Number} index
          */
@@ -339,7 +339,7 @@
         /**
          * Returns the index of the given Child
          * @name getChildIndex
-         * @memberOf me.Container
+         * @memberOf me.Container.prototype
          * @function
          * @param {me.Renderable} child
          */
@@ -365,7 +365,7 @@
         /**
          * Returns true if contains the specified Child
          * @name hasChild
-         * @memberOf me.Container
+         * @memberOf me.Container.prototype
          * @function
          * @param {me.Renderable} child
          * @return {Boolean}
@@ -379,7 +379,7 @@
          * note : avoid calling this function every frame since
          * it parses the whole object tree each time
          * @name getChildByProp
-         * @memberOf me.Container
+         * @memberOf me.Container.prototype
          * @public
          * @function
          * @param {String} prop Property name
@@ -428,7 +428,7 @@
         /**
          * returns the list of childs with the specified class type
          * @name getChildByType
-         * @memberOf me.Container
+         * @memberOf me.Container.prototype
          * @public
          * @function
          * @param {Object} class type
@@ -455,7 +455,7 @@
          * note : avoid calling this function every frame since
          * it parses the whole object list each time
          * @name getChildByName
-         * @memberOf me.Container
+         * @memberOf me.Container.prototype
          * @public
          * @function
          * @param {String|RegExp|Number|Boolean} name entity name
@@ -470,7 +470,7 @@
          * note : avoid calling this function every frame since
          * it parses the whole object list each time
          * @name getChildByGUID
-         * @memberOf me.Container
+         * @memberOf me.Container.prototype
          * @public
          * @function
          * @param {String|RegExp|Number|Boolean} GUID entity GUID
@@ -484,7 +484,7 @@
         /**
          * resizes the child bounds rectangle, based on children bounds.
          * @name updateChildBounds
-         * @memberOf me.Container
+         * @memberOf me.Container.prototype
          * @function
          * @return {me.Rect} updated child bounds
          */
@@ -514,7 +514,7 @@
          * Checks if this container is root or if it's attached to the root container.
          * @private
          * @name isAttachedToRoot
-         * @memberOf me.Container
+         * @memberOf me.Container.prototype
          * @function
          * @returns Boolean
          */
@@ -537,7 +537,7 @@
          * update the renderable's bounding rect (private)
          * @private
          * @name updateBoundsPos
-         * @memberOf me.Container
+         * @memberOf me.Container.prototype
          * @function
          */
         updateBoundsPos : function (newX, newY) {
@@ -573,7 +573,7 @@
         /**
          * Invokes the removeChildNow in a defer, to ensure the child is removed safely after the update & draw stack has completed
          * @name removeChild
-         * @memberOf me.Container
+         * @memberOf me.Container.prototype
          * @public
          * @function
          * @param {me.Renderable} child
@@ -594,7 +594,7 @@
          * (removal is immediate and unconditional)<br>
          * Never use keepalive=true with objects from {@link me.pool}. Doing so will create a memory leak.
          * @name removeChildNow
-         * @memberOf me.Container
+         * @memberOf me.Container.prototype
          * @function
          * @param {me.Renderable} child
          * @param {Boolean} [keepalive=False] True to prevent calling child.destroy()
@@ -627,7 +627,7 @@
         /**
          * Automatically set the specified property of all childs to the given value
          * @name setChildsProperty
-         * @memberOf me.Container
+         * @memberOf me.Container.prototype
          * @function
          * @param {String} property property name
          * @param {Object} value property value
@@ -646,7 +646,7 @@
         /**
          * Move the child in the group one step forward (z depth).
          * @name moveUp
-         * @memberOf me.Container
+         * @memberOf me.Container.prototype
          * @function
          * @param {me.Renderable} child
          */
@@ -661,7 +661,7 @@
         /**
          * Move the child in the group one step backward (z depth).
          * @name moveDown
-         * @memberOf me.Container
+         * @memberOf me.Container.prototype
          * @function
          * @param {me.Renderable} child
          */
@@ -676,7 +676,7 @@
         /**
          * Move the specified child to the top(z depth).
          * @name moveToTop
-         * @memberOf me.Container
+         * @memberOf me.Container.prototype
          * @function
          * @param {me.Renderable} child
          */
@@ -693,7 +693,7 @@
         /**
          * Move the specified child the bottom (z depth).
          * @name moveToBottom
-         * @memberOf me.Container
+         * @memberOf me.Container.prototype
          * @function
          * @param {me.Renderable} child
          */
@@ -710,7 +710,7 @@
         /**
          * Manually trigger the sort of all the childs in the container</p>
          * @name sort
-         * @memberOf me.Container
+         * @memberOf me.Container.prototype
          * @public
          * @function
          * @param {Boolean} [recursive=false] recursively sort all containers if true
