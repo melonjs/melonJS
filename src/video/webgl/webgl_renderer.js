@@ -29,15 +29,20 @@
         /**
          * @ignore
          */
-        init : function (c, width, height, options) {
-            this._super(me.Renderer, "init", [c, width, height, options]);
+        init : function (canvas, width, height, options) {
+            // reference to this renderer
+            var renderer = this;
+
+            // parent contructor
+            this._super(me.Renderer, "init", [canvas, width, height, options]);
 
             /**
              * The WebGL context
              * @name gl
              * @memberOf me.WebGLRenderer
+             * type {WebGLRenderingContext}
              */
-            this.context = this.gl = this.getContextGL(c, this.settings.transparent);
+            this.context = this.gl = this.getContextGL(canvas, this.settings.transparent);
 
             /**
              * @ignore
@@ -93,6 +98,21 @@
             // Configure the WebGL viewport
             this.scaleCanvas(1, 1);
 
+            // to simulate context lost and restore :
+            // var ctx = me.video.renderer.context.getExtension('WEBGL_lose_context');
+            // ctx.loseContext()
+            canvas.addEventListener("webglcontextlost", function (event) {
+                event.preventDefault();
+                renderer.isContextValid = false;
+                me.event.publish(me.event.WEBGL_ONCONTEXT_LOST, [ renderer ]);
+            }, false );
+            // ctx.restoreContext()
+            canvas.addEventListener("webglcontextrestored", function (event) {
+                renderer.reset();
+                renderer.isContextValid = true;
+                me.event.publish(me.event.WEBGL_ONCONTEXT_RESTORED, [ renderer ]);
+            }, false );
+
             return this;
         },
 
@@ -104,7 +124,12 @@
          */
         reset : function () {
             this._super(me.Renderer, "reset");
-            this.compositor.reset();
+            if (this.isContextValid === false) {
+                // on context lost/restore
+                this.compositor.init(this);
+            } else {
+                this.compositor.reset();
+            }
             this.gl.disable(this.gl.SCISSOR_TEST);
             if (typeof this.fontContext2D !== "undefined" ) {
                 this.createFontTexture(this.cache);

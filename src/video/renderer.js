@@ -42,6 +42,15 @@
             this.settings = options;
 
             /**
+             * true if the current rendering context is valid
+             * @name isContextValid
+             * @memberOf me.Renderer
+             * @default true
+             * type {Boolean}
+             */
+            this.isContextValid = true;
+
+            /**
              * @ignore
              */
             this.currentScissor = new Int32Array([ 0, 0, this.width, this.height ]);

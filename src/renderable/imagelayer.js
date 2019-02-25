@@ -166,6 +166,9 @@
             });
 
             this.repeat = settings.repeat || "repeat";
+
+            // on context lost, all previous textures are destroyed
+            me.event.subscribe(me.event.WEBGL_ONCONTEXT_RESTORED, this.createPattern.bind(this));
         },
 
         // called when the layer is added to the game world or a container

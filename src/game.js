@@ -315,7 +315,7 @@
          * @param {me.Stage} stage the current stage
          */
         api.draw = function (stage) {
-            if (isDirty || isAlwaysDirty) {
+            if (renderer.isContextValid === true && (isDirty || isAlwaysDirty)) {
 
                 // prepare renderer to draw a new frame
                 renderer.clear();

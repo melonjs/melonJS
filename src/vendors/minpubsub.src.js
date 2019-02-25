@@ -346,6 +346,30 @@
         api.VIEWPORT_ONCHANGE = "viewport.onchange";
 
         /**
+         * Channel Constant for when WebGL context is lost <br>
+         * Data passed : {me.WebGLRenderer} the current webgl renderer instance`
+         * @public
+         * @constant
+         * @type String
+         * @name WEBGL_ONCONTEXT_LOST
+         * @memberOf me.event
+         * @see me.event.subscribe
+         */
+        api.WEBGL_ONCONTEXT_LOST = "renderer.webglcontextlost";
+
+        /**
+         * Channel Constant for when WebGL context is restored <br>
+         * Data passed : {me.WebGLRenderer} the current webgl renderer instance`
+         * @public
+         * @constant
+         * @type String
+         * @name WEBGL_ONCONTEXT_RESTORED
+         * @memberOf me.event
+         * @see me.event.subscribe
+         */
+        api.WEBGL_ONCONTEXT_RESTORED = "renderer.webglcontextrestored";
+
+        /**
          * Publish some data on a channel
          * @name publish
          * @memberOf me.event

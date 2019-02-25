@@ -285,6 +285,9 @@
              */
             this.uniforms = extractUniforms(this.gl, this);
 
+            // destroy the shader on context lost (will be recreated on context restore)
+            me.event.subscribe(me.event.WEBGL_ONCONTEXT_LOST, this.destroy.bind(this));
+
             return this;
         },
 
@@ -296,6 +299,22 @@
          */
         bind : function () {
             this.gl.useProgram(this.program);
+        },
+
+        /**
+         * destroy this shader objects resources (program, attributes, uniforms)
+         * @name destroy
+         * @memberOf me.GLShader
+         * @function
+         */
+        destroy : function () {
+            this.uniforms = null;
+            this.attributes = null;
+
+            this.gl.deleteProgram(this.program);
+
+            this.vertex = null;
+            this.fragment = null;
         }
     });
 

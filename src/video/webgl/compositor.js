@@ -178,6 +178,28 @@
         },
 
         /**
+         * Reset compositor internal state
+         * @ignore
+         */
+        reset : function () {
+            this.sbIndex = 0;
+            this.length = 0;
+
+            var samplers = [];
+
+            // WebGL context
+            this.gl = this.renderer.gl;
+
+            for (var i = 0; i < this.maxTextures; i++) {
+                this.units[i] = false;
+                samplers[i] = i;
+            }
+            // set the quad shader as the default program
+            this.useShader(this.quadShader);
+            this.quadShader.uniforms.uSampler = samplers;
+        },
+
+        /**
          * Sets the projection matrix with the given size
          * @name setProjection
          * @memberOf me.WebGLRenderer.Compositor
@@ -258,25 +280,6 @@
             }
 
             return unit;
-        },
-
-        /**
-         * Reset compositor internal state
-         * @ignore
-         */
-        reset : function () {
-            this.sbIndex = 0;
-            this.length = 0;
-
-            var samplers = [];
-
-            for (var i = 0; i < this.maxTextures; i++) {
-                this.units[i] = false;
-                samplers[i] = i;
-            }
-            // set the quad shader as the default program
-            this.useShader(this.quadShader);
-            this.quadShader.uniforms.uSampler = samplers;
         },
 
         /**
