@@ -21,8 +21,8 @@
      * @extends me.Renderable
      * @memberOf me
      * @constructor
-     * @param {Number} [x=0] position of the container
-     * @param {Number} [y=0] position of the container
+     * @param {Number} [x=0] position of the container (accessible via the inherited pos.x property)
+     * @param {Number} [y=0] position of the container (accessible via the inherited pos.y property)
      * @param {Number} [w=me.game.viewport.width] width of the container
      * @param {Number} [h=me.game.viewport.height] height of the container
      */
