@@ -65,6 +65,9 @@ module.exports = function(config) {
          }
     },
 
+    //other supported options are Chrome and ChromeHeadless
+    browsers: ["ChromeHeadless"],
+
     singleRun: true
   });
 

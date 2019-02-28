@@ -29,7 +29,8 @@
     "CHANGELOG"
   ],
   "dependencies": {
-    "cheerio": "^1.0.0-rc.2"
+    "cheerio": "^1.0.0-rc.2",
+    "eslint": "^5.14.1"
   },
   "devDependencies": {
     "babel-core": "^6.26.3",
@@ -59,6 +60,7 @@
   },
   "scripts": {
     "release": "grunt release",
-    "test": "grunt test"
+    "lint": "eslint --config .eslintrc.json src",
+    "test": "npm run lint && karma start"
   }
 }
