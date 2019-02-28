@@ -60,6 +60,7 @@
   },
   "scripts": {
     "release": "grunt release",
+    "doc": "jsdoc -c jsdoc_conf.json",
     "lint": "eslint --config .eslintrc.json src",
     "test": "npm run lint && karma start"
   }
