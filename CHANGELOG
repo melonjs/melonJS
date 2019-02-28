@@ -6,6 +6,7 @@ Version History
 * Renderer : renderer selection now set to AUTO by default (Attempt WebGL first, with fallback to Canvas)
 * WebGL : shader implementation has been rewritten to allow for a more generic approach, and ease definition of custom shader (see me.GLShader)
 * WebGL : properly handle WebGL context lost and restore
+* WebGL : updated earcut to version 2.1.5
 
 6.4.0
 * Documentation : new documentation format, including a search feature

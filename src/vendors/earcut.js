@@ -1,5 +1,5 @@
 /**
- * from https://github.com/mapbox/earcut (v2.1.4)
+ * from https://github.com/mapbox/earcut (v2.1.5)
  */
 
 /* eslint-disable curly */
@@ -451,7 +451,7 @@
         var p = start,
             leftmost = start;
         do {
-            if (p.x < leftmost.x) leftmost = p;
+            if (p.x < leftmost.x || (p.x === leftmost.x && p.y < leftmost.y)) leftmost = p;
             p = p.next;
         } while (p !== start);
 
@@ -483,7 +483,7 @@
 
     // check if two segments intersect
     function intersects(p1, q1, p2, q2) {
-        if ((equals(p1, q1) && equals(p2, q2)) ||
+        if ((equals(p1, p2) && equals(q1, q2)) ||
             (equals(p1, q2) && equals(p2, q1))) return true;
         return area(p1, q1, p2) > 0 !== area(p1, q1, q2) > 0 &&
                area(p2, q2, p1) > 0 !== area(p2, q2, q1) > 0;
