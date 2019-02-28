@@ -5,7 +5,7 @@
   "homepage": "http://www.melonjs.org/",
   "repository": {
     "type": "git",
-    "url": "https://github.com/melonjs/melonJS"
+    "url": "https://github.com/melonjs/melonJS.git"
   },
   "bugs": {
     "url": "https://github.com/melonjs/melonJS/issues"
