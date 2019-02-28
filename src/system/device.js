@@ -96,12 +96,7 @@
             me.device.wheel = ("onwheel" in document.createElement("div"));
 
             // accelerometer detection
-            me.device.hasAccelerometer = (
-                (typeof (window.DeviceMotionEvent) !== "undefined") || (
-                    (typeof (window.Windows) !== "undefined") &&
-                    (typeof (Windows.Devices.Sensors.Accelerometer) === "function")
-                )
-            );
+            me.device.hasAccelerometer = typeof (window.DeviceMotionEvent) !== "undefined";
 
             // pointerlock detection
             this.hasPointerLockSupport = me.agent.prefixed("pointerLockElement", document);
@@ -821,18 +816,10 @@
          * @ignore
          */
         function onDeviceMotion(e) {
-            if (e.reading) {
-                // For Windows 8 devices
-                api.accelerationX = e.reading.accelerationX;
-                api.accelerationY = e.reading.accelerationY;
-                api.accelerationZ = e.reading.accelerationZ;
-            }
-            else {
-                // Accelerometer information
-                api.accelerationX = e.accelerationIncludingGravity.x;
-                api.accelerationY = e.accelerationIncludingGravity.y;
-                api.accelerationZ = e.accelerationIncludingGravity.z;
-            }
+            // Accelerometer information
+            api.accelerationX = e.accelerationIncludingGravity.x;
+            api.accelerationY = e.accelerationIncludingGravity.y;
+            api.accelerationZ = e.accelerationIncludingGravity.z;
         }
 
         function onDeviceRotate(e) {
@@ -907,22 +894,8 @@
         api.watchAccelerometer = function () {
             if (me.device.hasAccelerometer) {
                 if (!accelInitialized) {
-                    if (typeof Windows === "undefined") {
-                        // add a listener for the devicemotion event
-                        window.addEventListener("devicemotion", onDeviceMotion, false);
-                    }
-                    else {
-                        // On Windows 8 Device
-                        var accelerometer = Windows.Devices.Sensors.Accelerometer.getDefault();
-                        if (accelerometer) {
-                            // Capture event at regular intervals
-                            var minInterval = accelerometer.minimumReportInterval;
-                            var Interval = minInterval >= 16 ? minInterval : 25;
-                            accelerometer.reportInterval = Interval;
-
-                            accelerometer.addEventListener("readingchanged", onDeviceMotion, false);
-                        }
-                    }
+                    // add a listener for the devicemotion event
+                    window.addEventListener("devicemotion", onDeviceMotion, false);
                     accelInitialized = true;
                 }
                 return true;
@@ -939,15 +912,8 @@
          */
         api.unwatchAccelerometer = function () {
             if (accelInitialized) {
-                if (typeof Windows === "undefined") {
-                    // add a listener for the mouse
-                    window.removeEventListener("devicemotion", onDeviceMotion, false);
-                } else {
-                    // On Windows 8 Devices
-                    var accelerometer = Windows.Device.Sensors.Accelerometer.getDefault();
-
-                    accelerometer.removeEventListener("readingchanged", onDeviceMotion, false);
-                }
+                // remove the listener for the devicemotion event
+                window.removeEventListener("devicemotion", onDeviceMotion, false);
                 accelInitialized = false;
             }
         };
