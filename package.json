@@ -29,12 +29,12 @@
     "CHANGELOG"
   ],
   "dependencies": {
-    "cheerio": "^1.0.0-rc.2",
-    "eslint": "^5.14.1"
+    "cheerio": "^1.0.0-rc.2"
   },
   "devDependencies": {
     "babel-core": "^6.26.3",
     "babel-preset-env": "^1.7.0",
+    "eslint": "^5.14.1",
     "grunt": "^1.0.3",
     "grunt-babel": "^7.0.0",
     "grunt-build-gh-pages": "^1.0.5",
