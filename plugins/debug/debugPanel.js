@@ -328,8 +328,8 @@
 
             // some internal string/length
             this.help_str        = "["+String.fromCharCode(32 + this.debugToggle)+"]show/hide";
-            this.help_str_len    = this.font.measureText(me.video.renderer, this.help_str).width;
-            this.fps_str_len     = this.font.measureText(me.video.renderer, "00/00 fps").width;
+            this.help_str_len    = this.font.measureText(this.help_str).width;
+            this.fps_str_len     = this.font.measureText("00/00 fps").width;
             this.memoryPositionX = 325 * this.mod;
 
             // resize the panel if the browser is resized
