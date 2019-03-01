@@ -32,5 +32,5 @@
     }
     // declare me globally
     global.me = me;
-}(this));
+}(window));
 /* eslint-enable no-undef */
