@@ -68,14 +68,10 @@ For your first time using melonJS, follow these tutorials :
 - [Platformer](http://melonjs.github.io/tutorial-platformer/) Step by Step Tutorial.
 - [Space Invaders](http://melonjs.github.io/tutorial-space-invaders/) Step by Step Tutorial.
 
-You may find it usefull to skim the overview found at the wiki [Details & Usage](https://github.com/melonjs/melonJS/wiki#details--usage)
+You may find it useful to skim the overview found at the wiki [Details & Usage](https://github.com/melonjs/melonJS/wiki#details--usage)
 
 When starting your own projects, checkout the [boilerplate](https://github.com/melonjs/boilerplate)
 
-**Note** that due to the _cross-origin request_ policy implemented in most browsers
-(that prevents from accessing local files), you will need to either disable this
-security check (see the tutorial), or better use a "personal" local web server
-like the `grunt connect` task that is used for building melonJS (see below for building melonJS).
 
 Building melonJS
 -------------------------------------------------------------------------------
@@ -83,51 +79,33 @@ For most users, all you probably want is to use melonJS, and all you need then i
 
 To build your own version of melonJS you will need to install :
 
-- The [Node.js](http://nodejs.org/) JavaScript runtime and [npm](https://npmjs.org/) package manager
-- The [Grunt](http://gruntjs.com/) task manager
+- The [Node.js](http://nodejs.org/) JavaScript runtime and the [NPM](https://npmjs.org/) package manager
 
-Once the Node.js package manager has been installed (using the installer from their website),
-you need to install build dependencies and Grunt CLI (Command Line Interface), by doing the following :
+Once Node.js and NPM have been installed, you need to install build dependencies,
+by executing the following in the folder where you cloned the repository :
 
-Open a [Terminal](http://www.apple.com/osx/apps/all.html#terminal) or a [Command Prompt](http://en.wikipedia.org/wiki/Command_Prompt) and
-type the following :
+    $ [sudo] npm install
 
-    $ [sudo] npm install -g grunt-cli
+Then build the melonJS source by running:
 
-Next you need to install the melonJS dependencies, by typing :
+    $ npm run build
 
-    $ cd melonJS
-    $ npm install
-
-Once this is done, you can build melonJS :
-
-    $ cd melonJS # if not already in the melonJS directory
-    $ grunt
-
-Both plain and minified versions of the library will be available under the "build" directory.
+The generated library will be available under the `build` directory.
 
 Building the documentation
 -------------------------------------------------------------------------------
-Here is how you can build your own copy of the docs locally :
+Similarly, you can build your own copy of the docs locally by running :
 
-    $ cd melonJS # if not already in the melonJS directory
-    $ grunt doc
+    $ npm run doc
 
 The generated documentation will be available in the `docs` directory
 
 Testing
 -------------------------------------------------------------------------------
-The recommended way to test is to use the `serve` task:
-
-    $ grunt serve
-
-Then navigate to http://localhost:8000/ in your browser. Stop the server when
-you are done by pressing `Ctrl+C` in the terminal.
-
 
 To run melonJS tests in node simply run the following:
 
-    $ grunt test
+    $ npm run test
 
 This will run the jasmine spec tests with the output displayed on the shell. Do
 note that the latest Chrome version is required, as the test unit will run the

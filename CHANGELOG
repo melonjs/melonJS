@@ -1,6 +1,7 @@
 Version History
 ---------------
 7.0.0
+* General : new "grunt-free" build process based on npm, rollup & friends
 * Core : removed support for CocoonJS (following service shutdown)
 * Input : removed obsolete support for proprietary windows 8 accelerometer API (not a thing anymore)
 * Renderer : renderer selection now set to AUTO by default (Attempt WebGL first, with fallback to Canvas)
