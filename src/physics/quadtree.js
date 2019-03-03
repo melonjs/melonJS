@@ -1,8 +1,4 @@
 /*
- * MelonJS Game Engine
- * Copyright (C) 2011 - 2019 Olivier Biot
- * http://www.melonjs.org
- *
  * A QuadTree implementation in JavaScript, a 2d spatial subdivision algorithm.
  * Based on the QuadTree Library by Timo Hausmann and released under the MIT license
  * https://github.com/timohausmann/quadtree-js/

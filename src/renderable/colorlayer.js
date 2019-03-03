@@ -1,13 +1,7 @@
-/*
- * MelonJS Game Engine
- * Copyright (C) 2011 - 2019 Olivier Biot
- * http://www.melonjs.org
- *
- */
 (function () {
 
     /**
-     * a generic Color Layer Object.  Fills the entire Canvas with the color not just the container the object belongs to. 
+     * a generic Color Layer Object.  Fills the entire Canvas with the color not just the container the object belongs to.
      * @class
      * @extends me.Renderable
      * @memberOf me

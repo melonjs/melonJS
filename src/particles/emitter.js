@@ -1,9 +1,3 @@
-/*
- * MelonJS Game Engine
- * Copyright (C) 2011 - 2019 Olivier Biot
- * http://www.melonjs.org
- *
- */
 (function () {
     // generate a default image for the particles
     var pixel = (function () {

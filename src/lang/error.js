@@ -1,10 +1,4 @@
 /**
- * MelonJS Game Engine
- * Copyright (C) 2011 - 2019 Olivier Biot
- * http://www.melonjs.org
- */
-
-/**
  * melonJS base class for exception handling.
  * @class
  * @extends me.Object

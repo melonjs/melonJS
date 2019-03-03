@@ -1,12 +1,7 @@
 /*
- * MelonJS Game Engine
- * Copyright (C) 2011 - 2019 Olivier Biot
- * http://www.melonjs.org
- *
  * Separating Axis Theorem implementation, based on the SAT.js library by Jim Riecken <jimr@jimr.ca>
  * Available under the MIT License - https://github.com/jriecken/sat-js
  */
-
 (function () {
 
     /**

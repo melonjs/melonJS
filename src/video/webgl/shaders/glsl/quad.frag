@@ -1,11 +1,3 @@
-/*
- * MelonJS Game Engine
- * Copyright (C) 2011 - 2019 Olivier Biot
- * http://www.melonjs.org
- *
- * WebGL Fragment shader for quad compositing
- */
-
 precision {{= ctx.precision }} float;
 
 

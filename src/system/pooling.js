@@ -1,9 +1,3 @@
-/*
- * MelonJS Game Engine
- * Copyright (C) 2011 - 2019 Olivier Biot
- * http://www.melonjs.org
- *
- */
 (function () {
     /**
      * This object is used for object pooling - a technique that might speed up your game if used properly.<br>

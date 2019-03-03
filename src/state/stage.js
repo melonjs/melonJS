@@ -1,12 +1,3 @@
-/*
- * MelonJS Game Engine
- * Copyright (C) 2011 - 2019 Olivier Biot
- * http://www.melonjs.org
- *
- * Stages & State machine
- *
- */
-
 (function () {
 
     // a default camera instance to use across all stages

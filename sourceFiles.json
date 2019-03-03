@@ -1,5 +1,4 @@
 [
-  "src/license.js",
   "src/global.js",
   "src/lang/window.js",
   "src/lang/jay-extend.js",

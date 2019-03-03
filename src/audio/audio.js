@@ -1,12 +1,3 @@
-/*
- * MelonJS Game Engine
- * Copyright (C) 2011 - 2019 Olivier Biot
- * http://www.melonjs.org
- *
- * Audio Mngt Objects
- *
- *
- */
 (function () {
     /**
      * There is no constructor function for me.audio.

@@ -1,9 +1,3 @@
-/**
- * MelonJS Game Engine
- * Copyright (C) 2011 - 2019 Olivier Biot
- * http://www.melonjs.org
- */
-
 /* eslint-disable no-undef */
 (function (global) {
     "use strict";

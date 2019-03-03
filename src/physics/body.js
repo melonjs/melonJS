@@ -1,10 +1,3 @@
-/*
- * MelonJS Game Engine
- * Copyright (C) 2011 - 2019 Olivier Biot
- * http://www.melonjs.org
- *
- */
-
 (function () {
 
     /**
@@ -13,10 +6,10 @@
      the body.update call.  It important to know that when body.update is called there are several things that happen related to
      the movement and positioning of the parent entity (assuming its an Entity).  1) The force/gravity/friction parameters are used
      to calcuate a new velocity and 2) the parent position is updated by adding this to the parent.pos (position me.Vector2d)
-     value. Thus Affecting the movement of the parent.  Look at the source code for /src/physics/body.js:update (me.Body.update) for 
-     a better understanding.  
-     
-     
+     value. Thus Affecting the movement of the parent.  Look at the source code for /src/physics/body.js:update (me.Body.update) for
+     a better understanding.
+
+
      * @class
      * @extends me.Rect
      * @memberOf me
@@ -80,7 +73,7 @@
 
             /**
              * body velocity<br>
-             * 
+             *
              * @public
              * @type me.Vector2d
              * @default <0,0>
@@ -508,7 +501,7 @@
         /**
          * Sets accel to Velocity if x or y is not 0.  Net effect is to set the maxVel.x/y to the passed values for x/y<br>
          * note: This does not set the vel member of the body object. This is identical to the setMaxVelocity call except that the
-         * accel property is updated to match the passed x and y. 
+         * accel property is updated to match the passed x and y.
          * setMaxVelocity if needed<br>
          * @name setVelocity
          * @memberOf me.Body
@@ -619,8 +612,8 @@
 
         /**
          * Updates the parent's position as well as computes the new body's velocity based
-         * on the values of force/friction/gravity.  Velocity chages are proportional to the 
-         * me.timer.tick value (which can be used to scale velocities).  The approach to moving the 
+         * on the values of force/friction/gravity.  Velocity chages are proportional to the
+         * me.timer.tick value (which can be used to scale velocities).  The approach to moving the
          * parent Entity is to compute new values of the Body.vel property then add them to
          * the parent.pos value thus changing the postion the amount of Body.vel each time the
          * update call is made. <br>
