@@ -55,9 +55,8 @@
     "minify": "terser build/melonjs.js --compress --mangle --comments  '/(?:^!|@(?:license|preserve|cc_on))/' --output build/melonjs.min.js",
     "lint": "eslint --config .eslintrc.json src",
     "test": "npm run build && karma start",
-    "doc": "mkdirp dist docs && jsdoc -c jsdoc_conf.json",
+    "doc": "mkdirp docs && jsdoc -c jsdoc_conf.json",
     "publishdoc": "ghpages melonjs/melonJS -p docs",
-    "publish": "npm run dist && npm run doc && npm run publishdoc",
-    "release": "grunt release"
+    "release": "npm run dist && npm run doc && npm run publishdoc"
   }
 }
