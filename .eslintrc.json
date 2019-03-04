@@ -5,10 +5,11 @@
     "jasmine": true
 },
   "globals": {
-    "me"                    : false,
-    "Howl"                  : false,
-    "Howler"                : false
+    "me"                    : false
   },
+  "parserOptions": {
+       "sourceType": "module"
+   },
   "rules": {
     // Severity should be one of the following: 0 = off, 1 = warn, 2 = error
     // http://eslint.org/docs/rules/

@@ -1,3 +1,6 @@
+// external import
+import earcut from "earcut";
+
 (function () {
     /**
      * a polygon Object.<br>
@@ -271,7 +274,7 @@
                     data.push(points[i].x);
                     data.push(points[i].y);
                 }
-                this.indices = me.earcut(data);
+                this.indices = earcut(data);
             }
             return this.indices;
         },

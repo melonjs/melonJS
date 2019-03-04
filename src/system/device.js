@@ -1027,7 +1027,7 @@
          * @ignore
          */
         get: function () {
-                return !Howler.noAudio;
+            return me.audio.hasAudio();
         }
     });
 })();

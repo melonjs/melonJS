@@ -29,7 +29,10 @@
     "LICENSE",
     "CHANGELOG"
   ],
-  "dependencies": {},
+  "dependencies": {
+    "earcut": "^2.1.5",
+    "howler": "^2.1.1"
+  },
   "devDependencies": {
     "@babel/core": "^7.3.4",
     "@babel/preset-env": "^7.3.4",
@@ -47,7 +50,9 @@
     "rollup": "^1.4.0",
     "rollup-plugin-babel": "^4.3.2",
     "rollup-plugin-bundle-size": "^1.0.3",
+    "rollup-plugin-commonjs": "^9.2.1",
     "rollup-plugin-multi-entry": "^2.1.0",
+    "rollup-plugin-node-resolve": "^4.0.1",
     "rollup-plugin-replace": "^2.1.0",
     "terser": "^3.16.1"
   },

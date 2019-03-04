@@ -1,3 +1,6 @@
+// external import
+import {Howl, Howler} from "howler";
+
 (function () {
     /**
      * There is no constructor function for me.audio.
@@ -86,6 +89,18 @@
             // convert it into an array
             this.audioFormats = audioFormat.split(",");
 
+            return !Howler.noAudio;
+        };
+
+        /**
+         * return true if audio (HTML5 or WebAudio) is supported
+         * @see me.audio#hasAudio
+         * @name hasAudio
+         * @memberOf me.audio
+         * @public
+         * @function
+         */
+        api.hasAudio = function () {
             return !Howler.noAudio;
         };
 
