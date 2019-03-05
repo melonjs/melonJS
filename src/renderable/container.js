@@ -166,7 +166,12 @@
 
         /**
          * Add a child to the container <br>
-         * if auto-sort is disable, the object will be appended at the bottom of the list
+         * if auto-sort is disable, the object will be appended at the bottom of the list.
+         * Adding a child to the container will automatically remove it from its other container.
+         * Meaning a child can only have one parent.  This is important if you add a renderable
+         * to a container then add it to the me.game.world container it will move it out of the 
+         * orginal container.  Then when the me.game.world.reset() is called the renderable
+         * will not be in any container.
          * @name addChild
          * @memberOf me.Container.prototype
          * @function
