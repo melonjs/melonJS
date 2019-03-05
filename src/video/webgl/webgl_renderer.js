@@ -702,7 +702,7 @@
                       Math.floor(12 * Math.sqrt(w + h));
             var segment = (me.Math.TAU) / len;
             var points = this._glPoints;
-            var index = 0;
+            var index = 0, i;
 
             // Grow internal points buffer if necessary
             for (i = points.length; i < (len + 1) * 2; i++) {
@@ -710,7 +710,7 @@
             }
 
             // draw all vertices vertex coordinates
-            for (var i = 0; i < len + 1; i++) {
+            for (i = 0; i < len + 1; i++) {
                 points[index++].set(x, y);
                 points[index++].set(
                     x + (Math.sin(segment * i) * w),
@@ -855,7 +855,7 @@
             glPoints[2].y = y + height;
             glPoints[3].x = x;
             glPoints[3].y = y + height;
-            this.compositor.drawTriangle(glPoints, 4, true)
+            this.compositor.drawTriangle(glPoints, 4, true);
         },
 
         /**

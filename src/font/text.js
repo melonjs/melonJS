@@ -267,7 +267,7 @@
             var context;
 
             if (typeof renderer === "undefined") {
-                context = me.video.renderer.getFontContext()
+                context = me.video.renderer.getFontContext();
             } else if (renderer instanceof me.Renderer) {
                 context = renderer.getFontContext();
             } else {

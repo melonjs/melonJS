@@ -35,7 +35,7 @@ game.HUD.VirtualJoypad = me.Container.extend({
         this.button = new game.HUD.Button(
             me.game.viewport.width - 150,
             me.game.viewport.height - 150
-        )
+        );
 
         this.addChild(this.joypad);
         this.addChild(this.button);

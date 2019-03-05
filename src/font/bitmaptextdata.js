@@ -197,7 +197,7 @@
 
                     var ch = parseFloat(characterValues[2]);
                     glyph.id = ch;
-                    glyph.x = parseFloat(characterValues[4])
+                    glyph.x = parseFloat(characterValues[4]);
                     glyph.y = parseFloat(characterValues[6]);
                     glyph.width = parseFloat(characterValues[8]);
                     glyph.height = parseFloat(characterValues[10]);

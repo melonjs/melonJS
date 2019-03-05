@@ -95,7 +95,7 @@
             // Set all starting values present on the target object
             for ( var field in object ) {
                 if(typeof object !== 'object') {
-                    _valuesStart[ field ] = parseFloat(object[field], 10);
+                    _valuesStart[ field ] = parseFloat(object[field]);
                 }
             }
         };
@@ -381,7 +381,7 @@
 
                     // Parses relative end values with start as base (e.g.: +10, -3)
                     if ( typeof(end) === "string" ) {
-                        end = start + parseFloat(end, 10);
+                        end = start + parseFloat(end);
                     }
 
                     // protect against non numeric properties.
@@ -411,7 +411,7 @@
                     for( property in _valuesStartRepeat ) {
 
                         if ( typeof( _valuesEnd[ property ] ) === "string" ) {
-                            _valuesStartRepeat[ property ] = _valuesStartRepeat[ property ] + parseFloat(_valuesEnd[ property ], 10);
+                            _valuesStartRepeat[ property ] = _valuesStartRepeat[ property ] + parseFloat(_valuesEnd[ property ]);
                         }
 
                         if (_yoyo) {

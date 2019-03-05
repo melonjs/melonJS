@@ -539,7 +539,7 @@
                     dy = this._flip.y ? this.centerY - ay : 0;
 
                 renderer.translate(dx, dy);
-                renderer.scale(this._flip.x  ? -1 : 1, this._flip.y  ? -1 : 1)
+                renderer.scale(this._flip.x  ? -1 : 1, this._flip.y  ? -1 : 1);
                 renderer.translate(-dx, -dy);
             }
 
