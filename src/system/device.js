@@ -103,12 +103,6 @@
             if (window.DeviceOrientationEvent) {
                 me.device.hasDeviceOrientation = true;
             }
-            if (typeof window.screen !== "undefined") {
-                var screen = window.screen;
-                screen.orientation = me.agent.prefixed("orientation", screen);
-                screen.lockOrientation = me.agent.prefixed("lockOrientation", screen);
-                screen.unlockOrientation = me.agent.prefixed("unlockOrientation", screen);
-            }
 
             // fullscreen api detection & polyfill when possible
             this.hasFullscreenSupport = me.agent.prefixed("fullscreenEnabled", document) ||
@@ -668,8 +662,8 @@
 
             // first try using "standard" values
             if (typeof screen !== "undefined") {
-                var orientation = screen.orientation
-                if ((typeof orientation !== "undefined") && typeof (orientation.type === "string")) {
+                var orientation = me.agent.prefixed("orientation", screen);
+                if (typeof orientation !== "undefined" && typeof(orientation.type === "string")) {
                     // Screen Orientation API specification
                     return orientation.type;
                 } else if (typeof orientation === "string") {
@@ -697,9 +691,11 @@
          * @return {Boolean} true if the orientation was unsuccessfully locked
          */
         api.lockOrientation = function (orientation) {
-            if (typeof window.screen !== "undefined") {
-                if (typeof screen.lockOrientation !== "undefined") {
-                    return screen.lockOrientation(orientation);
+            var screen = window.screen;
+            if (typeof screen !== "undefined") {
+                var lockOrientation = me.agent.prefixed("lockOrientation", screen);
+                if (typeof lockOrientation !== "undefined") {
+                    return lockOrientation(orientation);
                 }
             }
             return false;
@@ -715,9 +711,11 @@
          * @return {Boolean} true if the orientation was unsuccessfully unlocked
          */
         api.unlockOrientation = function (orientation) {
-            if (typeof window.screen !== "undefined") {
-                if (typeof screen.unlockOrientation !== "undefined") {
-                    return screen.unlockOrientation(orientation);
+            var screen = window.screen;
+            if (typeof screen !== "undefined") {
+                var unlockOrientation = me.agent.prefixed("unlockOrientation", screen);
+                if (typeof unlockOrientation !== "undefined") {
+                    return unlockOrientation(orientation);
                 }
             }
             return false;
