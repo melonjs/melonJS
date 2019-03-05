@@ -1,26 +1,15 @@
-/**
- * MinPubSub
- * a micro publish/subscribe messaging framework
- * @see https://github.com/daniellmb/MinPubSub
- * @author Daniel Lamb <daniellmb.com>
- *
- * Released under the MIT License
- */
+// external import
+import MinPubSub from "minpubsub";
+
 (function () {
     /**
-     * There is no constructor function for me.event
-     * @namespace me.event
+     * an event system based on a micro publish/subscribe messaging framework
+     * @namespace event
      * @memberOf me
      */
     me.event = (function () {
         // hold public stuff inside the singleton
         var api = {};
-
-        /**
-         * the channel/subscription hash
-         * @ignore
-         */
-        var cache = {};
 
         /*
          * PUBLIC
@@ -385,15 +374,7 @@
          * me.event.publish("/some/channel", ["a","b","c"]);
          *
          */
-        api.publish = function (channel, args) {
-            var subs = cache[channel],
-                len = subs ? subs.length : 0;
-
-            //can change loop or reverse array if the order matters
-            while (len--) {
-                subs[len].apply(window, args || []); // is window correct here?
-            }
-        };
+        api.publish = MinPubSub.publish;
 
         /**
          * Register a callback on a named channel.
@@ -411,13 +392,7 @@
          * me.event.subscribe("/some/channel", function (a, b, c){ doSomething(); });
          */
 
-        api.subscribe = function (channel, callback) {
-            if (!cache[channel]) {
-                cache[channel] = [];
-            }
-            cache[channel].push(callback);
-            return [ channel, callback ]; // Array
-        };
+        api.subscribe = MinPubSub.subscribe;
 
         /**
          * Disconnect a subscribed function for a channel.
@@ -439,18 +414,7 @@
          * me.event.subscribe("/some/channel", callback);
          * me.event.unsubscribe("/some/channel", callback);
          */
-        api.unsubscribe = function (handle, callback) {
-            var subs = cache[callback ? handle : handle[0]],
-                len = subs ? subs.length : 0;
-
-            callback = callback || handle[1];
-
-            while (len--) {
-                if (subs[len] === callback) {
-                    subs.splice(len, 1);
-                }
-            }
-        };
+        api.unsubscribe = MinPubSub.unsubscribe;
 
         // return our object
         return api;

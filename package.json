@@ -31,7 +31,8 @@
   ],
   "dependencies": {
     "earcut": "^2.1.5",
-    "howler": "^2.1.1"
+    "howler": "^2.1.1",
+    "minpubsub": "0.0.2"
   },
   "devDependencies": {
     "@babel/core": "^7.3.4",
