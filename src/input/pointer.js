@@ -245,8 +245,8 @@
 
             this.type = event.type;
 
-            this.gameScreenX = this.pos.x;
-            this.gameScreenY = this.pos.y;
+            this.gameScreenX = event.layerX;
+            this.gameScreenY = event.layerY;
 
             // get the current screen to world offset
             if (typeof me.game.viewport !== "undefined") {
