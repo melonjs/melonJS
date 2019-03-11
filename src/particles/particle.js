@@ -1,9 +1,3 @@
-/*
- * MelonJS Game Engine
- * Copyright (C) 2011 - 2018 Olivier Biot
- * http://www.melonjs.org
- *
- */
 (function () {
     /**
      * Single Particle Object.
@@ -13,9 +7,7 @@
      * @constructor
      * @param {me.ParticleEmitter} particle emitter
      */
-    me.Particle = me.Renderable.extend(
-    /** @scope me.Particle.prototype */
-    {
+    me.Particle = me.Renderable.extend({
         /**
          * @ignore
          */
@@ -165,4 +157,4 @@
         }
     });
 
-})(window);
+})();

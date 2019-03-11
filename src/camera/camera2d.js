@@ -1,10 +1,3 @@
-/*
- * MelonJS Game Engine
- * Copyright (C) 2011 - 2018 Olivier Biot
- * http://www.melonjs.org
- *
- */
-
 (function () {
     // some ref shortcut
     var MIN = Math.min, MAX = Math.max;
@@ -22,9 +15,10 @@
      * @param {Number} maxX end x offset
      * @param {Number} maxY end y offset
      */
-    me.Camera2d = me.Renderable.extend(
-    /** @scope me.Camera2d.prototype */ {
-        /** @ignore */
+    me.Camera2d = me.Renderable.extend({
+        /**
+         * @ignore
+         */
         init : function (minX, minY, maxX, maxY) {
             this._super(me.Renderable, "init", [minX, minY, maxX - minX, maxY - minY]);
 
@@ -78,16 +72,6 @@
              */
             this.damping = 1.0;
 
-            /**
-             * the name of this camera
-             * @public
-             * @type {String}
-             * @name name
-             * @default "default"
-             * @memberOf me.Camera2d
-             */
-            this.name = "default";
-
             // offset for shake effect
             this.offset = new me.Vector2d();
 
@@ -115,6 +99,9 @@
                 color : null,
                 tween : null
             };
+
+            // default camera name
+            this.name = "default";
 
             // set a default deadzone
             this.setDeadzone(this.width / 6, this.height / 6);

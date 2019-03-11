@@ -1,14 +1,15 @@
-/*
- * MelonJS Game Engine
- * Copyright (C) 2011 - 2018 Olivier Biot
- * http://www.melonjs.org
- *
- */
-
 (function () {
 
     /**
-     * a Generic Body Object <br>
+     * a Generic Body Object with some physic properties and behavior functionality<br>
+     The body object is offten attached as a member of an Entity.  The Body object can handle movements of the parent with
+     the body.update call.  It important to know that when body.update is called there are several things that happen related to
+     the movement and positioning of the parent entity (assuming its an Entity).  1) The force/gravity/friction parameters are used
+     to calcuate a new velocity and 2) the parent position is updated by adding this to the parent.pos (position me.Vector2d)
+     value. Thus Affecting the movement of the parent.  Look at the source code for /src/physics/body.js:update (me.Body.update) for
+     a better understanding.
+
+
      * @class
      * @extends me.Rect
      * @memberOf me
@@ -17,14 +18,14 @@
      * @param {me.Rect[]|me.Polygon[]|me.Line[]|me.Ellipse[]} [shapes] the initial list of shapes
      * @param {Function} [onBodyUpdate] callback for when the body is updated (e.g. add/remove shapes)
      */
-    me.Body = me.Rect.extend(
-    /** @scope me.Body.prototype */
-    {
-        /** @ignore */
+    me.Body = me.Rect.extend({
+        /**
+         * @ignore
+         */
         init : function (parent, shapes, onBodyUpdate) {
 
             /**
-             * a reference to the parent object that contains this bodt,
+             * a reference to the parent object that contains this body,
              * or undefined if it has not been added to one.
              * @public
              * @type me.Renderable
@@ -71,7 +72,8 @@
             this.collisionType = me.collision.types.ENEMY_OBJECT;
 
             /**
-             * body velocity
+             * body velocity<br>
+             *
              * @public
              * @type me.Vector2d
              * @default <0,0>
@@ -84,7 +86,8 @@
             this.vel.set(0, 0);
 
             /**
-             * body acceleration
+             * body acceleration <br>
+             * Not fully implemented yet.  At this time accel is used to set the MaximumVelocity allowed.
              * @public
              * @type me.Vector2d
              * @default <0,0>
@@ -496,8 +499,9 @@
         },
 
         /**
-         * set the body default velocity<br>
-         * note : velocity is by default limited to the same value, see
+         * Sets accel to Velocity if x or y is not 0.  Net effect is to set the maxVel.x/y to the passed values for x/y<br>
+         * note: This does not set the vel member of the body object. This is identical to the setMaxVelocity call except that the
+         * accel property is updated to match the passed x and y.
          * setMaxVelocity if needed<br>
          * @name setVelocity
          * @memberOf me.Body
@@ -517,7 +521,7 @@
         },
 
         /**
-         * cap the body velocity to the specified value<br>
+         * cap the body velocity (body.maxVel property) to the specified value<br>
          * @name setMaxVelocity
          * @memberOf me.Body
          * @function
@@ -607,11 +611,23 @@
         },
 
         /**
-         * update the body position
+         * Updates the parent's position as well as computes the new body's velocity based
+         * on the values of force/friction/gravity.  Velocity chages are proportional to the
+         * me.timer.tick value (which can be used to scale velocities).  The approach to moving the
+         * parent Entity is to compute new values of the Body.vel property then add them to
+         * the parent.pos value thus changing the postion the amount of Body.vel each time the
+         * update call is made. <br>
+         * Updates to Body.vel are bounded by maxVel (which defaults to viewport size if not set) <br>
+         *
+         * In addition, when the gravity calcuation is made, if the Body.vel.y > 0 then the Body.falling
+         * property is set to true and Body.jumping is set to !Body.falling.
+         *
+         * At this time a call to Body.Update does not call the onBodyUpdate callback that is listed in the init: function.
          * @name update
          * @memberOf me.Body
          * @function
          * @return {boolean} true if resulting velocity is different than 0
+         * @see source code for me.Body.computeVelocity (private member)
          */
         update : function (/* dt */) {
             // update the velocity
@@ -640,6 +656,7 @@
      * @name Error
      * @class
      * @memberOf me.Body
+     * @private
      * @constructor
      * @param {String} msg Error message.
      */

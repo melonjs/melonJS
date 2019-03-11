@@ -1,13 +1,7 @@
-/*
- * MelonJS Game Engine
- * Copyright (C) 2011 - 2018 Olivier Biot
- * http://www.melonjs.org
- *
- */
 (function () {
 
     /**
-     * a generic Color Layer Object
+     * a generic Color Layer Object.  Fills the entire Canvas with the color not just the container the object belongs to.
      * @class
      * @extends me.Renderable
      * @memberOf me
@@ -18,7 +12,6 @@
      */
     me.ColorLayer = me.Renderable.extend({
         /**
-         * Constructor
          * @ignore
          */
         init: function (name, color, z) {
@@ -34,9 +27,9 @@
              * the layer color component
              * @public
              * @type me.Color
-             * @name me.ColorLayer#color
+             * @name color
+             * @memberOf me.ColorLayer#
              */
-
             // parse the given color
             if (color instanceof me.Color) {
                 this.color = color;

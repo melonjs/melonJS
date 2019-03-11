@@ -1,10 +1,3 @@
-/*
- * MelonJS Game Engine
- * Copyright (C) 2011 - 2018 Olivier Biot
- * http://www.melonjs.org
- *
- */
-
 (function () {
 
     /**
@@ -28,10 +21,10 @@
      * @param {Number} [settings.collisionMask] Mask collision detection for this object
      * @param {me.Rect[]|me.Polygon[]|me.Line[]|me.Ellipse[]} [settings.shapes] the initial list of collision shapes (usually populated through Tiled)
      */
-    me.Entity = me.Renderable.extend(
-    /** @scope me.Entity.prototype */
-    {
-        /** @ignore */
+    me.Entity = me.Renderable.extend({
+        /**
+         * @ignore
+         */
         init : function (x, y, settings) {
 
             /**
@@ -60,15 +53,10 @@
                 this.anchorPoint.set(settings.anchorPoint.x, settings.anchorPoint.y);
             }
 
-            /**
-             * Entity name<br>
-             * as defined in the Tiled Object Properties
-             * @public
-             * @type String
-             * @name name
-             * @memberOf me.Entity
-             */
-            this.name = settings.name || "";
+            // set the sprite name if specified
+            if (typeof (settings.name) === "string") {
+                this.name = settings.name;
+            }
 
             /**
              * object type (as defined in Tiled)
@@ -386,6 +374,7 @@
      * @class
      * @memberOf me.Entity
      * @constructor
+     * @private
      * @param {String} msg Error message.
      */
     me.Entity.Error = me.Renderable.Error.extend({

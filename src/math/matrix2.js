@@ -1,9 +1,3 @@
-/*
- * MelonJS Game Engine
- * Copyright (C) 2011 - 2018 Olivier Biot
- * http://www.melonjs.org
- *
- */
 (function () {
     /**
      * a Matrix2d Object.<br>
@@ -14,12 +8,12 @@
      * @memberOf me
      * @constructor
      * @param {me.Matrix2d} [mat2d] An instance of me.Matrix2d to copy from
-     * @param {Number[]} [arguments...] Matrix elements. See {@link me.Matrix2d.set}
+     * @param {Number[]} [arguments...] Matrix elements. See {@link me.Matrix2d.setTransform}
      */
-    me.Matrix2d = me.Object.extend(
-    /** @scope me.Matrix2d.prototype */    {
-
-        /** @ignore */
+    me.Matrix2d = me.Object.extend({
+        /**
+         * @ignore
+         */
         init : function () {
             if (typeof(this.val) === "undefined") {
                 this.val = new Float32Array(9);

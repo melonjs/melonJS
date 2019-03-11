@@ -1,9 +1,3 @@
-/*
- * MelonJS Game Engine
- * Copyright (C) 2011 - 2018 Olivier Biot
- * http://www.melonjs.org
- *
- */
 (function () {
     /**
      * a line segment Object.<br>
@@ -15,13 +9,12 @@
      * @param {Number} y origin point of the Line
      * @param {me.Vector2d[]} points array of vectors defining the Line
      */
-    me.Line = me.Polygon.extend(
-    /** @scope me.Line.prototype */ {
+    me.Line = me.Polygon.extend({
 
         /**
          * check if this line segment contains the specified point
          * @name containsPointV
-         * @memberOf me.Line
+         * @memberOf me.Line.prototype
          * @function
          * @param  {me.Vector2d} point
          * @return {boolean} true if contains
@@ -33,7 +26,7 @@
         /**
          * check if this line segment contains the specified point
          * @name containsPoint
-         * @memberOf me.Line
+         * @memberOf me.Line.prototype
          * @function
          * @param  {Number} x x coordinate
          * @param  {Number} y y coordinate
@@ -55,7 +48,7 @@
          * Computes the calculated collision edges and normals.
          * This **must** be called if the `points` array, `angle`, or `offset` is modified manually.
          * @name recalc
-         * @memberOf me.Line
+         * @memberOf me.Line.prototype
          * @function
          */
         recalc : function () {
@@ -84,7 +77,7 @@
         /**
          * clone this line segment
          * @name clone
-         * @memberOf me.Line
+         * @memberOf me.Line.prototype
          * @function
          * @return {me.Line} new Line
          */
@@ -102,6 +95,7 @@
      * @name Error
      * @class
      * @memberOf me.Line
+     * @private
      * @constructor
      * @param {String} msg Error message.
      */

@@ -1,10 +1,3 @@
-/*
- * MelonJS Game Engine
- * Copyright (C) 2011 - 2018 Olivier Biot
- * http://www.melonjs.org
- *
- */
-
 (function () {
 
     /**
@@ -27,9 +20,7 @@
      * @param {Number} [options.zoomX=width] The actual width of the canvas with scaling applied
      * @param {Number} [options.zoomY=height] The actual height of the canvas with scaling applied
      */
-    me.Renderer = me.Object.extend(
-    /** @scope me.Renderer.prototype */
-    {
+    me.Renderer = me.Object.extend({
         /**
          * @ignore
          */
@@ -38,10 +29,19 @@
              * The given constructor options
              * @public
              * @name settings
-             * @memberOf me.Renderer
+             * @memberOf me.Renderer#
              * @enum {Object}
              */
             this.settings = options;
+
+            /**
+             * true if the current rendering context is valid
+             * @name isContextValid
+             * @memberOf me.Renderer
+             * @default true
+             * type {Boolean}
+             */
+            this.isContextValid = true;
 
             /**
              * @ignore
@@ -79,19 +79,25 @@
         },
 
         /**
-         * @ignore
+         * prepare the framebuffer for drawing a new frame
+         * @name clear
+         * @memberOf me.Renderer.prototype
+         * @function
          */
         clear : function () {},
 
         /**
-         * @ignore
+         * Reset context state
+         * @name reset
+         * @memberOf me.Renderer.prototype
+         * @function
          */
         reset : function () {
             this.resetTransform();
             this.setBlendMode(this.settings.blendMode);
             this.setColor("#000000");
             this.currentTint.setColor(255, 255, 255, 1.0);
-            this.cache.reset();
+            this.cache.clear();
             this.currentScissor[0] = 0;
             this.currentScissor[1] = 0;
             this.currentScissor[2] = this.backBufferCanvas.width;
@@ -101,7 +107,7 @@
         /**
          * return a reference to the system canvas
          * @name getCanvas
-         * @memberOf me.Renderer
+         * @memberOf me.Renderer.prototype
          * @function
          * @return {HTMLCanvasElement}
          */
@@ -112,7 +118,7 @@
         /**
          * return a reference to the screen canvas
          * @name getScreenCanvas
-         * @memberOf me.Renderer
+         * @memberOf me.Renderer.prototype
          * @function
          * @return {HTMLCanvasElement}
          */
@@ -124,7 +130,7 @@
          * return a reference to the screen canvas corresponding 2d Context<br>
          * (will return buffered context if double buffering is enabled, or a reference to the Screen Context)
          * @name getScreenContext
-         * @memberOf me.Renderer
+         * @memberOf me.Renderer.prototype
          * @function
          * @return {Context2d}
          */
@@ -135,7 +141,7 @@
         /**
          * returns the current blend mode for this renderer
          * @name getBlendMode
-         * @memberOf me.Renderer
+         * @memberOf me.Renderer.prototype
          * @function
          * @return {String} blend mode
          */
@@ -147,7 +153,7 @@
          * Returns the 2D Context object of the given Canvas<br>
          * Also configures anti-aliasing and blend modes based on constructor options.
          * @name getContext2d
-         * @memberOf me.Renderer
+         * @memberOf me.Renderer.prototype
          * @function
          * @param {HTMLCanvasElement} canvas
          * @param {Boolean} [transparent=true] use false to disable transparency
@@ -171,19 +177,10 @@
                 transparent = true;
             }
 
-            var _context;
-            if (me.device.cocoon) {
-                // cocoonJS specific extension
-                _context = c.getContext("2d", {
-                    "antialias" : this.settings.antiAlias,
+            var _context = c.getContext("2d", {
                     "alpha" : transparent
-                });
-            }
-            else {
-                _context = c.getContext("2d", {
-                    "alpha" : transparent
-                });
-            }
+            });
+
             if (!_context.canvas) {
                 _context.canvas = c;
             }
@@ -194,7 +191,7 @@
         /**
          * return the width of the system Canvas
          * @name getWidth
-         * @memberOf me.Renderer
+         * @memberOf me.Renderer.prototype
          * @function
          * @return {Number}
          */
@@ -205,7 +202,7 @@
         /**
          * return the height of the system Canvas
          * @name getHeight
-         * @memberOf me.Renderer
+         * @memberOf me.Renderer.prototype
          * @function
          * @return {Number}
          */
@@ -216,7 +213,7 @@
         /**
          * get the current fill & stroke style color.
          * @name getColor
-         * @memberOf me.Renderer
+         * @memberOf me.Renderer.prototype
          * @function
          * @param {me.Color} current global color
          */
@@ -227,7 +224,7 @@
         /**
          * return the current global alpha
          * @name globalAlpha
-         * @memberOf me.Renderer
+         * @memberOf me.Renderer.prototype
          * @function
          * @return {Number}
          */
@@ -238,7 +235,7 @@
         /**
          * check if the given rectangle overlaps with the renderer screen coordinates
          * @name overlaps
-         * @memberOf me.Renderer
+         * @memberOf me.Renderer.prototype
          * @function
          * @param  {me.Rect} rect
          * @return {boolean} true if overlaps
@@ -254,7 +251,7 @@
         /**
          * resizes the system canvas
          * @name resize
-         * @memberOf me.Renderer
+         * @memberOf me.Renderer.prototype
          * @function
          * @param {Number} width new width of the canvas
          * @param {Number} height new height of the canvas
@@ -275,7 +272,7 @@
         /**
          * enable/disable image smoothing (scaling interpolation) for the given context
          * @name setAntiAlias
-         * @memberOf me.Renderer
+         * @memberOf me.Renderer.prototype
          * @function
          * @param {Context2d} context
          * @param {Boolean} [enable=false]
@@ -303,7 +300,7 @@
         /**
          * stroke the given shape
          * @name stroke
-         * @memberOf me.Renderer
+         * @memberOf me.Renderer.prototype
          * @function
          * @param {me.Rect|me.Polygon|me.Line|me.Ellipse} shape a shape object to stroke
          */
@@ -326,7 +323,7 @@
         /**
          * fill the given shape
          * @name fill
-         * @memberOf me.Renderer
+         * @memberOf me.Renderer.prototype
          * @function
          * @param {me.Rect|me.Polygon|me.Line|me.Ellipse} shape a shape object to fill
          */
@@ -339,7 +336,7 @@
          * So, if the renderable is larger than the mask, only the intersecting part of the renderable will be visible.
          * Mask are not preserved through renderer context save and restore.
          * @name setMask
-         * @memberOf me.Renderer
+         * @memberOf me.Renderer.prototype
          * @function
          * @param {me.Rect|me.Polygon|me.Line|me.Ellipse} [mask] the shape defining the mask to be applied
          */
@@ -349,7 +346,7 @@
          * disable (remove) the rendering mask set through setMask.
          * @name clearMask
          * @see setMask
-         * @memberOf me.Renderer
+         * @memberOf me.Renderer.prototype
          * @function
          */
         clearMask : function() {},
@@ -357,7 +354,7 @@
         /**
          * set a rendering tint (WebGL only) for sprite based renderables.
          * @name setTint
-         * @memberOf me.Renderer
+         * @memberOf me.Renderer.prototype
          * @function
          * @param {me.Color} [tint] the tint color
          */
@@ -370,7 +367,7 @@
          * clear the rendering tint set through setTint.
          * @name clearTint
          * @see setTint
-         * @memberOf me.Renderer
+         * @memberOf me.Renderer.prototype
          * @function
          */
         clearTint : function() {

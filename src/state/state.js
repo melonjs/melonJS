@@ -1,12 +1,3 @@
-/*
- * MelonJS Game Engine
- * Copyright (C) 2011 - 2018 Olivier Biot
- * http://www.melonjs.org
- *
- * Screens objects & State machine
- *
- */
-
 (function () {
 
     /**

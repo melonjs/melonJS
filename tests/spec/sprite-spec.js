@@ -43,8 +43,8 @@ describe("me.Sprite", function () {
         expect(sprite.anim["test"].frames[0].name).toEqual(1);
         expect(sprite.anim["test"].frames[1].name).toEqual(0);
         sprite.reverseAnimation();
-        expect(sprite.current.frames[0].name).toEqual(0);
-        expect(sprite.current.frames[1].name).toEqual(1);
+        expect(sprite.anim[sprite.current.name].frames[0].name).toEqual(0);
+        expect(sprite.anim[sprite.current.name].frames[1].name).toEqual(1);
     });
 
     it("me.Sprite isCurrentAnimation allows to verify which animation is set", function () {

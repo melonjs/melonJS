@@ -1,9 +1,3 @@
-/*
- * MelonJS Game Engine
- * Copyright (C) 2011 - 2018 Olivier Biot
- * http://www.melonjs.org
- *
- */
 (function () {
 
     /**
@@ -31,12 +25,11 @@
      */
     me.ImageLayer = me.Renderable.extend({
         /**
-         * constructor
          * @ignore
          */
         init: function (x, y, settings) {
-            // layer name
-            this.name = settings.name || "me.ImageLayer";
+            // call the constructor
+            this._super(me.Renderable, "init", [x, y, Infinity, Infinity]);
 
             // get the corresponding image
             this.image = (typeof settings.image === "object") ? settings.image : me.loader.getImage(settings.image);
@@ -53,8 +46,10 @@
             this.imagewidth = this.image.width;
             this.imageheight = this.image.height;
 
-            // call the constructor
-            this._super(me.Renderable, "init", [x, y, Infinity, Infinity]);
+            // set the sprite name if specified
+            if (typeof (settings.name) === "string") {
+                this.name = settings.name;
+            }
 
             // render in screen coordinates
             this.floating = true;
@@ -165,6 +160,9 @@
             });
 
             this.repeat = settings.repeat || "repeat";
+
+            // on context lost, all previous textures are destroyed
+            me.event.subscribe(me.event.WEBGL_ONCONTEXT_RESTORED, this.createPattern.bind(this));
         },
 
         // called when the layer is added to the game world or a container
@@ -188,7 +186,7 @@
         /**
          * resize the Image Layer to match the given size
          * @name resize
-         * @memberOf me.ImageLayer
+         * @memberOf me.ImageLayer.prototype
          * @function
          * @param {Number} w new width
          * @param {Number} h new height

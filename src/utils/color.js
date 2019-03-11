@@ -1,8 +1,3 @@
-/*
- * MelonJS Game Engine
- * Copyright (C) 2011 - 2018 Olivier Biot
- * http://www.melonjs.org
- */
 (function () {
 
     // convert a give color component to it hexadecimal value
@@ -184,10 +179,7 @@
      * @param {Number} [b=0] blue component
      * @param {Number} [alpha=1.0] alpha value
      */
-    me.Color = me.Object.extend(
-    /** @scope me.Color.prototype */
-    {
-
+    me.Color = me.Object.extend({
         /**
          * @ignore
          */
@@ -597,6 +589,7 @@
      * @name Error
      * @class
      * @memberOf me.Color
+     * @private
      * @constructor
      * @param {String} msg Error message.
      */

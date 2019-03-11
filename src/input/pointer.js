@@ -1,9 +1,3 @@
-/*
- * MelonJS Game Engine
- * Copyright (C) 2011 - 2018 Olivier Biot
- * http://www.melonjs.org
- *
- */
 (function () {
 
     /**
@@ -19,9 +13,7 @@
      * @memberOf me
      * @constructor
      */
-    me.Pointer = me.Rect.extend(
-    /** @scope me.Pointer.prototype */
-    {
+    me.Pointer = me.Rect.extend({
         /**
          * @ignore
          */

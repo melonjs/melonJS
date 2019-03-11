@@ -1,9 +1,6 @@
-/*
- * MelonJS Game Engine
- * Copyright (C) 2011 - 2018 Olivier Biot
- * http://www.melonjs.org
- *
- */
+// external import
+import earcut from "earcut";
+
 (function () {
     /**
      * a polygon Object.<br>
@@ -20,17 +17,17 @@
      * @param {Number} y origin point of the Polygon
      * @param {me.Vector2d[]} points array of vector defining the Polygon
      */
-    me.Polygon = me.Object.extend(
-    /** @scope me.Polygon.prototype */ {
-
-        /** @ignore */
+    me.Polygon = me.Object.extend({
+        /**
+         * @ignore
+         */
         init : function (x, y, points) {
             /**
              * origin point of the Polygon
              * @public
              * @type {me.Vector2d}
              * @name pos
-             * @memberOf me.Polygon
+             * @memberof me.Polygon#
              */
             this.pos = new me.Vector2d();
 
@@ -39,7 +36,7 @@
              * @ignore
              * @type {me.Rect}
              * @name _bounds
-             * @memberOf me.Polygon
+             * @memberOf me.Polygon#
              */
             this._bounds = undefined;
 
@@ -49,7 +46,7 @@
              * @public
              * @type {me.Vector2d[]}
              * @name points
-             * @memberOf me.Polygon
+             * @memberOf me.Polygon#
              */
             this.points = null;
 
@@ -88,7 +85,7 @@
         /**
          * set new value to the Polygon
          * @name setShape
-         * @memberOf me.Polygon
+         * @memberOf me.Polygon.prototype
          * @function
          * @param {Number} x position of the Polygon
          * @param {Number} y position of the Polygon
@@ -121,7 +118,7 @@
         /**
          * apply the given transformation matrix to this Polygon
          * @name transform
-         * @memberOf me.Polygon
+         * @memberOf me.Polygon.prototype
          * @function
          * @param {me.Matrix2d} matrix the transformation matrix
          * @return {me.Polygon} Reference to this object for method chaining
@@ -140,7 +137,7 @@
         /**
          * apply an isometric projection to this shape
          * @name toIso
-         * @memberOf me.Polygon
+         * @memberOf me.Polygon.prototype
          * @function
          * @return {me.Polygon} Reference to this object for method chaining
          */
@@ -151,7 +148,7 @@
         /**
          * apply a 2d projection to this shape
          * @name to2d
-         * @memberOf me.Polygon
+         * @memberOf me.Polygon.prototype
          * @function
          * @return {me.Polygon} Reference to this object for method chaining
          */
@@ -162,7 +159,7 @@
         /**
          * Rotate this Polygon (counter-clockwise) by the specified angle (in radians).
          * @name rotate
-         * @memberOf me.Polygon
+         * @memberOf me.Polygon.prototype
          * @function
          * @param {Number} angle The angle to rotate (in radians)
          * @return {me.Polygon} Reference to this object for method chaining
@@ -183,7 +180,7 @@
         /**
          * Scale this Polygon by the given scalar.
          * @name scale
-         * @memberOf me.Polygon
+         * @memberOf me.Polygon.prototype
          * @function
          * @param {Number} x
          * @param {Number} [y=x]
@@ -205,7 +202,7 @@
         /**
          * Scale this Polygon by the given vector
          * @name scaleV
-         * @memberOf me.Polygon
+         * @memberOf me.Polygon.prototype
          * @function
          * @param {me.Vector2d} v
          * @return {me.Polygon} Reference to this object for method chaining
@@ -218,7 +215,7 @@
          * Computes the calculated collision polygon.
          * This **must** be called if the `points` array, `angle`, or `offset` is modified manually.
          * @name recalc
-         * @memberOf me.Polygon
+         * @memberOf me.Polygon.prototype
          * @function
          * @return {me.Polygon} Reference to this object for method chaining
          */
@@ -261,7 +258,7 @@
         /**
          * returns a list of indices for all triangles defined in this polygon
          * @name getIndices
-         * @memberOf me.Polygon
+         * @memberOf me.Polygon.prototype
          * @function
          * @param {Vector2d[]} a list of vector
          * @return {me.Polygon} this Polygon
@@ -277,7 +274,7 @@
                     data.push(points[i].x);
                     data.push(points[i].y);
                 }
-                this.indices = me.earcut(data);
+                this.indices = earcut(data);
             }
             return this.indices;
         },
@@ -285,7 +282,7 @@
         /**
          * translate the Polygon by the specified offset
          * @name translate
-         * @memberOf me.Polygon
+         * @memberOf me.Polygon.prototype
          * @function
          * @param {Number} x x offset
          * @param {Number} y y offset
@@ -301,7 +298,7 @@
         /**
          * translate the Polygon by the specified vector
          * @name translateV
-         * @memberOf me.Polygon
+         * @memberOf me.Polygon.prototype
          * @function
          * @param {me.Vector2d} v vector offset
          * @return {me.Polygon} Reference to this object for method chaining
@@ -315,7 +312,7 @@
         /**
          * check if this Polygon contains the specified point
          * @name containsPointV
-         * @memberOf me.Polygon
+         * @memberOf me.Polygon.prototype
          * @function
          * @param  {me.Vector2d} point
          * @return {boolean} true if contains
@@ -329,7 +326,7 @@
          * (Note: it is highly recommended to first do a hit test on the corresponding <br>
          *  bounding rect, as the function can be highly consuming with complex shapes)
          * @name containsPoint
-         * @memberOf me.Polygon
+         * @memberOf me.Polygon.prototype
          * @function
          * @param  {Number} x x coordinate
          * @param  {Number} y y coordinate
@@ -355,7 +352,7 @@
         /**
          * returns the bounding box for this shape, the smallest Rectangle object completely containing this shape.
          * @name getBounds
-         * @memberOf me.Polygon
+         * @memberOf me.Polygon.prototype
          * @function
          * @return {me.Rect} this shape bounding box Rectangle object
          */
@@ -366,7 +363,7 @@
         /**
          * update the bounding box for this shape.
          * @name updateBounds
-         * @memberOf me.Polygon
+         * @memberOf me.Polygon.prototype
          * @function
          * @return {me.Rect} this shape bounding box Rectangle object
          */
@@ -383,7 +380,7 @@
         /**
          * clone this Polygon
          * @name clone
-         * @memberOf me.Polygon
+         * @memberOf me.Polygon.prototype
          * @function
          * @return {me.Polygon} new Polygon
          */
@@ -401,6 +398,7 @@
      * @name Error
      * @class
      * @memberOf me.Polygon
+     * @private
      * @constructor
      * @param {String} msg Error message.
      */

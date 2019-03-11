@@ -1,8 +1,5 @@
-/**
- * MelonJS Game Engine
- * Copyright (C) 2011 - 2018 Olivier Biot
- * http://www.melonjs.org
- */
+
+import "jay-extend";
 
 /**
  * The base class from which all melonJS objects inherit.

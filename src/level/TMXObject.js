@@ -1,12 +1,3 @@
-/*
- * MelonJS Game Engine
- * Copyright (C) 2011 - 2018 Olivier Biot
- * http://www.melonjs.org
- *
- * Tile QT 0.7.x format
- * http://www.mapeditor.org/
- *
- */
 (function () {
 
     /**
@@ -14,7 +5,7 @@
      * note : object definition are translated into the virtual `me.game.world` using `me.Entity`.
      * @see me.Entity
      * @class
-     * @extends Object
+     * @extends me.Object
      * @memberOf me
      * @constructor
      */

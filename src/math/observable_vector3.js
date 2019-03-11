@@ -1,9 +1,3 @@
-/*
- * MelonJS Game Engine
- * Copyright (C) 2011 - 2018 Olivier Biot
- * http://www.melonjs.org
- *
- */
 (function () {
     /**
      * A Vector3d object that provide notification by executing the given callback when the vector is changed.
@@ -17,8 +11,6 @@
      * @param {Function} settings.onUpdate the callback to be executed when the vector is changed
      */
     me.ObservableVector3d = me.Vector3d.extend({
-    /** @scope me.ObservableVector3d.prototype */
-
         /**
          * @ignore
          */
@@ -552,6 +544,7 @@
      * @name Error
      * @class
      * @memberOf me.ObservableVector3d
+     * @private
      * @constructor
      * @param {String} msg Error message.
      */

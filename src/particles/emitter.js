@@ -1,9 +1,3 @@
-/*
- * MelonJS Game Engine
- * Copyright (C) 2011 - 2018 Olivier Biot
- * http://www.melonjs.org
- *
- */
 (function () {
     // generate a default image for the particles
     var pixel = (function () {
@@ -326,9 +320,7 @@
      * me.game.world.removeChild(emitter);
      *
      */
-    me.ParticleEmitter = me.Rect.extend(
-    /** @scope me.ParticleEmitter.prototype */
-    {
+    me.ParticleEmitter = me.Rect.extend({
         /**
          * @ignore
          */

@@ -1,10 +1,4 @@
 /*
- * MelonJS Game Engine
- * Copyright (C) 2011 - 2018 Olivier Biot
- * http://www.melonjs.org
- *
- * Font / Bitmap font
- *
  * ASCII Table
  * http://www.asciitable.com/
  * [ !"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\]^_`abcdefghijklmnopqrstuvwxyz]
@@ -51,8 +45,7 @@
      * @param {me.Vector2d} [settings.anchorPoint={x:0.0, y:0.0}] anchor point to draw the text at
      * @param {(String|String[])} [settings.text] a string, or an array of strings
      */
-    me.Text = me.Renderable.extend(
-    /** @scope me.Font.prototype */ {
+    me.Text = me.Renderable.extend({
 
         /** @ignore */
         init : function (x, y, settings) {
@@ -64,7 +57,7 @@
              * @public
              * @type me.Color
              * @default black
-             * @name me.Font#fillStyle
+             * @name me.Text#fillStyle
              */
             if (typeof settings.fillStyle !== "undefined") {
                 if (settings.fillStyle instanceof me.Color) {
@@ -82,7 +75,7 @@
              * @public
              * @type me.Color
              * @default black
-             * @name me.Font#strokeStyle
+             * @name me.Text#strokeStyle
              */
              if (typeof settings.strokeStyle !== "undefined") {
                  if (settings.strokeStyle instanceof me.Color) {
@@ -100,7 +93,7 @@
              * @public
              * @type Number
              * @default 1
-             * @name me.Font#lineWidth
+             * @name me.Text#lineWidth
              */
             this.lineWidth = settings.lineWidth || 1;
 
@@ -110,7 +103,7 @@
              * @public
              * @type String
              * @default "left"
-             * @name me.Font#textAlign
+             * @name me.Text#textAlign
              */
             this.textAlign = settings.textAlign || "left";
 
@@ -120,7 +113,7 @@
              * @public
              * @type String
              * @default "top"
-             * @name me.Font#textBaseline
+             * @name me.Text#textBaseline
              */
             this.textBaseline = settings.textBaseline || "top";
 
@@ -130,7 +123,7 @@
              * @public
              * @type Number
              * @default 1.0
-             * @name me.Font#lineHeight
+             * @name me.Text#lineHeight
              */
             this.lineHeight = settings.lineHeight || 1.0;
 
@@ -170,7 +163,7 @@
         /**
          * make the font bold
          * @name bold
-         * @memberOf me.Text
+         * @memberOf me.Text.prototype
          * @function
          * @return this object for chaining
          */
@@ -183,7 +176,7 @@
         /**
          * make the font italic
          * @name italic
-         * @memberOf me.Text
+         * @memberOf me.Text.prototype
          * @function
          * @return this object for chaining
          */
@@ -196,7 +189,7 @@
         /**
          * set the font family and size
          * @name setFont
-         * @memberOf me.Text
+         * @memberOf me.Text.prototype
          * @function
          * @param {String} font a CSS font name
          * @param {Number|String} size size, or size + suffix (px, em, pt)
@@ -240,9 +233,9 @@
         /**
          * change the text to be displayed
          * @name setText
-         * @memberOf me.Text
+         * @memberOf me.Text.prototype
          * @function
-         * @param {(Number|String|String[])}} value a string, or an array of strings
+         * @param {Number|String|String[]} value a string, or an array of strings
          * @return this object for chaining
          */
         setText : function (value) {
@@ -261,7 +254,7 @@
         /**
          * measure the given text size in pixels
          * @name measureText
-         * @memberOf me.Text
+         * @memberOf me.Text.prototype
          * @function
          * @param {me.CanvasRenderer|me.WebGLRenderer} [renderer] reference a renderer instance
          * @param {String} [text] the text to be measured
@@ -274,7 +267,7 @@
             var context;
 
             if (typeof renderer === "undefined") {
-                context = me.video.renderer.getFontContext()
+                context = me.video.renderer.getFontContext();
             } else if (renderer instanceof me.Renderer) {
                 context = renderer.getFontContext();
             } else {
@@ -329,7 +322,7 @@
         /**
          * draw a text at the specified coord
          * @name draw
-         * @memberOf me.Text
+         * @memberOf me.Text.prototype
          * @function
          * @param {me.CanvasRenderer|me.WebGLRenderer} renderer Reference to the destination renderer instance
          * @param {String} [text]
@@ -388,7 +381,7 @@
          * by the `lineWidth` and `fillStroke` properties. <br>
          * Note : using drawStroke is not recommended for performance reasons
          * @name drawStroke
-         * @memberOf me.Text
+         * @memberOf me.Text.prototype
          * @function
          * @param {me.CanvasRenderer|me.WebGLRenderer} renderer Reference to the destination renderer instance
          * @param {String} text

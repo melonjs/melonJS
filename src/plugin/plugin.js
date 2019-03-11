@@ -1,8 +1,3 @@
-/*
- * MelonJS Game Engine
- * Copyright (C) 2011 - 2018 Olivier Biot
- * http://www.melonjs.org
- */
 (function () {
     /**
      * There is no constructor function for me.plugins<br>
@@ -32,14 +27,12 @@
         * plugin must be installed using the register function
         * @see me.plugin
         * @class
-        * @extends Object
+        * @extends me.Object
         * @name plugin.Base
         * @memberOf me
         * @constructor
         */
-        singleton.Base = me.Object.extend(
-        /** @scope me.plugin.Base.prototype */
-        {
+        singleton.Base = me.Object.extend({
             /** @ignore */
             init : function () {
                 /**

@@ -1,8 +1,3 @@
-/*
- * MelonJS Game Engine
- * Copyright (C) 2011 - 2018 Olivier Biot
- * http://www.melonjs.org
- */
 (function () {
 
     // Handy constants
@@ -38,9 +33,7 @@
      * @constructor
      * @param {me.WebGLRenderer} renderer the current WebGL renderer session
      */
-    me.WebGLRenderer.Compositor = me.Object.extend(
-    /** @scope me.WebGLRenderer.Compositor.prototype */
-    {
+    me.WebGLRenderer.Compositor = me.Object.extend({
         /**
          * @ignore
          */
@@ -112,24 +105,8 @@
             this.activeShader = null;
 
             // Load and create shader programs
-            /* eslint-disable */
-            this.primitiveShader = me.video.shader.createShader(
-                this.gl,
-                (__PRIMITIVE_VERTEX__)(),
-                (__PRIMITIVE_FRAGMENT__)({
-                    "precision"     : me.device.getMaxShaderPrecision(this.gl)
-                })
-            );
-
-            this.quadShader = me.video.shader.createShader(
-                this.gl,
-                (__QUAD_VERTEX__)(),
-                (__QUAD_FRAGMENT__)({
-                    "precision"     : me.device.getMaxShaderPrecision(this.gl),
-                    "maxTextures"   : this.maxTextures
-                })
-            );
-            /* eslint-enable */
+            this.primitiveShader = new me.PrimitiveGLShader(this.gl);
+            this.quadShader = new me.QuadGLShader(this.gl, this.maxTextures);
 
             // Stream buffer
             this.sb = gl.createBuffer();
@@ -196,6 +173,28 @@
         },
 
         /**
+         * Reset compositor internal state
+         * @ignore
+         */
+        reset : function () {
+            this.sbIndex = 0;
+            this.length = 0;
+
+            var samplers = [];
+
+            // WebGL context
+            this.gl = this.renderer.gl;
+
+            for (var i = 0; i < this.maxTextures; i++) {
+                this.units[i] = false;
+                samplers[i] = i;
+            }
+            // set the quad shader as the default program
+            this.useShader(this.quadShader);
+            this.quadShader.uniforms.uSampler = samplers;
+        },
+
+        /**
          * Sets the projection matrix with the given size
          * @name setProjection
          * @memberOf me.WebGLRenderer.Compositor
@@ -214,16 +213,58 @@
         },
 
         /**
+         * Create a texture from an image
+         * @name createTexture
+         * @memberOf me.WebGLRenderer.Compositor
+         * @function
+         * @param {Number} unit Destination texture unit
+         * @param {Image|Canvas|ImageData|UInt8Array[]|Float32Array[]} image Source image
+         * @param {Number} filter gl.LINEAR or gl.NEAREST
+         * @param {String} [repeat="no-repeat"] Image repeat behavior (see {@link me.ImageLayer#repeat})
+         * @param {Number} [w] Source image width (Only use with UInt8Array[] or Float32Array[] source image)
+         * @param {Number} [h] Source image height (Only use with UInt8Array[] or Float32Array[] source image)
+         * @param {Number} [b] Source image border (Only use with UInt8Array[] or Float32Array[] source image)
+         * @param {Number} [b] Source image border (Only use with UInt8Array[] or Float32Array[] source image)
+         * @param {Boolean} [premultipliedAlpha=true] Multiplies the alpha channel into the other color channels
+         * @return {WebGLTexture} A texture object
+         */
+        createTexture : function (unit, image, filter, repeat, w, h, b, premultipliedAlpha) {
+            var gl = this.gl;
+
+            repeat = repeat || "no-repeat";
+
+            var isPOT = me.Math.isPowerOfTwo(w || image.width) && me.Math.isPowerOfTwo(h || image.height);
+            var texture = gl.createTexture();
+            var rs = (repeat.search(/^repeat(-x)?$/) === 0) && isPOT ? gl.REPEAT : gl.CLAMP_TO_EDGE;
+            var rt = (repeat.search(/^repeat(-y)?$/) === 0) && isPOT ? gl.REPEAT : gl.CLAMP_TO_EDGE;
+
+            gl.activeTexture(gl.TEXTURE0 + unit);
+            gl.bindTexture(gl.TEXTURE_2D, texture);
+            gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, rs);
+            gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, rt);
+            gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, filter);
+            gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, filter);
+            gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, (typeof premultipliedAlpha === "boolean") ? premultipliedAlpha : true);
+            if (w || h || b) {
+                gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, w, h, b, gl.RGBA, gl.UNSIGNED_BYTE, image);
+            }
+            else {
+                gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, image);
+            }
+
+            return texture;
+        },
+
+        /**
          * @ignore
          */
         uploadTexture : function (texture, w, h, b, force) {
             var unit = this.renderer.cache.getUnit(texture);
             if (!this.units[unit] || force) {
                 this.units[unit] = true;
-                me.video.shader.createTexture(
-                    this.gl,
+                this.createTexture(
                     unit,
-                    texture.source,
+                    texture.getTexture(),
                     this.renderer.settings.antiAlias ? this.gl.LINEAR : this.gl.NEAREST,
                     texture.repeat,
                     w,
@@ -234,25 +275,6 @@
             }
 
             return unit;
-        },
-
-        /**
-         * Reset compositor internal state
-         * @ignore
-         */
-        reset : function () {
-            this.sbIndex = 0;
-            this.length = 0;
-
-            var samplers = [];
-
-            for (var i = 0; i < this.maxTextures; i++) {
-                this.units[i] = false;
-                samplers[i] = i;
-            }
-            // set the quad shader as the default program
-            this.useShader(this.quadShader);
-            this.quadShader.uniforms.uSampler = samplers;
         },
 
         /**
@@ -289,16 +311,16 @@
         /**
          * Select the shader to use for compositing
          * @name useShader
-         * @see me.video.shader.createShader
+         * @see me.GLShader
          * @memberOf me.WebGLRenderer.Compositor
          * @function
-         * @param {Object} a reference to a WebGL Shader Program
+         * @param {me.GLShader} shader a reference to a GLShader instance
          */
         useShader : function (shader) {
             if (this.activeShader !== shader) {
                 this.flush();
                 this.activeShader = shader;
-                this.gl.useProgram(this.activeShader.handle);
+                this.activeShader.bind();
                 this.activeShader.uniforms.uMatrix = this.uMatrix.val;
             }
         },
@@ -382,33 +404,17 @@
             this.stream[idx2 + TEXTURE_ELEMENT] =
             this.stream[idx3 + TEXTURE_ELEMENT] = unit;
 
-            // Get the source texture region
-            var region = texture.getRegion(key);
-            if (typeof(region) === "undefined") {
-                // TODO: Require proper atlas regions instead of caching arbitrary region keys
-                if (this.renderer.settings.verbose === true) {
-                    console.warn("Adding texture region", key, "for texture", texture);
-                }
-
-                var keys = key.split(","),
-                    sx = +keys[0],
-                    sy = +keys[1],
-                    sw = +keys[2],
-                    sh = +keys[3];
-                region = texture._insertRegion(key, sx, sy, sw, sh);
-            }
-
             // Fill texture coordinates buffer
+            var uvs = texture.getUVs(key);
             // FIXME: Pack each texture coordinate into single floats
-            var stMap = region.stMap;
-            this.stream[idx0 + REGION_ELEMENT + 0] = stMap[0];
-            this.stream[idx0 + REGION_ELEMENT + 1] = stMap[1];
-            this.stream[idx1 + REGION_ELEMENT + 0] = stMap[2];
-            this.stream[idx1 + REGION_ELEMENT + 1] = stMap[1];
-            this.stream[idx2 + REGION_ELEMENT + 0] = stMap[0];
-            this.stream[idx2 + REGION_ELEMENT + 1] = stMap[3];
-            this.stream[idx3 + REGION_ELEMENT + 0] = stMap[2];
-            this.stream[idx3 + REGION_ELEMENT + 1] = stMap[3];
+            this.stream[idx0 + REGION_ELEMENT + 0] = uvs[0];
+            this.stream[idx0 + REGION_ELEMENT + 1] = uvs[1];
+            this.stream[idx1 + REGION_ELEMENT + 0] = uvs[2];
+            this.stream[idx1 + REGION_ELEMENT + 1] = uvs[1];
+            this.stream[idx2 + REGION_ELEMENT + 0] = uvs[0];
+            this.stream[idx2 + REGION_ELEMENT + 1] = uvs[3];
+            this.stream[idx3 + REGION_ELEMENT + 0] = uvs[2];
+            this.stream[idx3 + REGION_ELEMENT + 1] = uvs[3];
 
             this.sbIndex += ELEMENT_SIZE * ELEMENTS_PER_QUAD;
             this.length++;

@@ -1,9 +1,3 @@
-/**
- * MelonJS Game Engine
- * Copyright (C) 2011 - 2018 Olivier Biot
- * http://www.melonjs.org
- */
-
 (function () {
 
     /**
@@ -288,7 +282,9 @@
                     // update the camera/viewport
                     // iterate through all cameras
                     stage.cameras.forEach(function(camera) {
-                        isDirty |= camera.update(updateDelta);
+                        if (camera.update(updateDelta)) {
+                            isDirty = true;
+                        };
                     });
 
                     me.timer.lastUpdate = window.performance.now();
@@ -313,7 +309,7 @@
          * @param {me.Stage} stage the current stage
          */
         api.draw = function (stage) {
-            if (isDirty || isAlwaysDirty) {
+            if (renderer.isContextValid === true && (isDirty || isAlwaysDirty)) {
 
                 // prepare renderer to draw a new frame
                 renderer.clear();

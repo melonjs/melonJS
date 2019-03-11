@@ -1,9 +1,3 @@
-/*
- * MelonJS Game Engine
- * Copyright (C) 2011 - 2018 Olivier Biot
- * http://www.melonjs.org
- *
- */
 (function () {
     /**
      * a small class to manage loading of stuff and manage resources
@@ -375,6 +369,7 @@
          * @name Error
          * @class
          * @memberOf me.loader
+         * @private
          * @constructor
          * @param {String} msg Error message.
          */
@@ -396,8 +391,10 @@
             // increment the loading counter
             loadCount++;
 
-            // callback ?
-            var progress = api.getLoadProgress();
+            // currrent progress
+            var progress = loadCount / resourceCount;
+
+            // call callback if defined
             if (api.onProgress) {
                 // pass the load progress in percent, as parameter
                 api.onProgress(progress, res);
@@ -612,11 +609,6 @@
                     if (!(res.name in imgList)) {
                         return false;
                     }
-                    if (typeof(imgList[res.name].dispose) === "function") {
-                        // cocoonJS implements a dispose function to free
-                        // corresponding allocated texture in memory
-                        imgList[res.name].dispose();
-                    }
                     delete imgList[res.name];
                     return true;
 
@@ -788,6 +780,8 @@
          * @public
          * @function
          * @deprecated use callback instead
+         * @see me.loader.onProgress
+         * @see me.event.LOADER_PROGRESS
          * @return {Number}
          */
         api.getLoadProgress = function () {

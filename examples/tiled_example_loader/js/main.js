@@ -11,7 +11,7 @@ var game = {
     onload: function() {
 
         // init the video
-        if (!me.video.init(800, 480, {wrapper : "jsapp", scale : me.device.PixelRatio})) {
+        if (!me.video.init(800, 480, {wrapper : "jsapp", scale : "me.device.PixelRatio"})) {
             alert("Your browser does not support HTML5 canvas.");
             return;
         }
@@ -68,12 +68,9 @@ var game = {
                 level = "sewers";
                 break;
             case "4":
-                level = "cute";
-                break;
-            case "5":
                 level = "isometric";
                 break;
-            case "6":
+            case "5":
                 level = "perspective";
                 break;
             default:

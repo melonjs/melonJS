@@ -1,9 +1,3 @@
-/*
- * MelonJS Game Engine
- * Copyright (C) 2011 - 2018 Olivier Biot
- * http://www.melonjs.org
- *
- */
 (function (api) {
 
     /**
@@ -47,7 +41,7 @@
          * @public
          * @function
          * @memberOf me.utils.string
-         * @name isBoolean
+         * @name isNumeric
          * @param {String} string the string to be tested
          * @return {Boolean} true if string contains only digits
          */

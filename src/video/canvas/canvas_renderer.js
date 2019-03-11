@@ -1,10 +1,3 @@
-/*
- * MelonJS Game Engine
- * Copyright (C) 2011 - 2018 Olivier Biot
- * http://www.melonjs.org
- *
- */
-
 (function () {
 
     /**
@@ -25,9 +18,7 @@
      * @param {Number} [options.zoomX=width] The actual width of the canvas with scaling applied
      * @param {Number} [options.zoomY=height] The actual height of the canvas with scaling applied
      */
-    me.CanvasRenderer = me.Renderer.extend(
-    /** @scope me.CanvasRenderer.prototype */
-    {
+    me.CanvasRenderer = me.Renderer.extend({
         /**
          * @ignore
          */
@@ -40,7 +31,7 @@
 
             // create the back buffer if we use double buffering
             if (this.settings.doubleBuffering) {
-                this.backBufferCanvas = me.video.createCanvas(width, height, false);
+                this.backBufferCanvas = me.video.createCanvas(width, height);
                 this.backBufferContext2D = this.getContext2d(this.backBufferCanvas);
 
                 if (this.settings.transparent) {
@@ -72,7 +63,7 @@
         /**
          * Reset context state
          * @name reset
-         * @memberOf me.WebGLRenderer
+         * @memberOf me.CanvasRenderer.prototype
          * @function
          */
         reset : function () {
@@ -82,7 +73,7 @@
         /**
          * Reset the canvas transform to identity
          * @name resetTransform
-         * @memberOf me.CanvasRenderer
+         * @memberOf me.CanvasRenderer.prototype
          * @function
          */
         resetTransform : function () {
@@ -92,7 +83,7 @@
         /**
          * Set a blend mode for the given context
          * @name setBlendMode
-         * @memberOf me.CanvasRenderer
+         * @memberOf me.CanvasRenderer.prototype
          * @function
          * @param {String} [mode="normal"] blend mode : "normal", "multiply"
          * @param {Context2d} [context]
@@ -115,7 +106,7 @@
         /**
          * prepare the framebuffer for drawing a new frame
          * @name clear
-         * @memberOf me.CanvasRenderer
+         * @memberOf me.CanvasRenderer.prototype
          * @function
          */
         clear : function () {
@@ -127,7 +118,7 @@
         /**
          * render the main framebuffer on screen
          * @name flush
-         * @memberOf me.CanvasRenderer
+         * @memberOf me.CanvasRenderer.prototype
          * @function
          */
         flush : function () {
@@ -144,7 +135,7 @@
         /**
          * Clears the main framebuffer with the given color
          * @name clearColor
-         * @memberOf me.CanvasRenderer
+         * @memberOf me.CanvasRenderer.prototype
          * @function
          * @param {me.Color|String} color CSS color.
          * @param {Boolean} [opaque=false] Allow transparency [default] or clear the surface completely [true]
@@ -161,7 +152,7 @@
         /**
          * Erase the pixels in the given rectangular area by setting them to transparent black (rgba(0,0,0,0)).
          * @name clearRect
-         * @memberOf me.CanvasRenderer
+         * @memberOf me.CanvasRenderer.prototype
          * @function
          * @param {Number} x x axis of the coordinate for the rectangle starting point.
          * @param {Number} y y axis of the coordinate for the rectangle starting point.
@@ -175,7 +166,7 @@
         /**
          * Create a pattern with the specified repetition
          * @name createPattern
-         * @memberOf me.CanvasRenderer
+         * @memberOf me.CanvasRenderer.prototype
          * @function
          * @param {image} image Source image
          * @param {String} repeat Define how the pattern should be repeated
@@ -194,7 +185,7 @@
         /**
          * Draw an image onto the main using the canvas api
          * @name drawImage
-         * @memberOf me.CanvasRenderer
+         * @memberOf me.CanvasRenderer.prototype
          * @function
          * @param {Image} image An element to draw into the context. The specification permits any canvas image source (CanvasImageSource), specifically, a CSSImageValue, an HTMLImageElement, an SVGImageElement, an HTMLVideoElement, an HTMLCanvasElement, an ImageBitmap, or an OffscreenCanvas.
          * @param {Number} sx The X coordinate of the top left corner of the sub-rectangle of the source image to draw into the destination context.
@@ -250,7 +241,7 @@
         /**
          * Draw a pattern within the given rectangle.
          * @name drawPattern
-         * @memberOf me.CanvasRenderer
+         * @memberOf me.CanvasRenderer.prototype
          * @function
          * @param {CanvasPattern} pattern Pattern object
          * @param {Number} x
@@ -273,7 +264,7 @@
         /**
          * Stroke an arc at the specified coordinates with given radius, start and end points
          * @name strokeArc
-         * @memberOf me.CanvasRenderer
+         * @memberOf me.CanvasRenderer.prototype
          * @function
          * @param {Number} x arc center point x-axis
          * @param {Number} y arc center point y-axis
@@ -300,7 +291,7 @@
         /**
          * Fill an arc at the specified coordinates with given radius, start and end points
          * @name fillArc
-         * @memberOf me.CanvasRenderer
+         * @memberOf me.CanvasRenderer.prototype
          * @function
          * @param {Number} x arc center point x-axis
          * @param {Number} y arc center point y-axis
@@ -316,7 +307,7 @@
         /**
          * Stroke an ellipse at the specified coordinates with given radius
          * @name strokeEllipse
-         * @memberOf me.CanvasRenderer
+         * @memberOf me.CanvasRenderer.prototype
          * @function
          * @param {Number} x ellipse center point x-axis
          * @param {Number} y ellipse center point y-axis
@@ -357,7 +348,7 @@
         /**
          * Fill an ellipse at the specified coordinates with given radius
          * @name fillEllipse
-         * @memberOf me.CanvasRenderer
+         * @memberOf me.CanvasRenderer.prototype
          * @function
          * @param {Number} x ellipse center point x-axis
          * @param {Number} y ellipse center point y-axis
@@ -371,7 +362,7 @@
         /**
          * Stroke a line of the given two points
          * @name strokeLine
-         * @memberOf me.CanvasRenderer
+         * @memberOf me.CanvasRenderer.prototype
          * @function
          * @param {Number} startX the start x coordinate
          * @param {Number} startY the start y coordinate
@@ -395,7 +386,7 @@
         /**
          * Fill a line of the given two points
          * @name fillLine
-         * @memberOf me.CanvasRenderer
+         * @memberOf me.CanvasRenderer.prototype
          * @function
          * @param {Number} startX the start x coordinate
          * @param {Number} startY the start y coordinate
@@ -409,7 +400,7 @@
         /**
          * Stroke the given me.Polygon on the screen
          * @name strokePolygon
-         * @memberOf me.CanvasRenderer
+         * @memberOf me.CanvasRenderer.prototype
          * @function
          * @param {me.Polygon} poly the shape to draw
          */
@@ -438,7 +429,7 @@
         /**
          * Fill the given me.Polygon on the screen
          * @name fillPolygon
-         * @memberOf me.CanvasRenderer
+         * @memberOf me.CanvasRenderer.prototype
          * @function
          * @param {me.Polygon} poly the shape to draw
          */
@@ -449,7 +440,7 @@
         /**
          * Stroke a rectangle at the specified coordinates
          * @name strokeRect
-         * @memberOf me.CanvasRenderer
+         * @memberOf me.CanvasRenderer.prototype
          * @function
          * @param {Number} x
          * @param {Number} y
@@ -467,7 +458,7 @@
         /**
          * Draw a filled rectangle at the specified coordinates
          * @name fillRect
-         * @memberOf me.CanvasRenderer
+         * @memberOf me.CanvasRenderer.prototype
          * @function
          * @param {Number} x
          * @param {Number} y
@@ -486,7 +477,7 @@
         /**
          * return a reference to the system 2d Context
          * @name getContext
-         * @memberOf me.CanvasRenderer
+         * @memberOf me.CanvasRenderer.prototype
          * @function
          * @return {CanvasRenderingContext2D}
          */
@@ -506,7 +497,7 @@
         /**
          * scales the canvas & 2d Context
          * @name scaleCanvas
-         * @memberOf me.CanvasRenderer
+         * @memberOf me.CanvasRenderer.prototype
          * @function
          */
         scaleCanvas : function (scaleX, scaleY) {
@@ -532,7 +523,7 @@
         /**
          * save the canvas context
          * @name save
-         * @memberOf me.CanvasRenderer
+         * @memberOf me.CanvasRenderer.prototype
          * @function
          */
         save : function () {
@@ -542,7 +533,7 @@
         /**
          * restores the canvas context
          * @name restore
-         * @memberOf me.CanvasRenderer
+         * @memberOf me.CanvasRenderer.prototype
          * @function
          */
         restore : function () {
@@ -557,7 +548,7 @@
         /**
          * rotates the canvas context
          * @name rotate
-         * @memberOf me.CanvasRenderer
+         * @memberOf me.CanvasRenderer.prototype
          * @function
          * @param {Number} angle in radians
          */
@@ -568,7 +559,7 @@
         /**
          * scales the canvas context
          * @name scale
-         * @memberOf me.CanvasRenderer
+         * @memberOf me.CanvasRenderer.prototype
          * @function
          * @param {Number} x
          * @param {Number} y
@@ -581,7 +572,7 @@
          * Set the current fill & stroke style color.
          * By default, or upon reset, the value is set to #000000.
          * @name setColor
-         * @memberOf me.CanvasRenderer
+         * @memberOf me.CanvasRenderer.prototype
          * @function
          * @param {me.Color|String} color css color value
          */
@@ -597,7 +588,7 @@
         /**
          * Set the global alpha on the canvas context
          * @name setGlobalAlpha
-         * @memberOf me.CanvasRenderer
+         * @memberOf me.CanvasRenderer.prototype
          * @function
          * @param {Number} alpha 0.0 to 1.0 values accepted.
          */
@@ -608,7 +599,7 @@
         /**
          * Set the line width on the context
          * @name setLineWidth
-         * @memberOf me.CanvasRenderer
+         * @memberOf me.CanvasRenderer.prototype
          * @function
          * @param {Number} width Line width
          */
@@ -620,7 +611,7 @@
          * Reset (overrides) the renderer transformation matrix to the
          * identity one, and then apply the given transformation matrix.
          * @name setTransform
-         * @memberOf me.CanvasRenderer
+         * @memberOf me.CanvasRenderer.prototype
          * @function
          * @param {me.Matrix2d} mat2d Matrix to transform by
          */
@@ -632,7 +623,7 @@
         /**
          * Multiply given matrix into the renderer tranformation matrix
          * @name transform
-         * @memberOf me.CanvasRenderer
+         * @memberOf me.CanvasRenderer.prototype
          * @function
          * @param {me.Matrix2d} mat2d Matrix to transform by
          */
@@ -659,7 +650,7 @@
         /**
          * Translates the context to the given position
          * @name translate
-         * @memberOf me.CanvasRenderer
+         * @memberOf me.CanvasRenderer.prototype
          * @function
          * @param {Number} x
          * @param {Number} y
@@ -679,7 +670,7 @@
          * and restore it (with the restore() method) any time in the future.
          * (<u>this is an experimental feature !</u>)
          * @name clipRect
-         * @memberOf me.CanvasRenderer
+         * @memberOf me.CanvasRenderer.prototype
          * @function
          * @param {Number} x
          * @param {Number} y
@@ -712,7 +703,7 @@
          * So, if the renderable is larger than the mask, only the intersecting part of the renderable will be visible.
          * Mask are not preserved through renderer context save and restore.
          * @name setMask
-         * @memberOf me.CanvasRenderer
+         * @memberOf me.CanvasRenderer.prototype
          * @function
          * @param {me.Rect|me.Polygon|me.Line|me.Ellipse} [mask] the shape defining the mask to be applied
          */
@@ -760,7 +751,7 @@
          * disable (remove) the rendering mask set through setMask.
          * @name clearMask
          * @see setMask
-         * @memberOf me.CanvasRenderer
+         * @memberOf me.CanvasRenderer.prototype
          * @function
          */
         clearMask : function() {

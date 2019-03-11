@@ -1,12 +1,3 @@
-/*
- * MelonJS Game Engine
- * Copyright (C) 2011 - 2018 Olivier Biot
- * http://www.melonjs.org
- *
- * Tiled (0.7+) format
- * http://www.mapeditor.org/
- *
- */
 (function () {
 
     // scope global var & constants
@@ -356,7 +347,6 @@
         drawTileLayer : function (renderer, layer, rect) {
             // cache a couple of useful references
             var tileset = layer.tileset;
-            var offset  = tileset.tileoffset;
 
             // get top-left and bottom-right tile position
             var rowItr = this.pixelToTileCoords(
@@ -418,7 +408,7 @@
                         if (tmxTile) {
                             tileset = tmxTile.tileset;
                             // offset could be different per tileset
-                            offset  = tileset.tileoffset;
+                            var offset  = tileset.tileoffset;
                             // draw our tile
                             tileset.drawTile(
                                 renderer,

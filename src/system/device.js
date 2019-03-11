@@ -1,9 +1,3 @@
-/*
- * MelonJS Game Engine
- * Copyright (C) 2011 - 2018 Olivier Biot
- * http://www.melonjs.org
- *
- */
 (function () {
     /**
      * A singleton object representing the device capabilities and specific events
@@ -75,7 +69,7 @@
             me.device._detectDevice();
 
             // Mobile browser hacks
-            if (me.device.isMobile && !me.device.cocoon) {
+            if (me.device.isMobile) {
                 // Prevent the webview from moving on a swipe
                 api.enableSwipe(false);
             }
@@ -86,7 +80,7 @@
             window.gesture = me.agent.prefixed("gesture");
 
             // detect touch capabilities
-            me.device.touch = (me.device.cocoon) || me.device.TouchEvent || me.device.PointerEvent;
+            me.device.touch = me.device.TouchEvent || me.device.PointerEvent;
 
             // max amount of touch points ; always at least return 1 (e.g. headless chrome will return 0)
             me.device.maxTouchPoints = me.device.touch ? (me.device.PointerEvent ? navigator.maxTouchPoints || 1 : 10) : 1;
@@ -96,12 +90,7 @@
             me.device.wheel = ("onwheel" in document.createElement("div"));
 
             // accelerometer detection
-            me.device.hasAccelerometer = (
-                (typeof (window.DeviceMotionEvent) !== "undefined") || (
-                    (typeof (window.Windows) !== "undefined") &&
-                    (typeof (Windows.Devices.Sensors.Accelerometer) === "function")
-                )
-            );
+            me.device.hasAccelerometer = typeof (window.DeviceMotionEvent) !== "undefined";
 
             // pointerlock detection
             this.hasPointerLockSupport = me.agent.prefixed("pointerLockElement", document);
@@ -113,12 +102,6 @@
             // device orientation and motion detection
             if (window.DeviceOrientationEvent) {
                 me.device.hasDeviceOrientation = true;
-            }
-            if (typeof window.screen !== "undefined") {
-                var screen = window.screen;
-                screen.orientation = me.agent.prefixed("orientation", screen);
-                screen.lockOrientation = me.agent.prefixed("lockOrientation", screen);
-                screen.unlockOrientation = me.agent.prefixed("unlockOrientation", screen);
             }
 
             // fullscreen api detection & polyfill when possible
@@ -238,10 +221,6 @@
             me.device.ejecta = (typeof window.ejecta !== "undefined");
             // Wechat
             me.device.isWeixin = /MicroMessenger/i.test(me.device.ua);
-            // cocoon/cocoonJS
-            me.device.cocoon = navigator.isCocoonJS ||  // former cocoonJS
-                               (typeof window.Cocoon !== "undefined"); // new cocoon
-
         };
 
 
@@ -420,16 +399,6 @@
          * @memberOf me.device
          */
          api.isWeixin = false;
-
-        /**
-         * equals to true if the game is running under cocoon/cocoonJS.
-         * @type Boolean
-         * @readonly
-         * @see https://cocoon.io
-         * @name cocoon
-         * @memberOf me.device
-         */
-         api.cocoon = false;
 
         /**
          * equals to true if the device is running on ChromeOS.
@@ -693,8 +662,8 @@
 
             // first try using "standard" values
             if (typeof screen !== "undefined") {
-                var orientation = screen.orientation
-                if ((typeof orientation !== "undefined") && typeof (orientation.type === "string")) {
+                var orientation = me.agent.prefixed("orientation", screen);
+                if (typeof orientation !== "undefined" && typeof(orientation.type === "string")) {
                     // Screen Orientation API specification
                     return orientation.type;
                 } else if (typeof orientation === "string") {
@@ -722,9 +691,11 @@
          * @return {Boolean} true if the orientation was unsuccessfully locked
          */
         api.lockOrientation = function (orientation) {
-            if (typeof window.screen !== "undefined") {
-                if (typeof screen.lockOrientation !== "undefined") {
-                    return screen.lockOrientation(orientation);
+            var screen = window.screen;
+            if (typeof screen !== "undefined") {
+                var lockOrientation = me.agent.prefixed("lockOrientation", screen);
+                if (typeof lockOrientation !== "undefined") {
+                    return lockOrientation(orientation);
                 }
             }
             return false;
@@ -740,9 +711,11 @@
          * @return {Boolean} true if the orientation was unsuccessfully unlocked
          */
         api.unlockOrientation = function (orientation) {
-            if (typeof window.screen !== "undefined") {
-                if (typeof screen.unlockOrientation !== "undefined") {
-                    return screen.unlockOrientation(orientation);
+            var screen = window.screen;
+            if (typeof screen !== "undefined") {
+                var unlockOrientation = me.agent.prefixed("unlockOrientation", screen);
+                if (typeof unlockOrientation !== "undefined") {
+                    return unlockOrientation(orientation);
                 }
             }
             return false;
@@ -835,18 +808,10 @@
          * @ignore
          */
         function onDeviceMotion(e) {
-            if (e.reading) {
-                // For Windows 8 devices
-                api.accelerationX = e.reading.accelerationX;
-                api.accelerationY = e.reading.accelerationY;
-                api.accelerationZ = e.reading.accelerationZ;
-            }
-            else {
-                // Accelerometer information
-                api.accelerationX = e.accelerationIncludingGravity.x;
-                api.accelerationY = e.accelerationIncludingGravity.y;
-                api.accelerationZ = e.accelerationIncludingGravity.z;
-            }
+            // Accelerometer information
+            api.accelerationX = e.accelerationIncludingGravity.x;
+            api.accelerationY = e.accelerationIncludingGravity.y;
+            api.accelerationZ = e.accelerationIncludingGravity.z;
         }
 
         function onDeviceRotate(e) {
@@ -921,22 +886,8 @@
         api.watchAccelerometer = function () {
             if (me.device.hasAccelerometer) {
                 if (!accelInitialized) {
-                    if (typeof Windows === "undefined") {
-                        // add a listener for the devicemotion event
-                        window.addEventListener("devicemotion", onDeviceMotion, false);
-                    }
-                    else {
-                        // On Windows 8 Device
-                        var accelerometer = Windows.Devices.Sensors.Accelerometer.getDefault();
-                        if (accelerometer) {
-                            // Capture event at regular intervals
-                            var minInterval = accelerometer.minimumReportInterval;
-                            var Interval = minInterval >= 16 ? minInterval : 25;
-                            accelerometer.reportInterval = Interval;
-
-                            accelerometer.addEventListener("readingchanged", onDeviceMotion, false);
-                        }
-                    }
+                    // add a listener for the devicemotion event
+                    window.addEventListener("devicemotion", onDeviceMotion, false);
                     accelInitialized = true;
                 }
                 return true;
@@ -953,15 +904,8 @@
          */
         api.unwatchAccelerometer = function () {
             if (accelInitialized) {
-                if (typeof Windows === "undefined") {
-                    // add a listener for the mouse
-                    window.removeEventListener("devicemotion", onDeviceMotion, false);
-                } else {
-                    // On Windows 8 Devices
-                    var accelerometer = Windows.Device.Sensors.Accelerometer.getDefault();
-
-                    accelerometer.removeEventListener("readingchanged", onDeviceMotion, false);
-                }
+                // remove the listener for the devicemotion event
+                window.removeEventListener("devicemotion", onDeviceMotion, false);
                 accelInitialized = false;
             }
         };
@@ -1081,7 +1025,7 @@
          * @ignore
          */
         get: function () {
-                return !Howler.noAudio;
+            return me.audio.hasAudio();
         }
     });
 })();

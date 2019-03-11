@@ -1,9 +1,3 @@
-/*
- * MelonJS Game Engine
- * Copyright (C) 2011 - 2018 Olivier Biot
- * http://www.melonjs.org
- *
- */
 (function () {
 
     /**
@@ -16,14 +10,44 @@
         var api = {};
 
         /*
-         * PRIVATE STUFF
-         */
-        var DEG_TO_RAD = Math.PI / 180.0;
-        var RAD_TO_DEG = 180.0 / Math.PI;
-
-        /*
          * PUBLIC STUFF
          */
+
+        /**
+         * constant to convert from degrees to radians
+         * @public
+         * @type {Number}
+         * @name DEG_TO_RAD
+         * @memberOf me.Math
+         */
+        api.DEG_TO_RAD = Math.PI / 180.0;
+
+        /**
+         * constant to convert from radians to degrees
+         * @public
+         * @type {Number}
+         * @name RAD_TO_DEG
+         * @memberOf me.Math
+         */
+        api.RAD_TO_DEG = 180.0 / Math.PI;
+
+        /**
+         * constant equals to 2 times pi
+         * @public
+         * @type {Number}
+         * @name TAU
+         * @memberOf me.Math
+         */
+        api.TAU = Math.PI * 2;
+
+        /**
+         * constant equals to half pi
+         * @public
+         * @type {Number}
+         * @name ETA
+         * @memberOf me.Math
+         */
+        api.ETA = Math.PI * 0.5;
 
         /**
          * returns true if the given value is a power of two
@@ -71,7 +95,7 @@
          * me.Math.degToRad(60); // return 1.0471...
          */
         api.degToRad = function (angle) {
-            return angle * DEG_TO_RAD;
+            return angle * api.DEG_TO_RAD;
         };
 
         /**
@@ -87,7 +111,7 @@
          * me.Math.radToDeg(1.0471975511965976); // return 60
          */
         api.radToDeg = function (radians) {
-            return radians * RAD_TO_DEG;
+            return radians * api.RAD_TO_DEG;
         };
 
         /**
@@ -161,7 +185,7 @@
          * @public
          * @function
          * @memberOf me.Math
-         * @name weightedRandom
+         * @name round
          * @param {number} num value to be rounded.
          * @param {number} [dec=0] number of decimal digit to be rounded to.
          * @return {number} rounded value

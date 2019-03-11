@@ -1,9 +1,3 @@
-/*
- * MelonJS Game Engine
- * Copyright (C) 2011 - 2018 Olivier Biot
- * http://www.melonjs.org
- */
-
 /**
  * Used to make a game entity draggable
  * @class
@@ -15,11 +9,7 @@
  * @param {Object} settings Entity properties (see {@link me.Entity})
  */
 me.DraggableEntity = (function (Entity, Input, Event, Vector) {
-    "use strict";
-
-    return Entity.extend(
-    /** @scope me.DraggableEntity.prototype */
-    {
+    return Entity.extend({
         /**
          * Constructor
          * @name init

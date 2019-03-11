@@ -1,6 +1,6 @@
 /*
  * MelonJS Game Engine
- * Copyright (C) 2011 - 2018 Olivier Biot
+ * Copyright (C) 2011 - 2019 Olivier Biot
  * http://www.melonjs.org
  *
  * a simple particle debug panel plugin
@@ -277,9 +277,7 @@
      * @memberOf me
      * @constructor
      */
-    me.debug.ParticlePanel = me.plugin.Base.extend(
-    /** @scope me.debug.ParticlePanel.prototype */
-    {
+    me.debug.ParticlePanel = me.plugin.Base.extend({
 
         /** @private */
         init : function () {

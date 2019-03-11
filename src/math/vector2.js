@@ -1,9 +1,3 @@
-/*
- * MelonJS Game Engine
- * Copyright (C) 2011 - 2018 Olivier Biot
- * http://www.melonjs.org
- *
- */
 (function () {
     /**
      * a generic 2D Vector Object
@@ -14,10 +8,10 @@
      * @param {Number} [x=0] x value of the vector
      * @param {Number} [y=0] y value of the vector
      */
-    me.Vector2d = me.Object.extend(
-    /** @scope me.Vector2d.prototype */
-    {
-        /** @ignore */
+    me.Vector2d = me.Object.extend({
+        /**
+         * @ignore
+         */
         init : function (x, y) {
             return this.set(x || 0, y || 0);
         },
@@ -492,6 +486,7 @@
      * @name Error
      * @class
      * @memberOf me.Vector2d
+     * @private
      * @constructor
      * @param {String} msg Error message.
      */

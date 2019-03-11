@@ -1,25 +1,100 @@
 /*
  * MelonJS Game Engine
- * Copyright (C) 2011 - 2018 Olivier Biot
+ * Copyright (C) 2011 - 2019 Olivier Biot
  * http://www.melonjs.org
- *
- * a simple debug panel plugin
- * usage : me.utils.function.defer(me.plugin.register, this, me.debug.Panel, "debug");
- *
- * you can then use me.plugins.debug.show() or me.plugins.debug.hide()
- * to show or hide the panel, press the "s" key.
- * default key can be configured using the following parameters in the url :
- * e.g. http://myURL/index.html#debugToggleKey=d
- *
- * note :
- * Heap Memory information is available under Chrome when using
- * the "--enable-memory-info" parameter to launch Chrome
  */
 
 (function () {
 
     // ensure that me.debug is defined
     me.debug = me.debug || {};
+
+    /**
+     * @classdesc
+     * a simple debug panel plugin <br>
+     * <img src="images/debugPanel.png"/> <br>
+     * the debug panel provides the following information : <br>
+     * &bull; amount of total objects currently active in the current stage <br>
+     * &bull; amount of draws operation <br>
+     * &bull; amount of body shape (for collision) <br>
+     * &bull; amount of bounding box <br>
+     * &bull; amount of sprites objects <br>
+     * &bull; amount of objects currently inactive in the the object pool <br>
+     * &bull; memory usage (Heap Memory information is only available under Chrome) <br>
+     * &bull; frame update time (in ms) <br>
+     * &bull; frame draw time (in ms) <br>
+     * &bull; current fps rate vs target fps <br>
+     * additionally, using the checkbox in the panel it is also possible to display : <br>
+     * &bull; the hitbox or bounding box for all objects <br>
+     * &bull; current velocity vector <br>
+     * &bull; quadtree spatial visualization <br>
+     * usage : <br>
+     * &bull; upon loading the debug panel, it will be automatically registered under me.plugins.debugPanel <br>
+     * &bull; you can then press the default "s" key to show or hide the panel, or use me.plugins.debugPanel.show() and me.plugins.debugPanel.show(), or add #debug as a parameter to your URL e.g. http://myURL/index.html#debug <br>
+     * &bull; default key can be configured using the following parameters in the url : e.g. http://myURL/index.html#debugToggleKey=d
+     * @class
+     * @hideconstructor
+     * @name DebugPanel
+     * @see me.plugins
+     * @public
+     * @extends me.plugin.Base
+     * @memberOf me
+     * @constructor
+     * @example
+     * // load the debugPanel in your index.html file
+     * <script type="text/javascript" src="plugins/debug/debugPanel.js"></script>
+     */
+    me.DebugPanel = me.plugin.Base.extend({
+        /** @private */
+        init : function (debugToggle) {
+            // call the super constructor
+            this._super(me.plugin.Base, "init");
+            this.panel = new DebugPanel(debugToggle);
+
+            // if "#debug" is present in the URL
+            if (me.game.HASH.debug === true) {
+                this.show();
+            } // else keep it hidden
+        },
+
+        /**
+         * show the debug panel
+         * @public
+         * @function
+         * @memberOf me.DebugPanel
+         */
+        show : function () {
+            this.panel.show();
+        },
+
+        /**
+         * hide the debug panel
+         * @public
+         * @function
+         * @memberOf me.DebugPanel
+         */
+        hide : function () {
+            this.panel.hide();
+        },
+
+        /**
+         * toggle the debug panel visibility state
+         * @public
+         * @function
+         * @memberOf me.DebugPanel
+         */
+        toggle : function () {
+            if (this.panel.visible) {
+                this.panel.hide();
+            } else {
+                this.panel.show();
+            }
+        }
+
+
+    });
+
+    // PRIVATE components
 
     var DEBUG_HEIGHT = 50;
 
@@ -253,8 +328,8 @@
 
             // some internal string/length
             this.help_str        = "["+String.fromCharCode(32 + this.debugToggle)+"]show/hide";
-            this.help_str_len    = this.font.measureText(me.video.renderer, this.help_str).width;
-            this.fps_str_len     = this.font.measureText(me.video.renderer, "00/00 fps").width;
+            this.help_str_len    = this.font.measureText(this.help_str).width;
+            this.fps_str_len     = this.font.measureText("00/00 fps").width;
             this.memoryPositionX = 325 * this.mod;
 
             // resize the panel if the browser is resized
@@ -270,6 +345,7 @@
 
         /**
          * patch system fn to draw debug information
+         * @ignore
          */
         patchSystemFn : function () {
 
@@ -541,6 +617,7 @@
 
         /**
          * show the debug panel
+         * @ignore
          */
         show : function () {
             if (!this.visible) {
@@ -557,6 +634,7 @@
 
         /**
          * hide the debug panel
+         * @ignore
          */
         hide : function () {
             if (this.visible) {
@@ -729,53 +807,9 @@
         }
     });
 
-    /**
-     * @class
-     * @public
-     * @extends me.plugin.Base
-     * @memberOf me
-     * @constructor
-     */
-    me.debug.Panel = me.plugin.Base.extend(
-    /** @scope me.debug.Panel.prototype */
-    {
-        /** @private */
-        init : function (debugToggle) {
-            // call the super constructor
-            this._super(me.plugin.Base, "init");
-            this.panel = new DebugPanel(debugToggle);
-
-            // if "#debug" is present in the URL
-            if (me.game.HASH.debug === true) {
-                this.show();
-            } // else keep it hidden
-        },
-
-        /** @private */
-        show : function () {
-            this.panel.show();
-        },
-
-        /** @private */
-        hide : function () {
-            this.panel.hide();
-        },
-
-        /** @private */
-        toggle : function () {
-            if (this.panel.visible) {
-                this.panel.hide();
-            } else {
-                this.panel.show();
-            }
-        }
-
-
-    });
-
     // automatically register the debug panel
     me.device.onReady(function () {
-        me.utils.function.defer(me.plugin.register, this, me.debug.Panel, "debugPanel",
+        me.utils.function.defer(me.plugin.register, this, me.DebugPanel, "debugPanel",
             me.game.HASH.debugToggleKey ? me.game.HASH.debugToggleKey.charCodeAt(0) - 32 : undefined
         );
     });

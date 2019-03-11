@@ -1,8 +1,3 @@
-/*
- * MelonJS Game Engine
- * Copyright (C) 2011 - 2018 Olivier Biot
- * http://www.melonjs.org
- */
 (function () {
     // a basic progress bar object
     var ProgressBar = me.Renderable.extend({

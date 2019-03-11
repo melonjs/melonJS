@@ -1,10 +1,3 @@
-/*
- * MelonJS Game Engine
- * Copyright (C) 2011 - 2018 Olivier Biot
- * http://www.melonjs.org
- *
- */
-
 (function () {
 
     /**
@@ -31,10 +24,10 @@
      *     }
      * ));
      */
-    me.LevelEntity = me.Entity.extend(
-    /** @scope me.LevelEntity.prototype */
-    {
-        /** @ignore */
+    me.LevelEntity = me.Entity.extend({
+        /**
+         * @ignore
+         */
         init : function (x, y, settings) {
             this._super(me.Entity, "init", [x, y, settings]);
 

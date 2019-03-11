@@ -1,9 +1,3 @@
-/*
- * MelonJS Game Engine
- * Copyright (C) 2011 - 2018 Olivier Biot
- * http://www.melonjs.org
- *
- */
 (function () {
     /**
      * a Timer object to manage time function (FPS, Game Tick, Time...)<p>
@@ -136,7 +130,7 @@
         };
 
         /**
-         * Calls a function once after a specified delay.
+         * Calls a function once after a specified delay. See me.timer.setInterval to repeativly call a function.
          * @name setTimeout
          * @memberOf me.timer
          * @param {Function} fn the function you want to execute after delay milliseconds.
@@ -158,7 +152,7 @@
         };
 
         /**
-         * Calls a function at specified interval.
+         * Calls a function continously at the specified interval.  See setTimeout to call function a single time.
          * @name setInterval
          * @memberOf me.timer
          * @param {Function} fn the function to execute

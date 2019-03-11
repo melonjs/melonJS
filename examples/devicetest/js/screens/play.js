@@ -26,7 +26,7 @@ game.PlayScreen = me.Stage.extend({
                 this.font.draw(renderer, "X: " + me.device.accelerationX, 10, 90);
                 this.font.draw(renderer, "Y: " + me.device.accelerationY, 10, 120);
                 this.font.draw(renderer, "Z: " + me.device.accelerationZ, 10, 150);
-                this.font.draw(renderer, "orientation: " + me.device.orientation + " degrees", 10, 180);
+                this.font.draw(renderer, "orientation: " + me.device.getScreenOrientation(), 10, 180);
             }
         });
 

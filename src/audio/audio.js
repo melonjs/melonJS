@@ -1,12 +1,6 @@
-/*
- * MelonJS Game Engine
- * Copyright (C) 2011 - 2018 Olivier Biot
- * http://www.melonjs.org
- *
- * Audio Mngt Objects
- *
- *
- */
+// external import
+import {Howl, Howler} from "howler";
+
 (function () {
     /**
      * There is no constructor function for me.audio.
@@ -95,6 +89,18 @@
             // convert it into an array
             this.audioFormats = audioFormat.split(",");
 
+            return !Howler.noAudio;
+        };
+
+        /**
+         * return true if audio (HTML5 or WebAudio) is supported
+         * @see me.audio#hasAudio
+         * @name hasAudio
+         * @memberOf me.audio
+         * @public
+         * @function
+         */
+        api.hasAudio = function () {
             return !Howler.noAudio;
         };
 
@@ -558,11 +564,6 @@
 
             // destroy the Howl object
             audioTracks[sound_name].unload();
-            if (typeof(audioTracks[sound_name].dispose) === "function") {
-                // cocoonJS implements a dispose function to free
-                // corresponding allocated audio in memory
-                audioTracks[sound_name].dispose();
-            }
             delete audioTracks[sound_name];
             return true;
         };
@@ -595,6 +596,7 @@
      * @class
      * @memberOf me.audio
      * @constructor
+     * @private
      * @param {String} msg Error message.
      */
     me.audio.Error = me.Error.extend({

@@ -1,9 +1,3 @@
-/*
- * MelonJS Game Engine
- * Copyright (C) 2011 - 2018 Olivier Biot
- * http://www.melonjs.org
- *
- */
 (function () {
     /**
      * This object is used for object pooling - a technique that might speed up your game if used properly.<br>
@@ -208,7 +202,7 @@
 
         /**
          * returns the amount of object instance currently in the pool
-         * @name exists
+         * @name getInstanceCount
          * @memberOf me.pool
          * @public
          * @function

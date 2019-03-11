@@ -1,49 +1,18 @@
 {
   "env": {
     "es6": true,
-    "browser": true
-  },
-
+    "browser": true,
+    "jasmine": true
+},
   "globals": {
-      // Custom Globals
-
-      // Non-standard
-      "Windows"               : false,
-      "define"                : false,
-
-      // melonJS
-      "me"                    : false,
-      "__PRIMITIVE_VERTEX__"  : false,
-      "__QUAD_VERTEX__"       : false,
-      "__PRIMITIVE_FRAGMENT__": false,
-      "__QUAD_FRAGMENT__"     : false,
-
-      // Howler
-      "AudioContext"          : false,
-      "webkitAudioContext"    : false,
-      "Howl"                  : false,
-      "Howler"                : false,
-
-      // Jasmine
-      "jasmine"               : false,
-      "describe"              : false,
-      "it"                    : false,
-      "expect"                : false,
-      "runs"                  : false,
-      "waitsFor"              : false,
-      "beforeEach"            : false,
-      "afterEach"             : false,
-      "spyOn"                 : false,
-      "xdescribe"             : false,
-      "xit"                   : false,
-      "beforeAll"             : false
+    "me"                    : false
   },
-
+  "parserOptions": {
+       "sourceType": "module"
+   },
   "rules": {
-
     // Severity should be one of the following: 0 = off, 1 = warn, 2 = error
     // http://eslint.org/docs/rules/
-
     "accessor-pairs": 2,
     "arrow-spacing": [2, { "before": true, "after": true }],
     "block-spacing": [2, "always"],

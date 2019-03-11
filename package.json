@@ -1,63 +1,71 @@
 {
   "name": "melonjs",
-  "version": "6.4.0",
-  "description": "MelonJS Game Engine",
+  "version": "7.0.0",
+  "description": "melonJS Game Engine",
   "homepage": "http://www.melonjs.org/",
   "repository": {
     "type": "git",
-    "url": "https://github.com/melonjs/melonJS"
+    "url": "https://github.com/melonjs/melonJS.git"
   },
   "bugs": {
     "url": "https://github.com/melonjs/melonJS/issues"
   },
   "license": "MIT",
   "author": {
-    "name": "melonJS",
+    "name": "Olivier Biot",
     "email": "contact@melonjs.org"
   },
   "engines": {
-    "node": ">= 6"
+    "node": ">= 8"
   },
-  "main": "build/melonjs.js",
+  "main": "dist/melonjs.js",
   "files": [
-    "build/melonjs.js",
-    "build/melonjs.min.js",
+    "dist/melonjs.js",
+    "dist/melonjs.min.js",
     "plugins/",
+    "src/",
     "package.json",
     "README.md",
     "LICENSE",
     "CHANGELOG"
   ],
-  "dependencies": {},
+  "dependencies": {
+    "earcut": "^2.1.5",
+    "howler": "^2.1.1",
+    "jay-extend": "^1.0.1",
+    "minpubsub": "0.0.2"
+  },
   "devDependencies": {
-    "babel-core": "^6.26.3",
-    "babel-preset-env": "^1.7.0",
-    "dot": "git+https://github.com/parasyte/doT.git#bug/replace-ext",
-    "grunt": "^1.0.3",
-    "grunt-babel": "^7.0.0",
-    "grunt-build-gh-pages": "^1.0.5",
-    "grunt-contrib-clean": "^1.1.0",
-    "grunt-contrib-concat": "^1.0.1",
-    "grunt-contrib-connect": "^1.0.2",
-    "grunt-contrib-copy": "^1.0.0",
-    "grunt-contrib-uglify": "^3.4.0",
-    "grunt-eslint": "^21.0.0",
-    "grunt-jsdoc": "^2.2.1",
-    "grunt-karma": "^2.0.0",
-    "grunt-replace": "^1.0.1",
-    "grunt-shell": "^2.1.0",
+    "@babel/core": "^7.3.4",
+    "@babel/preset-env": "^7.3.4",
+    "cheerio": "^1.0.0-rc.2",
+    "eslint": "^5.15.0",
+    "ghpages": "0.0.10",
     "jasmine-core": "~2.5.2",
-    "karma": "^2.0.5",
+    "jsdoc": "^3.5.5",
+    "karma": "^4.0.1",
     "karma-chrome-launcher": "2.2.0",
     "karma-coverage": "^1.1.2",
-    "karma-html-detailed-reporter": "^1.1.21",
+    "karma-html-detailed-reporter": "^1.1.38",
     "karma-jasmine": "^1.1.1",
     "karma-nyan-reporter": "0.2.5",
-    "q": "^1.4.1",
-    "shelljs": "^0.8.2"
+    "rollup": "^1.4.0",
+    "rollup-plugin-babel": "^4.3.2",
+    "rollup-plugin-bundle-size": "^1.0.3",
+    "rollup-plugin-commonjs": "^9.2.1",
+    "rollup-plugin-multi-entry": "^2.1.0",
+    "rollup-plugin-node-resolve": "^4.0.1",
+    "rollup-plugin-replace": "^2.1.0",
+    "terser": "^3.16.1"
   },
   "scripts": {
-    "release": "grunt release",
-    "test": "grunt test"
+    "build": "npm run lint && rollup -c --silent --sourcemap",
+    "dist": " npm run build && npm run minify && mkdirp dist && cp -f build/*.js dist/",
+    "minify": "terser build/melonjs.js --compress --mangle --comments  '/(?:^!|@(?:license|preserve|cc_on))/' --output build/melonjs.min.js",
+    "lint": "eslint --config .eslintrc.json src",
+    "test": "npm run build && karma start",
+    "doc": "mkdirp docs && jsdoc -c jsdoc_conf.json",
+    "publishdoc": "ghpages melonjs/melonJS -p docs",
+    "release": "npm run dist && npm run doc && npm run publishdoc"
   }
 }

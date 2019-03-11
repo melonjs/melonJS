@@ -58,6 +58,7 @@ describe("Audio tests", function () {
         );
     });
 
+    /* XXX redundant with Howler own test units
     _it("should run callback on end", function (done) {
         var started = Date.now();
         me.audio.play("silence", false, function () {
@@ -74,4 +75,5 @@ describe("Audio tests", function () {
             done();
         });
     });
+    */
 });

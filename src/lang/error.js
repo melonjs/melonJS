@@ -1,12 +1,7 @@
 /**
- * MelonJS Game Engine
- * Copyright (C) 2011 - 2018 Olivier Biot
- * http://www.melonjs.org
- */
-
-/**
  * melonJS base class for exception handling.
- * @name Error
+ * @class
+ * @extends me.Object
  * @memberOf me
  * @constructor
  * @param {String} msg Error message.

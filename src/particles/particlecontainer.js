@@ -1,9 +1,3 @@
-/*
- * MelonJS Game Engine
- * Copyright (C) 2011 - 2018 Olivier Biot
- * http://www.melonjs.org
- *
- */
 (function () {
     /**
      * Particle Container Object.
@@ -13,9 +7,7 @@
      * @constructor
      * @param {me.ParticleEmitter} emitter the emitter which owns this container
      */
-    me.ParticleContainer = me.Container.extend(
-    /** @scope ParticleContainer */
-    {
+    me.ParticleContainer = me.Container.extend({
         /**
          * @ignore
          */

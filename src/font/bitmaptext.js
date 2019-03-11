@@ -1,12 +1,3 @@
-/*
- * MelonJS Game Engine
- * Copyright (C) 2011 - 2018 Olivier Biot
- * http://www.melonjs.org
- *
- * Font / Bitmap font
- *
- * -> first char " " 32d (0x20);
- */
 (function () {
 
     /**
@@ -56,8 +47,8 @@
      * @example
      * // Use me.loader.preload or me.loader.load to load assets
      * me.loader.preload([
-     * { name: "arial", type: "binary" src: "data/font/arial.fnt" },
-     * { name: "arial", type: "image" src: "data/font/arial.png" },
+     *     { name: "arial", type: "binary" src: "data/font/arial.fnt" },
+     *     { name: "arial", type: "image" src: "data/font/arial.png" },
      * ])
      * // Then create an instance of your bitmap font:
      * var myFont = new me.BitmapText(x, y, {font:"arial", text:"Hello"});
@@ -67,8 +58,8 @@
      * // or just add it to the word container
      * me.game.world.addChild(myFont);
      */
-    me.BitmapText = me.Renderable.extend(
-    /** @scope me.BitmapText.prototype */ {
+    me.BitmapText = me.Renderable.extend({
+
         /** @ignore */
         init : function (x, y, settings) {
             // call the parent constructor
@@ -148,7 +139,7 @@
         /**
          * change the font settings
          * @name set
-         * @memberOf me.BitmapText
+         * @memberOf me.BitmapText.prototype
          * @function
          * @param {String} textAlign ("left", "center", "right")
          * @param {Number} [scale]
@@ -168,9 +159,9 @@
         /**
          * change the text to be displayed
          * @name setText
-         * @memberOf me.BitmapText
+         * @memberOf me.BitmapText.prototype
          * @function
-         * @param {(Number|String|String[])} value a string, or an array of strings
+         * @param {Number|String|String[]} value a string, or an array of strings
          * @return this object for chaining
          */
         setText : function (value) {
@@ -189,7 +180,7 @@
         /**
          * change the font display size
          * @name resize
-         * @memberOf me.BitmapText
+         * @memberOf me.BitmapText.prototype
          * @function
          * @param {Number} scale ratio
          * @return this object for chaining
@@ -206,7 +197,7 @@
         /**
          * measure the given text size in pixels
          * @name measureText
-         * @memberOf me.BitmapText
+         * @memberOf me.BitmapText.prototype
          * @function
          * @param {String} [text]
          * @param {me.Rect} [ret] a object in which to store the text metrics
@@ -241,7 +232,7 @@
         /**
          * draw the bitmap font
          * @name draw
-         * @memberOf me.BitmapText
+         * @memberOf me.BitmapText.prototype
          * @function
          * @param {me.CanvasRenderer|me.WebGLRenderer} renderer Reference to the destination renderer instance
          * @param {String} [text]

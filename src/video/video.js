@@ -1,9 +1,3 @@
-/*
- * MelonJS Game Engine
- * Copyright (C) 2011 - 2018 Olivier Biot
- * http://www.melonjs.org
- *
- */
 (function () {
     /**
      * video functions
@@ -28,7 +22,7 @@
         // default video settings
         var settings = {
             wrapper : undefined,
-            renderer : 0, // canvas
+            renderer : 2, // AUTO
             doubleBuffering : false,
             autoScale : false,
             scale : 1.0,
@@ -65,6 +59,7 @@
          * @name Error
          * @class
          * @constructor
+         * @private
          * @memberOf me.video
          * @param {String} msg Error message.
          */
@@ -135,7 +130,7 @@
          * @param {Number} height the height of the canvas viewport
          * @param {Object} [options] The optional video/renderer parameters.<br> (see Renderer(s) documentation for further specific options)
          * @param {String} [options.wrapper=document.body] the "div" element name to hold the canvas in the HTML file
-         * @param {Number} [options.renderer=me.video.CANVAS] renderer to use.
+         * @param {Number} [options.renderer=me.video.AUTO] renderer to use.
          * @param {Boolean} [options.doubleBuffering=false] enable/disable double buffering
          * @param {Number|String} [options.scale=1.0] enable scaling of the canvas ('auto' for automatic scaling)
          * @param {String} [options.scaleMethod="fit"] screen scaling modes ('fit','fill-min','fill-max','flex','flex-width','flex-height','stretch')
@@ -151,7 +146,7 @@
          * // init the video with a 640x480 canvas
          * me.video.init(640, 480, {
          *     wrapper : "screen",
-         *     renderer : me.video.CANVAS,
+         *     renderer : me.video.AUTO,
          *     scale : "auto",
          *     scaleMethod : "fit",
          *     doubleBuffering : true
@@ -267,7 +262,7 @@
                 // a global canvas is available, e.g. webapp adapter for wechat
                 canvas = window.canvas;
             } else {
-                canvas = api.createCanvas(game_width_zoom, game_height_zoom, true);
+                canvas = api.createCanvas(game_width_zoom, game_height_zoom);
             }
 
             // add our canvas
@@ -398,20 +393,14 @@
          * @function
          * @param {Number} width width
          * @param {Number} height height
-         * @param {Boolean} [screencanvas=false] set to true if this canvas renders directly to the screen
          * @return {Canvas}
          */
-        api.createCanvas = function (width, height, screencanvas) {
+        api.createCanvas = function (width, height) {
             if (width === 0 || height === 0)  {
                 throw new api.Error("width or height was zero, Canvas could not be initialized !");
             }
 
             var _canvas = document.createElement("canvas");
-
-            if ((screencanvas === true) && (me.device.cocoon) && (me.device.android2 !== true)) {
-                // http://docs.cocoon.io/article/screencanvas/
-                _canvas.screencanvas = true;
-            }
 
             _canvas.width = width;
             _canvas.height = height;

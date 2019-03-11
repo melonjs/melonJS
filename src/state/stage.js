@@ -1,12 +1,3 @@
-/*
- * MelonJS Game Engine
- * Copyright (C) 2011 - 2018 Olivier Biot
- * http://www.melonjs.org
- *
- * Stages & State machine
- *
- */
-
 (function () {
 
     // a default camera instance to use across all stages
@@ -29,10 +20,10 @@
      * @param {Boolean} [options.cameras=[new me.Camera2d()]] a list of cameras (experimental)
      * @see me.state
      */
-    me.Stage = me.Object.extend(
-    /** @scope me.Stage.prototype */
-    {
-        /** @ignore */
+    me.Stage = me.Object.extend({
+        /**
+         * @ignore
+         */
         init: function (settings) {
             /**
              * The list of active cameras in this stage.

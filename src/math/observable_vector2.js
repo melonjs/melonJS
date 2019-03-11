@@ -1,9 +1,3 @@
-/*
- * MelonJS Game Engine
- * Copyright (C) 2011 - 2018 Olivier Biot
- * http://www.melonjs.org
- *
- */
 (function () {
     /**
      * A Vector2d object that provide notification by executing the given callback when the vector is changed.
@@ -16,9 +10,9 @@
      * @param {Function} settings.onUpdate the callback to be executed when the vector is changed
      */
     me.ObservableVector2d = me.Vector2d.extend({
-    /** @scope me.ObservableVector2d.prototype */
-
-        /** @ignore */
+        /**
+         * @ignore
+         */
         init : function (x, y, settings) {
             /**
              * x value of the vector
@@ -463,6 +457,7 @@
      * @name Error
      * @class
      * @memberOf me.ObservableVector2d
+     * @private
      * @constructor
      * @param {String} msg Error message.
      */

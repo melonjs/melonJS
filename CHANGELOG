@@ -1,8 +1,24 @@
 Version History
 ---------------
+7.0.0
+* General : new "grunt-free" build process based on npm, rollup & friends
+* Core : removed support for CocoonJS (following service shutdown)
+* Input : removed obsolete support for proprietary windows 8 accelerometer API (not a thing anymore)
+* Renderer : renderer selection now set to AUTO by default (Attempt WebGL first, with fallback to Canvas)
+* WebGL : shader implementation has been rewritten to allow for a more generic approach, and ease definition of custom shader (see me.GLShader)
+* WebGL : properly handle WebGL context lost and restore
+* WebGL : updated earcut to version 2.1.5
+
 6.4.0
+* Documentation : new documentation format, including a search feature
+* Math : new PI related constants under me.Math (TAU, ETA, etc..)
 * Renderable : added a basic color tint feature (WebGL mode only)
-* Renderer : fixed default color to match standard canvas fill style (black)
+* Renderable : added support for Texture Packer multipack textures
+* Renderable : moved the name property definition at the me.Renderable level (prevent mostly all deriving objects from re-defining one)
+* Renderable : fixed an issue where a non Boolean value was passed to the onVisibilityChange callback
+* Sprite : cleaned up/simplified animation data handling
+* TMX : small memory optimization in the isometric renderer, where one temporary vector object was not properly recycled
+* Renderer : fixed stroke and fill default color to match standard W3C canvas stroke and fill style (black)
 
 6.3.0
 * Audio : audio core update (2.1.1), mostly improve auto audio unlock on latest (non-mobile) browser versions
