@@ -388,9 +388,11 @@
          * @ignore
          */
         set : function (value) {
-            this.points[1].x = this.points[2].x = value;
-            // _width updated in recalc
-            this.recalc();
+            if (this._width !== value) {
+                this.points[1].x = this.points[2].x = value;
+                // _width updated in recalc
+                this.recalc();
+            }
         },
         configurable : true
     });
@@ -413,9 +415,11 @@
          * @ignore
          */
         set : function (value) {
-            this.points[2].y = this.points[3].y = value;
-            // _height updated in recalc
-            this.recalc();
+            if (this._height !== value) {
+                this.points[2].y = this.points[3].y = value;
+                // _height updated in recalc
+                this.recalc();
+            }
         },
         configurable : true
     });
