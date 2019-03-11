@@ -74,7 +74,7 @@
         });
 
         /**
-         * cache value for the offset of the canvas position within the page
+         * cache value for relative position of the main canvas within the browser viewport
          * @ignore
          */
         api._canvasOffset = null;
@@ -349,23 +349,22 @@
         };
 
         /**
-         * return the relative (to the page) position of the specified Canvas
-         * @name getPos
+         * returns the relative position of the main canvas to the browser viewport.
+         * @name getBoundingClientRect
          * @memberOf me.video
          * @function
-         * @param {Canvas} [canvas] system one if none specified
-         * @return {DOMRect}
+         * @return {DOMRect} left and top coordinates of the canvas position
          */
-        api.getPos = function (c) {
-            if (typeof c === "undefined") {
-                if (api._canvasOffset === null) {
-                    c = this.renderer.getScreenCanvas();
-                    api._canvasOffset = c && c.getBoundingClientRect ? c.getBoundingClientRect() : { left : 0, top : 0 };
+        api.getBoundingClientRect = function () {
+            if (api._canvasOffset === null) {
+                var target = this.renderer.getScreenCanvas();
+                if (typeof target.getBoundingClientRect === "undefined") {
+                    api._canvasOffset = { left : 0, top : 0 };
+                } else {
+                    api._canvasOffset = target.getBoundingClientRect();
                 }
-                return api._canvasOffset;
-            } else  {
-                return c.getBoundingClientRect ? c.getBoundingClientRect() : { left : 0, top : 0 };
             }
+            return api._canvasOffset;
         };
 
         /**

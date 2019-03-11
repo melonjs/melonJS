@@ -556,7 +556,7 @@
      */
     api.globalToLocal = function (x, y, v) {
         v = v || new me.Vector2d();
-        var offset = me.video.getPos();
+        var offset = me.video.getBoundingClientRect();
         var pixelRatio = me.device.devicePixelRatio;
         x -= offset.left;
         y -= offset.top;
