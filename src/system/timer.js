@@ -52,7 +52,7 @@
                     _timer.elapsed += dt;
                 }
                 if (_timer.elapsed >= _timer.delay) {
-                    _timer.fn.apply(this);
+                    _timer.fn.apply(null, _timer.args);
                     if (_timer.repeat === true) {
                         _timer.elapsed -= _timer.delay;
                     } else {
@@ -136,8 +136,14 @@
          * @param {Function} fn the function you want to execute after delay milliseconds.
          * @param {Number} delay the number of milliseconds (thousandths of a second) that the function call should be delayed by.
          * @param {Boolean} [pauseable=true] respects the pause state of the engine.
-         * @return {Number} The numerical ID of the timeout, which can be used later with me.timer.clearTimeout().
+         * @param {...*} [param] optional parameters which are passed through to the function specified by fn once the timer expires.
+         * @return {Number} The numerical ID of the timer, which can be used later with me.timer.clearTimeout().
          * @function
+         * @example
+         * // set a timer to call "myFunction" after 1000ms
+         * me.timer.setTimeout(myFunction, 1000);
+         * // set a timer to call "myFunction" after 1000ms (respecting the pause state) and passing param1 and param2
+         * me.timer.setTimeout(myFunction, 1000, true, param1, param2);
          */
         api.setTimeout = function (fn, delay, pauseable) {
             timers.push({
@@ -146,7 +152,8 @@
                 elapsed : 0,
                 repeat : false,
                 timerId : ++timerId,
-                pauseable : pauseable === true || true
+                pauseable : pauseable === true || true,
+                args : arguments.length > 3 ? Array.prototype.slice.call(arguments, 3) : undefined
             });
             return timerId;
         };
@@ -158,8 +165,14 @@
          * @param {Function} fn the function to execute
          * @param {Number} delay the number of milliseconds (thousandths of a second) on how often to execute the function
          * @param {Boolean} [pauseable=true] respects the pause state of the engine.
-         * @return {Number} The numerical ID of the timeout, which can be used later with me.timer.clearInterval().
+         * @param {...*} [param] optional parameters which are passed through to the function specified by fn once the timer expires.
+         * @return {Number} The numerical ID of the timer, which can be used later with me.timer.clearInterval().
          * @function
+         * @example
+         * // set a timer to call "myFunction" every 1000ms
+         * me.timer.setInterval(myFunction, 1000);
+         * // set a timer to call "myFunction" every 1000ms (respecting the pause state) and passing param1 and param2
+         * me.timer.setInterval(myFunction, 1000, true, param1, param2);
          */
         api.setInterval = function (fn, delay, pauseable) {
             timers.push({
@@ -168,7 +181,8 @@
                 elapsed : 0,
                 repeat : true,
                 timerId : ++timerId,
-                pauseable : pauseable === true || true
+                pauseable : pauseable === true || true,
+                args : arguments.length > 3 ? Array.prototype.slice.call(arguments, 3) : undefined
             });
             return timerId;
         };

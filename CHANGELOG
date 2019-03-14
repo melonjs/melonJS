@@ -8,6 +8,7 @@ Version History
 * Input : fix potential issue with hardware not reporting proper event geometry
 * Math : prevent recalculating edges and normals when resizing a rectangle shape with the same width and height values
 * Renderer : renderer selection now set to AUTO by default (Attempt WebGL first, with fallback to Canvas)
+* Timer : added arguments passing to setTimeout and setInterval
 * WebGL : shader implementation has been rewritten to allow for a more generic approach, and ease definition of custom shader (see me.GLShader)
 * WebGL : properly handle WebGL context lost and restore
 * WebGL : updated earcut to version 2.1.5
@@ -487,7 +488,7 @@ Version History
 * TMX : XML TMX map are now converted to a JXON object on-the-fly, allowing to remove duplicated parsing code
 * TMX : added the Tiled "type" property to TMXObject
 * TMX : melonJS will now respect the object size as defined in Tiled when parsing/creating related object in the game world
-* Timer : added a setTimeout and setIntveral function obeying the engine pause state
+* Timer : added a setTimeout and setIntevral function obeying the engine pause state
 * Tween : fixed tweens to properly maintain time state when paused
 * Renderable : `collisionBox` has been replaced by a more cleaner implementation (see `getShape`/`addShape`/`getBounds`)
 * Renderable : the flicker function now takes the global flickering duration in ms (as opposed in frame count)
