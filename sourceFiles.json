@@ -2,7 +2,6 @@
   "src/global.js",
   "src/lang/window.js",
   "src/lang/object.js",
-  "src/lang/error.js",
   "src/system/agent.js",
   "src/system/device.js",
   "src/system/event.js",

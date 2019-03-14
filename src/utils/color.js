@@ -425,7 +425,7 @@
                 );
             }
 
-            throw new me.Color.Error(
+            throw new Error(
                 "invalid parameter: " + hexColor
             );
         },
@@ -582,24 +582,5 @@
         set : function (value) { this.glArray[3] = typeof(value) === "undefined" ? 1.0 : me.Math.clamp(+value, 0, 1.0); },
         enumerable : true,
         configurable : true
-    });
-
-    /**
-     * Base class for me.Color exception handling.
-     * @name Error
-     * @class
-     * @memberOf me.Color
-     * @private
-     * @constructor
-     * @param {String} msg Error message.
-     */
-    me.Color.Error = me.Error.extend({
-        /**
-         * @ignore
-         */
-        init : function (msg) {
-            this._super(me.Error, "init", [ msg ]);
-            this.name = "me.Color.Error";
-        }
     });
 })();

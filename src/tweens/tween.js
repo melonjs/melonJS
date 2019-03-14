@@ -258,7 +258,7 @@
          */
         this.easing = function ( easing ) {
             if (typeof easing !== 'function') {
-                throw new me.Tween.Error("invalid easing function for me.Tween.easing()");
+                throw new Error("invalid easing function for me.Tween.easing()");
             }
             _easingFunction = easing;
             return this;
@@ -878,24 +878,5 @@
         }
 
     };
-
-    /**
-     * Base class for Tween exception handling.
-     * @name Error
-     * @class
-     * @memberOf me.Tween
-     * @private
-     * @constructor
-     * @param {String} msg Error message.
-     */
-    me.Tween.Error = me.Error.extend({
-        /**
-         * @ignore
-         */
-        init : function (msg) {
-            this._super(me.Error, "init", [ msg ]);
-            this.name = "me.Tween.Error";
-        }
-    });
 })();
 /* eslint-enable quotes, keyword-spacing, comma-spacing, no-return-assign */

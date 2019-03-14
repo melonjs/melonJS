@@ -54,7 +54,7 @@
                             value = JSON.parse(match);
                         }
                         catch (e) {
-                            throw new me.Error("Unable to parse JSON: " + match);
+                            throw new Error("Unable to parse JSON: " + match);
                         }
                     }
                     else if (value.search(/^eval:/i) === 0) {
@@ -65,7 +65,7 @@
                             value = eval(match);
                         }
                         catch (e) {
-                            throw new me.Error("Unable to evaluate: " + match);
+                            throw new Error("Unable to evaluate: " + match);
                         }
                     }
                     else if (
@@ -117,7 +117,7 @@
          * @return {Number[]} Decompressed data
          */
         api.decompress = function () {
-            throw new me.Error("GZIP/ZLIB compressed TMX Tile Map not supported!");
+            throw new Error("GZIP/ZLIB compressed TMX Tile Map not supported!");
         };
 
         /**
@@ -189,10 +189,10 @@
                     return data;
 
                 case "xml":
-                    throw new me.Error("XML encoding is deprecated, use base64 instead");
+                    throw new Error("XML encoding is deprecated, use base64 instead");
 
                 default:
-                    throw new me.Error("Unknown layer encoding: " + encoding);
+                    throw new Error("Unknown layer encoding: " + encoding);
             }
         };
 

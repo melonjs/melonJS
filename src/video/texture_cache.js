@@ -30,7 +30,7 @@
         validate : function () {
             if (this.length >= this.max_size) {
                 // TODO: Merge textures instead of throwing an exception
-                throw new me.video.Error(
+                throw new Error(
                     "Texture cache overflow: " + this.max_size +
                     " texture units available."
                 );

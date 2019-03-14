@@ -611,7 +611,7 @@
 
         // throw an exception if no action is defined for the specified keycode
         if (!api._KeyBinding[keyCode]) {
-            throw new me.Error("no action defined for keycode " + keyCode);
+            throw new Error("no action defined for keycode " + keyCode);
         }
         // map the mouse button to the keycode
         api.pointer.bind[button] = keyCode;
@@ -680,11 +680,11 @@
         enablePointerEvent();
 
         if (pointerEventList.indexOf(eventType) === -1) {
-            throw new me.Error("invalid event type : " + eventType);
+            throw new Error("invalid event type : " + eventType);
         }
 
         if (typeof region === "undefined") {
-            throw new me.Error("registerPointerEvent: region for " + region + " event is undefined ");
+            throw new Error("registerPointerEvent: region for " + region + " event is undefined ");
         }
 
         var eventTypes = findAllActiveEvents(activeEventList, pointerEventMap[eventType]);
@@ -726,7 +726,7 @@
      */
     api.releasePointerEvent = function (eventType, region, callback) {
         if (pointerEventList.indexOf(eventType) === -1) {
-            throw new me.Error("invalid event type : " + eventType);
+            throw new Error("invalid event type : " + eventType);
         }
 
         // convert to supported event type if pointerEvent not natively supported

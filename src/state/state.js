@@ -463,7 +463,7 @@
          */
         api.set = function (state, stage) {
             if (!(stage instanceof me.Stage)) {
-                throw new me.Error(stage + " is not an instance of me.Stage");
+                throw new Error(stage + " is not an instance of me.Stage");
             }
             _stages[state] = {};
             _stages[state].stage = stage;
@@ -529,7 +529,7 @@
         api.change = function (state) {
             // Protect against undefined Stage
             if (typeof(_stages[state]) === "undefined") {
-                throw new me.Error("Undefined Stage for state '" + state + "'");
+                throw new Error("Undefined Stage for state '" + state + "'");
             }
 
             if (api.isCurrent(state)) {

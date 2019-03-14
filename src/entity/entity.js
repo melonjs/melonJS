@@ -35,7 +35,7 @@
 
             // ensure mandatory properties are defined
             if ((typeof settings.width !== "number") || (typeof settings.height !== "number")) {
-                throw new me.Entity.Error("height and width properties are mandatory when passing settings parameters to an object entity");
+                throw new Error("height and width properties are mandatory when passing settings parameters to an object entity");
             }
 
             // call the super constructor
@@ -127,7 +127,7 @@
                 if (typeof me.collision.types[settings.collisionType] !== "undefined") {
                     this.body.collisionType = me.collision.types[settings.collisionType];
                 } else {
-                    throw new me.Entity.Error("Invalid value for the collisionType property");
+                    throw new Error("Invalid value for the collisionType property");
                 }
             }
 
@@ -362,28 +362,9 @@
                 this.children[0] = value;
                 this.children[0].ancestor = this;
             } else {
-                throw new me.Entity.Error(value + "should extend me.Renderable");
+                throw new Error(value + "should extend me.Renderable");
             }
         },
         configurable : true
-    });
-
-    /**
-     * Base class for Entity exception handling.
-     * @name Error
-     * @class
-     * @memberOf me.Entity
-     * @constructor
-     * @private
-     * @param {String} msg Error message.
-     */
-    me.Entity.Error = me.Renderable.Error.extend({
-        /**
-         * @ignore
-         */
-        init : function (msg) {
-            this._super(me.Renderable.Error, "init", [ msg ]);
-            this.name = "me.Entity.Error";
-        }
     });
 })();

@@ -194,14 +194,14 @@
          */
         getContext2d : function (c, transparent) {
             if (typeof c === "undefined" || c === null) {
-                throw new me.video.Error(
+                throw new Error(
                     "You must pass a canvas element in order to create " +
                     "a 2d context"
                 );
             }
 
             if (typeof c.getContext === "undefined") {
-                throw new me.video.Error(
+                throw new Error(
                     "Your browser does not support HTML5 canvas."
                 );
             }

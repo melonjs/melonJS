@@ -80,7 +80,7 @@
                      "pool" : (pooling ? [] : undefined)
                  };
              } else {
-                 throw new me.Error("Cannot register object '" + className + "', invalid class");
+                 throw new Error("Cannot register object '" + className + "', invalid class");
              }
          };
 
@@ -144,7 +144,7 @@
                 return obj;
             }
 
-            throw new me.Error("Cannot instantiate object of type '" + name + "'");
+            throw new Error("Cannot instantiate object of type '" + name + "'");
         };
 
         /**

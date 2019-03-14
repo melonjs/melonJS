@@ -733,23 +733,4 @@
         },
         configurable : true
     });
-
-    /**
-     * Base class for Renderable exception handling.
-     * @name Error
-     * @class
-     * @memberOf me.Renderable
-     * @private
-     * @constructor
-     * @param {String} msg Error message.
-     */
-    me.Renderable.Error = me.Error.extend({
-        /**
-         * @ignore
-         */
-        init : function (msg) {
-            this._super(me.Error, "init", [ msg ]);
-            this.name = "me.Renderable.Error";
-        }
-    });
 })();

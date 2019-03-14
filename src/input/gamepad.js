@@ -390,7 +390,7 @@
     api.bindGamepad = function (index, button, keyCode) {
         // Throw an exception if no action is defined for the specified keycode
         if (!api._KeyBinding[keyCode]) {
-            throw new me.Error("no action defined for keycode " + keyCode);
+            throw new Error("no action defined for keycode " + keyCode);
         }
 
         // Allocate bindings if not defined
@@ -448,7 +448,7 @@
      */
     api.unbindGamepad = function (index, button) {
         if (!bindings[index]) {
-            throw new me.Error("no bindings for gamepad " + index);
+            throw new Error("no bindings for gamepad " + index);
         }
         bindings[index].buttons[button] = {};
     };

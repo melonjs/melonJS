@@ -58,7 +58,7 @@
             var points = this.points;
 
             if (points.length !== 2) {
-                throw new me.Line.Error("Requires exactly 2 points");
+                throw new Error("Requires exactly 2 points");
             }
 
             // Calculate the edges/normals
@@ -87,25 +87,6 @@
                 copy.push(point.clone());
             });
             return new me.Line(this.pos.x, this.pos.y, copy);
-        }
-    });
-
-    /**
-     * Base class for Line exception handling.
-     * @name Error
-     * @class
-     * @memberOf me.Line
-     * @private
-     * @constructor
-     * @param {String} msg Error message.
-     */
-    me.Line.Error = me.Error.extend({
-        /**
-         * @ignore
-         */
-        init : function (msg) {
-            this._super(me.Error, "init", [ msg ]);
-            this.name = "me.Line.Error";
         }
     });
 })();

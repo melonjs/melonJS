@@ -36,7 +36,7 @@
                     // load the external tileset (TSX/JSON)
                     tileset = me.loader.getTMX(me.utils.file.getBasename(src));
                     if (!tileset) {
-                        throw new me.Error(src + " external TSX/JSON tileset not found");
+                        throw new Error(src + " external TSX/JSON tileset not found");
                     }
                 }
             }
@@ -101,7 +101,7 @@
                     if ("image" in tiles[i]) {
                         var image = me.loader.getImage(tiles[i].image);
                         if (!image) {
-                            throw new me.TMXTileset.Error("melonJS: '" + tiles[i].image + "' file for tile '" + (+i + this.firstgid) + "' not found!");
+                            throw new Error("melonJS: '" + tiles[i].image + "' file for tile '" + (+i + this.firstgid) + "' not found!");
                         }
                         this.imageCollection[+i + this.firstgid] = image;
                     }
@@ -133,7 +133,7 @@
                 this.image = me.loader.getImage(tileset.image);
 
                 if (!this.image) {
-                    throw new me.TMXTileset.Error("melonJS: '" + tileset.image + "' file for tileset '" + this.name + "' not found!");
+                    throw new Error("melonJS: '" + tileset.image + "' file for tileset '" + this.name + "' not found!");
                 }
 
                 // create a texture atlas for the given tileset
@@ -368,28 +368,8 @@
                 return this.tilesets[invalidRange];
             }
             else {
-                throw new me.Error("no matching tileset found for gid " + gid);
+                throw new Error("no matching tileset found for gid " + gid);
             }
         }
     });
-
-    /**
-     * Base class for TMXTileset exception handling.
-     * @name Error
-     * @class
-     * @memberOf me.TMXTileset
-     * @private
-     * @constructor
-     * @param {String} msg Error message.
-     */
-    me.TMXTileset.Error = me.Error.extend({
-        /**
-         * @ignore
-         */
-        init : function (msg) {
-            this._super(me.Error, "init", [ msg ]);
-            this.name = "me.TMXTileset.Error";
-        }
-    });
-
 })();

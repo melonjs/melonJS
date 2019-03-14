@@ -3,6 +3,7 @@ Version History
 7.0.0
 * General : new "grunt-free" build process based on npm, rollup & friends
 * Core : removed support for CocoonJS (following service shutdown)
+* Core : simplified error/exception handling by removing the custom me.Error class
 * Input : removed obsolete support for proprietary windows 8 accelerometer API (not a thing anymore)
 * Input : fix potential issue with hardware not reporting proper event geometry
 * Math : prevent recalculating edges and normals when resizing a rectangle shape with the same width and height values

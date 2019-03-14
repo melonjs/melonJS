@@ -197,7 +197,7 @@
 
             if (!me.Math.isPowerOfTwo(image.width) || !me.Math.isPowerOfTwo(image.height)) {
                 var src = typeof image.src !== "undefined" ? image.src : image;
-                throw new me.video.Error(
+                throw new Error(
                     "[WebGL Renderer] " + src + " is not a POT texture " +
                     "(" + image.width + "x" + image.height + ")"
                 );
@@ -390,7 +390,7 @@
          */
         getContextGL : function (canvas, transparent) {
             if (typeof canvas === "undefined" || canvas === null) {
-                throw new me.video.Error(
+                throw new Error(
                     "You must pass a canvas element in order to create " +
                     "a GL context"
                 );
@@ -412,7 +412,7 @@
             var gl = canvas.getContext("webgl", attr) || canvas.getContext("experimental-webgl", attr);
 
             if (!gl) {
-                throw new me.video.Error(
+                throw new Error(
                     "A WebGL context could not be created."
                 );
             }

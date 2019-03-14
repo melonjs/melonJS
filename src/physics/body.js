@@ -304,7 +304,7 @@
                 data = json[id];
 
                 if (typeof(data) === "undefined") {
-                    throw new me.Body.Error("Identifier (" + id + ") undefined for the given PhysicsEditor JSON object)");
+                    throw new Error("Identifier (" + id + ") undefined for the given PhysicsEditor JSON object)");
                 }
 
                 if (data.length) {
@@ -332,7 +332,7 @@
                 });
 
                 if (typeof(data) === "undefined") {
-                    throw new me.Body.Error("Identifier (" + id + ") undefined for the given PhysicsEditor JSON object)");
+                    throw new Error("Identifier (" + id + ") undefined for the given PhysicsEditor JSON object)");
                 }
 
                 // shapes origin point
@@ -648,25 +648,6 @@
             this.onBodyUpdate = undefined;
             this.ancestor = undefined;
             this.shapes.length = 0;
-        }
-    });
-
-    /**
-     * Base class for Body exception handling.
-     * @name Error
-     * @class
-     * @memberOf me.Body
-     * @private
-     * @constructor
-     * @param {String} msg Error message.
-     */
-    me.Body.Error = me.Error.extend({
-        /**
-         * @ignore
-         */
-        init : function (msg) {
-            this._super(me.Error, "init", [ msg ]);
-            this.name = "me.Body.Error";
         }
     });
 })();

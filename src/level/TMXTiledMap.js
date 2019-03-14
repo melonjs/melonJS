@@ -39,7 +39,7 @@
 
             // if none found, throw an exception
             default:
-                throw new me.Error(obj.orientation + " type TMX Tile Map not supported!");
+                throw new Error(obj.orientation + " type TMX Tile Map not supported!");
         }
     }
 
@@ -247,7 +247,7 @@
             if (this.infinite === 1) {
                 // #956 Support for Infinite map
                 // see as well in me.TMXUtils
-                throw new me.Error("Tiled Infinite Map not supported!");
+                throw new Error("Tiled Infinite Map not supported!");
             }
         },
 

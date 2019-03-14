@@ -141,7 +141,7 @@
         _getValueFromPair: function (string, pattern) {
             var value = string.match(pattern);
             if (!value) {
-                throw "Could not find pattern " + pattern + " in string: " + string;
+                throw new Error("Could not find pattern " + pattern + " in string: " + string);
             }
 
             return value[0].split("=")[1];
@@ -156,12 +156,12 @@
          */
         parse: function (fontData) {
             if (!fontData) {
-                throw "File containing font data was empty, cannot load the bitmap font.";
+                throw new Error("File containing font data was empty, cannot load the bitmap font.");
             }
             var lines = fontData.split(/\r\n|\n/);
             var padding = fontData.match(/padding\=\d+,\d+,\d+,\d+/g);
             if (!padding) {
-                throw "Padding not found in first line";
+                throw new Error("Padding not found in first line");
             }
             var paddingValues = padding[0].split("=")[1].split(",");
             this.padTop = parseFloat(paddingValues[0]);

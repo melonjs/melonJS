@@ -132,7 +132,7 @@
          * @ignore
          */
         api.addLevel = function () {
-            throw new me.Error("no level loader defined");
+            throw new Error("no level loader defined");
         };
 
         /**
@@ -209,7 +209,7 @@
 
             // throw an exception if not existing
             if (typeof(levels[levelId]) === "undefined") {
-                throw new me.Error("level " + levelId + " not found");
+                throw new Error("level " + levelId + " not found");
             }
 
             if (levels[levelId] instanceof me.TMXTileMap) {
@@ -229,7 +229,7 @@
                 }
             }
             else {
-                throw new me.Error("no level loader defined");
+                throw new Error("no level loader defined");
             }
             return true;
         };

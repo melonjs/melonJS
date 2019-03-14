@@ -100,7 +100,7 @@
             });
 
             if (typeof(settings) === "undefined") {
-                throw new me.ObservableVector3d.Error(
+                throw new Error(
                     "undefined `onUpdate` callback"
                 );
             }
@@ -153,7 +153,7 @@
          */
         setCallback : function (fn) {
             if (typeof(fn) !== "function") {
-                throw new me.ObservableVector3d.Error(
+                throw new Error(
                     "invalid `onUpdate` callback"
                 );
             }
@@ -536,25 +536,6 @@
          */
         toString : function () {
             return "x:" + this._x + ",y:" + this._y + ",z:" + this._z;
-        }
-    });
-
-    /**
-     * Base class for Vector3d exception handling.
-     * @name Error
-     * @class
-     * @memberOf me.ObservableVector3d
-     * @private
-     * @constructor
-     * @param {String} msg Error message.
-     */
-    me.ObservableVector3d.Error = me.Error.extend({
-        /**
-         * @ignore
-         */
-        init : function (msg) {
-            this._super(me.Error, "init", [ msg ]);
-            this.name = "me.ObservableVector3d.Error";
         }
     });
 })();

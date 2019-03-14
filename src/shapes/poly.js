@@ -230,7 +230,7 @@ import earcut from "earcut";
             var len = points.length;
 
             if (len < 3) {
-                throw new me.Polygon.Error("Requires at least 3 points");
+                throw new Error("Requires at least 3 points");
             }
 
             // Calculate the edges/normals
@@ -390,25 +390,6 @@ import earcut from "earcut";
                 copy.push(point.clone());
             });
             return new me.Polygon(this.pos.x, this.pos.y, copy);
-        }
-    });
-
-    /**
-     * Base class for Polygon exception handling.
-     * @name Error
-     * @class
-     * @memberOf me.Polygon
-     * @private
-     * @constructor
-     * @param {String} msg Error message.
-     */
-    me.Polygon.Error = me.Error.extend({
-        /**
-         * @ignore
-         */
-        init : function (msg) {
-            this._super(me.Error, "init", [ msg ]);
-            this.name = "me.Polygon.Error";
         }
     });
 })();

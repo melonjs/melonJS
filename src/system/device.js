@@ -760,7 +760,7 @@
                     return me.save;
 
                 default :
-                    throw new me.Error("storage type " + type + " not supported");
+                    throw new Error("storage type " + type + " not supported");
             }
         };
 

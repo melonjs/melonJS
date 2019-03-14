@@ -278,7 +278,7 @@
                 this.target = target;
             }
             else {
-                throw new me.Renderable.Error("invalid target for me.Camera2d.follow");
+                throw new Error("invalid target for me.Camera2d.follow");
             }
             // if axis is null, camera is moved on target center
             this.follow_axis = (

@@ -88,7 +88,7 @@
                 });
             }
             else {
-                console.error(name + " is not an existing function");
+                throw new Error(name + " is not an existing function");
             }
         };
 
@@ -112,7 +112,7 @@
         singleton.register = function (plugin, name) {
             // ensure me.plugin[name] is not already "used"
             if (me.plugin[name]) {
-                console.error("plugin " + name + " already registered");
+                throw new Error("plugin " + name + " already registered");
             }
 
             // get extra arguments
@@ -128,12 +128,12 @@
 
             // inheritance check
             if (!instance || !(instance instanceof me.plugin.Base)) {
-                throw new me.Error("Plugin should extend the me.plugin.Base Class !");
+                throw new Error("Plugin should extend the me.plugin.Base Class !");
             }
 
             // compatibility testing
             if (me.sys.checkVersion(instance.version) > 0) {
-                throw new me.Error("Plugin version mismatch, expected: " + instance.version + ", got: " + me.version);
+                throw new Error("Plugin version mismatch, expected: " + instance.version + ", got: " + me.version);
             }
 
             // create a reference to the new plugin

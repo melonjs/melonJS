@@ -97,7 +97,7 @@
         gl.compileShader(shader);
 
         if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) {
-            throw new me.GLShader.Error(gl.getShaderInfoLog(shader));
+            throw new Error(gl.getShaderInfoLog(shader));
         }
 
         return shader;
@@ -118,7 +118,7 @@
         gl.linkProgram(program);
 
         if (!gl.getProgramParameter(program, gl.LINK_STATUS)) {
-            throw new me.GLShader.Error(
+            throw new Error(
                 "Error initializing Shader " + this + "\n" +
                 "gl.VALIDATE_STATUS: " + gl.getProgramParameter(program, gl.VALIDATE_STATUS) + "\n" +
                 "gl.getError()" + gl.getError() + "\n" +
@@ -312,24 +312,4 @@
             this.fragment = null;
         }
     });
-
-    /**
-     * Base class for GLShader exception handling.
-     * @name Error
-     * @class
-     * @memberOf me.GLShader
-     * @private
-     * @constructor
-     * @param {String} msg Error message.
-     */
-    me.GLShader.Error = me.Error.extend({
-        /**
-         * @ignore
-         */
-        init : function (msg) {
-            this._super(me.Error, "init", [ msg ]);
-            this.name = "me.GLShader.Error";
-        }
-    });
-
 })();

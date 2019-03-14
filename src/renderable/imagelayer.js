@@ -36,7 +36,7 @@
 
             // throw an error if image is null/undefined
             if (!this.image) {
-                throw new me.Error((
+                throw new Error((
                     (typeof(settings.image) === "string") ?
                     "'" + settings.image + "'" :
                     "Image"

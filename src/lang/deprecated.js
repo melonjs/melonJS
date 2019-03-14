@@ -107,3 +107,23 @@ me.video.getPos = function() {
     console.log("me.video.getPos() is deprecated, please use me.video.renderer.getBounds()");
     return me.video.renderer.getBounds();
 };
+
+/**
+ * melonJS base class for exception handling.
+ * @class
+ * @extends me.Object
+ * @memberOf me
+ * @constructor
+ * @deprecated since 7.0.0
+ * @see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Error
+ * @param {String} msg Error message.
+ */
+me.Error = me.Object.extend.bind(Error)({
+    /**
+     * @ignore
+     */
+    init : function (msg) {
+        this.name = "me.Error";
+        this.message = msg;
+    }
+});

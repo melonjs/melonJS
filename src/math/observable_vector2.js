@@ -71,7 +71,7 @@
             });
 
             if (typeof(settings) === "undefined") {
-                throw new me.ObservableVector2d.Error(
+                throw new Error(
                     "undefined `onUpdate` callback"
                 );
             }
@@ -118,7 +118,7 @@
          */
         setCallback : function (fn) {
             if (typeof(fn) !== "function") {
-                throw new me.ObservableVector2d.Error(
+                throw new Error(
                     "invalid `onUpdate` callback"
                 );
             }
@@ -449,25 +449,6 @@
          */
         toString : function () {
             return "x:" + this._x + ",y:" + this._y;
-        }
-    });
-
-    /**
-     * Base class for Vector2d exception handling.
-     * @name Error
-     * @class
-     * @memberOf me.ObservableVector2d
-     * @private
-     * @constructor
-     * @param {String} msg Error message.
-     */
-    me.ObservableVector2d.Error = me.Error.extend({
-        /**
-         * @ignore
-         */
-        init : function (msg) {
-            this._super(me.Error, "init", [ msg ]);
-            this.name = "me.ObservableVector2d.Error";
         }
     });
 })();

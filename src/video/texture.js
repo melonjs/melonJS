@@ -78,7 +78,7 @@
                                 // get the texture name from the atlas meta data
                                 var image = me.loader.getImage(atlas.meta.image);
                                 if (!image) {
-                                    throw new me.video.renderer.Texture.Error(
+                                    throw new Error(
                                         "Atlas texture '" + image + "' not found"
                                     );
                                 }
@@ -91,7 +91,7 @@
                         // ShoeBox
                         else if (atlas.meta.app.includes("ShoeBox")) {
                             if (!atlas.meta.exporter || !atlas.meta.exporter.includes("melonJS")) {
-                                throw new me.video.renderer.Texture.Error(
+                                throw new Error(
                                     "ShoeBox requires the JSON exporter : " +
                                     "https://github.com/melonjs/melonJS/tree/master/media/shoebox_JSON_export.sbx"
                                 );
@@ -131,7 +131,7 @@
 
             // if format not recognized
             if (this.atlases.length === 0) {
-                throw new me.video.renderer.Texture.Error("texture atlas format not supported");
+                throw new Error("texture atlas format not supported");
             }
 
             // Add self to TextureCache if cache !== false
@@ -470,7 +470,7 @@
                 region = this.getRegion(names[i]);
                 if (region == null) {
                     // throw an error
-                    throw new me.video.renderer.Texture.Error("Texture - region for " + names[i] + " not found");
+                    throw new Error("Texture - region for " + names[i] + " not found");
                 }
                 tpAtlas[i] = region;
                 // save the corresponding index
@@ -489,25 +489,6 @@
                 atlas: tpAtlas,
                 atlasIndices: indices
             }, settings || {}));
-        }
-    });
-
-    /**
-     * Base class for Texture exception handling.
-     * @name Error
-     * @class
-     * @memberOf me.Renderer.Texture
-     * @private
-     * @constructor
-     * @param {String} msg Error message.
-     */
-    me.Renderer.prototype.Texture.Error = me.Error.extend({
-        /**
-         * @ignore
-         */
-        init : function (msg) {
-            this._super(me.Error, "init", [ msg ]);
-            this.name = "me.Renderer.Texture.Error";
         }
     });
 })();

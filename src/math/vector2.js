@@ -35,7 +35,7 @@
          */
         set : function (x, y) {
             if (x !== +x || y !== +y) {
-                throw new me.Vector2d.Error(
+                throw new Error(
                     "invalid x,y parameters (not a number)"
                 );
             }
@@ -478,25 +478,6 @@
          */
         toString : function () {
             return "x:" + this.x + ",y:" + this.y;
-        }
-    });
-
-    /**
-     * Base class for Vector2d exception handling.
-     * @name Error
-     * @class
-     * @memberOf me.Vector2d
-     * @private
-     * @constructor
-     * @param {String} msg Error message.
-     */
-    me.Vector2d.Error = me.Error.extend({
-        /**
-         * @ignore
-         */
-        init : function (msg) {
-            this._super(me.Error, "init", [ msg ]);
-            this.name = "me.Vector2d.Error";
         }
     });
 })();

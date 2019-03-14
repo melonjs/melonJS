@@ -134,7 +134,7 @@
                         this.current.height = settings.frameheight || region.height;
                     } else {
                         // throw an error
-                        throw new me.Renderable.Error("Texture - region for " + settings.region + " not found");
+                        throw new Error("Texture - region for " + settings.region + " not found");
                     }
                 }
             } else {
@@ -316,7 +316,7 @@
                     }
                 } else { // string
                     if (this.atlasIndices === null) {
-                        throw new me.Renderable.Error(
+                        throw new Error(
                             "string parameters for addAnimation are not allowed for standard spritesheet based Texture"
                         );
                     } else {
@@ -389,7 +389,7 @@
                     this.dt = 0;
                 }
             } else {
-                throw new me.Renderable.Error("animation id '" + name + "' not defined");
+                throw new Error("animation id '" + name + "' not defined");
             }
             return this;
         },

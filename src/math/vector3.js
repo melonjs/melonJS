@@ -38,7 +38,7 @@
          */
         set : function (x, y, z) {
             if (x !== +x || y !== +y || z !== +z) {
-                throw new me.Vector3d.Error(
+                throw new Error(
                     "invalid x, y, z parameters (not a number)"
                 );
             }
@@ -496,25 +496,6 @@
          */
         toString : function () {
             return "x:" + this.x + ",y:" + this.y + ",z:" + this.z;
-        }
-    });
-
-    /**
-     * Base class for Vector3d exception handling.
-     * @name Error
-     * @class
-     * @memberOf me.Vector3d
-     * @private
-     * @constructor
-     * @param {String} msg Error message.
-     */
-    me.Vector3d.Error = me.Error.extend({
-        /**
-         * @ignore
-         */
-        init : function (msg) {
-            this._super(me.Error, "init", [ msg ]);
-            this.name = "me.Vector3d.Error";
         }
     });
 })();
