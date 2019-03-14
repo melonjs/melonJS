@@ -81,7 +81,7 @@ me.BitmapFont = me.BitmapText.extend({
 /**
  * @function me.Renderer.drawShape
  * @deprecated since 6.3.0
- * @see me.Renderer.stroke
+ * @see me.Renderer#stroke
  */
 me.Renderer.prototype.drawShape = function () {
     console.log("drawShape() is deprecated, please use the stroke() or fill() function");
