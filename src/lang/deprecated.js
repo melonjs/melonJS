@@ -97,3 +97,13 @@ me.CanvasRenderer.prototype.Texture = me.Renderer.prototype.Texture;
  * @ignore
  */
 me.WebGLRenderer.prototype.Texture = me.Renderer.prototype.Texture;
+
+/**
+ * @function me.video.getPos
+ * @deprecated since 7.0.0
+ * @see me.Renderer#getBounds
+ */
+me.video.getPos = function() {
+    console.log("me.video.getPos() is deprecated, please use me.video.renderer.getBounds()");
+    return me.video.renderer.getBounds();
+};

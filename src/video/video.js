@@ -6,7 +6,7 @@
      * @memberOf me
      */
     me.video = (function () {
-        // hold public stuff in our apig
+        // hold public stuff in our api
         var api = {};
 
         var deferResizeId = 0;
@@ -35,7 +35,6 @@
             verbose : false,
             consoleHeader : true
         };
-
 
         /**
          * Auto-detect the best renderer to use
@@ -72,12 +71,6 @@
                 this.name = "me.video.Error";
             }
         });
-
-        /**
-         * cache value for relative position of the main canvas within the browser viewport
-         * @ignore
-         */
-        api._canvasOffset = null;
 
         /**
          * Select the HTML5 Canvas renderer
@@ -235,9 +228,7 @@
             // Automatically update relative canvas position on scroll
             window.addEventListener("scroll", me.utils.function.throttle(
                 function (e) {
-                    // invalidate the current canvas position cache so that it
-                    // get recalculated the next time getPos is called
-                    api._canvasOffset = null;
+                    me.video.renderer.updateBounds();
                     me.event.publish(me.event.WINDOW_ONSCROLL, [ e ]);
                 }, 100
             ), false);
@@ -349,25 +340,6 @@
         };
 
         /**
-         * returns the relative position of the main canvas to the browser viewport.
-         * @name getBoundingClientRect
-         * @memberOf me.video
-         * @function
-         * @return {DOMRect} left and top coordinates of the canvas position
-         */
-        api.getBoundingClientRect = function () {
-            if (api._canvasOffset === null) {
-                var target = this.renderer.getScreenCanvas();
-                if (typeof target.getBoundingClientRect === "undefined") {
-                    api._canvasOffset = { left : 0, top : 0 };
-                } else {
-                    api._canvasOffset = target.getBoundingClientRect();
-                }
-            }
-            return api._canvasOffset;
-        };
-
-        /**
          * set the max canvas display size (when scaling)
          * @name setMaxSize
          * @memberOf me.video
@@ -382,7 +354,6 @@
             // trigger a resize
             // defer it to ensure everything is properly intialized
             me.utils.function.defer(me.video.onresize, me.video);
-
         };
 
         /**
@@ -425,10 +396,6 @@
         api.onresize = function () {
             // default (no scaling)
             var scaleX = 1, scaleY = 1;
-
-            // invalidate the current canvas position cache so that it
-            // get recalculated the next time getPos is called
-            api._canvasOffset = null;
 
             if (settings.autoScale) {
                 var parentNodeWidth;
@@ -503,6 +470,9 @@
                 }
                 deferResizeId = me.utils.function.defer(me.video.updateDisplaySize, this, scaleX, scaleY);
             }
+
+            // update parent container bounds
+            this.renderer.updateBounds();
         };
 
         /**
@@ -515,15 +485,16 @@
          */
         api.updateDisplaySize = function (scaleX, scaleY) {
 
-            // invalidate the current canvas position cache so that it
-            // get recalculated the next time getPos is called
-            api._canvasOffset = null;
-
             // update the global scale variable
             me.sys.scale.set(scaleX, scaleY);
 
             // renderer resize logic
             this.renderer.scaleCanvas(scaleX, scaleY);
+
+            // update parent container bounds
+            this.renderer.updateBounds();
+
+            // force repaint
             me.game.repaint();
 
             // clear the timeout id

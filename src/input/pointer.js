@@ -215,7 +215,7 @@
             this.clientY = clientY || 0;
 
             // translate to local coordinates
-            me.input.globalToLocal(this.clientX, this.clientY, this.pos);
+            me.input.globalToLocal(this.pageX, this.pageY, this.pos);
 
             // true if not originally a pointer event
             this.isNormalized = !me.device.PointerEvent || (me.device.PointerEvent && !(event instanceof window.PointerEvent));
