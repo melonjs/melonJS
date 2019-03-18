@@ -666,12 +666,14 @@
             // get top-left and bottom-right tile position
             var start = this.pixelToTileCoords(
                 rect.pos.x,
-                rect.pos.y
+                rect.pos.y,
+                me.pool.pull("me.Vector2d")
            ).floorSelf();
 
             var end = this.pixelToTileCoords(
                 rect.pos.x + rect.width + this.tilewidth,
-                rect.pos.y + rect.height + this.tileheight
+                rect.pos.y + rect.height + this.tileheight,
+                me.pool.pull("me.Vector2d")
             ).ceilSelf();
 
             //ensure we are in the valid tile range
@@ -688,7 +690,9 @@
                         this.drawTile(renderer, x, y, tmxTile);
                     }
                 }
-            }
+            }    
+            me.pool.push(start);
+            me.pool.push(end);
         }
     });
 
