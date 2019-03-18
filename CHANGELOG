@@ -5,11 +5,12 @@ Version History
 * Core : removed support for CocoonJS (following service shutdown)
 * Core : simplified error/exception handling by removing the custom me.Error class
 * Input : removed obsolete support for proprietary windows 8 accelerometer API (not a thing anymore)
-* Input : fix potential issue with hardware not reporting proper event geometry
+* Input : fixed potential issue with hardware not reporting proper event geometry
+* Inpit : improved pointer detection when using complex css layouts
 * Math : prevent recalculating edges and normals when resizing a rectangle shape with the same width and height values
 * Renderer : renderer selection now set to AUTO by default (Attempt WebGL first, with fallback to Canvas)
 * Timer : added arguments passing to setTimeout and setInterval
-* TMX : fix temporary vectors recycling in the hexagonal map renderer
+* TMX : fixed temporary vectors recycling in the hexagonal map renderer
 * WebGL : shader implementation has been rewritten to allow for a more generic approach, and ease definition of custom shader (see me.GLShader)
 * WebGL : properly handle WebGL context lost and restore
 * WebGL : updated earcut to version 2.1.5
