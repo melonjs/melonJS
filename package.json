@@ -65,7 +65,7 @@
     "lint": "eslint --config .eslintrc.json src",
     "test": "npm run build && karma start",
     "doc": "mkdirp docs && jsdoc -c jsdoc_conf.json",
-    "publishdoc": "ghpages melonjs/melonJS -p docs",
-    "release": "npm run dist && npm run doc && npm run publishdoc"
+    "publishdoc": "npm run doc && ghpages melonjs/melonJS -p docs",
+    "release": "npm run dist && npm publish --access public && npm run publishdoc"
   }
 }
