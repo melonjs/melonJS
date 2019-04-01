@@ -73,10 +73,30 @@ You may find it useful to skim the overview found at the wiki [Details & Usage](
 
 When starting your own projects, checkout the [boilerplate](https://github.com/melonjs/boilerplate)
 
+Download melonJS
+-------------------------------------------------------------------------------
+
+The latest build (plain and minified) with corresponding release note is available for direct download [here](https://github.com/melonjs/melonJS/releases).
+
+Alternatively, the latest version of melonJS can be installed through [NPM](https://www.npmjs.com/package/melonjs) :
+
+    $ npm install melonjs
+
+Or can simply be added to your html, through a content delivery network (CDN) URL, using :
+
+```html
+<script src="https://cdn.jsdelivr.net/npm/melonjs@7.0.0/dist/melonjs.js"></script>
+```
+or the following for the minified version :
+```html
+<script src="https://cdn.jsdelivr.net/npm/melonjs@7.0.0/dist/melonjs.min.js"></script>
+```
+
+> Note: NPM and CDN install are only available from version 7.0.0 and onwards.
 
 Building melonJS
 -------------------------------------------------------------------------------
-For most users, all you probably want is to use melonJS, and all you need then is just to download the latest pre-built [release](https://github.com/melonjs/melonJS/releases) to get started. The only time you should need to build melonJS is if you want to contribute to the project and start developing on it.
+For most users, all you probably want is to use melonJS, and all you need then is just to download the latest built [release](https://github.com/melonjs/melonJS#download-melonjs) to get started. The only time you should need to build melonJS is if you want to contribute to the project and start developing on it.
 
 To build your own version of melonJS you will need to install :
 
