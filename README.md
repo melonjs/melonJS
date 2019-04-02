@@ -92,7 +92,7 @@ or the following for the minified version :
 <script src="https://cdn.jsdelivr.net/npm/melonjs@7.0.0/dist/melonjs.min.js"></script>
 ```
 
-> Note: NPM and CDN install are only available from version 7.0.0 and onwards.
+> Note: "official" CDN and NPM install are only available from version 7.0.0 and onwards.
 
 Building melonJS
 -------------------------------------------------------------------------------
