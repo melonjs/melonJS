@@ -92,6 +92,10 @@ or the following for the minified version :
 ```html
 <script src="https://cdn.jsdelivr.net/npm/melonjs@7.0.0/dist/melonjs.min.js"></script>
 ```
+and of course the debug panel :
+```html
+https://cdn.jsdelivr.net/npm/melonjs@7.0.0/plugins/debug/debugPanel.js
+```
 
 > Note: "official" CDN and NPM install are only available from version 7.0.0 and onwards.
 
