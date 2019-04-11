@@ -2,6 +2,7 @@ Version History
 ---------------
 7.1.0
 * Core : new me.event.GAME_UPDATE system event that will be triggered at the beginning of the update loop
+* Core : me.game.HASH is deprecated and replaced by the me.utils.getUriFragment() function
 * Debug : fixed DebugPanel minimum version requirements (should have been 7.0 since last release)
 * Input : use passive event listeners when preventDefault is used (default behaviour)
 * Input : simplified pointer / keyboard / gamepad implementation and removed support for legacy API (e.g. mousewheel event)

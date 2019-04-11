@@ -52,7 +52,7 @@
             this.panel = new DebugPanel(debugToggle);
 
             // if "#debug" is present in the URL
-            if (me.game.HASH.debug === true) {
+            if (me.utils.getUriFragment().debug === true) {
                 this.show();
             } // else keep it hidden
         },
@@ -348,11 +348,12 @@
          * @ignore
          */
         patchSystemFn : function () {
+            var hash = me.utils.getUriFragment();
 
             // add a few new debug flag (if not yet defined)
-            me.debug.renderHitBox   = me.debug.renderHitBox   || me.game.HASH.hitbox || false;
-            me.debug.renderVelocity = me.debug.renderVelocity || me.game.HASH.velocity || false;
-            me.debug.renderQuadTree = me.debug.renderQuadTree || me.game.HASH.quadtree || false;
+            me.debug.renderHitBox   = me.debug.renderHitBox   || hash.hitbox || false;
+            me.debug.renderVelocity = me.debug.renderVelocity || hash.velocity || false;
+            me.debug.renderQuadTree = me.debug.renderQuadTree || hash.quadtree || false;
 
             var _this = this;
             var bounds = new me.Rect(0, 0, 0, 0);
@@ -803,8 +804,9 @@
 
     // automatically register the debug panel
     me.device.onReady(function () {
+        var toggleKey = me.utils.getUriFragment().debugToggleKey;
         me.utils.function.defer(me.plugin.register, this, me.DebugPanel, "debugPanel",
-            me.game.HASH.debugToggleKey ? me.game.HASH.debugToggleKey.charCodeAt(0) - 32 : undefined
+            toggleKey ? toggleKey.charCodeAt(0) - 32 : undefined
         );
     });
 

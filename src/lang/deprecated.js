@@ -127,3 +127,32 @@ me.Error = me.Object.extend.bind(Error)({
         this.message = msg;
     }
 });
+
+/**
+ * @function sys.checkVersion
+ * @deprecated since 7.1.0
+ * @see me.utils#checkVersion
+ */
+me.sys.checkVersion = function(first, second) {
+    console.log("me.sys.checkVersion() is deprecated, please use me.utils.checkVersion()");
+    return me.utils.checkVersion(first, second);
+};
+
+/**
+ * @public
+ * @type {Object}
+ * @name HASH
+ * @memberOf me.game
+ * @deprecated since 7.1.0
+ * @see me.utils#getUriFragment
+ */
+Object.defineProperty(me.game, "HASH", {
+    /**
+     * @ignore
+     */
+    get : function () {
+        console.log("me.game.HASH is deprecated, please use me.utils.getUriFragment()");
+        return me.utils.getUriFragment();
+    },
+    configurable : false
+});

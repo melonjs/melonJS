@@ -122,6 +122,12 @@
          */
 
         /**
+         * initialize the level director
+         * @ignore
+         */
+        api.init = function () {};
+
+        /**
          * reset the level director
          * @ignore
          */

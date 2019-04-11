@@ -44,7 +44,7 @@
             /**
              * @ignore
              */
-            _init: function () {
+            init: function () {
                 // Load previous data if local Storage is supported
                 if (me.device.localStorage === true) {
                     var me_save_content = localStorage.getItem("me.save");

@@ -105,24 +105,6 @@
         api.onLevelLoaded = function () {};
 
         /**
-         * Provide an object hash with all tag parameters specified in the url.
-         * @property {Boolean} [hitbox=false] draw the hitbox in the debug panel (if enabled)
-         * @property {Boolean} [velocity=false] draw the entities velocity in the debug panel (if enabled)
-         * @property {Boolean} [quadtree=false] draw the quadtree in the debug panel (if enabled)
-         * @property {Boolean} [webgl=false] force the renderer to WebGL
-         * @property {Boolean} [debug=false] display the debug panel (if preloaded)
-         * @property {String} [debugToggleKey="s"] show/hide the debug panel (if preloaded)
-         * @public
-         * @type {Object}
-         * @name HASH
-         * @memberOf me.game
-         * @example
-         * // http://www.example.com/index.html#debug&hitbox=true&mytag=value
-         * console.log(me.game.HASH["mytag"]); //> "value"
-         */
-        api.HASH = null;
-
-        /**
          * Initialize the game manager
          * @name init
          * @memberOf me.game

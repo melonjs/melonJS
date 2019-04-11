@@ -118,63 +118,9 @@
          * @default false
          * @memberOf me.sys
          */
-        preRender : false,
-
-        /*
-         * System methods
-         */
-
-        /**
-         * Compare two version strings
-         * @public
-         * @function
-         * @param {String} first First version string to compare
-         * @param {String} [second="__VERSION__"] Second version string to compare
-         * @return {Number} comparison result <br>&lt; 0 : first &lt; second<br>
-         * 0 : first == second<br>
-         * &gt; 0 : first &gt; second
-         * @example
-         * if (me.sys.checkVersion("__VERSION__") > 0) {
-         *     console.error(
-         *         "melonJS is too old. Expected: __VERSION__, Got: " + me.version
-         *     );
-         * }
-         */
-        checkVersion : function (first, second) {
-            second = second || me.version;
-
-            var a = first.split(".");
-            var b = second.split(".");
-            var len = Math.min(a.length, b.length);
-            var result = 0;
-
-            for (var i = 0; i < len; i++) {
-                if ((result = +a[i] - +b[i])) {
-                    break;
-                }
-            }
-
-            return result ? result : a.length - b.length;
-        }
+        preRender : false
     };
 
-    function parseHash() {
-        var hash = {};
-
-        // No "document.location" exist for Wechat mini game platform.
-        if (document.location && document.location.hash) {
-            document.location.hash.substr(1).split("&").filter(function (value) {
-                return (value !== "");
-            }).forEach(function (value) {
-                var kv = value.split("=");
-                var k = kv.shift();
-                var v = kv.join("=");
-                hash[k] = v || true;
-            });
-        }
-
-        return hash;
-    }
 
     // a flag to know if melonJS
     // is initialized
@@ -214,16 +160,13 @@
         me.pool.init();
 
         // initialize me.save
-        me.save._init();
-
-        // parse optional url parameters/tags
-        me.game.HASH = parseHash();
-
-        // enable/disable the cache
-        me.loader.setNocache( me.game.HASH.nocache || false );
+        me.save.init();
 
         // init the FPS counter if needed
         me.timer.init();
+
+        // enable/disable the cache
+        me.loader.setNocache( me.utils.getUriFragment().nocache || false );
 
         // init the App Manager
         me.state.init();
@@ -232,7 +175,7 @@
         me.input.initKeyboardEvent();
 
         // init the level Director
-        me.levelDirector.reset();
+        me.levelDirector.init();
 
         me_initialized = true;
     };

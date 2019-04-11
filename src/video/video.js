@@ -149,7 +149,7 @@
             }
 
             // override renderer settings if &webgl is defined in the URL
-            if (me.game.HASH.webgl === true) {
+            if (me.utils.getUriFragment().webgl === true) {
                 settings.renderer = api.WEBGL;
             }
 
