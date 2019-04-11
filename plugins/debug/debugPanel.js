@@ -235,7 +235,7 @@
             this.isKinematic = false;
 
             // minimum melonJS version expected
-            this.version = "6.3.0";
+            this.version = "7.0.0";
 
             // to hold the debug options
             // clickable rect area
@@ -356,15 +356,6 @@
 
             var _this = this;
             var bounds = new me.Rect(0, 0, 0, 0);
-
-            // patch timer.js
-            me.plugin.patch(me.timer, "update", function (dt) {
-                // call the original me.timer.update function
-                this._patched.apply(this, arguments);
-
-                // call the FPS counter
-                me.timer.countFPS();
-            });
 
             // patch me.game.update
             me.plugin.patch(me.game, "update", function (dt) {
@@ -652,6 +643,9 @@
 
         /** @private */
         update : function () {
+            // update the FPS counter
+            me.timer.countFPS();
+
             return this.visible;
         },
 

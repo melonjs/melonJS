@@ -96,6 +96,8 @@
     // mapping list
     var remap = new Map();
 
+    var updateEventHandler;
+
     /**
      * Default gamepad mappings
      * @ignore
@@ -150,26 +152,10 @@
     });
 
     /**
-     * gamepad connected callback
-     * @ignore
-     */
-    window.addEventListener("gamepadconnected", function (event) {
-        me.event.publish(me.event.GAMEPAD_CONNECTED, [ event.gamepad ]);
-    }, false);
-
-    /**
-     * gamepad disconnected callback
-     * @ignore
-     */
-    window.addEventListener("gamepaddisconnected", function (event) {
-        me.event.publish(me.event.GAMEPAD_DISCONNECTED, [ event.gamepad ]);
-    }, false);
-
-    /**
      * Update gamepad status
      * @ignore
      */
-    api._updateGamepads = navigator.getGamepads ? function () {
+    var updateGamepads = function () {
         var gamepads = navigator.getGamepads();
         var e = {};
 
@@ -286,7 +272,23 @@
                 last[range].pressed = pressed;
             });
         });
-    } : function () {};
+    };
+
+    /**
+     * gamepad connected callback
+     * @ignore
+     */
+    window.addEventListener("gamepadconnected", function (event) {
+        me.event.publish(me.event.GAMEPAD_CONNECTED, [ event.gamepad ]);
+    }, false);
+
+    /**
+     * gamepad disconnected callback
+     * @ignore
+     */
+    window.addEventListener("gamepaddisconnected", function (event) {
+        me.event.publish(me.event.GAMEPAD_DISCONNECTED, [ event.gamepad ]);
+    }, false);
 
     /*
      * PUBLIC STUFF
@@ -389,8 +391,14 @@
      */
     api.bindGamepad = function (index, button, keyCode) {
         // Throw an exception if no action is defined for the specified keycode
-        if (!api._KeyBinding[keyCode]) {
+        if (!me.input.getBindingKey(keyCode)) {
             throw new Error("no action defined for keycode " + keyCode);
+        }
+
+        // register to the the update event if not yet done and supported by the browser
+        // if not supported, the function will fail silently (-> update loop won't be called)
+        if (typeof updateEventHandler === "undefined" && navigator.getGamepads) {
+            updateEventHandler = me.event.subscribe(me.event.GAME_UPDATE, updateGamepads);
         }
 
         // Allocate bindings if not defined

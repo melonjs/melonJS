@@ -220,9 +220,7 @@
         me.game.HASH = parseHash();
 
         // enable/disable the cache
-        me.loader.setNocache(
-            me.game.HASH.nocache || false
-        );
+        me.loader.setNocache( me.game.HASH.nocache || false );
 
         // init the FPS counter if needed
         me.timer.init();
@@ -230,10 +228,8 @@
         // init the App Manager
         me.state.init();
 
-        // automatically enable keyboard events if on desktop
-        if (me.device.isMobile === false) {
-            me.input._enableKeyboardEvent();
-        }
+        // automatically enable keyboard events
+        me.input.initKeyboardEvent();
 
         // init the level Director
         me.levelDirector.reset();

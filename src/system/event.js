@@ -88,6 +88,18 @@ import MinPubSub from "minpubsub";
         api.GAME_RESET = "me.game.onReset";
 
         /**
+         * Channel Constant for when the game manager is updated (start of the update loop) <br>
+         * Data passed : {Number} time the current time stamp
+         * @public
+         * @constant
+         * @type String
+         * @name GAME_UPDATE
+         * @memberOf me.event
+         * @see me.event.subscribe
+         */
+        api.GAME_UPDATE = "me.game.onUpdate";
+
+        /**
          * Channel Constant for when a level is loaded <br>
          * Data passed : {String} Level Name
          * @public

@@ -84,7 +84,7 @@ Alternatively, the latest version of melonJS can be installed through [NPM](http
 
     $ npm install melonjs
 
-Or can simply be added to your html, through a content delivery network (CDN) URL, using :
+Or can simply be added to your html, through a content delivery network (CDN) URL, using for example :
 
 ```html
 <script src="https://cdn.jsdelivr.net/npm/melonjs@7.0.0/dist/melonjs.js"></script>

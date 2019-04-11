@@ -45,11 +45,23 @@
          * update timers
          * @ignore
          */
-        var updateTimers = function (dt) {
+        var updateTimers = function (time) {
+            last = now;
+            now = time;
+            delta = (now - last);
+
+            // fix for negative timestamp returned by wechat or chrome on startup
+            if (delta < 0) {
+                delta = 0;
+            }
+
+            // get the game tick
+            api.tick = (delta > minstep && me.sys.interpolation) ? delta / step : 1;
+
             for (var i = 0, len = timers.length; i < len; i++) {
                 var _timer = timers[i];
                 if (!(_timer.pauseable && me.state.isPaused())) {
-                    _timer.elapsed += dt;
+                    _timer.elapsed += delta;
                 }
                 if (_timer.elapsed >= _timer.delay) {
                     _timer.fn.apply(null, _timer.args);
@@ -111,6 +123,8 @@
             // reset variables to initial state
             api.reset();
             now = last = 0;
+            // register to the game update event
+            me.event.subscribe(me.event.GAME_UPDATE, updateTimers);
         };
 
         /**
@@ -243,39 +257,13 @@
             framecount++;
             framedelta += delta;
             if (framecount % 10 === 0) {
-                this.fps = me.Math.clamp(~~((1000 * framecount) / framedelta), 0, me.sys.fps);
+                this.fps = me.Math.clamp(Math.round((1000 * framecount) / framedelta), 0, me.sys.fps);
                 framedelta = 0;
                 framecount = 0;
             }
         };
 
-        /**
-         * update game tick
-         * should be called once a frame
-         * @param {Number} time current timestamp as provided by the RAF callback
-         * @return {Number} time elapsed since the last update
-         * @ignore
-         */
-        api.update = function (time) {
-            last = now;
-            now = time;
-            delta = (now - last);
-
-            // fix for negative timestamp returned by wechat or chrome on startup
-            if (delta < 0) {
-                delta = 0;
-            }
-
-            // get the game tick
-            api.tick = (delta > minstep && me.sys.interpolation) ? delta / step : 1;
-
-            // update defined timers
-            updateTimers(delta);
-
-            return delta;
-        };
-
-        // return our apiect
+        // return our api
         return api;
     })();
 })();

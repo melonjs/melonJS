@@ -3,9 +3,6 @@
      * PRIVATE STUFF
      */
 
-    // list of binded keys
-    api._KeyBinding = {};
-
     // corresponding actions
     var keyStatus = {};
 
@@ -20,29 +17,17 @@
     // whether default event should be prevented for a given keypress
     var preventDefaultForKeys = {};
 
-    // some useful flags
-    var keyboardInitialized = false;
-
-    /**
-     * enable keyboard event
-     * @ignore
-     */
-    api._enableKeyboardEvent = function () {
-        if (!keyboardInitialized) {
-            window.addEventListener("keydown", api._keydown, false);
-            window.addEventListener("keyup", api._keyup, false);
-            keyboardInitialized = true;
-        }
-    };
+    // list of binded keys
+    var keyBindings = {};
 
     /**
      * key down event
      * @ignore
      */
-    api._keydown = function (e, keyCode, mouseButton) {
+    var keyDownEvent = function (e, keyCode, mouseButton) {
 
         keyCode = keyCode || e.keyCode || e.button;
-        var action = api._KeyBinding[keyCode];
+        var action = keyBindings[keyCode];
 
         // publish a message for keydown event
         me.event.publish(me.event.KEYDOWN, [
@@ -61,7 +46,7 @@
             }
             // prevent event propagation
             if (preventDefaultForKeys[keyCode]) {
-                return api._preventDefaultFn(e);
+                return e.preventDefault();
             }
             else {
                 return true;
@@ -76,9 +61,9 @@
      * key up event
      * @ignore
      */
-    api._keyup = function (e, keyCode, mouseButton) {
+    var keyUpEvent = function (e, keyCode, mouseButton) {
         keyCode = keyCode || e.keyCode || e.button;
-        var action = api._KeyBinding[keyCode];
+        var action = keyBindings[keyCode];
 
         // publish a message for keydown event
         me.event.publish(me.event.KEYUP, [ action, keyCode ]);
@@ -95,7 +80,7 @@
 
             // prevent event propagation
             if (preventDefaultForKeys[keyCode]) {
-                return api._preventDefaultFn(e);
+                return e.preventDefault();
             }
             else {
                 return true;
@@ -108,6 +93,7 @@
     /*
      * PUBLIC STUFF
      */
+
 
     /**
      * standard keyboard constants
@@ -318,6 +304,19 @@
     };
 
     /**
+     * enable keyboard event
+     * @ignore
+     */
+    api.initKeyboardEvent = function () {
+        // make sure the keyboard is enable
+        if (me.input.keyBoardEventTarget === null && me.device.isMobile === false) {
+            me.input.keyBoardEventTarget = window;
+            me.input.keyBoardEventTarget.addEventListener("keydown", keyDownEvent, false);
+            me.input.keyBoardEventTarget.addEventListener("keyup", keyUpEvent, false);
+        }
+    };
+
+    /**
      * return the key press status of the specified action
      * @name isKeyPressed
      * @memberOf me.input
@@ -372,12 +371,12 @@
      * // trigger a key press
      * me.input.triggerKeyEvent(me.input.KEY.LEFT, true);
      */
-    api.triggerKeyEvent = function (keycode, status) {
+    api.triggerKeyEvent = function (keycode, status, mouseButton) {
         if (status) {
-            api._keydown({}, keycode);
+            keyDownEvent({}, keycode, mouseButton);
         }
         else {
-            api._keyup({}, keycode);
+            keyUpEvent({}, keycode, mouseButton);
         }
     };
 
@@ -400,20 +399,30 @@
      * me.input.bindKey(me.input.KEY.F1,    "options", true, true);
      */
     api.bindKey = function (keycode, action, lock, preventDefault) {
-        // make sure the keyboard is enable
-        api._enableKeyboardEvent();
-
         if (typeof preventDefault !== "boolean") {
-            preventDefault = api.preventDefault;
+            preventDefault = me.input.preventDefault;
         }
 
-        api._KeyBinding[keycode] = action;
+        keyBindings[keycode] = action;
         preventDefaultForKeys[keycode] = preventDefault;
 
         keyStatus[action] = 0;
         keyLock[action] = lock ? lock : false;
         keyLocked[action] = false;
         keyRefs[action] = {};
+    };
+
+    /**
+     * return the action associated with the given keycode
+     * @name getBindingKey
+     * @memberOf me.input
+     * @public
+     * @function
+     * @param {me.input.KEY} keycode
+     * @return {String} user defined associated action
+     */
+    api.getBindingKey = function (keycode) {
+        return keyBindings[keycode];
     };
 
     /**
@@ -445,12 +454,12 @@
      */
     api.unbindKey = function (keycode) {
         // clear the event status
-        var keybinding = api._KeyBinding[keycode];
+        var keybinding = keyBindings[keycode];
         keyStatus[keybinding] = 0;
         keyLock[keybinding] = false;
         keyRefs[keybinding] = {};
         // remove the key binding
-        api._KeyBinding[keycode] = null;
+        keyBindings[keycode] = null;
         preventDefaultForKeys[keycode] = null;
     };
 })(me.input);

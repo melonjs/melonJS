@@ -255,11 +255,8 @@
                 // reset the frame counter
                 frameCounter = 0;
 
-                // update the timer
-                me.timer.update(time);
-
-                // update the gamepads
-                me.input._updateGamepads();
+                // game update event
+                me.event.publish(me.event.GAME_UPDATE, [ time ]);
 
                 accumulator += me.timer.getDelta();
                 accumulator = Math.min(accumulator, accumulatorMax);
