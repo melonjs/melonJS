@@ -287,11 +287,14 @@
 
                 case "property":
                     var property = api.parse(item);
+                    // for custom properties, text is used
+                    var value = (typeof property.value !== "undefined") ? property.value : property.text;
+
                     obj[property.name] = setTMXValue(
                         property.name,
                         // in XML type is undefined for "string" values
                         property.type || "string",
-                        property.value
+                        value
                     );
                     break;
 

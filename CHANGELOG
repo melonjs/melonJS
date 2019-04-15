@@ -8,6 +8,7 @@ Version History
 * Input : simplified pointer / keyboard / gamepad implementation and removed support for legacy API (e.g. mousewheel event)
 * Input : added a new getBindingKey() method that returns the associated action to a given key
 * Input : exposed default targets for Keyboard and Pointer events under me.input
+* TMX : fixed parsing of string custom properties containing newline(s)
 
 7.0.0
 * General : new "grunt-free" build process based on npm, rollup & friends
