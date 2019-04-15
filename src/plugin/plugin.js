@@ -132,7 +132,7 @@
             }
 
             // compatibility testing
-            if (me.sys.checkVersion(instance.version) > 0) {
+            if (me.utils.checkVersion(instance.version) > 0) {
                 throw new Error("Plugin version mismatch, expected: " + instance.version + ", got: " + me.version);
             }
 
