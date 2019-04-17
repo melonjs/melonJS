@@ -379,7 +379,7 @@
         /**
          * disable (remove) the rendering mask set through setMask.
          * @name clearMask
-         * @see setMask
+         * @see me.Renderer#setMask
          * @memberOf me.Renderer.prototype
          * @function
          */
@@ -400,7 +400,7 @@
         /**
          * clear the rendering tint set through setTint.
          * @name clearTint
-         * @see setTint
+         * @see me.Renderer#setTint
          * @memberOf me.Renderer.prototype
          * @function
          */

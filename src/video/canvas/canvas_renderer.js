@@ -750,7 +750,7 @@
         /**
          * disable (remove) the rendering mask set through setMask.
          * @name clearMask
-         * @see setMask
+         * @see me.CanvasRenderer#setMask
          * @memberOf me.CanvasRenderer.prototype
          * @function
          */

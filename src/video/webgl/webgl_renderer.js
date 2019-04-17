@@ -990,7 +990,7 @@
         /**
          * disable (remove) the rendering mask set through setMask.
          * @name clearMask
-         * @see setMask
+         * @see me.WebGLRenderer#setMask
          * @memberOf me.WebGLRenderer.prototype
          * @function
          */
