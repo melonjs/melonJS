@@ -45,7 +45,8 @@
                 }
             }
             // prevent event propagation
-            if (preventDefaultForKeys[keyCode]) {
+            if (preventDefaultForKeys[keyCode] && (typeof e.preventDefault === "function")) {
+                // "fake" events generated through triggerKeyEvent do not have a preventDefault fn
                 return e.preventDefault();
             }
             else {
@@ -79,7 +80,8 @@
             keyLocked[action] = false;
 
             // prevent event propagation
-            if (preventDefaultForKeys[keyCode]) {
+            if (preventDefaultForKeys[keyCode] && (typeof e.preventDefault === "function")) {
+                // "fake" events generated through triggerKeyEvent do not have a preventDefault fn
                 return e.preventDefault();
             }
             else {
