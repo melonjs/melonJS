@@ -16,9 +16,6 @@
          * PRIVATE STUFF
          */
 
-        // flag to redraw the sprites
-        var initialized = false;
-
         // to know when we have to refresh the display
         var isDirty = true;
 
@@ -108,40 +105,33 @@
          * Initialize the game manager
          * @name init
          * @memberOf me.game
-         * @private
          * @ignore
          * @function
          * @param {Number} [width] width of the canvas
          * @param {Number} [height] width of the canvas
-         * init function.
          */
         api.init = function (width, height) {
-            if (!initialized) {
-                // if no parameter specified use the system size
-                width  = width  || me.video.renderer.getWidth();
-                height = height || me.video.renderer.getHeight();
+            // if no parameter specified use the system size
+            width  = width  || me.video.renderer.getWidth();
+            height = height || me.video.renderer.getHeight();
 
-                // the root object of our world is an entity container
-                api.world = new me.Container(0, 0, width, height, true);
-                api.world.name = "rootContainer";
+            // the root object of our world is an entity container
+            api.world = new me.Container(0, 0, width, height, true);
+            api.world.name = "rootContainer";
 
-                // to mimic the previous behavior
-                api.world.anchorPoint.set(0, 0);
+            // to mimic the previous behavior
+            api.world.anchorPoint.set(0, 0);
 
-                // initialize the collision system (the quadTree mostly)
-                me.collision.init();
+            // initialize the collision system (the quadTree mostly)
+            me.collision.init();
 
-                renderer = me.video.renderer;
+            renderer = me.video.renderer;
 
-                // publish init notification
-                me.event.publish(me.event.GAME_INIT);
+            // publish init notification
+            me.event.publish(me.event.GAME_INIT);
 
-                // make display dirty by default
-                isDirty = true;
-
-                // set as initialized
-                initialized = true;
-            }
+            // make display dirty by default
+            isDirty = true;
         };
 
         /**
