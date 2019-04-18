@@ -1,21 +1,20 @@
 (function () {
 
-    /**
-     * me global references
-     * @ignore
-     */
-    me.mod = "melonJS";
+   /**
+    * current melonJS version
+    * @static
+    * @constant
+    * @memberof me
+    * @name version
+    * @type {string}
+    */
     me.version = "__VERSION__";
+
     /**
      * global system settings and browser capabilities
      * @namespace
      */
     me.sys = {
-
-        /*
-         * Global settings
-         */
-
         /**
          * Set game FPS limiting
          * @see me.timer.tick
@@ -122,34 +121,37 @@
     };
 
 
-    // a flag to know if melonJS
-    // is initialized
-    var me_initialized = false;
-
-    Object.defineProperty(me, "initialized", {
-        /**
-         * @ignore
-         */
-        get : function get() {
-            return me_initialized;
-        }
-    });
+   /**
+    * a flag indicating that melonJS is fully initialized
+    * @type {Boolean}
+    * @default false
+    * @readonly
+    * @memberOf me
+    */
+    me.initialized = false;
 
     /**
-     * Disable melonJS auto-initialization
+     * disable melonJS auto-initialization
      * @type {Boolean}
      * @default false
+     * @see me.boot
      * @memberOf me
      */
     me.skipAutoInit = false;
 
     /**
-     * initial boot function
-     * @ignore
+     * initialize the melonJS library.
+     * this is automatically called unless me.skipAutoInit is set to true,
+     * to allow asynchronous loaders to work.
+     * @name boot
+     * @memberOf me
+     * @see me.skipAutoInit
+     * @public
+     * @function
      */
     me.boot = function () {
         // don't do anything if already initialized (should not happen anyway)
-        if (me_initialized) {
+        if (me.initialized === true) {
             return;
         }
 
@@ -177,22 +179,21 @@
         // init the level Director
         me.levelDirector.init();
 
-        me_initialized = true;
+        // mark melonJS as initialized
+        me.initialized = true;
+
+        /// if auto init is disable and this function was called manually
+        if (me.skipAutoInit === true) {
+            me.device._domReady();
+        }
     };
 
     // call the library init function when ready
-    if (me.skipAutoInit === false) {
-        me.device.onReady(function () {
-            me.boot();
-        });
-    } else {
-        /**
-         * @ignore
-         */
-        me.init = function () {
-            me.boot();
-            me.device._domReady();
-        };
-    }
+    me.device.onReady(function () {
+        if (me.skipAutoInit === false) {
+           me.boot();
+        }
+    });
+
 
 })();

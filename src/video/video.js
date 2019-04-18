@@ -304,7 +304,7 @@
                 var renderType = (me.video.renderer instanceof me.CanvasRenderer) ? "CANVAS" : "WebGL";
                 var audioType = me.device.hasWebAudio ? "Web Audio" : "HTML5 Audio";
                 // output video information in the console
-                console.log(me.mod + " " + me.version + " | http://melonjs.org" );
+                console.log("melonJS v" + me.version + " | http://melonjs.org" );
                 console.log(
                     renderType + " | " +
                     audioType + " | " +
