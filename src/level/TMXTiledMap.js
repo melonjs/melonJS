@@ -64,8 +64,9 @@
 
         // create the layer
         var imageLayer = me.pool.pull("me.ImageLayer",
-            +data.x || 0,
-            +data.y || 0,
+            // x/y is deprecated since 0.15 and replace by offsetx/y
+            +data.offsetx || +data.x || 0,
+            +data.offsety || +data.y || 0,
             Object.assign({
                 name: data.name,
                 image: data.image,
