@@ -8,38 +8,23 @@
      * for the specified map
      * @ignore
      */
-    function getNewDefaultRenderer(obj) {
-        switch (obj.orientation) {
+    function getNewDefaultRenderer(map) {
+        switch (map.orientation) {
             case "orthogonal":
-                return new me.TMXOrthogonalRenderer(
-                    obj.cols,
-                    obj.rows,
-                    obj.tilewidth,
-                    obj.tileheight
-                );
+                return new me.TMXOrthogonalRenderer(map);
 
             case "isometric":
-                return new me.TMXIsometricRenderer(
-                    obj.cols,
-                    obj.rows,
-                    obj.tilewidth,
-                    obj.tileheight
-                );
+                return new me.TMXIsometricRenderer(map);
 
             case "hexagonal":
-                return new me.TMXHexagonalRenderer(
-                    obj.cols,
-                    obj.rows,
-                    obj.tilewidth,
-                    obj.tileheight,
-                    obj.hexsidelength,
-                    obj.staggeraxis,
-                    obj.staggerindex
-                );
+                return new me.TMXHexagonalRenderer(map);
+
+            case "staggered":
+                return new me.TMXStaggeredRenderer(map);
 
             // if none found, throw an exception
             default:
-                throw new Error(obj.orientation + " type TMX Tile Map not supported!");
+                throw new Error(map.orientation + " type TMX Tile Map not supported!");
         }
     }
 
@@ -232,7 +217,7 @@
             this.nextobjectid = +data.nextobjectid || undefined;
 
             // hex/iso properties
-            this.hexsidelength = +data.hexsidelength || undefined;
+            this.hexsidelength = +data.hexsidelength;
             this.staggeraxis = data.staggeraxis;
             this.staggerindex = data.staggerindex;
 

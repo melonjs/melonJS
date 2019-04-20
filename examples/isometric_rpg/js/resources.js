@@ -5,7 +5,7 @@ game.resources = [
      * { name: "example", type:"image", src: "data/img/example.png" },
      */
     { name: "forest",  type:"image", src: "data/img/forest.png" },
-    { name: "meta_collide",  type:"image", src: "data/img/meta_collide.png" },
+    { name: "isometric_grass_and_water",  type:"image", src: "data/img/isometric_grass_and_water.png" },
     { name: "Blank_Sprite_Sheet_4_2_by_KnightYamato", type:"image", src: "data/img/Blank_Sprite_Sheet_4_2_by_KnightYamato.png" },
 
     /* Maps.
@@ -14,6 +14,7 @@ game.resources = [
      * { name: "example01", type: "tmx", src: "data/map/example01.json" },
       */
     { name: "isometric", type: "tmx", src: "data/map/isometric.tmx" },
+    { name: "isometric_staggered", type: "tmx", src: "data/map/isometric_staggered.tmx" }
 
     /* Background music.
      * @example
