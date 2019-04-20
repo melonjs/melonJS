@@ -1,6 +1,7 @@
 Version History
 ---------------
 7.1.0
+* Audio : audio core update (2.1.2) to fix audio unlock on Firefox 66 and onwards
 * Core : new me.event.GAME_UPDATE system event that will be triggered at the beginning of the update loop
 * Core : me.game.HASH is deprecated and replaced by the me.utils.getUriFragment() function
 * Debug : fixed DebugPanel minimum version requirements (should have been 7.0 since last release)

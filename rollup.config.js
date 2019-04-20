@@ -24,7 +24,7 @@ export default {
     input: require('./sourceFiles.json'),
     plugins: [
         resolve({
-            module: false,
+            mainFields: ['module', 'main'],
             browser: false,
             preferBuiltins: false
         }),
