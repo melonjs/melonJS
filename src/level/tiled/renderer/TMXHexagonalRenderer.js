@@ -28,8 +28,8 @@
             this._super(me.TMXRenderer, "init", [
                 map.cols,
                 map.rows,
-                map.tilewidth,
-                map.tileheight
+                map.tilewidth & ~1,
+                map.tileheight & ~1
             ]);
 
             this.hexsidelength = map.hexsidelength || 0;
@@ -92,14 +92,13 @@
          * @ignore
          */
         pixelToTileCoords : function (x, y, v) {
-            var q, r;
             var ret = v || new me.Vector2d();
 
             if (this.staggerX) { //flat top
-                x = x - ((!this.staggerEven) ? this.sideoffsetx : this.tilewidth);
+                x -= this.staggerEven ? this.tilewidth : this.sideoffsetx;
             }
             else { //pointy top
-                y = y - ((!this.staggerEven) ? this.sideoffsety : this.tileheight);
+                y -= this.staggerEven ? this.tileheight : this.sideoffsety;
             }
 
             // Start with the coordinates of a grid-aligned tile
@@ -153,9 +152,8 @@
 
             var nearest = 0;
             var minDist = Number.MAX_VALUE;
-            var dc;
             for (var i = 0; i < 4; ++i) {
-                dc = Math.pow(this.centers[i].x - rel.x, 2) + Math.pow(this.centers[i].y - rel.y, 2);
+                var dc = this.centers[i].sub(rel).length2();
                 if (dc < minDist) {
                     minDist = dc;
                     nearest = i;
@@ -164,47 +162,41 @@
 
             var offsets = (this.staggerX) ? offsetsStaggerX : offsetsStaggerY;
 
-            q = referencePoint.x + offsets[nearest].x;
-            r = referencePoint.y + offsets[nearest].y;
+            ret.set(
+                referencePoint.x + offsets[nearest].x,
+                referencePoint.y + offsets[nearest].y
+            );
 
             me.pool.push(referencePoint);
             me.pool.push(rel);
 
-            return ret.set(q, r);
+            return ret;
         },
 
         /**
          * return the pixel position corresponding of the specified tile
          * @ignore
          */
-        tileToPixelCoords : function (q, r, v) {
-            var x, y;
+        tileToPixelCoords : function (x, y, v) {
+            var tileX = Math.floor(x),
+                tileY = Math.floor(y);
             var ret = v || new me.Vector2d();
+
             if (this.staggerX) {
-                //flat top
-                x = q * this.columnwidth;
-                if (!this.staggerEven) {
-                    y = r * (this.tileheight + this.sidelengthy);
-                    y = y + (this.rowheight * (q & 1));
+                ret.y = tileY * (this.tileheight + this.sidelengthy);
+                if (this.doStaggerX(tileX)) {
+                    ret.y += this.rowheight;
                 }
-                else {
-                    y = r * (this.tileheight + this.sidelengthy);
-                    y = y + (this.rowheight * (1 - (q & 1)));
+                ret.x = tileX * this.columnwidth;
+            } else {
+                ret.x = tileX * (this.tilewidth + this.sidelengthx);
+                if (this.doStaggerY(tileY)) {
+                    ret.x += this.columnwidth;
                 }
+                ret.y = tileY * this.rowheight;
             }
-            else {
-                //pointy top
-                y = r * this.rowheight;
-                if (!this.staggerEven) {
-                    x = q * (this.tilewidth + this.sidelengthx);
-                    x = x + (this.columnwidth * (r & 1));
-                }
-                else {
-                    x = q * (this.tilewidth + this.sidelengthx);
-                    x = x + (this.columnwidth * (1 - (r & 1)));
-                }
-            }
-            return ret.set(x, y);
+
+            return ret;
         },
 
         /**
