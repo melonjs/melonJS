@@ -147,15 +147,6 @@
                 this.preRender = me.sys.preRender;
             }
 
-            // if pre-rendering method is use, create an offline canvas/renderer
-            if (this.preRender === true) {
-                this.canvasRenderer = new me.CanvasRenderer(
-                    me.video.createCanvas(this.width, this.height),
-                    this.width, this.height,
-                    { transparent : true }
-                );
-            }
-
             // initialize and set the layer data
             setLayerData(this,
                 me.TMXUtils.decode(
@@ -191,7 +182,17 @@
             }
 
             // Resize the bounding rect
-            this.getBounds().resize(this.width, this.height);
+            var bounds = this.getRenderer().getBounds(this);
+            this.getBounds().resize(bounds.width, bounds.height);
+
+            // if pre-rendering method is use, create an offline canvas/renderer
+            if ((this.preRender === true) && (!this.canvasRenderer)) {
+                this.canvasRenderer = new me.CanvasRenderer(
+                    me.video.createCanvas(this.width, this.height),
+                    this.width, this.height,
+                    { transparent : true }
+                );
+            }
         },
 
         // called when the layer is removed from the game world or a container
@@ -215,8 +216,6 @@
          */
         setRenderer : function (renderer) {
             this.renderer = renderer;
-            // update the layer bounds once the renderer is set
-            this.renderer.getBounds(this);
         },
 
         /**
