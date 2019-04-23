@@ -72,12 +72,14 @@
             var autoSort = container.autoSort;
             container.autoSort = false;
 
+            var levelBounds = level.getBounds();
+
             if (setViewportBounds) {
                 // update the viewport bounds
                 me.game.viewport.setBounds(
                     0, 0,
-                    Math.max(level.width, me.game.viewport.width),
-                    Math.max(level.height, me.game.viewport.height)
+                    Math.max(levelBounds.width, me.game.viewport.width),
+                    Math.max(levelBounds.height, me.game.viewport.height)
                 );
             }
 
@@ -95,13 +97,13 @@
             container.sort(true);
             container.autoSort = autoSort;
 
-            container.resize(level.width, level.height);
+            container.resize(levelBounds.width, levelBounds.height);
 
             function resize_container() {
                 // center the map if smaller than the current viewport
                 container.pos.set(
-                    Math.max(0, ~~((me.game.viewport.width - level.width) / 2)),
-                    Math.max(0, ~~((me.game.viewport.height - level.height) / 2)),
+                    Math.max(0, ~~((me.game.viewport.width - levelBounds.width) / 2)),
+                    Math.max(0, ~~((me.game.viewport.height - levelBounds.height) / 2)),
                     0
                 );
             }

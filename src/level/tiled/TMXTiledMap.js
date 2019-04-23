@@ -35,7 +35,7 @@
     function readLayer(map, data, z) {
         var layer = new me.TMXLayer(data, map.tilewidth, map.tileheight, map.orientation, map.tilesets, z);
         // set a renderer
-        layer.setRenderer(map.getRenderer(layer));
+        layer.setRenderer(map.getRenderer());
         return layer;
     }
 
@@ -205,13 +205,6 @@
             // Check if map is from melon editor
             this.isEditor = data.editor === "melon-editor";
 
-            if (this.orientation === "isometric") {
-                this.width = (this.cols + this.rows) * (this.tilewidth / 2);
-                this.height = (this.cols + this.rows) * (this.tileheight / 2);
-            } else {
-                this.width = this.cols * this.tilewidth;
-                this.height = this.rows * this.tileheight;
-            }
 
             // object id
             this.nextobjectid = +data.nextobjectid || undefined;
@@ -220,6 +213,13 @@
             this.hexsidelength = +data.hexsidelength;
             this.staggeraxis = data.staggeraxis;
             this.staggerindex = data.staggerindex;
+
+            // calculate the map bounding rect
+            this.bounds = this.getRenderer().getBounds();
+
+            // map "real" size
+            this.width = this.bounds.width;
+            this.height = this.bounds.height;
 
             // background color
             this.backgroundcolor = data.backgroundcolor;
@@ -243,22 +243,25 @@
          * @memberOf me.TMXTileMap
          * @public
          * @function
-         * @param {me.TMXLayer} [layer] a layer object
          * @return {me.TMXRenderer} a TMX renderer
          */
-        getRenderer : function (layer) {
-            // first ensure a renderer is associated to this map
+        getRenderer : function () {
             if ((typeof(this.renderer) === "undefined") || (!this.renderer.canRender(this))) {
                 this.renderer = getNewDefaultRenderer(this);
-            }
-
-            // return a renderer for the given layer (if any)
-            if ((typeof(layer) !== "undefined") && (!this.renderer.canRender(layer))) {
-                return getNewDefaultRenderer(layer);
-            }
-
-            // else return this renderer
+            };
             return this.renderer;
+        },
+
+        /**
+         * return the map bounding rect
+         * @name me.TMXRenderer#getBounds
+         * @public
+         * @function
+         * @return {me.Rect}
+         */
+        getBounds : function () {
+            // calculated in the constructor
+            return this.bounds;
         },
 
         /**

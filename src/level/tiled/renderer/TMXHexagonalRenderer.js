@@ -74,6 +74,40 @@
         },
 
         /**
+         * return the bounding rect for this map renderer
+         * @name me.TMXHexagonalRenderer#getBounds
+         * @public
+         * @function
+         * @param {me.TMXLayer} [layer] calculate the bounding rect for a specific layer (will return a new bounds object)
+         * @return {me.Rect}
+         */
+        getBounds : function (layer) {
+            var bounds = layer instanceof me.TMXLayer ? me.pool.pull("me.Rect", 0, 0, 0, 0) : this.bounds;
+
+            // origin is always 0 for finite maps
+            bounds.pos.set(0, 0);
+            // The map size is the same regardless of which indexes are shifted.
+            if (this.staggerX) {
+                bounds.resize(
+                    this.cols * this.columnwidth + this.sideoffsetx,
+                    this.rows * (this.tileheight + this.sidelengthy)
+                );
+                if (bounds.width > 1) {
+                    bounds.height += this.rowheight;
+                }
+            } else {
+                bounds.resize(
+                    this.cols * (this.tilewidth + this.sidelengthx),
+                    this.rows * this.rowheight + this.sideoffsety
+                );
+                if (bounds.height > 1) {
+                    bounds.width += this.columnwidth;
+                }
+            }
+            return bounds;
+        },
+
+        /**
          * @ignore
          */
         doStaggerX  : function (x) {
@@ -85,6 +119,103 @@
          */
         doStaggerY : function (y) {
             return !this.staggerX && (y & 1) ^ this.staggerEven;
+        },
+
+        /**
+         * @ignore
+         */
+        topLeft : function (x, y, v) {
+            var ret = v || new me.Vector2d();
+
+            if (!this.staggerX) {
+                if ((y & 1) ^ this.staggerEven) {
+                    ret.set(x, y - 1);
+                }
+                else {
+                    ret.set(x - 1, y - 1);
+                }
+            } else {
+                if ((x & 1) ^ this.staggerEven) {
+                    ret.set(x - 1, y);
+                }
+                else {
+                    ret.set(x - 1, y - 1);
+                }
+            }
+            return ret;
+        },
+
+        /**
+         * @ignore
+         */
+        topRight : function (x, y, v) {
+            var ret = v || new me.Vector2d();
+
+            if (!this.staggerX) {
+                if ((y & 1) ^ this.staggerEven) {
+                    ret.set(x + 1, y - 1);
+                }
+                else {
+                    ret.set(x, y - 1);
+                }
+            } else {
+                if ((x & 1) ^ this.staggerEven) {
+                    ret.set(x + 1, y);
+                }
+                else {
+                    ret.set(x + 1, y - 1);
+                }
+            }
+            return ret;
+        },
+
+
+        /**
+         * @ignore
+         */
+        bottomLeft : function (x, y, v) {
+            var ret = v || new me.Vector2d();
+
+            if (!this.staggerX) {
+                if ((y & 1) ^ this.staggerEven) {
+                    ret.set(x, y + 1);
+                }
+                else {
+                    ret.set(x - 1, y + 1);
+                }
+            } else {
+                if ((x & 1) ^ this.staggerEven) {
+                    ret.set(x -1, y + 1);
+                }
+                else {
+                    ret.set(x -1, y);
+                }
+            }
+            return ret;
+        },
+
+        /**
+         * @ignore
+         */
+        bottomRight : function (x, y, v) {
+            var ret = v || new me.Vector2d();
+
+            if (!this.staggerX) {
+                if ((y & 1) ^ this.staggerEven) {
+                    ret.set(x + 1, y + 1);
+                }
+                else {
+                    ret.set(x, y + 1);
+                }
+            } else {
+                if ((x & 1) ^ this.staggerEven) {
+                    ret.set(x + 1, y + 1);
+                }
+                else {
+                    ret.set(x + 1, y);
+                }
+            }
+            return ret;
         },
 
         /**
@@ -237,51 +368,128 @@
          * @ignore
          */
         drawTileLayer : function (renderer, layer, rect) {
-            var x, y, tile;
+            var tile;
 
             // get top-left and bottom-right tile position
-            var start = this.pixelToTileCoords(
+            var startTile = this.pixelToTileCoords(
                 rect.pos.x,
                 rect.pos.y,
                 me.pool.pull("me.Vector2d")
-           ).floorSelf();
+            );
 
-            var end = this.pixelToTileCoords(
-                rect.pos.x + rect.width + this.tilewidth,
-                rect.pos.y + rect.height + this.tileheight,
+            // Compensate for the layer position
+            startTile.sub(layer.pos);
+
+            // get top-left and bottom-right tile position
+            var startPos = this.tileToPixelCoords(
+                startTile.x + layer.pos.x,
+                startTile.y + layer.pos.y,
                 me.pool.pull("me.Vector2d")
-            ).ceilSelf();
+            );
 
-            //ensure we are in the valid tile range
-            start.x = start.x < 0 ? 0 : start.x;
-            start.y = start.y < 0 ? 0 : start.y;
-            end.x = end.x > this.cols ? this.cols : end.x;
-            end.y = end.y > this.rows ? this.rows : end.y;
+            var rowTile = startTile.clone();
+            var rowPos = startPos.clone();
+
+           /* Determine in which half of the tile the top-left corner of the area we
+            * need to draw is. If we're in the upper half, we need to start one row
+            * up due to those tiles being visible as well. How we go up one row
+            * depends on whether we're in the left or right half of the tile.
+            */
+            var inUpperHalf = rect.pos.y - startPos.y < this.sideoffsety;
+            var inLeftHalf = rect.pos.x - startPos.x < this.sideoffsetx;
+
+            if (inUpperHalf) {
+                startTile.y--;
+            }
+            if (inLeftHalf) {
+                startTile.x--;
+            }
+
+            var endX = layer.cols;
+            var endY = layer.rows;
 
             if (this.staggerX) {
-                //TOFO : https://github.com/melonjs/melonJS/issues/966
+                //ensure we are in the valid tile range
+                startTile.x = Math.max(0, startTile.x);
+                startTile.y = Math.max(0, startTile.y);
+
+                startPos = this.tileToPixelCoords(
+                    startTile.x + layer.pos.x,
+                    startTile.y + layer.pos.y
+                );
+
+                var staggeredRow = this.doStaggerX(startTile.x + layer.pos.x);
+
                 // main drawing loop
-                for (y = start.y; y < end.y; y++) {
-                    for (x = start.x; x < end.x; x++) {
-                        tile = layer.layerData[x][y];
+                for (; startPos.y < rect.bottom && startTile.y < endY; ) {
+                    rowTile.setV(startTile);
+                    rowPos.setV(startPos);
+
+                    for (; rowPos.x < rect.right && rowTile.x < endX; rowTile.x+=2) {
+                        tile = layer.layerData[rowTile.x][rowTile.y];
                         if (tile) {
-                            this.drawTile(renderer, x, y, tile);
+                            // draw the tile
+                            tile.tileset.drawTile(renderer, rowPos.x, rowPos.y, tile);
                         }
+                        rowPos.x += this.tilewidth + this.sidelengthx;
                     }
+
+                    if (staggeredRow) {
+                        startTile.x -= 1;
+                        startTile.y += 1;
+                        startPos.x -= this.columnwidth;
+                        staggeredRow = false;
+                    } else {
+                        startTile.x += 1;
+                        startPos.x += this.columnwidth;
+                        staggeredRow = true;
+                    }
+
+                    startPos.y += this.rowheight;
                 }
+                me.pool.push(rowTile);
+                me.pool.push(rowPos);
+
             } else {
-                // main drawing loop
-                for (y = start.y; y < end.y; y++) {
-                    for (x = start.x; x < end.x; x++) {
-                        tile = layer.layerData[x][y];
-                        if (tile) {
-                            this.drawTile(renderer, x, y, tile);
-                        }
-                    }
+                //ensure we are in the valid tile range
+                startTile.x = Math.max(0, startTile.x);
+                startTile.y = Math.max(0, startTile.y);
+
+                startPos = this.tileToPixelCoords(
+                    startTile.x + layer.pos.x,
+                    startTile.y + layer.pos.y
+                );
+
+                // Odd row shifting is applied in the rendering loop, so un-apply it here
+                if (this.doStaggerY(startTile.y)) {
+                    startPos.x -= this.columnwidth;
                 }
+
+                // main drawing loop
+                for (; startPos.y < rect.bottom && startTile.y < endY; startTile.y++) {
+                    rowTile.setV(startTile);
+                    rowPos.setV(startPos);
+
+                    if (this.doStaggerY(startTile.y)) {
+                        rowPos.x += this.columnwidth;
+                    }
+
+                    for (; rowPos.x < rect.right && rowTile.x < endX; rowTile.x++) {
+                        tile = layer.layerData[rowTile.x][rowTile.y];
+                        if (tile) {
+                            // draw the tile
+                            tile.tileset.drawTile(renderer, rowPos.x, rowPos.y, tile);
+                        }
+                        rowPos.x += this.tilewidth + this.sidelengthx;
+                    }
+                    startPos.y += this.rowheight;
+                }
+                me.pool.push(rowTile);
+                me.pool.push(rowPos);
             }
-            me.pool.push(start);
-            me.pool.push(end);
+
+            me.pool.push(startTile);
+            me.pool.push(startPos);
         }
     });
 

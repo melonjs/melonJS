@@ -18,10 +18,11 @@
             this.rows = rows;
             this.tilewidth = tilewidth;
             this.tileheight = tileheight;
+            this.bounds = new me.Rect(0, 0, 0, 0);
         },
 
         /**
-         * return true if the renderer can render the specified layer
+         * return true if the renderer can render the specified map or layer
          * @name me.TMXRenderer#canRender
          * @public
          * @function
@@ -30,11 +31,33 @@
          */
         canRender : function (component) {
             return (
+                /*
+                // layers can have different size within
+                // the same maps, so commenting these two lines
                 (this.cols === component.cols) &&
                 (this.rows === component.rows) &&
+                */
                 (this.tilewidth === component.tilewidth) &&
                 (this.tileheight === component.tileheight)
             );
+        },
+
+        /**
+         * return the bounding rect for this map renderer
+         * @name me.TMXRenderer#getBounds
+         * @public
+         * @function
+         * @param {me.TMXLayer} [layer] calculate the bounding rect for a specific layer (will return a new bounds object)
+         * @return {me.Rect}
+         */
+        getBounds : function (layer) {
+            var bounds = layer instanceof me.TMXLayer ? me.pool.pull("me.Rect", 0, 0, 0, 0) : this.bounds;
+            bounds.setShape(
+                0, 0,
+                this.cols * this.tilewidth,
+                this.rows * this.tileheight
+            );
+            return bounds;
         },
 
         /**
@@ -90,7 +113,7 @@
         drawTileLayer : function (renderer, layer, rect) {
 
         }
-        
+
     });
 
 })();

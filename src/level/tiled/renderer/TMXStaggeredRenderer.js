@@ -56,26 +56,26 @@
             }
 
             // Relative x and y position on the base square of the grid-aligned tile
-            /*
             var rel = me.pool.pull("me.Vector2d",
                 alignedX - referencePoint.x * this.tilewidth,
                 alignedY - referencePoint.y * this.tileheight
             );
-            */
 
             // Check whether the cursor is in any of the corners (neighboring tiles)
-            /*
             var y_pos = rel.x * (this.tileheight / this.tilewidth);
 
-            if (this.sideOffsetY - y_pos > rel.y)
-                referencePoint = topLeft(referencePoint.x(), referencePoint.y());
-            if (-p.sideOffsetY + y_pos > rel.y())
-                referencePoint = topRight(referencePoint.x(), referencePoint.y());
-            if (p.sideOffsetY + y_pos < rel.y())
-                referencePoint = bottomLeft(referencePoint.x(), referencePoint.y());
-            if (p.sideOffsetY * 3 - y_pos < rel.y())
-                referencePoint = bottomRight(referencePoint.x(), referencePoint.y());
-            */
+            if (this.sideoffsety - y_pos > rel.y) {
+                referencePoint = this.topLeft(referencePoint.x, referencePoint.y, referencePoint);
+            }
+            if (-this.sideoffsety + y_pos > rel.y) {
+                referencePoint = this.topRight(referencePoint.x, referencePoint.y, referencePoint);
+            }
+            if (this.sideoffsety + y_pos < rel.y) {
+                referencePoint = this.bottomLeft(referencePoint.x, referencePoint.y, referencePoint);
+            }
+            if (this.sideoffsety * 3 - y_pos < rel.y) {
+                referencePoint = this.bottomRight(referencePoint.x, referencePoint.y, referencePoint);
+            }
 
             ret = this.tileToPixelCoords(referencePoint.x, referencePoint.y, ret);
 
@@ -90,6 +90,7 @@
             ret.div(this.tilewidth / Math.sqrt(2)).rotate(me.Math.degToRad(-45)).add(referencePoint);
 
             me.pool.push(referencePoint);
+            me.pool.push(rel);
 
             return ret;
         }

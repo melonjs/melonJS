@@ -223,8 +223,8 @@
             var level = me.levelDirector.getCurrentLevel();
             this.setBounds(
                 0, 0,
-                Math.max(w, level ? level.width : 0),
-                Math.max(h, level ? level.height : 0)
+                Math.max(w, level ? level.getBounds().width : 0),
+                Math.max(h, level ? level.getBounds().height : 0)
             );
 
             // reset everthing

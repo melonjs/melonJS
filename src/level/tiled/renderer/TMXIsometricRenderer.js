@@ -35,6 +35,24 @@
         },
 
         /**
+         * return the bounding rect for this map renderer
+         * @name me.TMXIsometricRenderer#getBounds
+         * @public
+         * @function
+         * @param {me.TMXLayer} [layer] calculate the bounding rect for a specific layer (will return a new bounds object)
+         * @return {me.Rect}
+         */
+        getBounds : function (layer) {
+            var bounds = layer instanceof me.TMXLayer ? me.pool.pull("me.Rect", 0, 0, 0, 0) : this.bounds;
+            bounds.setShape(
+                0, 0,
+                (this.cols + this.rows) * (this.tilewidth / 2),
+                (this.cols + this.rows) * (this.tileheight / 2)
+            );
+            return bounds;
+        },
+
+        /**
          * return the tile position corresponding to the specified pixel
          * @ignore
          */

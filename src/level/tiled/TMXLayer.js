@@ -126,11 +126,6 @@
             this.cols = +data.width;
             this.rows = +data.height;
 
-            // hexagonal maps only
-            this.hexsidelength = +data.hexsidelength || undefined;
-            this.staggeraxis = data.staggeraxis;
-            this.staggerindex = data.staggerindex;
-
             // layer opacity
             var visible = typeof(data.visible) !== "undefined" ? +data.visible : 1;
             this.setOpacity(visible ? +data.opacity : 0);
@@ -207,15 +202,21 @@
         },
 
         /**
-         * Se the TMX renderer for this layer object
+         * Set the TMX renderer for this layer object
          * @name setRenderer
          * @memberOf me.TMXLayer
          * @public
          * @function
          * @param {me.TMXRenderer} renderer
+         * @example
+         * // use the parent map default renderer
+         * var layer = new me.TMXLayer(...);
+         * layer.setRenderer(map.getRenderer());
          */
         setRenderer : function (renderer) {
             this.renderer = renderer;
+            // update the layer bounds once the renderer is set
+            this.renderer.getBounds(this);
         },
 
         /**

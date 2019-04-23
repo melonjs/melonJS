@@ -83,7 +83,7 @@
                 _layers.forEach(function (data) {
                     var layer = new me.TMXLayer(data, map.tilewidth, map.tileheight, map.orientation, map.tilesets, z++);
                     // set a renderer
-                    layer.setRenderer(map.getRenderer(layer));
+                    layer.setRenderer(map.getRenderer());
                     // resize container accordingly
                     self.width = Math.max(self.width, layer.width);
                     self.height = Math.max(self.height, layer.height);

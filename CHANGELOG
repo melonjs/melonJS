@@ -12,6 +12,8 @@ Version History
 * TMX : fixed parsing of string custom properties containing newline(s)
 * TMX : use the offsetx/offsety properties when parsing ImageLayer data over the deprecated x/y ones
 * TMX : add support for Staggered Isometric maps
+* TMX : fix rendering of Staggered Hexagonal maps
+* TMX : fix pointer position detection on Hexagonal maps (was slightly off previously)
 
 7.0.0
 * General : new "grunt-free" build process based on npm, rollup & friends
