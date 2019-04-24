@@ -2,19 +2,14 @@
 // and corresponding alias for backward compatibility
 
 /**
- * @class me.ScreenObject
- * @deprecated since 6.2.0
- * @see me.Stage
+ * @function me.device.getPixelRatio
+ * @deprecated since 5.1.0
+ * @see me.device.devicePixelRatio
  */
-me.ScreenObject = me.Stage.extend({
-    /** @ignore */
-    init: function (settings) {
-        // super constructor
-        this._super(me.Stage, "init", settings);
-        // deprecation warning
-        console.log("me.ScreenObject is deprecated, please use me.Stage");
-    }
-});
+me.device.getPixelRatio = function() {
+    console.log("me.device.getPixelRatio() is deprecated, please use me.device.devicePixelRatio");
+    return me.device.devicePixelRatio;
+};
 
 /**
  * @class me.Font
@@ -75,6 +70,21 @@ me.BitmapFont = me.BitmapText.extend({
         this._super(me.BitmapText, "init", [0, 0, settings]);
         // deprecation warning
         console.log("me.BitmapFont is deprecated, please use me.BitmapText");
+    }
+});
+
+/**
+ * @class me.ScreenObject
+ * @deprecated since 6.2.0
+ * @see me.Stage
+ */
+me.ScreenObject = me.Stage.extend({
+    /** @ignore */
+    init: function (settings) {
+        // super constructor
+        this._super(me.Stage, "init", settings);
+        // deprecation warning
+        console.log("me.ScreenObject is deprecated, please use me.Stage");
     }
 });
 
