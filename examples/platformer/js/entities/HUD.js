@@ -28,11 +28,11 @@ game.HUD.UIContainer = me.Container.extend({
         this.addChild(new game.HUD.ScoreItem(-10, -10));
 
         // add our audio control object
-        this.addChild(new game.HUD.AudioControl(10, 10));
+        this.addChild(new game.HUD.AudioControl(36, 56));
 
         if (!me.device.isMobile) {
             // add our fullscreen control object
-            this.addChild(new game.HUD.FSControl(10 + 48 + 10, 10));
+            this.addChild(new game.HUD.FSControl(36 + 10 + 48, 56));
         }
     }
 });
@@ -50,7 +50,6 @@ game.HUD.FSControl = me.GUI_Object.extend({
             region : "shadedDark30.png"
         } ]);
         this.setOpacity(0.5);
-        this.anchorPoint.set(0, 0);
     },
 
     /**
@@ -92,7 +91,6 @@ game.HUD.AudioControl = me.GUI_Object.extend({
             image: game.texture,
             region : "shadedDark13.png" // ON by default
         } ]);
-        this.anchorPoint.set(0, 0);
         this.setOpacity(0.5);
         this.isMute = false;
     },
