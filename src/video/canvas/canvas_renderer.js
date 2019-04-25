@@ -280,12 +280,11 @@
                 // Fast path: don't draw fully transparent
                 return;
             }
-            this.translate(x + radius, y + radius);
+            context.translate(x, y);
             context.beginPath();
             context.arc(0, 0, radius, start, end, antiClockwise || false);
             context[fill === true ? "fill" : "stroke"]();
-            context.closePath();
-            this.translate(-(x + radius), -(y + radius));
+            context.translate(-x, -y);
         },
 
         /**
@@ -343,6 +342,8 @@
             context.bezierCurveTo(xmin, by, lx, ymax, lx, y);
             context.bezierCurveTo(lx, ymin, xmin, ty, x, ty);
             context[fill === true ? "fill" : "stroke"]();
+            context.closePath();
+
         },
 
         /**

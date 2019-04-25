@@ -9,6 +9,7 @@ Version History
 * Input : simplified pointer / keyboard / gamepad implementation and removed support for legacy API (e.g. mousewheel event)
 * Input : added a new getBindingKey() method that returns the associated action to a given key
 * Input : exposed default targets for Keyboard and Pointer events under me.input
+* Renderer : fix fill and stroke operations for arc and ellipse in the Canvas Renderer
 * TMX : fixed parsing of string custom properties containing newline(s)
 * TMX : use the offsetx/offsety properties when parsing ImageLayer data over the deprecated x/y ones
 * TMX : add support for Staggered Isometric maps
