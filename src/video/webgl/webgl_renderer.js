@@ -629,7 +629,30 @@
             if (fill === true ) {
                 this.fillArc(x, y, radius, start, end, antiClockwise);
             } else {
-                console.warn("strokeArc() is not implemented");
+                // XXX to be optimzed using a specific shader
+                var points = this._glPoints;
+                var len = Math.floor(24 * Math.sqrt(radius * 2));
+                var theta = (end - start) / (len * 2);
+                var theta2 = theta * 2;
+                var cos_theta = Math.cos(theta);
+                var sin_theta = Math.sin(theta);
+
+                // Grow internal points buffer if necessary
+                for (i = points.length; i < len + 1; i++) {
+                    points.push(new me.Vector2d());
+                }
+
+                // calculate and draw all segments
+                for (var i = 0; i < len; i++) {
+                    var angle = ((theta) + start + (theta2 * i));
+                    var cos = Math.cos(angle);
+                    var sin = -Math.sin(angle);
+
+                    points[i].x = x + (((cos_theta * cos) + (sin_theta * sin)) * radius);
+                    points[i].y = y + (((cos_theta * -sin) + (sin_theta * cos)) * radius);
+                }
+                // batch draw all lines
+                this.compositor.drawLine(points, len, true);
             }
         },
 
@@ -646,7 +669,34 @@
          * @param {Boolean} [antiClockwise=false] draw arc anti-clockwise
          */
         fillArc : function (x, y, radius, start, end, antiClockwise) {
-            console.warn("fillArc() is not implemented");
+            // XXX to be optimzed using a specific shader
+            var points = this._glPoints;
+            var index = 0;
+            var len = Math.floor(24 * Math.sqrt(radius * 2));
+            var theta = (end - start) / (len * 2);
+            var theta2 = theta * 2;
+            var cos_theta = Math.cos(theta);
+            var sin_theta = Math.sin(theta);
+
+            // Grow internal points buffer if necessary
+            for (i = points.length; i < len * 2; i++) {
+                points.push(new me.Vector2d());
+            }
+
+            // calculate and draw all segments
+            for (var i = 0; i < len - 1; i++) {
+                var angle = ((theta) + start + (theta2 * i));
+                var cos = Math.cos(angle);
+                var sin = -Math.sin(angle);
+
+                points[index++].set(x, y);
+                points[index++].set(
+                    x - (((cos_theta * cos) + (sin_theta * sin)) * radius),
+                    y - (((cos_theta * -sin) + (sin_theta * cos)) * radius)
+                )
+            }
+            // batch draw all triangles
+            this.compositor.drawTriangle(points, index, true);
         },
 
         /**
@@ -717,7 +767,6 @@
                     y + (Math.cos(segment * i) * h)
                 );
             }
-
             // batch draw all triangles
             this.compositor.drawTriangle(points, index, true);
         },

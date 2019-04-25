@@ -10,6 +10,7 @@ Version History
 * Input : added a new getBindingKey() method that returns the associated action to a given key
 * Input : exposed default targets for Keyboard and Pointer events under me.input
 * Renderer : fix fill and stroke operations for arc and ellipse in the Canvas Renderer
+* Renderer : added missing fill and stroke operations for arc in WebGL mode
 * TMX : fixed parsing of string custom properties containing newline(s)
 * TMX : use the offsetx/offsety properties when parsing ImageLayer data over the deprecated x/y ones
 * TMX : add support for Staggered Isometric maps
