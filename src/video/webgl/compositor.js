@@ -97,7 +97,7 @@
             this.tint = renderer.currentTint;
 
             // Uniform projection matrix
-            this.uMatrix = new me.Matrix2d();
+            this.projectionMatrix = new me.Matrix2d();
 
             // reference to the active shader
             this.activeShader = null;
@@ -214,7 +214,7 @@
          * @param {Number} h WebGL Canvas height
          */
         setProjection : function (w, h) {
-            this.uMatrix.setTransform(
+            this.projectionMatrix.setTransform(
                 2 / w,  0,      0,
                 0,      -2 / h, 0,
                 -1,     1,      1
@@ -344,7 +344,7 @@
                 this.flush();
                 this.activeShader = shader;
                 this.activeShader.bind();
-                this.activeShader.uniforms.uMatrix = this.uMatrix.val;
+                this.activeShader.uniforms.uProjectionMatrix = this.projectionMatrix.val;
             }
         },
 

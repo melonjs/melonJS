@@ -16,7 +16,7 @@ attribute vec2 aVertex;
  * Projection matrix
  * @ignore
  */
-uniform mat3 uMatrix;
+uniform mat3 uProjectionMatrix;
 
 /**
  * Vertex color
@@ -34,7 +34,7 @@ varying vec4 vColor;
 
 void main(void) {
     // Transform the vertex position by the projection matrix
-    gl_Position = vec4((uMatrix * vec3(aVertex, 1)).xy, 0, 1);
+    gl_Position = vec4((uProjectionMatrix * vec3(aVertex, 1.0)).xy, 0.0, 1.0);
     // Pass the remaining attributes to the fragment shader
     vColor = vec4(uColor.rgb * uColor.a, uColor.a);
 }
