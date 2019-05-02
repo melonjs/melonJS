@@ -154,15 +154,17 @@ game.HUD.ScoreItem = me.Renderable.extend({
 
         // local copy of the global score
         this.score = -1;
+
+        // recalculate the object position if the canvas is resize
+        me.event.subscribe(me.event.CANVAS_ONRESIZE, (function(w, h){
+            this.pos.set(w, h, 0).add(this.relative);
+        }).bind(this));
     },
 
     /**
      * update function
      */
     update : function (/*dt*/) {
-        this.pos.x = me.game.viewport.width + this.relative.x;
-        this.pos.y = me.game.viewport.height + this.relative.y;
-
         // we don't draw anything fancy here, so just
         // return true if the score has been updated
         if (this.score !== game.data.score) {
