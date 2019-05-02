@@ -53,10 +53,6 @@
              */
             this.currentBlendMode = "normal";
 
-            // canvas size after scaling
-            this.gameWidthZoom = this.settings.zoomX || width;
-            this.gameHeightZoom = this.settings.zoomY || height;
-
             // canvas object and context
             this.canvas = this.backBufferCanvas = c;
             this.context = null;
@@ -291,8 +287,8 @@
          */
         resize : function (width, height) {
             if (width !== this.backBufferCanvas.width || height !== this.backBufferCanvas.height) {
-                this.backBufferCanvas.width = width;
-                this.backBufferCanvas.height = height;
+                this.canvas.width = this.backBufferCanvas.width = width;
+                this.canvas.height = this.backBufferCanvas.height = height;
                 this.currentScissor[0] = 0;
                 this.currentScissor[1] = 0;
                 this.currentScissor[2] = width;

@@ -9,7 +9,7 @@
         // hold public stuff in our api
         var api = {};
 
-        var deferResizeId = 0;
+        var deferResizeId = -1;
 
         var designRatio = 1;
         var designWidth = 0;
@@ -445,11 +445,11 @@
                 scaleX *= me.device.devicePixelRatio;
                 scaleY *= me.device.devicePixelRatio;
 
-                if (deferResizeId) {
+                if (deferResizeId > 0) {
                     // cancel any previous pending resize
                     clearTimeout(deferResizeId);
                 }
-                deferResizeId = me.utils.function.defer(me.video.updateDisplaySize, this, scaleX, scaleY);
+                deferResizeId = me.utils.function.defer(me.video.scale, this, scaleX, scaleY);
             }
 
             // update parent container bounds
@@ -457,20 +457,37 @@
         };
 
         /**
-         * Modify the "displayed" canvas size
-         * @name updateDisplaySize
+         * scale the "displayed" canvas by the given scalar.
+         * this will modify the size of canvas element directly.
+         * Only use this if you are not using the automatic scaling feature.
+         * @name scale
          * @memberOf me.video
          * @function
-         * @param {Number} scaleX X scaling multiplier
-         * @param {Number} scaleY Y scaling multiplier
+         * @see me.video.init
+         * @param {Number} x x scaling multiplier
+         * @param {Number} y y scaling multiplier
          */
-        api.updateDisplaySize = function (scaleX, scaleY) {
+        api.scale = function (x, y) {
+            var canvas = this.renderer.getScreenCanvas();
+            var context = this.renderer.getScreenContext();
+            var settings = this.renderer.settings;
+            var w = canvas.width * x;
+            var h = canvas.height * y;
 
             // update the global scale variable
-            me.sys.scale.set(scaleX, scaleY);
+            me.sys.scale.set(x, y);
 
-            // renderer resize logic
-            this.renderer.scaleCanvas(scaleX, scaleY);
+            // adjust CSS style for High-DPI devices
+            if (me.device.devicePixelRatio > 1) {
+                canvas.style.width = (w / me.device.devicePixelRatio) + "px";
+                canvas.style.height = (h / me.device.devicePixelRatio) + "px";
+            } else {
+                canvas.style.width = w + "px";
+                canvas.style.height = h + "px";
+            }
+            // if anti-alias and blend mode were resetted (e.g. Canvas mode)
+            this.renderer.setAntiAlias(context, settings.antiAlias);
+            this.renderer.setBlendMode(settings.blendMode, context);
 
             // update parent container bounds
             this.renderer.updateBounds();
@@ -478,8 +495,8 @@
             // force repaint
             me.game.repaint();
 
-            // clear the timeout id
-            deferResizeId = 0;
+            // clear timeout id if defined
+            deferResizeId = -1;
         };
 
         // return our api

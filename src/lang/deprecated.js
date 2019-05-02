@@ -139,9 +139,9 @@ me.Error = me.Object.extend.bind(Error)({
 });
 
 /**
- * @function sys.checkVersion
+ * @function me.sys.checkVersion
  * @deprecated since 7.1.0
- * @see me.utils#checkVersion
+ * @see me.utils.checkVersion
  */
 me.sys.checkVersion = function(first, second) {
     console.log("me.sys.checkVersion() is deprecated, please use me.utils.checkVersion()");
@@ -154,7 +154,7 @@ me.sys.checkVersion = function(first, second) {
  * @name HASH
  * @memberOf me.game
  * @deprecated since 7.1.0
- * @see me.utils#getUriFragment
+ * @see me.utils.getUriFragment
  */
 Object.defineProperty(me.game, "HASH", {
     /**
@@ -166,3 +166,23 @@ Object.defineProperty(me.game, "HASH", {
     },
     configurable : false
 });
+
+/**
+ * @function me.video.updateDisplaySize
+ * @deprecated since 7.1.0
+ * @see me.video.scale
+ */
+me.video.updateDisplaySize = function(x, y) {
+    console.log("me.video.updateDisplaySize() is deprecated, please use me.video.scale()");
+    return me.video.scale(x, y);
+};
+
+/**
+ * @function me.Renderer.scaleCanvas
+ * @deprecated since 7.1.0
+ * @see me.video.scale
+ */
+me.Renderer.prototype.scaleCanvas = function (x, y) {
+    console.log("scaleCanvas() is deprecated, please use me.video.scale()");
+    return me.video.scale(x, y);
+}

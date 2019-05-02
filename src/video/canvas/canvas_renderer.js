@@ -33,11 +33,6 @@
             if (this.settings.doubleBuffering) {
                 this.backBufferCanvas = me.video.createCanvas(width, height);
                 this.backBufferContext2D = this.getContext2d(this.backBufferCanvas);
-
-                if (this.settings.transparent) {
-                    // Clears the front buffer for each frame blit
-                    this.context.globalCompositeOperation = "copy";
-                }
             }
             else {
                 this.backBufferCanvas = this.canvas;
@@ -101,6 +96,12 @@
                     this.currentBlendMode = "normal";
                     break;
             }
+
+            // transparent setting will override the given blendmode for this.context
+            if (this.settings.doubleBuffering && this.settings.transparent) {
+                // Clears the front buffer for each frame blit
+                this.context.globalCompositeOperation = "copy";
+            }
         },
 
         /**
@@ -123,12 +124,7 @@
          */
         flush : function () {
             if (this.settings.doubleBuffering) {
-                this.context.drawImage(
-                    this.backBufferCanvas, 0, 0,
-                    this.backBufferCanvas.width, this.backBufferCanvas.height,
-                    0, 0,
-                    this.gameWidthZoom, this.gameHeightZoom
-                );
+                this.context.drawImage(this.backBufferCanvas, 0, 0);
             }
         },
 
@@ -493,32 +489,6 @@
         getFontContext : function () {
             // in canvas mode we can directly use the 2d context
             return this.getContext();
-        },
-
-        /**
-         * scales the canvas & 2d Context
-         * @name scaleCanvas
-         * @memberOf me.CanvasRenderer.prototype
-         * @function
-         */
-        scaleCanvas : function (scaleX, scaleY) {
-            this.canvas.width = this.gameWidthZoom = this.backBufferCanvas.width * scaleX;
-            this.canvas.height = this.gameHeightZoom = this.backBufferCanvas.height * scaleY;
-
-            // adjust CSS style for High-DPI devices
-            if (me.device.devicePixelRatio > 1) {
-                this.canvas.style.width = (this.canvas.width / me.device.devicePixelRatio) + "px";
-                this.canvas.style.height = (this.canvas.height / me.device.devicePixelRatio) + "px";
-            }
-
-            if (this.settings.doubleBuffering && this.settings.transparent) {
-                // Clears the front buffer for each frame blit
-                this.context.globalCompositeOperation = "copy";
-            } else {
-                this.setBlendMode(this.settings.blendMode, this.context);
-            }
-            this.setAntiAlias(this.context, this.settings.antiAlias);
-            this.flush();
         },
 
         /**

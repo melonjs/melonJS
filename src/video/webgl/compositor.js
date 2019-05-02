@@ -82,9 +82,6 @@
             ];
 
             // the associated renderer
-            // TODO : add a set context or whatever function, and split
-            // the constructor accordingly, so that this is easier to restore
-            // the GL context when lost
             this.renderer = renderer;
 
             // WebGL context
@@ -95,6 +92,7 @@
 
             // Global fill color
             this.color = renderer.currentColor;
+
             // Global tint color
             this.tint = renderer.currentTint;
 
@@ -164,12 +162,16 @@
                 REGION_OFFSET
             );
 
+            // register to the CANVAS resize channel
+            me.event.subscribe(
+                me.event.CANVAS_ONRESIZE, (function(width, height) {
+                    this.flush();
+                    this.setProjection(width, height);
+                    this.setViewport(0, 0, width, height);
+                }).bind(this)
+            );
+
             this.reset();
-
-            this.setProjection(gl.canvas.width, gl.canvas.height);
-
-            // Initialize clear color
-            gl.clearColor(0.0, 0.0, 0.0, 1.0);
         },
 
         /**
@@ -184,6 +186,15 @@
 
             // WebGL context
             this.gl = this.renderer.gl;
+
+            this.flush();
+
+            this.setProjection(this.gl.canvas.width, this.gl.canvas.height);
+
+            this.setViewport(0, 0, this.gl.canvas.width, this.gl.canvas.height);
+
+            // Initialize clear color
+            this.gl.clearColor(0.0, 0.0, 0.0, 1.0);
 
             for (var i = 0; i < this.maxTextures; i++) {
                 this.units[i] = false;
@@ -203,13 +214,25 @@
          * @param {Number} h WebGL Canvas height
          */
         setProjection : function (w, h) {
-            this.flush();
-            this.gl.viewport(0, 0, w, h);
             this.uMatrix.setTransform(
                 2 / w,  0,      0,
                 0,      -2 / h, 0,
                 -1,     1,      1
             );
+        },
+
+        /**
+         * Sets the viewport
+         * @name setViewport
+         * @memberOf me.WebGLRenderer.Compositor
+         * @function
+         * @param {Number} x x position of viewport
+         * @param {Number} y y position of viewport
+         * @param {Number} width width of viewport
+         * @param {Number} height height of viewport
+         */
+        setViewport : function (x, y, w, h) {
+            this.gl.viewport(x, y, w, h);
         },
 
         /**
