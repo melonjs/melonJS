@@ -422,6 +422,19 @@
         },
 
         /**
+         * Rotate this renderable by the specified angle (in radians).
+         * @name rotate
+         * @memberOf me.Renderable.prototype
+         * @function
+         * @param {Number} angle The angle to rotate (in radians)
+         * @return {me.Renderable} Reference to this object for method chaining
+         */
+        rotate : function (angle) {
+            this.currentTransform.rotate(angle);
+            return this;
+        },
+
+        /**
          * scale the renderable around his anchor point.  Scaling actually applies changes
          * to the currentTransform member wich is used by the renderer to scale the object
          * when rendering.  It does not scale the object itself.  For example if the renderable
