@@ -87,9 +87,6 @@
             // WebGL context
             this.gl = renderer.gl;
 
-            // Global transformation matrix
-            this.matrix = renderer.currentTransform;
-
             // Global fill color
             this.color = renderer.currentColor;
 
@@ -98,6 +95,9 @@
 
             // Uniform projection matrix
             this.projectionMatrix = new me.Matrix2d();
+
+            // Global transformation matrix
+            this.viewMatrix = renderer.currentTransform;
 
             // reference to the active shader
             this.activeShader = null;
@@ -382,7 +382,7 @@
             }
 
             // Transform vertices
-            var m = this.matrix,
+            var m = this.viewMatrix,
                 v0 = this.v[0].set(x, y),
                 v1 = this.v[1].set(x + w, y),
                 v2 = this.v[2].set(x, y + h),
@@ -492,7 +492,7 @@
 
             // Put vertex data into the stream buffer
             var j = 0;
-            var m = this.matrix;
+            var m = this.viewMatrix;
             var m_isIdentity = m.isIdentity();
             for (var i = 0; i < points.length; i++) {
                 if (!m_isIdentity) {
@@ -580,7 +580,7 @@
 
             // Put vertex data into the stream buffer
             var j = 0;
-            var m = this.matrix;
+            var m = this.viewMatrix;
             var m_isIdentity = m.isIdentity();
             for (var i = 0; i < points.length; i++) {
                 if (!m_isIdentity) {
