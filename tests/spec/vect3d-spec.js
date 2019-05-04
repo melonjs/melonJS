@@ -209,4 +209,14 @@ describe("me.Vector3d", function () {
         expect(a.toString()).toEqual("x:32,y:32,z:1");
     });
 
+    it("angle function", function () {
+        a.set(6, 3, 1);
+        b.set(5, 13, 1);
+        expect(me.Math.radToDeg(a.angle(b))).toBeCloseTo(42, -1);
+
+        a.set(3, -6, 1);
+        b.set(8, 4, 1);
+        expect(me.Math.radToDeg(a.angle(b))).toBeCloseTo(90, -1);
+    });
+
 });

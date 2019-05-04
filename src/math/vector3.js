@@ -385,7 +385,7 @@
          * @return {Number} The dot product.
          */
         dotProduct : function (v) {
-            return this.x * v.x + this.y * v.y + this.z * (v.z || 1);
+            return this.x * v.x + this.y * v.y + this.z * (typeof(v.z) !== "undefined" ? v.z : this.z);
         },
 
        /**

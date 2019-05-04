@@ -182,4 +182,14 @@ describe("me.Vector2d", function () {
         expect(a.toString()).toEqual("x:32,y:32");
     });
 
+    it("angle function", function () {
+        a.set(6, 3);
+        b.set(5, 13);
+        expect(me.Math.radToDeg(a.angle(b))).toBeCloseTo(42, -1);
+
+        a.set(3, -6);
+        b.set(8, 4);
+        expect(me.Math.radToDeg(a.angle(b))).toBeCloseTo(90, -1);
+    });
+
 });

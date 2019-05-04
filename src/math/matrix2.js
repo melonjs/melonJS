@@ -303,17 +303,22 @@
         rotate : function (angle) {
             if (angle !== 0) {
                 var a = this.val,
-                    a0 = a[0],
-                    a1 = a[1],
-                    a3 = a[3],
-                    a4 = a[4],
+                    a00 = a[0],
+                    a01 = a[1],
+                    a02 = a[2],
+                    a10 = a[3],
+                    a11 = a[4],
+                    a12 = a[5],
                     s = Math.sin(angle),
                     c = Math.cos(angle);
 
-                a[0] = a0 * c + a3 * s;
-                a[1] = a1 * c + a4 * s;
-                a[3] = a0 * -s + a3 * c;
-                a[4] = a1 * -s + a4 * c;
+                a[0] = c * a00 + s * a10;
+                a[1] = c * a01 + s * a11;
+                a[2] = c * a02 + s * a12;
+
+                a[3] = c * a10 - s * a00;
+                a[4] = c * a11 - s * a01;
+                a[5] = c * a12 - s * a02;
             }
             return this;
         },
