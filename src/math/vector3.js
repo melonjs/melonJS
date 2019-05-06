@@ -343,11 +343,7 @@
          * @return {me.Vector3d} Reference to this object for method chaining
          */
         normalize : function () {
-            var d = this.length();
-            if (d > 0) {
-                return this._set(this.x / d, this.y / d, this.z / d);
-            }
-            return this;
+            return this.div(this.length() || 1);
         },
 
         /**

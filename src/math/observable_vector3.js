@@ -415,21 +415,6 @@
         },
 
         /**
-         * normalize this vector (scale the vector so that its magnitude is 1)
-         * @name normalize
-         * @memberOf me.ObservableVector3d
-         * @function
-         * @return {me.ObservableVector3d} Reference to this object for method chaining
-         */
-        normalize : function () {
-            var d = this.length();
-            if (d > 0) {
-                return this._set(this._x / d, this._y / d, this._z / d);
-            }
-            return this;
-        },
-
-        /**
          * change this vector to be perpendicular to what it was before.<br>
          * (Effectively rotates it 90 degrees in a clockwise direction)
          * @name perp
