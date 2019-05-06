@@ -462,8 +462,8 @@
                 dx = a.centerX - b.centerX;
                 dy = a.centerY - b.centerY;
             } else { // vector object
-                dx = a.centerX - b.x;
-                dy = a.centerY - b.y;
+                dx = a.centerX - target.x;
+                dy = a.centerY - target.y;
             }
 
             return Math.sqrt(dx * dx + dy * dy);
