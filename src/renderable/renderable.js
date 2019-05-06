@@ -422,6 +422,78 @@
         },
 
         /**
+         * return the angle to the specified target
+         * @name angleTo
+         * @memberOf me.Renderable
+         * @function
+         * @param {me.Renderable|me.Vector2d|me.Vector3d} target
+         * @return {Number} angle in radians
+         */
+        angleTo: function (target) {
+            var a = this.getBounds();
+            var ax, ay;
+
+            if (target instanceof me.Renderable) {
+                var b = target.getBounds();
+                ax = b.centerX - a.centerX;
+                ay = b.centerY - a.centerY;
+            } else { // vector object
+                ax = target.x - a.centerX;
+                ay = target.y - a.centerY;
+            }
+
+            return Math.atan2(ay, ax);
+        },
+
+        /**
+         * return the distance to the specified target
+         * @name distanceTo
+         * @memberOf me.Renderable
+         * @function
+         * @param {me.Renderable|me.Vector2d|me.Vector3d} target
+         * @return {Number} distance
+         */
+        distanceTo: function (target) {
+            var a = this.getBounds();
+            var dx, dy;
+
+            if (target instanceof me.Renderable) {
+                var b = target.getBounds();
+                dx = a.centerX - b.centerX;
+                dy = a.centerY - b.centerY;
+            } else { // vector object
+                dx = a.centerX - b.x;
+                dy = a.centerY - b.y;
+            }
+
+            return Math.sqrt(dx * dx + dy * dy);
+        },
+
+        /**
+         * Rotate this renderable towards the given target.
+         * @name lookAt
+         * @memberOf me.Renderable.prototype
+         * @function
+         * @param {me.Renderable|me.Vector2d|me.Vector3d} target the renderable or position to look at
+         * @return {me.Renderable} Reference to this object for method chaining
+         */
+        lookAt : function (target) {
+            var position;
+
+            if (target instanceof me.Renderable) {
+                position = target.pos;
+            } else {
+                position = target;
+            }
+
+            var angle = this.angleTo(position);
+
+            this.rotate(angle);
+
+            return this;
+        },
+
+        /**
          * Rotate this renderable by the specified angle (in radians).
          * @name rotate
          * @memberOf me.Renderable.prototype
@@ -430,7 +502,9 @@
          * @return {me.Renderable} Reference to this object for method chaining
          */
         rotate : function (angle) {
-            this.currentTransform.rotate(angle);
+            if (!isNaN(angle)) {
+                this.currentTransform.rotate(angle);
+            }
             return this;
         },
 

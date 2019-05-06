@@ -185,4 +185,24 @@ me.video.updateDisplaySize = function(x, y) {
 me.Renderer.prototype.scaleCanvas = function (x, y) {
     console.log("scaleCanvas() is deprecated, please use me.video.scale()");
     return me.video.scale(x, y);
-}
+};
+
+/**
+ * @function me.Entity.distanceToPoint
+ * @deprecated since 7.1.0
+ * @see me.Renderable.distanceTo
+*/
+me.Entity.prototype.distanceToPoint = function (v) {
+    console.log("distanceToPoint() is deprecated, please use me.Renderable.distanceTo()");
+    return this.distanceTo(v);
+};
+
+/**
+ * @function me.Entity.angleToPoint
+ * @deprecated since 7.1.0
+ * @see me.Renderable.angleTo
+*/
+me.Entity.prototype.angleToPoint = function (v) {
+    console.log("angleToPoint() is deprecated, please use me.Renderable.angleTo()");
+    return this.angleTo(v);
+};
