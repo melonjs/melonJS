@@ -165,15 +165,19 @@
          * @return this object for chaining
          */
         setText : function (value) {
-            value = "" + value;
+            if (typeof value === "undefined") {
+                value = "";
+            } else if (Array.isArray(value)) {
+                value = value.join("\n");
+            } else {
+                value = value.toString();
+            }
+
             if (this._text !== value) {
-                if (Array.isArray(value)) {
-                    this._text = value.join("\n");
-                } else {
-                    this._text = value;
-                }
+                this._text = value;
                 this.isDirty = true;
             }
+
             return this;
         },
 

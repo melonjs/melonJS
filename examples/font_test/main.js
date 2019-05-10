@@ -159,14 +159,14 @@ var FontTest = me.Renderable.extend ({
         // bitmapfonts
         // bFont  test
         this.fancyBFont.textAlign = "right";
-        text = "ANOTHER FANCY MULTILINE\n BITMAP FONT WITH MELONJS\nAND IT STILL WORKS";
+        text = ["ANOTHER FANCY MULTILINE", "BITMAP FONT USING AN ARRAY", "AND IT STILL WORKS"];
         this.fancyBFont.lineHeight = 1.2;
         this.fancyBFont.resize(1.5);
         this.fancyBFont.draw(renderer, text, 640, 230);
         this.fancyBFont.lineHeight = 1.0;
 
         this.bFont.textAlign = "center";
-        var text = "THIS IS A MULTILINE\n BITMAP FONT WITH MELONJS\nAND IT WORKS";
+        text = "THIS IS A MULTILINE\n BITMAP FONT WITH MELONJS\nAND IT WORKS";
         this.bFont.resize(2.5);
         this.bFont.draw(renderer, text,  me.video.renderer.getWidth() / 2, 400);
 
