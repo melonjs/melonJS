@@ -45,6 +45,7 @@
                 return new me.WebGLRenderer(c, width, height, options);
             }
             catch (e) {
+                console.log("Error creating WebGL renderer :" + e.message);
                 return new me.CanvasRenderer(c, width, height, options);
             }
         }

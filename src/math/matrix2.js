@@ -194,6 +194,38 @@
             return this;
         },
 
+        /**
+         * create an orthographic matrix with the result replacing the current matrix (WebGL Only)
+         * <img src="images/glortho.gif"/><br>
+         * @name glOrtho
+         * @memberOf me.Matrix2d
+         * @function
+         * @param {Number} left farthest left on the x-axis
+         * @param {Number} right farthest right on the x-axis
+         * @param {Number} bottom farthest down on the y-axis
+         * @param {Number} top farthest up on the y-axis
+         * @param {Number} near distance to the near clipping plane along the -Z axis
+         * @param {Number} far distance to the far clipping plane along the -Z axis
+         * @return {me.Matrix2d} Reference to this object for method chaining
+         */
+         glOrtho : function (left, right, bottom, top, near, far) {
+             var a = this.val;
+
+             a[0] = 2.0 / (right - left);
+             a[1] = 0.0;
+             a[2] = 0.0;
+
+             a[3] = 0.0;
+             a[4] = 2.0 / (top - bottom);
+             a[5] = 0.0;
+
+             a[6] = -1.0;
+             a[7] = 1.0;
+             a[8] = -2.0 / (far - near);
+
+             return this;
+         },
+
        /**
         * Transforms the given vector according to this matrix.
         * @name multiplyVector

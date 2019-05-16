@@ -63,6 +63,9 @@
             // global tint color
             this.currentTint = new me.Color(255, 255, 255, 1.0);
 
+            // the projectionMatrix (set through setProjection)
+            this.projectionMatrix = new me.Matrix2d();
+
             // default uvOffset
             this.uvOffset = 0;
 
@@ -325,6 +328,17 @@
             } else {
                 canvas.style["image-rendering"] = "auto";
             }
+        },
+
+        /**
+         * set/change the current projection matrix (WebGL only)
+         * @name setProjection
+         * @memberOf me.Renderer.prototype
+         * @function
+         * @param {me.Matrix2d} matrix
+         */
+        setProjection : function (matrix) {
+            this.projectionMatrix.copy(matrix);
         },
 
         /**

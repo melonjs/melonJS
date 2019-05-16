@@ -297,6 +297,25 @@
         },
 
         /**
+         * Set the uniform to the given value
+         * @name setUniform
+         * @memberOf me.GLShader
+         * @function
+         * @param {String} name the uniform name
+         * @param {Object} value the value to assign to that uniform
+         * @example
+         * // myShader.setUniform("uProjectionMatrix", this.projectionMatrix);
+         */
+        setUniform : function (name, value) {
+            var uniforms = this.uniforms;
+            if (typeof uniforms[name] !== "undefined") {
+                uniforms[name] = value;
+            } else {
+                throw new Error("undefined (" + name + ") uniform for shader " + this);
+            }
+        },
+
+        /**
          * destroy this shader objects resources (program, attributes, uniforms)
          * @name destroy
          * @memberOf me.GLShader

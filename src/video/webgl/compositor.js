@@ -93,9 +93,6 @@
             // Global tint color
             this.tint = renderer.currentTint;
 
-            // Uniform projection matrix
-            this.projectionMatrix = new me.Matrix2d();
-
             // Global transformation matrix
             this.viewMatrix = renderer.currentTransform;
 
@@ -166,7 +163,6 @@
             me.event.subscribe(
                 me.event.CANVAS_ONRESIZE, (function(width, height) {
                     this.flush();
-                    this.setProjection(width, height);
                     this.setViewport(0, 0, width, height);
                 }).bind(this)
             );
@@ -189,8 +185,6 @@
 
             this.flush();
 
-            this.setProjection(this.gl.canvas.width, this.gl.canvas.height);
-
             this.setViewport(0, 0, this.gl.canvas.width, this.gl.canvas.height);
 
             // Initialize clear color
@@ -202,23 +196,7 @@
             }
             // set the quad shader as the default program
             this.useShader(this.quadShader);
-            this.quadShader.uniforms.uSampler = samplers;
-        },
-
-        /**
-         * Sets the projection matrix with the given size
-         * @name setProjection
-         * @memberOf me.WebGLRenderer.Compositor
-         * @function
-         * @param {Number} w WebGL Canvas width
-         * @param {Number} h WebGL Canvas height
-         */
-        setProjection : function (w, h) {
-            this.projectionMatrix.setTransform(
-                2 / w,  0,      0,
-                0,      -2 / h, 0,
-                -1,     1,      1
-            );
+            this.quadShader.setUniform("uSampler", samplers);
         },
 
         /**
@@ -344,8 +322,8 @@
                 this.flush();
                 this.activeShader = shader;
                 this.activeShader.bind();
-                this.activeShader.uniforms.uProjectionMatrix = this.projectionMatrix.val;
             }
+            this.activeShader.setUniform("uProjectionMatrix", this.renderer.projectionMatrix.val);
         },
 
         /**

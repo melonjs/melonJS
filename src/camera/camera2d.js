@@ -72,6 +72,36 @@
              */
             this.damping = 1.0;
 
+            /**
+             * the closest point relative to the camera
+             * @public
+             * @type {Number}
+             * @name near
+             * @default 1
+             * @memberOf me.Camera2d
+             */
+            this.near = 1;
+
+            /**
+             * the furthest point relative to the camera.
+             * @public
+             * @type {Number}
+             * @name far
+             * @default 1000
+             * @memberOf me.Camera2d
+             */
+            this.far = 1000;
+
+            /**
+             * the default camera projection matrix
+             * (2d cameras use an orthographic projection by default).
+             * @public
+             * @type {me.Matrix2d}
+             * @name projectionMatrix
+             * @memberOf me.Camera2d
+             */
+            this.projectionMatrix = new me.Matrix2d();
+
             // offset for shake effect
             this.offset = new me.Vector2d();
 
@@ -112,6 +142,9 @@
             // enable event detection on the camera
             this.isKinematic = false;
 
+            // update the projection matrix
+            this._updateProjectionMatrix();
+
             // subscribe to the game reset event
             me.event.subscribe(me.event.GAME_RESET, this.reset.bind(this));
             // subscribe to the canvas resize event
@@ -119,6 +152,12 @@
         },
 
         // -- some private function ---
+
+        /** @ignore */
+        // update the projection matrix based on the projection frame (a rectangle)
+        _updateProjectionMatrix : function () {
+            this.projectionMatrix.glOrtho(0, this.width, this.height, 0, this.near, this.far)
+        },
 
         /** @ignore */
         _followH : function (target) {
@@ -169,6 +208,9 @@
 
             // reset the transformation matrix
             this.currentTransform.identity();
+
+            // update the projection matrix
+            this._updateProjectionMatrix();
         },
 
         /**
@@ -232,6 +274,10 @@
             this.update();
             this.smoothFollow = true;
 
+            // update the projection matrix
+            this._updateProjectionMatrix();
+
+            // publish the viewport resize event
             me.event.publish(me.event.VIEWPORT_ONRESIZE, [ this.width, this.height ]);
 
             return this;
@@ -655,6 +701,9 @@
 
             // translate the world coordinates by default to screen coordinates
             container.currentTransform.translate(-translateX, -translateY);
+
+            // set the camera projection
+            renderer.setProjection(this.projectionMatrix);
 
             // clip to camera bounds
             renderer.clipRect(
