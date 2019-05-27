@@ -309,7 +309,11 @@
         setUniform : function (name, value) {
             var uniforms = this.uniforms;
             if (typeof uniforms[name] !== "undefined") {
-                uniforms[name] = value;
+                if (typeof value === "object" && typeof value.toArray === "function") {
+                    uniforms[name] = value.toArray();
+                } else {
+                    uniforms[name] = value;
+                }
             } else {
                 throw new Error("undefined (" + name + ") uniform for shader " + this);
             }

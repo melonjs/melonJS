@@ -322,8 +322,8 @@
                 this.flush();
                 this.activeShader = shader;
                 this.activeShader.bind();
+                this.activeShader.setUniform("uProjectionMatrix", this.renderer.projectionMatrix);
             }
-            this.activeShader.setUniform("uProjectionMatrix", this.renderer.projectionMatrix.val);
         },
 
         /**
@@ -339,8 +339,8 @@
          * @param {Number} h Destination height
          */
         addQuad : function (texture, key, x, y, w, h) {
-            var color = this.color.toGL();
-            var tint = this.tint.toGL();
+            var color = this.color.toArray();
+            var tint = this.tint.toArray();
 
             if (color[3] < 1 / 255) {
                 // Fast path: don't send fully transparent quads

@@ -431,10 +431,13 @@
         },
 
         /**
-         * Returns the private glArray
-         * @ignore
+         * return an array representation of this object
+         * @name toArray
+         * @memberOf me.Color
+         * @function
+         * @return {Float32Array}
          */
-        toGL : function () {
+        toArray : function () {
             return this.glArray;
         },
 

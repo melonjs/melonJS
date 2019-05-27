@@ -144,17 +144,17 @@
          * @return {me.Matrix2d} Reference to this object for method chaining
          */
         transpose : function () {
-            var tmp, a = this.val;
+            var a = this.val,
+                a1 = a[1],
+                a2 = a[2],
+                a5 = a[5];
 
-            tmp = a[1];
             a[1] = a[3];
-            a[3] = tmp;
-            tmp = a[2];
             a[2] = a[6];
-            a[6] = tmp;
-            tmp = a[5];
+            a[3] = a1;
             a[5] = a[7];
-            a[7] = tmp;
+            a[6] = a2;
+            a[7] = a5;
 
             return this;
         },
@@ -195,9 +195,9 @@
         },
 
         /**
-         * create an orthographic matrix with the result replacing the current matrix (WebGL Only)
+         * generate an orthogonal projection matrix, with the result replacing the current matrix
          * <img src="images/glortho.gif"/><br>
-         * @name glOrtho
+         * @name ortho
          * @memberOf me.Matrix2d
          * @function
          * @param {Number} left farthest left on the x-axis
@@ -208,7 +208,7 @@
          * @param {Number} far distance to the far clipping plane along the -Z axis
          * @return {me.Matrix2d} Reference to this object for method chaining
          */
-         glOrtho : function (left, right, bottom, top, near, far) {
+         ortho : function (left, right, bottom, top, near, far) {
              var a = this.val;
 
              a[0] = 2.0 / (right - left);
@@ -417,6 +417,17 @@
          */
         clone : function () {
             return me.pool.pull("me.Matrix2d", this);
+        },
+
+        /**
+         * return an array representation of this Matrix
+         * @name toArray
+         * @memberOf me.Matrix2d
+         * @function
+         * @return {Float32Array}
+         */
+        toArray : function () {
+            return this.val;
         },
 
         /**

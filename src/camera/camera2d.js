@@ -156,7 +156,7 @@
         /** @ignore */
         // update the projection matrix based on the projection frame (a rectangle)
         _updateProjectionMatrix : function () {
-            this.projectionMatrix.glOrtho(0, this.width, this.height, 0, this.near, this.far)
+            this.projectionMatrix.ortho(0, this.width, this.height, 0, this.near, this.far)
         },
 
         /** @ignore */
