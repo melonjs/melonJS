@@ -302,9 +302,9 @@
          * @memberOf me.GLShader
          * @function
          * @param {String} name the uniform name
-         * @param {Object} value the value to assign to that uniform
+         * @param {Object|Float32Array} value the value to assign to that uniform
          * @example
-         * // myShader.setUniform("uProjectionMatrix", this.projectionMatrix);
+         * myShader.setUniform("uProjectionMatrix", this.projectionMatrix);
          */
         setUniform : function (name, value) {
             var uniforms = this.uniforms;
