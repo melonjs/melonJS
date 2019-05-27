@@ -481,7 +481,7 @@
             }
 
             // Set the line color
-            this.primitiveShader.uniforms.uColor = this.color.glArray;
+            this.primitiveShader.setUniform("uColor", this.color);
 
             // Copy data into the stream buffer
             gl.bufferData(
@@ -569,7 +569,7 @@
             }
 
             // Set the line color
-            this.primitiveShader.uniforms.uColor = this.color.glArray;
+            this.primitiveShader.setUniform("uColor", this.color);
 
             // Copy data into the stream buffer
             gl.bufferData(
