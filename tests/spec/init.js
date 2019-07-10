@@ -20,7 +20,7 @@ beforeAll(function (done) {
     me.boot();
 
     // Initialize video
-    if (!me.video.init(1024, 768, {wrapper: "screen"})) {
+    if (!me.video.init(1024, 768, {wrapper: "screen", renderer : me.video.CANVAS})) {
         throw "me.video.init failed";
     }
 

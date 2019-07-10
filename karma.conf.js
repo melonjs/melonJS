@@ -6,18 +6,27 @@ module.exports = function(config) {
         // melonJS
         { pattern: 'build/melonjs.js', watched: false },
         // test data
-        {pattern: 'tests/data/**/*', watched: false, included: false, served: true, nocache: false},
+        { pattern: 'tests/data/**/*', watched: false, included: false, served: true, nocache: false },
         // test files
         'tests/helper/helper-spec.js',
         'tests/spec/**/*.js'
     ],
-
 
     proxies: {
         "/tests/": "/base/tests/"
     },
 
     frameworks: ['jasmine'],
+    
+    client: {
+        jasmine: {
+            random: false,
+            seed: '4321',
+            oneFailurePerSpec: false,
+            failFast: true,
+            timeoutInterval: 1000
+        }
+    },
 
     reporters: ['nyan', 'coverage', 'htmlDetailed'],
 
@@ -41,36 +50,26 @@ module.exports = function(config) {
     },
 
     htmlDetailed: {
-      dir: 'build/reports/karma',
-      splitResults: true,
-      useHostedBootstrap: true,
-      autoReload: false
+        dir: 'build/reports/karma',
+        splitResults: true,
+        useHostedBootstrap: true,
+        autoReload: false
     },
 
     coverageReporter: {
-      dir: 'build/reports/coverage',
-      reporters: [
-        {type: 'html', subdir: 'report-html'}
-      ]
-    },
-
-    // This is the new content for your travis-ci configuration test
-    //  Custom launcher for Travis-CI
-    customLaunchers: {
-        Chrome_travis_ci: {
-           base: 'Chrome',
-           flags: ['--no-sandbox']
-         }
+        dir: 'build/reports/coverage',
+        reporters: [
+            { type: 'html', subdir: 'report-html' }
+        ]
     },
 
     //other supported options are Chrome and ChromeHeadless
     browsers: ["ChromeHeadless"],
-
     singleRun: true
+
   });
 
-  if(process.env.TRAVIS){
-     config.browsers = ['Chrome_travis_ci'];
+  if (process.env.TRAVIS) {
      config.nyanReporter.renderOnRunCompleteOnly = true;
   }
 }

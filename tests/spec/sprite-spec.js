@@ -12,7 +12,7 @@ describe("me.Sprite", function () {
             "anchorPoint" : {x:0, y:0}
         });
 
-        setCurrentAnimationCallback["callback"] = function () {}
+        setCurrentAnimationCallback["callback"] = function () {};
         spyOn(setCurrentAnimationCallback, "callback");
 
         // add to a parent container
