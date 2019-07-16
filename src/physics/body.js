@@ -590,7 +590,7 @@
             }
 
             // apply gravity if defined
-            if (this.gravity.y) {
+            if (this.gravity.x) {
                 vel.x += this.gravity.x * this.mass * me.timer.tick;
             }
             if (this.gravity.y) {

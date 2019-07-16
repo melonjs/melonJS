@@ -10,6 +10,7 @@ Version History
 * Input : simplified pointer / keyboard / gamepad implementation and removed support for legacy API (e.g. mousewheel event)
 * Input : added a new getBindingKey() method that returns the associated action to a given key
 * Input : exposed default targets for Keyboard and Pointer events under me.input
+* Physic : fix an issue where gravity was not properly applied on the x axis
 * Renderer : fix fill and stroke operations for arc and ellipse in the Canvas Renderer
 * Renderer : added missing fill and stroke operations for arc in WebGL mode
 * Renderer : align the canvas renderer with the WebGL renderer to properly use CSS scaling
