@@ -52,15 +52,6 @@
         scale : null, //initialized by me.video.init
 
         /**
-         * Global y axis gravity settings.
-         * (will override body gravity value if defined)
-         * @type {Number}
-         * @default undefined
-         * @memberOf me.sys
-         */
-        gravity : undefined,
-
-        /**
          * Specify either to stop on audio loading error or not<br>
          * if true, melonJS will throw an exception and stop loading<br>
          * if false, melonJS will disable sounds and output a warning message
@@ -179,6 +170,9 @@
         // init the level Director
         me.levelDirector.init();
 
+        // game instance init
+        me.game.init();
+
         // mark melonJS as initialized
         me.initialized = true;
 
@@ -194,6 +188,5 @@
            me.boot();
         }
     });
-
 
 })();

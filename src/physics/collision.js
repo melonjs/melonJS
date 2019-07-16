@@ -304,12 +304,14 @@
 
         /**
          * Initialize the collision/physic world
+         * @param {me.Rect} bounds the default game world bounds
          * @ignore
          */
-        api.init = function () {
+        api.init = function (bounds) {
             // default bounds to the game world size
-            api.bounds = me.game.world.getBounds().clone();
-            // initializa the quadtree
+            api.bounds = bounds.clone();
+
+            // initialize the quadtree
             api.quadTree = new me.QuadTree(api.bounds, api.maxChildren, api.maxDepth);
 
             // reset the collision detection engine if a new level is loaded

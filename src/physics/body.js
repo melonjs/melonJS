@@ -8,8 +8,6 @@
      to calcuate a new velocity and 2) the parent position is updated by adding this to the parent.pos (position me.Vector2d)
      value. Thus Affecting the movement of the parent.  Look at the source code for /src/physics/body.js:update (me.Body.update) for
      a better understanding.
-
-
      * @class
      * @extends me.Rect
      * @memberOf me
@@ -186,9 +184,9 @@
             /**
              * Default gravity value for this body.
              * To be set to to < 0, 0 > for RPG, shooter, etc...<br>
-             * Note: y axis gravity can also globally be defined through me.sys.gravity
+             * Note: total gravity is the sum of this vector and the world gravity.
              * @public
-             * @see me.sys.gravity
+             * @see me.game.world.gravity
              * @type me.Vector2d
              * @default <0,0.98>
              * @default
@@ -196,11 +194,20 @@
              * @memberOf me.Body
              */
             if (typeof(this.gravity) === "undefined") {
-                this.gravity = new me.Vector2d();
+                this.gravity = new me.Vector2d(0, 0);
             }
-            this.gravity.set(
-                0, typeof(me.sys.gravity) === "number" ? me.sys.gravity : 0.98
-            );
+            this.gravity.set(0, 0.98);
+
+            /**
+             * if true gravity won't be applied to this physic body
+             * @readonly
+             * @public
+             * @type Boolean
+             * @default false
+             * @name ignoreGravity
+             * @memberOf me.Body
+             */
+            this.ignoreGravity = false;
 
             /**
              * falling state of the body<br>
@@ -464,7 +471,7 @@
                 }
 
                 // cancel the falling an jumping flags if necessary
-                var dir = Math.sign(this.gravity.y) || 1;
+                var dir = Math.sign(me.game.world.gravity.y + this.gravity.y) || 1;
                 this.falling = overlap.y >= dir;
                 this.jumping = overlap.y <= -dir;
             }
@@ -576,6 +583,7 @@
          */
         computeVelocity : function (vel) {
 
+
             // apply fore if defined
             if (this.force.x) {
                 vel.x += this.force.x * me.timer.tick;
@@ -589,15 +597,18 @@
                 this.applyFriction(vel);
             }
 
-            // apply gravity if defined
-            if (this.gravity.y) {
-                vel.x += this.gravity.x * this.mass * me.timer.tick;
-            }
-            if (this.gravity.y) {
-                vel.y += this.gravity.y * this.mass * me.timer.tick;
-                // check if falling / jumping
-                this.falling = (vel.y * Math.sign(this.gravity.y)) > 0;
-                this.jumping = (this.falling ? false : this.jumping);
+            if (!this.ignoreGravity) {
+                var worldGravity = me.game.world.gravity;
+                // apply gravity if defined
+                if (worldGravity.x + this.gravity.x) {
+                    vel.x += worldGravity.x + this.gravity.x * this.mass * me.timer.tick;
+                }
+                if (worldGravity.y + this.gravity.y) {
+                    vel.y += worldGravity.y + this.gravity.y * this.mass * me.timer.tick;
+                    // check if falling / jumping
+                    this.falling = (vel.y * Math.sign(worldGravity.y + this.gravity.y)) > 0;
+                    this.jumping = (this.falling ? false : this.jumping);
+                }
             }
 
             // cap velocity

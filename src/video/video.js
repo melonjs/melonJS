@@ -285,8 +285,6 @@
                 me.video.setMaxSize(parseInt(style.maxWidth, 10), parseInt(style.maxHeight, 10));
             }
 
-            me.game.init();
-
             // trigger an initial resize();
             me.video.onresize();
 

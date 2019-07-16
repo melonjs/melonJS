@@ -206,3 +206,29 @@ me.Entity.prototype.angleToPoint = function (v) {
     console.log("angleToPoint() is deprecated, please use me.Renderable.angleTo()");
     return this.angleTo(v);
 };
+/**
+ * @public
+ * @type {Number}
+ * @name gravity
+ * @memberOf me.sys
+ * @deprecated since 7.1.0
+ * @see me.World.gravity
+ */
+Object.defineProperty(me.sys, "gravity", {
+    /**
+     * @ignore
+     */
+    get : function () {
+        console.log("me.sys.gravity is deprecated, please use me.game.world.gravity");
+        return me.game.world ? me.game.world.gravity.y : undefined;
+    },
+
+    /**
+     * @ignore
+     */
+    set : function (value) {
+        console.log("me.sys.gravity is deprecated, please me.game.world.gravity");
+        if (me.game.world) me.game.world.gravity.y = value;
+    },
+    configurable : false
+});
