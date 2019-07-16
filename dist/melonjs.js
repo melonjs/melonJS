@@ -1,5 +1,5 @@
 /*!
- * melonJS Game Engine - v7.0.0
+ * melonJS Game Engine - v7.1.0
  * http://www.melonjs.org
  * melonjs is licensed under the MIT License.
  * http://www.opensource.org/licenses/mit-license
@@ -107,7 +107,7 @@
    })();
    /* eslint-enable no-global-assign, no-native-reassign */
 
-   var commonjsGlobal = typeof window !== 'undefined' ? window : typeof global !== 'undefined' ? global : typeof self !== 'undefined' ? self : {};
+   var commonjsGlobal = typeof globalThis !== 'undefined' ? globalThis : typeof window !== 'undefined' ? window : typeof global !== 'undefined' ? global : typeof self !== 'undefined' ? self : {};
 
    function createCommonjsModule(fn, module) {
    	return module = { exports: {} }, fn(module, module.exports), module.exports;
@@ -1513,7 +1513,7 @@
      };
 
      // UMD definition to allow for CommonJS, AMD and legacy window
-     if (module.exports) {
+     if ( module.exports) {
        // CommonJS, just export
        module.exports = exports = MinPubSub;
      } else if (typeof context === 'object') {
@@ -1613,6 +1613,18 @@
         */
 
        api.GAME_RESET = "me.game.onReset";
+       /**
+        * Channel Constant for when the game manager is updated (start of the update loop) <br>
+        * Data passed : {Number} time the current time stamp
+        * @public
+        * @constant
+        * @type String
+        * @name GAME_UPDATE
+        * @memberOf me.event
+        * @see me.event.subscribe
+        */
+
+       api.GAME_UPDATE = "me.game.onUpdate";
        /**
         * Channel Constant for when a level is loaded <br>
         * Data passed : {String} Level Name
@@ -1961,9 +1973,7 @@
        /*
         * PRIVATE STUFF
         */
-       // flag to redraw the sprites
-
-       var initialized = false; // to know when we have to refresh the display
+       // to know when we have to refresh the display
 
        var isDirty = true; // always refresh the display when updatesPerSecond are lower than fps
 
@@ -2044,56 +2054,32 @@
 
        api.onLevelLoaded = function () {};
        /**
-        * Provide an object hash with all tag parameters specified in the url.
-        * @property {Boolean} [hitbox=false] draw the hitbox in the debug panel (if enabled)
-        * @property {Boolean} [velocity=false] draw the entities velocity in the debug panel (if enabled)
-        * @property {Boolean} [quadtree=false] draw the quadtree in the debug panel (if enabled)
-        * @property {Boolean} [webgl=false] force the renderer to WebGL
-        * @property {Boolean} [debug=false] display the debug panel (if preloaded)
-        * @property {String} [debugToggleKey="s"] show/hide the debug panel (if preloaded)
-        * @public
-        * @type {Object}
-        * @name HASH
-        * @memberOf me.game
-        * @example
-        * // http://www.example.com/index.html#debug&hitbox=true&mytag=value
-        * console.log(me.game.HASH["mytag"]); //> "value"
-        */
-
-
-       api.HASH = null;
-       /**
         * Initialize the game manager
         * @name init
         * @memberOf me.game
-        * @private
         * @ignore
         * @function
         * @param {Number} [width] width of the canvas
         * @param {Number} [height] width of the canvas
-        * init function.
         */
 
+
        api.init = function (width, height) {
-         if (!initialized) {
-           // if no parameter specified use the system size
-           width = width || me.video.renderer.getWidth();
-           height = height || me.video.renderer.getHeight(); // the root object of our world is an entity container
+         // if no parameter specified use the system size
+         width = width || me.video.renderer.getWidth();
+         height = height || me.video.renderer.getHeight(); // the root object of our world is an entity container
 
-           api.world = new me.Container(0, 0, width, height, true);
-           api.world.name = "rootContainer"; // to mimic the previous behavior
+         api.world = new me.Container(0, 0, width, height, true);
+         api.world.name = "rootContainer"; // to mimic the previous behavior
 
-           api.world.anchorPoint.set(0, 0); // initialize the collision system (the quadTree mostly)
+         api.world.anchorPoint.set(0, 0); // initialize the collision system (the quadTree mostly)
 
-           me.collision.init();
-           renderer = me.video.renderer; // publish init notification
+         me.collision.init();
+         renderer = me.video.renderer; // publish init notification
 
-           me.event.publish(me.event.GAME_INIT); // make display dirty by default
+         me.event.publish(me.event.GAME_INIT); // make display dirty by default
 
-           isDirty = true; // set as initialized
-
-           initialized = true;
-         }
+         isDirty = true;
        };
        /**
         * reset the game Object manager<br>
@@ -2183,12 +2169,9 @@
          // handle frame skipping if required
          if (++frameCounter % frameRate === 0) {
            // reset the frame counter
-           frameCounter = 0; // update the timer
+           frameCounter = 0; // game update event
 
-           me.timer.update(time); // update the gamepads
-
-           me.input._updateGamepads();
-
+           me.event.publish(me.event.GAME_UPDATE, [time]);
            accumulator += me.timer.getDelta();
            accumulator = Math.min(accumulator, accumulatorMax);
            updateDelta = me.sys.interpolation ? me.timer.getDelta() : stepSize;
@@ -2253,21 +2236,20 @@
 
    (function () {
      /**
-      * me global references
-      * @ignore
+      * current melonJS version
+      * @static
+      * @constant
+      * @memberof me
+      * @name version
+      * @type {string}
       */
-     me.mod = "melonJS";
-     me.version = "7.0.0";
+     me.version = "7.1.0";
      /**
       * global system settings and browser capabilities
       * @namespace
       */
 
      me.sys = {
-       /*
-        * Global settings
-        */
-
        /**
         * Set game FPS limiting
         * @see me.timer.tick
@@ -2371,89 +2353,40 @@
         * @default false
         * @memberOf me.sys
         */
-       preRender: false,
-
-       /*
-        * System methods
-        */
-
-       /**
-        * Compare two version strings
-        * @public
-        * @function
-        * @param {String} first First version string to compare
-        * @param {String} [second="7.0.0"] Second version string to compare
-        * @return {Number} comparison result <br>&lt; 0 : first &lt; second<br>
-        * 0 : first == second<br>
-        * &gt; 0 : first &gt; second
-        * @example
-        * if (me.sys.checkVersion("7.0.0") > 0) {
-        *     console.error(
-        *         "melonJS is too old. Expected: 7.0.0, Got: " + me.version
-        *     );
-        * }
-        */
-       checkVersion: function checkVersion(first, second) {
-         second = second || me.version;
-         var a = first.split(".");
-         var b = second.split(".");
-         var len = Math.min(a.length, b.length);
-         var result = 0;
-
-         for (var i = 0; i < len; i++) {
-           if (result = +a[i] - +b[i]) {
-             break;
-           }
-         }
-
-         return result ? result : a.length - b.length;
-       }
+       preRender: false
      };
-
-     function parseHash() {
-       var hash = {}; // No "document.location" exist for Wechat mini game platform.
-
-       if (document.location && document.location.hash) {
-         document.location.hash.substr(1).split("&").filter(function (value) {
-           return value !== "";
-         }).forEach(function (value) {
-           var kv = value.split("=");
-           var k = kv.shift();
-           var v = kv.join("=");
-           hash[k] = v || true;
-         });
-       }
-
-       return hash;
-     } // a flag to know if melonJS
-     // is initialized
-
-
-     var me_initialized = false;
-     Object.defineProperty(me, "initialized", {
-       /**
-        * @ignore
-        */
-       get: function get() {
-         return me_initialized;
-       }
-     });
      /**
-      * Disable melonJS auto-initialization
+      * a flag indicating that melonJS is fully initialized
       * @type {Boolean}
       * @default false
+      * @readonly
+      * @memberOf me
+      */
+
+     me.initialized = false;
+     /**
+      * disable melonJS auto-initialization
+      * @type {Boolean}
+      * @default false
+      * @see me.boot
       * @memberOf me
       */
 
      me.skipAutoInit = false;
      /**
-      * initial boot function
-      * @ignore
+      * initialize the melonJS library.
+      * this is automatically called unless me.skipAutoInit is set to true,
+      * to allow asynchronous loaders to work.
+      * @name boot
+      * @memberOf me
+      * @see me.skipAutoInit
+      * @public
+      * @function
       */
 
      me.boot = function () {
        // don't do anything if already initialized (should not happen anyway)
-       if (me_initialized) {
+       if (me.initialized === true) {
          return;
        } // check the device capabilites
 
@@ -2463,41 +2396,31 @@
 
        me.pool.init(); // initialize me.save
 
-       me.save._init(); // parse optional url parameters/tags
+       me.save.init(); // init the FPS counter if needed
 
+       me.timer.init(); // enable/disable the cache
 
-       me.game.HASH = parseHash(); // enable/disable the cache
+       me.loader.setNocache(me.utils.getUriFragment().nocache || false); // init the App Manager
 
-       me.loader.setNocache(me.game.HASH.nocache || false); // init the FPS counter if needed
+       me.state.init(); // automatically enable keyboard events
 
-       me.timer.init(); // init the App Manager
+       me.input.initKeyboardEvent(); // init the level Director
 
-       me.state.init(); // automatically enable keyboard events if on desktop
+       me.levelDirector.init(); // mark melonJS as initialized
 
-       if (me.device.isMobile === false) {
-         me.input._enableKeyboardEvent();
-       } // init the level Director
+       me.initialized = true; /// if auto init is disable and this function was called manually
 
-
-       me.levelDirector.reset();
-       me_initialized = true;
+       if (me.skipAutoInit === true) {
+         me.device._domReady();
+       }
      }; // call the library init function when ready
 
 
-     if (me.skipAutoInit === false) {
-       me.device.onReady(function () {
+     me.device.onReady(function () {
+       if (me.skipAutoInit === false) {
          me.boot();
-       });
-     } else {
-       /**
-        * @ignore
-        */
-       me.init = function () {
-         me.boot();
-
-         me.device._domReady();
-       };
-     }
+       }
+     });
    })();
 
    (function () {
@@ -2548,12 +2471,23 @@
         */
 
 
-       var updateTimers = function updateTimers(dt) {
+       var updateTimers = function updateTimers(time) {
+         last = now;
+         now = time;
+         delta = now - last; // fix for negative timestamp returned by wechat or chrome on startup
+
+         if (delta < 0) {
+           delta = 0;
+         } // get the game tick
+
+
+         api.tick = delta > minstep && me.sys.interpolation ? delta / step : 1;
+
          for (var i = 0, len = timers.length; i < len; i++) {
            var _timer = timers[i];
 
            if (!(_timer.pauseable && me.state.isPaused())) {
-             _timer.elapsed += dt;
+             _timer.elapsed += delta;
            }
 
            if (_timer.elapsed >= _timer.delay) {
@@ -2617,7 +2551,9 @@
        api.init = function () {
          // reset variables to initial state
          api.reset();
-         now = last = 0;
+         now = last = 0; // register to the game update event
+
+         me.event.subscribe(me.event.GAME_UPDATE, updateTimers);
        };
        /**
         * reset time (e.g. usefull in case of pause)
@@ -2706,7 +2642,7 @@
 
 
        api.clearTimeout = function (timeoutID) {
-         me.utils.function.defer(clearTimer, this, timeoutID);
+         me.utils["function"].defer(clearTimer, this, timeoutID);
        };
        /**
         * Clears the Interval set by me.timer.setInterval().
@@ -2718,7 +2654,7 @@
 
 
        api.clearInterval = function (intervalID) {
-         me.utils.function.defer(clearTimer, this, intervalID);
+         me.utils["function"].defer(clearTimer, this, intervalID);
        };
        /**
         * Return the current timestamp in milliseconds <br>
@@ -2759,35 +2695,11 @@
          framedelta += delta;
 
          if (framecount % 10 === 0) {
-           this.fps = me.Math.clamp(~~(1000 * framecount / framedelta), 0, me.sys.fps);
+           this.fps = me.Math.clamp(Math.round(1000 * framecount / framedelta), 0, me.sys.fps);
            framedelta = 0;
            framecount = 0;
          }
-       };
-       /**
-        * update game tick
-        * should be called once a frame
-        * @param {Number} time current timestamp as provided by the RAF callback
-        * @return {Number} time elapsed since the last update
-        * @ignore
-        */
-
-
-       api.update = function (time) {
-         last = now;
-         now = time;
-         delta = now - last; // fix for negative timestamp returned by wechat or chrome on startup
-
-         if (delta < 0) {
-           delta = 0;
-         } // get the game tick
-
-
-         api.tick = delta > minstep && me.sys.interpolation ? delta / step : 1; // update defined timers
-
-         updateTimers(delta);
-         return delta;
-       }; // return our apiect
+       }; // return our api
 
 
        return api;
@@ -3588,13 +3500,7 @@
         * @return {me.Vector2d} Reference to this object for method chaining
         */
        normalize: function normalize() {
-         var d = this.length();
-
-         if (d > 0) {
-           return this._set(this.x / d, this.y / d);
-         }
-
-         return this;
+         return this.div(this.length() || 1);
        },
 
        /**
@@ -4092,13 +3998,7 @@
         * @return {me.Vector3d} Reference to this object for method chaining
         */
        normalize: function normalize() {
-         var d = this.length();
-
-         if (d > 0) {
-           return this._set(this.x / d, this.y / d, this.z / d);
-         }
-
-         return this;
+         return this.div(this.length() || 1);
        },
 
        /**
@@ -4136,7 +4036,7 @@
         * @return {Number} The dot product.
         */
        dotProduct: function dotProduct(v) {
-         return this.x * v.x + this.y * v.y + this.z * (v.z || 1);
+         return this.x * v.x + this.y * v.y + this.z * (typeof v.z !== "undefined" ? v.z : this.z);
        },
 
        /**
@@ -4603,23 +4503,6 @@
         */
        equals: function equals(v) {
          return this._x === v.x && this._y === v.y;
-       },
-
-       /**
-        * normalize this vector (scale the vector so that its magnitude is 1)
-        * @name normalize
-        * @memberOf me.ObservableVector2d
-        * @function
-        * @return {me.ObservableVector2d} Reference to this object for method chaining
-        */
-       normalize: function normalize() {
-         var d = this.length();
-
-         if (d > 0) {
-           return this._set(this._x / d, this._y / d);
-         }
-
-         return this;
        },
 
        /**
@@ -5121,23 +5004,6 @@
        },
 
        /**
-        * normalize this vector (scale the vector so that its magnitude is 1)
-        * @name normalize
-        * @memberOf me.ObservableVector3d
-        * @function
-        * @return {me.ObservableVector3d} Reference to this object for method chaining
-        */
-       normalize: function normalize() {
-         var d = this.length();
-
-         if (d > 0) {
-           return this._set(this._x / d, this._y / d, this._z / d);
-         }
-
-         return this;
-       },
-
-       /**
         * change this vector to be perpendicular to what it was before.<br>
         * (Effectively rotates it 90 degrees in a clockwise direction)
         * @name perp
@@ -5398,17 +5264,16 @@
         * @return {me.Matrix2d} Reference to this object for method chaining
         */
        transpose: function transpose() {
-         var tmp,
-             a = this.val;
-         tmp = a[1];
+         var a = this.val,
+             a1 = a[1],
+             a2 = a[2],
+             a5 = a[5];
          a[1] = a[3];
-         a[3] = tmp;
-         tmp = a[2];
          a[2] = a[6];
-         a[6] = tmp;
-         tmp = a[5];
+         a[3] = a1;
          a[5] = a[7];
-         a[7] = tmp;
+         a[6] = a2;
+         a[7] = a5;
          return this;
        },
 
@@ -5443,6 +5308,34 @@
          val[6] = tg / n;
          val[7] = (b * g - h * a) / n;
          val[8] = (e * a - b * d) / n;
+         return this;
+       },
+
+       /**
+        * generate an orthogonal projection matrix, with the result replacing the current matrix
+        * <img src="images/glortho.gif"/><br>
+        * @name ortho
+        * @memberOf me.Matrix2d
+        * @function
+        * @param {Number} left farthest left on the x-axis
+        * @param {Number} right farthest right on the x-axis
+        * @param {Number} bottom farthest down on the y-axis
+        * @param {Number} top farthest up on the y-axis
+        * @param {Number} near distance to the near clipping plane along the -Z axis
+        * @param {Number} far distance to the far clipping plane along the -Z axis
+        * @return {me.Matrix2d} Reference to this object for method chaining
+        */
+       ortho: function ortho(left, right, bottom, top, near, far) {
+         var a = this.val;
+         a[0] = 2.0 / (right - left);
+         a[1] = 0.0;
+         a[2] = 0.0;
+         a[3] = 0.0;
+         a[4] = 2.0 / (top - bottom);
+         a[5] = 0.0;
+         a[6] = -1.0;
+         a[7] = 1.0;
+         a[8] = -2.0 / (far - near);
          return this;
        },
 
@@ -5549,16 +5442,20 @@
        rotate: function rotate(angle) {
          if (angle !== 0) {
            var a = this.val,
-               a0 = a[0],
-               a1 = a[1],
-               a3 = a[3],
-               a4 = a[4],
+               a00 = a[0],
+               a01 = a[1],
+               a02 = a[2],
+               a10 = a[3],
+               a11 = a[4],
+               a12 = a[5],
                s = Math.sin(angle),
                c = Math.cos(angle);
-           a[0] = a0 * c + a3 * s;
-           a[1] = a1 * c + a4 * s;
-           a[3] = a0 * -s + a3 * c;
-           a[4] = a1 * -s + a4 * c;
+           a[0] = c * a00 + s * a10;
+           a[1] = c * a01 + s * a11;
+           a[2] = c * a02 + s * a12;
+           a[3] = c * a10 - s * a00;
+           a[4] = c * a11 - s * a01;
+           a[5] = c * a12 - s * a02;
          }
 
          return this;
@@ -5613,6 +5510,17 @@
         */
        clone: function clone() {
          return me.pool.pull("me.Matrix2d", this);
+       },
+
+       /**
+        * return an array representation of this Matrix
+        * @name toArray
+        * @memberOf me.Matrix2d
+        * @function
+        * @return {Float32Array}
+        */
+       toArray: function toArray() {
+         return this.val;
        },
 
        /**
@@ -8133,7 +8041,7 @@
          } // apply gravity if defined
 
 
-         if (this.gravity.y) {
+         if (this.gravity.x) {
            vel.x += this.gravity.x * this.mass * me.timer.tick;
          }
 
@@ -9871,6 +9779,94 @@
          this.currentTransform.multiply(m);
          bounds.setPoints(bounds.transform(m).points);
          bounds.pos.setV(this.pos);
+         return this;
+       },
+
+       /**
+        * return the angle to the specified target
+        * @name angleTo
+        * @memberOf me.Renderable
+        * @function
+        * @param {me.Renderable|me.Vector2d|me.Vector3d} target
+        * @return {Number} angle in radians
+        */
+       angleTo: function angleTo(target) {
+         var a = this.getBounds();
+         var ax, ay;
+
+         if (target instanceof me.Renderable) {
+           var b = target.getBounds();
+           ax = b.centerX - a.centerX;
+           ay = b.centerY - a.centerY;
+         } else {
+           // vector object
+           ax = target.x - a.centerX;
+           ay = target.y - a.centerY;
+         }
+
+         return Math.atan2(ay, ax);
+       },
+
+       /**
+        * return the distance to the specified target
+        * @name distanceTo
+        * @memberOf me.Renderable
+        * @function
+        * @param {me.Renderable|me.Vector2d|me.Vector3d} target
+        * @return {Number} distance
+        */
+       distanceTo: function distanceTo(target) {
+         var a = this.getBounds();
+         var dx, dy;
+
+         if (target instanceof me.Renderable) {
+           var b = target.getBounds();
+           dx = a.centerX - b.centerX;
+           dy = a.centerY - b.centerY;
+         } else {
+           // vector object
+           dx = a.centerX - target.x;
+           dy = a.centerY - target.y;
+         }
+
+         return Math.sqrt(dx * dx + dy * dy);
+       },
+
+       /**
+        * Rotate this renderable towards the given target.
+        * @name lookAt
+        * @memberOf me.Renderable.prototype
+        * @function
+        * @param {me.Renderable|me.Vector2d|me.Vector3d} target the renderable or position to look at
+        * @return {me.Renderable} Reference to this object for method chaining
+        */
+       lookAt: function lookAt(target) {
+         var position;
+
+         if (target instanceof me.Renderable) {
+           position = target.pos;
+         } else {
+           position = target;
+         }
+
+         var angle = this.angleTo(position);
+         this.rotate(angle);
+         return this;
+       },
+
+       /**
+        * Rotate this renderable by the specified angle (in radians).
+        * @name rotate
+        * @memberOf me.Renderable.prototype
+        * @function
+        * @param {Number} angle The angle to rotate (in radians)
+        * @return {me.Renderable} Reference to this object for method chaining
+        */
+       rotate: function rotate(angle) {
+         if (!isNaN(angle)) {
+           this.currentTransform.rotate(angle);
+         }
+
          return this;
        },
 
@@ -12045,7 +12041,7 @@
         */
        removeChild: function removeChild(child, keepalive) {
          if (this.hasChild(child)) {
-           me.utils.function.defer(deferredRemove, this, child, keepalive);
+           me.utils["function"].defer(deferredRemove, this, child, keepalive);
          } else {
            throw new Error("Child is not mine.");
          }
@@ -12201,7 +12197,7 @@
            /** @ignore */
 
 
-           this.pendingSort = me.utils.function.defer(function (self) {
+           this.pendingSort = me.utils["function"].defer(function (self) {
              // sort everything in this container
              self.children.sort(self["_sort" + self.sortOn.toUpperCase()]); // clear the defer id
 
@@ -12447,7 +12443,37 @@
           * @memberOf me.Camera2d
           */
 
-         this.damping = 1.0; // offset for shake effect
+         this.damping = 1.0;
+         /**
+          * the closest point relative to the camera
+          * @public
+          * @type {Number}
+          * @name near
+          * @default 1
+          * @memberOf me.Camera2d
+          */
+
+         this.near = 1;
+         /**
+          * the furthest point relative to the camera.
+          * @public
+          * @type {Number}
+          * @name far
+          * @default 1000
+          * @memberOf me.Camera2d
+          */
+
+         this.far = 1000;
+         /**
+          * the default camera projection matrix
+          * (2d cameras use an orthographic projection by default).
+          * @public
+          * @type {me.Matrix2d}
+          * @name projectionMatrix
+          * @memberOf me.Camera2d
+          */
+
+         this.projectionMatrix = new me.Matrix2d(); // offset for shake effect
 
          this.offset = new me.Vector2d(); // target to follow
 
@@ -12478,13 +12504,22 @@
 
          this.anchorPoint.set(0, 0); // enable event detection on the camera
 
-         this.isKinematic = false; // subscribe to the game reset event
+         this.isKinematic = false; // update the projection matrix
+
+         this._updateProjectionMatrix(); // subscribe to the game reset event
+
 
          me.event.subscribe(me.event.GAME_RESET, this.reset.bind(this)); // subscribe to the canvas resize event
 
          me.event.subscribe(me.event.CANVAS_ONRESIZE, this.resize.bind(this));
        },
        // -- some private function ---
+
+       /** @ignore */
+       // update the projection matrix based on the projection frame (a rectangle)
+       _updateProjectionMatrix: function _updateProjectionMatrix() {
+         this.projectionMatrix.ortho(0, this.width, this.height, 0, this.near, this.far);
+       },
 
        /** @ignore */
        _followH: function _followH(target) {
@@ -12531,7 +12566,9 @@
          this.smoothFollow = true;
          this.damping = 1.0; // reset the transformation matrix
 
-         this.currentTransform.identity();
+         this.currentTransform.identity(); // update the projection matrix
+
+         this._updateProjectionMatrix();
        },
 
        /**
@@ -12576,11 +12613,15 @@
          this.smoothFollow = false; // update bounds
 
          var level = me.levelDirector.getCurrentLevel();
-         this.setBounds(0, 0, Math.max(w, level ? level.width : 0), Math.max(h, level ? level.height : 0)); // reset everthing
+         this.setBounds(0, 0, Math.max(w, level ? level.getBounds().width : 0), Math.max(h, level ? level.getBounds().height : 0)); // reset everthing
 
          this.setDeadzone(w / 6, h / 6);
          this.update();
-         this.smoothFollow = true;
+         this.smoothFollow = true; // update the projection matrix
+
+         this._updateProjectionMatrix(); // publish the viewport resize event
+
+
          me.event.publish(me.event.VIEWPORT_ONRESIZE, [this.width, this.height]);
          return this;
        },
@@ -12990,7 +13031,9 @@
          var translateX = this.pos.x + this.offset.x;
          var translateY = this.pos.y + this.offset.y; // translate the world coordinates by default to screen coordinates
 
-         container.currentTransform.translate(-translateX, -translateY); // clip to camera bounds
+         container.currentTransform.translate(-translateX, -translateY); // set the camera projection
+
+         renderer.setProjection(this.projectionMatrix); // clip to camera bounds
 
          renderer.clipRect(0, 0, this.width, this.height);
          this.preDraw(renderer);
@@ -13133,76 +13176,6 @@
          this.autoTransform = false; // enable collision detection
 
          this.isKinematic = false;
-       },
-
-       /**
-        * return the distance to the specified entity
-        * @name distanceTo
-        * @memberOf me.Entity
-        * @function
-        * @param {me.Entity} entity Entity
-        * @return {Number} distance
-        */
-       distanceTo: function distanceTo(e) {
-         var a = this.getBounds();
-         var b = e.getBounds(); // the me.Vector2d object also implements the same function, but
-         // we have to use here the center of both entities
-
-         var dx = a.pos.x + a.width / 2 - (b.pos.x + b.width / 2);
-         var dy = a.pos.y + a.height / 2 - (b.pos.y + b.height / 2);
-         return Math.sqrt(dx * dx + dy * dy);
-       },
-
-       /**
-        * return the distance to the specified point
-        * @name distanceToPoint
-        * @memberOf me.Entity
-        * @function
-        * @param {me.Vector2d} vector vector
-        * @return {Number} distance
-        */
-       distanceToPoint: function distanceToPoint(v) {
-         var a = this.getBounds(); // the me.Vector2d object also implements the same function, but
-         // we have to use here the center of both entities
-
-         var dx = a.pos.x + a.width / 2 - v.x;
-         var dy = a.pos.y + a.height / 2 - v.y;
-         return Math.sqrt(dx * dx + dy * dy);
-       },
-
-       /**
-        * return the angle to the specified entity
-        * @name angleTo
-        * @memberOf me.Entity
-        * @function
-        * @param {me.Entity} entity Entity
-        * @return {Number} angle in radians
-        */
-       angleTo: function angleTo(e) {
-         var a = this.getBounds();
-         var b = e.getBounds(); // the me.Vector2d object also implements the same function, but
-         // we have to use here the center of both entities
-
-         var ax = b.pos.x + b.width / 2 - (a.pos.x + a.width / 2);
-         var ay = b.pos.y + b.height / 2 - (a.pos.y + a.height / 2);
-         return Math.atan2(ay, ax);
-       },
-
-       /**
-        * return the angle to the specified point
-        * @name angleToPoint
-        * @memberOf me.Entity
-        * @function
-        * @param {me.Vector2d} vector vector
-        * @return {Number} angle in radians
-        */
-       angleToPoint: function angleToPoint(v) {
-         var a = this.getBounds(); // the me.Vector2d object also implements the same function, but
-         // we have to use here the center of both entities
-
-         var ax = v.x - (a.pos.x + a.width / 2);
-         var ay = v.y - (a.pos.y + a.height / 2);
-         return Math.atan2(ay, ax);
        },
 
        /** @ignore */
@@ -14030,13 +14003,13 @@
            };
 
            me.game.viewport.fadeIn(_fade.color, _fade.duration, function () {
-             me.utils.function.defer(_switchState, this, state);
+             me.utils["function"].defer(_switchState, this, state);
            });
          } // else just switch without any effects
          else {
              // wait for the last frame to be
              // "finished" before switching
-             me.utils.function.defer(_switchState, this, state);
+             me.utils["function"].defer(_switchState, this, state);
            }
        };
        /**
@@ -15290,15 +15263,16 @@
         * @return this object for chaining
         */
        setText: function setText(value) {
-         value = "" + value;
+         if (typeof value === "undefined") {
+           value = "";
+         } else if (Array.isArray(value)) {
+           value = value.join("\n");
+         } else {
+           value = value.toString();
+         }
 
          if (this._text !== value) {
-           if (Array.isArray(value)) {
-             this._text = value.join("\n");
-           } else {
-             this._text = value;
-           }
-
+           this._text = value;
            this.isDirty = true;
          }
 
@@ -15633,15 +15607,16 @@
         * @return this object for chaining
         */
        setText: function setText(value) {
-         value = "" + value;
+         if (typeof value === "undefined") {
+           value = "";
+         } else if (Array.isArray(value)) {
+           value = value.join("\n");
+         } else {
+           value = value.toString();
+         }
 
          if (this._text !== value) {
-           if (Array.isArray(value)) {
-             this._text = value.join("\n");
-           } else {
-             this._text = value;
-           }
-
+           this._text = value;
            this.isDirty = true;
          }
 
@@ -16105,10 +16080,10 @@
 
    var howler = createCommonjsModule(function (module, exports) {
    /*!
-    *  howler.js v2.1.1
+    *  howler.js v2.1.2
     *  howlerjs.com
     *
-    *  (c) 2013-2018, James Simpson of GoldFire Studios
+    *  (c) 2013-2019, James Simpson of GoldFire Studios
     *  goldfirestudios.com
     *
     *  MIT License
@@ -16386,9 +16361,8 @@
        _unlockAudio: function() {
          var self = this || Howler;
 
-         // Only run this on certain browsers/devices.
-         var shouldUnlock = /iPhone|iPad|iPod|Android|BlackBerry|BB10|Silk|Mobi|Chrome|Safari/i.test(self._navigator && self._navigator.userAgent);
-         if (self._audioUnlocked || !self.ctx || !shouldUnlock) {
+         // Only run this if Web Audio is supported and it hasn't already been unlocked.
+         if (self._audioUnlocked || !self.ctx) {
            return;
          }
 
@@ -16418,14 +16392,18 @@
            // This must occur before WebAudio setup or the source.onended
            // event will not fire.
            for (var i=0; i<self.html5PoolSize; i++) {
-             var audioNode = new Audio();
+             try {
+               var audioNode = new Audio();
 
-             // Mark this Audio object as unlocked to ensure it can get returned
-             // to the unlocked pool when released.
-             audioNode._unlocked = true;
+               // Mark this Audio object as unlocked to ensure it can get returned
+               // to the unlocked pool when released.
+               audioNode._unlocked = true;
 
-             // Add the audio node to the pool.
-             self._releaseHtml5Audio(audioNode);
+               // Add the audio node to the pool.
+               self._releaseHtml5Audio(audioNode);
+             } catch (e) {
+               self.noAudio = true;
+             }
            }
 
            // Loop through any assigned audio nodes and unlock them.
@@ -17038,6 +17016,12 @@
              }
            };
 
+           // If this is streaming audio, make sure the src is set and load again.
+           if (node.src === 'data:audio/wav;base64,UklGRigAAABXQVZFZm10IBIAAAABAAEARKwAAIhYAQACABAAAABkYXRhAgAAAAEA') {
+             node.src = self._src;
+             node.load();
+           }
+
            // Play immediately if ready, or wait for the 'canplaythrough'e vent.
            var loadedNoReadyState = (window && window.ejecta) || (!node.readyState && Howler._navigator.isCocoonJS);
            if (node.readyState >= 3 || loadedNoReadyState) {
@@ -17188,6 +17172,11 @@
                } else if (!isNaN(sound._node.duration) || sound._node.duration === Infinity) {
                  sound._node.currentTime = sound._start || 0;
                  sound._node.pause();
+
+                 // If this is a live stream, stop download once the audio is stopped.
+                 if (sound._node.duration === Infinity) {
+                   self._clearSound(sound._node);
+                 }
                }
              }
 
@@ -17803,10 +17792,7 @@
            // Remove the source or disconnect.
            if (!self._webAudio) {
              // Set the source to 0-second silence to stop any downloading (except in IE).
-             var checkIE = /MSIE |Trident\//.test(Howler._navigator && Howler._navigator.userAgent);
-             if (!checkIE) {
-               sounds[i]._node.src = 'data:audio/wav;base64,UklGRigAAABXQVZFZm10IBIAAAABAAEARKwAAIhYAQACABAAAABkYXRhAgAAAAEA';
-             }
+             self._clearSound(sounds[i]._node);
 
              // Remove any event listeners.
              sounds[i]._node.removeEventListener('error', sounds[i]._errorFn, false);
@@ -18224,6 +18210,17 @@
          node.bufferSource = null;
 
          return self;
+       },
+
+       /**
+        * Set the source to a 0-second silence to stop any downloading (except in IE).
+        * @param  {Object} node Audio node to clear.
+        */
+       _clearSound: function(node) {
+         var checkIE = /MSIE |Trident\//.test(Howler._navigator && Howler._navigator.userAgent);
+         if (!checkIE) {
+           node.src = 'data:audio/wav;base64,UklGRigAAABXQVZFZm10IBIAAAABAAEARKwAAIhYAQACABAAAABkYXRhAgAAAAEA';
+         }
        }
      };
 
@@ -18573,10 +18570,10 @@
    /*!
     *  Spatial Plugin - Adds support for stereo and 3D audio where Web Audio is supported.
     *  
-    *  howler.js v2.1.1
+    *  howler.js v2.1.2
     *  howlerjs.com
     *
-    *  (c) 2013-2018, James Simpson of GoldFire Studios
+    *  (c) 2013-2019, James Simpson of GoldFire Studios
     *  goldfirestudios.com
     *
     *  MIT License
@@ -19864,7 +19861,7 @@
      me.video = function () {
        // hold public stuff in our api
        var api = {};
-       var deferResizeId = 0;
+       var deferResizeId = -1;
        var designRatio = 1;
        var designWidth = 0;
        var designHeight = 0; // max display size
@@ -19897,6 +19894,7 @@
          try {
            return new me.WebGLRenderer(c, width, height, options);
          } catch (e) {
+           console.log("Error creating WebGL renderer :" + e.message);
            return new me.CanvasRenderer(c, width, height, options);
          }
        }
@@ -20002,7 +20000,7 @@
          } // override renderer settings if &webgl is defined in the URL
 
 
-         if (me.game.HASH.webgl === true) {
+         if (me.utils.getUriFragment().webgl === true) {
            settings.renderer = api.WEBGL;
          } // normalize scale
 
@@ -20024,7 +20022,7 @@
          settings.zoomX = game_width_zoom;
          settings.zoomY = game_height_zoom; //add a channel for the onresize/onorientationchange event
 
-         window.addEventListener("resize", me.utils.function.throttle(function (event) {
+         window.addEventListener("resize", me.utils["function"].throttle(function (event) {
            me.event.publish(me.event.WINDOW_ONRESIZE, [event]);
          }, 100), false); // Screen Orientation API
 
@@ -20044,7 +20042,7 @@
          } // Automatically update relative canvas position on scroll
 
 
-         window.addEventListener("scroll", me.utils.function.throttle(function (e) {
+         window.addEventListener("scroll", me.utils["function"].throttle(function (e) {
            me.video.renderer.updateBounds();
            me.event.publish(me.event.WINDOW_ONSCROLL, [e]);
          }, 100), false); // register to the channel
@@ -20133,7 +20131,7 @@
            var renderType = me.video.renderer instanceof me.CanvasRenderer ? "CANVAS" : "WebGL";
            var audioType = me.device.hasWebAudio ? "Web Audio" : "HTML5 Audio"; // output video information in the console
 
-           console.log(me.mod + " " + me.version + " | http://melonjs.org");
+           console.log("melonJS v" + me.version + " | http://melonjs.org");
            console.log(renderType + " | " + audioType + " | " + "pixel ratio " + me.device.devicePixelRatio + " | " + (me.device.isMobile ? "mobile" : "desktop") + " | " + me.device.getScreenOrientation() + " | " + me.device.language);
            console.log("resolution: " + "requested " + game_width + "x" + game_height + ", got " + me.video.renderer.getWidth() + "x" + me.video.renderer.getHeight());
          }
@@ -20156,7 +20154,7 @@
          maxHeight = h || Infinity; // trigger a resize
          // defer it to ensure everything is properly intialized
 
-         me.utils.function.defer(me.video.onresize, me.video);
+         me.utils["function"].defer(me.video.onresize, me.video);
        };
        /**
         * Create and return a new Canvas
@@ -20261,38 +20259,56 @@
            scaleX *= me.device.devicePixelRatio;
            scaleY *= me.device.devicePixelRatio;
 
-           if (deferResizeId) {
+           if (deferResizeId > 0) {
              // cancel any previous pending resize
              clearTimeout(deferResizeId);
            }
 
-           deferResizeId = me.utils.function.defer(me.video.updateDisplaySize, this, scaleX, scaleY);
+           deferResizeId = me.utils["function"].defer(me.video.scale, this, scaleX, scaleY);
          } // update parent container bounds
 
 
          this.renderer.updateBounds();
        };
        /**
-        * Modify the "displayed" canvas size
-        * @name updateDisplaySize
+        * scale the "displayed" canvas by the given scalar.
+        * this will modify the size of canvas element directly.
+        * Only use this if you are not using the automatic scaling feature.
+        * @name scale
         * @memberOf me.video
         * @function
-        * @param {Number} scaleX X scaling multiplier
-        * @param {Number} scaleY Y scaling multiplier
+        * @see me.video.init
+        * @param {Number} x x scaling multiplier
+        * @param {Number} y y scaling multiplier
         */
 
 
-       api.updateDisplaySize = function (scaleX, scaleY) {
-         // update the global scale variable
-         me.sys.scale.set(scaleX, scaleY); // renderer resize logic
+       api.scale = function (x, y) {
+         var canvas = this.renderer.getScreenCanvas();
+         var context = this.renderer.getScreenContext();
+         var settings = this.renderer.settings;
+         var w = canvas.width * x;
+         var h = canvas.height * y; // update the global scale variable
 
-         this.renderer.scaleCanvas(scaleX, scaleY); // update parent container bounds
+         me.sys.scale.set(x, y); // adjust CSS style for High-DPI devices
+
+         if (me.device.devicePixelRatio > 1) {
+           canvas.style.width = w / me.device.devicePixelRatio + "px";
+           canvas.style.height = h / me.device.devicePixelRatio + "px";
+         } else {
+           canvas.style.width = w + "px";
+           canvas.style.height = h + "px";
+         } // if anti-alias and blend mode were resetted (e.g. Canvas mode)
+
+
+         this.renderer.setAntiAlias(context, settings.antiAlias);
+         this.renderer.setBlendMode(settings.blendMode, context); // update parent container bounds
 
          this.renderer.updateBounds(); // force repaint
 
-         me.game.repaint(); // clear the timeout id
+         me.game.repaint(); // clear timeout id if defined
 
-         deferResizeId = 0;
+         deferResizeId = -1;
        }; // return our api
 
 
@@ -20352,17 +20368,16 @@
           * @ignore
           */
 
-         this.currentBlendMode = "normal"; // canvas size after scaling
-
-         this.gameWidthZoom = this.settings.zoomX || width;
-         this.gameHeightZoom = this.settings.zoomY || height; // canvas object and context
+         this.currentBlendMode = "normal"; // canvas object and context
 
          this.canvas = this.backBufferCanvas = c;
          this.context = null; // global color
 
          this.currentColor = new me.Color(0, 0, 0, 1.0); // global tint color
 
-         this.currentTint = new me.Color(255, 255, 255, 1.0); // default uvOffset
+         this.currentTint = new me.Color(255, 255, 255, 1.0); // the projectionMatrix (set through setProjection)
+
+         this.projectionMatrix = new me.Matrix2d(); // default uvOffset
 
          this.uvOffset = 0; // the parent container bouds
 
@@ -20583,8 +20598,8 @@
         */
        resize: function resize(width, height) {
          if (width !== this.backBufferCanvas.width || height !== this.backBufferCanvas.height) {
-           this.backBufferCanvas.width = width;
-           this.backBufferCanvas.height = height;
+           this.canvas.width = this.backBufferCanvas.width = width;
+           this.canvas.height = this.backBufferCanvas.height = height;
            this.currentScissor[0] = 0;
            this.currentScissor[1] = 0;
            this.currentScissor[2] = width;
@@ -20620,6 +20635,17 @@
          } else {
            canvas.style["image-rendering"] = "auto";
          }
+       },
+
+       /**
+        * set/change the current projection matrix (WebGL only)
+        * @name setProjection
+        * @memberOf me.Renderer.prototype
+        * @function
+        * @param {me.Matrix2d} matrix
+        */
+       setProjection: function setProjection(matrix) {
+         this.projectionMatrix.copy(matrix);
        },
 
        /**
@@ -20664,7 +20690,7 @@
        /**
         * disable (remove) the rendering mask set through setMask.
         * @name clearMask
-        * @see setMask
+        * @see me.Renderer#setMask
         * @memberOf me.Renderer.prototype
         * @function
         */
@@ -20685,7 +20711,7 @@
        /**
         * clear the rendering tint set through setTint.
         * @name clearTint
-        * @see setTint
+        * @see me.Renderer#setTint
         * @memberOf me.Renderer.prototype
         * @function
         */
@@ -20857,8 +20883,8 @@
              _iteratorError = err;
            } finally {
              try {
-               if (!_iteratorNormalCompletion && _iterator.return != null) {
-                 _iterator.return();
+               if (!_iteratorNormalCompletion && _iterator["return"] != null) {
+                 _iterator["return"]();
                }
              } finally {
                if (_didIteratorError) {
@@ -21319,11 +21345,6 @@
          if (this.settings.doubleBuffering) {
            this.backBufferCanvas = me.video.createCanvas(width, height);
            this.backBufferContext2D = this.getContext2d(this.backBufferCanvas);
-
-           if (this.settings.transparent) {
-             // Clears the front buffer for each frame blit
-             this.context.globalCompositeOperation = "copy";
-           }
          } else {
            this.backBufferCanvas = this.canvas;
            this.backBufferContext2D = this.context;
@@ -21385,6 +21406,12 @@
              context.globalCompositeOperation = "source-over";
              this.currentBlendMode = "normal";
              break;
+         } // transparent setting will override the given blendmode for this.context
+
+
+         if (this.settings.doubleBuffering && this.settings.transparent) {
+           // Clears the front buffer for each frame blit
+           this.context.globalCompositeOperation = "copy";
          }
        },
 
@@ -21408,7 +21435,7 @@
         */
        flush: function flush() {
          if (this.settings.doubleBuffering) {
-           this.context.drawImage(this.backBufferCanvas, 0, 0, this.backBufferCanvas.width, this.backBufferCanvas.height, 0, 0, this.gameWidthZoom, this.gameHeightZoom);
+           this.context.drawImage(this.backBufferCanvas, 0, 0);
          }
        },
 
@@ -21561,12 +21588,11 @@
            return;
          }
 
-         this.translate(x + radius, y + radius);
+         context.translate(x, y);
          context.beginPath();
          context.arc(0, 0, radius, start, end, antiClockwise || false);
          context[fill === true ? "fill" : "stroke"]();
-         context.closePath();
-         this.translate(-(x + radius), -(y + radius));
+         context.translate(-x, -y);
        },
 
        /**
@@ -21622,6 +21648,7 @@
          context.bezierCurveTo(xmin, by, lx, ymax, lx, y);
          context.bezierCurveTo(lx, ymin, xmin, ty, x, ty);
          context[fill === true ? "fill" : "stroke"]();
+         context.closePath();
        },
 
        /**
@@ -21774,32 +21801,6 @@
        getFontContext: function getFontContext() {
          // in canvas mode we can directly use the 2d context
          return this.getContext();
-       },
-
-       /**
-        * scales the canvas & 2d Context
-        * @name scaleCanvas
-        * @memberOf me.CanvasRenderer.prototype
-        * @function
-        */
-       scaleCanvas: function scaleCanvas(scaleX, scaleY) {
-         this.canvas.width = this.gameWidthZoom = this.backBufferCanvas.width * scaleX;
-         this.canvas.height = this.gameHeightZoom = this.backBufferCanvas.height * scaleY; // adjust CSS style for High-DPI devices
-
-         if (me.device.devicePixelRatio > 1) {
-           this.canvas.style.width = this.canvas.width / me.device.devicePixelRatio + "px";
-           this.canvas.style.height = this.canvas.height / me.device.devicePixelRatio + "px";
-         }
-
-         if (this.settings.doubleBuffering && this.settings.transparent) {
-           // Clears the front buffer for each frame blit
-           this.context.globalCompositeOperation = "copy";
-         } else {
-           this.setBlendMode(this.settings.blendMode, this.context);
-         }
-
-         this.setAntiAlias(this.context, this.settings.antiAlias);
-         this.flush();
        },
 
        /**
@@ -22020,7 +22021,7 @@
        /**
         * disable (remove) the rendering mask set through setMask.
         * @name clearMask
-        * @see setMask
+        * @see me.CanvasRenderer#setMask
         * @memberOf me.CanvasRenderer.prototype
         * @function
         */
@@ -22106,9 +22107,7 @@
 
          this.setBlendMode(this.settings.blendMode); // Create a texture cache
 
-         this.cache = new me.Renderer.TextureCache(this.compositor.maxTextures); // Configure the WebGL viewport
-
-         this.scaleCanvas(1, 1); // to simulate context lost and restore :
+         this.cache = new me.Renderer.TextureCache(this.compositor.maxTextures); // to simulate context lost and restore :
          // var ctx = me.video.renderer.context.getExtension('WEBGL_lose_context');
          // ctx.loseContext()
 
@@ -22443,27 +22442,6 @@
        },
 
        /**
-        * scales the canvas & GL Context
-        * @name scaleCanvas
-        * @memberOf me.WebGLRenderer.prototype
-        * @function
-        */
-       scaleCanvas: function scaleCanvas(scaleX, scaleY) {
-         var w = this.canvas.width * scaleX;
-         var h = this.canvas.height * scaleY; // adjust CSS style for High-DPI devices
-
-         if (me.device.devicePixelRatio > 1) {
-           this.canvas.style.width = w / me.device.devicePixelRatio + "px";
-           this.canvas.style.height = h / me.device.devicePixelRatio + "px";
-         } else {
-           this.canvas.style.width = w + "px";
-           this.canvas.style.height = h + "px";
-         }
-
-         this.compositor.setProjection(this.canvas.width, this.canvas.height);
-       },
-
-       /**
         * restores the canvas context
         * @name restore
         * @memberOf me.WebGLRenderer.prototype
@@ -22598,7 +22576,29 @@
          if (fill === true) {
            this.fillArc(x, y, radius, start, end, antiClockwise);
          } else {
-           console.warn("strokeArc() is not implemented");
+           // XXX to be optimzed using a specific shader
+           var points = this._glPoints;
+           var len = Math.floor(24 * Math.sqrt(radius * 2));
+           var theta = (end - start) / (len * 2);
+           var theta2 = theta * 2;
+           var cos_theta = Math.cos(theta);
+           var sin_theta = Math.sin(theta); // Grow internal points buffer if necessary
+
+           for (i = points.length; i < len + 1; i++) {
+             points.push(new me.Vector2d());
+           } // calculate and draw all segments
+
+
+           for (var i = 0; i < len; i++) {
+             var angle = theta + start + theta2 * i;
+             var cos = Math.cos(angle);
+             var sin = -Math.sin(angle);
+             points[i].x = x + (cos_theta * cos + sin_theta * sin) * radius;
+             points[i].y = y + (cos_theta * -sin + sin_theta * cos) * radius;
+           } // batch draw all lines
+
+
+           this.compositor.drawLine(points, len, true);
          }
        },
 
@@ -22615,7 +22615,30 @@
         * @param {Boolean} [antiClockwise=false] draw arc anti-clockwise
         */
        fillArc: function fillArc(x, y, radius, start, end, antiClockwise) {
-         console.warn("fillArc() is not implemented");
+         // XXX to be optimzed using a specific shader
+         var points = this._glPoints;
+         var index = 0;
+         var len = Math.floor(24 * Math.sqrt(radius * 2));
+         var theta = (end - start) / (len * 2);
+         var theta2 = theta * 2;
+         var cos_theta = Math.cos(theta);
+         var sin_theta = Math.sin(theta); // Grow internal points buffer if necessary
+
+         for (i = points.length; i < len * 2; i++) {
+           points.push(new me.Vector2d());
+         } // calculate and draw all segments
+
+
+         for (var i = 0; i < len - 1; i++) {
+           var angle = theta + start + theta2 * i;
+           var cos = Math.cos(angle);
+           var sin = -Math.sin(angle);
+           points[index++].set(x, y);
+           points[index++].set(x - (cos_theta * cos + sin_theta * sin) * radius, y - (cos_theta * -sin + sin_theta * cos) * radius);
+         } // batch draw all triangles
+
+
+         this.compositor.drawTriangle(points, index, true);
        },
 
        /**
@@ -22944,7 +22967,7 @@
        /**
         * disable (remove) the rendering mask set through setMask.
         * @name clearMask
-        * @see setMask
+        * @see me.WebGLRenderer#setMask
         * @memberOf me.WebGLRenderer.prototype
         * @function
         */
@@ -23024,21 +23047,16 @@
          this.maxTextures = Math.min(24, gl.getParameter(gl.MAX_TEXTURE_IMAGE_UNITS)); // Vector pool
 
          this.v = [new me.Vector2d(), new me.Vector2d(), new me.Vector2d(), new me.Vector2d()]; // the associated renderer
-         // TODO : add a set context or whatever function, and split
-         // the constructor accordingly, so that this is easier to restore
-         // the GL context when lost
 
          this.renderer = renderer; // WebGL context
 
-         this.gl = renderer.gl; // Global transformation matrix
-
-         this.matrix = renderer.currentTransform; // Global fill color
+         this.gl = renderer.gl; // Global fill color
 
          this.color = renderer.currentColor; // Global tint color
 
-         this.tint = renderer.currentTint; // Uniform projection matrix
+         this.tint = renderer.currentTint; // Global transformation matrix
 
-         this.uMatrix = new me.Matrix2d(); // reference to the active shader
+         this.viewMatrix = renderer.currentTransform; // reference to the active shader
 
          this.activeShader = null; // Load and create shader programs
 
@@ -23060,11 +23078,13 @@
          gl.vertexAttribPointer(this.quadShader.attributes.aVertex, VERTEX_SIZE, gl.FLOAT, false, ELEMENT_OFFSET, VERTEX_OFFSET);
          gl.vertexAttribPointer(this.quadShader.attributes.aColor, COLOR_SIZE, gl.FLOAT, false, ELEMENT_OFFSET, COLOR_OFFSET);
          gl.vertexAttribPointer(this.quadShader.attributes.aTexture, TEXTURE_SIZE, gl.FLOAT, false, ELEMENT_OFFSET, TEXTURE_OFFSET);
-         gl.vertexAttribPointer(this.quadShader.attributes.aRegion, REGION_SIZE, gl.FLOAT, false, ELEMENT_OFFSET, REGION_OFFSET);
-         this.reset();
-         this.setProjection(gl.canvas.width, gl.canvas.height); // Initialize clear color
+         gl.vertexAttribPointer(this.quadShader.attributes.aRegion, REGION_SIZE, gl.FLOAT, false, ELEMENT_OFFSET, REGION_OFFSET); // register to the CANVAS resize channel
 
-         gl.clearColor(0.0, 0.0, 0.0, 1.0);
+         me.event.subscribe(me.event.CANVAS_ONRESIZE, function (width, height) {
+           this.flush();
+           this.setViewport(0, 0, width, height);
+         }.bind(this));
+         this.reset();
        },
 
        /**
@@ -23077,6 +23097,10 @@
          var samplers = []; // WebGL context
 
          this.gl = this.renderer.gl;
+         this.flush();
+         this.setViewport(0, 0, this.gl.canvas.width, this.gl.canvas.height); // Initialize clear color
+
+         this.gl.clearColor(0.0, 0.0, 0.0, 1.0);
 
          for (var i = 0; i < this.maxTextures; i++) {
            this.units[i] = false;
@@ -23085,21 +23109,21 @@
 
 
          this.useShader(this.quadShader);
-         this.quadShader.uniforms.uSampler = samplers;
+         this.quadShader.setUniform("uSampler", samplers);
        },
 
        /**
-        * Sets the projection matrix with the given size
-        * @name setProjection
+        * Sets the viewport
+        * @name setViewport
         * @memberOf me.WebGLRenderer.Compositor
         * @function
-        * @param {Number} w WebGL Canvas width
-        * @param {Number} h WebGL Canvas height
+        * @param {Number} x x position of viewport
+        * @param {Number} y y position of viewport
+        * @param {Number} width width of viewport
+        * @param {Number} height height of viewport
         */
-       setProjection: function setProjection(w, h) {
-         this.flush();
-         this.gl.viewport(0, 0, w, h);
-         this.uMatrix.setTransform(2 / w, 0, 0, 0, -2 / h, 0, -1, 1, 1);
+       setViewport: function setViewport(x, y, w, h) {
+         this.gl.viewport(x, y, w, h);
        },
 
        /**
@@ -23196,7 +23220,7 @@
            this.flush();
            this.activeShader = shader;
            this.activeShader.bind();
-           this.activeShader.uniforms.uMatrix = this.uMatrix.val;
+           this.activeShader.setUniform("uProjectionMatrix", this.renderer.projectionMatrix);
          }
        },
 
@@ -23213,8 +23237,8 @@
         * @param {Number} h Destination height
         */
        addQuad: function addQuad(texture, key, x, y, w, h) {
-         var color = this.color.toGL();
-         var tint = this.tint.toGL();
+         var color = this.color.toArray();
+         var tint = this.tint.toArray();
 
          if (color[3] < 1 / 255) {
            // Fast path: don't send fully transparent quads
@@ -23235,7 +23259,7 @@
          } // Transform vertices
 
 
-         var m = this.matrix,
+         var m = this.viewMatrix,
              v0 = this.v[0].set(x, y),
              v1 = this.v[1].set(x + w, y),
              v2 = this.v[2].set(x, y + h),
@@ -23322,7 +23346,7 @@
          this.useShader(this.primitiveShader); // Put vertex data into the stream buffer
 
          var j = 0;
-         var m = this.matrix;
+         var m = this.viewMatrix;
          var m_isIdentity = m.isIdentity();
 
          for (var i = 0; i < points.length; i++) {
@@ -23335,7 +23359,7 @@
          } // Set the line color
 
 
-         this.primitiveShader.uniforms.uColor = this.color.glArray; // Copy data into the stream buffer
+         this.primitiveShader.setUniform("uColor", this.color); // Copy data into the stream buffer
 
          gl.bufferData(gl.ARRAY_BUFFER, this.stream.subarray(0, len * 2), gl.STREAM_DRAW); // FIXME: Configure vertex attrib pointers in `useShader`
 
@@ -23364,7 +23388,7 @@
          this.useShader(this.primitiveShader); // Put vertex data into the stream buffer
 
          var j = 0;
-         var m = this.matrix;
+         var m = this.viewMatrix;
          var m_isIdentity = m.isIdentity();
 
          for (var i = 0; i < points.length; i++) {
@@ -23377,7 +23401,7 @@
          } // Set the line color
 
 
-         this.primitiveShader.uniforms.uColor = this.color.glArray; // Copy data into the stream buffer
+         this.primitiveShader.setUniform("uColor", this.color); // Copy data into the stream buffer
 
          gl.bufferData(gl.ARRAY_BUFFER, this.stream.subarray(0, len * 2), gl.STREAM_DRAW); // FIXME: Configure vertex attrib pointers in `useShader`
 
@@ -23683,6 +23707,30 @@
        },
 
        /**
+        * Set the uniform to the given value
+        * @name setUniform
+        * @memberOf me.GLShader
+        * @function
+        * @param {String} name the uniform name
+        * @param {Object|Float32Array} value the value to assign to that uniform
+        * @example
+        * myShader.setUniform("uProjectionMatrix", this.projectionMatrix);
+        */
+       setUniform: function setUniform(name, value) {
+         var uniforms = this.uniforms;
+
+         if (typeof uniforms[name] !== "undefined") {
+           if (_typeof(value) === "object" && typeof value.toArray === "function") {
+             uniforms[name] = value.toArray();
+           } else {
+             uniforms[name] = value;
+           }
+         } else {
+           throw new Error("undefined (" + name + ") uniform for shader " + this);
+         }
+       },
+
+       /**
         * destroy this shader objects resources (program, attributes, uniforms)
         * @name destroy
         * @memberOf me.GLShader
@@ -23713,7 +23761,7 @@
         */
        init: function init(gl) {
          this._super(me.GLShader, "init", [gl, [// vertex`
-         "precision highp float;", "// Current vertex point", "attribute vec2 aVertex;", "// Projection matrix", "uniform mat3 uMatrix;", "// Vertex color", "uniform vec4 uColor;", "// Fragment color", "varying vec4 vColor;", "void main(void) {", "    // Transform the vertex position by the projection matrix", "    gl_Position = vec4((uMatrix * vec3(aVertex, 1)).xy, 0, 1);", "    // Pass the remaining attributes to the fragment shader", "    vColor = vec4(uColor.rgb * uColor.a, uColor.a);", "}"].join("\n"), [// fragment
+         "precision highp float;", "// Current vertex point", "attribute vec2 aVertex;", "// Projection matrix", "uniform mat3 uProjectionMatrix;", "// Vertex color", "uniform vec4 uColor;", "// Fragment color", "varying vec4 vColor;", "void main(void) {", "    // Transform the vertex position by the projection matrix", "    gl_Position = vec4((uProjectionMatrix * vec3(aVertex, 1.0)).xy, 0.0, 1.0);", "    // Pass the remaining attributes to the fragment shader", "    vColor = vec4(uColor.rgb * uColor.a, uColor.a);", "}"].join("\n"), [// fragment
          "// fragment color", "varying vec4 vColor;", "void main(void) {", "    gl_FragColor = vColor;", "}"].join("\n")]);
 
          return this;
@@ -23737,7 +23785,7 @@
         */
        init: function init(gl, maxTextures) {
          this._super(me.GLShader, "init", [gl, [// vertex`
-         "precision highp float;", "attribute vec2 aVertex;", "attribute vec4 aColor;", "attribute float aTexture;", "attribute vec2 aRegion;", "uniform mat3 uMatrix;", "varying vec4 vColor;", "varying float vTexture;", "varying vec2 vRegion;", "void main(void) {", "    // Transform the vertex position by the projection matrix", "    gl_Position = vec4((uMatrix * vec3(aVertex, 1)).xy, 0, 1);", "    // Pass the remaining attributes to the fragment shader", "    vColor = vec4(aColor.rgb * aColor.a, aColor.a);", "    vTexture = aTexture;", "    vRegion = aRegion;", "}"].join("\n"), [// fragment
+         "precision highp float;", "attribute vec2 aVertex;", "attribute vec4 aColor;", "attribute float aTexture;", "attribute vec2 aRegion;", "uniform mat3 uProjectionMatrix;", "varying vec4 vColor;", "varying float vTexture;", "varying vec2 vRegion;", "void main(void) {", "    // Transform the vertex position by the projection matrix", "    gl_Position = vec4((uProjectionMatrix * vec3(aVertex, 1.0)).xy, 0.0, 1.0);", "    // Pass the remaining attributes to the fragment shader", "    vColor = vec4(aColor.rgb * aColor.a, aColor.a);", "    vTexture = aTexture;", "    vRegion = aRegion;", "}"].join("\n"), [// fragment
 
          /*
           * Dynamically indexing arrays in a fragment shader is not allowed:
@@ -23786,65 +23834,300 @@
 
    (function () {
      /**
+      * cache value for the offset of the canvas position within the page
+      * @ignore
+      */
+     var viewportOffset = new me.Vector2d();
+     /**
+      * a pointer object, representing a single finger on a touch enabled device.
+      * @class
+      * @extends me.Rect
+      * @memberOf me
+      * @constructor
+      */
+
+     me.Pointer = me.Rect.extend({
+       /**
+        * @ignore
+        */
+       init: function init(x, y, w, h) {
+         /**
+           * the originating Event Object
+           * @public
+           * @type {PointerEvent|TouchEvent|MouseEvent}
+           * @name event
+           * @see https://developer.mozilla.org/en-US/docs/Web/API/PointerEvent
+           * @see https://developer.mozilla.org/en-US/docs/Web/API/TouchEvent
+           * @see https://developer.mozilla.org/en-US/docs/Web/API/MouseEvent
+           * @memberOf me.Pointer
+           */
+         this.event = undefined;
+         /**
+          * a string containing the event's type.
+          * @public
+          * @type {String}
+          * @name type
+          * @see https://developer.mozilla.org/en-US/docs/Web/API/Event/type
+          * @memberOf me.Pointer
+          */
+
+         this.type = undefined;
+         /**
+          * the button property indicates which button was pressed on the mouse to trigger the event.
+          * @public
+          * @type {Number}
+          * @name button
+          * @see https://developer.mozilla.org/en-US/docs/Web/API/MouseEvent/button
+          * @memberOf me.Pointer
+          */
+
+         this.button = 0;
+         /**
+          * indicates whether or not the pointer device that created the event is the primary pointer.
+          * @public
+          * @type {Boolean}
+          * @name isPrimary
+          * @see https://developer.mozilla.org/en-US/docs/Web/API/PointerEvent/isPrimary
+          * @memberOf me.Pointer
+          */
+
+         this.isPrimary = false;
+         /**
+          * the horizontal coordinate at which the event occurred, relative to the left edge of the entire document.
+          * @public
+          * @type {Number}
+          * @name pageX
+          * @see https://developer.mozilla.org/en-US/docs/Web/API/MouseEvent/pageX
+          * @memberOf me.Pointer
+          */
+
+         this.pageX = 0;
+         /**
+          * the vertical coordinate at which the event occurred, relative to the left edge of the entire document.
+          * @public
+          * @type {Number}
+          * @name pageY
+          * @see https://developer.mozilla.org/en-US/docs/Web/API/MouseEvent/pageY
+          * @memberOf me.Pointer
+          */
+
+         this.pageY = 0;
+         /**
+          * the horizontal coordinate within the application's client area at which the event occurred
+          * @public
+          * @type {Number}
+          * @name clientX
+          * @see https://developer.mozilla.org/en-US/docs/Web/API/MouseEvent/clientX
+          * @memberOf me.Pointer
+          */
+
+         this.clientX = 0;
+         /**
+          * the vertical coordinate within the application's client area at which the event occurred
+          * @public
+          * @type {Number}
+          * @name clientY
+          * @see https://developer.mozilla.org/en-US/docs/Web/API/MouseEvent/clientY
+          * @memberOf me.Pointer
+          */
+
+         this.clientY = 0;
+         /**
+           * Event normalized X coordinate within the game canvas itself<br>
+           * <img src="images/event_coord.png"/>
+           * @public
+           * @type {Number}
+           * @name gameX
+           * @memberOf me.Pointer
+           */
+
+         this.gameX = 0;
+         /**
+          * Event normalized Y coordinate within the game canvas itself<br>
+          * <img src="images/event_coord.png"/>
+          * @public
+          * @type {Number}
+          * @name gameY
+          * @memberOf me.Pointer
+          */
+
+         this.gameY = 0;
+         /**
+          * Event X coordinate relative to the viewport
+          * @public
+          * @type {Number}
+          * @name gameScreenX
+          * @memberOf me.Pointer
+          */
+
+         this.gameScreenX = 0;
+         /**
+          * Event Y coordinate relative to the viewport
+          * @public
+          * @type {Number}
+          * @name gameScreenY
+          * @memberOf me.Pointer
+          */
+
+         this.gameScreenY = 0;
+         /**
+          * Event X coordinate relative to the map
+          * @public
+          * @type {Number}
+          * @name gameWorldX
+          * @memberOf me.Pointer
+          */
+
+         this.gameWorldX = 0;
+         /**
+          * Event Y coordinate relative to the map
+          * @public
+          * @type {Number}
+          * @name gameWorldY
+          * @memberOf me.Pointer
+          */
+
+         this.gameWorldY = 0;
+         /**
+          * Event X coordinate relative to the holding container
+          * @public
+          * @type {Number}
+          * @name gameLocalX
+          * @memberOf me.Pointer
+          */
+
+         this.gameLocalX = 0;
+         /**
+          * Event Y coordinate relative to the holding container
+          * @public
+          * @type {Number}
+          * @name gameLocalY
+          * @memberOf me.Pointer
+          */
+
+         this.gameLocalY = 0;
+         /**
+          * The unique identifier of the contact for a touch, mouse or pen
+          * @public
+          * @type {Number}
+          * @name pointerId
+          * @memberOf me.Pointer
+          * @see https://developer.mozilla.org/en-US/docs/Web/API/PointerEvent/pointerId
+          */
+
+         this.pointerId = undefined; // parent constructor
+
+         this._super(me.Rect, "init", [x || 0, y || 0, w || 1, h || 1]);
+       },
+
+       /**
+        * initialize the Pointer object using the given Event Object
+        * @name me.Pointer#set
+        * @private
+        * @function
+        * @param {Event} event the original Event object
+        * @param {Number} pageX the horizontal coordinate at which the event occurred, relative to the left edge of the entire document
+        * @param {Number} pageY the vertical coordinate at which the event occurred, relative to the left edge of the entire document
+        * @param {Number} clientX the horizontal coordinate within the application's client area at which the event occurred
+        * @param {Number} clientX the vertical coordinate within the application's client area at which the event occurred
+        * @param {Number} pointedId the Pointer, Touch or Mouse event Id
+        */
+       setEvent: function setEvent(event, pageX, pageY, clientX, clientY, pointerId) {
+         var width = 1;
+         var height = 1; // the original event object
+
+         this.event = event;
+         this.pageX = pageX || 0;
+         this.pageY = pageY || 0;
+         this.clientX = clientX || 0;
+         this.clientY = clientY || 0; // translate to local coordinates
+
+         me.input.globalToLocal(this.pageX, this.pageY, this.pos); // true if not originally a pointer event
+
+         this.isNormalized = !me.device.PointerEvent || me.device.PointerEvent && !(event instanceof window.PointerEvent);
+
+         if (event.type === "wheel") {
+           this.deltaMode = 1;
+           this.deltaX = event.deltaX;
+           this.deltaY = -1 / 40 * event.wheelDelta;
+           event.wheelDeltaX && (this.deltaX = -1 / 40 * event.wheelDeltaX);
+         } // could be 0, so test if defined
+
+
+         this.pointerId = typeof pointerId !== "undefined" ? pointerId : 1;
+         this.isPrimary = typeof event.isPrimary !== "undefined" ? event.isPrimary : true; // in case of touch events, button is not defined
+
+         this.button = event.button || 0;
+         this.type = event.type;
+         this.gameScreenX = this.pos.x;
+         this.gameScreenY = this.pos.y; // get the current screen to world offset
+
+         if (typeof me.game.viewport !== "undefined") {
+           me.game.viewport.localToWorld(this.gameScreenX, this.gameScreenY, viewportOffset);
+         }
+         /* Initialize the two coordinate space properties. */
+
+
+         this.gameWorldX = viewportOffset.x;
+         this.gameWorldY = viewportOffset.y; // get the pointer size
+
+         if (this.isNormalized === false) {
+           // native PointerEvent
+           width = event.width || 1;
+           height = event.height || 1;
+         } else if (typeof event.radiusX === "number") {
+           // TouchEvent
+           width = event.radiusX * 2 || 1;
+           height = event.radiusY * 2 || 1;
+         } // resize the pointer object accordingly
+
+
+         this.resize(width, height);
+       }
+     });
+   })();
+
+   (function () {
+     /**
       * @namespace me.input
       * @memberOf me
       */
-     me.input = function () {
-       // hold public stuff in our singleton
-       var api = {};
-       /*
-        * PRIVATE STUFF
+     me.input = {
+       /**
+        * the default target element for keyboard events (usually the window element in which the game is running)
+        * @public
+        * @type EventTarget
+        * @name keyBoardEventTarget
+        * @memberOf me.input
         */
+       keyBoardEventTarget: null,
 
        /**
-        * prevent event propagation
-        * @ignore
+        * the default target element for pointer events (usually the canvas element in which the game is rendered)
+        * @public
+        * @type EventTarget
+        * @name pointerEventTarget
+        * @memberOf me.input
         */
-
-       api._preventDefaultFn = function (e) {
-         // stop event propagation
-         if (e.stopPropagation) {
-           e.stopPropagation();
-         } else {
-           e.cancelBubble = true;
-         } // stop event default processing
-
-
-         if (e.preventDefault) {
-           e.preventDefault();
-         } else {
-           e.returnValue = false;
-         }
-
-         return false;
-       };
-       /*
-        * PUBLIC STUFF
-        */
+       pointerEventTarget: null,
 
        /**
-        * Global flag to specify if melonJS should prevent all default browser action on registered events.
-        * default : true
+        * specify if melonJS should prevent all default browser action on registered events.
         * @public
         * @type Boolean
+        * @default true
         * @name preventDefault
         * @memberOf me.input
         */
-
-
-       api.preventDefault = true; // return our object
-
-       return api;
-     }();
+       preventDefault: true
+     };
    })();
 
    (function (api) {
      /*
       * PRIVATE STUFF
       */
-     // list of binded keys
-     api._KeyBinding = {}; // corresponding actions
-
+     // corresponding actions
      var keyStatus = {}; // lock enable flag for keys
 
      var keyLock = {}; // actual lock status of each key
@@ -23853,30 +24136,17 @@
 
      var keyRefs = {}; // whether default event should be prevented for a given keypress
 
-     var preventDefaultForKeys = {}; // some useful flags
+     var preventDefaultForKeys = {}; // list of binded keys
 
-     var keyboardInitialized = false;
-     /**
-      * enable keyboard event
-      * @ignore
-      */
-
-     api._enableKeyboardEvent = function () {
-       if (!keyboardInitialized) {
-         window.addEventListener("keydown", api._keydown, false);
-         window.addEventListener("keyup", api._keyup, false);
-         keyboardInitialized = true;
-       }
-     };
+     var keyBindings = {};
      /**
       * key down event
       * @ignore
       */
 
-
-     api._keydown = function (e, keyCode, mouseButton) {
+     var keyDownEvent = function keyDownEvent(e, keyCode, mouseButton) {
        keyCode = keyCode || e.keyCode || e.button;
-       var action = api._KeyBinding[keyCode]; // publish a message for keydown event
+       var action = keyBindings[keyCode]; // publish a message for keydown event
 
        me.event.publish(me.event.KEYDOWN, [action, keyCode, action ? !keyLocked[action] : true]);
 
@@ -23891,8 +24161,9 @@
          } // prevent event propagation
 
 
-         if (preventDefaultForKeys[keyCode]) {
-           return api._preventDefaultFn(e);
+         if (preventDefaultForKeys[keyCode] && typeof e.preventDefault === "function") {
+           // "fake" events generated through triggerKeyEvent do not have a preventDefault fn
+           return e.preventDefault();
          } else {
            return true;
          }
@@ -23906,9 +24177,9 @@
       */
 
 
-     api._keyup = function (e, keyCode, mouseButton) {
+     var keyUpEvent = function keyUpEvent(e, keyCode, mouseButton) {
        keyCode = keyCode || e.keyCode || e.button;
-       var action = api._KeyBinding[keyCode]; // publish a message for keydown event
+       var action = keyBindings[keyCode]; // publish a message for keydown event
 
        me.event.publish(me.event.KEYUP, [action, keyCode]);
 
@@ -23922,8 +24193,9 @@
 
          keyLocked[action] = false; // prevent event propagation
 
-         if (preventDefaultForKeys[keyCode]) {
-           return api._preventDefaultFn(e);
+         if (preventDefaultForKeys[keyCode] && typeof e.preventDefault === "function") {
+           // "fake" events generated through triggerKeyEvent do not have a preventDefault fn
+           return e.preventDefault();
          } else {
            return true;
          }
@@ -24243,6 +24515,19 @@
        "SINGLE_QUOTE": 222
      };
      /**
+      * enable keyboard event
+      * @ignore
+      */
+
+     api.initKeyboardEvent = function () {
+       // make sure the keyboard is enable
+       if (me.input.keyBoardEventTarget === null && me.device.isMobile === false) {
+         me.input.keyBoardEventTarget = window;
+         me.input.keyBoardEventTarget.addEventListener("keydown", keyDownEvent, false);
+         me.input.keyBoardEventTarget.addEventListener("keyup", keyUpEvent, false);
+       }
+     };
+     /**
       * return the key press status of the specified action
       * @name isKeyPressed
       * @memberOf me.input
@@ -24261,6 +24546,7 @@
       * }
       *
       */
+
 
      api.isKeyPressed = function (action) {
        if (keyStatus[action] && !keyLocked[action]) {
@@ -24301,11 +24587,11 @@
       */
 
 
-     api.triggerKeyEvent = function (keycode, status) {
+     api.triggerKeyEvent = function (keycode, status, mouseButton) {
        if (status) {
-         api._keydown({}, keycode);
+         keyDownEvent({}, keycode, mouseButton);
        } else {
-         api._keyup({}, keycode);
+         keyUpEvent({}, keycode, mouseButton);
        }
      };
      /**
@@ -24328,19 +24614,30 @@
 
 
      api.bindKey = function (keycode, action, lock, preventDefault) {
-       // make sure the keyboard is enable
-       api._enableKeyboardEvent();
-
        if (typeof preventDefault !== "boolean") {
-         preventDefault = api.preventDefault;
+         preventDefault = me.input.preventDefault;
        }
 
-       api._KeyBinding[keycode] = action;
+       keyBindings[keycode] = action;
        preventDefaultForKeys[keycode] = preventDefault;
        keyStatus[action] = 0;
        keyLock[action] = lock ? lock : false;
        keyLocked[action] = false;
        keyRefs[action] = {};
+     };
+     /**
+      * return the action associated with the given keycode
+      * @name getBindingKey
+      * @memberOf me.input
+      * @public
+      * @function
+      * @param {me.input.KEY} keycode
+      * @return {String} user defined associated action
+      */
+
+
+     api.getBindingKey = function (keycode) {
+       return keyBindings[keycode];
      };
      /**
       * unlock a key manually
@@ -24374,270 +24671,15 @@
 
      api.unbindKey = function (keycode) {
        // clear the event status
-       var keybinding = api._KeyBinding[keycode];
+       var keybinding = keyBindings[keycode];
        keyStatus[keybinding] = 0;
        keyLock[keybinding] = false;
        keyRefs[keybinding] = {}; // remove the key binding
 
-       api._KeyBinding[keycode] = null;
+       keyBindings[keycode] = null;
        preventDefaultForKeys[keycode] = null;
      };
    })(me.input);
-
-   (function () {
-     /**
-      * cache value for the offset of the canvas position within the page
-      * @ignore
-      */
-     var viewportOffset = new me.Vector2d();
-     /**
-      * a pointer object, representing a single finger on a touch enabled device.
-      * @class
-      * @extends me.Rect
-      * @memberOf me
-      * @constructor
-      */
-
-     me.Pointer = me.Rect.extend({
-       /**
-        * @ignore
-        */
-       init: function init(x, y, w, h) {
-         /**
-           * the originating Event Object
-           * @public
-           * @type {PointerEvent|TouchEvent|MouseEvent}
-           * @name event
-           * @see https://developer.mozilla.org/en-US/docs/Web/API/PointerEvent
-           * @see https://developer.mozilla.org/en-US/docs/Web/API/TouchEvent
-           * @see https://developer.mozilla.org/en-US/docs/Web/API/MouseEvent
-           * @memberOf me.Pointer
-           */
-         this.event = undefined;
-         /**
-          * a string containing the event's type.
-          * @public
-          * @type {String}
-          * @name type
-          * @see https://developer.mozilla.org/en-US/docs/Web/API/Event/type
-          * @memberOf me.Pointer
-          */
-
-         this.type = undefined;
-         /**
-          * the button property indicates which button was pressed on the mouse to trigger the event.
-          * @public
-          * @type {Number}
-          * @name button
-          * @see https://developer.mozilla.org/en-US/docs/Web/API/MouseEvent/button
-          * @memberOf me.Pointer
-          */
-
-         this.button = 0;
-         /**
-          * indicates whether or not the pointer device that created the event is the primary pointer.
-          * @public
-          * @type {Boolean}
-          * @name isPrimary
-          * @see https://developer.mozilla.org/en-US/docs/Web/API/PointerEvent/isPrimary
-          * @memberOf me.Pointer
-          */
-
-         this.isPrimary = false;
-         /**
-          * the horizontal coordinate at which the event occurred, relative to the left edge of the entire document.
-          * @public
-          * @type {Number}
-          * @name pageX
-          * @see https://developer.mozilla.org/en-US/docs/Web/API/MouseEvent/pageX
-          * @memberOf me.Pointer
-          */
-
-         this.pageX = 0;
-         /**
-          * the vertical coordinate at which the event occurred, relative to the left edge of the entire document.
-          * @public
-          * @type {Number}
-          * @name pageY
-          * @see https://developer.mozilla.org/en-US/docs/Web/API/MouseEvent/pageY
-          * @memberOf me.Pointer
-          */
-
-         this.pageY = 0;
-         /**
-          * the horizontal coordinate within the application's client area at which the event occurred
-          * @public
-          * @type {Number}
-          * @name clientX
-          * @see https://developer.mozilla.org/en-US/docs/Web/API/MouseEvent/clientX
-          * @memberOf me.Pointer
-          */
-
-         this.clientX = 0;
-         /**
-          * the vertical coordinate within the application's client area at which the event occurred
-          * @public
-          * @type {Number}
-          * @name clientY
-          * @see https://developer.mozilla.org/en-US/docs/Web/API/MouseEvent/clientY
-          * @memberOf me.Pointer
-          */
-
-         this.clientY = 0;
-         /**
-           * Event normalized X coordinate within the game canvas itself<br>
-           * <img src="images/event_coord.png"/>
-           * @public
-           * @type {Number}
-           * @name gameX
-           * @memberOf me.Pointer
-           */
-
-         this.gameX = 0;
-         /**
-          * Event normalized Y coordinate within the game canvas itself<br>
-          * <img src="images/event_coord.png"/>
-          * @public
-          * @type {Number}
-          * @name gameY
-          * @memberOf me.Pointer
-          */
-
-         this.gameY = 0;
-         /**
-          * Event X coordinate relative to the viewport
-          * @public
-          * @type {Number}
-          * @name gameScreenX
-          * @memberOf me.Pointer
-          */
-
-         this.gameScreenX = 0;
-         /**
-          * Event Y coordinate relative to the viewport
-          * @public
-          * @type {Number}
-          * @name gameScreenY
-          * @memberOf me.Pointer
-          */
-
-         this.gameScreenY = 0;
-         /**
-          * Event X coordinate relative to the map
-          * @public
-          * @type {Number}
-          * @name gameWorldX
-          * @memberOf me.Pointer
-          */
-
-         this.gameWorldX = 0;
-         /**
-          * Event Y coordinate relative to the map
-          * @public
-          * @type {Number}
-          * @name gameWorldY
-          * @memberOf me.Pointer
-          */
-
-         this.gameWorldY = 0;
-         /**
-          * Event X coordinate relative to the holding container
-          * @public
-          * @type {Number}
-          * @name gameLocalX
-          * @memberOf me.Pointer
-          */
-
-         this.gameLocalX = 0;
-         /**
-          * Event Y coordinate relative to the holding container
-          * @public
-          * @type {Number}
-          * @name gameLocalY
-          * @memberOf me.Pointer
-          */
-
-         this.gameLocalY = 0;
-         /**
-          * The unique identifier of the contact for a touch, mouse or pen
-          * @public
-          * @type {Number}
-          * @name pointerId
-          * @memberOf me.Pointer
-          * @see https://developer.mozilla.org/en-US/docs/Web/API/PointerEvent/pointerId
-          */
-
-         this.pointerId = undefined; // parent constructor
-
-         this._super(me.Rect, "init", [x || 0, y || 0, w || 1, h || 1]);
-       },
-
-       /**
-        * initialize the Pointer object using the given Event Object
-        * @name me.Pointer#set
-        * @private
-        * @function
-        * @param {Event} event the original Event object
-        * @param {Number} pageX the horizontal coordinate at which the event occurred, relative to the left edge of the entire document
-        * @param {Number} pageY the vertical coordinate at which the event occurred, relative to the left edge of the entire document
-        * @param {Number} clientX the horizontal coordinate within the application's client area at which the event occurred
-        * @param {Number} clientX the vertical coordinate within the application's client area at which the event occurred
-        * @param {Number} pointedId the Pointer, Touch or Mouse event Id
-        */
-       setEvent: function setEvent(event, pageX, pageY, clientX, clientY, pointerId) {
-         var width = 1;
-         var height = 1; // the original event object
-
-         this.event = event;
-         this.pageX = pageX || 0;
-         this.pageY = pageY || 0;
-         this.clientX = clientX || 0;
-         this.clientY = clientY || 0; // translate to local coordinates
-
-         me.input.globalToLocal(this.pageX, this.pageY, this.pos); // true if not originally a pointer event
-
-         this.isNormalized = !me.device.PointerEvent || me.device.PointerEvent && !(event instanceof window.PointerEvent);
-
-         if (event.type === "wheel") {
-           this.deltaMode = 1;
-           this.deltaX = event.deltaX;
-           this.deltaY = -1 / 40 * event.wheelDelta;
-           event.wheelDeltaX && (this.deltaX = -1 / 40 * event.wheelDeltaX);
-         } // could be 0, so test if defined
-
-
-         this.pointerId = typeof pointerId !== "undefined" ? pointerId : 1;
-         this.isPrimary = typeof event.isPrimary !== "undefined" ? event.isPrimary : true; // in case of touch events, button is not defined
-
-         this.button = event.button || 0;
-         this.type = event.type;
-         this.gameScreenX = this.pos.x;
-         this.gameScreenY = this.pos.y; // get the current screen to world offset
-
-         if (typeof me.game.viewport !== "undefined") {
-           me.game.viewport.localToWorld(this.gameScreenX, this.gameScreenY, viewportOffset);
-         }
-         /* Initialize the two coordinate space properties. */
-
-
-         this.gameWorldX = viewportOffset.x;
-         this.gameWorldY = viewportOffset.y; // get the pointer size
-
-         if (this.isNormalized === false) {
-           // native PointerEvent
-           width = event.width || 1;
-           height = event.height || 1;
-         } else if (typeof event.radiusX === "number") {
-           // TouchEvent
-           width = event.radiusX * 2 || 1;
-           height = event.radiusY * 2 || 1;
-         } // resize the pointer object accordingly
-
-
-         this.resize(width, height);
-       }
-     });
-   })();
 
    (function (api) {
      /**
@@ -24694,7 +24736,9 @@
      function registerEventListener(eventList, callback) {
        for (var x = 0; x < eventList.length; x++) {
          if (POINTER_MOVE.indexOf(eventList[x]) === -1) {
-           me.video.renderer.getScreenCanvas().addEventListener(eventList[x], callback, false);
+           me.input.pointerEventTarget.addEventListener(eventList[x], callback, {
+             passive: api.preventDefault === false
+           });
          }
        }
      }
@@ -24711,6 +24755,11 @@
            T_POINTERS.push(new me.Pointer());
          }
 
+         if (me.input.pointerEventTarget === null) {
+           // default pointer event target
+           me.input.pointerEventTarget = me.video.renderer.getScreenCanvas();
+         }
+
          if (me.device.PointerEvent) {
            // standard Pointer Events
            activeEventList = pointerEventList;
@@ -24724,12 +24773,7 @@
            activeEventList = activeEventList.concat(touchEventList);
          }
 
-         registerEventListener(activeEventList, onPointerEvent); // If W3C standard wheel events are not available, use non-standard
-
-         if (!me.device.wheel) {
-           window.addEventListener("mousewheel", onMouseWheel, false);
-         } // set the PointerMove/touchMove/MouseMove event
-
+         registerEventListener(activeEventList, onPointerEvent); // set the PointerMove/touchMove/MouseMove event
 
          if (typeof api.throttlingInterval === "undefined") {
            // set the default value
@@ -24738,11 +24782,11 @@
 
          if (me.sys.autoFocus === true) {
            me.device.focus();
-           me.video.renderer.getScreenCanvas().addEventListener(activeEventList[2], // MOUSE/POINTER DOWN
+           me.input.pointerEventTarget.addEventListener(activeEventList[2], // MOUSE/POINTER DOWN
            function () {
              me.device.focus();
            }, {
-             passive: true
+             passive: api.preventDefault === false
            });
          } // if time interval <= 16, disable the feature
 
@@ -24753,19 +24797,25 @@
          if (api.throttlingInterval < 17) {
            for (i = 0; i < events.length; i++) {
              if (activeEventList.indexOf(events[i]) !== -1) {
-               me.video.renderer.getScreenCanvas().addEventListener(events[i], onMoveEvent, false);
+               me.input.pointerEventTarget.addEventListener(events[i], onMoveEvent, {
+                 passive: true // do not preventDefault on Move events
+
+               });
              }
            }
          } else {
            for (i = 0; i < events.length; i++) {
              if (activeEventList.indexOf(events[i]) !== -1) {
-               me.video.renderer.getScreenCanvas().addEventListener(events[i], me.utils.function.throttle(onMoveEvent, api.throttlingInterval, false), false);
+               me.input.pointerEventTarget.addEventListener(events[i], me.utils["function"].throttle(onMoveEvent, api.throttlingInterval, false), {
+                 passive: true // do not preventDefault on Move events
+
+               });
              }
            }
          } // disable all gesture by default
 
 
-         me.input.setTouchAction(me.video.renderer.getScreenCanvas());
+         me.input.setTouchAction(me.input.pointerEventTarget);
          pointerInitialized = true;
        }
      }
@@ -24961,11 +25011,6 @@
                    // trigger the corresponding callback
                    if (triggerEvent(handlers, pointer.type, pointer, pointer.pointerId)) {
                      handled = true;
-
-                     if (pointer.type === "wheel") {
-                       api._preventDefaultFn(pointer.event);
-                     }
-
                      break;
                    }
                  }
@@ -25018,24 +25063,6 @@
        return normalizedEvents;
      }
      /**
-      * mouse event management (mousewheel)
-      * XXX: mousewheel is deprecated
-      * @ignore
-      */
-
-
-     function onMouseWheel(e) {
-       /* jshint expr:true */
-       if (e.target === me.video.renderer.getScreenCanvas()) {
-         // create a (fake) normalized event object
-         e.type = "wheel"; // dispatch mouse event to registered object
-
-         return dispatchEvent(normalizeEvent(e));
-       }
-
-       return true;
-     }
-     /**
       * mouse/touch/pointer event management (move)
       * @ignore
       */
@@ -25044,10 +25071,6 @@
      function onMoveEvent(e) {
        // dispatch mouse event to registered object
        dispatchEvent(normalizeEvent(e)); // do not prevent default on moveEvent :
-       // - raise a deprectated warning in latest chrome version for touchEvent
-       // - uncessary for pointer Events
-
-       return true;
      }
      /**
       * mouse/touch/pointer event management (start/down, end/up)
@@ -25056,29 +25079,23 @@
 
 
      function onPointerEvent(e) {
-       var ret = true; // normalize eventTypes
-
+       // normalize eventTypes
        normalizeEvent(e); // remember/use the first "primary" normalized event for pointer.bind
 
        var button = normalizedEvents[0].button; // dispatch event to registered objects
 
-       if (dispatchEvent(normalizedEvents) || api.preventDefault) {
-         // prevent default action
-         ret = api._preventDefaultFn(e);
+       if (dispatchEvent(normalizedEvents) || e.type === "wheel") {
+         // always preventDefault for wheel event (?legacy code/behavior?)
+         if (api.preventDefault === true) {
+           e.preventDefault();
+         }
        }
 
        var keycode = api.pointer.bind[button]; // check if mapped to a key
 
        if (keycode) {
-         if (POINTER_DOWN.includes(e.type)) {
-           return api._keydown(e, keycode, button + 1);
-         } else {
-           // 'mouseup' or 'touchend'
-           return api._keyup(e, keycode, button + 1);
-         }
+         me.input.triggerKeyEvent(keycode, POINTER_DOWN.includes(e.type), button + 1);
        }
-
-       return ret;
      }
      /*
       * PUBLIC STUFF
@@ -25192,7 +25209,7 @@
 
        enablePointerEvent(); // throw an exception if no action is defined for the specified keycode
 
-       if (!api._KeyBinding[keyCode]) {
+       if (!me.input.getBindingKey(keyCode)) {
          throw new Error("no action defined for keycode " + keyCode);
        } // map the mouse button to the keycode
 
@@ -25337,7 +25354,7 @@
          }
 
          if (Object.keys(handlers.callbacks).length === 0) {
-           eventHandlers.delete(region);
+           eventHandlers["delete"](region);
          }
        }
      };
@@ -25430,6 +25447,7 @@
      var bindings = {}; // mapping list
 
      var remap = new Map();
+     var updateEventHandler;
      /**
       * Default gamepad mappings
       * @ignore
@@ -25463,27 +25481,11 @@
        addMapping(value[0], value[1]);
      });
      /**
-      * gamepad connected callback
-      * @ignore
-      */
-
-     window.addEventListener("gamepadconnected", function (event) {
-       me.event.publish(me.event.GAMEPAD_CONNECTED, [event.gamepad]);
-     }, false);
-     /**
-      * gamepad disconnected callback
-      * @ignore
-      */
-
-     window.addEventListener("gamepaddisconnected", function (event) {
-       me.event.publish(me.event.GAMEPAD_DISCONNECTED, [event.gamepad]);
-     }, false);
-     /**
       * Update gamepad status
       * @ignore
       */
 
-     api._updateGamepads = navigator.getGamepads ? function () {
+     var updateGamepads = function updateGamepads() {
        var gamepads = navigator.getGamepads();
        var e = {}; // Trigger button bindings
 
@@ -25599,7 +25601,24 @@
            last[range].pressed = pressed;
          });
        });
-     } : function () {};
+     };
+     /**
+      * gamepad connected callback
+      * @ignore
+      */
+
+
+     window.addEventListener("gamepadconnected", function (event) {
+       me.event.publish(me.event.GAMEPAD_CONNECTED, [event.gamepad]);
+     }, false);
+     /**
+      * gamepad disconnected callback
+      * @ignore
+      */
+
+     window.addEventListener("gamepaddisconnected", function (event) {
+       me.event.publish(me.event.GAMEPAD_DISCONNECTED, [event.gamepad]);
+     }, false);
      /*
       * PUBLIC STUFF
       */
@@ -25702,8 +25721,14 @@
 
      api.bindGamepad = function (index, button, keyCode) {
        // Throw an exception if no action is defined for the specified keycode
-       if (!api._KeyBinding[keyCode]) {
+       if (!me.input.getBindingKey(keyCode)) {
          throw new Error("no action defined for keycode " + keyCode);
+       } // register to the the update event if not yet done and supported by the browser
+       // if not supported, the function will fail silently (-> update loop won't be called)
+
+
+       if (typeof updateEventHandler === "undefined" && navigator.getGamepads) {
+         updateEventHandler = me.event.subscribe(me.event.GAME_UPDATE, updateGamepads);
        } // Allocate bindings if not defined
 
 
@@ -25867,6 +25892,97 @@
          }
        };
        /**
+        * Compare two version strings
+        * @public
+        * @function
+        * @memberOf me.utils
+        * @name checkVersion
+        * @param {String} first First version string to compare
+        * @param {String} [second=me.version] Second version string to compare
+        * @return {Number} comparison result <br>&lt; 0 : first &lt; second<br>
+        * 0 : first == second<br>
+        * &gt; 0 : first &gt; second
+        * @example
+        * if (me.utils.checkVersion("7.0.0") > 0) {
+        *     console.error(
+        *         "melonJS is too old. Expected: 7.0.0, Got: 6.3.0"
+        *     );
+        * }
+        */
+
+
+       api.checkVersion = function (first, second) {
+         second = second || me.version;
+         var a = first.split(".");
+         var b = second.split(".");
+         var len = Math.min(a.length, b.length);
+         var result = 0;
+
+         for (var i = 0; i < len; i++) {
+           if (result = +a[i] - +b[i]) {
+             break;
+           }
+         }
+
+         return result ? result : a.length - b.length;
+       };
+       /**
+        * parse the fragment (hash) from a URL and returns them into
+        * @public
+        * @function
+        * @memberOf me.utils
+        * @name getUriFragment
+        * @param {String} [url=document.location] an optional params string or URL containing fragment (hash) params to be parsed
+        * @return {Object} an object representing the deserialized params string.
+        * @property {Boolean} [hitbox=false] draw the hitbox in the debug panel (if enabled)
+        * @property {Boolean} [velocity=false] draw the entities velocity in the debug panel (if enabled)
+        * @property {Boolean} [quadtree=false] draw the quadtree in the debug panel (if enabled)
+        * @property {Boolean} [webgl=false] force the renderer to WebGL
+        * @property {Boolean} [debug=false] display the debug panel (if preloaded)
+        * @property {String} [debugToggleKey="s"] show/hide the debug panel (if preloaded)
+        * @example
+        * // http://www.example.com/index.html#debug&hitbox=true&mytag=value
+        * var UriFragment = me.utils.getUriFragment();
+        * console.log(UriFragment["mytag"]); //> "value"
+        */
+
+
+       api.getUriFragment = function (url) {
+         var UriFragments = {};
+         var parsed = false;
+         return function (url) {
+           var hash;
+
+           if (typeof url === "undefined") {
+             hash = UriFragments;
+
+             if (parsed === true) {
+               return hash;
+             }
+
+             url = document.location;
+             parsed = true;
+           } else {
+             // never cache if a url is passed as parameter
+             hash = {};
+           } // No "document.location" exist for Wechat mini game platform.
+
+
+           if (url && url.hash) {
+             url.hash.substr(1).split("&").filter(function (value) {
+               return value !== "";
+             }).forEach(function (value) {
+               var kv = value.split("=");
+               var k = kv.shift();
+               var v = kv.join("=");
+               hash[k] = v || true;
+             });
+           }
+
+           return hash;
+         };
+       }();
+       /**
         * reset the GUID Base Name
         * the idea here being to have a unique ID
         * per level / object
@@ -26021,7 +26137,7 @@
        return api;
      }();
 
-     api.function = fn;
+     api["function"] = fn;
    })(me.utils);
 
    (function (api) {
@@ -26435,10 +26551,13 @@
        },
 
        /**
-        * Returns the private glArray
-        * @ignore
+        * return an array representation of this object
+        * @name toArray
+        * @memberOf me.Color
+        * @function
+        * @return {Float32Array}
         */
-       toGL: function toGL() {
+       toArray: function toArray() {
          return this.glArray;
        },
 
@@ -26641,7 +26760,7 @@
          /**
           * @ignore
           */
-         _init: function _init() {
+         init: function init() {
            // Load previous data if local Storage is supported
            if (me.device.localStorage === true) {
              var me_save_content = localStorage.getItem("me.save");
@@ -26730,6 +26849,337 @@
            }
          }
        };
+       return api;
+     }();
+   })();
+
+   (function () {
+     /**
+      * a level manager object <br>
+      * once ressources loaded, the level director contains all references of defined levels<br>
+      * There is no constructor function for me.levelDirector, this is a static object
+      * @namespace me.levelDirector
+      * @memberOf me
+      */
+     me.levelDirector = function () {
+       // hold public stuff in our singletong
+       var api = {};
+       /*
+        * PRIVATE STUFF
+        */
+       // our levels
+
+       var levels = {}; // level index table
+
+       var levelIdx = []; // current level index
+
+       var currentLevelIdx = 0; // onresize handler
+
+       var onresize_handler = null;
+
+       function safeLoadLevel(levelId, options, restart) {
+         // clean the destination container
+         options.container.reset(); // reset the renderer
+
+         me.game.reset(); // clean the current (previous) level
+
+         if (levels[api.getCurrentLevelId()]) {
+           levels[api.getCurrentLevelId()].destroy();
+         } // update current level index
+
+
+         currentLevelIdx = levelIdx.indexOf(levelId); // add the specified level to the game world
+
+         loadTMXLevel(levelId, options.container, options.flatten, options.setViewportBounds); // publish the corresponding message
+
+         me.event.publish(me.event.LEVEL_LOADED, [levelId]); // fire the callback
+
+         options.onLoaded(levelId);
+
+         if (restart) {
+           // resume the game loop if it was previously running
+           me.state.restart();
+         }
+       }
+       /**
+        * Load a TMX level
+        * @name loadTMXLevel
+        * @memberOf me.game
+        * @private
+        * @param {String} level level id
+        * @param {me.Container} target container
+        * @param {boolean} flatten if true, flatten all objects into the given container
+        * @param {boolean} setViewportBounds if true, set the viewport bounds to the map size
+        * @ignore
+        * @function
+        */
+
+
+       function loadTMXLevel(levelId, container, flatten, setViewportBounds) {
+         var level = levels[levelId]; // disable auto-sort for the given container
+
+         var autoSort = container.autoSort;
+         container.autoSort = false;
+         var levelBounds = level.getBounds();
+
+         if (setViewportBounds) {
+           // update the viewport bounds
+           me.game.viewport.setBounds(0, 0, Math.max(levelBounds.width, me.game.viewport.width), Math.max(levelBounds.height, me.game.viewport.height));
+         } // reset the GUID generator
+         // and pass the level id as parameter
+
+
+         me.utils.resetGUID(levelId, level.nextobjectid); // Tiled use 0,0 anchor coordinates
+
+         container.anchorPoint.set(0, 0); // add all level elements to the target container
+
+         level.addTo(container, flatten); // sort everything (recursively)
+
+         container.sort(true);
+         container.autoSort = autoSort;
+         container.resize(levelBounds.width, levelBounds.height);
+
+         function resize_container() {
+           // center the map if smaller than the current viewport
+           container.pos.set(Math.max(0, ~~((me.game.viewport.width - levelBounds.width) / 2)), Math.max(0, ~~((me.game.viewport.height - levelBounds.height) / 2)), 0);
+         }
+
+         if (setViewportBounds) {
+           resize_container(); // Replace the resize handler
+
+           if (onresize_handler) {
+             me.event.unsubscribe(onresize_handler);
+           }
+
+           onresize_handler = me.event.subscribe(me.event.VIEWPORT_ONRESIZE, resize_container);
+         }
+       }
+       /*
+        * PUBLIC STUFF
+        */
+
+       /**
+        * initialize the level director
+        * @ignore
+        */
+
+
+       api.init = function () {};
+       /**
+        * reset the level director
+        * @ignore
+        */
+
+
+       api.reset = function () {};
+       /**
+        * add a level
+        * @ignore
+        */
+
+
+       api.addLevel = function () {
+         throw new Error("no level loader defined");
+       };
+       /**
+        * add a TMX level
+        * @ignore
+        */
+
+
+       api.addTMXLevel = function (levelId, callback) {
+         // just load the level with the XML stuff
+         if (levels[levelId] == null) {
+           //console.log("loading "+ levelId);
+           levels[levelId] = new me.TMXTileMap(levelId, me.loader.getTMX(levelId)); // level index
+
+           levelIdx.push(levelId);
+         } else {
+           //console.log("level %s already loaded", levelId);
+           return false;
+         } // call the callback if defined
+
+
+         if (callback) {
+           callback();
+         } // true if level loaded
+
+
+         return true;
+       };
+       /**
+        * load a level into the game manager<br>
+        * (will also create all level defined entities, etc..)
+        * @name loadLevel
+        * @memberOf me.levelDirector
+        * @public
+        * @function
+        * @param {String} level level id
+        * @param {Object} [options] additional optional parameters
+        * @param {me.Container} [options.container=me.game.world] container in which to load the specified level
+        * @param {function} [options.onLoaded=me.game.onLevelLoaded] callback for when the level is fully loaded
+        * @param {boolean} [options.flatten=me.game.mergeGroup] if true, flatten all objects into the given container
+        * @param {boolean} [options.setViewportBounds=true] if true, set the viewport bounds to the map size
+        * @example
+        * // the game assets to be be preloaded
+        * // TMX maps
+        * var resources = [
+        *     {name: "a4_level1",   type: "tmx",   src: "data/level/a4_level1.tmx"},
+        *     {name: "a4_level2",   type: "tmx",   src: "data/level/a4_level2.tmx"},
+        *     {name: "a4_level3",   type: "tmx",   src: "data/level/a4_level3.tmx"},
+        *     // ...
+        * ];
+        *
+        * // ...
+        *
+        * // load a level into the game world
+        * me.levelDirector.loadLevel("a4_level1");
+        * ...
+        * ...
+        * // load a level into a specific container
+        * var levelContainer = new me.Container();
+        * me.levelDirector.loadLevel("a4_level2", {container:levelContainer});
+        * // add a simple transformation
+        * levelContainer.currentTransform.translate(levelContainer.width / 2, levelContainer.height / 2 );
+        * levelContainer.currentTransform.rotate(0.05);
+        * levelContainer.currentTransform.translate(-levelContainer.width / 2, -levelContainer.height / 2 );
+        * // add it to the game world
+        * me.game.world.addChild(levelContainer);
+        */
+
+
+       api.loadLevel = function (levelId, options) {
+         options = Object.assign({
+           "container": me.game.world,
+           "onLoaded": me.game.onLevelLoaded,
+           "flatten": me.game.mergeGroup,
+           "setViewportBounds": true
+         }, options || {}); // throw an exception if not existing
+
+         if (typeof levels[levelId] === "undefined") {
+           throw new Error("level " + levelId + " not found");
+         }
+
+         if (levels[levelId] instanceof me.TMXTileMap) {
+           // check the status of the state mngr
+           var wasRunning = me.state.isRunning();
+
+           if (wasRunning) {
+             // stop the game loop to avoid
+             // some silly side effects
+             me.state.stop();
+             me.utils["function"].defer(safeLoadLevel, this, levelId, options, true);
+           } else {
+             safeLoadLevel(levelId, options);
+           }
+         } else {
+           throw new Error("no level loader defined");
+         }
+
+         return true;
+       };
+       /**
+        * return the current level id<br>
+        * @name getCurrentLevelId
+        * @memberOf me.levelDirector
+        * @public
+        * @function
+        * @return {String}
+        */
+
+
+       api.getCurrentLevelId = function () {
+         return levelIdx[currentLevelIdx];
+       };
+       /**
+        * return the current level definition.
+        * for a reference to the live instantiated level,
+        * rather use the container in which it was loaded (e.g. me.game.world)
+        * @name getCurrentLevel
+        * @memberOf me.levelDirector
+        * @public
+        * @function
+        * @return {me.TMXTileMap}
+        */
+
+
+       api.getCurrentLevel = function () {
+         return levels[api.getCurrentLevelId()];
+       };
+       /**
+        * reload the current level<br>
+        * @name reloadLevel
+        * @memberOf me.levelDirector
+        * @public
+        * @function
+        * @param {Object} [options] additional optional parameters
+        * @param {me.Container} [options.container=me.game.world] container in which to load the specified level
+        * @param {function} [options.onLoaded=me.game.onLevelLoaded] callback for when the level is fully loaded
+        * @param {boolean} [options.flatten=me.game.mergeGroup] if true, flatten all objects into the given container
+        */
+
+
+       api.reloadLevel = function (options) {
+         // reset the level to initial state
+         //levels[currentLevel].reset();
+         return api.loadLevel(api.getCurrentLevelId(), options);
+       };
+       /**
+        * load the next level<br>
+        * @name nextLevel
+        * @memberOf me.levelDirector
+        * @public
+        * @function
+        * @param {Object} [options] additional optional parameters
+        * @param {me.Container} [options.container=me.game.world] container in which to load the specified level
+        * @param {function} [options.onLoaded=me.game.onLevelLoaded] callback for when the level is fully loaded
+        * @param {boolean} [options.flatten=me.game.mergeGroup] if true, flatten all objects into the given container
+        */
+
+
+       api.nextLevel = function (options) {
+         //go to the next level
+         if (currentLevelIdx + 1 < levelIdx.length) {
+           return api.loadLevel(levelIdx[currentLevelIdx + 1], options);
+         } else {
+           return false;
+         }
+       };
+       /**
+        * load the previous level<br>
+        * @name previousLevel
+        * @memberOf me.levelDirector
+        * @public
+        * @function
+        * @param {Object} [options] additional optional parameters
+        * @param {me.Container} [options.container=me.game.world] container in which to load the specified level
+        * @param {function} [options.onLoaded=me.game.onLevelLoaded] callback for when the level is fully loaded
+        * @param {boolean} [options.flatten=me.game.mergeGroup] if true, flatten all objects into the given container
+        */
+
+
+       api.previousLevel = function (options) {
+         // go to previous level
+         if (currentLevelIdx - 1 >= 0) {
+           return api.loadLevel(levelIdx[currentLevelIdx - 1], options);
+         } else {
+           return false;
+         }
+       };
+       /**
+        * return the amount of level preloaded<br>
+        * @name levelCount
+        * @memberOf me.levelDirector
+        * @public
+        * @function
+        */
+
+
+       api.levelCount = function () {
+         return levelIdx.length;
+       }; // return our object
+
+
        return api;
      }();
    })();
@@ -27020,9 +27470,11 @@
              break;
 
            case "property":
-             var property = api.parse(item);
+             var property = api.parse(item); // for custom properties, text is used
+
+             var value = typeof property.value !== "undefined" ? property.value : property.text;
              obj[property.name] = setTMXValue(property.name, // in XML type is undefined for "string" values
-             property.type || "string", property.value);
+             property.type || "string", value);
              break;
 
            default:
@@ -27194,7 +27646,7 @@
            _layers.forEach(function (data) {
              var layer = new me.TMXLayer(data, map.tilewidth, map.tileheight, map.orientation, map.tilesets, z++); // set a renderer
 
-             layer.setRenderer(map.getRenderer(layer)); // resize container accordingly
+             layer.setRenderer(map.getRenderer()); // resize container accordingly
 
              self.width = Math.max(self.width, layer.width);
              self.height = Math.max(self.height, layer.height);
@@ -28075,604 +28527,6 @@
    })();
 
    (function () {
-     // scope global var & constants
-     var offsetsStaggerX = [{
-       x: 0,
-       y: 0
-     }, {
-       x: +1,
-       y: -1
-     }, {
-       x: +1,
-       y: 0
-     }, {
-       x: +2,
-       y: 0
-     }];
-     var offsetsStaggerY = [{
-       x: 0,
-       y: 0
-     }, {
-       x: -1,
-       y: +1
-     }, {
-       x: 0,
-       y: +1
-     }, {
-       x: 0,
-       y: +2
-     }];
-     /**
-      * The map renderer base class
-      * @class
-      * @extends me.Object
-      * @memberOf me
-      * @constructor
-      * @param {Number} cols width of the tilemap in tiles
-      * @param {Number} rows height of the tilemap in tiles
-      * @param {Number} tilewidth width of each tile in pixels
-      * @param {Number} tileheight height of each tile in pixels
-      */
-
-     me.TMXRenderer = me.Object.extend({
-       // constructor
-       init: function init(cols, rows, tilewidth, tileheight) {
-         this.cols = cols;
-         this.rows = rows;
-         this.tilewidth = tilewidth;
-         this.tileheight = tileheight;
-       },
-
-       /**
-        * return true if the renderer can render the specified layer
-        * @name me.TMXRenderer#canRender
-        * @public
-        * @function
-        * @param {me.TMXTileMap|me.TMXLayer} component TMX Map or Layer
-        * @return {boolean}
-        */
-       canRender: function canRender(component) {
-         return this.cols === component.cols && this.rows === component.rows && this.tilewidth === component.tilewidth && this.tileheight === component.tileheight;
-       },
-
-       /**
-        * return the tile position corresponding to the specified pixel
-        * @name me.TMXRenderer#pixelToTileCoords
-        * @public
-        * @function
-        * @param {Number} x X coordinate
-        * @param {Number} y Y coordinate
-        * @param {me.Vector2d} [vector] an optional vector object where to put the return values
-        * @return {me.Vector2d}
-        */
-       pixelToTileCoords: function pixelToTileCoords(x, y, v) {
-         return v;
-       },
-
-       /**
-        * return the pixel position corresponding of the specified tile
-        * @name me.TMXRenderer#tileToPixelCoords
-        * @public
-        * @function
-        * @param {Number} col tile horizontal position
-        * @param {Number} row tile vertical position
-        * @param {me.Vector2d} [vector] an optional vector object where to put the return values
-        * @return {me.Vector2d}
-        */
-       tileToPixelCoords: function tileToPixelCoords(x, y, v) {
-         return v;
-       },
-
-       /**
-        * draw the given tile at the specified layer
-        * @name me.TMXRenderer#drawTile
-        * @public
-        * @function
-        * @param {me.CanvasRenderer|me.WebGLRenderer} renderer a renderer object
-        * @param {Number} x X coordinate where to draw the tile
-        * @param {Number} y Y coordinate where to draw the tile
-        * @param {me.Tile} tile the tile object to draw
-        */
-       drawTile: function drawTile(renderer, x, y, tile) {},
-
-       /**
-        * draw the given TMX Layer for the given area
-        * @name me.TMXRenderer#drawTileLayer
-        * @public
-        * @function
-        * @param {me.CanvasRenderer|me.WebGLRenderer} renderer a renderer object
-        * @param {me.TMXLayer} layer a TMX Layer object
-        * @param {me.Rect} rect the area of the layer to draw
-        */
-       drawTileLayer: function drawTileLayer(renderer, layer, rect) {}
-     });
-     /**
-      * an Orthogonal Map Renderder
-      * @memberOf me
-      * @extends me.TMXRenderer
-      * @memberOf me
-      * @constructor
-      * @param {Number} cols width of the tilemap in tiles
-      * @param {Number} rows height of the tilemap in tiles
-      * @param {Number} tilewidth width of each tile in pixels
-      * @param {Number} tileheight height of each tile in pixels
-      */
-
-     me.TMXOrthogonalRenderer = me.TMXRenderer.extend({
-       /**
-        * return true if the renderer can render the specified layer
-        * @ignore
-        */
-       canRender: function canRender(layer) {
-         return layer.orientation === "orthogonal" && this._super(me.TMXRenderer, "canRender", [layer]);
-       },
-
-       /**
-        * return the tile position corresponding to the specified pixel
-        * @ignore
-        */
-       pixelToTileCoords: function pixelToTileCoords(x, y, v) {
-         var ret = v || new me.Vector2d();
-         return ret.set(x / this.tilewidth, y / this.tileheight);
-       },
-
-       /**
-        * return the pixel position corresponding of the specified tile
-        * @ignore
-        */
-       tileToPixelCoords: function tileToPixelCoords(x, y, v) {
-         var ret = v || new me.Vector2d();
-         return ret.set(x * this.tilewidth, y * this.tileheight);
-       },
-
-       /**
-        * fix the position of Objects to match
-        * the way Tiled places them
-        * @ignore
-        */
-       adjustPosition: function adjustPosition(obj) {
-         // only adjust position if obj.gid is defined
-         if (typeof obj.gid === "number") {
-           // Tiled objects origin point is "bottom-left" in Tiled,
-           // "top-left" in melonJS)
-           obj.y -= obj.height;
-         }
-       },
-
-       /**
-        * draw the tile map
-        * @ignore
-        */
-       drawTile: function drawTile(renderer, x, y, tmxTile) {
-         var tileset = tmxTile.tileset; // draw the tile
-
-         tileset.drawTile(renderer, tileset.tileoffset.x + x * this.tilewidth, tileset.tileoffset.y + (y + 1) * this.tileheight - tileset.tileheight, tmxTile);
-       },
-
-       /**
-        * draw the tile map
-        * @ignore
-        */
-       drawTileLayer: function drawTileLayer(renderer, layer, rect) {
-         var incX = 1,
-             incY = 1; // get top-left and bottom-right tile position
-
-         var start = this.pixelToTileCoords(Math.max(rect.pos.x - (layer.maxTileSize.width - layer.tilewidth), 0), Math.max(rect.pos.y - (layer.maxTileSize.height - layer.tileheight), 0), me.pool.pull("me.Vector2d")).floorSelf();
-         var end = this.pixelToTileCoords(rect.pos.x + rect.width + this.tilewidth, rect.pos.y + rect.height + this.tileheight, me.pool.pull("me.Vector2d")).ceilSelf(); //ensure we are in the valid tile range
-
-         end.x = end.x > this.cols ? this.cols : end.x;
-         end.y = end.y > this.rows ? this.rows : end.y;
-
-         switch (layer.renderorder) {
-           case "right-up":
-             // swapping start.y and end.y
-             end.y = start.y + (start.y = end.y) - end.y;
-             incY = -1;
-             break;
-
-           case "left-down":
-             // swapping start.x and end.x
-             end.x = start.x + (start.x = end.x) - end.x;
-             incX = -1;
-             break;
-
-           case "left-up":
-             // swapping start.x and end.x
-             end.x = start.x + (start.x = end.x) - end.x; // swapping start.y and end.y
-
-             end.y = start.y + (start.y = end.y) - end.y;
-             incX = -1;
-             incY = -1;
-             break;
-
-           default:
-             // right-down
-             break;
-         } // main drawing loop
-
-
-         for (var y = start.y; y !== end.y; y += incY) {
-           for (var x = start.x; x !== end.x; x += incX) {
-             var tmxTile = layer.layerData[x][y];
-
-             if (tmxTile) {
-               this.drawTile(renderer, x, y, tmxTile);
-             }
-           }
-         }
-
-         me.pool.push(start);
-         me.pool.push(end);
-       }
-     });
-     /**
-      * an Isometric Map Renderder
-      * @memberOf me
-      * @extends me.TMXRenderer
-      * @memberOf me
-      * @constructor
-      * @param {Number} cols width of the tilemap in tiles
-      * @param {Number} rows height of the tilemap in tiles
-      * @param {Number} tilewidth width of each tile in pixels
-      * @param {Number} tileheight height of each tile in pixels
-      */
-
-     me.TMXIsometricRenderer = me.TMXRenderer.extend({
-       // constructor
-       init: function init(cols, rows, tilewidth, tileheight) {
-         this._super(me.TMXRenderer, "init", [cols, rows, tilewidth, tileheight]);
-
-         this.hTilewidth = tilewidth / 2;
-         this.hTileheight = tileheight / 2;
-         this.originX = this.rows * this.hTilewidth;
-       },
-
-       /**
-        * return true if the renderer can render the specified layer
-        * @ignore
-        */
-       canRender: function canRender(layer) {
-         return layer.orientation === "isometric" && this._super(me.TMXRenderer, "canRender", [layer]);
-       },
-
-       /**
-        * return the tile position corresponding to the specified pixel
-        * @ignore
-        */
-       pixelToTileCoords: function pixelToTileCoords(x, y, v) {
-         var ret = v || new me.Vector2d();
-         return ret.set(y / this.tileheight + (x - this.originX) / this.tilewidth, y / this.tileheight - (x - this.originX) / this.tilewidth);
-       },
-
-       /**
-        * return the pixel position corresponding of the specified tile
-        * @ignore
-        */
-       tileToPixelCoords: function tileToPixelCoords(x, y, v) {
-         var ret = v || new me.Vector2d();
-         return ret.set((x - y) * this.hTilewidth + this.originX, (x + y) * this.hTileheight);
-       },
-
-       /**
-        * fix the position of Objects to match
-        * the way Tiled places them
-        * @ignore
-        */
-       adjustPosition: function adjustPosition(obj) {
-         var tileX = obj.x / this.hTilewidth;
-         var tileY = obj.y / this.tileheight;
-         var isoPos = me.pool.pull("me.Vector2d");
-         this.tileToPixelCoords(tileX, tileY, isoPos);
-         obj.x = isoPos.x;
-         obj.y = isoPos.y;
-         me.pool.push(isoPos);
-       },
-
-       /**
-        * draw the tile map
-        * @ignore
-        */
-       drawTile: function drawTile(renderer, x, y, tmxTile) {
-         var tileset = tmxTile.tileset; // draw the tile
-
-         tileset.drawTile(renderer, (this.cols - 1) * tileset.tilewidth + (x - y) * tileset.tilewidth >> 1, -tileset.tilewidth + (x + y) * tileset.tileheight >> 2, tmxTile);
-       },
-
-       /**
-        * draw the tile map
-        * @ignore
-        */
-       drawTileLayer: function drawTileLayer(renderer, layer, rect) {
-         // cache a couple of useful references
-         var tileset = layer.tileset; // get top-left and bottom-right tile position
-
-         var rowItr = this.pixelToTileCoords(rect.pos.x - tileset.tilewidth, rect.pos.y - tileset.tileheight, me.pool.pull("me.Vector2d")).floorSelf();
-         var tileEnd = this.pixelToTileCoords(rect.pos.x + rect.width + tileset.tilewidth, rect.pos.y + rect.height + tileset.tileheight, me.pool.pull("me.Vector2d")).ceilSelf();
-         var rectEnd = this.tileToPixelCoords(tileEnd.x, tileEnd.y, me.pool.pull("me.Vector2d")); // Determine the tile and pixel coordinates to start at
-
-         var startPos = this.tileToPixelCoords(rowItr.x, rowItr.y, me.pool.pull("me.Vector2d"));
-         startPos.x -= this.hTilewidth;
-         startPos.y += this.tileheight;
-         /* Determine in which half of the tile the top-left corner of the area we
-          * need to draw is. If we're in the upper half, we need to start one row
-          * up due to those tiles being visible as well. How we go up one row
-          * depends on whether we're in the left or right half of the tile.
-          */
-
-         var inUpperHalf = startPos.y - rect.pos.y > this.hTileheight;
-         var inLeftHalf = rect.pos.x - startPos.x < this.hTilewidth;
-
-         if (inUpperHalf) {
-           if (inLeftHalf) {
-             rowItr.x--;
-             startPos.x -= this.hTilewidth;
-           } else {
-             rowItr.y--;
-             startPos.x += this.hTilewidth;
-           }
-
-           startPos.y -= this.hTileheight;
-         } // Determine whether the current row is shifted half a tile to the right
-
-
-         var shifted = inUpperHalf ^ inLeftHalf; // initialize the columItr vector
-
-         var columnItr = rowItr.clone(); // main drawing loop
-
-         for (var y = startPos.y * 2; y - this.tileheight * 2 < rectEnd.y * 2; y += this.tileheight) {
-           columnItr.setV(rowItr);
-
-           for (var x = startPos.x; x < rectEnd.x; x += this.tilewidth) {
-             //check if it's valid tile, if so render
-             if (columnItr.x >= 0 && columnItr.y >= 0 && columnItr.x < this.cols && columnItr.y < this.rows) {
-               var tmxTile = layer.layerData[columnItr.x][columnItr.y];
-
-               if (tmxTile) {
-                 tileset = tmxTile.tileset; // offset could be different per tileset
-
-                 var offset = tileset.tileoffset; // draw our tile
-
-                 tileset.drawTile(renderer, offset.x + x, offset.y + y / 2 - tileset.tileheight, tmxTile);
-               }
-             } // Advance to the next column
-
-
-             columnItr.x++;
-             columnItr.y--;
-           } // Advance to the next row
-
-
-           if (!shifted) {
-             rowItr.x++;
-             startPos.x += this.hTilewidth;
-             shifted = true;
-           } else {
-             rowItr.y++;
-             startPos.x -= this.hTilewidth;
-             shifted = false;
-           }
-         }
-
-         me.pool.push(columnItr);
-         me.pool.push(rowItr);
-         me.pool.push(tileEnd);
-         me.pool.push(rectEnd);
-         me.pool.push(startPos);
-       }
-     });
-     /**
-      * an Hexagonal Map Renderder
-      * @memberOf me
-      * @extends me.TMXRenderer
-      * @memberOf me
-      * @constructor
-      * @param {Number} cols width of the tilemap in tiles
-      * @param {Number} rows height of the tilemap in tiles
-      * @param {Number} tilewidth width of each tile in pixels
-      * @param {Number} tileheight height of each tile in pixels
-      */
-
-     me.TMXHexagonalRenderer = me.TMXRenderer.extend({
-       // constructor
-       init: function init(cols, rows, tilewidth, tileheight, hexsidelength, staggeraxis, staggerindex) {
-         this._super(me.TMXRenderer, "init", [cols, rows, tilewidth, tileheight]);
-
-         this.hexsidelength = hexsidelength;
-         this.staggeraxis = staggeraxis;
-         this.staggerindex = staggerindex;
-         this.sidelengthx = 0;
-         this.sidelengthy = 0;
-
-         if (staggeraxis === "x") {
-           this.sidelengthx = hexsidelength;
-         } else {
-           this.sidelengthy = hexsidelength;
-         }
-
-         this.sideoffsetx = (this.tilewidth - this.sidelengthx) / 2;
-         this.sideoffsety = (this.tileheight - this.sidelengthy) / 2;
-         this.columnwidth = this.sideoffsetx + this.sidelengthx;
-         this.rowheight = this.sideoffsety + this.sidelengthy;
-         this.centers = [new me.Vector2d(), new me.Vector2d(), new me.Vector2d(), new me.Vector2d()];
-       },
-
-       /**
-        * return true if the renderer can render the specified layer
-        * @ignore
-        */
-       canRender: function canRender(layer) {
-         return layer.orientation === "hexagonal" && this._super(me.TMXRenderer, "canRender", [layer]);
-       },
-
-       /**
-        * return the tile position corresponding to the specified pixel
-        * @ignore
-        */
-       pixelToTileCoords: function pixelToTileCoords(x, y, v) {
-         var q, r;
-         var ret = v || new me.Vector2d();
-
-         if (this.staggeraxis === "x") {
-           //flat top
-           x = x - (this.staggerindex === "odd" ? this.sideoffsetx : this.tilewidth);
-         } else {
-           //pointy top
-           y = y - (this.staggerindex === "odd" ? this.sideoffsety : this.tileheight);
-         } // Start with the coordinates of a grid-aligned tile
-
-
-         var referencePoint = me.pool.pull("me.Vector2d", Math.floor(x / (this.columnwidth * 2)), Math.floor(y / (this.rowheight * 2))); // Relative x and y position on the base square of the grid-aligned tile
-
-         var rel = me.pool.pull("me.Vector2d", x - referencePoint.x * (this.columnwidth * 2), y - referencePoint.y * (this.rowheight * 2)); // Adjust the reference point to the correct tile coordinates
-
-         if (this.staggeraxis === "x") {
-           referencePoint.x = referencePoint.x * 2;
-
-           if (this.staggerindex === "even") {
-             ++referencePoint.x;
-           }
-         } else {
-           referencePoint.y = referencePoint.y * 2;
-
-           if (this.staggerindex === "even") {
-             ++referencePoint.y;
-           }
-         } // Determine the nearest hexagon tile by the distance to the center
-
-
-         var left, top, centerX, centerY;
-
-         if (this.staggeraxis === "x") {
-           left = this.sidelengthx / 2;
-           centerX = left + this.columnwidth;
-           centerY = this.tileheight / 2;
-           this.centers[0].set(left, centerY);
-           this.centers[1].set(centerX, centerY - this.rowheight);
-           this.centers[2].set(centerX, centerY + this.rowheight);
-           this.centers[3].set(centerX + this.columnwidth, centerY);
-         } else {
-           top = this.sidelengthy / 2;
-           centerX = this.tilewidth / 2;
-           centerY = top + this.rowheight;
-           this.centers[0].set(centerX, top);
-           this.centers[1].set(centerX - this.columnwidth, centerY);
-           this.centers[2].set(centerX + this.columnwidth, centerY);
-           this.centers[3].set(centerX, centerY + this.rowheight);
-         }
-
-         var nearest = 0;
-         var minDist = Number.MAX_VALUE;
-         var dc;
-
-         for (var i = 0; i < 4; ++i) {
-           dc = Math.pow(this.centers[i].x - rel.x, 2) + Math.pow(this.centers[i].y - rel.y, 2);
-
-           if (dc < minDist) {
-             minDist = dc;
-             nearest = i;
-           }
-         }
-
-         var offsets = this.staggeraxis === "x" ? offsetsStaggerX : offsetsStaggerY;
-         q = referencePoint.x + offsets[nearest].x;
-         r = referencePoint.y + offsets[nearest].y;
-         me.pool.push(referencePoint);
-         me.pool.push(rel);
-         return ret.set(q, r);
-       },
-
-       /**
-        * return the pixel position corresponding of the specified tile
-        * @ignore
-        */
-       tileToPixelCoords: function tileToPixelCoords(q, r, v) {
-         var x, y;
-         var ret = v || new me.Vector2d();
-
-         if (this.staggeraxis === "x") {
-           //flat top
-           x = q * this.columnwidth;
-
-           if (this.staggerindex === "odd") {
-             y = r * (this.tileheight + this.sidelengthy);
-             y = y + this.rowheight * (q & 1);
-           } else {
-             y = r * (this.tileheight + this.sidelengthy);
-             y = y + this.rowheight * (1 - (q & 1));
-           }
-         } else {
-           //pointy top
-           y = r * this.rowheight;
-
-           if (this.staggerindex === "odd") {
-             x = q * (this.tilewidth + this.sidelengthx);
-             x = x + this.columnwidth * (r & 1);
-           } else {
-             x = q * (this.tilewidth + this.sidelengthx);
-             x = x + this.columnwidth * (1 - (r & 1));
-           }
-         }
-
-         return ret.set(x, y);
-       },
-
-       /**
-        * fix the position of Objects to match
-        * the way Tiled places them
-        * @ignore
-        */
-       adjustPosition: function adjustPosition(obj) {
-         // only adjust position if obj.gid is defined
-         if (typeof obj.gid === "number") {
-           // Tiled objects origin point is "bottom-left" in Tiled,
-           // "top-left" in melonJS)
-           obj.y -= obj.height;
-         }
-       },
-
-       /**
-        * draw the tile map
-        * @ignore
-        */
-       drawTile: function drawTile(renderer, x, y, tmxTile) {
-         var tileset = tmxTile.tileset;
-         var point = this.tileToPixelCoords(x, y, me.pool.pull("me.Vector2d")); // draw the tile
-
-         tileset.drawTile(renderer, tileset.tileoffset.x + point.x, tileset.tileoffset.y + point.y + (this.tileheight - tileset.tileheight), tmxTile);
-         me.pool.push(point);
-       },
-
-       /**
-        * draw the tile map
-        * @ignore
-        */
-       drawTileLayer: function drawTileLayer(renderer, layer, rect) {
-         // get top-left and bottom-right tile position
-         var start = this.pixelToTileCoords(rect.pos.x, rect.pos.y, me.pool.pull("me.Vector2d")).floorSelf();
-         var end = this.pixelToTileCoords(rect.pos.x + rect.width + this.tilewidth, rect.pos.y + rect.height + this.tileheight, me.pool.pull("me.Vector2d")).ceilSelf(); //ensure we are in the valid tile range
-
-         start.x = start.x < 0 ? 0 : start.x;
-         start.y = start.y < 0 ? 0 : start.y;
-         end.x = end.x > this.cols ? this.cols : end.x;
-         end.y = end.y > this.rows ? this.rows : end.y; // main drawing loop
-
-         for (var y = start.y; y < end.y; y++) {
-           for (var x = start.x; x < end.x; x++) {
-             var tmxTile = layer.layerData[x][y];
-
-             if (tmxTile) {
-               this.drawTile(renderer, x, y, tmxTile);
-             }
-           }
-         }
-
-         me.pool.push(start);
-         me.pool.push(end);
-       }
-     });
-   })();
-
-   (function () {
      /**
       * Create required arrays for the given layer object
       * @ignore
@@ -28797,11 +28651,7 @@
 
          this.name = data.name;
          this.cols = +data.width;
-         this.rows = +data.height; // hexagonal maps only
-
-         this.hexsidelength = +data.hexsidelength || undefined;
-         this.staggeraxis = data.staggeraxis;
-         this.staggerindex = data.staggerindex; // layer opacity
+         this.rows = +data.height; // layer opacity
 
          var visible = typeof data.visible !== "undefined" ? +data.visible : 1;
          this.setOpacity(visible ? +data.opacity : 0); // layer "real" size
@@ -28819,13 +28669,6 @@
 
          if (typeof this.preRender === "undefined") {
            this.preRender = me.sys.preRender;
-         } // if pre-rendering method is use, create an offline canvas/renderer
-
-
-         if (this.preRender === true) {
-           this.canvasRenderer = new me.CanvasRenderer(me.video.createCanvas(this.width, this.height), this.width, this.height, {
-             transparent: true
-           });
          } // initialize and set the layer data
 
 
@@ -28854,7 +28697,14 @@
          } // Resize the bounding rect
 
 
-         this.getBounds().resize(this.width, this.height);
+         var bounds = this.getRenderer().getBounds(this);
+         this.getBounds().resize(bounds.width, bounds.height); // if pre-rendering method is use, create an offline canvas/renderer
+
+         if (this.preRender === true && !this.canvasRenderer) {
+           this.canvasRenderer = new me.CanvasRenderer(me.video.createCanvas(this.width, this.height), this.width, this.height, {
+             transparent: true
+           });
+         }
        },
        // called when the layer is removed from the game world or a container
        onDeactivateEvent: function onDeactivateEvent() {
@@ -28864,12 +28714,16 @@
        },
 
        /**
-        * Se the TMX renderer for this layer object
+        * Set the TMX renderer for this layer object
         * @name setRenderer
         * @memberOf me.TMXLayer
         * @public
         * @function
         * @param {me.TMXRenderer} renderer
+        * @example
+        * // use the parent map default renderer
+        * var layer = new me.TMXLayer(...);
+        * layer.setRenderer(map.getRenderer());
         */
        setRenderer: function setRenderer(renderer) {
          this.renderer = renderer;
@@ -29033,20 +28887,23 @@
       * @ignore
       */
 
-     function getNewDefaultRenderer(obj) {
-       switch (obj.orientation) {
+     function getNewDefaultRenderer(map) {
+       switch (map.orientation) {
          case "orthogonal":
-           return new me.TMXOrthogonalRenderer(obj.cols, obj.rows, obj.tilewidth, obj.tileheight);
+           return new me.TMXOrthogonalRenderer(map);
 
          case "isometric":
-           return new me.TMXIsometricRenderer(obj.cols, obj.rows, obj.tilewidth, obj.tileheight);
+           return new me.TMXIsometricRenderer(map);
 
          case "hexagonal":
-           return new me.TMXHexagonalRenderer(obj.cols, obj.rows, obj.tilewidth, obj.tileheight, obj.hexsidelength, obj.staggeraxis, obj.staggerindex);
+           return new me.TMXHexagonalRenderer(map);
+
+         case "staggered":
+           return new me.TMXStaggeredRenderer(map);
          // if none found, throw an exception
 
          default:
-           throw new Error(obj.orientation + " type TMX Tile Map not supported!");
+           throw new Error(map.orientation + " type TMX Tile Map not supported!");
        }
      }
      /**
@@ -29058,7 +28915,7 @@
      function readLayer(map, data, z) {
        var layer = new me.TMXLayer(data, map.tilewidth, map.tileheight, map.orientation, map.tilesets, z); // set a renderer
 
-       layer.setRenderer(map.getRenderer(layer));
+       layer.setRenderer(map.getRenderer());
        return layer;
      }
      /**
@@ -29071,7 +28928,8 @@
        // Normalize properties
        me.TMXUtils.applyTMXProperties(data.properties, data); // create the layer
 
-       var imageLayer = me.pool.pull("me.ImageLayer", +data.x || 0, +data.y || 0, Object.assign({
+       var imageLayer = me.pool.pull("me.ImageLayer", // x/y is deprecated since 0.15 and replace by offsetx/y
+       +data.offsetx || +data.x || 0, +data.offsety || +data.y || 0, Object.assign({
          name: data.name,
          image: data.image,
          z: z
@@ -29221,22 +29079,18 @@
          } // Check if map is from melon editor
 
 
-         this.isEditor = data.editor === "melon-editor";
-
-         if (this.orientation === "isometric") {
-           this.width = (this.cols + this.rows) * (this.tilewidth / 2);
-           this.height = (this.cols + this.rows) * (this.tileheight / 2);
-         } else {
-           this.width = this.cols * this.tilewidth;
-           this.height = this.rows * this.tileheight;
-         } // object id
-
+         this.isEditor = data.editor === "melon-editor"; // object id
 
          this.nextobjectid = +data.nextobjectid || undefined; // hex/iso properties
 
-         this.hexsidelength = +data.hexsidelength || undefined;
+         this.hexsidelength = +data.hexsidelength;
          this.staggeraxis = data.staggeraxis;
-         this.staggerindex = data.staggerindex; // background color
+         this.staggerindex = data.staggerindex; // calculate the map bounding rect
+
+         this.bounds = this.getRenderer().getBounds(); // map "real" size
+
+         this.width = this.bounds.width;
+         this.height = this.bounds.height; // background color
 
          this.backgroundcolor = data.backgroundcolor; // set additional map properties (if any)
 
@@ -29257,22 +29111,25 @@
         * @memberOf me.TMXTileMap
         * @public
         * @function
-        * @param {me.TMXLayer} [layer] a layer object
         * @return {me.TMXRenderer} a TMX renderer
         */
-       getRenderer: function getRenderer(layer) {
-         // first ensure a renderer is associated to this map
+       getRenderer: function getRenderer() {
          if (typeof this.renderer === "undefined" || !this.renderer.canRender(this)) {
            this.renderer = getNewDefaultRenderer(this);
-         } // return a renderer for the given layer (if any)
-
-
-         if (typeof layer !== "undefined" && !this.renderer.canRender(layer)) {
-           return getNewDefaultRenderer(layer);
-         } // else return this renderer
-
-
+         }
          return this.renderer;
+       },
+
+       /**
+        * return the map bounding rect
+        * @name me.TMXRenderer#getBounds
+        * @public
+        * @function
+        * @return {me.Rect}
+        */
+       getBounds: function getBounds() {
+         // calculated in the constructor
+         return this.bounds;
        },
 
        /**
@@ -29546,325 +29403,937 @@
 
    (function () {
      /**
-      * a level manager object <br>
-      * once ressources loaded, the level director contains all references of defined levels<br>
-      * There is no constructor function for me.levelDirector, this is a static object
-      * @namespace me.levelDirector
+      * The map renderer base class
+      * @class
+      * @extends me.Object
       * @memberOf me
+      * @constructor
+      * @param {Number} cols width of the tilemap in tiles
+      * @param {Number} rows height of the tilemap in tiles
+      * @param {Number} tilewidth width of each tile in pixels
+      * @param {Number} tileheight height of each tile in pixels
       */
-     me.levelDirector = function () {
-       // hold public stuff in our singletong
-       var api = {};
-       /*
-        * PRIVATE STUFF
-        */
-       // our levels
-
-       var levels = {}; // level index table
-
-       var levelIdx = []; // current level index
-
-       var currentLevelIdx = 0; // onresize handler
-
-       var onresize_handler = null;
-
-       function safeLoadLevel(levelId, options, restart) {
-         // clean the destination container
-         options.container.reset(); // reset the renderer
-
-         me.game.reset(); // clean the current (previous) level
-
-         if (levels[api.getCurrentLevelId()]) {
-           levels[api.getCurrentLevelId()].destroy();
-         } // update current level index
-
-
-         currentLevelIdx = levelIdx.indexOf(levelId); // add the specified level to the game world
-
-         loadTMXLevel(levelId, options.container, options.flatten, options.setViewportBounds); // publish the corresponding message
-
-         me.event.publish(me.event.LEVEL_LOADED, [levelId]); // fire the callback
-
-         options.onLoaded(levelId);
-
-         if (restart) {
-           // resume the game loop if it was previously running
-           me.state.restart();
-         }
-       }
-       /**
-        * Load a TMX level
-        * @name loadTMXLevel
-        * @memberOf me.game
-        * @private
-        * @param {String} level level id
-        * @param {me.Container} target container
-        * @param {boolean} flatten if true, flatten all objects into the given container
-        * @param {boolean} setViewportBounds if true, set the viewport bounds to the map size
-        * @ignore
-        * @function
-        */
-
-
-       function loadTMXLevel(levelId, container, flatten, setViewportBounds) {
-         var level = levels[levelId]; // disable auto-sort for the given container
-
-         var autoSort = container.autoSort;
-         container.autoSort = false;
-
-         if (setViewportBounds) {
-           // update the viewport bounds
-           me.game.viewport.setBounds(0, 0, Math.max(level.width, me.game.viewport.width), Math.max(level.height, me.game.viewport.height));
-         } // reset the GUID generator
-         // and pass the level id as parameter
-
-
-         me.utils.resetGUID(levelId, level.nextobjectid); // Tiled use 0,0 anchor coordinates
-
-         container.anchorPoint.set(0, 0); // add all level elements to the target container
-
-         level.addTo(container, flatten); // sort everything (recursively)
-
-         container.sort(true);
-         container.autoSort = autoSort;
-         container.resize(level.width, level.height);
-
-         function resize_container() {
-           // center the map if smaller than the current viewport
-           container.pos.set(Math.max(0, ~~((me.game.viewport.width - level.width) / 2)), Math.max(0, ~~((me.game.viewport.height - level.height) / 2)), 0);
-         }
-
-         if (setViewportBounds) {
-           resize_container(); // Replace the resize handler
-
-           if (onresize_handler) {
-             me.event.unsubscribe(onresize_handler);
-           }
-
-           onresize_handler = me.event.subscribe(me.event.VIEWPORT_ONRESIZE, resize_container);
-         }
-       }
-       /*
-        * PUBLIC STUFF
-        */
+     me.TMXRenderer = me.Object.extend({
+       // constructor
+       init: function init(cols, rows, tilewidth, tileheight) {
+         this.cols = cols;
+         this.rows = rows;
+         this.tilewidth = tilewidth;
+         this.tileheight = tileheight;
+         this.bounds = new me.Rect(0, 0, 0, 0);
+       },
 
        /**
-        * reset the level director
-        * @ignore
-        */
-
-
-       api.reset = function () {};
-       /**
-        * add a level
-        * @ignore
-        */
-
-
-       api.addLevel = function () {
-         throw new Error("no level loader defined");
-       };
-       /**
-        * add a TMX level
-        * @ignore
-        */
-
-
-       api.addTMXLevel = function (levelId, callback) {
-         // just load the level with the XML stuff
-         if (levels[levelId] == null) {
-           //console.log("loading "+ levelId);
-           levels[levelId] = new me.TMXTileMap(levelId, me.loader.getTMX(levelId)); // level index
-
-           levelIdx.push(levelId);
-         } else {
-           //console.log("level %s already loaded", levelId);
-           return false;
-         } // call the callback if defined
-
-
-         if (callback) {
-           callback();
-         } // true if level loaded
-
-
-         return true;
-       };
-       /**
-        * load a level into the game manager<br>
-        * (will also create all level defined entities, etc..)
-        * @name loadLevel
-        * @memberOf me.levelDirector
+        * return true if the renderer can render the specified map or layer
+        * @name me.TMXRenderer#canRender
         * @public
         * @function
-        * @param {String} level level id
-        * @param {Object} [options] additional optional parameters
-        * @param {me.Container} [options.container=me.game.world] container in which to load the specified level
-        * @param {function} [options.onLoaded=me.game.onLevelLoaded] callback for when the level is fully loaded
-        * @param {boolean} [options.flatten=me.game.mergeGroup] if true, flatten all objects into the given container
-        * @param {boolean} [options.setViewportBounds=true] if true, set the viewport bounds to the map size
-        * @example
-        * // the game assets to be be preloaded
-        * // TMX maps
-        * var resources = [
-        *     {name: "a4_level1",   type: "tmx",   src: "data/level/a4_level1.tmx"},
-        *     {name: "a4_level2",   type: "tmx",   src: "data/level/a4_level2.tmx"},
-        *     {name: "a4_level3",   type: "tmx",   src: "data/level/a4_level3.tmx"},
-        *     // ...
-        * ];
-        *
-        * // ...
-        *
-        * // load a level into the game world
-        * me.levelDirector.loadLevel("a4_level1");
-        * ...
-        * ...
-        * // load a level into a specific container
-        * var levelContainer = new me.Container();
-        * me.levelDirector.loadLevel("a4_level2", {container:levelContainer});
-        * // add a simple transformation
-        * levelContainer.currentTransform.translate(levelContainer.width / 2, levelContainer.height / 2 );
-        * levelContainer.currentTransform.rotate(0.05);
-        * levelContainer.currentTransform.translate(-levelContainer.width / 2, -levelContainer.height / 2 );
-        * // add it to the game world
-        * me.game.world.addChild(levelContainer);
+        * @param {me.TMXTileMap|me.TMXLayer} component TMX Map or Layer
+        * @return {boolean}
         */
+       canRender: function canRender(component) {
+         return (
+           /*
+           // layers can have different size within
+           // the same maps, so commenting these two lines
+           (this.cols === component.cols) &&
+           (this.rows === component.rows) &&
+           */
+           this.tilewidth === component.tilewidth && this.tileheight === component.tileheight
+         );
+       },
+
+       /**
+        * return the bounding rect for this map renderer
+        * @name me.TMXRenderer#getBounds
+        * @public
+        * @function
+        * @param {me.TMXLayer} [layer] calculate the bounding rect for a specific layer (will return a new bounds object)
+        * @return {me.Rect}
+        */
+       getBounds: function getBounds(layer) {
+         var bounds = layer instanceof me.TMXLayer ? me.pool.pull("me.Rect", 0, 0, 0, 0) : this.bounds;
+         bounds.setShape(0, 0, this.cols * this.tilewidth, this.rows * this.tileheight);
+         return bounds;
+       },
+
+       /**
+        * return the tile position corresponding to the specified pixel
+        * @name me.TMXRenderer#pixelToTileCoords
+        * @public
+        * @function
+        * @param {Number} x X coordinate
+        * @param {Number} y Y coordinate
+        * @param {me.Vector2d} [vector] an optional vector object where to put the return values
+        * @return {me.Vector2d}
+        */
+       pixelToTileCoords: function pixelToTileCoords(x, y, v) {
+         return v;
+       },
+
+       /**
+        * return the pixel position corresponding of the specified tile
+        * @name me.TMXRenderer#tileToPixelCoords
+        * @public
+        * @function
+        * @param {Number} col tile horizontal position
+        * @param {Number} row tile vertical position
+        * @param {me.Vector2d} [vector] an optional vector object where to put the return values
+        * @return {me.Vector2d}
+        */
+       tileToPixelCoords: function tileToPixelCoords(x, y, v) {
+         return v;
+       },
+
+       /**
+        * draw the given tile at the specified layer
+        * @name me.TMXRenderer#drawTile
+        * @public
+        * @function
+        * @param {me.CanvasRenderer|me.WebGLRenderer} renderer a renderer object
+        * @param {Number} x X coordinate where to draw the tile
+        * @param {Number} y Y coordinate where to draw the tile
+        * @param {me.Tile} tile the tile object to draw
+        */
+       drawTile: function drawTile(renderer, x, y, tile) {},
+
+       /**
+        * draw the given TMX Layer for the given area
+        * @name me.TMXRenderer#drawTileLayer
+        * @public
+        * @function
+        * @param {me.CanvasRenderer|me.WebGLRenderer} renderer a renderer object
+        * @param {me.TMXLayer} layer a TMX Layer object
+        * @param {me.Rect} rect the area of the layer to draw
+        */
+       drawTileLayer: function drawTileLayer(renderer, layer, rect) {}
+     });
+   })();
+
+   (function () {
+     /**
+      * an Orthogonal Map Renderder
+      * @memberOf me
+      * @extends me.TMXRenderer
+      * @memberOf me
+      * @constructor
+      * @param {me.TMXTileMap} map the TMX map
+      */
+     me.TMXOrthogonalRenderer = me.TMXRenderer.extend({
+       // constructor
+       init: function init(map) {
+         this._super(me.TMXRenderer, "init", [map.cols, map.rows, map.tilewidth, map.tileheight]);
+       },
+
+       /**
+        * return true if the renderer can render the specified layer
+        * @ignore
+        */
+       canRender: function canRender(layer) {
+         return layer.orientation === "orthogonal" && this._super(me.TMXRenderer, "canRender", [layer]);
+       },
+
+       /**
+        * return the tile position corresponding to the specified pixel
+        * @ignore
+        */
+       pixelToTileCoords: function pixelToTileCoords(x, y, v) {
+         var ret = v || new me.Vector2d();
+         return ret.set(x / this.tilewidth, y / this.tileheight);
+       },
+
+       /**
+        * return the pixel position corresponding of the specified tile
+        * @ignore
+        */
+       tileToPixelCoords: function tileToPixelCoords(x, y, v) {
+         var ret = v || new me.Vector2d();
+         return ret.set(x * this.tilewidth, y * this.tileheight);
+       },
+
+       /**
+        * fix the position of Objects to match
+        * the way Tiled places them
+        * @ignore
+        */
+       adjustPosition: function adjustPosition(obj) {
+         // only adjust position if obj.gid is defined
+         if (typeof obj.gid === "number") {
+           // Tiled objects origin point is "bottom-left" in Tiled,
+           // "top-left" in melonJS)
+           obj.y -= obj.height;
+         }
+       },
+
+       /**
+        * draw the tile map
+        * @ignore
+        */
+       drawTile: function drawTile(renderer, x, y, tmxTile) {
+         var tileset = tmxTile.tileset; // draw the tile
+
+         tileset.drawTile(renderer, tileset.tileoffset.x + x * this.tilewidth, tileset.tileoffset.y + (y + 1) * this.tileheight - tileset.tileheight, tmxTile);
+       },
+
+       /**
+        * draw the tile map
+        * @ignore
+        */
+       drawTileLayer: function drawTileLayer(renderer, layer, rect) {
+         var incX = 1,
+             incY = 1; // get top-left and bottom-right tile position
+
+         var start = this.pixelToTileCoords(Math.max(rect.pos.x - (layer.maxTileSize.width - layer.tilewidth), 0), Math.max(rect.pos.y - (layer.maxTileSize.height - layer.tileheight), 0), me.pool.pull("me.Vector2d")).floorSelf();
+         var end = this.pixelToTileCoords(rect.pos.x + rect.width + this.tilewidth, rect.pos.y + rect.height + this.tileheight, me.pool.pull("me.Vector2d")).ceilSelf(); //ensure we are in the valid tile range
+
+         end.x = end.x > this.cols ? this.cols : end.x;
+         end.y = end.y > this.rows ? this.rows : end.y;
+
+         switch (layer.renderorder) {
+           case "right-up":
+             // swapping start.y and end.y
+             end.y = start.y + (start.y = end.y) - end.y;
+             incY = -1;
+             break;
+
+           case "left-down":
+             // swapping start.x and end.x
+             end.x = start.x + (start.x = end.x) - end.x;
+             incX = -1;
+             break;
+
+           case "left-up":
+             // swapping start.x and end.x
+             end.x = start.x + (start.x = end.x) - end.x; // swapping start.y and end.y
+
+             end.y = start.y + (start.y = end.y) - end.y;
+             incX = -1;
+             incY = -1;
+             break;
+
+           default:
+             // right-down
+             break;
+         } // main drawing loop
 
 
-       api.loadLevel = function (levelId, options) {
-         options = Object.assign({
-           "container": me.game.world,
-           "onLoaded": me.game.onLevelLoaded,
-           "flatten": me.game.mergeGroup,
-           "setViewportBounds": true
-         }, options || {}); // throw an exception if not existing
+         for (var y = start.y; y !== end.y; y += incY) {
+           for (var x = start.x; x !== end.x; x += incX) {
+             var tmxTile = layer.layerData[x][y];
 
-         if (typeof levels[levelId] === "undefined") {
-           throw new Error("level " + levelId + " not found");
+             if (tmxTile) {
+               this.drawTile(renderer, x, y, tmxTile);
+             }
+           }
          }
 
-         if (levels[levelId] instanceof me.TMXTileMap) {
-           // check the status of the state mngr
-           var wasRunning = me.state.isRunning();
+         me.pool.push(start);
+         me.pool.push(end);
+       }
+     });
+   })();
 
-           if (wasRunning) {
-             // stop the game loop to avoid
-             // some silly side effects
-             me.state.stop();
-             me.utils.function.defer(safeLoadLevel, this, levelId, options, true);
+   (function () {
+     /**
+      * an Isometric Map Renderder
+      * @memberOf me
+      * @extends me.TMXRenderer
+      * @memberOf me
+      * @constructor
+      * @param {me.TMXTileMap} map the TMX map
+      */
+     me.TMXIsometricRenderer = me.TMXRenderer.extend({
+       // constructor
+       init: function init(map) {
+         this._super(me.TMXRenderer, "init", [map.cols, map.rows, map.tilewidth, map.tileheight]);
+
+         this.hTilewidth = this.tilewidth / 2;
+         this.hTileheight = this.tileheight / 2;
+         this.originX = this.rows * this.hTilewidth;
+       },
+
+       /**
+        * return true if the renderer can render the specified layer
+        * @ignore
+        */
+       canRender: function canRender(layer) {
+         return layer.orientation === "isometric" && this._super(me.TMXRenderer, "canRender", [layer]);
+       },
+
+       /**
+        * return the bounding rect for this map renderer
+        * @name me.TMXIsometricRenderer#getBounds
+        * @public
+        * @function
+        * @param {me.TMXLayer} [layer] calculate the bounding rect for a specific layer (will return a new bounds object)
+        * @return {me.Rect}
+        */
+       getBounds: function getBounds(layer) {
+         var bounds = layer instanceof me.TMXLayer ? me.pool.pull("me.Rect", 0, 0, 0, 0) : this.bounds;
+         bounds.setShape(0, 0, (this.cols + this.rows) * (this.tilewidth / 2), (this.cols + this.rows) * (this.tileheight / 2));
+         return bounds;
+       },
+
+       /**
+        * return the tile position corresponding to the specified pixel
+        * @ignore
+        */
+       pixelToTileCoords: function pixelToTileCoords(x, y, v) {
+         var ret = v || new me.Vector2d();
+         return ret.set(y / this.tileheight + (x - this.originX) / this.tilewidth, y / this.tileheight - (x - this.originX) / this.tilewidth);
+       },
+
+       /**
+        * return the pixel position corresponding of the specified tile
+        * @ignore
+        */
+       tileToPixelCoords: function tileToPixelCoords(x, y, v) {
+         var ret = v || new me.Vector2d();
+         return ret.set((x - y) * this.hTilewidth + this.originX, (x + y) * this.hTileheight);
+       },
+
+       /**
+        * fix the position of Objects to match
+        * the way Tiled places them
+        * @ignore
+        */
+       adjustPosition: function adjustPosition(obj) {
+         var tileX = obj.x / this.hTilewidth;
+         var tileY = obj.y / this.tileheight;
+         var isoPos = me.pool.pull("me.Vector2d");
+         this.tileToPixelCoords(tileX, tileY, isoPos);
+         obj.x = isoPos.x;
+         obj.y = isoPos.y;
+         me.pool.push(isoPos);
+       },
+
+       /**
+        * draw the tile map
+        * @ignore
+        */
+       drawTile: function drawTile(renderer, x, y, tmxTile) {
+         var tileset = tmxTile.tileset; // draw the tile
+
+         tileset.drawTile(renderer, (this.cols - 1) * tileset.tilewidth + (x - y) * tileset.tilewidth >> 1, -tileset.tilewidth + (x + y) * tileset.tileheight >> 2, tmxTile);
+       },
+
+       /**
+        * draw the tile map
+        * @ignore
+        */
+       drawTileLayer: function drawTileLayer(renderer, layer, rect) {
+         // cache a couple of useful references
+         var tileset = layer.tileset; // get top-left and bottom-right tile position
+
+         var rowItr = this.pixelToTileCoords(rect.pos.x - tileset.tilewidth, rect.pos.y - tileset.tileheight, me.pool.pull("me.Vector2d")).floorSelf();
+         var tileEnd = this.pixelToTileCoords(rect.pos.x + rect.width + tileset.tilewidth, rect.pos.y + rect.height + tileset.tileheight, me.pool.pull("me.Vector2d")).ceilSelf();
+         var rectEnd = this.tileToPixelCoords(tileEnd.x, tileEnd.y, me.pool.pull("me.Vector2d")); // Determine the tile and pixel coordinates to start at
+
+         var startPos = this.tileToPixelCoords(rowItr.x, rowItr.y, me.pool.pull("me.Vector2d"));
+         startPos.x -= this.hTilewidth;
+         startPos.y += this.tileheight;
+         /* Determine in which half of the tile the top-left corner of the area we
+          * need to draw is. If we're in the upper half, we need to start one row
+          * up due to those tiles being visible as well. How we go up one row
+          * depends on whether we're in the left or right half of the tile.
+          */
+
+         var inUpperHalf = startPos.y - rect.pos.y > this.hTileheight;
+         var inLeftHalf = rect.pos.x - startPos.x < this.hTilewidth;
+
+         if (inUpperHalf) {
+           if (inLeftHalf) {
+             rowItr.x--;
+             startPos.x -= this.hTilewidth;
            } else {
-             safeLoadLevel(levelId, options);
+             rowItr.y--;
+             startPos.x += this.hTilewidth;
+           }
+
+           startPos.y -= this.hTileheight;
+         } // Determine whether the current row is shifted half a tile to the right
+
+
+         var shifted = inUpperHalf ^ inLeftHalf; // initialize the columItr vector
+
+         var columnItr = rowItr.clone(); // main drawing loop
+
+         for (var y = startPos.y * 2; y - this.tileheight * 2 < rectEnd.y * 2; y += this.tileheight) {
+           columnItr.setV(rowItr);
+
+           for (var x = startPos.x; x < rectEnd.x; x += this.tilewidth) {
+             //check if it's valid tile, if so render
+             if (columnItr.x >= 0 && columnItr.y >= 0 && columnItr.x < this.cols && columnItr.y < this.rows) {
+               var tmxTile = layer.layerData[columnItr.x][columnItr.y];
+
+               if (tmxTile) {
+                 tileset = tmxTile.tileset; // offset could be different per tileset
+
+                 var offset = tileset.tileoffset; // draw our tile
+
+                 tileset.drawTile(renderer, offset.x + x, offset.y + y / 2 - tileset.tileheight, tmxTile);
+               }
+             } // Advance to the next column
+
+
+             columnItr.x++;
+             columnItr.y--;
+           } // Advance to the next row
+
+
+           if (!shifted) {
+             rowItr.x++;
+             startPos.x += this.hTilewidth;
+             shifted = true;
+           } else {
+             rowItr.y++;
+             startPos.x -= this.hTilewidth;
+             shifted = false;
+           }
+         }
+
+         me.pool.push(columnItr);
+         me.pool.push(rowItr);
+         me.pool.push(tileEnd);
+         me.pool.push(rectEnd);
+         me.pool.push(startPos);
+       }
+     });
+   })();
+
+   (function () {
+     // scope global var & constants
+     var offsetsStaggerX = [{
+       x: 0,
+       y: 0
+     }, {
+       x: +1,
+       y: -1
+     }, {
+       x: +1,
+       y: 0
+     }, {
+       x: +2,
+       y: 0
+     }];
+     var offsetsStaggerY = [{
+       x: 0,
+       y: 0
+     }, {
+       x: -1,
+       y: +1
+     }, {
+       x: 0,
+       y: +1
+     }, {
+       x: 0,
+       y: +2
+     }];
+     /**
+      * an Hexagonal Map Renderder
+      * @memberOf me
+      * @extends me.TMXRenderer
+      * @memberOf me
+      * @constructor
+      * @param {me.TMXTileMap} map the TMX map
+      */
+
+     me.TMXHexagonalRenderer = me.TMXRenderer.extend({
+       // constructor
+       init: function init(map) {
+         this._super(me.TMXRenderer, "init", [map.cols, map.rows, map.tilewidth & ~1, map.tileheight & ~1]);
+
+         this.hexsidelength = map.hexsidelength || 0;
+         this.staggerX = map.staggeraxis === "x";
+         this.staggerEven = map.staggerindex === "even";
+         this.sidelengthx = 0;
+         this.sidelengthy = 0;
+
+         if (map.orientation === "hexagonal") {
+           if (this.staggerX) {
+             this.sidelengthx = this.hexsidelength;
+           } else {
+             this.sidelengthy = this.hexsidelength;
+           }
+         }
+
+         this.sideoffsetx = (this.tilewidth - this.sidelengthx) / 2;
+         this.sideoffsety = (this.tileheight - this.sidelengthy) / 2;
+         this.columnwidth = this.sideoffsetx + this.sidelengthx;
+         this.rowheight = this.sideoffsety + this.sidelengthy;
+         this.centers = [new me.Vector2d(), new me.Vector2d(), new me.Vector2d(), new me.Vector2d()];
+       },
+
+       /**
+        * return true if the renderer can render the specified layer
+        * @ignore
+        */
+       canRender: function canRender(layer) {
+         return layer.orientation === "hexagonal" && this._super(me.TMXRenderer, "canRender", [layer]);
+       },
+
+       /**
+        * return the bounding rect for this map renderer
+        * @name me.TMXHexagonalRenderer#getBounds
+        * @public
+        * @function
+        * @param {me.TMXLayer} [layer] calculate the bounding rect for a specific layer (will return a new bounds object)
+        * @return {me.Rect}
+        */
+       getBounds: function getBounds(layer) {
+         var bounds = layer instanceof me.TMXLayer ? me.pool.pull("me.Rect", 0, 0, 0, 0) : this.bounds; // origin is always 0 for finite maps
+
+         bounds.pos.set(0, 0); // The map size is the same regardless of which indexes are shifted.
+
+         if (this.staggerX) {
+           bounds.resize(this.cols * this.columnwidth + this.sideoffsetx, this.rows * (this.tileheight + this.sidelengthy));
+
+           if (bounds.width > 1) {
+             bounds.height += this.rowheight;
            }
          } else {
-           throw new Error("no level loader defined");
+           bounds.resize(this.cols * (this.tilewidth + this.sidelengthx), this.rows * this.rowheight + this.sideoffsety);
+
+           if (bounds.height > 1) {
+             bounds.width += this.columnwidth;
+           }
          }
 
-         return true;
-       };
+         return bounds;
+       },
+
        /**
-        * return the current level id<br>
-        * @name getCurrentLevelId
-        * @memberOf me.levelDirector
-        * @public
-        * @function
-        * @return {String}
+        * @ignore
         */
+       doStaggerX: function doStaggerX(x) {
+         return this.staggerX && x & 1 ^ this.staggerEven;
+       },
 
-
-       api.getCurrentLevelId = function () {
-         return levelIdx[currentLevelIdx];
-       };
        /**
-        * return the current level definition.
-        * for a reference to the live instantiated level,
-        * rather use the container in which it was loaded (e.g. me.game.world)
-        * @name getCurrentLevel
-        * @memberOf me.levelDirector
-        * @public
-        * @function
-        * @return {me.TMXTileMap}
+        * @ignore
         */
+       doStaggerY: function doStaggerY(y) {
+         return !this.staggerX && y & 1 ^ this.staggerEven;
+       },
 
-
-       api.getCurrentLevel = function () {
-         return levels[api.getCurrentLevelId()];
-       };
        /**
-        * reload the current level<br>
-        * @name reloadLevel
-        * @memberOf me.levelDirector
-        * @public
-        * @function
-        * @param {Object} [options] additional optional parameters
-        * @param {me.Container} [options.container=me.game.world] container in which to load the specified level
-        * @param {function} [options.onLoaded=me.game.onLevelLoaded] callback for when the level is fully loaded
-        * @param {boolean} [options.flatten=me.game.mergeGroup] if true, flatten all objects into the given container
+        * @ignore
         */
+       topLeft: function topLeft(x, y, v) {
+         var ret = v || new me.Vector2d();
 
-
-       api.reloadLevel = function (options) {
-         // reset the level to initial state
-         //levels[currentLevel].reset();
-         return api.loadLevel(api.getCurrentLevelId(), options);
-       };
-       /**
-        * load the next level<br>
-        * @name nextLevel
-        * @memberOf me.levelDirector
-        * @public
-        * @function
-        * @param {Object} [options] additional optional parameters
-        * @param {me.Container} [options.container=me.game.world] container in which to load the specified level
-        * @param {function} [options.onLoaded=me.game.onLevelLoaded] callback for when the level is fully loaded
-        * @param {boolean} [options.flatten=me.game.mergeGroup] if true, flatten all objects into the given container
-        */
-
-
-       api.nextLevel = function (options) {
-         //go to the next level
-         if (currentLevelIdx + 1 < levelIdx.length) {
-           return api.loadLevel(levelIdx[currentLevelIdx + 1], options);
+         if (!this.staggerX) {
+           if (y & 1 ^ this.staggerEven) {
+             ret.set(x, y - 1);
+           } else {
+             ret.set(x - 1, y - 1);
+           }
          } else {
-           return false;
+           if (x & 1 ^ this.staggerEven) {
+             ret.set(x - 1, y);
+           } else {
+             ret.set(x - 1, y - 1);
+           }
          }
-       };
+
+         return ret;
+       },
+
        /**
-        * load the previous level<br>
-        * @name previousLevel
-        * @memberOf me.levelDirector
-        * @public
-        * @function
-        * @param {Object} [options] additional optional parameters
-        * @param {me.Container} [options.container=me.game.world] container in which to load the specified level
-        * @param {function} [options.onLoaded=me.game.onLevelLoaded] callback for when the level is fully loaded
-        * @param {boolean} [options.flatten=me.game.mergeGroup] if true, flatten all objects into the given container
+        * @ignore
         */
+       topRight: function topRight(x, y, v) {
+         var ret = v || new me.Vector2d();
 
-
-       api.previousLevel = function (options) {
-         // go to previous level
-         if (currentLevelIdx - 1 >= 0) {
-           return api.loadLevel(levelIdx[currentLevelIdx - 1], options);
+         if (!this.staggerX) {
+           if (y & 1 ^ this.staggerEven) {
+             ret.set(x + 1, y - 1);
+           } else {
+             ret.set(x, y - 1);
+           }
          } else {
-           return false;
+           if (x & 1 ^ this.staggerEven) {
+             ret.set(x + 1, y);
+           } else {
+             ret.set(x + 1, y - 1);
+           }
          }
-       };
+
+         return ret;
+       },
+
        /**
-        * return the amount of level preloaded<br>
-        * @name levelCount
-        * @memberOf me.levelDirector
-        * @public
-        * @function
+        * @ignore
         */
+       bottomLeft: function bottomLeft(x, y, v) {
+         var ret = v || new me.Vector2d();
+
+         if (!this.staggerX) {
+           if (y & 1 ^ this.staggerEven) {
+             ret.set(x, y + 1);
+           } else {
+             ret.set(x - 1, y + 1);
+           }
+         } else {
+           if (x & 1 ^ this.staggerEven) {
+             ret.set(x - 1, y + 1);
+           } else {
+             ret.set(x - 1, y);
+           }
+         }
+
+         return ret;
+       },
+
+       /**
+        * @ignore
+        */
+       bottomRight: function bottomRight(x, y, v) {
+         var ret = v || new me.Vector2d();
+
+         if (!this.staggerX) {
+           if (y & 1 ^ this.staggerEven) {
+             ret.set(x + 1, y + 1);
+           } else {
+             ret.set(x, y + 1);
+           }
+         } else {
+           if (x & 1 ^ this.staggerEven) {
+             ret.set(x + 1, y + 1);
+           } else {
+             ret.set(x + 1, y);
+           }
+         }
+
+         return ret;
+       },
+
+       /**
+        * return the tile position corresponding to the specified pixel
+        * @ignore
+        */
+       pixelToTileCoords: function pixelToTileCoords(x, y, v) {
+         var ret = v || new me.Vector2d();
+
+         if (this.staggerX) {
+           //flat top
+           x -= this.staggerEven ? this.tilewidth : this.sideoffsetx;
+         } else {
+           //pointy top
+           y -= this.staggerEven ? this.tileheight : this.sideoffsety;
+         } // Start with the coordinates of a grid-aligned tile
 
 
-       api.levelCount = function () {
-         return levelIdx.length;
-       }; // return our object
+         var referencePoint = me.pool.pull("me.Vector2d", Math.floor(x / (this.columnwidth * 2)), Math.floor(y / (this.rowheight * 2))); // Relative x and y position on the base square of the grid-aligned tile
+
+         var rel = me.pool.pull("me.Vector2d", x - referencePoint.x * (this.columnwidth * 2), y - referencePoint.y * (this.rowheight * 2)); // Adjust the reference point to the correct tile coordinates
+
+         if (this.staggerX) {
+           referencePoint.x = referencePoint.x * 2;
+
+           if (this.staggerEven) {
+             ++referencePoint.x;
+           }
+         } else {
+           referencePoint.y = referencePoint.y * 2;
+
+           if (this.staggerEven) {
+             ++referencePoint.y;
+           }
+         } // Determine the nearest hexagon tile by the distance to the center
 
 
-       return api;
-     }();
+         var left, top, centerX, centerY;
+
+         if (this.staggerX) {
+           left = this.sidelengthx / 2;
+           centerX = left + this.columnwidth;
+           centerY = this.tileheight / 2;
+           this.centers[0].set(left, centerY);
+           this.centers[1].set(centerX, centerY - this.rowheight);
+           this.centers[2].set(centerX, centerY + this.rowheight);
+           this.centers[3].set(centerX + this.columnwidth, centerY);
+         } else {
+           top = this.sidelengthy / 2;
+           centerX = this.tilewidth / 2;
+           centerY = top + this.rowheight;
+           this.centers[0].set(centerX, top);
+           this.centers[1].set(centerX - this.columnwidth, centerY);
+           this.centers[2].set(centerX + this.columnwidth, centerY);
+           this.centers[3].set(centerX, centerY + this.rowheight);
+         }
+
+         var nearest = 0;
+         var minDist = Number.MAX_VALUE;
+
+         for (var i = 0; i < 4; ++i) {
+           var dc = this.centers[i].sub(rel).length2();
+
+           if (dc < minDist) {
+             minDist = dc;
+             nearest = i;
+           }
+         }
+
+         var offsets = this.staggerX ? offsetsStaggerX : offsetsStaggerY;
+         ret.set(referencePoint.x + offsets[nearest].x, referencePoint.y + offsets[nearest].y);
+         me.pool.push(referencePoint);
+         me.pool.push(rel);
+         return ret;
+       },
+
+       /**
+        * return the pixel position corresponding of the specified tile
+        * @ignore
+        */
+       tileToPixelCoords: function tileToPixelCoords(x, y, v) {
+         var tileX = Math.floor(x),
+             tileY = Math.floor(y);
+         var ret = v || new me.Vector2d();
+
+         if (this.staggerX) {
+           ret.y = tileY * (this.tileheight + this.sidelengthy);
+
+           if (this.doStaggerX(tileX)) {
+             ret.y += this.rowheight;
+           }
+
+           ret.x = tileX * this.columnwidth;
+         } else {
+           ret.x = tileX * (this.tilewidth + this.sidelengthx);
+
+           if (this.doStaggerY(tileY)) {
+             ret.x += this.columnwidth;
+           }
+
+           ret.y = tileY * this.rowheight;
+         }
+
+         return ret;
+       },
+
+       /**
+        * fix the position of Objects to match
+        * the way Tiled places them
+        * @ignore
+        */
+       adjustPosition: function adjustPosition(obj) {
+         // only adjust position if obj.gid is defined
+         if (typeof obj.gid === "number") {
+           // Tiled objects origin point is "bottom-left" in Tiled,
+           // "top-left" in melonJS)
+           obj.y -= obj.height;
+         }
+       },
+
+       /**
+        * draw the tile map
+        * @ignore
+        */
+       drawTile: function drawTile(renderer, x, y, tmxTile) {
+         var tileset = tmxTile.tileset;
+         var point = this.tileToPixelCoords(x, y, me.pool.pull("me.Vector2d")); // draw the tile
+
+         tileset.drawTile(renderer, tileset.tileoffset.x + point.x, tileset.tileoffset.y + point.y + (this.tileheight - tileset.tileheight), tmxTile);
+         me.pool.push(point);
+       },
+
+       /**
+        * draw the tile map
+        * @ignore
+        */
+       drawTileLayer: function drawTileLayer(renderer, layer, rect) {
+         var tile; // get top-left and bottom-right tile position
+
+         var startTile = this.pixelToTileCoords(rect.pos.x, rect.pos.y, me.pool.pull("me.Vector2d")); // Compensate for the layer position
+
+         startTile.sub(layer.pos); // get top-left and bottom-right tile position
+
+         var startPos = this.tileToPixelCoords(startTile.x + layer.pos.x, startTile.y + layer.pos.y, me.pool.pull("me.Vector2d"));
+         var rowTile = startTile.clone();
+         var rowPos = startPos.clone();
+         /* Determine in which half of the tile the top-left corner of the area we
+          * need to draw is. If we're in the upper half, we need to start one row
+          * up due to those tiles being visible as well. How we go up one row
+          * depends on whether we're in the left or right half of the tile.
+          */
+
+         var inUpperHalf = rect.pos.y - startPos.y < this.sideoffsety;
+         var inLeftHalf = rect.pos.x - startPos.x < this.sideoffsetx;
+
+         if (inUpperHalf) {
+           startTile.y--;
+         }
+
+         if (inLeftHalf) {
+           startTile.x--;
+         }
+
+         var endX = layer.cols;
+         var endY = layer.rows;
+
+         if (this.staggerX) {
+           //ensure we are in the valid tile range
+           startTile.x = Math.max(0, startTile.x);
+           startTile.y = Math.max(0, startTile.y);
+           startPos = this.tileToPixelCoords(startTile.x + layer.pos.x, startTile.y + layer.pos.y);
+           var staggeredRow = this.doStaggerX(startTile.x + layer.pos.x); // main drawing loop
+
+           for (; startPos.y < rect.bottom && startTile.y < endY;) {
+             rowTile.setV(startTile);
+             rowPos.setV(startPos);
+
+             for (; rowPos.x < rect.right && rowTile.x < endX; rowTile.x += 2) {
+               tile = layer.layerData[rowTile.x][rowTile.y];
+
+               if (tile) {
+                 // draw the tile
+                 tile.tileset.drawTile(renderer, rowPos.x, rowPos.y, tile);
+               }
+
+               rowPos.x += this.tilewidth + this.sidelengthx;
+             }
+
+             if (staggeredRow) {
+               startTile.x -= 1;
+               startTile.y += 1;
+               startPos.x -= this.columnwidth;
+               staggeredRow = false;
+             } else {
+               startTile.x += 1;
+               startPos.x += this.columnwidth;
+               staggeredRow = true;
+             }
+
+             startPos.y += this.rowheight;
+           }
+
+           me.pool.push(rowTile);
+           me.pool.push(rowPos);
+         } else {
+           //ensure we are in the valid tile range
+           startTile.x = Math.max(0, startTile.x);
+           startTile.y = Math.max(0, startTile.y);
+           startPos = this.tileToPixelCoords(startTile.x + layer.pos.x, startTile.y + layer.pos.y); // Odd row shifting is applied in the rendering loop, so un-apply it here
+
+           if (this.doStaggerY(startTile.y)) {
+             startPos.x -= this.columnwidth;
+           } // main drawing loop
+
+
+           for (; startPos.y < rect.bottom && startTile.y < endY; startTile.y++) {
+             rowTile.setV(startTile);
+             rowPos.setV(startPos);
+
+             if (this.doStaggerY(startTile.y)) {
+               rowPos.x += this.columnwidth;
+             }
+
+             for (; rowPos.x < rect.right && rowTile.x < endX; rowTile.x++) {
+               tile = layer.layerData[rowTile.x][rowTile.y];
+
+               if (tile) {
+                 // draw the tile
+                 tile.tileset.drawTile(renderer, rowPos.x, rowPos.y, tile);
+               }
+
+               rowPos.x += this.tilewidth + this.sidelengthx;
+             }
+
+             startPos.y += this.rowheight;
+           }
+
+           me.pool.push(rowTile);
+           me.pool.push(rowPos);
+         }
+
+         me.pool.push(startTile);
+         me.pool.push(startPos);
+       }
+     });
+   })();
+
+   (function () {
+     /**
+      * a Staggered Map Renderder
+      * @memberOf me
+      * @extends me.TMXRenderer
+      * @memberOf me
+      * @constructor
+      * @param {me.TMXTileMap} map the TMX map
+      */
+     me.TMXStaggeredRenderer = me.TMXHexagonalRenderer.extend({
+       /**
+        * return true if the renderer can render the specified layer
+        * @ignore
+        */
+       canRender: function canRender(layer) {
+         return layer.orientation === "staggered" && this._super(me.TMXRenderer, "canRender", [layer]);
+       },
+
+       /**
+        * return the tile position corresponding to the specified pixel
+        * @ignore
+        */
+       pixelToTileCoords: function pixelToTileCoords(x, y, v) {
+         var ret = v || new me.Vector2d();
+         var alignedX = x,
+             alignedY = y;
+
+         if (this.staggerX) {
+           alignedX -= this.staggerEven ? this.sideoffsetx : 0;
+         } else {
+           alignedY -= this.staggerEven ? this.sideoffsety : 0;
+         } // Start with the coordinates of a grid-aligned tile
+
+
+         var referencePoint = me.pool.pull("me.Vector2d", Math.floor(alignedX / this.tilewidth), Math.floor(alignedY / this.tileheight)); // Adjust the reference point to the correct tile coordinates
+
+         if (this.staggerX) {
+           referencePoint.x = referencePoint.x * 2;
+
+           if (this.staggerEven) {
+             ++referencePoint.x;
+           }
+         } else {
+           referencePoint.y = referencePoint.y * 2;
+
+           if (this.staggerEven) {
+             ++referencePoint.y;
+           }
+         } // Relative x and y position on the base square of the grid-aligned tile
+
+
+         var rel = me.pool.pull("me.Vector2d", alignedX - referencePoint.x * this.tilewidth, alignedY - referencePoint.y * this.tileheight); // Check whether the cursor is in any of the corners (neighboring tiles)
+
+         var y_pos = rel.x * (this.tileheight / this.tilewidth);
+
+         if (this.sideoffsety - y_pos > rel.y) {
+           referencePoint = this.topLeft(referencePoint.x, referencePoint.y, referencePoint);
+         }
+
+         if (-this.sideoffsety + y_pos > rel.y) {
+           referencePoint = this.topRight(referencePoint.x, referencePoint.y, referencePoint);
+         }
+
+         if (this.sideoffsety + y_pos < rel.y) {
+           referencePoint = this.bottomLeft(referencePoint.x, referencePoint.y, referencePoint);
+         }
+
+         if (this.sideoffsety * 3 - y_pos < rel.y) {
+           referencePoint = this.bottomRight(referencePoint.x, referencePoint.y, referencePoint);
+         }
+
+         ret = this.tileToPixelCoords(referencePoint.x, referencePoint.y, ret);
+         ret.set(x - ret.x, y - ret.y); // Start with the coordinates of a grid-aligned tile
+
+         ret.set(ret.x - this.tilewidth / 2, ret.y * (this.tilewidth / this.tileheight));
+         ret.div(this.tilewidth / Math.sqrt(2)).rotate(me.Math.degToRad(-45)).add(referencePoint);
+         me.pool.push(referencePoint);
+         me.pool.push(rel);
+         return ret;
+       }
+     });
    })();
 
    /**
@@ -30674,10 +31143,10 @@
             * this can be overridden by the plugin
             * @public
             * @type String
-            * @default "7.0.0"
+            * @default "7.1.0"
             * @name me.plugin.Base#version
             */
-           this.version = "7.0.0";
+           this.version = "7.1.0";
          }
        });
        /**
@@ -30767,7 +31236,7 @@
          } // compatibility testing
 
 
-         if (me.sys.checkVersion(instance.version) > 0) {
+         if (me.utils.checkVersion(instance.version) > 0) {
            throw new Error("Plugin version mismatch, expected: " + instance.version + ", got: " + me.version);
          } // create a reference to the new plugin
 
@@ -31939,25 +32408,20 @@
    // and corresponding alias for backward compatibility
 
    /**
-    * @class me.ScreenObject
-    * @deprecated since 6.2.0
-    * @see me.Stage
+    * @function me.device.getPixelRatio
+    * @deprecated since 5.1.0
+    * @see me.device.devicePixelRatio
     */
-   me.ScreenObject = me.Stage.extend({
-     /** @ignore */
-     init: function init(settings) {
-       // super constructor
-       this._super(me.Stage, "init", settings); // deprecation warning
-
-
-       console.log("me.ScreenObject is deprecated, please use me.Stage");
-     }
-   });
+   me.device.getPixelRatio = function () {
+     console.log("me.device.getPixelRatio() is deprecated, please use me.device.devicePixelRatio");
+     return me.device.devicePixelRatio;
+   };
    /**
     * @class me.Font
     * @deprecated since 6.1.0
     * @see me.Text
     */
+
 
    me.Font = me.Text.extend({
      /** @ignore */
@@ -32022,6 +32486,22 @@
      }
    });
    /**
+    * @class me.ScreenObject
+    * @deprecated since 6.2.0
+    * @see me.Stage
+    */
+
+   me.ScreenObject = me.Stage.extend({
+     /** @ignore */
+     init: function init(settings) {
+       // super constructor
+       this._super(me.Stage, "init", settings); // deprecation warning
+
+
+       console.log("me.ScreenObject is deprecated, please use me.Stage");
+     }
+   });
+   /**
     * @function me.Renderer.drawShape
     * @deprecated since 6.3.0
     * @see me.Renderer#stroke
@@ -32073,6 +32553,79 @@
        this.message = msg;
      }
    });
+   /**
+    * @function me.sys.checkVersion
+    * @deprecated since 7.1.0
+    * @see me.utils.checkVersion
+    */
+
+   me.sys.checkVersion = function (first, second) {
+     console.log("me.sys.checkVersion() is deprecated, please use me.utils.checkVersion()");
+     return me.utils.checkVersion(first, second);
+   };
+   /**
+    * @public
+    * @type {Object}
+    * @name HASH
+    * @memberOf me.game
+    * @deprecated since 7.1.0
+    * @see me.utils.getUriFragment
+    */
+
+
+   Object.defineProperty(me.game, "HASH", {
+     /**
+      * @ignore
+      */
+     get: function get() {
+       console.log("me.game.HASH is deprecated, please use me.utils.getUriFragment()");
+       return me.utils.getUriFragment();
+     },
+     configurable: false
+   });
+   /**
+    * @function me.video.updateDisplaySize
+    * @deprecated since 7.1.0
+    * @see me.video.scale
+    */
+
+   me.video.updateDisplaySize = function (x, y) {
+     console.log("me.video.updateDisplaySize() is deprecated, please use me.video.scale()");
+     return me.video.scale(x, y);
+   };
+   /**
+    * @function me.Renderer.scaleCanvas
+    * @deprecated since 7.1.0
+    * @see me.video.scale
+    */
+
+
+   me.Renderer.prototype.scaleCanvas = function (x, y) {
+     console.log("scaleCanvas() is deprecated, please use me.video.scale()");
+     return me.video.scale(x, y);
+   };
+   /**
+    * @function me.Entity.distanceToPoint
+    * @deprecated since 7.1.0
+    * @see me.Renderable.distanceTo
+   */
+
+
+   me.Entity.prototype.distanceToPoint = function (v) {
+     console.log("distanceToPoint() is deprecated, please use me.Renderable.distanceTo()");
+     return this.distanceTo(v);
+   };
+   /**
+    * @function me.Entity.angleToPoint
+    * @deprecated since 7.1.0
+    * @see me.Renderable.angleTo
+   */
+
+
+   me.Entity.prototype.angleToPoint = function (v) {
+     console.log("angleToPoint() is deprecated, please use me.Renderable.angleTo()");
+     return this.angleTo(v);
+   };
 
 }());
 //# sourceMappingURL=melonjs.js.map

@@ -87,15 +87,15 @@ Alternatively, the latest version of melonJS can be installed through [NPM](http
 Or can simply be added to your html, through a content delivery network (CDN) URL, using for example :
 
 ```html
-<script src="https://cdn.jsdelivr.net/npm/melonjs@7.0.0/dist/melonjs.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/melonjs@7.1.0/dist/melonjs.js"></script>
 ```
 or the following for the minified version :
 ```html
-<script src="https://cdn.jsdelivr.net/npm/melonjs@7.0.0/dist/melonjs.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/melonjs@7.1.0/dist/melonjs.min.js"></script>
 ```
 and of course the debug panel :
 ```html
-<script src="https://cdn.jsdelivr.net/npm/melonjs@7.0.0/plugins/debug/debugPanel.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/melonjs@7.1.0/plugins/debug/debugPanel.js"></script>
 ```
 
 > Note: "official" CDN and NPM install are only available from version 7.0.0 and onwards.
