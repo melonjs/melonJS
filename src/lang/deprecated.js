@@ -227,7 +227,7 @@ Object.defineProperty(me.sys, "gravity", {
      * @ignore
      */
     set : function (value) {
-        console.log("me.sys.gravity is deprecated, please me.game.world.gravity");
+        console.log("me.sys.gravity is deprecated, please use me.game.world.gravity");
         if (me.game.world) me.game.world.gravity.y = value;
     },
     configurable : false

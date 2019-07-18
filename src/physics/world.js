@@ -34,11 +34,11 @@
              * world gravity
              * @public
              * @type me.Vector2d
-             * @default <0,0>
+             * @default <0,0.98>
              * @name gravity
              * @memberOf me.World
              */
-            this.gravity = new me.Vector2d(0, 0);
+            this.gravity = new me.Vector2d(0, 0.98);
 
             // initialize the collision system (the quadTree mostly)
             me.collision.init(this.getBounds());

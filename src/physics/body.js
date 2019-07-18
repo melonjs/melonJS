@@ -184,24 +184,45 @@
             /**
              * Default gravity value for this body.
              * To be set to to < 0, 0 > for RPG, shooter, etc...<br>
-             * Note: total gravity is the sum of this vector and the world gravity.
              * @public
-             * @see me.game.world.gravity
+             * @see me.World.gravity
              * @type me.Vector2d
              * @default <0,0.98>
-             * @default
+             * @deprecated since 7.2.0
              * @name gravity
              * @memberOf me.Body
              */
             if (typeof(this.gravity) === "undefined") {
-                this.gravity = new me.Vector2d(0, 0);
+                var self = this;
+                this.gravity = new me.ObservableVector2d(0, 0, { onUpdate : function(x, y) {
+                    // disable gravity or apply a scale if y gravity is different from 0
+                    if (typeof y === "number") {
+                        self.gravityScale = y / me.game.world.gravity.y;
+                    }
+                    // deprecation // WARNING:
+                    console.log(
+                        "me.Body.gravity is deprecated, " +
+                        "please see me.Body.gravityScale " +
+                        "to modify gravity for a specific body"
+                    );
+                }});
             }
-            this.gravity.set(0, 0.98);
 
             /**
-             * if true gravity won't be applied to this physic body
-             * @readonly
+             * The degree to which this body is affected by the world gravity
              * @public
+             * @see me.World.gravity
+             * @type Number
+             * @default 1.0
+             * @name gravityScale
+             * @memberOf me.Body
+             */
+            this.gravityScale = 1.0;
+
+            /**
+             * If true this body won't be affected by the world gravity
+             * @public
+             * @see me.World.gravity
              * @type Boolean
              * @default false
              * @name ignoreGravity
@@ -471,7 +492,7 @@
                 }
 
                 // cancel the falling an jumping flags if necessary
-                var dir = Math.sign(me.game.world.gravity.y + this.gravity.y) || 1;
+                var dir = Math.sign(me.game.world.gravity.y * this.gravityScale) || 1;
                 this.falling = overlap.y >= dir;
                 this.jumping = overlap.y <= -dir;
             }
@@ -600,15 +621,11 @@
             if (!this.ignoreGravity) {
                 var worldGravity = me.game.world.gravity;
                 // apply gravity if defined
-                if (worldGravity.x + this.gravity.x) {
-                    vel.x += worldGravity.x + this.gravity.x * this.mass * me.timer.tick;
-                }
-                if (worldGravity.y + this.gravity.y) {
-                    vel.y += worldGravity.y + this.gravity.y * this.mass * me.timer.tick;
-                    // check if falling / jumping
-                    this.falling = (vel.y * Math.sign(worldGravity.y + this.gravity.y)) > 0;
-                    this.jumping = (this.falling ? false : this.jumping);
-                }
+                vel.x += worldGravity.x * this.gravityScale * this.mass * me.timer.tick;
+                vel.y += worldGravity.y * this.gravityScale * this.mass * me.timer.tick;
+                // check if falling / jumping
+                this.falling = (vel.y * Math.sign(worldGravity.y * this.gravityScale)) > 0;
+                this.jumping = (this.falling ? false : this.jumping);
             }
 
             // cap velocity
