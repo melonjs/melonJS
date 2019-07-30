@@ -38,9 +38,6 @@
         var lastUpdateStart = null;
         var updateAverageDelta = 0;
 
-        // reference to the renderer object
-        var renderer = null;
-
         /*
          * PUBLIC STUFF
          */
@@ -58,7 +55,7 @@
          * a reference to the game world, <br>
          * a world is a virtual environment containing all the game objects
          * @public
-         * @type {me.Container}
+         * @type {me.World}
          * @name world
          * @memberOf me.game
          */
@@ -107,25 +104,10 @@
          * @memberOf me.game
          * @ignore
          * @function
-         * @param {Number} [width] width of the canvas
-         * @param {Number} [height] width of the canvas
          */
-        api.init = function (width, height) {
-            // if no parameter specified use the system size
-            width  = width  || me.video.renderer.getWidth();
-            height = height || me.video.renderer.getHeight();
-
+        api.init = function () {
             // the root object of our world is an entity container
-            api.world = new me.Container(0, 0, width, height, true);
-            api.world.name = "rootContainer";
-
-            // to mimic the previous behavior
-            api.world.anchorPoint.set(0, 0);
-
-            // initialize the collision system (the quadTree mostly)
-            me.collision.init();
-
-            renderer = me.video.renderer;
+            api.world = new me.World();
 
             // publish init notification
             me.event.publish(me.event.GAME_INIT);
@@ -143,15 +125,6 @@
          * @function
          */
         api.reset = function () {
-            // clear the quadtree
-            me.collision.quadTree.clear();
-
-            // remove all objects
-            api.world.reset();
-
-            // reset the anchorPoint
-            api.world.anchorPoint.set(0, 0);
-
             // point to the current active stage "default" camera
             api.viewport = me.state.current().cameras.get("default");
 
@@ -215,7 +188,6 @@
          * update all objects of the game manager
          * @name update
          * @memberOf me.game
-         * @private
          * @ignore
          * @function
          * @param {Number} time current timestamp as provided by the RAF callback
@@ -239,22 +211,8 @@
                 while (accumulator >= accumulatorUpdateDelta || me.sys.interpolation) {
                     lastUpdateStart = window.performance.now();
 
-                    // clear the quadtree
-                    me.collision.quadTree.clear();
-
-                    // insert the world container (children) into the quadtree
-                    me.collision.quadTree.insertContainer(api.world);
-
                     // update all objects (and pass the elapsed time since last frame)
-                    isDirty = api.world.update(updateDelta) || isDirty;
-
-                    // update the camera/viewport
-                    // iterate through all cameras
-                    stage.cameras.forEach(function(camera) {
-                        if (camera.update(updateDelta)) {
-                            isDirty = true;
-                        };
-                    });
+                    isDirty = stage.update(updateDelta) || isDirty;
 
                     me.timer.lastUpdate = window.performance.now();
                     updateAverageDelta = me.timer.lastUpdate - lastUpdateStart;
@@ -269,26 +227,24 @@
         };
 
         /**
-         * draw all existing objects
+         * draw the current scene/stage
          * @name draw
          * @memberOf me.game
-         * @private
          * @ignore
          * @function
          * @param {me.Stage} stage the current stage
          */
         api.draw = function (stage) {
-            if (renderer.isContextValid === true && (isDirty || isAlwaysDirty)) {
+            var renderer = me.video.renderer;
 
+            if (renderer.isContextValid === true && (isDirty || isAlwaysDirty)) {
                 // prepare renderer to draw a new frame
                 renderer.clear();
 
-                // iterate through all cameras
-                stage.cameras.forEach(function(camera) {
-                    // render the root container
-                    camera.draw(renderer, me.game.world);
-                });
+                // render the stage
+                stage.draw(renderer);
 
+                // set back to flag
                 isDirty = false;
 
                 // flush/render our frame

@@ -8,8 +8,6 @@
      to calcuate a new velocity and 2) the parent position is updated by adding this to the parent.pos (position me.Vector2d)
      value. Thus Affecting the movement of the parent.  Look at the source code for /src/physics/body.js:update (me.Body.update) for
      a better understanding.
-
-
      * @class
      * @extends me.Rect
      * @memberOf me
@@ -186,21 +184,51 @@
             /**
              * Default gravity value for this body.
              * To be set to to < 0, 0 > for RPG, shooter, etc...<br>
-             * Note: y axis gravity can also globally be defined through me.sys.gravity
              * @public
-             * @see me.sys.gravity
+             * @see me.World.gravity
              * @type me.Vector2d
              * @default <0,0.98>
-             * @default
+             * @deprecated since 7.2.0
              * @name gravity
              * @memberOf me.Body
              */
             if (typeof(this.gravity) === "undefined") {
-                this.gravity = new me.Vector2d();
+                var self = this;
+                this.gravity = new me.ObservableVector2d(0, 0, { onUpdate : function(x, y) {
+                    // disable gravity or apply a scale if y gravity is different from 0
+                    if (typeof y === "number") {
+                        self.gravityScale = y / me.game.world.gravity.y;
+                    }
+                    // deprecation // WARNING:
+                    console.log(
+                        "me.Body.gravity is deprecated, " +
+                        "please see me.Body.gravityScale " +
+                        "to modify gravity for a specific body"
+                    );
+                }});
             }
-            this.gravity.set(
-                0, typeof(me.sys.gravity) === "number" ? me.sys.gravity : 0.98
-            );
+
+            /**
+             * The degree to which this body is affected by the world gravity
+             * @public
+             * @see me.World.gravity
+             * @type Number
+             * @default 1.0
+             * @name gravityScale
+             * @memberOf me.Body
+             */
+            this.gravityScale = 1.0;
+
+            /**
+             * If true this body won't be affected by the world gravity
+             * @public
+             * @see me.World.gravity
+             * @type Boolean
+             * @default false
+             * @name ignoreGravity
+             * @memberOf me.Body
+             */
+            this.ignoreGravity = false;
 
             /**
              * falling state of the body<br>
@@ -464,7 +492,7 @@
                 }
 
                 // cancel the falling an jumping flags if necessary
-                var dir = Math.sign(this.gravity.y) || 1;
+                var dir = Math.sign(me.game.world.gravity.y * this.gravityScale) || 1;
                 this.falling = overlap.y >= dir;
                 this.jumping = overlap.y <= -dir;
             }
@@ -576,6 +604,7 @@
          */
         computeVelocity : function (vel) {
 
+
             // apply fore if defined
             if (this.force.x) {
                 vel.x += this.force.x * me.timer.tick;
@@ -589,14 +618,13 @@
                 this.applyFriction(vel);
             }
 
-            // apply gravity if defined
-            if (this.gravity.x) {
-                vel.x += this.gravity.x * this.mass * me.timer.tick;
-            }
-            if (this.gravity.y) {
-                vel.y += this.gravity.y * this.mass * me.timer.tick;
+            if (!this.ignoreGravity) {
+                var worldGravity = me.game.world.gravity;
+                // apply gravity if defined
+                vel.x += worldGravity.x * this.gravityScale * this.mass * me.timer.tick;
+                vel.y += worldGravity.y * this.gravityScale * this.mass * me.timer.tick;
                 // check if falling / jumping
-                this.falling = (vel.y * Math.sign(this.gravity.y)) > 0;
+                this.falling = (vel.y * Math.sign(worldGravity.y * this.gravityScale)) > 0;
                 this.jumping = (this.falling ? false : this.jumping);
             }
 
