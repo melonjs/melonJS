@@ -196,7 +196,7 @@
 
         /**
          * generate an orthogonal projection matrix, with the result replacing the current matrix
-         * <img src="images/glortho.gif"/><br>
+         * <img src="images/glOrtho.gif"/><br>
          * @name ortho
          * @memberOf me.Matrix2d
          * @function
