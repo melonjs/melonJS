@@ -185,10 +185,10 @@
              * Default gravity value for this body.
              * To be set to to < 0, 0 > for RPG, shooter, etc...<br>
              * @public
-             * @see me.World.gravity
+             * @see me.Body.gravityScale
              * @type me.Vector2d
              * @default <0,0.98>
-             * @deprecated since 7.2.0
+             * @deprecated since 8.0.0
              * @name gravity
              * @memberOf me.Body
              */
