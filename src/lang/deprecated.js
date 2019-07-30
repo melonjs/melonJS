@@ -211,7 +211,7 @@ me.Entity.prototype.angleToPoint = function (v) {
  * @type {Number}
  * @name gravity
  * @memberOf me.sys
- * @deprecated since 7.1.0
+ * @deprecated since 8.0.0
  * @see me.World.gravity
  */
 Object.defineProperty(me.sys, "gravity", {
