@@ -368,13 +368,13 @@
      * @public
      * @function
      * @param {me.input.KEY} keycode
-     * @param {Boolean} [status=false] true to trigger a key press, or false for key release
+     * @param {Boolean} [status=false] true to trigger a key down event, or false for key up event
      * @example
      * // trigger a key press
      * me.input.triggerKeyEvent(me.input.KEY.LEFT, true);
      */
     api.triggerKeyEvent = function (keycode, status, mouseButton) {
-        if (status) {
+        if (status === true) {
             keyDownEvent({}, keycode, mouseButton);
         }
         else {

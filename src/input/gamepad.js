@@ -157,7 +157,6 @@
      */
     var updateGamepads = function () {
         var gamepads = navigator.getGamepads();
-        var e = {};
 
         // Trigger button bindings
         Object.keys(bindings).forEach(function (index) {
@@ -209,10 +208,10 @@
 
                 // Edge detection
                 if (!last.pressed && current.pressed) {
-                    api._keydown(e, last.keyCode, mapped_button + 256);
+                    api.triggerKeyEvent(last.keyCode, true, mapped_button + 256);
                 }
                 else if (last.pressed && !current.pressed) {
-                    api._keyup(e, last.keyCode, mapped_button + 256);
+                    api.triggerKeyEvent(last.keyCode, false, mapped_button + 256);
                 }
 
                 // Update last button state
@@ -255,16 +254,16 @@
                 if (!last[range].pressed && pressed) {
                     // Release the opposite direction, if necessary
                     if (last[-range].pressed) {
-                        api._keyup(e, last[-range].keyCode, mapped_axis + 256);
+                        api.triggerKeyEvent(last[-range].keyCode, false, mapped_axis + 256);
                         last[-range].value = 0;
                         last[-range].pressed = false;
                     }
 
-                    api._keydown(e, last[range].keyCode, mapped_axis + 256);
+                    api.triggerKeyEvent(last[range].keyCode, true, mapped_axis + 256);
                 }
                 else if ((last[range].pressed || last[-range].pressed) && !pressed) {
                     range = last[range].pressed ? range : -range;
-                    api._keyup(e, last[range].keyCode, mapped_axis + 256);
+                    api.triggerKeyEvent(last[range].keyCode, false, mapped_axis + 256);
                 }
 
                 // Update last axis state
