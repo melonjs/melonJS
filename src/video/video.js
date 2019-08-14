@@ -42,12 +42,14 @@
          */
         function autoDetectRenderer(c, width, height, options) {
             try {
-                return new me.WebGLRenderer(c, width, height, options);
-            }
-            catch (e) {
+                if (me.device.isWebGLSupported(options)) {
+                    return new me.WebGLRenderer(c, width, height, options);
+                }
+            } catch (e) {
                 console.log("Error creating WebGL renderer :" + e.message);
-                return new me.CanvasRenderer(c, width, height, options);
             }
+            // else fallback to canvas
+            return new me.CanvasRenderer(c, width, height, options);
         }
 
         /*

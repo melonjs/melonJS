@@ -764,6 +764,29 @@
             }
         };
 
+
+        /**
+         * returns true if the device supports WebGL
+         * @name isWebGLSupported
+         * @memberOf me.device
+         * @function
+         * @param {Object} [options] context creation options
+         * @param {Boolean} [options.failIfMajorPerformanceCaveat=true] If true, the renderer will switch to CANVAS mode if the performances of a WebGL context would be dramatically lower than that of a native application making equivalent OpenGL calls.
+         * @return {Boolean} true if WebGL is supported
+         */
+        api.isWebGLSupported = function (options) {
+            try {
+                var canvas = document.createElement("canvas");
+                var ctxOptions = {
+                    stencil: true,
+                    failIfMajorPerformanceCaveat : options.failIfMajorPerformanceCaveat
+                };
+                return !! (window.WebGLRenderingContext && (canvas.getContext("webgl", ctxOptions) || canvas.getContext("experimental-webgl", ctxOptions)));
+            } catch (e) {
+                return false;
+            }
+        },
+
         /**
          * return the highest precision format supported by this device for GL Shaders
          * @name getMaxShaderPrecision
