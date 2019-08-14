@@ -1,5 +1,7 @@
 Version History
 ---------------
+7.1.1
+
 7.1.0
 * Audio : audio core update (2.1.2) to fix audio unlock on Firefox 66 and onwards
 * Core : new me.event.GAME_UPDATE system event that will be triggered at the beginning of the update loop
