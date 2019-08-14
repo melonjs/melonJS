@@ -397,7 +397,7 @@
 
         // register to the the update event if not yet done and supported by the browser
         // if not supported, the function will fail silently (-> update loop won't be called)
-        if (typeof updateEventHandler === "undefined" && navigator.getGamepads) {
+        if (typeof updateEventHandler === "undefined" && typeof navigator.getGamepads === "function") {
             updateEventHandler = me.event.subscribe(me.event.GAME_UPDATE, updateGamepads);
         }
 

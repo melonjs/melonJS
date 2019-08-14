@@ -1,6 +1,7 @@
 Version History
 ---------------
 7.1.1
+* Input : fixed a regression with gamepad polling
 
 7.1.0
 * Audio : audio core update (2.1.2) to fix audio unlock on Firefox 66 and onwards
