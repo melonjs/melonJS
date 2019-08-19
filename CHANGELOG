@@ -1,6 +1,8 @@
 Version History
 ---------------
 7.1.1
+* Core : fix a crash when a game reset is triggered manually before any default stage has been defined
+* Core : new option to automatically change to a newly define stage
 * Input : fixed a regression with gamepad polling
 * Renderer : fixed an issue where a failed attempt at creating a WebGL context would then prevent from creating a canvas context as fallback
 

@@ -153,7 +153,10 @@
             api.world.anchorPoint.set(0, 0);
 
             // point to the current active stage "default" camera
-            api.viewport = me.state.current().cameras.get("default");
+            var current = me.state.current()
+            if (typeof current !== "undefined") {
+                api.viewport = me.state.current().cameras.get("default");
+            }
 
             // publish reset notification
             me.event.publish(me.event.GAME_RESET);
