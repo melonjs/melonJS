@@ -1,73 +1,85 @@
 <!DOCTYPE html>
 <html>
-<head>
-  <title>melonJS - Graphics drawing</title>
-  <link rel="stylesheet" type="text/css" media="screen" href="index.css">
-</head>
-<body bgcolor="white">
-  <!-- Canvas placeholder -->
-  <div id="screen"></div>
-  <!-- melonJS Library -->
-  <script type="text/javascript" src="../../build/melonjs.js"></script>
-  <script type="text/javascript" src="../../plugins/debug/debugPanel.js"></script>
+    <head>
+        <title>melonJS - Graphics drawing</title>
+        <link rel="stylesheet" type="text/css" media="screen" href="index.css">
+    </head>
+    <body bgcolor="white">
+        <!-- Canvas placeholder -->
+        <div id="screen"></div>
+        <!-- melonJS Library -->
+        <script type="text/javascript" src="../../build/melonjs.js"></script>
+        <script type="text/javascript" src="../../plugins/debug/debugPanel.js"></script>
 
-  <!-- script -->
-  <script type="text/javascript">
-      me.device.onReady(function onReady() {
-          // Initialize the video.
-          if (!me.video.init(320, 240, {wrapper : "screen", scale : "auto", renderer : me.video.AUTO, blendMode: "normal"})) {
-              alert("Your browser does not support HTML5 canvas.");
-              return;
-          }
+        <!-- script -->
+        <script type="text/javascript">
+            me.device.onReady(function onReady() {
+                // Initialize the video.
+                if (!me.video.init(320, 240, {wrapper : "screen", scale : "auto", renderer : me.video.AUTO, blendMode: "normal"})) {
+                    alert("Your browser does not support HTML5 canvas.");
+                    return;
+                }
 
-          var starMask = new me.Polygon(0, 0, [
-            // draw a star
-            {x: 0, y: 0},
-            {x: 14, y: 30},
-            {x: 47, y: 35},
-            {x: 23, y: 57},
-            {x: 44, y: 90},
-            {x: 0, y: 62},
-            {x: -44, y: 90},
-            {x: -23, y: 57},
-            {x: -47, y: 35},
-            {x: -14, y: 30}
-        ]);
+                // default stage
+                var mainStage = new (me.Stage.extend({
+                    // on reset event function
+                    onResetEvent : function() {
+                        me.game.world.addChild(new (me.Renderable.extend({
+                            // constructor
+                            init: function() {
+                                this._super(me.Renderable, "init", [0, 0, 320, 240]);
+                                this.starMask = new me.Polygon(0, 0, [
+                                // draw a star
+                                {x: 0, y: 0},
+                                {x: 14, y: 30},
+                                {x: 47, y: 35},
+                                {x: 23, y: 57},
+                                {x: 44, y: 90},
+                                {x: 0, y: 62},
+                                {x: -44, y: 90},
+                                {x: -23, y: 57},
+                                {x: -47, y: 35},
+                                {x: -14, y: 30}
+                                ]);
+                                this.circleMask = new me.Ellipse(160 + 50, 120 + 50, 100, 100);
+                                this.anchorPoint.set(0, 0);
+                            },
+                            // draw function
+                            draw : function(renderer) {
+                                renderer.clearColor("#FFFFFF80");
+                                renderer.setGlobalAlpha(0.5);
 
-          var circleMask = new me.Ellipse(160 + 50, 120 + 50, 100, 100);
+                                renderer.setColor("red");
+                                this.starMask.pos.set(60 + 50, 25);
+                                renderer.fill(this.starMask);
+                                renderer.stroke(this.starMask);
+                                renderer.fillRect(60, 20, 100 ,100);
+                                renderer.strokeRect(65, 25, 90 , 90);
 
-          me.video.renderer.clearColor("#FFFFFF80");
-          me.video.renderer.setGlobalAlpha(0.5);
+                                renderer.setColor("lime");
+                                this.starMask.pos.set(110 + 50, 75);
+                                renderer.setMask(this.starMask);
+                                renderer.stroke(this.starMask);
+                                renderer.fillRect(110, 70, 100 ,100);
+                                renderer.strokeRect(115, 75, 90 , 90);
+                                renderer.clearMask();
 
-          me.video.renderer.setColor("red");
-          starMask.pos.set(60 + 50, 25);
-          me.video.renderer.fill(starMask);
-          me.video.renderer.stroke(starMask);
-          me.video.renderer.fillRect(60, 20, 100 ,100);
-          me.video.renderer.strokeRect(65, 25, 90 , 90);
+                                renderer.setColor("orange");
+                                renderer.strokeArc(200, 75, 20, -Math.PI, 0 );
+                                renderer.fillArc(200, 75, 20, Math.PI * 2, Math.PI);
 
-          me.video.renderer.setColor("lime");
-          starMask.pos.set(110 + 50, 75);
-          me.video.renderer.setMask(starMask);
-          me.video.renderer.stroke(starMask);
-          me.video.renderer.fillRect(110, 70, 100 ,100);
-          me.video.renderer.strokeRect(115, 75, 90 , 90);
-          me.video.renderer.clearMask();
-
-          me.video.renderer.setColor("orange");
-          me.video.renderer.strokeArc(200, 75, 20, -Math.PI, 0 );
-          me.video.renderer.fillArc(200, 75, 20, Math.PI * 2, Math.PI);
-
-          me.video.renderer.setColor("blue");
-          me.video.renderer.setMask(circleMask);
-          me.video.renderer.fillRect(160, 120, 100 ,100);
-          me.video.renderer.strokeEllipse(160 + 50, 120 + 50, 30, 30);
-          me.video.renderer.strokeRect(165, 125, 90 , 90);
-          me.video.renderer.clearMask();
-
-
-
-      });
-  </script>
-</body>
+                                renderer.setColor("blue");
+                                renderer.setMask(this.circleMask);
+                                renderer.fillRect(160, 120, 100 ,100);
+                                renderer.strokeEllipse(160 + 50, 120 + 50, 30, 30);
+                                renderer.strokeRect(165, 125, 90 , 90);
+                                renderer.clearMask();
+                            }
+                        })));
+                    }
+                }));
+                me.state.set(me.state.PLAY, mainStage, true);
+            });
+        </script>
+    </body>
 </html>
