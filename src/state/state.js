@@ -422,8 +422,8 @@
          * @public
          * @function
          * @param {Number} state State ID (see constants)
-         * @param {me.Stage} stage Instantiated Stage to associate
-         * with state ID
+         * @param {me.Stage} stage Instantiated Stage to associate with state ID
+         * @param {Boolean} [start = false] if true the state will be changed immediately after adding it.
          * @example
          * var MenuButton = me.GUI_Object.extend({
          *     "onClick" : function () {
@@ -461,13 +461,17 @@
          *
          * me.state.set(me.state.MENU, new MenuScreen());
          */
-        api.set = function (state, stage) {
+        api.set = function (state, stage, start) {
             if (!(stage instanceof me.Stage)) {
                 throw new Error(stage + " is not an instance of me.Stage");
             }
             _stages[state] = {};
             _stages[state].stage = stage;
             _stages[state].transition = true;
+
+            if (start === true) {
+                api.change(state);
+            }
         };
 
         /**
@@ -480,7 +484,9 @@
          * @return {me.Stage}
          */
         api.current = function () {
-            return _stages[_state].stage;
+            if (typeof _stages[_state] !== "undefined") {
+                return _stages[_state].stage;
+            }
         };
 
         /**

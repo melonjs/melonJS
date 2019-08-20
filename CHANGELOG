@@ -2,6 +2,12 @@ Version History
 ---------------
 8.0.0
 
+7.1.1
+* Core : fix a crash when a game reset is triggered manually before any default stage has been defined
+* Core : new option to automatically change to a newly define stage
+* Input : fixed a regression with gamepad polling
+* Renderer : fixed an issue where a failed attempt at creating a WebGL context would then prevent from creating a canvas context as fallback
+
 7.1.0
 * Audio : audio core update (2.1.2) to fix audio unlock on Firefox 66 and onwards
 * Core : new me.event.GAME_UPDATE system event that will be triggered at the beginning of the update loop

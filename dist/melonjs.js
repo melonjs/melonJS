@@ -1,5 +1,5 @@
 /*!
- * melonJS Game Engine - v7.1.0
+ * melonJS Game Engine - v7.1.1
  * http://www.melonjs.org
  * melonjs is licensed under the MIT License.
  * http://www.opensource.org/licenses/mit-license
@@ -1160,6 +1160,29 @@
          }
        };
        /**
+        * returns true if the device supports WebGL
+        * @name isWebGLSupported
+        * @memberOf me.device
+        * @function
+        * @param {Object} [options] context creation options
+        * @param {Boolean} [options.failIfMajorPerformanceCaveat=true] If true, the renderer will switch to CANVAS mode if the performances of a WebGL context would be dramatically lower than that of a native application making equivalent OpenGL calls.
+        * @return {Boolean} true if WebGL is supported
+        */
+
+
+       api.isWebGLSupported = function (options) {
+         try {
+           var canvas = document.createElement("canvas");
+           var ctxOptions = {
+             stencil: true,
+             failIfMajorPerformanceCaveat: options.failIfMajorPerformanceCaveat
+           };
+           return !!(window.WebGLRenderingContext && (canvas.getContext("webgl", ctxOptions) || canvas.getContext("experimental-webgl", ctxOptions)));
+         } catch (e) {
+           return false;
+         }
+       },
+       /**
         * return the highest precision format supported by this device for GL Shaders
         * @name getMaxShaderPrecision
         * @memberOf me.device
@@ -1167,8 +1190,6 @@
         * @param {WebGLRenderingContext} gl
         * @return {Boolean} "lowp", "mediump", or "highp"
         */
-
-
        api.getMaxShaderPrecision = function (gl) {
          if (gl.getShaderPrecisionFormat(gl.VERTEX_SHADER, gl.HIGH_FLOAT).precision > 0 && gl.getShaderPrecisionFormat(gl.FRAGMENT_SHADER, gl.HIGH_FLOAT).precision > 0) {
            return "highp";
@@ -1190,7 +1211,6 @@
         *    me.device.focus();
         *  }
         */
-
 
        api.focus = function () {
          if (typeof window.focus === "function") {
@@ -2099,7 +2119,12 @@
 
          api.world.anchorPoint.set(0, 0); // point to the current active stage "default" camera
 
-         api.viewport = me.state.current().cameras.get("default"); // publish reset notification
+         var current = me.state.current();
+
+         if (typeof current !== "undefined") {
+           api.viewport = me.state.current().cameras.get("default");
+         } // publish reset notification
+
 
          me.event.publish(me.event.GAME_RESET); // Refresh internal variables for framerate  limiting
 
@@ -2243,7 +2268,7 @@
       * @name version
       * @type {string}
       */
-     me.version = "7.1.0";
+     me.version = "7.1.1";
      /**
       * global system settings and browser capabilities
       * @namespace
@@ -5313,7 +5338,7 @@
 
        /**
         * generate an orthogonal projection matrix, with the result replacing the current matrix
-        * <img src="images/glortho.gif"/><br>
+        * <img src="images/glOrtho.gif"/><br>
         * @name ortho
         * @memberOf me.Matrix2d
         * @function
@@ -13866,8 +13891,8 @@
         * @public
         * @function
         * @param {Number} state State ID (see constants)
-        * @param {me.Stage} stage Instantiated Stage to associate
-        * with state ID
+        * @param {me.Stage} stage Instantiated Stage to associate with state ID
+        * @param {Boolean} [start = false] if true the state will be changed immediately after adding it.
         * @example
         * var MenuButton = me.GUI_Object.extend({
         *     "onClick" : function () {
@@ -13907,7 +13932,7 @@
         */
 
 
-       api.set = function (state, stage) {
+       api.set = function (state, stage, start) {
          if (!(stage instanceof me.Stage)) {
            throw new Error(stage + " is not an instance of me.Stage");
          }
@@ -13915,6 +13940,10 @@
          _stages[state] = {};
          _stages[state].stage = stage;
          _stages[state].transition = true;
+
+         if (start === true) {
+           api.change(state);
+         }
        };
        /**
         * return a reference to the current screen object<br>
@@ -13928,7 +13957,9 @@
 
 
        api.current = function () {
-         return _stages[_state].stage;
+         if (typeof _stages[_state] !== "undefined") {
+           return _stages[_state].stage;
+         }
        };
        /**
         * specify a global transition effect
@@ -19892,11 +19923,15 @@
 
        function autoDetectRenderer(c, width, height, options) {
          try {
-           return new me.WebGLRenderer(c, width, height, options);
+           if (me.device.isWebGLSupported(options)) {
+             return new me.WebGLRenderer(c, width, height, options);
+           }
          } catch (e) {
            console.log("Error creating WebGL renderer :" + e.message);
-           return new me.CanvasRenderer(c, width, height, options);
-         }
+         } // else fallback to canvas
+
+
+         return new me.CanvasRenderer(c, width, height, options);
        }
        /*
         * PUBLIC STUFF
@@ -24580,7 +24615,7 @@
       * @public
       * @function
       * @param {me.input.KEY} keycode
-      * @param {Boolean} [status=false] true to trigger a key press, or false for key release
+      * @param {Boolean} [status=false] true to trigger a key down event, or false for key up event
       * @example
       * // trigger a key press
       * me.input.triggerKeyEvent(me.input.KEY.LEFT, true);
@@ -24588,7 +24623,7 @@
 
 
      api.triggerKeyEvent = function (keycode, status, mouseButton) {
-       if (status) {
+       if (status === true) {
          keyDownEvent({}, keycode, mouseButton);
        } else {
          keyUpEvent({}, keycode, mouseButton);
@@ -25486,8 +25521,7 @@
       */
 
      var updateGamepads = function updateGamepads() {
-       var gamepads = navigator.getGamepads();
-       var e = {}; // Trigger button bindings
+       var gamepads = navigator.getGamepads(); // Trigger button bindings
 
        Object.keys(bindings).forEach(function (index) {
          var gamepad = gamepads[index];
@@ -25536,9 +25570,9 @@
            me.event.publish(me.event.GAMEPAD_UPDATE, [index, "buttons", +button, current]); // Edge detection
 
            if (!last.pressed && current.pressed) {
-             api._keydown(e, last.keyCode, mapped_button + 256);
+             api.triggerKeyEvent(last.keyCode, true, mapped_button + 256);
            } else if (last.pressed && !current.pressed) {
-             api._keyup(e, last.keyCode, mapped_button + 256);
+             api.triggerKeyEvent(last.keyCode, false, mapped_button + 256);
            } // Update last button state
 
 
@@ -25583,17 +25617,15 @@
            if (!last[range].pressed && pressed) {
              // Release the opposite direction, if necessary
              if (last[-range].pressed) {
-               api._keyup(e, last[-range].keyCode, mapped_axis + 256);
-
+               api.triggerKeyEvent(last[-range].keyCode, false, mapped_axis + 256);
                last[-range].value = 0;
                last[-range].pressed = false;
              }
 
-             api._keydown(e, last[range].keyCode, mapped_axis + 256);
+             api.triggerKeyEvent(last[range].keyCode, true, mapped_axis + 256);
            } else if ((last[range].pressed || last[-range].pressed) && !pressed) {
              range = last[range].pressed ? range : -range;
-
-             api._keyup(e, last[range].keyCode, mapped_axis + 256);
+             api.triggerKeyEvent(last[range].keyCode, false, mapped_axis + 256);
            } // Update last axis state
 
 
@@ -25727,7 +25759,7 @@
        // if not supported, the function will fail silently (-> update loop won't be called)
 
 
-       if (typeof updateEventHandler === "undefined" && navigator.getGamepads) {
+       if (typeof updateEventHandler === "undefined" && typeof navigator.getGamepads === "function") {
          updateEventHandler = me.event.subscribe(me.event.GAME_UPDATE, updateGamepads);
        } // Allocate bindings if not defined
 
@@ -31143,10 +31175,10 @@
             * this can be overridden by the plugin
             * @public
             * @type String
-            * @default "7.1.0"
+            * @default "7.1.1"
             * @name me.plugin.Base#version
             */
-           this.version = "7.1.0";
+           this.version = "7.1.1";
          }
        });
        /**
