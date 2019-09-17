@@ -1,6 +1,8 @@
 Version History
 ---------------
 8.0.0
+* Physic : me.game.world is now a specific container (based on me.Container) that will manage all related physic updates
+* Physic : gravity for physic bodies is now defined globally under me.game.world.gravity, and can be scaled individually using me.Body.gravityScale
 
 7.1.1
 * Core : fix a crash when a game reset is triggered manually before any default stage has been defined
