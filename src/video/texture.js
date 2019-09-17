@@ -5,6 +5,7 @@
      * - [TexturePacker]{@link http://www.codeandweb.com/texturepacker/} : through JSON export (standard and multipack texture atlas) <br>
      * - [ShoeBox]{@link http://renderhjs.net/shoebox/} : through JSON export using the
      * melonJS setting [file]{@link https://github.com/melonjs/melonJS/raw/master/media/shoebox_JSON_export.sbx} <br>
+     * - [Free Texture Packer]{@link http://free-tex-packer.com/app/} : through JSON export (standard and multipack texture atlas) <br>
      * - Standard (fixed cell size) spritesheet : through a {framewidth:xx, frameheight:xx, anchorPoint:me.Vector2d} object
      * @class
      * @extends me.Object
@@ -70,8 +71,8 @@
                     var atlas = atlases[i];
 
                     if (typeof(atlas.meta) !== "undefined") {
-                        // Texture Packer
-                        if (atlas.meta.app.includes("texturepacker")) {
+                        // Texture Packer or Free Texture Packer
+                        if (atlas.meta.app.includes("texturepacker") || atlas.meta.app.includes("free-tex-packer")) {
                             this.format = "texturepacker";
                             // set the texture
                             if (typeof(src) === "undefined") {
