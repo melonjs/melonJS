@@ -100,6 +100,8 @@ var FontTest = me.Renderable.extend ({
         this.font.setFont("Arial", 48, this.color);
         this.font.strokeStyle.parseCSS("red");
         this.font.lineWidth = 3;
+        this.font.draw(renderer, "Arial Text " + i + "px !" , 5 , yPos );
+        this.font.lineWidth = 1;
         this.font.drawStroke(renderer, "Arial Text " + i + "px !" , 5 , yPos );
 
         // bFont size test
@@ -150,10 +152,11 @@ var FontTest = me.Renderable.extend ({
         this.font.textAlign = "center";
         this.font.lineHeight = 1.1;
         this.font.draw(renderer, text, 90, 210);
-        this.font.lineHeight = 1.1;
+
 
         text = "this is another font test \nwith right alignment\nand it still works!";
         this.font.textAlign = "right";
+        this.font.lineHeight = 1.1;
         this.font.draw(renderer, text, 200, 300);
 
         // bitmapfonts
