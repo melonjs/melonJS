@@ -1,7 +1,7 @@
 {
     "templates": {
         "systemName": "melonJS",
-        "copyright": "Copyright &copy; 2011 - 2019 Olivier Biot",
+        "copyright": "Copyright &copy; 2011 - 2020 Olivier Biot",
         "cleverLinks": true,
         "monospaceLinks": false,
         "default" : {
