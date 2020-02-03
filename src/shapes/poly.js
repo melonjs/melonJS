@@ -265,16 +265,7 @@ import earcut from "earcut";
          */
         getIndices : function (x, y) {
             if (this.indices.length === 0) {
-                var points = this.points;
-                var data = [];
-
-                // flatten the points vector array
-                for (var i = 0; i < points.length; i++) {
-                    // XXX Optimize me
-                    data.push(points[i].x);
-                    data.push(points[i].y);
-                }
-                this.indices = earcut(data);
+                this.indices = earcut(this.points.flatMap(p => [p.x, p.y]));
             }
             return this.indices;
         },

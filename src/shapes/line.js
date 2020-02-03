@@ -54,6 +54,8 @@
         recalc : function () {
             var edges = this.edges;
             var normals = this.normals;
+            var indices = this.indices;
+
             // Copy the original points array and apply the offset/angle
             var points = this.points;
 
@@ -70,6 +72,10 @@
                 normals[0] = new me.Vector2d();
             }
             normals[0].copy(edges[0]).perp().normalize();
+
+            // do not do anything here, indices will be computed by
+            // toIndices if array is empty upon function call
+            indices.length = 0;
 
             return this;
         },
