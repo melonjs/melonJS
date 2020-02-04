@@ -70,13 +70,11 @@ var FontTest = me.Renderable.extend ({
             .yoyo(true)
             .start();
 
-        // arial font
-        this.font = new me.Font("Arial", 8, this.color);
+        // text font
+        this.font = new me.Text(0, 0, {font: "Arial", size: 8, fillStyle: this.color});
         // bitmap font
-        this.bFont = new me.BitmapFont(me.loader.getBinary('xolo12'), me.loader.getImage('xolo12'));
-        this.name = "FontTest";
-
-        this.fancyBFont = new me.BitmapFont(me.loader.getBinary('arialfancy'), me.loader.getImage('arialfancy'));
+        this.bFont = new me.BitmapText(0, 0, {font: "xolo12"});
+        this.fancyBFont = new me.BitmapText(0, 0, {font: "arialfancy"});
     },
 
     // draw function
@@ -203,11 +201,6 @@ var FontTest = me.Renderable.extend ({
         this.bFont.textBaseline = "top";
         this.fancyBFont.textAlign = "left";
         this.fancyBFont.textBaseline = "top";
-    },
-
-    drawBitmapFont: function (renderer, font, yOffset, baselines, scale) {
-        // bFont  test
-
     },
 
     onDeactivateEvent: function() {
