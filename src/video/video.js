@@ -339,20 +339,30 @@
         };
 
         /**
-         * Create and return a new Canvas
+         * Create and return a new Canvas element
          * @name createCanvas
          * @memberOf me.video
          * @function
          * @param {Number} width width
          * @param {Number} height height
-         * @return {Canvas}
+         * @param {Boolean} [offscreen=false] will create an OffscreenCanvas object if supported
+         * @return {HTMLCanvasElement|OffscreenCanvas}
          */
-        api.createCanvas = function (width, height) {
+        api.createCanvas = function (width, height, offscreen) {
+            var _canvas;
+
             if (width === 0 || height === 0)  {
                 throw new Error("width or height was zero, Canvas could not be initialized !");
             }
 
-            var _canvas = document.createElement("canvas");
+            if (me.device.OffscreenCanvas === true && offscreen === true) {
+                _canvas = new OffscreenCanvas(0, 0);
+                // stubbing style for compatibility (as OffscreenCanvas is detached from the DOM)
+                _canvas.style = {};
+                console.log("OffScreenCanvas");
+            } else {
+                _canvas = document.createElement("canvas");
+            }
 
             _canvas.width = width;
             _canvas.height = height;

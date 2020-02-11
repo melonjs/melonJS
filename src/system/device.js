@@ -509,6 +509,15 @@
          */
         api.language = navigator.language || navigator.browserLanguage || navigator.userLanguage || "en";
 
+        /**
+         * equals to true if the device browser supports OffScreenCanvas.
+         * @type Boolean
+         * @readonly
+         * @name OffScreenCanvas
+         * @memberOf me.device
+         */
+        api.OffscreenCanvas = typeof window.OffscreenCanvas !== "undefined";
+
       /**
         * specify a function to execute when the Device is fully loaded and ready
         * @name onReady
