@@ -145,7 +145,8 @@
             if (typeof this.fontTexture === "undefined") {
                 var image = me.video.createCanvas(
                     me.Math.nextPowerOfTwo(this.backBufferCanvas.width),
-                    me.Math.nextPowerOfTwo(this.backBufferCanvas.height)
+                    me.Math.nextPowerOfTwo(this.backBufferCanvas.height),
+                    true
                 );
 
                 /**

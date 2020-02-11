@@ -96,11 +96,20 @@
              * @name lineHeight
              * @memberOf me.BitmapText
              */
-            this.lineHeight = settings.lineHeight || 1;
+            this.lineHeight = settings.lineHeight || 1.0;
+
+            /**
+             * the text to be displayed
+             * @private
+             * @type {String[]}
+             * @name _text
+             * @memberOf me.BitmapText
+             */
+            this._text = [];
 
             /** @ignore */
             // scaled font size;
-            this.fontScale = me.pool.pull("me.Vector2d", 1, 1);
+            this.fontScale = me.pool.pull("me.Vector2d", 1.0, 1.0);
 
             // get the corresponding image
             this.fontImage = (typeof settings.font === "object") ? settings.font : me.loader.getImage(settings.font);
@@ -167,19 +176,20 @@
         setText : function (value) {
             if (typeof value === "undefined") {
                 value = "";
-            } else if (Array.isArray(value)) {
-                value = value.join("\n");
-            } else {
-                value = value.toString();
             }
 
-            if (this._text !== value) {
-                this._text = value;
+            if (this._text.toString() !== value.toString()) {
+                if (!Array.isArray(value)) {
+                    this._text = ("" + value).split("\n");
+                } else {
+                    this._text = value;
+                }
                 this.isDirty = true;
             }
 
             return this;
         },
+
 
         /**
          * change the font display size
@@ -210,9 +220,9 @@
         measureText : function (text, ret) {
             text = text || this._text;
 
-            var strings = ("" + text).split("\n");
             var stringHeight = measureTextHeight(this);
             var textMetrics  = ret || this.getBounds();
+            var strings = typeof text !== "undefined" ? ("" + (text)).split("\n") : this._text;
 
             textMetrics.height = textMetrics.width = 0;
 
@@ -260,14 +270,13 @@
                 y = this.pos.y;
             }
 
-            var strings = ("" + this._text).split("\n");
             var lX = x;
             var stringHeight = measureTextHeight(this);
             var maxWidth = 0;
 
-            for (var i = 0; i < strings.length; i++) {
+            for (var i = 0; i < this._text.length; i++) {
                 x = lX;
-                var string = me.utils.string.trimRight(strings[i]);
+                var string = me.utils.string.trimRight(this._text[i]);
                 // adjust x pos based on alignment value
                 var stringWidth = measureTextWidth(this, string);
                 switch (this.textAlign) {
@@ -359,6 +368,7 @@
             this.fontScale = undefined;
             me.pool.push(this.fontData);
             this.fontData = undefined;
+            this._text.length = 0;
             this._super(me.Renderable, "destroy");
         }
     });

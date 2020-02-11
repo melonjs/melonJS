@@ -115,7 +115,7 @@
             this._super(me.Renderable, "init", [0, 0, w, h]);
 
             // offscreen cache canvas
-            this.fontCanvas = me.video.createCanvas(256, 64);
+            this.fontCanvas = me.video.createCanvas(256, 64, true);
             this.drawFont(me.video.renderer.getContext2d(this.fontCanvas));
 
             this.anchorPoint.set(0.0, 0.0);
@@ -149,8 +149,8 @@
             this.pos.y = Math.round(this.height / 2 + 16);
 
             // use the private _drawFont method to directly draw on the canvas context
-            logo1._drawFont(context, "melon", 0, 0);
-            logo2._drawFont(context, "JS", logo1_width, 0);
+            logo1._drawFont(context, ["melon"], 0, 0);
+            logo2._drawFont(context, ["JS"], logo1_width, 0);
 
             // put them back into the object pool
             me.pool.push(logo1);
