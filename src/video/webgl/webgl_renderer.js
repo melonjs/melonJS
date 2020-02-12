@@ -146,7 +146,7 @@
                 var image = me.video.createCanvas(
                     me.Math.nextPowerOfTwo(this.backBufferCanvas.width),
                     me.Math.nextPowerOfTwo(this.backBufferCanvas.height),
-                    true
+                    false
                 );
 
                 /**

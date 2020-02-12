@@ -282,7 +282,7 @@
             this.alwaysUpdate = true;
 
             // WebGL/Canvas compatibility
-            this.canvas = me.video.createCanvas(this.width, this.height, true);
+            this.canvas = me.video.createCanvas(this.width, this.height, false);
 
             // create a default font, with fixed char width
             this.font_size = 10;

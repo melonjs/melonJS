@@ -359,7 +359,6 @@
                 _canvas = new OffscreenCanvas(0, 0);
                 // stubbing style for compatibility (as OffscreenCanvas is detached from the DOM)
                 _canvas.style = {};
-                console.log("OffScreenCanvas");
             } else {
                 _canvas = document.createElement("canvas");
             }
