@@ -15,6 +15,20 @@
          * @ignore
          */
         init : function (x, y, w, h) {
+
+            /**
+             * the center point of this rectangle
+             * @public
+             * @type me.Vector2d
+             * @name center
+             * @memberOf me.Rect
+             */
+            if (typeof(this.center) === "undefined") {
+                this.center = new me.Vector2d();
+            }
+            this.center.set(0, 0);
+
+            // parent constructor
             this._super(me.Polygon, "init", [x, y, [
                 new me.Vector2d(0, 0), // 0, 0
                 new me.Vector2d(w, 0), // 1, 0
@@ -52,10 +66,6 @@
             }
 
             this._super(me.Polygon, "setShape", [x, y, points]);
-
-            // private properties to cache width & height
-            this._width = this.points[2].x; // w
-            this._height = this.points[2].y; // h
 
             return this;
         },
@@ -129,6 +139,7 @@
          * @return {me.Rect} this shape bounding box Rectangle object
          */
         updateBounds : function () {
+            this.center.set(this.centerX, this.centerY);
             return this;
         },
 
@@ -436,7 +447,11 @@
          * @ignore
          */
         get : function () {
-            return this.pos.x + (this._width / 2);
+            if (isFinite(this._width)) {
+                return this.pos.x + (this._width / 2);
+            } else {
+                return this._width;
+            }
         },
         /**
          * @ignore
@@ -459,7 +474,11 @@
          * @ignore
          */
         get : function () {
-            return this.pos.y + (this._height / 2);
+            if (isFinite(this._height)) {
+                return this.pos.y + (this._height / 2);
+            } else {
+                return this._height;
+            }
         },
         /**
          * @ignore
