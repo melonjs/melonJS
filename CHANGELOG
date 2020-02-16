@@ -3,9 +3,12 @@ Version History
 8.0.0
 * Physic : me.game.world is now a specific container (based on me.Container) that will manage all related physic updates
 * Physic : gravity for physic bodies is now defined globally under me.game.world.gravity, and can be scaled individually using me.Body.gravityScale
+* Physic : added a rotate method to me.Body to allow rotating all the body shapes properly (by default around the body bounding box center)
 * Renderable : add support for free-texture-packer (http://free-tex-packer.com), the free Texture Packer alternative (thanks @PLAYERKILLERS)
 * Renderable : optimized and tidied up me.Text and me.BitmapText implementation
 * Renderer : new optional parameter for createCanvas() to request an OffScreenCanvas if supported by the browser
+* Shapes : vectors and shapes can now be rotated around a given (optional) point instead of the default origin point
+* Shapes : added a center vector propery for me.Rect, giving the center point of the rectangle
 
 7.1.1
 * Core : fix a crash when a game reset is triggered manually before any default stage has been defined
