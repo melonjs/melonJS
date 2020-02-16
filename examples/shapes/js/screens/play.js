@@ -40,6 +40,7 @@ game.PlayScreen = me.Stage.extend({
                 return true;
             },
             draw: function(renderer) {
+                if (me.plugins.debugPanel.panel.visible === true) {
                 var x = Math.round(me.input.pointer.gameWorldX);
                 var y = Math.round(me.input.pointer.gameWorldY);
                 this.font.draw (
@@ -47,6 +48,7 @@ game.PlayScreen = me.Stage.extend({
                     "( " + x + "," + y + " )",
                     x,
                     y - this.fontHeight);
+                }
             }
         })), 10);
     }

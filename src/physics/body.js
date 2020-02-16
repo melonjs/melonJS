@@ -518,10 +518,34 @@
                 }
             }
 
+            this._super(me.Rect, "updateBounds");
+
             // trigger the onBodyChange
             if (typeof this.onBodyUpdate === "function") {
                 this.onBodyUpdate(this);
             }
+
+            return this;
+        },
+
+        /**
+         * Rotate this body (counter-clockwise) by the specified angle (in radians).
+         * Unless specified the body will be rotated around its center point
+         * @name rotate
+         * @memberOf me.Body
+         * @function
+         * @param {Number} angle The angle to rotate (in radians)
+         * @param {me.Vector2d|me.ObservableVector2d} [v] an optional point to rotate around
+         * @return {me.Body} Reference to this object for method chaining
+         */
+        rotate : function (angle, v) {
+            v = v || this.center;
+
+            for (var i = 0; i < this.shapes.length; i++) {
+                this.shapes[i].rotate(angle, v);
+            }
+
+            this.updateBounds();
 
             return this;
         },

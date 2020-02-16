@@ -22,6 +22,7 @@ game.ShapeObject = me.Entity.extend({
         me.input.registerPointerEvent("pointerup", this, this.onRelease.bind(this));
         me.input.registerPointerEvent("pointercancel", this, this.onRelease.bind(this));
         me.input.registerPointerEvent("pointermove", this, this.pointerMove.bind(this));
+        me.input.registerPointerEvent("wheel", this, this.onScroll.bind(this));
     },
 
     /**
@@ -33,6 +34,22 @@ game.ShapeObject = me.Entity.extend({
             me.game.world.moveUp(this);
             this.pos.set(event.gameX, event.gameY, this.pos.z);
             this.pos.sub(this.grabOffset);
+        }
+    },
+
+    /**
+     * pointermove function
+     */
+    onScroll: function (event) {
+        if (this.selected) {
+            // by default body rotate around the body center
+            this.body.rotate(event.deltaY);
+            // default anchor point for renderable is 0.5, 0.5
+            this.renderable.rotate(event.deltaY);
+
+            // ensure we are still withing the object bounds
+            this.selected = false;
+            this.onSelect(event);
         }
     },
 
@@ -66,7 +83,7 @@ game.ShapeObject = me.Entity.extend({
     onRelease : function (/*event*/) {
         this.selected = false;
         // don"t propagate the event furthermore
-        return false;
+        //return false;
     },
 
     /**
