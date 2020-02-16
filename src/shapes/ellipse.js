@@ -84,8 +84,8 @@
          * @name setShape
          * @memberOf me.Ellipse.prototype
          * @function
-         * @param {Number} x position of the ellipse
-         * @param {Number} y position of the ellipse
+         * @param {Number} x the center x coordinate of the ellipse
+         * @param {Number} y the center y coordinate of the ellipse
          * @param {Number} w width (diameter) of the ellipse
          * @param {Number} h height (diameter) of the ellipse
          */
@@ -108,10 +108,13 @@
          * @memberOf me.Ellipse.prototype
          * @function
          * @param {Number} angle The angle to rotate (in radians)
+         * @param {me.Vector2d|me.ObservableVector2d} [v] an optional point to rotate around
          * @return {me.Ellipse} Reference to this object for method chaining
          */
-        rotate : function (/*angle*/) {
-            // TODO
+        rotate : function (angle, v) {
+            // TODO : only works for circle
+            this.pos.rotate(angle, v);
+            this.updateBounds();
             return this;
         },
 

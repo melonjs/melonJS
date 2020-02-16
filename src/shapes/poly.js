@@ -162,14 +162,15 @@ import earcut from "earcut";
          * @memberOf me.Polygon.prototype
          * @function
          * @param {Number} angle The angle to rotate (in radians)
+         * @param {me.Vector2d|me.ObservableVector2d} [v] an optional point to rotate around
          * @return {me.Polygon} Reference to this object for method chaining
          */
-        rotate : function (angle) {
+        rotate : function (angle, v) {
             if (angle !== 0) {
                 var points = this.points;
                 var len = points.length;
                 for (var i = 0; i < len; i++) {
-                    points[i].rotate(angle);
+                    points[i].rotate(angle, v);
                 }
                 this.recalc();
                 this.updateBounds();

@@ -369,7 +369,11 @@
         rotate : function (angle) {
             var x = this.x;
             var y = this.y;
-            return this._set(x * Math.cos(angle) - y * Math.sin(angle), x * Math.sin(angle) + y * Math.cos(angle), this.z);
+
+            var c = Math.cos(angle)
+            var s = Math.sin(angle);
+
+            return this._set(x * c - y * s, x * s + y * c, this.z);
         },
 
         /**

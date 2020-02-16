@@ -347,12 +347,25 @@
          * @memberOf me.Vector2d
          * @function
          * @param {number} angle The angle to rotate (in radians)
+         * @param {me.Vector2d|me.ObservableVector2d} [v] an optional point to rotate around
          * @return {me.Vector2d} Reference to this object for method chaining
          */
-        rotate : function (angle) {
-            var x = this.x;
-            var y = this.y;
-            return this._set(x * Math.cos(angle) - y * Math.sin(angle), x * Math.sin(angle) + y * Math.cos(angle));
+        rotate : function (angle, v) {
+            var cx = 0;
+            var cy = 0;
+
+            if (typeof v === "object") {
+                cx = v.x;
+                cy = v.y;
+            }
+
+            var x = this.x - cx;
+            var y = this.y - cy;
+
+            var c = Math.cos(angle)
+            var s = Math.sin(angle);
+
+            return this._set(x * c - y * s + cx, x * s + y * c + cy);
         },
 
         /**
