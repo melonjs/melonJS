@@ -40,16 +40,15 @@
          * Auto-detect the best renderer to use
          * @ignore
          */
-        function autoDetectRenderer(c, width, height, options) {
+        function autoDetectRenderer(options) {
             try {
                 if (me.device.isWebGLSupported(options)) {
-                    return new me.WebGLRenderer(c, width, height, options);
+                    return new me.WebGLRenderer(options);
                 }
             } catch (e) {
                 console.log("Error creating WebGL renderer :" + e.message);
             }
-            // else fallback to canvas
-            return new me.CanvasRenderer(c, width, height, options);
+            return new me.CanvasRenderer(options);
         }
 
         /*
@@ -103,11 +102,11 @@
          * @name init
          * @memberOf me.video
          * @function
-         * @param {Number} width the width of the canvas viewport
-         * @param {Number} height the height of the canvas viewport
+         * @param {Number} width The width of the canvas viewport
+         * @param {Number} height The height of the canvas viewport
          * @param {Object} [options] The optional video/renderer parameters.<br> (see Renderer(s) documentation for further specific options)
          * @param {String} [options.wrapper=document.body] the "div" element name to hold the canvas in the HTML file
-         * @param {Number} [options.renderer=me.video.AUTO] renderer to use.
+         * @param {Number} [options.renderer=me.video.AUTO] renderer to use (me.video.CANVAS, me.video.WEBGL, me.video.AUTO)
          * @param {Boolean} [options.doubleBuffering=false] enable/disable double buffering
          * @param {Number|String} [options.scale=1.0] enable scaling of the canvas ('auto' for automatic scaling)
          * @param {String} [options.scaleMethod="fit"] screen scaling modes ('fit','fill-min','fill-max','flex','flex-width','flex-height','stretch')
@@ -130,6 +129,13 @@
          * });
          */
         api.init = function (game_width, game_height, options) {
+
+            // display melonJS version
+            if (options.consoleHeader !== false) {
+                // output video information in the console
+                console.log("melonJS v" + me.version + " | http://melonjs.org" );
+            }
+
             // ensure melonjs has been properly initialized
             if (!me.initialized) {
                 throw new Error("me.video.init() called before engine initialization.");
@@ -139,6 +145,8 @@
             settings = Object.assign(settings, options || {});
 
             // sanitize potential given parameters
+            settings.width = game_width;
+            settings.height = game_height;
             settings.doubleBuffering = !!(settings.doubleBuffering);
             settings.useParentDOMSize = !!(settings.useParentDOMSize);
             settings.autoScale = (settings.scale === "auto") || false;
@@ -171,10 +179,8 @@
             designHeight = game_height;
 
             // default scaled size value
-            var game_width_zoom = game_width * me.sys.scale.x;
-            var game_height_zoom = game_height * me.sys.scale.y;
-            settings.zoomX = game_width_zoom;
-            settings.zoomY = game_height_zoom;
+            settings.zoomX = game_width * me.sys.scale.x;
+            settings.zoomY = game_height * me.sys.scale.y;
 
             //add a channel for the onresize/onorientationchange event
             window.addEventListener(
@@ -227,17 +233,27 @@
                 me.video.onresize.bind(me.video)
             );
 
-            // create the main screen canvas
-            var canvas;
-
-            if (me.device.ejecta === true) {
-                // a main canvas is already automatically created by Ejecta
-                canvas = document.getElementById("canvas");
-            } else if (typeof window.canvas !== "undefined") {
-                // a global canvas is available, e.g. webapp adapter for wechat
-                canvas = window.canvas;
-            } else {
-                canvas = api.createCanvas(game_width_zoom, game_height_zoom);
+            try {
+                /**
+                 * A reference to the current video renderer
+                 * @public
+                 * @memberOf me.video
+                 * @name renderer
+                 * @type {me.Renderer|me.CanvasRenderer|me.WebGLRenderer}
+                 */
+                switch (settings.renderer) {
+                    case api.AUTO:
+                    case api.WEBGL:
+                        this.renderer = autoDetectRenderer(settings);
+                        break;
+                    default:
+                        this.renderer = new me.CanvasRenderer(settings);
+                        break;
+                }
+            } catch (e) {
+                console(e.message);
+                // me.video.init() returns false if failing at creating/using a HTML5 canvas
+                return false;
             }
 
             // add our canvas
@@ -249,41 +265,19 @@
                 // add the canvas to document.body
                 settings.wrapper = document.body;
             }
-            settings.wrapper.appendChild(canvas);
-
-            // stop here if not supported
-            if (typeof canvas.getContext === "undefined") {
-                return false;
-            }
-
-            /**
-             * A reference to the current video renderer
-             * @public
-             * @memberOf me.video
-             * @name renderer
-             * @type {me.Renderer|me.CanvasRenderer|me.WebGLRenderer}
-             */
-            switch (settings.renderer) {
-                case api.AUTO:
-                case api.WEBGL:
-                    this.renderer = autoDetectRenderer(canvas, game_width, game_height, settings);
-                    break;
-                default:
-                    this.renderer = new me.CanvasRenderer(canvas, game_width, game_height, settings);
-                    break;
-            }
+            settings.wrapper.appendChild(this.renderer.getScreenCanvas());
 
             // adjust CSS style for High-DPI devices
             var ratio = me.device.devicePixelRatio;
             if (ratio > 1) {
-                canvas.style.width = (canvas.width / ratio) + "px";
-                canvas.style.height = (canvas.height / ratio) + "px";
+                this.renderer.getScreenCanvas().style.width = (this.renderer.getScreenCanvas().width / ratio) + "px";
+                this.renderer.getScreenCanvas().style.height = (this.renderer.getScreenCanvas().height / ratio) + "px";
             }
 
 
             // set max the canvas max size if CSS values are defined
             if (window.getComputedStyle) {
-                var style = window.getComputedStyle(canvas, null);
+                var style = window.getComputedStyle(this.renderer.getScreenCanvas(), null);
                 me.video.setMaxSize(parseInt(style.maxWidth, 10), parseInt(style.maxHeight, 10));
             }
 
@@ -305,9 +299,8 @@
                 var renderType = (me.video.renderer instanceof me.CanvasRenderer) ? "CANVAS" : "WebGL";
                 var audioType = me.device.hasWebAudio ? "Web Audio" : "HTML5 Audio";
                 // output video information in the console
-                console.log("melonJS v" + me.version + " | http://melonjs.org" );
                 console.log(
-                    renderType + " | " +
+                    renderType + " renderer | " +
                     audioType + " | " +
                     "pixel ratio " + me.device.devicePixelRatio + " | " +
                     (me.device.isMobile ? "mobile" : "desktop") + " | " +

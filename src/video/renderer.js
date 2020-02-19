@@ -6,10 +6,10 @@
      * @extends me.Object
      * @memberOf me
      * @constructor
-     * @param {HTMLCanvasElement} canvas The html canvas tag to draw to on screen.
-     * @param {Number} width The width of the canvas without scaling
-     * @param {Number} height The height of the canvas without scaling
-     * @param {Object} [options] The renderer parameters
+     * @param {Object} options The renderer parameters
+     * @param {Number} options.width The width of the canvas without scaling
+     * @param {Number} options.height The height of the canvas without scaling
+     * @param {HTMLCanvasElement} [options.canvas] The html canvas to draw to on screen
      * @param {Boolean} [options.doubleBuffering=false] Whether to enable double buffering
      * @param {Boolean} [options.antiAlias=false] Whether to enable anti-aliasing, use false (default) for a pixelated effect.
      * @param {Boolean} [options.failIfMajorPerformanceCaveat=true] If true, the renderer will switch to CANVAS mode if the performances of a WebGL context would be dramatically lower than that of a native application making equivalent OpenGL calls.
@@ -24,7 +24,7 @@
         /**
          * @ignore
          */
-        init : function (c, width, height, options) {
+        init : function (options) {
             /**
              * The given constructor options
              * @public
@@ -46,15 +46,28 @@
             /**
              * @ignore
              */
-            this.currentScissor = new Int32Array([ 0, 0, this.width, this.height ]);
+            this.currentScissor = new Int32Array([ 0, 0, this.settings.width, this.settings.height ]);
 
             /**
              * @ignore
              */
             this.currentBlendMode = "normal";
 
+            // create the main screen canvas
+            if (me.device.ejecta === true) {
+                // a main canvas is already automatically created by Ejecta
+                this.canvas = document.getElementById("canvas");
+            } else if (typeof window.canvas !== "undefined") {
+                // a global canvas is available, e.g. webapp adapter for wechat
+                this.canvas = window.canvas;
+            } else if (typeof this.settings.canvas !== "undefined") {
+                this.canvas = this.settings.canvas;
+            } else {
+                this.canvas = me.video.createCanvas(this.settings.zoomX, this.settings.zoomY);
+            }
+
             // canvas object and context
-            this.canvas = this.backBufferCanvas = c;
+            this.backBufferCanvas = this.canvas;
             this.context = null;
 
             // global color

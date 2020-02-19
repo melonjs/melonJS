@@ -6,10 +6,10 @@
      * @namespace me.WebGLRenderer
      * @memberOf me
      * @constructor
-     * @param {HTMLCanvasElement} canvas The html canvas tag to draw to on screen.
-     * @param {Number} width The width of the canvas without scaling
-     * @param {Number} height The height of the canvas without scaling
-     * @param {Object} [options] The renderer parameters
+     * @param {Object} options The renderer parameters
+     * @param {Number} options.width The width of the canvas without scaling
+     * @param {Number} options.height The height of the canvas without scaling
+     * @param {HTMLCanvasElement} [options.canvas] The html canvas to draw to on screen
      * @param {Boolean} [options.doubleBuffering=false] Whether to enable double buffering
      * @param {Boolean} [options.antiAlias=false] Whether to enable anti-aliasing
      * @param {Boolean} [options.failIfMajorPerformanceCaveat=true] If true, the renderer will switch to CANVAS mode if the performances of a WebGL context would be dramatically lower than that of a native application making equivalent OpenGL calls.
@@ -23,12 +23,12 @@
         /**
          * @ignore
          */
-        init : function (canvas, width, height, options) {
+        init : function (options) {
             // reference to this renderer
             var renderer = this;
 
             // parent contructor
-            this._super(me.Renderer, "init", [canvas, width, height, options]);
+            this._super(me.Renderer, "init", [options]);
 
             /**
              * The WebGL context
@@ -36,7 +36,7 @@
              * @memberOf me.WebGLRenderer
              * type {WebGLRenderingContext}
              */
-            this.context = this.gl = this.getContextGL(canvas, this.settings.transparent);
+            this.context = this.gl = this.getContextGL(this.getScreenCanvas(), options.transparent);
 
             /**
              * @ignore
@@ -92,13 +92,13 @@
             // to simulate context lost and restore :
             // var ctx = me.video.renderer.context.getExtension('WEBGL_lose_context');
             // ctx.loseContext()
-            canvas.addEventListener("webglcontextlost", function (event) {
+            this.getScreenCanvas().addEventListener("webglcontextlost", function (event) {
                 event.preventDefault();
                 renderer.isContextValid = false;
                 me.event.publish(me.event.WEBGL_ONCONTEXT_LOST, [ renderer ]);
             }, false );
             // ctx.restoreContext()
-            canvas.addEventListener("webglcontextrestored", function (event) {
+            this.getScreenCanvas().addEventListener("webglcontextrestored", function (event) {
                 renderer.reset();
                 renderer.isContextValid = true;
                 me.event.publish(me.event.WEBGL_ONCONTEXT_RESTORED, [ renderer ]);

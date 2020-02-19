@@ -6,10 +6,10 @@
      * @extends me.Renderer
      * @memberOf me
      * @constructor
-     * @param {HTMLCanvasElement} canvas The html canvas tag to draw to on screen.
-     * @param {Number} width The width of the canvas without scaling
-     * @param {Number} height The height of the canvas without scaling
-     * @param {Object} [options] The renderer parameters
+     * @param {Object} options The renderer parameters
+     * @param {Number} options.width The width of the canvas without scaling
+     * @param {Number} options.height The height of the canvas without scaling
+     * @param {HTMLCanvasElement} [options.canvas] The html canvas to draw to on screen
      * @param {Boolean} [options.doubleBuffering=false] Whether to enable double buffering
      * @param {Boolean} [options.antiAlias=false] Whether to enable anti-aliasing
      * @param {Boolean} [options.transparent=false] Whether to enable transparency on the canvas (performance hit when enabled)
@@ -22,20 +22,20 @@
         /**
          * @ignore
          */
-        init : function (c, width, height, options) {
+        init : function (options) {
             // parent constructor
-            this._super(me.Renderer, "init", [c, width, height, options]);
+            this._super(me.Renderer, "init", [options]);
 
             // defined the 2d context
-            this.context = this.getContext2d(this.canvas, this.settings.transparent);
+            this.context = this.getContext2d(this.getScreenCanvas(), this.settings.transparent);
 
             // create the back buffer if we use double buffering
             if (this.settings.doubleBuffering) {
-                this.backBufferCanvas = me.video.createCanvas(width, height);
+                this.backBufferCanvas = me.video.createCanvas(this.settings.width, this.settings.height);
                 this.backBufferContext2D = this.getContext2d(this.backBufferCanvas);
             }
             else {
-                this.backBufferCanvas = this.canvas;
+                this.backBufferCanvas = this.getScreenCanvas();
                 this.backBufferContext2D = this.context;
             }
 

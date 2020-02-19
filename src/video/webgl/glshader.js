@@ -118,12 +118,16 @@
         gl.linkProgram(program);
 
         if (!gl.getProgramParameter(program, gl.LINK_STATUS)) {
-            throw new Error(
+            var error_msg =
                 "Error initializing Shader " + this + "\n" +
                 "gl.VALIDATE_STATUS: " + gl.getProgramParameter(program, gl.VALIDATE_STATUS) + "\n" +
                 "gl.getError()" + gl.getError() + "\n" +
-                "gl.getProgramInfoLog()" + gl.getProgramInfoLog(program)
-            );
+                "gl.getProgramInfoLog()" + gl.getProgramInfoLog(program);
+            // house cleaning
+            gl.deleteProgram(program);
+            program = null;
+            // throw the exception
+            throw new Error(error_msg);
         }
 
         gl.useProgram(program);
