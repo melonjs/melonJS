@@ -115,7 +115,7 @@
             this._super(me.Renderable, "init", [0, 0, w, h]);
 
             // offscreen cache canvas
-            this.fontCanvas = me.video.createCanvas(256, 64, false);
+            this.fontCanvas = me.video.createCanvas(256, 64, true);
             this.drawFont(me.video.renderer.getContext2d(this.fontCanvas));
 
             this.anchorPoint.set(0.0, 0.0);
