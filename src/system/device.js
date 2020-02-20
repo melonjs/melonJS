@@ -516,7 +516,15 @@
          * @name OffScreenCanvas
          * @memberOf me.device
          */
-        api.OffscreenCanvas = typeof window.OffscreenCanvas !== "undefined";
+        try {
+            // some browser (e.g. Safari) implements WebGL1 and WebGL2 contexts only
+            // https://bugzilla.mozilla.org/show_bug.cgi?id=801176
+            api.OffscreenCanvas =
+                (typeof window.OffscreenCanvas !== "undefined") &&
+                ((new OffscreenCanvas(0, 0).getContext( "2d" )) !== null);
+        } catch (e) {
+            api.OffscreenCanvas = false;
+        }
 
       /**
         * specify a function to execute when the Device is fully loaded and ready
