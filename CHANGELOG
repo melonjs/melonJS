@@ -7,6 +7,8 @@ Version History
 * Renderable : add support for free-texture-packer (http://free-tex-packer.com), the free Texture Packer alternative (thanks @PLAYERKILLERS)
 * Renderable : optimized and tidied up me.Text and me.BitmapText implementation
 * Renderer : new optional parameter for createCanvas() to request an OffScreenCanvas if supported by the browser
+* Renderer : use OffscreenCanvas by default for all secondary canvas (e.g. debugPanel, double buffering, font texture in WebGL)
+* Renderer : properly fallback to the Canvas Renderer including when then WebGL renderer is not able to compile the built-in shaders
 * Shapes : vectors and shapes can now be rotated around a given (optional) point instead of the default origin point
 * Shapes : added a center vector propery for me.Rect, giving the center point of the rectangle
 
