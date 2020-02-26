@@ -3,20 +3,17 @@
     // Handy constants
     var VERTEX_SIZE = 2;
     var COLOR_SIZE = 4;
-    var TEXTURE_SIZE = 1;
     var REGION_SIZE = 2;
 
-    var ELEMENT_SIZE = VERTEX_SIZE + COLOR_SIZE + TEXTURE_SIZE + REGION_SIZE;
+    var ELEMENT_SIZE = VERTEX_SIZE + COLOR_SIZE + REGION_SIZE;
     var ELEMENT_OFFSET = ELEMENT_SIZE * Float32Array.BYTES_PER_ELEMENT;
 
     var VERTEX_ELEMENT = 0;
     var COLOR_ELEMENT = VERTEX_ELEMENT + VERTEX_SIZE;
-    var TEXTURE_ELEMENT = COLOR_ELEMENT + COLOR_SIZE;
-    var REGION_ELEMENT = TEXTURE_ELEMENT + TEXTURE_SIZE;
+    var REGION_ELEMENT = COLOR_ELEMENT + COLOR_SIZE;
 
     var VERTEX_OFFSET = VERTEX_ELEMENT * Float32Array.BYTES_PER_ELEMENT;
     var COLOR_OFFSET = COLOR_ELEMENT * Float32Array.BYTES_PER_ELEMENT;
-    var TEXTURE_OFFSET = TEXTURE_ELEMENT * Float32Array.BYTES_PER_ELEMENT;
     var REGION_OFFSET = REGION_ELEMENT * Float32Array.BYTES_PER_ELEMENT;
 
     var ELEMENTS_PER_QUAD = 4;
@@ -50,28 +47,12 @@
              */
             this.length = 0;
 
-            // Hash map of texture units
-            this.units = [];
-            /*
-             * XXX: The GLSL compiler pukes with "memory exhausted" when it is
-             * given long if-then-else chains.
-             *
-             * See: http://stackoverflow.com/questions/15828966/glsl-compile-error-memory-exhausted
-             *
-             * Workaround the problem by limiting the max texture support to 24.
-             * The magic number was determined by testing under different UAs.
-             * All Desktop UAs were capable of compiling with 27 fragment shader
-             * samplers. Using 24 seems like a reasonable compromise;
-             *
-             * 24 = 2^4 + 2^3
-             *
-             * As of October 2015, approximately 4.2% of all WebGL-enabled UAs
-             * support more than 24 max textures, according to
-             * http://webglstats.com/
-             */
-            this.maxTextures = Math.min(24, gl.getParameter(
-                gl.MAX_TEXTURE_IMAGE_UNITS
-            ));
+            // list of active texture units
+            this.currentTextureUnit = -1;
+            this.boundTextures = [];
+
+            // maxTextures
+            this.maxTextures = gl.getParameter(gl.MAX_TEXTURE_IMAGE_UNITS);
 
             // Vector pool
             this.v = [
@@ -143,14 +124,6 @@
                 COLOR_OFFSET
             );
             gl.vertexAttribPointer(
-                this.quadShader.attributes.aTexture,
-                TEXTURE_SIZE,
-                gl.FLOAT,
-                false,
-                ELEMENT_OFFSET,
-                TEXTURE_OFFSET
-            );
-            gl.vertexAttribPointer(
                 this.quadShader.attributes.aRegion,
                 REGION_SIZE,
                 gl.FLOAT,
@@ -178,8 +151,6 @@
             this.sbIndex = 0;
             this.length = 0;
 
-            var samplers = [];
-
             // WebGL context
             this.gl = this.renderer.gl;
 
@@ -190,13 +161,14 @@
             // Initialize clear color
             this.gl.clearColor(0.0, 0.0, 0.0, 1.0);
 
+            // empty the texture "cache"
             for (var i = 0; i < this.maxTextures; i++) {
-                this.units[i] = false;
-                samplers[i] = i;
+                this.boundTextures[i] = null;
             }
+            this.currentTextureUnit = -1;
+
             // set the quad shader as the default program
             this.useShader(this.quadShader);
-            this.quadShader.setUniform("uSampler", samplers);
         },
 
         /**
@@ -214,7 +186,7 @@
         },
 
         /**
-         * Create a texture from an image
+         * Create a WebGL texture from an image
          * @name createTexture
          * @memberOf me.WebGLRenderer.Compositor
          * @function
@@ -227,7 +199,7 @@
          * @param {Number} [b] Source image border (Only use with UInt8Array[] or Float32Array[] source image)
          * @param {Number} [b] Source image border (Only use with UInt8Array[] or Float32Array[] source image)
          * @param {Boolean} [premultipliedAlpha=true] Multiplies the alpha channel into the other color channels
-         * @return {WebGLTexture} A texture object
+         * @return {WebGLTexture} a WebGL texture
          */
         createTexture : function (unit, image, filter, repeat, w, h, b, premultipliedAlpha) {
             var gl = this.gl;
@@ -239,8 +211,7 @@
             var rs = (repeat.search(/^repeat(-x)?$/) === 0) && isPOT ? gl.REPEAT : gl.CLAMP_TO_EDGE;
             var rt = (repeat.search(/^repeat(-y)?$/) === 0) && isPOT ? gl.REPEAT : gl.CLAMP_TO_EDGE;
 
-            gl.activeTexture(gl.TEXTURE0 + unit);
-            gl.bindTexture(gl.TEXTURE_2D, texture);
+            this.setTexture(texture, unit);
             gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, rs);
             gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, rt);
             gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, filter);
@@ -257,13 +228,44 @@
         },
 
         /**
+         * assign the texture to the given unit
+         * @name setTexture
+         * @memberOf me.WebGLRenderer.Compositor
+         * @function
+         * @param {WebGLTexture} a WebGL texture
+         * @param {Number} unit Destination texture unit
+         */
+        setTexture: function (texture, unit) {
+            var gl = this.gl;
+
+            if (texture !== this.boundTextures[unit]) {
+                // flush the pipeline if the texture is not bounds
+                gl.flush();
+
+                if (this.currentTextureUnit !== unit) {
+                    this.currentTextureUnit = unit;
+                    gl.activeTexture(gl.TEXTURE0 + unit);
+                }
+
+                gl.bindTexture(gl.TEXTURE_2D, texture);
+
+                this.boundTextures[unit] = texture;
+
+            } else if (this.currentTextureUnit !== unit) {
+                this.currentTextureUnit = unit;
+                gl.activeTexture(gl.TEXTURE0 + unit);
+                gl.bindTexture(gl.TEXTURE_2D, texture);
+            }
+        },
+
+
+        /**
          * @ignore
          */
-        uploadTexture : function (texture, w, h, b, force) {
+        uploadTexture : function (texture, w, h, b) {
             var unit = this.renderer.cache.getUnit(texture);
-            if (!this.units[unit] || force) {
-                this.units[unit] = true;
-                this.createTexture(
+            if (this.boundTextures[unit] === null) {
+                this.boundTextures[unit] = this.createTexture(
                     unit,
                     texture.getTexture(),
                     this.renderer.settings.antiAlias ? this.gl.LINEAR : this.gl.NEAREST,
@@ -273,9 +275,10 @@
                     b,
                     texture.premultipliedAlpha
                 );
+            } else {
+                this.setTexture(this.boundTextures[unit], unit);
             }
-
-            return unit;
+            return this.currentTextureUnit;
         },
 
         /**
@@ -339,6 +342,7 @@
          * @param {Number} h Destination height
          */
         addQuad : function (texture, key, x, y, w, h) {
+            //var gl = this.gl;
             var color = this.color.toArray();
             var tint = this.tint.toArray();
 
@@ -350,14 +354,14 @@
                 tint[3] = color[3];
             }
 
-            this.useShader(this.quadShader);
-
             if (this.length >= MAX_LENGTH) {
                 this.flush();
             }
             if (this.length >= this.sbSize) {
                 this.resizeSB();
             }
+
+            this.useShader(this.quadShader);
 
             // Transform vertices
             var m = this.viewMatrix,
@@ -399,11 +403,7 @@
 
             // Fill texture index buffer
             // FIXME: Can the texture index be packed into another element?
-            var unit = this.uploadTexture(texture);
-            this.stream[idx0 + TEXTURE_ELEMENT] =
-            this.stream[idx1 + TEXTURE_ELEMENT] =
-            this.stream[idx2 + TEXTURE_ELEMENT] =
-            this.stream[idx3 + TEXTURE_ELEMENT] = unit;
+            this.uploadTexture(texture);
 
             // Fill texture coordinates buffer
             var uvs = texture.getUVs(key);
@@ -503,6 +503,8 @@
             // Draw the stream buffer
             gl.drawArrays(strip === true ? gl.TRIANGLE_STRIP : gl.TRIANGLES, 0, len);
 
+            this.quadShader.setUniform("uSampler", this.currentTextureUnit);
+
             // FIXME: Configure vertex attrib pointers in `useShader`
             gl.vertexAttribPointer(
                 this.quadShader.attributes.aVertex,
@@ -520,15 +522,6 @@
                 ELEMENT_OFFSET,
                 COLOR_OFFSET
             );
-
-            gl.vertexAttribPointer(
-                this.quadShader.attributes.aTexture,
-                TEXTURE_SIZE,
-                gl.FLOAT,
-                false,
-                ELEMENT_OFFSET,
-                TEXTURE_OFFSET
-            );
             gl.vertexAttribPointer(
                 this.quadShader.attributes.aRegion,
                 REGION_SIZE,
@@ -537,7 +530,6 @@
                 ELEMENT_OFFSET,
                 REGION_OFFSET
             );
-
         },
 
         /**
@@ -591,6 +583,8 @@
             // Draw the stream buffer
             gl.drawArrays(open === true ? gl.LINE_STRIP : gl.LINE_LOOP, 0, len);
 
+            this.quadShader.setUniform("uSampler", this.currentTextureUnit);
+
             // FIXME: Configure vertex attrib pointers in `useShader`
             gl.vertexAttribPointer(
                 this.quadShader.attributes.aVertex,
@@ -607,14 +601,6 @@
                 false,
                 ELEMENT_OFFSET,
                 COLOR_OFFSET
-            );
-            gl.vertexAttribPointer(
-                this.quadShader.attributes.aTexture,
-                TEXTURE_SIZE,
-                gl.FLOAT,
-                false,
-                ELEMENT_OFFSET,
-                TEXTURE_OFFSET
             );
             gl.vertexAttribPointer(
                 this.quadShader.attributes.aRegion,
