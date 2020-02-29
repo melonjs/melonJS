@@ -222,7 +222,7 @@
 
             var stringHeight = measureTextHeight(this);
             var textMetrics  = ret || this.getBounds();
-            var strings = typeof text !== "undefined" ? ("" + (text)).split("\n") : this._text;
+            var strings = typeof text === "string" ? ("" + (text)).split("\n") : text;
 
             textMetrics.height = textMetrics.width = 0;
 

@@ -620,7 +620,6 @@
          * @function
          */
         clear : function () {
-            this.flush();
             this.gl.clear(this.gl.COLOR_BUFFER_BIT);
         }
     });
