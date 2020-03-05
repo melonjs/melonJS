@@ -267,9 +267,9 @@
 
 
             /**
-             * the attributes of the shader
+             * the location attributes of the shader
              * @public
-             * @type {Object}
+             * @type {GLint[]}
              * @name attributes
              * @memberOf me.GLShader
              */
@@ -298,6 +298,23 @@
          */
         bind : function () {
             this.gl.useProgram(this.program);
+        },
+
+        /**
+         * returns the location of an attribute variable in this shader program
+         * @name getAttribLocation
+         * @memberOf me.GLShader
+         * @function
+         * @param {String} name the name of the attribute variable whose location to get.
+         * @return {GLint} number indicating the location of the variable name if found. Returns -1 otherwise
+         */
+        getAttribLocation : function (name) {
+            var attr = this.attributes[name];
+            if (typeof attr !== "undefined") {
+                return attr;
+            } else {
+                return -1;
+            }
         },
 
         /**
