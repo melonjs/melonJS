@@ -100,7 +100,6 @@
             /// define all vertex attributes
             this.addAttribute("aVertex", VERTEX_SIZE, gl.FLOAT, false, VERTEX_OFFSET);
             this.addAttribute("aColor", COLOR_SIZE, gl.FLOAT, false, COLOR_OFFSET);
-            this.addAttribute("aTexture", TEXTURE_SIZE, gl.FLOAT, false, TEXTURE_OFFSET);
             this.addAttribute("aRegion", REGION_SIZE, gl.FLOAT, false, REGION_OFFSET);
 
             // Stream buffer
@@ -338,8 +337,6 @@
          */
         useShader : function (shader) {
             if (this.activeShader !== shader) {
-                var gl = this.gl;
-
                 this.flush();
                 this.activeShader = shader;
                 this.activeShader.bind();
