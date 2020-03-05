@@ -346,10 +346,9 @@
                 for (var index = 0; index < this.attributes.length; ++index) {
                     var gl = this.gl;
                     var element = this.attributes[index];
-                    var location = gl.getAttribLocation(this.activeShader.program, element.name);
+                    var location = this.activeShader.getAttribLocation(element.name);
 
                     if (location !== -1) {
-                        gl.enableVertexAttribArray(location);
                         gl.vertexAttribPointer(location, element.size, element.type, element.normalized, ELEMENT_OFFSET, element.offset);
                     }
                 }
@@ -509,26 +508,16 @@
                 if (!m_isIdentity) {
                     m.multiplyVector(verts[i]);
                 }
-                this.stream[offset++] = verts[i].x;
-                this.stream[offset++] = verts[i].y;
+                this.stream[offset + 0] = verts[i].x;
+                this.stream[offset + 1] = verts[i].y;
+                offset += ELEMENT_SIZE;
             }
-
 
             // Copy data into the stream buffer
             gl.bufferData(
                 gl.ARRAY_BUFFER,
-                this.stream.subarray(0, vertexCount * VERTEX_SIZE),
+                this.stream.subarray(0, vertexCount * ELEMENT_SIZE),
                 gl.STREAM_DRAW
-            );
-
-            // FIXME: unify aVertex offset and buffer stream format with the quad one
-            gl.vertexAttribPointer(
-                this.primitiveShader.attributes.aVertex,
-                VERTEX_SIZE,
-                gl.FLOAT,
-                false,
-                0, // ELEMENT_OFFSET
-                VERTEX_OFFSET
             );
 
             // Draw the stream buffer
