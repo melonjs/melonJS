@@ -77,12 +77,31 @@
             // Global transformation matrix
             this.viewMatrix = renderer.currentTransform;
 
-            // reference to the active shader
+            /**
+             * a reference to the active WebGL shader
+             * @name activeShader
+             * @memberOf me.WebGLRenderer.Compositor
+             * @type {me.GLShader}
+             */
             this.activeShader = null;
+
+            /**
+             * an array of vertex attribute properties
+             * @name attributes
+             * @see me.WebGLRenderer.Compositor.addAttribute
+             * @memberOf me.WebGLRenderer.Compositor
+             */
+            this.attributes = [];
 
             // Load and create shader programs
             this.primitiveShader = new me.PrimitiveGLShader(this.gl);
             this.quadShader = new me.QuadGLShader(this.gl);
+
+            /// define all vertex attributes
+            this.addAttribute("aVertex", VERTEX_SIZE, gl.FLOAT, false, VERTEX_OFFSET);
+            this.addAttribute("aColor", COLOR_SIZE, gl.FLOAT, false, COLOR_OFFSET);
+            this.addAttribute("aTexture", TEXTURE_SIZE, gl.FLOAT, false, TEXTURE_OFFSET);
+            this.addAttribute("aRegion", REGION_SIZE, gl.FLOAT, false, REGION_OFFSET);
 
             // Stream buffer
             this.sb = gl.createBuffer();
@@ -143,6 +162,27 @@
 
             // set the quad shader as the default program
             this.useShader(this.quadShader);
+        },
+
+        /**
+         * add vertex attribute property definition to the compositor
+         * @name addAttribute
+         * @memberOf me.WebGLRenderer.Compositor
+         * @function
+         * @param {String} name name of the attribute in the vertex shader
+         * @param {Number} size number of components per vertex attribute. Must be 1, 2, 3, or 4.
+         * @param {GLenum} type data type of each component in the array
+         * @param {Boolean} normalized whether integer data values should be normalized into a certain
+         * @param {Number} offset offset in bytes of the first component in the vertex attribute array
+         */
+        addAttribute : function (name, size, type, normalized, offset) {
+            this.attributes.push({
+                name: name,
+                size: size,
+                type: type,
+                normalized: normalized,
+                offset: offset
+            });
         },
 
         /**
@@ -305,42 +345,16 @@
                 this.activeShader.bind();
                 this.activeShader.setUniform("uProjectionMatrix", this.renderer.projectionMatrix);
 
-                if (shader === this.quadShader) {
-                    // FIXME: do this better
-                    gl.vertexAttribPointer(
-                        this.quadShader.attributes.aVertex,
-                        VERTEX_SIZE,
-                        gl.FLOAT,
-                        false,
-                        ELEMENT_OFFSET,
-                        VERTEX_OFFSET
-                    );
-                    gl.vertexAttribPointer(
-                        this.quadShader.attributes.aColor,
-                        COLOR_SIZE,
-                        gl.FLOAT,
-                        false,
-                        ELEMENT_OFFSET,
-                        COLOR_OFFSET
-                    );
-                    gl.vertexAttribPointer(
-                        this.quadShader.attributes.aRegion,
-                        REGION_SIZE,
-                        gl.FLOAT,
-                        false,
-                        ELEMENT_OFFSET,
-                        REGION_OFFSET
-                    );
-                } else if (shader === this.primitiveShader) {
-                    // FIXME: do this bettter
-                    gl.vertexAttribPointer(
-                        this.primitiveShader.attributes.aVertex,
-                        VERTEX_SIZE,
-                        gl.FLOAT,
-                        false,
-                        0,
-                        0
-                    );
+                // set the vertex attributes
+                for (var index = 0; index < this.attributes.length; ++index) {
+                    var gl = this.gl;
+                    var element = this.attributes[index];
+                    var location = gl.getAttribLocation(this.activeShader.program, element.name);
+
+                    if (location !== -1) {
+                        gl.enableVertexAttribArray(location);
+                        gl.vertexAttribPointer(location, element.size, element.type, element.normalized, ELEMENT_OFFSET, element.offset);
+                    }
                 }
             }
         },
@@ -471,88 +485,57 @@
         },
 
         /**
-         * Draw triangle(s)
-         * @name drawTriangle
+         * Draw an array of vertices
+         * @name drawVertices
          * @memberOf me.WebGLRenderer.Compositor
          * @function
-         * @param {me.Vector2d[]} points vertices
-         * @param {Number} [len=points.length] amount of points defined in the points array
-         * @param {Boolean} [strip=false] Whether the array defines a serie of connected triangles, sharing vertices
+         * @param {GLENUM} [mode=gl.TRIANGLES] primitive type to render (gl.POINTS, gl.LINE_STRIP, gl.LINE_LOOP, gl.LINES, gl.TRIANGLE_STRIP, gl.TRIANGLE_FAN, gl.TRIANGLES)
+         * @param {me.Vector2d[]} verts vertices
+         * @param {Number} [vertexCount=verts.length] amount of points defined in the points array
          */
-        drawTriangle : function (points, len, strip) {
+        drawVertices : function (mode, verts, vertexCount) {
             var gl = this.gl;
 
-            len = len || points.length;
+            vertexCount = vertexCount || verts.length;
 
+            // use the primitive shader
             this.useShader(this.primitiveShader);
-
-            // Put vertex data into the stream buffer
-            var j = 0;
-            var m = this.viewMatrix;
-            var m_isIdentity = m.isIdentity();
-            for (var i = 0; i < points.length; i++) {
-                if (!m_isIdentity) {
-                    m.multiplyVector(points[i]);
-                }
-                this.stream[j++] = points[i].x;
-                this.stream[j++] = points[i].y;
-            }
 
             // Set the line color
             this.primitiveShader.setUniform("uColor", this.color);
 
-            // Copy data into the stream buffer
-            gl.bufferData(
-                gl.ARRAY_BUFFER,
-                this.stream.subarray(0, len * 2),
-                gl.STREAM_DRAW
-            );
-
-            // Draw the stream buffer
-            gl.drawArrays(strip === true ? gl.TRIANGLE_STRIP : gl.TRIANGLES, 0, len);
-        },
-
-        /**
-         * Draw a line
-         * @name drawLine
-         * @memberOf me.WebGLRenderer.Compositor
-         * @function
-         * @param {me.Vector2d[]} points Line vertices
-         * @param {Number} [len=points.length] amount of points defined in the points array
-         * @param {Boolean} [open=false] Whether the line is open (true) or closed (false)
-         */
-        drawLine : function (points, len, open) {
-            var gl = this.gl;
-
-            len = len || points.length;
-
-            this.useShader(this.primitiveShader);
-
             // Put vertex data into the stream buffer
-            var j = 0;
+            var offset = 0;
             var m = this.viewMatrix;
             var m_isIdentity = m.isIdentity();
-            for (var i = 0; i < points.length; i++) {
+            for (var i = 0; i < vertexCount; i++) {
                 if (!m_isIdentity) {
-                    m.multiplyVector(points[i]);
+                    m.multiplyVector(verts[i]);
                 }
-                this.stream[j++] = points[i].x;
-                this.stream[j++] = points[i].y;
+                this.stream[offset++] = verts[i].x;
+                this.stream[offset++] = verts[i].y;
             }
 
-            // Set the line color
-            this.primitiveShader.setUniform("uColor", this.color);
 
             // Copy data into the stream buffer
             gl.bufferData(
                 gl.ARRAY_BUFFER,
-                this.stream.subarray(0, len * 2),
+                this.stream.subarray(0, vertexCount * VERTEX_SIZE),
                 gl.STREAM_DRAW
             );
 
+            // FIXME: unify aVertex offset and buffer stream format with the quad one
+            gl.vertexAttribPointer(
+                this.primitiveShader.attributes.aVertex,
+                VERTEX_SIZE,
+                gl.FLOAT,
+                false,
+                0, // ELEMENT_OFFSET
+                VERTEX_OFFSET
+            );
 
             // Draw the stream buffer
-            gl.drawArrays(open === true ? gl.LINE_STRIP : gl.LINE_LOOP, 0, len);
+            gl.drawArrays(mode, 0, vertexCount);
         },
 
         /**

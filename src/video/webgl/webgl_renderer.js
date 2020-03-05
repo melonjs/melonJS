@@ -627,7 +627,7 @@
                     points[i].y = y + (((cos_theta * -sin) + (sin_theta * cos)) * radius);
                 }
                 // batch draw all lines
-                this.compositor.drawLine(points, len, true);
+                this.compositor.drawVertices(this.gl.LINE_STRIP, points, len);
             }
         },
 
@@ -671,7 +671,7 @@
                 )
             }
             // batch draw all triangles
-            this.compositor.drawTriangle(points, index, true);
+            this.compositor.drawVertices(this.gl.TRIANGLE_STRIP, points, index);
         },
 
         /**
@@ -706,7 +706,7 @@
                     points[i].y = y + (Math.cos(segment * -i) * h);
                 }
                 // batch draw all lines
-                this.compositor.drawLine(points, len);
+                this.compositor.drawVertices(this.gl.LINE_LOOP, points, len);
             }
 
         },
@@ -743,7 +743,7 @@
                 );
             }
             // batch draw all triangles
-            this.compositor.drawTriangle(points, index, true);
+            this.compositor.drawVertices(this.gl.TRIANGLE_STRIP, points, index);
         },
 
         /**
@@ -762,7 +762,7 @@
             points[0].y = startY;
             points[1].x = endX;
             points[1].y = endY;
-            this.compositor.drawLine(points, 2, true);
+            this.compositor.drawVertices(this.gl.LINE_STRIP, points, 2);
         },
 
 
@@ -805,7 +805,7 @@
                     points[i].x = poly.pos.x + poly.points[i].x;
                     points[i].y = poly.pos.y + poly.points[i].y;
                 }
-                this.compositor.drawLine(points, len);
+                this.compositor.drawVertices(this.gl.LINE_LOOP, points, len);
             }
         },
 
@@ -833,7 +833,7 @@
             }
 
             // draw all triangle
-            this.compositor.drawTriangle(glPoints, indices.length);
+            this.compositor.drawVertices(this.gl.TRIANGLES, glPoints, indices.length);
         },
 
         /**
@@ -856,7 +856,7 @@
             points[2].y = y + height;
             points[3].x = x;
             points[3].y = y + height;
-            this.compositor.drawLine(points, 4);
+            this.compositor.drawVertices(this.gl.LINE_LOOP, points, 4);
         },
 
         /**
@@ -879,7 +879,7 @@
             glPoints[2].y = y + height;
             glPoints[3].x = x;
             glPoints[3].y = y + height;
-            this.compositor.drawTriangle(glPoints, 4, true);
+            this.compositor.drawVertices(this.gl.TRIANGLE_STRIP, glPoints, 4);
         },
 
         /**

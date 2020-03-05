@@ -232,3 +232,35 @@ Object.defineProperty(me.sys, "gravity", {
     },
     configurable : false
 });
+
+/**
+ * Draw triangle(s)
+ * @name drawTriangle
+ * @deprecated
+ * @memberOf me.WebGLRenderer.Compositor
+ * @function
+ * @param {me.Vector2d[]} points vertices
+ * @param {Number} [len=points.length] amount of points defined in the points array
+ * @param {Boolean} [strip=false] Whether the array defines a serie of connected triangles, sharing vertices
+ */
+me.WebGLRenderer.Compositor.prototype.drawTriangle = function (points, len, strip) {
+    var gl = this.gl;
+    this.drawVertices(strip === true ? gl.TRIANGLE_STRIP : gl.TRIANGLES, points, len);
+    console.log("drawTriangle is deprecated, please use drawVertices");
+};
+
+/**
+ * Draw a line
+ * @name drawLine
+ * @deprecated
+ * @memberOf me.WebGLRenderer.Compositor
+ * @function
+ * @param {me.Vector2d[]} points Line vertices
+ * @param {Number} [len=points.length] amount of points defined in the points array
+ * @param {Boolean} [open=false] Whether the line is open (true) or closed (false)
+ */
+me.WebGLRenderer.Compositor.prototype.drawLine = function (points, len, open) {
+    var gl = this.gl;
+    this.drawVertices(open === true ? gl.LINE_STRIP : gl.LINE_LOOP, points, len);
+    console.log("drawLine is deprecated, please use drawVertices");
+};
