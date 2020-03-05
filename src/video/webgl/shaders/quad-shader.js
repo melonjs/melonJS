@@ -7,13 +7,12 @@
      * @see me.WebGLRenderer.Compositor
      * @constructor
      * @param {WebGLRenderingContext} gl the current WebGL rendering context
-     * @param {Number} maxTextures the maximum amount of Texture supported by the WebGL Driver
      */
     me.QuadGLShader = me.GLShader.extend({
         /**
          * @ignore
          */
-        init : function (gl, maxTextures) {
+        init : function (gl) {
             this._super(me.GLShader, "init", [ gl,
                 [   // vertex`
                     "precision highp float;",
@@ -25,7 +24,7 @@
 
                     "varying vec2 vRegion;",
                     "varying vec4 vColor;",
-                    
+
                     "void main(void) {",
                     "    // Transform the vertex position by the projection matrix",
                     "    gl_Position = vec4((uProjectionMatrix * vec3(aVertex, 1.0)).xy, 0.0, 1.0);",

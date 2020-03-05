@@ -82,7 +82,7 @@
 
             // Load and create shader programs
             this.primitiveShader = new me.PrimitiveGLShader(this.gl);
-            this.quadShader = new me.QuadGLShader(this.gl, this.maxTextures);
+            this.quadShader = new me.QuadGLShader(this.gl);
 
             // Stream buffer
             this.sb = gl.createBuffer();
@@ -105,32 +105,6 @@
             this.ib = gl.createBuffer();
             gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, this.ib);
             gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, this.createIB(), gl.STATIC_DRAW);
-
-            // Bind attribute pointers for quad shader
-            gl.vertexAttribPointer(
-                this.quadShader.attributes.aVertex,
-                VERTEX_SIZE,
-                gl.FLOAT,
-                false,
-                ELEMENT_OFFSET,
-                VERTEX_OFFSET
-            );
-            gl.vertexAttribPointer(
-                this.quadShader.attributes.aColor,
-                COLOR_SIZE,
-                gl.FLOAT,
-                false,
-                ELEMENT_OFFSET,
-                COLOR_OFFSET
-            );
-            gl.vertexAttribPointer(
-                this.quadShader.attributes.aRegion,
-                REGION_SIZE,
-                gl.FLOAT,
-                false,
-                ELEMENT_OFFSET,
-                REGION_OFFSET
-            );
 
             // register to the CANVAS resize channel
             me.event.subscribe(
@@ -212,6 +186,7 @@
             var rt = (repeat.search(/^repeat(-y)?$/) === 0) && isPOT ? gl.REPEAT : gl.CLAMP_TO_EDGE;
 
             this.setTexture(texture, unit);
+
             gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, rs);
             gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, rt);
             gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, filter);
@@ -228,18 +203,18 @@
         },
 
         /**
-         * assign the texture to the given unit
+         * assign the given texture to the current batch
          * @name setTexture
          * @memberOf me.WebGLRenderer.Compositor
          * @function
          * @param {WebGLTexture} a WebGL texture
-         * @param {Number} unit Destination texture unit
+         * @param {Number} unit Texture unit to which the given texture is bound
          */
         setTexture: function (texture, unit) {
             var gl = this.gl;
 
             if (texture !== this.boundTextures[unit]) {
-                // flush the pipeline if the texture is not bounds
+                // flush the pipeline
                 gl.flush();
 
                 if (this.currentTextureUnit !== unit) {
@@ -248,13 +223,14 @@
                 }
 
                 gl.bindTexture(gl.TEXTURE_2D, texture);
-
                 this.boundTextures[unit] = texture;
 
             } else if (this.currentTextureUnit !== unit) {
+                // flush the pipeline
+                gl.flush();
+
                 this.currentTextureUnit = unit;
                 gl.activeTexture(gl.TEXTURE0 + unit);
-                gl.bindTexture(gl.TEXTURE_2D, texture);
             }
         },
 
@@ -322,10 +298,50 @@
          */
         useShader : function (shader) {
             if (this.activeShader !== shader) {
+                var gl = this.gl;
+
                 this.flush();
                 this.activeShader = shader;
                 this.activeShader.bind();
                 this.activeShader.setUniform("uProjectionMatrix", this.renderer.projectionMatrix);
+
+                if (shader === this.quadShader) {
+                    // FIXME: do this better
+                    gl.vertexAttribPointer(
+                        this.quadShader.attributes.aVertex,
+                        VERTEX_SIZE,
+                        gl.FLOAT,
+                        false,
+                        ELEMENT_OFFSET,
+                        VERTEX_OFFSET
+                    );
+                    gl.vertexAttribPointer(
+                        this.quadShader.attributes.aColor,
+                        COLOR_SIZE,
+                        gl.FLOAT,
+                        false,
+                        ELEMENT_OFFSET,
+                        COLOR_OFFSET
+                    );
+                    gl.vertexAttribPointer(
+                        this.quadShader.attributes.aRegion,
+                        REGION_SIZE,
+                        gl.FLOAT,
+                        false,
+                        ELEMENT_OFFSET,
+                        REGION_OFFSET
+                    );
+                } else if (shader === this.primitiveShader) {
+                    // FIXME: do this bettter
+                    gl.vertexAttribPointer(
+                        this.primitiveShader.attributes.aVertex,
+                        VERTEX_SIZE,
+                        gl.FLOAT,
+                        false,
+                        0,
+                        0
+                    );
+                }
             }
         },
 
@@ -402,8 +418,9 @@
             this.stream.set(tint, idx3 + COLOR_ELEMENT);
 
             // Fill texture index buffer
-            // FIXME: Can the texture index be packed into another element?
             this.uploadTexture(texture);
+
+            this.quadShader.setUniform("uSampler", this.currentTextureUnit);
 
             // Fill texture coordinates buffer
             var uvs = texture.getUVs(key);
@@ -423,11 +440,12 @@
 
         /**
          * Flush batched texture operations to the GPU
-         * @name flush
+         * @param {GLENUM} [mode=gl.TRIANGLES] primitive type to render (gl.POINTS, gl.LINE_STRIP, gl.LINE_LOOP, gl.LINES, gl.TRIANGLE_STRIP, gl.TRIANGLE_FAN, gl.TRIANGLES)
+         * @param
          * @memberOf me.WebGLRenderer.Compositor
          * @function
          */
-        flush : function () {
+        flush : function (mode) {
             if (this.length) {
                 var gl = this.gl;
 
@@ -441,7 +459,7 @@
 
                 // Draw the stream buffer
                 gl.drawElements(
-                    gl.TRIANGLES,
+                    typeof mode === "undefined" ? gl.TRIANGLES : mode,
                     this.length * INDICES_PER_QUAD,
                     gl.UNSIGNED_SHORT,
                     0
@@ -490,46 +508,8 @@
                 gl.STREAM_DRAW
             );
 
-            // FIXME: Configure vertex attrib pointers in `useShader`
-            gl.vertexAttribPointer(
-                this.primitiveShader.attributes.aVertex,
-                VERTEX_SIZE,
-                gl.FLOAT,
-                false,
-                0,
-                0
-            );
-
             // Draw the stream buffer
             gl.drawArrays(strip === true ? gl.TRIANGLE_STRIP : gl.TRIANGLES, 0, len);
-
-            this.quadShader.setUniform("uSampler", this.currentTextureUnit);
-
-            // FIXME: Configure vertex attrib pointers in `useShader`
-            gl.vertexAttribPointer(
-                this.quadShader.attributes.aVertex,
-                VERTEX_SIZE,
-                gl.FLOAT,
-                false,
-                ELEMENT_OFFSET,
-                VERTEX_OFFSET
-            );
-            gl.vertexAttribPointer(
-                this.quadShader.attributes.aColor,
-                COLOR_SIZE,
-                gl.FLOAT,
-                false,
-                ELEMENT_OFFSET,
-                COLOR_OFFSET
-            );
-            gl.vertexAttribPointer(
-                this.quadShader.attributes.aRegion,
-                REGION_SIZE,
-                gl.FLOAT,
-                false,
-                ELEMENT_OFFSET,
-                REGION_OFFSET
-            );
         },
 
         /**
@@ -570,46 +550,9 @@
                 gl.STREAM_DRAW
             );
 
-            // FIXME: Configure vertex attrib pointers in `useShader`
-            gl.vertexAttribPointer(
-                this.primitiveShader.attributes.aVertex,
-                VERTEX_SIZE,
-                gl.FLOAT,
-                false,
-                0,
-                0
-            );
 
             // Draw the stream buffer
             gl.drawArrays(open === true ? gl.LINE_STRIP : gl.LINE_LOOP, 0, len);
-
-            this.quadShader.setUniform("uSampler", this.currentTextureUnit);
-
-            // FIXME: Configure vertex attrib pointers in `useShader`
-            gl.vertexAttribPointer(
-                this.quadShader.attributes.aVertex,
-                VERTEX_SIZE,
-                gl.FLOAT,
-                false,
-                ELEMENT_OFFSET,
-                VERTEX_OFFSET
-            );
-            gl.vertexAttribPointer(
-                this.quadShader.attributes.aColor,
-                COLOR_SIZE,
-                gl.FLOAT,
-                false,
-                ELEMENT_OFFSET,
-                COLOR_OFFSET
-            );
-            gl.vertexAttribPointer(
-                this.quadShader.attributes.aRegion,
-                REGION_SIZE,
-                gl.FLOAT,
-                false,
-                ELEMENT_OFFSET,
-                REGION_OFFSET
-            );
         },
 
         /**
