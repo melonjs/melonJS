@@ -123,7 +123,6 @@
             this.ib = gl.createBuffer();
             gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, this.ib);
             gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, this.createIB(), gl.STATIC_DRAW);
-
             // register to the CANVAS resize channel
             me.event.subscribe(
                 me.event.CANVAS_ONRESIZE, (function(width, height) {
@@ -200,7 +199,7 @@
 
         /**
          * Create a WebGL texture from an image
-         * @name createTexture
+         * @name createTexture2D
          * @memberOf me.WebGLRenderer.Compositor
          * @function
          * @param {Number} unit Destination texture unit
@@ -214,7 +213,7 @@
          * @param {Boolean} [premultipliedAlpha=true] Multiplies the alpha channel into the other color channels
          * @return {WebGLTexture} a WebGL texture
          */
-        createTexture : function (unit, image, filter, repeat, w, h, b, premultipliedAlpha) {
+        createTexture2D : function (unit, image, filter, repeat, w, h, b, premultipliedAlpha) {
             var gl = this.gl;
 
             repeat = repeat || "no-repeat";
@@ -224,7 +223,7 @@
             var rs = (repeat.search(/^repeat(-x)?$/) === 0) && isPOT ? gl.REPEAT : gl.CLAMP_TO_EDGE;
             var rt = (repeat.search(/^repeat(-y)?$/) === 0) && isPOT ? gl.REPEAT : gl.CLAMP_TO_EDGE;
 
-            this.setTexture(texture, unit);
+            this.setTexture2D(texture, unit);
 
             gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, rs);
             gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, rt);
@@ -242,20 +241,18 @@
         },
 
         /**
-         * assign the given texture to the current batch
-         * @name setTexture
+         * assign the given WebGL texture to the current batch
+         * @name setTexture2D
          * @memberOf me.WebGLRenderer.Compositor
          * @function
          * @param {WebGLTexture} a WebGL texture
          * @param {Number} unit Texture unit to which the given texture is bound
          */
-        setTexture: function (texture, unit) {
+        setTexture2D: function (texture, unit) {
             var gl = this.gl;
 
             if (texture !== this.boundTextures[unit]) {
-                // flush the pipeline
-                gl.flush();
-
+                this.flush();
                 if (this.currentTextureUnit !== unit) {
                     this.currentTextureUnit = unit;
                     gl.activeTexture(gl.TEXTURE0 + unit);
@@ -265,9 +262,7 @@
                 this.boundTextures[unit] = texture;
 
             } else if (this.currentTextureUnit !== unit) {
-                // flush the pipeline
-                gl.flush();
-
+                this.flush();
                 this.currentTextureUnit = unit;
                 gl.activeTexture(gl.TEXTURE0 + unit);
             }
@@ -277,10 +272,12 @@
         /**
          * @ignore
          */
-        uploadTexture : function (texture, w, h, b) {
+        uploadTexture : function (texture, w, h, b, force) {
             var unit = this.renderer.cache.getUnit(texture);
-            if (this.boundTextures[unit] === null) {
-                this.boundTextures[unit] = this.createTexture(
+            var texture2D = this.boundTextures[unit];
+
+            if (texture2D === null || force) {
+                texture2D = this.createTexture2D(
                     unit,
                     texture.getTexture(),
                     this.renderer.settings.antiAlias ? this.gl.LINEAR : this.gl.NEAREST,
@@ -291,8 +288,9 @@
                     texture.premultipliedAlpha
                 );
             } else {
-                this.setTexture(this.boundTextures[unit], unit);
+                this.setTexture2D(texture2D, unit);
             }
+
             return this.currentTextureUnit;
         },
 
@@ -389,6 +387,11 @@
 
             this.useShader(this.quadShader);
 
+            // upload and activate the texture if necessary
+            var unit = this.uploadTexture(texture);
+            // set fragement sampler accordingly
+            this.quadShader.setUniform("uSampler", unit);
+
             // Transform vertices
             var m = this.viewMatrix,
                 v0 = this.v[0].set(x, y),
@@ -426,11 +429,6 @@
             this.stream.set(tint, idx1 + COLOR_ELEMENT);
             this.stream.set(tint, idx2 + COLOR_ELEMENT);
             this.stream.set(tint, idx3 + COLOR_ELEMENT);
-
-            // Fill texture index buffer
-            this.uploadTexture(texture);
-
-            this.quadShader.setUniform("uSampler", this.currentTextureUnit);
 
             // Fill texture coordinates buffer
             var uvs = texture.getUVs(key);

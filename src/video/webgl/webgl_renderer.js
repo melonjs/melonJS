@@ -171,9 +171,6 @@
                cache.set(this.fontContext2D.canvas, this.fontTexture);
            }
            this.compositor.uploadTexture(this.fontTexture, 0, 0, 0);
-
-
-
         },
 
         /**
@@ -269,9 +266,6 @@
          */
         drawFont : function (bounds) {
             var fontContext = this.getFontContext();
-
-            // Flush the compositor so we can upload a new texture
-            this.flush();
 
             // Force-upload the new texture
             this.compositor.uploadTexture(this.fontTexture, 0, 0, 0, true);
