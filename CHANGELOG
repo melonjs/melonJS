@@ -9,6 +9,7 @@ Version History
 * Renderer : new optional parameter for createCanvas() to request an OffScreenCanvas if supported by the browser
 * Renderer : use OffscreenCanvas by default for all secondary canvas (e.g. debugPanel, double buffering, font texture in WebGL)
 * Renderer : properly fallback to the Canvas Renderer including when then WebGL renderer is not able to compile the built-in shaders
+* Renderer : dynamically activate texture sampler instead of pre-indexing them (accordingly to GLSL 1.30 specifications and later)
 * Shapes : vectors and shapes can now be rotated around a given (optional) point instead of the default origin point
 * Shapes : added a center vector propery for me.Rect, giving the center point of the rectangle
 
