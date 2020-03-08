@@ -60,8 +60,8 @@
             var width = image.width;
             var height = image.height;
 
-            // warn if a non POT texture is added to the cache
-            if (!me.Math.isPowerOfTwo(width) || !me.Math.isPowerOfTwo(height)) {
+            // warn if a non POT texture is added to the cache when using WebGL1
+            if (me.video.renderer.WebGLVersion === 1 && (!me.Math.isPowerOfTwo(width) || !me.Math.isPowerOfTwo(height))) {
                 var src = typeof image.src !== "undefined" ? image.src : image;
                 console.warn(
                     "[Texture] " + src + " is not a POT texture " +

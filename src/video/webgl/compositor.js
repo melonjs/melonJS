@@ -211,17 +211,18 @@
          * @param {Number} [b] Source image border (Only use with UInt8Array[] or Float32Array[] source image)
          * @param {Number} [b] Source image border (Only use with UInt8Array[] or Float32Array[] source image)
          * @param {Boolean} [premultipliedAlpha=true] Multiplies the alpha channel into the other color channels
+         * @param {Boolean} [mipmap=true] Whether mipmap levels should be generated for this texture
          * @return {WebGLTexture} a WebGL texture
          */
-        createTexture2D : function (unit, image, filter, repeat, w, h, b, premultipliedAlpha) {
+        createTexture2D : function (unit, image, filter, repeat, w, h, b, premultipliedAlpha, mipmap) {
             var gl = this.gl;
 
             repeat = repeat || "no-repeat";
 
             var isPOT = me.Math.isPowerOfTwo(w || image.width) && me.Math.isPowerOfTwo(h || image.height);
             var texture = gl.createTexture();
-            var rs = (repeat.search(/^repeat(-x)?$/) === 0) && isPOT ? gl.REPEAT : gl.CLAMP_TO_EDGE;
-            var rt = (repeat.search(/^repeat(-y)?$/) === 0) && isPOT ? gl.REPEAT : gl.CLAMP_TO_EDGE;
+            var rs = (repeat.search(/^repeat(-x)?$/) === 0) && (isPOT || this.renderer.WebGLVersion === 2) ? gl.REPEAT : gl.CLAMP_TO_EDGE;
+            var rt = (repeat.search(/^repeat(-y)?$/) === 0) && (isPOT || this.renderer.WebGLVersion === 2) ? gl.REPEAT : gl.CLAMP_TO_EDGE;
 
             this.setTexture2D(texture, unit);
 
@@ -235,6 +236,11 @@
             }
             else {
                 gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, image);
+            }
+
+            // generate the sprite mimap (used when scaling) if a PowerOfTwo texture
+            if (isPOT && mipmap !== false) {
+                gl.generateMipmap(gl.TEXTURE_2D);
             }
 
             return texture;

@@ -32,6 +32,7 @@
             antiAlias : false,
             failIfMajorPerformanceCaveat : true,
             subPixel : false,
+            preferWebGL1 : true,
             verbose : false,
             consoleHeader : true
         };
@@ -112,6 +113,7 @@
          * @param {String} [options.scaleMethod="fit"] screen scaling modes ('fit','fill-min','fill-max','flex','flex-width','flex-height','stretch')
          * @param {Boolean} [options.useParentDOMSize=false] on browser devices, limit the canvas width and height to its parent container dimensions as returned by getBoundingClientRect(),
          *                                                   as opposed to the browser window dimensions
+         * @param {Boolean} [options.preferWebGL1=true] if false the renderer will try to use WebGL 2 if supported
          * @param {Boolean} [options.transparent=false] whether to allow transparent pixels in the front buffer (screen)
          * @param {Boolean} [options.antiAlias=false] whether to enable or not video scaling interpolation
          * @param {Boolean} [options.consoleHeader=true] whether to display melonJS version and basic device information in the console
@@ -160,8 +162,12 @@
             }
 
             // override renderer settings if &webgl is defined in the URL
-            if (me.utils.getUriFragment().webgl === true) {
+            var uriFragment = me.utils.getUriFragment();
+            if (uriFragment.webgl === true || uriFragment.webgl1 === true || uriFragment.webgl2 === true) {
                 settings.renderer = api.WEBGL;
+                if (uriFragment.webgl2 === true) {
+                    settings.preferWebGL1 = false;
+                }
             }
 
             // normalize scale
@@ -296,7 +302,7 @@
             }
 
             if (options.consoleHeader !== false) {
-                var renderType = (me.video.renderer instanceof me.CanvasRenderer) ? "CANVAS" : "WebGL";
+                var renderType = (me.video.renderer instanceof me.CanvasRenderer) ? "CANVAS" : "WebGL" + me.video.renderer.WebGLVersion;
                 var audioType = me.device.hasWebAudio ? "Web Audio" : "HTML5 Audio";
                 // output video information in the console
                 console.log(

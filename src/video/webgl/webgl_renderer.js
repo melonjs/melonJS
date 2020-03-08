@@ -15,6 +15,7 @@
      * @param {Boolean} [options.failIfMajorPerformanceCaveat=true] If true, the renderer will switch to CANVAS mode if the performances of a WebGL context would be dramatically lower than that of a native application making equivalent OpenGL calls.
      * @param {Boolean} [options.transparent=false] Whether to enable transparency on the canvas (performance hit when enabled)
      * @param {Boolean} [options.subPixel=false] Whether to enable subpixel renderering (performance hit when enabled)
+     * @param {Boolean} [options.preferWebGL1=true] if false the renderer will try to use WebGL 2 if supported
      * @param {Number} [options.zoomX=width] The actual width of the canvas with scaling applied
      * @param {Number} [options.zoomY=height] The actual height of the canvas with scaling applied
      * @param {me.WebGLRenderer.Compositor} [options.compositor] A class that implements the compositor API
@@ -37,6 +38,15 @@
              * type {WebGLRenderingContext}
              */
             this.context = this.gl = this.getContextGL(this.getScreenCanvas(), options.transparent);
+
+            /**
+             * The WebGL version used by this renderer (1 or 2)
+             * @name WebGLVersion
+             * @memberOf me.WebGLRenderer
+             * type {Number}
+             * default 1
+             */
+            this.webGLVersion = 1;
 
             /**
              * @ignore
@@ -401,7 +411,21 @@
                 failIfMajorPerformanceCaveat : this.settings.failIfMajorPerformanceCaveat
             };
 
-            var gl = canvas.getContext("webgl", attr) || canvas.getContext("experimental-webgl", attr);
+            var gl;
+
+            // attempt to create a WebGL2 context if requested
+            if (this.settings.preferWebGL1 === false) {
+                gl = canvas.getContext("webgl2", attr);
+                if (gl) {
+                    this.WebGLVersion = 2;
+                }
+            }
+
+            // fallback to WebGL1
+            if (!gl) {
+                this.WebGLVersion = 1;
+                gl = canvas.getContext("webgl", attr) || canvas.getContext("experimental-webgl", attr);
+            }
 
             if (!gl) {
                 throw new Error(
