@@ -15,7 +15,6 @@
         init : function (gl) {
             this._super(me.GLShader, "init", [ gl,
                 [   // vertex`
-                    "precision highp float;",
                     "attribute vec2 aVertex;",
                     "attribute vec2 aRegion;",
                     "attribute vec4 aColor;",
@@ -37,6 +36,7 @@
                     "uniform sampler2D uSampler;",
                     "varying vec4 vColor;",
                     "varying vec2 vRegion;",
+                    
                     "void main(void) {",
                     "    gl_FragColor = texture2D(uSampler, vRegion) * vColor;",
                     "}"

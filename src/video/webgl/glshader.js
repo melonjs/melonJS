@@ -165,7 +165,7 @@
 
     /**
      * set precision for the fiven shader source
-     * won't don anyhing if the precision is already specified
+     * won't do anything if the precision is already specified
      * @private
      */
     function setPrecision(src, precision) {

@@ -15,8 +15,6 @@
         init : function (gl) {
             this._super(me.GLShader, "init", [ gl,
                 [   // vertex`
-                    "precision highp float;",
-
                     "// Current vertex point",
                     "attribute vec2 aVertex;",
 
