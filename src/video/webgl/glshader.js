@@ -71,19 +71,13 @@
     function extractAttributes(gl, shader) {
         var attributes = {},
             attrRx = /attribute\s+\w+\s+(\w+)/g,
-            attrData = [],
-            match;
+            match,
+            i = 0;
 
         // Detect all attribute names
         while ((match = attrRx.exec(shader.vertex))) {
-            attrData.push(match[1]);
+            attributes[match[1]] = i++;
         }
-
-        // Get attribute references
-        attrData.forEach(function (attr) {
-            attributes[attr] = gl.getAttribLocation(shader.program, attr);
-            gl.enableVertexAttribArray(attributes[attr]);
-        });
 
         return attributes;
     };
@@ -107,7 +101,7 @@
      * Compile GLSL into a shader object
      * @private
      */
-    function compileProgram(gl, vertex, fragment) {
+    function compileProgram(gl, vertex, fragment, attributes) {
         var vertShader = compileShader(gl, gl.VERTEX_SHADER, vertex);
         var fragShader = compileShader(gl, gl.FRAGMENT_SHADER, fragment);
 
@@ -115,6 +109,14 @@
 
         gl.attachShader(program, vertShader);
         gl.attachShader(program, fragShader);
+
+
+        // force vertex attributes to use location 0 as starting location to prevent
+        // browser to do complicated emulation when running on desktop OpenGL (e.g. on macOS)
+        for (var location in attributes) {
+            gl.bindAttribLocation(program, attributes[location], location);
+        }
+
         gl.linkProgram(program);
 
         if (!gl.getProgramParameter(program, gl.LINK_STATUS)) {
@@ -257,16 +259,6 @@
             this.fragment = setPrecision(minify(fragment), precision || me.device.getMaxShaderPrecision(this.gl));
 
             /**
-             * a reference to the shader program (once compiled)
-             * @public
-             * @type {WebGLProgram}
-             * @name program
-             * @memberOf me.GLShader
-             */
-            this.program = compileProgram(this.gl, this.vertex, this.fragment);
-
-
-            /**
              * the location attributes of the shader
              * @public
              * @type {GLint[]}
@@ -274,6 +266,16 @@
              * @memberOf me.GLShader
              */
             this.attributes = extractAttributes(this.gl, this);
+
+
+            /**
+             * a reference to the shader program (once compiled)
+             * @public
+             * @type {WebGLProgram}
+             * @name program
+             * @memberOf me.GLShader
+             */
+            this.program = compileProgram(this.gl, this.vertex, this.fragment, this.attributes);
 
             /**
              * the uniforms of the shader

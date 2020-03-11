@@ -2,19 +2,20 @@
 
     // Handy constants
     var VERTEX_SIZE = 2;
-    var COLOR_SIZE = 4;
     var REGION_SIZE = 2;
+    var COLOR_SIZE = 4;
 
-    var ELEMENT_SIZE = VERTEX_SIZE + COLOR_SIZE + REGION_SIZE;
+    var ELEMENT_SIZE = VERTEX_SIZE + REGION_SIZE + COLOR_SIZE;
     var ELEMENT_OFFSET = ELEMENT_SIZE * Float32Array.BYTES_PER_ELEMENT;
 
     var VERTEX_ELEMENT = 0;
-    var COLOR_ELEMENT = VERTEX_ELEMENT + VERTEX_SIZE;
-    var REGION_ELEMENT = COLOR_ELEMENT + COLOR_SIZE;
+    var REGION_ELEMENT = VERTEX_ELEMENT + VERTEX_SIZE;
+    var COLOR_ELEMENT = REGION_ELEMENT + REGION_SIZE;
+
 
     var VERTEX_OFFSET = VERTEX_ELEMENT * Float32Array.BYTES_PER_ELEMENT;
-    var COLOR_OFFSET = COLOR_ELEMENT * Float32Array.BYTES_PER_ELEMENT;
     var REGION_OFFSET = REGION_ELEMENT * Float32Array.BYTES_PER_ELEMENT;
+    var COLOR_OFFSET = COLOR_ELEMENT * Float32Array.BYTES_PER_ELEMENT;
 
     var ELEMENTS_PER_QUAD = 4;
     var INDICES_PER_QUAD = 6;
@@ -85,6 +86,16 @@
              */
             this.activeShader = null;
 
+
+            /**
+             * primitive type to render (gl.POINTS, gl.LINE_STRIP, gl.LINE_LOOP, gl.LINES, gl.TRIANGLE_STRIP, gl.TRIANGLE_FAN, gl.TRIANGLES)
+             * @name mode
+             * @see me.WebGLRenderer.Compositor.mode
+             * @memberOf me.WebGLRenderer.Compositor
+             * @default gl.TRIANGLES
+             */
+            this.mode = gl.TRIANGLES;
+
             /**
              * an array of vertex attribute properties
              * @name attributes
@@ -99,8 +110,8 @@
 
             /// define all vertex attributes
             this.addAttribute("aVertex", VERTEX_SIZE, gl.FLOAT, false, VERTEX_OFFSET);
-            this.addAttribute("aColor", COLOR_SIZE, gl.FLOAT, false, COLOR_OFFSET);
             this.addAttribute("aRegion", REGION_SIZE, gl.FLOAT, false, REGION_OFFSET);
+            this.addAttribute("aColor", COLOR_SIZE, gl.FLOAT, false, COLOR_OFFSET);
 
             // Stream buffer
             this.sb = gl.createBuffer();
@@ -353,7 +364,10 @@
                     var location = this.activeShader.getAttribLocation(element.name);
 
                     if (location !== -1) {
+                        gl.enableVertexAttribArray(location);
                         gl.vertexAttribPointer(location, element.size, element.type, element.normalized, ELEMENT_OFFSET, element.offset);
+                    } else {
+                        gl.disableVertexAttribArray(index);
                     }
                 }
             }
@@ -429,13 +443,6 @@
             this.stream[idx3 + VERTEX_ELEMENT + 0] = v3.x;
             this.stream[idx3 + VERTEX_ELEMENT + 1] = v3.y;
 
-            // Fill color buffer
-            // FIXME: Pack color vector into single float
-            this.stream.set(tint, idx0 + COLOR_ELEMENT);
-            this.stream.set(tint, idx1 + COLOR_ELEMENT);
-            this.stream.set(tint, idx2 + COLOR_ELEMENT);
-            this.stream.set(tint, idx3 + COLOR_ELEMENT);
-
             // Fill texture coordinates buffer
             var uvs = texture.getUVs(key);
             // FIXME: Pack each texture coordinate into single floats
@@ -448,18 +455,24 @@
             this.stream[idx3 + REGION_ELEMENT + 0] = uvs[2];
             this.stream[idx3 + REGION_ELEMENT + 1] = uvs[3];
 
+            // Fill color buffer
+            // FIXME: Pack color vector into single float
+            this.stream.set(tint, idx0 + COLOR_ELEMENT);
+            this.stream.set(tint, idx1 + COLOR_ELEMENT);
+            this.stream.set(tint, idx2 + COLOR_ELEMENT);
+            this.stream.set(tint, idx3 + COLOR_ELEMENT);
+
             this.sbIndex += ELEMENT_SIZE * ELEMENTS_PER_QUAD;
             this.length++;
         },
 
         /**
          * Flush batched texture operations to the GPU
-         * @param {GLENUM} [mode=gl.TRIANGLES] primitive type to render (gl.POINTS, gl.LINE_STRIP, gl.LINE_LOOP, gl.LINES, gl.TRIANGLE_STRIP, gl.TRIANGLE_FAN, gl.TRIANGLES)
          * @param
          * @memberOf me.WebGLRenderer.Compositor
          * @function
          */
-        flush : function (mode) {
+        flush : function () {
             if (this.length) {
                 var gl = this.gl;
 
@@ -473,7 +486,7 @@
 
                 // Draw the stream buffer
                 gl.drawElements(
-                    typeof mode === "undefined" ? gl.TRIANGLES : mode,
+                    this.mode,
                     this.length * INDICES_PER_QUAD,
                     gl.UNSIGNED_SHORT,
                     0
