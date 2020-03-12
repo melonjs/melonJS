@@ -33,6 +33,7 @@
             failIfMajorPerformanceCaveat : true,
             subPixel : false,
             preferWebGL1 : true,
+            powerPreference : "default",
             verbose : false,
             consoleHeader : true
         };
@@ -114,7 +115,8 @@
          * @param {Boolean} [options.useParentDOMSize=false] on browser devices, limit the canvas width and height to its parent container dimensions as returned by getBoundingClientRect(),
          *                                                   as opposed to the browser window dimensions
          * @param {Boolean} [options.preferWebGL1=true] if false the renderer will try to use WebGL 2 if supported
-         * @param {Boolean} [options.transparent=false] whether to allow transparent pixels in the front buffer (screen)
+         * @param {String} [options.powerPreference="default"] a hint to the user agent indicating what configuration of GPU is suitable for the WebGL context ("default", "high-performance", "low-power"). To be noted that Safari and Chrome (since version 80) both default to "low-power" to save battery life and improve the user experience on these dual-GPU machines.
+         * @param {Boolean} [options.transparent=false] whether to allow transparent pixels in the front buffer (screen).
          * @param {Boolean} [options.antiAlias=false] whether to enable or not video scaling interpolation
          * @param {Boolean} [options.consoleHeader=true] whether to display melonJS version and basic device information in the console
          * @return {Boolean} false if initialization failed (canvas not supported)
