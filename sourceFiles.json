@@ -45,7 +45,7 @@
   "src/video/texture_cache.js",
   "src/video/canvas/canvas_renderer.js",
   "src/video/webgl/webgl_renderer.js",
-  "src/video/webgl/compositor.js",
+  "src/video/webgl/webgl_compositor.js",
   "src/video/webgl/glshader.js",
   "src/video/webgl/shaders/primitive-shader.js",
   "src/video/webgl/shaders/quad-shader.js",

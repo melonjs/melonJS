@@ -12,26 +12,21 @@
     var REGION_ELEMENT = VERTEX_ELEMENT + VERTEX_SIZE;
     var COLOR_ELEMENT = REGION_ELEMENT + REGION_SIZE;
 
-
-    var VERTEX_OFFSET = VERTEX_ELEMENT * Float32Array.BYTES_PER_ELEMENT;
-    var REGION_OFFSET = REGION_ELEMENT * Float32Array.BYTES_PER_ELEMENT;
-    var COLOR_OFFSET = COLOR_ELEMENT * Float32Array.BYTES_PER_ELEMENT;
-
     var ELEMENTS_PER_QUAD = 4;
     var INDICES_PER_QUAD = 6;
 
     var MAX_LENGTH = 16000;
 
     /**
-     * A WebGL texture Compositor object. This class handles all of the WebGL state<br>
-     * Pushes texture regions into WebGL buffers, automatically flushes to GPU
+     * A WebGL Compositor object. This class handles all of the WebGL state<br>
+     * Pushes texture regions or shape geometry into WebGL buffers, automatically flushes to GPU
      * @extends me.Object
-     * @namespace me.WebGLRenderer.Compositor
+     * @namespace me.WebGLCompositor
      * @memberOf me
      * @constructor
      * @param {me.WebGLRenderer} renderer the current WebGL renderer session
      */
-    me.WebGLRenderer.Compositor = me.Object.extend({
+    me.WebGLCompositor = me.Object.extend({
         /**
          * @ignore
          */
@@ -42,7 +37,7 @@
             /**
              * The number of quads held in the batch
              * @name length
-             * @memberOf me.WebGLRenderer.Compositor
+             * @memberOf me.WebGLCompositor
              * @type Number
              * @readonly
              */
@@ -52,8 +47,14 @@
             this.currentTextureUnit = -1;
             this.boundTextures = [];
 
-            // maxTextures
-            this.maxTextures = gl.getParameter(gl.MAX_TEXTURE_IMAGE_UNITS);
+            /**
+             * Maximum number of textures supported under the current context
+             * @name maxTextures
+             * @memberOf me.WebGLCompositor
+             * @type Number
+             * @readonly
+             */
+            this.maxTextures = 0;
 
             // Vector pool
             this.v = [
@@ -81,17 +82,16 @@
             /**
              * a reference to the active WebGL shader
              * @name activeShader
-             * @memberOf me.WebGLRenderer.Compositor
+             * @memberOf me.WebGLCompositor
              * @type {me.GLShader}
              */
             this.activeShader = null;
 
-
             /**
              * primitive type to render (gl.POINTS, gl.LINE_STRIP, gl.LINE_LOOP, gl.LINES, gl.TRIANGLE_STRIP, gl.TRIANGLE_FAN, gl.TRIANGLES)
              * @name mode
-             * @see me.WebGLRenderer.Compositor.mode
-             * @memberOf me.WebGLRenderer.Compositor
+             * @see me.WebGLCompositor
+             * @memberOf me.WebGLCompositor
              * @default gl.TRIANGLES
              */
             this.mode = gl.TRIANGLES;
@@ -99,8 +99,8 @@
             /**
              * an array of vertex attribute properties
              * @name attributes
-             * @see me.WebGLRenderer.Compositor.addAttribute
-             * @memberOf me.WebGLRenderer.Compositor
+             * @see me.WebGLCompositor.addAttribute
+             * @memberOf me.WebGLCompositor
              */
             this.attributes = [];
 
@@ -109,13 +109,12 @@
             this.quadShader = new me.QuadGLShader(this.gl);
 
             /// define all vertex attributes
-            this.addAttribute("aVertex", VERTEX_SIZE, gl.FLOAT, false, VERTEX_OFFSET);
-            this.addAttribute("aRegion", REGION_SIZE, gl.FLOAT, false, REGION_OFFSET);
-            this.addAttribute("aColor", COLOR_SIZE, gl.FLOAT, false, COLOR_OFFSET);
+            this.addAttribute("aVertex", 2, gl.FLOAT, false, 0 * Float32Array.BYTES_PER_ELEMENT); // 0
+            this.addAttribute("aRegion", 2, gl.FLOAT, false, 2 * Float32Array.BYTES_PER_ELEMENT); // 1
+            this.addAttribute("aColor",  4, gl.FLOAT, false, 4 * Float32Array.BYTES_PER_ELEMENT); // 2
 
             // Stream buffer
-            this.sb = gl.createBuffer();
-            gl.bindBuffer(gl.ARRAY_BUFFER, this.sb);
+            gl.bindBuffer(gl.ARRAY_BUFFER, gl.createBuffer());
             gl.bufferData(
                 gl.ARRAY_BUFFER,
                 MAX_LENGTH * ELEMENT_OFFSET * ELEMENTS_PER_QUAD,
@@ -131,9 +130,9 @@
             );
 
             // Index buffer
-            this.ib = gl.createBuffer();
-            gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, this.ib);
+            gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, gl.createBuffer());
             gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, this.createIB(), gl.STATIC_DRAW);
+
             // register to the CANVAS resize channel
             me.event.subscribe(
                 me.event.CANVAS_ONRESIZE, (function(width, height) {
@@ -163,6 +162,9 @@
             // Initialize clear color
             this.gl.clearColor(0.0, 0.0, 0.0, 1.0);
 
+            // maxTextures
+            this.maxTextures = this.gl.getParameter(this.gl.MAX_TEXTURE_IMAGE_UNITS);
+
             // empty the texture "cache"
             for (var i = 0; i < this.maxTextures; i++) {
                 this.boundTextures[i] = null;
@@ -176,7 +178,7 @@
         /**
          * add vertex attribute property definition to the compositor
          * @name addAttribute
-         * @memberOf me.WebGLRenderer.Compositor
+         * @memberOf me.WebGLCompositor
          * @function
          * @param {String} name name of the attribute in the vertex shader
          * @param {Number} size number of components per vertex attribute. Must be 1, 2, 3, or 4.
@@ -197,7 +199,7 @@
         /**
          * Sets the viewport
          * @name setViewport
-         * @memberOf me.WebGLRenderer.Compositor
+         * @memberOf me.WebGLCompositor
          * @function
          * @param {Number} x x position of viewport
          * @param {Number} y y position of viewport
@@ -211,7 +213,7 @@
         /**
          * Create a WebGL texture from an image
          * @name createTexture2D
-         * @memberOf me.WebGLRenderer.Compositor
+         * @memberOf me.WebGLCompositor
          * @function
          * @param {Number} unit Destination texture unit
          * @param {Image|Canvas|ImageData|UInt8Array[]|Float32Array[]} image Source image
@@ -260,7 +262,7 @@
         /**
          * assign the given WebGL texture to the current batch
          * @name setTexture2D
-         * @memberOf me.WebGLRenderer.Compositor
+         * @memberOf me.WebGLCompositor
          * @function
          * @param {WebGLTexture} a WebGL texture
          * @param {Number} unit Texture unit to which the given texture is bound
@@ -346,7 +348,7 @@
          * Select the shader to use for compositing
          * @name useShader
          * @see me.GLShader
-         * @memberOf me.WebGLRenderer.Compositor
+         * @memberOf me.WebGLCompositor
          * @function
          * @param {me.GLShader} shader a reference to a GLShader instance
          */
@@ -376,7 +378,7 @@
         /**
          * Add a textured quad
          * @name addQuad
-         * @memberOf me.WebGLRenderer.Compositor
+         * @memberOf me.WebGLCompositor
          * @function
          * @param {me.video.renderer.Texture} texture Source texture
          * @param {String} key Source texture region name
@@ -469,7 +471,7 @@
         /**
          * Flush batched texture operations to the GPU
          * @param
-         * @memberOf me.WebGLRenderer.Compositor
+         * @memberOf me.WebGLCompositor
          * @function
          */
         flush : function () {
@@ -500,7 +502,7 @@
         /**
          * Draw an array of vertices
          * @name drawVertices
-         * @memberOf me.WebGLRenderer.Compositor
+         * @memberOf me.WebGLCompositor
          * @function
          * @param {GLENUM} [mode=gl.TRIANGLES] primitive type to render (gl.POINTS, gl.LINE_STRIP, gl.LINE_LOOP, gl.LINES, gl.TRIANGLE_STRIP, gl.TRIANGLE_FAN, gl.TRIANGLES)
          * @param {me.Vector2d[]} verts vertices
@@ -545,7 +547,7 @@
          * Clear the frame buffer, flushes the composite operations and calls
          * gl.clear()
          * @name clear
-         * @memberOf me.WebGLRenderer.Compositor
+         * @memberOf me.WebGLCompositor
          * @function
          */
         clear : function () {

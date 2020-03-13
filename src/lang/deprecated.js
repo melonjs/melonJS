@@ -234,6 +234,11 @@ Object.defineProperty(me.sys, "gravity", {
 });
 
 /**
+ * @ignore
+ */
+me.WebGLRenderer.Compositor = me.WebGLCompositor;
+
+/**
  * Draw triangle(s)
  * @name drawTriangle
  * @deprecated

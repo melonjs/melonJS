@@ -19,7 +19,7 @@
      * @param {String} [options.powerPreference="default"] a hint to the user agent indicating what configuration of GPU is suitable for the WebGL context ("default", "high-performance", "low-power"). To be noted that Safari and Chrome (since version 80) both default to "low-power" to save battery life and improve the user experience on these dual-GPU machines.
      * @param {Number} [options.zoomX=width] The actual width of the canvas with scaling applied
      * @param {Number} [options.zoomY=height] The actual height of the canvas with scaling applied
-     * @param {me.WebGLRenderer.Compositor} [options.compositor] A class that implements the compositor API
+     * @param {me.WebGLCompositor} [options.compositor] A class that implements the compositor API
      */
     me.WebGLRenderer = me.Renderer.extend({
         /**
@@ -82,9 +82,17 @@
              */
             this.currentTransform = new me.Matrix2d();
 
+            /**
+             * The current compositor used by the renderer
+             * @name currentCompositor
+             * @type me.WebGLCompositor
+             * @memberOf me.WebGLRenderer#
+             */
+            this.currentCompositor = null;
+
             // Create a compositor
-            var Compositor = this.settings.compositor || me.WebGLRenderer.Compositor;
-            this.compositor = new Compositor(this);
+            var Compositor = this.settings.compositor || me.WebGLCompositor;
+            this.setCompositor(new Compositor(this));
 
 
             // default WebGL state(s)
@@ -97,7 +105,7 @@
 
             // Create a texture cache
             this.cache = new me.Renderer.TextureCache(
-                this.compositor.maxTextures
+                this.currentCompositor.maxTextures
             );
 
             // to simulate context lost and restore :
@@ -128,15 +136,32 @@
             this._super(me.Renderer, "reset");
             if (this.isContextValid === false) {
                 // on context lost/restore
-                this.compositor.init(this);
+                this.currentCompositor.init(this);
             } else {
-                this.compositor.reset();
+                this.currentCompositor.reset();
             }
             this.gl.disable(this.gl.SCISSOR_TEST);
             if (typeof this.fontContext2D !== "undefined" ) {
                 this.createFontTexture(this.cache);
             }
 
+        },
+
+        /**
+         * assign a compositor to this renderer
+         * @name setCompositor
+         * @function
+         * @param {WebGLCompositor} compositor a compositor instance
+         * @memberOf me.WebGLRenderer.prototype
+         * @function
+         */
+        setCompositor : function (compositor) {
+            if (this.currentCompositor !== null && this.currentCompositor !== compositor) {
+                // flush the current compositor
+                this.currentCompositor.flush();
+            }
+            
+            this.currentCompositor = compositor;
         },
 
         /**
@@ -176,7 +201,7 @@
                     image,
                     cache
                 );
-                this.compositor.uploadTexture(this.fontTexture, 0, 0, 0);
+                this.currentCompositor.uploadTexture(this.fontTexture, 0, 0, 0);
 
             } else {
                // fontTexture was already created, just add it back into the cache
@@ -218,7 +243,7 @@
             );
 
             // FIXME: Remove old cache entry and texture when changing the repeat mode
-            this.compositor.uploadTexture(texture);
+            this.currentCompositor.uploadTexture(texture);
 
             return texture;
         },
@@ -230,7 +255,7 @@
          * @function
          */
         flush : function () {
-            this.compositor.flush();
+            this.currentCompositor.flush();
         },
 
         /**
@@ -246,7 +271,7 @@
             this.resetTransform();
             this.currentColor.copy(col);
             if (opaque) {
-                this.compositor.clear();
+                this.currentCompositor.clear();
             }
             else {
                 this.fillRect(0, 0, this.canvas.width, this.canvas.height);
@@ -279,11 +304,11 @@
             var fontContext = this.getFontContext();
 
             // Force-upload the new texture
-            this.compositor.uploadTexture(this.fontTexture, 0, 0, 0, true);
+            this.currentCompositor.uploadTexture(this.fontTexture, 0, 0, 0, true);
 
             // Add the new quad
             var key = bounds.pos.x + "," + bounds.pos.y + "," + bounds.width + "," + bounds.height;
-            this.compositor.addQuad(
+            this.currentCompositor.addQuad(
                 this.fontTexture,
                 key,
                 bounds.pos.x,
@@ -350,7 +375,7 @@
             }
 
             var key = sx + "," + sy + "," + sw + "," + sh;
-            this.compositor.addQuad(this.cache.get(image), key, dx, dy, dw, dh);
+            this.currentCompositor.addQuad(this.cache.get(image), key, dx, dy, dw, dh);
         },
 
         /**
@@ -367,7 +392,7 @@
          */
         drawPattern : function (pattern, x, y, width, height) {
             var key = "0,0," + width + "," + height;
-            this.compositor.addQuad(pattern, key, x, y, width, height);
+            this.currentCompositor.addQuad(pattern, key, x, y, width, height);
         },
 
 
@@ -647,7 +672,7 @@
                     points[i].y = y + (((cos_theta * -sin) + (sin_theta * cos)) * radius);
                 }
                 // batch draw all lines
-                this.compositor.drawVertices(this.gl.LINE_STRIP, points, len);
+                this.currentCompositor.drawVertices(this.gl.LINE_STRIP, points, len);
             }
         },
 
@@ -691,7 +716,7 @@
                 )
             }
             // batch draw all triangles
-            this.compositor.drawVertices(this.gl.TRIANGLE_STRIP, points, index);
+            this.currentCompositor.drawVertices(this.gl.TRIANGLE_STRIP, points, index);
         },
 
         /**
@@ -726,7 +751,7 @@
                     points[i].y = y + (Math.cos(segment * -i) * h);
                 }
                 // batch draw all lines
-                this.compositor.drawVertices(this.gl.LINE_LOOP, points, len);
+                this.currentCompositor.drawVertices(this.gl.LINE_LOOP, points, len);
             }
 
         },
@@ -763,7 +788,7 @@
                 );
             }
             // batch draw all triangles
-            this.compositor.drawVertices(this.gl.TRIANGLE_STRIP, points, index);
+            this.currentCompositor.drawVertices(this.gl.TRIANGLE_STRIP, points, index);
         },
 
         /**
@@ -782,7 +807,7 @@
             points[0].y = startY;
             points[1].x = endX;
             points[1].y = endY;
-            this.compositor.drawVertices(this.gl.LINE_STRIP, points, 2);
+            this.currentCompositor.drawVertices(this.gl.LINE_STRIP, points, 2);
         },
 
 
@@ -825,7 +850,7 @@
                     points[i].x = poly.pos.x + poly.points[i].x;
                     points[i].y = poly.pos.y + poly.points[i].y;
                 }
-                this.compositor.drawVertices(this.gl.LINE_LOOP, points, len);
+                this.currentCompositor.drawVertices(this.gl.LINE_LOOP, points, len);
             }
         },
 
@@ -853,7 +878,7 @@
             }
 
             // draw all triangle
-            this.compositor.drawVertices(this.gl.TRIANGLES, glPoints, indices.length);
+            this.currentCompositor.drawVertices(this.gl.TRIANGLES, glPoints, indices.length);
         },
 
         /**
@@ -876,7 +901,7 @@
             points[2].y = y + height;
             points[3].x = x;
             points[3].y = y + height;
-            this.compositor.drawVertices(this.gl.LINE_LOOP, points, 4);
+            this.currentCompositor.drawVertices(this.gl.LINE_LOOP, points, 4);
         },
 
         /**
@@ -899,7 +924,7 @@
             glPoints[2].y = y + height;
             glPoints[3].x = x;
             glPoints[3].y = y + height;
-            this.compositor.drawVertices(this.gl.TRIANGLE_STRIP, glPoints, 4);
+            this.currentCompositor.drawVertices(this.gl.TRIANGLE_STRIP, glPoints, 4);
         },
 
         /**
