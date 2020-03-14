@@ -160,7 +160,6 @@
                 // flush the current compositor
                 this.currentCompositor.flush();
             }
-            
             this.currentCompositor = compositor;
         },
 
@@ -651,7 +650,7 @@
             } else {
                 // XXX to be optimzed using a specific shader
                 var points = this._glPoints;
-                var len = Math.floor(24 * Math.sqrt(radius * 2));
+                var i, len = Math.floor(24 * Math.sqrt(radius * 2));
                 var theta = (end - start) / (len * 2);
                 var theta2 = theta * 2;
                 var cos_theta = Math.cos(theta);
@@ -663,7 +662,7 @@
                 }
 
                 // calculate and draw all segments
-                for (var i = 0; i < len; i++) {
+                for (i = 0; i < len; i++) {
                     var angle = ((theta) + start + (theta2 * i));
                     var cos = Math.cos(angle);
                     var sin = -Math.sin(angle);
@@ -691,7 +690,7 @@
         fillArc : function (x, y, radius, start, end, antiClockwise) {
             // XXX to be optimzed using a specific shader
             var points = this._glPoints;
-            var index = 0;
+            var i, index = 0;
             var len = Math.floor(24 * Math.sqrt(radius * 2));
             var theta = (end - start) / (len * 2);
             var theta2 = theta * 2;
@@ -704,7 +703,7 @@
             }
 
             // calculate and draw all segments
-            for (var i = 0; i < len - 1; i++) {
+            for (i = 0; i < len - 1; i++) {
                 var angle = ((theta) + start + (theta2 * i));
                 var cos = Math.cos(angle);
                 var sin = -Math.sin(angle);
@@ -866,6 +865,7 @@
             var glPoints = this._glPoints;
             var indices = poly.getIndices();
             var x = poly.pos.x, y = poly.pos.y;
+            var i;
 
             // Grow internal points buffer if necessary
             for (i = glPoints.length; i < indices.length; i++) {
@@ -873,7 +873,7 @@
             }
 
             // calculate all vertices
-            for ( var i = 0; i < indices.length; i ++ ) {
+            for (i = 0; i < indices.length; i ++ ) {
                 glPoints[i].set(x + points[indices[i]].x, y + points[indices[i]].y);
             }
 
