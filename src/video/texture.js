@@ -137,7 +137,6 @@
 
             // Add self to TextureCache if cache !== false
             if (cache !== false) {
-                src = Array.isArray(src) ? src : [src];
                 for (var source of this.sources) {
                     if (cache instanceof me.Renderer.TextureCache) {
                         cache.set(source, this);
