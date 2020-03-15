@@ -47,15 +47,6 @@
             this.currentTextureUnit = -1;
             this.boundTextures = [];
 
-            /**
-             * Maximum number of textures supported under the current context
-             * @name maxTextures
-             * @memberOf me.WebGLCompositor
-             * @type Number
-             * @readonly
-             */
-            this.maxTextures = 0;
-
             // Vector pool
             this.v = [
                 new me.Vector2d(),
@@ -162,11 +153,12 @@
             // Initialize clear color
             this.gl.clearColor(0.0, 0.0, 0.0, 1.0);
 
-            // maxTextures
-            this.maxTextures = this.gl.getParameter(this.gl.MAX_TEXTURE_IMAGE_UNITS);
-
-            // empty the texture "cache"
-            for (var i = 0; i < this.maxTextures; i++) {
+            // delete all related bound texture
+            for (var i = 0; i < this.renderer.maxTextures; i++) {
+                var texture =  this.boundTextures[i];
+                if (texture !== null) {
+                    this.gl.deleteTexture(texture);
+                }
                 this.boundTextures[i] = null;
             }
             this.currentTextureUnit = -1;

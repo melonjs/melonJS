@@ -44,10 +44,20 @@
              * The WebGL version used by this renderer (1 or 2)
              * @name WebGLVersion
              * @memberOf me.WebGLRenderer
-             * type {Number}
-             * default 1
+             * @type {Number}
+             * @default 1
+             * @readonly
              */
             this.webGLVersion = 1;
+
+            /**
+             * Maximum number of texture unit supported under the current context
+             * @name maxTextures
+             * @memberOf me.WebGLRenderer
+             * @type {Number}
+             * @readonly
+             */
+            this.maxTextures = this.gl.getParameter(this.gl.MAX_TEXTURE_IMAGE_UNITS);
 
             /**
              * @ignore
@@ -104,9 +114,7 @@
             this.setBlendMode(this.settings.blendMode);
 
             // Create a texture cache
-            this.cache = new me.Renderer.TextureCache(
-                this.currentCompositor.maxTextures
-            );
+            this.cache = new me.Renderer.TextureCache(this.maxTextures);
 
             // to simulate context lost and restore :
             // var ctx = me.video.renderer.context.getExtension('WEBGL_lose_context');

@@ -32,7 +32,7 @@
                 // TODO: Merge textures instead of throwing an exception
                 throw new Error(
                     "Texture cache overflow: " + this.max_size +
-                    " texture units available."
+                    " texture units available for this GPU."
                 );
             }
         },
@@ -68,16 +68,17 @@
                     "(" + width + "x" + height + ")"
                 );
             }
-
-            this.validate();
             this.cache.set(image, texture);
-            this.units.set(texture, this.length++);
         },
 
         /**
          * @ignore
          */
         getUnit : function (texture) {
+            if (!this.units.has(texture)) {
+                this.validate();
+                this.units.set(texture, this.length++);
+            }
             return this.units.get(texture);
         }
     });
