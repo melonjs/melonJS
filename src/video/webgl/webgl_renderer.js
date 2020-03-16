@@ -720,7 +720,7 @@
                 points[index++].set(
                     x - (((cos_theta * cos) + (sin_theta * sin)) * radius),
                     y - (((cos_theta * -sin) + (sin_theta * cos)) * radius)
-                )
+                );
             }
             // batch draw all triangles
             this.currentCompositor.drawVertices(this.gl.TRIANGLE_STRIP, points, index);
