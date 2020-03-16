@@ -288,7 +288,7 @@
             var texture2D = this.boundTextures[unit];
 
             if (texture2D === null || force) {
-                texture2D = this.createTexture2D(
+                this.createTexture2D(
                     unit,
                     texture.getTexture(),
                     this.renderer.settings.antiAlias ? this.gl.LINEAR : this.gl.NEAREST,
