@@ -680,7 +680,7 @@
             // first try using "standard" values
             if (typeof screen !== "undefined") {
                 var orientation = me.agent.prefixed("orientation", screen);
-                if (typeof orientation !== "undefined" && typeof(orientation.type === "string")) {
+                if (typeof orientation !== "undefined" && typeof orientation.type === "string") {
                     // Screen Orientation API specification
                     return orientation.type;
                 } else if (typeof orientation === "string") {
