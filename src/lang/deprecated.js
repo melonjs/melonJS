@@ -96,7 +96,7 @@ me.ScreenObject = me.Stage.extend({
 me.Renderer.prototype.drawShape = function () {
     console.log("drawShape() is deprecated, please use the stroke() or fill() function");
     me.Renderer.prototype.stroke.apply(this, arguments);
-}
+};
 
 /**
  * @ignore
