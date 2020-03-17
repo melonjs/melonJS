@@ -370,7 +370,7 @@
             var x = this.x;
             var y = this.y;
 
-            var c = Math.cos(angle)
+            var c = Math.cos(angle);
             var s = Math.sin(angle);
 
             return this._set(x * c - y * s, x * s + y * c, this.z);

@@ -119,7 +119,7 @@
     "padded-blocks": [0, "never"],
     "quotes": [2, "double", { "avoidEscape": true, "allowTemplateLiterals": true }],
     "rest-spread-spacing": [2, "never"],
-    "semi": [0, "never"],
+    "semi": ["error", "always"],
     "semi-spacing": [2, { "before": false, "after": true }],
     "space-before-blocks": [2, "always"],
     "space-before-function-paren": [0, "always"],

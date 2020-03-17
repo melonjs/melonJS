@@ -465,7 +465,7 @@
 
         // check if mapped to a key
         if (keycode) {
-            me.input.triggerKeyEvent(keycode, POINTER_DOWN.includes(e.type), button + 1)
+            me.input.triggerKeyEvent(keycode, POINTER_DOWN.includes(e.type), button + 1);
         }
     }
 

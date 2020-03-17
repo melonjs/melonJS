@@ -101,7 +101,7 @@
          */
         api.getUriFragment = (function (url) {
             var UriFragments = {};
-            var parsed = false
+            var parsed = false;
             return function (url) {
                 var hash;
                 if (typeof url === "undefined") {
@@ -127,7 +127,7 @@
                     });
                 }
                 return hash;
-            }
+            };
         })();
 
         /**

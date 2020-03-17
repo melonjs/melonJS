@@ -24,7 +24,7 @@ me.Font = me.Text.extend({
             size:size,
             fillStyle:fillStyle,
             textAlign:textAlign
-        }
+        };
         // super constructor
         this._super(me.Text, "init", [0, 0, settings]);
         // deprecation warning
@@ -65,7 +65,7 @@ me.BitmapFont = me.BitmapText.extend({
             size: scale,
             textAlign: textAlign,
             textBaseline: textBaseline
-        }
+        };
         // super constructor
         this._super(me.BitmapText, "init", [0, 0, settings]);
         // deprecation warning

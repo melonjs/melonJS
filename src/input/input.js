@@ -32,6 +32,6 @@
          * @memberOf me.input
          */
          preventDefault : true
-    }
+    };
 
 })();

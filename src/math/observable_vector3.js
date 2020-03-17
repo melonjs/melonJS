@@ -37,7 +37,7 @@
                     if (ret && "x" in ret) {
                         this._x = ret.x;
                     } else {
-                        this._x = value
+                        this._x = value;
                     }
                 },
                 configurable : true
@@ -65,7 +65,7 @@
                     if (ret && "y" in ret) {
                         this._y = ret.y;
                     } else {
-                        this._y = value
+                        this._y = value;
                     }
                 },
                 configurable : true
@@ -93,7 +93,7 @@
                     if (ret && "z" in ret) {
                         this._z = ret.z;
                     } else {
-                        this._z = value
+                        this._z = value;
                     }
                 },
                 configurable : true
@@ -437,8 +437,8 @@
         rotate : function (angle) {
             var x = this._x;
             var y = this._y;
-            
-            var c = Math.cos(angle)
+
+            var c = Math.cos(angle);
             var s = Math.sin(angle);
 
             return this._set(x * c - y * s, x * s + y * c, this._z);

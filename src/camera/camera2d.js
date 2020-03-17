@@ -156,7 +156,7 @@
         /** @ignore */
         // update the projection matrix based on the projection frame (a rectangle)
         _updateProjectionMatrix : function () {
-            this.projectionMatrix.ortho(0, this.width, this.height, 0, this.near, this.far)
+            this.projectionMatrix.ortho(0, this.width, this.height, 0, this.near, this.far);
         },
 
         /** @ignore */
@@ -656,7 +656,7 @@
         worldToLocal : function (x, y, v) {
             // TODO memoization for one set of coords (multitouch)
             v = v || new me.Vector2d();
-            v.set(x, y)
+            v.set(x, y);
             if (!this.currentTransform.isIdentity()) {
                 this.currentTransform.multiplyVector(v);
             }

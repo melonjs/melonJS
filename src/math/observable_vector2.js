@@ -36,7 +36,7 @@
                     if (ret && "x" in ret) {
                         this._x = ret.x;
                     } else {
-                        this._x = value
+                        this._x = value;
                     }
                 },
                 configurable : true
@@ -64,7 +64,7 @@
                     if (ret && "y" in ret) {
                         this._y = ret.y;
                     } else {
-                        this._y = value
+                        this._y = value;
                     }
                 },
                 configurable : true
@@ -371,9 +371,9 @@
             var x = this._x - cx;
             var y = this._y - cy;
 
-            var c = Math.cos(angle)
+            var c = Math.cos(angle);
             var s = Math.sin(angle);
-            
+
             return this._set(x * c - y * s + cx, x * s + y * c + cy);
         },
 

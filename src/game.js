@@ -126,7 +126,7 @@
          */
         api.reset = function () {
             // point to the current active stage "default" camera
-            var current = me.state.current()
+            var current = me.state.current();
             if (typeof current !== "undefined") {
                 api.viewport = me.state.current().cameras.get("default");
             }
