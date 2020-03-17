@@ -5,6 +5,7 @@ melonJS
 [![Dependencies](https://img.shields.io/david/melonjs/melonJS.svg)](https://david-dm.org/melonjs/melonJS)
 [![Inline docs](http://inch-ci.org/github/melonjs/melonJS.svg?branch=master)](http://inch-ci.org/github/melonjs/melonJS)
 [![jsDeliver](https://data.jsdelivr.com/v1/package/npm/melonjs/badge)](https://www.jsdelivr.com/package/npm/melonjs)
+[![Language grade: JavaScript](https://img.shields.io/lgtm/grade/javascript/g/melonjs/melonJS.svg?logo=lgtm&logoWidth=18)](https://lgtm.com/projects/g/melonjs/melonJS/context:javascript)
 
 A fresh & lightweight HTML5 game engine
 -------------------------------------------------------------------------------
