@@ -16,7 +16,6 @@ var _ = require('underscore');
 var htmlsafe = helper.htmlsafe;
 var linkto = helper.linkto;
 var resolveAuthorLinks = helper.resolveAuthorLinks;
-var scopeToPunc = helper.scopeToPunc;
 var hasOwnProp = Object.prototype.hasOwnProperty;
 
 var data;
@@ -45,8 +44,8 @@ function find(spec) {
 
 function tutoriallink(tutorial) {
     return helper.toTutorial(tutorial, null, {
-        tag: 'em', 
-        classname: 'disabled', 
+        tag: 'em',
+        classname: 'disabled',
         prefix: 'Tutorial: '
     });
 }
@@ -114,7 +113,7 @@ function updateItemName(item) {
         itemName = '&hellip;' + itemName;
     }
 
-    if (attributes && attributes.length) {
+    if (typeof attributes !== "undefined" && attributes.length) {
         itemName = util.format( '%s<span class="signature-attributes">%s</span>', itemName,
             attributes.join(', ') );
     }
@@ -456,7 +455,7 @@ function buildNav(members) {
     var seen = {};
     var seenTutorials = {};
 
-    nav += buildMemberNav(members.tutorials, tutorialsName, seenTutorials, linktoTutorial, true);
+    nav += buildMemberNav(members.tutorials, tutorialsName, seenTutorials, linktoTutorial);
     nav += buildMemberNav(members.modules, 'Modules', {}, linkto);
     nav += buildMemberNav(members.externals, 'Externals', seen, linktoExternal);
     nav += buildMemberNav(members.classes, 'Classes', seen, linkto);
