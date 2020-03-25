@@ -77,10 +77,10 @@
              * @public
              * @type {Number}
              * @name near
-             * @default 1
+             * @default -1000
              * @memberOf me.Camera2d
              */
-            this.near = 1;
+            this.near = -1000;
 
             /**
              * the furthest point relative to the camera.
@@ -96,11 +96,11 @@
              * the default camera projection matrix
              * (2d cameras use an orthographic projection by default).
              * @public
-             * @type {me.Matrix2d}
+             * @type {me.Matrix3d}
              * @name projectionMatrix
              * @memberOf me.Camera2d
              */
-            this.projectionMatrix = new me.Matrix2d();
+            this.projectionMatrix = new me.Matrix3d();
 
             // offset for shake effect
             this.offset = new me.Vector2d();

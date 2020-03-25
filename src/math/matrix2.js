@@ -18,8 +18,12 @@
             if (typeof(this.val) === "undefined") {
                 this.val = new Float32Array(9);
             }
+
             if (arguments.length && arguments[0] instanceof me.Matrix2d) {
                 this.copy(arguments[0]);
+            }
+            else if (arguments.length && arguments[0] instanceof me.Matrix3d) {
+                this.fromMat3d(arguments[0]);
             }
             else if (arguments.length >= 6) {
                 this.setTransform.apply(this, arguments);
@@ -101,6 +105,31 @@
          */
         copy : function (b) {
             this.val.set(b.val);
+            return this;
+        },
+
+        /**
+         * Copies over the upper-left 3x3 values from the given me.Matrix3d
+         * @name fromMat3d
+         * @memberOf me.Matrix2d
+         * @function
+         * @param {me.Matrix3d} m the matrix object to copy from
+         * @return {me.Matrix2d} Reference to this object for method chaining
+         */
+        fromMat3d : function (b) {
+            b = b.val;
+            var a = this.val;
+
+            a[0] = b[0];
+            a[1] = b[1];
+            a[2] = b[2];
+            a[3] = b[4];
+            a[4] = b[5];
+            a[5] = b[6];
+            a[6] = b[8];
+            a[7] = b[9];
+            a[8] = b[10];
+
             return this;
         },
 
@@ -193,38 +222,6 @@
 
             return this;
         },
-
-        /**
-         * generate an orthogonal projection matrix, with the result replacing the current matrix
-         * <img src="images/glOrtho.gif"/><br>
-         * @name ortho
-         * @memberOf me.Matrix2d
-         * @function
-         * @param {Number} left farthest left on the x-axis
-         * @param {Number} right farthest right on the x-axis
-         * @param {Number} bottom farthest down on the y-axis
-         * @param {Number} top farthest up on the y-axis
-         * @param {Number} near distance to the near clipping plane along the -Z axis
-         * @param {Number} far distance to the far clipping plane along the -Z axis
-         * @return {me.Matrix2d} Reference to this object for method chaining
-         */
-         ortho : function (left, right, bottom, top, near, far) {
-             var a = this.val;
-
-             a[0] = 2.0 / (right - left);
-             a[1] = 0.0;
-             a[2] = 0.0;
-
-             a[3] = 0.0;
-             a[4] = 2.0 / (top - bottom);
-             a[5] = 0.0;
-
-             a[6] = -1.0;
-             a[7] = 1.0;
-             a[8] = -2.0 / (far - near);
-
-             return this;
-         },
 
        /**
         * Transforms the given vector according to this matrix.
@@ -405,6 +402,31 @@
                 a[6] === 0 &&
                 a[7] === 0 &&
                 a[8] === 1
+            );
+        },
+
+        /**
+         * return true if the two matrices are identical
+         * @name equals
+         * @memberOf me.Matrix2d
+         * @function
+         * @param {me.Matrix2d} b the other matrix
+         * @return {Boolean} true if both are equals
+         */
+        equals : function (b) {
+            b = b.val;
+            var a = this.val;
+
+            return (
+                (a[0] === b[0]) &&
+                (a[1] === b[1]) &&
+                (a[2] === b[2]) &&
+                (a[3] === b[3]) &&
+                (a[4] === b[4]) &&
+                (a[5] === b[5]) &&
+                (a[6] === b[6]) &&
+                (a[7] === b[7]) &&
+                (a[8] === b[8])
             );
         },
 

@@ -77,7 +77,7 @@
             this.currentTint = new me.Color(255, 255, 255, 1.0);
 
             // the projectionMatrix (set through setProjection)
-            this.projectionMatrix = new me.Matrix2d();
+            this.projectionMatrix = new me.Matrix3d();
 
             // default uvOffset
             this.uvOffset = 0;
@@ -348,7 +348,7 @@
          * @name setProjection
          * @memberOf me.Renderer.prototype
          * @function
-         * @param {me.Matrix2d} matrix
+         * @param {me.Matrix3d} matrix
          */
         setProjection : function (matrix) {
             this.projectionMatrix.copy(matrix);

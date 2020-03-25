@@ -19,14 +19,14 @@
                     "attribute vec2 aRegion;",
                     "attribute vec4 aColor;",
 
-                    "uniform mat3 uProjectionMatrix;",
+                    "uniform mat4 uProjectionMatrix;",
 
                     "varying vec2 vRegion;",
                     "varying vec4 vColor;",
 
                     "void main(void) {",
                     "    // Transform the vertex position by the projection matrix",
-                    "    gl_Position = vec4((uProjectionMatrix * vec3(aVertex, 1.0)).xy, 0.0, 1.0);",
+                    "     gl_Position = uProjectionMatrix * vec4(aVertex, 0.0, 1.0);",
                     "    // Pass the remaining attributes to the fragment shader",
                     "    vColor = vec4(aColor.rgb * aColor.a, aColor.a);",
                     "    vRegion = aRegion;",
@@ -36,7 +36,7 @@
                     "uniform sampler2D uSampler;",
                     "varying vec4 vColor;",
                     "varying vec2 vRegion;",
-                    
+
                     "void main(void) {",
                     "    gl_FragColor = texture2D(uSampler, vRegion) * vColor;",
                     "}"

@@ -12,6 +12,17 @@ describe("me.Matrix2d", function () {
         expect(matA.isIdentity()).toEqual(true);
     });
 
+    it("could be initialized using a given 4x4 matrix", function () {
+        var matA = new me.Matrix2d();
+        var matB = new me.Matrix3d(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16);
+        var result = "me.Matrix2d(1, 2, 3, 5, 6, 7, 9, 10, 11)";
+
+        matA.fromMat3d(matB);
+
+        expect(matA.toString() === result).toEqual(true);
+    });
+
+
     it("should multiply all values properly", function () {
         var matA = new me.Matrix2d(1, 2, 0, 3, 4, 0, 5, 6, 1);
         var matB = new me.Matrix2d(7, 8, 0, 9, 10, 0, 11, 12, 1);
