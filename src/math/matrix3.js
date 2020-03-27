@@ -255,6 +255,42 @@
         },
 
         /**
+         * apply the current transform to the given 3d vector
+         * @name apply
+         * @memberOf me.Matrix3d
+         * @function
+         * @param {me.Vector3d} vector the vector object to be transformed
+         * @return {me.Vector3d} result vector object.
+         */
+         apply : function (v) {
+            var a = this.val,
+            x = v.x,
+            y = v.y,
+            z = v.z;
+
+            var w = (a[3] * x + a[7] * y + a[11] * z + a[15]) || 1.0;
+
+            v.x = (a[0] * x + a[4] * y + a[8] * z + a[12]) / w;
+            v.y = (a[1] * x + a[5] * y + a[9] * z + a[13]) / w;
+            v.z = (a[2] * x + a[6] * y + a[10] * z + a[14]) / w;
+
+            return v;
+         },
+
+         /**
+          * apply the inverted current transform to the given 3d vector
+          * @name applyInverse
+          * @memberOf me.Matrix3d
+          * @function
+          * @param {me.Vector3d} vector the vector object to be transformed
+          * @return {me.Vector3d} result vector object.
+          */
+         applyInverse : function (v) {
+             // XXX : TODO
+             return v;
+         },
+
+        /**
          * generate an orthogonal projection matrix, with the result replacing the current matrix
          * <img src="images/glOrtho.gif"/><br>
          * @name ortho

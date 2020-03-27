@@ -25,6 +25,8 @@ describe("me.Camera2d", function () {
         camera.move(100, 100);
         // rotate the viewport
         camera.currentTransform.rotate(0.5);
+        // make sure the camera go through one round of update
+        camera.update(0.16);
         // convert to word coordinates
         camera.localToWorld(250, 150, result);
         // convert back to local coordinates

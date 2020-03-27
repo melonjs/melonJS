@@ -291,7 +291,7 @@
                         var gameX = pointer.gameX;
                         var gameY = pointer.gameY;
                         if (!region.currentTransform.isIdentity()) {
-                            var invV = region.currentTransform.multiplyVectorInverse(
+                            var invV = region.currentTransform.applyInverse(
                                 me.pool.pull("me.Vector2d", gameX, gameY)
                             );
                             gameX = invV.x;

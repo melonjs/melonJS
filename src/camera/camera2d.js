@@ -102,6 +102,15 @@
              */
             this.projectionMatrix = new me.Matrix3d();
 
+            /**
+             * the invert camera transform used to unproject points
+             * @private`
+             * @type {me.Matrix2d}
+             * @name invCurrentTransform
+             * @memberOf me.Camera2d
+             */
+            this.invCurrentTransform = new me.Matrix2d();
+
             // offset for shake effect
             this.offset = new me.Vector2d();
 
@@ -208,6 +217,7 @@
 
             // reset the transformation matrix
             this.currentTransform.identity();
+            this.invCurrentTransform.identity().invert();
 
             // update the projection matrix
             this._updateProjectionMatrix();
@@ -487,6 +497,12 @@
                 updated = true;
             }
 
+            if (!this.currentTransform.isIdentity()) {
+                this.invCurrentTransform.copy(this.currentTransform).invert();
+            } else {
+                // reset to default
+                this.invCurrentTransform.identity();
+            }
             return updated;
         },
 
@@ -637,7 +653,7 @@
             v = v || new me.Vector2d();
             v.set(x, y).add(this.pos).sub(me.game.world.pos);
             if (!this.currentTransform.isIdentity()) {
-                this.currentTransform.multiplyVectorInverse(v);
+                this.invCurrentTransform.apply(v);
             }
             return v;
         },
@@ -658,7 +674,7 @@
             v = v || new me.Vector2d();
             v.set(x, y);
             if (!this.currentTransform.isIdentity()) {
-                this.currentTransform.multiplyVector(v);
+                this.currentTransform.apply(v);
             }
             return v.sub(this.pos).add(me.game.world.pos);
         },

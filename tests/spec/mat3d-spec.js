@@ -95,4 +95,16 @@ describe("me.Matrix3d", function () {
         expect(matA.toString() === result).toEqual(true);
     });
 
+    it("should multiply a 3d vector properly", function () {
+        var matA = new me.Matrix3d(1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1);
+        var vecA = new me.Vector3d(1, 2, 3);
+
+        matA.apply(vecA);
+        //multiply back with the inverted matrix
+        matA.invert().apply(vecA);
+
+        // and we should have back the original vector values
+        expect(vecA.toString()).toEqual("x:1,y:2,z:3");
+    });
+
 });

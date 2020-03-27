@@ -127,7 +127,7 @@ import earcut from "earcut";
             var points = this.points;
             var len = points.length;
             for (var i = 0; i < len; i++) {
-                m.multiplyVector(points[i]);
+                m.apply(points[i]);
             }
             this.recalc();
             this.updateBounds();

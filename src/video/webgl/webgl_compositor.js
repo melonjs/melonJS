@@ -414,10 +414,10 @@
                 v3 = this.v[3].set(x + w, y + h);
 
             if (!m.isIdentity()) {
-                m.multiplyVector(v0);
-                m.multiplyVector(v1);
-                m.multiplyVector(v2);
-                m.multiplyVector(v3);
+                m.apply(v0);
+                m.apply(v1);
+                m.apply(v2);
+                m.apply(v3);
             }
 
             // Array index computation
@@ -517,7 +517,7 @@
             var m_isIdentity = m.isIdentity();
             for (var i = 0; i < vertexCount; i++) {
                 if (!m_isIdentity) {
-                    m.multiplyVector(verts[i]);
+                    m.apply(verts[i]);
                 }
                 this.stream[offset + 0] = verts[i].x;
                 this.stream[offset + 1] = verts[i].y;
