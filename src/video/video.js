@@ -358,9 +358,11 @@
 
             if (me.device.OffscreenCanvas === true && offscreen === true) {
                 _canvas = new OffscreenCanvas(0, 0);
-                    // stubbing style for compatibility,
-                    // as OffscreenCanvas is detached from the DOM
+                // stubbing style for compatibility,
+                // as OffscreenCanvas is detached from the DOM
+                if (typeof _canvas.style === "undefined") {
                     _canvas.style = {};
+                }
             } else {
                 // "else" create a "standard" canvas
                 _canvas = document.createElement("canvas");
