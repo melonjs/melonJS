@@ -47,6 +47,7 @@
             api.register("me.ObservableVector2d", me.ObservableVector2d, true);
             api.register("me.ObservableVector3d", me.ObservableVector3d, true);
             api.register("me.Matrix2d", me.Matrix2d, true);
+            api.register("me.Matrix3d", me.Matrix3d, true);
             api.register("me.Rect", me.Rect, true);
             api.register("me.Polygon", me.Polygon, true);
             api.register("me.Line", me.Line, true);

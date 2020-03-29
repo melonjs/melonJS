@@ -99,4 +99,13 @@ describe("me.Matrix2d", function () {
         // and we should have back the original vector values
         expect(vecA.toString()).toEqual("x:3,y:7");
     });
+
+    it("should be clonable", function () {
+        var matA = new me.Matrix2d(1, 2, 3, 4, 5, 6, 7, 8, 9);
+        var matB = matA.clone();
+
+        // and we should have back the original vector values
+        expect(matA.equals(matB)).toEqual(true);
+    });
+
 });
