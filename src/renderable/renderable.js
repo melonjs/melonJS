@@ -527,8 +527,12 @@
 
             // set the scaleFlag
             this.currentTransform.scale(_x, _y);
-            // resize the bounding box
-            this.getBounds().resize(this.width * _x, this.height * _y);
+
+            // corresponding bounding box to be set
+            // through the width and height setters
+            this.width = this.width * _x;
+            this.height = this.height * _y;
+
             return this;
         },
 
