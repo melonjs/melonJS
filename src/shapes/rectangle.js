@@ -128,6 +128,7 @@
             this._super(me.Polygon, "recalc");
             this._width = this.points[2].x;
             this._height = this.points[2].y;
+            this.center.set(this.centerX, this.centerY);
             return this;
         },
 
@@ -458,6 +459,7 @@
          */
         set : function (value) {
             this.pos.x = value - (this._width / 2);
+            this.center.x = value;
         },
         configurable : true
     });
@@ -485,6 +487,7 @@
          */
         set : function (value) {
             this.pos.y = value - (this._height / 2);
+            this.center.y = value;
         },
         configurable : true
     });

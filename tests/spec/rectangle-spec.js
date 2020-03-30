@@ -25,6 +25,8 @@ describe("Shape : me.Rect", function () {
         });
 
         it("center scaled rect1", function () {
+            expect(rect1.center.x).toEqual(50);
+            expect(rect1.center.y).toEqual(50);
             expect(rect1.centerX).toEqual(50);
             expect(rect1.centerY).toEqual(50);
         });
@@ -38,6 +40,8 @@ describe("Shape : me.Rect", function () {
             rect1.centerY = 400;
             expect(rect1.pos.x).toEqual(150);
             expect(rect1.pos.y).toEqual(350);
+            expect(rect1.center.x).toEqual(200);
+            expect(rect1.center.y).toEqual(400);
             // move it back
             rect1.centerX = 50;
             rect1.centerY = 50;
@@ -56,9 +60,24 @@ describe("Shape : me.Rect", function () {
         it("rect 1 does not overlaps rect4", function () {
             expect(rect1.overlaps(rect4)).toEqual(false);
         });
+
+        it("rect 1 can be resized", function () {
+            rect1.resize(500, 500);
+            expect(rect1.center.x).toEqual(250);
+            expect(rect1.center.y).toEqual(250);
+            expect(rect1.centerX).toEqual(250);
+            expect(rect1.centerY).toEqual(250);
+        });
     });
 
     describe("rect2", function () {
+
+        it("rect 2 center is set", function () {
+            expect(rect2.center.x).toEqual(100);
+            expect(rect2.center.y).toEqual(100);
+            expect(rect2.centerX).toEqual(100);
+            expect(rect2.centerY).toEqual(100);
+        });
 
         it("rect 2 overlaps rect3", function () {
             expect(rect1.overlaps(rect3)).toEqual(true);
@@ -70,8 +89,8 @@ describe("Shape : me.Rect", function () {
     });
 
     describe("rect3", function () {
-        it("rect 3 contains rect1", function () {
-            expect(rect3.contains(rect1)).toEqual(true);
+        it("rect 3 does no contains rect1", function () {
+            expect(rect3.contains(rect1)).toEqual(false);
         });
 
         it("rect 3 contains rect2", function () {
