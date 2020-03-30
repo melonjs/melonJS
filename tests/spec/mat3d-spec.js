@@ -115,4 +115,12 @@ describe("me.Matrix3d", function () {
         expect(matA.equals(matB)).toEqual(true);
     });
 
+    it("should be copiable", function () {
+        var matA = new me.Matrix3d(0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15);
+        var matB = (new me.Matrix3d).copy(matA);
+
+        // and we should have back the original vector values
+        expect(matA.equals(matB)).toEqual(true);
+    });
+
 });

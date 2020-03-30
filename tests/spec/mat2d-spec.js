@@ -108,4 +108,12 @@ describe("me.Matrix2d", function () {
         expect(matA.equals(matB)).toEqual(true);
     });
 
+    it("should be copiable", function () {
+        var matA = new me.Matrix2d(1, 2, 3, 4, 5, 6, 7, 8, 9);
+        var matB = (new me.Matrix2d).copy(matA);
+
+        // and we should have back the original vector values
+        expect(matA.equals(matB)).toEqual(true);
+    });
+
 });
