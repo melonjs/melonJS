@@ -7,6 +7,7 @@ Version History
 * Physic : added a rotate method to me.Body to allow rotating all the body shapes properly (by default around the body bounding box center)
 * Renderable : add support for free-texture-packer (http://free-tex-packer.com), the free Texture Packer alternative (thanks @PLAYERKILLERS)
 * Renderable : optimized and tidied up me.Text and me.BitmapText implementation
+* Renderable : new isFlippedX & isFlippedY getter to check the current renderable "flip" state
 * Renderer : new optional parameter for createCanvas() to request an OffScreenCanvas if supported by the browser
 * Renderer : use OffscreenCanvas by default for all secondary canvas (e.g. debugPanel, double buffering, font texture in WebGL)
 * Renderer : properly fallback to the Canvas Renderer including when then WebGL renderer is not able to compile the built-in shaders

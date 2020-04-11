@@ -37,7 +37,7 @@
              * @public
              * @type {me.Body}
              * @see me.Body
-             * @see me.collision.check
+             * @see me.collision#check
              * @name body
              * @memberOf me.Renderable#
              * @example
@@ -378,7 +378,7 @@
 
         /**
          * flip the renderable on the horizontal axis (around the center of the renderable)
-         * @see me.Matrix2d.scaleX
+         * @see me.Matrix2d#scaleX
          * @name flipX
          * @memberOf me.Renderable.prototype
          * @function
@@ -392,7 +392,7 @@
 
         /**
          * flip the renderable on the vertical axis (around the center of the renderable)
-         * @see me.Matrix2d.scaleY
+         * @see me.Matrix2d#scaleY
          * @name flipY
          * @memberOf me.Renderable.prototype
          * @function
@@ -769,6 +769,42 @@
                     this.onVisibilityChange.call(this, value);
                 }
             }
+        },
+        configurable : true
+    });
+
+    /**
+     * returns true if this renderable is flipped on the horizontal axis
+     * @public
+     * @see me.Renderable#flipX
+     * @type {Boolean}
+     * @name isFlippedX
+     * @memberOf me.Renderable
+     */
+    Object.defineProperty(me.Renderable.prototype, "isFlippedX", {
+        /**
+         * @ignore
+         */
+        get : function () {
+            return this._flip.x === true;
+        },
+        configurable : true
+    });
+
+    /**
+     * returns true if this renderable is flipped on the vertical axis
+     * @public
+     * @see me.Renderable#flipY
+     * @type {Boolean}
+     * @name isFlippedY
+     * @memberOf me.Renderable
+     */
+    Object.defineProperty(me.Renderable.prototype, "isFlippedY", {
+        /**
+         * @ignore
+         */
+        get : function () {
+            return this._flip.y === true;
         },
         configurable : true
     });
