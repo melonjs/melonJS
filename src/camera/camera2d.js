@@ -104,7 +104,7 @@
 
             /**
              * the invert camera transform used to unproject points
-             * @private`
+             * @ignore
              * @type {me.Matrix2d}
              * @name invCurrentTransform
              * @memberOf me.Camera2d
