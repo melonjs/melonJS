@@ -113,7 +113,7 @@ function updateItemName(item) {
         itemName = '&hellip;' + itemName;
     }
 
-    if (typeof attributes !== "undefined" && attributes.length) {
+    if (attributes.length > 0) {
         itemName = util.format( '%s<span class="signature-attributes">%s</span>', itemName,
             attributes.join(', ') );
     }
