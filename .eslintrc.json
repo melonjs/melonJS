@@ -1,19 +1,20 @@
 {
   "env": {
-    "es6": true,
-    "browser": true,
-    "jasmine": true
+    "es6"       : true,
+    "browser"   : true,
+    "jasmine"   : true
 },
   "globals": {
-    "me"                    : false
+    "me"        : false
   },
   "parserOptions": {
-       "sourceType": "module"
+    "sourceType": "module"
    },
   "rules": {
     // Severity should be one of the following: 0 = off, 1 = warn, 2 = error
     // http://eslint.org/docs/rules/
     "accessor-pairs": 2,
+    "block-scoped-var": 2,
     "arrow-spacing": [2, { "before": true, "after": true }],
     "block-spacing": [2, "always"],
     "brace-style": [0, "1tbs", { "allowSingleLine": true }],
@@ -60,6 +61,8 @@
     "no-func-assign": 2,
     "no-global-assign": 2,
     "no-implied-eval": 2,
+    "no-implicit-coercion": 0,
+    "no-implicit-globals": 2,
     "no-inner-declarations": [2, "functions"],
     "no-invalid-regexp": 2,
     "no-irregular-whitespace": 2,
@@ -68,7 +71,7 @@
     "no-labels": [2, { "allowLoop": false, "allowSwitch": false }],
     "no-lone-blocks": 2,
     "no-mixed-spaces-and-tabs": 2,
-    "no-multi-spaces": 0,
+    "no-multi-spaces": [0, { "ignoreEOLComments": true }],
     "no-multi-str": 2,
     "no-multiple-empty-lines": [0, { "max": 1 }],
     "no-native-reassign": 2,
@@ -105,6 +108,7 @@
     "no-unreachable": 2,
     "no-unsafe-finally": 2,
     "no-unsafe-negation": 2,
+    "no-unused-labels": 2,
     "no-unused-vars": [2, { "vars": "all", "args": "none" }],
     "no-useless-call": 0,
     "no-useless-computed-key": 2,

@@ -330,7 +330,7 @@
             if (target instanceof me.Renderable) {
                 this.target = target.pos;
             }
-            else if ((target instanceof me.Vector2d) || (target instanceof me.Vector3d))  {
+            else if ((target instanceof me.Vector2d) || (target instanceof me.Vector3d)) {
                 this.target = target;
             }
             else {

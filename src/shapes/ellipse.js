@@ -252,7 +252,7 @@
 
             if (!this._bounds) {
                 this._bounds = new me.Rect(x, y, w, h);
-            }  else {
+            } else {
                 this._bounds.setShape(x, y, w, h);
             }
             return this._bounds;

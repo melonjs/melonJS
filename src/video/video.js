@@ -352,7 +352,7 @@
         api.createCanvas = function (width, height, offscreen) {
             var _canvas;
 
-            if (width === 0 || height === 0)  {
+            if (width === 0 || height === 0) {
                 throw new Error("width or height was zero, Canvas could not be initialized !");
             }
 
@@ -410,27 +410,23 @@
                 var _max_width = Math.min(maxWidth, parentNodeWidth || window.innerWidth);
                 var _max_height = Math.min(maxHeight, parentNodeHeight || window.innerHeight);
                 var screenRatio = _max_width / _max_height;
-                var sWidth = Infinity;
-                var sHeight = Infinity;
 
-                if (
-                    (settings.scaleMethod === "fill-min" && screenRatio > designRatio) ||
+                if ((settings.scaleMethod === "fill-min" && screenRatio > designRatio) ||
                     (settings.scaleMethod === "fill-max" && screenRatio < designRatio) ||
                     (settings.scaleMethod === "flex-width")
                 ) {
                     // resize the display canvas to fill the parent container
-                    sWidth = Math.min(maxWidth, designHeight * screenRatio);
+                    var sWidth = Math.min(maxWidth, designHeight * screenRatio);
                     scaleX = scaleY = _max_width / sWidth;
                     sWidth = ~~(sWidth + 0.5);
                     this.renderer.resize(sWidth, designHeight);
                 }
-                else if (
-                    (settings.scaleMethod === "fill-min" && screenRatio < designRatio) ||
-                    (settings.scaleMethod === "fill-max" && screenRatio > designRatio) ||
-                    (settings.scaleMethod === "flex-height")
+                else if ((settings.scaleMethod === "fill-min" && screenRatio < designRatio) ||
+                         (settings.scaleMethod === "fill-max" && screenRatio > designRatio) ||
+                         (settings.scaleMethod === "flex-height")
                 ) {
                     // resize the display canvas to fill the parent container
-                    sHeight = Math.min(maxHeight, designWidth * (_max_height / _max_width));
+                    var sHeight = Math.min(maxHeight, designWidth * (_max_height / _max_width));
                     scaleX = scaleY = _max_height / sHeight;
                     sHeight = ~~(sHeight + 0.5);
                     this.renderer.resize(designWidth, sHeight);

@@ -34,8 +34,8 @@
             requestAnimationFrame = window[vendors[x] + "RequestAnimationFrame"];
         }
         for (x = 0; x < vendors.length && !cancelAnimationFrame; ++x) {
-            cancelAnimationFrame  = window[vendors[x] + "CancelAnimationFrame"] ||
-                                    window[vendors[x] + "CancelRequestAnimationFrame"];
+            cancelAnimationFrame = window[vendors[x] + "CancelAnimationFrame"] ||
+                                   window[vendors[x] + "CancelRequestAnimationFrame"];
         }
 
         if (!requestAnimationFrame || !cancelAnimationFrame) {

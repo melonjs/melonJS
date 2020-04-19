@@ -155,7 +155,7 @@
                 // level index
                 levelIdx.push(levelId);
             }
-            else  {
+            else {
                 //console.log("level %s already loaded", levelId);
                 return false;
             }

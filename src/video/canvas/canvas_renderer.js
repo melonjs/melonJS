@@ -47,7 +47,7 @@
             // create a texture cache
             this.cache = new me.Renderer.TextureCache();
 
-            if (this.settings.textureSeamFix !== false  && !this.settings.antiAlias) {
+            if (this.settings.textureSeamFix !== false && !this.settings.antiAlias) {
                 // enable the tile texture seam fix with the canvas renderer
                 this.uvOffset = 1;
             }

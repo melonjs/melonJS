@@ -254,7 +254,7 @@
                 // native PointerEvent
                 width = event.width || 1;
                 height = event.height || 1;
-            } else if (typeof(event.radiusX) === "number")  {
+            } else if (typeof(event.radiusX) === "number") {
                 // TouchEvent
                 width = (event.radiusX * 2) || 1;
                 height = (event.radiusY * 2) || 1;

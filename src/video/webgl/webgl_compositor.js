@@ -155,7 +155,7 @@
 
             // delete all related bound texture
             for (var i = 0; i < this.renderer.maxTextures; i++) {
-                var texture =  this.boundTextures[i];
+                var texture = this.boundTextures[i];
                 if (texture !== null) {
                     this.gl.deleteTexture(texture);
                 }

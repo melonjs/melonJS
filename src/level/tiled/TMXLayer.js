@@ -60,7 +60,7 @@
             this._super(me.Renderable, "init", [0, 0, 0, 0]);
 
             // tile width & height
-            this.tilewidth  = data.tilewidth || tilewidth;
+            this.tilewidth = data.tilewidth || tilewidth;
             this.tileheight = data.tileheight || tileheight;
 
             // layer orientation
@@ -262,9 +262,10 @@
          * var tile = layer.getTile(me.input.pointer.pos.x, me.input.pointer.pos.y);
          */
         getTile : function (x, y) {
+            var tile = null;
+            
             if (this.containsPoint(x, y)) {
                 var renderer = this.renderer;
-                var tile = null;
                 var coord = renderer.pixelToTileCoords(x, y, me.pool.pull("me.Vector2d"));
                 if ((coord.x >= 0 && coord.x < renderer.cols) && ( coord.y >= 0 && coord.y < renderer.rows)) {
                     tile = this.layerData[~~coord.x][~~coord.y];

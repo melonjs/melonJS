@@ -167,7 +167,7 @@
             if (settings.bold === true) {
                 this.bold();
             }
-            if (settings.italic  === true) {
+            if (settings.italic === true) {
                 this.italic();
             }
 
@@ -228,7 +228,7 @@
                 size += "px";
             } else /* string */ {
                 // extract the units and convert if necessary
-                var CSSval =  size.match(/([-+]?[\d.]*)(.*)/);
+                var CSSval = size.match(/([-+]?[\d.]*)(.*)/);
                 this.fontSize = parseFloat(CSSval[1]);
                 if (CSSval[2]) {
                     this.fontSize *= toPX[runits.indexOf(CSSval[2])];

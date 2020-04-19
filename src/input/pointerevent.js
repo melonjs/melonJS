@@ -446,7 +446,7 @@
      * mouse/touch/pointer event management (start/down, end/up)
      * @ignore
      */
-    function onPointerEvent(e)  {
+    function onPointerEvent(e) {
         // normalize eventTypes
         normalizeEvent(e);
 
@@ -653,7 +653,7 @@
         }
 
         if (typeof region === "undefined") {
-            throw new Error("registerPointerEvent: region for " + region + " event is undefined ");
+            throw new Error("registerPointerEvent: region for " + toString(region) + " event is undefined ");
         }
 
         var eventTypes = findAllActiveEvents(activeEventList, pointerEventMap[eventType]);

@@ -224,7 +224,7 @@
          * @param  {me.Rect} rect
          * @return {boolean} true if overlaps
          */
-        overlaps : function (r)    {
+        overlaps : function (r) {
             return (
                 this.left < r.right &&
                 r.left < this.right &&

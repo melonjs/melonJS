@@ -127,7 +127,7 @@
             var instance = new (plugin.bind.apply(plugin, _args))();
 
             // inheritance check
-            if (!instance || !(instance instanceof me.plugin.Base)) {
+            if (typeof instance === "undefined" || !(instance instanceof me.plugin.Base)) {
                 throw new Error("Plugin should extend the me.plugin.Base Class !");
             }
 

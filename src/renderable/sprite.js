@@ -130,7 +130,7 @@
                         // set the sprite region within the texture
                         this.setRegion(region);
                         // update the default "current" frame size
-                        this.current.width  = settings.framewidth || region.width;
+                        this.current.width = settings.framewidth || region.width;
                         this.current.height = settings.frameheight || region.height;
                     } else {
                         // throw an error
@@ -518,7 +518,7 @@
                     this.setAnimationFrame(nextFrame);
 
                     // Switch animation if we reach the end of the strip and a callback is defined
-                    if (this.current.idx === 0 && typeof this.resetAnim === "function")  {
+                    if (this.current.idx === 0 && typeof this.resetAnim === "function") {
                         // Otherwise is must be callable
                         if (this.resetAnim() === false) {
                             // Reset to last frame

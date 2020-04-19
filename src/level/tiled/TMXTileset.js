@@ -288,7 +288,7 @@
                 );
             }
 
-            if (tmxTile.flipped)  {
+            if (tmxTile.flipped) {
                 // restore the context to the previous state
                 renderer.restore();
             }
