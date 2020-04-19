@@ -10,7 +10,7 @@ Version History
 * Renderable : new isFlippedX & isFlippedY getter to check the current renderable "flip" state
 * Renderer : new optional parameter for createCanvas() to request an OffScreenCanvas if supported by the browser
 * Renderer : use OffscreenCanvas by default for all secondary canvas (e.g. debugPanel, double buffering, font texture in WebGL)
-* Renderer : properly fallback to the Canvas Renderer including when then WebGL renderer is not able to compile the built-in shaders
+* Renderer : properly fallback to the Canvas Renderer including when the WebGL renderer is not able to compile the built-in shaders
 * Renderer : dynamically activate texture sampler instead of pre-indexing them (accordingly to GLSL 1.30 specifications and later)
 * Renderer : added preliminary support for WebGL2 (disabled by default, see `preferWebGL1` to enable it when calling me.video.init)
 * Renderer : allow specifying the default `powerPreference` value for the WebGL Renderer (on Safari and Chrome 80+ default is now `low-power)
