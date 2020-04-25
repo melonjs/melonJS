@@ -134,12 +134,6 @@
          */
         api.init = function (game_width, game_height, options) {
 
-            // display melonJS version
-            if (options.consoleHeader !== false) {
-                // output video information in the console
-                console.log("melonJS v" + me.version + " | http://melonjs.org" );
-            }
-
             // ensure melonjs has been properly initialized
             if (!me.initialized) {
                 throw new Error("me.video.init() called before engine initialization.");
@@ -161,6 +155,12 @@
             settings.verbose = !!(settings.verbose);
             if (settings.scaleMethod.search(/^(fill-(min|max)|fit|flex(-(width|height))?|stretch)$/) !== 0) {
                 settings.scaleMethod = "fit";
+            }
+
+            // display melonJS version
+            if (settings.consoleHeader !== false) {
+                // output video information in the console
+                console.log("melonJS v" + me.version + " | http://melonjs.org" );
             }
 
             // override renderer settings if &webgl is defined in the URL
@@ -265,12 +265,10 @@
             }
 
             // add our canvas
-            if (options.wrapper) {
-                settings.wrapper = document.getElementById(options.wrapper);
-            }
-            // if wrapperid is not defined (null)
-            if (!settings.wrapper) {
-                // add the canvas to document.body
+            if (typeof settings.wrapper !== "undefined") {
+                settings.wrapper = document.getElementById(settings.wrapper);
+            } else {
+                // if wrapper is not defined, add the canvas to document.body
                 settings.wrapper = document.body;
             }
             settings.wrapper.appendChild(this.renderer.getScreenCanvas());
@@ -303,7 +301,7 @@
                 });
             }
 
-            if (options.consoleHeader !== false) {
+            if (settings.consoleHeader !== false) {
                 var renderType = (me.video.renderer instanceof me.CanvasRenderer) ? "CANVAS" : "WebGL" + me.video.renderer.WebGLVersion;
                 var audioType = me.device.hasWebAudio ? "Web Audio" : "HTML5 Audio";
                 // output video information in the console
