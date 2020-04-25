@@ -267,10 +267,14 @@
             // add our canvas
             if (typeof settings.wrapper !== "undefined") {
                 settings.wrapper = document.getElementById(settings.wrapper);
-            } else {
-                // if wrapper is not defined, add the canvas to document.body
-                settings.wrapper = document.body;
             }
+
+            // fallback, if invalid target or non HTMLElement object
+            if (!settings.wrapper)  {
+              // if wrapper is not defined, add the canvas to document.body
+              settings.wrapper = document.body;
+            }
+
             settings.wrapper.appendChild(this.renderer.getScreenCanvas());
 
             // adjust CSS style for High-DPI devices
