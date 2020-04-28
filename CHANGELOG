@@ -2,6 +2,7 @@ Version History
 ---------------
 8.0.0
 * Audio : audio core update (2.1.3)
+* Core : new me.event.VIDEO_INIT system event that will be triggered once the display canvas is initialized
 * Physic : me.game.world is now a specific container (based on me.Container) that will manage all related physic updates
 * Physic : gravity for physic bodies is now defined globally under me.game.world.gravity, and can be scaled individually using me.Body.gravityScale
 * Physic : added a rotate method to me.Body to allow rotating all the body shapes properly (by default around the body bounding box center)

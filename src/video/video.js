@@ -321,6 +321,10 @@
                     ", got " + me.video.renderer.getWidth() + "x" + me.video.renderer.getHeight()
                 );
             }
+
+            // notify the video has been initialized
+            me.event.publish(me.event.VIDEO_INIT);
+
             return true;
         };
 

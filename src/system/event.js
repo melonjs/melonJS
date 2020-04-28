@@ -64,6 +64,20 @@ import MinPubSub from "minpubsub";
         api.STATE_RESTART = "me.state.onRestart";
 
         /**
+         * Channel Constant for when the video is initialized<br>
+         * Data passed : none <br>
+         * @public
+         * @constant
+         * @type String
+         * @name VIDEO_INIT
+         * @memberOf me.event
+         * @see me.video.init
+         * @see me.event.subscribe
+         */
+        api.VIDEO_INIT = "me.video.onInit";
+
+
+        /**
          * Channel Constant for when the game manager is initialized <br>
          * Data passed : none <br>
          * @public
