@@ -292,7 +292,7 @@
             }
 
             // trigger an initial resize();
-            me.video.onresize();
+            me.video.onresize(true);
 
             // add an observer to detect when the dom tree is modified
             if ("MutationObserver" in window) {
@@ -392,9 +392,11 @@
 
         /**
          * callback for window resize event
+         * @param {Boolean} force force immediate resize
+         * @param force force immediate resize
          * @ignore
          */
-        api.onresize = function () {
+        api.onresize = function (force) {
             // default (no scaling)
             var scaleX = 1, scaleY = 1;
 
@@ -461,11 +463,16 @@
                 scaleX *= me.device.devicePixelRatio;
                 scaleY *= me.device.devicePixelRatio;
 
+
                 if (deferResizeId > 0) {
                     // cancel any previous pending resize
                     clearTimeout(deferResizeId);
                 }
-                deferResizeId = me.utils.function.defer(me.video.scale, this, scaleX, scaleY);
+                if (force !== true) {
+                    deferResizeId = me.utils.function.defer(me.video.scale, this, scaleX, scaleY);
+                } else {
+                    me.video.scale(scaleX, scaleY);
+                }
             }
 
             // update parent container bounds
