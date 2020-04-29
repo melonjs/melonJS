@@ -212,6 +212,11 @@
                 child.onActivateEvent();
             }
 
+            // force repaint in case this is a static non-animated object
+            if (this.isAttachedToRoot() === true) {
+                me.game.repaint();
+            }
+
             this.onChildChange.call(this, this.children.length - 1);
 
             return child;
@@ -246,6 +251,11 @@
 
                 if (typeof child.onActivateEvent === "function" && this.isAttachedToRoot()) {
                     child.onActivateEvent();
+                }
+
+                // force repaint in case this is a static non-animated object
+                if (this.isAttachedToRoot() === true) {
+                    me.game.repaint();
                 }
 
                 this.onChildChange.call(this, index);
@@ -619,6 +629,12 @@
                     this.children.splice(childIndex, 1);
                     child.ancestor = undefined;
                 }
+
+                // force repaint in case this is a static non-animated object
+                if (this.isAttachedToRoot() === true) {
+                    me.game.repaint();
+                }
+
                 this.onChildChange.call(this, childIndex);
             }
         },
