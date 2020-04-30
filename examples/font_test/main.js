@@ -32,8 +32,6 @@ var game = {
         var PlayScreen = me.Stage.extend({
             // on reset event function
             onResetEvent : function() {
-                // black background
-                me.game.world.addChild(new me.ColorLayer("background", "#202020"), 0);
                 // the font stuff
                 me.game.world.addChild(new FontTest(), 1);
             }
@@ -84,6 +82,9 @@ var FontTest = me.Renderable.extend ({
         var baseline = 0;
         var xPos = 0;
         var yPos = 0;
+
+        // black background
+        renderer.clearColor("#202020");
 
         // font size test
         this.font.textAlign = "left";

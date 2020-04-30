@@ -686,7 +686,14 @@
         drawFX : function (renderer) {
             // fading effect
             if (this._fadeIn.tween) {
-                renderer.clearColor(this._fadeIn.color);
+                // add an overlay
+                // TODO use the tint feature once implemented in Canvas mode
+                renderer.save();
+                // reset all transform so that the overaly cover the whole camera area
+                renderer.resetTransform();
+                renderer.setColor(this._fadeIn.color);
+                renderer.fillRect(0, 0, this.width, this.height);
+                renderer.restore();
                 // remove the tween if over
                 if (this._fadeIn.color.alpha === 1.0) {
                     this._fadeIn.tween = null;
@@ -697,7 +704,14 @@
 
             // flashing effect
             if (this._fadeOut.tween) {
-                renderer.clearColor(this._fadeOut.color);
+                // add an overlay
+                // TODO use the tint feature once implemented in Canvas mode
+                renderer.save();
+                // reset all transform so that the overaly cover the whole camera area 
+                renderer.resetTransform();
+                renderer.setColor(this._fadeOut.color);
+                renderer.fillRect(0, 0, this.width, this.height);
+                renderer.restore();
                 // remove the tween if over
                 if (this._fadeOut.color.alpha === 0.0) {
                     this._fadeOut.tween = null;

@@ -270,19 +270,28 @@
          * @name clearColor
          * @memberOf me.WebGLRenderer.prototype
          * @function
-         * @param {me.Color|String} color CSS color.
+         * @param {me.Color|String} [color] CSS color.
          * @param {Boolean} [opaque=false] Allow transparency [default] or clear the surface completely [true]
          */
         clearColor : function (col, opaque) {
+            var glArray;
+
             this.save();
-            this.resetTransform();
-            this.currentColor.copy(col);
-            if (opaque) {
-                this.currentCompositor.clear();
+
+            if (col instanceof me.Color) {
+                glArray = col.toArray();
+            } else {
+                // reuse temporary the renderer default color object
+                glArray = this.getColor().parseCSS(col).toArray();
             }
-            else {
-                this.fillRect(0, 0, this.canvas.width, this.canvas.height);
-            }
+
+            // clear gl context with the specified color
+            this.currentCompositor.clearColor(glArray[0], glArray[1], glArray[2], (opaque === true) ? 1.0 : glArray[3]);
+            this.currentCompositor.clear();
+
+            // restore default clear Color black
+            this.currentCompositor.clearColor(0.0, 0.0, 0.0, 0.0);
+
             this.restore();
         },
 
@@ -440,6 +449,7 @@
                 antialias : this.settings.antiAlias,
                 depth : false,
                 stencil: true,
+                preserveDrawingBuffer : false,
                 premultipliedAlpha: transparent,
                 powerPreference: this.settings.powerPreference,
                 failIfMajorPerformanceCaveat : this.settings.failIfMajorPerformanceCaveat

@@ -20,65 +20,58 @@
                     return;
                 }
 
-                // default stage
-                var mainStage = new (me.Stage.extend({
-                    // on reset event function
-                    onResetEvent : function() {
-                        me.game.world.addChild(new (me.Renderable.extend({
-                            // constructor
-                            init: function() {
-                                this._super(me.Renderable, "init", [0, 0, 320, 240]);
-                                this.starMask = new me.Polygon(0, 0, [
-                                // draw a star
-                                {x: 0, y: 0},
-                                {x: 14, y: 30},
-                                {x: 47, y: 35},
-                                {x: 23, y: 57},
-                                {x: 44, y: 90},
-                                {x: 0, y: 62},
-                                {x: -44, y: 90},
-                                {x: -23, y: 57},
-                                {x: -47, y: 35},
-                                {x: -14, y: 30}
-                                ]);
-                                this.circleMask = new me.Ellipse(160 + 50, 120 + 50, 100, 100);
-                                this.anchorPoint.set(0, 0);
-                            },
-                            // draw function
-                            draw : function(renderer) {
-                                renderer.clearColor("#FFFFFF80");
-                                renderer.setGlobalAlpha(0.5);
+                me.game.world.addChild(new (me.Renderable.extend({
+                    // constructor
+                    init: function() {
+                        this._super(me.Renderable, "init", [0, 0, 320, 240]);
+                        this.starMask = new me.Polygon(0, 0, [
+                        // draw a star
+                        {x: 0, y: 0},
+                        {x: 14, y: 30},
+                        {x: 47, y: 35},
+                        {x: 23, y: 57},
+                        {x: 44, y: 90},
+                        {x: 0, y: 62},
+                        {x: -44, y: 90},
+                        {x: -23, y: 57},
+                        {x: -47, y: 35},
+                        {x: -14, y: 30}
+                        ]);
+                        this.circleMask = new me.Ellipse(160 + 50, 120 + 50, 100, 100);
+                        this.anchorPoint.set(0, 0);
+                    },
+                    // draw function
+                    draw : function(renderer) {
+                        renderer.clearColor("#808080");
+                        renderer.setGlobalAlpha(0.5);
 
-                                renderer.setColor("red");
-                                this.starMask.pos.set(60 + 50, 25);
-                                renderer.fill(this.starMask);
-                                renderer.stroke(this.starMask);
-                                renderer.fillRect(60, 20, 100 ,100);
-                                renderer.strokeRect(65, 25, 90 , 90);
+                        renderer.setColor("red");
+                        this.starMask.pos.set(60 + 50, 25);
+                        renderer.fill(this.starMask);
+                        renderer.stroke(this.starMask);
+                        renderer.fillRect(60, 20, 100 ,100);
+                        renderer.strokeRect(65, 25, 90 , 90);
 
-                                renderer.setColor("lime");
-                                this.starMask.pos.set(110 + 50, 75);
-                                renderer.setMask(this.starMask);
-                                renderer.stroke(this.starMask);
-                                renderer.fillRect(110, 70, 100 ,100);
-                                renderer.strokeRect(115, 75, 90 , 90);
-                                renderer.clearMask();
+                        renderer.setColor("lime");
+                        this.starMask.pos.set(110 + 50, 75);
+                        renderer.setMask(this.starMask);
+                        renderer.stroke(this.starMask);
+                        renderer.fillRect(110, 70, 100 ,100);
+                        renderer.strokeRect(115, 75, 90 , 90);
+                        renderer.clearMask();
 
-                                renderer.setColor("orange");
-                                renderer.strokeArc(200, 75, 20, -Math.PI, 0 );
-                                renderer.fillArc(200, 75, 20, Math.PI * 2, Math.PI);
+                        renderer.setColor("orange");
+                        renderer.strokeArc(200, 75, 20, -Math.PI, 0 );
+                        renderer.fillArc(200, 75, 20, Math.PI * 2, Math.PI);
 
-                                renderer.setColor("blue");
-                                renderer.setMask(this.circleMask);
-                                renderer.fillRect(160, 120, 100 ,100);
-                                renderer.strokeEllipse(160 + 50, 120 + 50, 30, 30);
-                                renderer.strokeRect(165, 125, 90 , 90);
-                                renderer.clearMask();
-                            }
-                        })));
+                        renderer.setColor("blue");
+                        renderer.setMask(this.circleMask);
+                        renderer.fillRect(160, 120, 100 ,100);
+                        renderer.strokeEllipse(160 + 50, 120 + 50, 30, 30);
+                        renderer.strokeRect(165, 125, 90 , 90);
+                        renderer.clearMask();
                     }
-                }));
-                me.state.set(me.state.PLAY, mainStage, true);
+                })));
             });
         </script>
     </body>

@@ -42,8 +42,13 @@
          * @ignore
          */
         draw : function (renderer) {
-            var color = renderer.getColor();
             var height = renderer.getHeight();
+
+            renderer.save();
+
+            // clear the background
+            renderer.clearColor("#202020");
+
             // draw the progress bar
             renderer.setColor("black");
             renderer.fillRect(this.pos.x, height / 2, this.width, this.height / 2);
@@ -51,7 +56,7 @@
             renderer.setColor("#55aa00");
             renderer.fillRect(this.pos.x, height / 2, this.progress, this.height / 2);
 
-            renderer.setColor(color);
+            renderer.restore();
         }
     });
 
@@ -178,9 +183,6 @@
          * @ignore
          */
         onResetEvent : function () {
-            // background color
-            me.game.world.addChild(new me.ColorLayer("background", "#202020", 0), 0);
-
             // progress bar
             var progressBar = new ProgressBar(
                 0,
@@ -207,8 +209,8 @@
                 (me.video.renderer.getHeight() / 2) - (progressBar.height) - 35
 
             );
-            me.game.world.addChild(icon, 1);
-            me.game.world.addChild(new TextLogo(me.video.renderer.getWidth(), me.video.renderer.getHeight()), 1);
+            me.game.world.addChild(icon, 2);
+            me.game.world.addChild(new TextLogo(me.video.renderer.getWidth(), me.video.renderer.getHeight()), 2);
         },
 
         /**

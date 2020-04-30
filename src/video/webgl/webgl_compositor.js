@@ -151,7 +151,7 @@
             this.setViewport(0, 0, this.gl.canvas.width, this.gl.canvas.height);
 
             // Initialize clear color
-            this.gl.clearColor(0.0, 0.0, 0.0, 1.0);
+            this.gl.clearColor(0.0, 0.0, 0.0, 0.0);
 
             // delete all related bound texture
             for (var i = 0; i < this.renderer.maxTextures; i++) {
@@ -536,8 +536,21 @@
         },
 
         /**
-         * Clear the frame buffer, flushes the composite operations and calls
-         * gl.clear()
+         * Specify the color values used when clearing color buffers. The values are clamped between 0 and 1.
+         * @name clearColor
+         * @memberOf me.WebGLCompositor
+         * @function
+         * @param {Number} r - the red color value used when the color buffers are cleared
+         * @param {Number} g - the green color value used when the color buffers are cleared
+         * @param {Number} b - the blue color value used when the color buffers are cleared
+         * @param {Number} a - the alpha color value used when the color buffers are cleared
+         */
+        clearColor : function (r, g, b, a) {
+            this.gl.clearColor(r, g, b, a);
+        },
+
+        /**
+         * Clear the frame buffer
          * @name clear
          * @memberOf me.WebGLCompositor
          * @function
