@@ -1,38 +1,29 @@
 var game = {
     // game assets
     assets : [
-        { name: "alien",   type:"image", src:"data/gfx/alien.png" },
-        { name: "flushed", type:"image", src:"data/gfx/flushed.png" },
-        { name: "scream",  type:"image", src:"data/gfx/scream.png" },
-        { name: "smile",   type:"image", src:"data/gfx/smile.png" },
-        { name: "smirk",   type:"image", src:"data/gfx/smirk.png" },
-        { name: "brick",   type:"image", src:"data/gfx/brick.png" }
+        { name: "alien",   type:"image", src:"data/img/alien.png" },
+        { name: "flushed", type:"image", src:"data/img/flushed.png" },
+        { name: "scream",  type:"image", src:"data/img/scream.png" },
+        { name: "smile",   type:"image", src:"data/img/smile.png" },
+        { name: "smirk",   type:"image", src:"data/img/smirk.png" },
+        { name: "brick",   type:"image", src:"data/img/brick.png" }
     ],
 
     onload: function()
     {
         // Initialize the video.
-        if (!me.video.init(1024, 768, {wrapper : "screen", scale : "auto"})) {
+        if (!me.video.init(1024, 768, {scale : "auto"})) {
             alert("Your browser does not support HTML5 canvas.");
             return;
         }
 
         // set all resources to be loaded
-        me.loader.preload(game.assets, this.loaded.bind(this));
+        me.loader.preload(game.assets, this.loaded.bind(this), false);
     },
 
     loaded: function () {
-        // set the "Play/Ingame" Screen Object
-        me.state.set(me.state.PLAY, new PlayScreen());
 
-        // switch to PLAY state
-        me.state.change(me.state.PLAY);
-    }
-};
-
-var PlayScreen = me.Stage.extend( {
-    onResetEvent: function() {
-         // clear the background
+        // add a background layer
         me.game.world.addChild(new me.ColorLayer("background", "#5E3F66", 0), 0);
 
         // Add some objects
@@ -40,7 +31,8 @@ var PlayScreen = me.Stage.extend( {
             me.game.world.addChild(new Smilie(i), 3);
         }
     }
-});
+};
+
 
 var Smilie = me.Entity.extend({
     init : function (i) {
@@ -108,9 +100,4 @@ var Smilie = me.Entity.extend({
 
         return false;
     }
-});
-
-/* Bootstrap */
-me.device.onReady(function onReady() {
-    game.onload();
 });

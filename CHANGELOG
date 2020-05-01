@@ -3,6 +3,7 @@ Version History
 8.0.0
 * Audio : audio core update (2.1.3)
 * Core : new me.event.VIDEO_INIT system event that will be triggered once the display canvas is initialized
+* Core : a default stage is now instantiated at boot time, allowing to more easily write basic examples to test features
 * Physic : me.game.world is now a specific container (based on me.Container) that will manage all related physic updates
 * Physic : gravity for physic bodies is now defined globally under me.game.world.gravity, and can be scaled individually using me.Body.gravityScale
 * Physic : added a rotate method to me.Body to allow rotating all the body shapes properly (by default around the body bounding box center)
@@ -13,7 +14,7 @@ Version History
 * Renderer : use OffscreenCanvas by default for all secondary canvas (e.g. debugPanel, double buffering, font texture in WebGL)
 * Renderer : properly fallback to the Canvas Renderer including when the WebGL renderer is not able to compile the built-in shaders
 * Renderer : dynamically activate texture sampler instead of pre-indexing them (accordingly to GLSL 1.30 specifications and later)
-* Renderer : added preliminary support for WebGL2 (disabled by default, see `preferWebGL1` to enable it when calling me.video.init)
+* Renderer : added support for WebGL2 (disabled by default, use `preferWebGL1 = false` to enable it when calling me.video.init)
 * Renderer : allow specifying the default `powerPreference` value for the WebGL Renderer (on Safari and Chrome 80+ default is now `low-power)
 * Shapes : vectors and shapes can now be rotated around a given (optional) point instead of the default origin point
 * Shapes : added a center vector property for me.Rect, giving the center point of the rectangle

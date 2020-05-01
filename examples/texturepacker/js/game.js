@@ -20,14 +20,8 @@ var game = {
     // Initialize the audio.
     me.audio.init("mp3,ogg");
 
-    // Set a callback to run when loading is complete.
-    me.loader.onload = this.loaded.bind(this);
-
-    // Load the resources.
-    me.loader.preload(game.resources);
-
-    // Initialize melonJS and display a loading screen.
-    me.state.change(me.state.LOADING);
+    // set all ressources to be loaded
+    me.loader.preload(game.resources, this.loaded.bind(this));
 },
 
     // Run on game resources loaded.

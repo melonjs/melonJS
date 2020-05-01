@@ -1,8 +1,13 @@
-game.PlayScreen = me.Stage.extend({
-    /**
-     *  action to perform on state change
-     */
-    onResetEvent: function() {
+
+/* Game namespace */
+var game = {
+    // Run on page load.
+    onload: function () {
+        // Initialize the video.
+        if (!me.video.init(480, 320, {scale : "auto"})) {
+            alert("Your browser does not support HTML5 canvas.");
+            return;
+        }
 
         me.device.watchDeviceOrientation();
         me.device.watchAccelerometer();
@@ -32,13 +37,5 @@ game.PlayScreen = me.Stage.extend({
 
         // renderable to display device information
         me.game.world.addChild(new DeviceInfo(), 1);
-    },
-
-    /**
-     *  action to perform when leaving this screen (state change)
-     */
-    onDestroyEvent: function() {
-        me.device.unwatchDeviceOrientation();
-        me.device.unwatchAccelerometer();
     }
-});
+};
