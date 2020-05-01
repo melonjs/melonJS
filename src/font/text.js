@@ -390,7 +390,8 @@
                 renderer.restore();
             }
 
-            // clear the dirty flag
+            // clear the dirty flag here for
+            // backward compatibility 
             this.isDirty = false;
         },
 

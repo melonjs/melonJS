@@ -314,6 +314,15 @@
                 this.pos = me.pool.pull("me.ObservableVector3d", x, y, 0, { onUpdate: this.updateBoundsPos.bind(this) });
             }
 
+            /**
+             * when true the renderable will be redrawn during the next update cycle
+             * @type {Boolean}
+             * @name isDirty
+             * @default false
+             * @memberOf me.Renderable#
+             */
+            this.isDirty = false;
+
             this._width = width;
             this._height = height;
 
@@ -387,6 +396,7 @@
          */
         flipX : function (flip) {
             this._flip.x = !!flip;
+            this.isDirty = true;
             return this;
         },
 
@@ -401,6 +411,7 @@
          */
         flipY : function (flip) {
             this._flip.y = !!flip;
+            this.isDirty = true;
             return this;
         },
 
@@ -418,6 +429,7 @@
             this.currentTransform.multiply(m);
             bounds.setPoints(bounds.transform(m).points);
             bounds.pos.setV(this.pos);
+            this.isDirty = true;
             return this;
         },
 
@@ -504,6 +516,7 @@
         rotate : function (angle) {
             if (!isNaN(angle)) {
                 this.currentTransform.rotate(angle);
+                this.isDirty = true;
             }
             return this;
         },
@@ -533,6 +546,8 @@
             this.width = this.width * _x;
             this.height = this.height * _y;
 
+            this.isDirty = true;
+
             return this;
         },
 
@@ -560,7 +575,7 @@
          * @return false
          **/
         update : function (/* dt */) {
-            return false;
+            return this.isDirty;
         },
 
         /**
@@ -683,6 +698,10 @@
             if (typeof this.tint !== "undefined") {
                 renderer.clearTint();
             }
+
+            // reset the dirty flag
+            this.isDirty = false;
+
             // restore the context
             renderer.restore();
         },

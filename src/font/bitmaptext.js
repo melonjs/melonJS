@@ -256,7 +256,7 @@
         draw : function (renderer, text, x, y) {
             // save the previous global alpha value
             var _alpha = renderer.globalAlpha();
-            
+
             // allows to provide backward compatibility when
             // adding Bitmap Font to an object container
             if (typeof this.ancestor === "undefined") {
@@ -355,7 +355,8 @@
                 renderer.setGlobalAlpha(_alpha);
             }
 
-            // clear the dirty flag
+            // clear the dirty flag here for 
+            // backward compatibility
             this.isDirty = false;
         },
 

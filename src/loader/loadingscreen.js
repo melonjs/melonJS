@@ -6,8 +6,6 @@
          */
         init: function (x, y, w, h) {
             this._super(me.Renderable, "init", [x, y, w, h]);
-            // flag to know if we need to refresh the display
-            this.invalidate = false;
             // current progress
             this.progress = 0;
 
@@ -20,21 +18,7 @@
          */
         onProgressUpdate : function (progress) {
             this.progress = ~~(progress * this.width);
-            this.invalidate = true;
-        },
-
-        /**
-         * @ignore
-         */
-        update : function () {
-            if (this.invalidate === true) {
-                // clear the flag
-                this.invalidate = false;
-                // and return true
-                return true;
-            }
-            // else return false
-            return false;
+            this.isDirty = true;
         },
 
         /**
@@ -43,8 +27,6 @@
          */
         draw : function (renderer) {
             var height = renderer.getHeight();
-
-            renderer.save();
 
             // clear the background
             renderer.clearColor("#202020");
@@ -55,8 +37,6 @@
 
             renderer.setColor("#55aa00");
             renderer.fillRect(this.pos.x, height / 2, this.progress, this.height / 2);
-
-            renderer.restore();
         }
     });
 

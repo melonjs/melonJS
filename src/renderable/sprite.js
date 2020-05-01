@@ -388,6 +388,7 @@
                 if (!_preserve_dt) {
                     this.dt = 0;
                 }
+                this.isDirty = true;
             } else {
                 throw new Error("animation id '" + name + "' not defined");
             }
@@ -409,6 +410,7 @@
             } else {
                 this.anim[this.current.name].frames.reverse();
             }
+            this.isDirty = true;
             return this;
         },
 
@@ -459,6 +461,7 @@
                     this._flip.y && region.trimmed === true ? 1 - region.anchorPoint.y : region.anchorPoint.y
                 );
             }
+            this.isDirty = true;
             return this;
         },
 
@@ -505,13 +508,12 @@
          * @ignore
          */
         update : function (dt) {
-            var result = false;
             // Update animation if necessary
             if (!this.animationpause && this.current && this.current.length > 0) {
                 var duration = this.getAnimationFrameObjectByIndex(this.current.idx).delay;
                 this.dt += dt;
                 while (this.dt >= duration) {
-                    result = true;
+                    this.isDirty = true;
                     this.dt -= duration;
 
                     var nextFrame = (this.current.length > 1? this.current.idx+1: this.current.idx);
@@ -543,10 +545,10 @@
                     }
                     this.flicker(-1);
                 }
-                result = true;
+                this.isDirty = true;
             }
 
-            return result;
+            return this.isDirty;
         },
 
 
