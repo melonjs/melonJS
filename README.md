@@ -24,24 +24,23 @@ and currently features :
 
 - A fresh & lightweight 2D sprite-based engine
 - Standalone library (does not rely on anything else, except a HTML5 capable browser)
-- Compatible with most major browsers (Chrome, Safari, Firefox, Opera, IE) and mobile devices
-- Fast Canvas and WebGL rendering on desktop and mobile devices
-- High DPI resolution & canvas auto scaling
-- Multi-channel HTML5 audio support and Web Audio on supported devices
+- Compatible with all major browsers (Chrome, Safari, Firefox, Opera, Edge) and mobile devices
+- Fast WebGL renderer for desktop and mobile devices with fallback to Canvas rendering
+- High DPI resolution & Canvas advanced auto scaling
+- Web Audio support with fallback to Multi-channel HTML5 audio
 - Lightweight physics implementation to ensure low cpu requirements
 - Polygon (SAT) based collision algorithm for accurate detection and response
 - Fast Broad-phase collision detection using spatial partitioning
 - 3rd party tools support for physic body definition (PhysicEditor, Physic Body Editor)
 - Advanced math API for Vector and Matrix
-- Tween Effects
-- Transition effects
-- A basic set of Object Entities (to be extended)
-- Object Pooling
+- Tween Effects, Transition effects
+- Basic set of Object Entities and GUI elements included
+- Pooling support for object recycling
 - Basic Particle System
-- Basic animation management
+- Sprite with Animation management
 - Standard spritesheet, single and multiple Packed Textures (Texture Packer, ShoeBox) support
 - A state manager (to easily manage loading, menu, options, in-game state)
-- Tiled map format version +0.9.x integration for easy level design
+- Tiled map format version +1.0 integration for easy level design
     - Uncompressed Plain, Base64, CSV and JSON encoded XML tilemap loading
     - Orthogonal, Isometric and Hexagonal maps (both normal and staggered)
     - Multiple layers (multiple background/foreground, collision and Image layers)
@@ -54,13 +53,13 @@ and currently features :
     - Dynamic Layer and Object/Group ordering
     - Dynamic Entity loading
     - Shape based Tile collision support
-- System & bitmap fonts
+- System & Bitmap fonts
 - Mouse and Touch device support (with mouse emulation)
 - Device motion & accelerometer support
-- Built-in support for [CocoonJS](https://www.ludei.com/cocoonjs/) and [Ejecta](https://github.com/melonjs/melonJS/wiki/How-to-build-your-game-for-tvOS-(or-iOS)-using-Ejecta)
-- Asynchronous messaging support (minPubSub)
-- Basic GUI elements included
-- Customizable loader
+- Built-in support for 3rd party Application Wrappers such as [Cordova](https://cordova.apache.org)
+- Asynchronous publish/subscribe pattern messaging support (minPubSub)
+- A fully customizable preloader
+- As light as [~70kb] minified & gzipped (https://bundlephobia.com/result?p=melonjs@7.1.1)
 
 Using melonJS
 -------------------------------------------------------------------------------
@@ -91,7 +90,9 @@ me.device.onReady(function () {
 ```
 > Simple hello world using melonJS 8.x or higher
 
-* [API Documentation](http://melonjs.github.io/melonJS/docs/) ([offline](https://github.com/melonjs/melonJS/archive/gh-pages.zip) version under the `docs` directory)
+Documentation :
+
+* [Online API](http://melonjs.github.io/melonJS/docs/) ([offline](https://github.com/melonjs/melonJS/archive/gh-pages.zip) version under the `docs` directory)
 * [Examples](http://melonjs.github.io/melonJS/)
 
 For your first time using melonJS, follow these tutorials :
