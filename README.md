@@ -59,7 +59,7 @@ and currently features :
 - Built-in support for 3rd party Application Wrappers such as [Cordova](https://cordova.apache.org)
 - Asynchronous publish/subscribe pattern messaging support (minPubSub)
 - A fully customizable preloader
-- As light as [~70kb] minified & gzipped (https://bundlephobia.com/result?p=melonjs@7.1.1)
+- As light as [~70kb](https://bundlephobia.com/result?p=melonjs@7.1.1) minified & gzipped 
 
 Using melonJS
 -------------------------------------------------------------------------------
