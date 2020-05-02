@@ -17,6 +17,7 @@ Version History
 * Renderer : dynamically activate texture sampler instead of pre-indexing them (accordingly to GLSL 1.30 specifications and later)
 * Renderer : added support for WebGL2 (disabled by default, use `preferWebGL1 = false` to enable it when calling me.video.init)
 * Renderer : allow specifying the default `powerPreference` value for the WebGL Renderer (on Safari and Chrome 80+ default is now `low-power)
+* Renderer : display GPU information in the console when available (WebGL)
 * Shapes : vectors and shapes can now be rotated around a given (optional) point instead of the default origin point
 * Shapes : added a center vector property for me.Rect, giving the center point of the rectangle
 

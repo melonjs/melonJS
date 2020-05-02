@@ -51,6 +51,26 @@
             this.webGLVersion = 1;
 
             /**
+             * The vendor string of the underlying graphics driver.
+             * @name GPUVendor
+             * @memberOf me.WebGLRenderer
+             * @type {String}
+             * @default null
+             * @readonly
+             */
+            this.GPUVendor = null;
+
+            /**
+             * The renderer string of the underlying graphics driver.
+             * @name GPURenderer
+             * @memberOf me.WebGLRenderer
+             * @type {String}
+             * @default null
+             * @readonly
+             */
+            this.GPURenderer = null;
+
+            /**
              * Maximum number of texture unit supported under the current context
              * @name maxTextures
              * @memberOf me.WebGLRenderer
@@ -112,6 +132,13 @@
 
             // set default mode
             this.setBlendMode(this.settings.blendMode);
+
+            // get GPU vendor and renderer
+            var debugInfo = this.gl.getExtension("WEBGL_debug_renderer_info");
+            if (debugInfo !== null) {
+                this.GPUVendor = this.gl.getParameter(debugInfo.UNMASKED_VENDOR_WEBGL);
+                this.GPURenderer = this.gl.getParameter(debugInfo.UNMASKED_RENDERER_WEBGL);
+            }
 
             // Create a texture cache
             this.cache = new me.Renderer.TextureCache(this.maxTextures);

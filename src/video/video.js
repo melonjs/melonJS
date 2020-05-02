@@ -308,9 +308,10 @@
             if (settings.consoleHeader !== false) {
                 var renderType = (me.video.renderer instanceof me.CanvasRenderer) ? "CANVAS" : "WebGL" + me.video.renderer.WebGLVersion;
                 var audioType = me.device.hasWebAudio ? "Web Audio" : "HTML5 Audio";
+                var gpu_renderer = (typeof me.video.renderer.GPURenderer === "string") ? " (" + me.video.renderer.GPURenderer + ")" : "";
                 // output video information in the console
                 console.log(
-                    renderType + " renderer | " +
+                    renderType + " renderer" + gpu_renderer + " | " +
                     audioType + " | " +
                     "pixel ratio " + me.device.devicePixelRatio + " | " +
                     (me.device.isMobile ? "mobile" : "desktop") + " | " +
