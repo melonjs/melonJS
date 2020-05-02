@@ -11,19 +11,13 @@ var game = {
     onload: function() {
 
         // init the video
-        if (!me.video.init(800, 480, {wrapper : "jsapp", scale : "me.device.PixelRatio"})) {
+        if (!me.video.init(800, 480, {wrapper : "jsapp", scale : "auto", preferWebGL1: false, scaleMethod : "flex", useParentDOMSize : false})) {
             alert("Your browser does not support HTML5 canvas.");
             return;
         }
 
         // set all ressources to be loaded
-        me.loader.onload = this.loaded.bind(this);
-
-        // set all ressources to be loaded
-        me.loader.preload(g_ressources);
-
-        // load everything & display a loading screen
-        me.state.change(me.state.LOADING);
+        me.loader.preload(g_ressources, this.loaded.bind(this));
     },
 
 
@@ -31,8 +25,6 @@ var game = {
      * callback when everything is loaded
      */
     loaded: function () {
-        // set the "Play/Ingame" Screen Object
-        me.state.set(me.state.PLAY, new game.PlayScreen());
 
         // enable the keyboard (to navigate in the map)
         me.input.bindKey(me.input.KEY.LEFT,  "left");
@@ -40,9 +32,54 @@ var game = {
         me.input.bindKey(me.input.KEY.UP,    "up");
         me.input.bindKey(me.input.KEY.DOWN,  "down");
         me.input.bindKey(me.input.KEY.ENTER, "enter");
+        // subscribe to key down event
+        this.handle = me.event.subscribe(me.event.KEYDOWN, this.keyPressed.bind(this));
 
-        // start the game
-        me.state.change(me.state.PLAY);
+        me.input.registerPointerEvent("wheel", me.game.viewport, this.onScroll.bind(this));
+
+        // load a level
+        me.levelDirector.loadLevel("village");
+
+        // force redraw
+        me.game.repaint();
+    },
+
+    /**
+     * pointermove function
+     */
+    onScroll: function (event) {
+        if (event.deltaX !== 0) {
+            this.keyPressed(event.deltaX < 0 ? "left" : "right");
+        }
+        if (event.deltaY !== 0) {
+            this.keyPressed(event.deltaY < 0 ? "up" : "down");
+        }
+    },
+
+    /**
+     * update function
+     */
+    keyPressed: function (action /*, keyCode, edge */) {
+
+        // navigate the map :)
+        if (action === "left") {
+            me.game.viewport.move(-(me.levelDirector.getCurrentLevel().tilewidth / 2), 0);
+        } else if (action === "right") {
+            me.game.viewport.move(me.levelDirector.getCurrentLevel().tilewidth / 2, 0);
+        }
+
+        if (action === "up") {
+            me.game.viewport.move(0, -(me.levelDirector.getCurrentLevel().tileheight / 2));
+        } else if (action === "down") {
+            me.game.viewport.move(0, me.levelDirector.getCurrentLevel().tileheight / 2);
+        }
+
+        if (action === "enter") {
+            me.game.viewport.shake(16, 500);
+        }
+
+        // force redraw
+        me.game.repaint();
     },
 
 
@@ -79,12 +116,9 @@ var game = {
 
         // load the new level
         me.levelDirector.loadLevel(level);
+
+        // force redraw
+        me.game.repaint();
     }
 
-}; // game
-
-
-//bootstrap :)
-me.device.onReady(function() {
-    game.onload();
-});
+};

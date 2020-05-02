@@ -9,7 +9,18 @@
 </head>
 <body>
     <!-- Canvas placeholder -->
-    <div id="screen">
+    <div id="map" style="float: inherit;">
+    <label for="tmx_map">Tiled Example map:</label>
+    <select id="level_name" onchange="game.changelevel()">
+        <option value=1>village</option>
+        <option value=2>desert</option>
+        <option value=3>sewers</option>
+        <option value=4>isometric</option>
+        <option value=5>perspective</option>
+    </select>
+    </div>
+
+    <div id="screen" style="float: inherit;">
       <!-- melonJS Library -->
       <script type="text/javascript" src="../../build/melonjs.js"></script>
 
@@ -19,18 +30,6 @@
       <!-- Game Scripts -->
       <script type="text/javascript" src="js/ressources.js"></script>
       <script type="text/javascript" src="js/main.js"></script>
-      <script type="text/javascript" src="js/play.js"></script>
-    </div>
-
-    <div id="map" style="float: left;">
-    <label for="tmx_map">Tiled Example map:</label>
-    <select id="level_name" onchange="game.changelevel()">
-        <option value=1>village</option>
-        <option value=2>desert</option>
-        <option value=3>sewers</option>
-        <option value=4>isometric</option>
-        <option value=5>perspective</option>
-    </select>
     </div>
     <!-- Bootstrap -->
     <script type="text/javascript">

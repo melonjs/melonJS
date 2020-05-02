@@ -14,7 +14,6 @@ var g_ressources = [
     { name: "village",                      type: "tmx",    src: "data/village.tmx" },
     { name: "desert",                       type: "tmx",    src: "data/desert.tmx" },
     { name: "sewers",                       type: "tmx",    src: "data/sewers.tmx" },
-    { name: "cute",                         type: "tmx",    src: "data/cute.tmx" },
     { name: "isometric",                    type: "tmx",    src: "data/isometric_grass_and_water.tmx" },
     { name: "perspective",                  type: "tmx",    src: "data/perspective_walls.tmx" }
 ];
