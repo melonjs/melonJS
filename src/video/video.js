@@ -416,8 +416,8 @@
                         parentNodeHeight = parentNode.height;
                     }
                 }
-                var _max_width = Math.min(maxWidth, parentNodeWidth || window.innerWidth);
-                var _max_height = Math.min(maxHeight, parentNodeHeight || window.innerHeight);
+                var _max_width = Math.floor(Math.min(maxWidth, parentNodeWidth || window.innerWidth));
+                var _max_height = Math.floor(Math.min(maxHeight, parentNodeHeight || window.innerHeight));
                 var screenRatio = _max_width / _max_height;
 
                 if ((settings.scaleMethod === "fill-min" && screenRatio > designRatio) ||
