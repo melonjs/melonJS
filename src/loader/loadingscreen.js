@@ -5,11 +5,26 @@
          * @ignore
          */
         init: function (x, y, w, h) {
+            var self = this;
+
+            this.barHeight = h;
+
             this._super(me.Renderable, "init", [x, y, w, h]);
-            // current progress
-            this.progress = 0;
 
             this.anchorPoint.set(0, 0);
+
+            this.loaderHdlr = me.event.subscribe(
+                me.event.LOADER_PROGRESS,
+                self.onProgressUpdate.bind(self)
+            );
+
+            this.resizeHdlr = me.event.subscribe(
+                me.event.VIEWPORT_ONRESIZE,
+                self.resize.bind(self)
+            );
+
+            // store current progress
+            this.progress = 0;
         },
 
         /**
@@ -26,18 +41,28 @@
          * @ignore
          */
         draw : function (renderer) {
-            var height = renderer.getHeight();
-
             // clear the background
             renderer.clearColor("#202020");
 
             // draw the progress bar
             renderer.setColor("black");
-            renderer.fillRect(this.pos.x, height / 2, this.width, this.height / 2);
+            renderer.fillRect(this.pos.x, me.game.viewport.centerY, renderer.getWidth(), this.barHeight / 2);
 
             renderer.setColor("#55aa00");
-            renderer.fillRect(this.pos.x, height / 2, this.progress, this.height / 2);
+            renderer.fillRect(this.pos.x, me.game.viewport.centerY, this.progress, this.barHeight / 2);
+        },
+
+        /**
+         * Called by engine before deleting the object
+         * @ignore
+         */
+        onDestroyEvent : function () {
+            // cancel the callback
+            me.event.unsubscribe(this.loaderHdlr);
+            me.event.unsubscribe(this.resizeHdlr);
+            this.loaderHdlr = this.resizeHdlr = null;
         }
+
     });
 
     // the melonJS Logo
@@ -87,7 +112,7 @@
          * @ignore
          */
         draw : function (renderer) {
-            renderer.drawImage(this.iconCanvas, this.pos.x, this.pos.y);
+            renderer.drawImage(this.iconCanvas, renderer.getWidth() / 2, this.pos.y);
         }
     });
 
@@ -98,6 +123,8 @@
          */
         init : function (w, h) {
             this._super(me.Renderable, "init", [0, 0, w, h]);
+
+            this.textWidth = 0;
 
             // offscreen cache canvas
             this.fontCanvas = me.video.createCanvas(256, 64, true);
@@ -129,8 +156,10 @@
             var logo1_width = logo1.measureText(context).width;
             var logo2_width = logo2.measureText(context).width;
 
+            this.textWidth = logo1_width + logo2_width;
+
             // calculate the final rendering position
-            this.pos.x = Math.round((this.width - logo1_width - logo2_width) / 2);
+            this.pos.x = Math.round((this.width - this.textWidth) / 2);
             this.pos.y = Math.round(this.height / 2 + 16);
 
             // use the private _drawFont method to directly draw on the canvas context
@@ -146,7 +175,7 @@
          * @ignore
          */
         draw : function (renderer) {
-            renderer.drawImage(this.fontCanvas, this.pos.x, this.pos.y);
+            renderer.drawImage(this.fontCanvas, Math.round((renderer.getWidth() - this.textWidth) / 2), this.pos.y);
         }
 
     });
@@ -163,45 +192,28 @@
          * @ignore
          */
         onResetEvent : function () {
+            var barHeight = 8;
+
             // progress bar
-            var progressBar = new ProgressBar(
+            me.game.world.addChild(new ProgressBar(
                 0,
                 me.video.renderer.getHeight() / 2,
                 me.video.renderer.getWidth(),
-                8 // bar height
-            );
+                barHeight
+            ), 1);
 
-            this.loaderHdlr = me.event.subscribe(
-                me.event.LOADER_PROGRESS,
-                progressBar.onProgressUpdate.bind(progressBar)
-            );
-
-            this.resizeHdlr = me.event.subscribe(
-                me.event.VIEWPORT_ONRESIZE,
-                progressBar.resize.bind(progressBar)
-            );
-
-            me.game.world.addChild(progressBar, 1);
-
-            // melonJS text & logo
-            var icon = new IconLogo(
+            // melonJS logo
+            me.game.world.addChild(new IconLogo(
                 me.video.renderer.getWidth() / 2,
-                (me.video.renderer.getHeight() / 2) - (progressBar.height) - 35
+                (me.video.renderer.getHeight() / 2) - (barHeight * 2) - 35
 
-            );
-            me.game.world.addChild(icon, 2);
-            me.game.world.addChild(new TextLogo(me.video.renderer.getWidth(), me.video.renderer.getHeight()), 2);
-        },
+            ), 2);
 
-        /**
-         * destroy object at end of loading
-         * @ignore
-         */
-        onDestroyEvent : function () {
-            // cancel the callback
-            me.event.unsubscribe(this.loaderHdlr);
-            me.event.unsubscribe(this.resizeHdlr);
-            this.loaderHdlr = this.resizeHdlr = null;
+            // melonJS text
+            me.game.world.addChild(new TextLogo(
+                me.video.renderer.getWidth(),
+                me.video.renderer.getHeight()
+            ), 2);
         }
     });
 })();
