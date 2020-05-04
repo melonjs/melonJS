@@ -803,7 +803,7 @@
     });
 
     // automatically register the debug panel
-    me.device.onReady(function () {
+    me.event.subscribe(me.event.VIDEO_INIT, function () {
         var toggleKey = me.utils.getUriFragment().debugToggleKey;
         me.utils.function.defer(me.plugin.register, this, me.DebugPanel, "debugPanel",
             toggleKey ? toggleKey.charCodeAt(0) - 32 : undefined
