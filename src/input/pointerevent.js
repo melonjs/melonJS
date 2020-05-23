@@ -525,11 +525,11 @@
      */
     api.globalToLocal = function (x, y, v) {
         v = v || new me.Vector2d();
-        var parent = me.video.renderer.getBounds();
+        var rect = me.device.getElementBounds(me.video.renderer.getScreenCanvas());
         var pixelRatio = me.device.devicePixelRatio;
-        x -= parent.left;
-        y -= parent.top;
-        var scale = me.sys.scale;
+        x -= rect.left + (window.pageXOffset || 0);
+        y -= rect.top + (window.pageYOffset || 0);
+        var scale = me.video.scaleRatio;
         if (scale.x !== 1.0 || scale.y !== 1.0) {
             x /= scale.x;
             y /= scale.y;

@@ -117,36 +117,6 @@
             this.currentScissor[1] = 0;
             this.currentScissor[2] = this.backBufferCanvas.width;
             this.currentScissor[3] = this.backBufferCanvas.height;
-            this.updateBounds();
-        },
-
-        /**
-         * update the bounds (size and position) of the parent container.
-         * (this can be manually called in case of manual page layout modification not triggering a resize event)
-         * @name updateBounds
-         * @memberOf me.Renderer.prototype
-         * @function
-         */
-        updateBounds : function () {
-            var target = this.getScreenCanvas();
-            var rect;
-            if (typeof target.getBoundingClientRect === "undefined") {
-                rect = { left : 0, top : 0, width: 0, height: 0 };
-            } else {
-                rect = target.getBoundingClientRect();
-            }
-            this.parentBounds.setShape(rect.left, rect.top, rect.width, rect.height);
-        },
-
-        /**
-         * returns the bounds (size and position) of the parent container
-         * @name getBounds
-         * @memberOf me.Renderer.prototype
-         * @function
-         * @return {me.Rect}
-         */
-        getBounds : function () {
-            return this.parentBounds;
         },
 
         /**
@@ -312,7 +282,6 @@
                 // publish the corresponding event
                 me.event.publish(me.event.CANVAS_ONRESIZE, [ width, height ]);
             }
-            this.updateBounds();
         },
 
         /**

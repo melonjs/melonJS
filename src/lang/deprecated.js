@@ -114,8 +114,8 @@ me.WebGLRenderer.prototype.Texture = me.Renderer.prototype.Texture;
  * @see me.Renderer#getBounds
  */
 me.video.getPos = function() {
-    console.log("me.video.getPos() is deprecated, please use me.video.renderer.getBounds()");
-    return me.video.renderer.getBounds();
+    console.log("me.video.getPos() is deprecated, please use me.device.getElementBounds(me.video.renderer.getScreenCanvas());");
+    return me.device.getElementBounds(me.video.renderer.getScreenCanvas());
 };
 
 /**
@@ -206,6 +206,7 @@ me.Entity.prototype.angleToPoint = function (v) {
     console.log("angleToPoint() is deprecated, please use me.Renderable.angleTo()");
     return this.angleTo(v);
 };
+
 /**
  * @public
  * @type {Number}
@@ -241,7 +242,7 @@ me.WebGLRenderer.Compositor = me.WebGLCompositor;
 /**
  * Draw triangle(s)
  * @name drawTriangle
- * @deprecated
+ * @deprecated since 8.0.0
  * @memberOf me.WebGLRenderer.Compositor
  * @function
  * @param {me.Vector2d[]} points vertices
@@ -257,7 +258,7 @@ me.WebGLRenderer.Compositor.prototype.drawTriangle = function (points, len, stri
 /**
  * Draw a line
  * @name drawLine
- * @deprecated
+ * @deprecated since 8.0.0
  * @memberOf me.WebGLRenderer.Compositor
  * @function
  * @param {me.Vector2d[]} points Line vertices
@@ -269,3 +270,22 @@ me.WebGLRenderer.Compositor.prototype.drawLine = function (points, len, open) {
     this.drawVertices(open === true ? gl.LINE_STRIP : gl.LINE_LOOP, points, len);
     console.log("drawLine is deprecated, please use drawVertices");
 };
+
+/**
+ * @public
+ * @type {me.Vector2d}
+ * @name scale
+ * @memberOf me.sys
+ * @deprecated since 8.0.0
+ * @see me.video.scaleRatio
+ */
+Object.defineProperty(me.sys, "scale", {
+    /**
+     * @ignore
+     */
+    get : function () {
+        console.log("me.sys.scale is deprecated, please use me.video.scaleRatio");
+        return me.video.scaleRatio;
+    },
+    configurable : false
+});

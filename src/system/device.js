@@ -781,6 +781,82 @@
             }
         };
 
+        /**
+         * return the parent DOM element for the given parent name or HTMLElement object
+         * @name getParentElement
+         * @memberOf me.device
+         * @function
+         * @param {String|HTMLElement} element the parent element name or a HTMLElement object
+         * @return {HTMLElement} the parent Element
+         */
+        api.getParentElement = function (element) {
+            var target = me.device.getElement(element);
+
+            if (target !== null && target.parentNode !== null) {
+                target = target.parentNode;
+            }
+
+            // fallback, if invalid target or non HTMLElement object
+            if (!target)  {
+                //default to document.body
+                target = document.body;
+            }
+
+            return target;
+        };
+
+        /**
+         * return the DOM element for the given element name or HTMLElement object
+         * @name getElement
+         * @memberOf me.device
+         * @function
+         * @param {String|HTMLElement} element the parent element name or a HTMLElement object
+         * @return {HTMLElement} the corresponding DOM Element or null if not existing
+         */
+        api.getElement = function (element) {
+            var target = null;
+
+            if (element !== "undefined") {
+                if (typeof element === "string") {
+                    target = document.getElementById(element);
+                } else if (typeof element === "object" && element.nodeType === Node.ELEMENT_NODE) {
+                    target = element;
+                }
+            }
+            return target;
+        };
+
+        /**
+         * return the bounding rect for the given HTMLElement object
+         * @name getElementBounds
+         * @memberOf me.device
+         * @function
+         * @param {String|HTMLElement} element an HTMLElement object
+         * @return {DOMRect} the size and position of the element relatively to the viewport.
+         */
+        api.getElementBounds = function (element) {
+            var rect;
+
+            if (typeof element === "object" && element !== document.body && typeof element.getBoundingClientRect !== "undefined") {
+                rect = element.getBoundingClientRect();
+            } else {
+                // for cased where DOM is not implemented (e.g. Ejecta, Weixin)
+                rect = { left: 0, x: 0, top: 0, y: 0, width: window.innerWidth, height: window.innerHeight};
+            };
+            return rect;
+        };
+
+        /**
+         * return the parent bounds for the given parent name or HTMLElement object
+         * @name getParentBounds
+         * @memberOf me.device
+         * @function
+         * @param {String|HTMLElement} element the parent element name or a HTMLElement object
+         * @return {DOMRect} the size and position of the parent relative to the viewport.
+         */
+        api.getParentBounds = function (element) {
+            return me.device.getElementBounds(me.device.getParentElement(element));
+        };
 
         /**
          * returns true if the device supports WebGL

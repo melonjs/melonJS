@@ -44,14 +44,6 @@
         interpolation : false,
 
         /**
-         * Global scaling factor
-         * @type {me.Vector2d}
-         * @default <0,0>
-         * @memberOf me.sys
-         */
-        scale : null, //initialized by me.video.init
-
-        /**
          * Specify either to stop on audio loading error or not<br>
          * if true, melonJS will throw an exception and stop loading<br>
          * if false, melonJS will disable sounds and output a warning message
