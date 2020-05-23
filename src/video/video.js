@@ -276,7 +276,7 @@
             }
 
             // add our canvas (default to document.body if wrapper undefined)
-            me.video.parent = me.device.getElement(settings.wrapper);
+            me.video.parent = me.device.getParentElement(settings.wrapper);
             me.video.parent.appendChild(this.renderer.getScreenCanvas());
 
             // trigger an initial resize();
