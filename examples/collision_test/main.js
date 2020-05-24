@@ -12,7 +12,7 @@ var game = {
     onload: function()
     {
         // Initialize the video.
-        if (!me.video.init(1024, 768, {scale : "auto"})) {
+        if (!me.video.init(1024, 768, {scaleMethod : "flex"})) {
             alert("Your browser does not support HTML5 canvas.");
             return;
         }
@@ -23,13 +23,27 @@ var game = {
 
     loaded: function () {
 
+        // add some keyboard shortcuts
+        me.event.subscribe(me.event.KEYDOWN, function (action, keyCode /*, edge */) {
+            // toggle fullscreen on/off
+            if (keyCode === me.input.KEY.F) {
+                if (!me.device.isFullscreen) {
+                    me.device.requestFullscreen();
+                } else {
+                    me.device.exitFullscreen();
+                }
+            }
+        });
+
         // add a background layer
         me.game.world.addChild(new me.ColorLayer("background", "#5E3F66", 0), 0);
 
         // Add some objects
-        for (var i = 0; i < 200; i++) {
+        for (var i = 0; i < 255; i++) {
             me.game.world.addChild(new Smilie(i), 3);
         }
+
+
     }
 };
 
@@ -40,12 +54,12 @@ var Smilie = me.Entity.extend({
             me.Entity,
             "init",
             [
-                me.Math.random(-15, 1024),
-                me.Math.random(-15, 768),
+                me.Math.random(-15, me.game.viewport.width),
+                me.Math.random(-15, me.game.viewport.height),
                 {
                     width : 16,
                     height : 16,
-                    shapes : [ new me.Ellipse(4, 4, 8, 8) ]
+                    shapes : [ new me.Ellipse(6, 6, 10, 10) ]
                 }
             ]
         );
@@ -58,24 +72,28 @@ var Smilie = me.Entity.extend({
 
         // add the coin sprite as renderable
         this.renderable = new me.Sprite(0, 0, {image: me.loader.getImage(game.assets[i % 5].name)});
+        this.renderable.anchorPoint.set(0.5, 0.5);
     },
 
     update : function () {
         this.pos.add(this.body.vel);
 
         // world limit check
-        if (this.pos.x >= 1024) {
+        if (this.pos.x >= me.game.viewport.width) {
             this.pos.x = -15;
         }
         if (this.pos.x < -15) {
-            this.pos.x = 1024 - 1;
+            this.pos.x = me.game.viewport.width - 1;
         }
-        if (this.pos.y >= 768) {
+        if (this.pos.y >= me.game.viewport.height) {
             this.pos.y = -15;
         }
         if (this.pos.y < -15) {
-            this.pos.y = 768 - 1;
+            this.pos.y = me.game.viewport.height - 1;
         }
+
+        // rotate the sprite based on the current velocity
+        this.renderable.rotate(this.body.vel.x < 0 ? -0.05 : 0.05);
 
         if (me.collision.check(this)) {
             // me.collision.check returns true in case of collision
@@ -84,6 +102,7 @@ var Smilie = me.Entity.extend({
         else {
             this.renderable.setOpacity(0.5);
         }
+
         return true;
     },
 

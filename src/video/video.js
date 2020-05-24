@@ -159,14 +159,17 @@
             settings.height = game_height;
             settings.doubleBuffering = !!(settings.doubleBuffering);
             settings.useParentDOMSize = !!(settings.useParentDOMSize);
-            settings.autoScale = (settings.scale === "auto") || false;
             settings.transparent = !!(settings.transparent);
             settings.antiAlias = !!(settings.antiAlias);
             settings.failIfMajorPerformanceCaveat = !!(settings.failIfMajorPerformanceCaveat);
             settings.subPixel = !!(settings.subPixel);
             settings.verbose = !!(settings.verbose);
-            if (settings.scaleMethod.search(/^(fill-(min|max)|fit|flex(-(width|height))?|stretch)$/) !== 0) {
+            if (settings.scaleMethod.search(/^(fill-(min|max)|fit|flex(-(width|height))?|stretch)$/) !== -1) {
+                settings.autoScale = (settings.scale === "auto") || true;
+            } else {
+                // default scaling method
                 settings.scaleMethod = "fit";
+                settings.autoScale = (settings.scale === "auto") || false;
             }
 
             // display melonJS version

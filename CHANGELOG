@@ -4,6 +4,7 @@ Version History
 * Audio : audio core update (2.2.0)
 * Core : new me.event.VIDEO_INIT system event that will be triggered once the display canvas is initialized
 * Core : a default stage is now instantiated at boot time, allowing to more easily write basic examples to test features
+* Input : improved input detection when the canvas is embedded into a complex css layout and the page is being scrolled up/down
 * Physic : me.game.world is now a specific container (based on me.Container) that will manage all related physic updates
 * Physic : gravity for physic bodies is now defined globally under me.game.world.gravity, and can be scaled individually using me.Body.gravityScale
 * Physic : added a rotate method to me.Body to allow rotating all the body shapes properly (by default around the body bounding box center)
@@ -22,6 +23,7 @@ Version History
 * Shapes : vectors and shapes can now be rotated around a given (optional) point instead of the default origin point
 * Shapes : added a center vector property for me.Rect, giving the center point of the rectangle
 * Video : fix an issue when using the "flex" scaling mode, and where the reported parent container size could be floating values
+* Video : the `scale` parameter is now optional if scaleMethod is specified (auto-scaling will then automatically be enabled)
 
 7.1.1
 * Core : fix a crash when a game reset is triggered manually before any default stage has been defined
