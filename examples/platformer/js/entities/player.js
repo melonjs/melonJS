@@ -82,6 +82,7 @@ game.PlayerEntity = me.Entity.extend({
             if (this.multipleJump <= 2) {
                 // easy "math" for double jump
                 this.body.force.y = -this.body.maxVel.y * this.multipleJump++;
+                me.audio.stop("jump");
                 me.audio.play("jump", false);
             }
         }

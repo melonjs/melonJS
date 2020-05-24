@@ -292,19 +292,23 @@ import {Howl, Howler} from "howler";
          * @memberOf me.audio
          * @public
          * @function
-         * @param {String} sound_name audio clip name - case sensitive
+         * @param {String} [sound_name] audio clip name (case sensitive). If none is passed, all sounds are stopped.
          * @param {Number} [id] the sound instance ID. If none is passed, all sounds in group will stop.
          * @example
          * me.audio.stop("cling");
          */
         api.stop = function (sound_name, id) {
-            var sound = audioTracks[sound_name];
-            if (sound && typeof sound !== "undefined") {
-                sound.stop(id);
-                // remove the defined onend callback (if any defined)
-                sound.off("end", undefined, id);
+            if (typeof sound_name !== "undefined") {
+                var sound = audioTracks[sound_name];
+                if (sound && typeof sound !== "undefined") {
+                    sound.stop(id);
+                    // remove the defined onend callback (if any defined)
+                    sound.off("end", undefined, id);
+                } else {
+                    throw new Error("audio clip " + sound_name + " does not exist");
+                }
             } else {
-                throw new Error("audio clip " + sound_name + " does not exist");
+                Howler.stop();
             }
         };
 
