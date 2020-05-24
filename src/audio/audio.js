@@ -61,7 +61,7 @@ import {Howl, Howler} from "howler";
         /**
          * Initialize and configure the audio support.<br>
          * melonJS supports a wide array of audio codecs that have varying browser support :
-         * <i> ("mp3", "mpeg", opus", "ogg", "oga", "wav", "aac", "caf", "m4a", "mp4", "weba", "webm", "dolby", "flac")</i>.<br>
+         * <i> ("mp3", "mpeg", opus", "ogg", "oga", "wav", "aac", "caf", "m4a", "m4b", "mp4", "weba", "webm", "dolby", "flac")</i>.<br>
          * For a maximum browser coverage the recommendation is to use at least two of them,
          * typically default to webm and then fallback to mp3 for the best balance of small filesize and high quality,
          * webm has nearly full browser coverage with a great combination of compression and quality, and mp3 will fallback gracefully for other browsers.
