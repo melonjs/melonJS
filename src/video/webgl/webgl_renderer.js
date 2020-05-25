@@ -936,17 +936,21 @@
          * @param {Number} width
          * @param {Number} height
          */
-        strokeRect : function (x, y, width, height) {
-            var points = this._glPoints;
-            points[0].x = x;
-            points[0].y = y;
-            points[1].x = x + width;
-            points[1].y = y;
-            points[2].x = x + width;
-            points[2].y = y + height;
-            points[3].x = x;
-            points[3].y = y + height;
-            this.currentCompositor.drawVertices(this.gl.LINE_LOOP, points, 4);
+        strokeRect : function (x, y, width, height, fill) {
+            if (fill === true ) {
+                this.fillRect(x, y, width, height);
+            } else {
+                var points = this._glPoints;
+                points[0].x = x;
+                points[0].y = y;
+                points[1].x = x + width;
+                points[1].y = y;
+                points[2].x = x + width;
+                points[2].y = y + height;
+                points[3].x = x;
+                points[3].y = y + height;
+                this.currentCompositor.drawVertices(this.gl.LINE_LOOP, points, 4);
+            }
         },
 
         /**

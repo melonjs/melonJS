@@ -444,12 +444,16 @@
          * @param {Number} width
          * @param {Number} height
          */
-        strokeRect : function (x, y, width, height) {
-            if (this.backBufferContext2D.globalAlpha < 1 / 255) {
-                // Fast path: don't draw fully transparent
-                return;
+        strokeRect : function (x, y, width, height, fill) {
+            if (fill === true ) {
+                this.fillRect(x, y, width, height);
+            } else {
+                if (this.backBufferContext2D.globalAlpha < 1 / 255) {
+                    // Fast path: don't draw fully transparent
+                    return;
+                }
+                this.backBufferContext2D.strokeRect(x, y, width, height);
             }
-            this.backBufferContext2D.strokeRect(x, y, width, height);
         },
 
         /**
