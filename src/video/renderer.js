@@ -301,12 +301,14 @@
             // set antialias CSS property on the main canvas
             if (enable !== true) {
                 // https://developer.mozilla.org/en-US/docs/Web/CSS/image-rendering
-                canvas.style["image-rendering"] = "pixelated";
-                canvas.style["image-rendering"] = "crisp-edges";
-                canvas.style["image-rendering"] = "-moz-crisp-edges";
-                canvas.style["image-rendering"] = "-o-crisp-edges";
-                canvas.style["image-rendering"] = "-webkit-optimize-contrast";
-                canvas.style.msInterpolationMode = "nearest-neighbor";
+                canvas.style["image-rendering"] = "optimizeSpeed"; // legal fallback
+                canvas.style["image-rendering"] = "pixelated"; // CSS 4
+                canvas.style["image-rendering"] = "crisp-edges"; // CSS 4
+                canvas.style["image-rendering"] = "-moz-crisp-edges"; // Firefox
+                canvas.style["image-rendering"] = "-o-crisp-edges"; // Opera
+                canvas.style["image-rendering"] = "optimize-contrast"; // CSS 3
+                canvas.style["image-rendering"] = "-webkit-optimize-contrast"; // Safari
+                canvas.style.msInterpolationMode = "nearest-neighbor"; // IE8+
             } else {
                 canvas.style["image-rendering"] = "auto";
             }
