@@ -6,6 +6,7 @@ Version History
 * Core : new me.event.VIDEO_INIT system event that will be triggered once the display canvas is initialized
 * Core : a default stage is now instantiated at boot time, allowing to more easily write basic examples to test features
 * Input : improved input detection when the canvas is embedded into a complex css layout and the page is being scrolled up/down
+* Input : Changed the device accelerometer and orientation detection to comply with the latest API changes where a user permission is now required
 * Physic : me.game.world is now a specific container (based on me.Container) that will manage all related physic updates
 * Physic : gravity for physic bodies is now defined globally under me.game.world.gravity, and can be scaled individually using me.Body.gravityScale
 * Physic : added a rotate method to me.Body to allow rotating all the body shapes properly (by default around the body bounding box center)

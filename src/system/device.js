@@ -89,9 +89,6 @@
             // Modern browsers support "wheel", Webkit and IE support at least "mousewheel
             me.device.wheel = ("onwheel" in document.createElement("div"));
 
-            // accelerometer detection
-            me.device.hasAccelerometer = typeof (window.DeviceMotionEvent) !== "undefined";
-
             // pointerlock detection
             this.hasPointerLockSupport = me.agent.prefixed("pointerLockElement", document);
 
@@ -101,8 +98,11 @@
 
             // device orientation and motion detection
             if (window.DeviceOrientationEvent) {
-                me.device.hasDeviceOrientation = true;
+
             }
+            // device accelerometer and orientation detection
+            me.device.hasDeviceOrientation = !!window.DeviceOrientationEvent;
+            me.device.hasAccelerometer = !!window.DeviceMotionEvent;
 
             // fullscreen api detection & polyfill when possible
             this.hasFullscreenSupport = me.agent.prefixed("fullscreenEnabled", document) ||
@@ -442,6 +442,7 @@
          * @type Number
          * @readonly
          * @name accelerationX
+         * @see me.device.watchAccelerometer
          * @memberOf me.device
          */
         api.accelerationX = 0;
@@ -452,6 +453,7 @@
          * @type Number
          * @readonly
          * @name accelerationY
+         * @see me.device.watchAccelerometer
          * @memberOf me.device
          */
         api.accelerationY = 0;
@@ -462,6 +464,7 @@
          * @type Number
          * @readonly
          * @name accelerationZ
+         * @see me.device.watchAccelerometer
          * @memberOf me.device
          */
         api.accelerationZ = 0;
@@ -472,6 +475,7 @@
          * @type Number
          * @readonly
          * @name gamma
+         * @see me.device.watchDeviceOrientation
          * @memberOf me.device
          */
         api.gamma = 0;
@@ -482,6 +486,7 @@
          * @type Number
          * @readonly
          * @name beta
+         * @see me.device.watchDeviceOrientation
          * @memberOf me.device
          */
         api.beta = 0;
@@ -493,6 +498,7 @@
          * @type Number
          * @readonly
          * @name alpha
+         * @see me.device.watchDeviceOrientation
          * @memberOf me.device
          */
         api.alpha = 0;
@@ -992,23 +998,45 @@
         };
 
         /**
-         * watch Accelerator event
+         * Enable monitor of the device accelerator to detect the amount of physical force of acceleration the device is receiving.
+         * (one some device a first user gesture will be required before calling this function)
          * @name watchAccelerometer
          * @memberOf me.device
          * @public
          * @function
-         * @return {Boolean} false if not supported by the device
+         * @see me.device.accelerationX
+         * @see me.device.accelerationY
+         * @see me.device.accelerationZ
+         * @return {Boolean} false if not supported or permission not granted by the user
+         * @example
+         * // try to enable device accelerometer event on user gesture
+         * me.input.registerPointerEvent("pointerleave", me.game.viewport, function() {
+         *     if (me.device.watchAccelerometer() === true) {
+         *         // Success
+         *         me.input.releasePointerEvent("pointerleave", me.game.viewport);
+         *     } else {
+         *         // ... fail at enabling the device accelerometer event
+         *     }
+         * });
          */
         api.watchAccelerometer = function () {
-            if (me.device.hasAccelerometer) {
-                if (!accelInitialized) {
+            if (me.device.hasAccelerometer && !accelInitialized) {
+                if (DeviceOrientationEvent && typeof DeviceOrientationEvent.requestPermission === "function") {
+                    DeviceOrientationEvent.requestPermission()
+                        .then(response => {
+                            if (response === "granted") {
+                                // add a listener for the devicemotion event
+                                window.addEventListener("devicemotion", onDeviceMotion, false);
+                                accelInitialized = true;
+                            }
+                        }).catch(console.error);
+                } else {
                     // add a listener for the devicemotion event
                     window.addEventListener("devicemotion", onDeviceMotion, false);
                     accelInitialized = true;
                 }
-                return true;
             }
-            return false;
+            return accelInitialized;
         };
 
         /**
@@ -1027,19 +1055,43 @@
         };
 
         /**
-         * watch the device orientation event
+         * Enable monitor of the device orientation to detect the current orientation of the device as compared to the Earth coordinate frame.
+         * (one some device a first user gesture will be required before calling this function)
          * @name watchDeviceOrientation
          * @memberOf me.device
          * @public
          * @function
-         * @return {Boolean} false if not supported by the device
+         * @see me.device.alpha
+         * @see me.device.beta
+         * @see me.device.gamma
+         * @return {Boolean} false if not supported or permission not granted by the user
+         * @example
+         * // try to enable device orientation event on user gesture
+         * me.input.registerPointerEvent("pointerleave", me.game.viewport, function() {
+         *     if (me.device.watchDeviceOrientation() === true) {
+         *         // Success
+         *         me.input.releasePointerEvent("pointerleave", me.game.viewport);
+         *     } else {
+         *         // ... fail at enabling the device orientation event
+         *     }
+         * });
          */
         api.watchDeviceOrientation = function () {
             if (me.device.hasDeviceOrientation && !deviceOrientationInitialized) {
-                window.addEventListener("deviceorientation", onDeviceRotate, false);
-                deviceOrientationInitialized = true;
+                if (typeof DeviceOrientationEvent.requestPermission === "function") {
+                    DeviceOrientationEvent.requestPermission()
+                        .then(response => {
+                            if (response === "granted") {
+                                window.addEventListener("deviceorientation", onDeviceRotate, false);
+                                deviceOrientationInitialized = true;
+                            }
+                        }).catch(console.error);
+                } else {
+                    window.addEventListener("deviceorientation", onDeviceRotate, false);
+                    deviceOrientationInitialized = true;
+                }
             }
-            return false;
+            return deviceOrientationInitialized;
         };
 
         /**
