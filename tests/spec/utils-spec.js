@@ -38,5 +38,10 @@ describe("utils", function () {
             expect(me.utils.string.trimRight(untrimmed_str)).toEqual(" start and end with white space");
         });
 
+        it("capitalize", function () {
+            expect(me.utils.string.capitalize("capitalize")).toEqual("Capitalize");
+        });
+
+
     });
 });

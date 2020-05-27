@@ -1,15 +1,4 @@
 (function () {
-    /**
-     * Convert first character of a string to uppercase, if it's a letter.
-     * @ignore
-     * @function
-     * @name capitalize
-     * @param  {String} str Input string.
-     * @return {String} String with first letter made uppercase.
-     */
-    var capitalize = function (str) {
-        return str.substring(0, 1).toUpperCase() + str.substring(1, str.length);
-    };
 
     /**
      * A collection of utilities to ease porting between different user agents.
@@ -41,7 +30,7 @@
                 return obj[name];
             }
 
-            var uc_name = capitalize(name);
+            var uc_name = me.utils.string.capitalize(name);
 
             var result;
             vendors.some(function (vendor) {
@@ -69,7 +58,7 @@
                 return;
             }
 
-            var uc_name = capitalize(name);
+            var uc_name = me.utils.string.capitalize(name);
 
             vendors.some(function (vendor) {
                 var name = vendor + uc_name;
