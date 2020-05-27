@@ -34,7 +34,11 @@ var game = {
 
                 // write down device information
                 renderer.setColor("#ffffff");
-                this.font.draw(renderer, "Touch to enable motion detection", 10, me.game.viewport.height - 30);
+                if (me.device.hasDeviceOrientation) {
+                    this.font.draw(renderer, "Touch to enable motion detection", 10, me.game.viewport.height - 30);
+                } else {
+                    this.font.draw(renderer, "Motion detection not supported", 10, me.game.viewport.height - 30);
+                }
 
                 this.font.draw(renderer, "Gamma: " + me.device.gamma,    10, 0);
                 this.font.draw(renderer, "Beta: "  + me.device.beta,     10, 30);
@@ -45,13 +49,12 @@ var game = {
                 this.font.draw(renderer, "orientation: " + orientation,   10, 180);
 
                 // draw a red circle based on the device motion and orientation
-                var deltaX = (orientation === "portrait" ? me.device.gamma : me.device.beta) * 10;
-                var deltaY = (orientation === "portrait" ? me.device.beta : me.device.gamma) * 10;
-                var originX = Math.min((me.game.viewport.width  / 2) + deltaX, me.game.viewport.width);
-                var originY = Math.min((me.game.viewport.height / 2) + deltaY, me.game.viewport.height)
+                var deltaX = ((orientation === "portrait" ? me.device.gamma : me.device.beta) * 10);
+                var deltaY = ((orientation === "portrait" ? me.device.beta : me.device.gamma) * 10);
+                var originX = me.Math.clamp((me.game.viewport.width  / 2) + deltaX, 0, me.game.viewport.width);
+                var originY = me.Math.clamp((me.game.viewport.height / 2) + deltaY, 0, me.game.viewport.height);
 
-                renderer.setColor("#ff0000");
-                renderer.setGlobalAlpha(0.5);
+                renderer.setColor("#ff000080");
                 renderer.fillEllipse(originX, originY, 30, 30);
             }
         });
