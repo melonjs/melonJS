@@ -11,7 +11,7 @@ var game = {
     onload: function() {
 
         // init the video
-        if (!me.video.init(800, 480, {wrapper : "jsapp", scale : "auto", preferWebGL1: false, scaleMethod : "flex", useParentDOMSize : false})) {
+        if (!me.video.init(1024, 786, {wrapper : "jsapp", scaleMethod : "flex", preferWebGL1: false, useParentDOMSize : false})) {
             alert("Your browser does not support HTML5 canvas.");
             return;
         }
@@ -32,6 +32,7 @@ var game = {
         me.input.bindKey(me.input.KEY.UP,    "up");
         me.input.bindKey(me.input.KEY.DOWN,  "down");
         me.input.bindKey(me.input.KEY.ENTER, "enter");
+        
         // subscribe to key down event
         this.handle = me.event.subscribe(me.event.KEYDOWN, this.keyPressed.bind(this));
 
@@ -109,6 +110,9 @@ var game = {
                 break;
             case "5":
                 level = "perspective";
+                break;
+            case "6":
+                level = "sticker-knight";
                 break;
             default:
                 return;
