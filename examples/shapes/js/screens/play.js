@@ -3,6 +3,7 @@ game.PlayScreen = me.Stage.extend({
      *  action to perform on state change
      */
     onResetEvent: function() {
+
         // clear the background
         me.game.world.addChild(new me.ColorLayer("background", "#5E3F66"), 0);
 
@@ -32,22 +33,18 @@ game.PlayScreen = me.Stage.extend({
         me.game.world.addChild(new (me.Renderable.extend({
             init: function() {
                 this._super(me.Renderable, 'init', [0, 0, 10, 10]);
-                this.font = new me.Font("Arial", 10, "#FFFFFF");
+                this.font = new me.Text(0, 0, {font: "Arial", size: 10, fillStyle: "#FFFFFF"});
                 this.font.textAlign = "center";
-                this.fontHeight = this.font.measureText(me.video.renderer, "DUMMY").height;
+                this.font.textBaseline = "bottom";
             },
             update : function (dt) {
                 return true;
             },
             draw: function(renderer) {
-                if (me.plugins.debugPanel.panel.visible === true) {
-                var x = Math.round(me.input.pointer.gameWorldX);
-                var y = Math.round(me.input.pointer.gameWorldY);
-                this.font.draw (
-                    renderer,
-                    "( " + x + "," + y + " )",
-                    x,
-                    y - this.fontHeight);
+                if (typeof me.plugins.debugPanel !== "undefined" && me.plugins.debugPanel.panel.visible === true) {
+                    var x = Math.round(me.input.pointer.gameWorldX);
+                    var y = Math.round(me.input.pointer.gameWorldY);
+                    this.font.draw(renderer, "( " + x + "," + y + " )", x, y );
                 }
             }
         })), 10);
