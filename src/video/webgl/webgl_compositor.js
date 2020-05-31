@@ -151,7 +151,7 @@
             this.setViewport(0, 0, this.gl.canvas.width, this.gl.canvas.height);
 
             // Initialize clear color
-            this.gl.clearColor(0.0, 0.0, 0.0, 0.0);
+            this.clearColor(0.0, 0.0, 0.0, 0.0);
 
             // delete all related bound texture
             for (var i = 0; i < this.renderer.maxTextures; i++) {

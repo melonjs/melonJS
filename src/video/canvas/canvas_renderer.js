@@ -63,6 +63,7 @@
          */
         reset : function () {
             this._super(me.Renderer, "reset");
+            this.clearColor(this.currentColor, this.settings.transparent !== true);
         },
 
         /**
