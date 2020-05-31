@@ -146,8 +146,11 @@
                 this.atlas = this.texture.getAtlas();
 
                 // calculate the number of tiles per horizontal line
-                var hTileCount = +tileset.columns || ~~(this.image.width / (this.tilewidth + this.spacing));
-                var vTileCount = ~~(this.image.height / (this.tileheight + this.spacing));
+                var hTileCount = +tileset.columns || Math.round(this.image.width / (this.tilewidth + this.spacing));
+                var vTileCount = Math.round(this.image.height / (this.tileheight + this.spacing));
+                if (tileset.tilecount % hTileCount > 0) {
+                    ++vTileCount;
+                }
                 // compute the last gid value in the tileset
                 this.lastgid = this.firstgid + (((hTileCount * vTileCount) - 1) || 0);
                 if (tileset.tilecount && this.lastgid - this.firstgid + 1 !== +tileset.tilecount) {

@@ -225,16 +225,20 @@
             // verifying the texture size
             if ((width % (data.framewidth + spacing)) !== 0 ||
                 (height % (data.frameheight + spacing)) !== 0) {
-                // "truncate size"
-                width = spritecount.x * (data.framewidth + spacing);
-                height = spritecount.y * (data.frameheight + spacing);
-                // warning message
-                console.warn(
-                    "Spritesheet Texture for image: " + image.src +
-                    " is not divisible by " + (data.framewidth + spacing) +
-                    "x" + (data.frameheight + spacing) +
-                    ", truncating effective size to " + width + "x" + height
-                );
+                var computed_width = spritecount.x * (data.framewidth + spacing);
+                var computed_height = spritecount.y * (data.frameheight + spacing);
+                if (computed_width - width !== spacing && computed_height - height !== spacing) {
+                    // "truncate size" if delta is different from the spacing size
+                    width = computed_width;
+                    height = computed_height;
+                    // warning message
+                    console.warn(
+                        "Spritesheet Texture for image: " + image.src +
+                        " is not divisible by " + (data.framewidth + spacing) +
+                        "x" + (data.frameheight + spacing) +
+                        ", truncating effective size to " + width + "x" + height
+                    );
+                }
             }
 
             // build the local atlas
