@@ -3,84 +3,54 @@
  */
 
 var g_ressources = [
-    // images
-    { name: "free_tileset_version_10",      type: "image",  src: "data/free_tileset_version_10.png" },
-    { name: "tmw_desert_spacing",           type: "image",  src: "data/tmw_desert_spacing.png" },
-    { name: "sewer_tileset",                type: "image",  src: "data/sewer_tileset.png" },
-    { name: "sky",                          type: "image",  src: "data/sky.png" },
-    { name: "isometric_grass_and_water",    type: "image",  src: "data/isometric_grass_and_water.png" },
-    { name: "perspective_walls",            type: "image",  src: "data/perspective_walls.png" },
 
-    // sticker-knight
-    { name: "alter",                        type:"image",   src: "data/alter.png"},
-    { name: "blobBlue",                     type:"image",   src: "data/blobBlue.png"},
-    { name: "blobGreen",                    type:"image",   src: "data/blobGreen.png"},
-    { name: "blue",                         type:"image",   src: "data/blue.png"},
-    { name: "bombStroked",                  type:"image",   src: "data/bombStroked.png"},
-    { name: "castleWall",                   type:"image",   src: "data/castleWall.png"},
-    { name: "cloud",                        type:"image",   src: "data/cloud.png"},
-    { name: "column1",                      type:"image",   src: "data/column1.png"},
-    { name: "column2",                      type:"image",   src: "data/column2.png"},
-    { name: "doorBlueStroked",              type:"image",   src: "data/doorBlueStroked.png"},
-    { name: "doorGreenStroke",              type:"image",   src: "data/doorGreenStroke.png"},
-    { name: "doorRedStroked",               type:"image",   src: "data/doorRedStroked.png"},
-    { name: "doorStroked",                  type:"image",   src: "data/doorStroked.png"},
-    { name: "earthWall",                    type:"image",   src: "data/earthWall.png"},
-    { name: "exit",                         type:"image",   src: "data/exit.png"},
-    { name: "flare",                        type:"image",   src: "data/flare.png"},
-    { name: "gemBlueStroked",               type:"image",   src: "data/gemBlueStroked.png"},
-    { name: "gemRedStroked",                type:"image",   src: "data/gemRedStroked.png"},
-    { name: "grassLarge",                   type:"image",   src: "data/grassLarge.png"},
-    { name: "grassSmall",                   type:"image",   src: "data/grassSmall.png"},
-    { name: "grey",                         type:"image",   src: "data/grey.png"},
-    { name: "hero",                         type:"image",   src: "data/hero.png"},
-    { name: "keyGreenStroked",              type:"image",   src: "data/keyGreenStroked.png"},
-    { name: "keyRedStroked",                type:"image",   src: "data/keyRedStroked.png"},
-    { name: "keyYellowStroked",             type:"image",   src: "data/keyYellowStroked.png"},
-    { name: "platform1",                    type:"image",   src: "data/platform1.png"},
-    { name: "platform2",                    type:"image",   src: "data/platform2.png"},
-    { name: "platform3",                    type:"image",   src: "data/platform3.png"},
-    { name: "platform4",                    type:"image",   src: "data/platform4.png"},
-    { name: "platformBase1",                type:"image",   src: "data/platformBase1.png"},
-    { name: "platformBase2",                type:"image",   src: "data/platformBase2.png"},
-    { name: "platformBase3",                type:"image",   src: "data/platformBase3.png"},
-    { name: "platformBase4",                type:"image",   src: "data/platformBase4.png"},
-    { name: "platformBlock1",               type:"image",   src: "data/platformBlock1.png"},
-    { name: "platformBlock2",               type:"image",   src: "data/platformBlock2.png"},
-    { name: "platformBlock3",               type:"image",   src: "data/platformBlock3.png"},
-    { name: "platformBlock4",               type:"image",   src: "data/platformBlock4.png"},
-    { name: "platformConnector1",           type:"image",   src: "data/platformConnector1.png"},
-    { name: "platformConnector2",           type:"image",   src: "data/platformConnector2.png"},
-    { name: "platformConnector3",           type:"image",   src: "data/platformConnector3.png"},
-    { name: "platformConnector4",           type:"image",   src: "data/platformConnector4.png"},
-    { name: "pushBlock1",                   type:"image",   src: "data/pushBlock1.png"},
-    { name: "pushBlock2",                   type:"image",   src: "data/pushBlock2.png"},
-    { name: "pushBlock3",                   type:"image",   src: "data/pushBlock3.png"},
-    { name: "shadow",                       type:"image",   src: "data/shadow.png"},
-    { name: "shieldStroked",                type:"image",   src: "data/shieldStroked.png"},
-    { name: "sign",                         type:"image",   src: "data/sign.png"},
-    { name: "swordStroked",                 type:"image",   src: "data/swordStroked.png"},
-    { name: "torch",                        type:"image",   src: "data/torch.png"},
-    { name: "trap",                         type:"image",   src: "data/trap.png"},
-    { name: "wallDecor1",                   type:"image",   src: "data/wallDecor1.png"},
-    { name: "wallDecor2",                   type:"image",   src: "data/wallDecor2.png"},
-    { name: "wallDecor3",                   type:"image",   src: "data/wallDecor3.png"},
-    { name: "window1",                      type:"image",   src: "data/window1.png"},
-    { name: "window2",                      type:"image",   src: "data/window2.png"},
-    { name: "window3",                      type:"image",   src: "data/window3.png"},
-    { name: "backgroundArch",               type:"image",   src: "data/backgroundArch.png"},
-    { name: "backgroundMountain",           type:"image",   src: "data/backgroundMountain.png"},
-    { name: "backgroundTower",              type:"image",   src: "data/backgroundTower.png"},
-    { name: "backgroundTree",               type:"image",   src: "data/backgroundTree.png"},
-    { name: "earthWall2",                   type:"image",   src: "data/earthWall2.png"},
-    { name: "skeleton",                     type:"image",   src: "data/skeleton.png"},
+    // village example
+    { name: "village",                      type: "tmx",    src: "data/map/village.tmx" },
+    { name: "free_tileset_version_10",      type: "image",  src: "data/map/free_tileset_version_10.png" },
+    // desert example
+    { name: "desert",                       type: "tmx",    src: "data/map/desert.tmx" },
+    { name: "desert",                       type: "tsx",    src: "data/map/desert.tsx" },
+    { name: "tmw_desert_spacing",           type: "image",  src: "data/map/tmw_desert_spacing.png" },
+    // sewer
+    { name: "sewer_tileset",                type: "image",  src: "data/map/sewer_tileset.png" },
+    { name: "sewers",                       type: "tmx",    src: "data/map/sewers.tmx"},
 
-    // TMX maps
-    { name: "village",                      type: "tmx",    src: "data/village.tmx" },
-    { name: "desert",                       type: "tmx",    src: "data/desert.tmx" },
-    { name: "sewers",                       type: "tmx",    src: "data/sewers.tmx" },
-    { name: "isometric",                    type: "tmx",    src: "data/isometric_grass_and_water.tmx" },
-    { name: "perspective",                  type: "tmx",    src: "data/perspective_walls.tmx" },
-    { name: "sticker-knight",               type: "tmx",    src: "data/sandbox.tmx" },
-    { name: "sticker-knight2",              type: "tmx",    src: "data/sandbox2.tmx" }
+    // isometric
+    { name: "isometric",                    type: "tmx",    src: "data/map/isometric_grass_and_water.tmx" },
+    { name: "isometric_grass_and_water",    type: "image",  src: "data/map/isometric_grass_and_water.png" },
+    { name: "perspective_walls",            type: "image",  src: "data/map/perspective_walls.png" },
+
+    //orthogonal
+    { name: "orthogonal",                   type: "tmx",    src: "data/map/orthogonal-outside.tmx" },
+    { name: "buch-outdoor",                 type: "image",  src: "data/map/buch-outdoor.png" },
+
+    // perspective
+    { name: "perspective",                  type: "tmx",    src: "data/map/perspective_walls.tmx" },
+    { name: "perspective_walls",            type: "tsx",    src: "data/map/perspective_walls.tsx" },
+
+    // hexagonal mini
+    { name: "hexagonal-mini",               type: "tmx",    src: "data/map/hexagonal-mini.tmx" },
+    { name: "hexmini",                      type: "image",   src: "data/map/hexmini.png" },
+
+    // rpg
+    { name: "rpg",                          type: "tmx",    src: "data/map/rpg/island.tmx" },
+    { name: "beach_tileset",                type: "tsx",    src: "data/map/rpg/beach_tileset.tsx" },
+    { name: "beach_tileset",                type: "image",   src: "data/map/rpg/beach_tileset.png" },
+
+    // Magicland Dizzy
+    { name: "MagicLand",                    type: "tmx",    src: "data/map/jamesbowman/MagicLand.tmx" },
+    { name: "magiclanddizzy_tiles",         type: "image",   src: "data/map/jamesbowman/magiclanddizzy_tiles.gif" },
+
+    // JB 32
+    { name: "jb-32",                        type: "tmx",    src: "data/map/jamesbowman/jb-32.tmx" },
+    { name: "jb-32-Tileset",                type: "image",   src: "data/map/jamesbowman/jb-32-Tileset.png" },
+
+    // gameart2d desert
+    { name: "gameart2d-desert",             type: "tmx",    src: "data/map/jamesbowman/gameart2d-desert.tmx" },
+    { name: "gameart2d-desert",             type: "image",   src: "data/map/jamesbowman/gameart2d-desert.png" },
+
+    // level 25
+    { name: "level25",                      type: "tmx",    src: "data/map/jamesbowman/level25.tmx" },
+    { name: "level25-Tileset",              type: "image",   src: "data/map/jamesbowman/level25-Tileset.png" }
+
 ];

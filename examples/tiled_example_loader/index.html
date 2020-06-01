@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>melonJS - Tiled example loader</title>
+  <title>melonJS - Tiled example map loader</title>
   <link rel="stylesheet" type="text/css" media="screen" href="index.css">
   <meta id="viewport" name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
   <meta name="apple-mobile-web-app-capable" content="yes">
@@ -10,15 +10,22 @@
 <body>
     <!-- Canvas placeholder -->
     <div id="map" style="float: inherit;">
-    <label for="tmx_map">Tiled Example map:</label>
-    <select id="level_name" onchange="game.changelevel()">
-        <option value=1>village</option>
-        <option value=2>desert</option>
-        <option value=3>sewers</option>
-        <option value=4>isometric</option>
-        <option value=5>perspective</option>
-        <option value=6>sticker-knight</option>
+    <label for="tmx_map">Tiled example map loader:</label>
+    <select id="level_name" onchange="game.levelSelector()">
+        <option value=1>Village</option>
+        <option value=2>Desert</option>
+        <option value=3>Sewers</option>
+        <option value=4>Isometric</option>
+        <option value=5>Orthogonal</option>
+        <option value=6>Perspective</option>
+        <option value=7>Hexagonal-mini</option>
+        <option value=8>RPG Island</option>
+        <option value=9>Magic Land Dizzy</option>
+        <option value=10>jb-32 desert</option>
+        <option value=11>gameart2d desert</option>
+        <option value=12>gameboy space</option>
     </select>
+    <label for="instructions ">(Use arrow keys or mouse wheel to scroll to the selected map)</label>
     </div>
 
     <div id="screen" style="float: inherit;">
