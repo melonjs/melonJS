@@ -22,7 +22,7 @@
         _set : function (x, y, z) {
             this.x = x;
             this.y = y;
-            this.z = z;
+            this.z = z || 0;
             return this;
         },
 
@@ -33,11 +33,11 @@
          * @function
          * @param {Number} x
          * @param {Number} y
-         * @param {Number} z
+         * @param {Number} [z=0]
          * @return {me.Vector3d} Reference to this object for method chaining
          */
         set : function (x, y, z) {
-            if (x !== +x || y !== +y || z !== +z) {
+            if (x !== +x || y !== +y || (typeof z !== "undefined" && z !== +z)) {
                 throw new Error(
                     "invalid x, y, z parameters (not a number)"
                 );
@@ -93,7 +93,7 @@
          * @return {me.Vector3d} Reference to this object for method chaining
          */
         setV : function (v) {
-            return this._set(v.x, v.y, typeof (v.z) !== "undefined" ? v.z : this.z);
+            return this._set(v.x, v.y, v.z);
         },
 
         /**
@@ -127,13 +127,12 @@
          * @function
          * @param {Number} x
          * @param {Number} [y=x]
-         * @param {Number} [z=x]
+         * @param {Number} [z=1]
          * @return {me.Vector3d} Reference to this object for method chaining
          */
         scale : function (x, y, z) {
             y = (typeof (y) !== "undefined" ? y : x);
-            z = (typeof (z) !== "undefined" ? z : x);
-            return this._set(this.x * x, this.y * y, this.z * z);
+            return this._set(this.x * x, this.y * y, this.z * (z || 1));
         },
 
         /**
@@ -145,7 +144,7 @@
          * @return {me.Vector3d} Reference to this object for method chaining
          */
         scaleV : function (v) {
-            return this._set(this.x * v.x, this.y * v.y, this.z * (v.z || 1));
+            return this.scale(v.x, v.y, v.z);
         },
 
         /**
@@ -312,7 +311,7 @@
         },
 
         /**
-         * Copy the x,y values of the passed vector to this one
+         * Copy the components of the given vector into this one
          * @name copy
          * @memberOf me.Vector3d
          * @function
@@ -320,7 +319,7 @@
          * @return {me.Vector3d} Reference to this object for method chaining
          */
         copy : function (v) {
-            return this._set(v.x, v.y, typeof (v.z) !== "undefined" ? v.z : this.z);
+            return this._set(v.x, v.y, v.z || 0);
         },
 
         /**
@@ -435,7 +434,9 @@
          * @return {Number}
          */
         distance : function (v) {
-            var dx = this.x - v.x, dy = this.y - v.y, dz = this.z - (v.z || 0);
+            var dx = this.x - v.x;
+            var dy = this.y - v.y;
+            var dz = this.z - (v.z || 0);
             return Math.sqrt(dx * dx + dy * dy + dz * dz);
         },
 
@@ -460,7 +461,8 @@
          * @return {me.Vector3d} Reference to this object for method chaining
          */
         project : function (v) {
-            return this.scale(this.dotProduct(v) / v.length2());
+            var ratio = this.dotProduct(v) / v.length2();
+            return this.scale(ratio, ratio, ratio);
         },
 
         /**
@@ -473,7 +475,8 @@
          * @return {me.Vector3d} Reference to this object for method chaining
          */
         projectN : function (v) {
-            return this.scale(this.dotProduct(v));
+            var ratio = this.dotProduct(v) / v.length2();
+            return this.scale(ratio, ratio, ratio);
         },
 
         /**

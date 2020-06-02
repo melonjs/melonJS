@@ -121,7 +121,7 @@
             } else {
               this._x = x;
               this._y = y;
-              this._z = z;
+              this._z = z || 0;
             }
             return this;
         },
@@ -133,13 +133,13 @@
          * @function
          * @param {Number} x x value of the vector
          * @param {Number} y y value of the vector
-         * @param {Number} z z value of the vector
+         * @param {Number} [z=0] z value of the vector
          * @return {me.ObservableVector3d} Reference to this object for method chaining
          */
         setMuted : function (x, y, z) {
             this._x = x;
             this._y = y;
-            this._z = z;
+            this._z = z || 0;
             return this;
         },
 
@@ -192,13 +192,12 @@
          * @function
          * @param {Number} x
          * @param {Number} [y=x]
-         * @param {Number} [z=x]
+         * @param {Number} [z=1]
          * @return {me.ObservableVector3d} Reference to this object for method chaining
          */
         scale : function (x, y, z) {
             y = (typeof (y) !== "undefined" ? y : x);
-            z = (typeof (z) !== "undefined" ? z : x);
-            return this._set(this._x * x, this._y * y, this._z * z);
+            return this._set(this._x * x, this._y * y, this._z * (z || 1));
         },
 
         /**
@@ -391,7 +390,7 @@
         },
 
         /**
-         * Copy the x,y,z values of the passed vector to this one
+         * Copy the components of the given vector into this one
          * @name copy
          * @memberOf me.ObservableVector3d
          * @function
@@ -399,7 +398,7 @@
          * @return {me.ObservableVector3d} Reference to this object for method chaining
          */
         copy : function (v) {
-            return this._set(v.x, v.y, typeof (v.z) !== "undefined" ? v.z : this._z);
+            return this._set(v.x, v.y, v.z || 0);
         },
 
         /**
@@ -481,7 +480,9 @@
          * @return {Number}
          */
         distance : function (v) {
-            var dx = this._x - v.x, dy = this._y - v.y, dz = this._z - (v.z || 0);
+            var dx = this._x - v.x;
+            var dy = this._y - v.y;
+            var dz = this._z - (v.z || 0);
             return Math.sqrt(dx * dx + dy * dy + dz * dz);
         },
 
