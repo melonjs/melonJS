@@ -747,6 +747,10 @@
                 this.body = undefined;
             }
 
+            // release all registered events
+            me.input.releaseAllPointerEvents(this);
+
+            // call the user defined destroy method
             this.onDestroyEvent.apply(this, arguments);
         },
 

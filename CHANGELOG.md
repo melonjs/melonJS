@@ -11,6 +11,7 @@
 - Physic : gravity for physic bodies is now defined globally under me.game.world.gravity, and can be scaled individually using me.Body.gravityScale
 - Physic : added a rotate method to me.Body to allow rotating all the body shapes properly (by default around the body bounding box center)
 - Pointer : fix an issue with uncorrect horizontal delta value for wheel event
+- Pointer : all registered events for a specific renderable are now automatically released upon the object destruction
 - Renderable : add support for free-texture-packer (http://free-tex-packer.com), the free Texture Packer alternative (thanks @PLAYERKILLERS)
 - Renderable : optimized and tidied up me.Text and me.BitmapText implementation
 - Renderable : new isFlippedX & isFlippedY getter to check the current renderable "flip" state

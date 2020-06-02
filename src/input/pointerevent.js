@@ -725,4 +725,23 @@
         }
     };
 
+    /**
+     * allows the removal of all registered event listeners from the object target.
+     * @name releaseAllPointerEvents
+     * @memberOf me.input
+     * @public
+     * @function
+     * @param {me.Rect|me.Polygon|me.Line|me.Ellipse} region the registered region to release event from
+     * @example
+     * // release all registered event on the
+     * me.input.releaseAllPointerEvents(this);
+     */
+    api.releaseAllPointerEvents = function (region) {
+        if (eventHandlers.has(region)) {
+            for (var i = 0; i < pointerEventList.length; i++) {
+                api.releasePointerEvent(pointerEventList[i], region);
+            }
+        };
+    };
+
 })(me.input);
