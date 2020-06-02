@@ -20,7 +20,6 @@
     // based on the requestAnimationFrame polyfill by Erik Möller
     (function () {
         var lastTime = 0;
-        var frameDuration = 1000 / 60;
         var vendors = ["ms", "moz", "webkit", "o"];
         var x;
 
@@ -41,7 +40,7 @@
         if (!requestAnimationFrame || !cancelAnimationFrame) {
             requestAnimationFrame = function (callback) {
                 var currTime = window.performance.now();
-                var timeToCall = Math.max(0, frameDuration - (currTime - lastTime));
+                var timeToCall = Math.max(0, (1000 / me.sys.fps) - (currTime - lastTime));
                 var id = window.setTimeout(function () {
                     callback(currTime + timeToCall);
                 }, timeToCall);
