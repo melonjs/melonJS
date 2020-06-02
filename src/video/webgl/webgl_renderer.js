@@ -260,7 +260,7 @@
          */
         createPattern : function (image, repeat) {
 
-            if (!me.Math.isPowerOfTwo(image.width) || !me.Math.isPowerOfTwo(image.height)) {
+            if (me.video.renderer.WebGLVersion === 1 && (!me.Math.isPowerOfTwo(image.width) || !me.Math.isPowerOfTwo(image.height))) {
                 var src = typeof image.src !== "undefined" ? image.src : image;
                 throw new Error(
                     "[WebGL Renderer] " + src + " is not a POT texture " +

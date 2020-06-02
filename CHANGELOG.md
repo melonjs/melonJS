@@ -20,11 +20,12 @@
 - Renderer : properly fallback to the Canvas Renderer including when the WebGL renderer is not able to compile the built-in shaders
 - Renderer : dynamically activate texture sampler instead of pre-indexing them (accordingly to GLSL 1.30 specifications and later)
 - Renderer : added support for WebGL2 (disabled by default, use `preferWebGL1 = false` to enable it when calling me.video.init)
+- Renderer : enable use of NPOT textures when in WebGL2 mode for texture mapping and pattern drawing
 - Renderer : allow specifying the default `powerPreference` value for the WebGL Renderer (on Safari and Chrome 80+ default is now `low-power`)
 - Renderer : display GPU information in the console when available (WebGL)
 - Shapes : vectors and shapes can now be rotated around a given (optional) point instead of the default origin point
 - Shapes : added a center vector property for me.Rect, giving the center point of the rectangle
-- TMX : fix parsing of tileset image when the "last" tile spacing was truncated 
+- TMX : fix parsing of tileset image when the "last" tile spacing was truncated
 - Video : fix an issue when using the "flex" scaling mode, and where the reported parent container size could be floating values
 - Video : the `scale` parameter is now optional if scaleMethod is specified (auto-scaling will then automatically be enabled)
 
