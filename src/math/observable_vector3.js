@@ -431,16 +431,26 @@
          * @memberOf me.ObservableVector3d
          * @function
          * @param {number} angle The angle to rotate (in radians)
+         * @param {me.Vector2d|me.ObservableVector2d} [v] an optional point to rotate around (on the same z axis)
          * @return {me.ObservableVector3d} Reference to this object for method chaining
          */
-        rotate : function (angle) {
-            var x = this._x;
-            var y = this._y;
+        rotate : function (angle, v) {
+            var cx = 0;
+            var cy = 0;
+
+            if (typeof v === "object") {
+                cx = v.x;
+                cy = v.y;
+            }
+
+            // TODO also rotate on the z axis if the given vector is a 3d one
+            var x = this.x - cx;
+            var y = this.y - cy;
 
             var c = Math.cos(angle);
             var s = Math.sin(angle);
 
-            return this._set(x * c - y * s, x * s + y * c, this._z);
+            return this._set(x * c - y * s + cx, x * s + y * c + cy, this.z);
         },
 
         /**
