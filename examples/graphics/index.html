@@ -71,6 +71,9 @@
                             {x: 0, y: 80},
                         ]);
 
+                        // a temporary color object
+                        this.color = new me.Color();
+
                         this.anchorPoint.set(0, 0);
                     },
                     update : function () {
@@ -84,11 +87,14 @@
                         renderer.setGlobalAlpha(1.0);
 
                         // draw 3 stripes
-                        renderer.setColor("#55aa00");
+                        this.color.parseHex("#55aa00");
+                        renderer.setColor(this.color);
                         renderer.fill(this.stripe1);
                         renderer.setColor("#ffcc00");
+                        // lerp from the the starting color and the current renderer one
+                        renderer.setColor(this.color.lerp(renderer.getColor(), 0.5));
                         renderer.fill(this.stripe2);
-                        renderer.setColor("#e15d55");
+                        renderer.setColor("#ffcc00");
                         renderer.fill(this.stripe3);
 
                         renderer.setColor("#ffcc00");

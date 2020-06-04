@@ -117,11 +117,26 @@ describe("me.Color", function () {
         });
     });
 
+    describe("color lerp function", function () {
+        it("Linearly interpolates between colors", function () {
+            var _colorA = new me.Color(0, 0, 0);
+            var _colorB = new me.Color(255, 128, 64);
+
+            _colorA.lerp(_colorB, 0.5);
+
+            expect(_colorA.r).toEqual(127);
+            expect(_colorA.g).toEqual(64);
+            expect(_colorA.b).toEqual(32);
+        });
+    });
+
     describe("color clone function", function () {
         it("cloned color hex value is #2060FF", function () {
             var _color = new me.Color().parseHex("#2060FF");
             var clone = _color.clone();
-            expect(clone.toHex()).toEqual("#2060FF");
+            expect(clone.r).toEqual(32);
+            expect(clone.g).toEqual(96);
+            expect(clone.b).toEqual(255);
         });
     });
 

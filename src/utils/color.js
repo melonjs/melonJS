@@ -286,6 +286,24 @@
         },
 
         /**
+         * Linearly interpolate between this color and the given one.
+         * @name lerp
+         * @memberOf me.Color
+         * @function
+         * @param {me.Color} color
+         * @param {Number} alpha with alpha = 0 being this color, and alpha = 1 being the given one.
+         * @return {me.Color} Reference to this object for method chaining
+         */
+        lerp : function (color, alpha) {
+            alpha = me.Math.clamp(alpha, 0, 1);
+            this.glArray[0] += (color.glArray[0] - this.glArray[0]) * alpha;
+            this.glArray[1] += (color.glArray[1] - this.glArray[1]) * alpha;
+            this.glArray[2] += (color.glArray[2] - this.glArray[2]) * alpha;
+
+            return this;
+        },
+
+        /**
          * Lighten this color value by 0..1
          * @name lighten
          * @memberOf me.Color

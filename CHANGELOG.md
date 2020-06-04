@@ -2,7 +2,8 @@
 
 ## 8.0.0 (wip)
 - Audio : audio core update (2.2.0)
-- Audio : me.audio.stop() will now stop all sounds if none is specified
+- Audio : `me.audio.stop()` will now stop all sounds if none is specified
+- Color : new `lerp()` method to provide linear interpolation between two different colors
 - Core : new me.event.VIDEO_INIT system event that will be triggered once the display canvas is initialized
 - Core : a default stage is now instantiated at boot time, allowing to more easily write basic examples to test features
 - Input : improved input detection when the canvas is embedded into a complex css layout and the page is being scrolled up/down
