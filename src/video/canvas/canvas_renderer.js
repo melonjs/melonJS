@@ -604,23 +604,20 @@
          * @param {me.Matrix2d} mat2d Matrix to transform by
          */
         transform : function (mat2d) {
-            var a = mat2d.val;
-            var tx = a[6],
-                ty = a[7];
+            var m = mat2d.toArray(),
+                a = m[0],
+                b = m[1],
+                c = m[3],
+                d = m[4],
+                e = m[6],
+                f = m[7];
 
             if (this.settings.subPixel === false) {
-                tx = ~~tx;
-                ty = ~~ty;
+                e |= 0;
+                f |= 0;
             }
 
-            this.backBufferContext2D.transform(
-                a[0],
-                a[1],
-                a[3],
-                a[4],
-                tx,
-                ty
-            );
+            this.backBufferContext2D.transform(a, b, c, d, e, f);
         },
 
         /**

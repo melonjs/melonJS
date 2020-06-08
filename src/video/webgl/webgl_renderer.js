@@ -413,8 +413,8 @@
 
             if (this.settings.subPixel === false) {
                 // clamp to pixel grid
-                dx = ~~dx;
-                dy = ~~dy;
+                dx |= 0;
+                dy |= 0;
             }
 
             var key = sx + "," + sy + "," + sw + "," + sh;
@@ -997,12 +997,13 @@
          * @param {me.Matrix2d} mat2d Matrix to transform by
          */
         transform : function (mat2d) {
-            this.currentTransform.multiply(mat2d);
+            var currentTransform = this.currentTransform;
+            currentTransform.multiply(mat2d);
             if (this.settings.subPixel === false) {
                 // snap position values to pixel grid
-                var a = this.currentTransform.val;
-                a[6] = ~~a[6];
-                a[7] = ~~a[7];
+                var a = currentTransform.toArray();
+                a[6] |= 0;
+                a[7] |= 0;
             }
         },
 
@@ -1015,10 +1016,13 @@
          * @param {Number} y
          */
         translate : function (x, y) {
+            var currentTransform = this.currentTransform;
+            currentTransform.translate(x, y);
             if (this.settings.subPixel === false) {
-                this.currentTransform.translate(~~x, ~~y);
-            } else {
-                this.currentTransform.translate(x, y);
+                // snap position values to pixel grid
+                var a = currentTransform.toArray();
+                a[6] |= 0;
+                a[7] |= 0;
             }
         },
 
