@@ -656,7 +656,7 @@
                 renderer.translate(-this.pos.x, -this.pos.y);
             }
 
-            // offset sprite by the anchor point
+            // offset by the anchor point
             renderer.translate(-ax, -ay);
 
 
