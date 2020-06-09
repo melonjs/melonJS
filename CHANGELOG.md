@@ -17,7 +17,7 @@
 - Renderable : optimized and tidied up me.Text and me.BitmapText implementation
 - Renderable : new isFlippedX & isFlippedY getter to check the current renderable "flip" state
 - Renderable : fix implementation and usage of the isDirty flag across Renderables
-- Renderable : fix a regression with transformation when directly added to a me.Container Object
+- Renderable : fix a regression with transformation when a renderable is directly added to a me.Container object
 - Renderer : new optional parameter for createCanvas() to request an OffScreenCanvas if supported by the browser
 - Renderer : use OffscreenCanvas by default for all secondary canvas (e.g. debugPanel, double buffering, font texture in WebGL)
 - Renderer : properly fallback to the Canvas Renderer including when the WebGL renderer is not able to compile the built-in shaders
