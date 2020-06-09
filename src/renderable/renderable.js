@@ -650,14 +650,15 @@
             }
 
             if ((this.autoTransform === true) && (!this.currentTransform.isIdentity())) {
-                this.currentTransform.translate(-ax, -ay);
                 // apply the renderable transformation matrix
+                renderer.translate(this.pos.x, this.pos.y);
                 renderer.transform(this.currentTransform);
-                this.currentTransform.translate(ax, ay);
-            } else {
-                // translate to the defined anchor point
-                renderer.translate(-ax, -ay);
+                renderer.translate(-this.pos.x, -this.pos.y);
             }
+
+            // offset sprite by the anchor point
+            renderer.translate(-ax, -ay);
+
 
             if (typeof this.mask !== "undefined") {
                 renderer.setMask(this.mask);
