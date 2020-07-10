@@ -648,7 +648,7 @@
          */
         api.requestFullscreen = function (element) {
             if (this.hasFullscreenSupport) {
-                element = element || me.video.getWrapper();
+                element = element || me.video.getParent();
                 element.requestFullscreen = me.agent.prefixed("requestFullscreen", element) ||
                                             element.mozRequestFullScreen;
 
@@ -835,6 +835,7 @@
         /**
          * return the bounding rect for the given HTMLElement object
          * @name getElementBounds
+         * @see https://developer.mozilla.org/en-US/docs/Web/API/DOMRect
          * @memberOf me.device
          * @function
          * @param {String|HTMLElement} element an HTMLElement object
@@ -855,6 +856,7 @@
         /**
          * return the parent bounds for the given parent name or HTMLElement object
          * @name getParentBounds
+         * @see https://developer.mozilla.org/en-US/docs/Web/API/DOMRect
          * @memberOf me.device
          * @function
          * @param {String|HTMLElement} element the parent element name or a HTMLElement object
@@ -960,7 +962,7 @@
          */
         api.turnOnPointerLock = function () {
             if (this.hasPointerLockSupport) {
-                var element = me.video.getWrapper();
+                var element = me.video.getParent();
                 if (me.device.ua.match(/Firefox/i)) {
                     var fullscreenchange = function () {
                         if ((me.agent.prefixed("fullscreenElement", document) ||

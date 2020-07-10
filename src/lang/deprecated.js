@@ -91,7 +91,7 @@ me.ScreenObject = me.Stage.extend({
 /**
  * @function me.Renderer.drawShape
  * @deprecated since 6.3.0
- * @see me.Renderer#stroke
+ * @see me.Renderer.stroke
  */
 me.Renderer.prototype.drawShape = function () {
     console.log("drawShape() is deprecated, please use the stroke() or fill() function");
@@ -108,11 +108,12 @@ me.CanvasRenderer.prototype.Texture = me.Renderer.prototype.Texture;
  */
 me.WebGLRenderer.prototype.Texture = me.Renderer.prototype.Texture;
 
-/**
- * @function me.video.getPos
- * @deprecated since 7.0.0
- * @see me.Renderer#getBounds
- */
+
+ /**
+  * @function me.video.getPos
+  * @deprecated since 7.0.0
+  * @see me.device.getElementBounds
+  */
 me.video.getPos = function() {
     console.log("me.video.getPos() is deprecated, please use me.device.getElementBounds(me.video.renderer.getScreenCanvas());");
     return me.device.getElementBounds(me.video.renderer.getScreenCanvas());
@@ -243,7 +244,8 @@ me.WebGLRenderer.Compositor = me.WebGLCompositor;
  * Draw triangle(s)
  * @name drawTriangle
  * @deprecated since 8.0.0
- * @memberOf me.WebGLRenderer.Compositor
+ * @see me.WebGLRenderer.Compositor
+ * @memberOf me.WebGLRenderer.Compositor.drawVertices
  * @function
  * @param {me.Vector2d[]} points vertices
  * @param {Number} [len=points.length] amount of points defined in the points array
@@ -259,6 +261,7 @@ me.WebGLRenderer.Compositor.prototype.drawTriangle = function (points, len, stri
  * Draw a line
  * @name drawLine
  * @deprecated since 8.0.0
+ * @memberOf me.WebGLRenderer.Compositor.drawVertices
  * @memberOf me.WebGLRenderer.Compositor
  * @function
  * @param {me.Vector2d[]} points Line vertices
@@ -289,3 +292,13 @@ Object.defineProperty(me.sys, "scale", {
     },
     configurable : false
 });
+
+/**
+ * @function me.video.getWrapper
+ * @deprecated since 8.0.0
+ * @see me.video.getParent
+ */
+me.video.getWrapper = function() {
+    console.log("me.video.getWrapper()is deprecated, please use me.device.getParent();");
+    return me.video.getParent();
+};

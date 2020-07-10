@@ -15,7 +15,7 @@
 
         // default video settings
         var settings = {
-            wrapper : document.body,
+            parent : document.body,
             renderer : 2, // AUTO
             doubleBuffering : false,
             autoScale : false,
@@ -80,7 +80,7 @@
 
         /**
          * the parent container of the main canvas element
-         * @public
+         * @ignore
          * @type {HTMLElement}
          * @readonly
          * @name parent
@@ -89,7 +89,7 @@
         api.parent = null;
 
         /**
-         * the scaling ratio to be applied to the diplay canvas
+         * the scaling ratio to be applied to the display canvas
          * @type {me.Vector2d}
          * @default <1,1>
          * @memberOf me.video
@@ -119,13 +119,11 @@
          * @param {Number} width The width of the canvas viewport
          * @param {Number} height The height of the canvas viewport
          * @param {Object} [options] The optional video/renderer parameters.<br> (see Renderer(s) documentation for further specific options)
-         * @param {String} [options.wrapper=document.body] the "div" parent element name to hold the canvas in the HTML file
+         * @param {String|HTMLElement} [options.parent=document.body] the DOM parent element to hold the canvas in the HTML file
          * @param {Number} [options.renderer=me.video.AUTO] renderer to use (me.video.CANVAS, me.video.WEBGL, me.video.AUTO)
          * @param {Boolean} [options.doubleBuffering=false] enable/disable double buffering
          * @param {Number|String} [options.scale=1.0] enable scaling of the canvas ('auto' for automatic scaling)
          * @param {String} [options.scaleMethod="fit"] screen scaling modes ('fit','fill-min','fill-max','flex','flex-width','flex-height','stretch')
-         * @param {Boolean} [options.useParentDOMSize=false] on browser devices, limit the canvas width and height to its parent container dimensions as returned by getBoundingClientRect(),
-         *                                                   as opposed to the browser window dimensions
          * @param {Boolean} [options.preferWebGL1=true] if false the renderer will try to use WebGL 2 if supported
          * @param {String} [options.powerPreference="default"] a hint to the user agent indicating what configuration of GPU is suitable for the WebGL context ("default", "high-performance", "low-power"). To be noted that Safari and Chrome (since version 80) both default to "low-power" to save battery life and improve the user experience on these dual-GPU machines.
          * @param {Boolean} [options.transparent=false] whether to allow transparent pixels in the front buffer (screen).
@@ -137,7 +135,7 @@
          * @example
          * // init the video with a 640x480 canvas
          * me.video.init(640, 480, {
-         *     wrapper : "screen",
+         *     parent : "screen",
          *     renderer : me.video.AUTO,
          *     scale : "auto",
          *     scaleMethod : "fit",
@@ -158,7 +156,6 @@
             settings.width = game_width;
             settings.height = game_height;
             settings.doubleBuffering = !!(settings.doubleBuffering);
-            settings.useParentDOMSize = !!(settings.useParentDOMSize);
             settings.transparent = !!(settings.transparent);
             settings.antiAlias = !!(settings.antiAlias);
             settings.failIfMajorPerformanceCaveat = !!(settings.failIfMajorPerformanceCaveat);
@@ -170,6 +167,11 @@
                 // default scaling method
                 settings.scaleMethod = "fit";
                 settings.autoScale = (settings.scale === "auto") || false;
+            }
+
+            // for backward compatilibty with melonJS 7.1.1 and lower
+            if (typeof settings.wrapper !== "undefined") {
+                settings.parent = settings.wrapper;
             }
 
             // display melonJS version
@@ -278,8 +280,8 @@
                 return false;
             }
 
-            // add our canvas (default to document.body if wrapper undefined)
-            me.video.parent = me.device.getParentElement(settings.wrapper);
+            // add our canvas (default to document.body if settings.parent is undefined)
+            me.video.parent = me.device.getParentElement(settings.parent);
             me.video.parent.appendChild(this.renderer.getScreenCanvas());
 
             // trigger an initial resize();
@@ -355,13 +357,13 @@
         };
 
         /**
-         * return a reference to the parent element holding the main canvas
-         * @name getWrapper
+         * return a reference to the parent DOM element holding the main canvas
+         * @name getParent
          * @memberOf me.video
          * @function
          * @return {HTMLElement}
          */
-        api.getWrapper = function () {
+        api.getParent = function () {
             return me.video.parent;
         };
 
@@ -375,26 +377,24 @@
             var scaleX = 1, scaleY = 1;
 
             if (settings.autoScale) {
-                var canvasMaxWidth = Infinity;
-                var canvasMaxHeight = Infinity;
-                var parentNodeWidth = window.innerWidth;
-                var parentNodeHeight = window.innerHeight;
 
                 // set max the canvas max size if CSS values are defined
+                var canvasMaxWidth = Infinity;
+                var canvasMaxHeight = Infinity;
+
                 if (window.getComputedStyle) {
                     var style = window.getComputedStyle(renderer.getScreenCanvas(), null);
                     canvasMaxWidth = parseInt(style.maxWidth, 10) || Infinity;
                     canvasMaxHeight = parseInt(style.maxHeight, 10) || Infinity;
                 }
 
-                if (settings.useParentDOMSize === true) {
-                    var rect = me.device.getElementBounds(me.video.parent);
-                    parentNodeWidth = rect.width;
-                    parentNodeHeight = rect.height;
-                }
+                // get the maximum canvas size
+                var nodeBounds = me.device.getElementBounds(me.video.getParent());
 
-                var _max_width = Math.min(canvasMaxWidth, parentNodeWidth || window.innerWidth);
-                var _max_height = Math.min(canvasMaxHeight, parentNodeHeight || window.innerHeight);
+                var _max_width = Math.min(canvasMaxWidth, nodeBounds.width);
+                var _max_height = Math.min(canvasMaxHeight, nodeBounds.height);
+
+                // calculate final canvas width & height
                 var screenRatio = _max_width / _max_height;
 
                 if ((settings.scaleMethod === "fill-min" && screenRatio > designRatio) ||
