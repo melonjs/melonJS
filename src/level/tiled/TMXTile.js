@@ -111,29 +111,22 @@
                 this.currentTransform.identity();
             }
 
+            this.currentTransform.translate(this.width / 2, this.height / 2);
             if (this.flippedAD) {
-                // Use shearing to swap the X/Y axis
-                this.currentTransform.setTransform(
-                    0, 1, 0,
-                    1, 0, 0,
-                    0, 0, 1
-                );
-                this.currentTransform.translate(0, this.height - this.width);
+                this.currentTransform.rotate(-90 * Math.PI / 180);
+                this.currentTransform.scale(-1, 1);
             }
             if (this.flippedX) {
-                this.currentTransform.translate(
-                    (this.flippedAD ? 0 : this.width),
-                    (this.flippedAD ? this.height : 0)
+                this.currentTransform.scale(
+                    this.flippedAD ? 1 : -1, this.flippedAD ? -1 : 1
                 );
-                this.currentTransform.scaleX(-1);
             }
             if (this.flippedY) {
-                this.currentTransform.translate(
-                    (this.flippedAD ? this.width : 0),
-                    (this.flippedAD ? 0 : this.height)
-                );
-                this.currentTransform.scaleY(-1);
+                this.currentTransform.scale(
+                     this.flippedAD ? -1 : 1, this.flippedAD ? 1 : -1
+                 );
             }
+            this.currentTransform.translate(-this.width / 2, -this.height / 2);
         },
 
         /**
