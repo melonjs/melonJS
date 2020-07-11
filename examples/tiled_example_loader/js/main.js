@@ -151,10 +151,9 @@ var game = {
      */
     levelSelector: function() {
 
-        var level = "1";
-        var level_id = document.getElementById("level_name").value || 1;
+        var level;
 
-        switch (level_id) {
+        switch (document.getElementById("level_name").value || 1) {
             case "1":
                 level = "village";
                 break;
@@ -192,6 +191,7 @@ var game = {
                 level = "level25";
                 break;
             default:
+                level = "village";
                 return;
         };
 
