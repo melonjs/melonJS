@@ -87,11 +87,11 @@
                 if (tiles.hasOwnProperty(i)) {
                     if ("animation" in tiles[i]) {
                         this.isAnimated = true;
-                        this.animations.set(+i + this.firstgid, {
+                        this.animations.set(tiles[+i].animation[0].tileid, {
                             dt      : 0,
                             idx     : 0,
-                            frames  : tiles[i].animation,
-                            cur     : tiles[i].animation[0]
+                            frames  : tiles[+i].animation,
+                            cur     : tiles[+i].animation[0]
                         });
                     }
                     // set tile properties, if any (XML format)
@@ -206,16 +206,14 @@
          * @return {Number} View tile ID
          */
         getViewTileId : function (gid) {
-            if (this.animations.has(gid)) {
-                // apply animations
-                gid = this.animations.get(gid).cur.tileid;
-            }
-            else {
-                // get the local tileset id
-                gid -= this.firstgid;
+            var localId = gid - this.firstgid;
+
+            if (this.animations.has(localId)) {
+                // return the current corresponding tile id if animated
+                return this.animations.get(localId).cur.tileid;
             }
 
-            return gid;
+            return localId;
         },
 
         /**
