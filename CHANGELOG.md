@@ -29,6 +29,8 @@
 - Shapes : vectors and shapes can now be rotated around a given (optional) point instead of the default origin point
 - Shapes : added a center vector property for me.Rect, giving the center point of the rectangle
 - TMX : fix parsing of tileset image when the "last" tile spacing was truncated
+- TMX : fix parsing of animated tile with the latest version of Tiled (thanks @alcor)
+- TMX : fix anti-diagonal tile flipping (thanks @alcor)
 - Video : fix an issue when using the "flex" scaling mode, and where the reported parent container size could be floating values
 - Video : the `scale` parameter is now optional if scaleMethod is specified (auto-scaling will then automatically be enabled)
 
