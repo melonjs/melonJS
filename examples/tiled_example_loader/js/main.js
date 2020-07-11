@@ -190,6 +190,9 @@ var game = {
             case "12":
                 level = "level25";
                 break;
+            case "13":
+                level = "island-rotated-tiles";
+                break;
             default:
                 level = "village";
                 return;
