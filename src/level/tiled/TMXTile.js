@@ -16,7 +16,6 @@
      * @param {Number} y y index of the Tile in the map
      * @param {Number} gid tile gid
      * @param {me.TMXTileset} tileset the corresponding tileset object
-
      */
     me.Tile = me.Rect.extend({
         /** @ignore */
