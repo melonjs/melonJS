@@ -278,7 +278,7 @@
                 this.updateBounds();
             }
 
-            // automatically enable physic when when a body is added to a renderable
+            // automatically enable physic when a body is added to a renderable
             this.ancestor.isKinematic = false;
         },
 
