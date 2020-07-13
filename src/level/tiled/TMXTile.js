@@ -89,9 +89,13 @@
              * @name me.Tile#flipped
              */
             this.flipped = this.flippedX || this.flippedY || this.flippedAD;
-            // create a transformation matrix if required
+
+            // create and apply transformation matrix if required
             if (this.flipped === true) {
-                this.createTransform();
+                if (this.currentTransform === null) {
+                    this.currentTransform = new me.Matrix2d();
+                }
+                this.setTileTransform(this.currentTransform.identity());
             }
 
             // clear out the flags and set the tileId
@@ -99,33 +103,27 @@
         },
 
         /**
-         * create a transformation matrix for this tile
+         * set the transformation matrix for this tile
+         * @return {me.Matrix2d) a transformation matrix
          * @ignore
          */
-        createTransform : function () {
-            if (this.currentTransform === null) {
-                this.currentTransform = new me.Matrix2d();
-            } else {
-                // reset the matrix
-                this.currentTransform.identity();
-            }
-
-            this.currentTransform.translate(this.width / 2, this.height / 2);
+        setTileTransform : function (transform) {
+            transform.translate(this.width / 2, this.height / 2);
             if (this.flippedAD) {
-                this.currentTransform.rotate(-90 * Math.PI / 180);
-                this.currentTransform.scale(-1, 1);
+                transform.rotate(-90 * Math.PI / 180);
+                transform.scale(-1, 1);
             }
             if (this.flippedX) {
-                this.currentTransform.scale(
+                transform.scale(
                     this.flippedAD ? 1 : -1, this.flippedAD ? -1 : 1
                 );
             }
             if (this.flippedY) {
-                this.currentTransform.scale(
+                transform.scale(
                      this.flippedAD ? -1 : 1, this.flippedAD ? 1 : -1
                  );
             }
-            this.currentTransform.translate(-this.width / 2, -this.height / 2);
+            transform.translate(-this.width / 2, -this.height / 2);
         },
 
         /**
