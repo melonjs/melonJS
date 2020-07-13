@@ -94,22 +94,21 @@
              * @memberOf me.Entity
              */
             // initialize the default body
-            var shapes = (
-                Array.isArray(settings.shapes) ?
-                settings.shapes : [
-                    new me.Polygon(0, 0, [
-                        new me.Vector2d(0, 0),
-                        new me.Vector2d(this.width, 0),
-                        new me.Vector2d(this.width, this.height),
-                        new me.Vector2d(0, this.height)
-                    ])
-                ]
-            );
+
+            if (typeof settings.shapes === "undefined") {
+                settings.shapes = new me.Polygon(0, 0, [
+                    new me.Vector2d(0,          0),
+                    new me.Vector2d(this.width, 0),
+                    new me.Vector2d(this.width, this.height),
+                    new me.Vector2d(0,          this.height)
+                ]);
+            }
+
             if (typeof this.body !== "undefined") {
-                this.body.init(this, shapes, this.onBodyUpdate.bind(this));
+                this.body.init(this, settings.shapes, this.onBodyUpdate.bind(this));
             }
             else {
-                this.body = new me.Body(this, shapes, this.onBodyUpdate.bind(this));
+                this.body = new me.Body(this, settings.shapes, this.onBodyUpdate.bind(this));
             }
 
             // resize the entity if required

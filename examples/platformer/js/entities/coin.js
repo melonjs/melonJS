@@ -12,9 +12,9 @@ game.CoinEntity = me.Sprite.extend({
             }, settings)
         ]);
 
-        // add a physic body
-        this.body = new me.Body(this);
-        this.body.addShape(new me.Ellipse(this.width / 2, this.height / 2, this.width, this.height))
+        // add a physic body with an ellipse as body shape
+        this.body = new me.Body(this, new me.Ellipse(this.width / 2, this.height / 2, this.width, this.height));
+
         // set the collision type
         this.body.collisionType = me.collision.types.COLLECTABLE_OBJECT;
     },

@@ -13,7 +13,7 @@
      * @memberOf me
      * @constructor
      * @param {me.Renderable} ancestor the parent object this body is attached to
-     * @param {me.Rect[]|me.Polygon[]|me.Line[]|me.Ellipse[]} [shapes] the initial list of shapes
+     * @param {me.Rect|me.Rect[]|me.Polygon|me.Polygon[]|me.Line|me.Line[]|me.Ellipse|me.Ellipse[]} [shapes] the initial shape or list of shapes
      * @param {Function} [onBodyUpdate] callback for when the body is updated (e.g. add/remove shapes)
      */
     me.Body = me.Rect.extend({
@@ -271,11 +271,15 @@
             }
 
             // parses the given shapes array and add them
-            if (Array.isArray(shapes)) {
-                for (var s = 0; s < shapes.length; s++) {
-                    this.addShape(shapes[s], true);
+            if (typeof shapes !== "undefined") {
+                if (Array.isArray(shapes)) {
+                    for (var s = 0; s < shapes.length; s++) {
+                        this.addShape(shapes[s], true);
+                    }
+                    this.updateBounds();
+                } else {
+                    this.addShape(shapes);
                 }
-                this.updateBounds();
             }
 
             // automatically enable physic when a body is added to a renderable
