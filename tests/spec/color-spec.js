@@ -130,6 +130,36 @@ describe("me.Color", function () {
         });
     });
 
+    describe("color random function", function () {
+        it("generate random colors using different ranges", function () {
+            var _colorA = new me.Color().random();
+            var _colorB = new me.Color().random(64, 127);
+            var _colorC = new me.Color().random(-1, 256);
+
+            // they should all be between 0 and 255
+            expect(_colorA.r).toBeGreaterThan(-1);
+            expect(_colorA.g).toBeGreaterThan(-1);
+            expect(_colorA.b).toBeGreaterThan(-1);
+            expect(_colorA.r).toBeLessThan(256);
+            expect(_colorA.g).toBeLessThan(256);
+            expect(_colorA.b).toBeLessThan(256);
+
+            expect(_colorB.r).toBeGreaterThan(63);
+            expect(_colorB.g).toBeGreaterThan(63);
+            expect(_colorB.b).toBeGreaterThan(63);
+            expect(_colorB.r).toBeLessThan(128);
+            expect(_colorB.g).toBeLessThan(128);
+            expect(_colorB.b).toBeLessThan(128);
+
+            expect(_colorC.r).toBeGreaterThan(-1);
+            expect(_colorC.g).toBeGreaterThan(-1);
+            expect(_colorC.b).toBeGreaterThan(-1);
+            expect(_colorC.r).toBeLessThan(256);
+            expect(_colorC.g).toBeLessThan(256);
+            expect(_colorC.b).toBeLessThan(256);
+        });
+    });
+
     describe("color clone function", function () {
         it("cloned color hex value is #2060FF", function () {
             var _color = new me.Color().parseHex("#2060FF");

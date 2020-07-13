@@ -325,13 +325,22 @@
          * @name random
          * @memberOf me.Color
          * @function
+         * @param {Number} [min=0] minimum value for the random range
+         * @param {Number} [max=255] maxmium value for the random range
          * @return {me.Color} Reference to this object for method chaining
          */
-        random : function () {
+        random : function (min, max) {
+            if (typeof min === "undefined" || min < 0) {
+                min = 0;
+            }
+            if (typeof max === "undefined" || min > 255) {
+                max = 255;
+            }
+
             return this.setColor(
-                Math.random() * 256,
-                Math.random() * 256,
-                Math.random() * 256,
+                me.Math.random(min, max),
+                me.Math.random(min, max),
+                me.Math.random(min, max),
                 this.alpha
             );
         },
