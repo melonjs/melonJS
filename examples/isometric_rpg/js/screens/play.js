@@ -5,7 +5,7 @@ game.PlayScreen = me.Stage.extend({
     onResetEvent: function() {
 
         // disable gravity
-        me.sys.gravity = 0;
+        me.game.world.gravity.set(0, 0);
 
         // load a level
         me.levelDirector.loadLevel("isometric");
@@ -34,9 +34,13 @@ game.PlayScreen = me.Stage.extend({
                 // currently selected tile
                 this.currentTile = null;
 
-                // simple font to display tile coordinates
-                this.font = new me.Font("Arial", 10, "#FFFFFF");
-                this.font.textAlign = "center";
+                // simple system font to display tile coordinates
+                this.font = new me.Text(0, 0, {
+                    font: "Arial",
+                    fillStyle : "#FFFFFF",
+                    size: 10,
+                    textAlign : "center",
+                });
 
                 // dirty flag to enable/disable redraw
                 this.dirty = false;
