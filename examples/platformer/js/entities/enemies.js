@@ -85,6 +85,8 @@ game.PathEnemyEntity = me.Entity.extend({
             this.body.setCollisionMask(me.collision.types.NO_OBJECT);
             // set dead animation
             this.renderable.setCurrentAnimation("dead");
+            // tint to red
+            this.renderable.tint.setColor(255, 192, 192);
             // make it flicker and call destroy once timer finished
             var self = this;
             this.renderable.flicker(750, function () {

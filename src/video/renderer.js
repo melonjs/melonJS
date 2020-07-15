@@ -111,7 +111,7 @@
             this.resetTransform();
             this.setBlendMode(this.settings.blendMode);
             this.setColor("#000000");
-            this.currentTint.setColor(255, 255, 255, 1.0);
+            this.clearTint();
             this.cache.clear();
             this.currentScissor[0] = 0;
             this.currentScissor[1] = 0;

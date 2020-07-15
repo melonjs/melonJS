@@ -263,19 +263,19 @@
             this.mask = undefined;
 
             /**
-             * apply a tint to this renderable (WebGL Only)
+             * apply a tint to this renderable (WebGL Only). a (255, 255, 255) r, g, b value will remove the tint effect.
              * @public
              * @type {me.Color}
              * @name tint
-             * @default undefined
+             * @default (255, 255, 255)
              * @memberOf me.Renderable#
              * @example
              * // add a red tint to this renderable
-             * this.renderable.tint = new me.Color(255, 128, 128);
-             * // disable the tint
+             * this.renderable.tint.setColor(255, 128, 128);
+             * // remove the tint
              * this.renderable.tint.setColor(255, 255, 255);
              */
-            this.tint = undefined;
+            this.tint = me.pool.pull("me.Color", 255, 255, 255, 1.0);
 
             /**
              * The name of the renderable
@@ -664,10 +664,8 @@
                 renderer.setMask(this.mask);
             }
 
-            if (typeof this.tint !== "undefined") {
-                renderer.setTint(this.tint);
-            }
-
+            // apply the defined tint, if any
+            renderer.setTint(this.tint);
         },
 
         /**
@@ -696,9 +694,9 @@
             if (typeof this.mask !== "undefined") {
                 renderer.clearMask();
             }
-            if (typeof this.tint !== "undefined") {
-                renderer.clearTint();
-            }
+
+            // remove the previously applied tint
+            renderer.clearTint();
 
             // reset the dirty flag
             this.isDirty = false;
