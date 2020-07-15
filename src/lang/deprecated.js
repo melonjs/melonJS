@@ -359,3 +359,31 @@ Object.defineProperty(me.sys, "updatesPerSecond", {
     },
     configurable : false
 });
+
+/**
+ * Enable/disable frame interpolation
+ * @public
+ * @type {Boolean}
+ * @name interpolation
+ * @memberOf me.sys
+ * @deprecated since 8.0.0
+ * @see me.timer.interpolation
+ */
+Object.defineProperty(me.sys, "interpolation", {
+    /**
+     * @ignore
+     */
+    get : function () {
+        me.utils.deprecated("me.sys.interpolation", "me.timer.interpolation", "8.0.0");
+        return me.timer.interpolation;
+    },
+
+    /**
+     * @ignore
+     */
+    set : function (value) {
+        me.utils.deprecated("me.sys.interpolation", "me.timer.interpolation", "8.0.0");
+        me.timer.interpolation = value;
+    },
+    configurable : false
+});

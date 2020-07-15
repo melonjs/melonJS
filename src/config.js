@@ -15,14 +15,6 @@
      * @namespace
      */
     me.sys = {
-        /**
-         * Enable/disable frame interpolation
-         * @see me.timer.tick
-         * @type {Boolean}
-         * @default false
-         * @memberOf me.sys
-         */
-        interpolation : false,
 
         /**
          * Specify either to stop on audio loading error or not<br>

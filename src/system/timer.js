@@ -56,7 +56,7 @@
             }
 
             // get the game tick
-            api.tick = (delta > minstep && me.sys.interpolation) ? delta / step : 1;
+            api.tick = (delta > minstep && me.timer.interpolation) ? delta / step : 1;
 
             for (var i = 0, len = timers.length; i < len; i++) {
                 var _timer = timers[i];
@@ -82,10 +82,10 @@
          * Last game tick value.<br/>
          * Use this value to scale velocities during frame drops due to slow
          * hardware or when setting an FPS limit. (See {@link me.timer.maxfps})
-         * This feature is disabled by default. Enable me.sys.interpolation to
+         * This feature is disabled by default. Enable me.timer.interpolation to
          * use it.
          * @public
-         * @see me.sys.interpolation
+         * @see me.timer.interpolation
          * @type {Number}
          * @name tick
          * @memberOf me.timer
@@ -103,7 +103,7 @@
         api.fps = 0;
 
         /**
-         * Set the maximum target frame per second
+         * Set the maximum target display frame per second
          * @public
          * @see me.timer.tick
          * @type {Number}
@@ -112,6 +112,16 @@
          * @memberOf me.timer
          */
         api.maxfps = 60;
+
+        /**
+         * Enable/disable frame interpolation
+         * @see me.timer.tick
+         * @type {Boolean}
+         * @default false
+         * @name interpolation
+         * @memberOf me.timer
+         */
+        api.interpolation = false;
 
         /**
          * Last update time.<br/>

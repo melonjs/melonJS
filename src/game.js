@@ -208,10 +208,10 @@
                 accumulator += me.timer.getDelta();
                 accumulator = Math.min(accumulator, accumulatorMax);
 
-                updateDelta = (me.sys.interpolation) ? me.timer.getDelta() : stepSize;
-                accumulatorUpdateDelta = (me.sys.interpolation) ? updateDelta : Math.max(updateDelta, updateAverageDelta);
+                updateDelta = (me.timer.interpolation) ? me.timer.getDelta() : stepSize;
+                accumulatorUpdateDelta = (me.timer.interpolation) ? updateDelta : Math.max(updateDelta, updateAverageDelta);
 
-                while (accumulator >= accumulatorUpdateDelta || me.sys.interpolation) {
+                while (accumulator >= accumulatorUpdateDelta || me.timer.interpolation) {
                     lastUpdateStart = window.performance.now();
 
                     // update all objects (and pass the elapsed time since last frame)
@@ -221,7 +221,7 @@
                     updateAverageDelta = me.timer.lastUpdate - lastUpdateStart;
 
                     accumulator -= accumulatorUpdateDelta;
-                    if (me.sys.interpolation) {
+                    if (me.timer.interpolation) {
                         accumulator = 0;
                         break;
                     }
