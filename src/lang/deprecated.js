@@ -7,7 +7,7 @@
  * @see me.device.devicePixelRatio
  */
 me.device.getPixelRatio = function() {
-    console.log("me.device.getPixelRatio() is deprecated, please use me.device.devicePixelRatio");
+    console.warn("me.device.getPixelRatio() is deprecated, please use me.device.devicePixelRatio");
     return me.device.devicePixelRatio;
 };
 
@@ -28,7 +28,7 @@ me.Font = me.Text.extend({
         // super constructor
         this._super(me.Text, "init", [0, 0, settings]);
         // deprecation warning
-        console.log("me.Font is deprecated, please use me.Text");
+        console.warn("me.Font is deprecated, please use me.Text");
     },
 
     /** @ignore */
@@ -69,7 +69,7 @@ me.BitmapFont = me.BitmapText.extend({
         // super constructor
         this._super(me.BitmapText, "init", [0, 0, settings]);
         // deprecation warning
-        console.log("me.BitmapFont is deprecated, please use me.BitmapText");
+        console.warn("me.BitmapFont is deprecated, please use me.BitmapText");
     }
 });
 
@@ -84,7 +84,7 @@ me.ScreenObject = me.Stage.extend({
         // super constructor
         this._super(me.Stage, "init", settings);
         // deprecation warning
-        console.log("me.ScreenObject is deprecated, please use me.Stage");
+        console.warn("me.ScreenObject is deprecated, please use me.Stage");
     }
 });
 
@@ -94,7 +94,7 @@ me.ScreenObject = me.Stage.extend({
  * @see me.Renderer.stroke
  */
 me.Renderer.prototype.drawShape = function () {
-    console.log("drawShape() is deprecated, please use the stroke() or fill() function");
+    console.warn("drawShape() is deprecated, please use the stroke() or fill() function");
     me.Renderer.prototype.stroke.apply(this, arguments);
 };
 
@@ -115,7 +115,7 @@ me.WebGLRenderer.prototype.Texture = me.Renderer.prototype.Texture;
   * @see me.device.getElementBounds
   */
 me.video.getPos = function() {
-    console.log("me.video.getPos() is deprecated, please use me.device.getElementBounds(me.video.renderer.getScreenCanvas());");
+    console.warn("me.video.getPos() is deprecated, please use me.device.getElementBounds(me.video.renderer.getScreenCanvas());");
     return me.device.getElementBounds(me.video.renderer.getScreenCanvas());
 };
 
@@ -145,7 +145,7 @@ me.Error = me.Object.extend.bind(Error)({
  * @see me.utils.checkVersion
  */
 me.sys.checkVersion = function(first, second) {
-    console.log("me.sys.checkVersion() is deprecated, please use me.utils.checkVersion()");
+    console.warn("me.sys.checkVersion() is deprecated, please use me.utils.checkVersion()");
     return me.utils.checkVersion(first, second);
 };
 
@@ -162,7 +162,7 @@ Object.defineProperty(me.game, "HASH", {
      * @ignore
      */
     get : function () {
-        console.log("me.game.HASH is deprecated, please use me.utils.getUriFragment()");
+        console.warn("me.game.HASH is deprecated, please use me.utils.getUriFragment()");
         return me.utils.getUriFragment();
     },
     configurable : false
@@ -174,7 +174,7 @@ Object.defineProperty(me.game, "HASH", {
  * @see me.video.scale
  */
 me.video.updateDisplaySize = function(x, y) {
-    console.log("me.video.updateDisplaySize() is deprecated, please use me.video.scale()");
+    console.warn("me.video.updateDisplaySize() is deprecated, please use me.video.scale()");
     return me.video.scale(x, y);
 };
 
@@ -184,7 +184,7 @@ me.video.updateDisplaySize = function(x, y) {
  * @see me.video.scale
  */
 me.Renderer.prototype.scaleCanvas = function (x, y) {
-    console.log("scaleCanvas() is deprecated, please use me.video.scale()");
+    console.warn("scaleCanvas() is deprecated, please use me.video.scale()");
     return me.video.scale(x, y);
 };
 
@@ -194,7 +194,7 @@ me.Renderer.prototype.scaleCanvas = function (x, y) {
  * @see me.Renderable.distanceTo
 */
 me.Entity.prototype.distanceToPoint = function (v) {
-    console.log("distanceToPoint() is deprecated, please use me.Renderable.distanceTo()");
+    console.warn("distanceToPoint() is deprecated, please use me.Renderable.distanceTo()");
     return this.distanceTo(v);
 };
 
@@ -204,7 +204,7 @@ me.Entity.prototype.distanceToPoint = function (v) {
  * @see me.Renderable.angleTo
 */
 me.Entity.prototype.angleToPoint = function (v) {
-    console.log("angleToPoint() is deprecated, please use me.Renderable.angleTo()");
+    console.warn("angleToPoint() is deprecated, please use me.Renderable.angleTo()");
     return this.angleTo(v);
 };
 
@@ -221,7 +221,7 @@ Object.defineProperty(me.sys, "gravity", {
      * @ignore
      */
     get : function () {
-        console.log("me.sys.gravity is deprecated, please use me.game.world.gravity");
+        console.warn("me.sys.gravity is deprecated, please use me.game.world.gravity");
         return me.game.world ? me.game.world.gravity.y : undefined;
     },
 
@@ -229,7 +229,7 @@ Object.defineProperty(me.sys, "gravity", {
      * @ignore
      */
     set : function (value) {
-        console.log("me.sys.gravity is deprecated, please use me.game.world.gravity");
+        console.warn("me.sys.gravity is deprecated, please use me.game.world.gravity");
         if (me.game.world) me.game.world.gravity.y = value;
     },
     configurable : false
@@ -254,7 +254,7 @@ me.WebGLRenderer.Compositor = me.WebGLCompositor;
 me.WebGLRenderer.Compositor.prototype.drawTriangle = function (points, len, strip) {
     var gl = this.gl;
     this.drawVertices(strip === true ? gl.TRIANGLE_STRIP : gl.TRIANGLES, points, len);
-    console.log("drawTriangle is deprecated, please use drawVertices");
+    console.warn("drawTriangle is deprecated, please use drawVertices");
 };
 
 /**
@@ -271,7 +271,7 @@ me.WebGLRenderer.Compositor.prototype.drawTriangle = function (points, len, stri
 me.WebGLRenderer.Compositor.prototype.drawLine = function (points, len, open) {
     var gl = this.gl;
     this.drawVertices(open === true ? gl.LINE_STRIP : gl.LINE_LOOP, points, len);
-    console.log("drawLine is deprecated, please use drawVertices");
+    console.warn("drawLine is deprecated, please use drawVertices");
 };
 
 /**
@@ -287,7 +287,7 @@ Object.defineProperty(me.sys, "scale", {
      * @ignore
      */
     get : function () {
-        console.log("me.sys.scale is deprecated, please use me.video.scaleRatio");
+        console.warn("me.sys.scale is deprecated, please use me.video.scaleRatio");
         return me.video.scaleRatio;
     },
     configurable : false
@@ -299,6 +299,6 @@ Object.defineProperty(me.sys, "scale", {
  * @see me.video.getParent
  */
 me.video.getWrapper = function() {
-    console.log("me.video.getWrapper()is deprecated, please use me.device.getParent();");
+    console.warn("me.video.getWrapper()is deprecated, please use me.device.getParent();");
     return me.video.getParent();
 };
