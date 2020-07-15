@@ -24,7 +24,7 @@ var game = {
     onload: function() {
 
         // we don't need the default 60fps for a whack-a-mole !
-        me.sys.fps = 30;
+        me.timer.maxfps = 30;
 
         // Initialize the video.
         if (!me.video.init(1024, 768, {wrapper : "screen", scale : "auto"})) {

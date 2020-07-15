@@ -235,7 +235,7 @@
             this.isKinematic = false;
 
             // minimum melonJS version expected
-            this.version = "7.0.0";
+            this.version = "8.0.0";
 
             // to hold the debug options
             // clickable rect area
@@ -786,7 +786,7 @@
             this.font.draw(renderer, this.help_str, endX, 17 * this.mod);
 
             //fps counter
-            var fps_str = me.timer.fps + "/" + me.sys.fps + " fps";
+            var fps_str = me.timer.fps + "/" + me.timer.maxfps + " fps";
             this.font.draw(renderer, fps_str, endX, 2 * this.mod);
 
             renderer.restore();

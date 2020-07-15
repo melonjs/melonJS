@@ -302,3 +302,31 @@ me.video.getWrapper = function() {
     me.utils.deprecated("me.video.getWrapper()", "me.device.getParent()", "8.0.0");
     return me.video.getParent();
 };
+
+/**
+ * Set game FPS limiting
+ * @public
+ * @type {Number}
+ * @name fps
+ * @memberOf me.sys
+ * @deprecated since 8.0.0
+ * @see me.timer.maxfps
+ */
+Object.defineProperty(me.sys, "fps", {
+    /**
+     * @ignore
+     */
+    get : function () {
+        me.utils.deprecated("me.sys.fps", "me.timer.maxfps", "8.0.0");
+        return me.timer.maxfps;
+    },
+
+    /**
+     * @ignore
+     */
+    set : function (value) {
+        me.utils.deprecated("me.sys.fps", "me.timer.maxfps", "8.0.0");
+        me.timer.maxfps = value;
+    },
+    configurable : false
+});

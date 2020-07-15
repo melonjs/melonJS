@@ -128,7 +128,7 @@
             // set the PointerMove/touchMove/MouseMove event
             if (typeof(api.throttlingInterval) === "undefined") {
                 // set the default value
-                api.throttlingInterval = ~~(1000 / me.sys.fps);
+                api.throttlingInterval = ~~(1000 / me.timer.maxfps);
             }
 
             if (me.sys.autoFocus === true) {
@@ -496,7 +496,7 @@
 
     /**
      * time interval for event throttling in milliseconds<br>
-     * default value : "1000/me.sys.fps" ms<br>
+     * default value : "1000/me.timer.maxfps" ms<br>
      * set to 0 ms to disable the feature
      * @public
      * @type Number

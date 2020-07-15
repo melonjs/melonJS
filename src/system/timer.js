@@ -1,6 +1,6 @@
 (function () {
     /**
-     * a Timer object to manage time function (FPS, Game Tick, Time...)<p>
+     * a Timer object to manage timing related function (FPS, Game Tick, Time...)<p>
      * There is no constructor function for me.timer
      * @namespace me.timer
      * @memberOf me
@@ -21,9 +21,9 @@
         var last = 0;
         var now = 0;
         var delta = 0;
-        var step = Math.ceil(1000 / me.sys.fps); // ROUND IT ?
-        // define some step with some margin
-        var minstep = (1000 / me.sys.fps) * 1.25; // IS IT NECESSARY?\
+        // for timeout/interval update
+        var step =0;
+        var minstep = 0;
 
         // list of defined timer function
         var timers = [];
@@ -81,12 +81,12 @@
         /**
          * Last game tick value.<br/>
          * Use this value to scale velocities during frame drops due to slow
-         * hardware or when setting an FPS limit. (See {@link me.sys.fps})
+         * hardware or when setting an FPS limit. (See {@link me.timer.maxfps})
          * This feature is disabled by default. Enable me.sys.interpolation to
          * use it.
          * @public
          * @see me.sys.interpolation
-         * @type Number
+         * @type {Number}
          * @name tick
          * @memberOf me.timer
          */
@@ -94,14 +94,24 @@
 
         /**
          * Last measured fps rate.<br/>
-         * This feature is disabled by default. Load and enable the DebugPanel
-         * plugin to use it.
+         * This feature is disabled by default, unless the debugPanel is enabled/visible
          * @public
-         * @type Number
+         * @type {Number}
          * @name fps
          * @memberOf me.timer
          */
         api.fps = 0;
+
+        /**
+         * Set the maximum target frame per second
+         * @public
+         * @see me.timer.tick
+         * @type {Number}
+         * @name maxfps
+         * @default 60
+         * @memberOf me.timer
+         */
+        api.maxfps = 60;
 
         /**
          * Last update time.<br/>
@@ -141,6 +151,9 @@
             // reset delta counting variables
             framedelta = 0;
             framecount = 0;
+            step = Math.ceil(1000 / api.maxfps); // ROUND IT ?
+            // define some step with some margin
+            minstep = (1000 / api.maxfps) * 1.25; // IS IT NECESSARY?\
         };
 
         /**
@@ -236,7 +249,7 @@
         };
 
         /**
-         * Return elapsed time in milliseconds since the last update<br>
+         * Return elapsed time in milliseconds since the last update
          * @name getDelta
          * @memberOf me.timer
          * @return {Number}
@@ -257,7 +270,7 @@
             framecount++;
             framedelta += delta;
             if (framecount % 10 === 0) {
-                this.fps = me.Math.clamp(Math.round((1000 * framecount) / framedelta), 0, me.sys.fps);
+                api.fps = me.Math.clamp(Math.round((1000 * framecount) / framedelta), 0, api.maxfps);
                 framedelta = 0;
                 framecount = 0;
             }

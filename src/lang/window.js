@@ -40,7 +40,7 @@
         if (!requestAnimationFrame || !cancelAnimationFrame) {
             requestAnimationFrame = function (callback) {
                 var currTime = window.performance.now();
-                var timeToCall = Math.max(0, (1000 / me.sys.fps) - (currTime - lastTime));
+                var timeToCall = Math.max(0, (1000 / me.timer.maxfps) - (currTime - lastTime));
                 var id = window.setTimeout(function () {
                     callback(currTime + timeToCall);
                 }, timeToCall);

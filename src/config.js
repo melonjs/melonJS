@@ -15,14 +15,6 @@
      * @namespace
      */
     me.sys = {
-        /**
-         * Set game FPS limiting
-         * @see me.timer.tick
-         * @type {Number}
-         * @default 60
-         * @memberOf me.sys
-         */
-        fps : 60,
 
         /**
          * Rate at which the game updates;<br>

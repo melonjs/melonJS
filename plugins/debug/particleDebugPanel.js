@@ -24,7 +24,7 @@
             this._super(me.Renderable, "init", [ 0, me.video.renderer.getHeight() - 60, 200, 60 ]);
 
             // minimum melonJS version expected
-            this.version = "6.0.0";
+            this.version = "8.0.0";
 
             // to hold the debug options
             // clickable rect area
@@ -175,7 +175,7 @@
             }
 
             var maxTime = 60, scale = height / maxTime, len = updateTimeSamples.length;
-            var frameTimeLimit = 1000 / me.sys.fps, where = height - frameTimeLimit * scale;
+            var frameTimeLimit = 1000 / me.timer.maxfps, where = height - frameTimeLimit * scale;
 
             renderer.setColor("#80808080");
             renderer.strokeLine(0, where, width, where);
