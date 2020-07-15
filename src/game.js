@@ -145,7 +145,7 @@
          * @public
          * @function
          * @see me.timer.maxfps
-         * @see me.sys.updatesPerSecond
+         * @see me.game.world.fps
          */
         api.updateFrameRate = function () {
             // reset the frame counter
@@ -153,13 +153,13 @@
             frameRate = ~~(0.5 + 60 / me.timer.maxfps);
 
             // set step size based on the updatesPerSecond
-            stepSize = (1000 / me.sys.updatesPerSecond);
+            stepSize = (1000 / api.world.fps);
             accumulator = 0.0;
             accumulatorMax = stepSize * 10;
 
             // display should always re-draw when update speed doesn't match fps
             // this means the user intends to write position prediction drawing logic
-            isAlwaysDirty = (me.timer.maxfps > me.sys.updatesPerSecond);
+            isAlwaysDirty = (me.timer.maxfps > api.world.fps);
         };
 
         /**

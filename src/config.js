@@ -15,17 +15,6 @@
      * @namespace
      */
     me.sys = {
-
-        /**
-         * Rate at which the game updates;<br>
-         * may be greater than or lower than the fps
-         * @see me.timer.tick
-         * @type {Number}
-         * @default 60
-         * @memberOf me.sys
-         */
-        updatesPerSecond : 60,
-
         /**
          * Enable/disable frame interpolation
          * @see me.timer.tick

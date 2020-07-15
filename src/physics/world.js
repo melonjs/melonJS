@@ -31,6 +31,18 @@
             this.anchorPoint.set(0, 0);
 
             /**
+             * the rate at which the game world is updated,
+             * may be greater than or lower than the display fps
+             * @public
+             * @type me.Vector2d
+             * @default 60
+             * @name fps
+             * @memberOf me.World
+             * @see me.timer.maxfps
+             */
+            this.fps = 60;
+
+            /**
              * world gravity
              * @public
              * @type me.Vector2d

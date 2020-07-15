@@ -330,3 +330,32 @@ Object.defineProperty(me.sys, "fps", {
     },
     configurable : false
 });
+
+/**
+ * Rate at which the game physic updates;
+ * may be greater than or lower than the display fps
+ * @public
+ * @type {Number}
+ * @name updatesPerSecond
+ * @memberOf me.sys
+ * @deprecated since 8.0.0
+ * @see me.World.fps
+ */
+Object.defineProperty(me.sys, "updatesPerSecond", {
+    /**
+     * @ignore
+     */
+    get : function () {
+        me.utils.deprecated("me.sys.updatesPerSecond", "me.game.world.fps", "8.0.0");
+        return me.game.world.fps;
+    },
+
+    /**
+     * @ignore
+     */
+    set : function (value) {
+        me.utils.deprecated("me.sys.updatesPerSecond", "me.game.world.fps", "8.0.0");
+        me.game.world.fps = value;
+    },
+    configurable : false
+});
