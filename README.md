@@ -59,7 +59,7 @@ and currently features :
 - Built-in support for 3rd party Application Wrappers such as [Cordova](https://cordova.apache.org)
 - Asynchronous publish/subscribe pattern messaging support (minPubSub)
 - A fully customizable preloader
-- As light as [~70kb](https://bundlephobia.com/result?p=melonjs@7.1.1) minified & gzipped 
+- As light as [~70kb](https://bundlephobia.com/result?p=melonjs@7.1.1) minified & gzipped
 
 Using melonJS
 -------------------------------------------------------------------------------
@@ -69,7 +69,7 @@ Basic Example
 ```JavaScript
 me.device.onReady(function () {
     // initialize the display canvas once the device/browser is ready
-    if (!me.video.init(1218, 562, {wrapper : "screen", scale : "auto"})) {
+    if (!me.video.init(1218, 562, {parent : "screen", scale : "auto"})) {
         alert("Your browser does not support HTML5 canvas.");
         return;
     }

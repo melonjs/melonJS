@@ -16,7 +16,7 @@
             // upon device ready
             me.device.onReady(function () {
                 // Initialize the video.
-                if (!me.video.init(1218, 562, {wrapper : "screen", scale : "auto"})) {
+                if (!me.video.init(1218, 562, {parent : "screen", scale : "auto"})) {
                     alert("Your browser does not support HTML5 canvas.");
                     return;
                 }
