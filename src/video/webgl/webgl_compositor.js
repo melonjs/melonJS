@@ -1,3 +1,8 @@
+import primitiveVertex from "./shaders/primitive.vert";
+import primitiveFragment from "./shaders/primitive.frag";
+import quadVertex from "./shaders/quad.vert";
+import quadFragment from "./shaders/quad.frag";
+
 (function () {
 
     // Handy constants
@@ -96,8 +101,8 @@
             this.attributes = [];
 
             // Load and create shader programs
-            this.primitiveShader = new me.PrimitiveGLShader(this.gl);
-            this.quadShader = new me.QuadGLShader(this.gl);
+            this.primitiveShader = new me.GLShader(this.gl, primitiveVertex, primitiveFragment);
+            this.quadShader = new me.GLShader(this.gl, quadVertex, quadFragment);
 
             /// define all vertex attributes
             this.addAttribute("aVertex", 2, gl.FLOAT, false, 0 * Float32Array.BYTES_PER_ELEMENT); // 0
