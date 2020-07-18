@@ -213,11 +213,20 @@
          */
         createFontTexture : function (cache) {
             if (typeof this.fontTexture === "undefined") {
-                var image = me.video.createCanvas(
-                    me.Math.nextPowerOfTwo(this.backBufferCanvas.width),
-                    me.Math.nextPowerOfTwo(this.backBufferCanvas.height),
-                    true
-                );
+                var canvas = this.backBufferCanvas;
+                var width = canvas.width;
+                var height = canvas.height;
+
+                if (this.WebGLVersion === 1) {
+                    if (!me.Math.isPowerOfTwo(width)) {
+                        width = me.Math.nextPowerOfTwo(canvas.width);
+                    }
+                    if (!me.Math.isPowerOfTwo(height)) {
+                        height = me.Math.nextPowerOfTwo(canvas.height);
+                    }
+                }
+
+                var image = me.video.createCanvas(width, height, true);
 
                 /**
                  * @ignore
@@ -230,7 +239,7 @@
                 this.fontTexture = new this.Texture(
                     this.Texture.prototype.createAtlas.apply(
                         this.Texture.prototype,
-                        [ this.backBufferCanvas.width, this.backBufferCanvas.height, "fontTexture"]
+                        [ canvas.width, canvas.height, "fontTexture"]
                     ),
                     image,
                     cache
