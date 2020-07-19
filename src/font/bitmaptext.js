@@ -38,6 +38,7 @@
      * @param {String|Image} settings.font a font name to identify the corresponing source image
      * @param {String} [settings.fontData=settings.font] the bitmap font data corresponding name, or the bitmap font data itself
      * @param {Number} [settings.size] size a scaling ratio
+     * @param {me.Color|String} [settings.fillStyle] a CSS color value used to tint the bitmapText (@see me.BitmapText.tint)
      * @param {Number} [settings.lineWidth=1] line width, in pixels, when drawing stroke
      * @param {String} [settings.textAlign="left"] horizontal text alignment
      * @param {String} [settings.textBaseline="top"] the text baseline
@@ -132,6 +133,16 @@
             // resize if necessary
             if (typeof settings.size === "number" && settings.size !== 1.0) {
                 this.resize(settings.size);
+            }
+
+            // apply given fillstyle to the the renderable tint color
+            if (typeof settings.fillStyle !== "undefined") {
+                if (settings.fillStyle instanceof me.Color) {
+                    this.tint.setColor(settings.fillStyle);
+                } else {
+                    // string (#RGB, #ARGB, #RRGGBB, #AARRGGBB)
+                    this.tint.parseCSS(settings.fillStyle);
+                }
             }
 
             // update anchorPoint if provided
@@ -355,7 +366,7 @@
                 renderer.setGlobalAlpha(_alpha);
             }
 
-            // clear the dirty flag here for 
+            // clear the dirty flag here for
             // backward compatibility
             this.isDirty = false;
         },
