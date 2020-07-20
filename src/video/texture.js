@@ -415,9 +415,9 @@
          * ...
          * ...
          * // add the coin sprite as renderable for the entity
-         * this.renderable = game.texture.createSpriteFromName("coin.png");
+         * var sprite = game.texture.createSpriteFromName("coin.png");
          * // set the renderable position to bottom center
-         * this.anchorPoint.set(0.5, 1.0);
+         * sprite.anchorPoint.set(0.5, 1.0);
          */
         createSpriteFromName : function (name, settings) {
             // instantiate a new sprite object
@@ -448,7 +448,7 @@
          * );
          *
          * // create a new Sprite as renderable for the entity
-         * this.renderable = game.texture.createAnimationFromName([
+         * var sprite = game.texture.createAnimationFromName([
          *     "walk0001.png", "walk0002.png", "walk0003.png",
          *     "walk0004.png", "walk0005.png", "walk0006.png",
          *     "walk0007.png", "walk0008.png", "walk0009.png",
@@ -456,13 +456,13 @@
          * ]);
          *
          * // define an additional basic walking animation
-         * this.renderable.addAnimation ("simple_walk", [0,2,1]);
+         * sprite.addAnimation ("simple_walk", [0,2,1]);
          * // you can also use frame name to define your animation
-         * this.renderable.addAnimation ("speed_walk", ["walk0007.png", "walk0008.png", "walk0009.png", "walk0010.png"]);
+         * sprite.addAnimation ("speed_walk", ["walk0007.png", "walk0008.png", "walk0009.png", "walk0010.png"]);
          * // set the default animation
-         * this.renderable.setCurrentAnimation("simple_walk");
+         * sprite.setCurrentAnimation("simple_walk");
          * // set the renderable position to bottom center
-         * this.anchorPoint.set(0.5, 1.0);
+         * sprite.anchorPoint.set(0.5, 1.0);
          */
         createAnimationFromName : function (names, settings) {
             var tpAtlas = [], indices = {};

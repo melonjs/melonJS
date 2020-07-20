@@ -185,20 +185,13 @@
              * // enable "automatic" transformation when the object is activated
              * onActivateEvent: function () {
              *     // reset the transformation matrix
-             *     this.renderable.currentTransform.identity();
+             *     this.currentTransform.identity();
              *     // ensure the anchor point is the renderable center
-             *     this.renderable.anchorPoint.set(0.5, 0.5);
+             *     this.anchorPoint.set(0.5, 0.5);
              *     // enable auto transform
-             *     this.renderable.autoTransform = true;
+             *     this.autoTransform = true;
              *     ....
-             * },
-             * // add a rotation effect when updating the entity
-             * update : function (dt) {
-             *     ....
-             *     this.renderable.currentTransform.rotate(0.025);
-             *     ....
-             *     return this._super(me.Entity, 'update', [dt]);
-             * },
+             * }
              */
             this.autoTransform = true;
 
@@ -271,9 +264,9 @@
              * @memberOf me.Renderable#
              * @example
              * // add a red tint to this renderable
-             * this.renderable.tint.setColor(255, 128, 128);
+             * this.tint.setColor(255, 128, 128);
              * // remove the tint
-             * this.renderable.tint.setColor(255, 255, 255);
+             * this.tint.setColor(255, 255, 255);
              */
             this.tint = me.pool.pull("me.Color", 255, 255, 255, 1.0);
 
