@@ -20,13 +20,9 @@ beforeAll(function (done) {
     me.boot();
 
     // Initialize video
-    if (!me.video.init(1024, 768, {parent: "screen", renderer : me.video.CANVAS})) {
+    if (!me.video.init(1024, 768, {parent: "screen"})) {
         throw "me.video.init failed";
     }
-
-    // dummy stage
-    me.state.set(me.state.PLAY, new me.Stage());
-    me.state.change(me.state.PLAY);
 
     // Hide the screen
     var scr = document.querySelector("#screen");
