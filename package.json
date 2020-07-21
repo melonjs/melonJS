@@ -3,6 +3,24 @@
   "version": "8.0.0",
   "description": "melonJS Game Engine",
   "homepage": "http://www.melonjs.org/",
+  "keywords": [
+    "2D",
+    "HTML5",
+    "javascript",
+    "Canvas",
+    "WebGL",
+    "WebGL2",
+    "WebAudio",
+    "game",
+    "engine",
+    "tiled",
+    "tileset",
+    "mapeditor",
+    "browser",
+    "electron",
+    "mobile",
+    "cordova"
+],
   "repository": {
     "type": "git",
     "url": "https://github.com/melonjs/melonJS.git"

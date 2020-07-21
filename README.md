@@ -59,7 +59,7 @@ and currently features :
 - Built-in support for 3rd party Application Wrappers such as [Cordova](https://cordova.apache.org)
 - Asynchronous publish/subscribe pattern messaging support (minPubSub)
 - A fully customizable preloader
-- As light as [~70kb](https://bundlephobia.com/result?p=melonjs@7.1.1) minified & gzipped
+- As light as [~70kb](https://bundlephobia.com/result?p=melonjs@latest) minified & gzipped
 
 Using melonJS
 -------------------------------------------------------------------------------
@@ -116,15 +116,15 @@ Alternatively, the latest version of melonJS can be installed through [NPM](http
 Or can simply be added to your html, through a content delivery network (CDN) URL, using for example :
 
 ```html
-<script src="https://cdn.jsdelivr.net/npm/melonjs@7/dist/melonjs.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/melonjs@latest/dist/melonjs.js"></script>
 ```
 or the following for the minified version :
 ```html
-<script src="https://cdn.jsdelivr.net/npm/melonjs@7/dist/melonjs.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/melonjs@latest/dist/melonjs.min.js"></script>
 ```
 and of course the debug panel :
 ```html
-<script src="https://cdn.jsdelivr.net/npm/melonjs@7/plugins/debug/debugPanel.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/melonjs@latest/plugins/debug/debugPanel.js"></script>
 ```
 
 > Note: "official" CDN and NPM install are only available from version 7.0.0 and onwards.
