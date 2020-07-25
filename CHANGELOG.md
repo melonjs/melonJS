@@ -20,7 +20,7 @@
 - Renderable : new isFlippedX & isFlippedY getter to check the current renderable "flip" state
 - Renderable : fix implementation and usage of the isDirty flag across Renderables
 - Renderable : fix a regression with transformation when a renderable is directly added to a me.Container object
-- Renderable : apply a tint color to BitmapText if a `fillStyle` is specified in the constructor (WebGL mode only)
+- Renderable : apply a tint color to BitmapText if a `fillStyle` is specified in the constructor
 - Renderer : new optional parameter for createCanvas() to request an OffScreenCanvas if supported by the browser
 - Renderer : use OffscreenCanvas by default for all secondary canvas (e.g. debugPanel, double buffering, font texture in WebGL)
 - Renderer : properly fallback to the Canvas Renderer including when the WebGL renderer is not able to compile the built-in shaders
@@ -29,6 +29,7 @@
 - Renderer : enable use of NPOT textures when in WebGL2 mode for texture mapping and pattern drawing
 - Renderer : allow specifying the default `powerPreference` value for the WebGL Renderer (on Safari and Chrome 80+ default is now `low-power`)
 - Renderer : display GPU information in the console when available (WebGL)
+- Renderer : implemented sprite tint support for the Canvas Renderer
 - Shapes : vectors and shapes can now be rotated around a given (optional) point instead of the default origin point
 - Shapes : added a center vector property for me.Rect, giving the center point of the rectangle
 - TMX : fix parsing of tileset image when the "last" tile spacing was truncated

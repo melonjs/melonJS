@@ -10,6 +10,7 @@
          */
         init : function (max_size) {
             this.cache = new Map();
+            this.tinted = new Map();
             this.units = new Map();
             this.max_size = max_size || Infinity;
             this.clear();
@@ -20,6 +21,7 @@
          */
         clear : function () {
             this.cache.clear();
+            this.tinted.clear();
             this.units.clear();
             this.length = 0;
         },
@@ -51,6 +53,24 @@
                 this.set(image, new me.video.renderer.Texture(atlas, image, false));
             }
             return this.cache.get(image);
+        },
+
+        /**
+         * @ignore
+         */
+        tint : function (src, color) {
+            // make sure the src is in the cache
+            var image_cache = this.tinted.get(src);
+
+            if (image_cache === undefined) {
+                image_cache = this.tinted.set(src, new Map());
+            }
+
+            if (!image_cache.has(color)) {
+                image_cache.set(color, me.video.renderer.tint(src, color, "multiply"));
+            }
+
+            return image_cache.get(color);
         },
 
         /**

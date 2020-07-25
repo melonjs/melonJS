@@ -349,6 +349,35 @@
         },
 
         /**
+         * tint the given image or canvas using the given color
+         * @name tint
+         * @memberOf me.Renderer.prototype
+         * @function
+         * @param {HTMLImageElement|HTMLCanvasElement|OffscreenCanvas} image the source image to be tinted
+         * @param {me.Color|String} color the color that will be used to tint the image
+         * @param {String} [mode="multiply"] the composition mode used to tint the image
+         * @return {HTMLCanvasElement|OffscreenCanvas} a new canvas element representing the tinted image
+         */
+        tint : function (src, color, mode) {
+            var canvas = me.video.createCanvas(src.width, src.height, true);
+            var context = this.getContext2d(canvas);
+
+            context.save();
+
+            context.fillStyle = color instanceof me.Color ? color.toRGB() : color;
+            context.fillRect(0, 0, src.width, src.height);
+
+            context.globalCompositeOperation = mode || "multiply";
+            context.drawImage(src, 0, 0);
+            context.globalCompositeOperation = "destination-atop";
+            context.drawImage(src, 0, 0);
+
+            context.restore();
+
+            return canvas;
+        },
+
+        /**
          * fill the given shape
          * @name fill
          * @memberOf me.Renderer.prototype
@@ -380,7 +409,7 @@
         clearMask : function() {},
 
         /**
-         * set a rendering tint (WebGL only) for sprite based renderables.
+         * set a coloring tint for sprite based renderables
          * @name setTint
          * @memberOf me.Renderer.prototype
          * @function

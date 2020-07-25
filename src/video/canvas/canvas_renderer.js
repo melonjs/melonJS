@@ -232,7 +232,14 @@
                 dy = ~~dy;
             }
 
-            this.backBufferContext2D.drawImage(image, sx, sy, sw, sh, dx, dy, dw, dh);
+            // apply a tint if required
+            var source = image;
+            var tint = this.currentTint.toArray();
+            if (tint[0] !== 1.0 || tint[1] !== 1.0 || tint[2] !== 1.0) {
+                // get a tinted version of this image from the texture cache
+                source = this.cache.tint(image, this.currentTint.toRGB());
+            }
+            this.backBufferContext2D.drawImage(source, sx, sy, sw, sh, dx, dy, dw, dh);
         },
 
         /**
