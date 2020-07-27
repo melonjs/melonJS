@@ -28,11 +28,11 @@ game.HUD.UIContainer = me.Container.extend({
         this.addChild(new game.HUD.ScoreItem(-10, -10));
 
         // add our audio control object
-        this.addChild(new game.HUD.AudioControl(10, 10));
+        this.addChild(new game.HUD.AudioControl(36, 56));
 
         if (!me.device.isMobile) {
             // add our fullscreen control object
-            this.addChild(new game.HUD.FSControl(10 + 48 + 10, 10));
+            this.addChild(new game.HUD.FSControl(36 + 10 + 48, 56));
         }
     }
 });
@@ -50,7 +50,6 @@ game.HUD.FSControl = me.GUI_Object.extend({
             region : "shadedDark30.png"
         } ]);
         this.setOpacity(0.5);
-        this.anchorPoint.set(0, 0);
     },
 
     /**
@@ -92,7 +91,6 @@ game.HUD.AudioControl = me.GUI_Object.extend({
             image: game.texture,
             region : "shadedDark13.png" // ON by default
         } ]);
-        this.anchorPoint.set(0, 0);
         this.setOpacity(0.5);
         this.isMute = false;
     },
@@ -156,15 +154,17 @@ game.HUD.ScoreItem = me.Renderable.extend({
 
         // local copy of the global score
         this.score = -1;
+
+        // recalculate the object position if the canvas is resize
+        me.event.subscribe(me.event.CANVAS_ONRESIZE, (function(w, h){
+            this.pos.set(w, h, 0).add(this.relative);
+        }).bind(this));
     },
 
     /**
      * update function
      */
     update : function (/*dt*/) {
-        this.pos.x = me.game.viewport.width + this.relative.x;
-        this.pos.y = me.game.viewport.height + this.relative.y;
-
         // we don't draw anything fancy here, so just
         // return true if the score has been updated
         if (this.score !== game.data.score) {

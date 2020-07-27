@@ -7,7 +7,7 @@ var game = {
      onload: function() {
 
         // Initialize the video.
-        if (!me.video.init(640, 480, {wrapper : "screen", scale : "auto"})) {
+        if (!me.video.init(640, 480, {parent : "screen", scale : "auto", preferWebGL1 : false})) {
             alert("Your browser does not support HTML5 canvas.");
             return;
         }
@@ -32,8 +32,6 @@ var game = {
         var PlayScreen = me.Stage.extend({
             // on reset event function
             onResetEvent : function() {
-                // black background
-                me.game.world.addChild(new me.ColorLayer("background", "#202020"), 0);
                 // the font stuff
                 me.game.world.addChild(new FontTest(), 1);
             }
@@ -70,13 +68,11 @@ var FontTest = me.Renderable.extend ({
             .yoyo(true)
             .start();
 
-        // arial font
-        this.font = new me.Font("Arial", 8, this.color);
+        // text font
+        this.font = new me.Text(0, 0, {font: "Arial", size: 8, fillStyle: this.color});
         // bitmap font
-        this.bFont = new me.BitmapFont(me.loader.getBinary('xolo12'), me.loader.getImage('xolo12'));
-        this.name = "FontTest";
-
-        this.fancyBFont = new me.BitmapFont(me.loader.getBinary('arialfancy'), me.loader.getImage('arialfancy'));
+        this.bFont = new me.BitmapText(0, 0, {font: "xolo12"});
+        this.fancyBFont = new me.BitmapText(0, 0, {font: "arialfancy"});
     },
 
     // draw function
@@ -86,6 +82,9 @@ var FontTest = me.Renderable.extend ({
         var baseline = 0;
         var xPos = 0;
         var yPos = 0;
+
+        // black background
+        renderer.clearColor("#202020");
 
         // font size test
         this.font.textAlign = "left";
@@ -100,6 +99,8 @@ var FontTest = me.Renderable.extend ({
         this.font.setFont("Arial", 48, this.color);
         this.font.strokeStyle.parseCSS("red");
         this.font.lineWidth = 3;
+        this.font.draw(renderer, "Arial Text " + i + "px !" , 5 , yPos );
+        this.font.lineWidth = 1;
         this.font.drawStroke(renderer, "Arial Text " + i + "px !" , 5 , yPos );
 
         // bFont size test
@@ -150,23 +151,24 @@ var FontTest = me.Renderable.extend ({
         this.font.textAlign = "center";
         this.font.lineHeight = 1.1;
         this.font.draw(renderer, text, 90, 210);
-        this.font.lineHeight = 1.1;
+
 
         text = "this is another font test \nwith right alignment\nand it still works!";
         this.font.textAlign = "right";
+        this.font.lineHeight = 1.1;
         this.font.draw(renderer, text, 200, 300);
 
         // bitmapfonts
         // bFont  test
         this.fancyBFont.textAlign = "right";
-        text = "ANOTHER FANCY MULTILINE\n BITMAP FONT WITH MELONJS\nAND IT STILL WORKS";
+        text = ["ANOTHER FANCY MULTILINE", "BITMAP FONT USING AN ARRAY", "AND IT STILL WORKS"];
         this.fancyBFont.lineHeight = 1.2;
         this.fancyBFont.resize(1.5);
         this.fancyBFont.draw(renderer, text, 640, 230);
         this.fancyBFont.lineHeight = 1.0;
 
         this.bFont.textAlign = "center";
-        var text = "THIS IS A MULTILINE\n BITMAP FONT WITH MELONJS\nAND IT WORKS";
+        text = "THIS IS A MULTILINE\n BITMAP FONT WITH MELONJS\nAND IT WORKS";
         this.bFont.resize(2.5);
         this.bFont.draw(renderer, text,  me.video.renderer.getWidth() / 2, 400);
 
@@ -200,11 +202,6 @@ var FontTest = me.Renderable.extend ({
         this.bFont.textBaseline = "top";
         this.fancyBFont.textAlign = "left";
         this.fancyBFont.textBaseline = "top";
-    },
-
-    drawBitmapFont: function (renderer, font, yOffset, baselines, scale) {
-        // bFont  test
-
     },
 
     onDeactivateEvent: function() {

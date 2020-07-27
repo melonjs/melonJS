@@ -1,8 +1,26 @@
 {
   "name": "melonjs",
-  "version": "7.0.0",
+  "version": "8.0.0",
   "description": "melonJS Game Engine",
   "homepage": "http://www.melonjs.org/",
+  "keywords": [
+    "2D",
+    "HTML5",
+    "javascript",
+    "Canvas",
+    "WebGL",
+    "WebGL2",
+    "WebAudio",
+    "game",
+    "engine",
+    "tiled",
+    "tileset",
+    "mapeditor",
+    "browser",
+    "electron",
+    "mobile",
+    "cordova"
+  ],
   "repository": {
     "type": "git",
     "url": "https://github.com/melonjs/melonJS.git"
@@ -30,33 +48,34 @@
     "CHANGELOG"
   ],
   "dependencies": {
-    "earcut": "^2.1.5",
-    "howler": "^2.1.1",
-    "jay-extend": "^1.0.1",
+    "earcut": "2.2.2",
+    "howler": "^2.2.0",
+    "jay-extend": "1.0.1",
     "minpubsub": "0.0.2"
   },
   "devDependencies": {
-    "@babel/core": "^7.3.4",
-    "@babel/preset-env": "^7.3.4",
-    "cheerio": "^1.0.0-rc.2",
-    "eslint": "^5.15.0",
+    "@babel/core": "^7.10.5",
+    "@babel/preset-env": "^7.10.4",
+    "cheerio": "^1.0.0-rc.3",
+    "eslint": "^7.5.0",
     "ghpages": "0.0.10",
-    "jasmine-core": "~2.5.2",
-    "jsdoc": "^3.5.5",
-    "karma": "^4.0.1",
-    "karma-chrome-launcher": "2.2.0",
-    "karma-coverage": "^1.1.2",
-    "karma-html-detailed-reporter": "^1.1.38",
-    "karma-jasmine": "^1.1.1",
+    "jasmine-core": "^3.6.0",
+    "jsdoc": "^3.6.5",
+    "karma": "^5.0.9",
+    "karma-chrome-launcher": "^3.1.0",
+    "karma-coverage": "^2.0.3",
+    "karma-html-detailed-reporter": "^2.1.0",
+    "karma-jasmine": "^3.1.1",
     "karma-nyan-reporter": "0.2.5",
-    "rollup": "^1.4.0",
-    "rollup-plugin-babel": "^4.3.2",
+    "rollup": "^2.23.0",
+    "rollup-plugin-babel": "^4.4.0",
     "rollup-plugin-bundle-size": "^1.0.3",
-    "rollup-plugin-commonjs": "^9.2.1",
+    "rollup-plugin-commonjs": "^10.1.0",
     "rollup-plugin-multi-entry": "^2.1.0",
-    "rollup-plugin-node-resolve": "^4.0.1",
-    "rollup-plugin-replace": "^2.1.0",
-    "terser": "^3.16.1"
+    "rollup-plugin-node-resolve": "^5.2.0",
+    "rollup-plugin-replace": "^2.2.0",
+    "rollup-plugin-string": "^3.0.0",
+    "terser": "^4.7.0"
   },
   "scripts": {
     "build": "npm run lint && rollup -c --silent --sourcemap",
@@ -65,7 +84,7 @@
     "lint": "eslint --config .eslintrc.json src",
     "test": "npm run build && karma start",
     "doc": "mkdirp docs && jsdoc -c jsdoc_conf.json",
-    "publishdoc": "ghpages melonjs/melonJS -p docs",
-    "release": "npm run dist && npm run doc && npm run publishdoc"
+    "publishdoc": "npm run doc && ghpages melonjs/melonJS -p docs",
+    "release": "npm run dist && npm publish --access public && npm run publishdoc"
   }
 }

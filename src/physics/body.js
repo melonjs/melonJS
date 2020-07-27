@@ -8,14 +8,12 @@
      to calcuate a new velocity and 2) the parent position is updated by adding this to the parent.pos (position me.Vector2d)
      value. Thus Affecting the movement of the parent.  Look at the source code for /src/physics/body.js:update (me.Body.update) for
      a better understanding.
-
-
      * @class
      * @extends me.Rect
      * @memberOf me
      * @constructor
      * @param {me.Renderable} ancestor the parent object this body is attached to
-     * @param {me.Rect[]|me.Polygon[]|me.Line[]|me.Ellipse[]} [shapes] the initial list of shapes
+     * @param {me.Rect|me.Rect[]|me.Polygon|me.Polygon[]|me.Line|me.Line[]|me.Ellipse|me.Ellipse[]} [shapes] the initial shape or list of shapes
      * @param {Function} [onBodyUpdate] callback for when the body is updated (e.g. add/remove shapes)
      */
     me.Body = me.Rect.extend({
@@ -186,21 +184,51 @@
             /**
              * Default gravity value for this body.
              * To be set to to < 0, 0 > for RPG, shooter, etc...<br>
-             * Note: y axis gravity can also globally be defined through me.sys.gravity
              * @public
-             * @see me.sys.gravity
+             * @see me.Body.gravityScale
              * @type me.Vector2d
              * @default <0,0.98>
-             * @default
+             * @deprecated since 8.0.0
              * @name gravity
              * @memberOf me.Body
              */
             if (typeof(this.gravity) === "undefined") {
-                this.gravity = new me.Vector2d();
+                var self = this;
+                this.gravity = new me.ObservableVector2d(0, 0, { onUpdate : function(x, y) {
+                    // disable gravity or apply a scale if y gravity is different from 0
+                    if (typeof y === "number") {
+                        self.gravityScale = y / me.game.world.gravity.y;
+                    }
+                    // deprecation // WARNING:
+                    console.log(
+                        "me.Body.gravity is deprecated, " +
+                        "please see me.Body.gravityScale " +
+                        "to modify gravity for a specific body"
+                    );
+                }});
             }
-            this.gravity.set(
-                0, typeof(me.sys.gravity) === "number" ? me.sys.gravity : 0.98
-            );
+
+            /**
+             * The degree to which this body is affected by the world gravity
+             * @public
+             * @see me.World.gravity
+             * @type Number
+             * @default 1.0
+             * @name gravityScale
+             * @memberOf me.Body
+             */
+            this.gravityScale = 1.0;
+
+            /**
+             * If true this body won't be affected by the world gravity
+             * @public
+             * @see me.World.gravity
+             * @type Boolean
+             * @default false
+             * @name ignoreGravity
+             * @memberOf me.Body
+             */
+            this.ignoreGravity = false;
 
             /**
              * falling state of the body<br>
@@ -243,12 +271,19 @@
             }
 
             // parses the given shapes array and add them
-            if (Array.isArray(shapes)) {
-                for (var s = 0; s < shapes.length; s++) {
-                    this.addShape(shapes[s], true);
+            if (typeof shapes !== "undefined") {
+                if (Array.isArray(shapes)) {
+                    for (var s = 0; s < shapes.length; s++) {
+                        this.addShape(shapes[s], true);
+                    }
+                    this.updateBounds();
+                } else {
+                    this.addShape(shapes);
                 }
-                this.updateBounds();
             }
+
+            // automatically enable physic when a body is added to a renderable
+            this.ancestor.isKinematic = false;
         },
 
         /**
@@ -304,7 +339,7 @@
                 data = json[id];
 
                 if (typeof(data) === "undefined") {
-                    throw new me.Body.Error("Identifier (" + id + ") undefined for the given PhysicsEditor JSON object)");
+                    throw new Error("Identifier (" + id + ") undefined for the given PhysicsEditor JSON object)");
                 }
 
                 if (data.length) {
@@ -332,7 +367,7 @@
                 });
 
                 if (typeof(data) === "undefined") {
-                    throw new me.Body.Error("Identifier (" + id + ") undefined for the given PhysicsEditor JSON object)");
+                    throw new Error("Identifier (" + id + ") undefined for the given PhysicsEditor JSON object)");
                 }
 
                 // shapes origin point
@@ -464,7 +499,7 @@
                 }
 
                 // cancel the falling an jumping flags if necessary
-                var dir = Math.sign(this.gravity.y) || 1;
+                var dir = Math.sign(me.game.world.gravity.y * this.gravityScale) || 1;
                 this.falling = overlap.y >= dir;
                 this.jumping = overlap.y <= -dir;
             }
@@ -490,10 +525,34 @@
                 }
             }
 
+            this._super(me.Rect, "updateBounds");
+
             // trigger the onBodyChange
             if (typeof this.onBodyUpdate === "function") {
                 this.onBodyUpdate(this);
             }
+
+            return this;
+        },
+
+        /**
+         * Rotate this body (counter-clockwise) by the specified angle (in radians).
+         * Unless specified the body will be rotated around its center point
+         * @name rotate
+         * @memberOf me.Body
+         * @function
+         * @param {Number} angle The angle to rotate (in radians)
+         * @param {me.Vector2d|me.ObservableVector2d} [v] an optional point to rotate around
+         * @return {me.Body} Reference to this object for method chaining
+         */
+        rotate : function (angle, v) {
+            v = v || this.center;
+
+            for (var i = 0; i < this.shapes.length; i++) {
+                this.shapes[i].rotate(angle, v);
+            }
+
+            this.updateBounds();
 
             return this;
         },
@@ -576,6 +635,7 @@
          */
         computeVelocity : function (vel) {
 
+
             // apply fore if defined
             if (this.force.x) {
                 vel.x += this.force.x * me.timer.tick;
@@ -589,14 +649,13 @@
                 this.applyFriction(vel);
             }
 
-            // apply gravity if defined
-            if (this.gravity.y) {
-                vel.x += this.gravity.x * this.mass * me.timer.tick;
-            }
-            if (this.gravity.y) {
-                vel.y += this.gravity.y * this.mass * me.timer.tick;
+            if (!this.ignoreGravity) {
+                var worldGravity = me.game.world.gravity;
+                // apply gravity if defined
+                vel.x += worldGravity.x * this.gravityScale * this.mass * me.timer.tick;
+                vel.y += worldGravity.y * this.gravityScale * this.mass * me.timer.tick;
                 // check if falling / jumping
-                this.falling = (vel.y * Math.sign(this.gravity.y)) > 0;
+                this.falling = (vel.y * Math.sign(worldGravity.y * this.gravityScale)) > 0;
                 this.jumping = (this.falling ? false : this.jumping);
             }
 
@@ -648,25 +707,6 @@
             this.onBodyUpdate = undefined;
             this.ancestor = undefined;
             this.shapes.length = 0;
-        }
-    });
-
-    /**
-     * Base class for Body exception handling.
-     * @name Error
-     * @class
-     * @memberOf me.Body
-     * @private
-     * @constructor
-     * @param {String} msg Error message.
-     */
-    me.Body.Error = me.Error.extend({
-        /**
-         * @ignore
-         */
-        init : function (msg) {
-            this._super(me.Error, "init", [ msg ]);
-            this.name = "me.Body.Error";
         }
     });
 })();

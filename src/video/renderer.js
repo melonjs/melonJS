@@ -6,10 +6,10 @@
      * @extends me.Object
      * @memberOf me
      * @constructor
-     * @param {HTMLCanvasElement} canvas The html canvas tag to draw to on screen.
-     * @param {Number} width The width of the canvas without scaling
-     * @param {Number} height The height of the canvas without scaling
-     * @param {Object} [options] The renderer parameters
+     * @param {Object} options The renderer parameters
+     * @param {Number} options.width The width of the canvas without scaling
+     * @param {Number} options.height The height of the canvas without scaling
+     * @param {HTMLCanvasElement} [options.canvas] The html canvas to draw to on screen
      * @param {Boolean} [options.doubleBuffering=false] Whether to enable double buffering
      * @param {Boolean} [options.antiAlias=false] Whether to enable anti-aliasing, use false (default) for a pixelated effect.
      * @param {Boolean} [options.failIfMajorPerformanceCaveat=true] If true, the renderer will switch to CANVAS mode if the performances of a WebGL context would be dramatically lower than that of a native application making equivalent OpenGL calls.
@@ -24,7 +24,7 @@
         /**
          * @ignore
          */
-        init : function (c, width, height, options) {
+        init : function (options) {
             /**
              * The given constructor options
              * @public
@@ -46,19 +46,28 @@
             /**
              * @ignore
              */
-            this.currentScissor = new Int32Array([ 0, 0, this.width, this.height ]);
+            this.currentScissor = new Int32Array([ 0, 0, this.settings.width, this.settings.height ]);
 
             /**
              * @ignore
              */
             this.currentBlendMode = "normal";
 
-            // canvas size after scaling
-            this.gameWidthZoom = this.settings.zoomX || width;
-            this.gameHeightZoom = this.settings.zoomY || height;
+            // create the main screen canvas
+            if (me.device.ejecta === true) {
+                // a main canvas is already automatically created by Ejecta
+                this.canvas = document.getElementById("canvas");
+            } else if (typeof window.canvas !== "undefined") {
+                // a global canvas is available, e.g. webapp adapter for wechat
+                this.canvas = window.canvas;
+            } else if (typeof this.settings.canvas !== "undefined") {
+                this.canvas = this.settings.canvas;
+            } else {
+                this.canvas = me.video.createCanvas(this.settings.zoomX, this.settings.zoomY);
+            }
 
             // canvas object and context
-            this.canvas = this.backBufferCanvas = c;
+            this.backBufferCanvas = this.canvas;
             this.context = null;
 
             // global color
@@ -67,8 +76,14 @@
             // global tint color
             this.currentTint = new me.Color(255, 255, 255, 1.0);
 
+            // the projectionMatrix (set through setProjection)
+            this.projectionMatrix = new me.Matrix3d();
+
             // default uvOffset
             this.uvOffset = 0;
+
+            // the parent container bouds
+            this.parentBounds = new me.Rect(0, 0, 0, 0);
 
             // reset the instantiated renderer on game reset
             me.event.subscribe(me.event.GAME_RESET, function () {
@@ -96,7 +111,7 @@
             this.resetTransform();
             this.setBlendMode(this.settings.blendMode);
             this.setColor("#000000");
-            this.currentTint.setColor(255, 255, 255, 1.0);
+            this.clearTint();
             this.cache.clear();
             this.currentScissor[0] = 0;
             this.currentScissor[1] = 0;
@@ -161,14 +176,14 @@
          */
         getContext2d : function (c, transparent) {
             if (typeof c === "undefined" || c === null) {
-                throw new me.video.Error(
+                throw new Error(
                     "You must pass a canvas element in order to create " +
                     "a 2d context"
                 );
             }
 
             if (typeof c.getContext === "undefined") {
-                throw new me.video.Error(
+                throw new Error(
                     "Your browser does not support HTML5 canvas."
                 );
             }
@@ -258,8 +273,8 @@
          */
         resize : function (width, height) {
             if (width !== this.backBufferCanvas.width || height !== this.backBufferCanvas.height) {
-                this.backBufferCanvas.width = width;
-                this.backBufferCanvas.height = height;
+                this.canvas.width = this.backBufferCanvas.width = width;
+                this.canvas.height = this.backBufferCanvas.height = height;
                 this.currentScissor[0] = 0;
                 this.currentScissor[1] = 0;
                 this.currentScissor[2] = width;
@@ -286,15 +301,28 @@
             // set antialias CSS property on the main canvas
             if (enable !== true) {
                 // https://developer.mozilla.org/en-US/docs/Web/CSS/image-rendering
-                canvas.style["image-rendering"] = "pixelated";
-                canvas.style["image-rendering"] = "crisp-edges";
-                canvas.style["image-rendering"] = "-moz-crisp-edges";
-                canvas.style["image-rendering"] = "-o-crisp-edges";
-                canvas.style["image-rendering"] = "-webkit-optimize-contrast";
-                canvas.style.msInterpolationMode = "nearest-neighbor";
+                canvas.style["image-rendering"] = "optimizeSpeed"; // legal fallback
+                canvas.style["image-rendering"] = "-moz-crisp-edges"; // Firefox
+                canvas.style["image-rendering"] = "-o-crisp-edges"; // Opera
+                canvas.style["image-rendering"] = "-webkit-optimize-contrast"; // Safari
+                canvas.style["image-rendering"] = "optimize-contrast"; // CSS 3
+                canvas.style["image-rendering"] = "crisp-edges"; // CSS 4
+                canvas.style["image-rendering"] = "pixelated"; // CSS 4
+                canvas.style.msInterpolationMode = "nearest-neighbor"; // IE8+
             } else {
                 canvas.style["image-rendering"] = "auto";
             }
+        },
+
+        /**
+         * set/change the current projection matrix (WebGL only)
+         * @name setProjection
+         * @memberOf me.Renderer.prototype
+         * @function
+         * @param {me.Matrix3d} matrix
+         */
+        setProjection : function (matrix) {
+            this.projectionMatrix.copy(matrix);
         },
 
         /**
@@ -318,6 +346,35 @@
                     fill
                 );
             }
+        },
+
+        /**
+         * tint the given image or canvas using the given color
+         * @name tint
+         * @memberOf me.Renderer.prototype
+         * @function
+         * @param {HTMLImageElement|HTMLCanvasElement|OffscreenCanvas} image the source image to be tinted
+         * @param {me.Color|String} color the color that will be used to tint the image
+         * @param {String} [mode="multiply"] the composition mode used to tint the image
+         * @return {HTMLCanvasElement|OffscreenCanvas} a new canvas element representing the tinted image
+         */
+        tint : function (src, color, mode) {
+            var canvas = me.video.createCanvas(src.width, src.height, true);
+            var context = this.getContext2d(canvas);
+
+            context.save();
+
+            context.fillStyle = color instanceof me.Color ? color.toRGB() : color;
+            context.fillRect(0, 0, src.width, src.height);
+
+            context.globalCompositeOperation = mode || "multiply";
+            context.drawImage(src, 0, 0);
+            context.globalCompositeOperation = "destination-atop";
+            context.drawImage(src, 0, 0);
+
+            context.restore();
+
+            return canvas;
         },
 
         /**
@@ -345,14 +402,14 @@
         /**
          * disable (remove) the rendering mask set through setMask.
          * @name clearMask
-         * @see setMask
+         * @see me.Renderer#setMask
          * @memberOf me.Renderer.prototype
          * @function
          */
         clearMask : function() {},
 
         /**
-         * set a rendering tint (WebGL only) for sprite based renderables.
+         * set a coloring tint for sprite based renderables
          * @name setTint
          * @memberOf me.Renderer.prototype
          * @function
@@ -366,7 +423,7 @@
         /**
          * clear the rendering tint set through setTint.
          * @name clearTint
-         * @see setTint
+         * @see me.Renderer#setTint
          * @memberOf me.Renderer.prototype
          * @function
          */

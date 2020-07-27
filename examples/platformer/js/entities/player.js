@@ -82,6 +82,7 @@ game.PlayerEntity = me.Entity.extend({
             if (this.multipleJump <= 2) {
                 // easy "math" for double jump
                 this.body.force.y = -this.body.maxVel.y * this.multipleJump++;
+                me.audio.stop("jump");
                 me.audio.play("jump", false);
             }
         }
@@ -198,9 +199,17 @@ game.PlayerEntity = me.Entity.extend({
      * ouch
      */
     hurt : function () {
-        if (!this.renderable.isFlickering())
-        {
-            this.renderable.flicker(750);
+        var sprite = this.renderable;
+
+        if (!sprite.isFlickering()) {
+
+            // tint to red and flicker
+            sprite.tint.setColor(255, 192, 192);
+            sprite.flicker(750, function () {
+                // clear the tint once the flickering effect is over
+                sprite.tint.setColor(255, 255, 255);
+            });
+
             // flash the screen
             me.game.viewport.fadeIn("#FFFFFF", 75);
             me.audio.play("die", false);

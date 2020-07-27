@@ -127,7 +127,7 @@ import earcut from "earcut";
             var points = this.points;
             var len = points.length;
             for (var i = 0; i < len; i++) {
-                m.multiplyVector(points[i]);
+                m.apply(points[i]);
             }
             this.recalc();
             this.updateBounds();
@@ -162,14 +162,15 @@ import earcut from "earcut";
          * @memberOf me.Polygon.prototype
          * @function
          * @param {Number} angle The angle to rotate (in radians)
+         * @param {me.Vector2d|me.ObservableVector2d} [v] an optional point to rotate around
          * @return {me.Polygon} Reference to this object for method chaining
          */
-        rotate : function (angle) {
+        rotate : function (angle, v) {
             if (angle !== 0) {
                 var points = this.points;
                 var len = points.length;
                 for (var i = 0; i < len; i++) {
-                    points[i].rotate(angle);
+                    points[i].rotate(angle, v);
                 }
                 this.recalc();
                 this.updateBounds();
@@ -230,7 +231,7 @@ import earcut from "earcut";
             var len = points.length;
 
             if (len < 3) {
-                throw new me.Polygon.Error("Requires at least 3 points");
+                throw new Error("Requires at least 3 points");
             }
 
             // Calculate the edges/normals
@@ -265,16 +266,7 @@ import earcut from "earcut";
          */
         getIndices : function (x, y) {
             if (this.indices.length === 0) {
-                var points = this.points;
-                var data = [];
-
-                // flatten the points vector array
-                for (var i = 0; i < points.length; i++) {
-                    // XXX Optimize me
-                    data.push(points[i].x);
-                    data.push(points[i].y);
-                }
-                this.indices = earcut(data);
+                this.indices = earcut(this.points.flatMap(p => [p.x, p.y]));
             }
             return this.indices;
         },
@@ -390,25 +382,6 @@ import earcut from "earcut";
                 copy.push(point.clone());
             });
             return new me.Polygon(this.pos.x, this.pos.y, copy);
-        }
-    });
-
-    /**
-     * Base class for Polygon exception handling.
-     * @name Error
-     * @class
-     * @memberOf me.Polygon
-     * @private
-     * @constructor
-     * @param {String} msg Error message.
-     */
-    me.Polygon.Error = me.Error.extend({
-        /**
-         * @ignore
-         */
-        init : function (msg) {
-            this._super(me.Error, "init", [ msg ]);
-            this.name = "me.Polygon.Error";
         }
     });
 })();

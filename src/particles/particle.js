@@ -64,7 +64,7 @@
             this.pos.z = emitter.z;
 
             // cache inverse of the expected delta time
-            this._deltaInv = me.sys.fps / 1000;
+            this._deltaInv = me.timer.maxfps / 1000;
 
             // Set the start particle rotation as defined in emitter
             // if the particle not follow trajectory

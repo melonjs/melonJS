@@ -1,6 +1,6 @@
 (function () {
     /**
-     * a Timer object to manage time function (FPS, Game Tick, Time...)<p>
+     * a Timer object to manage timing related function (FPS, Game Tick, Time...)<p>
      * There is no constructor function for me.timer
      * @namespace me.timer
      * @memberOf me
@@ -21,9 +21,9 @@
         var last = 0;
         var now = 0;
         var delta = 0;
-        var step = Math.ceil(1000 / me.sys.fps); // ROUND IT ?
-        // define some step with some margin
-        var minstep = (1000 / me.sys.fps) * 1.25; // IS IT NECESSARY?\
+        // for timeout/interval update
+        var step =0;
+        var minstep = 0;
 
         // list of defined timer function
         var timers = [];
@@ -45,14 +45,26 @@
          * update timers
          * @ignore
          */
-        var updateTimers = function (dt) {
+        var updateTimers = function (time) {
+            last = now;
+            now = time;
+            delta = (now - last);
+
+            // fix for negative timestamp returned by wechat or chrome on startup
+            if (delta < 0) {
+                delta = 0;
+            }
+
+            // get the game tick
+            api.tick = (delta > minstep && me.timer.interpolation) ? delta / step : 1;
+
             for (var i = 0, len = timers.length; i < len; i++) {
                 var _timer = timers[i];
                 if (!(_timer.pauseable && me.state.isPaused())) {
-                    _timer.elapsed += dt;
+                    _timer.elapsed += delta;
                 }
                 if (_timer.elapsed >= _timer.delay) {
-                    _timer.fn.apply(this);
+                    _timer.fn.apply(null, _timer.args);
                     if (_timer.repeat === true) {
                         _timer.elapsed -= _timer.delay;
                     } else {
@@ -69,12 +81,12 @@
         /**
          * Last game tick value.<br/>
          * Use this value to scale velocities during frame drops due to slow
-         * hardware or when setting an FPS limit. (See {@link me.sys.fps})
-         * This feature is disabled by default. Enable me.sys.interpolation to
+         * hardware or when setting an FPS limit. (See {@link me.timer.maxfps})
+         * This feature is disabled by default. Enable me.timer.interpolation to
          * use it.
          * @public
-         * @see me.sys.interpolation
-         * @type Number
+         * @see me.timer.interpolation
+         * @type {Number}
          * @name tick
          * @memberOf me.timer
          */
@@ -82,14 +94,34 @@
 
         /**
          * Last measured fps rate.<br/>
-         * This feature is disabled by default. Load and enable the DebugPanel
-         * plugin to use it.
+         * This feature is disabled by default, unless the debugPanel is enabled/visible
          * @public
-         * @type Number
+         * @type {Number}
          * @name fps
          * @memberOf me.timer
          */
         api.fps = 0;
+
+        /**
+         * Set the maximum target display frame per second
+         * @public
+         * @see me.timer.tick
+         * @type {Number}
+         * @name maxfps
+         * @default 60
+         * @memberOf me.timer
+         */
+        api.maxfps = 60;
+
+        /**
+         * Enable/disable frame interpolation
+         * @see me.timer.tick
+         * @type {Boolean}
+         * @default false
+         * @name interpolation
+         * @memberOf me.timer
+         */
+        api.interpolation = false;
 
         /**
          * Last update time.<br/>
@@ -111,6 +143,8 @@
             // reset variables to initial state
             api.reset();
             now = last = 0;
+            // register to the game update event
+            me.event.subscribe(me.event.GAME_UPDATE, updateTimers);
         };
 
         /**
@@ -127,6 +161,9 @@
             // reset delta counting variables
             framedelta = 0;
             framecount = 0;
+            step = Math.ceil(1000 / api.maxfps); // ROUND IT ?
+            // define some step with some margin
+            minstep = (1000 / api.maxfps) * 1.25; // IS IT NECESSARY?\
         };
 
         /**
@@ -136,8 +173,14 @@
          * @param {Function} fn the function you want to execute after delay milliseconds.
          * @param {Number} delay the number of milliseconds (thousandths of a second) that the function call should be delayed by.
          * @param {Boolean} [pauseable=true] respects the pause state of the engine.
-         * @return {Number} The numerical ID of the timeout, which can be used later with me.timer.clearTimeout().
+         * @param {...*} [param] optional parameters which are passed through to the function specified by fn once the timer expires.
+         * @return {Number} The numerical ID of the timer, which can be used later with me.timer.clearTimeout().
          * @function
+         * @example
+         * // set a timer to call "myFunction" after 1000ms
+         * me.timer.setTimeout(myFunction, 1000);
+         * // set a timer to call "myFunction" after 1000ms (respecting the pause state) and passing param1 and param2
+         * me.timer.setTimeout(myFunction, 1000, true, param1, param2);
          */
         api.setTimeout = function (fn, delay, pauseable) {
             timers.push({
@@ -146,7 +189,8 @@
                 elapsed : 0,
                 repeat : false,
                 timerId : ++timerId,
-                pauseable : pauseable === true || true
+                pauseable : pauseable === true || true,
+                args : arguments.length > 3 ? Array.prototype.slice.call(arguments, 3) : undefined
             });
             return timerId;
         };
@@ -158,8 +202,14 @@
          * @param {Function} fn the function to execute
          * @param {Number} delay the number of milliseconds (thousandths of a second) on how often to execute the function
          * @param {Boolean} [pauseable=true] respects the pause state of the engine.
-         * @return {Number} The numerical ID of the timeout, which can be used later with me.timer.clearInterval().
+         * @param {...*} [param] optional parameters which are passed through to the function specified by fn once the timer expires.
+         * @return {Number} The numerical ID of the timer, which can be used later with me.timer.clearInterval().
          * @function
+         * @example
+         * // set a timer to call "myFunction" every 1000ms
+         * me.timer.setInterval(myFunction, 1000);
+         * // set a timer to call "myFunction" every 1000ms (respecting the pause state) and passing param1 and param2
+         * me.timer.setInterval(myFunction, 1000, true, param1, param2);
          */
         api.setInterval = function (fn, delay, pauseable) {
             timers.push({
@@ -168,7 +218,8 @@
                 elapsed : 0,
                 repeat : true,
                 timerId : ++timerId,
-                pauseable : pauseable === true || true
+                pauseable : pauseable === true || true,
+                args : arguments.length > 3 ? Array.prototype.slice.call(arguments, 3) : undefined
             });
             return timerId;
         };
@@ -208,7 +259,7 @@
         };
 
         /**
-         * Return elapsed time in milliseconds since the last update<br>
+         * Return elapsed time in milliseconds since the last update
          * @name getDelta
          * @memberOf me.timer
          * @return {Number}
@@ -229,39 +280,13 @@
             framecount++;
             framedelta += delta;
             if (framecount % 10 === 0) {
-                this.fps = me.Math.clamp(~~((1000 * framecount) / framedelta), 0, me.sys.fps);
+                api.fps = me.Math.clamp(Math.round((1000 * framecount) / framedelta), 0, api.maxfps);
                 framedelta = 0;
                 framecount = 0;
             }
         };
 
-        /**
-         * update game tick
-         * should be called once a frame
-         * @param {Number} time current timestamp as provided by the RAF callback
-         * @return {Number} time elapsed since the last update
-         * @ignore
-         */
-        api.update = function (time) {
-            last = now;
-            now = time;
-            delta = (now - last);
-
-            // fix for negative timestamp returned by wechat or chrome on startup
-            if (delta < 0) {
-                delta = 0;
-            }
-
-            // get the game tick
-            api.tick = (delta > minstep && me.sys.interpolation) ? delta / step : 1;
-
-            // update defined timers
-            updateTimers(delta);
-
-            return delta;
-        };
-
-        // return our apiect
+        // return our api
         return api;
     })();
 })();

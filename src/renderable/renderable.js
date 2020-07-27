@@ -37,7 +37,7 @@
              * @public
              * @type {me.Body}
              * @see me.Body
-             * @see me.collision.check
+             * @see me.collision#check
              * @name body
              * @memberOf me.Renderable#
              * @example
@@ -185,20 +185,13 @@
              * // enable "automatic" transformation when the object is activated
              * onActivateEvent: function () {
              *     // reset the transformation matrix
-             *     this.renderable.currentTransform.identity();
+             *     this.currentTransform.identity();
              *     // ensure the anchor point is the renderable center
-             *     this.renderable.anchorPoint.set(0.5, 0.5);
+             *     this.anchorPoint.set(0.5, 0.5);
              *     // enable auto transform
-             *     this.renderable.autoTransform = true;
+             *     this.autoTransform = true;
              *     ....
-             * },
-             * // add a rotation effect when updating the entity
-             * update : function (dt) {
-             *     ....
-             *     this.renderable.currentTransform.rotate(0.025);
-             *     ....
-             *     return this._super(me.Entity, 'update', [dt]);
-             * },
+             * }
              */
             this.autoTransform = true;
 
@@ -263,19 +256,19 @@
             this.mask = undefined;
 
             /**
-             * apply a tint to this renderable (WebGL Only)
+             * define a tint to this renderable. a (255, 255, 255) r, g, b value will remove the tint effect.
              * @public
              * @type {me.Color}
              * @name tint
-             * @default undefined
+             * @default (255, 255, 255)
              * @memberOf me.Renderable#
              * @example
              * // add a red tint to this renderable
-             * this.renderable.tint = new me.Color(255, 128, 128);
-             * // disable the tint
-             * this.renderable.tint.setColor(255, 255, 255);
+             * this.tint.setColor(255, 128, 128);
+             * // remove the tint
+             * this.tint.setColor(255, 255, 255);
              */
-            this.tint = undefined;
+            this.tint = me.pool.pull("me.Color", 255, 255, 255, 1.0);
 
             /**
              * The name of the renderable
@@ -313,6 +306,15 @@
             } else {
                 this.pos = me.pool.pull("me.ObservableVector3d", x, y, 0, { onUpdate: this.updateBoundsPos.bind(this) });
             }
+
+            /**
+             * when true the renderable will be redrawn during the next update cycle
+             * @type {Boolean}
+             * @name isDirty
+             * @default false
+             * @memberOf me.Renderable#
+             */
+            this.isDirty = false;
 
             this._width = width;
             this._height = height;
@@ -378,7 +380,7 @@
 
         /**
          * flip the renderable on the horizontal axis (around the center of the renderable)
-         * @see me.Matrix2d.scaleX
+         * @see me.Matrix2d#scaleX
          * @name flipX
          * @memberOf me.Renderable.prototype
          * @function
@@ -387,12 +389,13 @@
          */
         flipX : function (flip) {
             this._flip.x = !!flip;
+            this.isDirty = true;
             return this;
         },
 
         /**
          * flip the renderable on the vertical axis (around the center of the renderable)
-         * @see me.Matrix2d.scaleY
+         * @see me.Matrix2d#scaleY
          * @name flipY
          * @memberOf me.Renderable.prototype
          * @function
@@ -401,6 +404,7 @@
          */
         flipY : function (flip) {
             this._flip.y = !!flip;
+            this.isDirty = true;
             return this;
         },
 
@@ -418,6 +422,95 @@
             this.currentTransform.multiply(m);
             bounds.setPoints(bounds.transform(m).points);
             bounds.pos.setV(this.pos);
+            this.isDirty = true;
+            return this;
+        },
+
+        /**
+         * return the angle to the specified target
+         * @name angleTo
+         * @memberOf me.Renderable
+         * @function
+         * @param {me.Renderable|me.Vector2d|me.Vector3d} target
+         * @return {Number} angle in radians
+         */
+        angleTo: function (target) {
+            var a = this.getBounds();
+            var ax, ay;
+
+            if (target instanceof me.Renderable) {
+                var b = target.getBounds();
+                ax = b.centerX - a.centerX;
+                ay = b.centerY - a.centerY;
+            } else { // vector object
+                ax = target.x - a.centerX;
+                ay = target.y - a.centerY;
+            }
+
+            return Math.atan2(ay, ax);
+        },
+
+        /**
+         * return the distance to the specified target
+         * @name distanceTo
+         * @memberOf me.Renderable
+         * @function
+         * @param {me.Renderable|me.Vector2d|me.Vector3d} target
+         * @return {Number} distance
+         */
+        distanceTo: function (target) {
+            var a = this.getBounds();
+            var dx, dy;
+
+            if (target instanceof me.Renderable) {
+                var b = target.getBounds();
+                dx = a.centerX - b.centerX;
+                dy = a.centerY - b.centerY;
+            } else { // vector object
+                dx = a.centerX - target.x;
+                dy = a.centerY - target.y;
+            }
+
+            return Math.sqrt(dx * dx + dy * dy);
+        },
+
+        /**
+         * Rotate this renderable towards the given target.
+         * @name lookAt
+         * @memberOf me.Renderable.prototype
+         * @function
+         * @param {me.Renderable|me.Vector2d|me.Vector3d} target the renderable or position to look at
+         * @return {me.Renderable} Reference to this object for method chaining
+         */
+        lookAt : function (target) {
+            var position;
+
+            if (target instanceof me.Renderable) {
+                position = target.pos;
+            } else {
+                position = target;
+            }
+
+            var angle = this.angleTo(position);
+
+            this.rotate(angle);
+
+            return this;
+        },
+
+        /**
+         * Rotate this renderable by the specified angle (in radians).
+         * @name rotate
+         * @memberOf me.Renderable.prototype
+         * @function
+         * @param {Number} angle The angle to rotate (in radians)
+         * @return {me.Renderable} Reference to this object for method chaining
+         */
+        rotate : function (angle) {
+            if (!isNaN(angle)) {
+                this.currentTransform.rotate(angle);
+                this.isDirty = true;
+            }
             return this;
         },
 
@@ -440,8 +533,14 @@
 
             // set the scaleFlag
             this.currentTransform.scale(_x, _y);
-            // resize the bounding box
-            this.getBounds().resize(this.width * _x, this.height * _y);
+
+            // corresponding bounding box to be set
+            // through the width and height setters
+            this.width = this.width * _x;
+            this.height = this.height * _y;
+
+            this.isDirty = true;
+
             return this;
         },
 
@@ -469,7 +568,7 @@
          * @return false
          **/
         update : function (/* dt */) {
-            return false;
+            return this.isDirty;
         },
 
         /**
@@ -544,23 +643,22 @@
             }
 
             if ((this.autoTransform === true) && (!this.currentTransform.isIdentity())) {
-                this.currentTransform.translate(-ax, -ay);
                 // apply the renderable transformation matrix
+                renderer.translate(this.pos.x, this.pos.y);
                 renderer.transform(this.currentTransform);
-                this.currentTransform.translate(ax, ay);
-            } else {
-                // translate to the defined anchor point
-                renderer.translate(-ax, -ay);
+                renderer.translate(-this.pos.x, -this.pos.y);
             }
+
+            // offset by the anchor point
+            renderer.translate(-ax, -ay);
+
 
             if (typeof this.mask !== "undefined") {
                 renderer.setMask(this.mask);
             }
 
-            if (typeof this.tint !== "undefined") {
-                renderer.setTint(this.tint);
-            }
-
+            // apply the defined tint, if any
+            renderer.setTint(this.tint);
         },
 
         /**
@@ -589,9 +687,13 @@
             if (typeof this.mask !== "undefined") {
                 renderer.clearMask();
             }
-            if (typeof this.tint !== "undefined") {
-                renderer.clearTint();
-            }
+
+            // remove the previously applied tint
+            renderer.clearTint();
+
+            // reset the dirty flag
+            this.isDirty = false;
+
             // restore the context
             renderer.restore();
         },
@@ -637,6 +739,10 @@
                 this.body = undefined;
             }
 
+            // release all registered events
+            me.input.releaseAllPointerEvents(this);
+
+            // call the user defined destroy method
             this.onDestroyEvent.apply(this, arguments);
         },
 
@@ -678,6 +784,42 @@
                     this.onVisibilityChange.call(this, value);
                 }
             }
+        },
+        configurable : true
+    });
+
+    /**
+     * returns true if this renderable is flipped on the horizontal axis
+     * @public
+     * @see me.Renderable#flipX
+     * @type {Boolean}
+     * @name isFlippedX
+     * @memberOf me.Renderable
+     */
+    Object.defineProperty(me.Renderable.prototype, "isFlippedX", {
+        /**
+         * @ignore
+         */
+        get : function () {
+            return this._flip.x === true;
+        },
+        configurable : true
+    });
+
+    /**
+     * returns true if this renderable is flipped on the vertical axis
+     * @public
+     * @see me.Renderable#flipY
+     * @type {Boolean}
+     * @name isFlippedY
+     * @memberOf me.Renderable
+     */
+    Object.defineProperty(me.Renderable.prototype, "isFlippedY", {
+        /**
+         * @ignore
+         */
+        get : function () {
+            return this._flip.y === true;
         },
         configurable : true
     });
@@ -732,24 +874,5 @@
             }
         },
         configurable : true
-    });
-
-    /**
-     * Base class for Renderable exception handling.
-     * @name Error
-     * @class
-     * @memberOf me.Renderable
-     * @private
-     * @constructor
-     * @param {String} msg Error message.
-     */
-    me.Renderable.Error = me.Error.extend({
-        /**
-         * @ignore
-         */
-        init : function (msg) {
-            this._super(me.Error, "init", [ msg ]);
-            this.name = "me.Renderable.Error";
-        }
     });
 })();

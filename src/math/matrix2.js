@@ -18,8 +18,12 @@
             if (typeof(this.val) === "undefined") {
                 this.val = new Float32Array(9);
             }
+
             if (arguments.length && arguments[0] instanceof me.Matrix2d) {
                 this.copy(arguments[0]);
+            }
+            else if (arguments.length && arguments[0] instanceof me.Matrix3d) {
+                this.fromMat3d(arguments[0]);
             }
             else if (arguments.length >= 6) {
                 this.setTransform.apply(this, arguments);
@@ -105,6 +109,31 @@
         },
 
         /**
+         * Copies over the upper-left 3x3 values from the given me.Matrix3d
+         * @name fromMat3d
+         * @memberOf me.Matrix2d
+         * @function
+         * @param {me.Matrix3d} m the matrix object to copy from
+         * @return {me.Matrix2d} Reference to this object for method chaining
+         */
+        fromMat3d : function (b) {
+            b = b.val;
+            var a = this.val;
+
+            a[0] = b[0];
+            a[1] = b[1];
+            a[2] = b[2];
+            a[3] = b[4];
+            a[4] = b[5];
+            a[5] = b[6];
+            a[6] = b[8];
+            a[7] = b[9];
+            a[8] = b[10];
+
+            return this;
+        },
+
+        /**
          * multiply both matrix
          * @name multiply
          * @memberOf me.Matrix2d
@@ -144,17 +173,17 @@
          * @return {me.Matrix2d} Reference to this object for method chaining
          */
         transpose : function () {
-            var tmp, a = this.val;
+            var a = this.val,
+                a1 = a[1],
+                a2 = a[2],
+                a5 = a[5];
 
-            tmp = a[1];
             a[1] = a[3];
-            a[3] = tmp;
-            tmp = a[2];
             a[2] = a[6];
-            a[6] = tmp;
-            tmp = a[5];
+            a[3] = a1;
             a[5] = a[7];
-            a[7] = tmp;
+            a[6] = a2;
+            a[7] = a5;
 
             return this;
         },
@@ -195,14 +224,14 @@
         },
 
        /**
-        * Transforms the given vector according to this matrix.
-        * @name multiplyVector
+        * apply the current transform to the given 2d vector
+        * @name apply
         * @memberOf me.Matrix2d
         * @function
         * @param {me.Vector2d} vector the vector object to be transformed
-        * @return {me.Vector2d} result vector object. Useful for chaining method calls.
+        * @return {me.Vector2d} result vector object.
         */
-        multiplyVector : function (v) {
+        apply : function (v) {
             var a = this.val,
                 x = v.x,
                 y = v.y;
@@ -214,14 +243,14 @@
         },
 
         /**
-         * Transforms the given vector using the inverted current matrix.
-         * @name multiplyVector
+         * apply the inverted current transform to the given 2d vector
+         * @name applyInverse
          * @memberOf me.Matrix2d
          * @function
          * @param {me.Vector2d} vector the vector object to be transformed
-         * @return {me.Vector2d} result vector object. Useful for chaining method calls.
+         * @return {me.Vector2d} result vector object.
          */
-        multiplyVectorInverse : function (v) {
+        applyInverse : function (v) {
             var a = this.val,
                 x = v.x,
                 y = v.y;
@@ -303,17 +332,22 @@
         rotate : function (angle) {
             if (angle !== 0) {
                 var a = this.val,
-                    a0 = a[0],
-                    a1 = a[1],
-                    a3 = a[3],
-                    a4 = a[4],
+                    a00 = a[0],
+                    a01 = a[1],
+                    a02 = a[2],
+                    a10 = a[3],
+                    a11 = a[4],
+                    a12 = a[5],
                     s = Math.sin(angle),
                     c = Math.cos(angle);
 
-                a[0] = a0 * c + a3 * s;
-                a[1] = a1 * c + a4 * s;
-                a[3] = a0 * -s + a3 * c;
-                a[4] = a1 * -s + a4 * c;
+                a[0] = c * a00 + s * a10;
+                a[1] = c * a01 + s * a11;
+                a[2] = c * a02 + s * a12;
+
+                a[3] = c * a10 - s * a00;
+                a[4] = c * a11 - s * a01;
+                a[5] = c * a12 - s * a02;
             }
             return this;
         },
@@ -372,6 +406,31 @@
         },
 
         /**
+         * return true if the two matrices are identical
+         * @name equals
+         * @memberOf me.Matrix2d
+         * @function
+         * @param {me.Matrix2d} b the other matrix
+         * @return {Boolean} true if both are equals
+         */
+        equals : function (b) {
+            b = b.val;
+            var a = this.val;
+
+            return (
+                (a[0] === b[0]) &&
+                (a[1] === b[1]) &&
+                (a[2] === b[2]) &&
+                (a[3] === b[3]) &&
+                (a[4] === b[4]) &&
+                (a[5] === b[5]) &&
+                (a[6] === b[6]) &&
+                (a[7] === b[7]) &&
+                (a[8] === b[8])
+            );
+        },
+
+        /**
          * Clone the Matrix
          * @name clone
          * @memberOf me.Matrix2d
@@ -380,6 +439,17 @@
          */
         clone : function () {
             return me.pool.pull("me.Matrix2d", this);
+        },
+
+        /**
+         * return an array representation of this Matrix
+         * @name toArray
+         * @memberOf me.Matrix2d
+         * @function
+         * @return {Float32Array}
+         */
+        toArray : function () {
+            return this.val;
         },
 
         /**

@@ -69,11 +69,51 @@
                 this.cameras.set("default", default_camera);
             }
 
-            // reset the game manager
+            // reset the game
             me.game.reset();
 
             // call the onReset Function
             this.onResetEvent.apply(this, arguments);
+        },
+
+        /**
+         * update function
+         * @name update
+         * @memberOf me.Stage
+         * @ignore
+         * @function
+         * @param {Number} dt time since the last update in milliseconds.
+         * @return false
+         **/
+        update : function (dt) {
+            // update all objects (and pass the elapsed time since last frame)
+            var isDirty = me.game.world.update(dt);
+
+            // update the camera/viewport
+            // iterate through all cameras
+            this.cameras.forEach(function(camera) {
+                if (camera.update(dt)) {
+                    isDirty = true;
+                };
+            });
+
+            return isDirty;
+        },
+
+        /**
+         * draw the current stage
+         * @name draw
+         * @memberOf me.Stage
+         * @ignore
+         * @function
+         * @param {me.CanvasRenderer|me.WebGLRenderer} renderer a renderer object
+         */
+        draw : function (renderer) {
+            // iterate through all cameras
+            this.cameras.forEach(function(camera) {
+                // render the root container
+                camera.draw(renderer, me.game.world);
+            });
         },
 
         /**

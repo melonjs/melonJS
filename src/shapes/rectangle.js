@@ -15,6 +15,20 @@
          * @ignore
          */
         init : function (x, y, w, h) {
+
+            /**
+             * the center point of this rectangle
+             * @public
+             * @type me.Vector2d
+             * @name center
+             * @memberOf me.Rect
+             */
+            if (typeof(this.center) === "undefined") {
+                this.center = new me.Vector2d();
+            }
+            this.center.set(0, 0);
+
+            // parent constructor
             this._super(me.Polygon, "init", [x, y, [
                 new me.Vector2d(0, 0), // 0, 0
                 new me.Vector2d(w, 0), // 1, 0
@@ -52,10 +66,6 @@
             }
 
             this._super(me.Polygon, "setShape", [x, y, points]);
-
-            // private properties to cache width & height
-            this._width = this.points[2].x; // w
-            this._height = this.points[2].y; // h
 
             return this;
         },
@@ -118,6 +128,7 @@
             this._super(me.Polygon, "recalc");
             this._width = this.points[2].x;
             this._height = this.points[2].y;
+            this.center.set(this.centerX, this.centerY);
             return this;
         },
 
@@ -129,6 +140,7 @@
          * @return {me.Rect} this shape bounding box Rectangle object
          */
         updateBounds : function () {
+            this.center.set(this.centerX, this.centerY);
             return this;
         },
 
@@ -212,7 +224,7 @@
          * @param  {me.Rect} rect
          * @return {boolean} true if overlaps
          */
-        overlaps : function (r)    {
+        overlaps : function (r) {
             return (
                 this.left < r.right &&
                 r.left < this.right &&
@@ -388,9 +400,11 @@
          * @ignore
          */
         set : function (value) {
-            this.points[1].x = this.points[2].x = value;
-            // _width updated in recalc
-            this.recalc();
+            if (this._width !== value) {
+                this.points[1].x = this.points[2].x = value;
+                // _width updated in recalc
+                this.recalc();
+            }
         },
         configurable : true
     });
@@ -413,9 +427,11 @@
          * @ignore
          */
         set : function (value) {
-            this.points[2].y = this.points[3].y = value;
-            // _height updated in recalc
-            this.recalc();
+            if (this._height !== value) {
+                this.points[2].y = this.points[3].y = value;
+                // _height updated in recalc
+                this.recalc();
+            }
         },
         configurable : true
     });
@@ -432,13 +448,18 @@
          * @ignore
          */
         get : function () {
-            return this.pos.x + (this._width / 2);
+            if (isFinite(this._width)) {
+                return this.pos.x + (this._width / 2);
+            } else {
+                return this._width;
+            }
         },
         /**
          * @ignore
          */
         set : function (value) {
             this.pos.x = value - (this._width / 2);
+            this.center.x = value;
         },
         configurable : true
     });
@@ -455,13 +476,18 @@
          * @ignore
          */
         get : function () {
-            return this.pos.y + (this._height / 2);
+            if (isFinite(this._height)) {
+                return this.pos.y + (this._height / 2);
+            } else {
+                return this._height;
+            }
         },
         /**
          * @ignore
          */
         set : function (value) {
             this.pos.y = value - (this._height / 2);
+            this.center.y = value;
         },
         configurable : true
     });

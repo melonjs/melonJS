@@ -1,97 +1,85 @@
 var game = {
-    // game assets
-    assets : [
-        { name: "alien",   type:"image", src:"data/gfx/alien.png" },
-        { name: "flushed", type:"image", src:"data/gfx/flushed.png" },
-        { name: "scream",  type:"image", src:"data/gfx/scream.png" },
-        { name: "smile",   type:"image", src:"data/gfx/smile.png" },
-        { name: "smirk",   type:"image", src:"data/gfx/smirk.png" },
-        { name: "brick",   type:"image", src:"data/gfx/brick.png" }
-    ],
 
     onload: function()
     {
         // Initialize the video.
-        if (!me.video.init(1024, 768, {wrapper : "screen", scale : "auto"})) {
+        if (!me.video.init(1024, 768, {scaleMethod : "flex"})) {
             alert("Your browser does not support HTML5 canvas.");
             return;
         }
 
-        // set all resources to be loaded
-        me.loader.preload(game.assets, this.loaded.bind(this));
-    },
+        // load our monster image and populate the game world
+        me.loader.load({ name: "monster", type:"image", src:"data/img/monster.png" }, function () {
+            // add some keyboard shortcuts
+            me.event.subscribe(me.event.KEYDOWN, function (action, keyCode /*, edge */) {
+                // toggle fullscreen on/off
+                if (keyCode === me.input.KEY.F) {
+                    if (!me.device.isFullscreen) {
+                        me.device.requestFullscreen();
+                    } else {
+                        me.device.exitFullscreen();
+                    }
+                }
+            });
 
-    loaded: function () {
-        // set the "Play/Ingame" Screen Object
-        me.state.set(me.state.PLAY, new PlayScreen());
+            // add a background layer
+            me.game.world.addChild(new me.ColorLayer("background", "#5E3F66", 0), 0);
 
-        // switch to PLAY state
-        me.state.change(me.state.PLAY);
+            // Add some objects
+            for (var i = 0; i < 255; i++) {
+                me.game.world.addChild(new Smilie(i), 3);
+            }
+        });
     }
 };
 
-var PlayScreen = me.Stage.extend( {
-    onResetEvent: function() {
-         // clear the background
-        me.game.world.addChild(new me.ColorLayer("background", "#5E3F66", 0), 0);
-
-        // Add some objects
-        for (var i = 0; i < 200; i++) {
-            me.game.world.addChild(new Smilie(i), 3);
-        }
-    }
-});
-
-var Smilie = me.Entity.extend({
+var Smilie = me.Sprite.extend({
     init : function (i) {
-        this._super(
-            me.Entity,
-            "init",
-            [
-                me.Math.random(-15, 1024),
-                me.Math.random(-15, 768),
-                {
-                    width : 16,
-                    height : 16,
-                    shapes : [ new me.Ellipse(4, 4, 8, 8) ]
-                }
-            ]
-        );
+        this._super(me.Sprite, "init", [
+            me.Math.random(-15, me.game.viewport.width),
+            me.Math.random(-15, me.game.viewport.height),
+            {
+                image: "monster.png"
+            }
+        ]);
 
-        // disable gravity and add a random velocity
-        this.body.gravity = 0;
+        // only supported by the WebGL renderer
+        this.tint = new me.Color().random(64, 255);
+
+        // add a physic body with an ellipse as body shape
+        this.body = new me.Body(this, new me.Ellipse(6, 6, this.width - 6, this.height - 6));
         this.body.vel.set(me.Math.randomFloat(-4, 4), me.Math.randomFloat(-4, 4));
-
-        this.alwaysUpdate = true;
-
-        // add the coin sprite as renderable
-        this.renderable = new me.Sprite(0, 0, {image: me.loader.getImage(game.assets[i % 5].name)});
+        this.body.gravityScale = 0;
     },
 
     update : function () {
         this.pos.add(this.body.vel);
 
         // world limit check
-        if (this.pos.x >= 1024) {
-            this.pos.x = -15;
+        if (this.pos.x > me.game.viewport.width) {
+            this.body.vel.x = me.Math.randomFloat(-4, 4) * -Math.sign(this.body.vel.x);
         }
-        if (this.pos.x < -15) {
-            this.pos.x = 1024 - 1;
+        if (this.pos.x < 0) {
+            this.body.vel.x = me.Math.randomFloat(-4, 4) * -Math.sign(this.body.vel.x);
         }
-        if (this.pos.y >= 768) {
-            this.pos.y = -15;
+        if (this.pos.y > me.game.viewport.height) {
+            this.body.vel.y = me.Math.randomFloat(-4, 4) * -Math.sign(this.body.vel.y);
         }
-        if (this.pos.y < -15) {
-            this.pos.y = 768 - 1;
+        if (this.pos.y < 0) {
+            this.body.vel.y = me.Math.randomFloat(-4, 4) * -Math.sign(this.body.vel.y);
         }
+
+        // rotate the sprite based on the current velocity
+        this.rotate(this.body.vel.x < 0 ? -0.05 : 0.05);
 
         if (me.collision.check(this)) {
             // me.collision.check returns true in case of collision
-            this.renderable.setOpacity(1.0);
+            this.setOpacity(1.0);
         }
         else {
-            this.renderable.setOpacity(0.5);
+            this.setOpacity(0.5);
         }
+
         return true;
     },
 
@@ -99,6 +87,7 @@ var Smilie = me.Entity.extend({
     onCollision : function (response) {
 
         this.pos.sub(response.overlapN);
+
         if (response.overlapN.x !== 0) {
             this.body.vel.x = me.Math.randomFloat(-4, 4) * -Math.sign(this.body.vel.x);
         }
@@ -108,9 +97,4 @@ var Smilie = me.Entity.extend({
 
         return false;
     }
-});
-
-/* Bootstrap */
-me.device.onReady(function onReady() {
-    game.onload();
 });

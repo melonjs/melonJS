@@ -6,10 +6,10 @@
      * @extends me.Renderer
      * @memberOf me
      * @constructor
-     * @param {HTMLCanvasElement} canvas The html canvas tag to draw to on screen.
-     * @param {Number} width The width of the canvas without scaling
-     * @param {Number} height The height of the canvas without scaling
-     * @param {Object} [options] The renderer parameters
+     * @param {Object} options The renderer parameters
+     * @param {Number} options.width The width of the canvas without scaling
+     * @param {Number} options.height The height of the canvas without scaling
+     * @param {HTMLCanvasElement} [options.canvas] The html canvas to draw to on screen
      * @param {Boolean} [options.doubleBuffering=false] Whether to enable double buffering
      * @param {Boolean} [options.antiAlias=false] Whether to enable anti-aliasing
      * @param {Boolean} [options.transparent=false] Whether to enable transparency on the canvas (performance hit when enabled)
@@ -22,25 +22,20 @@
         /**
          * @ignore
          */
-        init : function (c, width, height, options) {
+        init : function (options) {
             // parent constructor
-            this._super(me.Renderer, "init", [c, width, height, options]);
+            this._super(me.Renderer, "init", [options]);
 
             // defined the 2d context
-            this.context = this.getContext2d(this.canvas, this.settings.transparent);
+            this.context = this.getContext2d(this.getScreenCanvas(), this.settings.transparent);
 
             // create the back buffer if we use double buffering
             if (this.settings.doubleBuffering) {
-                this.backBufferCanvas = me.video.createCanvas(width, height);
+                this.backBufferCanvas = me.video.createCanvas(this.settings.width, this.settings.height, true);
                 this.backBufferContext2D = this.getContext2d(this.backBufferCanvas);
-
-                if (this.settings.transparent) {
-                    // Clears the front buffer for each frame blit
-                    this.context.globalCompositeOperation = "copy";
-                }
             }
             else {
-                this.backBufferCanvas = this.canvas;
+                this.backBufferCanvas = this.getScreenCanvas();
                 this.backBufferContext2D = this.context;
             }
 
@@ -52,7 +47,7 @@
             // create a texture cache
             this.cache = new me.Renderer.TextureCache();
 
-            if (this.settings.textureSeamFix !== false  && !this.settings.antiAlias) {
+            if (this.settings.textureSeamFix !== false && !this.settings.antiAlias) {
                 // enable the tile texture seam fix with the canvas renderer
                 this.uvOffset = 1;
             }
@@ -68,6 +63,7 @@
          */
         reset : function () {
             this._super(me.Renderer, "reset");
+            this.clearColor(this.currentColor, this.settings.transparent !== true);
         },
 
         /**
@@ -101,6 +97,12 @@
                     this.currentBlendMode = "normal";
                     break;
             }
+
+            // transparent setting will override the given blendmode for this.context
+            if (this.settings.doubleBuffering && this.settings.transparent) {
+                // Clears the front buffer for each frame blit
+                this.context.globalCompositeOperation = "copy";
+            }
         },
 
         /**
@@ -123,12 +125,7 @@
          */
         flush : function () {
             if (this.settings.doubleBuffering) {
-                this.context.drawImage(
-                    this.backBufferCanvas, 0, 0,
-                    this.backBufferCanvas.width, this.backBufferCanvas.height,
-                    0, 0,
-                    this.gameWidthZoom, this.gameHeightZoom
-                );
+                this.context.drawImage(this.backBufferCanvas, 0, 0);
             }
         },
 
@@ -235,7 +232,14 @@
                 dy = ~~dy;
             }
 
-            this.backBufferContext2D.drawImage(image, sx, sy, sw, sh, dx, dy, dw, dh);
+            // apply a tint if required
+            var source = image;
+            var tint = this.currentTint.toArray();
+            if (tint[0] !== 1.0 || tint[1] !== 1.0 || tint[2] !== 1.0) {
+                // get a tinted version of this image from the texture cache
+                source = this.cache.tint(image, this.currentTint.toRGB());
+            }
+            this.backBufferContext2D.drawImage(source, sx, sy, sw, sh, dx, dy, dw, dh);
         },
 
         /**
@@ -280,12 +284,11 @@
                 // Fast path: don't draw fully transparent
                 return;
             }
-            this.translate(x + radius, y + radius);
+            context.translate(x, y);
             context.beginPath();
             context.arc(0, 0, radius, start, end, antiClockwise || false);
             context[fill === true ? "fill" : "stroke"]();
-            context.closePath();
-            this.translate(-(x + radius), -(y + radius));
+            context.translate(-x, -y);
         },
 
         /**
@@ -343,6 +346,8 @@
             context.bezierCurveTo(xmin, by, lx, ymax, lx, y);
             context.bezierCurveTo(lx, ymin, xmin, ty, x, ty);
             context[fill === true ? "fill" : "stroke"]();
+            context.closePath();
+
         },
 
         /**
@@ -447,12 +452,16 @@
          * @param {Number} width
          * @param {Number} height
          */
-        strokeRect : function (x, y, width, height) {
-            if (this.backBufferContext2D.globalAlpha < 1 / 255) {
-                // Fast path: don't draw fully transparent
-                return;
+        strokeRect : function (x, y, width, height, fill) {
+            if (fill === true ) {
+                this.fillRect(x, y, width, height);
+            } else {
+                if (this.backBufferContext2D.globalAlpha < 1 / 255) {
+                    // Fast path: don't draw fully transparent
+                    return;
+                }
+                this.backBufferContext2D.strokeRect(x, y, width, height);
             }
-            this.backBufferContext2D.strokeRect(x, y, width, height);
         },
 
         /**
@@ -492,32 +501,6 @@
         getFontContext : function () {
             // in canvas mode we can directly use the 2d context
             return this.getContext();
-        },
-
-        /**
-         * scales the canvas & 2d Context
-         * @name scaleCanvas
-         * @memberOf me.CanvasRenderer.prototype
-         * @function
-         */
-        scaleCanvas : function (scaleX, scaleY) {
-            this.canvas.width = this.gameWidthZoom = this.backBufferCanvas.width * scaleX;
-            this.canvas.height = this.gameHeightZoom = this.backBufferCanvas.height * scaleY;
-
-            // adjust CSS style for High-DPI devices
-            if (me.device.devicePixelRatio > 1) {
-                this.canvas.style.width = (this.canvas.width / me.device.devicePixelRatio) + "px";
-                this.canvas.style.height = (this.canvas.height / me.device.devicePixelRatio) + "px";
-            }
-
-            if (this.settings.doubleBuffering && this.settings.transparent) {
-                // Clears the front buffer for each frame blit
-                this.context.globalCompositeOperation = "copy";
-            } else {
-                this.setBlendMode(this.settings.blendMode, this.context);
-            }
-            this.setAntiAlias(this.context, this.settings.antiAlias);
-            this.flush();
         },
 
         /**
@@ -628,23 +611,20 @@
          * @param {me.Matrix2d} mat2d Matrix to transform by
          */
         transform : function (mat2d) {
-            var a = mat2d.val;
-            var tx = a[6],
-                ty = a[7];
+            var m = mat2d.toArray(),
+                a = m[0],
+                b = m[1],
+                c = m[3],
+                d = m[4],
+                e = m[6],
+                f = m[7];
 
             if (this.settings.subPixel === false) {
-                tx = ~~tx;
-                ty = ~~ty;
+                e |= 0;
+                f |= 0;
             }
 
-            this.backBufferContext2D.transform(
-                a[0],
-                a[1],
-                a[3],
-                a[4],
-                tx,
-                ty
-            );
+            this.backBufferContext2D.transform(a, b, c, d, e, f);
         },
 
         /**
@@ -750,7 +730,7 @@
         /**
          * disable (remove) the rendering mask set through setMask.
          * @name clearMask
-         * @see setMask
+         * @see me.CanvasRenderer#setMask
          * @memberOf me.CanvasRenderer.prototype
          * @function
          */

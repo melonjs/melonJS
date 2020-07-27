@@ -35,7 +35,7 @@
          */
         set : function (x, y) {
             if (x !== +x || y !== +y) {
-                throw new me.Vector2d.Error(
+                throw new Error(
                     "invalid x,y parameters (not a number)"
                 );
             }
@@ -326,11 +326,7 @@
          * @return {me.Vector2d} Reference to this object for method chaining
          */
         normalize : function () {
-            var d = this.length();
-            if (d > 0) {
-                return this._set(this.x / d, this.y / d);
-            }
-            return this;
+            return this.div(this.length() || 1);
         },
 
         /**
@@ -351,12 +347,25 @@
          * @memberOf me.Vector2d
          * @function
          * @param {number} angle The angle to rotate (in radians)
+         * @param {me.Vector2d|me.ObservableVector2d} [v] an optional point to rotate around
          * @return {me.Vector2d} Reference to this object for method chaining
          */
-        rotate : function (angle) {
-            var x = this.x;
-            var y = this.y;
-            return this._set(x * Math.cos(angle) - y * Math.sin(angle), x * Math.sin(angle) + y * Math.cos(angle));
+        rotate : function (angle, v) {
+            var cx = 0;
+            var cy = 0;
+
+            if (typeof v === "object") {
+                cx = v.x;
+                cy = v.y;
+            }
+
+            var x = this.x - cx;
+            var y = this.y - cy;
+
+            var c = Math.cos(angle);
+            var s = Math.sin(angle);
+
+            return this._set(x * c - y * s + cx, x * s + y * c + cy);
         },
 
         /**
@@ -478,25 +487,6 @@
          */
         toString : function () {
             return "x:" + this.x + ",y:" + this.y;
-        }
-    });
-
-    /**
-     * Base class for Vector2d exception handling.
-     * @name Error
-     * @class
-     * @memberOf me.Vector2d
-     * @private
-     * @constructor
-     * @param {String} msg Error message.
-     */
-    me.Vector2d.Error = me.Error.extend({
-        /**
-         * @ignore
-         */
-        init : function (msg) {
-            this._super(me.Error, "init", [ msg ]);
-            this.name = "me.Vector2d.Error";
         }
     });
 })();

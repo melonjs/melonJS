@@ -37,7 +37,7 @@
                     if (ret && "x" in ret) {
                         this._x = ret.x;
                     } else {
-                        this._x = value
+                        this._x = value;
                     }
                 },
                 configurable : true
@@ -65,7 +65,7 @@
                     if (ret && "y" in ret) {
                         this._y = ret.y;
                     } else {
-                        this._y = value
+                        this._y = value;
                     }
                 },
                 configurable : true
@@ -93,14 +93,14 @@
                     if (ret && "z" in ret) {
                         this._z = ret.z;
                     } else {
-                        this._z = value
+                        this._z = value;
                     }
                 },
                 configurable : true
             });
 
             if (typeof(settings) === "undefined") {
-                throw new me.ObservableVector3d.Error(
+                throw new Error(
                     "undefined `onUpdate` callback"
                 );
             }
@@ -121,7 +121,7 @@
             } else {
               this._x = x;
               this._y = y;
-              this._z = z;
+              this._z = z || 0;
             }
             return this;
         },
@@ -133,13 +133,13 @@
          * @function
          * @param {Number} x x value of the vector
          * @param {Number} y y value of the vector
-         * @param {Number} z z value of the vector
+         * @param {Number} [z=0] z value of the vector
          * @return {me.ObservableVector3d} Reference to this object for method chaining
          */
         setMuted : function (x, y, z) {
             this._x = x;
             this._y = y;
-            this._z = z;
+            this._z = z || 0;
             return this;
         },
 
@@ -153,7 +153,7 @@
          */
         setCallback : function (fn) {
             if (typeof(fn) !== "function") {
-                throw new me.ObservableVector3d.Error(
+                throw new Error(
                     "invalid `onUpdate` callback"
                 );
             }
@@ -192,13 +192,12 @@
          * @function
          * @param {Number} x
          * @param {Number} [y=x]
-         * @param {Number} [z=x]
+         * @param {Number} [z=1]
          * @return {me.ObservableVector3d} Reference to this object for method chaining
          */
         scale : function (x, y, z) {
             y = (typeof (y) !== "undefined" ? y : x);
-            z = (typeof (z) !== "undefined" ? z : x);
-            return this._set(this._x * x, this._y * y, this._z * z);
+            return this._set(this._x * x, this._y * y, this._z * (z || 1));
         },
 
         /**
@@ -391,7 +390,7 @@
         },
 
         /**
-         * Copy the x,y,z values of the passed vector to this one
+         * Copy the components of the given vector into this one
          * @name copy
          * @memberOf me.ObservableVector3d
          * @function
@@ -399,7 +398,7 @@
          * @return {me.ObservableVector3d} Reference to this object for method chaining
          */
         copy : function (v) {
-            return this._set(v.x, v.y, typeof (v.z) !== "undefined" ? v.z : this._z);
+            return this._set(v.x, v.y, v.z || 0);
         },
 
         /**
@@ -412,21 +411,6 @@
          */
         equals : function (v) {
             return ((this._x === v.x) && (this._y === v.y) && (this._z === (v.z || this._z)));
-        },
-
-        /**
-         * normalize this vector (scale the vector so that its magnitude is 1)
-         * @name normalize
-         * @memberOf me.ObservableVector3d
-         * @function
-         * @return {me.ObservableVector3d} Reference to this object for method chaining
-         */
-        normalize : function () {
-            var d = this.length();
-            if (d > 0) {
-                return this._set(this._x / d, this._y / d, this._z / d);
-            }
-            return this;
         },
 
         /**
@@ -447,16 +431,26 @@
          * @memberOf me.ObservableVector3d
          * @function
          * @param {number} angle The angle to rotate (in radians)
+         * @param {me.Vector2d|me.ObservableVector2d} [v] an optional point to rotate around (on the same z axis)
          * @return {me.ObservableVector3d} Reference to this object for method chaining
          */
-        rotate : function (angle) {
-            var x = this._x;
-            var y = this._y;
-            return this._set(
-                x * Math.cos(angle) - y * Math.sin(angle),
-                x * Math.sin(angle) + y * Math.cos(angle),
-                this._z
-            );
+        rotate : function (angle, v) {
+            var cx = 0;
+            var cy = 0;
+
+            if (typeof v === "object") {
+                cx = v.x;
+                cy = v.y;
+            }
+
+            // TODO also rotate on the z axis if the given vector is a 3d one
+            var x = this.x - cx;
+            var y = this.y - cy;
+
+            var c = Math.cos(angle);
+            var s = Math.sin(angle);
+
+            return this._set(x * c - y * s + cx, x * s + y * c + cy, this.z);
         },
 
         /**
@@ -496,7 +490,9 @@
          * @return {Number}
          */
         distance : function (v) {
-            var dx = this._x - v.x, dy = this._y - v.y, dz = this._z - (v.z || 0);
+            var dx = this._x - v.x;
+            var dy = this._y - v.y;
+            var dz = this._z - (v.z || 0);
             return Math.sqrt(dx * dx + dy * dy + dz * dz);
         },
 
@@ -536,25 +532,6 @@
          */
         toString : function () {
             return "x:" + this._x + ",y:" + this._y + ",z:" + this._z;
-        }
-    });
-
-    /**
-     * Base class for Vector3d exception handling.
-     * @name Error
-     * @class
-     * @memberOf me.ObservableVector3d
-     * @private
-     * @constructor
-     * @param {String} msg Error message.
-     */
-    me.ObservableVector3d.Error = me.Error.extend({
-        /**
-         * @ignore
-         */
-        init : function (msg) {
-            this._super(me.Error, "init", [ msg ]);
-            this.name = "me.ObservableVector3d.Error";
         }
     });
 })();

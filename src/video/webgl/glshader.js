@@ -71,19 +71,13 @@
     function extractAttributes(gl, shader) {
         var attributes = {},
             attrRx = /attribute\s+\w+\s+(\w+)/g,
-            attrData = [],
-            match;
+            match,
+            i = 0;
 
         // Detect all attribute names
         while ((match = attrRx.exec(shader.vertex))) {
-            attrData.push(match[1]);
+            attributes[match[1]] = i++;
         }
-
-        // Get attribute references
-        attrData.forEach(function (attr) {
-            attributes[attr] = gl.getAttribLocation(shader.program, attr);
-            gl.enableVertexAttribArray(attributes[attr]);
-        });
 
         return attributes;
     };
@@ -97,7 +91,7 @@
         gl.compileShader(shader);
 
         if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) {
-            throw new me.GLShader.Error(gl.getShaderInfoLog(shader));
+            throw new Error(gl.getShaderInfoLog(shader));
         }
 
         return shader;
@@ -107,7 +101,7 @@
      * Compile GLSL into a shader object
      * @private
      */
-    function compileProgram(gl, vertex, fragment) {
+    function compileProgram(gl, vertex, fragment, attributes) {
         var vertShader = compileShader(gl, gl.VERTEX_SHADER, vertex);
         var fragShader = compileShader(gl, gl.FRAGMENT_SHADER, fragment);
 
@@ -115,15 +109,27 @@
 
         gl.attachShader(program, vertShader);
         gl.attachShader(program, fragShader);
+
+
+        // force vertex attributes to use location 0 as starting location to prevent
+        // browser to do complicated emulation when running on desktop OpenGL (e.g. on macOS)
+        for (var location in attributes) {
+            gl.bindAttribLocation(program, attributes[location], location);
+        }
+
         gl.linkProgram(program);
 
         if (!gl.getProgramParameter(program, gl.LINK_STATUS)) {
-            throw new me.GLShader.Error(
+            var error_msg =
                 "Error initializing Shader " + this + "\n" +
                 "gl.VALIDATE_STATUS: " + gl.getProgramParameter(program, gl.VALIDATE_STATUS) + "\n" +
                 "gl.getError()" + gl.getError() + "\n" +
-                "gl.getProgramInfoLog()" + gl.getProgramInfoLog(program)
-            );
+                "gl.getProgramInfoLog()" + gl.getProgramInfoLog(program);
+            // house cleaning
+            gl.deleteProgram(program);
+            program = null;
+            // throw the exception
+            throw new Error(error_msg);
         }
 
         gl.useProgram(program);
@@ -161,7 +167,7 @@
 
     /**
      * set precision for the fiven shader source
-     * won't don anyhing if the precision is already specified
+     * won't do anything if the precision is already specified
      * @private
      */
     function setPrecision(src, precision) {
@@ -253,23 +259,23 @@
             this.fragment = setPrecision(minify(fragment), precision || me.device.getMaxShaderPrecision(this.gl));
 
             /**
+             * the location attributes of the shader
+             * @public
+             * @type {GLint[]}
+             * @name attributes
+             * @memberOf me.GLShader
+             */
+            this.attributes = extractAttributes(this.gl, this);
+
+
+            /**
              * a reference to the shader program (once compiled)
              * @public
              * @type {WebGLProgram}
              * @name program
              * @memberOf me.GLShader
              */
-            this.program = compileProgram(this.gl, this.vertex, this.fragment);
-
-
-            /**
-             * the attributes of the shader
-             * @public
-             * @type {Object}
-             * @name attributes
-             * @memberOf me.GLShader
-             */
-            this.attributes = extractAttributes(this.gl, this);
+            this.program = compileProgram(this.gl, this.vertex, this.fragment, this.attributes);
 
             /**
              * the uniforms of the shader
@@ -297,6 +303,46 @@
         },
 
         /**
+         * returns the location of an attribute variable in this shader program
+         * @name getAttribLocation
+         * @memberOf me.GLShader
+         * @function
+         * @param {String} name the name of the attribute variable whose location to get.
+         * @return {GLint} number indicating the location of the variable name if found. Returns -1 otherwise
+         */
+        getAttribLocation : function (name) {
+            var attr = this.attributes[name];
+            if (typeof attr !== "undefined") {
+                return attr;
+            } else {
+                return -1;
+            }
+        },
+
+        /**
+         * Set the uniform to the given value
+         * @name setUniform
+         * @memberOf me.GLShader
+         * @function
+         * @param {String} name the uniform name
+         * @param {Object|Float32Array} value the value to assign to that uniform
+         * @example
+         * myShader.setUniform("uProjectionMatrix", this.projectionMatrix);
+         */
+        setUniform : function (name, value) {
+            var uniforms = this.uniforms;
+            if (typeof uniforms[name] !== "undefined") {
+                if (typeof value === "object" && typeof value.toArray === "function") {
+                    uniforms[name] = value.toArray();
+                } else {
+                    uniforms[name] = value;
+                }
+            } else {
+                throw new Error("undefined (" + name + ") uniform for shader " + this);
+            }
+        },
+
+        /**
          * destroy this shader objects resources (program, attributes, uniforms)
          * @name destroy
          * @memberOf me.GLShader
@@ -312,24 +358,4 @@
             this.fragment = null;
         }
     });
-
-    /**
-     * Base class for GLShader exception handling.
-     * @name Error
-     * @class
-     * @memberOf me.GLShader
-     * @private
-     * @constructor
-     * @param {String} msg Error message.
-     */
-    me.GLShader.Error = me.Error.extend({
-        /**
-         * @ignore
-         */
-        init : function (msg) {
-            this._super(me.Error, "init", [ msg ]);
-            this.name = "me.GLShader.Error";
-        }
-    });
-
 })();

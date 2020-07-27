@@ -52,7 +52,7 @@
             this.panel = new DebugPanel(debugToggle);
 
             // if "#debug" is present in the URL
-            if (me.game.HASH.debug === true) {
+            if (me.utils.getUriFragment().debug === true) {
                 this.show();
             } // else keep it hidden
         },
@@ -235,7 +235,7 @@
             this.isKinematic = false;
 
             // minimum melonJS version expected
-            this.version = "6.3.0";
+            this.version = "8.0.0";
 
             // to hold the debug options
             // clickable rect area
@@ -348,23 +348,15 @@
          * @ignore
          */
         patchSystemFn : function () {
+            var hash = me.utils.getUriFragment();
 
             // add a few new debug flag (if not yet defined)
-            me.debug.renderHitBox   = me.debug.renderHitBox   || me.game.HASH.hitbox || false;
-            me.debug.renderVelocity = me.debug.renderVelocity || me.game.HASH.velocity || false;
-            me.debug.renderQuadTree = me.debug.renderQuadTree || me.game.HASH.quadtree || false;
+            me.debug.renderHitBox   = me.debug.renderHitBox   || hash.hitbox || false;
+            me.debug.renderVelocity = me.debug.renderVelocity || hash.velocity || false;
+            me.debug.renderQuadTree = me.debug.renderQuadTree || hash.quadtree || false;
 
             var _this = this;
             var bounds = new me.Rect(0, 0, 0, 0);
-
-            // patch timer.js
-            me.plugin.patch(me.timer, "update", function (dt) {
-                // call the original me.timer.update function
-                this._patched.apply(this, arguments);
-
-                // call the FPS counter
-                me.timer.countFPS();
-            });
 
             // patch me.game.update
             me.plugin.patch(me.game, "update", function (dt) {
@@ -652,6 +644,9 @@
 
         /** @private */
         update : function () {
+            // update the FPS counter
+            me.timer.countFPS();
+
             return this.visible;
         },
 
@@ -791,7 +786,7 @@
             this.font.draw(renderer, this.help_str, endX, 17 * this.mod);
 
             //fps counter
-            var fps_str = me.timer.fps + "/" + me.sys.fps + " fps";
+            var fps_str = me.timer.fps + "/" + me.timer.maxfps + " fps";
             this.font.draw(renderer, fps_str, endX, 2 * this.mod);
 
             renderer.restore();
@@ -808,9 +803,10 @@
     });
 
     // automatically register the debug panel
-    me.device.onReady(function () {
+    me.event.subscribe(me.event.VIDEO_INIT, function () {
+        var toggleKey = me.utils.getUriFragment().debugToggleKey;
         me.utils.function.defer(me.plugin.register, this, me.DebugPanel, "debugPanel",
-            me.game.HASH.debugToggleKey ? me.game.HASH.debugToggleKey.charCodeAt(0) - 32 : undefined
+            toggleKey ? toggleKey.charCodeAt(0) - 32 : undefined
         );
     });
 

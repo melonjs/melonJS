@@ -72,12 +72,14 @@
             var autoSort = container.autoSort;
             container.autoSort = false;
 
+            var levelBounds = level.getBounds();
+
             if (setViewportBounds) {
                 // update the viewport bounds
                 me.game.viewport.setBounds(
                     0, 0,
-                    Math.max(level.width, me.game.viewport.width),
-                    Math.max(level.height, me.game.viewport.height)
+                    Math.max(levelBounds.width, me.game.viewport.width),
+                    Math.max(levelBounds.height, me.game.viewport.height)
                 );
             }
 
@@ -95,13 +97,13 @@
             container.sort(true);
             container.autoSort = autoSort;
 
-            container.resize(level.width, level.height);
+            container.resize(levelBounds.width, levelBounds.height);
 
             function resize_container() {
                 // center the map if smaller than the current viewport
                 container.pos.set(
-                    Math.max(0, ~~((me.game.viewport.width - level.width) / 2)),
-                    Math.max(0, ~~((me.game.viewport.height - level.height) / 2)),
+                    Math.max(0, ~~((me.game.viewport.width - levelBounds.width) / 2)),
+                    Math.max(0, ~~((me.game.viewport.height - levelBounds.height) / 2)),
                     0
                 );
             }
@@ -122,6 +124,12 @@
          */
 
         /**
+         * initialize the level director
+         * @ignore
+         */
+        api.init = function () {};
+
+        /**
          * reset the level director
          * @ignore
          */
@@ -132,7 +140,7 @@
          * @ignore
          */
         api.addLevel = function () {
-            throw new me.Error("no level loader defined");
+            throw new Error("no level loader defined");
         };
 
         /**
@@ -147,7 +155,7 @@
                 // level index
                 levelIdx.push(levelId);
             }
-            else  {
+            else {
                 //console.log("level %s already loaded", levelId);
                 return false;
             }
@@ -209,7 +217,7 @@
 
             // throw an exception if not existing
             if (typeof(levels[levelId]) === "undefined") {
-                throw new me.Error("level " + levelId + " not found");
+                throw new Error("level " + levelId + " not found");
             }
 
             if (levels[levelId] instanceof me.TMXTileMap) {
@@ -229,7 +237,7 @@
                 }
             }
             else {
-                throw new me.Error("no level loader defined");
+                throw new Error("no level loader defined");
             }
             return true;
         };

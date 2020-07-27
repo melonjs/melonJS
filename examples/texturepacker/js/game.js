@@ -12,7 +12,7 @@ var game = {
     // Run on page load.
     "onload" : function () {
     // Initialize the video.
-    if (!me.video.init(800, 400, {wrapper : "screen", scale : "auto"})) {
+    if (!me.video.init(800, 400, {parent : "screen", scale : "auto"})) {
         alert("Your browser does not support HTML5 canvas.");
         return;
     }
@@ -20,14 +20,8 @@ var game = {
     // Initialize the audio.
     me.audio.init("mp3,ogg");
 
-    // Set a callback to run when loading is complete.
-    me.loader.onload = this.loaded.bind(this);
-
-    // Load the resources.
-    me.loader.preload(game.resources);
-
-    // Initialize melonJS and display a loading screen.
-    me.state.change(me.state.LOADING);
+    // set all ressources to be loaded
+    me.loader.preload(game.resources, this.loaded.bind(this));
 },
 
     // Run on game resources loaded.

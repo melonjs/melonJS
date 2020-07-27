@@ -44,7 +44,7 @@
                     }, 300);
                 }
                 else {
-                    console.error("no load callback defined");
+                    throw new Error("no load callback defined");
                 }
             }
             else {
@@ -157,7 +157,7 @@
                                         // manually create the XML DOM
                                         result = (new DOMParser()).parseFromString(xmlhttp.responseText, "text/xml");
                                     } else {
-                                        throw new api.Error("XML file format loading not supported, use the JSON file format instead");
+                                        throw new Error("XML file format loading not supported, use the JSON file format instead");
                                     }
                                 }
                                 else {
@@ -182,7 +182,7 @@
                                 break;
 
                             default:
-                                throw new api.Error("TMX file format " + format + "not supported !");
+                                throw new Error("TMX file format " + format + "not supported !");
                         }
 
                         //set the TMX content
@@ -365,25 +365,6 @@
         api.withCredentials = false;
 
         /**
-         * Base class for Loader exception handling.
-         * @name Error
-         * @class
-         * @memberOf me.loader
-         * @private
-         * @constructor
-         * @param {String} msg Error message.
-         */
-        api.Error = me.Error.extend({
-            /**
-             * @ignore
-             */
-            init : function (msg) {
-                this._super(me.Error, "init", [ msg ]);
-                this.name = "me.loader.Error";
-            }
-        });
-
-        /**
          * just increment the number of already loaded resources
          * @ignore
          */
@@ -407,7 +388,7 @@
          * @ignore
          */
         api.onLoadingError = function (res) {
-            throw new api.Error("Failed loading resource " + res.src);
+            throw new Error("Failed loading resource " + res.src);
         };
 
         /**
@@ -581,7 +562,7 @@
                     return 1;
 
                 default:
-                    throw new api.Error("load : unknown or invalid resource type : " + res.type);
+                    throw new Error("load : unknown or invalid resource type : " + res.type);
             }
         };
 
@@ -641,7 +622,7 @@
                     return me.audio.unload(res.name);
 
                 default:
-                    throw new api.Error("unload : unknown or invalid resource type : " + res.type);
+                    throw new Error("unload : unknown or invalid resource type : " + res.type);
             }
         };
 

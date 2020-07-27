@@ -54,11 +54,13 @@
         recalc : function () {
             var edges = this.edges;
             var normals = this.normals;
+            var indices = this.indices;
+
             // Copy the original points array and apply the offset/angle
             var points = this.points;
 
             if (points.length !== 2) {
-                throw new me.Line.Error("Requires exactly 2 points");
+                throw new Error("Requires exactly 2 points");
             }
 
             // Calculate the edges/normals
@@ -70,6 +72,10 @@
                 normals[0] = new me.Vector2d();
             }
             normals[0].copy(edges[0]).perp().normalize();
+
+            // do not do anything here, indices will be computed by
+            // toIndices if array is empty upon function call
+            indices.length = 0;
 
             return this;
         },
@@ -87,25 +93,6 @@
                 copy.push(point.clone());
             });
             return new me.Line(this.pos.x, this.pos.y, copy);
-        }
-    });
-
-    /**
-     * Base class for Line exception handling.
-     * @name Error
-     * @class
-     * @memberOf me.Line
-     * @private
-     * @constructor
-     * @param {String} msg Error message.
-     */
-    me.Line.Error = me.Error.extend({
-        /**
-         * @ignore
-         */
-        init : function (msg) {
-            this._super(me.Error, "init", [ msg ]);
-            this.name = "me.Line.Error";
         }
     });
 })();

@@ -26,6 +26,15 @@ describe("me.Vector3d", function () {
         expect(a.toString()).toEqual("x:"+x+",y:"+y+",z:"+z);
     });
 
+    it("use a 2d vector to set this vector", function () {
+        var vec2 = new me.Vector2d(x, y);
+        a.setV(vec2);
+        expect(a.toString()).toEqual("x:"+x+",y:"+y+",z:0");
+
+        a.set(y, x);
+        expect(a.toString()).toEqual("x:"+y+",y:"+x+",z:0");
+    });
+
     it("add (1, 2, 3) to (-1, -2, -3)", function () {
         a.set(x, y, z);
         b.set(-x, -y, -z);
@@ -48,7 +57,7 @@ describe("me.Vector3d", function () {
 
         a.set(x, y, z);
 
-        expect(a.scale(-1).equals(b)).toEqual(true);
+        expect(a.scale(-1, -1, -1).equals(b)).toEqual(true);
     });
 
     it("negate (1, 2, 3)", function () {
@@ -207,6 +216,16 @@ describe("me.Vector3d", function () {
 
         a.to2d();
         expect(a.toString()).toEqual("x:32,y:32,z:1");
+    });
+
+    it("angle function", function () {
+        a.set(6, 3, 1);
+        b.set(5, 13, 1);
+        expect(me.Math.radToDeg(a.angle(b))).toBeCloseTo(42, -1);
+
+        a.set(3, -6, 1);
+        b.set(8, 4, 1);
+        expect(me.Math.radToDeg(a.angle(b))).toBeCloseTo(90, -1);
     });
 
 });

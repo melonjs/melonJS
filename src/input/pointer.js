@@ -102,7 +102,47 @@
             */
             this.clientY = 0;
 
-          /**
+           /**
+            * an unsigned long representing the unit of the delta values scroll amount
+            * @public
+            * @type {Number}
+            * @name deltaMode
+            * @see https://developer.mozilla.org/en-US/docs/Web/API/WheelEvent/deltaMode
+            * @memberOf me.Pointer
+            */
+            this.deltaMode = 0;
+
+           /**
+            * a double representing the horizontal scroll amount in the Wheel Event deltaMode unit.
+            * @public
+            * @type {Number}
+            * @name deltaX
+            * @see https://developer.mozilla.org/en-US/docs/Web/API/WheelEvent/deltaX
+            * @memberOf me.Pointer
+            */
+            this.deltaX = 0;
+
+           /**
+            * a double representing the vertical scroll amount in the Wheel Event deltaMode unit.
+            * @public
+            * @type {Number}
+            * @name deltaY
+            * @see https://developer.mozilla.org/en-US/docs/Web/API/WheelEvent/deltaY
+            * @memberOf me.Pointer
+            */
+            this.deltaY = 0;
+
+           /**
+            * a double representing the scroll amount in the z-axis, in the Wheel Event deltaMode unit.
+            * @public
+            * @type {Number}
+            * @name deltaZ
+            * @see https://developer.mozilla.org/en-US/docs/Web/API/WheelEvent/deltaZ
+            * @memberOf me.Pointer
+            */
+            this.deltaZ = 0;
+
+           /**
             * Event normalized X coordinate within the game canvas itself<br>
             * <img src="images/event_coord.png"/>
             * @public
@@ -215,16 +255,21 @@
             this.clientY = clientY || 0;
 
             // translate to local coordinates
-            me.input.globalToLocal(this.clientX, this.clientY, this.pos);
+            me.input.globalToLocal(this.pageX, this.pageY, this.pos);
 
             // true if not originally a pointer event
             this.isNormalized = !me.device.PointerEvent || (me.device.PointerEvent && !(event instanceof window.PointerEvent));
 
             if (event.type === "wheel") {
-                this.deltaMode = 1;
-                this.deltaX = event.deltaX;
-                this.deltaY = - 1 / 40 * event.wheelDelta;
-                event.wheelDeltaX && (this.deltaX = - 1 / 40 * event.wheelDeltaX);
+                this.deltaMode = event.deltaMode || 0;
+                this.deltaX = event.deltaX || 0;
+                this.deltaY = event.deltaY || 0;
+                this.deltaZ = event.deltaZ || 0;
+            } else {
+                this.deltaMode = 0;
+                this.deltaX = 0;
+                this.deltaY = 0;
+                this.deltaZ = 0;
             }
 
             // could be 0, so test if defined
@@ -252,12 +297,12 @@
             // get the pointer size
             if (this.isNormalized === false) {
                 // native PointerEvent
-                width = event.width;
-                height = event.height;
-            } else if (typeof(event.radiusX) === "number")  {
+                width = event.width || 1;
+                height = event.height || 1;
+            } else if (typeof(event.radiusX) === "number") {
                 // TouchEvent
-                width = event.radiusX * 2;
-                height = event.radiusY * 2;
+                width = (event.radiusX * 2) || 1;
+                height = (event.radiusY * 2) || 1;
             }
             // resize the pointer object accordingly
             this.resize(width, height);

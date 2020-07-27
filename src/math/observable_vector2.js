@@ -36,7 +36,7 @@
                     if (ret && "x" in ret) {
                         this._x = ret.x;
                     } else {
-                        this._x = value
+                        this._x = value;
                     }
                 },
                 configurable : true
@@ -64,14 +64,14 @@
                     if (ret && "y" in ret) {
                         this._y = ret.y;
                     } else {
-                        this._y = value
+                        this._y = value;
                     }
                 },
                 configurable : true
             });
 
             if (typeof(settings) === "undefined") {
-                throw new me.ObservableVector2d.Error(
+                throw new Error(
                     "undefined `onUpdate` callback"
                 );
             }
@@ -118,7 +118,7 @@
          */
         setCallback : function (fn) {
             if (typeof(fn) !== "function") {
-                throw new me.ObservableVector2d.Error(
+                throw new Error(
                     "invalid `onUpdate` callback"
                 );
             }
@@ -339,21 +339,6 @@
         },
 
         /**
-         * normalize this vector (scale the vector so that its magnitude is 1)
-         * @name normalize
-         * @memberOf me.ObservableVector2d
-         * @function
-         * @return {me.ObservableVector2d} Reference to this object for method chaining
-         */
-        normalize : function () {
-            var d = this.length();
-            if (d > 0) {
-                return this._set(this._x / d, this._y / d);
-            }
-            return this;
-        },
-
-        /**
          * change this vector to be perpendicular to what it was before.<br>
          * (Effectively rotates it 90 degrees in a clockwise direction)
          * @name perp
@@ -371,12 +356,25 @@
          * @memberOf me.ObservableVector2d
          * @function
          * @param {number} angle The angle to rotate (in radians)
+         * @param {me.Vector2d|me.ObservableVector2d} [v] an optional point to rotate around
          * @return {me.ObservableVector2d} Reference to this object for method chaining
          */
-        rotate : function (angle) {
-            var x = this._x;
-            var y = this._y;
-            return this._set(x * Math.cos(angle) - y * Math.sin(angle), x * Math.sin(angle) + y * Math.cos(angle));
+        rotate : function (angle, v) {
+            var cx = 0;
+            var cy = 0;
+
+            if (typeof v === "object") {
+                cx = v.x;
+                cy = v.y;
+            }
+
+            var x = this._x - cx;
+            var y = this._y - cy;
+
+            var c = Math.cos(angle);
+            var s = Math.sin(angle);
+
+            return this._set(x * c - y * s + cx, x * s + y * c + cy);
         },
 
         /**
@@ -449,25 +447,6 @@
          */
         toString : function () {
             return "x:" + this._x + ",y:" + this._y;
-        }
-    });
-
-    /**
-     * Base class for Vector2d exception handling.
-     * @name Error
-     * @class
-     * @memberOf me.ObservableVector2d
-     * @private
-     * @constructor
-     * @param {String} msg Error message.
-     */
-    me.ObservableVector2d.Error = me.Error.extend({
-        /**
-         * @ignore
-         */
-        init : function (msg) {
-            this._super(me.Error, "init", [ msg ]);
-            this.name = "me.ObservableVector2d.Error";
         }
     });
 })();

@@ -72,6 +72,45 @@
              */
             this.damping = 1.0;
 
+            /**
+             * the closest point relative to the camera
+             * @public
+             * @type {Number}
+             * @name near
+             * @default -1000
+             * @memberOf me.Camera2d
+             */
+            this.near = -1000;
+
+            /**
+             * the furthest point relative to the camera.
+             * @public
+             * @type {Number}
+             * @name far
+             * @default 1000
+             * @memberOf me.Camera2d
+             */
+            this.far = 1000;
+
+            /**
+             * the default camera projection matrix
+             * (2d cameras use an orthographic projection by default).
+             * @public
+             * @type {me.Matrix3d}
+             * @name projectionMatrix
+             * @memberOf me.Camera2d
+             */
+            this.projectionMatrix = new me.Matrix3d();
+
+            /**
+             * the invert camera transform used to unproject points
+             * @ignore
+             * @type {me.Matrix2d}
+             * @name invCurrentTransform
+             * @memberOf me.Camera2d
+             */
+            this.invCurrentTransform = new me.Matrix2d();
+
             // offset for shake effect
             this.offset = new me.Vector2d();
 
@@ -112,6 +151,9 @@
             // enable event detection on the camera
             this.isKinematic = false;
 
+            // update the projection matrix
+            this._updateProjectionMatrix();
+
             // subscribe to the game reset event
             me.event.subscribe(me.event.GAME_RESET, this.reset.bind(this));
             // subscribe to the canvas resize event
@@ -119,6 +161,12 @@
         },
 
         // -- some private function ---
+
+        /** @ignore */
+        // update the projection matrix based on the projection frame (a rectangle)
+        _updateProjectionMatrix : function () {
+            this.projectionMatrix.ortho(0, this.width, this.height, 0, this.near, this.far);
+        },
 
         /** @ignore */
         _followH : function (target) {
@@ -169,6 +217,10 @@
 
             // reset the transformation matrix
             this.currentTransform.identity();
+            this.invCurrentTransform.identity().invert();
+
+            // update the projection matrix
+            this._updateProjectionMatrix();
         },
 
         /**
@@ -223,8 +275,8 @@
             var level = me.levelDirector.getCurrentLevel();
             this.setBounds(
                 0, 0,
-                Math.max(w, level ? level.width : 0),
-                Math.max(h, level ? level.height : 0)
+                Math.max(w, level ? level.getBounds().width : 0),
+                Math.max(h, level ? level.getBounds().height : 0)
             );
 
             // reset everthing
@@ -232,6 +284,10 @@
             this.update();
             this.smoothFollow = true;
 
+            // update the projection matrix
+            this._updateProjectionMatrix();
+
+            // publish the viewport resize event
             me.event.publish(me.event.VIEWPORT_ONRESIZE, [ this.width, this.height ]);
 
             return this;
@@ -274,11 +330,11 @@
             if (target instanceof me.Renderable) {
                 this.target = target.pos;
             }
-            else if ((target instanceof me.Vector2d) || (target instanceof me.Vector3d))  {
+            else if ((target instanceof me.Vector2d) || (target instanceof me.Vector3d)) {
                 this.target = target;
             }
             else {
-                throw new me.Renderable.Error("invalid target for me.Camera2d.follow");
+                throw new Error("invalid target for me.Camera2d.follow");
             }
             // if axis is null, camera is moved on target center
             this.follow_axis = (
@@ -441,6 +497,12 @@
                 updated = true;
             }
 
+            if (!this.currentTransform.isIdentity()) {
+                this.invCurrentTransform.copy(this.currentTransform).invert();
+            } else {
+                // reset to default
+                this.invCurrentTransform.identity();
+            }
             return updated;
         },
 
@@ -591,7 +653,7 @@
             v = v || new me.Vector2d();
             v.set(x, y).add(this.pos).sub(me.game.world.pos);
             if (!this.currentTransform.isIdentity()) {
-                this.currentTransform.multiplyVectorInverse(v);
+                this.invCurrentTransform.apply(v);
             }
             return v;
         },
@@ -610,9 +672,9 @@
         worldToLocal : function (x, y, v) {
             // TODO memoization for one set of coords (multitouch)
             v = v || new me.Vector2d();
-            v.set(x, y)
+            v.set(x, y);
             if (!this.currentTransform.isIdentity()) {
-                this.currentTransform.multiplyVector(v);
+                this.currentTransform.apply(v);
             }
             return v.sub(this.pos).add(me.game.world.pos);
         },
@@ -624,7 +686,14 @@
         drawFX : function (renderer) {
             // fading effect
             if (this._fadeIn.tween) {
-                renderer.clearColor(this._fadeIn.color);
+                // add an overlay
+                // TODO use the tint feature once implemented in Canvas mode
+                renderer.save();
+                // reset all transform so that the overaly cover the whole camera area
+                renderer.resetTransform();
+                renderer.setColor(this._fadeIn.color);
+                renderer.fillRect(0, 0, this.width, this.height);
+                renderer.restore();
                 // remove the tween if over
                 if (this._fadeIn.color.alpha === 1.0) {
                     this._fadeIn.tween = null;
@@ -635,7 +704,14 @@
 
             // flashing effect
             if (this._fadeOut.tween) {
-                renderer.clearColor(this._fadeOut.color);
+                // add an overlay
+                // TODO use the tint feature once implemented in Canvas mode
+                renderer.save();
+                // reset all transform so that the overaly cover the whole camera area 
+                renderer.resetTransform();
+                renderer.setColor(this._fadeOut.color);
+                renderer.fillRect(0, 0, this.width, this.height);
+                renderer.restore();
                 // remove the tween if over
                 if (this._fadeOut.color.alpha === 0.0) {
                     this._fadeOut.tween = null;
@@ -655,6 +731,9 @@
 
             // translate the world coordinates by default to screen coordinates
             container.currentTransform.translate(-translateX, -translateY);
+
+            // set the camera projection
+            renderer.setProjection(this.projectionMatrix);
 
             // clip to camera bounds
             renderer.clipRect(

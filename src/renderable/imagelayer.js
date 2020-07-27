@@ -36,7 +36,7 @@
 
             // throw an error if image is null/undefined
             if (!this.image) {
-                throw new me.Error((
+                throw new Error((
                     (typeof(settings.image) === "string") ?
                     "'" + settings.image + "'" :
                     "Image"
@@ -216,7 +216,7 @@
             var rx = this.ratio.x,
                 ry = this.ratio.y;
 
-            if (rx === ry === 0) {
+            if (rx === 0 && ry === 0) {
                 // static image
                 return;
             }
@@ -283,7 +283,8 @@
                 x = this.pos.x,
                 y = this.pos.y;
 
-            if (this.ratio.x === this.ratio.y === 0) {
+            if (this.ratio.x === 0 && this.ratio.y === 0) {
+                // static image
                 x = x + ax * (bw - width);
                 y = y + ay * (bh - height);
             }

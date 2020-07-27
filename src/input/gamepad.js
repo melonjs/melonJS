@@ -96,6 +96,8 @@
     // mapping list
     var remap = new Map();
 
+    var updateEventHandler;
+
     /**
      * Default gamepad mappings
      * @ignore
@@ -150,28 +152,11 @@
     });
 
     /**
-     * gamepad connected callback
-     * @ignore
-     */
-    window.addEventListener("gamepadconnected", function (event) {
-        me.event.publish(me.event.GAMEPAD_CONNECTED, [ event.gamepad ]);
-    }, false);
-
-    /**
-     * gamepad disconnected callback
-     * @ignore
-     */
-    window.addEventListener("gamepaddisconnected", function (event) {
-        me.event.publish(me.event.GAMEPAD_DISCONNECTED, [ event.gamepad ]);
-    }, false);
-
-    /**
      * Update gamepad status
      * @ignore
      */
-    api._updateGamepads = navigator.getGamepads ? function () {
+    var updateGamepads = function () {
         var gamepads = navigator.getGamepads();
-        var e = {};
 
         // Trigger button bindings
         Object.keys(bindings).forEach(function (index) {
@@ -223,10 +208,10 @@
 
                 // Edge detection
                 if (!last.pressed && current.pressed) {
-                    api._keydown(e, last.keyCode, mapped_button + 256);
+                    api.triggerKeyEvent(last.keyCode, true, mapped_button + 256);
                 }
                 else if (last.pressed && !current.pressed) {
-                    api._keyup(e, last.keyCode, mapped_button + 256);
+                    api.triggerKeyEvent(last.keyCode, false, mapped_button + 256);
                 }
 
                 // Update last button state
@@ -269,16 +254,16 @@
                 if (!last[range].pressed && pressed) {
                     // Release the opposite direction, if necessary
                     if (last[-range].pressed) {
-                        api._keyup(e, last[-range].keyCode, mapped_axis + 256);
+                        api.triggerKeyEvent(last[-range].keyCode, false, mapped_axis + 256);
                         last[-range].value = 0;
                         last[-range].pressed = false;
                     }
 
-                    api._keydown(e, last[range].keyCode, mapped_axis + 256);
+                    api.triggerKeyEvent(last[range].keyCode, true, mapped_axis + 256);
                 }
                 else if ((last[range].pressed || last[-range].pressed) && !pressed) {
                     range = last[range].pressed ? range : -range;
-                    api._keyup(e, last[range].keyCode, mapped_axis + 256);
+                    api.triggerKeyEvent(last[range].keyCode, false, mapped_axis + 256);
                 }
 
                 // Update last axis state
@@ -286,7 +271,23 @@
                 last[range].pressed = pressed;
             });
         });
-    } : function () {};
+    };
+
+    /**
+     * gamepad connected callback
+     * @ignore
+     */
+    window.addEventListener("gamepadconnected", function (event) {
+        me.event.publish(me.event.GAMEPAD_CONNECTED, [ event.gamepad ]);
+    }, false);
+
+    /**
+     * gamepad disconnected callback
+     * @ignore
+     */
+    window.addEventListener("gamepaddisconnected", function (event) {
+        me.event.publish(me.event.GAMEPAD_DISCONNECTED, [ event.gamepad ]);
+    }, false);
 
     /*
      * PUBLIC STUFF
@@ -389,8 +390,14 @@
      */
     api.bindGamepad = function (index, button, keyCode) {
         // Throw an exception if no action is defined for the specified keycode
-        if (!api._KeyBinding[keyCode]) {
-            throw new me.Error("no action defined for keycode " + keyCode);
+        if (!me.input.getBindingKey(keyCode)) {
+            throw new Error("no action defined for keycode " + keyCode);
+        }
+
+        // register to the the update event if not yet done and supported by the browser
+        // if not supported, the function will fail silently (-> update loop won't be called)
+        if (typeof updateEventHandler === "undefined" && typeof navigator.getGamepads === "function") {
+            updateEventHandler = me.event.subscribe(me.event.GAME_UPDATE, updateGamepads);
         }
 
         // Allocate bindings if not defined
@@ -448,7 +455,7 @@
      */
     api.unbindGamepad = function (index, button) {
         if (!bindings[index]) {
-            throw new me.Error("no bindings for gamepad " + index);
+            throw new Error("no bindings for gamepad " + index);
         }
         bindings[index].buttons[button] = {};
     };

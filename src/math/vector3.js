@@ -22,7 +22,7 @@
         _set : function (x, y, z) {
             this.x = x;
             this.y = y;
-            this.z = z;
+            this.z = z || 0;
             return this;
         },
 
@@ -33,12 +33,12 @@
          * @function
          * @param {Number} x
          * @param {Number} y
-         * @param {Number} z
+         * @param {Number} [z=0]
          * @return {me.Vector3d} Reference to this object for method chaining
          */
         set : function (x, y, z) {
-            if (x !== +x || y !== +y || z !== +z) {
-                throw new me.Vector3d.Error(
+            if (x !== +x || y !== +y || (typeof z !== "undefined" && z !== +z)) {
+                throw new Error(
                     "invalid x, y, z parameters (not a number)"
                 );
             }
@@ -93,7 +93,7 @@
          * @return {me.Vector3d} Reference to this object for method chaining
          */
         setV : function (v) {
-            return this._set(v.x, v.y, typeof (v.z) !== "undefined" ? v.z : this.z);
+            return this._set(v.x, v.y, v.z);
         },
 
         /**
@@ -127,13 +127,12 @@
          * @function
          * @param {Number} x
          * @param {Number} [y=x]
-         * @param {Number} [z=x]
+         * @param {Number} [z=1]
          * @return {me.Vector3d} Reference to this object for method chaining
          */
         scale : function (x, y, z) {
             y = (typeof (y) !== "undefined" ? y : x);
-            z = (typeof (z) !== "undefined" ? z : x);
-            return this._set(this.x * x, this.y * y, this.z * z);
+            return this._set(this.x * x, this.y * y, this.z * (z || 1));
         },
 
         /**
@@ -145,7 +144,7 @@
          * @return {me.Vector3d} Reference to this object for method chaining
          */
         scaleV : function (v) {
-            return this._set(this.x * v.x, this.y * v.y, this.z * (v.z || 1));
+            return this.scale(v.x, v.y, v.z);
         },
 
         /**
@@ -312,7 +311,7 @@
         },
 
         /**
-         * Copy the x,y values of the passed vector to this one
+         * Copy the components of the given vector into this one
          * @name copy
          * @memberOf me.Vector3d
          * @function
@@ -320,7 +319,7 @@
          * @return {me.Vector3d} Reference to this object for method chaining
          */
         copy : function (v) {
-            return this._set(v.x, v.y, typeof (v.z) !== "undefined" ? v.z : this.z);
+            return this._set(v.x, v.y, v.z || 0);
         },
 
         /**
@@ -343,11 +342,7 @@
          * @return {me.Vector3d} Reference to this object for method chaining
          */
         normalize : function () {
-            var d = this.length();
-            if (d > 0) {
-                return this._set(this.x / d, this.y / d, this.z / d);
-            }
-            return this;
+            return this.div(this.length() || 1);
         },
 
         /**
@@ -368,12 +363,26 @@
          * @memberOf me.Vector3d
          * @function
          * @param {number} angle The angle to rotate (in radians)
+         * @param {me.Vector2d|me.ObservableVector2d} [v] an optional point to rotate around (on the same z axis)
          * @return {me.Vector3d} Reference to this object for method chaining
          */
-        rotate : function (angle) {
-            var x = this.x;
-            var y = this.y;
-            return this._set(x * Math.cos(angle) - y * Math.sin(angle), x * Math.sin(angle) + y * Math.cos(angle), this.z);
+        rotate : function (angle, v) {
+            var cx = 0;
+            var cy = 0;
+
+            if (typeof v === "object") {
+                cx = v.x;
+                cy = v.y;
+            }
+
+            // TODO also rotate on the z axis if the given vector is a 3d one
+            var x = this.x - cx;
+            var y = this.y - cy;
+
+            var c = Math.cos(angle);
+            var s = Math.sin(angle);
+
+            return this._set(x * c - y * s + cx, x * s + y * c + cy, this.z);
         },
 
         /**
@@ -385,7 +394,7 @@
          * @return {Number} The dot product.
          */
         dotProduct : function (v) {
-            return this.x * v.x + this.y * v.y + this.z * (v.z || 1);
+            return this.x * v.x + this.y * v.y + this.z * (typeof(v.z) !== "undefined" ? v.z : this.z);
         },
 
        /**
@@ -435,7 +444,9 @@
          * @return {Number}
          */
         distance : function (v) {
-            var dx = this.x - v.x, dy = this.y - v.y, dz = this.z - (v.z || 0);
+            var dx = this.x - v.x;
+            var dy = this.y - v.y;
+            var dz = this.z - (v.z || 0);
             return Math.sqrt(dx * dx + dy * dy + dz * dz);
         },
 
@@ -460,7 +471,8 @@
          * @return {me.Vector3d} Reference to this object for method chaining
          */
         project : function (v) {
-            return this.scale(this.dotProduct(v) / v.length2());
+            var ratio = this.dotProduct(v) / v.length2();
+            return this.scale(ratio, ratio, ratio);
         },
 
         /**
@@ -473,7 +485,8 @@
          * @return {me.Vector3d} Reference to this object for method chaining
          */
         projectN : function (v) {
-            return this.scale(this.dotProduct(v));
+            var ratio = this.dotProduct(v) / v.length2();
+            return this.scale(ratio, ratio, ratio);
         },
 
         /**
@@ -496,25 +509,6 @@
          */
         toString : function () {
             return "x:" + this.x + ",y:" + this.y + ",z:" + this.z;
-        }
-    });
-
-    /**
-     * Base class for Vector3d exception handling.
-     * @name Error
-     * @class
-     * @memberOf me.Vector3d
-     * @private
-     * @constructor
-     * @param {String} msg Error message.
-     */
-    me.Vector3d.Error = me.Error.extend({
-        /**
-         * @ignore
-         */
-        init : function (msg) {
-            this._super(me.Error, "init", [ msg ]);
-            this.name = "me.Vector3d.Error";
         }
     });
 })();

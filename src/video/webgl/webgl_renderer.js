@@ -6,29 +6,31 @@
      * @namespace me.WebGLRenderer
      * @memberOf me
      * @constructor
-     * @param {HTMLCanvasElement} canvas The html canvas tag to draw to on screen.
-     * @param {Number} width The width of the canvas without scaling
-     * @param {Number} height The height of the canvas without scaling
-     * @param {Object} [options] The renderer parameters
+     * @param {Object} options The renderer parameters
+     * @param {Number} options.width The width of the canvas without scaling
+     * @param {Number} options.height The height of the canvas without scaling
+     * @param {HTMLCanvasElement} [options.canvas] The html canvas to draw to on screen
      * @param {Boolean} [options.doubleBuffering=false] Whether to enable double buffering
      * @param {Boolean} [options.antiAlias=false] Whether to enable anti-aliasing
      * @param {Boolean} [options.failIfMajorPerformanceCaveat=true] If true, the renderer will switch to CANVAS mode if the performances of a WebGL context would be dramatically lower than that of a native application making equivalent OpenGL calls.
      * @param {Boolean} [options.transparent=false] Whether to enable transparency on the canvas (performance hit when enabled)
      * @param {Boolean} [options.subPixel=false] Whether to enable subpixel renderering (performance hit when enabled)
+     * @param {Boolean} [options.preferWebGL1=true] if false the renderer will try to use WebGL 2 if supported
+     * @param {String} [options.powerPreference="default"] a hint to the user agent indicating what configuration of GPU is suitable for the WebGL context ("default", "high-performance", "low-power"). To be noted that Safari and Chrome (since version 80) both default to "low-power" to save battery life and improve the user experience on these dual-GPU machines.
      * @param {Number} [options.zoomX=width] The actual width of the canvas with scaling applied
      * @param {Number} [options.zoomY=height] The actual height of the canvas with scaling applied
-     * @param {me.WebGLRenderer.Compositor} [options.compositor] A class that implements the compositor API
+     * @param {me.WebGLCompositor} [options.compositor] A class that implements the compositor API
      */
     me.WebGLRenderer = me.Renderer.extend({
         /**
          * @ignore
          */
-        init : function (canvas, width, height, options) {
+        init : function (options) {
             // reference to this renderer
             var renderer = this;
 
             // parent contructor
-            this._super(me.Renderer, "init", [canvas, width, height, options]);
+            this._super(me.Renderer, "init", [options]);
 
             /**
              * The WebGL context
@@ -36,7 +38,46 @@
              * @memberOf me.WebGLRenderer
              * type {WebGLRenderingContext}
              */
-            this.context = this.gl = this.getContextGL(canvas, this.settings.transparent);
+            this.context = this.gl = this.getContextGL(this.getScreenCanvas(), options.transparent);
+
+            /**
+             * The WebGL version used by this renderer (1 or 2)
+             * @name WebGLVersion
+             * @memberOf me.WebGLRenderer
+             * @type {Number}
+             * @default 1
+             * @readonly
+             */
+            this.webGLVersion = 1;
+
+            /**
+             * The vendor string of the underlying graphics driver.
+             * @name GPUVendor
+             * @memberOf me.WebGLRenderer
+             * @type {String}
+             * @default null
+             * @readonly
+             */
+            this.GPUVendor = null;
+
+            /**
+             * The renderer string of the underlying graphics driver.
+             * @name GPURenderer
+             * @memberOf me.WebGLRenderer
+             * @type {String}
+             * @default null
+             * @readonly
+             */
+            this.GPURenderer = null;
+
+            /**
+             * Maximum number of texture unit supported under the current context
+             * @name maxTextures
+             * @memberOf me.WebGLRenderer
+             * @type {Number}
+             * @readonly
+             */
+            this.maxTextures = this.gl.getParameter(this.gl.MAX_TEXTURE_IMAGE_UNITS);
 
             /**
              * @ignore
@@ -71,9 +112,17 @@
              */
             this.currentTransform = new me.Matrix2d();
 
+            /**
+             * The current compositor used by the renderer
+             * @name currentCompositor
+             * @type me.WebGLCompositor
+             * @memberOf me.WebGLRenderer#
+             */
+            this.currentCompositor = null;
+
             // Create a compositor
-            var Compositor = this.settings.compositor || me.WebGLRenderer.Compositor;
-            this.compositor = new Compositor(this);
+            var Compositor = this.settings.compositor || me.WebGLCompositor;
+            this.setCompositor(new Compositor(this));
 
 
             // default WebGL state(s)
@@ -84,24 +133,26 @@
             // set default mode
             this.setBlendMode(this.settings.blendMode);
 
-            // Create a texture cache
-            this.cache = new me.Renderer.TextureCache(
-                this.compositor.maxTextures
-            );
+            // get GPU vendor and renderer
+            var debugInfo = this.gl.getExtension("WEBGL_debug_renderer_info");
+            if (debugInfo !== null) {
+                this.GPUVendor = this.gl.getParameter(debugInfo.UNMASKED_VENDOR_WEBGL);
+                this.GPURenderer = this.gl.getParameter(debugInfo.UNMASKED_RENDERER_WEBGL);
+            }
 
-            // Configure the WebGL viewport
-            this.scaleCanvas(1, 1);
+            // Create a texture cache
+            this.cache = new me.Renderer.TextureCache(this.maxTextures);
 
             // to simulate context lost and restore :
             // var ctx = me.video.renderer.context.getExtension('WEBGL_lose_context');
             // ctx.loseContext()
-            canvas.addEventListener("webglcontextlost", function (event) {
+            this.getScreenCanvas().addEventListener("webglcontextlost", function (event) {
                 event.preventDefault();
                 renderer.isContextValid = false;
                 me.event.publish(me.event.WEBGL_ONCONTEXT_LOST, [ renderer ]);
             }, false );
             // ctx.restoreContext()
-            canvas.addEventListener("webglcontextrestored", function (event) {
+            this.getScreenCanvas().addEventListener("webglcontextrestored", function (event) {
                 renderer.reset();
                 renderer.isContextValid = true;
                 me.event.publish(me.event.WEBGL_ONCONTEXT_RESTORED, [ renderer ]);
@@ -120,15 +171,31 @@
             this._super(me.Renderer, "reset");
             if (this.isContextValid === false) {
                 // on context lost/restore
-                this.compositor.init(this);
+                this.currentCompositor.init(this);
             } else {
-                this.compositor.reset();
+                this.currentCompositor.reset();
             }
             this.gl.disable(this.gl.SCISSOR_TEST);
             if (typeof this.fontContext2D !== "undefined" ) {
                 this.createFontTexture(this.cache);
             }
 
+        },
+
+        /**
+         * assign a compositor to this renderer
+         * @name setCompositor
+         * @function
+         * @param {WebGLCompositor} compositor a compositor instance
+         * @memberOf me.WebGLRenderer.prototype
+         * @function
+         */
+        setCompositor : function (compositor) {
+            if (this.currentCompositor !== null && this.currentCompositor !== compositor) {
+                // flush the current compositor
+                this.currentCompositor.flush();
+            }
+            this.currentCompositor = compositor;
         },
 
         /**
@@ -146,10 +213,20 @@
          */
         createFontTexture : function (cache) {
             if (typeof this.fontTexture === "undefined") {
-                var image = me.video.createCanvas(
-                    me.Math.nextPowerOfTwo(this.backBufferCanvas.width),
-                    me.Math.nextPowerOfTwo(this.backBufferCanvas.height)
-                );
+                var canvas = this.backBufferCanvas;
+                var width = canvas.width;
+                var height = canvas.height;
+
+                if (this.WebGLVersion === 1) {
+                    if (!me.Math.isPowerOfTwo(width)) {
+                        width = me.Math.nextPowerOfTwo(canvas.width);
+                    }
+                    if (!me.Math.isPowerOfTwo(height)) {
+                        height = me.Math.nextPowerOfTwo(canvas.height);
+                    }
+                }
+
+                var image = me.video.createCanvas(width, height, true);
 
                 /**
                  * @ignore
@@ -162,20 +239,17 @@
                 this.fontTexture = new this.Texture(
                     this.Texture.prototype.createAtlas.apply(
                         this.Texture.prototype,
-                        [ this.backBufferCanvas.width, this.backBufferCanvas.height, "fontTexture"]
+                        [ canvas.width, canvas.height, "fontTexture"]
                     ),
                     image,
                     cache
                 );
-            }
-            else {
+                this.currentCompositor.uploadTexture(this.fontTexture, 0, 0, 0);
+
+            } else {
                // fontTexture was already created, just add it back into the cache
                cache.set(this.fontContext2D.canvas, this.fontTexture);
            }
-           this.compositor.uploadTexture(this.fontTexture, 0, 0, 0);
-
-
-
         },
 
         /**
@@ -195,9 +269,9 @@
          */
         createPattern : function (image, repeat) {
 
-            if (!me.Math.isPowerOfTwo(image.width) || !me.Math.isPowerOfTwo(image.height)) {
+            if (me.video.renderer.WebGLVersion === 1 && (!me.Math.isPowerOfTwo(image.width) || !me.Math.isPowerOfTwo(image.height))) {
                 var src = typeof image.src !== "undefined" ? image.src : image;
-                throw new me.video.Error(
+                throw new Error(
                     "[WebGL Renderer] " + src + " is not a POT texture " +
                     "(" + image.width + "x" + image.height + ")"
                 );
@@ -212,7 +286,7 @@
             );
 
             // FIXME: Remove old cache entry and texture when changing the repeat mode
-            this.compositor.uploadTexture(texture);
+            this.currentCompositor.uploadTexture(texture);
 
             return texture;
         },
@@ -224,7 +298,7 @@
          * @function
          */
         flush : function () {
-            this.compositor.flush();
+            this.currentCompositor.flush();
         },
 
         /**
@@ -232,19 +306,28 @@
          * @name clearColor
          * @memberOf me.WebGLRenderer.prototype
          * @function
-         * @param {me.Color|String} color CSS color.
+         * @param {me.Color|String} [color] CSS color.
          * @param {Boolean} [opaque=false] Allow transparency [default] or clear the surface completely [true]
          */
         clearColor : function (col, opaque) {
+            var glArray;
+
             this.save();
-            this.resetTransform();
-            this.currentColor.copy(col);
-            if (opaque) {
-                this.compositor.clear();
+
+            if (col instanceof me.Color) {
+                glArray = col.toArray();
+            } else {
+                // reuse temporary the renderer default color object
+                glArray = this.getColor().parseCSS(col).toArray();
             }
-            else {
-                this.fillRect(0, 0, this.canvas.width, this.canvas.height);
-            }
+
+            // clear gl context with the specified color
+            this.currentCompositor.clearColor(glArray[0], glArray[1], glArray[2], (opaque === true) ? 1.0 : glArray[3]);
+            this.currentCompositor.clear();
+
+            // restore default clear Color black
+            this.currentCompositor.clearColor(0.0, 0.0, 0.0, 0.0);
+
             this.restore();
         },
 
@@ -272,15 +355,12 @@
         drawFont : function (bounds) {
             var fontContext = this.getFontContext();
 
-            // Flush the compositor so we can upload a new texture
-            this.flush();
-
             // Force-upload the new texture
-            this.compositor.uploadTexture(this.fontTexture, 0, 0, 0, true);
+            this.currentCompositor.uploadTexture(this.fontTexture, 0, 0, 0, true);
 
             // Add the new quad
             var key = bounds.pos.x + "," + bounds.pos.y + "," + bounds.width + "," + bounds.height;
-            this.compositor.addQuad(
+            this.currentCompositor.addQuad(
                 this.fontTexture,
                 key,
                 bounds.pos.x,
@@ -342,12 +422,12 @@
 
             if (this.settings.subPixel === false) {
                 // clamp to pixel grid
-                dx = ~~dx;
-                dy = ~~dy;
+                dx |= 0;
+                dy |= 0;
             }
 
             var key = sx + "," + sy + "," + sw + "," + sh;
-            this.compositor.addQuad(this.cache.get(image), key, dx, dy, dw, dh);
+            this.currentCompositor.addQuad(this.cache.get(image), key, dx, dy, dw, dh);
         },
 
         /**
@@ -364,7 +444,7 @@
          */
         drawPattern : function (pattern, x, y, width, height) {
             var key = "0,0," + width + "," + height;
-            this.compositor.addQuad(pattern, key, x, y, width, height);
+            this.currentCompositor.addQuad(pattern, key, x, y, width, height);
         },
 
 
@@ -390,7 +470,7 @@
          */
         getContextGL : function (canvas, transparent) {
             if (typeof canvas === "undefined" || canvas === null) {
-                throw new me.video.Error(
+                throw new Error(
                     "You must pass a canvas element in order to create " +
                     "a GL context"
                 );
@@ -405,14 +485,30 @@
                 antialias : this.settings.antiAlias,
                 depth : false,
                 stencil: true,
+                preserveDrawingBuffer : false,
                 premultipliedAlpha: transparent,
+                powerPreference: this.settings.powerPreference,
                 failIfMajorPerformanceCaveat : this.settings.failIfMajorPerformanceCaveat
             };
 
-            var gl = canvas.getContext("webgl", attr) || canvas.getContext("experimental-webgl", attr);
+            var gl;
+
+            // attempt to create a WebGL2 context if requested
+            if (this.settings.preferWebGL1 === false) {
+                gl = canvas.getContext("webgl2", attr);
+                if (gl) {
+                    this.WebGLVersion = 2;
+                }
+            }
+
+            // fallback to WebGL1
+            if (!gl) {
+                this.WebGLVersion = 1;
+                gl = canvas.getContext("webgl", attr) || canvas.getContext("experimental-webgl", attr);
+            }
 
             if (!gl) {
-                throw new me.video.Error(
+                throw new Error(
                     "A WebGL context could not be created."
                 );
             }
@@ -470,29 +566,6 @@
                 this.createFontTexture(this.cache);
             }
             return this.fontContext2D;
-        },
-
-        /**
-         * scales the canvas & GL Context
-         * @name scaleCanvas
-         * @memberOf me.WebGLRenderer.prototype
-         * @function
-         */
-        scaleCanvas : function (scaleX, scaleY) {
-            var w = this.canvas.width * scaleX;
-            var h = this.canvas.height * scaleY;
-
-            // adjust CSS style for High-DPI devices
-            if (me.device.devicePixelRatio > 1) {
-                this.canvas.style.width = (w / me.device.devicePixelRatio) + "px";
-                this.canvas.style.height = (h / me.device.devicePixelRatio) + "px";
-            }
-            else {
-                this.canvas.style.width = w + "px";
-                this.canvas.style.height = h + "px";
-            }
-
-            this.compositor.setProjection(this.canvas.width, this.canvas.height);
         },
 
         /**
@@ -629,7 +702,30 @@
             if (fill === true ) {
                 this.fillArc(x, y, radius, start, end, antiClockwise);
             } else {
-                console.warn("strokeArc() is not implemented");
+                // XXX to be optimzed using a specific shader
+                var points = this._glPoints;
+                var i, len = Math.floor(24 * Math.sqrt(radius * 2));
+                var theta = (end - start) / (len * 2);
+                var theta2 = theta * 2;
+                var cos_theta = Math.cos(theta);
+                var sin_theta = Math.sin(theta);
+
+                // Grow internal points buffer if necessary
+                for (i = points.length; i < len + 1; i++) {
+                    points.push(new me.Vector2d());
+                }
+
+                // calculate and draw all segments
+                for (i = 0; i < len; i++) {
+                    var angle = ((theta) + start + (theta2 * i));
+                    var cos = Math.cos(angle);
+                    var sin = -Math.sin(angle);
+
+                    points[i].x = x + (((cos_theta * cos) + (sin_theta * sin)) * radius);
+                    points[i].y = y + (((cos_theta * -sin) + (sin_theta * cos)) * radius);
+                }
+                // batch draw all lines
+                this.currentCompositor.drawVertices(this.gl.LINE_STRIP, points, len);
             }
         },
 
@@ -646,7 +742,34 @@
          * @param {Boolean} [antiClockwise=false] draw arc anti-clockwise
          */
         fillArc : function (x, y, radius, start, end, antiClockwise) {
-            console.warn("fillArc() is not implemented");
+            // XXX to be optimzed using a specific shader
+            var points = this._glPoints;
+            var i, index = 0;
+            var len = Math.floor(24 * Math.sqrt(radius * 2));
+            var theta = (end - start) / (len * 2);
+            var theta2 = theta * 2;
+            var cos_theta = Math.cos(theta);
+            var sin_theta = Math.sin(theta);
+
+            // Grow internal points buffer if necessary
+            for (i = points.length; i < len * 2; i++) {
+                points.push(new me.Vector2d());
+            }
+
+            // calculate and draw all segments
+            for (i = 0; i < len - 1; i++) {
+                var angle = ((theta) + start + (theta2 * i));
+                var cos = Math.cos(angle);
+                var sin = -Math.sin(angle);
+
+                points[index++].set(x, y);
+                points[index++].set(
+                    x - (((cos_theta * cos) + (sin_theta * sin)) * radius),
+                    y - (((cos_theta * -sin) + (sin_theta * cos)) * radius)
+                );
+            }
+            // batch draw all triangles
+            this.currentCompositor.drawVertices(this.gl.TRIANGLE_STRIP, points, index);
         },
 
         /**
@@ -681,7 +804,7 @@
                     points[i].y = y + (Math.cos(segment * -i) * h);
                 }
                 // batch draw all lines
-                this.compositor.drawLine(points, len);
+                this.currentCompositor.drawVertices(this.gl.LINE_LOOP, points, len);
             }
 
         },
@@ -717,9 +840,8 @@
                     y + (Math.cos(segment * i) * h)
                 );
             }
-
             // batch draw all triangles
-            this.compositor.drawTriangle(points, index, true);
+            this.currentCompositor.drawVertices(this.gl.TRIANGLE_STRIP, points, index);
         },
 
         /**
@@ -738,7 +860,7 @@
             points[0].y = startY;
             points[1].x = endX;
             points[1].y = endY;
-            this.compositor.drawLine(points, 2, true);
+            this.currentCompositor.drawVertices(this.gl.LINE_STRIP, points, 2);
         },
 
 
@@ -781,7 +903,7 @@
                     points[i].x = poly.pos.x + poly.points[i].x;
                     points[i].y = poly.pos.y + poly.points[i].y;
                 }
-                this.compositor.drawLine(points, len);
+                this.currentCompositor.drawVertices(this.gl.LINE_LOOP, points, len);
             }
         },
 
@@ -797,6 +919,7 @@
             var glPoints = this._glPoints;
             var indices = poly.getIndices();
             var x = poly.pos.x, y = poly.pos.y;
+            var i;
 
             // Grow internal points buffer if necessary
             for (i = glPoints.length; i < indices.length; i++) {
@@ -804,12 +927,12 @@
             }
 
             // calculate all vertices
-            for ( var i = 0; i < indices.length; i ++ ) {
+            for (i = 0; i < indices.length; i ++ ) {
                 glPoints[i].set(x + points[indices[i]].x, y + points[indices[i]].y);
             }
 
             // draw all triangle
-            this.compositor.drawTriangle(glPoints, indices.length);
+            this.currentCompositor.drawVertices(this.gl.TRIANGLES, glPoints, indices.length);
         },
 
         /**
@@ -822,17 +945,21 @@
          * @param {Number} width
          * @param {Number} height
          */
-        strokeRect : function (x, y, width, height) {
-            var points = this._glPoints;
-            points[0].x = x;
-            points[0].y = y;
-            points[1].x = x + width;
-            points[1].y = y;
-            points[2].x = x + width;
-            points[2].y = y + height;
-            points[3].x = x;
-            points[3].y = y + height;
-            this.compositor.drawLine(points, 4);
+        strokeRect : function (x, y, width, height, fill) {
+            if (fill === true ) {
+                this.fillRect(x, y, width, height);
+            } else {
+                var points = this._glPoints;
+                points[0].x = x;
+                points[0].y = y;
+                points[1].x = x + width;
+                points[1].y = y;
+                points[2].x = x + width;
+                points[2].y = y + height;
+                points[3].x = x;
+                points[3].y = y + height;
+                this.currentCompositor.drawVertices(this.gl.LINE_LOOP, points, 4);
+            }
         },
 
         /**
@@ -855,7 +982,7 @@
             glPoints[2].y = y + height;
             glPoints[3].x = x;
             glPoints[3].y = y + height;
-            this.compositor.drawTriangle(glPoints, 4, true);
+            this.currentCompositor.drawVertices(this.gl.TRIANGLE_STRIP, glPoints, 4);
         },
 
         /**
@@ -879,12 +1006,13 @@
          * @param {me.Matrix2d} mat2d Matrix to transform by
          */
         transform : function (mat2d) {
-            this.currentTransform.multiply(mat2d);
+            var currentTransform = this.currentTransform;
+            currentTransform.multiply(mat2d);
             if (this.settings.subPixel === false) {
                 // snap position values to pixel grid
-                var a = this.currentTransform.val;
-                a[6] = ~~a[6];
-                a[7] = ~~a[7];
+                var a = currentTransform.toArray();
+                a[6] |= 0;
+                a[7] |= 0;
             }
         },
 
@@ -897,10 +1025,13 @@
          * @param {Number} y
          */
         translate : function (x, y) {
+            var currentTransform = this.currentTransform;
+            currentTransform.translate(x, y);
             if (this.settings.subPixel === false) {
-                this.currentTransform.translate(~~x, ~~y);
-            } else {
-                this.currentTransform.translate(x, y);
+                // snap position values to pixel grid
+                var a = currentTransform.toArray();
+                a[6] |= 0;
+                a[7] |= 0;
             }
         },
 
@@ -990,7 +1121,7 @@
         /**
          * disable (remove) the rendering mask set through setMask.
          * @name clearMask
-         * @see setMask
+         * @see me.WebGLRenderer#setMask
          * @memberOf me.WebGLRenderer.prototype
          * @function
          */

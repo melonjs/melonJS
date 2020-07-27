@@ -44,6 +44,8 @@
      * @param {Number} [settings.lineHeight=1.0] line spacing height
      * @param {me.Vector2d} [settings.anchorPoint={x:0.0, y:0.0}] anchor point to draw the text at
      * @param {(String|String[])} [settings.text] a string, or an array of strings
+     * @example
+     * var font = new me.Text(0, 0, {font: "Arial", size: 8, fillStyle: this.color});
      */
     me.Text = me.Renderable.extend({
 
@@ -127,11 +129,24 @@
              */
             this.lineHeight = settings.lineHeight || 1.0;
 
-            // private font properties
-            this._fontSize = 0;
+            /**
+             * the text to be displayed
+             * @private
+             * @type {String[]}
+             * @name _text
+             * @memberOf me.Text
+             */
+            this._text = [];
 
-            // the text displayed by this bitmapFont object
-            this._text = "";
+            /**
+             * the font size (in px)
+             * @public
+             * @type {Number}
+             * @name fontSize
+             * @default 10
+             * @memberOf me.Text
+            */
+            this.fontSize = 10;
 
             // anchor point
             if (typeof settings.anchorPoint !== "undefined") {
@@ -152,7 +167,7 @@
             if (settings.bold === true) {
                 this.bold();
             }
-            if (settings.italic  === true) {
+            if (settings.italic === true) {
                 this.italic();
             }
 
@@ -192,7 +207,7 @@
          * @memberOf me.Text.prototype
          * @function
          * @param {String} font a CSS font name
-         * @param {Number|String} size size, or size + suffix (px, em, pt)
+         * @param {Number|String} [size=10] size in px, or size + suffix (px, em, pt)
          * @return this object for chaining
          * @example
          * font.setFont("Arial", 20);
@@ -209,20 +224,20 @@
 
             // font size
             if (typeof size === "number") {
-                this._fontSize = size;
+                this.fontSize = size;
                 size += "px";
             } else /* string */ {
                 // extract the units and convert if necessary
-                var CSSval =  size.match(/([-+]?[\d.]*)(.*)/);
-                this._fontSize = parseFloat(CSSval[1]);
+                var CSSval = size.match(/([-+]?[\d.]*)(.*)/);
+                this.fontSize = parseFloat(CSSval[1]);
                 if (CSSval[2]) {
-                    this._fontSize *= toPX[runits.indexOf(CSSval[2])];
+                    this.fontSize *= toPX[runits.indexOf(CSSval[2])];
                 } else {
                     // no unit define, assume px
                     size += "px";
                 }
             }
-            this.height = this._fontSize;
+            this.height = this.fontSize;
             this.font = size + " " + font_names.join(",");
 
             this.isDirty = true;
@@ -239,15 +254,19 @@
          * @return this object for chaining
          */
         setText : function (value) {
-            value = "" + value;
-            if (this._text !== value) {
-                if (Array.isArray(value)) {
-                    this._text = value.join("\n");
+            if (typeof value === "undefined") {
+                value = "";
+            }
+
+            if (this._text.toString() !== value.toString()) {
+                if (!Array.isArray(value)) {
+                    this._text = ("" + value).split("\n");
                 } else {
                     this._text = value;
                 }
                 this.isDirty = true;
             }
+
             return this;
         },
 
@@ -262,8 +281,6 @@
          * @returns {TextMetrics} a TextMetrics object with two properties: `width` and `height`, defining the output dimensions
          */
         measureText : function (renderer, text, ret) {
-            text = text || this._text;
-
             var context;
 
             if (typeof renderer === "undefined") {
@@ -276,8 +293,9 @@
             }
 
             var textMetrics = ret || this.getBounds();
-            var lineHeight = this._fontSize * this.lineHeight;
-            var strings = ("" + (text)).split("\n");
+            var lineHeight = this.fontSize * this.lineHeight;
+
+            var strings = typeof text !== "undefined" ? ("" + (text)).split("\n") : this._text;
 
             // save the previous context
             context.save();
@@ -288,7 +306,7 @@
             // compute the bounding box size
             this.height = this.width = 0;
             for (var i = 0; i < strings.length; i++) {
-                this.width = Math.max(context.measureText(me.utils.string.trimRight(strings[i])).width, this.width);
+                this.width = Math.max(context.measureText(me.utils.string.trimRight(""+strings[i])).width, this.width);
                 this.height += lineHeight;
             }
             textMetrics.width = Math.ceil(this.width);
@@ -372,7 +390,8 @@
                 renderer.restore();
             }
 
-            // clear the dirty flag
+            // clear the dirty flag here for
+            // backward compatibility 
             this.isDirty = false;
         },
 
@@ -398,10 +417,9 @@
         _drawFont : function (context, text, x, y, stroke) {
             setContextStyle(context, this, stroke);
 
-            var strings = ("" + text).split("\n");
-            var lineHeight = this._fontSize * this.lineHeight;
-            for (var i = 0; i < strings.length; i++) {
-                var string = me.utils.string.trimRight(strings[i]);
+            var lineHeight = this.fontSize * this.lineHeight;
+            for (var i = 0; i < text.length; i++) {
+                var string = me.utils.string.trimRight(""+text[i]);
                 // draw the string
                 context[stroke ? "strokeText" : "fillText"](string, x, y);
                 // add leading space
@@ -418,6 +436,7 @@
             me.pool.push(this.fillStyle);
             me.pool.push(this.strokeStyle);
             this.fillStyle = this.strokeStyle = undefined;
+            this._text.length = 0;
             this._super(me.Renderable, "destroy");
         }
     });

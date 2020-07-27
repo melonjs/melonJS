@@ -5,6 +5,7 @@
      * - [TexturePacker]{@link http://www.codeandweb.com/texturepacker/} : through JSON export (standard and multipack texture atlas) <br>
      * - [ShoeBox]{@link http://renderhjs.net/shoebox/} : through JSON export using the
      * melonJS setting [file]{@link https://github.com/melonjs/melonJS/raw/master/media/shoebox_JSON_export.sbx} <br>
+     * - [Free Texture Packer]{@link http://free-tex-packer.com/app/} : through JSON export (standard and multipack texture atlas) <br>
      * - Standard (fixed cell size) spritesheet : through a {framewidth:xx, frameheight:xx, anchorPoint:me.Vector2d} object
      * @class
      * @extends me.Object
@@ -70,15 +71,15 @@
                     var atlas = atlases[i];
 
                     if (typeof(atlas.meta) !== "undefined") {
-                        // Texture Packer
-                        if (atlas.meta.app.includes("texturepacker")) {
+                        // Texture Packer or Free Texture Packer
+                        if (atlas.meta.app.includes("texturepacker") || atlas.meta.app.includes("free-tex-packer")) {
                             this.format = "texturepacker";
                             // set the texture
                             if (typeof(src) === "undefined") {
                                 // get the texture name from the atlas meta data
                                 var image = me.loader.getImage(atlas.meta.image);
                                 if (!image) {
-                                    throw new me.video.renderer.Texture.Error(
+                                    throw new Error(
                                         "Atlas texture '" + image + "' not found"
                                     );
                                 }
@@ -91,7 +92,7 @@
                         // ShoeBox
                         else if (atlas.meta.app.includes("ShoeBox")) {
                             if (!atlas.meta.exporter || !atlas.meta.exporter.includes("melonJS")) {
-                                throw new me.video.renderer.Texture.Error(
+                                throw new Error(
                                     "ShoeBox requires the JSON exporter : " +
                                     "https://github.com/melonjs/melonJS/tree/master/media/shoebox_JSON_export.sbx"
                                 );
@@ -131,12 +132,11 @@
 
             // if format not recognized
             if (this.atlases.length === 0) {
-                throw new me.video.renderer.Texture.Error("texture atlas format not supported");
+                throw new Error("texture atlas format not supported");
             }
 
             // Add self to TextureCache if cache !== false
             if (cache !== false) {
-                src = Array.isArray(src) ? src : [src];
                 for (var source of this.sources) {
                     if (cache instanceof me.Renderer.TextureCache) {
                         cache.set(source, this);
@@ -225,16 +225,20 @@
             // verifying the texture size
             if ((width % (data.framewidth + spacing)) !== 0 ||
                 (height % (data.frameheight + spacing)) !== 0) {
-                // "truncate size"
-                width = spritecount.x * (data.framewidth + spacing);
-                height = spritecount.y * (data.frameheight + spacing);
-                // warning message
-                console.warn(
-                    "Spritesheet Texture for image: " + image.src +
-                    " is not divisible by " + (data.framewidth + spacing) +
-                    "x" + (data.frameheight + spacing) +
-                    ", truncating effective size to " + width + "x" + height
-                );
+                var computed_width = spritecount.x * (data.framewidth + spacing);
+                var computed_height = spritecount.y * (data.frameheight + spacing);
+                if (computed_width - width !== spacing && computed_height - height !== spacing) {
+                    // "truncate size" if delta is different from the spacing size
+                    width = computed_width;
+                    height = computed_height;
+                    // warning message
+                    console.warn(
+                        "Spritesheet Texture for image: " + image.src +
+                        " is not divisible by " + (data.framewidth + spacing) +
+                        "x" + (data.frameheight + spacing) +
+                        ", truncating effective size to " + width + "x" + height
+                    );
+                }
             }
 
             // build the local atlas
@@ -411,9 +415,9 @@
          * ...
          * ...
          * // add the coin sprite as renderable for the entity
-         * this.renderable = game.texture.createSpriteFromName("coin.png");
+         * var sprite = game.texture.createSpriteFromName("coin.png");
          * // set the renderable position to bottom center
-         * this.anchorPoint.set(0.5, 1.0);
+         * sprite.anchorPoint.set(0.5, 1.0);
          */
         createSpriteFromName : function (name, settings) {
             // instantiate a new sprite object
@@ -444,7 +448,7 @@
          * );
          *
          * // create a new Sprite as renderable for the entity
-         * this.renderable = game.texture.createAnimationFromName([
+         * var sprite = game.texture.createAnimationFromName([
          *     "walk0001.png", "walk0002.png", "walk0003.png",
          *     "walk0004.png", "walk0005.png", "walk0006.png",
          *     "walk0007.png", "walk0008.png", "walk0009.png",
@@ -452,13 +456,13 @@
          * ]);
          *
          * // define an additional basic walking animation
-         * this.renderable.addAnimation ("simple_walk", [0,2,1]);
+         * sprite.addAnimation ("simple_walk", [0,2,1]);
          * // you can also use frame name to define your animation
-         * this.renderable.addAnimation ("speed_walk", ["walk0007.png", "walk0008.png", "walk0009.png", "walk0010.png"]);
+         * sprite.addAnimation ("speed_walk", ["walk0007.png", "walk0008.png", "walk0009.png", "walk0010.png"]);
          * // set the default animation
-         * this.renderable.setCurrentAnimation("simple_walk");
+         * sprite.setCurrentAnimation("simple_walk");
          * // set the renderable position to bottom center
-         * this.anchorPoint.set(0.5, 1.0);
+         * sprite.anchorPoint.set(0.5, 1.0);
          */
         createAnimationFromName : function (names, settings) {
             var tpAtlas = [], indices = {};
@@ -470,7 +474,7 @@
                 region = this.getRegion(names[i]);
                 if (region == null) {
                     // throw an error
-                    throw new me.video.renderer.Texture.Error("Texture - region for " + names[i] + " not found");
+                    throw new Error("Texture - region for " + names[i] + " not found");
                 }
                 tpAtlas[i] = region;
                 // save the corresponding index
@@ -489,25 +493,6 @@
                 atlas: tpAtlas,
                 atlasIndices: indices
             }, settings || {}));
-        }
-    });
-
-    /**
-     * Base class for Texture exception handling.
-     * @name Error
-     * @class
-     * @memberOf me.Renderer.Texture
-     * @private
-     * @constructor
-     * @param {String} msg Error message.
-     */
-    me.Renderer.prototype.Texture.Error = me.Error.extend({
-        /**
-         * @ignore
-         */
-        init : function (msg) {
-            this._super(me.Error, "init", [ msg ]);
-            this.name = "me.Renderer.Texture.Error";
         }
     });
 })();

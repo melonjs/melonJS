@@ -9,6 +9,18 @@
         // hold public stuff in our singleton
         var api = {};
 
+        /**
+         * converts the first character of the given string to uppercase
+         * @public
+         * @function
+         * @memberOf me.utils.string
+         * @name capitalize
+         * @param {String} string the string to be capitalized
+         * @return {string} the capitalized string
+         */
+        api.capitalize = function (str) {
+            return str.charAt(0).toUpperCase() + str.slice(1);
+        };
 
         /**
          * returns the string stripped of whitespace from the left.

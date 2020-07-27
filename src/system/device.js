@@ -89,9 +89,6 @@
             // Modern browsers support "wheel", Webkit and IE support at least "mousewheel
             me.device.wheel = ("onwheel" in document.createElement("div"));
 
-            // accelerometer detection
-            me.device.hasAccelerometer = typeof (window.DeviceMotionEvent) !== "undefined";
-
             // pointerlock detection
             this.hasPointerLockSupport = me.agent.prefixed("pointerLockElement", document);
 
@@ -101,8 +98,11 @@
 
             // device orientation and motion detection
             if (window.DeviceOrientationEvent) {
-                me.device.hasDeviceOrientation = true;
+
             }
+            // device accelerometer and orientation detection
+            me.device.hasDeviceOrientation = !!window.DeviceOrientationEvent;
+            me.device.hasAccelerometer = !!window.DeviceMotionEvent;
 
             // fullscreen api detection & polyfill when possible
             this.hasFullscreenSupport = me.agent.prefixed("fullscreenEnabled", document) ||
@@ -442,6 +442,7 @@
          * @type Number
          * @readonly
          * @name accelerationX
+         * @see me.device.watchAccelerometer
          * @memberOf me.device
          */
         api.accelerationX = 0;
@@ -452,6 +453,7 @@
          * @type Number
          * @readonly
          * @name accelerationY
+         * @see me.device.watchAccelerometer
          * @memberOf me.device
          */
         api.accelerationY = 0;
@@ -462,6 +464,7 @@
          * @type Number
          * @readonly
          * @name accelerationZ
+         * @see me.device.watchAccelerometer
          * @memberOf me.device
          */
         api.accelerationZ = 0;
@@ -472,6 +475,7 @@
          * @type Number
          * @readonly
          * @name gamma
+         * @see me.device.watchDeviceOrientation
          * @memberOf me.device
          */
         api.gamma = 0;
@@ -482,6 +486,7 @@
          * @type Number
          * @readonly
          * @name beta
+         * @see me.device.watchDeviceOrientation
          * @memberOf me.device
          */
         api.beta = 0;
@@ -493,6 +498,7 @@
          * @type Number
          * @readonly
          * @name alpha
+         * @see me.device.watchDeviceOrientation
          * @memberOf me.device
          */
         api.alpha = 0;
@@ -508,6 +514,23 @@
          * @memberOf me.device
          */
         api.language = navigator.language || navigator.browserLanguage || navigator.userLanguage || "en";
+
+        /**
+         * equals to true if the device browser supports OffScreenCanvas.
+         * @type Boolean
+         * @readonly
+         * @name OffScreenCanvas
+         * @memberOf me.device
+         */
+        try {
+            // some browser (e.g. Safari) implements WebGL1 and WebGL2 contexts only
+            // https://bugzilla.mozilla.org/show_bug.cgi?id=801176
+            api.OffscreenCanvas =
+                (typeof window.OffscreenCanvas !== "undefined") &&
+                ((new OffscreenCanvas(0, 0).getContext( "2d" )) !== null);
+        } catch (e) {
+            api.OffscreenCanvas = false;
+        }
 
       /**
         * specify a function to execute when the Device is fully loaded and ready
@@ -625,7 +648,7 @@
          */
         api.requestFullscreen = function (element) {
             if (this.hasFullscreenSupport) {
-                element = element || me.video.getWrapper();
+                element = element || me.video.getParent();
                 element.requestFullscreen = me.agent.prefixed("requestFullscreen", element) ||
                                             element.mozRequestFullScreen;
 
@@ -663,7 +686,7 @@
             // first try using "standard" values
             if (typeof screen !== "undefined") {
                 var orientation = me.agent.prefixed("orientation", screen);
-                if (typeof orientation !== "undefined" && typeof(orientation.type === "string")) {
+                if (typeof orientation !== "undefined" && typeof orientation.type === "string") {
                     // Screen Orientation API specification
                     return orientation.type;
                 } else if (typeof orientation === "string") {
@@ -760,9 +783,110 @@
                     return me.save;
 
                 default :
-                    throw new me.Error("storage type " + type + " not supported");
+                    throw new Error("storage type " + type + " not supported");
             }
         };
+
+        /**
+         * return the parent DOM element for the given parent name or HTMLElement object
+         * @name getParentElement
+         * @memberOf me.device
+         * @function
+         * @param {String|HTMLElement} element the parent element name or a HTMLElement object
+         * @return {HTMLElement} the parent Element
+         */
+        api.getParentElement = function (element) {
+            var target = me.device.getElement(element);
+
+            if (target !== null && target.parentNode !== null) {
+                target = target.parentNode;
+            }
+
+            // fallback, if invalid target or non HTMLElement object
+            if (!target)  {
+                //default to document.body
+                target = document.body;
+            }
+
+            return target;
+        };
+
+        /**
+         * return the DOM element for the given element name or HTMLElement object
+         * @name getElement
+         * @memberOf me.device
+         * @function
+         * @param {String|HTMLElement} element the parent element name or a HTMLElement object
+         * @return {HTMLElement} the corresponding DOM Element or null if not existing
+         */
+        api.getElement = function (element) {
+            var target = null;
+
+            if (element !== "undefined") {
+                if (typeof element === "string") {
+                    target = document.getElementById(element);
+                } else if (typeof element === "object" && element.nodeType === Node.ELEMENT_NODE) {
+                    target = element;
+                }
+            }
+            return target;
+        };
+
+        /**
+         * return the bounding rect for the given HTMLElement object
+         * @name getElementBounds
+         * @see https://developer.mozilla.org/en-US/docs/Web/API/DOMRect
+         * @memberOf me.device
+         * @function
+         * @param {String|HTMLElement} element an HTMLElement object
+         * @return {DOMRect} the size and position of the element relatively to the viewport.
+         */
+        api.getElementBounds = function (element) {
+            var rect;
+
+            if (typeof element === "object" && element !== document.body && typeof element.getBoundingClientRect !== "undefined") {
+                rect = element.getBoundingClientRect();
+            } else {
+                // for cased where DOM is not implemented (e.g. Ejecta, Weixin)
+                rect = { left: 0, x: 0, top: 0, y: 0, width: window.innerWidth, height: window.innerHeight};
+            };
+            return rect;
+        };
+
+        /**
+         * return the parent bounds for the given parent name or HTMLElement object
+         * @name getParentBounds
+         * @see https://developer.mozilla.org/en-US/docs/Web/API/DOMRect
+         * @memberOf me.device
+         * @function
+         * @param {String|HTMLElement} element the parent element name or a HTMLElement object
+         * @return {DOMRect} the size and position of the parent relative to the viewport.
+         */
+        api.getParentBounds = function (element) {
+            return me.device.getElementBounds(me.device.getParentElement(element));
+        };
+
+        /**
+         * returns true if the device supports WebGL
+         * @name isWebGLSupported
+         * @memberOf me.device
+         * @function
+         * @param {Object} [options] context creation options
+         * @param {Boolean} [options.failIfMajorPerformanceCaveat=true] If true, the renderer will switch to CANVAS mode if the performances of a WebGL context would be dramatically lower than that of a native application making equivalent OpenGL calls.
+         * @return {Boolean} true if WebGL is supported
+         */
+        api.isWebGLSupported = function (options) {
+            try {
+                var canvas = document.createElement("canvas");
+                var ctxOptions = {
+                    stencil: true,
+                    failIfMajorPerformanceCaveat : options.failIfMajorPerformanceCaveat
+                };
+                return !! (window.WebGLRenderingContext && (canvas.getContext("webgl", ctxOptions) || canvas.getContext("experimental-webgl", ctxOptions)));
+            } catch (e) {
+                return false;
+            }
+        },
 
         /**
          * return the highest precision format supported by this device for GL Shaders
@@ -838,7 +962,7 @@
          */
         api.turnOnPointerLock = function () {
             if (this.hasPointerLockSupport) {
-                var element = me.video.getWrapper();
+                var element = me.video.getParent();
                 if (me.device.ua.match(/Firefox/i)) {
                     var fullscreenchange = function () {
                         if ((me.agent.prefixed("fullscreenElement", document) ||
@@ -876,23 +1000,45 @@
         };
 
         /**
-         * watch Accelerator event
+         * Enable monitor of the device accelerator to detect the amount of physical force of acceleration the device is receiving.
+         * (one some device a first user gesture will be required before calling this function)
          * @name watchAccelerometer
          * @memberOf me.device
          * @public
          * @function
-         * @return {Boolean} false if not supported by the device
+         * @see me.device.accelerationX
+         * @see me.device.accelerationY
+         * @see me.device.accelerationZ
+         * @return {Boolean} false if not supported or permission not granted by the user
+         * @example
+         * // try to enable device accelerometer event on user gesture
+         * me.input.registerPointerEvent("pointerleave", me.game.viewport, function() {
+         *     if (me.device.watchAccelerometer() === true) {
+         *         // Success
+         *         me.input.releasePointerEvent("pointerleave", me.game.viewport);
+         *     } else {
+         *         // ... fail at enabling the device accelerometer event
+         *     }
+         * });
          */
         api.watchAccelerometer = function () {
-            if (me.device.hasAccelerometer) {
-                if (!accelInitialized) {
+            if (me.device.hasAccelerometer && !accelInitialized) {
+                if (DeviceOrientationEvent && typeof DeviceOrientationEvent.requestPermission === "function") {
+                    DeviceOrientationEvent.requestPermission()
+                        .then(response => {
+                            if (response === "granted") {
+                                // add a listener for the devicemotion event
+                                window.addEventListener("devicemotion", onDeviceMotion, false);
+                                accelInitialized = true;
+                            }
+                        }).catch(console.error);
+                } else {
                     // add a listener for the devicemotion event
                     window.addEventListener("devicemotion", onDeviceMotion, false);
                     accelInitialized = true;
                 }
-                return true;
             }
-            return false;
+            return accelInitialized;
         };
 
         /**
@@ -911,19 +1057,43 @@
         };
 
         /**
-         * watch the device orientation event
+         * Enable monitor of the device orientation to detect the current orientation of the device as compared to the Earth coordinate frame.
+         * (one some device a first user gesture will be required before calling this function)
          * @name watchDeviceOrientation
          * @memberOf me.device
          * @public
          * @function
-         * @return {Boolean} false if not supported by the device
+         * @see me.device.alpha
+         * @see me.device.beta
+         * @see me.device.gamma
+         * @return {Boolean} false if not supported or permission not granted by the user
+         * @example
+         * // try to enable device orientation event on user gesture
+         * me.input.registerPointerEvent("pointerleave", me.game.viewport, function() {
+         *     if (me.device.watchDeviceOrientation() === true) {
+         *         // Success
+         *         me.input.releasePointerEvent("pointerleave", me.game.viewport);
+         *     } else {
+         *         // ... fail at enabling the device orientation event
+         *     }
+         * });
          */
         api.watchDeviceOrientation = function () {
             if (me.device.hasDeviceOrientation && !deviceOrientationInitialized) {
-                window.addEventListener("deviceorientation", onDeviceRotate, false);
-                deviceOrientationInitialized = true;
+                if (typeof DeviceOrientationEvent.requestPermission === "function") {
+                    DeviceOrientationEvent.requestPermission()
+                        .then(response => {
+                            if (response === "granted") {
+                                window.addEventListener("deviceorientation", onDeviceRotate, false);
+                                deviceOrientationInitialized = true;
+                            }
+                        }).catch(console.error);
+                } else {
+                    window.addEventListener("deviceorientation", onDeviceRotate, false);
+                    deviceOrientationInitialized = true;
+                }
             }
-            return false;
+            return deviceOrientationInitialized;
         };
 
         /**

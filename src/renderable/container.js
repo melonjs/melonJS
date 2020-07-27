@@ -169,7 +169,7 @@
          * if auto-sort is disable, the object will be appended at the bottom of the list.
          * Adding a child to the container will automatically remove it from its other container.
          * Meaning a child can only have one parent.  This is important if you add a renderable
-         * to a container then add it to the me.game.world container it will move it out of the 
+         * to a container then add it to the me.game.world container it will move it out of the
          * orginal container.  Then when the me.game.world.reset() is called the renderable
          * will not be in any container.
          * @name addChild
@@ -212,6 +212,11 @@
                 child.onActivateEvent();
             }
 
+            // force repaint in case this is a static non-animated object
+            if (this.isAttachedToRoot() === true) {
+                me.game.repaint();
+            }
+
             this.onChildChange.call(this, this.children.length - 1);
 
             return child;
@@ -248,12 +253,17 @@
                     child.onActivateEvent();
                 }
 
+                // force repaint in case this is a static non-animated object
+                if (this.isAttachedToRoot() === true) {
+                    me.game.repaint();
+                }
+
                 this.onChildChange.call(this, index);
 
                 return child;
             }
             else {
-                throw new me.Container.Error("Index (" + index + ") Out Of Bounds for addChildAt()");
+                throw new Error("Index (" + index + ") Out Of Bounds for addChildAt()");
             }
         },
 
@@ -280,7 +290,7 @@
             var len = this.children.length;
 
             if (typeof callback !== "function") {
-                throw new me.Container.Error(callback + " is not a function");
+                throw new Error(callback + " is not a function");
             }
 
             if (arguments.length > 1) {
@@ -315,7 +325,7 @@
                 this.children[index2] = child;
             }
             else {
-                throw new me.Container.Error(child + " Both the supplied childs must be a child of the caller " + this);
+                throw new Error(child + " Both the supplied childs must be a child of the caller " + this);
             }
         },
 
@@ -331,7 +341,7 @@
                 return this.children[index];
             }
             else {
-                throw new me.Container.Error("Index (" + index + ") Out Of Bounds for getChildAt()");
+                throw new Error("Index (" + index + ") Out Of Bounds for getChildAt()");
             }
         },
 
@@ -583,7 +593,7 @@
                 me.utils.function.defer(deferredRemove, this, child, keepalive);
             }
             else {
-                throw new me.Container.Error("Child is not mine.");
+                throw new Error("Child is not mine.");
             }
         },
 
@@ -619,6 +629,12 @@
                     this.children.splice(childIndex, 1);
                     child.ancestor = undefined;
                 }
+
+                // force repaint in case this is a static non-animated object
+                if (this.isAttachedToRoot() === true) {
+                    me.game.repaint();
+                }
+
                 this.onChildChange.call(this, childIndex);
             }
         },
@@ -908,25 +924,6 @@
                     }
                 }
             }
-        }
-    });
-
-    /**
-     * Base class for ObjectContainer exception handling.
-     * @name Error
-     * @class
-     * @memberOf me.Container
-     * @private
-     * @constructor
-     * @param {String} msg Error message.
-     */
-    me.Container.Error = me.Renderable.Error.extend({
-        /**
-         * @ignore
-         */
-        init : function (msg) {
-            this._super(me.Renderable.Error, "init", [ msg ]);
-            this.name = "me.Container.Error";
         }
     });
 })();

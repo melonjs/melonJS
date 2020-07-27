@@ -90,7 +90,7 @@
     function registerEventListener(eventList, callback) {
         for (var x = 0; x < eventList.length; x++) {
             if (POINTER_MOVE.indexOf(eventList[x]) === -1) {
-                me.video.renderer.getScreenCanvas().addEventListener(eventList[x], callback, false);
+                me.input.pointerEventTarget.addEventListener(eventList[x], callback, { passive: (api.preventDefault === false) });
             }
         }
     }
@@ -107,6 +107,11 @@
                 T_POINTERS.push(new me.Pointer());
             }
 
+            if (me.input.pointerEventTarget === null) {
+                // default pointer event target
+                me.input.pointerEventTarget = me.video.renderer.getScreenCanvas();
+            }
+
             if (me.device.PointerEvent) {
                 // standard Pointer Events
                 activeEventList = pointerEventList;
@@ -120,24 +125,20 @@
             }
             registerEventListener(activeEventList, onPointerEvent);
 
-            // If W3C standard wheel events are not available, use non-standard
-            if (!me.device.wheel) {
-                window.addEventListener("mousewheel", onMouseWheel, false);
-            }
-
             // set the PointerMove/touchMove/MouseMove event
             if (typeof(api.throttlingInterval) === "undefined") {
                 // set the default value
-                api.throttlingInterval = ~~(1000 / me.sys.fps);
+                api.throttlingInterval = ~~(1000 / me.timer.maxfps);
             }
 
             if (me.sys.autoFocus === true) {
                 me.device.focus();
-                me.video.renderer.getScreenCanvas().addEventListener(
+                me.input.pointerEventTarget.addEventListener(
                     activeEventList[2], // MOUSE/POINTER DOWN
                     function () {
                         me.device.focus();
-                    }, { passive: true }
+                    },
+                    { passive: (api.preventDefault === false) }
                 );
             }
 
@@ -147,10 +148,10 @@
             if (api.throttlingInterval < 17) {
                 for (i = 0; i < events.length; i++) {
                     if (activeEventList.indexOf(events[i]) !== -1) {
-                        me.video.renderer.getScreenCanvas().addEventListener(
+                        me.input.pointerEventTarget.addEventListener(
                             events[i],
                             onMoveEvent,
-                            false
+                            { passive: true } // do not preventDefault on Move events
                         );
                     }
 
@@ -159,20 +160,20 @@
             else {
                 for (i = 0; i < events.length; i++) {
                     if (activeEventList.indexOf(events[i]) !== -1) {
-                        me.video.renderer.getScreenCanvas().addEventListener(
+                        me.input.pointerEventTarget.addEventListener(
                             events[i],
                             me.utils.function.throttle(
                                 onMoveEvent,
                                 api.throttlingInterval,
                                 false
                             ),
-                            false
+                            { passive: true } // do not preventDefault on Move events
                         );
                     }
                 }
             }
             // disable all gesture by default
-            me.input.setTouchAction(me.video.renderer.getScreenCanvas());
+            me.input.setTouchAction(me.input.pointerEventTarget);
 
             pointerInitialized = true;
         }
@@ -290,7 +291,7 @@
                         var gameX = pointer.gameX;
                         var gameY = pointer.gameY;
                         if (!region.currentTransform.isIdentity()) {
-                            var invV = region.currentTransform.multiplyVectorInverse(
+                            var invV = region.currentTransform.applyInverse(
                                 me.pool.pull("me.Vector2d", gameX, gameY)
                             );
                             gameX = invV.x;
@@ -364,13 +365,9 @@
                         default:
                             // event inside of bounds: trigger the POINTER_DOWN or WHEEL callback
                             if (eventInBounds) {
-
                                 // trigger the corresponding callback
                                 if (triggerEvent(handlers, pointer.type, pointer, pointer.pointerId)) {
                                     handled = true;
-                                    if (pointer.type === "wheel") {
-                                        api._preventDefaultFn(pointer.event);
-                                    }
                                     break;
                                 }
                             }
@@ -435,24 +432,6 @@
         return normalizedEvents;
     }
 
-
-    /**
-     * mouse event management (mousewheel)
-     * XXX: mousewheel is deprecated
-     * @ignore
-     */
-    function onMouseWheel(e) {
-        /* jshint expr:true */
-        if (e.target === me.video.renderer.getScreenCanvas()) {
-            // create a (fake) normalized event object
-            e.type = "wheel";
-            // dispatch mouse event to registered object
-            return dispatchEvent(normalizeEvent(e));
-        }
-        return true;
-    }
-
-
     /**
      * mouse/touch/pointer event management (move)
      * @ignore
@@ -461,18 +440,13 @@
         // dispatch mouse event to registered object
         dispatchEvent(normalizeEvent(e));
         // do not prevent default on moveEvent :
-        // - raise a deprectated warning in latest chrome version for touchEvent
-        // - uncessary for pointer Events
-        return true;
     }
 
     /**
      * mouse/touch/pointer event management (start/down, end/up)
      * @ignore
      */
-    function onPointerEvent(e)  {
-        var ret = true;
-
+    function onPointerEvent(e) {
         // normalize eventTypes
         normalizeEvent(e);
 
@@ -480,24 +454,19 @@
         var button = normalizedEvents[0].button;
 
         // dispatch event to registered objects
-        if (dispatchEvent(normalizedEvents) || api.preventDefault) {
-            // prevent default action
-            ret = api._preventDefaultFn(e);
+        if (dispatchEvent(normalizedEvents) || e.type === "wheel") {
+            // always preventDefault for wheel event (?legacy code/behavior?)
+            if (api.preventDefault === true) {
+                e.preventDefault();
+            }
         }
 
         var keycode = api.pointer.bind[button];
 
         // check if mapped to a key
         if (keycode) {
-            if (POINTER_DOWN.includes(e.type)) {
-                return api._keydown(e, keycode, button + 1);
-            }
-            else { // 'mouseup' or 'touchend'
-                return api._keyup(e, keycode, button + 1);
-            }
+            me.input.triggerKeyEvent(keycode, POINTER_DOWN.includes(e.type), button + 1);
         }
-
-        return ret;
     }
 
     /*
@@ -527,7 +496,7 @@
 
     /**
      * time interval for event throttling in milliseconds<br>
-     * default value : "1000/me.sys.fps" ms<br>
+     * default value : "1000/me.timer.maxfps" ms<br>
      * set to 0 ms to disable the feature
      * @public
      * @type Number
@@ -556,11 +525,11 @@
      */
     api.globalToLocal = function (x, y, v) {
         v = v || new me.Vector2d();
-        var offset = me.video.getPos();
+        var rect = me.device.getElementBounds(me.video.renderer.getScreenCanvas());
         var pixelRatio = me.device.devicePixelRatio;
-        x -= offset.left;
-        y -= offset.top;
-        var scale = me.sys.scale;
+        x -= rect.left + (window.pageXOffset || 0);
+        y -= rect.top + (window.pageYOffset || 0);
+        var scale = me.video.scaleRatio;
         if (scale.x !== 1.0 || scale.y !== 1.0) {
             x /= scale.x;
             y /= scale.y;
@@ -610,8 +579,8 @@
         enablePointerEvent();
 
         // throw an exception if no action is defined for the specified keycode
-        if (!api._KeyBinding[keyCode]) {
-            throw new me.Error("no action defined for keycode " + keyCode);
+        if (!me.input.getBindingKey(keyCode)) {
+            throw new Error("no action defined for keycode " + keyCode);
         }
         // map the mouse button to the keycode
         api.pointer.bind[button] = keyCode;
@@ -680,11 +649,11 @@
         enablePointerEvent();
 
         if (pointerEventList.indexOf(eventType) === -1) {
-            throw new me.Error("invalid event type : " + eventType);
+            throw new Error("invalid event type : " + eventType);
         }
 
         if (typeof region === "undefined") {
-            throw new me.Error("registerPointerEvent: region for " + region + " event is undefined ");
+            throw new Error("registerPointerEvent: region for " + toString(region) + " event is undefined ");
         }
 
         var eventTypes = findAllActiveEvents(activeEventList, pointerEventMap[eventType]);
@@ -726,7 +695,7 @@
      */
     api.releasePointerEvent = function (eventType, region, callback) {
         if (pointerEventList.indexOf(eventType) === -1) {
-            throw new me.Error("invalid event type : " + eventType);
+            throw new Error("invalid event type : " + eventType);
         }
 
         // convert to supported event type if pointerEvent not natively supported
@@ -754,6 +723,25 @@
                 eventHandlers.delete(region);
             }
         }
+    };
+
+    /**
+     * allows the removal of all registered event listeners from the object target.
+     * @name releaseAllPointerEvents
+     * @memberOf me.input
+     * @public
+     * @function
+     * @param {me.Rect|me.Polygon|me.Line|me.Ellipse} region the registered region to release event from
+     * @example
+     * // release all registered event on the
+     * me.input.releaseAllPointerEvents(this);
+     */
+    api.releaseAllPointerEvents = function (region) {
+        if (eventHandlers.has(region)) {
+            for (var i = 0; i < pointerEventList.length; i++) {
+                api.releasePointerEvent(pointerEventList[i], region);
+            }
+        };
     };
 
 })(me.input);

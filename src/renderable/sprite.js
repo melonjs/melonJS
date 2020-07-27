@@ -130,11 +130,11 @@
                         // set the sprite region within the texture
                         this.setRegion(region);
                         // update the default "current" frame size
-                        this.current.width  = settings.framewidth || region.width;
+                        this.current.width = settings.framewidth || region.width;
                         this.current.height = settings.frameheight || region.height;
                     } else {
                         // throw an error
-                        throw new me.Renderable.Error("Texture - region for " + settings.region + " not found");
+                        throw new Error("Texture - region for " + settings.region + " not found");
                     }
                 }
             } else {
@@ -316,7 +316,7 @@
                     }
                 } else { // string
                     if (this.atlasIndices === null) {
-                        throw new me.Renderable.Error(
+                        throw new Error(
                             "string parameters for addAnimation are not allowed for standard spritesheet based Texture"
                         );
                     } else {
@@ -388,8 +388,9 @@
                 if (!_preserve_dt) {
                     this.dt = 0;
                 }
+                this.isDirty = true;
             } else {
-                throw new me.Renderable.Error("animation id '" + name + "' not defined");
+                throw new Error("animation id '" + name + "' not defined");
             }
             return this;
         },
@@ -409,6 +410,7 @@
             } else {
                 this.anim[this.current.name].frames.reverse();
             }
+            this.isDirty = true;
             return this;
         },
 
@@ -459,6 +461,7 @@
                     this._flip.y && region.trimmed === true ? 1 - region.anchorPoint.y : region.anchorPoint.y
                 );
             }
+            this.isDirty = true;
             return this;
         },
 
@@ -505,20 +508,19 @@
          * @ignore
          */
         update : function (dt) {
-            var result = false;
             // Update animation if necessary
             if (!this.animationpause && this.current && this.current.length > 0) {
                 var duration = this.getAnimationFrameObjectByIndex(this.current.idx).delay;
                 this.dt += dt;
                 while (this.dt >= duration) {
-                    result = true;
+                    this.isDirty = true;
                     this.dt -= duration;
 
                     var nextFrame = (this.current.length > 1? this.current.idx+1: this.current.idx);
                     this.setAnimationFrame(nextFrame);
 
                     // Switch animation if we reach the end of the strip and a callback is defined
-                    if (this.current.idx === 0 && typeof this.resetAnim === "function")  {
+                    if (this.current.idx === 0 && typeof this.resetAnim === "function") {
                         // Otherwise is must be callable
                         if (this.resetAnim() === false) {
                             // Reset to last frame
@@ -543,10 +545,10 @@
                     }
                     this.flicker(-1);
                 }
-                result = true;
+                this.isDirty = true;
             }
 
-            return result;
+            return this.isDirty;
         },
 
 

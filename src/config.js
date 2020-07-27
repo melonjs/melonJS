@@ -1,65 +1,20 @@
 (function () {
 
-    /**
-     * me global references
-     * @ignore
-     */
-    me.mod = "melonJS";
+   /**
+    * current melonJS version
+    * @static
+    * @constant
+    * @memberof me
+    * @name version
+    * @type {string}
+    */
     me.version = "__VERSION__";
+
     /**
      * global system settings and browser capabilities
      * @namespace
      */
     me.sys = {
-
-        /*
-         * Global settings
-         */
-
-        /**
-         * Set game FPS limiting
-         * @see me.timer.tick
-         * @type {Number}
-         * @default 60
-         * @memberOf me.sys
-         */
-        fps : 60,
-
-        /**
-         * Rate at which the game updates;<br>
-         * may be greater than or lower than the fps
-         * @see me.timer.tick
-         * @type {Number}
-         * @default 60
-         * @memberOf me.sys
-         */
-        updatesPerSecond : 60,
-
-        /**
-         * Enable/disable frame interpolation
-         * @see me.timer.tick
-         * @type {Boolean}
-         * @default false
-         * @memberOf me.sys
-         */
-        interpolation : false,
-
-        /**
-         * Global scaling factor
-         * @type {me.Vector2d}
-         * @default <0,0>
-         * @memberOf me.sys
-         */
-        scale : null, //initialized by me.video.init
-
-        /**
-         * Global y axis gravity settings.
-         * (will override body gravity value if defined)
-         * @type {Number}
-         * @default undefined
-         * @memberOf me.sys
-         */
-        gravity : undefined,
 
         /**
          * Specify either to stop on audio loading error or not<br>
@@ -118,92 +73,41 @@
          * @default false
          * @memberOf me.sys
          */
-        preRender : false,
-
-        /*
-         * System methods
-         */
-
-        /**
-         * Compare two version strings
-         * @public
-         * @function
-         * @param {String} first First version string to compare
-         * @param {String} [second="__VERSION__"] Second version string to compare
-         * @return {Number} comparison result <br>&lt; 0 : first &lt; second<br>
-         * 0 : first == second<br>
-         * &gt; 0 : first &gt; second
-         * @example
-         * if (me.sys.checkVersion("__VERSION__") > 0) {
-         *     console.error(
-         *         "melonJS is too old. Expected: __VERSION__, Got: " + me.version
-         *     );
-         * }
-         */
-        checkVersion : function (first, second) {
-            second = second || me.version;
-
-            var a = first.split(".");
-            var b = second.split(".");
-            var len = Math.min(a.length, b.length);
-            var result = 0;
-
-            for (var i = 0; i < len; i++) {
-                if ((result = +a[i] - +b[i])) {
-                    break;
-                }
-            }
-
-            return result ? result : a.length - b.length;
-        }
+        preRender : false
     };
 
-    function parseHash() {
-        var hash = {};
 
-        // No "document.location" exist for Wechat mini game platform.
-        if (document.location && document.location.hash) {
-            document.location.hash.substr(1).split("&").filter(function (value) {
-                return (value !== "");
-            }).forEach(function (value) {
-                var kv = value.split("=");
-                var k = kv.shift();
-                var v = kv.join("=");
-                hash[k] = v || true;
-            });
-        }
-
-        return hash;
-    }
-
-    // a flag to know if melonJS
-    // is initialized
-    var me_initialized = false;
-
-    Object.defineProperty(me, "initialized", {
-        /**
-         * @ignore
-         */
-        get : function get() {
-            return me_initialized;
-        }
-    });
+   /**
+    * a flag indicating that melonJS is fully initialized
+    * @type {Boolean}
+    * @default false
+    * @readonly
+    * @memberOf me
+    */
+    me.initialized = false;
 
     /**
-     * Disable melonJS auto-initialization
+     * disable melonJS auto-initialization
      * @type {Boolean}
      * @default false
+     * @see me.boot
      * @memberOf me
      */
     me.skipAutoInit = false;
 
     /**
-     * initial boot function
-     * @ignore
+     * initialize the melonJS library.
+     * this is automatically called unless me.skipAutoInit is set to true,
+     * to allow asynchronous loaders to work.
+     * @name boot
+     * @memberOf me
+     * @see me.skipAutoInit
+     * @public
+     * @function
      */
     me.boot = function () {
         // don't do anything if already initialized (should not happen anyway)
-        if (me_initialized) {
+        if (me.initialized === true) {
             return;
         }
 
@@ -214,46 +118,40 @@
         me.pool.init();
 
         // initialize me.save
-        me.save._init();
-
-        // parse optional url parameters/tags
-        me.game.HASH = parseHash();
-
-        // enable/disable the cache
-        me.loader.setNocache(
-            me.game.HASH.nocache || false
-        );
+        me.save.init();
 
         // init the FPS counter if needed
         me.timer.init();
 
+        // enable/disable the cache
+        me.loader.setNocache( me.utils.getUriFragment().nocache || false );
+
         // init the App Manager
         me.state.init();
 
-        // automatically enable keyboard events if on desktop
-        if (me.device.isMobile === false) {
-            me.input._enableKeyboardEvent();
-        }
+        // automatically enable keyboard events
+        me.input.initKeyboardEvent();
 
         // init the level Director
-        me.levelDirector.reset();
+        me.levelDirector.init();
 
-        me_initialized = true;
+        // game instance init
+        me.game.init();
+
+        // mark melonJS as initialized
+        me.initialized = true;
+
+        /// if auto init is disable and this function was called manually
+        if (me.skipAutoInit === true) {
+            me.device._domReady();
+        }
     };
 
     // call the library init function when ready
-    if (me.skipAutoInit === false) {
-        me.device.onReady(function () {
-            me.boot();
-        });
-    } else {
-        /**
-         * @ignore
-         */
-        me.init = function () {
-            me.boot();
-            me.device._domReady();
-        };
-    }
+    me.device.onReady(function () {
+        if (me.skipAutoInit === false) {
+           me.boot();
+        }
+    });
 
 })();

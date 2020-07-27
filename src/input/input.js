@@ -3,52 +3,35 @@
      * @namespace me.input
      * @memberOf me
      */
-    me.input = (function () {
-        // hold public stuff in our singleton
-        var api = {};
-
-        /*
-         * PRIVATE STUFF
-         */
+    me.input = {
 
         /**
-         * prevent event propagation
-         * @ignore
+         * the default target element for keyboard events (usually the window element in which the game is running)
+         * @public
+         * @type EventTarget
+         * @name keyBoardEventTarget
+         * @memberOf me.input
          */
-        api._preventDefaultFn = function (e) {
-            // stop event propagation
-            if (e.stopPropagation) {
-                e.stopPropagation();
-            }
-            else {
-                e.cancelBubble = true;
-            }
-            // stop event default processing
-            if (e.preventDefault)  {
-                e.preventDefault();
-            }
-            else  {
-                e.returnValue = false;
-            }
-
-            return false;
-        };
-
-        /*
-         * PUBLIC STUFF
-         */
+        keyBoardEventTarget : null,
 
         /**
-         * Global flag to specify if melonJS should prevent all default browser action on registered events.
-         * default : true
+         * the default target element for pointer events (usually the canvas element in which the game is rendered)
+         * @public
+         * @type EventTarget
+         * @name pointerEventTarget
+         * @memberOf me.input
+         */
+        pointerEventTarget : null,
+
+        /**
+         * specify if melonJS should prevent all default browser action on registered events.
          * @public
          * @type Boolean
+         * @default true
          * @name preventDefault
          * @memberOf me.input
          */
-        api.preventDefault = true;
+         preventDefault : true
+    };
 
-        // return our object
-        return api;
-    })();
 })();

@@ -3,7 +3,6 @@
     // bitmap constants
     var LOG2_PAGE_SIZE = 9;
     var PAGE_SIZE = 1 << LOG2_PAGE_SIZE;
-    var xChars = ["x", "e", "a", "o", "n", "s", "r", "c", "u", "m", "v", "w", "z"];
     var capChars = ["M", "N", "B", "D", "C", "E", "F", "K", "A", "G", "H", "I", "J", "L", "O", "P", "Q", "R", "S", "T", "U", "V", "W", "X", "Y", "Z"];
 
     /**
@@ -141,7 +140,7 @@
         _getValueFromPair: function (string, pattern) {
             var value = string.match(pattern);
             if (!value) {
-                throw "Could not find pattern " + pattern + " in string: " + string;
+                throw new Error("Could not find pattern " + pattern + " in string: " + string);
             }
 
             return value[0].split("=")[1];
@@ -156,12 +155,12 @@
          */
         parse: function (fontData) {
             if (!fontData) {
-                throw "File containing font data was empty, cannot load the bitmap font.";
+                throw new Error("File containing font data was empty, cannot load the bitmap font.");
             }
             var lines = fontData.split(/\r\n|\n/);
             var padding = fontData.match(/padding\=\d+,\d+,\d+,\d+/g);
             if (!padding) {
-                throw "Padding not found in first line";
+                throw new Error("Padding not found in first line");
             }
             var paddingValues = padding[0].split("=")[1].split(",");
             this.padTop = parseFloat(paddingValues[0]);
@@ -177,7 +176,9 @@
 
             var glyph = null;
 
-            for (var i = 4; i < lines.length; i++) {
+            var i;
+
+            for (i = 4; i < lines.length; i++) {
                 var line = lines[i];
                 var characterValues = line.split(/=|\s+/);
                 if (!line || /^kernings/.test(line)) {
@@ -216,18 +217,6 @@
             this.descent += this.padBottom;
 
             this._createSpaceGlyph();
-
-            var xGlyph = null;
-            for (i = 0; i < xChars.length; i++) {
-                var xChar = xChars[i];
-                xGlyph = this.glyphs[xChar.charCodeAt(0)];
-                if (xGlyph) {
-                    break;
-                }
-            }
-            if (!xGlyph) {
-                xGlyph = this._getFirstGlyph();
-            }
 
             var capGlyph = null;
             for (i = 0; i < capChars.length; i++) {

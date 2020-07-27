@@ -12,7 +12,7 @@ describe("me.Sprite", function () {
             "anchorPoint" : {x:0, y:0}
         });
 
-        setCurrentAnimationCallback["callback"] = function () {}
+        setCurrentAnimationCallback["callback"] = function () {};
         spyOn(setCurrentAnimationCallback, "callback");
 
         // add to a parent container
@@ -70,12 +70,16 @@ describe("me.Sprite", function () {
 
     it("me.Sprite bounds should be updated when the sprite is scaled", function () {
         var bounds = sprite.getBounds();
-        // scale the sprite
+
+        // scale up the sprite
         sprite.scale(2.0); // w & h -> 64, 64
         expect(bounds.width).toEqual(64);
         expect(bounds.height).toEqual(64);
+        expect(sprite.width).toEqual(64);
+        expect(sprite.height).toEqual(64);
 
-        sprite.scale(1.0); // back to original size
+        // scale back to original size
+        sprite.scale(0.5);
         expect(bounds.width).toEqual(32);
         expect(bounds.height).toEqual(32);
     });

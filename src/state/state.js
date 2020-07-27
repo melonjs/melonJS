@@ -146,7 +146,7 @@
          */
 
         /**
-         * default state ID for Loading Screen
+         * default state ID for Loading Stage
          * @constant
          * @name LOADING
          * @memberOf me.state
@@ -154,7 +154,7 @@
         api.LOADING = 0;
 
         /**
-         * default state ID for Menu Screen
+         * default state ID for Menu Stage
          * @constant
          * @name MENU
          * @memberOf me.state
@@ -162,7 +162,7 @@
 
         api.MENU = 1;
         /**
-         * default state ID for "Ready" Screen
+         * default state ID for "Ready" Stage
          * @constant
          * @name READY
          * @memberOf me.state
@@ -170,7 +170,7 @@
 
         api.READY = 2;
         /**
-         * default state ID for Play Screen
+         * default state ID for Play Stage
          * @constant
          * @name PLAY
          * @memberOf me.state
@@ -178,7 +178,7 @@
 
         api.PLAY = 3;
         /**
-         * default state ID for Game Over Screen
+         * default state ID for Game Over Stage
          * @constant
          * @name GAMEOVER
          * @memberOf me.state
@@ -186,7 +186,7 @@
 
         api.GAMEOVER = 4;
         /**
-         * default state ID for Game End Screen
+         * default state ID for Game End Stage
          * @constant
          * @name GAME_END
          * @memberOf me.state
@@ -194,7 +194,7 @@
 
         api.GAME_END = 5;
         /**
-         * default state ID for High Score Screen
+         * default state ID for High Score Stage
          * @constant
          * @name SCORE
          * @memberOf me.state
@@ -202,20 +202,30 @@
 
         api.SCORE = 6;
         /**
-         * default state ID for Credits Screen
+         * default state ID for Credits Stage
          * @constant
          * @name CREDITS
          * @memberOf me.state
          */
 
         api.CREDITS = 7;
+
         /**
-         * default state ID for Settings Screen
+         * default state ID for Settings Stage
          * @constant
          * @name SETTINGS
          * @memberOf me.state
          */
         api.SETTINGS = 8;
+
+        /**
+         * default state ID for the default Stage
+         * (the default stage is the one running as soon as melonJS is started)
+         * @constant
+         * @name SETTINGS
+         * @memberOf me.state
+         */
+        api.DEFAULT = 9;
 
         /**
          * default state ID for user defined constants<br>
@@ -266,8 +276,14 @@
          * @ignore
          */
         api.init = function () {
-            // set the embedded loading screen
+            // set the embedded loading stage
             api.set(api.LOADING, new me.DefaultLoadingScreen());
+            // set and enable the default stage
+            api.set(me.state.DEFAULT, new me.Stage());
+            // enable by default as soon as the display is initialized
+            me.event.subscribe(me.event.VIDEO_INIT, function () {
+                me.state.change(me.state.DEFAULT, true);
+            });
         };
 
         /**
@@ -422,8 +438,8 @@
          * @public
          * @function
          * @param {Number} state State ID (see constants)
-         * @param {me.Stage} stage Instantiated Stage to associate
-         * with state ID
+         * @param {me.Stage} stage Instantiated Stage to associate with state ID
+         * @param {Boolean} [start = false] if true the state will be changed immediately after adding it.
          * @example
          * var MenuButton = me.GUI_Object.extend({
          *     "onClick" : function () {
@@ -461,13 +477,17 @@
          *
          * me.state.set(me.state.MENU, new MenuScreen());
          */
-        api.set = function (state, stage) {
+        api.set = function (state, stage, start) {
             if (!(stage instanceof me.Stage)) {
-                throw new me.Error(stage + " is not an instance of me.Stage");
+                throw new Error(stage + " is not an instance of me.Stage");
             }
             _stages[state] = {};
             _stages[state].stage = stage;
             _stages[state].transition = true;
+
+            if (start === true) {
+                api.change(state);
+            }
         };
 
         /**
@@ -480,7 +500,9 @@
          * @return {me.Stage}
          */
         api.current = function () {
-            return _stages[_state].stage;
+            if (typeof _stages[_state] !== "undefined") {
+                return _stages[_state].stage;
+            }
         };
 
         /**
@@ -520,16 +542,17 @@
          * @public
          * @function
          * @param {Number} state State ID (see constants)
+         * @param {Boolean} forceChange if true the state will be changed immediately
          * @param {} [arguments...] extra arguments to be passed to the reset functions
          * @example
          * // The onResetEvent method on the play screen will receive two args:
          * // "level_1" and the number 3
          * me.state.change(me.state.PLAY, "level_1", 3);
          */
-        api.change = function (state) {
+        api.change = function (state, forceChange) {
             // Protect against undefined Stage
             if (typeof(_stages[state]) === "undefined") {
-                throw new me.Error("Undefined Stage for state '" + state + "'");
+                throw new Error("Undefined Stage for state '" + state + "'");
             }
 
             if (api.isCurrent(state)) {
@@ -561,7 +584,11 @@
             else {
                 // wait for the last frame to be
                 // "finished" before switching
-                me.utils.function.defer(_switchState, this, state);
+                if (forceChange === true) {
+                    _switchState(state);
+                } else {
+                    me.utils.function.defer(_switchState, this, state);
+                }
             }
         };
 

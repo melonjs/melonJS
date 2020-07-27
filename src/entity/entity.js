@@ -35,7 +35,7 @@
 
             // ensure mandatory properties are defined
             if ((typeof settings.width !== "number") || (typeof settings.height !== "number")) {
-                throw new me.Entity.Error("height and width properties are mandatory when passing settings parameters to an object entity");
+                throw new Error("height and width properties are mandatory when passing settings parameters to an object entity");
             }
 
             // call the super constructor
@@ -94,22 +94,21 @@
              * @memberOf me.Entity
              */
             // initialize the default body
-            var shapes = (
-                Array.isArray(settings.shapes) ?
-                settings.shapes : [
-                    new me.Polygon(0, 0, [
-                        new me.Vector2d(0, 0),
-                        new me.Vector2d(this.width, 0),
-                        new me.Vector2d(this.width, this.height),
-                        new me.Vector2d(0, this.height)
-                    ])
-                ]
-            );
+
+            if (typeof settings.shapes === "undefined") {
+                settings.shapes = new me.Polygon(0, 0, [
+                    new me.Vector2d(0,          0),
+                    new me.Vector2d(this.width, 0),
+                    new me.Vector2d(this.width, this.height),
+                    new me.Vector2d(0,          this.height)
+                ]);
+            }
+
             if (typeof this.body !== "undefined") {
-                this.body.init(this, shapes, this.onBodyUpdate.bind(this));
+                this.body.init(this, settings.shapes, this.onBodyUpdate.bind(this));
             }
             else {
-                this.body = new me.Body(this, shapes, this.onBodyUpdate.bind(this));
+                this.body = new me.Body(this, settings.shapes, this.onBodyUpdate.bind(this));
             }
 
             // resize the entity if required
@@ -127,85 +126,12 @@
                 if (typeof me.collision.types[settings.collisionType] !== "undefined") {
                     this.body.collisionType = me.collision.types[settings.collisionType];
                 } else {
-                    throw new me.Entity.Error("Invalid value for the collisionType property");
+                    throw new Error("Invalid value for the collisionType property");
                 }
             }
 
             // disable for entities
             this.autoTransform = false;
-
-            // enable collision detection
-            this.isKinematic = false;
-        },
-
-        /**
-         * return the distance to the specified entity
-         * @name distanceTo
-         * @memberOf me.Entity
-         * @function
-         * @param {me.Entity} entity Entity
-         * @return {Number} distance
-         */
-        distanceTo: function (e) {
-            var a = this.getBounds();
-            var b = e.getBounds();
-            // the me.Vector2d object also implements the same function, but
-            // we have to use here the center of both entities
-            var dx = (a.pos.x + (a.width / 2))  - (b.pos.x + (b.width / 2));
-            var dy = (a.pos.y + (a.height / 2)) - (b.pos.y + (b.height / 2));
-            return Math.sqrt(dx * dx + dy * dy);
-        },
-
-        /**
-         * return the distance to the specified point
-         * @name distanceToPoint
-         * @memberOf me.Entity
-         * @function
-         * @param {me.Vector2d} vector vector
-         * @return {Number} distance
-         */
-        distanceToPoint: function (v) {
-            var a = this.getBounds();
-            // the me.Vector2d object also implements the same function, but
-            // we have to use here the center of both entities
-            var dx = (a.pos.x + (a.width / 2))  - (v.x);
-            var dy = (a.pos.y + (a.height / 2)) - (v.y);
-            return Math.sqrt(dx * dx + dy * dy);
-        },
-
-        /**
-         * return the angle to the specified entity
-         * @name angleTo
-         * @memberOf me.Entity
-         * @function
-         * @param {me.Entity} entity Entity
-         * @return {Number} angle in radians
-         */
-        angleTo: function (e) {
-            var a = this.getBounds();
-            var b = e.getBounds();
-            // the me.Vector2d object also implements the same function, but
-            // we have to use here the center of both entities
-            var ax = (b.pos.x + (b.width / 2)) - (a.pos.x + (a.width / 2));
-            var ay = (b.pos.y + (b.height / 2)) - (a.pos.y + (a.height / 2));
-            return Math.atan2(ay, ax);
-        },
-
-        /**
-         * return the angle to the specified point
-         * @name angleToPoint
-         * @memberOf me.Entity
-         * @function
-         * @param {me.Vector2d} vector vector
-         * @return {Number} angle in radians
-         */
-        angleToPoint: function (v) {
-            var a = this.getBounds();
-            // the me.Vector2d object also implements the same function, but
-            // we have to use here the center of both entities
-            var ax = (v.x) - (a.pos.x + (a.width / 2));
-            var ay = (v.y) - (a.pos.y + (a.height / 2));
-            return Math.atan2(ay, ax);
         },
 
         /** @ignore */
@@ -362,28 +288,9 @@
                 this.children[0] = value;
                 this.children[0].ancestor = this;
             } else {
-                throw new me.Entity.Error(value + "should extend me.Renderable");
+                throw new Error(value + "should extend me.Renderable");
             }
         },
         configurable : true
-    });
-
-    /**
-     * Base class for Entity exception handling.
-     * @name Error
-     * @class
-     * @memberOf me.Entity
-     * @constructor
-     * @private
-     * @param {String} msg Error message.
-     */
-    me.Entity.Error = me.Renderable.Error.extend({
-        /**
-         * @ignore
-         */
-        init : function (msg) {
-            this._super(me.Renderable.Error, "init", [ msg ]);
-            this.name = "me.Entity.Error";
-        }
     });
 })();

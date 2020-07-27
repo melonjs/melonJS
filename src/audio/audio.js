@@ -45,7 +45,7 @@ import {Howl, Howler} from "howler";
                 }
                 else {
                     // throw an exception and stop everything !
-                    throw new me.audio.Error(errmsg);
+                    throw new Error(errmsg);
                 }
             // else try loading again !
             }
@@ -61,7 +61,7 @@ import {Howl, Howler} from "howler";
         /**
          * Initialize and configure the audio support.<br>
          * melonJS supports a wide array of audio codecs that have varying browser support :
-         * <i> ("mp3", "mpeg", opus", "ogg", "oga", "wav", "aac", "caf", "m4a", "mp4", "weba", "webm", "dolby", "flac")</i>.<br>
+         * <i> ("mp3", "mpeg", opus", "ogg", "oga", "wav", "aac", "caf", "m4a", "m4b", "mp4", "weba", "webm", "dolby", "flac")</i>.<br>
          * For a maximum browser coverage the recommendation is to use at least two of them,
          * typically default to webm and then fallback to mp3 for the best balance of small filesize and high quality,
          * webm has nearly full browser coverage with a great combination of compression and quality, and mp3 will fallback gracefully for other browsers.
@@ -82,7 +82,7 @@ import {Howl, Howler} from "howler";
          */
         api.init = function (audioFormat) {
             if (!me.initialized) {
-                throw new me.audio.Error("me.audio.init() called before engine initialization.");
+                throw new Error("me.audio.init() called before engine initialization.");
             }
             // if no param is given to init we use mp3 by default
             audioFormat = typeof audioFormat === "string" ? audioFormat : "mp3";
@@ -141,7 +141,7 @@ import {Howl, Howler} from "howler";
         api.load = function (sound, html5, onload_cb, onerror_cb) {
             var urls = [];
             if (typeof(this.audioFormats) === "undefined" || this.audioFormats.length === 0) {
-                throw new me.audio.Error("target audio extension(s) should be set through me.audio.init() before calling the preloader.");
+                throw new Error("target audio extension(s) should be set through me.audio.init() before calling the preloader.");
             }
             for (var i = 0; i < this.audioFormats.length; i++) {
                 urls.push(sound.src + sound.name + "." + this.audioFormats[i] + me.loader.nocache);
@@ -211,7 +211,7 @@ import {Howl, Howler} from "howler";
                 }
                 return id;
             } else {
-                throw new me.audio.Error("audio clip " + sound_name + " does not exist");
+                throw new Error("audio clip " + sound_name + " does not exist");
             }
         };
 
@@ -232,7 +232,7 @@ import {Howl, Howler} from "howler";
             if (sound && typeof sound !== "undefined") {
                 sound.fade(from, to, duration, id);
             } else {
-                throw new me.audio.Error("audio clip " + sound_name + " does not exist");
+                throw new Error("audio clip " + sound_name + " does not exist");
             }
         };
 
@@ -257,7 +257,7 @@ import {Howl, Howler} from "howler";
             if (sound && typeof sound !== "undefined") {
                 return sound.seek.apply(sound, Array.prototype.slice.call(arguments, 1));
             } else {
-                throw new me.audio.Error("audio clip " + sound_name + " does not exist");
+                throw new Error("audio clip " + sound_name + " does not exist");
             }
         };
 
@@ -282,7 +282,7 @@ import {Howl, Howler} from "howler";
             if (sound && typeof sound !== "undefined") {
                 return sound.rate.apply(sound, Array.prototype.slice.call(arguments, 1));
             } else {
-                throw new me.audio.Error("audio clip " + sound_name + " does not exist");
+                throw new Error("audio clip " + sound_name + " does not exist");
             }
         };
 
@@ -292,19 +292,23 @@ import {Howl, Howler} from "howler";
          * @memberOf me.audio
          * @public
          * @function
-         * @param {String} sound_name audio clip name - case sensitive
+         * @param {String} [sound_name] audio clip name (case sensitive). If none is passed, all sounds are stopped.
          * @param {Number} [id] the sound instance ID. If none is passed, all sounds in group will stop.
          * @example
          * me.audio.stop("cling");
          */
         api.stop = function (sound_name, id) {
-            var sound = audioTracks[sound_name];
-            if (sound && typeof sound !== "undefined") {
-                sound.stop(id);
-                // remove the defined onend callback (if any defined)
-                sound.off("end", undefined, id);
+            if (typeof sound_name !== "undefined") {
+                var sound = audioTracks[sound_name];
+                if (sound && typeof sound !== "undefined") {
+                    sound.stop(id);
+                    // remove the defined onend callback (if any defined)
+                    sound.off("end", undefined, id);
+                } else {
+                    throw new Error("audio clip " + sound_name + " does not exist");
+                }
             } else {
-                throw new me.audio.Error("audio clip " + sound_name + " does not exist");
+                Howler.stop();
             }
         };
 
@@ -325,7 +329,7 @@ import {Howl, Howler} from "howler";
             if (sound && typeof sound !== "undefined") {
                 sound.pause(id);
             } else {
-                throw new me.audio.Error("audio clip " + sound_name + " does not exist");
+                throw new Error("audio clip " + sound_name + " does not exist");
             }
         };
 
@@ -352,7 +356,7 @@ import {Howl, Howler} from "howler";
             if (sound && typeof sound !== "undefined") {
                 sound.play(id);
             } else {
-                throw new me.audio.Error("audio clip " + sound_name + " does not exist");
+                throw new Error("audio clip " + sound_name + " does not exist");
             }
         };
 
@@ -494,7 +498,7 @@ import {Howl, Howler} from "howler";
             if (sound && typeof(sound) !== "undefined") {
                 sound.mute(mute, id);
             } else {
-                throw new me.audio.Error("audio clip " + sound_name + " does not exist");
+                throw new Error("audio clip " + sound_name + " does not exist");
             }
         };
 
@@ -590,22 +594,4 @@ import {Howl, Howler} from "howler";
         return api;
     })();
 
-    /**
-     * Base class for audio exception handling.
-     * @name Error
-     * @class
-     * @memberOf me.audio
-     * @constructor
-     * @private
-     * @param {String} msg Error message.
-     */
-    me.audio.Error = me.Error.extend({
-        /**
-         * @ignore
-         */
-        init : function (msg) {
-            this._super(me.Error, "init", [ msg ]);
-            this.name = "me.audio.Error";
-        }
-    });
 })();

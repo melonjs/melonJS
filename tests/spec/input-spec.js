@@ -43,8 +43,8 @@ describe("me.input", function () {
 
             // configure the event
             event.pointerId = 1;
-            event.clientX = 10;
-            event.clientY = 10;
+            event.clientX = event.pageX = 10;
+            event.clientY = event.pageY = 10;
             event.width = 1;
             event.height = 1;
             event.isPrimary = true;

@@ -11,19 +11,16 @@ var game = {
     onload: function() {
 
         // init the video
-        if (!me.video.init(800, 480, {wrapper : "jsapp", scale : "me.device.PixelRatio"})) {
+        if (!me.video.init(1024, 786, {parent : "jsapp", scaleMethod : "flex", renderer : me.video.CANVAS})) {
             alert("Your browser does not support HTML5 canvas.");
             return;
         }
 
-        // set all ressources to be loaded
-        me.loader.onload = this.loaded.bind(this);
+        // initialize the "sound engine"
+        me.audio.init("mp3");
 
         // set all ressources to be loaded
-        me.loader.preload(g_ressources);
-
-        // load everything & display a loading screen
-        me.state.change(me.state.LOADING);
+        me.loader.preload(g_ressources, this.loaded.bind(this));
     },
 
 
@@ -31,18 +28,118 @@ var game = {
      * callback when everything is loaded
      */
     loaded: function () {
-        // set the "Play/Ingame" Screen Object
-        me.state.set(me.state.PLAY, new game.PlayScreen());
 
-        // enable the keyboard (to navigate in the map)
-        me.input.bindKey(me.input.KEY.LEFT,  "left");
-        me.input.bindKey(me.input.KEY.RIGHT, "right");
-        me.input.bindKey(me.input.KEY.UP,    "up");
-        me.input.bindKey(me.input.KEY.DOWN,  "down");
-        me.input.bindKey(me.input.KEY.ENTER, "enter");
+        // subscribe to key down and mouse scroll event to move the map
+        me.event.subscribe(me.event.KEYDOWN, this.keyPressed.bind(this));
+        me.input.registerPointerEvent("wheel", me.game.viewport, this.onScroll.bind(this));
 
-        // start the game
-        me.state.change(me.state.PLAY);
+        // load default level
+        this.levelSelector();
+    },
+
+    onLevelLoaded: function() {
+
+        // add a black background
+        me.game.world.addChild(new me.ColorLayer("background", "#000000"), 0);
+
+        /* -- debug purpose
+        // display the current pointer coordinates on top of the pointer arrow
+        me.game.world.addChild(new (me.Renderable.extend({
+            init: function() {
+                this._super(me.Renderable, 'init', [0, 0, 10, 10]);
+                this.font = new me.Text(0, 0, {font: "Arial", size: 10, fillStyle: "#FFFFFF", text : "?,?"});
+                this.font.textAlign = "center";
+                this.font.textBaseline = "bottom";
+            },
+
+            onActivateEvent: function () {
+                // register on mouse event
+                me.input.registerPointerEvent("pointermove", me.game.viewport, this.pointerMove.bind(this), false);
+            },
+
+            onDeactivateEvent: function () {
+                // register on mouse event
+                me.input.releasePointerEvent("pointermove", me.game.viewport);
+            },
+
+
+            pointerMove : function (e) {
+                //var layer = me.game.world.getChildByName("Ground")[0];
+                var layer = me.game.world.getChildByType(me.TMXLayer)[0];
+                if (layer) {
+                    var tile = layer.getTile(e.gameWorldX, e.gameWorldY);
+                    if (tile) {
+                        this.text = tile.col + "," + tile.row;
+                        return;
+                    }
+                }
+                this.text = "?,?";
+            },
+
+            update: function (dt) {
+                return true;
+            },
+
+            draw: function(renderer) {
+                var x = Math.round(me.input.pointer.gameLocalX);
+                var y = Math.round(me.input.pointer.gameLocalY);
+                this.font.draw(renderer, this.text, x, y );
+            }
+        })), 10);
+        */
+
+
+        // force redraw
+        me.game.repaint();
+
+    },
+
+    /**
+     * pointermove function
+     */
+    onScroll: function (event) {
+        if (event.deltaX !== 0) {
+            this.keyPressed(null, event.deltaX < 0 ? me.input.KEY.LEFT : me.input.KEY.RIGHT);
+        }
+        if (event.deltaY !== 0) {
+            this.keyPressed(null, event.deltaY < 0 ? me.input.KEY.UP: me.input.KEY.DOWN);
+        }
+    },
+
+    /**
+     * update function
+     */
+    keyPressed: function (action, keyCode) {
+
+        // navigate the map :)
+        if (keyCode === me.input.KEY.LEFT) {
+            me.game.viewport.move(-(me.levelDirector.getCurrentLevel().tilewidth / 2), 0);
+        }
+        if (keyCode === me.input.KEY.RIGHT) {
+            me.game.viewport.move(me.levelDirector.getCurrentLevel().tilewidth / 2, 0);
+        }
+        if (keyCode === me.input.KEY.UP) {
+            me.game.viewport.move(0, -(me.levelDirector.getCurrentLevel().tileheight / 2));
+        }
+        if (keyCode === me.input.KEY.DOWN) {
+            me.game.viewport.move(0, me.levelDirector.getCurrentLevel().tileheight / 2);
+        }
+
+        // shake it
+        if (keyCode === me.input.KEY.ENTER) {
+            me.game.viewport.shake(16, 500);
+        }
+
+        //zoom in/out
+        if (keyCode === me.input.KEY.MINUS) {
+            console.log("zoom out");
+        }
+        if (keyCode === me.input.KEY.PLUS) {
+            console.log("zoom in");
+        }
+
+        // force redraw
+        me.game.repaint();
     },
 
 
@@ -52,12 +149,11 @@ var game = {
      * change the current level
      * using the listbox current value in the HTML file
      */
-    changelevel: function() {
+    levelSelector: function() {
 
-        var level = "";
-        var level_id = document.getElementById("level_name").value;
+        var level;
 
-        switch (level_id) {
+        switch (document.getElementById("level_name").value || 1) {
             case "1":
                 level = "village";
                 break;
@@ -71,20 +167,42 @@ var game = {
                 level = "isometric";
                 break;
             case "5":
+                level = "orthogonal";
+                break;
+            case "6":
                 level = "perspective";
                 break;
+            case "7":
+                level = "hexagonal-mini";
+                break;
+            case "8":
+                level = "rpg";
+                break;
+            case "9":
+                level = "MagicLand";
+                break;
+            case "10":
+                level = "jb-32";
+                break;
+            case "11":
+                level = "gameart2d-desert";
+                break;
+            case "12":
+                level = "level25";
+                break;
+            case "13":
+                level = "island-rotated-tiles";
+                break;
             default:
-                return;
+                level = "village";
+                break;
         };
 
         // load the new level
-        me.levelDirector.loadLevel(level);
+        me.levelDirector.loadLevel(level, {
+            "container" : me.game.world,
+            "onLoaded"  : this.onLevelLoaded.bind(this)
+        });
     }
 
-}; // game
-
-
-//bootstrap :)
-me.device.onReady(function() {
-    game.onload();
-});
+};

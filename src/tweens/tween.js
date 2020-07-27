@@ -258,7 +258,7 @@
          */
         this.easing = function ( easing ) {
             if (typeof easing !== 'function') {
-                throw new me.Tween.Error("invalid easing function for me.Tween.easing()");
+                throw new Error("invalid easing function for me.Tween.easing()");
             }
             _easingFunction = easing;
             return this;
@@ -677,37 +677,38 @@
         Elastic: {
             /** @ignore */
             In: function ( k ) {
-
-                var s, a = 0.1, p = 0.4;
-                if ( k === 0 ) return 0;
-                if ( k === 1 ) return 1;
-                if ( !a || a < 1 ) { a = 1; s = p / 4; }
-                else s = p * Math.asin( 1 / a ) / ( 2 * Math.PI );
-                return - ( a * Math.pow( 2, 10 * ( k -= 1 ) ) * Math.sin( ( k - s ) * ( 2 * Math.PI ) / p ) );
-
+                if (k === 0) {
+                    return 0;
+                }
+                if (k === 1) {
+                    return 1;
+                }
+                return -Math.pow(2, 10 * (k - 1)) * Math.sin((k - 1.1) * 5 * Math.PI);
             },
             /** @ignore */
             Out: function ( k ) {
-
-                var s, a = 0.1, p = 0.4;
-                if ( k === 0 ) return 0;
-                if ( k === 1 ) return 1;
-                if ( !a || a < 1 ) { a = 1; s = p / 4; }
-                else s = p * Math.asin( 1 / a ) / ( 2 * Math.PI );
-                return ( a * Math.pow( 2, - 10 * k) * Math.sin( ( k - s ) * ( 2 * Math.PI ) / p ) + 1 );
+                if (k === 0) {
+                    return 0;
+                }
+                if (k === 1) {
+                    return 1;
+                }
+                return Math.pow(2, -10 * k) * Math.sin((k - 0.1) * 5 * Math.PI) + 1;
 
             },
             /** @ignore */
             InOut: function ( k ) {
-
-                var s, a = 0.1, p = 0.4;
-                if ( k === 0 ) return 0;
-                if ( k === 1 ) return 1;
-                if ( !a || a < 1 ) { a = 1; s = p / 4; }
-                else s = p * Math.asin( 1 / a ) / ( 2 * Math.PI );
-                if ( ( k *= 2 ) < 1 ) return - 0.5 * ( a * Math.pow( 2, 10 * ( k -= 1 ) ) * Math.sin( ( k - s ) * ( 2 * Math.PI ) / p ) );
-                return a * Math.pow( 2, -10 * ( k -= 1 ) ) * Math.sin( ( k - s ) * ( 2 * Math.PI ) / p ) * 0.5 + 1;
-
+                if (k === 0) {
+                    return 0;
+                }
+                if (k === 1) {
+                    return 1;
+                }
+                k *= 2;
+                if (k < 1) {
+                    return -0.5 * Math.pow(2, 10 * (k - 1)) * Math.sin((k - 1.1) * 5 * Math.PI);
+                }
+                return 0.5 * Math.pow(2, -10 * (k - 1)) * Math.sin((k - 1.1) * 5 * Math.PI) + 1;
             }
 
         },
@@ -878,24 +879,5 @@
         }
 
     };
-
-    /**
-     * Base class for Tween exception handling.
-     * @name Error
-     * @class
-     * @memberOf me.Tween
-     * @private
-     * @constructor
-     * @param {String} msg Error message.
-     */
-    me.Tween.Error = me.Error.extend({
-        /**
-         * @ignore
-         */
-        init : function (msg) {
-            this._super(me.Error, "init", [ msg ]);
-            this.name = "me.Tween.Error";
-        }
-    });
 })();
 /* eslint-enable quotes, keyword-spacing, comma-spacing, no-return-assign */

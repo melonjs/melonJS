@@ -26,7 +26,7 @@ game.HUD.Container = me.Container.extend({
         this.addChild(new game.HUD.ScoreItem("score", "left", 10, 10));
 
         // add our child score object at position
-        this.addChild(new game.HUD.ScoreItem("hiscore", "right", (me.video.renderer.getWidth() - 10), 10));
+        this.addChild(new game.HUD.ScoreItem("hiscore", "right", me.video.renderer.getWidth(), 10));
     }
 });
 
@@ -45,7 +45,12 @@ game.HUD.ScoreItem = me.Renderable.extend( {
         this._super(me.Renderable, "init", [x, y, 10, 10]);
 
         // create a font
-        this.font = new me.BitmapFont(me.loader.getBinary('PressStart2P'), me.loader.getImage('PressStart2P'), 1.5, align, "top");
+        this.font = new me.BitmapText(0, 0, {
+            font : "PressStart2P",
+            size : 1.5,
+            textAlign : align,
+            textBaseline : "top"
+        });
 
         // ref to the score variable
         this.scoreRef = score;
@@ -58,7 +63,7 @@ game.HUD.ScoreItem = me.Renderable.extend( {
      * draw the score
      */
     draw : function (context) {
-        this.font.draw (context, game.data[this.scoreRef], this.pos.x, this.pos.y);
+        this.font.draw(context, game.data[this.scoreRef], this.pos.x, this.pos.y);
     }
 
 });

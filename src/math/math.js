@@ -50,6 +50,15 @@
         api.ETA = Math.PI * 0.5;
 
         /**
+         * the difference between 1 and the smallest floating point number greater than 1
+         * @public
+         * @type {Number}
+         * @name EPSILON
+         * @memberOf me.Math
+         */
+        api.EPSILON = 0.000001;
+
+        /**
          * returns true if the given value is a power of two
          * @public
          * @function
@@ -219,7 +228,7 @@
             if (typeof precision !== "number") {
                 precision = 2;
             }
-            return Math.abs(expected - actual) < (Math.pow(10, -precision) / 2)
+            return Math.abs(expected - actual) < (Math.pow(10, -precision) / 2);
         };
 
         // return our object

@@ -286,6 +286,24 @@
         },
 
         /**
+         * Linearly interpolate between this color and the given one.
+         * @name lerp
+         * @memberOf me.Color
+         * @function
+         * @param {me.Color} color
+         * @param {Number} alpha with alpha = 0 being this color, and alpha = 1 being the given one.
+         * @return {me.Color} Reference to this object for method chaining
+         */
+        lerp : function (color, alpha) {
+            alpha = me.Math.clamp(alpha, 0, 1);
+            this.glArray[0] += (color.glArray[0] - this.glArray[0]) * alpha;
+            this.glArray[1] += (color.glArray[1] - this.glArray[1]) * alpha;
+            this.glArray[2] += (color.glArray[2] - this.glArray[2]) * alpha;
+
+            return this;
+        },
+
+        /**
          * Lighten this color value by 0..1
          * @name lighten
          * @memberOf me.Color
@@ -307,13 +325,22 @@
          * @name random
          * @memberOf me.Color
          * @function
+         * @param {Number} [min=0] minimum value for the random range
+         * @param {Number} [max=255] maxmium value for the random range
          * @return {me.Color} Reference to this object for method chaining
          */
-        random : function () {
+        random : function (min, max) {
+            if (typeof min === "undefined" || min < 0) {
+                min = 0;
+            }
+            if (typeof max === "undefined" || min > 255) {
+                max = 255;
+            }
+
             return this.setColor(
-                Math.random() * 256,
-                Math.random() * 256,
-                Math.random() * 256,
+                me.Math.random(min, max),
+                me.Math.random(min, max),
+                me.Math.random(min, max),
                 this.alpha
             );
         },
@@ -425,16 +452,19 @@
                 );
             }
 
-            throw new me.Color.Error(
+            throw new Error(
                 "invalid parameter: " + hexColor
             );
         },
 
         /**
-         * Returns the private glArray
-         * @ignore
+         * return an array representation of this object
+         * @name toArray
+         * @memberOf me.Color
+         * @function
+         * @return {Float32Array}
          */
-        toGL : function () {
+        toArray : function () {
             return this.glArray;
         },
 
@@ -582,24 +612,5 @@
         set : function (value) { this.glArray[3] = typeof(value) === "undefined" ? 1.0 : me.Math.clamp(+value, 0, 1.0); },
         enumerable : true,
         configurable : true
-    });
-
-    /**
-     * Base class for me.Color exception handling.
-     * @name Error
-     * @class
-     * @memberOf me.Color
-     * @private
-     * @constructor
-     * @param {String} msg Error message.
-     */
-    me.Color.Error = me.Error.extend({
-        /**
-         * @ignore
-         */
-        init : function (msg) {
-            this._super(me.Error, "init", [ msg ]);
-            this.name = "me.Color.Error";
-        }
     });
 })();

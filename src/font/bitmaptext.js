@@ -38,6 +38,7 @@
      * @param {String|Image} settings.font a font name to identify the corresponing source image
      * @param {String} [settings.fontData=settings.font] the bitmap font data corresponding name, or the bitmap font data itself
      * @param {Number} [settings.size] size a scaling ratio
+     * @param {me.Color|String} [settings.fillStyle] a CSS color value used to tint the bitmapText (@see me.BitmapText.tint)
      * @param {Number} [settings.lineWidth=1] line width, in pixels, when drawing stroke
      * @param {String} [settings.textAlign="left"] horizontal text alignment
      * @param {String} [settings.textBaseline="top"] the text baseline
@@ -96,11 +97,20 @@
              * @name lineHeight
              * @memberOf me.BitmapText
              */
-            this.lineHeight = settings.lineHeight || 1;
+            this.lineHeight = settings.lineHeight || 1.0;
+
+            /**
+             * the text to be displayed
+             * @private
+             * @type {String[]}
+             * @name _text
+             * @memberOf me.BitmapText
+             */
+            this._text = [];
 
             /** @ignore */
             // scaled font size;
-            this.fontScale = me.pool.pull("me.Vector2d", 1, 1);
+            this.fontScale = me.pool.pull("me.Vector2d", 1.0, 1.0);
 
             // get the corresponding image
             this.fontImage = (typeof settings.font === "object") ? settings.font : me.loader.getImage(settings.font);
@@ -123,6 +133,16 @@
             // resize if necessary
             if (typeof settings.size === "number" && settings.size !== 1.0) {
                 this.resize(settings.size);
+            }
+
+            // apply given fillstyle to the the renderable tint color
+            if (typeof settings.fillStyle !== "undefined") {
+                if (settings.fillStyle instanceof me.Color) {
+                    this.tint.setColor(settings.fillStyle);
+                } else {
+                    // string (#RGB, #ARGB, #RRGGBB, #AARRGGBB)
+                    this.tint.parseCSS(settings.fillStyle);
+                }
             }
 
             // update anchorPoint if provided
@@ -165,17 +185,22 @@
          * @return this object for chaining
          */
         setText : function (value) {
-            value = "" + value;
-            if (this._text !== value) {
-                if (Array.isArray(value)) {
-                    this._text = value.join("\n");
+            if (typeof value === "undefined") {
+                value = "";
+            }
+
+            if (this._text.toString() !== value.toString()) {
+                if (!Array.isArray(value)) {
+                    this._text = ("" + value).split("\n");
                 } else {
                     this._text = value;
                 }
                 this.isDirty = true;
             }
+
             return this;
         },
+
 
         /**
          * change the font display size
@@ -206,9 +231,9 @@
         measureText : function (text, ret) {
             text = text || this._text;
 
-            var strings = ("" + text).split("\n");
             var stringHeight = measureTextHeight(this);
-            var textMetrics  = ret || this.getBounds();
+            var textMetrics = ret || this.getBounds();
+            var strings = typeof text === "string" ? ("" + (text)).split("\n") : text;
 
             textMetrics.height = textMetrics.width = 0;
 
@@ -240,6 +265,9 @@
          * @param {Number} [y]
          */
         draw : function (renderer, text, x, y) {
+            // save the previous global alpha value
+            var _alpha = renderer.globalAlpha();
+
             // allows to provide backward compatibility when
             // adding Bitmap Font to an object container
             if (typeof this.ancestor === "undefined") {
@@ -247,8 +275,6 @@
                 this.setText(text);
                 // force update bounds
                 this.update(0);
-                // save the previous global alpha value
-                var _alpha = renderer.globalAlpha();
                 renderer.setGlobalAlpha(_alpha * this.getOpacity());
             } else {
                 // added directly to an object container
@@ -256,14 +282,13 @@
                 y = this.pos.y;
             }
 
-            var strings = ("" + this._text).split("\n");
             var lX = x;
             var stringHeight = measureTextHeight(this);
             var maxWidth = 0;
 
-            for (var i = 0; i < strings.length; i++) {
+            for (var i = 0; i < this._text.length; i++) {
                 x = lX;
-                var string = me.utils.string.trimRight(strings[i]);
+                var string = me.utils.string.trimRight(this._text[i]);
                 // adjust x pos based on alignment value
                 var stringWidth = measureTextWidth(this, string);
                 switch (this.textAlign) {
@@ -341,7 +366,8 @@
                 renderer.setGlobalAlpha(_alpha);
             }
 
-            // clear the dirty flag
+            // clear the dirty flag here for
+            // backward compatibility
             this.isDirty = false;
         },
 
@@ -355,6 +381,7 @@
             this.fontScale = undefined;
             me.pool.push(this.fontData);
             this.fontData = undefined;
+            this._text.length = 0;
             this._super(me.Renderable, "destroy");
         }
     });
