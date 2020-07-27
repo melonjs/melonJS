@@ -195,7 +195,7 @@ var game = {
                 break;
             default:
                 level = "village";
-                return;
+                break;
         };
 
         // load the new level
