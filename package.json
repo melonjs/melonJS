@@ -20,7 +20,7 @@
     "electron",
     "mobile",
     "cordova"
-],
+  ],
   "repository": {
     "type": "git",
     "url": "https://github.com/melonjs/melonJS.git"
@@ -59,15 +59,15 @@
     "cheerio": "^1.0.0-rc.3",
     "eslint": "^7.5.0",
     "ghpages": "0.0.10",
-    "jasmine-core": "^3.5.0",
-    "jsdoc": "^3.6.4",
+    "jasmine-core": "^3.6.0",
+    "jsdoc": "^3.6.5",
     "karma": "^5.0.9",
     "karma-chrome-launcher": "^3.1.0",
-    "karma-coverage": "^2.0.2",
+    "karma-coverage": "^2.0.3",
     "karma-html-detailed-reporter": "^2.1.0",
     "karma-jasmine": "^3.1.1",
     "karma-nyan-reporter": "0.2.5",
-    "rollup": "^2.22.1",
+    "rollup": "^2.23.0",
     "rollup-plugin-babel": "^4.4.0",
     "rollup-plugin-bundle-size": "^1.0.3",
     "rollup-plugin-commonjs": "^10.1.0",
