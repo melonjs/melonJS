@@ -38,7 +38,7 @@ and currently features :
 - Pooling support for object recycling
 - Basic Particle System
 - Sprite with Animation management
-- Standard spritesheet, single and multiple Packed Textures (Texture Packer, ShoeBox) support
+- Standard spritesheet, single and multiple Packed Textures ([TexturePacker](https://www.codeandweb.com/texturepacker), [Free Texture Packer](http://free-tex-packer.com), [ShoeBox](https://renderhjs.net/shoebox/)) support
 - A state manager (to easily manage loading, menu, options, in-game state)
 - Tiled map format version +1.0 integration for easy level design
     - Uncompressed Plain, Base64, CSV and JSON encoded XML tilemap loading
