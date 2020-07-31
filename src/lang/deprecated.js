@@ -387,3 +387,19 @@ Object.defineProperty(me.sys, "interpolation", {
     },
     configurable : false
 });
+
+/**
+ * add collision mesh based on a given Physics Editor JSON object
+ * @name addShapesFromJSON
+ * @deprecated since 8.0.0
+ * @see me.Body.fromJSON
+ * @memberOf me.Body
+ * @function
+ * @param {me.Rect|me.Polygon|me.Line|me.Ellipse|Object} shape a shape or JSON object
+ * @param {Boolean} batchInsert if true the body bounds won't be updated after adding a shape
+ * @return {Number} the shape array length
+ */
+me.Body.prototype.addShapesFromJSON = function (json, id) {
+    me.utils.deprecated("addShapesFromJSON()", "fromJSON()", "8.0.0");
+    return this.fromJSON(json, id);
+};

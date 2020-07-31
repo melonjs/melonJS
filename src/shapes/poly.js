@@ -89,7 +89,7 @@ import earcut from "earcut";
          * @function
          * @param {Number} x position of the Polygon
          * @param {Number} y position of the Polygon
-         * @param {me.Vector2d[]} points array of vector defining the Polygon
+         * @param {me.Vector2d[]|Number[]} points array of vector or vertice defining the Polygon
          */
         setShape : function (x, y, points) {
             this.pos.set(x, y);
@@ -101,9 +101,19 @@ import earcut from "earcut";
             // convert given points to me.Vector2d if required
             if (!(points[0] instanceof me.Vector2d)) {
                 var _points = this.points = [];
-                points.forEach(function (point) {
-                   _points.push(new me.Vector2d(point.x, point.y));
-                });
+
+                if (typeof points[0] === "object") {
+                    // array of {x,y} object
+                    points.forEach(function (point) {
+                       _points.push(new me.Vector2d(point.x, point.y));
+                    });
+
+                } else {
+                    // it's a flat array
+                    for (var p = 0; p < points.length; p += 2) {
+                        _points.push(new me.Vector2d(points[p], points[p + 1]));
+                    }
+                }
             } else {
                 // array of me.Vector2d
                 this.points = points;

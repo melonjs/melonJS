@@ -426,12 +426,23 @@
                         }
 
                         if (typeof this.body !== "undefined") {
+                            if (!this.currentTransform.isIdentity()) {
+                                // if any transform were applied to me.Sprite
+                                // we need to reset the context so that we
+                                // can draw the body shapes properly
+                                renderer.save();
+                                renderer.resetTransform();
+                                renderer.translate(-ax, -ay);
+                            }
                             renderer.translate(this.pos.x, this.pos.y);
                             // draw all defined shapes
                             renderer.setColor("red");
                             for (var i = this.body.shapes.length, shape; i--, (shape = this.body.shapes[i]);) {
                                 renderer.stroke(shape);
                                 _this.counters.inc("shapes");
+                            }
+                            if (!this.currentTransform.isIdentity()) {
+                                renderer.restore();
                             }
                         }
                     }

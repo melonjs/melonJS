@@ -13,7 +13,7 @@
      * @memberOf me
      * @constructor
      * @param {me.Renderable} ancestor the parent object this body is attached to
-     * @param {me.Rect|me.Rect[]|me.Polygon|me.Polygon[]|me.Line|me.Line[]|me.Ellipse|me.Ellipse[]} [shapes] the initial shape or list of shapes
+     * @param {me.Rect|me.Rect[]|me.Polygon|me.Polygon[]|me.Line|me.Line[]|me.Ellipse|me.Ellipse[]|Object} [shapes] a initial shape, list of shapes, or JSON object defining the body
      * @param {Function} [onBodyUpdate] callback for when the body is updated (e.g. add/remove shapes)
      */
     me.Body = me.Rect.extend({
@@ -293,16 +293,24 @@
          * @memberOf me.Body
          * @public
          * @function
-         * @param {me.Rect|me.Polygon|me.Line|me.Ellipse} shape a shape object
+         * @param {me.Rect|me.Polygon|me.Line|me.Ellipse|Object} shape a shape or JSON object
          * @param {Boolean} batchInsert if true the body bounds won't be updated after adding a shape
          * @return {Number} the shape array length
+         * @example
+         * // add a rectangle shape
+         * this.body.addShape(new me.Rect(0, 0, image.width, image.height));
+         * // add a shape from a JSON object
+         * this.body.addShape(me.loader.getJSON("shapesdef").banana);
          */
         addShape : function (shape, batchInsert) {
             if (shape instanceof me.Rect) {
                 this.shapes.push(shape.toPolygon());
-            } else {
+            } else if (shape instanceof me.Polygon || shape instanceof me.Ellipse) {
                 // else polygon or circle
                 this.shapes.push(shape);
+            } else {
+                // JSON object
+                this.fromJSON(shape);
             }
 
             if (batchInsert !== true) {
@@ -315,91 +323,72 @@
         },
 
         /**
-         * add collision mesh based on a given Physics Editor JSON object.
-         * (this will also apply any physic properties defined in the given JSON file)
-         * @name addShapesFromJSON
+         * sets the body shape vertices
+         * @name setVertices
          * @memberOf me.Body
          * @public
          * @function
-         * @param {Object} json a JSON object as exported from the a Physics Editor tool
-         * @param {String} id the shape identifier within the given the json object
-         * @param {String} [scale=1] the desired scale of the body (physic-body-editor only)
-         * @see https://www.codeandweb.com/physicseditor
-         * @return {Number} the shape array length
-         * @example
-         * this.body.addShapesFromJSON(me.loader.getJSON("shapesdef1"), settings.banana);
+         * @param {me.Vector2d[]} vertices an array of me.Vector2d points defining a convex hull
+         * @param {Number} [index=0] the shape object for which to set the vertices
          */
-        addShapesFromJSON : function (json, id, scale) {
-            var data;
-            scale = scale || 1;
-
-            // identify the json format
-            if (typeof(json.rigidBodies) === "undefined") {
-                // Physic Editor Format (https://www.codeandweb.com/physicseditor)
-                data = json[id];
-
-                if (typeof(data) === "undefined") {
-                    throw new Error("Identifier (" + id + ") undefined for the given PhysicsEditor JSON object)");
-                }
-
-                if (data.length) {
-                    // go through all shapes and add them to the body
-                    for (var i = 0; i < data.length; i++) {
-                        var points = [];
-                        for (var s = 0; s < data[i].shape.length; s += 2) {
-                            points.push(new me.Vector2d(data[i].shape[s], data[i].shape[s + 1]));
-                        }
-                        this.addShape(new me.Polygon(0, 0, points), true);
-                    }
-                    // apply density, friction and bounce properties from the first shape
-                    // Note : how to manage different mass or friction for all different shapes?
-                    this.mass = data[0].density || 0;
-                    this.friction.set(data[0].friction || 0, data[0].friction || 0);
-                    this.bounce = data[0].bounce || 0;
-                }
+        setVertices : function (vertices, index, batchInsert) {
+            var polygon = this.getShape(index);
+            if (polygon instanceof me.Polygon) {
+                polygon.setShape(0, 0, vertices);
             } else {
-                // Physic Body Editor Format (http://www.aurelienribon.com/blog/projects/physics-body-editor/)
-                json.rigidBodies.forEach(function (shape) {
-                    if (shape.name === id) {
-                        data = shape;
-                        // how to stop a forEach loop?
-                    }
-                });
-
-                if (typeof(data) === "undefined") {
-                    throw new Error("Identifier (" + id + ") undefined for the given PhysicsEditor JSON object)");
-                }
-
-                // shapes origin point
-                // top-left origin in the editor is (0,1)
-                this.pos.set(data.origin.x, 1.0 - data.origin.y).scale(scale);
-
-                var self = this;
-                // parse all polygons
-                data.polygons.forEach(function (poly) {
-                    var points = [];
-                    poly.forEach(function (point) {
-                        // top-left origin in the editor is (0,1)
-                        points.push(new me.Vector2d(point.x, 1.0 - point.y).scale(scale));
-                    });
-                    self.addShape(new me.Polygon(0, 0, points), true);
-                });
-                // parse all circles
-                data.circles.forEach(function (circle) {
-                    self.addShape(new me.Ellipse(
-                        circle.cx * scale,
-                        (1.0 - circle.cy) * scale,
-                        circle.r * 2 * scale,
-                        circle.r * 2 * scale
-                    ), true);
-                });
+                // this will replace any other non polygon shape type if defined
+                this.shapes[index || 0] = new me.Polygon(0, 0, vertices);
             }
 
-            // update the body bounds to take in account the added shapes
-            this.updateBounds();
+            if (batchInsert !== true) {
+                // update the body bounds to take in account the new vertices
+                this.updateBounds();
+            }
+        },
 
-            // return the length of the shape list
-            return this.shapes.length;
+        /**
+         * add collision mesh based on a JSON object
+         * (this will also apply any physic properties defined in the given JSON file)
+         * @name fromJSON
+         * @memberOf me.Body
+         * @public
+         * @function
+         * @param {Object} json a JSON object as exported from a Physics Editor tool
+         * @param {String} [id] an optional shape identifier within the given the json object
+         * @see https://www.codeandweb.com/physicseditor
+         * @return {Number} how many shapes were added to the body
+         * @example
+         * // define the body based on the banana shape
+         * this.body.fromJSON(me.loader.getJSON("shapesdef").banana);
+         * // or ...
+         * this.body.fromJSON(me.loader.getJSON("shapesdef"), "banana");
+         */
+        fromJSON : function (json, id) {
+            var data = json;
+
+            if (typeof id !== "undefined" ) {
+                json[id];
+            }
+
+            // Physic Editor Format (https://www.codeandweb.com/physicseditor)
+            if (typeof(data) === "undefined") {
+                throw new Error("Identifier (" + id + ") undefined for the given JSON object)");
+            }
+
+            if (data.length) {
+                // go through all shapes and add them to the body
+                for (var i = 0; i < data.length; i++) {
+                    this.setVertices(data[i].shape, i);
+                }
+                // apply density, friction and bounce properties from the first shape
+                // Note : how to manage different mass or friction for all different shapes?
+                this.mass = data[0].density || 0;
+                this.friction.set(data[0].friction || 0, data[0].friction || 0);
+                this.bounce = data[0].bounce || 0;
+            }
+
+            // return the amount of shapes added to the body
+            return data.length;
         },
 
         /**
