@@ -21,17 +21,17 @@ describe("me.input", function () {
             me.game.world.addChild(renderable);
 
             // clear the quadtree
-            me.collision.quadTree.clear();
+            me.game.world.broadphase.clear();
 
             // insert the world container (children) into the quadtree
-            me.collision.quadTree.insertContainer(me.game.world);
+            me.game.world.broadphase.insertContainer(me.game.world);
 
             // register on pointer down
             me.input.registerPointerEvent("pointerdown", renderable, function () {
                 // Cleanup
                 me.input.releasePointerEvent("pointerdown", renderable);
                 me.game.world.removeChildNow(renderable);
-                me.collision.quadTree.clear();
+                me.game.world.broadphase.clear();
 
                 // Assure Jasmine that everything is alright
                 expect(true).toBe(true);
