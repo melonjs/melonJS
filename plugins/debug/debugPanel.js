@@ -706,7 +706,7 @@
 
             renderer.translate(-x, -y);
 
-            this.drawQuadTreeNode(renderer, me.collision.quadTree);
+            this.drawQuadTreeNode(renderer, me.game.world.broadphase);
 
             renderer.translate(x, y);
         },

@@ -33,7 +33,7 @@
             this.ancestor = parent;
 
             /**
-             * The collision shapes of the body <br>
+             * The collision shapes of the body
              * @ignore
              * @type {me.Polygon[]|me.Line[]|me.Ellipse[]}
              * @name shapes

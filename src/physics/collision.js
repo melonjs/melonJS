@@ -200,46 +200,28 @@
          * PUBLIC STUFF
          */
 
-        /**
-         * the world quadtree used for the collision broadphase
-         * @name quadTree
-         * @memberOf me.collision
-         * @public
-         * @type {me.QuadTree}
-         */
-        api.quadTree = null;
+         /**
+          * The maximum number of children that a quadtree node can contain before it is split into sub-nodes.
+          * @name maxChildren
+          * @memberOf me.collision
+          * @public
+          * @type {Number}
+          * @default 8
+          * @see me.game.world.broadphase
+          */
+         api.maxChildren = 8;
 
-        /**
-         * The maximum number of levels that the quadtree will create.
-         * @name maxDepth
-         * @memberOf me.collision
-         * @public
-         * @type {Number}
-         * @default 4
-         * @see me.collision.quadTree
-         *
-         */
-        api.maxDepth = 4;
-
-        /**
-         * The maximum number of children that a quadtree node can contain before it is split into sub-nodes.
-         * @name maxChildren
-         * @memberOf me.collision
-         * @public
-         * @type {Number}
-         * @default 8
-         * @see me.collision.quadTree
-         */
-        api.maxChildren = 8;
-
-        /**
-         * bounds of the physic world.
-         * @name bounds
-         * @memberOf me.collision
-         * @public
-         * @type {me.Rect}
-         */
-        api.bounds = null;
+         /**
+          * The maximum number of levels that the quadtree will create.
+          * @name maxDepth
+          * @memberOf me.collision
+          * @public
+          * @type {Number}
+          * @default 4
+          * @see me.game.world.broadphase
+          *
+          */
+         api.maxDepth = 4;
 
         /**
          * Enum for collision type values.
@@ -300,27 +282,6 @@
             WORLD_SHAPE         : 1 << 6, // walls, etc...
             USER                : 1 << 7, // user-defined types start here...
             ALL_OBJECT          : 0xFFFFFFFF // all objects
-        };
-
-        /**
-         * Initialize the collision/physic world
-         * @param {me.Rect} bounds the default game world bounds
-         * @ignore
-         */
-        api.init = function (bounds) {
-            // default bounds to the game world size
-            api.bounds = bounds.clone();
-
-            // initialize the quadtree
-            api.quadTree = new me.QuadTree(api.bounds, api.maxChildren, api.maxDepth);
-
-            // reset the collision detection engine if a new level is loaded
-            me.event.subscribe(me.event.LEVEL_LOADED, function () {
-                // align default bounds to the game world bounds
-                api.bounds.copy(me.game.world.getBounds());
-                // reset the quadtree
-                api.quadTree.clear(api.bounds);
-            });
         };
 
         /**
@@ -438,7 +399,7 @@
             var response = responseObject || api.response;
 
             // retreive a list of potential colliding objects
-            var candidates = api.quadTree.retrieve(objA);
+            var candidates = me.game.world.broadphase.retrieve(objA);
 
             for (var i = candidates.length, objB; i--, (objB = candidates[i]);) {
 
@@ -530,7 +491,7 @@
             var result = resultArray || [];
 
             // retrieve a list of potential colliding objects
-            var candidates = api.quadTree.retrieve(line.getBounds());
+            var candidates = me.game.world.broadphase.retrieve(line.getBounds());
 
             for (var i = candidates.length, objB; i--, (objB = candidates[i]);) {
 

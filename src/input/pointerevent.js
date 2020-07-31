@@ -259,7 +259,7 @@
                 me.event.publish(me.event.POINTERMOVE, [pointer]);
             }
 
-            var candidates = me.collision.quadTree.retrieve(currentPointer, me.Container.prototype._sortReverseZ);
+            var candidates = me.game.world.broadphase.retrieve(currentPointer, me.Container.prototype._sortReverseZ);
 
             // add the main viewport to the list of candidates
             candidates = candidates.concat([ me.game.viewport ]);

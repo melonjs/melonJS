@@ -52,12 +52,23 @@
              */
             this.gravity = new me.Vector2d(0, 0.98);
 
-            // initialize the collision system (the quadTree mostly)
-            me.collision.init(this.getBounds());
+            /**
+             * the instance of the game world quadtree used for broadphase
+             * @name broadphase
+             * @memberOf me.World
+             * @public
+             * @type {me.QuadTree}
+             */
+            this.broadphase = new me.QuadTree(this.getBounds().clone(), me.collision.maxChildren, me.collision.maxDepth);
 
             // reset the world container on the game reset signal
             me.event.subscribe(me.event.GAME_RESET, this.reset.bind(this));
 
+            // update the broadband world bounds if a new level is loaded
+            me.event.subscribe(me.event.LEVEL_LOADED, function () {
+                // reset the quadtree
+                me.game.world.broadphase.clear(me.game.world.getBounds());
+            });
         },
 
         /**
@@ -68,7 +79,7 @@
          */
         reset : function () {
             // clear the quadtree
-            me.collision.quadTree.clear();
+            this.broadphase.clear();
 
             // reset the anchorPoint
             this.anchorPoint.set(0, 0);
@@ -85,10 +96,10 @@
          */
         update : function (dt) {
             // clear the quadtree
-            me.collision.quadTree.clear();
+            this.broadphase.clear();
 
             // insert the world container (children) into the quadtree
-            me.collision.quadTree.insertContainer(this);
+            this.broadphase.insertContainer(this);
 
             // call the _super constructor
             return this._super(me.Container, "update", [dt]);
