@@ -98,7 +98,7 @@
             this.clipping = false;
 
             /**
-             * a callback to be extended, triggered when a child is added or removed
+             * a callback to be extended, triggered after a child has been added or removed
              * @name onChildChange
              * @memberOf me.Container#
              * @function
