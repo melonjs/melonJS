@@ -256,7 +256,7 @@
             this.mask = undefined;
 
             /**
-             * define a tint to this renderable. a (255, 255, 255) r, g, b value will remove the tint effect.
+             * define a tint for this renderable. a (255, 255, 255) r, g, b value will remove the tint effect.
              * @public
              * @type {me.Color}
              * @name tint

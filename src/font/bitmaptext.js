@@ -135,13 +135,13 @@
                 this.resize(settings.size);
             }
 
-            // apply given fillstyle to the the renderable tint color
+            // apply given fillstyle
             if (typeof settings.fillStyle !== "undefined") {
                 if (settings.fillStyle instanceof me.Color) {
-                    this.tint.setColor(settings.fillStyle);
+                    this.fillStyle.setColor(settings.fillStyle);
                 } else {
                     // string (#RGB, #ARGB, #RRGGBB, #AARRGGBB)
-                    this.tint.parseCSS(settings.fillStyle);
+                    this.fillStyle.parseCSS(settings.fillStyle);
                 }
             }
 
@@ -384,5 +384,29 @@
             this._text.length = 0;
             this._super(me.Renderable, "destroy");
         }
+    });
+
+    /**
+     * defines the color used to tint the bitmap text
+     * @public
+     * @type {me.Color}
+     * @name fillStyle
+     * @see me.Renderable#tint
+     * @memberOf me.BitmapText
+     */
+    Object.defineProperty(me.BitmapText.prototype, "fillStyle", {
+        /**
+         * @ignore
+         */
+        get : function () {
+            return this.tint;
+        },
+        /**
+         * @ignore
+         */
+        set : function (value) {
+            this.tint = value;
+        },
+        configurable : true
     });
 })();
