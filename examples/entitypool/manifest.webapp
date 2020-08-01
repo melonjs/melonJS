@@ -1,9 +1,0 @@
-{
-  "name": "entitypool",
-  "launch_path" : "./index.html",
-  "version": "1",
-  "developer": {
-    "name": "melonjs",
-    "url": "http://www.melonjs.org"
-  }
-}
