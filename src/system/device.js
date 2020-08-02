@@ -798,14 +798,8 @@
         api.getParentElement = function (element) {
             var target = me.device.getElement(element);
 
-            if (target !== null && target.parentNode !== null) {
+            if (target.parentNode !== null) {
                 target = target.parentNode;
-            }
-
-            // fallback, if invalid target or non HTMLElement object
-            if (!target)  {
-                //default to document.body
-                target = document.body;
             }
 
             return target;
@@ -829,6 +823,13 @@
                     target = element;
                 }
             }
+
+            // fallback, if invalid target or non HTMLElement object
+            if (!target)  {
+                //default to document.body
+                target = document.body;
+            }
+
             return target;
         };
 

@@ -282,7 +282,7 @@
             }
 
             // add our canvas (default to document.body if settings.parent is undefined)
-            me.video.parent = me.device.getParentElement(settings.parent);
+            me.video.parent = me.device.getElement(settings.parent);
             me.video.parent.appendChild(this.renderer.getScreenCanvas());
 
             // trigger an initial resize();
@@ -389,8 +389,8 @@
                     canvasMaxHeight = parseInt(style.maxHeight, 10) || Infinity;
                 }
 
-                // get the maximum canvas size
-                var nodeBounds = me.device.getElementBounds(me.video.getParent());
+                // get the maximum canvas size within the parent div containing the canvas container
+                var nodeBounds = me.device.getElementBounds(me.device.getParentElement(me.video.getParent()));
 
                 var _max_width = Math.min(canvasMaxWidth, nodeBounds.width);
                 var _max_height = Math.min(canvasMaxHeight, nodeBounds.height);
