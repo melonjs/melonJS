@@ -1,10 +1,10 @@
-import babel from 'rollup-plugin-babel';
-import multiEntry from "rollup-plugin-multi-entry";
+import babel from '@rollup/plugin-babel';
+import multiEntry from "@rollup/plugin-multi-entry";
 import { string } from 'rollup-plugin-string';
-import replace from 'rollup-plugin-replace';
+import replace from '@rollup/plugin-replace';
 import bundleSize from 'rollup-plugin-bundle-size';
-import commonjs from 'rollup-plugin-commonjs';
-import resolve from 'rollup-plugin-node-resolve';
+import commonjs from '@rollup/plugin-commonjs';
+import resolve from '@rollup/plugin-node-resolve';
 
 
 const pkg = require('./package.json');
@@ -36,9 +36,13 @@ export default {
         multiEntry(),
         replace({
             '__VERSION__': pkg.version,
-            //'/this\._super\(\s*([\w\.]+)\s*,\s*"(\w+)"\s*(,\s*)?/g' : '$1.prototype.$2.apply(this$3',
-             delimiters: ['', '']
-        }),
+            delimiters: ['', '']
+        }
+        //, {
+        //    '/this\._super\(\s*([\w\.]+)\s*,\s*"(\w+)"\s*(,\s*)?/g' : '$1.prototype.$2.apply(this$3',
+        //    delimiters: ['', '']
+        //  }
+        ),
         string({
             include: [
                 '**/*.frag',
