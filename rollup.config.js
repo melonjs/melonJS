@@ -50,7 +50,8 @@ export default {
             ],
         }),
         babel({
-          exclude: 'node_modules/**'
+          exclude: 'node_modules/**',
+          babelHelpers: 'bundled' // shall we change to runtime ?
       }),
       bundleSize()
     ],
