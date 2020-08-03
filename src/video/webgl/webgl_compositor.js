@@ -153,7 +153,12 @@ import quadFragment from "./shaders/quad.frag";
 
             this.flush();
 
-            this.setViewport(0, 0, this.gl.canvas.width, this.gl.canvas.height);
+            // initial viewport size
+            this.setViewport(
+                0, 0,
+                this.renderer.getScreenCanvas().width,
+                this.renderer.getScreenCanvas().height
+            );
 
             // Initialize clear color
             this.clearColor(0.0, 0.0, 0.0, 0.0);
