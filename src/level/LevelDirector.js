@@ -67,11 +67,6 @@
          */
         function loadTMXLevel(levelId, container, flatten, setViewportBounds) {
             var level = levels[levelId];
-
-            // disable auto-sort for the given container
-            var autoSort = container.autoSort;
-            container.autoSort = false;
-
             var levelBounds = level.getBounds();
 
             if (setViewportBounds) {
@@ -92,12 +87,6 @@
 
             // add all level elements to the target container
             level.addTo(container, flatten);
-
-            // sort everything (recursively)
-            container.sort(true);
-            container.autoSort = autoSort;
-
-            container.resize(levelBounds.width, levelBounds.height);
 
             function resize_container() {
                 // center the map if smaller than the current viewport

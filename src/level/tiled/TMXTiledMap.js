@@ -347,7 +347,8 @@
 
 
         /**
-         * add all the map layers and objects to the given container
+         * add all the map layers and objects to the given container.
+         * note : this will not automatically update the camera viewport
          * @name me.TMXTileMap#addTo
          * @public
          * @function
@@ -377,12 +378,15 @@
                 container.addChild(object);
             });
 
+            // resize the container accordingly
+            container.resize(this.bounds.width, this.bounds.height);
+
+            // sort everything (recursively)
+            container.sort(true);
+
             //  set back auto-sort and auto-depth
             container.autoSort = _sort;
             container.autoDepth = _depth;
-
-            // force a sort
-            container.sort(true);
         },
 
         /**
