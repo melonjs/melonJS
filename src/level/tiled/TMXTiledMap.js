@@ -353,7 +353,7 @@
          * @public
          * @function
          * @param {me.Container} target container
-         * @param {boolean} flatten if true, flatten all objects into the given container
+         * @param {boolean} [flatten=true] if true, flatten all objects into the given container, else a `me.Container` object will be created for each corresponding groups
          * @example
          * // create a new level object based on the TMX JSON object
          * var level = new me.TMXTileMap(levelId, me.loader.getTMX(levelId));
@@ -394,8 +394,8 @@
          * @name me.TMXTileMap#getObjects
          * @public
          * @function
-         * @param {boolean} flatten if true, flatten all objects into the returned array, <br>
-         * ignoring all defined groups (no sub containers will be created)
+         * @param {boolean} [flatten=true] if true, flatten all objects into the returned array.
+         * when false, a `me.Container` object will be created for each corresponding groups
          * @return {me.Renderable[]} Array of Objects
          */
         getObjects : function (flatten) {
@@ -498,7 +498,7 @@
                     }
 
                     //apply group opacity value to the child objects if group are merged
-                    if (flatten === true) {
+                    if (flatten !== false) {
                         if (obj.isRenderable === true) {
                             obj.setOpacity(obj.getOpacity() * group.opacity);
                             // and to child renderables if any
