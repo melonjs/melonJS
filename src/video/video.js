@@ -390,7 +390,7 @@
                 }
 
                 // get the maximum canvas size within the parent div containing the canvas container
-                var nodeBounds = me.device.getElementBounds(me.device.getParentElement(me.video.getParent()));
+                var nodeBounds = me.device.getParentBounds(me.video.getParent());
 
                 var _max_width = Math.min(canvasMaxWidth, nodeBounds.width);
                 var _max_height = Math.min(canvasMaxHeight, nodeBounds.height);

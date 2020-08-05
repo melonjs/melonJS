@@ -834,34 +834,37 @@
         };
 
         /**
-         * return the bounding rect for the given HTMLElement object
+         * returns the size of the given HTMLElement and its position relative to the viewport
+         * <br><img src="images/element-box-diagram.png"/>
          * @name getElementBounds
          * @see https://developer.mozilla.org/en-US/docs/Web/API/DOMRect
          * @memberOf me.device
          * @function
          * @param {String|HTMLElement} element an HTMLElement object
-         * @return {DOMRect} the size and position of the element relatively to the viewport.
+         * @return {DOMRect} the size and position of the element relatively to the viewport
          */
         api.getElementBounds = function (element) {
             var rect;
 
-            if (typeof element === "object" && element !== document.body && typeof element.getBoundingClientRect !== "undefined") {
+            if (typeof element === "object" && typeof element.getBoundingClientRect !== "undefined") {
                 rect = element.getBoundingClientRect();
             } else {
-                // for cased where DOM is not implemented (e.g. Ejecta, Weixin)
-                rect = { left: 0, x: 0, top: 0, y: 0, width: window.innerWidth, height: window.innerHeight};
+                var w = window.innerWidth, h = window.innerHeight;
+                // fallback where DOM is not implemented (e.g. Ejecta, Weixin)
+                rect = {left: 0, top: 0, x: 0, y: 0, width: w, height: h, right: w, bottom: h };
             };
             return rect;
         };
 
         /**
-         * return the parent bounds for the given parent name or HTMLElement object
+         * returns the size of the given HTMLElement Parent and its position relative to the viewport
+         * <br><img src="images/element-box-diagram.png"/>
          * @name getParentBounds
          * @see https://developer.mozilla.org/en-US/docs/Web/API/DOMRect
          * @memberOf me.device
          * @function
-         * @param {String|HTMLElement} element the parent element name or a HTMLElement object
-         * @return {DOMRect} the size and position of the parent relative to the viewport.
+         * @param {String|HTMLElement} element an HTMLElement object
+         * @return {DOMRect} the size and position of the given element parent relative to the viewport
          */
         api.getParentBounds = function (element) {
             return me.device.getElementBounds(me.device.getParentElement(element));
