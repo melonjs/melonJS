@@ -20,8 +20,6 @@
         var levelIdx = [];
         // current level index
         var currentLevelIdx = 0;
-        // onresize handler
-        var onresize_handler = null;
 
         function safeLoadLevel(levelId, options, restart) {
             // clean the destination container
@@ -60,23 +58,13 @@
          * @private
          * @param {String} level level id
          * @param {me.Container} target container
-         * @param {boolean} flatten if true, flatten all objects into the given container
-         * @param {boolean} setViewportBounds if true, set the viewport bounds to the map size
+         * @param {boolean} [flatten=true] if true, flatten all objects into the given container
+         * @param {boolean} [setViewportBounds=false] if true, set the viewport bounds to the map size, this should be set to true especially if adding a level to the game world container.
          * @ignore
          * @function
          */
         function loadTMXLevel(levelId, container, flatten, setViewportBounds) {
             var level = levels[levelId];
-            var levelBounds = level.getBounds();
-
-            if (setViewportBounds) {
-                // update the viewport bounds
-                me.game.viewport.setBounds(
-                    0, 0,
-                    Math.max(levelBounds.width, me.game.viewport.width),
-                    Math.max(levelBounds.height, me.game.viewport.height)
-                );
-            }
 
             // reset the GUID generator
             // and pass the level id as parameter
@@ -86,26 +74,7 @@
             container.anchorPoint.set(0, 0);
 
             // add all level elements to the target container
-            level.addTo(container, flatten);
-
-            function resize_container() {
-                // center the map if smaller than the current viewport
-                container.pos.set(
-                    Math.max(0, ~~((me.game.viewport.width - levelBounds.width) / 2)),
-                    Math.max(0, ~~((me.game.viewport.height - levelBounds.height) / 2)),
-                    0
-                );
-            }
-
-            if (setViewportBounds) {
-                resize_container();
-
-                // Replace the resize handler
-                if (onresize_handler) {
-                    me.event.unsubscribe(onresize_handler);
-                }
-                onresize_handler = me.event.subscribe(me.event.VIEWPORT_ONRESIZE, resize_container);
-            }
+            level.addTo(container, flatten, setViewportBounds);
         }
 
         /*
@@ -258,7 +227,7 @@
         };
 
         /**
-         * reload the current level<br>
+         * reload the current level
          * @name reloadLevel
          * @memberOf me.levelDirector
          * @public

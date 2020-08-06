@@ -3,6 +3,9 @@
     // constant to identify the collision object layer
     var COLLISION_GROUP = "collision";
 
+    // onresize handler
+    var onresize_handler = null;
+
     /**
      * set a compatible renderer object
      * for the specified map
@@ -354,15 +357,18 @@
          * @function
          * @param {me.Container} target container
          * @param {boolean} [flatten=true] if true, flatten all objects into the given container, else a `me.Container` object will be created for each corresponding groups
+         * @param {boolean} [setViewportBounds=false] if true, set the viewport bounds to the map size, this should be set to true especially if adding a level to the game world container.
          * @example
          * // create a new level object based on the TMX JSON object
          * var level = new me.TMXTileMap(levelId, me.loader.getTMX(levelId));
          * // add the level to the game world container
-         * level.addTo(me.game.world, true);
+         * level.addTo(me.game.world, true, true);
          */
-        addTo : function (container, flatten) {
+        addTo : function (container, flatten, setViewportBounds) {
             var _sort = container.autoSort;
             var _depth = container.autoDepth;
+
+            var levelBounds = this.getBounds();
 
             // disable auto-sort and auto-depth
             container.autoSort = false;
@@ -383,6 +389,34 @@
 
             // sort everything (recursively)
             container.sort(true);
+
+
+            // callback funtion for the viewport resize event
+            function _setBounds(width, height) {
+                // adjust the viewport bounds if level is smaller
+                me.game.viewport.setBounds(
+                    0, 0,
+                    Math.max(levelBounds.width, width),
+                    Math.max(levelBounds.height, height)
+                );
+                // center the map if smaller than the current viewport
+                container.pos.set(
+                    Math.max(0, ~~((width - levelBounds.width) / 2)),
+                    Math.max(0, ~~((height - levelBounds.height) / 2)),
+                    // don't change the container z position if defined
+                    container.pos.z
+                );
+            }
+
+            if (setViewportBounds === true) {
+                // force viewport bounds update
+                _setBounds(me.game.viewport.width, me.game.viewport.height);
+                // Replace the resize handler
+                if (onresize_handler) {
+                    me.event.unsubscribe(onresize_handler);
+                }
+                onresize_handler = me.event.subscribe(me.event.VIEWPORT_ONRESIZE, _setBounds);
+            }
 
             //  set back auto-sort and auto-depth
             container.autoSort = _sort;

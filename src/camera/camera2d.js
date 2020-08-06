@@ -271,15 +271,8 @@
             // disable damping while resizing
             this.smoothFollow = false;
 
-            // update bounds
-            var level = me.levelDirector.getCurrentLevel();
-            this.setBounds(
-                0, 0,
-                Math.max(w, level ? level.getBounds().width : 0),
-                Math.max(h, level ? level.getBounds().height : 0)
-            );
-
-            // reset everthing
+            // reset everything
+            this.setBounds(0, 0, w, h);
             this.setDeadzone(w / 6, h / 6);
             this.update();
             this.smoothFollow = true;
@@ -707,7 +700,7 @@
                 // add an overlay
                 // TODO use the tint feature once implemented in Canvas mode
                 renderer.save();
-                // reset all transform so that the overaly cover the whole camera area 
+                // reset all transform so that the overaly cover the whole camera area
                 renderer.resetTransform();
                 renderer.setColor(this._fadeOut.color);
                 renderer.fillRect(0, 0, this.width, this.height);
