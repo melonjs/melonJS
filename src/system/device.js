@@ -846,7 +846,7 @@
         api.getElementBounds = function (element) {
             var rect;
 
-            if (typeof element === "object" && typeof element.getBoundingClientRect !== "undefined") {
+            if (typeof element === "object" && element !== document.body && typeof element.getBoundingClientRect !== "undefined") {
                 rect = element.getBoundingClientRect();
             } else {
                 var w = window.innerWidth, h = window.innerHeight;
