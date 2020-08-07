@@ -59,6 +59,9 @@
             }
         };
 
+        // a cache DOMRect object
+        var _domRect = {left: 0, top: 0, x: 0, y: 0, width: 0, height: 0, right: 0, bottom: 0};
+
         /**
          * check the device capapbilities
          * @ignore
@@ -844,16 +847,13 @@
          * @return {DOMRect} the size and position of the element relatively to the viewport
          */
         api.getElementBounds = function (element) {
-            var rect;
-
             if (typeof element === "object" && element !== document.body && typeof element.getBoundingClientRect !== "undefined") {
-                rect = element.getBoundingClientRect();
+                return element.getBoundingClientRect();
             } else {
-                var w = window.innerWidth, h = window.innerHeight;
-                // fallback where DOM is not implemented (e.g. Ejecta, Weixin)
-                rect = {left: 0, top: 0, x: 0, y: 0, width: w, height: h, right: w, bottom: h };
+                _domRect.width = _domRect.right = window.innerWidth;
+                _domRect.height = _domRect.bottom = window.innerHeight;
+                return _domRect;
             };
-            return rect;
         };
 
         /**
