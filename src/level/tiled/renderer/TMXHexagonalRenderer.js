@@ -426,7 +426,7 @@
                     rowPos.setV(startPos);
 
                     for (; rowPos.x < rect.right && rowTile.x < endX; rowTile.x+=2) {
-                        tile = layer.layerData[rowTile.x][rowTile.y];
+                        tile = layer.cellAt(rowTile.x, rowTile.y, false);
                         if (tile) {
                             // draw the tile
                             tile.tileset.drawTile(renderer, rowPos.x, rowPos.y, tile);
@@ -475,7 +475,7 @@
                     }
 
                     for (; rowPos.x < rect.right && rowTile.x < endX; rowTile.x++) {
-                        tile = layer.layerData[rowTile.x][rowTile.y];
+                        tile = layer.cellAt(rowTile.x, rowTile.y, false);
                         if (tile) {
                             // draw the tile
                             tile.tileset.drawTile(renderer, rowPos.x, rowPos.y, tile);

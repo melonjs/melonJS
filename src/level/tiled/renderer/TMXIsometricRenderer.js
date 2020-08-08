@@ -166,27 +166,21 @@
             for (var y = startPos.y * 2; y - this.tileheight * 2 < rectEnd.y * 2; y += this.tileheight) {
                 columnItr.setV(rowItr);
                 for (var x = startPos.x; x < rectEnd.x; x += this.tilewidth) {
-                    //check if it's valid tile, if so render
-                    if (
-                        (columnItr.x >= 0) &&
-                        (columnItr.y >= 0) &&
-                        (columnItr.x < this.cols) &&
-                        (columnItr.y < this.rows)
-                    ) {
-                        var tmxTile = layer.layerData[columnItr.x][columnItr.y];
-                        if (tmxTile) {
-                            tileset = tmxTile.tileset;
-                            // offset could be different per tileset
-                            var offset  = tileset.tileoffset;
-                            // draw our tile
-                            tileset.drawTile(
-                                renderer,
-                                offset.x + x,
-                                offset.y + y / 2 - tileset.tileheight,
-                                tmxTile
-                            );
-                        }
+                    var tmxTile = layer.cellAt(columnItr.x, columnItr.y);
+                    // render if a valid tile position
+                    if (tmxTile) {
+                        tileset = tmxTile.tileset;
+                        // offset could be different per tileset
+                        var offset  = tileset.tileoffset;
+                        // draw our tile
+                        tileset.drawTile(
+                            renderer,
+                            offset.x + x,
+                            offset.y + y / 2 - tileset.tileheight,
+                            tmxTile
+                        );
                     }
+
                     // Advance to the next column
                     columnItr.x++;
                     columnItr.y--;

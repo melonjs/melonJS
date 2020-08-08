@@ -254,7 +254,7 @@
          * @function
          * @param {Number} x X coordinate (in world/pixels coordinates)
          * @param {Number} y Y coordinate (in world/pixels coordinates)
-         * @return {me.Tile} corresponding tile or null if outside of the map area
+         * @return {me.Tile} corresponding tile or null if there is no defined tile at the coordinate or if outside of the layer bounds
          * @example
          * // get the TMX Map Layer called "Front layer"
          * var layer = me.game.world.getChildByName("Front Layer")[0];
@@ -263,16 +263,39 @@
          */
         getTile : function (x, y) {
             var tile = null;
-            
+
             if (this.containsPoint(x, y)) {
-                var renderer = this.renderer;
-                var coord = renderer.pixelToTileCoords(x, y, me.pool.pull("me.Vector2d"));
-                if ((coord.x >= 0 && coord.x < renderer.cols) && ( coord.y >= 0 && coord.y < renderer.rows)) {
-                    tile = this.layerData[~~coord.x][~~coord.y];
-                }
+                var coord = this.renderer.pixelToTileCoords(x, y, me.pool.pull("me.Vector2d"));
+                tile = this.cellAt(coord.x, coord.y);
                 me.pool.push(coord);
             }
             return tile;
+        },
+
+        /**
+         * Return the Tile object at the specified tile coordinates
+         * @name cellAt
+         * @memberOf me.TMXLayer
+         * @public
+         * @function
+         * @param {Number} x x position of the tile (in Tile unit)
+         * @param {Number} y x position of the tile (in Tile unit)
+         * @param {Number} [boundsCheck=true] check first if within the layer bounds
+         * @return {me.Tile} corresponding tile or null if there is no defined tile at the position or if outside of the layer bounds
+         * @example
+         * // return the first tile at offset 0, 0
+         * var tile = layer.cellAt(0, 0);
+         */
+        cellAt : function (x, y, boundsCheck) {
+            var _x = ~~x;
+            var _y = ~~y;
+
+            // boundsCheck only used internally by the tiled renderer, when the layer bound check was already done
+            if (boundsCheck === false || (_x >= 0 && _x < this.renderer.cols && _y >= 0 && _y < this.renderer.rows)) {
+                return this.layerData[_x][_y];
+            } else {
+                return null;
+            }
         },
 
         /**

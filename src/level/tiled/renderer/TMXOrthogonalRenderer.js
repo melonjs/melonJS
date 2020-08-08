@@ -134,7 +134,7 @@
             // main drawing loop
             for (var y = start.y; y !== end.y; y+= incY) {
                 for (var x = start.x; x !== end.x; x+= incX) {
-                    var tmxTile = layer.layerData[x][y];
+                    var tmxTile = layer.cellAt(x, y, false);
                     if (tmxTile) {
                         this.drawTile(renderer, x, y, tmxTile);
                     }
