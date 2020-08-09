@@ -9,12 +9,12 @@
 - Core : a default stage is now instantiated at boot time, allowing to more easily write basic examples to test features
 - Input : improved input detection when the canvas is embedded into a complex css layout and the page is being scrolled up/down
 - Input : Changed the device accelerometer and orientation detection to comply with the latest API changes where a user permission is now required
-- Physic : me.game.world is now a specific container (based on me.Container) that will manage all related physic updates
+- Input : fix an issue with uncorrect horizontal delta value for wheel event
+- Input : all registered events for a specific renderable are now automatically released upon the object destruction
+- Physic : me.game.world is now a specific container (based on me.Container) that will hold and manage all related physic updates
 - Physic : gravity for physic bodies is now defined globally under me.game.world.gravity, and can be scaled individually using me.Body.gravityScale
 - Physic : added a rotate method to me.Body to allow rotating all the body shapes properly (by default around the body bounding box center)
 - Physic : melonJS will now automatically enable body physic when when a me.Body object is added to any renderable
-- Pointer : fix an issue with uncorrect horizontal delta value for wheel event
-- Pointer : all registered events for a specific renderable are now automatically released upon the object destruction
 - Renderable : add support for free-texture-packer (http://free-tex-packer.com), the free Texture Packer alternative (thanks @PLAYERKILLERS)
 - Renderable : optimized and tidied up me.Text and me.BitmapText implementation
 - Renderable : new isFlippedX & isFlippedY getter to check the current renderable "flip" state
@@ -24,7 +24,7 @@
 - Renderer : new optional parameter for createCanvas() to request an OffScreenCanvas if supported by the browser
 - Renderer : use OffscreenCanvas by default for all secondary canvas (e.g. debugPanel, double buffering, font texture in WebGL)
 - Renderer : properly fallback to the Canvas Renderer including when the WebGL renderer is not able to compile the built-in shaders
-- Renderer : dynamically activate texture sampler instead of pre-indexing them (accordingly to GLSL 1.30 specifications and later)
+- Renderer : dynamically activate WebGL texture sampler instead of pre-indexing them (accordingly to GLSL 1.30 specifications and later)
 - Renderer : added support for WebGL2 (disabled by default, use `preferWebGL1 = false` to enable it when calling me.video.init)
 - Renderer : enable use of NPOT textures when in WebGL2 mode for texture mapping and pattern drawing
 - Renderer : allow specifying the default `powerPreference` value for the WebGL Renderer (on Safari and Chrome 80+ default is now `low-power`)
@@ -33,8 +33,10 @@
 - Shapes : vectors and shapes can now be rotated around a given (optional) point instead of the default origin point
 - Shapes : added a center vector property for me.Rect, giving the center point of the rectangle
 - TMX : fix parsing of tileset image when the "last" tile spacing was truncated
+- TMX : fix staggered map rendering, where computed tiles coordinates were non integer values (thanks @siauderman)
 - TMX : fix parsing of animated tile with the latest version of Tiled (thanks @alcor)
 - TMX : fix anti-diagonal tile flipping (thanks @alcor)
+- TMX : fix world bounds not being updated if a level is added manually using `addTo` (thanks @siauderman)
 - Video : fix an issue when using the "flex" scaling mode, and where the reported parent container size could be floating values
 - Video : the `scale` parameter is now optional if scaleMethod is specified (auto-scaling will then automatically be enabled)
 
