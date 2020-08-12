@@ -1,6 +1,6 @@
 /*
  * MelonJS Game Engine
- * Copyright (C) 2011 - 2019 Olivier Biot
+ * Copyright (C) 2011 - 2020 Olivier Biot
  * http://www.melonjs.org
  */
 
