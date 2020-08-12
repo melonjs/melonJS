@@ -94,7 +94,7 @@ me.device.onReady(function () {
 Documentation :
 
 * [Online API](http://melonjs.github.io/melonJS/docs/) ([offline](https://github.com/melonjs/melonJS/archive/gh-pages.zip) version under the `docs` directory)
-* [Examples](http://melonjs.github.io/melonJS/)
+* [Examples](https://melonjs.github.io/examples/)
 
 For your first time using melonJS, follow these tutorials :
 
