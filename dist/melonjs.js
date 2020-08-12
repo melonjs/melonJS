@@ -1,9 +1,9 @@
 /*!
- * melonJS Game Engine - v7.1.1
+ * melonJS Game Engine - v8.0.1
  * http://www.melonjs.org
  * melonjs is licensed under the MIT License.
  * http://www.opensource.org/licenses/mit-license
- * @copyright (C) 2011 - 2019 Olivier Biot
+ * @copyright (C) 2011 - 2020 Olivier Biot
  */
 (function () {
    'use strict';
@@ -68,7 +68,6 @@
 
      (function () {
        var lastTime = 0;
-       var frameDuration = 1000 / 60;
        var vendors = ["ms", "moz", "webkit", "o"];
        var x; // standardized functions
        // https://developer.mozilla.org/fr/docs/Web/API/Window/requestAnimationFrame
@@ -87,7 +86,7 @@
        if (!requestAnimationFrame || !cancelAnimationFrame) {
          requestAnimationFrame = function requestAnimationFrame(callback) {
            var currTime = window.performance.now();
-           var timeToCall = Math.max(0, frameDuration - (currTime - lastTime));
+           var timeToCall = Math.max(0, 1000 / me.timer.maxfps - (currTime - lastTime));
            var id = window.setTimeout(function () {
              callback(currTime + timeToCall);
            }, timeToCall);
@@ -109,8 +108,18 @@
 
    var commonjsGlobal = typeof globalThis !== 'undefined' ? globalThis : typeof window !== 'undefined' ? window : typeof global !== 'undefined' ? global : typeof self !== 'undefined' ? self : {};
 
-   function createCommonjsModule(fn, module) {
-   	return module = { exports: {} }, fn(module, module.exports), module.exports;
+   function createCommonjsModule(fn, basedir, module) {
+   	return module = {
+   	  path: basedir,
+   	  exports: {},
+   	  require: function (path, base) {
+         return commonjsRequire(path, (base === undefined || base === null) ? module.path : base);
+       }
+   	}, fn(module, module.exports), module.exports;
+   }
+
+   function commonjsRequire () {
+   	throw new Error('Dynamic requires are not currently supported by @rollup/plugin-commonjs');
    }
 
    var jayExtend = createCommonjsModule(function (module) {
@@ -294,23 +303,10 @@
 
    (function () {
      /**
-      * Convert first character of a string to uppercase, if it's a letter.
-      * @ignore
-      * @function
-      * @name capitalize
-      * @param  {String} str Input string.
-      * @return {String} String with first letter made uppercase.
-      */
-     var capitalize = function capitalize(str) {
-       return str.substring(0, 1).toUpperCase() + str.substring(1, str.length);
-     };
-     /**
       * A collection of utilities to ease porting between different user agents.
       * @namespace me.agent
       * @memberOf me
       */
-
-
      me.agent = function () {
        var api = {};
        /**
@@ -337,7 +333,7 @@
            return obj[name];
          }
 
-         var uc_name = capitalize(name);
+         var uc_name = me.utils.string.capitalize(name);
          var result;
          vendors.some(function (vendor) {
            var name = vendor + uc_name;
@@ -366,7 +362,7 @@
            return;
          }
 
-         var uc_name = capitalize(name);
+         var uc_name = me.utils.string.capitalize(name);
          vendors.some(function (vendor) {
            var name = vendor + uc_name;
 
@@ -384,6 +380,8 @@
    })();
 
    function _typeof(obj) {
+     "@babel/helpers - typeof";
+
      if (typeof Symbol === "function" && typeof Symbol.iterator === "symbol") {
        _typeof = function (obj) {
          return typeof obj;
@@ -395,6 +393,80 @@
      }
 
      return _typeof(obj);
+   }
+
+   function _unsupportedIterableToArray(o, minLen) {
+     if (!o) return;
+     if (typeof o === "string") return _arrayLikeToArray(o, minLen);
+     var n = Object.prototype.toString.call(o).slice(8, -1);
+     if (n === "Object" && o.constructor) n = o.constructor.name;
+     if (n === "Map" || n === "Set") return Array.from(o);
+     if (n === "Arguments" || /^(?:Ui|I)nt(?:8|16|32)(?:Clamped)?Array$/.test(n)) return _arrayLikeToArray(o, minLen);
+   }
+
+   function _arrayLikeToArray(arr, len) {
+     if (len == null || len > arr.length) len = arr.length;
+
+     for (var i = 0, arr2 = new Array(len); i < len; i++) arr2[i] = arr[i];
+
+     return arr2;
+   }
+
+   function _createForOfIteratorHelper(o, allowArrayLike) {
+     var it;
+
+     if (typeof Symbol === "undefined" || o[Symbol.iterator] == null) {
+       if (Array.isArray(o) || (it = _unsupportedIterableToArray(o)) || allowArrayLike && o && typeof o.length === "number") {
+         if (it) o = it;
+         var i = 0;
+
+         var F = function () {};
+
+         return {
+           s: F,
+           n: function () {
+             if (i >= o.length) return {
+               done: true
+             };
+             return {
+               done: false,
+               value: o[i++]
+             };
+           },
+           e: function (e) {
+             throw e;
+           },
+           f: F
+         };
+       }
+
+       throw new TypeError("Invalid attempt to iterate non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method.");
+     }
+
+     var normalCompletion = true,
+         didErr = false,
+         err;
+     return {
+       s: function () {
+         it = o[Symbol.iterator]();
+       },
+       n: function () {
+         var step = it.next();
+         normalCompletion = step.done;
+         return step;
+       },
+       e: function (e) {
+         didErr = true;
+         err = e;
+       },
+       f: function () {
+         try {
+           if (!normalCompletion && it.return != null) it.return();
+         } finally {
+           if (didErr) throw err;
+         }
+       }
+     };
    }
 
    (function () {
@@ -457,12 +529,23 @@
 
            isReady = true;
          }
+       }; // a cache DOMRect object
+
+
+       var _domRect = {
+         left: 0,
+         top: 0,
+         x: 0,
+         y: 0,
+         width: 0,
+         height: 0,
+         right: 0,
+         bottom: 0
        };
        /**
         * check the device capapbilities
         * @ignore
         */
-
 
        api._check = function () {
          // detect device type/platform
@@ -484,9 +567,7 @@
          me.device.maxTouchPoints = me.device.touch ? me.device.PointerEvent ? navigator.maxTouchPoints || 1 : 10 : 1; // detect wheel event support
          // Modern browsers support "wheel", Webkit and IE support at least "mousewheel
 
-         me.device.wheel = "onwheel" in document.createElement("div"); // accelerometer detection
-
-         me.device.hasAccelerometer = typeof window.DeviceMotionEvent !== "undefined"; // pointerlock detection
+         me.device.wheel = "onwheel" in document.createElement("div"); // pointerlock detection
 
          this.hasPointerLockSupport = me.agent.prefixed("pointerLockElement", document);
 
@@ -495,10 +576,8 @@
          } // device orientation and motion detection
 
 
-         if (window.DeviceOrientationEvent) {
-           me.device.hasDeviceOrientation = true;
-         } // fullscreen api detection & polyfill when possible
-
+         me.device.hasDeviceOrientation = !!window.DeviceOrientationEvent;
+         me.device.hasAccelerometer = !!window.DeviceMotionEvent; // fullscreen api detection & polyfill when possible
 
          this.hasFullscreenSupport = me.agent.prefixed("fullscreenEnabled", document) || document.mozFullScreenEnabled;
          document.exitFullscreen = me.agent.prefixed("cancelFullScreen", document) || me.agent.prefixed("exitFullscreen", document); // vibration API poyfill
@@ -827,6 +906,7 @@
         * @type Number
         * @readonly
         * @name accelerationX
+        * @see me.device.watchAccelerometer
         * @memberOf me.device
         */
 
@@ -837,6 +917,7 @@
         * @type Number
         * @readonly
         * @name accelerationY
+        * @see me.device.watchAccelerometer
         * @memberOf me.device
         */
 
@@ -847,6 +928,7 @@
         * @type Number
         * @readonly
         * @name accelerationZ
+        * @see me.device.watchAccelerometer
         * @memberOf me.device
         */
 
@@ -857,6 +939,7 @@
         * @type Number
         * @readonly
         * @name gamma
+        * @see me.device.watchDeviceOrientation
         * @memberOf me.device
         */
 
@@ -867,6 +950,7 @@
         * @type Number
         * @readonly
         * @name beta
+        * @see me.device.watchDeviceOrientation
         * @memberOf me.device
         */
 
@@ -878,6 +962,7 @@
         * @type Number
         * @readonly
         * @name alpha
+        * @see me.device.watchDeviceOrientation
         * @memberOf me.device
         */
 
@@ -894,6 +979,21 @@
         */
 
        api.language = navigator.language || navigator.browserLanguage || navigator.userLanguage || "en";
+       /**
+        * equals to true if the device browser supports OffScreenCanvas.
+        * @type Boolean
+        * @readonly
+        * @name OffScreenCanvas
+        * @memberOf me.device
+        */
+
+       try {
+         // some browser (e.g. Safari) implements WebGL1 and WebGL2 contexts only
+         // https://bugzilla.mozilla.org/show_bug.cgi?id=801176
+         api.OffscreenCanvas = typeof window.OffscreenCanvas !== "undefined" && new OffscreenCanvas(0, 0).getContext("2d") !== null;
+       } catch (e) {
+         api.OffscreenCanvas = false;
+       }
        /**
          * specify a function to execute when the Device is fully loaded and ready
          * @name onReady
@@ -939,6 +1039,7 @@
          *    game.onload();
          * });
          */
+
 
        api.onReady = function (fn) {
          // If the DOM is already ready
@@ -1012,7 +1113,7 @@
 
        api.requestFullscreen = function (element) {
          if (this.hasFullscreenSupport) {
-           element = element || me.video.getWrapper();
+           element = element || me.video.getParent();
            element.requestFullscreen = me.agent.prefixed("requestFullscreen", element) || element.mozRequestFullScreen;
            element.requestFullscreen();
          }
@@ -1049,7 +1150,7 @@
          if (typeof screen !== "undefined") {
            var orientation = me.agent.prefixed("orientation", screen);
 
-           if (typeof orientation !== "undefined" && _typeof(orientation.type === "string")) {
+           if (typeof orientation !== "undefined" && typeof orientation.type === "string") {
              // Screen Orientation API specification
              return orientation.type;
            } else if (typeof orientation === "string") {
@@ -1160,6 +1261,90 @@
          }
        };
        /**
+        * return the parent DOM element for the given parent name or HTMLElement object
+        * @name getParentElement
+        * @memberOf me.device
+        * @function
+        * @param {String|HTMLElement} element the parent element name or a HTMLElement object
+        * @return {HTMLElement} the parent Element
+        */
+
+
+       api.getParentElement = function (element) {
+         var target = me.device.getElement(element);
+
+         if (target.parentNode !== null) {
+           target = target.parentNode;
+         }
+
+         return target;
+       };
+       /**
+        * return the DOM element for the given element name or HTMLElement object
+        * @name getElement
+        * @memberOf me.device
+        * @function
+        * @param {String|HTMLElement} element the parent element name or a HTMLElement object
+        * @return {HTMLElement} the corresponding DOM Element or null if not existing
+        */
+
+
+       api.getElement = function (element) {
+         var target = null;
+
+         if (element !== "undefined") {
+           if (typeof element === "string") {
+             target = document.getElementById(element);
+           } else if (_typeof(element) === "object" && element.nodeType === Node.ELEMENT_NODE) {
+             target = element;
+           }
+         } // fallback, if invalid target or non HTMLElement object
+
+
+         if (!target) {
+           //default to document.body
+           target = document.body;
+         }
+
+         return target;
+       };
+       /**
+        * returns the size of the given HTMLElement and its position relative to the viewport
+        * <br><img src="images/element-box-diagram.png"/>
+        * @name getElementBounds
+        * @see https://developer.mozilla.org/en-US/docs/Web/API/DOMRect
+        * @memberOf me.device
+        * @function
+        * @param {String|HTMLElement} element an HTMLElement object
+        * @return {DOMRect} the size and position of the element relatively to the viewport
+        */
+
+
+       api.getElementBounds = function (element) {
+         if (_typeof(element) === "object" && element !== document.body && typeof element.getBoundingClientRect !== "undefined") {
+           return element.getBoundingClientRect();
+         } else {
+           _domRect.width = _domRect.right = window.innerWidth;
+           _domRect.height = _domRect.bottom = window.innerHeight;
+           return _domRect;
+         }
+       };
+       /**
+        * returns the size of the given HTMLElement Parent and its position relative to the viewport
+        * <br><img src="images/element-box-diagram.png"/>
+        * @name getParentBounds
+        * @see https://developer.mozilla.org/en-US/docs/Web/API/DOMRect
+        * @memberOf me.device
+        * @function
+        * @param {String|HTMLElement} element an HTMLElement object
+        * @return {DOMRect} the size and position of the given element parent relative to the viewport
+        */
+
+
+       api.getParentBounds = function (element) {
+         return me.device.getElementBounds(me.device.getParentElement(element));
+       };
+       /**
         * returns true if the device supports WebGL
         * @name isWebGLSupported
         * @memberOf me.device
@@ -1257,7 +1442,7 @@
 
        api.turnOnPointerLock = function () {
          if (this.hasPointerLockSupport) {
-           var element = me.video.getWrapper();
+           var element = me.video.getParent();
 
            if (me.device.ua.match(/Firefox/i)) {
              var fullscreenchange = function fullscreenchange() {
@@ -1291,27 +1476,47 @@
          }
        };
        /**
-        * watch Accelerator event
+        * Enable monitor of the device accelerator to detect the amount of physical force of acceleration the device is receiving.
+        * (one some device a first user gesture will be required before calling this function)
         * @name watchAccelerometer
         * @memberOf me.device
         * @public
         * @function
-        * @return {Boolean} false if not supported by the device
+        * @see me.device.accelerationX
+        * @see me.device.accelerationY
+        * @see me.device.accelerationZ
+        * @return {Boolean} false if not supported or permission not granted by the user
+        * @example
+        * // try to enable device accelerometer event on user gesture
+        * me.input.registerPointerEvent("pointerleave", me.game.viewport, function() {
+        *     if (me.device.watchAccelerometer() === true) {
+        *         // Success
+        *         me.input.releasePointerEvent("pointerleave", me.game.viewport);
+        *     } else {
+        *         // ... fail at enabling the device accelerometer event
+        *     }
+        * });
         */
 
 
        api.watchAccelerometer = function () {
-         if (me.device.hasAccelerometer) {
-           if (!accelInitialized) {
+         if (me.device.hasAccelerometer && !accelInitialized) {
+           if (DeviceOrientationEvent && typeof DeviceOrientationEvent.requestPermission === "function") {
+             DeviceOrientationEvent.requestPermission().then(function (response) {
+               if (response === "granted") {
+                 // add a listener for the devicemotion event
+                 window.addEventListener("devicemotion", onDeviceMotion, false);
+                 accelInitialized = true;
+               }
+             })["catch"](console.error);
+           } else {
              // add a listener for the devicemotion event
              window.addEventListener("devicemotion", onDeviceMotion, false);
              accelInitialized = true;
            }
-
-           return true;
          }
 
-         return false;
+         return accelInitialized;
        };
        /**
         * unwatch Accelerometor event
@@ -1330,22 +1535,45 @@
          }
        };
        /**
-        * watch the device orientation event
+        * Enable monitor of the device orientation to detect the current orientation of the device as compared to the Earth coordinate frame.
+        * (one some device a first user gesture will be required before calling this function)
         * @name watchDeviceOrientation
         * @memberOf me.device
         * @public
         * @function
-        * @return {Boolean} false if not supported by the device
+        * @see me.device.alpha
+        * @see me.device.beta
+        * @see me.device.gamma
+        * @return {Boolean} false if not supported or permission not granted by the user
+        * @example
+        * // try to enable device orientation event on user gesture
+        * me.input.registerPointerEvent("pointerleave", me.game.viewport, function() {
+        *     if (me.device.watchDeviceOrientation() === true) {
+        *         // Success
+        *         me.input.releasePointerEvent("pointerleave", me.game.viewport);
+        *     } else {
+        *         // ... fail at enabling the device orientation event
+        *     }
+        * });
         */
 
 
        api.watchDeviceOrientation = function () {
          if (me.device.hasDeviceOrientation && !deviceOrientationInitialized) {
-           window.addEventListener("deviceorientation", onDeviceRotate, false);
-           deviceOrientationInitialized = true;
+           if (typeof DeviceOrientationEvent.requestPermission === "function") {
+             DeviceOrientationEvent.requestPermission().then(function (response) {
+               if (response === "granted") {
+                 window.addEventListener("deviceorientation", onDeviceRotate, false);
+                 deviceOrientationInitialized = true;
+               }
+             })["catch"](console.error);
+           } else {
+             window.addEventListener("deviceorientation", onDeviceRotate, false);
+             deviceOrientationInitialized = true;
+           }
          }
 
-         return false;
+         return deviceOrientationInitialized;
        };
        /**
         * unwatch Device orientation event
@@ -1609,6 +1837,19 @@
         */
 
        api.STATE_RESTART = "me.state.onRestart";
+       /**
+        * Channel Constant for when the video is initialized<br>
+        * Data passed : none <br>
+        * @public
+        * @constant
+        * @type String
+        * @name VIDEO_INIT
+        * @memberOf me.event
+        * @see me.video.init
+        * @see me.event.subscribe
+        */
+
+       api.VIDEO_INIT = "me.video.onInit";
        /**
         * Channel Constant for when the game manager is initialized <br>
         * Data passed : none <br>
@@ -2010,9 +2251,7 @@
        var stepSize = 1000 / 60;
        var updateDelta = 0;
        var lastUpdateStart = null;
-       var updateAverageDelta = 0; // reference to the renderer object
-
-       var renderer = null;
+       var updateAverageDelta = 0;
        /*
         * PUBLIC STUFF
         */
@@ -2030,7 +2269,7 @@
         * a reference to the game world, <br>
         * a world is a virtual environment containing all the game objects
         * @public
-        * @type {me.Container}
+        * @type {me.World}
         * @name world
         * @memberOf me.game
         */
@@ -2079,23 +2318,12 @@
         * @memberOf me.game
         * @ignore
         * @function
-        * @param {Number} [width] width of the canvas
-        * @param {Number} [height] width of the canvas
         */
 
 
-       api.init = function (width, height) {
-         // if no parameter specified use the system size
-         width = width || me.video.renderer.getWidth();
-         height = height || me.video.renderer.getHeight(); // the root object of our world is an entity container
-
-         api.world = new me.Container(0, 0, width, height, true);
-         api.world.name = "rootContainer"; // to mimic the previous behavior
-
-         api.world.anchorPoint.set(0, 0); // initialize the collision system (the quadTree mostly)
-
-         me.collision.init();
-         renderer = me.video.renderer; // publish init notification
+       api.init = function () {
+         // the root object of our world is an entity container
+         api.world = new me.World(); // publish init notification
 
          me.event.publish(me.event.GAME_INIT); // make display dirty by default
 
@@ -2112,13 +2340,7 @@
 
 
        api.reset = function () {
-         // clear the quadtree
-         me.collision.quadTree.clear(); // remove all objects
-
-         api.world.reset(); // reset the anchorPoint
-
-         api.world.anchorPoint.set(0, 0); // point to the current active stage "default" camera
-
+         // point to the current active stage "default" camera
          var current = me.state.current();
 
          if (typeof current !== "undefined") {
@@ -2136,22 +2358,22 @@
         * @memberOf me.game
         * @public
         * @function
-        * @see me.sys.fps
-        * @see me.sys.updatesPerSecond
+        * @see me.timer.maxfps
+        * @see me.game.world.fps
         */
 
 
        api.updateFrameRate = function () {
          // reset the frame counter
          frameCounter = 0;
-         frameRate = ~~(0.5 + 60 / me.sys.fps); // set step size based on the updatesPerSecond
+         frameRate = ~~(0.5 + 60 / me.timer.maxfps); // set step size based on the updatesPerSecond
 
-         stepSize = 1000 / me.sys.updatesPerSecond;
+         stepSize = 1000 / api.world.fps;
          accumulator = 0.0;
          accumulatorMax = stepSize * 10; // display should always re-draw when update speed doesn't match fps
          // this means the user intends to write position prediction drawing logic
 
-         isAlwaysDirty = me.sys.fps > me.sys.updatesPerSecond;
+         isAlwaysDirty = me.timer.maxfps > api.world.fps;
        };
        /**
         * Returns the parent container of the specified Child in the game world
@@ -2182,7 +2404,6 @@
         * update all objects of the game manager
         * @name update
         * @memberOf me.game
-        * @private
         * @ignore
         * @function
         * @param {Number} time current timestamp as provided by the RAF callback
@@ -2199,29 +2420,18 @@
            me.event.publish(me.event.GAME_UPDATE, [time]);
            accumulator += me.timer.getDelta();
            accumulator = Math.min(accumulator, accumulatorMax);
-           updateDelta = me.sys.interpolation ? me.timer.getDelta() : stepSize;
-           accumulatorUpdateDelta = me.sys.interpolation ? updateDelta : Math.max(updateDelta, updateAverageDelta);
+           updateDelta = me.timer.interpolation ? me.timer.getDelta() : stepSize;
+           accumulatorUpdateDelta = me.timer.interpolation ? updateDelta : Math.max(updateDelta, updateAverageDelta);
 
-           while (accumulator >= accumulatorUpdateDelta || me.sys.interpolation) {
-             lastUpdateStart = window.performance.now(); // clear the quadtree
+           while (accumulator >= accumulatorUpdateDelta || me.timer.interpolation) {
+             lastUpdateStart = window.performance.now(); // update all objects (and pass the elapsed time since last frame)
 
-             me.collision.quadTree.clear(); // insert the world container (children) into the quadtree
-
-             me.collision.quadTree.insertContainer(api.world); // update all objects (and pass the elapsed time since last frame)
-
-             isDirty = api.world.update(updateDelta) || isDirty; // update the camera/viewport
-             // iterate through all cameras
-
-             stage.cameras.forEach(function (camera) {
-               if (camera.update(updateDelta)) {
-                 isDirty = true;
-               }
-             });
+             isDirty = stage.update(updateDelta) || isDirty;
              me.timer.lastUpdate = window.performance.now();
              updateAverageDelta = me.timer.lastUpdate - lastUpdateStart;
              accumulator -= accumulatorUpdateDelta;
 
-             if (me.sys.interpolation) {
+             if (me.timer.interpolation) {
                accumulator = 0;
                break;
              }
@@ -2229,10 +2439,9 @@
          }
        };
        /**
-        * draw all existing objects
+        * draw the current scene/stage
         * @name draw
         * @memberOf me.game
-        * @private
         * @ignore
         * @function
         * @param {me.Stage} stage the current stage
@@ -2240,14 +2449,14 @@
 
 
        api.draw = function (stage) {
+         var renderer = me.video.renderer;
+
          if (renderer.isContextValid === true && (isDirty || isAlwaysDirty)) {
            // prepare renderer to draw a new frame
-           renderer.clear(); // iterate through all cameras
+           renderer.clear(); // render the stage
 
-           stage.cameras.forEach(function (camera) {
-             // render the root container
-             camera.draw(renderer, me.game.world);
-           });
+           stage.draw(renderer); // set back to flag
+
            isDirty = false; // flush/render our frame
 
            renderer.flush();
@@ -2268,59 +2477,13 @@
       * @name version
       * @type {string}
       */
-     me.version = "7.1.1";
+     me.version = "8.0.1";
      /**
       * global system settings and browser capabilities
       * @namespace
       */
 
      me.sys = {
-       /**
-        * Set game FPS limiting
-        * @see me.timer.tick
-        * @type {Number}
-        * @default 60
-        * @memberOf me.sys
-        */
-       fps: 60,
-
-       /**
-        * Rate at which the game updates;<br>
-        * may be greater than or lower than the fps
-        * @see me.timer.tick
-        * @type {Number}
-        * @default 60
-        * @memberOf me.sys
-        */
-       updatesPerSecond: 60,
-
-       /**
-        * Enable/disable frame interpolation
-        * @see me.timer.tick
-        * @type {Boolean}
-        * @default false
-        * @memberOf me.sys
-        */
-       interpolation: false,
-
-       /**
-        * Global scaling factor
-        * @type {me.Vector2d}
-        * @default <0,0>
-        * @memberOf me.sys
-        */
-       scale: null,
-       //initialized by me.video.init
-
-       /**
-        * Global y axis gravity settings.
-        * (will override body gravity value if defined)
-        * @type {Number}
-        * @default undefined
-        * @memberOf me.sys
-        */
-       gravity: undefined,
-
        /**
         * Specify either to stop on audio loading error or not<br>
         * if true, melonJS will throw an exception and stop loading<br>
@@ -2431,7 +2594,9 @@
 
        me.input.initKeyboardEvent(); // init the level Director
 
-       me.levelDirector.init(); // mark melonJS as initialized
+       me.levelDirector.init(); // game instance init
+
+       me.game.init(); // mark melonJS as initialized
 
        me.initialized = true; /// if auto init is disable and this function was called manually
 
@@ -2450,7 +2615,7 @@
 
    (function () {
      /**
-      * a Timer object to manage time function (FPS, Game Tick, Time...)<p>
+      * a Timer object to manage timing related function (FPS, Game Tick, Time...)<p>
       * There is no constructor function for me.timer
       * @namespace me.timer
       * @memberOf me
@@ -2469,12 +2634,10 @@
 
        var last = 0;
        var now = 0;
-       var delta = 0;
-       var step = Math.ceil(1000 / me.sys.fps); // ROUND IT ?
-       // define some step with some margin
+       var delta = 0; // for timeout/interval update
 
-       var minstep = 1000 / me.sys.fps * 1.25; // IS IT NECESSARY?\
-       // list of defined timer function
+       var step = 0;
+       var minstep = 0; // list of defined timer function
 
        var timers = [];
        var timerId = 0;
@@ -2506,7 +2669,7 @@
          } // get the game tick
 
 
-         api.tick = delta > minstep && me.sys.interpolation ? delta / step : 1;
+         api.tick = delta > minstep && me.timer.interpolation ? delta / step : 1;
 
          for (var i = 0, len = timers.length; i < len; i++) {
            var _timer = timers[i];
@@ -2533,12 +2696,12 @@
        /**
         * Last game tick value.<br/>
         * Use this value to scale velocities during frame drops due to slow
-        * hardware or when setting an FPS limit. (See {@link me.sys.fps})
-        * This feature is disabled by default. Enable me.sys.interpolation to
+        * hardware or when setting an FPS limit. (See {@link me.timer.maxfps})
+        * This feature is disabled by default. Enable me.timer.interpolation to
         * use it.
         * @public
-        * @see me.sys.interpolation
-        * @type Number
+        * @see me.timer.interpolation
+        * @type {Number}
         * @name tick
         * @memberOf me.timer
         */
@@ -2547,15 +2710,35 @@
        api.tick = 1.0;
        /**
         * Last measured fps rate.<br/>
-        * This feature is disabled by default. Load and enable the DebugPanel
-        * plugin to use it.
+        * This feature is disabled by default, unless the debugPanel is enabled/visible
         * @public
-        * @type Number
+        * @type {Number}
         * @name fps
         * @memberOf me.timer
         */
 
        api.fps = 0;
+       /**
+        * Set the maximum target display frame per second
+        * @public
+        * @see me.timer.tick
+        * @type {Number}
+        * @name maxfps
+        * @default 60
+        * @memberOf me.timer
+        */
+
+       api.maxfps = 60;
+       /**
+        * Enable/disable frame interpolation
+        * @see me.timer.tick
+        * @type {Boolean}
+        * @default false
+        * @name interpolation
+        * @memberOf me.timer
+        */
+
+       api.interpolation = false;
        /**
         * Last update time.<br/>
         * Use this value to implement frame prediction in drawing events,
@@ -2596,6 +2779,10 @@
 
          framedelta = 0;
          framecount = 0;
+         step = Math.ceil(1000 / api.maxfps); // ROUND IT ?
+         // define some step with some margin
+
+         minstep = 1000 / api.maxfps * 1.25; // IS IT NECESSARY?\
        };
        /**
         * Calls a function once after a specified delay. See me.timer.setInterval to repeativly call a function.
@@ -2695,7 +2882,7 @@
          return now;
        };
        /**
-        * Return elapsed time in milliseconds since the last update<br>
+        * Return elapsed time in milliseconds since the last update
         * @name getDelta
         * @memberOf me.timer
         * @return {Number}
@@ -2720,7 +2907,7 @@
          framedelta += delta;
 
          if (framecount % 10 === 0) {
-           this.fps = me.Math.clamp(Math.round(1000 * framecount / framedelta), 0, me.sys.fps);
+           api.fps = me.Math.clamp(Math.round(1000 * framecount / framedelta), 0, api.maxfps);
            framedelta = 0;
            framecount = 0;
          }
@@ -2778,6 +2965,7 @@
          api.register("me.ObservableVector2d", me.ObservableVector2d, true);
          api.register("me.ObservableVector3d", me.ObservableVector3d, true);
          api.register("me.Matrix2d", me.Matrix2d, true);
+         api.register("me.Matrix3d", me.Matrix3d, true);
          api.register("me.Rect", me.Rect, true);
          api.register("me.Polygon", me.Polygon, true);
          api.register("me.Line", me.Line, true);
@@ -3010,6 +3198,15 @@
         */
 
        api.ETA = Math.PI * 0.5;
+       /**
+        * the difference between 1 and the smallest floating point number greater than 1
+        * @public
+        * @type {Number}
+        * @name EPSILON
+        * @memberOf me.Math
+        */
+
+       api.EPSILON = 0.000001;
        /**
         * returns true if the given value is a power of two
         * @public
@@ -3546,12 +3743,23 @@
         * @memberOf me.Vector2d
         * @function
         * @param {number} angle The angle to rotate (in radians)
+        * @param {me.Vector2d|me.ObservableVector2d} [v] an optional point to rotate around
         * @return {me.Vector2d} Reference to this object for method chaining
         */
-       rotate: function rotate(angle) {
-         var x = this.x;
-         var y = this.y;
-         return this._set(x * Math.cos(angle) - y * Math.sin(angle), x * Math.sin(angle) + y * Math.cos(angle));
+       rotate: function rotate(angle, v) {
+         var cx = 0;
+         var cy = 0;
+
+         if (_typeof(v) === "object") {
+           cx = v.x;
+           cy = v.y;
+         }
+
+         var x = this.x - cx;
+         var y = this.y - cy;
+         var c = Math.cos(angle);
+         var s = Math.sin(angle);
+         return this._set(x * c - y * s + cx, x * s + y * c + cy);
        },
 
        /**
@@ -3702,7 +3910,7 @@
        _set: function _set(x, y, z) {
          this.x = x;
          this.y = y;
-         this.z = z;
+         this.z = z || 0;
          return this;
        },
 
@@ -3713,11 +3921,11 @@
         * @function
         * @param {Number} x
         * @param {Number} y
-        * @param {Number} z
+        * @param {Number} [z=0]
         * @return {me.Vector3d} Reference to this object for method chaining
         */
        set: function set(x, y, z) {
-         if (x !== +x || y !== +y || z !== +z) {
+         if (x !== +x || y !== +y || typeof z !== "undefined" && z !== +z) {
            throw new Error("invalid x, y, z parameters (not a number)");
          }
          /**
@@ -3771,7 +3979,7 @@
         * @return {me.Vector3d} Reference to this object for method chaining
         */
        setV: function setV(v) {
-         return this._set(v.x, v.y, typeof v.z !== "undefined" ? v.z : this.z);
+         return this._set(v.x, v.y, v.z);
        },
 
        /**
@@ -3805,13 +4013,12 @@
         * @function
         * @param {Number} x
         * @param {Number} [y=x]
-        * @param {Number} [z=x]
+        * @param {Number} [z=1]
         * @return {me.Vector3d} Reference to this object for method chaining
         */
        scale: function scale(x, y, z) {
          y = typeof y !== "undefined" ? y : x;
-         z = typeof z !== "undefined" ? z : x;
-         return this._set(this.x * x, this.y * y, this.z * z);
+         return this._set(this.x * x, this.y * y, this.z * (z || 1));
        },
 
        /**
@@ -3823,7 +4030,7 @@
         * @return {me.Vector3d} Reference to this object for method chaining
         */
        scaleV: function scaleV(v) {
-         return this._set(this.x * v.x, this.y * v.y, this.z * (v.z || 1));
+         return this.scale(v.x, v.y, v.z);
        },
 
        /**
@@ -3992,7 +4199,7 @@
        },
 
        /**
-        * Copy the x,y values of the passed vector to this one
+        * Copy the components of the given vector into this one
         * @name copy
         * @memberOf me.Vector3d
         * @function
@@ -4000,7 +4207,7 @@
         * @return {me.Vector3d} Reference to this object for method chaining
         */
        copy: function copy(v) {
-         return this._set(v.x, v.y, typeof v.z !== "undefined" ? v.z : this.z);
+         return this._set(v.x, v.y, v.z || 0);
        },
 
        /**
@@ -4044,12 +4251,24 @@
         * @memberOf me.Vector3d
         * @function
         * @param {number} angle The angle to rotate (in radians)
+        * @param {me.Vector2d|me.ObservableVector2d} [v] an optional point to rotate around (on the same z axis)
         * @return {me.Vector3d} Reference to this object for method chaining
         */
-       rotate: function rotate(angle) {
-         var x = this.x;
-         var y = this.y;
-         return this._set(x * Math.cos(angle) - y * Math.sin(angle), x * Math.sin(angle) + y * Math.cos(angle), this.z);
+       rotate: function rotate(angle, v) {
+         var cx = 0;
+         var cy = 0;
+
+         if (_typeof(v) === "object") {
+           cx = v.x;
+           cy = v.y;
+         } // TODO also rotate on the z axis if the given vector is a 3d one
+
+
+         var x = this.x - cx;
+         var y = this.y - cy;
+         var c = Math.cos(angle);
+         var s = Math.sin(angle);
+         return this._set(x * c - y * s + cx, x * s + y * c + cy, this.z);
        },
 
        /**
@@ -4111,9 +4330,9 @@
         * @return {Number}
         */
        distance: function distance(v) {
-         var dx = this.x - v.x,
-             dy = this.y - v.y,
-             dz = this.z - (v.z || 0);
+         var dx = this.x - v.x;
+         var dy = this.y - v.y;
+         var dz = this.z - (v.z || 0);
          return Math.sqrt(dx * dx + dy * dy + dz * dz);
        },
 
@@ -4138,7 +4357,8 @@
         * @return {me.Vector3d} Reference to this object for method chaining
         */
        project: function project(v) {
-         return this.scale(this.dotProduct(v) / v.length2());
+         var ratio = this.dotProduct(v) / v.length2();
+         return this.scale(ratio, ratio, ratio);
        },
 
        /**
@@ -4151,7 +4371,8 @@
         * @return {me.Vector3d} Reference to this object for method chaining
         */
        projectN: function projectN(v) {
-         return this.scale(this.dotProduct(v));
+         var ratio = this.dotProduct(v) / v.length2();
+         return this.scale(ratio, ratio, ratio);
        },
 
        /**
@@ -4548,12 +4769,23 @@
         * @memberOf me.ObservableVector2d
         * @function
         * @param {number} angle The angle to rotate (in radians)
+        * @param {me.Vector2d|me.ObservableVector2d} [v] an optional point to rotate around
         * @return {me.ObservableVector2d} Reference to this object for method chaining
         */
-       rotate: function rotate(angle) {
-         var x = this._x;
-         var y = this._y;
-         return this._set(x * Math.cos(angle) - y * Math.sin(angle), x * Math.sin(angle) + y * Math.cos(angle));
+       rotate: function rotate(angle, v) {
+         var cx = 0;
+         var cy = 0;
+
+         if (_typeof(v) === "object") {
+           cx = v.x;
+           cy = v.y;
+         }
+
+         var x = this._x - cx;
+         var y = this._y - cy;
+         var c = Math.cos(angle);
+         var s = Math.sin(angle);
+         return this._set(x * c - y * s + cx, x * s + y * c + cy);
        },
 
        /**
@@ -4761,7 +4993,7 @@
          } else {
            this._x = x;
            this._y = y;
-           this._z = z;
+           this._z = z || 0;
          }
 
          return this;
@@ -4774,13 +5006,13 @@
         * @function
         * @param {Number} x x value of the vector
         * @param {Number} y y value of the vector
-        * @param {Number} z z value of the vector
+        * @param {Number} [z=0] z value of the vector
         * @return {me.ObservableVector3d} Reference to this object for method chaining
         */
        setMuted: function setMuted(x, y, z) {
          this._x = x;
          this._y = y;
-         this._z = z;
+         this._z = z || 0;
          return this;
        },
 
@@ -4832,13 +5064,12 @@
         * @function
         * @param {Number} x
         * @param {Number} [y=x]
-        * @param {Number} [z=x]
+        * @param {Number} [z=1]
         * @return {me.ObservableVector3d} Reference to this object for method chaining
         */
        scale: function scale(x, y, z) {
          y = typeof y !== "undefined" ? y : x;
-         z = typeof z !== "undefined" ? z : x;
-         return this._set(this._x * x, this._y * y, this._z * z);
+         return this._set(this._x * x, this._y * y, this._z * (z || 1));
        },
 
        /**
@@ -5005,7 +5236,7 @@
        },
 
        /**
-        * Copy the x,y,z values of the passed vector to this one
+        * Copy the components of the given vector into this one
         * @name copy
         * @memberOf me.ObservableVector3d
         * @function
@@ -5013,7 +5244,7 @@
         * @return {me.ObservableVector3d} Reference to this object for method chaining
         */
        copy: function copy(v) {
-         return this._set(v.x, v.y, typeof v.z !== "undefined" ? v.z : this._z);
+         return this._set(v.x, v.y, v.z || 0);
        },
 
        /**
@@ -5046,12 +5277,24 @@
         * @memberOf me.ObservableVector3d
         * @function
         * @param {number} angle The angle to rotate (in radians)
+        * @param {me.Vector2d|me.ObservableVector2d} [v] an optional point to rotate around (on the same z axis)
         * @return {me.ObservableVector3d} Reference to this object for method chaining
         */
-       rotate: function rotate(angle) {
-         var x = this._x;
-         var y = this._y;
-         return this._set(x * Math.cos(angle) - y * Math.sin(angle), x * Math.sin(angle) + y * Math.cos(angle), this._z);
+       rotate: function rotate(angle, v) {
+         var cx = 0;
+         var cy = 0;
+
+         if (_typeof(v) === "object") {
+           cx = v.x;
+           cy = v.y;
+         } // TODO also rotate on the z axis if the given vector is a 3d one
+
+
+         var x = this.x - cx;
+         var y = this.y - cy;
+         var c = Math.cos(angle);
+         var s = Math.sin(angle);
+         return this._set(x * c - y * s + cx, x * s + y * c + cy, this.z);
        },
 
        /**
@@ -5091,9 +5334,9 @@
         * @return {Number}
         */
        distance: function distance(v) {
-         var dx = this._x - v.x,
-             dy = this._y - v.y,
-             dz = this._z - (v.z || 0);
+         var dx = this._x - v.x;
+         var dy = this._y - v.y;
+         var dz = this._z - (v.z || 0);
          return Math.sqrt(dx * dx + dy * dy + dz * dz);
        },
 
@@ -5157,6 +5400,8 @@
 
          if (arguments.length && arguments[0] instanceof me.Matrix2d) {
            this.copy(arguments[0]);
+         } else if (arguments.length && arguments[0] instanceof me.Matrix3d) {
+           this.fromMat3d(arguments[0]);
          } else if (arguments.length >= 6) {
            this.setTransform.apply(this, arguments);
          } else {
@@ -5252,6 +5497,29 @@
        },
 
        /**
+        * Copies over the upper-left 3x3 values from the given me.Matrix3d
+        * @name fromMat3d
+        * @memberOf me.Matrix2d
+        * @function
+        * @param {me.Matrix3d} m the matrix object to copy from
+        * @return {me.Matrix2d} Reference to this object for method chaining
+        */
+       fromMat3d: function fromMat3d(b) {
+         b = b.val;
+         var a = this.val;
+         a[0] = b[0];
+         a[1] = b[1];
+         a[2] = b[2];
+         a[3] = b[4];
+         a[4] = b[5];
+         a[5] = b[6];
+         a[6] = b[8];
+         a[7] = b[9];
+         a[8] = b[10];
+         return this;
+       },
+
+       /**
         * multiply both matrix
         * @name multiply
         * @memberOf me.Matrix2d
@@ -5337,42 +5605,14 @@
        },
 
        /**
-        * generate an orthogonal projection matrix, with the result replacing the current matrix
-        * <img src="images/glOrtho.gif"/><br>
-        * @name ortho
-        * @memberOf me.Matrix2d
-        * @function
-        * @param {Number} left farthest left on the x-axis
-        * @param {Number} right farthest right on the x-axis
-        * @param {Number} bottom farthest down on the y-axis
-        * @param {Number} top farthest up on the y-axis
-        * @param {Number} near distance to the near clipping plane along the -Z axis
-        * @param {Number} far distance to the far clipping plane along the -Z axis
-        * @return {me.Matrix2d} Reference to this object for method chaining
-        */
-       ortho: function ortho(left, right, bottom, top, near, far) {
-         var a = this.val;
-         a[0] = 2.0 / (right - left);
-         a[1] = 0.0;
-         a[2] = 0.0;
-         a[3] = 0.0;
-         a[4] = 2.0 / (top - bottom);
-         a[5] = 0.0;
-         a[6] = -1.0;
-         a[7] = 1.0;
-         a[8] = -2.0 / (far - near);
-         return this;
-       },
-
-       /**
-        * Transforms the given vector according to this matrix.
-        * @name multiplyVector
+        * apply the current transform to the given 2d vector
+        * @name apply
         * @memberOf me.Matrix2d
         * @function
         * @param {me.Vector2d} vector the vector object to be transformed
-        * @return {me.Vector2d} result vector object. Useful for chaining method calls.
+        * @return {me.Vector2d} result vector object.
         */
-       multiplyVector: function multiplyVector(v) {
+       apply: function apply(v) {
          var a = this.val,
              x = v.x,
              y = v.y;
@@ -5382,14 +5622,14 @@
        },
 
        /**
-        * Transforms the given vector using the inverted current matrix.
-        * @name multiplyVector
+        * apply the inverted current transform to the given 2d vector
+        * @name applyInverse
         * @memberOf me.Matrix2d
         * @function
         * @param {me.Vector2d} vector the vector object to be transformed
-        * @return {me.Vector2d} result vector object. Useful for chaining method calls.
+        * @return {me.Vector2d} result vector object.
         */
-       multiplyVectorInverse: function multiplyVectorInverse(v) {
+       applyInverse: function applyInverse(v) {
          var a = this.val,
              x = v.x,
              y = v.y;
@@ -5527,6 +5767,20 @@
        },
 
        /**
+        * return true if the two matrices are identical
+        * @name equals
+        * @memberOf me.Matrix2d
+        * @function
+        * @param {me.Matrix2d} b the other matrix
+        * @return {Boolean} true if both are equals
+        */
+       equals: function equals(b) {
+         b = b.val;
+         var a = this.val;
+         return a[0] === b[0] && a[1] === b[1] && a[2] === b[2] && a[3] === b[3] && a[4] === b[4] && a[5] === b[5] && a[6] === b[6] && a[7] === b[7] && a[8] === b[8];
+       },
+
+       /**
         * Clone the Matrix
         * @name clone
         * @memberOf me.Matrix2d
@@ -5595,6 +5849,621 @@
         */
        get: function get() {
          return this.val[7];
+       },
+       configurable: true
+     });
+   })();
+
+   (function () {
+     /**
+      * a 4x4 Matrix3d Object<br>
+      * @class
+      * @extends me.Object
+      * @memberOf me
+      * @constructor
+      * @param {me.Matrix3d} [mat3d] An instance of me.Matrix3d to copy from
+      * @param {Number[]} [arguments...] Matrix elements. See {@link me.Matrix3d.setTransform}
+      */
+     me.Matrix3d = me.Object.extend({
+       /**
+        * @ignore
+        */
+       init: function init() {
+         if (typeof this.val === "undefined") {
+           this.val = new Float32Array(16);
+         }
+
+         if (arguments.length && arguments[0] instanceof me.Matrix3d) {
+           this.copy(arguments[0]);
+         } else if (arguments.length === 16) {
+           this.setTransform.apply(this, arguments);
+         } else {
+           this.identity();
+         }
+       },
+
+       /**
+        * reset the transformation matrix to the identity matrix (no transformation).<br>
+        * the identity matrix and parameters position : <br>
+        * <img src="images/identity-matrix_2x.png"/>
+        * @name identity
+        * @memberOf me.Matrix3d
+        * @function
+        * @return {me.Matrix3d} Reference to this object for method chaining
+        */
+       identity: function identity() {
+         return this.setTransform(1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1);
+       },
+
+       /**
+        * set the matrix to the specified value
+        * @name setTransform
+        * @memberOf me.Matrix3d
+        * @function
+        * @param {Number} m00
+        * @param {Number} m01
+        * @param {Number} m02
+        * @param {Number} m03
+        * @param {Number} m10
+        * @param {Number} m11
+        * @param {Number} m12
+        * @param {Number} m13
+        * @param {Number} m20
+        * @param {Number} m21
+        * @param {Number} m22
+        * @param {Number} m23
+        * @param {Number} m30
+        * @param {Number} m31
+        * @param {Number} m32
+        * @param {Number} m33
+        * @return {me.Matrix3d} Reference to this object for method chaining
+        */
+       setTransform: function setTransform(m00, m01, m02, m03, m10, m11, m12, m13, m20, m21, m22, m23, m30, m31, m32, m33) {
+         var a = this.val;
+         a[0] = m00;
+         a[1] = m01;
+         a[2] = m02;
+         a[3] = m03;
+         a[4] = m10;
+         a[5] = m11;
+         a[6] = m12;
+         a[7] = m13;
+         a[8] = m20;
+         a[9] = m21;
+         a[10] = m22;
+         a[11] = m23;
+         a[12] = m30;
+         a[13] = m31;
+         a[14] = m32;
+         a[15] = m33;
+         return this;
+       },
+
+       /**
+        * Copies over the values from another me.Matrix3d.
+        * @name copy
+        * @memberOf me.Matrix3d
+        * @function
+        * @param {me.Matrix3d} m the matrix object to copy from
+        * @return {me.Matrix3d} Reference to this object for method chaining
+        */
+       copy: function copy(b) {
+         this.val.set(b.val);
+         return this;
+       },
+
+       /**
+        * multiply both matrix
+        * @name multiply
+        * @memberOf me.Matrix3d
+        * @function
+        * @param {me.Matrix3d} b Other matrix
+        * @return {me.Matrix3d} Reference to this object for method chaining
+        */
+       multiply: function multiply(b) {
+         var a = this.val;
+         var a00 = a[0],
+             a01 = a[1],
+             a02 = a[2],
+             a03 = a[3];
+         var a10 = a[4],
+             a11 = a[5],
+             a12 = a[6],
+             a13 = a[7];
+         var a20 = a[8],
+             a21 = a[9],
+             a22 = a[10],
+             a23 = a[11];
+         var a30 = a[12],
+             a31 = a[13],
+             a32 = a[14],
+             a33 = a[15];
+         b = b.val;
+         var b0 = b[0],
+             b1 = b[1],
+             b2 = b[2],
+             b3 = b[3];
+         a[0] = b0 * a00 + b1 * a10 + b2 * a20 + b3 * a30;
+         a[1] = b0 * a01 + b1 * a11 + b2 * a21 + b3 * a31;
+         a[2] = b0 * a02 + b1 * a12 + b2 * a22 + b3 * a32;
+         a[3] = b0 * a03 + b1 * a13 + b2 * a23 + b3 * a33;
+         b0 = b[4];
+         b1 = b[5];
+         b2 = b[6];
+         b3 = b[7];
+         a[4] = b0 * a00 + b1 * a10 + b2 * a20 + b3 * a30;
+         a[5] = b0 * a01 + b1 * a11 + b2 * a21 + b3 * a31;
+         a[6] = b0 * a02 + b1 * a12 + b2 * a22 + b3 * a32;
+         a[7] = b0 * a03 + b1 * a13 + b2 * a23 + b3 * a33;
+         b0 = b[8];
+         b1 = b[9];
+         b2 = b[10];
+         b3 = b[11];
+         a[8] = b0 * a00 + b1 * a10 + b2 * a20 + b3 * a30;
+         a[9] = b0 * a01 + b1 * a11 + b2 * a21 + b3 * a31;
+         a[10] = b0 * a02 + b1 * a12 + b2 * a22 + b3 * a32;
+         a[11] = b0 * a03 + b1 * a13 + b2 * a23 + b3 * a33;
+         b0 = b[12];
+         b1 = b[13];
+         b2 = b[14];
+         b3 = b[15];
+         a[12] = b0 * a00 + b1 * a10 + b2 * a20 + b3 * a30;
+         a[13] = b0 * a01 + b1 * a11 + b2 * a21 + b3 * a31;
+         a[14] = b0 * a02 + b1 * a12 + b2 * a22 + b3 * a32;
+         a[15] = b0 * a03 + b1 * a13 + b2 * a23 + b3 * a33;
+         return this;
+       },
+
+       /**
+        * Transpose the value of this matrix.
+        * @name transpose
+        * @memberOf me.Matrix3d
+        * @function
+        * @return {me.Matrix3d} Reference to this object for method chaining
+        */
+       transpose: function transpose() {
+         var a = this.val,
+             a01 = a[1],
+             a02 = a[2],
+             a03 = a[3],
+             a12 = a[6],
+             a13 = a[7],
+             a23 = a[11];
+         a[1] = a[4];
+         a[2] = a[8];
+         a[3] = a[12];
+         a[4] = a01;
+         a[6] = a[9];
+         a[7] = a[13];
+         a[8] = a02;
+         a[9] = a12;
+         a[11] = a[14];
+         a[12] = a03;
+         a[13] = a13;
+         a[14] = a23;
+         return this;
+       },
+
+       /**
+        * invert this matrix, causing it to apply the opposite transformation.
+        * @name invert
+        * @memberOf me.Matrix3d
+        * @function
+        * @return {me.Matrix3d} Reference to this object for method chaining
+        */
+       invert: function invert() {
+         var a = this.val;
+         var a00 = a[0],
+             a01 = a[1],
+             a02 = a[2],
+             a03 = a[3];
+         var a10 = a[4],
+             a11 = a[5],
+             a12 = a[6],
+             a13 = a[7];
+         var a20 = a[8],
+             a21 = a[9],
+             a22 = a[10],
+             a23 = a[11];
+         var a30 = a[12],
+             a31 = a[13],
+             a32 = a[14],
+             a33 = a[15];
+         var b00 = a00 * a11 - a01 * a10;
+         var b01 = a00 * a12 - a02 * a10;
+         var b02 = a00 * a13 - a03 * a10;
+         var b03 = a01 * a12 - a02 * a11;
+         var b04 = a01 * a13 - a03 * a11;
+         var b05 = a02 * a13 - a03 * a12;
+         var b06 = a20 * a31 - a21 * a30;
+         var b07 = a20 * a32 - a22 * a30;
+         var b08 = a20 * a33 - a23 * a30;
+         var b09 = a21 * a32 - a22 * a31;
+         var b10 = a21 * a33 - a23 * a31;
+         var b11 = a22 * a33 - a23 * a32; // Calculate the determinant
+
+         var det = b00 * b11 - b01 * b10 + b02 * b09 + b03 * b08 - b04 * b07 + b05 * b06;
+
+         if (!det) {
+           return null;
+         }
+
+         det = 1 / det;
+         a[0] = (a11 * b11 - a12 * b10 + a13 * b09) * det;
+         a[1] = (a02 * b10 - a01 * b11 - a03 * b09) * det;
+         a[2] = (a31 * b05 - a32 * b04 + a33 * b03) * det;
+         a[3] = (a22 * b04 - a21 * b05 - a23 * b03) * det;
+         a[4] = (a12 * b08 - a10 * b11 - a13 * b07) * det;
+         a[5] = (a00 * b11 - a02 * b08 + a03 * b07) * det;
+         a[6] = (a32 * b02 - a30 * b05 - a33 * b01) * det;
+         a[7] = (a20 * b05 - a22 * b02 + a23 * b01) * det;
+         a[8] = (a10 * b10 - a11 * b08 + a13 * b06) * det;
+         a[9] = (a01 * b08 - a00 * b10 - a03 * b06) * det;
+         a[10] = (a30 * b04 - a31 * b02 + a33 * b00) * det;
+         a[11] = (a21 * b02 - a20 * b04 - a23 * b00) * det;
+         a[12] = (a11 * b07 - a10 * b09 - a12 * b06) * det;
+         a[13] = (a00 * b09 - a01 * b07 + a02 * b06) * det;
+         a[14] = (a31 * b01 - a30 * b03 - a32 * b00) * det;
+         a[15] = (a20 * b03 - a21 * b01 + a22 * b00) * det;
+         return this;
+       },
+
+       /**
+        * apply the current transform to the given 3d vector
+        * @name apply
+        * @memberOf me.Matrix3d
+        * @function
+        * @param {me.Vector3d} vector the vector object to be transformed
+        * @return {me.Vector3d} result vector object.
+        */
+       apply: function apply(v) {
+         var a = this.val,
+             x = v.x,
+             y = v.y,
+             z = v.z;
+         var w = a[3] * x + a[7] * y + a[11] * z + a[15] || 1.0;
+         v.x = (a[0] * x + a[4] * y + a[8] * z + a[12]) / w;
+         v.y = (a[1] * x + a[5] * y + a[9] * z + a[13]) / w;
+         v.z = (a[2] * x + a[6] * y + a[10] * z + a[14]) / w;
+         return v;
+       },
+
+       /**
+        * apply the inverted current transform to the given 3d vector
+        * @name applyInverse
+        * @memberOf me.Matrix3d
+        * @function
+        * @param {me.Vector3d} vector the vector object to be transformed
+        * @return {me.Vector3d} result vector object.
+        */
+       applyInverse: function applyInverse(v) {
+         // XXX : TODO
+         return v;
+       },
+
+       /**
+        * generate an orthogonal projection matrix, with the result replacing the current matrix
+        * <img src="images/glOrtho.gif"/><br>
+        * @name ortho
+        * @memberOf me.Matrix3d
+        * @function
+        * @param {Number} left farthest left on the x-axis
+        * @param {Number} right farthest right on the x-axis
+        * @param {Number} bottom farthest down on the y-axis
+        * @param {Number} top farthest up on the y-axis
+        * @param {Number} near distance to the near clipping plane along the -Z axis
+        * @param {Number} far distance to the far clipping plane along the -Z axis
+        * @return {me.Matrix3d} Reference to this object for method chaining
+        */
+       ortho: function ortho(left, right, bottom, top, near, far) {
+         var a = this.val;
+         var leftRight = 1.0 / (left - right);
+         var bottomTop = 1.0 / (bottom - top);
+         var nearFar = 1.0 / (near - far);
+         a[0] = -2.0 * leftRight;
+         a[1] = 0.0;
+         a[2] = 0.0;
+         a[3] = 0.0;
+         a[4] = 0.0;
+         a[5] = -2.0 * bottomTop;
+         a[6] = 0.0;
+         a[7] = 0.0;
+         a[8] = 0.0;
+         a[9] = 0.0;
+         a[10] = 2.0 * nearFar;
+         a[11] = 0.0;
+         a[12] = (left + right) * leftRight;
+         a[13] = (top + bottom) * bottomTop;
+         a[14] = (far + near) * nearFar;
+         a[15] = 1.0;
+         return this;
+       },
+
+       /**
+        * scale the matrix
+        * @name scale
+        * @memberOf me.Matrix3d
+        * @function
+        * @param {Number} x a number representing the abscissa of the scaling vector.
+        * @param {Number} [y=x] a number representing the ordinate of the scaling vector.
+        * @param {Number} [z=0] a number representing the depth vector
+        * @return {me.Matrix3d} Reference to this object for method chaining
+        */
+       scale: function scale(x, y, z) {
+         var a = this.val,
+             _x = x,
+             _y = typeof y === "undefined" ? _x : y,
+             _z = typeof z === "undefined" ? 0 : z;
+
+         a[0] = a[0] * _x;
+         a[1] = a[1] * _x;
+         a[2] = a[2] * _x;
+         a[3] = a[3] * _x;
+         a[4] = a[4] * _y;
+         a[5] = a[5] * _y;
+         a[6] = a[6] * _y;
+         a[7] = a[7] * _y;
+         a[8] = a[8] * _z;
+         a[9] = a[9] * _z;
+         a[10] = a[10] * _z;
+         a[11] = a[11] * _z;
+         return this;
+       },
+
+       /**
+        * adds a 2D scaling transformation.
+        * @name scaleV
+        * @memberOf me.Matrix3d
+        * @function
+        * @param {me.Vector2d|me.Vector3d} vector scaling vector
+        * @return {me.Matrix3d} Reference to this object for method chaining
+        */
+       scaleV: function scaleV(v) {
+         return this.scale(v.x, v.y, v.z);
+       },
+
+       /**
+        * specifies a 2D scale operation using the [sx, 1] scaling vector
+        * @name scaleX
+        * @memberOf me.Matrix3d
+        * @function
+        * @param {Number} x x scaling vector
+        * @return {me.Matrix3d} Reference to this object for method chaining
+        */
+       scaleX: function scaleX(x) {
+         return this.scale(x, 1);
+       },
+
+       /**
+        * specifies a 2D scale operation using the [1,sy] scaling vector
+        * @name scaleY
+        * @memberOf me.Matrix3d
+        * @function
+        * @param {Number} y y scaling vector
+        * @return {me.Matrix3d} Reference to this object for method chaining
+        */
+       scaleY: function scaleY(y) {
+         return this.scale(1, y);
+       },
+
+       /**
+        * rotate this matrix (counter-clockwise) by the specified angle (in radians).
+        * @name rotate
+        * @memberOf me.Matrix3d
+        * @function
+        * @param {Number} angle Rotation angle in radians.
+        * @param {me.Vector3d} axis the axis to rotate around
+        * @return {me.Matrix3d} Reference to this object for method chaining
+        */
+       rotate: function rotate(angle, v) {
+         var a = this.val,
+             x = v.x,
+             y = v.y,
+             z = v.z;
+         var len = Math.sqrt(x * x + y * y + z * z);
+         var s, c, t;
+         var a00, a01, a02, a03;
+         var a10, a11, a12, a13;
+         var a20, a21, a22, a23;
+         var b00, b01, b02;
+         var b10, b11, b12;
+         var b20, b21, b22;
+
+         if (len < me.Math.EPSILON) {
+           return null;
+         }
+
+         len = 1 / len;
+         x *= len;
+         y *= len;
+         z *= len;
+         s = Math.sin(angle);
+         c = Math.cos(angle);
+         t = 1 - c;
+         a00 = a[0];
+         a01 = a[1];
+         a02 = a[2];
+         a03 = a[3];
+         a10 = a[4];
+         a11 = a[5];
+         a12 = a[6];
+         a13 = a[7];
+         a20 = a[8];
+         a21 = a[9];
+         a22 = a[10];
+         a23 = a[11]; // Construct the elements of the rotation matrix
+
+         b00 = x * x * t + c;
+         b01 = y * x * t + z * s;
+         b02 = z * x * t - y * s;
+         b10 = x * y * t - z * s;
+         b11 = y * y * t + c;
+         b12 = z * y * t + x * s;
+         b20 = x * z * t + y * s;
+         b21 = y * z * t - x * s;
+         b22 = z * z * t + c; // Perform rotation-specific matrix multiplication
+
+         a[0] = a00 * b00 + a10 * b01 + a20 * b02;
+         a[1] = a01 * b00 + a11 * b01 + a21 * b02;
+         a[2] = a02 * b00 + a12 * b01 + a22 * b02;
+         a[3] = a03 * b00 + a13 * b01 + a23 * b02;
+         a[4] = a00 * b10 + a10 * b11 + a20 * b12;
+         a[5] = a01 * b10 + a11 * b11 + a21 * b12;
+         a[6] = a02 * b10 + a12 * b11 + a22 * b12;
+         a[7] = a03 * b10 + a13 * b11 + a23 * b12;
+         a[8] = a00 * b20 + a10 * b21 + a20 * b22;
+         a[9] = a01 * b20 + a11 * b21 + a21 * b22;
+         a[10] = a02 * b20 + a12 * b21 + a22 * b22;
+         a[11] = a03 * b20 + a13 * b21 + a23 * b22;
+         return this;
+       },
+
+       /**
+        * translate the matrix position using the given vector
+        * @name translate
+        * @memberOf me.Matrix3d
+        * @function
+        * @param {Number} x a number representing the abscissa of the vector.
+        * @param {Number} [y=x] a number representing the ordinate of the vector.
+        * @param {Number} [z=0] a number representing the depth of the vector
+        * @return {me.Matrix3d} Reference to this object for method chaining
+        */
+       translate: function translate(x, y, z) {
+         var a = this.val,
+             _x = x,
+             _y = typeof y === "undefined" ? _x : y,
+             _z = typeof z === "undefined" ? 0 : z;
+
+         a[12] = a[0] * _x + a[4] * _y + a[8] * _z + a[12];
+         a[13] = a[1] * _x + a[5] * _y + a[9] * _z + a[13];
+         a[14] = a[2] * _x + a[6] * _y + a[10] * _z + a[14];
+         a[15] = a[3] * _x + a[7] * _y + a[11] * _z + a[15];
+         return this;
+       },
+
+       /**
+        * translate the matrix by a vector on the horizontal and vertical axis
+        * @name translateV
+        * @memberOf me.Matrix3d
+        * @function
+        * @param {me.Vector2d|me.Vector3d} v the vector to translate the matrix by
+        * @return {me.Matrix3d} Reference to this object for method chaining
+        */
+       translateV: function translateV(v) {
+         return this.translate(v.x, v.y, v.z);
+       },
+
+       /**
+        * returns true if the matrix is an identity matrix.
+        * @name isIdentity
+        * @memberOf me.Matrix3d
+        * @function
+        * @return {Boolean}
+        **/
+       isIdentity: function isIdentity() {
+         var a = this.val;
+         return a[0] === 1 && a[1] === 0 && a[2] === 0 && a[3] === 0 && a[4] === 0 && a[5] === 1 && a[6] === 0 && a[7] === 0 && a[8] === 0 && a[9] === 0 && a[10] === 1 && a[11] === 0 && a[12] === 0 && a[13] === 0 && a[14] === 0 && a[15] === 1;
+       },
+
+       /**
+        * return true if the two matrices are identical
+        * @name equals
+        * @memberOf me.Matrix3d
+        * @function
+        * @param {me.Matrix3d} b the other matrix
+        * @return {Boolean} true if both are equals
+        */
+       equals: function equals(b) {
+         b = b.val;
+         var a = this.val;
+         return a[0] === b[0] && a[1] === b[1] && a[2] === b[2] && a[3] === b[3] && a[4] === b[4] && a[5] === b[5] && a[6] === b[6] && a[7] === b[7] && a[8] === b[8] && a[9] === b[9] && a[10] === b[10] && a[11] === b[11] && a[12] === b[12] && a[13] === b[13] && a[14] === b[14] && a[15] === b[15];
+       },
+
+       /**
+        * Clone the Matrix
+        * @name clone
+        * @memberOf me.Matrix3d
+        * @function
+        * @return {me.Matrix3d}
+        */
+       clone: function clone() {
+         return me.pool.pull("me.Matrix3d", this);
+       },
+
+       /**
+        * return an array representation of this Matrix
+        * @name toArray
+        * @memberOf me.Matrix3d
+        * @function
+        * @return {Float32Array}
+        */
+       toArray: function toArray() {
+         return this.val;
+       },
+
+       /**
+        * convert the object to a string representation
+        * @name toString
+        * @memberOf me.Matrix3d
+        * @function
+        * @return {String}
+        */
+       toString: function toString() {
+         var a = this.val;
+         return "me.Matrix3d(" + a[0] + ", " + a[1] + ", " + a[2] + ", " + a[3] + ", " + a[4] + ", " + a[5] + ", " + a[6] + ", " + a[7] + ", " + a[8] + ", " + a[9] + ", " + a[10] + ", " + a[11] + ", " + a[12] + ", " + a[13] + ", " + a[14] + ", " + a[15] + ")";
+       }
+     });
+     /**
+      * tx component of the matrix
+      * @public
+      * @type {Number}
+      * @readonly
+      * @name tx
+      * @memberOf me.Matrix3d
+      */
+
+     Object.defineProperty(me.Matrix3d.prototype, "tx", {
+       /**
+        * @ignore
+        */
+       get: function get() {
+         return this.val[12];
+       },
+       configurable: true
+     });
+     /**
+      * ty component of the matrix
+      * @public
+      * @type {Number}
+      * @readonly
+      * @name ty
+      * @memberOf me.Matrix3d
+      */
+
+     Object.defineProperty(me.Matrix3d.prototype, "ty", {
+       /**
+        * @ignore
+        */
+       get: function get() {
+         return this.val[13];
+       },
+       configurable: true
+     });
+     /**
+      * ty component of the matrix
+      * @public
+      * @type {Number}
+      * @readonly
+      * @name tz
+      * @memberOf me.Matrix3d
+      */
+
+     Object.defineProperty(me.Matrix3d.prototype, "tz", {
+       /**
+        * @ignore
+        */
+       get: function get() {
+         return this.val[14];
        },
        configurable: true
      });
@@ -5685,8 +6554,8 @@
         * @name setShape
         * @memberOf me.Ellipse.prototype
         * @function
-        * @param {Number} x position of the ellipse
-        * @param {Number} y position of the ellipse
+        * @param {Number} x the center x coordinate of the ellipse
+        * @param {Number} y the center y coordinate of the ellipse
         * @param {Number} w width (diameter) of the ellipse
         * @param {Number} h height (diameter) of the ellipse
         */
@@ -5709,12 +6578,13 @@
         * @memberOf me.Ellipse.prototype
         * @function
         * @param {Number} angle The angle to rotate (in radians)
+        * @param {me.Vector2d|me.ObservableVector2d} [v] an optional point to rotate around
         * @return {me.Ellipse} Reference to this object for method chaining
         */
-       rotate: function rotate()
-       /*angle*/
-       {
-         // TODO
+       rotate: function rotate(angle, v) {
+         // TODO : only works for circle
+         this.pos.rotate(angle, v);
+         this.updateBounds();
          return this;
        },
 
@@ -5871,7 +6741,7 @@
    })();
 
    var earcut_1 = earcut;
-   var default_1 = earcut;
+   var _default = earcut;
 
    function earcut(data, holeIndices, dim) {
 
@@ -5994,7 +6864,7 @@
 
                // if this didn't work, try curing all small self-intersections locally
                } else if (pass === 1) {
-                   ear = cureLocalIntersections(ear, triangles, dim);
+                   ear = cureLocalIntersections(filterPoints(ear), triangles, dim);
                    earcutLinked(ear, triangles, dim, minX, minY, invSize, 2);
 
                // as a last resort, try splitting the remaining polygon into two
@@ -6101,7 +6971,7 @@
            p = p.next;
        } while (p !== start);
 
-       return p;
+       return filterPoints(p);
    }
 
    // try splitting polygon into two and triangulate them independently
@@ -6163,6 +7033,9 @@
        outerNode = findHoleBridge(hole, outerNode);
        if (outerNode) {
            var b = splitPolygon(outerNode, hole);
+
+           // filter collinear points around the cuts
+           filterPoints(outerNode, outerNode.next);
            filterPoints(b, b.next);
        }
    }
@@ -6194,7 +7067,7 @@
 
        if (!m) return null;
 
-       if (hx === qx) return m.prev; // hole touches outer segment; pick lower endpoint
+       if (hx === qx) return m; // hole touches outer segment; pick leftmost endpoint
 
        // look for points inside the triangle of hole point, segment intersection and endpoint;
        // if there are no points found, we have a valid connection;
@@ -6206,24 +7079,30 @@
            tanMin = Infinity,
            tan;
 
-       p = m.next;
+       p = m;
 
-       while (p !== stop) {
+       do {
            if (hx >= p.x && p.x >= mx && hx !== p.x &&
                    pointInTriangle(hy < my ? hx : qx, hy, mx, my, hy < my ? qx : hx, hy, p.x, p.y)) {
 
                tan = Math.abs(hy - p.y) / (hx - p.x); // tangential
 
-               if ((tan < tanMin || (tan === tanMin && p.x > m.x)) && locallyInside(p, hole)) {
+               if (locallyInside(p, hole) &&
+                   (tan < tanMin || (tan === tanMin && (p.x > m.x || (p.x === m.x && sectorContainsSector(m, p)))))) {
                    m = p;
                    tanMin = tan;
                }
            }
 
            p = p.next;
-       }
+       } while (p !== stop);
 
        return m;
+   }
+
+   // whether sector in vertex m contains sector in vertex p in the same coordinates
+   function sectorContainsSector(m, p) {
+       return area(m.prev, m, p.prev) < 0 && area(p.next, m, m.next) < 0;
    }
 
    // interlink polygon nodes in z-order
@@ -6335,8 +7214,10 @@
 
    // check if a diagonal between two polygon nodes is valid (lies in polygon interior)
    function isValidDiagonal(a, b) {
-       return a.next.i !== b.i && a.prev.i !== b.i && !intersectsPolygon(a, b) &&
-              locallyInside(a, b) && locallyInside(b, a) && middleInside(a, b);
+       return a.next.i !== b.i && a.prev.i !== b.i && !intersectsPolygon(a, b) && // dones't intersect other edges
+              (locallyInside(a, b) && locallyInside(b, a) && middleInside(a, b) && // locally visible
+               (area(a.prev, a, b.prev) || area(a, b.prev, b)) || // does not create opposite-facing sectors
+               equals(a, b) && area(a.prev, a, a.next) > 0 && area(b.prev, b, b.next) > 0); // special zero-length case
    }
 
    // signed area of a triangle
@@ -6351,10 +7232,28 @@
 
    // check if two segments intersect
    function intersects(p1, q1, p2, q2) {
-       if ((equals(p1, q1) && equals(p2, q2)) ||
-           (equals(p1, q2) && equals(p2, q1))) return true;
-       return area(p1, q1, p2) > 0 !== area(p1, q1, q2) > 0 &&
-              area(p2, q2, p1) > 0 !== area(p2, q2, q1) > 0;
+       var o1 = sign(area(p1, q1, p2));
+       var o2 = sign(area(p1, q1, q2));
+       var o3 = sign(area(p2, q2, p1));
+       var o4 = sign(area(p2, q2, q1));
+
+       if (o1 !== o2 && o3 !== o4) return true; // general case
+
+       if (o1 === 0 && onSegment(p1, p2, q1)) return true; // p1, q1 and p2 are collinear and p2 lies on p1q1
+       if (o2 === 0 && onSegment(p1, q2, q1)) return true; // p1, q1 and q2 are collinear and q2 lies on p1q1
+       if (o3 === 0 && onSegment(p2, p1, q2)) return true; // p2, q2 and p1 are collinear and p1 lies on p2q2
+       if (o4 === 0 && onSegment(p2, q1, q2)) return true; // p2, q2 and q1 are collinear and q1 lies on p2q2
+
+       return false;
+   }
+
+   // for collinear points p, q, r, check if point q lies on segment pr
+   function onSegment(p, q, r) {
+       return q.x <= Math.max(p.x, r.x) && q.x >= Math.min(p.x, r.x) && q.y <= Math.max(p.y, r.y) && q.y >= Math.min(p.y, r.y);
+   }
+
+   function sign(num) {
+       return num > 0 ? 1 : num < 0 ? -1 : 0;
    }
 
    // check if a polygon diagonal intersects any polygon segments
@@ -6395,8 +7294,8 @@
    // link two polygon vertices with a bridge; if the vertices belong to the same ring, it splits polygon into two;
    // if one belongs to the outer ring and another to a hole, it merges it into a single ring
    function splitPolygon(a, b) {
-       var a2 = new Node(a.i, a.x, a.y),
-           b2 = new Node(b.i, b.x, b.y),
+       var a2 = new Node$1(a.i, a.x, a.y),
+           b2 = new Node$1(b.i, b.x, b.y),
            an = a.next,
            bp = b.prev;
 
@@ -6417,7 +7316,7 @@
 
    // create a node and optionally link it with previous one (in a circular doubly linked list)
    function insertNode(i, x, y, last) {
-       var p = new Node(i, x, y);
+       var p = new Node$1(i, x, y);
 
        if (!last) {
            p.prev = p;
@@ -6440,7 +7339,7 @@
        if (p.nextZ) p.nextZ.prevZ = p.prevZ;
    }
 
-   function Node(i, x, y) {
+   function Node$1(i, x, y) {
        // vertex index in coordinates array
        this.i = i;
 
@@ -6518,9 +7417,7 @@
        }
        return result;
    };
-   earcut_1.default = default_1;
-
-   // external import
+   earcut_1.default = _default;
 
    (function () {
      /**
@@ -6609,7 +7506,7 @@
         * @function
         * @param {Number} x position of the Polygon
         * @param {Number} y position of the Polygon
-        * @param {me.Vector2d[]} points array of vector defining the Polygon
+        * @param {me.Vector2d[]|Number[]} points array of vector or vertice defining the Polygon
         */
        setShape: function setShape(x, y, points) {
          this.pos.set(x, y);
@@ -6622,9 +7519,17 @@
          if (!(points[0] instanceof me.Vector2d)) {
            var _points = this.points = [];
 
-           points.forEach(function (point) {
-             _points.push(new me.Vector2d(point.x, point.y));
-           });
+           if (_typeof(points[0]) === "object") {
+             // array of {x,y} object
+             points.forEach(function (point) {
+               _points.push(new me.Vector2d(point.x, point.y));
+             });
+           } else {
+             // it's a flat array
+             for (var p = 0; p < points.length; p += 2) {
+               _points.push(new me.Vector2d(points[p], points[p + 1]));
+             }
+           }
          } else {
            // array of me.Vector2d
            this.points = points;
@@ -6648,7 +7553,7 @@
          var len = points.length;
 
          for (var i = 0; i < len; i++) {
-           m.multiplyVector(points[i]);
+           m.apply(points[i]);
          }
 
          this.recalc();
@@ -6684,15 +7589,16 @@
         * @memberOf me.Polygon.prototype
         * @function
         * @param {Number} angle The angle to rotate (in radians)
+        * @param {me.Vector2d|me.ObservableVector2d} [v] an optional point to rotate around
         * @return {me.Polygon} Reference to this object for method chaining
         */
-       rotate: function rotate(angle) {
+       rotate: function rotate(angle, v) {
          if (angle !== 0) {
            var points = this.points;
            var len = points.length;
 
            for (var i = 0; i < len; i++) {
-             points[i].rotate(angle);
+             points[i].rotate(angle, v);
            }
 
            this.recalc();
@@ -6792,16 +7698,9 @@
         */
        getIndices: function getIndices(x, y) {
          if (this.indices.length === 0) {
-           var points = this.points;
-           var data = []; // flatten the points vector array
-
-           for (var i = 0; i < points.length; i++) {
-             // XXX Optimize me
-             data.push(points[i].x);
-             data.push(points[i].y);
-           }
-
-           this.indices = earcut_1(data);
+           this.indices = earcut_1(this.points.flatMap(function (p) {
+             return [p.x, p.y];
+           }));
          }
 
          return this.indices;
@@ -6949,6 +7848,19 @@
         * @ignore
         */
        init: function init(x, y, w, h) {
+         /**
+          * the center point of this rectangle
+          * @public
+          * @type me.Vector2d
+          * @name center
+          * @memberOf me.Rect
+          */
+         if (typeof this.center === "undefined") {
+           this.center = new me.Vector2d();
+         }
+
+         this.center.set(0, 0); // parent constructor
+
          this._super(me.Polygon, "init", [x, y, [new me.Vector2d(0, 0), // 0, 0
          new me.Vector2d(w, 0), // 1, 0
          new me.Vector2d(w, h), // 1, 1
@@ -6988,12 +7900,7 @@
            points[3].set(0, h); // 0, 1
          }
 
-         this._super(me.Polygon, "setShape", [x, y, points]); // private properties to cache width & height
-
-
-         this._width = this.points[2].x; // w
-
-         this._height = this.points[2].y; // h
+         this._super(me.Polygon, "setShape", [x, y, points]);
 
          return this;
        },
@@ -7060,6 +7967,7 @@
 
          this._width = this.points[2].x;
          this._height = this.points[2].y;
+         this.center.set(this.centerX, this.centerY);
          return this;
        },
 
@@ -7071,6 +7979,7 @@
         * @return {me.Rect} this shape bounding box Rectangle object
         */
        updateBounds: function updateBounds() {
+         this.center.set(this.centerX, this.centerY);
          return this;
        },
 
@@ -7363,7 +8272,11 @@
         * @ignore
         */
        get: function get() {
-         return this.pos.x + this._width / 2;
+         if (isFinite(this._width)) {
+           return this.pos.x + this._width / 2;
+         } else {
+           return this._width;
+         }
        },
 
        /**
@@ -7371,6 +8284,7 @@
         */
        set: function set(value) {
          this.pos.x = value - this._width / 2;
+         this.center.x = value;
        },
        configurable: true
      });
@@ -7387,7 +8301,11 @@
         * @ignore
         */
        get: function get() {
-         return this.pos.y + this._height / 2;
+         if (isFinite(this._height)) {
+           return this.pos.y + this._height / 2;
+         } else {
+           return this._height;
+         }
        },
 
        /**
@@ -7395,6 +8313,7 @@
         */
        set: function set(value) {
          this.pos.y = value - this._height / 2;
+         this.center.y = value;
        },
        configurable: true
      });
@@ -7457,7 +8376,8 @@
         */
        recalc: function recalc() {
          var edges = this.edges;
-         var normals = this.normals; // Copy the original points array and apply the offset/angle
+         var normals = this.normals;
+         var indices = this.indices; // Copy the original points array and apply the offset/angle
 
          var points = this.points;
 
@@ -7476,7 +8396,10 @@
            normals[0] = new me.Vector2d();
          }
 
-         normals[0].copy(edges[0]).perp().normalize();
+         normals[0].copy(edges[0]).perp().normalize(); // do not do anything here, indices will be computed by
+         // toIndices if array is empty upon function call
+
+         indices.length = 0;
          return this;
        },
 
@@ -7499,6 +8422,3085 @@
 
    (function () {
      /**
+      * A base class for renderable objects.
+      * @class
+      * @extends me.Rect
+      * @memberOf me
+      * @constructor
+      * @param {Number} x position of the renderable object (accessible through inherited pos.x property)
+      * @param {Number} y position of the renderable object (accessible through inherited pos.y property)
+      * @param {Number} width object width
+      * @param {Number} height object height
+      */
+     me.Renderable = me.Rect.extend({
+       /**
+        * @ignore
+        */
+       init: function init(x, y, width, height) {
+         /**
+          * to identify the object as a renderable object
+          * @ignore
+          */
+         this.isRenderable = true;
+         /**
+          * If true then physic collision and input events will not impact this renderable
+          * @public
+          * @type Boolean
+          * @default true
+          * @name isKinematic
+          * @memberOf me.Renderable
+          */
+
+         this.isKinematic = true;
+         /**
+          * the renderable physic body
+          * @public
+          * @type {me.Body}
+          * @see me.Body
+          * @see me.collision#check
+          * @name body
+          * @memberOf me.Renderable#
+          * @example
+          *  // define a new Player Class
+          *  game.PlayerEntity = me.Sprite.extend({
+          *      // constructor
+          *      init:function (x, y, settings) {
+          *          // call the parent constructor
+          *          this._super(me.Sprite, 'init', [x, y , settings]);
+          *
+          *          // define a basic walking animation
+          *          this.addAnimation("walk",  [...]);
+          *          // define a standing animation (using the first frame)
+          *          this.addAnimation("stand",  [...]);
+          *          // set the standing animation as default
+          *          this.setCurrentAnimation("stand");
+          *
+          *          // add a physic body
+          *          this.body = new me.Body(this);
+          *          // add a default collision shape
+          *          this.body.addShape(new me.Rect(0, 0, this.width, this.height));
+          *          // configure max speed and friction
+          *          this.body.setMaxVelocity(3, 15);
+          *          this.body.setFriction(0.4, 0);
+          *
+          *          // enable physic collision (off by default for basic me.Renderable)
+          *          this.isKinematic = false;
+          *
+          *          // set the display to follow our position on both axis
+          *          me.game.viewport.follow(this.pos, me.game.viewport.AXIS.BOTH);
+          *      },
+          *
+          *      ...
+          *
+          * }
+          */
+
+         this.body = undefined;
+         /**
+          * the renderable default transformation matrix
+          * @public
+          * @type me.Matrix2d
+          * @name currentTransform
+          * @memberOf me.Renderable#
+          */
+
+         if (typeof this.currentTransform === "undefined") {
+           this.currentTransform = me.pool.pull("me.Matrix2d");
+         }
+
+         this.currentTransform.identity();
+         /**
+          * (G)ame (U)nique (Id)entifier" <br>
+          * a GUID will be allocated for any renderable object added <br>
+          * to an object container (including the `me.game.world` container)
+          * @public
+          * @type String
+          * @name GUID
+          * @memberOf me.Renderable
+          */
+
+         this.GUID = undefined;
+         /**
+          * an event handler that is called when the renderable leave or enter a camera viewport
+          * @public
+          * @type function
+          * @default undefined
+          * @name onVisibilityChange
+          * @memberOf me.Renderable#
+          * @example
+          * this.onVisibilityChange = function(inViewport) {
+          *     if (inViewport === true) {
+          *         console.log("object has entered the in a camera viewport!");
+          *     }
+          * };
+          */
+
+         this.onVisibilityChange = undefined;
+         /**
+          * Whether the renderable object will always update, even when outside of the viewport<br>
+          * @public
+          * @type Boolean
+          * @default false
+          * @name alwaysUpdate
+          * @memberOf me.Renderable
+          */
+
+         this.alwaysUpdate = false;
+         /**
+          * Whether to update this object when the game is paused.
+          * @public
+          * @type Boolean
+          * @default false
+          * @name updateWhenPaused
+          * @memberOf me.Renderable
+          */
+
+         this.updateWhenPaused = false;
+         /**
+          * make the renderable object persistent over level changes<br>
+          * @public
+          * @type Boolean
+          * @default false
+          * @name isPersistent
+          * @memberOf me.Renderable
+          */
+
+         this.isPersistent = false;
+         /**
+          * If true, this renderable will be rendered using screen coordinates,
+          * as opposed to world coordinates. Use this, for example, to define UI elements.
+          * @public
+          * @type Boolean
+          * @default false
+          * @name floating
+          * @memberOf me.Renderable
+          */
+
+         this.floating = false;
+         /**
+          * The anchor point is used for attachment behavior, and/or when applying transformations.<br>
+          * The coordinate system places the origin at the top left corner of the frame (0, 0) and (1, 1) means the bottom-right corner<br>
+          * <img src="images/anchor_point.png"/> :<br>
+          * a Renderable's anchor point defaults to (0.5,0.5), which corresponds to the center position.<br>
+          * @public
+          * @type me.ObservableVector2d
+          * @default <0.5,0.5>
+          * @name anchorPoint
+          * @memberOf me.Renderable#
+          */
+
+         if (this.anchorPoint instanceof me.ObservableVector2d) {
+           this.anchorPoint.setMuted(0.5, 0.5).setCallback(this.onAnchorUpdate.bind(this));
+         } else {
+           this.anchorPoint = me.pool.pull("me.ObservableVector2d", 0.5, 0.5, {
+             onUpdate: this.onAnchorUpdate.bind(this)
+           });
+         }
+         /**
+          * When enabled, an object container will automatically apply
+          * any defined transformation before calling the child draw method.
+          * @public
+          * @type Boolean
+          * @default true
+          * @name autoTransform
+          * @memberOf me.Renderable
+          * @example
+          * // enable "automatic" transformation when the object is activated
+          * onActivateEvent: function () {
+          *     // reset the transformation matrix
+          *     this.currentTransform.identity();
+          *     // ensure the anchor point is the renderable center
+          *     this.anchorPoint.set(0.5, 0.5);
+          *     // enable auto transform
+          *     this.autoTransform = true;
+          *     ....
+          * }
+          */
+
+
+         this.autoTransform = true;
+         /**
+          * Define the renderable opacity<br>
+          * Set to zero if you do not wish an object to be drawn
+          * @see me.Renderable#setOpacity
+          * @see me.Renderable#getOpacity
+          * @public
+          * @type Number
+          * @default 1.0
+          * @name me.Renderable#alpha
+          */
+
+         this.alpha = 1.0;
+         /**
+          * a reference to the parent object that contains this renderable
+          * @public
+          * @type me.Container|me.Entity
+          * @default undefined
+          * @name me.Renderable#ancestor
+          */
+
+         this.ancestor = undefined;
+         /**
+          * The bounding rectangle for this renderable
+          * @ignore
+          * @type {me.Rect}
+          * @name _bounds
+          * @memberOf me.Renderable
+          */
+
+         if (this._bounds instanceof me.Rect) {
+           this._bounds.setShape(x, y, width, height);
+         } else {
+           this._bounds = me.pool.pull("me.Rect", x, y, width, height);
+         }
+         /**
+          * A mask limits rendering elements to the shape and position of the given mask object.
+          * So, if the renderable is larger than the mask, only the intersecting part of the renderable will be visible.
+          * @public
+          * @type {me.Rect|me.Polygon|me.Line|me.Ellipse}
+          * @name mask
+          * @default undefined
+          * @memberOf me.Renderable#
+          * @example
+          * // apply a mask in the shape of a Star
+          * myNPCSprite.mask = new me.Polygon(myNPCSprite.width / 2, 0, [
+          *    // draw a star
+          *    {x: 0, y: 0},
+          *    {x: 14, y: 30},
+          *    {x: 47, y: 35},
+          *    {x: 23, y: 57},
+          *    {x: 44, y: 90},
+          *    {x: 0, y: 62},
+          *    {x: -44, y: 90},
+          *    {x: -23, y: 57},
+          *    {x: -47, y: 35},
+          *    {x: -14, y: 30}
+          * ]);
+          */
+
+
+         this.mask = undefined;
+         /**
+          * define a tint for this renderable. a (255, 255, 255) r, g, b value will remove the tint effect.
+          * @public
+          * @type {me.Color}
+          * @name tint
+          * @default (255, 255, 255)
+          * @memberOf me.Renderable#
+          * @example
+          * // add a red tint to this renderable
+          * this.tint.setColor(255, 128, 128);
+          * // remove the tint
+          * this.tint.setColor(255, 255, 255);
+          */
+
+         this.tint = me.pool.pull("me.Color", 255, 255, 255, 1.0);
+         /**
+          * The name of the renderable
+          * @public
+          * @type {String}
+          * @name name
+          * @default ""
+          * @memberOf me.Renderable
+          */
+
+         this.name = "";
+         /**
+          * Absolute position in the game world
+          * @ignore
+          * @type {me.Vector2d}
+          * @name _absPos
+          * @memberOf me.Renderable#
+          */
+
+         if (this._absPos instanceof me.Vector2d) {
+           this._absPos.set(x, y);
+         } else {
+           this._absPos = me.pool.pull("me.Vector2d", x, y);
+         }
+         /**
+          * Position of the Renderable relative to its parent container
+          * @public
+          * @type {me.ObservableVector3d}
+          * @name pos
+          * @memberOf me.Renderable#
+          */
+
+
+         if (this.pos instanceof me.ObservableVector3d) {
+           this.pos.setMuted(x, y, 0).setCallback(this.updateBoundsPos.bind(this));
+         } else {
+           this.pos = me.pool.pull("me.ObservableVector3d", x, y, 0, {
+             onUpdate: this.updateBoundsPos.bind(this)
+           });
+         }
+         /**
+          * when true the renderable will be redrawn during the next update cycle
+          * @type {Boolean}
+          * @name isDirty
+          * @default false
+          * @memberOf me.Renderable#
+          */
+
+
+         this.isDirty = false;
+         this._width = width;
+         this._height = height; // keep track of when we flip
+
+         this._flip = {
+           x: false,
+           y: false
+         }; // viewport flag
+
+         this._inViewport = false;
+         this.shapeType = "Rectangle"; // ensure it's fully opaque by default
+
+         this.setOpacity(1.0);
+       },
+
+       /** @ignore */
+       onResetEvent: function onResetEvent() {
+         this.init.apply(this, arguments);
+       },
+
+       /**
+        * returns the bounding box for this renderable
+        * @name getBounds
+        * @memberOf me.Renderable.prototype
+        * @function
+        * @return {me.Rect} bounding box Rectangle object
+        */
+       getBounds: function getBounds() {
+         return this._bounds;
+       },
+
+       /**
+        * get the renderable alpha channel value<br>
+        * @name getOpacity
+        * @memberOf me.Renderable.prototype
+        * @function
+        * @return {Number} current opacity value between 0 and 1
+        */
+       getOpacity: function getOpacity() {
+         return this.alpha;
+       },
+
+       /**
+        * set the renderable alpha channel value<br>
+        * @name setOpacity
+        * @memberOf me.Renderable.prototype
+        * @function
+        * @param {Number} alpha opacity value between 0.0 and 1.0
+        */
+       setOpacity: function setOpacity(alpha) {
+         if (typeof alpha === "number") {
+           this.alpha = me.Math.clamp(alpha, 0.0, 1.0); // Set to 1 if alpha is NaN
+
+           if (isNaN(this.alpha)) {
+             this.alpha = 1.0;
+           }
+         }
+       },
+
+       /**
+        * flip the renderable on the horizontal axis (around the center of the renderable)
+        * @see me.Matrix2d#scaleX
+        * @name flipX
+        * @memberOf me.Renderable.prototype
+        * @function
+        * @param {Boolean} [flip=false] `true` to flip this renderable.
+        * @return {me.Renderable} Reference to this object for method chaining
+        */
+       flipX: function flipX(flip) {
+         this._flip.x = !!flip;
+         this.isDirty = true;
+         return this;
+       },
+
+       /**
+        * flip the renderable on the vertical axis (around the center of the renderable)
+        * @see me.Matrix2d#scaleY
+        * @name flipY
+        * @memberOf me.Renderable.prototype
+        * @function
+        * @param {Boolean} [flip=false] `true` to flip this renderable.
+        * @return {me.Renderable} Reference to this object for method chaining
+        */
+       flipY: function flipY(flip) {
+         this._flip.y = !!flip;
+         this.isDirty = true;
+         return this;
+       },
+
+       /**
+        * multiply the renderable currentTransform with the given matrix
+        * @name transform
+        * @memberOf me.Renderable.prototype
+        * @see me.Renderable#currentTransform
+        * @function
+        * @param {me.Matrix2d} matrix the transformation matrix
+        * @return {me.Renderable} Reference to this object for method chaining
+        */
+       transform: function transform(m) {
+         var bounds = this.getBounds();
+         this.currentTransform.multiply(m);
+         bounds.setPoints(bounds.transform(m).points);
+         bounds.pos.setV(this.pos);
+         this.isDirty = true;
+         return this;
+       },
+
+       /**
+        * return the angle to the specified target
+        * @name angleTo
+        * @memberOf me.Renderable
+        * @function
+        * @param {me.Renderable|me.Vector2d|me.Vector3d} target
+        * @return {Number} angle in radians
+        */
+       angleTo: function angleTo(target) {
+         var a = this.getBounds();
+         var ax, ay;
+
+         if (target instanceof me.Renderable) {
+           var b = target.getBounds();
+           ax = b.centerX - a.centerX;
+           ay = b.centerY - a.centerY;
+         } else {
+           // vector object
+           ax = target.x - a.centerX;
+           ay = target.y - a.centerY;
+         }
+
+         return Math.atan2(ay, ax);
+       },
+
+       /**
+        * return the distance to the specified target
+        * @name distanceTo
+        * @memberOf me.Renderable
+        * @function
+        * @param {me.Renderable|me.Vector2d|me.Vector3d} target
+        * @return {Number} distance
+        */
+       distanceTo: function distanceTo(target) {
+         var a = this.getBounds();
+         var dx, dy;
+
+         if (target instanceof me.Renderable) {
+           var b = target.getBounds();
+           dx = a.centerX - b.centerX;
+           dy = a.centerY - b.centerY;
+         } else {
+           // vector object
+           dx = a.centerX - target.x;
+           dy = a.centerY - target.y;
+         }
+
+         return Math.sqrt(dx * dx + dy * dy);
+       },
+
+       /**
+        * Rotate this renderable towards the given target.
+        * @name lookAt
+        * @memberOf me.Renderable.prototype
+        * @function
+        * @param {me.Renderable|me.Vector2d|me.Vector3d} target the renderable or position to look at
+        * @return {me.Renderable} Reference to this object for method chaining
+        */
+       lookAt: function lookAt(target) {
+         var position;
+
+         if (target instanceof me.Renderable) {
+           position = target.pos;
+         } else {
+           position = target;
+         }
+
+         var angle = this.angleTo(position);
+         this.rotate(angle);
+         return this;
+       },
+
+       /**
+        * Rotate this renderable by the specified angle (in radians).
+        * @name rotate
+        * @memberOf me.Renderable.prototype
+        * @function
+        * @param {Number} angle The angle to rotate (in radians)
+        * @return {me.Renderable} Reference to this object for method chaining
+        */
+       rotate: function rotate(angle) {
+         if (!isNaN(angle)) {
+           this.currentTransform.rotate(angle);
+           this.isDirty = true;
+         }
+
+         return this;
+       },
+
+       /**
+        * scale the renderable around his anchor point.  Scaling actually applies changes
+        * to the currentTransform member wich is used by the renderer to scale the object
+        * when rendering.  It does not scale the object itself.  For example if the renderable
+        * is an image, the image.width and image.height properties are unaltered but the currentTransform
+        * member will be changed.
+        * @name scale
+        * @memberOf me.Renderable.prototype
+        * @function
+        * @param {Number} x a number representing the abscissa of the scaling vector.
+        * @param {Number} [y=x] a number representing the ordinate of the scaling vector.
+        * @return {me.Renderable} Reference to this object for method chaining
+        */
+       scale: function scale(x, y) {
+         var _x = x,
+             _y = typeof y === "undefined" ? _x : y; // set the scaleFlag
+
+
+         this.currentTransform.scale(_x, _y); // corresponding bounding box to be set
+         // through the width and height setters
+
+         this.width = this.width * _x;
+         this.height = this.height * _y;
+         this.isDirty = true;
+         return this;
+       },
+
+       /**
+        * scale the renderable around his anchor point
+        * @name scaleV
+        * @memberOf me.Renderable.prototype
+        * @function
+        * @param {me.Vector2d} vector scaling vector
+        * @return {me.Renderable} Reference to this object for method chaining
+        */
+       scaleV: function scaleV(v) {
+         this.scale(v.x, v.y);
+         return this;
+       },
+
+       /**
+        * update function. <br>
+        * automatically called by the game manager {@link me.game}
+        * @name update
+        * @memberOf me.Renderable.prototype
+        * @function
+        * @protected
+        * @param {Number} dt time since the last update in milliseconds.
+        * @return false
+        **/
+       update: function update()
+       /* dt */
+       {
+         return this.isDirty;
+       },
+
+       /**
+        * update the renderable's bounding rect (private)
+        * @ignore
+        * @name updateBoundsPos
+        * @memberOf me.Renderable.prototype
+        * @function
+        */
+       updateBoundsPos: function updateBoundsPos(newX, newY) {
+         var bounds = this.getBounds();
+         bounds.pos.set(newX, newY, bounds.pos.z); // XXX: This is called from the constructor, before it gets an ancestor
+
+         if (this.ancestor instanceof me.Container && !this.floating) {
+           bounds.pos.add(this.ancestor._absPos);
+         }
+
+         return bounds;
+       },
+
+       /**
+        * called when the anchor point value is changed
+        * @private
+        * @name onAnchorUpdate
+        * @memberOf me.Renderable.prototype
+        * @function
+        */
+       onAnchorUpdate: function onAnchorUpdate() {
+       },
+
+       /**
+        * update the bounds
+        * @private
+        * @deprecated
+        * @name updateBounds
+        * @memberOf me.Renderable.prototype
+        * @function
+        */
+       updateBounds: function updateBounds() {
+         console.warn("Deprecated: me.Renderable.updateBounds");
+         return this._super(me.Rect, "updateBounds");
+       },
+
+       /**
+        * prepare the rendering context before drawing
+        * (apply defined transforms, anchor point). <br>
+        * automatically called by the game manager {@link me.game}
+        * @name preDraw
+        * @memberOf me.Renderable.prototype
+        * @function
+        * @protected
+        * @param {me.CanvasRenderer|me.WebGLRenderer} renderer a renderer object
+        **/
+       preDraw: function preDraw(renderer) {
+         var bounds = this.getBounds();
+         var ax = bounds.width * this.anchorPoint.x,
+             ay = bounds.height * this.anchorPoint.y; // save context
+
+         renderer.save(); // apply the defined alpha value
+
+         renderer.setGlobalAlpha(renderer.globalAlpha() * this.getOpacity()); // apply flip
+
+         if (this._flip.x || this._flip.y) {
+           var dx = this._flip.x ? this.centerX - ax : 0,
+               dy = this._flip.y ? this.centerY - ay : 0;
+           renderer.translate(dx, dy);
+           renderer.scale(this._flip.x ? -1 : 1, this._flip.y ? -1 : 1);
+           renderer.translate(-dx, -dy);
+         }
+
+         if (this.autoTransform === true && !this.currentTransform.isIdentity()) {
+           // apply the renderable transformation matrix
+           renderer.translate(this.pos.x, this.pos.y);
+           renderer.transform(this.currentTransform);
+           renderer.translate(-this.pos.x, -this.pos.y);
+         } // offset by the anchor point
+
+
+         renderer.translate(-ax, -ay);
+
+         if (typeof this.mask !== "undefined") {
+           renderer.setMask(this.mask);
+         } // apply the defined tint, if any
+
+
+         renderer.setTint(this.tint);
+       },
+
+       /**
+        * object draw. <br>
+        * automatically called by the game manager {@link me.game}
+        * @name draw
+        * @memberOf me.Renderable.prototype
+        * @function
+        * @protected
+        * @param {me.CanvasRenderer|me.WebGLRenderer} renderer a renderer object
+        **/
+       draw: function draw()
+       /*renderer*/
+       {// empty one !
+       },
+
+       /**
+        * restore the rendering context after drawing. <br>
+        * automatically called by the game manager {@link me.game}
+        * @name postDraw
+        * @memberOf me.Renderable.prototype
+        * @function
+        * @protected
+        * @param {me.CanvasRenderer|me.WebGLRenderer} renderer a renderer object
+        **/
+       postDraw: function postDraw(renderer) {
+         if (typeof this.mask !== "undefined") {
+           renderer.clearMask();
+         } // remove the previously applied tint
+
+
+         renderer.clearTint(); // reset the dirty flag
+
+         this.isDirty = false; // restore the context
+
+         renderer.restore();
+       },
+
+       /**
+        * Destroy function<br>
+        * @ignore
+        */
+       destroy: function destroy() {
+         // allow recycling object properties
+         me.pool.push(this.currentTransform);
+         this.currentTransform = undefined;
+         me.pool.push(this.anchorPoint);
+         this.anchorPoint = undefined;
+         me.pool.push(this.pos);
+         this.pos = undefined;
+         me.pool.push(this._absPos);
+         this._absPos = undefined;
+         me.pool.push(this._bounds);
+         this._bounds = undefined;
+         this.onVisibilityChange = undefined;
+
+         if (typeof this.mask !== "undefined") {
+           me.pool.push(this.mask);
+           this.mask = undefined;
+         }
+
+         if (typeof this.tint !== "undefined") {
+           me.pool.push(this.tint);
+           this.tint = undefined;
+         }
+
+         this.ancestor = undefined; // destroy the physic body if defined
+
+         if (typeof this.body !== "undefined") {
+           this.body.destroy.apply(this.body, arguments);
+           this.body = undefined;
+         } // release all registered events
+
+
+         me.input.releaseAllPointerEvents(this); // call the user defined destroy method
+
+         this.onDestroyEvent.apply(this, arguments);
+       },
+
+       /**
+        * OnDestroy Notification function<br>
+        * Called by engine before deleting the object
+        * @name onDestroyEvent
+        * @memberOf me.Renderable
+        * @function
+        */
+       onDestroyEvent: function onDestroyEvent() {// to be extended !
+       }
+     });
+     /**
+      * Whether the renderable object is visible and within the viewport
+      * @public
+      * @readonly
+      * @type Boolean
+      * @default false
+      * @name inViewport
+      * @memberOf me.Renderable
+      */
+
+     Object.defineProperty(me.Renderable.prototype, "inViewport", {
+       /**
+        * @ignore
+        */
+       get: function get() {
+         return this._inViewport;
+       },
+
+       /**
+        * @ignore
+        */
+       set: function set(value) {
+         if (this._inViewport !== value) {
+           this._inViewport = value;
+
+           if (typeof this.onVisibilityChange === "function") {
+             this.onVisibilityChange.call(this, value);
+           }
+         }
+       },
+       configurable: true
+     });
+     /**
+      * returns true if this renderable is flipped on the horizontal axis
+      * @public
+      * @see me.Renderable#flipX
+      * @type {Boolean}
+      * @name isFlippedX
+      * @memberOf me.Renderable
+      */
+
+     Object.defineProperty(me.Renderable.prototype, "isFlippedX", {
+       /**
+        * @ignore
+        */
+       get: function get() {
+         return this._flip.x === true;
+       },
+       configurable: true
+     });
+     /**
+      * returns true if this renderable is flipped on the vertical axis
+      * @public
+      * @see me.Renderable#flipY
+      * @type {Boolean}
+      * @name isFlippedY
+      * @memberOf me.Renderable
+      */
+
+     Object.defineProperty(me.Renderable.prototype, "isFlippedY", {
+       /**
+        * @ignore
+        */
+       get: function get() {
+         return this._flip.y === true;
+       },
+       configurable: true
+     });
+     /**
+      * width of the Renderable bounding box
+      * @public
+      * @type {Number}
+      * @name width
+      * @memberOf me.Renderable
+      */
+
+     Object.defineProperty(me.Renderable.prototype, "width", {
+       /**
+        * @ignore
+        */
+       get: function get() {
+         return this._width;
+       },
+
+       /**
+        * @ignore
+        */
+       set: function set(value) {
+         if (this._width !== value) {
+           this.getBounds().width = value;
+           this._width = value;
+         }
+       },
+       configurable: true
+     });
+     /**
+      * height of the Renderable bounding box
+      * @public
+      * @type {Number}
+      * @name height
+      * @memberOf me.Renderable
+      */
+
+     Object.defineProperty(me.Renderable.prototype, "height", {
+       /**
+        * @ignore
+        */
+       get: function get() {
+         return this._height;
+       },
+
+       /**
+        * @ignore
+        */
+       set: function set(value) {
+         if (this._height !== value) {
+           this.getBounds().height = value;
+           this._height = value;
+         }
+       },
+       configurable: true
+     });
+   })();
+
+   (function () {
+     /**
+      * a generic Color Layer Object.  Fills the entire Canvas with the color not just the container the object belongs to.
+      * @class
+      * @extends me.Renderable
+      * @memberOf me
+      * @constructor
+      * @param {String} name Layer name
+      * @param {me.Color|String} color CSS color
+      * @param {Number} z z-index position
+      */
+     me.ColorLayer = me.Renderable.extend({
+       /**
+        * @ignore
+        */
+       init: function init(name, color, z) {
+         // parent constructor
+         this._super(me.Renderable, "init", [0, 0, Infinity, Infinity]); // apply given parameters
+
+
+         this.name = name;
+         this.pos.z = z;
+         this.floating = true;
+         /**
+          * the layer color component
+          * @public
+          * @type me.Color
+          * @name color
+          * @memberOf me.ColorLayer#
+          */
+         // parse the given color
+
+         if (color instanceof me.Color) {
+           this.color = color;
+         } else {
+           // string (#RGB, #ARGB, #RRGGBB, #AARRGGBB)
+           this.color = me.pool.pull("me.Color").parseCSS(color);
+         }
+
+         this.anchorPoint.set(0, 0);
+       },
+
+       /**
+        * draw the color layer
+        * @ignore
+        */
+       draw: function draw(renderer, rect) {
+         var color = renderer.getColor();
+         var vpos = me.game.viewport.pos;
+         renderer.setColor(this.color);
+         renderer.fillRect(rect.left - vpos.x, rect.top - vpos.y, rect.width, rect.height);
+         renderer.setColor(color);
+       },
+
+       /**
+        * Destroy function
+        * @ignore
+        */
+       destroy: function destroy() {
+         me.pool.push(this.color);
+         this.color = undefined;
+
+         this._super(me.Renderable, "destroy");
+       }
+     });
+   })();
+
+   (function () {
+     /**
+      * a generic Image Layer Object
+      * @class
+      * @extends me.Renderable
+      * @memberOf me
+      * @constructor
+      * @param {Number} x x coordinate
+      * @param {Number} y y coordinate
+      * @param {Object} settings ImageLayer properties
+      * @param {HTMLImageElement|HTMLCanvasElement|String} settings.image Image reference. See {@link me.loader.getImage}
+      * @param {String} [settings.name="me.ImageLayer"] layer name
+      * @param {Number} [settings.z=0] z-index position
+      * @param {Number|me.Vector2d} [settings.ratio=1.0] Scrolling ratio to be applied. See {@link me.ImageLayer#ratio}
+      * @param {String} [settings.repeat='repeat'] define if and how an Image Layer should be repeated (accepted values are 'repeat',
+     'repeat-x', 'repeat-y', 'no-repeat'). See {@link me.ImageLayer#repeat}
+      * @param {Number|me.Vector2d} [settings.anchorPoint=0.0] Image origin. See {@link me.ImageLayer#anchorPoint}
+      * @example
+      * // create a repetitive background pattern on the X axis using the citycloud image asset
+      * me.game.world.addChild(new me.ImageLayer(0, 0, {
+      *     image:"citycloud",
+      *     repeat :"repeat-x"
+      * }), 1);
+      */
+     me.ImageLayer = me.Renderable.extend({
+       /**
+        * @ignore
+        */
+       init: function init(x, y, settings) {
+         // call the constructor
+         this._super(me.Renderable, "init", [x, y, Infinity, Infinity]); // get the corresponding image
+
+
+         this.image = _typeof(settings.image) === "object" ? settings.image : me.loader.getImage(settings.image); // throw an error if image is null/undefined
+
+         if (!this.image) {
+           throw new Error((typeof settings.image === "string" ? "'" + settings.image + "'" : "Image") + " file for Image Layer '" + this.name + "' not found!");
+         }
+
+         this.imagewidth = this.image.width;
+         this.imageheight = this.image.height; // set the sprite name if specified
+
+         if (typeof settings.name === "string") {
+           this.name = settings.name;
+         } // render in screen coordinates
+
+
+         this.floating = true; // displaying order
+
+         this.pos.z = settings.z || 0;
+         this.offset = me.pool.pull("me.Vector2d", x, y);
+         /**
+          * Define the image scrolling ratio<br>
+          * Scrolling speed is defined by multiplying the viewport delta position (e.g. followed entity) by the specified ratio.
+          * Setting this vector to &lt;0.0,0.0&gt; will disable automatic scrolling.<br>
+          * To specify a value through Tiled, use one of the following format : <br>
+          * - a number, to change the value for both axis <br>
+          * - a json expression like `json:{"x":0.5,"y":0.5}` if you wish to specify a different value for both x and y
+          * @public
+          * @type me.Vector2d
+          * @default <1.0,1.0>
+          * @name me.ImageLayer#ratio
+          */
+
+         this.ratio = me.pool.pull("me.Vector2d", 1.0, 1.0);
+
+         if (typeof settings.ratio !== "undefined") {
+           // little hack for backward compatiblity
+           if (typeof settings.ratio === "number") {
+             this.ratio.set(settings.ratio, settings.ratio);
+           } else
+             /* vector */
+             {
+               this.ratio.setV(settings.ratio);
+             }
+         }
+
+         if (typeof settings.anchorPoint === "undefined") {
+           /**
+            * Define how the image is anchored to the viewport bounds<br>
+            * By default, its upper-left corner is anchored to the viewport bounds upper left corner.<br>
+            * The anchorPoint is a unit vector where each component falls in range [0.0,1.0].<br>
+            * Some common examples:<br>
+            * * &lt;0.0,0.0&gt; : (Default) Anchor image to the upper-left corner of viewport bounds
+            * * &lt;0.5,0.5&gt; : Center the image within viewport bounds
+            * * &lt;1.0,1.0&gt; : Anchor image to the lower-right corner of viewport bounds
+            * To specify a value through Tiled, use one of the following format : <br>
+            * - a number, to change the value for both axis <br>
+            * - a json expression like `json:{"x":0.5,"y":0.5}` if you wish to specify a different value for both x and y
+            * @public
+            * @type me.Vector2d
+            * @default <0.0,0.0>
+            * @name me.ImageLayer#anchorPoint
+            */
+           this.anchorPoint.set(0, 0);
+         } else {
+           if (typeof settings.anchorPoint === "number") {
+             this.anchorPoint.set(settings.anchorPoint, settings.anchorPoint);
+           } else
+             /* vector */
+             {
+               this.anchorPoint.setV(settings.anchorPoint);
+             }
+         }
+         /**
+          * Define if and how an Image Layer should be repeated.<br>
+          * By default, an Image Layer is repeated both vertically and horizontally.<br>
+          * Acceptable values : <br>
+          * * 'repeat' - The background image will be repeated both vertically and horizontally <br>
+          * * 'repeat-x' - The background image will be repeated only horizontally.<br>
+          * * 'repeat-y' - The background image will be repeated only vertically.<br>
+          * * 'no-repeat' - The background-image will not be repeated.<br>
+          * @public
+          * @type String
+          * @default 'repeat'
+          * @name me.ImageLayer#repeat
+          */
+
+
+         Object.defineProperty(this, "repeat", {
+           /**
+            * @ignore
+            */
+           get: function get() {
+             return this._repeat;
+           },
+
+           /**
+            * @ignore
+            */
+           set: function set(val) {
+             this._repeat = val;
+
+             switch (this._repeat) {
+               case "no-repeat":
+                 this.repeatX = false;
+                 this.repeatY = false;
+                 break;
+
+               case "repeat-x":
+                 this.repeatX = true;
+                 this.repeatY = false;
+                 break;
+
+               case "repeat-y":
+                 this.repeatX = false;
+                 this.repeatY = true;
+                 break;
+
+               default:
+                 // "repeat"
+                 this.repeatX = true;
+                 this.repeatY = true;
+                 break;
+             }
+
+             this.resize(me.game.viewport.width, me.game.viewport.height);
+             this.createPattern();
+           },
+           configurable: true
+         });
+         this.repeat = settings.repeat || "repeat"; // on context lost, all previous textures are destroyed
+
+         me.event.subscribe(me.event.WEBGL_ONCONTEXT_RESTORED, this.createPattern.bind(this));
+       },
+       // called when the layer is added to the game world or a container
+       onActivateEvent: function onActivateEvent() {
+         var _updateLayerFn = this.updateLayer.bind(this); // register to the viewport change notification
+
+
+         this.vpChangeHdlr = me.event.subscribe(me.event.VIEWPORT_ONCHANGE, _updateLayerFn);
+         this.vpResizeHdlr = me.event.subscribe(me.event.VIEWPORT_ONRESIZE, this.resize.bind(this));
+         this.vpLoadedHdlr = me.event.subscribe(me.event.LEVEL_LOADED, function () {
+           // force a first refresh when the level is loaded
+           _updateLayerFn(me.game.viewport.pos);
+         }); // in case the level is not added to the root container,
+         // the onActivateEvent call happens after the LEVEL_LOADED event
+         // so we need to force a first update
+
+         if (this.ancestor.root !== true) {
+           this.updateLayer(me.game.viewport.pos);
+         }
+       },
+
+       /**
+        * resize the Image Layer to match the given size
+        * @name resize
+        * @memberOf me.ImageLayer.prototype
+        * @function
+        * @param {Number} w new width
+        * @param {Number} h new height
+       */
+       resize: function resize(w, h) {
+         this._super(me.Renderable, "resize", [this.repeatX ? Infinity : w, this.repeatY ? Infinity : h]);
+       },
+
+       /**
+        * createPattern function
+        * @ignore
+        * @function
+        */
+       createPattern: function createPattern() {
+         this._pattern = me.video.renderer.createPattern(this.image, this._repeat);
+       },
+
+       /**
+        * updateLayer function
+        * @ignore
+        * @function
+        */
+       updateLayer: function updateLayer(vpos) {
+         var rx = this.ratio.x,
+             ry = this.ratio.y;
+
+         if (rx === 0 && ry === 0) {
+           // static image
+           return;
+         }
+
+         var viewport = me.game.viewport,
+             width = this.imagewidth,
+             height = this.imageheight,
+             bw = viewport.bounds.width,
+             bh = viewport.bounds.height,
+             ax = this.anchorPoint.x,
+             ay = this.anchorPoint.y,
+
+         /*
+          * Automatic positioning
+          *
+          * See https://github.com/melonjs/melonJS/issues/741#issuecomment-138431532
+          * for a thorough description of how this works.
+          */
+         x = ax * (rx - 1) * (bw - viewport.width) + this.offset.x - rx * vpos.x,
+             y = ay * (ry - 1) * (bh - viewport.height) + this.offset.y - ry * vpos.y; // Repeat horizontally; start drawing from left boundary
+
+         if (this.repeatX) {
+           this.pos.x = x % width;
+         } else {
+           this.pos.x = x;
+         } // Repeat vertically; start drawing from top boundary
+
+
+         if (this.repeatY) {
+           this.pos.y = y % height;
+         } else {
+           this.pos.y = y;
+         }
+       },
+
+       /*
+        * override the default predraw function
+        * as repeat and anchor are managed directly in the draw method
+        * @ignore
+        */
+       preDraw: function preDraw(renderer) {
+         // save the context
+         renderer.save(); // apply the defined alpha value
+
+         renderer.setGlobalAlpha(renderer.globalAlpha() * this.getOpacity());
+       },
+
+       /**
+        * draw the image layer
+        * @ignore
+        */
+       draw: function draw(renderer) {
+         var viewport = me.game.viewport,
+             width = this.imagewidth,
+             height = this.imageheight,
+             bw = viewport.bounds.width,
+             bh = viewport.bounds.height,
+             ax = this.anchorPoint.x,
+             ay = this.anchorPoint.y,
+             x = this.pos.x,
+             y = this.pos.y;
+
+         if (this.ratio.x === 0 && this.ratio.y === 0) {
+           // static image
+           x = x + ax * (bw - width);
+           y = y + ay * (bh - height);
+         }
+
+         renderer.translate(x, y);
+         renderer.drawPattern(this._pattern, 0, 0, viewport.width * 2, viewport.height * 2);
+       },
+       // called when the layer is removed from the game world or a container
+       onDeactivateEvent: function onDeactivateEvent() {
+         // cancel all event subscriptions
+         me.event.unsubscribe(this.vpChangeHdlr);
+         me.event.unsubscribe(this.vpResizeHdlr);
+         me.event.unsubscribe(this.vpLoadedHdlr);
+       },
+
+       /**
+        * Destroy function<br>
+        * @ignore
+        */
+       destroy: function destroy() {
+         me.pool.push(this.offset);
+         this.offset = undefined;
+         me.pool.push(this.ratio);
+         this.ratio = undefined;
+
+         this._super(me.Renderable, "destroy");
+       }
+     });
+   })();
+
+   (function () {
+     /**
+      * An object to display a fixed or animated sprite on screen.
+      * @class
+      * @extends me.Renderable
+      * @memberOf me
+      * @constructor
+      * @param {Number} x the x coordinates of the sprite object
+      * @param {Number} y the y coordinates of the sprite object
+      * @param {Object} settings Configuration parameters for the Sprite object
+      * @param {me.video.renderer.Texture|HTMLImageElement|HTMLCanvasElement|String} settings.image reference to a texture, spritesheet image or to a texture atlas
+      * @param {String} [settings.name=""] name of this object
+      * @param {String} [settings.region] region name of a specific region to use when using a texture atlas, see {@link me.Renderer.Texture}
+      * @param {Number} [settings.framewidth] Width of a single frame within the spritesheet
+      * @param {Number} [settings.frameheight] Height of a single frame within the spritesheet
+      * @param {Number} [settings.flipX] flip the sprite on the horizontal axis
+      * @param {Number} [settings.flipY] flip the sprite on the vertical axis
+      * @param {me.Vector2d} [settings.anchorPoint={x:0.5, y:0.5}] Anchor point to draw the frame at (defaults to the center of the frame).
+      * @example
+      * // create a single sprite from a standalone image, with anchor in the center
+      * var sprite = new me.Sprite(0, 0, {
+      *     image : "PlayerTexture",
+      *     framewidth : 64,
+      *     frameheight : 64,
+      *     anchorPoint : new me.Vector2d(0.5, 0.5)
+      * });
+      *
+      * // create a single sprite from a packed texture
+      * game.texture = new me.video.renderer.Texture(
+      *     me.loader.getJSON("texture"),
+      *     me.loader.getImage("texture")
+      * );
+      * var sprite = new me.Sprite(0, 0, {
+      *     image : game.texture,
+      *     region : "npc2.png",
+      * });
+      */
+     me.Sprite = me.Renderable.extend({
+       /**
+        * @ignore
+        */
+       init: function init(x, y, settings) {
+         /**
+          * pause and resume animation
+          * @public
+          * @type Boolean
+          * @default false
+          * @name me.Sprite#animationpause
+          */
+         this.animationpause = false;
+         /**
+          * animation cycling speed (delay between frame in ms)
+          * @public
+          * @type Number
+          * @default 100
+          * @name me.Sprite#animationspeed
+          */
+
+         this.animationspeed = 100;
+         /**
+          * global offset for the position to draw from on the source image.
+          * @public
+          * @type me.Vector2d
+          * @default <0.0,0.0>
+          * @name offset
+          * @memberOf me.Sprite#
+          */
+
+         this.offset = me.pool.pull("me.Vector2d", 0, 0);
+         /**
+          * The source texture object this sprite object is using
+          * @public
+          * @type me.video.renderer.Texture
+          * @name source
+          * @memberOf me.Sprite#
+          */
+
+         this.source = null; // hold all defined animation
+
+         this.anim = {}; // a flag to reset animation
+
+         this.resetAnim = undefined; // current frame information
+         // (reusing current, any better/cleaner place?)
+
+         this.current = {
+           // the current animation name
+           name: "default",
+           // length of the current animation name
+           length: 0,
+           //current frame texture offset
+           offset: new me.Vector2d(),
+           // current frame size
+           width: 0,
+           height: 0,
+           // Source rotation angle for pre-rotating the source image
+           angle: 0,
+           // current frame index
+           idx: 0
+         }; // animation frame delta
+
+         this.dt = 0; // flicker settings
+
+         this._flicker = {
+           isFlickering: false,
+           duration: 0,
+           callback: null,
+           state: false
+         }; // call the super constructor
+
+         this._super(me.Renderable, "init", [x, y, 0, 0]); // set the proper image/texture to use
+
+
+         if (settings.image instanceof me.Renderer.prototype.Texture) {
+           this.source = settings.image;
+           this.image = this.source.getTexture();
+           this.textureAtlas = settings.image; // check for defined region
+
+           if (typeof settings.region !== "undefined") {
+             // use a texture atlas
+             var region = this.source.getRegion(settings.region);
+
+             if (region) {
+               // set the sprite region within the texture
+               this.setRegion(region); // update the default "current" frame size
+
+               this.current.width = settings.framewidth || region.width;
+               this.current.height = settings.frameheight || region.height;
+             } else {
+               // throw an error
+               throw new Error("Texture - region for " + settings.region + " not found");
+             }
+           }
+         } else {
+           // HTMLImageElement/Canvas or String
+           this.image = _typeof(settings.image) === "object" ? settings.image : me.loader.getImage(settings.image); // update the default "current" frame size
+
+           this.current.width = settings.framewidth = settings.framewidth || this.image.width;
+           this.current.height = settings.frameheight = settings.frameheight || this.image.height;
+           this.source = me.video.renderer.cache.get(this.image, settings);
+           this.textureAtlas = this.source.getAtlas();
+         } // store/reset the current atlas information if specified
+
+
+         if (typeof settings.atlas !== "undefined") {
+           this.textureAtlas = settings.atlas;
+           this.atlasIndices = settings.atlasIndices;
+         } else {
+           this.atlasIndices = null;
+         } // resize based on the active frame
+
+
+         this.width = this.current.width;
+         this.height = this.current.height; // apply flip flags if specified
+
+         if (typeof settings.flipX !== "undefined") {
+           this.flipX(!!settings.flipX);
+         }
+
+         if (typeof settings.flipY !== "undefined") {
+           this.flipY(!!settings.flipY);
+         } // set the default rotation angle is defined in the settings
+         // * WARNING: rotating sprites decreases performance with Canvas Renderer
+
+
+         if (typeof settings.rotation !== "undefined") {
+           this.currentTransform.rotate(settings.rotation);
+         } // update anchorPoint
+
+
+         if (settings.anchorPoint) {
+           this.anchorPoint.set(settings.anchorPoint.x, settings.anchorPoint.y);
+         } // set the sprite name if specified
+
+
+         if (typeof settings.name === "string") {
+           this.name = settings.name;
+         } // for sprite, addAnimation will return !=0
+
+
+         if (this.addAnimation("default", null) !== 0) {
+           // set as default
+           this.setCurrentAnimation("default");
+         } // enable currentTransform for me.Sprite based objects
+
+
+         this.autoTransform = true;
+       },
+
+       /**
+        * return the flickering state of the object
+        * @name isFlickering
+        * @memberOf me.Sprite.prototype
+        * @function
+        * @return {Boolean}
+        */
+       isFlickering: function isFlickering() {
+         return this._flicker.isFlickering;
+       },
+
+       /**
+        * make the object flicker
+        * @name flicker
+        * @memberOf me.Sprite.prototype
+        * @function
+        * @param {Number} duration expressed in milliseconds
+        * @param {Function} callback Function to call when flickering ends
+        * @return {me.Sprite} Reference to this object for method chaining
+        * @example
+        * // make the object flicker for 1 second
+        * // and then remove it
+        * this.flicker(1000, function () {
+        *     me.game.world.removeChild(this);
+        * });
+        */
+       flicker: function flicker(duration, callback) {
+         this._flicker.duration = duration;
+
+         if (this._flicker.duration <= 0) {
+           this._flicker.isFlickering = false;
+           this._flicker.callback = null;
+         } else if (!this._flicker.isFlickering) {
+           this._flicker.callback = callback;
+           this._flicker.isFlickering = true;
+         }
+
+         return this;
+       },
+
+       /**
+        * add an animation <br>
+        * For fixed-sized cell sprite sheet, the index list must follow the
+        * logic as per the following example :<br>
+        * <img src="images/spritesheet_grid.png"/>
+        * @name addAnimation
+        * @memberOf me.Sprite.prototype
+        * @function
+        * @param {String} name animation id
+        * @param {Number[]|String[]|Object[]} index list of sprite index or name
+        * defining the animation. Can also use objects to specify delay for each frame, see below
+        * @param {Number} [animationspeed] cycling speed for animation in ms
+        * @return {Number} frame amount of frame added to the animation (delay between each frame).
+        * @see me.Sprite#animationspeed
+        * @example
+        * // walking animation
+        * this.addAnimation("walk", [ 0, 1, 2, 3, 4, 5 ]);
+        * // standing animation
+        * this.addAnimation("stand", [ 11, 12 ]);
+        * // eating animation
+        * this.addAnimation("eat", [ 6, 6 ]);
+        * // rolling animation
+        * this.addAnimation("roll", [ 7, 8, 9, 10 ]);
+        * // slower animation
+        * this.addAnimation("roll", [ 7, 8, 9, 10 ], 200);
+        * // or get more specific with delay for each frame. Good solution instead of repeating:
+        * this.addAnimation("turn", [{ name: 0, delay: 200 }, { name: 1, delay: 100 }])
+        * // can do this with atlas values as well:
+        * this.addAnimation("turn", [{ name: "turnone", delay: 200 }, { name: "turntwo", delay: 100 }])
+        * // define an dying animation that stop on the last frame
+        * this.addAnimation("die", [{ name: 3, delay: 200 }, { name: 4, delay: 100 }, { name: 5, delay: Infinity }])
+        * // set the standing animation as default
+        * this.setCurrentAnimation("stand");
+        */
+       addAnimation: function addAnimation(name, index, animationspeed) {
+         this.anim[name] = {
+           name: name,
+           frames: [],
+           idx: 0,
+           length: 0
+         }; // # of frames
+
+         var counter = 0;
+
+         if (_typeof(this.textureAtlas) !== "object") {
+           return 0;
+         }
+
+         if (index == null) {
+           index = []; // create a default animation with all frame
+
+           Object.keys(this.textureAtlas).forEach(function (v, i) {
+             index[i] = i;
+           });
+         } // set each frame configuration (offset, size, etc..)
+
+
+         for (var i = 0, len = index.length; i < len; i++) {
+           var frame = index[i];
+           var frameObject;
+
+           if (typeof frame === "number" || typeof frame === "string") {
+             frameObject = {
+               name: frame,
+               delay: animationspeed || this.animationspeed
+             };
+           } else {
+             frameObject = frame;
+           }
+
+           var frameObjectName = frameObject.name;
+
+           if (typeof frameObjectName === "number") {
+             if (typeof this.textureAtlas[frameObjectName] !== "undefined") {
+               // TODO: adding the cache source coordinates add undefined entries in webGL mode
+               this.anim[name].frames[i] = Object.assign({}, this.textureAtlas[frameObjectName], frameObject);
+               counter++;
+             }
+           } else {
+             // string
+             if (this.atlasIndices === null) {
+               throw new Error("string parameters for addAnimation are not allowed for standard spritesheet based Texture");
+             } else {
+               this.anim[name].frames[i] = Object.assign({}, this.textureAtlas[this.atlasIndices[frameObjectName]], frameObject);
+               counter++;
+             }
+           }
+         }
+
+         this.anim[name].length = counter;
+         return counter;
+       },
+
+       /**
+        * set the current animation
+        * this will always change the animation & set the frame to zero
+        * @name setCurrentAnimation
+        * @memberOf me.Sprite.prototype
+        * @function
+        * @param {String} name animation id
+        * @param {String|Function} [onComplete] animation id to switch to when complete, or callback
+        * @return {me.Sprite} Reference to this object for method chaining
+        * @example
+        * // set "walk" animation
+        * this.setCurrentAnimation("walk");
+        *
+        * // set "walk" animation if it is not the current animation
+        * if (this.isCurrentAnimation("walk")) {
+        *     this.setCurrentAnimation("walk");
+        * }
+        *
+        * // set "eat" animation, and switch to "walk" when complete
+        * this.setCurrentAnimation("eat", "walk");
+        *
+        * // set "die" animation, and remove the object when finished
+        * this.setCurrentAnimation("die", (function () {
+        *    me.game.world.removeChild(this);
+        *    return false; // do not reset to first frame
+        * }).bind(this));
+        *
+        * // set "attack" animation, and pause for a short duration
+        * this.setCurrentAnimation("die", (function () {
+        *    this.animationpause = true;
+        *
+        *    // back to "standing" animation after 1 second
+        *    setTimeout(function () {
+        *        this.setCurrentAnimation("standing");
+        *    }, 1000);
+        *
+        *    return false; // do not reset to first frame
+        * }).bind(this));
+        **/
+       setCurrentAnimation: function setCurrentAnimation(name, resetAnim, _preserve_dt) {
+         if (this.anim[name]) {
+           this.current.name = name;
+           this.current.length = this.anim[this.current.name].length;
+
+           if (typeof resetAnim === "string") {
+             this.resetAnim = this.setCurrentAnimation.bind(this, resetAnim, null, true);
+           } else if (typeof resetAnim === "function") {
+             this.resetAnim = resetAnim;
+           } else {
+             this.resetAnim = undefined;
+           }
+
+           this.setAnimationFrame(this.current.idx);
+
+           if (!_preserve_dt) {
+             this.dt = 0;
+           }
+
+           this.isDirty = true;
+         } else {
+           throw new Error("animation id '" + name + "' not defined");
+         }
+
+         return this;
+       },
+
+       /**
+        * reverse the given or current animation if none is specified
+        * @name reverseAnimation
+        * @memberOf me.Sprite.prototype
+        * @function
+        * @param {String} [name] animation id
+        * @return {me.Sprite} Reference to this object for method chaining
+        * @see me.Sprite#animationspeed
+        */
+       reverseAnimation: function reverseAnimation(name) {
+         if (typeof name !== "undefined" && typeof this.anim[name] !== "undefined") {
+           this.anim[name].frames.reverse();
+         } else {
+           this.anim[this.current.name].frames.reverse();
+         }
+
+         this.isDirty = true;
+         return this;
+       },
+
+       /**
+        * return true if the specified animation is the current one.
+        * @name isCurrentAnimation
+        * @memberOf me.Sprite.prototype
+        * @function
+        * @param {String} name animation id
+        * @return {Boolean}
+        * @example
+        * if (!this.isCurrentAnimation("walk")) {
+        *     // do something funny...
+        * }
+        */
+       isCurrentAnimation: function isCurrentAnimation(name) {
+         return this.current.name === name;
+       },
+
+       /**
+        * change the current texture atlas region for this sprite
+        * @see me.Texture.getRegion
+        * @name setRegion
+        * @memberOf me.Sprite.prototype
+        * @function
+        * @param {Object} region typically returned through me.Texture.getRegion()
+        * @return {me.Sprite} Reference to this object for method chaining
+        * @example
+        * // change the sprite to "shadedDark13.png";
+        * mySprite.setRegion(game.texture.getRegion("shadedDark13.png"));
+        */
+       setRegion: function setRegion(region) {
+         if (this.source !== null) {
+           // set the source texture for the given region
+           this.image = this.source.getTexture(region);
+         } // set the sprite offset within the texture
+
+
+         this.current.offset.setV(region.offset); // set angle if defined
+
+         this.current.angle = region.angle; // update the default "current" size
+
+         this.width = this.current.width = region.width;
+         this.height = this.current.height = region.height; // set global anchortPoint if defined
+
+         if (region.anchorPoint) {
+           this.anchorPoint.set(this._flip.x && region.trimmed === true ? 1 - region.anchorPoint.x : region.anchorPoint.x, this._flip.y && region.trimmed === true ? 1 - region.anchorPoint.y : region.anchorPoint.y);
+         }
+
+         this.isDirty = true;
+         return this;
+       },
+
+       /**
+        * force the current animation frame index.
+        * @name setAnimationFrame
+        * @memberOf me.Sprite.prototype
+        * @function
+        * @param {Number} [index=0] animation frame index
+        * @return {me.Sprite} Reference to this object for method chaining
+        * @example
+        * // reset the current animation to the first frame
+        * this.setAnimationFrame();
+        */
+       setAnimationFrame: function setAnimationFrame(idx) {
+         this.current.idx = (idx || 0) % this.current.length;
+         return this.setRegion(this.getAnimationFrameObjectByIndex(this.current.idx));
+       },
+
+       /**
+        * return the current animation frame index.
+        * @name getCurrentAnimationFrame
+        * @memberOf me.Sprite.prototype
+        * @function
+        * @return {Number} current animation frame index
+        */
+       getCurrentAnimationFrame: function getCurrentAnimationFrame() {
+         return this.current.idx;
+       },
+
+       /**
+        * Returns the frame object by the index.
+        * @name getAnimationFrameObjectByIndex
+        * @memberOf me.Sprite.prototype
+        * @function
+        * @private
+        * @return {Number} if using number indices. Returns {Object} containing frame data if using texture atlas
+        */
+       getAnimationFrameObjectByIndex: function getAnimationFrameObjectByIndex(id) {
+         return this.anim[this.current.name].frames[id];
+       },
+
+       /**
+        * @ignore
+        */
+       update: function update(dt) {
+         // Update animation if necessary
+         if (!this.animationpause && this.current && this.current.length > 0) {
+           var duration = this.getAnimationFrameObjectByIndex(this.current.idx).delay;
+           this.dt += dt;
+
+           while (this.dt >= duration) {
+             this.isDirty = true;
+             this.dt -= duration;
+             var nextFrame = this.current.length > 1 ? this.current.idx + 1 : this.current.idx;
+             this.setAnimationFrame(nextFrame); // Switch animation if we reach the end of the strip and a callback is defined
+
+             if (this.current.idx === 0 && typeof this.resetAnim === "function") {
+               // Otherwise is must be callable
+               if (this.resetAnim() === false) {
+                 // Reset to last frame
+                 this.setAnimationFrame(this.current.length - 1); // Bail early without skipping any more frames.
+
+                 this.dt %= duration;
+                 break;
+               }
+             } // Get next frame duration
+
+
+             duration = this.getAnimationFrameObjectByIndex(this.current.idx).delay;
+           }
+         } //update the "flickering" state if necessary
+
+
+         if (this._flicker.isFlickering) {
+           this._flicker.duration -= dt;
+
+           if (this._flicker.duration < 0) {
+             if (typeof this._flicker.callback === "function") {
+               this._flicker.callback();
+             }
+
+             this.flicker(-1);
+           }
+
+           this.isDirty = true;
+         }
+
+         return this.isDirty;
+       },
+
+       /**
+        * update the renderable's bounding rect (private)
+        * @ignore
+        * @name updateBoundsPos
+        * @memberOf me.Sprite.prototype
+        * @function
+        */
+       updateBoundsPos: function updateBoundsPos(newX, newY) {
+         var bounds = this.getBounds();
+         bounds.pos.set(newX - this.anchorPoint.x * bounds.width, newY - this.anchorPoint.y * bounds.height); // XXX: This is called from the constructor, before it gets an ancestor
+
+         if (this.ancestor instanceof me.Container && !this.floating) {
+           bounds.pos.add(this.ancestor._absPos);
+         }
+
+         return bounds;
+       },
+
+       /**
+        * called when the anchor point value is changed
+        * @private
+        * @name onAnchorUpdate
+        * @memberOf me.Sprite.prototype
+        * @function
+        */
+       onAnchorUpdate: function onAnchorUpdate(newX, newY) {
+         // since the callback is called before setting the new value
+         // manually update the anchor point (required for updateBoundsPos)
+         this.anchorPoint.setMuted(newX, newY); // then call updateBouds
+
+         this.updateBoundsPos(this.pos.x, this.pos.y);
+       },
+
+       /**
+        * Destroy function<br>
+        * @ignore
+        */
+       destroy: function destroy() {
+         me.pool.push(this.offset);
+         this.offset = undefined;
+
+         this._super(me.Renderable, "destroy");
+       },
+
+       /**
+        * @ignore
+        */
+       draw: function draw(renderer) {
+         // do nothing if we are flickering
+         if (this._flicker.isFlickering) {
+           this._flicker.state = !this._flicker.state;
+
+           if (!this._flicker.state) {
+             return;
+           }
+         } // the frame to draw
+
+
+         var frame = this.current; // cache the current position and size
+
+         var xpos = this.pos.x,
+             ypos = this.pos.y;
+         var w = frame.width,
+             h = frame.height; // frame offset in the texture/atlas
+
+         var frame_offset = frame.offset;
+         var g_offset = this.offset; // remove image's TexturePacker/ShoeBox rotation
+
+         if (frame.angle !== 0) {
+           renderer.translate(-xpos, -ypos);
+           renderer.rotate(frame.angle);
+           xpos -= h;
+           w = frame.height;
+           h = frame.width;
+         }
+
+         renderer.drawImage(this.image, g_offset.x + frame_offset.x, // sx
+         g_offset.y + frame_offset.y, // sy
+         w, h, // sw,sh
+         xpos, ypos, // dx,dy
+         w, h // dw,dh
+         );
+       }
+     });
+   })();
+
+   (function () {
+     /**
+      * GUI Object<br>
+      * A very basic object to manage GUI elements <br>
+      * The object simply register on the "pointerdown" <br>
+      * or "touchstart" event and call the onClick function"
+      * @class
+      * @extends me.Sprite
+      * @memberOf me
+      * @constructor
+      * @param {Number} x the x coordinate of the GUI Object
+      * @param {Number} y the y coordinate of the GUI Object
+      * @param {Object} settings See {@link me.Sprite}
+      * @example
+      *
+      * // create a basic GUI Object
+      * var myButton = me.GUI_Object.extend(
+      * {
+      *    init:function (x, y)
+      *    {
+      *       var settings = {}
+      *       settings.image = "button";
+      *       settings.framewidth = 100;
+      *       settings.frameheight = 50;
+      *       // super constructor
+      *       this._super(me.GUI_Object, "init", [x, y, settings]);
+      *       // define the object z order
+      *       this.pos.z = 4;
+      *    },
+      *
+      *    // output something in the console
+      *    // when the object is clicked
+      *    onClick:function (event)
+      *    {
+      *       console.log("clicked!");
+      *       // don't propagate the event
+      *       return false;
+      *    }
+      * });
+      *
+      * // add the object at pos (10,10)
+      * me.game.world.addChild(new myButton(10,10));
+      *
+      */
+     me.GUI_Object = me.Sprite.extend({
+       /**
+        * @ignore
+        */
+       init: function init(x, y, settings) {
+         /**
+          * object can be clicked or not
+          * @public
+          * @type boolean
+          * @default true
+          * @name me.GUI_Object#isClickable
+          */
+         this.isClickable = true;
+         /**
+          * Tap and hold threshold timeout in ms
+          * @type {number}
+          * @default 250
+          * @name me.GUI_Object#holdThreshold
+          */
+
+         this.holdThreshold = 250;
+         /**
+          * object can be tap and hold
+          * @public
+          * @type boolean
+          * @default false
+          * @name me.GUI_Object#isHoldable
+          */
+
+         this.isHoldable = false;
+         /**
+          * true if the pointer is over the object
+          * @public
+          * @type boolean
+          * @default false
+          * @name me.GUI_Object#hover
+          */
+
+         this.hover = false; // object has been updated (clicked,etc..)
+
+         this.holdTimeout = null;
+         this.updated = false;
+         this.released = true; // call the parent constructor
+
+         this._super(me.Sprite, "init", [x, y, settings]); // GUI items use screen coordinates
+
+
+         this.floating = true; // enable event detection
+
+         this.isKinematic = false;
+       },
+
+       /**
+        * return true if the object has been clicked
+        * @ignore
+        */
+       update: function update(dt) {
+         // call the parent constructor
+         var updated = this._super(me.Sprite, "update", [dt]); // check if the button was updated
+
+
+         if (this.updated) {
+           // clear the flag
+           if (!this.released) {
+             this.updated = false;
+           }
+
+           return true;
+         } // else only return true/false based on the parent function
+
+
+         return updated;
+       },
+
+       /**
+        * function callback for the pointerdown event
+        * @ignore
+        */
+       clicked: function clicked(event) {
+         // Check if left mouse button is pressed
+         if (event.button === 0 && this.isClickable) {
+           this.updated = true;
+           this.released = false;
+
+           if (this.isHoldable) {
+             if (this.holdTimeout !== null) {
+               me.timer.clearTimeout(this.holdTimeout);
+             }
+
+             this.holdTimeout = me.timer.setTimeout(this.hold.bind(this), this.holdThreshold, false);
+             this.released = false;
+           }
+
+           return this.onClick.call(this, event);
+         }
+       },
+
+       /**
+        * function called when the object is pressed <br>
+        * to be extended <br>
+        * return false if we need to stop propagating the event
+        * @name onClick
+        * @memberOf me.GUI_Object.prototype
+        * @public
+        * @function
+        * @param {Event} event the event object
+        */
+       onClick: function onClick()
+       /* event */
+       {
+         return false;
+       },
+
+       /**
+        * function callback for the pointerEnter event
+        * @ignore
+        */
+       enter: function enter(event) {
+         this.hover = true;
+         return this.onOver.call(this, event);
+       },
+
+       /**
+        * function called when the pointer is over the object
+        * @name onOver
+        * @memberOf me.GUI_Object.prototype
+        * @public
+        * @function
+        * @param {Event} event the event object
+        */
+       onOver: function onOver()
+       /* event */
+       {},
+
+       /**
+        * function callback for the pointerLeave event
+        * @ignore
+        */
+       leave: function leave(event) {
+         this.hover = false;
+         this.release.call(this, event);
+         return this.onOut.call(this, event);
+       },
+
+       /**
+        * function called when the pointer is leaving the object area
+        * @name onOut
+        * @memberOf me.GUI_Object.prototype
+        * @public
+        * @function
+        * @param {Event} event the event object
+        */
+       onOut: function onOut()
+       /* event */
+       {},
+
+       /**
+        * function callback for the pointerup event
+        * @ignore
+        */
+       release: function release(event) {
+         if (this.released === false) {
+           this.released = true;
+           me.timer.clearTimeout(this.holdTimeout);
+           return this.onRelease.call(this, event);
+         }
+       },
+
+       /**
+        * function called when the object is pressed and released <br>
+        * to be extended <br>
+        * return false if we need to stop propagating the event
+        * @name onRelease
+        * @memberOf me.GUI_Object.prototype
+        * @public
+        * @function
+        * @param {Event} event the event object
+        */
+       onRelease: function onRelease() {
+         return false;
+       },
+
+       /**
+        * function callback for the tap and hold timer event
+        * @ignore
+        */
+       hold: function hold() {
+         me.timer.clearTimeout(this.holdTimeout);
+
+         if (!this.released) {
+           this.onHold.call(this);
+         }
+       },
+
+       /**
+        * function called when the object is pressed and held<br>
+        * to be extended <br>
+        * @name onHold
+        * @memberOf me.GUI_Object.prototype
+        * @public
+        * @function
+        */
+       onHold: function onHold() {},
+
+       /**
+        * function called when added to the game world or a container
+        * @ignore
+        */
+       onActivateEvent: function onActivateEvent() {
+         // register pointer events
+         me.input.registerPointerEvent("pointerdown", this, this.clicked.bind(this));
+         me.input.registerPointerEvent("pointerup", this, this.release.bind(this));
+         me.input.registerPointerEvent("pointercancel", this, this.release.bind(this));
+         me.input.registerPointerEvent("pointerenter", this, this.enter.bind(this));
+         me.input.registerPointerEvent("pointerleave", this, this.leave.bind(this));
+       },
+
+       /**
+        * function called when removed from the game world or a container
+        * @ignore
+        */
+       onDeactivateEvent: function onDeactivateEvent() {
+         // release pointer events
+         me.input.releasePointerEvent("pointerdown", this);
+         me.input.releasePointerEvent("pointerup", this);
+         me.input.releasePointerEvent("pointercancel", this);
+         me.input.releasePointerEvent("pointerenter", this);
+         me.input.releasePointerEvent("pointerleave", this);
+         me.timer.clearTimeout(this.holdTimeout);
+       }
+     });
+   })();
+
+   (function () {
+     /**
+      * Private function to re-use for object removal in a defer
+      * @ignore
+      */
+     var deferredRemove = function deferredRemove(child, keepalive) {
+       this.removeChildNow(child, keepalive);
+     };
+
+     var globalFloatingCounter = 0;
+     /**
+      * me.Container represents a collection of child objects
+      * @class
+      * @extends me.Renderable
+      * @memberOf me
+      * @constructor
+      * @param {Number} [x=0] position of the container (accessible via the inherited pos.x property)
+      * @param {Number} [y=0] position of the container (accessible via the inherited pos.y property)
+      * @param {Number} [w=me.game.viewport.width] width of the container
+      * @param {Number} [h=me.game.viewport.height] height of the container
+      */
+
+     me.Container = me.Renderable.extend({
+       /**
+        * @ignore
+        */
+       init: function init(x, y, width, height, root) {
+         /**
+          * keep track of pending sort
+          * @ignore
+          */
+         this.pendingSort = null; // call the _super constructor
+
+         this._super(me.Renderable, "init", [x || 0, y || 0, width || Infinity, height || Infinity]);
+         /**
+          * whether the container is the root of the scene
+          * @public
+          * @type Boolean
+          * @default false
+          * @name root
+          * @memberOf me.Container
+          */
+
+
+         this.root = root || false;
+         /**
+          * The array of children of this container.
+          * @ignore
+          */
+
+         this.children = [];
+         /**
+          * The property of the child object that should be used to sort on <br>
+          * value : "x", "y", "z"
+          * @public
+          * @type String
+          * @default me.game.sortOn
+          * @name sortOn
+          * @memberOf me.Container
+          */
+
+         this.sortOn = me.game.sortOn;
+         /**
+          * Specify if the children list should be automatically sorted when adding a new child
+          * @public
+          * @type Boolean
+          * @default true
+          * @name autoSort
+          * @memberOf me.Container
+          */
+
+         this.autoSort = true;
+         /**
+          * Specify if the children z index should automatically be managed by the parent container
+          * @public
+          * @type Boolean
+          * @default true
+          * @name autoDepth
+          * @memberOf me.Container
+          */
+
+         this.autoDepth = true;
+         /**
+          * Specify if the container draw operation should clip his children to its own bounds
+          * @public
+          * @type Boolean
+          * @default false
+          * @name clipping
+          * @memberOf me.Container
+          */
+
+         this.clipping = false;
+         /**
+          * a callback to be extended, triggered after a child has been added or removed
+          * @name onChildChange
+          * @memberOf me.Container#
+          * @function
+          * @param {Number} index added or removed child index
+          */
+
+         this.onChildChange = function ()
+         /* index */
+         {// to be extended
+         };
+         /**
+          * Used by the debug panel plugin
+          * @ignore
+          */
+
+
+         this.drawCount = 0;
+         /**
+          * The bounds that contains all its children
+          * @public
+          * @type me.Rect
+          * @name childBounds
+          * @memberOf me.Container#
+          */
+
+         this.childBounds = this.getBounds().clone(); // container self apply any defined transformation
+
+         this.autoTransform = true; // enable collision and event detection
+
+         this.isKinematic = false; // subscribe on the canvas resize event
+
+         if (this.root === true) {
+           // XXX: Workaround for not updating container child-bounds automatically (it's expensive!)
+           me.event.subscribe(me.event.CANVAS_ONRESIZE, this.updateChildBounds.bind(this));
+         }
+       },
+
+       /**
+        * reset the container, removing all childrens, and reseting transforms.
+        * @name reset
+        * @memberOf me.Container
+        * @function
+        */
+       reset: function reset() {
+         // cancel any sort operation
+         if (this.pendingSort) {
+           clearTimeout(this.pendingSort);
+           this.pendingSort = null;
+         } // delete all children
+
+
+         for (var i = this.children.length, obj; i >= 0; obj = this.children[--i]) {
+           // don't remove it if a persistent object
+           if (obj && !obj.isPersistent) {
+             this.removeChildNow(obj);
+           }
+         }
+
+         if (typeof this.currentTransform !== "undefined") {
+           // just reset some variables
+           this.currentTransform.identity();
+         }
+       },
+
+       /**
+        * Add a child to the container <br>
+        * if auto-sort is disable, the object will be appended at the bottom of the list.
+        * Adding a child to the container will automatically remove it from its other container.
+        * Meaning a child can only have one parent.  This is important if you add a renderable
+        * to a container then add it to the me.game.world container it will move it out of the
+        * orginal container.  Then when the me.game.world.reset() is called the renderable
+        * will not be in any container.
+        * @name addChild
+        * @memberOf me.Container.prototype
+        * @function
+        * @param {me.Renderable} child
+        * @param {number} [z] forces the z index of the child to the specified value
+        * @return {me.Renderable} the added child
+        */
+       addChild: function addChild(child, z) {
+         if (child.ancestor instanceof me.Container) {
+           child.ancestor.removeChildNow(child);
+         } else {
+           // only allocate a GUID if the object has no previous ancestor
+           // (e.g. move one child from one container to another)
+           if (child.isRenderable) {
+             // allocated a GUID value (use child.id as based index if defined)
+             child.GUID = me.utils.createGUID(child.id);
+           }
+         }
+
+         child.ancestor = this;
+         this.children.push(child); // set the child z value if required
+
+         if (typeof child.pos !== "undefined") {
+           if (typeof z === "number") {
+             child.pos.z = z;
+           } else if (this.autoDepth === true) {
+             child.pos.z = this.children.length;
+           }
+         }
+
+         if (this.autoSort === true) {
+           this.sort();
+         }
+
+         if (typeof child.onActivateEvent === "function" && this.isAttachedToRoot()) {
+           child.onActivateEvent();
+         } // force repaint in case this is a static non-animated object
+
+
+         if (this.isAttachedToRoot() === true) {
+           me.game.repaint();
+         }
+
+         this.onChildChange.call(this, this.children.length - 1);
+         return child;
+       },
+
+       /**
+        * Add a child to the container at the specified index<br>
+        * (the list won't be sorted after insertion)
+        * @name addChildAt
+        * @memberOf me.Container.prototype
+        * @function
+        * @param {me.Renderable} child
+        * @param {Number} index
+        * @return {me.Renderable} the added child
+        */
+       addChildAt: function addChildAt(child, index) {
+         if (index >= 0 && index < this.children.length) {
+           if (child.ancestor instanceof me.Container) {
+             child.ancestor.removeChildNow(child);
+           } else {
+             // only allocate a GUID if the object has no previous ancestor
+             // (e.g. move one child from one container to another)
+             if (child.isRenderable) {
+               // allocated a GUID value
+               child.GUID = me.utils.createGUID();
+             }
+           }
+
+           child.ancestor = this;
+           this.children.splice(index, 0, child);
+
+           if (typeof child.onActivateEvent === "function" && this.isAttachedToRoot()) {
+             child.onActivateEvent();
+           } // force repaint in case this is a static non-animated object
+
+
+           if (this.isAttachedToRoot() === true) {
+             me.game.repaint();
+           }
+
+           this.onChildChange.call(this, index);
+           return child;
+         } else {
+           throw new Error("Index (" + index + ") Out Of Bounds for addChildAt()");
+         }
+       },
+
+       /**
+        * The forEach() method executes a provided function once per child element. <br>
+        * callback is invoked with three arguments: <br>
+        *    - the element value <br>
+        *    - the element index <br>
+        *    - the array being traversed <br>
+        * @name forEach
+        * @memberOf me.Container.prototype
+        * @function
+        * @param {Function} callback
+        * @param {Object} [thisArg] value to use as this(i.e reference Object) when executing callback.
+        * @example
+        * // iterate through all children of the root container
+        * me.game.world.forEach(function (child) {
+        *    // do something with the child
+        * });
+        */
+       forEach: function forEach(callback, thisArg) {
+         var context = this,
+             i = 0;
+         var len = this.children.length;
+
+         if (typeof callback !== "function") {
+           throw new Error(callback + " is not a function");
+         }
+
+         if (arguments.length > 1) {
+           context = thisArg;
+         }
+
+         while (i < len) {
+           callback.call(context, this.children[i], i, this.children);
+           i++;
+         }
+       },
+
+       /**
+        * Swaps the position (z-index) of 2 children
+        * @name swapChildren
+        * @memberOf me.Container.prototype
+        * @function
+        * @param {me.Renderable} child
+        * @param {me.Renderable} child2
+        */
+       swapChildren: function swapChildren(child, child2) {
+         var index = this.getChildIndex(child);
+         var index2 = this.getChildIndex(child2);
+
+         if (index !== -1 && index2 !== -1) {
+           // swap z index
+           var _z = child.pos.z;
+           child.pos.z = child2.pos.z;
+           child2.pos.z = _z; // swap the positions..
+
+           this.children[index] = child2;
+           this.children[index2] = child;
+         } else {
+           throw new Error(child + " Both the supplied childs must be a child of the caller " + this);
+         }
+       },
+
+       /**
+        * Returns the Child at the specified index
+        * @name getChildAt
+        * @memberOf me.Container.prototype
+        * @function
+        * @param {Number} index
+        */
+       getChildAt: function getChildAt(index) {
+         if (index >= 0 && index < this.children.length) {
+           return this.children[index];
+         } else {
+           throw new Error("Index (" + index + ") Out Of Bounds for getChildAt()");
+         }
+       },
+
+       /**
+        * Returns the index of the given Child
+        * @name getChildIndex
+        * @memberOf me.Container.prototype
+        * @function
+        * @param {me.Renderable} child
+        */
+       getChildIndex: function getChildIndex(child) {
+         return this.children.indexOf(child);
+       },
+
+       /**
+        * Returns the next child within the container or undefined if none
+        * @name getNextChild
+        * @memberOf me.Container
+        * @function
+        * @param {me.Renderable} child
+        */
+       getNextChild: function getNextChild(child) {
+         var index = this.children.indexOf(child) - 1;
+
+         if (index >= 0 && index < this.children.length) {
+           return this.getChildAt(index);
+         }
+
+         return undefined;
+       },
+
+       /**
+        * Returns true if contains the specified Child
+        * @name hasChild
+        * @memberOf me.Container.prototype
+        * @function
+        * @param {me.Renderable} child
+        * @return {Boolean}
+        */
+       hasChild: function hasChild(child) {
+         return this === child.ancestor;
+       },
+
+       /**
+        * return the child corresponding to the given property and value.<br>
+        * note : avoid calling this function every frame since
+        * it parses the whole object tree each time
+        * @name getChildByProp
+        * @memberOf me.Container.prototype
+        * @public
+        * @function
+        * @param {String} prop Property name
+        * @param {String|RegExp|Number|Boolean} value Value of the property
+        * @return {me.Renderable[]} Array of childs
+        * @example
+        * // get the first child object called "mainPlayer" in a specific container :
+        * var ent = myContainer.getChildByProp("name", "mainPlayer");
+        *
+        * // or query the whole world :
+        * var ent = me.game.world.getChildByProp("name", "mainPlayer");
+        *
+        * // partial property matches are also allowed by using a RegExp.
+        * // the following matches "redCOIN", "bluecoin", "bagOfCoins", etc :
+        * var allCoins = me.game.world.getChildByProp("name", /coin/i);
+        *
+        * // searching for numbers or other data types :
+        * var zIndex10 = me.game.world.getChildByProp("z", 10);
+        * var inViewport = me.game.world.getChildByProp("inViewport", true);
+        */
+       getChildByProp: function getChildByProp(prop, value) {
+         var objList = [];
+
+         function compare(obj, prop) {
+           var v = obj[prop];
+
+           if (value instanceof RegExp && typeof v === "string") {
+             if (value.test(v)) {
+               objList.push(obj);
+             }
+           } else if (v === value) {
+             objList.push(obj);
+           }
+         }
+
+         for (var i = this.children.length - 1; i >= 0; i--) {
+           var obj = this.children[i];
+           compare(obj, prop);
+
+           if (obj instanceof me.Container) {
+             objList = objList.concat(obj.getChildByProp(prop, value));
+           }
+         }
+
+         return objList;
+       },
+
+       /**
+        * returns the list of childs with the specified class type
+        * @name getChildByType
+        * @memberOf me.Container.prototype
+        * @public
+        * @function
+        * @param {Object} class type
+        * @return {me.Renderable[]} Array of children
+        */
+       getChildByType: function getChildByType(_class) {
+         var objList = [];
+
+         for (var i = this.children.length - 1; i >= 0; i--) {
+           var obj = this.children[i];
+
+           if (obj instanceof _class) {
+             objList.push(obj);
+           }
+
+           if (obj instanceof me.Container) {
+             objList = objList.concat(obj.getChildByType(_class));
+           }
+         }
+
+         return objList;
+       },
+
+       /**
+        * returns the list of childs with the specified name<br>
+        * as defined in Tiled (Name field of the Object Properties)<br>
+        * note : avoid calling this function every frame since
+        * it parses the whole object list each time
+        * @name getChildByName
+        * @memberOf me.Container.prototype
+        * @public
+        * @function
+        * @param {String|RegExp|Number|Boolean} name entity name
+        * @return {me.Renderable[]} Array of children
+        */
+       getChildByName: function getChildByName(name) {
+         return this.getChildByProp("name", name);
+       },
+
+       /**
+        * return the child corresponding to the specified GUID<br>
+        * note : avoid calling this function every frame since
+        * it parses the whole object list each time
+        * @name getChildByGUID
+        * @memberOf me.Container.prototype
+        * @public
+        * @function
+        * @param {String|RegExp|Number|Boolean} GUID entity GUID
+        * @return {me.Renderable} corresponding child or null
+        */
+       getChildByGUID: function getChildByGUID(guid) {
+         var obj = this.getChildByProp("GUID", guid);
+         return obj.length > 0 ? obj[0] : null;
+       },
+
+       /**
+        * resizes the child bounds rectangle, based on children bounds.
+        * @name updateChildBounds
+        * @memberOf me.Container.prototype
+        * @function
+        * @return {me.Rect} updated child bounds
+        */
+       updateChildBounds: function updateChildBounds() {
+         this.childBounds.pos.set(Infinity, Infinity);
+         this.childBounds.resize(-Infinity, -Infinity);
+         var childBounds;
+
+         for (var i = this.children.length, child; i--, child = this.children[i];) {
+           if (child.isRenderable) {
+             if (child instanceof me.Container) {
+               childBounds = child.childBounds;
+             } else {
+               childBounds = child.getBounds();
+             } // TODO : returns an "empty" rect instead of null (e.g. EntityObject)
+             // TODO : getBounds should always return something anyway
+
+
+             if (childBounds !== null) {
+               this.childBounds.union(childBounds);
+             }
+           }
+         }
+
+         return this.childBounds;
+       },
+
+       /**
+        * Checks if this container is root or if it's attached to the root container.
+        * @private
+        * @name isAttachedToRoot
+        * @memberOf me.Container.prototype
+        * @function
+        * @returns Boolean
+        */
+       isAttachedToRoot: function isAttachedToRoot() {
+         if (this.root === true) {
+           return true;
+         } else {
+           var ancestor = this.ancestor;
+
+           while (ancestor) {
+             if (ancestor.root === true) {
+               return true;
+             }
+
+             ancestor = ancestor.ancestor;
+           }
+
+           return false;
+         }
+       },
+
+       /**
+        * update the renderable's bounding rect (private)
+        * @private
+        * @name updateBoundsPos
+        * @memberOf me.Container.prototype
+        * @function
+        */
+       updateBoundsPos: function updateBoundsPos(newX, newY) {
+         this._super(me.Renderable, "updateBoundsPos", [newX, newY]); // Update container's absolute position
+
+
+         this._absPos.set(newX, newY);
+
+         if (this.ancestor instanceof me.Container && !this.floating) {
+           this._absPos.add(this.ancestor._absPos);
+         } // Notify children that the parent's position has changed
+
+
+         for (var i = this.children.length, child; i--, child = this.children[i];) {
+           if (child.isRenderable) {
+             child.updateBoundsPos(child.pos.x, child.pos.y);
+           }
+         }
+
+         return this.getBounds();
+       },
+
+       /**
+        * @ignore
+        */
+       onActivateEvent: function onActivateEvent() {
+         for (var i = this.children.length, child; i--, child = this.children[i];) {
+           if (typeof child.onActivateEvent === "function") {
+             child.onActivateEvent();
+           }
+         }
+       },
+
+       /**
+        * Invokes the removeChildNow in a defer, to ensure the child is removed safely after the update & draw stack has completed
+        * @name removeChild
+        * @memberOf me.Container.prototype
+        * @public
+        * @function
+        * @param {me.Renderable} child
+        * @param {Boolean} [keepalive=False] True to prevent calling child.destroy()
+        */
+       removeChild: function removeChild(child, keepalive) {
+         if (this.hasChild(child)) {
+           me.utils["function"].defer(deferredRemove, this, child, keepalive);
+         } else {
+           throw new Error("Child is not mine.");
+         }
+       },
+
+       /**
+        * Removes (and optionally destroys) a child from the container.<br>
+        * (removal is immediate and unconditional)<br>
+        * Never use keepalive=true with objects from {@link me.pool}. Doing so will create a memory leak.
+        * @name removeChildNow
+        * @memberOf me.Container.prototype
+        * @function
+        * @param {me.Renderable} child
+        * @param {Boolean} [keepalive=False] True to prevent calling child.destroy()
+        */
+       removeChildNow: function removeChildNow(child, keepalive) {
+         if (this.hasChild(child) && this.getChildIndex(child) >= 0) {
+           if (typeof child.onDeactivateEvent === "function") {
+             child.onDeactivateEvent();
+           }
+
+           if (!keepalive) {
+             if (typeof child.destroy === "function") {
+               child.destroy();
+             }
+
+             me.pool.push(child);
+           } // Don't cache the child index; another element might have been removed
+           // by the child's `onDeactivateEvent` or `destroy` methods
+
+
+           var childIndex = this.getChildIndex(child);
+
+           if (childIndex >= 0) {
+             this.children.splice(childIndex, 1);
+             child.ancestor = undefined;
+           } // force repaint in case this is a static non-animated object
+
+
+           if (this.isAttachedToRoot() === true) {
+             me.game.repaint();
+           }
+
+           this.onChildChange.call(this, childIndex);
+         }
+       },
+
+       /**
+        * Automatically set the specified property of all childs to the given value
+        * @name setChildsProperty
+        * @memberOf me.Container.prototype
+        * @function
+        * @param {String} property property name
+        * @param {Object} value property value
+        * @param {Boolean} [recursive=false] recursively apply the value to child containers if true
+        */
+       setChildsProperty: function setChildsProperty(prop, val, recursive) {
+         for (var i = this.children.length; i >= 0; i--) {
+           var obj = this.children[i];
+
+           if (recursive === true && obj instanceof me.Container) {
+             obj.setChildsProperty(prop, val, recursive);
+           }
+
+           obj[prop] = val;
+         }
+       },
+
+       /**
+        * Move the child in the group one step forward (z depth).
+        * @name moveUp
+        * @memberOf me.Container.prototype
+        * @function
+        * @param {me.Renderable} child
+        */
+       moveUp: function moveUp(child) {
+         var childIndex = this.getChildIndex(child);
+
+         if (childIndex - 1 >= 0) {
+           // note : we use an inverted loop
+           this.swapChildren(child, this.getChildAt(childIndex - 1));
+         }
+       },
+
+       /**
+        * Move the child in the group one step backward (z depth).
+        * @name moveDown
+        * @memberOf me.Container.prototype
+        * @function
+        * @param {me.Renderable} child
+        */
+       moveDown: function moveDown(child) {
+         var childIndex = this.getChildIndex(child);
+
+         if (childIndex >= 0 && childIndex + 1 < this.children.length) {
+           // note : we use an inverted loop
+           this.swapChildren(child, this.getChildAt(childIndex + 1));
+         }
+       },
+
+       /**
+        * Move the specified child to the top(z depth).
+        * @name moveToTop
+        * @memberOf me.Container.prototype
+        * @function
+        * @param {me.Renderable} child
+        */
+       moveToTop: function moveToTop(child) {
+         var childIndex = this.getChildIndex(child);
+
+         if (childIndex > 0) {
+           // note : we use an inverted loop
+           this.children.splice(0, 0, this.children.splice(childIndex, 1)[0]); // increment our child z value based on the previous child depth
+
+           child.pos.z = this.children[1].pos.z + 1;
+         }
+       },
+
+       /**
+        * Move the specified child the bottom (z depth).
+        * @name moveToBottom
+        * @memberOf me.Container.prototype
+        * @function
+        * @param {me.Renderable} child
+        */
+       moveToBottom: function moveToBottom(child) {
+         var childIndex = this.getChildIndex(child);
+
+         if (childIndex >= 0 && childIndex < this.children.length - 1) {
+           // note : we use an inverted loop
+           this.children.splice(this.children.length - 1, 0, this.children.splice(childIndex, 1)[0]); // increment our child z value based on the next child depth
+
+           child.pos.z = this.children[this.children.length - 2].pos.z - 1;
+         }
+       },
+
+       /**
+        * Manually trigger the sort of all the childs in the container</p>
+        * @name sort
+        * @memberOf me.Container.prototype
+        * @public
+        * @function
+        * @param {Boolean} [recursive=false] recursively sort all containers if true
+        */
+       sort: function sort(recursive) {
+         // do nothing if there is already a pending sort
+         if (!this.pendingSort) {
+           if (recursive === true) {
+             // trigger other child container sort function (if any)
+             for (var i = this.children.length, obj; i--, obj = this.children[i];) {
+               if (obj instanceof me.Container) {
+                 // note : this will generate one defered sorting function
+                 // for each existing containe
+                 obj.sort(recursive);
+               }
+             }
+           }
+           /** @ignore */
+
+
+           this.pendingSort = me.utils["function"].defer(function (self) {
+             // sort everything in this container
+             self.children.sort(self["_sort" + self.sortOn.toUpperCase()]); // clear the defer id
+
+             self.pendingSort = null; // make sure we redraw everything
+
+             me.game.repaint();
+           }, this, this);
+         }
+       },
+
+       /**
+        * @ignore
+        */
+       onDeactivateEvent: function onDeactivateEvent() {
+         for (var i = this.children.length, child; i--, child = this.children[i];) {
+           if (typeof child.onDeactivateEvent === "function") {
+             child.onDeactivateEvent();
+           }
+         }
+       },
+
+       /**
+        * Z Sorting function
+        * @ignore
+        */
+       _sortZ: function _sortZ(a, b) {
+         return b.pos && a.pos ? b.pos.z - a.pos.z : a.pos ? -Infinity : Infinity;
+       },
+
+       /**
+        * Reverse Z Sorting function
+        * @ignore
+        */
+       _sortReverseZ: function _sortReverseZ(a, b) {
+         return a.pos && b.pos ? a.pos.z - b.pos.z : a.pos ? Infinity : -Infinity;
+       },
+
+       /**
+        * X Sorting function
+        * @ignore
+        */
+       _sortX: function _sortX(a, b) {
+         if (!b.pos || !a.pos) {
+           return a.pos ? -Infinity : Infinity;
+         }
+
+         var result = b.pos.z - a.pos.z;
+         return result ? result : b.pos.x - a.pos.x;
+       },
+
+       /**
+        * Y Sorting function
+        * @ignore
+        */
+       _sortY: function _sortY(a, b) {
+         if (!b.pos || !a.pos) {
+           return a.pos ? -Infinity : Infinity;
+         }
+
+         var result = b.pos.z - a.pos.z;
+         return result ? result : b.pos.y - a.pos.y;
+       },
+
+       /**
+        * Destroy function<br>
+        * @ignore
+        */
+       destroy: function destroy() {
+         // empty the container
+         this.reset(); // call the parent destroy method
+
+         this._super(me.Renderable, "destroy", arguments);
+       },
+
+       /**
+        * @ignore
+        */
+       update: function update(dt) {
+         this._super(me.Renderable, "update", [dt]);
+
+         var isDirty = false;
+         var isFloating = false;
+         var isPaused = me.state.isPaused(); // Update container's absolute position
+
+         this._absPos.setV(this.pos);
+
+         if (this.ancestor) {
+           this._absPos.add(this.ancestor._absPos);
+         }
+
+         for (var i = this.children.length, obj; i--, obj = this.children[i];) {
+           if (isPaused && !obj.updateWhenPaused) {
+             // skip this object
+             continue;
+           }
+
+           if (obj.isRenderable) {
+             isFloating = globalFloatingCounter > 0 || obj.floating;
+
+             if (isFloating) {
+               globalFloatingCounter++;
+             } // check if object is in any active cameras
+
+
+             obj.inViewport = false; // iterate through all cameras
+
+             me.state.current().cameras.forEach(function (camera) {
+               if (camera.isVisible(obj, isFloating)) {
+                 obj.inViewport = true;
+               }
+             }); // update our object
+
+             isDirty = (obj.inViewport || obj.alwaysUpdate) && obj.update(dt) || isDirty; // Update child's absolute position
+
+             obj._absPos.setV(this._absPos).add(obj.pos);
+
+             if (globalFloatingCounter > 0) {
+               globalFloatingCounter--;
+             }
+           } else {
+             // just directly call update() for non renderable object
+             isDirty = obj.update(dt) || isDirty;
+           }
+         }
+
+         return isDirty;
+       },
+
+       /**
+        * @ignore
+        */
+       draw: function draw(renderer, rect) {
+         var isFloating = false;
+         this.drawCount = 0; // clip the containter children to the container bounds
+
+         if (this.root === false && this.clipping === true && this.childBounds.isFinite() === true) {
+           renderer.clipRect(this.childBounds.pos.x, this.childBounds.pos.y, this.childBounds.width, this.childBounds.height);
+         } // adjust position if required (e.g. canvas/window centering)
+
+
+         renderer.translate(this.pos.x, this.pos.y);
+
+         for (var i = this.children.length, obj; i--, obj = this.children[i];) {
+           if (obj.isRenderable) {
+             isFloating = obj.floating === true;
+
+             if (obj.inViewport || isFloating) {
+               if (isFloating) {
+                 // translate to screen coordinates
+                 renderer.save();
+                 renderer.resetTransform();
+               } // predraw (apply transforms)
+
+
+               obj.preDraw(renderer); // draw the object
+
+               obj.draw(renderer, rect); // postdraw (clean-up);
+
+               obj.postDraw(renderer); // restore the previous "state"
+
+               if (isFloating) {
+                 renderer.restore();
+               }
+
+               this.drawCount++;
+             }
+           }
+         }
+       }
+     });
+   })();
+
+   (function () {
+     /**
       * a Generic Body Object with some physic properties and behavior functionality<br>
       The body object is offten attached as a member of an Entity.  The Body object can handle movements of the parent with
       the body.update call.  It important to know that when body.update is called there are several things that happen related to
@@ -7506,12 +11508,12 @@
       to calcuate a new velocity and 2) the parent position is updated by adding this to the parent.pos (position me.Vector2d)
       value. Thus Affecting the movement of the parent.  Look at the source code for /src/physics/body.js:update (me.Body.update) for
       a better understanding.
-        * @class
+      * @class
       * @extends me.Rect
       * @memberOf me
       * @constructor
       * @param {me.Renderable} ancestor the parent object this body is attached to
-      * @param {me.Rect[]|me.Polygon[]|me.Line[]|me.Ellipse[]} [shapes] the initial list of shapes
+      * @param {me.Rect|me.Rect[]|me.Polygon|me.Polygon[]|me.Line|me.Line[]|me.Ellipse|me.Ellipse[]|Object} [shapes] a initial shape, list of shapes, or JSON object defining the body
       * @param {Function} [onBodyUpdate] callback for when the body is updated (e.g. add/remove shapes)
       */
      me.Body = me.Rect.extend({
@@ -7529,7 +11531,7 @@
           */
          this.ancestor = parent;
          /**
-          * The collision shapes of the body <br>
+          * The collision shapes of the body
           * @ignore
           * @type {me.Polygon[]|me.Line[]|me.Ellipse[]}
           * @name shapes
@@ -7685,21 +11687,52 @@
          /**
           * Default gravity value for this body.
           * To be set to to < 0, 0 > for RPG, shooter, etc...<br>
-          * Note: y axis gravity can also globally be defined through me.sys.gravity
           * @public
-          * @see me.sys.gravity
+          * @see me.Body.gravityScale
           * @type me.Vector2d
           * @default <0,0.98>
-          * @default
+          * @deprecated since 8.0.0
           * @name gravity
           * @memberOf me.Body
           */
 
          if (typeof this.gravity === "undefined") {
-           this.gravity = new me.Vector2d();
-         }
+           var self = this;
+           this.gravity = new me.ObservableVector2d(0, 0, {
+             onUpdate: function onUpdate(x, y) {
+               // disable gravity or apply a scale if y gravity is different from 0
+               if (typeof y === "number") {
+                 self.gravityScale = y / me.game.world.gravity.y;
+               } // deprecation // WARNING:
 
-         this.gravity.set(0, typeof me.sys.gravity === "number" ? me.sys.gravity : 0.98);
+
+               console.log("me.Body.gravity is deprecated, " + "please see me.Body.gravityScale " + "to modify gravity for a specific body");
+             }
+           });
+         }
+         /**
+          * The degree to which this body is affected by the world gravity
+          * @public
+          * @see me.World.gravity
+          * @type Number
+          * @default 1.0
+          * @name gravityScale
+          * @memberOf me.Body
+          */
+
+
+         this.gravityScale = 1.0;
+         /**
+          * If true this body won't be affected by the world gravity
+          * @public
+          * @see me.World.gravity
+          * @type Boolean
+          * @default false
+          * @name ignoreGravity
+          * @memberOf me.Body
+          */
+
+         this.ignoreGravity = false;
          /**
           * falling state of the body<br>
           * true if the object is falling<br>
@@ -7733,13 +11766,20 @@
          } // parses the given shapes array and add them
 
 
-         if (Array.isArray(shapes)) {
-           for (var s = 0; s < shapes.length; s++) {
-             this.addShape(shapes[s], true);
-           }
+         if (typeof shapes !== "undefined") {
+           if (Array.isArray(shapes)) {
+             for (var s = 0; s < shapes.length; s++) {
+               this.addShape(shapes[s], true);
+             }
 
-           this.updateBounds();
-         }
+             this.updateBounds();
+           } else {
+             this.addShape(shapes);
+           }
+         } // automatically enable physic when a body is added to a renderable
+
+
+         this.ancestor.isKinematic = false;
        },
 
        /**
@@ -7749,16 +11789,24 @@
         * @memberOf me.Body
         * @public
         * @function
-        * @param {me.Rect|me.Polygon|me.Line|me.Ellipse} shape a shape object
+        * @param {me.Rect|me.Polygon|me.Line|me.Ellipse|Object} shape a shape or JSON object
         * @param {Boolean} batchInsert if true the body bounds won't be updated after adding a shape
         * @return {Number} the shape array length
+        * @example
+        * // add a rectangle shape
+        * this.body.addShape(new me.Rect(0, 0, image.width, image.height));
+        * // add a shape from a JSON object
+        * this.body.addShape(me.loader.getJSON("shapesdef").banana);
         */
        addShape: function addShape(shape, batchInsert) {
          if (shape instanceof me.Rect) {
            this.shapes.push(shape.toPolygon());
-         } else {
+         } else if (shape instanceof me.Polygon || shape instanceof me.Ellipse) {
            // else polygon or circle
            this.shapes.push(shape);
+         } else {
+           // JSON object
+           this.fromJSON(shape);
          }
 
          if (batchInsert !== true) {
@@ -7771,85 +11819,74 @@
        },
 
        /**
-        * add collision mesh based on a given Physics Editor JSON object.
-        * (this will also apply any physic properties defined in the given JSON file)
-        * @name addShapesFromJSON
+        * sets the body shape vertices
+        * @name setVertices
         * @memberOf me.Body
         * @public
         * @function
-        * @param {Object} json a JSON object as exported from the a Physics Editor tool
-        * @param {String} id the shape identifier within the given the json object
-        * @param {String} [scale=1] the desired scale of the body (physic-body-editor only)
-        * @see https://www.codeandweb.com/physicseditor
-        * @return {Number} the shape array length
-        * @example
-        * this.body.addShapesFromJSON(me.loader.getJSON("shapesdef1"), settings.banana);
+        * @param {me.Vector2d[]} vertices an array of me.Vector2d points defining a convex hull
+        * @param {Number} [index=0] the shape object for which to set the vertices
         */
-       addShapesFromJSON: function addShapesFromJSON(json, id, scale) {
-         var data;
-         scale = scale || 1; // identify the json format
+       setVertices: function setVertices(vertices, index, batchInsert) {
+         var polygon = this.getShape(index);
 
-         if (typeof json.rigidBodies === "undefined") {
-           // Physic Editor Format (https://www.codeandweb.com/physicseditor)
-           data = json[id];
-
-           if (typeof data === "undefined") {
-             throw new Error("Identifier (" + id + ") undefined for the given PhysicsEditor JSON object)");
-           }
-
-           if (data.length) {
-             // go through all shapes and add them to the body
-             for (var i = 0; i < data.length; i++) {
-               var points = [];
-
-               for (var s = 0; s < data[i].shape.length; s += 2) {
-                 points.push(new me.Vector2d(data[i].shape[s], data[i].shape[s + 1]));
-               }
-
-               this.addShape(new me.Polygon(0, 0, points), true);
-             } // apply density, friction and bounce properties from the first shape
-             // Note : how to manage different mass or friction for all different shapes?
-
-
-             this.mass = data[0].density || 0;
-             this.friction.set(data[0].friction || 0, data[0].friction || 0);
-             this.bounce = data[0].bounce || 0;
-           }
+         if (polygon instanceof me.Polygon) {
+           polygon.setShape(0, 0, vertices);
          } else {
-           // Physic Body Editor Format (http://www.aurelienribon.com/blog/projects/physics-body-editor/)
-           json.rigidBodies.forEach(function (shape) {
-             if (shape.name === id) {
-               data = shape; // how to stop a forEach loop?
-             }
-           });
+           // this will replace any other non polygon shape type if defined
+           this.shapes[index || 0] = new me.Polygon(0, 0, vertices);
+         }
 
-           if (typeof data === "undefined") {
-             throw new Error("Identifier (" + id + ") undefined for the given PhysicsEditor JSON object)");
-           } // shapes origin point
-           // top-left origin in the editor is (0,1)
+         if (batchInsert !== true) {
+           // update the body bounds to take in account the new vertices
+           this.updateBounds();
+         }
+       },
+
+       /**
+        * add collision mesh based on a JSON object
+        * (this will also apply any physic properties defined in the given JSON file)
+        * @name fromJSON
+        * @memberOf me.Body
+        * @public
+        * @function
+        * @param {Object} json a JSON object as exported from a Physics Editor tool
+        * @param {String} [id] an optional shape identifier within the given the json object
+        * @see https://www.codeandweb.com/physicseditor
+        * @return {Number} how many shapes were added to the body
+        * @example
+        * // define the body based on the banana shape
+        * this.body.fromJSON(me.loader.getJSON("shapesdef").banana);
+        * // or ...
+        * this.body.fromJSON(me.loader.getJSON("shapesdef"), "banana");
+        */
+       fromJSON: function fromJSON(json, id) {
+         var data = json;
+
+         if (typeof id !== "undefined") {
+           json[id];
+         } // Physic Editor Format (https://www.codeandweb.com/physicseditor)
 
 
-           this.pos.set(data.origin.x, 1.0 - data.origin.y).scale(scale);
-           var self = this; // parse all polygons
+         if (typeof data === "undefined") {
+           throw new Error("Identifier (" + id + ") undefined for the given JSON object)");
+         }
 
-           data.polygons.forEach(function (poly) {
-             var points = [];
-             poly.forEach(function (point) {
-               // top-left origin in the editor is (0,1)
-               points.push(new me.Vector2d(point.x, 1.0 - point.y).scale(scale));
-             });
-             self.addShape(new me.Polygon(0, 0, points), true);
-           }); // parse all circles
-
-           data.circles.forEach(function (circle) {
-             self.addShape(new me.Ellipse(circle.cx * scale, (1.0 - circle.cy) * scale, circle.r * 2 * scale, circle.r * 2 * scale), true);
-           });
-         } // update the body bounds to take in account the added shapes
+         if (data.length) {
+           // go through all shapes and add them to the body
+           for (var i = 0; i < data.length; i++) {
+             this.setVertices(data[i].shape, i);
+           } // apply density, friction and bounce properties from the first shape
+           // Note : how to manage different mass or friction for all different shapes?
 
 
-         this.updateBounds(); // return the length of the shape list
+           this.mass = data[0].density || 0;
+           this.friction.set(data[0].friction || 0, data[0].friction || 0);
+           this.bounce = data[0].bounce || 0;
+         } // return the amount of shapes added to the body
 
-         return this.shapes.length;
+
+         return data.length;
        },
 
        /**
@@ -7947,7 +11984,7 @@
            } // cancel the falling an jumping flags if necessary
 
 
-           var dir = Math.sign(this.gravity.y) || 1;
+           var dir = Math.sign(me.game.world.gravity.y * this.gravityScale) || 1;
            this.falling = overlap.y >= dir;
            this.jumping = overlap.y <= -dir;
          }
@@ -7972,13 +12009,36 @@
            for (var i = 1; i < this.shapes.length; i++) {
              this.union(this.shapes[i].getBounds());
            }
-         } // trigger the onBodyChange
+         }
+
+         this._super(me.Rect, "updateBounds"); // trigger the onBodyChange
 
 
          if (typeof this.onBodyUpdate === "function") {
            this.onBodyUpdate(this);
          }
 
+         return this;
+       },
+
+       /**
+        * Rotate this body (counter-clockwise) by the specified angle (in radians).
+        * Unless specified the body will be rotated around its center point
+        * @name rotate
+        * @memberOf me.Body
+        * @function
+        * @param {Number} angle The angle to rotate (in radians)
+        * @param {me.Vector2d|me.ObservableVector2d} [v] an optional point to rotate around
+        * @return {me.Body} Reference to this object for method chaining
+        */
+       rotate: function rotate(angle, v) {
+         v = v || this.center;
+
+         for (var i = 0; i < this.shapes.length; i++) {
+           this.shapes[i].rotate(angle, v);
+         }
+
+         this.updateBounds();
          return this;
        },
 
@@ -8063,17 +12123,15 @@
 
          if (this.friction.x || this.friction.y) {
            this.applyFriction(vel);
-         } // apply gravity if defined
-
-
-         if (this.gravity.x) {
-           vel.x += this.gravity.x * this.mass * me.timer.tick;
          }
 
-         if (this.gravity.y) {
-           vel.y += this.gravity.y * this.mass * me.timer.tick; // check if falling / jumping
+         if (!this.ignoreGravity) {
+           var worldGravity = me.game.world.gravity; // apply gravity if defined
 
-           this.falling = vel.y * Math.sign(this.gravity.y) > 0;
+           vel.x += worldGravity.x * this.gravityScale * this.mass * me.timer.tick;
+           vel.y += worldGravity.y * this.gravityScale * this.mass * me.timer.tick; // check if falling / jumping
+
+           this.falling = vel.y * Math.sign(worldGravity.y * this.gravityScale) > 0;
            this.jumping = this.falling ? false : this.jumping;
          } // cap velocity
 
@@ -8714,14 +12772,16 @@
         */
 
        /**
-        * the world quadtree used for the collision broadphase
-        * @name quadTree
+        * The maximum number of children that a quadtree node can contain before it is split into sub-nodes.
+        * @name maxChildren
         * @memberOf me.collision
         * @public
-        * @type {me.QuadTree}
+        * @type {Number}
+        * @default 8
+        * @see me.game.world.broadphase
         */
 
-       api.quadTree = null;
+       api.maxChildren = 8;
        /**
         * The maximum number of levels that the quadtree will create.
         * @name maxDepth
@@ -8729,31 +12789,11 @@
         * @public
         * @type {Number}
         * @default 4
-        * @see me.collision.quadTree
+        * @see me.game.world.broadphase
         *
         */
 
        api.maxDepth = 4;
-       /**
-        * The maximum number of children that a quadtree node can contain before it is split into sub-nodes.
-        * @name maxChildren
-        * @memberOf me.collision
-        * @public
-        * @type {Number}
-        * @default 8
-        * @see me.collision.quadTree
-        */
-
-       api.maxChildren = 8;
-       /**
-        * bounds of the physic world.
-        * @name bounds
-        * @memberOf me.collision
-        * @public
-        * @type {me.Rect}
-        */
-
-       api.bounds = null;
        /**
         * Enum for collision type values.
         * @property NO_OBJECT to disable collision check
@@ -8821,24 +12861,6 @@
 
        };
        /**
-        * Initialize the collision/physic world
-        * @ignore
-        */
-
-       api.init = function () {
-         // default bounds to the game world size
-         api.bounds = me.game.world.getBounds().clone(); // initializa the quadtree
-
-         api.quadTree = new me.QuadTree(api.bounds, api.maxChildren, api.maxDepth); // reset the collision detection engine if a new level is loaded
-
-         me.event.subscribe(me.event.LEVEL_LOADED, function () {
-           // align default bounds to the game world bounds
-           api.bounds.copy(me.game.world.getBounds()); // reset the quadtree
-
-           api.quadTree.clear(api.bounds);
-         });
-       };
-       /**
         * An object representing the result of an intersection.
         * @property {me.Renderable} a The first object participating in the intersection
         * @property {me.Renderable} b The second object participating in the intersection
@@ -8855,7 +12877,6 @@
         * @type {Object}
         * @see me.collision.check
         */
-
 
        api.ResponseObject = function () {
          this.a = null;
@@ -8952,7 +12973,7 @@
          var collision = 0;
          var response = responseObject || api.response; // retreive a list of potential colliding objects
 
-         var candidates = api.quadTree.retrieve(objA);
+         var candidates = me.game.world.broadphase.retrieve(objA);
 
          for (var i = candidates.length, objB; i--, objB = candidates[i];) {
            // check if both objects "should" collide
@@ -9039,7 +13060,7 @@
          var collision = 0;
          var result = resultArray || []; // retrieve a list of potential colliding objects
 
-         var candidates = api.quadTree.retrieve(line.getBounds());
+         var candidates = me.game.world.broadphase.retrieve(line.getBounds());
 
          for (var i = candidates.length, objB; i--, objB = candidates[i];) {
            // fast AABB check if both bounding boxes are overlaping
@@ -9384,2123 +13405,9 @@
 
    (function () {
      /**
-      * A base class for renderable objects.
+      * an object representing the physic world, and responsible for managing and updating all childs and physics
       * @class
-      * @extends me.Rect
-      * @memberOf me
-      * @constructor
-      * @param {Number} x position of the renderable object (accessible through inherited pos.x property)
-      * @param {Number} y position of the renderable object (accessible through inherited pos.y property)
-      * @param {Number} width object width
-      * @param {Number} height object height
-      */
-     me.Renderable = me.Rect.extend({
-       /**
-        * @ignore
-        */
-       init: function init(x, y, width, height) {
-         /**
-          * to identify the object as a renderable object
-          * @ignore
-          */
-         this.isRenderable = true;
-         /**
-          * If true then physic collision and input events will not impact this renderable
-          * @public
-          * @type Boolean
-          * @default true
-          * @name isKinematic
-          * @memberOf me.Renderable
-          */
-
-         this.isKinematic = true;
-         /**
-          * the renderable physic body
-          * @public
-          * @type {me.Body}
-          * @see me.Body
-          * @see me.collision.check
-          * @name body
-          * @memberOf me.Renderable#
-          * @example
-          *  // define a new Player Class
-          *  game.PlayerEntity = me.Sprite.extend({
-          *      // constructor
-          *      init:function (x, y, settings) {
-          *          // call the parent constructor
-          *          this._super(me.Sprite, 'init', [x, y , settings]);
-          *
-          *          // define a basic walking animation
-          *          this.addAnimation("walk",  [...]);
-          *          // define a standing animation (using the first frame)
-          *          this.addAnimation("stand",  [...]);
-          *          // set the standing animation as default
-          *          this.setCurrentAnimation("stand");
-          *
-          *          // add a physic body
-          *          this.body = new me.Body(this);
-          *          // add a default collision shape
-          *          this.body.addShape(new me.Rect(0, 0, this.width, this.height));
-          *          // configure max speed and friction
-          *          this.body.setMaxVelocity(3, 15);
-          *          this.body.setFriction(0.4, 0);
-          *
-          *          // enable physic collision (off by default for basic me.Renderable)
-          *          this.isKinematic = false;
-          *
-          *          // set the display to follow our position on both axis
-          *          me.game.viewport.follow(this.pos, me.game.viewport.AXIS.BOTH);
-          *      },
-          *
-          *      ...
-          *
-          * }
-          */
-
-         this.body = undefined;
-         /**
-          * the renderable default transformation matrix
-          * @public
-          * @type me.Matrix2d
-          * @name currentTransform
-          * @memberOf me.Renderable#
-          */
-
-         if (typeof this.currentTransform === "undefined") {
-           this.currentTransform = me.pool.pull("me.Matrix2d");
-         }
-
-         this.currentTransform.identity();
-         /**
-          * (G)ame (U)nique (Id)entifier" <br>
-          * a GUID will be allocated for any renderable object added <br>
-          * to an object container (including the `me.game.world` container)
-          * @public
-          * @type String
-          * @name GUID
-          * @memberOf me.Renderable
-          */
-
-         this.GUID = undefined;
-         /**
-          * an event handler that is called when the renderable leave or enter a camera viewport
-          * @public
-          * @type function
-          * @default undefined
-          * @name onVisibilityChange
-          * @memberOf me.Renderable#
-          * @example
-          * this.onVisibilityChange = function(inViewport) {
-          *     if (inViewport === true) {
-          *         console.log("object has entered the in a camera viewport!");
-          *     }
-          * };
-          */
-
-         this.onVisibilityChange = undefined;
-         /**
-          * Whether the renderable object will always update, even when outside of the viewport<br>
-          * @public
-          * @type Boolean
-          * @default false
-          * @name alwaysUpdate
-          * @memberOf me.Renderable
-          */
-
-         this.alwaysUpdate = false;
-         /**
-          * Whether to update this object when the game is paused.
-          * @public
-          * @type Boolean
-          * @default false
-          * @name updateWhenPaused
-          * @memberOf me.Renderable
-          */
-
-         this.updateWhenPaused = false;
-         /**
-          * make the renderable object persistent over level changes<br>
-          * @public
-          * @type Boolean
-          * @default false
-          * @name isPersistent
-          * @memberOf me.Renderable
-          */
-
-         this.isPersistent = false;
-         /**
-          * If true, this renderable will be rendered using screen coordinates,
-          * as opposed to world coordinates. Use this, for example, to define UI elements.
-          * @public
-          * @type Boolean
-          * @default false
-          * @name floating
-          * @memberOf me.Renderable
-          */
-
-         this.floating = false;
-         /**
-          * The anchor point is used for attachment behavior, and/or when applying transformations.<br>
-          * The coordinate system places the origin at the top left corner of the frame (0, 0) and (1, 1) means the bottom-right corner<br>
-          * <img src="images/anchor_point.png"/> :<br>
-          * a Renderable's anchor point defaults to (0.5,0.5), which corresponds to the center position.<br>
-          * @public
-          * @type me.ObservableVector2d
-          * @default <0.5,0.5>
-          * @name anchorPoint
-          * @memberOf me.Renderable#
-          */
-
-         if (this.anchorPoint instanceof me.ObservableVector2d) {
-           this.anchorPoint.setMuted(0.5, 0.5).setCallback(this.onAnchorUpdate.bind(this));
-         } else {
-           this.anchorPoint = me.pool.pull("me.ObservableVector2d", 0.5, 0.5, {
-             onUpdate: this.onAnchorUpdate.bind(this)
-           });
-         }
-         /**
-          * When enabled, an object container will automatically apply
-          * any defined transformation before calling the child draw method.
-          * @public
-          * @type Boolean
-          * @default true
-          * @name autoTransform
-          * @memberOf me.Renderable
-          * @example
-          * // enable "automatic" transformation when the object is activated
-          * onActivateEvent: function () {
-          *     // reset the transformation matrix
-          *     this.renderable.currentTransform.identity();
-          *     // ensure the anchor point is the renderable center
-          *     this.renderable.anchorPoint.set(0.5, 0.5);
-          *     // enable auto transform
-          *     this.renderable.autoTransform = true;
-          *     ....
-          * },
-          * // add a rotation effect when updating the entity
-          * update : function (dt) {
-          *     ....
-          *     this.renderable.currentTransform.rotate(0.025);
-          *     ....
-          *     return this._super(me.Entity, 'update', [dt]);
-          * },
-          */
-
-
-         this.autoTransform = true;
-         /**
-          * Define the renderable opacity<br>
-          * Set to zero if you do not wish an object to be drawn
-          * @see me.Renderable#setOpacity
-          * @see me.Renderable#getOpacity
-          * @public
-          * @type Number
-          * @default 1.0
-          * @name me.Renderable#alpha
-          */
-
-         this.alpha = 1.0;
-         /**
-          * a reference to the parent object that contains this renderable
-          * @public
-          * @type me.Container|me.Entity
-          * @default undefined
-          * @name me.Renderable#ancestor
-          */
-
-         this.ancestor = undefined;
-         /**
-          * The bounding rectangle for this renderable
-          * @ignore
-          * @type {me.Rect}
-          * @name _bounds
-          * @memberOf me.Renderable
-          */
-
-         if (this._bounds instanceof me.Rect) {
-           this._bounds.setShape(x, y, width, height);
-         } else {
-           this._bounds = me.pool.pull("me.Rect", x, y, width, height);
-         }
-         /**
-          * A mask limits rendering elements to the shape and position of the given mask object.
-          * So, if the renderable is larger than the mask, only the intersecting part of the renderable will be visible.
-          * @public
-          * @type {me.Rect|me.Polygon|me.Line|me.Ellipse}
-          * @name mask
-          * @default undefined
-          * @memberOf me.Renderable#
-          * @example
-          * // apply a mask in the shape of a Star
-          * myNPCSprite.mask = new me.Polygon(myNPCSprite.width / 2, 0, [
-          *    // draw a star
-          *    {x: 0, y: 0},
-          *    {x: 14, y: 30},
-          *    {x: 47, y: 35},
-          *    {x: 23, y: 57},
-          *    {x: 44, y: 90},
-          *    {x: 0, y: 62},
-          *    {x: -44, y: 90},
-          *    {x: -23, y: 57},
-          *    {x: -47, y: 35},
-          *    {x: -14, y: 30}
-          * ]);
-          */
-
-
-         this.mask = undefined;
-         /**
-          * apply a tint to this renderable (WebGL Only)
-          * @public
-          * @type {me.Color}
-          * @name tint
-          * @default undefined
-          * @memberOf me.Renderable#
-          * @example
-          * // add a red tint to this renderable
-          * this.renderable.tint = new me.Color(255, 128, 128);
-          * // disable the tint
-          * this.renderable.tint.setColor(255, 255, 255);
-          */
-
-         this.tint = undefined;
-         /**
-          * The name of the renderable
-          * @public
-          * @type {String}
-          * @name name
-          * @default ""
-          * @memberOf me.Renderable
-          */
-
-         this.name = "";
-         /**
-          * Absolute position in the game world
-          * @ignore
-          * @type {me.Vector2d}
-          * @name _absPos
-          * @memberOf me.Renderable#
-          */
-
-         if (this._absPos instanceof me.Vector2d) {
-           this._absPos.set(x, y);
-         } else {
-           this._absPos = me.pool.pull("me.Vector2d", x, y);
-         }
-         /**
-          * Position of the Renderable relative to its parent container
-          * @public
-          * @type {me.ObservableVector3d}
-          * @name pos
-          * @memberOf me.Renderable#
-          */
-
-
-         if (this.pos instanceof me.ObservableVector3d) {
-           this.pos.setMuted(x, y, 0).setCallback(this.updateBoundsPos.bind(this));
-         } else {
-           this.pos = me.pool.pull("me.ObservableVector3d", x, y, 0, {
-             onUpdate: this.updateBoundsPos.bind(this)
-           });
-         }
-
-         this._width = width;
-         this._height = height; // keep track of when we flip
-
-         this._flip = {
-           x: false,
-           y: false
-         }; // viewport flag
-
-         this._inViewport = false;
-         this.shapeType = "Rectangle"; // ensure it's fully opaque by default
-
-         this.setOpacity(1.0);
-       },
-
-       /** @ignore */
-       onResetEvent: function onResetEvent() {
-         this.init.apply(this, arguments);
-       },
-
-       /**
-        * returns the bounding box for this renderable
-        * @name getBounds
-        * @memberOf me.Renderable.prototype
-        * @function
-        * @return {me.Rect} bounding box Rectangle object
-        */
-       getBounds: function getBounds() {
-         return this._bounds;
-       },
-
-       /**
-        * get the renderable alpha channel value<br>
-        * @name getOpacity
-        * @memberOf me.Renderable.prototype
-        * @function
-        * @return {Number} current opacity value between 0 and 1
-        */
-       getOpacity: function getOpacity() {
-         return this.alpha;
-       },
-
-       /**
-        * set the renderable alpha channel value<br>
-        * @name setOpacity
-        * @memberOf me.Renderable.prototype
-        * @function
-        * @param {Number} alpha opacity value between 0.0 and 1.0
-        */
-       setOpacity: function setOpacity(alpha) {
-         if (typeof alpha === "number") {
-           this.alpha = me.Math.clamp(alpha, 0.0, 1.0); // Set to 1 if alpha is NaN
-
-           if (isNaN(this.alpha)) {
-             this.alpha = 1.0;
-           }
-         }
-       },
-
-       /**
-        * flip the renderable on the horizontal axis (around the center of the renderable)
-        * @see me.Matrix2d.scaleX
-        * @name flipX
-        * @memberOf me.Renderable.prototype
-        * @function
-        * @param {Boolean} [flip=false] `true` to flip this renderable.
-        * @return {me.Renderable} Reference to this object for method chaining
-        */
-       flipX: function flipX(flip) {
-         this._flip.x = !!flip;
-         return this;
-       },
-
-       /**
-        * flip the renderable on the vertical axis (around the center of the renderable)
-        * @see me.Matrix2d.scaleY
-        * @name flipY
-        * @memberOf me.Renderable.prototype
-        * @function
-        * @param {Boolean} [flip=false] `true` to flip this renderable.
-        * @return {me.Renderable} Reference to this object for method chaining
-        */
-       flipY: function flipY(flip) {
-         this._flip.y = !!flip;
-         return this;
-       },
-
-       /**
-        * multiply the renderable currentTransform with the given matrix
-        * @name transform
-        * @memberOf me.Renderable.prototype
-        * @see me.Renderable#currentTransform
-        * @function
-        * @param {me.Matrix2d} matrix the transformation matrix
-        * @return {me.Renderable} Reference to this object for method chaining
-        */
-       transform: function transform(m) {
-         var bounds = this.getBounds();
-         this.currentTransform.multiply(m);
-         bounds.setPoints(bounds.transform(m).points);
-         bounds.pos.setV(this.pos);
-         return this;
-       },
-
-       /**
-        * return the angle to the specified target
-        * @name angleTo
-        * @memberOf me.Renderable
-        * @function
-        * @param {me.Renderable|me.Vector2d|me.Vector3d} target
-        * @return {Number} angle in radians
-        */
-       angleTo: function angleTo(target) {
-         var a = this.getBounds();
-         var ax, ay;
-
-         if (target instanceof me.Renderable) {
-           var b = target.getBounds();
-           ax = b.centerX - a.centerX;
-           ay = b.centerY - a.centerY;
-         } else {
-           // vector object
-           ax = target.x - a.centerX;
-           ay = target.y - a.centerY;
-         }
-
-         return Math.atan2(ay, ax);
-       },
-
-       /**
-        * return the distance to the specified target
-        * @name distanceTo
-        * @memberOf me.Renderable
-        * @function
-        * @param {me.Renderable|me.Vector2d|me.Vector3d} target
-        * @return {Number} distance
-        */
-       distanceTo: function distanceTo(target) {
-         var a = this.getBounds();
-         var dx, dy;
-
-         if (target instanceof me.Renderable) {
-           var b = target.getBounds();
-           dx = a.centerX - b.centerX;
-           dy = a.centerY - b.centerY;
-         } else {
-           // vector object
-           dx = a.centerX - target.x;
-           dy = a.centerY - target.y;
-         }
-
-         return Math.sqrt(dx * dx + dy * dy);
-       },
-
-       /**
-        * Rotate this renderable towards the given target.
-        * @name lookAt
-        * @memberOf me.Renderable.prototype
-        * @function
-        * @param {me.Renderable|me.Vector2d|me.Vector3d} target the renderable or position to look at
-        * @return {me.Renderable} Reference to this object for method chaining
-        */
-       lookAt: function lookAt(target) {
-         var position;
-
-         if (target instanceof me.Renderable) {
-           position = target.pos;
-         } else {
-           position = target;
-         }
-
-         var angle = this.angleTo(position);
-         this.rotate(angle);
-         return this;
-       },
-
-       /**
-        * Rotate this renderable by the specified angle (in radians).
-        * @name rotate
-        * @memberOf me.Renderable.prototype
-        * @function
-        * @param {Number} angle The angle to rotate (in radians)
-        * @return {me.Renderable} Reference to this object for method chaining
-        */
-       rotate: function rotate(angle) {
-         if (!isNaN(angle)) {
-           this.currentTransform.rotate(angle);
-         }
-
-         return this;
-       },
-
-       /**
-        * scale the renderable around his anchor point.  Scaling actually applies changes
-        * to the currentTransform member wich is used by the renderer to scale the object
-        * when rendering.  It does not scale the object itself.  For example if the renderable
-        * is an image, the image.width and image.height properties are unaltered but the currentTransform
-        * member will be changed.
-        * @name scale
-        * @memberOf me.Renderable.prototype
-        * @function
-        * @param {Number} x a number representing the abscissa of the scaling vector.
-        * @param {Number} [y=x] a number representing the ordinate of the scaling vector.
-        * @return {me.Renderable} Reference to this object for method chaining
-        */
-       scale: function scale(x, y) {
-         var _x = x,
-             _y = typeof y === "undefined" ? _x : y; // set the scaleFlag
-
-
-         this.currentTransform.scale(_x, _y); // resize the bounding box
-
-         this.getBounds().resize(this.width * _x, this.height * _y);
-         return this;
-       },
-
-       /**
-        * scale the renderable around his anchor point
-        * @name scaleV
-        * @memberOf me.Renderable.prototype
-        * @function
-        * @param {me.Vector2d} vector scaling vector
-        * @return {me.Renderable} Reference to this object for method chaining
-        */
-       scaleV: function scaleV(v) {
-         this.scale(v.x, v.y);
-         return this;
-       },
-
-       /**
-        * update function. <br>
-        * automatically called by the game manager {@link me.game}
-        * @name update
-        * @memberOf me.Renderable.prototype
-        * @function
-        * @protected
-        * @param {Number} dt time since the last update in milliseconds.
-        * @return false
-        **/
-       update: function update()
-       /* dt */
-       {
-         return false;
-       },
-
-       /**
-        * update the renderable's bounding rect (private)
-        * @ignore
-        * @name updateBoundsPos
-        * @memberOf me.Renderable.prototype
-        * @function
-        */
-       updateBoundsPos: function updateBoundsPos(newX, newY) {
-         var bounds = this.getBounds();
-         bounds.pos.set(newX, newY, bounds.pos.z); // XXX: This is called from the constructor, before it gets an ancestor
-
-         if (this.ancestor instanceof me.Container && !this.floating) {
-           bounds.pos.add(this.ancestor._absPos);
-         }
-
-         return bounds;
-       },
-
-       /**
-        * called when the anchor point value is changed
-        * @private
-        * @name onAnchorUpdate
-        * @memberOf me.Renderable.prototype
-        * @function
-        */
-       onAnchorUpdate: function onAnchorUpdate() {
-       },
-
-       /**
-        * update the bounds
-        * @private
-        * @deprecated
-        * @name updateBounds
-        * @memberOf me.Renderable.prototype
-        * @function
-        */
-       updateBounds: function updateBounds() {
-         console.warn("Deprecated: me.Renderable.updateBounds");
-         return this._super(me.Rect, "updateBounds");
-       },
-
-       /**
-        * prepare the rendering context before drawing
-        * (apply defined transforms, anchor point). <br>
-        * automatically called by the game manager {@link me.game}
-        * @name preDraw
-        * @memberOf me.Renderable.prototype
-        * @function
-        * @protected
-        * @param {me.CanvasRenderer|me.WebGLRenderer} renderer a renderer object
-        **/
-       preDraw: function preDraw(renderer) {
-         var bounds = this.getBounds();
-         var ax = bounds.width * this.anchorPoint.x,
-             ay = bounds.height * this.anchorPoint.y; // save context
-
-         renderer.save(); // apply the defined alpha value
-
-         renderer.setGlobalAlpha(renderer.globalAlpha() * this.getOpacity()); // apply flip
-
-         if (this._flip.x || this._flip.y) {
-           var dx = this._flip.x ? this.centerX - ax : 0,
-               dy = this._flip.y ? this.centerY - ay : 0;
-           renderer.translate(dx, dy);
-           renderer.scale(this._flip.x ? -1 : 1, this._flip.y ? -1 : 1);
-           renderer.translate(-dx, -dy);
-         }
-
-         if (this.autoTransform === true && !this.currentTransform.isIdentity()) {
-           this.currentTransform.translate(-ax, -ay); // apply the renderable transformation matrix
-
-           renderer.transform(this.currentTransform);
-           this.currentTransform.translate(ax, ay);
-         } else {
-           // translate to the defined anchor point
-           renderer.translate(-ax, -ay);
-         }
-
-         if (typeof this.mask !== "undefined") {
-           renderer.setMask(this.mask);
-         }
-
-         if (typeof this.tint !== "undefined") {
-           renderer.setTint(this.tint);
-         }
-       },
-
-       /**
-        * object draw. <br>
-        * automatically called by the game manager {@link me.game}
-        * @name draw
-        * @memberOf me.Renderable.prototype
-        * @function
-        * @protected
-        * @param {me.CanvasRenderer|me.WebGLRenderer} renderer a renderer object
-        **/
-       draw: function draw()
-       /*renderer*/
-       {// empty one !
-       },
-
-       /**
-        * restore the rendering context after drawing. <br>
-        * automatically called by the game manager {@link me.game}
-        * @name postDraw
-        * @memberOf me.Renderable.prototype
-        * @function
-        * @protected
-        * @param {me.CanvasRenderer|me.WebGLRenderer} renderer a renderer object
-        **/
-       postDraw: function postDraw(renderer) {
-         if (typeof this.mask !== "undefined") {
-           renderer.clearMask();
-         }
-
-         if (typeof this.tint !== "undefined") {
-           renderer.clearTint();
-         } // restore the context
-
-
-         renderer.restore();
-       },
-
-       /**
-        * Destroy function<br>
-        * @ignore
-        */
-       destroy: function destroy() {
-         // allow recycling object properties
-         me.pool.push(this.currentTransform);
-         this.currentTransform = undefined;
-         me.pool.push(this.anchorPoint);
-         this.anchorPoint = undefined;
-         me.pool.push(this.pos);
-         this.pos = undefined;
-         me.pool.push(this._absPos);
-         this._absPos = undefined;
-         me.pool.push(this._bounds);
-         this._bounds = undefined;
-         this.onVisibilityChange = undefined;
-
-         if (typeof this.mask !== "undefined") {
-           me.pool.push(this.mask);
-           this.mask = undefined;
-         }
-
-         if (typeof this.tint !== "undefined") {
-           me.pool.push(this.tint);
-           this.tint = undefined;
-         }
-
-         this.ancestor = undefined; // destroy the physic body if defined
-
-         if (typeof this.body !== "undefined") {
-           this.body.destroy.apply(this.body, arguments);
-           this.body = undefined;
-         }
-
-         this.onDestroyEvent.apply(this, arguments);
-       },
-
-       /**
-        * OnDestroy Notification function<br>
-        * Called by engine before deleting the object
-        * @name onDestroyEvent
-        * @memberOf me.Renderable
-        * @function
-        */
-       onDestroyEvent: function onDestroyEvent() {// to be extended !
-       }
-     });
-     /**
-      * Whether the renderable object is visible and within the viewport
-      * @public
-      * @readonly
-      * @type Boolean
-      * @default false
-      * @name inViewport
-      * @memberOf me.Renderable
-      */
-
-     Object.defineProperty(me.Renderable.prototype, "inViewport", {
-       /**
-        * @ignore
-        */
-       get: function get() {
-         return this._inViewport;
-       },
-
-       /**
-        * @ignore
-        */
-       set: function set(value) {
-         if (this._inViewport !== value) {
-           this._inViewport = value;
-
-           if (typeof this.onVisibilityChange === "function") {
-             this.onVisibilityChange.call(this, value);
-           }
-         }
-       },
-       configurable: true
-     });
-     /**
-      * width of the Renderable bounding box
-      * @public
-      * @type {Number}
-      * @name width
-      * @memberOf me.Renderable
-      */
-
-     Object.defineProperty(me.Renderable.prototype, "width", {
-       /**
-        * @ignore
-        */
-       get: function get() {
-         return this._width;
-       },
-
-       /**
-        * @ignore
-        */
-       set: function set(value) {
-         if (this._width !== value) {
-           this.getBounds().width = value;
-           this._width = value;
-         }
-       },
-       configurable: true
-     });
-     /**
-      * height of the Renderable bounding box
-      * @public
-      * @type {Number}
-      * @name height
-      * @memberOf me.Renderable
-      */
-
-     Object.defineProperty(me.Renderable.prototype, "height", {
-       /**
-        * @ignore
-        */
-       get: function get() {
-         return this._height;
-       },
-
-       /**
-        * @ignore
-        */
-       set: function set(value) {
-         if (this._height !== value) {
-           this.getBounds().height = value;
-           this._height = value;
-         }
-       },
-       configurable: true
-     });
-   })();
-
-   (function () {
-     /**
-      * a generic Color Layer Object.  Fills the entire Canvas with the color not just the container the object belongs to.
-      * @class
-      * @extends me.Renderable
-      * @memberOf me
-      * @constructor
-      * @param {String} name Layer name
-      * @param {me.Color|String} color CSS color
-      * @param {Number} z z-index position
-      */
-     me.ColorLayer = me.Renderable.extend({
-       /**
-        * @ignore
-        */
-       init: function init(name, color, z) {
-         // parent constructor
-         this._super(me.Renderable, "init", [0, 0, Infinity, Infinity]); // apply given parameters
-
-
-         this.name = name;
-         this.pos.z = z;
-         this.floating = true;
-         /**
-          * the layer color component
-          * @public
-          * @type me.Color
-          * @name color
-          * @memberOf me.ColorLayer#
-          */
-         // parse the given color
-
-         if (color instanceof me.Color) {
-           this.color = color;
-         } else {
-           // string (#RGB, #ARGB, #RRGGBB, #AARRGGBB)
-           this.color = me.pool.pull("me.Color").parseCSS(color);
-         }
-
-         this.anchorPoint.set(0, 0);
-       },
-
-       /**
-        * draw the color layer
-        * @ignore
-        */
-       draw: function draw(renderer, rect) {
-         var color = renderer.getColor();
-         var vpos = me.game.viewport.pos;
-         renderer.setColor(this.color);
-         renderer.fillRect(rect.left - vpos.x, rect.top - vpos.y, rect.width, rect.height);
-         renderer.setColor(color);
-       },
-
-       /**
-        * Destroy function
-        * @ignore
-        */
-       destroy: function destroy() {
-         me.pool.push(this.color);
-         this.color = undefined;
-
-         this._super(me.Renderable, "destroy");
-       }
-     });
-   })();
-
-   (function () {
-     /**
-      * a generic Image Layer Object
-      * @class
-      * @extends me.Renderable
-      * @memberOf me
-      * @constructor
-      * @param {Number} x x coordinate
-      * @param {Number} y y coordinate
-      * @param {Object} settings ImageLayer properties
-      * @param {HTMLImageElement|HTMLCanvasElement|String} settings.image Image reference. See {@link me.loader.getImage}
-      * @param {String} [settings.name="me.ImageLayer"] layer name
-      * @param {Number} [settings.z=0] z-index position
-      * @param {Number|me.Vector2d} [settings.ratio=1.0] Scrolling ratio to be applied. See {@link me.ImageLayer#ratio}
-      * @param {String} [settings.repeat='repeat'] define if and how an Image Layer should be repeated (accepted values are 'repeat',
-     'repeat-x', 'repeat-y', 'no-repeat'). See {@link me.ImageLayer#repeat}
-      * @param {Number|me.Vector2d} [settings.anchorPoint=0.0] Image origin. See {@link me.ImageLayer#anchorPoint}
-      * @example
-      * // create a repetitive background pattern on the X axis using the citycloud image asset
-      * me.game.world.addChild(new me.ImageLayer(0, 0, {
-      *     image:"citycloud",
-      *     repeat :"repeat-x"
-      * }), 1);
-      */
-     me.ImageLayer = me.Renderable.extend({
-       /**
-        * @ignore
-        */
-       init: function init(x, y, settings) {
-         // call the constructor
-         this._super(me.Renderable, "init", [x, y, Infinity, Infinity]); // get the corresponding image
-
-
-         this.image = _typeof(settings.image) === "object" ? settings.image : me.loader.getImage(settings.image); // throw an error if image is null/undefined
-
-         if (!this.image) {
-           throw new Error((typeof settings.image === "string" ? "'" + settings.image + "'" : "Image") + " file for Image Layer '" + this.name + "' not found!");
-         }
-
-         this.imagewidth = this.image.width;
-         this.imageheight = this.image.height; // set the sprite name if specified
-
-         if (typeof settings.name === "string") {
-           this.name = settings.name;
-         } // render in screen coordinates
-
-
-         this.floating = true; // displaying order
-
-         this.pos.z = settings.z || 0;
-         this.offset = me.pool.pull("me.Vector2d", x, y);
-         /**
-          * Define the image scrolling ratio<br>
-          * Scrolling speed is defined by multiplying the viewport delta position (e.g. followed entity) by the specified ratio.
-          * Setting this vector to &lt;0.0,0.0&gt; will disable automatic scrolling.<br>
-          * To specify a value through Tiled, use one of the following format : <br>
-          * - a number, to change the value for both axis <br>
-          * - a json expression like `json:{"x":0.5,"y":0.5}` if you wish to specify a different value for both x and y
-          * @public
-          * @type me.Vector2d
-          * @default <1.0,1.0>
-          * @name me.ImageLayer#ratio
-          */
-
-         this.ratio = me.pool.pull("me.Vector2d", 1.0, 1.0);
-
-         if (typeof settings.ratio !== "undefined") {
-           // little hack for backward compatiblity
-           if (typeof settings.ratio === "number") {
-             this.ratio.set(settings.ratio, settings.ratio);
-           } else
-             /* vector */
-             {
-               this.ratio.setV(settings.ratio);
-             }
-         }
-
-         if (typeof settings.anchorPoint === "undefined") {
-           /**
-            * Define how the image is anchored to the viewport bounds<br>
-            * By default, its upper-left corner is anchored to the viewport bounds upper left corner.<br>
-            * The anchorPoint is a unit vector where each component falls in range [0.0,1.0].<br>
-            * Some common examples:<br>
-            * * &lt;0.0,0.0&gt; : (Default) Anchor image to the upper-left corner of viewport bounds
-            * * &lt;0.5,0.5&gt; : Center the image within viewport bounds
-            * * &lt;1.0,1.0&gt; : Anchor image to the lower-right corner of viewport bounds
-            * To specify a value through Tiled, use one of the following format : <br>
-            * - a number, to change the value for both axis <br>
-            * - a json expression like `json:{"x":0.5,"y":0.5}` if you wish to specify a different value for both x and y
-            * @public
-            * @type me.Vector2d
-            * @default <0.0,0.0>
-            * @name me.ImageLayer#anchorPoint
-            */
-           this.anchorPoint.set(0, 0);
-         } else {
-           if (typeof settings.anchorPoint === "number") {
-             this.anchorPoint.set(settings.anchorPoint, settings.anchorPoint);
-           } else
-             /* vector */
-             {
-               this.anchorPoint.setV(settings.anchorPoint);
-             }
-         }
-         /**
-          * Define if and how an Image Layer should be repeated.<br>
-          * By default, an Image Layer is repeated both vertically and horizontally.<br>
-          * Acceptable values : <br>
-          * * 'repeat' - The background image will be repeated both vertically and horizontally <br>
-          * * 'repeat-x' - The background image will be repeated only horizontally.<br>
-          * * 'repeat-y' - The background image will be repeated only vertically.<br>
-          * * 'no-repeat' - The background-image will not be repeated.<br>
-          * @public
-          * @type String
-          * @default 'repeat'
-          * @name me.ImageLayer#repeat
-          */
-
-
-         Object.defineProperty(this, "repeat", {
-           /**
-            * @ignore
-            */
-           get: function get() {
-             return this._repeat;
-           },
-
-           /**
-            * @ignore
-            */
-           set: function set(val) {
-             this._repeat = val;
-
-             switch (this._repeat) {
-               case "no-repeat":
-                 this.repeatX = false;
-                 this.repeatY = false;
-                 break;
-
-               case "repeat-x":
-                 this.repeatX = true;
-                 this.repeatY = false;
-                 break;
-
-               case "repeat-y":
-                 this.repeatX = false;
-                 this.repeatY = true;
-                 break;
-
-               default:
-                 // "repeat"
-                 this.repeatX = true;
-                 this.repeatY = true;
-                 break;
-             }
-
-             this.resize(me.game.viewport.width, me.game.viewport.height);
-             this.createPattern();
-           },
-           configurable: true
-         });
-         this.repeat = settings.repeat || "repeat"; // on context lost, all previous textures are destroyed
-
-         me.event.subscribe(me.event.WEBGL_ONCONTEXT_RESTORED, this.createPattern.bind(this));
-       },
-       // called when the layer is added to the game world or a container
-       onActivateEvent: function onActivateEvent() {
-         var _updateLayerFn = this.updateLayer.bind(this); // register to the viewport change notification
-
-
-         this.vpChangeHdlr = me.event.subscribe(me.event.VIEWPORT_ONCHANGE, _updateLayerFn);
-         this.vpResizeHdlr = me.event.subscribe(me.event.VIEWPORT_ONRESIZE, this.resize.bind(this));
-         this.vpLoadedHdlr = me.event.subscribe(me.event.LEVEL_LOADED, function () {
-           // force a first refresh when the level is loaded
-           _updateLayerFn(me.game.viewport.pos);
-         }); // in case the level is not added to the root container,
-         // the onActivateEvent call happens after the LEVEL_LOADED event
-         // so we need to force a first update
-
-         if (this.ancestor.root !== true) {
-           this.updateLayer(me.game.viewport.pos);
-         }
-       },
-
-       /**
-        * resize the Image Layer to match the given size
-        * @name resize
-        * @memberOf me.ImageLayer.prototype
-        * @function
-        * @param {Number} w new width
-        * @param {Number} h new height
-       */
-       resize: function resize(w, h) {
-         this._super(me.Renderable, "resize", [this.repeatX ? Infinity : w, this.repeatY ? Infinity : h]);
-       },
-
-       /**
-        * createPattern function
-        * @ignore
-        * @function
-        */
-       createPattern: function createPattern() {
-         this._pattern = me.video.renderer.createPattern(this.image, this._repeat);
-       },
-
-       /**
-        * updateLayer function
-        * @ignore
-        * @function
-        */
-       updateLayer: function updateLayer(vpos) {
-         var rx = this.ratio.x,
-             ry = this.ratio.y;
-
-         if (rx === ry === 0) {
-           // static image
-           return;
-         }
-
-         var viewport = me.game.viewport,
-             width = this.imagewidth,
-             height = this.imageheight,
-             bw = viewport.bounds.width,
-             bh = viewport.bounds.height,
-             ax = this.anchorPoint.x,
-             ay = this.anchorPoint.y,
-
-         /*
-          * Automatic positioning
-          *
-          * See https://github.com/melonjs/melonJS/issues/741#issuecomment-138431532
-          * for a thorough description of how this works.
-          */
-         x = ax * (rx - 1) * (bw - viewport.width) + this.offset.x - rx * vpos.x,
-             y = ay * (ry - 1) * (bh - viewport.height) + this.offset.y - ry * vpos.y; // Repeat horizontally; start drawing from left boundary
-
-         if (this.repeatX) {
-           this.pos.x = x % width;
-         } else {
-           this.pos.x = x;
-         } // Repeat vertically; start drawing from top boundary
-
-
-         if (this.repeatY) {
-           this.pos.y = y % height;
-         } else {
-           this.pos.y = y;
-         }
-       },
-
-       /*
-        * override the default predraw function
-        * as repeat and anchor are managed directly in the draw method
-        * @ignore
-        */
-       preDraw: function preDraw(renderer) {
-         // save the context
-         renderer.save(); // apply the defined alpha value
-
-         renderer.setGlobalAlpha(renderer.globalAlpha() * this.getOpacity());
-       },
-
-       /**
-        * draw the image layer
-        * @ignore
-        */
-       draw: function draw(renderer) {
-         var viewport = me.game.viewport,
-             width = this.imagewidth,
-             height = this.imageheight,
-             bw = viewport.bounds.width,
-             bh = viewport.bounds.height,
-             ax = this.anchorPoint.x,
-             ay = this.anchorPoint.y,
-             x = this.pos.x,
-             y = this.pos.y;
-
-         if (this.ratio.x === this.ratio.y === 0) {
-           x = x + ax * (bw - width);
-           y = y + ay * (bh - height);
-         }
-
-         renderer.translate(x, y);
-         renderer.drawPattern(this._pattern, 0, 0, viewport.width * 2, viewport.height * 2);
-       },
-       // called when the layer is removed from the game world or a container
-       onDeactivateEvent: function onDeactivateEvent() {
-         // cancel all event subscriptions
-         me.event.unsubscribe(this.vpChangeHdlr);
-         me.event.unsubscribe(this.vpResizeHdlr);
-         me.event.unsubscribe(this.vpLoadedHdlr);
-       },
-
-       /**
-        * Destroy function<br>
-        * @ignore
-        */
-       destroy: function destroy() {
-         me.pool.push(this.offset);
-         this.offset = undefined;
-         me.pool.push(this.ratio);
-         this.ratio = undefined;
-
-         this._super(me.Renderable, "destroy");
-       }
-     });
-   })();
-
-   (function () {
-     /**
-      * An object to display a fixed or animated sprite on screen.
-      * @class
-      * @extends me.Renderable
-      * @memberOf me
-      * @constructor
-      * @param {Number} x the x coordinates of the sprite object
-      * @param {Number} y the y coordinates of the sprite object
-      * @param {Object} settings Configuration parameters for the Sprite object
-      * @param {me.video.renderer.Texture|HTMLImageElement|HTMLCanvasElement|String} settings.image reference to a texture, spritesheet image or to a texture atlas
-      * @param {String} [settings.name=""] name of this object
-      * @param {String} [settings.region] region name of a specific region to use when using a texture atlas, see {@link me.Renderer.Texture}
-      * @param {Number} [settings.framewidth] Width of a single frame within the spritesheet
-      * @param {Number} [settings.frameheight] Height of a single frame within the spritesheet
-      * @param {Number} [settings.flipX] flip the sprite on the horizontal axis
-      * @param {Number} [settings.flipY] flip the sprite on the vertical axis
-      * @param {me.Vector2d} [settings.anchorPoint={x:0.5, y:0.5}] Anchor point to draw the frame at (defaults to the center of the frame).
-      * @example
-      * // create a single sprite from a standalone image, with anchor in the center
-      * var sprite = new me.Sprite(0, 0, {
-      *     image : "PlayerTexture",
-      *     framewidth : 64,
-      *     frameheight : 64,
-      *     anchorPoint : new me.Vector2d(0.5, 0.5)
-      * });
-      *
-      * // create a single sprite from a packed texture
-      * game.texture = new me.video.renderer.Texture(
-      *     me.loader.getJSON("texture"),
-      *     me.loader.getImage("texture")
-      * );
-      * var sprite = new me.Sprite(0, 0, {
-      *     image : game.texture,
-      *     region : "npc2.png",
-      * });
-      */
-     me.Sprite = me.Renderable.extend({
-       /**
-        * @ignore
-        */
-       init: function init(x, y, settings) {
-         /**
-          * pause and resume animation
-          * @public
-          * @type Boolean
-          * @default false
-          * @name me.Sprite#animationpause
-          */
-         this.animationpause = false;
-         /**
-          * animation cycling speed (delay between frame in ms)
-          * @public
-          * @type Number
-          * @default 100
-          * @name me.Sprite#animationspeed
-          */
-
-         this.animationspeed = 100;
-         /**
-          * global offset for the position to draw from on the source image.
-          * @public
-          * @type me.Vector2d
-          * @default <0.0,0.0>
-          * @name offset
-          * @memberOf me.Sprite#
-          */
-
-         this.offset = me.pool.pull("me.Vector2d", 0, 0);
-         /**
-          * The source texture object this sprite object is using
-          * @public
-          * @type me.video.renderer.Texture
-          * @name source
-          * @memberOf me.Sprite#
-          */
-
-         this.source = null; // hold all defined animation
-
-         this.anim = {}; // a flag to reset animation
-
-         this.resetAnim = undefined; // current frame information
-         // (reusing current, any better/cleaner place?)
-
-         this.current = {
-           // the current animation name
-           name: "default",
-           // length of the current animation name
-           length: 0,
-           //current frame texture offset
-           offset: new me.Vector2d(),
-           // current frame size
-           width: 0,
-           height: 0,
-           // Source rotation angle for pre-rotating the source image
-           angle: 0,
-           // current frame index
-           idx: 0
-         }; // animation frame delta
-
-         this.dt = 0; // flicker settings
-
-         this._flicker = {
-           isFlickering: false,
-           duration: 0,
-           callback: null,
-           state: false
-         }; // call the super constructor
-
-         this._super(me.Renderable, "init", [x, y, 0, 0]); // set the proper image/texture to use
-
-
-         if (settings.image instanceof me.Renderer.prototype.Texture) {
-           this.source = settings.image;
-           this.image = this.source.getTexture();
-           this.textureAtlas = settings.image; // check for defined region
-
-           if (typeof settings.region !== "undefined") {
-             // use a texture atlas
-             var region = this.source.getRegion(settings.region);
-
-             if (region) {
-               // set the sprite region within the texture
-               this.setRegion(region); // update the default "current" frame size
-
-               this.current.width = settings.framewidth || region.width;
-               this.current.height = settings.frameheight || region.height;
-             } else {
-               // throw an error
-               throw new Error("Texture - region for " + settings.region + " not found");
-             }
-           }
-         } else {
-           // HTMLImageElement/Canvas or String
-           this.image = _typeof(settings.image) === "object" ? settings.image : me.loader.getImage(settings.image); // update the default "current" frame size
-
-           this.current.width = settings.framewidth = settings.framewidth || this.image.width;
-           this.current.height = settings.frameheight = settings.frameheight || this.image.height;
-           this.source = me.video.renderer.cache.get(this.image, settings);
-           this.textureAtlas = this.source.getAtlas();
-         } // store/reset the current atlas information if specified
-
-
-         if (typeof settings.atlas !== "undefined") {
-           this.textureAtlas = settings.atlas;
-           this.atlasIndices = settings.atlasIndices;
-         } else {
-           this.atlasIndices = null;
-         } // resize based on the active frame
-
-
-         this.width = this.current.width;
-         this.height = this.current.height; // apply flip flags if specified
-
-         if (typeof settings.flipX !== "undefined") {
-           this.flipX(!!settings.flipX);
-         }
-
-         if (typeof settings.flipY !== "undefined") {
-           this.flipY(!!settings.flipY);
-         } // set the default rotation angle is defined in the settings
-         // * WARNING: rotating sprites decreases performance with Canvas Renderer
-
-
-         if (typeof settings.rotation !== "undefined") {
-           this.currentTransform.rotate(settings.rotation);
-         } // update anchorPoint
-
-
-         if (settings.anchorPoint) {
-           this.anchorPoint.set(settings.anchorPoint.x, settings.anchorPoint.y);
-         } // set the sprite name if specified
-
-
-         if (typeof settings.name === "string") {
-           this.name = settings.name;
-         } // for sprite, addAnimation will return !=0
-
-
-         if (this.addAnimation("default", null) !== 0) {
-           // set as default
-           this.setCurrentAnimation("default");
-         } // enable currentTransform for me.Sprite based objects
-
-
-         this.autoTransform = true;
-       },
-
-       /**
-        * return the flickering state of the object
-        * @name isFlickering
-        * @memberOf me.Sprite.prototype
-        * @function
-        * @return {Boolean}
-        */
-       isFlickering: function isFlickering() {
-         return this._flicker.isFlickering;
-       },
-
-       /**
-        * make the object flicker
-        * @name flicker
-        * @memberOf me.Sprite.prototype
-        * @function
-        * @param {Number} duration expressed in milliseconds
-        * @param {Function} callback Function to call when flickering ends
-        * @return {me.Sprite} Reference to this object for method chaining
-        * @example
-        * // make the object flicker for 1 second
-        * // and then remove it
-        * this.flicker(1000, function () {
-        *     me.game.world.removeChild(this);
-        * });
-        */
-       flicker: function flicker(duration, callback) {
-         this._flicker.duration = duration;
-
-         if (this._flicker.duration <= 0) {
-           this._flicker.isFlickering = false;
-           this._flicker.callback = null;
-         } else if (!this._flicker.isFlickering) {
-           this._flicker.callback = callback;
-           this._flicker.isFlickering = true;
-         }
-
-         return this;
-       },
-
-       /**
-        * add an animation <br>
-        * For fixed-sized cell sprite sheet, the index list must follow the
-        * logic as per the following example :<br>
-        * <img src="images/spritesheet_grid.png"/>
-        * @name addAnimation
-        * @memberOf me.Sprite.prototype
-        * @function
-        * @param {String} name animation id
-        * @param {Number[]|String[]|Object[]} index list of sprite index or name
-        * defining the animation. Can also use objects to specify delay for each frame, see below
-        * @param {Number} [animationspeed] cycling speed for animation in ms
-        * @return {Number} frame amount of frame added to the animation (delay between each frame).
-        * @see me.Sprite#animationspeed
-        * @example
-        * // walking animation
-        * this.addAnimation("walk", [ 0, 1, 2, 3, 4, 5 ]);
-        * // standing animation
-        * this.addAnimation("stand", [ 11, 12 ]);
-        * // eating animation
-        * this.addAnimation("eat", [ 6, 6 ]);
-        * // rolling animation
-        * this.addAnimation("roll", [ 7, 8, 9, 10 ]);
-        * // slower animation
-        * this.addAnimation("roll", [ 7, 8, 9, 10 ], 200);
-        * // or get more specific with delay for each frame. Good solution instead of repeating:
-        * this.addAnimation("turn", [{ name: 0, delay: 200 }, { name: 1, delay: 100 }])
-        * // can do this with atlas values as well:
-        * this.addAnimation("turn", [{ name: "turnone", delay: 200 }, { name: "turntwo", delay: 100 }])
-        * // define an dying animation that stop on the last frame
-        * this.addAnimation("die", [{ name: 3, delay: 200 }, { name: 4, delay: 100 }, { name: 5, delay: Infinity }])
-        * // set the standing animation as default
-        * this.setCurrentAnimation("stand");
-        */
-       addAnimation: function addAnimation(name, index, animationspeed) {
-         this.anim[name] = {
-           name: name,
-           frames: [],
-           idx: 0,
-           length: 0
-         }; // # of frames
-
-         var counter = 0;
-
-         if (_typeof(this.textureAtlas) !== "object") {
-           return 0;
-         }
-
-         if (index == null) {
-           index = []; // create a default animation with all frame
-
-           Object.keys(this.textureAtlas).forEach(function (v, i) {
-             index[i] = i;
-           });
-         } // set each frame configuration (offset, size, etc..)
-
-
-         for (var i = 0, len = index.length; i < len; i++) {
-           var frame = index[i];
-           var frameObject;
-
-           if (typeof frame === "number" || typeof frame === "string") {
-             frameObject = {
-               name: frame,
-               delay: animationspeed || this.animationspeed
-             };
-           } else {
-             frameObject = frame;
-           }
-
-           var frameObjectName = frameObject.name;
-
-           if (typeof frameObjectName === "number") {
-             if (typeof this.textureAtlas[frameObjectName] !== "undefined") {
-               // TODO: adding the cache source coordinates add undefined entries in webGL mode
-               this.anim[name].frames[i] = Object.assign({}, this.textureAtlas[frameObjectName], frameObject);
-               counter++;
-             }
-           } else {
-             // string
-             if (this.atlasIndices === null) {
-               throw new Error("string parameters for addAnimation are not allowed for standard spritesheet based Texture");
-             } else {
-               this.anim[name].frames[i] = Object.assign({}, this.textureAtlas[this.atlasIndices[frameObjectName]], frameObject);
-               counter++;
-             }
-           }
-         }
-
-         this.anim[name].length = counter;
-         return counter;
-       },
-
-       /**
-        * set the current animation
-        * this will always change the animation & set the frame to zero
-        * @name setCurrentAnimation
-        * @memberOf me.Sprite.prototype
-        * @function
-        * @param {String} name animation id
-        * @param {String|Function} [onComplete] animation id to switch to when complete, or callback
-        * @return {me.Sprite} Reference to this object for method chaining
-        * @example
-        * // set "walk" animation
-        * this.setCurrentAnimation("walk");
-        *
-        * // set "walk" animation if it is not the current animation
-        * if (this.isCurrentAnimation("walk")) {
-        *     this.setCurrentAnimation("walk");
-        * }
-        *
-        * // set "eat" animation, and switch to "walk" when complete
-        * this.setCurrentAnimation("eat", "walk");
-        *
-        * // set "die" animation, and remove the object when finished
-        * this.setCurrentAnimation("die", (function () {
-        *    me.game.world.removeChild(this);
-        *    return false; // do not reset to first frame
-        * }).bind(this));
-        *
-        * // set "attack" animation, and pause for a short duration
-        * this.setCurrentAnimation("die", (function () {
-        *    this.animationpause = true;
-        *
-        *    // back to "standing" animation after 1 second
-        *    setTimeout(function () {
-        *        this.setCurrentAnimation("standing");
-        *    }, 1000);
-        *
-        *    return false; // do not reset to first frame
-        * }).bind(this));
-        **/
-       setCurrentAnimation: function setCurrentAnimation(name, resetAnim, _preserve_dt) {
-         if (this.anim[name]) {
-           this.current.name = name;
-           this.current.length = this.anim[this.current.name].length;
-
-           if (typeof resetAnim === "string") {
-             this.resetAnim = this.setCurrentAnimation.bind(this, resetAnim, null, true);
-           } else if (typeof resetAnim === "function") {
-             this.resetAnim = resetAnim;
-           } else {
-             this.resetAnim = undefined;
-           }
-
-           this.setAnimationFrame(this.current.idx);
-
-           if (!_preserve_dt) {
-             this.dt = 0;
-           }
-         } else {
-           throw new Error("animation id '" + name + "' not defined");
-         }
-
-         return this;
-       },
-
-       /**
-        * reverse the given or current animation if none is specified
-        * @name reverseAnimation
-        * @memberOf me.Sprite.prototype
-        * @function
-        * @param {String} [name] animation id
-        * @return {me.Sprite} Reference to this object for method chaining
-        * @see me.Sprite#animationspeed
-        */
-       reverseAnimation: function reverseAnimation(name) {
-         if (typeof name !== "undefined" && typeof this.anim[name] !== "undefined") {
-           this.anim[name].frames.reverse();
-         } else {
-           this.anim[this.current.name].frames.reverse();
-         }
-
-         return this;
-       },
-
-       /**
-        * return true if the specified animation is the current one.
-        * @name isCurrentAnimation
-        * @memberOf me.Sprite.prototype
-        * @function
-        * @param {String} name animation id
-        * @return {Boolean}
-        * @example
-        * if (!this.isCurrentAnimation("walk")) {
-        *     // do something funny...
-        * }
-        */
-       isCurrentAnimation: function isCurrentAnimation(name) {
-         return this.current.name === name;
-       },
-
-       /**
-        * change the current texture atlas region for this sprite
-        * @see me.Texture.getRegion
-        * @name setRegion
-        * @memberOf me.Sprite.prototype
-        * @function
-        * @param {Object} region typically returned through me.Texture.getRegion()
-        * @return {me.Sprite} Reference to this object for method chaining
-        * @example
-        * // change the sprite to "shadedDark13.png";
-        * mySprite.setRegion(game.texture.getRegion("shadedDark13.png"));
-        */
-       setRegion: function setRegion(region) {
-         if (this.source !== null) {
-           // set the source texture for the given region
-           this.image = this.source.getTexture(region);
-         } // set the sprite offset within the texture
-
-
-         this.current.offset.setV(region.offset); // set angle if defined
-
-         this.current.angle = region.angle; // update the default "current" size
-
-         this.width = this.current.width = region.width;
-         this.height = this.current.height = region.height; // set global anchortPoint if defined
-
-         if (region.anchorPoint) {
-           this.anchorPoint.set(this._flip.x && region.trimmed === true ? 1 - region.anchorPoint.x : region.anchorPoint.x, this._flip.y && region.trimmed === true ? 1 - region.anchorPoint.y : region.anchorPoint.y);
-         }
-
-         return this;
-       },
-
-       /**
-        * force the current animation frame index.
-        * @name setAnimationFrame
-        * @memberOf me.Sprite.prototype
-        * @function
-        * @param {Number} [index=0] animation frame index
-        * @return {me.Sprite} Reference to this object for method chaining
-        * @example
-        * // reset the current animation to the first frame
-        * this.setAnimationFrame();
-        */
-       setAnimationFrame: function setAnimationFrame(idx) {
-         this.current.idx = (idx || 0) % this.current.length;
-         return this.setRegion(this.getAnimationFrameObjectByIndex(this.current.idx));
-       },
-
-       /**
-        * return the current animation frame index.
-        * @name getCurrentAnimationFrame
-        * @memberOf me.Sprite.prototype
-        * @function
-        * @return {Number} current animation frame index
-        */
-       getCurrentAnimationFrame: function getCurrentAnimationFrame() {
-         return this.current.idx;
-       },
-
-       /**
-        * Returns the frame object by the index.
-        * @name getAnimationFrameObjectByIndex
-        * @memberOf me.Sprite.prototype
-        * @function
-        * @private
-        * @return {Number} if using number indices. Returns {Object} containing frame data if using texture atlas
-        */
-       getAnimationFrameObjectByIndex: function getAnimationFrameObjectByIndex(id) {
-         return this.anim[this.current.name].frames[id];
-       },
-
-       /**
-        * @ignore
-        */
-       update: function update(dt) {
-         var result = false; // Update animation if necessary
-
-         if (!this.animationpause && this.current && this.current.length > 0) {
-           var duration = this.getAnimationFrameObjectByIndex(this.current.idx).delay;
-           this.dt += dt;
-
-           while (this.dt >= duration) {
-             result = true;
-             this.dt -= duration;
-             var nextFrame = this.current.length > 1 ? this.current.idx + 1 : this.current.idx;
-             this.setAnimationFrame(nextFrame); // Switch animation if we reach the end of the strip and a callback is defined
-
-             if (this.current.idx === 0 && typeof this.resetAnim === "function") {
-               // Otherwise is must be callable
-               if (this.resetAnim() === false) {
-                 // Reset to last frame
-                 this.setAnimationFrame(this.current.length - 1); // Bail early without skipping any more frames.
-
-                 this.dt %= duration;
-                 break;
-               }
-             } // Get next frame duration
-
-
-             duration = this.getAnimationFrameObjectByIndex(this.current.idx).delay;
-           }
-         } //update the "flickering" state if necessary
-
-
-         if (this._flicker.isFlickering) {
-           this._flicker.duration -= dt;
-
-           if (this._flicker.duration < 0) {
-             if (typeof this._flicker.callback === "function") {
-               this._flicker.callback();
-             }
-
-             this.flicker(-1);
-           }
-
-           result = true;
-         }
-
-         return result;
-       },
-
-       /**
-        * update the renderable's bounding rect (private)
-        * @ignore
-        * @name updateBoundsPos
-        * @memberOf me.Sprite.prototype
-        * @function
-        */
-       updateBoundsPos: function updateBoundsPos(newX, newY) {
-         var bounds = this.getBounds();
-         bounds.pos.set(newX - this.anchorPoint.x * bounds.width, newY - this.anchorPoint.y * bounds.height); // XXX: This is called from the constructor, before it gets an ancestor
-
-         if (this.ancestor instanceof me.Container && !this.floating) {
-           bounds.pos.add(this.ancestor._absPos);
-         }
-
-         return bounds;
-       },
-
-       /**
-        * called when the anchor point value is changed
-        * @private
-        * @name onAnchorUpdate
-        * @memberOf me.Sprite.prototype
-        * @function
-        */
-       onAnchorUpdate: function onAnchorUpdate(newX, newY) {
-         // since the callback is called before setting the new value
-         // manually update the anchor point (required for updateBoundsPos)
-         this.anchorPoint.setMuted(newX, newY); // then call updateBouds
-
-         this.updateBoundsPos(this.pos.x, this.pos.y);
-       },
-
-       /**
-        * Destroy function<br>
-        * @ignore
-        */
-       destroy: function destroy() {
-         me.pool.push(this.offset);
-         this.offset = undefined;
-
-         this._super(me.Renderable, "destroy");
-       },
-
-       /**
-        * @ignore
-        */
-       draw: function draw(renderer) {
-         // do nothing if we are flickering
-         if (this._flicker.isFlickering) {
-           this._flicker.state = !this._flicker.state;
-
-           if (!this._flicker.state) {
-             return;
-           }
-         } // the frame to draw
-
-
-         var frame = this.current; // cache the current position and size
-
-         var xpos = this.pos.x,
-             ypos = this.pos.y;
-         var w = frame.width,
-             h = frame.height; // frame offset in the texture/atlas
-
-         var frame_offset = frame.offset;
-         var g_offset = this.offset; // remove image's TexturePacker/ShoeBox rotation
-
-         if (frame.angle !== 0) {
-           renderer.translate(-xpos, -ypos);
-           renderer.rotate(frame.angle);
-           xpos -= h;
-           w = frame.height;
-           h = frame.width;
-         }
-
-         renderer.drawImage(this.image, g_offset.x + frame_offset.x, // sx
-         g_offset.y + frame_offset.y, // sy
-         w, h, // sw,sh
-         xpos, ypos, // dx,dy
-         w, h // dw,dh
-         );
-       }
-     });
-   })();
-
-   (function () {
-     /**
-      * GUI Object<br>
-      * A very basic object to manage GUI elements <br>
-      * The object simply register on the "pointerdown" <br>
-      * or "touchstart" event and call the onClick function"
-      * @class
-      * @extends me.Sprite
-      * @memberOf me
-      * @constructor
-      * @param {Number} x the x coordinate of the GUI Object
-      * @param {Number} y the y coordinate of the GUI Object
-      * @param {Object} settings See {@link me.Sprite}
-      * @example
-      *
-      * // create a basic GUI Object
-      * var myButton = me.GUI_Object.extend(
-      * {
-      *    init:function (x, y)
-      *    {
-      *       var settings = {}
-      *       settings.image = "button";
-      *       settings.framewidth = 100;
-      *       settings.frameheight = 50;
-      *       // super constructor
-      *       this._super(me.GUI_Object, "init", [x, y, settings]);
-      *       // define the object z order
-      *       this.pos.z = 4;
-      *    },
-      *
-      *    // output something in the console
-      *    // when the object is clicked
-      *    onClick:function (event)
-      *    {
-      *       console.log("clicked!");
-      *       // don't propagate the event
-      *       return false;
-      *    }
-      * });
-      *
-      * // add the object at pos (10,10)
-      * me.game.world.addChild(new myButton(10,10));
-      *
-      */
-     me.GUI_Object = me.Sprite.extend({
-       /**
-        * @ignore
-        */
-       init: function init(x, y, settings) {
-         /**
-          * object can be clicked or not
-          * @public
-          * @type boolean
-          * @default true
-          * @name me.GUI_Object#isClickable
-          */
-         this.isClickable = true;
-         /**
-          * Tap and hold threshold timeout in ms
-          * @type {number}
-          * @default 250
-          * @name me.GUI_Object#holdThreshold
-          */
-
-         this.holdThreshold = 250;
-         /**
-          * object can be tap and hold
-          * @public
-          * @type boolean
-          * @default false
-          * @name me.GUI_Object#isHoldable
-          */
-
-         this.isHoldable = false;
-         /**
-          * true if the pointer is over the object
-          * @public
-          * @type boolean
-          * @default false
-          * @name me.GUI_Object#hover
-          */
-
-         this.hover = false; // object has been updated (clicked,etc..)
-
-         this.holdTimeout = null;
-         this.updated = false;
-         this.released = true; // call the parent constructor
-
-         this._super(me.Sprite, "init", [x, y, settings]); // GUI items use screen coordinates
-
-
-         this.floating = true; // enable event detection
-
-         this.isKinematic = false;
-       },
-
-       /**
-        * return true if the object has been clicked
-        * @ignore
-        */
-       update: function update(dt) {
-         // call the parent constructor
-         var updated = this._super(me.Sprite, "update", [dt]); // check if the button was updated
-
-
-         if (this.updated) {
-           // clear the flag
-           if (!this.released) {
-             this.updated = false;
-           }
-
-           return true;
-         } // else only return true/false based on the parent function
-
-
-         return updated;
-       },
-
-       /**
-        * function callback for the pointerdown event
-        * @ignore
-        */
-       clicked: function clicked(event) {
-         // Check if left mouse button is pressed
-         if (event.button === 0 && this.isClickable) {
-           this.updated = true;
-           this.released = false;
-
-           if (this.isHoldable) {
-             if (this.holdTimeout !== null) {
-               me.timer.clearTimeout(this.holdTimeout);
-             }
-
-             this.holdTimeout = me.timer.setTimeout(this.hold.bind(this), this.holdThreshold, false);
-             this.released = false;
-           }
-
-           return this.onClick.call(this, event);
-         }
-       },
-
-       /**
-        * function called when the object is pressed <br>
-        * to be extended <br>
-        * return false if we need to stop propagating the event
-        * @name onClick
-        * @memberOf me.GUI_Object.prototype
-        * @public
-        * @function
-        * @param {Event} event the event object
-        */
-       onClick: function onClick()
-       /* event */
-       {
-         return false;
-       },
-
-       /**
-        * function callback for the pointerEnter event
-        * @ignore
-        */
-       enter: function enter(event) {
-         this.hover = true;
-         return this.onOver.call(this, event);
-       },
-
-       /**
-        * function called when the pointer is over the object
-        * @name onOver
-        * @memberOf me.GUI_Object.prototype
-        * @public
-        * @function
-        * @param {Event} event the event object
-        */
-       onOver: function onOver()
-       /* event */
-       {},
-
-       /**
-        * function callback for the pointerLeave event
-        * @ignore
-        */
-       leave: function leave(event) {
-         this.hover = false;
-         this.release.call(this, event);
-         return this.onOut.call(this, event);
-       },
-
-       /**
-        * function called when the pointer is leaving the object area
-        * @name onOut
-        * @memberOf me.GUI_Object.prototype
-        * @public
-        * @function
-        * @param {Event} event the event object
-        */
-       onOut: function onOut()
-       /* event */
-       {},
-
-       /**
-        * function callback for the pointerup event
-        * @ignore
-        */
-       release: function release(event) {
-         if (this.released === false) {
-           this.released = true;
-           me.timer.clearTimeout(this.holdTimeout);
-           return this.onRelease.call(this, event);
-         }
-       },
-
-       /**
-        * function called when the object is pressed and released <br>
-        * to be extended <br>
-        * return false if we need to stop propagating the event
-        * @name onRelease
-        * @memberOf me.GUI_Object.prototype
-        * @public
-        * @function
-        * @param {Event} event the event object
-        */
-       onRelease: function onRelease() {
-         return false;
-       },
-
-       /**
-        * function callback for the tap and hold timer event
-        * @ignore
-        */
-       hold: function hold() {
-         me.timer.clearTimeout(this.holdTimeout);
-
-         if (!this.released) {
-           this.onHold.call(this);
-         }
-       },
-
-       /**
-        * function called when the object is pressed and held<br>
-        * to be extended <br>
-        * @name onHold
-        * @memberOf me.GUI_Object.prototype
-        * @public
-        * @function
-        */
-       onHold: function onHold() {},
-
-       /**
-        * function called when added to the game world or a container
-        * @ignore
-        */
-       onActivateEvent: function onActivateEvent() {
-         // register pointer events
-         me.input.registerPointerEvent("pointerdown", this, this.clicked.bind(this));
-         me.input.registerPointerEvent("pointerup", this, this.release.bind(this));
-         me.input.registerPointerEvent("pointercancel", this, this.release.bind(this));
-         me.input.registerPointerEvent("pointerenter", this, this.enter.bind(this));
-         me.input.registerPointerEvent("pointerleave", this, this.leave.bind(this));
-       },
-
-       /**
-        * function called when removed from the game world or a container
-        * @ignore
-        */
-       onDeactivateEvent: function onDeactivateEvent() {
-         // release pointer events
-         me.input.releasePointerEvent("pointerdown", this);
-         me.input.releasePointerEvent("pointerup", this);
-         me.input.releasePointerEvent("pointercancel", this);
-         me.input.releasePointerEvent("pointerenter", this);
-         me.input.releasePointerEvent("pointerleave", this);
-         me.timer.clearTimeout(this.holdTimeout);
-       }
-     });
-   })();
-
-   (function () {
-     /**
-      * Private function to re-use for object removal in a defer
-      * @ignore
-      */
-     var deferredRemove = function deferredRemove(child, keepalive) {
-       this.removeChildNow(child, keepalive);
-     };
-
-     var globalFloatingCounter = 0;
-     /**
-      * me.Container represents a collection of child objects
-      * @class
-      * @extends me.Renderable
+      * @extends me.Container
       * @memberOf me
       * @constructor
       * @param {Number} [x=0] position of the container (accessible via the inherited pos.x property)
@@ -11508,889 +13415,86 @@
       * @param {Number} [w=me.game.viewport.width] width of the container
       * @param {Number} [h=me.game.viewport.height] height of the container
       */
-
-     me.Container = me.Renderable.extend({
+     me.World = me.Container.extend({
        /**
         * @ignore
         */
-       init: function init(x, y, width, height, root) {
-         /**
-          * keep track of pending sort
-          * @ignore
-          */
-         this.pendingSort = null; // call the _super constructor
+       init: function init(x, y, width, height) {
+         // call the _super constructor
+         this._super(me.Container, "init", [x || 0, y || 0, width || Infinity, height || Infinity, true]); // world is the root container
 
-         this._super(me.Renderable, "init", [x || 0, y || 0, width || Infinity, height || Infinity]);
+
+         this.name = "rootContainer"; // to mimic the previous behavior
+
+         this.anchorPoint.set(0, 0);
          /**
-          * whether the container is the root of the scene
+          * the rate at which the game world is updated,
+          * may be greater than or lower than the display fps
           * @public
-          * @type Boolean
-          * @default false
-          * @name root
-          * @memberOf me.Container
+          * @type me.Vector2d
+          * @default 60
+          * @name fps
+          * @memberOf me.World
+          * @see me.timer.maxfps
           */
 
-
-         this.root = root || false;
+         this.fps = 60;
          /**
-          * The array of children of this container.
-          * @ignore
-          */
-
-         this.children = [];
-         /**
-          * The property of the child object that should be used to sort on <br>
-          * value : "x", "y", "z"
+          * world gravity
           * @public
-          * @type String
-          * @default me.game.sortOn
-          * @name sortOn
-          * @memberOf me.Container
+          * @type me.Vector2d
+          * @default <0,0.98>
+          * @name gravity
+          * @memberOf me.World
           */
 
-         this.sortOn = me.game.sortOn;
+         this.gravity = new me.Vector2d(0, 0.98);
          /**
-          * Specify if the children list should be automatically sorted when adding a new child
+          * the instance of the game world quadtree used for broadphase
+          * @name broadphase
+          * @memberOf me.World
           * @public
-          * @type Boolean
-          * @default true
-          * @name autoSort
-          * @memberOf me.Container
+          * @type {me.QuadTree}
           */
 
-         this.autoSort = true;
-         /**
-          * Specify if the children z index should automatically be managed by the parent container
-          * @public
-          * @type Boolean
-          * @default true
-          * @name autoDepth
-          * @memberOf me.Container
-          */
+         this.broadphase = new me.QuadTree(this.getBounds().clone(), me.collision.maxChildren, me.collision.maxDepth); // reset the world container on the game reset signal
 
-         this.autoDepth = true;
-         /**
-          * Specify if the container draw operation should clip his children to its own bounds
-          * @public
-          * @type Boolean
-          * @default false
-          * @name clipping
-          * @memberOf me.Container
-          */
+         me.event.subscribe(me.event.GAME_RESET, this.reset.bind(this)); // update the broadband world bounds if a new level is loaded
 
-         this.clipping = false;
-         /**
-          * a callback to be extended, triggered when a child is added or removed
-          * @name onChildChange
-          * @memberOf me.Container#
-          * @function
-          * @param {Number} index added or removed child index
-          */
-
-         this.onChildChange = function ()
-         /* index */
-         {// to be extended
-         };
-         /**
-          * Used by the debug panel plugin
-          * @ignore
-          */
-
-
-         this.drawCount = 0;
-         /**
-          * The bounds that contains all its children
-          * @public
-          * @type me.Rect
-          * @name childBounds
-          * @memberOf me.Container#
-          */
-
-         this.childBounds = this.getBounds().clone(); // container self apply any defined transformation
-
-         this.autoTransform = true; // enable collision and event detection
-
-         this.isKinematic = false; // subscribe on the canvas resize event
-
-         if (this.root === true) {
-           // XXX: Workaround for not updating container child-bounds automatically (it's expensive!)
-           me.event.subscribe(me.event.CANVAS_ONRESIZE, this.updateChildBounds.bind(this));
-         }
+         me.event.subscribe(me.event.LEVEL_LOADED, function () {
+           // reset the quadtree
+           me.game.world.broadphase.clear(me.game.world.getBounds());
+         });
        },
 
        /**
-        * reset the container, removing all childrens, and reseting transforms.
+        * reset the game world
         * @name reset
-        * @memberOf me.Container
+        * @memberOf me.World
         * @function
         */
        reset: function reset() {
-         // cancel any sort operation
-         if (this.pendingSort) {
-           clearTimeout(this.pendingSort);
-           this.pendingSort = null;
-         } // delete all children
+         // clear the quadtree
+         this.broadphase.clear(); // reset the anchorPoint
 
+         this.anchorPoint.set(0, 0); // call the _super constructor
 
-         for (var i = this.children.length, obj; i >= 0; obj = this.children[--i]) {
-           // don't remove it if a persistent object
-           if (obj && !obj.isPersistent) {
-             this.removeChildNow(obj);
-           }
-         }
-
-         if (typeof this.currentTransform !== "undefined") {
-           // just reset some variables
-           this.currentTransform.identity();
-         }
+         this._super(me.Container, "reset");
        },
 
        /**
-        * Add a child to the container <br>
-        * if auto-sort is disable, the object will be appended at the bottom of the list.
-        * Adding a child to the container will automatically remove it from its other container.
-        * Meaning a child can only have one parent.  This is important if you add a renderable
-        * to a container then add it to the me.game.world container it will move it out of the
-        * orginal container.  Then when the me.game.world.reset() is called the renderable
-        * will not be in any container.
-        * @name addChild
-        * @memberOf me.Container.prototype
+        * update the game world
+        * @name reset
+        * @memberOf me.World
         * @function
-        * @param {me.Renderable} child
-        * @param {number} [z] forces the z index of the child to the specified value
-        * @return {me.Renderable} the added child
-        */
-       addChild: function addChild(child, z) {
-         if (child.ancestor instanceof me.Container) {
-           child.ancestor.removeChildNow(child);
-         } else {
-           // only allocate a GUID if the object has no previous ancestor
-           // (e.g. move one child from one container to another)
-           if (child.isRenderable) {
-             // allocated a GUID value (use child.id as based index if defined)
-             child.GUID = me.utils.createGUID(child.id);
-           }
-         }
-
-         child.ancestor = this;
-         this.children.push(child); // set the child z value if required
-
-         if (typeof child.pos !== "undefined") {
-           if (typeof z === "number") {
-             child.pos.z = z;
-           } else if (this.autoDepth === true) {
-             child.pos.z = this.children.length;
-           }
-         }
-
-         if (this.autoSort === true) {
-           this.sort();
-         }
-
-         if (typeof child.onActivateEvent === "function" && this.isAttachedToRoot()) {
-           child.onActivateEvent();
-         }
-
-         this.onChildChange.call(this, this.children.length - 1);
-         return child;
-       },
-
-       /**
-        * Add a child to the container at the specified index<br>
-        * (the list won't be sorted after insertion)
-        * @name addChildAt
-        * @memberOf me.Container.prototype
-        * @function
-        * @param {me.Renderable} child
-        * @param {Number} index
-        * @return {me.Renderable} the added child
-        */
-       addChildAt: function addChildAt(child, index) {
-         if (index >= 0 && index < this.children.length) {
-           if (child.ancestor instanceof me.Container) {
-             child.ancestor.removeChildNow(child);
-           } else {
-             // only allocate a GUID if the object has no previous ancestor
-             // (e.g. move one child from one container to another)
-             if (child.isRenderable) {
-               // allocated a GUID value
-               child.GUID = me.utils.createGUID();
-             }
-           }
-
-           child.ancestor = this;
-           this.children.splice(index, 0, child);
-
-           if (typeof child.onActivateEvent === "function" && this.isAttachedToRoot()) {
-             child.onActivateEvent();
-           }
-
-           this.onChildChange.call(this, index);
-           return child;
-         } else {
-           throw new Error("Index (" + index + ") Out Of Bounds for addChildAt()");
-         }
-       },
-
-       /**
-        * The forEach() method executes a provided function once per child element. <br>
-        * callback is invoked with three arguments: <br>
-        *    - the element value <br>
-        *    - the element index <br>
-        *    - the array being traversed <br>
-        * @name forEach
-        * @memberOf me.Container.prototype
-        * @function
-        * @param {Function} callback
-        * @param {Object} [thisArg] value to use as this(i.e reference Object) when executing callback.
-        * @example
-        * // iterate through all children of the root container
-        * me.game.world.forEach(function (child) {
-        *    // do something with the child
-        * });
-        */
-       forEach: function forEach(callback, thisArg) {
-         var context = this,
-             i = 0;
-         var len = this.children.length;
-
-         if (typeof callback !== "function") {
-           throw new Error(callback + " is not a function");
-         }
-
-         if (arguments.length > 1) {
-           context = thisArg;
-         }
-
-         while (i < len) {
-           callback.call(context, this.children[i], i, this.children);
-           i++;
-         }
-       },
-
-       /**
-        * Swaps the position (z-index) of 2 children
-        * @name swapChildren
-        * @memberOf me.Container.prototype
-        * @function
-        * @param {me.Renderable} child
-        * @param {me.Renderable} child2
-        */
-       swapChildren: function swapChildren(child, child2) {
-         var index = this.getChildIndex(child);
-         var index2 = this.getChildIndex(child2);
-
-         if (index !== -1 && index2 !== -1) {
-           // swap z index
-           var _z = child.pos.z;
-           child.pos.z = child2.pos.z;
-           child2.pos.z = _z; // swap the positions..
-
-           this.children[index] = child2;
-           this.children[index2] = child;
-         } else {
-           throw new Error(child + " Both the supplied childs must be a child of the caller " + this);
-         }
-       },
-
-       /**
-        * Returns the Child at the specified index
-        * @name getChildAt
-        * @memberOf me.Container.prototype
-        * @function
-        * @param {Number} index
-        */
-       getChildAt: function getChildAt(index) {
-         if (index >= 0 && index < this.children.length) {
-           return this.children[index];
-         } else {
-           throw new Error("Index (" + index + ") Out Of Bounds for getChildAt()");
-         }
-       },
-
-       /**
-        * Returns the index of the given Child
-        * @name getChildIndex
-        * @memberOf me.Container.prototype
-        * @function
-        * @param {me.Renderable} child
-        */
-       getChildIndex: function getChildIndex(child) {
-         return this.children.indexOf(child);
-       },
-
-       /**
-        * Returns the next child within the container or undefined if none
-        * @name getNextChild
-        * @memberOf me.Container
-        * @function
-        * @param {me.Renderable} child
-        */
-       getNextChild: function getNextChild(child) {
-         var index = this.children.indexOf(child) - 1;
-
-         if (index >= 0 && index < this.children.length) {
-           return this.getChildAt(index);
-         }
-
-         return undefined;
-       },
-
-       /**
-        * Returns true if contains the specified Child
-        * @name hasChild
-        * @memberOf me.Container.prototype
-        * @function
-        * @param {me.Renderable} child
-        * @return {Boolean}
-        */
-       hasChild: function hasChild(child) {
-         return this === child.ancestor;
-       },
-
-       /**
-        * return the child corresponding to the given property and value.<br>
-        * note : avoid calling this function every frame since
-        * it parses the whole object tree each time
-        * @name getChildByProp
-        * @memberOf me.Container.prototype
-        * @public
-        * @function
-        * @param {String} prop Property name
-        * @param {String|RegExp|Number|Boolean} value Value of the property
-        * @return {me.Renderable[]} Array of childs
-        * @example
-        * // get the first child object called "mainPlayer" in a specific container :
-        * var ent = myContainer.getChildByProp("name", "mainPlayer");
-        *
-        * // or query the whole world :
-        * var ent = me.game.world.getChildByProp("name", "mainPlayer");
-        *
-        * // partial property matches are also allowed by using a RegExp.
-        * // the following matches "redCOIN", "bluecoin", "bagOfCoins", etc :
-        * var allCoins = me.game.world.getChildByProp("name", /coin/i);
-        *
-        * // searching for numbers or other data types :
-        * var zIndex10 = me.game.world.getChildByProp("z", 10);
-        * var inViewport = me.game.world.getChildByProp("inViewport", true);
-        */
-       getChildByProp: function getChildByProp(prop, value) {
-         var objList = [];
-
-         function compare(obj, prop) {
-           var v = obj[prop];
-
-           if (value instanceof RegExp && typeof v === "string") {
-             if (value.test(v)) {
-               objList.push(obj);
-             }
-           } else if (v === value) {
-             objList.push(obj);
-           }
-         }
-
-         for (var i = this.children.length - 1; i >= 0; i--) {
-           var obj = this.children[i];
-           compare(obj, prop);
-
-           if (obj instanceof me.Container) {
-             objList = objList.concat(obj.getChildByProp(prop, value));
-           }
-         }
-
-         return objList;
-       },
-
-       /**
-        * returns the list of childs with the specified class type
-        * @name getChildByType
-        * @memberOf me.Container.prototype
-        * @public
-        * @function
-        * @param {Object} class type
-        * @return {me.Renderable[]} Array of children
-        */
-       getChildByType: function getChildByType(_class) {
-         var objList = [];
-
-         for (var i = this.children.length - 1; i >= 0; i--) {
-           var obj = this.children[i];
-
-           if (obj instanceof _class) {
-             objList.push(obj);
-           }
-
-           if (obj instanceof me.Container) {
-             objList = objList.concat(obj.getChildByType(_class));
-           }
-         }
-
-         return objList;
-       },
-
-       /**
-        * returns the list of childs with the specified name<br>
-        * as defined in Tiled (Name field of the Object Properties)<br>
-        * note : avoid calling this function every frame since
-        * it parses the whole object list each time
-        * @name getChildByName
-        * @memberOf me.Container.prototype
-        * @public
-        * @function
-        * @param {String|RegExp|Number|Boolean} name entity name
-        * @return {me.Renderable[]} Array of children
-        */
-       getChildByName: function getChildByName(name) {
-         return this.getChildByProp("name", name);
-       },
-
-       /**
-        * return the child corresponding to the specified GUID<br>
-        * note : avoid calling this function every frame since
-        * it parses the whole object list each time
-        * @name getChildByGUID
-        * @memberOf me.Container.prototype
-        * @public
-        * @function
-        * @param {String|RegExp|Number|Boolean} GUID entity GUID
-        * @return {me.Renderable} corresponding child or null
-        */
-       getChildByGUID: function getChildByGUID(guid) {
-         var obj = this.getChildByProp("GUID", guid);
-         return obj.length > 0 ? obj[0] : null;
-       },
-
-       /**
-        * resizes the child bounds rectangle, based on children bounds.
-        * @name updateChildBounds
-        * @memberOf me.Container.prototype
-        * @function
-        * @return {me.Rect} updated child bounds
-        */
-       updateChildBounds: function updateChildBounds() {
-         this.childBounds.pos.set(Infinity, Infinity);
-         this.childBounds.resize(-Infinity, -Infinity);
-         var childBounds;
-
-         for (var i = this.children.length, child; i--, child = this.children[i];) {
-           if (child.isRenderable) {
-             if (child instanceof me.Container) {
-               childBounds = child.childBounds;
-             } else {
-               childBounds = child.getBounds();
-             } // TODO : returns an "empty" rect instead of null (e.g. EntityObject)
-             // TODO : getBounds should always return something anyway
-
-
-             if (childBounds !== null) {
-               this.childBounds.union(childBounds);
-             }
-           }
-         }
-
-         return this.childBounds;
-       },
-
-       /**
-        * Checks if this container is root or if it's attached to the root container.
-        * @private
-        * @name isAttachedToRoot
-        * @memberOf me.Container.prototype
-        * @function
-        * @returns Boolean
-        */
-       isAttachedToRoot: function isAttachedToRoot() {
-         if (this.root === true) {
-           return true;
-         } else {
-           var ancestor = this.ancestor;
-
-           while (ancestor) {
-             if (ancestor.root === true) {
-               return true;
-             }
-
-             ancestor = ancestor.ancestor;
-           }
-
-           return false;
-         }
-       },
-
-       /**
-        * update the renderable's bounding rect (private)
-        * @private
-        * @name updateBoundsPos
-        * @memberOf me.Container.prototype
-        * @function
-        */
-       updateBoundsPos: function updateBoundsPos(newX, newY) {
-         this._super(me.Renderable, "updateBoundsPos", [newX, newY]); // Update container's absolute position
-
-
-         this._absPos.set(newX, newY);
-
-         if (this.ancestor instanceof me.Container && !this.floating) {
-           this._absPos.add(this.ancestor._absPos);
-         } // Notify children that the parent's position has changed
-
-
-         for (var i = this.children.length, child; i--, child = this.children[i];) {
-           if (child.isRenderable) {
-             child.updateBoundsPos(child.pos.x, child.pos.y);
-           }
-         }
-
-         return this.getBounds();
-       },
-
-       /**
-        * @ignore
-        */
-       onActivateEvent: function onActivateEvent() {
-         for (var i = this.children.length, child; i--, child = this.children[i];) {
-           if (typeof child.onActivateEvent === "function") {
-             child.onActivateEvent();
-           }
-         }
-       },
-
-       /**
-        * Invokes the removeChildNow in a defer, to ensure the child is removed safely after the update & draw stack has completed
-        * @name removeChild
-        * @memberOf me.Container.prototype
-        * @public
-        * @function
-        * @param {me.Renderable} child
-        * @param {Boolean} [keepalive=False] True to prevent calling child.destroy()
-        */
-       removeChild: function removeChild(child, keepalive) {
-         if (this.hasChild(child)) {
-           me.utils["function"].defer(deferredRemove, this, child, keepalive);
-         } else {
-           throw new Error("Child is not mine.");
-         }
-       },
-
-       /**
-        * Removes (and optionally destroys) a child from the container.<br>
-        * (removal is immediate and unconditional)<br>
-        * Never use keepalive=true with objects from {@link me.pool}. Doing so will create a memory leak.
-        * @name removeChildNow
-        * @memberOf me.Container.prototype
-        * @function
-        * @param {me.Renderable} child
-        * @param {Boolean} [keepalive=False] True to prevent calling child.destroy()
-        */
-       removeChildNow: function removeChildNow(child, keepalive) {
-         if (this.hasChild(child) && this.getChildIndex(child) >= 0) {
-           if (typeof child.onDeactivateEvent === "function") {
-             child.onDeactivateEvent();
-           }
-
-           if (!keepalive) {
-             if (typeof child.destroy === "function") {
-               child.destroy();
-             }
-
-             me.pool.push(child);
-           } // Don't cache the child index; another element might have been removed
-           // by the child's `onDeactivateEvent` or `destroy` methods
-
-
-           var childIndex = this.getChildIndex(child);
-
-           if (childIndex >= 0) {
-             this.children.splice(childIndex, 1);
-             child.ancestor = undefined;
-           }
-
-           this.onChildChange.call(this, childIndex);
-         }
-       },
-
-       /**
-        * Automatically set the specified property of all childs to the given value
-        * @name setChildsProperty
-        * @memberOf me.Container.prototype
-        * @function
-        * @param {String} property property name
-        * @param {Object} value property value
-        * @param {Boolean} [recursive=false] recursively apply the value to child containers if true
-        */
-       setChildsProperty: function setChildsProperty(prop, val, recursive) {
-         for (var i = this.children.length; i >= 0; i--) {
-           var obj = this.children[i];
-
-           if (recursive === true && obj instanceof me.Container) {
-             obj.setChildsProperty(prop, val, recursive);
-           }
-
-           obj[prop] = val;
-         }
-       },
-
-       /**
-        * Move the child in the group one step forward (z depth).
-        * @name moveUp
-        * @memberOf me.Container.prototype
-        * @function
-        * @param {me.Renderable} child
-        */
-       moveUp: function moveUp(child) {
-         var childIndex = this.getChildIndex(child);
-
-         if (childIndex - 1 >= 0) {
-           // note : we use an inverted loop
-           this.swapChildren(child, this.getChildAt(childIndex - 1));
-         }
-       },
-
-       /**
-        * Move the child in the group one step backward (z depth).
-        * @name moveDown
-        * @memberOf me.Container.prototype
-        * @function
-        * @param {me.Renderable} child
-        */
-       moveDown: function moveDown(child) {
-         var childIndex = this.getChildIndex(child);
-
-         if (childIndex >= 0 && childIndex + 1 < this.children.length) {
-           // note : we use an inverted loop
-           this.swapChildren(child, this.getChildAt(childIndex + 1));
-         }
-       },
-
-       /**
-        * Move the specified child to the top(z depth).
-        * @name moveToTop
-        * @memberOf me.Container.prototype
-        * @function
-        * @param {me.Renderable} child
-        */
-       moveToTop: function moveToTop(child) {
-         var childIndex = this.getChildIndex(child);
-
-         if (childIndex > 0) {
-           // note : we use an inverted loop
-           this.children.splice(0, 0, this.children.splice(childIndex, 1)[0]); // increment our child z value based on the previous child depth
-
-           child.pos.z = this.children[1].pos.z + 1;
-         }
-       },
-
-       /**
-        * Move the specified child the bottom (z depth).
-        * @name moveToBottom
-        * @memberOf me.Container.prototype
-        * @function
-        * @param {me.Renderable} child
-        */
-       moveToBottom: function moveToBottom(child) {
-         var childIndex = this.getChildIndex(child);
-
-         if (childIndex >= 0 && childIndex < this.children.length - 1) {
-           // note : we use an inverted loop
-           this.children.splice(this.children.length - 1, 0, this.children.splice(childIndex, 1)[0]); // increment our child z value based on the next child depth
-
-           child.pos.z = this.children[this.children.length - 2].pos.z - 1;
-         }
-       },
-
-       /**
-        * Manually trigger the sort of all the childs in the container</p>
-        * @name sort
-        * @memberOf me.Container.prototype
-        * @public
-        * @function
-        * @param {Boolean} [recursive=false] recursively sort all containers if true
-        */
-       sort: function sort(recursive) {
-         // do nothing if there is already a pending sort
-         if (!this.pendingSort) {
-           if (recursive === true) {
-             // trigger other child container sort function (if any)
-             for (var i = this.children.length, obj; i--, obj = this.children[i];) {
-               if (obj instanceof me.Container) {
-                 // note : this will generate one defered sorting function
-                 // for each existing containe
-                 obj.sort(recursive);
-               }
-             }
-           }
-           /** @ignore */
-
-
-           this.pendingSort = me.utils["function"].defer(function (self) {
-             // sort everything in this container
-             self.children.sort(self["_sort" + self.sortOn.toUpperCase()]); // clear the defer id
-
-             self.pendingSort = null; // make sure we redraw everything
-
-             me.game.repaint();
-           }, this, this);
-         }
-       },
-
-       /**
-        * @ignore
-        */
-       onDeactivateEvent: function onDeactivateEvent() {
-         for (var i = this.children.length, child; i--, child = this.children[i];) {
-           if (typeof child.onDeactivateEvent === "function") {
-             child.onDeactivateEvent();
-           }
-         }
-       },
-
-       /**
-        * Z Sorting function
-        * @ignore
-        */
-       _sortZ: function _sortZ(a, b) {
-         return b.pos && a.pos ? b.pos.z - a.pos.z : a.pos ? -Infinity : Infinity;
-       },
-
-       /**
-        * Reverse Z Sorting function
-        * @ignore
-        */
-       _sortReverseZ: function _sortReverseZ(a, b) {
-         return a.pos && b.pos ? a.pos.z - b.pos.z : a.pos ? Infinity : -Infinity;
-       },
-
-       /**
-        * X Sorting function
-        * @ignore
-        */
-       _sortX: function _sortX(a, b) {
-         if (!b.pos || !a.pos) {
-           return a.pos ? -Infinity : Infinity;
-         }
-
-         var result = b.pos.z - a.pos.z;
-         return result ? result : b.pos.x - a.pos.x;
-       },
-
-       /**
-        * Y Sorting function
-        * @ignore
-        */
-       _sortY: function _sortY(a, b) {
-         if (!b.pos || !a.pos) {
-           return a.pos ? -Infinity : Infinity;
-         }
-
-         var result = b.pos.z - a.pos.z;
-         return result ? result : b.pos.y - a.pos.y;
-       },
-
-       /**
-        * Destroy function<br>
-        * @ignore
-        */
-       destroy: function destroy() {
-         // empty the container
-         this.reset(); // call the parent destroy method
-
-         this._super(me.Renderable, "destroy", arguments);
-       },
-
-       /**
-        * @ignore
         */
        update: function update(dt) {
-         this._super(me.Renderable, "update", [dt]);
+         // clear the quadtree
+         this.broadphase.clear(); // insert the world container (children) into the quadtree
 
-         var isDirty = false;
-         var isFloating = false;
-         var isPaused = me.state.isPaused(); // Update container's absolute position
+         this.broadphase.insertContainer(this); // call the _super constructor
 
-         this._absPos.setV(this.pos);
-
-         if (this.ancestor) {
-           this._absPos.add(this.ancestor._absPos);
-         }
-
-         for (var i = this.children.length, obj; i--, obj = this.children[i];) {
-           if (isPaused && !obj.updateWhenPaused) {
-             // skip this object
-             continue;
-           }
-
-           if (obj.isRenderable) {
-             isFloating = globalFloatingCounter > 0 || obj.floating;
-
-             if (isFloating) {
-               globalFloatingCounter++;
-             } // check if object is in any active cameras
-
-
-             obj.inViewport = false; // iterate through all cameras
-
-             me.state.current().cameras.forEach(function (camera) {
-               if (camera.isVisible(obj, isFloating)) {
-                 obj.inViewport = true;
-               }
-             }); // update our object
-
-             isDirty = (obj.inViewport || obj.alwaysUpdate) && obj.update(dt) || isDirty; // Update child's absolute position
-
-             obj._absPos.setV(this._absPos).add(obj.pos);
-
-             if (globalFloatingCounter > 0) {
-               globalFloatingCounter--;
-             }
-           } else {
-             // just directly call update() for non renderable object
-             isDirty = obj.update(dt) || isDirty;
-           }
-         }
-
-         return isDirty;
-       },
-
-       /**
-        * @ignore
-        */
-       draw: function draw(renderer, rect) {
-         var isFloating = false;
-         this.drawCount = 0; // clip the containter children to the container bounds
-
-         if (this.root === false && this.clipping === true && this.childBounds.isFinite() === true) {
-           renderer.clipRect(this.childBounds.pos.x, this.childBounds.pos.y, this.childBounds.width, this.childBounds.height);
-         } // adjust position if required (e.g. canvas/window centering)
-
-
-         renderer.translate(this.pos.x, this.pos.y);
-
-         for (var i = this.children.length, obj; i--, obj = this.children[i];) {
-           if (obj.isRenderable) {
-             isFloating = obj.floating === true;
-
-             if (obj.inViewport || isFloating) {
-               if (isFloating) {
-                 // translate to screen coordinates
-                 renderer.save();
-                 renderer.resetTransform();
-               } // predraw (apply transforms)
-
-
-               obj.preDraw(renderer); // draw the object
-
-               obj.draw(renderer, rect); // postdraw (clean-up);
-
-               obj.postDraw(renderer); // restore the previous "state"
-
-               if (isFloating) {
-                 renderer.restore();
-               }
-
-               this.drawCount++;
-             }
-           }
-         }
+         return this._super(me.Container, "update", [dt]);
        }
      });
    })();
@@ -12474,11 +13578,11 @@
           * @public
           * @type {Number}
           * @name near
-          * @default 1
+          * @default -1000
           * @memberOf me.Camera2d
           */
 
-         this.near = 1;
+         this.near = -1000;
          /**
           * the furthest point relative to the camera.
           * @public
@@ -12493,12 +13597,21 @@
           * the default camera projection matrix
           * (2d cameras use an orthographic projection by default).
           * @public
-          * @type {me.Matrix2d}
+          * @type {me.Matrix3d}
           * @name projectionMatrix
           * @memberOf me.Camera2d
           */
 
-         this.projectionMatrix = new me.Matrix2d(); // offset for shake effect
+         this.projectionMatrix = new me.Matrix3d();
+         /**
+          * the invert camera transform used to unproject points
+          * @ignore
+          * @type {me.Matrix2d}
+          * @name invCurrentTransform
+          * @memberOf me.Camera2d
+          */
+
+         this.invCurrentTransform = new me.Matrix2d(); // offset for shake effect
 
          this.offset = new me.Vector2d(); // target to follow
 
@@ -12591,7 +13704,8 @@
          this.smoothFollow = true;
          this.damping = 1.0; // reset the transformation matrix
 
-         this.currentTransform.identity(); // update the projection matrix
+         this.currentTransform.identity();
+         this.invCurrentTransform.identity().invert(); // update the projection matrix
 
          this._updateProjectionMatrix();
        },
@@ -12635,11 +13749,9 @@
          this._super(me.Renderable, "resize", [w, h]); // disable damping while resizing
 
 
-         this.smoothFollow = false; // update bounds
+         this.smoothFollow = false; // reset everything
 
-         var level = me.levelDirector.getCurrentLevel();
-         this.setBounds(0, 0, Math.max(w, level ? level.getBounds().width : 0), Math.max(h, level ? level.getBounds().height : 0)); // reset everthing
-
+         this.setBounds(0, 0, w, h);
          this.setDeadzone(w / 6, h / 6);
          this.update();
          this.smoothFollow = true; // update the projection matrix
@@ -12777,9 +13889,6 @@
                targetV.x = this._followH(this.target);
                targetV.y = this._followV(this.target);
                break;
-
-             default:
-               break;
            }
 
            if (!this.pos.equals(targetV)) {
@@ -12839,6 +13948,13 @@
 
          if (this._fadeIn.tween != null || this._fadeOut.tween != null) {
            updated = true;
+         }
+
+         if (!this.currentTransform.isIdentity()) {
+           this.invCurrentTransform.copy(this.currentTransform).invert();
+         } else {
+           // reset to default
+           this.invCurrentTransform.identity();
          }
 
          return updated;
@@ -12991,7 +14107,7 @@
          v.set(x, y).add(this.pos).sub(me.game.world.pos);
 
          if (!this.currentTransform.isIdentity()) {
-           this.currentTransform.multiplyVectorInverse(v);
+           this.invCurrentTransform.apply(v);
          }
 
          return v;
@@ -13014,7 +14130,7 @@
          v.set(x, y);
 
          if (!this.currentTransform.isIdentity()) {
-           this.currentTransform.multiplyVector(v);
+           this.currentTransform.apply(v);
          }
 
          return v.sub(this.pos).add(me.game.world.pos);
@@ -13027,7 +14143,14 @@
        drawFX: function drawFX(renderer) {
          // fading effect
          if (this._fadeIn.tween) {
-           renderer.clearColor(this._fadeIn.color); // remove the tween if over
+           // add an overlay
+           // TODO use the tint feature once implemented in Canvas mode
+           renderer.save(); // reset all transform so that the overaly cover the whole camera area
+
+           renderer.resetTransform();
+           renderer.setColor(this._fadeIn.color);
+           renderer.fillRect(0, 0, this.width, this.height);
+           renderer.restore(); // remove the tween if over
 
            if (this._fadeIn.color.alpha === 1.0) {
              this._fadeIn.tween = null;
@@ -13038,7 +14161,14 @@
 
 
          if (this._fadeOut.tween) {
-           renderer.clearColor(this._fadeOut.color); // remove the tween if over
+           // add an overlay
+           // TODO use the tint feature once implemented in Canvas mode
+           renderer.save(); // reset all transform so that the overaly cover the whole camera area
+
+           renderer.resetTransform();
+           renderer.setColor(this._fadeOut.color);
+           renderer.fillRect(0, 0, this.width, this.height);
+           renderer.restore(); // remove the tween if over
 
            if (this._fadeOut.color.alpha === 0.0) {
              this._fadeOut.tween = null;
@@ -13170,12 +14300,14 @@
           */
          // initialize the default body
 
-         var shapes = Array.isArray(settings.shapes) ? settings.shapes : [new me.Polygon(0, 0, [new me.Vector2d(0, 0), new me.Vector2d(this.width, 0), new me.Vector2d(this.width, this.height), new me.Vector2d(0, this.height)])];
+         if (typeof settings.shapes === "undefined") {
+           settings.shapes = new me.Polygon(0, 0, [new me.Vector2d(0, 0), new me.Vector2d(this.width, 0), new me.Vector2d(this.width, this.height), new me.Vector2d(0, this.height)]);
+         }
 
          if (typeof this.body !== "undefined") {
-           this.body.init(this, shapes, this.onBodyUpdate.bind(this));
+           this.body.init(this, settings.shapes, this.onBodyUpdate.bind(this));
          } else {
-           this.body = new me.Body(this, shapes, this.onBodyUpdate.bind(this));
+           this.body = new me.Body(this, settings.shapes, this.onBodyUpdate.bind(this));
          } // resize the entity if required
 
 
@@ -13198,9 +14330,7 @@
          } // disable for entities
 
 
-         this.autoTransform = false; // enable collision detection
-
-         this.isKinematic = false;
+         this.autoTransform = false;
        },
 
        /** @ignore */
@@ -13422,12 +14552,50 @@
            }
 
            this.cameras.set("default", default_camera);
-         } // reset the game manager
+         } // reset the game
 
 
          me.game.reset(); // call the onReset Function
 
          this.onResetEvent.apply(this, arguments);
+       },
+
+       /**
+        * update function
+        * @name update
+        * @memberOf me.Stage
+        * @ignore
+        * @function
+        * @param {Number} dt time since the last update in milliseconds.
+        * @return false
+        **/
+       update: function update(dt) {
+         // update all objects (and pass the elapsed time since last frame)
+         var isDirty = me.game.world.update(dt); // update the camera/viewport
+         // iterate through all cameras
+
+         this.cameras.forEach(function (camera) {
+           if (camera.update(dt)) {
+             isDirty = true;
+           }
+         });
+         return isDirty;
+       },
+
+       /**
+        * draw the current stage
+        * @name draw
+        * @memberOf me.Stage
+        * @ignore
+        * @function
+        * @param {me.CanvasRenderer|me.WebGLRenderer} renderer a renderer object
+        */
+       draw: function draw(renderer) {
+         // iterate through all cameras
+         this.cameras.forEach(function (camera) {
+           // render the root container
+           camera.draw(renderer, me.game.world);
+         });
        },
 
        /**
@@ -13609,7 +14777,7 @@
         */
 
        /**
-        * default state ID for Loading Screen
+        * default state ID for Loading Stage
         * @constant
         * @name LOADING
         * @memberOf me.state
@@ -13618,7 +14786,7 @@
 
        api.LOADING = 0;
        /**
-        * default state ID for Menu Screen
+        * default state ID for Menu Stage
         * @constant
         * @name MENU
         * @memberOf me.state
@@ -13626,7 +14794,7 @@
 
        api.MENU = 1;
        /**
-        * default state ID for "Ready" Screen
+        * default state ID for "Ready" Stage
         * @constant
         * @name READY
         * @memberOf me.state
@@ -13634,7 +14802,7 @@
 
        api.READY = 2;
        /**
-        * default state ID for Play Screen
+        * default state ID for Play Stage
         * @constant
         * @name PLAY
         * @memberOf me.state
@@ -13642,7 +14810,7 @@
 
        api.PLAY = 3;
        /**
-        * default state ID for Game Over Screen
+        * default state ID for Game Over Stage
         * @constant
         * @name GAMEOVER
         * @memberOf me.state
@@ -13650,7 +14818,7 @@
 
        api.GAMEOVER = 4;
        /**
-        * default state ID for Game End Screen
+        * default state ID for Game End Stage
         * @constant
         * @name GAME_END
         * @memberOf me.state
@@ -13658,7 +14826,7 @@
 
        api.GAME_END = 5;
        /**
-        * default state ID for High Score Screen
+        * default state ID for High Score Stage
         * @constant
         * @name SCORE
         * @memberOf me.state
@@ -13666,7 +14834,7 @@
 
        api.SCORE = 6;
        /**
-        * default state ID for Credits Screen
+        * default state ID for Credits Stage
         * @constant
         * @name CREDITS
         * @memberOf me.state
@@ -13674,13 +14842,22 @@
 
        api.CREDITS = 7;
        /**
-        * default state ID for Settings Screen
+        * default state ID for Settings Stage
         * @constant
         * @name SETTINGS
         * @memberOf me.state
         */
 
        api.SETTINGS = 8;
+       /**
+        * default state ID for the default Stage
+        * (the default stage is the one running as soon as melonJS is started)
+        * @constant
+        * @name SETTINGS
+        * @memberOf me.state
+        */
+
+       api.DEFAULT = 9;
        /**
         * default state ID for user defined constants<br>
         * @constant
@@ -13731,8 +14908,14 @@
         */
 
        api.init = function () {
-         // set the embedded loading screen
-         api.set(api.LOADING, new me.DefaultLoadingScreen());
+         // set the embedded loading stage
+         api.set(api.LOADING, new me.DefaultLoadingScreen()); // set and enable the default stage
+
+         api.set(me.state.DEFAULT, new me.Stage()); // enable by default as soon as the display is initialized
+
+         me.event.subscribe(me.event.VIDEO_INIT, function () {
+           me.state.change(me.state.DEFAULT, true);
+         });
        };
        /**
         * Stop the current screen object.
@@ -14000,6 +15183,7 @@
         * @public
         * @function
         * @param {Number} state State ID (see constants)
+        * @param {Boolean} forceChange if true the state will be changed immediately
         * @param {} [arguments...] extra arguments to be passed to the reset functions
         * @example
         * // The onResetEvent method on the play screen will receive two args:
@@ -14008,7 +15192,7 @@
         */
 
 
-       api.change = function (state) {
+       api.change = function (state, forceChange) {
          // Protect against undefined Stage
          if (typeof _stages[state] === "undefined") {
            throw new Error("Undefined Stage for state '" + state + "'");
@@ -14040,7 +15224,11 @@
          else {
              // wait for the last frame to be
              // "finished" before switching
-             me.utils["function"].defer(_switchState, this, state);
+             if (forceChange === true) {
+               _switchState(state);
+             } else {
+               me.utils["function"].defer(_switchState, this, state);
+             }
            }
        };
        /**
@@ -14069,13 +15257,16 @@
         * @ignore
         */
        init: function init(x, y, w, h) {
-         this._super(me.Renderable, "init", [x, y, w, h]); // flag to know if we need to refresh the display
+         var self = this;
+         this.barHeight = h;
 
+         this._super(me.Renderable, "init", [x, y, w, h]);
 
-         this.invalidate = false; // current progress
+         this.anchorPoint.set(0, 0);
+         this.loaderHdlr = me.event.subscribe(me.event.LOADER_PROGRESS, self.onProgressUpdate.bind(self));
+         this.resizeHdlr = me.event.subscribe(me.event.VIEWPORT_ONRESIZE, self.resize.bind(self)); // store current progress
 
          this.progress = 0;
-         this.anchorPoint.set(0, 0);
        },
 
        /**
@@ -14084,22 +15275,7 @@
         */
        onProgressUpdate: function onProgressUpdate(progress) {
          this.progress = ~~(progress * this.width);
-         this.invalidate = true;
-       },
-
-       /**
-        * @ignore
-        */
-       update: function update() {
-         if (this.invalidate === true) {
-           // clear the flag
-           this.invalidate = false; // and return true
-
-           return true;
-         } // else return false
-
-
-         return false;
+         this.isDirty = true;
        },
 
        /**
@@ -14107,14 +15283,24 @@
         * @ignore
         */
        draw: function draw(renderer) {
-         var color = renderer.getColor();
-         var height = renderer.getHeight(); // draw the progress bar
+         // clear the background
+         renderer.clearColor("#202020"); // draw the progress bar
 
          renderer.setColor("black");
-         renderer.fillRect(this.pos.x, height / 2, this.width, this.height / 2);
+         renderer.fillRect(this.pos.x, me.game.viewport.centerY, renderer.getWidth(), this.barHeight / 2);
          renderer.setColor("#55aa00");
-         renderer.fillRect(this.pos.x, height / 2, this.progress, this.height / 2);
-         renderer.setColor(color);
+         renderer.fillRect(this.pos.x, me.game.viewport.centerY, this.progress, this.barHeight / 2);
+       },
+
+       /**
+        * Called by engine before deleting the object
+        * @ignore
+        */
+       onDestroyEvent: function onDestroyEvent() {
+         // cancel the callback
+         me.event.unsubscribe(this.loaderHdlr);
+         me.event.unsubscribe(this.resizeHdlr);
+         this.loaderHdlr = this.resizeHdlr = null;
        }
      }); // the melonJS Logo
 
@@ -14158,7 +15344,7 @@
         * @ignore
         */
        draw: function draw(renderer) {
-         renderer.drawImage(this.iconCanvas, this.pos.x, this.pos.y);
+         renderer.drawImage(this.iconCanvas, renderer.getWidth() / 2, this.pos.y);
        }
      }); // the melonJS Text Logo
 
@@ -14167,10 +15353,11 @@
         * @ignore
         */
        init: function init(w, h) {
-         this._super(me.Renderable, "init", [0, 0, w, h]); // offscreen cache canvas
+         this._super(me.Renderable, "init", [0, 0, w, h]);
 
+         this.textWidth = 0; // offscreen cache canvas
 
-         this.fontCanvas = me.video.createCanvas(256, 64);
+         this.fontCanvas = me.video.createCanvas(256, 64, true);
          this.drawFont(me.video.renderer.getContext2d(this.fontCanvas));
          this.anchorPoint.set(0.0, 0.0);
        },
@@ -14194,14 +15381,15 @@
          }); // compute both logo respective size
 
          var logo1_width = logo1.measureText(context).width;
-         var logo2_width = logo2.measureText(context).width; // calculate the final rendering position
+         var logo2_width = logo2.measureText(context).width;
+         this.textWidth = logo1_width + logo2_width; // calculate the final rendering position
 
-         this.pos.x = Math.round((this.width - logo1_width - logo2_width) / 2);
+         this.pos.x = Math.round((this.width - this.textWidth) / 2);
          this.pos.y = Math.round(this.height / 2 + 16); // use the private _drawFont method to directly draw on the canvas context
 
-         logo1._drawFont(context, "melon", 0, 0);
+         logo1._drawFont(context, ["melon"], 0, 0);
 
-         logo2._drawFont(context, "JS", logo1_width, 0); // put them back into the object pool
+         logo2._drawFont(context, ["JS"], logo1_width, 0); // put them back into the object pool
 
 
          me.pool.push(logo1);
@@ -14212,7 +15400,7 @@
         * @ignore
         */
        draw: function draw(renderer) {
-         renderer.drawImage(this.fontCanvas, this.pos.x, this.pos.y);
+         renderer.drawImage(this.fontCanvas, Math.round((renderer.getWidth() - this.textWidth) / 2), this.pos.y);
        }
      });
      /**
@@ -14228,29 +15416,13 @@
         * @ignore
         */
        onResetEvent: function onResetEvent() {
-         // background color
-         me.game.world.addChild(new me.ColorLayer("background", "#202020", 0), 0); // progress bar
+         var barHeight = 8; // progress bar
 
-         var progressBar = new ProgressBar(0, me.video.renderer.getHeight() / 2, me.video.renderer.getWidth(), 8 // bar height
-         );
-         this.loaderHdlr = me.event.subscribe(me.event.LOADER_PROGRESS, progressBar.onProgressUpdate.bind(progressBar));
-         this.resizeHdlr = me.event.subscribe(me.event.VIEWPORT_ONRESIZE, progressBar.resize.bind(progressBar));
-         me.game.world.addChild(progressBar, 1); // melonJS text & logo
+         me.game.world.addChild(new ProgressBar(0, me.video.renderer.getHeight() / 2, me.video.renderer.getWidth(), barHeight), 1); // melonJS logo
 
-         var icon = new IconLogo(me.video.renderer.getWidth() / 2, me.video.renderer.getHeight() / 2 - progressBar.height - 35);
-         me.game.world.addChild(icon, 1);
-         me.game.world.addChild(new TextLogo(me.video.renderer.getWidth(), me.video.renderer.getHeight()), 1);
-       },
+         me.game.world.addChild(new IconLogo(me.video.renderer.getWidth() / 2, me.video.renderer.getHeight() / 2 - barHeight * 2 - 35), 2); // melonJS text
 
-       /**
-        * destroy object at end of loading
-        * @ignore
-        */
-       onDestroyEvent: function onDestroyEvent() {
-         // cancel the callback
-         me.event.unsubscribe(this.loaderHdlr);
-         me.event.unsubscribe(this.resizeHdlr);
-         this.loaderHdlr = this.resizeHdlr = null;
+         me.game.world.addChild(new TextLogo(me.video.renderer.getWidth(), me.video.renderer.getHeight()), 2);
        }
      });
    })();
@@ -15099,6 +16271,8 @@
       * @param {Number} [settings.lineHeight=1.0] line spacing height
       * @param {me.Vector2d} [settings.anchorPoint={x:0.0, y:0.0}] anchor point to draw the text at
       * @param {(String|String[])} [settings.text] a string, or an array of strings
+      * @example
+      * var font = new me.Text(0, 0, {font: "Arial", size: 8, fillStyle: this.color});
       */
 
 
@@ -15184,11 +16358,26 @@
           * @name me.Text#lineHeight
           */
 
-         this.lineHeight = settings.lineHeight || 1.0; // private font properties
+         this.lineHeight = settings.lineHeight || 1.0;
+         /**
+          * the text to be displayed
+          * @private
+          * @type {String[]}
+          * @name _text
+          * @memberOf me.Text
+          */
 
-         this._fontSize = 0; // the text displayed by this bitmapFont object
+         this._text = [];
+         /**
+          * the font size (in px)
+          * @public
+          * @type {Number}
+          * @name fontSize
+          * @default 10
+          * @memberOf me.Text
+         */
 
-         this._text = ""; // anchor point
+         this.fontSize = 10; // anchor point
 
          if (typeof settings.anchorPoint !== "undefined") {
            this.anchorPoint.setV(settings.anchorPoint);
@@ -15248,7 +16437,7 @@
         * @memberOf me.Text.prototype
         * @function
         * @param {String} font a CSS font name
-        * @param {Number|String} size size, or size + suffix (px, em, pt)
+        * @param {Number|String} [size=10] size in px, or size + suffix (px, em, pt)
         * @return this object for chaining
         * @example
         * font.setFont("Arial", 20);
@@ -15262,24 +16451,24 @@
          }); // font size
 
          if (typeof size === "number") {
-           this._fontSize = size;
+           this.fontSize = size;
            size += "px";
          } else
            /* string */
            {
              // extract the units and convert if necessary
              var CSSval = size.match(/([-+]?[\d.]*)(.*)/);
-             this._fontSize = parseFloat(CSSval[1]);
+             this.fontSize = parseFloat(CSSval[1]);
 
              if (CSSval[2]) {
-               this._fontSize *= toPX[runits.indexOf(CSSval[2])];
+               this.fontSize *= toPX[runits.indexOf(CSSval[2])];
              } else {
                // no unit define, assume px
                size += "px";
              }
            }
 
-         this.height = this._fontSize;
+         this.height = this.fontSize;
          this.font = size + " " + font_names.join(",");
          this.isDirty = true;
          return this;
@@ -15296,14 +16485,15 @@
        setText: function setText(value) {
          if (typeof value === "undefined") {
            value = "";
-         } else if (Array.isArray(value)) {
-           value = value.join("\n");
-         } else {
-           value = value.toString();
          }
 
-         if (this._text !== value) {
-           this._text = value;
+         if (this._text.toString() !== value.toString()) {
+           if (!Array.isArray(value)) {
+             this._text = ("" + value).split("\n");
+           } else {
+             this._text = value;
+           }
+
            this.isDirty = true;
          }
 
@@ -15321,7 +16511,6 @@
         * @returns {TextMetrics} a TextMetrics object with two properties: `width` and `height`, defining the output dimensions
         */
        measureText: function measureText(renderer, text, ret) {
-         text = text || this._text;
          var context;
 
          if (typeof renderer === "undefined") {
@@ -15334,8 +16523,8 @@
          }
 
          var textMetrics = ret || this.getBounds();
-         var lineHeight = this._fontSize * this.lineHeight;
-         var strings = ("" + text).split("\n"); // save the previous context
+         var lineHeight = this.fontSize * this.lineHeight;
+         var strings = typeof text !== "undefined" ? ("" + text).split("\n") : this._text; // save the previous context
 
          context.save(); // apply the style font
 
@@ -15344,7 +16533,7 @@
          this.height = this.width = 0;
 
          for (var i = 0; i < strings.length; i++) {
-           this.width = Math.max(context.measureText(me.utils.string.trimRight(strings[i])).width, this.width);
+           this.width = Math.max(context.measureText(me.utils.string.trimRight("" + strings[i])).width, this.width);
            this.height += lineHeight;
          }
 
@@ -15418,7 +16607,8 @@
          if (typeof this.ancestor === "undefined") {
            // restore previous context
            renderer.restore();
-         } // clear the dirty flag
+         } // clear the dirty flag here for
+         // backward compatibility 
 
 
          this.isDirty = false;
@@ -15445,11 +16635,10 @@
         */
        _drawFont: function _drawFont(context, text, x, y, stroke) {
          setContextStyle(context, this, stroke);
-         var strings = ("" + text).split("\n");
-         var lineHeight = this._fontSize * this.lineHeight;
+         var lineHeight = this.fontSize * this.lineHeight;
 
-         for (var i = 0; i < strings.length; i++) {
-           var string = me.utils.string.trimRight(strings[i]); // draw the string
+         for (var i = 0; i < text.length; i++) {
+           var string = me.utils.string.trimRight("" + text[i]); // draw the string
 
            context[stroke ? "strokeText" : "fillText"](string, x, y); // add leading space
 
@@ -15467,6 +16656,7 @@
          me.pool.push(this.fillStyle);
          me.pool.push(this.strokeStyle);
          this.fillStyle = this.strokeStyle = undefined;
+         this._text.length = 0;
 
          this._super(me.Renderable, "destroy");
        }
@@ -15513,6 +16703,7 @@
       * @param {String|Image} settings.font a font name to identify the corresponing source image
       * @param {String} [settings.fontData=settings.font] the bitmap font data corresponding name, or the bitmap font data itself
       * @param {Number} [settings.size] size a scaling ratio
+      * @param {me.Color|String} [settings.fillStyle] a CSS color value used to tint the bitmapText (@see me.BitmapText.tint)
       * @param {Number} [settings.lineWidth=1] line width, in pixels, when drawing stroke
       * @param {String} [settings.textAlign="left"] horizontal text alignment
       * @param {String} [settings.textBaseline="top"] the text baseline
@@ -15573,11 +16764,20 @@
           * @memberOf me.BitmapText
           */
 
-         this.lineHeight = settings.lineHeight || 1;
+         this.lineHeight = settings.lineHeight || 1.0;
+         /**
+          * the text to be displayed
+          * @private
+          * @type {String[]}
+          * @name _text
+          * @memberOf me.BitmapText
+          */
+
+         this._text = [];
          /** @ignore */
          // scaled font size;
 
-         this.fontScale = me.pool.pull("me.Vector2d", 1, 1); // get the corresponding image
+         this.fontScale = me.pool.pull("me.Vector2d", 1.0, 1.0); // get the corresponding image
 
          this.fontImage = _typeof(settings.font) === "object" ? settings.font : me.loader.getImage(settings.font);
 
@@ -15596,6 +16796,16 @@
 
          if (typeof settings.size === "number" && settings.size !== 1.0) {
            this.resize(settings.size);
+         } // apply given fillstyle
+
+
+         if (typeof settings.fillStyle !== "undefined") {
+           if (settings.fillStyle instanceof me.Color) {
+             this.fillStyle.setColor(settings.fillStyle);
+           } else {
+             // string (#RGB, #ARGB, #RRGGBB, #AARRGGBB)
+             this.fillStyle.parseCSS(settings.fillStyle);
+           }
          } // update anchorPoint if provided
 
 
@@ -15640,14 +16850,15 @@
        setText: function setText(value) {
          if (typeof value === "undefined") {
            value = "";
-         } else if (Array.isArray(value)) {
-           value = value.join("\n");
-         } else {
-           value = value.toString();
          }
 
-         if (this._text !== value) {
-           this._text = value;
+         if (this._text.toString() !== value.toString()) {
+           if (!Array.isArray(value)) {
+             this._text = ("" + value).split("\n");
+           } else {
+             this._text = value;
+           }
+
            this.isDirty = true;
          }
 
@@ -15680,9 +16891,9 @@
         */
        measureText: function measureText(text, ret) {
          text = text || this._text;
-         var strings = ("" + text).split("\n");
          var stringHeight = measureTextHeight(this);
          var textMetrics = ret || this.getBounds();
+         var strings = typeof text === "string" ? ("" + text).split("\n") : text;
          textMetrics.height = textMetrics.width = 0;
 
          for (var i = 0; i < strings.length; i++) {
@@ -15717,16 +16928,16 @@
         * @param {Number} [y]
         */
        draw: function draw(renderer, text, x, y) {
-         // allows to provide backward compatibility when
+         // save the previous global alpha value
+         var _alpha = renderer.globalAlpha(); // allows to provide backward compatibility when
          // adding Bitmap Font to an object container
+
+
          if (typeof this.ancestor === "undefined") {
            // update cache
            this.setText(text); // force update bounds
 
-           this.update(0); // save the previous global alpha value
-
-           var _alpha = renderer.globalAlpha();
-
+           this.update(0);
            renderer.setGlobalAlpha(_alpha * this.getOpacity());
          } else {
            // added directly to an object container
@@ -15734,15 +16945,13 @@
            y = this.pos.y;
          }
 
-         var strings = ("" + this._text).split("\n");
-
          var lX = x;
          var stringHeight = measureTextHeight(this);
          var maxWidth = 0;
 
-         for (var i = 0; i < strings.length; i++) {
+         for (var i = 0; i < this._text.length; i++) {
            x = lX;
-           var string = me.utils.string.trimRight(strings[i]); // adjust x pos based on alignment value
+           var string = me.utils.string.trimRight(this._text[i]); // adjust x pos based on alignment value
 
            var stringWidth = measureTextWidth(this, string);
 
@@ -15753,9 +16962,6 @@
 
              case "center":
                x -= stringWidth * 0.5;
-               break;
-
-             default:
                break;
            } // adjust y pos based on alignment value
 
@@ -15769,9 +16975,6 @@
              case "alphabetic":
              case "bottom":
                y -= stringHeight;
-               break;
-
-             default:
                break;
            } // update initial position if required
 
@@ -15815,7 +17018,8 @@
          if (typeof this.ancestor === "undefined") {
            // restore the previous global alpha value
            renderer.setGlobalAlpha(_alpha);
-         } // clear the dirty flag
+         } // clear the dirty flag here for
+         // backward compatibility
 
 
          this.isDirty = false;
@@ -15830,9 +17034,35 @@
          this.fontScale = undefined;
          me.pool.push(this.fontData);
          this.fontData = undefined;
+         this._text.length = 0;
 
          this._super(me.Renderable, "destroy");
        }
+     });
+     /**
+      * defines the color used to tint the bitmap text
+      * @public
+      * @type {me.Color}
+      * @name fillStyle
+      * @see me.Renderable#tint
+      * @memberOf me.BitmapText
+      */
+
+     Object.defineProperty(me.BitmapText.prototype, "fillStyle", {
+       /**
+        * @ignore
+        */
+       get: function get() {
+         return this.tint;
+       },
+
+       /**
+        * @ignore
+        */
+       set: function set(value) {
+         this.tint = value;
+       },
+       configurable: true
      });
    })();
 
@@ -15840,7 +17070,6 @@
      // bitmap constants
      var LOG2_PAGE_SIZE = 9;
      var PAGE_SIZE = 1 << LOG2_PAGE_SIZE;
-     var xChars = ["x", "e", "a", "o", "n", "s", "r", "c", "u", "m", "v", "w", "z"];
      var capChars = ["M", "N", "B", "D", "C", "E", "F", "K", "A", "G", "H", "I", "J", "L", "O", "P", "Q", "R", "S", "T", "U", "V", "W", "X", "Y", "Z"];
      /**
       * a glyph representing a single character in a font
@@ -16020,8 +17249,9 @@
          var baseLine = parseFloat(this._getValueFromPair(lines[1], /base\=\d+/g));
          var padY = this.padTop + this.padBottom;
          var glyph = null;
+         var i;
 
-         for (var i = 4; i < lines.length; i++) {
+         for (i = 4; i < lines.length; i++) {
            var line = lines[i];
            var characterValues = line.split(/=|\s+/);
 
@@ -16062,21 +17292,6 @@
 
          this._createSpaceGlyph();
 
-         var xGlyph = null;
-
-         for (i = 0; i < xChars.length; i++) {
-           var xChar = xChars[i];
-           xGlyph = this.glyphs[xChar.charCodeAt(0)];
-
-           if (xGlyph) {
-             break;
-           }
-         }
-
-         if (!xGlyph) {
-           xGlyph = this._getFirstGlyph();
-         }
-
          var capGlyph = null;
 
          for (i = 0; i < capChars.length; i++) {
@@ -16111,10 +17326,10 @@
 
    var howler = createCommonjsModule(function (module, exports) {
    /*!
-    *  howler.js v2.1.2
+    *  howler.js v2.2.0
     *  howlerjs.com
     *
-    *  (c) 2013-2019, James Simpson of GoldFire Studios
+    *  (c) 2013-2020, James Simpson of GoldFire Studios
     *  goldfirestudios.com
     *
     *  MIT License
@@ -16261,6 +17476,20 @@
        },
 
        /**
+        * Handle stopping all sounds globally.
+        */
+       stop: function() {
+         var self = this || Howler;
+
+         // Loop through all Howls and stop them.
+         for (var i=0; i<self._howls.length; i++) {
+           self._howls[i].stop();
+         }
+
+         return self;
+       },
+
+       /**
         * Unload and destroy all currently loaded Howl objects.
         * @return {Howler}
         */
@@ -16373,6 +17602,7 @@
            aac: !!audioTest.canPlayType('audio/aac;').replace(/^no$/, ''),
            caf: !!audioTest.canPlayType('audio/x-caf;').replace(/^no$/, ''),
            m4a: !!(audioTest.canPlayType('audio/x-m4a;') || audioTest.canPlayType('audio/m4a;') || audioTest.canPlayType('audio/aac;')).replace(/^no$/, ''),
+           m4b: !!(audioTest.canPlayType('audio/x-m4b;') || audioTest.canPlayType('audio/m4b;') || audioTest.canPlayType('audio/aac;')).replace(/^no$/, ''),
            mp4: !!(audioTest.canPlayType('audio/x-mp4;') || audioTest.canPlayType('audio/mp4;') || audioTest.canPlayType('audio/aac;')).replace(/^no$/, ''),
            weba: !!audioTest.canPlayType('audio/webm; codecs="vorbis"').replace(/^no$/, ''),
            webm: !!audioTest.canPlayType('audio/webm; codecs="vorbis"').replace(/^no$/, ''),
@@ -16422,7 +17652,7 @@
            // to the WebAudio API which only needs a single activation.
            // This must occur before WebAudio setup or the source.onended
            // event will not fire.
-           for (var i=0; i<self.html5PoolSize; i++) {
+           while (self._html5AudioPool.length < self.html5PoolSize) {
              try {
                var audioNode = new Audio();
 
@@ -16434,6 +17664,7 @@
                self._releaseHtml5Audio(audioNode);
              } catch (e) {
                self.noAudio = true;
+               break;
              }
            }
 
@@ -16576,14 +17807,20 @@
 
            self._suspendTimer = null;
            self.state = 'suspending';
-           self.ctx.suspend().then(function() {
+
+           // Handle updating the state of the audio context after suspending.
+           var handleSuspension = function() {
              self.state = 'suspended';
 
              if (self._resumeAfterSuspend) {
                delete self._resumeAfterSuspend;
                self._autoResume();
              }
-           });
+           };
+
+           // Either the state gets suspended or it is interrupted.
+           // Either way, we need to update the state to suspended.
+           self.ctx.suspend().then(handleSuspension, handleSuspension);
          }, 30000);
 
          return self;
@@ -16600,10 +17837,10 @@
            return;
          }
 
-         if (self.state === 'running' && self._suspendTimer) {
+         if (self.state === 'running' && self.ctx.state !== 'interrupted' && self._suspendTimer) {
            clearTimeout(self._suspendTimer);
            self._suspendTimer = null;
-         } else if (self.state === 'suspended') {
+         } else if (self.state === 'suspended' || self.state === 'running' && self.ctx.state === 'interrupted') {
            self.ctx.resume().then(function() {
              self.state = 'running';
 
@@ -16667,12 +17904,16 @@
          self._muted = o.mute || false;
          self._loop = o.loop || false;
          self._pool = o.pool || 5;
-         self._preload = (typeof o.preload === 'boolean') ? o.preload : true;
+         self._preload = (typeof o.preload === 'boolean' || o.preload === 'metadata') ? o.preload : true;
          self._rate = o.rate || 1;
          self._sprite = o.sprite || {};
          self._src = (typeof o.src !== 'string') ? o.src : [o.src];
          self._volume = o.volume !== undefined ? o.volume : 1;
-         self._xhrWithCredentials = o.xhrWithCredentials || false;
+         self._xhr = {
+           method: o.xhr && o.xhr.method ? o.xhr.method : 'GET',
+           headers: o.xhr && o.xhr.headers ? o.xhr.headers : null,
+           withCredentials: o.xhr && o.xhr.withCredentials ? o.xhr.withCredentials : false,
+         };
 
          // Setup all other default properties.
          self._duration = 0;
@@ -16720,7 +17961,7 @@
          }
 
          // Load the source file unless otherwise specified.
-         if (self._preload) {
+         if (self._preload && self._preload !== 'none') {
            self.load();
          }
 
@@ -16831,8 +18072,8 @@
            // Use the default sound sprite (plays the full audio length).
            sprite = '__default';
 
-           // Check if there is a single paused sound that isn't ended. 
-           // If there is, play that sound. If not, continue as usual.  
+           // Check if there is a single paused sound that isn't ended.
+           // If there is, play that sound. If not, continue as usual.
            if (!self._playLock) {
              var num = 0;
              for (var i=0; i<self._sounds.length; i++) {
@@ -16906,7 +18147,6 @@
          var timeout = (duration * 1000) / Math.abs(sound._rate);
          var start = self._sprite[sprite][0] / 1000;
          var stop = (self._sprite[sprite][0] + self._sprite[sprite][1]) / 1000;
-         var loop = !!(sound._loop || self._sprite[sprite][2]);
          sound._sprite = sprite;
 
          // Mark the sound as ended instantly so that this async playback
@@ -16919,7 +18159,7 @@
            sound._seek = seek;
            sound._start = start;
            sound._stop = stop;
-           sound._loop = loop;
+           sound._loop = !!(sound._loop || self._sprite[sprite][2]);
          };
 
          // End the sound instantly if seek is at the end.
@@ -16962,7 +18202,7 @@
              }
            };
 
-           if (Howler.state === 'running') {
+           if (Howler.state === 'running' && Howler.ctx.state !== 'interrupted') {
              playWebAudio();
            } else {
              self._playLock = true;
@@ -17361,7 +18601,7 @@
        },
 
        /**
-        * Fade a currently playing sound between two volumes (if no id is passsed, all sounds will fade).
+        * Fade a currently playing sound between two volumes (if no id is passed, all sounds will fade).
         * @param  {Number} from The value to fade from (0.0 to 1.0).
         * @param  {Number} to   The volume to fade to (0.0 to 1.0).
         * @param  {Number} len  Time in milliseconds to fade.
@@ -17384,8 +18624,8 @@
          }
 
          // Make sure the to/from/len values are numbers.
-         from = parseFloat(from);
-         to = parseFloat(to);
+         from = Math.min(Math.max(0, parseFloat(from)), 1);
+         to = Math.min(Math.max(0, parseFloat(to)), 1);
          len = parseFloat(len);
 
          // Set the volume to the start position.
@@ -17448,8 +18688,11 @@
            vol += diff * tick;
 
            // Make sure the volume is in the right bounds.
-           vol = Math.max(0, vol);
-           vol = Math.min(1, vol);
+           if (diff < 0) {
+             vol = Math.max(to, vol);
+           } else {
+             vol = Math.min(to, vol);
+           }
 
            // Round to within 2 decimal points.
            vol = Math.round(vol * 100) / 100;
@@ -18312,7 +19555,7 @@
            self._node.gain.setValueAtTime(volume, Howler.ctx.currentTime);
            self._node.paused = true;
            self._node.connect(Howler.masterGain);
-         } else {
+         } else if (!Howler.noAudio) {
            // Get an unlocked Audio object from the pool.
            self._node = Howler._obtainHtml5Audio();
 
@@ -18326,7 +19569,7 @@
 
            // Setup the new audio node.
            self._node.src = parent._src;
-           self._node.preload = 'auto';
+           self._node.preload = parent._preload === true ? 'auto' : parent._preload;
            self._node.volume = volume * Howler.volume();
 
            // Begin loading the source.
@@ -18435,9 +19678,17 @@
        } else {
          // Load the buffer from the URL.
          var xhr = new XMLHttpRequest();
-         xhr.open('GET', url, true);
-         xhr.withCredentials = self._xhrWithCredentials;
+         xhr.open(self._xhr.method, url, true);
+         xhr.withCredentials = self._xhr.withCredentials;
          xhr.responseType = 'arraybuffer';
+
+         // Apply any custom headers to the request.
+         if (self._xhr.headers) {
+           Object.keys(self._xhr.headers).forEach(function(key) {
+             xhr.setRequestHeader(key, self._xhr.headers[key]);
+           });
+         }
+
          xhr.onload = function() {
            // Make sure we get a successful response back.
            var code = (xhr.status + '')[0];
@@ -18561,7 +19812,7 @@
        var version = appVersion ? parseInt(appVersion[1], 10) : null;
        if (iOS && version && version < 9) {
          var safari = /safari/.test(Howler._navigator && Howler._navigator.userAgent.toLowerCase());
-         if (Howler._navigator && Howler._navigator.standalone && !safari || Howler._navigator && !Howler._navigator.standalone && !safari) {
+         if (Howler._navigator && !safari) {
            Howler.usingWebAudio = false;
          }
        }
@@ -18569,7 +19820,7 @@
        // Create and expose the master GainNode when using Web Audio (useful for plugins or advanced usage).
        if (Howler.usingWebAudio) {
          Howler.masterGain = (typeof Howler.ctx.createGain === 'undefined') ? Howler.ctx.createGainNode() : Howler.ctx.createGain();
-         Howler.masterGain.gain.setValueAtTime(Howler._muted ? 0 : 1, Howler.ctx.currentTime);
+         Howler.masterGain.gain.setValueAtTime(Howler._muted ? 0 : Howler._volume, Howler.ctx.currentTime);
          Howler.masterGain.connect(Howler.ctx.destination);
        }
 
@@ -18583,17 +19834,17 @@
        exports.Howl = Howl;
      }
 
-     // Define globally in case AMD is not available or unused.
-     if (typeof window !== 'undefined') {
-       window.HowlerGlobal = HowlerGlobal;
-       window.Howler = Howler;
-       window.Howl = Howl;
-       window.Sound = Sound;
-     } else if (typeof commonjsGlobal !== 'undefined') { // Add to global in Node.js (for testing, etc).
+     // Add to global in Node.js (for testing, etc).
+     if (typeof commonjsGlobal !== 'undefined') {
        commonjsGlobal.HowlerGlobal = HowlerGlobal;
        commonjsGlobal.Howler = Howler;
        commonjsGlobal.Howl = Howl;
        commonjsGlobal.Sound = Sound;
+     } else if (typeof window !== 'undefined') {  // Define globally in case AMD is not available or unused.
+       window.HowlerGlobal = HowlerGlobal;
+       window.Howler = Howler;
+       window.Howl = Howl;
+       window.Sound = Sound;
      }
    })();
 
@@ -18601,10 +19852,10 @@
    /*!
     *  Spatial Plugin - Adds support for stereo and 3D audio where Web Audio is supported.
     *  
-    *  howler.js v2.1.2
+    *  howler.js v2.2.0
     *  howlerjs.com
     *
-    *  (c) 2013-2019, James Simpson of GoldFire Studios
+    *  (c) 2013-2020, James Simpson of GoldFire Studios
     *  goldfirestudios.com
     *
     *  MIT License
@@ -18715,9 +19966,9 @@
            self.ctx.listener.forwardX.setTargetAtTime(x, Howler.ctx.currentTime, 0.1);
            self.ctx.listener.forwardY.setTargetAtTime(y, Howler.ctx.currentTime, 0.1);
            self.ctx.listener.forwardZ.setTargetAtTime(z, Howler.ctx.currentTime, 0.1);
-           self.ctx.listener.upX.setTargetAtTime(x, Howler.ctx.currentTime, 0.1);
-           self.ctx.listener.upY.setTargetAtTime(y, Howler.ctx.currentTime, 0.1);
-           self.ctx.listener.upZ.setTargetAtTime(z, Howler.ctx.currentTime, 0.1);
+           self.ctx.listener.upX.setTargetAtTime(xUp, Howler.ctx.currentTime, 0.1);
+           self.ctx.listener.upY.setTargetAtTime(yUp, Howler.ctx.currentTime, 0.1);
+           self.ctx.listener.upZ.setTargetAtTime(zUp, Howler.ctx.currentTime, 0.1);
          } else {
            self.ctx.listener.setOrientation(x, y, z, xUp, yUp, zUp);
          }
@@ -19254,8 +20505,6 @@
      };
    })();
    });
-   var howler_1 = howler.Howler;
-   var howler_2 = howler.Howl;
 
    // external import
 
@@ -19314,7 +20563,7 @@
        /**
         * Initialize and configure the audio support.<br>
         * melonJS supports a wide array of audio codecs that have varying browser support :
-        * <i> ("mp3", "mpeg", opus", "ogg", "oga", "wav", "aac", "caf", "m4a", "mp4", "weba", "webm", "dolby", "flac")</i>.<br>
+        * <i> ("mp3", "mpeg", opus", "ogg", "oga", "wav", "aac", "caf", "m4a", "m4b", "mp4", "weba", "webm", "dolby", "flac")</i>.<br>
         * For a maximum browser coverage the recommendation is to use at least two of them,
         * typically default to webm and then fallback to mp3 for the best balance of small filesize and high quality,
         * webm has nearly full browser coverage with a great combination of compression and quality, and mp3 will fallback gracefully for other browsers.
@@ -19344,7 +20593,7 @@
          audioFormat = typeof audioFormat === "string" ? audioFormat : "mp3"; // convert it into an array
 
          this.audioFormats = audioFormat.split(",");
-         return !howler_1.noAudio;
+         return !howler.Howler.noAudio;
        };
        /**
         * return true if audio (HTML5 or WebAudio) is supported
@@ -19357,7 +20606,7 @@
 
 
        api.hasAudio = function () {
-         return !howler_1.noAudio;
+         return !howler.Howler.noAudio;
        };
        /**
         * enable audio output <br>
@@ -19408,9 +20657,9 @@
            urls.push(sound.src + sound.name + "." + this.audioFormats[i] + me.loader.nocache);
          }
 
-         audioTracks[sound.name] = new howler_2({
+         audioTracks[sound.name] = new howler.Howl({
            src: urls,
-           volume: howler_1.volume(),
+           volume: howler.Howler.volume(),
            html5: html5 === true,
            xhrWithCredentials: me.loader.withCredentials,
 
@@ -19468,7 +20717,7 @@
              sound.loop(loop, id);
            }
 
-           sound.volume(typeof volume === "number" ? me.Math.clamp(volume, 0.0, 1.0) : howler_1.volume(), id);
+           sound.volume(typeof volume === "number" ? me.Math.clamp(volume, 0.0, 1.0) : howler.Howler.volume(), id);
 
            if (typeof onend === "function") {
              if (loop === true) {
@@ -19566,7 +20815,7 @@
         * @memberOf me.audio
         * @public
         * @function
-        * @param {String} sound_name audio clip name - case sensitive
+        * @param {String} [sound_name] audio clip name (case sensitive). If none is passed, all sounds are stopped.
         * @param {Number} [id] the sound instance ID. If none is passed, all sounds in group will stop.
         * @example
         * me.audio.stop("cling");
@@ -19574,14 +20823,18 @@
 
 
        api.stop = function (sound_name, id) {
-         var sound = audioTracks[sound_name];
+         if (typeof sound_name !== "undefined") {
+           var sound = audioTracks[sound_name];
 
-         if (sound && typeof sound !== "undefined") {
-           sound.stop(id); // remove the defined onend callback (if any defined)
+           if (sound && typeof sound !== "undefined") {
+             sound.stop(id); // remove the defined onend callback (if any defined)
 
-           sound.off("end", undefined, id);
+             sound.off("end", undefined, id);
+           } else {
+             throw new Error("audio clip " + sound_name + " does not exist");
+           }
          } else {
-           throw new Error("audio clip " + sound_name + " does not exist");
+           howler.Howler.stop();
          }
        };
        /**
@@ -19741,7 +20994,7 @@
 
 
        api.setVolume = function (volume) {
-         howler_1.volume(volume);
+         howler.Howler.volume(volume);
        };
        /**
         * get the default global volume
@@ -19754,7 +21007,7 @@
 
 
        api.getVolume = function () {
-         return howler_1.volume();
+         return howler.Howler.volume();
        };
        /**
         * mute or unmute the specified sound, but does not pause the playback.
@@ -19806,7 +21059,7 @@
 
 
        api.muteAll = function () {
-         howler_1.mute(true);
+         howler.Howler.mute(true);
        };
        /**
         * unmute all audio
@@ -19818,7 +21071,7 @@
 
 
        api.unmuteAll = function () {
-         howler_1.mute(false);
+         howler.Howler.mute(false);
        };
        /**
         * Returns true if audio is muted globally.
@@ -19831,7 +21084,7 @@
 
 
        api.muted = function () {
-         return howler_1._muted;
+         return howler.Howler._muted;
        };
        /**
         * unload specified audio track to free memory
@@ -19892,16 +21145,12 @@
      me.video = function () {
        // hold public stuff in our api
        var api = {};
-       var deferResizeId = -1;
        var designRatio = 1;
        var designWidth = 0;
-       var designHeight = 0; // max display size
-
-       var maxWidth = Infinity;
-       var maxHeight = Infinity; // default video settings
+       var designHeight = 0; // default video settings
 
        var settings = {
-         wrapper: undefined,
+         parent: document.body,
          renderer: 2,
          // AUTO
          doubleBuffering: false,
@@ -19913,6 +21162,8 @@
          antiAlias: false,
          failIfMajorPerformanceCaveat: true,
          subPixel: false,
+         preferWebGL1: true,
+         powerPreference: "default",
          verbose: false,
          consoleHeader: true
        };
@@ -19921,17 +21172,16 @@
         * @ignore
         */
 
-       function autoDetectRenderer(c, width, height, options) {
+       function autoDetectRenderer(options) {
          try {
            if (me.device.isWebGLSupported(options)) {
-             return new me.WebGLRenderer(c, width, height, options);
+             return new me.WebGLRenderer(options);
            }
          } catch (e) {
            console.log("Error creating WebGL renderer :" + e.message);
-         } // else fallback to canvas
+         }
 
-
-         return new me.CanvasRenderer(c, width, height, options);
+         return new me.CanvasRenderer(options);
        }
        /*
         * PUBLIC STUFF
@@ -19966,6 +21216,24 @@
 
        api.AUTO = 2;
        /**
+        * the parent container of the main canvas element
+        * @ignore
+        * @type {HTMLElement}
+        * @readonly
+        * @name parent
+        * @memberOf me.video
+        */
+
+       api.parent = null;
+       /**
+        * the scaling ratio to be applied to the display canvas
+        * @type {me.Vector2d}
+        * @default <1,1>
+        * @memberOf me.video
+        */
+
+       api.scaleRatio = new me.Vector2d(1, 1);
+       /**
         * Initialize the "video" system (create a canvas based on the given arguments, and the related renderer). <br>
         * melonJS support various scaling mode, that can be enabled <u>once the scale option is set to <b>`auto`</b></u> : <br>
         *  - <i><b>`fit`</b></i> : Letterboxed; content is scaled to design aspect ratio <br>
@@ -19985,17 +21253,17 @@
         * @name init
         * @memberOf me.video
         * @function
-        * @param {Number} width the width of the canvas viewport
-        * @param {Number} height the height of the canvas viewport
+        * @param {Number} width The width of the canvas viewport
+        * @param {Number} height The height of the canvas viewport
         * @param {Object} [options] The optional video/renderer parameters.<br> (see Renderer(s) documentation for further specific options)
-        * @param {String} [options.wrapper=document.body] the "div" element name to hold the canvas in the HTML file
-        * @param {Number} [options.renderer=me.video.AUTO] renderer to use.
+        * @param {String|HTMLElement} [options.parent=document.body] the DOM parent element to hold the canvas in the HTML file
+        * @param {Number} [options.renderer=me.video.AUTO] renderer to use (me.video.CANVAS, me.video.WEBGL, me.video.AUTO)
         * @param {Boolean} [options.doubleBuffering=false] enable/disable double buffering
         * @param {Number|String} [options.scale=1.0] enable scaling of the canvas ('auto' for automatic scaling)
         * @param {String} [options.scaleMethod="fit"] screen scaling modes ('fit','fill-min','fill-max','flex','flex-width','flex-height','stretch')
-        * @param {Boolean} [options.useParentDOMSize=false] on browser devices, limit the canvas width and height to its parent container dimensions as returned by getBoundingClientRect(),
-        *                                                   as opposed to the browser window dimensions
-        * @param {Boolean} [options.transparent=false] whether to allow transparent pixels in the front buffer (screen)
+        * @param {Boolean} [options.preferWebGL1=true] if false the renderer will try to use WebGL 2 if supported
+        * @param {String} [options.powerPreference="default"] a hint to the user agent indicating what configuration of GPU is suitable for the WebGL context ("default", "high-performance", "low-power"). To be noted that Safari and Chrome (since version 80) both default to "low-power" to save battery life and improve the user experience on these dual-GPU machines.
+        * @param {Boolean} [options.transparent=false] whether to allow transparent pixels in the front buffer (screen).
         * @param {Boolean} [options.antiAlias=false] whether to enable or not video scaling interpolation
         * @param {Boolean} [options.consoleHeader=true] whether to display melonJS version and basic device information in the console
         * @return {Boolean} false if initialization failed (canvas not supported)
@@ -20004,7 +21272,7 @@
         * @example
         * // init the video with a 640x480 canvas
         * me.video.init(640, 480, {
-        *     wrapper : "screen",
+        *     parent : "screen",
         *     renderer : me.video.AUTO,
         *     scale : "auto",
         *     scaleMethod : "fit",
@@ -20021,27 +21289,49 @@
 
          settings = Object.assign(settings, options || {}); // sanitize potential given parameters
 
+         settings.width = game_width;
+         settings.height = game_height;
          settings.doubleBuffering = !!settings.doubleBuffering;
-         settings.useParentDOMSize = !!settings.useParentDOMSize;
-         settings.autoScale = settings.scale === "auto" || false;
          settings.transparent = !!settings.transparent;
          settings.antiAlias = !!settings.antiAlias;
          settings.failIfMajorPerformanceCaveat = !!settings.failIfMajorPerformanceCaveat;
          settings.subPixel = !!settings.subPixel;
          settings.verbose = !!settings.verbose;
 
-         if (settings.scaleMethod.search(/^(fill-(min|max)|fit|flex(-(width|height))?|stretch)$/) !== 0) {
+         if (settings.scaleMethod.search(/^(fill-(min|max)|fit|flex(-(width|height))?|stretch)$/) !== -1) {
+           settings.autoScale = settings.scale === "auto" || true;
+         } else {
+           // default scaling method
            settings.scaleMethod = "fit";
+           settings.autoScale = settings.scale === "auto" || false;
+         } // for backward compatilibty with melonJS 7.1.1 and lower
+
+
+         if (typeof settings.wrapper !== "undefined") {
+           me.utils.deprecated("settings.wrapper", "settings.parent", "8.0.0");
+           settings.parent = settings.wrapper;
+         } // display melonJS version
+
+
+         if (settings.consoleHeader !== false) {
+           // output video information in the console
+           console.log("melonJS v" + me.version + " | http://melonjs.org");
          } // override renderer settings if &webgl is defined in the URL
 
 
-         if (me.utils.getUriFragment().webgl === true) {
+         var uriFragment = me.utils.getUriFragment();
+
+         if (uriFragment.webgl === true || uriFragment.webgl1 === true || uriFragment.webgl2 === true) {
            settings.renderer = api.WEBGL;
+
+           if (uriFragment.webgl2 === true) {
+             settings.preferWebGL1 = false;
+           }
          } // normalize scale
 
 
          settings.scale = settings.autoScale ? 1.0 : +settings.scale || 1.0;
-         me.sys.scale = new me.Vector2d(settings.scale, settings.scale); // force double buffering if scaling is required
+         me.video.scaleRatio.set(settings.scale, settings.scale); // force double buffering if scaling is required
 
          if (settings.autoScale || settings.scale !== 1.0) {
            settings.doubleBuffering = true;
@@ -20052,10 +21342,8 @@
          designWidth = game_width;
          designHeight = game_height; // default scaled size value
 
-         var game_width_zoom = game_width * me.sys.scale.x;
-         var game_height_zoom = game_height * me.sys.scale.y;
-         settings.zoomX = game_width_zoom;
-         settings.zoomY = game_height_zoom; //add a channel for the onresize/onorientationchange event
+         settings.zoomX = game_width * me.video.scaleRatio.x;
+         settings.zoomY = game_height * me.video.scaleRatio.y; //add a channel for the onresize/onorientationchange event
 
          window.addEventListener("resize", me.utils["function"].throttle(function (event) {
            me.event.publish(me.event.WINDOW_ONRESIZE, [event]);
@@ -20078,76 +21366,39 @@
 
 
          window.addEventListener("scroll", me.utils["function"].throttle(function (e) {
-           me.video.renderer.updateBounds();
            me.event.publish(me.event.WINDOW_ONSCROLL, [e]);
          }, 100), false); // register to the channel
 
          me.event.subscribe(me.event.WINDOW_ONRESIZE, me.video.onresize.bind(me.video));
-         me.event.subscribe(me.event.WINDOW_ONORIENTATION_CHANGE, me.video.onresize.bind(me.video)); // create the main screen canvas
+         me.event.subscribe(me.event.WINDOW_ONORIENTATION_CHANGE, me.video.onresize.bind(me.video));
 
-         var canvas;
+         try {
+           /**
+            * A reference to the current video renderer
+            * @public
+            * @memberOf me.video
+            * @name renderer
+            * @type {me.Renderer|me.CanvasRenderer|me.WebGLRenderer}
+            */
+           switch (settings.renderer) {
+             case api.AUTO:
+             case api.WEBGL:
+               this.renderer = autoDetectRenderer(settings);
+               break;
 
-         if (me.device.ejecta === true) {
-           // a main canvas is already automatically created by Ejecta
-           canvas = document.getElementById("canvas");
-         } else if (typeof window.canvas !== "undefined") {
-           // a global canvas is available, e.g. webapp adapter for wechat
-           canvas = window.canvas;
-         } else {
-           canvas = api.createCanvas(game_width_zoom, game_height_zoom);
-         } // add our canvas
+             default:
+               this.renderer = new me.CanvasRenderer(settings);
+               break;
+           }
+         } catch (e) {
+           console(e.message); // me.video.init() returns false if failing at creating/using a HTML5 canvas
 
-
-         if (options.wrapper) {
-           settings.wrapper = document.getElementById(options.wrapper);
-         } // if wrapperid is not defined (null)
-
-
-         if (!settings.wrapper) {
-           // add the canvas to document.body
-           settings.wrapper = document.body;
-         }
-
-         settings.wrapper.appendChild(canvas); // stop here if not supported
-
-         if (typeof canvas.getContext === "undefined") {
            return false;
-         }
-         /**
-          * A reference to the current video renderer
-          * @public
-          * @memberOf me.video
-          * @name renderer
-          * @type {me.Renderer|me.CanvasRenderer|me.WebGLRenderer}
-          */
+         } // add our canvas (default to document.body if settings.parent is undefined)
 
 
-         switch (settings.renderer) {
-           case api.AUTO:
-           case api.WEBGL:
-             this.renderer = autoDetectRenderer(canvas, game_width, game_height, settings);
-             break;
-
-           default:
-             this.renderer = new me.CanvasRenderer(canvas, game_width, game_height, settings);
-             break;
-         } // adjust CSS style for High-DPI devices
-
-
-         var ratio = me.device.devicePixelRatio;
-
-         if (ratio > 1) {
-           canvas.style.width = canvas.width / ratio + "px";
-           canvas.style.height = canvas.height / ratio + "px";
-         } // set max the canvas max size if CSS values are defined
-
-
-         if (window.getComputedStyle) {
-           var style = window.getComputedStyle(canvas, null);
-           me.video.setMaxSize(parseInt(style.maxWidth, 10), parseInt(style.maxHeight, 10));
-         }
-
-         me.game.init(); // trigger an initial resize();
+         me.video.parent = me.device.getElement(settings.parent);
+         me.video.parent.appendChild(this.renderer.getScreenCanvas()); // trigger an initial resize();
 
          me.video.onresize(); // add an observer to detect when the dom tree is modified
 
@@ -20155,75 +21406,72 @@
            // Create an observer instance linked to the callback function
            var observer = new MutationObserver(me.video.onresize.bind(me.video)); // Start observing the target node for configured mutations
 
-           observer.observe(settings.wrapper, {
+           observer.observe(me.video.parent, {
              attributes: false,
              childList: true,
              subtree: true
            });
          }
 
-         if (options.consoleHeader !== false) {
-           var renderType = me.video.renderer instanceof me.CanvasRenderer ? "CANVAS" : "WebGL";
-           var audioType = me.device.hasWebAudio ? "Web Audio" : "HTML5 Audio"; // output video information in the console
+         if (settings.consoleHeader !== false) {
+           var renderType = me.video.renderer instanceof me.CanvasRenderer ? "CANVAS" : "WebGL" + me.video.renderer.WebGLVersion;
+           var audioType = me.device.hasWebAudio ? "Web Audio" : "HTML5 Audio";
+           var gpu_renderer = typeof me.video.renderer.GPURenderer === "string" ? " (" + me.video.renderer.GPURenderer + ")" : ""; // output video information in the console
 
-           console.log("melonJS v" + me.version + " | http://melonjs.org");
-           console.log(renderType + " | " + audioType + " | " + "pixel ratio " + me.device.devicePixelRatio + " | " + (me.device.isMobile ? "mobile" : "desktop") + " | " + me.device.getScreenOrientation() + " | " + me.device.language);
+           console.log(renderType + " renderer" + gpu_renderer + " | " + audioType + " | " + "pixel ratio " + me.device.devicePixelRatio + " | " + (me.device.isMobile ? "mobile" : "desktop") + " | " + me.device.getScreenOrientation() + " | " + me.device.language);
            console.log("resolution: " + "requested " + game_width + "x" + game_height + ", got " + me.video.renderer.getWidth() + "x" + me.video.renderer.getHeight());
-         }
+         } // notify the video has been initialized
 
+
+         me.event.publish(me.event.VIDEO_INIT);
          return true;
        };
        /**
-        * set the max canvas display size (when scaling)
-        * @name setMaxSize
-        * @memberOf me.video
-        * @function
-        * @param {Number} width width
-        * @param {Number} height height
-        */
-
-
-       api.setMaxSize = function (w, h) {
-         // max display size
-         maxWidth = w || Infinity;
-         maxHeight = h || Infinity; // trigger a resize
-         // defer it to ensure everything is properly intialized
-
-         me.utils["function"].defer(me.video.onresize, me.video);
-       };
-       /**
-        * Create and return a new Canvas
+        * Create and return a new Canvas element
         * @name createCanvas
         * @memberOf me.video
         * @function
         * @param {Number} width width
         * @param {Number} height height
-        * @return {Canvas}
+        * @param {Boolean} [offscreen=false] will returns an OffscreenCanvas if supported
+        * @return {HTMLCanvasElement|OffscreenCanvas}
         */
 
 
-       api.createCanvas = function (width, height) {
+       api.createCanvas = function (width, height, offscreen) {
+         var _canvas;
+
          if (width === 0 || height === 0) {
            throw new Error("width or height was zero, Canvas could not be initialized !");
          }
 
-         var _canvas = document.createElement("canvas");
+         if (me.device.OffscreenCanvas === true && offscreen === true) {
+           _canvas = new OffscreenCanvas(0, 0); // stubbing style for compatibility,
+           // as OffscreenCanvas is detached from the DOM
+
+           if (typeof _canvas.style === "undefined") {
+             _canvas.style = {};
+           }
+         } else {
+           // "else" create a "standard" canvas
+           _canvas = document.createElement("canvas");
+         }
 
          _canvas.width = width;
          _canvas.height = height;
          return _canvas;
        };
        /**
-        * return a reference to the wrapper
-        * @name getWrapper
+        * return a reference to the parent DOM element holding the main canvas
+        * @name getParent
         * @memberOf me.video
         * @function
-        * @return {Document}
+        * @return {HTMLElement}
         */
 
 
-       api.getWrapper = function () {
-         return settings.wrapper;
+       api.getParent = function () {
+         return me.video.parent;
        };
        /**
         * callback for window resize event
@@ -20232,50 +21480,45 @@
 
 
        api.onresize = function () {
-         // default (no scaling)
+         var renderer = me.video.renderer;
+         var settings = renderer.settings;
          var scaleX = 1,
              scaleY = 1;
 
          if (settings.autoScale) {
-           var parentNodeWidth;
-           var parentNodeHeight;
-           var parentNode = me.video.renderer.getScreenCanvas().parentNode;
+           // set max the canvas max size if CSS values are defined
+           var canvasMaxWidth = Infinity;
+           var canvasMaxHeight = Infinity;
 
-           if (typeof parentNode !== "undefined") {
-             if (settings.useParentDOMSize && typeof parentNode.getBoundingClientRect === "function") {
-               var rect = parentNode.getBoundingClientRect();
-               parentNodeWidth = rect.width || rect.right - rect.left;
-               parentNodeHeight = rect.height || rect.bottom - rect.top;
-             } else {
-               // for cased where DOM is not implemented and so parentNode (e.g. Ejecta, Weixin)
-               parentNodeWidth = parentNode.width;
-               parentNodeHeight = parentNode.height;
-             }
-           }
+           if (window.getComputedStyle) {
+             var style = window.getComputedStyle(renderer.getScreenCanvas(), null);
+             canvasMaxWidth = parseInt(style.maxWidth, 10) || Infinity;
+             canvasMaxHeight = parseInt(style.maxHeight, 10) || Infinity;
+           } // get the maximum canvas size within the parent div containing the canvas container
 
-           var _max_width = Math.min(maxWidth, parentNodeWidth || window.innerWidth);
 
-           var _max_height = Math.min(maxHeight, parentNodeHeight || window.innerHeight);
+           var nodeBounds = me.device.getParentBounds(me.video.getParent());
+
+           var _max_width = Math.min(canvasMaxWidth, nodeBounds.width);
+
+           var _max_height = Math.min(canvasMaxHeight, nodeBounds.height); // calculate final canvas width & height
+
 
            var screenRatio = _max_width / _max_height;
-           var sWidth = Infinity;
-           var sHeight = Infinity;
 
            if (settings.scaleMethod === "fill-min" && screenRatio > designRatio || settings.scaleMethod === "fill-max" && screenRatio < designRatio || settings.scaleMethod === "flex-width") {
              // resize the display canvas to fill the parent container
-             sWidth = Math.min(maxWidth, designHeight * screenRatio);
+             var sWidth = Math.min(canvasMaxWidth, designHeight * screenRatio);
              scaleX = scaleY = _max_width / sWidth;
-             sWidth = ~~(sWidth + 0.5);
-             this.renderer.resize(sWidth, designHeight);
+             renderer.resize(Math.floor(sWidth), designHeight);
            } else if (settings.scaleMethod === "fill-min" && screenRatio < designRatio || settings.scaleMethod === "fill-max" && screenRatio > designRatio || settings.scaleMethod === "flex-height") {
              // resize the display canvas to fill the parent container
-             sHeight = Math.min(maxHeight, designWidth * (_max_height / _max_width));
+             var sHeight = Math.min(canvasMaxHeight, designWidth * (_max_height / _max_width));
              scaleX = scaleY = _max_height / sHeight;
-             sHeight = ~~(sHeight + 0.5);
-             this.renderer.resize(designWidth, sHeight);
+             renderer.resize(designWidth, Math.floor(sHeight));
            } else if (settings.scaleMethod === "flex") {
              // resize the display canvas to fill the parent container
-             this.renderer.resize(_max_width, _max_height);
+             renderer.resize(Math.floor(_max_width), Math.floor(_max_height));
            } else if (settings.scaleMethod === "stretch") {
              // scale the display canvas to fit with the parent container
              scaleX = _max_width / designWidth;
@@ -20288,22 +21531,11 @@
              } else {
                scaleX = scaleY = _max_height / designHeight;
              }
-           } // adjust scaling ratio based on the device pixel ratio
+           } // adjust scaling ratio based on the new scaling ratio
 
 
-           scaleX *= me.device.devicePixelRatio;
-           scaleY *= me.device.devicePixelRatio;
-
-           if (deferResizeId > 0) {
-             // cancel any previous pending resize
-             clearTimeout(deferResizeId);
-           }
-
-           deferResizeId = me.utils["function"].defer(me.video.scale, this, scaleX, scaleY);
-         } // update parent container bounds
-
-
-         this.renderer.updateBounds();
+           me.video.scale(scaleX, scaleY);
+         }
        };
        /**
         * scale the "displayed" canvas by the given scalar.
@@ -20319,31 +21551,23 @@
 
 
        api.scale = function (x, y) {
-         var canvas = this.renderer.getScreenCanvas();
-         var context = this.renderer.getScreenContext();
-         var settings = this.renderer.settings;
-         var w = canvas.width * x;
-         var h = canvas.height * y; // update the global scale variable
+         var renderer = me.video.renderer;
+         var canvas = renderer.getScreenCanvas();
+         var context = renderer.getScreenContext();
+         var settings = renderer.settings;
+         var pixelRatio = me.device.devicePixelRatio;
+         var w = settings.zoomX = canvas.width * x * pixelRatio;
+         var h = settings.zoomY = canvas.height * y * pixelRatio; // update the global scale variable
 
-         me.sys.scale.set(x, y); // adjust CSS style for High-DPI devices
+         me.video.scaleRatio.set(x * pixelRatio, y * pixelRatio); // adjust CSS style based on device pixel ratio
 
-         if (me.device.devicePixelRatio > 1) {
-           canvas.style.width = w / me.device.devicePixelRatio + "px";
-           canvas.style.height = h / me.device.devicePixelRatio + "px";
-         } else {
-           canvas.style.width = w + "px";
-           canvas.style.height = h + "px";
-         } // if anti-alias and blend mode were resetted (e.g. Canvas mode)
+         canvas.style.width = w / pixelRatio + "px";
+         canvas.style.height = h / pixelRatio + "px"; // if anti-alias and blend mode were resetted (e.g. Canvas mode)
 
+         renderer.setAntiAlias(context, settings.antiAlias);
+         renderer.setBlendMode(settings.blendMode, context); // force repaint
 
-         this.renderer.setAntiAlias(context, settings.antiAlias);
-         this.renderer.setBlendMode(settings.blendMode, context); // update parent container bounds
-
-         this.renderer.updateBounds(); // force repaint
-
-         me.game.repaint(); // clear timeout id if defined
-
-         deferResizeId = -1;
+         me.game.repaint();
        }; // return our api
 
 
@@ -20358,10 +21582,10 @@
       * @extends me.Object
       * @memberOf me
       * @constructor
-      * @param {HTMLCanvasElement} canvas The html canvas tag to draw to on screen.
-      * @param {Number} width The width of the canvas without scaling
-      * @param {Number} height The height of the canvas without scaling
-      * @param {Object} [options] The renderer parameters
+      * @param {Object} options The renderer parameters
+      * @param {Number} options.width The width of the canvas without scaling
+      * @param {Number} options.height The height of the canvas without scaling
+      * @param {HTMLCanvasElement} [options.canvas] The html canvas to draw to on screen
       * @param {Boolean} [options.doubleBuffering=false] Whether to enable double buffering
       * @param {Boolean} [options.antiAlias=false] Whether to enable anti-aliasing, use false (default) for a pixelated effect.
       * @param {Boolean} [options.failIfMajorPerformanceCaveat=true] If true, the renderer will switch to CANVAS mode if the performances of a WebGL context would be dramatically lower than that of a native application making equivalent OpenGL calls.
@@ -20376,7 +21600,7 @@
        /**
         * @ignore
         */
-       init: function init(c, width, height, options) {
+       init: function init(options) {
          /**
           * The given constructor options
           * @public
@@ -20398,21 +21622,34 @@
           * @ignore
           */
 
-         this.currentScissor = new Int32Array([0, 0, this.width, this.height]);
+         this.currentScissor = new Int32Array([0, 0, this.settings.width, this.settings.height]);
          /**
           * @ignore
           */
 
-         this.currentBlendMode = "normal"; // canvas object and context
+         this.currentBlendMode = "normal"; // create the main screen canvas
 
-         this.canvas = this.backBufferCanvas = c;
+         if (me.device.ejecta === true) {
+           // a main canvas is already automatically created by Ejecta
+           this.canvas = document.getElementById("canvas");
+         } else if (typeof window.canvas !== "undefined") {
+           // a global canvas is available, e.g. webapp adapter for wechat
+           this.canvas = window.canvas;
+         } else if (typeof this.settings.canvas !== "undefined") {
+           this.canvas = this.settings.canvas;
+         } else {
+           this.canvas = me.video.createCanvas(this.settings.zoomX, this.settings.zoomY);
+         } // canvas object and context
+
+
+         this.backBufferCanvas = this.canvas;
          this.context = null; // global color
 
          this.currentColor = new me.Color(0, 0, 0, 1.0); // global tint color
 
          this.currentTint = new me.Color(255, 255, 255, 1.0); // the projectionMatrix (set through setProjection)
 
-         this.projectionMatrix = new me.Matrix2d(); // default uvOffset
+         this.projectionMatrix = new me.Matrix3d(); // default uvOffset
 
          this.uvOffset = 0; // the parent container bouds
 
@@ -20442,49 +21679,12 @@
          this.resetTransform();
          this.setBlendMode(this.settings.blendMode);
          this.setColor("#000000");
-         this.currentTint.setColor(255, 255, 255, 1.0);
+         this.clearTint();
          this.cache.clear();
          this.currentScissor[0] = 0;
          this.currentScissor[1] = 0;
          this.currentScissor[2] = this.backBufferCanvas.width;
          this.currentScissor[3] = this.backBufferCanvas.height;
-         this.updateBounds();
-       },
-
-       /**
-        * update the bounds (size and position) of the parent container.
-        * (this can be manually called in case of manual page layout modification not triggering a resize event)
-        * @name updateBounds
-        * @memberOf me.Renderer.prototype
-        * @function
-        */
-       updateBounds: function updateBounds() {
-         var target = this.getScreenCanvas();
-         var rect;
-
-         if (typeof target.getBoundingClientRect === "undefined") {
-           rect = {
-             left: 0,
-             top: 0,
-             width: 0,
-             height: 0
-           };
-         } else {
-           rect = target.getBoundingClientRect();
-         }
-
-         this.parentBounds.setShape(rect.left, rect.top, rect.width, rect.height);
-       },
-
-       /**
-        * returns the bounds (size and position) of the parent container
-        * @name getBounds
-        * @memberOf me.Renderer.prototype
-        * @function
-        * @return {me.Rect}
-        */
-       getBounds: function getBounds() {
-         return this.parentBounds;
        },
 
        /**
@@ -20642,8 +21842,6 @@
 
            me.event.publish(me.event.CANVAS_ONRESIZE, [width, height]);
          }
-
-         this.updateBounds();
        },
 
        /**
@@ -20661,12 +21859,21 @@
 
          if (enable !== true) {
            // https://developer.mozilla.org/en-US/docs/Web/CSS/image-rendering
-           canvas.style["image-rendering"] = "pixelated";
-           canvas.style["image-rendering"] = "crisp-edges";
-           canvas.style["image-rendering"] = "-moz-crisp-edges";
-           canvas.style["image-rendering"] = "-o-crisp-edges";
-           canvas.style["image-rendering"] = "-webkit-optimize-contrast";
-           canvas.style.msInterpolationMode = "nearest-neighbor";
+           canvas.style["image-rendering"] = "optimizeSpeed"; // legal fallback
+
+           canvas.style["image-rendering"] = "-moz-crisp-edges"; // Firefox
+
+           canvas.style["image-rendering"] = "-o-crisp-edges"; // Opera
+
+           canvas.style["image-rendering"] = "-webkit-optimize-contrast"; // Safari
+
+           canvas.style["image-rendering"] = "optimize-contrast"; // CSS 3
+
+           canvas.style["image-rendering"] = "crisp-edges"; // CSS 4
+
+           canvas.style["image-rendering"] = "pixelated"; // CSS 4
+
+           canvas.style.msInterpolationMode = "nearest-neighbor"; // IE8+
          } else {
            canvas.style["image-rendering"] = "auto";
          }
@@ -20677,7 +21884,7 @@
         * @name setProjection
         * @memberOf me.Renderer.prototype
         * @function
-        * @param {me.Matrix2d} matrix
+        * @param {me.Matrix3d} matrix
         */
        setProjection: function setProjection(matrix) {
          this.projectionMatrix.copy(matrix);
@@ -20698,6 +21905,30 @@
          } else if (shape instanceof me.Ellipse) {
            this.strokeEllipse(shape.pos.x, shape.pos.y, shape.radiusV.x, shape.radiusV.y, fill);
          }
+       },
+
+       /**
+        * tint the given image or canvas using the given color
+        * @name tint
+        * @memberOf me.Renderer.prototype
+        * @function
+        * @param {HTMLImageElement|HTMLCanvasElement|OffscreenCanvas} image the source image to be tinted
+        * @param {me.Color|String} color the color that will be used to tint the image
+        * @param {String} [mode="multiply"] the composition mode used to tint the image
+        * @return {HTMLCanvasElement|OffscreenCanvas} a new canvas element representing the tinted image
+        */
+       tint: function tint(src, color, mode) {
+         var canvas = me.video.createCanvas(src.width, src.height, true);
+         var context = this.getContext2d(canvas);
+         context.save();
+         context.fillStyle = color instanceof me.Color ? color.toRGB() : color;
+         context.fillRect(0, 0, src.width, src.height);
+         context.globalCompositeOperation = mode || "multiply";
+         context.drawImage(src, 0, 0);
+         context.globalCompositeOperation = "destination-atop";
+         context.drawImage(src, 0, 0);
+         context.restore();
+         return canvas;
        },
 
        /**
@@ -20732,7 +21963,7 @@
        clearMask: function clearMask() {},
 
        /**
-        * set a rendering tint (WebGL only) for sprite based renderables.
+        * set a coloring tint for sprite based renderables
         * @name setTint
         * @memberOf me.Renderer.prototype
         * @function
@@ -20770,6 +22001,7 @@
       * - [TexturePacker]{@link http://www.codeandweb.com/texturepacker/} : through JSON export (standard and multipack texture atlas) <br>
       * - [ShoeBox]{@link http://renderhjs.net/shoebox/} : through JSON export using the
       * melonJS setting [file]{@link https://github.com/melonjs/melonJS/raw/master/media/shoebox_JSON_export.sbx} <br>
+      * - [Free Texture Packer]{@link http://free-tex-packer.com/app/} : through JSON export (standard and multipack texture atlas) <br>
       * - Standard (fixed cell size) spritesheet : through a {framewidth:xx, frameheight:xx, anchorPoint:me.Vector2d} object
       * @class
       * @extends me.Object
@@ -20835,8 +22067,8 @@
              var atlas = atlases[i];
 
              if (typeof atlas.meta !== "undefined") {
-               // Texture Packer
-               if (atlas.meta.app.includes("texturepacker")) {
+               // Texture Packer or Free Texture Packer
+               if (atlas.meta.app.includes("texturepacker") || atlas.meta.app.includes("free-tex-packer")) {
                  this.format = "texturepacker"; // set the texture
 
                  if (typeof src === "undefined") {
@@ -20898,13 +22130,11 @@
 
 
          if (cache !== false) {
-           src = Array.isArray(src) ? src : [src];
-           var _iteratorNormalCompletion = true;
-           var _didIteratorError = false;
-           var _iteratorError = undefined;
+           var _iterator = _createForOfIteratorHelper(this.sources),
+               _step;
 
            try {
-             for (var _iterator = this.sources[Symbol.iterator](), _step; !(_iteratorNormalCompletion = (_step = _iterator.next()).done); _iteratorNormalCompletion = true) {
+             for (_iterator.s(); !(_step = _iterator.n()).done;) {
                var source = _step.value;
 
                if (cache instanceof me.Renderer.TextureCache) {
@@ -20914,18 +22144,9 @@
                }
              }
            } catch (err) {
-             _didIteratorError = true;
-             _iteratorError = err;
+             _iterator.e(err);
            } finally {
-             try {
-               if (!_iteratorNormalCompletion && _iterator["return"] != null) {
-                 _iterator["return"]();
-               }
-             } finally {
-               if (_didIteratorError) {
-                 throw _iteratorError;
-               }
-             }
+             _iterator.f();
            }
          }
        },
@@ -21011,11 +22232,16 @@
          var spritecount = me.pool.pull("me.Vector2d", ~~((width - margin + spacing) / (data.framewidth + spacing)), ~~((height - margin + spacing) / (data.frameheight + spacing))); // verifying the texture size
 
          if (width % (data.framewidth + spacing) !== 0 || height % (data.frameheight + spacing) !== 0) {
-           // "truncate size"
-           width = spritecount.x * (data.framewidth + spacing);
-           height = spritecount.y * (data.frameheight + spacing); // warning message
+           var computed_width = spritecount.x * (data.framewidth + spacing);
+           var computed_height = spritecount.y * (data.frameheight + spacing);
 
-           console.warn("Spritesheet Texture for image: " + image.src + " is not divisible by " + (data.framewidth + spacing) + "x" + (data.frameheight + spacing) + ", truncating effective size to " + width + "x" + height);
+           if (computed_width - width !== spacing && computed_height - height !== spacing) {
+             // "truncate size" if delta is different from the spacing size
+             width = computed_width;
+             height = computed_height; // warning message
+
+             console.warn("Spritesheet Texture for image: " + image.src + " is not divisible by " + (data.framewidth + spacing) + "x" + (data.frameheight + spacing) + ", truncating effective size to " + width + "x" + height);
+           }
          } // build the local atlas
 
 
@@ -21188,9 +22414,9 @@
         * ...
         * ...
         * // add the coin sprite as renderable for the entity
-        * this.renderable = game.texture.createSpriteFromName("coin.png");
+        * var sprite = game.texture.createSpriteFromName("coin.png");
         * // set the renderable position to bottom center
-        * this.anchorPoint.set(0.5, 1.0);
+        * sprite.anchorPoint.set(0.5, 1.0);
         */
        createSpriteFromName: function createSpriteFromName(name, settings) {
          // instantiate a new sprite object
@@ -21217,7 +22443,7 @@
         * );
         *
         * // create a new Sprite as renderable for the entity
-        * this.renderable = game.texture.createAnimationFromName([
+        * var sprite = game.texture.createAnimationFromName([
         *     "walk0001.png", "walk0002.png", "walk0003.png",
         *     "walk0004.png", "walk0005.png", "walk0006.png",
         *     "walk0007.png", "walk0008.png", "walk0009.png",
@@ -21225,13 +22451,13 @@
         * ]);
         *
         * // define an additional basic walking animation
-        * this.renderable.addAnimation ("simple_walk", [0,2,1]);
+        * sprite.addAnimation ("simple_walk", [0,2,1]);
         * // you can also use frame name to define your animation
-        * this.renderable.addAnimation ("speed_walk", ["walk0007.png", "walk0008.png", "walk0009.png", "walk0010.png"]);
+        * sprite.addAnimation ("speed_walk", ["walk0007.png", "walk0008.png", "walk0009.png", "walk0010.png"]);
         * // set the default animation
-        * this.renderable.setCurrentAnimation("simple_walk");
+        * sprite.setCurrentAnimation("simple_walk");
         * // set the renderable position to bottom center
-        * this.anchorPoint.set(0.5, 1.0);
+        * sprite.anchorPoint.set(0.5, 1.0);
         */
        createAnimationFromName: function createAnimationFromName(names, settings) {
          var tpAtlas = [],
@@ -21282,6 +22508,7 @@
         */
        init: function init(max_size) {
          this.cache = new Map();
+         this.tinted = new Map();
          this.units = new Map();
          this.max_size = max_size || Infinity;
          this.clear();
@@ -21292,6 +22519,7 @@
         */
        clear: function clear() {
          this.cache.clear();
+         this.tinted.clear();
          this.units.clear();
          this.length = 0;
        },
@@ -21302,7 +22530,7 @@
        validate: function validate() {
          if (this.length >= this.max_size) {
            // TODO: Merge textures instead of throwing an exception
-           throw new Error("Texture cache overflow: " + this.max_size + " texture units available.");
+           throw new Error("Texture cache overflow: " + this.max_size + " texture units available for this GPU.");
          }
        },
 
@@ -21324,24 +22552,45 @@
        /**
         * @ignore
         */
+       tint: function tint(src, color) {
+         // make sure the src is in the cache
+         var image_cache = this.tinted.get(src);
+
+         if (image_cache === undefined) {
+           image_cache = this.tinted.set(src, new Map());
+         }
+
+         if (!image_cache.has(color)) {
+           image_cache.set(color, me.video.renderer.tint(src, color, "multiply"));
+         }
+
+         return image_cache.get(color);
+       },
+
+       /**
+        * @ignore
+        */
        set: function set(image, texture) {
          var width = image.width;
-         var height = image.height; // warn if a non POT texture is added to the cache
+         var height = image.height; // warn if a non POT texture is added to the cache when using WebGL1
 
-         if (!me.Math.isPowerOfTwo(width) || !me.Math.isPowerOfTwo(height)) {
+         if (me.video.renderer.WebGLVersion === 1 && (!me.Math.isPowerOfTwo(width) || !me.Math.isPowerOfTwo(height))) {
            var src = typeof image.src !== "undefined" ? image.src : image;
            console.warn("[Texture] " + src + " is not a POT texture " + "(" + width + "x" + height + ")");
          }
 
-         this.validate();
          this.cache.set(image, texture);
-         this.units.set(texture, this.length++);
        },
 
        /**
         * @ignore
         */
        getUnit: function getUnit(texture) {
+         if (!this.units.has(texture)) {
+           this.validate();
+           this.units.set(texture, this.length++);
+         }
+
          return this.units.get(texture);
        }
      });
@@ -21354,10 +22603,10 @@
       * @extends me.Renderer
       * @memberOf me
       * @constructor
-      * @param {HTMLCanvasElement} canvas The html canvas tag to draw to on screen.
-      * @param {Number} width The width of the canvas without scaling
-      * @param {Number} height The height of the canvas without scaling
-      * @param {Object} [options] The renderer parameters
+      * @param {Object} options The renderer parameters
+      * @param {Number} options.width The width of the canvas without scaling
+      * @param {Number} options.height The height of the canvas without scaling
+      * @param {HTMLCanvasElement} [options.canvas] The html canvas to draw to on screen
       * @param {Boolean} [options.doubleBuffering=false] Whether to enable double buffering
       * @param {Boolean} [options.antiAlias=false] Whether to enable anti-aliasing
       * @param {Boolean} [options.transparent=false] Whether to enable transparency on the canvas (performance hit when enabled)
@@ -21370,18 +22619,18 @@
        /**
         * @ignore
         */
-       init: function init(c, width, height, options) {
+       init: function init(options) {
          // parent constructor
-         this._super(me.Renderer, "init", [c, width, height, options]); // defined the 2d context
+         this._super(me.Renderer, "init", [options]); // defined the 2d context
 
 
-         this.context = this.getContext2d(this.canvas, this.settings.transparent); // create the back buffer if we use double buffering
+         this.context = this.getContext2d(this.getScreenCanvas(), this.settings.transparent); // create the back buffer if we use double buffering
 
          if (this.settings.doubleBuffering) {
-           this.backBufferCanvas = me.video.createCanvas(width, height);
+           this.backBufferCanvas = me.video.createCanvas(this.settings.width, this.settings.height, true);
            this.backBufferContext2D = this.getContext2d(this.backBufferCanvas);
          } else {
-           this.backBufferCanvas = this.canvas;
+           this.backBufferCanvas = this.getScreenCanvas();
            this.backBufferContext2D = this.context;
          }
 
@@ -21407,6 +22656,8 @@
         */
        reset: function reset() {
          this._super(me.Renderer, "reset");
+
+         this.clearColor(this.currentColor, this.settings.transparent !== true);
        },
 
        /**
@@ -21574,9 +22825,18 @@
            // clamp to pixel grid
            dx = ~~dx;
            dy = ~~dy;
+         } // apply a tint if required
+
+
+         var source = image;
+         var tint = this.currentTint.toArray();
+
+         if (tint[0] !== 1.0 || tint[1] !== 1.0 || tint[2] !== 1.0) {
+           // get a tinted version of this image from the texture cache
+           source = this.cache.tint(image, this.currentTint.toRGB());
          }
 
-         this.backBufferContext2D.drawImage(image, sx, sy, sw, sh, dx, dy, dw, dh);
+         this.backBufferContext2D.drawImage(source, sx, sy, sw, sh, dx, dy, dw, dh);
        },
 
        /**
@@ -21790,13 +23050,17 @@
         * @param {Number} width
         * @param {Number} height
         */
-       strokeRect: function strokeRect(x, y, width, height) {
-         if (this.backBufferContext2D.globalAlpha < 1 / 255) {
-           // Fast path: don't draw fully transparent
-           return;
-         }
+       strokeRect: function strokeRect(x, y, width, height, fill) {
+         if (fill === true) {
+           this.fillRect(x, y, width, height);
+         } else {
+           if (this.backBufferContext2D.globalAlpha < 1 / 255) {
+             // Fast path: don't draw fully transparent
+             return;
+           }
 
-         this.backBufferContext2D.strokeRect(x, y, width, height);
+           this.backBufferContext2D.strokeRect(x, y, width, height);
+         }
        },
 
        /**
@@ -21941,16 +23205,20 @@
         * @param {me.Matrix2d} mat2d Matrix to transform by
         */
        transform: function transform(mat2d) {
-         var a = mat2d.val;
-         var tx = a[6],
-             ty = a[7];
+         var m = mat2d.toArray(),
+             a = m[0],
+             b = m[1],
+             c = m[3],
+             d = m[4],
+             e = m[6],
+             f = m[7];
 
          if (this.settings.subPixel === false) {
-           tx = ~~tx;
-           ty = ~~ty;
+           e |= 0;
+           f |= 0;
          }
 
-         this.backBufferContext2D.transform(a[0], a[1], a[3], a[4], tx, ty);
+         this.backBufferContext2D.transform(a, b, c, d, e, f);
        },
 
        /**
@@ -22073,28 +23341,30 @@
       * @namespace me.WebGLRenderer
       * @memberOf me
       * @constructor
-      * @param {HTMLCanvasElement} canvas The html canvas tag to draw to on screen.
-      * @param {Number} width The width of the canvas without scaling
-      * @param {Number} height The height of the canvas without scaling
-      * @param {Object} [options] The renderer parameters
+      * @param {Object} options The renderer parameters
+      * @param {Number} options.width The width of the canvas without scaling
+      * @param {Number} options.height The height of the canvas without scaling
+      * @param {HTMLCanvasElement} [options.canvas] The html canvas to draw to on screen
       * @param {Boolean} [options.doubleBuffering=false] Whether to enable double buffering
       * @param {Boolean} [options.antiAlias=false] Whether to enable anti-aliasing
       * @param {Boolean} [options.failIfMajorPerformanceCaveat=true] If true, the renderer will switch to CANVAS mode if the performances of a WebGL context would be dramatically lower than that of a native application making equivalent OpenGL calls.
       * @param {Boolean} [options.transparent=false] Whether to enable transparency on the canvas (performance hit when enabled)
       * @param {Boolean} [options.subPixel=false] Whether to enable subpixel renderering (performance hit when enabled)
+      * @param {Boolean} [options.preferWebGL1=true] if false the renderer will try to use WebGL 2 if supported
+      * @param {String} [options.powerPreference="default"] a hint to the user agent indicating what configuration of GPU is suitable for the WebGL context ("default", "high-performance", "low-power"). To be noted that Safari and Chrome (since version 80) both default to "low-power" to save battery life and improve the user experience on these dual-GPU machines.
       * @param {Number} [options.zoomX=width] The actual width of the canvas with scaling applied
       * @param {Number} [options.zoomY=height] The actual height of the canvas with scaling applied
-      * @param {me.WebGLRenderer.Compositor} [options.compositor] A class that implements the compositor API
+      * @param {me.WebGLCompositor} [options.compositor] A class that implements the compositor API
       */
      me.WebGLRenderer = me.Renderer.extend({
        /**
         * @ignore
         */
-       init: function init(canvas, width, height, options) {
+       init: function init(options) {
          // reference to this renderer
          var renderer = this; // parent contructor
 
-         this._super(me.Renderer, "init", [canvas, width, height, options]);
+         this._super(me.Renderer, "init", [options]);
          /**
           * The WebGL context
           * @name gl
@@ -22103,7 +23373,46 @@
           */
 
 
-         this.context = this.gl = this.getContextGL(canvas, this.settings.transparent);
+         this.context = this.gl = this.getContextGL(this.getScreenCanvas(), options.transparent);
+         /**
+          * The WebGL version used by this renderer (1 or 2)
+          * @name WebGLVersion
+          * @memberOf me.WebGLRenderer
+          * @type {Number}
+          * @default 1
+          * @readonly
+          */
+
+         this.webGLVersion = 1;
+         /**
+          * The vendor string of the underlying graphics driver.
+          * @name GPUVendor
+          * @memberOf me.WebGLRenderer
+          * @type {String}
+          * @default null
+          * @readonly
+          */
+
+         this.GPUVendor = null;
+         /**
+          * The renderer string of the underlying graphics driver.
+          * @name GPURenderer
+          * @memberOf me.WebGLRenderer
+          * @type {String}
+          * @default null
+          * @readonly
+          */
+
+         this.GPURenderer = null;
+         /**
+          * Maximum number of texture unit supported under the current context
+          * @name maxTextures
+          * @memberOf me.WebGLRenderer
+          * @type {Number}
+          * @readonly
+          */
+
+         this.maxTextures = this.gl.getParameter(this.gl.MAX_TEXTURE_IMAGE_UNITS);
          /**
           * @ignore
           */
@@ -22131,28 +23440,44 @@
           * @memberOf me.WebGLRenderer#
           */
 
-         this.currentTransform = new me.Matrix2d(); // Create a compositor
+         this.currentTransform = new me.Matrix2d();
+         /**
+          * The current compositor used by the renderer
+          * @name currentCompositor
+          * @type me.WebGLCompositor
+          * @memberOf me.WebGLRenderer#
+          */
 
-         var Compositor = this.settings.compositor || me.WebGLRenderer.Compositor;
-         this.compositor = new Compositor(this); // default WebGL state(s)
+         this.currentCompositor = null; // Create a compositor
+
+         var Compositor = this.settings.compositor || me.WebGLCompositor;
+         this.setCompositor(new Compositor(this)); // default WebGL state(s)
 
          this.gl.disable(this.gl.DEPTH_TEST);
          this.gl.disable(this.gl.SCISSOR_TEST);
          this.gl.enable(this.gl.BLEND); // set default mode
 
-         this.setBlendMode(this.settings.blendMode); // Create a texture cache
+         this.setBlendMode(this.settings.blendMode); // get GPU vendor and renderer
 
-         this.cache = new me.Renderer.TextureCache(this.compositor.maxTextures); // to simulate context lost and restore :
+         var debugInfo = this.gl.getExtension("WEBGL_debug_renderer_info");
+
+         if (debugInfo !== null) {
+           this.GPUVendor = this.gl.getParameter(debugInfo.UNMASKED_VENDOR_WEBGL);
+           this.GPURenderer = this.gl.getParameter(debugInfo.UNMASKED_RENDERER_WEBGL);
+         } // Create a texture cache
+
+
+         this.cache = new me.Renderer.TextureCache(this.maxTextures); // to simulate context lost and restore :
          // var ctx = me.video.renderer.context.getExtension('WEBGL_lose_context');
          // ctx.loseContext()
 
-         canvas.addEventListener("webglcontextlost", function (event) {
+         this.getScreenCanvas().addEventListener("webglcontextlost", function (event) {
            event.preventDefault();
            renderer.isContextValid = false;
            me.event.publish(me.event.WEBGL_ONCONTEXT_LOST, [renderer]);
          }, false); // ctx.restoreContext()
 
-         canvas.addEventListener("webglcontextrestored", function (event) {
+         this.getScreenCanvas().addEventListener("webglcontextrestored", function (event) {
            renderer.reset();
            renderer.isContextValid = true;
            me.event.publish(me.event.WEBGL_ONCONTEXT_RESTORED, [renderer]);
@@ -22171,9 +23496,9 @@
 
          if (this.isContextValid === false) {
            // on context lost/restore
-           this.compositor.init(this);
+           this.currentCompositor.init(this);
          } else {
-           this.compositor.reset();
+           this.currentCompositor.reset();
          }
 
          this.gl.disable(this.gl.SCISSOR_TEST);
@@ -22181,6 +23506,23 @@
          if (typeof this.fontContext2D !== "undefined") {
            this.createFontTexture(this.cache);
          }
+       },
+
+       /**
+        * assign a compositor to this renderer
+        * @name setCompositor
+        * @function
+        * @param {WebGLCompositor} compositor a compositor instance
+        * @memberOf me.WebGLRenderer.prototype
+        * @function
+        */
+       setCompositor: function setCompositor(compositor) {
+         if (this.currentCompositor !== null && this.currentCompositor !== compositor) {
+           // flush the current compositor
+           this.currentCompositor.flush();
+         }
+
+         this.currentCompositor = compositor;
        },
 
        /**
@@ -22198,7 +23540,21 @@
         */
        createFontTexture: function createFontTexture(cache) {
          if (typeof this.fontTexture === "undefined") {
-           var image = me.video.createCanvas(me.Math.nextPowerOfTwo(this.backBufferCanvas.width), me.Math.nextPowerOfTwo(this.backBufferCanvas.height));
+           var canvas = this.backBufferCanvas;
+           var width = canvas.width;
+           var height = canvas.height;
+
+           if (this.WebGLVersion === 1) {
+             if (!me.Math.isPowerOfTwo(width)) {
+               width = me.Math.nextPowerOfTwo(canvas.width);
+             }
+
+             if (!me.Math.isPowerOfTwo(height)) {
+               height = me.Math.nextPowerOfTwo(canvas.height);
+             }
+           }
+
+           var image = me.video.createCanvas(width, height, true);
            /**
             * @ignore
             */
@@ -22208,13 +23564,12 @@
             * @ignore
             */
 
-           this.fontTexture = new this.Texture(this.Texture.prototype.createAtlas.apply(this.Texture.prototype, [this.backBufferCanvas.width, this.backBufferCanvas.height, "fontTexture"]), image, cache);
+           this.fontTexture = new this.Texture(this.Texture.prototype.createAtlas.apply(this.Texture.prototype, [canvas.width, canvas.height, "fontTexture"]), image, cache);
+           this.currentCompositor.uploadTexture(this.fontTexture, 0, 0, 0);
          } else {
            // fontTexture was already created, just add it back into the cache
            cache.set(this.fontContext2D.canvas, this.fontTexture);
          }
-
-         this.compositor.uploadTexture(this.fontTexture, 0, 0, 0);
        },
 
        /**
@@ -22233,14 +23588,14 @@
         * var basic      = renderer.createPattern(image, "no-repeat");
         */
        createPattern: function createPattern(image, repeat) {
-         if (!me.Math.isPowerOfTwo(image.width) || !me.Math.isPowerOfTwo(image.height)) {
+         if (me.video.renderer.WebGLVersion === 1 && (!me.Math.isPowerOfTwo(image.width) || !me.Math.isPowerOfTwo(image.height))) {
            var src = typeof image.src !== "undefined" ? image.src : image;
            throw new Error("[WebGL Renderer] " + src + " is not a POT texture " + "(" + image.width + "x" + image.height + ")");
          }
 
          var texture = new this.Texture(this.Texture.prototype.createAtlas.apply(this.Texture.prototype, [image.width, image.height, "pattern", repeat]), image); // FIXME: Remove old cache entry and texture when changing the repeat mode
 
-         this.compositor.uploadTexture(texture);
+         this.currentCompositor.uploadTexture(texture);
          return texture;
        },
 
@@ -22251,7 +23606,7 @@
         * @function
         */
        flush: function flush() {
-         this.compositor.flush();
+         this.currentCompositor.flush();
        },
 
        /**
@@ -22259,20 +23614,25 @@
         * @name clearColor
         * @memberOf me.WebGLRenderer.prototype
         * @function
-        * @param {me.Color|String} color CSS color.
+        * @param {me.Color|String} [color] CSS color.
         * @param {Boolean} [opaque=false] Allow transparency [default] or clear the surface completely [true]
         */
        clearColor: function clearColor(col, opaque) {
+         var glArray;
          this.save();
-         this.resetTransform();
-         this.currentColor.copy(col);
 
-         if (opaque) {
-           this.compositor.clear();
+         if (col instanceof me.Color) {
+           glArray = col.toArray();
          } else {
-           this.fillRect(0, 0, this.canvas.width, this.canvas.height);
-         }
+           // reuse temporary the renderer default color object
+           glArray = this.getColor().parseCSS(col).toArray();
+         } // clear gl context with the specified color
 
+
+         this.currentCompositor.clearColor(glArray[0], glArray[1], glArray[2], opaque === true ? 1.0 : glArray[3]);
+         this.currentCompositor.clear(); // restore default clear Color black
+
+         this.currentCompositor.clearColor(0.0, 0.0, 0.0, 0.0);
          this.restore();
        },
 
@@ -22298,14 +23658,12 @@
         * @ignore
         */
        drawFont: function drawFont(bounds) {
-         var fontContext = this.getFontContext(); // Flush the compositor so we can upload a new texture
+         var fontContext = this.getFontContext(); // Force-upload the new texture
 
-         this.flush(); // Force-upload the new texture
-
-         this.compositor.uploadTexture(this.fontTexture, 0, 0, 0, true); // Add the new quad
+         this.currentCompositor.uploadTexture(this.fontTexture, 0, 0, 0, true); // Add the new quad
 
          var key = bounds.pos.x + "," + bounds.pos.y + "," + bounds.width + "," + bounds.height;
-         this.compositor.addQuad(this.fontTexture, key, bounds.pos.x, bounds.pos.y, bounds.width, bounds.height); // Clear font context2D
+         this.currentCompositor.addQuad(this.fontTexture, key, bounds.pos.x, bounds.pos.y, bounds.width, bounds.height); // Clear font context2D
 
          fontContext.clearRect(bounds.pos.x, bounds.pos.y, bounds.width, bounds.height);
        },
@@ -22353,12 +23711,12 @@
 
          if (this.settings.subPixel === false) {
            // clamp to pixel grid
-           dx = ~~dx;
-           dy = ~~dy;
+           dx |= 0;
+           dy |= 0;
          }
 
          var key = sx + "," + sy + "," + sw + "," + sh;
-         this.compositor.addQuad(this.cache.get(image), key, dx, dy, dw, dh);
+         this.currentCompositor.addQuad(this.cache.get(image), key, dx, dy, dw, dh);
        },
 
        /**
@@ -22375,7 +23733,7 @@
         */
        drawPattern: function drawPattern(pattern, x, y, width, height) {
          var key = "0,0," + width + "," + height;
-         this.compositor.addQuad(pattern, key, x, y, width, height);
+         this.currentCompositor.addQuad(pattern, key, x, y, width, height);
        },
 
        /**
@@ -22412,10 +23770,26 @@
            antialias: this.settings.antiAlias,
            depth: false,
            stencil: true,
+           preserveDrawingBuffer: false,
            premultipliedAlpha: transparent,
+           powerPreference: this.settings.powerPreference,
            failIfMajorPerformanceCaveat: this.settings.failIfMajorPerformanceCaveat
          };
-         var gl = canvas.getContext("webgl", attr) || canvas.getContext("experimental-webgl", attr);
+         var gl; // attempt to create a WebGL2 context if requested
+
+         if (this.settings.preferWebGL1 === false) {
+           gl = canvas.getContext("webgl2", attr);
+
+           if (gl) {
+             this.WebGLVersion = 2;
+           }
+         } // fallback to WebGL1
+
+
+         if (!gl) {
+           this.WebGLVersion = 1;
+           gl = canvas.getContext("webgl", attr) || canvas.getContext("experimental-webgl", attr);
+         }
 
          if (!gl) {
            throw new Error("A WebGL context could not be created.");
@@ -22613,7 +23987,8 @@
          } else {
            // XXX to be optimzed using a specific shader
            var points = this._glPoints;
-           var len = Math.floor(24 * Math.sqrt(radius * 2));
+           var i,
+               len = Math.floor(24 * Math.sqrt(radius * 2));
            var theta = (end - start) / (len * 2);
            var theta2 = theta * 2;
            var cos_theta = Math.cos(theta);
@@ -22624,7 +23999,7 @@
            } // calculate and draw all segments
 
 
-           for (var i = 0; i < len; i++) {
+           for (i = 0; i < len; i++) {
              var angle = theta + start + theta2 * i;
              var cos = Math.cos(angle);
              var sin = -Math.sin(angle);
@@ -22633,7 +24008,7 @@
            } // batch draw all lines
 
 
-           this.compositor.drawLine(points, len, true);
+           this.currentCompositor.drawVertices(this.gl.LINE_STRIP, points, len);
          }
        },
 
@@ -22652,7 +24027,8 @@
        fillArc: function fillArc(x, y, radius, start, end, antiClockwise) {
          // XXX to be optimzed using a specific shader
          var points = this._glPoints;
-         var index = 0;
+         var i,
+             index = 0;
          var len = Math.floor(24 * Math.sqrt(radius * 2));
          var theta = (end - start) / (len * 2);
          var theta2 = theta * 2;
@@ -22664,7 +24040,7 @@
          } // calculate and draw all segments
 
 
-         for (var i = 0; i < len - 1; i++) {
+         for (i = 0; i < len - 1; i++) {
            var angle = theta + start + theta2 * i;
            var cos = Math.cos(angle);
            var sin = -Math.sin(angle);
@@ -22673,7 +24049,7 @@
          } // batch draw all triangles
 
 
-         this.compositor.drawTriangle(points, index, true);
+         this.currentCompositor.drawVertices(this.gl.TRIANGLE_STRIP, points, index);
        },
 
        /**
@@ -22707,7 +24083,7 @@
            } // batch draw all lines
 
 
-           this.compositor.drawLine(points, len);
+           this.currentCompositor.drawVertices(this.gl.LINE_LOOP, points, len);
          }
        },
 
@@ -22740,7 +24116,7 @@
          } // batch draw all triangles
 
 
-         this.compositor.drawTriangle(points, index, true);
+         this.currentCompositor.drawVertices(this.gl.TRIANGLE_STRIP, points, index);
        },
 
        /**
@@ -22759,7 +24135,7 @@
          points[0].y = startY;
          points[1].x = endX;
          points[1].y = endY;
-         this.compositor.drawLine(points, 2, true);
+         this.currentCompositor.drawVertices(this.gl.LINE_STRIP, points, 2);
        },
 
        /**
@@ -22801,7 +24177,7 @@
              points[i].y = poly.pos.y + poly.points[i].y;
            }
 
-           this.compositor.drawLine(points, len);
+           this.currentCompositor.drawVertices(this.gl.LINE_LOOP, points, len);
          }
        },
 
@@ -22817,19 +24193,20 @@
          var glPoints = this._glPoints;
          var indices = poly.getIndices();
          var x = poly.pos.x,
-             y = poly.pos.y; // Grow internal points buffer if necessary
+             y = poly.pos.y;
+         var i; // Grow internal points buffer if necessary
 
          for (i = glPoints.length; i < indices.length; i++) {
            glPoints.push(new me.Vector2d());
          } // calculate all vertices
 
 
-         for (var i = 0; i < indices.length; i++) {
+         for (i = 0; i < indices.length; i++) {
            glPoints[i].set(x + points[indices[i]].x, y + points[indices[i]].y);
          } // draw all triangle
 
 
-         this.compositor.drawTriangle(glPoints, indices.length);
+         this.currentCompositor.drawVertices(this.gl.TRIANGLES, glPoints, indices.length);
        },
 
        /**
@@ -22842,17 +24219,21 @@
         * @param {Number} width
         * @param {Number} height
         */
-       strokeRect: function strokeRect(x, y, width, height) {
-         var points = this._glPoints;
-         points[0].x = x;
-         points[0].y = y;
-         points[1].x = x + width;
-         points[1].y = y;
-         points[2].x = x + width;
-         points[2].y = y + height;
-         points[3].x = x;
-         points[3].y = y + height;
-         this.compositor.drawLine(points, 4);
+       strokeRect: function strokeRect(x, y, width, height, fill) {
+         if (fill === true) {
+           this.fillRect(x, y, width, height);
+         } else {
+           var points = this._glPoints;
+           points[0].x = x;
+           points[0].y = y;
+           points[1].x = x + width;
+           points[1].y = y;
+           points[2].x = x + width;
+           points[2].y = y + height;
+           points[3].x = x;
+           points[3].y = y + height;
+           this.currentCompositor.drawVertices(this.gl.LINE_LOOP, points, 4);
+         }
        },
 
        /**
@@ -22875,7 +24256,7 @@
          glPoints[2].y = y + height;
          glPoints[3].x = x;
          glPoints[3].y = y + height;
-         this.compositor.drawTriangle(glPoints, 4, true);
+         this.currentCompositor.drawVertices(this.gl.TRIANGLE_STRIP, glPoints, 4);
        },
 
        /**
@@ -22899,13 +24280,14 @@
         * @param {me.Matrix2d} mat2d Matrix to transform by
         */
        transform: function transform(mat2d) {
-         this.currentTransform.multiply(mat2d);
+         var currentTransform = this.currentTransform;
+         currentTransform.multiply(mat2d);
 
          if (this.settings.subPixel === false) {
            // snap position values to pixel grid
-           var a = this.currentTransform.val;
-           a[6] = ~~a[6];
-           a[7] = ~~a[7];
+           var a = currentTransform.toArray();
+           a[6] |= 0;
+           a[7] |= 0;
          }
        },
 
@@ -22918,10 +24300,14 @@
         * @param {Number} y
         */
        translate: function translate(x, y) {
+         var currentTransform = this.currentTransform;
+         currentTransform.translate(x, y);
+
          if (this.settings.subPixel === false) {
-           this.currentTransform.translate(~~x, ~~y);
-         } else {
-           this.currentTransform.translate(x, y);
+           // snap position values to pixel grid
+           var a = currentTransform.toArray();
+           a[6] |= 0;
+           a[7] |= 0;
          }
        },
 
@@ -23014,36 +24400,38 @@
      });
    })();
 
+   var primitiveVertex = "// Current vertex point\nattribute vec2 aVertex;\n\n// Projection matrix\nuniform mat4 uProjectionMatrix;\n\n// Vertex color\nuniform vec4 uColor;\n\n// Fragment color\nvarying vec4 vColor;\n\nvoid main(void) {\n    // Transform the vertex position by the projection matrix\n    gl_Position = uProjectionMatrix * vec4(aVertex, 0.0, 1.0);\n    // Pass the remaining attributes to the fragment shader\n    vColor = vec4(uColor.rgb * uColor.a, uColor.a);\n}\n";
+
+   var primitiveFragment = "varying vec4 vColor;\n\nvoid main(void) {\n    gl_FragColor = vColor;\n}\n";
+
+   var quadVertex = "attribute vec2 aVertex;\nattribute vec2 aRegion;\nattribute vec4 aColor;\n\nuniform mat4 uProjectionMatrix;\n\nvarying vec2 vRegion;\nvarying vec4 vColor;\n\nvoid main(void) {\n    // Transform the vertex position by the projection matrix\n     gl_Position = uProjectionMatrix * vec4(aVertex, 0.0, 1.0);\n    // Pass the remaining attributes to the fragment shader\n    vColor = vec4(aColor.rgb * aColor.a, aColor.a);\n    vRegion = aRegion;\n}\n";
+
+   var quadFragment = "uniform sampler2D uSampler;\nvarying vec4 vColor;\nvarying vec2 vRegion;\n\nvoid main(void) {\n    gl_FragColor = texture2D(uSampler, vRegion) * vColor;\n}\n";
+
    (function () {
      // Handy constants
      var VERTEX_SIZE = 2;
-     var COLOR_SIZE = 4;
-     var TEXTURE_SIZE = 1;
      var REGION_SIZE = 2;
-     var ELEMENT_SIZE = VERTEX_SIZE + COLOR_SIZE + TEXTURE_SIZE + REGION_SIZE;
+     var COLOR_SIZE = 4;
+     var ELEMENT_SIZE = VERTEX_SIZE + REGION_SIZE + COLOR_SIZE;
      var ELEMENT_OFFSET = ELEMENT_SIZE * Float32Array.BYTES_PER_ELEMENT;
      var VERTEX_ELEMENT = 0;
-     var COLOR_ELEMENT = VERTEX_ELEMENT + VERTEX_SIZE;
-     var TEXTURE_ELEMENT = COLOR_ELEMENT + COLOR_SIZE;
-     var REGION_ELEMENT = TEXTURE_ELEMENT + TEXTURE_SIZE;
-     var VERTEX_OFFSET = VERTEX_ELEMENT * Float32Array.BYTES_PER_ELEMENT;
-     var COLOR_OFFSET = COLOR_ELEMENT * Float32Array.BYTES_PER_ELEMENT;
-     var TEXTURE_OFFSET = TEXTURE_ELEMENT * Float32Array.BYTES_PER_ELEMENT;
-     var REGION_OFFSET = REGION_ELEMENT * Float32Array.BYTES_PER_ELEMENT;
+     var REGION_ELEMENT = VERTEX_ELEMENT + VERTEX_SIZE;
+     var COLOR_ELEMENT = REGION_ELEMENT + REGION_SIZE;
      var ELEMENTS_PER_QUAD = 4;
      var INDICES_PER_QUAD = 6;
      var MAX_LENGTH = 16000;
      /**
-      * A WebGL texture Compositor object. This class handles all of the WebGL state<br>
-      * Pushes texture regions into WebGL buffers, automatically flushes to GPU
+      * A WebGL Compositor object. This class handles all of the WebGL state<br>
+      * Pushes texture regions or shape geometry into WebGL buffers, automatically flushes to GPU
       * @extends me.Object
-      * @namespace me.WebGLRenderer.Compositor
+      * @namespace me.WebGLCompositor
       * @memberOf me
       * @constructor
       * @param {me.WebGLRenderer} renderer the current WebGL renderer session
       */
 
-     me.WebGLRenderer.Compositor = me.Object.extend({
+     me.WebGLCompositor = me.Object.extend({
        /**
         * @ignore
         */
@@ -23053,33 +24441,15 @@
          /**
           * The number of quads held in the batch
           * @name length
-          * @memberOf me.WebGLRenderer.Compositor
+          * @memberOf me.WebGLCompositor
           * @type Number
           * @readonly
           */
 
-         this.length = 0; // Hash map of texture units
+         this.length = 0; // list of active texture units
 
-         this.units = [];
-         /*
-          * XXX: The GLSL compiler pukes with "memory exhausted" when it is
-          * given long if-then-else chains.
-          *
-          * See: http://stackoverflow.com/questions/15828966/glsl-compile-error-memory-exhausted
-          *
-          * Workaround the problem by limiting the max texture support to 24.
-          * The magic number was determined by testing under different UAs.
-          * All Desktop UAs were capable of compiling with 27 fragment shader
-          * samplers. Using 24 seems like a reasonable compromise;
-          *
-          * 24 = 2^4 + 2^3
-          *
-          * As of October 2015, approximately 4.2% of all WebGL-enabled UAs
-          * support more than 24 max textures, according to
-          * http://webglstats.com/
-          */
-
-         this.maxTextures = Math.min(24, gl.getParameter(gl.MAX_TEXTURE_IMAGE_UNITS)); // Vector pool
+         this.currentTextureUnit = -1;
+         this.boundTextures = []; // Vector pool
 
          this.v = [new me.Vector2d(), new me.Vector2d(), new me.Vector2d(), new me.Vector2d()]; // the associated renderer
 
@@ -23091,29 +24461,52 @@
 
          this.tint = renderer.currentTint; // Global transformation matrix
 
-         this.viewMatrix = renderer.currentTransform; // reference to the active shader
+         this.viewMatrix = renderer.currentTransform;
+         /**
+          * a reference to the active WebGL shader
+          * @name activeShader
+          * @memberOf me.WebGLCompositor
+          * @type {me.GLShader}
+          */
 
-         this.activeShader = null; // Load and create shader programs
+         this.activeShader = null;
+         /**
+          * primitive type to render (gl.POINTS, gl.LINE_STRIP, gl.LINE_LOOP, gl.LINES, gl.TRIANGLE_STRIP, gl.TRIANGLE_FAN, gl.TRIANGLES)
+          * @name mode
+          * @see me.WebGLCompositor
+          * @memberOf me.WebGLCompositor
+          * @default gl.TRIANGLES
+          */
 
-         this.primitiveShader = new me.PrimitiveGLShader(this.gl);
-         this.quadShader = new me.QuadGLShader(this.gl, this.maxTextures); // Stream buffer
+         this.mode = gl.TRIANGLES;
+         /**
+          * an array of vertex attribute properties
+          * @name attributes
+          * @see me.WebGLCompositor.addAttribute
+          * @memberOf me.WebGLCompositor
+          */
 
-         this.sb = gl.createBuffer();
-         gl.bindBuffer(gl.ARRAY_BUFFER, this.sb);
+         this.attributes = []; // Load and create shader programs
+
+         this.primitiveShader = new me.GLShader(this.gl, primitiveVertex, primitiveFragment);
+         this.quadShader = new me.GLShader(this.gl, quadVertex, quadFragment); /// define all vertex attributes
+
+         this.addAttribute("aVertex", 2, gl.FLOAT, false, 0 * Float32Array.BYTES_PER_ELEMENT); // 0
+
+         this.addAttribute("aRegion", 2, gl.FLOAT, false, 2 * Float32Array.BYTES_PER_ELEMENT); // 1
+
+         this.addAttribute("aColor", 4, gl.FLOAT, false, 4 * Float32Array.BYTES_PER_ELEMENT); // 2
+         // Stream buffer
+
+         gl.bindBuffer(gl.ARRAY_BUFFER, gl.createBuffer());
          gl.bufferData(gl.ARRAY_BUFFER, MAX_LENGTH * ELEMENT_OFFSET * ELEMENTS_PER_QUAD, gl.STREAM_DRAW);
          this.sbSize = 256;
          this.sbIndex = 0; // Quad stream buffer
 
          this.stream = new Float32Array(this.sbSize * ELEMENT_SIZE * ELEMENTS_PER_QUAD); // Index buffer
 
-         this.ib = gl.createBuffer();
-         gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, this.ib);
-         gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, this.createIB(), gl.STATIC_DRAW); // Bind attribute pointers for quad shader
-
-         gl.vertexAttribPointer(this.quadShader.attributes.aVertex, VERTEX_SIZE, gl.FLOAT, false, ELEMENT_OFFSET, VERTEX_OFFSET);
-         gl.vertexAttribPointer(this.quadShader.attributes.aColor, COLOR_SIZE, gl.FLOAT, false, ELEMENT_OFFSET, COLOR_OFFSET);
-         gl.vertexAttribPointer(this.quadShader.attributes.aTexture, TEXTURE_SIZE, gl.FLOAT, false, ELEMENT_OFFSET, TEXTURE_OFFSET);
-         gl.vertexAttribPointer(this.quadShader.attributes.aRegion, REGION_SIZE, gl.FLOAT, false, ELEMENT_OFFSET, REGION_OFFSET); // register to the CANVAS resize channel
+         gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, gl.createBuffer());
+         gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, this.createIB(), gl.STATIC_DRAW); // register to the CANVAS resize channel
 
          me.event.subscribe(me.event.CANVAS_ONRESIZE, function (width, height) {
            this.flush();
@@ -23128,29 +24521,55 @@
         */
        reset: function reset() {
          this.sbIndex = 0;
-         this.length = 0;
-         var samplers = []; // WebGL context
+         this.length = 0; // WebGL context
 
          this.gl = this.renderer.gl;
-         this.flush();
-         this.setViewport(0, 0, this.gl.canvas.width, this.gl.canvas.height); // Initialize clear color
+         this.flush(); // initial viewport size
 
-         this.gl.clearColor(0.0, 0.0, 0.0, 1.0);
+         this.setViewport(0, 0, this.renderer.getScreenCanvas().width, this.renderer.getScreenCanvas().height); // Initialize clear color
 
-         for (var i = 0; i < this.maxTextures; i++) {
-           this.units[i] = false;
-           samplers[i] = i;
-         } // set the quad shader as the default program
+         this.clearColor(0.0, 0.0, 0.0, 0.0); // delete all related bound texture
 
+         for (var i = 0; i < this.renderer.maxTextures; i++) {
+           var texture = this.boundTextures[i];
+
+           if (texture !== null) {
+             this.gl.deleteTexture(texture);
+           }
+
+           this.boundTextures[i] = null;
+         }
+
+         this.currentTextureUnit = -1; // set the quad shader as the default program
 
          this.useShader(this.quadShader);
-         this.quadShader.setUniform("uSampler", samplers);
+       },
+
+       /**
+        * add vertex attribute property definition to the compositor
+        * @name addAttribute
+        * @memberOf me.WebGLCompositor
+        * @function
+        * @param {String} name name of the attribute in the vertex shader
+        * @param {Number} size number of components per vertex attribute. Must be 1, 2, 3, or 4.
+        * @param {GLenum} type data type of each component in the array
+        * @param {Boolean} normalized whether integer data values should be normalized into a certain
+        * @param {Number} offset offset in bytes of the first component in the vertex attribute array
+        */
+       addAttribute: function addAttribute(name, size, type, normalized, offset) {
+         this.attributes.push({
+           name: name,
+           size: size,
+           type: type,
+           normalized: normalized,
+           offset: offset
+         });
        },
 
        /**
         * Sets the viewport
         * @name setViewport
-        * @memberOf me.WebGLRenderer.Compositor
+        * @memberOf me.WebGLCompositor
         * @function
         * @param {Number} x x position of viewport
         * @param {Number} y y position of viewport
@@ -23162,9 +24581,9 @@
        },
 
        /**
-        * Create a texture from an image
-        * @name createTexture
-        * @memberOf me.WebGLRenderer.Compositor
+        * Create a WebGL texture from an image
+        * @name createTexture2D
+        * @memberOf me.WebGLCompositor
         * @function
         * @param {Number} unit Destination texture unit
         * @param {Image|Canvas|ImageData|UInt8Array[]|Float32Array[]} image Source image
@@ -23175,17 +24594,17 @@
         * @param {Number} [b] Source image border (Only use with UInt8Array[] or Float32Array[] source image)
         * @param {Number} [b] Source image border (Only use with UInt8Array[] or Float32Array[] source image)
         * @param {Boolean} [premultipliedAlpha=true] Multiplies the alpha channel into the other color channels
-        * @return {WebGLTexture} A texture object
+        * @param {Boolean} [mipmap=true] Whether mipmap levels should be generated for this texture
+        * @return {WebGLTexture} a WebGL texture
         */
-       createTexture: function createTexture(unit, image, filter, repeat, w, h, b, premultipliedAlpha) {
+       createTexture2D: function createTexture2D(unit, image, filter, repeat, w, h, b, premultipliedAlpha, mipmap) {
          var gl = this.gl;
          repeat = repeat || "no-repeat";
          var isPOT = me.Math.isPowerOfTwo(w || image.width) && me.Math.isPowerOfTwo(h || image.height);
          var texture = gl.createTexture();
-         var rs = repeat.search(/^repeat(-x)?$/) === 0 && isPOT ? gl.REPEAT : gl.CLAMP_TO_EDGE;
-         var rt = repeat.search(/^repeat(-y)?$/) === 0 && isPOT ? gl.REPEAT : gl.CLAMP_TO_EDGE;
-         gl.activeTexture(gl.TEXTURE0 + unit);
-         gl.bindTexture(gl.TEXTURE_2D, texture);
+         var rs = repeat.search(/^repeat(-x)?$/) === 0 && (isPOT || this.renderer.WebGLVersion === 2) ? gl.REPEAT : gl.CLAMP_TO_EDGE;
+         var rt = repeat.search(/^repeat(-y)?$/) === 0 && (isPOT || this.renderer.WebGLVersion === 2) ? gl.REPEAT : gl.CLAMP_TO_EDGE;
+         this.setTexture2D(texture, unit);
          gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, rs);
          gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, rt);
          gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, filter);
@@ -23196,9 +24615,42 @@
            gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, w, h, b, gl.RGBA, gl.UNSIGNED_BYTE, image);
          } else {
            gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, image);
+         } // generate the sprite mimap (used when scaling) if a PowerOfTwo texture
+
+
+         if (isPOT && mipmap !== false) {
+           gl.generateMipmap(gl.TEXTURE_2D);
          }
 
          return texture;
+       },
+
+       /**
+        * assign the given WebGL texture to the current batch
+        * @name setTexture2D
+        * @memberOf me.WebGLCompositor
+        * @function
+        * @param {WebGLTexture} a WebGL texture
+        * @param {Number} unit Texture unit to which the given texture is bound
+        */
+       setTexture2D: function setTexture2D(texture, unit) {
+         var gl = this.gl;
+
+         if (texture !== this.boundTextures[unit]) {
+           this.flush();
+
+           if (this.currentTextureUnit !== unit) {
+             this.currentTextureUnit = unit;
+             gl.activeTexture(gl.TEXTURE0 + unit);
+           }
+
+           gl.bindTexture(gl.TEXTURE_2D, texture);
+           this.boundTextures[unit] = texture;
+         } else if (this.currentTextureUnit !== unit) {
+           this.flush();
+           this.currentTextureUnit = unit;
+           gl.activeTexture(gl.TEXTURE0 + unit);
+         }
        },
 
        /**
@@ -23206,13 +24658,15 @@
         */
        uploadTexture: function uploadTexture(texture, w, h, b, force) {
          var unit = this.renderer.cache.getUnit(texture);
+         var texture2D = this.boundTextures[unit];
 
-         if (!this.units[unit] || force) {
-           this.units[unit] = true;
-           this.createTexture(unit, texture.getTexture(), this.renderer.settings.antiAlias ? this.gl.LINEAR : this.gl.NEAREST, texture.repeat, w, h, b, texture.premultipliedAlpha);
+         if (texture2D === null || force) {
+           this.createTexture2D(unit, texture.getTexture(), this.renderer.settings.antiAlias ? this.gl.LINEAR : this.gl.NEAREST, texture.repeat, w, h, b, texture.premultipliedAlpha);
+         } else {
+           this.setTexture2D(texture2D, unit);
          }
 
-         return unit;
+         return this.currentTextureUnit;
        },
 
        /**
@@ -23246,7 +24700,7 @@
         * Select the shader to use for compositing
         * @name useShader
         * @see me.GLShader
-        * @memberOf me.WebGLRenderer.Compositor
+        * @memberOf me.WebGLCompositor
         * @function
         * @param {me.GLShader} shader a reference to a GLShader instance
         */
@@ -23255,14 +24709,27 @@
            this.flush();
            this.activeShader = shader;
            this.activeShader.bind();
-           this.activeShader.setUniform("uProjectionMatrix", this.renderer.projectionMatrix);
+           this.activeShader.setUniform("uProjectionMatrix", this.renderer.projectionMatrix); // set the vertex attributes
+
+           for (var index = 0; index < this.attributes.length; ++index) {
+             var gl = this.gl;
+             var element = this.attributes[index];
+             var location = this.activeShader.getAttribLocation(element.name);
+
+             if (location !== -1) {
+               gl.enableVertexAttribArray(location);
+               gl.vertexAttribPointer(location, element.size, element.type, element.normalized, ELEMENT_OFFSET, element.offset);
+             } else {
+               gl.disableVertexAttribArray(index);
+             }
+           }
          }
        },
 
        /**
         * Add a textured quad
         * @name addQuad
-        * @memberOf me.WebGLRenderer.Compositor
+        * @memberOf me.WebGLCompositor
         * @function
         * @param {me.video.renderer.Texture} texture Source texture
         * @param {String} key Source texture region name
@@ -23272,6 +24739,7 @@
         * @param {Number} h Destination height
         */
        addQuad: function addQuad(texture, key, x, y, w, h) {
+         //var gl = this.gl;
          var color = this.color.toArray();
          var tint = this.tint.toArray();
 
@@ -23283,16 +24751,19 @@
            tint[3] = color[3];
          }
 
-         this.useShader(this.quadShader);
-
          if (this.length >= MAX_LENGTH) {
            this.flush();
          }
 
          if (this.length >= this.sbSize) {
            this.resizeSB();
-         } // Transform vertices
+         }
 
+         this.useShader(this.quadShader); // upload and activate the texture if necessary
+
+         var unit = this.uploadTexture(texture); // set fragement sampler accordingly
+
+         this.quadShader.setUniform("uSampler", unit); // Transform vertices
 
          var m = this.viewMatrix,
              v0 = this.v[0].set(x, y),
@@ -23301,10 +24772,10 @@
              v3 = this.v[3].set(x + w, y + h);
 
          if (!m.isIdentity()) {
-           m.multiplyVector(v0);
-           m.multiplyVector(v1);
-           m.multiplyVector(v2);
-           m.multiplyVector(v3);
+           m.apply(v0);
+           m.apply(v1);
+           m.apply(v2);
+           m.apply(v3);
          } // Array index computation
 
 
@@ -23321,17 +24792,7 @@
          this.stream[idx2 + VERTEX_ELEMENT + 0] = v2.x;
          this.stream[idx2 + VERTEX_ELEMENT + 1] = v2.y;
          this.stream[idx3 + VERTEX_ELEMENT + 0] = v3.x;
-         this.stream[idx3 + VERTEX_ELEMENT + 1] = v3.y; // Fill color buffer
-         // FIXME: Pack color vector into single float
-
-         this.stream.set(tint, idx0 + COLOR_ELEMENT);
-         this.stream.set(tint, idx1 + COLOR_ELEMENT);
-         this.stream.set(tint, idx2 + COLOR_ELEMENT);
-         this.stream.set(tint, idx3 + COLOR_ELEMENT); // Fill texture index buffer
-         // FIXME: Can the texture index be packed into another element?
-
-         var unit = this.uploadTexture(texture);
-         this.stream[idx0 + TEXTURE_ELEMENT] = this.stream[idx1 + TEXTURE_ELEMENT] = this.stream[idx2 + TEXTURE_ELEMENT] = this.stream[idx3 + TEXTURE_ELEMENT] = unit; // Fill texture coordinates buffer
+         this.stream[idx3 + VERTEX_ELEMENT + 1] = v3.y; // Fill texture coordinates buffer
 
          var uvs = texture.getUVs(key); // FIXME: Pack each texture coordinate into single floats
 
@@ -23342,15 +24803,21 @@
          this.stream[idx2 + REGION_ELEMENT + 0] = uvs[0];
          this.stream[idx2 + REGION_ELEMENT + 1] = uvs[3];
          this.stream[idx3 + REGION_ELEMENT + 0] = uvs[2];
-         this.stream[idx3 + REGION_ELEMENT + 1] = uvs[3];
+         this.stream[idx3 + REGION_ELEMENT + 1] = uvs[3]; // Fill color buffer
+         // FIXME: Pack color vector into single float
+
+         this.stream.set(tint, idx0 + COLOR_ELEMENT);
+         this.stream.set(tint, idx1 + COLOR_ELEMENT);
+         this.stream.set(tint, idx2 + COLOR_ELEMENT);
+         this.stream.set(tint, idx3 + COLOR_ELEMENT);
          this.sbIndex += ELEMENT_SIZE * ELEMENTS_PER_QUAD;
          this.length++;
        },
 
        /**
         * Flush batched texture operations to the GPU
-        * @name flush
-        * @memberOf me.WebGLRenderer.Compositor
+        * @param
+        * @memberOf me.WebGLCompositor
         * @function
         */
        flush: function flush() {
@@ -23360,105 +24827,70 @@
            var len = this.length * ELEMENT_SIZE * ELEMENTS_PER_QUAD;
            gl.bufferData(gl.ARRAY_BUFFER, this.stream.subarray(0, len), gl.STREAM_DRAW); // Draw the stream buffer
 
-           gl.drawElements(gl.TRIANGLES, this.length * INDICES_PER_QUAD, gl.UNSIGNED_SHORT, 0);
+           gl.drawElements(this.mode, this.length * INDICES_PER_QUAD, gl.UNSIGNED_SHORT, 0);
            this.sbIndex = 0;
            this.length = 0;
          }
        },
 
        /**
-        * Draw triangle(s)
-        * @name drawTriangle
-        * @memberOf me.WebGLRenderer.Compositor
+        * Draw an array of vertices
+        * @name drawVertices
+        * @memberOf me.WebGLCompositor
         * @function
-        * @param {me.Vector2d[]} points vertices
-        * @param {Number} [len=points.length] amount of points defined in the points array
-        * @param {Boolean} [strip=false] Whether the array defines a serie of connected triangles, sharing vertices
+        * @param {GLENUM} [mode=gl.TRIANGLES] primitive type to render (gl.POINTS, gl.LINE_STRIP, gl.LINE_LOOP, gl.LINES, gl.TRIANGLE_STRIP, gl.TRIANGLE_FAN, gl.TRIANGLES)
+        * @param {me.Vector2d[]} verts vertices
+        * @param {Number} [vertexCount=verts.length] amount of points defined in the points array
         */
-       drawTriangle: function drawTriangle(points, len, strip) {
+       drawVertices: function drawVertices(mode, verts, vertexCount) {
          var gl = this.gl;
-         len = len || points.length;
-         this.useShader(this.primitiveShader); // Put vertex data into the stream buffer
+         vertexCount = vertexCount || verts.length; // use the primitive shader
 
-         var j = 0;
+         this.useShader(this.primitiveShader); // Set the line color
+
+         this.primitiveShader.setUniform("uColor", this.color); // Put vertex data into the stream buffer
+
+         var offset = 0;
          var m = this.viewMatrix;
          var m_isIdentity = m.isIdentity();
 
-         for (var i = 0; i < points.length; i++) {
+         for (var i = 0; i < vertexCount; i++) {
            if (!m_isIdentity) {
-             m.multiplyVector(points[i]);
+             m.apply(verts[i]);
            }
 
-           this.stream[j++] = points[i].x;
-           this.stream[j++] = points[i].y;
-         } // Set the line color
+           this.stream[offset + 0] = verts[i].x;
+           this.stream[offset + 1] = verts[i].y;
+           offset += ELEMENT_SIZE;
+         } // Copy data into the stream buffer
 
 
-         this.primitiveShader.setUniform("uColor", this.color); // Copy data into the stream buffer
+         gl.bufferData(gl.ARRAY_BUFFER, this.stream.subarray(0, vertexCount * ELEMENT_SIZE), gl.STREAM_DRAW); // Draw the stream buffer
 
-         gl.bufferData(gl.ARRAY_BUFFER, this.stream.subarray(0, len * 2), gl.STREAM_DRAW); // FIXME: Configure vertex attrib pointers in `useShader`
-
-         gl.vertexAttribPointer(this.primitiveShader.attributes.aVertex, VERTEX_SIZE, gl.FLOAT, false, 0, 0); // Draw the stream buffer
-
-         gl.drawArrays(strip === true ? gl.TRIANGLE_STRIP : gl.TRIANGLES, 0, len); // FIXME: Configure vertex attrib pointers in `useShader`
-
-         gl.vertexAttribPointer(this.quadShader.attributes.aVertex, VERTEX_SIZE, gl.FLOAT, false, ELEMENT_OFFSET, VERTEX_OFFSET);
-         gl.vertexAttribPointer(this.quadShader.attributes.aColor, COLOR_SIZE, gl.FLOAT, false, ELEMENT_OFFSET, COLOR_OFFSET);
-         gl.vertexAttribPointer(this.quadShader.attributes.aTexture, TEXTURE_SIZE, gl.FLOAT, false, ELEMENT_OFFSET, TEXTURE_OFFSET);
-         gl.vertexAttribPointer(this.quadShader.attributes.aRegion, REGION_SIZE, gl.FLOAT, false, ELEMENT_OFFSET, REGION_OFFSET);
+         gl.drawArrays(mode, 0, vertexCount);
        },
 
        /**
-        * Draw a line
-        * @name drawLine
-        * @memberOf me.WebGLRenderer.Compositor
+        * Specify the color values used when clearing color buffers. The values are clamped between 0 and 1.
+        * @name clearColor
+        * @memberOf me.WebGLCompositor
         * @function
-        * @param {me.Vector2d[]} points Line vertices
-        * @param {Number} [len=points.length] amount of points defined in the points array
-        * @param {Boolean} [open=false] Whether the line is open (true) or closed (false)
+        * @param {Number} r - the red color value used when the color buffers are cleared
+        * @param {Number} g - the green color value used when the color buffers are cleared
+        * @param {Number} b - the blue color value used when the color buffers are cleared
+        * @param {Number} a - the alpha color value used when the color buffers are cleared
         */
-       drawLine: function drawLine(points, len, open) {
-         var gl = this.gl;
-         len = len || points.length;
-         this.useShader(this.primitiveShader); // Put vertex data into the stream buffer
-
-         var j = 0;
-         var m = this.viewMatrix;
-         var m_isIdentity = m.isIdentity();
-
-         for (var i = 0; i < points.length; i++) {
-           if (!m_isIdentity) {
-             m.multiplyVector(points[i]);
-           }
-
-           this.stream[j++] = points[i].x;
-           this.stream[j++] = points[i].y;
-         } // Set the line color
-
-
-         this.primitiveShader.setUniform("uColor", this.color); // Copy data into the stream buffer
-
-         gl.bufferData(gl.ARRAY_BUFFER, this.stream.subarray(0, len * 2), gl.STREAM_DRAW); // FIXME: Configure vertex attrib pointers in `useShader`
-
-         gl.vertexAttribPointer(this.primitiveShader.attributes.aVertex, VERTEX_SIZE, gl.FLOAT, false, 0, 0); // Draw the stream buffer
-
-         gl.drawArrays(open === true ? gl.LINE_STRIP : gl.LINE_LOOP, 0, len); // FIXME: Configure vertex attrib pointers in `useShader`
-
-         gl.vertexAttribPointer(this.quadShader.attributes.aVertex, VERTEX_SIZE, gl.FLOAT, false, ELEMENT_OFFSET, VERTEX_OFFSET);
-         gl.vertexAttribPointer(this.quadShader.attributes.aColor, COLOR_SIZE, gl.FLOAT, false, ELEMENT_OFFSET, COLOR_OFFSET);
-         gl.vertexAttribPointer(this.quadShader.attributes.aTexture, TEXTURE_SIZE, gl.FLOAT, false, ELEMENT_OFFSET, TEXTURE_OFFSET);
-         gl.vertexAttribPointer(this.quadShader.attributes.aRegion, REGION_SIZE, gl.FLOAT, false, ELEMENT_OFFSET, REGION_OFFSET);
+       clearColor: function clearColor(r, g, b, a) {
+         this.gl.clearColor(r, g, b, a);
        },
 
        /**
-        * Clear the frame buffer, flushes the composite operations and calls
-        * gl.clear()
+        * Clear the frame buffer
         * @name clear
-        * @memberOf me.WebGLRenderer.Compositor
+        * @memberOf me.WebGLCompositor
         * @function
         */
        clear: function clear() {
-         this.flush();
          this.gl.clear(this.gl.COLOR_BUFFER_BIT);
        }
      });
@@ -23532,18 +24964,13 @@
      function extractAttributes(gl, shader) {
        var attributes = {},
            attrRx = /attribute\s+\w+\s+(\w+)/g,
-           attrData = [],
-           match; // Detect all attribute names
+           match,
+           i = 0; // Detect all attribute names
 
        while (match = attrRx.exec(shader.vertex)) {
-         attrData.push(match[1]);
-       } // Get attribute references
+         attributes[match[1]] = i++;
+       }
 
-
-       attrData.forEach(function (attr) {
-         attributes[attr] = gl.getAttribLocation(shader.program, attr);
-         gl.enableVertexAttribArray(attributes[attr]);
-       });
        return attributes;
      }
      /**
@@ -23566,16 +24993,27 @@
       * @private
       */
 
-     function compileProgram(gl, vertex, fragment) {
+     function compileProgram(gl, vertex, fragment, attributes) {
        var vertShader = compileShader(gl, gl.VERTEX_SHADER, vertex);
        var fragShader = compileShader(gl, gl.FRAGMENT_SHADER, fragment);
        var program = gl.createProgram();
        gl.attachShader(program, vertShader);
-       gl.attachShader(program, fragShader);
+       gl.attachShader(program, fragShader); // force vertex attributes to use location 0 as starting location to prevent
+       // browser to do complicated emulation when running on desktop OpenGL (e.g. on macOS)
+
+       for (var location in attributes) {
+         gl.bindAttribLocation(program, attributes[location], location);
+       }
+
        gl.linkProgram(program);
 
        if (!gl.getProgramParameter(program, gl.LINK_STATUS)) {
-         throw new Error("Error initializing Shader " + this + "\n" + "gl.VALIDATE_STATUS: " + gl.getProgramParameter(program, gl.VALIDATE_STATUS) + "\n" + "gl.getError()" + gl.getError() + "\n" + "gl.getProgramInfoLog()" + gl.getProgramInfoLog(program));
+         var error_msg = "Error initializing Shader " + this + "\n" + "gl.VALIDATE_STATUS: " + gl.getProgramParameter(program, gl.VALIDATE_STATUS) + "\n" + "gl.getError()" + gl.getError() + "\n" + "gl.getProgramInfoLog()" + gl.getProgramInfoLog(program); // house cleaning
+
+         gl.deleteProgram(program);
+         program = null; // throw the exception
+
+         throw new Error(error_msg);
        }
 
        gl.useProgram(program); // clean-up
@@ -23609,7 +25047,7 @@
      };
      /**
       * set precision for the fiven shader source
-      * won't don anyhing if the precision is already specified
+      * won't do anything if the precision is already specified
       * @private
       */
 
@@ -23700,6 +25138,15 @@
 
          this.fragment = setPrecision(minify(fragment), precision || me.device.getMaxShaderPrecision(this.gl));
          /**
+          * the location attributes of the shader
+          * @public
+          * @type {GLint[]}
+          * @name attributes
+          * @memberOf me.GLShader
+          */
+
+         this.attributes = extractAttributes(this.gl, this);
+         /**
           * a reference to the shader program (once compiled)
           * @public
           * @type {WebGLProgram}
@@ -23707,16 +25154,7 @@
           * @memberOf me.GLShader
           */
 
-         this.program = compileProgram(this.gl, this.vertex, this.fragment);
-         /**
-          * the attributes of the shader
-          * @public
-          * @type {Object}
-          * @name attributes
-          * @memberOf me.GLShader
-          */
-
-         this.attributes = extractAttributes(this.gl, this);
+         this.program = compileProgram(this.gl, this.vertex, this.fragment, this.attributes);
          /**
           * the uniforms of the shader
           * @public
@@ -23739,6 +25177,24 @@
         */
        bind: function bind() {
          this.gl.useProgram(this.program);
+       },
+
+       /**
+        * returns the location of an attribute variable in this shader program
+        * @name getAttribLocation
+        * @memberOf me.GLShader
+        * @function
+        * @param {String} name the name of the attribute variable whose location to get.
+        * @return {GLint} number indicating the location of the variable name if found. Returns -1 otherwise
+        */
+       getAttribLocation: function getAttribLocation(name) {
+         var attr = this.attributes[name];
+
+         if (typeof attr !== "undefined") {
+           return attr;
+         } else {
+           return -1;
+         }
        },
 
        /**
@@ -23777,92 +25233,6 @@
          this.gl.deleteProgram(this.program);
          this.vertex = null;
          this.fragment = null;
-       }
-     });
-   })();
-
-   (function () {
-     /**
-      * a built-in shader used by the Compositor for primitive drawing
-      * @class
-      * @extends me.GLShader
-      * @see me.WebGLRenderer.Compositor
-      * @constructor
-      * @param {WebGLRenderingContext} gl the current WebGL rendering context
-      */
-     me.PrimitiveGLShader = me.GLShader.extend({
-       /**
-        * @ignore
-        */
-       init: function init(gl) {
-         this._super(me.GLShader, "init", [gl, [// vertex`
-         "precision highp float;", "// Current vertex point", "attribute vec2 aVertex;", "// Projection matrix", "uniform mat3 uProjectionMatrix;", "// Vertex color", "uniform vec4 uColor;", "// Fragment color", "varying vec4 vColor;", "void main(void) {", "    // Transform the vertex position by the projection matrix", "    gl_Position = vec4((uProjectionMatrix * vec3(aVertex, 1.0)).xy, 0.0, 1.0);", "    // Pass the remaining attributes to the fragment shader", "    vColor = vec4(uColor.rgb * uColor.a, uColor.a);", "}"].join("\n"), [// fragment
-         "// fragment color", "varying vec4 vColor;", "void main(void) {", "    gl_FragColor = vColor;", "}"].join("\n")]);
-
-         return this;
-       }
-     });
-   })();
-
-   (function () {
-     /**
-      * a built-in shader used by the Compositor for Quad Texture drawing
-      * @class
-      * @extends me.GLShader
-      * @see me.WebGLRenderer.Compositor
-      * @constructor
-      * @param {WebGLRenderingContext} gl the current WebGL rendering context
-      * @param {Number} maxTextures the maximum amount of Texture supported by the WebGL Driver
-      */
-     me.QuadGLShader = me.GLShader.extend({
-       /**
-        * @ignore
-        */
-       init: function init(gl, maxTextures) {
-         this._super(me.GLShader, "init", [gl, [// vertex`
-         "precision highp float;", "attribute vec2 aVertex;", "attribute vec4 aColor;", "attribute float aTexture;", "attribute vec2 aRegion;", "uniform mat3 uProjectionMatrix;", "varying vec4 vColor;", "varying float vTexture;", "varying vec2 vRegion;", "void main(void) {", "    // Transform the vertex position by the projection matrix", "    gl_Position = vec4((uProjectionMatrix * vec3(aVertex, 1.0)).xy, 0.0, 1.0);", "    // Pass the remaining attributes to the fragment shader", "    vColor = vec4(aColor.rgb * aColor.a, aColor.a);", "    vTexture = aTexture;", "    vRegion = aRegion;", "}"].join("\n"), [// fragment
-
-         /*
-          * Dynamically indexing arrays in a fragment shader is not allowed:
-          *
-          * https://www.khronos.org/registry/webgl/specs/1.0/#4.3
-          *
-          * "
-          *  Appendix A mandates certain forms of indexing of arrays; for example,
-          *  within fragment shaders, indexing is only mandated with a
-          *  constant-index-expression (see [GLES20GLSL] for the definition of this
-          *  term). In the WebGL API, only the forms of indexing mandated in
-          *  Appendix A are supported.
-          * "
-          *
-          * And GLES20GLSL has this to say about constant-index-expressions:
-          *
-          * "
-          *  constant-index-expressions are a superset of constant-expressions.
-          *  Constant-index-expressions can include loop indices as defined in
-          *  Appendix A section 4.
-          *
-          *  The following are constant-index-expressions:
-          *    * Constant expressions
-          *    * Loop indices as defined in section 4
-          *    * Expressions composed of both of the above
-          * "
-          *
-          * To workaround this issue, we create a long if-then-else statement using
-          * a template processor; the number of branches depends only on the total
-          * number of texture units supported by the WebGL implementation.
-          *
-          * The number of available texture units is at least 8, but can be as high
-          * as 32 (as of 2016-01); source: http://webglstats.com/
-          * See: MAX_TEXTURE_IMAGE_UNITS
-          *
-          * The idea of sampler selection originated from work by Kenneth Russell and
-          * Nat Duca from the Chromium Team.
-          * See: http://webglsamples.org/sprites/readme.html
-          */
-         "uniform sampler2D uSampler[" + maxTextures + "];", "varying vec4 vColor;", "varying float vTexture;", "varying vec2 vRegion;", "void main(void) {", "    // Convert texture unit index to integer", "    int texture = int(vTexture);", "    if (texture == 0) {", "        gl_FragColor = texture2D(uSampler[0], vRegion) * vColor;", "    }", "    else {", "        for (int i = 1; i < " + (maxTextures - 1) + "; i++) {", "            if (texture == i) {", "                gl_FragColor = texture2D(uSampler[i], vRegion) * vColor;", "                return;", "            }", "            gl_FragColor = texture2D(uSampler[" + (maxTextures - 1) + "], vRegion) * vColor;", "        };", "    }", "}"].join("\n")]);
-
-         return this;
        }
      });
    })();
@@ -23968,13 +25338,53 @@
 
          this.clientY = 0;
          /**
-           * Event normalized X coordinate within the game canvas itself<br>
-           * <img src="images/event_coord.png"/>
-           * @public
-           * @type {Number}
-           * @name gameX
-           * @memberOf me.Pointer
-           */
+          * an unsigned long representing the unit of the delta values scroll amount
+          * @public
+          * @type {Number}
+          * @name deltaMode
+          * @see https://developer.mozilla.org/en-US/docs/Web/API/WheelEvent/deltaMode
+          * @memberOf me.Pointer
+          */
+
+         this.deltaMode = 0;
+         /**
+          * a double representing the horizontal scroll amount in the Wheel Event deltaMode unit.
+          * @public
+          * @type {Number}
+          * @name deltaX
+          * @see https://developer.mozilla.org/en-US/docs/Web/API/WheelEvent/deltaX
+          * @memberOf me.Pointer
+          */
+
+         this.deltaX = 0;
+         /**
+          * a double representing the vertical scroll amount in the Wheel Event deltaMode unit.
+          * @public
+          * @type {Number}
+          * @name deltaY
+          * @see https://developer.mozilla.org/en-US/docs/Web/API/WheelEvent/deltaY
+          * @memberOf me.Pointer
+          */
+
+         this.deltaY = 0;
+         /**
+          * a double representing the scroll amount in the z-axis, in the Wheel Event deltaMode unit.
+          * @public
+          * @type {Number}
+          * @name deltaZ
+          * @see https://developer.mozilla.org/en-US/docs/Web/API/WheelEvent/deltaZ
+          * @memberOf me.Pointer
+          */
+
+         this.deltaZ = 0;
+         /**
+          * Event normalized X coordinate within the game canvas itself<br>
+          * <img src="images/event_coord.png"/>
+          * @public
+          * @type {Number}
+          * @name gameX
+          * @memberOf me.Pointer
+          */
 
          this.gameX = 0;
          /**
@@ -24082,10 +25492,15 @@
          this.isNormalized = !me.device.PointerEvent || me.device.PointerEvent && !(event instanceof window.PointerEvent);
 
          if (event.type === "wheel") {
-           this.deltaMode = 1;
-           this.deltaX = event.deltaX;
-           this.deltaY = -1 / 40 * event.wheelDelta;
-           event.wheelDeltaX && (this.deltaX = -1 / 40 * event.wheelDeltaX);
+           this.deltaMode = event.deltaMode || 0;
+           this.deltaX = event.deltaX || 0;
+           this.deltaY = event.deltaY || 0;
+           this.deltaZ = event.deltaZ || 0;
+         } else {
+           this.deltaMode = 0;
+           this.deltaX = 0;
+           this.deltaY = 0;
+           this.deltaZ = 0;
          } // could be 0, so test if defined
 
 
@@ -24812,7 +26227,7 @@
 
          if (typeof api.throttlingInterval === "undefined") {
            // set the default value
-           api.throttlingInterval = ~~(1000 / me.sys.fps);
+           api.throttlingInterval = ~~(1000 / me.timer.maxfps);
          }
 
          if (me.sys.autoFocus === true) {
@@ -24833,18 +26248,18 @@
            for (i = 0; i < events.length; i++) {
              if (activeEventList.indexOf(events[i]) !== -1) {
                me.input.pointerEventTarget.addEventListener(events[i], onMoveEvent, {
-                 passive: true // do not preventDefault on Move events
-
-               });
+                 passive: true
+               } // do not preventDefault on Move events
+               );
              }
            }
          } else {
            for (i = 0; i < events.length; i++) {
              if (activeEventList.indexOf(events[i]) !== -1) {
                me.input.pointerEventTarget.addEventListener(events[i], me.utils["function"].throttle(onMoveEvent, api.throttlingInterval, false), {
-                 passive: true // do not preventDefault on Move events
-
-               });
+                 passive: true
+               } // do not preventDefault on Move events
+               );
              }
            }
          } // disable all gesture by default
@@ -24938,7 +26353,7 @@
            me.event.publish(me.event.POINTERMOVE, [pointer]);
          }
 
-         var candidates = me.collision.quadTree.retrieve(currentPointer, me.Container.prototype._sortReverseZ); // add the main viewport to the list of candidates
+         var candidates = me.game.world.broadphase.retrieve(currentPointer, me.Container.prototype._sortReverseZ); // add the main viewport to the list of candidates
 
          candidates = candidates.concat([me.game.viewport]);
 
@@ -24971,7 +26386,7 @@
                var gameY = pointer.gameY;
 
                if (!region.currentTransform.isIdentity()) {
-                 var invV = region.currentTransform.multiplyVectorInverse(me.pool.pull("me.Vector2d", gameX, gameY));
+                 var invV = region.currentTransform.applyInverse(me.pool.pull("me.Vector2d", gameX, gameY));
                  gameX = invV.x;
                  gameY = invV.y;
                  me.pool.push(invV);
@@ -25158,7 +26573,7 @@
      api.pointer.RIGHT = 2;
      /**
       * time interval for event throttling in milliseconds<br>
-      * default value : "1000/me.sys.fps" ms<br>
+      * default value : "1000/me.timer.maxfps" ms<br>
       * set to 0 ms to disable the feature
       * @public
       * @type Number
@@ -25188,11 +26603,11 @@
 
      api.globalToLocal = function (x, y, v) {
        v = v || new me.Vector2d();
-       var parent = me.video.renderer.getBounds();
+       var rect = me.device.getElementBounds(me.video.renderer.getScreenCanvas());
        var pixelRatio = me.device.devicePixelRatio;
-       x -= parent.left;
-       y -= parent.top;
-       var scale = me.sys.scale;
+       x -= rect.left + (window.pageXOffset || 0);
+       y -= rect.top + (window.pageYOffset || 0);
+       var scale = me.video.scaleRatio;
 
        if (scale.x !== 1.0 || scale.y !== 1.0) {
          x /= scale.x;
@@ -25317,7 +26732,7 @@
        }
 
        if (typeof region === "undefined") {
-         throw new Error("registerPointerEvent: region for " + region + " event is undefined ");
+         throw new Error("registerPointerEvent: region for " + toString(region) + " event is undefined ");
        }
 
        var eventTypes = findAllActiveEvents(activeEventList, pointerEventMap[eventType]); // register the event
@@ -25390,6 +26805,26 @@
 
          if (Object.keys(handlers.callbacks).length === 0) {
            eventHandlers["delete"](region);
+         }
+       }
+     };
+     /**
+      * allows the removal of all registered event listeners from the object target.
+      * @name releaseAllPointerEvents
+      * @memberOf me.input
+      * @public
+      * @function
+      * @param {me.Rect|me.Polygon|me.Line|me.Ellipse} region the registered region to release event from
+      * @example
+      * // release all registered event on the
+      * me.input.releaseAllPointerEvents(this);
+      */
+
+
+     api.releaseAllPointerEvents = function (region) {
+       if (eventHandlers.has(region)) {
+         for (var i = 0; i < pointerEventList.length; i++) {
+           api.releasePointerEvent(pointerEventList[i], region);
          }
        }
      };
@@ -25902,6 +27337,20 @@
         */
 
        /**
+        * display a deprecation warning in the console
+        * @public
+        * @function
+        * @memberOf me.deprecated
+        * @name deprecated
+        * @param {String} deprecated deprecated class,function or property name
+        * @param {String} replacement the replacement class, function, or property name
+        * @param {String} version the version since when the lass,function or property is deprecated
+        */
+
+       api.deprecated = function (deprecated, replacement, version) {
+         console.warn("melonJS: %s is deprecated since version %s, please use %s", deprecated, version, replacement);
+       };
+       /**
         * Get image pixels
         * @public
         * @function
@@ -25910,6 +27359,7 @@
         * @param {Image|Canvas} image Image to read
         * @return {ImageData} Canvas ImageData object
         */
+
 
        api.getPixels = function (arg) {
          if (arg instanceof HTMLImageElement) {
@@ -26251,6 +27701,19 @@
        // hold public stuff in our singleton
        var api = {};
        /**
+        * converts the first character of the given string to uppercase
+        * @public
+        * @function
+        * @memberOf me.utils.string
+        * @name capitalize
+        * @param {String} string the string to be capitalized
+        * @return {string} the capitalized string
+        */
+
+       api.capitalize = function (str) {
+         return str.charAt(0).toUpperCase() + str.slice(1);
+       };
+       /**
         * returns the string stripped of whitespace from the left.
         * @public
         * @function
@@ -26259,6 +27722,7 @@
         * @param {String} string the string to be trimmed
         * @return {string} trimmed string
         */
+
 
        api.trimLeft = function (str) {
          return str.replace(/^\s+/, "");
@@ -26470,6 +27934,23 @@
        },
 
        /**
+        * Linearly interpolate between this color and the given one.
+        * @name lerp
+        * @memberOf me.Color
+        * @function
+        * @param {me.Color} color
+        * @param {Number} alpha with alpha = 0 being this color, and alpha = 1 being the given one.
+        * @return {me.Color} Reference to this object for method chaining
+        */
+       lerp: function lerp(color, alpha) {
+         alpha = me.Math.clamp(alpha, 0, 1);
+         this.glArray[0] += (color.glArray[0] - this.glArray[0]) * alpha;
+         this.glArray[1] += (color.glArray[1] - this.glArray[1]) * alpha;
+         this.glArray[2] += (color.glArray[2] - this.glArray[2]) * alpha;
+         return this;
+       },
+
+       /**
         * Lighten this color value by 0..1
         * @name lighten
         * @memberOf me.Color
@@ -26490,10 +27971,20 @@
         * @name random
         * @memberOf me.Color
         * @function
+        * @param {Number} [min=0] minimum value for the random range
+        * @param {Number} [max=255] maxmium value for the random range
         * @return {me.Color} Reference to this object for method chaining
         */
-       random: function random() {
-         return this.setColor(Math.random() * 256, Math.random() * 256, Math.random() * 256, this.alpha);
+       random: function random(min, max) {
+         if (typeof min === "undefined" || min < 0) {
+           min = 0;
+         }
+
+         if (typeof max === "undefined" || min > 255) {
+           max = 255;
+         }
+
+         return this.setColor(me.Math.random(min, max), me.Math.random(min, max), me.Math.random(min, max), this.alpha);
        },
 
        /**
@@ -26905,9 +28396,7 @@
 
        var levelIdx = []; // current level index
 
-       var currentLevelIdx = 0; // onresize handler
-
-       var onresize_handler = null;
+       var currentLevelIdx = 0;
 
        function safeLoadLevel(levelId, options, restart) {
          // clean the destination container
@@ -26940,51 +28429,22 @@
         * @private
         * @param {String} level level id
         * @param {me.Container} target container
-        * @param {boolean} flatten if true, flatten all objects into the given container
-        * @param {boolean} setViewportBounds if true, set the viewport bounds to the map size
+        * @param {boolean} [flatten=true] if true, flatten all objects into the given container
+        * @param {boolean} [setViewportBounds=false] if true, set the viewport bounds to the map size, this should be set to true especially if adding a level to the game world container.
         * @ignore
         * @function
         */
 
 
        function loadTMXLevel(levelId, container, flatten, setViewportBounds) {
-         var level = levels[levelId]; // disable auto-sort for the given container
-
-         var autoSort = container.autoSort;
-         container.autoSort = false;
-         var levelBounds = level.getBounds();
-
-         if (setViewportBounds) {
-           // update the viewport bounds
-           me.game.viewport.setBounds(0, 0, Math.max(levelBounds.width, me.game.viewport.width), Math.max(levelBounds.height, me.game.viewport.height));
-         } // reset the GUID generator
+         var level = levels[levelId]; // reset the GUID generator
          // and pass the level id as parameter
-
 
          me.utils.resetGUID(levelId, level.nextobjectid); // Tiled use 0,0 anchor coordinates
 
          container.anchorPoint.set(0, 0); // add all level elements to the target container
 
-         level.addTo(container, flatten); // sort everything (recursively)
-
-         container.sort(true);
-         container.autoSort = autoSort;
-         container.resize(levelBounds.width, levelBounds.height);
-
-         function resize_container() {
-           // center the map if smaller than the current viewport
-           container.pos.set(Math.max(0, ~~((me.game.viewport.width - levelBounds.width) / 2)), Math.max(0, ~~((me.game.viewport.height - levelBounds.height) / 2)), 0);
-         }
-
-         if (setViewportBounds) {
-           resize_container(); // Replace the resize handler
-
-           if (onresize_handler) {
-             me.event.unsubscribe(onresize_handler);
-           }
-
-           onresize_handler = me.event.subscribe(me.event.VIEWPORT_ONRESIZE, resize_container);
-         }
+         level.addTo(container, flatten, setViewportBounds);
        }
        /*
         * PUBLIC STUFF
@@ -27139,7 +28599,7 @@
          return levels[api.getCurrentLevelId()];
        };
        /**
-        * reload the current level<br>
+        * reload the current level
         * @name reloadLevel
         * @memberOf me.levelDirector
         * @public
@@ -28029,7 +29489,7 @@
       * @param {Number} y y index of the Tile in the map
       * @param {Number} gid tile gid
       * @param {me.TMXTileset} tileset the corresponding tileset object
-       */
+      */
 
      me.Tile = me.Rect.extend({
        /** @ignore */
@@ -28104,10 +29564,14 @@
           * @name me.Tile#flipped
           */
 
-         this.flipped = this.flippedX || this.flippedY || this.flippedAD; // create a transformation matrix if required
+         this.flipped = this.flippedX || this.flippedY || this.flippedAD; // create and apply transformation matrix if required
 
          if (this.flipped === true) {
-           this.createTransform();
+           if (this.currentTransform === null) {
+             this.currentTransform = new me.Matrix2d();
+           }
+
+           this.setTileTransform(this.currentTransform.identity());
          } // clear out the flags and set the tileId
 
 
@@ -28115,32 +29579,27 @@
        },
 
        /**
-        * create a transformation matrix for this tile
+        * set the transformation matrix for this tile
+        * @return {me.Matrix2d) a transformation matrix
         * @ignore
         */
-       createTransform: function createTransform() {
-         if (this.currentTransform === null) {
-           this.currentTransform = new me.Matrix2d();
-         } else {
-           // reset the matrix
-           this.currentTransform.identity();
-         }
+       setTileTransform: function setTileTransform(transform) {
+         transform.translate(this.width / 2, this.height / 2);
 
          if (this.flippedAD) {
-           // Use shearing to swap the X/Y axis
-           this.currentTransform.setTransform(0, 1, 0, 1, 0, 0, 0, 0, 1);
-           this.currentTransform.translate(0, this.height - this.width);
+           transform.rotate(-90 * Math.PI / 180);
+           transform.scale(-1, 1);
          }
 
          if (this.flippedX) {
-           this.currentTransform.translate(this.flippedAD ? 0 : this.width, this.flippedAD ? this.height : 0);
-           this.currentTransform.scaleX(-1);
+           transform.scale(this.flippedAD ? 1 : -1, this.flippedAD ? -1 : 1);
          }
 
          if (this.flippedY) {
-           this.currentTransform.translate(this.flippedAD ? this.width : 0, this.flippedAD ? 0 : this.height);
-           this.currentTransform.scaleY(-1);
+           transform.scale(this.flippedAD ? -1 : 1, this.flippedAD ? 1 : -1);
          }
+
+         transform.translate(-this.width / 2, -this.height / 2);
        },
 
        /**
@@ -28289,11 +29748,11 @@
            if (tiles.hasOwnProperty(i)) {
              if ("animation" in tiles[i]) {
                this.isAnimated = true;
-               this.animations.set(+i + this.firstgid, {
+               this.animations.set(tiles[+i].animation[0].tileid, {
                  dt: 0,
                  idx: 0,
-                 frames: tiles[i].animation,
-                 cur: tiles[i].animation[0]
+                 frames: tiles[+i].animation,
+                 cur: tiles[+i].animation[0]
                });
              } // set tile properties, if any (XML format)
 
@@ -28351,8 +29810,13 @@
            });
            this.atlas = this.texture.getAtlas(); // calculate the number of tiles per horizontal line
 
-           var hTileCount = +tileset.columns || ~~(this.image.width / (this.tilewidth + this.spacing));
-           var vTileCount = ~~(this.image.height / (this.tileheight + this.spacing)); // compute the last gid value in the tileset
+           var hTileCount = +tileset.columns || Math.round(this.image.width / (this.tilewidth + this.spacing));
+           var vTileCount = Math.round(this.image.height / (this.tileheight + this.spacing));
+
+           if (tileset.tilecount % hTileCount > 0) {
+             ++vTileCount;
+           } // compute the last gid value in the tileset
+
 
            this.lastgid = this.firstgid + (hTileCount * vTileCount - 1 || 0);
 
@@ -28405,15 +29869,14 @@
         * @return {Number} View tile ID
         */
        getViewTileId: function getViewTileId(gid) {
-         if (this.animations.has(gid)) {
-           // apply animations
-           gid = this.animations.get(gid).cur.tileid;
-         } else {
-           // get the local tileset id
-           gid -= this.firstgid;
+         var localId = gid - this.firstgid;
+
+         if (this.animations.has(localId)) {
+           // return the current corresponding tile id if animated
+           return this.animations.get(localId).cur.tileid;
          }
 
-         return gid;
+         return localId;
        },
 
        /**
@@ -28796,7 +30259,7 @@
         * @function
         * @param {Number} x X coordinate (in world/pixels coordinates)
         * @param {Number} y Y coordinate (in world/pixels coordinates)
-        * @return {me.Tile} corresponding tile or null if outside of the map area
+        * @return {me.Tile} corresponding tile or null if there is no defined tile at the coordinate or if outside of the layer bounds
         * @example
         * // get the TMX Map Layer called "Front layer"
         * var layer = me.game.world.getChildByName("Front Layer")[0];
@@ -28804,19 +30267,42 @@
         * var tile = layer.getTile(me.input.pointer.pos.x, me.input.pointer.pos.y);
         */
        getTile: function getTile(x, y) {
+         var tile = null;
+
          if (this.containsPoint(x, y)) {
-           var renderer = this.renderer;
-           var tile = null;
-           var coord = renderer.pixelToTileCoords(x, y, me.pool.pull("me.Vector2d"));
-
-           if (coord.x >= 0 && coord.x < renderer.cols && coord.y >= 0 && coord.y < renderer.rows) {
-             tile = this.layerData[~~coord.x][~~coord.y];
-           }
-
+           var coord = this.renderer.pixelToTileCoords(x, y, me.pool.pull("me.Vector2d"));
+           tile = this.cellAt(coord.x, coord.y);
            me.pool.push(coord);
          }
 
          return tile;
+       },
+
+       /**
+        * Return the Tile object at the specified tile coordinates
+        * @name cellAt
+        * @memberOf me.TMXLayer
+        * @public
+        * @function
+        * @param {Number} x x position of the tile (in Tile unit)
+        * @param {Number} y x position of the tile (in Tile unit)
+        * @param {Number} [boundsCheck=true] check first if within the layer bounds
+        * @return {me.Tile} corresponding tile or null if there is no defined tile at the position or if outside of the layer bounds
+        * @example
+        * // return the first tile at offset 0, 0
+        * var tile = layer.cellAt(0, 0);
+        */
+       cellAt: function cellAt(x, y, boundsCheck) {
+         var _x = ~~x;
+
+         var _y = ~~y; // boundsCheck only used internally by the tiled renderer, when the layer bound check was already done
+
+
+         if (boundsCheck === false || _x >= 0 && _x < this.renderer.cols && _y >= 0 && _y < this.renderer.rows) {
+           return this.layerData[_x][_y];
+         } else {
+           return null;
+         }
        },
 
        /**
@@ -28912,7 +30398,9 @@
 
    (function () {
      // constant to identify the collision object layer
-     var COLLISION_GROUP = "collision";
+     var COLLISION_GROUP = "collision"; // onresize handler
+
+     var onresize_handler = null;
      /**
       * set a compatible renderer object
       * for the specified map
@@ -29225,30 +30713,30 @@
              case "group":
                self.objectGroups.push(readObjectGroup(self, layer, zOrder++));
                break;
-
-             default:
-               break;
            }
          });
          this.initialized = true;
        },
 
        /**
-        * add all the map layers and objects to the given container
+        * add all the map layers and objects to the given container.
+        * note : this will not automatically update the camera viewport
         * @name me.TMXTileMap#addTo
         * @public
         * @function
         * @param {me.Container} target container
-        * @param {boolean} flatten if true, flatten all objects into the given container
+        * @param {boolean} [flatten=true] if true, flatten all objects into the given container, else a `me.Container` object will be created for each corresponding groups
+        * @param {boolean} [setViewportBounds=false] if true, set the viewport bounds to the map size, this should be set to true especially if adding a level to the game world container.
         * @example
         * // create a new level object based on the TMX JSON object
         * var level = new me.TMXTileMap(levelId, me.loader.getTMX(levelId));
         * // add the level to the game world container
-        * level.addTo(me.game.world, true);
+        * level.addTo(me.game.world, true, true);
         */
-       addTo: function addTo(container, flatten) {
+       addTo: function addTo(container, flatten, setViewportBounds) {
          var _sort = container.autoSort;
-         var _depth = container.autoDepth; // disable auto-sort and auto-depth
+         var _depth = container.autoDepth;
+         var levelBounds = this.getBounds(); // disable auto-sort and auto-depth
 
          container.autoSort = false;
          container.autoDepth = false; // add all layers instances
@@ -29259,12 +30747,35 @@
 
          this.getObjects(flatten).forEach(function (object) {
            container.addChild(object);
-         }); //  set back auto-sort and auto-depth
+         }); // resize the container accordingly
+
+         container.resize(this.bounds.width, this.bounds.height); // sort everything (recursively)
+
+         container.sort(true); // callback funtion for the viewport resize event
+
+         function _setBounds(width, height) {
+           // adjust the viewport bounds if level is smaller
+           me.game.viewport.setBounds(0, 0, Math.max(levelBounds.width, width), Math.max(levelBounds.height, height)); // center the map if smaller than the current viewport
+
+           container.pos.set(Math.max(0, ~~((width - levelBounds.width) / 2)), Math.max(0, ~~((height - levelBounds.height) / 2)), // don't change the container z position if defined
+           container.pos.z);
+         }
+
+         if (setViewportBounds === true) {
+           // force viewport bounds update
+           _setBounds(me.game.viewport.width, me.game.viewport.height); // Replace the resize handler
+
+
+           if (onresize_handler) {
+             me.event.unsubscribe(onresize_handler);
+           }
+
+           onresize_handler = me.event.subscribe(me.event.VIEWPORT_ONRESIZE, _setBounds);
+         } //  set back auto-sort and auto-depth
+
 
          container.autoSort = _sort;
-         container.autoDepth = _depth; // force a sort
-
-         container.sort(true);
+         container.autoDepth = _depth;
        },
 
        /**
@@ -29272,8 +30783,8 @@
         * @name me.TMXTileMap#getObjects
         * @public
         * @function
-        * @param {boolean} flatten if true, flatten all objects into the returned array, <br>
-        * ignoring all defined groups (no sub containers will be created)
+        * @param {boolean} [flatten=true] if true, flatten all objects into the returned array.
+        * when false, a `me.Container` object will be created for each corresponding groups
         * @return {me.Renderable[]} Array of Objects
         */
        getObjects: function getObjects(flatten) {
@@ -29358,10 +30869,6 @@
                  case -(Math.PI / 2):
                    obj.translate(-obj.renderable.width, 0);
                    break;
-
-                 default:
-                   // this should not happen
-                   break;
                } // tile object use use left-bottom coordinates
                //obj.anchorPoint.set(0, 1);
 
@@ -29373,7 +30880,7 @@
              } //apply group opacity value to the child objects if group are merged
 
 
-             if (flatten === true) {
+             if (flatten !== false) {
                if (obj.isRenderable === true) {
                  obj.setOpacity(obj.getOpacity() * group.opacity); // and to child renderables if any
 
@@ -29642,16 +31149,12 @@
              incX = -1;
              incY = -1;
              break;
-
-           default:
-             // right-down
-             break;
          } // main drawing loop
 
 
          for (var y = start.y; y !== end.y; y += incY) {
            for (var x = start.x; x !== end.x; x += incX) {
-             var tmxTile = layer.layerData[x][y];
+             var tmxTile = layer.cellAt(x, y, false);
 
              if (tmxTile) {
                this.drawTile(renderer, x, y, tmxTile);
@@ -29794,17 +31297,14 @@
            columnItr.setV(rowItr);
 
            for (var x = startPos.x; x < rectEnd.x; x += this.tilewidth) {
-             //check if it's valid tile, if so render
-             if (columnItr.x >= 0 && columnItr.y >= 0 && columnItr.x < this.cols && columnItr.y < this.rows) {
-               var tmxTile = layer.layerData[columnItr.x][columnItr.y];
+             var tmxTile = layer.cellAt(columnItr.x, columnItr.y); // render if a valid tile position
 
-               if (tmxTile) {
-                 tileset = tmxTile.tileset; // offset could be different per tileset
+             if (tmxTile) {
+               tileset = tmxTile.tileset; // offset could be different per tileset
 
-                 var offset = tileset.tileoffset; // draw our tile
+               var offset = tileset.tileoffset; // draw our tile
 
-                 tileset.drawTile(renderer, offset.x + x, offset.y + y / 2 - tileset.tileheight, tmxTile);
-               }
+               tileset.drawTile(renderer, offset.x + x, offset.y + y / 2 - tileset.tileheight, tmxTile);
              } // Advance to the next column
 
 
@@ -30216,7 +31716,7 @@
              rowPos.setV(startPos);
 
              for (; rowPos.x < rect.right && rowTile.x < endX; rowTile.x += 2) {
-               tile = layer.layerData[rowTile.x][rowTile.y];
+               tile = layer.cellAt(rowTile.x, rowTile.y, false);
 
                if (tile) {
                  // draw the tile
@@ -30262,7 +31762,7 @@
              }
 
              for (; rowPos.x < rect.right && rowTile.x < endX; rowTile.x++) {
-               tile = layer.layerData[rowTile.x][rowTile.y];
+               tile = layer.cellAt(rowTile.x, rowTile.y, false);
 
                if (tile) {
                  // draw the tile
@@ -30943,51 +32443,47 @@
        Elastic: {
          /** @ignore */
          In: function In(k) {
-           var s,
-               a = 0.1,
-               p = 0.4;
-           if (k === 0) return 0;
-           if (k === 1) return 1;
+           if (k === 0) {
+             return 0;
+           }
 
-           if (!a || a < 1) {
-             a = 1;
-             s = p / 4;
-           } else s = p * Math.asin(1 / a) / (2 * Math.PI);
+           if (k === 1) {
+             return 1;
+           }
 
-           return -(a * Math.pow(2, 10 * (k -= 1)) * Math.sin((k - s) * (2 * Math.PI) / p));
+           return -Math.pow(2, 10 * (k - 1)) * Math.sin((k - 1.1) * 5 * Math.PI);
          },
 
          /** @ignore */
          Out: function Out(k) {
-           var s,
-               a = 0.1,
-               p = 0.4;
-           if (k === 0) return 0;
-           if (k === 1) return 1;
+           if (k === 0) {
+             return 0;
+           }
 
-           if (!a || a < 1) {
-             a = 1;
-             s = p / 4;
-           } else s = p * Math.asin(1 / a) / (2 * Math.PI);
+           if (k === 1) {
+             return 1;
+           }
 
-           return a * Math.pow(2, -10 * k) * Math.sin((k - s) * (2 * Math.PI) / p) + 1;
+           return Math.pow(2, -10 * k) * Math.sin((k - 0.1) * 5 * Math.PI) + 1;
          },
 
          /** @ignore */
          InOut: function InOut(k) {
-           var s,
-               a = 0.1,
-               p = 0.4;
-           if (k === 0) return 0;
-           if (k === 1) return 1;
+           if (k === 0) {
+             return 0;
+           }
 
-           if (!a || a < 1) {
-             a = 1;
-             s = p / 4;
-           } else s = p * Math.asin(1 / a) / (2 * Math.PI);
+           if (k === 1) {
+             return 1;
+           }
 
-           if ((k *= 2) < 1) return -0.5 * (a * Math.pow(2, 10 * (k -= 1)) * Math.sin((k - s) * (2 * Math.PI) / p));
-           return a * Math.pow(2, -10 * (k -= 1)) * Math.sin((k - s) * (2 * Math.PI) / p) * 0.5 + 1;
+           k *= 2;
+
+           if (k < 1) {
+             return -0.5 * Math.pow(2, 10 * (k - 1)) * Math.sin((k - 1.1) * 5 * Math.PI);
+           }
+
+           return 0.5 * Math.pow(2, -10 * (k - 1)) * Math.sin((k - 1.1) * 5 * Math.PI) + 1;
          }
        },
        Back: {
@@ -31175,10 +32671,10 @@
             * this can be overridden by the plugin
             * @public
             * @type String
-            * @default "7.1.1"
+            * @default "8.0.1"
             * @name me.plugin.Base#version
             */
-           this.version = "7.1.1";
+           this.version = "8.0.1";
          }
        });
        /**
@@ -31263,7 +32759,7 @@
          _args[0] = plugin;
          var instance = new (plugin.bind.apply(plugin, _args))(); // inheritance check
 
-         if (!instance || !(instance instanceof me.plugin.Base)) {
+         if (typeof instance === "undefined" || !(instance instanceof me.plugin.Base)) {
            throw new Error("Plugin should extend the me.plugin.Base Class !");
          } // compatibility testing
 
@@ -32363,7 +33859,7 @@
 
          this.pos.z = emitter.z; // cache inverse of the expected delta time
 
-         this._deltaInv = me.sys.fps / 1000; // Set the start particle rotation as defined in emitter
+         this._deltaInv = me.timer.maxfps / 1000; // Set the start particle rotation as defined in emitter
          // if the particle not follow trajectory
 
          if (!emitter.followTrajectory) {
@@ -32445,7 +33941,7 @@
     * @see me.device.devicePixelRatio
     */
    me.device.getPixelRatio = function () {
-     console.log("me.device.getPixelRatio() is deprecated, please use me.device.devicePixelRatio");
+     me.utils.deprecated("me.device.getPixelRatio()", "me.device.devicePixelRatio", "5.1.0");
      return me.device.devicePixelRatio;
    };
    /**
@@ -32462,14 +33958,13 @@
          font: font,
          size: size,
          fillStyle: fillStyle,
-         textAlign: textAlign // super constructor
-
-       };
+         textAlign: textAlign
+       }; // super constructor
 
        this._super(me.Text, "init", [0, 0, settings]); // deprecation warning
 
 
-       console.log("me.Font is deprecated, please use me.Text");
+       me.utils.deprecated("me.Font", "me.Text", "6.1.0");
      },
 
      /** @ignore */
@@ -32507,14 +34002,13 @@
          fontData: data,
          size: scale,
          textAlign: textAlign,
-         textBaseline: textBaseline // super constructor
-
-       };
+         textBaseline: textBaseline
+       }; // super constructor
 
        this._super(me.BitmapText, "init", [0, 0, settings]); // deprecation warning
 
 
-       console.log("me.BitmapFont is deprecated, please use me.BitmapText");
+       me.utils.deprecated("me.BitmapFont", "me.BitmapText", "6.1.0");
      }
    });
    /**
@@ -32530,17 +34024,17 @@
        this._super(me.Stage, "init", settings); // deprecation warning
 
 
-       console.log("me.ScreenObject is deprecated, please use me.Stage");
+       me.utils.deprecated("me.ScreenObject", "me.Stage", "6.2.0");
      }
    });
    /**
     * @function me.Renderer.drawShape
     * @deprecated since 6.3.0
-    * @see me.Renderer#stroke
+    * @see me.Renderer.stroke
     */
 
    me.Renderer.prototype.drawShape = function () {
-     console.log("drawShape() is deprecated, please use the stroke() or fill() function");
+     me.utils.deprecated("drawShape()", "the stroke() or fill()", "6.3.0");
      me.Renderer.prototype.stroke.apply(this, arguments);
    };
    /**
@@ -32557,12 +34051,12 @@
    /**
     * @function me.video.getPos
     * @deprecated since 7.0.0
-    * @see me.Renderer#getBounds
+    * @see me.device.getElementBounds
     */
 
    me.video.getPos = function () {
-     console.log("me.video.getPos() is deprecated, please use me.video.renderer.getBounds()");
-     return me.video.renderer.getBounds();
+     me.utils.deprecated("me.video.getPos()", "me.device.getElementBounds(me.video.renderer.getScreenCanvas());", "7.0.0");
+     return me.device.getElementBounds(me.video.renderer.getScreenCanvas());
    };
    /**
     * melonJS base class for exception handling.
@@ -32592,7 +34086,7 @@
     */
 
    me.sys.checkVersion = function (first, second) {
-     console.log("me.sys.checkVersion() is deprecated, please use me.utils.checkVersion()");
+     me.utils.deprecated("me.sys.checkVersion()", "me.utils.checkVersion()", "7.1.0");
      return me.utils.checkVersion(first, second);
    };
    /**
@@ -32610,7 +34104,7 @@
       * @ignore
       */
      get: function get() {
-       console.log("me.game.HASH is deprecated, please use me.utils.getUriFragment()");
+       me.utils.deprecated("me.game.HASH", "me.utils.getUriFragment()", "7.1.0");
        return me.utils.getUriFragment();
      },
      configurable: false
@@ -32622,7 +34116,7 @@
     */
 
    me.video.updateDisplaySize = function (x, y) {
-     console.log("me.video.updateDisplaySize() is deprecated, please use me.video.scale()");
+     me.utils.deprecated("me.video.updateDisplaySize()", "me.video.scale()", "7.1.0");
      return me.video.scale(x, y);
    };
    /**
@@ -32633,7 +34127,7 @@
 
 
    me.Renderer.prototype.scaleCanvas = function (x, y) {
-     console.log("scaleCanvas() is deprecated, please use me.video.scale()");
+     me.utils.deprecated("scaleCanvas()", "me.video.scale()", "7.1.0");
      return me.video.scale(x, y);
    };
    /**
@@ -32644,7 +34138,7 @@
 
 
    me.Entity.prototype.distanceToPoint = function (v) {
-     console.log("distanceToPoint() is deprecated, please use me.Renderable.distanceTo()");
+     me.utils.deprecated("distanceToPoint()", "me.Renderable.distanceTo()", "7.1.0");
      return this.distanceTo(v);
    };
    /**
@@ -32655,8 +34149,208 @@
 
 
    me.Entity.prototype.angleToPoint = function (v) {
-     console.log("angleToPoint() is deprecated, please use me.Renderable.angleTo()");
+     me.utils.deprecated("angleToPoint()", "me.Renderable.angleTo()", "7.1.0");
      return this.angleTo(v);
+   };
+   /**
+    * @public
+    * @type {Number}
+    * @name gravity
+    * @memberOf me.sys
+    * @deprecated since 8.0.0
+    * @see me.World.gravity
+    */
+
+
+   Object.defineProperty(me.sys, "gravity", {
+     /**
+      * @ignore
+      */
+     get: function get() {
+       me.utils.deprecated("me.sys.gravity", "me.game.world.gravity", "8.0.0");
+       return me.game.world ? me.game.world.gravity.y : undefined;
+     },
+
+     /**
+      * @ignore
+      */
+     set: function set(value) {
+       me.utils.deprecated("me.sys.gravity", "me.game.world.gravity", "8.0.0");
+       if (me.game.world) me.game.world.gravity.y = value;
+     },
+     configurable: false
+   });
+   /**
+    * @ignore
+    */
+
+   me.WebGLRenderer.Compositor = me.WebGLCompositor;
+   /**
+    * Draw triangle(s)
+    * @name drawTriangle
+    * @deprecated since 8.0.0
+    * @see me.WebGLRenderer.Compositor
+    * @memberOf me.WebGLRenderer.Compositor.drawVertices
+    * @function
+    * @param {me.Vector2d[]} points vertices
+    * @param {Number} [len=points.length] amount of points defined in the points array
+    * @param {Boolean} [strip=false] Whether the array defines a serie of connected triangles, sharing vertices
+    */
+
+   me.WebGLRenderer.Compositor.prototype.drawTriangle = function (points, len, strip) {
+     var gl = this.gl;
+     this.drawVertices(strip === true ? gl.TRIANGLE_STRIP : gl.TRIANGLES, points, len);
+     me.utils.deprecated("drawTriangle()", "drawVertices()", "8.0.0");
+   };
+   /**
+    * Draw a line
+    * @name drawLine
+    * @deprecated since 8.0.0
+    * @memberOf me.WebGLRenderer.Compositor.drawVertices
+    * @memberOf me.WebGLRenderer.Compositor
+    * @function
+    * @param {me.Vector2d[]} points Line vertices
+    * @param {Number} [len=points.length] amount of points defined in the points array
+    * @param {Boolean} [open=false] Whether the line is open (true) or closed (false)
+    */
+
+
+   me.WebGLRenderer.Compositor.prototype.drawLine = function (points, len, open) {
+     var gl = this.gl;
+     this.drawVertices(open === true ? gl.LINE_STRIP : gl.LINE_LOOP, points, len);
+     me.utils.deprecated("drawLine()", "drawVertices()", "8.0.0");
+   };
+   /**
+    * @public
+    * @type {me.Vector2d}
+    * @name scale
+    * @memberOf me.sys
+    * @deprecated since 8.0.0
+    * @see me.video.scaleRatio
+    */
+
+
+   Object.defineProperty(me.sys, "scale", {
+     /**
+      * @ignore
+      */
+     get: function get() {
+       me.utils.deprecated("me.sys.scale", "me.video.scaleRatio", "8.0.0");
+       return me.video.scaleRatio;
+     },
+     configurable: false
+   });
+   /**
+    * @function me.video.getWrapper
+    * @deprecated since 8.0.0
+    * @see me.video.getParent
+    */
+
+   me.video.getWrapper = function () {
+     me.utils.deprecated("me.video.getWrapper()", "me.device.getParent()", "8.0.0");
+     return me.video.getParent();
+   };
+   /**
+    * Set game FPS limiting
+    * @public
+    * @type {Number}
+    * @name fps
+    * @memberOf me.sys
+    * @deprecated since 8.0.0
+    * @see me.timer.maxfps
+    */
+
+
+   Object.defineProperty(me.sys, "fps", {
+     /**
+      * @ignore
+      */
+     get: function get() {
+       me.utils.deprecated("me.sys.fps", "me.timer.maxfps", "8.0.0");
+       return me.timer.maxfps;
+     },
+
+     /**
+      * @ignore
+      */
+     set: function set(value) {
+       me.utils.deprecated("me.sys.fps", "me.timer.maxfps", "8.0.0");
+       me.timer.maxfps = value;
+     },
+     configurable: false
+   });
+   /**
+    * Rate at which the game physic updates;
+    * may be greater than or lower than the display fps
+    * @public
+    * @type {Number}
+    * @name updatesPerSecond
+    * @memberOf me.sys
+    * @deprecated since 8.0.0
+    * @see me.World.fps
+    */
+
+   Object.defineProperty(me.sys, "updatesPerSecond", {
+     /**
+      * @ignore
+      */
+     get: function get() {
+       me.utils.deprecated("me.sys.updatesPerSecond", "me.game.world.fps", "8.0.0");
+       return me.game.world.fps;
+     },
+
+     /**
+      * @ignore
+      */
+     set: function set(value) {
+       me.utils.deprecated("me.sys.updatesPerSecond", "me.game.world.fps", "8.0.0");
+       me.game.world.fps = value;
+     },
+     configurable: false
+   });
+   /**
+    * Enable/disable frame interpolation
+    * @public
+    * @type {Boolean}
+    * @name interpolation
+    * @memberOf me.sys
+    * @deprecated since 8.0.0
+    * @see me.timer.interpolation
+    */
+
+   Object.defineProperty(me.sys, "interpolation", {
+     /**
+      * @ignore
+      */
+     get: function get() {
+       me.utils.deprecated("me.sys.interpolation", "me.timer.interpolation", "8.0.0");
+       return me.timer.interpolation;
+     },
+
+     /**
+      * @ignore
+      */
+     set: function set(value) {
+       me.utils.deprecated("me.sys.interpolation", "me.timer.interpolation", "8.0.0");
+       me.timer.interpolation = value;
+     },
+     configurable: false
+   });
+   /**
+    * add collision mesh based on a given Physics Editor JSON object
+    * @name addShapesFromJSON
+    * @deprecated since 8.0.0
+    * @see me.Body.fromJSON
+    * @memberOf me.Body
+    * @function
+    * @param {me.Rect|me.Polygon|me.Line|me.Ellipse|Object} shape a shape or JSON object
+    * @param {Boolean} batchInsert if true the body bounds won't be updated after adding a shape
+    * @return {Number} the shape array length
+    */
+
+   me.Body.prototype.addShapesFromJSON = function (json, id) {
+     me.utils.deprecated("addShapesFromJSON()", "fromJSON()", "8.0.0");
+     return this.fromJSON(json, id);
    };
 
 }());

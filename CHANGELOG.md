@@ -1,6 +1,9 @@
 # Version History
 
-## 8.0.0 (wip)
+## 8.0.1 (12 Aug 2020)
+- release fix for NPM & jsDeliver
+
+## 8.0.0 (12 Aug 2020)
 - Audio : audio core update (2.2.0)
 - Audio : `me.audio.stop()` will now stop all sounds if none is specified
 - Color : new `lerp()` method to provide linear interpolation between two different colors
