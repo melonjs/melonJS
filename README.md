@@ -117,19 +117,19 @@ Alternatively, the latest version of melonJS can be installed through [NPM](http
 Or can simply be added to your html, through a content delivery network (CDN) URL, using for example :
 
 ```html
-// load melonJS v8.0.1
-https://cdn.jsdelivr.net/npm/melonjs@8.0.1/dist/melonjs.js
-// omit the version completely to get the latest one
-// you should NOT use this in production
+<!-- load melonJS v8.0.1 -->
+<script src="https://cdn.jsdelivr.net/npm/melonjs@8.0.1/dist/melonjs.js"></script>
+<!-- omit the version completely to get the latest one -->
+<!-- you should NOT use this in production -->
 <script src="https://cdn.jsdelivr.net/npm/melonjs/dist/melonjs.js"></script>
-// add ".min" to any JS/CSS file to get a minified version
+<!-- add ".min" to any JS/CSS file to get a minified version -->
 <script src="https://cdn.jsdelivr.net/npm/melonjs@8.0.1/dist/melonjs.min.js"></script>
 ```
 and of course the debug panel :
 ```html
-// load the latest debug panel
+<!-- load the latest debug panel -->
 <script src="https://cdn.jsdelivr.net/npm/melonjs/plugins/debug/debugPanel.js"></script>
-or a specific corresponding release
+<!-- or a specific corresponding release -->
 <script src="https://cdn.jsdelivr.net/npm/melonjs@8.0.1/plugins/debug/debugPanel.js"></script>
 ```
 
