@@ -185,5 +185,6 @@ If you need technical support, you can contact us through the following channels
 * [melonJS developer forum](http://www.html5gamedevs.com/forum/32-melonjs/)
 * [gitter web chat](https://gitter.im/melonjs/public)
 * [melonJS wikipage](https://github.com/melonjs/melonJS/wiki)
+* [Discord](https://discord.gg/aur7JMk)
 
 For any other non technical related questions, feel free to also send us an [email](mailto:contact@melonjs.org).
