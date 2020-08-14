@@ -75,9 +75,7 @@ var utils = {
      *     );
      * }
      */
-    checkVersion : function (first, second) {
-        second = second || me.version;
-
+    checkVersion : function (first, second = me.version) {
         var a = first.split(".");
         var b = second.split(".");
         var len = Math.min(a.length, b.length);
@@ -148,10 +146,10 @@ var utils = {
      * per level / object
      * @ignore
      */
-    resetGUID : function (base, index) {
+    resetGUID : function (base, index = 0) {
         // also ensure it's only 8bit ASCII characters
         GUID_base  = me.utils.string.toHex(base.toString().toUpperCase());
-        GUID_index = index || 0;
+        GUID_index = index;
     },
 
     /**
@@ -159,9 +157,9 @@ var utils = {
      * Game Unique ID
      * @ignore
      */
-    createGUID : function (index) {
+    createGUID : function (index = 1) {
         // to cover the case of undefined id for groups
-        GUID_index += index || 1;
+        GUID_index += index;
         return GUID_base + "-" + (index || GUID_index);
     }
 };

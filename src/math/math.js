@@ -195,9 +195,9 @@ var math = {
      * // round a specific value to 2 digits
      * me.Math.round(10.33333, 2); // return 10.33
      */
-    round : function (num, dec) {
+    round : function (num, dec = 0) {
         // if only one argument use the object value
-        var powres = Math.pow(10, dec || 0);
+        var powres = Math.pow(10, dec);
         return (~~(0.5 + num * powres) / powres);
     },
 
@@ -217,10 +217,7 @@ var math = {
      *     // do something
      * }
      */
-    toBeCloseTo : function (expected, actual, precision) {
-        if (typeof precision !== "number") {
-            precision = 2;
-        }
+    toBeCloseTo : function (expected, actual, precision = 2) {
         return Math.abs(expected - actual) < (Math.pow(10, -precision) / 2);
     }
 };
