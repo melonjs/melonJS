@@ -137,13 +137,13 @@
 
             // Add self to TextureCache if cache !== false
             if (cache !== false) {
-                for (var source of this.sources) {
+                this.sources.forEach(function (source) {
                     if (cache instanceof me.Renderer.TextureCache) {
                         cache.set(source, this);
                     } else {
                         me.video.renderer.cache.set(source, this);
                     }
-                }
+                });
             }
         },
 

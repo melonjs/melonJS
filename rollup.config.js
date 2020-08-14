@@ -1,4 +1,4 @@
-import babel from '@rollup/plugin-babel';
+import buble from '@rollup/plugin-buble';
 import multiEntry from "@rollup/plugin-multi-entry";
 import { string } from 'rollup-plugin-string';
 import replace from '@rollup/plugin-replace';
@@ -49,11 +49,8 @@ export default {
                 '**/*.vert',
             ],
         }),
-        babel({
-          exclude: 'node_modules/**',
-          babelHelpers: 'bundled' // shall we change to runtime ?
-      }),
-      bundleSize()
+        buble(),
+        bundleSize()
     ],
     output: {
       file: 'build/melonjs.js',
