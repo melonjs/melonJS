@@ -37,3 +37,10 @@
     }
 }(window));
 /* eslint-enable no-undef */
+
+
+// import ES6 Classes and Utility class
+import MathUtils from "./math/math.js";
+
+// "export" under es5 namespace
+me.Math = MathUtils;
