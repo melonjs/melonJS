@@ -1,6 +1,5 @@
 [
   "src/index.js",
-  "src/lang/window.js",
   "src/lang/object.js",
   "src/system/agent.js",
   "src/system/device.js",

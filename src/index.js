@@ -1,3 +1,6 @@
+// ES5 polyfills
+import "./polyfill/console.js";
+import "./polyfill/requestAnimationFrame.js";
 
 // import all ES6 Class definition
 import math from "./math/math.js";
