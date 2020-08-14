@@ -1,5 +1,8 @@
 # Version History
 
+## 9.0.0 (WIP)
+- release fix for NPM & jsDeliver
+
 ## 8.0.1 (12 Aug 2020)
 - release fix for NPM & jsDeliver
 
