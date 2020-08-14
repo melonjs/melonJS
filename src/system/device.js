@@ -129,23 +129,23 @@
 
             // set pause/stop action on losing focus
             window.addEventListener("blur", function () {
-                if (me.sys.stopOnBlur) {
+                if (api.stopOnBlur) {
                     me.state.stop(true);
                 }
-                if (me.sys.pauseOnBlur) {
+                if (api.pauseOnBlur) {
                     me.state.pause(true);
                 }
             }, false);
             // set restart/resume action on gaining focus
             window.addEventListener("focus", function () {
-                if (me.sys.stopOnBlur) {
+                if (api.stopOnBlur) {
                     me.state.restart(true);
                 }
-                if (me.sys.resumeOnFocus) {
+                if (api.resumeOnFocus) {
                     me.state.resume(true);
                 }
                 // force focus if autofocus is on
-                if (me.sys.autoFocus) {
+                if (api.autoFocus) {
                     me.device.focus();
                 }
             }, false);
@@ -174,17 +174,17 @@
                 document.addEventListener(visibilityChange,
                     function () {
                         if (document[hidden]) {
-                            if (me.sys.stopOnBlur) {
+                            if (api.stopOnBlur) {
                                 me.state.stop(true);
                             }
-                            if (me.sys.pauseOnBlur) {
+                            if (api.pauseOnBlur) {
                                 me.state.pause(true);
                             }
                         } else {
-                            if (me.sys.stopOnBlur) {
+                            if (api.stopOnBlur) {
                                 me.state.restart(true);
                             }
-                            if (me.sys.resumeOnFocus) {
+                            if (api.resumeOnFocus) {
                                 me.state.resume(true);
                             }
                         }
@@ -517,6 +517,39 @@
          * @memberOf me.device
          */
         api.language = navigator.language || navigator.browserLanguage || navigator.userLanguage || "en";
+
+        /**
+         * Specify whether to pause the game when losing focus
+         * @type {Boolean}
+         * @default true
+         * @memberOf me.device
+         */
+        api.pauseOnBlur = true;
+
+        /**
+         * Specify whether to unpause the game when gaining focus
+         * @type {Boolean}
+         * @default true
+         * @memberOf me.device
+         */
+        api.resumeOnFocus = true;
+
+        /**
+         * Specify whether to automatically bring the window to the front
+         * @type {Boolean}
+         * @default true
+         * @memberOf me.device
+         */
+        api.autoFocus = true;
+
+        /**
+         * Specify whether to stop the game when losing focus or not.
+         * The engine restarts on focus if this is enabled.
+         * @type {boolean}
+         * @default false
+         * @memberOf me.device
+         */
+        api.stopOnBlur = false;
 
         /**
          * equals to true if the device browser supports OffScreenCanvas.

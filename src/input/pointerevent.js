@@ -131,7 +131,7 @@
                 api.throttlingInterval = ~~(1000 / me.timer.maxfps);
             }
 
-            if (me.sys.autoFocus === true) {
+            if (me.device.autoFocus === true) {
                 me.device.focus();
                 me.input.pointerEventTarget.addEventListener(
                     activeEventList[2], // MOUSE/POINTER DOWN

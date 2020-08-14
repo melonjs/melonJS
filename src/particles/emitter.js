@@ -185,7 +185,7 @@
          * @name gravity
          * @default 0
          * @memberOf me.ParticleEmitterSettings
-         * @see me.sys.gravity
+         * @see me.game.world.gravity
          */
         gravity : 0,
 

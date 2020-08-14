@@ -144,7 +144,7 @@
 
             // check for the correct rendering method
             if (typeof (this.preRender) === "undefined") {
-                this.preRender = me.sys.preRender;
+                this.preRender = me.game.world.preRender;
             }
 
             // initialize and set the layer data

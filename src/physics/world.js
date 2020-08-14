@@ -53,6 +53,20 @@
             this.gravity = new me.Vector2d(0, 0.98);
 
             /**
+             * Specify the rendering method for tile layers. <br>
+             * if false visible part of the layers are rendered dynamically,<br>
+             * if true the entire layers are first rendered into an offscreen canvas.<br>
+             * the "best" rendering method depends of your game
+             * (amount of layer, layer size, amount of tiles per layer, etc.)<br>
+             * note : rendering method is also configurable per layer by adding this
+             * property to your layer (in Tiled).
+             * @type {Boolean}
+             * @default false
+             * @memberOf me.World
+             */
+            this.preRender = false;
+
+            /**
              * the instance of the game world quadtree used for broadphase
              * @name broadphase
              * @memberOf me.World

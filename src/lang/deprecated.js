@@ -140,6 +140,12 @@ me.Error = me.Object.extend.bind(Error)({
 });
 
 /**
+ * @namespace me.sys
+ * @deprecated since 9.0.0
+ */
+me.sys = me.sys || {};
+
+/**
  * @function me.sys.checkVersion
  * @deprecated since 7.1.0
  * @see me.utils.checkVersion
@@ -403,3 +409,171 @@ me.Body.prototype.addShapesFromJSON = function (json, id) {
     me.utils.deprecated("addShapesFromJSON()", "fromJSON()", "8.0.0");
     return this.fromJSON(json, id);
 };
+
+/**
+ * Specify either to stop on audio loading error or not
+ * @public
+ * @type {Boolean}
+ * @name stopOnAudioError
+ * @memberOf me.sys
+ * @deprecated since 9.0.0
+ * @see me.audio.interpolation
+ */
+Object.defineProperty(me.sys, "stopOnAudioError", {
+    /**
+     * @ignore
+     */
+    get : function () {
+        me.utils.deprecated("me.sys.stopOnAudioError", "me.audio.stopOnAudioError", "9.0.0");
+        return me.audio.stopOnAudioError;
+    },
+
+    /**
+     * @ignore
+     */
+    set : function (value) {
+        me.utils.deprecated("me.sys.stopOnAudioError", "me.audio.stopOnAudioError", "9.0.0");
+        me.audio.stopOnAudioError = value;
+    },
+    configurable : false
+});
+
+/**
+ * Specify whether to pause the game when losing focus
+ * @public
+ * @type {Boolean}
+ * @name pauseOnBlur
+ * @memberOf me.sys
+ * @deprecated since 9.0.0
+ * @see me.device.pauseOnBlur
+ */
+Object.defineProperty(me.sys, "pauseOnBlur", {
+    /**
+     * @ignore
+     */
+    get : function () {
+        me.utils.deprecated("me.sys.pauseOnBlur", "me.device.pauseOnBlur", "9.0.0");
+        return me.audio.pauseOnBlur;
+    },
+
+    /**
+     * @ignore
+     */
+    set : function (value) {
+        me.utils.deprecated("me.sys.pauseOnBlur", "me.device.pauseOnBlur", "9.0.0");
+        me.device.pauseOnBlur = value;
+    },
+    configurable : false
+});
+
+/**
+ * Specify whether to unpause the game when gaining focus
+ * @public
+ * @type {Boolean}
+ * @name resumeOnFocus
+ * @memberOf me.sys
+ * @deprecated since 9.0.0
+ * @see me.device.resumeOnFocus
+ */
+Object.defineProperty(me.sys, "resumeOnFocus", {
+    /**
+     * @ignore
+     */
+    get : function () {
+        me.utils.deprecated("me.sys.pauseOnBlur", "me.device.resumeOnFocus", "9.0.0");
+        return me.device.resumeOnFocus;
+    },
+
+    /**
+     * @ignore
+     */
+    set : function (value) {
+        me.utils.deprecated("me.sys.pauseOnBlur", "me.device.resumeOnFocus", "9.0.0");
+        me.device.resumeOnFocus = value;
+    },
+    configurable : false
+});
+
+/**
+ * Specify whether to automatically bring the window to the front
+ * @public
+ * @type {Boolean}
+ * @name autoFocus
+ * @memberOf me.sys
+ * @deprecated since 9.0.0
+ * @see me.device.autoFocus
+ */
+Object.defineProperty(me.sys, "autoFocus", {
+    /**
+     * @ignore
+     */
+    get : function () {
+        me.utils.deprecated("me.sys.autoFocus", "me.device.autoFocus", "9.0.0");
+        return me.device.autoFocus;
+    },
+
+    /**
+     * @ignore
+     */
+    set : function (value) {
+        me.utils.deprecated("me.sys.autoFocus", "me.device.autoFocus", "9.0.0");
+        me.device.autoFocus = value;
+    },
+    configurable : false
+});
+
+/**
+ * Specify whether to stop the game when losing focus or not
+ * @public
+ * @type {Boolean}
+ * @name pauseOnBlur
+ * @memberOf me.sys
+ * @deprecated since 9.0.0
+ * @see me.device.pauseOnBlur
+ */
+Object.defineProperty(me.sys, "stopOnBlur", {
+    /**
+     * @ignore
+     */
+    get : function () {
+        me.utils.deprecated("me.sys.pauseOnBlur", "me.device.stopOnBlur", "9.0.0");
+        return me.device.stopOnBlur;
+    },
+
+    /**
+     * @ignore
+     */
+    set : function (value) {
+        me.utils.deprecated("me.sys.pauseOnBlur", "me.device.stopOnBlur", "9.0.0");
+        me.device.stopOnBlur = value;
+    },
+    configurable : false
+});
+
+/**
+ * Specify the rendering method for tiled layers
+ * @public
+ * @type {Boolean}
+ * @name preRender
+ * @memberOf me.sys
+ * @deprecated since 9.0.0
+ * @see me.game.world.preRender
+ */
+Object.defineProperty(me.sys, "preRender", {
+    /**
+     * @ignore
+     */
+    get : function () {
+        me.utils.deprecated("me.sys.preRender", "me.game.world.preRender", "9.0.0");
+        return me.game.world.stopOnBlur;
+    },
+
+    /**
+     * @ignore
+     */
+    set : function (value) {
+        me.utils.deprecated("me.sys.preRender", "me.game.world.preRender", "9.0.0");
+        me.game.world.stopOnBlur = value;
+    },
+    configurable : false
+});

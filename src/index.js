@@ -14,6 +14,16 @@ import utils from "./utils/utils.js";
 * @namespace me
 */
 
+/**
+ * current melonJS version
+ * @static
+ * @constant
+ * @memberof me
+ * @name version
+ * @type {string}
+ */
+export const version = "__VERSION__";
+
 // namespace "me" will be created by rollup automatically
 // export everything
 export {

@@ -33,7 +33,7 @@ import {Howl, Howler} from "howler";
             if (retry_counter++ > 3) {
                 // something went wrong
                 var errmsg = "melonJS: failed loading " + sound_name;
-                if (me.sys.stopOnAudioError === false) {
+                if (api.stopOnAudioError === false) {
                     // disable audio
                     me.audio.disable();
                     // call error callback if defined
@@ -57,6 +57,17 @@ import {Howl, Howler} from "howler";
         /*
          * PUBLIC STUFF
          */
+
+        /**
+         * Specify either to stop on audio loading error or not<br>
+         * if true, melonJS will throw an exception and stop loading<br>
+         * if false, melonJS will disable sounds and output a warning message
+         * in the console<br>
+         * @type {Boolean}
+         * @default true
+         * @memberOf me.audio
+         */
+        api.stopOnAudioError = true;
 
         /**
          * Initialize and configure the audio support.<br>
