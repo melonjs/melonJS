@@ -40,7 +40,9 @@
 
 
 // import ES6 Classes and Utility class
-import MathUtils from "./math/math.js";
+import math from "./math/math.js";
+import utils from "./utils/utils.js";
 
 // "export" under es5 namespace
-me.Math = MathUtils;
+me.Math = math;
+me.utils = utils;

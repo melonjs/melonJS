@@ -4,7 +4,7 @@
  * @memberOf me
  */
 
-var MathUtils = {
+var math = {
 
     /**
      * constant to convert from degrees to radians
@@ -225,4 +225,4 @@ var MathUtils = {
     }
 };
 
-export default MathUtils;
+export default math;

@@ -27,6 +27,28 @@ describe("utils", function () {
 
     });
 
+    describe("Array", function () {
+        var arr = [ "foo", "bar", "baz" ];
+
+        it("base", function () {
+            expect(me.utils.array.remove(arr, "foo").includes("foo")).toEqual(false);
+        });
+    });
+
+    describe("File", function () {
+        var filename = "bar/foo.baz";
+
+        it("file basename", function () {
+            expect(me.utils.file.getBasename(filename)).toEqual("foo");
+        });
+
+        it("file extension", function () {
+            expect(me.utils.file.getExtension(filename)).toEqual("baz");
+        });
+
+    });
+
+
     describe("String", function () {
         var untrimmed_str = " start and end with white space ";
 
@@ -41,7 +63,5 @@ describe("utils", function () {
         it("capitalize", function () {
             expect(me.utils.string.capitalize("capitalize")).toEqual("Capitalize");
         });
-
-
     });
 });
