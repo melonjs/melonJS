@@ -1,7 +1,7 @@
 # Version History
 
 ## 9.0.0 (WIP)
-
+- melonJS is now automatically transpiled (for es6 classes) and bundled into a es5 umd module using rollup
 
 ## 8.0.1 (12 Aug 2020)
 - release fix for NPM & jsDeliver
