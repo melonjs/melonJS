@@ -55,6 +55,7 @@ export default {
     output: {
       file: 'build/melonjs.js',
       banner: license,
-      format: 'iife'
+      name : "me",
+      format: 'umd'
     }
 };
