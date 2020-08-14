@@ -1,3 +1,9 @@
+/**
+ * a collection of math utility functions
+ * @namespace me.Math
+ * @memberOf me
+ */
+
 var MathUtils = {
 
     /**
