@@ -1,3 +1,5 @@
+import deprecated from "./lang/deprecated";
+
 (function () {
 
    /**
@@ -60,6 +62,9 @@
 
         // game instance init
         me.game.init();
+
+        // add all deprecated api
+        deprecated();
 
         // mark melonJS as initialized
         me.initialized = true;
