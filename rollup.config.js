@@ -55,6 +55,7 @@ export default {
     output: {
       file: 'build/melonjs.js',
       banner: license,
+      footer : 'me.deprecated.apply();',
       name : "me",
       format: 'umd'
     }

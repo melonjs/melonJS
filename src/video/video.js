@@ -171,7 +171,7 @@
 
             // for backward compatilibty with melonJS 7.1.1 and lower
             if (typeof settings.wrapper !== "undefined") {
-                me.utils.deprecated("settings.wrapper", "settings.parent", "8.0.0");
+                me.deprecated.warning("settings.wrapper", "settings.parent", "8.0.0");
                 settings.parent = settings.wrapper;
             }
 

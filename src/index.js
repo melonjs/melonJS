@@ -2,11 +2,12 @@
 import "./polyfill/console.js";
 import "./polyfill/requestAnimationFrame.js";
 
-// import all ES6 Class definition
+// import all classes declaration
 import audio from "./audio/audio.js";
 import game from "./game.js";
 import math from "./math/math.js";
 import utils from "./utils/utils.js";
+import deprecated from "./lang/deprecated";
 
 /**
 * (<b>m</b>)elonJS (<b>e</b>)ngine : All melonJS functions are defined inside this namespace.
@@ -31,5 +32,10 @@ export {
     game,
     math as Math,
     utils
-    // work in progress during the es5->es6 transition
+};
+
+// Backward compatibility for deprecated method or properties are
+// automatically applied when generating the UMD module through rollup
+export {
+    deprecated
 };

@@ -19,21 +19,6 @@ var utils = {
      file : fileUtils,
      string : stringUtils,
      function : fnUtils,
-
-     /**
-      * display a deprecation warning in the console
-      * @public
-      * @function
-      * @memberOf me.deprecated
-      * @name deprecated
-      * @param {String} deprecated deprecated class,function or property name
-      * @param {String} replacement the replacement class, function, or property name
-      * @param {String} version the version since when the lass,function or property is deprecated
-      */
-     deprecated : function (deprecated, replacement, version) {
-         console.warn("melonJS: %s is deprecated since version %s, please use %s", deprecated, version, replacement);
-     },
-
     /**
      * Get image pixels
      * @public
