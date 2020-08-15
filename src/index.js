@@ -4,6 +4,7 @@ import "./polyfill/requestAnimationFrame.js";
 
 // import all ES6 Class definition
 import audio from "./audio/audio.js";
+import game from "./game.js";
 import math from "./math/math.js";
 import utils from "./utils/utils.js";
 
@@ -27,6 +28,7 @@ export const version = "__VERSION__";
 // export everything
 export {
     audio,
+    game,
     math as Math,
     utils
     // work in progress during the es5->es6 transition
