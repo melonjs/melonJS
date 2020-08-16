@@ -1,7 +1,7 @@
-import arrayUtils from "./array.js";
-import fileUtils from "./file.js";
-import stringUtils from "./string.js";
-import fnUtils from "./function.js";
+import * as arrayUtils from "./array.js";
+import * as fileUtils from "./file.js";
+import * as stringUtils from "./string.js";
+import * as fnUtils from "./function.js";
 
 /**
  * a collection of utility functions
@@ -15,10 +15,11 @@ var GUID_index = 0;
 
 var utils = {
 
-     array : arrayUtils,
-     file : fileUtils,
-     string : stringUtils,
-     function : fnUtils,
+    array : arrayUtils,
+    file : fileUtils,
+    string : stringUtils,
+    function : fnUtils,
+
     /**
      * Get image pixels
      * @public
@@ -133,7 +134,7 @@ var utils = {
      */
     resetGUID : function (base, index = 0) {
         // also ensure it's only 8bit ASCII characters
-        GUID_base  = me.utils.string.toHex(base.toString().toUpperCase());
+        GUID_base  = stringUtils.toHex(base.toString().toUpperCase());
         GUID_index = index;
     },
 
