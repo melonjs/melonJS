@@ -5,7 +5,7 @@ import "./polyfill/requestAnimationFrame.js";
 // import all classes declaration
 import audio from "./audio/audio.js";
 import game from "./game.js";
-import math from "./math/math.js";
+import * as Math from "./math/math.js";
 import utils from "./utils/utils.js";
 import deprecated from "./lang/deprecated";
 
@@ -30,7 +30,7 @@ export const version = "__VERSION__";
 export {
     audio,
     game,
-    math as Math,
+    Math,
     utils
 };
 

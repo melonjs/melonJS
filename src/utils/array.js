@@ -1,3 +1,4 @@
+import {random, weightedRandom} from "./../math/math.js";
 
 /**
  * a collection of array utility functions
@@ -41,7 +42,7 @@ var arrayUtils = {
      * console.log(me.utils.array.random(arr));
      */
     random : function (arr) {
-        return arr[me.Math.random(0, arr.length)];
+        return arr[random(0, arr.length)];
     },
 
     /**
@@ -54,7 +55,7 @@ var arrayUtils = {
      * @return {any} random member of array
      */
     weightedRandom : function (arr) {
-        return arr[me.Math.weightedRandom(0, arr.length)];
+        return arr[weightedRandom(0, arr.length)];
     }
 };
 
