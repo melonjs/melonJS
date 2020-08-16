@@ -1,3 +1,5 @@
+import {warning} from "./../lang/deprecated";
+
 (function () {
     /**
      * video functions
@@ -171,7 +173,7 @@
 
             // for backward compatilibty with melonJS 7.1.1 and lower
             if (typeof settings.wrapper !== "undefined") {
-                me.deprecated.warning("settings.wrapper", "settings.parent", "8.0.0");
+                warning("settings.wrapper", "settings.parent", "8.0.0");
                 settings.parent = settings.wrapper;
             }
 

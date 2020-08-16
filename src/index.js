@@ -7,7 +7,7 @@ import audio from "./audio/audio.js";
 import game from "./game.js";
 import * as Math from "./math/math.js";
 import utils from "./utils/utils.js";
-import deprecated from "./lang/deprecated";
+import * as deprecated from "./lang/deprecated";
 
 /**
 * (<b>m</b>)elonJS (<b>e</b>)ngine : All melonJS functions are defined inside this namespace.
