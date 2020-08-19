@@ -1,3 +1,5 @@
+import Vector2d from "./../math/vector2.js";
+
 /*
  * Separating Axis Theorem implementation, based on the SAT.js library by Jim Riecken <jimr@jimr.ca>
  * Available under the MIT License - https://github.com/jriecken/sat-js
@@ -28,7 +30,7 @@
      * @type {Array.<Vector>}
      */
     var T_VECTORS = [];
-    for (var v = 0; v < 10; v++) { T_VECTORS.push(new me.Vector2d()); }
+    for (var v = 0; v < 10; v++) { T_VECTORS.push(new Vector2d()); }
 
     /**
      * A pool of arrays of numbers used in calculations to avoid allocating memory.
@@ -39,9 +41,9 @@
 
     // a dummy entity object when using Line for raycasting
     var dummyEntity = {
-        pos : new me.Vector2d(0, 0),
+        pos : new Vector2d(0, 0),
         ancestor : {
-            _absPos : new me.Vector2d(0, 0)
+            _absPos : new Vector2d(0, 0)
         }
     };
 
@@ -304,8 +306,8 @@
         api.ResponseObject = function () {
             this.a = null;
             this.b = null;
-            this.overlapN = new me.Vector2d();
-            this.overlapV = new me.Vector2d();
+            this.overlapN = new Vector2d();
+            this.overlapV = new Vector2d();
             this.aInB = true;
             this.bInA = true;
             this.indexShapeA = -1;

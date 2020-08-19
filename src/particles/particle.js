@@ -1,3 +1,5 @@
+import Vector2d from "./../math/vector2.js";
+
 (function () {
     /**
      * Single Particle Object.
@@ -31,7 +33,7 @@
             var speed = emitter.speed + ((emitter.speedVariation > 0) ? (me.Math.randomFloat(0, 2) - 1) * emitter.speedVariation : 0);
 
             // Set the start particle Velocity
-            this.vel = new me.Vector2d(speed * Math.cos(angle), -speed * Math.sin(angle));
+            this.vel = new Vector2d(speed * Math.cos(angle), -speed * Math.sin(angle));
 
             // Set the start particle Time of Life as defined in emitter
             this.life = me.Math.randomFloat(emitter.minLife, emitter.maxLife);

@@ -1,3 +1,5 @@
+import Vector2d from "./../../math/vector2.js";
+
 (function () {
 
     // bitmask constants to check for flipped & rotated tiles
@@ -48,7 +50,7 @@
             this.margin = +tileset.margin || 0;
 
             // set tile offset properties (if any)
-            this.tileoffset = new me.Vector2d();
+            this.tileoffset = new Vector2d();
 
             /**
              * Tileset contains animated tiles

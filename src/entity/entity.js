@@ -1,3 +1,5 @@
+import Vector2d from "./../math/vector2.js";
+
 (function () {
 
     /**
@@ -97,10 +99,10 @@
 
             if (typeof settings.shapes === "undefined") {
                 settings.shapes = new me.Polygon(0, 0, [
-                    new me.Vector2d(0,          0),
-                    new me.Vector2d(this.width, 0),
-                    new me.Vector2d(this.width, this.height),
-                    new me.Vector2d(0,          this.height)
+                    new Vector2d(0,          0),
+                    new Vector2d(this.width, 0),
+                    new Vector2d(this.width, this.height),
+                    new Vector2d(0,          this.height)
                 ]);
             }
 

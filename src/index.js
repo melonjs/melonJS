@@ -2,12 +2,21 @@
 import "./polyfill/console.js";
 import "./polyfill/requestAnimationFrame.js";
 
-// import all classes declaration
+// utility classes
 import audio from "./audio/audio.js";
 import game from "./game.js";
 import * as Math from "./math/math.js";
 import utils from "./utils/utils.js";
-import * as deprecated from "./lang/deprecated";
+import * as input from "./input/input.js";
+
+// class definition
+import Vector2d from "./math/vector2.js";
+import Vector3d from "./math/vector3.js";
+import ObservableVector2d from "./math/observable_vector2.js";
+import ObservableVector3d from "./math/observable_vector3.js";
+
+// alias and wrapper for deprecated API
+import * as deprecated from "./lang/deprecated.js";
 
 /**
 * (<b>m</b>)elonJS (<b>e</b>)ngine : All melonJS functions are defined inside this namespace.
@@ -26,12 +35,22 @@ import * as deprecated from "./lang/deprecated";
 export const version = "__VERSION__";
 
 // namespace "me" will be created by rollup automatically
-// export everything
+
+// export all utility function
 export {
     audio,
     game,
     Math,
-    utils
+    utils,
+    input
+};
+
+// export all class definition
+export {
+    Vector2d,
+    Vector3d,
+    ObservableVector2d,
+    ObservableVector3d
 };
 
 // Backward compatibility for deprecated method or properties are

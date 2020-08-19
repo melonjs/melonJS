@@ -1,3 +1,5 @@
+import Vector2d from "./../../../math/vector2.js";
+
 (function () {
 
     // scope global var & constants
@@ -55,10 +57,10 @@
             this.rowheight = this.sideoffsety + this.sidelengthy;
 
             this.centers = [
-                new me.Vector2d(),
-                new me.Vector2d(),
-                new me.Vector2d(),
-                new me.Vector2d()
+                new Vector2d(),
+                new Vector2d(),
+                new Vector2d(),
+                new Vector2d()
             ];
         },
 
@@ -125,7 +127,7 @@
          * @ignore
          */
         topLeft : function (x, y, v) {
-            var ret = v || new me.Vector2d();
+            var ret = v || new Vector2d();
 
             if (!this.staggerX) {
                 if ((y & 1) ^ this.staggerEven) {
@@ -149,7 +151,7 @@
          * @ignore
          */
         topRight : function (x, y, v) {
-            var ret = v || new me.Vector2d();
+            var ret = v || new Vector2d();
 
             if (!this.staggerX) {
                 if ((y & 1) ^ this.staggerEven) {
@@ -174,7 +176,7 @@
          * @ignore
          */
         bottomLeft : function (x, y, v) {
-            var ret = v || new me.Vector2d();
+            var ret = v || new Vector2d();
 
             if (!this.staggerX) {
                 if ((y & 1) ^ this.staggerEven) {
@@ -198,7 +200,7 @@
          * @ignore
          */
         bottomRight : function (x, y, v) {
-            var ret = v || new me.Vector2d();
+            var ret = v || new Vector2d();
 
             if (!this.staggerX) {
                 if ((y & 1) ^ this.staggerEven) {
@@ -223,7 +225,7 @@
          * @ignore
          */
         pixelToTileCoords : function (x, y, v) {
-            var ret = v || new me.Vector2d();
+            var ret = v || new Vector2d();
 
             if (this.staggerX) { //flat top
                 x -= this.staggerEven ? this.tilewidth : this.sideoffsetx;
@@ -311,7 +313,7 @@
         tileToPixelCoords : function (x, y, v) {
             var tileX = Math.floor(x),
                 tileY = Math.floor(y);
-            var ret = v || new me.Vector2d();
+            var ret = v || new Vector2d();
 
             if (this.staggerX) {
                 ret.y = tileY * (this.tileheight + this.sidelengthy);

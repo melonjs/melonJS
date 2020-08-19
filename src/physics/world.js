@@ -1,3 +1,5 @@
+import Vector2d from "./../math/vector2.js";
+
 (function () {
 
     /**
@@ -50,7 +52,7 @@
              * @name gravity
              * @memberOf me.World
              */
-            this.gravity = new me.Vector2d(0, 0.98);
+            this.gravity = new Vector2d(0, 0.98);
 
             /**
              * Specify the rendering method for tile layers. <br>

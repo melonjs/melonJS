@@ -1,3 +1,5 @@
+import Vector2d from "./../math/vector2.js";
+
 (function () {
 
     /**
@@ -190,8 +192,8 @@
                     atlas[frame.filename] = {
                         name         : frame.filename, // frame name
                         texture      : data.meta.image || "default", // the source texture
-                        offset       : new me.Vector2d(s.x, s.y),
-                        anchorPoint  : (hasTextureAnchorPoint) ? new me.Vector2d(originX / s.w, originY / s.h) : null,
+                        offset       : new Vector2d(s.x, s.y),
+                        anchorPoint  : (hasTextureAnchorPoint) ? new Vector2d(originX / s.w, originY / s.h) : null,
                         trimmed      : !!frame.trimmed,
                         width        : s.w,
                         height       : s.h,
@@ -247,7 +249,7 @@
                 atlas[name] = {
                     name        : name,
                     texture     : "default", // the source texture
-                    offset      : new me.Vector2d(
+                    offset      : new Vector2d(
                         margin + (spacing + data.framewidth) * (frame % spritecount.x),
                         margin + (spacing + data.frameheight) * ~~(frame / spritecount.x)
                     ),
@@ -306,7 +308,7 @@
 
             atlas[name] = {
                 name    : name,
-                offset  : new me.Vector2d(x, y),
+                offset  : new Vector2d(x, y),
                 width   : w,
                 height  : h,
                 angle   : 0

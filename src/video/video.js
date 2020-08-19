@@ -1,3 +1,4 @@
+import Vector2d from "./../math/vector2.js";
 import {warning} from "./../lang/deprecated";
 
 (function () {
@@ -96,7 +97,7 @@ import {warning} from "./../lang/deprecated";
          * @default <1,1>
          * @memberOf me.video
          */
-        api.scaleRatio = new me.Vector2d(1, 1);
+        api.scaleRatio = new Vector2d(1, 1);
 
         /**
          * Initialize the "video" system (create a canvas based on the given arguments, and the related renderer). <br>

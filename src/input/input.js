@@ -1,37 +1,18 @@
-(function () {
-    /**
-     * @namespace me.input
-     * @memberOf me
-     */
-    me.input = {
+/**
+ * @namespace me.input
+ * @memberOf me
+ */
 
-        /**
-         * the default target element for keyboard events (usually the window element in which the game is running)
-         * @public
-         * @type EventTarget
-         * @name keyBoardEventTarget
-         * @memberOf me.input
-         */
-        keyBoardEventTarget : null,
+/**
+ * specify if melonJS should prevent all default browser action on registered events.
+ * @public
+ * @type Boolean
+ * @default true
+ * @name preventDefault
+ * @memberOf me.input
+ */
+export var preventDefault = true;
 
-        /**
-         * the default target element for pointer events (usually the canvas element in which the game is rendered)
-         * @public
-         * @type EventTarget
-         * @name pointerEventTarget
-         * @memberOf me.input
-         */
-        pointerEventTarget : null,
-
-        /**
-         * specify if melonJS should prevent all default browser action on registered events.
-         * @public
-         * @type Boolean
-         * @default true
-         * @name preventDefault
-         * @memberOf me.input
-         */
-         preventDefault : true
-    };
-
-})();
+export * from "./pointerevent.js";
+export * from "./keyboard.js";
+export * from "./gamepad.js";

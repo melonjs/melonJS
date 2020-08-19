@@ -1,3 +1,5 @@
+import Vector2d from "./../../math/vector2.js";
+
 (function () {
 
     /**
@@ -98,10 +100,10 @@
              * @ignore
              */
             this._glPoints = [
-                new me.Vector2d(),
-                new me.Vector2d(),
-                new me.Vector2d(),
-                new me.Vector2d()
+                new Vector2d(),
+                new Vector2d(),
+                new Vector2d(),
+                new Vector2d()
             ];
 
             /**
@@ -712,7 +714,7 @@
 
                 // Grow internal points buffer if necessary
                 for (i = points.length; i < len + 1; i++) {
-                    points.push(new me.Vector2d());
+                    points.push(new Vector2d());
                 }
 
                 // calculate and draw all segments
@@ -753,7 +755,7 @@
 
             // Grow internal points buffer if necessary
             for (i = points.length; i < len * 2; i++) {
-                points.push(new me.Vector2d());
+                points.push(new Vector2d());
             }
 
             // calculate and draw all segments
@@ -795,7 +797,7 @@
 
                 // Grow internal points buffer if necessary
                 for (i = points.length; i < len; i++) {
-                    points.push(new me.Vector2d());
+                    points.push(new Vector2d());
                 }
 
                 // calculate and draw all segments
@@ -829,7 +831,7 @@
 
             // Grow internal points buffer if necessary
             for (i = points.length; i < (len + 1) * 2; i++) {
-                points.push(new me.Vector2d());
+                points.push(new Vector2d());
             }
 
             // draw all vertices vertex coordinates
@@ -895,7 +897,7 @@
 
                 // Grow internal points buffer if necessary
                 for (i = points.length; i < len; i++) {
-                    points.push(new me.Vector2d());
+                    points.push(new Vector2d());
                 }
 
                 // calculate and draw all segments
@@ -923,7 +925,7 @@
 
             // Grow internal points buffer if necessary
             for (i = glPoints.length; i < indices.length; i++) {
-                glPoints.push(new me.Vector2d());
+                glPoints.push(new Vector2d());
             }
 
             // calculate all vertices

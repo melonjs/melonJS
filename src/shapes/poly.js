@@ -1,5 +1,5 @@
-// external import
 import earcut from "earcut";
+import Vector2d from "./../math/vector2.js";
 
 (function () {
     /**
@@ -29,7 +29,7 @@ import earcut from "earcut";
              * @name pos
              * @memberof me.Polygon#
              */
-            this.pos = new me.Vector2d();
+            this.pos = new Vector2d();
 
             /**
              * The bounding rectangle for this shape
@@ -38,7 +38,7 @@ import earcut from "earcut";
              * @name _bounds
              * @memberOf me.Polygon#
              */
-            this._bounds = undefined;
+            this._bounds;
 
             /**
              * Array of points defining the Polygon <br>
@@ -99,19 +99,19 @@ import earcut from "earcut";
             }
 
             // convert given points to me.Vector2d if required
-            if (!(points[0] instanceof me.Vector2d)) {
+            if (!(points[0] instanceof Vector2d)) {
                 var _points = this.points = [];
 
                 if (typeof points[0] === "object") {
                     // array of {x,y} object
                     points.forEach(function (point) {
-                       _points.push(new me.Vector2d(point.x, point.y));
+                       _points.push(new Vector2d(point.x, point.y));
                     });
 
                 } else {
                     // it's a flat array
                     for (var p = 0; p < points.length; p += 2) {
-                        _points.push(new me.Vector2d(points[p], points[p + 1]));
+                        _points.push(new Vector2d(points[p], points[p + 1]));
                     }
                 }
             } else {
@@ -247,12 +247,12 @@ import earcut from "earcut";
             // Calculate the edges/normals
             for (i = 0; i < len; i++) {
                 if (edges[i] === undefined) {
-                    edges[i] = new me.Vector2d();
+                    edges[i] = new Vector2d();
                 }
                 edges[i].copy(points[(i + 1) % len]).sub(points[i]);
 
                 if (normals[i] === undefined) {
-                    normals[i] = new me.Vector2d();
+                    normals[i] = new Vector2d();
                 }
                 normals[i].copy(edges[i]).perp().normalize();
             }
@@ -293,7 +293,7 @@ import earcut from "earcut";
         translate : function (x, y) {
             this.pos.x += x;
             this.pos.y += y;
-            this._bounds.translate(x, y);
+            this.getBounds().translate(x, y);
             return this;
         },
 
@@ -307,7 +307,7 @@ import earcut from "earcut";
          */
         translateV : function (v) {
             this.pos.add(v);
-            this._bounds.translateV(v);
+            this.getBounds().translateV(v);
             return this;
         },
 
@@ -359,6 +359,9 @@ import earcut from "earcut";
          * @return {me.Rect} this shape bounding box Rectangle object
          */
         getBounds : function () {
+            if (typeof this._bounds === "undefined") {
+                this._bounds = me.pool.pull("me.Rect", 0, 0, 0, 0);
+            }
             return this._bounds;
         },
 
@@ -370,13 +373,12 @@ import earcut from "earcut";
          * @return {me.Rect} this shape bounding box Rectangle object
          */
         updateBounds : function () {
-            if (!this._bounds) {
-                this._bounds = new me.Rect(0, 0, 0, 0);
-            }
-            this._bounds.setPoints(this.points);
-            this._bounds.translateV(this.pos);
+            var bounds = this.getBounds();
 
-            return this._bounds;
+            bounds.setPoints(this.points);
+            bounds.translateV(this.pos);
+
+            return bounds;
         },
 
         /**

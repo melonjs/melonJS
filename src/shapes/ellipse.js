@@ -1,3 +1,5 @@
+import Vector2d from "./../math/vector2.js";
+
 (function () {
     /**
      * an ellipse Object
@@ -22,7 +24,7 @@
              * @name pos
              * @memberOf me.Ellipse#
              */
-            this.pos = new me.Vector2d();
+            this.pos = new Vector2d();
 
             /**
              * The bounding rectangle for this shape
@@ -49,7 +51,7 @@
              * @name radiusV
              * @memberOf me.Ellipse#
              */
-            this.radiusV = new me.Vector2d();
+            this.radiusV = new Vector2d();
 
             /**
              * Radius squared, for pythagorean theorom
@@ -58,7 +60,7 @@
              * @name radiusSq
              * @memberOf me.Ellipse#
              */
-            this.radiusSq = new me.Vector2d();
+            this.radiusSq = new Vector2d();
 
             /**
              * x/y scaling ratio for ellipse
@@ -67,7 +69,7 @@
              * @name ratio
              * @memberOf me.Ellipse#
              */
-            this.ratio = new me.Vector2d();
+            this.ratio = new Vector2d();
 
             // the shape type
             this.shapeType = "Ellipse";
@@ -174,7 +176,7 @@
         translate : function (x, y) {
             this.pos.x += x;
             this.pos.y += y;
-            this._bounds.translate(x, y);
+            this.getBounds().translate(x, y);
             return this;
         },
 
@@ -188,7 +190,7 @@
          */
         translateV : function (v) {
             this.pos.add(v);
-            this._bounds.translateV(v);
+            this.getBounds().translateV(v);
             return this;
         },
 
@@ -232,6 +234,9 @@
          * @return {me.Rect} this shape bounding box Rectangle object
          */
         getBounds : function () {
+            if (typeof this._bounds === "undefined") {
+                this._bounds = me.pool.pull("me.Rect", 0, 0, 0, 0);
+            }
             return this._bounds;
         },
 
@@ -243,6 +248,7 @@
          * @return {me.Rect} this shape bounding box Rectangle object
          */
         updateBounds : function () {
+            var bounds = this.getBounds();
             var rx = this.radiusV.x,
                 ry = this.radiusV.y,
                 x = this.pos.x - rx,
@@ -250,12 +256,7 @@
                 w = rx * 2,
                 h = ry * 2;
 
-            if (!this._bounds) {
-                this._bounds = new me.Rect(x, y, w, h);
-            } else {
-                this._bounds.setShape(x, y, w, h);
-            }
-            return this._bounds;
+            return bounds.setShape(x, y, w, h);
         },
 
         /**

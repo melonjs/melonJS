@@ -1,3 +1,8 @@
+import Vector2d from "./../math/vector2.js";
+import Vector3d from "./../math/vector3.js";
+import ObservableVector2d from "./../math/observable_vector2.js";
+import ObservableVector3d from "./../math/observable_vector3.js";
+
 (function () {
     /**
      * This object is used for object pooling - a technique that might speed up your game if used properly.<br>
@@ -42,16 +47,22 @@
             api.register("me.BitmapTextData", me.BitmapTextData, true);
             api.register("me.ImageLayer", me.ImageLayer, true);
             api.register("me.ColorLayer", me.ColorLayer, true);
-            api.register("me.Vector2d", me.Vector2d, true);
-            api.register("me.Vector3d", me.Vector3d, true);
-            api.register("me.ObservableVector2d", me.ObservableVector2d, true);
-            api.register("me.ObservableVector3d", me.ObservableVector3d, true);
+            api.register("me.Vector2d", Vector2d, true);
+            api.register("me.Vector3d", Vector3d, true);
+            api.register("me.ObservableVector2d", ObservableVector2d, true);
+            api.register("me.ObservableVector3d", ObservableVector3d, true);
             api.register("me.Matrix2d", me.Matrix2d, true);
             api.register("me.Matrix3d", me.Matrix3d, true);
             api.register("me.Rect", me.Rect, true);
             api.register("me.Polygon", me.Polygon, true);
             api.register("me.Line", me.Line, true);
             api.register("me.Ellipse", me.Ellipse, true);
+
+            // if use with no namespace
+            api.register("Vector2d", Vector2d, true);
+            api.register("Vector3d", Vector3d, true);
+            api.register("ObservableVector2d", ObservableVector2d, true);
+            api.register("ObservableVector3d", ObservableVector3d, true);
         };
 
         /**
@@ -130,7 +141,8 @@
                     if (typeof(obj.onResetEvent) === "function") {
                         obj.onResetEvent.apply(obj, args);
                     }
-                    else {
+                    else if (typeof(obj.init) === "function") {
+                        // backward compatibility with Jay Inheritance
                         obj.init.apply(obj, args);
                     }
                     instance_counter--;

@@ -1,3 +1,5 @@
+import Vector2d from "./../math/vector2.js";
+
 (function () {
     /**
      * a line segment Object.<br>
@@ -65,11 +67,11 @@
 
             // Calculate the edges/normals
             if (edges[0] === undefined) {
-                edges[0] = new me.Vector2d();
+                edges[0] = new Vector2d();
             }
             edges[0].copy(points[1]).sub(points[0]);
             if (normals[0] === undefined) {
-                normals[0] = new me.Vector2d();
+                normals[0] = new Vector2d();
             }
             normals[0].copy(edges[0]).perp().normalize();
 

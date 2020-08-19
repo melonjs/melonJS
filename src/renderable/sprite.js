@@ -1,3 +1,5 @@
+import Vector2d from "./../math/vector2.js";
+
 (function () {
 
     /**
@@ -93,7 +95,7 @@
                 // length of the current animation name
                 length : 0,
                 //current frame texture offset
-                offset : new me.Vector2d(),
+                offset : new Vector2d(),
                 // current frame size
                 width : 0,
                 height : 0,

@@ -4,19 +4,6 @@
 //ToDo Consider combining jasmine preparation path with init.js and including actual helper function via browserify require
 (function () {
     "use strict";
-    beforeEach(function () {
-        jasmine.addMatchers({
-            toBeInstanceOf : function () {
-                return {
-                    compare : function(actual, expected) {
-                        return {
-                            pass: actual instanceof expected
-                        };
-                    }
-                };
-            }
-        });
-    });
 
     // Cross-browser helper for triggering events on elements
     /**

@@ -2,6 +2,7 @@ import primitiveVertex from "./shaders/primitive.vert";
 import primitiveFragment from "./shaders/primitive.frag";
 import quadVertex from "./shaders/quad.vert";
 import quadFragment from "./shaders/quad.frag";
+import Vector2d from "./../../math/vector2.js";
 
 (function () {
 
@@ -54,10 +55,10 @@ import quadFragment from "./shaders/quad.frag";
 
             // Vector pool
             this.v = [
-                new me.Vector2d(),
-                new me.Vector2d(),
-                new me.Vector2d(),
-                new me.Vector2d()
+                new Vector2d(),
+                new Vector2d(),
+                new Vector2d(),
+                new Vector2d()
             ];
 
             // the associated renderer

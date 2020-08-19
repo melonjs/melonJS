@@ -1,3 +1,6 @@
+import Vector2d from "./../math/vector2.js";
+import ObservableVector2d from "./../math/observable_vector2.js";
+
 (function () {
 
     /**
@@ -79,7 +82,7 @@
              * @memberOf me.Body
              */
             if (typeof(this.vel) === "undefined") {
-                this.vel = new me.Vector2d();
+                this.vel = new Vector2d();
             }
             this.vel.set(0, 0);
 
@@ -95,7 +98,7 @@
              * @memberOf me.Body
              */
             if (typeof(this.accel) === "undefined") {
-                this.accel = new me.Vector2d();
+                this.accel = new Vector2d();
             }
             this.accel.set(0, 0);
 
@@ -128,7 +131,7 @@
              * }
              */
             if (typeof(this.force) === "undefined") {
-                this.force = new me.Vector2d();
+                this.force = new Vector2d();
             }
             this.force.set(0, 0);
 
@@ -142,7 +145,7 @@
              * @memberOf me.Body
              */
             if (typeof(this.friction) === "undefined") {
-                this.friction = new me.Vector2d();
+                this.friction = new Vector2d();
             }
             this.friction.set(0, 0);
 
@@ -176,7 +179,7 @@
              * @memberOf me.Body
              */
             if (typeof(this.maxVel) === "undefined") {
-                this.maxVel = new me.Vector2d();
+                this.maxVel = new Vector2d();
             }
             // cap by default to half the default gravity force
             this.maxVel.set(490, 490);
@@ -194,7 +197,7 @@
              */
             if (typeof(this.gravity) === "undefined") {
                 var self = this;
-                this.gravity = new me.ObservableVector2d(0, 0, { onUpdate : function(x, y) {
+                this.gravity = new ObservableVector2d(0, 0, { onUpdate : function(x, y) {
                     // disable gravity or apply a scale if y gravity is different from 0
                     if (typeof y === "number") {
                         self.gravityScale = y / me.game.world.gravity.y;

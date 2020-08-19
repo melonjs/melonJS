@@ -1,6 +1,8 @@
 module.exports = function(config) {
   config.set({
-    basePath: '',
+
+    // base path for files
+    basePath: '..',
 
     files: [
         // melonJS
@@ -17,7 +19,7 @@ module.exports = function(config) {
     },
 
     frameworks: ['jasmine'],
-    
+
     client: {
         jasmine: {
             random: false,

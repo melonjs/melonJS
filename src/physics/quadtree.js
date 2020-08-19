@@ -1,3 +1,5 @@
+import Vector2d from "./../math/vector2.js";
+
 /*
  * A QuadTree implementation in JavaScript, a 2d spatial subdivision algorithm.
  * Based on the QuadTree Library by Timo Hausmann and released under the MIT license
@@ -39,7 +41,7 @@
     /**
      * a temporary vector object to be reused
      */
-    var QT_VECTOR = new me.Vector2d();
+    var QT_VECTOR = new Vector2d();
 
 
     /**

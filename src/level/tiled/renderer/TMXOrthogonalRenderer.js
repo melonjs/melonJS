@@ -1,3 +1,5 @@
+import Vector2d from "./../../../math/vector2.js";
+
 (function () {
 
     /**
@@ -35,7 +37,7 @@
          * @ignore
          */
         pixelToTileCoords : function (x, y, v) {
-            var ret = v || new me.Vector2d();
+            var ret = v || new Vector2d();
             return ret.set(
                 x / this.tilewidth,
                 y / this.tileheight
@@ -48,7 +50,7 @@
          * @ignore
          */
         tileToPixelCoords : function (x, y, v) {
-            var ret = v || new me.Vector2d();
+            var ret = v || new Vector2d();
             return ret.set(
                 x * this.tilewidth,
                 y * this.tileheight

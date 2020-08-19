@@ -1,3 +1,7 @@
+import Vector2d from "./../math/vector2.js";
+import ObservableVector2d from "./../math/observable_vector2.js";
+import ObservableVector3d from "./../math/observable_vector3.js";
+
 (function () {
 
     /**
@@ -167,10 +171,10 @@
              * @name anchorPoint
              * @memberOf me.Renderable#
              */
-            if (this.anchorPoint instanceof me.ObservableVector2d) {
-                this.anchorPoint.setMuted(0.5, 0.5).setCallback(this.onAnchorUpdate.bind(this));
+            if (this.anchorPoint instanceof ObservableVector2d) {
+                this.anchorPoint.setMuted(0.5, 0.5).setCallback(this.onAnchorUpdate, this);
             } else {
-                this.anchorPoint = me.pool.pull("me.ObservableVector2d", 0.5, 0.5, { onUpdate: this.onAnchorUpdate.bind(this) });
+                this.anchorPoint = me.pool.pull("me.ObservableVector2d", 0.5, 0.5, { onUpdate: this.onAnchorUpdate, scope: this });
             }
 
             /**
@@ -215,19 +219,6 @@
              * @name me.Renderable#ancestor
              */
             this.ancestor = undefined;
-
-            /**
-             * The bounding rectangle for this renderable
-             * @ignore
-             * @type {me.Rect}
-             * @name _bounds
-             * @memberOf me.Renderable
-             */
-            if (this._bounds instanceof me.Rect) {
-                this._bounds.setShape(x, y, width, height);
-            } else {
-                this._bounds = me.pool.pull("me.Rect", x, y, width, height);
-            }
 
             /**
              * A mask limits rendering elements to the shape and position of the given mask object.
@@ -287,7 +278,7 @@
              * @name _absPos
              * @memberOf me.Renderable#
              */
-            if (this._absPos instanceof me.Vector2d) {
+            if (this._absPos instanceof Vector2d) {
                 this._absPos.set(x, y);
             }
             else {
@@ -301,10 +292,10 @@
              * @name pos
              * @memberOf me.Renderable#
              */
-            if (this.pos instanceof me.ObservableVector3d) {
-                this.pos.setMuted(x, y, 0).setCallback(this.updateBoundsPos.bind(this));
+            if (this.pos instanceof ObservableVector3d) {
+                this.pos.setMuted(x, y, 0).setCallback(this.updateBoundsPos, this);
             } else {
-                this.pos = me.pool.pull("me.ObservableVector3d", x, y, 0, { onUpdate: this.updateBoundsPos.bind(this) });
+                this.pos = me.pool.pull("me.ObservableVector3d", x, y, 0, { onUpdate: this.updateBoundsPos, scope: this});
             }
 
             /**
@@ -347,6 +338,10 @@
          * @return {me.Rect} bounding box Rectangle object
          */
         getBounds : function () {
+            if (typeof this._bounds === "undefined") {
+                this._bounds = me.pool.pull("me.Rect", 0, 0, this._width, this._height);
+                this.updateBoundsPos(this.pos.x, this.pos.y);
+            }
             return this._bounds;
         },
 

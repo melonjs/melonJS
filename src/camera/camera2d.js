@@ -1,8 +1,13 @@
+import Vector2d from "./../math/vector2.js";
+import Vector3d from "./../math/vector3.js";
+import ObservableVector2d from "./../math/observable_vector2.js";
+import ObservableVector3d from "./../math/observable_vector3.js";
+
 (function () {
     // some ref shortcut
     var MIN = Math.min, MAX = Math.max;
 
-    var targetV = new me.Vector2d();
+    var targetV = new Vector2d();
 
     /**
      * a 2D orthographic camera
@@ -112,7 +117,7 @@
             this.invCurrentTransform = new me.Matrix2d();
 
             // offset for shake effect
-            this.offset = new me.Vector2d();
+            this.offset = new Vector2d();
 
             // target to follow
             this.target = null;
@@ -323,7 +328,8 @@
             if (target instanceof me.Renderable) {
                 this.target = target.pos;
             }
-            else if ((target instanceof me.Vector2d) || (target instanceof me.Vector3d)) {
+            else if ((target instanceof Vector2d) || (target instanceof Vector3d) ||
+                     (target instanceof ObservableVector2d) || (target instanceof ObservableVector3d)) {
                 this.target = target;
             }
             else {
@@ -643,7 +649,7 @@
          */
         localToWorld : function (x, y, v) {
             // TODO memoization for one set of coords (multitouch)
-            v = v || new me.Vector2d();
+            v = v || new Vector2d();
             v.set(x, y).add(this.pos).sub(me.game.world.pos);
             if (!this.currentTransform.isIdentity()) {
                 this.invCurrentTransform.apply(v);
@@ -664,7 +670,7 @@
          */
         worldToLocal : function (x, y, v) {
             // TODO memoization for one set of coords (multitouch)
-            v = v || new me.Vector2d();
+            v = v || new Vector2d();
             v.set(x, y);
             if (!this.currentTransform.isIdentity()) {
                 this.currentTransform.apply(v);

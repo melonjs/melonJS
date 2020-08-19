@@ -1,3 +1,5 @@
+import Vector2d from "./../math/vector2.js";
+
 (function () {
     /**
      * a rectangle Object
@@ -24,16 +26,16 @@
              * @memberOf me.Rect
              */
             if (typeof(this.center) === "undefined") {
-                this.center = new me.Vector2d();
+                this.center = new Vector2d();
             }
             this.center.set(0, 0);
 
             // parent constructor
             this._super(me.Polygon, "init", [x, y, [
-                new me.Vector2d(0, 0), // 0, 0
-                new me.Vector2d(w, 0), // 1, 0
-                new me.Vector2d(w, h), // 1, 1
-                new me.Vector2d(0, h)  // 0, 1
+                new Vector2d(0, 0), // 0, 0
+                new Vector2d(w, 0), // 1, 0
+                new Vector2d(w, h), // 1, 1
+                new Vector2d(0, h)  // 0, 1
             ]]);
             this.shapeType = "Rectangle";
         },
