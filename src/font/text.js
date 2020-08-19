@@ -1,3 +1,5 @@
+import Color from "./../math/color.js";
+
 /*
  * ASCII Table
  * http://www.asciitable.com/
@@ -62,7 +64,7 @@
              * @name me.Text#fillStyle
              */
             if (typeof settings.fillStyle !== "undefined") {
-                if (settings.fillStyle instanceof me.Color) {
+                if (settings.fillStyle instanceof Color) {
                     this.fillStyle = settings.fillStyle;
                 } else {
                     // string (#RGB, #ARGB, #RRGGBB, #AARRGGBB)
@@ -80,7 +82,7 @@
              * @name me.Text#strokeStyle
              */
              if (typeof settings.strokeStyle !== "undefined") {
-                 if (settings.strokeStyle instanceof me.Color) {
+                 if (settings.strokeStyle instanceof Color) {
                      this.strokeStyle = settings.strokeStyle;
                  } else {
                      // string (#RGB, #ARGB, #RRGGBB, #AARRGGBB)
@@ -391,7 +393,7 @@
             }
 
             // clear the dirty flag here for
-            // backward compatibility 
+            // backward compatibility
             this.isDirty = false;
         },
 

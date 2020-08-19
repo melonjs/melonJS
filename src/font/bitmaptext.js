@@ -1,3 +1,5 @@
+import Color from "./../math/color.js";
+
 (function () {
 
     /**
@@ -137,7 +139,7 @@
 
             // apply given fillstyle
             if (typeof settings.fillStyle !== "undefined") {
-                if (settings.fillStyle instanceof me.Color) {
+                if (settings.fillStyle instanceof Color) {
                     this.fillStyle.setColor(settings.fillStyle);
                 } else {
                     // string (#RGB, #ARGB, #RRGGBB, #AARRGGBB)

@@ -1,3 +1,5 @@
+import Color from "./../math/color.js";
+
 (function () {
 
     /**
@@ -31,7 +33,7 @@
              * @memberOf me.ColorLayer#
              */
             // parse the given color
-            if (color instanceof me.Color) {
+            if (color instanceof Color) {
                 this.color = color;
             } else {
                 // string (#RGB, #ARGB, #RRGGBB, #AARRGGBB)

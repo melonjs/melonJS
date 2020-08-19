@@ -1,3 +1,5 @@
+import Color from "./../math/color.js";
+
 (function () {
 
     /**
@@ -71,10 +73,10 @@
             this.context = null;
 
             // global color
-            this.currentColor = new me.Color(0, 0, 0, 1.0);
+            this.currentColor = new Color(0, 0, 0, 1.0);
 
             // global tint color
-            this.currentTint = new me.Color(255, 255, 255, 1.0);
+            this.currentTint = new Color(255, 255, 255, 1.0);
 
             // the projectionMatrix (set through setProjection)
             this.projectionMatrix = new me.Matrix3d();
@@ -364,7 +366,7 @@
 
             context.save();
 
-            context.fillStyle = color instanceof me.Color ? color.toRGB() : color;
+            context.fillStyle = color instanceof Color ? color.toRGB() : color;
             context.fillRect(0, 0, src.width, src.height);
 
             context.globalCompositeOperation = mode || "multiply";

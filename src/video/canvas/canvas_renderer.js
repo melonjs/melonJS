@@ -1,3 +1,5 @@
+import Color from "./../../math/color.js";
+
 (function () {
 
     /**
@@ -141,7 +143,7 @@
             this.save();
             this.resetTransform();
             this.backBufferContext2D.globalCompositeOperation = opaque ? "copy" : "source-over";
-            this.backBufferContext2D.fillStyle = (col instanceof me.Color) ? col.toRGBA() : col;
+            this.backBufferContext2D.fillStyle = (col instanceof Color) ? col.toRGBA() : col;
             this.fillRect(0, 0, this.backBufferCanvas.width, this.backBufferCanvas.height);
             this.restore();
         },
@@ -557,12 +559,12 @@
          * @name setColor
          * @memberOf me.CanvasRenderer.prototype
          * @function
-         * @param {me.Color|String} color css color value
+         * @param {Color|String} color css color value
          */
         setColor : function (color) {
             this.backBufferContext2D.strokeStyle =
             this.backBufferContext2D.fillStyle = (
-                color instanceof me.Color ?
+                color instanceof Color ?
                 color.toRGBA() :
                 color
             );

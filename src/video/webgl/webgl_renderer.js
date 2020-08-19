@@ -1,3 +1,4 @@
+import Color from "./../../math/color.js";
 import Vector2d from "./../../math/vector2.js";
 
 (function () {
@@ -316,7 +317,7 @@ import Vector2d from "./../../math/vector2.js";
 
             this.save();
 
-            if (col instanceof me.Color) {
+            if (col instanceof Color) {
                 glArray = col.toArray();
             } else {
                 // reuse temporary the renderer default color object

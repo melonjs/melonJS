@@ -10,6 +10,7 @@ import utils from "./utils/utils.js";
 import * as input from "./input/input.js";
 
 // class definition
+import Color from "./math/color.js";
 import Vector2d from "./math/vector2.js";
 import Vector3d from "./math/vector3.js";
 import ObservableVector2d from "./math/observable_vector2.js";
@@ -47,6 +48,7 @@ export {
 
 // export all class definition
 export {
+    Color,
     Vector2d,
     Vector3d,
     ObservableVector2d,
