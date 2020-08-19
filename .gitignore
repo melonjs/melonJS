@@ -26,5 +26,4 @@ node_modules/
 build/*
 docs/*
 !.placeholder
-package-lock.json
 /_SpecRunner.html
