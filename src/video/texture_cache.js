@@ -1,10 +1,12 @@
+import Renderer from "./renderer.js";
+
 (function () {
 
     /**
      * a basic texture cache object
      * @ignore
      */
-    me.Renderer.TextureCache = me.Object.extend({
+    Renderer.TextureCache = me.Object.extend({
         /**
          * @ignore
          */

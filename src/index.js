@@ -17,6 +17,9 @@ import ObservableVector2d from "./math/observable_vector2.js";
 import ObservableVector3d from "./math/observable_vector3.js";
 import GLShader from "./video/webgl/glshader.js";
 import WebGLCompositor from "./video/webgl/webgl_compositor.js";
+import Renderer from "./video/renderer.js";
+import WebGLRenderer from "./video/webgl/webgl_renderer.js";
+import CanvasRenderer from "./video/canvas/canvas_renderer.js";
 
 // alias and wrapper for deprecated API
 import * as deprecated from "./lang/deprecated.js";
@@ -56,7 +59,10 @@ export {
     ObservableVector2d,
     ObservableVector3d,
     GLShader,
-    WebGLCompositor
+    WebGLCompositor,
+    Renderer,
+    WebGLRenderer,
+    CanvasRenderer
 };
 
 // Backward compatibility for deprecated method or properties are

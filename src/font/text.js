@@ -1,4 +1,5 @@
 import Color from "./../math/color.js";
+import Renderer from "./../video/renderer.js";
 
 /*
  * ASCII Table
@@ -287,7 +288,7 @@ import Color from "./../math/color.js";
 
             if (typeof renderer === "undefined") {
                 context = me.video.renderer.getFontContext();
-            } else if (renderer instanceof me.Renderer) {
+            } else if (renderer instanceof Renderer) {
                 context = renderer.getFontContext();
             } else {
                 // else it's a 2d rendering context object

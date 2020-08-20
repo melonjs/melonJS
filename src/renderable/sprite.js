@@ -1,4 +1,5 @@
 import Vector2d from "./../math/vector2.js";
+import Renderer from "./../video/renderer.js";
 
 (function () {
 
@@ -120,7 +121,7 @@ import Vector2d from "./../math/vector2.js";
             this._super(me.Renderable, "init", [ x, y, 0, 0 ]);
 
             // set the proper image/texture to use
-            if (settings.image instanceof me.Renderer.prototype.Texture) {
+            if (settings.image instanceof Renderer.prototype.Texture) {
                 this.source = settings.image;
                 this.image = this.source.getTexture();
                 this.textureAtlas = settings.image;

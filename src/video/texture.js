@@ -1,4 +1,5 @@
 import Vector2d from "./../math/vector2.js";
+import Renderer from "./renderer.js";
 
 (function () {
 
@@ -40,7 +41,7 @@ import Vector2d from "./../math/vector2.js";
      *     me.loader.getImage("spritesheet")
      * );
      */
-    me.Renderer.prototype.Texture = me.Object.extend({
+    Renderer.prototype.Texture = me.Object.extend({
         /**
          * @ignore
          */
@@ -140,7 +141,7 @@ import Vector2d from "./../math/vector2.js";
             // Add self to TextureCache if cache !== false
             if (cache !== false) {
                 this.sources.forEach(function (source) {
-                    if (cache instanceof me.Renderer.TextureCache) {
+                    if (cache instanceof Renderer.TextureCache) {
                         cache.set(source, this);
                     } else {
                         me.video.renderer.cache.set(source, this);
