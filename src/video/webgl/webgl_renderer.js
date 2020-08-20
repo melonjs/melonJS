@@ -1,5 +1,6 @@
 import Color from "./../../math/color.js";
 import Vector2d from "./../../math/vector2.js";
+import WebGLCompositor from "./webgl_compositor.js";
 
 (function () {
 
@@ -124,7 +125,7 @@ import Vector2d from "./../../math/vector2.js";
             this.currentCompositor = null;
 
             // Create a compositor
-            var Compositor = this.settings.compositor || me.WebGLCompositor;
+            var Compositor = this.settings.compositor || WebGLCompositor;
             this.setCompositor(new Compositor(this));
 
 
