@@ -1,8 +1,9 @@
 import {clamp} from "./math.js";
 
 /**
+ * @classdesc
  * a generic 3D Vector Object
- * @class
+ * @class Vector3d
  * @memberOf me
  * @constructor
  * @param {Number} [x=0] x value of the vector
@@ -11,18 +12,16 @@ import {clamp} from "./math.js";
  */
 
 class Vector3d {
-    /**
-     * @ignore
-     */
+
     constructor(x = 0, y = 0, z = 0) {
         this.onResetEvent(x, y, z);
     }
 
     /**
      * @ignore
-     * enable proper pooling
      */
     onResetEvent(x = 0, y = 0, z = 0) {
+        // this is to enable proper object pooling
         this.x = x;
         this.y = y;
         this.z = z;

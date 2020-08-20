@@ -2,9 +2,11 @@ import Vector2d from "./vector2.js";
 import {clamp} from "./math.js";
 
 /**
+ * @classdesc
  * A Vector2d object that provide notification by executing the given callback when the vector is changed.
- * @class
+ * @class ObservableVector2d
  * @extends me.Vector2d
+ * @memberOf me
  * @constructor
  * @param {Number} [x=0] x value of the vector
  * @param {Number} [y=0] y value of the vector
@@ -14,9 +16,6 @@ import {clamp} from "./math.js";
  */
 class ObservableVector2d extends Vector2d {
 
-    /**
-     * @ignore
-     */
     constructor(x = 0, y = 0, settings) {
         super(x, y);
         if (typeof(settings) === "undefined") {
@@ -29,7 +28,6 @@ class ObservableVector2d extends Vector2d {
 
     /**
      * @ignore
-     * enable proper pooling
      */
     onResetEvent(x = 0, y = 0, settings) {
         // init is call by the constructor and does not trigger the cb

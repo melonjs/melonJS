@@ -3,8 +3,10 @@ import {clamp} from "./math.js";
 
 /**
  * A Vector3d object that provide notification by executing the given callback when the vector is changed.
- * @class
+ * @classdesc
+ * @class ObservableVector3d
  * @extends me.Vector3d
+ * @memberOf me
  * @constructor
  * @param {Number} [x=0] x value of the vector
  * @param {Number} [y=0] y value of the vector
@@ -15,9 +17,6 @@ import {clamp} from "./math.js";
  */
 class ObservableVector3d extends Vector3d {
 
-    /**
-     * @ignore
-     */
     constructor(x = 0, y = 0, z = 0, settings) {
         super(x, y, z);
         if (typeof(settings) === "undefined") {
@@ -30,7 +29,6 @@ class ObservableVector3d extends Vector3d {
 
     /**
      * @ignore
-     * enable proper pooling
      */
     onResetEvent(x = 0, y = 0, z = 0, settings) {
         // init is call by the constructor and does not trigger the cb

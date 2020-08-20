@@ -22,7 +22,6 @@ export function warning(deprecated, replacement, version) {
 /**
  * Backward compatibility for deprecated method or properties are automatically
  * applied when automatically generating an UMD module (which is the default since version 9.0).
- * @example
  * @memberof me.deprecated
  * @function apply
  */

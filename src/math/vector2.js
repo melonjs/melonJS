@@ -1,26 +1,25 @@
 import {clamp} from "./math.js";
 
 /**
+ * @classdesc
  * a generic 2D Vector Object
- * @class
+ * @class Vector2d
  * @memberOf me
  * @constructor
  * @param {Number} [x=0] x value of the vector
  * @param {Number} [y=0] y value of the vector
  */
 class Vector2d {
-    /**
-     * @ignore
-     */
+
     constructor(x = 0, y = 0) {
         this.onResetEvent(x, y);
     }
 
     /**
      * @ignore
-     * enable proper pooling
      */
     onResetEvent(x = 0, y = 0) {
+        // this is to enable proper object pooling
         this.x = x;
         this.y = y;
         return this;

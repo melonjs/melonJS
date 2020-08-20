@@ -169,20 +169,18 @@ var cssToRGB = new Map();
 });
 
 /**
+ * @classdesc
  * A color manipulation object.
- * @class
+ * @class Color
  * @memberOf me
  * @constructor
- * @param {Float32Array|Number} [r=0] red component or array of color components
+ * @param {Number|Float32Array} [r=0] red component or array of color components
  * @param {Number} [g=0] green component
  * @param {Number} [b=0] blue component
  * @param {Number} [alpha=1.0] alpha value
  */
 class Color {
 
-    /**
-     * @ignore
-     */
     constructor(r, g, b, alpha) {
         this.onResetEvent(r, g, b, alpha);
     }
@@ -190,15 +188,12 @@ class Color {
     /**
      * @ignore
      */
-    onResetEvent(r, g, b, alpha) {
+    onResetEvent(r = 0, g = 0, b = 0, alpha = 1.0) {
         /**
-         * Color components in a Float32Array suitable for WebGL
-         * @name glArray
-         * @memberOf me.Color
-         * @type {Float32Array}
-         * @readonly
+         * @ignore
          */
         if (typeof (this.glArray) === "undefined") {
+            // Color components in a Float32Array suitable for WebGL
             this.glArray = new Float32Array([ 0.0, 0.0, 0.0, 1.0 ]);
         }
 
@@ -302,7 +297,7 @@ class Color {
      * @param {Number} [alpha=1.0] alpha value [0.0 .. 1.0]
      * @return {me.Color} Reference to this object for method chaining
      */
-    setColor(r, g, b, alpha) {
+    setColor(r, g, b, alpha = 1.0) {
         // Private initialization: copy Color value directly
         if (r instanceof Color) {
             this.glArray.set(r.glArray);
@@ -421,11 +416,11 @@ class Color {
      * @param {Number} [max=255] maxmium value for the random range
      * @return {me.Color} Reference to this object for method chaining
      */
-    random(min, max) {
-        if (typeof min === "undefined" || min < 0) {
+    random(min = 0, max = 255) {
+        if (min < 0) {
             min = 0;
         }
-        if (typeof max === "undefined" || min > 255) {
+        if (max > 255) {
             max = 255;
         }
 
