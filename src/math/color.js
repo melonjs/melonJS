@@ -171,7 +171,6 @@ var cssToRGB = new Map();
 /**
  * A color manipulation object.
  * @class
- * @extends me.Object
  * @memberOf me
  * @constructor
  * @param {Float32Array|Number} [r=0] red component or array of color components

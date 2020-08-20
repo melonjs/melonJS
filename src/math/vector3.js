@@ -3,7 +3,6 @@ import {clamp} from "./math.js";
 /**
  * a generic 3D Vector Object
  * @class
- * @extends me.Object
  * @memberOf me
  * @constructor
  * @param {Number} [x=0] x value of the vector
