@@ -2,6 +2,7 @@ import Vector2d from "./../math/vector2.js";
 import Vector3d from "./../math/vector3.js";
 import ObservableVector2d from "./../math/observable_vector2.js";
 import ObservableVector3d from "./../math/observable_vector3.js";
+import video from "./../video/video.js";
 
 (function () {
     // some ref shortcut
@@ -629,7 +630,7 @@ import ObservableVector3d from "./../math/observable_vector3.js";
         isVisible : function (obj, floating) {
             if (floating === true || obj.floating === true) {
                 // check against screen coordinates
-                return me.video.renderer.overlaps(obj.getBounds());
+                return video.renderer.overlaps(obj.getBounds());
             } else {
                 // check if within the current camera
                 return obj.getBounds().overlaps(this);

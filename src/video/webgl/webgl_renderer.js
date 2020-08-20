@@ -2,6 +2,7 @@ import Color from "./../../math/color.js";
 import Vector2d from "./../../math/vector2.js";
 import WebGLCompositor from "./webgl_compositor.js";
 import Renderer from "./../renderer.js";
+import video from "./../video.js";
 
 
 /**
@@ -229,7 +230,7 @@ class WebGLRenderer extends Renderer {
                 }
             }
 
-            var image = me.video.createCanvas(width, height, true);
+            var image = video.createCanvas(width, height, true);
 
             /**
              * @ignore
@@ -272,7 +273,7 @@ class WebGLRenderer extends Renderer {
      */
     createPattern(image, repeat) {
 
-        if (me.video.renderer.WebGLVersion === 1 && (!me.Math.isPowerOfTwo(image.width) || !me.Math.isPowerOfTwo(image.height))) {
+        if (video.renderer.WebGLVersion === 1 && (!me.Math.isPowerOfTwo(image.width) || !me.Math.isPowerOfTwo(image.height))) {
             var src = typeof image.src !== "undefined" ? image.src : image;
             throw new Error(
                 "[WebGL Renderer] " + src + " is not a POT texture " +

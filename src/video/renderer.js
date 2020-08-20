@@ -1,4 +1,5 @@
 import Color from "./../math/color.js";
+import video from "./video.js";
 
 /**
  * @classdesc
@@ -61,7 +62,7 @@ class Renderer {
         } else if (typeof this.settings.canvas !== "undefined") {
             this.canvas = this.settings.canvas;
         } else {
-            this.canvas = me.video.createCanvas(this.settings.zoomX, this.settings.zoomY);
+            this.canvas = video.createCanvas(this.settings.zoomX, this.settings.zoomY);
         }
 
         // canvas object and context
@@ -85,7 +86,7 @@ class Renderer {
 
         // reset the instantiated renderer on game reset
         me.event.subscribe(me.event.GAME_RESET, function () {
-            me.video.renderer.reset();
+            video.renderer.reset();
         });
 
         return this;
@@ -357,7 +358,7 @@ class Renderer {
      * @return {HTMLCanvasElement|OffscreenCanvas} a new canvas element representing the tinted image
      */
     tint(src, color, mode) {
-        var canvas = me.video.createCanvas(src.width, src.height, true);
+        var canvas = video.createCanvas(src.width, src.height, true);
         var context = this.getContext2d(canvas);
 
         context.save();

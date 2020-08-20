@@ -1,5 +1,6 @@
 import Vector2d from "./../math/vector2.js";
 import Renderer from "./../video/renderer.js";
+import video from "./../video/video.js";
 
 (function () {
 
@@ -146,7 +147,7 @@ import Renderer from "./../video/renderer.js";
                 // update the default "current" frame size
                 this.current.width = settings.framewidth = settings.framewidth || this.image.width;
                 this.current.height = settings.frameheight = settings.frameheight || this.image.height;
-                this.source = me.video.renderer.cache.get(this.image, settings);
+                this.source = video.renderer.cache.get(this.image, settings);
                 this.textureAtlas = this.source.getAtlas();
             }
 

@@ -1,6 +1,7 @@
 import {preventDefault} from "./input.js";
 import {getBindingKey, triggerKeyEvent} from "./keyboard.js";
 import Vector2d from "./../math/vector2.js";
+import video from "./../video/video.js";
 
 
 /**
@@ -117,7 +118,7 @@ function enablePointerEvent() {
 
         if (pointerEventTarget === null) {
             // default pointer event target
-            pointerEventTarget = me.video.renderer.getScreenCanvas();
+            pointerEventTarget = video.renderer.getScreenCanvas();
         }
 
         if (me.device.PointerEvent) {
@@ -530,11 +531,11 @@ export var throttlingInterval;
  */
 export function globalToLocal(x, y, v) {
     v = v || new Vector2d();
-    var rect = me.device.getElementBounds(me.video.renderer.getScreenCanvas());
+    var rect = me.device.getElementBounds(video.renderer.getScreenCanvas());
     var pixelRatio = me.device.devicePixelRatio;
     x -= rect.left + (window.pageXOffset || 0);
     y -= rect.top + (window.pageYOffset || 0);
-    var scale = me.video.scaleRatio;
+    var scale = video.scaleRatio;
     if (scale.x !== 1.0 || scale.y !== 1.0) {
         x /= scale.x;
         y /= scale.y;

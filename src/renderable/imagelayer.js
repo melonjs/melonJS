@@ -1,3 +1,5 @@
+import video from "./../video/video.js";
+
 (function () {
 
     /**
@@ -204,7 +206,7 @@
          * @function
          */
         createPattern : function () {
-            this._pattern = me.video.renderer.createPattern(this.image, this._repeat);
+            this._pattern = video.renderer.createPattern(this.image, this._repeat);
         },
 
         /**

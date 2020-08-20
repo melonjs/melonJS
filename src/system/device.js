@@ -1,3 +1,5 @@
+import video from "./../video/video.js";
+
 (function () {
     /**
      * A singleton object representing the device capabilities and specific events
@@ -684,7 +686,7 @@
          */
         api.requestFullscreen = function (element) {
             if (this.hasFullscreenSupport) {
-                element = element || me.video.getParent();
+                element = element || video.getParent();
                 element.requestFullscreen = me.agent.prefixed("requestFullscreen", element) ||
                                             element.mozRequestFullScreen;
 
@@ -999,7 +1001,7 @@
          */
         api.turnOnPointerLock = function () {
             if (this.hasPointerLockSupport) {
-                var element = me.video.getParent();
+                var element = video.getParent();
                 if (me.device.ua.match(/Firefox/i)) {
                     var fullscreenchange = function () {
                         if ((me.agent.prefixed("fullscreenElement", document) ||

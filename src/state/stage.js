@@ -1,3 +1,5 @@
+import video from "./../video/video.js";
+
 (function () {
 
     // a default camera instance to use across all stages
@@ -61,8 +63,8 @@
             // empty or no default camera
             if (this.cameras.has("default") === false) {
                 if (typeof default_camera === "undefined") {
-                    var width = me.video.renderer.getWidth();
-                    var height = me.video.renderer.getHeight();
+                    var width = video.renderer.getWidth();
+                    var height = video.renderer.getHeight();
                     // new default camera instance
                     default_camera = new me.Camera2d(0, 0, width, height);
                 }

@@ -1,3 +1,5 @@
+import video from "./../video/video.js";
+
 (function () {
     // a basic progress bar object
     var ProgressBar = me.Renderable.extend({
@@ -73,12 +75,12 @@
         init : function (x, y) {
             this._super(me.Renderable, "init", [x, y, 100, 85]);
 
-            this.iconCanvas = me.video.createCanvas(
+            this.iconCanvas = video.createCanvas(
                 me.Math.nextPowerOfTwo(this.width),
                 me.Math.nextPowerOfTwo(this.height),
             false);
 
-            var context = me.video.renderer.getContext2d(this.iconCanvas);
+            var context = video.renderer.getContext2d(this.iconCanvas);
 
             context.beginPath();
             context.moveTo(0.7, 48.9);
@@ -127,8 +129,8 @@
             this.textWidth = 0;
 
             // offscreen cache canvas
-            this.fontCanvas = me.video.createCanvas(256, 64, true);
-            this.drawFont(me.video.renderer.getContext2d(this.fontCanvas));
+            this.fontCanvas = video.createCanvas(256, 64, true);
+            this.drawFont(video.renderer.getContext2d(this.fontCanvas));
 
             this.anchorPoint.set(0.0, 0.0);
         },
@@ -197,22 +199,22 @@
             // progress bar
             me.game.world.addChild(new ProgressBar(
                 0,
-                me.video.renderer.getHeight() / 2,
-                me.video.renderer.getWidth(),
+                video.renderer.getHeight() / 2,
+                video.renderer.getWidth(),
                 barHeight
             ), 1);
 
             // melonJS logo
             me.game.world.addChild(new IconLogo(
-                me.video.renderer.getWidth() / 2,
-                (me.video.renderer.getHeight() / 2) - (barHeight * 2) - 35
+                video.renderer.getWidth() / 2,
+                (video.renderer.getHeight() / 2) - (barHeight * 2) - 35
 
             ), 2);
 
             // melonJS text
             me.game.world.addChild(new TextLogo(
-                me.video.renderer.getWidth(),
-                me.video.renderer.getHeight()
+                video.renderer.getWidth(),
+                video.renderer.getHeight()
             ), 2);
         }
     });

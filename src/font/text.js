@@ -1,5 +1,6 @@
 import Color from "./../math/color.js";
 import Renderer from "./../video/renderer.js";
+import video from "./../video/video.js";
 
 /*
  * ASCII Table
@@ -287,7 +288,7 @@ import Renderer from "./../video/renderer.js";
             var context;
 
             if (typeof renderer === "undefined") {
-                context = me.video.renderer.getFontContext();
+                context = video.renderer.getFontContext();
             } else if (renderer instanceof Renderer) {
                 context = renderer.getFontContext();
             } else {

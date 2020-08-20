@@ -8,6 +8,7 @@ import game from "./game.js";
 import * as Math from "./math/math.js";
 import utils from "./utils/utils.js";
 import * as input from "./input/input.js";
+import video from "./video/video.js";
 
 // class definition
 import Color from "./math/color.js";
@@ -48,7 +49,8 @@ export {
     game,
     Math,
     utils,
-    input
+    input,
+    video
 };
 
 // export all class definition

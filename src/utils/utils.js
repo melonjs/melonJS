@@ -2,6 +2,8 @@ import * as arrayUtils from "./array.js";
 import * as fileUtils from "./file.js";
 import * as stringUtils from "./string.js";
 import * as fnUtils from "./function.js";
+import video from "./../video/video.js";
+import CanvasRenderer from "./../video/canvas/canvas_renderer.js";
 
 /**
  * a collection of utility functions
@@ -31,8 +33,8 @@ var utils = {
      */
     getPixels : function (arg) {
         if (arg instanceof HTMLImageElement) {
-            var _context = me.CanvasRenderer.getContext2d(
-                me.video.createCanvas(arg.width, arg.height)
+            var _context = CanvasRenderer.getContext2d(
+                video.createCanvas(arg.width, arg.height)
             );
             _context.drawImage(arg, 0, 0);
             return _context.getImageData(0, 0, arg.width, arg.height);

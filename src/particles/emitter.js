@@ -1,7 +1,9 @@
+import video from "./../video/video.js";
+
 (function () {
     // generate a default image for the particles
     var pixel = (function () {
-        var canvas = me.video.createCanvas(1, 1);
+        var canvas = video.createCanvas(1, 1);
         var context = canvas.getContext("2d");
         context.fillStyle = "#fff";
         context.fillRect(0, 0, 1, 1);

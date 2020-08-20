@@ -1,3 +1,5 @@
+import video from "./../../video/video.js";
+
 (function () {
 
     /**
@@ -188,7 +190,7 @@
             // if pre-rendering method is use, create an offline canvas/renderer
             if ((this.preRender === true) && (!this.canvasRenderer)) {
                 this.canvasRenderer = new me.CanvasRenderer(
-                    me.video.createCanvas(this.width, this.height),
+                    video.createCanvas(this.width, this.height),
                     this.width, this.height,
                     { transparent : true }
                 );

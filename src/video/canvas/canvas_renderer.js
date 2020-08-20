@@ -1,5 +1,6 @@
 import Color from "./../../math/color.js";
 import Renderer from "./../renderer.js";
+import video from "./../video.js";
 
 
 
@@ -33,7 +34,7 @@ class CanvasRenderer extends Renderer {
 
         // create the back buffer if we use double buffering
         if (this.settings.doubleBuffering) {
-            this.backBufferCanvas = me.video.createCanvas(this.settings.width, this.settings.height, true);
+            this.backBufferCanvas = video.createCanvas(this.settings.width, this.settings.height, true);
             this.backBufferContext2D = this.getContext2d(this.backBufferCanvas);
         }
         else {

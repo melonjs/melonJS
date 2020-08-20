@@ -1,4 +1,5 @@
 import Renderer from "./renderer.js";
+import video from "./video.js";
 
 (function () {
 
@@ -47,12 +48,12 @@ import Renderer from "./renderer.js";
         get : function (image, atlas) {
             if (!this.cache.has(image)) {
                 if (!atlas) {
-                    atlas = me.video.renderer.Texture.prototype.createAtlas.apply(
-                        me.video.renderer.Texture.prototype,
+                    atlas = video.renderer.Texture.prototype.createAtlas.apply(
+                        video.renderer.Texture.prototype,
                         [image.width, image.height, image.src ? me.utils.file.getBasename(image.src) : undefined]
                     );
                 }
-                this.set(image, new me.video.renderer.Texture(atlas, image, false));
+                this.set(image, new video.renderer.Texture(atlas, image, false));
             }
             return this.cache.get(image);
         },
@@ -69,7 +70,7 @@ import Renderer from "./renderer.js";
             }
 
             if (!image_cache.has(color)) {
-                image_cache.set(color, me.video.renderer.tint(src, color, "multiply"));
+                image_cache.set(color, video.renderer.tint(src, color, "multiply"));
             }
 
             return image_cache.get(color);
@@ -83,7 +84,7 @@ import Renderer from "./renderer.js";
             var height = image.height;
 
             // warn if a non POT texture is added to the cache when using WebGL1
-            if (me.video.renderer.WebGLVersion === 1 && (!me.Math.isPowerOfTwo(width) || !me.Math.isPowerOfTwo(height))) {
+            if (video.renderer.WebGLVersion === 1 && (!me.Math.isPowerOfTwo(width) || !me.Math.isPowerOfTwo(height))) {
                 var src = typeof image.src !== "undefined" ? image.src : image;
                 console.warn(
                     "[Texture] " + src + " is not a POT texture " +

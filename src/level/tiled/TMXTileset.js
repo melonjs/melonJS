@@ -1,4 +1,5 @@
 import Vector2d from "./../../math/vector2.js";
+import video from "./../../video/video.js";
 
 (function () {
 
@@ -139,7 +140,7 @@ import Vector2d from "./../../math/vector2.js";
                 }
 
                 // create a texture atlas for the given tileset
-                this.texture = me.video.renderer.cache.get(this.image, {
+                this.texture = video.renderer.cache.get(this.image, {
                     framewidth : this.tilewidth,
                     frameheight : this.tileheight,
                     margin : this.margin,

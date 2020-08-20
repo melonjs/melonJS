@@ -1,4 +1,4 @@
-
+import video from "./video/video.js";
 
 /**
  * me.game represents your current game, it contains all the objects,
@@ -229,7 +229,7 @@ var game = {
      * @param {me.Stage} stage the current stage
      */
     draw : function (stage) {
-        var renderer = me.video.renderer;
+        var renderer = video.renderer;
 
         if (renderer.isContextValid === true && (isDirty || isAlwaysDirty)) {
             // prepare renderer to draw a new frame

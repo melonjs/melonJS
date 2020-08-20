@@ -1,5 +1,7 @@
 import Vector2d from "./../math/vector2.js";
 import Renderer from "./renderer.js";
+import WebGLRenderer from "./webgl/webgl_renderer.js";
+import video from "./video.js";
 
 (function () {
 
@@ -144,7 +146,7 @@ import Renderer from "./renderer.js";
                     if (cache instanceof Renderer.TextureCache) {
                         cache.set(source, this);
                     } else {
-                        me.video.renderer.cache.set(source, this);
+                        video.renderer.cache.set(source, this);
                     }
                 });
             }
@@ -273,7 +275,7 @@ import Renderer from "./renderer.js";
          */
         addUvsMap : function (atlas, frame, w, h) {
             // ignore if using the Canvas Renderer
-            if (me.video.renderer instanceof me.WebGLRenderer) {
+            if (video.renderer instanceof WebGLRenderer) {
                 // Source coordinates
                 var s = atlas[frame].offset;
                 var sw = atlas[frame].width;
@@ -298,7 +300,7 @@ import Renderer from "./renderer.js";
          */
         addQuadRegion : function (name, x, y, w, h) {
             // TODO: Require proper atlas regions instead of caching arbitrary region keys
-            if (me.video.renderer.settings.verbose === true) {
+            if (video.renderer.settings.verbose === true) {
                 console.warn("Adding texture region", name, "for texture", this);
             }
 
