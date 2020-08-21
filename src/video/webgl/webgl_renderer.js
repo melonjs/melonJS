@@ -2,8 +2,10 @@ import Color from "./../../math/color.js";
 import Vector2d from "./../../math/vector2.js";
 import WebGLCompositor from "./webgl_compositor.js";
 import Renderer from "./../renderer.js";
+import TextureCache from "./../texture_cache.js";
 import video from "./../video.js";
 import event from "./../../system/event.js";
+
 
 
 /**
@@ -144,7 +146,7 @@ class WebGLRenderer extends Renderer {
         }
 
         // Create a texture cache
-        this.cache = new Renderer.TextureCache(this.maxTextures);
+        this.cache = new TextureCache(this.maxTextures);
 
         // to simulate context lost and restore :
         // var ctx = me.video.renderer.context.getExtension('WEBGL_lose_context');

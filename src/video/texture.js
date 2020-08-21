@@ -1,6 +1,7 @@
 import Vector2d from "./../math/vector2.js";
 import Renderer from "./renderer.js";
 import WebGLRenderer from "./webgl/webgl_renderer.js";
+import TextureCache from "./texture_cache.js";
 import video from "./video.js";
 
 (function () {
@@ -143,7 +144,7 @@ import video from "./video.js";
             // Add self to TextureCache if cache !== false
             if (cache !== false) {
                 this.sources.forEach(function (source) {
-                    if (cache instanceof Renderer.TextureCache) {
+                    if (cache instanceof TextureCache) {
                         cache.set(source, this);
                     } else {
                         video.renderer.cache.set(source, this);

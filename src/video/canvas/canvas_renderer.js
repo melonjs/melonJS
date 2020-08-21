@@ -1,5 +1,6 @@
 import Color from "./../../math/color.js";
 import Renderer from "./../renderer.js";
+import TextureCache from "./../texture_cache.js";
 import video from "./../video.js";
 
 
@@ -48,7 +49,7 @@ class CanvasRenderer extends Renderer {
         this.setColor(this.currentColor);
 
         // create a texture cache
-        this.cache = new Renderer.TextureCache();
+        this.cache = new TextureCache();
 
         if (this.settings.textureSeamFix !== false && !this.settings.antiAlias) {
             // enable the tile texture seam fix with the canvas renderer
