@@ -71,10 +71,10 @@
     "karma-jasmine": "^4.0.1",
     "karma-nyan-reporter": "0.2.5",
     "qs": ">=6.0.4",
-    "rollup": "^2.26.3",
+    "rollup": "^2.26.4",
     "rollup-plugin-bundle-size": "^1.0.3",
     "rollup-plugin-string": "^3.0.0",
-    "terser": "^5.2.0"
+    "terser": "^5.2.1"
   },
   "scripts": {
     "build": "npm run lint && rollup -c --silent --sourcemap",
