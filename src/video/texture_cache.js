@@ -1,5 +1,6 @@
 import Renderer from "./renderer.js";
 import video from "./video.js";
+import utils from "./../utils/utils.js";
 
 (function () {
 
@@ -50,7 +51,7 @@ import video from "./video.js";
                 if (!atlas) {
                     atlas = video.renderer.Texture.prototype.createAtlas.apply(
                         video.renderer.Texture.prototype,
-                        [image.width, image.height, image.src ? me.utils.file.getBasename(image.src) : undefined]
+                        [image.width, image.height, image.src ? utils.file.getBasename(image.src) : undefined]
                     );
                 }
                 this.set(image, new video.renderer.Texture(atlas, image, false));

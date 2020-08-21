@@ -1,5 +1,6 @@
 import Vector2d from "./../math/vector2.js";
 import ObservableVector2d from "./../math/observable_vector2.js";
+import utils from "./../utils/utils.js";
 
 (function () {
 
@@ -417,7 +418,7 @@ import ObservableVector2d from "./../math/observable_vector2.js";
          * @return {Number} the shape array length
          */
         removeShape : function (shape) {
-            me.utils.array.remove(this.shapes, shape);
+            utils.array.remove(this.shapes, shape);
 
             // update the body bounds to take in account the removed shape
             this.updateBounds();

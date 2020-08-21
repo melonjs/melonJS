@@ -1,4 +1,5 @@
 import Vector2d from "./../math/vector2.js";
+import utils from "./../utils/utils.js";
 
 /*
  * A QuadTree implementation in JavaScript, a 2d spatial subdivision algorithm.
@@ -304,7 +305,7 @@ import Vector2d from "./../math/vector2.js";
             var index = this.getIndex(item);
 
             if (index !== -1) {
-                found = me.utils.array.remove(this.nodes[index], item);
+                found = utils.array.remove(this.nodes[index], item);
                 // trim node if empty
                 if (found && this.nodes[index].isPrunable()) {
                     this.nodes.splice(index, 1);
@@ -315,7 +316,7 @@ import Vector2d from "./../math/vector2.js";
         if (found === false) {
             // try and remove the item from the list of items in this node
             if (this.objects.indexOf(item) !== -1) {
-                me.utils.array.remove(this.objects, item);
+                utils.array.remove(this.objects, item);
                 found = true;
             }
         }

@@ -1,3 +1,5 @@
+import utils from "./../utils/utils.js";
+
 (function () {
     /**
      * a small class to manage loading of stuff and manage resources
@@ -124,7 +126,7 @@
 
             var xmlhttp = new XMLHttpRequest();
             // check the data format ('tmx', 'json')
-            var format = me.utils.file.getExtension(tmxData.src);
+            var format = utils.file.getExtension(tmxData.src);
 
             if (xmlhttp.overrideMimeType) {
                 if (format === "json") {
@@ -728,7 +730,7 @@
          */
         api.getImage = function (image) {
             // force as string and extract the base name
-            image = me.utils.file.getBasename("" + image);
+            image = utils.file.getBasename("" + image);
             if (image in imgList) {
                 // return the corresponding Image object
                 return imgList[image];

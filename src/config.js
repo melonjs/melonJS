@@ -1,4 +1,4 @@
-
+import utils from "./utils/utils.js";
 
 (function () {
 
@@ -49,7 +49,7 @@
         me.timer.init();
 
         // enable/disable the cache
-        me.loader.setNocache( me.utils.getUriFragment().nocache || false );
+        me.loader.setNocache( utils.getUriFragment().nocache || false );
 
         // init the App Manager
         me.state.init();

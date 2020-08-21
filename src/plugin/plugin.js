@@ -1,3 +1,5 @@
+import utils from "./../utils/utils.js";
+
 (function () {
     /**
      * There is no constructor function for me.plugins<br>
@@ -132,7 +134,7 @@
             }
 
             // compatibility testing
-            if (me.utils.checkVersion(instance.version) > 0) {
+            if (utils.checkVersion(instance.version) > 0) {
                 throw new Error("Plugin version mismatch, expected: " + instance.version + ", got: " + me.version);
             }
 

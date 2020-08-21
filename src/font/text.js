@@ -1,6 +1,7 @@
 import Color from "./../math/color.js";
 import Renderer from "./../video/renderer.js";
 import video from "./../video/video.js";
+import utils from "./../utils/utils.js";
 
 /*
  * ASCII Table
@@ -310,7 +311,7 @@ import video from "./../video/video.js";
             // compute the bounding box size
             this.height = this.width = 0;
             for (var i = 0; i < strings.length; i++) {
-                this.width = Math.max(context.measureText(me.utils.string.trimRight(""+strings[i])).width, this.width);
+                this.width = Math.max(context.measureText(utils.string.trimRight(""+strings[i])).width, this.width);
                 this.height += lineHeight;
             }
             textMetrics.width = Math.ceil(this.width);
@@ -423,7 +424,7 @@ import video from "./../video/video.js";
 
             var lineHeight = this.fontSize * this.lineHeight;
             for (var i = 0; i < text.length; i++) {
-                var string = me.utils.string.trimRight(""+text[i]);
+                var string = utils.string.trimRight(""+text[i]);
                 // draw the string
                 context[stroke ? "strokeText" : "fillText"](string, x, y);
                 // add leading space

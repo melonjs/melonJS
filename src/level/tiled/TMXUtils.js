@@ -1,3 +1,5 @@
+import utils from "./../../utils/utils.js";
+
 (function () {
 
     /**
@@ -39,11 +41,11 @@
 
                 default :
                     // try to parse it anyway
-                    if (!value || me.utils.string.isBoolean(value)) {
+                    if (!value || utils.string.isBoolean(value)) {
                         // if value not defined or boolean
                         value = value ? (value === "true") : true;
                     }
-                    else if (me.utils.string.isNumeric(value)) {
+                    else if (utils.string.isNumeric(value)) {
                         // check if numeric
                         value = Number(value);
                     }

@@ -1,4 +1,5 @@
 import Color from "./../math/color.js";
+import utils from "./../utils/utils.js";
 
 (function () {
 
@@ -290,7 +291,7 @@ import Color from "./../math/color.js";
 
             for (var i = 0; i < this._text.length; i++) {
                 x = lX;
-                var string = me.utils.string.trimRight(this._text[i]);
+                var string = utils.string.trimRight(this._text[i]);
                 // adjust x pos based on alignment value
                 var stringWidth = measureTextWidth(this, string);
                 switch (this.textAlign) {

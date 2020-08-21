@@ -1,3 +1,5 @@
+import utils from "./../utils/utils.js";
+
 (function () {
     /**
      * a level manager object <br>
@@ -54,7 +56,7 @@
         /**
          * Load a TMX level
          * @name loadTMXLevel
-         * @memberOf me.game
+         * @memberOf me.levelDirector
          * @private
          * @param {String} level level id
          * @param {me.Container} target container
@@ -68,7 +70,7 @@
 
             // reset the GUID generator
             // and pass the level id as parameter
-            me.utils.resetGUID(levelId, level.nextobjectid);
+            utils.resetGUID(levelId, level.nextobjectid);
 
             // Tiled use 0,0 anchor coordinates
             container.anchorPoint.set(0, 0);
@@ -188,7 +190,7 @@
                     // some silly side effects
                     me.state.stop();
 
-                    me.utils.function.defer(safeLoadLevel, this, levelId, options, true);
+                    utils.function.defer(safeLoadLevel, this, levelId, options, true);
                 }
                 else {
                     safeLoadLevel(levelId, options);

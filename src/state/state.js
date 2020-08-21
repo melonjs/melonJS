@@ -1,3 +1,5 @@
+import utils from "./../utils/utils.js";
+
 (function () {
 
     /**
@@ -575,7 +577,7 @@
                     _fade.color,
                     _fade.duration,
                     function () {
-                        me.utils.function.defer(_switchState, this, state);
+                        utils.function.defer(_switchState, this, state);
                     }
                 );
 
@@ -587,7 +589,7 @@
                 if (forceChange === true) {
                     _switchState(state);
                 } else {
-                    me.utils.function.defer(_switchState, this, state);
+                    utils.function.defer(_switchState, this, state);
                 }
             }
         };

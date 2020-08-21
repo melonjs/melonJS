@@ -1,3 +1,5 @@
+import utils from "./../utils/utils.js";
+
 (function () {
     /**
      * Private function to re-use for object removal in a defer
@@ -188,7 +190,7 @@
                 // (e.g. move one child from one container to another)
                 if (child.isRenderable) {
                     // allocated a GUID value (use child.id as based index if defined)
-                    child.GUID = me.utils.createGUID(child.id);
+                    child.GUID = utils.createGUID(child.id);
                 }
             }
 
@@ -242,7 +244,7 @@
                     // (e.g. move one child from one container to another)
                     if (child.isRenderable) {
                         // allocated a GUID value
-                        child.GUID = me.utils.createGUID();
+                        child.GUID = utils.createGUID();
                     }
                 }
                 child.ancestor = this;
@@ -590,7 +592,7 @@
          */
         removeChild : function (child, keepalive) {
             if (this.hasChild(child)) {
-                me.utils.function.defer(deferredRemove, this, child, keepalive);
+                utils.function.defer(deferredRemove, this, child, keepalive);
             }
             else {
                 throw new Error("Child is not mine.");
@@ -744,7 +746,7 @@
                     }
                 }
                 /** @ignore */
-                this.pendingSort = me.utils.function.defer(function (self) {
+                this.pendingSort = utils.function.defer(function (self) {
                     // sort everything in this container
                     self.children.sort(self["_sort" + self.sortOn.toUpperCase()]);
                     // clear the defer id

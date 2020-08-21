@@ -1,3 +1,5 @@
+import utils from "./../utils/utils.js";
+
 (function () {
     /**
      * a Timer object to manage timing related function (FPS, Game Tick, Time...)<p>
@@ -232,7 +234,7 @@
          * @param {Number} timeoutID ID of the timeout to be cleared
          */
         api.clearTimeout = function (timeoutID) {
-            me.utils.function.defer(clearTimer, this, timeoutID);
+            utils.function.defer(clearTimer, this, timeoutID);
         };
 
         /**
@@ -243,7 +245,7 @@
          * @param {Number} intervalID ID of the interval to be cleared
          */
         api.clearInterval = function (intervalID) {
-            me.utils.function.defer(clearTimer, this, intervalID);
+            utils.function.defer(clearTimer, this, intervalID);
         };
 
         /**

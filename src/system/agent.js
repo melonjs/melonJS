@@ -1,3 +1,5 @@
+import utils from "./../utils/utils.js";
+
 (function () {
 
     /**
@@ -30,7 +32,7 @@
                 return obj[name];
             }
 
-            var uc_name = me.utils.string.capitalize(name);
+            var uc_name = utils.string.capitalize(name);
 
             var result;
             vendors.some(function (vendor) {
@@ -58,7 +60,7 @@
                 return;
             }
 
-            var uc_name = me.utils.string.capitalize(name);
+            var uc_name = utils.string.capitalize(name);
 
             vendors.some(function (vendor) {
                 var name = vendor + uc_name;

@@ -2,6 +2,7 @@ import {preventDefault} from "./input.js";
 import {getBindingKey, triggerKeyEvent} from "./keyboard.js";
 import Vector2d from "./../math/vector2.js";
 import video from "./../video/video.js";
+import utils from "./../utils/utils.js";
 
 
 /**
@@ -171,7 +172,7 @@ function enablePointerEvent() {
                 if (activeEventList.indexOf(events[i]) !== -1) {
                     pointerEventTarget.addEventListener(
                         events[i],
-                        me.utils.function.throttle(
+                        utils.function.throttle(
                             onMoveEvent,
                             throttlingInterval,
                             false
@@ -713,7 +714,7 @@ export function releasePointerEvent(eventType, region, callback) {
             eventType = eventTypes[i];
             if (handlers.callbacks[eventType]) {
                 if (typeof (callback) !== "undefined") {
-                    me.utils.array.remove(handlers.callbacks[eventType], callback);
+                    utils.array.remove(handlers.callbacks[eventType], callback);
                 } else {
                     while (handlers.callbacks[eventType].length > 0) {
                         handlers.callbacks[eventType].pop();

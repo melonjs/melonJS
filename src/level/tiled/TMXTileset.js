@@ -1,5 +1,6 @@
 import Vector2d from "./../../math/vector2.js";
 import video from "./../../video/video.js";
+import utils from "./../../utils/utils.js";
 
 (function () {
 
@@ -34,10 +35,10 @@ import video from "./../../video/video.js";
             // check if an external tileset is defined
             if (typeof(tileset.source) !== "undefined") {
                 var src = tileset.source;
-                var ext = me.utils.file.getExtension(src);
+                var ext = utils.file.getExtension(src);
                 if (ext === "tsx" || ext === "json") {
                     // load the external tileset (TSX/JSON)
-                    tileset = me.loader.getTMX(me.utils.file.getBasename(src));
+                    tileset = me.loader.getTMX(utils.file.getBasename(src));
                     if (!tileset) {
                         throw new Error(src + " external TSX/JSON tileset not found");
                     }

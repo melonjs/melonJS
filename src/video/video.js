@@ -2,6 +2,7 @@ import Vector2d from "./../math/vector2.js";
 import {warning} from "./../lang/deprecated";
 import WebGLRenderer from "./webgl/webgl_renderer.js";
 import CanvasRenderer from "./canvas/canvas_renderer.js";
+import utils from "./../utils/utils.js";
 
 var designRatio = 1;
 var designWidth = 0;
@@ -179,7 +180,7 @@ var video = {
         }
 
         // override renderer settings if &webgl is defined in the URL
-        var uriFragment = me.utils.getUriFragment();
+        var uriFragment = utils.getUriFragment();
         if (uriFragment.webgl === true || uriFragment.webgl1 === true || uriFragment.webgl2 === true) {
             settings.renderer = this.WEBGL;
             if (uriFragment.webgl2 === true) {
@@ -208,7 +209,7 @@ var video = {
         //add a channel for the onresize/onorientationchange event
         window.addEventListener(
             "resize",
-            me.utils.function.throttle(
+            utils.function.throttle(
                 function (event) {
                     me.event.publish(me.event.WINDOW_ONRESIZE, [ event ]);
                 }, 100
@@ -239,7 +240,7 @@ var video = {
         }
 
         // Automatically update relative canvas position on scroll
-        window.addEventListener("scroll", me.utils.function.throttle(
+        window.addEventListener("scroll", utils.function.throttle(
             function (e) {
                 me.event.publish(me.event.WINDOW_ONSCROLL, [ e ]);
             }, 100
