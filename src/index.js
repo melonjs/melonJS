@@ -4,6 +4,7 @@ import "./polyfill/requestAnimationFrame.js";
 
 // utility classes
 import audio from "./audio/audio.js";
+import event from "./system/event.js";
 import game from "./game.js";
 import * as Math from "./math/math.js";
 import utils from "./utils/utils.js";
@@ -46,6 +47,7 @@ export const version = "__VERSION__";
 // export all utility function
 export {
     audio,
+    event,
     game,
     Math,
     utils,

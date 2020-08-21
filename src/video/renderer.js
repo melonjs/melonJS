@@ -1,5 +1,6 @@
 import Color from "./../math/color.js";
 import video from "./video.js";
+import event from "./../system/event.js";
 
 /**
  * @classdesc
@@ -85,7 +86,7 @@ class Renderer {
         this.parentBounds = new me.Rect(0, 0, 0, 0);
 
         // reset the instantiated renderer on game reset
-        me.event.subscribe(me.event.GAME_RESET, function () {
+        event.subscribe(event.GAME_RESET, function () {
             video.renderer.reset();
         });
 
@@ -279,7 +280,7 @@ class Renderer {
             this.currentScissor[2] = width;
             this.currentScissor[3] = height;
             // publish the corresponding event
-            me.event.publish(me.event.CANVAS_ONRESIZE, [ width, height ]);
+            event.publish(event.CANVAS_ONRESIZE, [ width, height ]);
         }
     }
 

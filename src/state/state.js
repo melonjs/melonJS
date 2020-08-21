@@ -1,4 +1,5 @@
 import utils from "./../utils/utils.js";
+import event from "./../system/event.js";
 
 (function () {
 
@@ -283,7 +284,7 @@ import utils from "./../utils/utils.js";
             // set and enable the default stage
             api.set(me.state.DEFAULT, new me.Stage());
             // enable by default as soon as the display is initialized
-            me.event.subscribe(me.event.VIDEO_INIT, function () {
+            event.subscribe(event.VIDEO_INIT, function () {
                 me.state.change(me.state.DEFAULT, true);
             });
         };
@@ -310,7 +311,7 @@ import utils from "./../utils/utils.js";
                 _pauseTime = window.performance.now();
 
                 // publish the stop notification
-                me.event.publish(me.event.STATE_STOP);
+                event.publish(event.STATE_STOP);
                 // any callback defined ?
                 if (typeof(api.onStop) === "function") {
                     api.onStop();
@@ -340,7 +341,7 @@ import utils from "./../utils/utils.js";
                 _pauseTime = window.performance.now();
 
                 // publish the pause event
-                me.event.publish(me.event.STATE_PAUSE);
+                event.publish(event.STATE_PAUSE);
                 // any callback defined ?
                 if (typeof(api.onPause) === "function") {
                     api.onPause();
@@ -372,7 +373,7 @@ import utils from "./../utils/utils.js";
                 me.game.repaint();
 
                 // publish the restart notification
-                me.event.publish(me.event.STATE_RESTART, [ _pauseTime ]);
+                event.publish(event.STATE_RESTART, [ _pauseTime ]);
                 // any callback defined ?
                 if (typeof(api.onRestart) === "function") {
                     api.onRestart();
@@ -401,7 +402,7 @@ import utils from "./../utils/utils.js";
                 _pauseTime = window.performance.now() - _pauseTime;
 
                 // publish the resume event
-                me.event.publish(me.event.STATE_RESUME, [ _pauseTime ]);
+                event.publish(event.STATE_RESUME, [ _pauseTime ]);
                 // any callback defined ?
                 if (typeof(api.onResume) === "function") {
                     api.onResume();

@@ -3,7 +3,6 @@
   "src/lang/object.js",
   "src/system/agent.js",
   "src/system/device.js",
-  "src/system/event.js",
   "src/config.js",
   "src/system/timer.js",
   "src/system/pooling.js",

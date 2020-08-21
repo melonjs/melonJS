@@ -1,4 +1,6 @@
 import Vector2d from "./../math/vector2.js";
+import game from "./../game.js";
+import event from "./../system/event.js";
 
 (function () {
 
@@ -78,12 +80,12 @@ import Vector2d from "./../math/vector2.js";
             this.broadphase = new me.QuadTree(this.getBounds().clone(), me.collision.maxChildren, me.collision.maxDepth);
 
             // reset the world container on the game reset signal
-            me.event.subscribe(me.event.GAME_RESET, this.reset.bind(this));
+            event.subscribe(event.GAME_RESET, this.reset.bind(this));
 
             // update the broadband world bounds if a new level is loaded
-            me.event.subscribe(me.event.LEVEL_LOADED, function () {
+            event.subscribe(event.LEVEL_LOADED, function () {
                 // reset the quadtree
-                me.game.world.broadphase.clear(me.game.world.getBounds());
+                game.world.broadphase.clear(game.world.getBounds());
             });
         },
 

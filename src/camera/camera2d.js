@@ -3,6 +3,7 @@ import Vector3d from "./../math/vector3.js";
 import ObservableVector2d from "./../math/observable_vector2.js";
 import ObservableVector3d from "./../math/observable_vector3.js";
 import video from "./../video/video.js";
+import event from "./../system/event.js";
 
 (function () {
     // some ref shortcut
@@ -161,9 +162,9 @@ import video from "./../video/video.js";
             this._updateProjectionMatrix();
 
             // subscribe to the game reset event
-            me.event.subscribe(me.event.GAME_RESET, this.reset.bind(this));
+            event.subscribe(event.GAME_RESET, this.reset.bind(this));
             // subscribe to the canvas resize event
-            me.event.subscribe(me.event.CANVAS_ONRESIZE, this.resize.bind(this));
+            event.subscribe(event.CANVAS_ONRESIZE, this.resize.bind(this));
         },
 
         // -- some private function ---
@@ -287,7 +288,7 @@ import video from "./../video/video.js";
             this._updateProjectionMatrix();
 
             // publish the viewport resize event
-            me.event.publish(me.event.VIEWPORT_ONRESIZE, [ this.width, this.height ]);
+            event.publish(event.VIEWPORT_ONRESIZE, [ this.width, this.height ]);
 
             return this;
         },
@@ -408,7 +409,7 @@ import video from "./../video/video.js";
 
             //publish the VIEWPORT_ONCHANGE event if necessary
             if (_x !== this.pos.x || _y !== this.pos.y) {
-                me.event.publish(me.event.VIEWPORT_ONCHANGE, [this.pos]);
+                event.publish(event.VIEWPORT_ONCHANGE, [this.pos]);
             }
         },
 
@@ -489,7 +490,7 @@ import video from "./../video/video.js";
 
             if (updated === true) {
                 //publish the corresponding message
-                me.event.publish(me.event.VIEWPORT_ONCHANGE, [this.pos]);
+                event.publish(event.VIEWPORT_ONCHANGE, [this.pos]);
             }
 
             // check for fade/flash effect

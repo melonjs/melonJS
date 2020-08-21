@@ -1,4 +1,4 @@
-
+import event from "./../../system/event.js";
 
 /**
  * @private
@@ -285,7 +285,7 @@ class GLShader {
         this.uniforms = extractUniforms(this.gl, this);
 
         // destroy the shader on context lost (will be recreated on context restore)
-        me.event.subscribe(me.event.WEBGL_ONCONTEXT_LOST, this.destroy.bind(this));
+        event.subscribe(event.WEBGL_ONCONTEXT_LOST, this.destroy.bind(this));
 
         return this;
     }

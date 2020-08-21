@@ -1,4 +1,6 @@
 import video from "./../video/video.js";
+import event from "./../system/event.js";
+import {nextPowerOfTwo} from "./../math/math.js";
 
 (function () {
     // a basic progress bar object
@@ -15,13 +17,13 @@ import video from "./../video/video.js";
 
             this.anchorPoint.set(0, 0);
 
-            this.loaderHdlr = me.event.subscribe(
-                me.event.LOADER_PROGRESS,
+            this.loaderHdlr = event.subscribe(
+                event.LOADER_PROGRESS,
                 self.onProgressUpdate.bind(self)
             );
 
-            this.resizeHdlr = me.event.subscribe(
-                me.event.VIEWPORT_ONRESIZE,
+            this.resizeHdlr = event.subscribe(
+                event.VIEWPORT_ONRESIZE,
                 self.resize.bind(self)
             );
 
@@ -60,8 +62,8 @@ import video from "./../video/video.js";
          */
         onDestroyEvent : function () {
             // cancel the callback
-            me.event.unsubscribe(this.loaderHdlr);
-            me.event.unsubscribe(this.resizeHdlr);
+            event.unsubscribe(this.loaderHdlr);
+            event.unsubscribe(this.resizeHdlr);
             this.loaderHdlr = this.resizeHdlr = null;
         }
 
@@ -76,8 +78,8 @@ import video from "./../video/video.js";
             this._super(me.Renderable, "init", [x, y, 100, 85]);
 
             this.iconCanvas = video.createCanvas(
-                me.Math.nextPowerOfTwo(this.width),
-                me.Math.nextPowerOfTwo(this.height),
+                nextPowerOfTwo(this.width),
+                nextPowerOfTwo(this.height),
             false);
 
             var context = video.renderer.getContext2d(this.iconCanvas);

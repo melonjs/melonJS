@@ -1,4 +1,5 @@
 import video from "./video/video.js";
+import event from "./system/event.js";
 
 /**
  * me.game represents your current game, it contains all the objects,
@@ -101,7 +102,7 @@ var game = {
         this.world = new me.World();
 
         // publish init notification
-        me.event.publish(me.event.GAME_INIT);
+        event.publish(event.GAME_INIT);
 
         // make display dirty by default
         isDirty = true;
@@ -123,7 +124,7 @@ var game = {
         }
 
         // publish reset notification
-        me.event.publish(me.event.GAME_RESET);
+        event.publish(event.GAME_RESET);
 
         // Refresh internal variables for framerate  limiting
         this.updateFrameRate();
@@ -194,7 +195,7 @@ var game = {
             frameCounter = 0;
 
             // game update event
-            me.event.publish(me.event.GAME_UPDATE, [ time ]);
+            event.publish(event.GAME_UPDATE, [ time ]);
 
             accumulator += me.timer.getDelta();
             accumulator = Math.min(accumulator, accumulatorMax);

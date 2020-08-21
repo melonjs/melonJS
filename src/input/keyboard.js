@@ -1,4 +1,5 @@
 import {preventDefault as preventDefaultAction} from "./input.js";
+import event from "./../system/event.js";
 
 // corresponding actions
 var _keyStatus = {};
@@ -27,7 +28,7 @@ var keyDownEvent = function (e, keyCode, mouseButton) {
     var action = _keyBindings[keyCode];
 
     // publish a message for keydown event
-    me.event.publish(me.event.KEYDOWN, [
+    event.publish(event.KEYDOWN, [
         action,
         keyCode,
         action ? !_keyLocked[action] : true
@@ -64,7 +65,7 @@ var keyUpEvent = function (e, keyCode, mouseButton) {
     var action = _keyBindings[keyCode];
 
     // publish a message for keydown event
-    me.event.publish(me.event.KEYUP, [ action, keyCode ]);
+    event.publish(event.KEYUP, [ action, keyCode ]);
 
     if (action) {
         var trigger = (typeof mouseButton !== "undefined") ? mouseButton : keyCode;

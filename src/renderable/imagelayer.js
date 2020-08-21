@@ -1,4 +1,5 @@
 import video from "./../video/video.js";
+import event from "./../system/event.js";
 
 (function () {
 
@@ -164,16 +165,16 @@ import video from "./../video/video.js";
             this.repeat = settings.repeat || "repeat";
 
             // on context lost, all previous textures are destroyed
-            me.event.subscribe(me.event.WEBGL_ONCONTEXT_RESTORED, this.createPattern.bind(this));
+            event.subscribe(event.WEBGL_ONCONTEXT_RESTORED, this.createPattern.bind(this));
         },
 
         // called when the layer is added to the game world or a container
         onActivateEvent : function () {
             var _updateLayerFn = this.updateLayer.bind(this);
             // register to the viewport change notification
-            this.vpChangeHdlr = me.event.subscribe(me.event.VIEWPORT_ONCHANGE, _updateLayerFn);
-            this.vpResizeHdlr = me.event.subscribe(me.event.VIEWPORT_ONRESIZE, this.resize.bind(this));
-            this.vpLoadedHdlr = me.event.subscribe(me.event.LEVEL_LOADED, function() {
+            this.vpChangeHdlr = event.subscribe(event.VIEWPORT_ONCHANGE, _updateLayerFn);
+            this.vpResizeHdlr = event.subscribe(event.VIEWPORT_ONRESIZE, this.resize.bind(this));
+            this.vpLoadedHdlr = event.subscribe(event.LEVEL_LOADED, function() {
                 // force a first refresh when the level is loaded
                 _updateLayerFn(me.game.viewport.pos);
             });
@@ -304,9 +305,9 @@ import video from "./../video/video.js";
         // called when the layer is removed from the game world or a container
         onDeactivateEvent : function () {
             // cancel all event subscriptions
-            me.event.unsubscribe(this.vpChangeHdlr);
-            me.event.unsubscribe(this.vpResizeHdlr);
-            me.event.unsubscribe(this.vpLoadedHdlr);
+            event.unsubscribe(this.vpChangeHdlr);
+            event.unsubscribe(this.vpResizeHdlr);
+            event.unsubscribe(this.vpLoadedHdlr);
         },
 
         /**

@@ -1,4 +1,5 @@
 import utils from "./../utils/utils.js";
+import event from "./../system/event.js";
 
 (function () {
     /**
@@ -42,7 +43,7 @@ import utils from "./../utils/utils.js";
             loadTMXLevel(levelId, options.container, options.flatten, options.setViewportBounds);
 
             // publish the corresponding message
-            me.event.publish(me.event.LEVEL_LOADED, [ levelId ]);
+            event.publish(event.LEVEL_LOADED, [ levelId ]);
 
             // fire the callback
             options.onLoaded(levelId);

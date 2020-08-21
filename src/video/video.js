@@ -3,6 +3,8 @@ import {warning} from "./../lang/deprecated";
 import WebGLRenderer from "./webgl/webgl_renderer.js";
 import CanvasRenderer from "./canvas/canvas_renderer.js";
 import utils from "./../utils/utils.js";
+import event from "./../system/event.js";
+import game from "./../game.js";
 
 var designRatio = 1;
 var designWidth = 0;
@@ -210,8 +212,8 @@ var video = {
         window.addEventListener(
             "resize",
             utils.function.throttle(
-                function (event) {
-                    me.event.publish(me.event.WINDOW_ONRESIZE, [ event ]);
+                function (e) {
+                    event.publish(event.WINDOW_ONRESIZE, [ e ]);
                 }, 100
             ), false
         );
@@ -219,40 +221,40 @@ var video = {
         // Screen Orientation API
         window.addEventListener(
             "orientationchange",
-            function (event) {
-                me.event.publish(me.event.WINDOW_ONORIENTATION_CHANGE, [ event ]);
+            function (e) {
+                event.publish(event.WINDOW_ONORIENTATION_CHANGE, [ e ]);
             },
             false
         );
         // pre-fixed implementation on mozzila
         window.addEventListener(
             "onmozorientationchange",
-            function (event) {
-                me.event.publish(me.event.WINDOW_ONORIENTATION_CHANGE, [ event ]);
+            function (e) {
+                event.publish(event.WINDOW_ONORIENTATION_CHANGE, [ e ]);
             },
             false
         );
         if (typeof window.screen !== "undefined") {
             // is this one required ?
-            window.screen.onorientationchange = function (event) {
-                me.event.publish(me.event.WINDOW_ONORIENTATION_CHANGE, [ event ]);
+            window.screen.onorientationchange = function (e) {
+                event.publish(event.WINDOW_ONORIENTATION_CHANGE, [ e ]);
             };
         }
 
         // Automatically update relative canvas position on scroll
         window.addEventListener("scroll", utils.function.throttle(
             function (e) {
-                me.event.publish(me.event.WINDOW_ONSCROLL, [ e ]);
+                event.publish(event.WINDOW_ONSCROLL, [ e ]);
             }, 100
         ), false);
 
         // register to the channel
-        me.event.subscribe(
-            me.event.WINDOW_ONRESIZE,
+        event.subscribe(
+            event.WINDOW_ONRESIZE,
             this.onresize.bind(this)
         );
-        me.event.subscribe(
-            me.event.WINDOW_ONORIENTATION_CHANGE,
+        event.subscribe(
+            event.WINDOW_ONORIENTATION_CHANGE,
             this.onresize.bind(this)
         );
 
@@ -316,7 +318,7 @@ var video = {
         }
 
         // notify the video has been initialized
-        me.event.publish(me.event.VIDEO_INIT);
+        event.publish(event.VIDEO_INIT);
 
         return true;
     },
@@ -472,7 +474,7 @@ var video = {
         renderer.setBlendMode(settings.blendMode, context);
 
         // force repaint
-        me.game.repaint();
+        game.repaint();
     }
 };
 

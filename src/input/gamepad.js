@@ -1,4 +1,5 @@
 import {getBindingKey, triggerKeyEvent} from "./keyboard.js";
+import event from "./../system/event.js";
 
 // Analog deadzone
 var deadzone = 0.1;
@@ -201,7 +202,7 @@ var updateGamepads = function () {
                 }
             }
 
-            me.event.publish(me.event.GAMEPAD_UPDATE, [ index, "buttons", +button, current ]);
+            event.publish(event.GAMEPAD_UPDATE, [ index, "buttons", +button, current ]);
 
             // Edge detection
             if (!last.pressed && current.pressed) {
@@ -245,7 +246,7 @@ var updateGamepads = function () {
             }
             var pressed = (Math.abs(value) >= (deadzone + Math.abs(last[range].threshold)));
 
-            me.event.publish(me.event.GAMEPAD_UPDATE, [ index, "axes", +axis, value ]);
+            event.publish(event.GAMEPAD_UPDATE, [ index, "axes", +axis, value ]);
 
             // Edge detection
             if (!last[range].pressed && pressed) {
@@ -274,16 +275,16 @@ var updateGamepads = function () {
  * gamepad connected callback
  * @ignore
  */
-window.addEventListener("gamepadconnected", function (event) {
-    me.event.publish(me.event.GAMEPAD_CONNECTED, [ event.gamepad ]);
+window.addEventListener("gamepadconnected", function (e) {
+    event.publish(event.GAMEPAD_CONNECTED, [ e.gamepad ]);
 }, false);
 
 /**
  * gamepad disconnected callback
  * @ignore
  */
-window.addEventListener("gamepaddisconnected", function (event) {
-    me.event.publish(me.event.GAMEPAD_DISCONNECTED, [ event.gamepad ]);
+window.addEventListener("gamepaddisconnected", function (e) {
+    event.publish(event.GAMEPAD_DISCONNECTED, [ e.gamepad ]);
 }, false);
 
 /*
@@ -394,7 +395,7 @@ export function bindGamepad(index, button, keyCode) {
     // register to the the update event if not yet done and supported by the browser
     // if not supported, the function will fail silently (-> update loop won't be called)
     if (typeof updateEventHandler === "undefined" && typeof navigator.getGamepads === "function") {
-        updateEventHandler = me.event.subscribe(me.event.GAME_UPDATE, updateGamepads);
+        updateEventHandler = event.subscribe(event.GAME_UPDATE, updateGamepads);
     }
 
     // Allocate bindings if not defined

@@ -1,4 +1,5 @@
 import utils from "./../utils/utils.js";
+import event from "./../system/event.js";
 
 (function () {
     /**
@@ -42,7 +43,7 @@ import utils from "./../utils/utils.js";
                     var callback = onload || api.onload;
                     setTimeout(function () {
                         callback();
-                        me.event.publish(me.event.LOADER_COMPLETE);
+                        event.publish(event.LOADER_COMPLETE);
                     }, 300);
                 }
                 else {
@@ -382,7 +383,7 @@ import utils from "./../utils/utils.js";
                 // pass the load progress in percent, as parameter
                 api.onProgress(progress, res);
             }
-            me.event.publish(me.event.LOADER_PROGRESS, [progress, res]);
+            event.publish(event.LOADER_PROGRESS, [progress, res]);
         };
 
         /**

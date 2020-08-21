@@ -1,5 +1,6 @@
 import Vector2d from "./../../math/vector2.js";
 import GLShader from "./glshader.js";
+import event from "./../../system/event.js";
 
 import primitiveVertex from "./shaders/primitive.vert";
 import primitiveFragment from "./shaders/primitive.frag";
@@ -130,8 +131,8 @@ class WebGLCompositor {
         gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, this.createIB(), gl.STATIC_DRAW);
 
         // register to the CANVAS resize channel
-        me.event.subscribe(
-            me.event.CANVAS_ONRESIZE, (function(width, height) {
+        event.subscribe(
+            event.CANVAS_ONRESIZE, (function(width, height) {
                 this.flush();
                 this.setViewport(0, 0, width, height);
             }).bind(this)

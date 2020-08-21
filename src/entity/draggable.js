@@ -1,5 +1,6 @@
 import Vector2d from "./../math/vector2.js";
 import * as input from "./../input/input.js";
+import event from "./../system/event.js";
 
 /**
  * Used to make a game entity draggable
@@ -143,4 +144,4 @@ me.DraggableEntity = (function (Entity, Input, Event, Vector) {
             this.removePointerEvent("pointerup", this);
         }
     });
-}(me.Entity, input, me.event, Vector2d));
+}(me.Entity, input, event, Vector2d));

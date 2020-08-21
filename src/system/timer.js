@@ -1,4 +1,5 @@
 import utils from "./../utils/utils.js";
+import event from "./../system/event.js";
 
 (function () {
     /**
@@ -146,7 +147,7 @@ import utils from "./../utils/utils.js";
             api.reset();
             now = last = 0;
             // register to the game update event
-            me.event.subscribe(me.event.GAME_UPDATE, updateTimers);
+            event.subscribe(event.GAME_UPDATE, updateTimers);
         };
 
         /**

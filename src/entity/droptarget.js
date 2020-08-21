@@ -1,3 +1,5 @@
+import event from "./../system/event.js";
+
 /**
  * Used to make a game entity a droptarget
  * @class
@@ -100,4 +102,4 @@ me.DroptargetEntity = (function (Entity, Event) {
             Event.unsubscribe(Event.DRAGEND, this.checkOnMe);
         }
     });
-}(me.Entity, me.event));
+}(me.Entity, event));

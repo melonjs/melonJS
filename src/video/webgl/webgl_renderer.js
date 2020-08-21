@@ -3,6 +3,7 @@ import Vector2d from "./../../math/vector2.js";
 import WebGLCompositor from "./webgl_compositor.js";
 import Renderer from "./../renderer.js";
 import video from "./../video.js";
+import event from "./../../system/event.js";
 
 
 /**
@@ -150,16 +151,16 @@ class WebGLRenderer extends Renderer {
         // ctx.loseContext()
         // reference to this renderer
         var renderer = this;
-        this.getScreenCanvas().addEventListener("webglcontextlost", function (event) {
+        this.getScreenCanvas().addEventListener("webglcontextlost", function (e) {
             event.preventDefault();
             renderer.isContextValid = false;
-            me.event.publish(me.event.WEBGL_ONCONTEXT_LOST, [ renderer ]);
+            event.publish(event.WEBGL_ONCONTEXT_LOST, [ renderer ]);
         }, false );
         // ctx.restoreContext()
-        this.getScreenCanvas().addEventListener("webglcontextrestored", function (event) {
+        this.getScreenCanvas().addEventListener("webglcontextrestored", function (e) {
             renderer.reset();
             renderer.isContextValid = true;
-            me.event.publish(me.event.WEBGL_ONCONTEXT_RESTORED, [ renderer ]);
+            event.publish(event.WEBGL_ONCONTEXT_RESTORED, [ renderer ]);
         }, false );
 
         return this;

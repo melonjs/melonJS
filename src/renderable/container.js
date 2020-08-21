@@ -1,4 +1,6 @@
 import utils from "./../utils/utils.js";
+import game from "./../game.js";
+import event from "./../system/event.js";
 
 (function () {
     /**
@@ -67,7 +69,7 @@ import utils from "./../utils/utils.js";
              * @name sortOn
              * @memberOf me.Container
              */
-            this.sortOn = me.game.sortOn;
+            this.sortOn = game.sortOn;
 
             /**
              * Specify if the children list should be automatically sorted when adding a new child
@@ -134,7 +136,7 @@ import utils from "./../utils/utils.js";
             // subscribe on the canvas resize event
             if (this.root === true) {
                 // XXX: Workaround for not updating container child-bounds automatically (it's expensive!)
-                me.event.subscribe(me.event.CANVAS_ONRESIZE, this.updateChildBounds.bind(this));
+                event.subscribe(event.CANVAS_ONRESIZE, this.updateChildBounds.bind(this));
             }
         },
 
@@ -216,7 +218,7 @@ import utils from "./../utils/utils.js";
 
             // force repaint in case this is a static non-animated object
             if (this.isAttachedToRoot() === true) {
-                me.game.repaint();
+                game.repaint();
             }
 
             this.onChildChange.call(this, this.children.length - 1);
@@ -257,7 +259,7 @@ import utils from "./../utils/utils.js";
 
                 // force repaint in case this is a static non-animated object
                 if (this.isAttachedToRoot() === true) {
-                    me.game.repaint();
+                    game.repaint();
                 }
 
                 this.onChildChange.call(this, index);
@@ -634,7 +636,7 @@ import utils from "./../utils/utils.js";
 
                 // force repaint in case this is a static non-animated object
                 if (this.isAttachedToRoot() === true) {
-                    me.game.repaint();
+                    game.repaint();
                 }
 
                 this.onChildChange.call(this, childIndex);
@@ -752,7 +754,7 @@ import utils from "./../utils/utils.js";
                     // clear the defer id
                     self.pendingSort = null;
                     // make sure we redraw everything
-                    me.game.repaint();
+                    game.repaint();
                 }, this, this);
             }
         },

@@ -3,6 +3,7 @@ import {getBindingKey, triggerKeyEvent} from "./keyboard.js";
 import Vector2d from "./../math/vector2.js";
 import video from "./../video/video.js";
 import utils from "./../utils/utils.js";
+import event from "./../system/event.js";
 
 
 /**
@@ -266,7 +267,7 @@ function dispatchEvent(normalizedEvents) {
         if (POINTER_MOVE.includes(pointer.type)) {
             pointer.gameX = pointer.gameLocalX = pointer.gameScreenX;
             pointer.gameY = pointer.gameLocalY = pointer.gameScreenY;
-            me.event.publish(me.event.POINTERMOVE, [pointer]);
+            event.publish(event.POINTERMOVE, [pointer]);
         }
 
         var candidates = me.game.world.broadphase.retrieve(currentPointer, me.Container.prototype._sortReverseZ);
@@ -397,17 +398,17 @@ function dispatchEvent(normalizedEvents) {
  * translate event coordinates
  * @ignore
  */
-function normalizeEvent(event) {
+function normalizeEvent(originalEvent) {
     var pointer;
 
     // PointerEvent or standard Mouse event
-    if (me.device.TouchEvent && event.changedTouches) {
+    if (me.device.TouchEvent && originalEvent.changedTouches) {
         // iOS/Android Touch event
-        for (var i = 0, l = event.changedTouches.length; i < l; i++) {
-            var touchEvent = event.changedTouches[i];
+        for (var i = 0, l = originalEvent.changedTouches.length; i < l; i++) {
+            var touchEvent = originalEvent.changedTouches[i];
             pointer = T_POINTERS.pop();
             pointer.setEvent(
-                event,
+                originalEvent,
                 touchEvent.pageX,
                 touchEvent.pageY,
                 touchEvent.clientX,
@@ -420,18 +421,18 @@ function normalizeEvent(event) {
         // Mouse or PointerEvent
         pointer = T_POINTERS.pop();
         pointer.setEvent(
-            event,
-            event.pageX,
-            event.pageY,
-            event.clientX,
-            event.clientY,
-            event.pointerId
+            originalEvent,
+            originalEvent.pageX,
+            originalEvent.pageY,
+            originalEvent.clientX,
+            originalEvent.clientY,
+            originalEvent.pointerId
         );
         normalizedEvents.push(pointer);
     }
 
     // if event.isPrimary is defined and false, return
-    if (event.isPrimary === false) {
+    if (originalEvent.isPrimary === false) {
         return normalizedEvents;
     }
 
