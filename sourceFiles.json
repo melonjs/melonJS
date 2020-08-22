@@ -34,7 +34,6 @@
   "src/video/texture.js",
   "src/video/texture_cache.js",
   "src/input/pointer.js",
-  "src/system/save.js",
   "src/level/LevelDirector.js",
   "src/level/tiled/TMXUtils.js",
   "src/level/tiled/TMXGroup.js",

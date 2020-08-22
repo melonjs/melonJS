@@ -1,4 +1,5 @@
 import video from "./../video/video.js";
+import save from "./../system/save.js";
 
 (function () {
     /**
@@ -810,15 +811,13 @@ import video from "./../video/video.js";
          * @memberOf me.device
          * @function
          * @param {String} [type="local"]
-         * @return me.save object
+         * @see me.save
+         * @return {Object} a reference to the device storage
          */
-        api.getStorage = function (type) {
-
-            type = type || "local";
-
+        api.getStorage = function (type = "local") {
             switch (type) {
                 case "local" :
-                    return me.save;
+                    return save;
 
                 default :
                     throw new Error("storage type " + type + " not supported");

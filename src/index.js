@@ -10,6 +10,7 @@ import * as Math from "./math/math.js";
 import utils from "./utils/utils.js";
 import * as input from "./input/input.js";
 import video from "./video/video.js";
+import save from "./system/save.js";
 
 // class definition
 import Color from "./math/color.js";
@@ -49,9 +50,10 @@ export {
     audio,
     event,
     game,
+    input,
     Math,
     utils,
-    input,
+    save,
     video
 };
 
