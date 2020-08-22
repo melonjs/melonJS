@@ -1,5 +1,6 @@
 import video from "./video/video.js";
 import event from "./system/event.js";
+import timer from "./system/timer.js";
 
 /**
  * me.game represents your current game, it contains all the objects,
@@ -142,7 +143,7 @@ var game = {
     updateFrameRate : function () {
         // reset the frame counter
         frameCounter = 0;
-        frameRate = ~~(0.5 + 60 / me.timer.maxfps);
+        frameRate = ~~(0.5 + 60 / timer.maxfps);
 
         // set step size based on the updatesPerSecond
         stepSize = (1000 / this.world.fps);
@@ -151,7 +152,7 @@ var game = {
 
         // display should always re-draw when update speed doesn't match fps
         // this means the user intends to write position prediction drawing logic
-        isAlwaysDirty = (me.timer.maxfps > this.world.fps);
+        isAlwaysDirty = (timer.maxfps > this.world.fps);
     },
 
     /**
@@ -197,23 +198,23 @@ var game = {
             // game update event
             event.publish(event.GAME_UPDATE, [ time ]);
 
-            accumulator += me.timer.getDelta();
+            accumulator += timer.getDelta();
             accumulator = Math.min(accumulator, accumulatorMax);
 
-            updateDelta = (me.timer.interpolation) ? me.timer.getDelta() : stepSize;
-            accumulatorUpdateDelta = (me.timer.interpolation) ? updateDelta : Math.max(updateDelta, updateAverageDelta);
+            updateDelta = (timer.interpolation) ? timer.getDelta() : stepSize;
+            accumulatorUpdateDelta = (timer.interpolation) ? updateDelta : Math.max(updateDelta, updateAverageDelta);
 
-            while (accumulator >= accumulatorUpdateDelta || me.timer.interpolation) {
+            while (accumulator >= accumulatorUpdateDelta || timer.interpolation) {
                 lastUpdateStart = window.performance.now();
 
                 // update all objects (and pass the elapsed time since last frame)
                 isDirty = stage.update(updateDelta) || isDirty;
 
-                me.timer.lastUpdate = window.performance.now();
-                updateAverageDelta = me.timer.lastUpdate - lastUpdateStart;
+                timer.lastUpdate = window.performance.now();
+                updateAverageDelta = timer.lastUpdate - lastUpdateStart;
 
                 accumulator -= accumulatorUpdateDelta;
-                if (me.timer.interpolation) {
+                if (timer.interpolation) {
                     accumulator = 0;
                     break;
                 }

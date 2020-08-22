@@ -11,6 +11,7 @@ import utils from "./utils/utils.js";
 import * as input from "./input/input.js";
 import video from "./video/video.js";
 import save from "./system/save.js";
+import timer from "./system/timer.js";
 
 // class definition
 import Color from "./math/color.js";
@@ -54,6 +55,7 @@ export {
     Math,
     utils,
     save,
+    timer,
     video
 };
 

@@ -4,7 +4,6 @@
   "src/system/agent.js",
   "src/system/device.js",
   "src/config.js",
-  "src/system/timer.js",
   "src/system/pooling.js",
   "src/math/matrix2.js",
   "src/math/matrix3.js",

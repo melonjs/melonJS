@@ -1,3 +1,5 @@
+import timer from "./../system/timer.js";
+
 (function () {
 
     /**
@@ -128,9 +130,9 @@
                 this.released = false;
                 if (this.isHoldable) {
                     if (this.holdTimeout !== null) {
-                        me.timer.clearTimeout(this.holdTimeout);
+                        timer.clearTimeout(this.holdTimeout);
                     }
-                    this.holdTimeout = me.timer.setTimeout(this.hold.bind(this), this.holdThreshold, false);
+                    this.holdTimeout = timer.setTimeout(this.hold.bind(this), this.holdThreshold, false);
                     this.released = false;
                 }
                 return this.onClick.call(this, event);
@@ -197,7 +199,7 @@
         release : function (event) {
             if (this.released === false) {
                 this.released = true;
-                me.timer.clearTimeout(this.holdTimeout);
+                timer.clearTimeout(this.holdTimeout);
                 return this.onRelease.call(this, event);
             }
         },
@@ -221,7 +223,7 @@
          * @ignore
          */
         hold : function () {
-            me.timer.clearTimeout(this.holdTimeout);
+            timer.clearTimeout(this.holdTimeout);
             if (!this.released) {
                 this.onHold.call(this);
             }
@@ -261,7 +263,7 @@
             me.input.releasePointerEvent("pointercancel", this);
             me.input.releasePointerEvent("pointerenter", this);
             me.input.releasePointerEvent("pointerleave", this);
-            me.timer.clearTimeout(this.holdTimeout);
+            timer.clearTimeout(this.holdTimeout);
         }
     });
 })();

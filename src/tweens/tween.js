@@ -1,3 +1,5 @@
+import timer from "./../system/timer.js";
+
 /**
  * Tween.js - Licensed under the MIT license
  * https://github.com/tweenjs/tween.js
@@ -83,7 +85,7 @@
             _onStartCallbackFired = false;
             _onUpdateCallback = null;
             _onCompleteCallback = null;
-            _tweenTimeTracker = me.timer.lastUpdate;
+            _tweenTimeTracker = timer.lastUpdate;
 
             // reset flags to default value
             this.isPersistent = false;
@@ -161,7 +163,7 @@
             // add the tween to the object pool on start
             me.game.world.addChild(this);
 
-            _startTime = (typeof(_time) === 'undefined' ? me.timer.getTime() : _time) + _delayTime;
+            _startTime = (typeof(_time) === 'undefined' ? timer.getTime() : _time) + _delayTime;
 
             for ( var property in _valuesEnd ) {
 
@@ -340,7 +342,7 @@
 
             // the original Tween implementation expect
             // a timestamp and not a time delta
-            _tweenTimeTracker = (me.timer.lastUpdate > _tweenTimeTracker) ? me.timer.lastUpdate : _tweenTimeTracker + dt;
+            _tweenTimeTracker = (timer.lastUpdate > _tweenTimeTracker) ? timer.lastUpdate : _tweenTimeTracker + dt;
             var time = _tweenTimeTracker;
 
             var property;

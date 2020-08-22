@@ -1,4 +1,5 @@
 import Vector2d from "./../math/vector2.js";
+import timer from "./../system/timer.js";
 
 (function () {
     /**
@@ -66,7 +67,7 @@ import Vector2d from "./../math/vector2.js";
             this.pos.z = emitter.z;
 
             // cache inverse of the expected delta time
-            this._deltaInv = me.timer.maxfps / 1000;
+            this._deltaInv = timer.maxfps / 1000;
 
             // Set the start particle rotation as defined in emitter
             // if the particle not follow trajectory

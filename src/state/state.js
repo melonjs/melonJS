@@ -1,5 +1,6 @@
 import utils from "./../utils/utils.js";
 import event from "./../system/event.js";
+import timer from "./../system/timer.js";
 
 (function () {
 
@@ -52,7 +53,7 @@ import event from "./../system/event.js";
             // ensure nothing is running first and in valid state
             if ((_animFrameId === -1) && (_state !== -1)) {
                 // reset the timer
-                me.timer.reset();
+                timer.reset();
 
                 // start the main loop
                 _animFrameId = window.requestAnimationFrame(_renderFrame);
@@ -67,7 +68,7 @@ import event from "./../system/event.js";
             // ensure game is actually paused and in valid state
             if (_isPaused && (_state !== -1)) {
                 // reset the timer
-                me.timer.reset();
+                timer.reset();
 
                 _isPaused = false;
             }

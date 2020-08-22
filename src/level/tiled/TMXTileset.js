@@ -1,6 +1,7 @@
 import Vector2d from "./../../math/vector2.js";
 import video from "./../../video/video.js";
 import utils from "./../../utils/utils.js";
+import timer from "./../../system/timer.js";
 
 (function () {
 
@@ -235,7 +236,7 @@ import utils from "./../../utils/utils.js";
         // update tile animations
         update : function (dt) {
             var duration = 0,
-                now = me.timer.getTime(),
+                now = timer.getTime(),
                 result = false;
 
             if (this._lastUpdate !== now) {

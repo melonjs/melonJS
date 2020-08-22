@@ -4,6 +4,7 @@ import Vector2d from "./../math/vector2.js";
 import video from "./../video/video.js";
 import utils from "./../utils/utils.js";
 import event from "./../system/event.js";
+import timer from "./../system/timer.js";
 
 
 /**
@@ -139,7 +140,7 @@ function enablePointerEvent() {
         // set the PointerMove/touchMove/MouseMove event
         if (typeof(throttlingInterval) === "undefined") {
             // set the default value
-            throttlingInterval = ~~(1000 / me.timer.maxfps);
+            throttlingInterval = ~~(1000 / timer.maxfps);
         }
 
         if (me.device.autoFocus === true) {

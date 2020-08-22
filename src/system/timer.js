@@ -1,85 +1,74 @@
 import utils from "./../utils/utils.js";
 import event from "./../system/event.js";
 
-(function () {
-    /**
-     * a Timer object to manage timing related function (FPS, Game Tick, Time...)<p>
-     * There is no constructor function for me.timer
-     * @namespace me.timer
-     * @memberOf me
-     */
-    me.timer = (function () {
-        // hold public stuff in our api
-        var api = {};
+//hold element to display fps
+var framecount = 0;
+var framedelta = 0;
 
-        /*
-         * PRIVATE STUFF
-         */
+/* fps count stuff */
+var last = 0;
+var now = 0;
+var delta = 0;
+// for timeout/interval update
+var step =0;
+var minstep = 0;
 
-        //hold element to display fps
-        var framecount = 0;
-        var framedelta = 0;
+// list of defined timer function
+var timers = [];
+var timerId = 0;
 
-        /* fps count stuff */
-        var last = 0;
-        var now = 0;
-        var delta = 0;
-        // for timeout/interval update
-        var step =0;
-        var minstep = 0;
+/**
+ * @ignore
+ */
+function clearTimer(timerId) {
+    for (var i = 0, len = timers.length; i < len; i++) {
+        if (timers[i].timerId === timerId) {
+            timers.splice(i, 1);
+            break;
+        }
+    }
+};
 
-        // list of defined timer function
-        var timers = [];
-        var timerId = 0;
+/**
+ * update timers
+ * @ignore
+ */
+function updateTimers(time) {
+    last = now;
+    now = time;
+    delta = (now - last);
 
-        /**
-         * @ignore
-         */
-        var clearTimer = function (timerId) {
-            for (var i = 0, len = timers.length; i < len; i++) {
-                if (timers[i].timerId === timerId) {
-                    timers.splice(i, 1);
-                    break;
-                }
+    // fix for negative timestamp returned by wechat or chrome on startup
+    if (delta < 0) {
+        delta = 0;
+    }
+
+    // get the game tick
+    timer.tick = (delta > minstep && timer.interpolation) ? delta / step : 1;
+
+    for (var i = 0, len = timers.length; i < len; i++) {
+        var _timer = timers[i];
+        if (!(_timer.pauseable && me.state.isPaused())) {
+            _timer.elapsed += delta;
+        }
+        if (_timer.elapsed >= _timer.delay) {
+            _timer.fn.apply(null, _timer.args);
+            if (_timer.repeat === true) {
+                _timer.elapsed -= _timer.delay;
+            } else {
+                timer.clearTimeout(_timer.timerId);
             }
-        };
+        }
+    }
+};
 
-        /**
-         * update timers
-         * @ignore
-         */
-        var updateTimers = function (time) {
-            last = now;
-            now = time;
-            delta = (now - last);
 
-            // fix for negative timestamp returned by wechat or chrome on startup
-            if (delta < 0) {
-                delta = 0;
-            }
-
-            // get the game tick
-            api.tick = (delta > minstep && me.timer.interpolation) ? delta / step : 1;
-
-            for (var i = 0, len = timers.length; i < len; i++) {
-                var _timer = timers[i];
-                if (!(_timer.pauseable && me.state.isPaused())) {
-                    _timer.elapsed += delta;
-                }
-                if (_timer.elapsed >= _timer.delay) {
-                    _timer.fn.apply(null, _timer.args);
-                    if (_timer.repeat === true) {
-                        _timer.elapsed -= _timer.delay;
-                    } else {
-                        me.timer.clearTimeout(_timer.timerId);
-                    }
-                }
-            }
-        };
-
-        /*
-         * PUBLIC STUFF
-         */
+/**
+ * a Timer class to manage timing related function (FPS, Game Tick, Time...)
+ * @namespace me.timer
+ * @memberOf me
+ */
+var timer = {
 
         /**
          * Last game tick value.<br/>
@@ -93,7 +82,7 @@ import event from "./../system/event.js";
          * @name tick
          * @memberOf me.timer
          */
-        api.tick = 1.0;
+        tick : 1.0,
 
         /**
          * Last measured fps rate.<br/>
@@ -103,7 +92,7 @@ import event from "./../system/event.js";
          * @name fps
          * @memberOf me.timer
          */
-        api.fps = 0;
+        fps : 0,
 
         /**
          * Set the maximum target display frame per second
@@ -114,7 +103,7 @@ import event from "./../system/event.js";
          * @default 60
          * @memberOf me.timer
          */
-        api.maxfps = 60;
+        maxfps : 60,
 
         /**
          * Enable/disable frame interpolation
@@ -124,7 +113,7 @@ import event from "./../system/event.js";
          * @name interpolation
          * @memberOf me.timer
          */
-        api.interpolation = false;
+        interpolation : false,
 
         /**
          * Last update time.<br/>
@@ -136,19 +125,19 @@ import event from "./../system/event.js";
          * @name lastUpdate
          * @memberOf me.timer
          */
-        api.lastUpdate = window.performance.now();
+        lastUpdate : window.performance.now(),
 
         /**
          * init the timer
          * @ignore
          */
-        api.init = function () {
+        init() {
             // reset variables to initial state
-            api.reset();
+            this.reset();
             now = last = 0;
             // register to the game update event
             event.subscribe(event.GAME_UPDATE, updateTimers);
-        };
+        },
 
         /**
          * reset time (e.g. usefull in case of pause)
@@ -157,17 +146,17 @@ import event from "./../system/event.js";
          * @ignore
          * @function
          */
-        api.reset = function () {
+        reset() {
             // set to "now"
             last = now = window.performance.now();
             delta = 0;
             // reset delta counting variables
             framedelta = 0;
             framecount = 0;
-            step = Math.ceil(1000 / api.maxfps); // ROUND IT ?
+            step = Math.ceil(1000 / this.maxfps); // ROUND IT ?
             // define some step with some margin
-            minstep = (1000 / api.maxfps) * 1.25; // IS IT NECESSARY?\
-        };
+            minstep = (1000 / this.maxfps) * 1.25; // IS IT NECESSARY?\
+        },
 
         /**
          * Calls a function once after a specified delay. See me.timer.setInterval to repeativly call a function.
@@ -185,7 +174,7 @@ import event from "./../system/event.js";
          * // set a timer to call "myFunction" after 1000ms (respecting the pause state) and passing param1 and param2
          * me.timer.setTimeout(myFunction, 1000, true, param1, param2);
          */
-        api.setTimeout = function (fn, delay, pauseable) {
+        setTimeout(fn, delay, pauseable) {
             timers.push({
                 fn : fn,
                 delay : delay,
@@ -196,7 +185,7 @@ import event from "./../system/event.js";
                 args : arguments.length > 3 ? Array.prototype.slice.call(arguments, 3) : undefined
             });
             return timerId;
-        };
+        },
 
         /**
          * Calls a function continously at the specified interval.  See setTimeout to call function a single time.
@@ -214,7 +203,7 @@ import event from "./../system/event.js";
          * // set a timer to call "myFunction" every 1000ms (respecting the pause state) and passing param1 and param2
          * me.timer.setInterval(myFunction, 1000, true, param1, param2);
          */
-        api.setInterval = function (fn, delay, pauseable) {
+        setInterval(fn, delay, pauseable) {
             timers.push({
                 fn : fn,
                 delay : delay,
@@ -225,7 +214,7 @@ import event from "./../system/event.js";
                 args : arguments.length > 3 ? Array.prototype.slice.call(arguments, 3) : undefined
             });
             return timerId;
-        };
+        },
 
         /**
          * Clears the delay set by me.timer.setTimeout().
@@ -234,9 +223,9 @@ import event from "./../system/event.js";
          * @function
          * @param {Number} timeoutID ID of the timeout to be cleared
          */
-        api.clearTimeout = function (timeoutID) {
+        clearTimeout(timeoutID) {
             utils.function.defer(clearTimer, this, timeoutID);
-        };
+        },
 
         /**
          * Clears the Interval set by me.timer.setInterval().
@@ -245,9 +234,9 @@ import event from "./../system/event.js";
          * @function
          * @param {Number} intervalID ID of the interval to be cleared
          */
-        api.clearInterval = function (intervalID) {
+        clearInterval(intervalID) {
             utils.function.defer(clearTimer, this, intervalID);
-        };
+        },
 
         /**
          * Return the current timestamp in milliseconds <br>
@@ -257,9 +246,9 @@ import event from "./../system/event.js";
          * @return {Number}
          * @function
          */
-        api.getTime = function () {
+        getTime() {
             return now;
-        };
+        },
 
         /**
          * Return elapsed time in milliseconds since the last update
@@ -268,9 +257,9 @@ import event from "./../system/event.js";
          * @return {Number}
          * @function
          */
-        api.getDelta = function () {
+        getDelta() {
             return delta;
-        };
+        },
 
         /**
          * compute the actual frame time and fps rate
@@ -279,17 +268,15 @@ import event from "./../system/event.js";
          * @memberOf me.timer
          * @function
          */
-        api.countFPS = function () {
+        countFPS() {
             framecount++;
             framedelta += delta;
             if (framecount % 10 === 0) {
-                api.fps = me.Math.clamp(Math.round((1000 * framecount) / framedelta), 0, api.maxfps);
+                this.fps = me.Math.clamp(Math.round((1000 * framecount) / framedelta), 0, this.maxfps);
                 framedelta = 0;
                 framecount = 0;
             }
-        };
+        }
+};
 
-        // return our api
-        return api;
-    })();
-})();
+export default timer;

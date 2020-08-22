@@ -1,3 +1,5 @@
+import timer from "./../system/timer.js";
+
 var lastTime = 0;
 var vendors = ["ms", "moz", "webkit", "o"];
 var x;
@@ -19,7 +21,7 @@ for (x = 0; x < vendors.length && !cancelAnimationFrame; ++x) {
 if (!requestAnimationFrame || !cancelAnimationFrame) {
     requestAnimationFrame = function (callback) {
         var currTime = window.performance.now();
-        var timeToCall = Math.max(0, (1000 / me.timer.maxfps) - (currTime - lastTime));
+        var timeToCall = Math.max(0, (1000 / timer.maxfps) - (currTime - lastTime));
         var id = window.setTimeout(function () {
             callback(currTime + timeToCall);
         }, timeToCall);

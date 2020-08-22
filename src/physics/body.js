@@ -1,6 +1,7 @@
 import Vector2d from "./../math/vector2.js";
 import ObservableVector2d from "./../math/observable_vector2.js";
 import utils from "./../utils/utils.js";
+import timer from "./../system/timer.js";
 
 (function () {
 
@@ -605,10 +606,10 @@ import utils from "./../utils/utils.js";
          * @ignore
          */
         applyFriction : function (vel) {
-            var fx = this.friction.x * me.timer.tick,
+            var fx = this.friction.x * timer.tick,
                 nx = vel.x + fx,
                 x = vel.x - fx,
-                fy = this.friction.y * me.timer.tick,
+                fy = this.friction.y * timer.tick,
                 ny = vel.y + fy,
                 y = vel.y - fy;
 
@@ -631,10 +632,10 @@ import utils from "./../utils/utils.js";
 
             // apply fore if defined
             if (this.force.x) {
-                vel.x += this.force.x * me.timer.tick;
+                vel.x += this.force.x * timer.tick;
             }
             if (this.force.y) {
-                vel.y += this.force.y * me.timer.tick;
+                vel.y += this.force.y * timer.tick;
             }
 
             // apply friction
@@ -645,8 +646,8 @@ import utils from "./../utils/utils.js";
             if (!this.ignoreGravity) {
                 var worldGravity = me.game.world.gravity;
                 // apply gravity if defined
-                vel.x += worldGravity.x * this.gravityScale * this.mass * me.timer.tick;
-                vel.y += worldGravity.y * this.gravityScale * this.mass * me.timer.tick;
+                vel.x += worldGravity.x * this.gravityScale * this.mass * timer.tick;
+                vel.y += worldGravity.y * this.gravityScale * this.mass * timer.tick;
                 // check if falling / jumping
                 this.falling = (vel.y * Math.sign(worldGravity.y * this.gravityScale)) > 0;
                 this.jumping = (this.falling ? false : this.jumping);
