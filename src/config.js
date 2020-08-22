@@ -1,4 +1,8 @@
+import game from "./game.js";
 import utils from "./utils/utils.js";
+import timer from "./system/timer.js";
+import save from "./system/save.js";
+import * as input from "./input/input.js";
 
 (function () {
 
@@ -43,10 +47,10 @@ import utils from "./utils/utils.js";
         me.pool.init();
 
         // initialize me.save
-        me.save.init();
+        save.init();
 
         // init the FPS counter if needed
-        me.timer.init();
+        timer.init();
 
         // enable/disable the cache
         me.loader.setNocache( utils.getUriFragment().nocache || false );
@@ -55,13 +59,13 @@ import utils from "./utils/utils.js";
         me.state.init();
 
         // automatically enable keyboard events
-        me.input.initKeyboardEvent();
+        input.initKeyboardEvent();
 
         // init the level Director
         me.levelDirector.init();
 
         // game instance init
-        me.game.init();
+        game.init();
 
         // mark melonJS as initialized
         me.initialized = true;
