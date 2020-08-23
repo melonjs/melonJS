@@ -3,6 +3,7 @@ import video from "./video.js";
 import event from "./../system/event.js";
 import device from "./../system/device.js";
 import { setPrefixed } from "./../utils/agent.js";
+import { Texture } from "./texture.js";
 
 /**
  * @classdesc
@@ -86,6 +87,8 @@ class Renderer {
 
         // the parent container bouds
         this.parentBounds = new me.Rect(0, 0, 0, 0);
+
+        this.Texture = Texture;
 
         // reset the instantiated renderer on game reset
         event.subscribe(event.GAME_RESET, function () {

@@ -25,8 +25,6 @@
   "src/font/text.js",
   "src/font/bitmaptext.js",
   "src/font/bitmaptextdata.js",
-  "src/video/texture.js",
-  "src/video/texture_cache.js",
   "src/input/pointer.js",
   "src/level/LevelDirector.js",
   "src/level/tiled/TMXUtils.js",

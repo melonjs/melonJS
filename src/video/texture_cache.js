@@ -1,5 +1,6 @@
 import video from "./video.js";
 import utils from "./../utils/utils.js";
+import {Texture, createAtlas } from "./texture.js";
 
 
 /**
@@ -48,12 +49,9 @@ class TextureCache {
     get(image, atlas) {
         if (!this.cache.has(image)) {
             if (!atlas) {
-                atlas = video.renderer.Texture.prototype.createAtlas.apply(
-                    video.renderer.Texture.prototype,
-                    [image.width, image.height, image.src ? utils.file.getBasename(image.src) : undefined]
-                );
+                atlas = createAtlas(image.width, image.height, image.src ? utils.file.getBasename(image.src) : undefined);
             }
-            this.set(image, new video.renderer.Texture(atlas, image, false));
+            this.set(image, new Texture(atlas, image, false));
         }
         return this.cache.get(image);
     }

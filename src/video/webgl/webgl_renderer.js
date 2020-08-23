@@ -3,6 +3,7 @@ import Vector2d from "./../../math/vector2.js";
 import WebGLCompositor from "./webgl_compositor.js";
 import Renderer from "./../renderer.js";
 import TextureCache from "./../texture_cache.js";
+import {Texture, createAtlas } from "./../texture.js";
 import video from "./../video.js";
 import event from "./../../system/event.js";
 
@@ -243,14 +244,7 @@ class WebGLRenderer extends Renderer {
             /**
              * @ignore
              */
-            this.fontTexture = new this.Texture(
-                this.Texture.prototype.createAtlas.apply(
-                    this.Texture.prototype,
-                    [ canvas.width, canvas.height, "fontTexture"]
-                ),
-                image,
-                cache
-            );
+            this.fontTexture = new Texture(createAtlas(canvas.width, canvas.height, "fontTexture"), image, cache);
             this.currentCompositor.uploadTexture(this.fontTexture, 0, 0, 0);
 
         } else {
@@ -284,13 +278,7 @@ class WebGLRenderer extends Renderer {
             );
         }
 
-        var texture = new this.Texture(
-            this.Texture.prototype.createAtlas.apply(
-                this.Texture.prototype,
-                [ image.width, image.height, "pattern", repeat]
-            ),
-            image
-        );
+        var texture = new Texture(createAtlas(image.width, image.height, "pattern", repeat), image);
 
         // FIXME: Remove old cache entry and texture when changing the repeat mode
         this.currentCompositor.uploadTexture(texture);

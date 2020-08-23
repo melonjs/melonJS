@@ -125,21 +125,10 @@ export function warning(deprecated, replacement, version) {
     };
 
     /**
-     * @ignore
+     * @function me.video.getPos
+     * @deprecated since 7.0.0
+     * @see me.device.getElementBounds
      */
-    me.CanvasRenderer.prototype.Texture = me.Renderer.prototype.Texture;
-
-    /**
-     * @ignore
-     */
-    me.WebGLRenderer.prototype.Texture = me.Renderer.prototype.Texture;
-
-
-     /**
-      * @function me.video.getPos
-      * @deprecated since 7.0.0
-      * @see me.device.getElementBounds
-      */
     me.video.getPos = function() {
         warning("me.video.getPos()", "me.device.getElementBounds(me.video.renderer.getScreenCanvas());", "7.0.0");
         return me.device.getElementBounds(me.video.renderer.getScreenCanvas());
