@@ -15,7 +15,6 @@
   "src/renderable/GUI.js",
   "src/renderable/container.js",
   "src/physics/body.js",
-  "src/physics/quadtree.js",
   "src/physics/collision.js",
   "src/physics/world.js",
   "src/camera/camera2d.js",

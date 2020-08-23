@@ -1,6 +1,7 @@
 import Vector2d from "./../math/vector2.js";
 import game from "./../game.js";
 import event from "./../system/event.js";
+import QuadTree from "./quadtree.js";
 
 (function () {
 
@@ -77,7 +78,7 @@ import event from "./../system/event.js";
              * @public
              * @type {me.QuadTree}
              */
-            this.broadphase = new me.QuadTree(this.getBounds().clone(), me.collision.maxChildren, me.collision.maxDepth);
+            this.broadphase = new QuadTree(this.getBounds().clone(), me.collision.maxChildren, me.collision.maxDepth);
 
             // reset the world container on the game reset signal
             event.subscribe(event.GAME_RESET, this.reset.bind(this));

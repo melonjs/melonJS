@@ -21,6 +21,7 @@ import Vector2d from "./math/vector2.js";
 import Vector3d from "./math/vector3.js";
 import ObservableVector2d from "./math/observable_vector2.js";
 import ObservableVector3d from "./math/observable_vector3.js";
+import QuadTree from "./physics/quadtree.js";
 import GLShader from "./video/webgl/glshader.js";
 import WebGLCompositor from "./video/webgl/webgl_compositor.js";
 import Renderer from "./video/renderer.js";
@@ -70,6 +71,7 @@ export {
     Vector3d,
     ObservableVector2d,
     ObservableVector3d,
+    QuadTree,
     GLShader,
     WebGLCompositor,
     Renderer,

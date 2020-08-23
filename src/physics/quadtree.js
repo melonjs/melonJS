@@ -1,5 +1,6 @@
 import Vector2d from "./../math/vector2.js";
 import utils from "./../utils/utils.js";
+import game from "./../game.js";
 
 /*
  * A QuadTree implementation in JavaScript, a 2d spatial subdivision algorithm.
@@ -7,59 +8,57 @@ import utils from "./../utils/utils.js";
  * https://github.com/timohausmann/quadtree-js/
 **/
 
-(function () {
 
+/**
+ * a pool of `QuadTree` objects
+ */
+var QT_ARRAY = [];
 
-    /**
-     * a pool of `QuadTree` objects
-     */
-    var QT_ARRAY = [];
+/**
+ * will pop a quadtree object from the array
+ * or create a new one if the array is empty
+ */
+function QT_ARRAY_POP(bounds, max_objects, max_levels, level) {
+    if (QT_ARRAY.length > 0) {
+        var _qt =  QT_ARRAY.pop();
+        _qt.bounds = bounds;
+        _qt.max_objects = max_objects || 4;
+        _qt.max_levels  = max_levels || 4;
+        _qt.level = level || 0;
+        return _qt;
+    } else {
+        return new QuadTree(bounds, max_objects, max_levels, level);
+    }
+};
 
-    /**
-     * will pop a quadtree object from the array
-     * or create a new one if the array is empty
-     */
-    var QT_ARRAY_POP = function (bounds, max_objects, max_levels, level) {
-        if (QT_ARRAY.length > 0) {
-            var _qt =  QT_ARRAY.pop();
-            _qt.bounds = bounds;
-            _qt.max_objects = max_objects || 4;
-            _qt.max_levels  = max_levels || 4;
-            _qt.level = level || 0;
-            return _qt;
-        } else {
-            return new me.QuadTree(bounds, max_objects, max_levels, level);
-        }
-    };
+/**
+ * Push back a quadtree back into the array
+ */
+function QT_ARRAY_PUSH(qt) {
+    QT_ARRAY.push(qt);
+};
 
-    /**
-     * Push back a quadtree back into the array
-     */
-    var QT_ARRAY_PUSH = function (qt) {
-        QT_ARRAY.push(qt);
-    };
+/**
+ * a temporary vector object to be reused
+ */
+var QT_VECTOR = new Vector2d();
 
-    /**
-     * a temporary vector object to be reused
-     */
-    var QT_VECTOR = new Vector2d();
+/**
+ * @classdesc
+ * a QuadTree implementation in JavaScript, a 2d spatial subdivision algorithm.
+ * @class
+ * @name QuadTree
+ * @memberOf me
+ * @constructor
+ * @see me.game.world.broadphase
+ * @param {me.Rect} bounds bounds of the node
+ * @param {Number} [max_objects=4] max objects a node can hold before splitting into 4 subnodes
+ * @param {Number} [max_levels=4] total max levels inside root Quadtree
+ * @param {Number} [level] deepth level, required for subnodes
+ */
+class QuadTree {
 
-
-    /**
-     * Quadtree Constructor <br>
-     * note: the global quadtree instance is available through `me.collision.quadTree`
-     * @class
-     * @name QuadTree
-     * @extends Object
-     * @memberOf me
-     * @constructor
-     * @see me.collision.quadTree
-     * @param {me.Rect} bounds bounds of the node
-     * @param {Number} [max_objects=4] max objects a node can hold before splitting into 4 subnodes
-     * @param {Number} [max_levels=4] total max levels inside root Quadtree
-     * @param {Number} [level] deepth level, required for subnodes
-     */
-    function Quadtree(bounds, max_objects, max_levels, level) {
+    constructor(bounds, max_objects, max_levels, level) {
         this.max_objects = max_objects || 4;
         this.max_levels  = max_levels || 4;
 
@@ -70,12 +69,10 @@ import utils from "./../utils/utils.js";
         this.nodes = [];
     }
 
-
     /*
      * Split the node into 4 subnodes
      */
-    Quadtree.prototype.split = function () {
-
+    split() {
         var nextLevel = this.level + 1,
             subWidth  = ~~(0.5 + this.bounds.width / 2),
             subHeight = ~~(0.5 + this.bounds.height / 2),
@@ -121,22 +118,20 @@ import utils from "./../utils/utils.js";
             width : subWidth,
             height : subHeight
         }, this.max_objects, this.max_levels, nextLevel);
-    };
-
+    }
 
     /*
      * Determine which node the object belongs to
      * @param {me.Rect} rect bounds of the area to be checked
      * @return Integer index of the subnode (0-3), or -1 if rect cannot completely fit within a subnode and is part of the parent node
      */
-    Quadtree.prototype.getIndex = function (item) {
-
+    getIndex(item) {
         var rect = item.getBounds(),
             pos = rect.pos;
 
         // use world coordinates for floating items
         if (item.floating || (item.ancestor && item.ancestor.floating)) {
-            pos = me.game.viewport.localToWorld(pos.x, pos.y, QT_VECTOR);
+            pos = game.viewport.localToWorld(pos.x, pos.y, QT_VECTOR);
         }
 
         var index = -1,
@@ -168,7 +163,7 @@ import utils from "./../utils/utils.js";
         }
 
         return index;
-    };
+    }
 
     /**
      * Insert the given object container into the node.
@@ -177,8 +172,7 @@ import utils from "./../utils/utils.js";
      * @function
      * @param {me.Container} container group of objects to be added
      */
-    Quadtree.prototype.insertContainer = function (container) {
-
+    insertContainer(container) {
         for (var i = container.children.length, child; i--, (child = container.children[i]);) {
             if (child.isKinematic !== true) {
                 if (child instanceof me.Container) {
@@ -196,7 +190,7 @@ import utils from "./../utils/utils.js";
                 }
             }
         }
-    };
+    }
 
     /**
      * Insert the given object into the node. If the node
@@ -207,8 +201,7 @@ import utils from "./../utils/utils.js";
      * @function
      * @param {Object} item object to be added
      */
-    Quadtree.prototype.insert = function (item) {
-
+    insert(item) {
         var index = -1;
 
         //if we have subnodes ...
@@ -244,7 +237,7 @@ import utils from "./../utils/utils.js";
                 }
             }
         }
-    };
+    }
 
     /**
      * Return all objects that could collide with the given object
@@ -255,8 +248,7 @@ import utils from "./../utils/utils.js";
      * @param {Object} [function] a sorting function for the returned array
      * @return {Object[]} array with all detected objects
      */
-    Quadtree.prototype.retrieve = function (item, fn) {
-
+    retrieve(item, fn) {
         var returnObjects = this.objects;
 
         //if we have subnodes ...
@@ -280,7 +272,7 @@ import utils from "./../utils/utils.js";
         }
 
         return returnObjects;
-    };
+    }
 
     /**
      * Remove the given item from the quadtree.
@@ -291,7 +283,7 @@ import utils from "./../utils/utils.js";
      * @param {Object} object object to be removed
      * @return true if the item was found and removed.
      */
-     Quadtree.prototype.remove = function (item) {
+     remove(item) {
         var found = false;
 
         if (typeof (item.getBounds) === "undefined") {
@@ -322,7 +314,7 @@ import utils from "./../utils/utils.js";
         }
 
         return found;
-    };
+    }
 
     /**
      * return true if the node is prunable
@@ -331,9 +323,9 @@ import utils from "./../utils/utils.js";
      * @function
      * @return true if the node is prunable
      */
-    Quadtree.prototype.isPrunable = function () {
+    isPrunable() {
         return !(this.hasChildren() || (this.objects.length > 0));
-    };
+    }
 
     /**
      * return true if the node has any children
@@ -342,7 +334,7 @@ import utils from "./../utils/utils.js";
      * @function
      * @return true if the node has any children
      */
-    Quadtree.prototype.hasChildren = function () {
+    hasChildren() {
         for (var i = 0; i < this.nodes.length; i = i + 1) {
             var subnode = this.nodes[i];
             if (subnode.length > 0 || subnode.objects.length > 0) {
@@ -350,7 +342,7 @@ import utils from "./../utils/utils.js";
             }
         }
         return false;
-    };
+    }
 
     /**
      * clear the quadtree
@@ -358,8 +350,7 @@ import utils from "./../utils/utils.js";
      * @memberOf me.QuadTree
      * @function
      */
-    Quadtree.prototype.clear = function (bounds) {
-
+    clear(bounds) {
         this.objects.length = 0;
 
         for (var i = 0; i < this.nodes.length; i = i + 1) {
@@ -374,9 +365,7 @@ import utils from "./../utils/utils.js";
         if (typeof bounds !== "undefined") {
             this.bounds.setShape(bounds.pos.x, bounds.pos.y, bounds.width, bounds.height);
         }
-    };
+    }
+}
 
-    //make Quadtree available in the me namespace
-    me.QuadTree = Quadtree;
-
-})();
+export default QuadTree;
