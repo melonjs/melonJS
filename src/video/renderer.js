@@ -2,6 +2,7 @@ import Color from "./../math/color.js";
 import video from "./video.js";
 import event from "./../system/event.js";
 import device from "./../system/device.js";
+import { setPrefixed } from "./../utils/agent.js";
 
 /**
  * @classdesc
@@ -297,7 +298,7 @@ class Renderer {
         var canvas = context.canvas;
 
         // enable/disable antialis on the given Context2d object
-        me.agent.setPrefixed("imageSmoothingEnabled", enable === true, context);
+        setPrefixed("imageSmoothingEnabled", enable === true, context);
 
         // set antialias CSS property on the main canvas
         if (enable !== true) {

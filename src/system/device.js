@@ -1,5 +1,6 @@
 import video from "./../video/video.js";
 import save from "./../system/save.js";
+import { prefixed } from "./../utils/agent.js";
 
 // private properties
 let accelInitialized = false;
@@ -81,7 +82,7 @@ let device = {
         // Touch/Gesture Event feature detection
         this.TouchEvent = !!("ontouchstart" in window);
         this.PointerEvent = !!window.PointerEvent;
-        window.gesture = me.agent.prefixed("gesture");
+        window.gesture = prefixed("gesture");
 
         // detect touch capabilities
         this.touch = this.TouchEvent || this.PointerEvent;
@@ -94,10 +95,10 @@ let device = {
         this.wheel = ("onwheel" in document.createElement("div"));
 
         // pointerlock detection
-        this.hasPointerLockSupport = me.agent.prefixed("pointerLockElement", document);
+        this.hasPointerLockSupport = prefixed("pointerLockElement", document);
 
         if (this.hasPointerLockSupport) {
-            document.exitPointerLock = me.agent.prefixed("exitPointerLock", document);
+            document.exitPointerLock = prefixed("exitPointerLock", document);
         }
 
         // device orientation and motion detection
@@ -109,14 +110,14 @@ let device = {
         this.hasAccelerometer = !!window.DeviceMotionEvent;
 
         // fullscreen api detection & polyfill when possible
-        this.hasFullscreenSupport = me.agent.prefixed("fullscreenEnabled", document) ||
+        this.hasFullscreenSupport = prefixed("fullscreenEnabled", document) ||
                                     document.mozFullScreenEnabled;
 
-        document.exitFullscreen = me.agent.prefixed("cancelFullScreen", document) ||
-                                  me.agent.prefixed("exitFullscreen", document);
+        document.exitFullscreen = prefixed("cancelFullScreen", document) ||
+                                  prefixed("exitFullscreen", document);
 
         // vibration API poyfill
-        navigator.vibrate = me.agent.prefixed("vibrate", navigator);
+        navigator.vibrate = prefixed("vibrate", navigator);
 
         // web Audio detection
         this.hasWebAudio = !!(window.AudioContext || window.webkitAudioContext);
@@ -681,7 +682,7 @@ let device = {
     requestFullscreen(element) {
         if (this.hasFullscreenSupport) {
             element = element || video.getParent();
-            element.requestFullscreen = me.agent.prefixed("requestFullscreen", element) ||
+            element.requestFullscreen = prefixed("requestFullscreen", element) ||
                                         element.mozRequestFullScreen;
 
             element.requestFullscreen();
@@ -717,7 +718,7 @@ let device = {
 
         // first try using "standard" values
         if (typeof screen !== "undefined") {
-            var orientation = me.agent.prefixed("orientation", screen);
+            var orientation = prefixed("orientation", screen);
             if (typeof orientation !== "undefined" && typeof orientation.type === "string") {
                 // Screen Orientation API specification
                 return orientation.type;
@@ -748,7 +749,7 @@ let device = {
     lockOrientation(orientation) {
         var screen = window.screen;
         if (typeof screen !== "undefined") {
-            var lockOrientation = me.agent.prefixed("lockOrientation", screen);
+            var lockOrientation = prefixed("lockOrientation", screen);
             if (typeof lockOrientation !== "undefined") {
                 return lockOrientation(orientation);
             }
@@ -768,7 +769,7 @@ let device = {
     unlockOrientation(orientation) {
         var screen = window.screen;
         if (typeof screen !== "undefined") {
-            var unlockOrientation = me.agent.prefixed("unlockOrientation", screen);
+            var unlockOrientation = prefixed("unlockOrientation", screen);
             if (typeof unlockOrientation !== "undefined") {
                 return unlockOrientation(orientation);
             }
@@ -999,12 +1000,12 @@ let device = {
             var element = video.getParent();
             if (this.ua.match(/Firefox/i)) {
                 var fullscreenchange = function() {
-                    if ((me.agent.prefixed("fullscreenElement", document) ||
+                    if ((prefixed("fullscreenElement", document) ||
                         document.mozFullScreenElement) === element) {
 
                         document.removeEventListener("fullscreenchange", fullscreenchange);
                         document.removeEventListener("mozfullscreenchange", fullscreenchange);
-                        element.requestPointerLock = me.agent.prefixed("requestPointerLock", element);
+                        element.requestPointerLock = prefixed("requestPointerLock", element);
                         element.requestPointerLock();
                     }
                 };
@@ -1205,7 +1206,7 @@ Object.defineProperty(device, "isFullscreen", {
      */
     get: function () {
         if (this.hasFullscreenSupport) {
-            return !!(me.agent.prefixed("fullscreenElement", document) ||
+            return !!(prefixed("fullscreenElement", document) ||
                 document.mozFullScreenElement);
         } else {
             return false;

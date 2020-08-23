@@ -1,3 +1,4 @@
+import * as agentUtils from "./agent.js";
 import * as arrayUtils from "./array.js";
 import * as fileUtils from "./file.js";
 import * as stringUtils from "./string.js";
@@ -17,6 +18,7 @@ var GUID_index = 0;
 
 var utils = {
 
+    agent : agentUtils,
     array : arrayUtils,
     file : fileUtils,
     string : stringUtils,
