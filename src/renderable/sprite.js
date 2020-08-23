@@ -1,6 +1,7 @@
 import Vector2d from "./../math/vector2.js";
 import Renderer from "./../video/renderer.js";
 import video from "./../video/video.js";
+import pool from "./../system/pooling.js";
 
 (function () {
 
@@ -72,7 +73,7 @@ import video from "./../video/video.js";
              * @name offset
              * @memberOf me.Sprite#
              */
-            this.offset = me.pool.pull("me.Vector2d", 0, 0);
+            this.offset = pool.pull("me.Vector2d", 0, 0);
 
             /**
              * The source texture object this sprite object is using
@@ -596,7 +597,7 @@ import video from "./../video/video.js";
          * @ignore
          */
         destroy : function () {
-            me.pool.push(this.offset);
+            pool.push(this.offset);
             this.offset = undefined;
             this._super(me.Renderable, "destroy");
         },

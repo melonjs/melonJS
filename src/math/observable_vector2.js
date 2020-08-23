@@ -1,3 +1,4 @@
+import pool from "./../system/pooling.js";
 import Vector2d from "./vector2.js";
 import {clamp} from "./math.js";
 
@@ -439,7 +440,7 @@ class ObservableVector2d extends Vector2d {
      * @return {me.ObservableVector2d} new me.ObservableVector2d
      */
     clone() {
-        return me.pool.pull("me.ObservableVector2d", this._x, this._y, {onUpdate: this.onUpdate, scope: this.scope});
+        return pool.pull("me.ObservableVector2d", this._x, this._y, {onUpdate: this.onUpdate, scope: this.scope});
     }
 
     /**
@@ -450,7 +451,7 @@ class ObservableVector2d extends Vector2d {
      * @return {me.Vector2d} new me.Vector2d
      */
     toVector2d() {
-        return me.pool.pull("me.Vector2d", this._x, this._y);
+        return pool.pull("me.Vector2d", this._x, this._y);
     }
 
     /**

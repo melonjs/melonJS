@@ -1,4 +1,5 @@
 import {clamp} from "./math.js";
+import pool from "./../system/pooling.js";
 
 /**
  * @classdesc
@@ -505,7 +506,7 @@ class Vector3d {
      * @return {me.Vector3d} new me.Vector3d
      */
     clone() {
-        return me.pool.pull("me.Vector3d", this.x, this.y, this.z);
+        return pool.pull("me.Vector3d", this.x, this.y, this.z);
     }
 
     /**

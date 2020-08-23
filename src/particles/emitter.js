@@ -1,4 +1,5 @@
 import video from "./../video/video.js";
+import pool from "./../system/pooling.js";
 
 (function () {
     // generate a default image for the particles
@@ -475,7 +476,7 @@ import video from "./../video/video.js";
         addParticles: function (count) {
             for (var i = 0; i < ~~count; i++) {
                 // Add particle to the container
-                var particle = me.pool.pull("me.Particle", this);
+                var particle = pool.pull("me.Particle", this);
                 this.container.addChild(particle);
             }
         },

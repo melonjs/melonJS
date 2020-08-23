@@ -1,3 +1,5 @@
+import pool from "./../../system/pooling.js";
+
 (function () {
 
     // constant to identify the collision object layer
@@ -51,7 +53,7 @@
         me.TMXUtils.applyTMXProperties(data.properties, data);
 
         // create the layer
-        var imageLayer = me.pool.pull("me.ImageLayer",
+        var imageLayer = pool.pull("me.ImageLayer",
             // x/y is deprecated since 0.15 and replace by offsetx/y
             +data.offsetx || +data.x || 0,
             +data.offsety || +data.y || 0,
@@ -299,7 +301,7 @@
             // check if a user-defined background color is defined
             if (this.backgroundcolor) {
                 this.layers.push(
-                    me.pool.pull("me.ColorLayer",
+                    pool.pull("me.ColorLayer",
                         "background_color",
                         this.backgroundcolor,
                         zOrder++
@@ -311,7 +313,7 @@
             if (this.background_image) {
                 // add a new image layer
                 this.layers.push(
-                    me.pool.pull("me.ImageLayer",
+                    pool.pull("me.ImageLayer",
                         0, 0, {
                             name : "background_image",
                             image : this.background_image,
@@ -487,15 +489,15 @@
                             settings.text.anchorPoint = settings.anchorPoint;
                         }
                         if (settings.text.bitmap === true) {
-                            obj = me.pool.pull("me.BitmapText", settings.x, settings.y, settings.text);
+                            obj = pool.pull("me.BitmapText", settings.x, settings.y, settings.text);
                         } else {
-                            obj = me.pool.pull("me.Text", settings.x, settings.y, settings.text);
+                            obj = pool.pull("me.Text", settings.x, settings.y, settings.text);
                         }
                         // set the obj z order
                         obj.pos.z = settings.z;
                     } else {
                         // pull the corresponding entity from the object pool
-                        obj = me.pool.pull(
+                        obj = pool.pull(
                             settings.name || "me.Entity",
                             settings.x, settings.y,
                             settings

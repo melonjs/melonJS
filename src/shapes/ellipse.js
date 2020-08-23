@@ -1,4 +1,5 @@
 import Vector2d from "./../math/vector2.js";
+import pool from "./../system/pooling.js";
 
 (function () {
     /**
@@ -235,7 +236,7 @@ import Vector2d from "./../math/vector2.js";
          */
         getBounds : function () {
             if (typeof this._bounds === "undefined") {
-                this._bounds = me.pool.pull("me.Rect", 0, 0, 0, 0);
+                this._bounds = pool.pull("me.Rect", 0, 0, 0, 0);
             }
             return this._bounds;
         },

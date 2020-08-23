@@ -1,5 +1,6 @@
 import Color from "./../math/color.js";
 import utils from "./../utils/utils.js";
+import pool from "./../system/pooling.js";
 
 (function () {
 
@@ -113,16 +114,16 @@ import utils from "./../utils/utils.js";
 
             /** @ignore */
             // scaled font size;
-            this.fontScale = me.pool.pull("me.Vector2d", 1.0, 1.0);
+            this.fontScale = pool.pull("me.Vector2d", 1.0, 1.0);
 
             // get the corresponding image
             this.fontImage = (typeof settings.font === "object") ? settings.font : me.loader.getImage(settings.font);
 
             if (typeof settings.fontData !== "string") {
                 // use settings.font to retreive the data from the loader
-                this.fontData = me.pool.pull("me.BitmapTextData", me.loader.getBinary(settings.font));
+                this.fontData = pool.pull("me.BitmapTextData", me.loader.getBinary(settings.font));
             } else {
-                this.fontData = me.pool.pull("me.BitmapTextData",
+                this.fontData = pool.pull("me.BitmapTextData",
                     // if starting/includes "info face" the whole data string was passed as parameter
                     (settings.fontData.includes("info face")) ? settings.fontData : me.loader.getBinary(settings.fontData)
                 );
@@ -380,9 +381,9 @@ import utils from "./../utils/utils.js";
          * @ignore
          */
         destroy : function () {
-            me.pool.push(this.fontScale);
+            pool.push(this.fontScale);
             this.fontScale = undefined;
-            me.pool.push(this.fontData);
+            pool.push(this.fontData);
             this.fontData = undefined;
             this._text.length = 0;
             this._super(me.Renderable, "destroy");

@@ -2,6 +2,7 @@ import Color from "./../math/color.js";
 import Renderer from "./../video/renderer.js";
 import video from "./../video/video.js";
 import utils from "./../utils/utils.js";
+import pool from "./../system/pooling.js";
 
 /*
  * ASCII Table
@@ -71,10 +72,10 @@ import utils from "./../utils/utils.js";
                     this.fillStyle = settings.fillStyle;
                 } else {
                     // string (#RGB, #ARGB, #RRGGBB, #AARRGGBB)
-                    this.fillStyle = me.pool.pull("me.Color").parseCSS(settings.fillStyle);
+                    this.fillStyle = pool.pull("me.Color").parseCSS(settings.fillStyle);
                 }
             } else {
-                this.fillStyle = me.pool.pull("me.Color", 0, 0, 0);
+                this.fillStyle = pool.pull("me.Color", 0, 0, 0);
             }
 
             /**
@@ -89,10 +90,10 @@ import utils from "./../utils/utils.js";
                      this.strokeStyle = settings.strokeStyle;
                  } else {
                      // string (#RGB, #ARGB, #RRGGBB, #AARRGGBB)
-                     this.strokeStyle = me.pool.pull("me.Color").parseCSS(settings.strokeStyle);
+                     this.strokeStyle = pool.pull("me.Color").parseCSS(settings.strokeStyle);
                  }
              } else {
-                 this.strokeStyle = me.pool.pull("me.Color", 0, 0, 0);
+                 this.strokeStyle = pool.pull("me.Color", 0, 0, 0);
              }
 
             /**
@@ -438,8 +439,8 @@ import utils from "./../utils/utils.js";
          * @ignore
          */
         destroy : function () {
-            me.pool.push(this.fillStyle);
-            me.pool.push(this.strokeStyle);
+            pool.push(this.fillStyle);
+            pool.push(this.strokeStyle);
             this.fillStyle = this.strokeStyle = undefined;
             this._text.length = 0;
             this._super(me.Renderable, "destroy");

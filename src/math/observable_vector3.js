@@ -1,5 +1,6 @@
 import Vector3d from "./vector3.js";
 import {clamp} from "./math.js";
+import pool from "./../system/pooling.js";
 
 /**
  * A Vector3d object that provide notification by executing the given callback when the vector is changed.
@@ -515,7 +516,7 @@ class ObservableVector3d extends Vector3d {
      * @return {me.ObservableVector3d} new me.ObservableVector3d
      */
     clone() {
-        return me.pool.pull("me.ObservableVector3d",
+        return pool.pull("me.ObservableVector3d",
             this._x,
             this._y,
             this._z,
@@ -531,7 +532,7 @@ class ObservableVector3d extends Vector3d {
      * @return {me.Vector3d} new me.Vector3d
      */
     toVector3d() {
-        return me.pool.pull("me.Vector3d", this._x, this._y, this._z);
+        return pool.pull("me.Vector3d", this._x, this._y, this._z);
     }
 
     /**

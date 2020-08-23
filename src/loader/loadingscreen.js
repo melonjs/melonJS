@@ -1,6 +1,7 @@
 import video from "./../video/video.js";
 import event from "./../system/event.js";
 import {nextPowerOfTwo} from "./../math/math.js";
+import pool from "./../system/pooling.js";
 
 (function () {
     // a basic progress bar object
@@ -138,7 +139,7 @@ import {nextPowerOfTwo} from "./../math/math.js";
         },
 
         drawFont : function (context) {
-            var logo1 = me.pool.pull("me.Text", 0, 0, {
+            var logo1 = pool.pull("me.Text", 0, 0, {
                 font: "century gothic",
                 size: 32,
                 fillStyle: "white",
@@ -146,7 +147,7 @@ import {nextPowerOfTwo} from "./../math/math.js";
                 textBaseline : "top",
                 text: "melon"
             });
-            var logo2 = me.pool.pull("me.Text", 0, 0, {
+            var logo2 = pool.pull("me.Text", 0, 0, {
                 font: "century gothic",
                 size: 32,
                 fillStyle: "#55aa00",
@@ -171,8 +172,8 @@ import {nextPowerOfTwo} from "./../math/math.js";
             logo2._drawFont(context, ["JS"], logo1_width, 0);
 
             // put them back into the object pool
-            me.pool.push(logo1);
-            me.pool.push(logo2);
+            pool.push(logo1);
+            pool.push(logo2);
         },
 
         /**

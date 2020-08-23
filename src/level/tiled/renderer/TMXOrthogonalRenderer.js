@@ -1,4 +1,5 @@
 import Vector2d from "./../../../math/vector2.js";
+import pool from "./../../../system/pooling.js";
 
 (function () {
 
@@ -97,13 +98,13 @@ import Vector2d from "./../../../math/vector2.js";
             var start = this.pixelToTileCoords(
                 Math.max(rect.pos.x - (layer.maxTileSize.width - layer.tilewidth), 0),
                 Math.max(rect.pos.y - (layer.maxTileSize.height - layer.tileheight), 0),
-                me.pool.pull("me.Vector2d")
+                pool.pull("me.Vector2d")
             ).floorSelf();
 
             var end = this.pixelToTileCoords(
                 rect.pos.x + rect.width + this.tilewidth,
                 rect.pos.y + rect.height + this.tileheight,
-                me.pool.pull("me.Vector2d")
+                pool.pull("me.Vector2d")
             ).ceilSelf();
 
             //ensure we are in the valid tile range
@@ -143,8 +144,8 @@ import Vector2d from "./../../../math/vector2.js";
                 }
             }
 
-            me.pool.push(start);
-            me.pool.push(end);
+            pool.push(start);
+            pool.push(end);
         }
     });
 

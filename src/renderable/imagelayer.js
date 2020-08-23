@@ -1,5 +1,6 @@
 import video from "./../video/video.js";
 import event from "./../system/event.js";
+import pool from "./../system/pooling.js";
 
 (function () {
 
@@ -60,7 +61,7 @@ import event from "./../system/event.js";
             // displaying order
             this.pos.z = settings.z || 0;
 
-            this.offset = me.pool.pull("me.Vector2d", x, y);
+            this.offset = pool.pull("me.Vector2d", x, y);
 
             /**
              * Define the image scrolling ratio<br>
@@ -74,7 +75,7 @@ import event from "./../system/event.js";
              * @default <1.0,1.0>
              * @name me.ImageLayer#ratio
              */
-            this.ratio = me.pool.pull("me.Vector2d", 1.0, 1.0);
+            this.ratio = pool.pull("me.Vector2d", 1.0, 1.0);
 
             if (typeof(settings.ratio) !== "undefined") {
                 // little hack for backward compatiblity
@@ -315,9 +316,9 @@ import event from "./../system/event.js";
          * @ignore
          */
         destroy : function () {
-            me.pool.push(this.offset);
+            pool.push(this.offset);
             this.offset = undefined;
-            me.pool.push(this.ratio);
+            pool.push(this.ratio);
             this.ratio = undefined;
             this._super(me.Renderable, "destroy");
         }

@@ -1,5 +1,6 @@
 import {preventDefault as preventDefaultAction} from "./input.js";
 import event from "./../system/event.js";
+import device from "./../system/device.js";
 
 // corresponding actions
 var _keyStatus = {};
@@ -317,7 +318,7 @@ export var KEY = {
  */
 export function initKeyboardEvent() {
     // make sure the keyboard is enable
-    if (keyBoardEventTarget === null && me.device.isMobile === false) {
+    if (keyBoardEventTarget === null && device.isMobile === false) {
         keyBoardEventTarget = window;
         keyBoardEventTarget.addEventListener("keydown", keyDownEvent, false);
         keyBoardEventTarget.addEventListener("keyup", keyUpEvent, false);

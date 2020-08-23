@@ -1,4 +1,5 @@
 import Color from "./../math/color.js";
+import pool from "./../system/pooling.js";
 
 (function () {
 
@@ -37,7 +38,7 @@ import Color from "./../math/color.js";
                 this.color = color;
             } else {
                 // string (#RGB, #ARGB, #RRGGBB, #AARRGGBB)
-                this.color = me.pool.pull("me.Color").parseCSS(color);
+                this.color = pool.pull("me.Color").parseCSS(color);
             }
             this.anchorPoint.set(0, 0);
         },
@@ -62,7 +63,7 @@ import Color from "./../math/color.js";
          * @ignore
          */
         destroy : function () {
-            me.pool.push(this.color);
+            pool.push(this.color);
             this.color = undefined;
             this._super(me.Renderable, "destroy");
         }

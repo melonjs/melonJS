@@ -4,6 +4,7 @@ import ObservableVector2d from "./../math/observable_vector2.js";
 import ObservableVector3d from "./../math/observable_vector3.js";
 import video from "./../video/video.js";
 import event from "./../system/event.js";
+import pool from "./../system/pooling.js";
 
 (function () {
     // some ref shortcut
@@ -550,8 +551,8 @@ import event from "./../system/event.js";
          * });
          */
         fadeOut : function (color, duration, onComplete) {
-            this._fadeOut.color = me.pool.pull("me.Color").copy(color);
-            this._fadeOut.tween = me.pool.pull("me.Tween", this._fadeOut.color)
+            this._fadeOut.color = pool.pull("me.Color").copy(color);
+            this._fadeOut.tween = pool.pull("me.Tween", this._fadeOut.color)
                 .to({ alpha: 0.0 }, duration || 1000)
                 .onComplete(onComplete || null);
             this._fadeOut.tween.isPersistent = true;
@@ -572,10 +573,10 @@ import event from "./../system/event.js";
          * me.game.viewport.fadeIn("#FFFFFF", 75);
          */
         fadeIn : function (color, duration, onComplete) {
-            this._fadeIn.color = me.pool.pull("me.Color").copy(color);
+            this._fadeIn.color = pool.pull("me.Color").copy(color);
             var _alpha = this._fadeIn.color.alpha;
             this._fadeIn.color.alpha = 0.0;
-            this._fadeIn.tween = me.pool.pull("me.Tween", this._fadeIn.color)
+            this._fadeIn.tween = pool.pull("me.Tween", this._fadeIn.color)
                 .to({ alpha: _alpha }, duration || 1000)
                 .onComplete(onComplete || null);
             this._fadeIn.tween.isPersistent = true;
@@ -698,7 +699,7 @@ import event from "./../system/event.js";
                 // remove the tween if over
                 if (this._fadeIn.color.alpha === 1.0) {
                     this._fadeIn.tween = null;
-                    me.pool.push(this._fadeIn.color);
+                    pool.push(this._fadeIn.color);
                     this._fadeIn.color = null;
                 }
             }
@@ -716,7 +717,7 @@ import event from "./../system/event.js";
                 // remove the tween if over
                 if (this._fadeOut.color.alpha === 0.0) {
                     this._fadeOut.tween = null;
-                    me.pool.push(this._fadeOut.color);
+                    pool.push(this._fadeOut.color);
                     this._fadeOut.color = null;
                 }
             }

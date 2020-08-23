@@ -1,4 +1,5 @@
 import Vector2d from "./../../../math/vector2.js";
+import pool from "./../../../system/pooling.js";
 
 (function () {
 
@@ -45,7 +46,7 @@ import Vector2d from "./../../../math/vector2.js";
          * @return {me.Rect}
          */
         getBounds : function (layer) {
-            var bounds = layer instanceof me.TMXLayer ? me.pool.pull("me.Rect", 0, 0, 0, 0) : this.bounds;
+            var bounds = layer instanceof me.TMXLayer ? pool.pull("me.Rect", 0, 0, 0, 0) : this.bounds;
             bounds.setShape(
                 0, 0,
                 (this.cols + this.rows) * (this.tilewidth / 2),
@@ -86,14 +87,14 @@ import Vector2d from "./../../../math/vector2.js";
         adjustPosition: function (obj) {
             var tileX = obj.x / this.hTilewidth;
             var tileY = obj.y / this.tileheight;
-            var isoPos = me.pool.pull("me.Vector2d");
+            var isoPos = pool.pull("me.Vector2d");
 
             this.tileToPixelCoords(tileX, tileY, isoPos);
 
             obj.x = isoPos.x;
             obj.y = isoPos.y;
 
-            me.pool.push(isoPos);
+            pool.push(isoPos);
         },
 
         /**
@@ -123,18 +124,18 @@ import Vector2d from "./../../../math/vector2.js";
             var rowItr = this.pixelToTileCoords(
                 rect.pos.x - tileset.tilewidth,
                 rect.pos.y - tileset.tileheight,
-                me.pool.pull("me.Vector2d")
+                pool.pull("me.Vector2d")
             ).floorSelf();
             var tileEnd = this.pixelToTileCoords(
                 rect.pos.x + rect.width + tileset.tilewidth,
                 rect.pos.y + rect.height + tileset.tileheight,
-                me.pool.pull("me.Vector2d")
+                pool.pull("me.Vector2d")
             ).ceilSelf();
 
-            var rectEnd = this.tileToPixelCoords(tileEnd.x, tileEnd.y, me.pool.pull("me.Vector2d"));
+            var rectEnd = this.tileToPixelCoords(tileEnd.x, tileEnd.y, pool.pull("me.Vector2d"));
 
             // Determine the tile and pixel coordinates to start at
-            var startPos = this.tileToPixelCoords(rowItr.x, rowItr.y, me.pool.pull("me.Vector2d"));
+            var startPos = this.tileToPixelCoords(rowItr.x, rowItr.y, pool.pull("me.Vector2d"));
             startPos.x -= this.hTilewidth;
             startPos.y += this.tileheight;
 
@@ -201,11 +202,11 @@ import Vector2d from "./../../../math/vector2.js";
                 }
             }
 
-            me.pool.push(columnItr);
-            me.pool.push(rowItr);
-            me.pool.push(tileEnd);
-            me.pool.push(rectEnd);
-            me.pool.push(startPos);
+            pool.push(columnItr);
+            pool.push(rowItr);
+            pool.push(tileEnd);
+            pool.push(rectEnd);
+            pool.push(startPos);
         }
     });
 

@@ -5,6 +5,7 @@ import CanvasRenderer from "./canvas/canvas_renderer.js";
 import utils from "./../utils/utils.js";
 import event from "./../system/event.js";
 import game from "./../game.js";
+import device from "./../system/device.js";
 
 var designRatio = 1;
 var designWidth = 0;
@@ -35,7 +36,7 @@ var settings = {
  */
 function autoDetectRenderer(options) {
     try {
-        if (me.device.isWebGLSupported(options)) {
+        if (device.isWebGLSupported(options)) {
             return new WebGLRenderer(options);
         }
     } catch (e) {
@@ -282,7 +283,7 @@ var video = {
         }
 
         // add our canvas (default to document.body if settings.parent is undefined)
-        this.parent = me.device.getElement(settings.parent);
+        this.parent = device.getElement(settings.parent);
         this.parent.appendChild(this.renderer.getScreenCanvas());
 
         // trigger an initial resize();
@@ -301,16 +302,16 @@ var video = {
 
         if (settings.consoleHeader !== false) {
             var renderType = (this.renderer instanceof CanvasRenderer) ? "CANVAS" : "WebGL" + this.renderer.WebGLVersion;
-            var audioType = me.device.hasWebAudio ? "Web Audio" : "HTML5 Audio";
+            var audioType = device.hasWebAudio ? "Web Audio" : "HTML5 Audio";
             var gpu_renderer = (typeof this.renderer.GPURenderer === "string") ? " (" + this.renderer.GPURenderer + ")" : "";
             // output video information in the console
             console.log(
                 renderType + " renderer" + gpu_renderer + " | " +
                 audioType + " | " +
-                "pixel ratio " + me.device.devicePixelRatio + " | " +
-                (me.device.isMobile ? "mobile" : "desktop") + " | " +
-                me.device.getScreenOrientation() + " | " +
-                me.device.language
+                "pixel ratio " + device.devicePixelRatio + " | " +
+                (device.isMobile ? "mobile" : "desktop") + " | " +
+                device.getScreenOrientation() + " | " +
+                device.language
             );
             console.log( "resolution: " + "requested " + game_width + "x" + game_height +
                 ", got " + this.renderer.getWidth() + "x" + this.renderer.getHeight()
@@ -340,7 +341,7 @@ var video = {
             throw new Error("width or height was zero, Canvas could not be initialized !");
         }
 
-        if (me.device.OffscreenCanvas === true && offscreen === true) {
+        if (device.OffscreenCanvas === true && offscreen === true) {
             _canvas = new OffscreenCanvas(0, 0);
             // stubbing style for compatibility,
             // as OffscreenCanvas is detached from the DOM
@@ -390,7 +391,7 @@ var video = {
             }
 
             // get the maximum canvas size within the parent div containing the canvas container
-            var nodeBounds = me.device.getParentBounds(this.getParent());
+            var nodeBounds = device.getParentBounds(this.getParent());
 
             var _max_width = Math.min(canvasMaxWidth, nodeBounds.width);
             var _max_height = Math.min(canvasMaxHeight, nodeBounds.height);
@@ -457,7 +458,7 @@ var video = {
         var canvas = renderer.getScreenCanvas();
         var context = renderer.getScreenContext();
         var settings = renderer.settings;
-        var pixelRatio = me.device.devicePixelRatio;
+        var pixelRatio = device.devicePixelRatio;
 
         var w = settings.zoomX = canvas.width * x * pixelRatio;
         var h = settings.zoomY = canvas.height * y * pixelRatio;

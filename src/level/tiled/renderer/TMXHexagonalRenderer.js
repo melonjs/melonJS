@@ -1,4 +1,5 @@
 import Vector2d from "./../../../math/vector2.js";
+import pool from "./../../../system/pooling.js";
 
 (function () {
 
@@ -84,7 +85,7 @@ import Vector2d from "./../../../math/vector2.js";
          * @return {me.Rect}
          */
         getBounds : function (layer) {
-            var bounds = layer instanceof me.TMXLayer ? me.pool.pull("me.Rect", 0, 0, 0, 0) : this.bounds;
+            var bounds = layer instanceof me.TMXLayer ? pool.pull("me.Rect", 0, 0, 0, 0) : this.bounds;
 
             // origin is always 0 for finite maps
             bounds.pos.set(0, 0);
@@ -235,13 +236,13 @@ import Vector2d from "./../../../math/vector2.js";
             }
 
             // Start with the coordinates of a grid-aligned tile
-            var referencePoint = me.pool.pull("me.Vector2d",
+            var referencePoint = pool.pull("me.Vector2d",
                 Math.floor(x / (this.columnwidth * 2)),
                 Math.floor((y / (this.rowheight * 2)))
             );
 
             // Relative x and y position on the base square of the grid-aligned tile
-            var rel = me.pool.pull("me.Vector2d",
+            var rel = pool.pull("me.Vector2d",
                 x - referencePoint.x * (this.columnwidth * 2),
                 y - referencePoint.y * (this.rowheight * 2)
             );
@@ -300,8 +301,8 @@ import Vector2d from "./../../../math/vector2.js";
                 referencePoint.y + offsets[nearest].y
             );
 
-            me.pool.push(referencePoint);
-            me.pool.push(rel);
+            pool.push(referencePoint);
+            pool.push(rel);
 
             return ret;
         },
@@ -352,7 +353,7 @@ import Vector2d from "./../../../math/vector2.js";
          */
         drawTile : function (renderer, x, y, tmxTile) {
             var tileset = tmxTile.tileset;
-            var point = this.tileToPixelCoords(x, y, me.pool.pull("me.Vector2d"));
+            var point = this.tileToPixelCoords(x, y, pool.pull("me.Vector2d"));
 
             // draw the tile
             tileset.drawTile(
@@ -362,7 +363,7 @@ import Vector2d from "./../../../math/vector2.js";
                 tmxTile
             );
 
-            me.pool.push(point);
+            pool.push(point);
         },
 
         /**
@@ -376,7 +377,7 @@ import Vector2d from "./../../../math/vector2.js";
             var startTile = this.pixelToTileCoords(
                 rect.pos.x,
                 rect.pos.y,
-                me.pool.pull("me.Vector2d")
+                pool.pull("me.Vector2d")
             );
 
             // Compensate for the layer position
@@ -386,7 +387,7 @@ import Vector2d from "./../../../math/vector2.js";
             var startPos = this.tileToPixelCoords(
                 startTile.x + layer.pos.x,
                 startTile.y + layer.pos.y,
-                me.pool.pull("me.Vector2d")
+                pool.pull("me.Vector2d")
             );
 
             var rowTile = startTile.clone();
@@ -449,8 +450,8 @@ import Vector2d from "./../../../math/vector2.js";
 
                     startPos.y += this.rowheight;
                 }
-                me.pool.push(rowTile);
-                me.pool.push(rowPos);
+                pool.push(rowTile);
+                pool.push(rowPos);
 
             } else {
                 //ensure we are in the valid tile range
@@ -486,12 +487,12 @@ import Vector2d from "./../../../math/vector2.js";
                     }
                     startPos.y += this.rowheight;
                 }
-                me.pool.push(rowTile);
-                me.pool.push(rowPos);
+                pool.push(rowTile);
+                pool.push(rowPos);
             }
 
-            me.pool.push(startTile);
-            me.pool.push(startPos);
+            pool.push(startTile);
+            pool.push(startPos);
         }
     });
 

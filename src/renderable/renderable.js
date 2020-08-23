@@ -1,6 +1,7 @@
 import Vector2d from "./../math/vector2.js";
 import ObservableVector2d from "./../math/observable_vector2.js";
 import ObservableVector3d from "./../math/observable_vector3.js";
+import pool from "./../system/pooling.js";
 
 (function () {
 
@@ -88,7 +89,7 @@ import ObservableVector3d from "./../math/observable_vector3.js";
              * @memberOf me.Renderable#
              */
             if (typeof this.currentTransform === "undefined") {
-                this.currentTransform = me.pool.pull("me.Matrix2d");
+                this.currentTransform = pool.pull("me.Matrix2d");
             }
             this.currentTransform.identity();
 
@@ -174,7 +175,7 @@ import ObservableVector3d from "./../math/observable_vector3.js";
             if (this.anchorPoint instanceof ObservableVector2d) {
                 this.anchorPoint.setMuted(0.5, 0.5).setCallback(this.onAnchorUpdate, this);
             } else {
-                this.anchorPoint = me.pool.pull("me.ObservableVector2d", 0.5, 0.5, { onUpdate: this.onAnchorUpdate, scope: this });
+                this.anchorPoint = pool.pull("me.ObservableVector2d", 0.5, 0.5, { onUpdate: this.onAnchorUpdate, scope: this });
             }
 
             /**
@@ -259,7 +260,7 @@ import ObservableVector3d from "./../math/observable_vector3.js";
              * // remove the tint
              * this.tint.setColor(255, 255, 255);
              */
-            this.tint = me.pool.pull("me.Color", 255, 255, 255, 1.0);
+            this.tint = pool.pull("me.Color", 255, 255, 255, 1.0);
 
             /**
              * The name of the renderable
@@ -282,7 +283,7 @@ import ObservableVector3d from "./../math/observable_vector3.js";
                 this._absPos.set(x, y);
             }
             else {
-                this._absPos = me.pool.pull("me.Vector2d", x, y);
+                this._absPos = pool.pull("me.Vector2d", x, y);
             }
 
             /**
@@ -295,7 +296,7 @@ import ObservableVector3d from "./../math/observable_vector3.js";
             if (this.pos instanceof ObservableVector3d) {
                 this.pos.setMuted(x, y, 0).setCallback(this.updateBoundsPos, this);
             } else {
-                this.pos = me.pool.pull("me.ObservableVector3d", x, y, 0, { onUpdate: this.updateBoundsPos, scope: this});
+                this.pos = pool.pull("me.ObservableVector3d", x, y, 0, { onUpdate: this.updateBoundsPos, scope: this});
             }
 
             /**
@@ -339,7 +340,7 @@ import ObservableVector3d from "./../math/observable_vector3.js";
          */
         getBounds : function () {
             if (typeof this._bounds === "undefined") {
-                this._bounds = me.pool.pull("me.Rect", 0, 0, this._width, this._height);
+                this._bounds = pool.pull("me.Rect", 0, 0, this._width, this._height);
                 this.updateBoundsPos(this.pos.x, this.pos.y);
             }
             return this._bounds;
@@ -699,30 +700,30 @@ import ObservableVector3d from "./../math/observable_vector3.js";
          */
         destroy : function () {
             // allow recycling object properties
-            me.pool.push(this.currentTransform);
+            pool.push(this.currentTransform);
             this.currentTransform = undefined;
 
-            me.pool.push(this.anchorPoint);
+            pool.push(this.anchorPoint);
             this.anchorPoint = undefined;
 
-            me.pool.push(this.pos);
+            pool.push(this.pos);
             this.pos = undefined;
 
-            me.pool.push(this._absPos);
+            pool.push(this._absPos);
             this._absPos = undefined;
 
-            me.pool.push(this._bounds);
+            pool.push(this._bounds);
             this._bounds = undefined;
 
             this.onVisibilityChange = undefined;
 
             if (typeof this.mask !== "undefined") {
-                me.pool.push(this.mask);
+                pool.push(this.mask);
                 this.mask = undefined;
             }
 
             if (typeof this.tint !== "undefined") {
-                me.pool.push(this.tint);
+                pool.push(this.tint);
                 this.tint = undefined;
             }
 

@@ -1,4 +1,5 @@
 import Vector2d from "./../../../math/vector2.js";
+import pool from "./../../../system/pooling.js";
 
 (function () {
 
@@ -39,7 +40,7 @@ import Vector2d from "./../../../math/vector2.js";
             }
 
             // Start with the coordinates of a grid-aligned tile
-            var referencePoint = me.pool.pull("me.Vector2d",
+            var referencePoint = pool.pull("me.Vector2d",
                 Math.floor(alignedX / this.tilewidth),
                 Math.floor(alignedY / this.tileheight)
             );
@@ -58,7 +59,7 @@ import Vector2d from "./../../../math/vector2.js";
             }
 
             // Relative x and y position on the base square of the grid-aligned tile
-            var rel = me.pool.pull("me.Vector2d",
+            var rel = pool.pull("me.Vector2d",
                 alignedX - referencePoint.x * this.tilewidth,
                 alignedY - referencePoint.y * this.tileheight
             );
@@ -91,8 +92,8 @@ import Vector2d from "./../../../math/vector2.js";
 
             ret.div(this.tilewidth / Math.sqrt(2)).rotate(me.Math.degToRad(-45)).add(referencePoint);
 
-            me.pool.push(referencePoint);
-            me.pool.push(rel);
+            pool.push(referencePoint);
+            pool.push(rel);
 
             return ret;
         }

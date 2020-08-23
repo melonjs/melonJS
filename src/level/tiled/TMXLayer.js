@@ -1,4 +1,5 @@
 import video from "./../../video/video.js";
+import pool from "./../../system/pooling.js";
 
 (function () {
 
@@ -267,9 +268,9 @@ import video from "./../../video/video.js";
             var tile = null;
 
             if (this.containsPoint(x, y)) {
-                var coord = this.renderer.pixelToTileCoords(x, y, me.pool.pull("me.Vector2d"));
+                var coord = this.renderer.pixelToTileCoords(x, y, pool.pull("me.Vector2d"));
                 tile = this.cellAt(coord.x, coord.y);
-                me.pool.push(coord);
+                pool.push(coord);
             }
             return tile;
         },

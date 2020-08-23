@@ -1,4 +1,5 @@
 import event from "./../../system/event.js";
+import device from "./../../system/device.js";
 
 /**
  * @private
@@ -245,7 +246,7 @@ class GLShader {
          * @name vertex
          * @memberOf me.GLShader
          */
-        this.vertex = setPrecision(minify(vertex), precision || me.device.getMaxShaderPrecision(this.gl));
+        this.vertex = setPrecision(minify(vertex), precision || device.getMaxShaderPrecision(this.gl));
 
         /**
          * the fragment shader source code
@@ -254,7 +255,7 @@ class GLShader {
          * @name vertex
          * @memberOf me.GLShader
          */
-        this.fragment = setPrecision(minify(fragment), precision || me.device.getMaxShaderPrecision(this.gl));
+        this.fragment = setPrecision(minify(fragment), precision || device.getMaxShaderPrecision(this.gl));
 
         /**
          * the location attributes of the shader

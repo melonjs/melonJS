@@ -5,6 +5,8 @@ import video from "./../video/video.js";
 import utils from "./../utils/utils.js";
 import event from "./../system/event.js";
 import timer from "./../system/timer.js";
+import pool from "./../system/pooling.js";
+import device from "./../system/device.js";
 
 
 /**
@@ -115,7 +117,7 @@ function enablePointerEvent() {
         pointer = new me.Pointer(0, 0, 1, 1);
 
         // instantiate a pool of pointer catched
-        for (var v = 0; v < me.device.maxTouchPoints; v++) {
+        for (var v = 0; v < device.maxTouchPoints; v++) {
             T_POINTERS.push(new me.Pointer());
         }
 
@@ -124,14 +126,14 @@ function enablePointerEvent() {
             pointerEventTarget = video.renderer.getScreenCanvas();
         }
 
-        if (me.device.PointerEvent) {
+        if (device.PointerEvent) {
             // standard Pointer Events
             activeEventList = pointerEventList;
         } else {
             // Regular Mouse events
             activeEventList = mouseEventList;
         }
-        if (me.device.touch && !me.device.PointerEvent) {
+        if (device.touch && !device.PointerEvent) {
             // touch event on mobile devices
             activeEventList = activeEventList.concat(touchEventList);
         }
@@ -143,12 +145,12 @@ function enablePointerEvent() {
             throttlingInterval = ~~(1000 / timer.maxfps);
         }
 
-        if (me.device.autoFocus === true) {
-            me.device.focus();
+        if (device.autoFocus === true) {
+            device.focus();
             pointerEventTarget.addEventListener(
                 activeEventList[2], // MOUSE/POINTER DOWN
                 function () {
-                    me.device.focus();
+                    device.focus();
                 },
                 { passive: (preventDefault === false) }
             );
@@ -304,11 +306,11 @@ function dispatchEvent(normalizedEvents) {
                     var gameY = pointer.gameY;
                     if (!region.currentTransform.isIdentity()) {
                         var invV = region.currentTransform.applyInverse(
-                            me.pool.pull("me.Vector2d", gameX, gameY)
+                            pool.pull("me.Vector2d", gameX, gameY)
                         );
                         gameX = invV.x;
                         gameY = invV.y;
-                        me.pool.push(invV);
+                        pool.push(invV);
                     }
                     eventInBounds = bounds.containsPoint(gameX, gameY);
                 } else {
@@ -403,7 +405,7 @@ function normalizeEvent(originalEvent) {
     var pointer;
 
     // PointerEvent or standard Mouse event
-    if (me.device.TouchEvent && originalEvent.changedTouches) {
+    if (device.TouchEvent && originalEvent.changedTouches) {
         // iOS/Android Touch event
         for (var i = 0, l = originalEvent.changedTouches.length; i < l; i++) {
             var touchEvent = originalEvent.changedTouches[i];
@@ -534,8 +536,8 @@ export var throttlingInterval;
  */
 export function globalToLocal(x, y, v) {
     v = v || new Vector2d();
-    var rect = me.device.getElementBounds(video.renderer.getScreenCanvas());
-    var pixelRatio = me.device.devicePixelRatio;
+    var rect = device.getElementBounds(video.renderer.getScreenCanvas());
+    var pixelRatio = device.devicePixelRatio;
     x -= rect.left + (window.pageXOffset || 0);
     y -= rect.top + (window.pageYOffset || 0);
     var scale = video.scaleRatio;

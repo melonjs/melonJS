@@ -1,3 +1,5 @@
+import pool from "./../system/pooling.js";
+
 (function () {
     /**
      * a 4x4 Matrix3d Object<br>
@@ -585,7 +587,7 @@
          * @return {me.Matrix3d}
          */
         clone : function () {
-            return me.pool.pull("me.Matrix3d", this);
+            return pool.pull("me.Matrix3d", this);
         },
 
         /**

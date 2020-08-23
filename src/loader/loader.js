@@ -1,5 +1,6 @@
 import utils from "./../utils/utils.js";
 import event from "./../system/event.js";
+import device from "./../system/device.js";
 
 (function () {
     /**
@@ -155,7 +156,7 @@ import event from "./../system/event.js";
                             case "tmx":
                             case "tsx":
                                 // ie9 does not fully implement the responseXML
-                                if (me.device.ua.match(/msie/i) || !xmlhttp.responseXML) {
+                                if (device.ua.match(/msie/i) || !xmlhttp.responseXML) {
                                     if (window.DOMParser) {
                                         // manually create the XML DOM
                                         result = (new DOMParser()).parseFromString(xmlhttp.responseText, "text/xml");

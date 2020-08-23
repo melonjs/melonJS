@@ -1,4 +1,5 @@
 import Vector2d from "./../math/vector2.js";
+import device from "./../system/device.js";
 
 (function () {
 
@@ -291,7 +292,7 @@ import Vector2d from "./../math/vector2.js";
             me.input.globalToLocal(this.pageX, this.pageY, this.pos);
 
             // true if not originally a pointer event
-            this.isNormalized = !me.device.PointerEvent || (me.device.PointerEvent && !(event instanceof window.PointerEvent));
+            this.isNormalized = !device.PointerEvent || (device.PointerEvent && !(event instanceof window.PointerEvent));
 
             if (event.type === "wheel") {
                 this.deltaMode = event.deltaMode || 0;

@@ -1,4 +1,4 @@
-
+import device from "./../system/device.js";
 /**
  * allow to access and manage the device localStorage
  * @example
@@ -46,7 +46,7 @@ var save = {
      */
     init() {
         // Load previous data if local Storage is supported
-        if (me.device.localStorage === true) {
+        if (device.localStorage === true) {
             var me_save_content = localStorage.getItem("me.save");
 
             if (typeof me_save_content === "string" && me_save_content.length > 0) {
@@ -93,7 +93,7 @@ var save = {
                      */
                     set (value) {
                         data[prop] = value;
-                        if (me.device.localStorage === true) {
+                        if (device.localStorage === true) {
                             localStorage.setItem("me.save." + prop, JSON.stringify(value));
                         }
                     }
@@ -107,7 +107,7 @@ var save = {
         });
 
         // Save keys
-        if (me.device.localStorage === true) {
+        if (device.localStorage === true) {
             localStorage.setItem("me.save", JSON.stringify(Object.keys(data)));
         }
     },
@@ -126,7 +126,7 @@ var save = {
         if (!isReserved(key)) {
             if (typeof data[key] !== "undefined") {
                 delete data[key];
-                if (me.device.localStorage === true) {
+                if (device.localStorage === true) {
                     localStorage.removeItem("me.save." + key);
                     localStorage.setItem("me.save", JSON.stringify(Object.keys(data)));
                 }

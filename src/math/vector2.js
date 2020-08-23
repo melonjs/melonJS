@@ -1,4 +1,5 @@
 import {clamp} from "./math.js";
+import pool from "./../system/pooling.js";
 
 /**
  * @classdesc
@@ -482,8 +483,8 @@ class Vector2d {
      * @function
      * @return {me.Vector2d} new me.Vector2d
      */
-    clone  () {
-        return me.pool.pull("me.Vector2d", this.x, this.y);
+    clone() {
+        return pool.pull("me.Vector2d", this.x, this.y);
     }
 
     /**

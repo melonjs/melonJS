@@ -1,3 +1,5 @@
+import pool from "./../../../system/pooling.js";
+
 (function () {
 
     /**
@@ -51,7 +53,7 @@
          * @return {me.Rect}
          */
         getBounds : function (layer) {
-            var bounds = layer instanceof me.TMXLayer ? me.pool.pull("me.Rect", 0, 0, 0, 0) : this.bounds;
+            var bounds = layer instanceof me.TMXLayer ? pool.pull("me.Rect", 0, 0, 0, 0) : this.bounds;
             bounds.setShape(
                 0, 0,
                 this.cols * this.tilewidth,

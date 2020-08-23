@@ -1,6 +1,7 @@
 import Color from "./../math/color.js";
 import video from "./video.js";
 import event from "./../system/event.js";
+import device from "./../system/device.js";
 
 /**
  * @classdesc
@@ -54,7 +55,7 @@ class Renderer {
         this.currentBlendMode = "normal";
 
         // create the main screen canvas
-        if (me.device.ejecta === true) {
+        if (device.ejecta === true) {
             // a main canvas is already automatically created by Ejecta
             this.canvas = document.getElementById("canvas");
         } else if (typeof window.canvas !== "undefined") {

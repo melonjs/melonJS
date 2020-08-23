@@ -1,6 +1,7 @@
 import utils from "./../utils/utils.js";
 import game from "./../game.js";
 import event from "./../system/event.js";
+import pool from "./../system/pooling.js";
 
 (function () {
     /**
@@ -623,7 +624,7 @@ import event from "./../system/event.js";
                         child.destroy();
                     }
 
-                    me.pool.push(child);
+                    pool.push(child);
                 }
 
                 // Don't cache the child index; another element might have been removed
