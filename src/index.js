@@ -7,6 +7,7 @@ import audio from "./audio/audio.js";
 import device from "./system/device.js";
 import event from "./system/event.js";
 import game from "./game.js";
+import loader from "./loader/loader.js";
 import * as Math from "./math/math.js";
 import utils from "./utils/utils.js";
 import * as input from "./input/input.js";
@@ -58,6 +59,7 @@ export {
     device,
     event,
     game,
+    loader,
     input,
     Math,
     utils,

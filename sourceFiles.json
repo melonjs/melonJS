@@ -19,7 +19,6 @@
   "src/state/stage.js",
   "src/state/state.js",
   "src/loader/loadingscreen.js",
-  "src/loader/loader.js",
   "src/text/text.js",
   "src/text/bitmaptext.js",
   "src/input/pointer.js",
