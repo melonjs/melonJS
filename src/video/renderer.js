@@ -1,4 +1,5 @@
 import Color from "./../math/color.js";
+import Matrix3d from "./../math/matrix3.js";
 import video from "./video.js";
 import event from "./../system/event.js";
 import device from "./../system/device.js";
@@ -80,7 +81,7 @@ class Renderer {
         this.currentTint = new Color(255, 255, 255, 1.0);
 
         // the projectionMatrix (set through setProjection)
-        this.projectionMatrix = new me.Matrix3d();
+        this.projectionMatrix = new Matrix3d();
 
         // default uvOffset
         this.uvOffset = 0;

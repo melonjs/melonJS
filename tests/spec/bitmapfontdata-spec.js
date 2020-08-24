@@ -1,4 +1,4 @@
-var bitmapFontDataFixture = "info face=\"Arial\" size=18 bold=0 italic=0 charset=\"\" unicode=0 stretchH=100 smooth=1 aa=1 padding=0,0,0,0 spacing=0,0\n" +
+var bitmapTextDataFixture = "info face=\"Arial\" size=18 bold=0 italic=0 charset=\"\" unicode=0 stretchH=100 smooth=1 aa=1 padding=0,0,0,0 spacing=0,0\n" +
 "common lineHeight=22 base=19 scaleW=256 scaleH=256 pages=1 packed=0\n" +
 "page id=0 file=\"arialfancy.png\"\n" +
 "chars count=95\n" +
@@ -137,19 +137,19 @@ var bitmapFontDataFixture = "info face=\"Arial\" size=18 bold=0 italic=0 charset
 "kerning first=121 second=46 amount=-1\n" +
 "kerning first=86 second=46 amount=-1";
 
-describe("me.BitmapFontData", function () {
+describe("me.BitmapTextData", function () {
     describe("parse", function () {
-        var bitmapFontData = null;
+        var bitmapTextData = null;
         beforeEach(function () {
-            bitmapFontData = new me.BitmapFontData(bitmapFontDataFixture);
+            bitmapTextData = new me.BitmapTextData(bitmapTextDataFixture);
         });
 
         it("should have 95 glyphs", function () {
-            expect(Object.keys(bitmapFontData.glyphs).length).toEqual(95);
+            expect(Object.keys(bitmapTextData.glyphs).length).toEqual(95);
         });
 
         it("glyph by character 33 should have set data", function () {
-            var glyph = bitmapFontData.glyphs[33];
+            var glyph = bitmapTextData.glyphs[33];
             expect(glyph.x).toEqual(192);
             expect(glyph.y).toEqual(38);
             expect(glyph.width).toEqual(8);
@@ -160,7 +160,7 @@ describe("me.BitmapFontData", function () {
         });
 
         it("glyph by character 70 should have kerning data", function () {
-            var glyph = bitmapFontData.glyphs[70];
+            var glyph = bitmapTextData.glyphs[70];
             expect(glyph.getKerning(44)).toEqual(-1);
         });
     });

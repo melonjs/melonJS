@@ -1,3 +1,5 @@
+import Matrix2d from "./../../math/matrix2.js";
+
 (function () {
 
     // bitmask constants to check for flipped & rotated tiles
@@ -93,7 +95,7 @@
             // create and apply transformation matrix if required
             if (this.flipped === true) {
                 if (this.currentTransform === null) {
-                    this.currentTransform = new me.Matrix2d();
+                    this.currentTransform = new Matrix2d();
                 }
                 this.setTileTransform(this.currentTransform.identity());
             }

@@ -2,6 +2,8 @@ import Vector2d from "./../math/vector2.js";
 import Vector3d from "./../math/vector3.js";
 import ObservableVector2d from "./../math/observable_vector2.js";
 import ObservableVector3d from "./../math/observable_vector3.js";
+import Matrix2d from "./../math/matrix2.js";
+import Matrix3d from "./../math/matrix3.js";
 import video from "./../video/video.js";
 import event from "./../system/event.js";
 import pool from "./../system/pooling.js";
@@ -108,7 +110,7 @@ import pool from "./../system/pooling.js";
              * @name projectionMatrix
              * @memberOf me.Camera2d
              */
-            this.projectionMatrix = new me.Matrix3d();
+            this.projectionMatrix = new Matrix3d();
 
             /**
              * the invert camera transform used to unproject points
@@ -117,7 +119,7 @@ import pool from "./../system/pooling.js";
              * @name invCurrentTransform
              * @memberOf me.Camera2d
              */
-            this.invCurrentTransform = new me.Matrix2d();
+            this.invCurrentTransform = new Matrix2d();
 
             // offset for shake effect
             this.offset = new Vector2d();

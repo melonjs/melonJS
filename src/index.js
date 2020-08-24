@@ -21,6 +21,8 @@ import Vector2d from "./math/vector2.js";
 import Vector3d from "./math/vector3.js";
 import ObservableVector2d from "./math/observable_vector2.js";
 import ObservableVector3d from "./math/observable_vector3.js";
+import Matrix2d from "./math/matrix2.js";
+import Matrix3d from "./math/matrix3.js";
 import QuadTree from "./physics/quadtree.js";
 import GLShader from "./video/webgl/glshader.js";
 import WebGLCompositor from "./video/webgl/webgl_compositor.js";
@@ -72,12 +74,15 @@ export {
     Vector3d,
     ObservableVector2d,
     ObservableVector3d,
+    Matrix2d,
+    Matrix3d,
     QuadTree,
     GLShader,
     WebGLCompositor,
     Renderer,
     WebGLRenderer,
-    CanvasRenderer
+    CanvasRenderer,
+    BitmapTextData
 };
 
 // Backward compatibility for deprecated method or properties are
@@ -141,8 +146,8 @@ export function boot() {
     pool.register("me.Vector3d", Vector3d, true);
     pool.register("me.ObservableVector2d", ObservableVector2d, true);
     pool.register("me.ObservableVector3d", ObservableVector3d, true);
-    pool.register("me.Matrix2d", me.Matrix2d, true);
-    pool.register("me.Matrix3d", me.Matrix3d, true);
+    pool.register("me.Matrix2d", Matrix2d, true);
+    pool.register("me.Matrix3d", Matrix3d, true);
     pool.register("me.Rect", me.Rect, true);
     pool.register("me.Polygon", me.Polygon, true);
     pool.register("me.Line", me.Line, true);
@@ -154,6 +159,8 @@ export function boot() {
     pool.register("Vector3d", Vector3d, true);
     pool.register("ObservableVector2d", ObservableVector2d, true);
     pool.register("ObservableVector3d", ObservableVector3d, true);
+    pool.register("Matrix2d", Matrix2d, true);
+    pool.register("Matrix3d", Matrix3d, true);
     pool.register("BitmapTextData", BitmapTextData, true);
 
     // initialize me.save

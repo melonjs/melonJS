@@ -1,5 +1,6 @@
 import Color from "./../../math/color.js";
 import Vector2d from "./../../math/vector2.js";
+import Matrix2d from "./../../math/matrix2.js";
 import WebGLCompositor from "./webgl_compositor.js";
 import Renderer from "./../renderer.js";
 import TextureCache from "./../texture_cache.js";
@@ -116,7 +117,7 @@ class WebGLRenderer extends Renderer {
          * @type me.Matrix2d
          * @memberOf me.WebGLRenderer#
          */
-        this.currentTransform = new me.Matrix2d();
+        this.currentTransform = new Matrix2d();
 
         /**
          * The current compositor used by the renderer
