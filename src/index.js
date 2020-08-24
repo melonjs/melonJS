@@ -27,6 +27,7 @@ import WebGLCompositor from "./video/webgl/webgl_compositor.js";
 import Renderer from "./video/renderer.js";
 import WebGLRenderer from "./video/webgl/webgl_renderer.js";
 import CanvasRenderer from "./video/canvas/canvas_renderer.js";
+import BitmapTextData from "./text/bitmaptextdata.js";
 
 // alias and wrapper for deprecated API
 import * as deprecated from "./lang/deprecated.js";
@@ -133,7 +134,7 @@ export function boot() {
     pool.register("me.Sprite", me.Sprite);
     pool.register("me.Text", me.Text, true);
     pool.register("me.BitmapText", me.BitmapText, true);
-    pool.register("me.BitmapTextData", me.BitmapTextData, true);
+    pool.register("me.BitmapTextData", BitmapTextData, true);
     pool.register("me.ImageLayer", me.ImageLayer, true);
     pool.register("me.ColorLayer", me.ColorLayer, true);
     pool.register("me.Vector2d", Vector2d, true);
@@ -153,6 +154,7 @@ export function boot() {
     pool.register("Vector3d", Vector3d, true);
     pool.register("ObservableVector2d", ObservableVector2d, true);
     pool.register("ObservableVector3d", ObservableVector3d, true);
+    pool.register("BitmapTextData", BitmapTextData, true);
 
     // initialize me.save
     save.init();
