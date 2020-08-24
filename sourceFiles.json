@@ -35,7 +35,6 @@
   "src/level/tiled/renderer/TMXIsometricRenderer.js",
   "src/level/tiled/renderer/TMXHexagonalRenderer.js",
   "src/level/tiled/renderer/TMXStaggeredRenderer.js",
-  "src/tweens/tween.js",
   "src/plugin/plugin.js",
   "src/entity/draggable.js",
   "src/entity/droptarget.js",

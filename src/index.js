@@ -25,6 +25,7 @@ import ObservableVector3d from "./math/observable_vector3.js";
 import Matrix2d from "./math/matrix2.js";
 import Matrix3d from "./math/matrix3.js";
 import QuadTree from "./physics/quadtree.js";
+import Tween from "./tweens/tween.js";
 import GLShader from "./video/webgl/glshader.js";
 import WebGLCompositor from "./video/webgl/webgl_compositor.js";
 import Renderer from "./video/renderer.js";
@@ -78,6 +79,7 @@ export {
     ObservableVector3d,
     Matrix2d,
     Matrix3d,
+    Tween,
     QuadTree,
     GLShader,
     WebGLCompositor,
@@ -135,7 +137,7 @@ export function boot() {
     pool.register("me.Entity", me.Entity);
     pool.register("me.CollectableEntity", me.CollectableEntity);
     pool.register("me.LevelEntity", me.LevelEntity);
-    pool.register("me.Tween", me.Tween, true);
+    pool.register("me.Tween", Tween, true);
     pool.register("me.Color", Color, true);
     pool.register("me.Particle", me.Particle, true);
     pool.register("me.Sprite", me.Sprite);
@@ -156,6 +158,7 @@ export function boot() {
     pool.register("me.Ellipse", me.Ellipse, true);
 
     // if use with no namespace (e.g. es6)
+    pool.register("Tween", Tween, true);
     pool.register("Color", Color, true);
     pool.register("Vector2d", Vector2d, true);
     pool.register("Vector3d", Vector3d, true);
