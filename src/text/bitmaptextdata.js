@@ -1,8 +1,60 @@
 import Glyph from "./glyph.js";
 
-
 // bitmap constants
 var capChars = ["M", "N", "B", "D", "C", "E", "F", "K", "A", "G", "H", "I", "J", "L", "O", "P", "Q", "R", "S", "T", "U", "V", "W", "X", "Y", "Z"];
+
+/**
+ * Gets the value from a string of pairs.
+ * @private
+ */
+function getValueFromPair(string, pattern) {
+    var value = string.match(pattern);
+    if (!value) {
+        throw new Error("Could not find pattern " + pattern + " in string: " + string);
+    }
+
+    return value[0].split("=")[1];
+};
+
+/**
+ * Gets the first glyph in the map that is not a space character
+ * @private
+ * @name _getFirstGlyph
+ * @memberOf me.BitmapTextData
+ * @function
+ * @param {Object} glyphs the map of glyphs, each key is a char code
+ * @returns {me.Glyph}
+ */
+function getFirstGlyph(glyphs) {
+    var keys = Object.keys(glyphs);
+    for (var i = 0; i < keys.length; i++) {
+        if (keys[i] > 32) {
+            return glyphs[keys[i]];
+        }
+    }
+    return null;
+};
+
+/**
+ * Creates a glyph to use for the space character
+ * @private
+ * @name createSpaceGlyph
+ * @memberOf me.BitmapTextData
+ * @function
+ * @param {Object} glyphs the map of glyphs, each key is a char code
+ */
+function createSpaceGlyph(glyphs) {
+    var spaceCharCode = " ".charCodeAt(0);
+    var glyph = glyphs[spaceCharCode];
+    if (!glyph) {
+        glyph = new Glyph();
+        glyph.id = spaceCharCode;
+        glyph.xadvance = getFirstGlyph(glyphs).xadvance;
+        glyphs[spaceCharCode] = glyph;
+    }
+};
+
+
 
 /**
  * Class for storing relevant data from the font file.
@@ -12,10 +64,15 @@ var capChars = ["M", "N", "B", "D", "C", "E", "F", "K", "A", "G", "H", "I", "J",
  * @constructor
  */
 class BitmapTextData {
+
+    constructor(...args) {
+        this.onResetEvent(...args);
+    }
+
     /**
      * @ignore
      */
-    constructor(data) {
+    onResetEvent(data) {
         this.padTop = 0;
         this.padRight = 0;
         this.padBottom = 0;
@@ -40,60 +97,6 @@ class BitmapTextData {
     }
 
     /**
-     * Creates a glyph to use for the space character
-     * @private
-     * @name _createSpaceGlyph
-     * @memberOf me.BitmapTextData
-     * @function
-     */
-    _createSpaceGlyph() {
-        var spaceCharCode = " ".charCodeAt(0);
-        var glyph = this.glyphs[spaceCharCode];
-        if (!glyph) {
-            glyph = new Glyph();
-            glyph.id = spaceCharCode;
-            glyph.xadvance = this._getFirstGlyph().xadvance;
-            this.glyphs[spaceCharCode] = glyph;
-        }
-    }
-
-    /**
-     * Gets the first glyph in the map that is not a space character
-     * @private
-     * @name _getFirstGlyph
-     * @memberOf me.BitmapTextData
-     * @function
-     * @returns {me.Glyph}
-     */
-    _getFirstGlyph() {
-        var keys = Object.keys(this.glyphs);
-        for (var i = 0; i < keys.length; i++) {
-            if (keys[i] > 32) {
-                return this.glyphs[keys[i]];
-            }
-        }
-        return null;
-    }
-
-    /**
-     * Gets the value from a string of pairs. For example: one=1 two=2 something=hi. Can accept the regex of /one={d}/
-     * and returns the value of d
-     * @private
-     * @name _getValueFromPair
-     * @memberOf me.BitmapTextData
-     * @function
-     * @returns {String}
-     */
-    _getValueFromPair(string, pattern) {
-        var value = string.match(pattern);
-        if (!value) {
-            throw new Error("Could not find pattern " + pattern + " in string: " + string);
-        }
-
-        return value[0].split("=")[1];
-    }
-
-    /**
      * This parses the font data text and builds a map of glyphs containing the data for each character
      * @name parse
      * @memberOf me.BitmapTextData
@@ -115,9 +118,9 @@ class BitmapTextData {
         this.padBottom = parseFloat(paddingValues[2]);
         this.padRight = parseFloat(paddingValues[3]);
 
-        this.lineHeight = parseFloat(this._getValueFromPair(lines[1], /lineHeight\=\d+/g));
+        this.lineHeight = parseFloat(getValueFromPair(lines[1], /lineHeight\=\d+/g));
 
-        var baseLine = parseFloat(this._getValueFromPair(lines[1], /base\=\d+/g));
+        var baseLine = parseFloat(getValueFromPair(lines[1], /base\=\d+/g));
 
         var padY = this.padTop + this.padBottom;
 
@@ -163,7 +166,7 @@ class BitmapTextData {
 
         this.descent += this.padBottom;
 
-        this._createSpaceGlyph();
+        createSpaceGlyph(this.glyphs);
 
         var capGlyph = null;
         for (i = 0; i < capChars.length; i++) {
