@@ -2,6 +2,7 @@ import utils from "./../utils/utils.js";
 import game from "./../game.js";
 import event from "./../system/event.js";
 import pool from "./../system/pooling.js";
+import state from "./../state/state.js";
 
 (function () {
     /**
@@ -829,7 +830,7 @@ import pool from "./../system/pooling.js";
             this._super(me.Renderable, "update", [dt]);
             var isDirty = false;
             var isFloating = false;
-            var isPaused = me.state.isPaused();
+            var isPaused = state.isPaused();
 
             // Update container's absolute position
             this._absPos.setV(this.pos);
@@ -852,7 +853,7 @@ import pool from "./../system/pooling.js";
                     // check if object is in any active cameras
                     obj.inViewport = false;
                     // iterate through all cameras
-                    me.state.current().cameras.forEach(function(camera) {
+                    state.current().cameras.forEach(function(camera) {
                         if (camera.isVisible(obj, isFloating)) {
                             obj.inViewport = true;
                         };

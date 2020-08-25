@@ -17,7 +17,6 @@
   "src/camera/camera2d.js",
   "src/entity/entity.js",
   "src/state/stage.js",
-  "src/state/state.js",
   "src/loader/loadingscreen.js",
   "src/text/text.js",
   "src/text/bitmaptext.js",

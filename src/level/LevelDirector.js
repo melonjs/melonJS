@@ -1,5 +1,6 @@
 import utils from "./../utils/utils.js";
 import event from "./../system/event.js";
+import state from "./../state/state.js";
 
 (function () {
     /**
@@ -50,7 +51,7 @@ import event from "./../system/event.js";
 
             if (restart) {
                 // resume the game loop if it was previously running
-                me.state.restart();
+                state.restart();
             }
         }
 
@@ -184,12 +185,12 @@ import event from "./../system/event.js";
             if (levels[levelId] instanceof me.TMXTileMap) {
 
                 // check the status of the state mngr
-                var wasRunning = me.state.isRunning();
+                var wasRunning = state.isRunning();
 
                 if (wasRunning) {
                     // stop the game loop to avoid
                     // some silly side effects
-                    me.state.stop();
+                    state.stop();
 
                     utils.function.defer(safeLoadLevel, this, levelId, options, true);
                 }

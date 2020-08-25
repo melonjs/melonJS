@@ -14,7 +14,8 @@ import * as input from "./input/input.js";
 import video from "./video/video.js";
 import save from "./system/save.js";
 import timer from "./system/timer.js";
-import pool from "./system/pooling";
+import pool from "./system/pooling.js";
+import state from "./state/state.js";
 
 // class definition
 import Color from "./math/color.js";
@@ -67,6 +68,7 @@ export {
     save,
     timer,
     pool,
+    state,
     video
 };
 
@@ -177,8 +179,8 @@ export function boot() {
     // enable/disable the cache
     me.loader.setNocache( utils.getUriFragment().nocache || false );
 
-    // init the App Manager
-    me.state.init();
+    // init the stage Manager
+    state.init();
 
     // automatically enable keyboard events
     input.initKeyboardEvent();

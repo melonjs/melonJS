@@ -1,6 +1,7 @@
 import video from "./video/video.js";
 import event from "./system/event.js";
 import timer from "./system/timer.js";
+import state from "./state/state.js";
 
 /**
  * me.game represents your current game, it contains all the objects,
@@ -119,9 +120,9 @@ var game = {
      */
     reset : function () {
         // point to the current active stage "default" camera
-        var current = me.state.current();
+        var current = state.current();
         if (typeof current !== "undefined") {
-            this.viewport = me.state.current().cameras.get("default");
+            this.viewport = state.current().cameras.get("default");
         }
 
         // publish reset notification

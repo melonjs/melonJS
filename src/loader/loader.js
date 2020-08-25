@@ -2,6 +2,7 @@ import utils from "./../utils/utils.js";
 import event from "./../system/event.js";
 import device from "./../system/device.js";
 import audio from "./../audio/audio.js";
+import state from "./../state/state.js";
 
 
 // contains all the images loaded
@@ -491,7 +492,7 @@ var loader = {
 
         if (switchToLoadState !== false) {
             // swith to the loading screen
-            me.state.change(me.state.LOADING);
+            state.change(state.LOADING);
         }
 
         // check load status

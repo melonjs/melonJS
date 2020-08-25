@@ -1,5 +1,6 @@
 import utils from "./../utils/utils.js";
 import event from "./../system/event.js";
+import state from "./../state/state.js";
 
 //hold element to display fps
 var framecount = 0;
@@ -48,7 +49,7 @@ function updateTimers(time) {
 
     for (var i = 0, len = timers.length; i < len; i++) {
         var _timer = timers[i];
-        if (!(_timer.pauseable && me.state.isPaused())) {
+        if (!(_timer.pauseable && state.isPaused())) {
             _timer.elapsed += delta;
         }
         if (_timer.elapsed >= _timer.delay) {

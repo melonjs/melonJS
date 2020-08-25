@@ -1,6 +1,7 @@
 import video from "./../video/video.js";
 import save from "./../system/save.js";
 import { prefixed } from "./../utils/agent.js";
+import state from "./../state/state.js";
 
 // private properties
 let accelInitialized = false;
@@ -142,19 +143,19 @@ let device = {
         // set pause/stop action on losing focus
         window.addEventListener("blur", function () {
             if (this.stopOnBlur) {
-                me.state.stop(true);
+                state.stop(true);
             }
             if (this.pauseOnBlur) {
-                me.state.pause(true);
+                state.pause(true);
             }
         }, false);
         // set restart/resume action on gaining focus
         window.addEventListener("focus", function () {
             if (this.stopOnBlur) {
-                me.state.restart(true);
+                state.restart(true);
             }
             if (this.resumeOnFocus) {
-                me.state.resume(true);
+                state.resume(true);
             }
             // force focus if autofocus is on
             if (this.autoFocus) {
@@ -187,17 +188,17 @@ let device = {
                 function () {
                     if (document[hidden]) {
                         if (this.stopOnBlur) {
-                            me.state.stop(true);
+                            state.stop(true);
                         }
                         if (this.pauseOnBlur) {
-                            me.state.pause(true);
+                            state.pause(true);
                         }
                     } else {
                         if (this.stopOnBlur) {
-                            me.state.restart(true);
+                            state.restart(true);
                         }
                         if (this.resumeOnFocus) {
-                            me.state.resume(true);
+                            state.resume(true);
                         }
                     }
                 }, false
