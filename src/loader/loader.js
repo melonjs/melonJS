@@ -3,6 +3,7 @@ import event from "./../system/event.js";
 import device from "./../system/device.js";
 import audio from "./../audio/audio.js";
 import state from "./../state/state.js";
+import level from "./../level/level.js";
 
 
 // contains all the images loaded
@@ -104,9 +105,9 @@ function preloadTMX(tmxData, onload, onerror) {
         // set the TMX content
         tmxList[tmxData.name] = data;
 
-        // add the tmx to the levelDirector
+        // add the tmx to the level manager
         if (tmxData.type === "tmx") {
-            me.levelDirector.addTMXLevel(tmxData.name);
+            level.add(tmxData.type, tmxData.name);
         }
     }
 

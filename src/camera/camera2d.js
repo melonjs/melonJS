@@ -548,7 +548,7 @@ import pool from "./../system/pooling.js";
          * // fade the camera to white upon dying, reload the level, and then fade out back
          * me.game.viewport.fadeIn("#fff", 150, function() {
          *     me.audio.play("die", false);
-         *     me.levelDirector.reloadLevel();
+         *     me.level.reload();
          *     me.game.viewport.fadeOut("#fff", 150);
          * });
          */

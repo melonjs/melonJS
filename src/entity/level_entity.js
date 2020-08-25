@@ -11,10 +11,10 @@
      * @param {String} [settings.duration] Fade duration (in ms)
      * @param {String|me.Color} [settings.color] Fade color
      * @param {String} [settings.to] TMX level to load
-     * @param {String|me.Container} [settings.container] Target container. See {@link me.levelDirector.loadLevel}
-     * @param {Function} [settings.onLoaded] Level loaded callback. See {@link me.levelDirector.loadLevel}
-     * @param {Boolean} [settings.flatten] Flatten all objects into the target container. See {@link me.levelDirector.loadLevel}
-     * @param {Boolean} [settings.setViewportBounds] Resize the viewport to match the level. See {@link me.levelDirector.loadLevel}
+     * @param {String|me.Container} [settings.container] Target container. See {@link me.level.load}
+     * @param {Function} [settings.onLoaded] Level loaded callback. See {@link me.level.load}
+     * @param {Boolean} [settings.flatten] Flatten all objects into the target container. See {@link me.level.load}
+     * @param {Boolean} [settings.setViewportBounds] Resize the viewport to match the level. See {@link me.level.load}
      * @example
      * me.game.world.addChild(new me.LevelEntity(
      *     x, y, {
@@ -69,7 +69,7 @@
          */
         onFadeComplete : function () {
 
-            me.levelDirector.loadLevel(this.gotolevel, this.getlevelSettings());
+            me.level.load(this.gotolevel, this.getlevelSettings());
             me.game.viewport.fadeOut(this.fade, this.duration);
         },
 
@@ -92,7 +92,7 @@
                             this.onFadeComplete.bind(this));
                 }
             } else {
-                me.levelDirector.loadLevel(this.gotolevel, this.getlevelSettings());
+                me.level.load(this.gotolevel, this.getlevelSettings());
             }
         },
 

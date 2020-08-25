@@ -16,6 +16,7 @@ import save from "./system/save.js";
 import timer from "./system/timer.js";
 import pool from "./system/pooling.js";
 import state from "./state/state.js";
+import level from "./level/level.js";
 
 // class definition
 import Color from "./math/color.js";
@@ -33,6 +34,7 @@ import Renderer from "./video/renderer.js";
 import WebGLRenderer from "./video/webgl/webgl_renderer.js";
 import CanvasRenderer from "./video/canvas/canvas_renderer.js";
 import BitmapTextData from "./text/bitmaptextdata.js";
+
 
 // alias and wrapper for deprecated API
 import * as deprecated from "./lang/deprecated.js";
@@ -62,6 +64,7 @@ export {
     event,
     game,
     loader,
+    level,
     input,
     Math,
     utils,
@@ -184,9 +187,6 @@ export function boot() {
 
     // automatically enable keyboard events
     input.initKeyboardEvent();
-
-    // init the level Director
-    me.levelDirector.init();
 
     // game instance init
     game.init();
