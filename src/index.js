@@ -4,6 +4,7 @@ import "./polyfill/requestAnimationFrame.js";
 
 // utility classes
 import audio from "./audio/audio.js";
+import collision from "./physics/collision.js";
 import device from "./system/device.js";
 import event from "./system/event.js";
 import game from "./game.js";
@@ -60,6 +61,7 @@ export const version = "__VERSION__";
 // export all utility function
 export {
     audio,
+    collision,
     device,
     event,
     game,
