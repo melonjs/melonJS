@@ -1,4 +1,8 @@
 import pool from "./../../system/pooling.js";
+import TMXOrthogonalRenderer from "./renderer/TMXOrthogonalRenderer.js";
+import TMXIsometricRenderer from "./renderer/TMXIsometricRenderer.js";
+import TMXHexagonalRenderer from "./renderer/TMXHexagonalRenderer.js";
+import TMXStaggeredRenderer from "./renderer/TMXStaggeredRenderer.js";
 
 (function () {
 
@@ -16,16 +20,16 @@ import pool from "./../../system/pooling.js";
     function getNewDefaultRenderer(map) {
         switch (map.orientation) {
             case "orthogonal":
-                return new me.TMXOrthogonalRenderer(map);
+                return new TMXOrthogonalRenderer(map);
 
             case "isometric":
-                return new me.TMXIsometricRenderer(map);
+                return new TMXIsometricRenderer(map);
 
             case "hexagonal":
-                return new me.TMXHexagonalRenderer(map);
+                return new TMXHexagonalRenderer(map);
 
             case "staggered":
-                return new me.TMXStaggeredRenderer(map);
+                return new TMXStaggeredRenderer(map);
 
             // if none found, throw an exception
             default:

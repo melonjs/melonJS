@@ -35,6 +35,11 @@ import Renderer from "./video/renderer.js";
 import WebGLRenderer from "./video/webgl/webgl_renderer.js";
 import CanvasRenderer from "./video/canvas/canvas_renderer.js";
 import BitmapTextData from "./text/bitmaptextdata.js";
+import TMXRenderer from "./level/tiled/renderer/TMXRenderer.js";
+import TMXOrthogonalRenderer from "./level/tiled/renderer/TMXOrthogonalRenderer.js";
+import TMXIsometricRenderer from "./level/tiled/renderer/TMXIsometricRenderer.js";
+import TMXHexagonalRenderer from "./level/tiled/renderer/TMXHexagonalRenderer.js";
+import TMXStaggeredRenderer from "./level/tiled/renderer/TMXStaggeredRenderer.js";
 
 
 // alias and wrapper for deprecated API
@@ -93,7 +98,12 @@ export {
     Renderer,
     WebGLRenderer,
     CanvasRenderer,
-    BitmapTextData
+    BitmapTextData,
+    TMXRenderer,
+    TMXOrthogonalRenderer,
+    TMXIsometricRenderer,
+    TMXHexagonalRenderer,
+    TMXStaggeredRenderer
 };
 
 // Backward compatibility for deprecated method or properties are
