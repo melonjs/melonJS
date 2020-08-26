@@ -135,24 +135,23 @@ export function warning(deprecated, replacement, version) {
     };
 
     /**
+     * @classdesc
      * melonJS base class for exception handling.
      * @class
-     * @extends me.Object
      * @memberOf me
      * @constructor
      * @deprecated since 7.0.0
      * @see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Error
      * @param {String} msg Error message.
+     * @example
+     * throw new me.Error("Guru Meditation");
      */
-    me.Error = me.Object.extend.bind(Error)({
-        /**
-         * @ignore
-         */
-        init : function (msg) {
-            this.name = "me.Error";
-            this.message = msg;
-        }
-    });
+     me.Error = function(msg) {
+         var err = new Error();
+         err.name = "me.Error";
+         err.message = msg;
+         return err;
+     };
 
     /**
      * @namespace me.sys

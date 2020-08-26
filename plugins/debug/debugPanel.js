@@ -98,27 +98,22 @@
 
     var DEBUG_HEIGHT = 50;
 
-    var Counters = me.Object.extend({
-        init : function (stats) {
-            this.stats = {};
-            this.reset(stats);
-        },
-
-        reset : function (stats) {
-            var self = this;
-            (stats || Object.keys(this.stats)).forEach(function (stat) {
-                self.stats[stat] = 0;
-            });
-        },
-
-        inc : function (stat, value) {
-            this.stats[stat] += (value || 1);
-        },
-
-        get : function (stat) {
-            return this.stats[stat];
-        }
-    });
+    var Counters = function(name) {
+        this.stats = {};
+        this.reset(stats);
+    }
+    Counters.prototype.reset = function() {
+        var self = this;
+        (stats || Object.keys(this.stats)).forEach(function (stat) {
+            self.stats[stat] = 0;
+        });
+    }
+    Counters.prototype.inc = function() {
+        this.stats[stat] += (value || 1);
+    }
+    Counters.prototype.get = function() {
+        return this.stats[stat];
+    }
 
     // embedded bitmap font data
     var fontDataSource =
