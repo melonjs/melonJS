@@ -3,6 +3,8 @@ import TMXOrthogonalRenderer from "./renderer/TMXOrthogonalRenderer.js";
 import TMXIsometricRenderer from "./renderer/TMXIsometricRenderer.js";
 import TMXHexagonalRenderer from "./renderer/TMXHexagonalRenderer.js";
 import TMXStaggeredRenderer from "./renderer/TMXStaggeredRenderer.js";
+import TMXTileset from "./TMXTileset.js";
+import TMXTilesetGroup from "./TMXTilesetGroup.js";
 import { applyTMXProperties } from "./TMXUtils.js";
 
 (function () {
@@ -81,7 +83,7 @@ import { applyTMXProperties } from "./TMXUtils.js";
      * @ignore
      */
     function readTileset(data) {
-        return (new me.TMXTileset(data));
+        return (new TMXTileset(data));
     }
 
     /**
@@ -291,7 +293,7 @@ import { applyTMXProperties } from "./TMXUtils.js";
             // Tileset information
             if (!this.tilesets) {
                 // make sure we have a TilesetGroup Object
-                this.tilesets = new me.TMXTilesetGroup();
+                this.tilesets = new TMXTilesetGroup();
             }
 
             // parse all tileset objects

@@ -23,7 +23,6 @@
   "src/level/tiled/TMXGroup.js",
   "src/level/tiled/TMXObject.js",
   "src/level/tiled/TMXTile.js",
-  "src/level/tiled/TMXTileset.js",
   "src/level/tiled/TMXLayer.js",
   "src/level/tiled/TMXTiledMap.js",
   "src/plugin/plugin.js",
