@@ -134,6 +134,12 @@ import * as TMXUtils from "./TMXUtils.js";
             var visible = typeof(data.visible) !== "undefined" ? +data.visible : 1;
             this.setOpacity(visible ? +data.opacity : 0);
 
+            // layer tint
+            if (typeof data.tintcolor === "string") {
+                // Tiled provides #RRGGBB or #AARRGGBB
+                this.tint.parseHex(data.tintcolor, true);
+            }
+
             // layer "real" size
             if (this.orientation === "isometric") {
                 this.width = (this.cols + this.rows) * (this.tilewidth / 2);

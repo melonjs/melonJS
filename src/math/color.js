@@ -495,19 +495,20 @@ class Color {
      * @memberOf me.Color
      * @function
      * @param {String} color
+     * @param {boolean} [argb = false] true if format is #ARGB, or #AARRGGBB (as opposed to #RGBA or #RGGBBAA)
      * @return {me.Color} Reference to this object for method chaining
      */
-    parseHex(hexColor) {
+    parseHex(hexColor, argb = false) {
         // TODO : Memoize this function by caching its input
 
         var match;
         if ((match = hex8Rx.exec(hexColor))) {
-            // #AARRGGBB
+            // #AARRGGBB or #RRGGBBAA
             return this.setColor(
-                parseInt(match[1], 16),
-                parseInt(match[2], 16),
-                parseInt(match[3], 16),
-                (clamp(parseInt(match[4], 16), 0, 255) / 255.0).toFixed(1)
+                parseInt(match[argb === false ? 1 : 2], 16), // r
+                parseInt(match[argb === false ? 2 : 3], 16), // g
+                parseInt(match[argb === false ? 3 : 4], 16), // b
+                (clamp(parseInt(match[argb === false ? 4 : 1], 16), 0, 255) / 255.0).toFixed(1) // a
             );
         }
 
@@ -521,12 +522,16 @@ class Color {
         }
 
         if ((match = hex4Rx.exec(hexColor))) {
-            // #ARGB
+            // #ARGB or #RGBA
+            var r = match[argb === false ? 1 : 2];
+            var g = match[argb === false ? 2 : 3];
+            var b = match[argb === false ? 3 : 4];
+            var a = match[argb === false ? 4 : 1];
             return this.setColor(
-                parseInt(match[1] + match[1], 16),
-                parseInt(match[2] + match[2], 16),
-                parseInt(match[3] + match[3], 16),
-                (clamp(parseInt(match[4] + match[4], 16), 0, 255) / 255.0).toFixed(1)
+                parseInt(r + r, 16), // r
+                parseInt(g + g, 16), // g
+                parseInt(b + b, 16), // b
+                (clamp(parseInt(a + a, 16), 0, 255) / 255.0).toFixed(1) // a
             );
         }
 
