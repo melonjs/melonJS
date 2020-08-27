@@ -20,7 +20,6 @@
   "src/text/text.js",
   "src/text/bitmaptext.js",
   "src/input/pointer.js",
-  "src/level/tiled/TMXUtils.js",
   "src/level/tiled/TMXGroup.js",
   "src/level/tiled/TMXObject.js",
   "src/level/tiled/TMXTile.js",

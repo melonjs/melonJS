@@ -1,3 +1,5 @@
+import { applyTMXProperties } from "./TMXUtils.js";
+
 (function () {
 
     /**
@@ -66,7 +68,7 @@
             this.opacity = (visible === true) ? me.Math.clamp(+data.opacity || 1.0, 0.0, 1.0) : 0;
 
             // check if we have any user-defined properties
-            me.TMXUtils.applyTMXProperties(this, data);
+            applyTMXProperties(this, data);
 
             // parse all child objects/layers
             var self = this;

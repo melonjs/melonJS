@@ -4,6 +4,7 @@ import device from "./../system/device.js";
 import audio from "./../audio/audio.js";
 import state from "./../state/state.js";
 import level from "./../level/level.js";
+import * as TMXUtils from "./../level/tiled/TMXUtils.js";
 
 
 // contains all the images loaded
@@ -161,7 +162,7 @@ function preloadTMX(tmxData, onload, onerror) {
                             result = xmlhttp.responseXML;
                         }
                         // converts to a JS object
-                        var data = me.TMXUtils.parse(result);
+                        var data = TMXUtils.parse(result);
                         switch (format) {
                             case "tmx":
                                 result = data.map;

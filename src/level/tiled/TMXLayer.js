@@ -1,5 +1,6 @@
 import video from "./../../video/video.js";
 import pool from "./../../system/pooling.js";
+import * as TMXUtils from "./TMXUtils.js";
 
 (function () {
 
@@ -143,7 +144,7 @@ import pool from "./../../system/pooling.js";
             }
 
             // check if we have any user-defined properties
-            me.TMXUtils.applyTMXProperties(this, data);
+            TMXUtils.applyTMXProperties(this, data);
 
             // check for the correct rendering method
             if (typeof (this.preRender) === "undefined") {
@@ -152,7 +153,7 @@ import pool from "./../../system/pooling.js";
 
             // initialize and set the layer data
             setLayerData(this,
-                me.TMXUtils.decode(
+                TMXUtils.decode(
                     data.data,
                     data.encoding,
                     data.compression

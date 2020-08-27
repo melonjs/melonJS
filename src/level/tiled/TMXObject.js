@@ -1,4 +1,5 @@
 import Vector2d from "./../../math/vector2.js";
+import { applyTMXProperties } from "./TMXUtils.js";
 
 (function () {
 
@@ -203,10 +204,10 @@ import Vector2d from "./../../math/vector2.js";
                 this.text.width = this.width;
                 this.text.height = this.height;
                 // set the object properties
-                me.TMXUtils.applyTMXProperties(this.text, settings);
+                applyTMXProperties(this.text, settings);
             } else {
                 // set the object properties
-                me.TMXUtils.applyTMXProperties(this, settings);
+                applyTMXProperties(this, settings);
                 // a standard object
                 if (!this.shapes) {
                     // else define the object shapes if required

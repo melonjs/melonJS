@@ -3,6 +3,7 @@ import TMXOrthogonalRenderer from "./renderer/TMXOrthogonalRenderer.js";
 import TMXIsometricRenderer from "./renderer/TMXIsometricRenderer.js";
 import TMXHexagonalRenderer from "./renderer/TMXHexagonalRenderer.js";
 import TMXStaggeredRenderer from "./renderer/TMXStaggeredRenderer.js";
+import { applyTMXProperties } from "./TMXUtils.js";
 
 (function () {
 
@@ -54,7 +55,7 @@ import TMXStaggeredRenderer from "./renderer/TMXStaggeredRenderer.js";
      */
     function readImageLayer(map, data, z) {
         // Normalize properties
-        me.TMXUtils.applyTMXProperties(data.properties, data);
+        applyTMXProperties(data.properties, data);
 
         // create the layer
         var imageLayer = pool.pull("me.ImageLayer",
@@ -234,7 +235,7 @@ import TMXStaggeredRenderer from "./renderer/TMXStaggeredRenderer.js";
             this.backgroundcolor = data.backgroundcolor;
 
             // set additional map properties (if any)
-            me.TMXUtils.applyTMXProperties(this, data);
+            applyTMXProperties(this, data);
 
             // internal flag
             this.initialized = false;
