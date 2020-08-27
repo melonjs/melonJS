@@ -1,5 +1,6 @@
 describe("utils", function () {
 
+    /*
     describe("TMX Parsing", function () {
 
         it("correctly decodes single-line csv", function () {
@@ -26,6 +27,7 @@ describe("utils", function () {
         });
 
     });
+    */
 
     describe("Array", function () {
         var arr = [ "foo", "bar", "baz" ];
