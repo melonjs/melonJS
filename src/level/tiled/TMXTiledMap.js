@@ -5,6 +5,7 @@ import TMXHexagonalRenderer from "./renderer/TMXHexagonalRenderer.js";
 import TMXStaggeredRenderer from "./renderer/TMXStaggeredRenderer.js";
 import TMXTileset from "./TMXTileset.js";
 import TMXTilesetGroup from "./TMXTilesetGroup.js";
+import TMXGroup from "./TMXGroup.js";
 import { applyTMXProperties } from "./TMXUtils.js";
 
 (function () {
@@ -91,7 +92,7 @@ import { applyTMXProperties } from "./TMXUtils.js";
      * @ignore
      */
     function readObjectGroup(map, data, z) {
-        return (new me.TMXGroup(map, data, z));
+        return (new TMXGroup(map, data, z));
     }
 
     /**
