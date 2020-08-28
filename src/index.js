@@ -42,6 +42,7 @@ import TMXHexagonalRenderer from "./level/tiled/renderer/TMXHexagonalRenderer.js
 import TMXStaggeredRenderer from "./level/tiled/renderer/TMXStaggeredRenderer.js";
 import TMXTileset from "./level/tiled/TMXTileset.js";
 import TMXTilesetGroup from "./level/tiled/TMXTilesetGroup.js";
+import TMXTileMap from "./level/tiled/TMXTileMap.js";
 
 
 // alias and wrapper for deprecated API
@@ -107,7 +108,8 @@ export {
     TMXHexagonalRenderer,
     TMXStaggeredRenderer,
     TMXTileset,
-    TMXTilesetGroup
+    TMXTilesetGroup,
+    TMXTileMap
 };
 
 // Backward compatibility for deprecated method or properties are

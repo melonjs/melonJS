@@ -2,6 +2,7 @@ import utils from "./../utils/utils.js";
 import event from "./../system/event.js";
 import state from "./../state/state.js";
 import game from "./../game.js";
+import TMXTileMap from "./tiled/TMXTileMap.js";
 
 
 // our levels
@@ -93,7 +94,7 @@ var level = {
                 // just load the level with the XML stuff
                 if (levels[levelId] == null) {
                     //console.log("loading "+ levelId);
-                    levels[levelId] = new me.TMXTileMap(levelId, me.loader.getTMX(levelId));
+                    levels[levelId] = new TMXTileMap(levelId, me.loader.getTMX(levelId));
                     // level index
                     levelIdx.push(levelId);
                 }
