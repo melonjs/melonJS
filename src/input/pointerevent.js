@@ -7,6 +7,7 @@ import event from "./../system/event.js";
 import timer from "./../system/timer.js";
 import pool from "./../system/pooling.js";
 import device from "./../system/device.js";
+import Pointer from "./pointer.js";
 
 
 /**
@@ -114,11 +115,11 @@ function enablePointerEvent() {
         // the current pointer area
         currentPointer = new me.Rect(0, 0, 1, 1);
 
-        pointer = new me.Pointer(0, 0, 1, 1);
+        pointer = new Pointer(0, 0, 1, 1);
 
         // instantiate a pool of pointer catched
         for (var v = 0; v < device.maxTouchPoints; v++) {
-            T_POINTERS.push(new me.Pointer());
+            T_POINTERS.push(new Pointer());
         }
 
         if (pointerEventTarget === null) {

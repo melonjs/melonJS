@@ -15,7 +15,6 @@
   "src/loader/loadingscreen.js",
   "src/text/text.js",
   "src/text/bitmaptext.js",
-  "src/input/pointer.js",
   "src/level/tiled/TMXTile.js",
   "src/level/tiled/TMXLayer.js",
   "src/entity/draggable.js",
