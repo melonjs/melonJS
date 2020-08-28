@@ -17,6 +17,7 @@ import loader from "./loader/loader.js";
 import * as Math from "./math/math.js";
 import utils from "./utils/utils.js";
 import * as input from "./input/input.js";
+import { plugin, plugins } from "./plugin/plugin.js";
 import video from "./video/video.js";
 import save from "./system/save.js";
 import timer from "./system/timer.js";
@@ -82,6 +83,8 @@ export {
     level,
     input,
     Math,
+    plugin,
+    plugins,
     utils,
     save,
     timer,
