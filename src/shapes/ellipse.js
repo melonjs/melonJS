@@ -1,5 +1,6 @@
 import Vector2d from "./../math/vector2.js";
 import pool from "./../system/pooling.js";
+import "jay-extend";
 
 (function () {
     /**
@@ -13,7 +14,7 @@ import pool from "./../system/pooling.js";
      * @param {Number} w width (diameter) of the ellipse
      * @param {Number} h height (diameter) of the ellipse
      */
-    me.Ellipse = me.Object.extend({
+    me.Ellipse = window.Jay.extend({
         /**
          * @ignore
          */

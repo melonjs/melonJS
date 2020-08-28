@@ -1,4 +1,5 @@
 import utils from "./../utils/utils.js";
+import "jay-extend";
 
 (function () {
     /**
@@ -34,7 +35,7 @@ import utils from "./../utils/utils.js";
         * @memberOf me
         * @constructor
         */
-        singleton.Base = me.Object.extend({
+        singleton.Base = window.Jay.extend({
             /** @ignore */
             init : function () {
                 /**

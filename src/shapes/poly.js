@@ -1,6 +1,7 @@
 import earcut from "earcut";
 import Vector2d from "./../math/vector2.js";
 import pool from "./../system/pooling.js";
+import "jay-extend";
 
 (function () {
     /**
@@ -18,7 +19,7 @@ import pool from "./../system/pooling.js";
      * @param {Number} y origin point of the Polygon
      * @param {me.Vector2d[]} points array of vector defining the Polygon
      */
-    me.Polygon = me.Object.extend({
+    me.Polygon = window.Jay.extend({
         /**
          * @ignore
          */

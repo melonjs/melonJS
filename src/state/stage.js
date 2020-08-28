@@ -1,4 +1,5 @@
 import video from "./../video/video.js";
+import "jay-extend";
 
 (function () {
 
@@ -22,7 +23,7 @@ import video from "./../video/video.js";
      * @param {Boolean} [options.cameras=[new me.Camera2d()]] a list of cameras (experimental)
      * @see me.state
      */
-    me.Stage = me.Object.extend({
+    me.Stage = window.Jay.extend({
         /**
          * @ignore
          */

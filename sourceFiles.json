@@ -1,6 +1,5 @@
 [
   "src/index.js",
-  "src/lang/object.js",
   "src/shapes/ellipse.js",
   "src/shapes/poly.js",
   "src/shapes/rectangle.js",

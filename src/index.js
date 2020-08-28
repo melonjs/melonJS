@@ -2,6 +2,11 @@
 import "./polyfill/console.js";
 import "./polyfill/requestAnimationFrame.js";
 
+// external dependencies
+import "jay-extend";
+// jay-extend does not properly export Jay
+var Jay = window.Jay;
+
 // utility classes
 import audio from "./audio/audio.js";
 import collision from "./physics/collision.js";
@@ -87,6 +92,8 @@ export {
 
 // export all class definition
 export {
+    // export as me.Object for backward compatibility
+    Jay as Object,
     Color,
     Vector2d,
     Vector3d,
