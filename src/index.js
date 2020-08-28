@@ -33,6 +33,10 @@ import ObservableVector2d from "./math/observable_vector2.js";
 import ObservableVector3d from "./math/observable_vector3.js";
 import Matrix2d from "./math/matrix2.js";
 import Matrix3d from "./math/matrix3.js";
+import Polygon from "./shapes/poly.js";
+import Line from "./shapes/line.js";
+import Ellipse from "./shapes/ellipse.js";
+import Rect from "./shapes/rectangle.js";
 import QuadTree from "./physics/quadtree.js";
 import Tween from "./tweens/tween.js";
 import GLShader from "./video/webgl/glshader.js";
@@ -104,6 +108,10 @@ export {
     ObservableVector3d,
     Matrix2d,
     Matrix3d,
+    Polygon,
+    Line,
+    Ellipse,
+    Rect,
     Tween,
     QuadTree,
     GLShader,

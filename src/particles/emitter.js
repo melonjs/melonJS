@@ -1,5 +1,6 @@
 import video from "./../video/video.js";
 import pool from "./../system/pooling.js";
+import Rect from "./../shapes/rectangle.js";
 
 (function () {
     // generate a default image for the particles
@@ -323,7 +324,7 @@ import pool from "./../system/pooling.js";
      * me.game.world.removeChild(emitter);
      *
      */
-    me.ParticleEmitter = me.Rect.extend({
+    me.ParticleEmitter = Rect.extend({
         /**
          * @ignore
          */

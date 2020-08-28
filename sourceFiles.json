@@ -1,9 +1,6 @@
 [
   "src/index.js",
-  "src/shapes/ellipse.js",
-  "src/shapes/poly.js",
   "src/shapes/rectangle.js",
-  "src/shapes/line.js",
   "src/renderable/renderable.js",
   "src/renderable/colorlayer.js",
   "src/renderable/imagelayer.js",

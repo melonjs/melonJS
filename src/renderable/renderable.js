@@ -1,6 +1,7 @@
 import Vector2d from "./../math/vector2.js";
 import ObservableVector2d from "./../math/observable_vector2.js";
 import ObservableVector3d from "./../math/observable_vector3.js";
+import Rect from "./../shapes/rectangle.js";
 import pool from "./../system/pooling.js";
 
 (function () {
@@ -16,7 +17,7 @@ import pool from "./../system/pooling.js";
      * @param {Number} width object width
      * @param {Number} height object height
      */
-    me.Renderable = me.Rect.extend({
+    me.Renderable = Rect.extend({
         /**
          * @ignore
          */

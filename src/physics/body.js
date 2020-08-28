@@ -1,5 +1,6 @@
 import Vector2d from "./../math/vector2.js";
 import ObservableVector2d from "./../math/observable_vector2.js";
+import Rect from "./../shapes/rectangle.js";
 import utils from "./../utils/utils.js";
 import timer from "./../system/timer.js";
 
@@ -21,7 +22,7 @@ import timer from "./../system/timer.js";
      * @param {me.Rect|me.Rect[]|me.Polygon|me.Polygon[]|me.Line|me.Line[]|me.Ellipse|me.Ellipse[]|Object} [shapes] a initial shape, list of shapes, or JSON object defining the body
      * @param {Function} [onBodyUpdate] callback for when the body is updated (e.g. add/remove shapes)
      */
-    me.Body = me.Rect.extend({
+    me.Body = Rect.extend({
         /**
          * @ignore
          */

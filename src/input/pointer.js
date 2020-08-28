@@ -1,5 +1,6 @@
 import Vector2d from "./../math/vector2.js";
 import device from "./../system/device.js";
+import Rect from "./../shapes/rectangle.js";
 
 (function () {
 
@@ -16,7 +17,7 @@ import device from "./../system/device.js";
      * @memberOf me
      * @constructor
      */
-    me.Pointer = me.Rect.extend({
+    me.Pointer = Rect.extend({
 
         /**
          * @ignore

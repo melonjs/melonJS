@@ -1,4 +1,5 @@
 import Matrix2d from "./../../math/matrix2.js";
+import Rect from "./../../shapes/rectangle.js";
 
 (function () {
 
@@ -19,7 +20,7 @@ import Matrix2d from "./../../math/matrix2.js";
      * @param {Number} gid tile gid
      * @param {me.TMXTileset} tileset the corresponding tileset object
      */
-    me.Tile = me.Rect.extend({
+    me.Tile = Rect.extend({
         /** @ignore */
         init : function (x, y, gid, tileset) {
             var width, height;
