@@ -1,6 +1,7 @@
 import video from "./../video/video.js";
 import event from "./../system/event.js";
 import pool from "./../system/pooling.js";
+import Renderable from "./renderable.js";
 
 (function () {
 
@@ -27,13 +28,13 @@ import pool from "./../system/pooling.js";
      *     repeat :"repeat-x"
      * }), 1);
      */
-    me.ImageLayer = me.Renderable.extend({
+    me.ImageLayer = Renderable.extend({
         /**
          * @ignore
          */
         init: function (x, y, settings) {
             // call the constructor
-            this._super(me.Renderable, "init", [x, y, Infinity, Infinity]);
+            this._super(Renderable, "init", [x, y, Infinity, Infinity]);
 
             // get the corresponding image
             this.image = (typeof settings.image === "object") ? settings.image : me.loader.getImage(settings.image);
@@ -196,7 +197,7 @@ import pool from "./../system/pooling.js";
          * @param {Number} h new height
         */
         resize : function (w, h) {
-            this._super(me.Renderable, "resize", [
+            this._super(Renderable, "resize", [
                 this.repeatX ? Infinity : w,
                 this.repeatY ? Infinity : h
             ]);
@@ -320,7 +321,7 @@ import pool from "./../system/pooling.js";
             this.offset = undefined;
             pool.push(this.ratio);
             this.ratio = undefined;
-            this._super(me.Renderable, "destroy");
+            this._super(Renderable, "destroy");
         }
     });
 })();

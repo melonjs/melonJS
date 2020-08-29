@@ -1,6 +1,6 @@
 import Vector2d from "./../../math/vector2.js";
 import { applyTMXProperties } from "./TMXUtils.js";
-
+import Tile from "./TMXTile.js";
 
 /**
  * a TMX Object defintion, as defined in Tiled
@@ -230,7 +230,7 @@ export default class TMXObject {
         }
 
         // the object corresponding tile object
-        this.tile = new me.Tile(this.x, this.y, this.gid, tileset);
+        this.tile = new Tile(this.x, this.y, this.gid, tileset);
     }
 
     /**

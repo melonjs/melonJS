@@ -1,5 +1,6 @@
 import Color from "./../math/color.js";
 import pool from "./../system/pooling.js";
+import Renderable from "./renderable.js";
 
 (function () {
 
@@ -13,13 +14,13 @@ import pool from "./../system/pooling.js";
      * @param {me.Color|String} color CSS color
      * @param {Number} z z-index position
      */
-    me.ColorLayer = me.Renderable.extend({
+    me.ColorLayer = Renderable.extend({
         /**
          * @ignore
          */
         init: function (name, color, z) {
             // parent constructor
-            this._super(me.Renderable, "init", [0, 0, Infinity, Infinity]);
+            this._super(Renderable, "init", [0, 0, Infinity, Infinity]);
 
             // apply given parameters
             this.name = name;
@@ -65,7 +66,7 @@ import pool from "./../system/pooling.js";
         destroy : function () {
             pool.push(this.color);
             this.color = undefined;
-            this._super(me.Renderable, "destroy");
+            this._super(Renderable, "destroy");
         }
     });
 

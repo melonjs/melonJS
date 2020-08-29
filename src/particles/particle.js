@@ -1,5 +1,6 @@
 import Vector2d from "./../math/vector2.js";
 import timer from "./../system/timer.js";
+import Renderable from "./../renderable/renderable.js";
 
 (function () {
     /**
@@ -10,13 +11,13 @@ import timer from "./../system/timer.js";
      * @constructor
      * @param {me.ParticleEmitter} particle emitter
      */
-    me.Particle = me.Renderable.extend({
+    me.Particle = Renderable.extend({
         /**
          * @ignore
          */
         init : function (emitter) {
             // Call the super constructor
-            this._super(me.Renderable, "init", [
+            this._super(Renderable, "init", [
                 emitter.getRandomPointX(),
                 emitter.getRandomPointY(),
                 emitter.image.width,

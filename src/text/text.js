@@ -3,6 +3,8 @@ import Renderer from "./../video/renderer.js";
 import video from "./../video/video.js";
 import utils from "./../utils/utils.js";
 import pool from "./../system/pooling.js";
+import Renderable from "./../renderable/renderable.js";
+
 
 /*
  * ASCII Table
@@ -53,12 +55,12 @@ import pool from "./../system/pooling.js";
      * @example
      * var font = new me.Text(0, 0, {font: "Arial", size: 8, fillStyle: this.color});
      */
-    me.Text = me.Renderable.extend({
+    me.Text = Renderable.extend({
 
         /** @ignore */
         init : function (x, y, settings) {
             // call the parent constructor
-            this._super(me.Renderable, "init", [x, y, settings.width || 0, settings.height || 0]);
+            this._super(Renderable, "init", [x, y, settings.width || 0, settings.height || 0]);
 
             /**
              * defines the color used to draw the font.<br>
@@ -443,7 +445,7 @@ import pool from "./../system/pooling.js";
             pool.push(this.strokeStyle);
             this.fillStyle = this.strokeStyle = undefined;
             this._text.length = 0;
-            this._super(me.Renderable, "destroy");
+            this._super(Renderable, "destroy");
         }
     });
 })();

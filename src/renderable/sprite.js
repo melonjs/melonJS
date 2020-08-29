@@ -2,6 +2,7 @@ import Vector2d from "./../math/vector2.js";
 import video from "./../video/video.js";
 import pool from "./../system/pooling.js";
 import {Texture } from "./../video/texture.js";
+import Renderable from "./renderable.js";
 
 (function () {
 
@@ -41,7 +42,7 @@ import {Texture } from "./../video/texture.js";
      *     region : "npc2.png",
      * });
      */
-    me.Sprite = me.Renderable.extend({
+    me.Sprite = Renderable.extend({
         /**
          * @ignore
          */
@@ -120,7 +121,7 @@ import {Texture } from "./../video/texture.js";
             };
 
             // call the super constructor
-            this._super(me.Renderable, "init", [ x, y, 0, 0 ]);
+            this._super(Renderable, "init", [ x, y, 0, 0 ]);
 
             // set the proper image/texture to use
             if (settings.image instanceof Texture) {
@@ -599,7 +600,7 @@ import {Texture } from "./../video/texture.js";
         destroy : function () {
             pool.push(this.offset);
             this.offset = undefined;
-            this._super(me.Renderable, "destroy");
+            this._super(Renderable, "destroy");
         },
 
         /**

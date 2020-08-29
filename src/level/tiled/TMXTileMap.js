@@ -9,7 +9,9 @@ import TMXStaggeredRenderer from "./renderer/TMXStaggeredRenderer.js";
 import TMXTileset from "./TMXTileset.js";
 import TMXTilesetGroup from "./TMXTilesetGroup.js";
 import TMXGroup from "./TMXGroup.js";
+import TMXLayer from "./TMXLayer.js";
 import { applyTMXProperties } from "./TMXUtils.js";
+import Renderable from "./../../renderable/renderable.js";
 
 
 // constant to identify the collision object layer
@@ -48,7 +50,7 @@ function getNewDefaultRenderer(map) {
  * @ignore
  */
 function readLayer(map, data, z) {
-    var layer = new me.TMXLayer(data, map.tilewidth, map.tileheight, map.orientation, map.tilesets, z);
+    var layer = new TMXLayer(data, map.tilewidth, map.tileheight, map.orientation, map.tilesets, z);
     // set a renderer
     layer.setRenderer(map.getRenderer());
     return layer;
@@ -490,7 +492,7 @@ export default class TMXTileMap {
                 }
 
                 // groups can contains either text, objects or layers
-                if (settings instanceof me.TMXLayer) {
+                if (settings instanceof TMXLayer) {
                     // layers are already instantiated & initialized
                     obj = settings;
                     // z value set already
@@ -549,7 +551,7 @@ export default class TMXTileMap {
                     if (obj.isRenderable === true) {
                         obj.setOpacity(obj.getOpacity() * group.opacity);
                         // and to child renderables if any
-                        if (obj.renderable instanceof me.Renderable) {
+                        if (obj.renderable instanceof Renderable) {
                             obj.renderable.setOpacity(obj.renderable.getOpacity() * group.opacity);
                         }
                     }

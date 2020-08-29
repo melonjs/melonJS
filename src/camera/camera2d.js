@@ -7,6 +7,7 @@ import Matrix3d from "./../math/matrix3.js";
 import video from "./../video/video.js";
 import event from "./../system/event.js";
 import pool from "./../system/pooling.js";
+import Renderable from "./../renderable/renderable.js";
 
 (function () {
     // some ref shortcut
@@ -25,12 +26,12 @@ import pool from "./../system/pooling.js";
      * @param {Number} maxX end x offset
      * @param {Number} maxY end y offset
      */
-    me.Camera2d = me.Renderable.extend({
+    me.Camera2d = Renderable.extend({
         /**
          * @ignore
          */
         init : function (minX, minY, maxX, maxY) {
-            this._super(me.Renderable, "init", [minX, minY, maxX - minX, maxY - minY]);
+            this._super(Renderable, "init", [minX, minY, maxX - minX, maxY - minY]);
 
             /**
              * Axis definition
@@ -276,7 +277,7 @@ import pool from "./../system/pooling.js";
         */
         resize : function (w, h) {
             // parent consctructor, resize camera rect
-            this._super(me.Renderable, "resize", [w, h]);
+            this._super(Renderable, "resize", [w, h]);
 
             // disable damping while resizing
             this.smoothFollow = false;
@@ -330,7 +331,7 @@ import pool from "./../system/pooling.js";
          * me.game.viewport.follow(this, me.game.viewport.AXIS.BOTH, 0.1);
          */
         follow : function (target, axis, damping) {
-            if (target instanceof me.Renderable) {
+            if (target instanceof Renderable) {
                 this.target = target.pos;
             }
             else if ((target instanceof Vector2d) || (target instanceof Vector3d) ||

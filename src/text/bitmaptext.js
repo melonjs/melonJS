@@ -1,6 +1,7 @@
 import Color from "./../math/color.js";
 import utils from "./../utils/utils.js";
 import pool from "./../system/pooling.js";
+import Renderable from "./../renderable/renderable.js";
 
 (function () {
 
@@ -63,12 +64,12 @@ import pool from "./../system/pooling.js";
      * // or just add it to the word container
      * me.game.world.addChild(myFont);
      */
-    me.BitmapText = me.Renderable.extend({
+    me.BitmapText = Renderable.extend({
 
         /** @ignore */
         init : function (x, y, settings) {
             // call the parent constructor
-            this._super(me.Renderable, "init", [x, y, settings.width || 0, settings.height || 0]);
+            this._super(Renderable, "init", [x, y, settings.width || 0, settings.height || 0]);
 
             /**
              * Set the default text alignment (or justification),<br>
@@ -386,7 +387,7 @@ import pool from "./../system/pooling.js";
             pool.push(this.fontData);
             this.fontData = undefined;
             this._text.length = 0;
-            this._super(me.Renderable, "destroy");
+            this._super(Renderable, "destroy");
         }
     });
 

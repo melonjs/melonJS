@@ -3,6 +3,7 @@ import game from "./../game.js";
 import event from "./../system/event.js";
 import pool from "./../system/pooling.js";
 import state from "./../state/state.js";
+import Renderable from "./renderable.js";
 
 (function () {
     /**
@@ -26,7 +27,7 @@ import state from "./../state/state.js";
      * @param {Number} [w=me.game.viewport.width] width of the container
      * @param {Number} [h=me.game.viewport.height] height of the container
      */
-    me.Container = me.Renderable.extend({
+    me.Container = Renderable.extend({
         /**
          * @ignore
          */
@@ -39,7 +40,7 @@ import state from "./../state/state.js";
 
 
             // call the _super constructor
-            this._super(me.Renderable,
+            this._super(Renderable,
                 "init",
                 [x || 0, y || 0,
                 width || Infinity,
@@ -556,7 +557,7 @@ import state from "./../state/state.js";
          * @function
          */
         updateBoundsPos : function (newX, newY) {
-            this._super(me.Renderable, "updateBoundsPos", [ newX, newY ]);
+            this._super(Renderable, "updateBoundsPos", [ newX, newY ]);
 
             // Update container's absolute position
             this._absPos.set(newX, newY);
@@ -820,14 +821,14 @@ import state from "./../state/state.js";
             // empty the container
             this.reset();
             // call the parent destroy method
-            this._super(me.Renderable, "destroy", arguments);
+            this._super(Renderable, "destroy", arguments);
         },
 
         /**
          * @ignore
          */
         update : function (dt) {
-            this._super(me.Renderable, "update", [dt]);
+            this._super(Renderable, "update", [dt]);
             var isDirty = false;
             var isFloating = false;
             var isPaused = state.isPaused();

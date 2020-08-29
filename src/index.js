@@ -44,15 +44,18 @@ import WebGLCompositor from "./video/webgl/webgl_compositor.js";
 import Renderer from "./video/renderer.js";
 import WebGLRenderer from "./video/webgl/webgl_renderer.js";
 import CanvasRenderer from "./video/canvas/canvas_renderer.js";
+import Renderable from "./renderable/renderable.js";
 import BitmapTextData from "./text/bitmaptextdata.js";
 import TMXRenderer from "./level/tiled/renderer/TMXRenderer.js";
 import TMXOrthogonalRenderer from "./level/tiled/renderer/TMXOrthogonalRenderer.js";
 import TMXIsometricRenderer from "./level/tiled/renderer/TMXIsometricRenderer.js";
 import TMXHexagonalRenderer from "./level/tiled/renderer/TMXHexagonalRenderer.js";
 import TMXStaggeredRenderer from "./level/tiled/renderer/TMXStaggeredRenderer.js";
+import Tile from "./level/tiled/TMXTile.js";
 import TMXTileset from "./level/tiled/TMXTileset.js";
 import TMXTilesetGroup from "./level/tiled/TMXTilesetGroup.js";
 import TMXTileMap from "./level/tiled/TMXTileMap.js";
+import TMXLayer from "./level/tiled/TMXLayer.js";
 import Pointer from "./input/pointer.js";
 
 
@@ -120,15 +123,18 @@ export {
     Renderer,
     WebGLRenderer,
     CanvasRenderer,
+    Renderable,
     BitmapTextData,
     TMXRenderer,
     TMXOrthogonalRenderer,
     TMXIsometricRenderer,
     TMXHexagonalRenderer,
     TMXStaggeredRenderer,
+    Tile,
     TMXTileset,
     TMXTilesetGroup,
     TMXTileMap,
+    TMXLayer,
     Pointer
 };
 

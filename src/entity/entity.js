@@ -1,4 +1,5 @@
 import Vector2d from "./../math/vector2.js";
+import Renderable from "./../renderable/renderable.js";
 
 (function () {
 
@@ -23,7 +24,7 @@ import Vector2d from "./../math/vector2.js";
      * @param {Number} [settings.collisionMask] Mask collision detection for this object
      * @param {me.Rect[]|me.Polygon[]|me.Line[]|me.Ellipse[]} [settings.shapes] the initial list of collision shapes (usually populated through Tiled)
      */
-    me.Entity = me.Renderable.extend({
+    me.Entity = Renderable.extend({
         /**
          * @ignore
          */
@@ -41,7 +42,7 @@ import Vector2d from "./../math/vector2.js";
             }
 
             // call the super constructor
-            this._super(me.Renderable, "init", [x, y, settings.width, settings.height]);
+            this._super(Renderable, "init", [x, y, settings.width, settings.height]);
 
             if (settings.image) {
                 // set the frame size to the given entity size, if not defined in settings
@@ -141,7 +142,7 @@ import Vector2d from "./../math/vector2.js";
             if (this.renderable) {
                 return this.renderable.update(dt);
             }
-            return this._super(me.Renderable, "update", [dt]);
+            return this._super(Renderable, "update", [dt]);
         },
 
         /**
@@ -154,12 +155,12 @@ import Vector2d from "./../math/vector2.js";
         updateBoundsPos : function (x, y) {
             if (typeof this.body !== "undefined") {
                 var _pos = this.body.pos;
-                this._super(me.Renderable, "updateBoundsPos", [
+                this._super(Renderable, "updateBoundsPos", [
                     x + _pos.x,
                     y + _pos.y
                 ]);
             } else {
-                this._super(me.Renderable, "updateBoundsPos", [x, y]);
+                this._super(Renderable, "updateBoundsPos", [x, y]);
             }
             return this.getBounds();
         },
@@ -187,7 +188,7 @@ import Vector2d from "./../math/vector2.js";
                 this.pos.y + this.body.pos.y
             );
 
-            if (this.renderable instanceof me.Renderable) {
+            if (this.renderable instanceof Renderable) {
                 // draw the child renderable's anchorPoint at the entity's
                 // anchor point.  the entity's anchor point is a scale from
                 // body position to body width/height
@@ -211,7 +212,7 @@ import Vector2d from "./../math/vector2.js";
          **/
         draw : function (renderer, rect) {
             var renderable = this.renderable;
-            if (renderable instanceof me.Renderable) {
+            if (renderable instanceof Renderable) {
                 // predraw (apply transforms)
                 renderable.preDraw(renderer);
 
@@ -235,7 +236,7 @@ import Vector2d from "./../math/vector2.js";
             }
 
             // call the parent destroy method
-            this._super(me.Renderable, "destroy", arguments);
+            this._super(Renderable, "destroy", arguments);
         },
 
         /**
@@ -286,7 +287,7 @@ import Vector2d from "./../math/vector2.js";
          * @ignore
          */
         set : function (value) {
-            if (value instanceof me.Renderable) {
+            if (value instanceof Renderable) {
                 this.children[0] = value;
                 this.children[0].ancestor = this;
             } else {

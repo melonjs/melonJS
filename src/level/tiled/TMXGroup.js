@@ -1,5 +1,6 @@
 import { applyTMXProperties } from "./TMXUtils.js";
 import TMXObject from "./TMXObject.js";
+import TMXLayer from "./TMXLayer.js";
 
 /**
  * @classdesc
@@ -78,7 +79,7 @@ export default class TMXGroup {
         if (data.layers) {
             var _layers = data.layers;
             _layers.forEach(function (data) {
-                var layer = new me.TMXLayer(data, map.tilewidth, map.tileheight, map.orientation, map.tilesets, z++);
+                var layer = new TMXLayer(data, map.tilewidth, map.tileheight, map.orientation, map.tilesets, z++);
                 // set a renderer
                 layer.setRenderer(map.getRenderer());
                 // resize container accordingly

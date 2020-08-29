@@ -1,7 +1,5 @@
 [
   "src/index.js",
-  "src/shapes/rectangle.js",
-  "src/renderable/renderable.js",
   "src/renderable/colorlayer.js",
   "src/renderable/imagelayer.js",
   "src/renderable/sprite.js",
@@ -15,8 +13,6 @@
   "src/loader/loadingscreen.js",
   "src/text/text.js",
   "src/text/bitmaptext.js",
-  "src/level/tiled/TMXTile.js",
-  "src/level/tiled/TMXLayer.js",
   "src/entity/draggable.js",
   "src/entity/droptarget.js",
   "src/entity/collectable_entity.js",

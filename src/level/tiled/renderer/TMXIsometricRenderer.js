@@ -1,6 +1,7 @@
 import Vector2d from "./../../../math/vector2.js";
 import pool from "./../../../system/pooling.js";
 import TMXRenderer from "./TMXRenderer.js";
+import TMXLayer from "./../TMXLayer.js";
 
 
 /**
@@ -47,7 +48,7 @@ class TMXIsometricRenderer extends TMXRenderer {
      * @return {me.Rect}
      */
     getBounds(layer) {
-        var bounds = layer instanceof me.TMXLayer ? pool.pull("me.Rect", 0, 0, 0, 0) : this.bounds;
+        var bounds = layer instanceof TMXLayer ? pool.pull("me.Rect", 0, 0, 0, 0) : this.bounds;
         bounds.setShape(
             0, 0,
             (this.cols + this.rows) * (this.tilewidth / 2),

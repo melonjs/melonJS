@@ -2,10 +2,11 @@ import video from "./../video/video.js";
 import event from "./../system/event.js";
 import {nextPowerOfTwo} from "./../math/math.js";
 import pool from "./../system/pooling.js";
+import Renderable from "./../renderable/renderable.js";
 
 (function () {
     // a basic progress bar object
-    var ProgressBar = me.Renderable.extend({
+    var ProgressBar = Renderable.extend({
         /**
          * @ignore
          */
@@ -14,7 +15,7 @@ import pool from "./../system/pooling.js";
 
             this.barHeight = h;
 
-            this._super(me.Renderable, "init", [x, y, w, h]);
+            this._super(Renderable, "init", [x, y, w, h]);
 
             this.anchorPoint.set(0, 0);
 
@@ -71,12 +72,12 @@ import pool from "./../system/pooling.js";
     });
 
     // the melonJS Logo
-    var IconLogo = me.Renderable.extend({
+    var IconLogo = Renderable.extend({
         /**
          * @ignore
          */
         init : function (x, y) {
-            this._super(me.Renderable, "init", [x, y, 100, 85]);
+            this._super(Renderable, "init", [x, y, 100, 85]);
 
             this.iconCanvas = video.createCanvas(
                 nextPowerOfTwo(this.width),
@@ -122,12 +123,12 @@ import pool from "./../system/pooling.js";
     });
 
     // the melonJS Text Logo
-    var TextLogo = me.Renderable.extend({
+    var TextLogo = Renderable.extend({
         /**
          * @ignore
          */
         init : function (w, h) {
-            this._super(me.Renderable, "init", [0, 0, w, h]);
+            this._super(Renderable, "init", [0, 0, w, h]);
 
             this.textWidth = 0;
 

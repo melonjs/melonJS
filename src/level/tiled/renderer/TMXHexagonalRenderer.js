@@ -1,6 +1,7 @@
 import Vector2d from "./../../../math/vector2.js";
 import pool from "./../../../system/pooling.js";
 import TMXRenderer from "./TMXRenderer.js";
+import TMXLayer from "./../TMXLayer.js";
 
 
 
@@ -87,7 +88,7 @@ class TMXHexagonalRenderer extends TMXRenderer {
      * @return {me.Rect}
      */
     getBounds(layer) {
-        var bounds = layer instanceof me.TMXLayer ? pool.pull("me.Rect", 0, 0, 0, 0) : this.bounds;
+        var bounds = layer instanceof TMXLayer ? pool.pull("me.Rect", 0, 0, 0, 0) : this.bounds;
 
         // origin is always 0 for finite maps
         bounds.pos.set(0, 0);
