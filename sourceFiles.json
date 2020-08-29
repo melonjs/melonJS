@@ -1,7 +1,5 @@
 [
   "src/index.js",
-  "src/renderable/colorlayer.js",
-  "src/renderable/imagelayer.js",
   "src/renderable/sprite.js",
   "src/renderable/GUI.js",
   "src/entity/entity.js",

@@ -49,6 +49,8 @@ import Renderable from "./renderable/renderable.js";
 import Text from "./text/text.js";
 import BitmapText from "./text/bitmaptext.js";
 import BitmapTextData from "./text/bitmaptextdata.js";
+import ColorLayer from "./renderable/colorlayer.js";
+import ImageLayer from "./renderable/imagelayer.js";
 import TMXRenderer from "./level/tiled/renderer/TMXRenderer.js";
 import TMXOrthogonalRenderer from "./level/tiled/renderer/TMXOrthogonalRenderer.js";
 import TMXIsometricRenderer from "./level/tiled/renderer/TMXIsometricRenderer.js";
@@ -135,6 +137,8 @@ export {
     Text,
     BitmapText,
     BitmapTextData,
+    ColorLayer,
+    ImageLayer,
     TMXRenderer,
     TMXOrthogonalRenderer,
     TMXIsometricRenderer,
@@ -207,8 +211,8 @@ export function boot() {
     pool.register("me.Text", Text, true);
     pool.register("me.BitmapText", BitmapText, true);
     pool.register("me.BitmapTextData", BitmapTextData, true);
-    pool.register("me.ImageLayer", me.ImageLayer, true);
-    pool.register("me.ColorLayer", me.ColorLayer, true);
+    pool.register("me.ImageLayer", ImageLayer, true);
+    pool.register("me.ColorLayer", ColorLayer, true);
     pool.register("me.Vector2d", Vector2d, true);
     pool.register("me.Vector3d", Vector3d, true);
     pool.register("me.ObservableVector2d", ObservableVector2d, true);
