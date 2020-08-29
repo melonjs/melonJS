@@ -4,8 +4,6 @@ import Rect from "./../shapes/rectangle.js";
 import utils from "./../utils/utils.js";
 import timer from "./../system/timer.js";
 
-(function () {
-
     /**
      * a Generic Body Object with some physic properties and behavior functionality<br>
      The body object is offten attached as a member of an Entity.  The Body object can handle movements of the parent with
@@ -14,7 +12,7 @@ import timer from "./../system/timer.js";
      to calcuate a new velocity and 2) the parent position is updated by adding this to the parent.pos (position me.Vector2d)
      value. Thus Affecting the movement of the parent.  Look at the source code for /src/physics/body.js:update (me.Body.update) for
      a better understanding.
-     * @class
+     * @class Body
      * @extends me.Rect
      * @memberOf me
      * @constructor
@@ -22,7 +20,7 @@ import timer from "./../system/timer.js";
      * @param {me.Rect|me.Rect[]|me.Polygon|me.Polygon[]|me.Line|me.Line[]|me.Ellipse|me.Ellipse[]|Object} [shapes] a initial shape, list of shapes, or JSON object defining the body
      * @param {Function} [onBodyUpdate] callback for when the body is updated (e.g. add/remove shapes)
      */
-    me.Body = Rect.extend({
+var Body = Rect.extend({
         /**
          * @ignore
          */
@@ -704,4 +702,5 @@ import timer from "./../system/timer.js";
             this.shapes.length = 0;
         }
     });
-})();
+
+export default Body;

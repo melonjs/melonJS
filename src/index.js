@@ -38,6 +38,7 @@ import Line from "./shapes/line.js";
 import Ellipse from "./shapes/ellipse.js";
 import Rect from "./shapes/rectangle.js";
 import QuadTree from "./physics/quadtree.js";
+import Body from "./physics/body.js";
 import Tween from "./tweens/tween.js";
 import GLShader from "./video/webgl/glshader.js";
 import WebGLCompositor from "./video/webgl/webgl_compositor.js";
@@ -128,6 +129,7 @@ export {
     WebGLRenderer,
     CanvasRenderer,
     Renderable,
+    Body,
     Text,
     BitmapText,
     BitmapTextData,

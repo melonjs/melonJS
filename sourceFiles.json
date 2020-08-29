@@ -5,7 +5,6 @@
   "src/renderable/sprite.js",
   "src/renderable/GUI.js",
   "src/renderable/container.js",
-  "src/physics/body.js",
   "src/physics/world.js",
   "src/entity/entity.js",
   "src/entity/draggable.js",

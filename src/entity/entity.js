@@ -1,5 +1,6 @@
 import Vector2d from "./../math/vector2.js";
 import Renderable from "./../renderable/renderable.js";
+import Body from "./../physics/body.js";
 
 (function () {
 
@@ -111,7 +112,7 @@ import Renderable from "./../renderable/renderable.js";
                 this.body.init(this, settings.shapes, this.onBodyUpdate.bind(this));
             }
             else {
-                this.body = new me.Body(this, settings.shapes, this.onBodyUpdate.bind(this));
+                this.body = new Body(this, settings.shapes, this.onBodyUpdate.bind(this));
             }
 
             // resize the entity if required
