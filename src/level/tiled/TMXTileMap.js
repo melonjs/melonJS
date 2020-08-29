@@ -12,7 +12,7 @@ import TMXGroup from "./TMXGroup.js";
 import TMXLayer from "./TMXLayer.js";
 import { applyTMXProperties } from "./TMXUtils.js";
 import Renderable from "./../../renderable/renderable.js";
-
+import Container from "./../../renderable/container.js";
 
 // constant to identify the collision object layer
 var COLLISION_GROUP = "collision";
@@ -463,7 +463,7 @@ export default class TMXTileMap {
 
             if (flatten === false) {
                 // create a new container
-                targetContainer = new me.Container(0, 0, this.width, this.height);
+                targetContainer = new Container(0, 0, this.width, this.height);
 
                 // tiled uses 0,0 by default
                 targetContainer.anchorPoint.set(0, 0);

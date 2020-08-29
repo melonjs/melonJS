@@ -62,6 +62,8 @@ import TMXLayer from "./level/tiled/TMXLayer.js";
 import Pointer from "./input/pointer.js";
 import Stage from "./state/stage.js";
 import Camera2d from "./camera/camera2d.js";
+import Container from "./renderable/container.js";
+import World from "./physics/world.js";
 
 
 // alias and wrapper for deprecated API
@@ -145,7 +147,9 @@ export {
     TMXLayer,
     Pointer,
     Stage,
-    Camera2d
+    Camera2d,
+    Container,
+    World
 };
 
 // Backward compatibility for deprecated method or properties are

@@ -4,7 +4,6 @@ import ObservableVector3d from "./../math/observable_vector3.js";
 import Rect from "./../shapes/rectangle.js";
 import pool from "./../system/pooling.js";
 
-
 /**
  * A base class for renderable objects.
  * @class
@@ -578,7 +577,7 @@ var Renderable = Rect.extend({
         var bounds = this.getBounds();
         bounds.pos.set(newX, newY, bounds.pos.z);
         // XXX: This is called from the constructor, before it gets an ancestor
-        if (this.ancestor instanceof me.Container && !this.floating) {
+        if (typeof this.ancestor !== "undefined" && !this.floating) {
             bounds.pos.add(this.ancestor._absPos);
         }
         return bounds;

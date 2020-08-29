@@ -1,6 +1,7 @@
 import video from "./../video/video.js";
 import pool from "./../system/pooling.js";
 import Rect from "./../shapes/rectangle.js";
+import ParticleContainer from "./particlecontainer.js";
 
 (function () {
     // generate a default image for the particles
@@ -360,7 +361,7 @@ import Rect from "./../shapes/rectangle.js";
             // don't sort the particles by z-index
             this.autoSort = false;
 
-            this.container = new me.ParticleContainer(this);
+            this.container = new ParticleContainer(this);
 
             /**
              * @ignore
