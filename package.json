@@ -56,7 +56,6 @@
   "devDependencies": {
     "@rollup/plugin-buble": "^0.21.3",
     "@rollup/plugin-commonjs": "^15.0.0",
-    "@rollup/plugin-multi-entry": "^3.0.1",
     "@rollup/plugin-node-resolve": "^9.0.0",
     "@rollup/plugin-replace": "^2.3.3",
     "cheerio": "^1.0.0-rc.3",
@@ -71,7 +70,7 @@
     "karma-jasmine": "^4.0.1",
     "karma-nyan-reporter": "0.2.5",
     "qs": ">=6.0.4",
-    "rollup": "^2.26.5",
+    "rollup": "^2.26.8",
     "rollup-plugin-bundle-size": "^1.0.3",
     "rollup-plugin-string": "^3.0.0",
     "terser": "^5.2.1"

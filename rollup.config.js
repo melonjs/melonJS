@@ -1,14 +1,11 @@
 import buble from '@rollup/plugin-buble';
-import multiEntry from "@rollup/plugin-multi-entry";
 import { string } from 'rollup-plugin-string';
 import replace from '@rollup/plugin-replace';
 import bundleSize from 'rollup-plugin-bundle-size';
 import commonjs from '@rollup/plugin-commonjs';
 import resolve from '@rollup/plugin-node-resolve';
 
-
 const pkg = require('./package.json');
-
 
 // credit/license information
 const license = [
@@ -22,7 +19,7 @@ const license = [
 ].join('\n');
 
 export default {
-    input: require('./sourceFiles.json'),
+    input: 'src/index.js',
     plugins: [
         resolve({
             mainFields: ['module', 'main'],
@@ -33,7 +30,6 @@ export default {
             include: 'node_modules/**',
             sourceMap: false
         }),
-        multiEntry(),
         replace({
             '__VERSION__': pkg.version,
             delimiters: ['', '']
