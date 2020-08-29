@@ -2,6 +2,7 @@
 
 ## 9.0.0 (WIP)
 - melonJS is now automatically transpiled (for es6 classes) and bundled into a es5 umd module using rollup
+- Core : me.Stage constructor now accept new argument properties to specify the onResetEvent and onDestroyEvent functions
 - TMX : support for layer tintcolor
 
 ## 8.0.1 (12 Aug 2020)

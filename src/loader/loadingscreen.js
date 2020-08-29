@@ -193,7 +193,7 @@ var TextLogo = Renderable.extend({
  * @ignore
  * @constructor
  */
-var DefaultLoadingScreen = Stage.extend({
+var defaultLoadingScreen = new Stage({
     /**
      * call when the loader is resetted
      * @ignore
@@ -224,4 +224,4 @@ var DefaultLoadingScreen = Stage.extend({
     }
 });
 
-export default DefaultLoadingScreen;
+export default defaultLoadingScreen;

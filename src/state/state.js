@@ -3,7 +3,7 @@ import event from "./../system/event.js";
 import timer from "./../system/timer.js";
 import game from "./../game.js";
 import Stage from "./../state/stage.js";
-import DefaultLoadingScreen from "./../loader/loadingscreen.js";
+import defaultLoadingScreen from "./../loader/loadingscreen.js";
 
 
 // current state
@@ -273,7 +273,7 @@ var state = {
      */
     init() {
         // set the built-in loading stage
-        this.set(this.LOADING, new DefaultLoadingScreen());
+        this.set(this.LOADING, defaultLoadingScreen);
         // set and enable the default stage
         this.set(this.DEFAULT, new Stage());
         // enable by default as soon as the display is initialized

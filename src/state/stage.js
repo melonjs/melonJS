@@ -22,6 +22,8 @@ var default_settings = {
  * @constructor
  * @param {Object} [options] The stage` parameters
  * @param {Boolean} [options.cameras=[new me.Camera2d()]] a list of cameras (experimental)
+ * @param {Function} [options.onResetEvent] called by the state manager when reseting the object
+ * @param {Function} [options.onDestroyEvent] called by the state manager before switching to another state
  * @see me.state
  */
 var Stage = window.Jay.extend({
@@ -142,7 +144,11 @@ var Stage = window.Jay.extend({
      * @see me.state#change
      */
     onResetEvent : function () {
-        // to be extended
+        // execute onResetEvent function if given through the constructor
+        if (typeof this.settings.onResetEvent === "function") {
+            this.settings.onResetEvent.apply(this, arguments);
+        }
+
     },
 
     /**
@@ -153,7 +159,10 @@ var Stage = window.Jay.extend({
      * @function
      */
     onDestroyEvent : function () {
-        // to be extended
+        // execute onDestroyEvent function if given through the constructor
+        if (typeof this.settings.onDestroyEvent === "function") {
+            this.settings.onDestroyEvent.apply(this, arguments);
+        }
     }
 });
 
