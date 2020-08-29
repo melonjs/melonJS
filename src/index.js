@@ -66,6 +66,8 @@ import Stage from "./state/stage.js";
 import Camera2d from "./camera/camera2d.js";
 import Container from "./renderable/container.js";
 import World from "./physics/world.js";
+import ParticleEmitter from "./particles/emitter.js";
+import Particle from "./particles/particle.js";
 
 
 // alias and wrapper for deprecated API
@@ -153,7 +155,9 @@ export {
     Stage,
     Camera2d,
     Container,
-    World
+    World,
+    ParticleEmitter,
+    Particle
 };
 
 // Backward compatibility for deprecated method or properties are
