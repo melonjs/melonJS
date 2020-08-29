@@ -209,10 +209,10 @@ export function boot() {
     pool.register("me.ObservableVector3d", ObservableVector3d, true);
     pool.register("me.Matrix2d", Matrix2d, true);
     pool.register("me.Matrix3d", Matrix3d, true);
-    pool.register("me.Rect", me.Rect, true);
-    pool.register("me.Polygon", me.Polygon, true);
-    pool.register("me.Line", me.Line, true);
-    pool.register("me.Ellipse", me.Ellipse, true);
+    pool.register("me.Rect", Rect, true);
+    pool.register("me.Polygon", Polygon, true);
+    pool.register("me.Line", Line, true);
+    pool.register("me.Ellipse", Ellipse, true);
 
     // if use with no namespace (e.g. es6)
     pool.register("Tween", Tween, true);
