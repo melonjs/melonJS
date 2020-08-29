@@ -58,6 +58,7 @@ import TMXTileMap from "./level/tiled/TMXTileMap.js";
 import TMXLayer from "./level/tiled/TMXLayer.js";
 import Pointer from "./input/pointer.js";
 import Stage from "./state/stage.js";
+import Camera2d from "./camera/camera2d.js";
 
 
 // alias and wrapper for deprecated API
@@ -137,7 +138,8 @@ export {
     TMXTileMap,
     TMXLayer,
     Pointer,
-    Stage
+    Stage,
+    Camera2d
 };
 
 // Backward compatibility for deprecated method or properties are

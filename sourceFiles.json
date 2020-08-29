@@ -7,7 +7,6 @@
   "src/renderable/container.js",
   "src/physics/body.js",
   "src/physics/world.js",
-  "src/camera/camera2d.js",
   "src/entity/entity.js",
   "src/text/text.js",
   "src/text/bitmaptext.js",

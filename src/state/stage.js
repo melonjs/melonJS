@@ -1,4 +1,5 @@
 import video from "./../video/video.js";
+import Camera2d from "./../camera/camera2d.js";
 import "jay-extend";
 
 
@@ -67,7 +68,7 @@ var Stage = window.Jay.extend({
                 var width = video.renderer.getWidth();
                 var height = video.renderer.getHeight();
                 // new default camera instance
-                default_camera = new me.Camera2d(0, 0, width, height);
+                default_camera = new Camera2d(0, 0, width, height);
             }
             this.cameras.set("default", default_camera);
         }
