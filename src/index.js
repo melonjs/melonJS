@@ -70,6 +70,12 @@ import Container from "./renderable/container.js";
 import World from "./physics/world.js";
 import ParticleEmitter from "./particles/emitter.js";
 import Particle from "./particles/particle.js";
+import Entity from "./entity/entity.js";
+import CollectableEntity from "./entity/collectable_entity.js";
+import LevelEntity from "./entity/level_entity.js";
+import DraggableEntity from "src/entity/draggable.js";
+import DroptargetEntity from "src/entity/droptarget.js";
+
 
 
 // alias and wrapper for deprecated API
@@ -161,7 +167,12 @@ export {
     Container,
     World,
     ParticleEmitter,
-    Particle
+    Particle,
+    Entity,
+    CollectableEntity,
+    LevelEntity,
+    DraggableEntity,
+    DroptargetEntity
 };
 
 // Backward compatibility for deprecated method or properties are
@@ -209,9 +220,9 @@ export function boot() {
     device._check();
 
     // register all built-ins objects into the object pool
-    pool.register("me.Entity", me.Entity);
-    pool.register("me.CollectableEntity", me.CollectableEntity);
-    pool.register("me.LevelEntity", me.LevelEntity);
+    pool.register("me.Entity", Entity);
+    pool.register("me.CollectableEntity", CollectableEntity);
+    pool.register("me.LevelEntity", LevelEntity);
     pool.register("me.Tween", Tween, true);
     pool.register("me.Color", Color, true);
     pool.register("me.Particle", Particle, true);
