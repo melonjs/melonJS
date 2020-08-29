@@ -5,6 +5,7 @@ import event from "./../system/event.js";
 import device from "./../system/device.js";
 import { setPrefixed } from "./../utils/agent.js";
 import { Texture } from "./texture.js";
+import Rect from "./../shapes/rectangle.js";
 
 /**
  * @classdesc
@@ -87,7 +88,7 @@ class Renderer {
         this.uvOffset = 0;
 
         // the parent container bouds
-        this.parentBounds = new me.Rect(0, 0, 0, 0);
+        this.parentBounds = new Rect(0, 0, 0, 0);
 
         this.Texture = Texture;
 

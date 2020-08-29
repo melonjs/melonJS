@@ -309,7 +309,7 @@ import timer from "./../system/timer.js";
          * this.body.addShape(me.loader.getJSON("shapesdef").banana);
          */
         addShape : function (shape, batchInsert) {
-            if (shape instanceof me.Rect) {
+            if (shape instanceof Rect) {
                 this.shapes.push(shape.toPolygon());
             } else if (shape instanceof me.Polygon || shape instanceof me.Ellipse) {
                 // else polygon or circle

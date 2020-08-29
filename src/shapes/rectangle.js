@@ -154,7 +154,7 @@ var Rect = Polygon.extend({
      * @return {me.Rect} new rectangle
      */
     clone : function () {
-        return new me.Rect(this.pos.x, this.pos.y, this._width, this._height);
+        return new Rect(this.pos.x, this.pos.y, this._width, this._height);
     },
 
     /**

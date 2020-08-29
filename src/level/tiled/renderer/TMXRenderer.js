@@ -1,5 +1,6 @@
 import pool from "./../../../system/pooling.js";
 import TMXLayer from "./../TMXLayer.js";
+import Rect from "./../../../shapes/rectangle.js";
 
 /**
  * @classdesc
@@ -19,7 +20,7 @@ class TMXRenderer {
         this.rows = rows;
         this.tilewidth = tilewidth;
         this.tileheight = tileheight;
-        this.bounds = new me.Rect(0, 0, 0, 0);
+        this.bounds = new Rect(0, 0, 0, 0);
     }
 
     /**
