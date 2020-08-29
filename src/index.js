@@ -57,6 +57,7 @@ import TMXTilesetGroup from "./level/tiled/TMXTilesetGroup.js";
 import TMXTileMap from "./level/tiled/TMXTileMap.js";
 import TMXLayer from "./level/tiled/TMXLayer.js";
 import Pointer from "./input/pointer.js";
+import Stage from "./state/stage.js";
 
 
 // alias and wrapper for deprecated API
@@ -135,7 +136,8 @@ export {
     TMXTilesetGroup,
     TMXTileMap,
     TMXLayer,
-    Pointer
+    Pointer,
+    Stage
 };
 
 // Backward compatibility for deprecated method or properties are

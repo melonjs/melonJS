@@ -2,6 +2,8 @@ import utils from "./../utils/utils.js";
 import event from "./../system/event.js";
 import timer from "./../system/timer.js";
 import game from "./../game.js";
+import Stage from "./../state/stage.js";
+import DefaultLoadingScreen from "./../loader/loadingscreen.js";
 
 
 // current state
@@ -270,10 +272,10 @@ var state = {
      * @ignore
      */
     init() {
-        // set the embedded loading stage
-        this.set(this.LOADING, new me.DefaultLoadingScreen());
+        // set the built-in loading stage
+        this.set(this.LOADING, new DefaultLoadingScreen());
         // set and enable the default stage
-        this.set(this.DEFAULT, new me.Stage());
+        this.set(this.DEFAULT, new Stage());
         // enable by default as soon as the display is initialized
         var _state = this;
         event.subscribe(event.VIDEO_INIT, function () {
@@ -473,7 +475,7 @@ var state = {
      * me.state.set(me.state.MENU, new MenuScreen());
      */
     set(state, stage, start) {
-        if (!(stage instanceof me.Stage)) {
+        if (!(stage instanceof Stage)) {
             throw new Error(stage + " is not an instance of me.Stage");
         }
         _stages[state] = {};
