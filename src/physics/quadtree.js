@@ -11,12 +11,14 @@ import game from "./../game.js";
 
 /**
  * a pool of `QuadTree` objects
+ * @ignore
  */
 var QT_ARRAY = [];
 
 /**
  * will pop a quadtree object from the array
  * or create a new one if the array is empty
+ * @ignore
  */
 function QT_ARRAY_POP(bounds, max_objects, max_levels, level) {
     if (QT_ARRAY.length > 0) {
@@ -33,6 +35,7 @@ function QT_ARRAY_POP(bounds, max_objects, max_levels, level) {
 
 /**
  * Push back a quadtree back into the array
+ * @ignore
  */
 function QT_ARRAY_PUSH(qt) {
     QT_ARRAY.push(qt);
@@ -40,6 +43,7 @@ function QT_ARRAY_PUSH(qt) {
 
 /**
  * a temporary vector object to be reused
+ * @ignore
  */
 var QT_VECTOR = new Vector2d();
 

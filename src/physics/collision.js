@@ -28,6 +28,7 @@ var RIGHT_VORNOI_REGION = 1;
 /**
  * A pool of `Vector` objects that are used in calculations to avoid allocating memory.
  * @type {Array.<Vector>}
+ * @ignore
  */
 var T_VECTORS = [];
 for (var v = 0; v < 10; v++) { T_VECTORS.push(new Vector2d()); }
@@ -35,6 +36,7 @@ for (var v = 0; v < 10; v++) { T_VECTORS.push(new Vector2d()); }
 /**
  * A pool of arrays of numbers used in calculations to avoid allocating memory.
  * @type {Array.<Array.<number>>}
+ * @ignore
  */
 var T_ARRAYS = [];
 for (var a = 0; a < 5; a++) { T_ARRAYS.push([]); }
@@ -51,6 +53,7 @@ var dummyEntity = {
  * Flattens the specified array of points onto a unit vector axis,
  * resulting in a one dimensional range of the minimum and
  * maximum value on that axis.
+ * @ignore
  * @param {Array.<Vector>} points The points to flatten.
  * @param {Vector} normal The unit vector axis to flatten on.
  * @param {Array.<number>} result An array.  After calling this function,
@@ -74,6 +77,7 @@ function flattenPointsOn(points, normal, result) {
 /**
  * Check whether two convex polygons are separated by the specified
  * axis (must be a unit vector).
+ * @ignore
  * @param {Vector} aPos The position of the first polygon.
  * @param {Vector} bPos The position of the second polygon.
  * @param {Array.<Vector>} aPoints The points in the first polygon.

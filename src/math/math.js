@@ -1,6 +1,6 @@
 /**
  * a collection of math utility functions
- * @namespace me.Math
+ * @namespace Math
  * @memberOf me
  */
 

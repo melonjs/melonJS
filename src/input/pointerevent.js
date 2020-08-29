@@ -13,6 +13,7 @@ import Pointer from "./pointer.js";
 /**
  * A pool of `Pointer` objects to cache pointer/touch event coordinates.
  * @type {Array.<Vector>}
+ * @ignore
  */
 var T_POINTERS = [];
 
