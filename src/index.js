@@ -45,6 +45,8 @@ import Renderer from "./video/renderer.js";
 import WebGLRenderer from "./video/webgl/webgl_renderer.js";
 import CanvasRenderer from "./video/canvas/canvas_renderer.js";
 import Renderable from "./renderable/renderable.js";
+import Text from "./text/text.js";
+import BitmapText from "./text/bitmaptext.js";
 import BitmapTextData from "./text/bitmaptextdata.js";
 import TMXRenderer from "./level/tiled/renderer/TMXRenderer.js";
 import TMXOrthogonalRenderer from "./level/tiled/renderer/TMXOrthogonalRenderer.js";
@@ -126,6 +128,8 @@ export {
     WebGLRenderer,
     CanvasRenderer,
     Renderable,
+    Text,
+    BitmapText,
     BitmapTextData,
     TMXRenderer,
     TMXOrthogonalRenderer,
@@ -194,8 +198,8 @@ export function boot() {
     pool.register("me.Color", Color, true);
     pool.register("me.Particle", me.Particle, true);
     pool.register("me.Sprite", me.Sprite);
-    pool.register("me.Text", me.Text, true);
-    pool.register("me.BitmapText", me.BitmapText, true);
+    pool.register("me.Text", Text, true);
+    pool.register("me.BitmapText", BitmapText, true);
     pool.register("me.BitmapTextData", BitmapTextData, true);
     pool.register("me.ImageLayer", me.ImageLayer, true);
     pool.register("me.ColorLayer", me.ColorLayer, true);
