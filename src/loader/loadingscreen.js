@@ -1,3 +1,4 @@
+import game from "./../game.js";
 import video from "./../video/video.js";
 import event from "./../system/event.js";
 import {nextPowerOfTwo} from "./../math/math.js";
@@ -53,10 +54,10 @@ var ProgressBar = Renderable.extend({
 
         // draw the progress bar
         renderer.setColor("black");
-        renderer.fillRect(this.pos.x, me.game.viewport.centerY, renderer.getWidth(), this.barHeight / 2);
+        renderer.fillRect(this.pos.x, game.viewport.centerY, renderer.getWidth(), this.barHeight / 2);
 
         renderer.setColor("#55aa00");
-        renderer.fillRect(this.pos.x, me.game.viewport.centerY, this.progress, this.barHeight / 2);
+        renderer.fillRect(this.pos.x, game.viewport.centerY, this.progress, this.barHeight / 2);
     },
 
     /**
@@ -202,7 +203,7 @@ var defaultLoadingScreen = new Stage({
         var barHeight = 8;
 
         // progress bar
-        me.game.world.addChild(new ProgressBar(
+        game.world.addChild(new ProgressBar(
             0,
             video.renderer.getHeight() / 2,
             video.renderer.getWidth(),
@@ -210,14 +211,14 @@ var defaultLoadingScreen = new Stage({
         ), 1);
 
         // melonJS logo
-        me.game.world.addChild(new IconLogo(
+        game.world.addChild(new IconLogo(
             video.renderer.getWidth() / 2,
             (video.renderer.getHeight() / 2) - (barHeight * 2) - 35
 
         ), 2);
 
         // melonJS text
-        me.game.world.addChild(new TextLogo(
+        game.world.addChild(new TextLogo(
             video.renderer.getWidth(),
             video.renderer.getHeight()
         ), 2);
