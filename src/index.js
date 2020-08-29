@@ -51,6 +51,8 @@ import BitmapText from "./text/bitmaptext.js";
 import BitmapTextData from "./text/bitmaptextdata.js";
 import ColorLayer from "./renderable/colorlayer.js";
 import ImageLayer from "./renderable/imagelayer.js";
+import Sprite from "./renderable/sprite.js";
+import GUI_Object from "./renderable/GUI.js";
 import TMXRenderer from "./level/tiled/renderer/TMXRenderer.js";
 import TMXOrthogonalRenderer from "./level/tiled/renderer/TMXOrthogonalRenderer.js";
 import TMXIsometricRenderer from "./level/tiled/renderer/TMXIsometricRenderer.js";
@@ -141,6 +143,8 @@ export {
     BitmapTextData,
     ColorLayer,
     ImageLayer,
+    Sprite,
+    GUI_Object,
     TMXRenderer,
     TMXOrthogonalRenderer,
     TMXIsometricRenderer,
@@ -210,8 +214,8 @@ export function boot() {
     pool.register("me.LevelEntity", me.LevelEntity);
     pool.register("me.Tween", Tween, true);
     pool.register("me.Color", Color, true);
-    pool.register("me.Particle", me.Particle, true);
-    pool.register("me.Sprite", me.Sprite);
+    pool.register("me.Particle", Particle, true);
+    pool.register("me.Sprite", Sprite);
     pool.register("me.Text", Text, true);
     pool.register("me.BitmapText", BitmapText, true);
     pool.register("me.BitmapTextData", BitmapTextData, true);

@@ -1,6 +1,7 @@
 import Vector2d from "./../math/vector2.js";
 import WebGLRenderer from "./webgl/webgl_renderer.js";
 import TextureCache from "./texture_cache.js";
+import Sprite from "./../renderable/sprite.js";
 import video from "./video.js";
 
 /**
@@ -485,7 +486,7 @@ export class Texture {
             height = Math.max(region.height, height);
         }
         // instantiate a new animation sheet object
-        return new me.Sprite(0, 0, Object.assign({
+        return new Sprite(0, 0, Object.assign({
             image: this,
             framewidth: width,
             frameheight: height,

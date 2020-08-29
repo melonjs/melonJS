@@ -1,7 +1,5 @@
 [
   "src/index.js",
-  "src/renderable/sprite.js",
-  "src/renderable/GUI.js",
   "src/entity/entity.js",
   "src/entity/draggable.js",
   "src/entity/droptarget.js",

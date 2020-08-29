@@ -1,5 +1,6 @@
 import Vector2d from "./../math/vector2.js";
 import Renderable from "./../renderable/renderable.js";
+import Sprite from "./../renderable/sprite.js";
 import Body from "./../physics/body.js";
 
 (function () {
@@ -49,7 +50,7 @@ import Body from "./../physics/body.js";
                 // set the frame size to the given entity size, if not defined in settings
                 settings.framewidth = settings.framewidth || settings.width;
                 settings.frameheight = settings.frameheight || settings.height;
-                this.renderable = new me.Sprite(0, 0, settings);
+                this.renderable = new Sprite(0, 0, settings);
             }
 
             // Update anchorPoint

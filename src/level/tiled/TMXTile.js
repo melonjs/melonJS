@@ -1,5 +1,6 @@
 import Matrix2d from "./../../math/matrix2.js";
 import Rect from "./../../shapes/rectangle.js";
+import Sprite from "./../../renderable/sprite.js";
 
 // bitmask constants to check for flipped & rotated tiles
 var TMX_FLIP_H          = 0x80000000,
@@ -156,7 +157,7 @@ var Tile = Rect.extend({
         } else {
             if (tileset.isCollection === true) {
                 var image = tileset.getTileImage(this.tileId);
-                renderable = new me.Sprite(0, 0,
+                renderable = new Sprite(0, 0,
                     Object.assign({
                         image: image
                     })//, settings)
