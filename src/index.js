@@ -73,8 +73,8 @@ import Particle from "./particles/particle.js";
 import Entity from "./entity/entity.js";
 import CollectableEntity from "./entity/collectable_entity.js";
 import LevelEntity from "./entity/level_entity.js";
-import DraggableEntity from "src/entity/draggable.js";
-import DroptargetEntity from "src/entity/droptarget.js";
+import DraggableEntity from "./entity/draggable.js";
+import DroptargetEntity from "./entity/droptarget.js";
 
 
 
