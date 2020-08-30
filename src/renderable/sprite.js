@@ -19,6 +19,7 @@ import Renderable from "./renderable.js";
  * @param {String} [settings.region] region name of a specific region to use when using a texture atlas, see {@link me.Renderer.Texture}
  * @param {Number} [settings.framewidth] Width of a single frame within the spritesheet
  * @param {Number} [settings.frameheight] Height of a single frame within the spritesheet
+ * @param {String|Color} [settings.tint] a tint to be applied to this sprite
  * @param {Number} [settings.flipX] flip the sprite on the horizontal axis
  * @param {Number} [settings.flipY] flip the sprite on the vertical axis
  * @param {me.Vector2d} [settings.anchorPoint={x:0.5, y:0.5}] Anchor point to draw the frame at (defaults to the center of the frame).
@@ -181,6 +182,10 @@ var Sprite = Renderable.extend({
         // update anchorPoint
         if (settings.anchorPoint) {
             this.anchorPoint.set(settings.anchorPoint.x, settings.anchorPoint.y);
+        }
+
+        if (typeof (settings.tint) !== "undefined") {
+            this.tint.setColor(settings.tint);
         }
 
         // set the sprite name if specified

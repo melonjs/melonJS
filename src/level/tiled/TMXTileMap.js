@@ -490,6 +490,11 @@ export default class TMXTileMap {
                 if (typeof (settings.anchorPoint) === "undefined") {
                     settings.anchorPoint = {x : 0, y : 0};
                 }
+                // convert to melonJS renderable argument name
+                if (typeof (settings.tintcolor) !== "undefined") {
+                    settings.tint = me.pool.pull("me.Color");
+                    settings.tint.parseHex(settings.tintcolor, true);
+                }
 
                 // groups can contains either text, objects or layers
                 if (settings instanceof TMXLayer) {

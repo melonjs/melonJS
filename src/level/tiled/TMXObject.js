@@ -87,6 +87,15 @@ export default class TMXObject {
         this.gid = +settings.gid || null;
 
         /**
+         * tint color
+         * @public
+         * @type String
+         * @name tintcolor
+         * @memberOf me.TMXObject
+         */
+        this.tintcolor = settings.tintcolor;
+
+        /**
          * object type
          * @public
          * @type String

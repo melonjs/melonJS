@@ -42,6 +42,15 @@ export default class TMXGroup {
         this.height = data.height || 0;
 
         /**
+         * tint color
+         * @public
+         * @type String
+         * @name tintcolor
+         * @memberOf me.TMXGroup
+         */
+        this.tintcolor = data.tintcolor;
+
+        /**
          * group z order
          * @public
          * @type Number
@@ -72,6 +81,7 @@ export default class TMXGroup {
         if (data.objects) {
             var _objects = data.objects;
             _objects.forEach(function (object) {
+                object.tintcolor = self.tintcolor;
                 self.objects.push(new TMXObject(map, object, z));
             });
         }
