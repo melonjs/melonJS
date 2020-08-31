@@ -99,19 +99,19 @@
     var DEBUG_HEIGHT = 50;
 
     var Counters = function(name) {
-        this.stats = {};
-        this.reset(stats);
+        this.stats = [];
+        this.reset(this.stats);
     }
-    Counters.prototype.reset = function() {
+    Counters.prototype.reset = function(stats) {
         var self = this;
         (stats || Object.keys(this.stats)).forEach(function (stat) {
             self.stats[stat] = 0;
         });
     }
-    Counters.prototype.inc = function() {
+    Counters.prototype.inc = function(stat, value) {
         this.stats[stat] += (value || 1);
     }
-    Counters.prototype.get = function() {
+    Counters.prototype.get = function(stat) {
         return this.stats[stat];
     }
 
