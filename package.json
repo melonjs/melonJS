@@ -37,9 +37,11 @@
     "node": ">= 8"
   },
   "main": "dist/melonjs.js",
+  "module": "dist/melonjs.module.js",
   "files": [
     "dist/melonjs.js",
     "dist/melonjs.min.js",
+    "dist/melonjs.module.js",
     "plugins/",
     "src/",
     "package.json",
