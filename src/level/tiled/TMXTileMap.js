@@ -2,6 +2,7 @@ import pool from "./../../system/pooling.js";
 import event from "./../../system/event.js";
 import game from "./../../game.js";
 import collision from "./../../physics/collision.js";
+import Body from "./../../physics/body.js";
 import TMXOrthogonalRenderer from "./renderer/TMXOrthogonalRenderer.js";
 import TMXIsometricRenderer from "./renderer/TMXIsometricRenderer.js";
 import TMXHexagonalRenderer from "./renderer/TMXHexagonalRenderer.js";
@@ -513,6 +514,12 @@ export default class TMXTileMap {
                     }
                     // set the obj z order
                     obj.pos.z = settings.z;
+                } else if (typeof settings.tile === "object") {
+                    // check if a me.Tile object is embedded
+                    obj = settings.tile.getRenderable(settings);
+                    obj.body = new Body(obj, settings.shapes || obj.getBounds());
+                    // set the obj z order
+                    obj.pos.setMuted(settings.x, settings.y, settings.z);
                 } else {
                     // pull the corresponding entity from the object pool
                     obj = pool.pull(
@@ -522,28 +529,6 @@ export default class TMXTileMap {
                     );
                     // set the obj z order
                     obj.pos.z = settings.z;
-                }
-
-                // check if a me.Tile object is embedded
-                if (typeof (settings.tile) === "object" && !obj.renderable) {
-                    obj.renderable = settings.tile.getRenderable(settings);
-                    // adjust position if necessary
-                    switch (settings.rotation) {
-                        case Math.PI:
-                            obj.translate(-obj.renderable.width, obj.renderable.height);
-                            break;
-                        case Math.PI / 2 :
-                            obj.translate(0, obj.renderable.height);
-                            break;
-                        case -(Math.PI / 2) :
-                            obj.translate(-obj.renderable.width, 0);
-                            break;
-                        default :
-                            // this should not happen
-                            break;
-                    }
-                    // tile object use use left-bottom coordinates
-                    //obj.anchorPoint.set(0, 1);
                 }
 
                 if (isCollisionGroup && !settings.name) {

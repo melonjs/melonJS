@@ -112,7 +112,7 @@
         this.stats[stat] += (value || 1);
     }
     Counters.prototype.get = function(stat) {
-        return this.stats[stat];
+        return this.stats[stat] || 0;
     }
 
     // embedded bitmap font data
@@ -230,7 +230,7 @@
             this.isKinematic = false;
 
             // minimum melonJS version expected
-            this.version = "8.0.0";
+            this.version = "9.0.0";
 
             // to hold the debug options
             // clickable rect area
@@ -421,14 +421,6 @@
                         }
 
                         if (typeof this.body !== "undefined") {
-                            if (!this.currentTransform.isIdentity()) {
-                                // if any transform were applied to me.Sprite
-                                // we need to reset the context so that we
-                                // can draw the body shapes properly
-                                renderer.save();
-                                renderer.resetTransform();
-                                renderer.translate(-ax, -ay);
-                            }
                             renderer.translate(this.pos.x, this.pos.y);
                             // draw all defined shapes
                             renderer.setColor("red");
@@ -436,9 +428,7 @@
                                 renderer.stroke(shape);
                                 _this.counters.inc("shapes");
                             }
-                            if (!this.currentTransform.isIdentity()) {
-                                renderer.restore();
-                            }
+                            renderer.translate(-this.pos.x, -this.pos.y);
                         }
                     }
                 }
@@ -523,14 +513,14 @@
                         renderer.save();
 
                         renderer.translate(
-                            -this.pos.x - this.body.pos.x - this.ancestor._absPos.x,
-                            -this.pos.y - this.body.pos.y - this.ancestor._absPos.y
+                            -this.pos.x - this.body.getBounds().x - this.ancestor._absPos.x,
+                            -this.pos.y - this.body.getBounds().y - this.ancestor._absPos.y
                         );
 
                         if (this.renderable instanceof me.Renderable) {
                             renderer.translate(
-                                -this.anchorPoint.x * this.body.width,
-                                -this.anchorPoint.y * this.body.height
+                                -this.anchorPoint.x * this.body.getBounds().width,
+                                -this.anchorPoint.y * this.body.getBounds().height
                             );
                         }
 

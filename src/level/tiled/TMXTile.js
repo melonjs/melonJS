@@ -4,9 +4,9 @@ import Sprite from "./../../renderable/sprite.js";
 
 // bitmask constants to check for flipped & rotated tiles
 var TMX_FLIP_H          = 0x80000000,
-TMX_FLIP_V          = 0x40000000,
-TMX_FLIP_AD         = 0x20000000,
-TMX_CLEAR_BIT_MASK  = ~(0x80000000 | 0x40000000 | 0x20000000);
+    TMX_FLIP_V          = 0x40000000,
+    TMX_FLIP_AD         = 0x20000000,
+    TMX_CLEAR_BIT_MASK  = ~(0x80000000 | 0x40000000 | 0x20000000);
 
 /**
  * a basic tile object
@@ -173,16 +173,12 @@ var Tile = Rect.extend({
                 }
             } else {
                 renderable = tileset.texture.createSpriteFromName(this.tileId - tileset.firstgid, settings);
+                renderable.anchorPoint.set(0, 0);
             }
         }
 
         // any H/V flipping to apply?
-        if (this.flippedX) {
-            renderable.currentTransform.scaleX(-1);
-        }
-        if (this.flippedY) {
-            renderable.currentTransform.scaleY(-1);
-        }
+        this.setTileTransform(renderable.currentTransform);
 
         return renderable;
     }

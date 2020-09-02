@@ -117,7 +117,7 @@ var Entity = Renderable.extend({
 
         // resize the entity if required
         if (this.width === 0 && this.height === 0) {
-            this.resize(this.body.width, this.body.height);
+            this.resize(this.body.getBounds().width, this.body.getBounds().height);
         }
 
         // set the  collision mask if defined
@@ -155,10 +155,10 @@ var Entity = Renderable.extend({
      */
     updateBoundsPos : function (x, y) {
         if (typeof this.body !== "undefined") {
-            var _pos = this.body.pos;
+            var bounds = this.body.getBounds();
             this._super(Renderable, "updateBoundsPos", [
-                x + _pos.x,
-                y + _pos.y
+                x + bounds.x,
+                y + bounds.y
             ]);
         } else {
             this._super(Renderable, "updateBoundsPos", [x, y]);
@@ -174,8 +174,9 @@ var Entity = Renderable.extend({
      * @function
      */
     onBodyUpdate : function (body) {
+        var bounds = body.getBounds();
         // update the entity bounds to match with the body bounds
-        this.getBounds().resize(body.width, body.height);
+        this.getBounds().resize(bounds.width, bounds.height);
         // update the bounds pos
         this.updateBoundsPos(this.pos.x, this.pos.y);
     },
@@ -185,8 +186,8 @@ var Entity = Renderable.extend({
 
         // translate to the entity position
         renderer.translate(
-            this.pos.x + this.body.pos.x,
-            this.pos.y + this.body.pos.y
+            this.pos.x + this.body.getBounds().x,
+            this.pos.y + this.body.getBounds().y
         );
 
         if (this.renderable instanceof Renderable) {
@@ -194,8 +195,8 @@ var Entity = Renderable.extend({
             // anchor point.  the entity's anchor point is a scale from
             // body position to body width/height
             renderer.translate(
-                this.anchorPoint.x * this.body.width,
-                this.anchorPoint.y * this.body.height
+                this.anchorPoint.x * this.body.getBounds().width,
+                this.anchorPoint.y * this.body.getBounds().height
             );
         }
     },

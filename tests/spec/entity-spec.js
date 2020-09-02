@@ -36,8 +36,8 @@ describe("Entity", function () {
 
     it("has the correct body bounds: A", function () {
         var bounds = entity.body.getBounds();
-        expect(bounds.pos.x).toEqual(10);
-        expect(bounds.pos.y).toEqual(10);
+        expect(bounds.x).toEqual(10);
+        expect(bounds.y).toEqual(10);
         expect(bounds.width).toEqual(32);
         expect(bounds.height).toEqual(64);
     });
@@ -74,10 +74,10 @@ describe("Entity", function () {
 
     it("has the correct body bounds: B", function () {
         var bounds = entity.body.getBounds();
-        expect(bounds.pos.x).toEqual(-10);
-        expect(bounds.pos.y).toEqual(-10);
-        expect(bounds.width).toEqual(52);
-        expect(bounds.height).toEqual(84);
+        expect(bounds.x).toEqual(-10);
+        expect(bounds.y).toEqual(-10);
+        expect(bounds.width).toEqual(42);
+        expect(bounds.height).toEqual(74);
     });
 
     it("has the correct renderable bounds: B", function () {
@@ -91,8 +91,8 @@ describe("Entity", function () {
         var bounds = entity.getBounds();
         expect(bounds.pos.x).toEqual(90);
         expect(bounds.pos.y).toEqual(90);
-        expect(bounds.width).toEqual(52);
-        expect(bounds.height).toEqual(84);
+        expect(bounds.width).toEqual(42);
+        expect(bounds.height).toEqual(74);
     });
 
     /*
@@ -102,8 +102,8 @@ describe("Entity", function () {
     xit("has the correct entity geometry: B", function () {
         expect(entity.pos.x).toEqual(90);
         expect(entity.pos.y).toEqual(90);
-        expect(entity.width).toEqual(52);
-        expect(entity.height).toEqual(84);
+        expect(entity.width).toEqual(42);
+        expect(entity.height).toEqual(74);
     });
 
     it("removes the second shape", function () {
@@ -112,8 +112,8 @@ describe("Entity", function () {
 
     it("has the correct body bounds: C", function () {
         var bounds = entity.body.getBounds();
-        expect(bounds.pos.x).toEqual(10);
-        expect(bounds.pos.y).toEqual(10);
+        expect(bounds.x).toEqual(10);
+        expect(bounds.y).toEqual(10);
         expect(bounds.width).toEqual(32);
         expect(bounds.height).toEqual(64);
     });
@@ -133,10 +133,6 @@ describe("Entity", function () {
         expect(bounds.height).toEqual(64);
     });
 
-    /*
-     * XXX: Disabled until #580 is fixed:
-     * https://github.com/melonjs/melonJS/issues/580
-     */
     xit("has the correct entity geometry: C", function () {
         expect(entity.pos.x).toEqual(100);
         expect(entity.pos.y).toEqual(100);
@@ -152,8 +148,8 @@ describe("Entity", function () {
 
     it("has the correct body bounds: D", function () {
         var bounds = entity.body.getBounds();
-        expect(bounds.pos.x).toEqual(10);
-        expect(bounds.pos.y).toEqual(10);
+        expect(bounds.x).toEqual(10);
+        expect(bounds.y).toEqual(10);
         expect(bounds.width).toEqual(32);
         expect(bounds.height).toEqual(64);
     });
