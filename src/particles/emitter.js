@@ -1,6 +1,6 @@
 import video from "./../video/video.js";
 import pool from "./../system/pooling.js";
-import Rect from "./../shapes/rectangle.js";
+import Renderable from "./../renderable/renderable.js";
 import ParticleContainer from "./particlecontainer.js";
 
 
@@ -324,7 +324,7 @@ var ParticleEmitterSettings = {
  * me.game.world.removeChild(emitter);
  *
  */
-var ParticleEmitter = Rect.extend({
+var ParticleEmitter = Renderable.extend({
     /**
      * @ignore
      */
@@ -346,16 +346,18 @@ var ParticleEmitter = Rect.extend({
         // Emitter is emitting particles
         /** @ignore */
         this._enabled = false;
-        // Emitter will always update
-        this.isRenderable = false;
+
         // call the super constructor
         this._super(
-            me.Rect,
+            Renderable,
             "init",
             [x, y,
             Infinity,
             Infinity]
         );
+
+        // Emitter will always update
+        this.alwaysUpdate = true;
 
         // don't sort the particles by z-index
         this.autoSort = false;
