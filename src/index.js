@@ -263,7 +263,7 @@ export function boot() {
     timer.init();
 
     // enable/disable the cache
-    me.loader.setNocache( utils.getUriFragment().nocache || false );
+    loader.setNocache( utils.getUriFragment().nocache || false );
 
     // init the stage Manager
     state.init();
