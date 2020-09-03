@@ -493,7 +493,7 @@ export default class TMXTileMap {
                 }
                 // convert to melonJS renderable argument name
                 if (typeof (settings.tintcolor) !== "undefined") {
-                    settings.tint = me.pool.pull("me.Color");
+                    settings.tint = pool.pull("me.Color");
                     settings.tint.parseHex(settings.tintcolor, true);
                 }
 

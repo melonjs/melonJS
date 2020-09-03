@@ -221,7 +221,7 @@ export class Texture {
         var height = image.height;
 
         // calculate the sprite count (line, col)
-        var spritecount = me.pool.pull("me.Vector2d",
+        var spritecount = pool.pull("me.Vector2d",
             ~~((width - margin + spacing) / (data.framewidth + spacing)),
             ~~((height - margin + spacing) / (data.frameheight + spacing))
         );
@@ -264,7 +264,7 @@ export class Texture {
             this.addUvsMap(atlas, name, width, height);
         }
 
-        me.pool.push(spritecount);
+        pool.push(spritecount);
 
         return atlas;
     }

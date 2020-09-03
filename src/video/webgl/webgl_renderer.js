@@ -7,6 +7,7 @@ import TextureCache from "./../texture_cache.js";
 import {Texture, createAtlas } from "./../texture.js";
 import video from "./../video.js";
 import event from "./../../system/event.js";
+import pool from "./../../system/pooling.js";
 import { isPowerOfTwo, nextPowerOfTwo, TAU } from "./../../math/math.js";
 
 
@@ -342,7 +343,7 @@ class WebGLRenderer extends Renderer {
         this.currentColor.copy("#000000");
         this.fillRect(x, y, width, height);
         this.currentColor.copy(color);
-        me.pool.push(color);
+        pool.push(color);
     }
 
     /**
@@ -581,8 +582,8 @@ class WebGLRenderer extends Renderer {
             this.currentTransform.copy(matrix);
 
             // recycle objects
-            me.pool.push(color);
-            me.pool.push(matrix);
+            pool.push(color);
+            pool.push(matrix);
         }
 
         if (this._scissorStack.length !== 0) {
