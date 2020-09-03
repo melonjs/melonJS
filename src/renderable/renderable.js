@@ -3,6 +3,7 @@ import ObservableVector2d from "./../math/observable_vector2.js";
 import ObservableVector3d from "./../math/observable_vector3.js";
 import Rect from "./../shapes/rectangle.js";
 import pool from "./../system/pooling.js";
+import { releaseAllPointerEvents } from "./../input/input.js";
 import { clamp } from "./../math/math.js";
 
 /**
@@ -736,7 +737,7 @@ var Renderable = Rect.extend({
         }
 
         // release all registered events
-        me.input.releaseAllPointerEvents(this);
+        releaseAllPointerEvents(this);
 
         // call the user defined destroy method
         this.onDestroyEvent.apply(this, arguments);

@@ -1,6 +1,7 @@
 import video from "./../video/video.js";
 import event from "./../system/event.js";
 import pool from "./../system/pooling.js";
+import loader from "./../loader/loader.js";
 import game from "./../game.js";
 import Renderable from "./renderable.js";
 
@@ -37,7 +38,7 @@ var ImageLayer = Renderable.extend({
         this._super(Renderable, "init", [x, y, Infinity, Infinity]);
 
         // get the corresponding image
-        this.image = (typeof settings.image === "object") ? settings.image : me.loader.getImage(settings.image);
+        this.image = (typeof settings.image === "object") ? settings.image : loader.getImage(settings.image);
 
         // throw an error if image is null/undefined
         if (!this.image) {

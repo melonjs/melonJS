@@ -1,6 +1,7 @@
 // external import
 import {Howl, Howler} from "howler";
 import {clamp} from "./../math/math.js";
+import loader from "./../loader/loader.js";
 
 // audio channel list
 var audioTracks = {};
@@ -144,13 +145,13 @@ var audio = {
             throw new Error("target audio extension(s) should be set through me.audio.init() before calling the preloader.");
         }
         for (var i = 0; i < this.audioFormats.length; i++) {
-            urls.push(sound.src + sound.name + "." + this.audioFormats[i] + me.loader.nocache);
+            urls.push(sound.src + sound.name + "." + this.audioFormats[i] + loader.nocache);
         }
         audioTracks[sound.name] = new Howl({
             src : urls,
             volume : Howler.volume(),
             html5 : html5 === true,
-            xhrWithCredentials : me.loader.withCredentials,
+            xhrWithCredentials : loader.withCredentials,
             /**
              * @ignore
              */

@@ -1,6 +1,7 @@
 import Color from "./../math/color.js";
 import utils from "./../utils/utils.js";
 import pool from "./../system/pooling.js";
+import loader from "./../loader/loader.js";
 import Renderable from "./../renderable/renderable.js";
 
 /**
@@ -116,15 +117,15 @@ var BitmapText = Renderable.extend({
         this.fontScale = pool.pull("me.Vector2d", 1.0, 1.0);
 
         // get the corresponding image
-        this.fontImage = (typeof settings.font === "object") ? settings.font : me.loader.getImage(settings.font);
+        this.fontImage = (typeof settings.font === "object") ? settings.font : loader.getImage(settings.font);
 
         if (typeof settings.fontData !== "string") {
             // use settings.font to retreive the data from the loader
-            this.fontData = pool.pull("me.BitmapTextData", me.loader.getBinary(settings.font));
+            this.fontData = pool.pull("me.BitmapTextData", loader.getBinary(settings.font));
         } else {
             this.fontData = pool.pull("me.BitmapTextData",
                 // if starting/includes "info face" the whole data string was passed as parameter
-                (settings.fontData.includes("info face")) ? settings.fontData : me.loader.getBinary(settings.fontData)
+                (settings.fontData.includes("info face")) ? settings.fontData : loader.getBinary(settings.fontData)
             );
         };
 

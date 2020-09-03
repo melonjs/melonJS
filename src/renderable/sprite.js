@@ -1,8 +1,10 @@
 import Vector2d from "./../math/vector2.js";
 import video from "./../video/video.js";
 import pool from "./../system/pooling.js";
+import loader from "./../loader/loader.js";
 import {Texture } from "./../video/texture.js";
 import Renderable from "./renderable.js";
+import Container from "./container.js";
 
 
 /**
@@ -145,7 +147,7 @@ var Sprite = Renderable.extend({
             }
         } else {
             // HTMLImageElement/Canvas or String
-            this.image = (typeof settings.image === "object") ? settings.image : me.loader.getImage(settings.image);
+            this.image = (typeof settings.image === "object") ? settings.image : loader.getImage(settings.image);
             // update the default "current" frame size
             this.current.width = settings.framewidth = settings.framewidth || this.image.width;
             this.current.height = settings.frameheight = settings.frameheight || this.image.height;
@@ -576,7 +578,7 @@ var Sprite = Renderable.extend({
             newY - (this.anchorPoint.y * bounds.height)
         );
         // XXX: This is called from the constructor, before it gets an ancestor
-        if (this.ancestor instanceof me.Container && !this.floating) {
+        if (this.ancestor instanceof Container && !this.floating) {
             bounds.pos.add(this.ancestor._absPos);
         }
         return bounds;
