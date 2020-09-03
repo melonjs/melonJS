@@ -3,6 +3,7 @@ import WebGLRenderer from "./webgl/webgl_renderer.js";
 import TextureCache from "./texture_cache.js";
 import Sprite from "./../renderable/sprite.js";
 import video from "./video.js";
+import pool from "./../system/pooling.js";
 import { ETA } from "./../math/math.js";
 
 /**
@@ -424,7 +425,7 @@ export class Texture {
      */
     createSpriteFromName(name, settings) {
         // instantiate a new sprite object
-        return me.pool.pull(
+        return pool.pull(
             "me.Sprite",
             0, 0,
             Object.assign({

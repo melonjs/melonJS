@@ -1,4 +1,5 @@
 import { clamp, random } from "./math.js";
+import pool from "./../system/pooling.js";
 
 // convert a give color component to it hexadecimal value
 var toHex = function (component) {
@@ -318,7 +319,7 @@ class Color {
      * @return {me.Color} Reference to the newly cloned object
      */
     clone() {
-        return me.pool.pull("me.Color", this);
+        return pool.pull("me.Color", this);
     }
 
     /**
