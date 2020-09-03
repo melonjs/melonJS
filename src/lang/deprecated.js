@@ -591,80 +591,80 @@ export function warning(deprecated, replacement, version) {
         },
         configurable : false
     });
-};
 
-/**
- * @namespace me.levelDirector
- * @deprecated since 9.0.0
- */
-me.levelDirector = me.levelDirector || {};
+    /**
+     * @namespace me.levelDirector
+     * @deprecated since 9.0.0
+     */
+    me.levelDirector = me.levelDirector || {};
 
-/**
- * @function me.levelDirector.loadLevel
- * @deprecated since 9.0.0
- * @see me.level.load
- */
-me.levelDirector.loadLevel = function(levelId, options) {
-    warning("me.levelDirector.loadLevel()", "me.level.load()", "9.0.0");
-    return me.level.load(levelId, options);
-};
+    /**
+     * @function me.levelDirector.loadLevel
+     * @deprecated since 9.0.0
+     * @see me.level.load
+     */
+    me.levelDirector.loadLevel = function(levelId, options) {
+        warning("me.levelDirector.loadLevel()", "me.level.load()", "9.0.0");
+        return me.level.load(levelId, options);
+    };
 
-/**
- * @function me.levelDirector.getCurrentLevelId
- * @deprecated since 9.0.0
- * @see me.level.getCurrentLevelId
- */
-me.levelDirector.getCurrentLevelId = function() {
-    warning("me.levelDirector.getCurrentLevelId()", "me.level.getCurrentLevelId()", "9.0.0");
-    return me.level.getCurrentLevelId();
-};
+    /**
+     * @function me.levelDirector.getCurrentLevelId
+     * @deprecated since 9.0.0
+     * @see me.level.getCurrentLevelId
+     */
+    me.levelDirector.getCurrentLevelId = function() {
+        warning("me.levelDirector.getCurrentLevelId()", "me.level.getCurrentLevelId()", "9.0.0");
+        return me.level.getCurrentLevelId();
+    };
 
-/**
- * @function me.levelDirector.getCurrentLevel
- * @deprecated since 9.0.0
- * @see me.level.load
- */
-me.levelDirector.getCurrentLevel = function() {
-    warning("me.levelDirector.getCurrentLevel()", "me.level.getCurrentLevel()", "9.0.0");
-    return me.level.getCurrentLevel();
-};
+    /**
+     * @function me.levelDirector.getCurrentLevel
+     * @deprecated since 9.0.0
+     * @see me.level.load
+     */
+    me.levelDirector.getCurrentLevel = function() {
+        warning("me.levelDirector.getCurrentLevel()", "me.level.getCurrentLevel()", "9.0.0");
+        return me.level.getCurrentLevel();
+    };
 
-/**
- * @function me.levelDirector.reloadLevel
- * @deprecated since 9.0.0
- * @see me.level.reload
- */
-me.levelDirector.reloadLevel = function(options) {
-    warning("me.levelDirector.reloadLevel()", "me.level.reload()", "9.0.0");
-    return me.level.reload(options);
-};
+    /**
+     * @function me.levelDirector.reloadLevel
+     * @deprecated since 9.0.0
+     * @see me.level.reload
+     */
+    me.levelDirector.reloadLevel = function(options) {
+        warning("me.levelDirector.reloadLevel()", "me.level.reload()", "9.0.0");
+        return me.level.reload(options);
+    };
 
-/**
- * @function me.levelDirector.nextLevel
- * @deprecated since 9.0.0
- * @see me.level.load
- */
-me.levelDirector.nextLevel = function(options) {
-    warning("me.levelDirector.nextLevel()", "me.level.next()", "9.0.0");
-    return me.level.next(options);
-};
+    /**
+     * @function me.levelDirector.nextLevel
+     * @deprecated since 9.0.0
+     * @see me.level.load
+     */
+    me.levelDirector.nextLevel = function(options) {
+        warning("me.levelDirector.nextLevel()", "me.level.next()", "9.0.0");
+        return me.level.next(options);
+    };
 
-/**
- * @function me.levelDirector.previousLevel
- * @deprecated since 9.0.0
- * @see me.level.load
- */
-me.levelDirector.previousLevel = function(options) {
-    warning("me.levelDirector.previousLevel()", "me.level.previous()", "9.0.0");
-    return me.level.previous(options);
-};
+    /**
+     * @function me.levelDirector.previousLevel
+     * @deprecated since 9.0.0
+     * @see me.level.load
+     */
+    me.levelDirector.previousLevel = function(options) {
+        warning("me.levelDirector.previousLevel()", "me.level.previous()", "9.0.0");
+        return me.level.previous(options);
+    };
 
-/**
- * @function me.levelDirector.levelCount
- * @deprecated since 9.0.0
- * @see me.level.levelCount
- */
-me.levelDirector.levelCount = function() {
-    warning("me.levelDirector.levelCount()", "me.level.levelCount()", "9.0.0");
-    return me.level.levelCount();
+    /**
+     * @function me.levelDirector.levelCount
+     * @deprecated since 9.0.0
+     * @see me.level.levelCount
+     */
+    me.levelDirector.levelCount = function() {
+        warning("me.levelDirector.levelCount()", "me.level.levelCount()", "9.0.0");
+        return me.level.levelCount();
+    };
 };
