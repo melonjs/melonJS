@@ -7,5 +7,5 @@ if [ "${TRAVIS_NODE_VERSION}" = "10" ] ; then
         --s3-region us-east-1 \
         --permissions public-read \
         --target-paths artifacts/${TRAVIS_BRANCH}/${TRAVIS_BUILD_NUMBER} \
-        build/melonjs.js
+        build/*.js
 fi
