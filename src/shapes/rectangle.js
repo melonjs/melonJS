@@ -306,7 +306,7 @@ var Rect = Polygon.extend({
      * @return {me.Polygon} a new Polygon that represents this rectangle.
      */
     toPolygon: function () {
-        return new me.Polygon(
+        return new Polygon(
             this.pos.x, this.pos.y, this.points
         );
     }

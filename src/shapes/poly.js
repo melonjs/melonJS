@@ -394,7 +394,7 @@ var Polygon = window.Jay.extend({
         this.points.forEach(function (point) {
             copy.push(point.clone());
         });
-        return new me.Polygon(this.pos.x, this.pos.y, copy);
+        return new Polygon(this.pos.x, this.pos.y, copy);
     }
 });
 

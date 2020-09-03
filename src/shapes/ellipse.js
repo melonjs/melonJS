@@ -268,7 +268,7 @@ var Ellipse = window.Jay.extend({
      * @return {me.Ellipse} new Ellipse
      */
     clone : function () {
-        return new me.Ellipse(
+        return new Ellipse(
             this.pos.x,
             this.pos.y,
             this.radiusV.x * 2,

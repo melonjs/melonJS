@@ -3,6 +3,7 @@ import pool from "./../../system/pooling.js";
 import * as TMXUtils from "./TMXUtils.js";
 import Tile from "./TMXTile.js";
 import Renderable from "./../../renderable/renderable.js";
+import CanvasRenderer from "./../../video/canvas/canvas_renderer";
 
 /**
  * Create required arrays for the given layer object
@@ -197,7 +198,7 @@ var TMXLayer = Renderable.extend({
 
         // if pre-rendering method is use, create an offline canvas/renderer
         if ((this.preRender === true) && (!this.canvasRenderer)) {
-            this.canvasRenderer = new me.CanvasRenderer(
+            this.canvasRenderer = new CanvasRenderer(
                 video.createCanvas(this.width, this.height),
                 this.width, this.height,
                 { transparent : true }

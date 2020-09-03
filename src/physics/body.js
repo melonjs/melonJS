@@ -1,6 +1,7 @@
 import Vector2d from "./../math/vector2.js";
 import ObservableVector2d from "./../math/observable_vector2.js";
 import Rect from "./../shapes/rectangle.js";
+import Polygon from "./../shapes/poly.js";
 import Bounds from "./bounds.js";
 import collision from "./collision.js";
 import utils from "./../utils/utils.js";
@@ -359,7 +360,7 @@ class Body {
             polygon.setShape(0, 0, vertices);
         } else {
             // this will replace any other non polygon shape type if defined
-            this.shapes[index] = new me.Polygon(0, 0, vertices);
+            this.shapes[index] = new Polygon(0, 0, vertices);
         }
 
         // update the body bounds to take in account the new vertices

@@ -94,7 +94,7 @@ var Line = Polygon.extend({
         this.points.forEach(function (point) {
             copy.push(point.clone());
         });
-        return new me.Line(this.pos.x, this.pos.y, copy);
+        return new Line(this.pos.x, this.pos.y, copy);
     }
 });
 export default Line;

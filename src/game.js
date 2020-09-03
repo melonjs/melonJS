@@ -2,6 +2,7 @@ import video from "./video/video.js";
 import event from "./system/event.js";
 import timer from "./system/timer.js";
 import state from "./state/state.js";
+import World from "./physics/world.js";
 
 /**
  * me.game represents your current game, it contains all the objects,
@@ -101,7 +102,7 @@ var game = {
      */
     init : function () {
         // the root object of our world is an entity container
-        this.world = new me.World();
+        this.world = new World();
 
         // publish init notification
         event.publish(event.GAME_INIT);

@@ -2,6 +2,7 @@ import Vector2d from "./../math/vector2.js";
 import Renderable from "./../renderable/renderable.js";
 import Sprite from "./../renderable/sprite.js";
 import Body from "./../physics/body.js";
+import Polygon from "./../shapes/poly.js";
 
 
 /**
@@ -100,7 +101,7 @@ var Entity = Renderable.extend({
         // initialize the default body
 
         if (typeof settings.shapes === "undefined") {
-            settings.shapes = new me.Polygon(0, 0, [
+            settings.shapes = new Polygon(0, 0, [
                 new Vector2d(0,          0),
                 new Vector2d(this.width, 0),
                 new Vector2d(this.width, this.height),

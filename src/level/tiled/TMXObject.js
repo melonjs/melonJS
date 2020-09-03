@@ -1,6 +1,9 @@
 import Vector2d from "./../../math/vector2.js";
 import { applyTMXProperties } from "./TMXUtils.js";
 import Tile from "./TMXTile.js";
+import Ellipse from "./../../shapes/ellipse.js";
+import Polygon from "./../../shapes/poly.js";
+import Line from "./../../shapes/line.js";
 
 /**
  * a TMX Object defintion, as defined in Tiled
@@ -257,7 +260,7 @@ export default class TMXObject {
         // add an ellipse shape
         if (this.isEllipse === true) {
             // ellipse coordinates are the center position, so set default to the corresonding radius
-            shapes.push((new me.Ellipse(
+            shapes.push((new Ellipse(
                 this.width / 2,
                 this.height / 2,
                 this.width,
@@ -267,7 +270,7 @@ export default class TMXObject {
 
         // add a polygon
         else if (this.isPolygon === true) {
-            shapes.push((new me.Polygon(0, 0, this.points)).rotate(this.rotation));
+            shapes.push((new Polygon(0, 0, this.points)).rotate(this.rotation));
         }
 
         // add a polyline
@@ -284,13 +287,13 @@ export default class TMXObject {
                     p1 = p1.rotate(this.rotation);
                     p2 = p2.rotate(this.rotation);
                 }
-                shapes.push(new me.Line(0, 0, [ p1, p2 ]));
+                shapes.push(new Line(0, 0, [ p1, p2 ]));
             }
         }
 
         // it's a rectangle, returns a polygon object anyway
         else {
-            shapes.push((new me.Polygon(
+            shapes.push((new Polygon(
                 0, 0, [
                     new Vector2d(), new Vector2d(this.width, 0),
                     new Vector2d(this.width, this.height), new Vector2d(0, this.height)
