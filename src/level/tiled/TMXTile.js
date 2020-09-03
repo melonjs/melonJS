@@ -1,6 +1,6 @@
 import Matrix2d from "./../../math/matrix2.js";
-import Rect from "./../../shapes/rectangle.js";
 import Sprite from "./../../renderable/sprite.js";
+import Bounds from "./../../physics/bounds.js";
 
 // bitmask constants to check for flipped & rotated tiles
 var TMX_FLIP_H          = 0x80000000,
@@ -11,7 +11,7 @@ var TMX_FLIP_H          = 0x80000000,
 /**
  * a basic tile object
  * @class
- * @extends me.Rect
+ * @extends me.Bounds
  * @memberOf me
  * @constructor
  * @param {Number} x x index of the Tile in the map
@@ -19,10 +19,13 @@ var TMX_FLIP_H          = 0x80000000,
  * @param {Number} gid tile gid
  * @param {me.TMXTileset} tileset the corresponding tileset object
  */
-var Tile = Rect.extend({
-    /** @ignore */
-    init : function (x, y, gid, tileset) {
+class Tile extends Bounds {
+
+    constructor(x, y, gid, tileset) {
         var width, height;
+
+        // call the parent constructor
+        super();
 
         // determine the tile size
         if (tileset.isCollection) {
@@ -34,8 +37,7 @@ var Tile = Rect.extend({
             height = tileset.tileheight;
         }
 
-        // call the parent constructor
-        this._super(me.Rect, "init", [x * width, y * height, width, height]);
+        this.setMinMax(0, 0, width, height);
 
         /**
          * tileset
@@ -102,14 +104,14 @@ var Tile = Rect.extend({
 
         // clear out the flags and set the tileId
         this.tileId &= TMX_CLEAR_BIT_MASK;
-    },
+    }
 
     /**
      * set the transformation matrix for this tile
      * @return {me.Matrix2d) a transformation matrix
      * @ignore
      */
-    setTileTransform : function (transform) {
+    setTileTransform(transform) {
         transform.translate(this.width / 2, this.height / 2);
         if (this.flippedAD) {
             transform.rotate(-90 * Math.PI / 180);
@@ -126,7 +128,7 @@ var Tile = Rect.extend({
              );
         }
         transform.translate(-this.width / 2, -this.height / 2);
-    },
+    }
 
     /**
      * return a renderable object for this Tile object
@@ -136,7 +138,7 @@ var Tile = Rect.extend({
      * @param {Object} [settings] see {@link me.Sprite}
      * @return {me.Renderable} a me.Sprite object
      */
-    getRenderable : function (settings) {
+    getRenderable(settings) {
         var renderable;
         var tileset = this.tileset;
 
@@ -182,5 +184,5 @@ var Tile = Rect.extend({
 
         return renderable;
     }
-});
+};
 export default Tile;
