@@ -1,4 +1,5 @@
 import video from "./../video/video.js";
+import game from "./../game.js";
 import Camera2d from "./../camera/camera2d.js";
 import "jay-extend";
 
@@ -76,7 +77,7 @@ var Stage = window.Jay.extend({
         }
 
         // reset the game
-        me.game.reset();
+        game.reset();
 
         // call the onReset Function
         this.onResetEvent.apply(this, arguments);
@@ -93,7 +94,7 @@ var Stage = window.Jay.extend({
      **/
     update : function (dt) {
         // update all objects (and pass the elapsed time since last frame)
-        var isDirty = me.game.world.update(dt);
+        var isDirty = game.world.update(dt);
 
         // update the camera/viewport
         // iterate through all cameras
@@ -118,7 +119,7 @@ var Stage = window.Jay.extend({
         // iterate through all cameras
         this.cameras.forEach(function(camera) {
             // render the root container
-            camera.draw(renderer, me.game.world);
+            camera.draw(renderer, game.world);
         });
     },
 
