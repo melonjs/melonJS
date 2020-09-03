@@ -6,7 +6,7 @@ import utils from "./../utils/utils.js";
 import event from "./../system/event.js";
 import game from "./../game.js";
 import device from "./../system/device.js";
-import { initialized } from "./../index.js";
+import { initialized, version } from "./../index.js";
 
 var designRatio = 1;
 var designWidth = 0;
@@ -180,7 +180,7 @@ var video = {
         // display melonJS version
         if (settings.consoleHeader !== false) {
             // output video information in the console
-            console.log("melonJS v" + me.version + " | http://melonjs.org" );
+            console.log("melonJS v" + version + " | http://melonjs.org" );
         }
 
         // override renderer settings if &webgl is defined in the URL
