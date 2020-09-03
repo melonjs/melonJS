@@ -3,6 +3,7 @@ import WebGLRenderer from "./webgl/webgl_renderer.js";
 import TextureCache from "./texture_cache.js";
 import Sprite from "./../renderable/sprite.js";
 import video from "./video.js";
+import { ETA } from "./../math/math.js";
 
 /**
   * @classdesc
@@ -197,7 +198,7 @@ export class Texture {
                     trimmed      : !!frame.trimmed,
                     width        : s.w,
                     height       : s.h,
-                    angle        : (frame.rotated === true) ? -me.Math.ETA : 0
+                    angle        : (frame.rotated === true) ? -ETA : 0
                 };
                 self.addUvsMap(atlas, frame.filename, data.meta.size.w, data.meta.size.h);
             }

@@ -7,7 +7,7 @@ import TextureCache from "./../texture_cache.js";
 import {Texture, createAtlas } from "./../texture.js";
 import video from "./../video.js";
 import event from "./../../system/event.js";
-
+import { isPowerOfTwo, nextPowerOfTwo, TAU } from "./../../math/math.js";
 
 
 /**
@@ -227,11 +227,11 @@ class WebGLRenderer extends Renderer {
             var height = canvas.height;
 
             if (this.WebGLVersion === 1) {
-                if (!me.Math.isPowerOfTwo(width)) {
-                    width = me.Math.nextPowerOfTwo(canvas.width);
+                if (!isPowerOfTwo(width)) {
+                    width = nextPowerOfTwo(canvas.width);
                 }
-                if (!me.Math.isPowerOfTwo(height)) {
-                    height = me.Math.nextPowerOfTwo(canvas.height);
+                if (!isPowerOfTwo(height)) {
+                    height = nextPowerOfTwo(canvas.height);
                 }
             }
 
@@ -271,7 +271,7 @@ class WebGLRenderer extends Renderer {
      */
     createPattern(image, repeat) {
 
-        if (video.renderer.WebGLVersion === 1 && (!me.Math.isPowerOfTwo(image.width) || !me.Math.isPowerOfTwo(image.height))) {
+        if (video.renderer.WebGLVersion === 1 && (!isPowerOfTwo(image.width) || !isPowerOfTwo(image.height))) {
             var src = typeof image.src !== "undefined" ? image.src : image;
             throw new Error(
                 "[WebGL Renderer] " + src + " is not a POT texture " +
@@ -785,7 +785,7 @@ class WebGLRenderer extends Renderer {
             // XXX to be optimzed using a specific shader
             var len = Math.floor(24 * Math.sqrt(w)) ||
                       Math.floor(12 * Math.sqrt(w + h));
-            var segment = (me.Math.TAU) / len;
+            var segment = (TAU) / len;
             var points = this._glPoints,
                 i;
 
@@ -818,7 +818,7 @@ class WebGLRenderer extends Renderer {
         // XXX to be optimzed using a specific shader
         var len = Math.floor(24 * Math.sqrt(w)) ||
                   Math.floor(12 * Math.sqrt(w + h));
-        var segment = (me.Math.TAU) / len;
+        var segment = (TAU) / len;
         var points = this._glPoints;
         var index = 0, i;
 

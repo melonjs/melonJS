@@ -1,6 +1,7 @@
 import utils from "./../utils/utils.js";
 import event from "./../system/event.js";
 import state from "./../state/state.js";
+import { clamp } from "./../math/math.js";
 
 //hold element to display fps
 var framecount = 0;
@@ -273,7 +274,7 @@ var timer = {
             framecount++;
             framedelta += delta;
             if (framecount % 10 === 0) {
-                this.fps = me.Math.clamp(Math.round((1000 * framecount) / framedelta), 0, this.maxfps);
+                this.fps = clamp(Math.round((1000 * framecount) / framedelta), 0, this.maxfps);
                 framedelta = 0;
                 framecount = 0;
             }

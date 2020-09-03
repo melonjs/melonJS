@@ -2,6 +2,8 @@ import video from "./../video/video.js";
 import pool from "./../system/pooling.js";
 import Renderable from "./../renderable/renderable.js";
 import ParticleContainer from "./particlecontainer.js";
+import { randomFloat } from "./../math/math.js";
+
 
 
 // generate a default image for the particles
@@ -438,7 +440,7 @@ var ParticleEmitter = Renderable.extend({
      * @return {Number}
      */
     getRandomPointX: function () {
-        return this.pos.x + me.Math.randomFloat(0, this.width);
+        return this.pos.x + randomFloat(0, this.width);
     },
 
     /**
@@ -449,7 +451,7 @@ var ParticleEmitter = Renderable.extend({
      * @return {Number}
      */
     getRandomPointY: function () {
-        return this.pos.y + me.Math.randomFloat(0, this.height);
+        return this.pos.y + randomFloat(0, this.height);
     },
 
     /**

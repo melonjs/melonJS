@@ -1,4 +1,4 @@
-import {clamp} from "./math.js";
+import { clamp, random } from "./math.js";
 
 // convert a give color component to it hexadecimal value
 var toHex = function (component) {
@@ -425,9 +425,9 @@ class Color {
         }
 
         return this.setColor(
-            me.Math.random(min, max),
-            me.Math.random(min, max),
-            me.Math.random(min, max),
+            random(min, max),
+            random(min, max),
+            random(min, max),
             this.alpha
         );
     }

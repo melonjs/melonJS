@@ -3,6 +3,7 @@ import ObservableVector2d from "./../math/observable_vector2.js";
 import ObservableVector3d from "./../math/observable_vector3.js";
 import Rect from "./../shapes/rectangle.js";
 import pool from "./../system/pooling.js";
+import { clamp } from "./../math/math.js";
 
 /**
  * A base class for renderable objects.
@@ -365,7 +366,7 @@ var Renderable = Rect.extend({
      */
     setOpacity : function (alpha) {
         if (typeof (alpha) === "number") {
-            this.alpha = me.Math.clamp(alpha, 0.0, 1.0);
+            this.alpha = clamp(alpha, 0.0, 1.0);
             // Set to 1 if alpha is NaN
             if (isNaN(this.alpha)) {
                 this.alpha = 1.0;

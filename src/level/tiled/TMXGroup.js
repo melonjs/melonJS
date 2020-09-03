@@ -1,6 +1,7 @@
 import { applyTMXProperties } from "./TMXUtils.js";
 import TMXObject from "./TMXObject.js";
 import TMXLayer from "./TMXLayer.js";
+import { clamp } from "./../../math/math.js";
 
 /**
  * @classdesc
@@ -70,7 +71,7 @@ export default class TMXGroup {
         this.objects = [];
 
         var visible = typeof(data.visible) !== "undefined" ? data.visible : true;
-        this.opacity = (visible === true) ? me.Math.clamp(+data.opacity || 1.0, 0.0, 1.0) : 0;
+        this.opacity = (visible === true) ? clamp(+data.opacity || 1.0, 0.0, 1.0) : 0;
 
         // check if we have any user-defined properties
         applyTMXProperties(this, data);

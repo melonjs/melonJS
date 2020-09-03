@@ -9,6 +9,7 @@ import video from "./../video/video.js";
 import event from "./../system/event.js";
 import pool from "./../system/pooling.js";
 import Renderable from "./../renderable/renderable.js";
+import {clamp, toBeCloseTo} from "./../math/math.js";
 
 
 // some ref shortcut
@@ -353,7 +354,7 @@ var Camera2d = Renderable.extend({
         if (typeof damping !== "number") {
             this.damping = 1;
         } else {
-            this.damping = me.Math.clamp(damping, 0.0, 1.0);
+            this.damping = clamp(damping, 0.0, 1.0);
         }
 
         // force a camera update
@@ -402,12 +403,12 @@ var Camera2d = Renderable.extend({
         var _x = this.pos.x;
         var _y = this.pos.y;
 
-        this.pos.x = me.Math.clamp(
+        this.pos.x = clamp(
             x,
             this.bounds.pos.x,
             this.bounds.width - this.width
         );
-        this.pos.y = me.Math.clamp(
+        this.pos.y = clamp(
             y,
             this.bounds.pos.y,
             this.bounds.height - this.height
@@ -451,8 +452,8 @@ var Camera2d = Renderable.extend({
                 // update the camera position
                 if (this.smoothFollow === true && this.damping < 1.0) {
                     // account for floating precision and check if we are close "enough"
-                    if (me.Math.toBeCloseTo(targetV.x, this.pos.x, 2) &&
-                        me.Math.toBeCloseTo(targetV.y, this.pos.y, 2)) {
+                    if (toBeCloseTo(targetV.x, this.pos.x, 2) &&
+                        toBeCloseTo(targetV.y, this.pos.y, 2)) {
                         this.pos.setV(targetV);
                         return false;
                     } else {

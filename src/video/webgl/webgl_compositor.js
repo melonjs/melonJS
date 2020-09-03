@@ -1,11 +1,13 @@
 import Vector2d from "./../../math/vector2.js";
 import GLShader from "./glshader.js";
 import event from "./../../system/event.js";
+import { isPowerOfTwo } from "./../../math/math.js";
 
 import primitiveVertex from "./shaders/primitive.vert";
 import primitiveFragment from "./shaders/primitive.frag";
 import quadVertex from "./shaders/quad.vert";
 import quadFragment from "./shaders/quad.frag";
+
 
 
 // Handy constants
@@ -235,7 +237,7 @@ class WebGLCompositor {
 
         repeat = repeat || "no-repeat";
 
-        var isPOT = me.Math.isPowerOfTwo(w || image.width) && me.Math.isPowerOfTwo(h || image.height);
+        var isPOT = isPowerOfTwo(w || image.width) && isPowerOfTwo(h || image.height);
         var texture = gl.createTexture();
         var rs = (repeat.search(/^repeat(-x)?$/) === 0) && (isPOT || this.renderer.WebGLVersion === 2) ? gl.REPEAT : gl.CLAMP_TO_EDGE;
         var rt = (repeat.search(/^repeat(-y)?$/) === 0) && (isPOT || this.renderer.WebGLVersion === 2) ? gl.REPEAT : gl.CLAMP_TO_EDGE;

@@ -1,6 +1,8 @@
 import Vector2d from "./../../../math/vector2.js";
 import pool from "./../../../system/pooling.js";
 import TMXHexagonalRenderer from "./TMXHexagonalRenderer.js";
+import { degToRad } from "./../../../math/math.js";
+
 
 /**
  * @classdesc
@@ -91,7 +93,7 @@ class TMXStaggeredRenderer extends TMXHexagonalRenderer {
             ret.y * (this.tilewidth / this.tileheight)
         );
 
-        ret.div(this.tilewidth / Math.sqrt(2)).rotate(me.Math.degToRad(-45)).add(referencePoint);
+        ret.div(this.tilewidth / Math.sqrt(2)).rotate(degToRad(-45)).add(referencePoint);
 
         pool.push(referencePoint);
         pool.push(rel);

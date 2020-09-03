@@ -6,6 +6,7 @@ import Bounds from "./bounds.js";
 import collision from "./collision.js";
 import utils from "./../utils/utils.js";
 import timer from "./../system/timer.js";
+import { clamp } from "./../math/math.js";
 
 
 /**
@@ -673,10 +674,10 @@ class Body {
 
         // cap velocity
         if (vel.y !== 0) {
-            vel.y = me.Math.clamp(vel.y, -this.maxVel.y, this.maxVel.y);
+            vel.y = clamp(vel.y, -this.maxVel.y, this.maxVel.y);
         }
         if (vel.x !== 0) {
-            vel.x = me.Math.clamp(vel.x, -this.maxVel.x, this.maxVel.x);
+            vel.x = clamp(vel.x, -this.maxVel.x, this.maxVel.x);
         }
 
     }

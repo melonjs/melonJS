@@ -4,6 +4,7 @@ import Tile from "./TMXTile.js";
 import Ellipse from "./../../shapes/ellipse.js";
 import Polygon from "./../../shapes/poly.js";
 import Line from "./../../shapes/line.js";
+import { degToRad } from "./../../math/math.js";
 
 /**
  * a TMX Object defintion, as defined in Tiled
@@ -124,7 +125,7 @@ export default class TMXObject {
          * @name rotation
          * @memberOf me.TMXObject
          */
-        this.rotation = me.Math.degToRad(+settings.rotation || 0);
+        this.rotation = degToRad(+settings.rotation || 0);
 
         /**
          * object unique identifier per level (Tiled 0.11.x+)
