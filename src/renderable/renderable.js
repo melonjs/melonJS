@@ -604,7 +604,7 @@ var Renderable = Rect.extend({
      */
     updateBounds : function () {
         console.warn("Deprecated: me.Renderable.updateBounds");
-        return this._super(me.Rect, "updateBounds");
+        return this._super(Rect, "updateBounds");
     },
 
     /**

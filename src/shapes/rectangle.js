@@ -31,7 +31,7 @@ var Rect = Polygon.extend({
         this.center.set(0, 0);
 
         // parent constructor
-        this._super(me.Polygon, "init", [x, y, [
+        this._super(Polygon, "init", [x, y, [
             new Vector2d(0, 0), // 0, 0
             new Vector2d(w, 0), // 1, 0
             new Vector2d(w, h), // 1, 1
@@ -67,7 +67,7 @@ var Rect = Polygon.extend({
             points[3].set(0, h); // 0, 1
         }
 
-        this._super(me.Polygon, "setShape", [x, y, points]);
+        this._super(Polygon, "setShape", [x, y, points]);
 
         return this;
     },
@@ -127,7 +127,7 @@ var Rect = Polygon.extend({
      * @function
      */
     recalc : function () {
-        this._super(me.Polygon, "recalc");
+        this._super(Polygon, "recalc");
         this._width = this.points[2].x;
         this._height = this.points[2].y;
         this.center.set(this.centerX, this.centerY);

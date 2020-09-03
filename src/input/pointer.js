@@ -261,7 +261,7 @@ var Pointer = Rect.extend({
         this.bind = [ 0, 0, 0 ];
 
         // parent constructor
-        this._super(me.Rect, "init", [x, y, w, h]);
+        this._super(Rect, "init", [x, y, w, h]);
     },
 
     /**

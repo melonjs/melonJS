@@ -16,7 +16,7 @@ var CollectableEntity = Entity.extend({
      */
     init : function (x, y, settings) {
         // call the super constructor
-        this._super(me.Entity, "init", [x, y, settings]);
+        this._super(Entity, "init", [x, y, settings]);
         this.body.collisionType = collision.types.COLLECTABLE_OBJECT;
     }
 });
