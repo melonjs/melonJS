@@ -6,6 +6,7 @@ import utils from "./../utils/utils.js";
 import event from "./../system/event.js";
 import game from "./../game.js";
 import device from "./../system/device.js";
+import { initialized } from "./../index.js";
 
 var designRatio = 1;
 var designWidth = 0;
@@ -146,7 +147,7 @@ var video = {
     init : function (game_width, game_height, options) {
 
         // ensure melonjs has been properly initialized
-        if (!me.initialized) {
+        if (!initialized) {
             throw new Error("me.video.init() called before engine initialization.");
         }
 

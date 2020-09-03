@@ -95,7 +95,7 @@ export function nextPowerOfTwo(val) {
  * me.Math.degToRad(60); // return 1.0471...
  */
 export function degToRad(angle) {
-    return angle * this.DEG_TO_RAD;
+    return angle * DEG_TO_RAD;
 };
 
 /**
@@ -111,7 +111,7 @@ export function degToRad(angle) {
  * me.Math.radToDeg(1.0471975511965976); // return 60
  */
 export function radToDeg(radians) {
-    return radians * this.RAD_TO_DEG;
+    return radians * RAD_TO_DEG;
 };
 
 /**
