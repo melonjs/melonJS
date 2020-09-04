@@ -476,7 +476,7 @@ var state = {
      * me.state.set(me.state.MENU, new MenuScreen());
      */
     set(state, stage, start) {
-        if (typeof stage !== "undefined" && stage.constructor === Stage) {
+        if (!(stage instanceof Stage)) {
             throw new Error(stage + " is not an instance of me.Stage");
         }
         _stages[state] = {};
