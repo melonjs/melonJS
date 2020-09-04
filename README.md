@@ -118,7 +118,7 @@ If you need to import the ES6 module of melonjs :
 
     $ import * as me from "melonjs-module.js";
 
-> Note: when using the es6 module, deprecated methods need to be manually applied, see [here] http://melonjs.github.io/melonJS/docs/me.deprecated.html#.apply
+> Note: when using the es6 module, deprecated methods need to be manually applied, see [here] (http://melonjs.github.io/melonJS/docs/me.deprecated.html#.apply)
 
 Or can simply be added to your html, through a content delivery network (CDN) URL, using for example :
 
