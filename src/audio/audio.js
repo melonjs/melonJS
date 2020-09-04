@@ -2,6 +2,7 @@
 import {Howl, Howler} from "howler";
 import {clamp} from "./../math/math.js";
 import loader from "./../loader/loader.js";
+import { initialized } from "./../index.js";
 
 // audio channel list
 var audioTracks = {};
@@ -82,7 +83,7 @@ var audio = {
      * }
      */
     init : function (audioFormat) {
-        if (!me.initialized) {
+        if (!initialized) {
             throw new Error("me.audio.init() called before engine initialization.");
         }
         // if no param is given to init we use mp3 by default
