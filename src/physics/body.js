@@ -213,7 +213,7 @@ class Body {
             this.gravity = new ObservableVector2d(0, 0, { onUpdate : function(x, y) {
                 // disable gravity or apply a scale if y gravity is different from 0
                 if (typeof y === "number") {
-                    self.gravityScale = y / me.game.world.gravity.y;
+                    self.gravityScale = y / game.world.gravity.y;
                 }
                 // deprecation // WARNING:
                 console.log(
@@ -542,7 +542,7 @@ class Body {
             }
 
             // cancel the falling an jumping flags if necessary
-            var dir = Math.sign(me.game.world.gravity.y * this.gravityScale) || 1;
+            var dir = Math.sign(game.world.gravity.y * this.gravityScale) || 1;
             this.falling = overlap.y >= dir;
             this.jumping = overlap.y <= -dir;
         }

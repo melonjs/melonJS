@@ -10,6 +10,7 @@ import event from "./../system/event.js";
 import pool from "./../system/pooling.js";
 import Renderable from "./../renderable/renderable.js";
 import {clamp, toBeCloseTo} from "./../math/math.js";
+import game from "./../game.js";
 
 
 // some ref shortcut
@@ -659,7 +660,7 @@ var Camera2d = Renderable.extend({
     localToWorld : function (x, y, v) {
         // TODO memoization for one set of coords (multitouch)
         v = v || new Vector2d();
-        v.set(x, y).add(this.pos).sub(me.game.world.pos);
+        v.set(x, y).add(this.pos).sub(game.world.pos);
         if (!this.currentTransform.isIdentity()) {
             this.invCurrentTransform.apply(v);
         }
@@ -684,7 +685,7 @@ var Camera2d = Renderable.extend({
         if (!this.currentTransform.isIdentity()) {
             this.currentTransform.apply(v);
         }
-        return v.sub(this.pos).add(me.game.world.pos);
+        return v.sub(this.pos).add(game.world.pos);
     },
 
     /**

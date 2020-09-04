@@ -280,7 +280,7 @@ function dispatchEvent(normalizedEvents) {
         var candidates = game.world.broadphase.retrieve(currentPointer, me.Container.prototype._sortReverseZ);
 
         // add the main viewport to the list of candidates
-        candidates = candidates.concat([ me.game.viewport ]);
+        candidates = candidates.concat([ game.viewport ]);
 
         for (var c = candidates.length, candidate; c--, (candidate = candidates[c]);) {
             if (eventHandlers.has(candidate) && (candidate.isKinematic !== true)) {
