@@ -3,17 +3,14 @@
  * a bound object contains methods for creating and manipulating axis-aligned bounding boxes (AABB).
  * @class Bounds
  * @memberOf me
+ * @constructor
+ * @memberOf me
+ * @param {me.Vector2d[]} [vertices] an array of me.Vector2d points
+ * @return {me.Bounds} A new bounds object
  */
 
 class Bounds {
 
-    /**
-     * Creates a new axis-aligned bounding box (AABB) for the given vertices.
-     * @constructor
-     * @memberOf me.Bounds
-     * @param {me.Vector2d[]} vertices an array of me.Vector2d points
-     * @return {me.Bounds} A new bounds object
-     */
     constructor(vertices) {
         this.min = { x: Infinity,  y: Infinity };
         this.max = { x: -Infinity, y: -Infinity };
@@ -122,8 +119,6 @@ class Bounds {
      * @name update
      * @memberOf me.Bounds
      * @function
-     * @method update
-     * @param {me.Bounds} bounds
      * @param {me.Vector2d[]} vertices an array of me.Vector2d points
      */
     update(vertices) {
@@ -132,11 +127,9 @@ class Bounds {
 
     /**
      * add the given vertices to the bounds definition.
-     * @name update
+     * @name add
      * @memberOf me.Bounds
      * @function
-     * @method update
-     * @param {me.Bounds} bounds
      * @param {me.Vector2d[]} vertices an array of me.Vector2d points
      * @param {boolean} [clear=false] either to reset the bounds before adding the new vertices
      */
@@ -154,11 +147,29 @@ class Bounds {
     }
 
     /**
+     * add the given bounds to the bounds definition.
+     * @name addBounds
+     * @memberOf me.Bounds
+     * @function
+     * @param {me.Bounds} bounds
+     * @param {boolean} [clear=false] either to reset the bounds before adding the new vertices
+     */
+    addBounds(bounds, clear = false) {
+        if (clear === true) {
+            this.clear();
+        }
+
+        if (bounds.max.x > this.max.x) this.max.x = bounds.max.x;
+        if (bounds.min.x < this.min.x) this.min.x = bounds.min.x;
+        if (bounds.max.y > this.max.y) this.max.y = bounds.max.y;
+        if (bounds.min.y < this.min.y) this.min.y = bounds.max.y;
+    }
+
+    /**
      * Returns true if the bounds contains the given point.
      * @name contains
      * @memberOf me.Bounds
      * @function
-     * @method contains
      * @param {vector} point
      * @return {boolean} True if the bounds contain the point, otherwise false
      */
@@ -172,7 +183,6 @@ class Bounds {
      * @name overlaps
      * @memberOf me.Bounds
      * @function
-     * @method overlaps
      * @param {me.Bounds} bounds
      * @return {boolean} True if the bounds overlap, otherwise false
      */
@@ -186,7 +196,6 @@ class Bounds {
      * @name translate
      * @memberOf me.Bounds
      * @function
-     * @method translate
      * @param {me.Vector2d} vector
      */
     translate(vector) {
@@ -201,7 +210,6 @@ class Bounds {
      * @name shift
      * @memberOf me.Bounds
      * @function
-     * @method shift
      * @param {me.Vector2d} position
      */
     shift(vector) {
@@ -213,5 +221,37 @@ class Bounds {
         this.min.y = vector.y;
         this.max.y = vector.y + deltaY;
     }
+
+    /**
+     * resize the bounds to the given width and height
+     * @name resize
+     * @memberOf me.Bounds
+     * @function
+     * @param {Number} width
+     * @param {Number} height
+     */
+    resize(width, height) {
+        this.width = width;
+        this.height = height;
+    }
+
+    /**
+     * clone this bounds
+     * @name clone
+     * @memberOf me.Bounds
+     * @function
+     * @return {me.Bounds}
+     */
+    clone() {
+        var bounds = new Bounds();
+        bounds.setMinMax(
+            this.min.x,
+            this.min.y,
+            this.max.x,
+            this.max.y
+        );
+        return bounds;
+    }
+
 };
 export default Bounds;
