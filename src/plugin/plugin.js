@@ -1,4 +1,5 @@
 import utils from "./../utils/utils.js";
+import { version } from "./../index.js";
 import "jay-extend";
 
 /**
@@ -102,7 +103,7 @@ export var plugin = {
      * // under then me.plugins namespace
      * me.plugins.testPlugin.myfunction ();
      */
-    register : function (plugin, name) {
+    register : function (pluginObj, name) {
         // ensure me.plugins[name] is not already "used"
         if (plugins[name]) {
             throw new Error("plugin " + name + " already registered");
@@ -116,17 +117,17 @@ export var plugin = {
         }
 
         // try to instantiate the plugin
-        _args[0] = plugin;
-        var instance = new (plugin.bind.apply(plugin, _args))();
+        _args[0] = pluginObj;
+        var instance = new (pluginObj.bind.apply(pluginObj, _args))();
 
         // inheritance check
-        if (typeof instance === "undefined" || !(instance instanceof me.plugin.Base)) {
+        if (typeof instance === "undefined" || !(instance instanceof plugin.Base)) {
             throw new Error("Plugin should extend the me.plugin.Base Class !");
         }
 
         // compatibility testing
         if (utils.checkVersion(instance.version) > 0) {
-            throw new Error("Plugin version mismatch, expected: " + instance.version + ", got: " + me.version);
+            throw new Error("Plugin version mismatch, expected: " + instance.version + ", got: " + version);
         }
 
         // create a reference to the new plugin

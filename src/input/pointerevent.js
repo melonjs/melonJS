@@ -9,6 +9,7 @@ import pool from "./../system/pooling.js";
 import device from "./../system/device.js";
 import Pointer from "./pointer.js";
 import Rect from "./../shapes/rectangle.js";
+import Container from "./../renderable/container.js";
 import game from "./../game.js";
 
 
@@ -277,7 +278,7 @@ function dispatchEvent(normalizedEvents) {
             event.publish(event.POINTERMOVE, [pointer]);
         }
 
-        var candidates = game.world.broadphase.retrieve(currentPointer, me.Container.prototype._sortReverseZ);
+        var candidates = game.world.broadphase.retrieve(currentPointer, Container.prototype._sortReverseZ);
 
         // add the main viewport to the list of candidates
         candidates = candidates.concat([ game.viewport ]);
@@ -305,7 +306,10 @@ function dispatchEvent(normalizedEvents) {
                     pointer.gameLocalY = pointer.gameY - parentPos.y;
                 }
 
-                if (region instanceof me.Sprite) {
+                // XXX using instanceof Sprite here crash the browser now (WHY?)
+                // XXX TODO : apply this to all renderable, not just Sprite based object
+                //if (typeof region.setAnimationFrame === "function") {
+                if (typeof region.setAnimationFrame === "function") {
                     var gameX = pointer.gameX;
                     var gameY = pointer.gameY;
                     if (!region.currentTransform.isIdentity()) {

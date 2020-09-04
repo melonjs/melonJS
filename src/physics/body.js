@@ -1,6 +1,7 @@
 import Vector2d from "./../math/vector2.js";
 import ObservableVector2d from "./../math/observable_vector2.js";
 import Rect from "./../shapes/rectangle.js";
+import Ellipse from "./../shapes/ellipse.js";
 import Polygon from "./../shapes/poly.js";
 import Bounds from "./bounds.js";
 import collision from "./collision.js";
@@ -317,7 +318,7 @@ class Body {
             // update the body bounds
             this.bounds.add(poly.points);
             this.bounds.translate(shape.pos);
-        } else if (shape instanceof me.Ellipse) {
+        } else if (shape instanceof Ellipse) {
             if (!this.shapes.includes(shape)) {
                 // see removeShape
                 this.shapes.push(shape);
@@ -325,7 +326,7 @@ class Body {
             // update the body bounds
             this.bounds.add(shape.getBounds().points);
             this.bounds.translate(shape.pos);
-        } else if (shape instanceof me.Polygon) {
+        } else if (shape instanceof Polygon) {
             if (!this.shapes.includes(shape)) {
                 // see removeShape
                 this.shapes.push(shape);
@@ -358,7 +359,7 @@ class Body {
      */
     setVertices(vertices, index = 0, clear = true) {
         var polygon = this.getShape(index);
-        if (polygon instanceof me.Polygon) {
+        if (polygon instanceof Polygon) {
             polygon.setShape(0, 0, vertices);
         } else {
             // this will replace any other non polygon shape type if defined

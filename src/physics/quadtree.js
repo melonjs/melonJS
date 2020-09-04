@@ -1,4 +1,5 @@
 import Vector2d from "./../math/vector2.js";
+import Container from "./../renderable/container.js";
 import utils from "./../utils/utils.js";
 import game from "./../game.js";
 
@@ -179,7 +180,7 @@ class QuadTree {
     insertContainer(container) {
         for (var i = container.children.length, child; i--, (child = container.children[i]);) {
             if (child.isKinematic !== true) {
-                if (child instanceof me.Container) {
+                if (child instanceof Container) {
                     if (child.name !== "rootContainer") {
                         this.insert(child);
                     }

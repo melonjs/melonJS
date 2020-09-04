@@ -1,5 +1,6 @@
 import timer from "./../system/timer.js";
 import Sprite from "./sprite.js";
+import { registerPointerEvent, releasePointerEvent} from "./../input/input.js";
 
 
 /**
@@ -245,11 +246,11 @@ var GUI_Object = Sprite.extend({
      */
     onActivateEvent : function () {
         // register pointer events
-        me.input.registerPointerEvent("pointerdown", this, this.clicked.bind(this));
-        me.input.registerPointerEvent("pointerup", this, this.release.bind(this));
-        me.input.registerPointerEvent("pointercancel", this, this.release.bind(this));
-        me.input.registerPointerEvent("pointerenter", this, this.enter.bind(this));
-        me.input.registerPointerEvent("pointerleave", this, this.leave.bind(this));
+        registerPointerEvent("pointerdown", this, this.clicked.bind(this));
+        registerPointerEvent("pointerup", this, this.release.bind(this));
+        registerPointerEvent("pointercancel", this, this.release.bind(this));
+        registerPointerEvent("pointerenter", this, this.enter.bind(this));
+        registerPointerEvent("pointerleave", this, this.leave.bind(this));
     },
 
     /**
@@ -258,11 +259,11 @@ var GUI_Object = Sprite.extend({
      */
     onDeactivateEvent : function () {
         // release pointer events
-        me.input.releasePointerEvent("pointerdown", this);
-        me.input.releasePointerEvent("pointerup", this);
-        me.input.releasePointerEvent("pointercancel", this);
-        me.input.releasePointerEvent("pointerenter", this);
-        me.input.releasePointerEvent("pointerleave", this);
+        releasePointerEvent("pointerdown", this);
+        releasePointerEvent("pointerup", this);
+        releasePointerEvent("pointercancel", this);
+        releasePointerEvent("pointerenter", this);
+        releasePointerEvent("pointerleave", this);
         timer.clearTimeout(this.holdTimeout);
     }
 });

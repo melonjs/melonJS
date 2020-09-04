@@ -1,6 +1,7 @@
 import Color from "./../../math/color.js";
 import Renderer from "./../renderer.js";
 import TextureCache from "./../texture_cache.js";
+import Ellipse from "./../../shapes/ellipse.js";
 import video from "./../video.js";
 
 
@@ -695,7 +696,7 @@ class CanvasRenderer extends Renderer {
         var _x = mask.pos.x, _y = mask.pos.y;
 
         // https://github.com/melonjs/melonJS/issues/648
-        if (mask instanceof me.Ellipse) {
+        if (mask instanceof Ellipse) {
             var hw = mask.radiusV.x,
                 hh = mask.radiusV.y,
                 lx = _x - hw,

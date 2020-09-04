@@ -2,6 +2,7 @@ import Vector2d from "./../math/vector2.js";
 import device from "./../system/device.js";
 import Rect from "./../shapes/rectangle.js";
 import game from "./../game.js";
+import { globalToLocal } from "./input.js";
 
 
 /**
@@ -290,7 +291,7 @@ var Pointer = Rect.extend({
         this.clientY = clientY;
 
         // translate to local coordinates
-        me.input.globalToLocal(this.pageX, this.pageY, this.pos);
+        globalToLocal(this.pageX, this.pageY, this.pos);
 
         // true if not originally a pointer event
         this.isNormalized = !device.PointerEvent || (device.PointerEvent && !(event instanceof window.PointerEvent));

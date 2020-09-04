@@ -168,7 +168,7 @@ var level = {
             throw new Error("level " + levelId + " not found");
         }
 
-        if (levels[levelId] instanceof me.TMXTileMap) {
+        if (levels[levelId] instanceof TMXTileMap) {
 
             // check the status of the state mngr
             var wasRunning = state.isRunning();
