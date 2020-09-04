@@ -114,6 +114,12 @@ Alternatively, the latest version of melonJS can be installed through [NPM](http
 
     $ npm install melonjs
 
+If you need to import the ES6 module of melonjs :
+
+    $ import * as me from "melonjs-module.js";
+
+> Note: when using the es6 module, deprecated methods need to be manually applied, see [here] http://melonjs.github.io/melonJS/docs/me.deprecated.html#.apply
+
 Or can simply be added to your html, through a content delivery network (CDN) URL, using for example :
 
 ```html
@@ -152,7 +158,11 @@ Then build the melonJS source by running:
 
     $ npm run build
 
-The generated library will be available under the `build` directory.
+The generated library will be available under the `build` directory :
+- `melonjs.js` : a plain ES5 UMD bundle
+- `melonjs.min.js` : a minified ES5 UMD bundle
+- `melonjs-module.js` : a plain ES6 module
+
 
 Building the documentation
 -------------------------------------------------------------------------------

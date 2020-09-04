@@ -1,9 +1,10 @@
 # Version History
 
 ## 9.0.0 (WIP)
-- melonJS is now automatically transpiled (for es6 classes) and bundled into a es5 umd module using rollup
-- Core : me.Stage constructor now accept new argument properties to specify the onResetEvent and onDestroyEvent functions
-- Tiled : add TMX tint color parsing for tile and object layers 
+- Core : melonJS build process now automatically output one ES5 umd bundle, and one pure ES6 module
+- Core : the "legacy" es5 umd bundle is now automatically transpiled (from ES6 to ES5) using rollup and buble
+- Core : `me.Stage` constructor now accept new argument properties to specify the `onResetEvent` and `onDestroyEvent` functions
+- Tiled : add TMX `tintcolor` parsing for tile and object layers
 
 ## 8.0.1 (12 Aug 2020)
 - release fix for NPM & jsDeliver
