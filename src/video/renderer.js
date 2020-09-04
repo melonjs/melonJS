@@ -6,6 +6,9 @@ import device from "./../system/device.js";
 import { setPrefixed } from "./../utils/agent.js";
 import { Texture } from "./texture.js";
 import Rect from "./../shapes/rectangle.js";
+import Ellipse from "./../shapes/ellipse.js";
+import Polygon from "./../shapes/poly.js";
+import Line from "./../shapes/line.js";
 
 /**
  * @classdesc
@@ -342,9 +345,9 @@ class Renderer {
     stroke(shape, fill) {
         if (shape.shapeType === "Rectangle") {
             this.strokeRect(shape.left, shape.top, shape.width, shape.height, fill);
-        } else if (shape instanceof me.Line || shape instanceof me.Polygon) {
+        } else if (shape instanceof Line || shape instanceof Polygon) {
             this.strokePolygon(shape, fill);
-        } else if (shape instanceof me.Ellipse) {
+        } else if (shape instanceof Ellipse) {
             this.strokeEllipse(
                 shape.pos.x,
                 shape.pos.y,

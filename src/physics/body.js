@@ -7,6 +7,7 @@ import collision from "./collision.js";
 import utils from "./../utils/utils.js";
 import timer from "./../system/timer.js";
 import { clamp } from "./../math/math.js";
+import game from "./../game.js";
 
 
 /**
@@ -663,7 +664,7 @@ class Body {
         }
 
         if (!this.ignoreGravity) {
-            var worldGravity = me.game.world.gravity;
+            var worldGravity = game.world.gravity;
             // apply gravity if defined
             vel.x += worldGravity.x * this.gravityScale * this.mass * timer.tick;
             vel.y += worldGravity.y * this.gravityScale * this.mass * timer.tick;

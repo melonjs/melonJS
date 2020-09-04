@@ -9,6 +9,7 @@ import pool from "./../system/pooling.js";
 import device from "./../system/device.js";
 import Pointer from "./pointer.js";
 import Rect from "./../shapes/rectangle.js";
+import game from "./../game.js";
 
 
 /**
@@ -276,7 +277,7 @@ function dispatchEvent(normalizedEvents) {
             event.publish(event.POINTERMOVE, [pointer]);
         }
 
-        var candidates = me.game.world.broadphase.retrieve(currentPointer, me.Container.prototype._sortReverseZ);
+        var candidates = game.world.broadphase.retrieve(currentPointer, me.Container.prototype._sortReverseZ);
 
         // add the main viewport to the list of candidates
         candidates = candidates.concat([ me.game.viewport ]);

@@ -3,6 +3,7 @@ import Renderable from "./../renderable/renderable.js";
 import Sprite from "./../renderable/sprite.js";
 import Body from "./../physics/body.js";
 import Polygon from "./../shapes/poly.js";
+import collision from "./../physics/collision.js";
 
 
 /**
@@ -128,8 +129,8 @@ var Entity = Renderable.extend({
 
         // set the  collision mask if defined
         if (typeof(settings.collisionType) !== "undefined") {
-            if (typeof me.collision.types[settings.collisionType] !== "undefined") {
-                this.body.collisionType = me.collision.types[settings.collisionType];
+            if (typeof collision.types[settings.collisionType] !== "undefined") {
+                this.body.collisionType = collision.types[settings.collisionType];
             } else {
                 throw new Error("Invalid value for the collisionType property");
             }

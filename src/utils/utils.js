@@ -5,6 +5,7 @@ import * as stringUtils from "./string.js";
 import * as fnUtils from "./function.js";
 import video from "./../video/video.js";
 import CanvasRenderer from "./../video/canvas/canvas_renderer.js";
+import { version } from "./../index.js";
 
 /**
  * a collection of utility functions
@@ -65,7 +66,7 @@ var utils = {
      *     );
      * }
      */
-    checkVersion : function (first, second = me.version) {
+    checkVersion : function (first, second = version) {
         var a = first.split(".");
         var b = second.split(".");
         var len = Math.min(a.length, b.length);
