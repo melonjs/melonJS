@@ -232,11 +232,8 @@ class WebGLCompositor {
      * @param {Boolean} [mipmap=true] Whether mipmap levels should be generated for this texture
      * @return {WebGLTexture} a WebGL texture
      */
-    createTexture2D(unit, image, filter, repeat, w, h, b, premultipliedAlpha, mipmap) {
+    createTexture2D(unit, image, filter, repeat = "no-repeat", w, h, b, premultipliedAlpha = true, mipmap = true) {
         var gl = this.gl;
-
-        repeat = repeat || "no-repeat";
-
         var isPOT = isPowerOfTwo(w || image.width) && isPowerOfTwo(h || image.height);
         var texture = gl.createTexture();
         var rs = (repeat.search(/^repeat(-x)?$/) === 0) && (isPOT || this.renderer.WebGLVersion === 2) ? gl.REPEAT : gl.CLAMP_TO_EDGE;
@@ -248,7 +245,7 @@ class WebGLCompositor {
         gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, rt);
         gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, filter);
         gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, filter);
-        gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, (typeof premultipliedAlpha === "boolean") ? premultipliedAlpha : true);
+        gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, premultipliedAlpha);
         if (w || h || b) {
             gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, w, h, b, gl.RGBA, gl.UNSIGNED_BYTE, image);
         }
