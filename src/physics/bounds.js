@@ -177,12 +177,32 @@ class Bounds {
      * @name contains
      * @memberOf me.Bounds
      * @function
-     * @param {vector} point
+     * @param {me.Vector2d} point
+     * @return {boolean} True if the bounds contain the point, otherwise false
+     */
+    /**
+     * Returns true if the bounds contains the given point.
+     * @name contains
+     * @memberOf me.Bounds
+     * @function
+     * @param {Number} x
+     * @param {Number} y
      * @return {boolean} True if the bounds contain the point, otherwise false
      */
     contains(point) {
-        return point.x >= this.min.x && point.x <= this.max.x
-               && point.y >= this.min.y && point.y <= this.max.y;
+        var _x, _y;
+        if (arguments.length === 2) {
+            // x, y
+            _x = arguments[0];
+            _y = arguments[1];
+        } else {
+            // vector
+            _x = arguments[0].x;
+            _y = arguments[0].y;
+        }
+
+        return _x >= this.min.x && _x <= this.max.x
+            && _y >= this.min.y && _y <= this.max.y;
     }
 
     /**
@@ -205,11 +225,29 @@ class Bounds {
      * @function
      * @param {me.Vector2d} vector
      */
-    translate(vector) {
-        this.min.x += vector.x;
-        this.max.x += vector.x;
-        this.min.y += vector.y;
-        this.max.y += vector.y;
+    /**
+     * Translates the bounds by x on the x axis, and y on the y axis
+     * @name translate
+     * @memberOf me.Bounds
+     * @function
+     * @param {Number} x
+     * @param {Number} y
+     */
+    translate() {
+        var _x, _y;
+        if (arguments.length === 2) {
+            // x, y
+            _x = arguments[0];
+            _y = arguments[1];
+        } else {
+            // vector
+            _x = arguments[0].x;
+            _y = arguments[0].y;
+        }
+        this.min.x += _x;
+        this.max.x += _x;
+        this.min.y += _y;
+        this.max.y += _y;
     }
 
     /**
