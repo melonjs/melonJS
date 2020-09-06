@@ -244,17 +244,32 @@ export function boot() {
     pool.register("me.Polygon", Polygon, true);
     pool.register("me.Line", Line, true);
     pool.register("me.Ellipse", Ellipse, true);
+    pool.register("me.Bounds", Bounds, true);
 
-    // if use with no namespace (e.g. es6)
+    // duplicate all entries if use with no namespace (e.g. es6)
+    pool.register("Entity", Entity);
+    pool.register("CollectableEntity", CollectableEntity);
+    pool.register("LevelEntity", LevelEntity);
     pool.register("Tween", Tween, true);
     pool.register("Color", Color, true);
+    pool.register("Particle", Particle, true);
+    pool.register("Sprite", Sprite);
+    pool.register("Text", Text, true);
+    pool.register("BitmapText", BitmapText, true);
+    pool.register("BitmapTextData", BitmapTextData, true);
+    pool.register("ImageLayer", ImageLayer, true);
+    pool.register("ColorLayer", ColorLayer, true);
     pool.register("Vector2d", Vector2d, true);
     pool.register("Vector3d", Vector3d, true);
     pool.register("ObservableVector2d", ObservableVector2d, true);
     pool.register("ObservableVector3d", ObservableVector3d, true);
     pool.register("Matrix2d", Matrix2d, true);
     pool.register("Matrix3d", Matrix3d, true);
-    pool.register("BitmapTextData", BitmapTextData, true);
+    pool.register("Rect", Rect, true);
+    pool.register("Polygon", Polygon, true);
+    pool.register("Line", Line, true);
+    pool.register("Ellipse", Ellipse, true);
+    pool.register("Bounds", Bounds, true);
 
     // initialize me.save
     save.init();

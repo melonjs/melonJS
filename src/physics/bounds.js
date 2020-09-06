@@ -12,9 +12,16 @@
 class Bounds {
 
     constructor(vertices) {
-        this.min = { x: Infinity,  y: Infinity };
-        this.max = { x: -Infinity, y: -Infinity };
+        this.onResetEvent(vertices);
+    }
 
+    onResetEvent(vertices) {
+        if (typeof this.min === "undefined") {
+            this.min = { x: Infinity,  y: Infinity };
+            this.max = { x: -Infinity, y: -Infinity };
+        } else {
+            this.clear();
+        }
         if (typeof vertices !== "undefined") {
             this.update(vertices);
         }
