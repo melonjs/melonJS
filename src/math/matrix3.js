@@ -533,20 +533,6 @@ class Matrix3d {
      * @param {Number} [z=0] a number representing the depth of the vector
      * @return {me.Matrix3d} Reference to this object for method chaining
      */
-    translate(x, y, z) {
-        var a = this.val,
-           _x = x,
-           _y = typeof(y) === "undefined" ? _x : y,
-           _z = typeof(z) === "undefined" ?  0 : z;
-
-         a[12] = a[0] * _x + a[4] * _y + a[8] * _z + a[12];
-         a[13] = a[1] * _x + a[5] * _y + a[9] * _z + a[13];
-         a[14] = a[2] * _x + a[6] * _y + a[10] * _z + a[14];
-         a[15] = a[3] * _x + a[7] * _y + a[11] * _z + a[15];
-
-         return this;
-    }
-
     /**
      * translate the matrix by a vector on the horizontal and vertical axis
      * @name translateV
@@ -555,8 +541,28 @@ class Matrix3d {
      * @param {me.Vector2d|me.Vector3d} v the vector to translate the matrix by
      * @return {me.Matrix3d} Reference to this object for method chaining
      */
-    translateV(v) {
-        return this.translate(v.x, v.y, v.z);
+    translate(x, y, z) {
+        var a = this.val;
+        var _x, _y, _z;
+
+        if (arguments.length > 1 ) {
+            // x, y (, z)
+            _x = arguments[0];
+            _y = arguments[1];
+            _z = typeof(arguments[2]) === "undefined" ?  0 : arguments[2];
+        } else {
+            // 2d/3d vector
+            _x = arguments[0].x;
+            _y = arguments[0].y;
+            _z = typeof(arguments[0].z) === "undefined" ? _y : arguments[0].z;
+        }
+
+        a[12] = a[0] * _x + a[4] * _y + a[8] * _z + a[12];
+        a[13] = a[1] * _x + a[5] * _y + a[9] * _z + a[13];
+        a[14] = a[2] * _x + a[6] * _y + a[10] * _z + a[14];
+        a[15] = a[3] * _x + a[7] * _y + a[11] * _z + a[15];
+
+        return this;
     }
 
     /**

@@ -178,22 +178,31 @@ var Rect = Polygon.extend({
      * @param {Number} y y offset
      * @return {me.Rect} this rectangle
      */
-    translate : function (x, y) {
-        this.pos.x += x;
-        this.pos.y += y;
-        return this;
-    },
-
     /**
      * translate the rect by the specified vector
-     * @name translateV
+     * @name translate
      * @memberOf me.Rect.prototype
      * @function
      * @param {me.Vector2d} v vector offset
      * @return {me.Rect} this rectangle
      */
-    translateV : function (v) {
-        return this.translate(v.x, v.y);
+    translate : function () {
+        var _x, _y;
+
+        if (arguments.length === 2) {
+            // x, y
+            _x = arguments[0];
+            _y = arguments[1];
+        } else {
+            // vector
+            _x = arguments[0].x;
+            _y = arguments[0].y;
+        }
+
+        this.pos.x += _x;
+        this.pos.y += _y;
+
+        return this;
     },
 
     /**

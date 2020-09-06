@@ -667,4 +667,74 @@ export function warning(deprecated, replacement, version) {
         warning("me.levelDirector.levelCount()", "me.level.levelCount()", "9.0.0");
         return me.level.levelCount();
     };
+
+    /**
+     * translate the rect by the specified vector
+     * @name translate
+     * @memberOf me.Rect.prototype
+     * @function
+     * @deprecated since 9.0.0
+     * @param {me.Vector2d} v vector offset
+     * @return {me.Rect} this rectangle
+     */
+    me.Rect.prototype.translateV = function (v) {
+        warning("translateV()", "translate()", "9.0.0");
+        return this.translate(v);
+    };
+
+    /**
+     * translate the Polygon by the specified vector
+     * @name translateV
+     * @memberOf me.Polygon.prototype
+     * @function
+     * @deprecated since 9.0.0
+     * @param {me.Vector2d} v vector offset
+     * @return {me.Polygon} Reference to this object for method chaining
+     */
+    me.Polygon.prototype.translateV = function (v) {
+        warning("translateV()", "translate()", "9.0.0");
+        return this.translate(v);
+    };
+
+    /**
+     * translate the circle/ellipse by the specified vector
+     * @name translateV
+     * @memberOf me.Ellipse.prototype
+     * @function
+     * @deprecated since 9.0.0
+     * @param {me.Vector2d} v vector offset
+     * @return {me.Rect} this ellipse
+     */
+    me.Ellipse.prototype.translateV = function (v) {
+        warning("translateV()", "translate()", "9.0.0");
+        return this.translate(v);
+    };
+
+    /**
+     * translate the matrix by a vector on the horizontal and vertical axis
+     * @name translateV
+     * @memberOf me.Matrix2d
+     * @function
+     * @deprecated since 9.0.0
+     * @param {me.Vector2d} v the vector to translate the matrix by
+     * @return {me.Matrix2d} Reference to this object for method chaining
+     */
+    me.Matrix2d.prototype.translateV = function (v) {
+        warning("translateV()", "translate()", "9.0.0");
+        return this.translate(v);
+    };
+
+    /**
+     * translate the matrix by a vector on the horizontal and vertical axis
+     * @name translateV
+     * @memberOf me.Matrix3d
+     * @function
+     * @deprecated since 9.0.0
+     * @param {me.Vector2d|me.Vector3d} v the vector to translate the matrix by
+     * @return {me.Matrix3d} Reference to this object for method chaining
+     */
+    me.Matrix3d.prototype.translateV = function (v) {
+        warning("translateV()", "translate()", "9.0.0");
+        return this.translate(v);
+    };
 };

@@ -396,15 +396,6 @@ class Matrix2d {
      * @param {Number} y the y coordindates to translate the matrix by
      * @return {me.Matrix2d} Reference to this object for method chaining
      */
-    translate(x, y) {
-        var a = this.val;
-
-        a[6] += a[0] * x + a[3] * y;
-        a[7] += a[1] * x + a[4] * y;
-
-        return this;
-    }
-
     /**
      * translate the matrix by a vector on the horizontal and vertical axis
      * @name translateV
@@ -413,8 +404,24 @@ class Matrix2d {
      * @param {me.Vector2d} v the vector to translate the matrix by
      * @return {me.Matrix2d} Reference to this object for method chaining
      */
-    translateV(v) {
-        return this.translate(v.x, v.y);
+    translate() {
+        var a = this.val;
+        var _x, _y;
+
+        if (arguments.length === 2) {
+            // x, y
+            _x = arguments[0];
+            _y = arguments[1];
+        } else {
+            // vector
+            _x = arguments[0].x;
+            _y = arguments[0].y;
+        }
+
+        a[6] += a[0] * _x + a[3] * _y;
+        a[7] += a[1] * _x + a[4] * _y;
+
+        return this;
     }
 
     /**

@@ -174,24 +174,31 @@ var Ellipse = window.Jay.extend({
      * @param {Number} y y offset
      * @return {me.Ellipse} this ellipse
      */
-    translate : function (x, y) {
-        this.pos.x += x;
-        this.pos.y += y;
-        this.getBounds().translate(x, y);
-        return this;
-    },
-
     /**
      * translate the circle/ellipse by the specified vector
-     * @name translateV
+     * @name translate
      * @memberOf me.Ellipse.prototype
      * @function
      * @param {me.Vector2d} v vector offset
      * @return {me.Rect} this ellipse
      */
-    translateV : function (v) {
-        this.pos.add(v);
-        this.getBounds().translateV(v);
+    translate : function () {
+        var _x, _y;
+
+        if (arguments.length === 2) {
+            // x, y
+            _x = arguments[0];
+            _y = arguments[1];
+        } else {
+            // vector
+            _x = arguments[0].x;
+            _y = arguments[0].y;
+        }
+
+        this.pos.x += _x;
+        this.pos.y += _y;
+        this.getBounds().translate(_x, _y);
+
         return this;
     },
 

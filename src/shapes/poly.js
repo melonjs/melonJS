@@ -291,24 +291,31 @@ var Polygon = window.Jay.extend({
      * @param {Number} y y offset
      * @return {me.Polygon} this Polygon
      */
-    translate : function (x, y) {
-        this.pos.x += x;
-        this.pos.y += y;
-        this.getBounds().translate(x, y);
-        return this;
-    },
-
     /**
      * translate the Polygon by the specified vector
-     * @name translateV
+     * @name translate
      * @memberOf me.Polygon.prototype
      * @function
      * @param {me.Vector2d} v vector offset
      * @return {me.Polygon} Reference to this object for method chaining
      */
-    translateV : function (v) {
-        this.pos.add(v);
-        this.getBounds().translateV(v);
+    translate : function () {
+        var _x, _y;
+
+        if (arguments.length === 2) {
+            // x, y
+            _x = arguments[0];
+            _y = arguments[1];
+        } else {
+            // vector
+            _x = arguments[0].x;
+            _y = arguments[0].y;
+        }
+
+        this.pos.x += _x;
+        this.pos.y += _y;
+        this.getBounds().translate(_x, _y);
+
         return this;
     },
 
@@ -377,7 +384,7 @@ var Polygon = window.Jay.extend({
         var bounds = this.getBounds();
 
         bounds.setPoints(this.points);
-        bounds.translateV(this.pos);
+        bounds.translate(this.pos);
 
         return bounds;
     },
