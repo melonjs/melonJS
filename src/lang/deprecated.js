@@ -15,7 +15,13 @@
  * @param {String} version the version since when the lass,function or property is deprecated
  */
 export function warning(deprecated, replacement, version) {
-    console.warn("melonJS: %s is deprecated since version %s, please use %s", deprecated, version, replacement);
+    var msg = "melonJS: %s is deprecated since version %s, please use %s";
+    var stack = new Error().stack;
+
+    console.warn(msg, deprecated, version, replacement);
+    if (typeof stack !== "undefined") {
+        console.warn(stack);
+    }
 };
 
 
