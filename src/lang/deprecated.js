@@ -18,10 +18,32 @@ export function warning(deprecated, replacement, version) {
     var msg = "melonJS: %s is deprecated since version %s, please use %s";
     var stack = new Error().stack;
 
-    console.warn(msg, deprecated, version, replacement);
+    if (console.groupCollapsed) {
+        console.groupCollapsed(
+            "%c" + msg,
+            "font-weight:normal;color:yellow;",
+            deprecated,
+            version,
+            replacement
+        );
+    } else {
+        console.warn(
+            msg,
+            deprecated,
+            version,
+            replacement
+        );
+    }
+
     if (typeof stack !== "undefined") {
         console.warn(stack);
     }
+
+    if (console.groupCollapsed) {
+        console.groupEnd();
+    }
+
+
 };
 
 
