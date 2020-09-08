@@ -120,6 +120,28 @@ class Bounds {
         this.max.y = this.min.y + value;
     }
 
+    /**
+     * center position of the bound on the x axis
+     * @public
+     * @type {Number}
+     * @name centerX
+     * @memberOf me.Bounds
+     */
+    get centerX() {
+        return this.min.x + (this.width / 2);
+    }
+
+    /**
+     * center position of the bound on the y axis
+     * @public
+     * @type {Number}
+     * @name centerY
+     * @memberOf me.Bounds
+     */
+    get centerY() {
+        return this.min.y + (this.height / 2);
+    }
+
 
     /**
      * Updates bounds using the given vertices
