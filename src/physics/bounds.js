@@ -25,6 +25,9 @@ class Bounds {
         if (typeof vertices !== "undefined") {
             this.update(vertices);
         }
+
+        // @ignore
+        this._center = new me.Vector2d();
     }
 
     /**
@@ -142,6 +145,16 @@ class Bounds {
         return this.min.y + (this.height / 2);
     }
 
+    /**
+     * return the center position of the bound
+     * @public
+     * @type {me.Vector2d}
+     * @name center
+     * @memberOf me.Bounds
+     */
+    get center() {
+        return this._center.set(this.centerX, this.centerY);
+    }
 
     /**
      * Updates bounds using the given vertices
@@ -191,7 +204,7 @@ class Bounds {
         if (bounds.max.x > this.max.x) this.max.x = bounds.max.x;
         if (bounds.min.x < this.min.x) this.min.x = bounds.min.x;
         if (bounds.max.y > this.max.y) this.max.y = bounds.max.y;
-        if (bounds.min.y < this.min.y) this.min.y = bounds.max.y;
+        if (bounds.min.y < this.min.y) this.min.y = bounds.min.y;
     }
 
     /**
@@ -279,14 +292,34 @@ class Bounds {
      * @function
      * @param {me.Vector2d} position
      */
-    shift(vector) {
+    /**
+     * Shifts the bounds to the given x, y position.
+     * @name shift
+     * @memberOf me.Bounds
+     * @function
+     * @param {Number} x
+     * @param {Number} y
+     */
+    shift() {
+        var _x, _y;
+
+        if (arguments.length === 2) {
+            // x, y
+            _x = arguments[0];
+            _y = arguments[1];
+        } else {
+            // vector
+            _x = arguments[0].x;
+            _y = arguments[0].y;
+        }
+
         var deltaX = this.max.x - this.min.x,
             deltaY = this.max.y - this.min.y;
 
-        this.min.x = vector.x;
-        this.max.x = vector.x + deltaX;
-        this.min.y = vector.y;
-        this.max.y = vector.y + deltaY;
+        this.min.x = _x;
+        this.max.x = _x + deltaX;
+        this.min.y = _y;
+        this.max.y = _y + deltaY;
     }
 
     /**
@@ -311,12 +344,7 @@ class Bounds {
      */
     clone() {
         var bounds = new Bounds();
-        bounds.setMinMax(
-            this.min.x,
-            this.min.y,
-            this.max.x,
-            this.max.y
-        );
+        bounds.addBounds(this);
         return bounds;
     }
 
