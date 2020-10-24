@@ -12,7 +12,7 @@ import pool from "./../system/pooling.js";
  */
 class Vector2d {
 
-    constructor(x = 0, y = 0) {
+    constructor(x, y) {
         this.onResetEvent(x, y);
     }
 
@@ -29,7 +29,8 @@ class Vector2d {
     /**
      * @ignore */
     _set(x, y) {
-        this.onResetEvent(x, y);
+        this.x = x;
+        this.y = y;
         return this;
     }
 
@@ -323,8 +324,27 @@ class Vector2d {
      * @param {me.Vector2d} v
      * @return {Boolean}
      */
-    equals(v) {
-        return ((this.x === v.x) && (this.y === v.y));
+    /**
+     * return true if this vector is equal to the given values
+     * @name equals
+     * @memberOf me.Vector2d
+     * @function
+     * @param {Number} x
+     * @param {Number} y
+     * @return {Boolean}
+     */
+    equals() {
+        var _x, _y;
+        if (arguments.length === 2) {
+            // x, y
+            _x = arguments[0];
+            _y = arguments[1];
+        } else {
+            // vector
+            _x = arguments[0].x;
+            _y = arguments[0].y;
+        }
+        return ((this.x === _x) && (this.y === _y));
     }
 
     /**

@@ -17,6 +17,7 @@ describe("me.Vector2d", function () {
         b.copy(a);
 
         expect(b.equals(a)).toEqual(true);
+        expect(b.equals(a.x, a.y)).toEqual(true);
     });
 
     it("set (1, 2) into a defined vector", function () {

@@ -14,7 +14,7 @@ import pool from "./../system/pooling.js";
 
 class Vector3d {
 
-    constructor(x = 0, y = 0, z = 0) {
+    constructor(x, y, z) {
         this.onResetEvent(x, y, z);
     }
 
@@ -32,7 +32,10 @@ class Vector3d {
     /**
      * @ignore */
     _set(x, y, z = 0) {
-        return this.onResetEvent(x, y, z);
+        this.x = x;
+        this.y = y;
+        this.z = z;
+        return this;
     }
 
     /**
@@ -339,8 +342,35 @@ class Vector3d {
      * @param {me.Vector2d|me.Vector3d} v
      * @return {Boolean}
      */
-    equals(v) {
-        return ((this.x === v.x) && (this.y === v.y) && (this.z === (v.z || this.z)));
+    /**
+     * return true if this vector is equal to the given values
+     * @name equals
+     * @memberOf me.Vector3d
+     * @function
+     * @param {Number} x
+     * @param {Number} y
+     * @param {Number} [z]
+     * @return {Boolean}
+     */
+    equals() {
+        var _x, _y, _z;
+        if (arguments.length >= 2) {
+            // x, y, z
+            _x = arguments[0];
+            _y = arguments[1];
+            _z = arguments[2];
+        } else {
+            // vector
+            _x = arguments[0].x;
+            _y = arguments[0].y;
+            _z = arguments[0].z;
+        }
+
+        if (typeof _z === "undefined") {
+            _z = this.z;
+        }
+
+        return ((this.x === _x) && (this.y === _y) && (this.z === _z));
     }
 
     /**

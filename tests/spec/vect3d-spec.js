@@ -18,6 +18,10 @@ describe("me.Vector3d", function () {
         b.copy(a);
 
         expect(b.equals(a)).toEqual(true);
+        // this should be true too
+        expect(b.equals(a.x, a.y, a.z)).toEqual(true);
+        // and also this one
+        expect(b.equals(a.x, a.y)).toEqual(true);
     });
 
     it("set (1, 2, 3) into a defined vector", function () {
