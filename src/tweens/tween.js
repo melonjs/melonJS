@@ -137,17 +137,31 @@ class Tween {
          * @public
          * @function
          * @param {Object} properties hash of properties
-         * @param {Number} [duration=1000] tween duration
+         * @param {Object} [options] object of tween properties
+         * @param {Number} [options.duration] tween duration
+         * @param {me.Tween.Easing} [options.easing] easing function
+         * @param {Number} [options.delay] delay amount expressed in milliseconds
+         * @param {Boolean} [options.yoyo] allows the tween to bounce back to their original value when finished. To be used together with repeat to create endless loops.
+         * @param {Number} [options.repeat] amount of times the tween should be repeated
+         * @param {me.Tween.Interpolation} [options.interpolation] interpolation function
+         * @param {Boolean} [options.autoStart] allow this tween to start automatically. Otherwise call me.Tween.start().
          */
-        this.to = function ( properties, duration ) {
-
-            if ( duration !== undefined ) {
-
-                _duration = duration;
-
-            }
+        this.to = function ( properties, options ) {
 
             _valuesEnd = properties;
+
+            if (typeof options === 'object' && options !== null) {
+                if (options.duration) { _duration = options.duration; }
+                if (options.yoyo) { this.yoyo(options.yoyo); }
+                if (options.easing) { this.easing(options.easing); }
+                if (options.repeat) { this.repeat(options.repeat); }
+                if (options.delay) { this.delay(options.delay); }
+                if (options.interpolation) { this.interpolation(options.interpolation); }
+
+                if (options.autoStart) {
+                    this.start();
+                }
+            }
 
             return this;
 
