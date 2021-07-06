@@ -560,7 +560,7 @@ var Camera2d = Renderable.extend({
     fadeOut : function (color, duration, onComplete) {
         this._fadeOut.color = pool.pull("me.Color").copy(color);
         this._fadeOut.tween = pool.pull("me.Tween", this._fadeOut.color)
-            .to({ alpha: 0.0 }, duration || 1000)
+            .to({ alpha: 0.0 }, {duration: duration || 1000})
             .onComplete(onComplete || null);
         this._fadeOut.tween.isPersistent = true;
         this._fadeOut.tween.start();
@@ -584,7 +584,7 @@ var Camera2d = Renderable.extend({
         var _alpha = this._fadeIn.color.alpha;
         this._fadeIn.color.alpha = 0.0;
         this._fadeIn.tween = pool.pull("me.Tween", this._fadeIn.color)
-            .to({ alpha: _alpha }, duration || 1000)
+            .to({ alpha: _alpha }, {duration: duration || 1000})
             .onComplete(onComplete || null);
         this._fadeIn.tween.isPersistent = true;
         this._fadeIn.tween.start();
