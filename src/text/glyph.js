@@ -5,6 +5,7 @@ var PAGE_SIZE = 1 << LOG2_PAGE_SIZE;
 
 /**
  * a glyph representing a single character in a font
+ * @ignore
  */
 class Glyph {
     constructor() {
