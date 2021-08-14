@@ -3,7 +3,7 @@
 ## 9.0.0 (WIP)
 - Audio : Howler audio core update (2.2.1)
 - Core : melonJS build process now automatically output one ES5 umd bundle, and one pure ES6 module
-- Core : the "legacy" es5 umd bundle is now automatically transpiled (from ES6 to ES5) using rollup and buble
+- Core : the "legacy" es5 umd bundle is now automatically transpiled (from ES6 to ES5) using rollup and bubble
 - Core : `me.Stage` constructor now accept new argument properties to specify the `onResetEvent` and `onDestroyEvent` functions
 - Tiled : add TMX `tintcolor` parsing for tile and object layers
 
