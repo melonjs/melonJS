@@ -50,22 +50,22 @@
     "CHANGELOG"
   ],
   "dependencies": {
-    "earcut": "2.2.2",
-    "howler": "^2.2.1",
+    "earcut": "2.2.3",
+    "howler": "2.2.3",
     "jay-extend": "1.0.1",
     "minpubsub": "0.0.2"
   },
   "devDependencies": {
     "@rollup/plugin-buble": "^0.21.3",
-    "@rollup/plugin-commonjs": "^17.0.0",
-    "@rollup/plugin-node-resolve": "^11.0.1",
-    "@rollup/plugin-replace": "^2.3.4",
+    "@rollup/plugin-commonjs": "^20.0.0",
+    "@rollup/plugin-node-resolve": "^13.0.4",
+    "@rollup/plugin-replace": "^3.0.0",
     "cheerio": "^1.0.0-rc.5",
     "eslint": "^7.17.0",
     "ghpages": "0.0.10",
     "jasmine-core": "^3.6.0",
     "jsdoc": "^3.6.6",
-    "karma": "^5.2.3",
+    "karma": "^6.3.4",
     "karma-chrome-launcher": "^3.1.0",
     "karma-coverage": "^2.0.3",
     "karma-html-detailed-reporter": "^2.1.0",
