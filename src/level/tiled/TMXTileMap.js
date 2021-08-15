@@ -531,7 +531,7 @@ export default class TMXTileMap {
                     obj.pos.z = settings.z;
                 }
 
-                if (isCollisionGroup && !settings.name) {
+                if (isCollisionGroup && !settings.name && obj.body) {
                     // configure the body accordingly
                     obj.body.collisionType = collision.types.WORLD_SHAPE;
                 }
