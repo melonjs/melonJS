@@ -6,6 +6,7 @@
 - Core : the "legacy" es5 umd bundle is now automatically transpiled (from ES6 to ES5) using rollup and bubble
 - Core : `me.Stage` constructor now accept new argument properties to specify the `onResetEvent` and `onDestroyEvent` functions
 - Tiled : add TMX `tintcolor` parsing for tile and object layers
+- TMX : fix crash when trying to add collisionType to text nodes (thanks @framp)
 
 ## 8.0.1 (12 Aug 2020)
 - release fix for NPM & jsDeliver
