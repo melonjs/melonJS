@@ -204,33 +204,42 @@ var Ellipse = window.Jay.extend({
 
     /**
      * check if this circle/ellipse contains the specified point
-     * @name containsPointV
+     * @name contains
      * @memberOf me.Ellipse.prototype
      * @function
      * @param  {me.Vector2d} point
      * @return {boolean} true if contains
      */
-    containsPointV: function (v) {
-        return this.containsPoint(v.x, v.y);
-    },
 
     /**
      * check if this circle/ellipse contains the specified point
-     * @name containsPoint
+     * @name contains
      * @memberOf me.Ellipse.prototype
      * @function
      * @param  {Number} x x coordinate
      * @param  {Number} y y coordinate
      * @return {boolean} true if contains
      */
-    containsPoint: function (x, y) {
+    contains: function (x, y) {
+        var _x, _y;
+
+        if (arguments.length === 2) {
+          // x, y
+          _x = arguments[0];
+          _y = arguments[1];
+        } else {
+          // vector
+          _x = arguments[0].x;
+          _y = arguments[0].y;
+        }
+
         // Make position relative to object center point.
-        x -= this.pos.x;
-        y -= this.pos.y;
+        _x -= this.pos.x;
+        _y -= this.pos.y;
         // Pythagorean theorem.
         return (
-            ((x * x) / this.radiusSq.x) +
-            ((y * y) / this.radiusSq.y)
+            ((_x * _x) / this.radiusSq.x) +
+            ((_y * _y) / this.radiusSq.y)
         ) <= 1.0;
     },
 

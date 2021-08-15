@@ -649,13 +649,13 @@
         /** @private */
         onClick : function (e)  {
             // check the clickable areas
-            if (this.area.renderHitBox.containsPoint(e.gameX, e.gameY)) {
+            if (this.area.renderHitBox.contains(e.gameX, e.gameY)) {
                 me.debug.renderHitBox = !me.debug.renderHitBox;
-            } else if (this.area.renderVelocity.containsPoint(e.gameX, e.gameY)) {
+            } else if (this.area.renderVelocity.contains(e.gameX, e.gameY)) {
                 // does nothing for now, since velocity is
                 // rendered together with hitboxes (is a global debug flag required?)
                 me.debug.renderVelocity = !me.debug.renderVelocity;
-            } else if (this.area.renderQuadTree.containsPoint(e.gameX, e.gameY)) {
+            } else if (this.area.renderQuadTree.contains(e.gameX, e.gameY)) {
                 me.debug.renderQuadTree = !me.debug.renderQuadTree;
             }
             // force repaint

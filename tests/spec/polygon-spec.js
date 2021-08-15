@@ -35,11 +35,11 @@ describe("Shape : me.Polygon", function () {
         });
 
         it("contains the point (75, 75)", function () {
-            expect(stars.containsPoint(75, 75)).toEqual(true);
+            expect(stars.contains(75, 75)).toEqual(true);
         });
 
         it("does not contains the point (75, 500)", function () {
-            expect(stars.containsPoint(75, 500)).toEqual(false);
+            expect(stars.contains(75, 500)).toEqual(false);
         });
 
         it("width is 188", function () {

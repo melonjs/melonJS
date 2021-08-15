@@ -320,13 +320,13 @@ function dispatchEvent(normalizedEvents) {
                         gameY = invV.y;
                         pool.push(invV);
                     }
-                    eventInBounds = bounds.containsPoint(gameX, gameY);
+                    eventInBounds = bounds.contains(gameX, gameY);
                 } else {
                     eventInBounds =
-                        bounds.containsPoint(pointer.gameX, pointer.gameY) &&
+                        bounds.contains(pointer.gameX, pointer.gameY) &&
                         (bounds === region ||
                         // if the given target is another shape than me.Rect
-                        region.containsPoint(pointer.gameLocalX, pointer.gameLocalY));
+                        region.contains(pointer.gameLocalX, pointer.gameLocalY));
                 }
 
                 switch (pointer.type) {

@@ -98,7 +98,7 @@ describe("Shape : me.Rect", function () {
         });
 
         it("rect 3 contains the point (70, 150)", function () {
-            expect(rect3.containsPoint(70, 150)).toEqual(true);
+            expect(rect3.contains(70, 150)).toEqual(true);
         });
 
         it("rect 3 does not overlaps rect4", function () {

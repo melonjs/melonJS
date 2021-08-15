@@ -32,11 +32,11 @@ describe("Shape : me.Line", function () {
         });
 
         it("contains the point (0, 0)", function () {
-            expect(line.containsPoint(0, 0)).toEqual(true);
+            expect(line.contains(0, 0)).toEqual(true);
         });
 
         it("contains the point (14, 30)", function () {
-            expect(line.containsPoint(14, 30)).toEqual(true);
+            expect(line.contains(14, 30)).toEqual(true);
         });
 
         it("contains the point (60, -28) after rotating the line by -90 degrees", function () {
@@ -48,19 +48,19 @@ describe("Shape : me.Line", function () {
 
         it("does not contain the point (60, 28) after rotating back", function () {
             line.rotate(Math.PI / 2);
-            expect(line.containsPoint(60, 28)).toEqual(false);
+            expect(line.contains(60, 28)).toEqual(false);
         });
 
         it("contains the point (28, 60)", function () {
-            expect(line.containsPoint(28, 60)).toEqual(true);
+            expect(line.contains(28, 60)).toEqual(true);
         });
 
         it("does not contain the point (15, 30)", function () {
-            expect(line.containsPoint(15, 30)).toEqual(false);
+            expect(line.contains(15, 30)).toEqual(false);
         });
 
         it("does not contain the point (29, 61)", function () {
-            expect(line.containsPoint(29, 61)).toEqual(false);
+            expect(line.contains(29, 61)).toEqual(false);
         });
 
         it("Polygon Bounding Rect width is 28", function () {

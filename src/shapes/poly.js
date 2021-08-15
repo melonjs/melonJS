@@ -320,29 +320,40 @@ var Polygon = window.Jay.extend({
     },
 
     /**
-     * check if this Polygon contains the specified point
-     * @name containsPointV
+     * Returns true if the polygon contains the given point.
+     * (Note: it is highly recommended to first do a hit test on the corresponding <br>
+     *  bounding rect, as the function can be highly consuming with complex shapes)
+     * @name contains
      * @memberOf me.Polygon.prototype
      * @function
      * @param  {me.Vector2d} point
      * @return {boolean} true if contains
      */
-    containsPointV: function (v) {
-        return this.containsPoint(v.x, v.y);
-    },
 
     /**
-     * check if this Polygon contains the specified point <br>
+     * Returns true if the polygon contains the given point. <br>
      * (Note: it is highly recommended to first do a hit test on the corresponding <br>
      *  bounding rect, as the function can be highly consuming with complex shapes)
-     * @name containsPoint
+     * @name contains
      * @memberOf me.Polygon.prototype
      * @function
      * @param  {Number} x x coordinate
      * @param  {Number} y y coordinate
      * @return {boolean} true if contains
      */
-    containsPoint: function (x, y) {
+    contains: function () {
+        var _x, _y;
+
+        if (arguments.length === 2) {
+          // x, y
+          _x = arguments[0];
+          _y = arguments[1];
+        } else {
+          // vector
+          _x = arguments[0].x;
+          _y = arguments[0].y;
+        }
+
         var intersects = false;
         var posx = this.pos.x, posy = this.pos.y;
         var points = this.points;
@@ -352,7 +363,7 @@ var Polygon = window.Jay.extend({
         for (var i = 0, j = len - 1; i < len; j = i++) {
             var iy = points[i].y + posy, ix = points[i].x + posx,
                 jy = points[j].y + posy, jx = points[j].x + posx;
-            if (((iy > y) !== (jy > y)) && (x < (jx - ix) * (y - iy) / (jy - iy) + ix)) {
+            if (((iy > _y) !== (jy > _y)) && (_x < (jx - ix) * (_y - iy) / (jy - iy) + ix)) {
                 intersects = !intersects;
             }
         }

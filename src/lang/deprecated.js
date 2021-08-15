@@ -702,6 +702,7 @@ export function warning(deprecated, replacement, version) {
      * @memberOf me.Rect.prototype
      * @function
      * @deprecated since 9.0.0
+     * @see me.Rect.translate
      * @param {me.Vector2d} v vector offset
      * @return {me.Rect} this rectangle
      */
@@ -711,11 +712,28 @@ export function warning(deprecated, replacement, version) {
     };
 
     /**
+     * Returns true if the rectangle contains the given point
+     * @name containsPoint
+     * @memberOf me.Rect.prototype
+     * @function
+     * @deprecated since 9.0.0
+     * @see me.Rect.contains
+     * @param  {Number} x x coordinate
+     * @param  {Number} y y coordinate
+     * @return {boolean} true if contains
+     */
+    me.Rect.prototype.containsPoint = function (x, y) {
+        warning("containsPoint()", "contains()", "9.0.0");
+        return this.contains(x, y);
+    };
+
+    /**
      * translate the Polygon by the specified vector
      * @name translateV
      * @memberOf me.Polygon.prototype
      * @function
      * @deprecated since 9.0.0
+     * @see me.Polygon.translate
      * @param {me.Vector2d} v vector offset
      * @return {me.Polygon} Reference to this object for method chaining
      */
@@ -725,11 +743,79 @@ export function warning(deprecated, replacement, version) {
     };
 
     /**
+     * check if this Polygon contains the specified point
+     * @name containsPointV
+     * @memberOf me.Polygon.prototype
+     * @function
+     * @deprecated since 9.0.0
+     * @see me.Polygon.contains
+     * @param  {me.Vector2d} point
+     * @return {boolean} true if contains
+     */
+    me.Polygon.prototype.containsPointV = function (v) {
+        warning("containsPointV()", "contains()", "9.0.0");
+        return this.contains(v);
+    };
+
+    /**
+     * Returns true if the polygon contains the given point. <br>
+     * (Note: it is highly recommended to first do a hit test on the corresponding <br>
+     *  bounding rect, as the function can be highly consuming with complex shapes)
+     * @name containsPoint
+     * @memberOf me.Polygon.prototype
+     * @function
+     * @deprecated since 9.0.0
+     * @see me.Polygon.contains
+     * @param  {Number} x x coordinate
+     * @param  {Number} y y coordinate
+     * @return {boolean} true if contains
+     */
+
+    me.Polygon.prototype.containsPoint = function (x, y) {
+        warning("containsPoint()", "contains()", "9.0.0");
+        return this.contains(x, y);
+    };
+
+    /**
+     * check if this Line contains the specified point
+     * @name containsPointV
+     * @memberOf me.Line.prototype
+     * @function
+     * @deprecated since 9.0.0
+     * @see me.Line.contains
+     * @param  {me.Vector2d} point
+     * @return {boolean} true if contains
+     */
+    me.Line.prototype.containsPointV = function (v) {
+        warning("containsPointV()", "contains()", "9.0.0");
+        return this.contains(v);
+    };
+
+    /**
+     * Returns true if the Line contains the given point. <br>
+     * (Note: it is highly recommended to first do a hit test on the corresponding <br>
+     *  bounding rect, as the function can be highly consuming with complex shapes)
+     * @name containsPoint
+     * @memberOf me.Line.prototype
+     * @function
+     * @deprecated since 9.0.0
+     * @see me.Line.contains
+     * @param  {Number} x x coordinate
+     * @param  {Number} y y coordinate
+     * @return {boolean} true if contains
+     */
+    me.Line.prototype.containsPoint = function (x, y) {
+        warning("containsPoint()", "contains()", "9.0.0");
+        return this.contains(x, y);
+    };
+
+    /**
      * translate the circle/ellipse by the specified vector
      * @name translateV
      * @memberOf me.Ellipse.prototype
      * @function
      * @deprecated since 9.0.0
+     * @see me.Ellipse.translate
      * @param {me.Vector2d} v vector offset
      * @return {me.Rect} this ellipse
      */
@@ -739,11 +825,43 @@ export function warning(deprecated, replacement, version) {
     };
 
     /**
+     * check if this Ellipse contains the specified point
+     * @name containsPointV
+     * @memberOf me.Ellipse.prototype
+     * @function
+     * @deprecated since 9.0.0
+     * @see me.Ellipse.contains
+     * @param  {me.Vector2d} point
+     * @return {boolean} true if contains
+     */
+    me.Ellipse.prototype.containsPointV = function (v) {
+        warning("containsPointV()", "contains()", "9.0.0");
+        return this.contains(v);
+    };
+
+    /**
+     * Returns true if the Ellipse contains the given point
+     * @name containsPoint
+     * @memberOf me.Ellipse.prototype
+     * @function
+     * @deprecated since 9.0.0
+     * @see me.Ellipse.contains
+     * @param  {Number} x x coordinate
+     * @param  {Number} y y coordinate
+     * @return {boolean} true if contains
+     */
+    me.Ellipse.prototype.containsPoint = function (x, y) {
+        warning("containsPoint()", "contains()", "9.0.0");
+        return this.contains(x, y);
+    };
+
+    /**
      * translate the matrix by a vector on the horizontal and vertical axis
      * @name translateV
      * @memberOf me.Matrix2d
      * @function
      * @deprecated since 9.0.0
+     * @see me.Matrix2d.translate
      * @param {me.Vector2d} v the vector to translate the matrix by
      * @return {me.Matrix2d} Reference to this object for method chaining
      */
@@ -758,6 +876,7 @@ export function warning(deprecated, replacement, version) {
      * @memberOf me.Matrix3d
      * @function
      * @deprecated since 9.0.0
+     * @see me.Matrix3d.translate
      * @param {me.Vector2d|me.Vector3d} v the vector to translate the matrix by
      * @return {me.Matrix3d} Reference to this object for method chaining
      */
@@ -765,4 +884,5 @@ export function warning(deprecated, replacement, version) {
         warning("translateV()", "translate()", "9.0.0");
         return this.translate(v);
     };
+
 };

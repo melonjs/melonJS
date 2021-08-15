@@ -276,7 +276,7 @@ var TMXLayer = Renderable.extend({
     getTile : function (x, y) {
         var tile = null;
 
-        if (this.containsPoint(x, y)) {
+        if (this.contains(x, y)) {
             var coord = this.renderer.pixelToTileCoords(x, y, pool.pull("me.Vector2d"));
             tile = this.cellAt(coord.x, coord.y);
             pool.push(coord);

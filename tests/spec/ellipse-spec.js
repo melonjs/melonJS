@@ -39,11 +39,11 @@ describe("Shape : me.Ellipse", function () {
         });
 
         it("Ellipse contains the point (75, 75)", function () {
-            expect(circle.containsPoint(75, 75)).toEqual(true);
+            expect(circle.contains(75, 75)).toEqual(true);
         });
 
         it("Ellipse does not contains the point (75, 500)", function () {
-            expect(circle.containsPoint(75, 500)).toEqual(false);
+            expect(circle.contains(75, 500)).toEqual(false);
         });
 
         /*

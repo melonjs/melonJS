@@ -245,38 +245,58 @@ var Rect = Polygon.extend({
     },
 
     /**
-     * check if this rectangle contains the specified one
+     * Returns true if the rectangle contains the given rectangle
      * @name contains
      * @memberOf me.Rect.prototype
      * @function
-     * @param  {me.Rect} rect
+     * @param {me.Rect} rect
      * @return {boolean} true if contains
      */
-    contains: function (r) {
-        return (
-            r.left >= this.left &&
-            r.right <= this.right &&
-            r.top >= this.top &&
-            r.bottom <= this.bottom
-        );
-    },
 
     /**
-     * check if this rectangle contains the specified point
-     * @name containsPoint
+     * Returns true if the rectangle contains the given point
+     * @name contains
      * @memberOf me.Rect.prototype
      * @function
      * @param  {Number} x x coordinate
      * @param  {Number} y y coordinate
      * @return {boolean} true if contains
      */
-    containsPoint: function (x, y) {
-        return (
-            x >= this.left &&
-            x <= this.right &&
-            y >= this.top &&
-            y <= this.bottom
-        );
+
+    /**
+     * Returns true if the rectangle contains the given point
+     * @name contains
+     * @memberOf me.Bounds
+     * @function
+     * @param {me.Vector2d} point
+     * @return {boolean} true if contains
+     */
+    contains: function () {
+        var arg0 = arguments[0];
+        var _x1, _x2, _y1, _y2;
+        if (arguments.length === 2) {
+             // x, y
+             _x1 = _x2 = arg0;
+             _y1 = _y2 = arguments[1];
+         } else {
+             if (arg0 instanceof me.Rect) {
+                 // me.Rect
+                 _x1 = arg0.left;
+                 _x2 = arg0.right;
+                 _y1 = arg0.top;
+                 _y2 = arg0.bottom;
+             } else {
+                 // vector
+                 _x1 = _x2 = arg0.x;
+                 _y1 = _y2 = arg0.y;
+             }
+         }
+         return (
+             _x1 >= this.left &&
+             _x2 <= this.right &&
+             _y1 >= this.top &&
+             _y2 <= this.bottom
+         );
     },
 
     /**
