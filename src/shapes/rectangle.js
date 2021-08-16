@@ -279,7 +279,7 @@ var Rect = Polygon.extend({
              _x1 = _x2 = arg0;
              _y1 = _y2 = arguments[1];
          } else {
-             if (arg0 instanceof me.Rect) {
+             if (arg0 instanceof Rect) {
                  // me.Rect
                  _x1 = arg0.left;
                  _x2 = arg0.right;
