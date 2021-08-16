@@ -268,20 +268,29 @@ class Bounds {
      * @param {Number} y
      * @return {boolean} True if the bounds contain the point, otherwise false
      */
-    contains(point) {
-        var _x, _y;
+    contains() {
+        var arg0 = arguments[0];
+        var _x1, _x2, _y1, _y2;
         if (arguments.length === 2) {
             // x, y
-            _x = arguments[0];
-            _y = arguments[1];
+            _x1 = _x2 = arg0;
+            _y1 = _y2 = arguments[1];
         } else {
-            // vector
-            _x = arguments[0].x;
-            _y = arguments[0].y;
+            if (arg0 instanceof Bounds) {
+                // bounds
+                _x1 = arg0.min.x;
+                _x2 = arg0.max.x;
+                _y1 = arg0.min.y;
+                _y2 = arg0.max.y;
+            } else {
+                // vector
+                _x1 = _x2 = arg0.x;
+                _y1 = _y2 = arg0.y;
+            }
         }
 
-        return _x >= this.min.x && _x <= this.max.x
-            && _y >= this.min.y && _y <= this.max.y;
+        return _x1 >= this.min.x && _x2 <= this.max.x
+            && _y1 >= this.min.y && _y2 <= this.max.y;
     }
 
     /**
