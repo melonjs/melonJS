@@ -124,6 +124,50 @@ class Bounds {
     }
 
     /**
+     * left coordinate of the bound
+     * @public
+     * @type {Number}
+     * @name left
+     * @memberOf me.Bounds
+     */
+    get left() {
+        return this.min.x;
+    }
+
+    /**
+     * right coordinate of the bound
+     * @public
+     * @type {Number}
+     * @name right
+     * @memberOf me.Bounds
+     */
+    get right() {
+        return this.max.x;
+    }
+
+    /**
+     * top coordinate of the bound
+     * @public
+     * @type {Number}
+     * @name top
+     * @memberOf me.Bounds
+     */
+    get top() {
+        return this.min.y;
+    }
+
+    /**
+     * bottom coordinate of the bound
+     * @public
+     * @type {Number}
+     * @name bottom
+     * @memberOf me.Bounds
+     */
+    get bottom() {
+        return this.max.y;
+    }
+
+    /**
      * center position of the bound on the x axis
      * @public
      * @type {Number}
@@ -254,6 +298,17 @@ class Bounds {
     }
 
     /**
+     * determines whether all coordinates of this bounds are finite numbers.
+     * @name isFinite
+     * @memberOf me.Bounds
+     * @function
+     * @return {boolean} false if all coordinates are positive or negative Infinity or NaN; otherwise, true.
+     */
+    isFinite() {
+        return (isFinite(this.min.x) && isFinite(this.max.x) && isFinite(this.min.y) && isFinite(this.max.y));
+    }
+
+    /**
      * Translates the bounds by the given vector.
      * @name translate
      * @memberOf me.Bounds
@@ -320,19 +375,6 @@ class Bounds {
         this.max.x = _x + deltaX;
         this.min.y = _y;
         this.max.y = _y + deltaY;
-    }
-
-    /**
-     * resize the bounds to the given width and height
-     * @name resize
-     * @memberOf me.Bounds
-     * @function
-     * @param {Number} width
-     * @param {Number} height
-     */
-    resize(width, height) {
-        this.width = width;
-        this.height = height;
     }
 
     /**
