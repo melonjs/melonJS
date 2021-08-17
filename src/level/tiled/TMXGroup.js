@@ -90,7 +90,7 @@ export default class TMXGroup {
         if (data.layers) {
             var _layers = data.layers;
             _layers.forEach(function (data) {
-                var layer = new TMXLayer(data, map.tilewidth, map.tileheight, map.orientation, map.tilesets, z++);
+                var layer = new TMXLayer(map, data, map.tilewidth, map.tileheight, map.orientation, map.tilesets, z++);
                 // set a renderer
                 layer.setRenderer(map.getRenderer());
                 // resize container accordingly

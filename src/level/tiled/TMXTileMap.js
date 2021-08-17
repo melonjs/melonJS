@@ -51,10 +51,7 @@ function getNewDefaultRenderer(map) {
  * @ignore
  */
 function readLayer(map, data, z) {
-    var layer = new TMXLayer(data, map.tilewidth, map.tileheight, map.orientation, map.tilesets, z);
-    // set a renderer
-    layer.setRenderer(map.getRenderer());
-    return layer;
+    return new TMXLayer(map, data, map.tilewidth, map.tileheight, map.orientation, map.tilesets, z);
 }
 
 /**
