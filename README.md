@@ -69,6 +69,8 @@ Using melonJS
 Basic Example
 
 ```JavaScript
+import * as me from "melonjs-module.js"
+
 me.device.onReady(function () {
     // initialize the display canvas once the device/browser is ready
     if (!me.video.init(1218, 562, {parent : "screen", scale : "auto"})) {
@@ -90,7 +92,7 @@ me.device.onReady(function () {
     }));
 });
 ```
-> Simple hello world using melonJS 8.x or higher
+> Simple hello world using melonJS 9.x or higher
 
 Documentation :
 
@@ -124,8 +126,10 @@ If you need to import the ES6 module of melonjs :
 Or can simply be added to your html, through a content delivery network (CDN) URL, using for example :
 
 ```html
-<!-- load melonJS v8.0.1 -->
-<script src="https://cdn.jsdelivr.net/npm/melonjs@8.0.1/dist/melonjs.js"></script>
+<!-- load the ES5 UMD bundle of melonJS v9.0.0 -->
+<script src="https://cdn.jsdelivr.net/npm/melonjs@9.0.0/dist/melonjs.js"></script>
+<!-- load the ES6 module bundle of melonJS v9.0.0 -->
+<script src="https://cdn.jsdelivr.net/npm/melonjs@9.0.0/dist/melonjs-module.js"></script>
 <!-- omit the version completely to get the latest one -->
 <!-- you should NOT use this in production -->
 <script src="https://cdn.jsdelivr.net/npm/melonjs/dist/melonjs.js"></script>
@@ -141,6 +145,7 @@ and of course the debug panel :
 ```
 
 > Note: "official" CDN and NPM install are only available from version 7.0.0 and onwards.
+> Note: ES6 version of melonJS is available from version 9.0.0 and onwards.
 
 Building melonJS
 -------------------------------------------------------------------------------
