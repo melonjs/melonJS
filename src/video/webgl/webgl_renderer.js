@@ -356,20 +356,20 @@ class WebGLRenderer extends Renderer {
         this.currentCompositor.uploadTexture(this.fontTexture, 0, 0, 0, true);
 
         // Add the new quad
-        var key = bounds.pos.x + "," + bounds.pos.y + "," + bounds.width + "," + bounds.height;
+        var key = bounds.left + "," + bounds.top + "," + bounds.width + "," + bounds.height;
         this.currentCompositor.addQuad(
             this.fontTexture,
             key,
-            bounds.pos.x,
-            bounds.pos.y,
+            bounds.left,
+            bounds.top,
             bounds.width,
             bounds.height
         );
 
         // Clear font context2D
         fontContext.clearRect(
-            bounds.pos.x,
-            bounds.pos.y,
+            bounds.left,
+            bounds.top,
             bounds.width,
             bounds.height
         );

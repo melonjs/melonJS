@@ -190,7 +190,7 @@ var Camera2d = Renderable.extend({
             targetX = MIN((target.x) - (this.deadzone.right), this.bounds.width - this.width);
         }
         else if ((target.x - this.pos.x) < (this.deadzone.pos.x)) {
-            targetX = MAX((target.x) - this.deadzone.pos.x, this.bounds.pos.x);
+            targetX = MAX((target.x) - this.deadzone.pos.x, this.bounds.left);
         }
         return targetX;
 
@@ -203,7 +203,7 @@ var Camera2d = Renderable.extend({
             targetY = MIN((target.y) - (this.deadzone.bottom), this.bounds.height - this.height);
         }
         else if ((target.y - this.pos.y) < (this.deadzone.pos.y)) {
-            targetY = MAX((target.y) - this.deadzone.pos.y, this.bounds.pos.y);
+            targetY = MAX((target.y) - this.deadzone.pos.y, this.bounds.top);
         }
         return targetY;
     },
@@ -314,7 +314,7 @@ var Camera2d = Renderable.extend({
      */
     setBounds : function (x, y, w, h) {
         this.smoothFollow = false;
-        this.bounds.pos.set(x, y);
+        this.bounds.shift(x, y);
         this.bounds.resize(w, h);
         this.moveTo(this.pos.x, this.pos.y);
         this.update();
@@ -406,12 +406,12 @@ var Camera2d = Renderable.extend({
 
         this.pos.x = clamp(
             x,
-            this.bounds.pos.x,
+            this.bounds.left,
             this.bounds.width - this.width
         );
         this.pos.y = clamp(
             y,
-            this.bounds.pos.y,
+            this.bounds.top,
             this.bounds.height - this.height
         );
 
@@ -622,8 +622,8 @@ var Camera2d = Renderable.extend({
     focusOn : function (target) {
         var bounds = target.getBounds();
         this.moveTo(
-            target.pos.x + bounds.pos.x + (bounds.width / 2),
-            target.pos.y + bounds.pos.y + (bounds.height / 2)
+            target.pos.x + bounds.left + (bounds.width / 2),
+            target.pos.y + bounds.top + (bounds.height / 2)
         );
     },
 

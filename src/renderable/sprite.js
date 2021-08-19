@@ -573,13 +573,13 @@ var Sprite = Renderable.extend({
      */
     updateBoundsPos : function (newX, newY) {
         var bounds = this.getBounds();
-        bounds.pos.set(
+        bounds.shift(
             newX - (this.anchorPoint.x * bounds.width),
             newY - (this.anchorPoint.y * bounds.height)
         );
         // XXX: This is called from the constructor, before it gets an ancestor
         if (this.ancestor instanceof Container && !this.floating) {
-            bounds.pos.add(this.ancestor._absPos);
+            bounds.translate(this.ancestor._absPos);
         }
         return bounds;
     },

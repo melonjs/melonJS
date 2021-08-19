@@ -91,7 +91,7 @@ class TMXHexagonalRenderer extends TMXRenderer {
         var bounds = layer instanceof TMXLayer ? pool.pull("me.Rect", 0, 0, 0, 0) : this.bounds;
 
         // origin is always 0 for finite maps
-        bounds.pos.set(0, 0);
+        bounds.shift(0, 0);
         // The map size is the same regardless of which indexes are shifted.
         if (this.staggerX) {
             bounds.resize(

@@ -18,6 +18,27 @@ describe("Shape : me.Rect", function () {
             expect(rect1.isFinite()).toEqual(true);
         });
 
+        it("shift and translate rect1", function () {
+            expect(rect1.pos.x).toEqual(0);
+            expect(rect1.pos.y).toEqual(0);
+            rect1.shift(10, 20);
+            expect(rect1.pos.x).toEqual(10);
+            expect(rect1.pos.y).toEqual(20);
+            rect1.translate(10, 10);
+            expect(rect1.pos.x).toEqual(20);
+            expect(rect1.pos.y).toEqual(30);
+            rect1.shift(100, 100);
+            expect(rect1.pos.x).toEqual(100);
+            expect(rect1.pos.y).toEqual(100);
+            rect1.translate(-50, -50);
+            expect(rect1.pos.x).toEqual(50);
+            expect(rect1.pos.y).toEqual(50);
+            rect1.shift(0, 0);
+            expect(rect1.pos.x).toEqual(0);
+            expect(rect1.pos.y).toEqual(0);
+        });
+
+
         it("scale rect1", function () {
             rect1.scale(4, 2);
             expect(rect1.width).toEqual(100);

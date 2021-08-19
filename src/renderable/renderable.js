@@ -418,7 +418,7 @@ var Renderable = Rect.extend({
         var bounds = this.getBounds();
         this.currentTransform.multiply(m);
         bounds.setPoints(bounds.transform(m).points);
-        bounds.pos.setV(this.pos);
+        bounds.shift(this.pos);
         this.isDirty = true;
         return this;
     },
@@ -577,10 +577,10 @@ var Renderable = Rect.extend({
      */
     updateBoundsPos : function (newX, newY) {
         var bounds = this.getBounds();
-        bounds.pos.set(newX, newY, bounds.pos.z);
+        bounds.shift(newX, newY);
         // XXX: This is called from the constructor, before it gets an ancestor
         if (typeof this.ancestor !== "undefined" && !this.floating) {
-            bounds.pos.add(this.ancestor._absPos);
+            bounds.translate(this.ancestor._absPos);
         }
         return bounds;
     },

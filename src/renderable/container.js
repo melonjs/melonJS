@@ -504,7 +504,7 @@ var Container = Renderable.extend({
      * @return {me.Rect} updated child bounds
      */
     updateChildBounds : function () {
-        this.childBounds.pos.set(Infinity, Infinity);
+        this.childBounds.shift(Infinity, Infinity);
         this.childBounds.resize(-Infinity, -Infinity);
         var childBounds;
         for (var i = this.children.length, child; i--, (child = this.children[i]);) {
@@ -889,8 +889,8 @@ var Container = Renderable.extend({
         // clip the containter children to the container bounds
         if (this.root === false && this.clipping === true && this.childBounds.isFinite() === true) {
             renderer.clipRect(
-                this.childBounds.pos.x,
-                this.childBounds.pos.y,
+                this.childBounds.left,
+                this.childBounds.top,
                 this.childBounds.width,
                 this.childBounds.height
             );

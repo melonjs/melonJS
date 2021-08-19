@@ -15,6 +15,26 @@ describe("Physics : me.Bounds", function () {
             expect(bound1.top).toEqual(0);
         });
 
+        it("shift and translate bound1", function () {
+            expect(bound1.left).toEqual(0);
+            expect(bound1.top).toEqual(0);
+            bound1.shift(10, 20);
+            expect(bound1.left).toEqual(10);
+            expect(bound1.top).toEqual(20);
+            bound1.translate(10, 10);
+            expect(bound1.left).toEqual(20);
+            expect(bound1.top).toEqual(30);
+            bound1.shift(100, 100);
+            expect(bound1.left).toEqual(100);
+            expect(bound1.top).toEqual(100);
+            bound1.translate(-50, -50);
+            expect(bound1.left).toEqual(50);
+            expect(bound1.top).toEqual(50);
+            bound1.shift(0, 0);
+            expect(bound1.left).toEqual(0);
+            expect(bound1.top).toEqual(0);
+        });
+
         it("translate bound1", function () {
             bound1.translate(100, 100);
             expect(bound1.left).toEqual(100);

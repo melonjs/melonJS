@@ -81,8 +81,8 @@ class QuadTree {
         var nextLevel = this.level + 1,
             subWidth  = ~~(0.5 + this.bounds.width / 2),
             subHeight = ~~(0.5 + this.bounds.height / 2),
-            x = ~~(0.5 + this.bounds.pos.x),
-            y = ~~(0.5 + this.bounds.pos.y);
+            x = ~~(0.5 + this.bounds.left),
+            y = ~~(0.5 + this.bounds.top);
 
          //top right node
         this.nodes[0] = QT_ARRAY_POP({
@@ -144,8 +144,8 @@ class QuadTree {
             ry = pos.y,
             rw = rect.width,
             rh = rect.height,
-            verticalMidpoint = this.bounds.pos.x + (this.bounds.width / 2),
-            horizontalMidpoint = this.bounds.pos.y + (this.bounds.height / 2),
+            verticalMidpoint = this.bounds.left + (this.bounds.width / 2),
+            horizontalMidpoint = this.bounds.top + (this.bounds.height / 2),
             //rect can completely fit within the top quadrants
             topQuadrant = (ry < horizontalMidpoint && ry + rh < horizontalMidpoint),
             //rect can completely fit within the bottom quadrants
@@ -368,7 +368,7 @@ class QuadTree {
 
         // resize the root bounds if required
         if (typeof bounds !== "undefined") {
-            this.bounds.setShape(bounds.pos.x, bounds.pos.y, bounds.width, bounds.height);
+            this.bounds.setShape(bounds.left, bounds.top, bounds.width, bounds.height);
         }
     }
 }

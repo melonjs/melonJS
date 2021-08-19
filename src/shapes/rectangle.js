@@ -206,6 +206,31 @@ var Rect = Polygon.extend({
     },
 
     /**
+     * Shifts the rect to the given position vector.
+     * @name shift
+     * @memberOf me.Rect
+     * @function
+     * @param {me.Vector2d} position
+     */
+    /**
+     * Shifts the rect to the given x, y position.
+     * @name shift
+     * @memberOf me.Rect
+     * @function
+     * @param {Number} x
+     * @param {Number} y
+     */
+    shift : function () {
+        if (arguments.length === 2) {
+            // x, y
+            this.pos.set(arguments[0], arguments[1]);
+        } else {
+            // vector
+            this.pos.setV(arguments[0]);
+        }
+    },
+
+    /**
      * merge this rectangle with another one
      * @name union
      * @memberOf me.Rect.prototype
