@@ -291,7 +291,7 @@ var Rect = Polygon.extend({
     /**
      * Returns true if the rectangle contains the given point
      * @name contains
-     * @memberOf me.Bounds
+     * @memberOf me.Rect
      * @function
      * @param {me.Vector2d} point
      * @return {boolean} true if contains
