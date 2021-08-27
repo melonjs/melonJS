@@ -61,9 +61,9 @@
     "@rollup/plugin-node-resolve": "^13.0.4",
     "@rollup/plugin-replace": "^3.0.0",
     "cheerio": "^1.0.0-rc.5",
-    "eslint": "^7.17.0",
+    "eslint": "^7.32.0",
     "ghpages": "0.0.10",
-    "jasmine-core": "^3.6.0",
+    "jasmine-core": "^3.9.0",
     "jsdoc": "^3.6.6",
     "karma": "^6.3.4",
     "karma-chrome-launcher": "^3.1.0",
@@ -71,11 +71,11 @@
     "karma-html-detailed-reporter": "^2.1.0",
     "karma-jasmine": "^4.0.1",
     "karma-nyan-reporter": "0.2.5",
-    "qs": "^6.9.4",
-    "rollup": "^2.36.1",
+    "qs": "^6.10.1",
+    "rollup": "^2.56.3",
     "rollup-plugin-bundle-size": "^1.0.3",
     "rollup-plugin-string": "^3.0.0",
-    "terser": "^5.5.1"
+    "terser": "^5.7.2"
   },
   "scripts": {
     "build": "npm run lint && rollup -c --silent --sourcemap",
