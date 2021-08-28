@@ -92,9 +92,17 @@ export default class TMXTileset {
                         cur     : tiles[+i].animation[0]
                     });
                 }
-                // set tile properties, if any (XML format)
+                // set tile properties, if any
                 if ("properties" in tiles[i]) {
-                    this.setTileProperty(+i + this.firstgid, tiles[i].properties);
+                    if (Array.isArray(tiles[i].properties)) { // JSON (new format)
+                        var tileProperty = {};
+                        for (var j in tiles[i].properties) {
+                            tileProperty[tiles[i].properties[j].name] = tiles[i].properties[j].value;
+                        }
+                        this.setTileProperty(+tiles[i].id + this.firstgid, tileProperty);
+                    } else { // XML format
+                        this.setTileProperty(+i + this.firstgid, tiles[i].properties);
+                    }
                 }
                 if ("image" in tiles[i]) {
                     var image = loader.getImage(tiles[i].image);
@@ -114,7 +122,7 @@ export default class TMXTileset {
             this.tileoffset.y = +offset.y;
         }
 
-        // set tile properties, if any (JSON format)
+        // set tile properties, if any (JSON old format)
         var tileInfo = tileset.tileproperties;
         if (tileInfo) {
             for (i in tileInfo) {
