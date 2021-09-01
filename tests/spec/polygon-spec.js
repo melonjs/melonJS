@@ -51,7 +51,8 @@ describe("Shape : me.Polygon", function () {
         });
 
         it("pos is (-94,0)", function () {
-            expect(bounds.pos.equals({x: -94, y: 0})).toEqual(true);
+            expect(bounds.x).toEqual(-94);
+            expect(bounds.y).toEqual(0);
         });
     });
 

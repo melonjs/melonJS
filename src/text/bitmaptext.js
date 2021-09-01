@@ -114,16 +114,16 @@ var BitmapText = Renderable.extend({
 
         /** @ignore */
         // scaled font size;
-        this.fontScale = pool.pull("me.Vector2d", 1.0, 1.0);
+        this.fontScale = pool.pull("Vector2d", 1.0, 1.0);
 
         // get the corresponding image
         this.fontImage = (typeof settings.font === "object") ? settings.font : loader.getImage(settings.font);
 
         if (typeof settings.fontData !== "string") {
             // use settings.font to retreive the data from the loader
-            this.fontData = pool.pull("me.BitmapTextData", loader.getBinary(settings.font));
+            this.fontData = pool.pull("BitmapTextData", loader.getBinary(settings.font));
         } else {
-            this.fontData = pool.pull("me.BitmapTextData",
+            this.fontData = pool.pull("BitmapTextData",
                 // if starting/includes "info face" the whole data string was passed as parameter
                 (settings.fontData.includes("info face")) ? settings.fontData : loader.getBinary(settings.fontData)
             );

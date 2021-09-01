@@ -4,7 +4,6 @@ import pool from "./../system/pooling.js";
 import loader from "./../loader/loader.js";
 import {Texture } from "./../video/texture.js";
 import Renderable from "./renderable.js";
-import Container from "./container.js";
 
 
 /**
@@ -76,7 +75,7 @@ var Sprite = Renderable.extend({
          * @name offset
          * @memberOf me.Sprite#
          */
-        this.offset = pool.pull("me.Vector2d", 0, 0);
+        this.offset = pool.pull("Vector2d", 0, 0);
 
         /**
          * The source texture object this sprite object is using
@@ -520,6 +519,7 @@ var Sprite = Renderable.extend({
      * @ignore
      */
     update : function (dt) {
+
         // Update animation if necessary
         if (!this.animationpause && this.current && this.current.length > 0) {
             var duration = this.getAnimationFrameObjectByIndex(this.current.idx).delay;
@@ -548,6 +548,21 @@ var Sprite = Renderable.extend({
             }
         }
 
+        // update the sprite bounding box
+        /*
+        if (this.isDirty === true && !this.currentTransform.isIdentity()) {
+            this.getBounds().clear();
+            this.getBounds().addFrame(
+                0,
+                0,
+                this.current.width,
+                this.current.height,
+                this.currentTransform
+            );
+            this.updateBoundsPos(this.pos.x, this.pos.y);
+        }
+        */
+
         //update the "flickering" state if necessary
         if (this._flicker.isFlickering) {
             this._flicker.duration -= dt;
@@ -561,42 +576,6 @@ var Sprite = Renderable.extend({
         }
 
         return this.isDirty;
-    },
-
-
-    /**
-     * update the renderable's bounding rect (private)
-     * @ignore
-     * @name updateBoundsPos
-     * @memberOf me.Sprite.prototype
-     * @function
-     */
-    updateBoundsPos : function (newX, newY) {
-        var bounds = this.getBounds();
-        bounds.shift(
-            newX - (this.anchorPoint.x * bounds.width),
-            newY - (this.anchorPoint.y * bounds.height)
-        );
-        // XXX: This is called from the constructor, before it gets an ancestor
-        if (this.ancestor instanceof Container && !this.floating) {
-            bounds.translate(this.ancestor._absPos);
-        }
-        return bounds;
-    },
-
-    /**
-     * called when the anchor point value is changed
-     * @private
-     * @name onAnchorUpdate
-     * @memberOf me.Sprite.prototype
-     * @function
-     */
-    onAnchorUpdate : function (newX, newY) {
-        // since the callback is called before setting the new value
-        // manually update the anchor point (required for updateBoundsPos)
-        this.anchorPoint.setMuted(newX, newY);
-        // then call updateBouds
-        this.updateBoundsPos(this.pos.x, this.pos.y);
     },
 
     /**

@@ -95,16 +95,28 @@ describe("me.Matrix3d", function () {
         expect(matA.toString() === result).toEqual(true);
     });
 
-    it("should multiply a 3d vector properly", function () {
+    xit("should multiply a 2d vector properly", function () {
         var matA = new me.Matrix3d(1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1);
-        var vecA = new me.Vector3d(1, 2, 3);
+        var vecA = new me.Vector2d(1, 2);
 
         matA.apply(vecA);
         //multiply back with the inverted matrix
         matA.invert().apply(vecA);
 
         // and we should have back the original vector values
-        expect(vecA.toString()).toEqual("x:1,y:2,z:3");
+        expect(vecA.toString()).toEqual("x:1,y:2");
+    });
+
+    xit("should multiply a 3d vector properly with the inverted matrix", function () {
+        var matA = new me.Matrix3d(1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 1, 2, 3, 1);
+        var vecA = new me.Vector3d(3, 7, 1);
+
+        matA.apply(vecA);
+        // multiply back with the inverted matrix
+        matA.applyInverse(vecA);
+
+        // and we should have back the original vector values
+        expect(vecA.toString()).toEqual("x:3,y:7,z:1");
     });
 
     it("should be clonable", function () {

@@ -9,6 +9,7 @@ import Rect from "./../shapes/rectangle.js";
 import Ellipse from "./../shapes/ellipse.js";
 import Polygon from "./../shapes/poly.js";
 import Line from "./../shapes/line.js";
+import Bounds from "./../physics/bounds.js";
 
 /**
  * @classdesc
@@ -258,17 +259,17 @@ class Renderer {
     }
 
     /**
-     * check if the given rectangle overlaps with the renderer screen coordinates
+     * check if the given bounds overlaps with the renderer screen coordinates
      * @name overlaps
      * @memberOf me.Renderer.prototype
      * @function
-     * @param  {me.Rect} rect
+     * @param  {me.Rect\me.Bounds} bounds
      * @return {boolean} true if overlaps
      */
-    overlaps(rect) {
+    overlaps(bounds) {
         return (
-            rect.left < this.getWidth() && rect.right > 0 &&
-            rect.top < this.getHeight() && rect.bottom > 0
+            bounds.left <= this.getWidth() && bounds.right >= 0 &&
+            bounds.top <= this.getHeight() && bounds.bottom >= 0
         );
     }
 
@@ -343,7 +344,7 @@ class Renderer {
      * @param {me.Rect|me.Polygon|me.Line|me.Ellipse} shape a shape object to stroke
      */
     stroke(shape, fill) {
-        if (shape.shapeType === "Rectangle") {
+        if (shape instanceof Rect || shape instanceof Bounds) {
             this.strokeRect(shape.left, shape.top, shape.width, shape.height, fill);
         } else if (shape instanceof Line || shape instanceof Polygon) {
             this.strokePolygon(shape, fill);

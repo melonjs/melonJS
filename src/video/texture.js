@@ -222,7 +222,7 @@ export class Texture {
         var height = image.height;
 
         // calculate the sprite count (line, col)
-        var spritecount = pool.pull("me.Vector2d",
+        var spritecount = pool.pull("Vector2d",
             ~~((width - margin + spacing) / (data.framewidth + spacing)),
             ~~((height - margin + spacing) / (data.frameheight + spacing))
         );

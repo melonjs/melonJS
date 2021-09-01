@@ -20,14 +20,9 @@ var World = Container.extend({
     /**
      * @ignore
      */
-    init : function (x, y, width, height) {
+    init : function (x = 0, y = 0, width = Infinity, height = Infinity) {
         // call the _super constructor
-        this._super(Container, "init", [
-            x || 0, y || 0,
-            width || Infinity,
-            height || Infinity,
-            true
-        ]);
+        this._super(Container, "init", [x, y, width, height, true]);
 
         // world is the root container
         this.name = "rootContainer";

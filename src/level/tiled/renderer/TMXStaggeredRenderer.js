@@ -43,7 +43,7 @@ class TMXStaggeredRenderer extends TMXHexagonalRenderer {
         }
 
         // Start with the coordinates of a grid-aligned tile
-        var referencePoint = pool.pull("me.Vector2d",
+        var referencePoint = pool.pull("Vector2d",
             Math.floor(alignedX / this.tilewidth),
             Math.floor(alignedY / this.tileheight)
         );
@@ -62,7 +62,7 @@ class TMXStaggeredRenderer extends TMXHexagonalRenderer {
         }
 
         // Relative x and y position on the base square of the grid-aligned tile
-        var rel = pool.pull("me.Vector2d",
+        var rel = pool.pull("Vector2d",
             alignedX - referencePoint.x * this.tilewidth,
             alignedY - referencePoint.y * this.tileheight
         );

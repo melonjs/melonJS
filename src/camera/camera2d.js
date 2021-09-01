@@ -59,11 +59,11 @@ var Camera2d = Renderable.extend({
         /**
          * Camera bounds
          * @public
-         * @type me.Rect
+         * @type me.Bounds
          * @name bounds
          * @memberOf me.Camera2d
          */
-        this.bounds = new Rect(-Infinity, -Infinity, Infinity, Infinity);
+        this.bounds = pool.pull("Bounds");
 
         /**
          * [IMTERNAL] enable or disable damping
@@ -165,6 +165,8 @@ var Camera2d = Renderable.extend({
 
         // enable event detection on the camera
         this.isKinematic = false;
+
+        this.bounds.setMinMax(minX, minY, maxX, maxY);
 
         // update the projection matrix
         this._updateProjectionMatrix();
@@ -314,8 +316,7 @@ var Camera2d = Renderable.extend({
      */
     setBounds : function (x, y, w, h) {
         this.smoothFollow = false;
-        this.bounds.shift(x, y);
-        this.bounds.resize(w, h);
+        this.bounds.setMinMax(x, y, w + x, h + y);
         this.moveTo(this.pos.x, this.pos.y);
         this.update();
         this.smoothFollow = true;
@@ -407,12 +408,12 @@ var Camera2d = Renderable.extend({
         this.pos.x = clamp(
             x,
             this.bounds.left,
-            this.bounds.width - this.width
+            this.bounds.width
         );
         this.pos.y = clamp(
             y,
             this.bounds.top,
-            this.bounds.height - this.height
+            this.bounds.height
         );
 
         //publish the VIEWPORT_ONCHANGE event if necessary
@@ -558,8 +559,8 @@ var Camera2d = Renderable.extend({
      * });
      */
     fadeOut : function (color, duration, onComplete) {
-        this._fadeOut.color = pool.pull("me.Color").copy(color);
-        this._fadeOut.tween = pool.pull("me.Tween", this._fadeOut.color)
+        this._fadeOut.color = pool.pull("Color").copy(color);
+        this._fadeOut.tween = pool.pull("Tween", this._fadeOut.color)
             .to({ alpha: 0.0 }, duration || 1000)
             .onComplete(onComplete || null);
         this._fadeOut.tween.isPersistent = true;
@@ -580,10 +581,10 @@ var Camera2d = Renderable.extend({
      * me.game.viewport.fadeIn("#FFFFFF", 75);
      */
     fadeIn : function (color, duration, onComplete) {
-        this._fadeIn.color = pool.pull("me.Color").copy(color);
+        this._fadeIn.color = pool.pull("Color").copy(color);
         var _alpha = this._fadeIn.color.alpha;
         this._fadeIn.color.alpha = 0.0;
-        this._fadeIn.tween = pool.pull("me.Tween", this._fadeIn.color)
+        this._fadeIn.tween = pool.pull("Tween", this._fadeIn.color)
             .to({ alpha: _alpha }, duration || 1000)
             .onComplete(onComplete || null);
         this._fadeIn.tween.isPersistent = true;
@@ -636,7 +637,7 @@ var Camera2d = Renderable.extend({
      * @param {Boolean} [floating===object.floating] if visibility check should be done against screen coordinates
      * @return {Boolean}
      */
-    isVisible : function (obj, floating) {
+    isVisible : function (obj, floating = obj.floating) {
         if (floating === true || obj.floating === true) {
             // check against screen coordinates
             return video.renderer.overlaps(obj.getBounds());

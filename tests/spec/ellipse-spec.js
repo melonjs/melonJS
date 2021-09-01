@@ -77,8 +77,8 @@ describe("Shape : me.Ellipse", function () {
         });
 
         it("Ellipse Bounding Rect pos is (0,0)", function () {
-            expect(bounds.pos.x).toEqual(0);
-            expect(bounds.pos.y).toEqual(0);
+            expect(bounds.x).toEqual(0);
+            expect(bounds.y).toEqual(0);
         });
     });
 

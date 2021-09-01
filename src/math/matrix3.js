@@ -635,7 +635,7 @@ class Matrix3d {
      * @return {me.Matrix3d}
      */
     clone() {
-        return pool.pull("me.Matrix3d", this);
+        return pool.pull("Matrix3d", this);
     }
 
     /**

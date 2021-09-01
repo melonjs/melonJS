@@ -85,16 +85,15 @@ class TMXHexagonalRenderer extends TMXRenderer {
      * @public
      * @function
      * @param {me.TMXLayer} [layer] calculate the bounding rect for a specific layer (will return a new bounds object)
-     * @return {me.Rect}
+     * @return {me.Bounds}
      */
     getBounds(layer) {
-        var bounds = layer instanceof TMXLayer ? pool.pull("me.Rect", 0, 0, 0, 0) : this.bounds;
+        var bounds = layer instanceof TMXLayer ? pool.pull("Bounds") : this.bounds;
 
-        // origin is always 0 for finite maps
-        bounds.shift(0, 0);
         // The map size is the same regardless of which indexes are shifted.
         if (this.staggerX) {
-            bounds.resize(
+            bounds.setMinMax(
+                0, 0,
                 this.cols * this.columnwidth + this.sideoffsetx,
                 this.rows * (this.tileheight + this.sidelengthy)
             );
@@ -102,7 +101,8 @@ class TMXHexagonalRenderer extends TMXRenderer {
                 bounds.height += this.rowheight;
             }
         } else {
-            bounds.resize(
+            bounds.setMinMax(
+                0, 0,
                 this.cols * (this.tilewidth + this.sidelengthx),
                 this.rows * this.rowheight + this.sideoffsety
             );
@@ -239,13 +239,13 @@ class TMXHexagonalRenderer extends TMXRenderer {
         }
 
         // Start with the coordinates of a grid-aligned tile
-        var referencePoint = pool.pull("me.Vector2d",
+        var referencePoint = pool.pull("Vector2d",
             Math.floor(x / (this.columnwidth * 2)),
             Math.floor((y / (this.rowheight * 2)))
         );
 
         // Relative x and y position on the base square of the grid-aligned tile
-        var rel = pool.pull("me.Vector2d",
+        var rel = pool.pull("Vector2d",
             x - referencePoint.x * (this.columnwidth * 2),
             y - referencePoint.y * (this.rowheight * 2)
         );
@@ -356,7 +356,7 @@ class TMXHexagonalRenderer extends TMXRenderer {
      */
     drawTile(renderer, x, y, tmxTile) {
         var tileset = tmxTile.tileset;
-        var point = this.tileToPixelCoords(x, y, pool.pull("me.Vector2d"));
+        var point = this.tileToPixelCoords(x, y, pool.pull("Vector2d"));
 
         // draw the tile
         tileset.drawTile(
@@ -380,7 +380,7 @@ class TMXHexagonalRenderer extends TMXRenderer {
         var startTile = this.pixelToTileCoords(
             rect.pos.x,
             rect.pos.y,
-            pool.pull("me.Vector2d")
+            pool.pull("Vector2d")
         );
 
         // Compensate for the layer position
@@ -390,7 +390,7 @@ class TMXHexagonalRenderer extends TMXRenderer {
         var startPos = this.tileToPixelCoords(
             startTile.x + layer.pos.x,
             startTile.y + layer.pos.y,
-            pool.pull("me.Vector2d")
+            pool.pull("Vector2d")
         );
 
         var rowTile = startTile.clone();

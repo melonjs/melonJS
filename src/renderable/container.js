@@ -30,21 +30,15 @@ var Container = Renderable.extend({
     /**
      * @ignore
      */
-    init : function (x, y, width, height, root) {
+    init : function (x = 0, y = 0, width = game.viewport.width, height = game.viewport.height, root = false) {
         /**
          * keep track of pending sort
          * @ignore
          */
         this.pendingSort = null;
 
-
         // call the _super constructor
-        this._super(Renderable,
-            "init",
-            [x || 0, y || 0,
-            width || Infinity,
-            height || Infinity]
-        );
+        this._super(Renderable, "init", [x, y, width, height]);
 
         /**
          * whether the container is the root of the scene
@@ -54,13 +48,13 @@ var Container = Renderable.extend({
          * @name root
          * @memberOf me.Container
          */
-        this.root = root || false;
+        this.root = root;
 
         /**
          * The array of children of this container.
          * @ignore
          */
-        this.children = [];
+        this.children = undefined;
 
         /**
          * The property of the child object that should be used to sort on <br>
@@ -123,7 +117,7 @@ var Container = Renderable.extend({
         /**
          * The bounds that contains all its children
          * @public
-         * @type me.Rect
+         * @type me.Bounds
          * @name childBounds
          * @memberOf me.Container#
          */
@@ -134,6 +128,8 @@ var Container = Renderable.extend({
 
         // enable collision and event detection
         this.isKinematic = false;
+
+        this.anchorPoint.set(0, 0);
 
         // subscribe on the canvas resize event
         if (this.root === true) {
@@ -156,7 +152,8 @@ var Container = Renderable.extend({
         }
 
         // delete all children
-        for (var i = this.children.length, obj; i >= 0; (obj = this.children[--i])) {
+        var children = this.getChildren();
+        for (var i = children.length, obj; i >= 0; (obj = children[--i])) {
             // don't remove it if a persistent object
             if (obj && !obj.isPersistent) {
                 this.removeChildNow(obj);
@@ -199,14 +196,14 @@ var Container = Renderable.extend({
         }
 
         child.ancestor = this;
-        this.children.push(child);
+        this.getChildren().push(child);
 
         // set the child z value if required
         if (typeof(child.pos) !== "undefined") {
             if (typeof(z) === "number") {
                     child.pos.z = z;
             } else if (this.autoDepth === true) {
-                child.pos.z = this.children.length;
+                child.pos.z = this.getChildren().length;
             }
         }
 
@@ -223,7 +220,7 @@ var Container = Renderable.extend({
             game.repaint();
         }
 
-        this.onChildChange.call(this, this.children.length - 1);
+        this.onChildChange.call(this, this.getChildren().length - 1);
 
         return child;
     },
@@ -239,7 +236,7 @@ var Container = Renderable.extend({
      * @return {me.Renderable} the added child
      */
     addChildAt : function (child, index) {
-        if (index >= 0 && index < this.children.length) {
+        if (index >= 0 && index < this.getChildren().length) {
             if (child.ancestor instanceof Container) {
                 child.ancestor.removeChildNow(child);
             }
@@ -253,7 +250,7 @@ var Container = Renderable.extend({
             }
             child.ancestor = this;
 
-            this.children.splice(index, 0, child);
+            this.getChildren().splice(index, 0, child);
 
             if (typeof child.onActivateEvent === "function" && this.isAttachedToRoot()) {
                 child.onActivateEvent();
@@ -293,7 +290,7 @@ var Container = Renderable.extend({
     forEach : function (callback, thisArg) {
         var context = this, i = 0;
 
-        var len = this.children.length;
+        var len = this.getChildren().length;
 
         if (typeof callback !== "function") {
             throw new Error(callback + " is not a function");
@@ -304,7 +301,7 @@ var Container = Renderable.extend({
         }
 
         while (i < len) {
-            callback.call(context, this.children[i], i, this.children);
+            callback.call(context, this.getChildren()[i], i, this.getChildren());
             i++;
         }
     },
@@ -327,8 +324,8 @@ var Container = Renderable.extend({
             child.pos.z = child2.pos.z;
             child2.pos.z = _z;
             // swap the positions..
-            this.children[index] = child2;
-            this.children[index2] = child;
+            this.getChildren()[index] = child2;
+            this.getChildren()[index2] = child;
         }
         else {
             throw new Error(child + " Both the supplied childs must be a child of the caller " + this);
@@ -343,8 +340,8 @@ var Container = Renderable.extend({
      * @param {Number} index
      */
     getChildAt : function (index) {
-        if (index >= 0 && index < this.children.length) {
-            return this.children[index];
+        if (index >= 0 && index < this.getChildren().length) {
+            return this.getChildren()[index];
         }
         else {
             throw new Error("Index (" + index + ") Out Of Bounds for getChildAt()");
@@ -359,7 +356,7 @@ var Container = Renderable.extend({
      * @param {me.Renderable} child
      */
     getChildIndex : function (child) {
-        return this.children.indexOf(child);
+        return this.getChildren().indexOf(child);
     },
 
     /**
@@ -370,8 +367,8 @@ var Container = Renderable.extend({
      * @param {me.Renderable} child
      */
     getNextChild : function (child) {
-        var index = this.children.indexOf(child) - 1;
-        if (index >= 0 && index < this.children.length) {
+        var index = this.getChildren().indexOf(child) - 1;
+        if (index >= 0 && index < this.getChildren().length) {
             return this.getChildAt(index);
         }
         return undefined;
@@ -430,8 +427,8 @@ var Container = Renderable.extend({
             }
         }
 
-        for (var i = this.children.length - 1; i >= 0; i--) {
-            var obj = this.children[i];
+        for (var i = this.getChildren().length - 1; i >= 0; i--) {
+            var obj = this.getChildren()[i];
             compare(obj, prop);
             if (obj instanceof Container) {
                 objList = objList.concat(obj.getChildByProp(prop, value));
@@ -452,8 +449,8 @@ var Container = Renderable.extend({
     getChildByType : function (_class) {
         var objList = [];
 
-        for (var i = this.children.length - 1; i >= 0; i--) {
-            var obj = this.children[i];
+        for (var i = this.getChildren().length - 1; i >= 0; i--) {
+            var obj = this.getChildren()[i];
             if (obj instanceof _class) {
                 objList.push(obj);
             }
@@ -496,18 +493,37 @@ var Container = Renderable.extend({
         return (obj.length > 0) ? obj[0] : null;
     },
 
+
+    /**
+     * return all child in this container
+
+     * @name getChildren
+     * @memberOf me.Container.prototype
+     * @public
+     * @function
+     * @return {me.Renderable[]} an array of renderable object
+     */
+    getChildren : function () {
+        if (typeof this.children === "undefined") {
+            this.children = [];
+        }
+        return this.children;
+    },
+
+
+
     /**
      * resizes the child bounds rectangle, based on children bounds.
      * @name updateChildBounds
      * @memberOf me.Container.prototype
      * @function
-     * @return {me.Rect} updated child bounds
+     * @return {me.Bounds} updated child bounds
      */
     updateChildBounds : function () {
-        this.childBounds.shift(Infinity, Infinity);
-        this.childBounds.resize(-Infinity, -Infinity);
+        this.childBounds.clear();
         var childBounds;
-        for (var i = this.children.length, child; i--, (child = this.children[i]);) {
+        var children = this.getChildren();
+        for (var i = children.length, child; i--, (child = children[i]);) {
             if (child.isRenderable) {
                 if (child instanceof Container) {
                     childBounds = child.childBounds;
@@ -518,7 +534,7 @@ var Container = Renderable.extend({
                 // TODO : returns an "empty" rect instead of null (e.g. EntityObject)
                 // TODO : getBounds should always return something anyway
                 if (childBounds !== null) {
-                    this.childBounds.union(childBounds);
+                    this.childBounds.addBounds(childBounds);
                 }
             }
         }
@@ -549,7 +565,7 @@ var Container = Renderable.extend({
     },
 
     /**
-     * update the renderable's bounding rect (private)
+     * update the cointainer's bounding rect (private)
      * @private
      * @name updateBoundsPos
      * @memberOf me.Container.prototype
@@ -558,16 +574,16 @@ var Container = Renderable.extend({
     updateBoundsPos : function (newX, newY) {
         this._super(Renderable, "updateBoundsPos", [ newX, newY ]);
 
-        // Update container's absolute position
-        this._absPos.set(newX, newY);
-        if (this.ancestor instanceof Container && !this.floating) {
-            this._absPos.add(this.ancestor._absPos);
-        }
-
         // Notify children that the parent's position has changed
-        for (var i = this.children.length, child; i--, (child = this.children[i]);) {
+        var children = this.getChildren();
+        for (var i = children.length, child; i--, (child = children[i]);) {
             if (child.isRenderable) {
-                child.updateBoundsPos(child.pos.x, child.pos.y);
+                child.updateBoundsPos(
+                    // workaround on this.pos being updated after
+                    // the callback being triggered
+                    child.pos.x + newX - this.pos.x,
+                    child.pos.y + newY - this.pos.y
+                );
             }
         }
 
@@ -578,7 +594,8 @@ var Container = Renderable.extend({
      * @ignore
      */
     onActivateEvent : function () {
-      for (var i = this.children.length, child; i--, (child = this.children[i]);) {
+      var children = this.getChildren();
+      for (var i = children.length, child; i--, (child = children[i]);) {
           if (typeof child.onActivateEvent === "function") {
               child.onActivateEvent();
           }
@@ -632,7 +649,7 @@ var Container = Renderable.extend({
             // by the child's `onDeactivateEvent` or `destroy` methods
             var childIndex = this.getChildIndex(child);
             if (childIndex >= 0) {
-                this.children.splice(childIndex, 1);
+                this.getChildren().splice(childIndex, 1);
                 child.ancestor = undefined;
             }
 
@@ -655,8 +672,9 @@ var Container = Renderable.extend({
      * @param {Boolean} [recursive=false] recursively apply the value to child containers if true
      */
     setChildsProperty : function (prop, val, recursive) {
-        for (var i = this.children.length; i >= 0; i--) {
-            var obj = this.children[i];
+        var children = this.getChildren();
+        for (var i = children.length; i >= 0; i--) {
+            var obj = children[i];
             if ((recursive === true) && (obj instanceof Container)) {
                 obj.setChildsProperty(prop, val, recursive);
             }
@@ -688,7 +706,7 @@ var Container = Renderable.extend({
      */
     moveDown : function (child) {
         var childIndex = this.getChildIndex(child);
-        if (childIndex >= 0 && (childIndex + 1) < this.children.length) {
+        if (childIndex >= 0 && (childIndex + 1) < this.getChildren().length) {
             // note : we use an inverted loop
             this.swapChildren(child, this.getChildAt(childIndex + 1));
         }
@@ -704,10 +722,11 @@ var Container = Renderable.extend({
     moveToTop : function (child) {
         var childIndex = this.getChildIndex(child);
         if (childIndex > 0) {
+            var children = this.getChildren();
             // note : we use an inverted loop
-            this.children.splice(0, 0, this.children.splice(childIndex, 1)[0]);
+            children.splice(0, 0, children.splice(childIndex, 1)[0]);
             // increment our child z value based on the previous child depth
-            child.pos.z = this.children[1].pos.z + 1;
+            child.pos.z = children[1].pos.z + 1;
         }
     },
 
@@ -720,11 +739,12 @@ var Container = Renderable.extend({
      */
     moveToBottom : function (child) {
         var childIndex = this.getChildIndex(child);
-        if (childIndex >= 0 && childIndex < (this.children.length - 1)) {
+        var children = this.getChildren();
+        if (childIndex >= 0 && childIndex < (children.length - 1)) {
             // note : we use an inverted loop
-            this.children.splice((this.children.length - 1), 0, this.children.splice(childIndex, 1)[0]);
+            children.splice((children.length - 1), 0, children.splice(childIndex, 1)[0]);
             // increment our child z value based on the next child depth
-            child.pos.z = this.children[(this.children.length - 2)].pos.z - 1;
+            child.pos.z = children[(children.length - 2)].pos.z - 1;
         }
     },
 
@@ -740,8 +760,9 @@ var Container = Renderable.extend({
         // do nothing if there is already a pending sort
         if (!this.pendingSort) {
             if (recursive === true) {
+                var children = this.getChildren();
                 // trigger other child container sort function (if any)
-                for (var i = this.children.length, obj; i--, (obj = this.children[i]);) {
+                for (var i = children.length, obj; i--, (obj = children[i]);) {
                     if (obj instanceof Container) {
                         // note : this will generate one defered sorting function
                         // for each existing containe
@@ -752,7 +773,7 @@ var Container = Renderable.extend({
             /** @ignore */
             this.pendingSort = utils.function.defer(function (self) {
                 // sort everything in this container
-                self.children.sort(self["_sort" + self.sortOn.toUpperCase()]);
+                self.getChildren().sort(self["_sort" + self.sortOn.toUpperCase()]);
                 // clear the defer id
                 self.pendingSort = null;
                 // make sure we redraw everything
@@ -765,7 +786,8 @@ var Container = Renderable.extend({
      * @ignore
      */
     onDeactivateEvent : function () {
-        for (var i = this.children.length, child; i--, (child = this.children[i]);) {
+        var children = this.getChildren();
+        for (var i = children.length, child; i--, (child = children[i]);) {
             if (typeof child.onDeactivateEvent === "function") {
                 child.onDeactivateEvent();
             }
@@ -832,13 +854,8 @@ var Container = Renderable.extend({
         var isFloating = false;
         var isPaused = state.isPaused();
 
-        // Update container's absolute position
-        this._absPos.setV(this.pos);
-        if (this.ancestor) {
-            this._absPos.add(this.ancestor._absPos);
-        }
-
-        for (var i = this.children.length, obj; i--, (obj = this.children[i]);) {
+        var children = this.getChildren();
+        for (var i = children.length, obj; i--, (obj = children[i]);) {
             if (isPaused && (!obj.updateWhenPaused)) {
                 // skip this object
                 continue;
@@ -861,9 +878,6 @@ var Container = Renderable.extend({
 
                 // update our object
                 isDirty = ((obj.inViewport || obj.alwaysUpdate) && obj.update(dt)) || isDirty;
-
-                // Update child's absolute position
-                obj._absPos.setV(this._absPos).add(obj.pos);
 
                 if (globalFloatingCounter > 0) {
                     globalFloatingCounter--;
@@ -899,7 +913,8 @@ var Container = Renderable.extend({
         // adjust position if required (e.g. canvas/window centering)
         renderer.translate(this.pos.x, this.pos.y);
 
-        for (var i = this.children.length, obj; i--, (obj = this.children[i]);) {
+        var children = this.getChildren();
+        for (var i = children.length, obj; i--, (obj = children[i]);) {
             if (obj.isRenderable) {
 
                 isFloating = obj.floating === true;

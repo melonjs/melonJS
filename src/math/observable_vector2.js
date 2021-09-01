@@ -440,7 +440,7 @@ class ObservableVector2d extends Vector2d {
      * @return {me.ObservableVector2d} new me.ObservableVector2d
      */
     clone() {
-        return pool.pull("me.ObservableVector2d", this._x, this._y, {onUpdate: this.onUpdate, scope: this.scope});
+        return pool.pull("ObservableVector2d", this._x, this._y, {onUpdate: this.onUpdate, scope: this.scope});
     }
 
     /**
@@ -451,7 +451,7 @@ class ObservableVector2d extends Vector2d {
      * @return {me.Vector2d} new me.Vector2d
      */
     toVector2d() {
-        return pool.pull("me.Vector2d", this._x, this._y);
+        return pool.pull("Vector2d", this._x, this._y);
     }
 
     /**

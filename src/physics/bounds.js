@@ -252,6 +252,47 @@ class Bounds {
     }
 
     /**
+     * add the given point to the bounds definition.
+     * @name addPoint
+     * @memberOf me.Bounds
+     * @function
+     * @param {me.Vector2d} vector
+     * @param {me.Matrix2d} [matrix] an optional transform to apply to the given point
+     */
+    addPoint(v, m) {
+        if (typeof m !== "undefined") {
+            v = m.apply(v);
+        }
+        this.min.x = Math.min(this.min.x, v.x);
+        this.max.x = Math.max(this.max.x, v.x);
+        this.min.y = Math.min(this.min.y, v.y);
+        this.max.y = Math.max(this.max.y, v.y);
+    }
+
+    /**
+     * add the given quad coordinates to this bound definition, multiplied by the given matrix
+     * @name addFrame
+     * @memberOf me.Bounds
+     * @function
+     * @param {Number} x0 - left X coordinates of the quad
+     * @param {Number} y0 - top Y coordinates of the quad
+     * @param {Number} x1 - right X coordinates of the quad
+     * @param {Number} y1 - bottom y coordinates of the quad
+     * @param {me.Matrix2d} [matrix] an optional transform to apply to the given frame coordinates
+     */
+    addFrame(x0, y0, x1, y1, m) {
+        var v = me.pool.pull("Vector2d");
+
+        // transform all points and add to the bound definition
+        this.addPoint(v.set(x0, y0), m);
+        this.addPoint(v.set(x1, y0), m);
+        this.addPoint(v.set(x0, y1), m);
+        this.addPoint(v.set(x1, y1), m);
+
+        me.pool.push(v);
+    }
+
+    /**
      * Returns true if the bounds contains the given point.
      * @name contains
      * @memberOf me.Bounds
@@ -298,12 +339,12 @@ class Bounds {
      * @name overlaps
      * @memberOf me.Bounds
      * @function
-     * @param {me.Bounds} bounds
+     * @param {me.Bounds|me.Rect} bounds
      * @return {boolean} True if the bounds overlap, otherwise false
      */
     overlaps(bounds) {
-        return (this.min.x <= bounds.max.x && this.max.x >= bounds.min.x
-                && this.max.y >= bounds.min.y && this.min.y <= bounds.max.y);
+        return (this.left <= bounds.right && this.right >= bounds.left
+            && this.bottom >= bounds.top && this.top <= bounds.bottom);
     }
 
     /**

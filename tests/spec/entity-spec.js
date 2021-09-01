@@ -51,8 +51,8 @@ describe("Entity", function () {
 
     it("has the correct entity bounds: A", function () {
         var bounds = entity.getBounds();
-        expect(bounds.pos.x).toEqual(110);
-        expect(bounds.pos.y).toEqual(110);
+        expect(bounds.x).toEqual(100);
+        expect(bounds.y).toEqual(100);
         expect(bounds.width).toEqual(32);
         expect(bounds.height).toEqual(64);
     });
@@ -89,8 +89,8 @@ describe("Entity", function () {
 
     it("has the correct entity bounds: B", function () {
         var bounds = entity.getBounds();
-        expect(bounds.pos.x).toEqual(90);
-        expect(bounds.pos.y).toEqual(90);
+        expect(bounds.x).toEqual(100);
+        expect(bounds.y).toEqual(100);
         expect(bounds.width).toEqual(42);
         expect(bounds.height).toEqual(74);
     });
@@ -127,8 +127,8 @@ describe("Entity", function () {
 
     it("has the correct entity bounds: C", function () {
         var bounds = entity.getBounds();
-        expect(bounds.pos.x).toEqual(110);
-        expect(bounds.pos.y).toEqual(110);
+        expect(bounds.x).toEqual(100);
+        expect(bounds.y).toEqual(100);
         expect(bounds.width).toEqual(32);
         expect(bounds.height).toEqual(64);
     });
@@ -163,8 +163,8 @@ describe("Entity", function () {
 
     it("has the correct entity bounds: D", function () {
         var bounds = entity.getBounds();
-        expect(bounds.pos.x).toEqual(130);
-        expect(bounds.pos.y).toEqual(160);
+        expect(bounds.x).toEqual(120);
+        expect(bounds.y).toEqual(150);
         expect(bounds.width).toEqual(32);
         expect(bounds.height).toEqual(64);
     });

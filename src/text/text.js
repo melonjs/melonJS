@@ -74,10 +74,10 @@ var Text = Renderable.extend({
                 this.fillStyle = settings.fillStyle;
             } else {
                 // string (#RGB, #ARGB, #RRGGBB, #AARRGGBB)
-                this.fillStyle = pool.pull("me.Color").parseCSS(settings.fillStyle);
+                this.fillStyle = pool.pull("Color").parseCSS(settings.fillStyle);
             }
         } else {
-            this.fillStyle = pool.pull("me.Color", 0, 0, 0);
+            this.fillStyle = pool.pull("Color", 0, 0, 0);
         }
 
         /**
@@ -92,10 +92,10 @@ var Text = Renderable.extend({
                  this.strokeStyle = settings.strokeStyle;
              } else {
                  // string (#RGB, #ARGB, #RRGGBB, #AARRGGBB)
-                 this.strokeStyle = pool.pull("me.Color").parseCSS(settings.strokeStyle);
+                 this.strokeStyle = pool.pull("Color").parseCSS(settings.strokeStyle);
              }
          } else {
-             this.strokeStyle = pool.pull("me.Color", 0, 0, 0);
+             this.strokeStyle = pool.pull("Color", 0, 0, 0);
          }
 
         /**
@@ -285,7 +285,7 @@ var Text = Renderable.extend({
      * @function
      * @param {me.CanvasRenderer|me.WebGLRenderer} [renderer] reference a renderer instance
      * @param {String} [text] the text to be measured
-     * @param {me.Rect} [ret] a object in which to store the text metrics
+     * @param {me.Rect|me.Bounds} [ret] a object in which to store the text metrics
      * @returns {TextMetrics} a TextMetrics object with two properties: `width` and `height`, defining the output dimensions
      */
     measureText : function (renderer, text, ret) {
@@ -321,10 +321,10 @@ var Text = Renderable.extend({
         textMetrics.height = Math.ceil(this.height);
 
         // compute the bounding box position
-        textMetrics.pos.x = Math.floor((this.textAlign === "right" ? this.pos.x - this.width : (
+        textMetrics.x = Math.floor((this.textAlign === "right" ? this.pos.x - this.width : (
             this.textAlign === "center" ? this.pos.x - (this.width / 2) : this.pos.x
         )));
-        textMetrics.pos.y = Math.floor((this.textBaseline.search(/^(top|hanging)$/) === 0) ? this.pos.y : (
+        textMetrics.y = Math.floor((this.textBaseline.search(/^(top|hanging)$/) === 0) ? this.pos.y : (
             this.textBaseline === "middle" ? this.pos.y - (textMetrics.height / 2) : this.pos.y - textMetrics.height
         ));
 

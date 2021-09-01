@@ -218,8 +218,8 @@ var TMXLayer = Renderable.extend({
         }
 
         // Resize the bounding rect
-        var bounds = this.getRenderer().getBounds(this);
-        this.getBounds().resize(bounds.width, bounds.height);
+        this.getBounds().addBounds(this.getRenderer().getBounds(), true);
+        this.getBounds().shift(this.pos);
 
         // if pre-rendering method is use, create an offline canvas/renderer
         if ((this.preRender === true) && (!this.canvasRenderer)) {
@@ -303,7 +303,7 @@ var TMXLayer = Renderable.extend({
         var tile = null;
 
         if (this.contains(x, y)) {
-            var coord = this.getRenderer().pixelToTileCoords(x, y, pool.pull("me.Vector2d"));
+            var coord = this.getRenderer().pixelToTileCoords(x, y, pool.pull("Vector2d"));
             tile = this.cellAt(coord.x, coord.y);
             pool.push(coord);
         }

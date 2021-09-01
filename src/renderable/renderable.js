@@ -1,7 +1,7 @@
-import Vector2d from "./../math/vector2.js";
 import ObservableVector2d from "./../math/observable_vector2.js";
 import ObservableVector3d from "./../math/observable_vector3.js";
 import Rect from "./../shapes/rectangle.js";
+import Container from "./container.js";
 import pool from "./../system/pooling.js";
 import { releaseAllPointerEvents } from "./../input/input.js";
 import { clamp } from "./../math/math.js";
@@ -22,6 +22,10 @@ var Renderable = Rect.extend({
      * @ignore
      */
     init : function (x, y, width, height) {
+
+        // parent constructor
+        this._super(Rect, "init", [x, y, width, height]);
+
         /**
          * to identify the object as a renderable object
          * @ignore
@@ -90,7 +94,7 @@ var Renderable = Rect.extend({
          * @memberOf me.Renderable#
          */
         if (typeof this.currentTransform === "undefined") {
-            this.currentTransform = pool.pull("me.Matrix2d");
+            this.currentTransform = pool.pull("Matrix2d");
         }
         this.currentTransform.identity();
 
@@ -176,7 +180,7 @@ var Renderable = Rect.extend({
         if (this.anchorPoint instanceof ObservableVector2d) {
             this.anchorPoint.setMuted(0.5, 0.5).setCallback(this.onAnchorUpdate, this);
         } else {
-            this.anchorPoint = pool.pull("me.ObservableVector2d", 0.5, 0.5, { onUpdate: this.onAnchorUpdate, scope: this });
+            this.anchorPoint = pool.pull("ObservableVector2d", 0.5, 0.5, { onUpdate: this.onAnchorUpdate, scope: this });
         }
 
         /**
@@ -261,7 +265,7 @@ var Renderable = Rect.extend({
          * // remove the tint
          * this.tint.setColor(255, 255, 255);
          */
-        this.tint = pool.pull("me.Color", 255, 255, 255, 1.0);
+        this.tint = pool.pull("Color", 255, 255, 255, 1.0);
 
         /**
          * The name of the renderable
@@ -274,20 +278,6 @@ var Renderable = Rect.extend({
         this.name = "";
 
         /**
-         * Absolute position in the game world
-         * @ignore
-         * @type {me.Vector2d}
-         * @name _absPos
-         * @memberOf me.Renderable#
-         */
-        if (this._absPos instanceof Vector2d) {
-            this._absPos.set(x, y);
-        }
-        else {
-            this._absPos = pool.pull("me.Vector2d", x, y);
-        }
-
-        /**
          * Position of the Renderable relative to its parent container
          * @public
          * @type {me.ObservableVector3d}
@@ -297,7 +287,7 @@ var Renderable = Rect.extend({
         if (this.pos instanceof ObservableVector3d) {
             this.pos.setMuted(x, y, 0).setCallback(this.updateBoundsPos, this);
         } else {
-            this.pos = pool.pull("me.ObservableVector3d", x, y, 0, { onUpdate: this.updateBoundsPos, scope: this});
+            this.pos = pool.pull("ObservableVector3d", x, y, 0, { onUpdate: this.updateBoundsPos, scope: this});
         }
 
         /**
@@ -309,9 +299,6 @@ var Renderable = Rect.extend({
          */
         this.isDirty = false;
 
-        this._width = width;
-        this._height = height;
-
         // keep track of when we flip
         this._flip = {
             x : false,
@@ -320,8 +307,6 @@ var Renderable = Rect.extend({
 
         // viewport flag
         this._inViewport = false;
-
-        this.shapeType = "Rectangle";
 
         // ensure it's fully opaque by default
         this.setOpacity(1.0);
@@ -337,12 +322,18 @@ var Renderable = Rect.extend({
      * @name getBounds
      * @memberOf me.Renderable.prototype
      * @function
-     * @return {me.Rect} bounding box Rectangle object
+     * @return {me.Bounds} bounding box Rectangle object
      */
     getBounds : function () {
         if (typeof this._bounds === "undefined") {
-            this._bounds = pool.pull("me.Rect", 0, 0, this._width, this._height);
-            this.updateBoundsPos(this.pos.x, this.pos.y);
+            this._super(Rect, "getBounds");
+            if (this.isFinite()) {
+                this._bounds.setMinMax(this.pos.x, this.pos.y, this.pos.x + this.width, this.pos.y + this.height);
+            } else {
+                // e.g. containers or game world can have infinite size
+                this._bounds.setMinMax(this.pos.x, this.pos.y, this.width, this.height);
+            }
+
         }
         return this._bounds;
     },
@@ -415,10 +406,9 @@ var Renderable = Rect.extend({
      * @return {me.Renderable} Reference to this object for method chaining
      */
     transform : function (m) {
-        var bounds = this.getBounds();
         this.currentTransform.multiply(m);
-        bounds.setPoints(bounds.transform(m).points);
-        bounds.shift(this.pos);
+        //this._super(Rect, "transform", [m]);
+        this.updateBoundsPos(this.pos.x, this.pos.y);
         this.isDirty = true;
         return this;
     },
@@ -501,11 +491,13 @@ var Renderable = Rect.extend({
      * @memberOf me.Renderable.prototype
      * @function
      * @param {Number} angle The angle to rotate (in radians)
+     * @param {me.Vector2d|me.ObservableVector2d} [v] an optional point to rotate around
      * @return {me.Renderable} Reference to this object for method chaining
      */
     rotate : function (angle) {
         if (!isNaN(angle)) {
             this.currentTransform.rotate(angle);
+            //this.updateBoundsPos(this.pos.x, this.pos.y);
             this.isDirty = true;
         }
         return this;
@@ -525,19 +517,9 @@ var Renderable = Rect.extend({
      * @return {me.Renderable} Reference to this object for method chaining
      */
     scale : function (x, y) {
-        var _x = x,
-            _y = typeof(y) === "undefined" ? _x : y;
-
-        // set the scaleFlag
-        this.currentTransform.scale(_x, _y);
-
-        // corresponding bounding box to be set
-        // through the width and height setters
-        this.width = this.width * _x;
-        this.height = this.height * _y;
-
+        this.currentTransform.scale(x, y);
+        this._super(Rect, "scale", [x, y]);
         this.isDirty = true;
-
         return this;
     },
 
@@ -569,21 +551,70 @@ var Renderable = Rect.extend({
     },
 
     /**
+     * update the bounding box for this shape.
+     * @ignore
+     * @name updateBounds
+     * @memberOf me.Renderable.prototype
+     * @function
+     * @return {me.Bounds} this shape bounding box Rectangle object
+     */
+    updateBounds : function () {
+        this._super(Rect, "updateBounds");
+        this.updateBoundsPos(this.pos.x, this.pos.y);
+        return this.getBounds();
+    },
+
+    /**
      * update the renderable's bounding rect (private)
      * @ignore
      * @name updateBoundsPos
      * @memberOf me.Renderable.prototype
      * @function
      */
-    updateBoundsPos : function (newX, newY) {
-        var bounds = this.getBounds();
-        bounds.shift(newX, newY);
-        // XXX: This is called from the constructor, before it gets an ancestor
-        if (typeof this.ancestor !== "undefined" && !this.floating) {
-            bounds.translate(this.ancestor._absPos);
-        }
-        return bounds;
-    },
+     updateBoundsPos : function (newX, newY) {
+         var bounds = this.getBounds();
+
+         bounds.shift(newX, newY);
+
+         if (typeof this.anchorPoint !== "undefined" && bounds.isFinite()) {
+             bounds.translate(
+                 -(this.anchorPoint.x * bounds.width),
+                 -(this.anchorPoint.y * bounds.height)
+             );
+         }
+
+         /*
+         if (typeof this.body !== "undefined") {
+              var bodyBounds = this.body.getBounds();
+              bounds.translate(bodyBounds.x, bodyBounds.y);
+         }
+         */
+
+         // XXX: This is called from the constructor, before it gets an ancestor
+         if (this.ancestor instanceof Container && this.floating !== true) {
+             bounds.translate(this.ancestor.getAbsolutePosition());
+         }
+         //return bounds;
+     },
+
+     /**
+      * return the renderable absolute position in the game world
+      * @name getAbsolutePosition
+      * @memberOf me.Renderable.prototype
+      * @function
+      * @return {me.Vector2d}
+      */
+      getAbsolutePosition : function () {
+          if (typeof this._absPos === "undefined") {
+              this._absPos = pool.pull("Vector2d");
+          }
+          // XXX Cache me or something
+          this._absPos.set(this.pos.x, this.pos.y);
+          if (this.ancestor instanceof Container && this.floating !== true) {
+              this._absPos.add(this.ancestor.getAbsolutePosition());
+          }
+          return this._absPos;
+      },
 
     /**
      * called when the anchor point value is changed
@@ -592,22 +623,14 @@ var Renderable = Rect.extend({
      * @memberOf me.Renderable.prototype
      * @function
      */
-    onAnchorUpdate : function () {
-        ; // to be extended
-    },
+     onAnchorUpdate : function (newX, newY) {
+         // since the callback is called before setting the new value
+         // manually update the anchor point (required for updateBoundsPos)
+         this.anchorPoint.setMuted(newX, newY);
+         // then call updateBouds
+         this.updateBoundsPos(this.pos.x, this.pos.y);
+     },
 
-    /**
-     * update the bounds
-     * @private
-     * @deprecated
-     * @name updateBounds
-     * @memberOf me.Renderable.prototype
-     * @function
-     */
-    updateBounds : function () {
-        console.warn("Deprecated: me.Renderable.updateBounds");
-        return this._super(Rect, "updateBounds");
-    },
 
     /**
      * prepare the rendering context before drawing
@@ -710,8 +733,10 @@ var Renderable = Rect.extend({
         pool.push(this.pos);
         this.pos = undefined;
 
-        pool.push(this._absPos);
-        this._absPos = undefined;
+        if (typeof this._absPos !== "undefined") {
+            pool.push(this._absPos);
+            this._absPos = undefined;
+        }
 
         pool.push(this._bounds);
         this._bounds = undefined;
@@ -821,55 +846,4 @@ Object.defineProperty(Renderable.prototype, "isFlippedY", {
     configurable : true
 });
 
-/**
- * width of the Renderable bounding box
- * @public
- * @type {Number}
- * @name width
- * @memberOf me.Renderable
- */
-Object.defineProperty(Renderable.prototype, "width", {
-    /**
-     * @ignore
-     */
-    get : function () {
-        return this._width;
-    },
-    /**
-     * @ignore
-     */
-    set : function (value) {
-        if (this._width !== value) {
-            this.getBounds().width = value;
-            this._width = value;
-        }
-    },
-    configurable : true
-});
-
-/**
- * height of the Renderable bounding box
- * @public
- * @type {Number}
- * @name height
- * @memberOf me.Renderable
- */
-Object.defineProperty(Renderable.prototype, "height", {
-    /**
-     * @ignore
-     */
-    get : function () {
-        return this._height;
-    },
-    /**
-     * @ignore
-     */
-    set : function (value) {
-        if (this._height !== value) {
-            this.getBounds().height = value;
-            this._height = value;
-        }
-    },
-    configurable : true
-});
 export default Renderable;

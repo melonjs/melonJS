@@ -63,16 +63,21 @@ describe("Shape : me.Line", function () {
             expect(line.contains(29, 61)).toEqual(false);
         });
 
-        it("Polygon Bounding Rect width is 28", function () {
+        it("Line Bounding Rect width is 28", function () {
             expect(bounds.width).toEqual(28);
         });
 
-        it("Polygon Bounding Rect height is 60", function () {
+        it("Line Bounding Rect height is 60", function () {
             expect(bounds.height).toEqual(60);
         });
 
-        it("Polygon Bounding Rect pos is (0,0)", function () {
-            expect(bounds.pos.equals({x: 0, y: 0})).toEqual(true);
+        it("Line bounding rect contains the point (28, 60)", function () {
+            expect(bounds.contains(28, 60)).toEqual(true);
+        });
+
+        it("Line Bounding Rect pos is (0,0)", function () {
+            expect(bounds.x).toEqual(0);
+            expect(bounds.y).toEqual(0);
         });
     });
 

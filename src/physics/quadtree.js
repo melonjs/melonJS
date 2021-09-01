@@ -56,7 +56,7 @@ var QT_VECTOR = new Vector2d();
  * @memberOf me
  * @constructor
  * @see me.game.world.broadphase
- * @param {me.Rect} bounds bounds of the node
+ * @param {me.Bounds} bounds bounds of the node
  * @param {Number} [max_objects=4] max objects a node can hold before splitting into 4 subnodes
  * @param {Number} [max_levels=4] total max levels inside root Quadtree
  * @param {Number} [level] deepth level, required for subnodes
@@ -79,47 +79,39 @@ class QuadTree {
      */
     split() {
         var nextLevel = this.level + 1,
-            subWidth  = ~~(0.5 + this.bounds.width / 2),
-            subHeight = ~~(0.5 + this.bounds.height / 2),
-            x = ~~(0.5 + this.bounds.left),
-            y = ~~(0.5 + this.bounds.top);
+            subWidth  = this.bounds.width / 2,
+            subHeight = this.bounds.height / 2,
+            left = this.bounds.left,
+            top = this.bounds.top;
 
          //top right node
         this.nodes[0] = QT_ARRAY_POP({
-            pos : {
-                x : x + subWidth,
-                y : y
-            },
+            left : left + subWidth,
+            top : top,
             width : subWidth,
             height : subHeight
         }, this.max_objects, this.max_levels, nextLevel);
 
         //top left node
         this.nodes[1] = QT_ARRAY_POP({
-            pos : {
-                x : x,
-                y : y
-            },
+            left : left,
+            top: top,
             width : subWidth,
             height : subHeight
         }, this.max_objects, this.max_levels, nextLevel);
 
         //bottom left node
         this.nodes[2] = QT_ARRAY_POP({
-            pos : {
-                x : x,
-                y : y + subHeight
-            },
+            left : left,
+            top : top + subHeight,
             width : subWidth,
             height : subHeight
         }, this.max_objects, this.max_levels, nextLevel);
 
         //bottom right node
         this.nodes[3] = QT_ARRAY_POP({
-            pos : {
-                x : x + subWidth,
-                y : y + subHeight
-            },
+            left : left + subWidth,
+            top : top + subHeight,
             width : subWidth,
             height : subHeight
         }, this.max_objects, this.max_levels, nextLevel);
@@ -131,19 +123,20 @@ class QuadTree {
      * @return Integer index of the subnode (0-3), or -1 if rect cannot completely fit within a subnode and is part of the parent node
      */
     getIndex(item) {
-        var rect = item.getBounds(),
-            pos = rect.pos;
+        var pos;
 
         // use world coordinates for floating items
         if (item.floating || (item.ancestor && item.ancestor.floating)) {
-            pos = game.viewport.localToWorld(pos.x, pos.y, QT_VECTOR);
+            pos = game.viewport.localToWorld(item.left, item.top, QT_VECTOR);
+        } else {
+            pos = QT_VECTOR.set(item.left, item.top);
         }
 
         var index = -1,
             rx = pos.x,
             ry = pos.y,
-            rw = rect.width,
-            rh = rect.height,
+            rw = item.width,
+            rh = item.height,
             verticalMidpoint = this.bounds.left + (this.bounds.width / 2),
             horizontalMidpoint = this.bounds.top + (this.bounds.height / 2),
             //rect can completely fit within the top quadrants
@@ -358,7 +351,7 @@ class QuadTree {
     clear(bounds) {
         this.objects.length = 0;
 
-        for (var i = 0; i < this.nodes.length; i = i + 1) {
+        for (var i = 0; i < this.nodes.length; i++) {
             this.nodes[i].clear();
             // recycle the quadTree object
             QT_ARRAY_PUSH(this.nodes[i]);
@@ -368,7 +361,7 @@ class QuadTree {
 
         // resize the root bounds if required
         if (typeof bounds !== "undefined") {
-            this.bounds.setShape(bounds.left, bounds.top, bounds.width, bounds.height);
+            this.bounds.setMinMax(bounds.min.x, bounds.min.y, bounds.max.x, bounds.max.y);
         }
     }
 }

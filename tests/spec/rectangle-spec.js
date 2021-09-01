@@ -1,5 +1,8 @@
 describe("Shape : me.Rect", function () {
 
+    // test fail without this
+    me.pool.register("Bounds", me.Bounds, true);
+
     var rect1 = new me.Rect(0, 0, 25, 50);
     // rect 2 overlap rect 1
     var rect2 = new me.Rect(50, 50, 100, 100);
@@ -43,11 +46,11 @@ describe("Shape : me.Rect", function () {
             rect1.scale(4, 2);
             expect(rect1.width).toEqual(100);
             expect(rect1.height).toEqual(100);
+            expect(rect1.getBounds().width).toEqual(100);
+            expect(rect1.getBounds().height).toEqual(100);
         });
 
         it("center scaled rect1", function () {
-            expect(rect1.center.x).toEqual(50);
-            expect(rect1.center.y).toEqual(50);
             expect(rect1.centerX).toEqual(50);
             expect(rect1.centerY).toEqual(50);
         });
@@ -61,8 +64,8 @@ describe("Shape : me.Rect", function () {
             rect1.centerY = 400;
             expect(rect1.pos.x).toEqual(150);
             expect(rect1.pos.y).toEqual(350);
-            expect(rect1.center.x).toEqual(200);
-            expect(rect1.center.y).toEqual(400);
+            expect(rect1.centerX).toEqual(200);
+            expect(rect1.centerY).toEqual(400);
             // move it back
             rect1.centerX = 50;
             rect1.centerY = 50;
@@ -84,8 +87,6 @@ describe("Shape : me.Rect", function () {
 
         it("rect 1 can be resized", function () {
             rect1.resize(500, 500);
-            expect(rect1.center.x).toEqual(250);
-            expect(rect1.center.y).toEqual(250);
             expect(rect1.centerX).toEqual(250);
             expect(rect1.centerY).toEqual(250);
         });
@@ -94,8 +95,6 @@ describe("Shape : me.Rect", function () {
     describe("rect2", function () {
 
         it("rect 2 center is set", function () {
-            expect(rect2.center.x).toEqual(100);
-            expect(rect2.center.y).toEqual(100);
             expect(rect2.centerX).toEqual(100);
             expect(rect2.centerY).toEqual(100);
         });

@@ -1,6 +1,6 @@
 import pool from "./../../../system/pooling.js";
 import TMXLayer from "./../TMXLayer.js";
-import Rect from "./../../../shapes/rectangle.js";
+import Bounds from "./../../../physics/Bounds.js";
 
 /**
  * @classdesc
@@ -20,7 +20,7 @@ class TMXRenderer {
         this.rows = rows;
         this.tilewidth = tilewidth;
         this.tileheight = tileheight;
-        this.bounds = new Rect(0, 0, 0, 0);
+        this.bounds = new Bounds();
     }
 
     /**
@@ -50,11 +50,11 @@ class TMXRenderer {
      * @public
      * @function
      * @param {me.TMXLayer} [layer] calculate the bounding rect for a specific layer (will return a new bounds object)
-     * @return {me.Rect}
+     * @return {me.Bounds}
      */
     getBounds(layer) {
-        var bounds = layer instanceof TMXLayer ? pool.pull("me.Rect", 0, 0, 0, 0) : this.bounds;
-        bounds.setShape(
+        var bounds = layer instanceof TMXLayer ? pool.pull("Bounds") : this.bounds;
+        bounds.setMinMax(
             0, 0,
             this.cols * this.tilewidth,
             this.rows * this.tileheight

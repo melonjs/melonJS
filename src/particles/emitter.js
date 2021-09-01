@@ -481,7 +481,7 @@ var ParticleEmitter = Renderable.extend({
     addParticles: function (count) {
         for (var i = 0; i < ~~count; i++) {
             // Add particle to the container
-            var particle = pool.pull("me.Particle", this);
+            var particle = pool.pull("Particle", this);
             this.container.addChild(particle);
         }
     },

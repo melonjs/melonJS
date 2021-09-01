@@ -30,7 +30,7 @@ var Ellipse = window.Jay.extend({
         /**
          * The bounding rectangle for this shape
          * @private
-         * @type {me.Rect}
+         * @type {me.Bounds}
          * @name _bounds
          * @memberOf me.Ellipse#
          */
@@ -95,13 +95,19 @@ var Ellipse = window.Jay.extend({
     setShape : function (x, y, w, h) {
         var hW = w / 2;
         var hH = h / 2;
+
         this.pos.set(x, y);
         this.radius = Math.max(hW, hH);
         this.ratio.set(hW / this.radius, hH / this.radius);
         this.radiusV.set(this.radius, this.radius).scaleV(this.ratio);
         var r = this.radius * this.radius;
         this.radiusSq.set(r, r).scaleV(this.ratio);
-        this.updateBounds();
+
+        // update the corresponding bounds
+        this.getBounds().setMinMax(x, y, x + w, x + h);
+        // elipse position is the center of the cirble, bounds position are top left
+        this.getBounds().translate(-this.radiusV.x, -this.radiusV.y);
+
         return this;
     },
 
@@ -117,7 +123,8 @@ var Ellipse = window.Jay.extend({
     rotate : function (angle, v) {
         // TODO : only works for circle
         this.pos.rotate(angle, v);
-        this.updateBounds();
+        this.getBounds().shift(this.pos);
+        this.getBounds().translate(-this.radiusV.x, -this.radiusV.y);
         return this;
     },
 
@@ -180,7 +187,7 @@ var Ellipse = window.Jay.extend({
      * @memberOf me.Ellipse.prototype
      * @function
      * @param {me.Vector2d} v vector offset
-     * @return {me.Rect} this ellipse
+     * @return {me.Ellipse} this ellipse
      */
     translate : function () {
         var _x, _y;
@@ -248,32 +255,13 @@ var Ellipse = window.Jay.extend({
      * @name getBounds
      * @memberOf me.Ellipse.prototype
      * @function
-     * @return {me.Rect} this shape bounding box Rectangle object
+     * @return {me.Bounds} this shape bounding box Rectangle object
      */
     getBounds : function () {
         if (typeof this._bounds === "undefined") {
-            this._bounds = pool.pull("me.Rect", 0, 0, 0, 0);
+            this._bounds = pool.pull("Bounds");
         }
         return this._bounds;
-    },
-
-    /**
-     * update the bounding box for this shape.
-     * @name updateBounds
-     * @memberOf me.Ellipse.prototype
-     * @function
-     * @return {me.Rect} this shape bounding box Rectangle object
-     */
-    updateBounds : function () {
-        var bounds = this.getBounds();
-        var rx = this.radiusV.x,
-            ry = this.radiusV.y,
-            x = this.pos.x - rx,
-            y = this.pos.y - ry,
-            w = rx * 2,
-            h = ry * 2;
-
-        return bounds.setShape(x, y, w, h);
     },
 
     /**
