@@ -411,7 +411,7 @@ class Body {
         var data = json;
 
         if (typeof id !== "undefined" ) {
-            json[id];
+            data = json[id];
         }
 
         // Physic Editor Format (https://www.codeandweb.com/physicseditor)
