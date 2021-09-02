@@ -34,7 +34,7 @@
     "email": "contact@melonjs.org"
   },
   "engines": {
-    "node": ">= 8"
+    "node": ">= 12"
   },
   "main": "dist/melonjs.js",
   "module": "dist/melonjs.module.js",
