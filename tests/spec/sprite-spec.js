@@ -22,10 +22,50 @@ describe("me.Sprite", function () {
 
     it("me.Sprite bounds return the visible part of the sprite", function () {
         var bounds = sprite.getBounds();
-        expect(bounds.pos.x).toEqual(50);
-        expect(bounds.pos.y).toEqual(50);
+        expect(bounds.x).toEqual(50);
+        expect(bounds.y).toEqual(50);
         expect(bounds.width).toEqual(32);
         expect(bounds.height).toEqual(32);
+    });
+
+    it("me.Sprite bounds should be updated when the sprite is scaled", function () {
+        var bounds = sprite.getBounds();
+
+        // scale up the sprite
+        sprite.scale(2.0); // w & h -> 64, 64
+        expect(bounds.x).toEqual(50);
+        expect(bounds.y).toEqual(50);
+        expect(bounds.width).toEqual(64);
+        expect(bounds.height).toEqual(64);
+        expect(sprite.width).toEqual(64);
+        expect(sprite.height).toEqual(64);
+
+        // scale back to original size
+        sprite.scale(0.5);
+        expect(bounds.x).toEqual(50);
+        expect(bounds.y).toEqual(50);
+        expect(bounds.width).toEqual(32);
+        expect(bounds.height).toEqual(32);
+    });
+
+    it("me.Sprite bounds should be updated when the anchor is changed", function () {
+        var bounds = sprite.getBounds();
+
+        sprite.anchorPoint.set(0, 1);
+        expect(bounds.x).toEqual(50 + 0); // container pos + 0
+        expect(bounds.y).toEqual(50 - 32); // container pos - sprite size
+
+        sprite.anchorPoint.set(0.5, 0.5);
+        expect(bounds.x).toEqual(50 - 16); // container pos - half sprite size
+        expect(bounds.y).toEqual(50 - 16); // container pos - half sprite size
+
+        sprite.anchorPoint.set(1, 0);
+        expect(bounds.x).toEqual(50 - 32); // container pos - sprite size
+        expect(bounds.y).toEqual(50 + 0); // container pos + 0
+
+        sprite.anchorPoint.set(1, 1);
+        expect(bounds.x).toEqual(50 - 32); // container pos - sprite size
+        expect(bounds.y).toEqual(50 - 32); // container pos - sprite size
     });
 
     it("me.Sprite addAnimation should return the correct amount of frame", function () {
@@ -67,43 +107,7 @@ describe("me.Sprite", function () {
         expect(sprite.isCurrentAnimation("yoyo")).toEqual(false);
         expect(sprite.isCurrentAnimation("test")).toEqual(true);
     });
-
-    it("me.Sprite bounds should be updated when the sprite is scaled", function () {
-        var bounds = sprite.getBounds();
-
-        // scale up the sprite
-        sprite.scale(2.0); // w & h -> 64, 64
-        expect(bounds.width).toEqual(64);
-        expect(bounds.height).toEqual(64);
-        expect(sprite.width).toEqual(64);
-        expect(sprite.height).toEqual(64);
-
-        // scale back to original size
-        sprite.scale(0.5);
-        expect(bounds.width).toEqual(32);
-        expect(bounds.height).toEqual(32);
-    });
-
-    it("me.Sprite bounds should be updated when the anchor is changed", function () {
-        var bounds = sprite.getBounds();
-
-        sprite.anchorPoint.set(0, 1);
-        expect(bounds.pos.x).toEqual(sprite.ancestor._absPos.x + sprite.pos.x - (0 * bounds.width));
-        expect(bounds.pos.y).toEqual(sprite.ancestor._absPos.y + sprite.pos.y - (1 * bounds.height));
-
-        sprite.anchorPoint.set(0.5, 0.5);
-        expect(bounds.pos.x).toEqual(sprite.ancestor._absPos.x + sprite.pos.x - (0.5 * bounds.width));
-        expect(bounds.pos.y).toEqual(sprite.ancestor._absPos.y + sprite.pos.y - (0.5 * bounds.height));
-
-        sprite.anchorPoint.set(1, 0);
-        expect(bounds.pos.x).toEqual(sprite.ancestor._absPos.x + sprite.pos.x - (1 * bounds.width));
-        expect(bounds.pos.y).toEqual(sprite.ancestor._absPos.y + sprite.pos.y - (0 * bounds.height));
-
-        sprite.anchorPoint.set(1, 1);
-        expect(bounds.pos.x).toEqual(sprite.ancestor._absPos.x + sprite.pos.x - (1 * bounds.width));
-        expect(bounds.pos.y).toEqual(sprite.ancestor._absPos.y + sprite.pos.y - (1 * bounds.height));
-    });
-
+    
     it("me.Sprite onComplete of setCurrentAnimation shall be called when sprite array of addAnimation is > 0", function () {
 
         var randomSpriteLength = Math.floor(Math.random() * Math.floor(100))

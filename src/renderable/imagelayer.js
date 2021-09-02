@@ -63,7 +63,7 @@ var ImageLayer = Renderable.extend({
         // displaying order
         this.pos.z = settings.z || 0;
 
-        this.offset = pool.pull("me.Vector2d", x, y);
+        this.offset = pool.pull("Vector2d", x, y);
 
         /**
          * Define the image scrolling ratio<br>
@@ -77,7 +77,7 @@ var ImageLayer = Renderable.extend({
          * @default <1.0,1.0>
          * @name me.ImageLayer#ratio
          */
-        this.ratio = pool.pull("me.Vector2d", 1.0, 1.0);
+        this.ratio = pool.pull("Vector2d", 1.0, 1.0);
 
         if (typeof(settings.ratio) !== "undefined") {
             // little hack for backward compatiblity

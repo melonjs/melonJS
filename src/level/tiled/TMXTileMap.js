@@ -51,10 +51,7 @@ function getNewDefaultRenderer(map) {
  * @ignore
  */
 function readLayer(map, data, z) {
-    var layer = new TMXLayer(data, map.tilewidth, map.tileheight, map.orientation, map.tilesets, z);
-    // set a renderer
-    layer.setRenderer(map.getRenderer());
-    return layer;
+    return new TMXLayer(map, data, map.tilewidth, map.tileheight, map.orientation, map.tilesets, z);
 }
 
 /**
@@ -66,7 +63,7 @@ function readImageLayer(map, data, z) {
     applyTMXProperties(data.properties, data);
 
     // create the layer
-    var imageLayer = pool.pull("me.ImageLayer",
+    var imageLayer = pool.pull("ImageLayer",
         // x/y is deprecated since 0.15 and replace by offsetx/y
         +data.offsetx || +data.x || 0,
         +data.offsety || +data.y || 0,
@@ -234,7 +231,7 @@ export default class TMXTileMap {
         this.staggerindex = data.staggerindex;
 
         // calculate the map bounding rect
-        this.bounds = this.getRenderer().getBounds();
+        this.bounds = this.getRenderer().getBounds().clone();
 
         // map "real" size
         this.width = this.bounds.width;
@@ -276,7 +273,7 @@ export default class TMXTileMap {
      * @name me.TMXRenderer#getBounds
      * @public
      * @function
-     * @return {me.Rect}
+     * @return {me.Bounds}
      */
     getBounds() {
         // calculated in the constructor
@@ -315,7 +312,7 @@ export default class TMXTileMap {
         // check if a user-defined background color is defined
         if (this.backgroundcolor) {
             this.layers.push(
-                pool.pull("me.ColorLayer",
+                pool.pull("ColorLayer",
                     "background_color",
                     this.backgroundcolor,
                     zOrder++
@@ -327,7 +324,7 @@ export default class TMXTileMap {
         if (this.background_image) {
             // add a new image layer
             this.layers.push(
-                pool.pull("me.ImageLayer",
+                pool.pull("ImageLayer",
                     0, 0, {
                         name : "background_image",
                         image : this.background_image,
@@ -493,7 +490,7 @@ export default class TMXTileMap {
                 }
                 // convert to melonJS renderable argument name
                 if (typeof (settings.tintcolor) !== "undefined") {
-                    settings.tint = pool.pull("me.Color");
+                    settings.tint = pool.pull("Color");
                     settings.tint.parseHex(settings.tintcolor, true);
                 }
 
@@ -508,9 +505,9 @@ export default class TMXTileMap {
                         settings.text.anchorPoint = settings.anchorPoint;
                     }
                     if (settings.text.bitmap === true) {
-                        obj = pool.pull("me.BitmapText", settings.x, settings.y, settings.text);
+                        obj = pool.pull("BitmapText", settings.x, settings.y, settings.text);
                     } else {
-                        obj = pool.pull("me.Text", settings.x, settings.y, settings.text);
+                        obj = pool.pull("Text", settings.x, settings.y, settings.text);
                     }
                     // set the obj z order
                     obj.pos.z = settings.z;
@@ -531,7 +528,7 @@ export default class TMXTileMap {
                     obj.pos.z = settings.z;
                 }
 
-                if (isCollisionGroup && !settings.name) {
+                if (isCollisionGroup && !settings.name && obj.body) {
                     // configure the body accordingly
                     obj.body.collisionType = collision.types.WORLD_SHAPE;
                 }

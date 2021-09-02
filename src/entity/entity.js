@@ -21,6 +21,7 @@ import collision from "./../physics/collision.js";
  * @param {String} [settings.name] object entity name
  * @param {String} [settings.id] object unique IDs
  * @param {Image|String} [settings.image] resource name of a spritesheet to use for the entity renderable component
+ * @param {me.Vector2d} [settings.anchorPoint=0.0] Entity anchorpoint
  * @param {Number} [settings.framewidth=settings.width] width of a single frame in the given spritesheet
  * @param {Number} [settings.frameheight=settings.width] height of a single frame in the given spritesheet
  * @param {String} [settings.type] object type
@@ -57,6 +58,9 @@ var Entity = Renderable.extend({
         // Update anchorPoint
         if (settings.anchorPoint) {
             this.anchorPoint.set(settings.anchorPoint.x, settings.anchorPoint.y);
+        } else {
+            // for backward compatibility
+            this.anchorPoint.set(0, 0);
         }
 
         // set the sprite name if specified
@@ -149,26 +153,6 @@ var Entity = Renderable.extend({
     },
 
     /**
-     * update the bounds position when the position is modified
-     * @private
-     * @name updateBoundsPos
-     * @memberOf me.Entity
-     * @function
-     */
-    updateBoundsPos : function (x, y) {
-        if (typeof this.body !== "undefined") {
-            var bounds = this.body.getBounds();
-            this._super(Renderable, "updateBoundsPos", [
-                x + bounds.x,
-                y + bounds.y
-            ]);
-        } else {
-            this._super(Renderable, "updateBoundsPos", [x, y]);
-        }
-        return this.getBounds();
-    },
-
-    /**
      * update the bounds position when the body is modified
      * @private
      * @name onBodyUpdate
@@ -176,9 +160,8 @@ var Entity = Renderable.extend({
      * @function
      */
     onBodyUpdate : function (body) {
-        var bounds = body.getBounds();
-        // update the entity bounds to match with the body bounds
-        this.getBounds().resize(bounds.width, bounds.height);
+        // update the entity bounds to include the body bounds
+        this.getBounds().addBounds(body.getBounds(), true);
         // update the bounds pos
         this.updateBoundsPos(this.pos.x, this.pos.y);
     },

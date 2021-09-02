@@ -124,6 +124,50 @@ class Bounds {
     }
 
     /**
+     * left coordinate of the bound
+     * @public
+     * @type {Number}
+     * @name left
+     * @memberOf me.Bounds
+     */
+    get left() {
+        return this.min.x;
+    }
+
+    /**
+     * right coordinate of the bound
+     * @public
+     * @type {Number}
+     * @name right
+     * @memberOf me.Bounds
+     */
+    get right() {
+        return this.max.x;
+    }
+
+    /**
+     * top coordinate of the bound
+     * @public
+     * @type {Number}
+     * @name top
+     * @memberOf me.Bounds
+     */
+    get top() {
+        return this.min.y;
+    }
+
+    /**
+     * bottom coordinate of the bound
+     * @public
+     * @type {Number}
+     * @name bottom
+     * @memberOf me.Bounds
+     */
+    get bottom() {
+        return this.max.y;
+    }
+
+    /**
      * center position of the bound on the x axis
      * @public
      * @type {Number}
@@ -208,6 +252,47 @@ class Bounds {
     }
 
     /**
+     * add the given point to the bounds definition.
+     * @name addPoint
+     * @memberOf me.Bounds
+     * @function
+     * @param {me.Vector2d} vector
+     * @param {me.Matrix2d} [matrix] an optional transform to apply to the given point
+     */
+    addPoint(v, m) {
+        if (typeof m !== "undefined") {
+            v = m.apply(v);
+        }
+        this.min.x = Math.min(this.min.x, v.x);
+        this.max.x = Math.max(this.max.x, v.x);
+        this.min.y = Math.min(this.min.y, v.y);
+        this.max.y = Math.max(this.max.y, v.y);
+    }
+
+    /**
+     * add the given quad coordinates to this bound definition, multiplied by the given matrix
+     * @name addFrame
+     * @memberOf me.Bounds
+     * @function
+     * @param {Number} x0 - left X coordinates of the quad
+     * @param {Number} y0 - top Y coordinates of the quad
+     * @param {Number} x1 - right X coordinates of the quad
+     * @param {Number} y1 - bottom y coordinates of the quad
+     * @param {me.Matrix2d} [matrix] an optional transform to apply to the given frame coordinates
+     */
+    addFrame(x0, y0, x1, y1, m) {
+        var v = me.pool.pull("Vector2d");
+
+        // transform all points and add to the bound definition
+        this.addPoint(v.set(x0, y0), m);
+        this.addPoint(v.set(x1, y0), m);
+        this.addPoint(v.set(x0, y1), m);
+        this.addPoint(v.set(x1, y1), m);
+
+        me.pool.push(v);
+    }
+
+    /**
      * Returns true if the bounds contains the given point.
      * @name contains
      * @memberOf me.Bounds
@@ -224,20 +309,29 @@ class Bounds {
      * @param {Number} y
      * @return {boolean} True if the bounds contain the point, otherwise false
      */
-    contains(point) {
-        var _x, _y;
+    contains() {
+        var arg0 = arguments[0];
+        var _x1, _x2, _y1, _y2;
         if (arguments.length === 2) {
             // x, y
-            _x = arguments[0];
-            _y = arguments[1];
+            _x1 = _x2 = arg0;
+            _y1 = _y2 = arguments[1];
         } else {
-            // vector
-            _x = arguments[0].x;
-            _y = arguments[0].y;
+            if (arg0 instanceof Bounds) {
+                // bounds
+                _x1 = arg0.min.x;
+                _x2 = arg0.max.x;
+                _y1 = arg0.min.y;
+                _y2 = arg0.max.y;
+            } else {
+                // vector
+                _x1 = _x2 = arg0.x;
+                _y1 = _y2 = arg0.y;
+            }
         }
 
-        return _x >= this.min.x && _x <= this.max.x
-            && _y >= this.min.y && _y <= this.max.y;
+        return _x1 >= this.min.x && _x2 <= this.max.x
+            && _y1 >= this.min.y && _y2 <= this.max.y;
     }
 
     /**
@@ -245,12 +339,23 @@ class Bounds {
      * @name overlaps
      * @memberOf me.Bounds
      * @function
-     * @param {me.Bounds} bounds
+     * @param {me.Bounds|me.Rect} bounds
      * @return {boolean} True if the bounds overlap, otherwise false
      */
     overlaps(bounds) {
-        return (this.min.x <= bounds.max.x && this.max.x >= bounds.min.x
-                && this.max.y >= bounds.min.y && this.min.y <= bounds.max.y);
+        return (this.left <= bounds.right && this.right >= bounds.left
+            && this.bottom >= bounds.top && this.top <= bounds.bottom);
+    }
+
+    /**
+     * determines whether all coordinates of this bounds are finite numbers.
+     * @name isFinite
+     * @memberOf me.Bounds
+     * @function
+     * @return {boolean} false if all coordinates are positive or negative Infinity or NaN; otherwise, true.
+     */
+    isFinite() {
+        return (isFinite(this.min.x) && isFinite(this.max.x) && isFinite(this.min.y) && isFinite(this.max.y));
     }
 
     /**
@@ -320,19 +425,6 @@ class Bounds {
         this.max.x = _x + deltaX;
         this.min.y = _y;
         this.max.y = _y + deltaY;
-    }
-
-    /**
-     * resize the bounds to the given width and height
-     * @name resize
-     * @memberOf me.Bounds
-     * @function
-     * @param {Number} width
-     * @param {Number} height
-     */
-    resize(width, height) {
-        this.width = width;
-        this.height = height;
     }
 
     /**

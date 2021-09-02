@@ -516,7 +516,7 @@ class ObservableVector3d extends Vector3d {
      * @return {me.ObservableVector3d} new me.ObservableVector3d
      */
     clone() {
-        return pool.pull("me.ObservableVector3d",
+        return pool.pull("ObservableVector3d",
             this._x,
             this._y,
             this._z,
@@ -532,7 +532,7 @@ class ObservableVector3d extends Vector3d {
      * @return {me.Vector3d} new me.Vector3d
      */
     toVector3d() {
-        return pool.pull("me.Vector3d", this._x, this._y, this._z);
+        return pool.pull("Vector3d", this._x, this._y, this._z);
     }
 
     /**

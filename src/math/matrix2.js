@@ -480,7 +480,7 @@ class Matrix2d {
      * @return {me.Matrix2d}
      */
     clone() {
-        return pool.pull("me.Matrix2d", this);
+        return pool.pull("Matrix2d", this);
     }
 
     /**

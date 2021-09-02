@@ -59,11 +59,11 @@ var Camera2d = Renderable.extend({
         /**
          * Camera bounds
          * @public
-         * @type me.Rect
+         * @type me.Bounds
          * @name bounds
          * @memberOf me.Camera2d
          */
-        this.bounds = new Rect(-Infinity, -Infinity, Infinity, Infinity);
+        this.bounds = pool.pull("Bounds");
 
         /**
          * [IMTERNAL] enable or disable damping
@@ -166,6 +166,8 @@ var Camera2d = Renderable.extend({
         // enable event detection on the camera
         this.isKinematic = false;
 
+        this.bounds.setMinMax(minX, minY, maxX, maxY);
+
         // update the projection matrix
         this._updateProjectionMatrix();
 
@@ -190,7 +192,7 @@ var Camera2d = Renderable.extend({
             targetX = MIN((target.x) - (this.deadzone.right), this.bounds.width - this.width);
         }
         else if ((target.x - this.pos.x) < (this.deadzone.pos.x)) {
-            targetX = MAX((target.x) - this.deadzone.pos.x, this.bounds.pos.x);
+            targetX = MAX((target.x) - this.deadzone.pos.x, this.bounds.left);
         }
         return targetX;
 
@@ -203,7 +205,7 @@ var Camera2d = Renderable.extend({
             targetY = MIN((target.y) - (this.deadzone.bottom), this.bounds.height - this.height);
         }
         else if ((target.y - this.pos.y) < (this.deadzone.pos.y)) {
-            targetY = MAX((target.y) - this.deadzone.pos.y, this.bounds.pos.y);
+            targetY = MAX((target.y) - this.deadzone.pos.y, this.bounds.top);
         }
         return targetY;
     },
@@ -314,8 +316,7 @@ var Camera2d = Renderable.extend({
      */
     setBounds : function (x, y, w, h) {
         this.smoothFollow = false;
-        this.bounds.pos.set(x, y);
-        this.bounds.resize(w, h);
+        this.bounds.setMinMax(x, y, w + x, h + y);
         this.moveTo(this.pos.x, this.pos.y);
         this.update();
         this.smoothFollow = true;
@@ -406,13 +407,13 @@ var Camera2d = Renderable.extend({
 
         this.pos.x = clamp(
             x,
-            this.bounds.pos.x,
-            this.bounds.width - this.width
+            this.bounds.left,
+            this.bounds.width
         );
         this.pos.y = clamp(
             y,
-            this.bounds.pos.y,
-            this.bounds.height - this.height
+            this.bounds.top,
+            this.bounds.height
         );
 
         //publish the VIEWPORT_ONCHANGE event if necessary
@@ -558,9 +559,9 @@ var Camera2d = Renderable.extend({
      * });
      */
     fadeOut : function (color, duration, onComplete) {
-        this._fadeOut.color = pool.pull("me.Color").copy(color);
-        this._fadeOut.tween = pool.pull("me.Tween", this._fadeOut.color)
-            .to({ alpha: 0.0 }, {duration: duration || 1000})
+        this._fadeOut.color = pool.pull("Color").copy(color);
+        this._fadeOut.tween = pool.pull("Tween", this._fadeOut.color)
+            .to({ alpha: 0.0 }, duration || 1000)
             .onComplete(onComplete || null);
         this._fadeOut.tween.isPersistent = true;
         this._fadeOut.tween.start();
@@ -580,11 +581,11 @@ var Camera2d = Renderable.extend({
      * me.game.viewport.fadeIn("#FFFFFF", 75);
      */
     fadeIn : function (color, duration, onComplete) {
-        this._fadeIn.color = pool.pull("me.Color").copy(color);
+        this._fadeIn.color = pool.pull("Color").copy(color);
         var _alpha = this._fadeIn.color.alpha;
         this._fadeIn.color.alpha = 0.0;
-        this._fadeIn.tween = pool.pull("me.Tween", this._fadeIn.color)
-            .to({ alpha: _alpha }, {duration: duration || 1000})
+        this._fadeIn.tween = pool.pull("Tween", this._fadeIn.color)
+            .to({ alpha: _alpha }, duration || 1000)
             .onComplete(onComplete || null);
         this._fadeIn.tween.isPersistent = true;
         this._fadeIn.tween.start();
@@ -622,8 +623,8 @@ var Camera2d = Renderable.extend({
     focusOn : function (target) {
         var bounds = target.getBounds();
         this.moveTo(
-            target.pos.x + bounds.pos.x + (bounds.width / 2),
-            target.pos.y + bounds.pos.y + (bounds.height / 2)
+            target.pos.x + bounds.left + (bounds.width / 2),
+            target.pos.y + bounds.top + (bounds.height / 2)
         );
     },
 
@@ -636,7 +637,7 @@ var Camera2d = Renderable.extend({
      * @param {Boolean} [floating===object.floating] if visibility check should be done against screen coordinates
      * @return {Boolean}
      */
-    isVisible : function (obj, floating) {
+    isVisible : function (obj, floating = obj.floating) {
         if (floating === true || obj.floating === true) {
             // check against screen coordinates
             return video.renderer.overlaps(obj.getBounds());

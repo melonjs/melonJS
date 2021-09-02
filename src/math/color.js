@@ -319,7 +319,7 @@ class Color {
      * @return {me.Color} Reference to the newly cloned object
      */
     clone() {
-        return pool.pull("me.Color", this);
+        return pool.pull("Color", this);
     }
 
     /**

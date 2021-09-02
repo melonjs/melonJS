@@ -2,10 +2,12 @@ describe("me.input", function () {
     var renderable;
     var evenType;
     beforeAll(function () {
-        renderable = new me.Entity(0, 0, {
-            "width" : 32,
-            "height" : 32
-        });
+        renderable = new me.Renderable(0, 0, 32, 32);
+
+        renderable.isKinematic = false;
+
+        //renderable.anchorPoint.set(0, 0);
+
         if (me.device.PointerEvent) {
             evenType = "pointerdown";
         } else {

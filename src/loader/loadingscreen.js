@@ -31,6 +31,8 @@ var ProgressBar = Renderable.extend({
             self.resize.bind(self)
         );
 
+        this.anchorPoint.set(0, 0);
+
         // store current progress
         this.progress = 0;
     },
@@ -138,11 +140,11 @@ var TextLogo = Renderable.extend({
         this.fontCanvas = video.createCanvas(256, 64, true);
         this.drawFont(video.renderer.getContext2d(this.fontCanvas));
 
-        this.anchorPoint.set(0.0, 0.0);
+        this.anchorPoint.set(0, 0.5);
     },
 
     drawFont : function (context) {
-        var logo1 = pool.pull("me.Text", 0, 0, {
+        var logo1 = pool.pull("Text", 0, 0, {
             font: "century gothic",
             size: 32,
             fillStyle: "white",
@@ -150,7 +152,7 @@ var TextLogo = Renderable.extend({
             textBaseline : "top",
             text: "melon"
         });
-        var logo2 = pool.pull("me.Text", 0, 0, {
+        var logo2 = pool.pull("Text", 0, 0, {
             font: "century gothic",
             size: 32,
             fillStyle: "#55aa00",
@@ -160,6 +162,7 @@ var TextLogo = Renderable.extend({
             text: "JS"
         });
 
+
         // compute both logo respective size
         var logo1_width = logo1.measureText(context).width;
         var logo2_width = logo2.measureText(context).width;
@@ -167,8 +170,8 @@ var TextLogo = Renderable.extend({
         this.textWidth = logo1_width + logo2_width;
 
         // calculate the final rendering position
-        this.pos.x = Math.round((this.width - this.textWidth) / 2);
-        this.pos.y = Math.round(this.height / 2 + 16);
+        this.pos.x = Math.round(this.width - this.textWidth / 2);
+        this.pos.y = Math.round(this.height + 16);
 
         // use the private _drawFont method to directly draw on the canvas context
         logo1._drawFont(context, ["melon"], 0, 0);

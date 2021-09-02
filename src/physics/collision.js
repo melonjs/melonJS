@@ -6,7 +6,10 @@ import game from "./../game.js";
 var dummyObj = {
     pos : new Vector2d(0, 0),
     ancestor : {
-        _absPos : new Vector2d(0, 0)
+        _absPos : new Vector2d(0, 0),
+        getAbsolutePosition : function () {
+            return this._absPos;
+        }
     }
 };
 
@@ -229,7 +232,7 @@ var collision = {
             // check if both objects "should" collide
             if ((objB !== objA) && this.shouldCollide(objA, objB) &&
                 // fast AABB check if both bounding boxes are overlaping
-                objA.getBounds().overlaps(objB.getBounds())) {
+                objA.body.getBounds().overlaps(objB.body.getBounds())) {
 
                 // go trough all defined shapes in A
                 var aLen = objA.body.shapes.length;
@@ -314,12 +317,12 @@ var collision = {
         var result = resultArray || [];
 
         // retrieve a list of potential colliding objects
-        var candidates = game.world.broadphase.retrieve(line.getBounds());
+        var candidates = game.world.broadphase.retrieve(line);
 
         for (var i = candidates.length, objB; i--, (objB = candidates[i]);) {
 
             // fast AABB check if both bounding boxes are overlaping
-            if (objB.body && line.getBounds().overlaps(objB.getBounds())) {
+            if (objB.body && line.getBounds().overlaps(objB.body.getBounds())) {
 
                 // go trough all defined shapes in B (if any)
                 var bLen = objB.body.shapes.length;

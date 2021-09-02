@@ -10,6 +10,7 @@ import device from "./../system/device.js";
 import Pointer from "./pointer.js";
 import Rect from "./../shapes/rectangle.js";
 import Container from "./../renderable/container.js";
+import Renderable from "./../renderable/renderable.js";
 import game from "./../game.js";
 
 
@@ -298,35 +299,34 @@ function dispatchEvent(normalizedEvents) {
                     pointer.gameX = pointer.gameLocalX = pointer.gameWorldX;
                     pointer.gameY = pointer.gameLocalY = pointer.gameWorldY;
                 }
+
                 // adjust gameLocalX to specify coordinates
                 // within the region ancestor container
                 if (typeof ancestor !== "undefined") {
-                    var parentPos = ancestor.getBounds().pos;
-                    pointer.gameLocalX = pointer.gameX - parentPos.x;
-                    pointer.gameLocalY = pointer.gameY - parentPos.y;
+                    var parentBounds = ancestor.getBounds();
+                    pointer.gameLocalX = pointer.gameX - parentBounds.x;
+                    pointer.gameLocalY = pointer.gameY - parentBounds.y;
                 }
 
-                // XXX using instanceof Sprite here crash the browser now (WHY?)
-                // XXX TODO : apply this to all renderable, not just Sprite based object
-                //if (typeof region.setAnimationFrame === "function") {
-                if (typeof region.setAnimationFrame === "function") {
+                // apply inverse transformation for renderable
+                if (region instanceof Renderable) {
                     var gameX = pointer.gameX;
                     var gameY = pointer.gameY;
                     if (!region.currentTransform.isIdentity()) {
                         var invV = region.currentTransform.applyInverse(
-                            pool.pull("me.Vector2d", gameX, gameY)
+                            pool.pull("Vector2d", gameX, gameY)
                         );
                         gameX = invV.x;
                         gameY = invV.y;
                         pool.push(invV);
                     }
-                    eventInBounds = bounds.containsPoint(gameX, gameY);
+                    eventInBounds = bounds.contains(gameX, gameY);
                 } else {
                     eventInBounds =
-                        bounds.containsPoint(pointer.gameX, pointer.gameY) &&
+                        bounds.contains(pointer.gameX, pointer.gameY) &&
                         (bounds === region ||
                         // if the given target is another shape than me.Rect
-                        region.containsPoint(pointer.gameLocalX, pointer.gameLocalY));
+                        region.contains(pointer.gameLocalX, pointer.gameLocalY));
                 }
 
                 switch (pointer.type) {

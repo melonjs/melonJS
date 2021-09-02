@@ -35,7 +35,7 @@ var Polygon = window.Jay.extend({
         /**
          * The bounding rectangle for this shape
          * @ignore
-         * @type {me.Rect}
+         * @type {me.Bounds}
          * @name _bounds
          * @memberOf me.Polygon#
          */
@@ -94,35 +94,46 @@ var Polygon = window.Jay.extend({
      */
     setShape : function (x, y, points) {
         this.pos.set(x, y);
+        this.setVertices(points);
+        return this;
+    },
 
-        if (!Array.isArray(points)) {
+    /**
+     * set the vertices defining this Polygon
+     * @name setVertices
+     * @memberOf me.Polygon.prototype
+     * @function
+     * @param {me.Vector2d[]} points array of vector or vertice defining the Polygon
+     */
+    setVertices : function (vertices) {
+
+        if (!Array.isArray(vertices)) {
             return this;
         }
 
         // convert given points to me.Vector2d if required
-        if (!(points[0] instanceof Vector2d)) {
+        if (!(vertices[0] instanceof Vector2d)) {
             var _points = this.points = [];
 
-            if (typeof points[0] === "object") {
+            if (typeof vertices[0] === "object") {
                 // array of {x,y} object
-                points.forEach(function (point) {
-                   _points.push(new Vector2d(point.x, point.y));
+                vertices.forEach(function (vertice) {
+                   _points.push(new Vector2d(vertice.x, vertice.y));
                 });
 
             } else {
                 // it's a flat array
-                for (var p = 0; p < points.length; p += 2) {
-                    _points.push(new Vector2d(points[p], points[p + 1]));
+                for (var p = 0; p < vertices.length; p += 2) {
+                    _points.push(new Vector2d(vertices[p], vertices[p + 1]));
                 }
             }
         } else {
             // array of me.Vector2d
-            this.points = points;
+            this.points = vertices;
         }
 
         this.recalc();
         this.updateBounds();
-
         return this;
     },
 
@@ -320,29 +331,40 @@ var Polygon = window.Jay.extend({
     },
 
     /**
-     * check if this Polygon contains the specified point
-     * @name containsPointV
+     * Returns true if the polygon contains the given point.
+     * (Note: it is highly recommended to first do a hit test on the corresponding <br>
+     *  bounding rect, as the function can be highly consuming with complex shapes)
+     * @name contains
      * @memberOf me.Polygon.prototype
      * @function
      * @param  {me.Vector2d} point
      * @return {boolean} true if contains
      */
-    containsPointV: function (v) {
-        return this.containsPoint(v.x, v.y);
-    },
 
     /**
-     * check if this Polygon contains the specified point <br>
+     * Returns true if the polygon contains the given point. <br>
      * (Note: it is highly recommended to first do a hit test on the corresponding <br>
      *  bounding rect, as the function can be highly consuming with complex shapes)
-     * @name containsPoint
+     * @name contains
      * @memberOf me.Polygon.prototype
      * @function
      * @param  {Number} x x coordinate
      * @param  {Number} y y coordinate
      * @return {boolean} true if contains
      */
-    containsPoint: function (x, y) {
+    contains: function () {
+        var _x, _y;
+
+        if (arguments.length === 2) {
+          // x, y
+          _x = arguments[0];
+          _y = arguments[1];
+        } else {
+          // vector
+          _x = arguments[0].x;
+          _y = arguments[0].y;
+        }
+
         var intersects = false;
         var posx = this.pos.x, posy = this.pos.y;
         var points = this.points;
@@ -352,7 +374,7 @@ var Polygon = window.Jay.extend({
         for (var i = 0, j = len - 1; i < len; j = i++) {
             var iy = points[i].y + posy, ix = points[i].x + posx,
                 jy = points[j].y + posy, jx = points[j].x + posx;
-            if (((iy > y) !== (jy > y)) && (x < (jx - ix) * (y - iy) / (jy - iy) + ix)) {
+            if (((iy > _y) !== (jy > _y)) && (_x < (jx - ix) * (_y - iy) / (jy - iy) + ix)) {
                 intersects = !intersects;
             }
         }
@@ -364,26 +386,27 @@ var Polygon = window.Jay.extend({
      * @name getBounds
      * @memberOf me.Polygon.prototype
      * @function
-     * @return {me.Rect} this shape bounding box Rectangle object
+     * @return {me.Bounds} this shape bounding box Rectangle object
      */
     getBounds : function () {
         if (typeof this._bounds === "undefined") {
-            this._bounds = pool.pull("me.Rect", 0, 0, 0, 0);
+            this._bounds = pool.pull("Bounds");
         }
         return this._bounds;
     },
 
     /**
      * update the bounding box for this shape.
+     * @ignore
      * @name updateBounds
      * @memberOf me.Polygon.prototype
      * @function
-     * @return {me.Rect} this shape bounding box Rectangle object
+     * @return {me.Bounds} this shape bounding box Rectangle object
      */
     updateBounds : function () {
         var bounds = this.getBounds();
 
-        bounds.setPoints(this.points);
+        bounds.update(this.points);
         bounds.translate(this.pos);
 
         return bounds;

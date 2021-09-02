@@ -98,13 +98,13 @@ class TMXOrthogonalRenderer extends TMXRenderer {
         var start = this.pixelToTileCoords(
             Math.max(rect.pos.x - (layer.maxTileSize.width - layer.tilewidth), 0),
             Math.max(rect.pos.y - (layer.maxTileSize.height - layer.tileheight), 0),
-            pool.pull("me.Vector2d")
+            pool.pull("Vector2d")
         ).floorSelf();
 
         var end = this.pixelToTileCoords(
             rect.pos.x + rect.width + this.tilewidth,
             rect.pos.y + rect.height + this.tileheight,
-            pool.pull("me.Vector2d")
+            pool.pull("Vector2d")
         ).ceilSelf();
 
         //ensure we are in the valid tile range

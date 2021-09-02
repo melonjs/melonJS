@@ -14,36 +14,45 @@ import Polygon from "./poly.js";
 var Line = Polygon.extend({
 
     /**
-     * check if this line segment contains the specified point
-     * @name containsPointV
+     * Returns true if the Line contains the given point
+     * @name contains
      * @memberOf me.Line.prototype
      * @function
      * @param  {me.Vector2d} point
      * @return {boolean} true if contains
      */
-    containsPointV: function (v) {
-        return this.containsPoint(v.x, v.y);
-    },
 
     /**
-     * check if this line segment contains the specified point
-     * @name containsPoint
+     * Returns true if the Line contains the given point
+     * @name contains
      * @memberOf me.Line.prototype
      * @function
      * @param  {Number} x x coordinate
      * @param  {Number} y y coordinate
      * @return {boolean} true if contains
      */
-    containsPoint: function (x, y) {
+    contains: function () {
+        var _x, _y;
+
+        if (arguments.length === 2) {
+          // x, y
+          _x = arguments[0];
+          _y = arguments[1];
+        } else {
+          // vector
+          _x = arguments[0].x;
+          _y = arguments[0].y;
+        }
+
         // translate the given coordinates,
         // rather than creating temp translated vectors
-        x -= this.pos.x; // Cx
-        y -= this.pos.y; // Cy
+        _x -= this.pos.x; // Cx
+        _y -= this.pos.y; // Cy
         var start = this.points[0]; // Ax/Ay
         var end = this.points[1]; // Bx/By
 
         //(Cy - Ay) * (Bx - Ax) = (By - Ay) * (Cx - Ax)
-        return (y - start.y) * (end.x - start.x) === (end.y - start.y) * (x - start.x);
+        return (_y - start.y) * (end.x - start.x) === (end.y - start.y) * (_x - start.x);
     },
 
     /**

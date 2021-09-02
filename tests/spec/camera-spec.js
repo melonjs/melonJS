@@ -41,6 +41,9 @@ describe("me.Camera2d", function () {
         var camera = new me.Camera2d(0, 0, 1000, 1000);
         var obj = new me.Renderable(0, 0, 10, 10);
 
+        // make it easier by setting anchor point to 0, 0
+        obj.anchorPoint.set(0 ,0);
+
         // check if obj is visible
         expect(camera.isVisible(obj)).toEqual(true);
         // move the object half-way over the camera origin point

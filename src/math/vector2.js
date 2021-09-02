@@ -504,7 +504,7 @@ class Vector2d {
      * @return {me.Vector2d} new me.Vector2d
      */
     clone() {
-        return pool.pull("me.Vector2d", this.x, this.y);
+        return pool.pull("Vector2d", this.x, this.y);
     }
 
     /**

@@ -22,11 +22,43 @@ describe("me.Container", function () {
         });
     });
 
+    describe("object absolute position in containers", function () {
+
+        it("should return 50,50 for renderable container", function () {
+            var renderable = new me.Renderable(50, 50, 100, 100)
+
+            expect(container.getAbsolutePosition().x).toEqual(0);
+            expect(container.getAbsolutePosition().y).toEqual(0);
+
+            container.addChild(renderable);
+
+            expect(renderable.getAbsolutePosition().x).toEqual(50);
+            expect(renderable.getAbsolutePosition().y).toEqual(50);
+
+        });
+
+        it("should return proper value for object in nested containers", function () {
+            var secondContainer = new me.Container(10, 10, 100, 100);
+            var thirdContainer = new me.Container(10, 10, 100, 100);
+            var renderable = new me.Renderable(50, 50, 100, 100)
+
+            secondContainer.addChild(thirdContainer);
+            container.addChild(secondContainer);
+
+            thirdContainer.addChild(renderable);
+
+            var absPos = renderable.getAbsolutePosition();
+            expect(absPos.x).toEqual(70);
+            expect(absPos.y).toEqual(70);
+        });
+
+    });
+
     describe("Container bounds test", function () {
         it("me.Container bounds return default assigned size", function () {
             var bounds = container.getBounds();
-            expect(bounds.pos.x).toEqual(0);
-            expect(bounds.pos.y).toEqual(0);
+            expect(bounds.x).toEqual(0);
+            expect(bounds.y).toEqual(0);
             expect(bounds.width).toEqual(100);
             expect(bounds.height).toEqual(100);
         });
@@ -37,16 +69,16 @@ describe("me.Container", function () {
             // update the child bounds
             container.updateChildBounds();
             var bounds = container.childBounds;
-            expect(bounds.pos.x).toEqual(50);
-            expect(bounds.pos.y).toEqual(50);
-            expect(bounds.width).toEqual(150);
-            expect(bounds.height).toEqual(150);
+            expect(bounds.x).toEqual(0); // because of default 0.5 anchor point
+            expect(bounds.y).toEqual(0); // because of default 0.5 anchor point
+            expect(bounds.width).toEqual(150);  // because of default 0.5 anchor point
+            expect(bounds.height).toEqual(150);  // because of default 0.5 anchor point
         });
     });
 
     describe("Container utility function", function () {
-        var counter = 0;
         it("forEach iterate through all children", function () {
+            var counter = 0;
             container.addChild(new me.Renderable(50, 50, 100, 100));
             container.addChild(new me.Renderable(100, 100, 100, 100));
             container.forEach(function(child) {
@@ -57,7 +89,7 @@ describe("me.Container", function () {
             expect(counter).toEqual(2);
         });
         it("onChildChange callback", function () {
-            counter = 0;
+            var counter = 0;
             container.onChildChange = function (index) {
                 // just count how many times this one is called
                 counter ++;

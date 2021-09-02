@@ -277,7 +277,6 @@ class Body {
             this.onBodyUpdate = onBodyUpdate;
         }
 
-
         this.bounds.clear();
 
         // parses the given shapes array and add them
@@ -324,8 +323,12 @@ class Body {
                 this.shapes.push(shape);
             }
             // update the body bounds
-            this.bounds.add(shape.getBounds().points);
-            this.bounds.translate(shape.pos);
+            this.bounds.addBounds(shape.getBounds());
+            // use bounds position as ellipse position is center
+            this.bounds.translate(
+                shape.getBounds().x,
+                shape.getBounds().y
+            );
         } else if (shape instanceof Polygon) {
             if (!this.shapes.includes(shape)) {
                 // see removeShape
@@ -408,7 +411,7 @@ class Body {
         var data = json;
 
         if (typeof id !== "undefined" ) {
-            json[id];
+            data = json[id];
         }
 
         // Physic Editor Format (https://www.codeandweb.com/physicseditor)
@@ -550,27 +553,72 @@ class Body {
     }
 
     /**
+     * Returns true if the any of the shape composing the body contains the given point.
+     * @name contains
+     * @memberOf me.Body
+     * @function
+     * @param  {me.Vector2d} point
+     * @return {boolean} true if contains
+     */
+
+    /**
+     * Returns true if the any of the shape composing the body contains the given point.
+     * @name contains
+     * @memberOf me.Body
+     * @function
+     * @param  {Number} x x coordinate
+     * @param  {Number} y y coordinate
+     * @return {boolean} true if contains
+     */
+    contains() {
+        var _x, _y;
+
+        if (arguments.length === 2) {
+          // x, y
+          _x = arguments[0];
+          _y = arguments[1];
+        } else {
+          // vector
+          _x = arguments[0].x;
+          _y = arguments[0].y;
+        }
+
+        if (this.getBounds().contains(_x, _y)) {
+            for (var i = this.shapes.length, shape; i--, (shape = this.shapes[i]);) {
+                if (shape.contains(_x, _y)) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
+    /**
      * Rotate this body (counter-clockwise) by the specified angle (in radians).
      * Unless specified the body will be rotated around its center point
      * @name rotate
      * @memberOf me.Body
      * @function
      * @param {Number} angle The angle to rotate (in radians)
-     * @param {me.Vector2d|me.ObservableVector2d} [v] an optional point to rotate around
+     * @param {me.Vector2d|me.ObservableVector2d} [v=me.Body.getBounds().center] an optional point to rotate around
      * @return {me.Body} Reference to this object for method chaining
      */
-    rotate(angle, v) {
-        v = v || this.center;
-
+    rotate(angle, v = this.getBounds().center) {
         this.bounds.clear();
-
         for (var i = 0; i < this.shapes.length; i++) {
             var shape = this.shapes[i];
             shape.rotate(angle, v);
-            this.bounds.add(shape.points);
-            this.bounds.translate(shape.pos);
+            this.bounds.addBounds(shape.getBounds());
+            if (shape instanceof Ellipse) {
+                // use bounds position as ellipse position is center
+                this.bounds.translate(
+                    shape.getBounds().x,
+                    shape.getBounds().y
+                );
+            } else {
+                this.bounds.translate(shape.pos);
+            }
         }
-
         return this;
     }
 

@@ -45,11 +45,11 @@ class TMXIsometricRenderer extends TMXRenderer {
      * @public
      * @function
      * @param {me.TMXLayer} [layer] calculate the bounding rect for a specific layer (will return a new bounds object)
-     * @return {me.Rect}
+     * @return {me.Bounds}
      */
     getBounds(layer) {
-        var bounds = layer instanceof TMXLayer ? pool.pull("me.Rect", 0, 0, 0, 0) : this.bounds;
-        bounds.setShape(
+        var bounds = layer instanceof TMXLayer ? pool.pull("Bounds") : this.bounds;
+        bounds.setMinMax(
             0, 0,
             (this.cols + this.rows) * (this.tilewidth / 2),
             (this.cols + this.rows) * (this.tileheight / 2)
@@ -89,7 +89,7 @@ class TMXIsometricRenderer extends TMXRenderer {
     adjustPosition(obj) {
         var tileX = obj.x / this.hTilewidth;
         var tileY = obj.y / this.tileheight;
-        var isoPos = pool.pull("me.Vector2d");
+        var isoPos = pool.pull("Vector2d");
 
         this.tileToPixelCoords(tileX, tileY, isoPos);
 
@@ -126,18 +126,18 @@ class TMXIsometricRenderer extends TMXRenderer {
         var rowItr = this.pixelToTileCoords(
             rect.pos.x - tileset.tilewidth,
             rect.pos.y - tileset.tileheight,
-            pool.pull("me.Vector2d")
+            pool.pull("Vector2d")
         ).floorSelf();
         var tileEnd = this.pixelToTileCoords(
             rect.pos.x + rect.width + tileset.tilewidth,
             rect.pos.y + rect.height + tileset.tileheight,
-            pool.pull("me.Vector2d")
+            pool.pull("Vector2d")
         ).ceilSelf();
 
-        var rectEnd = this.tileToPixelCoords(tileEnd.x, tileEnd.y, pool.pull("me.Vector2d"));
+        var rectEnd = this.tileToPixelCoords(tileEnd.x, tileEnd.y, pool.pull("Vector2d"));
 
         // Determine the tile and pixel coordinates to start at
-        var startPos = this.tileToPixelCoords(rowItr.x, rowItr.y, pool.pull("me.Vector2d"));
+        var startPos = this.tileToPixelCoords(rowItr.x, rowItr.y, pool.pull("Vector2d"));
         startPos.x -= this.hTilewidth;
         startPos.y += this.tileheight;
 

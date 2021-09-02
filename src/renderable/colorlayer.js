@@ -39,7 +39,7 @@ var ColorLayer = Renderable.extend({
             this.color = color;
         } else {
             // string (#RGB, #ARGB, #RRGGBB, #AARRGGBB)
-            this.color = pool.pull("me.Color").parseCSS(color);
+            this.color = pool.pull("Color").parseCSS(color);
         }
         this.anchorPoint.set(0, 0);
     },

@@ -351,7 +351,6 @@
             me.debug.renderQuadTree = me.debug.renderQuadTree || hash.quadtree || false;
 
             var _this = this;
-            var bounds = new me.Rect(0, 0, 0, 0);
 
             // patch me.game.update
             me.plugin.patch(me.game, "update", function (dt) {
@@ -376,7 +375,7 @@
             });
 
             // patch sprite.js
-            me.plugin.patch(me.Sprite, "draw", function (renderer) {
+            me.plugin.patch(me.Sprite, "postDraw", function (renderer) {
 
                 // call the original me.Sprite.draw function
                 this._patched(renderer);
@@ -389,30 +388,27 @@
 
                     // draw the sprite rectangle
                     if (me.debug.renderHitBox) {
-                        var bounds = this.getBounds();
-                        var ax = this.anchorPoint.x * bounds.width,
-                            ay = this.anchorPoint.y * bounds.height;
 
-                        var ancestor = this.ancestor;
-                        if (ancestor instanceof me.Container && ancestor.root === false) {
-                            ax -= ancestor._absPos.x;
-                            ay -= ancestor._absPos.y;
-                        } else if (ancestor instanceof me.Entity) {
-                            ancestor = ancestor.ancestor;
-                            if (ancestor instanceof me.Container && ancestor.root === false) {
-                                // is this correct ???
-                                ax = ay = 0;
-                            }
+                        var absolutePosition = this.ancestor.getAbsolutePosition();
+
+                        if (!this.ancestor.root && this.ancestor.floating) {
+                            renderer.translate(
+                                -absolutePosition.x,
+                                -absolutePosition.y
+                            );
                         }
 
-                        // translate back as the bounds position
-                        // is already adjusted to the anchor Point
-                        renderer.translate(ax, ay);
-
+                        // draw the sprite bounds
                         renderer.setColor("green");
-                        renderer.stroke(bounds);
+                        renderer.stroke(this.getBounds());
 
-                        renderer.translate(-ax, -ay);
+
+                        if (!this.ancestor.root && this.ancestor.floating) {
+                            renderer.translate(
+                                absolutePosition.x,
+                                absolutePosition.y
+                            );
+                        }
 
                         // the sprite mask if defined
                         if (typeof this.mask !== "undefined") {
@@ -421,19 +417,23 @@
                         }
 
                         if (typeof this.body !== "undefined") {
-                            renderer.translate(this.pos.x, this.pos.y);
+                            var bounds = this.getBounds();
+                            renderer.translate(bounds.x, bounds.y);
+
+                            renderer.setColor("orange");
+                            renderer.stroke(this.body.getBounds());
+
                             // draw all defined shapes
                             renderer.setColor("red");
                             for (var i = this.body.shapes.length, shape; i--, (shape = this.body.shapes[i]);) {
                                 renderer.stroke(shape);
                                 _this.counters.inc("shapes");
                             }
-                            renderer.translate(-this.pos.x, -this.pos.y);
+                            renderer.translate(-bounds.x, -bounds.y);
                         }
                     }
                 }
             });
-
 
             me.plugin.patch(me.BitmapText, "draw", function (renderer) {
                 // call the original me.Sprite.draw function
@@ -513,8 +513,8 @@
                         renderer.save();
 
                         renderer.translate(
-                            -this.pos.x - this.body.getBounds().x - this.ancestor._absPos.x,
-                            -this.pos.y - this.body.getBounds().y - this.ancestor._absPos.y
+                            -this.pos.x - this.body.getBounds().x - this.ancestor.getAbsolutePosition().x,
+                            -this.pos.y - this.body.getBounds().y - this.ancestor.getAbsolutePosition().y
                         );
 
                         if (this.renderable instanceof me.Renderable) {
@@ -524,14 +524,14 @@
                             );
                         }
 
+                        renderer.translate(
+                            this.pos.x + this.ancestor.getAbsolutePosition().x,
+                            this.pos.y + this.ancestor.getAbsolutePosition().y
+                        );
+
                         // draw the bounding rect shape
                         renderer.setColor("orange");
-                        renderer.stroke(this.getBounds());
-
-                        renderer.translate(
-                            this.pos.x + this.ancestor._absPos.x,
-                            this.pos.y + this.ancestor._absPos.y
-                        );
+                        renderer.stroke(this.body.getBounds());
 
                         // draw all defined shapes
                         renderer.setColor("red");
@@ -544,7 +544,7 @@
 
                     if (me.debug.renderVelocity && (this.body.vel.x || this.body.vel.y)) {
                         bounds.copy(this.getBounds());
-                        bounds.pos.sub(this.ancestor._absPos);
+                        bounds.pos.sub(this.ancestor.getAbsolutePosition());
                         // draw entity current velocity
                         var x = bounds.width / 2;
                         var y = bounds.height / 2;
@@ -585,8 +585,8 @@
 
                     if (!this.root) {
                         renderer.translate(
-                            -this._absPos.x,
-                            -this._absPos.y
+                            -this.getAbsolutePosition().x,
+                            -this.getAbsolutePosition().y
                         );
                     }
 
@@ -649,13 +649,13 @@
         /** @private */
         onClick : function (e)  {
             // check the clickable areas
-            if (this.area.renderHitBox.containsPoint(e.gameX, e.gameY)) {
+            if (this.area.renderHitBox.contains(e.gameX, e.gameY)) {
                 me.debug.renderHitBox = !me.debug.renderHitBox;
-            } else if (this.area.renderVelocity.containsPoint(e.gameX, e.gameY)) {
+            } else if (this.area.renderVelocity.contains(e.gameX, e.gameY)) {
                 // does nothing for now, since velocity is
                 // rendered together with hitboxes (is a global debug flag required?)
                 me.debug.renderVelocity = !me.debug.renderVelocity;
-            } else if (this.area.renderQuadTree.containsPoint(e.gameX, e.gameY)) {
+            } else if (this.area.renderQuadTree.contains(e.gameX, e.gameY)) {
                 me.debug.renderQuadTree = !me.debug.renderQuadTree;
             }
             // force repaint
@@ -673,7 +673,7 @@
                 if (_alpha > 0.0) {
                     renderer.save();
                     renderer.setColor("rgba(255,0,0," + _alpha + ")");
-                    renderer.fillRect(bounds.pos.x, bounds.pos.y, bounds.width, bounds.height);
+                    renderer.fillRect(bounds.left, bounds.top, bounds.width, bounds.height);
                     renderer.restore();
                 }
             } else {
