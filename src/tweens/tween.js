@@ -28,10 +28,15 @@ import { Interpolation } from "./interpolation.js";
  * @constructor
  * @param {Object} object object on which to apply the tween
  * @example
- * // add a tween to change the object pos.y variable to 200 in 3 seconds
- * tween = new me.Tween(myObject.pos).to({y: 200}, 3000).onComplete(myFunc);
- * tween.easing(me.Tween.Easing.Bounce.Out);
- * tween.start();
+ * // add a tween to change the object pos.x and pos.y variable to 200 in 3 seconds
+ * tween = new me.Tween(myObject.pos).to({
+ *       x: 200,
+ *       y: 200,
+ *    }, {
+ *       duration: 3000,
+ *       easing: me.Tween.Easing.Bounce.Out,
+ *       autoStart : true
+ * }).onComplete(myFunc);
  */
 class Tween {
 
@@ -137,7 +142,7 @@ class Tween {
          * @public
          * @function
          * @param {Object} properties hash of properties
-         * @param {Object} [options] object of tween properties
+         * @param {Object|Number} [options] object of tween properties, or a duration if a numeric value is passed
          * @param {Number} [options.duration] tween duration
          * @param {me.Tween.Easing} [options.easing] easing function
          * @param {Number} [options.delay] delay amount expressed in milliseconds
@@ -150,16 +155,21 @@ class Tween {
 
             _valuesEnd = properties;
 
-            if (typeof options === 'object' && options !== null) {
-                if (options.duration) { _duration = options.duration; }
-                if (options.yoyo) { this.yoyo(options.yoyo); }
-                if (options.easing) { this.easing(options.easing); }
-                if (options.repeat) { this.repeat(options.repeat); }
-                if (options.delay) { this.delay(options.delay); }
-                if (options.interpolation) { this.interpolation(options.interpolation); }
+            if (typeof options !== "undefined") {
+                if (typeof options === 'number') {
+                    // for backward compatiblity
+                    _duration = options;
+                } else if (typeof options === 'object') {
+                    if (options.duration) { _duration = options.duration; }
+                    if (options.yoyo) { this.yoyo(options.yoyo); }
+                    if (options.easing) { this.easing(options.easing); }
+                    if (options.repeat) { this.repeat(options.repeat); }
+                    if (options.delay) { this.delay(options.delay); }
+                    if (options.interpolation) { this.interpolation(options.interpolation); }
 
-                if (options.autoStart) {
-                    this.start();
+                    if (options.autoStart) {
+                        this.start();
+                    }
                 }
             }
 

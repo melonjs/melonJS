@@ -9,6 +9,7 @@
 - Tiled : add TMX `tintcolor` parsing for tile and object layers
 - TMX : fix crash when trying to add collisionType to text nodes (thanks @framp)
 - TMX : fix a regression with the Tile Layer preRender feature
+- Tween: allow to pass a set of tween properties to the '.to' method instead of just the duration (thanks @0xf0f0f0) 
 
 ## 8.0.1 (12 Aug 2020)
 - release fix for NPM & jsDeliver

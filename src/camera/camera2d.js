@@ -558,10 +558,10 @@ var Camera2d = Renderable.extend({
      *     me.game.viewport.fadeOut("#fff", 150);
      * });
      */
-    fadeOut : function (color, duration, onComplete) {
+    fadeOut : function (color, duration = 1000, onComplete) {
         this._fadeOut.color = pool.pull("Color").copy(color);
         this._fadeOut.tween = pool.pull("Tween", this._fadeOut.color)
-            .to({ alpha: 0.0 }, duration || 1000)
+            .to({ alpha: 0.0 }, duration)
             .onComplete(onComplete || null);
         this._fadeOut.tween.isPersistent = true;
         this._fadeOut.tween.start();
@@ -580,12 +580,12 @@ var Camera2d = Renderable.extend({
      * // flash the camera to white for 75ms
      * me.game.viewport.fadeIn("#FFFFFF", 75);
      */
-    fadeIn : function (color, duration, onComplete) {
+    fadeIn : function (color, duration = 1000, onComplete) {
         this._fadeIn.color = pool.pull("Color").copy(color);
         var _alpha = this._fadeIn.color.alpha;
         this._fadeIn.color.alpha = 0.0;
         this._fadeIn.tween = pool.pull("Tween", this._fadeIn.color)
-            .to({ alpha: _alpha }, duration || 1000)
+            .to({ alpha: _alpha }, duration)
             .onComplete(onComplete || null);
         this._fadeIn.tween.isPersistent = true;
         this._fadeIn.tween.start();
