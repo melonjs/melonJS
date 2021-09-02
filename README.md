@@ -121,6 +121,8 @@ Since version 9.0.0 melonJS provides different build options :
 | `melonjs.min.js`    | a minified version of the ES5 UMD bundle version |
 | `melonjs-module.js` | a ES6 Module Bundle, for those living on the edge, and with no backward compatibility (note: this will break your game when upgrading!) |
 
+> Note: current version of both the tutorials and the debugPanel are not compatible with the ES6 version.
+
 Alternatively, the latest version of melonJS can be installed through [NPM](https://www.npmjs.com/package/melonjs) :
 
     $ npm install melonjs
