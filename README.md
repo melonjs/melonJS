@@ -111,7 +111,15 @@ When starting your own projects, checkout the [boilerplate](https://github.com/m
 Download melonJS
 -------------------------------------------------------------------------------
 
-The latest build (plain and minified) with corresponding release note is available for direct download [here](https://github.com/melonjs/melonJS/releases).
+The latest builds with corresponding release note are available for direct download [here](https://github.com/melonjs/melonJS/releases).
+
+Since version 9.0.0 melonJS provides different build options :
+
+| build               | description |
+| ------------------- | ----------- |
+| `melonjs.js`        | a legacy ES5 UMD Bundle (directly transpiled from the ES6 version) including full API backward compatibility with previous versions |
+| `melonjs.min.js`    | a minified version of the ES5 UMD bundle version |
+| `melonjs-module.js` | a ES6 Module Bundle, for those living on the edge, and with no backward compatibility (note: this will break your game when upgrading!) |
 
 Alternatively, the latest version of melonJS can be installed through [NPM](https://www.npmjs.com/package/melonjs) :
 
@@ -165,9 +173,17 @@ Then build the melonJS source by running:
     $ npm run build
 
 The generated library will be available under the `build` directory :
-- `melonjs.js` : a plain ES5 UMD bundle
-- `melonjs.min.js` : a minified ES5 UMD bundle
-- `melonjs-module.js` : a plain ES6 module
+- `melonjs.js` : plain ES5 UMD bundle
+- `melonjs.min.js` : minified ES5 UMD bundle
+- `melonjs-module.js` : plain ES6 module
+
+To run the melonJS test suite simply use the following:
+
+    $ npm run test
+
+This will run the jasmine spec tests with the output displayed on the shell. Do
+note that the latest Chrome version is required, as the test unit will run the
+Browser in a headless mode (in case of failed tests, upgrade your browser).
 
 
 Building the documentation
@@ -177,17 +193,6 @@ Similarly, you can build your own copy of the docs locally by running :
     $ npm run doc
 
 The generated documentation will be available in the `docs` directory
-
-Testing
--------------------------------------------------------------------------------
-
-To run melonJS tests in node simply run the following:
-
-    $ npm run test
-
-This will run the jasmine spec tests with the output displayed on the shell. Do
-note that the latest Chrome version is required, as the test unit will run the
-Browser in a headless mode (in case of failed tests, upgrade your browser).
 
 WIP Builds
 -------------------------------------------------------------------------------
