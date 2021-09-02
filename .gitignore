@@ -3,9 +3,6 @@
 .settings
 .idea
 
-# Grunt files
-.grunt
-
 # Temp files
 .DS_Store
 Thumbs.db
@@ -21,7 +18,6 @@ npm-debug.log
 
 # Project specific ignore
 add-on/
-bower_components/
 node_modules/
 build/*
 docs/*
