@@ -109,19 +109,22 @@ var Container = Renderable.extend({
         };
 
         /**
+         * Specify if the container bounds should automatically take in account
+         * all child bounds when updated (this is expensive and disabled by default,
+         * only enable if necessary)
+         * @public
+         * @type Boolean
+         * @default false
+         * @name enableChildBoundsUpdate
+         * @memberOf me.Container
+         */
+        this.enableChildBoundsUpdate = false;
+
+        /**
          * Used by the debug panel plugin
          * @ignore
          */
         this.drawCount = 0;
-
-        /**
-         * The bounds that contains all its children
-         * @public
-         * @type me.Bounds
-         * @name childBounds
-         * @memberOf me.Container#
-         */
-        this.childBounds = this.getBounds().clone();
 
         // container self apply any defined transformation
         this.autoTransform = true;
@@ -133,8 +136,8 @@ var Container = Renderable.extend({
 
         // subscribe on the canvas resize event
         if (this.root === true) {
-            // XXX: Workaround for not updating container child-bounds automatically (it's expensive!)
-            event.subscribe(event.CANVAS_ONRESIZE, this.updateChildBounds.bind(this));
+            // Workaround for not updating container child-bounds automatically (it's expensive!)
+            event.subscribe(event.CANVAS_ONRESIZE, this.updateBounds.bind(this, true));
         }
     },
 
@@ -220,6 +223,11 @@ var Container = Renderable.extend({
             game.repaint();
         }
 
+        // force bounds update if required
+        if (this.enableChildBoundsUpdate) {
+            this.updateBounds(true);
+        }
+        // triggered callback if defined
         this.onChildChange.call(this, this.getChildren().length - 1);
 
         return child;
@@ -261,6 +269,11 @@ var Container = Renderable.extend({
                 game.repaint();
             }
 
+            // force bounds update if required
+            if (this.enableChildBoundsUpdate) {
+                this.updateBounds(true);
+            }
+            // triggered callback if defined
             this.onChildChange.call(this, index);
 
             return child;
@@ -510,35 +523,35 @@ var Container = Renderable.extend({
         return this.children;
     },
 
-
-
     /**
-     * resizes the child bounds rectangle, based on children bounds.
-     * @name updateChildBounds
-     * @memberOf me.Container.prototype
+     * update the bounding box for this shape.
+     * @ignore
+     * @name updateBounds
+     * @memberOf me.Renderable.prototype
      * @function
-     * @return {me.Bounds} updated child bounds
+     * @return {me.Bounds} this shape bounding box Rectangle object
      */
-    updateChildBounds : function () {
-        this.childBounds.clear();
-        var childBounds;
-        var children = this.getChildren();
-        for (var i = children.length, child; i--, (child = children[i]);) {
-            if (child.isRenderable) {
-                if (child instanceof Container) {
-                    childBounds = child.childBounds;
-                }
-                else {
-                    childBounds = child.getBounds();
-                }
-                // TODO : returns an "empty" rect instead of null (e.g. EntityObject)
-                // TODO : getBounds should always return something anyway
-                if (childBounds !== null) {
-                    this.childBounds.addBounds(childBounds);
+    updateBounds : function (forceUpdateChildBounds = false) {
+        var bounds = this.getBounds();
+
+        // call parent method
+        this._super(Renderable, "updateBounds");
+        this.updateBoundsPos(this.pos.x, this.pos.y);
+
+        if (forceUpdateChildBounds === true || this.enableChildBoundsUpdate === true) {
+
+            var children = this.getChildren();
+            for (var i = children.length, child; i--, (child = children[i]);) {
+                if (child.isRenderable) {
+                    var childBounds = child.getBounds();
+                    if (childBounds.isFinite()) {
+                        bounds.addBounds(child.getBounds());
+                    }
                 }
             }
         }
-        return this.childBounds;
+
+        return bounds;
     },
 
     /**
@@ -658,6 +671,11 @@ var Container = Renderable.extend({
                 game.repaint();
             }
 
+            // force bounds update if required
+            if (this.enableChildBoundsUpdate) {
+                this.updateBounds(true);
+            }
+            // triggered callback if defined
             this.onChildChange.call(this, childIndex);
         }
     },
@@ -897,16 +915,17 @@ var Container = Renderable.extend({
      */
     draw : function (renderer, rect) {
         var isFloating = false;
+        var bounds = this.getBounds();
 
         this.drawCount = 0;
 
         // clip the containter children to the container bounds
-        if (this.root === false && this.clipping === true && this.childBounds.isFinite() === true) {
+        if (this.root === false && this.clipping === true && bounds.isFinite() === true) {
             renderer.clipRect(
-                this.childBounds.left,
-                this.childBounds.top,
-                this.childBounds.width,
-                this.childBounds.height
+                bounds.left,
+                bounds.top,
+                bounds.width,
+                bounds.height
             );
         }
 

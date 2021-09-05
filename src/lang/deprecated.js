@@ -885,4 +885,24 @@ export function warning(deprecated, replacement, version) {
         return this.translate(v);
     };
 
+    /**
+     * The bounds that contains all its children
+     * @public
+     * @type {me.Bounds}
+     * @name childBounds
+     * @memberOf me.Container
+     * @deprecated since 9.0.0
+     * @see me.Container.getBounds
+     */
+    Object.defineProperty(me.Container.prototype, "childBounds", {
+        /**
+         * @ignore
+         */
+        get : function () {
+            warning("childBounds", "getBounds()", "9.0.0");
+            return this.getBounds();
+        },
+        configurable : false
+    });
+
 };

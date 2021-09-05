@@ -63,12 +63,12 @@ describe("me.Container", function () {
             expect(bounds.height).toEqual(100);
         });
 
-        it("me.Container childbounds return the union of all child bounds", function () {
+        it("me.Container bounds return the union of all child bounds if enabled", function () {
+            container.enableChildBoundsUpdate = true;
             container.addChild(new me.Renderable(50, 50, 100, 100));
             container.addChild(new me.Renderable(100, 100, 100, 100));
-            // update the child bounds
-            container.updateChildBounds();
-            var bounds = container.childBounds;
+
+            var bounds = container.getBounds();
             expect(bounds.x).toEqual(0); // because of default 0.5 anchor point
             expect(bounds.y).toEqual(0); // because of default 0.5 anchor point
             expect(bounds.width).toEqual(150);  // because of default 0.5 anchor point

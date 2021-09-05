@@ -594,10 +594,6 @@
                     renderer.setColor("orange");
                     renderer.stroke(this.getBounds());
 
-                    // draw the children bounding rect shape
-                    renderer.setColor("purple");
-                    renderer.stroke(this.childBounds);
-
                     renderer.restore();
                 }
             });
