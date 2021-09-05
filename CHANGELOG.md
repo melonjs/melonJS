@@ -2,10 +2,12 @@
 
 ## 9.0.0 (WIP)
 - Audio : Howler audio core update (2.2.3)
+- Core : overall code rewrite to comply with ES6 module and class semantic (at the exception of #1021) 
 - Core : melonJS build process now automatically output one ES5 umd "legacy" bundle, and one pure ES6 module
 - Core : the "legacy" es5 umd bundle is now automatically transpiled (from ES6 to ES5) using rollup and bubble
-- Core : `me.Stage` constructor now accept new argument properties to specify the `onResetEvent` and `onDestroyEvent` functions
-- Core : internal rewrite on object bound implementation, now fully using/relying on the me.Bounds object introduced in last version
+- Stage : `me.Stage` constructor now accept new argument properties to specify the `onResetEvent` and `onDestroyEvent` functions
+- Core : internal rewrite on object bound implementation, with all Renderable now fully using/relying on the me.Bounds object introduced in last version
+- Container : Containers defines an additional `enableChildBoundsUpdate` flag to enable full bounds update, including child bounds (disabled by default)
 - Tiled : add TMX `tintcolor` parsing for tile and object layers
 - TMX : fix crash when trying to add collisionType to text nodes (thanks @framp)
 - TMX : fix a regression with the Tile Layer preRender feature
