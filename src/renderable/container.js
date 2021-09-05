@@ -156,12 +156,12 @@ var Container = Renderable.extend({
 
         // delete all children
         var children = this.getChildren();
-        for (var i = children.length, obj; i >= 0; (obj = children[--i])) {
+        for (var i = children.length, child; i >= 0; (child = children[--i])) {
             // don't remove it if a persistent object
-            if (obj && !obj.isPersistent) {
-                this.removeChildNow(obj);
+            if (child && child.isPersistent !== true) {
+                this.removeChildNow(child);
             }
-        }
+        };
 
         if (typeof this.currentTransform !== "undefined") {
             // just reset some variables
@@ -285,25 +285,30 @@ var Container = Renderable.extend({
 
     /**
      * The forEach() method executes a provided function once per child element. <br>
-     * callback is invoked with three arguments: <br>
-     *    - the element value <br>
-     *    - the element index <br>
-     *    - the array being traversed <br>
+     * the callback function is invoked with three arguments: <br>
+     *    - The current element being processed in the array <br>
+     *    - The index of element in the array. <br>
+     *    - The array forEach() was called upon. <br>
      * @name forEach
      * @memberOf me.Container.prototype
      * @function
-     * @param {Function} callback
+     * @param {Function} callback fnction to execute on each element
      * @param {Object} [thisArg] value to use as this(i.e reference Object) when executing callback.
      * @example
      * // iterate through all children of the root container
-     * me.game.world.forEach(function (child) {
+     * me.game.world.forEach((child) => {
      *    // do something with the child
+     *    child.doSomething();
      * });
+     * me.game.world.forEach((child, index) => { ... });
+     * me.game.world.forEach((child, index, array) => { ... });
+     * me.game.world.forEach((child, index, array) => { ... }, thisArg);
      */
     forEach : function (callback, thisArg) {
         var context = this, i = 0;
+        var children = this.getChildren();
 
-        var len = this.getChildren().length;
+        var len = children.length;
 
         if (typeof callback !== "function") {
             throw new Error(callback + " is not a function");
@@ -314,7 +319,7 @@ var Container = Renderable.extend({
         }
 
         while (i < len) {
-            callback.call(context, this.getChildren()[i], i, this.getChildren());
+            callback.call(context, children[i], i, children);
             i++;
         }
     },
@@ -440,13 +445,13 @@ var Container = Renderable.extend({
             }
         }
 
-        for (var i = this.getChildren().length - 1; i >= 0; i--) {
-            var obj = this.getChildren()[i];
-            compare(obj, prop);
-            if (obj instanceof Container) {
-                objList = objList.concat(obj.getChildByProp(prop, value));
+        this.forEach((child) => {
+            compare(child, prop);
+            if (child instanceof Container) {
+                objList = objList.concat(child.getChildByProp(prop, value));
             }
-        }
+        });
+
         return objList;
     },
 
@@ -462,15 +467,15 @@ var Container = Renderable.extend({
     getChildByType : function (_class) {
         var objList = [];
 
-        for (var i = this.getChildren().length - 1; i >= 0; i--) {
-            var obj = this.getChildren()[i];
-            if (obj instanceof _class) {
-                objList.push(obj);
+        this.forEach((child) => {
+            if (child instanceof _class) {
+                objList.push(child);
             }
-            if (obj instanceof Container) {
-                objList = objList.concat(obj.getChildByType(_class));
+            if (child instanceof Container) {
+                objList = objList.concat(child.getChildByType(_class));
             }
-        }
+        });
+
         return objList;
     },
 
@@ -532,23 +537,20 @@ var Container = Renderable.extend({
      * @return {me.Bounds} this shape bounding box Rectangle object
      */
     updateBounds : function (forceUpdateChildBounds = false) {
-        var bounds = this.getBounds();
-
         // call parent method
         this._super(Renderable, "updateBounds");
-        this.updateBoundsPos(this.pos.x, this.pos.y);
+
+        var bounds = this.getBounds();
 
         if (forceUpdateChildBounds === true || this.enableChildBoundsUpdate === true) {
-
-            var children = this.getChildren();
-            for (var i = children.length, child; i--, (child = children[i]);) {
+            this.forEach((child) => {
                 if (child.isRenderable) {
                     var childBounds = child.getBounds();
                     if (childBounds.isFinite()) {
                         bounds.addBounds(child.getBounds());
                     }
                 }
-            }
+            });
         }
 
         return bounds;
@@ -588,8 +590,7 @@ var Container = Renderable.extend({
         this._super(Renderable, "updateBoundsPos", [ newX, newY ]);
 
         // Notify children that the parent's position has changed
-        var children = this.getChildren();
-        for (var i = children.length, child; i--, (child = children[i]);) {
+        this.forEach((child) => {
             if (child.isRenderable) {
                 child.updateBoundsPos(
                     // workaround on this.pos being updated after
@@ -598,8 +599,7 @@ var Container = Renderable.extend({
                     child.pos.y + newY - this.pos.y
                 );
             }
-        }
-
+        });
         return this.getBounds();
     },
 
@@ -607,12 +607,11 @@ var Container = Renderable.extend({
      * @ignore
      */
     onActivateEvent : function () {
-      var children = this.getChildren();
-      for (var i = children.length, child; i--, (child = children[i]);) {
-          if (typeof child.onActivateEvent === "function") {
-              child.onActivateEvent();
-          }
-      }
+        this.forEach((child) => {
+            if (typeof child.onActivateEvent === "function") {
+                child.onActivateEvent();
+            }
+        });
     },
 
     /**
@@ -690,14 +689,12 @@ var Container = Renderable.extend({
      * @param {Boolean} [recursive=false] recursively apply the value to child containers if true
      */
     setChildsProperty : function (prop, val, recursive) {
-        var children = this.getChildren();
-        for (var i = children.length; i >= 0; i--) {
-            var obj = children[i];
-            if ((recursive === true) && (obj instanceof Container)) {
-                obj.setChildsProperty(prop, val, recursive);
+        this.forEach((child) => {
+            if ((recursive === true) && (child instanceof Container)) {
+                child.setChildsProperty(prop, val, recursive);
             }
-            obj[prop] = val;
-        }
+            child[prop] = val;
+        });
     },
 
     /**
@@ -778,15 +775,13 @@ var Container = Renderable.extend({
         // do nothing if there is already a pending sort
         if (!this.pendingSort) {
             if (recursive === true) {
-                var children = this.getChildren();
-                // trigger other child container sort function (if any)
-                for (var i = children.length, obj; i--, (obj = children[i]);) {
-                    if (obj instanceof Container) {
+                this.forEach((child) => {
+                    if (child instanceof Container) {
                         // note : this will generate one defered sorting function
                         // for each existing containe
-                        obj.sort(recursive);
+                        child.sort(recursive);
                     }
-                }
+                });
             }
             /** @ignore */
             this.pendingSort = utils.function.defer(function (self) {
@@ -804,12 +799,11 @@ var Container = Renderable.extend({
      * @ignore
      */
     onDeactivateEvent : function () {
-        var children = this.getChildren();
-        for (var i = children.length, child; i--, (child = children[i]);) {
+        this.forEach((child) => {
             if (typeof child.onDeactivateEvent === "function") {
                 child.onDeactivateEvent();
             }
-        }
+        });
     },
 
     /**
