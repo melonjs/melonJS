@@ -13,10 +13,10 @@ import game from "./../game.js";
 
 /**
  * a Generic Body Object with some physic properties and behavior functionality<br>
- The body object is offten attached as a member of an Entity.  The Body object can handle movements of the parent with
- the body.update call.  It important to know that when body.update is called there are several things that happen related to
- the movement and positioning of the parent entity (assuming its an Entity).  1) The force/gravity/friction parameters are used
- to calcuate a new velocity and 2) the parent position is updated by adding this to the parent.pos (position me.Vector2d)
+ The body object is attached as a member of a Renderable.  The Body object can handle movements of the parent with
+ the body.update call.  It is important to know that when body.update is called there are several things that happen related to
+ the movement and positioning of the parent renderable object.  1) The force/gravity/friction parameters are used
+ to calculate a new velocity and 2) the parent position is updated by adding this to the parent.pos (position me.Vector2d)
  value. Thus Affecting the movement of the parent.  Look at the source code for /src/physics/body.js:update (me.Body.update) for
  a better understanding.
  * @class Body
