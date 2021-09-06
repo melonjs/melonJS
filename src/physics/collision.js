@@ -115,7 +115,7 @@ var collision = {
      * @see me.body.setCollisionMask
      * @see me.body.collisionType
      * @example
-     * // set the entity body collision type
+     * // set the body collision type
      * myEntity.body.collisionType = me.collision.types.PLAYER_OBJECT;
      *
      * // filter collision detection with collision shapes, enemies and collectables
@@ -189,12 +189,12 @@ var collision = {
     },
 
     /**
-     * Checks if the specified entity collides with others entities
+     * Checks if the specified object collides with others
      * @name check
      * @memberOf me.collision
      * @public
      * @function
-     * @param {me.Renderable} obj entity to be tested for collision
+     * @param {me.Renderable} obj object to be tested for collision
      * @param {me.collision.ResponseObject} [respObj=me.collision.response] a user defined response object that will be populated if they intersect.
      * @return {Boolean} in case of collision, false otherwise
      * @example
@@ -210,7 +210,7 @@ var collision = {
      * // colision handler
      * onCollision : function (response) {
      *     if (response.b.body.collisionType === me.collision.types.ENEMY_OBJECT) {
-     *         // makes the other entity solid, by substracting the overlap vector to the current position
+     *         // makes the other object solid, by substracting the overlap vector to the current position
      *         this.pos.sub(response.overlapV);
      *         this.hurt();
      *         // not solid

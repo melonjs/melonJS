@@ -67,7 +67,7 @@ var ImageLayer = Renderable.extend({
 
         /**
          * Define the image scrolling ratio<br>
-         * Scrolling speed is defined by multiplying the viewport delta position (e.g. followed entity) by the specified ratio.
+         * Scrolling speed is defined by multiplying the viewport delta position by the specified ratio.
          * Setting this vector to &lt;0.0,0.0&gt; will disable automatic scrolling.<br>
          * To specify a value through Tiled, use one of the following format : <br>
          * - a number, to change the value for both axis <br>

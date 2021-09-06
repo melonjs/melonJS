@@ -488,7 +488,7 @@ var Container = Renderable.extend({
      * @memberOf me.Container.prototype
      * @public
      * @function
-     * @param {String|RegExp|Number|Boolean} name entity name
+     * @param {String|RegExp|Number|Boolean} name child name
      * @return {me.Renderable[]} Array of children
      */
     getChildByName : function (name) {
@@ -503,7 +503,7 @@ var Container = Renderable.extend({
      * @memberOf me.Container.prototype
      * @public
      * @function
-     * @param {String|RegExp|Number|Boolean} GUID entity GUID
+     * @param {String|RegExp|Number|Boolean} GUID child GUID
      * @return {me.Renderable} corresponding child or null
      */
     getChildByGUID : function (guid) {

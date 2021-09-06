@@ -419,7 +419,7 @@ export class Texture {
      * );
      * ...
      * ...
-     * // add the coin sprite as renderable for the entity
+     * // create a new "coin" sprite
      * var sprite = game.texture.createSpriteFromName("coin.png");
      * // set the renderable position to bottom center
      * sprite.anchorPoint.set(0.5, 1.0);
@@ -452,7 +452,7 @@ export class Texture {
      *     me.loader.getImage("texture")
      * );
      *
-     * // create a new Sprite as renderable for the entity
+     * // create a new Animated Sprite
      * var sprite = game.texture.createAnimationFromName([
      *     "walk0001.png", "walk0002.png", "walk0003.png",
      *     "walk0004.png", "walk0005.png", "walk0006.png",
