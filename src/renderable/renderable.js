@@ -73,9 +73,6 @@ var Renderable = Rect.extend({
          *          this.body.setMaxVelocity(3, 15);
          *          this.body.setFriction(0.4, 0);
          *
-         *          // enable physic collision (off by default for basic me.Renderable)
-         *          this.isKinematic = false;
-         *
          *          // set the display to follow our position on both axis
          *          me.game.viewport.follow(this.pos, me.game.viewport.AXIS.BOTH);
          *      },
