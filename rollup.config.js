@@ -33,7 +33,8 @@ export default [
             }),
             replace({
                 '__VERSION__': pkg.version,
-                delimiters: ['', '']
+                delimiters: ['', ''],
+                preventAssignment : true
             }
             //, {
             //    '/this\._super\(\s*([\w\.]+)\s*,\s*"(\w+)"\s*(,\s*)?/g' : '$1.prototype.$2.apply(this$3',
