@@ -496,14 +496,14 @@ class Body {
 
     /**
      * By default all entities are able to collide with all other entities, <br>
-     * but it's also possible to specificy 'collision filters' to provide a finer <br>
+     * but it's also possible to specify 'collision filters' to provide a finer <br>
      * control over which entities can collide with each other.
      * @name setCollisionMask
      * @memberOf me.Body
      * @public
      * @function
      * @see me.collision.types
-     * @param {Number} bitmask the collision mask
+     * @param {Number} [bitmask = me.collision.types.ALL_OBJECT] the collision mask
      * @example
      * // filter collision detection with collision shapes, enemies and collectables
      * myEntity.body.setCollisionMask(me.collision.types.WORLD_SHAPE | me.collision.types.ENEMY_OBJECT | me.collision.types.COLLECTABLE_OBJECT);
@@ -511,8 +511,30 @@ class Body {
      * // disable collision detection with all other objects
      * myEntity.body.setCollisionMask(me.collision.types.NO_OBJECT);
      */
-    setCollisionMask(bitmask) {
+    setCollisionMask(bitmask = collision.types.ALL_OBJECT) {
         this.collisionMask = bitmask;
+    }
+
+    /**
+     * define the collision type of the body for collision filtering
+     * @name setCollisionType
+     * @memberOf me.Body
+     * @public
+     * @function
+     * @see me.collision.types
+     * @param {Number} type the collision type
+     * @example
+     * // set the body collision type
+     * myEntity.body.collisionType = me.collision.types.PLAYER_OBJECT;
+     */
+    setCollisionType(type) {
+        if (typeof type !== "undefined") {
+            if (typeof collision.types[type] !== "undefined") {
+                this.collisionType = collision.types[type];
+            } else {
+                throw new Error("Invalid value for the collisionType property");
+            }
+        }
     }
 
     /**

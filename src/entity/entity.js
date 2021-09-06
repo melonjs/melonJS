@@ -3,14 +3,14 @@ import Renderable from "./../renderable/renderable.js";
 import Sprite from "./../renderable/sprite.js";
 import Body from "./../physics/body.js";
 import Polygon from "./../shapes/poly.js";
-import collision from "./../physics/collision.js";
 
 
 /**
- * a Generic Object Entity<br>
+ * a Generic Object Entity
  * @class
  * @extends me.Renderable
  * @memberOf me
+ * @see me.Renderable
  * @constructor
  * @param {Number} x the x coordinates of the entity object
  * @param {Number} y the y coordinates of the entity object
@@ -126,19 +126,9 @@ var Entity = Renderable.extend({
             this.resize(this.body.getBounds().width, this.body.getBounds().height);
         }
 
-        // set the  collision mask if defined
-        if (typeof(settings.collisionMask) !== "undefined") {
-            this.body.setCollisionMask(settings.collisionMask);
-        }
-
-        // set the  collision mask if defined
-        if (typeof(settings.collisionType) !== "undefined") {
-            if (typeof collision.types[settings.collisionType] !== "undefined") {
-                this.body.collisionType = collision.types[settings.collisionType];
-            } else {
-                throw new Error("Invalid value for the collisionType property");
-            }
-        }
+        // set the  collision mask and type (if defined)
+        this.body.setCollisionMask(settings.collisionMask);
+        this.body.setCollisionType(settings.collisionType);
 
         // disable for entities
         this.autoTransform = false;
