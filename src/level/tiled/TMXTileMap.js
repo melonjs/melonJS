@@ -494,6 +494,9 @@ export default class TMXTileMap {
                     settings.tint.parseHex(settings.tintcolor, true);
                 }
 
+                /// XXX Clean/rewrite all this part to remove object
+                /// specific instantiation logic/details from here
+
                 // groups can contains either text, objects or layers
                 if (settings instanceof TMXLayer) {
                     // layers are already instantiated & initialized
@@ -518,12 +521,27 @@ export default class TMXTileMap {
                     // set the obj z order
                     obj.pos.setMuted(settings.x, settings.y, settings.z);
                 } else {
-                    // pull the corresponding entity from the object pool
-                    obj = pool.pull(
-                        settings.name || "me.Entity",
-                        settings.x, settings.y,
-                        settings
-                    );
+                    // pull the corresponding object from the object pool
+                    if (typeof settings.name !== "undefined" && settings.name !== "") {
+                        obj = pool.pull(
+                            settings.name,
+                            settings.x, settings.y,
+                            settings
+                        );
+                    } else {
+                        // unnamed shape object
+                        obj = pool.pull(
+                            "Renderable",
+                            settings.x, settings.y,
+                            settings.width, settings.height
+                        );
+                        obj.anchorPoint.set(0, 0);
+                        obj.name = settings.name;
+                        obj.type = settings.type;
+                        obj.id = settings.id;
+                        obj.body = new Body(obj, settings.shapes || obj.getBounds());
+                        obj.resize(obj.body.getBounds().width, obj.body.getBounds().height);
+                    }
                     // set the obj z order
                     obj.pos.z = settings.z;
                 }
