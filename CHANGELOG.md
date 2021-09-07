@@ -5,14 +5,15 @@
 - Core : overall code rewrite to comply with ES6 module and class semantic (at the exception of #1021)
 - Core : melonJS build process now automatically output one ES5 umd "legacy" bundle, and one pure ES6 module
 - Core : the "legacy" es5 umd bundle is now automatically transpiled (from ES6 to ES5) using rollup and bubble
-- Stage : `me.Stage` constructor now accept new argument properties to specify the `onResetEvent` and `onDestroyEvent` functions
 - Core : internal rewrite on object bound implementation, with all Renderable now fully using/relying on the me.Bounds object introduced in last version
 - Container : Containers defines an additional `enableChildBoundsUpdate` flag to enable full bounds update, including child bounds (disabled by default)
+- Renderer : WebGL2 is now the default mode when using the WebGL renderer (use `preferWebGL1 = true` calling me.video.init if you need to force WebGL1)
 - Tiled : add TMX `tintcolor` parsing for tile and object layers
+- Stage : `me.Stage` constructor now accept new argument properties to specify the `onResetEvent` and `onDestroyEvent` functions
 - TMX : fix crash when trying to add collisionType to text nodes (thanks @framp)
 - TMX : fix a regression with the Tile Layer preRender feature
 - TMX : fix tile properties import for the new Tiled JSON format (thanks @3ck0o)
-- TMS : "unnamed" object in Tiled will now instantiate base Renderable object (with a physic body) rather than an "sprite-less" Entity object
+- TMX : "unnamed" object in Tiled will now instantiate base Renderable object (with a physic body) rather than an "sprite-less" Entity object
 - Tween: allow to pass a set of tween properties to the '.to' method instead of just the duration (thanks @0xf0f0f0)
 
 ## 8.0.1 (12 Aug 2020)

@@ -27,7 +27,7 @@ import { isPowerOfTwo, nextPowerOfTwo, TAU } from "./../../math/math.js";
  * @param {Boolean} [options.failIfMajorPerformanceCaveat=true] If true, the renderer will switch to CANVAS mode if the performances of a WebGL context would be dramatically lower than that of a native application making equivalent OpenGL calls.
  * @param {Boolean} [options.transparent=false] Whether to enable transparency on the canvas (performance hit when enabled)
  * @param {Boolean} [options.subPixel=false] Whether to enable subpixel renderering (performance hit when enabled)
- * @param {Boolean} [options.preferWebGL1=true] if false the renderer will try to use WebGL 2 if supported
+ * @param {Boolean} [options.preferWebGL1=false] if true the renderer will only use WebGL 1
  * @param {String} [options.powerPreference="default"] a hint to the user agent indicating what configuration of GPU is suitable for the WebGL context ("default", "high-performance", "low-power"). To be noted that Safari and Chrome (since version 80) both default to "low-power" to save battery life and improve the user experience on these dual-GPU machines.
  * @param {Number} [options.zoomX=width] The actual width of the canvas with scaling applied
  * @param {Number} [options.zoomY=height] The actual height of the canvas with scaling applied

@@ -25,7 +25,7 @@ var settings = {
     antiAlias : false,
     failIfMajorPerformanceCaveat : true,
     subPixel : false,
-    preferWebGL1 : true,
+    preferWebGL1 : false,
     powerPreference : "default",
     verbose : false,
     consoleHeader : true
@@ -126,7 +126,7 @@ var video = {
      * @param {Boolean} [options.doubleBuffering=false] enable/disable double buffering
      * @param {Number|String} [options.scale=1.0] enable scaling of the canvas ('auto' for automatic scaling)
      * @param {String} [options.scaleMethod="fit"] screen scaling modes ('fit','fill-min','fill-max','flex','flex-width','flex-height','stretch')
-     * @param {Boolean} [options.preferWebGL1=true] if false the renderer will try to use WebGL 2 if supported
+     * @param {Boolean} [options.preferWebGL1=false] if true the renderer will only use WebGL 1
      * @param {String} [options.powerPreference="default"] a hint to the user agent indicating what configuration of GPU is suitable for the WebGL context ("default", "high-performance", "low-power"). To be noted that Safari and Chrome (since version 80) both default to "low-power" to save battery life and improve the user experience on these dual-GPU machines.
      * @param {Boolean} [options.transparent=false] whether to allow transparent pixels in the front buffer (screen).
      * @param {Boolean} [options.antiAlias=false] whether to enable or not video scaling interpolation
@@ -187,8 +187,8 @@ var video = {
         var uriFragment = utils.getUriFragment();
         if (uriFragment.webgl === true || uriFragment.webgl1 === true || uriFragment.webgl2 === true) {
             settings.renderer = this.WEBGL;
-            if (uriFragment.webgl2 === true) {
-                settings.preferWebGL1 = false;
+            if (uriFragment.webgl1 === true) {
+                settings.preferWebGL1 = true;
             }
         }
 
