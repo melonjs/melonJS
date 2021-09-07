@@ -389,25 +389,27 @@
                     // draw the sprite rectangle
                     if (me.debug.renderHitBox) {
 
-                        var absolutePosition = this.ancestor.getAbsolutePosition();
+                        if (typeof this.ancestor !== "undefined") {
+                            var absolutePosition = this.ancestor.getAbsolutePosition();
 
-                        if (!this.ancestor.root && this.ancestor.floating) {
-                            renderer.translate(
-                                -absolutePosition.x,
-                                -absolutePosition.y
-                            );
-                        }
+                            if (!this.ancestor.root && this.ancestor.floating) {
+                                renderer.translate(
+                                    -absolutePosition.x,
+                                    -absolutePosition.y
+                                );
+                            }
 
-                        // draw the sprite bounds
-                        renderer.setColor("green");
-                        renderer.stroke(this.getBounds());
+                            // draw the sprite bounds
+                            renderer.setColor("green");
+                            renderer.stroke(this.getBounds());
 
 
-                        if (!this.ancestor.root && this.ancestor.floating) {
-                            renderer.translate(
-                                absolutePosition.x,
-                                absolutePosition.y
-                            );
+                            if (!this.ancestor.root && this.ancestor.floating) {
+                                renderer.translate(
+                                    absolutePosition.x,
+                                    absolutePosition.y
+                                );
+                            }
                         }
 
                         // the sprite mask if defined
@@ -453,7 +455,7 @@
                         renderer.save();
                     }
 
-                    renderer.setColor("orange");
+                    renderer.setColor("green");
                     renderer.stroke(bounds);
                     _this.counters.inc("bounds");
 
@@ -473,28 +475,10 @@
                     if (typeof this.ancestor === "undefined") {
                         renderer.save();
                     }
-                    renderer.setColor("orange");
+                    renderer.setColor("green");
                     renderer.stroke(this.getBounds());
                     _this.counters.inc("bounds");
-                    if (typeof this.ancestor === "undefined") {
-                        renderer.restore();
-                    }
-                }
-            });
 
-            // patch font.js
-            me.plugin.patch(me.Text, "drawStroke", function (renderer, text, x, y) {
-                // call the original me.Font.drawStroke function
-                this._patched.apply(this, arguments);
-
-                // draw the font rectangle
-                if (_this.visible && me.debug.renderHitBox) {
-                    if (typeof this.ancestor === "undefined") {
-                        renderer.save();
-                    }
-                    renderer.setColor("orange");
-                    renderer.stroke(this.getBounds());
-                    _this.counters.inc("bounds");
                     if (typeof this.ancestor === "undefined") {
                         renderer.restore();
                     }
