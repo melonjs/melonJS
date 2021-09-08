@@ -575,6 +575,47 @@ class Body {
     }
 
     /**
+     * The forEach() method executes a provided function once per body shape element. <br>
+     * the callback function is invoked with three arguments: <br>
+     *    - The current element being processed in the array <br>
+     *    - The index of element in the array. <br>
+     *    - The array forEach() was called upon. <br>
+     * @name forEach
+     * @memberOf me.Body.prototype
+     * @function
+     * @param {Function} callback fnction to execute on each element
+     * @param {Object} [thisArg] value to use as this(i.e reference Object) when executing callback.
+     * @example
+     * // iterate through all shapes of the physic body
+     * mySprite.body.forEach((shape) => {
+     *    shape.doSomething();
+     * });
+     * mySprite.body.forEach((shape, index) => { ... });
+     * mySprite.body.forEach((shape, index, array) => { ... });
+     * mySprite.body.forEach((shape, index, array) => { ... }, thisArg);
+     */
+    forEach(callback, thisArg) {
+        var context = this, i = 0;
+        var shapes = this.shapes;
+
+        var len = shapes.length;
+
+        if (typeof callback !== "function") {
+            throw new Error(callback + " is not a function");
+        }
+
+        if (arguments.length > 1) {
+            context = thisArg;
+        }
+
+        while (i < len) {
+            callback.call(context, shapes[i], i, shapes);
+            i++;
+        }
+    }
+
+
+    /**
      * Returns true if the any of the shape composing the body contains the given point.
      * @name contains
      * @memberOf me.Body
@@ -606,11 +647,12 @@ class Body {
         }
 
         if (this.getBounds().contains(_x, _y)) {
-            for (var i = this.shapes.length, shape; i--, (shape = this.shapes[i]);) {
+             // cannot use forEach here as cannot break out with a return
+             for (var i = this.shapes.length, shape; i--, (shape = this.shapes[i]);) {
                 if (shape.contains(_x, _y)) {
                     return true;
                 }
-            }
+            };
         }
         return false;
     }
@@ -627,8 +669,7 @@ class Body {
      */
     rotate(angle, v = this.getBounds().center) {
         this.bounds.clear();
-        for (var i = 0; i < this.shapes.length; i++) {
-            var shape = this.shapes[i];
+        this.forEach((shape) => {
             shape.rotate(angle, v);
             this.bounds.addBounds(shape.getBounds());
             if (shape instanceof Ellipse) {
@@ -640,7 +681,7 @@ class Body {
             } else {
                 this.bounds.translate(shape.pos);
             }
-        }
+        });
         return this;
     }
 
