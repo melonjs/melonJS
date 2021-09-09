@@ -136,7 +136,7 @@ export function warning(deprecated, replacement, version) {
         /** @ignore */
         init: function (settings) {
             // super constructor
-            this._super(me.Stage, "init", settings);
+            this._super(me.Stage, "init", [settings]);
             // deprecation warning
             warning("me.ScreenObject", "me.Stage", "6.2.0");
         }
@@ -904,5 +904,39 @@ export function warning(deprecated, replacement, version) {
         },
         configurable : false
     });
+
+    /**
+     * @class me.CollectableEntity
+     * @deprecated since 9.0.0
+     * @see me.Collectable
+     */
+    me.CollectableEntity = me.Collectable.extend({
+        /** @ignore */
+        init: function (x, y, settings) {
+            // super constructor
+            this._super(me.Collectable, "init", [x, y, settings]);
+            // deprecation warning
+            warning("me.CollectableEntity", "me.Collectable", "9.0.0");
+        }
+    });
+
+    /**
+     * @class me.LevelEntity
+     * @deprecated since 9.0.0
+     * @see me.Trigger
+     */
+    me.LevelEntity = me.Trigger.extend({
+        /** @ignore */
+        init: function (x, y, settings) {
+            // super constructor
+            this._super(me.Trigger, "init", [x, y, settings]);
+            // deprecation warning
+            warning("me.LevelEntity", "me.Trigger", "9.0.0");
+        }
+    });
+
+    // corresponding entry in the object pool
+    me.pool.register("me.CollectableEntity", me.CollectableEntity);
+    me.pool.register("me.LevelEntity", me.LevelEntity);
 
 };

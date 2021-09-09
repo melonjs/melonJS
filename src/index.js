@@ -54,6 +54,8 @@ import ColorLayer from "./renderable/colorlayer.js";
 import ImageLayer from "./renderable/imagelayer.js";
 import Sprite from "./renderable/sprite.js";
 import GUI_Object from "./renderable/GUI.js";
+import Collectable from "./renderable/collectable.js";
+import Trigger from "./renderable/trigger.js";
 import TMXRenderer from "./level/tiled/renderer/TMXRenderer.js";
 import TMXOrthogonalRenderer from "./level/tiled/renderer/TMXOrthogonalRenderer.js";
 import TMXIsometricRenderer from "./level/tiled/renderer/TMXIsometricRenderer.js";
@@ -72,8 +74,6 @@ import World from "./physics/world.js";
 import ParticleEmitter from "./particles/emitter.js";
 import Particle from "./particles/particle.js";
 import Entity from "./entity/entity.js";
-import CollectableEntity from "./entity/collectable_entity.js";
-import LevelEntity from "./entity/level_entity.js";
 import DraggableEntity from "./entity/draggable.js";
 import DroptargetEntity from "./entity/droptarget.js";
 
@@ -153,6 +153,8 @@ export {
     ImageLayer,
     Sprite,
     GUI_Object,
+    Collectable,
+    Trigger,
     TMXRenderer,
     TMXOrthogonalRenderer,
     TMXIsometricRenderer,
@@ -171,8 +173,6 @@ export {
     ParticleEmitter,
     Particle,
     Entity,
-    CollectableEntity,
-    LevelEntity,
     DraggableEntity,
     DroptargetEntity
 };
@@ -223,8 +223,8 @@ export function boot() {
 
     // register all built-ins objects into the object pool
     pool.register("me.Entity", Entity);
-    pool.register("me.CollectableEntity", CollectableEntity);
-    pool.register("me.LevelEntity", LevelEntity);
+    pool.register("me.Collectable", Collectable);
+    pool.register("me.Trigger", Trigger);
     pool.register("me.Tween", Tween, true);
     pool.register("me.Color", Color, true);
     pool.register("me.Particle", Particle, true);
@@ -249,8 +249,8 @@ export function boot() {
 
     // duplicate all entries if use with no namespace (e.g. es6)
     pool.register("Entity", Entity);
-    pool.register("CollectableEntity", CollectableEntity);
-    pool.register("LevelEntity", LevelEntity);
+    pool.register("Collectable", Collectable);
+    pool.register("Trigger", Trigger);
     pool.register("Tween", Tween, true);
     pool.register("Color", Color, true);
     pool.register("Particle", Particle, true);
