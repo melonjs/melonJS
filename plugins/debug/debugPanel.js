@@ -541,7 +541,7 @@
                     }
 
                     if (me.debug.renderVelocity && (this.body.vel.x || this.body.vel.y)) {
-                        var bounds = this.getBounds()
+                        var bounds = this.getBounds();
                         var hWidth = bounds.width / 2;
                         var hHeight = bounds.height / 2;
 
