@@ -322,7 +322,7 @@ var collision = {
         for (var i = candidates.length, objB; i--, (objB = candidates[i]);) {
 
             // fast AABB check if both bounding boxes are overlaping
-            if (objB.body && line.getBounds().overlaps(objB.body.getBounds())) {
+            if (objB.body && line.getBounds().overlaps(objB.getBounds())) {
 
                 // go trough all defined shapes in B (if any)
                 var bLen = objB.body.shapes.length;
