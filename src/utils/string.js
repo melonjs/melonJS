@@ -45,7 +45,7 @@ export function trimRight(str) {
 };
 
 /**
- * returns true if the given string contains a numeric value
+ * returns true if the given string contains a numeric (integer) value
  * @public
  * @function
  * @memberOf me.utils.string
@@ -54,7 +54,10 @@ export function trimRight(str) {
  * @return {Boolean} true if string contains only digits
  */
 export function isNumeric(str) {
-    return (!isNaN(str) && str.trim() !== "");
+    if (typeof str === "string") {
+        str = str.trim();
+    }
+    return !isNaN(str) && /^\d+$/.test(str);
 };
 
 /**

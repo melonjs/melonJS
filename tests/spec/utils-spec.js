@@ -65,5 +65,21 @@ describe("utils", function () {
         it("capitalize", function () {
             expect(me.utils.string.capitalize("capitalize")).toEqual("Capitalize");
         });
+
+        it("isNumeric", function () {
+            expect(me.utils.string.isNumeric("123")).toEqual(true);
+            expect(me.utils.string.isNumeric(" 123")).toEqual(true);
+            expect(me.utils.string.isNumeric("123 ")).toEqual(true);
+            expect(me.utils.string.isNumeric("")).toEqual(false);
+            expect(me.utils.string.isNumeric(null)).toEqual(false);
+            expect(me.utils.string.isNumeric(undefined)).toEqual(false);
+            expect(me.utils.string.isNumeric("12 3")).toEqual(false);
+            expect(me.utils.string.isNumeric("ab2c")).toEqual(false);
+            expect(me.utils.string.isNumeric("12-3")).toEqual(false);
+            expect(me.utils.string.isNumeric("12.3")).toEqual(false);
+            expect(me.utils.string.isNumeric("12,3")).toEqual(false);
+            expect(me.utils.string.isNumeric("-123")).toEqual(false);
+            expect(me.utils.string.isNumeric("+123")).toEqual(false);
+        });
     });
 });
