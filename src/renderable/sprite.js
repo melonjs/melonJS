@@ -326,7 +326,7 @@ var Sprite = Renderable.extend({
                     counter++;
                 }
             } else { // string
-                if (this.atlasIndices === null) {
+                if (this.source.getFormat().includes("Spritesheet")) {
                     throw new Error(
                         "string parameters for addAnimation are not allowed for standard spritesheet based Texture"
                     );

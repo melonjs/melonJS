@@ -339,6 +339,17 @@ export class Texture {
     }
 
     /**
+     * return the format of the atlas dictionnary
+     * @name getFormat
+     * @memberOf me.Renderer.Texture
+     * @function
+     * @return {String} will return "texturepacker", or "ShoeBox", or "melonJS", or "Spritesheet (fixed cell size)"
+     */
+    getFormat() {
+        return this.format;
+    }
+
+    /**
      * return the source texture for the given region (or default one if none specified)
      * @name getTexture
      * @memberOf me.Renderer.Texture
