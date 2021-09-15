@@ -75,7 +75,7 @@
     "rollup": "^2.56.3",
     "rollup-plugin-bundle-size": "^1.0.3",
     "rollup-plugin-string": "^3.0.0",
-    "terser": "^5.7.2"
+    "terser": "^5.8.0"
   },
   "scripts": {
     "build": "npm run lint && rollup -c --silent --sourcemap",
