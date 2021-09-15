@@ -454,10 +454,8 @@ var Sprite = Renderable.extend({
      * mySprite.setRegion(game.texture.getRegion("shadedDark13.png"));
      */
     setRegion : function (region) {
-        if (this.source !== null) {
-            // set the source texture for the given region
-            this.image = this.source.getTexture(region);
-        }
+        // set the source texture for the given region
+        this.image = this.source.getTexture(region);
         // set the sprite offset within the texture
         this.current.offset.setV(region.offset);
         // set angle if defined
