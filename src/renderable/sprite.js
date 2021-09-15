@@ -158,8 +158,6 @@ var Sprite = Renderable.extend({
         if (typeof(settings.atlas) !== "undefined") {
             this.textureAtlas = settings.atlas;
             this.atlasIndices = settings.atlasIndices;
-        } else {
-            this.atlasIndices = null;
         }
 
         // resize based on the active frame
