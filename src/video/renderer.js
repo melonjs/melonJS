@@ -259,11 +259,11 @@ class Renderer {
     }
 
     /**
-     * check if the given bounds overlaps with the renderer screen coordinates
+     * check if the given rect or bounds overlaps with the renderer screen coordinates
      * @name overlaps
      * @memberOf me.Renderer.prototype
      * @function
-     * @param  {me.Rect\me.Bounds} bounds
+     * @param  {me.Rect|me.Bounds} bounds
      * @return {boolean} true if overlaps
      */
     overlaps(bounds) {
