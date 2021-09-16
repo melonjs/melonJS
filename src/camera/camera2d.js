@@ -697,7 +697,6 @@ var Camera2d = Renderable.extend({
         // fading effect
         if (this._fadeIn.tween) {
             // add an overlay
-            // TODO use the tint feature once implemented in Canvas mode
             renderer.save();
             // reset all transform so that the overaly cover the whole camera area
             renderer.resetTransform();
@@ -715,7 +714,6 @@ var Camera2d = Renderable.extend({
         // flashing effect
         if (this._fadeOut.tween) {
             // add an overlay
-            // TODO use the tint feature once implemented in Canvas mode
             renderer.save();
             // reset all transform so that the overaly cover the whole camera area
             renderer.resetTransform();
