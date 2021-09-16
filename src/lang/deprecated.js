@@ -623,6 +623,7 @@ export function warning(deprecated, replacement, version) {
     /**
      * @namespace me.levelDirector
      * @deprecated since 9.0.0
+     * @see me.level
      */
     me.levelDirector = me.levelDirector || {};
 
