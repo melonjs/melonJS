@@ -91,9 +91,6 @@ class Renderer {
         // default uvOffset
         this.uvOffset = 0;
 
-        // the parent container bouds
-        this.parentBounds = new Rect(0, 0, 0, 0);
-
         this.Texture = Texture;
 
         // reset the instantiated renderer on game reset
