@@ -15,7 +15,7 @@ import Renderable from "./renderable.js";
  * @param {Number} x the x coordinates of the sprite object
  * @param {Number} y the y coordinates of the sprite object
  * @param {Object} settings Configuration parameters for the Sprite object
- * @param {me.video.renderer.Texture|HTMLImageElement|HTMLCanvasElement|String} settings.image reference to a texture, spritesheet image or to a texture atlas
+ * @param {me.Renderer.Texture|HTMLImageElement|HTMLCanvasElement|String} settings.image reference to a texture, spritesheet image or to a texture atlas
  * @param {String} [settings.name=""] name of this object
  * @param {String} [settings.region] region name of a specific region to use when using a texture atlas, see {@link me.Renderer.Texture}
  * @param {Number} [settings.framewidth] Width of a single frame within the spritesheet
@@ -80,7 +80,7 @@ var Sprite = Renderable.extend({
         /**
          * The source texture object this sprite object is using
          * @public
-         * @type me.video.renderer.Texture
+         * @type me.Renderer.Texture
          * @name source
          * @memberOf me.Sprite#
          */

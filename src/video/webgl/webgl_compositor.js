@@ -382,7 +382,7 @@ class WebGLCompositor {
      * @name addQuad
      * @memberOf me.WebGLCompositor
      * @function
-     * @param {me.video.renderer.Texture} texture Source texture
+     * @param {me.Renderer.Texture} texture Source texture
      * @param {String} key Source texture region name
      * @param {Number} x Destination x-coordinate
      * @param {Number} y Destination y-coordinate

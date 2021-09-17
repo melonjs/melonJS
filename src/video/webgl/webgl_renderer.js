@@ -262,7 +262,7 @@ class WebGLRenderer extends Renderer {
      * @function
      * @param {image} image Source image
      * @param {String} repeat Define how the pattern should be repeated
-     * @return {me.video.renderer.Texture}
+     * @return {me.Renderer.Texture}
      * @see me.ImageLayer#repeat
      * @example
      * var tileable   = renderer.createPattern(image, "repeat");
@@ -432,7 +432,7 @@ class WebGLRenderer extends Renderer {
      * @name drawPattern
      * @memberOf me.WebGLRenderer.prototype
      * @function
-     * @param {me.video.renderer.Texture} pattern Pattern object
+     * @param {me.Renderer.Texture} pattern Pattern object
      * @param {Number} x
      * @param {Number} y
      * @param {Number} width
