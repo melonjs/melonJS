@@ -6,6 +6,7 @@
 - Core : melonJS build process now automatically output one ES5 umd "legacy" bundle, and one pure ES6 module
 - Core : the "legacy" es5 umd bundle is now automatically transpiled (from ES6 to ES5) using rollup and bubble
 - Core : internal rewrite on object bound implementation, with all Renderable now fully using/relying on the me.Bounds object introduced in last version
+- Container : Unified bound management between Container and Renderable (Container now follow its parent Renderable implementation)
 - Container : Containers defines an additional `enableChildBoundsUpdate` flag to enable full bounds update, including child bounds (disabled by default)
 - Entity : me.CollectableEntity is now deprecated and replaced by a more generic `me.Collectable` base object that do not extend me.Entity anymore
 - Entity : me.LevelEntity is now deprecated and replaced by a more generic `me.Trigger` objects that do not extend me.Entity anymore
