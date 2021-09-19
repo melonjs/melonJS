@@ -166,8 +166,10 @@ var Renderable = Rect.extend({
         /**
          * The anchor point is used for attachment behavior, and/or when applying transformations.<br>
          * The coordinate system places the origin at the top left corner of the frame (0, 0) and (1, 1) means the bottom-right corner<br>
-         * <img src="images/anchor_point.png"/> :<br>
+         * <img src="images/anchor_point.png"/><br>
          * a Renderable's anchor point defaults to (0.5,0.5), which corresponds to the center position.<br>
+         * <br>
+         * <i><b>Note:</b> Object created through Tiled will have their anchorPoint set to (0, 0) to match Tiled Level editor implementation</i>
          * @public
          * @type me.ObservableVector2d
          * @default <0.5,0.5>

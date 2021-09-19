@@ -21,7 +21,7 @@ import Polygon from "./../shapes/poly.js";
  * @param {String} [settings.name] object entity name
  * @param {String} [settings.id] object unique IDs
  * @param {Image|String} [settings.image] resource name of a spritesheet to use for the entity renderable component
- * @param {me.Vector2d} [settings.anchorPoint=0.0] Entity anchorpoint
+ * @param {me.Vector2d} [settings.anchorPoint=0.0] Entity anchor point
  * @param {Number} [settings.framewidth=settings.width] width of a single frame in the given spritesheet
  * @param {Number} [settings.frameheight=settings.width] height of a single frame in the given spritesheet
  * @param {String} [settings.type] object type
