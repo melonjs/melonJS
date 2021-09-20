@@ -1,5 +1,6 @@
 import Sprite from "./sprite.js";
 import Body from "./../physics/body.js";
+import Rect from "./../shapes/rectangle.js";
 import collision from "./../physics/collision.js";
 
 /**
@@ -25,7 +26,7 @@ var Collectable = Sprite.extend({
         this.id = settings.id;
 
         // add and configure the physic body
-        this.body = new Body(this, settings.shapes || this.getBounds());
+        this.body = new Body(this, settings.shapes || new Rect(0, 0, this.width, this.height));
         this.body.collisionType = collision.types.COLLECTABLE_OBJECT;
 
         // Update anchorPoint

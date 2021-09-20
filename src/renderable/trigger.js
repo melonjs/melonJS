@@ -1,6 +1,7 @@
 import Renderable from "./renderable.js";
 import collision from "./../physics/collision.js";
 import Body from "./../physics/body.js";
+import Rect from "./../shapes/rectangle.js";
 import level from "./../level/level.js";
 import game from "./../game.js";
 
@@ -69,7 +70,7 @@ var Trigger = Renderable.extend({
 
 
         // physic body to check for collision against
-        this.body = new Body(this, settings.shapes || this.getBounds());
+        this.body = new Body(this, settings.shapes || new Rect(0, 0, this.width, this.height));
         this.body.collisionType = collision.types.ACTION_OBJECT;
         this.resize(this.body.getBounds().width, this.body.getBounds().height);
 

@@ -1,3 +1,6 @@
+import Vector2d from "./../math/vector2.js";
+import Polygon from "./../shapes/poly.js";
+
 /**
  * @classdesc
  * a bound object contains methods for creating and manipulating axis-aligned bounding boxes (AABB).
@@ -27,7 +30,7 @@ class Bounds {
         }
 
         // @ignore
-        this._center = new me.Vector2d();
+        this._center = new Vector2d();
     }
 
     /**
@@ -38,6 +41,7 @@ class Bounds {
      */
     clear() {
         this.setMinMax(Infinity, Infinity, -Infinity, -Infinity);
+
     }
 
     /**
@@ -438,6 +442,22 @@ class Bounds {
         var bounds = new Bounds();
         bounds.addBounds(this);
         return bounds;
+    }
+
+    /**
+     * Returns a polygon whose edges are the same as this bounds.
+     * @name toPolygon
+     * @memberOf me.Bounds
+     * @function
+     * @return {me.Polygon} a new Polygon that represents this bounds.
+     */
+    toPolygon () {
+        return new Polygon(this.x, this.y, [
+            new Vector2d(0,          0),
+            new Vector2d(this.width, 0),
+            new Vector2d(this.width, this.height),
+            new Vector2d(0,          this.height)
+        ]);
     }
 
 };

@@ -14,6 +14,7 @@ import TMXLayer from "./TMXLayer.js";
 import { applyTMXProperties } from "./TMXUtils.js";
 import Renderable from "./../../renderable/renderable.js";
 import Container from "./../../renderable/container.js";
+import Rect from "./../../shapes/rectangle.js";
 
 // constant to identify the collision object layer
 var COLLISION_GROUP = "collision";
@@ -517,7 +518,7 @@ export default class TMXTileMap {
                 } else if (typeof settings.tile === "object") {
                     // check if a me.Tile object is embedded
                     obj = settings.tile.getRenderable(settings);
-                    obj.body = new Body(obj, settings.shapes || obj.getBounds());
+                    obj.body = new Body(obj, settings.shapes || new Rect(0, 0, this.width, this.height));
                     // set the obj z order
                     obj.pos.setMuted(settings.x, settings.y, settings.z);
                 } else {
@@ -539,7 +540,7 @@ export default class TMXTileMap {
                         obj.name = settings.name;
                         obj.type = settings.type;
                         obj.id = settings.id;
-                        obj.body = new Body(obj, settings.shapes || obj.getBounds());
+                        obj.body = new Body(obj, settings.shapes || new Rect(0, 0, obj.width, obj.height));
                         obj.resize(obj.body.getBounds().width, obj.body.getBounds().height);
                     }
                     // set the obj z order

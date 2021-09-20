@@ -23,7 +23,7 @@ import game from "./../game.js";
  * @memberOf me
  * @constructor
  * @param {me.Renderable} ancestor the parent object this body is attached to
- * @param {me.Rect|me.Rect[]|me.Polygon|me.Polygon[]|me.Line|me.Line[]|me.Ellipse|me.Ellipse[]|Object} [shapes] a initial shape, list of shapes, or JSON object defining the body
+ * @param {me.Rect|me.Rect[]|me.Polygon|me.Polygon[]|me.Line|me.Line[]|me.Ellipse|me.Ellipse[]|me.Bounds|me.Bounds[]|Object} [shapes] a initial shape, list of shapes, or JSON object defining the body
  * @param {Function} [onBodyUpdate] callback for when the body is updated (e.g. add/remove shapes)
  */
 class Body {
@@ -301,7 +301,7 @@ class Body {
      * @memberOf me.Body
      * @public
      * @function
-     * @param {me.Rect|me.Polygon|me.Line|me.Ellipse|Object} shape a shape or JSON object
+     * @param {me.Rect|me.Polygon|me.Line|me.Ellipse|me.Bounds|Object} shape a shape or JSON object
      * @param {Boolean} batchInsert if true the body bounds won't be updated after adding a shape
      * @return {Number} the shape array length
      * @example
@@ -311,12 +311,12 @@ class Body {
      * this.body.addShape(me.loader.getJSON("shapesdef").banana);
      */
     addShape(shape) {
-        if (shape instanceof Rect) {
+        if (shape instanceof Rect || shape instanceof Bounds) {
             var poly = shape.toPolygon();
             this.shapes.push(poly);
             // update the body bounds
             this.bounds.add(poly.points);
-            this.bounds.translate(shape.pos);
+            this.bounds.translate(poly.pos);
         } else if (shape instanceof Ellipse) {
             if (!this.shapes.includes(shape)) {
                 // see removeShape
