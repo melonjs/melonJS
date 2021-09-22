@@ -73,7 +73,7 @@ var audio = {
      * @memberOf me.audio
      * @public
      * @function
-     * @param {String} [audioFormat="mp3"] audio format provided
+     * @param {String} [audioFormat="mp3"] audio format to prioritize
      * @return {Boolean} Indicates whether audio initialization was successful
      * @example
      * // initialize the "sound engine", giving "webm" as default desired audio format, and "mp3" as a fallback
@@ -94,9 +94,21 @@ var audio = {
         return !Howler.noAudio;
     },
 
+
+    /**
+     * return true if the given audio format is supported
+     * @name hasFormat
+     * @param {String} format audio format : "mp3", "mpeg", opus", "ogg", "oga", "wav", "aac", "caf", "m4a", "m4b", "mp4", "weba", "webm", "dolby", "flac"
+     * @memberOf me.audio
+     * @public
+     * @function
+     */
+    hasFormat:function (codec) {
+        return this.hasAudio && Howler.codecs(codec);
+    },
+
     /**
      * return true if audio (HTML5 or WebAudio) is supported
-     * @see me.audio#hasAudio
      * @name hasAudio
      * @memberOf me.audio
      * @public
@@ -109,7 +121,6 @@ var audio = {
     /**
      * enable audio output <br>
      * only useful if audio supported and previously disabled through
-     *
      * @see me.audio#disable
      * @name enable
      * @memberOf me.audio
