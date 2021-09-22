@@ -77,6 +77,19 @@ describe("me.Matrix3d", function () {
         expect(matA.tz === 6).toEqual(true);
     });
 
+    it("a 2d vector should translate all values properly", function () {
+        var matA = new me.Matrix3d(1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 1, 2, 3, 1);
+        var result = "me.Matrix3d(1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 2, 4, 3, 1)";
+        var vecA = new me.Vector2d(1, 2);
+
+        matA.translate(vecA);
+
+        expect(matA.toString() === result).toEqual(true);
+        expect(matA.tx === 2).toEqual(true);
+        expect(matA.ty === 4).toEqual(true);
+        expect(matA.tz === 3).toEqual(true); // did not change
+    });
+
     it("should transpose the matrix properly", function () {
         var matA = new me.Matrix3d(1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 1, 2, 3, 1);
         var result = "me.Matrix3d(1, 0, 0, 1, 0, 1, 0, 2, 0, 0, 1, 3, 0, 0, 0, 1)";

@@ -11,6 +11,7 @@
 - Entity : me.CollectableEntity is now deprecated and replaced by a more generic `me.Collectable` base object that do not extend me.Entity anymore
 - Entity : me.LevelEntity is now deprecated and replaced by a more generic `me.Trigger` objects that do not extend me.Entity anymore
 - Math : add missing `applyInverse()` method to the Matrix3d implementation
+- Math : fix Matrix3d translate method when passing a 2d vector as argument
 - Renderable : fix Renderables bounds not correctly respecting the anchor point.
 - Renderer : WebGL2 is now the default mode when using the WebGL renderer (use `preferWebGL1 = true` calling me.video.init if you need to force WebGL1)
 - Tiled : add TMX `tintcolor` parsing for tile and object layers

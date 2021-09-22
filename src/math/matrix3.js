@@ -335,7 +335,7 @@ class Matrix3d {
      applyInverse(v) {
          // invert the current matrix
          var im = pool.pull("Matrix3d", this).invert();
-         
+
          // apply the inverted matrix
          im.apply(v);
 
@@ -564,7 +564,7 @@ class Matrix3d {
             // 2d/3d vector
             _x = arguments[0].x;
             _y = arguments[0].y;
-            _z = typeof(arguments[0].z) === "undefined" ? _y : arguments[0].z;
+            _z = typeof(arguments[0].z) === "undefined" ? 0 : arguments[0].z;
         }
 
         a[12] = a[0] * _x + a[4] * _y + a[8] * _z + a[12];
