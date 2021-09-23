@@ -12,8 +12,8 @@ import pool from "./../system/pooling.js";
  */
 class Vector2d {
 
-    constructor(x, y) {
-        this.onResetEvent(x, y);
+    constructor(...args) {
+        this.onResetEvent(...args);
     }
 
     /**

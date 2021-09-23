@@ -182,8 +182,8 @@ var cssToRGB = new Map();
  */
 class Color {
 
-    constructor(r, g, b, alpha) {
-        this.onResetEvent(r, g, b, alpha);
+    constructor(...args) {
+        this.onResetEvent(...args);
     }
 
     /**
