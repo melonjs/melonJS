@@ -151,8 +151,8 @@ class Matrix2d {
      * @param {me.Matrix3d} m the matrix object to copy from
      * @return {me.Matrix2d} Reference to this object for method chaining
      */
-    fromMat3d(b) {
-        b = b.val;
+    fromMat3d(m) {
+        var b = m.val;
         var a = this.val;
 
         a[0] = b[0];
@@ -173,11 +173,11 @@ class Matrix2d {
      * @name multiply
      * @memberOf me.Matrix2d
      * @function
-     * @param {me.Matrix2d} b Other matrix
+     * @param {me.Matrix2d} m the other matrix
      * @return {me.Matrix2d} Reference to this object for method chaining
      */
-    multiply(b) {
-        b = b.val;
+    multiply(m) {
+        var b = m.val;
         var a = this.val,
             a0 = a[0],
             a1 = a[1],
@@ -452,11 +452,11 @@ class Matrix2d {
      * @name equals
      * @memberOf me.Matrix2d
      * @function
-     * @param {me.Matrix2d} b the other matrix
+     * @param {me.Matrix2d} m the other matrix
      * @return {Boolean} true if both are equals
      */
-    equals(b) {
-        b = b.val;
+    equals(m) {
+        var b = m.val;
         var a = this.val;
 
         return (

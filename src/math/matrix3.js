@@ -150,22 +150,40 @@ class Matrix3d {
     }
 
     /**
+     * Copies over the upper-left 2x2 values from the given me.Matrix2d
+     * @name fromMat2d
+     * @memberOf me.Matrix3d
+     * @function
+     * @param {me.Matrix2d} m the matrix object to copy from
+     * @return {me.Matrix2d} Reference to this object for method chaining
+     */
+    fromMat2d(m) {
+        var b = m.val;
+        return this.setTransform(
+            b[0], b[3], b[6], 0,
+            b[1], b[4], b[7], 0,
+            b[2], b[5], b[8], 0,
+            0,    0,    0,    1
+
+        );
+    }
+
+    /**
      * multiply both matrix
      * @name multiply
      * @memberOf me.Matrix3d
      * @function
-     * @param {me.Matrix3d} b Other matrix
+     * @param {me.Matrix3d} m Other matrix
      * @return {me.Matrix3d} Reference to this object for method chaining
      */
-    multiply(b) {
+    multiply(m) {
         var a = this.val;
+        var b = m.val;
 
         var a00 = a[0], a01 = a[1], a02 = a[2], a03 = a[3];
         var a10 = a[4], a11 = a[5], a12 = a[6], a13 = a[7];
         var a20 = a[8], a21 = a[9], a22 = a[10], a23 = a[11];
         var a30 = a[12], a31 = a[13], a32 = a[14], a33 = a[15];
-
-        b = b.val;
         var b0 = b[0], b1 = b[1], b2 = b[2], b3 = b[3];
 
         a[0] = b0 * a00 + b1 * a10 + b2 * a20 + b3 * a30;
@@ -610,11 +628,11 @@ class Matrix3d {
      * @name equals
      * @memberOf me.Matrix3d
      * @function
-     * @param {me.Matrix3d} b the other matrix
+     * @param {me.Matrix3d} m the other matrix
      * @return {Boolean} true if both are equals
      */
-    equals(b) {
-        b = b.val;
+    equals(m) {
+        var b = m.val;
         var a = this.val;
 
         return (
