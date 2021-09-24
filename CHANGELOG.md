@@ -1,6 +1,6 @@
 # Version History
 
-## 9.0.0 (WIP)
+## 9.0.0 (24 Sep 2020)
 - Audio : Howler audio core update (2.2.3)
 - Core : overall code rewrite to comply with ES6 module and class semantic (at the exception of #1021)
 - Core : melonJS build process now automatically output one ES5 umd "legacy" bundle, and one pure ES6 module
