@@ -1,6 +1,9 @@
 # Version History
 
 ## 9.0.1 (24 Sep 2020)
+- fix name of the ES6 version (> melons.module.js) so that it's properly uploaded on jsDeliver
+
+## 9.0.1 (24 Sep 2020)
 - release fix for NPM
 
 ## 9.0.0 (24 Sep 2020)

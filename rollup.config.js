@@ -88,7 +88,7 @@ export default [
             bundleSize()
         ],
         output: {
-          file: 'build/melonjs-module.js',
+          file: 'build/melonjs.module.js',
           banner: license,
           format: 'esm'
         }

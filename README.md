@@ -68,7 +68,7 @@ Using melonJS
 Basic Example
 
 ```JavaScript
-import * as me from "melonjs-module.js"
+import * as me from "melonjs.module.js"
 
 me.device.onReady(function () {
     // initialize the display canvas once the device/browser is ready
@@ -118,7 +118,7 @@ Since version 9.0.0 melonJS provides different build options :
 | ------------------- | ----------- |
 | `melonjs.js`        | a legacy ES5 UMD Bundle (directly transpiled from the ES6 version) including full API backward compatibility with previous versions |
 | `melonjs.min.js`    | a minified version of the ES5 UMD bundle version |
-| `melonjs-module.js` | a ES6 Module Bundle, for those living on the edge, and with no backward compatibility (note: this will break your game when upgrading!) |
+| `melonjs.module.js` | a ES6 Module Bundle, for those living on the edge, and with no backward compatibility (note: this will break your game when upgrading!) |
 
 > Note: current version of both the tutorials and the debugPanel are not compatible with the ES6 version.
 
@@ -128,7 +128,7 @@ Alternatively, the latest version of melonJS can be installed through [NPM](http
 
 If you need to import the ES6 module of melonjs :
 
-    $ import * as me from "melonjs-module.js";
+    $ import * as me from "melonjs.module.js";
 
 > Note: when using the es6 module, deprecated methods need to be manually applied, see [here](http://melonjs.github.io/melonJS/docs/me.deprecated.html#.apply)
 
@@ -138,7 +138,7 @@ Or can simply be added to your html, through a content delivery network (CDN) UR
 <!-- load the ES5 UMD bundle of melonJS v9.0.0 -->
 <script src="https://cdn.jsdelivr.net/npm/melonjs@9.0.0/dist/melonjs.js"></script>
 <!-- load the ES6 module bundle of melonJS v9.0.0 -->
-<script src="https://cdn.jsdelivr.net/npm/melonjs@9.0.0/dist/melonjs-module.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/melonjs@9.0.0/dist/melonjs.module.js"></script>
 <!-- omit the version completely to get the latest one -->
 <!-- you should NOT use this in production -->
 <script src="https://cdn.jsdelivr.net/npm/melonjs/dist/melonjs.js"></script>
@@ -176,7 +176,7 @@ Then build the melonJS source by running:
 The generated library will be available under the `build` directory :
 - `melonjs.js` : plain ES5 UMD bundle
 - `melonjs.min.js` : minified ES5 UMD bundle
-- `melonjs-module.js` : plain ES6 module
+- `melonjs.module.js` : plain ES6 module
 
 To run the melonJS test suite simply use the following:
 

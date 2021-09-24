@@ -1,5 +1,5 @@
 /*!
- * melonJS Game Engine - v9.0.1
+ * melonJS Game Engine - v9.0.2
  * http://www.melonjs.org
  * melonjs is licensed under the MIT License.
  * http://www.opensource.org/licenses/mit-license
@@ -9,7 +9,7 @@
     typeof exports === 'object' && typeof module !== 'undefined' ? factory(exports) :
     typeof define === 'function' && define.amd ? define(['exports'], factory) :
     (global = typeof globalThis !== 'undefined' ? globalThis : global || self, factory(global.me = {}));
-}(this, (function (exports) { 'use strict';
+})(this, (function (exports) { 'use strict';
 
     /* eslint-disable no-global-assign, no-native-reassign */
     if (typeof console === "undefined") {
@@ -32506,10 +32506,10 @@
                  * this can be overridden by the plugin
                  * @public
                  * @type String
-                 * @default "9.0.1"
+                 * @default "9.0.2"
                  * @name me.plugin.Base#version
                  */
-                this.version = "9.0.1";
+                this.version = "9.0.2";
             }
         }),
 
@@ -36781,7 +36781,7 @@
      * @name version
      * @type {string}
      */
-    var version = "9.0.1";
+    var version = "9.0.2";
 
 
     /**
@@ -36976,5 +36976,5 @@
 
     Object.defineProperty(exports, '__esModule', { value: true });
 
-})));
+}));
 me.deprecated.apply();
