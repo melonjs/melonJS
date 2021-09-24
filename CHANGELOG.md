@@ -1,5 +1,8 @@
 # Version History
 
+## 9.0.1 (24 Sep 2020)
+- release fix for NPM
+
 ## 9.0.0 (24 Sep 2020)
 - Audio : Howler audio core update (2.2.3)
 - Core : overall code rewrite to comply with ES6 module and class semantic (at the exception of #1021)
