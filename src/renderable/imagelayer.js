@@ -1,9 +1,9 @@
 import video from "./../video/video.js";
 import event from "./../system/event.js";
 import pool from "./../system/pooling.js";
-import loader from "./../loader/loader.js";
 import game from "./../game.js";
-import Renderable from "./renderable.js";
+import Sprite from "./sprite.js";
+import utils from "./../utils/utils.js";
 
 
 /**
@@ -29,41 +29,19 @@ import Renderable from "./renderable.js";
  *     repeat :"repeat-x"
  * }), 1);
  */
-var ImageLayer = Renderable.extend({
+var ImageLayer = Sprite.extend({
     /**
      * @ignore
      */
     init: function (x, y, settings) {
         // call the constructor
-        this._super(Renderable, "init", [x, y, Infinity, Infinity]);
-
-        // get the corresponding image
-        this.image = (typeof settings.image === "object") ? settings.image : loader.getImage(settings.image);
-
-        // throw an error if image is null/undefined
-        if (!this.image) {
-            throw new Error((
-                (typeof(settings.image) === "string") ?
-                "'" + settings.image + "'" :
-                "Image"
-            ) + " file for Image Layer '" + this.name + "' not found!");
-        }
-
-        this.imagewidth = this.image.width;
-        this.imageheight = this.image.height;
-
-        // set the sprite name if specified
-        if (typeof (settings.name) === "string") {
-            this.name = settings.name;
-        }
+        this._super(Sprite, "init", [x, y, settings]);
 
         // render in screen coordinates
         this.floating = true;
 
-        // displaying order
-        this.pos.z = settings.z || 0;
-
-        this.offset = pool.pull("Vector2d", x, y);
+        // image drawing offset
+        this.offset.set(x, y);
 
         /**
          * Define the image scrolling ratio<br>
@@ -81,8 +59,8 @@ var ImageLayer = Renderable.extend({
 
         if (typeof(settings.ratio) !== "undefined") {
             // little hack for backward compatiblity
-            if (typeof(settings.ratio) === "number") {
-                this.ratio.set(settings.ratio, settings.ratio);
+            if (utils.string.isNumeric(settings.ratio)) {
+                this.ratio.set(settings.ratio, +settings.ratio);
             } else /* vector */ {
                 this.ratio.setV(settings.ratio);
             }
@@ -198,7 +176,7 @@ var ImageLayer = Renderable.extend({
      * @param {Number} h new height
     */
     resize : function (w, h) {
-        this._super(Renderable, "resize", [
+        this._super(Sprite, "resize", [
             this.repeatX ? Infinity : w,
             this.repeatY ? Infinity : h
         ]);
@@ -228,8 +206,8 @@ var ImageLayer = Renderable.extend({
         }
 
         var viewport = game.viewport,
-            width = this.imagewidth,
-            height = this.imageheight,
+            width = this.width,
+            height = this.height,
             bw = viewport.bounds.width,
             bh = viewport.bounds.height,
             ax = this.anchorPoint.x,
@@ -272,6 +250,9 @@ var ImageLayer = Renderable.extend({
         renderer.save();
         // apply the defined alpha value
         renderer.setGlobalAlpha(renderer.globalAlpha() * this.getOpacity());
+
+        // apply the defined tint, if any
+        renderer.setTint(this.tint);
     },
 
     /**
@@ -280,8 +261,8 @@ var ImageLayer = Renderable.extend({
      */
     draw : function (renderer) {
         var viewport = game.viewport,
-            width = this.imagewidth,
-            height = this.imageheight,
+            width = this.width,
+            height = this.height,
             bw = viewport.bounds.width,
             bh = viewport.bounds.height,
             ax = this.anchorPoint.x,
@@ -318,11 +299,9 @@ var ImageLayer = Renderable.extend({
      * @ignore
      */
     destroy : function () {
-        pool.push(this.offset);
-        this.offset = undefined;
         pool.push(this.ratio);
         this.ratio = undefined;
-        this._super(Renderable, "destroy");
+        this._super(Sprite, "destroy");
     }
 });
 

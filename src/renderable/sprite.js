@@ -154,6 +154,15 @@ var Sprite = Renderable.extend({
             this.textureAtlas = this.source.getAtlas();
         }
 
+        // throw an error if image ends up being null/undefined
+        if (!this.image) {
+            throw new Error((
+                (typeof(settings.image) === "string") ?
+                "'" + settings.image + "'" :
+                "Image"
+            ) + " file for Image Layer '" + this.name + "' not found!");
+        }
+
         // store/reset the current atlas information if specified
         if (typeof(settings.atlas) !== "undefined") {
             this.textureAtlas = settings.atlas;
@@ -191,6 +200,11 @@ var Sprite = Renderable.extend({
         if (typeof (settings.name) === "string") {
             this.name = settings.name;
         }
+
+        // displaying order
+        if (typeof settings.z !== "undefined") {
+            this.pos.z = settings.z;
+        };
 
         // for sprite, addAnimation will return !=0
         if (this.addAnimation("default", null) !== 0) {
