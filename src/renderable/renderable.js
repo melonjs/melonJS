@@ -169,7 +169,8 @@ var Renderable = Rect.extend({
          * <img src="images/anchor_point.png"/><br>
          * a Renderable's anchor point defaults to (0.5,0.5), which corresponds to the center position.<br>
          * <br>
-         * <i><b>Note:</b> Object created through Tiled will have their anchorPoint set to (0, 0) to match Tiled Level editor implementation</i>
+         * <i><b>Note:</b> Object created through Tiled will have their anchorPoint set to (0, 0) to match Tiled Level editor implementation.
+         * To specify a value through Tiled, use a json expression like `json:{"x":0.5,"y":0.5}`. </i>
          * @public
          * @type me.ObservableVector2d
          * @default <0.5,0.5>
