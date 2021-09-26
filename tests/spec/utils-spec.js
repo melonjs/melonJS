@@ -76,10 +76,11 @@ describe("utils", function () {
             expect(me.utils.string.isNumeric("12 3")).toEqual(false);
             expect(me.utils.string.isNumeric("ab2c")).toEqual(false);
             expect(me.utils.string.isNumeric("12-3")).toEqual(false);
-            expect(me.utils.string.isNumeric("12.3")).toEqual(false);
+            expect(me.utils.string.isNumeric("12.3")).toEqual(true);
+            expect(me.utils.string.isNumeric(".3")).toEqual(true);
             expect(me.utils.string.isNumeric("12,3")).toEqual(false);
-            expect(me.utils.string.isNumeric("-123")).toEqual(false);
-            expect(me.utils.string.isNumeric("+123")).toEqual(false);
+            expect(me.utils.string.isNumeric("-123")).toEqual(true);
+            expect(me.utils.string.isNumeric("+123")).toEqual(true);
         });
     });
 });
