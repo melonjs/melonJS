@@ -3,7 +3,7 @@
 ## 9.1.0 (26 Sep 2020)
 - Renderable : simplify ImageLayer implementation by extending Sprite object
 - TMX : fix a regression with Parallax scrolling ratio
-- TMX : tinting support for Image Layers (tinting was added "only" for Tiled Layer in 9.0.0)
+- TMX : add missing tinting support for Image Layers (was added "only" for Tiled Layer in 9.0.0)
 - TMX : add support for the new Tiled Parallax Layers x and y ratio properties
 
 ## 9.0.2 (24 Sep 2020)

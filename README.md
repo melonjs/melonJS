@@ -45,9 +45,9 @@ and currently features :
     - Uncompressed Plain, Base64, CSV and JSON encoded XML tilemap loading
     - Orthogonal, Isometric and Hexagonal maps (both normal and staggered)
     - Multiple layers (multiple background/foreground, collision and Image layers)
-    - Multiple Tileset support
-    - Tileset Transparency settings
-    - Layers Alpha settings
+    - Animated and multiple Tileset support
+    - Tileset transparency settings
+    - Layers alpha and tinting settings
     - Rectangle, Ellipse, Polygon and Polyline objects support
     - Tiled Objects
     - Flipped & rotated Tiles
