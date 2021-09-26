@@ -71,9 +71,13 @@ function readImageLayer(map, data, z) {
         Object.assign({
             name: data.name,
             image: data.image,
+            ratio : pool.pull("Vector2d", +data.parallaxx || 1.0, +data.parallaxy || 1.0),
+            // convert to melonJS color format (note: this should be done earlier when parsing data)
+            tint : typeof (data.tintcolor) !== "undefined" ? (pool.pull("Color")).parseHex(data.tintcolor, true) : undefined,
             z: z
         }, data.properties)
     );
+
 
     // set some additional flags
     var visible = typeof(data.visible) !== "undefined" ? data.visible : true;
