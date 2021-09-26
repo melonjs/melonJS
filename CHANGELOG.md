@@ -1,6 +1,12 @@
 # Version History
 
-## 9.0.1 (24 Sep 2020)
+## 9.1.0 (26 Sep 2020)
+- Renderable : simplify ImageLayer implementation by extending Sprite object
+- TMX : fix a regression with Parallax scrolling ratio
+- TMX : tinting support for Image Layers (tinting was added "only" for Tiled Layer in 9.0.0)
+- TMX : add support for the new Tiled Parallax Layers x and y ratio properties
+
+## 9.0.2 (24 Sep 2020)
 - fix name of the ES6 version (> melons.module.js) so that it's properly uploaded on jsDeliver
 
 ## 9.0.1 (24 Sep 2020)
