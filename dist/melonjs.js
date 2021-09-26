@@ -1,5 +1,5 @@
 /*!
- * melonJS Game Engine - v9.0.2
+ * melonJS Game Engine - v9.1.0
  * http://www.melonjs.org
  * melonjs is licensed under the MIT License.
  * http://www.opensource.org/licenses/mit-license
@@ -72,7 +72,7 @@
         return str.replace(/\s+$/, "");
     }
     /**
-     * returns true if the given string contains a numeric (integer) value
+     * returns true if the given string contains a numeric integer or float value
      * @public
      * @function
      * @memberOf me.utils.string
@@ -84,7 +84,7 @@
         if (typeof str === "string") {
             str = str.trim();
         }
-        return !isNaN(str) && /^\d+$/.test(str);
+        return !isNaN(str) && /[+-]?([0-9]*[.])?[0-9]+/.test(str);
     }
     /**
      * returns true if the given string contains a true or false
@@ -13533,7 +13533,8 @@
              * <img src="images/anchor_point.png"/><br>
              * a Renderable's anchor point defaults to (0.5,0.5), which corresponds to the center position.<br>
              * <br>
-             * <i><b>Note:</b> Object created through Tiled will have their anchorPoint set to (0, 0) to match Tiled Level editor implementation</i>
+             * <i><b>Note:</b> Object created through Tiled will have their anchorPoint set to (0, 0) to match Tiled Level editor implementation.
+             * To specify a value through Tiled, use a json expression like `json:{"x":0.5,"y":0.5}`. </i>
              * @public
              * @type me.ObservableVector2d
              * @default <0.5,0.5>
@@ -21160,6 +21161,15 @@
                 this.textureAtlas = this.source.getAtlas();
             }
 
+            // throw an error if image ends up being null/undefined
+            if (!this.image) {
+                throw new Error((
+                    (typeof(settings.image) === "string") ?
+                    "'" + settings.image + "'" :
+                    "Image"
+                ) + " file for Image Layer '" + this.name + "' not found!");
+            }
+
             // store/reset the current atlas information if specified
             if (typeof(settings.atlas) !== "undefined") {
                 this.textureAtlas = settings.atlas;
@@ -21198,6 +21208,10 @@
                 this.name = settings.name;
             }
 
+            // displaying order
+            if (typeof settings.z !== "undefined") {
+                this.pos.z = settings.z;
+            }
             // for sprite, addAnimation will return !=0
             if (this.addAnimation("default", null) !== 0) {
                 // set as default
@@ -25943,9 +25957,13 @@
             Object.assign({
                 name: data.name,
                 image: data.image,
+                ratio : pool.pull("Vector2d", +data.parallaxx || 1.0, +data.parallaxy || 1.0),
+                // convert to melonJS color format (note: this should be done earlier when parsing data)
+                tint : typeof (data.tintcolor) !== "undefined" ? (pool.pull("Color")).parseHex(data.tintcolor, true) : undefined,
                 z: z
             }, data.properties)
         );
+
 
         // set some additional flags
         var visible = typeof(data.visible) !== "undefined" ? data.visible : true;
@@ -32506,10 +32524,10 @@
                  * this can be overridden by the plugin
                  * @public
                  * @type String
-                 * @default "9.0.2"
+                 * @default "9.1.0"
                  * @name me.plugin.Base#version
                  */
-                this.version = "9.0.2";
+                this.version = "9.1.0";
             }
         }),
 
@@ -34706,41 +34724,19 @@
      *     repeat :"repeat-x"
      * }), 1);
      */
-    var ImageLayer = Renderable.extend({
+    var ImageLayer = Sprite.extend({
         /**
          * @ignore
          */
         init: function (x, y, settings) {
             // call the constructor
-            this._super(Renderable, "init", [x, y, Infinity, Infinity]);
-
-            // get the corresponding image
-            this.image = (typeof settings.image === "object") ? settings.image : loader$1.getImage(settings.image);
-
-            // throw an error if image is null/undefined
-            if (!this.image) {
-                throw new Error((
-                    (typeof(settings.image) === "string") ?
-                    "'" + settings.image + "'" :
-                    "Image"
-                ) + " file for Image Layer '" + this.name + "' not found!");
-            }
-
-            this.imagewidth = this.image.width;
-            this.imageheight = this.image.height;
-
-            // set the sprite name if specified
-            if (typeof (settings.name) === "string") {
-                this.name = settings.name;
-            }
+            this._super(Sprite, "init", [x, y, settings]);
 
             // render in screen coordinates
             this.floating = true;
 
-            // displaying order
-            this.pos.z = settings.z || 0;
-
-            this.offset = pool.pull("Vector2d", x, y);
+            // image drawing offset
+            this.offset.set(x, y);
 
             /**
              * Define the image scrolling ratio<br>
@@ -34758,8 +34754,8 @@
 
             if (typeof(settings.ratio) !== "undefined") {
                 // little hack for backward compatiblity
-                if (typeof(settings.ratio) === "number") {
-                    this.ratio.set(settings.ratio, settings.ratio);
+                if (utils$1.string.isNumeric(settings.ratio)) {
+                    this.ratio.set(settings.ratio, +settings.ratio);
                 } else /* vector */ {
                     this.ratio.setV(settings.ratio);
                 }
@@ -34875,7 +34871,7 @@
          * @param {Number} h new height
         */
         resize : function (w, h) {
-            this._super(Renderable, "resize", [
+            this._super(Sprite, "resize", [
                 this.repeatX ? Infinity : w,
                 this.repeatY ? Infinity : h
             ]);
@@ -34905,8 +34901,8 @@
             }
 
             var viewport = game$1.viewport,
-                width = this.imagewidth,
-                height = this.imageheight,
+                width = this.width,
+                height = this.height,
                 bw = viewport.bounds.width,
                 bh = viewport.bounds.height,
                 ax = this.anchorPoint.x,
@@ -34949,6 +34945,9 @@
             renderer.save();
             // apply the defined alpha value
             renderer.setGlobalAlpha(renderer.globalAlpha() * this.getOpacity());
+
+            // apply the defined tint, if any
+            renderer.setTint(this.tint);
         },
 
         /**
@@ -34957,8 +34956,8 @@
          */
         draw : function (renderer) {
             var viewport = game$1.viewport,
-                width = this.imagewidth,
-                height = this.imageheight,
+                width = this.width,
+                height = this.height,
                 bw = viewport.bounds.width,
                 bh = viewport.bounds.height,
                 ax = this.anchorPoint.x,
@@ -34995,11 +34994,9 @@
          * @ignore
          */
         destroy : function () {
-            pool.push(this.offset);
-            this.offset = undefined;
             pool.push(this.ratio);
             this.ratio = undefined;
-            this._super(Renderable, "destroy");
+            this._super(Sprite, "destroy");
         }
     });
 
@@ -36781,7 +36778,7 @@
      * @name version
      * @type {string}
      */
-    var version = "9.0.2";
+    var version = "9.1.0";
 
 
     /**
