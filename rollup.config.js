@@ -55,7 +55,8 @@ export default [
           banner: license,
           footer : 'me.deprecated.apply();',
           name : "me",
-          format: 'umd'
+          format: 'umd',
+          generatedCode: 'es5'
         }
     },
     {
