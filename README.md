@@ -68,7 +68,7 @@ Using melonJS
 Basic Example
 
 ```JavaScript
-import * as me from "melonjs.module.js"
+import * as me from "melonjs.module.js";
 
 me.device.onReady(function () {
     // initialize the display canvas once the device/browser is ready
@@ -126,9 +126,9 @@ Alternatively, the latest version of melonJS can be installed through [NPM](http
 
     $ npm install melonjs
 
-If you need to import the ES6 module of melonjs :
+If you need to import the ES6 module of melonjs (for Webpack):
 
-    $ import * as me from "melonjs.module.js";
+    $ import * as me from 'melonjs/dist/melonjs.module.js';
 
 > Note: when using the es6 module, deprecated methods need to be manually applied, see [here](http://melonjs.github.io/melonJS/docs/me.deprecated.html#.apply)
 
