@@ -935,7 +935,7 @@
 - Audio : fixed compatibility issues with IE9/10
 - Geometry : added a merge function to me.Rect
 
-## [0.9.0]
+## 0.9.0
 - Documentation : API documentation using jsdoc-toolkit (finally!)
 - Geometry : define getter for me.Rect coordinates (simplify code)
 - Level : support for fadeOut/fadeIn effect in me.LevelEntity (when changing levels)
@@ -945,12 +945,12 @@
 - Viewport : rounding issue fix in the viewportEntity (aroun 30% less CPU usage on Safari/OSX!)
 - TMX : cleaned & refactored tilemap collision detection (still not perfect though)
 
-## [0.8.0]
+## 0.8.0
 - TMX : support for "TiledObject" (as supported in Tiled 0.6.2)
 - Entity : re-factored constructor call to Object Entities (to use the settings obj produced through Tiled)
 - Entity : moved collision function from AnimatedSpriteObject to ObjectEntity
 
-## [0.7.9]
+## 0.7.9
 - Viewport : added some effects to the camera object (shaking, fading, ...)
 - Viewport : re-factored and fixed the camera/viewport code
 - Core : re-factored public objects using John Resig Inheritance mechanism.
@@ -959,9 +959,53 @@
 - Audio : partially fix crash audio in safari when audio is enabled
 - Core : fixed gfx glitches (rounding issues)
 
-## [0.7.6] - _2011-05-16_
+## 0.7.6 - _2011-05-16_
 - first public version with alex4 !
 - www.melonjs.org is live :)
 
-[9.1.1]: https://github.com/melonjs/melonJS/compare/9.1.1...9.1.0
-[9.0.2]: https://github.com/melonjs/melonJS/compare/8.0.1...9.0.2
+[9.1.1]: https://github.com/melonjs/melonJS/compare/9.0.2...9.1.1
+[9.0.2]: https://github.com/melonjs/melonJS/compare/9.0.1...9.0.2
+[9.0.1]: https://github.com/melonjs/melonJS/compare/9.0.0...9.0.1
+[9.0.0]: https://github.com/melonjs/melonJS/compare/8.0.1...9.0.0
+[8.0.1]: https://github.com/melonjs/melonJS/compare/8.0.0...8.0.1
+[8.0.0]: https://github.com/melonjs/melonJS/compare/7.1.1...8.0.0
+[7.1.1]: https://github.com/melonjs/melonJS/compare/7.1.0...7.1.1
+[7.1.0]: https://github.com/melonjs/melonJS/compare/7.0.0...7.1.0
+[7.0.0]: https://github.com/melonjs/melonJS/compare/6.4.0...7.0.0
+[6.4.0]: https://github.com/melonjs/melonJS/compare/6.3.0...6.4.0
+[6.3.0]: https://github.com/melonjs/melonJS/compare/6.2.0...6.3.0
+[6.2.0]: https://github.com/melonjs/melonJS/compare/6.1.1...6.2.0
+[6.1.1]: https://github.com/melonjs/melonJS/compare/6.0.0...6.1.1
+[6.0.0]: https://github.com/melonjs/melonJS/compare/5.1.0...6.0.0
+[5.1.0]: https://github.com/melonjs/melonJS/compare/5.0.1...5.1.0
+[5.0.1]: https://github.com/melonjs/melonJS/compare/5.0.0...5.0.1
+[5.0.0]: https://github.com/melonjs/melonJS/compare/4.1.1...5.0.0
+[4.1.1]: https://github.com/melonjs/melonJS/compare/4.1.0...4.1.1
+[4.1.0]: https://github.com/melonjs/melonJS/compare/4.0.0...4.1.0
+[4.0.0]: https://github.com/melonjs/melonJS/compare/3.1.0...4.0.0
+[3.1.0]: https://github.com/melonjs/melonJS/compare/3.0.1...3.1.0
+[3.0.1]: https://github.com/melonjs/melonJS/compare/3.0.0...3.0.1
+[3.0.0]: https://github.com/melonjs/melonJS/compare/2.1.4...3.0.0
+[2.1.4]: https://github.com/melonjs/melonJS/compare/2.1.3...2.1.4
+[2.1.3]: https://github.com/melonjs/melonJS/compare/2.1.2...2.1.3
+[2.1.2]: https://github.com/melonjs/melonJS/compare/2.1.1...2.1.2
+[2.1.1]: https://github.com/melonjs/melonJS/compare/2.1.0...2.1.1
+[2.1.0]: https://github.com/melonjs/melonJS/compare/2.0.2...2.1.0
+[2.0.2]: https://github.com/melonjs/melonJS/compare/2.0.1...2.0.2
+[2.0.1]: https://github.com/melonjs/melonJS/compare/2.0.0...2.0.1
+[2.0.0]: https://github.com/melonjs/melonJS/compare/1.1.0...2.0.0
+[1.1.0]: https://github.com/melonjs/melonJS/compare/1.0.2...1.1.0
+[1.0.2]: https://github.com/melonjs/melonJS/compare/1.0.1...1.0.2
+[1.0.1]: https://github.com/melonjs/melonJS/compare/1.0.0...1.0.1
+[1.0.0]: https://github.com/melonjs/melonJS/compare/0.9.11...1.0.0
+[0.9.11]: https://github.com/melonjs/melonJS/compare/0.9.10...0.9.11
+[0.9.10]: https://github.com/melonjs/melonJS/compare/0.9.9...0.9.10
+[0.9.9]: https://github.com/melonjs/melonJS/compare/0.9.8...0.9.9
+[0.9.8]: https://github.com/melonjs/melonJS/compare/0.9.7...0.9.8
+[0.9.7]: https://github.com/melonjs/melonJS/compare/0.9.6...0.9.7
+[0.9.6]: https://github.com/melonjs/melonJS/compare/0.9.5...0.9.6
+[0.9.5]: https://github.com/melonjs/melonJS/compare/0.9.4...0.9.5
+[0.9.4]: https://github.com/melonjs/melonJS/compare/0.9.3...0.9.4
+[0.9.3]: https://github.com/melonjs/melonJS/compare/0.9.2...0.9.3
+[0.9.2]: https://github.com/melonjs/melonJS/compare/0.9.1...0.9.2
+[0.9.1]: https://github.com/melonjs/melonJS/compare/0.9.0...0.9.1
