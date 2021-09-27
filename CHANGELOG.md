@@ -1,18 +1,33 @@
-# Version History
+# Changelog
 
-## 9.1.0 (26 Sep 2020)
+## [9.1.1] - _2021-09-26_
+
+### Fixed
+- Renderable : fix the error message in me.Sprite on undefined image/texture source
+
+## [9.1.0] - _2021-09-26_
+
+### Added
 - Renderable : simplify ImageLayer implementation by extending Sprite object
-- TMX : fix a regression with Parallax scrolling ratio
 - TMX : add missing tinting support for Image Layers (was added "only" for Tiled Layer in 9.0.0)
 - TMX : add support for the new Tiled Parallax Layers x and y ratio properties
 
-## 9.0.2 (24 Sep 2020)
+### Fixed
+- TMX : fix a regression with Parallax scrolling ratio
+
+## [9.0.2] - _2021-09-24_
+
+### Fixed
 - fix name of the ES6 version (> melons.module.js) so that it's properly uploaded on jsDeliver
 
-## 9.0.1 (24 Sep 2020)
+## [9.0.1] - _2021-09-24_
+
+###Fixed
 - release fix for NPM
 
-## 9.0.0 (24 Sep 2020)
+## [9.0.0] - _2021-09-24_
+
+### Added
 - Audio : Howler audio core update (2.2.3)
 - Core : overall code rewrite to comply with ES6 module and class semantic (at the exception of #1021)
 - Core : melonJS build process now automatically output one ES5 umd "legacy" bundle, and one pure ES6 module
@@ -20,25 +35,30 @@
 - Core : internal rewrite on object bound implementation, with all Renderable now fully using/relying on the me.Bounds object introduced in last version
 - Container : Unified bound management between Container and Renderable (Container now follow its parent Renderable implementation)
 - Container : Containers defines an additional `enableChildBoundsUpdate` flag to enable full bounds update, including child bounds (disabled by default)
-- Entity : me.CollectableEntity is now deprecated and replaced by a more generic `me.Collectable` base object that do not extend me.Entity anymore
-- Entity : me.LevelEntity is now deprecated and replaced by a more generic `me.Trigger` objects that do not extend me.Entity anymore
 - Math : add missing `applyInverse()` method to the Matrix3d implementation
-- Math : fix Matrix3d translate method when passing a 2d vector as argument
-- Renderable : fix Renderables bounds not correctly respecting the anchor point.
 - Renderer : WebGL2 is now the default mode when using the WebGL renderer (use `preferWebGL1 = true` calling me.video.init if you need to force WebGL1)
 - Tiled : add TMX `tintcolor` parsing for tile and object layers
 - Stage : `me.Stage` constructor now accept new argument properties to specify the `onResetEvent` and `onDestroyEvent` functions
-- Stage : fix a crash with legacy API when using the deprecated me.ScreenObject object
-- TMX : fix crash when trying to add collisionType to text nodes (thanks @framp)
-- TMX : fix a regression with the Tile Layer preRender feature
-- TMX : fix tile properties import for the new Tiled JSON format (thanks @3ck0o)
 - TMX : "unnamed" object in Tiled will now instantiate base Renderable object (with a physic body) rather than an "sprite-less" Entity object
 - Tween: allow to pass a set of tween properties to the '.to' method instead of just the duration (thanks @0xf0f0f0)
 
-## 8.0.1 (12 Aug 2020)
+### Deprecated
+- Entity : me.CollectableEntity is now deprecated and replaced by a more generic `me.Collectable` base object that do not extend me.Entity anymore
+- Entity : me.LevelEntity is now deprecated and replaced by a more generic `me.Trigger` objects that do not extend me.Entity anymore
+
+### Fixed
+
+- Math : fix Matrix3d translate method when passing a 2d vector as argument
+- Renderable : fix Renderables bounds not correctly respecting the anchor point.
+- Stage : fix a crash with legacy API when using the deprecated me.ScreenObject object
+- TMX : fix a crash when trying to add collisionType to text nodes (thanks @framp)
+- TMX : fix a regression with the Tile Layer preRender feature
+- TMX : fix tile properties import for the new Tiled JSON format (thanks @3ck0o)
+
+## [8.0.1] - _2020-09-12_
 - release fix for NPM & jsDeliver
 
-## 8.0.0 (12 Aug 2020)
+## [8.0.0] - _2020-09-12_
 - Audio : audio core update (2.2.0)
 - Audio : `me.audio.stop()` will now stop all sounds if none is specified
 - Color : new `lerp()` method to provide linear interpolation between two different colors
@@ -78,13 +98,13 @@
 - Video : fix an issue when using the "flex" scaling mode, and where the reported parent container size could be floating values
 - Video : the `scale` parameter is now optional if scaleMethod is specified (auto-scaling will then automatically be enabled)
 
-## 7.1.1 (20 Aug 2019)
+## [7.1.1] - _2019-08-20_
 - Core : fix a crash when a game reset is triggered manually before any default stage has been defined
 - Core : new option to automatically change to a newly define stage
 - Input : fixed a regression with gamepad polling
 - Renderer : fixed an issue where a failed attempt at creating a WebGL context would then prevent from creating a canvas context as fallback
 
-## 7.1.0 (16 Jul 2019)
+## [7.1.0] - _2019-07-16_
 - Audio : audio core update (2.1.2) to fix audio unlock on Firefox 66 and onwards
 - Core : new me.event.GAME_UPDATE system event that will be triggered at the beginning of the update loop
 - Core : me.game.HASH is deprecated and replaced by the `me.utils.getUriFragment()` function
@@ -105,7 +125,7 @@
 - TMX : fix rendering of Staggered Hexagonal maps
 - TMX : fix pointer position detection on Hexagonal maps (was slightly off previously)
 
-## 7.0.0 (26 Mar 2019)
+## [7.0.0] - _2019-03-26_
 - General : new "grunt-free" build process based on npm, rollup & friends
 - Core : removed support for CocoonJS (following service shutdown)
 - Core : simplified error/exception handling by removing the custom me.Error class
@@ -120,7 +140,7 @@
 - WebGL : properly handle WebGL context lost and restore
 - WebGL : updated earcut to version 2.1.5
 
-## 6.4.0 (18 Feb 2019)
+## [6.4.0] - _2019-02-18_
 - Documentation : new documentation format, including a search feature
 - Math : new PI related constants under me.Math (TAU, ETA, etc..)
 - Renderable : added a basic color tint feature (WebGL mode only)
@@ -131,7 +151,7 @@
 - TMX : small memory optimization in the isometric renderer, where one temporary vector object was not properly recycled
 - Renderer : fixed stroke and fill default color to match standard W3C canvas stroke and fill style (black)
 
-## 6.3.0 (24 Dec 2018)
+## [6.3.0 (24 Dec 2018)] - _2018-12-24_
 - Audio : audio core update (2.1.1), mostly improve auto audio unlock on latest (non-mobile) browser versions
 - Color : fixed alpha value not being properly clamped (leading to issue in WebGL mode when passing the glArray buffer)
 - Debug : fixed wrong bounding box drawing position for nested containers and entity childs
@@ -146,7 +166,7 @@
 - WebGLRenderer : fixed a clipping issue with nested containers
 - WebGLRenderer : fixed the clearRect method
 
-## 6.2.0 (29 Nov 2018)
+## [6.2.0] - _2018-11-29_
 - Audio : fixed a regression when passing an initial volume value to the play function (thanks @PLAYERKILLERS)
 - Container : new `getNextChild` function that returns the next child within the container
 - Core : renamed `me.ScreenObject` to `me.Stage` (with an alias to `me.ScreenObject` for Backward compatibility)
@@ -176,7 +196,7 @@
 - TMX : optimized the getTile function to avoid duplicate calls to the pixel to tile coordinates functions
 - WebGLRenderer : fix a bug when clipping is disabled due to the clipping area being equal to the canvas size
 
-## ## 6.1.0 (11 Sep 2018)
+## [6.1.0] - _2018-09-11_
 - Audio : latest audio core update (2.0.15)
 - Core : new linux detection flag under me.device
 - Renderer : now systematically warn when using non POT texture in both Canvas and WebGL mode
@@ -186,7 +206,7 @@
 - WebGLRenderer : only throw an exception (e.g. stop execution) when using repeat/wrap mode with a non POT texture
 - WebGLRenderer : properly fallback to Canvas mode in AUTO and WEBGL mode when failing at creating a valid WebGL Context
 
-## 6.0.0 (13 Aug 2018)
+## [6.0.0] - _2018-08-13_
 - Audio : latest audio core update to fix HTML5 Audio issue with FB Instant Games, and Chrome API deprecation
 - Camera : renamed `me.Viewport` to `me.Camera2d` and move it to its own folder
 - Container : new `clipping` feature to automatically clip childrens to their parent container bounds (disable by default)
@@ -221,7 +241,7 @@
 - WebGLRenderer : feature to change the blending mode (experimental and limited to "normal" and "multiply" for now)
 - WebGLRenderer : fix a deprecation warning in Firefox
 
-## 5.1.0 (21 Jan 2018)
+## [5.1.0] - _2018-01-21_
 - Audio : Howler core update (2.0.8)
 - Core : window.onReady is now marked as deprecated, and replaced by me.device.onReady
 - Container : new `onChildChange` callback for when a child is added or removed
@@ -238,11 +258,11 @@
 - Viewport : apply current transformation when converting given coordinates from localToWorld and WorldToLocal
 - Viewport : fix a regression where transforms were not applied anymore to the camera/viewport
 
-## 5.0.1 (3 Dec 2017)
+## [5.0.1] - _2017-12-03_
 - Input : fix a regression with bindPointer
 - Loader : fix the progressBar position when resizing the screen
 
-## 5.0.0 (1 Dec 2017)
+## [5.0.0] - _2017-12-01_
 - Audio : Howler core update (2.0.5)
 - Audio : added a function to check if audio is muted globally
 - Core : fix fullscreen detection when not set on the main canvas
@@ -264,7 +284,7 @@
 - TMX : added support for layer grouping (Tiled 1.0.0)
 - Viewport : added a method to unfollow the current target
 
-## 4.1.1 (28 Feb 2017)
+## [4.1.1] - _2017-02-28_
 - Core : fixed a bug in `Number.prototype.round()`
 - Core : throw an exception when attempting to add an invalid state in `me.state.set()`
 - Core : fixed `falling` and `jumping` flags on `me.Body` when gravity is reversed
@@ -274,7 +294,7 @@
 - Pointer : replaced non-standard `mousewheel` with W3C standard `wheel` events
 - Pointer : fixed duplicate `wheel` events
 
-## 4.1.0 (16 Jan 2017)
+## [4.1.0] - _2017-01-16_
 - Audio : updated to latest Howler 2.0.2 (WebAudio resume/seek fixes, and IE related security issues)
 - Audio : added a `me.audio.seek` function, to change or get the current position of a specific audio clip
 - Core : throw an error message when registering a non valid object in the object pool (i.e. undefined class)
@@ -297,7 +317,7 @@
 - WebGLRenderer : now properly complain when using NPOT textures, and throw an exception for repetitive ones
 - WebGLRenderer : does not create anymore a default overlay for me.Font drawing, unless required (reminder: me.Font+WebGL = Bad!)
 
-## 4.0.0 (29 Nov 2016)
+## [4.0.0] - _2016-11-29_
 - Audio : updated to the latest Howler 2.0.1 version
 - Container : added a 'forEach' function that allows to iterate through all children
 - Core : largely improved and completed the matrix implementation and usage
@@ -320,7 +340,7 @@
 - TMX : fixed some issues when loading TMX level into a child container.
 - WebGLRenderer : fixed the currentColor alpha not taking in account the "globalAlpha" (now better match canvas renderer)
 
-## 3.1.0 (17 May 2016)
+## [3.1.0] - _2016-05-17_
 - Audio : exposed a `me.audio.rate` function to allow modifying the playback rate of the specified audio clip.
 - Audio : added back the possibility to stream audio elements (through the `stream` flag when defining audio assets)
 - Camera : use the `alpha` component of the given color as the threshold for fading effect
@@ -345,11 +365,11 @@
 - TMX : added support for typed custom properties (Tiled 0.16)
 - WebGLRenderer : added a workaround for Safari resetting WebGL attributes bindings (see #783)
 
-## 3.0.1 (23 Feb 2016)
+## [3.0.1] - _2016-02-23_
 - Core : fixed/improved compatibility with Ejecta (e.g. initialization, CAFF support)
 - Input : actually really truly fix pointer event z-ordering, finally
 
-## 3.0.0 (3 Nov 2015)
+## [3.0.0] - _2015-11-03_
 - Audio : updated to the latest Howler v2.0.0 beta version
 - Audio : added a `me.audio.resume` function for added convenience (was already possible by calling back `me.audio.play`)
 - Container : added an `autoDepth` feature that auto-increments a child's z-coordinate when inserted
@@ -407,11 +427,11 @@
 - Video : animations are now able to skip frames for low FPS devices and high-speed animations
 - WebGLRenderer : added a `repeat` parameter to `createTexture` method
 
-## 2.1.4 (9 Sep 2015)
+## [2.1.4] - _2015-09-09_
 - Audio : fixed the audio-enable workaround on iOS9
 - Tween : fixed potential re-initialization issues when recycling tween objects.
 
-## 2.1.3 (26 Jul 2015)
+## [2.1.3] - _2015-07-26_
 - Audio : fixed an issue with decoding audio data on Opera
 - Audio : updated to the latest 2.0 Howler beta (fixes a loop issue on Chrome mobile, and touch event for iOS playback)
 - Core : fixed an exception in the Map polyfill
@@ -422,11 +442,11 @@
 - Video : fixed a regression where `me.device.getPixelRatio()` no longer works when called before `me.video.init()` (introduced in 2.1.0)
 - WebGLRenderer : fixed a bug that causes a compile failure with the quad fragment shader on a small number of platforms
 
-## 2.1.2 (9 Jul 2015)
+## [2.1.2] - _2015-07-09_
 - LevelDirector : do not replace Tile Object's `renderable`
 - Renderable : fixed renderable bounds initialization with object pooling
 
-## 2.1.1 (6 Jun 2015)
+## [2.1.1] - _2015-06-06_
 - Container : fixed child bounds when manipulating the container position.
 - Core : fixed a regression when using the pooling system with renderables.
 - Examples : fixed conditional debugPanel loading in cocoonJS
@@ -435,7 +455,7 @@
 - Input : fixed/improved `pointerEvent` and `pointerLeave` event bindings for the sample GUI Object
 - Loader : throw an exception indicating to use JSON if XML parsing is not supported by the browser/platform
 
-## 2.1.0 (8 May 2015)
+## [2.1.0] - _2018-12-24_
 - Audio & Loader : file/clip names passed to various methods are now case sensitive. Removed uses of toLowerCase on variables.
 - Audio : properly dispose of audio resources when using cocoonJS
 - Container : `getChildByProp` and friends now accepts a RegExp for value matching
@@ -469,7 +489,7 @@
 - Video : added support for the `image-rendering` CSS property standard "pixelated" value
 - Video : added new `scaleMethod` option : `fit`, `fill-max`, `flex-height`, `flex-width`, and `stretch`; replaces old `maintainAspectRatio` flag (@Djokal)
 
-## 2.0.2 (15 Dec 2014)
+## [2.0.2] - _2014-12-15_
 - Audio : automatically cleanup `onend` callbacks in `me.audio.play`
 - Audio : `me.audio.play` now applies the `loop`, `onend`, and `volume` properties only to the expected sound instance ID
 - Audio : fix `me.audio.unmute()`
@@ -487,7 +507,7 @@
 - Font : fixed globalAlpha not being set when using `me.Font.setOpacity()`
 - TMX : fixed an uncaught exception when loading a map with an empty object layer (thanks @Tiagojdferreira)
 
-## 2.0.1 (28 Nov 2014)
+## [2.0.1] - _2014-11-28_
 - Core : fixed loading under CocoonJS when using Canvas+
 - Shapes : replaced the isometric magic numbers used for scaling, by proper and more accurate math constants (ldd)
 - Audio : fixed sound looping
@@ -495,7 +515,7 @@
 - Audio : cleaned the onend callback when stopping a sound
 - Audio : added a me.audio.fade() function
 
-## 2.0.0 (18 Nov 2014)
+## [2.0.0] - _2014-11-18_
 - Core : implemented a new shape based collision system for the collision layer
 - Core : added user agent detection for Kindle devices
 - Core : fixed the collision response for circles (me.Ellipse with a uniform radius)
@@ -517,7 +537,7 @@
 - TMX : fixed isometric projection for Polygon/PolyLine objects
 - TMX : fixed TSX external tileset loading
 
-## 1.1.0 (3 Sep 2014)
+## [1.1.0] - _2014-09-03_
 - Core : reorganised source code for all basic object definition/augmentation
 - Core : new CI and unit testing frameworks
 - Core : new object inheritance mechanism: http://github.com/parasyte/jay-inheritance
@@ -544,12 +564,12 @@
 - TMX : fixed collision layer rendering issue with isometric map
 - TMX : fixed world container size not being updated after a new level is loaded
 
-## 1.0.2 (2 Jul 2014)
+## [1.0.2] - _2014-07-02_
 - Core : improved general compatibility with IE9/IE10 (Desktop/Mobile/Tablets)
 - Geometry : added basic type check for the `me.Vector2d` constructor
 - Input : fixed event detection on Chrome 35+
 
-## 1.0.1
+## [1.0.1] - _2014-07-01_
 - Core : removed unused `Object.mixin` method, (caused compatibility issues with socket.io and other libs)
 - Entity : disable falling flag when gravity is disabled
 - Entity : fix an exception in ObjectEntity.checkCollision()
@@ -567,7 +587,7 @@
 - Particles : fixed the particle emitter bounds (aaschmitz)
 - Input : added several keyboard keys for input mapping (aaschmitz)
 
-## 1.0.0 (29 May 2014)
+## [1.0.0] - _2014-05-29_
 - Core : now pass the elapsed time as a parameter when calling any object update function
 - Core : cleaned-up/renamed conflicting set function in shape and font objects
 - Core : added new shapes objects (Ellipse, Polygon) on top of the existing Rectangle one
@@ -601,7 +621,7 @@
 - Renderable : the flicker function now takes the global flickering duration in ms (as opposed in frame count)
 - Renderable : removed the visible property
 
-## 0.9.11
+## [0.9.11]
 - Documentation : numerous fixes and improvements
 - General : fix initial loading for me.save, and update documentation
 - General : fix detection of localStorage on some phones (agmcleod)
@@ -618,7 +638,7 @@
 - Font : added a drawStroke function
 - Font : fixed a bug that broke some CSS font-family names, like `monospace` and `"Trebuchet MS"`
 
-## 0.9.10
+## [0.9.10]
 - Core : fixed object `visible` flag not being set based on their parent group visible status
 - Core : fixed both `pauseOnBlur` and `StopOnBlur` being enabled by default
 - TMX : fixed the imageLayer reset bug (when unsubscribing the viewport change event)
@@ -629,7 +649,7 @@
 - ScreenObject : fixed cases where ScreenObjects may not be considered in the viewport
 - ObjectContainer : fixed rendering of nested containers
 
-## 0.9.9
+## [0.9.9]
 - General : added proper support for a jslint task and cleaned source code accordingly (nvlbg)
 - General : added a renderable container object (me.ObjectContainer) and reorganize `me.game` accordingly
 - General : added `me.game.world` as a reference to the game world root object container.
@@ -664,7 +684,7 @@
 - Tween : the tween implementation has been updated to the last official r11 version.
 - Camera : renamed the mislabeled worldToScreen and ScreenToWorld, and fixed a bug in one of the function.
 
-## 0.9.8
+## [0.9.8]
 - Renderable : added ShoeBox Packed Texture Support (see `me.TextureAtlas`)
 - Loader : the `tps` data type has been changed to a more generic `json` data type (agmcleaod)
 - Input : added MSPointer support (Halfman)
@@ -678,7 +698,7 @@
 - Renderable : allow animation callback to prevent resetting to first frame by returning `false`
 - Core : added "Mobile" to `me.sys.isMobile` UA sniffer (fix Firefox OS detection)
 
-## 0.9.7
+## [0.9.7]
 - General : melonJS now uses Grunt, the task manager, for the build system
 - General : game objects will not update unless inside the viewport or `obj.alwaysUpdate` flag is enabled
 - Audio : preliminary audio support for mobile devices (iOS6 for now)
@@ -710,7 +730,7 @@
 - Video : optimized framerate on cocoonJS platforms by using the 'screencanvas' extension
 - Video : disable video scaling interpolation by default
 
-## 0.9.6
+## [0.9.6]
 - General : fix compatibility issue with previous iOS(5.x) and Android version
 - Core : workaround for useNativeFrame when cancelAnimationRequest is not supported
 - Audio : added volume and mute control settings
@@ -719,7 +739,7 @@
 - TMX : fixed layer scrolling when using pre-rendering
 - Loader : fixed `me.loader.load` not adding TMX into the `me.levelDirector`
 
-## 0.9.5
+## [0.9.5]
 - Audio : added mp4/aac pre-loading support
 - Audio : added codec selection based on audio support level
 - Core : fixed requestAnimationFrame
@@ -766,7 +786,7 @@
 - Example : added "whack-a-mole" as an official example
 - Example : added a new "platfomer" example (using legal assets) and removed alex kidd based examples
 
-## 0.9.4
+## [0.9.4]
 - General : melonJS is now only using Google Closure (removed YUI compressor)
 - General : melonJS is now ES5 strict mode compliant
 - General : added a .editorconfig file to provide basic rules to editors
@@ -806,7 +826,7 @@
 - Tween : fixed exception in the tween library (parasyte)
 - Documentation : corrected and added missing documentation
 
-## 0.9.3
+## [0.9.3]
 - General : better error management and reporting
 - General : added a dummy console.log for platforms not supporting it
 - General : melonJS now uses Google Closure for library minification
@@ -847,7 +867,7 @@
 - Documentation : don't use onDestroyEvent to manage score in the examples
 - Documentation : exposed more TMX objects and APIs
 
-## 0.9.2
+## [0.9.2]
 - General : melonJS is now licensed under the terms of the MIT License
 - General : added some Cake magic, allowing to use melonJS with CoffeeScript (by scan)
 - General : added melonJS UML Class Diagram in the official repository (by Ben2303)
@@ -886,7 +906,7 @@
 - Viewport : fixed default value (if parameter not specified) for Axis to follow on
 - Video : cleaned-up the applyRGBFilter function
 
-## 0.9.1
+## [0.9.1]
 - Core : "cache image" option (disabled by default) to use canvas instead of directly using Image Object
 - Core : add onPause and onResume callback when game is paused/resumed on losing/gaining focus
 - Core : added possibility to pass more than 1 extra argument to me.state.change (extra arguments will be passed to the reset function of the target object)
@@ -915,7 +935,7 @@
 - Audio : fixed compatibility issues with IE9/10
 - Geometry : added a merge function to me.Rect
 
-## 0.9.0
+## [0.9.0]
 - Documentation : API documentation using jsdoc-toolkit (finally!)
 - Geometry : define getter for me.Rect coordinates (simplify code)
 - Level : support for fadeOut/fadeIn effect in me.LevelEntity (when changing levels)
@@ -925,12 +945,12 @@
 - Viewport : rounding issue fix in the viewportEntity (aroun 30% less CPU usage on Safari/OSX!)
 - TMX : cleaned & refactored tilemap collision detection (still not perfect though)
 
-## 0.8.0
+## [0.8.0]
 - TMX : support for "TiledObject" (as supported in Tiled 0.6.2)
 - Entity : re-factored constructor call to Object Entities (to use the settings obj produced through Tiled)
 - Entity : moved collision function from AnimatedSpriteObject to ObjectEntity
 
-## 0.7.9
+## [0.7.9]
 - Viewport : added some effects to the camera object (shaking, fading, ...)
 - Viewport : re-factored and fixed the camera/viewport code
 - Core : re-factored public objects using John Resig Inheritance mechanism.
@@ -939,6 +959,6 @@
 - Audio : partially fix crash audio in safari when audio is enabled
 - Core : fixed gfx glitches (rounding issues)
 
-## 0.7.6 (16 May 2011)
+## [0.7.6] - _2011-05-16_
 - first public version with alex4 !
 - www.melonjs.org is live :)
