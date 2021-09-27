@@ -1,5 +1,5 @@
 /*!
- * melonJS Game Engine - v9.1.0
+ * melonJS Game Engine - v9.1.1
  * http://www.melonjs.org
  * melonjs is licensed under the MIT License.
  * http://www.opensource.org/licenses/mit-license
@@ -21029,20 +21029,15 @@ var Sprite = Renderable.extend({
         } else {
             // HTMLImageElement/Canvas or String
             this.image = (typeof settings.image === "object") ? settings.image : loader$1.getImage(settings.image);
+            // throw an error if image ends up being null/undefined
+            if (!this.image) {
+                throw new Error("me.Sprite: '" + settings.image + "' image/texture not found!");
+            }
             // update the default "current" frame size
             this.current.width = settings.framewidth = settings.framewidth || this.image.width;
             this.current.height = settings.frameheight = settings.frameheight || this.image.height;
             this.source = video$1.renderer.cache.get(this.image, settings);
             this.textureAtlas = this.source.getAtlas();
-        }
-
-        // throw an error if image ends up being null/undefined
-        if (!this.image) {
-            throw new Error((
-                (typeof(settings.image) === "string") ?
-                "'" + settings.image + "'" :
-                "Image"
-            ) + " file for Image Layer '" + this.name + "' not found!");
         }
 
         // store/reset the current atlas information if specified
@@ -32373,10 +32368,10 @@ var plugin = {
              * this can be overridden by the plugin
              * @public
              * @type String
-             * @default "9.1.0"
+             * @default "9.1.1"
              * @name me.plugin.Base#version
              */
-            this.version = "9.1.0";
+            this.version = "9.1.1";
         }
     }),
 
@@ -36628,7 +36623,7 @@ var Jay = window.Jay;
  * @name version
  * @type {string}
  */
-const version = "9.1.0";
+const version = "9.1.1";
 
 
 /**
