@@ -86,7 +86,7 @@
     "test": "npm run build && karma start tests/karma.conf.js",
     "doc": "mkdirp docs && jsdoc -c jsdoc_conf.json",
     "publishdoc": "npm run doc && ghpages melonjs/melonJS -p docs",
-    "release": "npm run dist && npm publish --access public && npm run publishdoc",
+    "release": "npm run dist && npm publish --access public",
     "clean": "del-cli --force build/*.js docs"
   }
 }
