@@ -147,20 +147,15 @@ var Sprite = Renderable.extend({
         } else {
             // HTMLImageElement/Canvas or String
             this.image = (typeof settings.image === "object") ? settings.image : loader.getImage(settings.image);
+            // throw an error if image ends up being null/undefined
+            if (!this.image) {
+                throw new Error("me.Sprite: '" + settings.image + "' image/texture not found!");
+            }
             // update the default "current" frame size
             this.current.width = settings.framewidth = settings.framewidth || this.image.width;
             this.current.height = settings.frameheight = settings.frameheight || this.image.height;
             this.source = video.renderer.cache.get(this.image, settings);
             this.textureAtlas = this.source.getAtlas();
-        }
-
-        // throw an error if image ends up being null/undefined
-        if (!this.image) {
-            throw new Error((
-                (typeof(settings.image) === "string") ?
-                "'" + settings.image + "'" :
-                "Image"
-            ) + " file for Image Layer '" + this.name + "' not found!");
         }
 
         // store/reset the current atlas information if specified
