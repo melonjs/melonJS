@@ -962,3 +962,6 @@
 ## [0.7.6] - _2011-05-16_
 - first public version with alex4 !
 - www.melonjs.org is live :)
+
+[9.1.1]: https://github.com/melonjs/melonJS/compare/9.1.1...9.1.0
+[9.0.2]: https://github.com/melonjs/melonJS/compare/8.0.1...9.0.2
