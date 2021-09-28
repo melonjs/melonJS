@@ -1,7 +1,7 @@
 /*!
- * melonJS Game Engine - v9.1.1
+ * melonJS Game Engine - v10.0.0
  * http://www.melonjs.org
- * melonjs is licensed under the MIT License.
+ * melonJS 2 is licensed under the MIT License.
  * http://www.opensource.org/licenses/mit-license
  * @copyright (C) 2011 - 2021 Olivier Biot
  */
@@ -696,10 +696,6 @@ var pool = {
                 if (typeof(obj.onResetEvent) === "function") {
                     obj.onResetEvent.apply(obj, args);
                 }
-                else if (typeof(obj.init) === "function") {
-                    // backward compatibility with Jay Inheritance
-                    obj.init.apply(obj, args);
-                }
                 instance_counter--;
             }
             else {
@@ -1298,955 +1294,6 @@ class Vector2d {
         return "x:" + this.x + ",y:" + this.y;
     }
 }
-
-/**
- * placeholder for all deprecated classes and corresponding alias for backward compatibility
- * @namespace deprecated
- * @memberOf me
- */
-
-/**
- * display a deprecation warning in the console
- * @public
- * @function
- * @memberOf me.deprecated
- * @name warning
- * @param {String} deprecated deprecated class,function or property name
- * @param {String} replacement the replacement class, function, or property name
- * @param {String} version the version since when the lass,function or property is deprecated
- */
-function warning(deprecated, replacement, version) {
-    var msg = "melonJS: %s is deprecated since version %s, please use %s";
-    var stack = new Error().stack;
-
-    if (console.groupCollapsed) {
-        console.groupCollapsed(
-            "%c" + msg,
-            "font-weight:normal;color:yellow;",
-            deprecated,
-            version,
-            replacement
-        );
-    } else {
-        console.warn(
-            msg,
-            deprecated,
-            version,
-            replacement
-        );
-    }
-
-    if (typeof stack !== "undefined") {
-        console.warn(stack);
-    }
-
-    if (console.groupCollapsed) {
-        console.groupEnd();
-    }
-
-
-}
-
-/**
- * Backward compatibility for deprecated method or properties are automatically
- * applied when automatically generating an UMD bundle (which is the default since version 9.0).
- * @memberof me.deprecated
- * @function apply
- */
- function apply() {
-
-    /**
-     * @function me.device.getPixelRatio
-     * @deprecated since 5.1.0
-     * @see me.device.devicePixelRatio
-     */
-    me.device.getPixelRatio = function() {
-        warning("me.device.getPixelRatio()", "me.device.devicePixelRatio", "5.1.0");
-        return me.device.devicePixelRatio;
-    };
-
-    /**
-     * @class me.Font
-     * @deprecated since 6.1.0
-     * @see me.Text
-     */
-    me.Font = me.Text.extend({
-        /** @ignore */
-        init: function (font, size, fillStyle, textAlign) {
-            var settings = {
-                font:font,
-                size:size,
-                fillStyle:fillStyle,
-                textAlign:textAlign
-            };
-            // super constructor
-            this._super(me.Text, "init", [0, 0, settings]);
-            // deprecation warning
-            warning("me.Font", "me.Text", "6.1.0");
-        },
-
-        /** @ignore */
-        setFont : function (font, size, fillStyle, textAlign) {
-            // apply fillstyle if defined
-            if (typeof(fillStyle) !== "undefined") {
-                this.fillStyle.copy(fillStyle);
-            }
-            // h alignement if defined
-            if (typeof(textAlign) !== "undefined") {
-                this.textAlign = textAlign;
-            }
-            // super constructor
-            return this._super(me.Text, "setFont", [font, size]);
-        }
-    });
-
-    /**
-     * @ignore
-     */
-    me.BitmapFontData = me.BitmapTextData;
-
-    /**
-     * @class me.BitmapFont
-     * @deprecated since 6.1.0
-     * @see me.BitmapText
-     */
-    me.BitmapFont = me.BitmapText.extend({
-        /** @ignore */
-        init: function (data, fontImage, scale, textAlign, textBaseline) {
-            var settings = {
-                font: fontImage,
-                fontData: data,
-                size: scale,
-                textAlign: textAlign,
-                textBaseline: textBaseline
-            };
-            // super constructor
-            this._super(me.BitmapText, "init", [0, 0, settings]);
-            // deprecation warning
-            warning("me.BitmapFont", "me.BitmapText", "6.1.0");
-        }
-    });
-
-    /**
-     * @class me.ScreenObject
-     * @deprecated since 6.2.0
-     * @see me.Stage
-     */
-    me.ScreenObject = me.Stage.extend({
-        /** @ignore */
-        init: function (settings) {
-            // super constructor
-            this._super(me.Stage, "init", [settings]);
-            // deprecation warning
-            warning("me.ScreenObject", "me.Stage", "6.2.0");
-        }
-    });
-
-    /**
-     * @function me.Renderer.drawShape
-     * @deprecated since 6.3.0
-     * @see me.Renderer.stroke
-     */
-    me.Renderer.prototype.drawShape = function () {
-        warning("drawShape()", "the stroke() or fill()", "6.3.0");
-        me.Renderer.prototype.stroke.apply(this, arguments);
-    };
-
-    /**
-     * @function me.video.getPos
-     * @deprecated since 7.0.0
-     * @see me.device.getElementBounds
-     */
-    me.video.getPos = function() {
-        warning("me.video.getPos()", "me.device.getElementBounds(me.video.renderer.getScreenCanvas());", "7.0.0");
-        return me.device.getElementBounds(me.video.renderer.getScreenCanvas());
-    };
-
-    /**
-     * @classdesc
-     * melonJS base class for exception handling.
-     * @class
-     * @memberOf me
-     * @constructor
-     * @deprecated since 7.0.0
-     * @see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Error
-     * @param {String} msg Error message.
-     * @example
-     * throw new me.Error("Guru Meditation");
-     */
-     me.Error = function(msg) {
-         var err = new Error();
-         err.name = "me.Error";
-         err.message = msg;
-         return err;
-     };
-
-    /**
-     * @namespace me.sys
-     * @deprecated since 9.0.0
-     */
-    me.sys = me.sys || {};
-
-    /**
-     * @function me.sys.checkVersion
-     * @deprecated since 7.1.0
-     * @see me.utils.checkVersion
-     */
-    me.sys.checkVersion = function(first, second) {
-        warning("me.sys.checkVersion()", "me.utils.checkVersion()", "7.1.0");
-        return me.utils.checkVersion(first, second);
-    };
-
-    /**
-     * @public
-     * @type {Object}
-     * @name HASH
-     * @memberOf me.game
-     * @deprecated since 7.1.0
-     * @see me.utils.getUriFragment
-     */
-    Object.defineProperty(me.game, "HASH", {
-        /**
-         * @ignore
-         */
-        get : function () {
-            warning("me.game.HASH", "me.utils.getUriFragment()", "7.1.0");
-            return me.utils.getUriFragment();
-        },
-        configurable : false
-    });
-
-    /**
-     * @function me.video.updateDisplaySize
-     * @deprecated since 7.1.0
-     * @see me.video.scale
-     */
-    me.video.updateDisplaySize = function(x, y) {
-        warning("me.video.updateDisplaySize()", "me.video.scale()", "7.1.0");
-        return me.video.scale(x, y);
-    };
-
-    /**
-     * @function me.Renderer.scaleCanvas
-     * @deprecated since 7.1.0
-     * @see me.video.scale
-     */
-    me.Renderer.prototype.scaleCanvas = function (x, y) {
-        warning("scaleCanvas()", "me.video.scale()", "7.1.0");
-        return me.video.scale(x, y);
-    };
-
-    /**
-     * @function me.Entity.distanceToPoint
-     * @deprecated since 7.1.0
-     * @see me.Renderable.distanceTo
-    */
-    me.Entity.prototype.distanceToPoint = function (v) {
-        warning("distanceToPoint()", "me.Renderable.distanceTo()", "7.1.0");
-        return this.distanceTo(v);
-    };
-
-    /**
-     * @function me.Entity.angleToPoint
-     * @deprecated since 7.1.0
-     * @see me.Renderable.angleTo
-    */
-    me.Entity.prototype.angleToPoint = function (v) {
-        warning("angleToPoint()", "me.Renderable.angleTo()", "7.1.0");
-        return this.angleTo(v);
-    };
-
-    /**
-     * @public
-     * @type {Number}
-     * @name gravity
-     * @memberOf me.sys
-     * @deprecated since 8.0.0
-     * @see me.World.gravity
-     */
-    Object.defineProperty(me.sys, "gravity", {
-        /**
-         * @ignore
-         */
-        get : function () {
-            warning("me.sys.gravity", "me.game.world.gravity", "8.0.0");
-            return me.game.world ? me.game.world.gravity.y : undefined;
-        },
-
-        /**
-         * @ignore
-         */
-        set : function (value) {
-            warning("me.sys.gravity", "me.game.world.gravity", "8.0.0");
-            if (me.game.world) me.game.world.gravity.y = value;
-        },
-        configurable : false
-    });
-
-    /**
-     * @ignore
-     */
-    me.WebGLRenderer.Compositor = me.WebGLCompositor;
-
-    /**
-     * Draw triangle(s)
-     * @name drawTriangle
-     * @deprecated since 8.0.0
-     * @see me.WebGLRenderer.Compositor
-     * @memberOf me.WebGLRenderer.Compositor.drawVertices
-     * @function
-     * @param {me.Vector2d[]} points vertices
-     * @param {Number} [len=points.length] amount of points defined in the points array
-     * @param {Boolean} [strip=false] Whether the array defines a serie of connected triangles, sharing vertices
-     */
-    me.WebGLRenderer.Compositor.prototype.drawTriangle = function (points, len, strip) {
-        var gl = this.gl;
-        this.drawVertices(strip === true ? gl.TRIANGLE_STRIP : gl.TRIANGLES, points, len);
-        warning("drawTriangle()", "drawVertices()", "8.0.0");
-    };
-
-    /**
-     * Draw a line
-     * @name drawLine
-     * @deprecated since 8.0.0
-     * @memberOf me.WebGLRenderer.Compositor.drawVertices
-     * @memberOf me.WebGLRenderer.Compositor
-     * @function
-     * @param {me.Vector2d[]} points Line vertices
-     * @param {Number} [len=points.length] amount of points defined in the points array
-     * @param {Boolean} [open=false] Whether the line is open (true) or closed (false)
-     */
-    me.WebGLRenderer.Compositor.prototype.drawLine = function (points, len, open) {
-        var gl = this.gl;
-        this.drawVertices(open === true ? gl.LINE_STRIP : gl.LINE_LOOP, points, len);
-        warning("drawLine()", "drawVertices()", "8.0.0");
-    };
-
-    /**
-     * @public
-     * @type {me.Vector2d}
-     * @name scale
-     * @memberOf me.sys
-     * @deprecated since 8.0.0
-     * @see me.video.scaleRatio
-     */
-    Object.defineProperty(me.sys, "scale", {
-        /**
-         * @ignore
-         */
-        get : function () {
-            warning("me.sys.scale", "me.video.scaleRatio", "8.0.0");
-            return me.video.scaleRatio;
-        },
-        configurable : false
-    });
-
-    /**
-     * @function me.video.getWrapper
-     * @deprecated since 8.0.0
-     * @see me.video.getParent
-     */
-    me.video.getWrapper = function() {
-        warning("me.video.getWrapper()", "me.device.getParent()", "8.0.0");
-        return me.video.getParent();
-    };
-
-    /**
-     * Set game FPS limiting
-     * @public
-     * @type {Number}
-     * @name fps
-     * @memberOf me.sys
-     * @deprecated since 8.0.0
-     * @see me.timer.maxfps
-     */
-    Object.defineProperty(me.sys, "fps", {
-        /**
-         * @ignore
-         */
-        get : function () {
-            warning("me.sys.fps", "me.timer.maxfps", "8.0.0");
-            return me.timer.maxfps;
-        },
-
-        /**
-         * @ignore
-         */
-        set : function (value) {
-            warning("me.sys.fps", "me.timer.maxfps", "8.0.0");
-            me.timer.maxfps = value;
-        },
-        configurable : false
-    });
-
-    /**
-     * Rate at which the game physic updates;
-     * may be greater than or lower than the display fps
-     * @public
-     * @type {Number}
-     * @name updatesPerSecond
-     * @memberOf me.sys
-     * @deprecated since 8.0.0
-     * @see me.World.fps
-     */
-    Object.defineProperty(me.sys, "updatesPerSecond", {
-        /**
-         * @ignore
-         */
-        get : function () {
-            warning("me.sys.updatesPerSecond", "me.game.world.fps", "8.0.0");
-            return me.game.world.fps;
-        },
-
-        /**
-         * @ignore
-         */
-        set : function (value) {
-            warning("me.sys.updatesPerSecond", "me.game.world.fps", "8.0.0");
-            me.game.world.fps = value;
-        },
-        configurable : false
-    });
-
-    /**
-     * Enable/disable frame interpolation
-     * @public
-     * @type {Boolean}
-     * @name interpolation
-     * @memberOf me.sys
-     * @deprecated since 8.0.0
-     * @see me.timer.interpolation
-     */
-    Object.defineProperty(me.sys, "interpolation", {
-        /**
-         * @ignore
-         */
-        get : function () {
-            warning("me.sys.interpolation", "me.timer.interpolation", "8.0.0");
-            return me.timer.interpolation;
-        },
-
-        /**
-         * @ignore
-         */
-        set : function (value) {
-            warning("me.sys.interpolation", "me.timer.interpolation", "8.0.0");
-            me.timer.interpolation = value;
-        },
-        configurable : false
-    });
-
-    /**
-     * add collision mesh based on a given Physics Editor JSON object
-     * @name addShapesFromJSON
-     * @deprecated since 8.0.0
-     * @see me.Body.fromJSON
-     * @memberOf me.Body
-     * @function
-     * @param {me.Rect|me.Polygon|me.Line|me.Ellipse|Object} shape a shape or JSON object
-     * @param {Boolean} batchInsert if true the body bounds won't be updated after adding a shape
-     * @return {Number} the shape array length
-     */
-    me.Body.prototype.addShapesFromJSON = function (json, id) {
-        warning("addShapesFromJSON()", "fromJSON()", "8.0.0");
-        return this.fromJSON(json, id);
-    };
-
-    /**
-     * Specify either to stop on audio loading error or not
-     * @public
-     * @type {Boolean}
-     * @name stopOnAudioError
-     * @memberOf me.sys
-     * @deprecated since 9.0.0
-     * @see me.audio.interpolation
-     */
-    Object.defineProperty(me.sys, "stopOnAudioError", {
-        /**
-         * @ignore
-         */
-        get : function () {
-            warning("me.sys.stopOnAudioError", "me.audio.stopOnAudioError", "9.0.0");
-            return me.audio.stopOnAudioError;
-        },
-
-        /**
-         * @ignore
-         */
-        set : function (value) {
-            warning("me.sys.stopOnAudioError", "me.audio.stopOnAudioError", "9.0.0");
-            me.audio.stopOnAudioError = value;
-        },
-        configurable : false
-    });
-
-    /**
-     * Specify whether to pause the game when losing focus
-     * @public
-     * @type {Boolean}
-     * @name pauseOnBlur
-     * @memberOf me.sys
-     * @deprecated since 9.0.0
-     * @see me.device.pauseOnBlur
-     */
-    Object.defineProperty(me.sys, "pauseOnBlur", {
-        /**
-         * @ignore
-         */
-        get : function () {
-            warning("me.sys.pauseOnBlur", "me.device.pauseOnBlur", "9.0.0");
-            return me.audio.pauseOnBlur;
-        },
-
-        /**
-         * @ignore
-         */
-        set : function (value) {
-            warning("me.sys.pauseOnBlur", "me.device.pauseOnBlur", "9.0.0");
-            me.device.pauseOnBlur = value;
-        },
-        configurable : false
-    });
-
-    /**
-     * Specify whether to unpause the game when gaining focus
-     * @public
-     * @type {Boolean}
-     * @name resumeOnFocus
-     * @memberOf me.sys
-     * @deprecated since 9.0.0
-     * @see me.device.resumeOnFocus
-     */
-    Object.defineProperty(me.sys, "resumeOnFocus", {
-        /**
-         * @ignore
-         */
-        get : function () {
-            warning("me.sys.pauseOnBlur", "me.device.resumeOnFocus", "9.0.0");
-            return me.device.resumeOnFocus;
-        },
-
-        /**
-         * @ignore
-         */
-        set : function (value) {
-            warning("me.sys.pauseOnBlur", "me.device.resumeOnFocus", "9.0.0");
-            me.device.resumeOnFocus = value;
-        },
-        configurable : false
-    });
-
-    /**
-     * Specify whether to automatically bring the window to the front
-     * @public
-     * @type {Boolean}
-     * @name autoFocus
-     * @memberOf me.sys
-     * @deprecated since 9.0.0
-     * @see me.device.autoFocus
-     */
-    Object.defineProperty(me.sys, "autoFocus", {
-        /**
-         * @ignore
-         */
-        get : function () {
-            warning("me.sys.autoFocus", "me.device.autoFocus", "9.0.0");
-            return me.device.autoFocus;
-        },
-
-        /**
-         * @ignore
-         */
-        set : function (value) {
-            warning("me.sys.autoFocus", "me.device.autoFocus", "9.0.0");
-            me.device.autoFocus = value;
-        },
-        configurable : false
-    });
-
-    /**
-     * Specify whether to stop the game when losing focus or not
-     * @public
-     * @type {Boolean}
-     * @name pauseOnBlur
-     * @memberOf me.sys
-     * @deprecated since 9.0.0
-     * @see me.device.pauseOnBlur
-     */
-    Object.defineProperty(me.sys, "stopOnBlur", {
-        /**
-         * @ignore
-         */
-        get : function () {
-            warning("me.sys.pauseOnBlur", "me.device.stopOnBlur", "9.0.0");
-            return me.device.stopOnBlur;
-        },
-
-        /**
-         * @ignore
-         */
-        set : function (value) {
-            warning("me.sys.pauseOnBlur", "me.device.stopOnBlur", "9.0.0");
-            me.device.stopOnBlur = value;
-        },
-        configurable : false
-    });
-
-    /**
-     * Specify the rendering method for tiled layers
-     * @public
-     * @type {Boolean}
-     * @name preRender
-     * @memberOf me.sys
-     * @deprecated since 9.0.0
-     * @see me.game.world.preRender
-     */
-    Object.defineProperty(me.sys, "preRender", {
-        /**
-         * @ignore
-         */
-        get : function () {
-            warning("me.sys.preRender", "me.game.world.preRender", "9.0.0");
-            return me.game.world.stopOnBlur;
-        },
-
-        /**
-         * @ignore
-         */
-        set : function (value) {
-            warning("me.sys.preRender", "me.game.world.preRender", "9.0.0");
-            me.game.world.stopOnBlur = value;
-        },
-        configurable : false
-    });
-
-    /**
-     * @namespace me.levelDirector
-     * @deprecated since 9.0.0
-     * @see me.level
-     */
-    me.levelDirector = me.levelDirector || {};
-
-    /**
-     * @function me.levelDirector.loadLevel
-     * @deprecated since 9.0.0
-     * @see me.level.load
-     */
-    me.levelDirector.loadLevel = function(levelId, options) {
-        warning("me.levelDirector.loadLevel()", "me.level.load()", "9.0.0");
-        return me.level.load(levelId, options);
-    };
-
-    /**
-     * @function me.levelDirector.getCurrentLevelId
-     * @deprecated since 9.0.0
-     * @see me.level.getCurrentLevelId
-     */
-    me.levelDirector.getCurrentLevelId = function() {
-        warning("me.levelDirector.getCurrentLevelId()", "me.level.getCurrentLevelId()", "9.0.0");
-        return me.level.getCurrentLevelId();
-    };
-
-    /**
-     * @function me.levelDirector.getCurrentLevel
-     * @deprecated since 9.0.0
-     * @see me.level.load
-     */
-    me.levelDirector.getCurrentLevel = function() {
-        warning("me.levelDirector.getCurrentLevel()", "me.level.getCurrentLevel()", "9.0.0");
-        return me.level.getCurrentLevel();
-    };
-
-    /**
-     * @function me.levelDirector.reloadLevel
-     * @deprecated since 9.0.0
-     * @see me.level.reload
-     */
-    me.levelDirector.reloadLevel = function(options) {
-        warning("me.levelDirector.reloadLevel()", "me.level.reload()", "9.0.0");
-        return me.level.reload(options);
-    };
-
-    /**
-     * @function me.levelDirector.nextLevel
-     * @deprecated since 9.0.0
-     * @see me.level.load
-     */
-    me.levelDirector.nextLevel = function(options) {
-        warning("me.levelDirector.nextLevel()", "me.level.next()", "9.0.0");
-        return me.level.next(options);
-    };
-
-    /**
-     * @function me.levelDirector.previousLevel
-     * @deprecated since 9.0.0
-     * @see me.level.load
-     */
-    me.levelDirector.previousLevel = function(options) {
-        warning("me.levelDirector.previousLevel()", "me.level.previous()", "9.0.0");
-        return me.level.previous(options);
-    };
-
-    /**
-     * @function me.levelDirector.levelCount
-     * @deprecated since 9.0.0
-     * @see me.level.levelCount
-     */
-    me.levelDirector.levelCount = function() {
-        warning("me.levelDirector.levelCount()", "me.level.levelCount()", "9.0.0");
-        return me.level.levelCount();
-    };
-
-    /**
-     * translate the rect by the specified vector
-     * @name translate
-     * @memberOf me.Rect.prototype
-     * @function
-     * @deprecated since 9.0.0
-     * @see me.Rect.translate
-     * @param {me.Vector2d} v vector offset
-     * @return {me.Rect} this rectangle
-     */
-    me.Rect.prototype.translateV = function (v) {
-        warning("translateV()", "translate()", "9.0.0");
-        return this.translate(v);
-    };
-
-    /**
-     * Returns true if the rectangle contains the given point
-     * @name containsPoint
-     * @memberOf me.Rect.prototype
-     * @function
-     * @deprecated since 9.0.0
-     * @see me.Rect.contains
-     * @param  {Number} x x coordinate
-     * @param  {Number} y y coordinate
-     * @return {boolean} true if contains
-     */
-    me.Rect.prototype.containsPoint = function (x, y) {
-        warning("containsPoint()", "contains()", "9.0.0");
-        return this.contains(x, y);
-    };
-
-    /**
-     * translate the Polygon by the specified vector
-     * @name translateV
-     * @memberOf me.Polygon.prototype
-     * @function
-     * @deprecated since 9.0.0
-     * @see me.Polygon.translate
-     * @param {me.Vector2d} v vector offset
-     * @return {me.Polygon} Reference to this object for method chaining
-     */
-    me.Polygon.prototype.translateV = function (v) {
-        warning("translateV()", "translate()", "9.0.0");
-        return this.translate(v);
-    };
-
-    /**
-     * check if this Polygon contains the specified point
-     * @name containsPointV
-     * @memberOf me.Polygon.prototype
-     * @function
-     * @deprecated since 9.0.0
-     * @see me.Polygon.contains
-     * @param  {me.Vector2d} point
-     * @return {boolean} true if contains
-     */
-    me.Polygon.prototype.containsPointV = function (v) {
-        warning("containsPointV()", "contains()", "9.0.0");
-        return this.contains(v);
-    };
-
-    /**
-     * Returns true if the polygon contains the given point. <br>
-     * (Note: it is highly recommended to first do a hit test on the corresponding <br>
-     *  bounding rect, as the function can be highly consuming with complex shapes)
-     * @name containsPoint
-     * @memberOf me.Polygon.prototype
-     * @function
-     * @deprecated since 9.0.0
-     * @see me.Polygon.contains
-     * @param  {Number} x x coordinate
-     * @param  {Number} y y coordinate
-     * @return {boolean} true if contains
-     */
-
-    me.Polygon.prototype.containsPoint = function (x, y) {
-        warning("containsPoint()", "contains()", "9.0.0");
-        return this.contains(x, y);
-    };
-
-    /**
-     * check if this Line contains the specified point
-     * @name containsPointV
-     * @memberOf me.Line.prototype
-     * @function
-     * @deprecated since 9.0.0
-     * @see me.Line.contains
-     * @param  {me.Vector2d} point
-     * @return {boolean} true if contains
-     */
-    me.Line.prototype.containsPointV = function (v) {
-        warning("containsPointV()", "contains()", "9.0.0");
-        return this.contains(v);
-    };
-
-    /**
-     * Returns true if the Line contains the given point. <br>
-     * (Note: it is highly recommended to first do a hit test on the corresponding <br>
-     *  bounding rect, as the function can be highly consuming with complex shapes)
-     * @name containsPoint
-     * @memberOf me.Line.prototype
-     * @function
-     * @deprecated since 9.0.0
-     * @see me.Line.contains
-     * @param  {Number} x x coordinate
-     * @param  {Number} y y coordinate
-     * @return {boolean} true if contains
-     */
-    me.Line.prototype.containsPoint = function (x, y) {
-        warning("containsPoint()", "contains()", "9.0.0");
-        return this.contains(x, y);
-    };
-
-    /**
-     * translate the circle/ellipse by the specified vector
-     * @name translateV
-     * @memberOf me.Ellipse.prototype
-     * @function
-     * @deprecated since 9.0.0
-     * @see me.Ellipse.translate
-     * @param {me.Vector2d} v vector offset
-     * @return {me.Rect} this ellipse
-     */
-    me.Ellipse.prototype.translateV = function (v) {
-        warning("translateV()", "translate()", "9.0.0");
-        return this.translate(v);
-    };
-
-    /**
-     * check if this Ellipse contains the specified point
-     * @name containsPointV
-     * @memberOf me.Ellipse.prototype
-     * @function
-     * @deprecated since 9.0.0
-     * @see me.Ellipse.contains
-     * @param  {me.Vector2d} point
-     * @return {boolean} true if contains
-     */
-    me.Ellipse.prototype.containsPointV = function (v) {
-        warning("containsPointV()", "contains()", "9.0.0");
-        return this.contains(v);
-    };
-
-    /**
-     * Returns true if the Ellipse contains the given point
-     * @name containsPoint
-     * @memberOf me.Ellipse.prototype
-     * @function
-     * @deprecated since 9.0.0
-     * @see me.Ellipse.contains
-     * @param  {Number} x x coordinate
-     * @param  {Number} y y coordinate
-     * @return {boolean} true if contains
-     */
-    me.Ellipse.prototype.containsPoint = function (x, y) {
-        warning("containsPoint()", "contains()", "9.0.0");
-        return this.contains(x, y);
-    };
-
-    /**
-     * translate the matrix by a vector on the horizontal and vertical axis
-     * @name translateV
-     * @memberOf me.Matrix2d
-     * @function
-     * @deprecated since 9.0.0
-     * @see me.Matrix2d.translate
-     * @param {me.Vector2d} v the vector to translate the matrix by
-     * @return {me.Matrix2d} Reference to this object for method chaining
-     */
-    me.Matrix2d.prototype.translateV = function (v) {
-        warning("translateV()", "translate()", "9.0.0");
-        return this.translate(v);
-    };
-
-    /**
-     * translate the matrix by a vector on the horizontal and vertical axis
-     * @name translateV
-     * @memberOf me.Matrix3d
-     * @function
-     * @deprecated since 9.0.0
-     * @see me.Matrix3d.translate
-     * @param {me.Vector2d|me.Vector3d} v the vector to translate the matrix by
-     * @return {me.Matrix3d} Reference to this object for method chaining
-     */
-    me.Matrix3d.prototype.translateV = function (v) {
-        warning("translateV()", "translate()", "9.0.0");
-        return this.translate(v);
-    };
-
-    /**
-     * The bounds that contains all its children
-     * @public
-     * @type {me.Bounds}
-     * @name childBounds
-     * @memberOf me.Container
-     * @deprecated since 9.0.0
-     * @see me.Container.getBounds
-     */
-    Object.defineProperty(me.Container.prototype, "childBounds", {
-        /**
-         * @ignore
-         */
-        get : function () {
-            warning("childBounds", "getBounds()", "9.0.0");
-            return this.getBounds();
-        },
-        configurable : false
-    });
-
-    /**
-     * @class me.CollectableEntity
-     * @deprecated since 9.0.0
-     * @see me.Collectable
-     */
-    me.CollectableEntity = me.Collectable.extend({
-        /** @ignore */
-        init: function (x, y, settings) {
-            // super constructor
-            this._super(me.Collectable, "init", [x, y, settings]);
-            // deprecation warning
-            warning("me.CollectableEntity", "me.Collectable", "9.0.0");
-        }
-    });
-
-    /**
-     * @class me.LevelEntity
-     * @deprecated since 9.0.0
-     * @see me.Trigger
-     */
-    me.LevelEntity = me.Trigger.extend({
-        /** @ignore */
-        init: function (x, y, settings) {
-            // super constructor
-            this._super(me.Trigger, "init", [x, y, settings]);
-            // deprecation warning
-            warning("me.LevelEntity", "me.Trigger", "9.0.0");
-        }
-    });
-
-    // corresponding entry in the object pool
-    me.pool.register("me.CollectableEntity", me.CollectableEntity);
-    me.pool.register("me.LevelEntity", me.LevelEntity);
-
-}
-
-var deprecated = /*#__PURE__*/Object.freeze({
-    __proto__: null,
-    warning: warning,
-    apply: apply
-});
 
 // convert a give color component to it hexadecimal value
 var toHex = function (component) {
@@ -10099,191 +9146,24 @@ earcut.flatten = function (data) {
 var earcut$1 = earcut$2.exports;
 
 /**
- * Extend a class prototype with the provided mixin descriptors.
- * Designed as a faster replacement for John Resig's Simple Inheritance.
- * @name extend
- * @memberOf Jay
- * @function
- * @param {Object[]} mixins... Each mixin is a dictionary of functions, or a
- * previously extended class whose methods will be applied to the target class
- * prototype.
- * @return {Object}
- * @example
- * var Person = Jay.extend({
- *     "init" : function (isDancing) {
- *         this.dancing = isDancing;
- *     },
- *     "dance" : function () {
- *         return this.dancing;
- *     }
- * });
- *
- * var Ninja = Person.extend({
- *     "init" : function () {
- *         // Call the super constructor, passing a single argument
- *         this._super(Person, "init", [false]);
- *     },
- *     "dance" : function () {
- *         // Call the overridden dance() method
- *         return this._super(Person, "dance");
- *     },
- *     "swingSword" : function () {
- *         return true;
- *     }
- * });
- *
- * var Pirate = Person.extend(Ninja, {
- *     "init" : function () {
- *         // Call the super constructor, passing a single argument
- *         this._super(Person, "init", [true]);
- *     }
- * });
- *
- * var p = new Person(true);
- * console.log(p.dance()); // => true
- *
- * var n = new Ninja();
- * console.log(n.dance()); // => false
- * console.log(n.swingSword()); // => true
- *
- * var r = new Pirate();
- * console.log(r.dance()); // => true
- * console.log(r.swingSword()); // => true
- *
- * console.log(
- *     p instanceof Person &&
- *     n instanceof Ninja &&
- *     n instanceof Person &&
- *     r instanceof Pirate &&
- *     r instanceof Person
- * ); // => true
- *
- * console.log(r instanceof Ninja); // => false
- */
-
-(function () {
-    function extend() {
-        var methods = {};
-        var mixins = new Array(arguments.length);
-        for (var i = 0; i < arguments.length; i++) {
-            mixins.push(arguments[i]);
-        }
-
-        /**
-         * The class constructor which calls the user `init` constructor.
-         * @ignore
-         */
-        function Class() {
-            // Call the user constructor
-            this.init.apply(this, arguments);
-            return this;
-        }
-
-        // Apply superClass
-        Class.prototype = Object.create(this.prototype);
-
-        // Apply all mixin methods to the class prototype
-        mixins.forEach(function (mixin) {
-            apply_methods(Class, methods, mixin.__methods__ || mixin);
-        });
-
-        // Verify constructor exists
-        if (!("init" in Class.prototype)) {
-            throw new TypeError(
-                "extend: Class is missing a constructor named `init`"
-            );
-        }
-
-        // Apply syntactic sugar for accessing methods on super classes
-        Object.defineProperty(Class.prototype, "_super", {
-            "value" : _super
-        });
-
-        // Create a hidden property on the class itself
-        // List of methods, used for applying classes as mixins
-        Object.defineProperty(Class, "__methods__", {
-            "value" : methods
-        });
-
-        // Make this class extendable
-        Class.extend = extend;
-
-        return Class;
-    }
-
-    /**
-     * Apply methods to the class prototype.
-     * @ignore
-     */
-    function apply_methods(Class, methods, descriptor) {
-        Object.keys(descriptor).forEach(function (method) {
-            methods[method] = descriptor[method];
-
-            if (typeof(descriptor[method]) !== "function") {
-                throw new TypeError(
-                    "extend: Method `" + method + "` is not a function"
-                );
-            }
-
-            Object.defineProperty(Class.prototype, method, {
-                "configurable" : true,
-                "value" : descriptor[method]
-            });
-        });
-    }
-
-    /**
-     * Special method that acts as a proxy to the super class.
-     * @name _super
-     * @ignore
-     */
-    function _super(superClass, method, args) {
-        return superClass.prototype[method].apply(this, args);
-    }
-
-    /**
-     * The base class from which all jay-extend classes inherit.
-     * @ignore
-     */
-    var Jay = function () {
-        Object.apply(this, arguments);
-    };
-    Jay.prototype = Object.create(Object.prototype);
-    Jay.prototype.constructor = Jay;
-
-    Object.defineProperty(Jay, "extend", {
-        "value" : extend
-    });
-
-    /**
-     * Export the extend method.
-     * @ignore
-     */
-    if (typeof(window) !== "undefined") {
-        window.Jay = Jay;
-    }
-})();
-
-/**
+ * @classdesc
  * a polygon Object.<br>
  * Please do note that melonJS implements a simple Axis-Aligned Boxes collision algorithm, which requires all polygons used for collision to be convex with all vertices defined with clockwise winding.
  * A polygon is convex when all line segments connecting two points in the interior do not cross any edge of the polygon
  * (which means that all angles are less than 180 degrees), as described here below : <br>
  * <center><img src="images/convex_polygon.png"/></center><br>
  * A polygon's `winding` is clockwise iff its vertices (points) are declared turning to the right. The image above shows COUNTERCLOCKWISE winding.
- * @class
- * @extends me.Object
+ * @class Polygon
  * @memberOf me
  * @constructor
  * @param {Number} x origin point of the Polygon
  * @param {Number} y origin point of the Polygon
  * @param {me.Vector2d[]} points array of vector defining the Polygon
  */
-var Polygon = window.Jay.extend({
-    /**
-     * @ignore
-     */
-    init : function (x, y, points) {
+
+class Polygon {
+
+    constructor(x, y, points) {
         /**
          * origin point of the Polygon
          * @public
@@ -10337,12 +9217,12 @@ var Polygon = window.Jay.extend({
         // the shape type
         this.shapeType = "Polygon";
         this.setShape(x, y, points);
-    },
+    }
 
     /** @ignore */
-    onResetEvent : function (x, y, points) {
+    onResetEvent(x, y, points) {
         this.setShape(x, y, points);
-    },
+    }
 
     /**
      * set new value to the Polygon
@@ -10353,11 +9233,11 @@ var Polygon = window.Jay.extend({
      * @param {Number} y position of the Polygon
      * @param {me.Vector2d[]|Number[]} points array of vector or vertice defining the Polygon
      */
-    setShape : function (x, y, points) {
+    setShape(x, y, points) {
         this.pos.set(x, y);
         this.setVertices(points);
         return this;
-    },
+    }
 
     /**
      * set the vertices defining this Polygon
@@ -10366,7 +9246,7 @@ var Polygon = window.Jay.extend({
      * @function
      * @param {me.Vector2d[]} points array of vector or vertice defining the Polygon
      */
-    setVertices : function (vertices) {
+    setVertices(vertices) {
 
         if (!Array.isArray(vertices)) {
             return this;
@@ -10396,7 +9276,7 @@ var Polygon = window.Jay.extend({
         this.recalc();
         this.updateBounds();
         return this;
-    },
+    }
 
     /**
      * apply the given transformation matrix to this Polygon
@@ -10406,7 +9286,7 @@ var Polygon = window.Jay.extend({
      * @param {me.Matrix2d} matrix the transformation matrix
      * @return {me.Polygon} Reference to this object for method chaining
      */
-    transform : function (m) {
+    transform(m) {
         var points = this.points;
         var len = points.length;
         for (var i = 0; i < len; i++) {
@@ -10415,7 +9295,7 @@ var Polygon = window.Jay.extend({
         this.recalc();
         this.updateBounds();
         return this;
-    },
+    }
 
     /**
      * apply an isometric projection to this shape
@@ -10424,9 +9304,9 @@ var Polygon = window.Jay.extend({
      * @function
      * @return {me.Polygon} Reference to this object for method chaining
      */
-    toIso : function () {
+    toIso() {
         return this.rotate(Math.PI / 4).scale(Math.SQRT2, Math.SQRT1_2);
-    },
+    }
 
     /**
      * apply a 2d projection to this shape
@@ -10435,9 +9315,9 @@ var Polygon = window.Jay.extend({
      * @function
      * @return {me.Polygon} Reference to this object for method chaining
      */
-    to2d : function () {
+    to2d() {
         return this.scale(Math.SQRT1_2, Math.SQRT2).rotate(-Math.PI / 4);
-    },
+    }
 
     /**
      * Rotate this Polygon (counter-clockwise) by the specified angle (in radians).
@@ -10448,7 +9328,7 @@ var Polygon = window.Jay.extend({
      * @param {me.Vector2d|me.ObservableVector2d} [v] an optional point to rotate around
      * @return {me.Polygon} Reference to this object for method chaining
      */
-    rotate : function (angle, v) {
+    rotate(angle, v) {
         if (angle !== 0) {
             var points = this.points;
             var len = points.length;
@@ -10459,7 +9339,7 @@ var Polygon = window.Jay.extend({
             this.updateBounds();
         }
         return this;
-    },
+    }
 
     /**
      * Scale this Polygon by the given scalar.
@@ -10470,7 +9350,7 @@ var Polygon = window.Jay.extend({
      * @param {Number} [y=x]
      * @return {me.Polygon} Reference to this object for method chaining
      */
-    scale : function (x, y) {
+    scale(x, y) {
         y = typeof (y) !== "undefined" ? y : x;
 
         var points = this.points;
@@ -10481,7 +9361,7 @@ var Polygon = window.Jay.extend({
         this.recalc();
         this.updateBounds();
         return this;
-    },
+    }
 
     /**
      * Scale this Polygon by the given vector
@@ -10491,9 +9371,9 @@ var Polygon = window.Jay.extend({
      * @param {me.Vector2d} v
      * @return {me.Polygon} Reference to this object for method chaining
      */
-    scaleV : function (v) {
+    scaleV(v) {
         return this.scale(v.x, v.y);
-    },
+    }
 
     /**
      * Computes the calculated collision polygon.
@@ -10503,7 +9383,7 @@ var Polygon = window.Jay.extend({
      * @function
      * @return {me.Polygon} Reference to this object for method chaining
      */
-    recalc : function () {
+    recalc() {
         var i;
         var edges = this.edges;
         var normals = this.normals;
@@ -10537,7 +9417,7 @@ var Polygon = window.Jay.extend({
         indices.length = 0;
 
         return this;
-    },
+    }
 
     /**
      * returns a list of indices for all triangles defined in this polygon
@@ -10547,12 +9427,12 @@ var Polygon = window.Jay.extend({
      * @param {Vector2d[]} a list of vector
      * @return {me.Polygon} this Polygon
      */
-    getIndices : function (x, y) {
+    getIndices(x, y) {
         if (this.indices.length === 0) {
             this.indices = earcut$1(this.points.flatMap(p => [p.x, p.y]));
         }
         return this.indices;
-    },
+    }
 
     /**
      * translate the Polygon by the specified offset
@@ -10571,7 +9451,7 @@ var Polygon = window.Jay.extend({
      * @param {me.Vector2d} v vector offset
      * @return {me.Polygon} Reference to this object for method chaining
      */
-    translate : function () {
+    translate() {
         var _x, _y;
 
         if (arguments.length === 2) {
@@ -10589,7 +9469,7 @@ var Polygon = window.Jay.extend({
         this.getBounds().translate(_x, _y);
 
         return this;
-    },
+    }
 
     /**
      * Returns true if the polygon contains the given point.
@@ -10613,7 +9493,7 @@ var Polygon = window.Jay.extend({
      * @param  {Number} y y coordinate
      * @return {boolean} true if contains
      */
-    contains: function () {
+    contains() {
         var _x, _y;
 
         if (arguments.length === 2) {
@@ -10640,7 +9520,7 @@ var Polygon = window.Jay.extend({
             }
         }
         return intersects;
-    },
+    }
 
     /**
      * returns the bounding box for this shape, the smallest Rectangle object completely containing this shape.
@@ -10649,12 +9529,12 @@ var Polygon = window.Jay.extend({
      * @function
      * @return {me.Bounds} this shape bounding box Rectangle object
      */
-    getBounds : function () {
+    getBounds() {
         if (typeof this._bounds === "undefined") {
             this._bounds = pool.pull("Bounds");
         }
         return this._bounds;
-    },
+    }
 
     /**
      * update the bounding box for this shape.
@@ -10664,14 +9544,14 @@ var Polygon = window.Jay.extend({
      * @function
      * @return {me.Bounds} this shape bounding box Rectangle object
      */
-    updateBounds : function () {
+    updateBounds() {
         var bounds = this.getBounds();
 
         bounds.update(this.points);
         bounds.translate(this.pos);
 
         return bounds;
-    },
+    }
 
     /**
      * clone this Polygon
@@ -10680,16 +9560,17 @@ var Polygon = window.Jay.extend({
      * @function
      * @return {me.Polygon} new Polygon
      */
-    clone : function () {
+    clone() {
         var copy = [];
         this.points.forEach(function (point) {
             copy.push(point.clone());
         });
         return new Polygon(this.pos.x, this.pos.y, copy);
     }
-});
+}
 
 /**
+ * @classdesc
  * a rectangle Object
  * @class
  * @extends me.Polygon
@@ -10700,25 +9581,24 @@ var Polygon = window.Jay.extend({
  * @param {Number} w width of the rectangle
  * @param {Number} h height of the rectangle
  */
-var Rect = Polygon.extend({
-    /**
-     * @ignore
-     */
-    init : function (x, y, w, h) {
+
+class Rect extends Polygon {
+
+    constructor(x, y, w, h) {
         // parent constructor
-        this._super(Polygon, "init", [x, y, [
+        super(x, y, [
             new Vector2d(0, 0), // 0, 0
             new Vector2d(w, 0), // 1, 0
             new Vector2d(w, h), // 1, 1
             new Vector2d(0, h)  // 0, 1
-        ]]);
+        ]);
         this.shapeType = "Rectangle";
-    },
+    }
 
     /** @ignore */
-    onResetEvent : function (x, y, w, h) {
+    onResetEvent(x, y, w, h) {
         this.setShape(x, y, w, h);
-    },
+    }
 
     /**
      * set new value to the rectangle shape
@@ -10731,7 +9611,7 @@ var Rect = Polygon.extend({
      * @param {Number} [h] height of the rectangle, if a numeral width parameter is specified
      * @return {me.Rect} this rectangle
      */
-    setShape : function (x, y, w, h) {
+    setShape(x, y, w, h) {
         var points = w; // assume w is an array by default
 
         this.pos.set(x, y);
@@ -10746,7 +9626,168 @@ var Rect = Polygon.extend({
 
         this.setVertices(points);
         return this;
-    },
+    }
+
+
+    /**
+     * left coordinate of the Rectangle
+     * @public
+     * @type {Number}
+     * @name left
+     * @memberOf me.Rect
+     */
+
+    /**
+     * @ignore
+     */
+    get left() {
+        return this.pos.x;
+    }
+
+    /**
+     * right coordinate of the Rectangle
+     * @public
+     * @type {Number}
+     * @name right
+     * @memberOf me.Rect
+     */
+
+    /**
+     * @ignore
+     */
+    get right() {
+        var w = this.width;
+        return (this.pos.x + w) || w;
+    }
+
+    /**
+     * top coordinate of the Rectangle
+     * @public
+     * @type {Number}
+     * @name top
+     * @memberOf me.Rect
+     */
+
+    /**
+     * @ignore
+     */
+    get top() {
+        return this.pos.y;
+    }
+
+    /**
+     * bottom coordinate of the Rectangle
+     * @public
+     * @type {Number}
+     * @name bottom
+     * @memberOf me.Rect
+     */
+
+    /**
+     * @ignore
+     */
+    get bottom() {
+        var h = this.height;
+        return (this.pos.y + h) || h;
+    }
+
+    /**
+     * width of the Rectangle
+     * @public
+     * @type {Number}
+     * @name width
+     * @memberOf me.Rect
+     */
+
+    /**
+     * @ignore
+     */
+    get width() {
+        return this.points[2].x;
+    }
+    /**
+     * @ignore
+     */
+    set width(value) {
+        this.points[1].x = this.points[2].x = value;
+        this.recalc();
+        this.updateBounds();
+    }
+
+    /**
+     * height of the Rectangle
+     * @public
+     * @type {Number}
+     * @name height
+     * @memberOf me.Rect
+     */
+
+    /**
+     * @ignore
+     */
+    get height() {
+        return this.points[2].y;
+    }
+    /**
+     * @ignore
+     */
+    set height(value) {
+        this.points[2].y = this.points[3].y = value;
+        this.recalc();
+        this.updateBounds();
+    }
+
+    /**
+     * absolute center of this rectangle on the horizontal axis
+     * @public
+     * @type {Number}
+     * @name centerX
+     * @memberOf me.Rect
+     */
+
+    /**
+     * @ignore
+     */
+    get centerX() {
+        if (isFinite(this.width)) {
+            return this.pos.x + (this.width / 2);
+        } else {
+            return this.width;
+        }
+    }
+
+    /**
+     * @ignore
+     */
+    set centerX (value) {
+        this.pos.x = value - (this.width / 2);
+    }
+
+    /**
+     * absolute center of this rectangle on the vertical axis
+     * @public
+     * @type {Number}
+     * @name centerY
+     * @memberOf me.Rect
+     */
+
+    /**
+     * @ignore
+     */
+    get centerY() {
+        if (isFinite(this.height)) {
+            return this.pos.y + (this.height / 2);
+        } else {
+            return this.height;
+        }
+    }
+    
+    /**
+     * @ignore
+     */
+    set centerY(value) {
+        this.pos.y = value - (this.height / 2);
+    }
 
     /**
      * resize the rectangle
@@ -10757,11 +9798,11 @@ var Rect = Polygon.extend({
      * @param {Number} h new height of the rectangle
      * @return {me.Rect} this rectangle
      */
-    resize : function (w, h) {
+    resize(w, h) {
         this.width = w;
         this.height = h;
         return this;
-    },
+    }
 
     /**
      * scale the rectangle
@@ -10772,11 +9813,11 @@ var Rect = Polygon.extend({
      * @param {Number} [y=x] a number representing the ordinate of the scaling vector.
      * @return {me.Rect} this rectangle
      */
-    scale : function (x, y = x) {
+    scale(x, y = x) {
         this.width *= x;
         this.height *= y;
         return this;
-    },
+    }
 
     /**
      * clone this rectangle
@@ -10785,9 +9826,9 @@ var Rect = Polygon.extend({
      * @function
      * @return {me.Rect} new rectangle
      */
-    clone : function () {
+    clone() {
         return new Rect(this.pos.x, this.pos.y, this.width, this.height);
-    },
+    }
 
     /**
      * copy the position and size of the given rectangle into this one
@@ -10797,9 +9838,9 @@ var Rect = Polygon.extend({
      * @param {me.Rect} rect Source rectangle
      * @return {me.Rect} new rectangle
      */
-    copy : function (rect) {
+    copy(rect) {
         return this.setShape(rect.pos.x, rect.pos.y, rect.width, rect.height);
-    },
+    }
 
     /**
      * translate the rect by the specified offset
@@ -10818,7 +9859,7 @@ var Rect = Polygon.extend({
      * @param {me.Vector2d} v vector offset
      * @return {me.Rect} this rectangle
      */
-    translate : function () {
+    translate() {
         var _x, _y;
 
         if (arguments.length === 2) {
@@ -10835,7 +9876,7 @@ var Rect = Polygon.extend({
         this.pos.y += _y;
 
         return this;
-    },
+    }
 
     /**
      * Shifts the rect to the given position vector.
@@ -10852,7 +9893,7 @@ var Rect = Polygon.extend({
      * @param {Number} x
      * @param {Number} y
      */
-    shift : function () {
+    shift() {
         if (arguments.length === 2) {
             // x, y
             this.pos.set(arguments[0], arguments[1]);
@@ -10860,7 +9901,7 @@ var Rect = Polygon.extend({
             // vector
             this.pos.setV(arguments[0]);
         }
-    },
+    }
 
     /**
      * merge this rectangle with another one
@@ -10870,7 +9911,7 @@ var Rect = Polygon.extend({
      * @param {me.Rect} rect other rectangle to union with
      * @return {me.Rect} the union(ed) rectangle
      */
-    union : function (/** {me.Rect} */ r) {
+    union(/** {me.Rect} */ r) {
         var x1 = Math.min(this.left, r.left);
         var y1 = Math.min(this.top, r.top);
 
@@ -10882,7 +9923,7 @@ var Rect = Polygon.extend({
         this.pos.set(x1, y1);
 
         return this;
-    },
+    }
 
     /**
      * check if this rectangle is intersecting with the specified one
@@ -10892,14 +9933,14 @@ var Rect = Polygon.extend({
      * @param  {me.Rect} rect
      * @return {boolean} true if overlaps
      */
-    overlaps : function (r) {
+    overlaps(r) {
         return (
             this.left < r.right &&
             r.left < this.right &&
             this.top < r.bottom &&
             r.top < this.bottom
         );
-    },
+    }
 
     /**
      * Returns true if the rectangle contains the given rectangle
@@ -10928,7 +9969,7 @@ var Rect = Polygon.extend({
      * @param {me.Vector2d} point
      * @return {boolean} true if contains
      */
-    contains: function () {
+    contains() {
         var arg0 = arguments[0];
         var _x1, _x2, _y1, _y2;
         if (arguments.length === 2) {
@@ -10954,7 +9995,7 @@ var Rect = Polygon.extend({
              _y1 >= this.top &&
              _y2 <= this.bottom
          );
-    },
+    }
 
     /**
      * check if this rectangle is identical to the specified one
@@ -10964,14 +10005,14 @@ var Rect = Polygon.extend({
      * @param  {me.Rect} rect
      * @return {boolean} true if equals
      */
-    equals: function (r) {
+    equals(r) {
         return (
             r.left === this.left &&
             r.right === this.right &&
             r.top === this.top &&
             r.bottom === this.bottom
         );
-    },
+    }
 
     /**
      * determines whether all coordinates of this rectangle are finite numbers.
@@ -10980,9 +10021,9 @@ var Rect = Polygon.extend({
      * @function
      * @return {boolean} false if all coordinates are positive or negative Infinity or NaN; otherwise, true.
      */
-    isFinite: function () {
+    isFinite() {
         return (isFinite(this.pos.x) && isFinite(this.pos.y) && isFinite(this.width) && isFinite(this.height));
-    },
+    }
 
     /**
      * Returns a polygon whose edges are the same as this box.
@@ -10991,188 +10032,12 @@ var Rect = Polygon.extend({
      * @function
      * @return {me.Polygon} a new Polygon that represents this rectangle.
      */
-    toPolygon: function () {
+    toPolygon() {
         return new Polygon(
             this.pos.x, this.pos.y, this.points
         );
     }
-});
-
-// redefine some properties to ease our life when getting the rectangle coordinates
-
-/**
- * left coordinate of the Rectangle
- * @public
- * @type {Number}
- * @name left
- * @memberOf me.Rect
- */
-Object.defineProperty(Rect.prototype, "left", {
-    /**
-     * @ignore
-     */
-    get : function () {
-        return this.pos.x;
-    },
-    configurable : true
-});
-
-/**
- * right coordinate of the Rectangle
- * @public
- * @type {Number}
- * @name right
- * @memberOf me.Rect
- */
-Object.defineProperty(Rect.prototype, "right", {
-    /**
-     * @ignore
-     */
-    get : function () {
-        var w = this.width;
-        return (this.pos.x + w) || w;
-    },
-    configurable : true
-});
-
-/**
- * top coordinate of the Rectangle
- * @public
- * @type {Number}
- * @name top
- * @memberOf me.Rect
- */
-Object.defineProperty(Rect.prototype, "top", {
-    /**
-     * @ignore
-     */
-    get : function () {
-        return this.pos.y;
-    },
-    configurable : true
-});
-
-/**
- * bottom coordinate of the Rectangle
- * @public
- * @type {Number}
- * @name bottom
- * @memberOf me.Rect
- */
-Object.defineProperty(Rect.prototype, "bottom", {
-    /**
-     * @ignore
-     */
-    get : function () {
-        var h = this.height;
-        return (this.pos.y + h) || h;
-    },
-    configurable : true
-});
-
-/**
- * width of the Rectangle
- * @public
- * @type {Number}
- * @name width
- * @memberOf me.Rect
- */
-Object.defineProperty(Rect.prototype, "width", {
-    /**
-     * @ignore
-     */
-    get : function () {
-        return this.points[2].x;
-    },
-    /**
-     * @ignore
-     */
-    set : function (value) {
-        this.points[1].x = this.points[2].x = value;
-        this.recalc();
-        this.updateBounds();
-    },
-    configurable : true
-});
-
-/**
- * height of the Rectangle
- * @public
- * @type {Number}
- * @name height
- * @memberOf me.Rect
- */
-Object.defineProperty(Rect.prototype, "height", {
-    /**
-     * @ignore
-     */
-    get : function () {
-        return this.points[2].y;
-    },
-    /**
-     * @ignore
-     */
-    set : function (value) {
-        this.points[2].y = this.points[3].y = value;
-        this.recalc();
-        this.updateBounds();
-    },
-    configurable : true
-});
-
-/**
- * absolute center of this rectangle on the horizontal axis
- * @public
- * @type {Number}
- * @name centerX
- * @memberOf me.Rect
- */
-Object.defineProperty(Rect.prototype, "centerX", {
-    /**
-     * @ignore
-     */
-    get : function () {
-        if (isFinite(this.width)) {
-            return this.pos.x + (this.width / 2);
-        } else {
-            return this.width;
-        }
-    },
-    /**
-     * @ignore
-     */
-    set : function (value) {
-        this.pos.x = value - (this.width / 2);
-    },
-    configurable : true
-});
-
-/**
- * absolute center of this rectangle on the vertical axis
- * @public
- * @type {Number}
- * @name centerY
- * @memberOf me.Rect
- */
-Object.defineProperty(Rect.prototype, "centerY", {
-    /**
-     * @ignore
-     */
-    get : function () {
-        if (isFinite(this.height)) {
-            return this.pos.y + (this.height / 2);
-        } else {
-            return this.height;
-        }
-    },
-    /**
-     * @ignore
-     */
-    set : function (value) {
-        this.pos.y = value - (this.height / 2);
-    },
-    configurable : true
-});
+}
 
 // corresponding actions
 var _keyStatus = {};
@@ -11490,7 +10355,7 @@ var KEY = {
  */
 function initKeyboardEvent() {
     // make sure the keyboard is enable
-    if (keyBoardEventTarget === null && device$1.isMobile === false) {
+    if (keyBoardEventTarget === null && device.isMobile === false) {
         keyBoardEventTarget = window;
         keyBoardEventTarget.addEventListener("keydown", keyDownEvent, false);
         keyBoardEventTarget.addEventListener("keyup", keyUpEvent, false);
@@ -11640,18 +10505,22 @@ function unbindKey(keycode) {
 var viewportOffset = new Vector2d();
 
 /**
+ * @classdesc
  * a pointer object, representing a single finger on a touch enabled device.
  * @class
  * @extends me.Rect
  * @memberOf me
  * @constructor
  */
-var Pointer = Rect.extend({
+class Pointer extends Rect {
 
     /**
      * @ignore
      */
-    init : function (x = 0, y = 0, w = 1, h = 1) {
+    constructor(x = 0, y = 0, w = 1, h = 1) {
+
+        // parent constructor
+        super(x, y, w, h);
 
         /**
          * constant for left button
@@ -11889,10 +10758,7 @@ var Pointer = Rect.extend({
 
         // bind list for mouse buttons
         this.bind = [ 0, 0, 0 ];
-
-        // parent constructor
-        this._super(Rect, "init", [x, y, w, h]);
-    },
+    }
 
     /**
      * initialize the Pointer object using the given Event Object
@@ -11906,7 +10772,7 @@ var Pointer = Rect.extend({
      * @param {Number} [clientX=0] the vertical coordinate within the application's client area at which the event occurred
      * @param {Number} [pointedId=1] the Pointer, Touch or Mouse event Id (1)
      */
-    setEvent : function (event, pageX = 0, pageY = 0, clientX = 0, clientY = 0, pointerId = 1) {
+    setEvent(event, pageX = 0, pageY = 0, clientX = 0, clientY = 0, pointerId = 1) {
         var width = 1;
         var height = 1;
 
@@ -11922,7 +10788,7 @@ var Pointer = Rect.extend({
         globalToLocal(this.pageX, this.pageY, this.pos);
 
         // true if not originally a pointer event
-        this.isNormalized = !device$1.PointerEvent || (device$1.PointerEvent && !(event instanceof window.PointerEvent));
+        this.isNormalized = !device.PointerEvent || (device.PointerEvent && !(event instanceof window.PointerEvent));
 
         if (event.type === "wheel") {
             this.deltaMode = event.deltaMode || 0;
@@ -11970,7 +10836,7 @@ var Pointer = Rect.extend({
         // resize the pointer object accordingly
         this.resize(width, height);
     }
-});
+}
 
 /**
  * A pool of `Pointer` objects to cache pointer/touch event coordinates.
@@ -12081,7 +10947,7 @@ function enablePointerEvent() {
         pointer = new Pointer(0, 0, 1, 1);
 
         // instantiate a pool of pointer catched
-        for (var v = 0; v < device$1.maxTouchPoints; v++) {
+        for (var v = 0; v < device.maxTouchPoints; v++) {
             T_POINTERS.push(new Pointer());
         }
 
@@ -12090,14 +10956,14 @@ function enablePointerEvent() {
             pointerEventTarget = video$1.renderer.getScreenCanvas();
         }
 
-        if (device$1.PointerEvent) {
+        if (device.PointerEvent) {
             // standard Pointer Events
             activeEventList = pointerEventList;
         } else {
             // Regular Mouse events
             activeEventList = mouseEventList;
         }
-        if (device$1.touch && !device$1.PointerEvent) {
+        if (device.touch && !device.PointerEvent) {
             // touch event on mobile devices
             activeEventList = activeEventList.concat(touchEventList);
         }
@@ -12109,12 +10975,12 @@ function enablePointerEvent() {
             throttlingInterval = ~~(1000 / timer$1.maxfps);
         }
 
-        if (device$1.autoFocus === true) {
-            device$1.focus();
+        if (device.autoFocus === true) {
+            device.focus();
             pointerEventTarget.addEventListener(
                 activeEventList[2], // MOUSE/POINTER DOWN
                 function () {
-                    device$1.focus();
+                    device.focus();
                 },
                 { passive: (preventDefault === false) }
             );
@@ -12237,7 +11103,7 @@ function dispatchEvent(normalizedEvents) {
             event.publish(event.POINTERMOVE, [pointer]);
         }
 
-        var candidates = game$1.world.broadphase.retrieve(currentPointer, Container$1.prototype._sortReverseZ);
+        var candidates = game$1.world.broadphase.retrieve(currentPointer, Container.prototype._sortReverseZ);
 
         // add the main viewport to the list of candidates
         candidates = candidates.concat([ game$1.viewport ]);
@@ -12371,7 +11237,7 @@ function normalizeEvent(originalEvent) {
     var pointer;
 
     // PointerEvent or standard Mouse event
-    if (device$1.TouchEvent && originalEvent.changedTouches) {
+    if (device.TouchEvent && originalEvent.changedTouches) {
         // iOS/Android Touch event
         for (var i = 0, l = originalEvent.changedTouches.length; i < l; i++) {
             var touchEvent = originalEvent.changedTouches[i];
@@ -12502,8 +11368,8 @@ var throttlingInterval;
  */
 function globalToLocal(x, y, v) {
     v = v || new Vector2d();
-    var rect = device$1.getElementBounds(video$1.renderer.getScreenCanvas());
-    var pixelRatio = device$1.devicePixelRatio;
+    var rect = device.getElementBounds(video$1.renderer.getScreenCanvas());
+    var pixelRatio = device.devicePixelRatio;
     x -= rect.left + (window.pageXOffset || 0);
     y -= rect.top + (window.pageYOffset || 0);
     var scale = video$1.scaleRatio;
@@ -13277,14 +12143,15 @@ var input = /*#__PURE__*/Object.freeze({
  * @param {Number} width object width
  * @param {Number} height object height
  */
-var Renderable = Rect.extend({
+class Renderable extends Rect {
+
     /**
      * @ignore
      */
-    init : function (x, y, width, height) {
+    constructor(x, y, width, height) {
 
         // parent constructor
-        this._super(Rect, "init", [x, y, width, height]);
+        super(x, y, width, height);
 
         /**
          * to identify the object as a renderable object
@@ -13570,12 +12437,68 @@ var Renderable = Rect.extend({
 
         // ensure it's fully opaque by default
         this.setOpacity(1.0);
-    },
+    }
 
-    /** @ignore */
-    onResetEvent : function () {
-        this.init.apply(this, arguments);
-    },
+    /**
+     * Whether the renderable object is visible and within the viewport
+     * @public
+     * @readonly
+     * @type Boolean
+     * @default false
+     * @name inViewport
+     * @memberOf me.Renderable
+     */
+
+    /**
+     * @ignore
+     */
+    get inViewport() {
+        return this._inViewport;
+    }
+
+    /**
+     * @ignore
+     */
+    set inViewport(value) {
+        if (this._inViewport !== value) {
+            this._inViewport = value;
+            if (typeof this.onVisibilityChange === "function") {
+                this.onVisibilityChange.call(this, value);
+            }
+        }
+    }
+
+    /**
+     * returns true if this renderable is flipped on the horizontal axis
+     * @public
+     * @see me.Renderable#flipX
+     * @type {Boolean}
+     * @name isFlippedX
+     * @memberOf me.Renderable
+     */
+
+    /**
+     * @ignore
+     */
+    get isFlippedX() {
+        return this._flip.x === true;
+    }
+
+    /**
+     * returns true if this renderable is flipped on the vertical axis
+     * @public
+     * @see me.Renderable#flipY
+     * @type {Boolean}
+     * @name isFlippedY
+     * @memberOf me.Renderable
+     */
+
+    /**
+     * @ignore
+     */
+    get isFlippedY() {
+        return this._flip.y === true;
+    }
 
     /**
      * returns the bounding box for this renderable
@@ -13584,9 +12507,9 @@ var Renderable = Rect.extend({
      * @function
      * @return {me.Bounds} bounding box Rectangle object
      */
-    getBounds : function () {
+    getBounds() {
         if (typeof this._bounds === "undefined") {
-            this._super(Rect, "getBounds");
+            super.getBounds();
             if (this.isFinite()) {
                 this._bounds.setMinMax(this.pos.x, this.pos.y, this.pos.x + this.width, this.pos.y + this.height);
             } else {
@@ -13596,7 +12519,7 @@ var Renderable = Rect.extend({
 
         }
         return this._bounds;
-    },
+    }
 
     /**
      * get the renderable alpha channel value<br>
@@ -13605,9 +12528,9 @@ var Renderable = Rect.extend({
      * @function
      * @return {Number} current opacity value between 0 and 1
      */
-    getOpacity : function () {
+    getOpacity() {
         return this.alpha;
-    },
+    }
 
     /**
      * set the renderable alpha channel value<br>
@@ -13616,7 +12539,7 @@ var Renderable = Rect.extend({
      * @function
      * @param {Number} alpha opacity value between 0.0 and 1.0
      */
-    setOpacity : function (alpha) {
+    setOpacity(alpha) {
         if (typeof (alpha) === "number") {
             this.alpha = clamp(alpha, 0.0, 1.0);
             // Set to 1 if alpha is NaN
@@ -13624,7 +12547,7 @@ var Renderable = Rect.extend({
                 this.alpha = 1.0;
             }
         }
-    },
+    }
 
     /**
      * flip the renderable on the horizontal axis (around the center of the renderable)
@@ -13635,11 +12558,11 @@ var Renderable = Rect.extend({
      * @param {Boolean} [flip=false] `true` to flip this renderable.
      * @return {me.Renderable} Reference to this object for method chaining
      */
-    flipX : function (flip) {
+    flipX(flip) {
         this._flip.x = !!flip;
         this.isDirty = true;
         return this;
-    },
+    }
 
     /**
      * flip the renderable on the vertical axis (around the center of the renderable)
@@ -13650,11 +12573,11 @@ var Renderable = Rect.extend({
      * @param {Boolean} [flip=false] `true` to flip this renderable.
      * @return {me.Renderable} Reference to this object for method chaining
      */
-    flipY : function (flip) {
+    flipY(flip) {
         this._flip.y = !!flip;
         this.isDirty = true;
         return this;
-    },
+    }
 
     /**
      * multiply the renderable currentTransform with the given matrix
@@ -13665,13 +12588,13 @@ var Renderable = Rect.extend({
      * @param {me.Matrix2d} matrix the transformation matrix
      * @return {me.Renderable} Reference to this object for method chaining
      */
-    transform : function (m) {
+    transform(m) {
         this.currentTransform.multiply(m);
-        //this._super(Rect, "transform", [m]);
+        //super.transform(m);
         this.updateBoundsPos(this.pos.x, this.pos.y);
         this.isDirty = true;
         return this;
-    },
+    }
 
     /**
      * return the angle to the specified target
@@ -13681,7 +12604,7 @@ var Renderable = Rect.extend({
      * @param {me.Renderable|me.Vector2d|me.Vector3d} target
      * @return {Number} angle in radians
      */
-    angleTo: function (target) {
+    angleTo(target) {
         var a = this.getBounds();
         var ax, ay;
 
@@ -13695,7 +12618,7 @@ var Renderable = Rect.extend({
         }
 
         return Math.atan2(ay, ax);
-    },
+    }
 
     /**
      * return the distance to the specified target
@@ -13705,7 +12628,7 @@ var Renderable = Rect.extend({
      * @param {me.Renderable|me.Vector2d|me.Vector3d} target
      * @return {Number} distance
      */
-    distanceTo: function (target) {
+    distanceTo(target) {
         var a = this.getBounds();
         var dx, dy;
 
@@ -13719,7 +12642,7 @@ var Renderable = Rect.extend({
         }
 
         return Math.sqrt(dx * dx + dy * dy);
-    },
+    }
 
     /**
      * Rotate this renderable towards the given target.
@@ -13729,7 +12652,7 @@ var Renderable = Rect.extend({
      * @param {me.Renderable|me.Vector2d|me.Vector3d} target the renderable or position to look at
      * @return {me.Renderable} Reference to this object for method chaining
      */
-    lookAt : function (target) {
+    lookAt(target) {
         var position;
 
         if (target instanceof Renderable) {
@@ -13743,7 +12666,7 @@ var Renderable = Rect.extend({
         this.rotate(angle);
 
         return this;
-    },
+    }
 
     /**
      * Rotate this renderable by the specified angle (in radians).
@@ -13754,14 +12677,14 @@ var Renderable = Rect.extend({
      * @param {me.Vector2d|me.ObservableVector2d} [v] an optional point to rotate around
      * @return {me.Renderable} Reference to this object for method chaining
      */
-    rotate : function (angle) {
+    rotate(angle) {
         if (!isNaN(angle)) {
             this.currentTransform.rotate(angle);
             //this.updateBoundsPos(this.pos.x, this.pos.y);
             this.isDirty = true;
         }
         return this;
-    },
+    }
 
     /**
      * scale the renderable around his anchor point.  Scaling actually applies changes
@@ -13776,12 +12699,12 @@ var Renderable = Rect.extend({
      * @param {Number} [y=x] a number representing the ordinate of the scaling vector.
      * @return {me.Renderable} Reference to this object for method chaining
      */
-    scale : function (x, y) {
+    scale(x, y) {
         this.currentTransform.scale(x, y);
-        this._super(Rect, "scale", [x, y]);
+        super.scale(x, y);
         this.isDirty = true;
         return this;
-    },
+    }
 
     /**
      * scale the renderable around his anchor point
@@ -13791,10 +12714,10 @@ var Renderable = Rect.extend({
      * @param {me.Vector2d} vector scaling vector
      * @return {me.Renderable} Reference to this object for method chaining
      */
-    scaleV : function (v) {
+    scaleV(v) {
         this.scale(v.x, v.y);
         return this;
-    },
+    }
 
     /**
      * update function. <br>
@@ -13806,9 +12729,9 @@ var Renderable = Rect.extend({
      * @param {Number} dt time since the last update in milliseconds.
      * @return false
      **/
-    update : function (/* dt */) {
+    update(/* dt */) {
         return this.isDirty;
-    },
+    }
 
     /**
      * update the bounding box for this shape.
@@ -13818,11 +12741,11 @@ var Renderable = Rect.extend({
      * @function
      * @return {me.Bounds} this shape bounding box Rectangle object
      */
-    updateBounds : function () {
-        this._super(Rect, "updateBounds");
+    updateBounds() {
+        super.updateBounds();
         this.updateBoundsPos(this.pos.x, this.pos.y);
         return this.getBounds();
-    },
+    }
 
     /**
      * update the renderable's bounding rect (private)
@@ -13831,7 +12754,7 @@ var Renderable = Rect.extend({
      * @memberOf me.Renderable.prototype
      * @function
      */
-     updateBoundsPos : function (newX, newY) {
+     updateBoundsPos(newX, newY) {
          var bounds = this.getBounds();
 
          bounds.shift(newX, newY);
@@ -13851,11 +12774,11 @@ var Renderable = Rect.extend({
          */
 
          // XXX: This is called from the constructor, before it gets an ancestor
-         if (this.ancestor instanceof Container$1 && this.floating !== true) {
+         if (this.ancestor instanceof Container && this.floating !== true) {
              bounds.translate(this.ancestor.getAbsolutePosition());
          }
          //return bounds;
-     },
+     }
 
      /**
       * return the renderable absolute position in the game world
@@ -13864,17 +12787,17 @@ var Renderable = Rect.extend({
       * @function
       * @return {me.Vector2d}
       */
-      getAbsolutePosition : function () {
+      getAbsolutePosition() {
           if (typeof this._absPos === "undefined") {
               this._absPos = pool.pull("Vector2d");
           }
           // XXX Cache me or something
           this._absPos.set(this.pos.x, this.pos.y);
-          if (this.ancestor instanceof Container$1 && this.floating !== true) {
+          if (this.ancestor instanceof Container && this.floating !== true) {
               this._absPos.add(this.ancestor.getAbsolutePosition());
           }
           return this._absPos;
-      },
+      }
 
     /**
      * called when the anchor point value is changed
@@ -13883,13 +12806,13 @@ var Renderable = Rect.extend({
      * @memberOf me.Renderable.prototype
      * @function
      */
-     onAnchorUpdate : function (newX, newY) {
+     onAnchorUpdate(newX, newY) {
          // since the callback is called before setting the new value
          // manually update the anchor point (required for updateBoundsPos)
          this.anchorPoint.setMuted(newX, newY);
-         // then call updateBouds
+         // then call updateBounds
          this.updateBoundsPos(this.pos.x, this.pos.y);
-     },
+     }
 
 
     /**
@@ -13902,7 +12825,7 @@ var Renderable = Rect.extend({
      * @protected
      * @param {me.CanvasRenderer|me.WebGLRenderer} renderer a renderer object
      **/
-    preDraw : function (renderer) {
+    preDraw(renderer) {
         var bounds = this.getBounds();
         var ax = bounds.width * this.anchorPoint.x,
             ay = bounds.height * this.anchorPoint.y;
@@ -13939,7 +12862,7 @@ var Renderable = Rect.extend({
 
         // apply the defined tint, if any
         renderer.setTint(this.tint);
-    },
+    }
 
     /**
      * object draw. <br>
@@ -13950,9 +12873,9 @@ var Renderable = Rect.extend({
      * @protected
      * @param {me.CanvasRenderer|me.WebGLRenderer} renderer a renderer object
      **/
-    draw : function (/*renderer*/) {
+    draw(/*renderer*/) {
         // empty one !
-    },
+    }
 
     /**
      * restore the rendering context after drawing. <br>
@@ -13963,7 +12886,7 @@ var Renderable = Rect.extend({
      * @protected
      * @param {me.CanvasRenderer|me.WebGLRenderer} renderer a renderer object
      **/
-    postDraw : function (renderer) {
+    postDraw(renderer) {
         if (typeof this.mask !== "undefined") {
             renderer.clearMask();
         }
@@ -13976,13 +12899,13 @@ var Renderable = Rect.extend({
 
         // restore the context
         renderer.restore();
-    },
+    }
 
     /**
      * Destroy function<br>
      * @ignore
      */
-    destroy : function () {
+    destroy() {
         // allow recycling object properties
         pool.push(this.currentTransform);
         this.currentTransform = undefined;
@@ -14026,7 +12949,7 @@ var Renderable = Rect.extend({
 
         // call the user defined destroy method
         this.onDestroyEvent.apply(this, arguments);
-    },
+    }
 
     /**
      * OnDestroy Notification function<br>
@@ -14035,76 +12958,11 @@ var Renderable = Rect.extend({
      * @memberOf me.Renderable
      * @function
      */
-    onDestroyEvent : function () {
+    onDestroyEvent() {
         // to be extended !
     }
-});
 
-/**
- * Whether the renderable object is visible and within the viewport
- * @public
- * @readonly
- * @type Boolean
- * @default false
- * @name inViewport
- * @memberOf me.Renderable
- */
-Object.defineProperty(Renderable.prototype, "inViewport", {
-    /**
-     * @ignore
-     */
-    get : function () {
-        return this._inViewport;
-    },
-    /**
-     * @ignore
-     */
-    set : function (value) {
-        if (this._inViewport !== value) {
-            this._inViewport = value;
-            if (typeof this.onVisibilityChange === "function") {
-                this.onVisibilityChange.call(this, value);
-            }
-        }
-    },
-    configurable : true
-});
-
-/**
- * returns true if this renderable is flipped on the horizontal axis
- * @public
- * @see me.Renderable#flipX
- * @type {Boolean}
- * @name isFlippedX
- * @memberOf me.Renderable
- */
-Object.defineProperty(Renderable.prototype, "isFlippedX", {
-    /**
-     * @ignore
-     */
-    get : function () {
-        return this._flip.x === true;
-    },
-    configurable : true
-});
-
-/**
- * returns true if this renderable is flipped on the vertical axis
- * @public
- * @see me.Renderable#flipY
- * @type {Boolean}
- * @name isFlippedY
- * @memberOf me.Renderable
- */
-Object.defineProperty(Renderable.prototype, "isFlippedY", {
-    /**
-     * @ignore
-     */
-    get : function () {
-        return this._flip.y === true;
-    },
-    configurable : true
-});
+}
 
 /**
  * Private function to re-use for object removal in a defer
@@ -14127,19 +12985,22 @@ var globalFloatingCounter = 0;
  * @param {Number} [w=me.game.viewport.width] width of the container
  * @param {Number} [h=me.game.viewport.height] height of the container
  */
-var Container = Renderable.extend({
+
+class Container extends Renderable {
+
     /**
      * @ignore
      */
-    init : function (x = 0, y = 0, width = game$1.viewport.width, height = game$1.viewport.height, root = false) {
+    constructor(x = 0, y = 0, width = game$1.viewport.width, height = game$1.viewport.height, root = false) {
+
+        // call the _super constructor
+        super(x, y, width, height);
+
         /**
          * keep track of pending sort
          * @ignore
          */
         this.pendingSort = null;
-
-        // call the _super constructor
-        this._super(Renderable, "init", [x, y, width, height]);
 
         /**
          * whether the container is the root of the scene
@@ -14240,7 +13101,7 @@ var Container = Renderable.extend({
             // Workaround for not updating container child-bounds automatically (it's expensive!)
             event.subscribe(event.CANVAS_ONRESIZE, this.updateBounds.bind(this, true));
         }
-    },
+    }
 
     /**
      * reset the container, removing all childrens, and reseting transforms.
@@ -14248,7 +13109,7 @@ var Container = Renderable.extend({
      * @memberOf me.Container
      * @function
      */
-    reset : function () {
+    reset() {
         // cancel any sort operation
         if (this.pendingSort) {
             clearTimeout(this.pendingSort);
@@ -14267,8 +13128,7 @@ var Container = Renderable.extend({
             // just reset some variables
             this.currentTransform.identity();
         }
-    },
-
+    }
 
     /**
      * Add a child to the container <br>
@@ -14285,7 +13145,7 @@ var Container = Renderable.extend({
      * @param {number} [z] forces the z index of the child to the specified value
      * @return {me.Renderable} the added child
      */
-    addChild : function (child, z) {
+    addChild(child, z) {
         if (child.ancestor instanceof Container) {
             child.ancestor.removeChildNow(child);
         }
@@ -14331,7 +13191,7 @@ var Container = Renderable.extend({
         this.onChildChange.call(this, this.getChildren().length - 1);
 
         return child;
-    },
+    }
 
     /**
      * Add a child to the container at the specified index<br>
@@ -14343,7 +13203,7 @@ var Container = Renderable.extend({
      * @param {Number} index
      * @return {me.Renderable} the added child
      */
-    addChildAt : function (child, index) {
+    addChildAt(child, index) {
         if (index >= 0 && index < this.getChildren().length) {
             if (child.ancestor instanceof Container) {
                 child.ancestor.removeChildNow(child);
@@ -14381,7 +13241,7 @@ var Container = Renderable.extend({
         else {
             throw new Error("Index (" + index + ") Out Of Bounds for addChildAt()");
         }
-    },
+    }
 
     /**
      * The forEach() method executes a provided function once per child element. <br>
@@ -14404,7 +13264,7 @@ var Container = Renderable.extend({
      * me.game.world.forEach((child, index, array) => { ... });
      * me.game.world.forEach((child, index, array) => { ... }, thisArg);
      */
-    forEach : function (callback, thisArg) {
+    forEach(callback, thisArg) {
         var context = this, i = 0;
         var children = this.getChildren();
 
@@ -14422,7 +13282,7 @@ var Container = Renderable.extend({
             callback.call(context, children[i], i, children);
             i++;
         }
-    },
+    }
 
     /**
      * Swaps the position (z-index) of 2 children
@@ -14432,7 +13292,7 @@ var Container = Renderable.extend({
      * @param {me.Renderable} child
      * @param {me.Renderable} child2
      */
-    swapChildren : function (child, child2) {
+    swapChildren(child, child2) {
         var index = this.getChildIndex(child);
         var index2 = this.getChildIndex(child2);
 
@@ -14448,7 +13308,7 @@ var Container = Renderable.extend({
         else {
             throw new Error(child + " Both the supplied childs must be a child of the caller " + this);
         }
-    },
+    }
 
     /**
      * Returns the Child at the specified index
@@ -14457,14 +13317,14 @@ var Container = Renderable.extend({
      * @function
      * @param {Number} index
      */
-    getChildAt : function (index) {
+    getChildAt(index) {
         if (index >= 0 && index < this.getChildren().length) {
             return this.getChildren()[index];
         }
         else {
             throw new Error("Index (" + index + ") Out Of Bounds for getChildAt()");
         }
-    },
+    }
 
     /**
      * Returns the index of the given Child
@@ -14473,9 +13333,9 @@ var Container = Renderable.extend({
      * @function
      * @param {me.Renderable} child
      */
-    getChildIndex : function (child) {
+    getChildIndex(child) {
         return this.getChildren().indexOf(child);
-    },
+    }
 
     /**
      * Returns the next child within the container or undefined if none
@@ -14484,13 +13344,13 @@ var Container = Renderable.extend({
      * @function
      * @param {me.Renderable} child
      */
-    getNextChild : function (child) {
+    getNextChild(child) {
         var index = this.getChildren().indexOf(child) - 1;
         if (index >= 0 && index < this.getChildren().length) {
             return this.getChildAt(index);
         }
         return undefined;
-    },
+    }
 
     /**
      * Returns true if contains the specified Child
@@ -14500,9 +13360,9 @@ var Container = Renderable.extend({
      * @param {me.Renderable} child
      * @return {Boolean}
      */
-    hasChild : function (child) {
+    hasChild(child) {
         return this === child.ancestor;
-    },
+    }
 
     /**
      * return the child corresponding to the given property and value.<br>
@@ -14530,7 +13390,7 @@ var Container = Renderable.extend({
      * var zIndex10 = me.game.world.getChildByProp("z", 10);
      * var inViewport = me.game.world.getChildByProp("inViewport", true);
      */
-    getChildByProp : function (prop, value)    {
+    getChildByProp(prop, value)    {
         var objList = [];
 
         function compare(obj, prop) {
@@ -14553,7 +13413,7 @@ var Container = Renderable.extend({
         });
 
         return objList;
-    },
+    }
 
     /**
      * returns the list of childs with the specified class type
@@ -14564,7 +13424,7 @@ var Container = Renderable.extend({
      * @param {Object} class type
      * @return {me.Renderable[]} Array of children
      */
-    getChildByType : function (_class) {
+    getChildByType(_class) {
         var objList = [];
 
         this.forEach((child) => {
@@ -14577,7 +13437,7 @@ var Container = Renderable.extend({
         });
 
         return objList;
-    },
+    }
 
     /**
      * returns the list of childs with the specified name<br>
@@ -14591,9 +13451,9 @@ var Container = Renderable.extend({
      * @param {String|RegExp|Number|Boolean} name child name
      * @return {me.Renderable[]} Array of children
      */
-    getChildByName : function (name) {
+    getChildByName(name) {
         return this.getChildByProp("name", name);
-    },
+    }
 
     /**
      * return the child corresponding to the specified GUID<br>
@@ -14606,10 +13466,10 @@ var Container = Renderable.extend({
      * @param {String|RegExp|Number|Boolean} GUID child GUID
      * @return {me.Renderable} corresponding child or null
      */
-    getChildByGUID : function (guid) {
+    getChildByGUID(guid) {
         var obj = this.getChildByProp("GUID", guid);
         return (obj.length > 0) ? obj[0] : null;
-    },
+    }
 
 
     /**
@@ -14621,12 +13481,12 @@ var Container = Renderable.extend({
      * @function
      * @return {me.Renderable[]} an array of renderable object
      */
-    getChildren : function () {
+    getChildren() {
         if (typeof this.children === "undefined") {
             this.children = [];
         }
         return this.children;
-    },
+    }
 
     /**
      * update the bounding box for this shape.
@@ -14636,9 +13496,10 @@ var Container = Renderable.extend({
      * @function
      * @return {me.Bounds} this shape bounding box Rectangle object
      */
-    updateBounds : function (forceUpdateChildBounds = false) {
+    updateBounds(forceUpdateChildBounds = false) {
+
         // call parent method
-        this._super(Renderable, "updateBounds");
+        super.updateBounds();
 
         var bounds = this.getBounds();
 
@@ -14654,7 +13515,7 @@ var Container = Renderable.extend({
         }
 
         return bounds;
-    },
+    }
 
     /**
      * Checks if this container is root or if it's attached to the root container.
@@ -14664,7 +13525,7 @@ var Container = Renderable.extend({
      * @function
      * @returns Boolean
      */
-    isAttachedToRoot : function () {
+    isAttachedToRoot() {
         if (this.root === true) {
             return true;
         } else {
@@ -14677,7 +13538,7 @@ var Container = Renderable.extend({
             }
             return false;
         }
-    },
+    }
 
     /**
      * update the cointainer's bounding rect (private)
@@ -14686,8 +13547,9 @@ var Container = Renderable.extend({
      * @memberOf me.Container.prototype
      * @function
      */
-    updateBoundsPos : function (newX, newY) {
-        this._super(Renderable, "updateBoundsPos", [ newX, newY ]);
+    updateBoundsPos(newX, newY) {
+        // call the parent method
+        super.updateBoundsPos(newX, newY);
 
         // Notify children that the parent's position has changed
         this.forEach((child) => {
@@ -14701,18 +13563,18 @@ var Container = Renderable.extend({
             }
         });
         return this.getBounds();
-    },
+    }
 
     /**
      * @ignore
      */
-    onActivateEvent : function () {
+    onActivateEvent() {
         this.forEach((child) => {
             if (typeof child.onActivateEvent === "function") {
                 child.onActivateEvent();
             }
         });
-    },
+    }
 
     /**
      * Invokes the removeChildNow in a defer, to ensure the child is removed safely after the update & draw stack has completed
@@ -14723,15 +13585,14 @@ var Container = Renderable.extend({
      * @param {me.Renderable} child
      * @param {Boolean} [keepalive=False] True to prevent calling child.destroy()
      */
-    removeChild : function (child, keepalive) {
+    removeChild(child, keepalive) {
         if (this.hasChild(child)) {
             utils$1.function.defer(deferredRemove, this, child, keepalive);
         }
         else {
             throw new Error("Child is not mine.");
         }
-    },
-
+    }
 
     /**
      * Removes (and optionally destroys) a child from the container.<br>
@@ -14743,7 +13604,7 @@ var Container = Renderable.extend({
      * @param {me.Renderable} child
      * @param {Boolean} [keepalive=False] True to prevent calling child.destroy()
      */
-    removeChildNow : function (child, keepalive) {
+    removeChildNow(child, keepalive) {
         if (this.hasChild(child) && (this.getChildIndex(child) >= 0)) {
             if (typeof child.onDeactivateEvent === "function") {
                 child.onDeactivateEvent();
@@ -14777,7 +13638,7 @@ var Container = Renderable.extend({
             // triggered callback if defined
             this.onChildChange.call(this, childIndex);
         }
-    },
+    }
 
     /**
      * Automatically set the specified property of all childs to the given value
@@ -14788,14 +13649,14 @@ var Container = Renderable.extend({
      * @param {Object} value property value
      * @param {Boolean} [recursive=false] recursively apply the value to child containers if true
      */
-    setChildsProperty : function (prop, val, recursive) {
+    setChildsProperty(prop, val, recursive) {
         this.forEach((child) => {
             if ((recursive === true) && (child instanceof Container)) {
                 child.setChildsProperty(prop, val, recursive);
             }
             child[prop] = val;
         });
-    },
+    }
 
     /**
      * Move the child in the group one step forward (z depth).
@@ -14804,13 +13665,13 @@ var Container = Renderable.extend({
      * @function
      * @param {me.Renderable} child
      */
-    moveUp : function (child) {
+    moveUp(child) {
         var childIndex = this.getChildIndex(child);
         if (childIndex - 1 >= 0) {
             // note : we use an inverted loop
             this.swapChildren(child, this.getChildAt(childIndex - 1));
         }
-    },
+    }
 
     /**
      * Move the child in the group one step backward (z depth).
@@ -14819,13 +13680,13 @@ var Container = Renderable.extend({
      * @function
      * @param {me.Renderable} child
      */
-    moveDown : function (child) {
+    moveDown(child) {
         var childIndex = this.getChildIndex(child);
         if (childIndex >= 0 && (childIndex + 1) < this.getChildren().length) {
             // note : we use an inverted loop
             this.swapChildren(child, this.getChildAt(childIndex + 1));
         }
-    },
+    }
 
     /**
      * Move the specified child to the top(z depth).
@@ -14834,7 +13695,7 @@ var Container = Renderable.extend({
      * @function
      * @param {me.Renderable} child
      */
-    moveToTop : function (child) {
+    moveToTop(child) {
         var childIndex = this.getChildIndex(child);
         if (childIndex > 0) {
             var children = this.getChildren();
@@ -14843,7 +13704,7 @@ var Container = Renderable.extend({
             // increment our child z value based on the previous child depth
             child.pos.z = children[1].pos.z + 1;
         }
-    },
+    }
 
     /**
      * Move the specified child the bottom (z depth).
@@ -14852,7 +13713,7 @@ var Container = Renderable.extend({
      * @function
      * @param {me.Renderable} child
      */
-    moveToBottom : function (child) {
+    moveToBottom(child) {
         var childIndex = this.getChildIndex(child);
         var children = this.getChildren();
         if (childIndex >= 0 && childIndex < (children.length - 1)) {
@@ -14861,7 +13722,7 @@ var Container = Renderable.extend({
             // increment our child z value based on the next child depth
             child.pos.z = children[(children.length - 2)].pos.z - 1;
         }
-    },
+    }
 
     /**
      * Manually trigger the sort of all the childs in the container</p>
@@ -14871,7 +13732,7 @@ var Container = Renderable.extend({
      * @function
      * @param {Boolean} [recursive=false] recursively sort all containers if true
      */
-    sort : function (recursive) {
+    sort(recursive) {
         // do nothing if there is already a pending sort
         if (!this.pendingSort) {
             if (recursive === true) {
@@ -14893,75 +13754,77 @@ var Container = Renderable.extend({
                 game$1.repaint();
             }, this, this);
         }
-    },
+    }
 
     /**
      * @ignore
      */
-    onDeactivateEvent : function () {
+    onDeactivateEvent() {
         this.forEach((child) => {
             if (typeof child.onDeactivateEvent === "function") {
                 child.onDeactivateEvent();
             }
         });
-    },
+    }
 
     /**
      * Z Sorting function
      * @ignore
      */
-    _sortZ : function (a, b) {
+    _sortZ(a, b) {
         return (b.pos && a.pos) ? (b.pos.z - a.pos.z) : (a.pos ? -Infinity : Infinity);
-    },
+    }
 
     /**
      * Reverse Z Sorting function
      * @ignore
      */
-    _sortReverseZ : function (a, b) {
+    _sortReverseZ(a, b) {
         return (a.pos && b.pos) ? (a.pos.z - b.pos.z) : (a.pos ? Infinity : -Infinity);
-    },
+    }
 
     /**
      * X Sorting function
      * @ignore
      */
-    _sortX : function (a, b) {
+    _sortX(a, b) {
         if (!b.pos || !a.pos) {
             return (a.pos ? -Infinity : Infinity);
         }
         var result = b.pos.z - a.pos.z;
         return (result ? result : (b.pos.x - a.pos.x));
-    },
+    }
 
     /**
      * Y Sorting function
      * @ignore
      */
-    _sortY : function (a, b) {
+    _sortY(a, b) {
         if (!b.pos || !a.pos) {
             return (a.pos ? -Infinity : Infinity);
         }
         var result = b.pos.z - a.pos.z;
         return (result ? result : (b.pos.y - a.pos.y));
-    },
+    }
 
     /**
      * Destroy function<br>
      * @ignore
      */
-    destroy : function () {
+    destroy() {
         // empty the container
         this.reset();
         // call the parent destroy method
-        this._super(Renderable, "destroy", arguments);
-    },
+        super.destroy(arguments);
+    }
 
     /**
      * @ignore
      */
-    update : function (dt) {
-        this._super(Renderable, "update", [dt]);
+    update(dt) {
+        // call the parent method
+        super.update(dt);
+
         var isDirty = false;
         var isFloating = false;
         var isPaused = state$1.isPaused();
@@ -15001,12 +13864,12 @@ var Container = Renderable.extend({
         }
 
         return isDirty;
-    },
+    }
 
     /**
      * @ignore
      */
-    draw : function (renderer, rect) {
+    draw(renderer, rect) {
         var isFloating = false;
         var bounds = this.getBounds();
 
@@ -15058,9 +13921,7 @@ var Container = Renderable.extend({
             }
         }
     }
-});
-
-var Container$1 = Container;
+}
 
 /*
  * A QuadTree implementation in JavaScript, a 2d spatial subdivision algorithm.
@@ -15230,7 +14091,7 @@ class QuadTree {
     insertContainer(container) {
         for (var i = container.children.length, child; i--, (child = container.children[i]);) {
             if (child.isKinematic !== true) {
-                if (child instanceof Container$1) {
+                if (child instanceof Container) {
                     if (child.name !== "rootContainer") {
                         this.insert(child);
                     }
@@ -16277,13 +15138,14 @@ var collision = {
  * @param {Number} [w=me.game.viewport.width] width of the container
  * @param {Number} [h=me.game.viewport.height] height of the container
  */
-var World = Container$1.extend({
+class World extends Container {
     /**
      * @ignore
      */
-    init : function (x = 0, y = 0, width = Infinity, height = Infinity) {
+    constructor(x = 0, y = 0, width = Infinity, height = Infinity) {
+
         // call the _super constructor
-        this._super(Container$1, "init", [x, y, width, height, true]);
+        super(x, y, width, height, true);
 
         // world is the root container
         this.name = "rootContainer";
@@ -16344,7 +15206,7 @@ var World = Container$1.extend({
             // reset the quadtree
             game$1.world.broadphase.clear(game$1.world.getBounds());
         });
-    },
+    }
 
     /**
      * reset the game world
@@ -16352,7 +15214,7 @@ var World = Container$1.extend({
      * @memberOf me.World
      * @function
      */
-    reset : function () {
+    reset() {
         // clear the quadtree
         this.broadphase.clear();
 
@@ -16360,8 +15222,8 @@ var World = Container$1.extend({
         this.anchorPoint.set(0, 0);
 
         // call the _super constructor
-        this._super(Container$1, "reset");
-    },
+        super.reset();
+    }
 
     /**
      * update the game world
@@ -16369,7 +15231,7 @@ var World = Container$1.extend({
      * @memberOf me.World
      * @function
      */
-    update : function (dt) {
+    update (dt) {
         // clear the quadtree
         this.broadphase.clear();
 
@@ -16377,9 +15239,10 @@ var World = Container$1.extend({
         this.broadphase.insertContainer(this);
 
         // call the _super constructor
-        return this._super(Container$1, "update", [dt]);
+        return super.update(dt);
     }
-});
+
+}
 
 /**
  * me.game represents your current game, it contains all the objects,
@@ -16476,6 +15339,7 @@ var game = {
      * @memberOf me.game
      * @ignore
      * @function
+     * @type () => void
      */
     init : function () {
         // the root object of our world is an entity container
@@ -16495,6 +15359,7 @@ var game = {
      * @memberOf me.game
      * @public
      * @function
+     * @type () => void
      */
     reset : function () {
         // point to the current active stage "default" camera
@@ -16647,12 +15512,13 @@ var targetV = new Vector2d();
  * @param {Number} maxX end x offset
  * @param {Number} maxY end y offset
  */
-var Camera2d = Renderable.extend({
+class Camera2d extends Renderable {
+
     /**
      * @ignore
      */
-    init : function (minX, minY, maxX, maxY) {
-        this._super(Renderable, "init", [minX, minY, maxX - minX, maxY - minY]);
+    constructor(minX, minY, maxX, maxY) {
+        super(minX, minY, maxX - minX, maxY - minY);
 
         /**
          * Axis definition
@@ -16792,18 +15658,18 @@ var Camera2d = Renderable.extend({
         event.subscribe(event.GAME_RESET, this.reset.bind(this));
         // subscribe to the canvas resize event
         event.subscribe(event.CANVAS_ONRESIZE, this.resize.bind(this));
-    },
+    }
 
     // -- some private function ---
 
     /** @ignore */
     // update the projection matrix based on the projection frame (a rectangle)
-    _updateProjectionMatrix : function () {
+    _updateProjectionMatrix() {
         this.projectionMatrix.ortho(0, this.width, this.height, 0, this.near, this.far);
-    },
+    }
 
     /** @ignore */
-    _followH : function (target) {
+    _followH(target) {
         var targetX = this.pos.x;
         if ((target.x - this.pos.x) > (this.deadzone.right)) {
             targetX = MIN((target.x) - (this.deadzone.right), this.bounds.width - this.width);
@@ -16813,10 +15679,10 @@ var Camera2d = Renderable.extend({
         }
         return targetX;
 
-    },
+    }
 
     /** @ignore */
-    _followV : function (target) {
+    _followV(target) {
         var targetY = this.pos.y;
         if ((target.y - this.pos.y) > (this.deadzone.bottom)) {
             targetY = MIN((target.y) - (this.deadzone.bottom), this.bounds.height - this.height);
@@ -16825,7 +15691,7 @@ var Camera2d = Renderable.extend({
             targetY = MAX((target.y) - this.deadzone.pos.y, this.bounds.top);
         }
         return targetY;
-    },
+    }
 
     // -- public function ---
 
@@ -16837,7 +15703,7 @@ var Camera2d = Renderable.extend({
      * @param {Number} [x=0]
      * @param {Number} [y=0]
      */
-    reset : function (x, y) {
+    reset(x, y) {
         // reset the initial camera position to 0,0
         this.pos.x = x || 0;
         this.pos.y = y || 0;
@@ -16855,7 +15721,7 @@ var Camera2d = Renderable.extend({
 
         // update the projection matrix
         this._updateProjectionMatrix();
-    },
+    }
 
     /**
      * change the deadzone settings.
@@ -16868,7 +15734,7 @@ var Camera2d = Renderable.extend({
      * @param {Number} w deadzone width
      * @param {Number} h deadzone height
      */
-    setDeadzone : function (w, h) {
+    setDeadzone(w, h) {
         if (typeof(this.deadzone) === "undefined") {
             this.deadzone = new Rect(0, 0, 0, 0);
         }
@@ -16886,8 +15752,7 @@ var Camera2d = Renderable.extend({
         this.updateTarget();
 
         this.smoothFollow = true;
-    },
-
+    }
 
     /**
      * resize the camera
@@ -16898,9 +15763,9 @@ var Camera2d = Renderable.extend({
      * @param {Number} h new height of the camera
      * @return {me.Camera2d} this camera
     */
-    resize : function (w, h) {
+    resize(w, h) {
         // parent consctructor, resize camera rect
-        this._super(Renderable, "resize", [w, h]);
+        super.resize(w, h);
 
         // disable damping while resizing
         this.smoothFollow = false;
@@ -16918,7 +15783,7 @@ var Camera2d = Renderable.extend({
         event.publish(event.VIEWPORT_ONRESIZE, [ this.width, this.height ]);
 
         return this;
-    },
+    }
 
     /**
      * set the camera boundaries (set to the world limit by default).
@@ -16931,13 +15796,13 @@ var Camera2d = Renderable.extend({
      * @param {Number} w world width limit
      * @param {Number} h world height limit
      */
-    setBounds : function (x, y, w, h) {
+    setBounds(x, y, w, h) {
         this.smoothFollow = false;
         this.bounds.setMinMax(x, y, w + x, h + y);
         this.moveTo(this.pos.x, this.pos.y);
         this.update();
         this.smoothFollow = true;
-    },
+    }
 
     /**
      * set the camera to follow the specified renderable. <br>
@@ -16952,7 +15817,7 @@ var Camera2d = Renderable.extend({
      * // set the camera to follow this renderable on both axis, and enable damping
      * me.game.viewport.follow(this, me.game.viewport.AXIS.BOTH, 0.1);
      */
-    follow : function (target, axis, damping) {
+    follow(target, axis, damping) {
         if (target instanceof Renderable) {
             this.target = target.pos;
         }
@@ -16980,7 +15845,7 @@ var Camera2d = Renderable.extend({
         this.updateTarget();
 
         this.smoothFollow = true;
-    },
+    }
 
     /**
      * unfollow the current target
@@ -16988,10 +15853,10 @@ var Camera2d = Renderable.extend({
      * @memberOf me.Camera2d
      * @function
      */
-    unfollow : function () {
+    unfollow() {
         this.target = null;
         this.follow_axis = this.AXIS.NONE;
-    },
+    }
 
     /**
      * move the camera upper-left position by the specified offset.
@@ -17005,9 +15870,9 @@ var Camera2d = Renderable.extend({
      * // Move the camera up by four pixels
      * me.game.viewport.move(0, -4);
      */
-    move : function (x, y) {
+    move(x, y) {
         this.moveTo(this.pos.x + x, this.pos.y + y);
-    },
+    }
 
     /**
      * move the camera upper-left position to the specified coordinates
@@ -17018,7 +15883,7 @@ var Camera2d = Renderable.extend({
      * @param {Number} x
      * @param {Number} y
      */
-    moveTo : function (x, y) {
+    moveTo(x, y) {
         var _x = this.pos.x;
         var _y = this.pos.y;
 
@@ -17037,10 +15902,10 @@ var Camera2d = Renderable.extend({
         if (_x !== this.pos.x || _y !== this.pos.y) {
             event.publish(event.VIEWPORT_ONCHANGE, [this.pos]);
         }
-    },
+    }
 
     /** @ignore */
-    updateTarget : function () {
+    updateTarget() {
         if (this.target) {
 
             targetV.setV(this.pos);
@@ -17082,10 +15947,10 @@ var Camera2d = Renderable.extend({
             }
         }
         return false;
-    },
+    }
 
     /** @ignore */
-    update : function (dt) {
+    update(dt) {
         var updated = this.updateTarget(dt);
 
         if (this._shake.duration > 0) {
@@ -17128,7 +15993,7 @@ var Camera2d = Renderable.extend({
             this.invCurrentTransform.identity();
         }
         return updated;
-    },
+    }
 
     /**
      * shake the camera
@@ -17146,14 +16011,14 @@ var Camera2d = Renderable.extend({
      * // shake it baby !
      * me.game.viewport.shake(10, 500, me.game.viewport.AXIS.BOTH);
      */
-    shake : function (intensity, duration, axis, onComplete, force) {
+    shake(intensity, duration, axis, onComplete, force) {
         if (this._shake.duration === 0 || force === true) {
             this._shake.intensity = intensity;
             this._shake.duration = duration;
             this._shake.axis = axis || this.AXIS.BOTH;
             this._shake.onComplete = typeof (onComplete) === "function" ? onComplete : undefined;
         }
-    },
+    }
 
     /**
      * fadeOut(flash) effect<p>
@@ -17172,14 +16037,14 @@ var Camera2d = Renderable.extend({
      *     me.game.viewport.fadeOut("#fff", 150);
      * });
      */
-    fadeOut : function (color, duration = 1000, onComplete) {
+    fadeOut(color, duration = 1000, onComplete) {
         this._fadeOut.color = pool.pull("Color").copy(color);
         this._fadeOut.tween = pool.pull("Tween", this._fadeOut.color)
             .to({ alpha: 0.0 }, duration)
             .onComplete(onComplete || null);
         this._fadeOut.tween.isPersistent = true;
         this._fadeOut.tween.start();
-    },
+    }
 
     /**
      * fadeIn effect <p>
@@ -17194,7 +16059,7 @@ var Camera2d = Renderable.extend({
      * // flash the camera to white for 75ms
      * me.game.viewport.fadeIn("#FFFFFF", 75);
      */
-    fadeIn : function (color, duration = 1000, onComplete) {
+    fadeIn(color, duration = 1000, onComplete) {
         this._fadeIn.color = pool.pull("Color").copy(color);
         var _alpha = this._fadeIn.color.alpha;
         this._fadeIn.color.alpha = 0.0;
@@ -17203,7 +16068,7 @@ var Camera2d = Renderable.extend({
             .onComplete(onComplete || null);
         this._fadeIn.tween.isPersistent = true;
         this._fadeIn.tween.start();
-    },
+    }
 
     /**
      * return the camera width
@@ -17212,9 +16077,9 @@ var Camera2d = Renderable.extend({
      * @function
      * @return {Number}
      */
-    getWidth : function () {
+    getWidth() {
         return this.width;
-    },
+    }
 
     /**
      * return the camera height
@@ -17223,9 +16088,9 @@ var Camera2d = Renderable.extend({
      * @function
      * @return {Number}
      */
-    getHeight : function () {
+    getHeight() {
         return this.height;
-    },
+    }
 
     /**
      * set the camera position around the specified object
@@ -17234,13 +16099,13 @@ var Camera2d = Renderable.extend({
      * @function
      * @param {me.Renderable}
      */
-    focusOn : function (target) {
+    focusOn(target) {
         var bounds = target.getBounds();
         this.moveTo(
             target.pos.x + bounds.left + (bounds.width / 2),
             target.pos.y + bounds.top + (bounds.height / 2)
         );
-    },
+    }
 
     /**
      * check if the specified renderable is in the camera
@@ -17251,7 +16116,7 @@ var Camera2d = Renderable.extend({
      * @param {Boolean} [floating===object.floating] if visibility check should be done against screen coordinates
      * @return {Boolean}
      */
-    isVisible : function (obj, floating = obj.floating) {
+    isVisible(obj, floating = obj.floating) {
         if (floating === true || obj.floating === true) {
             // check against screen coordinates
             return video$1.renderer.overlaps(obj.getBounds());
@@ -17259,7 +16124,7 @@ var Camera2d = Renderable.extend({
             // check if within the current camera
             return obj.getBounds().overlaps(this);
         }
-    },
+    }
 
     /**
      * convert the given "local" (screen) coordinates into world coordinates
@@ -17272,7 +16137,7 @@ var Camera2d = Renderable.extend({
      * converted value
      * @return {me.Vector2d}
      */
-    localToWorld : function (x, y, v) {
+    localToWorld(x, y, v) {
         // TODO memoization for one set of coords (multitouch)
         v = v || new Vector2d();
         v.set(x, y).add(this.pos).sub(game$1.world.pos);
@@ -17280,7 +16145,7 @@ var Camera2d = Renderable.extend({
             this.invCurrentTransform.apply(v);
         }
         return v;
-    },
+    }
 
     /**
      * convert the given world coordinates into "local" (screen) coordinates
@@ -17293,7 +16158,7 @@ var Camera2d = Renderable.extend({
      * converted value
      * @return {me.Vector2d}
      */
-    worldToLocal : function (x, y, v) {
+    worldToLocal(x, y, v) {
         // TODO memoization for one set of coords (multitouch)
         v = v || new Vector2d();
         v.set(x, y);
@@ -17301,13 +16166,13 @@ var Camera2d = Renderable.extend({
             this.currentTransform.apply(v);
         }
         return v.sub(this.pos).add(game$1.world.pos);
-    },
+    }
 
     /**
      * render the camera effects
      * @ignore
      */
-    drawFX : function (renderer) {
+    drawFX(renderer) {
         // fading effect
         if (this._fadeIn.tween) {
             // add an overlay
@@ -17341,13 +16206,13 @@ var Camera2d = Renderable.extend({
                 this._fadeOut.color = null;
             }
         }
-    },
+    }
 
     /**
      * draw all object visibile in this viewport
      * @ignore
      */
-    draw : function (renderer, container) {
+    draw(renderer, container) {
         var translateX = this.pos.x + this.offset.x;
         var translateY = this.pos.y + this.offset.y;
 
@@ -17383,7 +16248,8 @@ var Camera2d = Renderable.extend({
         // translate the world coordinates by default to screen coordinates
         container.currentTransform.translate(translateX, translateY);
     }
-});
+
+}
 
 // a default camera instance to use across all stages
 var default_camera;
@@ -17408,11 +16274,12 @@ var default_settings = {
  * @param {Function} [options.onDestroyEvent] called by the state manager before switching to another state
  * @see me.state
  */
-var Stage = window.Jay.extend({
+class Stage {
+
     /**
      * @ignore
      */
-    init: function (settings) {
+    constructor(settings) {
         /**
          * The list of active cameras in this stage.
          * Cameras will be renderered based on this order defined in this list.
@@ -17432,13 +16299,13 @@ var Stage = window.Jay.extend({
          * @enum {Object}
          */
         this.settings = Object.assign(default_settings, settings || {});
-    },
+    }
 
     /**
      * Object reset function
      * @ignore
      */
-    reset : function () {
+    reset() {
         var self = this;
 
         // add all defined cameras
@@ -17462,7 +16329,7 @@ var Stage = window.Jay.extend({
 
         // call the onReset Function
         this.onResetEvent.apply(this, arguments);
-    },
+    }
 
     /**
      * update function
@@ -17473,7 +16340,7 @@ var Stage = window.Jay.extend({
      * @param {Number} dt time since the last update in milliseconds.
      * @return false
      **/
-    update : function (dt) {
+    update(dt) {
         // update all objects (and pass the elapsed time since last frame)
         var isDirty = game$1.world.update(dt);
 
@@ -17485,7 +16352,7 @@ var Stage = window.Jay.extend({
             }        });
 
         return isDirty;
-    },
+    }
 
     /**
      * draw the current stage
@@ -17495,24 +16362,24 @@ var Stage = window.Jay.extend({
      * @function
      * @param {me.CanvasRenderer|me.WebGLRenderer} renderer a renderer object
      */
-    draw : function (renderer) {
+    draw(renderer) {
         // iterate through all cameras
         this.cameras.forEach(function(camera) {
             // render the root container
             camera.draw(renderer, game$1.world);
         });
-    },
+    }
 
     /**
      * destroy function
      * @ignore
      */
-    destroy : function () {
+    destroy() {
         // clear all cameras
         this.cameras.clear();
         // notify the object
         this.onDestroyEvent.apply(this, arguments);
-    },
+    }
 
     /**
      * onResetEvent function<br>
@@ -17524,13 +16391,13 @@ var Stage = window.Jay.extend({
      * @param {} [arguments...] optional arguments passed when switching state
      * @see me.state#change
      */
-    onResetEvent : function () {
+    onResetEvent() {
         // execute onResetEvent function if given through the constructor
         if (typeof this.settings.onResetEvent === "function") {
             this.settings.onResetEvent.apply(this, arguments);
         }
 
-    },
+    }
 
     /**
      * onDestroyEvent function<br>
@@ -17539,25 +16406,26 @@ var Stage = window.Jay.extend({
      * @memberOf me.Stage
      * @function
      */
-    onDestroyEvent : function () {
+    onDestroyEvent() {
         // execute onDestroyEvent function if given through the constructor
         if (typeof this.settings.onDestroyEvent === "function") {
             this.settings.onDestroyEvent.apply(this, arguments);
         }
     }
-});
+}
 
 // a basic progress bar object
-var ProgressBar = Renderable.extend({
+class ProgressBar extends Renderable {
     /**
      * @ignore
      */
-    init: function (x, y, w, h) {
+    constructor(x, y, w, h) {
+
+        super(x, y, w, h);
+
         var self = this;
 
         this.barHeight = h;
-
-        this._super(Renderable, "init", [x, y, w, h]);
 
         this.anchorPoint.set(0, 0);
 
@@ -17575,22 +16443,22 @@ var ProgressBar = Renderable.extend({
 
         // store current progress
         this.progress = 0;
-    },
+    }
 
     /**
      * make sure the screen is refreshed every frame
      * @ignore
      */
-    onProgressUpdate : function (progress) {
+    onProgressUpdate(progress) {
         this.progress = ~~(progress * this.width);
         this.isDirty = true;
-    },
+    }
 
     /**
      * draw function
      * @ignore
      */
-    draw : function (renderer) {
+    draw (renderer) {
         // clear the background
         renderer.clearColor("#202020");
 
@@ -17600,28 +16468,27 @@ var ProgressBar = Renderable.extend({
 
         renderer.setColor("#55aa00");
         renderer.fillRect(this.pos.x, game$1.viewport.centerY, this.progress, this.barHeight / 2);
-    },
+    }
 
     /**
      * Called by engine before deleting the object
      * @ignore
      */
-    onDestroyEvent : function () {
+    onDestroyEvent() {
         // cancel the callback
         event.unsubscribe(this.loaderHdlr);
         event.unsubscribe(this.resizeHdlr);
         this.loaderHdlr = this.resizeHdlr = null;
     }
 
-});
-
+}
 // the melonJS Logo
-var IconLogo = Renderable.extend({
+class IconLogo extends Renderable {
     /**
      * @ignore
      */
-    init : function (x, y) {
-        this._super(Renderable, "init", [x, y, 100, 85]);
+    constructor(x, y) {
+        super(x, y, 100, 85);
 
         this.iconCanvas = video$1.createCanvas(
             nextPowerOfTwo(this.width),
@@ -17657,22 +16524,22 @@ var IconLogo = Renderable.extend({
         context.stroke();
 
         this.anchorPoint.set(0.5, 0.5);
-    },
+    }
+
     /**
      * @ignore
      */
-    draw : function (renderer) {
+    draw(renderer) {
         renderer.drawImage(this.iconCanvas, renderer.getWidth() / 2, this.pos.y);
     }
-});
-
+}
 // the melonJS Text Logo
-var TextLogo = Renderable.extend({
+class TextLogo extends Renderable {
     /**
      * @ignore
      */
-    init : function (w, h) {
-        this._super(Renderable, "init", [0, 0, w, h]);
+    constructor(w, h) {
+        super(0, 0, w, h);
 
         this.textWidth = 0;
 
@@ -17681,9 +16548,9 @@ var TextLogo = Renderable.extend({
         this.drawFont(video$1.renderer.getContext2d(this.fontCanvas));
 
         this.anchorPoint.set(0, 0.5);
-    },
+    }
 
-    drawFont : function (context) {
+    drawFont(context) {
         var logo1 = pool.pull("Text", 0, 0, {
             font: "century gothic",
             size: 32,
@@ -17720,17 +16587,16 @@ var TextLogo = Renderable.extend({
         // put them back into the object pool
         pool.push(logo1);
         pool.push(logo2);
-    },
+    }
 
     /**
      * @ignore
      */
-    draw : function (renderer) {
+    draw(renderer) {
         renderer.drawImage(this.fontCanvas, Math.round((renderer.getWidth() - this.textWidth) / 2), this.pos.y);
     }
 
-});
-
+}
 /**
  * a default loading screen
  * @memberOf me
@@ -18367,6 +17233,7 @@ var state = {
 var state$1 = state;
 
 /**
+ * @classdesc
  * an ellipse Object
  * @class
  * @extends me.Object
@@ -18377,11 +17244,10 @@ var state$1 = state;
  * @param {Number} w width (diameter) of the ellipse
  * @param {Number} h height (diameter) of the ellipse
  */
-var Ellipse = window.Jay.extend({
-    /**
-     * @ignore
-     */
-    init : function (x, y, w, h) {
+
+class Ellipse {
+
+    constructor(x, y, w, h) {
         /**
          * the center coordinates of the ellipse
          * @public
@@ -18439,12 +17305,12 @@ var Ellipse = window.Jay.extend({
         // the shape type
         this.shapeType = "Ellipse";
         this.setShape(x, y, w, h);
-    },
+    }
 
     /** @ignore */
-    onResetEvent : function (x, y, w, h) {
+    onResetEvent(x, y, w, h) {
         this.setShape(x, y, w, h);
-    },
+    }
 
     /**
      * set new value to the Ellipse shape
@@ -18456,7 +17322,7 @@ var Ellipse = window.Jay.extend({
      * @param {Number} w width (diameter) of the ellipse
      * @param {Number} h height (diameter) of the ellipse
      */
-    setShape : function (x, y, w, h) {
+    setShape(x, y, w, h) {
         var hW = w / 2;
         var hH = h / 2;
 
@@ -18473,7 +17339,7 @@ var Ellipse = window.Jay.extend({
         this.getBounds().translate(-this.radiusV.x, -this.radiusV.y);
 
         return this;
-    },
+    }
 
     /**
      * Rotate this Ellipse (counter-clockwise) by the specified angle (in radians).
@@ -18484,13 +17350,13 @@ var Ellipse = window.Jay.extend({
      * @param {me.Vector2d|me.ObservableVector2d} [v] an optional point to rotate around
      * @return {me.Ellipse} Reference to this object for method chaining
      */
-    rotate : function (angle, v) {
+    rotate(angle, v) {
         // TODO : only works for circle
         this.pos.rotate(angle, v);
         this.getBounds().shift(this.pos);
         this.getBounds().translate(-this.radiusV.x, -this.radiusV.y);
         return this;
-    },
+    }
 
     /**
      * Scale this Ellipse by the specified scalar.
@@ -18501,7 +17367,7 @@ var Ellipse = window.Jay.extend({
      * @param {Number} [y=x]
      * @return {me.Ellipse} Reference to this object for method chaining
      */
-    scale : function (x, y) {
+    scale(x, y) {
         y = typeof (y) !== "undefined" ? y : x;
         return this.setShape(
             this.pos.x,
@@ -18509,7 +17375,7 @@ var Ellipse = window.Jay.extend({
             this.radiusV.x * 2 * x,
             this.radiusV.y * 2 * y
         );
-    },
+    }
 
     /**
      * Scale this Ellipse by the specified vector.
@@ -18519,9 +17385,9 @@ var Ellipse = window.Jay.extend({
      * @param {me.Vector2d} v
      * @return {me.Ellipse} Reference to this object for method chaining
      */
-    scaleV : function (v) {
+    scaleV(v) {
         return this.scale(v.x, v.y);
-    },
+    }
 
     /**
      * apply the given transformation matrix to this ellipse
@@ -18531,10 +17397,10 @@ var Ellipse = window.Jay.extend({
      * @param {me.Matrix2d} matrix the transformation matrix
      * @return {me.Polygon} Reference to this object for method chaining
      */
-    transform : function (/* m */) {
+    transform(/* m */) {
         // TODO
         return this;
-    },
+    }
 
     /**
      * translate the circle/ellipse by the specified offset
@@ -18553,7 +17419,7 @@ var Ellipse = window.Jay.extend({
      * @param {me.Vector2d} v vector offset
      * @return {me.Ellipse} this ellipse
      */
-    translate : function () {
+    translate() {
         var _x, _y;
 
         if (arguments.length === 2) {
@@ -18571,7 +17437,7 @@ var Ellipse = window.Jay.extend({
         this.getBounds().translate(_x, _y);
 
         return this;
-    },
+    }
 
     /**
      * check if this circle/ellipse contains the specified point
@@ -18591,7 +17457,7 @@ var Ellipse = window.Jay.extend({
      * @param  {Number} y y coordinate
      * @return {boolean} true if contains
      */
-    contains: function (x, y) {
+    contains(x, y) {
         var _x, _y;
 
         if (arguments.length === 2) {
@@ -18612,7 +17478,7 @@ var Ellipse = window.Jay.extend({
             ((_x * _x) / this.radiusSq.x) +
             ((_y * _y) / this.radiusSq.y)
         ) <= 1.0;
-    },
+    }
 
     /**
      * returns the bounding box for this shape, the smallest Rectangle object completely containing this shape.
@@ -18621,12 +17487,12 @@ var Ellipse = window.Jay.extend({
      * @function
      * @return {me.Bounds} this shape bounding box Rectangle object
      */
-    getBounds : function () {
+    getBounds() {
         if (typeof this._bounds === "undefined") {
             this._bounds = pool.pull("Bounds");
         }
         return this._bounds;
-    },
+    }
 
     /**
      * clone this Ellipse
@@ -18635,7 +17501,7 @@ var Ellipse = window.Jay.extend({
      * @function
      * @return {me.Ellipse} new Ellipse
      */
-    clone : function () {
+    clone() {
         return new Ellipse(
             this.pos.x,
             this.pos.y,
@@ -18643,7 +17509,7 @@ var Ellipse = window.Jay.extend({
             this.radiusV.y * 2
         );
     }
-});
+}
 
 /**
  * @classdesc
@@ -19292,33 +18158,6 @@ class Body {
         }
         // cap by default to half the default gravity force
         this.maxVel.set(490, 490);
-
-        /**
-         * Default gravity value for this body.
-         * To be set to to < 0, 0 > for RPG, shooter, etc...<br>
-         * @public
-         * @see me.Body.gravityScale
-         * @type me.Vector2d
-         * @default <0,0.98>
-         * @deprecated since 8.0.0
-         * @name gravity
-         * @memberOf me.Body
-         */
-        if (typeof this.gravity === "undefined") {
-            var self = this;
-            this.gravity = new ObservableVector2d(0, 0, { onUpdate : function(x, y) {
-                // disable gravity or apply a scale if y gravity is different from 0
-                if (typeof y === "number") {
-                    self.gravityScale = y / game$1.world.gravity.y;
-                }
-                // deprecation // WARNING:
-                console.log(
-                    "me.Body.gravity is deprecated, " +
-                    "please see me.Body.gravityScale " +
-                    "to modify gravity for a specific body"
-                );
-            }});
-        }
 
         /**
          * The degree to which this body is affected by the world gravity
@@ -20477,7 +19316,7 @@ class Texture {
                         // set the texture
                         if (typeof(src) === "undefined") {
                             // get the texture name from the atlas meta data
-                            var image = loader$1.getImage(atlas.meta.image);
+                            var image = loader.getImage(atlas.meta.image);
                             if (!image) {
                                 throw new Error(
                                     "Atlas texture '" + image + "' not found"
@@ -20485,7 +19324,7 @@ class Texture {
                             }
                             this.sources.set(atlas.meta.image, image);
                         } else {
-                            this.sources.set(atlas.meta.image || "default", typeof src === "string" ? loader$1.getImage(src) : src);
+                            this.sources.set(atlas.meta.image || "default", typeof src === "string" ? loader.getImage(src) : src);
                         }
                         this.repeat = "no-repeat";
                     }
@@ -20499,13 +19338,13 @@ class Texture {
                         }
                         this.format = "ShoeBox";
                         this.repeat = "no-repeat";
-                        this.sources.set("default", typeof src === "string" ? loader$1.getImage(src) : src);
+                        this.sources.set("default", typeof src === "string" ? loader.getImage(src) : src);
                     }
                     // Internal texture atlas
                     else if (atlas.meta.app.includes("melonJS")) {
                         this.format = "melonJS";
                         this.repeat = atlas.meta.repeat || "no-repeat";
-                        this.sources.set("default", typeof src === "string" ? loader$1.getImage(src) : src);
+                        this.sources.set("default", typeof src === "string" ? loader.getImage(src) : src);
                     }
                     // initialize the atlas
                     this.atlases.set(atlas.meta.image || "default", this.parse(atlas));
@@ -20519,7 +19358,7 @@ class Texture {
 
                         if (typeof(src) !== "undefined") {
                             // overwrite if specified
-                            atlas.image = typeof src === "string" ? loader$1.getImage(src) : src;
+                            atlas.image = typeof src === "string" ? loader.getImage(src) : src;
                         }
                         // initialize the atlas
                         this.atlases.set("default", this.parseFromSpriteSheet(atlas));
@@ -20889,6 +19728,7 @@ class Texture {
 }
 
 /**
+ * @classdesc
  * An object to display a fixed or animated sprite on screen.
  * @class
  * @extends me.Renderable
@@ -20925,11 +19765,16 @@ class Texture {
  *     region : "npc2.png",
  * });
  */
-var Sprite = Renderable.extend({
+
+class Sprite extends Renderable {
+
     /**
      * @ignore
      */
-    init : function (x, y, settings) {
+    constructor(x, y, settings) {
+
+        // call the super constructor
+        super(x, y, 0, 0);
 
         /**
          * pause and resume animation
@@ -21003,9 +19848,6 @@ var Sprite = Renderable.extend({
             state : false
         };
 
-        // call the super constructor
-        this._super(Renderable, "init", [ x, y, 0, 0 ]);
-
         // set the proper image/texture to use
         if (settings.image instanceof Texture) {
             this.source = settings.image;
@@ -21028,7 +19870,7 @@ var Sprite = Renderable.extend({
             }
         } else {
             // HTMLImageElement/Canvas or String
-            this.image = (typeof settings.image === "object") ? settings.image : loader$1.getImage(settings.image);
+            this.image = (typeof settings.image === "object") ? settings.image : loader.getImage(settings.image);
             // throw an error if image ends up being null/undefined
             if (!this.image) {
                 throw new Error("me.Sprite: '" + settings.image + "' image/texture not found!");
@@ -21090,7 +19932,7 @@ var Sprite = Renderable.extend({
 
         // enable currentTransform for me.Sprite based objects
         this.autoTransform = true;
-    },
+    }
 
     /**
      * return the flickering state of the object
@@ -21099,9 +19941,9 @@ var Sprite = Renderable.extend({
      * @function
      * @return {Boolean}
      */
-    isFlickering : function () {
+    isFlickering() {
         return this._flicker.isFlickering;
-    },
+    }
 
     /**
      * make the object flicker
@@ -21118,7 +19960,7 @@ var Sprite = Renderable.extend({
      *     me.game.world.removeChild(this);
      * });
      */
-    flicker : function (duration, callback) {
+    flicker(duration, callback) {
         this._flicker.duration = duration;
         if (this._flicker.duration <= 0) {
             this._flicker.isFlickering = false;
@@ -21129,7 +19971,7 @@ var Sprite = Renderable.extend({
             this._flicker.isFlickering = true;
         }
         return this;
-    },
+    }
 
     /**
      * add an animation <br>
@@ -21165,7 +20007,7 @@ var Sprite = Renderable.extend({
      * // set the standing animation as default
      * this.setCurrentAnimation("stand");
      */
-    addAnimation : function (name, index, animationspeed) {
+    addAnimation(name, index, animationspeed) {
         this.anim[name] = {
             name : name,
             frames : [],
@@ -21231,7 +20073,7 @@ var Sprite = Renderable.extend({
         this.anim[name].length = counter;
 
         return counter;
-    },
+    }
 
     /**
      * set the current animation
@@ -21272,7 +20114,7 @@ var Sprite = Renderable.extend({
      *    return false; // do not reset to first frame
      * }).bind(this));
      **/
-    setCurrentAnimation : function (name, resetAnim, _preserve_dt) {
+    setCurrentAnimation(name, resetAnim, _preserve_dt) {
         if (this.anim[name]) {
             this.current.name = name;
             this.current.length = this.anim[this.current.name].length;
@@ -21292,7 +20134,7 @@ var Sprite = Renderable.extend({
             throw new Error("animation id '" + name + "' not defined");
         }
         return this;
-    },
+    }
 
     /**
      * reverse the given or current animation if none is specified
@@ -21303,7 +20145,7 @@ var Sprite = Renderable.extend({
      * @return {me.Sprite} Reference to this object for method chaining
      * @see me.Sprite#animationspeed
      */
-    reverseAnimation : function (name) {
+    reverseAnimation(name) {
         if (typeof name !== "undefined" && typeof this.anim[name] !== "undefined") {
             this.anim[name].frames.reverse();
         } else {
@@ -21311,7 +20153,7 @@ var Sprite = Renderable.extend({
         }
         this.isDirty = true;
         return this;
-    },
+    }
 
     /**
      * return true if the specified animation is the current one.
@@ -21325,9 +20167,9 @@ var Sprite = Renderable.extend({
      *     // do something funny...
      * }
      */
-    isCurrentAnimation : function (name) {
+    isCurrentAnimation(name) {
         return this.current.name === name;
-    },
+    }
 
     /**
      * change the current texture atlas region for this sprite
@@ -21341,7 +20183,7 @@ var Sprite = Renderable.extend({
      * // change the sprite to "shadedDark13.png";
      * mySprite.setRegion(game.texture.getRegion("shadedDark13.png"));
      */
-    setRegion : function (region) {
+    setRegion(region) {
         // set the source texture for the given region
         this.image = this.source.getTexture(region);
         // set the sprite offset within the texture
@@ -21360,7 +20202,7 @@ var Sprite = Renderable.extend({
         }
         this.isDirty = true;
         return this;
-    },
+    }
 
     /**
      * force the current animation frame index.
@@ -21373,10 +20215,10 @@ var Sprite = Renderable.extend({
      * // reset the current animation to the first frame
      * this.setAnimationFrame();
      */
-    setAnimationFrame : function (idx) {
+    setAnimationFrame(idx) {
         this.current.idx = (idx || 0) % this.current.length;
         return this.setRegion(this.getAnimationFrameObjectByIndex(this.current.idx));
-    },
+    }
 
     /**
      * return the current animation frame index.
@@ -21385,9 +20227,9 @@ var Sprite = Renderable.extend({
      * @function
      * @return {Number} current animation frame index
      */
-    getCurrentAnimationFrame : function () {
+    getCurrentAnimationFrame() {
         return this.current.idx;
-    },
+    }
 
     /**
      * Returns the frame object by the index.
@@ -21397,14 +20239,14 @@ var Sprite = Renderable.extend({
      * @private
      * @return {Number} if using number indices. Returns {Object} containing frame data if using texture atlas
      */
-    getAnimationFrameObjectByIndex : function (id) {
+    getAnimationFrameObjectByIndex(id) {
         return this.anim[this.current.name].frames[id];
-    },
+    }
 
     /**
      * @ignore
      */
-    update : function (dt) {
+    update(dt) {
 
         // Update animation if necessary
         if (!this.animationpause && this.current && this.current.length > 0) {
@@ -21462,22 +20304,22 @@ var Sprite = Renderable.extend({
         }
 
         return this.isDirty;
-    },
+    }
 
     /**
      * Destroy function<br>
      * @ignore
      */
-    destroy : function () {
+    destroy() {
         pool.push(this.offset);
         this.offset = undefined;
-        this._super(Renderable, "destroy");
-    },
+        super.destroy();
+    }
 
     /**
      * @ignore
      */
-    draw : function (renderer) {
+    draw(renderer) {
         // do nothing if we are flickering
         if (this._flicker.isFlickering) {
             this._flicker.state = !this._flicker.state;
@@ -21519,7 +20361,7 @@ var Sprite = Renderable.extend({
             w, h                         // dw,dh
         );
     }
-});
+}
 
 // bitmask constants to check for flipped & rotated tiles
 var TMX_FLIP_H          = 0x80000000,
@@ -21706,7 +20548,8 @@ class Tile extends Bounds$1 {
 }
 
 /**
- * a line segment Object.<br>
+ * @classdesc
+ * a line segment Object
  * @class
  * @extends me.Polygon
  * @memberOf me
@@ -21715,7 +20558,8 @@ class Tile extends Bounds$1 {
  * @param {Number} y origin point of the Line
  * @param {me.Vector2d[]} points array of vectors defining the Line
  */
-var Line = Polygon.extend({
+
+class Line extends Polygon {
 
     /**
      * Returns true if the Line contains the given point
@@ -21735,7 +20579,7 @@ var Line = Polygon.extend({
      * @param  {Number} y y coordinate
      * @return {boolean} true if contains
      */
-    contains: function () {
+    contains() {
         var _x, _y;
 
         if (arguments.length === 2) {
@@ -21757,7 +20601,7 @@ var Line = Polygon.extend({
 
         //(Cy - Ay) * (Bx - Ax) = (By - Ay) * (Cx - Ax)
         return (_y - start.y) * (end.x - start.x) === (end.y - start.y) * (_x - start.x);
-    },
+    }
 
     /**
      * Computes the calculated collision edges and normals.
@@ -21766,7 +20610,7 @@ var Line = Polygon.extend({
      * @memberOf me.Line.prototype
      * @function
      */
-    recalc : function () {
+    recalc() {
         var edges = this.edges;
         var normals = this.normals;
         var indices = this.indices;
@@ -21793,7 +20637,7 @@ var Line = Polygon.extend({
         indices.length = 0;
 
         return this;
-    },
+    }
 
     /**
      * clone this line segment
@@ -21802,14 +20646,15 @@ var Line = Polygon.extend({
      * @function
      * @return {me.Line} new Line
      */
-    clone : function () {
+    clone() {
         var copy = [];
         this.points.forEach(function (point) {
             copy.push(point.clone());
         });
         return new Line(this.pos.x, this.pos.y, copy);
     }
-});
+
+}
 
 /**
  * @classdesc
@@ -21863,7 +20708,7 @@ class Renderer {
         this.currentBlendMode = "normal";
 
         // create the main screen canvas
-        if (device$1.ejecta === true) {
+        if (device.ejecta === true) {
             // a main canvas is already automatically created by Ejecta
             this.canvas = document.getElementById("canvas");
         } else if (typeof window.canvas !== "undefined") {
@@ -22522,6 +21367,7 @@ class CanvasRenderer extends Renderer {
      * @param {Number} start start angle in radians
      * @param {Number} end end angle in radians
      * @param {Boolean} [antiClockwise=false] draw arc anti-clockwise
+     * @param {Boolean} [fill=false] draw arc anti-clockwise
      */
     strokeArc(x, y, radius, start, end, antiClockwise, fill) {
         var context = this.backBufferContext2D;
@@ -23056,13 +21902,13 @@ function preRenderLayer(layer, renderer) {
  * @param {me.TMXTilesetGroup} tilesets tileset as defined in Tiled
  * @param {Number} z z-index position
  */
-var TMXLayer = Renderable.extend({
+class TMXLayer extends Renderable {
     /**
      * @ignore
      */
-    init: function (map, data, tilewidth, tileheight, orientation, tilesets, z) {
+    constructor(map, data, tilewidth, tileheight, orientation, tilesets, z) {
         // super constructor
-        this._super(Renderable, "init", [0, 0, 0, 0]);
+        super(0, 0, 0, 0);
 
         // tile width & height
         this.tilewidth = data.tilewidth || tilewidth;
@@ -23170,11 +22016,11 @@ var TMXLayer = Renderable.extend({
                 data.compression
             )
         );
-    },
+    }
 
 
     // called when the layer is added to the game world or a container
-    onActivateEvent : function () {
+    onActivateEvent() {
 
         if (this.animatedTilesets === undefined) {
             this.animatedTilesets = [];
@@ -23210,14 +22056,14 @@ var TMXLayer = Renderable.extend({
             });
             preRenderLayer(this, this.canvasRenderer);
         }
-    },
+    }
 
     // called when the layer is removed from the game world or a container
-    onDeactivateEvent : function () {
+    onDeactivateEvent() {
         // clear all allocated objects
         //this.layerData = undefined;
         this.animatedTilesets = undefined;
-    },
+    }
 
     /**
      * Set the TMX renderer for this layer object
@@ -23231,9 +22077,9 @@ var TMXLayer = Renderable.extend({
      * var layer = new me.TMXLayer(...);
      * layer.setRenderer(map.getRenderer());
      */
-    setRenderer : function (renderer) {
+    setRenderer(renderer) {
         this.renderer = renderer;
-    },
+    }
 
     /**
      * Return the layer current renderer object
@@ -23243,9 +22089,9 @@ var TMXLayer = Renderable.extend({
      * @function
      * @return {me.TMXRenderer} renderer
      */
-    getRenderer : function () {
+    getRenderer() {
         return this.renderer;
-    },
+    }
 
 
     /**
@@ -23258,10 +22104,10 @@ var TMXLayer = Renderable.extend({
      * @param {Number} y Y coordinate (in world/pixels coordinates)
      * @return {Number} TileId or null if there is no Tile at the given position
      */
-    getTileId : function (x, y) {
+    getTileId(x, y) {
         var tile = this.getTile(x, y);
         return (tile ? tile.tileId : null);
-    },
+    }
 
     /**
      * Return the Tile object at the specified position
@@ -23278,7 +22124,7 @@ var TMXLayer = Renderable.extend({
      * // get the tile object corresponding to the latest pointer position
      * var tile = layer.getTile(me.input.pointer.pos.x, me.input.pointer.pos.y);
      */
-    getTile : function (x, y) {
+    getTile(x, y) {
         var tile = null;
 
         if (this.contains(x, y)) {
@@ -23287,7 +22133,7 @@ var TMXLayer = Renderable.extend({
             pool.push(coord);
         }
         return tile;
-    },
+    }
 
     /**
      * assign the given Tile object to the specified position
@@ -23300,10 +22146,10 @@ var TMXLayer = Renderable.extend({
      * @param {Number} y Y coordinate (in world/pixels coordinates)
      * @return {me.Tile} the tile object
      */
-    setTile : function (tile, x, y) {
+    setTile(tile, x, y) {
         this.layerData[x][y] = tile;
         return tile;
-    },
+    }
 
     /**
      * return a new the Tile object corresponding to the given tile id
@@ -23316,13 +22162,13 @@ var TMXLayer = Renderable.extend({
      * @param {Number} y Y coordinate (in world/pixels coordinates)
      * @return {me.Tile} the tile object
      */
-    getTileById : function (tileId, x, y) {
+    getTileById(tileId, x, y) {
         if (!this.tileset.contains(tileId)) {
             // look for the corresponding tileset
             this.tileset = this.tilesets.getTilesetByGid(tileId);
         }
         return new Tile(x, y, tileId, this.tileset);
-    },
+    }
 
     /**
      * Return the Tile object at the specified tile coordinates
@@ -23338,7 +22184,7 @@ var TMXLayer = Renderable.extend({
      * // return the first tile at offset 0, 0
      * var tile = layer.cellAt(0, 0);
      */
-    cellAt : function (x, y, boundsCheck) {
+    cellAt(x, y, boundsCheck) {
         var _x = ~~x;
         var _y = ~~y;
 
@@ -23349,7 +22195,7 @@ var TMXLayer = Renderable.extend({
         } else {
             return null;
         }
-    },
+    }
 
     /**
      * clear the tile at the specified position
@@ -23365,20 +22211,20 @@ var TMXLayer = Renderable.extend({
      *     layer.clearTile(x, y);
      * });
      */
-    clearTile : function (x, y) {
+    clearTile(x, y) {
         // clearing tile
         this.layerData[x][y] = null;
         // erase the corresponding area in the canvas
         if (this.preRender) {
             this.canvasRenderer.clearRect(x * this.tilewidth, y * this.tileheight, this.tilewidth, this.tileheight);
         }
-    },
+    }
 
     /**
      * update animations in a tileset layer
      * @ignore
      */
-    update : function (dt) {
+    update(dt) {
         if (this.isAnimated) {
             var result = false;
             for (var i = 0; i < this.animatedTilesets.length; i++) {
@@ -23388,13 +22234,13 @@ var TMXLayer = Renderable.extend({
         }
 
         return false;
-    },
+    }
 
     /**
      * draw a tileset layer
      * @ignore
      */
-    draw : function (renderer, rect) {
+    draw(renderer, rect) {
         // use the offscreen canvas
         if (this.preRender) {
             var width = Math.min(rect.width, this.width);
@@ -23415,7 +22261,7 @@ var TMXLayer = Renderable.extend({
             this.getRenderer().drawTileLayer(renderer, this, rect);
         }
     }
-});
+}
 
 /**
  * @classdesc
@@ -24966,7 +23812,7 @@ class TMXTileset {
             var ext = utils$1.file.getExtension(src);
             if (ext === "tsx" || ext === "json") {
                 // load the external tileset (TSX/JSON)
-                tileset = loader$1.getTMX(utils$1.file.getBasename(src));
+                tileset = loader.getTMX(utils$1.file.getBasename(src));
                 if (!tileset) {
                     throw new Error(src + " external TSX/JSON tileset not found");
                 }
@@ -25039,7 +23885,7 @@ class TMXTileset {
                     }
                 }
                 if ("image" in tiles[i]) {
-                    var image = loader$1.getImage(tiles[i].image);
+                    var image = loader.getImage(tiles[i].image);
                     if (!image) {
                         throw new Error("melonJS: '" + tiles[i].image + "' file for tile '" + (+i + this.firstgid) + "' not found!");
                     }
@@ -25070,7 +23916,7 @@ class TMXTileset {
         if (this.isCollection === false) {
 
             // get the global tileset texture
-            this.image = loader$1.getImage(tileset.image);
+            this.image = loader.getImage(tileset.image);
 
             if (!this.image) {
                 throw new Error("melonJS: '" + tileset.image + "' file for tileset '" + this.name + "' not found!");
@@ -26205,7 +25051,7 @@ class TMXTileMap {
 
             if (flatten === false) {
                 // create a new container
-                targetContainer = new Container$1(0, 0, this.width, this.height);
+                targetContainer = new Container(0, 0, this.width, this.height);
 
                 // tiled uses 0,0 by default
                 targetContainer.anchorPoint.set(0, 0);
@@ -26441,7 +25287,7 @@ var level = {
                 // just load the level with the XML stuff
                 if (levels[levelId] == null) {
                     //console.log("loading "+ levelId);
-                    levels[levelId] = new TMXTileMap(levelId, loader$1.getTMX(levelId));
+                    levels[levelId] = new TMXTileMap(levelId, loader.getTMX(levelId));
                     // level index
                     levelIdx.push(levelId);
                 }
@@ -26774,7 +25620,7 @@ function preloadTMX(tmxData, onload, onerror) {
                     case "tmx":
                     case "tsx":
                         // ie9 does not fully implement the responseXML
-                        if (device$1.ua.match(/msie/i) || !xmlhttp.responseXML) {
+                        if (device.ua.match(/msie/i) || !xmlhttp.responseXML) {
                             if (window.DOMParser) {
                                 // manually create the XML DOM
                                 result = (new DOMParser()).parseFromString(xmlhttp.responseText, "text/xml");
@@ -27376,26 +26222,9 @@ var loader = {
             return jsonList[elt];
         }
         return null;
-    },
-
-    /**
-     * Return the loading progress in percent
-     * @name getLoadProgress
-     * @memberOf me.loader
-     * @public
-     * @function
-     * @deprecated use callback instead
-     * @see me.loader.onProgress
-     * @see me.event.LOADER_PROGRESS
-     * @return {Number}
-     */
-    getLoadProgress() {
-        return loadCount / resourceCount;
     }
 
 };
-
-var loader$1 = loader;
 
 // external import
 
@@ -27476,8 +26305,9 @@ var audio = {
      *     alert("Sorry but your browser does not support html 5 audio !");
      *     return;
      * }
+     * @type (audioFormat: string) => boolean
      */
-    init : function (audioFormat) {
+     init : function (audioFormat) {
         if (!initialized) {
             throw new Error("me.audio.init() called before engine initialization.");
         }
@@ -27552,13 +26382,13 @@ var audio = {
             throw new Error("target audio extension(s) should be set through me.audio.init() before calling the preloader.");
         }
         for (var i = 0; i < this.audioFormats.length; i++) {
-            urls.push(sound.src + sound.name + "." + this.audioFormats[i] + loader$1.nocache);
+            urls.push(sound.src + sound.name + "." + this.audioFormats[i] + loader.nocache);
         }
         audioTracks[sound.name] = new howler.Howl({
             src : urls,
             volume : howler.Howler.volume(),
             html5 : html5 === true,
-            xhrWithCredentials : loader$1.withCredentials,
+            xhrWithCredentials : loader.withCredentials,
             /**
              * @ignore
              */
@@ -28047,7 +26877,7 @@ var save = {
      */
     init() {
         // Load previous data if local Storage is supported
-        if (device$1.localStorage === true) {
+        if (device.localStorage === true) {
             var me_save_content = localStorage.getItem("me.save");
 
             if (typeof me_save_content === "string" && me_save_content.length > 0) {
@@ -28094,7 +26924,7 @@ var save = {
                      */
                     set (value) {
                         data[prop] = value;
-                        if (device$1.localStorage === true) {
+                        if (device.localStorage === true) {
                             localStorage.setItem("me.save." + prop, JSON.stringify(value));
                         }
                     }
@@ -28108,7 +26938,7 @@ var save = {
         });
 
         // Save keys
-        if (device$1.localStorage === true) {
+        if (device.localStorage === true) {
             localStorage.setItem("me.save", JSON.stringify(Object.keys(data)));
         }
     },
@@ -28127,7 +26957,7 @@ var save = {
         if (!isReserved(key)) {
             if (typeof data[key] !== "undefined") {
                 delete data[key];
-                if (device$1.localStorage === true) {
+                if (device.localStorage === true) {
                     localStorage.removeItem("me.save." + key);
                     localStorage.setItem("me.save", JSON.stringify(Object.keys(data)));
                 }
@@ -29359,8 +28189,6 @@ Object.defineProperty(device, "sound", {
     }
 });
 
-var device$1 = device;
-
 /**
  * @private
  */
@@ -29600,7 +28428,7 @@ class GLShader {
          * @name vertex
          * @memberOf me.GLShader
          */
-        this.vertex = setPrecision(minify(vertex), precision || device$1.getMaxShaderPrecision(this.gl));
+        this.vertex = setPrecision(minify(vertex), precision || device.getMaxShaderPrecision(this.gl));
 
         /**
          * the fragment shader source code
@@ -29609,7 +28437,7 @@ class GLShader {
          * @name vertex
          * @memberOf me.GLShader
          */
-        this.fragment = setPrecision(minify(fragment), precision || device$1.getMaxShaderPrecision(this.gl));
+        this.fragment = setPrecision(minify(fragment), precision || device.getMaxShaderPrecision(this.gl));
 
         /**
          * the location attributes of the shader
@@ -30217,7 +29045,7 @@ class WebGLCompositor {
      * @memberOf me.WebGLCompositor
      * @function
      * @param {GLENUM} [mode=gl.TRIANGLES] primitive type to render (gl.POINTS, gl.LINE_STRIP, gl.LINE_LOOP, gl.LINES, gl.TRIANGLE_STRIP, gl.TRIANGLE_FAN, gl.TRIANGLES)
-     * @param {me.Vector2d[]} verts vertices
+     * @param {me.Vector2d[]} [verts=[]] vertices
      * @param {Number} [vertexCount=verts.length] amount of points defined in the points array
      */
     drawVertices(mode, verts, vertexCount) {
@@ -30963,6 +29791,7 @@ class WebGLRenderer extends Renderer {
      * @param {Number} start start angle in radians
      * @param {Number} end end angle in radians
      * @param {Boolean} [antiClockwise=false] draw arc anti-clockwise
+     * @param {Boolean} [fill=false]
      */
     strokeArc(x, y, radius, start, end, antiClockwise, fill) {
         if (fill === true ) {
@@ -31426,7 +30255,7 @@ var settings = {
  */
 function autoDetectRenderer(options) {
     try {
-        if (device$1.isWebGLSupported(options)) {
+        if (device.isWebGLSupported(options)) {
             return new WebGLRenderer(options);
         }
     } catch (e) {
@@ -31531,6 +30360,16 @@ var video = {
      *     scaleMethod : "fit",
      *     doubleBuffering : true
      * });
+     * @type (game_width: number, game_height: number, options: {
+     *      parent: String|HTMLElement
+     *      renderer: Number
+     *      doubleBuffering: Boolean
+     *      scale: Number|String
+     *      scaleMethod: String
+     *      preferWebGL1: Boolean
+     *      powerPreference: String
+     *      transparent: Boolean
+     * }) => boolean
      */
     init : function (game_width, game_height, options) {
 
@@ -31559,16 +30398,10 @@ var video = {
             settings.autoScale = (settings.scale === "auto") || false;
         }
 
-        // for backward compatilibty with melonJS 7.1.1 and lower
-        if (typeof settings.wrapper !== "undefined") {
-            warning("settings.wrapper", "settings.parent", "8.0.0");
-            settings.parent = settings.wrapper;
-        }
-
         // display melonJS version
         if (settings.consoleHeader !== false) {
             // output video information in the console
-            console.log("melonJS v" + version + " | http://melonjs.org" );
+            console.log("melonJS 2 (v" + version + ") | http://melonjs.org" );
         }
 
         // override renderer settings if &webgl is defined in the URL
@@ -31672,7 +30505,7 @@ var video = {
         }
 
         // add our canvas (default to document.body if settings.parent is undefined)
-        this.parent = device$1.getElement(settings.parent);
+        this.parent = device.getElement(settings.parent);
         this.parent.appendChild(this.renderer.getScreenCanvas());
 
         // trigger an initial resize();
@@ -31691,16 +30524,16 @@ var video = {
 
         if (settings.consoleHeader !== false) {
             var renderType = (this.renderer instanceof CanvasRenderer) ? "CANVAS" : "WebGL" + this.renderer.WebGLVersion;
-            var audioType = device$1.hasWebAudio ? "Web Audio" : "HTML5 Audio";
+            var audioType = device.hasWebAudio ? "Web Audio" : "HTML5 Audio";
             var gpu_renderer = (typeof this.renderer.GPURenderer === "string") ? " (" + this.renderer.GPURenderer + ")" : "";
             // output video information in the console
             console.log(
                 renderType + " renderer" + gpu_renderer + " | " +
                 audioType + " | " +
-                "pixel ratio " + device$1.devicePixelRatio + " | " +
-                (device$1.isMobile ? "mobile" : "desktop") + " | " +
-                device$1.getScreenOrientation() + " | " +
-                device$1.language
+                "pixel ratio " + device.devicePixelRatio + " | " +
+                (device.isMobile ? "mobile" : "desktop") + " | " +
+                device.getScreenOrientation() + " | " +
+                device.language
             );
             console.log( "resolution: " + "requested " + game_width + "x" + game_height +
                 ", got " + this.renderer.getWidth() + "x" + this.renderer.getHeight()
@@ -31730,7 +30563,7 @@ var video = {
             throw new Error("width or height was zero, Canvas could not be initialized !");
         }
 
-        if (device$1.OffscreenCanvas === true && offscreen === true) {
+        if (device.OffscreenCanvas === true && offscreen === true) {
             _canvas = new OffscreenCanvas(0, 0);
             // stubbing style for compatibility,
             // as OffscreenCanvas is detached from the DOM
@@ -31780,7 +30613,7 @@ var video = {
             }
 
             // get the maximum canvas size within the parent div containing the canvas container
-            var nodeBounds = device$1.getParentBounds(this.getParent());
+            var nodeBounds = device.getParentBounds(this.getParent());
 
             var _max_width = Math.min(canvasMaxWidth, nodeBounds.width);
             var _max_height = Math.min(canvasMaxHeight, nodeBounds.height);
@@ -31847,7 +30680,7 @@ var video = {
         var canvas = renderer.getScreenCanvas();
         var context = renderer.getScreenContext();
         var settings = renderer.settings;
-        var pixelRatio = device$1.devicePixelRatio;
+        var pixelRatio = device.devicePixelRatio;
 
         var w = settings.zoomX = canvas.width * x * pixelRatio;
         var h = settings.zoomY = canvas.height * y * pixelRatio;
@@ -32344,6 +31177,22 @@ if (!requestAnimationFrame || !cancelAnimationFrame) {
  */
 var plugins = {};
 
+
+class BasePlugin {
+
+    constructor() {
+        /**
+         * define the minimum required version of melonJS<br>
+         * this can be overridden by the plugin
+         * @public
+         * @type String
+         * @default "10.0.0"
+         * @name me.plugin.Base#version
+         */
+        this.version = "10.0.0";
+    }
+}
+
 /**
  * @namespace plugin
  * @memberOf me
@@ -32351,29 +31200,16 @@ var plugins = {};
 var plugin = {
 
     /**
-    * a base Object for plugin <br>
-    * plugin must be installed using the register function
-    * @see me.plugin
-    * @class
-    * @extends me.Object
-    * @name plugin.Base
-    * @memberOf me
-    * @constructor
-    */
-    Base : window.Jay.extend({
-        /** @ignore */
-        init : function () {
-            /**
-             * define the minimum required version of melonJS<br>
-             * this can be overridden by the plugin
-             * @public
-             * @type String
-             * @default "9.1.1"
-             * @name me.plugin.Base#version
-             */
-            this.version = "9.1.1";
-        }
-    }),
+     * a base Object for plugin <br>
+     * plugin must be installed using the register function
+     * @see me.plugin
+     * @class
+     * @extends me.Object
+     * @name plugin.Base
+     * @memberOf me
+     * @constructor
+     */
+    Base : BasePlugin,
 
     /**
      * patch a melonJS function
@@ -32979,6 +31815,7 @@ class Tween {
 
         /**
          * @ignore
+         * @type (o: Record<string, unknown>) => void
          */
         this.setProperties = function (object) {
             _object = object;
@@ -33439,12 +32276,17 @@ var setContextStyle = function(context, font, stroke) {
  * @example
  * var font = new me.Text(0, 0, {font: "Arial", size: 8, fillStyle: this.color});
  */
-var Text = Renderable.extend({
+class Text extends Renderable {
 
     /** @ignore */
-    init : function (x, y, settings) {
+    constructor(x, y, settings) {
         // call the parent constructor
-        this._super(Renderable, "init", [x, y, settings.width || 0, settings.height || 0]);
+        super(x, y, settings.width || 0, settings.height || 0);
+        this.onResetEvent(x, y, settings);
+    }
+
+    /** @ignore */
+    onResetEvent(x, y, settings) {
 
         /**
          * defines the color used to draw the font.<br>
@@ -33565,7 +32407,7 @@ var Text = Renderable.extend({
 
         // set the text
         this.setText(settings.text);
-    },
+    }
 
     /**
      * make the font bold
@@ -33574,11 +32416,11 @@ var Text = Renderable.extend({
      * @function
      * @return this object for chaining
      */
-    bold : function () {
+    bold() {
         this.font = "bold " + this.font;
         this.isDirty = true;
         return this;
-    },
+    }
 
     /**
      * make the font italic
@@ -33587,11 +32429,11 @@ var Text = Renderable.extend({
      * @function
      * @return this object for chaining
      */
-    italic : function () {
+    italic() {
         this.font = "italic " + this.font;
         this.isDirty = true;
         return this;
-    },
+    }
 
     /**
      * set the font family and size
@@ -33605,7 +32447,7 @@ var Text = Renderable.extend({
      * font.setFont("Arial", 20);
      * font.setFont("Arial", "1.5em");
      */
-    setFont : function (font, size) {
+    setFont(font, size) {
         // font name and type
         var font_names = font.split(",").map(function (value) {
             value = value.trim();
@@ -33635,7 +32477,7 @@ var Text = Renderable.extend({
         this.isDirty = true;
 
         return this;
-    },
+    }
 
     /**
      * change the text to be displayed
@@ -33645,7 +32487,7 @@ var Text = Renderable.extend({
      * @param {Number|String|String[]} value a string, or an array of strings
      * @return this object for chaining
      */
-    setText : function (value) {
+    setText(value) {
         if (typeof value === "undefined") {
             value = "";
         }
@@ -33660,7 +32502,7 @@ var Text = Renderable.extend({
         }
 
         return this;
-    },
+    }
 
     /**
      * measure the given text size in pixels
@@ -33672,7 +32514,7 @@ var Text = Renderable.extend({
      * @param {me.Rect|me.Bounds} [ret] a object in which to store the text metrics
      * @returns {TextMetrics} a TextMetrics object with two properties: `width` and `height`, defining the output dimensions
      */
-    measureText : function (renderer, text, ret) {
+    measureText(renderer, text, ret) {
         var context;
 
         if (typeof renderer === "undefined") {
@@ -33717,17 +32559,17 @@ var Text = Renderable.extend({
 
         // returns the Font bounds me.Rect by default
         return textMetrics;
-    },
+    }
 
     /**
      * @ignore
      */
-    update : function (/* dt */) {
+    update(/* dt */) {
         if (this.isDirty === true) {
             this.measureText();
         }
         return this.isDirty;
-    },
+    }
 
     /**
      * draw a text at the specified coord
@@ -33739,7 +32581,7 @@ var Text = Renderable.extend({
      * @param {Number} [x]
      * @param {Number} [y]
      */
-    draw : function (renderer, text, x, y, stroke) {
+    draw(renderer, text, x, y, stroke) {
         // "hacky patch" for backward compatibilty
         if (typeof this.ancestor === "undefined") {
             // update text cache
@@ -33785,7 +32627,7 @@ var Text = Renderable.extend({
         // clear the dirty flag here for
         // backward compatibility
         this.isDirty = false;
-    },
+    }
 
     /**
      * draw a stroke text at the specified coord, as defined <br>
@@ -33799,14 +32641,14 @@ var Text = Renderable.extend({
      * @param {Number} x
      * @param {Number} y
      */
-    drawStroke : function (renderer, text, x, y) {
+    drawStroke(renderer, text, x, y) {
         this.draw.call(this, renderer, text, x, y, true);
-    },
+    }
 
     /**
      * @ignore
      */
-    _drawFont : function (context, text, x, y, stroke) {
+    _drawFont(context, text, x, y, stroke) {
         setContextStyle(context, this, stroke);
 
         var lineHeight = this.fontSize * this.lineHeight;
@@ -33818,20 +32660,20 @@ var Text = Renderable.extend({
             y += lineHeight;
         }
         return this.getBounds();
-    },
+    }
 
     /**
      * Destroy function
      * @ignore
      */
-    destroy : function () {
+    destroy() {
         pool.push(this.fillStyle);
         pool.push(this.strokeStyle);
         this.fillStyle = this.strokeStyle = undefined;
         this._text.length = 0;
-        this._super(Renderable, "destroy");
+        super.destroy();
     }
-});
+}
 
 /**
  * Measures the width of a single line of text, does not account for \n
@@ -33892,12 +32734,13 @@ var measureTextHeight = function(font) {
  * // or just add it to the word container
  * me.game.world.addChild(myFont);
  */
-var BitmapText = Renderable.extend({
+
+class BitmapText extends Renderable {
 
     /** @ignore */
-    init : function (x, y, settings) {
+    constructor(x, y, settings) {
         // call the parent constructor
-        this._super(Renderable, "init", [x, y, settings.width || 0, settings.height || 0]);
+        super(x, y, settings.width || 0, settings.height || 0);
 
         /**
          * Set the default text alignment (or justification),<br>
@@ -33946,15 +32789,15 @@ var BitmapText = Renderable.extend({
         this.fontScale = pool.pull("Vector2d", 1.0, 1.0);
 
         // get the corresponding image
-        this.fontImage = (typeof settings.font === "object") ? settings.font : loader$1.getImage(settings.font);
+        this.fontImage = (typeof settings.font === "object") ? settings.font : loader.getImage(settings.font);
 
         if (typeof settings.fontData !== "string") {
             // use settings.font to retreive the data from the loader
-            this.fontData = pool.pull("BitmapTextData", loader$1.getBinary(settings.font));
+            this.fontData = pool.pull("BitmapTextData", loader.getBinary(settings.font));
         } else {
             this.fontData = pool.pull("BitmapTextData",
                 // if starting/includes "info face" the whole data string was passed as parameter
-                (settings.fontData.includes("info face")) ? settings.fontData : loader$1.getBinary(settings.fontData)
+                (settings.fontData.includes("info face")) ? settings.fontData : loader.getBinary(settings.fontData)
             );
         }
         // if floating was specified through settings
@@ -33986,7 +32829,7 @@ var BitmapText = Renderable.extend({
 
         // set the text
         this.setText(settings.text);
-    },
+    }
 
     /**
      * change the font settings
@@ -33997,7 +32840,7 @@ var BitmapText = Renderable.extend({
      * @param {Number} [scale]
      * @return this object for chaining
      */
-    set : function (textAlign, scale) {
+    set(textAlign, scale) {
         this.textAlign = textAlign;
         // updated scaled Size
         if (scale) {
@@ -34006,7 +32849,7 @@ var BitmapText = Renderable.extend({
         this.isDirty = true;
 
         return this;
-    },
+    }
 
     /**
      * change the text to be displayed
@@ -34016,7 +32859,7 @@ var BitmapText = Renderable.extend({
      * @param {Number|String|String[]} value a string, or an array of strings
      * @return this object for chaining
      */
-    setText : function (value) {
+    setText(value) {
         if (typeof value === "undefined") {
             value = "";
         }
@@ -34031,8 +32874,29 @@ var BitmapText = Renderable.extend({
         }
 
         return this;
-    },
+    }
 
+    /**
+     * defines the color used to tint the bitmap text
+     * @public
+     * @type {me.Color}
+     * @name fillStyle
+     * @see me.Renderable#tint
+     * @memberOf me.BitmapText
+     */
+
+    /**
+     * @ignore
+     */
+    get fillStyle() {
+        return this.tint;
+    }
+    /**
+     * @ignore
+     */
+    set fillStyle(value) {
+        this.tint = value;
+    }
 
     /**
      * change the font display size
@@ -34042,14 +32906,13 @@ var BitmapText = Renderable.extend({
      * @param {Number} scale ratio
      * @return this object for chaining
      */
-    resize : function (scale) {
+    resize(scale) {
         this.fontScale.set(scale, scale);
         // clear the cache text to recalculate bounds
         this.isDirty = true;
 
         return this;
-    },
-
+    }
 
     /**
      * measure the given text size in pixels
@@ -34060,7 +32923,7 @@ var BitmapText = Renderable.extend({
      * @param {me.Rect} [ret] a object in which to store the text metrics
      * @returns {TextMetrics} a TextMetrics object with two properties: `width` and `height`, defining the output dimensions
      */
-    measureText : function (text, ret) {
+    measureText(text, ret) {
         text = text || this._text;
 
         var stringHeight = measureTextHeight(this);
@@ -34074,17 +32937,17 @@ var BitmapText = Renderable.extend({
             textMetrics.height += stringHeight;
         }
         return textMetrics;
-    },
+    }
 
     /**
      * @ignore
      */
-    update : function (/* dt */) {
+    update(/* dt */) {
         if (this.isDirty === true) {
             this.measureText();
         }
         return this.isDirty;
-    },
+    }
 
     /**
      * draw the bitmap font
@@ -34096,7 +32959,7 @@ var BitmapText = Renderable.extend({
      * @param {Number} [x]
      * @param {Number} [y]
      */
-    draw : function (renderer, text, x, y) {
+    draw(renderer, text, x, y) {
         // save the previous global alpha value
         var _alpha = renderer.globalAlpha();
 
@@ -34195,14 +33058,13 @@ var BitmapText = Renderable.extend({
         // clear the dirty flag here for
         // backward compatibility
         this.isDirty = false;
-    },
-
+    }
 
     /**
      * Destroy function
      * @ignore
      */
-    destroy : function () {
+    destroy() {
         pool.push(this.fontScale);
         this.fontScale = undefined;
         pool.push(this.fontData);
@@ -34210,31 +33072,8 @@ var BitmapText = Renderable.extend({
         this._text.length = 0;
         this._super(Renderable, "destroy");
     }
-});
 
-/**
- * defines the color used to tint the bitmap text
- * @public
- * @type {me.Color}
- * @name fillStyle
- * @see me.Renderable#tint
- * @memberOf me.BitmapText
- */
-Object.defineProperty(BitmapText.prototype, "fillStyle", {
-    /**
-     * @ignore
-     */
-    get : function () {
-        return this.tint;
-    },
-    /**
-     * @ignore
-     */
-    set : function (value) {
-        this.tint = value;
-    },
-    configurable : true
-});
+}
 
 // bitmap constants
 var LOG2_PAGE_SIZE = 9;
@@ -34481,6 +33320,7 @@ class BitmapTextData {
 }
 
 /**
+ * @classdesc
  * a generic Color Layer Object.  Fills the entire Canvas with the color not just the container the object belongs to.
  * @class
  * @extends me.Renderable
@@ -34490,13 +33330,14 @@ class BitmapTextData {
  * @param {me.Color|String} color CSS color
  * @param {Number} z z-index position
  */
-var ColorLayer = Renderable.extend({
+class ColorLayer extends Renderable {
+
     /**
      * @ignore
      */
-    init: function (name, color, z) {
+    constructor(name, color, z) {
         // parent constructor
-        this._super(Renderable, "init", [0, 0, Infinity, Infinity]);
+        super(0, 0, Infinity, Infinity);
 
         // apply given parameters
         this.name = name;
@@ -34518,13 +33359,13 @@ var ColorLayer = Renderable.extend({
             this.color = pool.pull("Color").parseCSS(color);
         }
         this.anchorPoint.set(0, 0);
-    },
+    }
 
     /**
      * draw the color layer
      * @ignore
      */
-    draw : function (renderer, rect) {
+    draw(renderer, rect) {
         var color = renderer.getColor();
         var vpos = game$1.viewport.pos;
         renderer.setColor(this.color);
@@ -34533,20 +33374,22 @@ var ColorLayer = Renderable.extend({
             rect.width, rect.height
         );
         renderer.setColor(color);
-    },
+    }
 
     /**
      * Destroy function
      * @ignore
      */
-    destroy : function () {
+    destroy() {
         pool.push(this.color);
         this.color = undefined;
-        this._super(Renderable, "destroy");
+        super.destroy();
     }
-});
+
+}
 
 /**
+ * @classdesc
  * a generic Image Layer Object
  * @class
  * @extends me.Renderable
@@ -34569,13 +33412,15 @@ var ColorLayer = Renderable.extend({
  *     repeat :"repeat-x"
  * }), 1);
  */
-var ImageLayer = Sprite.extend({
+
+class ImageLayer extends Sprite {
+
     /**
      * @ignore
      */
-    init: function (x, y, settings) {
+    constructor(x, y, settings) {
         // call the constructor
-        this._super(Sprite, "init", [x, y, settings]);
+        super(x, y, settings);
 
         // render in screen coordinates
         this.floating = true;
@@ -34634,63 +33479,63 @@ var ImageLayer = Sprite.extend({
             }
         }
 
-        /**
-         * Define if and how an Image Layer should be repeated.<br>
-         * By default, an Image Layer is repeated both vertically and horizontally.<br>
-         * Acceptable values : <br>
-         * * 'repeat' - The background image will be repeated both vertically and horizontally <br>
-         * * 'repeat-x' - The background image will be repeated only horizontally.<br>
-         * * 'repeat-y' - The background image will be repeated only vertically.<br>
-         * * 'no-repeat' - The background-image will not be repeated.<br>
-         * @public
-         * @type String
-         * @default 'repeat'
-         * @name me.ImageLayer#repeat
-         */
-        Object.defineProperty(this, "repeat", {
-            /**
-             * @ignore
-             */
-            get : function get() {
-                return this._repeat;
-            },
-            /**
-             * @ignore
-             */
-            set : function set(val) {
-                this._repeat = val;
-                switch (this._repeat) {
-                    case "no-repeat" :
-                        this.repeatX = false;
-                        this.repeatY = false;
-                        break;
-                    case "repeat-x" :
-                        this.repeatX = true;
-                        this.repeatY = false;
-                        break;
-                    case "repeat-y" :
-                        this.repeatX = false;
-                        this.repeatY = true;
-                        break;
-                    default : // "repeat"
-                        this.repeatX = true;
-                        this.repeatY = true;
-                        break;
-                }
-                this.resize(game$1.viewport.width, game$1.viewport.height);
-                this.createPattern();
-            },
-            configurable: true
-        });
-
         this.repeat = settings.repeat || "repeat";
 
         // on context lost, all previous textures are destroyed
         event.subscribe(event.WEBGL_ONCONTEXT_RESTORED, this.createPattern.bind(this));
-    },
+    }
+
+    /**
+     * Define if and how an Image Layer should be repeated.<br>
+     * By default, an Image Layer is repeated both vertically and horizontally.<br>
+     * Acceptable values : <br>
+     * * 'repeat' - The background image will be repeated both vertically and horizontally <br>
+     * * 'repeat-x' - The background image will be repeated only horizontally.<br>
+     * * 'repeat-y' - The background image will be repeated only vertically.<br>
+     * * 'no-repeat' - The background-image will not be repeated.<br>
+     * @public
+     * @type String
+     * @default 'repeat'
+     * @name me.ImageLayer#repeat
+     */
+
+    /**
+     * @ignore
+     */
+    get repeat() {
+        return this._repeat;
+    }
+
+    /**
+     * @ignore
+     */
+    set repeat(value) {
+        this._repeat = value;
+        switch (this._repeat) {
+            case "no-repeat" :
+                this.repeatX = false;
+                this.repeatY = false;
+                break;
+            case "repeat-x" :
+                this.repeatX = true;
+                this.repeatY = false;
+                break;
+            case "repeat-y" :
+                this.repeatX = false;
+                this.repeatY = true;
+                break;
+            default : // "repeat"
+                this.repeatX = true;
+                this.repeatY = true;
+                break;
+        }
+        this.resize(game$1.viewport.width, game$1.viewport.height);
+        this.createPattern();
+    }
+
 
     // called when the layer is added to the game world or a container
-    onActivateEvent : function () {
+    onActivateEvent() {
         var _updateLayerFn = this.updateLayer.bind(this);
         // register to the viewport change notification
         this.vpChangeHdlr = event.subscribe(event.VIEWPORT_ONCHANGE, _updateLayerFn);
@@ -34705,7 +33550,7 @@ var ImageLayer = Sprite.extend({
         if (this.ancestor.root !== true) {
             this.updateLayer(game$1.viewport.pos);
         }
-    },
+    }
 
     /**
      * resize the Image Layer to match the given size
@@ -34715,28 +33560,28 @@ var ImageLayer = Sprite.extend({
      * @param {Number} w new width
      * @param {Number} h new height
     */
-    resize : function (w, h) {
-        this._super(Sprite, "resize", [
+    resize(w, h) {
+        super.resize(
             this.repeatX ? Infinity : w,
             this.repeatY ? Infinity : h
-        ]);
-    },
+        );
+    }
 
     /**
      * createPattern function
      * @ignore
      * @function
      */
-    createPattern : function () {
+    createPattern() {
         this._pattern = video$1.renderer.createPattern(this.image, this._repeat);
-    },
+    }
 
     /**
      * updateLayer function
      * @ignore
      * @function
      */
-    updateLayer : function (vpos) {
+    updateLayer(vpos) {
         var rx = this.ratio.x,
             ry = this.ratio.y;
 
@@ -34778,14 +33623,14 @@ var ImageLayer = Sprite.extend({
         else {
             this.pos.y = y;
         }
-    },
+    }
 
    /*
     * override the default predraw function
     * as repeat and anchor are managed directly in the draw method
     * @ignore
     */
-    preDraw : function (renderer) {
+    preDraw(renderer) {
         // save the context
         renderer.save();
         // apply the defined alpha value
@@ -34793,13 +33638,13 @@ var ImageLayer = Sprite.extend({
 
         // apply the defined tint, if any
         renderer.setTint(this.tint);
-    },
+    }
 
     /**
      * draw the image layer
      * @ignore
      */
-    draw : function (renderer) {
+    draw(renderer) {
         var viewport = game$1.viewport,
             width = this.width,
             height = this.height,
@@ -34824,26 +33669,27 @@ var ImageLayer = Sprite.extend({
             viewport.width * 2,
             viewport.height * 2
         );
-    },
+    }
 
     // called when the layer is removed from the game world or a container
-    onDeactivateEvent : function () {
+    onDeactivateEvent() {
         // cancel all event subscriptions
         event.unsubscribe(this.vpChangeHdlr);
         event.unsubscribe(this.vpResizeHdlr);
         event.unsubscribe(this.vpLoadedHdlr);
-    },
+    }
 
     /**
      * Destroy function<br>
      * @ignore
      */
-    destroy : function () {
+    destroy() {
         pool.push(this.ratio);
         this.ratio = undefined;
-        this._super(Sprite, "destroy");
+        super.destroy();
     }
-});
+
+}
 
 /**
  * GUI Object<br>
@@ -34860,24 +33706,21 @@ var ImageLayer = Sprite.extend({
  * @example
  *
  * // create a basic GUI Object
- * var myButton = me.GUI_Object.extend(
- * {
- *    init:function (x, y)
- *    {
+ * class myButton extends GUI_Object {
+ *    constructor(x, y) {
  *       var settings = {}
  *       settings.image = "button";
  *       settings.framewidth = 100;
  *       settings.frameheight = 50;
  *       // super constructor
- *       this._super(me.GUI_Object, "init", [x, y, settings]);
+ *       super(x, y, settings);
  *       // define the object z order
  *       this.pos.z = 4;
- *    },
+ *    }
  *
  *    // output something in the console
  *    // when the object is clicked
- *    onClick:function (event)
- *    {
+ *    onClick:function (event) {
  *       console.log("clicked!");
  *       // don't propagate the event
  *       return false;
@@ -34888,11 +33731,17 @@ var ImageLayer = Sprite.extend({
  * me.game.world.addChild(new myButton(10,10));
  *
  */
-var GUI_Object = Sprite.extend({
+
+class GUI_Object extends Sprite {
+
     /**
      * @ignore
      */
-    init : function (x, y, settings) {
+    constructor(x, y, settings) {
+
+        // call the parent constructor
+        super(x, y, settings);
+
         /**
          * object can be clicked or not
          * @public
@@ -34933,23 +33782,20 @@ var GUI_Object = Sprite.extend({
         this.updated = false;
         this.released = true;
 
-        // call the parent constructor
-        this._super(Sprite, "init", [ x, y, settings ]);
-
         // GUI items use screen coordinates
         this.floating = true;
 
         // enable event detection
         this.isKinematic = false;
-    },
+    }
 
     /**
      * return true if the object has been clicked
      * @ignore
      */
-    update : function (dt) {
+    update(dt) {
         // call the parent constructor
-        var updated = this._super(Sprite, "update", [ dt ]);
+        var updated = super.update(dt);
         // check if the button was updated
         if (this.updated) {
             // clear the flag
@@ -34960,13 +33806,13 @@ var GUI_Object = Sprite.extend({
         }
         // else only return true/false based on the parent function
         return updated;
-    },
+    }
 
     /**
      * function callback for the pointerdown event
      * @ignore
      */
-    clicked : function (event) {
+    clicked(event) {
         // Check if left mouse button is pressed
         if (event.button === 0 && this.isClickable) {
             this.updated = true;
@@ -34980,7 +33826,7 @@ var GUI_Object = Sprite.extend({
             }
             return this.onClick.call(this, event);
         }
-    },
+    }
 
     /**
      * function called when the object is pressed <br>
@@ -34992,18 +33838,18 @@ var GUI_Object = Sprite.extend({
      * @function
      * @param {Event} event the event object
      */
-    onClick : function (/* event */) {
+    onClick(/* event */) {
         return false;
-    },
+    }
 
     /**
      * function callback for the pointerEnter event
      * @ignore
      */
-    enter : function (event) {
+    enter(event) {
         this.hover = true;
         return this.onOver.call(this, event);
-    },
+    }
 
     /**
      * function called when the pointer is over the object
@@ -35013,17 +33859,17 @@ var GUI_Object = Sprite.extend({
      * @function
      * @param {Event} event the event object
      */
-    onOver : function (/* event */) {},
+    onOver(/* event */) {}
 
     /**
      * function callback for the pointerLeave event
      * @ignore
      */
-    leave : function (event) {
+    leave(event) {
         this.hover = false;
         this.release.call(this, event);
         return this.onOut.call(this, event);
-    },
+    }
 
     /**
      * function called when the pointer is leaving the object area
@@ -35033,19 +33879,21 @@ var GUI_Object = Sprite.extend({
      * @function
      * @param {Event} event the event object
      */
-    onOut : function (/* event */) {},
+    onOut(/* event */) {
+        
+    }
 
     /**
      * function callback for the pointerup event
      * @ignore
      */
-    release : function (event) {
+    release(event) {
         if (this.released === false) {
             this.released = true;
             timer$1.clearTimeout(this.holdTimeout);
             return this.onRelease.call(this, event);
         }
-    },
+    }
 
     /**
      * function called when the object is pressed and released <br>
@@ -35057,20 +33905,20 @@ var GUI_Object = Sprite.extend({
      * @function
      * @param {Event} event the event object
      */
-    onRelease : function () {
+    onRelease() {
         return false;
-    },
+    }
 
     /**
      * function callback for the tap and hold timer event
      * @ignore
      */
-    hold : function () {
+    hold() {
         timer$1.clearTimeout(this.holdTimeout);
         if (!this.released) {
             this.onHold.call(this);
         }
-    },
+    }
 
     /**
      * function called when the object is pressed and held<br>
@@ -35080,26 +33928,26 @@ var GUI_Object = Sprite.extend({
      * @public
      * @function
      */
-    onHold : function () {},
+    onHold() {}
 
     /**
      * function called when added to the game world or a container
      * @ignore
      */
-    onActivateEvent : function () {
+    onActivateEvent() {
         // register pointer events
         registerPointerEvent("pointerdown", this, this.clicked.bind(this));
         registerPointerEvent("pointerup", this, this.release.bind(this));
         registerPointerEvent("pointercancel", this, this.release.bind(this));
         registerPointerEvent("pointerenter", this, this.enter.bind(this));
         registerPointerEvent("pointerleave", this, this.leave.bind(this));
-    },
+    }
 
     /**
      * function called when removed from the game world or a container
      * @ignore
      */
-    onDeactivateEvent : function () {
+    onDeactivateEvent() {
         // release pointer events
         releasePointerEvent("pointerdown", this);
         releasePointerEvent("pointerup", this);
@@ -35108,9 +33956,10 @@ var GUI_Object = Sprite.extend({
         releasePointerEvent("pointerleave", this);
         timer$1.clearTimeout(this.holdTimeout);
     }
-});
+}
 
 /**
+ * @classdesc
  * a basic collectable helper class for immovable object (e.g. a coin)
  * @class
  * @extends me.Sprite
@@ -35120,13 +33969,15 @@ var GUI_Object = Sprite.extend({
  * @param {Number} y the y coordinates of the collectable
  * @param {Object} settings See {@link me.Sprite}
  */
-var Collectable = Sprite.extend({
+
+class Collectable extends Sprite {
     /**
      * @ignore
      */
-    init : function (x, y, settings) {
+    constructor(x, y, settings) {
+
         // call the super constructor
-        this._super(Sprite, "init", [x, y, settings]);
+        super(x, y, settings);
 
         this.name = settings.name;
         this.type = settings.type;
@@ -35145,9 +33996,11 @@ var Collectable = Sprite.extend({
         }
 
     }
-});
+
+}
 
 /**
+ * classdesc
  * trigger an event when colliding with another object
  * @class
  * @extends me.Renderable
@@ -35176,12 +34029,15 @@ var Collectable = Sprite.extend({
  *     }
  * ));
  */
-var Trigger = Renderable.extend({
+
+class Trigger extends Renderable {
+
     /**
      * @ignore
      */
-    init : function (x, y, settings) {
-        this._super(Renderable, "init", [x, y, settings.width || 0, settings.height || 0]);
+    constructor(x, y, settings) {
+
+        super(x, y, settings.width || 0, settings.height || 0);
 
         // for backward compatibility
         this.anchorPoint.set(0, 0);
@@ -35215,27 +34071,26 @@ var Trigger = Renderable.extend({
         this.body = new Body(this, settings.shapes || new Rect(0, 0, this.width, this.height));
         this.body.collisionType = collision.types.ACTION_OBJECT;
         this.resize(this.body.getBounds().width, this.body.getBounds().height);
-
-    },
+    }
 
     /**
      * @ignore
      */
-     getTriggerSettings : function () {
+     getTriggerSettings() {
          // Lookup for the container instance
          if (typeof(this.triggerSettings.container) === "string") {
              this.triggerSettings.container = game$1.world.getChildByName(this.triggerSettings.container)[0];
          }
          return this.triggerSettings;
-     },
+     }
 
     /**
      * @ignore
      */
-    onFadeComplete : function () {
+    onFadeComplete() {
         level.load(this.gotolevel, this.getTriggerSettings());
         game$1.viewport.fadeOut(this.fade, this.duration);
-    },
+    }
 
     /**
      * go to the specified level
@@ -35245,7 +34100,7 @@ var Trigger = Renderable.extend({
      * @param {String} [level=this.nextlevel] name of the level to load
      * @protected
      */
-    triggerEvent : function () {
+    triggerEvent() {
         var triggerSettings = this.getTriggerSettings();
 
         if (triggerSettings.event === "level") {
@@ -35264,16 +34119,17 @@ var Trigger = Renderable.extend({
         } else {
             throw new Error("Trigger invalid type");
         }
-    },
+    }
 
     /** @ignore */
-    onCollision : function () {
+    onCollision() {
         if (this.name === "Trigger") {
             this.triggerEvent.apply(this);
         }
         return false;
     }
-});
+
+}
 
 /**
  * Particle Container Object.
@@ -35283,18 +34139,20 @@ var Trigger = Renderable.extend({
  * @constructor
  * @param {me.ParticleEmitter} emitter the emitter which owns this container
  */
-var ParticleContainer = Container$1.extend({
+
+class ParticleContainer extends Container {
+
     /**
      * @ignore
      */
-    init: function (emitter) {
+    constructor(emitter) {
         // call the super constructor
-        this._super(Container$1, "init", [
+        super(
             game$1.viewport.pos.x,
             game$1.viewport.pos.y,
             game$1.viewport.width,
             game$1.viewport.height
-        ]);
+        );
 
         // don't sort the particles by z-index
         this.autoSort = false;
@@ -35313,12 +34171,12 @@ var ParticleContainer = Container$1.extend({
         this.anchorPoint.set(0, 0);
 
         this.isKinematic = true;
-    },
+    }
 
     /**
      * @ignore
      */
-    update: function (dt) {
+    update(dt) {
         // skip frames if necessary
         if (++this._updateCount > this._emitter.framesToSkip) {
             this._updateCount = 0;
@@ -35342,12 +34200,12 @@ var ParticleContainer = Container$1.extend({
             }
         }
         return true;
-    },
+    }
 
     /**
      * @ignore
      */
-    draw : function (renderer, rect) {
+    draw(renderer, rect) {
         if (this.children.length > 0) {
             var context = renderer.getContext(),
                 gco;
@@ -35357,7 +34215,7 @@ var ParticleContainer = Container$1.extend({
                 context.globalCompositeOperation = "lighter";
             }
 
-            this._super(Container$1, "draw", [renderer, rect]);
+            this._super(Container, "draw", [renderer, rect]);
 
             // Restore globalCompositeOperation
             if (this._emitter.textureAdditive) {
@@ -35365,7 +34223,7 @@ var ParticleContainer = Container$1.extend({
             }
         }
     }
-});
+}
 
 // generate a default image for the particles
 var pixel = (function () {
@@ -35687,11 +34545,15 @@ var ParticleEmitterSettings = {
  * me.game.world.removeChild(emitter);
  *
  */
-var ParticleEmitter = Renderable.extend({
+class ParticleEmitter extends Renderable {
+
     /**
      * @ignore
      */
-    init: function (x, y, settings) {
+    constructor(x, y, settings) {
+        // call the super constructor
+        super(x, y, Infinity, Infinity);
+
         // Emitter is Stream, launch particles constantly
         /** @ignore */
         this._stream = false;
@@ -35709,15 +34571,6 @@ var ParticleEmitter = Renderable.extend({
         // Emitter is emitting particles
         /** @ignore */
         this._enabled = false;
-
-        // call the super constructor
-        this._super(
-            Renderable,
-            "init",
-            [x, y,
-            Infinity,
-            Infinity]
-        );
 
         // Emitter will always update
         this.alwaysUpdate = true;
@@ -35764,34 +34617,34 @@ var ParticleEmitter = Renderable.extend({
 
         // Reset the emitter to defaults
         this.reset(settings);
-    },
+    }
 
     /**
      * @ignore
      */
-    onActivateEvent: function() {
+    onActivateEvent() {
         this.ancestor.addChild(this.container);
         this.container.pos.z = this.pos.z;
         if (!this.ancestor.autoSort) {
             this.ancestor.sort();
         }
-    },
+    }
 
     /**
      * @ignore
      */
-    onDeactivateEvent: function() {
+    onDeactivateEvent() {
         if (this.ancestor.hasChild(this.container)) {
             this.ancestor.removeChildNow(this.container);
         }
-    },
+    }
 
     /**
      * @ignore
      */
-    destroy: function () {
+    destroy() {
         this.reset();
-    },
+    }
 
     /**
      * returns a random point inside the bounds x axis of this emitter
@@ -35800,9 +34653,9 @@ var ParticleEmitter = Renderable.extend({
      * @function
      * @return {Number}
      */
-    getRandomPointX: function () {
+    getRandomPointX() {
         return this.pos.x + randomFloat(0, this.width);
-    },
+    }
 
     /**
      * returns a random point inside the bounds y axis of this emitter
@@ -35811,9 +34664,9 @@ var ParticleEmitter = Renderable.extend({
      * @function
      * @return {Number}
      */
-    getRandomPointY: function () {
+    getRandomPointY() {
         return this.pos.y + randomFloat(0, this.height);
-    },
+    }
 
     /**
      * Reset the emitter with default values.<br>
@@ -35822,7 +34675,7 @@ var ParticleEmitter = Renderable.extend({
      * @name reset
      * @memberOf me.ParticleEmitter
      */
-    reset: function (settings) {
+    reset(settings) {
         // check if settings exists and create a dummy object if necessary
         settings = settings || {};
         var defaults = ParticleEmitterSettings;
@@ -35835,17 +34688,17 @@ var ParticleEmitter = Renderable.extend({
 
         // reset particle container values
         this.container.reset();
-    },
+    }
 
     // Add count particles in the game world
     /** @ignore */
-    addParticles: function (count) {
+    addParticles(count) {
         for (var i = 0; i < ~~count; i++) {
             // Add particle to the container
             var particle = pool.pull("Particle", this);
             this.container.addChild(particle);
         }
-    },
+    }
 
     /**
      * Emitter is of type stream and is launching particles <br>
@@ -35854,9 +34707,9 @@ var ParticleEmitter = Renderable.extend({
      * @name isRunning
      * @memberOf me.ParticleEmitter
      */
-    isRunning: function () {
+    isRunning() {
         return this._enabled && this._stream;
-    },
+    }
 
     /**
      * Launch particles from emitter constantly <br>
@@ -35866,12 +34719,12 @@ var ParticleEmitter = Renderable.extend({
      * @name streamParticles
      * @memberOf me.ParticleEmitter
      */
-    streamParticles: function (duration) {
+    streamParticles(duration) {
         this._enabled = true;
         this._stream = true;
         this.frequency = Math.max(this.frequency, 1);
         this._durationTimer = (typeof duration === "number") ? duration : this.duration;
-    },
+    }
 
     /**
      * Stop the emitter from generating new particles (used only if emitter is Stream) <br>
@@ -35879,9 +34732,9 @@ var ParticleEmitter = Renderable.extend({
      * @name stopStream
      * @memberOf me.ParticleEmitter
      */
-    stopStream: function () {
+    stopStream() {
         this._enabled = false;
-    },
+    }
 
     /**
      * Launch all particles from emitter and stop <br>
@@ -35891,17 +34744,17 @@ var ParticleEmitter = Renderable.extend({
      * @name burstParticles
      * @memberOf me.ParticleEmitter
      */
-    burstParticles: function (total) {
+    burstParticles(total) {
         this._enabled = true;
         this._stream = false;
         this.addParticles((typeof total === "number") ? total : this.totalParticles);
         this._enabled = false;
-    },
+    }
 
     /**
      * @ignore
      */
-    update: function (dt) {
+    update(dt) {
         // Launch new particles, if emitter is Stream
         if ((this._enabled) && (this._stream)) {
             // Check if the emitter has duration set
@@ -35932,7 +34785,8 @@ var ParticleEmitter = Renderable.extend({
         }
         return true;
     }
-});
+
+}
 
 /**
  * Single Particle Object.
@@ -35942,18 +34796,18 @@ var ParticleEmitter = Renderable.extend({
  * @constructor
  * @param {me.ParticleEmitter} particle emitter
  */
-var Particle = Renderable.extend({
+class Particle extends Renderable {
     /**
      * @ignore
      */
-    init : function (emitter) {
+    constructor(emitter) {
         // Call the super constructor
-        this._super(Renderable, "init", [
+        super(
             emitter.getRandomPointX(),
             emitter.getRandomPointY(),
             emitter.image.width,
             emitter.image.height
-        ]);
+        );
 
         // Particle will always update
         this.alwaysUpdate = true;
@@ -36006,7 +34860,7 @@ var Particle = Renderable.extend({
         if (!emitter.followTrajectory) {
             this.angle = randomFloat(emitter.minRotation, emitter.maxRotation);
         }
-    },
+    }
 
     /**
      * Update the Particle <br>
@@ -36017,7 +34871,7 @@ var Particle = Renderable.extend({
      * @ignore
      * @param {Number} dt time since the last update in milliseconds
      */
-    update : function (dt) {
+    update(dt) {
         // move things forward independent of the current frame rate
         var skew = dt * this._deltaInv;
 
@@ -36060,12 +34914,12 @@ var Particle = Renderable.extend({
 
         // Return true if the particle is not dead yet
         return (this.inViewport || !this.onlyInViewport) && (this.life > 0);
-    },
+    }
 
     /**
      * @ignore
      */
-    preDraw : function (renderer) {
+    preDraw(renderer) {
 
         // restore is called in postDraw
         renderer.save();
@@ -36075,12 +34929,12 @@ var Particle = Renderable.extend({
 
         // translate to the defined anchor point and scale it
         renderer.transform(this.currentTransform);
-    },
+    }
 
     /**
      * @ignore
      */
-    draw : function (renderer) {
+    draw(renderer) {
         var w = this.width, h = this.height;
         renderer.drawImage(
             this.image,
@@ -36090,7 +34944,7 @@ var Particle = Renderable.extend({
             w, h
         );
     }
-});
+}
 
 /**
  * a Generic Object Entity
@@ -36115,17 +34969,14 @@ var Particle = Renderable.extend({
  * @param {Number} [settings.collisionMask] Mask collision detection for this object
  * @param {me.Rect[]|me.Polygon[]|me.Line[]|me.Ellipse[]} [settings.shapes] the initial list of collision shapes (usually populated through Tiled)
  */
-var Entity = Renderable.extend({
+
+class Entity extends Renderable {
+
+
     /**
      * @ignore
      */
-    init : function (x, y, settings) {
-
-        /**
-         * The array of renderable children of this entity.
-         * @ignore
-         */
-        this.children = [];
+    constructor(x, y, settings) {
 
         // ensure mandatory properties are defined
         if ((typeof settings.width !== "number") || (typeof settings.height !== "number")) {
@@ -36133,7 +34984,13 @@ var Entity = Renderable.extend({
         }
 
         // call the super constructor
-        this._super(Renderable, "init", [x, y, settings.width, settings.height]);
+        super(x, y, settings.width, settings.height);
+
+        /**
+         * The array of renderable children of this entity.
+         * @ignore
+         */
+        this.children = [];
 
         if (settings.image) {
             // set the frame size to the given entity size, if not defined in settings
@@ -36219,15 +35076,42 @@ var Entity = Renderable.extend({
 
         // disable for entities
         this.autoTransform = false;
-    },
+    }
+
+
+    /**
+     * The entity renderable component (can be any objects deriving from me.Renderable, like me.Sprite for example)
+     * @public
+     * @type me.Renderable
+     * @name renderable
+     * @memberOf me.Entity
+     */
+
+    /**
+     * @ignore
+     */
+    get renderable() {
+        return this.children[0];
+    }
+    /**
+     * @ignore
+     */
+    set renderable(value) {
+        if (value instanceof Renderable) {
+            this.children[0] = value;
+            this.children[0].ancestor = this;
+        } else {
+            throw new Error(value + "should extend me.Renderable");
+        }
+    }
 
     /** @ignore */
-    update : function (dt) {
+    update(dt) {
         if (this.renderable) {
             return this.renderable.update(dt);
         }
         return this._super(Renderable, "update", [dt]);
-    },
+    }
 
     /**
      * update the bounds position when the body is modified
@@ -36236,14 +35120,14 @@ var Entity = Renderable.extend({
      * @memberOf me.Entity
      * @function
      */
-    onBodyUpdate : function (body) {
+    onBodyUpdate(body) {
         // update the entity bounds to include the body bounds
         this.getBounds().addBounds(body.getBounds(), true);
         // update the bounds pos
         this.updateBoundsPos(this.pos.x, this.pos.y);
-    },
+    }
 
-    preDraw : function (renderer) {
+    preDraw(renderer) {
         renderer.save();
 
         // translate to the entity position
@@ -36261,7 +35145,7 @@ var Entity = Renderable.extend({
                 this.anchorPoint.y * this.body.getBounds().height
             );
         }
-    },
+    }
 
     /**
      * object draw<br>
@@ -36274,7 +35158,7 @@ var Entity = Renderable.extend({
      * @param {me.CanvasRenderer|me.WebGLRenderer} renderer a renderer object
      * @param {me.Rect} region to draw
      **/
-    draw : function (renderer, rect) {
+    draw(renderer, rect) {
         var renderable = this.renderable;
         if (renderable instanceof Renderable) {
             // predraw (apply transforms)
@@ -36286,13 +35170,13 @@ var Entity = Renderable.extend({
             // postdraw (clean-up);
             renderable.postDraw(renderer);
         }
-    },
+    }
 
     /**
      * Destroy function<br>
      * @ignore
      */
-    destroy : function () {
+    destroy() {
         // free some property objects
         if (this.renderable) {
             this.renderable.destroy.apply(this.renderable, arguments);
@@ -36300,8 +35184,8 @@ var Entity = Renderable.extend({
         }
 
         // call the parent destroy method
-        this._super(Renderable, "destroy", arguments);
-    },
+        super.destroy(arguments);
+    }
 
     /**
      * onDeactivateEvent Notification function<br>
@@ -36310,11 +35194,11 @@ var Entity = Renderable.extend({
      * @memberOf me.Entity
      * @function
      */
-    onDeactivateEvent : function () {
-      if (this.renderable && this.renderable.onDeactivateEvent) {
-          this.renderable.onDeactivateEvent();
-      }
-    },
+    onDeactivateEvent() {
+        if (this.renderable && this.renderable.onDeactivateEvent) {
+            this.renderable.onDeactivateEvent();
+        }
+    }
 
     /**
      * onCollision callback<br>
@@ -36326,40 +35210,10 @@ var Entity = Renderable.extend({
      * @param {me.Entity} other the other entity touching this one (a reference to response.a or response.b)
      * @return {Boolean} true if the object should respond to the collision (its position and velocity will be corrected)
      */
-    onCollision : function () {
+    onCollision() {
         return false;
     }
-});
-
-
-/**
- * The entity renderable component (can be any objects deriving from me.Renderable, like me.Sprite for example)
- * @public
- * @type me.Renderable
- * @name renderable
- * @memberOf me.Entity
- */
-Object.defineProperty(Entity.prototype, "renderable", {
-    /* for backward compatiblity */
-    /**
-     * @ignore
-     */
-    get : function () {
-        return this.children[0];
-    },
-    /**
-     * @ignore
-     */
-    set : function (value) {
-        if (value instanceof Renderable) {
-            this.children[0] = value;
-            this.children[0].ancestor = this;
-        } else {
-            throw new Error(value + "should extend me.Renderable");
-        }
-    },
-    configurable : true
-});
+}
 
 /**
 * Used to make a game entity draggable
@@ -36371,7 +35225,8 @@ Object.defineProperty(Entity.prototype, "renderable", {
 * @param {Number} y the y coordinates of the entity object
 * @param {Object} settings Entity properties (see {@link me.Entity})
 */
-var DraggableEntity = Entity.extend({
+class DraggableEntity extends Entity {
+
     /**
      * Constructor
      * @name init
@@ -36381,15 +35236,15 @@ var DraggableEntity = Entity.extend({
      * @param {Number} y the y postion of the entity
      * @param {Object} settings the additional entity settings
      */
-    init: function (x, y, settings) {
-        this._super(Entity, "init", [x, y, settings]);
+    constructor(x, y, settings) {
+        super(x, y, settings);
         this.dragging = false;
         this.dragId = null;
         this.grabOffset = new Vector2d(0, 0);
         this.onPointerEvent = registerPointerEvent;
         this.removePointerEvent = releasePointerEvent;
         this.initEvents();
-    },
+    }
 
     /**
      * Initializes the events the modules needs to listen to
@@ -36401,7 +35256,7 @@ var DraggableEntity = Entity.extend({
      * @memberOf me.DraggableEntity
      * @function
      */
-    initEvents: function () {
+    initEvents() {
         var self = this;
         /**
          * @ignore
@@ -36429,7 +35284,7 @@ var DraggableEntity = Entity.extend({
                 self.dragEnd(e);
             }
         });
-    },
+    }
 
     /**
      * Translates a pointer event to a me.event
@@ -36440,9 +35295,9 @@ var DraggableEntity = Entity.extend({
      * @param {String} translation the me.event you want to translate
      * the event to
      */
-    translatePointerEvent: function (e, translation) {
+    translatePointerEvent(e, translation) {
         event.publish(translation, [e, this]);
-    },
+    }
 
     /**
      * Gets called when the user starts dragging the entity
@@ -36451,14 +35306,14 @@ var DraggableEntity = Entity.extend({
      * @function
      * @param {Object} x the pointer event
      */
-    dragStart: function (e) {
+    dragStart(e) {
         if (this.dragging === false) {
             this.dragging = true;
             this.grabOffset.set(e.gameX, e.gameY);
             this.grabOffset.sub(this.pos);
             return false;
         }
-    },
+    }
 
     /**
      * Gets called when the user drags this entity around
@@ -36467,12 +35322,12 @@ var DraggableEntity = Entity.extend({
      * @function
      * @param {Object} x the pointer event
      */
-    dragMove: function (e) {
+    dragMove(e) {
         if (this.dragging === true) {
             this.pos.set(e.gameX, e.gameY, this.pos.z); //TODO : z ?
             this.pos.sub(this.grabOffset);
         }
-    },
+    }
 
     /**
      * Gets called when the user stops dragging the entity
@@ -36481,12 +35336,12 @@ var DraggableEntity = Entity.extend({
      * @function
      * @param {Object} x the pointer event
      */
-    dragEnd: function () {
+    dragEnd() {
         if (this.dragging === true) {
             this.dragging = false;
             return false;
         }
-    },
+    }
 
     /**
      * Destructor
@@ -36494,14 +35349,14 @@ var DraggableEntity = Entity.extend({
      * @memberOf me.DraggableEntity
      * @function
      */
-    destroy: function () {
+    destroy() {
         event.unsubscribe(event.POINTERMOVE, this.dragMove);
         event.unsubscribe(event.DRAGSTART, this.dragStart);
         event.unsubscribe(event.DRAGEND, this.dragEnd);
         this.removePointerEvent("pointerdown", this);
         this.removePointerEvent("pointerup", this);
     }
-});
+}
 
 /**
 * Used to make a game entity a droptarget
@@ -36513,7 +35368,8 @@ var DraggableEntity = Entity.extend({
 * @param {Number} y the y coordinates of the entity object
 * @param {Object} settings Entity properties (see {@link me.Entity})
 */
-var DroptargetEntity = Entity.extend({
+
+class DroptargetEntity extends Entity {
     /**
      * Constructor
      * @name init
@@ -36523,7 +35379,8 @@ var DroptargetEntity = Entity.extend({
      * @param {Number} y the y postion of the entity
      * @param {Object} settings the additional entity settings
      */
-    init: function (x, y, settings) {
+    constructor(x, y, settings) {
+        super(x, y, settings);
         /**
          * constant for the overlaps method
          * @public
@@ -36551,10 +35408,9 @@ var DroptargetEntity = Entity.extend({
          * @memberOf me.DroptargetEntity
          */
         this.checkMethod = null;
-        this._super(Entity, "init", [x, y, settings]);
         event.subscribe(event.DRAGEND, this.checkOnMe.bind(this));
         this.checkMethod = this[this.CHECKMETHOD_OVERLAP];
-    },
+    }
 
     /**
      * Sets the collision method which is going to be used to check a valid drop
@@ -36563,13 +35419,13 @@ var DroptargetEntity = Entity.extend({
      * @function
      * @param {Constant} checkMethod the checkmethod (defaults to CHECKMETHOD_OVERLAP)
      */
-    setCheckMethod: function (checkMethod) {
+    setCheckMethod(checkMethod) {
         //  We can improve this check,
         //  because now you can use every method in theory
         if (typeof(this[checkMethod]) !== "undefined") {
             this.checkMethod = this[checkMethod];
         }
-    },
+    }
 
     /**
      * Checks if a dropped entity is dropped on the current entity
@@ -36578,12 +35434,12 @@ var DroptargetEntity = Entity.extend({
      * @function
      * @param {Object} draggableEntity the draggable entity that is dropped
      */
-    checkOnMe: function (e, draggableEntity) {
+    checkOnMe(e, draggableEntity) {
         if (draggableEntity && this.checkMethod(draggableEntity.getBounds())) {
             // call the drop method on the current entity
             this.drop(draggableEntity);
         }
-    },
+    }
 
     /**
      * Gets called when a draggable entity is dropped on the current entity
@@ -36592,7 +35448,9 @@ var DroptargetEntity = Entity.extend({
      * @function
      * @param {Object} draggableEntity the draggable entity that is dropped
      */
-    drop: function () {},
+    drop() {
+        
+    }
 
     /**
      * Destructor
@@ -36600,14 +35458,75 @@ var DroptargetEntity = Entity.extend({
      * @memberOf me.DroptargetEntity
      * @function
      */
-    destroy: function () {
+    destroy() {
         event.unsubscribe(event.DRAGEND, this.checkOnMe);
     }
+}
+
+/**
+ * placeholder for all deprecated classes and corresponding alias for backward compatibility
+ * @namespace deprecated
+ * @memberOf me
+ */
+
+/**
+ * display a deprecation warning in the console
+ * @public
+ * @function
+ * @memberOf me.deprecated
+ * @name warning
+ * @param {String} deprecated deprecated class,function or property name
+ * @param {String} replacement the replacement class, function, or property name
+ * @param {String} version the version since when the lass,function or property is deprecated
+ */
+function warning(deprecated, replacement, version) {
+    var msg = "melonJS: %s is deprecated since version %s, please use %s";
+    var stack = new Error().stack;
+
+    if (console.groupCollapsed) {
+        console.groupCollapsed(
+            "%c" + msg,
+            "font-weight:normal;color:yellow;",
+            deprecated,
+            version,
+            replacement
+        );
+    } else {
+        console.warn(
+            msg,
+            deprecated,
+            version,
+            replacement
+        );
+    }
+
+    if (typeof stack !== "undefined") {
+        console.warn(stack);
+    }
+
+    if (console.groupCollapsed) {
+        console.groupEnd();
+    }
+
+
+}
+
+/**
+ * Backward compatibility for deprecated method or properties are automatically
+ * applied when automatically generating an UMD bundle (which is the default since version 9.0).
+ * @memberof me.deprecated
+ * @function apply
+ */
+ function apply() {
+ }
+
+var deprecated = /*#__PURE__*/Object.freeze({
+    __proto__: null,
+    warning: warning,
+    apply: apply
 });
 
 // ES5 polyfills
-// jay-extend does not properly export Jay
-var Jay = window.Jay;
 
 /**
 * (<b>m</b>)elonJS (<b>e</b>)ngine : All melonJS functions are defined inside this namespace.
@@ -36623,7 +35542,7 @@ var Jay = window.Jay;
  * @name version
  * @type {string}
  */
-const version = "9.1.1";
+const version = "10.0.0";
 
 
 /**
@@ -36661,7 +35580,7 @@ function boot() {
     }
 
     // check the device capabilites
-    device$1._check();
+    device._check();
 
     // register all built-ins objects into the object pool
     pool.register("me.Entity", Entity);
@@ -36722,7 +35641,7 @@ function boot() {
     timer$1.init();
 
     // enable/disable the cache
-    loader$1.setNocache( utils$1.getUriFragment().nocache || false );
+    loader.setNocache( utils$1.getUriFragment().nocache || false );
 
     // init the stage Manager
     state$1.init();
@@ -36737,10 +35656,10 @@ function boot() {
     initialized = true;
 }
 // call the library init function when ready
-device$1.onReady(function () {
+device.onReady(function () {
     {
        boot();
     }
 });
 
-export { BitmapText, BitmapTextData, Body, Bounds$1 as Bounds, Camera2d, CanvasRenderer, Collectable, Color, ColorLayer, Container$1 as Container, DraggableEntity, DroptargetEntity, Ellipse, Entity, GLShader, GUI_Object, ImageLayer, Line, math as Math, Matrix2d, Matrix3d, Jay as Object, ObservableVector2d, ObservableVector3d, Particle, ParticleEmitter, Pointer, Polygon, QuadTree, Rect, Renderable, Renderer, Sprite, Stage, TMXHexagonalRenderer, TMXIsometricRenderer, TMXLayer, TMXOrthogonalRenderer, TMXRenderer, TMXStaggeredRenderer, TMXTileMap, TMXTileset, TMXTilesetGroup, Text, Tile, Trigger, Tween, Vector2d, Vector3d, WebGLCompositor, WebGLRenderer, World, audio$1 as audio, boot, collision, deprecated, device$1 as device, event, game$1 as game, initialized, input, level, loader$1 as loader, plugin, plugins, pool, save, skipAutoInit, state$1 as state, timer$1 as timer, utils$1 as utils, version, video$1 as video };
+export { BitmapText, BitmapTextData, Body, Bounds$1 as Bounds, Camera2d, CanvasRenderer, Collectable, Color, ColorLayer, Container, DraggableEntity, DroptargetEntity, Ellipse, Entity, GLShader, GUI_Object, ImageLayer, Line, math as Math, Matrix2d, Matrix3d, ObservableVector2d, ObservableVector3d, Particle, ParticleEmitter, Pointer, Polygon, QuadTree, Rect, Renderable, Renderer, Sprite, Stage, TMXHexagonalRenderer, TMXIsometricRenderer, TMXLayer, TMXOrthogonalRenderer, TMXRenderer, TMXStaggeredRenderer, TMXTileMap, TMXTileset, TMXTilesetGroup, Text, Tile, Trigger, Tween, Vector2d, Vector3d, WebGLCompositor, WebGLRenderer, World, audio$1 as audio, boot, collision, deprecated, device, event, game$1 as game, initialized, input, level, loader, plugin, plugins, pool, save, skipAutoInit, state$1 as state, timer$1 as timer, utils$1 as utils, version, video$1 as video };
