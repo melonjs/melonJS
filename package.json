@@ -52,7 +52,6 @@
   "dependencies": {
     "earcut": "2.2.3",
     "howler": "2.2.3",
-    "jay-extend": "1.0.1",
     "minpubsub": "0.0.2"
   },
   "devDependencies": {

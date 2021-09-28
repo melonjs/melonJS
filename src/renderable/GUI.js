@@ -18,24 +18,21 @@ import { registerPointerEvent, releasePointerEvent} from "./../input/input.js";
  * @example
  *
  * // create a basic GUI Object
- * var myButton = me.GUI_Object.extend(
- * {
- *    init:function (x, y)
- *    {
+ * class myButton extends GUI_Object {
+ *    constructor(x, y) {
  *       var settings = {}
  *       settings.image = "button";
  *       settings.framewidth = 100;
  *       settings.frameheight = 50;
  *       // super constructor
- *       this._super(me.GUI_Object, "init", [x, y, settings]);
+ *       super(x, y, settings);
  *       // define the object z order
  *       this.pos.z = 4;
- *    },
+ *    }
  *
  *    // output something in the console
  *    // when the object is clicked
- *    onClick:function (event)
- *    {
+ *    onClick:function (event) {
  *       console.log("clicked!");
  *       // don't propagate the event
  *       return false;
@@ -46,11 +43,17 @@ import { registerPointerEvent, releasePointerEvent} from "./../input/input.js";
  * me.game.world.addChild(new myButton(10,10));
  *
  */
-var GUI_Object = Sprite.extend({
+
+class GUI_Object extends Sprite {
+
     /**
      * @ignore
      */
-    init : function (x, y, settings) {
+    constructor(x, y, settings) {
+
+        // call the parent constructor
+        super(x, y, settings);
+
         /**
          * object can be clicked or not
          * @public
@@ -91,23 +94,20 @@ var GUI_Object = Sprite.extend({
         this.updated = false;
         this.released = true;
 
-        // call the parent constructor
-        this._super(Sprite, "init", [ x, y, settings ]);
-
         // GUI items use screen coordinates
         this.floating = true;
 
         // enable event detection
         this.isKinematic = false;
-    },
+    }
 
     /**
      * return true if the object has been clicked
      * @ignore
      */
-    update : function (dt) {
+    update(dt) {
         // call the parent constructor
-        var updated = this._super(Sprite, "update", [ dt ]);
+        var updated = super.update(dt);
         // check if the button was updated
         if (this.updated) {
             // clear the flag
@@ -118,13 +118,13 @@ var GUI_Object = Sprite.extend({
         }
         // else only return true/false based on the parent function
         return updated;
-    },
+    }
 
     /**
      * function callback for the pointerdown event
      * @ignore
      */
-    clicked : function (event) {
+    clicked(event) {
         // Check if left mouse button is pressed
         if (event.button === 0 && this.isClickable) {
             this.updated = true;
@@ -138,7 +138,7 @@ var GUI_Object = Sprite.extend({
             }
             return this.onClick.call(this, event);
         }
-    },
+    }
 
     /**
      * function called when the object is pressed <br>
@@ -150,18 +150,18 @@ var GUI_Object = Sprite.extend({
      * @function
      * @param {Event} event the event object
      */
-    onClick : function (/* event */) {
+    onClick(/* event */) {
         return false;
-    },
+    }
 
     /**
      * function callback for the pointerEnter event
      * @ignore
      */
-    enter : function (event) {
+    enter(event) {
         this.hover = true;
         return this.onOver.call(this, event);
-    },
+    }
 
     /**
      * function called when the pointer is over the object
@@ -171,17 +171,17 @@ var GUI_Object = Sprite.extend({
      * @function
      * @param {Event} event the event object
      */
-    onOver : function (/* event */) {},
+    onOver(/* event */) {}
 
     /**
      * function callback for the pointerLeave event
      * @ignore
      */
-    leave : function (event) {
+    leave(event) {
         this.hover = false;
         this.release.call(this, event);
         return this.onOut.call(this, event);
-    },
+    }
 
     /**
      * function called when the pointer is leaving the object area
@@ -191,19 +191,21 @@ var GUI_Object = Sprite.extend({
      * @function
      * @param {Event} event the event object
      */
-    onOut : function (/* event */) {},
+    onOut(/* event */) {
+        
+    }
 
     /**
      * function callback for the pointerup event
      * @ignore
      */
-    release : function (event) {
+    release(event) {
         if (this.released === false) {
             this.released = true;
             timer.clearTimeout(this.holdTimeout);
             return this.onRelease.call(this, event);
         }
-    },
+    }
 
     /**
      * function called when the object is pressed and released <br>
@@ -215,20 +217,20 @@ var GUI_Object = Sprite.extend({
      * @function
      * @param {Event} event the event object
      */
-    onRelease : function () {
+    onRelease() {
         return false;
-    },
+    }
 
     /**
      * function callback for the tap and hold timer event
      * @ignore
      */
-    hold : function () {
+    hold() {
         timer.clearTimeout(this.holdTimeout);
         if (!this.released) {
             this.onHold.call(this);
         }
-    },
+    }
 
     /**
      * function called when the object is pressed and held<br>
@@ -238,26 +240,26 @@ var GUI_Object = Sprite.extend({
      * @public
      * @function
      */
-    onHold : function () {},
+    onHold() {}
 
     /**
      * function called when added to the game world or a container
      * @ignore
      */
-    onActivateEvent : function () {
+    onActivateEvent() {
         // register pointer events
         registerPointerEvent("pointerdown", this, this.clicked.bind(this));
         registerPointerEvent("pointerup", this, this.release.bind(this));
         registerPointerEvent("pointercancel", this, this.release.bind(this));
         registerPointerEvent("pointerenter", this, this.enter.bind(this));
         registerPointerEvent("pointerleave", this, this.leave.bind(this));
-    },
+    }
 
     /**
      * function called when removed from the game world or a container
      * @ignore
      */
-    onDeactivateEvent : function () {
+    onDeactivateEvent() {
         // release pointer events
         releasePointerEvent("pointerdown", this);
         releasePointerEvent("pointerup", this);
@@ -266,6 +268,6 @@ var GUI_Object = Sprite.extend({
         releasePointerEvent("pointerleave", this);
         timer.clearTimeout(this.holdTimeout);
     }
-});
+};
 
 export default GUI_Object;

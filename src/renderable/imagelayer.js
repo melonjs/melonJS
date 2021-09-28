@@ -7,6 +7,7 @@ import utils from "./../utils/utils.js";
 
 
 /**
+ * @classdesc
  * a generic Image Layer Object
  * @class
  * @extends me.Renderable
@@ -29,13 +30,15 @@ import utils from "./../utils/utils.js";
  *     repeat :"repeat-x"
  * }), 1);
  */
-var ImageLayer = Sprite.extend({
+
+class ImageLayer extends Sprite {
+
     /**
      * @ignore
      */
-    init: function (x, y, settings) {
+    constructor(x, y, settings) {
         // call the constructor
-        this._super(Sprite, "init", [x, y, settings]);
+        super(x, y, settings);
 
         // render in screen coordinates
         this.floating = true;
@@ -94,63 +97,63 @@ var ImageLayer = Sprite.extend({
             }
         }
 
-        /**
-         * Define if and how an Image Layer should be repeated.<br>
-         * By default, an Image Layer is repeated both vertically and horizontally.<br>
-         * Acceptable values : <br>
-         * * 'repeat' - The background image will be repeated both vertically and horizontally <br>
-         * * 'repeat-x' - The background image will be repeated only horizontally.<br>
-         * * 'repeat-y' - The background image will be repeated only vertically.<br>
-         * * 'no-repeat' - The background-image will not be repeated.<br>
-         * @public
-         * @type String
-         * @default 'repeat'
-         * @name me.ImageLayer#repeat
-         */
-        Object.defineProperty(this, "repeat", {
-            /**
-             * @ignore
-             */
-            get : function get() {
-                return this._repeat;
-            },
-            /**
-             * @ignore
-             */
-            set : function set(val) {
-                this._repeat = val;
-                switch (this._repeat) {
-                    case "no-repeat" :
-                        this.repeatX = false;
-                        this.repeatY = false;
-                        break;
-                    case "repeat-x" :
-                        this.repeatX = true;
-                        this.repeatY = false;
-                        break;
-                    case "repeat-y" :
-                        this.repeatX = false;
-                        this.repeatY = true;
-                        break;
-                    default : // "repeat"
-                        this.repeatX = true;
-                        this.repeatY = true;
-                        break;
-                }
-                this.resize(game.viewport.width, game.viewport.height);
-                this.createPattern();
-            },
-            configurable: true
-        });
-
         this.repeat = settings.repeat || "repeat";
 
         // on context lost, all previous textures are destroyed
         event.subscribe(event.WEBGL_ONCONTEXT_RESTORED, this.createPattern.bind(this));
-    },
+    }
+
+    /**
+     * Define if and how an Image Layer should be repeated.<br>
+     * By default, an Image Layer is repeated both vertically and horizontally.<br>
+     * Acceptable values : <br>
+     * * 'repeat' - The background image will be repeated both vertically and horizontally <br>
+     * * 'repeat-x' - The background image will be repeated only horizontally.<br>
+     * * 'repeat-y' - The background image will be repeated only vertically.<br>
+     * * 'no-repeat' - The background-image will not be repeated.<br>
+     * @public
+     * @type String
+     * @default 'repeat'
+     * @name me.ImageLayer#repeat
+     */
+
+    /**
+     * @ignore
+     */
+    get repeat() {
+        return this._repeat;
+    }
+
+    /**
+     * @ignore
+     */
+    set repeat(value) {
+        this._repeat = value;
+        switch (this._repeat) {
+            case "no-repeat" :
+                this.repeatX = false;
+                this.repeatY = false;
+                break;
+            case "repeat-x" :
+                this.repeatX = true;
+                this.repeatY = false;
+                break;
+            case "repeat-y" :
+                this.repeatX = false;
+                this.repeatY = true;
+                break;
+            default : // "repeat"
+                this.repeatX = true;
+                this.repeatY = true;
+                break;
+        }
+        this.resize(game.viewport.width, game.viewport.height);
+        this.createPattern();
+    }
+
 
     // called when the layer is added to the game world or a container
-    onActivateEvent : function () {
+    onActivateEvent() {
         var _updateLayerFn = this.updateLayer.bind(this);
         // register to the viewport change notification
         this.vpChangeHdlr = event.subscribe(event.VIEWPORT_ONCHANGE, _updateLayerFn);
@@ -165,7 +168,7 @@ var ImageLayer = Sprite.extend({
         if (this.ancestor.root !== true) {
             this.updateLayer(game.viewport.pos);
         }
-    },
+    }
 
     /**
      * resize the Image Layer to match the given size
@@ -175,28 +178,28 @@ var ImageLayer = Sprite.extend({
      * @param {Number} w new width
      * @param {Number} h new height
     */
-    resize : function (w, h) {
-        this._super(Sprite, "resize", [
+    resize(w, h) {
+        super.resize(
             this.repeatX ? Infinity : w,
             this.repeatY ? Infinity : h
-        ]);
-    },
+        );
+    }
 
     /**
      * createPattern function
      * @ignore
      * @function
      */
-    createPattern : function () {
+    createPattern() {
         this._pattern = video.renderer.createPattern(this.image, this._repeat);
-    },
+    }
 
     /**
      * updateLayer function
      * @ignore
      * @function
      */
-    updateLayer : function (vpos) {
+    updateLayer(vpos) {
         var rx = this.ratio.x,
             ry = this.ratio.y;
 
@@ -238,14 +241,14 @@ var ImageLayer = Sprite.extend({
         else {
             this.pos.y = y;
         }
-    },
+    }
 
    /*
     * override the default predraw function
     * as repeat and anchor are managed directly in the draw method
     * @ignore
     */
-    preDraw : function (renderer) {
+    preDraw(renderer) {
         // save the context
         renderer.save();
         // apply the defined alpha value
@@ -253,13 +256,13 @@ var ImageLayer = Sprite.extend({
 
         // apply the defined tint, if any
         renderer.setTint(this.tint);
-    },
+    }
 
     /**
      * draw the image layer
      * @ignore
      */
-    draw : function (renderer) {
+    draw(renderer) {
         var viewport = game.viewport,
             width = this.width,
             height = this.height,
@@ -284,25 +287,26 @@ var ImageLayer = Sprite.extend({
             viewport.width * 2,
             viewport.height * 2
         );
-    },
+    }
 
     // called when the layer is removed from the game world or a container
-    onDeactivateEvent : function () {
+    onDeactivateEvent() {
         // cancel all event subscriptions
         event.unsubscribe(this.vpChangeHdlr);
         event.unsubscribe(this.vpResizeHdlr);
         event.unsubscribe(this.vpLoadedHdlr);
-    },
+    }
 
     /**
      * Destroy function<br>
      * @ignore
      */
-    destroy : function () {
+    destroy() {
         pool.push(this.ratio);
         this.ratio = undefined;
-        this._super(Sprite, "destroy");
+        super.destroy();
     }
-});
+
+};
 
 export default ImageLayer;

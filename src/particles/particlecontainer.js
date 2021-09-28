@@ -9,18 +9,20 @@ import game from "./../game.js";
  * @constructor
  * @param {me.ParticleEmitter} emitter the emitter which owns this container
  */
-var ParticleContainer = Container.extend({
+
+class ParticleContainer extends Container {
+
     /**
      * @ignore
      */
-    init: function (emitter) {
+    constructor(emitter) {
         // call the super constructor
-        this._super(Container, "init", [
+        super(
             game.viewport.pos.x,
             game.viewport.pos.y,
             game.viewport.width,
             game.viewport.height
-        ]);
+        );
 
         // don't sort the particles by z-index
         this.autoSort = false;
@@ -39,12 +41,12 @@ var ParticleContainer = Container.extend({
         this.anchorPoint.set(0, 0);
 
         this.isKinematic = true;
-    },
+    }
 
     /**
      * @ignore
      */
-    update: function (dt) {
+    update(dt) {
         // skip frames if necessary
         if (++this._updateCount > this._emitter.framesToSkip) {
             this._updateCount = 0;
@@ -68,12 +70,12 @@ var ParticleContainer = Container.extend({
             }
         }
         return true;
-    },
+    }
 
     /**
      * @ignore
      */
-    draw : function (renderer, rect) {
+    draw(renderer, rect) {
         if (this.children.length > 0) {
             var context = renderer.getContext(),
                 gco;
@@ -91,5 +93,5 @@ var ParticleContainer = Container.extend({
             }
         }
     }
-});
+};
 export default ParticleContainer;

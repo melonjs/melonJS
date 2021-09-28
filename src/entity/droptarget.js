@@ -11,7 +11,8 @@ import Entity from "./entity.js";
 * @param {Number} y the y coordinates of the entity object
 * @param {Object} settings Entity properties (see {@link me.Entity})
 */
-var DroptargetEntity = Entity.extend({
+
+class DroptargetEntity extends Entity {
     /**
      * Constructor
      * @name init
@@ -21,7 +22,8 @@ var DroptargetEntity = Entity.extend({
      * @param {Number} y the y postion of the entity
      * @param {Object} settings the additional entity settings
      */
-    init: function (x, y, settings) {
+    constructor(x, y, settings) {
+        super(x, y, settings);
         /**
          * constant for the overlaps method
          * @public
@@ -49,10 +51,9 @@ var DroptargetEntity = Entity.extend({
          * @memberOf me.DroptargetEntity
          */
         this.checkMethod = null;
-        this._super(Entity, "init", [x, y, settings]);
         event.subscribe(event.DRAGEND, this.checkOnMe.bind(this));
         this.checkMethod = this[this.CHECKMETHOD_OVERLAP];
-    },
+    }
 
     /**
      * Sets the collision method which is going to be used to check a valid drop
@@ -61,13 +62,13 @@ var DroptargetEntity = Entity.extend({
      * @function
      * @param {Constant} checkMethod the checkmethod (defaults to CHECKMETHOD_OVERLAP)
      */
-    setCheckMethod: function (checkMethod) {
+    setCheckMethod(checkMethod) {
         //  We can improve this check,
         //  because now you can use every method in theory
         if (typeof(this[checkMethod]) !== "undefined") {
             this.checkMethod = this[checkMethod];
         }
-    },
+    }
 
     /**
      * Checks if a dropped entity is dropped on the current entity
@@ -76,12 +77,12 @@ var DroptargetEntity = Entity.extend({
      * @function
      * @param {Object} draggableEntity the draggable entity that is dropped
      */
-    checkOnMe: function (e, draggableEntity) {
+    checkOnMe(e, draggableEntity) {
         if (draggableEntity && this.checkMethod(draggableEntity.getBounds())) {
             // call the drop method on the current entity
             this.drop(draggableEntity);
         }
-    },
+    }
 
     /**
      * Gets called when a draggable entity is dropped on the current entity
@@ -90,7 +91,9 @@ var DroptargetEntity = Entity.extend({
      * @function
      * @param {Object} draggableEntity the draggable entity that is dropped
      */
-    drop: function () {},
+    drop() {
+        
+    }
 
     /**
      * Destructor
@@ -98,8 +101,8 @@ var DroptargetEntity = Entity.extend({
      * @memberOf me.DroptargetEntity
      * @function
      */
-    destroy: function () {
+    destroy() {
         event.unsubscribe(event.DRAGEND, this.checkOnMe);
     }
-});
+};
 export default DroptargetEntity;

@@ -8,16 +8,17 @@ import Stage from "./../state/stage.js";
 
 
 // a basic progress bar object
-var ProgressBar = Renderable.extend({
+class ProgressBar extends Renderable {
     /**
      * @ignore
      */
-    init: function (x, y, w, h) {
+    constructor(x, y, w, h) {
+
+        super(x, y, w, h);
+
         var self = this;
 
         this.barHeight = h;
-
-        this._super(Renderable, "init", [x, y, w, h]);
 
         this.anchorPoint.set(0, 0);
 
@@ -35,22 +36,22 @@ var ProgressBar = Renderable.extend({
 
         // store current progress
         this.progress = 0;
-    },
+    }
 
     /**
      * make sure the screen is refreshed every frame
      * @ignore
      */
-    onProgressUpdate : function (progress) {
+    onProgressUpdate(progress) {
         this.progress = ~~(progress * this.width);
         this.isDirty = true;
-    },
+    }
 
     /**
      * draw function
      * @ignore
      */
-    draw : function (renderer) {
+    draw (renderer) {
         // clear the background
         renderer.clearColor("#202020");
 
@@ -60,28 +61,28 @@ var ProgressBar = Renderable.extend({
 
         renderer.setColor("#55aa00");
         renderer.fillRect(this.pos.x, game.viewport.centerY, this.progress, this.barHeight / 2);
-    },
+    }
 
     /**
      * Called by engine before deleting the object
      * @ignore
      */
-    onDestroyEvent : function () {
+    onDestroyEvent() {
         // cancel the callback
         event.unsubscribe(this.loaderHdlr);
         event.unsubscribe(this.resizeHdlr);
         this.loaderHdlr = this.resizeHdlr = null;
     }
 
-});
+};
 
 // the melonJS Logo
-var IconLogo = Renderable.extend({
+class IconLogo extends Renderable {
     /**
      * @ignore
      */
-    init : function (x, y) {
-        this._super(Renderable, "init", [x, y, 100, 85]);
+    constructor(x, y) {
+        super(x, y, 100, 85);
 
         this.iconCanvas = video.createCanvas(
             nextPowerOfTwo(this.width),
@@ -117,22 +118,23 @@ var IconLogo = Renderable.extend({
         context.stroke();
 
         this.anchorPoint.set(0.5, 0.5);
-    },
+    }
+
     /**
      * @ignore
      */
-    draw : function (renderer) {
+    draw(renderer) {
         renderer.drawImage(this.iconCanvas, renderer.getWidth() / 2, this.pos.y);
     }
-});
+};
 
 // the melonJS Text Logo
-var TextLogo = Renderable.extend({
+class TextLogo extends Renderable {
     /**
      * @ignore
      */
-    init : function (w, h) {
-        this._super(Renderable, "init", [0, 0, w, h]);
+    constructor(w, h) {
+        super(0, 0, w, h);
 
         this.textWidth = 0;
 
@@ -141,9 +143,9 @@ var TextLogo = Renderable.extend({
         this.drawFont(video.renderer.getContext2d(this.fontCanvas));
 
         this.anchorPoint.set(0, 0.5);
-    },
+    }
 
-    drawFont : function (context) {
+    drawFont(context) {
         var logo1 = pool.pull("Text", 0, 0, {
             font: "century gothic",
             size: 32,
@@ -180,16 +182,16 @@ var TextLogo = Renderable.extend({
         // put them back into the object pool
         pool.push(logo1);
         pool.push(logo2);
-    },
+    }
 
     /**
      * @ignore
      */
-    draw : function (renderer) {
+    draw(renderer) {
         renderer.drawImage(this.fontCanvas, Math.round((renderer.getWidth() - this.textWidth) / 2), this.pos.y);
     }
 
-});
+};
 
 /**
  * a default loading screen

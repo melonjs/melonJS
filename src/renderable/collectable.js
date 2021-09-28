@@ -4,6 +4,7 @@ import Rect from "./../shapes/rectangle.js";
 import collision from "./../physics/collision.js";
 
 /**
+ * @classdesc
  * a basic collectable helper class for immovable object (e.g. a coin)
  * @class
  * @extends me.Sprite
@@ -13,13 +14,15 @@ import collision from "./../physics/collision.js";
  * @param {Number} y the y coordinates of the collectable
  * @param {Object} settings See {@link me.Sprite}
  */
-var Collectable = Sprite.extend({
+
+class Collectable extends Sprite {
     /**
      * @ignore
      */
-    init : function (x, y, settings) {
+    constructor(x, y, settings) {
+
         // call the super constructor
-        this._super(Sprite, "init", [x, y, settings]);
+        super(x, y, settings);
 
         this.name = settings.name;
         this.type = settings.type;
@@ -38,6 +41,7 @@ var Collectable = Sprite.extend({
         }
 
     }
-});
+
+};
 
 export default Collectable;

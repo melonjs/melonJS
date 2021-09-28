@@ -12,18 +12,22 @@ import { globalToLocal } from "./input.js";
 var viewportOffset = new Vector2d();
 
 /**
+ * @classdesc
  * a pointer object, representing a single finger on a touch enabled device.
  * @class
  * @extends me.Rect
  * @memberOf me
  * @constructor
  */
-var Pointer = Rect.extend({
+class Pointer extends Rect {
 
     /**
      * @ignore
      */
-    init : function (x = 0, y = 0, w = 1, h = 1) {
+    constructor(x = 0, y = 0, w = 1, h = 1) {
+
+        // parent constructor
+        super(x, y, w, h);
 
         /**
          * constant for left button
@@ -261,10 +265,7 @@ var Pointer = Rect.extend({
 
         // bind list for mouse buttons
         this.bind = [ 0, 0, 0 ];
-
-        // parent constructor
-        this._super(Rect, "init", [x, y, w, h]);
-    },
+    }
 
     /**
      * initialize the Pointer object using the given Event Object
@@ -278,7 +279,7 @@ var Pointer = Rect.extend({
      * @param {Number} [clientX=0] the vertical coordinate within the application's client area at which the event occurred
      * @param {Number} [pointedId=1] the Pointer, Touch or Mouse event Id (1)
      */
-    setEvent : function (event, pageX = 0, pageY = 0, clientX = 0, clientY = 0, pointerId = 1) {
+    setEvent(event, pageX = 0, pageY = 0, clientX = 0, clientY = 0, pointerId = 1) {
         var width = 1;
         var height = 1;
 
@@ -342,5 +343,6 @@ var Pointer = Rect.extend({
         // resize the pointer object accordingly
         this.resize(width, height);
     }
-});
+};
+
 export default Pointer;

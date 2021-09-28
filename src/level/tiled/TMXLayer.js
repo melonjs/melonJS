@@ -77,13 +77,13 @@ function preRenderLayer(layer, renderer) {
  * @param {me.TMXTilesetGroup} tilesets tileset as defined in Tiled
  * @param {Number} z z-index position
  */
-var TMXLayer = Renderable.extend({
+class TMXLayer extends Renderable {
     /**
      * @ignore
      */
-    init: function (map, data, tilewidth, tileheight, orientation, tilesets, z) {
+    constructor(map, data, tilewidth, tileheight, orientation, tilesets, z) {
         // super constructor
-        this._super(Renderable, "init", [0, 0, 0, 0]);
+        super(0, 0, 0, 0);
 
         // tile width & height
         this.tilewidth = data.tilewidth || tilewidth;
@@ -191,11 +191,11 @@ var TMXLayer = Renderable.extend({
                 data.compression
             )
         );
-    },
+    }
 
 
     // called when the layer is added to the game world or a container
-    onActivateEvent : function () {
+    onActivateEvent() {
 
         if (this.animatedTilesets === undefined) {
             this.animatedTilesets = [];
@@ -231,14 +231,14 @@ var TMXLayer = Renderable.extend({
             });
             preRenderLayer(this, this.canvasRenderer);
         }
-    },
+    }
 
     // called when the layer is removed from the game world or a container
-    onDeactivateEvent : function () {
+    onDeactivateEvent() {
         // clear all allocated objects
         //this.layerData = undefined;
         this.animatedTilesets = undefined;
-    },
+    }
 
     /**
      * Set the TMX renderer for this layer object
@@ -252,9 +252,9 @@ var TMXLayer = Renderable.extend({
      * var layer = new me.TMXLayer(...);
      * layer.setRenderer(map.getRenderer());
      */
-    setRenderer : function (renderer) {
+    setRenderer(renderer) {
         this.renderer = renderer;
-    },
+    }
 
     /**
      * Return the layer current renderer object
@@ -264,9 +264,9 @@ var TMXLayer = Renderable.extend({
      * @function
      * @return {me.TMXRenderer} renderer
      */
-    getRenderer : function () {
+    getRenderer() {
         return this.renderer;
-    },
+    }
 
 
     /**
@@ -279,10 +279,10 @@ var TMXLayer = Renderable.extend({
      * @param {Number} y Y coordinate (in world/pixels coordinates)
      * @return {Number} TileId or null if there is no Tile at the given position
      */
-    getTileId : function (x, y) {
+    getTileId(x, y) {
         var tile = this.getTile(x, y);
         return (tile ? tile.tileId : null);
-    },
+    }
 
     /**
      * Return the Tile object at the specified position
@@ -299,7 +299,7 @@ var TMXLayer = Renderable.extend({
      * // get the tile object corresponding to the latest pointer position
      * var tile = layer.getTile(me.input.pointer.pos.x, me.input.pointer.pos.y);
      */
-    getTile : function (x, y) {
+    getTile(x, y) {
         var tile = null;
 
         if (this.contains(x, y)) {
@@ -308,7 +308,7 @@ var TMXLayer = Renderable.extend({
             pool.push(coord);
         }
         return tile;
-    },
+    }
 
     /**
      * assign the given Tile object to the specified position
@@ -321,10 +321,10 @@ var TMXLayer = Renderable.extend({
      * @param {Number} y Y coordinate (in world/pixels coordinates)
      * @return {me.Tile} the tile object
      */
-    setTile : function (tile, x, y) {
+    setTile(tile, x, y) {
         this.layerData[x][y] = tile;
         return tile;
-    },
+    }
 
     /**
      * return a new the Tile object corresponding to the given tile id
@@ -337,13 +337,13 @@ var TMXLayer = Renderable.extend({
      * @param {Number} y Y coordinate (in world/pixels coordinates)
      * @return {me.Tile} the tile object
      */
-    getTileById : function (tileId, x, y) {
+    getTileById(tileId, x, y) {
         if (!this.tileset.contains(tileId)) {
             // look for the corresponding tileset
             this.tileset = this.tilesets.getTilesetByGid(tileId);
         }
         return new Tile(x, y, tileId, this.tileset);
-    },
+    }
 
     /**
      * Return the Tile object at the specified tile coordinates
@@ -359,7 +359,7 @@ var TMXLayer = Renderable.extend({
      * // return the first tile at offset 0, 0
      * var tile = layer.cellAt(0, 0);
      */
-    cellAt : function (x, y, boundsCheck) {
+    cellAt(x, y, boundsCheck) {
         var _x = ~~x;
         var _y = ~~y;
 
@@ -370,7 +370,7 @@ var TMXLayer = Renderable.extend({
         } else {
             return null;
         }
-    },
+    }
 
     /**
      * clear the tile at the specified position
@@ -386,20 +386,20 @@ var TMXLayer = Renderable.extend({
      *     layer.clearTile(x, y);
      * });
      */
-    clearTile : function (x, y) {
+    clearTile(x, y) {
         // clearing tile
         this.layerData[x][y] = null;
         // erase the corresponding area in the canvas
         if (this.preRender) {
             this.canvasRenderer.clearRect(x * this.tilewidth, y * this.tileheight, this.tilewidth, this.tileheight);
         }
-    },
+    }
 
     /**
      * update animations in a tileset layer
      * @ignore
      */
-    update : function (dt) {
+    update(dt) {
         if (this.isAnimated) {
             var result = false;
             for (var i = 0; i < this.animatedTilesets.length; i++) {
@@ -409,13 +409,13 @@ var TMXLayer = Renderable.extend({
         }
 
         return false;
-    },
+    }
 
     /**
      * draw a tileset layer
      * @ignore
      */
-    draw : function (renderer, rect) {
+    draw(renderer, rect) {
         // use the offscreen canvas
         if (this.preRender) {
             var width = Math.min(rect.width, this.width);
@@ -436,5 +436,6 @@ var TMXLayer = Renderable.extend({
             this.getRenderer().drawTileLayer(renderer, this, rect);
         }
     }
-});
+};
+
 export default TMXLayer;

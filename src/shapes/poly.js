@@ -1,28 +1,26 @@
 import earcut from "earcut";
 import Vector2d from "./../math/vector2.js";
 import pool from "./../system/pooling.js";
-import "jay-extend";
 
 /**
+ * @classdesc
  * a polygon Object.<br>
  * Please do note that melonJS implements a simple Axis-Aligned Boxes collision algorithm, which requires all polygons used for collision to be convex with all vertices defined with clockwise winding.
  * A polygon is convex when all line segments connecting two points in the interior do not cross any edge of the polygon
  * (which means that all angles are less than 180 degrees), as described here below : <br>
  * <center><img src="images/convex_polygon.png"/></center><br>
  * A polygon's `winding` is clockwise iff its vertices (points) are declared turning to the right. The image above shows COUNTERCLOCKWISE winding.
- * @class
- * @extends me.Object
+ * @class Polygon
  * @memberOf me
  * @constructor
  * @param {Number} x origin point of the Polygon
  * @param {Number} y origin point of the Polygon
  * @param {me.Vector2d[]} points array of vector defining the Polygon
  */
-var Polygon = window.Jay.extend({
-    /**
-     * @ignore
-     */
-    init : function (x, y, points) {
+
+class Polygon {
+
+    constructor(x, y, points) {
         /**
          * origin point of the Polygon
          * @public
@@ -76,12 +74,12 @@ var Polygon = window.Jay.extend({
         // the shape type
         this.shapeType = "Polygon";
         this.setShape(x, y, points);
-    },
+    }
 
     /** @ignore */
-    onResetEvent : function (x, y, points) {
+    onResetEvent(x, y, points) {
         this.setShape(x, y, points);
-    },
+    }
 
     /**
      * set new value to the Polygon
@@ -92,11 +90,11 @@ var Polygon = window.Jay.extend({
      * @param {Number} y position of the Polygon
      * @param {me.Vector2d[]|Number[]} points array of vector or vertice defining the Polygon
      */
-    setShape : function (x, y, points) {
+    setShape(x, y, points) {
         this.pos.set(x, y);
         this.setVertices(points);
         return this;
-    },
+    }
 
     /**
      * set the vertices defining this Polygon
@@ -105,7 +103,7 @@ var Polygon = window.Jay.extend({
      * @function
      * @param {me.Vector2d[]} points array of vector or vertice defining the Polygon
      */
-    setVertices : function (vertices) {
+    setVertices(vertices) {
 
         if (!Array.isArray(vertices)) {
             return this;
@@ -135,7 +133,7 @@ var Polygon = window.Jay.extend({
         this.recalc();
         this.updateBounds();
         return this;
-    },
+    }
 
     /**
      * apply the given transformation matrix to this Polygon
@@ -145,7 +143,7 @@ var Polygon = window.Jay.extend({
      * @param {me.Matrix2d} matrix the transformation matrix
      * @return {me.Polygon} Reference to this object for method chaining
      */
-    transform : function (m) {
+    transform(m) {
         var points = this.points;
         var len = points.length;
         for (var i = 0; i < len; i++) {
@@ -154,7 +152,7 @@ var Polygon = window.Jay.extend({
         this.recalc();
         this.updateBounds();
         return this;
-    },
+    }
 
     /**
      * apply an isometric projection to this shape
@@ -163,9 +161,9 @@ var Polygon = window.Jay.extend({
      * @function
      * @return {me.Polygon} Reference to this object for method chaining
      */
-    toIso : function () {
+    toIso() {
         return this.rotate(Math.PI / 4).scale(Math.SQRT2, Math.SQRT1_2);
-    },
+    }
 
     /**
      * apply a 2d projection to this shape
@@ -174,9 +172,9 @@ var Polygon = window.Jay.extend({
      * @function
      * @return {me.Polygon} Reference to this object for method chaining
      */
-    to2d : function () {
+    to2d() {
         return this.scale(Math.SQRT1_2, Math.SQRT2).rotate(-Math.PI / 4);
-    },
+    }
 
     /**
      * Rotate this Polygon (counter-clockwise) by the specified angle (in radians).
@@ -187,7 +185,7 @@ var Polygon = window.Jay.extend({
      * @param {me.Vector2d|me.ObservableVector2d} [v] an optional point to rotate around
      * @return {me.Polygon} Reference to this object for method chaining
      */
-    rotate : function (angle, v) {
+    rotate(angle, v) {
         if (angle !== 0) {
             var points = this.points;
             var len = points.length;
@@ -198,7 +196,7 @@ var Polygon = window.Jay.extend({
             this.updateBounds();
         }
         return this;
-    },
+    }
 
     /**
      * Scale this Polygon by the given scalar.
@@ -209,7 +207,7 @@ var Polygon = window.Jay.extend({
      * @param {Number} [y=x]
      * @return {me.Polygon} Reference to this object for method chaining
      */
-    scale : function (x, y) {
+    scale(x, y) {
         y = typeof (y) !== "undefined" ? y : x;
 
         var points = this.points;
@@ -220,7 +218,7 @@ var Polygon = window.Jay.extend({
         this.recalc();
         this.updateBounds();
         return this;
-    },
+    }
 
     /**
      * Scale this Polygon by the given vector
@@ -230,9 +228,9 @@ var Polygon = window.Jay.extend({
      * @param {me.Vector2d} v
      * @return {me.Polygon} Reference to this object for method chaining
      */
-    scaleV : function (v) {
+    scaleV(v) {
         return this.scale(v.x, v.y);
-    },
+    }
 
     /**
      * Computes the calculated collision polygon.
@@ -242,7 +240,7 @@ var Polygon = window.Jay.extend({
      * @function
      * @return {me.Polygon} Reference to this object for method chaining
      */
-    recalc : function () {
+    recalc() {
         var i;
         var edges = this.edges;
         var normals = this.normals;
@@ -276,7 +274,7 @@ var Polygon = window.Jay.extend({
         indices.length = 0;
 
         return this;
-    },
+    }
 
     /**
      * returns a list of indices for all triangles defined in this polygon
@@ -286,12 +284,12 @@ var Polygon = window.Jay.extend({
      * @param {Vector2d[]} a list of vector
      * @return {me.Polygon} this Polygon
      */
-    getIndices : function (x, y) {
+    getIndices(x, y) {
         if (this.indices.length === 0) {
             this.indices = earcut(this.points.flatMap(p => [p.x, p.y]));
         }
         return this.indices;
-    },
+    }
 
     /**
      * translate the Polygon by the specified offset
@@ -310,7 +308,7 @@ var Polygon = window.Jay.extend({
      * @param {me.Vector2d} v vector offset
      * @return {me.Polygon} Reference to this object for method chaining
      */
-    translate : function () {
+    translate() {
         var _x, _y;
 
         if (arguments.length === 2) {
@@ -328,7 +326,7 @@ var Polygon = window.Jay.extend({
         this.getBounds().translate(_x, _y);
 
         return this;
-    },
+    }
 
     /**
      * Returns true if the polygon contains the given point.
@@ -352,7 +350,7 @@ var Polygon = window.Jay.extend({
      * @param  {Number} y y coordinate
      * @return {boolean} true if contains
      */
-    contains: function () {
+    contains() {
         var _x, _y;
 
         if (arguments.length === 2) {
@@ -379,7 +377,7 @@ var Polygon = window.Jay.extend({
             }
         }
         return intersects;
-    },
+    }
 
     /**
      * returns the bounding box for this shape, the smallest Rectangle object completely containing this shape.
@@ -388,12 +386,12 @@ var Polygon = window.Jay.extend({
      * @function
      * @return {me.Bounds} this shape bounding box Rectangle object
      */
-    getBounds : function () {
+    getBounds() {
         if (typeof this._bounds === "undefined") {
             this._bounds = pool.pull("Bounds");
         }
         return this._bounds;
-    },
+    }
 
     /**
      * update the bounding box for this shape.
@@ -403,14 +401,14 @@ var Polygon = window.Jay.extend({
      * @function
      * @return {me.Bounds} this shape bounding box Rectangle object
      */
-    updateBounds : function () {
+    updateBounds() {
         var bounds = this.getBounds();
 
         bounds.update(this.points);
         bounds.translate(this.pos);
 
         return bounds;
-    },
+    }
 
     /**
      * clone this Polygon
@@ -419,13 +417,13 @@ var Polygon = window.Jay.extend({
      * @function
      * @return {me.Polygon} new Polygon
      */
-    clone : function () {
+    clone() {
         var copy = [];
         this.points.forEach(function (point) {
             copy.push(point.clone());
         });
         return new Polygon(this.pos.x, this.pos.y, copy);
     }
-});
+};
 
 export default Polygon;

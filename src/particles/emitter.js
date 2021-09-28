@@ -326,11 +326,15 @@ var ParticleEmitterSettings = {
  * me.game.world.removeChild(emitter);
  *
  */
-var ParticleEmitter = Renderable.extend({
+class ParticleEmitter extends Renderable {
+
     /**
      * @ignore
      */
-    init: function (x, y, settings) {
+    constructor(x, y, settings) {
+        // call the super constructor
+        super(x, y, Infinity, Infinity);
+
         // Emitter is Stream, launch particles constantly
         /** @ignore */
         this._stream = false;
@@ -348,15 +352,6 @@ var ParticleEmitter = Renderable.extend({
         // Emitter is emitting particles
         /** @ignore */
         this._enabled = false;
-
-        // call the super constructor
-        this._super(
-            Renderable,
-            "init",
-            [x, y,
-            Infinity,
-            Infinity]
-        );
 
         // Emitter will always update
         this.alwaysUpdate = true;
@@ -403,34 +398,34 @@ var ParticleEmitter = Renderable.extend({
 
         // Reset the emitter to defaults
         this.reset(settings);
-    },
+    }
 
     /**
      * @ignore
      */
-    onActivateEvent: function() {
+    onActivateEvent() {
         this.ancestor.addChild(this.container);
         this.container.pos.z = this.pos.z;
         if (!this.ancestor.autoSort) {
             this.ancestor.sort();
         }
-    },
+    }
 
     /**
      * @ignore
      */
-    onDeactivateEvent: function() {
+    onDeactivateEvent() {
         if (this.ancestor.hasChild(this.container)) {
             this.ancestor.removeChildNow(this.container);
         }
-    },
+    }
 
     /**
      * @ignore
      */
-    destroy: function () {
+    destroy() {
         this.reset();
-    },
+    }
 
     /**
      * returns a random point inside the bounds x axis of this emitter
@@ -439,9 +434,9 @@ var ParticleEmitter = Renderable.extend({
      * @function
      * @return {Number}
      */
-    getRandomPointX: function () {
+    getRandomPointX() {
         return this.pos.x + randomFloat(0, this.width);
-    },
+    }
 
     /**
      * returns a random point inside the bounds y axis of this emitter
@@ -450,9 +445,9 @@ var ParticleEmitter = Renderable.extend({
      * @function
      * @return {Number}
      */
-    getRandomPointY: function () {
+    getRandomPointY() {
         return this.pos.y + randomFloat(0, this.height);
-    },
+    }
 
     /**
      * Reset the emitter with default values.<br>
@@ -461,7 +456,7 @@ var ParticleEmitter = Renderable.extend({
      * @name reset
      * @memberOf me.ParticleEmitter
      */
-    reset: function (settings) {
+    reset(settings) {
         // check if settings exists and create a dummy object if necessary
         settings = settings || {};
         var defaults = ParticleEmitterSettings;
@@ -474,17 +469,17 @@ var ParticleEmitter = Renderable.extend({
 
         // reset particle container values
         this.container.reset();
-    },
+    }
 
     // Add count particles in the game world
     /** @ignore */
-    addParticles: function (count) {
+    addParticles(count) {
         for (var i = 0; i < ~~count; i++) {
             // Add particle to the container
             var particle = pool.pull("Particle", this);
             this.container.addChild(particle);
         }
-    },
+    }
 
     /**
      * Emitter is of type stream and is launching particles <br>
@@ -493,9 +488,9 @@ var ParticleEmitter = Renderable.extend({
      * @name isRunning
      * @memberOf me.ParticleEmitter
      */
-    isRunning: function () {
+    isRunning() {
         return this._enabled && this._stream;
-    },
+    }
 
     /**
      * Launch particles from emitter constantly <br>
@@ -505,12 +500,12 @@ var ParticleEmitter = Renderable.extend({
      * @name streamParticles
      * @memberOf me.ParticleEmitter
      */
-    streamParticles: function (duration) {
+    streamParticles(duration) {
         this._enabled = true;
         this._stream = true;
         this.frequency = Math.max(this.frequency, 1);
         this._durationTimer = (typeof duration === "number") ? duration : this.duration;
-    },
+    }
 
     /**
      * Stop the emitter from generating new particles (used only if emitter is Stream) <br>
@@ -518,9 +513,9 @@ var ParticleEmitter = Renderable.extend({
      * @name stopStream
      * @memberOf me.ParticleEmitter
      */
-    stopStream: function () {
+    stopStream() {
         this._enabled = false;
-    },
+    }
 
     /**
      * Launch all particles from emitter and stop <br>
@@ -530,17 +525,17 @@ var ParticleEmitter = Renderable.extend({
      * @name burstParticles
      * @memberOf me.ParticleEmitter
      */
-    burstParticles: function (total) {
+    burstParticles(total) {
         this._enabled = true;
         this._stream = false;
         this.addParticles((typeof total === "number") ? total : this.totalParticles);
         this._enabled = false;
-    },
+    }
 
     /**
      * @ignore
      */
-    update: function (dt) {
+    update(dt) {
         // Launch new particles, if emitter is Stream
         if ((this._enabled) && (this._stream)) {
             // Check if the emitter has duration set
@@ -571,5 +566,6 @@ var ParticleEmitter = Renderable.extend({
         }
         return true;
     }
-});
+
+};
 export default ParticleEmitter;

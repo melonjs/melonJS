@@ -15,19 +15,19 @@
             draggable,
             // creates a test draggable entity
             createDraggable = function (position, dimensions) {
-                var Draggable = DraggableEntity.extend({
-                    init: function (x, y, settings) {
-                        this._super(DraggableEntity, "init", [x, y, settings]);
+                class Draggable extends DraggableEntity {
+                    constructor(x, y, settings) {
+                        super(x, y, settings);
                         this.color = "white";
-                    },
-                    update: function () {
+                    }
+                    update() {
                         return true;
-                    },
-                    draw: function (context) {
+                    }
+                    draw(context) {
                         context.fillStyle = this.color;
                         context.fillRect(this.pos.x, this.pos.y, this.width, this.height);
                     }
-                });
+                };
                 // create a new draggable entity instance
                 draggable = new Draggable(position.x, position.y, {width: dimensions.x, height: dimensions.y});
                 // add the test draggable entity to the game

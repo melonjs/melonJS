@@ -12,18 +12,18 @@ import Renderable from "./../renderable/renderable.js";
  * @constructor
  * @param {me.ParticleEmitter} particle emitter
  */
-var Particle = Renderable.extend({
+class Particle extends Renderable {
     /**
      * @ignore
      */
-    init : function (emitter) {
+    constructor(emitter) {
         // Call the super constructor
-        this._super(Renderable, "init", [
+        super(
             emitter.getRandomPointX(),
             emitter.getRandomPointY(),
             emitter.image.width,
             emitter.image.height
-        ]);
+        );
 
         // Particle will always update
         this.alwaysUpdate = true;
@@ -76,7 +76,7 @@ var Particle = Renderable.extend({
         if (!emitter.followTrajectory) {
             this.angle = randomFloat(emitter.minRotation, emitter.maxRotation);
         }
-    },
+    }
 
     /**
      * Update the Particle <br>
@@ -87,7 +87,7 @@ var Particle = Renderable.extend({
      * @ignore
      * @param {Number} dt time since the last update in milliseconds
      */
-    update : function (dt) {
+    update(dt) {
         // move things forward independent of the current frame rate
         var skew = dt * this._deltaInv;
 
@@ -130,12 +130,12 @@ var Particle = Renderable.extend({
 
         // Return true if the particle is not dead yet
         return (this.inViewport || !this.onlyInViewport) && (this.life > 0);
-    },
+    }
 
     /**
      * @ignore
      */
-    preDraw : function (renderer) {
+    preDraw(renderer) {
 
         // restore is called in postDraw
         renderer.save();
@@ -145,12 +145,12 @@ var Particle = Renderable.extend({
 
         // translate to the defined anchor point and scale it
         renderer.transform(this.currentTransform);
-    },
+    }
 
     /**
      * @ignore
      */
-    draw : function (renderer) {
+    draw(renderer) {
         var w = this.width, h = this.height;
         renderer.drawImage(
             this.image,
@@ -160,6 +160,6 @@ var Particle = Renderable.extend({
             w, h
         );
     }
-});
+};
 
 export default Particle;

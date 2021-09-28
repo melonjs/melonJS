@@ -3,10 +3,11 @@
 ## [10.0.0] (melonJS 2) - _unreleased_
 
 ### Changed
-- melonJS 2 (aka version 10.0.0) is now a pure modern ES6 based version of melonJS
+- Jay Inheritance has been replaced with ES6 standard inheritance
+- melonJS is now a pure ES6 library, for class definition, inheritance and semantic
 
 ### Deprecated
-- all deprecated API from melonJS "1" have been removed
+- all deprecated API from the legacy melonJS version have been removed
 
 ## [9.1.1] - _2021-09-26_
 

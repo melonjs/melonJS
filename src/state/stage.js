@@ -1,8 +1,6 @@
 import video from "./../video/video.js";
 import game from "./../game.js";
 import Camera2d from "./../camera/camera2d.js";
-import "jay-extend";
-
 
 // a default camera instance to use across all stages
 var default_camera;
@@ -27,11 +25,12 @@ var default_settings = {
  * @param {Function} [options.onDestroyEvent] called by the state manager before switching to another state
  * @see me.state
  */
-var Stage = window.Jay.extend({
+class Stage {
+
     /**
      * @ignore
      */
-    init: function (settings) {
+    constructor(settings) {
         /**
          * The list of active cameras in this stage.
          * Cameras will be renderered based on this order defined in this list.
@@ -51,13 +50,13 @@ var Stage = window.Jay.extend({
          * @enum {Object}
          */
         this.settings = Object.assign(default_settings, settings || {});
-    },
+    }
 
     /**
      * Object reset function
      * @ignore
      */
-    reset : function () {
+    reset() {
         var self = this;
 
         // add all defined cameras
@@ -81,7 +80,7 @@ var Stage = window.Jay.extend({
 
         // call the onReset Function
         this.onResetEvent.apply(this, arguments);
-    },
+    }
 
     /**
      * update function
@@ -92,7 +91,7 @@ var Stage = window.Jay.extend({
      * @param {Number} dt time since the last update in milliseconds.
      * @return false
      **/
-    update : function (dt) {
+    update(dt) {
         // update all objects (and pass the elapsed time since last frame)
         var isDirty = game.world.update(dt);
 
@@ -105,7 +104,7 @@ var Stage = window.Jay.extend({
         });
 
         return isDirty;
-    },
+    }
 
     /**
      * draw the current stage
@@ -115,24 +114,24 @@ var Stage = window.Jay.extend({
      * @function
      * @param {me.CanvasRenderer|me.WebGLRenderer} renderer a renderer object
      */
-    draw : function (renderer) {
+    draw(renderer) {
         // iterate through all cameras
         this.cameras.forEach(function(camera) {
             // render the root container
             camera.draw(renderer, game.world);
         });
-    },
+    }
 
     /**
      * destroy function
      * @ignore
      */
-    destroy : function () {
+    destroy() {
         // clear all cameras
         this.cameras.clear();
         // notify the object
         this.onDestroyEvent.apply(this, arguments);
-    },
+    }
 
     /**
      * onResetEvent function<br>
@@ -144,13 +143,13 @@ var Stage = window.Jay.extend({
      * @param {} [arguments...] optional arguments passed when switching state
      * @see me.state#change
      */
-    onResetEvent : function () {
+    onResetEvent() {
         // execute onResetEvent function if given through the constructor
         if (typeof this.settings.onResetEvent === "function") {
             this.settings.onResetEvent.apply(this, arguments);
         }
 
-    },
+    }
 
     /**
      * onDestroyEvent function<br>
@@ -159,12 +158,12 @@ var Stage = window.Jay.extend({
      * @memberOf me.Stage
      * @function
      */
-    onDestroyEvent : function () {
+    onDestroyEvent() {
         // execute onDestroyEvent function if given through the constructor
         if (typeof this.settings.onDestroyEvent === "function") {
             this.settings.onDestroyEvent.apply(this, arguments);
         }
     }
-});
+};
 
 export default Stage;

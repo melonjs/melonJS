@@ -1,8 +1,8 @@
 import Vector2d from "./../math/vector2.js";
 import pool from "./../system/pooling.js";
-import "jay-extend";
 
 /**
+ * @classdesc
  * an ellipse Object
  * @class
  * @extends me.Object
@@ -13,11 +13,10 @@ import "jay-extend";
  * @param {Number} w width (diameter) of the ellipse
  * @param {Number} h height (diameter) of the ellipse
  */
-var Ellipse = window.Jay.extend({
-    /**
-     * @ignore
-     */
-    init : function (x, y, w, h) {
+
+class Ellipse {
+
+    constructor(x, y, w, h) {
         /**
          * the center coordinates of the ellipse
          * @public
@@ -75,12 +74,12 @@ var Ellipse = window.Jay.extend({
         // the shape type
         this.shapeType = "Ellipse";
         this.setShape(x, y, w, h);
-    },
+    }
 
     /** @ignore */
-    onResetEvent : function (x, y, w, h) {
+    onResetEvent(x, y, w, h) {
         this.setShape(x, y, w, h);
-    },
+    }
 
     /**
      * set new value to the Ellipse shape
@@ -92,7 +91,7 @@ var Ellipse = window.Jay.extend({
      * @param {Number} w width (diameter) of the ellipse
      * @param {Number} h height (diameter) of the ellipse
      */
-    setShape : function (x, y, w, h) {
+    setShape(x, y, w, h) {
         var hW = w / 2;
         var hH = h / 2;
 
@@ -109,7 +108,7 @@ var Ellipse = window.Jay.extend({
         this.getBounds().translate(-this.radiusV.x, -this.radiusV.y);
 
         return this;
-    },
+    }
 
     /**
      * Rotate this Ellipse (counter-clockwise) by the specified angle (in radians).
@@ -120,13 +119,13 @@ var Ellipse = window.Jay.extend({
      * @param {me.Vector2d|me.ObservableVector2d} [v] an optional point to rotate around
      * @return {me.Ellipse} Reference to this object for method chaining
      */
-    rotate : function (angle, v) {
+    rotate(angle, v) {
         // TODO : only works for circle
         this.pos.rotate(angle, v);
         this.getBounds().shift(this.pos);
         this.getBounds().translate(-this.radiusV.x, -this.radiusV.y);
         return this;
-    },
+    }
 
     /**
      * Scale this Ellipse by the specified scalar.
@@ -137,7 +136,7 @@ var Ellipse = window.Jay.extend({
      * @param {Number} [y=x]
      * @return {me.Ellipse} Reference to this object for method chaining
      */
-    scale : function (x, y) {
+    scale(x, y) {
         y = typeof (y) !== "undefined" ? y : x;
         return this.setShape(
             this.pos.x,
@@ -145,7 +144,7 @@ var Ellipse = window.Jay.extend({
             this.radiusV.x * 2 * x,
             this.radiusV.y * 2 * y
         );
-    },
+    }
 
     /**
      * Scale this Ellipse by the specified vector.
@@ -155,9 +154,9 @@ var Ellipse = window.Jay.extend({
      * @param {me.Vector2d} v
      * @return {me.Ellipse} Reference to this object for method chaining
      */
-    scaleV : function (v) {
+    scaleV(v) {
         return this.scale(v.x, v.y);
-    },
+    }
 
     /**
      * apply the given transformation matrix to this ellipse
@@ -167,10 +166,10 @@ var Ellipse = window.Jay.extend({
      * @param {me.Matrix2d} matrix the transformation matrix
      * @return {me.Polygon} Reference to this object for method chaining
      */
-    transform : function (/* m */) {
+    transform(/* m */) {
         // TODO
         return this;
-    },
+    }
 
     /**
      * translate the circle/ellipse by the specified offset
@@ -189,7 +188,7 @@ var Ellipse = window.Jay.extend({
      * @param {me.Vector2d} v vector offset
      * @return {me.Ellipse} this ellipse
      */
-    translate : function () {
+    translate() {
         var _x, _y;
 
         if (arguments.length === 2) {
@@ -207,7 +206,7 @@ var Ellipse = window.Jay.extend({
         this.getBounds().translate(_x, _y);
 
         return this;
-    },
+    }
 
     /**
      * check if this circle/ellipse contains the specified point
@@ -227,7 +226,7 @@ var Ellipse = window.Jay.extend({
      * @param  {Number} y y coordinate
      * @return {boolean} true if contains
      */
-    contains: function (x, y) {
+    contains(x, y) {
         var _x, _y;
 
         if (arguments.length === 2) {
@@ -248,7 +247,7 @@ var Ellipse = window.Jay.extend({
             ((_x * _x) / this.radiusSq.x) +
             ((_y * _y) / this.radiusSq.y)
         ) <= 1.0;
-    },
+    }
 
     /**
      * returns the bounding box for this shape, the smallest Rectangle object completely containing this shape.
@@ -257,12 +256,12 @@ var Ellipse = window.Jay.extend({
      * @function
      * @return {me.Bounds} this shape bounding box Rectangle object
      */
-    getBounds : function () {
+    getBounds() {
         if (typeof this._bounds === "undefined") {
             this._bounds = pool.pull("Bounds");
         }
         return this._bounds;
-    },
+    }
 
     /**
      * clone this Ellipse
@@ -271,7 +270,7 @@ var Ellipse = window.Jay.extend({
      * @function
      * @return {me.Ellipse} new Ellipse
      */
-    clone : function () {
+    clone() {
         return new Ellipse(
             this.pos.x,
             this.pos.y,
@@ -279,5 +278,6 @@ var Ellipse = window.Jay.extend({
             this.radiusV.y * 2
         );
     }
-});
+};
+
 export default Ellipse;

@@ -63,12 +63,13 @@ var measureTextHeight = function(font) {
  * // or just add it to the word container
  * me.game.world.addChild(myFont);
  */
-var BitmapText = Renderable.extend({
+
+class BitmapText extends Renderable {
 
     /** @ignore */
-    init : function (x, y, settings) {
+    constructor(x, y, settings) {
         // call the parent constructor
-        this._super(Renderable, "init", [x, y, settings.width || 0, settings.height || 0]);
+        super(x, y, settings.width || 0, settings.height || 0);
 
         /**
          * Set the default text alignment (or justification),<br>
@@ -158,7 +159,7 @@ var BitmapText = Renderable.extend({
 
         // set the text
         this.setText(settings.text);
-    },
+    }
 
     /**
      * change the font settings
@@ -169,7 +170,7 @@ var BitmapText = Renderable.extend({
      * @param {Number} [scale]
      * @return this object for chaining
      */
-    set : function (textAlign, scale) {
+    set(textAlign, scale) {
         this.textAlign = textAlign;
         // updated scaled Size
         if (scale) {
@@ -178,7 +179,7 @@ var BitmapText = Renderable.extend({
         this.isDirty = true;
 
         return this;
-    },
+    }
 
     /**
      * change the text to be displayed
@@ -188,7 +189,7 @@ var BitmapText = Renderable.extend({
      * @param {Number|String|String[]} value a string, or an array of strings
      * @return this object for chaining
      */
-    setText : function (value) {
+    setText(value) {
         if (typeof value === "undefined") {
             value = "";
         }
@@ -203,8 +204,29 @@ var BitmapText = Renderable.extend({
         }
 
         return this;
-    },
+    }
 
+    /**
+     * defines the color used to tint the bitmap text
+     * @public
+     * @type {me.Color}
+     * @name fillStyle
+     * @see me.Renderable#tint
+     * @memberOf me.BitmapText
+     */
+
+    /**
+     * @ignore
+     */
+    get fillStyle() {
+        return this.tint;
+    }
+    /**
+     * @ignore
+     */
+    set fillStyle(value) {
+        this.tint = value;
+    }
 
     /**
      * change the font display size
@@ -214,14 +236,13 @@ var BitmapText = Renderable.extend({
      * @param {Number} scale ratio
      * @return this object for chaining
      */
-    resize : function (scale) {
+    resize(scale) {
         this.fontScale.set(scale, scale);
         // clear the cache text to recalculate bounds
         this.isDirty = true;
 
         return this;
-    },
-
+    }
 
     /**
      * measure the given text size in pixels
@@ -232,7 +253,7 @@ var BitmapText = Renderable.extend({
      * @param {me.Rect} [ret] a object in which to store the text metrics
      * @returns {TextMetrics} a TextMetrics object with two properties: `width` and `height`, defining the output dimensions
      */
-    measureText : function (text, ret) {
+    measureText(text, ret) {
         text = text || this._text;
 
         var stringHeight = measureTextHeight(this);
@@ -246,17 +267,17 @@ var BitmapText = Renderable.extend({
             textMetrics.height += stringHeight;
         }
         return textMetrics;
-    },
+    }
 
     /**
      * @ignore
      */
-    update : function (/* dt */) {
+    update(/* dt */) {
         if (this.isDirty === true) {
             this.measureText();
         }
         return this.isDirty;
-    },
+    }
 
     /**
      * draw the bitmap font
@@ -268,7 +289,7 @@ var BitmapText = Renderable.extend({
      * @param {Number} [x]
      * @param {Number} [y]
      */
-    draw : function (renderer, text, x, y) {
+    draw(renderer, text, x, y) {
         // save the previous global alpha value
         var _alpha = renderer.globalAlpha();
 
@@ -373,14 +394,13 @@ var BitmapText = Renderable.extend({
         // clear the dirty flag here for
         // backward compatibility
         this.isDirty = false;
-    },
-
+    }
 
     /**
      * Destroy function
      * @ignore
      */
-    destroy : function () {
+    destroy() {
         pool.push(this.fontScale);
         this.fontScale = undefined;
         pool.push(this.fontData);
@@ -388,30 +408,8 @@ var BitmapText = Renderable.extend({
         this._text.length = 0;
         this._super(Renderable, "destroy");
     }
-});
 
-/**
- * defines the color used to tint the bitmap text
- * @public
- * @type {me.Color}
- * @name fillStyle
- * @see me.Renderable#tint
- * @memberOf me.BitmapText
- */
-Object.defineProperty(BitmapText.prototype, "fillStyle", {
-    /**
-     * @ignore
-     */
-    get : function () {
-        return this.tint;
-    },
-    /**
-     * @ignore
-     */
-    set : function (value) {
-        this.tint = value;
-    },
-    configurable : true
-});
+};
+
 
 export default BitmapText;

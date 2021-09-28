@@ -16,13 +16,14 @@ import collision from "./collision.js";
  * @param {Number} [w=me.game.viewport.width] width of the container
  * @param {Number} [h=me.game.viewport.height] height of the container
  */
-var World = Container.extend({
+class World extends Container {
     /**
      * @ignore
      */
-    init : function (x = 0, y = 0, width = Infinity, height = Infinity) {
+    constructor(x = 0, y = 0, width = Infinity, height = Infinity) {
+
         // call the _super constructor
-        this._super(Container, "init", [x, y, width, height, true]);
+        super(x, y, width, height, true);
 
         // world is the root container
         this.name = "rootContainer";
@@ -83,7 +84,7 @@ var World = Container.extend({
             // reset the quadtree
             game.world.broadphase.clear(game.world.getBounds());
         });
-    },
+    }
 
     /**
      * reset the game world
@@ -91,7 +92,7 @@ var World = Container.extend({
      * @memberOf me.World
      * @function
      */
-    reset : function () {
+    reset() {
         // clear the quadtree
         this.broadphase.clear();
 
@@ -99,8 +100,8 @@ var World = Container.extend({
         this.anchorPoint.set(0, 0);
 
         // call the _super constructor
-        this._super(Container, "reset");
-    },
+        super.reset();
+    }
 
     /**
      * update the game world
@@ -108,7 +109,7 @@ var World = Container.extend({
      * @memberOf me.World
      * @function
      */
-    update : function (dt) {
+    update (dt) {
         // clear the quadtree
         this.broadphase.clear();
 
@@ -116,8 +117,9 @@ var World = Container.extend({
         this.broadphase.insertContainer(this);
 
         // call the _super constructor
-        return this._super(Container, "update", [dt]);
+        return super.update(dt);
     }
-});
+
+};
 
 export default World;

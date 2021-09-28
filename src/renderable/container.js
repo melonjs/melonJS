@@ -26,19 +26,22 @@ var globalFloatingCounter = 0;
  * @param {Number} [w=me.game.viewport.width] width of the container
  * @param {Number} [h=me.game.viewport.height] height of the container
  */
-var Container = Renderable.extend({
+
+class Container extends Renderable {
+
     /**
      * @ignore
      */
-    init : function (x = 0, y = 0, width = game.viewport.width, height = game.viewport.height, root = false) {
+    constructor(x = 0, y = 0, width = game.viewport.width, height = game.viewport.height, root = false) {
+
+        // call the _super constructor
+        super(x, y, width, height);
+
         /**
          * keep track of pending sort
          * @ignore
          */
         this.pendingSort = null;
-
-        // call the _super constructor
-        this._super(Renderable, "init", [x, y, width, height]);
 
         /**
          * whether the container is the root of the scene
@@ -139,7 +142,7 @@ var Container = Renderable.extend({
             // Workaround for not updating container child-bounds automatically (it's expensive!)
             event.subscribe(event.CANVAS_ONRESIZE, this.updateBounds.bind(this, true));
         }
-    },
+    }
 
     /**
      * reset the container, removing all childrens, and reseting transforms.
@@ -147,7 +150,7 @@ var Container = Renderable.extend({
      * @memberOf me.Container
      * @function
      */
-    reset : function () {
+    reset() {
         // cancel any sort operation
         if (this.pendingSort) {
             clearTimeout(this.pendingSort);
@@ -167,8 +170,7 @@ var Container = Renderable.extend({
             // just reset some variables
             this.currentTransform.identity();
         }
-    },
-
+    }
 
     /**
      * Add a child to the container <br>
@@ -185,7 +187,7 @@ var Container = Renderable.extend({
      * @param {number} [z] forces the z index of the child to the specified value
      * @return {me.Renderable} the added child
      */
-    addChild : function (child, z) {
+    addChild(child, z) {
         if (child.ancestor instanceof Container) {
             child.ancestor.removeChildNow(child);
         }
@@ -231,7 +233,7 @@ var Container = Renderable.extend({
         this.onChildChange.call(this, this.getChildren().length - 1);
 
         return child;
-    },
+    }
 
     /**
      * Add a child to the container at the specified index<br>
@@ -243,7 +245,7 @@ var Container = Renderable.extend({
      * @param {Number} index
      * @return {me.Renderable} the added child
      */
-    addChildAt : function (child, index) {
+    addChildAt(child, index) {
         if (index >= 0 && index < this.getChildren().length) {
             if (child.ancestor instanceof Container) {
                 child.ancestor.removeChildNow(child);
@@ -281,7 +283,7 @@ var Container = Renderable.extend({
         else {
             throw new Error("Index (" + index + ") Out Of Bounds for addChildAt()");
         }
-    },
+    }
 
     /**
      * The forEach() method executes a provided function once per child element. <br>
@@ -304,7 +306,7 @@ var Container = Renderable.extend({
      * me.game.world.forEach((child, index, array) => { ... });
      * me.game.world.forEach((child, index, array) => { ... }, thisArg);
      */
-    forEach : function (callback, thisArg) {
+    forEach(callback, thisArg) {
         var context = this, i = 0;
         var children = this.getChildren();
 
@@ -322,7 +324,7 @@ var Container = Renderable.extend({
             callback.call(context, children[i], i, children);
             i++;
         }
-    },
+    }
 
     /**
      * Swaps the position (z-index) of 2 children
@@ -332,7 +334,7 @@ var Container = Renderable.extend({
      * @param {me.Renderable} child
      * @param {me.Renderable} child2
      */
-    swapChildren : function (child, child2) {
+    swapChildren(child, child2) {
         var index = this.getChildIndex(child);
         var index2 = this.getChildIndex(child2);
 
@@ -348,7 +350,7 @@ var Container = Renderable.extend({
         else {
             throw new Error(child + " Both the supplied childs must be a child of the caller " + this);
         }
-    },
+    }
 
     /**
      * Returns the Child at the specified index
@@ -357,14 +359,14 @@ var Container = Renderable.extend({
      * @function
      * @param {Number} index
      */
-    getChildAt : function (index) {
+    getChildAt(index) {
         if (index >= 0 && index < this.getChildren().length) {
             return this.getChildren()[index];
         }
         else {
             throw new Error("Index (" + index + ") Out Of Bounds for getChildAt()");
         }
-    },
+    }
 
     /**
      * Returns the index of the given Child
@@ -373,9 +375,9 @@ var Container = Renderable.extend({
      * @function
      * @param {me.Renderable} child
      */
-    getChildIndex : function (child) {
+    getChildIndex(child) {
         return this.getChildren().indexOf(child);
-    },
+    }
 
     /**
      * Returns the next child within the container or undefined if none
@@ -384,13 +386,13 @@ var Container = Renderable.extend({
      * @function
      * @param {me.Renderable} child
      */
-    getNextChild : function (child) {
+    getNextChild(child) {
         var index = this.getChildren().indexOf(child) - 1;
         if (index >= 0 && index < this.getChildren().length) {
             return this.getChildAt(index);
         }
         return undefined;
-    },
+    }
 
     /**
      * Returns true if contains the specified Child
@@ -400,9 +402,9 @@ var Container = Renderable.extend({
      * @param {me.Renderable} child
      * @return {Boolean}
      */
-    hasChild : function (child) {
+    hasChild(child) {
         return this === child.ancestor;
-    },
+    }
 
     /**
      * return the child corresponding to the given property and value.<br>
@@ -430,7 +432,7 @@ var Container = Renderable.extend({
      * var zIndex10 = me.game.world.getChildByProp("z", 10);
      * var inViewport = me.game.world.getChildByProp("inViewport", true);
      */
-    getChildByProp : function (prop, value)    {
+    getChildByProp(prop, value)    {
         var objList = [];
 
         function compare(obj, prop) {
@@ -453,7 +455,7 @@ var Container = Renderable.extend({
         });
 
         return objList;
-    },
+    }
 
     /**
      * returns the list of childs with the specified class type
@@ -464,7 +466,7 @@ var Container = Renderable.extend({
      * @param {Object} class type
      * @return {me.Renderable[]} Array of children
      */
-    getChildByType : function (_class) {
+    getChildByType(_class) {
         var objList = [];
 
         this.forEach((child) => {
@@ -477,7 +479,7 @@ var Container = Renderable.extend({
         });
 
         return objList;
-    },
+    }
 
     /**
      * returns the list of childs with the specified name<br>
@@ -491,9 +493,9 @@ var Container = Renderable.extend({
      * @param {String|RegExp|Number|Boolean} name child name
      * @return {me.Renderable[]} Array of children
      */
-    getChildByName : function (name) {
+    getChildByName(name) {
         return this.getChildByProp("name", name);
-    },
+    }
 
     /**
      * return the child corresponding to the specified GUID<br>
@@ -506,10 +508,10 @@ var Container = Renderable.extend({
      * @param {String|RegExp|Number|Boolean} GUID child GUID
      * @return {me.Renderable} corresponding child or null
      */
-    getChildByGUID : function (guid) {
+    getChildByGUID(guid) {
         var obj = this.getChildByProp("GUID", guid);
         return (obj.length > 0) ? obj[0] : null;
-    },
+    }
 
 
     /**
@@ -521,12 +523,12 @@ var Container = Renderable.extend({
      * @function
      * @return {me.Renderable[]} an array of renderable object
      */
-    getChildren : function () {
+    getChildren() {
         if (typeof this.children === "undefined") {
             this.children = [];
         }
         return this.children;
-    },
+    }
 
     /**
      * update the bounding box for this shape.
@@ -536,9 +538,10 @@ var Container = Renderable.extend({
      * @function
      * @return {me.Bounds} this shape bounding box Rectangle object
      */
-    updateBounds : function (forceUpdateChildBounds = false) {
+    updateBounds(forceUpdateChildBounds = false) {
+
         // call parent method
-        this._super(Renderable, "updateBounds");
+        super.updateBounds();
 
         var bounds = this.getBounds();
 
@@ -554,7 +557,7 @@ var Container = Renderable.extend({
         }
 
         return bounds;
-    },
+    }
 
     /**
      * Checks if this container is root or if it's attached to the root container.
@@ -564,7 +567,7 @@ var Container = Renderable.extend({
      * @function
      * @returns Boolean
      */
-    isAttachedToRoot : function () {
+    isAttachedToRoot() {
         if (this.root === true) {
             return true;
         } else {
@@ -577,7 +580,7 @@ var Container = Renderable.extend({
             }
             return false;
         }
-    },
+    }
 
     /**
      * update the cointainer's bounding rect (private)
@@ -586,8 +589,9 @@ var Container = Renderable.extend({
      * @memberOf me.Container.prototype
      * @function
      */
-    updateBoundsPos : function (newX, newY) {
-        this._super(Renderable, "updateBoundsPos", [ newX, newY ]);
+    updateBoundsPos(newX, newY) {
+        // call the parent method
+        super.updateBoundsPos(newX, newY);
 
         // Notify children that the parent's position has changed
         this.forEach((child) => {
@@ -601,18 +605,18 @@ var Container = Renderable.extend({
             }
         });
         return this.getBounds();
-    },
+    }
 
     /**
      * @ignore
      */
-    onActivateEvent : function () {
+    onActivateEvent() {
         this.forEach((child) => {
             if (typeof child.onActivateEvent === "function") {
                 child.onActivateEvent();
             }
         });
-    },
+    }
 
     /**
      * Invokes the removeChildNow in a defer, to ensure the child is removed safely after the update & draw stack has completed
@@ -623,15 +627,14 @@ var Container = Renderable.extend({
      * @param {me.Renderable} child
      * @param {Boolean} [keepalive=False] True to prevent calling child.destroy()
      */
-    removeChild : function (child, keepalive) {
+    removeChild(child, keepalive) {
         if (this.hasChild(child)) {
             utils.function.defer(deferredRemove, this, child, keepalive);
         }
         else {
             throw new Error("Child is not mine.");
         }
-    },
-
+    }
 
     /**
      * Removes (and optionally destroys) a child from the container.<br>
@@ -643,7 +646,7 @@ var Container = Renderable.extend({
      * @param {me.Renderable} child
      * @param {Boolean} [keepalive=False] True to prevent calling child.destroy()
      */
-    removeChildNow : function (child, keepalive) {
+    removeChildNow(child, keepalive) {
         if (this.hasChild(child) && (this.getChildIndex(child) >= 0)) {
             if (typeof child.onDeactivateEvent === "function") {
                 child.onDeactivateEvent();
@@ -677,7 +680,7 @@ var Container = Renderable.extend({
             // triggered callback if defined
             this.onChildChange.call(this, childIndex);
         }
-    },
+    }
 
     /**
      * Automatically set the specified property of all childs to the given value
@@ -688,14 +691,14 @@ var Container = Renderable.extend({
      * @param {Object} value property value
      * @param {Boolean} [recursive=false] recursively apply the value to child containers if true
      */
-    setChildsProperty : function (prop, val, recursive) {
+    setChildsProperty(prop, val, recursive) {
         this.forEach((child) => {
             if ((recursive === true) && (child instanceof Container)) {
                 child.setChildsProperty(prop, val, recursive);
             }
             child[prop] = val;
         });
-    },
+    }
 
     /**
      * Move the child in the group one step forward (z depth).
@@ -704,13 +707,13 @@ var Container = Renderable.extend({
      * @function
      * @param {me.Renderable} child
      */
-    moveUp : function (child) {
+    moveUp(child) {
         var childIndex = this.getChildIndex(child);
         if (childIndex - 1 >= 0) {
             // note : we use an inverted loop
             this.swapChildren(child, this.getChildAt(childIndex - 1));
         }
-    },
+    }
 
     /**
      * Move the child in the group one step backward (z depth).
@@ -719,13 +722,13 @@ var Container = Renderable.extend({
      * @function
      * @param {me.Renderable} child
      */
-    moveDown : function (child) {
+    moveDown(child) {
         var childIndex = this.getChildIndex(child);
         if (childIndex >= 0 && (childIndex + 1) < this.getChildren().length) {
             // note : we use an inverted loop
             this.swapChildren(child, this.getChildAt(childIndex + 1));
         }
-    },
+    }
 
     /**
      * Move the specified child to the top(z depth).
@@ -734,7 +737,7 @@ var Container = Renderable.extend({
      * @function
      * @param {me.Renderable} child
      */
-    moveToTop : function (child) {
+    moveToTop(child) {
         var childIndex = this.getChildIndex(child);
         if (childIndex > 0) {
             var children = this.getChildren();
@@ -743,7 +746,7 @@ var Container = Renderable.extend({
             // increment our child z value based on the previous child depth
             child.pos.z = children[1].pos.z + 1;
         }
-    },
+    }
 
     /**
      * Move the specified child the bottom (z depth).
@@ -752,7 +755,7 @@ var Container = Renderable.extend({
      * @function
      * @param {me.Renderable} child
      */
-    moveToBottom : function (child) {
+    moveToBottom(child) {
         var childIndex = this.getChildIndex(child);
         var children = this.getChildren();
         if (childIndex >= 0 && childIndex < (children.length - 1)) {
@@ -761,7 +764,7 @@ var Container = Renderable.extend({
             // increment our child z value based on the next child depth
             child.pos.z = children[(children.length - 2)].pos.z - 1;
         }
-    },
+    }
 
     /**
      * Manually trigger the sort of all the childs in the container</p>
@@ -771,7 +774,7 @@ var Container = Renderable.extend({
      * @function
      * @param {Boolean} [recursive=false] recursively sort all containers if true
      */
-    sort : function (recursive) {
+    sort(recursive) {
         // do nothing if there is already a pending sort
         if (!this.pendingSort) {
             if (recursive === true) {
@@ -793,75 +796,77 @@ var Container = Renderable.extend({
                 game.repaint();
             }, this, this);
         }
-    },
+    }
 
     /**
      * @ignore
      */
-    onDeactivateEvent : function () {
+    onDeactivateEvent() {
         this.forEach((child) => {
             if (typeof child.onDeactivateEvent === "function") {
                 child.onDeactivateEvent();
             }
         });
-    },
+    }
 
     /**
      * Z Sorting function
      * @ignore
      */
-    _sortZ : function (a, b) {
+    _sortZ(a, b) {
         return (b.pos && a.pos) ? (b.pos.z - a.pos.z) : (a.pos ? -Infinity : Infinity);
-    },
+    }
 
     /**
      * Reverse Z Sorting function
      * @ignore
      */
-    _sortReverseZ : function (a, b) {
+    _sortReverseZ(a, b) {
         return (a.pos && b.pos) ? (a.pos.z - b.pos.z) : (a.pos ? Infinity : -Infinity);
-    },
+    }
 
     /**
      * X Sorting function
      * @ignore
      */
-    _sortX : function (a, b) {
+    _sortX(a, b) {
         if (!b.pos || !a.pos) {
             return (a.pos ? -Infinity : Infinity);
         }
         var result = b.pos.z - a.pos.z;
         return (result ? result : (b.pos.x - a.pos.x));
-    },
+    }
 
     /**
      * Y Sorting function
      * @ignore
      */
-    _sortY : function (a, b) {
+    _sortY(a, b) {
         if (!b.pos || !a.pos) {
             return (a.pos ? -Infinity : Infinity);
         }
         var result = b.pos.z - a.pos.z;
         return (result ? result : (b.pos.y - a.pos.y));
-    },
+    }
 
     /**
      * Destroy function<br>
      * @ignore
      */
-    destroy : function () {
+    destroy() {
         // empty the container
         this.reset();
         // call the parent destroy method
-        this._super(Renderable, "destroy", arguments);
-    },
+        super.destroy(arguments);
+    }
 
     /**
      * @ignore
      */
-    update : function (dt) {
-        this._super(Renderable, "update", [dt]);
+    update(dt) {
+        // call the parent method
+        super.update(dt);
+
         var isDirty = false;
         var isFloating = false;
         var isPaused = state.isPaused();
@@ -902,12 +907,12 @@ var Container = Renderable.extend({
         }
 
         return isDirty;
-    },
+    }
 
     /**
      * @ignore
      */
-    draw : function (renderer, rect) {
+    draw(renderer, rect) {
         var isFloating = false;
         var bounds = this.getBounds();
 
@@ -959,6 +964,6 @@ var Container = Renderable.extend({
             }
         }
     }
-});
+};
 
 export default Container;

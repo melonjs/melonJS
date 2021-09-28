@@ -7,6 +7,7 @@ import Renderable from "./renderable.js";
 
 
 /**
+ * @classdesc
  * An object to display a fixed or animated sprite on screen.
  * @class
  * @extends me.Renderable
@@ -43,11 +44,16 @@ import Renderable from "./renderable.js";
  *     region : "npc2.png",
  * });
  */
-var Sprite = Renderable.extend({
+
+class Sprite extends Renderable {
+
     /**
      * @ignore
      */
-    init : function (x, y, settings) {
+    constructor(x, y, settings) {
+
+        // call the super constructor
+        super(x, y, 0, 0);
 
         /**
          * pause and resume animation
@@ -120,9 +126,6 @@ var Sprite = Renderable.extend({
             callback : null,
             state : false
         };
-
-        // call the super constructor
-        this._super(Renderable, "init", [ x, y, 0, 0 ]);
 
         // set the proper image/texture to use
         if (settings.image instanceof Texture) {
@@ -209,7 +212,7 @@ var Sprite = Renderable.extend({
 
         // enable currentTransform for me.Sprite based objects
         this.autoTransform = true;
-    },
+    }
 
     /**
      * return the flickering state of the object
@@ -218,9 +221,9 @@ var Sprite = Renderable.extend({
      * @function
      * @return {Boolean}
      */
-    isFlickering : function () {
+    isFlickering() {
         return this._flicker.isFlickering;
-    },
+    }
 
     /**
      * make the object flicker
@@ -237,7 +240,7 @@ var Sprite = Renderable.extend({
      *     me.game.world.removeChild(this);
      * });
      */
-    flicker : function (duration, callback) {
+    flicker(duration, callback) {
         this._flicker.duration = duration;
         if (this._flicker.duration <= 0) {
             this._flicker.isFlickering = false;
@@ -248,7 +251,7 @@ var Sprite = Renderable.extend({
             this._flicker.isFlickering = true;
         }
         return this;
-    },
+    }
 
     /**
      * add an animation <br>
@@ -284,7 +287,7 @@ var Sprite = Renderable.extend({
      * // set the standing animation as default
      * this.setCurrentAnimation("stand");
      */
-    addAnimation : function (name, index, animationspeed) {
+    addAnimation(name, index, animationspeed) {
         this.anim[name] = {
             name : name,
             frames : [],
@@ -350,7 +353,7 @@ var Sprite = Renderable.extend({
         this.anim[name].length = counter;
 
         return counter;
-    },
+    }
 
     /**
      * set the current animation
@@ -391,7 +394,7 @@ var Sprite = Renderable.extend({
      *    return false; // do not reset to first frame
      * }).bind(this));
      **/
-    setCurrentAnimation : function (name, resetAnim, _preserve_dt) {
+    setCurrentAnimation(name, resetAnim, _preserve_dt) {
         if (this.anim[name]) {
             this.current.name = name;
             this.current.length = this.anim[this.current.name].length;
@@ -411,7 +414,7 @@ var Sprite = Renderable.extend({
             throw new Error("animation id '" + name + "' not defined");
         }
         return this;
-    },
+    }
 
     /**
      * reverse the given or current animation if none is specified
@@ -422,7 +425,7 @@ var Sprite = Renderable.extend({
      * @return {me.Sprite} Reference to this object for method chaining
      * @see me.Sprite#animationspeed
      */
-    reverseAnimation : function (name) {
+    reverseAnimation(name) {
         if (typeof name !== "undefined" && typeof this.anim[name] !== "undefined") {
             this.anim[name].frames.reverse();
         } else {
@@ -430,7 +433,7 @@ var Sprite = Renderable.extend({
         }
         this.isDirty = true;
         return this;
-    },
+    }
 
     /**
      * return true if the specified animation is the current one.
@@ -444,9 +447,9 @@ var Sprite = Renderable.extend({
      *     // do something funny...
      * }
      */
-    isCurrentAnimation : function (name) {
+    isCurrentAnimation(name) {
         return this.current.name === name;
-    },
+    }
 
     /**
      * change the current texture atlas region for this sprite
@@ -460,7 +463,7 @@ var Sprite = Renderable.extend({
      * // change the sprite to "shadedDark13.png";
      * mySprite.setRegion(game.texture.getRegion("shadedDark13.png"));
      */
-    setRegion : function (region) {
+    setRegion(region) {
         // set the source texture for the given region
         this.image = this.source.getTexture(region);
         // set the sprite offset within the texture
@@ -479,7 +482,7 @@ var Sprite = Renderable.extend({
         }
         this.isDirty = true;
         return this;
-    },
+    }
 
     /**
      * force the current animation frame index.
@@ -492,10 +495,10 @@ var Sprite = Renderable.extend({
      * // reset the current animation to the first frame
      * this.setAnimationFrame();
      */
-    setAnimationFrame : function (idx) {
+    setAnimationFrame(idx) {
         this.current.idx = (idx || 0) % this.current.length;
         return this.setRegion(this.getAnimationFrameObjectByIndex(this.current.idx));
-    },
+    }
 
     /**
      * return the current animation frame index.
@@ -504,9 +507,9 @@ var Sprite = Renderable.extend({
      * @function
      * @return {Number} current animation frame index
      */
-    getCurrentAnimationFrame : function () {
+    getCurrentAnimationFrame() {
         return this.current.idx;
-    },
+    }
 
     /**
      * Returns the frame object by the index.
@@ -516,14 +519,14 @@ var Sprite = Renderable.extend({
      * @private
      * @return {Number} if using number indices. Returns {Object} containing frame data if using texture atlas
      */
-    getAnimationFrameObjectByIndex : function (id) {
+    getAnimationFrameObjectByIndex(id) {
         return this.anim[this.current.name].frames[id];
-    },
+    }
 
     /**
      * @ignore
      */
-    update : function (dt) {
+    update(dt) {
 
         // Update animation if necessary
         if (!this.animationpause && this.current && this.current.length > 0) {
@@ -581,22 +584,22 @@ var Sprite = Renderable.extend({
         }
 
         return this.isDirty;
-    },
+    }
 
     /**
      * Destroy function<br>
      * @ignore
      */
-    destroy : function () {
+    destroy() {
         pool.push(this.offset);
         this.offset = undefined;
-        this._super(Renderable, "destroy");
-    },
+        super.destroy();
+    }
 
     /**
      * @ignore
      */
-    draw : function (renderer) {
+    draw(renderer) {
         // do nothing if we are flickering
         if (this._flicker.isFlickering) {
             this._flicker.state = !this._flicker.state;
@@ -638,6 +641,6 @@ var Sprite = Renderable.extend({
             w, h                         // dw,dh
         );
     }
-});
+};
 
 export default Sprite;

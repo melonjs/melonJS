@@ -1,14 +1,15 @@
 describe("me.plugin", function () {
-    describe("patch", function () {
-        var BaseObject = me.Object.extend({
-            init : function () {
-                this.name = "John Doe";
-            },
 
-            setType : function (t) {
+    describe("patch", function () {
+        class BaseObject {
+            constructor() {
+                this.name = "John Doe";
+            }
+
+            setType(t) {
                 this.type = t;
             }
-        });
+        };
 
         me.plugin.patch(BaseObject, "setType", function (t) {
             this._patched(t);
@@ -31,7 +32,12 @@ describe("me.plugin", function () {
     });
 
     describe("register", function () {
-        var Plugin = me.plugin.Base.extend({});
+        class Plugin extends me.plugin.Base {
+            constructor() {
+                super();
+                this.name = "myPlugin";
+            }
+        };
 
         me.plugin.register(Plugin, "ExamplePlugin");
 
@@ -43,4 +49,5 @@ describe("me.plugin", function () {
             expect(me.plugin.ExamplePlugin).not.toBeDefined();
         });
     });
+
 });

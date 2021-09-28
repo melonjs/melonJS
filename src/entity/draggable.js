@@ -13,7 +13,8 @@ import Entity from "./entity.js";
 * @param {Number} y the y coordinates of the entity object
 * @param {Object} settings Entity properties (see {@link me.Entity})
 */
-var DraggableEntity = Entity.extend({
+class DraggableEntity extends Entity {
+
     /**
      * Constructor
      * @name init
@@ -23,15 +24,15 @@ var DraggableEntity = Entity.extend({
      * @param {Number} y the y postion of the entity
      * @param {Object} settings the additional entity settings
      */
-    init: function (x, y, settings) {
-        this._super(Entity, "init", [x, y, settings]);
+    constructor(x, y, settings) {
+        super(x, y, settings);
         this.dragging = false;
         this.dragId = null;
         this.grabOffset = new Vector2d(0, 0);
         this.onPointerEvent = input.registerPointerEvent;
         this.removePointerEvent = input.releasePointerEvent;
         this.initEvents();
-    },
+    }
 
     /**
      * Initializes the events the modules needs to listen to
@@ -43,7 +44,7 @@ var DraggableEntity = Entity.extend({
      * @memberOf me.DraggableEntity
      * @function
      */
-    initEvents: function () {
+    initEvents() {
         var self = this;
         /**
          * @ignore
@@ -71,7 +72,7 @@ var DraggableEntity = Entity.extend({
                 self.dragEnd(e);
             }
         });
-    },
+    }
 
     /**
      * Translates a pointer event to a me.event
@@ -82,9 +83,9 @@ var DraggableEntity = Entity.extend({
      * @param {String} translation the me.event you want to translate
      * the event to
      */
-    translatePointerEvent: function (e, translation) {
+    translatePointerEvent(e, translation) {
         event.publish(translation, [e, this]);
-    },
+    }
 
     /**
      * Gets called when the user starts dragging the entity
@@ -93,14 +94,14 @@ var DraggableEntity = Entity.extend({
      * @function
      * @param {Object} x the pointer event
      */
-    dragStart: function (e) {
+    dragStart(e) {
         if (this.dragging === false) {
             this.dragging = true;
             this.grabOffset.set(e.gameX, e.gameY);
             this.grabOffset.sub(this.pos);
             return false;
         }
-    },
+    }
 
     /**
      * Gets called when the user drags this entity around
@@ -109,12 +110,12 @@ var DraggableEntity = Entity.extend({
      * @function
      * @param {Object} x the pointer event
      */
-    dragMove: function (e) {
+    dragMove(e) {
         if (this.dragging === true) {
             this.pos.set(e.gameX, e.gameY, this.pos.z); //TODO : z ?
             this.pos.sub(this.grabOffset);
         }
-    },
+    }
 
     /**
      * Gets called when the user stops dragging the entity
@@ -123,12 +124,12 @@ var DraggableEntity = Entity.extend({
      * @function
      * @param {Object} x the pointer event
      */
-    dragEnd: function () {
+    dragEnd() {
         if (this.dragging === true) {
             this.dragging = false;
             return false;
         }
-    },
+    }
 
     /**
      * Destructor
@@ -136,12 +137,12 @@ var DraggableEntity = Entity.extend({
      * @memberOf me.DraggableEntity
      * @function
      */
-    destroy: function () {
+    destroy() {
         event.unsubscribe(event.POINTERMOVE, this.dragMove);
         event.unsubscribe(event.DRAGSTART, this.dragStart);
         event.unsubscribe(event.DRAGEND, this.dragEnd);
         this.removePointerEvent("pointerdown", this);
         this.removePointerEvent("pointerup", this);
     }
-});
+};
 export default DraggableEntity;

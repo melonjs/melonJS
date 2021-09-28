@@ -1,6 +1,5 @@
 import utils from "./../utils/utils.js";
 import { version } from "./../index.js";
-import "jay-extend";
 
 /**
  * This namespace is a container for all registered plugins.
@@ -10,6 +9,22 @@ import "jay-extend";
  */
 export var plugins = {};
 
+
+class BasePlugin {
+
+    constructor() {
+        /**
+         * define the minimum required version of melonJS<br>
+         * this can be overridden by the plugin
+         * @public
+         * @type String
+         * @default "__VERSION__"
+         * @name me.plugin.Base#version
+         */
+        this.version = "__VERSION__";
+    }
+}
+
 /**
  * @namespace plugin
  * @memberOf me
@@ -17,29 +32,16 @@ export var plugins = {};
 export var plugin = {
 
     /**
-    * a base Object for plugin <br>
-    * plugin must be installed using the register function
-    * @see me.plugin
-    * @class
-    * @extends me.Object
-    * @name plugin.Base
-    * @memberOf me
-    * @constructor
-    */
-    Base : window.Jay.extend({
-        /** @ignore */
-        init : function () {
-            /**
-             * define the minimum required version of melonJS<br>
-             * this can be overridden by the plugin
-             * @public
-             * @type String
-             * @default "__VERSION__"
-             * @name me.plugin.Base#version
-             */
-            this.version = "__VERSION__";
-        }
-    }),
+     * a base Object for plugin <br>
+     * plugin must be installed using the register function
+     * @see me.plugin
+     * @class
+     * @extends me.Object
+     * @name plugin.Base
+     * @memberOf me
+     * @constructor
+     */
+    Base : BasePlugin,
 
     /**
      * patch a melonJS function

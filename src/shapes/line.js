@@ -2,7 +2,8 @@ import Vector2d from "./../math/vector2.js";
 import Polygon from "./poly.js";
 
 /**
- * a line segment Object.<br>
+ * @classdesc
+ * a line segment Object
  * @class
  * @extends me.Polygon
  * @memberOf me
@@ -11,7 +12,8 @@ import Polygon from "./poly.js";
  * @param {Number} y origin point of the Line
  * @param {me.Vector2d[]} points array of vectors defining the Line
  */
-var Line = Polygon.extend({
+
+class Line extends Polygon {
 
     /**
      * Returns true if the Line contains the given point
@@ -31,7 +33,7 @@ var Line = Polygon.extend({
      * @param  {Number} y y coordinate
      * @return {boolean} true if contains
      */
-    contains: function () {
+    contains() {
         var _x, _y;
 
         if (arguments.length === 2) {
@@ -53,7 +55,7 @@ var Line = Polygon.extend({
 
         //(Cy - Ay) * (Bx - Ax) = (By - Ay) * (Cx - Ax)
         return (_y - start.y) * (end.x - start.x) === (end.y - start.y) * (_x - start.x);
-    },
+    }
 
     /**
      * Computes the calculated collision edges and normals.
@@ -62,7 +64,7 @@ var Line = Polygon.extend({
      * @memberOf me.Line.prototype
      * @function
      */
-    recalc : function () {
+    recalc() {
         var edges = this.edges;
         var normals = this.normals;
         var indices = this.indices;
@@ -89,7 +91,7 @@ var Line = Polygon.extend({
         indices.length = 0;
 
         return this;
-    },
+    }
 
     /**
      * clone this line segment
@@ -98,12 +100,14 @@ var Line = Polygon.extend({
      * @function
      * @return {me.Line} new Line
      */
-    clone : function () {
+    clone() {
         var copy = [];
         this.points.forEach(function (point) {
             copy.push(point.clone());
         });
         return new Line(this.pos.x, this.pos.y, copy);
     }
-});
+
+};
+
 export default Line;

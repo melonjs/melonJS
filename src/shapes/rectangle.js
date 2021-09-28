@@ -2,6 +2,7 @@ import Vector2d from "./../math/vector2.js";
 import Polygon from "./poly.js";
 
 /**
+ * @classdesc
  * a rectangle Object
  * @class
  * @extends me.Polygon
@@ -12,25 +13,24 @@ import Polygon from "./poly.js";
  * @param {Number} w width of the rectangle
  * @param {Number} h height of the rectangle
  */
-var Rect = Polygon.extend({
-    /**
-     * @ignore
-     */
-    init : function (x, y, w, h) {
+
+class Rect extends Polygon {
+
+    constructor(x, y, w, h) {
         // parent constructor
-        this._super(Polygon, "init", [x, y, [
+        super(x, y, [
             new Vector2d(0, 0), // 0, 0
             new Vector2d(w, 0), // 1, 0
             new Vector2d(w, h), // 1, 1
             new Vector2d(0, h)  // 0, 1
-        ]]);
+        ]);
         this.shapeType = "Rectangle";
-    },
+    }
 
     /** @ignore */
-    onResetEvent : function (x, y, w, h) {
+    onResetEvent(x, y, w, h) {
         this.setShape(x, y, w, h);
-    },
+    }
 
     /**
      * set new value to the rectangle shape
@@ -43,7 +43,7 @@ var Rect = Polygon.extend({
      * @param {Number} [h] height of the rectangle, if a numeral width parameter is specified
      * @return {me.Rect} this rectangle
      */
-    setShape : function (x, y, w, h) {
+    setShape(x, y, w, h) {
         var points = w; // assume w is an array by default
 
         this.pos.set(x, y);
@@ -58,7 +58,168 @@ var Rect = Polygon.extend({
 
         this.setVertices(points);
         return this;
-    },
+    }
+
+
+    /**
+     * left coordinate of the Rectangle
+     * @public
+     * @type {Number}
+     * @name left
+     * @memberOf me.Rect
+     */
+
+    /**
+     * @ignore
+     */
+    get left() {
+        return this.pos.x;
+    }
+
+    /**
+     * right coordinate of the Rectangle
+     * @public
+     * @type {Number}
+     * @name right
+     * @memberOf me.Rect
+     */
+
+    /**
+     * @ignore
+     */
+    get right() {
+        var w = this.width;
+        return (this.pos.x + w) || w;
+    }
+
+    /**
+     * top coordinate of the Rectangle
+     * @public
+     * @type {Number}
+     * @name top
+     * @memberOf me.Rect
+     */
+
+    /**
+     * @ignore
+     */
+    get top() {
+        return this.pos.y;
+    }
+
+    /**
+     * bottom coordinate of the Rectangle
+     * @public
+     * @type {Number}
+     * @name bottom
+     * @memberOf me.Rect
+     */
+
+    /**
+     * @ignore
+     */
+    get bottom() {
+        var h = this.height;
+        return (this.pos.y + h) || h;
+    }
+
+    /**
+     * width of the Rectangle
+     * @public
+     * @type {Number}
+     * @name width
+     * @memberOf me.Rect
+     */
+
+    /**
+     * @ignore
+     */
+    get width() {
+        return this.points[2].x;
+    }
+    /**
+     * @ignore
+     */
+    set width(value) {
+        this.points[1].x = this.points[2].x = value;
+        this.recalc();
+        this.updateBounds();
+    }
+
+    /**
+     * height of the Rectangle
+     * @public
+     * @type {Number}
+     * @name height
+     * @memberOf me.Rect
+     */
+
+    /**
+     * @ignore
+     */
+    get height() {
+        return this.points[2].y;
+    }
+    /**
+     * @ignore
+     */
+    set height(value) {
+        this.points[2].y = this.points[3].y = value;
+        this.recalc();
+        this.updateBounds();
+    }
+
+    /**
+     * absolute center of this rectangle on the horizontal axis
+     * @public
+     * @type {Number}
+     * @name centerX
+     * @memberOf me.Rect
+     */
+
+    /**
+     * @ignore
+     */
+    get centerX() {
+        if (isFinite(this.width)) {
+            return this.pos.x + (this.width / 2);
+        } else {
+            return this.width;
+        }
+    }
+
+    /**
+     * @ignore
+     */
+    set centerX (value) {
+        this.pos.x = value - (this.width / 2);
+    }
+
+    /**
+     * absolute center of this rectangle on the vertical axis
+     * @public
+     * @type {Number}
+     * @name centerY
+     * @memberOf me.Rect
+     */
+
+    /**
+     * @ignore
+     */
+    get centerY() {
+        if (isFinite(this.height)) {
+            return this.pos.y + (this.height / 2);
+        } else {
+            return this.height;
+        }
+    }
+    
+    /**
+     * @ignore
+     */
+    set centerY(value) {
+        this.pos.y = value - (this.height / 2);
+    }
 
     /**
      * resize the rectangle
@@ -69,11 +230,11 @@ var Rect = Polygon.extend({
      * @param {Number} h new height of the rectangle
      * @return {me.Rect} this rectangle
      */
-    resize : function (w, h) {
+    resize(w, h) {
         this.width = w;
         this.height = h;
         return this;
-    },
+    }
 
     /**
      * scale the rectangle
@@ -84,11 +245,11 @@ var Rect = Polygon.extend({
      * @param {Number} [y=x] a number representing the ordinate of the scaling vector.
      * @return {me.Rect} this rectangle
      */
-    scale : function (x, y = x) {
+    scale(x, y = x) {
         this.width *= x;
         this.height *= y;
         return this;
-    },
+    }
 
     /**
      * clone this rectangle
@@ -97,9 +258,9 @@ var Rect = Polygon.extend({
      * @function
      * @return {me.Rect} new rectangle
      */
-    clone : function () {
+    clone() {
         return new Rect(this.pos.x, this.pos.y, this.width, this.height);
-    },
+    }
 
     /**
      * copy the position and size of the given rectangle into this one
@@ -109,9 +270,9 @@ var Rect = Polygon.extend({
      * @param {me.Rect} rect Source rectangle
      * @return {me.Rect} new rectangle
      */
-    copy : function (rect) {
+    copy(rect) {
         return this.setShape(rect.pos.x, rect.pos.y, rect.width, rect.height);
-    },
+    }
 
     /**
      * translate the rect by the specified offset
@@ -130,7 +291,7 @@ var Rect = Polygon.extend({
      * @param {me.Vector2d} v vector offset
      * @return {me.Rect} this rectangle
      */
-    translate : function () {
+    translate() {
         var _x, _y;
 
         if (arguments.length === 2) {
@@ -147,7 +308,7 @@ var Rect = Polygon.extend({
         this.pos.y += _y;
 
         return this;
-    },
+    }
 
     /**
      * Shifts the rect to the given position vector.
@@ -164,7 +325,7 @@ var Rect = Polygon.extend({
      * @param {Number} x
      * @param {Number} y
      */
-    shift : function () {
+    shift() {
         if (arguments.length === 2) {
             // x, y
             this.pos.set(arguments[0], arguments[1]);
@@ -172,7 +333,7 @@ var Rect = Polygon.extend({
             // vector
             this.pos.setV(arguments[0]);
         }
-    },
+    }
 
     /**
      * merge this rectangle with another one
@@ -182,7 +343,7 @@ var Rect = Polygon.extend({
      * @param {me.Rect} rect other rectangle to union with
      * @return {me.Rect} the union(ed) rectangle
      */
-    union : function (/** {me.Rect} */ r) {
+    union(/** {me.Rect} */ r) {
         var x1 = Math.min(this.left, r.left);
         var y1 = Math.min(this.top, r.top);
 
@@ -194,7 +355,7 @@ var Rect = Polygon.extend({
         this.pos.set(x1, y1);
 
         return this;
-    },
+    }
 
     /**
      * check if this rectangle is intersecting with the specified one
@@ -204,14 +365,14 @@ var Rect = Polygon.extend({
      * @param  {me.Rect} rect
      * @return {boolean} true if overlaps
      */
-    overlaps : function (r) {
+    overlaps(r) {
         return (
             this.left < r.right &&
             r.left < this.right &&
             this.top < r.bottom &&
             r.top < this.bottom
         );
-    },
+    }
 
     /**
      * Returns true if the rectangle contains the given rectangle
@@ -240,7 +401,7 @@ var Rect = Polygon.extend({
      * @param {me.Vector2d} point
      * @return {boolean} true if contains
      */
-    contains: function () {
+    contains() {
         var arg0 = arguments[0];
         var _x1, _x2, _y1, _y2;
         if (arguments.length === 2) {
@@ -266,7 +427,7 @@ var Rect = Polygon.extend({
              _y1 >= this.top &&
              _y2 <= this.bottom
          );
-    },
+    }
 
     /**
      * check if this rectangle is identical to the specified one
@@ -276,14 +437,14 @@ var Rect = Polygon.extend({
      * @param  {me.Rect} rect
      * @return {boolean} true if equals
      */
-    equals: function (r) {
+    equals(r) {
         return (
             r.left === this.left &&
             r.right === this.right &&
             r.top === this.top &&
             r.bottom === this.bottom
         );
-    },
+    }
 
     /**
      * determines whether all coordinates of this rectangle are finite numbers.
@@ -292,9 +453,9 @@ var Rect = Polygon.extend({
      * @function
      * @return {boolean} false if all coordinates are positive or negative Infinity or NaN; otherwise, true.
      */
-    isFinite: function () {
+    isFinite() {
         return (isFinite(this.pos.x) && isFinite(this.pos.y) && isFinite(this.width) && isFinite(this.height));
-    },
+    }
 
     /**
      * Returns a polygon whose edges are the same as this box.
@@ -303,187 +464,12 @@ var Rect = Polygon.extend({
      * @function
      * @return {me.Polygon} a new Polygon that represents this rectangle.
      */
-    toPolygon: function () {
+    toPolygon() {
         return new Polygon(
             this.pos.x, this.pos.y, this.points
         );
     }
-});
+};
 
-// redefine some properties to ease our life when getting the rectangle coordinates
-
-/**
- * left coordinate of the Rectangle
- * @public
- * @type {Number}
- * @name left
- * @memberOf me.Rect
- */
-Object.defineProperty(Rect.prototype, "left", {
-    /**
-     * @ignore
-     */
-    get : function () {
-        return this.pos.x;
-    },
-    configurable : true
-});
-
-/**
- * right coordinate of the Rectangle
- * @public
- * @type {Number}
- * @name right
- * @memberOf me.Rect
- */
-Object.defineProperty(Rect.prototype, "right", {
-    /**
-     * @ignore
-     */
-    get : function () {
-        var w = this.width;
-        return (this.pos.x + w) || w;
-    },
-    configurable : true
-});
-
-/**
- * top coordinate of the Rectangle
- * @public
- * @type {Number}
- * @name top
- * @memberOf me.Rect
- */
-Object.defineProperty(Rect.prototype, "top", {
-    /**
-     * @ignore
-     */
-    get : function () {
-        return this.pos.y;
-    },
-    configurable : true
-});
-
-/**
- * bottom coordinate of the Rectangle
- * @public
- * @type {Number}
- * @name bottom
- * @memberOf me.Rect
- */
-Object.defineProperty(Rect.prototype, "bottom", {
-    /**
-     * @ignore
-     */
-    get : function () {
-        var h = this.height;
-        return (this.pos.y + h) || h;
-    },
-    configurable : true
-});
-
-/**
- * width of the Rectangle
- * @public
- * @type {Number}
- * @name width
- * @memberOf me.Rect
- */
-Object.defineProperty(Rect.prototype, "width", {
-    /**
-     * @ignore
-     */
-    get : function () {
-        return this.points[2].x;
-    },
-    /**
-     * @ignore
-     */
-    set : function (value) {
-        this.points[1].x = this.points[2].x = value;
-        this.recalc();
-        this.updateBounds();
-    },
-    configurable : true
-});
-
-/**
- * height of the Rectangle
- * @public
- * @type {Number}
- * @name height
- * @memberOf me.Rect
- */
-Object.defineProperty(Rect.prototype, "height", {
-    /**
-     * @ignore
-     */
-    get : function () {
-        return this.points[2].y;
-    },
-    /**
-     * @ignore
-     */
-    set : function (value) {
-        this.points[2].y = this.points[3].y = value;
-        this.recalc();
-        this.updateBounds();
-    },
-    configurable : true
-});
-
-/**
- * absolute center of this rectangle on the horizontal axis
- * @public
- * @type {Number}
- * @name centerX
- * @memberOf me.Rect
- */
-Object.defineProperty(Rect.prototype, "centerX", {
-    /**
-     * @ignore
-     */
-    get : function () {
-        if (isFinite(this.width)) {
-            return this.pos.x + (this.width / 2);
-        } else {
-            return this.width;
-        }
-    },
-    /**
-     * @ignore
-     */
-    set : function (value) {
-        this.pos.x = value - (this.width / 2);
-    },
-    configurable : true
-});
-
-/**
- * absolute center of this rectangle on the vertical axis
- * @public
- * @type {Number}
- * @name centerY
- * @memberOf me.Rect
- */
-Object.defineProperty(Rect.prototype, "centerY", {
-    /**
-     * @ignore
-     */
-    get : function () {
-        if (isFinite(this.height)) {
-            return this.pos.y + (this.height / 2);
-        } else {
-            return this.height;
-        }
-    },
-    /**
-     * @ignore
-     */
-    set : function (value) {
-        this.pos.y = value - (this.height / 2);
-    },
-    configurable : true
-});
 
 export default Rect;

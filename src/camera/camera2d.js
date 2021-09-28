@@ -30,12 +30,13 @@ var targetV = new Vector2d();
  * @param {Number} maxX end x offset
  * @param {Number} maxY end y offset
  */
-var Camera2d = Renderable.extend({
+class Camera2d extends Renderable {
+
     /**
      * @ignore
      */
-    init : function (minX, minY, maxX, maxY) {
-        this._super(Renderable, "init", [minX, minY, maxX - minX, maxY - minY]);
+    constructor(minX, minY, maxX, maxY) {
+        super(minX, minY, maxX - minX, maxY - minY);
 
         /**
          * Axis definition
@@ -175,18 +176,18 @@ var Camera2d = Renderable.extend({
         event.subscribe(event.GAME_RESET, this.reset.bind(this));
         // subscribe to the canvas resize event
         event.subscribe(event.CANVAS_ONRESIZE, this.resize.bind(this));
-    },
+    }
 
     // -- some private function ---
 
     /** @ignore */
     // update the projection matrix based on the projection frame (a rectangle)
-    _updateProjectionMatrix : function () {
+    _updateProjectionMatrix() {
         this.projectionMatrix.ortho(0, this.width, this.height, 0, this.near, this.far);
-    },
+    }
 
     /** @ignore */
-    _followH : function (target) {
+    _followH(target) {
         var targetX = this.pos.x;
         if ((target.x - this.pos.x) > (this.deadzone.right)) {
             targetX = MIN((target.x) - (this.deadzone.right), this.bounds.width - this.width);
@@ -196,10 +197,10 @@ var Camera2d = Renderable.extend({
         }
         return targetX;
 
-    },
+    }
 
     /** @ignore */
-    _followV : function (target) {
+    _followV(target) {
         var targetY = this.pos.y;
         if ((target.y - this.pos.y) > (this.deadzone.bottom)) {
             targetY = MIN((target.y) - (this.deadzone.bottom), this.bounds.height - this.height);
@@ -208,7 +209,7 @@ var Camera2d = Renderable.extend({
             targetY = MAX((target.y) - this.deadzone.pos.y, this.bounds.top);
         }
         return targetY;
-    },
+    }
 
     // -- public function ---
 
@@ -220,7 +221,7 @@ var Camera2d = Renderable.extend({
      * @param {Number} [x=0]
      * @param {Number} [y=0]
      */
-    reset : function (x, y) {
+    reset(x, y) {
         // reset the initial camera position to 0,0
         this.pos.x = x || 0;
         this.pos.y = y || 0;
@@ -238,7 +239,7 @@ var Camera2d = Renderable.extend({
 
         // update the projection matrix
         this._updateProjectionMatrix();
-    },
+    }
 
     /**
      * change the deadzone settings.
@@ -251,7 +252,7 @@ var Camera2d = Renderable.extend({
      * @param {Number} w deadzone width
      * @param {Number} h deadzone height
      */
-    setDeadzone : function (w, h) {
+    setDeadzone(w, h) {
         if (typeof(this.deadzone) === "undefined") {
             this.deadzone = new Rect(0, 0, 0, 0);
         }
@@ -269,8 +270,7 @@ var Camera2d = Renderable.extend({
         this.updateTarget();
 
         this.smoothFollow = true;
-    },
-
+    }
 
     /**
      * resize the camera
@@ -281,9 +281,9 @@ var Camera2d = Renderable.extend({
      * @param {Number} h new height of the camera
      * @return {me.Camera2d} this camera
     */
-    resize : function (w, h) {
+    resize(w, h) {
         // parent consctructor, resize camera rect
-        this._super(Renderable, "resize", [w, h]);
+        super.resize(w, h);
 
         // disable damping while resizing
         this.smoothFollow = false;
@@ -301,7 +301,7 @@ var Camera2d = Renderable.extend({
         event.publish(event.VIEWPORT_ONRESIZE, [ this.width, this.height ]);
 
         return this;
-    },
+    }
 
     /**
      * set the camera boundaries (set to the world limit by default).
@@ -314,13 +314,13 @@ var Camera2d = Renderable.extend({
      * @param {Number} w world width limit
      * @param {Number} h world height limit
      */
-    setBounds : function (x, y, w, h) {
+    setBounds(x, y, w, h) {
         this.smoothFollow = false;
         this.bounds.setMinMax(x, y, w + x, h + y);
         this.moveTo(this.pos.x, this.pos.y);
         this.update();
         this.smoothFollow = true;
-    },
+    }
 
     /**
      * set the camera to follow the specified renderable. <br>
@@ -335,7 +335,7 @@ var Camera2d = Renderable.extend({
      * // set the camera to follow this renderable on both axis, and enable damping
      * me.game.viewport.follow(this, me.game.viewport.AXIS.BOTH, 0.1);
      */
-    follow : function (target, axis, damping) {
+    follow(target, axis, damping) {
         if (target instanceof Renderable) {
             this.target = target.pos;
         }
@@ -363,7 +363,7 @@ var Camera2d = Renderable.extend({
         this.updateTarget();
 
         this.smoothFollow = true;
-    },
+    }
 
     /**
      * unfollow the current target
@@ -371,10 +371,10 @@ var Camera2d = Renderable.extend({
      * @memberOf me.Camera2d
      * @function
      */
-    unfollow : function () {
+    unfollow() {
         this.target = null;
         this.follow_axis = this.AXIS.NONE;
-    },
+    }
 
     /**
      * move the camera upper-left position by the specified offset.
@@ -388,9 +388,9 @@ var Camera2d = Renderable.extend({
      * // Move the camera up by four pixels
      * me.game.viewport.move(0, -4);
      */
-    move : function (x, y) {
+    move(x, y) {
         this.moveTo(this.pos.x + x, this.pos.y + y);
-    },
+    }
 
     /**
      * move the camera upper-left position to the specified coordinates
@@ -401,7 +401,7 @@ var Camera2d = Renderable.extend({
      * @param {Number} x
      * @param {Number} y
      */
-    moveTo : function (x, y) {
+    moveTo(x, y) {
         var _x = this.pos.x;
         var _y = this.pos.y;
 
@@ -420,10 +420,10 @@ var Camera2d = Renderable.extend({
         if (_x !== this.pos.x || _y !== this.pos.y) {
             event.publish(event.VIEWPORT_ONCHANGE, [this.pos]);
         }
-    },
+    }
 
     /** @ignore */
-    updateTarget : function () {
+    updateTarget() {
         if (this.target) {
 
             targetV.setV(this.pos);
@@ -468,10 +468,10 @@ var Camera2d = Renderable.extend({
             }
         }
         return false;
-    },
+    }
 
     /** @ignore */
-    update : function (dt) {
+    update(dt) {
         var updated = this.updateTarget(dt);
 
         if (this._shake.duration > 0) {
@@ -514,7 +514,7 @@ var Camera2d = Renderable.extend({
             this.invCurrentTransform.identity();
         }
         return updated;
-    },
+    }
 
     /**
      * shake the camera
@@ -532,14 +532,14 @@ var Camera2d = Renderable.extend({
      * // shake it baby !
      * me.game.viewport.shake(10, 500, me.game.viewport.AXIS.BOTH);
      */
-    shake : function (intensity, duration, axis, onComplete, force) {
+    shake(intensity, duration, axis, onComplete, force) {
         if (this._shake.duration === 0 || force === true) {
             this._shake.intensity = intensity;
             this._shake.duration = duration;
             this._shake.axis = axis || this.AXIS.BOTH;
             this._shake.onComplete = typeof (onComplete) === "function" ? onComplete : undefined;
         }
-    },
+    }
 
     /**
      * fadeOut(flash) effect<p>
@@ -558,14 +558,14 @@ var Camera2d = Renderable.extend({
      *     me.game.viewport.fadeOut("#fff", 150);
      * });
      */
-    fadeOut : function (color, duration = 1000, onComplete) {
+    fadeOut(color, duration = 1000, onComplete) {
         this._fadeOut.color = pool.pull("Color").copy(color);
         this._fadeOut.tween = pool.pull("Tween", this._fadeOut.color)
             .to({ alpha: 0.0 }, duration)
             .onComplete(onComplete || null);
         this._fadeOut.tween.isPersistent = true;
         this._fadeOut.tween.start();
-    },
+    }
 
     /**
      * fadeIn effect <p>
@@ -580,7 +580,7 @@ var Camera2d = Renderable.extend({
      * // flash the camera to white for 75ms
      * me.game.viewport.fadeIn("#FFFFFF", 75);
      */
-    fadeIn : function (color, duration = 1000, onComplete) {
+    fadeIn(color, duration = 1000, onComplete) {
         this._fadeIn.color = pool.pull("Color").copy(color);
         var _alpha = this._fadeIn.color.alpha;
         this._fadeIn.color.alpha = 0.0;
@@ -589,7 +589,7 @@ var Camera2d = Renderable.extend({
             .onComplete(onComplete || null);
         this._fadeIn.tween.isPersistent = true;
         this._fadeIn.tween.start();
-    },
+    }
 
     /**
      * return the camera width
@@ -598,9 +598,9 @@ var Camera2d = Renderable.extend({
      * @function
      * @return {Number}
      */
-    getWidth : function () {
+    getWidth() {
         return this.width;
-    },
+    }
 
     /**
      * return the camera height
@@ -609,9 +609,9 @@ var Camera2d = Renderable.extend({
      * @function
      * @return {Number}
      */
-    getHeight : function () {
+    getHeight() {
         return this.height;
-    },
+    }
 
     /**
      * set the camera position around the specified object
@@ -620,13 +620,13 @@ var Camera2d = Renderable.extend({
      * @function
      * @param {me.Renderable}
      */
-    focusOn : function (target) {
+    focusOn(target) {
         var bounds = target.getBounds();
         this.moveTo(
             target.pos.x + bounds.left + (bounds.width / 2),
             target.pos.y + bounds.top + (bounds.height / 2)
         );
-    },
+    }
 
     /**
      * check if the specified renderable is in the camera
@@ -637,7 +637,7 @@ var Camera2d = Renderable.extend({
      * @param {Boolean} [floating===object.floating] if visibility check should be done against screen coordinates
      * @return {Boolean}
      */
-    isVisible : function (obj, floating = obj.floating) {
+    isVisible(obj, floating = obj.floating) {
         if (floating === true || obj.floating === true) {
             // check against screen coordinates
             return video.renderer.overlaps(obj.getBounds());
@@ -645,7 +645,7 @@ var Camera2d = Renderable.extend({
             // check if within the current camera
             return obj.getBounds().overlaps(this);
         }
-    },
+    }
 
     /**
      * convert the given "local" (screen) coordinates into world coordinates
@@ -658,7 +658,7 @@ var Camera2d = Renderable.extend({
      * converted value
      * @return {me.Vector2d}
      */
-    localToWorld : function (x, y, v) {
+    localToWorld(x, y, v) {
         // TODO memoization for one set of coords (multitouch)
         v = v || new Vector2d();
         v.set(x, y).add(this.pos).sub(game.world.pos);
@@ -666,7 +666,7 @@ var Camera2d = Renderable.extend({
             this.invCurrentTransform.apply(v);
         }
         return v;
-    },
+    }
 
     /**
      * convert the given world coordinates into "local" (screen) coordinates
@@ -679,7 +679,7 @@ var Camera2d = Renderable.extend({
      * converted value
      * @return {me.Vector2d}
      */
-    worldToLocal : function (x, y, v) {
+    worldToLocal(x, y, v) {
         // TODO memoization for one set of coords (multitouch)
         v = v || new Vector2d();
         v.set(x, y);
@@ -687,13 +687,13 @@ var Camera2d = Renderable.extend({
             this.currentTransform.apply(v);
         }
         return v.sub(this.pos).add(game.world.pos);
-    },
+    }
 
     /**
      * render the camera effects
      * @ignore
      */
-    drawFX : function (renderer) {
+    drawFX(renderer) {
         // fading effect
         if (this._fadeIn.tween) {
             // add an overlay
@@ -727,13 +727,13 @@ var Camera2d = Renderable.extend({
                 this._fadeOut.color = null;
             }
         }
-    },
+    }
 
     /**
      * draw all object visibile in this viewport
      * @ignore
      */
-    draw : function (renderer, container) {
+    draw(renderer, container) {
         var translateX = this.pos.x + this.offset.x;
         var translateY = this.pos.y + this.offset.y;
 
@@ -769,5 +769,7 @@ var Camera2d = Renderable.extend({
         // translate the world coordinates by default to screen coordinates
         container.currentTransform.translate(translateX, translateY);
     }
-});
+
+};
+
 export default Camera2d;

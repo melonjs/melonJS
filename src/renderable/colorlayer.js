@@ -5,6 +5,7 @@ import Renderable from "./renderable.js";
 
 
 /**
+ * @classdesc
  * a generic Color Layer Object.  Fills the entire Canvas with the color not just the container the object belongs to.
  * @class
  * @extends me.Renderable
@@ -14,13 +15,14 @@ import Renderable from "./renderable.js";
  * @param {me.Color|String} color CSS color
  * @param {Number} z z-index position
  */
-var ColorLayer = Renderable.extend({
+class ColorLayer extends Renderable {
+
     /**
      * @ignore
      */
-    init: function (name, color, z) {
+    constructor(name, color, z) {
         // parent constructor
-        this._super(Renderable, "init", [0, 0, Infinity, Infinity]);
+        super(0, 0, Infinity, Infinity);
 
         // apply given parameters
         this.name = name;
@@ -42,13 +44,13 @@ var ColorLayer = Renderable.extend({
             this.color = pool.pull("Color").parseCSS(color);
         }
         this.anchorPoint.set(0, 0);
-    },
+    }
 
     /**
      * draw the color layer
      * @ignore
      */
-    draw : function (renderer, rect) {
+    draw(renderer, rect) {
         var color = renderer.getColor();
         var vpos = game.viewport.pos;
         renderer.setColor(this.color);
@@ -57,17 +59,18 @@ var ColorLayer = Renderable.extend({
             rect.width, rect.height
         );
         renderer.setColor(color);
-    },
+    }
 
     /**
      * Destroy function
      * @ignore
      */
-    destroy : function () {
+    destroy() {
         pool.push(this.color);
         this.color = undefined;
-        this._super(Renderable, "destroy");
+        super.destroy();
     }
-});
+
+};
 
 export default ColorLayer;

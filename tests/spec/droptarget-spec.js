@@ -18,19 +18,19 @@
             dropped = false,
             // creates a test draggable entity
             createDraggable = function (position, dimensions) {
-                var Draggable = DraggableEntity.extend({
-                    init: function (x, y, settings) {
-                        this._super(DraggableEntity, "init", [x, y, settings]);
+                class Draggable extends DraggableEntity {
+                    constructor(x, y, settings) {
+                        super(x, y, settings);
                         this.color = "white";
-                    },
-                    update: function () {
+                    }
+                    update() {
                         return true;
-                    },
-                    draw: function (context) {
+                    }
+                    draw(context) {
                         context.fillStyle = this.color;
                         context.fillRect(this.pos.x, this.pos.y, this.width, this.height);
                     }
-                });
+                };
                 // create a new draggable entity instance
                 draggable = new Draggable(position.x, position.y, {width: dimensions.x, height:
                     dimensions.y});
@@ -39,25 +39,25 @@
             },
             // creates a test droptarget entity
             createDroptarget = function () {
-                var Droptarget = DroptargetEntity.extend({
-                    init: function (x, y, settings) {
-                        this._super(me.DroptargetEntity, "init", [x, y, settings]);
+                class Droptarget extends DroptargetEntity {
+                    constructor(x, y, settings) {
+                        super(x, y, settings);
                         this.color = "red";
-                    },
-                    enableContains: function () {
+                    }
+                    enableContains() {
                         this.setCheckMethod(this.CHECKMETHOD_CONTAINS);
-                    },
-                    update: function () {
+                    }
+                    update() {
                         return true;
-                    },
-                    draw: function (context) {
+                    }
+                    draw(context) {
                         context.fillStyle = this.color;
                         context.fillRect(this.pos.x, this.pos.y, this.width, this.height);
-                    },
-                    drop: function () {
+                    }
+                    drop() {
                         dropped = true;
                     }
-                });
+                };
                 // create a new droptarget entity instance
                 droptarget = new Droptarget(100, 100, {width: 200, height: 200});
                 // add the test droptarget to the game

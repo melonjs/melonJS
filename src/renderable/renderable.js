@@ -17,14 +17,15 @@ import { clamp } from "./../math/math.js";
  * @param {Number} width object width
  * @param {Number} height object height
  */
-var Renderable = Rect.extend({
+class Renderable extends Rect {
+
     /**
      * @ignore
      */
-    init : function (x, y, width, height) {
+    constructor(x, y, width, height) {
 
         // parent constructor
-        this._super(Rect, "init", [x, y, width, height]);
+        super(x, y, width, height);
 
         /**
          * to identify the object as a renderable object
@@ -310,12 +311,73 @@ var Renderable = Rect.extend({
 
         // ensure it's fully opaque by default
         this.setOpacity(1.0);
-    },
+    }
 
     /** @ignore */
-    onResetEvent : function () {
-        this.init.apply(this, arguments);
-    },
+    onResetEvent() {
+        this.constructor.apply(this, arguments); //???
+    }
+
+    /**
+     * Whether the renderable object is visible and within the viewport
+     * @public
+     * @readonly
+     * @type Boolean
+     * @default false
+     * @name inViewport
+     * @memberOf me.Renderable
+     */
+
+    /**
+     * @ignore
+     */
+    get inViewport() {
+        return this._inViewport;
+    }
+
+    /**
+     * @ignore
+     */
+    set inViewport(value) {
+        if (this._inViewport !== value) {
+            this._inViewport = value;
+            if (typeof this.onVisibilityChange === "function") {
+                this.onVisibilityChange.call(this, value);
+            }
+        }
+    }
+
+    /**
+     * returns true if this renderable is flipped on the horizontal axis
+     * @public
+     * @see me.Renderable#flipX
+     * @type {Boolean}
+     * @name isFlippedX
+     * @memberOf me.Renderable
+     */
+
+    /**
+     * @ignore
+     */
+    get isFlippedX() {
+        return this._flip.x === true;
+    }
+
+    /**
+     * returns true if this renderable is flipped on the vertical axis
+     * @public
+     * @see me.Renderable#flipY
+     * @type {Boolean}
+     * @name isFlippedY
+     * @memberOf me.Renderable
+     */
+
+    /**
+     * @ignore
+     */
+    get isFlippedY() {
+        return this._flip.y === true;
+    }
 
     /**
      * returns the bounding box for this renderable
@@ -324,9 +386,9 @@ var Renderable = Rect.extend({
      * @function
      * @return {me.Bounds} bounding box Rectangle object
      */
-    getBounds : function () {
+    getBounds() {
         if (typeof this._bounds === "undefined") {
-            this._super(Rect, "getBounds");
+            super.getBounds();
             if (this.isFinite()) {
                 this._bounds.setMinMax(this.pos.x, this.pos.y, this.pos.x + this.width, this.pos.y + this.height);
             } else {
@@ -336,7 +398,7 @@ var Renderable = Rect.extend({
 
         }
         return this._bounds;
-    },
+    }
 
     /**
      * get the renderable alpha channel value<br>
@@ -345,9 +407,9 @@ var Renderable = Rect.extend({
      * @function
      * @return {Number} current opacity value between 0 and 1
      */
-    getOpacity : function () {
+    getOpacity() {
         return this.alpha;
-    },
+    }
 
     /**
      * set the renderable alpha channel value<br>
@@ -356,7 +418,7 @@ var Renderable = Rect.extend({
      * @function
      * @param {Number} alpha opacity value between 0.0 and 1.0
      */
-    setOpacity : function (alpha) {
+    setOpacity(alpha) {
         if (typeof (alpha) === "number") {
             this.alpha = clamp(alpha, 0.0, 1.0);
             // Set to 1 if alpha is NaN
@@ -364,7 +426,7 @@ var Renderable = Rect.extend({
                 this.alpha = 1.0;
             }
         }
-    },
+    }
 
     /**
      * flip the renderable on the horizontal axis (around the center of the renderable)
@@ -375,11 +437,11 @@ var Renderable = Rect.extend({
      * @param {Boolean} [flip=false] `true` to flip this renderable.
      * @return {me.Renderable} Reference to this object for method chaining
      */
-    flipX : function (flip) {
+    flipX(flip) {
         this._flip.x = !!flip;
         this.isDirty = true;
         return this;
-    },
+    }
 
     /**
      * flip the renderable on the vertical axis (around the center of the renderable)
@@ -390,11 +452,11 @@ var Renderable = Rect.extend({
      * @param {Boolean} [flip=false] `true` to flip this renderable.
      * @return {me.Renderable} Reference to this object for method chaining
      */
-    flipY : function (flip) {
+    flipY(flip) {
         this._flip.y = !!flip;
         this.isDirty = true;
         return this;
-    },
+    }
 
     /**
      * multiply the renderable currentTransform with the given matrix
@@ -405,13 +467,13 @@ var Renderable = Rect.extend({
      * @param {me.Matrix2d} matrix the transformation matrix
      * @return {me.Renderable} Reference to this object for method chaining
      */
-    transform : function (m) {
+    transform(m) {
         this.currentTransform.multiply(m);
-        //this._super(Rect, "transform", [m]);
+        //super.transform(m);
         this.updateBoundsPos(this.pos.x, this.pos.y);
         this.isDirty = true;
         return this;
-    },
+    }
 
     /**
      * return the angle to the specified target
@@ -421,7 +483,7 @@ var Renderable = Rect.extend({
      * @param {me.Renderable|me.Vector2d|me.Vector3d} target
      * @return {Number} angle in radians
      */
-    angleTo: function (target) {
+    angleTo(target) {
         var a = this.getBounds();
         var ax, ay;
 
@@ -435,7 +497,7 @@ var Renderable = Rect.extend({
         }
 
         return Math.atan2(ay, ax);
-    },
+    }
 
     /**
      * return the distance to the specified target
@@ -445,7 +507,7 @@ var Renderable = Rect.extend({
      * @param {me.Renderable|me.Vector2d|me.Vector3d} target
      * @return {Number} distance
      */
-    distanceTo: function (target) {
+    distanceTo(target) {
         var a = this.getBounds();
         var dx, dy;
 
@@ -459,7 +521,7 @@ var Renderable = Rect.extend({
         }
 
         return Math.sqrt(dx * dx + dy * dy);
-    },
+    }
 
     /**
      * Rotate this renderable towards the given target.
@@ -469,7 +531,7 @@ var Renderable = Rect.extend({
      * @param {me.Renderable|me.Vector2d|me.Vector3d} target the renderable or position to look at
      * @return {me.Renderable} Reference to this object for method chaining
      */
-    lookAt : function (target) {
+    lookAt(target) {
         var position;
 
         if (target instanceof Renderable) {
@@ -483,7 +545,7 @@ var Renderable = Rect.extend({
         this.rotate(angle);
 
         return this;
-    },
+    }
 
     /**
      * Rotate this renderable by the specified angle (in radians).
@@ -494,14 +556,14 @@ var Renderable = Rect.extend({
      * @param {me.Vector2d|me.ObservableVector2d} [v] an optional point to rotate around
      * @return {me.Renderable} Reference to this object for method chaining
      */
-    rotate : function (angle) {
+    rotate(angle) {
         if (!isNaN(angle)) {
             this.currentTransform.rotate(angle);
             //this.updateBoundsPos(this.pos.x, this.pos.y);
             this.isDirty = true;
         }
         return this;
-    },
+    }
 
     /**
      * scale the renderable around his anchor point.  Scaling actually applies changes
@@ -516,12 +578,12 @@ var Renderable = Rect.extend({
      * @param {Number} [y=x] a number representing the ordinate of the scaling vector.
      * @return {me.Renderable} Reference to this object for method chaining
      */
-    scale : function (x, y) {
+    scale(x, y) {
         this.currentTransform.scale(x, y);
-        this._super(Rect, "scale", [x, y]);
+        super.scale(x, y);
         this.isDirty = true;
         return this;
-    },
+    }
 
     /**
      * scale the renderable around his anchor point
@@ -531,10 +593,10 @@ var Renderable = Rect.extend({
      * @param {me.Vector2d} vector scaling vector
      * @return {me.Renderable} Reference to this object for method chaining
      */
-    scaleV : function (v) {
+    scaleV(v) {
         this.scale(v.x, v.y);
         return this;
-    },
+    }
 
     /**
      * update function. <br>
@@ -546,9 +608,9 @@ var Renderable = Rect.extend({
      * @param {Number} dt time since the last update in milliseconds.
      * @return false
      **/
-    update : function (/* dt */) {
+    update(/* dt */) {
         return this.isDirty;
-    },
+    }
 
     /**
      * update the bounding box for this shape.
@@ -558,11 +620,11 @@ var Renderable = Rect.extend({
      * @function
      * @return {me.Bounds} this shape bounding box Rectangle object
      */
-    updateBounds : function () {
-        this._super(Rect, "updateBounds");
+    updateBounds() {
+        super.updateBounds();
         this.updateBoundsPos(this.pos.x, this.pos.y);
         return this.getBounds();
-    },
+    }
 
     /**
      * update the renderable's bounding rect (private)
@@ -571,7 +633,7 @@ var Renderable = Rect.extend({
      * @memberOf me.Renderable.prototype
      * @function
      */
-     updateBoundsPos : function (newX, newY) {
+     updateBoundsPos(newX, newY) {
          var bounds = this.getBounds();
 
          bounds.shift(newX, newY);
@@ -595,7 +657,7 @@ var Renderable = Rect.extend({
              bounds.translate(this.ancestor.getAbsolutePosition());
          }
          //return bounds;
-     },
+     }
 
      /**
       * return the renderable absolute position in the game world
@@ -604,7 +666,7 @@ var Renderable = Rect.extend({
       * @function
       * @return {me.Vector2d}
       */
-      getAbsolutePosition : function () {
+      getAbsolutePosition() {
           if (typeof this._absPos === "undefined") {
               this._absPos = pool.pull("Vector2d");
           }
@@ -614,7 +676,7 @@ var Renderable = Rect.extend({
               this._absPos.add(this.ancestor.getAbsolutePosition());
           }
           return this._absPos;
-      },
+      }
 
     /**
      * called when the anchor point value is changed
@@ -623,13 +685,13 @@ var Renderable = Rect.extend({
      * @memberOf me.Renderable.prototype
      * @function
      */
-     onAnchorUpdate : function (newX, newY) {
+     onAnchorUpdate(newX, newY) {
          // since the callback is called before setting the new value
          // manually update the anchor point (required for updateBoundsPos)
          this.anchorPoint.setMuted(newX, newY);
-         // then call updateBouds
+         // then call updateBounds
          this.updateBoundsPos(this.pos.x, this.pos.y);
-     },
+     }
 
 
     /**
@@ -642,7 +704,7 @@ var Renderable = Rect.extend({
      * @protected
      * @param {me.CanvasRenderer|me.WebGLRenderer} renderer a renderer object
      **/
-    preDraw : function (renderer) {
+    preDraw(renderer) {
         var bounds = this.getBounds();
         var ax = bounds.width * this.anchorPoint.x,
             ay = bounds.height * this.anchorPoint.y;
@@ -679,7 +741,7 @@ var Renderable = Rect.extend({
 
         // apply the defined tint, if any
         renderer.setTint(this.tint);
-    },
+    }
 
     /**
      * object draw. <br>
@@ -690,9 +752,9 @@ var Renderable = Rect.extend({
      * @protected
      * @param {me.CanvasRenderer|me.WebGLRenderer} renderer a renderer object
      **/
-    draw : function (/*renderer*/) {
+    draw(/*renderer*/) {
         // empty one !
-    },
+    }
 
     /**
      * restore the rendering context after drawing. <br>
@@ -703,7 +765,7 @@ var Renderable = Rect.extend({
      * @protected
      * @param {me.CanvasRenderer|me.WebGLRenderer} renderer a renderer object
      **/
-    postDraw : function (renderer) {
+    postDraw(renderer) {
         if (typeof this.mask !== "undefined") {
             renderer.clearMask();
         }
@@ -716,13 +778,13 @@ var Renderable = Rect.extend({
 
         // restore the context
         renderer.restore();
-    },
+    }
 
     /**
      * Destroy function<br>
      * @ignore
      */
-    destroy : function () {
+    destroy() {
         // allow recycling object properties
         pool.push(this.currentTransform);
         this.currentTransform = undefined;
@@ -766,7 +828,7 @@ var Renderable = Rect.extend({
 
         // call the user defined destroy method
         this.onDestroyEvent.apply(this, arguments);
-    },
+    }
 
     /**
      * OnDestroy Notification function<br>
@@ -775,75 +837,11 @@ var Renderable = Rect.extend({
      * @memberOf me.Renderable
      * @function
      */
-    onDestroyEvent : function () {
+    onDestroyEvent() {
         // to be extended !
     }
-});
 
-/**
- * Whether the renderable object is visible and within the viewport
- * @public
- * @readonly
- * @type Boolean
- * @default false
- * @name inViewport
- * @memberOf me.Renderable
- */
-Object.defineProperty(Renderable.prototype, "inViewport", {
-    /**
-     * @ignore
-     */
-    get : function () {
-        return this._inViewport;
-    },
-    /**
-     * @ignore
-     */
-    set : function (value) {
-        if (this._inViewport !== value) {
-            this._inViewport = value;
-            if (typeof this.onVisibilityChange === "function") {
-                this.onVisibilityChange.call(this, value);
-            }
-        }
-    },
-    configurable : true
-});
+};
 
-/**
- * returns true if this renderable is flipped on the horizontal axis
- * @public
- * @see me.Renderable#flipX
- * @type {Boolean}
- * @name isFlippedX
- * @memberOf me.Renderable
- */
-Object.defineProperty(Renderable.prototype, "isFlippedX", {
-    /**
-     * @ignore
-     */
-    get : function () {
-        return this._flip.x === true;
-    },
-    configurable : true
-});
-
-/**
- * returns true if this renderable is flipped on the vertical axis
- * @public
- * @see me.Renderable#flipY
- * @type {Boolean}
- * @name isFlippedY
- * @memberOf me.Renderable
- */
-Object.defineProperty(Renderable.prototype, "isFlippedY", {
-    /**
-     * @ignore
-     */
-    get : function () {
-        return this._flip.y === true;
-    },
-    configurable : true
-});
 
 export default Renderable;

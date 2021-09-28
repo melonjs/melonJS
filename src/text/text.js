@@ -55,12 +55,12 @@ var setContextStyle = function(context, font, stroke) {
  * @example
  * var font = new me.Text(0, 0, {font: "Arial", size: 8, fillStyle: this.color});
  */
-var Text = Renderable.extend({
+class Text extends Renderable {
 
     /** @ignore */
-    init : function (x, y, settings) {
+    constructor(x, y, settings) {
         // call the parent constructor
-        this._super(Renderable, "init", [x, y, settings.width || 0, settings.height || 0]);
+        super(x, y, settings.width || 0, settings.height || 0);
 
         /**
          * defines the color used to draw the font.<br>
@@ -181,7 +181,7 @@ var Text = Renderable.extend({
 
         // set the text
         this.setText(settings.text);
-    },
+    }
 
     /**
      * make the font bold
@@ -190,11 +190,11 @@ var Text = Renderable.extend({
      * @function
      * @return this object for chaining
      */
-    bold : function () {
+    bold() {
         this.font = "bold " + this.font;
         this.isDirty = true;
         return this;
-    },
+    }
 
     /**
      * make the font italic
@@ -203,11 +203,11 @@ var Text = Renderable.extend({
      * @function
      * @return this object for chaining
      */
-    italic : function () {
+    italic() {
         this.font = "italic " + this.font;
         this.isDirty = true;
         return this;
-    },
+    }
 
     /**
      * set the font family and size
@@ -221,7 +221,7 @@ var Text = Renderable.extend({
      * font.setFont("Arial", 20);
      * font.setFont("Arial", "1.5em");
      */
-    setFont : function (font, size) {
+    setFont(font, size) {
         // font name and type
         var font_names = font.split(",").map(function (value) {
             value = value.trim();
@@ -251,7 +251,7 @@ var Text = Renderable.extend({
         this.isDirty = true;
 
         return this;
-    },
+    }
 
     /**
      * change the text to be displayed
@@ -261,7 +261,7 @@ var Text = Renderable.extend({
      * @param {Number|String|String[]} value a string, or an array of strings
      * @return this object for chaining
      */
-    setText : function (value) {
+    setText(value) {
         if (typeof value === "undefined") {
             value = "";
         }
@@ -276,7 +276,7 @@ var Text = Renderable.extend({
         }
 
         return this;
-    },
+    }
 
     /**
      * measure the given text size in pixels
@@ -288,7 +288,7 @@ var Text = Renderable.extend({
      * @param {me.Rect|me.Bounds} [ret] a object in which to store the text metrics
      * @returns {TextMetrics} a TextMetrics object with two properties: `width` and `height`, defining the output dimensions
      */
-    measureText : function (renderer, text, ret) {
+    measureText(renderer, text, ret) {
         var context;
 
         if (typeof renderer === "undefined") {
@@ -333,17 +333,17 @@ var Text = Renderable.extend({
 
         // returns the Font bounds me.Rect by default
         return textMetrics;
-    },
+    }
 
     /**
      * @ignore
      */
-    update : function (/* dt */) {
+    update(/* dt */) {
         if (this.isDirty === true) {
             this.measureText();
         }
         return this.isDirty;
-    },
+    }
 
     /**
      * draw a text at the specified coord
@@ -355,7 +355,7 @@ var Text = Renderable.extend({
      * @param {Number} [x]
      * @param {Number} [y]
      */
-    draw : function (renderer, text, x, y, stroke) {
+    draw(renderer, text, x, y, stroke) {
         // "hacky patch" for backward compatibilty
         if (typeof this.ancestor === "undefined") {
             // update text cache
@@ -401,7 +401,7 @@ var Text = Renderable.extend({
         // clear the dirty flag here for
         // backward compatibility
         this.isDirty = false;
-    },
+    }
 
     /**
      * draw a stroke text at the specified coord, as defined <br>
@@ -415,14 +415,14 @@ var Text = Renderable.extend({
      * @param {Number} x
      * @param {Number} y
      */
-    drawStroke : function (renderer, text, x, y) {
+    drawStroke(renderer, text, x, y) {
         this.draw.call(this, renderer, text, x, y, true);
-    },
+    }
 
     /**
      * @ignore
      */
-    _drawFont : function (context, text, x, y, stroke) {
+    _drawFont(context, text, x, y, stroke) {
         setContextStyle(context, this, stroke);
 
         var lineHeight = this.fontSize * this.lineHeight;
@@ -434,19 +434,19 @@ var Text = Renderable.extend({
             y += lineHeight;
         }
         return this.getBounds();
-    },
+    }
 
     /**
      * Destroy function
      * @ignore
      */
-    destroy : function () {
+    destroy() {
         pool.push(this.fillStyle);
         pool.push(this.strokeStyle);
         this.fillStyle = this.strokeStyle = undefined;
         this._text.length = 0;
-        this._super(Renderable, "destroy");
+        super.destroy();
     }
-});
+};
 
 export default Text;

@@ -6,6 +6,7 @@ import level from "./../level/level.js";
 import game from "./../game.js";
 
 /**
+ * classdesc
  * trigger an event when colliding with another object
  * @class
  * @extends me.Renderable
@@ -34,12 +35,15 @@ import game from "./../game.js";
  *     }
  * ));
  */
-var Trigger = Renderable.extend({
+
+class Trigger extends Renderable {
+
     /**
      * @ignore
      */
-    init : function (x, y, settings) {
-        this._super(Renderable, "init", [x, y, settings.width || 0, settings.height || 0]);
+    constructor(x, y, settings) {
+
+        super(x, y, settings.width || 0, settings.height || 0);
 
         // for backward compatibility
         this.anchorPoint.set(0, 0);
@@ -73,27 +77,26 @@ var Trigger = Renderable.extend({
         this.body = new Body(this, settings.shapes || new Rect(0, 0, this.width, this.height));
         this.body.collisionType = collision.types.ACTION_OBJECT;
         this.resize(this.body.getBounds().width, this.body.getBounds().height);
-
-    },
+    }
 
     /**
      * @ignore
      */
-     getTriggerSettings : function () {
+     getTriggerSettings() {
          // Lookup for the container instance
          if (typeof(this.triggerSettings.container) === "string") {
              this.triggerSettings.container = game.world.getChildByName(this.triggerSettings.container)[0];
          }
          return this.triggerSettings;
-     },
+     }
 
     /**
      * @ignore
      */
-    onFadeComplete : function () {
+    onFadeComplete() {
         level.load(this.gotolevel, this.getTriggerSettings());
         game.viewport.fadeOut(this.fade, this.duration);
-    },
+    }
 
     /**
      * go to the specified level
@@ -103,7 +106,7 @@ var Trigger = Renderable.extend({
      * @param {String} [level=this.nextlevel] name of the level to load
      * @protected
      */
-    triggerEvent : function () {
+    triggerEvent() {
         var triggerSettings = this.getTriggerSettings();
 
         if (triggerSettings.event === "level") {
@@ -122,15 +125,16 @@ var Trigger = Renderable.extend({
         } else {
             throw new Error("Trigger invalid type");
         }
-    },
+    }
 
     /** @ignore */
-    onCollision : function () {
+    onCollision() {
         if (this.name === "Trigger") {
             this.triggerEvent.apply(this);
         }
         return false;
     }
-});
+
+};
 
 export default Trigger;

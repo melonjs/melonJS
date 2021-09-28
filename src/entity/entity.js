@@ -28,17 +28,14 @@ import Polygon from "./../shapes/poly.js";
  * @param {Number} [settings.collisionMask] Mask collision detection for this object
  * @param {me.Rect[]|me.Polygon[]|me.Line[]|me.Ellipse[]} [settings.shapes] the initial list of collision shapes (usually populated through Tiled)
  */
-var Entity = Renderable.extend({
+
+class Entity extends Renderable {
+
+
     /**
      * @ignore
      */
-    init : function (x, y, settings) {
-
-        /**
-         * The array of renderable children of this entity.
-         * @ignore
-         */
-        this.children = [];
+    constructor(x, y, settings) {
 
         // ensure mandatory properties are defined
         if ((typeof settings.width !== "number") || (typeof settings.height !== "number")) {
@@ -46,7 +43,13 @@ var Entity = Renderable.extend({
         }
 
         // call the super constructor
-        this._super(Renderable, "init", [x, y, settings.width, settings.height]);
+        super(x, y, settings.width, settings.height);
+
+        /**
+         * The array of renderable children of this entity.
+         * @ignore
+         */
+        this.children = [];
 
         if (settings.image) {
             // set the frame size to the given entity size, if not defined in settings
@@ -132,15 +135,42 @@ var Entity = Renderable.extend({
 
         // disable for entities
         this.autoTransform = false;
-    },
+    }
+
+
+    /**
+     * The entity renderable component (can be any objects deriving from me.Renderable, like me.Sprite for example)
+     * @public
+     * @type me.Renderable
+     * @name renderable
+     * @memberOf me.Entity
+     */
+
+    /**
+     * @ignore
+     */
+    get renderable() {
+        return this.children[0];
+    }
+    /**
+     * @ignore
+     */
+    set renderable(value) {
+        if (value instanceof Renderable) {
+            this.children[0] = value;
+            this.children[0].ancestor = this;
+        } else {
+            throw new Error(value + "should extend me.Renderable");
+        }
+    }
 
     /** @ignore */
-    update : function (dt) {
+    update(dt) {
         if (this.renderable) {
             return this.renderable.update(dt);
         }
         return this._super(Renderable, "update", [dt]);
-    },
+    }
 
     /**
      * update the bounds position when the body is modified
@@ -149,14 +179,14 @@ var Entity = Renderable.extend({
      * @memberOf me.Entity
      * @function
      */
-    onBodyUpdate : function (body) {
+    onBodyUpdate(body) {
         // update the entity bounds to include the body bounds
         this.getBounds().addBounds(body.getBounds(), true);
         // update the bounds pos
         this.updateBoundsPos(this.pos.x, this.pos.y);
-    },
+    }
 
-    preDraw : function (renderer) {
+    preDraw(renderer) {
         renderer.save();
 
         // translate to the entity position
@@ -174,7 +204,7 @@ var Entity = Renderable.extend({
                 this.anchorPoint.y * this.body.getBounds().height
             );
         }
-    },
+    }
 
     /**
      * object draw<br>
@@ -187,7 +217,7 @@ var Entity = Renderable.extend({
      * @param {me.CanvasRenderer|me.WebGLRenderer} renderer a renderer object
      * @param {me.Rect} region to draw
      **/
-    draw : function (renderer, rect) {
+    draw(renderer, rect) {
         var renderable = this.renderable;
         if (renderable instanceof Renderable) {
             // predraw (apply transforms)
@@ -199,13 +229,13 @@ var Entity = Renderable.extend({
             // postdraw (clean-up);
             renderable.postDraw(renderer);
         }
-    },
+    }
 
     /**
      * Destroy function<br>
      * @ignore
      */
-    destroy : function () {
+    destroy() {
         // free some property objects
         if (this.renderable) {
             this.renderable.destroy.apply(this.renderable, arguments);
@@ -213,8 +243,8 @@ var Entity = Renderable.extend({
         }
 
         // call the parent destroy method
-        this._super(Renderable, "destroy", arguments);
-    },
+        super.destroy(arguments);
+    }
 
     /**
      * onDeactivateEvent Notification function<br>
@@ -223,11 +253,11 @@ var Entity = Renderable.extend({
      * @memberOf me.Entity
      * @function
      */
-    onDeactivateEvent : function () {
-      if (this.renderable && this.renderable.onDeactivateEvent) {
-          this.renderable.onDeactivateEvent();
-      }
-    },
+    onDeactivateEvent() {
+        if (this.renderable && this.renderable.onDeactivateEvent) {
+            this.renderable.onDeactivateEvent();
+        }
+    }
 
     /**
      * onCollision callback<br>
@@ -239,39 +269,9 @@ var Entity = Renderable.extend({
      * @param {me.Entity} other the other entity touching this one (a reference to response.a or response.b)
      * @return {Boolean} true if the object should respond to the collision (its position and velocity will be corrected)
      */
-    onCollision : function () {
+    onCollision() {
         return false;
     }
-});
-
-
-/**
- * The entity renderable component (can be any objects deriving from me.Renderable, like me.Sprite for example)
- * @public
- * @type me.Renderable
- * @name renderable
- * @memberOf me.Entity
- */
-Object.defineProperty(Entity.prototype, "renderable", {
-    /* for backward compatiblity */
-    /**
-     * @ignore
-     */
-    get : function () {
-        return this.children[0];
-    },
-    /**
-     * @ignore
-     */
-    set : function (value) {
-        if (value instanceof Renderable) {
-            this.children[0] = value;
-            this.children[0].ancestor = this;
-        } else {
-            throw new Error(value + "should extend me.Renderable");
-        }
-    },
-    configurable : true
-});
+};
 
 export default Entity;
