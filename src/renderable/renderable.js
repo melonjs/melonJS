@@ -313,11 +313,6 @@ class Renderable extends Rect {
         this.setOpacity(1.0);
     }
 
-    /** @ignore */
-    onResetEvent() {
-        this.constructor.apply(this, arguments); //???
-    }
-
     /**
      * Whether the renderable object is visible and within the viewport
      * @public

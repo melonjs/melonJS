@@ -61,6 +61,11 @@ class Text extends Renderable {
     constructor(x, y, settings) {
         // call the parent constructor
         super(x, y, settings.width || 0, settings.height || 0);
+        this.onResetEvent(x, y, settings);
+    }
+
+    /** @ignore */
+    onResetEvent(x, y, settings) {
 
         /**
          * defines the color used to draw the font.<br>
