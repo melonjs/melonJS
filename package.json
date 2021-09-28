@@ -87,7 +87,8 @@
     "doc": "mkdirp docs && jsdoc -c jsdoc_conf.json",
     "publishdoc": "npm run doc && ghpages melonjs/melonJS -p docs",
     "release": "npm run dist && npm publish --access public",
-    "clean": "del-cli --force build/*.js docs",
-    "makedts": "npx -p typescript tsc dist/melonjs.module.js --declaration --allowJs --emitDeclarationOnly"
+    "clean": "del-cli --force build/*.js docs src/**/*.d.ts",
+    "makedts": "npx -p typescript tsc dist/melonjs.module.js --declaration --allowJs --emitDeclarationOnly",
+    "make-separated-src-dts": "npm run clean && npx -p typescript tsc src/**/*.js --declaration --allowJs --emitDeclarationOnly"
   }
 }
