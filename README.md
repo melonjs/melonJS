@@ -14,7 +14,7 @@ A fresh, _modern_ & lightweight HTML5 game engine
 
 melonJS 2 is a modern version of the melonJS game engine. It has been rebuilt almost entirely using ES6 class, inheritance and semantic, and is bundled using Rollup to provide modern features such as transpiling and tree-shaking.
 
-Note: melonJS 2 is a work in progress and will break your game (No more Jay inheritance, and no backward compatibility with deprecated APIs), unless you want to contribute to the development, or if you are looking at the stable legacy version of melonJS, you can find it [here](https://github.com/melonjs/melonJS/tree/legacy) under the _legacy_ branch.
+>Note: melonJS 2 is a work in progress and will break your game (No more Jay inheritance, and no backward compatibility with deprecated APIs), unless you want to contribute to the development, or if you are looking at the stable legacy version of melonJS, you can find it [here](https://github.com/melonjs/melonJS/tree/legacy) under the _legacy_ branch.
 
 [melonJS](http://melonjs.org/) is open-source, licensed under the [MIT License](LICENSE), and actively developed and maintained by small team of enthusiasts at AltByte in Singapore.
 
