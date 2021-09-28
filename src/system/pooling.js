@@ -94,10 +94,6 @@ var pool = {
                 if (typeof(obj.onResetEvent) === "function") {
                     obj.onResetEvent.apply(obj, args);
                 }
-                else if (typeof(obj.init) === "function") {
-                    // backward compatibility with Jay Inheritance
-                    obj.init.apply(obj, args);
-                }
                 instance_counter--;
             }
             else {
