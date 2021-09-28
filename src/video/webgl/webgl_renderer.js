@@ -694,6 +694,7 @@ class WebGLRenderer extends Renderer {
      * @param {Number} start start angle in radians
      * @param {Number} end end angle in radians
      * @param {Boolean} [antiClockwise=false] draw arc anti-clockwise
+     * @param {Boolean} [fill=false]
      */
     strokeArc(x, y, radius, start, end, antiClockwise, fill) {
         if (fill === true ) {
