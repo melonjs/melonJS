@@ -75,17 +75,19 @@
     "rollup": "^2.57.0",
     "rollup-plugin-bundle-size": "^1.0.3",
     "rollup-plugin-string": "^3.0.0",
-    "terser": "^5.8.0"
+    "terser": "^5.8.0",
+    "typescript": "^4.4.3"
   },
   "scripts": {
     "build": "npm run lint && rollup -c --silent",
-    "dist": " npm run build && npm run minify && mkdirp dist && cp -f build/*.js dist/",
+    "dist": " npm run build && npm run minify && mkdirp dist && cp -f build/*.js dist/ && npm run makedts",
     "minify": "terser build/melonjs.js --compress --mangle --comments  '/(?:^!|@(?:license|preserve|cc_on))/' --output build/melonjs.min.js",
     "lint": "eslint --config .eslintrc.json src",
     "test": "npm run build && karma start tests/karma.conf.js",
     "doc": "mkdirp docs && jsdoc -c jsdoc_conf.json",
     "publishdoc": "npm run doc && ghpages melonjs/melonJS -p docs",
     "release": "npm run dist && npm publish --access public",
-    "clean": "del-cli --force build/*.js docs"
+    "clean": "del-cli --force build/*.js docs",
+    "makedts": "npx -p typescript tsc dist/melonjs.module.js --declaration --allowJs --emitDeclarationOnly"
   }
 }
