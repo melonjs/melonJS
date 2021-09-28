@@ -1,5 +1,4 @@
 import Vector2d from "./../math/vector2.js";
-import ObservableVector2d from "./../math/observable_vector2.js";
 import Rect from "./../shapes/rectangle.js";
 import Ellipse from "./../shapes/ellipse.js";
 import Polygon from "./../shapes/poly.js";
@@ -197,33 +196,6 @@ class Body {
         }
         // cap by default to half the default gravity force
         this.maxVel.set(490, 490);
-
-        /**
-         * Default gravity value for this body.
-         * To be set to to < 0, 0 > for RPG, shooter, etc...<br>
-         * @public
-         * @see me.Body.gravityScale
-         * @type me.Vector2d
-         * @default <0,0.98>
-         * @deprecated since 8.0.0
-         * @name gravity
-         * @memberOf me.Body
-         */
-        if (typeof this.gravity === "undefined") {
-            var self = this;
-            this.gravity = new ObservableVector2d(0, 0, { onUpdate : function(x, y) {
-                // disable gravity or apply a scale if y gravity is different from 0
-                if (typeof y === "number") {
-                    self.gravityScale = y / game.world.gravity.y;
-                }
-                // deprecation // WARNING:
-                console.log(
-                    "me.Body.gravity is deprecated, " +
-                    "please see me.Body.gravityScale " +
-                    "to modify gravity for a specific body"
-                );
-            }});
-        }
 
         /**
          * The degree to which this body is affected by the world gravity

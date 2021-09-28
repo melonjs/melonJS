@@ -1,5 +1,13 @@
 # Changelog
 
+## [10.0.0] (melonJS 2) - _unreleased_
+
+### Changed
+- melonJS 2 (aka version 10.0.0) is now a pure modern ES6 based version of melonJS
+
+### Deprecated
+- all deprecated API from melonJS "1" have been removed
+
 ## [9.1.1] - _2021-09-26_
 
 ### Fixed
@@ -22,7 +30,7 @@
 
 ## [9.0.1] - _2021-09-24_
 
-###Fixed
+### Fixed
 - release fix for NPM
 
 ## [9.0.0] - _2021-09-24_

@@ -756,21 +756,6 @@ var loader = {
             return jsonList[elt];
         }
         return null;
-    },
-
-    /**
-     * Return the loading progress in percent
-     * @name getLoadProgress
-     * @memberOf me.loader
-     * @public
-     * @function
-     * @deprecated use callback instead
-     * @see me.loader.onProgress
-     * @see me.event.LOADER_PROGRESS
-     * @return {Number}
-     */
-    getLoadProgress() {
-        return loadCount / resourceCount;
     }
 
 };

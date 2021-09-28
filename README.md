@@ -1,20 +1,22 @@
-melonJS
-=======
+melonJS 2
+=========
 [![Build Status](https://travis-ci.org/melonjs/melonJS.svg)](https://travis-ci.org/melonjs/melonJS)
 [![Language grade: JavaScript](https://img.shields.io/lgtm/grade/javascript/g/melonjs/melonJS.svg?logo=lgtm&logoWidth=18)](https://lgtm.com/projects/g/melonjs/melonJS/context:javascript)
 [![Build Size](https://badgen.net/bundlephobia/min/melonjs)](https://bundlephobia.com/result?p=melonjs)
 [![Dependencies](https://img.shields.io/david/melonjs/melonJS.svg)](https://david-dm.org/melonjs/melonJS)
-[![jsDeliver](https://data.jsdelivr.com/v1/package/npm/melonjs/badge)](https://www.jsdelivr.com/package/npm/melonjs)
+[![NPM Package](https://img.shields.io/npm/v/melonjs)](https://www.npmjs.com/package/melonjs)
 [![Boss Bounty Badge](https://img.shields.io/endpoint.svg?url=https://api.boss.dev/badge/enabled/melonjs/melonJS)](https://www.boss.dev/issues/repo/melonjs/melonJS)
 
 
-A fresh & lightweight HTML5 game engine
+A fresh, _modern_ & lightweight HTML5 game engine
 -------------------------------------------------------------------------------
 ![melonJS](http://melonjs.org/media/alex4-github.png)
 
-Copyright (C) 2011 - 2021 Olivier Biot
+melonJS 2 is a modern version of the melonJS game engine. It has been rebuilt almost entirely using ES6 class, inheritance and semantic, and is bundled using Rollup to provide modern features such as transpiling and tree-shaking.
 
-[melonJS](http://melonjs.org/) is licensed under the [MIT License](http://www.opensource.org/licenses/mit-license.php)
+Note: melonJS 2 is a work in progress and will break your game (No more Jay inheritance, and no backward compatibility with deprecated APIs), unless you want to contribute to the development, or if you are looking at the stable legacy version of melonJS, you can find it [here](https://github.com/melonjs/melonJS/tree/legacy) under the _legacy_ branch.
+
+[melonJS](http://melonjs.org/) is open-source, licensed under the [MIT License](LICENSE), and actively developed and maintained by small team of enthusiasts at AltByte in Singapore.
 
 About melonJS
 -------------------------------------------------------------------------------
@@ -60,7 +62,7 @@ and currently features :
 - Built-in support for 3rd party Application Wrappers such as [Cordova](https://cordova.apache.org)
 - Asynchronous publish/subscribe pattern messaging support (minPubSub)
 - A fully customizable preloader
-- As light as [~70kb](https://bundlephobia.com/result?p=melonjs@latest) minified & gzipped
+- As light as [~70kb](https://bundlephobia.com/result?p=melonjs@latest) minified & gzipped, before tree-shaking
 
 Using melonJS
 -------------------------------------------------------------------------------
@@ -116,11 +118,9 @@ Since version 9.0.0 melonJS provides different build options :
 
 | build               | description |
 | ------------------- | ----------- |
-| `melonjs.js`        | a legacy ES5 UMD Bundle (directly transpiled from the ES6 version) including full API backward compatibility with previous versions |
-| `melonjs.min.js`    | a minified version of the ES5 UMD bundle version |
-| `melonjs.module.js` | a ES6 Module Bundle, for those living on the edge, and with no backward compatibility (note: this will break your game when upgrading!) |
-
-> Note: current version of both the tutorials and the debugPanel are not compatible with the ES6 version.
+| `melonjs.module.js` | the ES6 Module (ESM) Bundle |
+| `melonjs.js`        | a ES5 UMD Bundle (directly transpiled from the ES6 version) |
+| `melonjs.min.js`    | a minified version of the ES5 UMD bundle |
 
 Alternatively, the latest version of melonJS can be installed through [NPM](https://www.npmjs.com/package/melonjs) :
 
@@ -135,26 +135,26 @@ If you need to import the ES6 module of melonjs (for Webpack):
 Or can simply be added to your html, through a content delivery network (CDN) URL, using for example :
 
 ```html
-<!-- load the ES5 UMD bundle of melonJS v9.0.0 -->
-<script src="https://cdn.jsdelivr.net/npm/melonjs@9.0.0/dist/melonjs.js"></script>
-<!-- load the ES6 module bundle of melonJS v9.0.0 -->
-<script src="https://cdn.jsdelivr.net/npm/melonjs@9.0.0/dist/melonjs.module.js"></script>
+<!-- load the ES5 UMD bundle of melonJS v10.0.0 -->
+<script src="https://cdn.jsdelivr.net/npm/melonjs@10.0.0/dist/melonjs.js"></script>
+<!-- load the ES6 module bundle of melonJS v10.0.0 -->
+<script src="https://cdn.jsdelivr.net/npm/melonjs@10.0.0/dist/melonjs.module.js"></script>
 <!-- omit the version completely to get the latest one -->
 <!-- you should NOT use this in production -->
 <script src="https://cdn.jsdelivr.net/npm/melonjs/dist/melonjs.js"></script>
 <!-- add ".min" to any JS/CSS file to get a minified version -->
-<script src="https://cdn.jsdelivr.net/npm/melonjs@8.0.1/dist/melonjs.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/melonjs@10.0.0/dist/melonjs.min.js"></script>
 ```
 and of course the debug panel :
 ```html
 <!-- load the latest debug panel -->
 <script src="https://cdn.jsdelivr.net/npm/melonjs/plugins/debug/debugPanel.js"></script>
 <!-- or a specific corresponding release -->
-<script src="https://cdn.jsdelivr.net/npm/melonjs@8.0.1/plugins/debug/debugPanel.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/melonjs@9.0.0/plugins/debug/debugPanel.js"></script>
 ```
 
 > Note: "official" CDN and NPM install are only available from version 7.0.0 and onwards.
-> Note: ES6 version of melonJS is available from version 9.0.0 and onwards.
+> Note: current version of both the tutorials and the debugPanel are not compatible with the ES6 version.
 
 Building melonJS
 -------------------------------------------------------------------------------

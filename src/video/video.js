@@ -1,5 +1,4 @@
 import Vector2d from "./../math/vector2.js";
-import {warning} from "./../lang/deprecated";
 import WebGLRenderer from "./webgl/webgl_renderer.js";
 import CanvasRenderer from "./canvas/canvas_renderer.js";
 import utils from "./../utils/utils.js";
@@ -171,16 +170,10 @@ var video = {
             settings.autoScale = (settings.scale === "auto") || false;
         }
 
-        // for backward compatilibty with melonJS 7.1.1 and lower
-        if (typeof settings.wrapper !== "undefined") {
-            warning("settings.wrapper", "settings.parent", "8.0.0");
-            settings.parent = settings.wrapper;
-        }
-
         // display melonJS version
         if (settings.consoleHeader !== false) {
             // output video information in the console
-            console.log("melonJS v" + version + " | http://melonjs.org" );
+            console.log("melonJS 2 (v" + version + ") | http://melonjs.org" );
         }
 
         // override renderer settings if &webgl is defined in the URL
