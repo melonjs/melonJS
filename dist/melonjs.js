@@ -1,7 +1,7 @@
 /*!
  * melonJS Game Engine - v10.0.0
  * http://www.melonjs.org
- * melonJS 2 is licensed under the MIT License.
+ * melonJS is licensed under the MIT License.
  * http://www.opensource.org/licenses/mit-license
  * @copyright (C) 2011 - 2021 Olivier Biot
  */
