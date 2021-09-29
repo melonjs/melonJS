@@ -281,9 +281,9 @@ class CanvasRenderer extends Renderer {
      * @param {Number} start start angle in radians
      * @param {Number} end end angle in radians
      * @param {Boolean} [antiClockwise=false] draw arc anti-clockwise
-     * @param {Boolean} [fill=false] draw arc anti-clockwise
+     * @param {Boolean} [fill=false] also fill the shape with the current color if true
      */
-    strokeArc(x, y, radius, start, end, antiClockwise, fill) {
+    strokeArc(x, y, radius, start, end, antiClockwise, fill = false) {
         var context = this.backBufferContext2D;
 
         if (context.globalAlpha < 1 / 255) {
@@ -322,8 +322,9 @@ class CanvasRenderer extends Renderer {
      * @param {Number} y ellipse center point y-axis
      * @param {Number} w horizontal radius of the ellipse
      * @param {Number} h vertical radius of the ellipse
+     * @param {Boolean} [fill=false] also fill the shape with the current color if true
      */
-    strokeEllipse(x, y, w, h, fill) {
+    strokeEllipse(x, y, w, h, fill = false) {
         var context = this.backBufferContext2D;
 
         if (context.globalAlpha < 1 / 255) {
@@ -413,8 +414,9 @@ class CanvasRenderer extends Renderer {
      * @memberOf me.CanvasRenderer.prototype
      * @function
      * @param {me.Polygon} poly the shape to draw
+     * @param {Boolean} [fill=false] also fill the shape with the current color if true
      */
-    strokePolygon(poly, fill) {
+    strokePolygon(poly, fill = false) {
         var context = this.backBufferContext2D;
 
         if (context.globalAlpha < 1 / 255) {
@@ -456,8 +458,9 @@ class CanvasRenderer extends Renderer {
      * @param {Number} y
      * @param {Number} width
      * @param {Number} height
+     * @param {Boolean} [fill=false] also fill the shape with the current color if true
      */
-    strokeRect(x, y, width, height, fill) {
+    strokeRect(x, y, width, height, fill = false) {
         if (fill === true ) {
             this.fillRect(x, y, width, height);
         } else {

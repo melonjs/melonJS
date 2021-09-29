@@ -696,7 +696,7 @@ class WebGLRenderer extends Renderer {
      * @param {Boolean} [antiClockwise=false] draw arc anti-clockwise
      * @param {Boolean} [fill=false]
      */
-    strokeArc(x, y, radius, start, end, antiClockwise, fill) {
+    strokeArc(x, y, radius, start, end, antiClockwise = false, fill) {
         if (fill === true ) {
             this.fillArc(x, y, radius, start, end, antiClockwise);
         } else {
@@ -739,7 +739,7 @@ class WebGLRenderer extends Renderer {
      * @param {Number} end end angle in radians
      * @param {Boolean} [antiClockwise=false] draw arc anti-clockwise
      */
-    fillArc(x, y, radius, start, end, antiClockwise) {
+    fillArc(x, y, radius, start, end, antiClockwise = false) {
         // XXX to be optimzed using a specific shader
         var points = this._glPoints;
         var i, index = 0;
@@ -779,8 +779,9 @@ class WebGLRenderer extends Renderer {
      * @param {Number} y ellipse center point y-axis
      * @param {Number} w horizontal radius of the ellipse
      * @param {Number} h vertical radius of the ellipse
+     * @param {Boolean} [fill=false] also fill the shape with the current color if true
      */
-    strokeEllipse(x, y, w, h, fill) {
+    strokeEllipse(x, y, w, h, fill = false) {
         if (fill === true ) {
             this.fillEllipse(x, y, w, h);
         } else {
@@ -881,8 +882,9 @@ class WebGLRenderer extends Renderer {
      * @memberOf me.WebGLRenderer.prototype
      * @function
      * @param {me.Polygon} poly the shape to draw
+     * @param {Boolean} [fill=false] also fill the shape with the current color if true
      */
-    strokePolygon(poly, fill) {
+    strokePolygon(poly, fill = false) {
         if (fill === true ) {
             this.fillPolygon(poly);
         } else {
@@ -941,8 +943,9 @@ class WebGLRenderer extends Renderer {
      * @param {Number} y
      * @param {Number} width
      * @param {Number} height
+     * @param {Boolean} [fill=false] also fill the shape with the current color if true
      */
-    strokeRect(x, y, width, height, fill) {
+    strokeRect(x, y, width, height, fill = false) {
         if (fill === true ) {
             this.fillRect(x, y, width, height);
         } else {
