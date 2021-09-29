@@ -323,7 +323,6 @@ export class Body {
      * @public
      * @function
      * @param {me.Rect|me.Polygon|me.Line|me.Ellipse|me.Bounds|Object} shape a shape or JSON object
-     * @param {Boolean} batchInsert if true the body bounds won't be updated after adding a shape
      * @return {Number} the shape array length
      * @example
      * // add a rectangle shape
@@ -1313,7 +1312,7 @@ export class CanvasRenderer {
      * @param {Number} start start angle in radians
      * @param {Number} end end angle in radians
      * @param {Boolean} [antiClockwise=false] draw arc anti-clockwise
-     * @param {Boolean} [fill=false] draw arc anti-clockwise
+     * @param {Boolean} [fill=false] also fill the shape with the current color if true
      */
     strokeArc(x: number, y: number, radius: number, start: number, end: number, antiClockwise?: boolean, fill?: boolean): void;
     /**
@@ -1338,8 +1337,9 @@ export class CanvasRenderer {
      * @param {Number} y ellipse center point y-axis
      * @param {Number} w horizontal radius of the ellipse
      * @param {Number} h vertical radius of the ellipse
+     * @param {Boolean} [fill=false] also fill the shape with the current color if true
      */
-    strokeEllipse(x: number, y: number, w: number, h: number, fill: any): void;
+    strokeEllipse(x: number, y: number, w: number, h: number, fill?: boolean): void;
     /**
      * Fill an ellipse at the specified coordinates with given radius
      * @name fillEllipse
@@ -1379,8 +1379,9 @@ export class CanvasRenderer {
      * @memberOf me.CanvasRenderer.prototype
      * @function
      * @param {me.Polygon} poly the shape to draw
+     * @param {Boolean} [fill=false] also fill the shape with the current color if true
      */
-    strokePolygon(poly: any, fill: any): void;
+    strokePolygon(poly: any, fill?: boolean): void;
     /**
      * Fill the given me.Polygon on the screen
      * @name fillPolygon
@@ -1398,8 +1399,9 @@ export class CanvasRenderer {
      * @param {Number} y
      * @param {Number} width
      * @param {Number} height
+     * @param {Boolean} [fill=false] also fill the shape with the current color if true
      */
-    strokeRect(x: number, y: number, width: number, height: number, fill: any): void;
+    strokeRect(x: number, y: number, width: number, height: number, fill?: boolean): void;
     /**
      * Draw a filled rectangle at the specified coordinates
      * @name fillRect
@@ -5305,11 +5307,11 @@ export class Renderable {
      * @memberOf me.Renderable#
      * @example
      *  // define a new Player Class
-     *  game.PlayerEntity = me.Sprite.extend({
+     *  class PlayerEntity extends me.Sprite {
      *      // constructor
-     *      init:function (x, y, settings) {
+     *      constructor(x, y, settings) {
      *          // call the parent constructor
-     *          this._super(me.Sprite, 'init', [x, y , settings]);
+     *          super(x, y , settings);
      *
      *          // define a basic walking animation
      *          this.addAnimation("walk",  [...]);
@@ -5328,7 +5330,7 @@ export class Renderable {
      *
      *          // set the display to follow our position on both axis
      *          me.game.viewport.follow(this.pos, me.game.viewport.AXIS.BOTH);
-     *      },
+     *      }
      *
      *      ...
      *
@@ -7494,10 +7496,15 @@ export class Tween {
      */
     _resumeCallback: (elapsed: any) => void;
     /**
+    * @typedef {Function} SetProperties
+    * @param {Object.<string, any>} object
+    * @returns {void}
+    */
+    /**
      * @ignore
-     * @type (o: Record<string, unknown>) => void
+     * @type {SetProperties}
      */
-    setProperties: any;
+    setProperties: Function;
     /**
      * reset the tween object to default value
      * @ignore
@@ -8329,6 +8336,11 @@ export class Vector3d {
 export class WebGLCompositor {
     constructor(renderer: any);
     /**
+     * Initialize the compositor
+     * @ignore
+     */
+    init(renderer: any): void;
+    /**
      * The number of quads held in the batch
      * @name length
      * @memberOf me.WebGLCompositor
@@ -8336,7 +8348,7 @@ export class WebGLCompositor {
      * @readonly
      */
     readonly length: number;
-    currentTextureUnit: number;
+    currentTextureUnit: any;
     boundTextures: any[];
     v: Vector2d[];
     renderer: any;
@@ -8429,7 +8441,7 @@ export class WebGLCompositor {
     /**
      * @ignore
      */
-    uploadTexture(texture: any, w: any, h: any, b: any, force: any): number;
+    uploadTexture(texture: any, w: any, h: any, b: any, force: any): any;
     /**
      * Create a full index buffer for the element array
      * @ignore
@@ -8854,8 +8866,9 @@ export class WebGLRenderer {
      * @param {Number} y ellipse center point y-axis
      * @param {Number} w horizontal radius of the ellipse
      * @param {Number} h vertical radius of the ellipse
+     * @param {Boolean} [fill=false] also fill the shape with the current color if true
      */
-    strokeEllipse(x: number, y: number, w: number, h: number, fill: any): void;
+    strokeEllipse(x: number, y: number, w: number, h: number, fill?: boolean): void;
     /**
      * Fill an ellipse at the specified coordinates with given radius
      * @name fillEllipse
@@ -8895,8 +8908,9 @@ export class WebGLRenderer {
      * @memberOf me.WebGLRenderer.prototype
      * @function
      * @param {me.Polygon} poly the shape to draw
+     * @param {Boolean} [fill=false] also fill the shape with the current color if true
      */
-    strokePolygon(poly: any, fill: any): void;
+    strokePolygon(poly: any, fill?: boolean): void;
     /**
      * Fill a me.Polygon on the screen
      * @name fillPolygon
@@ -8914,8 +8928,9 @@ export class WebGLRenderer {
      * @param {Number} y
      * @param {Number} width
      * @param {Number} height
+     * @param {Boolean} [fill=false] also fill the shape with the current color if true
      */
-    strokeRect(x: number, y: number, width: number, height: number, fill: any): void;
+    strokeRect(x: number, y: number, width: number, height: number, fill?: boolean): void;
     /**
      * Draw a filled rectangle at the specified coordinates
      * @name fillRect
@@ -9062,7 +9077,7 @@ export class World {
 }
 declare namespace audio$1 {
     const stopOnAudioError: boolean;
-    const init: any;
+    const init: Function;
     function hasFormat(codec: any): any;
     function hasAudio(): boolean;
     function enable(): void;
@@ -9312,9 +9327,9 @@ declare namespace game$1 {
     export const mergeGroup: boolean;
     export const sortOn: string;
     export function onLevelLoaded(): void;
-    const init_1: any;
+    const init_1: Function;
     export { init_1 as init };
-    export const reset: any;
+    export const reset: Function;
     export function updateFrameRate(): void;
     export function getParentContainer(child: any): any;
     export function repaint(): void;
@@ -10624,16 +10639,16 @@ declare namespace state$1 {
      * @param {me.Stage} stage Instantiated Stage to associate with state ID
      * @param {Boolean} [start = false] if true the state will be changed immediately after adding it.
      * @example
-     * var MenuButton = me.GUI_Object.extend({
-     *     "onClick" : function () {
+     * class MenuButton extends me.GUI_Object {
+     *     onClick() {
      *         // Change to the PLAY state when the button is clicked
      *         me.state.change(me.state.PLAY);
      *         return true;
      *     }
-     * });
+     * };
      *
-     * var MenuScreen = me.Stage.extend({
-     *     onResetEvent: function() {
+     * class MenuScreen extends me.Stage {
+     *     onResetEvent() {
      *         // Load background image
      *         me.game.world.addChild(
      *             new me.ImageLayer(0, 0, {
@@ -10650,13 +10665,13 @@ declare namespace state$1 {
      *
      *         // Play music
      *         me.audio.playTrack("menu");
-     *     },
+     *     }
      *
-     *     "onDestroyEvent" : function () {
+     *     onDestroyEvent() {
      *         // Stop music
      *         me.audio.stopTrack();
      *     }
-     * });
+     * };
      *
      * me.state.set(me.state.MENU, new MenuScreen());
      */
@@ -10671,16 +10686,16 @@ declare namespace state$1 {
      * @param {me.Stage} stage Instantiated Stage to associate with state ID
      * @param {Boolean} [start = false] if true the state will be changed immediately after adding it.
      * @example
-     * var MenuButton = me.GUI_Object.extend({
-     *     "onClick" : function () {
+     * class MenuButton extends me.GUI_Object {
+     *     onClick() {
      *         // Change to the PLAY state when the button is clicked
      *         me.state.change(me.state.PLAY);
      *         return true;
      *     }
-     * });
+     * };
      *
-     * var MenuScreen = me.Stage.extend({
-     *     onResetEvent: function() {
+     * class MenuScreen extends me.Stage {
+     *     onResetEvent() {
      *         // Load background image
      *         me.game.world.addChild(
      *             new me.ImageLayer(0, 0, {
@@ -10697,13 +10712,13 @@ declare namespace state$1 {
      *
      *         // Play music
      *         me.audio.playTrack("menu");
-     *     },
+     *     }
      *
-     *     "onDestroyEvent" : function () {
+     *     onDestroyEvent() {
      *         // Stop music
      *         me.audio.stopTrack();
      *     }
-     * });
+     * };
      *
      * me.state.set(me.state.MENU, new MenuScreen());
      */
@@ -11034,7 +11049,7 @@ declare namespace video$1 {
     export const AUTO: number;
     export const parent: HTMLElement;
     export const scaleRatio: any;
-    const init_2: any;
+    const init_2: Function;
     export { init_2 as init };
     export function createCanvas(width: number, height: number, offscreen?: boolean): any;
     export function getParent(): HTMLElement;

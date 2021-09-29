@@ -98,6 +98,25 @@ var video = {
     scaleRatio : new Vector2d(1, 1),
 
     /**
+     * @typedef {Function} Init
+     * @param {Number} width The width of the canvas viewport
+     * @param {Number} height The height of the canvas viewport
+     * @param {Object} [options] The optional video/renderer parameters.<br> (see Renderer(s) documentation for further specific options)
+     * @param {String|HTMLElement} [options.parent=document.body] the DOM parent element to hold the canvas in the HTML file
+     * @param {Number} [options.renderer=me.video.AUTO] renderer to use (me.video.CANVAS, me.video.WEBGL, me.video.AUTO)
+     * @param {Boolean} [options.doubleBuffering=false] enable/disable double buffering
+     * @param {Number|String} [options.scale=1.0] enable scaling of the canvas ('auto' for automatic scaling)
+     * @param {String} [options.scaleMethod="fit"] screen scaling modes ('fit','fill-min','fill-max','flex','flex-width','flex-height','stretch')
+     * @param {Boolean} [options.preferWebGL1=false] if true the renderer will only use WebGL 1
+     * @param {String} [options.powerPreference="default"] a hint to the user agent indicating what configuration of GPU is suitable for the WebGL context ("default", "high-performance", "low-power"). To be noted that Safari and Chrome (since version 80) both default to "low-power" to save battery life and improve the user experience on these dual-GPU machines.
+     * @param {Boolean} [options.transparent=false] whether to allow transparent pixels in the front buffer (screen).
+     * @param {Boolean} [options.antiAlias=false] whether to enable or not video scaling interpolation
+     * @param {Boolean} [options.consoleHeader=true] whether to display melonJS version and basic device information in the console
+     * @return {Boolean} false if initialization failed (canvas not supported)
+    */
+
+
+    /**
      * Initialize the "video" system (create a canvas based on the given arguments, and the related renderer). <br>
      * melonJS support various scaling mode, that can be enabled <u>once the scale option is set to <b>`auto`</b></u> : <br>
      *  - <i><b>`fit`</b></i> : Letterboxed; content is scaled to design aspect ratio <br>
@@ -117,20 +136,7 @@ var video = {
      * @name init
      * @memberOf me.video
      * @function
-     * @param {Number} width The width of the canvas viewport
-     * @param {Number} height The height of the canvas viewport
-     * @param {Object} [options] The optional video/renderer parameters.<br> (see Renderer(s) documentation for further specific options)
-     * @param {String|HTMLElement} [options.parent=document.body] the DOM parent element to hold the canvas in the HTML file
-     * @param {Number} [options.renderer=me.video.AUTO] renderer to use (me.video.CANVAS, me.video.WEBGL, me.video.AUTO)
-     * @param {Boolean} [options.doubleBuffering=false] enable/disable double buffering
-     * @param {Number|String} [options.scale=1.0] enable scaling of the canvas ('auto' for automatic scaling)
-     * @param {String} [options.scaleMethod="fit"] screen scaling modes ('fit','fill-min','fill-max','flex','flex-width','flex-height','stretch')
-     * @param {Boolean} [options.preferWebGL1=false] if true the renderer will only use WebGL 1
-     * @param {String} [options.powerPreference="default"] a hint to the user agent indicating what configuration of GPU is suitable for the WebGL context ("default", "high-performance", "low-power"). To be noted that Safari and Chrome (since version 80) both default to "low-power" to save battery life and improve the user experience on these dual-GPU machines.
-     * @param {Boolean} [options.transparent=false] whether to allow transparent pixels in the front buffer (screen).
-     * @param {Boolean} [options.antiAlias=false] whether to enable or not video scaling interpolation
-     * @param {Boolean} [options.consoleHeader=true] whether to display melonJS version and basic device information in the console
-     * @return {Boolean} false if initialization failed (canvas not supported)
+
      * @see me.CanvasRenderer
      * @see me.WebGLRenderer
      * @example
@@ -142,16 +148,7 @@ var video = {
      *     scaleMethod : "fit",
      *     doubleBuffering : true
      * });
-     * @type (game_width: number, game_height: number, options: {
-     *      parent: String|HTMLElement
-     *      renderer: Number
-     *      doubleBuffering: Boolean
-     *      scale: Number|String
-     *      scaleMethod: String
-     *      preferWebGL1: Boolean
-     *      powerPreference: String
-     *      transparent: Boolean
-     * }) => boolean
+     * @type {Init}
      */
     init : function (game_width, game_height, options) {
 

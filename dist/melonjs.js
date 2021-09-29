@@ -696,10 +696,10 @@
             for (var i = 0; i < arguments.length; i++) {
                 args[i] = arguments$1[i];
             }
-            var entity = objectClass[name];
-            if (entity) {
-                var proto = entity["class"],
-                    poolArray = entity.pool,
+            var className = objectClass[name];
+            if (className) {
+                var proto = className["class"],
+                    poolArray = className.pool,
                     obj;
 
                 if (poolArray && ((obj = poolArray.pop()))) {
@@ -719,7 +719,6 @@
                 }
                 return obj;
             }
-
             throw new Error("Cannot instantiate object of type '" + name + "'");
         },
 
@@ -12285,11 +12284,11 @@
              * @memberOf me.Renderable#
              * @example
              *  // define a new Player Class
-             *  game.PlayerEntity = me.Sprite.extend({
+             *  class PlayerEntity extends me.Sprite {
              *      // constructor
-             *      init:function (x, y, settings) {
+             *      constructor(x, y, settings) {
              *          // call the parent constructor
-             *          this._super(me.Sprite, 'init', [x, y , settings]);
+             *          super(x, y , settings);
              *
              *          // define a basic walking animation
              *          this.addAnimation("walk",  [...]);
@@ -12308,7 +12307,7 @@
              *
              *          // set the display to follow our position on both axis
              *          me.game.viewport.follow(this.pos, me.game.viewport.AXIS.BOTH);
-             *      },
+             *      }
              *
              *      ...
              *
@@ -13110,7 +13109,7 @@
             if ( root === void 0 ) root = false;
 
 
-            // call the _super constructor
+            // call the super constructor
             Renderable.call(this, x, y, width, height);
 
             /**
@@ -15268,7 +15267,7 @@
             if ( height === void 0 ) height = Infinity;
 
 
-            // call the _super constructor
+            // call the super constructor
             Container.call(this, x, y, width, height, true);
 
             // world is the root container
@@ -15349,7 +15348,7 @@
             // reset the anchorPoint
             this.anchorPoint.set(0, 0);
 
-            // call the _super constructor
+            // call the super constructor
             Container.prototype.reset.call(this);
         };
 
@@ -15366,7 +15365,7 @@
             // insert the world container (children) into the quadtree
             this.broadphase.insertContainer(this);
 
-            // call the _super constructor
+            // call the super constructor
             return Container.prototype.update.call(this, dt);
         };
 
@@ -15463,12 +15462,17 @@
         onLevelLoaded : function () {},
 
         /**
+         * @typedef {Function} EmptyCallback
+         * @return {void}
+         */
+
+        /**
          * Initialize the game manager
          * @name init
          * @memberOf me.game
          * @ignore
          * @function
-         * @type () => void
+         * @type {EmptyCallback}
          */
         init : function () {
             // the root object of our world is an entity container
@@ -15488,7 +15492,7 @@
          * @memberOf me.game
          * @public
          * @function
-         * @type () => void
+         * @type {EmptyCallback}
          */
         reset : function () {
             // point to the current active stage "default" camera
@@ -17203,16 +17207,16 @@
          * @param {me.Stage} stage Instantiated Stage to associate with state ID
          * @param {Boolean} [start = false] if true the state will be changed immediately after adding it.
          * @example
-         * var MenuButton = me.GUI_Object.extend({
-         *     "onClick" : function () {
+         * class MenuButton extends me.GUI_Object {
+         *     onClick() {
          *         // Change to the PLAY state when the button is clicked
          *         me.state.change(me.state.PLAY);
          *         return true;
          *     }
-         * });
+         * };
          *
-         * var MenuScreen = me.Stage.extend({
-         *     onResetEvent: function() {
+         * class MenuScreen extends me.Stage {
+         *     onResetEvent() {
          *         // Load background image
          *         me.game.world.addChild(
          *             new me.ImageLayer(0, 0, {
@@ -17229,13 +17233,13 @@
          *
          *         // Play music
          *         me.audio.playTrack("menu");
-         *     },
+         *     }
          *
-         *     "onDestroyEvent" : function () {
+         *     onDestroyEvent() {
          *         // Stop music
          *         me.audio.stopTrack();
          *     }
-         * });
+         * };
          *
          * me.state.set(me.state.MENU, new MenuScreen());
          */
@@ -18372,7 +18376,6 @@
      * @public
      * @function
      * @param {me.Rect|me.Polygon|me.Line|me.Ellipse|me.Bounds|Object} shape a shape or JSON object
-     * @param {Boolean} batchInsert if true the body bounds won't be updated after adding a shape
      * @return {Number} the shape array length
      * @example
      * // add a rectangle shape
@@ -18911,6 +18914,7 @@
     Body.prototype.destroy = function destroy () {
         this.onBodyUpdate = undefined;
         this.ancestor = undefined;
+        this.bounds = undefined;
         this.shapes.length = 0;
     };
 
@@ -21502,9 +21506,11 @@
          * @param {Number} start start angle in radians
          * @param {Number} end end angle in radians
          * @param {Boolean} [antiClockwise=false] draw arc anti-clockwise
-         * @param {Boolean} [fill=false] draw arc anti-clockwise
+         * @param {Boolean} [fill=false] also fill the shape with the current color if true
          */
         CanvasRenderer.prototype.strokeArc = function strokeArc (x, y, radius, start, end, antiClockwise, fill) {
+            if ( fill === void 0 ) fill = false;
+
             var context = this.backBufferContext2D;
 
             if (context.globalAlpha < 1 / 255) {
@@ -21543,8 +21549,11 @@
          * @param {Number} y ellipse center point y-axis
          * @param {Number} w horizontal radius of the ellipse
          * @param {Number} h vertical radius of the ellipse
+         * @param {Boolean} [fill=false] also fill the shape with the current color if true
          */
         CanvasRenderer.prototype.strokeEllipse = function strokeEllipse (x, y, w, h, fill) {
+            if ( fill === void 0 ) fill = false;
+
             var context = this.backBufferContext2D;
 
             if (context.globalAlpha < 1 / 255) {
@@ -21634,8 +21643,11 @@
          * @memberOf me.CanvasRenderer.prototype
          * @function
          * @param {me.Polygon} poly the shape to draw
+         * @param {Boolean} [fill=false] also fill the shape with the current color if true
          */
         CanvasRenderer.prototype.strokePolygon = function strokePolygon (poly, fill) {
+            if ( fill === void 0 ) fill = false;
+
             var context = this.backBufferContext2D;
 
             if (context.globalAlpha < 1 / 255) {
@@ -21677,8 +21689,11 @@
          * @param {Number} y
          * @param {Number} width
          * @param {Number} height
+         * @param {Boolean} [fill=false] also fill the shape with the current color if true
          */
         CanvasRenderer.prototype.strokeRect = function strokeRect (x, y, width, height, fill) {
+            if ( fill === void 0 ) fill = false;
+
             if (fill === true ) {
                 this.fillRect(x, y, width, height);
             } else {
@@ -26428,6 +26443,12 @@
         stopOnAudioError : true,
 
         /**
+         * @typedef {Function} Init
+         * @param {String} [audioFormat="mp3"] audio format to prioritize
+         * @returns {Boolean} Indicates whether audio initialization was successful
+         */
+
+        /**
          * Initialize and configure the audio support.<br>
          * melonJS supports a wide array of audio codecs that have varying browser support :
          * <i> ("mp3", "mpeg", opus", "ogg", "oga", "wav", "aac", "caf", "m4a", "m4b", "mp4", "weba", "webm", "dolby", "flac")</i>.<br>
@@ -26440,20 +26461,15 @@
          * @memberOf me.audio
          * @public
          * @function
-         * @param {String} [audioFormat="mp3"] audio format to prioritize
-         * @return {Boolean} Indicates whether audio initialization was successful
+         * @type {Init}
          * @example
          * // initialize the "sound engine", giving "webm" as default desired audio format, and "mp3" as a fallback
          * if (!me.audio.init("webm,mp3")) {
          *     alert("Sorry but your browser does not support html 5 audio !");
          *     return;
          * }
-         * @type (audioFormat: string) => boolean
          */
          init : function (audioFormat) {
-            if (!exports.initialized) {
-                throw new Error("me.audio.init() called before engine initialization.");
-            }
             // if no param is given to init we use mp3 by default
             audioFormat = typeof audioFormat === "string" ? audioFormat : "mp3";
             // convert it into an array
@@ -28723,6 +28739,14 @@
      * @param {me.WebGLRenderer} renderer the current WebGL renderer session
      */
     var WebGLCompositor = function WebGLCompositor (renderer) {
+        this.init(renderer);
+    };
+
+    /**
+     * Initialize the compositor
+     * @ignore
+     */
+    WebGLCompositor.prototype.init = function init (renderer) {
         // local reference
         var gl = renderer.gl;
 
@@ -29946,6 +29970,8 @@
          * @param {Boolean} [fill=false]
          */
         WebGLRenderer.prototype.strokeArc = function strokeArc (x, y, radius, start, end, antiClockwise, fill) {
+            if ( antiClockwise === void 0 ) antiClockwise = false;
+
             if (fill === true ) {
                 this.fillArc(x, y, radius, start, end, antiClockwise);
             } else {
@@ -29989,6 +30015,7 @@
          * @param {Boolean} [antiClockwise=false] draw arc anti-clockwise
          */
         WebGLRenderer.prototype.fillArc = function fillArc (x, y, radius, start, end, antiClockwise) {
+
             // XXX to be optimzed using a specific shader
             var points = this._glPoints;
             var i, index = 0;
@@ -30028,8 +30055,11 @@
          * @param {Number} y ellipse center point y-axis
          * @param {Number} w horizontal radius of the ellipse
          * @param {Number} h vertical radius of the ellipse
+         * @param {Boolean} [fill=false] also fill the shape with the current color if true
          */
         WebGLRenderer.prototype.strokeEllipse = function strokeEllipse (x, y, w, h, fill) {
+            if ( fill === void 0 ) fill = false;
+
             if (fill === true ) {
                 this.fillEllipse(x, y, w, h);
             } else {
@@ -30130,8 +30160,11 @@
          * @memberOf me.WebGLRenderer.prototype
          * @function
          * @param {me.Polygon} poly the shape to draw
+         * @param {Boolean} [fill=false] also fill the shape with the current color if true
          */
         WebGLRenderer.prototype.strokePolygon = function strokePolygon (poly, fill) {
+            if ( fill === void 0 ) fill = false;
+
             if (fill === true ) {
                 this.fillPolygon(poly);
             } else {
@@ -30190,8 +30223,11 @@
          * @param {Number} y
          * @param {Number} width
          * @param {Number} height
+         * @param {Boolean} [fill=false] also fill the shape with the current color if true
          */
         WebGLRenderer.prototype.strokeRect = function strokeRect (x, y, width, height, fill) {
+            if ( fill === void 0 ) fill = false;
+
             if (fill === true ) {
                 this.fillRect(x, y, width, height);
             } else {
@@ -30470,6 +30506,25 @@
         scaleRatio : new Vector2d(1, 1),
 
         /**
+         * @typedef {Function} Init
+         * @param {Number} width The width of the canvas viewport
+         * @param {Number} height The height of the canvas viewport
+         * @param {Object} [options] The optional video/renderer parameters.<br> (see Renderer(s) documentation for further specific options)
+         * @param {String|HTMLElement} [options.parent=document.body] the DOM parent element to hold the canvas in the HTML file
+         * @param {Number} [options.renderer=me.video.AUTO] renderer to use (me.video.CANVAS, me.video.WEBGL, me.video.AUTO)
+         * @param {Boolean} [options.doubleBuffering=false] enable/disable double buffering
+         * @param {Number|String} [options.scale=1.0] enable scaling of the canvas ('auto' for automatic scaling)
+         * @param {String} [options.scaleMethod="fit"] screen scaling modes ('fit','fill-min','fill-max','flex','flex-width','flex-height','stretch')
+         * @param {Boolean} [options.preferWebGL1=false] if true the renderer will only use WebGL 1
+         * @param {String} [options.powerPreference="default"] a hint to the user agent indicating what configuration of GPU is suitable for the WebGL context ("default", "high-performance", "low-power"). To be noted that Safari and Chrome (since version 80) both default to "low-power" to save battery life and improve the user experience on these dual-GPU machines.
+         * @param {Boolean} [options.transparent=false] whether to allow transparent pixels in the front buffer (screen).
+         * @param {Boolean} [options.antiAlias=false] whether to enable or not video scaling interpolation
+         * @param {Boolean} [options.consoleHeader=true] whether to display melonJS version and basic device information in the console
+         * @return {Boolean} false if initialization failed (canvas not supported)
+        */
+
+
+        /**
          * Initialize the "video" system (create a canvas based on the given arguments, and the related renderer). <br>
          * melonJS support various scaling mode, that can be enabled <u>once the scale option is set to <b>`auto`</b></u> : <br>
          *  - <i><b>`fit`</b></i> : Letterboxed; content is scaled to design aspect ratio <br>
@@ -30489,20 +30544,7 @@
          * @name init
          * @memberOf me.video
          * @function
-         * @param {Number} width The width of the canvas viewport
-         * @param {Number} height The height of the canvas viewport
-         * @param {Object} [options] The optional video/renderer parameters.<br> (see Renderer(s) documentation for further specific options)
-         * @param {String|HTMLElement} [options.parent=document.body] the DOM parent element to hold the canvas in the HTML file
-         * @param {Number} [options.renderer=me.video.AUTO] renderer to use (me.video.CANVAS, me.video.WEBGL, me.video.AUTO)
-         * @param {Boolean} [options.doubleBuffering=false] enable/disable double buffering
-         * @param {Number|String} [options.scale=1.0] enable scaling of the canvas ('auto' for automatic scaling)
-         * @param {String} [options.scaleMethod="fit"] screen scaling modes ('fit','fill-min','fill-max','flex','flex-width','flex-height','stretch')
-         * @param {Boolean} [options.preferWebGL1=false] if true the renderer will only use WebGL 1
-         * @param {String} [options.powerPreference="default"] a hint to the user agent indicating what configuration of GPU is suitable for the WebGL context ("default", "high-performance", "low-power"). To be noted that Safari and Chrome (since version 80) both default to "low-power" to save battery life and improve the user experience on these dual-GPU machines.
-         * @param {Boolean} [options.transparent=false] whether to allow transparent pixels in the front buffer (screen).
-         * @param {Boolean} [options.antiAlias=false] whether to enable or not video scaling interpolation
-         * @param {Boolean} [options.consoleHeader=true] whether to display melonJS version and basic device information in the console
-         * @return {Boolean} false if initialization failed (canvas not supported)
+
          * @see me.CanvasRenderer
          * @see me.WebGLRenderer
          * @example
@@ -30514,16 +30556,7 @@
          *     scaleMethod : "fit",
          *     doubleBuffering : true
          * });
-         * @type (game_width: number, game_height: number, options: {
-         *      parent: String|HTMLElement
-         *      renderer: Number
-         *      doubleBuffering: Boolean
-         *      scale: Number|String
-         *      scaleMethod: String
-         *      preferWebGL1: Boolean
-         *      powerPreference: String
-         *      transparent: Boolean
-         * }) => boolean
+         * @type {Init}
          */
         init : function (game_width, game_height, options) {
 
@@ -31968,8 +32001,14 @@
         };
 
         /**
+        * @typedef {Function} SetProperties
+        * @param {Object.<string, any>} object
+        * @returns {void}
+        */
+
+        /**
          * @ignore
-         * @type (o: Record<string, unknown>) => void
+         * @type {SetProperties}
          */
         this.setProperties = function (object) {
             _object = object;
@@ -33235,7 +33274,7 @@
             pool.push(this.fontData);
             this.fontData = undefined;
             this._text.length = 0;
-            this._super(Renderable, "destroy");
+            Renderable.prototype.destroy.call(this);
         };
 
         Object.defineProperties( BitmapText.prototype, prototypeAccessors );
@@ -34393,7 +34432,7 @@
                     context.globalCompositeOperation = "lighter";
                 }
 
-                this._super(Container, "draw", [renderer, rect]);
+                Container.prototype.draw.call(this, renderer, rect);
 
                 // Restore globalCompositeOperation
                 if (this._emitter.textureAdditive) {
@@ -35227,7 +35266,6 @@
              * @memberOf me.Entity
              */
             // initialize the default body
-
             if (typeof settings.shapes === "undefined") {
                 settings.shapes = new Polygon(0, 0, [
                     new Vector2d(0,          0),
@@ -35236,13 +35274,7 @@
                     new Vector2d(0,          this.height)
                 ]);
             }
-
-            if (typeof this.body !== "undefined") {
-                this.body.init(this, settings.shapes, this.onBodyUpdate.bind(this));
-            }
-            else {
-                this.body = new Body(this, settings.shapes, this.onBodyUpdate.bind(this));
-            }
+            this.body = new Body(this, settings.shapes, this.onBodyUpdate.bind(this));
 
             // resize the entity if required
             if (this.width === 0 && this.height === 0) {
@@ -35295,7 +35327,7 @@
             if (this.renderable) {
                 return this.renderable.update(dt);
             }
-            return this._super(Renderable, "update", [dt]);
+            return Renderable.prototype.update.call(this, dt);
         };
 
         /**

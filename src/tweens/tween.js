@@ -75,8 +75,14 @@ class Tween {
         };
 
         /**
+        * @typedef {Function} SetProperties
+        * @param {Object.<string, any>} object
+        * @returns {void}
+        */
+
+        /**
          * @ignore
-         * @type (o: Record<string, unknown>) => void
+         * @type {SetProperties}
          */
         this.setProperties = function (object) {
             _object = object;

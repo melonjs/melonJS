@@ -60,6 +60,12 @@ var audio = {
     stopOnAudioError : true,
 
     /**
+     * @typedef {Function} Init
+     * @param {String} [audioFormat="mp3"] audio format to prioritize
+     * @returns {Boolean} Indicates whether audio initialization was successful
+     */
+
+    /**
      * Initialize and configure the audio support.<br>
      * melonJS supports a wide array of audio codecs that have varying browser support :
      * <i> ("mp3", "mpeg", opus", "ogg", "oga", "wav", "aac", "caf", "m4a", "m4b", "mp4", "weba", "webm", "dolby", "flac")</i>.<br>
@@ -72,15 +78,13 @@ var audio = {
      * @memberOf me.audio
      * @public
      * @function
-     * @param {String} [audioFormat="mp3"] audio format to prioritize
-     * @return {Boolean} Indicates whether audio initialization was successful
+     * @type {Init}
      * @example
      * // initialize the "sound engine", giving "webm" as default desired audio format, and "mp3" as a fallback
      * if (!me.audio.init("webm,mp3")) {
      *     alert("Sorry but your browser does not support html 5 audio !");
      *     return;
      * }
-     * @type (audioFormat: string) => boolean
      */
      init : function (audioFormat) {
         // if no param is given to init we use mp3 by default
