@@ -274,7 +274,6 @@ class Body {
      * @public
      * @function
      * @param {me.Rect|me.Polygon|me.Line|me.Ellipse|me.Bounds|Object} shape a shape or JSON object
-     * @param {Boolean} batchInsert if true the body bounds won't be updated after adding a shape
      * @return {Number} the shape array length
      * @example
      * // add a rectangle shape
