@@ -803,6 +803,7 @@ class Body {
     destroy() {
         this.onBodyUpdate = undefined;
         this.ancestor = undefined;
+        this.bounds = undefined;
         this.shapes.length = 0;
     }
 };
