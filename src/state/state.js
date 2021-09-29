@@ -439,16 +439,16 @@ var state = {
      * @param {me.Stage} stage Instantiated Stage to associate with state ID
      * @param {Boolean} [start = false] if true the state will be changed immediately after adding it.
      * @example
-     * var MenuButton = me.GUI_Object.extend({
-     *     "onClick" : function () {
+     * class MenuButton extends me.GUI_Object {
+     *     onClick() {
      *         // Change to the PLAY state when the button is clicked
      *         me.state.change(me.state.PLAY);
      *         return true;
      *     }
-     * });
+     * };
      *
-     * var MenuScreen = me.Stage.extend({
-     *     onResetEvent: function() {
+     * class MenuScreen extends me.Stage {
+     *     onResetEvent() {
      *         // Load background image
      *         me.game.world.addChild(
      *             new me.ImageLayer(0, 0, {
@@ -465,13 +465,13 @@ var state = {
      *
      *         // Play music
      *         me.audio.playTrack("menu");
-     *     },
+     *     }
      *
-     *     "onDestroyEvent" : function () {
+     *     onDestroyEvent() {
      *         // Stop music
      *         me.audio.stopTrack();
      *     }
-     * });
+     * };
      *
      * me.state.set(me.state.MENU, new MenuScreen());
      */

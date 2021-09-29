@@ -53,11 +53,11 @@ class Renderable extends Rect {
          * @memberOf me.Renderable#
          * @example
          *  // define a new Player Class
-         *  game.PlayerEntity = me.Sprite.extend({
+         *  class PlayerEntity extends me.Sprite {
          *      // constructor
-         *      init:function (x, y, settings) {
+         *      constructor(x, y, settings) {
          *          // call the parent constructor
-         *          this._super(me.Sprite, 'init', [x, y , settings]);
+         *          super(x, y , settings);
          *
          *          // define a basic walking animation
          *          this.addAnimation("walk",  [...]);
@@ -76,7 +76,7 @@ class Renderable extends Rect {
          *
          *          // set the display to follow our position on both axis
          *          me.game.viewport.follow(this.pos, me.game.viewport.AXIS.BOTH);
-         *      },
+         *      }
          *
          *      ...
          *
