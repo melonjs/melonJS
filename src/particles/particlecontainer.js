@@ -85,7 +85,7 @@ class ParticleContainer extends Container {
                 context.globalCompositeOperation = "lighter";
             }
 
-            this._super(Container, "draw", [renderer, rect]);
+            super.draw(renderer, rect);
 
             // Restore globalCompositeOperation
             if (this._emitter.textureAdditive) {

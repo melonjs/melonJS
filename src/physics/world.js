@@ -22,7 +22,7 @@ class World extends Container {
      */
     constructor(x = 0, y = 0, width = Infinity, height = Infinity) {
 
-        // call the _super constructor
+        // call the super constructor
         super(x, y, width, height, true);
 
         // world is the root container
@@ -99,7 +99,7 @@ class World extends Container {
         // reset the anchorPoint
         this.anchorPoint.set(0, 0);
 
-        // call the _super constructor
+        // call the super constructor
         super.reset();
     }
 
@@ -116,7 +116,7 @@ class World extends Container {
         // insert the world container (children) into the quadtree
         this.broadphase.insertContainer(this);
 
-        // call the _super constructor
+        // call the super constructor
         return super.update(dt);
     }
 

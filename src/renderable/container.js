@@ -34,7 +34,7 @@ class Container extends Renderable {
      */
     constructor(x = 0, y = 0, width = game.viewport.width, height = game.viewport.height, root = false) {
 
-        // call the _super constructor
+        // call the super constructor
         super(x, y, width, height);
 
         /**

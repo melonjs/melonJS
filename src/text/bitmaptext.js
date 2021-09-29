@@ -406,7 +406,7 @@ class BitmapText extends Renderable {
         pool.push(this.fontData);
         this.fontData = undefined;
         this._text.length = 0;
-        this._super(Renderable, "destroy");
+        super.destroy();
     }
 
 };

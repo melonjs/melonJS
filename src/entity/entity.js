@@ -169,7 +169,7 @@ class Entity extends Renderable {
         if (this.renderable) {
             return this.renderable.update(dt);
         }
-        return this._super(Renderable, "update", [dt]);
+        return super.update(dt);
     }
 
     /**
