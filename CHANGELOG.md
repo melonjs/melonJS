@@ -2,9 +2,12 @@
 
 ## [10.0.0] (melonJS 2) - _unreleased_
 
+### Added
+- melonJS is now a pure ES6 library, for class definition, inheritance and semantic
+- melonJS now includes typescript definition for the ESM bundle (`melonjs.module.d.ts`)
+
 ### Changed
 - Jay Inheritance has been replaced with ES6 standard inheritance
-- melonJS is now a pure ES6 library, for class definition, inheritance and semantic
 
 ### Deprecated
 - all deprecated API from the legacy melonJS version have been removed

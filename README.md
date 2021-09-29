@@ -114,11 +114,12 @@ Download melonJS
 
 The latest builds with corresponding release note are available for direct download [here](https://github.com/melonjs/melonJS/releases).
 
-Since version 9.0.0 melonJS provides different build options :
+Since version 10.0.0 melonJS provides different build options :
 
 | build               | description |
 | ------------------- | ----------- |
 | `melonjs.module.js` | the ES6 Module (ESM) Bundle |
+| `melonjs.module.d.ts` | typescript declaration file for the ES6 Module (ESM) Bundle |
 | `melonjs.js`        | a ES5 UMD Bundle (directly transpiled from the ES6 version) |
 | `melonjs.min.js`    | a minified version of the ES5 UMD bundle |
 
