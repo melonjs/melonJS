@@ -39,6 +39,14 @@ var MAX_LENGTH = 16000;
 class WebGLCompositor {
 
     constructor (renderer) {
+        this.init(renderer);
+    }
+
+    /**
+     * Initialize the compositor
+     * @ignore
+     */
+    init (renderer) {
         // local reference
         var gl = renderer.gl;
 
