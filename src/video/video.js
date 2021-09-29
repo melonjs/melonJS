@@ -142,6 +142,16 @@ var video = {
      *     scaleMethod : "fit",
      *     doubleBuffering : true
      * });
+     * @type (game_width: number, game_height: number, options: {
+     *      parent: String|HTMLElement
+     *      renderer: Number
+     *      doubleBuffering: Boolean
+     *      scale: Number|String
+     *      scaleMethod: String
+     *      preferWebGL1: Boolean
+     *      powerPreference: String
+     *      transparent: Boolean
+     * }) => boolean
      */
     init : function (game_width, game_height, options) {
 

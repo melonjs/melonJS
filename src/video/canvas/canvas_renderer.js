@@ -281,6 +281,7 @@ class CanvasRenderer extends Renderer {
      * @param {Number} start start angle in radians
      * @param {Number} end end angle in radians
      * @param {Boolean} [antiClockwise=false] draw arc anti-clockwise
+     * @param {Boolean} [fill=false] draw arc anti-clockwise
      */
     strokeArc(x, y, radius, start, end, antiClockwise, fill) {
         var context = this.backBufferContext2D;

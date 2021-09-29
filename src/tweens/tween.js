@@ -76,6 +76,7 @@ class Tween {
 
         /**
          * @ignore
+         * @type (o: Record<string, unknown>) => void
          */
         this.setProperties = function (object) {
             _object = object;

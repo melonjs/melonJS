@@ -99,6 +99,7 @@ var game = {
      * @memberOf me.game
      * @ignore
      * @function
+     * @type () => void
      */
     init : function () {
         // the root object of our world is an entity container
@@ -118,6 +119,7 @@ var game = {
      * @memberOf me.game
      * @public
      * @function
+     * @type () => void
      */
     reset : function () {
         // point to the current active stage "default" camera

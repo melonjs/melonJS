@@ -1,7 +1,7 @@
 /*!
- * melonJS Game Engine - v9.1.1
+ * melonJS Game Engine - v10.0.0
  * http://www.melonjs.org
- * melonjs is licensed under the MIT License.
+ * melonJS 2 is licensed under the MIT License.
  * http://www.opensource.org/licenses/mit-license
  * @copyright (C) 2011 - 2021 Olivier Biot
  */
@@ -708,10 +708,6 @@
                     if (typeof(obj.onResetEvent) === "function") {
                         obj.onResetEvent.apply(obj, args);
                     }
-                    else if (typeof(obj.init) === "function") {
-                        // backward compatibility with Jay Inheritance
-                        obj.init.apply(obj, args);
-                    }
                     instance_counter--;
                 }
                 else {
@@ -1314,955 +1310,6 @@
      Vector2d.prototype.toString = function toString () {
          return "x:" + this.x + ",y:" + this.y;
      };
-
-    /**
-     * placeholder for all deprecated classes and corresponding alias for backward compatibility
-     * @namespace deprecated
-     * @memberOf me
-     */
-
-    /**
-     * display a deprecation warning in the console
-     * @public
-     * @function
-     * @memberOf me.deprecated
-     * @name warning
-     * @param {String} deprecated deprecated class,function or property name
-     * @param {String} replacement the replacement class, function, or property name
-     * @param {String} version the version since when the lass,function or property is deprecated
-     */
-    function warning(deprecated, replacement, version) {
-        var msg = "melonJS: %s is deprecated since version %s, please use %s";
-        var stack = new Error().stack;
-
-        if (console.groupCollapsed) {
-            console.groupCollapsed(
-                "%c" + msg,
-                "font-weight:normal;color:yellow;",
-                deprecated,
-                version,
-                replacement
-            );
-        } else {
-            console.warn(
-                msg,
-                deprecated,
-                version,
-                replacement
-            );
-        }
-
-        if (typeof stack !== "undefined") {
-            console.warn(stack);
-        }
-
-        if (console.groupCollapsed) {
-            console.groupEnd();
-        }
-
-
-    }
-
-    /**
-     * Backward compatibility for deprecated method or properties are automatically
-     * applied when automatically generating an UMD bundle (which is the default since version 9.0).
-     * @memberof me.deprecated
-     * @function apply
-     */
-     function apply() {
-
-        /**
-         * @function me.device.getPixelRatio
-         * @deprecated since 5.1.0
-         * @see me.device.devicePixelRatio
-         */
-        me.device.getPixelRatio = function() {
-            warning("me.device.getPixelRatio()", "me.device.devicePixelRatio", "5.1.0");
-            return me.device.devicePixelRatio;
-        };
-
-        /**
-         * @class me.Font
-         * @deprecated since 6.1.0
-         * @see me.Text
-         */
-        me.Font = me.Text.extend({
-            /** @ignore */
-            init: function (font, size, fillStyle, textAlign) {
-                var settings = {
-                    font:font,
-                    size:size,
-                    fillStyle:fillStyle,
-                    textAlign:textAlign
-                };
-                // super constructor
-                this._super(me.Text, "init", [0, 0, settings]);
-                // deprecation warning
-                warning("me.Font", "me.Text", "6.1.0");
-            },
-
-            /** @ignore */
-            setFont : function (font, size, fillStyle, textAlign) {
-                // apply fillstyle if defined
-                if (typeof(fillStyle) !== "undefined") {
-                    this.fillStyle.copy(fillStyle);
-                }
-                // h alignement if defined
-                if (typeof(textAlign) !== "undefined") {
-                    this.textAlign = textAlign;
-                }
-                // super constructor
-                return this._super(me.Text, "setFont", [font, size]);
-            }
-        });
-
-        /**
-         * @ignore
-         */
-        me.BitmapFontData = me.BitmapTextData;
-
-        /**
-         * @class me.BitmapFont
-         * @deprecated since 6.1.0
-         * @see me.BitmapText
-         */
-        me.BitmapFont = me.BitmapText.extend({
-            /** @ignore */
-            init: function (data, fontImage, scale, textAlign, textBaseline) {
-                var settings = {
-                    font: fontImage,
-                    fontData: data,
-                    size: scale,
-                    textAlign: textAlign,
-                    textBaseline: textBaseline
-                };
-                // super constructor
-                this._super(me.BitmapText, "init", [0, 0, settings]);
-                // deprecation warning
-                warning("me.BitmapFont", "me.BitmapText", "6.1.0");
-            }
-        });
-
-        /**
-         * @class me.ScreenObject
-         * @deprecated since 6.2.0
-         * @see me.Stage
-         */
-        me.ScreenObject = me.Stage.extend({
-            /** @ignore */
-            init: function (settings) {
-                // super constructor
-                this._super(me.Stage, "init", [settings]);
-                // deprecation warning
-                warning("me.ScreenObject", "me.Stage", "6.2.0");
-            }
-        });
-
-        /**
-         * @function me.Renderer.drawShape
-         * @deprecated since 6.3.0
-         * @see me.Renderer.stroke
-         */
-        me.Renderer.prototype.drawShape = function () {
-            warning("drawShape()", "the stroke() or fill()", "6.3.0");
-            me.Renderer.prototype.stroke.apply(this, arguments);
-        };
-
-        /**
-         * @function me.video.getPos
-         * @deprecated since 7.0.0
-         * @see me.device.getElementBounds
-         */
-        me.video.getPos = function() {
-            warning("me.video.getPos()", "me.device.getElementBounds(me.video.renderer.getScreenCanvas());", "7.0.0");
-            return me.device.getElementBounds(me.video.renderer.getScreenCanvas());
-        };
-
-        /**
-         * @classdesc
-         * melonJS base class for exception handling.
-         * @class
-         * @memberOf me
-         * @constructor
-         * @deprecated since 7.0.0
-         * @see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Error
-         * @param {String} msg Error message.
-         * @example
-         * throw new me.Error("Guru Meditation");
-         */
-         me.Error = function(msg) {
-             var err = new Error();
-             err.name = "me.Error";
-             err.message = msg;
-             return err;
-         };
-
-        /**
-         * @namespace me.sys
-         * @deprecated since 9.0.0
-         */
-        me.sys = me.sys || {};
-
-        /**
-         * @function me.sys.checkVersion
-         * @deprecated since 7.1.0
-         * @see me.utils.checkVersion
-         */
-        me.sys.checkVersion = function(first, second) {
-            warning("me.sys.checkVersion()", "me.utils.checkVersion()", "7.1.0");
-            return me.utils.checkVersion(first, second);
-        };
-
-        /**
-         * @public
-         * @type {Object}
-         * @name HASH
-         * @memberOf me.game
-         * @deprecated since 7.1.0
-         * @see me.utils.getUriFragment
-         */
-        Object.defineProperty(me.game, "HASH", {
-            /**
-             * @ignore
-             */
-            get : function () {
-                warning("me.game.HASH", "me.utils.getUriFragment()", "7.1.0");
-                return me.utils.getUriFragment();
-            },
-            configurable : false
-        });
-
-        /**
-         * @function me.video.updateDisplaySize
-         * @deprecated since 7.1.0
-         * @see me.video.scale
-         */
-        me.video.updateDisplaySize = function(x, y) {
-            warning("me.video.updateDisplaySize()", "me.video.scale()", "7.1.0");
-            return me.video.scale(x, y);
-        };
-
-        /**
-         * @function me.Renderer.scaleCanvas
-         * @deprecated since 7.1.0
-         * @see me.video.scale
-         */
-        me.Renderer.prototype.scaleCanvas = function (x, y) {
-            warning("scaleCanvas()", "me.video.scale()", "7.1.0");
-            return me.video.scale(x, y);
-        };
-
-        /**
-         * @function me.Entity.distanceToPoint
-         * @deprecated since 7.1.0
-         * @see me.Renderable.distanceTo
-        */
-        me.Entity.prototype.distanceToPoint = function (v) {
-            warning("distanceToPoint()", "me.Renderable.distanceTo()", "7.1.0");
-            return this.distanceTo(v);
-        };
-
-        /**
-         * @function me.Entity.angleToPoint
-         * @deprecated since 7.1.0
-         * @see me.Renderable.angleTo
-        */
-        me.Entity.prototype.angleToPoint = function (v) {
-            warning("angleToPoint()", "me.Renderable.angleTo()", "7.1.0");
-            return this.angleTo(v);
-        };
-
-        /**
-         * @public
-         * @type {Number}
-         * @name gravity
-         * @memberOf me.sys
-         * @deprecated since 8.0.0
-         * @see me.World.gravity
-         */
-        Object.defineProperty(me.sys, "gravity", {
-            /**
-             * @ignore
-             */
-            get : function () {
-                warning("me.sys.gravity", "me.game.world.gravity", "8.0.0");
-                return me.game.world ? me.game.world.gravity.y : undefined;
-            },
-
-            /**
-             * @ignore
-             */
-            set : function (value) {
-                warning("me.sys.gravity", "me.game.world.gravity", "8.0.0");
-                if (me.game.world) { me.game.world.gravity.y = value; }
-            },
-            configurable : false
-        });
-
-        /**
-         * @ignore
-         */
-        me.WebGLRenderer.Compositor = me.WebGLCompositor;
-
-        /**
-         * Draw triangle(s)
-         * @name drawTriangle
-         * @deprecated since 8.0.0
-         * @see me.WebGLRenderer.Compositor
-         * @memberOf me.WebGLRenderer.Compositor.drawVertices
-         * @function
-         * @param {me.Vector2d[]} points vertices
-         * @param {Number} [len=points.length] amount of points defined in the points array
-         * @param {Boolean} [strip=false] Whether the array defines a serie of connected triangles, sharing vertices
-         */
-        me.WebGLRenderer.Compositor.prototype.drawTriangle = function (points, len, strip) {
-            var gl = this.gl;
-            this.drawVertices(strip === true ? gl.TRIANGLE_STRIP : gl.TRIANGLES, points, len);
-            warning("drawTriangle()", "drawVertices()", "8.0.0");
-        };
-
-        /**
-         * Draw a line
-         * @name drawLine
-         * @deprecated since 8.0.0
-         * @memberOf me.WebGLRenderer.Compositor.drawVertices
-         * @memberOf me.WebGLRenderer.Compositor
-         * @function
-         * @param {me.Vector2d[]} points Line vertices
-         * @param {Number} [len=points.length] amount of points defined in the points array
-         * @param {Boolean} [open=false] Whether the line is open (true) or closed (false)
-         */
-        me.WebGLRenderer.Compositor.prototype.drawLine = function (points, len, open) {
-            var gl = this.gl;
-            this.drawVertices(open === true ? gl.LINE_STRIP : gl.LINE_LOOP, points, len);
-            warning("drawLine()", "drawVertices()", "8.0.0");
-        };
-
-        /**
-         * @public
-         * @type {me.Vector2d}
-         * @name scale
-         * @memberOf me.sys
-         * @deprecated since 8.0.0
-         * @see me.video.scaleRatio
-         */
-        Object.defineProperty(me.sys, "scale", {
-            /**
-             * @ignore
-             */
-            get : function () {
-                warning("me.sys.scale", "me.video.scaleRatio", "8.0.0");
-                return me.video.scaleRatio;
-            },
-            configurable : false
-        });
-
-        /**
-         * @function me.video.getWrapper
-         * @deprecated since 8.0.0
-         * @see me.video.getParent
-         */
-        me.video.getWrapper = function() {
-            warning("me.video.getWrapper()", "me.device.getParent()", "8.0.0");
-            return me.video.getParent();
-        };
-
-        /**
-         * Set game FPS limiting
-         * @public
-         * @type {Number}
-         * @name fps
-         * @memberOf me.sys
-         * @deprecated since 8.0.0
-         * @see me.timer.maxfps
-         */
-        Object.defineProperty(me.sys, "fps", {
-            /**
-             * @ignore
-             */
-            get : function () {
-                warning("me.sys.fps", "me.timer.maxfps", "8.0.0");
-                return me.timer.maxfps;
-            },
-
-            /**
-             * @ignore
-             */
-            set : function (value) {
-                warning("me.sys.fps", "me.timer.maxfps", "8.0.0");
-                me.timer.maxfps = value;
-            },
-            configurable : false
-        });
-
-        /**
-         * Rate at which the game physic updates;
-         * may be greater than or lower than the display fps
-         * @public
-         * @type {Number}
-         * @name updatesPerSecond
-         * @memberOf me.sys
-         * @deprecated since 8.0.0
-         * @see me.World.fps
-         */
-        Object.defineProperty(me.sys, "updatesPerSecond", {
-            /**
-             * @ignore
-             */
-            get : function () {
-                warning("me.sys.updatesPerSecond", "me.game.world.fps", "8.0.0");
-                return me.game.world.fps;
-            },
-
-            /**
-             * @ignore
-             */
-            set : function (value) {
-                warning("me.sys.updatesPerSecond", "me.game.world.fps", "8.0.0");
-                me.game.world.fps = value;
-            },
-            configurable : false
-        });
-
-        /**
-         * Enable/disable frame interpolation
-         * @public
-         * @type {Boolean}
-         * @name interpolation
-         * @memberOf me.sys
-         * @deprecated since 8.0.0
-         * @see me.timer.interpolation
-         */
-        Object.defineProperty(me.sys, "interpolation", {
-            /**
-             * @ignore
-             */
-            get : function () {
-                warning("me.sys.interpolation", "me.timer.interpolation", "8.0.0");
-                return me.timer.interpolation;
-            },
-
-            /**
-             * @ignore
-             */
-            set : function (value) {
-                warning("me.sys.interpolation", "me.timer.interpolation", "8.0.0");
-                me.timer.interpolation = value;
-            },
-            configurable : false
-        });
-
-        /**
-         * add collision mesh based on a given Physics Editor JSON object
-         * @name addShapesFromJSON
-         * @deprecated since 8.0.0
-         * @see me.Body.fromJSON
-         * @memberOf me.Body
-         * @function
-         * @param {me.Rect|me.Polygon|me.Line|me.Ellipse|Object} shape a shape or JSON object
-         * @param {Boolean} batchInsert if true the body bounds won't be updated after adding a shape
-         * @return {Number} the shape array length
-         */
-        me.Body.prototype.addShapesFromJSON = function (json, id) {
-            warning("addShapesFromJSON()", "fromJSON()", "8.0.0");
-            return this.fromJSON(json, id);
-        };
-
-        /**
-         * Specify either to stop on audio loading error or not
-         * @public
-         * @type {Boolean}
-         * @name stopOnAudioError
-         * @memberOf me.sys
-         * @deprecated since 9.0.0
-         * @see me.audio.interpolation
-         */
-        Object.defineProperty(me.sys, "stopOnAudioError", {
-            /**
-             * @ignore
-             */
-            get : function () {
-                warning("me.sys.stopOnAudioError", "me.audio.stopOnAudioError", "9.0.0");
-                return me.audio.stopOnAudioError;
-            },
-
-            /**
-             * @ignore
-             */
-            set : function (value) {
-                warning("me.sys.stopOnAudioError", "me.audio.stopOnAudioError", "9.0.0");
-                me.audio.stopOnAudioError = value;
-            },
-            configurable : false
-        });
-
-        /**
-         * Specify whether to pause the game when losing focus
-         * @public
-         * @type {Boolean}
-         * @name pauseOnBlur
-         * @memberOf me.sys
-         * @deprecated since 9.0.0
-         * @see me.device.pauseOnBlur
-         */
-        Object.defineProperty(me.sys, "pauseOnBlur", {
-            /**
-             * @ignore
-             */
-            get : function () {
-                warning("me.sys.pauseOnBlur", "me.device.pauseOnBlur", "9.0.0");
-                return me.audio.pauseOnBlur;
-            },
-
-            /**
-             * @ignore
-             */
-            set : function (value) {
-                warning("me.sys.pauseOnBlur", "me.device.pauseOnBlur", "9.0.0");
-                me.device.pauseOnBlur = value;
-            },
-            configurable : false
-        });
-
-        /**
-         * Specify whether to unpause the game when gaining focus
-         * @public
-         * @type {Boolean}
-         * @name resumeOnFocus
-         * @memberOf me.sys
-         * @deprecated since 9.0.0
-         * @see me.device.resumeOnFocus
-         */
-        Object.defineProperty(me.sys, "resumeOnFocus", {
-            /**
-             * @ignore
-             */
-            get : function () {
-                warning("me.sys.pauseOnBlur", "me.device.resumeOnFocus", "9.0.0");
-                return me.device.resumeOnFocus;
-            },
-
-            /**
-             * @ignore
-             */
-            set : function (value) {
-                warning("me.sys.pauseOnBlur", "me.device.resumeOnFocus", "9.0.0");
-                me.device.resumeOnFocus = value;
-            },
-            configurable : false
-        });
-
-        /**
-         * Specify whether to automatically bring the window to the front
-         * @public
-         * @type {Boolean}
-         * @name autoFocus
-         * @memberOf me.sys
-         * @deprecated since 9.0.0
-         * @see me.device.autoFocus
-         */
-        Object.defineProperty(me.sys, "autoFocus", {
-            /**
-             * @ignore
-             */
-            get : function () {
-                warning("me.sys.autoFocus", "me.device.autoFocus", "9.0.0");
-                return me.device.autoFocus;
-            },
-
-            /**
-             * @ignore
-             */
-            set : function (value) {
-                warning("me.sys.autoFocus", "me.device.autoFocus", "9.0.0");
-                me.device.autoFocus = value;
-            },
-            configurable : false
-        });
-
-        /**
-         * Specify whether to stop the game when losing focus or not
-         * @public
-         * @type {Boolean}
-         * @name pauseOnBlur
-         * @memberOf me.sys
-         * @deprecated since 9.0.0
-         * @see me.device.pauseOnBlur
-         */
-        Object.defineProperty(me.sys, "stopOnBlur", {
-            /**
-             * @ignore
-             */
-            get : function () {
-                warning("me.sys.pauseOnBlur", "me.device.stopOnBlur", "9.0.0");
-                return me.device.stopOnBlur;
-            },
-
-            /**
-             * @ignore
-             */
-            set : function (value) {
-                warning("me.sys.pauseOnBlur", "me.device.stopOnBlur", "9.0.0");
-                me.device.stopOnBlur = value;
-            },
-            configurable : false
-        });
-
-        /**
-         * Specify the rendering method for tiled layers
-         * @public
-         * @type {Boolean}
-         * @name preRender
-         * @memberOf me.sys
-         * @deprecated since 9.0.0
-         * @see me.game.world.preRender
-         */
-        Object.defineProperty(me.sys, "preRender", {
-            /**
-             * @ignore
-             */
-            get : function () {
-                warning("me.sys.preRender", "me.game.world.preRender", "9.0.0");
-                return me.game.world.stopOnBlur;
-            },
-
-            /**
-             * @ignore
-             */
-            set : function (value) {
-                warning("me.sys.preRender", "me.game.world.preRender", "9.0.0");
-                me.game.world.stopOnBlur = value;
-            },
-            configurable : false
-        });
-
-        /**
-         * @namespace me.levelDirector
-         * @deprecated since 9.0.0
-         * @see me.level
-         */
-        me.levelDirector = me.levelDirector || {};
-
-        /**
-         * @function me.levelDirector.loadLevel
-         * @deprecated since 9.0.0
-         * @see me.level.load
-         */
-        me.levelDirector.loadLevel = function(levelId, options) {
-            warning("me.levelDirector.loadLevel()", "me.level.load()", "9.0.0");
-            return me.level.load(levelId, options);
-        };
-
-        /**
-         * @function me.levelDirector.getCurrentLevelId
-         * @deprecated since 9.0.0
-         * @see me.level.getCurrentLevelId
-         */
-        me.levelDirector.getCurrentLevelId = function() {
-            warning("me.levelDirector.getCurrentLevelId()", "me.level.getCurrentLevelId()", "9.0.0");
-            return me.level.getCurrentLevelId();
-        };
-
-        /**
-         * @function me.levelDirector.getCurrentLevel
-         * @deprecated since 9.0.0
-         * @see me.level.load
-         */
-        me.levelDirector.getCurrentLevel = function() {
-            warning("me.levelDirector.getCurrentLevel()", "me.level.getCurrentLevel()", "9.0.0");
-            return me.level.getCurrentLevel();
-        };
-
-        /**
-         * @function me.levelDirector.reloadLevel
-         * @deprecated since 9.0.0
-         * @see me.level.reload
-         */
-        me.levelDirector.reloadLevel = function(options) {
-            warning("me.levelDirector.reloadLevel()", "me.level.reload()", "9.0.0");
-            return me.level.reload(options);
-        };
-
-        /**
-         * @function me.levelDirector.nextLevel
-         * @deprecated since 9.0.0
-         * @see me.level.load
-         */
-        me.levelDirector.nextLevel = function(options) {
-            warning("me.levelDirector.nextLevel()", "me.level.next()", "9.0.0");
-            return me.level.next(options);
-        };
-
-        /**
-         * @function me.levelDirector.previousLevel
-         * @deprecated since 9.0.0
-         * @see me.level.load
-         */
-        me.levelDirector.previousLevel = function(options) {
-            warning("me.levelDirector.previousLevel()", "me.level.previous()", "9.0.0");
-            return me.level.previous(options);
-        };
-
-        /**
-         * @function me.levelDirector.levelCount
-         * @deprecated since 9.0.0
-         * @see me.level.levelCount
-         */
-        me.levelDirector.levelCount = function() {
-            warning("me.levelDirector.levelCount()", "me.level.levelCount()", "9.0.0");
-            return me.level.levelCount();
-        };
-
-        /**
-         * translate the rect by the specified vector
-         * @name translate
-         * @memberOf me.Rect.prototype
-         * @function
-         * @deprecated since 9.0.0
-         * @see me.Rect.translate
-         * @param {me.Vector2d} v vector offset
-         * @return {me.Rect} this rectangle
-         */
-        me.Rect.prototype.translateV = function (v) {
-            warning("translateV()", "translate()", "9.0.0");
-            return this.translate(v);
-        };
-
-        /**
-         * Returns true if the rectangle contains the given point
-         * @name containsPoint
-         * @memberOf me.Rect.prototype
-         * @function
-         * @deprecated since 9.0.0
-         * @see me.Rect.contains
-         * @param  {Number} x x coordinate
-         * @param  {Number} y y coordinate
-         * @return {boolean} true if contains
-         */
-        me.Rect.prototype.containsPoint = function (x, y) {
-            warning("containsPoint()", "contains()", "9.0.0");
-            return this.contains(x, y);
-        };
-
-        /**
-         * translate the Polygon by the specified vector
-         * @name translateV
-         * @memberOf me.Polygon.prototype
-         * @function
-         * @deprecated since 9.0.0
-         * @see me.Polygon.translate
-         * @param {me.Vector2d} v vector offset
-         * @return {me.Polygon} Reference to this object for method chaining
-         */
-        me.Polygon.prototype.translateV = function (v) {
-            warning("translateV()", "translate()", "9.0.0");
-            return this.translate(v);
-        };
-
-        /**
-         * check if this Polygon contains the specified point
-         * @name containsPointV
-         * @memberOf me.Polygon.prototype
-         * @function
-         * @deprecated since 9.0.0
-         * @see me.Polygon.contains
-         * @param  {me.Vector2d} point
-         * @return {boolean} true if contains
-         */
-        me.Polygon.prototype.containsPointV = function (v) {
-            warning("containsPointV()", "contains()", "9.0.0");
-            return this.contains(v);
-        };
-
-        /**
-         * Returns true if the polygon contains the given point. <br>
-         * (Note: it is highly recommended to first do a hit test on the corresponding <br>
-         *  bounding rect, as the function can be highly consuming with complex shapes)
-         * @name containsPoint
-         * @memberOf me.Polygon.prototype
-         * @function
-         * @deprecated since 9.0.0
-         * @see me.Polygon.contains
-         * @param  {Number} x x coordinate
-         * @param  {Number} y y coordinate
-         * @return {boolean} true if contains
-         */
-
-        me.Polygon.prototype.containsPoint = function (x, y) {
-            warning("containsPoint()", "contains()", "9.0.0");
-            return this.contains(x, y);
-        };
-
-        /**
-         * check if this Line contains the specified point
-         * @name containsPointV
-         * @memberOf me.Line.prototype
-         * @function
-         * @deprecated since 9.0.0
-         * @see me.Line.contains
-         * @param  {me.Vector2d} point
-         * @return {boolean} true if contains
-         */
-        me.Line.prototype.containsPointV = function (v) {
-            warning("containsPointV()", "contains()", "9.0.0");
-            return this.contains(v);
-        };
-
-        /**
-         * Returns true if the Line contains the given point. <br>
-         * (Note: it is highly recommended to first do a hit test on the corresponding <br>
-         *  bounding rect, as the function can be highly consuming with complex shapes)
-         * @name containsPoint
-         * @memberOf me.Line.prototype
-         * @function
-         * @deprecated since 9.0.0
-         * @see me.Line.contains
-         * @param  {Number} x x coordinate
-         * @param  {Number} y y coordinate
-         * @return {boolean} true if contains
-         */
-        me.Line.prototype.containsPoint = function (x, y) {
-            warning("containsPoint()", "contains()", "9.0.0");
-            return this.contains(x, y);
-        };
-
-        /**
-         * translate the circle/ellipse by the specified vector
-         * @name translateV
-         * @memberOf me.Ellipse.prototype
-         * @function
-         * @deprecated since 9.0.0
-         * @see me.Ellipse.translate
-         * @param {me.Vector2d} v vector offset
-         * @return {me.Rect} this ellipse
-         */
-        me.Ellipse.prototype.translateV = function (v) {
-            warning("translateV()", "translate()", "9.0.0");
-            return this.translate(v);
-        };
-
-        /**
-         * check if this Ellipse contains the specified point
-         * @name containsPointV
-         * @memberOf me.Ellipse.prototype
-         * @function
-         * @deprecated since 9.0.0
-         * @see me.Ellipse.contains
-         * @param  {me.Vector2d} point
-         * @return {boolean} true if contains
-         */
-        me.Ellipse.prototype.containsPointV = function (v) {
-            warning("containsPointV()", "contains()", "9.0.0");
-            return this.contains(v);
-        };
-
-        /**
-         * Returns true if the Ellipse contains the given point
-         * @name containsPoint
-         * @memberOf me.Ellipse.prototype
-         * @function
-         * @deprecated since 9.0.0
-         * @see me.Ellipse.contains
-         * @param  {Number} x x coordinate
-         * @param  {Number} y y coordinate
-         * @return {boolean} true if contains
-         */
-        me.Ellipse.prototype.containsPoint = function (x, y) {
-            warning("containsPoint()", "contains()", "9.0.0");
-            return this.contains(x, y);
-        };
-
-        /**
-         * translate the matrix by a vector on the horizontal and vertical axis
-         * @name translateV
-         * @memberOf me.Matrix2d
-         * @function
-         * @deprecated since 9.0.0
-         * @see me.Matrix2d.translate
-         * @param {me.Vector2d} v the vector to translate the matrix by
-         * @return {me.Matrix2d} Reference to this object for method chaining
-         */
-        me.Matrix2d.prototype.translateV = function (v) {
-            warning("translateV()", "translate()", "9.0.0");
-            return this.translate(v);
-        };
-
-        /**
-         * translate the matrix by a vector on the horizontal and vertical axis
-         * @name translateV
-         * @memberOf me.Matrix3d
-         * @function
-         * @deprecated since 9.0.0
-         * @see me.Matrix3d.translate
-         * @param {me.Vector2d|me.Vector3d} v the vector to translate the matrix by
-         * @return {me.Matrix3d} Reference to this object for method chaining
-         */
-        me.Matrix3d.prototype.translateV = function (v) {
-            warning("translateV()", "translate()", "9.0.0");
-            return this.translate(v);
-        };
-
-        /**
-         * The bounds that contains all its children
-         * @public
-         * @type {me.Bounds}
-         * @name childBounds
-         * @memberOf me.Container
-         * @deprecated since 9.0.0
-         * @see me.Container.getBounds
-         */
-        Object.defineProperty(me.Container.prototype, "childBounds", {
-            /**
-             * @ignore
-             */
-            get : function () {
-                warning("childBounds", "getBounds()", "9.0.0");
-                return this.getBounds();
-            },
-            configurable : false
-        });
-
-        /**
-         * @class me.CollectableEntity
-         * @deprecated since 9.0.0
-         * @see me.Collectable
-         */
-        me.CollectableEntity = me.Collectable.extend({
-            /** @ignore */
-            init: function (x, y, settings) {
-                // super constructor
-                this._super(me.Collectable, "init", [x, y, settings]);
-                // deprecation warning
-                warning("me.CollectableEntity", "me.Collectable", "9.0.0");
-            }
-        });
-
-        /**
-         * @class me.LevelEntity
-         * @deprecated since 9.0.0
-         * @see me.Trigger
-         */
-        me.LevelEntity = me.Trigger.extend({
-            /** @ignore */
-            init: function (x, y, settings) {
-                // super constructor
-                this._super(me.Trigger, "init", [x, y, settings]);
-                // deprecation warning
-                warning("me.LevelEntity", "me.Trigger", "9.0.0");
-            }
-        });
-
-        // corresponding entry in the object pool
-        me.pool.register("me.CollectableEntity", me.CollectableEntity);
-        me.pool.register("me.LevelEntity", me.LevelEntity);
-
-    }
-
-    var deprecated = /*#__PURE__*/Object.freeze({
-        __proto__: null,
-        warning: warning,
-        apply: apply
-    });
 
     // convert a give color component to it hexadecimal value
     var toHex = function (component) {
@@ -10187,599 +9234,428 @@
     var earcut$1 = earcut$2.exports;
 
     /**
-     * Extend a class prototype with the provided mixin descriptors.
-     * Designed as a faster replacement for John Resig's Simple Inheritance.
-     * @name extend
-     * @memberOf Jay
-     * @function
-     * @param {Object[]} mixins... Each mixin is a dictionary of functions, or a
-     * previously extended class whose methods will be applied to the target class
-     * prototype.
-     * @return {Object}
-     * @example
-     * var Person = Jay.extend({
-     *     "init" : function (isDancing) {
-     *         this.dancing = isDancing;
-     *     },
-     *     "dance" : function () {
-     *         return this.dancing;
-     *     }
-     * });
-     *
-     * var Ninja = Person.extend({
-     *     "init" : function () {
-     *         // Call the super constructor, passing a single argument
-     *         this._super(Person, "init", [false]);
-     *     },
-     *     "dance" : function () {
-     *         // Call the overridden dance() method
-     *         return this._super(Person, "dance");
-     *     },
-     *     "swingSword" : function () {
-     *         return true;
-     *     }
-     * });
-     *
-     * var Pirate = Person.extend(Ninja, {
-     *     "init" : function () {
-     *         // Call the super constructor, passing a single argument
-     *         this._super(Person, "init", [true]);
-     *     }
-     * });
-     *
-     * var p = new Person(true);
-     * console.log(p.dance()); // => true
-     *
-     * var n = new Ninja();
-     * console.log(n.dance()); // => false
-     * console.log(n.swingSword()); // => true
-     *
-     * var r = new Pirate();
-     * console.log(r.dance()); // => true
-     * console.log(r.swingSword()); // => true
-     *
-     * console.log(
-     *     p instanceof Person &&
-     *     n instanceof Ninja &&
-     *     n instanceof Person &&
-     *     r instanceof Pirate &&
-     *     r instanceof Person
-     * ); // => true
-     *
-     * console.log(r instanceof Ninja); // => false
-     */
-
-    (function () {
-        function extend() {
-            var arguments$1 = arguments;
-
-            var methods = {};
-            var mixins = new Array(arguments.length);
-            for (var i = 0; i < arguments.length; i++) {
-                mixins.push(arguments$1[i]);
-            }
-
-            /**
-             * The class constructor which calls the user `init` constructor.
-             * @ignore
-             */
-            function Class() {
-                // Call the user constructor
-                this.init.apply(this, arguments);
-                return this;
-            }
-
-            // Apply superClass
-            Class.prototype = Object.create(this.prototype);
-
-            // Apply all mixin methods to the class prototype
-            mixins.forEach(function (mixin) {
-                apply_methods(Class, methods, mixin.__methods__ || mixin);
-            });
-
-            // Verify constructor exists
-            if (!("init" in Class.prototype)) {
-                throw new TypeError(
-                    "extend: Class is missing a constructor named `init`"
-                );
-            }
-
-            // Apply syntactic sugar for accessing methods on super classes
-            Object.defineProperty(Class.prototype, "_super", {
-                "value" : _super
-            });
-
-            // Create a hidden property on the class itself
-            // List of methods, used for applying classes as mixins
-            Object.defineProperty(Class, "__methods__", {
-                "value" : methods
-            });
-
-            // Make this class extendable
-            Class.extend = extend;
-
-            return Class;
-        }
-
-        /**
-         * Apply methods to the class prototype.
-         * @ignore
-         */
-        function apply_methods(Class, methods, descriptor) {
-            Object.keys(descriptor).forEach(function (method) {
-                methods[method] = descriptor[method];
-
-                if (typeof(descriptor[method]) !== "function") {
-                    throw new TypeError(
-                        "extend: Method `" + method + "` is not a function"
-                    );
-                }
-
-                Object.defineProperty(Class.prototype, method, {
-                    "configurable" : true,
-                    "value" : descriptor[method]
-                });
-            });
-        }
-
-        /**
-         * Special method that acts as a proxy to the super class.
-         * @name _super
-         * @ignore
-         */
-        function _super(superClass, method, args) {
-            return superClass.prototype[method].apply(this, args);
-        }
-
-        /**
-         * The base class from which all jay-extend classes inherit.
-         * @ignore
-         */
-        var Jay = function () {
-            Object.apply(this, arguments);
-        };
-        Jay.prototype = Object.create(Object.prototype);
-        Jay.prototype.constructor = Jay;
-
-        Object.defineProperty(Jay, "extend", {
-            "value" : extend
-        });
-
-        /**
-         * Export the extend method.
-         * @ignore
-         */
-        if (typeof(window) !== "undefined") {
-            window.Jay = Jay;
-        }
-    })();
-
-    /**
+     * @classdesc
      * a polygon Object.<br>
      * Please do note that melonJS implements a simple Axis-Aligned Boxes collision algorithm, which requires all polygons used for collision to be convex with all vertices defined with clockwise winding.
      * A polygon is convex when all line segments connecting two points in the interior do not cross any edge of the polygon
      * (which means that all angles are less than 180 degrees), as described here below : <br>
      * <center><img src="images/convex_polygon.png"/></center><br>
      * A polygon's `winding` is clockwise iff its vertices (points) are declared turning to the right. The image above shows COUNTERCLOCKWISE winding.
-     * @class
-     * @extends me.Object
+     * @class Polygon
      * @memberOf me
      * @constructor
      * @param {Number} x origin point of the Polygon
      * @param {Number} y origin point of the Polygon
      * @param {me.Vector2d[]} points array of vector defining the Polygon
      */
-    var Polygon = window.Jay.extend({
+
+    var Polygon = function Polygon(x, y, points) {
         /**
+         * origin point of the Polygon
+         * @public
+         * @type {me.Vector2d}
+         * @name pos
+         * @memberof me.Polygon#
+         */
+        this.pos = new Vector2d();
+
+        /**
+         * The bounding rectangle for this shape
+         * @ignore
+         * @type {me.Bounds}
+         * @name _bounds
+         * @memberOf me.Polygon#
+         */
+        this._bounds;
+
+        /**
+         * Array of points defining the Polygon <br>
+         * Note: If you manually change `points`, you **must** call `recalc`afterwards so that the changes get applied correctly.
+         * @public
+         * @type {me.Vector2d[]}
+         * @name points
+         * @memberOf me.Polygon#
+         */
+        this.points = null;
+
+        /**
+         * The edges here are the direction of the `n`th edge of the polygon, relative to
+         * the `n`th point. If you want to draw a given edge from the edge value, you must
+         * first translate to the position of the starting point.
          * @ignore
          */
-        init : function (x, y, points) {
-            /**
-             * origin point of the Polygon
-             * @public
-             * @type {me.Vector2d}
-             * @name pos
-             * @memberof me.Polygon#
-             */
-            this.pos = new Vector2d();
-
-            /**
-             * The bounding rectangle for this shape
-             * @ignore
-             * @type {me.Bounds}
-             * @name _bounds
-             * @memberOf me.Polygon#
-             */
-            this._bounds;
-
-            /**
-             * Array of points defining the Polygon <br>
-             * Note: If you manually change `points`, you **must** call `recalc`afterwards so that the changes get applied correctly.
-             * @public
-             * @type {me.Vector2d[]}
-             * @name points
-             * @memberOf me.Polygon#
-             */
-            this.points = null;
-
-            /**
-             * The edges here are the direction of the `n`th edge of the polygon, relative to
-             * the `n`th point. If you want to draw a given edge from the edge value, you must
-             * first translate to the position of the starting point.
-             * @ignore
-             */
-            this.edges = [];
-
-            /**
-             * a list of indices for all vertices composing this polygon (@see earcut)
-             * @ignore
-             */
-            this.indices = [];
-
-            /**
-             * The normals here are the direction of the normal for the `n`th edge of the polygon, relative
-             * to the position of the `n`th point. If you want to draw an edge normal, you must first
-             * translate to the position of the starting point.
-             * @ignore
-             */
-            this.normals = [];
-
-            // the shape type
-            this.shapeType = "Polygon";
-            this.setShape(x, y, points);
-        },
-
-        /** @ignore */
-        onResetEvent : function (x, y, points) {
-            this.setShape(x, y, points);
-        },
+        this.edges = [];
 
         /**
-         * set new value to the Polygon
-         * @name setShape
-         * @memberOf me.Polygon.prototype
-         * @function
-         * @param {Number} x position of the Polygon
-         * @param {Number} y position of the Polygon
-         * @param {me.Vector2d[]|Number[]} points array of vector or vertice defining the Polygon
-         */
-        setShape : function (x, y, points) {
-            this.pos.set(x, y);
-            this.setVertices(points);
-            return this;
-        },
-
-        /**
-         * set the vertices defining this Polygon
-         * @name setVertices
-         * @memberOf me.Polygon.prototype
-         * @function
-         * @param {me.Vector2d[]} points array of vector or vertice defining the Polygon
-         */
-        setVertices : function (vertices) {
-
-            if (!Array.isArray(vertices)) {
-                return this;
-            }
-
-            // convert given points to me.Vector2d if required
-            if (!(vertices[0] instanceof Vector2d)) {
-                var _points = this.points = [];
-
-                if (typeof vertices[0] === "object") {
-                    // array of {x,y} object
-                    vertices.forEach(function (vertice) {
-                       _points.push(new Vector2d(vertice.x, vertice.y));
-                    });
-
-                } else {
-                    // it's a flat array
-                    for (var p = 0; p < vertices.length; p += 2) {
-                        _points.push(new Vector2d(vertices[p], vertices[p + 1]));
-                    }
-                }
-            } else {
-                // array of me.Vector2d
-                this.points = vertices;
-            }
-
-            this.recalc();
-            this.updateBounds();
-            return this;
-        },
-
-        /**
-         * apply the given transformation matrix to this Polygon
-         * @name transform
-         * @memberOf me.Polygon.prototype
-         * @function
-         * @param {me.Matrix2d} matrix the transformation matrix
-         * @return {me.Polygon} Reference to this object for method chaining
-         */
-        transform : function (m) {
-            var points = this.points;
-            var len = points.length;
-            for (var i = 0; i < len; i++) {
-                m.apply(points[i]);
-            }
-            this.recalc();
-            this.updateBounds();
-            return this;
-        },
-
-        /**
-         * apply an isometric projection to this shape
-         * @name toIso
-         * @memberOf me.Polygon.prototype
-         * @function
-         * @return {me.Polygon} Reference to this object for method chaining
-         */
-        toIso : function () {
-            return this.rotate(Math.PI / 4).scale(Math.SQRT2, Math.SQRT1_2);
-        },
-
-        /**
-         * apply a 2d projection to this shape
-         * @name to2d
-         * @memberOf me.Polygon.prototype
-         * @function
-         * @return {me.Polygon} Reference to this object for method chaining
-         */
-        to2d : function () {
-            return this.scale(Math.SQRT1_2, Math.SQRT2).rotate(-Math.PI / 4);
-        },
-
-        /**
-         * Rotate this Polygon (counter-clockwise) by the specified angle (in radians).
-         * @name rotate
-         * @memberOf me.Polygon.prototype
-         * @function
-         * @param {Number} angle The angle to rotate (in radians)
-         * @param {me.Vector2d|me.ObservableVector2d} [v] an optional point to rotate around
-         * @return {me.Polygon} Reference to this object for method chaining
-         */
-        rotate : function (angle, v) {
-            if (angle !== 0) {
-                var points = this.points;
-                var len = points.length;
-                for (var i = 0; i < len; i++) {
-                    points[i].rotate(angle, v);
-                }
-                this.recalc();
-                this.updateBounds();
-            }
-            return this;
-        },
-
-        /**
-         * Scale this Polygon by the given scalar.
-         * @name scale
-         * @memberOf me.Polygon.prototype
-         * @function
-         * @param {Number} x
-         * @param {Number} [y=x]
-         * @return {me.Polygon} Reference to this object for method chaining
-         */
-        scale : function (x, y) {
-            y = typeof (y) !== "undefined" ? y : x;
-
-            var points = this.points;
-            var len = points.length;
-            for (var i = 0; i < len; i++) {
-                points[i].scale(x, y);
-            }
-            this.recalc();
-            this.updateBounds();
-            return this;
-        },
-
-        /**
-         * Scale this Polygon by the given vector
-         * @name scaleV
-         * @memberOf me.Polygon.prototype
-         * @function
-         * @param {me.Vector2d} v
-         * @return {me.Polygon} Reference to this object for method chaining
-         */
-        scaleV : function (v) {
-            return this.scale(v.x, v.y);
-        },
-
-        /**
-         * Computes the calculated collision polygon.
-         * This **must** be called if the `points` array, `angle`, or `offset` is modified manually.
-         * @name recalc
-         * @memberOf me.Polygon.prototype
-         * @function
-         * @return {me.Polygon} Reference to this object for method chaining
-         */
-        recalc : function () {
-            var i;
-            var edges = this.edges;
-            var normals = this.normals;
-            var indices = this.indices;
-
-            // Copy the original points array and apply the offset/angle
-            var points = this.points;
-            var len = points.length;
-
-            if (len < 3) {
-                throw new Error("Requires at least 3 points");
-            }
-
-            // Calculate the edges/normals
-            for (i = 0; i < len; i++) {
-                if (edges[i] === undefined) {
-                    edges[i] = new Vector2d();
-                }
-                edges[i].copy(points[(i + 1) % len]).sub(points[i]);
-
-                if (normals[i] === undefined) {
-                    normals[i] = new Vector2d();
-                }
-                normals[i].copy(edges[i]).perp().normalize();
-            }
-            // trunc array
-            edges.length = len;
-            normals.length = len;
-            // do not do anything here, indices will be computed by
-            // toIndices if array is empty upon function call
-            indices.length = 0;
-
-            return this;
-        },
-
-        /**
-         * returns a list of indices for all triangles defined in this polygon
-         * @name getIndices
-         * @memberOf me.Polygon.prototype
-         * @function
-         * @param {Vector2d[]} a list of vector
-         * @return {me.Polygon} this Polygon
-         */
-        getIndices : function (x, y) {
-            if (this.indices.length === 0) {
-                this.indices = earcut$1(this.points.flatMap(function (p) { return [p.x, p.y]; }));
-            }
-            return this.indices;
-        },
-
-        /**
-         * translate the Polygon by the specified offset
-         * @name translate
-         * @memberOf me.Polygon.prototype
-         * @function
-         * @param {Number} x x offset
-         * @param {Number} y y offset
-         * @return {me.Polygon} this Polygon
-         */
-        /**
-         * translate the Polygon by the specified vector
-         * @name translate
-         * @memberOf me.Polygon.prototype
-         * @function
-         * @param {me.Vector2d} v vector offset
-         * @return {me.Polygon} Reference to this object for method chaining
-         */
-        translate : function () {
-            var _x, _y;
-
-            if (arguments.length === 2) {
-                // x, y
-                _x = arguments[0];
-                _y = arguments[1];
-            } else {
-                // vector
-                _x = arguments[0].x;
-                _y = arguments[0].y;
-            }
-
-            this.pos.x += _x;
-            this.pos.y += _y;
-            this.getBounds().translate(_x, _y);
-
-            return this;
-        },
-
-        /**
-         * Returns true if the polygon contains the given point.
-         * (Note: it is highly recommended to first do a hit test on the corresponding <br>
-         *  bounding rect, as the function can be highly consuming with complex shapes)
-         * @name contains
-         * @memberOf me.Polygon.prototype
-         * @function
-         * @param  {me.Vector2d} point
-         * @return {boolean} true if contains
-         */
-
-        /**
-         * Returns true if the polygon contains the given point. <br>
-         * (Note: it is highly recommended to first do a hit test on the corresponding <br>
-         *  bounding rect, as the function can be highly consuming with complex shapes)
-         * @name contains
-         * @memberOf me.Polygon.prototype
-         * @function
-         * @param  {Number} x x coordinate
-         * @param  {Number} y y coordinate
-         * @return {boolean} true if contains
-         */
-        contains: function () {
-            var _x, _y;
-
-            if (arguments.length === 2) {
-              // x, y
-              _x = arguments[0];
-              _y = arguments[1];
-            } else {
-              // vector
-              _x = arguments[0].x;
-              _y = arguments[0].y;
-            }
-
-            var intersects = false;
-            var posx = this.pos.x, posy = this.pos.y;
-            var points = this.points;
-            var len = points.length;
-
-            //http://www.ecse.rpi.edu/Homepages/wrf/Research/Short_Notes/pnpoly.html
-            for (var i = 0, j = len - 1; i < len; j = i++) {
-                var iy = points[i].y + posy, ix = points[i].x + posx,
-                    jy = points[j].y + posy, jx = points[j].x + posx;
-                if (((iy > _y) !== (jy > _y)) && (_x < (jx - ix) * (_y - iy) / (jy - iy) + ix)) {
-                    intersects = !intersects;
-                }
-            }
-            return intersects;
-        },
-
-        /**
-         * returns the bounding box for this shape, the smallest Rectangle object completely containing this shape.
-         * @name getBounds
-         * @memberOf me.Polygon.prototype
-         * @function
-         * @return {me.Bounds} this shape bounding box Rectangle object
-         */
-        getBounds : function () {
-            if (typeof this._bounds === "undefined") {
-                this._bounds = pool.pull("Bounds");
-            }
-            return this._bounds;
-        },
-
-        /**
-         * update the bounding box for this shape.
+         * a list of indices for all vertices composing this polygon (@see earcut)
          * @ignore
-         * @name updateBounds
-         * @memberOf me.Polygon.prototype
-         * @function
-         * @return {me.Bounds} this shape bounding box Rectangle object
          */
-        updateBounds : function () {
-            var bounds = this.getBounds();
-
-            bounds.update(this.points);
-            bounds.translate(this.pos);
-
-            return bounds;
-        },
+        this.indices = [];
 
         /**
-         * clone this Polygon
-         * @name clone
-         * @memberOf me.Polygon.prototype
-         * @function
-         * @return {me.Polygon} new Polygon
+         * The normals here are the direction of the normal for the `n`th edge of the polygon, relative
+         * to the position of the `n`th point. If you want to draw an edge normal, you must first
+         * translate to the position of the starting point.
+         * @ignore
          */
-        clone : function () {
-            var copy = [];
-            this.points.forEach(function (point) {
-                copy.push(point.clone());
-            });
-            return new Polygon(this.pos.x, this.pos.y, copy);
-        }
-    });
+        this.normals = [];
+
+        // the shape type
+        this.shapeType = "Polygon";
+        this.setShape(x, y, points);
+    };
+
+    /** @ignore */
+    Polygon.prototype.onResetEvent = function onResetEvent (x, y, points) {
+        this.setShape(x, y, points);
+    };
 
     /**
+     * set new value to the Polygon
+     * @name setShape
+     * @memberOf me.Polygon.prototype
+     * @function
+     * @param {Number} x position of the Polygon
+     * @param {Number} y position of the Polygon
+     * @param {me.Vector2d[]|Number[]} points array of vector or vertice defining the Polygon
+     */
+    Polygon.prototype.setShape = function setShape (x, y, points) {
+        this.pos.set(x, y);
+        this.setVertices(points);
+        return this;
+    };
+
+    /**
+     * set the vertices defining this Polygon
+     * @name setVertices
+     * @memberOf me.Polygon.prototype
+     * @function
+     * @param {me.Vector2d[]} points array of vector or vertice defining the Polygon
+     */
+    Polygon.prototype.setVertices = function setVertices (vertices) {
+
+        if (!Array.isArray(vertices)) {
+            return this;
+        }
+
+        // convert given points to me.Vector2d if required
+        if (!(vertices[0] instanceof Vector2d)) {
+            var _points = this.points = [];
+
+            if (typeof vertices[0] === "object") {
+                // array of {x,y} object
+                vertices.forEach(function (vertice) {
+                   _points.push(new Vector2d(vertice.x, vertice.y));
+                });
+
+            } else {
+                // it's a flat array
+                for (var p = 0; p < vertices.length; p += 2) {
+                    _points.push(new Vector2d(vertices[p], vertices[p + 1]));
+                }
+            }
+        } else {
+            // array of me.Vector2d
+            this.points = vertices;
+        }
+
+        this.recalc();
+        this.updateBounds();
+        return this;
+    };
+
+    /**
+     * apply the given transformation matrix to this Polygon
+     * @name transform
+     * @memberOf me.Polygon.prototype
+     * @function
+     * @param {me.Matrix2d} matrix the transformation matrix
+     * @return {me.Polygon} Reference to this object for method chaining
+     */
+    Polygon.prototype.transform = function transform (m) {
+        var points = this.points;
+        var len = points.length;
+        for (var i = 0; i < len; i++) {
+            m.apply(points[i]);
+        }
+        this.recalc();
+        this.updateBounds();
+        return this;
+    };
+
+    /**
+     * apply an isometric projection to this shape
+     * @name toIso
+     * @memberOf me.Polygon.prototype
+     * @function
+     * @return {me.Polygon} Reference to this object for method chaining
+     */
+    Polygon.prototype.toIso = function toIso () {
+        return this.rotate(Math.PI / 4).scale(Math.SQRT2, Math.SQRT1_2);
+    };
+
+    /**
+     * apply a 2d projection to this shape
+     * @name to2d
+     * @memberOf me.Polygon.prototype
+     * @function
+     * @return {me.Polygon} Reference to this object for method chaining
+     */
+    Polygon.prototype.to2d = function to2d () {
+        return this.scale(Math.SQRT1_2, Math.SQRT2).rotate(-Math.PI / 4);
+    };
+
+    /**
+     * Rotate this Polygon (counter-clockwise) by the specified angle (in radians).
+     * @name rotate
+     * @memberOf me.Polygon.prototype
+     * @function
+     * @param {Number} angle The angle to rotate (in radians)
+     * @param {me.Vector2d|me.ObservableVector2d} [v] an optional point to rotate around
+     * @return {me.Polygon} Reference to this object for method chaining
+     */
+    Polygon.prototype.rotate = function rotate (angle, v) {
+        if (angle !== 0) {
+            var points = this.points;
+            var len = points.length;
+            for (var i = 0; i < len; i++) {
+                points[i].rotate(angle, v);
+            }
+            this.recalc();
+            this.updateBounds();
+        }
+        return this;
+    };
+
+    /**
+     * Scale this Polygon by the given scalar.
+     * @name scale
+     * @memberOf me.Polygon.prototype
+     * @function
+     * @param {Number} x
+     * @param {Number} [y=x]
+     * @return {me.Polygon} Reference to this object for method chaining
+     */
+    Polygon.prototype.scale = function scale (x, y) {
+        y = typeof (y) !== "undefined" ? y : x;
+
+        var points = this.points;
+        var len = points.length;
+        for (var i = 0; i < len; i++) {
+            points[i].scale(x, y);
+        }
+        this.recalc();
+        this.updateBounds();
+        return this;
+    };
+
+    /**
+     * Scale this Polygon by the given vector
+     * @name scaleV
+     * @memberOf me.Polygon.prototype
+     * @function
+     * @param {me.Vector2d} v
+     * @return {me.Polygon} Reference to this object for method chaining
+     */
+    Polygon.prototype.scaleV = function scaleV (v) {
+        return this.scale(v.x, v.y);
+    };
+
+    /**
+     * Computes the calculated collision polygon.
+     * This **must** be called if the `points` array, `angle`, or `offset` is modified manually.
+     * @name recalc
+     * @memberOf me.Polygon.prototype
+     * @function
+     * @return {me.Polygon} Reference to this object for method chaining
+     */
+    Polygon.prototype.recalc = function recalc () {
+        var i;
+        var edges = this.edges;
+        var normals = this.normals;
+        var indices = this.indices;
+
+        // Copy the original points array and apply the offset/angle
+        var points = this.points;
+        var len = points.length;
+
+        if (len < 3) {
+            throw new Error("Requires at least 3 points");
+        }
+
+        // Calculate the edges/normals
+        for (i = 0; i < len; i++) {
+            if (edges[i] === undefined) {
+                edges[i] = new Vector2d();
+            }
+            edges[i].copy(points[(i + 1) % len]).sub(points[i]);
+
+            if (normals[i] === undefined) {
+                normals[i] = new Vector2d();
+            }
+            normals[i].copy(edges[i]).perp().normalize();
+        }
+        // trunc array
+        edges.length = len;
+        normals.length = len;
+        // do not do anything here, indices will be computed by
+        // toIndices if array is empty upon function call
+        indices.length = 0;
+
+        return this;
+    };
+
+    /**
+     * returns a list of indices for all triangles defined in this polygon
+     * @name getIndices
+     * @memberOf me.Polygon.prototype
+     * @function
+     * @param {Vector2d[]} a list of vector
+     * @return {me.Polygon} this Polygon
+     */
+    Polygon.prototype.getIndices = function getIndices (x, y) {
+        if (this.indices.length === 0) {
+            this.indices = earcut$1(this.points.flatMap(function (p) { return [p.x, p.y]; }));
+        }
+        return this.indices;
+    };
+
+    /**
+     * translate the Polygon by the specified offset
+     * @name translate
+     * @memberOf me.Polygon.prototype
+     * @function
+     * @param {Number} x x offset
+     * @param {Number} y y offset
+     * @return {me.Polygon} this Polygon
+     */
+    /**
+     * translate the Polygon by the specified vector
+     * @name translate
+     * @memberOf me.Polygon.prototype
+     * @function
+     * @param {me.Vector2d} v vector offset
+     * @return {me.Polygon} Reference to this object for method chaining
+     */
+    Polygon.prototype.translate = function translate () {
+        var _x, _y;
+
+        if (arguments.length === 2) {
+            // x, y
+            _x = arguments[0];
+            _y = arguments[1];
+        } else {
+            // vector
+            _x = arguments[0].x;
+            _y = arguments[0].y;
+        }
+
+        this.pos.x += _x;
+        this.pos.y += _y;
+        this.getBounds().translate(_x, _y);
+
+        return this;
+    };
+
+    /**
+     * Returns true if the polygon contains the given point.
+     * (Note: it is highly recommended to first do a hit test on the corresponding <br>
+     *  bounding rect, as the function can be highly consuming with complex shapes)
+     * @name contains
+     * @memberOf me.Polygon.prototype
+     * @function
+     * @param  {me.Vector2d} point
+     * @return {boolean} true if contains
+     */
+
+    /**
+     * Returns true if the polygon contains the given point. <br>
+     * (Note: it is highly recommended to first do a hit test on the corresponding <br>
+     *  bounding rect, as the function can be highly consuming with complex shapes)
+     * @name contains
+     * @memberOf me.Polygon.prototype
+     * @function
+     * @param  {Number} x x coordinate
+     * @param  {Number} y y coordinate
+     * @return {boolean} true if contains
+     */
+    Polygon.prototype.contains = function contains () {
+        var _x, _y;
+
+        if (arguments.length === 2) {
+          // x, y
+          _x = arguments[0];
+          _y = arguments[1];
+        } else {
+          // vector
+          _x = arguments[0].x;
+          _y = arguments[0].y;
+        }
+
+        var intersects = false;
+        var posx = this.pos.x, posy = this.pos.y;
+        var points = this.points;
+        var len = points.length;
+
+        //http://www.ecse.rpi.edu/Homepages/wrf/Research/Short_Notes/pnpoly.html
+        for (var i = 0, j = len - 1; i < len; j = i++) {
+            var iy = points[i].y + posy, ix = points[i].x + posx,
+                jy = points[j].y + posy, jx = points[j].x + posx;
+            if (((iy > _y) !== (jy > _y)) && (_x < (jx - ix) * (_y - iy) / (jy - iy) + ix)) {
+                intersects = !intersects;
+            }
+        }
+        return intersects;
+    };
+
+    /**
+     * returns the bounding box for this shape, the smallest Rectangle object completely containing this shape.
+     * @name getBounds
+     * @memberOf me.Polygon.prototype
+     * @function
+     * @return {me.Bounds} this shape bounding box Rectangle object
+     */
+    Polygon.prototype.getBounds = function getBounds () {
+        if (typeof this._bounds === "undefined") {
+            this._bounds = pool.pull("Bounds");
+        }
+        return this._bounds;
+    };
+
+    /**
+     * update the bounding box for this shape.
+     * @ignore
+     * @name updateBounds
+     * @memberOf me.Polygon.prototype
+     * @function
+     * @return {me.Bounds} this shape bounding box Rectangle object
+     */
+    Polygon.prototype.updateBounds = function updateBounds () {
+        var bounds = this.getBounds();
+
+        bounds.update(this.points);
+        bounds.translate(this.pos);
+
+        return bounds;
+    };
+
+    /**
+     * clone this Polygon
+     * @name clone
+     * @memberOf me.Polygon.prototype
+     * @function
+     * @return {me.Polygon} new Polygon
+     */
+    Polygon.prototype.clone = function clone () {
+        var copy = [];
+        this.points.forEach(function (point) {
+            copy.push(point.clone());
+        });
+        return new Polygon(this.pos.x, this.pos.y, copy);
+    };
+
+    /**
+     * @classdesc
      * a rectangle Object
      * @class
      * @extends me.Polygon
@@ -10790,24 +9666,28 @@
      * @param {Number} w width of the rectangle
      * @param {Number} h height of the rectangle
      */
-    var Rect = Polygon.extend({
-        /**
-         * @ignore
-         */
-        init : function (x, y, w, h) {
+
+    var Rect = /*@__PURE__*/(function (Polygon) {
+        function Rect(x, y, w, h) {
             // parent constructor
-            this._super(Polygon, "init", [x, y, [
+            Polygon.call(this, x, y, [
                 new Vector2d(0, 0), // 0, 0
                 new Vector2d(w, 0), // 1, 0
                 new Vector2d(w, h), // 1, 1
-                new Vector2d(0, h) ]]);
+                new Vector2d(0, h) ]);
             this.shapeType = "Rectangle";
-        },
+        }
+
+        if ( Polygon ) Rect.__proto__ = Polygon;
+        Rect.prototype = Object.create( Polygon && Polygon.prototype );
+        Rect.prototype.constructor = Rect;
+
+        var prototypeAccessors = { left: { configurable: true },right: { configurable: true },top: { configurable: true },bottom: { configurable: true },width: { configurable: true },height: { configurable: true },centerX: { configurable: true },centerY: { configurable: true } };
 
         /** @ignore */
-        onResetEvent : function (x, y, w, h) {
+        Rect.prototype.onResetEvent = function onResetEvent (x, y, w, h) {
             this.setShape(x, y, w, h);
-        },
+        };
 
         /**
          * set new value to the rectangle shape
@@ -10820,7 +9700,7 @@
          * @param {Number} [h] height of the rectangle, if a numeral width parameter is specified
          * @return {me.Rect} this rectangle
          */
-        setShape : function (x, y, w, h) {
+        Rect.prototype.setShape = function setShape (x, y, w, h) {
             var points = w; // assume w is an array by default
 
             this.pos.set(x, y);
@@ -10835,7 +9715,168 @@
 
             this.setVertices(points);
             return this;
-        },
+        };
+
+
+        /**
+         * left coordinate of the Rectangle
+         * @public
+         * @type {Number}
+         * @name left
+         * @memberOf me.Rect
+         */
+
+        /**
+         * @ignore
+         */
+        prototypeAccessors.left.get = function () {
+            return this.pos.x;
+        };
+
+        /**
+         * right coordinate of the Rectangle
+         * @public
+         * @type {Number}
+         * @name right
+         * @memberOf me.Rect
+         */
+
+        /**
+         * @ignore
+         */
+        prototypeAccessors.right.get = function () {
+            var w = this.width;
+            return (this.pos.x + w) || w;
+        };
+
+        /**
+         * top coordinate of the Rectangle
+         * @public
+         * @type {Number}
+         * @name top
+         * @memberOf me.Rect
+         */
+
+        /**
+         * @ignore
+         */
+        prototypeAccessors.top.get = function () {
+            return this.pos.y;
+        };
+
+        /**
+         * bottom coordinate of the Rectangle
+         * @public
+         * @type {Number}
+         * @name bottom
+         * @memberOf me.Rect
+         */
+
+        /**
+         * @ignore
+         */
+        prototypeAccessors.bottom.get = function () {
+            var h = this.height;
+            return (this.pos.y + h) || h;
+        };
+
+        /**
+         * width of the Rectangle
+         * @public
+         * @type {Number}
+         * @name width
+         * @memberOf me.Rect
+         */
+
+        /**
+         * @ignore
+         */
+        prototypeAccessors.width.get = function () {
+            return this.points[2].x;
+        };
+        /**
+         * @ignore
+         */
+        prototypeAccessors.width.set = function (value) {
+            this.points[1].x = this.points[2].x = value;
+            this.recalc();
+            this.updateBounds();
+        };
+
+        /**
+         * height of the Rectangle
+         * @public
+         * @type {Number}
+         * @name height
+         * @memberOf me.Rect
+         */
+
+        /**
+         * @ignore
+         */
+        prototypeAccessors.height.get = function () {
+            return this.points[2].y;
+        };
+        /**
+         * @ignore
+         */
+        prototypeAccessors.height.set = function (value) {
+            this.points[2].y = this.points[3].y = value;
+            this.recalc();
+            this.updateBounds();
+        };
+
+        /**
+         * absolute center of this rectangle on the horizontal axis
+         * @public
+         * @type {Number}
+         * @name centerX
+         * @memberOf me.Rect
+         */
+
+        /**
+         * @ignore
+         */
+        prototypeAccessors.centerX.get = function () {
+            if (isFinite(this.width)) {
+                return this.pos.x + (this.width / 2);
+            } else {
+                return this.width;
+            }
+        };
+
+        /**
+         * @ignore
+         */
+        prototypeAccessors.centerX.set = function (value) {
+            this.pos.x = value - (this.width / 2);
+        };
+
+        /**
+         * absolute center of this rectangle on the vertical axis
+         * @public
+         * @type {Number}
+         * @name centerY
+         * @memberOf me.Rect
+         */
+
+        /**
+         * @ignore
+         */
+        prototypeAccessors.centerY.get = function () {
+            if (isFinite(this.height)) {
+                return this.pos.y + (this.height / 2);
+            } else {
+                return this.height;
+            }
+        };
+        
+        /**
+         * @ignore
+         */
+        prototypeAccessors.centerY.set = function (value) {
+            this.pos.y = value - (this.height / 2);
+        };
 
         /**
          * resize the rectangle
@@ -10846,11 +9887,11 @@
          * @param {Number} h new height of the rectangle
          * @return {me.Rect} this rectangle
          */
-        resize : function (w, h) {
+        Rect.prototype.resize = function resize (w, h) {
             this.width = w;
             this.height = h;
             return this;
-        },
+        };
 
         /**
          * scale the rectangle
@@ -10861,13 +9902,13 @@
          * @param {Number} [y=x] a number representing the ordinate of the scaling vector.
          * @return {me.Rect} this rectangle
          */
-        scale : function (x, y) {
+        Rect.prototype.scale = function scale (x, y) {
             if ( y === void 0 ) y = x;
 
             this.width *= x;
             this.height *= y;
             return this;
-        },
+        };
 
         /**
          * clone this rectangle
@@ -10876,9 +9917,9 @@
          * @function
          * @return {me.Rect} new rectangle
          */
-        clone : function () {
+        Rect.prototype.clone = function clone () {
             return new Rect(this.pos.x, this.pos.y, this.width, this.height);
-        },
+        };
 
         /**
          * copy the position and size of the given rectangle into this one
@@ -10888,9 +9929,9 @@
          * @param {me.Rect} rect Source rectangle
          * @return {me.Rect} new rectangle
          */
-        copy : function (rect) {
+        Rect.prototype.copy = function copy (rect) {
             return this.setShape(rect.pos.x, rect.pos.y, rect.width, rect.height);
-        },
+        };
 
         /**
          * translate the rect by the specified offset
@@ -10909,7 +9950,7 @@
          * @param {me.Vector2d} v vector offset
          * @return {me.Rect} this rectangle
          */
-        translate : function () {
+        Rect.prototype.translate = function translate () {
             var _x, _y;
 
             if (arguments.length === 2) {
@@ -10926,7 +9967,7 @@
             this.pos.y += _y;
 
             return this;
-        },
+        };
 
         /**
          * Shifts the rect to the given position vector.
@@ -10943,7 +9984,7 @@
          * @param {Number} x
          * @param {Number} y
          */
-        shift : function () {
+        Rect.prototype.shift = function shift () {
             if (arguments.length === 2) {
                 // x, y
                 this.pos.set(arguments[0], arguments[1]);
@@ -10951,7 +9992,7 @@
                 // vector
                 this.pos.setV(arguments[0]);
             }
-        },
+        };
 
         /**
          * merge this rectangle with another one
@@ -10961,7 +10002,7 @@
          * @param {me.Rect} rect other rectangle to union with
          * @return {me.Rect} the union(ed) rectangle
          */
-        union : function (/** {me.Rect} */ r) {
+        Rect.prototype.union = function union (/** {me.Rect} */ r) {
             var x1 = Math.min(this.left, r.left);
             var y1 = Math.min(this.top, r.top);
 
@@ -10973,7 +10014,7 @@
             this.pos.set(x1, y1);
 
             return this;
-        },
+        };
 
         /**
          * check if this rectangle is intersecting with the specified one
@@ -10983,14 +10024,14 @@
          * @param  {me.Rect} rect
          * @return {boolean} true if overlaps
          */
-        overlaps : function (r) {
+        Rect.prototype.overlaps = function overlaps (r) {
             return (
                 this.left < r.right &&
                 r.left < this.right &&
                 this.top < r.bottom &&
                 r.top < this.bottom
             );
-        },
+        };
 
         /**
          * Returns true if the rectangle contains the given rectangle
@@ -11019,7 +10060,7 @@
          * @param {me.Vector2d} point
          * @return {boolean} true if contains
          */
-        contains: function () {
+        Rect.prototype.contains = function contains () {
             var arg0 = arguments[0];
             var _x1, _x2, _y1, _y2;
             if (arguments.length === 2) {
@@ -11045,7 +10086,7 @@
                  _y1 >= this.top &&
                  _y2 <= this.bottom
              );
-        },
+        };
 
         /**
          * check if this rectangle is identical to the specified one
@@ -11055,14 +10096,14 @@
          * @param  {me.Rect} rect
          * @return {boolean} true if equals
          */
-        equals: function (r) {
+        Rect.prototype.equals = function equals (r) {
             return (
                 r.left === this.left &&
                 r.right === this.right &&
                 r.top === this.top &&
                 r.bottom === this.bottom
             );
-        },
+        };
 
         /**
          * determines whether all coordinates of this rectangle are finite numbers.
@@ -11071,9 +10112,9 @@
          * @function
          * @return {boolean} false if all coordinates are positive or negative Infinity or NaN; otherwise, true.
          */
-        isFinite: function () {
+        Rect.prototype.isFinite = function isFinite$1 () {
             return (isFinite(this.pos.x) && isFinite(this.pos.y) && isFinite(this.width) && isFinite(this.height));
-        },
+        };
 
         /**
          * Returns a polygon whose edges are the same as this box.
@@ -11082,188 +10123,16 @@
          * @function
          * @return {me.Polygon} a new Polygon that represents this rectangle.
          */
-        toPolygon: function () {
+        Rect.prototype.toPolygon = function toPolygon () {
             return new Polygon(
                 this.pos.x, this.pos.y, this.points
             );
-        }
-    });
+        };
 
-    // redefine some properties to ease our life when getting the rectangle coordinates
+        Object.defineProperties( Rect.prototype, prototypeAccessors );
 
-    /**
-     * left coordinate of the Rectangle
-     * @public
-     * @type {Number}
-     * @name left
-     * @memberOf me.Rect
-     */
-    Object.defineProperty(Rect.prototype, "left", {
-        /**
-         * @ignore
-         */
-        get : function () {
-            return this.pos.x;
-        },
-        configurable : true
-    });
-
-    /**
-     * right coordinate of the Rectangle
-     * @public
-     * @type {Number}
-     * @name right
-     * @memberOf me.Rect
-     */
-    Object.defineProperty(Rect.prototype, "right", {
-        /**
-         * @ignore
-         */
-        get : function () {
-            var w = this.width;
-            return (this.pos.x + w) || w;
-        },
-        configurable : true
-    });
-
-    /**
-     * top coordinate of the Rectangle
-     * @public
-     * @type {Number}
-     * @name top
-     * @memberOf me.Rect
-     */
-    Object.defineProperty(Rect.prototype, "top", {
-        /**
-         * @ignore
-         */
-        get : function () {
-            return this.pos.y;
-        },
-        configurable : true
-    });
-
-    /**
-     * bottom coordinate of the Rectangle
-     * @public
-     * @type {Number}
-     * @name bottom
-     * @memberOf me.Rect
-     */
-    Object.defineProperty(Rect.prototype, "bottom", {
-        /**
-         * @ignore
-         */
-        get : function () {
-            var h = this.height;
-            return (this.pos.y + h) || h;
-        },
-        configurable : true
-    });
-
-    /**
-     * width of the Rectangle
-     * @public
-     * @type {Number}
-     * @name width
-     * @memberOf me.Rect
-     */
-    Object.defineProperty(Rect.prototype, "width", {
-        /**
-         * @ignore
-         */
-        get : function () {
-            return this.points[2].x;
-        },
-        /**
-         * @ignore
-         */
-        set : function (value) {
-            this.points[1].x = this.points[2].x = value;
-            this.recalc();
-            this.updateBounds();
-        },
-        configurable : true
-    });
-
-    /**
-     * height of the Rectangle
-     * @public
-     * @type {Number}
-     * @name height
-     * @memberOf me.Rect
-     */
-    Object.defineProperty(Rect.prototype, "height", {
-        /**
-         * @ignore
-         */
-        get : function () {
-            return this.points[2].y;
-        },
-        /**
-         * @ignore
-         */
-        set : function (value) {
-            this.points[2].y = this.points[3].y = value;
-            this.recalc();
-            this.updateBounds();
-        },
-        configurable : true
-    });
-
-    /**
-     * absolute center of this rectangle on the horizontal axis
-     * @public
-     * @type {Number}
-     * @name centerX
-     * @memberOf me.Rect
-     */
-    Object.defineProperty(Rect.prototype, "centerX", {
-        /**
-         * @ignore
-         */
-        get : function () {
-            if (isFinite(this.width)) {
-                return this.pos.x + (this.width / 2);
-            } else {
-                return this.width;
-            }
-        },
-        /**
-         * @ignore
-         */
-        set : function (value) {
-            this.pos.x = value - (this.width / 2);
-        },
-        configurable : true
-    });
-
-    /**
-     * absolute center of this rectangle on the vertical axis
-     * @public
-     * @type {Number}
-     * @name centerY
-     * @memberOf me.Rect
-     */
-    Object.defineProperty(Rect.prototype, "centerY", {
-        /**
-         * @ignore
-         */
-        get : function () {
-            if (isFinite(this.height)) {
-                return this.pos.y + (this.height / 2);
-            } else {
-                return this.height;
-            }
-        },
-        /**
-         * @ignore
-         */
-        set : function (value) {
-            this.pos.y = value - (this.height / 2);
-        },
-        configurable : true
-    });
+        return Rect;
+    }(Polygon));
 
     // corresponding actions
     var _keyStatus = {};
@@ -11581,7 +10450,7 @@
      */
     function initKeyboardEvent() {
         // make sure the keyboard is enable
-        if (keyBoardEventTarget === null && device$1.isMobile === false) {
+        if (keyBoardEventTarget === null && device.isMobile === false) {
             keyBoardEventTarget = window;
             keyBoardEventTarget.addEventListener("keydown", keyDownEvent, false);
             keyBoardEventTarget.addEventListener("keyup", keyUpEvent, false);
@@ -11733,23 +10602,23 @@
     var viewportOffset = new Vector2d();
 
     /**
+     * @classdesc
      * a pointer object, representing a single finger on a touch enabled device.
      * @class
      * @extends me.Rect
      * @memberOf me
      * @constructor
      */
-    var Pointer = Rect.extend({
-
-        /**
-         * @ignore
-         */
-        init : function (x, y, w, h) {
+    var Pointer = /*@__PURE__*/(function (Rect) {
+        function Pointer(x, y, w, h) {
             if ( x === void 0 ) x = 0;
             if ( y === void 0 ) y = 0;
             if ( w === void 0 ) w = 1;
             if ( h === void 0 ) h = 1;
 
+
+            // parent constructor
+            Rect.call(this, x, y, w, h);
 
             /**
              * constant for left button
@@ -11987,10 +10856,11 @@
 
             // bind list for mouse buttons
             this.bind = [ 0, 0, 0 ];
+        }
 
-            // parent constructor
-            this._super(Rect, "init", [x, y, w, h]);
-        },
+        if ( Rect ) Pointer.__proto__ = Rect;
+        Pointer.prototype = Object.create( Rect && Rect.prototype );
+        Pointer.prototype.constructor = Pointer;
 
         /**
          * initialize the Pointer object using the given Event Object
@@ -12004,7 +10874,7 @@
          * @param {Number} [clientX=0] the vertical coordinate within the application's client area at which the event occurred
          * @param {Number} [pointedId=1] the Pointer, Touch or Mouse event Id (1)
          */
-        setEvent : function (event, pageX, pageY, clientX, clientY, pointerId) {
+        Pointer.prototype.setEvent = function setEvent (event, pageX, pageY, clientX, clientY, pointerId) {
             if ( pageX === void 0 ) pageX = 0;
             if ( pageY === void 0 ) pageY = 0;
             if ( clientX === void 0 ) clientX = 0;
@@ -12026,7 +10896,7 @@
             globalToLocal(this.pageX, this.pageY, this.pos);
 
             // true if not originally a pointer event
-            this.isNormalized = !device$1.PointerEvent || (device$1.PointerEvent && !(event instanceof window.PointerEvent));
+            this.isNormalized = !device.PointerEvent || (device.PointerEvent && !(event instanceof window.PointerEvent));
 
             if (event.type === "wheel") {
                 this.deltaMode = event.deltaMode || 0;
@@ -12073,8 +10943,10 @@
             }
             // resize the pointer object accordingly
             this.resize(width, height);
-        }
-    });
+        };
+
+        return Pointer;
+    }(Rect));
 
     /**
      * A pool of `Pointer` objects to cache pointer/touch event coordinates.
@@ -12185,7 +11057,7 @@
             pointer = new Pointer(0, 0, 1, 1);
 
             // instantiate a pool of pointer catched
-            for (var v = 0; v < device$1.maxTouchPoints; v++) {
+            for (var v = 0; v < device.maxTouchPoints; v++) {
                 T_POINTERS.push(new Pointer());
             }
 
@@ -12194,14 +11066,14 @@
                 pointerEventTarget = video$1.renderer.getScreenCanvas();
             }
 
-            if (device$1.PointerEvent) {
+            if (device.PointerEvent) {
                 // standard Pointer Events
                 activeEventList = pointerEventList;
             } else {
                 // Regular Mouse events
                 activeEventList = mouseEventList;
             }
-            if (device$1.touch && !device$1.PointerEvent) {
+            if (device.touch && !device.PointerEvent) {
                 // touch event on mobile devices
                 activeEventList = activeEventList.concat(touchEventList);
             }
@@ -12213,12 +11085,12 @@
                 throttlingInterval = ~~(1000 / timer$1.maxfps);
             }
 
-            if (device$1.autoFocus === true) {
-                device$1.focus();
+            if (device.autoFocus === true) {
+                device.focus();
                 pointerEventTarget.addEventListener(
                     activeEventList[2], // MOUSE/POINTER DOWN
                     function () {
-                        device$1.focus();
+                        device.focus();
                     },
                     { passive: (preventDefault === false) }
                 );
@@ -12341,7 +11213,7 @@
                 event.publish(event.POINTERMOVE, [pointer]);
             }
 
-            var candidates = game$1.world.broadphase.retrieve(currentPointer, Container$1.prototype._sortReverseZ);
+            var candidates = game$1.world.broadphase.retrieve(currentPointer, Container.prototype._sortReverseZ);
 
             // add the main viewport to the list of candidates
             candidates = candidates.concat([ game$1.viewport ]);
@@ -12475,7 +11347,7 @@
         var pointer;
 
         // PointerEvent or standard Mouse event
-        if (device$1.TouchEvent && originalEvent.changedTouches) {
+        if (device.TouchEvent && originalEvent.changedTouches) {
             // iOS/Android Touch event
             for (var i = 0, l = originalEvent.changedTouches.length; i < l; i++) {
                 var touchEvent = originalEvent.changedTouches[i];
@@ -12606,8 +11478,8 @@
      */
     function globalToLocal(x, y, v) {
         v = v || new Vector2d();
-        var rect = device$1.getElementBounds(video$1.renderer.getScreenCanvas());
-        var pixelRatio = device$1.devicePixelRatio;
+        var rect = device.getElementBounds(video$1.renderer.getScreenCanvas());
+        var pixelRatio = device.devicePixelRatio;
         x -= rect.left + (window.pageXOffset || 0);
         y -= rect.top + (window.pageYOffset || 0);
         var scale = video$1.scaleRatio;
@@ -13381,14 +12253,11 @@
      * @param {Number} width object width
      * @param {Number} height object height
      */
-    var Renderable = Rect.extend({
-        /**
-         * @ignore
-         */
-        init : function (x, y, width, height) {
+    var Renderable = /*@__PURE__*/(function (Rect) {
+        function Renderable(x, y, width, height) {
 
             // parent constructor
-            this._super(Rect, "init", [x, y, width, height]);
+            Rect.call(this, x, y, width, height);
 
             /**
              * to identify the object as a renderable object
@@ -13674,12 +12543,74 @@
 
             // ensure it's fully opaque by default
             this.setOpacity(1.0);
-        },
+        }
 
-        /** @ignore */
-        onResetEvent : function () {
-            this.init.apply(this, arguments);
-        },
+        if ( Rect ) Renderable.__proto__ = Rect;
+        Renderable.prototype = Object.create( Rect && Rect.prototype );
+        Renderable.prototype.constructor = Renderable;
+
+        var prototypeAccessors = { inViewport: { configurable: true },isFlippedX: { configurable: true },isFlippedY: { configurable: true } };
+
+        /**
+         * Whether the renderable object is visible and within the viewport
+         * @public
+         * @readonly
+         * @type Boolean
+         * @default false
+         * @name inViewport
+         * @memberOf me.Renderable
+         */
+
+        /**
+         * @ignore
+         */
+        prototypeAccessors.inViewport.get = function () {
+            return this._inViewport;
+        };
+
+        /**
+         * @ignore
+         */
+        prototypeAccessors.inViewport.set = function (value) {
+            if (this._inViewport !== value) {
+                this._inViewport = value;
+                if (typeof this.onVisibilityChange === "function") {
+                    this.onVisibilityChange.call(this, value);
+                }
+            }
+        };
+
+        /**
+         * returns true if this renderable is flipped on the horizontal axis
+         * @public
+         * @see me.Renderable#flipX
+         * @type {Boolean}
+         * @name isFlippedX
+         * @memberOf me.Renderable
+         */
+
+        /**
+         * @ignore
+         */
+        prototypeAccessors.isFlippedX.get = function () {
+            return this._flip.x === true;
+        };
+
+        /**
+         * returns true if this renderable is flipped on the vertical axis
+         * @public
+         * @see me.Renderable#flipY
+         * @type {Boolean}
+         * @name isFlippedY
+         * @memberOf me.Renderable
+         */
+
+        /**
+         * @ignore
+         */
+        prototypeAccessors.isFlippedY.get = function () {
+            return this._flip.y === true;
+        };
 
         /**
          * returns the bounding box for this renderable
@@ -13688,9 +12619,9 @@
          * @function
          * @return {me.Bounds} bounding box Rectangle object
          */
-        getBounds : function () {
+        Renderable.prototype.getBounds = function getBounds () {
             if (typeof this._bounds === "undefined") {
-                this._super(Rect, "getBounds");
+                Rect.prototype.getBounds.call(this);
                 if (this.isFinite()) {
                     this._bounds.setMinMax(this.pos.x, this.pos.y, this.pos.x + this.width, this.pos.y + this.height);
                 } else {
@@ -13700,7 +12631,7 @@
 
             }
             return this._bounds;
-        },
+        };
 
         /**
          * get the renderable alpha channel value<br>
@@ -13709,9 +12640,9 @@
          * @function
          * @return {Number} current opacity value between 0 and 1
          */
-        getOpacity : function () {
+        Renderable.prototype.getOpacity = function getOpacity () {
             return this.alpha;
-        },
+        };
 
         /**
          * set the renderable alpha channel value<br>
@@ -13720,7 +12651,7 @@
          * @function
          * @param {Number} alpha opacity value between 0.0 and 1.0
          */
-        setOpacity : function (alpha) {
+        Renderable.prototype.setOpacity = function setOpacity (alpha) {
             if (typeof (alpha) === "number") {
                 this.alpha = clamp(alpha, 0.0, 1.0);
                 // Set to 1 if alpha is NaN
@@ -13728,7 +12659,7 @@
                     this.alpha = 1.0;
                 }
             }
-        },
+        };
 
         /**
          * flip the renderable on the horizontal axis (around the center of the renderable)
@@ -13739,11 +12670,11 @@
          * @param {Boolean} [flip=false] `true` to flip this renderable.
          * @return {me.Renderable} Reference to this object for method chaining
          */
-        flipX : function (flip) {
+        Renderable.prototype.flipX = function flipX (flip) {
             this._flip.x = !!flip;
             this.isDirty = true;
             return this;
-        },
+        };
 
         /**
          * flip the renderable on the vertical axis (around the center of the renderable)
@@ -13754,11 +12685,11 @@
          * @param {Boolean} [flip=false] `true` to flip this renderable.
          * @return {me.Renderable} Reference to this object for method chaining
          */
-        flipY : function (flip) {
+        Renderable.prototype.flipY = function flipY (flip) {
             this._flip.y = !!flip;
             this.isDirty = true;
             return this;
-        },
+        };
 
         /**
          * multiply the renderable currentTransform with the given matrix
@@ -13769,13 +12700,13 @@
          * @param {me.Matrix2d} matrix the transformation matrix
          * @return {me.Renderable} Reference to this object for method chaining
          */
-        transform : function (m) {
+        Renderable.prototype.transform = function transform (m) {
             this.currentTransform.multiply(m);
-            //this._super(Rect, "transform", [m]);
+            //super.transform(m);
             this.updateBoundsPos(this.pos.x, this.pos.y);
             this.isDirty = true;
             return this;
-        },
+        };
 
         /**
          * return the angle to the specified target
@@ -13785,7 +12716,7 @@
          * @param {me.Renderable|me.Vector2d|me.Vector3d} target
          * @return {Number} angle in radians
          */
-        angleTo: function (target) {
+        Renderable.prototype.angleTo = function angleTo (target) {
             var a = this.getBounds();
             var ax, ay;
 
@@ -13799,7 +12730,7 @@
             }
 
             return Math.atan2(ay, ax);
-        },
+        };
 
         /**
          * return the distance to the specified target
@@ -13809,7 +12740,7 @@
          * @param {me.Renderable|me.Vector2d|me.Vector3d} target
          * @return {Number} distance
          */
-        distanceTo: function (target) {
+        Renderable.prototype.distanceTo = function distanceTo (target) {
             var a = this.getBounds();
             var dx, dy;
 
@@ -13823,7 +12754,7 @@
             }
 
             return Math.sqrt(dx * dx + dy * dy);
-        },
+        };
 
         /**
          * Rotate this renderable towards the given target.
@@ -13833,7 +12764,7 @@
          * @param {me.Renderable|me.Vector2d|me.Vector3d} target the renderable or position to look at
          * @return {me.Renderable} Reference to this object for method chaining
          */
-        lookAt : function (target) {
+        Renderable.prototype.lookAt = function lookAt (target) {
             var position;
 
             if (target instanceof Renderable) {
@@ -13847,7 +12778,7 @@
             this.rotate(angle);
 
             return this;
-        },
+        };
 
         /**
          * Rotate this renderable by the specified angle (in radians).
@@ -13858,14 +12789,14 @@
          * @param {me.Vector2d|me.ObservableVector2d} [v] an optional point to rotate around
          * @return {me.Renderable} Reference to this object for method chaining
          */
-        rotate : function (angle) {
+        Renderable.prototype.rotate = function rotate (angle) {
             if (!isNaN(angle)) {
                 this.currentTransform.rotate(angle);
                 //this.updateBoundsPos(this.pos.x, this.pos.y);
                 this.isDirty = true;
             }
             return this;
-        },
+        };
 
         /**
          * scale the renderable around his anchor point.  Scaling actually applies changes
@@ -13880,12 +12811,12 @@
          * @param {Number} [y=x] a number representing the ordinate of the scaling vector.
          * @return {me.Renderable} Reference to this object for method chaining
          */
-        scale : function (x, y) {
+        Renderable.prototype.scale = function scale (x, y) {
             this.currentTransform.scale(x, y);
-            this._super(Rect, "scale", [x, y]);
+            Rect.prototype.scale.call(this, x, y);
             this.isDirty = true;
             return this;
-        },
+        };
 
         /**
          * scale the renderable around his anchor point
@@ -13895,10 +12826,10 @@
          * @param {me.Vector2d} vector scaling vector
          * @return {me.Renderable} Reference to this object for method chaining
          */
-        scaleV : function (v) {
+        Renderable.prototype.scaleV = function scaleV (v) {
             this.scale(v.x, v.y);
             return this;
-        },
+        };
 
         /**
          * update function. <br>
@@ -13910,9 +12841,9 @@
          * @param {Number} dt time since the last update in milliseconds.
          * @return false
          **/
-        update : function (/* dt */) {
+        Renderable.prototype.update = function update (/* dt */) {
             return this.isDirty;
-        },
+        };
 
         /**
          * update the bounding box for this shape.
@@ -13922,11 +12853,11 @@
          * @function
          * @return {me.Bounds} this shape bounding box Rectangle object
          */
-        updateBounds : function () {
-            this._super(Rect, "updateBounds");
+        Renderable.prototype.updateBounds = function updateBounds () {
+            Rect.prototype.updateBounds.call(this);
             this.updateBoundsPos(this.pos.x, this.pos.y);
             return this.getBounds();
-        },
+        };
 
         /**
          * update the renderable's bounding rect (private)
@@ -13935,7 +12866,7 @@
          * @memberOf me.Renderable.prototype
          * @function
          */
-         updateBoundsPos : function (newX, newY) {
+         Renderable.prototype.updateBoundsPos = function updateBoundsPos (newX, newY) {
              var bounds = this.getBounds();
 
              bounds.shift(newX, newY);
@@ -13955,11 +12886,11 @@
              */
 
              // XXX: This is called from the constructor, before it gets an ancestor
-             if (this.ancestor instanceof Container$1 && this.floating !== true) {
+             if (this.ancestor instanceof Container && this.floating !== true) {
                  bounds.translate(this.ancestor.getAbsolutePosition());
              }
              //return bounds;
-         },
+         };
 
          /**
           * return the renderable absolute position in the game world
@@ -13968,17 +12899,17 @@
           * @function
           * @return {me.Vector2d}
           */
-          getAbsolutePosition : function () {
+          Renderable.prototype.getAbsolutePosition = function getAbsolutePosition () {
               if (typeof this._absPos === "undefined") {
                   this._absPos = pool.pull("Vector2d");
               }
               // XXX Cache me or something
               this._absPos.set(this.pos.x, this.pos.y);
-              if (this.ancestor instanceof Container$1 && this.floating !== true) {
+              if (this.ancestor instanceof Container && this.floating !== true) {
                   this._absPos.add(this.ancestor.getAbsolutePosition());
               }
               return this._absPos;
-          },
+          };
 
         /**
          * called when the anchor point value is changed
@@ -13987,13 +12918,13 @@
          * @memberOf me.Renderable.prototype
          * @function
          */
-         onAnchorUpdate : function (newX, newY) {
+         Renderable.prototype.onAnchorUpdate = function onAnchorUpdate (newX, newY) {
              // since the callback is called before setting the new value
              // manually update the anchor point (required for updateBoundsPos)
              this.anchorPoint.setMuted(newX, newY);
-             // then call updateBouds
+             // then call updateBounds
              this.updateBoundsPos(this.pos.x, this.pos.y);
-         },
+         };
 
 
         /**
@@ -14006,7 +12937,7 @@
          * @protected
          * @param {me.CanvasRenderer|me.WebGLRenderer} renderer a renderer object
          **/
-        preDraw : function (renderer) {
+        Renderable.prototype.preDraw = function preDraw (renderer) {
             var bounds = this.getBounds();
             var ax = bounds.width * this.anchorPoint.x,
                 ay = bounds.height * this.anchorPoint.y;
@@ -14043,7 +12974,7 @@
 
             // apply the defined tint, if any
             renderer.setTint(this.tint);
-        },
+        };
 
         /**
          * object draw. <br>
@@ -14054,9 +12985,9 @@
          * @protected
          * @param {me.CanvasRenderer|me.WebGLRenderer} renderer a renderer object
          **/
-        draw : function (/*renderer*/) {
+        Renderable.prototype.draw = function draw (/*renderer*/) {
             // empty one !
-        },
+        };
 
         /**
          * restore the rendering context after drawing. <br>
@@ -14067,7 +12998,7 @@
          * @protected
          * @param {me.CanvasRenderer|me.WebGLRenderer} renderer a renderer object
          **/
-        postDraw : function (renderer) {
+        Renderable.prototype.postDraw = function postDraw (renderer) {
             if (typeof this.mask !== "undefined") {
                 renderer.clearMask();
             }
@@ -14080,13 +13011,13 @@
 
             // restore the context
             renderer.restore();
-        },
+        };
 
         /**
          * Destroy function<br>
          * @ignore
          */
-        destroy : function () {
+        Renderable.prototype.destroy = function destroy () {
             // allow recycling object properties
             pool.push(this.currentTransform);
             this.currentTransform = undefined;
@@ -14130,7 +13061,7 @@
 
             // call the user defined destroy method
             this.onDestroyEvent.apply(this, arguments);
-        },
+        };
 
         /**
          * OnDestroy Notification function<br>
@@ -14139,76 +13070,14 @@
          * @memberOf me.Renderable
          * @function
          */
-        onDestroyEvent : function () {
+        Renderable.prototype.onDestroyEvent = function onDestroyEvent () {
             // to be extended !
-        }
-    });
+        };
 
-    /**
-     * Whether the renderable object is visible and within the viewport
-     * @public
-     * @readonly
-     * @type Boolean
-     * @default false
-     * @name inViewport
-     * @memberOf me.Renderable
-     */
-    Object.defineProperty(Renderable.prototype, "inViewport", {
-        /**
-         * @ignore
-         */
-        get : function () {
-            return this._inViewport;
-        },
-        /**
-         * @ignore
-         */
-        set : function (value) {
-            if (this._inViewport !== value) {
-                this._inViewport = value;
-                if (typeof this.onVisibilityChange === "function") {
-                    this.onVisibilityChange.call(this, value);
-                }
-            }
-        },
-        configurable : true
-    });
+        Object.defineProperties( Renderable.prototype, prototypeAccessors );
 
-    /**
-     * returns true if this renderable is flipped on the horizontal axis
-     * @public
-     * @see me.Renderable#flipX
-     * @type {Boolean}
-     * @name isFlippedX
-     * @memberOf me.Renderable
-     */
-    Object.defineProperty(Renderable.prototype, "isFlippedX", {
-        /**
-         * @ignore
-         */
-        get : function () {
-            return this._flip.x === true;
-        },
-        configurable : true
-    });
-
-    /**
-     * returns true if this renderable is flipped on the vertical axis
-     * @public
-     * @see me.Renderable#flipY
-     * @type {Boolean}
-     * @name isFlippedY
-     * @memberOf me.Renderable
-     */
-    Object.defineProperty(Renderable.prototype, "isFlippedY", {
-        /**
-         * @ignore
-         */
-        get : function () {
-            return this._flip.y === true;
-        },
-        configurable : true
-    });
+        return Renderable;
+    }(Rect));
 
     /**
      * Private function to re-use for object removal in a defer
@@ -14231,25 +13100,24 @@
      * @param {Number} [w=me.game.viewport.width] width of the container
      * @param {Number} [h=me.game.viewport.height] height of the container
      */
-    var Container = Renderable.extend({
-        /**
-         * @ignore
-         */
-        init : function (x, y, width, height, root) {
+
+    var Container = /*@__PURE__*/(function (Renderable) {
+        function Container(x, y, width, height, root) {
             if ( x === void 0 ) x = 0;
             if ( y === void 0 ) y = 0;
             if ( width === void 0 ) width = game$1.viewport.width;
             if ( height === void 0 ) height = game$1.viewport.height;
             if ( root === void 0 ) root = false;
 
+
+            // call the _super constructor
+            Renderable.call(this, x, y, width, height);
+
             /**
              * keep track of pending sort
              * @ignore
              */
             this.pendingSort = null;
-
-            // call the _super constructor
-            this._super(Renderable, "init", [x, y, width, height]);
 
             /**
              * whether the container is the root of the scene
@@ -14350,7 +13218,11 @@
                 // Workaround for not updating container child-bounds automatically (it's expensive!)
                 event.subscribe(event.CANVAS_ONRESIZE, this.updateBounds.bind(this, true));
             }
-        },
+        }
+
+        if ( Renderable ) Container.__proto__ = Renderable;
+        Container.prototype = Object.create( Renderable && Renderable.prototype );
+        Container.prototype.constructor = Container;
 
         /**
          * reset the container, removing all childrens, and reseting transforms.
@@ -14358,7 +13230,7 @@
          * @memberOf me.Container
          * @function
          */
-        reset : function () {
+        Container.prototype.reset = function reset () {
             // cancel any sort operation
             if (this.pendingSort) {
                 clearTimeout(this.pendingSort);
@@ -14377,8 +13249,7 @@
                 // just reset some variables
                 this.currentTransform.identity();
             }
-        },
-
+        };
 
         /**
          * Add a child to the container <br>
@@ -14395,7 +13266,7 @@
          * @param {number} [z] forces the z index of the child to the specified value
          * @return {me.Renderable} the added child
          */
-        addChild : function (child, z) {
+        Container.prototype.addChild = function addChild (child, z) {
             if (child.ancestor instanceof Container) {
                 child.ancestor.removeChildNow(child);
             }
@@ -14441,7 +13312,7 @@
             this.onChildChange.call(this, this.getChildren().length - 1);
 
             return child;
-        },
+        };
 
         /**
          * Add a child to the container at the specified index<br>
@@ -14453,7 +13324,7 @@
          * @param {Number} index
          * @return {me.Renderable} the added child
          */
-        addChildAt : function (child, index) {
+        Container.prototype.addChildAt = function addChildAt (child, index) {
             if (index >= 0 && index < this.getChildren().length) {
                 if (child.ancestor instanceof Container) {
                     child.ancestor.removeChildNow(child);
@@ -14491,7 +13362,7 @@
             else {
                 throw new Error("Index (" + index + ") Out Of Bounds for addChildAt()");
             }
-        },
+        };
 
         /**
          * The forEach() method executes a provided function once per child element. <br>
@@ -14514,7 +13385,7 @@
          * me.game.world.forEach((child, index, array) => { ... });
          * me.game.world.forEach((child, index, array) => { ... }, thisArg);
          */
-        forEach : function (callback, thisArg) {
+        Container.prototype.forEach = function forEach (callback, thisArg) {
             var context = this, i = 0;
             var children = this.getChildren();
 
@@ -14532,7 +13403,7 @@
                 callback.call(context, children[i], i, children);
                 i++;
             }
-        },
+        };
 
         /**
          * Swaps the position (z-index) of 2 children
@@ -14542,7 +13413,7 @@
          * @param {me.Renderable} child
          * @param {me.Renderable} child2
          */
-        swapChildren : function (child, child2) {
+        Container.prototype.swapChildren = function swapChildren (child, child2) {
             var index = this.getChildIndex(child);
             var index2 = this.getChildIndex(child2);
 
@@ -14558,7 +13429,7 @@
             else {
                 throw new Error(child + " Both the supplied childs must be a child of the caller " + this);
             }
-        },
+        };
 
         /**
          * Returns the Child at the specified index
@@ -14567,14 +13438,14 @@
          * @function
          * @param {Number} index
          */
-        getChildAt : function (index) {
+        Container.prototype.getChildAt = function getChildAt (index) {
             if (index >= 0 && index < this.getChildren().length) {
                 return this.getChildren()[index];
             }
             else {
                 throw new Error("Index (" + index + ") Out Of Bounds for getChildAt()");
             }
-        },
+        };
 
         /**
          * Returns the index of the given Child
@@ -14583,9 +13454,9 @@
          * @function
          * @param {me.Renderable} child
          */
-        getChildIndex : function (child) {
+        Container.prototype.getChildIndex = function getChildIndex (child) {
             return this.getChildren().indexOf(child);
-        },
+        };
 
         /**
          * Returns the next child within the container or undefined if none
@@ -14594,13 +13465,13 @@
          * @function
          * @param {me.Renderable} child
          */
-        getNextChild : function (child) {
+        Container.prototype.getNextChild = function getNextChild (child) {
             var index = this.getChildren().indexOf(child) - 1;
             if (index >= 0 && index < this.getChildren().length) {
                 return this.getChildAt(index);
             }
             return undefined;
-        },
+        };
 
         /**
          * Returns true if contains the specified Child
@@ -14610,9 +13481,9 @@
          * @param {me.Renderable} child
          * @return {Boolean}
          */
-        hasChild : function (child) {
+        Container.prototype.hasChild = function hasChild (child) {
             return this === child.ancestor;
-        },
+        };
 
         /**
          * return the child corresponding to the given property and value.<br>
@@ -14640,7 +13511,7 @@
          * var zIndex10 = me.game.world.getChildByProp("z", 10);
          * var inViewport = me.game.world.getChildByProp("inViewport", true);
          */
-        getChildByProp : function (prop, value)    {
+        Container.prototype.getChildByProp = function getChildByProp (prop, value)    {
             var objList = [];
 
             function compare(obj, prop) {
@@ -14663,7 +13534,7 @@
             });
 
             return objList;
-        },
+        };
 
         /**
          * returns the list of childs with the specified class type
@@ -14674,7 +13545,7 @@
          * @param {Object} class type
          * @return {me.Renderable[]} Array of children
          */
-        getChildByType : function (_class) {
+        Container.prototype.getChildByType = function getChildByType (_class) {
             var objList = [];
 
             this.forEach(function (child) {
@@ -14687,7 +13558,7 @@
             });
 
             return objList;
-        },
+        };
 
         /**
          * returns the list of childs with the specified name<br>
@@ -14701,9 +13572,9 @@
          * @param {String|RegExp|Number|Boolean} name child name
          * @return {me.Renderable[]} Array of children
          */
-        getChildByName : function (name) {
+        Container.prototype.getChildByName = function getChildByName (name) {
             return this.getChildByProp("name", name);
-        },
+        };
 
         /**
          * return the child corresponding to the specified GUID<br>
@@ -14716,10 +13587,10 @@
          * @param {String|RegExp|Number|Boolean} GUID child GUID
          * @return {me.Renderable} corresponding child or null
          */
-        getChildByGUID : function (guid) {
+        Container.prototype.getChildByGUID = function getChildByGUID (guid) {
             var obj = this.getChildByProp("GUID", guid);
             return (obj.length > 0) ? obj[0] : null;
-        },
+        };
 
 
         /**
@@ -14731,12 +13602,12 @@
          * @function
          * @return {me.Renderable[]} an array of renderable object
          */
-        getChildren : function () {
+        Container.prototype.getChildren = function getChildren () {
             if (typeof this.children === "undefined") {
                 this.children = [];
             }
             return this.children;
-        },
+        };
 
         /**
          * update the bounding box for this shape.
@@ -14746,11 +13617,12 @@
          * @function
          * @return {me.Bounds} this shape bounding box Rectangle object
          */
-        updateBounds : function (forceUpdateChildBounds) {
+        Container.prototype.updateBounds = function updateBounds (forceUpdateChildBounds) {
             if ( forceUpdateChildBounds === void 0 ) forceUpdateChildBounds = false;
 
+
             // call parent method
-            this._super(Renderable, "updateBounds");
+            Renderable.prototype.updateBounds.call(this);
 
             var bounds = this.getBounds();
 
@@ -14766,7 +13638,7 @@
             }
 
             return bounds;
-        },
+        };
 
         /**
          * Checks if this container is root or if it's attached to the root container.
@@ -14776,7 +13648,7 @@
          * @function
          * @returns Boolean
          */
-        isAttachedToRoot : function () {
+        Container.prototype.isAttachedToRoot = function isAttachedToRoot () {
             if (this.root === true) {
                 return true;
             } else {
@@ -14789,7 +13661,7 @@
                 }
                 return false;
             }
-        },
+        };
 
         /**
          * update the cointainer's bounding rect (private)
@@ -14798,10 +13670,11 @@
          * @memberOf me.Container.prototype
          * @function
          */
-        updateBoundsPos : function (newX, newY) {
+        Container.prototype.updateBoundsPos = function updateBoundsPos (newX, newY) {
             var this$1$1 = this;
 
-            this._super(Renderable, "updateBoundsPos", [ newX, newY ]);
+            // call the parent method
+            Renderable.prototype.updateBoundsPos.call(this, newX, newY);
 
             // Notify children that the parent's position has changed
             this.forEach(function (child) {
@@ -14815,18 +13688,18 @@
                 }
             });
             return this.getBounds();
-        },
+        };
 
         /**
          * @ignore
          */
-        onActivateEvent : function () {
+        Container.prototype.onActivateEvent = function onActivateEvent () {
             this.forEach(function (child) {
                 if (typeof child.onActivateEvent === "function") {
                     child.onActivateEvent();
                 }
             });
-        },
+        };
 
         /**
          * Invokes the removeChildNow in a defer, to ensure the child is removed safely after the update & draw stack has completed
@@ -14837,15 +13710,14 @@
          * @param {me.Renderable} child
          * @param {Boolean} [keepalive=False] True to prevent calling child.destroy()
          */
-        removeChild : function (child, keepalive) {
+        Container.prototype.removeChild = function removeChild (child, keepalive) {
             if (this.hasChild(child)) {
                 utils$1.function.defer(deferredRemove, this, child, keepalive);
             }
             else {
                 throw new Error("Child is not mine.");
             }
-        },
-
+        };
 
         /**
          * Removes (and optionally destroys) a child from the container.<br>
@@ -14857,7 +13729,7 @@
          * @param {me.Renderable} child
          * @param {Boolean} [keepalive=False] True to prevent calling child.destroy()
          */
-        removeChildNow : function (child, keepalive) {
+        Container.prototype.removeChildNow = function removeChildNow (child, keepalive) {
             if (this.hasChild(child) && (this.getChildIndex(child) >= 0)) {
                 if (typeof child.onDeactivateEvent === "function") {
                     child.onDeactivateEvent();
@@ -14891,7 +13763,7 @@
                 // triggered callback if defined
                 this.onChildChange.call(this, childIndex);
             }
-        },
+        };
 
         /**
          * Automatically set the specified property of all childs to the given value
@@ -14902,14 +13774,14 @@
          * @param {Object} value property value
          * @param {Boolean} [recursive=false] recursively apply the value to child containers if true
          */
-        setChildsProperty : function (prop, val, recursive) {
+        Container.prototype.setChildsProperty = function setChildsProperty (prop, val, recursive) {
             this.forEach(function (child) {
                 if ((recursive === true) && (child instanceof Container)) {
                     child.setChildsProperty(prop, val, recursive);
                 }
                 child[prop] = val;
             });
-        },
+        };
 
         /**
          * Move the child in the group one step forward (z depth).
@@ -14918,13 +13790,13 @@
          * @function
          * @param {me.Renderable} child
          */
-        moveUp : function (child) {
+        Container.prototype.moveUp = function moveUp (child) {
             var childIndex = this.getChildIndex(child);
             if (childIndex - 1 >= 0) {
                 // note : we use an inverted loop
                 this.swapChildren(child, this.getChildAt(childIndex - 1));
             }
-        },
+        };
 
         /**
          * Move the child in the group one step backward (z depth).
@@ -14933,13 +13805,13 @@
          * @function
          * @param {me.Renderable} child
          */
-        moveDown : function (child) {
+        Container.prototype.moveDown = function moveDown (child) {
             var childIndex = this.getChildIndex(child);
             if (childIndex >= 0 && (childIndex + 1) < this.getChildren().length) {
                 // note : we use an inverted loop
                 this.swapChildren(child, this.getChildAt(childIndex + 1));
             }
-        },
+        };
 
         /**
          * Move the specified child to the top(z depth).
@@ -14948,7 +13820,7 @@
          * @function
          * @param {me.Renderable} child
          */
-        moveToTop : function (child) {
+        Container.prototype.moveToTop = function moveToTop (child) {
             var childIndex = this.getChildIndex(child);
             if (childIndex > 0) {
                 var children = this.getChildren();
@@ -14957,7 +13829,7 @@
                 // increment our child z value based on the previous child depth
                 child.pos.z = children[1].pos.z + 1;
             }
-        },
+        };
 
         /**
          * Move the specified child the bottom (z depth).
@@ -14966,7 +13838,7 @@
          * @function
          * @param {me.Renderable} child
          */
-        moveToBottom : function (child) {
+        Container.prototype.moveToBottom = function moveToBottom (child) {
             var childIndex = this.getChildIndex(child);
             var children = this.getChildren();
             if (childIndex >= 0 && childIndex < (children.length - 1)) {
@@ -14975,7 +13847,7 @@
                 // increment our child z value based on the next child depth
                 child.pos.z = children[(children.length - 2)].pos.z - 1;
             }
-        },
+        };
 
         /**
          * Manually trigger the sort of all the childs in the container</p>
@@ -14985,7 +13857,7 @@
          * @function
          * @param {Boolean} [recursive=false] recursively sort all containers if true
          */
-        sort : function (recursive) {
+        Container.prototype.sort = function sort (recursive) {
             // do nothing if there is already a pending sort
             if (!this.pendingSort) {
                 if (recursive === true) {
@@ -15007,75 +13879,77 @@
                     game$1.repaint();
                 }, this, this);
             }
-        },
+        };
 
         /**
          * @ignore
          */
-        onDeactivateEvent : function () {
+        Container.prototype.onDeactivateEvent = function onDeactivateEvent () {
             this.forEach(function (child) {
                 if (typeof child.onDeactivateEvent === "function") {
                     child.onDeactivateEvent();
                 }
             });
-        },
+        };
 
         /**
          * Z Sorting function
          * @ignore
          */
-        _sortZ : function (a, b) {
+        Container.prototype._sortZ = function _sortZ (a, b) {
             return (b.pos && a.pos) ? (b.pos.z - a.pos.z) : (a.pos ? -Infinity : Infinity);
-        },
+        };
 
         /**
          * Reverse Z Sorting function
          * @ignore
          */
-        _sortReverseZ : function (a, b) {
+        Container.prototype._sortReverseZ = function _sortReverseZ (a, b) {
             return (a.pos && b.pos) ? (a.pos.z - b.pos.z) : (a.pos ? Infinity : -Infinity);
-        },
+        };
 
         /**
          * X Sorting function
          * @ignore
          */
-        _sortX : function (a, b) {
+        Container.prototype._sortX = function _sortX (a, b) {
             if (!b.pos || !a.pos) {
                 return (a.pos ? -Infinity : Infinity);
             }
             var result = b.pos.z - a.pos.z;
             return (result ? result : (b.pos.x - a.pos.x));
-        },
+        };
 
         /**
          * Y Sorting function
          * @ignore
          */
-        _sortY : function (a, b) {
+        Container.prototype._sortY = function _sortY (a, b) {
             if (!b.pos || !a.pos) {
                 return (a.pos ? -Infinity : Infinity);
             }
             var result = b.pos.z - a.pos.z;
             return (result ? result : (b.pos.y - a.pos.y));
-        },
+        };
 
         /**
          * Destroy function<br>
          * @ignore
          */
-        destroy : function () {
+        Container.prototype.destroy = function destroy () {
             // empty the container
             this.reset();
             // call the parent destroy method
-            this._super(Renderable, "destroy", arguments);
-        },
+            Renderable.prototype.destroy.call(this, arguments);
+        };
 
         /**
          * @ignore
          */
-        update : function (dt) {
-            this._super(Renderable, "update", [dt]);
+        Container.prototype.update = function update (dt) {
+            // call the parent method
+            Renderable.prototype.update.call(this, dt);
+
             var isDirty = false;
             var isFloating = false;
             var isPaused = state$1.isPaused();
@@ -15115,12 +13989,12 @@
             }
 
             return isDirty;
-        },
+        };
 
         /**
          * @ignore
          */
-        draw : function (renderer, rect) {
+        Container.prototype.draw = function draw (renderer, rect) {
             var isFloating = false;
             var bounds = this.getBounds();
 
@@ -15171,10 +14045,10 @@
                     }
                 }
             }
-        }
-    });
+        };
 
-    var Container$1 = Container;
+        return Container;
+    }(Renderable));
 
     /*
      * A QuadTree implementation in JavaScript, a 2d spatial subdivision algorithm.
@@ -15342,7 +14216,7 @@
     QuadTree.prototype.insertContainer = function insertContainer (container) {
         for (var i = container.children.length, child; i--, (child = container.children[i]);) {
             if (child.isKinematic !== true) {
-                if (child instanceof Container$1) {
+                if (child instanceof Container) {
                     if (child.name !== "rootContainer") {
                         this.insert(child);
                     }
@@ -16386,18 +15260,16 @@
      * @param {Number} [w=me.game.viewport.width] width of the container
      * @param {Number} [h=me.game.viewport.height] height of the container
      */
-    var World = Container$1.extend({
-        /**
-         * @ignore
-         */
-        init : function (x, y, width, height) {
+    var World = /*@__PURE__*/(function (Container) {
+        function World(x, y, width, height) {
             if ( x === void 0 ) x = 0;
             if ( y === void 0 ) y = 0;
             if ( width === void 0 ) width = Infinity;
             if ( height === void 0 ) height = Infinity;
 
+
             // call the _super constructor
-            this._super(Container$1, "init", [x, y, width, height, true]);
+            Container.call(this, x, y, width, height, true);
 
             // world is the root container
             this.name = "rootContainer";
@@ -16458,7 +15330,11 @@
                 // reset the quadtree
                 game$1.world.broadphase.clear(game$1.world.getBounds());
             });
-        },
+        }
+
+        if ( Container ) World.__proto__ = Container;
+        World.prototype = Object.create( Container && Container.prototype );
+        World.prototype.constructor = World;
 
         /**
          * reset the game world
@@ -16466,7 +15342,7 @@
          * @memberOf me.World
          * @function
          */
-        reset : function () {
+        World.prototype.reset = function reset () {
             // clear the quadtree
             this.broadphase.clear();
 
@@ -16474,8 +15350,8 @@
             this.anchorPoint.set(0, 0);
 
             // call the _super constructor
-            this._super(Container$1, "reset");
-        },
+            Container.prototype.reset.call(this);
+        };
 
         /**
          * update the game world
@@ -16483,7 +15359,7 @@
          * @memberOf me.World
          * @function
          */
-        update : function (dt) {
+        World.prototype.update = function update (dt) {
             // clear the quadtree
             this.broadphase.clear();
 
@@ -16491,9 +15367,11 @@
             this.broadphase.insertContainer(this);
 
             // call the _super constructor
-            return this._super(Container$1, "update", [dt]);
-        }
-    });
+            return Container.prototype.update.call(this, dt);
+        };
+
+        return World;
+    }(Container));
 
     /**
      * me.game represents your current game, it contains all the objects,
@@ -16590,6 +15468,7 @@
          * @memberOf me.game
          * @ignore
          * @function
+         * @type () => void
          */
         init : function () {
             // the root object of our world is an entity container
@@ -16609,6 +15488,7 @@
          * @memberOf me.game
          * @public
          * @function
+         * @type () => void
          */
         reset : function () {
             // point to the current active stage "default" camera
@@ -16761,12 +15641,9 @@
      * @param {Number} maxX end x offset
      * @param {Number} maxY end y offset
      */
-    var Camera2d = Renderable.extend({
-        /**
-         * @ignore
-         */
-        init : function (minX, minY, maxX, maxY) {
-            this._super(Renderable, "init", [minX, minY, maxX - minX, maxY - minY]);
+    var Camera2d = /*@__PURE__*/(function (Renderable) {
+        function Camera2d(minX, minY, maxX, maxY) {
+            Renderable.call(this, minX, minY, maxX - minX, maxY - minY);
 
             /**
              * Axis definition
@@ -16906,18 +15783,22 @@
             event.subscribe(event.GAME_RESET, this.reset.bind(this));
             // subscribe to the canvas resize event
             event.subscribe(event.CANVAS_ONRESIZE, this.resize.bind(this));
-        },
+        }
+
+        if ( Renderable ) Camera2d.__proto__ = Renderable;
+        Camera2d.prototype = Object.create( Renderable && Renderable.prototype );
+        Camera2d.prototype.constructor = Camera2d;
 
         // -- some private function ---
 
         /** @ignore */
         // update the projection matrix based on the projection frame (a rectangle)
-        _updateProjectionMatrix : function () {
+        Camera2d.prototype._updateProjectionMatrix = function _updateProjectionMatrix () {
             this.projectionMatrix.ortho(0, this.width, this.height, 0, this.near, this.far);
-        },
+        };
 
         /** @ignore */
-        _followH : function (target) {
+        Camera2d.prototype._followH = function _followH (target) {
             var targetX = this.pos.x;
             if ((target.x - this.pos.x) > (this.deadzone.right)) {
                 targetX = MIN((target.x) - (this.deadzone.right), this.bounds.width - this.width);
@@ -16927,10 +15808,10 @@
             }
             return targetX;
 
-        },
+        };
 
         /** @ignore */
-        _followV : function (target) {
+        Camera2d.prototype._followV = function _followV (target) {
             var targetY = this.pos.y;
             if ((target.y - this.pos.y) > (this.deadzone.bottom)) {
                 targetY = MIN((target.y) - (this.deadzone.bottom), this.bounds.height - this.height);
@@ -16939,7 +15820,7 @@
                 targetY = MAX((target.y) - this.deadzone.pos.y, this.bounds.top);
             }
             return targetY;
-        },
+        };
 
         // -- public function ---
 
@@ -16951,7 +15832,7 @@
          * @param {Number} [x=0]
          * @param {Number} [y=0]
          */
-        reset : function (x, y) {
+        Camera2d.prototype.reset = function reset (x, y) {
             // reset the initial camera position to 0,0
             this.pos.x = x || 0;
             this.pos.y = y || 0;
@@ -16969,7 +15850,7 @@
 
             // update the projection matrix
             this._updateProjectionMatrix();
-        },
+        };
 
         /**
          * change the deadzone settings.
@@ -16982,7 +15863,7 @@
          * @param {Number} w deadzone width
          * @param {Number} h deadzone height
          */
-        setDeadzone : function (w, h) {
+        Camera2d.prototype.setDeadzone = function setDeadzone (w, h) {
             if (typeof(this.deadzone) === "undefined") {
                 this.deadzone = new Rect(0, 0, 0, 0);
             }
@@ -17000,8 +15881,7 @@
             this.updateTarget();
 
             this.smoothFollow = true;
-        },
-
+        };
 
         /**
          * resize the camera
@@ -17012,9 +15892,9 @@
          * @param {Number} h new height of the camera
          * @return {me.Camera2d} this camera
         */
-        resize : function (w, h) {
+        Camera2d.prototype.resize = function resize (w, h) {
             // parent consctructor, resize camera rect
-            this._super(Renderable, "resize", [w, h]);
+            Renderable.prototype.resize.call(this, w, h);
 
             // disable damping while resizing
             this.smoothFollow = false;
@@ -17032,7 +15912,7 @@
             event.publish(event.VIEWPORT_ONRESIZE, [ this.width, this.height ]);
 
             return this;
-        },
+        };
 
         /**
          * set the camera boundaries (set to the world limit by default).
@@ -17045,13 +15925,13 @@
          * @param {Number} w world width limit
          * @param {Number} h world height limit
          */
-        setBounds : function (x, y, w, h) {
+        Camera2d.prototype.setBounds = function setBounds (x, y, w, h) {
             this.smoothFollow = false;
             this.bounds.setMinMax(x, y, w + x, h + y);
             this.moveTo(this.pos.x, this.pos.y);
             this.update();
             this.smoothFollow = true;
-        },
+        };
 
         /**
          * set the camera to follow the specified renderable. <br>
@@ -17066,7 +15946,7 @@
          * // set the camera to follow this renderable on both axis, and enable damping
          * me.game.viewport.follow(this, me.game.viewport.AXIS.BOTH, 0.1);
          */
-        follow : function (target, axis, damping) {
+        Camera2d.prototype.follow = function follow (target, axis, damping) {
             if (target instanceof Renderable) {
                 this.target = target.pos;
             }
@@ -17094,7 +15974,7 @@
             this.updateTarget();
 
             this.smoothFollow = true;
-        },
+        };
 
         /**
          * unfollow the current target
@@ -17102,10 +15982,10 @@
          * @memberOf me.Camera2d
          * @function
          */
-        unfollow : function () {
+        Camera2d.prototype.unfollow = function unfollow () {
             this.target = null;
             this.follow_axis = this.AXIS.NONE;
-        },
+        };
 
         /**
          * move the camera upper-left position by the specified offset.
@@ -17119,9 +15999,9 @@
          * // Move the camera up by four pixels
          * me.game.viewport.move(0, -4);
          */
-        move : function (x, y) {
+        Camera2d.prototype.move = function move (x, y) {
             this.moveTo(this.pos.x + x, this.pos.y + y);
-        },
+        };
 
         /**
          * move the camera upper-left position to the specified coordinates
@@ -17132,7 +16012,7 @@
          * @param {Number} x
          * @param {Number} y
          */
-        moveTo : function (x, y) {
+        Camera2d.prototype.moveTo = function moveTo (x, y) {
             var _x = this.pos.x;
             var _y = this.pos.y;
 
@@ -17151,10 +16031,10 @@
             if (_x !== this.pos.x || _y !== this.pos.y) {
                 event.publish(event.VIEWPORT_ONCHANGE, [this.pos]);
             }
-        },
+        };
 
         /** @ignore */
-        updateTarget : function () {
+        Camera2d.prototype.updateTarget = function updateTarget () {
             if (this.target) {
 
                 targetV.setV(this.pos);
@@ -17196,10 +16076,10 @@
                 }
             }
             return false;
-        },
+        };
 
         /** @ignore */
-        update : function (dt) {
+        Camera2d.prototype.update = function update (dt) {
             var updated = this.updateTarget(dt);
 
             if (this._shake.duration > 0) {
@@ -17242,7 +16122,7 @@
                 this.invCurrentTransform.identity();
             }
             return updated;
-        },
+        };
 
         /**
          * shake the camera
@@ -17260,14 +16140,14 @@
          * // shake it baby !
          * me.game.viewport.shake(10, 500, me.game.viewport.AXIS.BOTH);
          */
-        shake : function (intensity, duration, axis, onComplete, force) {
+        Camera2d.prototype.shake = function shake (intensity, duration, axis, onComplete, force) {
             if (this._shake.duration === 0 || force === true) {
                 this._shake.intensity = intensity;
                 this._shake.duration = duration;
                 this._shake.axis = axis || this.AXIS.BOTH;
                 this._shake.onComplete = typeof (onComplete) === "function" ? onComplete : undefined;
             }
-        },
+        };
 
         /**
          * fadeOut(flash) effect<p>
@@ -17286,7 +16166,7 @@
          *     me.game.viewport.fadeOut("#fff", 150);
          * });
          */
-        fadeOut : function (color, duration, onComplete) {
+        Camera2d.prototype.fadeOut = function fadeOut (color, duration, onComplete) {
             if ( duration === void 0 ) duration = 1000;
 
             this._fadeOut.color = pool.pull("Color").copy(color);
@@ -17295,7 +16175,7 @@
                 .onComplete(onComplete || null);
             this._fadeOut.tween.isPersistent = true;
             this._fadeOut.tween.start();
-        },
+        };
 
         /**
          * fadeIn effect <p>
@@ -17310,7 +16190,7 @@
          * // flash the camera to white for 75ms
          * me.game.viewport.fadeIn("#FFFFFF", 75);
          */
-        fadeIn : function (color, duration, onComplete) {
+        Camera2d.prototype.fadeIn = function fadeIn (color, duration, onComplete) {
             if ( duration === void 0 ) duration = 1000;
 
             this._fadeIn.color = pool.pull("Color").copy(color);
@@ -17321,7 +16201,7 @@
                 .onComplete(onComplete || null);
             this._fadeIn.tween.isPersistent = true;
             this._fadeIn.tween.start();
-        },
+        };
 
         /**
          * return the camera width
@@ -17330,9 +16210,9 @@
          * @function
          * @return {Number}
          */
-        getWidth : function () {
+        Camera2d.prototype.getWidth = function getWidth () {
             return this.width;
-        },
+        };
 
         /**
          * return the camera height
@@ -17341,9 +16221,9 @@
          * @function
          * @return {Number}
          */
-        getHeight : function () {
+        Camera2d.prototype.getHeight = function getHeight () {
             return this.height;
-        },
+        };
 
         /**
          * set the camera position around the specified object
@@ -17352,13 +16232,13 @@
          * @function
          * @param {me.Renderable}
          */
-        focusOn : function (target) {
+        Camera2d.prototype.focusOn = function focusOn (target) {
             var bounds = target.getBounds();
             this.moveTo(
                 target.pos.x + bounds.left + (bounds.width / 2),
                 target.pos.y + bounds.top + (bounds.height / 2)
             );
-        },
+        };
 
         /**
          * check if the specified renderable is in the camera
@@ -17369,7 +16249,7 @@
          * @param {Boolean} [floating===object.floating] if visibility check should be done against screen coordinates
          * @return {Boolean}
          */
-        isVisible : function (obj, floating) {
+        Camera2d.prototype.isVisible = function isVisible (obj, floating) {
             if ( floating === void 0 ) floating = obj.floating;
 
             if (floating === true || obj.floating === true) {
@@ -17379,7 +16259,7 @@
                 // check if within the current camera
                 return obj.getBounds().overlaps(this);
             }
-        },
+        };
 
         /**
          * convert the given "local" (screen) coordinates into world coordinates
@@ -17392,7 +16272,7 @@
          * converted value
          * @return {me.Vector2d}
          */
-        localToWorld : function (x, y, v) {
+        Camera2d.prototype.localToWorld = function localToWorld (x, y, v) {
             // TODO memoization for one set of coords (multitouch)
             v = v || new Vector2d();
             v.set(x, y).add(this.pos).sub(game$1.world.pos);
@@ -17400,7 +16280,7 @@
                 this.invCurrentTransform.apply(v);
             }
             return v;
-        },
+        };
 
         /**
          * convert the given world coordinates into "local" (screen) coordinates
@@ -17413,7 +16293,7 @@
          * converted value
          * @return {me.Vector2d}
          */
-        worldToLocal : function (x, y, v) {
+        Camera2d.prototype.worldToLocal = function worldToLocal (x, y, v) {
             // TODO memoization for one set of coords (multitouch)
             v = v || new Vector2d();
             v.set(x, y);
@@ -17421,13 +16301,13 @@
                 this.currentTransform.apply(v);
             }
             return v.sub(this.pos).add(game$1.world.pos);
-        },
+        };
 
         /**
          * render the camera effects
          * @ignore
          */
-        drawFX : function (renderer) {
+        Camera2d.prototype.drawFX = function drawFX (renderer) {
             // fading effect
             if (this._fadeIn.tween) {
                 // add an overlay
@@ -17461,13 +16341,13 @@
                     this._fadeOut.color = null;
                 }
             }
-        },
+        };
 
         /**
          * draw all object visibile in this viewport
          * @ignore
          */
-        draw : function (renderer, container) {
+        Camera2d.prototype.draw = function draw (renderer, container) {
             var translateX = this.pos.x + this.offset.x;
             var translateY = this.pos.y + this.offset.y;
 
@@ -17502,8 +16382,10 @@
 
             // translate the world coordinates by default to screen coordinates
             container.currentTransform.translate(translateX, translateY);
-        }
-    });
+        };
+
+        return Camera2d;
+    }(Renderable));
 
     // a default camera instance to use across all stages
     var default_camera;
@@ -17528,156 +16410,149 @@
      * @param {Function} [options.onDestroyEvent] called by the state manager before switching to another state
      * @see me.state
      */
-    var Stage = window.Jay.extend({
+    var Stage = function Stage(settings) {
         /**
-         * @ignore
+         * The list of active cameras in this stage.
+         * Cameras will be renderered based on this order defined in this list.
+         * Only the "default" camera will be resized when the window or canvas is resized.
+         * @public
+         * @type {Map}
+         * @name cameras
+         * @memberOf me.Stage
          */
-        init: function (settings) {
-            /**
-             * The list of active cameras in this stage.
-             * Cameras will be renderered based on this order defined in this list.
-             * Only the "default" camera will be resized when the window or canvas is resized.
-             * @public
-             * @type {Map}
-             * @name cameras
-             * @memberOf me.Stage
-             */
-            this.cameras = new Map();
-
-            /**
-             * The given constructor options
-             * @public
-             * @name settings
-             * @memberOf me.Stage
-             * @enum {Object}
-             */
-            this.settings = Object.assign(default_settings, settings || {});
-        },
+        this.cameras = new Map();
 
         /**
-         * Object reset function
-         * @ignore
+         * The given constructor options
+         * @public
+         * @name settings
+         * @memberOf me.Stage
+         * @enum {Object}
          */
-        reset : function () {
-            var self = this;
+        this.settings = Object.assign(default_settings, settings || {});
+    };
 
-            // add all defined cameras
-            this.settings.cameras.forEach(function(camera) {
-                self.cameras.set(camera.name, camera);
-            });
+    /**
+     * Object reset function
+     * @ignore
+     */
+    Stage.prototype.reset = function reset () {
+        var self = this;
 
-            // empty or no default camera
-            if (this.cameras.has("default") === false) {
-                if (typeof default_camera === "undefined") {
-                    var width = video$1.renderer.getWidth();
-                    var height = video$1.renderer.getHeight();
-                    // new default camera instance
-                    default_camera = new Camera2d(0, 0, width, height);
-                }
-                this.cameras.set("default", default_camera);
+        // add all defined cameras
+        this.settings.cameras.forEach(function(camera) {
+            self.cameras.set(camera.name, camera);
+        });
+
+        // empty or no default camera
+        if (this.cameras.has("default") === false) {
+            if (typeof default_camera === "undefined") {
+                var width = video$1.renderer.getWidth();
+                var height = video$1.renderer.getHeight();
+                // new default camera instance
+                default_camera = new Camera2d(0, 0, width, height);
             }
-
-            // reset the game
-            game$1.reset();
-
-            // call the onReset Function
-            this.onResetEvent.apply(this, arguments);
-        },
-
-        /**
-         * update function
-         * @name update
-         * @memberOf me.Stage
-         * @ignore
-         * @function
-         * @param {Number} dt time since the last update in milliseconds.
-         * @return false
-         **/
-        update : function (dt) {
-            // update all objects (and pass the elapsed time since last frame)
-            var isDirty = game$1.world.update(dt);
-
-            // update the camera/viewport
-            // iterate through all cameras
-            this.cameras.forEach(function(camera) {
-                if (camera.update(dt)) {
-                    isDirty = true;
-                }        });
-
-            return isDirty;
-        },
-
-        /**
-         * draw the current stage
-         * @name draw
-         * @memberOf me.Stage
-         * @ignore
-         * @function
-         * @param {me.CanvasRenderer|me.WebGLRenderer} renderer a renderer object
-         */
-        draw : function (renderer) {
-            // iterate through all cameras
-            this.cameras.forEach(function(camera) {
-                // render the root container
-                camera.draw(renderer, game$1.world);
-            });
-        },
-
-        /**
-         * destroy function
-         * @ignore
-         */
-        destroy : function () {
-            // clear all cameras
-            this.cameras.clear();
-            // notify the object
-            this.onDestroyEvent.apply(this, arguments);
-        },
-
-        /**
-         * onResetEvent function<br>
-         * called by the state manager when reseting the object
-         * this is typically where you will load a level, add renderables, etc...
-         * @name onResetEvent
-         * @memberOf me.Stage
-         * @function
-         * @param {} [arguments...] optional arguments passed when switching state
-         * @see me.state#change
-         */
-        onResetEvent : function () {
-            // execute onResetEvent function if given through the constructor
-            if (typeof this.settings.onResetEvent === "function") {
-                this.settings.onResetEvent.apply(this, arguments);
-            }
-
-        },
-
-        /**
-         * onDestroyEvent function<br>
-         * called by the state manager before switching to another state
-         * @name onDestroyEvent
-         * @memberOf me.Stage
-         * @function
-         */
-        onDestroyEvent : function () {
-            // execute onDestroyEvent function if given through the constructor
-            if (typeof this.settings.onDestroyEvent === "function") {
-                this.settings.onDestroyEvent.apply(this, arguments);
-            }
+            this.cameras.set("default", default_camera);
         }
-    });
+
+        // reset the game
+        game$1.reset();
+
+        // call the onReset Function
+        this.onResetEvent.apply(this, arguments);
+    };
+
+    /**
+     * update function
+     * @name update
+     * @memberOf me.Stage
+     * @ignore
+     * @function
+     * @param {Number} dt time since the last update in milliseconds.
+     * @return false
+     **/
+    Stage.prototype.update = function update (dt) {
+        // update all objects (and pass the elapsed time since last frame)
+        var isDirty = game$1.world.update(dt);
+
+        // update the camera/viewport
+        // iterate through all cameras
+        this.cameras.forEach(function(camera) {
+            if (camera.update(dt)) {
+                isDirty = true;
+            }    });
+
+        return isDirty;
+    };
+
+    /**
+     * draw the current stage
+     * @name draw
+     * @memberOf me.Stage
+     * @ignore
+     * @function
+     * @param {me.CanvasRenderer|me.WebGLRenderer} renderer a renderer object
+     */
+    Stage.prototype.draw = function draw (renderer) {
+        // iterate through all cameras
+        this.cameras.forEach(function(camera) {
+            // render the root container
+            camera.draw(renderer, game$1.world);
+        });
+    };
+
+    /**
+     * destroy function
+     * @ignore
+     */
+    Stage.prototype.destroy = function destroy () {
+        // clear all cameras
+        this.cameras.clear();
+        // notify the object
+        this.onDestroyEvent.apply(this, arguments);
+    };
+
+    /**
+     * onResetEvent function<br>
+     * called by the state manager when reseting the object
+     * this is typically where you will load a level, add renderables, etc...
+     * @name onResetEvent
+     * @memberOf me.Stage
+     * @function
+     * @param {} [arguments...] optional arguments passed when switching state
+     * @see me.state#change
+     */
+    Stage.prototype.onResetEvent = function onResetEvent () {
+        // execute onResetEvent function if given through the constructor
+        if (typeof this.settings.onResetEvent === "function") {
+            this.settings.onResetEvent.apply(this, arguments);
+        }
+
+    };
+
+    /**
+     * onDestroyEvent function<br>
+     * called by the state manager before switching to another state
+     * @name onDestroyEvent
+     * @memberOf me.Stage
+     * @function
+     */
+    Stage.prototype.onDestroyEvent = function onDestroyEvent () {
+        // execute onDestroyEvent function if given through the constructor
+        if (typeof this.settings.onDestroyEvent === "function") {
+            this.settings.onDestroyEvent.apply(this, arguments);
+        }
+    };
 
     // a basic progress bar object
-    var ProgressBar = Renderable.extend({
-        /**
-         * @ignore
-         */
-        init: function (x, y, w, h) {
+    var ProgressBar = /*@__PURE__*/(function (Renderable) {
+        function ProgressBar(x, y, w, h) {
+
+            Renderable.call(this, x, y, w, h);
+
             var self = this;
 
             this.barHeight = h;
-
-            this._super(Renderable, "init", [x, y, w, h]);
 
             this.anchorPoint.set(0, 0);
 
@@ -17695,22 +16570,26 @@
 
             // store current progress
             this.progress = 0;
-        },
+        }
+
+        if ( Renderable ) ProgressBar.__proto__ = Renderable;
+        ProgressBar.prototype = Object.create( Renderable && Renderable.prototype );
+        ProgressBar.prototype.constructor = ProgressBar;
 
         /**
          * make sure the screen is refreshed every frame
          * @ignore
          */
-        onProgressUpdate : function (progress) {
+        ProgressBar.prototype.onProgressUpdate = function onProgressUpdate (progress) {
             this.progress = ~~(progress * this.width);
             this.isDirty = true;
-        },
+        };
 
         /**
          * draw function
          * @ignore
          */
-        draw : function (renderer) {
+        ProgressBar.prototype.draw = function draw (renderer) {
             // clear the background
             renderer.clearColor("#202020");
 
@@ -17720,28 +16599,25 @@
 
             renderer.setColor("#55aa00");
             renderer.fillRect(this.pos.x, game$1.viewport.centerY, this.progress, this.barHeight / 2);
-        },
+        };
 
         /**
          * Called by engine before deleting the object
          * @ignore
          */
-        onDestroyEvent : function () {
+        ProgressBar.prototype.onDestroyEvent = function onDestroyEvent () {
             // cancel the callback
             event.unsubscribe(this.loaderHdlr);
             event.unsubscribe(this.resizeHdlr);
             this.loaderHdlr = this.resizeHdlr = null;
-        }
+        };
 
-    });
-
+        return ProgressBar;
+    }(Renderable));
     // the melonJS Logo
-    var IconLogo = Renderable.extend({
-        /**
-         * @ignore
-         */
-        init : function (x, y) {
-            this._super(Renderable, "init", [x, y, 100, 85]);
+    var IconLogo = /*@__PURE__*/(function (Renderable) {
+        function IconLogo(x, y) {
+            Renderable.call(this, x, y, 100, 85);
 
             this.iconCanvas = video$1.createCanvas(
                 nextPowerOfTwo(this.width),
@@ -17777,22 +16653,25 @@
             context.stroke();
 
             this.anchorPoint.set(0.5, 0.5);
-        },
-        /**
-         * @ignore
-         */
-        draw : function (renderer) {
-            renderer.drawImage(this.iconCanvas, renderer.getWidth() / 2, this.pos.y);
         }
-    });
 
-    // the melonJS Text Logo
-    var TextLogo = Renderable.extend({
+        if ( Renderable ) IconLogo.__proto__ = Renderable;
+        IconLogo.prototype = Object.create( Renderable && Renderable.prototype );
+        IconLogo.prototype.constructor = IconLogo;
+
         /**
          * @ignore
          */
-        init : function (w, h) {
-            this._super(Renderable, "init", [0, 0, w, h]);
+        IconLogo.prototype.draw = function draw (renderer) {
+            renderer.drawImage(this.iconCanvas, renderer.getWidth() / 2, this.pos.y);
+        };
+
+        return IconLogo;
+    }(Renderable));
+    // the melonJS Text Logo
+    var TextLogo = /*@__PURE__*/(function (Renderable) {
+        function TextLogo(w, h) {
+            Renderable.call(this, 0, 0, w, h);
 
             this.textWidth = 0;
 
@@ -17801,9 +16680,13 @@
             this.drawFont(video$1.renderer.getContext2d(this.fontCanvas));
 
             this.anchorPoint.set(0, 0.5);
-        },
+        }
 
-        drawFont : function (context) {
+        if ( Renderable ) TextLogo.__proto__ = Renderable;
+        TextLogo.prototype = Object.create( Renderable && Renderable.prototype );
+        TextLogo.prototype.constructor = TextLogo;
+
+        TextLogo.prototype.drawFont = function drawFont (context) {
             var logo1 = pool.pull("Text", 0, 0, {
                 font: "century gothic",
                 size: 32,
@@ -17840,17 +16723,17 @@
             // put them back into the object pool
             pool.push(logo1);
             pool.push(logo2);
-        },
+        };
 
         /**
          * @ignore
          */
-        draw : function (renderer) {
+        TextLogo.prototype.draw = function draw (renderer) {
             renderer.drawImage(this.fontCanvas, Math.round((renderer.getWidth() - this.textWidth) / 2), this.pos.y);
-        }
+        };
 
-    });
-
+        return TextLogo;
+    }(Renderable));
     /**
      * a default loading screen
      * @memberOf me
@@ -18487,6 +17370,7 @@
     var state$1 = state;
 
     /**
+     * @classdesc
      * an ellipse Object
      * @class
      * @extends me.Object
@@ -18497,273 +17381,269 @@
      * @param {Number} w width (diameter) of the ellipse
      * @param {Number} h height (diameter) of the ellipse
      */
-    var Ellipse = window.Jay.extend({
+
+    var Ellipse = function Ellipse(x, y, w, h) {
         /**
-         * @ignore
+         * the center coordinates of the ellipse
+         * @public
+         * @type {me.Vector2d}
+         * @name pos
+         * @memberOf me.Ellipse#
          */
-        init : function (x, y, w, h) {
-            /**
-             * the center coordinates of the ellipse
-             * @public
-             * @type {me.Vector2d}
-             * @name pos
-             * @memberOf me.Ellipse#
-             */
-            this.pos = new Vector2d();
-
-            /**
-             * The bounding rectangle for this shape
-             * @private
-             * @type {me.Bounds}
-             * @name _bounds
-             * @memberOf me.Ellipse#
-             */
-            this._bounds = undefined;
-
-            /**
-             * Maximum radius of the ellipse
-             * @public
-             * @type {Number}
-             * @name radius
-             * @memberOf me.Ellipse
-             */
-            this.radius = NaN;
-
-            /**
-             * Pre-scaled radius vector for ellipse
-             * @public
-             * @type {me.Vector2d}
-             * @name radiusV
-             * @memberOf me.Ellipse#
-             */
-            this.radiusV = new Vector2d();
-
-            /**
-             * Radius squared, for pythagorean theorom
-             * @public
-             * @type {me.Vector2d}
-             * @name radiusSq
-             * @memberOf me.Ellipse#
-             */
-            this.radiusSq = new Vector2d();
-
-            /**
-             * x/y scaling ratio for ellipse
-             * @public
-             * @type {me.Vector2d}
-             * @name ratio
-             * @memberOf me.Ellipse#
-             */
-            this.ratio = new Vector2d();
-
-            // the shape type
-            this.shapeType = "Ellipse";
-            this.setShape(x, y, w, h);
-        },
-
-        /** @ignore */
-        onResetEvent : function (x, y, w, h) {
-            this.setShape(x, y, w, h);
-        },
+        this.pos = new Vector2d();
 
         /**
-         * set new value to the Ellipse shape
-         * @name setShape
-         * @memberOf me.Ellipse.prototype
-         * @function
-         * @param {Number} x the center x coordinate of the ellipse
-         * @param {Number} y the center y coordinate of the ellipse
-         * @param {Number} w width (diameter) of the ellipse
-         * @param {Number} h height (diameter) of the ellipse
+         * The bounding rectangle for this shape
+         * @private
+         * @type {me.Bounds}
+         * @name _bounds
+         * @memberOf me.Ellipse#
          */
-        setShape : function (x, y, w, h) {
-            var hW = w / 2;
-            var hH = h / 2;
-
-            this.pos.set(x, y);
-            this.radius = Math.max(hW, hH);
-            this.ratio.set(hW / this.radius, hH / this.radius);
-            this.radiusV.set(this.radius, this.radius).scaleV(this.ratio);
-            var r = this.radius * this.radius;
-            this.radiusSq.set(r, r).scaleV(this.ratio);
-
-            // update the corresponding bounds
-            this.getBounds().setMinMax(x, y, x + w, x + h);
-            // elipse position is the center of the cirble, bounds position are top left
-            this.getBounds().translate(-this.radiusV.x, -this.radiusV.y);
-
-            return this;
-        },
+        this._bounds = undefined;
 
         /**
-         * Rotate this Ellipse (counter-clockwise) by the specified angle (in radians).
-         * @name rotate
-         * @memberOf me.Ellipse.prototype
-         * @function
-         * @param {Number} angle The angle to rotate (in radians)
-         * @param {me.Vector2d|me.ObservableVector2d} [v] an optional point to rotate around
-         * @return {me.Ellipse} Reference to this object for method chaining
+         * Maximum radius of the ellipse
+         * @public
+         * @type {Number}
+         * @name radius
+         * @memberOf me.Ellipse
          */
-        rotate : function (angle, v) {
-            // TODO : only works for circle
-            this.pos.rotate(angle, v);
-            this.getBounds().shift(this.pos);
-            this.getBounds().translate(-this.radiusV.x, -this.radiusV.y);
-            return this;
-        },
+        this.radius = NaN;
 
         /**
-         * Scale this Ellipse by the specified scalar.
-         * @name scale
-         * @memberOf me.Ellipse.prototype
-         * @function
-         * @param {Number} x
-         * @param {Number} [y=x]
-         * @return {me.Ellipse} Reference to this object for method chaining
+         * Pre-scaled radius vector for ellipse
+         * @public
+         * @type {me.Vector2d}
+         * @name radiusV
+         * @memberOf me.Ellipse#
          */
-        scale : function (x, y) {
-            y = typeof (y) !== "undefined" ? y : x;
-            return this.setShape(
-                this.pos.x,
-                this.pos.y,
-                this.radiusV.x * 2 * x,
-                this.radiusV.y * 2 * y
-            );
-        },
+        this.radiusV = new Vector2d();
 
         /**
-         * Scale this Ellipse by the specified vector.
-         * @name scale
-         * @memberOf me.Ellipse.prototype
-         * @function
-         * @param {me.Vector2d} v
-         * @return {me.Ellipse} Reference to this object for method chaining
+         * Radius squared, for pythagorean theorom
+         * @public
+         * @type {me.Vector2d}
+         * @name radiusSq
+         * @memberOf me.Ellipse#
          */
-        scaleV : function (v) {
-            return this.scale(v.x, v.y);
-        },
+        this.radiusSq = new Vector2d();
 
         /**
-         * apply the given transformation matrix to this ellipse
-         * @name transform
-         * @memberOf me.Ellipse.prototype
-         * @function
-         * @param {me.Matrix2d} matrix the transformation matrix
-         * @return {me.Polygon} Reference to this object for method chaining
+         * x/y scaling ratio for ellipse
+         * @public
+         * @type {me.Vector2d}
+         * @name ratio
+         * @memberOf me.Ellipse#
          */
-        transform : function (/* m */) {
-            // TODO
-            return this;
-        },
+        this.ratio = new Vector2d();
 
-        /**
-         * translate the circle/ellipse by the specified offset
-         * @name translate
-         * @memberOf me.Ellipse.prototype
-         * @function
-         * @param {Number} x x offset
-         * @param {Number} y y offset
-         * @return {me.Ellipse} this ellipse
-         */
-        /**
-         * translate the circle/ellipse by the specified vector
-         * @name translate
-         * @memberOf me.Ellipse.prototype
-         * @function
-         * @param {me.Vector2d} v vector offset
-         * @return {me.Ellipse} this ellipse
-         */
-        translate : function () {
-            var _x, _y;
+        // the shape type
+        this.shapeType = "Ellipse";
+        this.setShape(x, y, w, h);
+    };
 
-            if (arguments.length === 2) {
-                // x, y
-                _x = arguments[0];
-                _y = arguments[1];
-            } else {
-                // vector
-                _x = arguments[0].x;
-                _y = arguments[0].y;
-            }
+    /** @ignore */
+    Ellipse.prototype.onResetEvent = function onResetEvent (x, y, w, h) {
+        this.setShape(x, y, w, h);
+    };
 
-            this.pos.x += _x;
-            this.pos.y += _y;
-            this.getBounds().translate(_x, _y);
+    /**
+     * set new value to the Ellipse shape
+     * @name setShape
+     * @memberOf me.Ellipse.prototype
+     * @function
+     * @param {Number} x the center x coordinate of the ellipse
+     * @param {Number} y the center y coordinate of the ellipse
+     * @param {Number} w width (diameter) of the ellipse
+     * @param {Number} h height (diameter) of the ellipse
+     */
+    Ellipse.prototype.setShape = function setShape (x, y, w, h) {
+        var hW = w / 2;
+        var hH = h / 2;
 
-            return this;
-        },
+        this.pos.set(x, y);
+        this.radius = Math.max(hW, hH);
+        this.ratio.set(hW / this.radius, hH / this.radius);
+        this.radiusV.set(this.radius, this.radius).scaleV(this.ratio);
+        var r = this.radius * this.radius;
+        this.radiusSq.set(r, r).scaleV(this.ratio);
 
-        /**
-         * check if this circle/ellipse contains the specified point
-         * @name contains
-         * @memberOf me.Ellipse.prototype
-         * @function
-         * @param  {me.Vector2d} point
-         * @return {boolean} true if contains
-         */
+        // update the corresponding bounds
+        this.getBounds().setMinMax(x, y, x + w, x + h);
+        // elipse position is the center of the cirble, bounds position are top left
+        this.getBounds().translate(-this.radiusV.x, -this.radiusV.y);
 
-        /**
-         * check if this circle/ellipse contains the specified point
-         * @name contains
-         * @memberOf me.Ellipse.prototype
-         * @function
-         * @param  {Number} x x coordinate
-         * @param  {Number} y y coordinate
-         * @return {boolean} true if contains
-         */
-        contains: function (x, y) {
-            var _x, _y;
+        return this;
+    };
 
-            if (arguments.length === 2) {
-              // x, y
-              _x = arguments[0];
-              _y = arguments[1];
-            } else {
-              // vector
-              _x = arguments[0].x;
-              _y = arguments[0].y;
-            }
+    /**
+     * Rotate this Ellipse (counter-clockwise) by the specified angle (in radians).
+     * @name rotate
+     * @memberOf me.Ellipse.prototype
+     * @function
+     * @param {Number} angle The angle to rotate (in radians)
+     * @param {me.Vector2d|me.ObservableVector2d} [v] an optional point to rotate around
+     * @return {me.Ellipse} Reference to this object for method chaining
+     */
+    Ellipse.prototype.rotate = function rotate (angle, v) {
+        // TODO : only works for circle
+        this.pos.rotate(angle, v);
+        this.getBounds().shift(this.pos);
+        this.getBounds().translate(-this.radiusV.x, -this.radiusV.y);
+        return this;
+    };
 
-            // Make position relative to object center point.
-            _x -= this.pos.x;
-            _y -= this.pos.y;
-            // Pythagorean theorem.
-            return (
-                ((_x * _x) / this.radiusSq.x) +
-                ((_y * _y) / this.radiusSq.y)
-            ) <= 1.0;
-        },
+    /**
+     * Scale this Ellipse by the specified scalar.
+     * @name scale
+     * @memberOf me.Ellipse.prototype
+     * @function
+     * @param {Number} x
+     * @param {Number} [y=x]
+     * @return {me.Ellipse} Reference to this object for method chaining
+     */
+    Ellipse.prototype.scale = function scale (x, y) {
+        y = typeof (y) !== "undefined" ? y : x;
+        return this.setShape(
+            this.pos.x,
+            this.pos.y,
+            this.radiusV.x * 2 * x,
+            this.radiusV.y * 2 * y
+        );
+    };
 
-        /**
-         * returns the bounding box for this shape, the smallest Rectangle object completely containing this shape.
-         * @name getBounds
-         * @memberOf me.Ellipse.prototype
-         * @function
-         * @return {me.Bounds} this shape bounding box Rectangle object
-         */
-        getBounds : function () {
-            if (typeof this._bounds === "undefined") {
-                this._bounds = pool.pull("Bounds");
-            }
-            return this._bounds;
-        },
+    /**
+     * Scale this Ellipse by the specified vector.
+     * @name scale
+     * @memberOf me.Ellipse.prototype
+     * @function
+     * @param {me.Vector2d} v
+     * @return {me.Ellipse} Reference to this object for method chaining
+     */
+    Ellipse.prototype.scaleV = function scaleV (v) {
+        return this.scale(v.x, v.y);
+    };
 
-        /**
-         * clone this Ellipse
-         * @name clone
-         * @memberOf me.Ellipse.prototype
-         * @function
-         * @return {me.Ellipse} new Ellipse
-         */
-        clone : function () {
-            return new Ellipse(
-                this.pos.x,
-                this.pos.y,
-                this.radiusV.x * 2,
-                this.radiusV.y * 2
-            );
+    /**
+     * apply the given transformation matrix to this ellipse
+     * @name transform
+     * @memberOf me.Ellipse.prototype
+     * @function
+     * @param {me.Matrix2d} matrix the transformation matrix
+     * @return {me.Polygon} Reference to this object for method chaining
+     */
+    Ellipse.prototype.transform = function transform (/* m */) {
+        // TODO
+        return this;
+    };
+
+    /**
+     * translate the circle/ellipse by the specified offset
+     * @name translate
+     * @memberOf me.Ellipse.prototype
+     * @function
+     * @param {Number} x x offset
+     * @param {Number} y y offset
+     * @return {me.Ellipse} this ellipse
+     */
+    /**
+     * translate the circle/ellipse by the specified vector
+     * @name translate
+     * @memberOf me.Ellipse.prototype
+     * @function
+     * @param {me.Vector2d} v vector offset
+     * @return {me.Ellipse} this ellipse
+     */
+    Ellipse.prototype.translate = function translate () {
+        var _x, _y;
+
+        if (arguments.length === 2) {
+            // x, y
+            _x = arguments[0];
+            _y = arguments[1];
+        } else {
+            // vector
+            _x = arguments[0].x;
+            _y = arguments[0].y;
         }
-    });
+
+        this.pos.x += _x;
+        this.pos.y += _y;
+        this.getBounds().translate(_x, _y);
+
+        return this;
+    };
+
+    /**
+     * check if this circle/ellipse contains the specified point
+     * @name contains
+     * @memberOf me.Ellipse.prototype
+     * @function
+     * @param  {me.Vector2d} point
+     * @return {boolean} true if contains
+     */
+
+    /**
+     * check if this circle/ellipse contains the specified point
+     * @name contains
+     * @memberOf me.Ellipse.prototype
+     * @function
+     * @param  {Number} x x coordinate
+     * @param  {Number} y y coordinate
+     * @return {boolean} true if contains
+     */
+    Ellipse.prototype.contains = function contains (x, y) {
+        var _x, _y;
+
+        if (arguments.length === 2) {
+          // x, y
+          _x = arguments[0];
+          _y = arguments[1];
+        } else {
+          // vector
+          _x = arguments[0].x;
+          _y = arguments[0].y;
+        }
+
+        // Make position relative to object center point.
+        _x -= this.pos.x;
+        _y -= this.pos.y;
+        // Pythagorean theorem.
+        return (
+            ((_x * _x) / this.radiusSq.x) +
+            ((_y * _y) / this.radiusSq.y)
+        ) <= 1.0;
+    };
+
+    /**
+     * returns the bounding box for this shape, the smallest Rectangle object completely containing this shape.
+     * @name getBounds
+     * @memberOf me.Ellipse.prototype
+     * @function
+     * @return {me.Bounds} this shape bounding box Rectangle object
+     */
+    Ellipse.prototype.getBounds = function getBounds () {
+        if (typeof this._bounds === "undefined") {
+            this._bounds = pool.pull("Bounds");
+        }
+        return this._bounds;
+    };
+
+    /**
+     * clone this Ellipse
+     * @name clone
+     * @memberOf me.Ellipse.prototype
+     * @function
+     * @return {me.Ellipse} new Ellipse
+     */
+    Ellipse.prototype.clone = function clone () {
+        return new Ellipse(
+            this.pos.x,
+            this.pos.y,
+            this.radiusV.x * 2,
+            this.radiusV.y * 2
+        );
+    };
 
     /**
      * @classdesc
@@ -19414,33 +18294,6 @@
         }
         // cap by default to half the default gravity force
         this.maxVel.set(490, 490);
-
-        /**
-         * Default gravity value for this body.
-         * To be set to to < 0, 0 > for RPG, shooter, etc...<br>
-         * @public
-         * @see me.Body.gravityScale
-         * @type me.Vector2d
-         * @default <0,0.98>
-         * @deprecated since 8.0.0
-         * @name gravity
-         * @memberOf me.Body
-         */
-        if (typeof this.gravity === "undefined") {
-            var self = this;
-            this.gravity = new ObservableVector2d(0, 0, { onUpdate : function(x, y) {
-                // disable gravity or apply a scale if y gravity is different from 0
-                if (typeof y === "number") {
-                    self.gravityScale = y / game$1.world.gravity.y;
-                }
-                // deprecation // WARNING:
-                console.log(
-                    "me.Body.gravity is deprecated, " +
-                    "please see me.Body.gravityScale " +
-                    "to modify gravity for a specific body"
-                );
-            }});
-        }
 
         /**
          * The degree to which this body is affected by the world gravity
@@ -20603,7 +19456,7 @@
                           // set the texture
                           if (typeof(src) === "undefined") {
                               // get the texture name from the atlas meta data
-                              var image = loader$1.getImage(atlas.meta.image);
+                              var image = loader.getImage(atlas.meta.image);
                               if (!image) {
                                   throw new Error(
                                       "Atlas texture '" + image + "' not found"
@@ -20611,7 +19464,7 @@
                               }
                               this.sources.set(atlas.meta.image, image);
                           } else {
-                              this.sources.set(atlas.meta.image || "default", typeof src === "string" ? loader$1.getImage(src) : src);
+                              this.sources.set(atlas.meta.image || "default", typeof src === "string" ? loader.getImage(src) : src);
                           }
                           this.repeat = "no-repeat";
                       }
@@ -20625,13 +19478,13 @@
                           }
                           this.format = "ShoeBox";
                           this.repeat = "no-repeat";
-                          this.sources.set("default", typeof src === "string" ? loader$1.getImage(src) : src);
+                          this.sources.set("default", typeof src === "string" ? loader.getImage(src) : src);
                       }
                       // Internal texture atlas
                       else if (atlas.meta.app.includes("melonJS")) {
                           this.format = "melonJS";
                           this.repeat = atlas.meta.repeat || "no-repeat";
-                          this.sources.set("default", typeof src === "string" ? loader$1.getImage(src) : src);
+                          this.sources.set("default", typeof src === "string" ? loader.getImage(src) : src);
                       }
                       // initialize the atlas
                       this.atlases.set(atlas.meta.image || "default", this.parse(atlas));
@@ -20645,7 +19498,7 @@
 
                           if (typeof(src) !== "undefined") {
                               // overwrite if specified
-                              atlas.image = typeof src === "string" ? loader$1.getImage(src) : src;
+                              atlas.image = typeof src === "string" ? loader.getImage(src) : src;
                           }
                           // initialize the atlas
                           this.atlases.set("default", this.parseFromSpriteSheet(atlas));
@@ -21014,6 +19867,7 @@
       };
 
     /**
+     * @classdesc
      * An object to display a fixed or animated sprite on screen.
      * @class
      * @extends me.Renderable
@@ -21050,11 +19904,12 @@
      *     region : "npc2.png",
      * });
      */
-    var Sprite = Renderable.extend({
-        /**
-         * @ignore
-         */
-        init : function (x, y, settings) {
+
+    var Sprite = /*@__PURE__*/(function (Renderable) {
+        function Sprite(x, y, settings) {
+
+            // call the super constructor
+            Renderable.call(this, x, y, 0, 0);
 
             /**
              * pause and resume animation
@@ -21128,9 +19983,6 @@
                 state : false
             };
 
-            // call the super constructor
-            this._super(Renderable, "init", [ x, y, 0, 0 ]);
-
             // set the proper image/texture to use
             if (settings.image instanceof Texture) {
                 this.source = settings.image;
@@ -21153,7 +20005,7 @@
                 }
             } else {
                 // HTMLImageElement/Canvas or String
-                this.image = (typeof settings.image === "object") ? settings.image : loader$1.getImage(settings.image);
+                this.image = (typeof settings.image === "object") ? settings.image : loader.getImage(settings.image);
                 // throw an error if image ends up being null/undefined
                 if (!this.image) {
                     throw new Error("me.Sprite: '" + settings.image + "' image/texture not found!");
@@ -21215,7 +20067,11 @@
 
             // enable currentTransform for me.Sprite based objects
             this.autoTransform = true;
-        },
+        }
+
+        if ( Renderable ) Sprite.__proto__ = Renderable;
+        Sprite.prototype = Object.create( Renderable && Renderable.prototype );
+        Sprite.prototype.constructor = Sprite;
 
         /**
          * return the flickering state of the object
@@ -21224,9 +20080,9 @@
          * @function
          * @return {Boolean}
          */
-        isFlickering : function () {
+        Sprite.prototype.isFlickering = function isFlickering () {
             return this._flicker.isFlickering;
-        },
+        };
 
         /**
          * make the object flicker
@@ -21243,7 +20099,7 @@
          *     me.game.world.removeChild(this);
          * });
          */
-        flicker : function (duration, callback) {
+        Sprite.prototype.flicker = function flicker (duration, callback) {
             this._flicker.duration = duration;
             if (this._flicker.duration <= 0) {
                 this._flicker.isFlickering = false;
@@ -21254,7 +20110,7 @@
                 this._flicker.isFlickering = true;
             }
             return this;
-        },
+        };
 
         /**
          * add an animation <br>
@@ -21290,7 +20146,7 @@
          * // set the standing animation as default
          * this.setCurrentAnimation("stand");
          */
-        addAnimation : function (name, index, animationspeed) {
+        Sprite.prototype.addAnimation = function addAnimation (name, index, animationspeed) {
             this.anim[name] = {
                 name : name,
                 frames : [],
@@ -21356,7 +20212,7 @@
             this.anim[name].length = counter;
 
             return counter;
-        },
+        };
 
         /**
          * set the current animation
@@ -21397,7 +20253,7 @@
          *    return false; // do not reset to first frame
          * }).bind(this));
          **/
-        setCurrentAnimation : function (name, resetAnim, _preserve_dt) {
+        Sprite.prototype.setCurrentAnimation = function setCurrentAnimation (name, resetAnim, _preserve_dt) {
             if (this.anim[name]) {
                 this.current.name = name;
                 this.current.length = this.anim[this.current.name].length;
@@ -21417,7 +20273,7 @@
                 throw new Error("animation id '" + name + "' not defined");
             }
             return this;
-        },
+        };
 
         /**
          * reverse the given or current animation if none is specified
@@ -21428,7 +20284,7 @@
          * @return {me.Sprite} Reference to this object for method chaining
          * @see me.Sprite#animationspeed
          */
-        reverseAnimation : function (name) {
+        Sprite.prototype.reverseAnimation = function reverseAnimation (name) {
             if (typeof name !== "undefined" && typeof this.anim[name] !== "undefined") {
                 this.anim[name].frames.reverse();
             } else {
@@ -21436,7 +20292,7 @@
             }
             this.isDirty = true;
             return this;
-        },
+        };
 
         /**
          * return true if the specified animation is the current one.
@@ -21450,9 +20306,9 @@
          *     // do something funny...
          * }
          */
-        isCurrentAnimation : function (name) {
+        Sprite.prototype.isCurrentAnimation = function isCurrentAnimation (name) {
             return this.current.name === name;
-        },
+        };
 
         /**
          * change the current texture atlas region for this sprite
@@ -21466,7 +20322,7 @@
          * // change the sprite to "shadedDark13.png";
          * mySprite.setRegion(game.texture.getRegion("shadedDark13.png"));
          */
-        setRegion : function (region) {
+        Sprite.prototype.setRegion = function setRegion (region) {
             // set the source texture for the given region
             this.image = this.source.getTexture(region);
             // set the sprite offset within the texture
@@ -21485,7 +20341,7 @@
             }
             this.isDirty = true;
             return this;
-        },
+        };
 
         /**
          * force the current animation frame index.
@@ -21498,10 +20354,10 @@
          * // reset the current animation to the first frame
          * this.setAnimationFrame();
          */
-        setAnimationFrame : function (idx) {
+        Sprite.prototype.setAnimationFrame = function setAnimationFrame (idx) {
             this.current.idx = (idx || 0) % this.current.length;
             return this.setRegion(this.getAnimationFrameObjectByIndex(this.current.idx));
-        },
+        };
 
         /**
          * return the current animation frame index.
@@ -21510,9 +20366,9 @@
          * @function
          * @return {Number} current animation frame index
          */
-        getCurrentAnimationFrame : function () {
+        Sprite.prototype.getCurrentAnimationFrame = function getCurrentAnimationFrame () {
             return this.current.idx;
-        },
+        };
 
         /**
          * Returns the frame object by the index.
@@ -21522,14 +20378,14 @@
          * @private
          * @return {Number} if using number indices. Returns {Object} containing frame data if using texture atlas
          */
-        getAnimationFrameObjectByIndex : function (id) {
+        Sprite.prototype.getAnimationFrameObjectByIndex = function getAnimationFrameObjectByIndex (id) {
             return this.anim[this.current.name].frames[id];
-        },
+        };
 
         /**
          * @ignore
          */
-        update : function (dt) {
+        Sprite.prototype.update = function update (dt) {
 
             // Update animation if necessary
             if (!this.animationpause && this.current && this.current.length > 0) {
@@ -21587,22 +20443,22 @@
             }
 
             return this.isDirty;
-        },
+        };
 
         /**
          * Destroy function<br>
          * @ignore
          */
-        destroy : function () {
+        Sprite.prototype.destroy = function destroy () {
             pool.push(this.offset);
             this.offset = undefined;
-            this._super(Renderable, "destroy");
-        },
+            Renderable.prototype.destroy.call(this);
+        };
 
         /**
          * @ignore
          */
-        draw : function (renderer) {
+        Sprite.prototype.draw = function draw (renderer) {
             // do nothing if we are flickering
             if (this._flicker.isFlickering) {
                 this._flicker.state = !this._flicker.state;
@@ -21643,8 +20499,10 @@
                 xpos, ypos,                  // dx,dy
                 w, h                         // dw,dh
             );
-        }
-    });
+        };
+
+        return Sprite;
+    }(Renderable));
 
     // bitmask constants to check for flipped & rotated tiles
     var TMX_FLIP_H          = 0x80000000,
@@ -21836,7 +20694,8 @@
     }(Bounds$1));
 
     /**
-     * a line segment Object.<br>
+     * @classdesc
+     * a line segment Object
      * @class
      * @extends me.Polygon
      * @memberOf me
@@ -21845,27 +20704,17 @@
      * @param {Number} y origin point of the Line
      * @param {me.Vector2d[]} points array of vectors defining the Line
      */
-    var Line = Polygon.extend({
 
-        /**
-         * Returns true if the Line contains the given point
-         * @name contains
-         * @memberOf me.Line.prototype
-         * @function
-         * @param  {me.Vector2d} point
-         * @return {boolean} true if contains
-         */
+    var Line = /*@__PURE__*/(function (Polygon) {
+        function Line () {
+            Polygon.apply(this, arguments);
+        }
 
-        /**
-         * Returns true if the Line contains the given point
-         * @name contains
-         * @memberOf me.Line.prototype
-         * @function
-         * @param  {Number} x x coordinate
-         * @param  {Number} y y coordinate
-         * @return {boolean} true if contains
-         */
-        contains: function () {
+        if ( Polygon ) Line.__proto__ = Polygon;
+        Line.prototype = Object.create( Polygon && Polygon.prototype );
+        Line.prototype.constructor = Line;
+
+        Line.prototype.contains = function contains () {
             var _x, _y;
 
             if (arguments.length === 2) {
@@ -21887,7 +20736,7 @@
 
             //(Cy - Ay) * (Bx - Ax) = (By - Ay) * (Cx - Ax)
             return (_y - start.y) * (end.x - start.x) === (end.y - start.y) * (_x - start.x);
-        },
+        };
 
         /**
          * Computes the calculated collision edges and normals.
@@ -21896,7 +20745,7 @@
          * @memberOf me.Line.prototype
          * @function
          */
-        recalc : function () {
+        Line.prototype.recalc = function recalc () {
             var edges = this.edges;
             var normals = this.normals;
             var indices = this.indices;
@@ -21923,7 +20772,7 @@
             indices.length = 0;
 
             return this;
-        },
+        };
 
         /**
          * clone this line segment
@@ -21932,14 +20781,16 @@
          * @function
          * @return {me.Line} new Line
          */
-        clone : function () {
+        Line.prototype.clone = function clone () {
             var copy = [];
             this.points.forEach(function (point) {
                 copy.push(point.clone());
             });
             return new Line(this.pos.x, this.pos.y, copy);
-        }
-    });
+        };
+
+        return Line;
+    }(Polygon));
 
     /**
      * @classdesc
@@ -21991,7 +20842,7 @@
         this.currentBlendMode = "normal";
 
         // create the main screen canvas
-        if (device$1.ejecta === true) {
+        if (device.ejecta === true) {
             // a main canvas is already automatically created by Ejecta
             this.canvas = document.getElementById("canvas");
         } else if (typeof window.canvas !== "undefined") {
@@ -22651,6 +21502,7 @@
          * @param {Number} start start angle in radians
          * @param {Number} end end angle in radians
          * @param {Boolean} [antiClockwise=false] draw arc anti-clockwise
+         * @param {Boolean} [fill=false] draw arc anti-clockwise
          */
         CanvasRenderer.prototype.strokeArc = function strokeArc (x, y, radius, start, end, antiClockwise, fill) {
             var context = this.backBufferContext2D;
@@ -23186,13 +22038,10 @@
      * @param {me.TMXTilesetGroup} tilesets tileset as defined in Tiled
      * @param {Number} z z-index position
      */
-    var TMXLayer = Renderable.extend({
-        /**
-         * @ignore
-         */
-        init: function (map, data, tilewidth, tileheight, orientation, tilesets, z) {
+    var TMXLayer = /*@__PURE__*/(function (Renderable) {
+        function TMXLayer(map, data, tilewidth, tileheight, orientation, tilesets, z) {
             // super constructor
-            this._super(Renderable, "init", [0, 0, 0, 0]);
+            Renderable.call(this, 0, 0, 0, 0);
 
             // tile width & height
             this.tilewidth = data.tilewidth || tilewidth;
@@ -23300,11 +22149,15 @@
                     data.compression
                 )
             );
-        },
+        }
+
+        if ( Renderable ) TMXLayer.__proto__ = Renderable;
+        TMXLayer.prototype = Object.create( Renderable && Renderable.prototype );
+        TMXLayer.prototype.constructor = TMXLayer;
 
 
         // called when the layer is added to the game world or a container
-        onActivateEvent : function () {
+        TMXLayer.prototype.onActivateEvent = function onActivateEvent () {
 
             if (this.animatedTilesets === undefined) {
                 this.animatedTilesets = [];
@@ -23340,14 +22193,14 @@
                 });
                 preRenderLayer(this, this.canvasRenderer);
             }
-        },
+        };
 
         // called when the layer is removed from the game world or a container
-        onDeactivateEvent : function () {
+        TMXLayer.prototype.onDeactivateEvent = function onDeactivateEvent () {
             // clear all allocated objects
             //this.layerData = undefined;
             this.animatedTilesets = undefined;
-        },
+        };
 
         /**
          * Set the TMX renderer for this layer object
@@ -23361,9 +22214,9 @@
          * var layer = new me.TMXLayer(...);
          * layer.setRenderer(map.getRenderer());
          */
-        setRenderer : function (renderer) {
+        TMXLayer.prototype.setRenderer = function setRenderer (renderer) {
             this.renderer = renderer;
-        },
+        };
 
         /**
          * Return the layer current renderer object
@@ -23373,9 +22226,9 @@
          * @function
          * @return {me.TMXRenderer} renderer
          */
-        getRenderer : function () {
+        TMXLayer.prototype.getRenderer = function getRenderer () {
             return this.renderer;
-        },
+        };
 
 
         /**
@@ -23388,10 +22241,10 @@
          * @param {Number} y Y coordinate (in world/pixels coordinates)
          * @return {Number} TileId or null if there is no Tile at the given position
          */
-        getTileId : function (x, y) {
+        TMXLayer.prototype.getTileId = function getTileId (x, y) {
             var tile = this.getTile(x, y);
             return (tile ? tile.tileId : null);
-        },
+        };
 
         /**
          * Return the Tile object at the specified position
@@ -23408,7 +22261,7 @@
          * // get the tile object corresponding to the latest pointer position
          * var tile = layer.getTile(me.input.pointer.pos.x, me.input.pointer.pos.y);
          */
-        getTile : function (x, y) {
+        TMXLayer.prototype.getTile = function getTile (x, y) {
             var tile = null;
 
             if (this.contains(x, y)) {
@@ -23417,7 +22270,7 @@
                 pool.push(coord);
             }
             return tile;
-        },
+        };
 
         /**
          * assign the given Tile object to the specified position
@@ -23430,10 +22283,10 @@
          * @param {Number} y Y coordinate (in world/pixels coordinates)
          * @return {me.Tile} the tile object
          */
-        setTile : function (tile, x, y) {
+        TMXLayer.prototype.setTile = function setTile (tile, x, y) {
             this.layerData[x][y] = tile;
             return tile;
-        },
+        };
 
         /**
          * return a new the Tile object corresponding to the given tile id
@@ -23446,13 +22299,13 @@
          * @param {Number} y Y coordinate (in world/pixels coordinates)
          * @return {me.Tile} the tile object
          */
-        getTileById : function (tileId, x, y) {
+        TMXLayer.prototype.getTileById = function getTileById (tileId, x, y) {
             if (!this.tileset.contains(tileId)) {
                 // look for the corresponding tileset
                 this.tileset = this.tilesets.getTilesetByGid(tileId);
             }
             return new Tile(x, y, tileId, this.tileset);
-        },
+        };
 
         /**
          * Return the Tile object at the specified tile coordinates
@@ -23468,7 +22321,7 @@
          * // return the first tile at offset 0, 0
          * var tile = layer.cellAt(0, 0);
          */
-        cellAt : function (x, y, boundsCheck) {
+        TMXLayer.prototype.cellAt = function cellAt (x, y, boundsCheck) {
             var _x = ~~x;
             var _y = ~~y;
 
@@ -23479,7 +22332,7 @@
             } else {
                 return null;
             }
-        },
+        };
 
         /**
          * clear the tile at the specified position
@@ -23495,20 +22348,20 @@
          *     layer.clearTile(x, y);
          * });
          */
-        clearTile : function (x, y) {
+        TMXLayer.prototype.clearTile = function clearTile (x, y) {
             // clearing tile
             this.layerData[x][y] = null;
             // erase the corresponding area in the canvas
             if (this.preRender) {
                 this.canvasRenderer.clearRect(x * this.tilewidth, y * this.tileheight, this.tilewidth, this.tileheight);
             }
-        },
+        };
 
         /**
          * update animations in a tileset layer
          * @ignore
          */
-        update : function (dt) {
+        TMXLayer.prototype.update = function update (dt) {
             if (this.isAnimated) {
                 var result = false;
                 for (var i = 0; i < this.animatedTilesets.length; i++) {
@@ -23518,13 +22371,13 @@
             }
 
             return false;
-        },
+        };
 
         /**
          * draw a tileset layer
          * @ignore
          */
-        draw : function (renderer, rect) {
+        TMXLayer.prototype.draw = function draw (renderer, rect) {
             // use the offscreen canvas
             if (this.preRender) {
                 var width = Math.min(rect.width, this.width);
@@ -23544,8 +22397,10 @@
                 // draw the layer
                 this.getRenderer().drawTileLayer(renderer, this, rect);
             }
-        }
-    });
+        };
+
+        return TMXLayer;
+    }(Renderable));
 
     /**
      * @classdesc
@@ -25114,7 +23969,7 @@
             var ext = utils$1.file.getExtension(src);
             if (ext === "tsx" || ext === "json") {
                 // load the external tileset (TSX/JSON)
-                tileset = loader$1.getTMX(utils$1.file.getBasename(src));
+                tileset = loader.getTMX(utils$1.file.getBasename(src));
                 if (!tileset) {
                     throw new Error(src + " external TSX/JSON tileset not found");
                 }
@@ -25187,7 +24042,7 @@
                     }
                 }
                 if ("image" in tiles[i]) {
-                    var image = loader$1.getImage(tiles[i].image);
+                    var image = loader.getImage(tiles[i].image);
                     if (!image) {
                         throw new Error("melonJS: '" + tiles[i].image + "' file for tile '" + (+i + this.firstgid) + "' not found!");
                     }
@@ -25218,7 +24073,7 @@
         if (this.isCollection === false) {
 
             // get the global tileset texture
-            this.image = loader$1.getImage(tileset.image);
+            this.image = loader.getImage(tileset.image);
 
             if (!this.image) {
                 throw new Error("melonJS: '" + tileset.image + "' file for tileset '" + this.name + "' not found!");
@@ -26340,7 +25195,7 @@
 
             if (flatten === false) {
                 // create a new container
-                targetContainer = new Container$1(0, 0, this.width, this.height);
+                targetContainer = new Container(0, 0, this.width, this.height);
 
                 // tiled uses 0,0 by default
                 targetContainer.anchorPoint.set(0, 0);
@@ -26575,7 +25430,7 @@
                     // just load the level with the XML stuff
                     if (levels[levelId] == null) {
                         //console.log("loading "+ levelId);
-                        levels[levelId] = new TMXTileMap(levelId, loader$1.getTMX(levelId));
+                        levels[levelId] = new TMXTileMap(levelId, loader.getTMX(levelId));
                         // level index
                         levelIdx.push(levelId);
                     }
@@ -26908,7 +25763,7 @@
                         case "tmx":
                         case "tsx":
                             // ie9 does not fully implement the responseXML
-                            if (device$1.ua.match(/msie/i) || !xmlhttp.responseXML) {
+                            if (device.ua.match(/msie/i) || !xmlhttp.responseXML) {
                                 if (window.DOMParser) {
                                     // manually create the XML DOM
                                     result = (new DOMParser()).parseFromString(xmlhttp.responseText, "text/xml");
@@ -27510,26 +26365,9 @@
                 return jsonList[elt];
             }
             return null;
-        },
-
-        /**
-         * Return the loading progress in percent
-         * @name getLoadProgress
-         * @memberOf me.loader
-         * @public
-         * @function
-         * @deprecated use callback instead
-         * @see me.loader.onProgress
-         * @see me.event.LOADER_PROGRESS
-         * @return {Number}
-         */
-        getLoadProgress: function getLoadProgress() {
-            return loadCount / resourceCount;
         }
 
     };
-
-    var loader$1 = loader;
 
     // external import
 
@@ -27610,8 +26448,9 @@
          *     alert("Sorry but your browser does not support html 5 audio !");
          *     return;
          * }
+         * @type (audioFormat: string) => boolean
          */
-        init : function (audioFormat) {
+         init : function (audioFormat) {
             if (!exports.initialized) {
                 throw new Error("me.audio.init() called before engine initialization.");
             }
@@ -27686,13 +26525,13 @@
                 throw new Error("target audio extension(s) should be set through me.audio.init() before calling the preloader.");
             }
             for (var i = 0; i < this.audioFormats.length; i++) {
-                urls.push(sound.src + sound.name + "." + this.audioFormats[i] + loader$1.nocache);
+                urls.push(sound.src + sound.name + "." + this.audioFormats[i] + loader.nocache);
             }
             audioTracks[sound.name] = new howler.Howl({
                 src : urls,
                 volume : howler.Howler.volume(),
                 html5 : html5 === true,
-                xhrWithCredentials : loader$1.withCredentials,
+                xhrWithCredentials : loader.withCredentials,
                 /**
                  * @ignore
                  */
@@ -28183,7 +27022,7 @@
          */
         init: function init() {
             // Load previous data if local Storage is supported
-            if (device$1.localStorage === true) {
+            if (device.localStorage === true) {
                 var me_save_content = localStorage.getItem("me.save");
 
                 if (typeof me_save_content === "string" && me_save_content.length > 0) {
@@ -28230,7 +27069,7 @@
                          */
                         set: function set (value) {
                             data[prop] = value;
-                            if (device$1.localStorage === true) {
+                            if (device.localStorage === true) {
                                 localStorage.setItem("me.save." + prop, JSON.stringify(value));
                             }
                         }
@@ -28244,7 +27083,7 @@
             });
 
             // Save keys
-            if (device$1.localStorage === true) {
+            if (device.localStorage === true) {
                 localStorage.setItem("me.save", JSON.stringify(Object.keys(data)));
             }
         },
@@ -28263,7 +27102,7 @@
             if (!isReserved(key)) {
                 if (typeof data[key] !== "undefined") {
                     delete data[key];
-                    if (device$1.localStorage === true) {
+                    if (device.localStorage === true) {
                         localStorage.removeItem("me.save." + key);
                         localStorage.setItem("me.save", JSON.stringify(Object.keys(data)));
                     }
@@ -29501,8 +28340,6 @@
         }
     });
 
-    var device$1 = device;
-
     /**
      * @private
      */
@@ -29740,7 +28577,7 @@
          * @name vertex
          * @memberOf me.GLShader
          */
-        this.vertex = setPrecision(minify(vertex), precision || device$1.getMaxShaderPrecision(this.gl));
+        this.vertex = setPrecision(minify(vertex), precision || device.getMaxShaderPrecision(this.gl));
 
         /**
          * the fragment shader source code
@@ -29749,7 +28586,7 @@
          * @name vertex
          * @memberOf me.GLShader
          */
-        this.fragment = setPrecision(minify(fragment), precision || device$1.getMaxShaderPrecision(this.gl));
+        this.fragment = setPrecision(minify(fragment), precision || device.getMaxShaderPrecision(this.gl));
 
         /**
          * the location attributes of the shader
@@ -30358,7 +29195,7 @@
      * @memberOf me.WebGLCompositor
      * @function
      * @param {GLENUM} [mode=gl.TRIANGLES] primitive type to render (gl.POINTS, gl.LINE_STRIP, gl.LINE_LOOP, gl.LINES, gl.TRIANGLE_STRIP, gl.TRIANGLE_FAN, gl.TRIANGLES)
-     * @param {me.Vector2d[]} verts vertices
+     * @param {me.Vector2d[]} [verts=[]] vertices
      * @param {Number} [vertexCount=verts.length] amount of points defined in the points array
      */
     WebGLCompositor.prototype.drawVertices = function drawVertices (mode, verts, vertexCount) {
@@ -31106,6 +29943,7 @@
          * @param {Number} start start angle in radians
          * @param {Number} end end angle in radians
          * @param {Boolean} [antiClockwise=false] draw arc anti-clockwise
+         * @param {Boolean} [fill=false]
          */
         WebGLRenderer.prototype.strokeArc = function strokeArc (x, y, radius, start, end, antiClockwise, fill) {
             if (fill === true ) {
@@ -31571,7 +30409,7 @@
      */
     function autoDetectRenderer(options) {
         try {
-            if (device$1.isWebGLSupported(options)) {
+            if (device.isWebGLSupported(options)) {
                 return new WebGLRenderer(options);
             }
         } catch (e) {
@@ -31676,6 +30514,16 @@
          *     scaleMethod : "fit",
          *     doubleBuffering : true
          * });
+         * @type (game_width: number, game_height: number, options: {
+         *      parent: String|HTMLElement
+         *      renderer: Number
+         *      doubleBuffering: Boolean
+         *      scale: Number|String
+         *      scaleMethod: String
+         *      preferWebGL1: Boolean
+         *      powerPreference: String
+         *      transparent: Boolean
+         * }) => boolean
          */
         init : function (game_width, game_height, options) {
 
@@ -31704,16 +30552,10 @@
                 settings.autoScale = (settings.scale === "auto") || false;
             }
 
-            // for backward compatilibty with melonJS 7.1.1 and lower
-            if (typeof settings.wrapper !== "undefined") {
-                warning("settings.wrapper", "settings.parent", "8.0.0");
-                settings.parent = settings.wrapper;
-            }
-
             // display melonJS version
             if (settings.consoleHeader !== false) {
                 // output video information in the console
-                console.log("melonJS v" + version + " | http://melonjs.org" );
+                console.log("melonJS 2 (v" + version + ") | http://melonjs.org" );
             }
 
             // override renderer settings if &webgl is defined in the URL
@@ -31817,7 +30659,7 @@
             }
 
             // add our canvas (default to document.body if settings.parent is undefined)
-            this.parent = device$1.getElement(settings.parent);
+            this.parent = device.getElement(settings.parent);
             this.parent.appendChild(this.renderer.getScreenCanvas());
 
             // trigger an initial resize();
@@ -31836,16 +30678,16 @@
 
             if (settings.consoleHeader !== false) {
                 var renderType = (this.renderer instanceof CanvasRenderer) ? "CANVAS" : "WebGL" + this.renderer.WebGLVersion;
-                var audioType = device$1.hasWebAudio ? "Web Audio" : "HTML5 Audio";
+                var audioType = device.hasWebAudio ? "Web Audio" : "HTML5 Audio";
                 var gpu_renderer = (typeof this.renderer.GPURenderer === "string") ? " (" + this.renderer.GPURenderer + ")" : "";
                 // output video information in the console
                 console.log(
                     renderType + " renderer" + gpu_renderer + " | " +
                     audioType + " | " +
-                    "pixel ratio " + device$1.devicePixelRatio + " | " +
-                    (device$1.isMobile ? "mobile" : "desktop") + " | " +
-                    device$1.getScreenOrientation() + " | " +
-                    device$1.language
+                    "pixel ratio " + device.devicePixelRatio + " | " +
+                    (device.isMobile ? "mobile" : "desktop") + " | " +
+                    device.getScreenOrientation() + " | " +
+                    device.language
                 );
                 console.log( "resolution: " + "requested " + game_width + "x" + game_height +
                     ", got " + this.renderer.getWidth() + "x" + this.renderer.getHeight()
@@ -31875,7 +30717,7 @@
                 throw new Error("width or height was zero, Canvas could not be initialized !");
             }
 
-            if (device$1.OffscreenCanvas === true && offscreen === true) {
+            if (device.OffscreenCanvas === true && offscreen === true) {
                 _canvas = new OffscreenCanvas(0, 0);
                 // stubbing style for compatibility,
                 // as OffscreenCanvas is detached from the DOM
@@ -31925,7 +30767,7 @@
                 }
 
                 // get the maximum canvas size within the parent div containing the canvas container
-                var nodeBounds = device$1.getParentBounds(this.getParent());
+                var nodeBounds = device.getParentBounds(this.getParent());
 
                 var _max_width = Math.min(canvasMaxWidth, nodeBounds.width);
                 var _max_height = Math.min(canvasMaxHeight, nodeBounds.height);
@@ -31992,7 +30834,7 @@
             var canvas = renderer.getScreenCanvas();
             var context = renderer.getScreenContext();
             var settings = renderer.settings;
-            var pixelRatio = device$1.devicePixelRatio;
+            var pixelRatio = device.devicePixelRatio;
 
             var w = settings.zoomX = canvas.width * x * pixelRatio;
             var h = settings.zoomY = canvas.height * y * pixelRatio;
@@ -32495,6 +31337,19 @@
      */
     var plugins = {};
 
+
+    var BasePlugin = function BasePlugin() {
+        /**
+         * define the minimum required version of melonJS<br>
+         * this can be overridden by the plugin
+         * @public
+         * @type String
+         * @default "10.0.0"
+         * @name me.plugin.Base#version
+         */
+        this.version = "10.0.0";
+    };
+
     /**
      * @namespace plugin
      * @memberOf me
@@ -32502,29 +31357,16 @@
     var plugin = {
 
         /**
-        * a base Object for plugin <br>
-        * plugin must be installed using the register function
-        * @see me.plugin
-        * @class
-        * @extends me.Object
-        * @name plugin.Base
-        * @memberOf me
-        * @constructor
-        */
-        Base : window.Jay.extend({
-            /** @ignore */
-            init : function () {
-                /**
-                 * define the minimum required version of melonJS<br>
-                 * this can be overridden by the plugin
-                 * @public
-                 * @type String
-                 * @default "9.1.1"
-                 * @name me.plugin.Base#version
-                 */
-                this.version = "9.1.1";
-            }
-        }),
+         * a base Object for plugin <br>
+         * plugin must be installed using the register function
+         * @see me.plugin
+         * @class
+         * @extends me.Object
+         * @name plugin.Base
+         * @memberOf me
+         * @constructor
+         */
+        Base : BasePlugin,
 
         /**
          * patch a melonJS function
@@ -33127,6 +31969,7 @@
 
         /**
          * @ignore
+         * @type (o: Record<string, unknown>) => void
          */
         this.setProperties = function (object) {
             _object = object;
@@ -33590,12 +32433,19 @@
      * @example
      * var font = new me.Text(0, 0, {font: "Arial", size: 8, fillStyle: this.color});
      */
-    var Text = Renderable.extend({
+    var Text = /*@__PURE__*/(function (Renderable) {
+        function Text(x, y, settings) {
+            // call the parent constructor
+            Renderable.call(this, x, y, settings.width || 0, settings.height || 0);
+            this.onResetEvent(x, y, settings);
+        }
+
+        if ( Renderable ) Text.__proto__ = Renderable;
+        Text.prototype = Object.create( Renderable && Renderable.prototype );
+        Text.prototype.constructor = Text;
 
         /** @ignore */
-        init : function (x, y, settings) {
-            // call the parent constructor
-            this._super(Renderable, "init", [x, y, settings.width || 0, settings.height || 0]);
+        Text.prototype.onResetEvent = function onResetEvent (x, y, settings) {
 
             /**
              * defines the color used to draw the font.<br>
@@ -33716,7 +32566,7 @@
 
             // set the text
             this.setText(settings.text);
-        },
+        };
 
         /**
          * make the font bold
@@ -33725,11 +32575,11 @@
          * @function
          * @return this object for chaining
          */
-        bold : function () {
+        Text.prototype.bold = function bold () {
             this.font = "bold " + this.font;
             this.isDirty = true;
             return this;
-        },
+        };
 
         /**
          * make the font italic
@@ -33738,11 +32588,11 @@
          * @function
          * @return this object for chaining
          */
-        italic : function () {
+        Text.prototype.italic = function italic () {
             this.font = "italic " + this.font;
             this.isDirty = true;
             return this;
-        },
+        };
 
         /**
          * set the font family and size
@@ -33756,7 +32606,7 @@
          * font.setFont("Arial", 20);
          * font.setFont("Arial", "1.5em");
          */
-        setFont : function (font, size) {
+        Text.prototype.setFont = function setFont (font, size) {
             // font name and type
             var font_names = font.split(",").map(function (value) {
                 value = value.trim();
@@ -33786,7 +32636,7 @@
             this.isDirty = true;
 
             return this;
-        },
+        };
 
         /**
          * change the text to be displayed
@@ -33796,7 +32646,7 @@
          * @param {Number|String|String[]} value a string, or an array of strings
          * @return this object for chaining
          */
-        setText : function (value) {
+        Text.prototype.setText = function setText (value) {
             if (typeof value === "undefined") {
                 value = "";
             }
@@ -33811,7 +32661,7 @@
             }
 
             return this;
-        },
+        };
 
         /**
          * measure the given text size in pixels
@@ -33823,7 +32673,7 @@
          * @param {me.Rect|me.Bounds} [ret] a object in which to store the text metrics
          * @returns {TextMetrics} a TextMetrics object with two properties: `width` and `height`, defining the output dimensions
          */
-        measureText : function (renderer, text, ret) {
+        Text.prototype.measureText = function measureText (renderer, text, ret) {
             var context;
 
             if (typeof renderer === "undefined") {
@@ -33868,17 +32718,17 @@
 
             // returns the Font bounds me.Rect by default
             return textMetrics;
-        },
+        };
 
         /**
          * @ignore
          */
-        update : function (/* dt */) {
+        Text.prototype.update = function update (/* dt */) {
             if (this.isDirty === true) {
                 this.measureText();
             }
             return this.isDirty;
-        },
+        };
 
         /**
          * draw a text at the specified coord
@@ -33890,7 +32740,7 @@
          * @param {Number} [x]
          * @param {Number} [y]
          */
-        draw : function (renderer, text, x, y, stroke) {
+        Text.prototype.draw = function draw (renderer, text, x, y, stroke) {
             // "hacky patch" for backward compatibilty
             if (typeof this.ancestor === "undefined") {
                 // update text cache
@@ -33936,7 +32786,7 @@
             // clear the dirty flag here for
             // backward compatibility
             this.isDirty = false;
-        },
+        };
 
         /**
          * draw a stroke text at the specified coord, as defined <br>
@@ -33950,14 +32800,14 @@
          * @param {Number} x
          * @param {Number} y
          */
-        drawStroke : function (renderer, text, x, y) {
+        Text.prototype.drawStroke = function drawStroke (renderer, text, x, y) {
             this.draw.call(this, renderer, text, x, y, true);
-        },
+        };
 
         /**
          * @ignore
          */
-        _drawFont : function (context, text, x, y, stroke) {
+        Text.prototype._drawFont = function _drawFont (context, text, x, y, stroke) {
             setContextStyle(context, this, stroke);
 
             var lineHeight = this.fontSize * this.lineHeight;
@@ -33969,20 +32819,22 @@
                 y += lineHeight;
             }
             return this.getBounds();
-        },
+        };
 
         /**
          * Destroy function
          * @ignore
          */
-        destroy : function () {
+        Text.prototype.destroy = function destroy () {
             pool.push(this.fillStyle);
             pool.push(this.strokeStyle);
             this.fillStyle = this.strokeStyle = undefined;
             this._text.length = 0;
-            this._super(Renderable, "destroy");
-        }
-    });
+            Renderable.prototype.destroy.call(this);
+        };
+
+        return Text;
+    }(Renderable));
 
     /**
      * Measures the width of a single line of text, does not account for \n
@@ -34043,12 +32895,11 @@
      * // or just add it to the word container
      * me.game.world.addChild(myFont);
      */
-    var BitmapText = Renderable.extend({
 
-        /** @ignore */
-        init : function (x, y, settings) {
+    var BitmapText = /*@__PURE__*/(function (Renderable) {
+        function BitmapText(x, y, settings) {
             // call the parent constructor
-            this._super(Renderable, "init", [x, y, settings.width || 0, settings.height || 0]);
+            Renderable.call(this, x, y, settings.width || 0, settings.height || 0);
 
             /**
              * Set the default text alignment (or justification),<br>
@@ -34097,15 +32948,15 @@
             this.fontScale = pool.pull("Vector2d", 1.0, 1.0);
 
             // get the corresponding image
-            this.fontImage = (typeof settings.font === "object") ? settings.font : loader$1.getImage(settings.font);
+            this.fontImage = (typeof settings.font === "object") ? settings.font : loader.getImage(settings.font);
 
             if (typeof settings.fontData !== "string") {
                 // use settings.font to retreive the data from the loader
-                this.fontData = pool.pull("BitmapTextData", loader$1.getBinary(settings.font));
+                this.fontData = pool.pull("BitmapTextData", loader.getBinary(settings.font));
             } else {
                 this.fontData = pool.pull("BitmapTextData",
                     // if starting/includes "info face" the whole data string was passed as parameter
-                    (settings.fontData.includes("info face")) ? settings.fontData : loader$1.getBinary(settings.fontData)
+                    (settings.fontData.includes("info face")) ? settings.fontData : loader.getBinary(settings.fontData)
                 );
             }
             // if floating was specified through settings
@@ -34137,7 +32988,13 @@
 
             // set the text
             this.setText(settings.text);
-        },
+        }
+
+        if ( Renderable ) BitmapText.__proto__ = Renderable;
+        BitmapText.prototype = Object.create( Renderable && Renderable.prototype );
+        BitmapText.prototype.constructor = BitmapText;
+
+        var prototypeAccessors = { fillStyle: { configurable: true } };
 
         /**
          * change the font settings
@@ -34148,7 +33005,7 @@
          * @param {Number} [scale]
          * @return this object for chaining
          */
-        set : function (textAlign, scale) {
+        BitmapText.prototype.set = function set (textAlign, scale) {
             this.textAlign = textAlign;
             // updated scaled Size
             if (scale) {
@@ -34157,7 +33014,7 @@
             this.isDirty = true;
 
             return this;
-        },
+        };
 
         /**
          * change the text to be displayed
@@ -34167,7 +33024,7 @@
          * @param {Number|String|String[]} value a string, or an array of strings
          * @return this object for chaining
          */
-        setText : function (value) {
+        BitmapText.prototype.setText = function setText (value) {
             if (typeof value === "undefined") {
                 value = "";
             }
@@ -34182,8 +33039,29 @@
             }
 
             return this;
-        },
+        };
 
+        /**
+         * defines the color used to tint the bitmap text
+         * @public
+         * @type {me.Color}
+         * @name fillStyle
+         * @see me.Renderable#tint
+         * @memberOf me.BitmapText
+         */
+
+        /**
+         * @ignore
+         */
+        prototypeAccessors.fillStyle.get = function () {
+            return this.tint;
+        };
+        /**
+         * @ignore
+         */
+        prototypeAccessors.fillStyle.set = function (value) {
+            this.tint = value;
+        };
 
         /**
          * change the font display size
@@ -34193,14 +33071,13 @@
          * @param {Number} scale ratio
          * @return this object for chaining
          */
-        resize : function (scale) {
+        BitmapText.prototype.resize = function resize (scale) {
             this.fontScale.set(scale, scale);
             // clear the cache text to recalculate bounds
             this.isDirty = true;
 
             return this;
-        },
-
+        };
 
         /**
          * measure the given text size in pixels
@@ -34211,7 +33088,7 @@
          * @param {me.Rect} [ret] a object in which to store the text metrics
          * @returns {TextMetrics} a TextMetrics object with two properties: `width` and `height`, defining the output dimensions
          */
-        measureText : function (text, ret) {
+        BitmapText.prototype.measureText = function measureText (text, ret) {
             text = text || this._text;
 
             var stringHeight = measureTextHeight(this);
@@ -34225,17 +33102,17 @@
                 textMetrics.height += stringHeight;
             }
             return textMetrics;
-        },
+        };
 
         /**
          * @ignore
          */
-        update : function (/* dt */) {
+        BitmapText.prototype.update = function update (/* dt */) {
             if (this.isDirty === true) {
                 this.measureText();
             }
             return this.isDirty;
-        },
+        };
 
         /**
          * draw the bitmap font
@@ -34247,7 +33124,7 @@
          * @param {Number} [x]
          * @param {Number} [y]
          */
-        draw : function (renderer, text, x, y) {
+        BitmapText.prototype.draw = function draw (renderer, text, x, y) {
             // save the previous global alpha value
             var _alpha = renderer.globalAlpha();
 
@@ -34346,46 +33223,25 @@
             // clear the dirty flag here for
             // backward compatibility
             this.isDirty = false;
-        },
-
+        };
 
         /**
          * Destroy function
          * @ignore
          */
-        destroy : function () {
+        BitmapText.prototype.destroy = function destroy () {
             pool.push(this.fontScale);
             this.fontScale = undefined;
             pool.push(this.fontData);
             this.fontData = undefined;
             this._text.length = 0;
             this._super(Renderable, "destroy");
-        }
-    });
+        };
 
-    /**
-     * defines the color used to tint the bitmap text
-     * @public
-     * @type {me.Color}
-     * @name fillStyle
-     * @see me.Renderable#tint
-     * @memberOf me.BitmapText
-     */
-    Object.defineProperty(BitmapText.prototype, "fillStyle", {
-        /**
-         * @ignore
-         */
-        get : function () {
-            return this.tint;
-        },
-        /**
-         * @ignore
-         */
-        set : function (value) {
-            this.tint = value;
-        },
-        configurable : true
-    });
+        Object.defineProperties( BitmapText.prototype, prototypeAccessors );
+
+        return BitmapText;
+    }(Renderable));
 
     // bitmap constants
     var LOG2_PAGE_SIZE = 9;
@@ -34631,6 +33487,7 @@
     };
 
     /**
+     * @classdesc
      * a generic Color Layer Object.  Fills the entire Canvas with the color not just the container the object belongs to.
      * @class
      * @extends me.Renderable
@@ -34640,13 +33497,10 @@
      * @param {me.Color|String} color CSS color
      * @param {Number} z z-index position
      */
-    var ColorLayer = Renderable.extend({
-        /**
-         * @ignore
-         */
-        init: function (name, color, z) {
+    var ColorLayer = /*@__PURE__*/(function (Renderable) {
+        function ColorLayer(name, color, z) {
             // parent constructor
-            this._super(Renderable, "init", [0, 0, Infinity, Infinity]);
+            Renderable.call(this, 0, 0, Infinity, Infinity);
 
             // apply given parameters
             this.name = name;
@@ -34668,13 +33522,17 @@
                 this.color = pool.pull("Color").parseCSS(color);
             }
             this.anchorPoint.set(0, 0);
-        },
+        }
+
+        if ( Renderable ) ColorLayer.__proto__ = Renderable;
+        ColorLayer.prototype = Object.create( Renderable && Renderable.prototype );
+        ColorLayer.prototype.constructor = ColorLayer;
 
         /**
          * draw the color layer
          * @ignore
          */
-        draw : function (renderer, rect) {
+        ColorLayer.prototype.draw = function draw (renderer, rect) {
             var color = renderer.getColor();
             var vpos = game$1.viewport.pos;
             renderer.setColor(this.color);
@@ -34683,20 +33541,23 @@
                 rect.width, rect.height
             );
             renderer.setColor(color);
-        },
+        };
 
         /**
          * Destroy function
          * @ignore
          */
-        destroy : function () {
+        ColorLayer.prototype.destroy = function destroy () {
             pool.push(this.color);
             this.color = undefined;
-            this._super(Renderable, "destroy");
-        }
-    });
+            Renderable.prototype.destroy.call(this);
+        };
+
+        return ColorLayer;
+    }(Renderable));
 
     /**
+     * @classdesc
      * a generic Image Layer Object
      * @class
      * @extends me.Renderable
@@ -34719,13 +33580,11 @@
      *     repeat :"repeat-x"
      * }), 1);
      */
-    var ImageLayer = Sprite.extend({
-        /**
-         * @ignore
-         */
-        init: function (x, y, settings) {
+
+    var ImageLayer = /*@__PURE__*/(function (Sprite) {
+       function ImageLayer(x, y, settings) {
             // call the constructor
-            this._super(Sprite, "init", [x, y, settings]);
+            Sprite.call(this, x, y, settings);
 
             // render in screen coordinates
             this.floating = true;
@@ -34784,63 +33643,69 @@
                 }
             }
 
-            /**
-             * Define if and how an Image Layer should be repeated.<br>
-             * By default, an Image Layer is repeated both vertically and horizontally.<br>
-             * Acceptable values : <br>
-             * * 'repeat' - The background image will be repeated both vertically and horizontally <br>
-             * * 'repeat-x' - The background image will be repeated only horizontally.<br>
-             * * 'repeat-y' - The background image will be repeated only vertically.<br>
-             * * 'no-repeat' - The background-image will not be repeated.<br>
-             * @public
-             * @type String
-             * @default 'repeat'
-             * @name me.ImageLayer#repeat
-             */
-            Object.defineProperty(this, "repeat", {
-                /**
-                 * @ignore
-                 */
-                get : function get() {
-                    return this._repeat;
-                },
-                /**
-                 * @ignore
-                 */
-                set : function set(val) {
-                    this._repeat = val;
-                    switch (this._repeat) {
-                        case "no-repeat" :
-                            this.repeatX = false;
-                            this.repeatY = false;
-                            break;
-                        case "repeat-x" :
-                            this.repeatX = true;
-                            this.repeatY = false;
-                            break;
-                        case "repeat-y" :
-                            this.repeatX = false;
-                            this.repeatY = true;
-                            break;
-                        default : // "repeat"
-                            this.repeatX = true;
-                            this.repeatY = true;
-                            break;
-                    }
-                    this.resize(game$1.viewport.width, game$1.viewport.height);
-                    this.createPattern();
-                },
-                configurable: true
-            });
-
             this.repeat = settings.repeat || "repeat";
 
             // on context lost, all previous textures are destroyed
             event.subscribe(event.WEBGL_ONCONTEXT_RESTORED, this.createPattern.bind(this));
-        },
+        }
+
+       if ( Sprite ) ImageLayer.__proto__ = Sprite;
+       ImageLayer.prototype = Object.create( Sprite && Sprite.prototype );
+       ImageLayer.prototype.constructor = ImageLayer;
+
+       var prototypeAccessors = { repeat: { configurable: true } };
+
+        /**
+         * Define if and how an Image Layer should be repeated.<br>
+         * By default, an Image Layer is repeated both vertically and horizontally.<br>
+         * Acceptable values : <br>
+         * * 'repeat' - The background image will be repeated both vertically and horizontally <br>
+         * * 'repeat-x' - The background image will be repeated only horizontally.<br>
+         * * 'repeat-y' - The background image will be repeated only vertically.<br>
+         * * 'no-repeat' - The background-image will not be repeated.<br>
+         * @public
+         * @type String
+         * @default 'repeat'
+         * @name me.ImageLayer#repeat
+         */
+
+        /**
+         * @ignore
+         */
+        prototypeAccessors.repeat.get = function () {
+            return this._repeat;
+        };
+
+        /**
+         * @ignore
+         */
+        prototypeAccessors.repeat.set = function (value) {
+            this._repeat = value;
+            switch (this._repeat) {
+                case "no-repeat" :
+                    this.repeatX = false;
+                    this.repeatY = false;
+                    break;
+                case "repeat-x" :
+                    this.repeatX = true;
+                    this.repeatY = false;
+                    break;
+                case "repeat-y" :
+                    this.repeatX = false;
+                    this.repeatY = true;
+                    break;
+                default : // "repeat"
+                    this.repeatX = true;
+                    this.repeatY = true;
+                    break;
+            }
+            this.resize(game$1.viewport.width, game$1.viewport.height);
+            this.createPattern();
+        };
+
 
         // called when the layer is added to the game world or a container
-        onActivateEvent : function () {
+        ImageLayer.prototype.onActivateEvent = function onActivateEvent () {
             var _updateLayerFn = this.updateLayer.bind(this);
             // register to the viewport change notification
             this.vpChangeHdlr = event.subscribe(event.VIEWPORT_ONCHANGE, _updateLayerFn);
@@ -34855,7 +33720,7 @@
             if (this.ancestor.root !== true) {
                 this.updateLayer(game$1.viewport.pos);
             }
-        },
+        };
 
         /**
          * resize the Image Layer to match the given size
@@ -34865,28 +33730,28 @@
          * @param {Number} w new width
          * @param {Number} h new height
         */
-        resize : function (w, h) {
-            this._super(Sprite, "resize", [
-                this.repeatX ? Infinity : w,
+        ImageLayer.prototype.resize = function resize (w, h) {
+            Sprite.prototype.resize.call(
+                this, this.repeatX ? Infinity : w,
                 this.repeatY ? Infinity : h
-            ]);
-        },
+            );
+        };
 
         /**
          * createPattern function
          * @ignore
          * @function
          */
-        createPattern : function () {
+        ImageLayer.prototype.createPattern = function createPattern () {
             this._pattern = video$1.renderer.createPattern(this.image, this._repeat);
-        },
+        };
 
         /**
          * updateLayer function
          * @ignore
          * @function
          */
-        updateLayer : function (vpos) {
+        ImageLayer.prototype.updateLayer = function updateLayer (vpos) {
             var rx = this.ratio.x,
                 ry = this.ratio.y;
 
@@ -34928,14 +33793,14 @@
             else {
                 this.pos.y = y;
             }
-        },
+        };
 
        /*
         * override the default predraw function
         * as repeat and anchor are managed directly in the draw method
         * @ignore
         */
-        preDraw : function (renderer) {
+        ImageLayer.prototype.preDraw = function preDraw (renderer) {
             // save the context
             renderer.save();
             // apply the defined alpha value
@@ -34943,13 +33808,13 @@
 
             // apply the defined tint, if any
             renderer.setTint(this.tint);
-        },
+        };
 
         /**
          * draw the image layer
          * @ignore
          */
-        draw : function (renderer) {
+        ImageLayer.prototype.draw = function draw (renderer) {
             var viewport = game$1.viewport,
                 width = this.width,
                 height = this.height,
@@ -34974,26 +33839,30 @@
                 viewport.width * 2,
                 viewport.height * 2
             );
-        },
+        };
 
         // called when the layer is removed from the game world or a container
-        onDeactivateEvent : function () {
+        ImageLayer.prototype.onDeactivateEvent = function onDeactivateEvent () {
             // cancel all event subscriptions
             event.unsubscribe(this.vpChangeHdlr);
             event.unsubscribe(this.vpResizeHdlr);
             event.unsubscribe(this.vpLoadedHdlr);
-        },
+        };
 
         /**
          * Destroy function<br>
          * @ignore
          */
-        destroy : function () {
+        ImageLayer.prototype.destroy = function destroy () {
             pool.push(this.ratio);
             this.ratio = undefined;
-            this._super(Sprite, "destroy");
-        }
-    });
+            Sprite.prototype.destroy.call(this);
+        };
+
+       Object.defineProperties( ImageLayer.prototype, prototypeAccessors );
+
+       return ImageLayer;
+    }(Sprite));
 
     /**
      * GUI Object<br>
@@ -35010,24 +33879,21 @@
      * @example
      *
      * // create a basic GUI Object
-     * var myButton = me.GUI_Object.extend(
-     * {
-     *    init:function (x, y)
-     *    {
+     * class myButton extends GUI_Object {
+     *    constructor(x, y) {
      *       var settings = {}
      *       settings.image = "button";
      *       settings.framewidth = 100;
      *       settings.frameheight = 50;
      *       // super constructor
-     *       this._super(me.GUI_Object, "init", [x, y, settings]);
+     *       super(x, y, settings);
      *       // define the object z order
      *       this.pos.z = 4;
-     *    },
+     *    }
      *
      *    // output something in the console
      *    // when the object is clicked
-     *    onClick:function (event)
-     *    {
+     *    onClick:function (event) {
      *       console.log("clicked!");
      *       // don't propagate the event
      *       return false;
@@ -35038,11 +33904,13 @@
      * me.game.world.addChild(new myButton(10,10));
      *
      */
-    var GUI_Object = Sprite.extend({
-        /**
-         * @ignore
-         */
-        init : function (x, y, settings) {
+
+    var GUI_Object = /*@__PURE__*/(function (Sprite) {
+        function GUI_Object(x, y, settings) {
+
+            // call the parent constructor
+            Sprite.call(this, x, y, settings);
+
             /**
              * object can be clicked or not
              * @public
@@ -35083,23 +33951,24 @@
             this.updated = false;
             this.released = true;
 
-            // call the parent constructor
-            this._super(Sprite, "init", [ x, y, settings ]);
-
             // GUI items use screen coordinates
             this.floating = true;
 
             // enable event detection
             this.isKinematic = false;
-        },
+        }
+
+        if ( Sprite ) GUI_Object.__proto__ = Sprite;
+        GUI_Object.prototype = Object.create( Sprite && Sprite.prototype );
+        GUI_Object.prototype.constructor = GUI_Object;
 
         /**
          * return true if the object has been clicked
          * @ignore
          */
-        update : function (dt) {
+        GUI_Object.prototype.update = function update (dt) {
             // call the parent constructor
-            var updated = this._super(Sprite, "update", [ dt ]);
+            var updated = Sprite.prototype.update.call(this, dt);
             // check if the button was updated
             if (this.updated) {
                 // clear the flag
@@ -35110,13 +33979,13 @@
             }
             // else only return true/false based on the parent function
             return updated;
-        },
+        };
 
         /**
          * function callback for the pointerdown event
          * @ignore
          */
-        clicked : function (event) {
+        GUI_Object.prototype.clicked = function clicked (event) {
             // Check if left mouse button is pressed
             if (event.button === 0 && this.isClickable) {
                 this.updated = true;
@@ -35130,7 +33999,7 @@
                 }
                 return this.onClick.call(this, event);
             }
-        },
+        };
 
         /**
          * function called when the object is pressed <br>
@@ -35142,18 +34011,18 @@
          * @function
          * @param {Event} event the event object
          */
-        onClick : function (/* event */) {
+        GUI_Object.prototype.onClick = function onClick (/* event */) {
             return false;
-        },
+        };
 
         /**
          * function callback for the pointerEnter event
          * @ignore
          */
-        enter : function (event) {
+        GUI_Object.prototype.enter = function enter (event) {
             this.hover = true;
             return this.onOver.call(this, event);
-        },
+        };
 
         /**
          * function called when the pointer is over the object
@@ -35163,17 +34032,17 @@
          * @function
          * @param {Event} event the event object
          */
-        onOver : function (/* event */) {},
+        GUI_Object.prototype.onOver = function onOver (/* event */) {};
 
         /**
          * function callback for the pointerLeave event
          * @ignore
          */
-        leave : function (event) {
+        GUI_Object.prototype.leave = function leave (event) {
             this.hover = false;
             this.release.call(this, event);
             return this.onOut.call(this, event);
-        },
+        };
 
         /**
          * function called when the pointer is leaving the object area
@@ -35183,19 +34052,21 @@
          * @function
          * @param {Event} event the event object
          */
-        onOut : function (/* event */) {},
+        GUI_Object.prototype.onOut = function onOut (/* event */) {
+            
+        };
 
         /**
          * function callback for the pointerup event
          * @ignore
          */
-        release : function (event) {
+        GUI_Object.prototype.release = function release (event) {
             if (this.released === false) {
                 this.released = true;
                 timer$1.clearTimeout(this.holdTimeout);
                 return this.onRelease.call(this, event);
             }
-        },
+        };
 
         /**
          * function called when the object is pressed and released <br>
@@ -35207,20 +34078,20 @@
          * @function
          * @param {Event} event the event object
          */
-        onRelease : function () {
+        GUI_Object.prototype.onRelease = function onRelease () {
             return false;
-        },
+        };
 
         /**
          * function callback for the tap and hold timer event
          * @ignore
          */
-        hold : function () {
+        GUI_Object.prototype.hold = function hold () {
             timer$1.clearTimeout(this.holdTimeout);
             if (!this.released) {
                 this.onHold.call(this);
             }
-        },
+        };
 
         /**
          * function called when the object is pressed and held<br>
@@ -35230,26 +34101,26 @@
          * @public
          * @function
          */
-        onHold : function () {},
+        GUI_Object.prototype.onHold = function onHold () {};
 
         /**
          * function called when added to the game world or a container
          * @ignore
          */
-        onActivateEvent : function () {
+        GUI_Object.prototype.onActivateEvent = function onActivateEvent () {
             // register pointer events
             registerPointerEvent("pointerdown", this, this.clicked.bind(this));
             registerPointerEvent("pointerup", this, this.release.bind(this));
             registerPointerEvent("pointercancel", this, this.release.bind(this));
             registerPointerEvent("pointerenter", this, this.enter.bind(this));
             registerPointerEvent("pointerleave", this, this.leave.bind(this));
-        },
+        };
 
         /**
          * function called when removed from the game world or a container
          * @ignore
          */
-        onDeactivateEvent : function () {
+        GUI_Object.prototype.onDeactivateEvent = function onDeactivateEvent () {
             // release pointer events
             releasePointerEvent("pointerdown", this);
             releasePointerEvent("pointerup", this);
@@ -35257,10 +34128,13 @@
             releasePointerEvent("pointerenter", this);
             releasePointerEvent("pointerleave", this);
             timer$1.clearTimeout(this.holdTimeout);
-        }
-    });
+        };
+
+        return GUI_Object;
+    }(Sprite));
 
     /**
+     * @classdesc
      * a basic collectable helper class for immovable object (e.g. a coin)
      * @class
      * @extends me.Sprite
@@ -35270,13 +34144,12 @@
      * @param {Number} y the y coordinates of the collectable
      * @param {Object} settings See {@link me.Sprite}
      */
-    var Collectable = Sprite.extend({
-        /**
-         * @ignore
-         */
-        init : function (x, y, settings) {
+
+    var Collectable = /*@__PURE__*/(function (Sprite) {
+        function Collectable(x, y, settings) {
+
             // call the super constructor
-            this._super(Sprite, "init", [x, y, settings]);
+            Sprite.call(this, x, y, settings);
 
             this.name = settings.name;
             this.type = settings.type;
@@ -35295,9 +34168,16 @@
             }
 
         }
-    });
+
+        if ( Sprite ) Collectable.__proto__ = Sprite;
+        Collectable.prototype = Object.create( Sprite && Sprite.prototype );
+        Collectable.prototype.constructor = Collectable;
+
+        return Collectable;
+    }(Sprite));
 
     /**
+     * classdesc
      * trigger an event when colliding with another object
      * @class
      * @extends me.Renderable
@@ -35326,12 +34206,11 @@
      *     }
      * ));
      */
-    var Trigger = Renderable.extend({
-        /**
-         * @ignore
-         */
-        init : function (x, y, settings) {
-            this._super(Renderable, "init", [x, y, settings.width || 0, settings.height || 0]);
+
+    var Trigger = /*@__PURE__*/(function (Renderable) {
+        function Trigger(x, y, settings) {
+
+            Renderable.call(this, x, y, settings.width || 0, settings.height || 0);
 
             // for backward compatibility
             this.anchorPoint.set(0, 0);
@@ -35365,27 +34244,30 @@
             this.body = new Body(this, settings.shapes || new Rect(0, 0, this.width, this.height));
             this.body.collisionType = collision.types.ACTION_OBJECT;
             this.resize(this.body.getBounds().width, this.body.getBounds().height);
+        }
 
-        },
+        if ( Renderable ) Trigger.__proto__ = Renderable;
+        Trigger.prototype = Object.create( Renderable && Renderable.prototype );
+        Trigger.prototype.constructor = Trigger;
 
         /**
          * @ignore
          */
-         getTriggerSettings : function () {
+         Trigger.prototype.getTriggerSettings = function getTriggerSettings () {
              // Lookup for the container instance
              if (typeof(this.triggerSettings.container) === "string") {
                  this.triggerSettings.container = game$1.world.getChildByName(this.triggerSettings.container)[0];
              }
              return this.triggerSettings;
-         },
+         };
 
         /**
          * @ignore
          */
-        onFadeComplete : function () {
+        Trigger.prototype.onFadeComplete = function onFadeComplete () {
             level.load(this.gotolevel, this.getTriggerSettings());
             game$1.viewport.fadeOut(this.fade, this.duration);
-        },
+        };
 
         /**
          * go to the specified level
@@ -35395,7 +34277,7 @@
          * @param {String} [level=this.nextlevel] name of the level to load
          * @protected
          */
-        triggerEvent : function () {
+        Trigger.prototype.triggerEvent = function triggerEvent () {
             var triggerSettings = this.getTriggerSettings();
 
             if (triggerSettings.event === "level") {
@@ -35414,16 +34296,18 @@
             } else {
                 throw new Error("Trigger invalid type");
             }
-        },
+        };
 
         /** @ignore */
-        onCollision : function () {
+        Trigger.prototype.onCollision = function onCollision () {
             if (this.name === "Trigger") {
                 this.triggerEvent.apply(this);
             }
             return false;
-        }
-    });
+        };
+
+        return Trigger;
+    }(Renderable));
 
     /**
      * Particle Container Object.
@@ -35433,18 +34317,16 @@
      * @constructor
      * @param {me.ParticleEmitter} emitter the emitter which owns this container
      */
-    var ParticleContainer = Container$1.extend({
-        /**
-         * @ignore
-         */
-        init: function (emitter) {
+
+    var ParticleContainer = /*@__PURE__*/(function (Container) {
+        function ParticleContainer(emitter) {
             // call the super constructor
-            this._super(Container$1, "init", [
-                game$1.viewport.pos.x,
+            Container.call(
+                this, game$1.viewport.pos.x,
                 game$1.viewport.pos.y,
                 game$1.viewport.width,
                 game$1.viewport.height
-            ]);
+            );
 
             // don't sort the particles by z-index
             this.autoSort = false;
@@ -35463,12 +34345,16 @@
             this.anchorPoint.set(0, 0);
 
             this.isKinematic = true;
-        },
+        }
+
+        if ( Container ) ParticleContainer.__proto__ = Container;
+        ParticleContainer.prototype = Object.create( Container && Container.prototype );
+        ParticleContainer.prototype.constructor = ParticleContainer;
 
         /**
          * @ignore
          */
-        update: function (dt) {
+        ParticleContainer.prototype.update = function update (dt) {
             // skip frames if necessary
             if (++this._updateCount > this._emitter.framesToSkip) {
                 this._updateCount = 0;
@@ -35492,12 +34378,12 @@
                 }
             }
             return true;
-        },
+        };
 
         /**
          * @ignore
          */
-        draw : function (renderer, rect) {
+        ParticleContainer.prototype.draw = function draw (renderer, rect) {
             if (this.children.length > 0) {
                 var context = renderer.getContext(),
                     gco;
@@ -35507,15 +34393,17 @@
                     context.globalCompositeOperation = "lighter";
                 }
 
-                this._super(Container$1, "draw", [renderer, rect]);
+                this._super(Container, "draw", [renderer, rect]);
 
                 // Restore globalCompositeOperation
                 if (this._emitter.textureAdditive) {
                     context.globalCompositeOperation = gco;
                 }
             }
-        }
-    });
+        };
+
+        return ParticleContainer;
+    }(Container));
 
     // generate a default image for the particles
     var pixel = (function () {
@@ -35837,11 +34725,11 @@
      * me.game.world.removeChild(emitter);
      *
      */
-    var ParticleEmitter = Renderable.extend({
-        /**
-         * @ignore
-         */
-        init: function (x, y, settings) {
+    var ParticleEmitter = /*@__PURE__*/(function (Renderable) {
+        function ParticleEmitter(x, y, settings) {
+            // call the super constructor
+            Renderable.call(this, x, y, Infinity, Infinity);
+
             // Emitter is Stream, launch particles constantly
             /** @ignore */
             this._stream = false;
@@ -35859,15 +34747,6 @@
             // Emitter is emitting particles
             /** @ignore */
             this._enabled = false;
-
-            // call the super constructor
-            this._super(
-                Renderable,
-                "init",
-                [x, y,
-                Infinity,
-                Infinity]
-            );
 
             // Emitter will always update
             this.alwaysUpdate = true;
@@ -35914,34 +34793,38 @@
 
             // Reset the emitter to defaults
             this.reset(settings);
-        },
+        }
+
+        if ( Renderable ) ParticleEmitter.__proto__ = Renderable;
+        ParticleEmitter.prototype = Object.create( Renderable && Renderable.prototype );
+        ParticleEmitter.prototype.constructor = ParticleEmitter;
 
         /**
          * @ignore
          */
-        onActivateEvent: function() {
+        ParticleEmitter.prototype.onActivateEvent = function onActivateEvent () {
             this.ancestor.addChild(this.container);
             this.container.pos.z = this.pos.z;
             if (!this.ancestor.autoSort) {
                 this.ancestor.sort();
             }
-        },
+        };
 
         /**
          * @ignore
          */
-        onDeactivateEvent: function() {
+        ParticleEmitter.prototype.onDeactivateEvent = function onDeactivateEvent () {
             if (this.ancestor.hasChild(this.container)) {
                 this.ancestor.removeChildNow(this.container);
             }
-        },
+        };
 
         /**
          * @ignore
          */
-        destroy: function () {
+        ParticleEmitter.prototype.destroy = function destroy () {
             this.reset();
-        },
+        };
 
         /**
          * returns a random point inside the bounds x axis of this emitter
@@ -35950,9 +34833,9 @@
          * @function
          * @return {Number}
          */
-        getRandomPointX: function () {
+        ParticleEmitter.prototype.getRandomPointX = function getRandomPointX () {
             return this.pos.x + randomFloat(0, this.width);
-        },
+        };
 
         /**
          * returns a random point inside the bounds y axis of this emitter
@@ -35961,9 +34844,9 @@
          * @function
          * @return {Number}
          */
-        getRandomPointY: function () {
+        ParticleEmitter.prototype.getRandomPointY = function getRandomPointY () {
             return this.pos.y + randomFloat(0, this.height);
-        },
+        };
 
         /**
          * Reset the emitter with default values.<br>
@@ -35972,7 +34855,7 @@
          * @name reset
          * @memberOf me.ParticleEmitter
          */
-        reset: function (settings) {
+        ParticleEmitter.prototype.reset = function reset (settings) {
             // check if settings exists and create a dummy object if necessary
             settings = settings || {};
             var defaults = ParticleEmitterSettings;
@@ -35985,17 +34868,17 @@
 
             // reset particle container values
             this.container.reset();
-        },
+        };
 
         // Add count particles in the game world
         /** @ignore */
-        addParticles: function (count) {
+        ParticleEmitter.prototype.addParticles = function addParticles (count) {
             for (var i = 0; i < ~~count; i++) {
                 // Add particle to the container
                 var particle = pool.pull("Particle", this);
                 this.container.addChild(particle);
             }
-        },
+        };
 
         /**
          * Emitter is of type stream and is launching particles <br>
@@ -36004,9 +34887,9 @@
          * @name isRunning
          * @memberOf me.ParticleEmitter
          */
-        isRunning: function () {
+        ParticleEmitter.prototype.isRunning = function isRunning () {
             return this._enabled && this._stream;
-        },
+        };
 
         /**
          * Launch particles from emitter constantly <br>
@@ -36016,12 +34899,12 @@
          * @name streamParticles
          * @memberOf me.ParticleEmitter
          */
-        streamParticles: function (duration) {
+        ParticleEmitter.prototype.streamParticles = function streamParticles (duration) {
             this._enabled = true;
             this._stream = true;
             this.frequency = Math.max(this.frequency, 1);
             this._durationTimer = (typeof duration === "number") ? duration : this.duration;
-        },
+        };
 
         /**
          * Stop the emitter from generating new particles (used only if emitter is Stream) <br>
@@ -36029,9 +34912,9 @@
          * @name stopStream
          * @memberOf me.ParticleEmitter
          */
-        stopStream: function () {
+        ParticleEmitter.prototype.stopStream = function stopStream () {
             this._enabled = false;
-        },
+        };
 
         /**
          * Launch all particles from emitter and stop <br>
@@ -36041,17 +34924,17 @@
          * @name burstParticles
          * @memberOf me.ParticleEmitter
          */
-        burstParticles: function (total) {
+        ParticleEmitter.prototype.burstParticles = function burstParticles (total) {
             this._enabled = true;
             this._stream = false;
             this.addParticles((typeof total === "number") ? total : this.totalParticles);
             this._enabled = false;
-        },
+        };
 
         /**
          * @ignore
          */
-        update: function (dt) {
+        ParticleEmitter.prototype.update = function update (dt) {
             // Launch new particles, if emitter is Stream
             if ((this._enabled) && (this._stream)) {
                 // Check if the emitter has duration set
@@ -36081,8 +34964,10 @@
                 }
             }
             return true;
-        }
-    });
+        };
+
+        return ParticleEmitter;
+    }(Renderable));
 
     /**
      * Single Particle Object.
@@ -36092,18 +34977,15 @@
      * @constructor
      * @param {me.ParticleEmitter} particle emitter
      */
-    var Particle = Renderable.extend({
-        /**
-         * @ignore
-         */
-        init : function (emitter) {
+    var Particle = /*@__PURE__*/(function (Renderable) {
+        function Particle(emitter) {
             // Call the super constructor
-            this._super(Renderable, "init", [
-                emitter.getRandomPointX(),
+            Renderable.call(
+                this, emitter.getRandomPointX(),
                 emitter.getRandomPointY(),
                 emitter.image.width,
                 emitter.image.height
-            ]);
+            );
 
             // Particle will always update
             this.alwaysUpdate = true;
@@ -36156,7 +35038,11 @@
             if (!emitter.followTrajectory) {
                 this.angle = randomFloat(emitter.minRotation, emitter.maxRotation);
             }
-        },
+        }
+
+        if ( Renderable ) Particle.__proto__ = Renderable;
+        Particle.prototype = Object.create( Renderable && Renderable.prototype );
+        Particle.prototype.constructor = Particle;
 
         /**
          * Update the Particle <br>
@@ -36167,7 +35053,7 @@
          * @ignore
          * @param {Number} dt time since the last update in milliseconds
          */
-        update : function (dt) {
+        Particle.prototype.update = function update (dt) {
             // move things forward independent of the current frame rate
             var skew = dt * this._deltaInv;
 
@@ -36210,12 +35096,12 @@
 
             // Return true if the particle is not dead yet
             return (this.inViewport || !this.onlyInViewport) && (this.life > 0);
-        },
+        };
 
         /**
          * @ignore
          */
-        preDraw : function (renderer) {
+        Particle.prototype.preDraw = function preDraw (renderer) {
 
             // restore is called in postDraw
             renderer.save();
@@ -36225,12 +35111,12 @@
 
             // translate to the defined anchor point and scale it
             renderer.transform(this.currentTransform);
-        },
+        };
 
         /**
          * @ignore
          */
-        draw : function (renderer) {
+        Particle.prototype.draw = function draw (renderer) {
             var w = this.width, h = this.height;
             renderer.drawImage(
                 this.image,
@@ -36239,8 +35125,10 @@
                 -w / 2, -h / 2,
                 w, h
             );
-        }
-    });
+        };
+
+        return Particle;
+    }(Renderable));
 
     /**
      * a Generic Object Entity
@@ -36265,17 +35153,9 @@
      * @param {Number} [settings.collisionMask] Mask collision detection for this object
      * @param {me.Rect[]|me.Polygon[]|me.Line[]|me.Ellipse[]} [settings.shapes] the initial list of collision shapes (usually populated through Tiled)
      */
-    var Entity = Renderable.extend({
-        /**
-         * @ignore
-         */
-        init : function (x, y, settings) {
 
-            /**
-             * The array of renderable children of this entity.
-             * @ignore
-             */
-            this.children = [];
+    var Entity = /*@__PURE__*/(function (Renderable) {
+        function Entity(x, y, settings) {
 
             // ensure mandatory properties are defined
             if ((typeof settings.width !== "number") || (typeof settings.height !== "number")) {
@@ -36283,7 +35163,13 @@
             }
 
             // call the super constructor
-            this._super(Renderable, "init", [x, y, settings.width, settings.height]);
+            Renderable.call(this, x, y, settings.width, settings.height);
+
+            /**
+             * The array of renderable children of this entity.
+             * @ignore
+             */
+            this.children = [];
 
             if (settings.image) {
                 // set the frame size to the given entity size, if not defined in settings
@@ -36369,15 +35255,48 @@
 
             // disable for entities
             this.autoTransform = false;
-        },
+        }
+
+        if ( Renderable ) Entity.__proto__ = Renderable;
+        Entity.prototype = Object.create( Renderable && Renderable.prototype );
+        Entity.prototype.constructor = Entity;
+
+        var prototypeAccessors = { renderable: { configurable: true } };
+
+
+        /**
+         * The entity renderable component (can be any objects deriving from me.Renderable, like me.Sprite for example)
+         * @public
+         * @type me.Renderable
+         * @name renderable
+         * @memberOf me.Entity
+         */
+
+        /**
+         * @ignore
+         */
+        prototypeAccessors.renderable.get = function () {
+            return this.children[0];
+        };
+        /**
+         * @ignore
+         */
+        prototypeAccessors.renderable.set = function (value) {
+            if (value instanceof Renderable) {
+                this.children[0] = value;
+                this.children[0].ancestor = this;
+            } else {
+                throw new Error(value + "should extend me.Renderable");
+            }
+        };
 
         /** @ignore */
-        update : function (dt) {
+        Entity.prototype.update = function update (dt) {
             if (this.renderable) {
                 return this.renderable.update(dt);
             }
             return this._super(Renderable, "update", [dt]);
-        },
+        };
 
         /**
          * update the bounds position when the body is modified
@@ -36386,14 +35305,14 @@
          * @memberOf me.Entity
          * @function
          */
-        onBodyUpdate : function (body) {
+        Entity.prototype.onBodyUpdate = function onBodyUpdate (body) {
             // update the entity bounds to include the body bounds
             this.getBounds().addBounds(body.getBounds(), true);
             // update the bounds pos
             this.updateBoundsPos(this.pos.x, this.pos.y);
-        },
+        };
 
-        preDraw : function (renderer) {
+        Entity.prototype.preDraw = function preDraw (renderer) {
             renderer.save();
 
             // translate to the entity position
@@ -36411,7 +35330,7 @@
                     this.anchorPoint.y * this.body.getBounds().height
                 );
             }
-        },
+        };
 
         /**
          * object draw<br>
@@ -36424,7 +35343,7 @@
          * @param {me.CanvasRenderer|me.WebGLRenderer} renderer a renderer object
          * @param {me.Rect} region to draw
          **/
-        draw : function (renderer, rect) {
+        Entity.prototype.draw = function draw (renderer, rect) {
             var renderable = this.renderable;
             if (renderable instanceof Renderable) {
                 // predraw (apply transforms)
@@ -36436,13 +35355,13 @@
                 // postdraw (clean-up);
                 renderable.postDraw(renderer);
             }
-        },
+        };
 
         /**
          * Destroy function<br>
          * @ignore
          */
-        destroy : function () {
+        Entity.prototype.destroy = function destroy () {
             // free some property objects
             if (this.renderable) {
                 this.renderable.destroy.apply(this.renderable, arguments);
@@ -36450,8 +35369,8 @@
             }
 
             // call the parent destroy method
-            this._super(Renderable, "destroy", arguments);
-        },
+            Renderable.prototype.destroy.call(this, arguments);
+        };
 
         /**
          * onDeactivateEvent Notification function<br>
@@ -36460,11 +35379,11 @@
          * @memberOf me.Entity
          * @function
          */
-        onDeactivateEvent : function () {
-          if (this.renderable && this.renderable.onDeactivateEvent) {
-              this.renderable.onDeactivateEvent();
-          }
-        },
+        Entity.prototype.onDeactivateEvent = function onDeactivateEvent () {
+            if (this.renderable && this.renderable.onDeactivateEvent) {
+                this.renderable.onDeactivateEvent();
+            }
+        };
 
         /**
          * onCollision callback<br>
@@ -36476,40 +35395,14 @@
          * @param {me.Entity} other the other entity touching this one (a reference to response.a or response.b)
          * @return {Boolean} true if the object should respond to the collision (its position and velocity will be corrected)
          */
-        onCollision : function () {
+        Entity.prototype.onCollision = function onCollision () {
             return false;
-        }
-    });
+        };
 
+        Object.defineProperties( Entity.prototype, prototypeAccessors );
 
-    /**
-     * The entity renderable component (can be any objects deriving from me.Renderable, like me.Sprite for example)
-     * @public
-     * @type me.Renderable
-     * @name renderable
-     * @memberOf me.Entity
-     */
-    Object.defineProperty(Entity.prototype, "renderable", {
-        /* for backward compatiblity */
-        /**
-         * @ignore
-         */
-        get : function () {
-            return this.children[0];
-        },
-        /**
-         * @ignore
-         */
-        set : function (value) {
-            if (value instanceof Renderable) {
-                this.children[0] = value;
-                this.children[0].ancestor = this;
-            } else {
-                throw new Error(value + "should extend me.Renderable");
-            }
-        },
-        configurable : true
-    });
+        return Entity;
+    }(Renderable));
 
     /**
     * Used to make a game entity draggable
@@ -36521,25 +35414,20 @@
     * @param {Number} y the y coordinates of the entity object
     * @param {Object} settings Entity properties (see {@link me.Entity})
     */
-    var DraggableEntity = Entity.extend({
-        /**
-         * Constructor
-         * @name init
-         * @memberOf me.DraggableEntity
-         * @function
-         * @param {Number} x the x postion of the entity
-         * @param {Number} y the y postion of the entity
-         * @param {Object} settings the additional entity settings
-         */
-        init: function (x, y, settings) {
-            this._super(Entity, "init", [x, y, settings]);
+    var DraggableEntity = /*@__PURE__*/(function (Entity) {
+        function DraggableEntity(x, y, settings) {
+            Entity.call(this, x, y, settings);
             this.dragging = false;
             this.dragId = null;
             this.grabOffset = new Vector2d(0, 0);
             this.onPointerEvent = registerPointerEvent;
             this.removePointerEvent = releasePointerEvent;
             this.initEvents();
-        },
+        }
+
+        if ( Entity ) DraggableEntity.__proto__ = Entity;
+        DraggableEntity.prototype = Object.create( Entity && Entity.prototype );
+        DraggableEntity.prototype.constructor = DraggableEntity;
 
         /**
          * Initializes the events the modules needs to listen to
@@ -36551,7 +35439,7 @@
          * @memberOf me.DraggableEntity
          * @function
          */
-        initEvents: function () {
+        DraggableEntity.prototype.initEvents = function initEvents () {
             var self = this;
             /**
              * @ignore
@@ -36579,7 +35467,7 @@
                     self.dragEnd(e);
                 }
             });
-        },
+        };
 
         /**
          * Translates a pointer event to a me.event
@@ -36590,9 +35478,9 @@
          * @param {String} translation the me.event you want to translate
          * the event to
          */
-        translatePointerEvent: function (e, translation) {
+        DraggableEntity.prototype.translatePointerEvent = function translatePointerEvent (e, translation) {
             event.publish(translation, [e, this]);
-        },
+        };
 
         /**
          * Gets called when the user starts dragging the entity
@@ -36601,14 +35489,14 @@
          * @function
          * @param {Object} x the pointer event
          */
-        dragStart: function (e) {
+        DraggableEntity.prototype.dragStart = function dragStart (e) {
             if (this.dragging === false) {
                 this.dragging = true;
                 this.grabOffset.set(e.gameX, e.gameY);
                 this.grabOffset.sub(this.pos);
                 return false;
             }
-        },
+        };
 
         /**
          * Gets called when the user drags this entity around
@@ -36617,12 +35505,12 @@
          * @function
          * @param {Object} x the pointer event
          */
-        dragMove: function (e) {
+        DraggableEntity.prototype.dragMove = function dragMove (e) {
             if (this.dragging === true) {
                 this.pos.set(e.gameX, e.gameY, this.pos.z); //TODO : z ?
                 this.pos.sub(this.grabOffset);
             }
-        },
+        };
 
         /**
          * Gets called when the user stops dragging the entity
@@ -36631,12 +35519,12 @@
          * @function
          * @param {Object} x the pointer event
          */
-        dragEnd: function () {
+        DraggableEntity.prototype.dragEnd = function dragEnd () {
             if (this.dragging === true) {
                 this.dragging = false;
                 return false;
             }
-        },
+        };
 
         /**
          * Destructor
@@ -36644,14 +35532,16 @@
          * @memberOf me.DraggableEntity
          * @function
          */
-        destroy: function () {
+        DraggableEntity.prototype.destroy = function destroy () {
             event.unsubscribe(event.POINTERMOVE, this.dragMove);
             event.unsubscribe(event.DRAGSTART, this.dragStart);
             event.unsubscribe(event.DRAGEND, this.dragEnd);
             this.removePointerEvent("pointerdown", this);
             this.removePointerEvent("pointerup", this);
-        }
-    });
+        };
+
+        return DraggableEntity;
+    }(Entity));
 
     /**
     * Used to make a game entity a droptarget
@@ -36663,17 +35553,10 @@
     * @param {Number} y the y coordinates of the entity object
     * @param {Object} settings Entity properties (see {@link me.Entity})
     */
-    var DroptargetEntity = Entity.extend({
-        /**
-         * Constructor
-         * @name init
-         * @memberOf me.DroptargetEntity
-         * @function
-         * @param {Number} x the x postion of the entity
-         * @param {Number} y the y postion of the entity
-         * @param {Object} settings the additional entity settings
-         */
-        init: function (x, y, settings) {
+
+    var DroptargetEntity = /*@__PURE__*/(function (Entity) {
+        function DroptargetEntity(x, y, settings) {
+            Entity.call(this, x, y, settings);
             /**
              * constant for the overlaps method
              * @public
@@ -36701,10 +35584,13 @@
              * @memberOf me.DroptargetEntity
              */
             this.checkMethod = null;
-            this._super(Entity, "init", [x, y, settings]);
             event.subscribe(event.DRAGEND, this.checkOnMe.bind(this));
             this.checkMethod = this[this.CHECKMETHOD_OVERLAP];
-        },
+        }
+
+        if ( Entity ) DroptargetEntity.__proto__ = Entity;
+        DroptargetEntity.prototype = Object.create( Entity && Entity.prototype );
+        DroptargetEntity.prototype.constructor = DroptargetEntity;
 
         /**
          * Sets the collision method which is going to be used to check a valid drop
@@ -36713,13 +35599,13 @@
          * @function
          * @param {Constant} checkMethod the checkmethod (defaults to CHECKMETHOD_OVERLAP)
          */
-        setCheckMethod: function (checkMethod) {
+        DroptargetEntity.prototype.setCheckMethod = function setCheckMethod (checkMethod) {
             //  We can improve this check,
             //  because now you can use every method in theory
             if (typeof(this[checkMethod]) !== "undefined") {
                 this.checkMethod = this[checkMethod];
             }
-        },
+        };
 
         /**
          * Checks if a dropped entity is dropped on the current entity
@@ -36728,12 +35614,12 @@
          * @function
          * @param {Object} draggableEntity the draggable entity that is dropped
          */
-        checkOnMe: function (e, draggableEntity) {
+        DroptargetEntity.prototype.checkOnMe = function checkOnMe (e, draggableEntity) {
             if (draggableEntity && this.checkMethod(draggableEntity.getBounds())) {
                 // call the drop method on the current entity
                 this.drop(draggableEntity);
             }
-        },
+        };
 
         /**
          * Gets called when a draggable entity is dropped on the current entity
@@ -36742,7 +35628,9 @@
          * @function
          * @param {Object} draggableEntity the draggable entity that is dropped
          */
-        drop: function () {},
+        DroptargetEntity.prototype.drop = function drop () {
+            
+        };
 
         /**
          * Destructor
@@ -36750,14 +35638,77 @@
          * @memberOf me.DroptargetEntity
          * @function
          */
-        destroy: function () {
+        DroptargetEntity.prototype.destroy = function destroy () {
             event.unsubscribe(event.DRAGEND, this.checkOnMe);
+        };
+
+        return DroptargetEntity;
+    }(Entity));
+
+    /**
+     * placeholder for all deprecated classes and corresponding alias for backward compatibility
+     * @namespace deprecated
+     * @memberOf me
+     */
+
+    /**
+     * display a deprecation warning in the console
+     * @public
+     * @function
+     * @memberOf me.deprecated
+     * @name warning
+     * @param {String} deprecated deprecated class,function or property name
+     * @param {String} replacement the replacement class, function, or property name
+     * @param {String} version the version since when the lass,function or property is deprecated
+     */
+    function warning(deprecated, replacement, version) {
+        var msg = "melonJS: %s is deprecated since version %s, please use %s";
+        var stack = new Error().stack;
+
+        if (console.groupCollapsed) {
+            console.groupCollapsed(
+                "%c" + msg,
+                "font-weight:normal;color:yellow;",
+                deprecated,
+                version,
+                replacement
+            );
+        } else {
+            console.warn(
+                msg,
+                deprecated,
+                version,
+                replacement
+            );
         }
+
+        if (typeof stack !== "undefined") {
+            console.warn(stack);
+        }
+
+        if (console.groupCollapsed) {
+            console.groupEnd();
+        }
+
+
+    }
+
+    /**
+     * Backward compatibility for deprecated method or properties are automatically
+     * applied when automatically generating an UMD bundle (which is the default since version 9.0).
+     * @memberof me.deprecated
+     * @function apply
+     */
+     function apply() {
+     }
+
+    var deprecated = /*#__PURE__*/Object.freeze({
+        __proto__: null,
+        warning: warning,
+        apply: apply
     });
 
     // ES5 polyfills
-    // jay-extend does not properly export Jay
-    var Jay = window.Jay;
 
     /**
     * (<b>m</b>)elonJS (<b>e</b>)ngine : All melonJS functions are defined inside this namespace.
@@ -36773,7 +35724,7 @@
      * @name version
      * @type {string}
      */
-    var version = "9.1.1";
+    var version = "10.0.0";
 
 
     /**
@@ -36811,7 +35762,7 @@
         }
 
         // check the device capabilites
-        device$1._check();
+        device._check();
 
         // register all built-ins objects into the object pool
         pool.register("me.Entity", Entity);
@@ -36872,7 +35823,7 @@
         timer$1.init();
 
         // enable/disable the cache
-        loader$1.setNocache( utils$1.getUriFragment().nocache || false );
+        loader.setNocache( utils$1.getUriFragment().nocache || false );
 
         // init the stage Manager
         state$1.init();
@@ -36887,7 +35838,7 @@
         exports.initialized = true;
     }
     // call the library init function when ready
-    device$1.onReady(function () {
+    device.onReady(function () {
         {
            boot();
         }
@@ -36902,7 +35853,7 @@
     exports.Collectable = Collectable;
     exports.Color = Color;
     exports.ColorLayer = ColorLayer;
-    exports.Container = Container$1;
+    exports.Container = Container;
     exports.DraggableEntity = DraggableEntity;
     exports.DroptargetEntity = DroptargetEntity;
     exports.Ellipse = Ellipse;
@@ -36914,7 +35865,6 @@
     exports.Math = math;
     exports.Matrix2d = Matrix2d;
     exports.Matrix3d = Matrix3d;
-    exports.Object = Jay;
     exports.ObservableVector2d = ObservableVector2d;
     exports.ObservableVector3d = ObservableVector3d;
     exports.Particle = Particle;
@@ -36949,12 +35899,12 @@
     exports.boot = boot;
     exports.collision = collision;
     exports.deprecated = deprecated;
-    exports.device = device$1;
+    exports.device = device;
     exports.event = event;
     exports.game = game$1;
     exports.input = input;
     exports.level = level;
-    exports.loader = loader$1;
+    exports.loader = loader;
     exports.plugin = plugin;
     exports.plugins = plugins;
     exports.pool = pool;

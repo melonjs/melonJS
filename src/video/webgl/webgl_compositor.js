@@ -507,7 +507,7 @@ class WebGLCompositor {
      * @memberOf me.WebGLCompositor
      * @function
      * @param {GLENUM} [mode=gl.TRIANGLES] primitive type to render (gl.POINTS, gl.LINE_STRIP, gl.LINE_LOOP, gl.LINES, gl.TRIANGLE_STRIP, gl.TRIANGLE_FAN, gl.TRIANGLES)
-     * @param {me.Vector2d[]} verts vertices
+     * @param {me.Vector2d[]} [verts=[]] vertices
      * @param {Number} [vertexCount=verts.length] amount of points defined in the points array
      */
     drawVertices(mode, verts, vertexCount) {

@@ -81,8 +81,9 @@ var audio = {
      *     alert("Sorry but your browser does not support html 5 audio !");
      *     return;
      * }
+     * @type (audioFormat: string) => boolean
      */
-    init : function (audioFormat) {
+     init : function (audioFormat) {
         if (!initialized) {
             throw new Error("me.audio.init() called before engine initialization.");
         }
