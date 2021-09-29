@@ -107,7 +107,6 @@ class Entity extends Renderable {
          * @memberOf me.Entity
          */
         // initialize the default body
-
         if (typeof settings.shapes === "undefined") {
             settings.shapes = new Polygon(0, 0, [
                 new Vector2d(0,          0),
@@ -116,13 +115,7 @@ class Entity extends Renderable {
                 new Vector2d(0,          this.height)
             ]);
         }
-
-        if (typeof this.body !== "undefined") {
-            this.body.init(this, settings.shapes, this.onBodyUpdate.bind(this));
-        }
-        else {
-            this.body = new Body(this, settings.shapes, this.onBodyUpdate.bind(this));
-        }
+        this.body = new Body(this, settings.shapes, this.onBodyUpdate.bind(this));
 
         // resize the entity if required
         if (this.width === 0 && this.height === 0) {
