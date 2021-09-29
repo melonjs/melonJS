@@ -82,10 +82,10 @@ var pool = {
         for (var i = 0; i < arguments.length; i++) {
             args[i] = arguments[i];
         }
-        var entity = objectClass[name];
-        if (entity) {
-            var proto = entity["class"],
-                poolArray = entity.pool,
+        var className = objectClass[name];
+        if (className) {
+            var proto = className["class"],
+                poolArray = className.pool,
                 obj;
 
             if (poolArray && ((obj = poolArray.pop()))) {
@@ -105,7 +105,6 @@ var pool = {
             }
             return obj;
         }
-
         throw new Error("Cannot instantiate object of type '" + name + "'");
     },
 
