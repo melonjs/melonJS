@@ -2,7 +2,6 @@
 import {Howl, Howler} from "howler";
 import {clamp} from "./../math/math.js";
 import loader from "./../loader/loader.js";
-import { initialized } from "./../index.js";
 
 // audio channel list
 var audioTracks = {};
@@ -84,9 +83,6 @@ var audio = {
      * @type (audioFormat: string) => boolean
      */
      init : function (audioFormat) {
-        if (!initialized) {
-            throw new Error("me.audio.init() called before engine initialization.");
-        }
         // if no param is given to init we use mp3 by default
         audioFormat = typeof audioFormat === "string" ? audioFormat : "mp3";
         // convert it into an array
