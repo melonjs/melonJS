@@ -331,6 +331,37 @@ var Polygon = window.Jay.extend({
     },
 
     /**
+     * Shifts the Polygon to the given position vector.
+     * @name shift
+     * @memberOf me.Polygon
+     * @function
+     * @param {me.Vector2d} position
+     */
+    /**
+     * Shifts the Polygon to the given x, y position.
+     * @name shift
+     * @memberOf me.Polygon
+     * @function
+     * @param {Number} x
+     * @param {Number} y
+     */
+    shift() {
+        var _x, _y;
+        if (arguments.length === 2) {
+            // x, y
+            _x = arguments[0];
+            _y = arguments[1];
+        } else {
+            // vector
+            _x = arguments[0].x;
+            _y = arguments[0].y;
+        }
+        this.pos.x = _x;
+        this.pos.y = _y;
+        this.updateBounds();
+    }
+
+    /**
      * Returns true if the polygon contains the given point.
      * (Note: it is highly recommended to first do a hit test on the corresponding <br>
      *  bounding rect, as the function can be highly consuming with complex shapes)

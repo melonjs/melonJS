@@ -24,6 +24,33 @@ describe("Shape : me.Polygon", function () {
             bounds = stars.getBounds();
         });
 
+        it("shift and translate stars", function () {
+            expect(stars.pos.x).toEqual(0);
+            expect(stars.pos.y).toEqual(0);
+            stars.shift(10, 20);
+            expect(stars.pos.x).toEqual(10);
+            expect(stars.pos.y).toEqual(20);
+            // default bounds pos is -94, 0
+            expect(stars.getBounds().x).toEqual(-84);
+            expect(stars.getBounds().y).toEqual(20);
+            stars.translate(10, 10);
+            expect(stars.pos.x).toEqual(20);
+            expect(stars.pos.y).toEqual(30);
+            expect(stars.getBounds().x).toEqual(-74);
+            expect(stars.getBounds().y).toEqual(30);
+            stars.shift(100, 100);
+            expect(stars.pos.x).toEqual(100);
+            expect(stars.pos.y).toEqual(100);
+            stars.translate(-50, -50);
+            expect(stars.pos.x).toEqual(50);
+            expect(stars.pos.y).toEqual(50);
+            stars.shift(0, 0);
+            expect(stars.pos.x).toEqual(0);
+            expect(stars.pos.y).toEqual(0);
+            expect(stars.getBounds().x).toEqual(-94);
+            expect(stars.getBounds().y).toEqual(0);
+        });
+
         it("requires at least 3 points", function () {
             function badPolygon() {
                 return new me.Polygon(0, 0, [
