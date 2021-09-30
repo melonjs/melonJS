@@ -1,4 +1,3 @@
-import Color from "./../math/color.js";
 import pool from "./../system/pooling.js";
 import game from "./../game.js";
 import Renderable from "./renderable.js";
@@ -24,11 +23,6 @@ class ColorLayer extends Renderable {
         // parent constructor
         super(0, 0, Infinity, Infinity);
 
-        // apply given parameters
-        this.name = name;
-        this.pos.z = z;
-        this.floating = true;
-
         /**
          * the layer color component
          * @public
@@ -36,14 +30,19 @@ class ColorLayer extends Renderable {
          * @name color
          * @memberOf me.ColorLayer#
          */
-        // parse the given color
-        if (color instanceof Color) {
-            this.color = color;
-        } else {
-            // string (#RGB, #ARGB, #RRGGBB, #AARRGGBB)
-            this.color = pool.pull("Color").parseCSS(color);
-        }
-        this.anchorPoint.set(0, 0);
+         this.color = pool.pull("Color").parseCSS(color);
+
+         this.onResetEvent(name, color, z);
+
+    }
+
+    onResetEvent(name, color, z) {
+        // apply given parameters
+        this.name = name;
+        this.pos.z = z;
+        this.floating = true;
+        // string (#RGB, #ARGB, #RRGGBB, #AARRGGBB)
+        this.color.parseCSS(color);
     }
 
     /**

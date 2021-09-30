@@ -21,7 +21,7 @@ var pool = {
     /**
      * register an object to the pool. <br>
      * Pooling must be set to true if more than one such objects will be created. <br>
-     * (note) If pooling is enabled, you shouldn't instantiate objects with `new`.
+     * (Note: for an object to be poolable, it must implements a `onResetEvent` method)
      * See examples in {@link me.pool#pull}
      * @name register
      * @memberOf me.pool
@@ -29,20 +29,23 @@ var pool = {
      * @function
      * @param {String} className as defined in the Name field of the Object Properties (in Tiled)
      * @param {Object} class corresponding Class to be instantiated
-     * @param {Boolean} [objectPooling=false] enables object pooling for the specified class
-     * - speeds up the game by reusing existing objects
+     * @param {Boolean} [recycling=false] enables object recycling for the specified class
      * @example
-     * // add our users defined entities in the object pool
-     * me.pool.register("playerspawnpoint", PlayerEntity);
+     * // implement CherryEntity
+     * class CherryEntity extends Spritesheet {
+     *    onResetEvent() {
+     *        // reset object mutable properties
+     *        this.lifeBar = 100;
+     *    }
+     * };
+     * // add our users defined entities in the object pool and enable object recycling
      * me.pool.register("cherryentity", CherryEntity, true);
-     * me.pool.register("heartentity", HeartEntity, true);
-     * me.pool.register("starentity", StarEntity, true);
      */
-     register(className, classObj, pooling) {
+     register(className, classObj, recycling = false) {
          if (typeof (classObj) !== "undefined") {
              objectClass[className] = {
                  "class" : classObj,
-                 "pool" : (pooling ? [] : undefined)
+                 "pool" : (recycling ? [] : undefined)
              };
          } else {
              throw new Error("Cannot register object '" + className + "', invalid class");
@@ -139,8 +142,11 @@ var pool = {
      */
     push(obj) {
         var name = obj.className;
-        if (typeof(name) === "undefined" || !objectClass[name]) {
-            // object is not registered, don't do anything
+        if (!this.poolable(name)) {
+            // object can not be recycled, call the destroy function
+            if (typeof obj.destroy === "function") {
+                obj.destroy();
+            }
             return;
         }
         // store back the object instance for later recycling
@@ -154,11 +160,30 @@ var pool = {
      * @memberOf me.pool
      * @public
      * @function
-     * @param {String} name of the registered object
+     * @param {String} name of the registered object class
      * @return {Boolean} true if the classname is registered
      */
     exists(name) {
         return name in objectClass;
+    },
+
+    /**
+     * Check if an object with the provided name is poolable
+     * (was properly registered with the recycling feature enable)
+     * @name poolable
+     * @memberOf me.pool
+     * @public
+     * @see me.pool.register
+     * @function
+     * @param {String} name of the registered object class
+     * @return {Boolean} true if the classname is poolable
+     * @example
+     * if (!me.pool.poolable("CherryEntity")) {
+     *     // object was not properly registered
+     * }
+     */
+    poolable(name) {
+        return (name in objectClass) && (objectClass[name].pool !== "undefined");
     },
 
     /**

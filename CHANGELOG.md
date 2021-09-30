@@ -8,6 +8,7 @@
 
 ### Changed
 - Jay Inheritance has been replaced with ES6 standard inheritance
+- object using the pooling function *must* now implement a `onResetEvent` method and use the `recycling` flag when registered
 
 ### Deprecated
 - all deprecated API from the legacy melonJS version have been removed

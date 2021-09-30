@@ -224,9 +224,9 @@ export function boot() {
     pool.register("me.Sprite", Sprite);
     pool.register("me.Renderable", Renderable);
     pool.register("me.Text", Text, true);
-    pool.register("me.BitmapText", BitmapText, true);
+    pool.register("me.BitmapText", BitmapText);
     pool.register("me.BitmapTextData", BitmapTextData, true);
-    pool.register("me.ImageLayer", ImageLayer, true);
+    pool.register("me.ImageLayer", ImageLayer);
     pool.register("me.ColorLayer", ColorLayer, true);
     pool.register("me.Vector2d", Vector2d, true);
     pool.register("me.Vector3d", Vector3d, true);
@@ -250,9 +250,9 @@ export function boot() {
     pool.register("Sprite", Sprite);
     pool.register("Renderable", Renderable);
     pool.register("Text", Text, true);
-    pool.register("BitmapText", BitmapText, true);
+    pool.register("BitmapText", BitmapText);
     pool.register("BitmapTextData", BitmapTextData, true);
-    pool.register("ImageLayer", ImageLayer, true);
+    pool.register("ImageLayer", ImageLayer);
     pool.register("ColorLayer", ColorLayer, true);
     pool.register("Vector2d", Vector2d, true);
     pool.register("Vector3d", Vector3d, true);

@@ -25,6 +25,21 @@ class Particle extends Renderable {
             emitter.image.height
         );
 
+        // particle velocity
+        this.vel = new Vector2d();
+        this.onResetEvent(emitter, true);
+    }
+
+    onResetEvent(emitter, newInstance = false) {
+        if (newInstance === false) {
+            super.onResetEvent(
+                emitter.getRandomPointX(),
+                emitter.getRandomPointY(),
+                emitter.image.width,
+                emitter.image.height
+            );
+        }
+
         // Particle will always update
         this.alwaysUpdate = true;
 
@@ -36,7 +51,7 @@ class Particle extends Renderable {
         var speed = emitter.speed + ((emitter.speedVariation > 0) ? (randomFloat(0, 2) - 1) * emitter.speedVariation : 0);
 
         // Set the start particle Velocity
-        this.vel = new Vector2d(speed * Math.cos(angle), -speed * Math.sin(angle));
+        this.vel.set(speed * Math.cos(angle), -speed * Math.sin(angle));
 
         // Set the start particle Time of Life as defined in emitter
         this.life = randomFloat(emitter.minLife, emitter.maxLife);

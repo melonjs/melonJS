@@ -1,9 +1,8 @@
 describe("pool", function () {
 
-    // test fail without this
-    me.pool.register("Vector2d", me.Vector2d, true);
+    describe("poolable object", function () {
 
-    describe("push & pull", function () {
+        me.pool.register("Vector2d", me.Vector2d, true);
         var vec2 = me.pool.pull("Vector2d");
 
         it("pulled object is of the correct instance", function () {
@@ -27,4 +26,43 @@ describe("pool", function () {
             expect(vec2.toString()).toEqual("x:0,y:0");
         });
     });
+
+    describe("non poolable object", function () {
+        class dummyClass {
+            constructor() {
+                this.alive = true;
+            }
+            destroy() {
+                this.alive = false;
+            }
+        }
+        me.pool.register("dummyClass", dummyClass, false);
+
+        var obj = me.pool.pull("dummyClass");
+
+        it("pulled object is of the correct instance", function () {
+            expect(obj).toBeInstanceOf(dummyClass);
+            expect(obj.alive).toEqual(true);
+        });
+
+        it("object is not recycled when pushed and pulled back again", function () {
+            // add a hidden property
+            obj._recycled = true;
+
+            // push it back to the object pool
+            me.pool.push(obj);
+
+            // destroy method was called
+            expect(obj.alive).toEqual(false);
+
+            // pull one similar object again
+            obj = me.pool.pull("dummyClass");
+
+            // should not be the same object
+            expect(obj.alive).toEqual(true);
+            expect(obj._recycled).toBeUndefined();
+
+        });
+    });
+
 });
