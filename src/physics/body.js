@@ -88,8 +88,7 @@ class Body {
         this.collisionType = collision.types.ENEMY_OBJECT;
 
         /**
-         * body velocity<br>
-         *
+         * body velocity
          * @public
          * @type me.Vector2d
          * @default <0,0>
@@ -100,22 +99,6 @@ class Body {
             this.vel = new Vector2d();
         }
         this.vel.set(0, 0);
-
-        /**
-         * body acceleration <br>
-         * Not fully implemented yet.  At this time accel is used to set the MaximumVelocity allowed.
-         * @public
-         * @type me.Vector2d
-         * @default <0,0>
-         * @name accel
-         * @deprecated
-         * @see me.Body.force
-         * @memberOf me.Body
-         */
-        if (typeof this.accel === "undefined") {
-            this.accel = new Vector2d();
-        }
-        this.accel.set(0, 0);
 
         /**
          * body force or acceleration (automatically) applied to the body.
@@ -654,28 +637,6 @@ class Body {
             }
         });
         return this;
-    }
-
-    /**
-     * Sets accel to Velocity if x or y is not 0.  Net effect is to set the maxVel.x/y to the passed values for x/y<br>
-     * note: This does not set the vel member of the body object. This is identical to the setMaxVelocity call except that the
-     * accel property is updated to match the passed x and y.
-     * setMaxVelocity if needed<br>
-     * @name setVelocity
-     * @memberOf me.Body
-     * @function
-     * @param {Number} x velocity on x axis
-     * @param {Number} y velocity on y axis
-     * @protected
-     * @deprecated
-     * @see me.Body.force
-     */
-    setVelocity(x, y) {
-        this.accel.x = x !== 0 ? x : this.accel.x;
-        this.accel.y = y !== 0 ? y : this.accel.y;
-
-        // limit by default to the same max value
-        this.setMaxVelocity(x, y);
     }
 
     /**
