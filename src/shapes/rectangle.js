@@ -213,7 +213,7 @@ class Rect extends Polygon {
             return this.height;
         }
     }
-    
+
     /**
      * @ignore
      */
@@ -272,67 +272,6 @@ class Rect extends Polygon {
      */
     copy(rect) {
         return this.setShape(rect.pos.x, rect.pos.y, rect.width, rect.height);
-    }
-
-    /**
-     * translate the rect by the specified offset
-     * @name translate
-     * @memberOf me.Rect.prototype
-     * @function
-     * @param {Number} x x offset
-     * @param {Number} y y offset
-     * @return {me.Rect} this rectangle
-     */
-    /**
-     * translate the rect by the specified vector
-     * @name translate
-     * @memberOf me.Rect.prototype
-     * @function
-     * @param {me.Vector2d} v vector offset
-     * @return {me.Rect} this rectangle
-     */
-    translate() {
-        var _x, _y;
-
-        if (arguments.length === 2) {
-            // x, y
-            _x = arguments[0];
-            _y = arguments[1];
-        } else {
-            // vector
-            _x = arguments[0].x;
-            _y = arguments[0].y;
-        }
-
-        this.pos.x += _x;
-        this.pos.y += _y;
-
-        return this;
-    }
-
-    /**
-     * Shifts the rect to the given position vector.
-     * @name shift
-     * @memberOf me.Rect
-     * @function
-     * @param {me.Vector2d} position
-     */
-    /**
-     * Shifts the rect to the given x, y position.
-     * @name shift
-     * @memberOf me.Rect
-     * @function
-     * @param {Number} x
-     * @param {Number} y
-     */
-    shift() {
-        if (arguments.length === 2) {
-            // x, y
-            this.pos.set(arguments[0], arguments[1]);
-        } else {
-            // vector
-            this.pos.setV(arguments[0]);
-        }
     }
 
     /**

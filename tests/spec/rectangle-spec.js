@@ -27,9 +27,13 @@ describe("Shape : me.Rect", function () {
             rect1.shift(10, 20);
             expect(rect1.pos.x).toEqual(10);
             expect(rect1.pos.y).toEqual(20);
+            expect(rect1.getBounds().x).toEqual(10);
+            expect(rect1.getBounds().y).toEqual(20);
             rect1.translate(10, 10);
             expect(rect1.pos.x).toEqual(20);
             expect(rect1.pos.y).toEqual(30);
+            expect(rect1.getBounds().x).toEqual(20);
+            expect(rect1.getBounds().y).toEqual(30);
             rect1.shift(100, 100);
             expect(rect1.pos.x).toEqual(100);
             expect(rect1.pos.y).toEqual(100);
