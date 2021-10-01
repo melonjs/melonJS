@@ -1,16 +1,11 @@
-/* eslint-disable no-global-assign, no-native-reassign */
-if (typeof console === "undefined") {
-    /**
-     * Dummy console.log to avoid crash
-     * in case the browser does not support it
-     * @ignore
-     */
-    console = {
-        log : function () {},
-        info : function () {},
-        error : function () {
+if (typeof window !== "undefined") {
+    if (typeof window.console === "undefined") {
+        window.console = {};
+        window.console.log = function() {};
+        window.console.assert = function() {};
+        window.console.warn = function() {};
+        window.console.error = function() {
             alert(Array.prototype.slice.call(arguments).join(", "));
-        }
-    };
+        };
+    }
 }
-/* eslint-enable no-global-assign, no-native-reassign */
