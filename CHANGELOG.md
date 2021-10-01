@@ -1,5 +1,10 @@
 # Changelog
 
+## [9.1.2] - _2021-10-03_
+
+### Fixed
+- fix a regression with state pause & resume when losing & gaining window focus
+
 ## [9.1.1] - _2021-09-26_
 
 ### Fixed
