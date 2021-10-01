@@ -94,12 +94,17 @@ var game = {
     onLevelLoaded : function () {},
 
     /**
+     * @typedef {Function} EmptyCallback
+     * @return {void}
+     */
+
+    /**
      * Initialize the game manager
      * @name init
      * @memberOf me.game
      * @ignore
      * @function
-     * @type () => void
+     * @type {EmptyCallback}
      */
     init : function () {
         // the root object of our world is an entity container
@@ -119,7 +124,7 @@ var game = {
      * @memberOf me.game
      * @public
      * @function
-     * @type () => void
+     * @type {EmptyCallback}
      */
     reset : function () {
         // point to the current active stage "default" camera
