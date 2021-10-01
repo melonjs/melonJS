@@ -92,6 +92,7 @@ var pool = {
                 obj;
 
             if (poolArray && ((obj = poolArray.pop()))) {
+                // pull an existing instance from the pool
                 args.shift();
                 // call the object onResetEvent function if defined
                 if (typeof(obj.onResetEvent) === "function") {
@@ -100,6 +101,7 @@ var pool = {
                 instance_counter--;
             }
             else {
+                // create a new instance
                 args[0] = proto;
                 obj = new (proto.bind.apply(proto, args))();
                 if (poolArray) {
