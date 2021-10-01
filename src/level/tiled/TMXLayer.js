@@ -1,4 +1,4 @@
-import video from "./../../video/video.js";
+import { createCanvas } from "./../../video/video.js";
 import pool from "./../../system/pooling.js";
 import * as TMXUtils from "./TMXUtils.js";
 import Tile from "./TMXTile.js";
@@ -224,7 +224,7 @@ class TMXLayer extends Renderable {
         // if pre-rendering method is use, create an offline canvas/renderer
         if ((this.preRender === true) && (!this.canvasRenderer)) {
             this.canvasRenderer = new CanvasRenderer({
-                canvas : video.createCanvas(this.width, this.height),
+                canvas : createCanvas(this.width, this.height),
                 widht : this.width,
                 heigth : this.height,
                 transparent : true

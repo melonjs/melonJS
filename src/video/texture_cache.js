@@ -1,4 +1,4 @@
-import video from "./video.js";
+import { renderer } from "./video.js";
 import utils from "./../utils/utils.js";
 import { Texture, createAtlas } from "./texture.js";
 import { isPowerOfTwo} from "./../math/math.js";
@@ -69,7 +69,7 @@ class TextureCache {
         }
 
         if (!image_cache.has(color)) {
-            image_cache.set(color, video.renderer.tint(src, color, "multiply"));
+            image_cache.set(color, renderer.tint(src, color, "multiply"));
         }
 
         return image_cache.get(color);
@@ -83,7 +83,7 @@ class TextureCache {
         var height = image.height;
 
         // warn if a non POT texture is added to the cache when using WebGL1
-        if (video.renderer.WebGLVersion === 1 && (!isPowerOfTwo(width) || !isPowerOfTwo(height))) {
+        if (renderer.WebGLVersion === 1 && (!isPowerOfTwo(width) || !isPowerOfTwo(height))) {
             var src = typeof image.src !== "undefined" ? image.src : image;
             console.warn(
                 "[Texture] " + src + " is not a POT texture " +

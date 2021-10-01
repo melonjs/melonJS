@@ -2,7 +2,7 @@ import Vector2d from "./../math/vector2.js";
 import WebGLRenderer from "./webgl/webgl_renderer.js";
 import TextureCache from "./texture_cache.js";
 import Sprite from "./../renderable/sprite.js";
-import video from "./video.js";
+import { renderer } from "./video.js";
 import pool from "./../system/pooling.js";
 import loader from "./../loader/loader.js";
 import { ETA } from "./../math/math.js";
@@ -165,7 +165,7 @@ export class Texture {
                 if (cache instanceof TextureCache) {
                     cache.set(source, this);
                 } else {
-                    video.renderer.cache.set(source, this);
+                    renderer.cache.set(source, this);
                 }
             });
         }
@@ -275,7 +275,7 @@ export class Texture {
      */
     addUvsMap(atlas, frame, w, h) {
         // ignore if using the Canvas Renderer
-        if (video.renderer instanceof WebGLRenderer) {
+        if (renderer instanceof WebGLRenderer) {
             // Source coordinates
             var s = atlas[frame].offset;
             var sw = atlas[frame].width;
@@ -300,7 +300,7 @@ export class Texture {
      */
     addQuadRegion(name, x, y, w, h) {
         // TODO: Require proper atlas regions instead of caching arbitrary region keys
-        if (video.renderer.settings.verbose === true) {
+        if (renderer.settings.verbose === true) {
             console.warn("Adding texture region", name, "for texture", this);
         }
 

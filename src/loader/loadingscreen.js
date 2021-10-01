@@ -1,5 +1,5 @@
 import game from "./../game.js";
-import video from "./../video/video.js";
+import { createCanvas, renderer } from "./../video/video.js";
 import event from "./../system/event.js";
 import {nextPowerOfTwo} from "./../math/math.js";
 import pool from "./../system/pooling.js";
@@ -84,12 +84,12 @@ class IconLogo extends Renderable {
     constructor(x, y) {
         super(x, y, 100, 85);
 
-        this.iconCanvas = video.createCanvas(
+        this.iconCanvas = createCanvas(
             nextPowerOfTwo(this.width),
             nextPowerOfTwo(this.height),
         false);
 
-        var context = video.renderer.getContext2d(this.iconCanvas);
+        var context = renderer.getContext2d(this.iconCanvas);
 
         context.beginPath();
         context.moveTo(0.7, 48.9);
@@ -139,8 +139,8 @@ class TextLogo extends Renderable {
         this.textWidth = 0;
 
         // offscreen cache canvas
-        this.fontCanvas = video.createCanvas(256, 64, true);
-        this.drawFont(video.renderer.getContext2d(this.fontCanvas));
+        this.fontCanvas = createCanvas(256, 64, true);
+        this.drawFont(renderer.getContext2d(this.fontCanvas));
 
         this.anchorPoint.set(0, 0.5);
     }
@@ -210,22 +210,22 @@ var defaultLoadingScreen = new Stage({
         // progress bar
         game.world.addChild(new ProgressBar(
             0,
-            video.renderer.getHeight() / 2,
-            video.renderer.getWidth(),
+            renderer.getHeight() / 2,
+            renderer.getWidth(),
             barHeight
         ), 1);
 
         // melonJS logo
         game.world.addChild(new IconLogo(
-            video.renderer.getWidth() / 2,
-            (video.renderer.getHeight() / 2) - (barHeight * 2) - 35
+            renderer.getWidth() / 2,
+            (renderer.getHeight() / 2) - (barHeight * 2) - 35
 
         ), 2);
 
         // melonJS text
         game.world.addChild(new TextLogo(
-            video.renderer.getWidth(),
-            video.renderer.getHeight()
+            renderer.getWidth(),
+            renderer.getHeight()
         ), 2);
     }
 });

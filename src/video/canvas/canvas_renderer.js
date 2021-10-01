@@ -2,7 +2,7 @@ import Color from "./../../math/color.js";
 import Renderer from "./../renderer.js";
 import TextureCache from "./../texture_cache.js";
 import Ellipse from "./../../shapes/ellipse.js";
-import video from "./../video.js";
+import { createCanvas } from "./../video.js";
 
 
 
@@ -36,7 +36,7 @@ class CanvasRenderer extends Renderer {
 
         // create the back buffer if we use double buffering
         if (this.settings.doubleBuffering) {
-            this.backBufferCanvas = video.createCanvas(this.settings.width, this.settings.height, true);
+            this.backBufferCanvas = createCanvas(this.settings.width, this.settings.height, true);
             this.backBufferContext2D = this.getContext2d(this.backBufferCanvas);
         }
         else {

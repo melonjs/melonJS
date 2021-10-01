@@ -5,7 +5,7 @@ import WebGLCompositor from "./webgl_compositor.js";
 import Renderer from "./../renderer.js";
 import TextureCache from "./../texture_cache.js";
 import {Texture, createAtlas } from "./../texture.js";
-import video from "./../video.js";
+import { createCanvas, renderer } from "./../video.js";
 import event from "./../../system/event.js";
 import pool from "./../../system/pooling.js";
 import { isPowerOfTwo, nextPowerOfTwo, TAU } from "./../../math/math.js";
@@ -236,7 +236,7 @@ class WebGLRenderer extends Renderer {
                 }
             }
 
-            var image = video.createCanvas(width, height, true);
+            var image = createCanvas(width, height, true);
 
             /**
              * @ignore
@@ -272,7 +272,7 @@ class WebGLRenderer extends Renderer {
      */
     createPattern(image, repeat) {
 
-        if (video.renderer.WebGLVersion === 1 && (!isPowerOfTwo(image.width) || !isPowerOfTwo(image.height))) {
+        if (renderer.WebGLVersion === 1 && (!isPowerOfTwo(image.width) || !isPowerOfTwo(image.height))) {
             var src = typeof image.src !== "undefined" ? image.src : image;
             throw new Error(
                 "[WebGL Renderer] " + src + " is not a POT texture " +

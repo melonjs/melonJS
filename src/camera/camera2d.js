@@ -5,7 +5,7 @@ import ObservableVector3d from "./../math/observable_vector3.js";
 import Matrix2d from "./../math/matrix2.js";
 import Matrix3d from "./../math/matrix3.js";
 import Rect from "./../shapes/rectangle.js";
-import video from "./../video/video.js";
+import { renderer } from "./../video/video.js";
 import event from "./../system/event.js";
 import pool from "./../system/pooling.js";
 import Renderable from "./../renderable/renderable.js";
@@ -640,7 +640,7 @@ class Camera2d extends Renderable {
     isVisible(obj, floating = obj.floating) {
         if (floating === true || obj.floating === true) {
             // check against screen coordinates
-            return video.renderer.overlaps(obj.getBounds());
+            return renderer.overlaps(obj.getBounds());
         } else {
             // check if within the current camera
             return obj.getBounds().overlaps(this);

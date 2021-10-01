@@ -1,5 +1,5 @@
 import Vector2d from "./../math/vector2.js";
-import video from "./../video/video.js";
+import { renderer } from "./../video/video.js";
 import pool from "./../system/pooling.js";
 import loader from "./../loader/loader.js";
 import {Texture } from "./../video/texture.js";
@@ -157,7 +157,7 @@ class Sprite extends Renderable {
             // update the default "current" frame size
             this.current.width = settings.framewidth = settings.framewidth || this.image.width;
             this.current.height = settings.frameheight = settings.frameheight || this.image.height;
-            this.source = video.renderer.cache.get(this.image, settings);
+            this.source = renderer.cache.get(this.image, settings);
             this.textureAtlas = this.source.getAtlas();
         }
 

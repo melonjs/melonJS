@@ -1,4 +1,4 @@
-import video from "./../video/video.js";
+import { createCanvas } from "./../video/video.js";
 import pool from "./../system/pooling.js";
 import Renderable from "./../renderable/renderable.js";
 import ParticleContainer from "./particlecontainer.js";
@@ -8,7 +8,7 @@ import { randomFloat } from "./../math/math.js";
 
 // generate a default image for the particles
 var pixel = (function () {
-    var canvas = video.createCanvas(1, 1);
+    var canvas = createCanvas(1, 1);
     var context = canvas.getContext("2d");
     context.fillStyle = "#fff";
     context.fillRect(0, 0, 1, 1);

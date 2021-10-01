@@ -1,4 +1,4 @@
-import video from "./video/video.js";
+import { renderer } from "./video/video.js";
 import event from "./system/event.js";
 import timer from "./system/timer.js";
 import state from "./state/state.js";
@@ -240,7 +240,6 @@ var game = {
      * @param {me.Stage} stage the current stage
      */
     draw : function (stage) {
-        var renderer = video.renderer;
 
         if (renderer.isContextValid === true && (isDirty || isAlwaysDirty)) {
             // prepare renderer to draw a new frame

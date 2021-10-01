@@ -1,6 +1,6 @@
 import Color from "./../math/color.js";
 import Renderer from "./../video/renderer.js";
-import video from "./../video/video.js";
+import { renderer } from "./../video/video.js";
 import utils from "./../utils/utils.js";
 import pool from "./../system/pooling.js";
 import Renderable from "./../renderable/renderable.js";
@@ -293,16 +293,16 @@ class Text extends Renderable {
      * @param {me.Rect|me.Bounds} [ret] a object in which to store the text metrics
      * @returns {TextMetrics} a TextMetrics object with two properties: `width` and `height`, defining the output dimensions
      */
-    measureText(renderer, text, ret) {
+    measureText(_renderer, text, ret) {
         var context;
 
-        if (typeof renderer === "undefined") {
-            context = video.renderer.getFontContext();
-        } else if (renderer instanceof Renderer) {
+        if (typeof _renderer === "undefined") {
             context = renderer.getFontContext();
+        } else if (_renderer instanceof Renderer) {
+            context = _renderer.getFontContext();
         } else {
             // else it's a 2d rendering context object
-            context = renderer;
+            context = _renderer;
         }
 
         var textMetrics = ret || this.getBounds();

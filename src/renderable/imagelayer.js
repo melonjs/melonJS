@@ -1,4 +1,4 @@
-import video from "./../video/video.js";
+import { renderer } from "./../video/video.js";
 import event from "./../system/event.js";
 import pool from "./../system/pooling.js";
 import game from "./../game.js";
@@ -191,7 +191,7 @@ class ImageLayer extends Sprite {
      * @function
      */
     createPattern() {
-        this._pattern = video.renderer.createPattern(this.image, this._repeat);
+        this._pattern = renderer.createPattern(this.image, this._repeat);
     }
 
     /**

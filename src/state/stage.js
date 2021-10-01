@@ -1,4 +1,4 @@
-import video from "./../video/video.js";
+import { renderer } from "./../video/video.js";
 import game from "./../game.js";
 import Camera2d from "./../camera/camera2d.js";
 
@@ -67,8 +67,8 @@ class Stage {
         // empty or no default camera
         if (this.cameras.has("default") === false) {
             if (typeof default_camera === "undefined") {
-                var width = video.renderer.getWidth();
-                var height = video.renderer.getHeight();
+                var width = renderer.getWidth();
+                var height = renderer.getHeight();
                 // new default camera instance
                 default_camera = new Camera2d(0, 0, width, height);
             }

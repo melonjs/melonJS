@@ -1,5 +1,5 @@
 import Vector2d from "./../../math/vector2.js";
-import video from "./../../video/video.js";
+import { renderer } from "./../../video/video.js";
 import utils from "./../../utils/utils.js";
 import timer from "./../../system/timer.js";
 import loader from "./../../loader/loader.js";
@@ -143,7 +143,7 @@ export default class TMXTileset {
             }
 
             // create a texture atlas for the given tileset
-            this.texture = video.renderer.cache.get(this.image, {
+            this.texture = renderer.cache.get(this.image, {
                 framewidth : this.tilewidth,
                 frameheight : this.tileheight,
                 margin : this.margin,

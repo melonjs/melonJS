@@ -1,5 +1,5 @@
 import { hasAudio } from "./../audio/audio.js";
-import video from "./../video/video.js";
+import { getParent } from "./../video/video.js";
 import save from "./../system/save.js";
 import { prefixed } from "./../utils/agent.js";
 import state from "./../state/state.js";
@@ -683,7 +683,7 @@ let device = {
      */
     requestFullscreen(element) {
         if (this.hasFullscreenSupport) {
-            element = element || video.getParent();
+            element = element || getParent();
             element.requestFullscreen = prefixed("requestFullscreen", element) ||
                                         element.mozRequestFullScreen;
 
@@ -999,7 +999,7 @@ let device = {
      */
     turnOnPointerLock() {
         if (this.hasPointerLockSupport) {
-            var element = video.getParent();
+            var element = getParent();
             if (this.ua.match(/Firefox/i)) {
                 var fullscreenchange = function() {
                     if ((prefixed("fullscreenElement", document) ||

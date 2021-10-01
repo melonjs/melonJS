@@ -1,6 +1,6 @@
 import Color from "./../math/color.js";
 import Matrix3d from "./../math/matrix3.js";
-import video from "./video.js";
+import { createCanvas, renderer } from "./video.js";
 import event from "./../system/event.js";
 import device from "./../system/device.js";
 import { setPrefixed } from "./../utils/agent.js";
@@ -72,7 +72,7 @@ class Renderer {
         } else if (typeof this.settings.canvas !== "undefined") {
             this.canvas = this.settings.canvas;
         } else {
-            this.canvas = video.createCanvas(this.settings.zoomX, this.settings.zoomY);
+            this.canvas = createCanvas(this.settings.zoomX, this.settings.zoomY);
         }
 
         // canvas object and context
@@ -95,7 +95,7 @@ class Renderer {
 
         // reset the instantiated renderer on game reset
         event.subscribe(event.GAME_RESET, function () {
-            video.renderer.reset();
+            renderer.reset();
         });
 
         return this;
@@ -367,7 +367,7 @@ class Renderer {
      * @return {HTMLCanvasElement|OffscreenCanvas} a new canvas element representing the tinted image
      */
     tint(src, color, mode) {
-        var canvas = video.createCanvas(src.width, src.height, true);
+        var canvas = createCanvas(src.width, src.height, true);
         var context = this.getContext2d(canvas);
 
         context.save();
