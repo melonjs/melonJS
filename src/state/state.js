@@ -1,4 +1,4 @@
-import audio from "./../audio/audio.js";
+import { pauseTrack, resumeTrack } from "./../audio/audio.js";
 import utils from "./../utils/utils.js";
 import event from "./../system/event.js";
 import timer from "./../system/timer.js";
@@ -299,7 +299,7 @@ var state = {
             _stopRunLoop();
             // current music stop
             if (music === true) {
-                audio.pauseTrack();
+                pauseTrack();
             }
 
             // store time when stopped
@@ -329,7 +329,7 @@ var state = {
             _pauseRunLoop();
             // current music stop
             if (music === true) {
-                audio.pauseTrack();
+                pauseTrack();
             }
 
             // store time when paused
@@ -358,7 +358,7 @@ var state = {
             _startRunLoop();
             // current music stop
             if (music === true) {
-                audio.resumeTrack();
+                resumeTrack();
             }
 
             // calculate the elpased time
@@ -390,7 +390,7 @@ var state = {
             _resumeRunLoop();
             // current music stop
             if (music === true) {
-                audio.resumeTrack();
+                resumeTrack();
             }
 
             // calculate the elpased time

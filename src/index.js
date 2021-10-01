@@ -3,7 +3,7 @@ import "./polyfill/console.js";
 import "./polyfill/requestAnimationFrame.js";
 
 // utility classes
-import audio from "./audio/audio.js";
+import * as audio from "./audio/audio.js";
 import collision from "./physics/collision.js";
 import device from "./system/device.js";
 import event from "./system/event.js";

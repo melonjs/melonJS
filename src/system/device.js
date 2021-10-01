@@ -1,4 +1,4 @@
-import audio from "./../audio/audio.js";
+import { hasAudio } from "./../audio/audio.js";
 import video from "./../video/video.js";
 import save from "./../system/save.js";
 import { prefixed } from "./../utils/agent.js";
@@ -1230,7 +1230,7 @@ Object.defineProperty(device, "sound", {
      * @ignore
      */
     get: function () {
-        return audio.hasAudio();
+        return hasAudio();
     }
 });
 

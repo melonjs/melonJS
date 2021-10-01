@@ -1,7 +1,7 @@
 import utils from "./../utils/utils.js";
 import event from "./../system/event.js";
 import device from "./../system/device.js";
-import audio from "./../audio/audio.js";
+import * as audio from "./../audio/audio.js";
 import state from "./../state/state.js";
 import level from "./../level/level.js";
 import * as TMXUtils from "./../level/tiled/TMXUtils.js";
