@@ -142,16 +142,16 @@ let device = {
         }
 
         // set pause/stop action on losing focus
-        window.addEventListener("blur", function () {
+        window.addEventListener("blur", (function () {
             if (this.stopOnBlur) {
                 state.stop(true);
             }
             if (this.pauseOnBlur) {
                 state.pause(true);
             }
-        }, false);
+        }).bind(this), false);
         // set restart/resume action on gaining focus
-        window.addEventListener("focus", function () {
+        window.addEventListener("focus", (function () {
             if (this.stopOnBlur) {
                 state.restart(true);
             }
@@ -162,7 +162,7 @@ let device = {
             if (this.autoFocus) {
                 this.focus();
             }
-        }, false);
+        }).bind(this), false);
 
 
         // Set the name of the hidden property and the change event for visibility
@@ -186,7 +186,7 @@ let device = {
         if (typeof (visibilityChange) === "string") {
             // add the corresponding event listener
             document.addEventListener(visibilityChange,
-                function () {
+                (function () {
                     if (document[hidden]) {
                         if (this.stopOnBlur) {
                             state.stop(true);
@@ -202,7 +202,7 @@ let device = {
                             state.resume(true);
                         }
                     }
-                }, false
+                }).bind(this), false
             );
         }
     },

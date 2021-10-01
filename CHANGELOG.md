@@ -13,6 +13,9 @@
 ### Deprecated
 - all deprecated API from the legacy melonJS version have been removed
 
+### Fixed
+- fix a regression with state pause & resume when losing & gaining window focus
+
 ## [9.1.1] - _2021-09-26_
 
 ### Fixed
