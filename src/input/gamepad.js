@@ -1,5 +1,5 @@
 import {getBindingKey, triggerKeyEvent} from "./keyboard.js";
-import event from "./../system/event.js";
+import * as event from "./../system/event.js";
 
 // Analog deadzone
 var deadzone = 0.1;

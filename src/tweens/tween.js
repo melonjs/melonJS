@@ -1,5 +1,5 @@
 import timer from "./../system/timer.js";
-import event from "./../system/event.js";
+import * as event from "./../system/event.js";
 import { world } from "./../game.js";
 import { Easing } from "./easing.js";
 import { Interpolation } from "./interpolation.js";

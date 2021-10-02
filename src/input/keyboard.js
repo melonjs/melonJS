@@ -1,5 +1,5 @@
 import {preventDefault as preventDefaultAction} from "./input.js";
-import event from "./../system/event.js";
+import * as event from "./../system/event.js";
 import device from "./../system/device.js";
 
 // corresponding actions

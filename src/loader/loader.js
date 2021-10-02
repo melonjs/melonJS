@@ -1,5 +1,5 @@
 import utils from "./../utils/utils.js";
-import event from "./../system/event.js";
+import * as event from "./../system/event.js";
 import device from "./../system/device.js";
 import * as audio from "./../audio/audio.js";
 import state from "./../state/state.js";

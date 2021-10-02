@@ -1,5 +1,5 @@
 import utils from "./../utils/utils.js";
-import event from "./../system/event.js";
+import * as event from "./../system/event.js";
 import state from "./../state/state.js";
 import loader from "./../loader/loader.js";
 import * as game from "./../game.js";

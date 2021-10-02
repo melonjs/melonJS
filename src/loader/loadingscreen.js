@@ -1,6 +1,6 @@
 import { world, viewport } from "./../game.js";
 import { createCanvas, renderer } from "./../video/video.js";
-import event from "./../system/event.js";
+import * as event from "./../system/event.js";
 import {nextPowerOfTwo} from "./../math/math.js";
 import pool from "./../system/pooling.js";
 import Renderable from "./../renderable/renderable.js";

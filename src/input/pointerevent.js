@@ -3,7 +3,7 @@ import {getBindingKey, triggerKeyEvent} from "./keyboard.js";
 import Vector2d from "./../math/vector2.js";
 import { renderer, scaleRatio } from "./../video/video.js";
 import utils from "./../utils/utils.js";
-import event from "./../system/event.js";
+import * as event from "./../system/event.js";
 import timer from "./../system/timer.js";
 import pool from "./../system/pooling.js";
 import device from "./../system/device.js";

@@ -2,7 +2,7 @@ import Vector2d from "./../math/vector2.js";
 import WebGLRenderer from "./webgl/webgl_renderer.js";
 import CanvasRenderer from "./canvas/canvas_renderer.js";
 import utils from "./../utils/utils.js";
-import event from "./../system/event.js";
+import * as event from "./../system/event.js";
 import { repaint } from "./../game.js";
 import device from "./../system/device.js";
 import { initialized, version } from "./../index.js";

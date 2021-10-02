@@ -3293,444 +3293,457 @@
 
     var MinPubSub = minpubsub_src.exports;
 
-    // external import
-
     /**
     * an event system based on a micro publish/subscribe messaging framework
     * @namespace event
     * @memberOf me
     */
-    var event = {
 
-        /**
-         * Channel Constant when the game is paused <br>
-         * Data passed : none <br>
-         * @public
-         * @constant
-         * @type String
-         * @name STATE_PAUSE
-         * @memberOf me.event
-         * @see me.event.subscribe
-         */
-        STATE_PAUSE : "me.state.onPause",
+    /**
+     * Channel Constant when the game is paused <br>
+     * Data passed : none <br>
+     * @public
+     * @constant
+     * @type String
+     * @name STATE_PAUSE
+     * @memberOf me.event
+     * @see me.event.subscribe
+     */
+    var STATE_PAUSE = "me.state.onPause";
 
-        /**
-         * Channel Constant for when the game is resumed <br>
-         * Data passed : {Number} time in ms the game was paused
-         * @public
-         * @constant
-         * @type String
-         * @name STATE_RESUME
-         * @memberOf me.event
-         * @see me.event.subscribe
-         */
-        STATE_RESUME : "me.state.onResume",
+    /**
+     * Channel Constant for when the game is resumed <br>
+     * Data passed : {Number} time in ms the game was paused
+     * @public
+     * @constant
+     * @type String
+     * @name STATE_RESUME
+     * @memberOf me.event
+     * @see me.event.subscribe
+     */
+    var STATE_RESUME = "me.state.onResume";
 
-        /**
-         * Channel Constant when the game is stopped <br>
-         * Data passed : none <br>
-         * @public
-         * @constant
-         * @type String
-         * @name STATE_STOP
-         * @memberOf me.event
-         * @see me.event.subscribe
-         */
-        STATE_STOP : "me.state.onStop",
+    /**
+     * Channel Constant when the game is stopped <br>
+     * Data passed : none <br>
+     * @public
+     * @constant
+     * @type String
+     * @name STATE_STOP
+     * @memberOf me.event
+     * @see me.event.subscribe
+     */
+    var STATE_STOP = "me.state.onStop";
 
-        /**
-         * Channel Constant for when the game is restarted <br>
-         * Data passed : {Number} time in ms the game was stopped
-         * @public
-         * @constant
-         * @type String
-         * @name STATE_RESTART
-         * @memberOf me.event
-         * @see me.event.subscribe
-         */
-        STATE_RESTART : "me.state.onRestart",
+    /**
+     * Channel Constant for when the game is restarted <br>
+     * Data passed : {Number} time in ms the game was stopped
+     * @public
+     * @constant
+     * @type String
+     * @name STATE_RESTART
+     * @memberOf me.event
+     * @see me.event.subscribe
+     */
+    var STATE_RESTART = "me.state.onRestart";
 
-        /**
-         * Channel Constant for when the video is initialized<br>
-         * Data passed : none <br>
-         * @public
-         * @constant
-         * @type String
-         * @name VIDEO_INIT
-         * @memberOf me.event
-         * @see me.video.init
-         * @see me.event.subscribe
-         */
-        VIDEO_INIT : "me.video.onInit",
-
-
-        /**
-         * Channel Constant for when the game manager is initialized <br>
-         * Data passed : none <br>
-         * @public
-         * @constant
-         * @type String
-         * @name GAME_INIT
-         * @memberOf me.event
-         * @see me.event.subscribe
-         */
-        GAME_INIT : "me.game.onInit",
-
-        /**
-         * Channel Constant for when the game manager is resetted <br>
-         * Data passed : none <br>
-         * @public
-         * @constant
-         * @type String
-         * @name GAME_RESET
-         * @memberOf me.event
-         * @see me.event.subscribe
-         */
-        GAME_RESET : "me.game.onReset",
-
-        /**
-         * Channel Constant for when the game manager is updated (start of the update loop) <br>
-         * Data passed : {Number} time the current time stamp
-         * @public
-         * @constant
-         * @type String
-         * @name GAME_UPDATE
-         * @memberOf me.event
-         * @see me.event.subscribe
-         */
-        GAME_UPDATE : "me.game.onUpdate",
-
-        /**
-         * Channel Constant for when a level is loaded <br>
-         * Data passed : {String} Level Name
-         * @public
-         * @constant
-         * @type String
-         * @name LEVEL_LOADED
-         * @memberOf me.event
-         * @see me.event.subscribe
-         */
-        LEVEL_LOADED : "me.game.onLevelLoaded",
-
-        /**
-         * Channel Constant for when everything has loaded <br>
-         * Data passed : none <br>
-         * @public
-         * @constant
-         * @type String
-         * @name LOADER_COMPLETE
-         * @memberOf me.event
-         * @see me.event.subscribe
-         */
-        LOADER_COMPLETE : "me.loader.onload",
-
-        /**
-         * Channel Constant for displaying a load progress indicator <br>
-         * Data passed : {Number} [0 .. 1], {Resource} resource object<br>
-         * @public
-         * @constant
-         * @type String
-         * @name LOADER_PROGRESS
-         * @memberOf me.event
-         * @see me.event.subscribe
-         */
-        LOADER_PROGRESS : "me.loader.onProgress",
-
-        /**
-         * Channel Constant for pressing a binded key <br>
-         * Data passed : {String} user-defined action, {Number} keyCode,
-         * {Boolean} edge state <br>
-         * Edge-state is for detecting "locked" key bindings. When a locked key
-         * is pressed and held, the first event will have the third argument
-         * set true. Subsequent events will continue firing with the third
-         * argument set false.
-         * @public
-         * @constant
-         * @type String
-         * @name KEYDOWN
-         * @memberOf me.event
-         * @see me.event.subscribe
-         * @example
-         * me.input.bindKey(me.input.KEY.X, "jump", true); // Edge-triggered
-         * me.input.bindKey(me.input.KEY.Z, "shoot"); // Level-triggered
-         * me.event.subscribe(me.event.KEYDOWN, function (action, keyCode, edge) {
-         *   // Checking bound keys
-         *   if (action === "jump") {
-         *       if (edge) {
-         *           this.doJump();
-         *       }
-         *
-         *       // Make character fall slower when holding the jump key
-         *       this.vel.y = this.body.gravity;
-         *   }
-         * });
-         */
-        KEYDOWN : "me.input.keydown",
-
-        /**
-         * Channel Constant for releasing a binded key <br>
-         * Data passed : {String} user-defined action, {Number} keyCode
-         * @public
-         * @constant
-         * @type String
-         * @name KEYUP
-         * @memberOf me.event
-         * @see me.event.subscribe
-         * @example
-         * me.event.subscribe(me.event.KEYUP, function (action, keyCode) {
-         *   // Checking unbound keys
-         *   if (keyCode == me.input.KEY.ESC) {
-         *       if (me.state.isPaused()) {
-         *           me.state.resume();
-         *       }
-         *       else {
-         *           me.state.pause();
-         *       }
-         *   }
-         * });
-         */
-        KEYUP : "me.input.keyup",
-
-        /**
-         * Channel Constant for when a gamepad is connected <br>
-         * Data passed : {Object} gamepad object
-         * @public
-         * @constant
-         * @type String
-         * @name GAMEPAD_CONNECTED
-         * @memberOf me.event
-         * @see me.event.subscribe
-         */
-        GAMEPAD_CONNECTED : "gamepad.connected",
-
-        /**
-         * Channel Constant for when a gamepad is disconnected <br>
-         * Data passed : {Object} gamepad object
-         * @public
-         * @constant
-         * @type String
-         * @name GAMEPAD_DISCONNECTED
-         * @memberOf me.event
-         * @see me.event.subscribe
-         */
-        GAMEPAD_DISCONNECTED : "gamepad.disconnected",
-
-        /**
-         * Channel Constant for when gamepad button/axis state is updated <br>
-         * Data passed : {Number} index <br>
-         * Data passed : {String} type : "axes" or "buttons" <br>
-         * Data passed : {Number} button <br>
-         * Data passed : {Number} current.value <br>
-         * Data passed : {Boolean} current.pressed
-         * @public
-         * @constant
-         * @type String
-         * @name GAMEPAD_UPDATE
-         * @memberOf me.event
-         * @see me.event.subscribe
-         */
-        GAMEPAD_UPDATE : "gamepad.update",
-
-        /**
-         * Channel Constant for pointermove events on the screen area <br>
-         * Data passed : {me.Pointer} a Pointer object
-         * @public
-         * @constant
-         * @type String
-         * @name POINTERMOVE
-         * @memberOf me.event
-         * @see me.event.subscribe
-         */
-        POINTERMOVE : "me.event.pointermove",
-
-        /**
-         * Channel Constant for dragstart events on a Draggable entity <br>
-         * Data passed:
-         * {Object} the drag event <br>
-         * {Object} the Draggable entity
-         * @public
-         * @constant
-         * @type String
-         * @name DRAGSTART
-         * @memberOf me.event
-         * @see me.event.subscribe
-         */
-        DRAGSTART : "me.game.dragstart",
-
-        /**
-         * Channel Constant for dragend events on a Draggable entity <br>
-         * Data passed:
-         * {Object} the drag event <br>
-         * {Object} the Draggable entity
-         * @public
-         * @constant
-         * @type String
-         * @name DRAGEND
-         * @memberOf me.event
-         * @see me.event.subscribe
-         */
-        DRAGEND : "me.game.dragend",
-
-        /**
-         * Channel Constant for when the (browser) window is resized <br>
-         * Data passed : {Event} Event object
-         * @public
-         * @constant
-         * @type String
-         * @name WINDOW_ONRESIZE
-         * @memberOf me.event
-         * @see me.event.subscribe
-         */
-        WINDOW_ONRESIZE : "window.onresize",
-
-        /**
-         * Channel Constant for when the canvas is resized <br>
-         * (this usually follows a WINDOW_ONRESIZE event).<br>
-         * Data passed : {Number} canvas width <br>
-         * Data passed : {Number} canvas height
-         * @public
-         * @constant
-         * @type String
-         * @name CANVAS_ONRESIZE
-         * @memberOf me.event
-         * @see me.event.subscribe
-         */
-        CANVAS_ONRESIZE : "canvas.onresize",
-
-        /**
-         * Channel Constant for when the viewport is resized <br>
-         * (this usually follows a WINDOW_ONRESIZE event, when using the `flex` scaling mode is used and after the viewport was updated).<br>
-         * Data passed : {Number} viewport width <br>
-         * Data passed : {Number} viewport height
-         * @public
-         * @constant
-         * @type String
-         * @name VIEWPORT_ONRESIZE
-         * @memberOf me.event
-         * @see me.event.subscribe
-         */
-        VIEWPORT_ONRESIZE : "viewport.onresize",
-
-        /**
-         * Channel Constant for when the device is rotated <br>
-         * Data passed : {Event} Event object <br>
-         * @public
-         * @constant
-         * @type String
-         * @name WINDOW_ONORIENTATION_CHANGE
-         * @memberOf me.event
-         * @see me.event.subscribe
-         */
-        WINDOW_ONORIENTATION_CHANGE : "window.orientationchange",
-
-        /**
-         * Channel Constant for when the (browser) window is scrolled <br>
-         * Data passed : {Event} Event object
-         * @public
-         * @constant
-         * @type String
-         * @name WINDOW_ONSCROLL
-         * @memberOf me.event
-         * @see me.event.subscribe
-         */
-        WINDOW_ONSCROLL : "window.onscroll",
-
-        /**
-         * Channel Constant for when the viewport position is updated <br>
-         * Data passed : {me.Vector2d} viewport position vector
-         * @public
-         * @constant
-         * @type String
-         * @name VIEWPORT_ONCHANGE
-         * @memberOf me.event
-         * @see me.event.subscribe
-         */
-        VIEWPORT_ONCHANGE : "viewport.onchange",
-
-        /**
-         * Channel Constant for when WebGL context is lost <br>
-         * Data passed : {me.WebGLRenderer} the current webgl renderer instance`
-         * @public
-         * @constant
-         * @type String
-         * @name WEBGL_ONCONTEXT_LOST
-         * @memberOf me.event
-         * @see me.event.subscribe
-         */
-        WEBGL_ONCONTEXT_LOST : "renderer.webglcontextlost",
-
-        /**
-         * Channel Constant for when WebGL context is restored <br>
-         * Data passed : {me.WebGLRenderer} the current webgl renderer instance`
-         * @public
-         * @constant
-         * @type String
-         * @name WEBGL_ONCONTEXT_RESTORED
-         * @memberOf me.event
-         * @see me.event.subscribe
-         */
-        WEBGL_ONCONTEXT_RESTORED : "renderer.webglcontextrestored",
-
-        /**
-         * Publish some data on a channel
-         * @name publish
-         * @memberOf me.event
-         * @public
-         * @function
-         * @param {String} channel The channel to publish on
-         * @param {Array} arguments The data to publish
-         *
-         * @example Publish stuff on '/some/channel'.
-         * Anything subscribed will be called with a function
-         * signature like: function (a,b,c){ ... }
-         *
-         * me.event.publish("/some/channel", ["a","b","c"]);
-         *
-         */
-        publish : MinPubSub.publish,
-
-        /**
-         * Register a callback on a named channel.
-         * @name subscribe
-         * @memberOf me.event
-         * @public
-         * @function
-         * @param {String} channel The channel to subscribe to
-         * @param {Function} callback The event handler, any time something is
-         * published on a subscribed channel, the callback will be called
-         * with the published array as ordered arguments
-         * @return {handle} A handle which can be used to unsubscribe this
-         * particular subscription
-         * @example
-         * me.event.subscribe("/some/channel", function (a, b, c){ doSomething(); });
-         */
-
-        subscribe : MinPubSub.subscribe,
-
-        /**
-         * Disconnect a subscribed function for a channel.
-         * @name unsubscribe
-         * @memberOf me.event
-         * @see me.event.subscribe
-         * @public
-         * @function
-         * @param {Array|String} handle The return value from a subscribe call or the
-         * name of a channel as a String
-         * @param {Function} [callback] The callback to be unsubscribed.
-         * @example
-         * var handle = me.event.subscribe("/some/channel", function (){});
-         * me.event.unsubscribe(handle);
-         *
-         * // Or alternatively ...
-         *
-         * var callback = function (){};
-         * me.event.subscribe("/some/channel", callback);
-         * me.event.unsubscribe("/some/channel", callback);
-         */
-        unsubscribe : MinPubSub.unsubscribe
+    /**
+     * Channel Constant for when the video is initialized<br>
+     * Data passed : none <br>
+     * @public
+     * @constant
+     * @type String
+     * @name VIDEO_INIT
+     * @memberOf me.event
+     * @see me.video.init
+     * @see me.event.subscribe
+     */
+    var VIDEO_INIT = "me.video.onInit";
 
 
-    };
+    /**
+     * Channel Constant for when the game manager is initialized <br>
+     * Data passed : none <br>
+     * @public
+     * @constant
+     * @type String
+     * @name GAME_INIT
+     * @memberOf me.event
+     * @see me.event.subscribe
+     */
+    var GAME_INIT = "me.game.onInit";
+
+    /**
+     * Channel Constant for when the game manager is resetted <br>
+     * Data passed : none <br>
+     * @public
+     * @constant
+     * @type String
+     * @name GAME_RESET
+     * @memberOf me.event
+     * @see me.event.subscribe
+     */
+    var GAME_RESET = "me.game.onReset";
+
+    /**
+     * Channel Constant for when the game manager is updated (start of the update loop) <br>
+     * Data passed : {Number} time the current time stamp
+     * @public
+     * @constant
+     * @type String
+     * @name GAME_UPDATE
+     * @memberOf me.event
+     * @see me.event.subscribe
+     */
+    var GAME_UPDATE = "me.game.onUpdate";
+
+    /**
+     * Channel Constant for when a level is loaded <br>
+     * Data passed : {String} Level Name
+     * @public
+     * @constant
+     * @type String
+     * @name LEVEL_LOADED
+     * @memberOf me.event
+     * @see me.event.subscribe
+     */
+    var LEVEL_LOADED = "me.game.onLevelLoaded";
+
+    /**
+     * Channel Constant for when everything has loaded <br>
+     * Data passed : none <br>
+     * @public
+     * @constant
+     * @type String
+     * @name LOADER_COMPLETE
+     * @memberOf me.event
+     * @see me.event.subscribe
+     */
+    var LOADER_COMPLETE = "me.loader.onload";
+
+    /**
+     * Channel Constant for displaying a load progress indicator <br>
+     * Data passed : {Number} [0 .. 1], {Resource} resource object<br>
+     * @public
+     * @constant
+     * @type String
+     * @name LOADER_PROGRESS
+     * @memberOf me.event
+     * @see me.event.subscribe
+     */
+    var LOADER_PROGRESS = "me.loader.onProgress";
+
+    /**
+     * Channel Constant for pressing a binded key <br>
+     * Data passed : {String} user-defined action, {Number} keyCode,
+     * {Boolean} edge state <br>
+     * Edge-state is for detecting "locked" key bindings. When a locked key
+     * is pressed and held, the first event will have the third argument
+     * set true. Subsequent events will continue firing with the third
+     * argument set false.
+     * @public
+     * @constant
+     * @type String
+     * @name KEYDOWN
+     * @memberOf me.event
+     * @see me.event.subscribe
+     * @example
+     * me.input.bindKey(me.input.KEY.X, "jump", true); // Edge-triggered
+     * me.input.bindKey(me.input.KEY.Z, "shoot"); // Level-triggered
+     * me.event.subscribe(me.event.KEYDOWN, function (action, keyCode, edge) {
+     *   // Checking bound keys
+     *   if (action === "jump") {
+     *       if (edge) {
+     *           this.doJump();
+     *       }
+     *
+     *       // Make character fall slower when holding the jump key
+     *       this.vel.y = this.body.gravity;
+     *   }
+     * });
+     */
+    var KEYDOWN = "me.input.keydown";
+
+    /**
+     * Channel Constant for releasing a binded key <br>
+     * Data passed : {String} user-defined action, {Number} keyCode
+     * @public
+     * @constant
+     * @type String
+     * @name KEYUP
+     * @memberOf me.event
+     * @see me.event.subscribe
+     * @example
+     * me.event.subscribe(me.event.KEYUP, function (action, keyCode) {
+     *   // Checking unbound keys
+     *   if (keyCode == me.input.KEY.ESC) {
+     *       if (me.state.isPaused()) {
+     *           me.state.resume();
+     *       }
+     *       else {
+     *           me.state.pause();
+     *       }
+     *   }
+     * });
+     */
+    var KEYUP = "me.input.keyup";
+
+    /**
+     * Channel Constant for when a gamepad is connected <br>
+     * Data passed : {Object} gamepad object
+     * @public
+     * @constant
+     * @type String
+     * @name GAMEPAD_CONNECTED
+     * @memberOf me.event
+     * @see me.event.subscribe
+     */
+    var GAMEPAD_CONNECTED = "gamepad.connected";
+
+    /**
+     * Channel Constant for when a gamepad is disconnected <br>
+     * Data passed : {Object} gamepad object
+     * @public
+     * @constant
+     * @type String
+     * @name GAMEPAD_DISCONNECTED
+     * @memberOf me.event
+     * @see me.event.subscribe
+     */
+    var GAMEPAD_DISCONNECTED = "gamepad.disconnected";
+
+    /**
+     * Channel Constant for when gamepad button/axis state is updated <br>
+     * Data passed : {Number} index <br>
+     * Data passed : {String} type : "axes" or "buttons" <br>
+     * Data passed : {Number} button <br>
+     * Data passed : {Number} current.value <br>
+     * Data passed : {Boolean} current.pressed
+     * @public
+     * @constant
+     * @type String
+     * @name GAMEPAD_UPDATE
+     * @memberOf me.event
+     * @see me.event.subscribe
+     */
+    var GAMEPAD_UPDATE = "gamepad.update";
+
+    /**
+     * Channel Constant for pointermove events on the screen area <br>
+     * Data passed : {me.Pointer} a Pointer object
+     * @public
+     * @constant
+     * @type String
+     * @name POINTERMOVE
+     * @memberOf me.event
+     * @see me.event.subscribe
+     */
+    var POINTERMOVE = "me.event.pointermove";
+
+    /**
+     * Channel Constant for dragstart events on a Draggable entity <br>
+     * Data passed:
+     * {Object} the drag event <br>
+     * {Object} the Draggable entity
+     * @public
+     * @constant
+     * @type String
+     * @name DRAGSTART
+     * @memberOf me.event
+     * @see me.event.subscribe
+     */
+    var DRAGSTART = "me.game.dragstart";
+
+    /**
+     * Channel Constant for dragend events on a Draggable entity <br>
+     * Data passed:
+     * {Object} the drag event <br>
+     * {Object} the Draggable entity
+     * @public
+     * @constant
+     * @type String
+     * @name DRAGEND
+     * @memberOf me.event
+     * @see me.event.subscribe
+     */
+    var DRAGEND = "me.game.dragend";
+
+    /**
+     * Channel Constant for when the (browser) window is resized <br>
+     * Data passed : {Event} Event object
+     * @public
+     * @constant
+     * @type String
+     * @name WINDOW_ONRESIZE
+     * @memberOf me.event
+     * @see me.event.subscribe
+     */
+    var WINDOW_ONRESIZE = "window.onresize";
+
+    /**
+     * Channel Constant for when the canvas is resized <br>
+     * (this usually follows a WINDOW_ONRESIZE event).<br>
+     * Data passed : {Number} canvas width <br>
+     * Data passed : {Number} canvas height
+     * @public
+     * @constant
+     * @type String
+     * @name CANVAS_ONRESIZE
+     * @memberOf me.event
+     * @see me.event.subscribe
+     */
+    var CANVAS_ONRESIZE = "canvas.onresize";
+
+    /**
+     * Channel Constant for when the viewport is resized <br>
+     * (this usually follows a WINDOW_ONRESIZE event, when using the `flex` scaling mode is used and after the viewport was updated).<br>
+     * Data passed : {Number} viewport width <br>
+     * Data passed : {Number} viewport height
+     * @public
+     * @constant
+     * @type String
+     * @name VIEWPORT_ONRESIZE
+     * @memberOf me.event
+     * @see me.event.subscribe
+     */
+    var VIEWPORT_ONRESIZE = "viewport.onresize";
+
+    /**
+     * Channel Constant for when the device is rotated <br>
+     * Data passed : {Event} Event object <br>
+     * @public
+     * @constant
+     * @type String
+     * @name WINDOW_ONORIENTATION_CHANGE
+     * @memberOf me.event
+     * @see me.event.subscribe
+     */
+    var WINDOW_ONORIENTATION_CHANGE = "window.orientationchange";
+
+    /**
+     * Channel Constant for when the (browser) window is scrolled <br>
+     * Data passed : {Event} Event object
+     * @public
+     * @constant
+     * @type String
+     * @name WINDOW_ONSCROLL
+     * @memberOf me.event
+     * @see me.event.subscribe
+     */
+    var WINDOW_ONSCROLL = "window.onscroll";
+
+    /**
+     * Channel Constant for when the viewport position is updated <br>
+     * Data passed : {me.Vector2d} viewport position vector
+     * @public
+     * @constant
+     * @type String
+     * @name VIEWPORT_ONCHANGE
+     * @memberOf me.event
+     * @see me.event.subscribe
+     */
+    var VIEWPORT_ONCHANGE = "viewport.onchange";
+
+    /**
+     * Channel Constant for when WebGL context is lost <br>
+     * Data passed : {me.WebGLRenderer} the current webgl renderer instance`
+     * @public
+     * @constant
+     * @type String
+     * @name WEBGL_ONCONTEXT_LOST
+     * @memberOf me.event
+     * @see me.event.subscribe
+     */
+    var WEBGL_ONCONTEXT_LOST = "renderer.webglcontextlost";
+
+    /**
+     * Channel Constant for when WebGL context is restored <br>
+     * Data passed : {me.WebGLRenderer} the current webgl renderer instance`
+     * @public
+     * @constant
+     * @type String
+     * @name WEBGL_ONCONTEXT_RESTORED
+     * @memberOf me.event
+     * @see me.event.subscribe
+     */
+    var WEBGL_ONCONTEXT_RESTORED = "renderer.webglcontextrestored";
+
+    /**
+     * Publish some data on a channel
+     * @function me.event.publish
+     * @param {String} channel The channel to publish on
+     * @param {Array} arguments The data to publish
+     * @example
+     * // Publish stuff on '/some/channel'.
+     * // Anything subscribed will be called with a function
+     * // signature like: function (a,b,c){ ... }
+     * me.event.publish("/some/channel", ["a","b","c"]);
+     */
+    function publish (channel, data) { MinPubSub.publish(channel, data); }
+    /**
+     * Register a callback on a named channel.
+     * @function me.event.subscribe
+     * @param {String} channel The channel to subscribe to
+     * @param {Function} callback The event handler, any time something is
+     * published on a subscribed channel, the callback will be called
+     * with the published array as ordered arguments
+     * @return {handle} A handle which can be used to unsubscribe this
+     * particular subscription
+     * @example
+     * me.event.subscribe("/some/channel", function (a, b, c){ doSomething(); });
+     */
+    function subscribe (channel, callback) { return MinPubSub.subscribe(channel, callback); }
+    /**
+     * Disconnect a subscribed function for a channel.
+     * @function me.event.unsubscribe
+     * @param {Array|String} handle The return value from a subscribe call or the
+     * name of a channel as a String
+     * @param {Function} [callback] The callback to be unsubscribed.
+     * @example
+     * var handle = me.event.subscribe("/some/channel", function (){});
+     * me.event.unsubscribe(handle);
+     *
+     * // Or alternatively ...
+     *
+     * var callback = function (){};
+     * me.event.subscribe("/some/channel", callback);
+     * me.event.unsubscribe("/some/channel", callback);
+     */
+    function unsubscribe (handle, callback) { MinPubSub.unsubscribe(handle, callback); }
+
+    var event = /*#__PURE__*/Object.freeze({
+        __proto__: null,
+        STATE_PAUSE: STATE_PAUSE,
+        STATE_RESUME: STATE_RESUME,
+        STATE_STOP: STATE_STOP,
+        STATE_RESTART: STATE_RESTART,
+        VIDEO_INIT: VIDEO_INIT,
+        GAME_INIT: GAME_INIT,
+        GAME_RESET: GAME_RESET,
+        GAME_UPDATE: GAME_UPDATE,
+        LEVEL_LOADED: LEVEL_LOADED,
+        LOADER_COMPLETE: LOADER_COMPLETE,
+        LOADER_PROGRESS: LOADER_PROGRESS,
+        KEYDOWN: KEYDOWN,
+        KEYUP: KEYUP,
+        GAMEPAD_CONNECTED: GAMEPAD_CONNECTED,
+        GAMEPAD_DISCONNECTED: GAMEPAD_DISCONNECTED,
+        GAMEPAD_UPDATE: GAMEPAD_UPDATE,
+        POINTERMOVE: POINTERMOVE,
+        DRAGSTART: DRAGSTART,
+        DRAGEND: DRAGEND,
+        WINDOW_ONRESIZE: WINDOW_ONRESIZE,
+        CANVAS_ONRESIZE: CANVAS_ONRESIZE,
+        VIEWPORT_ONRESIZE: VIEWPORT_ONRESIZE,
+        WINDOW_ONORIENTATION_CHANGE: WINDOW_ONORIENTATION_CHANGE,
+        WINDOW_ONSCROLL: WINDOW_ONSCROLL,
+        VIEWPORT_ONCHANGE: VIEWPORT_ONCHANGE,
+        WEBGL_ONCONTEXT_LOST: WEBGL_ONCONTEXT_LOST,
+        WEBGL_ONCONTEXT_RESTORED: WEBGL_ONCONTEXT_RESTORED,
+        publish: publish,
+        subscribe: subscribe,
+        unsubscribe: unsubscribe
+    });
 
     var howler = {};
 
@@ -10154,7 +10167,7 @@
         var action = _keyBindings[keyCode];
 
         // publish a message for keydown event
-        event.publish(event.KEYDOWN, [
+        publish(KEYDOWN, [
             action,
             keyCode,
             action ? !_keyLocked[action] : true
@@ -10191,7 +10204,7 @@
         var action = _keyBindings[keyCode];
 
         // publish a message for keydown event
-        event.publish(event.KEYUP, [ action, keyCode ]);
+        publish(KEYUP, [ action, keyCode ]);
 
         if (action) {
             var trigger = (typeof mouseButton !== "undefined") ? mouseButton : keyCode;
@@ -11203,7 +11216,7 @@
             if (POINTER_MOVE.includes(pointer.type)) {
                 pointer.gameX = pointer.gameLocalX = pointer.gameScreenX;
                 pointer.gameY = pointer.gameLocalY = pointer.gameScreenY;
-                event.publish(event.POINTERMOVE, [pointer]);
+                publish(POINTERMOVE, [pointer]);
             }
 
             // fetch valid candiates from the game world container
@@ -11874,7 +11887,7 @@
                     }
                 }
 
-                event.publish(event.GAMEPAD_UPDATE, [ index, "buttons", +button, current ]);
+                publish(GAMEPAD_UPDATE, [ index, "buttons", +button, current ]);
 
                 // Edge detection
                 if (!last.pressed && current.pressed) {
@@ -11918,7 +11931,7 @@
                 }
                 var pressed = (Math.abs(value) >= (deadzone + Math.abs(last[range].threshold)));
 
-                event.publish(event.GAMEPAD_UPDATE, [ index, "axes", +axis, value ]);
+                publish(GAMEPAD_UPDATE, [ index, "axes", +axis, value ]);
 
                 // Edge detection
                 if (!last[range].pressed && pressed) {
@@ -11948,7 +11961,7 @@
      * @ignore
      */
     window.addEventListener("gamepadconnected", function (e) {
-        event.publish(event.GAMEPAD_CONNECTED, [ e.gamepad ]);
+        publish(GAMEPAD_CONNECTED, [ e.gamepad ]);
     }, false);
 
     /**
@@ -11956,7 +11969,7 @@
      * @ignore
      */
     window.addEventListener("gamepaddisconnected", function (e) {
-        event.publish(event.GAMEPAD_DISCONNECTED, [ e.gamepad ]);
+        publish(GAMEPAD_DISCONNECTED, [ e.gamepad ]);
     }, false);
 
     /*
@@ -12067,7 +12080,7 @@
         // register to the the update event if not yet done and supported by the browser
         // if not supported, the function will fail silently (-> update loop won't be called)
         if (typeof updateEventHandler === "undefined" && typeof navigator.getGamepads === "function") {
-            updateEventHandler = event.subscribe(event.GAME_UPDATE, updateGamepads);
+            updateEventHandler = subscribe(GAME_UPDATE, updateGamepads);
         }
 
         // Allocate bindings if not defined
@@ -13199,7 +13212,7 @@
             // subscribe on the canvas resize event
             if (this.root === true) {
                 // Workaround for not updating container child-bounds automatically (it's expensive!)
-                event.subscribe(event.CANVAS_ONRESIZE, this.updateBounds.bind(this, true));
+                subscribe(CANVAS_ONRESIZE, this.updateBounds.bind(this, true));
             }
         }
 
@@ -15307,10 +15320,10 @@
             this.broadphase = new QuadTree(this.getBounds().clone(), collision.maxChildren, collision.maxDepth);
 
             // reset the world container on the game reset signal
-            event.subscribe(event.GAME_RESET, this.reset.bind(this));
+            subscribe(GAME_RESET, this.reset.bind(this));
 
             // update the broadband world bounds if a new level is loaded
-            event.subscribe(event.LEVEL_LOADED, (function () {
+            subscribe(LEVEL_LOADED, (function () {
                 // reset the quadtree
                 this.broadphase.clear(this.getBounds());
             }).bind(this));
@@ -15452,7 +15465,7 @@
         world = new World();
 
         // publish init notification
-        event.publish(event.GAME_INIT);
+        publish(GAME_INIT);
     }
     /**
      * reset the game Object manager<br>
@@ -15467,7 +15480,7 @@
         }
 
         // publish reset notification
-        event.publish(event.GAME_RESET);
+        publish(GAME_RESET);
 
         // Refresh internal variables for framerate  limiting
         updateFrameRate();
@@ -15524,7 +15537,7 @@
             frameCounter = 0;
 
             // game update event
-            event.publish(event.GAME_UPDATE, [ time ]);
+            publish(GAME_UPDATE, [ time ]);
 
             accumulator += timer.getDelta();
             accumulator = Math.min(accumulator, accumulatorMax);
@@ -15744,9 +15757,9 @@
             this._updateProjectionMatrix();
 
             // subscribe to the game reset event
-            event.subscribe(event.GAME_RESET, this.reset.bind(this));
+            subscribe(GAME_RESET, this.reset.bind(this));
             // subscribe to the canvas resize event
-            event.subscribe(event.CANVAS_ONRESIZE, this.resize.bind(this));
+            subscribe(CANVAS_ONRESIZE, this.resize.bind(this));
         }
 
         if ( Renderable ) Camera2d.__proto__ = Renderable;
@@ -15873,7 +15886,7 @@
             this._updateProjectionMatrix();
 
             // publish the viewport resize event
-            event.publish(event.VIEWPORT_ONRESIZE, [ this.width, this.height ]);
+            publish(VIEWPORT_ONRESIZE, [ this.width, this.height ]);
 
             return this;
         };
@@ -15993,7 +16006,7 @@
 
             //publish the VIEWPORT_ONCHANGE event if necessary
             if (_x !== this.pos.x || _y !== this.pos.y) {
-                event.publish(event.VIEWPORT_ONCHANGE, [this.pos]);
+                publish(VIEWPORT_ONCHANGE, [this.pos]);
             }
         };
 
@@ -16071,7 +16084,7 @@
 
             if (updated === true) {
                 //publish the corresponding message
-                event.publish(event.VIEWPORT_ONCHANGE, [this.pos]);
+                publish(VIEWPORT_ONCHANGE, [this.pos]);
             }
 
             // check for fade/flash effect
@@ -16520,13 +16533,13 @@
 
             this.anchorPoint.set(0, 0);
 
-            this.loaderHdlr = event.subscribe(
-                event.LOADER_PROGRESS,
+            this.loaderHdlr = subscribe(
+                LOADER_PROGRESS,
                 self.onProgressUpdate.bind(self)
             );
 
-            this.resizeHdlr = event.subscribe(
-                event.VIEWPORT_ONRESIZE,
+            this.resizeHdlr = subscribe(
+                VIEWPORT_ONRESIZE,
                 self.resize.bind(self)
             );
 
@@ -16571,8 +16584,8 @@
          */
         ProgressBar.prototype.onDestroyEvent = function onDestroyEvent () {
             // cancel the callback
-            event.unsubscribe(this.loaderHdlr);
-            event.unsubscribe(this.resizeHdlr);
+            unsubscribe(this.loaderHdlr);
+            unsubscribe(this.resizeHdlr);
             this.loaderHdlr = this.resizeHdlr = null;
         };
 
@@ -17007,7 +17020,7 @@
             this.set(this.DEFAULT, new Stage());
             // enable by default as soon as the display is initialized
             var _state = this;
-            event.subscribe(event.VIDEO_INIT, function () {
+            subscribe(VIDEO_INIT, function () {
                 _state.change(_state.DEFAULT, true);
             });
         },
@@ -17034,7 +17047,7 @@
                 _pauseTime = window.performance.now();
 
                 // publish the stop notification
-                event.publish(event.STATE_STOP);
+                publish(STATE_STOP);
                 // any callback defined ?
                 if (typeof(this.onStop) === "function") {
                     this.onStop();
@@ -17064,7 +17077,7 @@
                 _pauseTime = window.performance.now();
 
                 // publish the pause event
-                event.publish(event.STATE_PAUSE);
+                publish(STATE_PAUSE);
                 // any callback defined ?
                 if (typeof(this.onPause) === "function") {
                     this.onPause();
@@ -17096,7 +17109,7 @@
                 repaint();
 
                 // publish the restart notification
-                event.publish(event.STATE_RESTART, [ _pauseTime ]);
+                publish(STATE_RESTART, [ _pauseTime ]);
                 // any callback defined ?
                 if (typeof(this.onRestart) === "function") {
                     this.onRestart();
@@ -17125,7 +17138,7 @@
                 _pauseTime = window.performance.now() - _pauseTime;
 
                 // publish the resume event
-                event.publish(event.STATE_RESUME, [ _pauseTime ]);
+                publish(STATE_RESUME, [ _pauseTime ]);
                 // any callback defined ?
                 if (typeof(this.onResume) === "function") {
                     this.onResume();
@@ -20797,7 +20810,7 @@
         this.Texture = Texture;
 
         // reset the instantiated renderer on game reset
-        event.subscribe(event.GAME_RESET, function () {
+        subscribe(GAME_RESET, function () {
             renderer.reset();
         });
 
@@ -20991,7 +21004,7 @@
             this.currentScissor[2] = width;
             this.currentScissor[3] = height;
             // publish the corresponding event
-            event.publish(event.CANVAS_ONRESIZE, [ width, height ]);
+            publish(CANVAS_ONRESIZE, [ width, height ]);
         }
     };
 
@@ -25095,9 +25108,9 @@
             _setBounds(viewport.width, viewport.height);
             // Replace the resize handler
             if (onresize_handler) {
-                event.unsubscribe(onresize_handler);
+                unsubscribe(onresize_handler);
             }
-            onresize_handler = event.subscribe(event.VIEWPORT_ONRESIZE, _setBounds);
+            onresize_handler = subscribe(VIEWPORT_ONRESIZE, _setBounds);
         }
 
         //  set back auto-sort and auto-depth
@@ -25304,7 +25317,7 @@
         loadTMXLevel(levelId, options.container, options.flatten, options.setViewportBounds);
 
         // publish the corresponding message
-        event.publish(event.LEVEL_LOADED, [ levelId ]);
+        publish(LEVEL_LOADED, [ levelId ]);
 
         // fire the callback
         options.onLoaded(levelId);
@@ -25589,7 +25602,7 @@
                 var callback = onload || loader.onload;
                 setTimeout(function () {
                     callback();
-                    event.publish(event.LOADER_COMPLETE);
+                    publish(LOADER_COMPLETE);
                 }, 300);
             }
             else {
@@ -25929,7 +25942,7 @@
                 // pass the load progress in percent, as parameter
                 this.onProgress(progress, res);
             }
-            event.publish(event.LOADER_PROGRESS, [progress, res]);
+            publish(LOADER_PROGRESS, [progress, res]);
         },
 
         /**
@@ -28474,7 +28487,7 @@
         this.uniforms = extractUniforms(this.gl, this);
 
         // destroy the shader on context lost (will be recreated on context restore)
-        event.subscribe(event.WEBGL_ONCONTEXT_LOST, this.destroy.bind(this));
+        subscribe(WEBGL_ONCONTEXT_LOST, this.destroy.bind(this));
 
         return this;
     };
@@ -28682,8 +28695,8 @@
         gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, this.createIB(), gl.STATIC_DRAW);
 
         // register to the CANVAS resize channel
-        event.subscribe(
-            event.CANVAS_ONRESIZE, (function(width, height) {
+        subscribe(
+            CANVAS_ONRESIZE, (function(width, height) {
                 this.flush();
                 this.setViewport(0, 0, width, height);
             }).bind(this)
@@ -29267,15 +29280,15 @@
             // reference to this renderer
             var renderer = this;
             this.getScreenCanvas().addEventListener("webglcontextlost", function (e) {
-                event.preventDefault();
+                undefined();
                 renderer.isContextValid = false;
-                event.publish(event.WEBGL_ONCONTEXT_LOST, [ renderer ]);
+                publish(WEBGL_ONCONTEXT_LOST, [ renderer ]);
             }, false );
             // ctx.restoreContext()
             this.getScreenCanvas().addEventListener("webglcontextrestored", function (e) {
                 renderer.reset();
                 renderer.isContextValid = true;
-                event.publish(event.WEBGL_ONCONTEXT_RESTORED, [ renderer ]);
+                publish(WEBGL_ONCONTEXT_RESTORED, [ renderer ]);
             }, false );
 
             return this;
@@ -30529,7 +30542,7 @@
             "resize",
             utils.function.throttle(
                 function (e) {
-                    event.publish(event.WINDOW_ONRESIZE, [ e ]);
+                    publish(WINDOW_ONRESIZE, [ e ]);
                 }, 100
             ), false
         );
@@ -30538,7 +30551,7 @@
         window.addEventListener(
             "orientationchange",
             function (e) {
-                event.publish(event.WINDOW_ONORIENTATION_CHANGE, [ e ]);
+                publish(WINDOW_ONORIENTATION_CHANGE, [ e ]);
             },
             false
         );
@@ -30546,31 +30559,31 @@
         window.addEventListener(
             "onmozorientationchange",
             function (e) {
-                event.publish(event.WINDOW_ONORIENTATION_CHANGE, [ e ]);
+                publish(WINDOW_ONORIENTATION_CHANGE, [ e ]);
             },
             false
         );
         if (typeof window.screen !== "undefined") {
             // is this one required ?
             window.screen.onorientationchange = function (e) {
-                event.publish(event.WINDOW_ONORIENTATION_CHANGE, [ e ]);
+                publish(WINDOW_ONORIENTATION_CHANGE, [ e ]);
             };
         }
 
         // Automatically update relative canvas position on scroll
         window.addEventListener("scroll", utils.function.throttle(
             function (e) {
-                event.publish(event.WINDOW_ONSCROLL, [ e ]);
+                publish(WINDOW_ONSCROLL, [ e ]);
             }, 100
         ), false);
 
         // register to the channel
-        event.subscribe(
-            event.WINDOW_ONRESIZE,
+        subscribe(
+            WINDOW_ONRESIZE,
             onresize.bind(this)
         );
-        event.subscribe(
-            event.WINDOW_ONORIENTATION_CHANGE,
+        subscribe(
+            WINDOW_ONORIENTATION_CHANGE,
             onresize.bind(this)
         );
 
@@ -30627,7 +30640,7 @@
         }
 
         // notify the video has been initialized
-        event.publish(event.VIDEO_INIT);
+        publish(VIDEO_INIT);
 
         return true;
     }
@@ -31004,7 +31017,7 @@
                 this.reset();
                 now = last = 0;
                 // register to the game update event
-                event.subscribe(event.GAME_UPDATE, updateTimers);
+                subscribe(GAME_UPDATE, updateTimers);
             },
 
             /**
@@ -31870,7 +31883,7 @@
      * @ignore
      */
     Tween.prototype.onActivateEvent = function onActivateEvent () {
-        event.subscribe(event.STATE_RESUME, this._resumeCallback);
+        subscribe(STATE_RESUME, this._resumeCallback);
     };
 
     /**
@@ -31878,7 +31891,7 @@
      * @ignore
      */
     Tween.prototype.onDeactivateEvent = function onDeactivateEvent () {
-        event.unsubscribe(event.STATE_RESUME, this._resumeCallback);
+        unsubscribe(STATE_RESUME, this._resumeCallback);
     };
 
     /**
@@ -33500,7 +33513,7 @@
             this.repeat = settings.repeat || "repeat";
 
             // on context lost, all previous textures are destroyed
-            event.subscribe(event.WEBGL_ONCONTEXT_RESTORED, this.createPattern.bind(this));
+            subscribe(WEBGL_ONCONTEXT_RESTORED, this.createPattern.bind(this));
         }
 
        if ( Sprite ) ImageLayer.__proto__ = Sprite;
@@ -33562,9 +33575,9 @@
         ImageLayer.prototype.onActivateEvent = function onActivateEvent () {
             var _updateLayerFn = this.updateLayer.bind(this);
             // register to the viewport change notification
-            this.vpChangeHdlr = event.subscribe(event.VIEWPORT_ONCHANGE, _updateLayerFn);
-            this.vpResizeHdlr = event.subscribe(event.VIEWPORT_ONRESIZE, this.resize.bind(this));
-            this.vpLoadedHdlr = event.subscribe(event.LEVEL_LOADED, function() {
+            this.vpChangeHdlr = subscribe(VIEWPORT_ONCHANGE, _updateLayerFn);
+            this.vpResizeHdlr = subscribe(VIEWPORT_ONRESIZE, this.resize.bind(this));
+            this.vpLoadedHdlr = subscribe(LEVEL_LOADED, function() {
                 // force a first refresh when the level is loaded
                 _updateLayerFn(viewport.pos);
             });
@@ -33696,9 +33709,9 @@
         // called when the layer is removed from the game world or a container
         ImageLayer.prototype.onDeactivateEvent = function onDeactivateEvent () {
             // cancel all event subscriptions
-            event.unsubscribe(this.vpChangeHdlr);
-            event.unsubscribe(this.vpResizeHdlr);
-            event.unsubscribe(this.vpLoadedHdlr);
+            unsubscribe(this.vpChangeHdlr);
+            unsubscribe(this.vpResizeHdlr);
+            unsubscribe(this.vpLoadedHdlr);
         };
 
         /**
@@ -35307,24 +35320,24 @@
              * @ignore
              */
             this.mouseDown = function (e) {
-                this.translatePointerEvent(e, event.DRAGSTART);
+                this.translatePointerEvent(e, DRAGSTART);
             };
             /**
              * @ignore
              */
             this.mouseUp = function (e) {
-                this.translatePointerEvent(e, event.DRAGEND);
+                this.translatePointerEvent(e, DRAGEND);
             };
             this.onPointerEvent("pointerdown", this, this.mouseDown.bind(this));
             this.onPointerEvent("pointerup", this, this.mouseUp.bind(this));
             this.onPointerEvent("pointercancel", this, this.mouseUp.bind(this));
-            event.subscribe(event.POINTERMOVE, this.dragMove.bind(this));
-            event.subscribe(event.DRAGSTART, function (e, draggable) {
+            subscribe(POINTERMOVE, this.dragMove.bind(this));
+            subscribe(DRAGSTART, function (e, draggable) {
                 if (draggable === self) {
                     self.dragStart(e);
                 }
             });
-            event.subscribe(event.DRAGEND, function (e, draggable) {
+            subscribe(DRAGEND, function (e, draggable) {
                 if (draggable === self) {
                     self.dragEnd(e);
                 }
@@ -35341,7 +35354,7 @@
          * the event to
          */
         DraggableEntity.prototype.translatePointerEvent = function translatePointerEvent (e, translation) {
-            event.publish(translation, [e, this]);
+            publish(translation, [e, this]);
         };
 
         /**
@@ -35395,9 +35408,9 @@
          * @function
          */
         DraggableEntity.prototype.destroy = function destroy () {
-            event.unsubscribe(event.POINTERMOVE, this.dragMove);
-            event.unsubscribe(event.DRAGSTART, this.dragStart);
-            event.unsubscribe(event.DRAGEND, this.dragEnd);
+            unsubscribe(POINTERMOVE, this.dragMove);
+            unsubscribe(DRAGSTART, this.dragStart);
+            unsubscribe(DRAGEND, this.dragEnd);
             this.removePointerEvent("pointerdown", this);
             this.removePointerEvent("pointerup", this);
         };
@@ -35446,7 +35459,7 @@
              * @memberOf me.DroptargetEntity
              */
             this.checkMethod = null;
-            event.subscribe(event.DRAGEND, this.checkOnMe.bind(this));
+            subscribe(DRAGEND, this.checkOnMe.bind(this));
             this.checkMethod = this[this.CHECKMETHOD_OVERLAP];
         }
 
@@ -35491,7 +35504,7 @@
          * @param {Object} draggableEntity the draggable entity that is dropped
          */
         DroptargetEntity.prototype.drop = function drop () {
-            
+
         };
 
         /**
@@ -35501,7 +35514,7 @@
          * @function
          */
         DroptargetEntity.prototype.destroy = function destroy () {
-            event.unsubscribe(event.DRAGEND, this.checkOnMe);
+            unsubscribe(DRAGEND, this.checkOnMe);
         };
 
         return DroptargetEntity;

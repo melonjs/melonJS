@@ -6,7 +6,7 @@ import "./polyfill/requestAnimationFrame.js";
 import * as audio from "./audio/audio.js";
 import collision from "./physics/collision.js";
 import device from "./system/device.js";
-import event from "./system/event.js";
+import * as event from "./system/event.js";
 import * as game from "./game.js";
 import loader from "./loader/loader.js";
 import * as Math from "./math/math.js";

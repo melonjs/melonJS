@@ -9302,38 +9302,39 @@ export namespace device {
     const isFullscreen: boolean;
     const sound: boolean;
 }
-export namespace event {
-    const STATE_PAUSE: string;
-    const STATE_RESUME: string;
-    const STATE_STOP: string;
-    const STATE_RESTART: string;
-    const VIDEO_INIT: string;
-    const GAME_INIT: string;
-    const GAME_RESET: string;
-    const GAME_UPDATE: string;
-    const LEVEL_LOADED: string;
-    const LOADER_COMPLETE: string;
-    const LOADER_PROGRESS: string;
-    const KEYDOWN: string;
-    const KEYUP: string;
-    const GAMEPAD_CONNECTED: string;
-    const GAMEPAD_DISCONNECTED: string;
-    const GAMEPAD_UPDATE: string;
-    const POINTERMOVE: string;
-    const DRAGSTART: string;
-    const DRAGEND: string;
-    const WINDOW_ONRESIZE: string;
-    const CANVAS_ONRESIZE: string;
-    const VIEWPORT_ONRESIZE: string;
-    const WINDOW_ONORIENTATION_CHANGE: string;
-    const WINDOW_ONSCROLL: string;
-    const VIEWPORT_ONCHANGE: string;
-    const WEBGL_ONCONTEXT_LOST: string;
-    const WEBGL_ONCONTEXT_RESTORED: string;
-    const publish: any;
-    const subscribe: any;
-    const unsubscribe: any;
-}
+export var event: Readonly<{
+    __proto__: any;
+    STATE_PAUSE: string;
+    STATE_RESUME: string;
+    STATE_STOP: string;
+    STATE_RESTART: string;
+    VIDEO_INIT: string;
+    GAME_INIT: string;
+    GAME_RESET: string;
+    GAME_UPDATE: string;
+    LEVEL_LOADED: string;
+    LOADER_COMPLETE: string;
+    LOADER_PROGRESS: string;
+    KEYDOWN: string;
+    KEYUP: string;
+    GAMEPAD_CONNECTED: string;
+    GAMEPAD_DISCONNECTED: string;
+    GAMEPAD_UPDATE: string;
+    POINTERMOVE: string;
+    DRAGSTART: string;
+    DRAGEND: string;
+    WINDOW_ONRESIZE: string;
+    CANVAS_ONRESIZE: string;
+    VIEWPORT_ONRESIZE: string;
+    WINDOW_ONORIENTATION_CHANGE: string;
+    WINDOW_ONSCROLL: string;
+    VIEWPORT_ONCHANGE: string;
+    WEBGL_ONCONTEXT_LOST: string;
+    WEBGL_ONCONTEXT_RESTORED: string;
+    publish: typeof publish;
+    subscribe: typeof subscribe;
+    unsubscribe: typeof unsubscribe;
+}>;
 export var game: Readonly<{
     __proto__: any;
     readonly viewport: any;
@@ -12043,6 +12044,48 @@ declare function warning(deprecated: string, replacement: string, version: strin
  * @function apply
  */
 declare function apply(): void;
+/**
+ * Publish some data on a channel
+ * @function me.event.publish
+ * @param {String} channel The channel to publish on
+ * @param {Array} arguments The data to publish
+ * @example
+ * // Publish stuff on '/some/channel'.
+ * // Anything subscribed will be called with a function
+ * // signature like: function (a,b,c){ ... }
+ * me.event.publish("/some/channel", ["a","b","c"]);
+ */
+declare function publish(channel: string, data: any): void;
+/**
+ * Register a callback on a named channel.
+ * @function me.event.subscribe
+ * @param {String} channel The channel to subscribe to
+ * @param {Function} callback The event handler, any time something is
+ * published on a subscribed channel, the callback will be called
+ * with the published array as ordered arguments
+ * @return {handle} A handle which can be used to unsubscribe this
+ * particular subscription
+ * @example
+ * me.event.subscribe("/some/channel", function (a, b, c){ doSomething(); });
+ */
+declare function subscribe(channel: string, callback: Function): any;
+/**
+ * Disconnect a subscribed function for a channel.
+ * @function me.event.unsubscribe
+ * @param {Array|String} handle The return value from a subscribe call or the
+ * name of a channel as a String
+ * @param {Function} [callback] The callback to be unsubscribed.
+ * @example
+ * var handle = me.event.subscribe("/some/channel", function (){});
+ * me.event.unsubscribe(handle);
+ *
+ * // Or alternatively ...
+ *
+ * var callback = function (){};
+ * me.event.subscribe("/some/channel", callback);
+ * me.event.unsubscribe("/some/channel", callback);
+ */
+declare function unsubscribe(handle: any[] | string, callback?: Function): void;
 /**
  * Fired when a level is fully loaded and <br>
  * and all entities instantiated. <br>

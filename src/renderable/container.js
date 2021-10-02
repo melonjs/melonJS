@@ -1,6 +1,6 @@
 import utils from "./../utils/utils.js";
 import * as game from "./../game.js";
-import event from "./../system/event.js";
+import * as event from "./../system/event.js";
 import pool from "./../system/pooling.js";
 import state from "./../state/state.js";
 import Renderable from "./renderable.js";

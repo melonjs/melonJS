@@ -1,6 +1,6 @@
 import Vector2d from "./../math/vector2.js";
 import * as input from "./../input/input.js";
-import event from "./../system/event.js";
+import * as event from "./../system/event.js";
 import Entity from "./entity.js";
 
 /**

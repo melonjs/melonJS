@@ -1,4 +1,4 @@
-import event from "./../system/event.js";
+import * as event from "./../system/event.js";
 import Entity from "./entity.js";
 
 /**
@@ -92,7 +92,7 @@ class DroptargetEntity extends Entity {
      * @param {Object} draggableEntity the draggable entity that is dropped
      */
     drop() {
-        
+
     }
 
     /**

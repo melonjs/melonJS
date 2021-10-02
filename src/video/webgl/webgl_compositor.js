@@ -1,6 +1,6 @@
 import Vector2d from "./../../math/vector2.js";
 import GLShader from "./glshader.js";
-import event from "./../../system/event.js";
+import * as event from "./../../system/event.js";
 import { isPowerOfTwo } from "./../../math/math.js";
 
 import primitiveVertex from "./shaders/primitive.vert";

@@ -1,5 +1,5 @@
 import { renderer } from "./video/video.js";
-import event from "./system/event.js";
+import * as event from "./system/event.js";
 import timer from "./system/timer.js";
 import state from "./state/state.js";
 import World from "./physics/world.js";

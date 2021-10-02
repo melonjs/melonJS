@@ -6,7 +6,7 @@ import Renderer from "./../renderer.js";
 import TextureCache from "./../texture_cache.js";
 import {Texture, createAtlas } from "./../texture.js";
 import { createCanvas, renderer } from "./../video.js";
-import event from "./../../system/event.js";
+import * as event from "./../../system/event.js";
 import pool from "./../../system/pooling.js";
 import { isPowerOfTwo, nextPowerOfTwo, TAU } from "./../../math/math.js";
 

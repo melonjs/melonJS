@@ -6,7 +6,7 @@ import Matrix2d from "./../math/matrix2.js";
 import Matrix3d from "./../math/matrix3.js";
 import Rect from "./../shapes/rectangle.js";
 import { renderer } from "./../video/video.js";
-import event from "./../system/event.js";
+import * as event from "./../system/event.js";
 import pool from "./../system/pooling.js";
 import Renderable from "./../renderable/renderable.js";
 import {clamp, toBeCloseTo} from "./../math/math.js";

@@ -1,6 +1,6 @@
 import { pauseTrack, resumeTrack } from "./../audio/audio.js";
 import utils from "./../utils/utils.js";
-import event from "./../system/event.js";
+import * as event from "./../system/event.js";
 import timer from "./../system/timer.js";
 import * as game from "./../game.js";
 import Stage from "./../state/stage.js";
