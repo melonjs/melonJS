@@ -359,7 +359,7 @@ var Polygon = window.Jay.extend({
         this.pos.x = _x;
         this.pos.y = _y;
         this.updateBounds();
-    }
+    },
 
     /**
      * Returns true if the polygon contains the given point.
