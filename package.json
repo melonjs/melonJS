@@ -57,7 +57,7 @@
   },
   "devDependencies": {
     "@rollup/plugin-buble": "^0.21.3",
-    "@rollup/plugin-commonjs": "^20.0.0",
+    "@rollup/plugin-commonjs": "^21.0.0",
     "@rollup/plugin-node-resolve": "^13.0.4",
     "@rollup/plugin-replace": "^3.0.0",
     "cheerio": "^1.0.0-rc.10",
@@ -73,7 +73,7 @@
     "karma-jasmine": "^4.0.1",
     "karma-nyan-reporter": "0.2.5",
     "qs": "^6.10.1",
-    "rollup": "^2.57.0",
+    "rollup": "^2.58.0",
     "rollup-plugin-bundle-size": "^1.0.3",
     "rollup-plugin-string": "^3.0.0",
     "terser": "^5.8.0",
