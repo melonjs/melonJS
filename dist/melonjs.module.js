@@ -1,5 +1,5 @@
 /*!
- * melonJS Game Engine - v9.1.1
+ * melonJS Game Engine - v9.1.2
  * http://www.melonjs.org
  * melonjs is licensed under the MIT License.
  * http://www.opensource.org/licenses/mit-license
@@ -10592,6 +10592,37 @@ var Polygon = window.Jay.extend({
     },
 
     /**
+     * Shifts the Polygon to the given position vector.
+     * @name shift
+     * @memberOf me.Polygon
+     * @function
+     * @param {me.Vector2d} position
+     */
+    /**
+     * Shifts the Polygon to the given x, y position.
+     * @name shift
+     * @memberOf me.Polygon
+     * @function
+     * @param {Number} x
+     * @param {Number} y
+     */
+    shift() {
+        var _x, _y;
+        if (arguments.length === 2) {
+            // x, y
+            _x = arguments[0];
+            _y = arguments[1];
+        } else {
+            // vector
+            _x = arguments[0].x;
+            _y = arguments[0].y;
+        }
+        this.pos.x = _x;
+        this.pos.y = _y;
+        this.updateBounds();
+    },
+
+    /**
      * Returns true if the polygon contains the given point.
      * (Note: it is highly recommended to first do a hit test on the corresponding <br>
      *  bounding rect, as the function can be highly consuming with complex shapes)
@@ -10799,67 +10830,6 @@ var Rect = Polygon.extend({
      */
     copy : function (rect) {
         return this.setShape(rect.pos.x, rect.pos.y, rect.width, rect.height);
-    },
-
-    /**
-     * translate the rect by the specified offset
-     * @name translate
-     * @memberOf me.Rect.prototype
-     * @function
-     * @param {Number} x x offset
-     * @param {Number} y y offset
-     * @return {me.Rect} this rectangle
-     */
-    /**
-     * translate the rect by the specified vector
-     * @name translate
-     * @memberOf me.Rect.prototype
-     * @function
-     * @param {me.Vector2d} v vector offset
-     * @return {me.Rect} this rectangle
-     */
-    translate : function () {
-        var _x, _y;
-
-        if (arguments.length === 2) {
-            // x, y
-            _x = arguments[0];
-            _y = arguments[1];
-        } else {
-            // vector
-            _x = arguments[0].x;
-            _y = arguments[0].y;
-        }
-
-        this.pos.x += _x;
-        this.pos.y += _y;
-
-        return this;
-    },
-
-    /**
-     * Shifts the rect to the given position vector.
-     * @name shift
-     * @memberOf me.Rect
-     * @function
-     * @param {me.Vector2d} position
-     */
-    /**
-     * Shifts the rect to the given x, y position.
-     * @name shift
-     * @memberOf me.Rect
-     * @function
-     * @param {Number} x
-     * @param {Number} y
-     */
-    shift : function () {
-        if (arguments.length === 2) {
-            // x, y
-            this.pos.set(arguments[0], arguments[1]);
-        } else {
-            // vector
-            this.pos.setV(arguments[0]);
-        }
     },
 
     /**
@@ -28268,16 +28238,16 @@ let device = {
         }
 
         // set pause/stop action on losing focus
-        window.addEventListener("blur", function () {
+        window.addEventListener("blur", (function () {
             if (this.stopOnBlur) {
                 state$1.stop(true);
             }
             if (this.pauseOnBlur) {
                 state$1.pause(true);
             }
-        }, false);
+        }).bind(this), false);
         // set restart/resume action on gaining focus
-        window.addEventListener("focus", function () {
+        window.addEventListener("focus", (function () {
             if (this.stopOnBlur) {
                 state$1.restart(true);
             }
@@ -28288,7 +28258,7 @@ let device = {
             if (this.autoFocus) {
                 this.focus();
             }
-        }, false);
+        }).bind(this), false);
 
 
         // Set the name of the hidden property and the change event for visibility
@@ -28312,7 +28282,7 @@ let device = {
         if (typeof (visibilityChange) === "string") {
             // add the corresponding event listener
             document.addEventListener(visibilityChange,
-                function () {
+                (function () {
                     if (document[hidden]) {
                         if (this.stopOnBlur) {
                             state$1.stop(true);
@@ -28328,7 +28298,7 @@ let device = {
                             state$1.resume(true);
                         }
                     }
-                }, false
+                }).bind(this), false
             );
         }
     },
@@ -32368,10 +32338,10 @@ var plugin = {
              * this can be overridden by the plugin
              * @public
              * @type String
-             * @default "9.1.1"
+             * @default "9.1.2"
              * @name me.plugin.Base#version
              */
-            this.version = "9.1.1";
+            this.version = "9.1.2";
         }
     }),
 
@@ -36623,7 +36593,7 @@ var Jay = window.Jay;
  * @name version
  * @type {string}
  */
-const version = "9.1.1";
+const version = "9.1.2";
 
 
 /**
