@@ -3,8 +3,6 @@
 * https://github.com/tweenjs/tween.js
 */
 
-/* eslint-disable quotes, keyword-spacing, comma-spacing, no-return-assign */
-
 /**
  * Interpolation Function :<br>
  * <p>
@@ -72,7 +70,7 @@ export let Interpolation = {
 
         },
         /** @ignore */
-        Bernstein: function ( n , i ) {
+        Bernstein: function ( n, i ) {
 
             var fc = Interpolation.Utils.Factorial;
             return fc( n ) / fc( i ) / fc( n - i );
@@ -88,7 +86,8 @@ export let Interpolation = {
                 var s = 1, i;
                 if ( a[ n ] ) return a[ n ];
                 for ( i = n; i > 1; i-- ) s *= i;
-                return a[ n ] = s;
+                a[ n ] = s;
+                return s;
 
             };
 
@@ -98,11 +97,7 @@ export let Interpolation = {
 
             var v0 = ( p2 - p0 ) * 0.5, v1 = ( p3 - p1 ) * 0.5, t2 = t * t, t3 = t * t2;
             return ( 2 * p1 - 2 * p2 + v0 + v1 ) * t3 + ( - 3 * p1 + 3 * p2 - 2 * v0 - v1 ) * t2 + v0 * t + p1;
-
         }
-
     }
 
 };
-
-/* eslint-enable quotes, keyword-spacing, comma-spacing, no-return-assign */

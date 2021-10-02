@@ -325,5 +325,3 @@ export let Easing = {
     }
 
 };
-
-/* eslint-enable quotes, keyword-spacing, comma-spacing, no-return-assign */
