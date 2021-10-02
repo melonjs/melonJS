@@ -1,6 +1,6 @@
 import * as SAT from "./sat.js";
 import Vector2d from "./../math/vector2.js";
-import game from "./../game.js";
+import { world } from "./../game.js";
 
 // a dummy object when using Line for raycasting
 var dummyObj = {
@@ -224,8 +224,8 @@ var collision = {
         var collision = 0;
         var response = responseObject || this.response;
 
-        // retreive a list of potential colliding objects
-        var candidates = game.world.broadphase.retrieve(objA);
+        // retreive a list of potential colliding objects from the game world
+        var candidates = world.broadphase.retrieve(objA);
 
         for (var i = candidates.length, objB; i--, (objB = candidates[i]);) {
 
@@ -316,8 +316,8 @@ var collision = {
         var collision = 0;
         var result = resultArray || [];
 
-        // retrieve a list of potential colliding objects
-        var candidates = game.world.broadphase.retrieve(line);
+        // retrieve a list of potential colliding objects from the game world
+        var candidates = world.broadphase.retrieve(line);
 
         for (var i = candidates.length, objB; i--, (objB = candidates[i]);) {
 

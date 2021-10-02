@@ -1,5 +1,5 @@
 import Container from "./../renderable/container.js";
-import game from "./../game.js";
+import { viewport } from "./../game.js";
 
 /**
  * Particle Container Object.
@@ -18,10 +18,10 @@ class ParticleContainer extends Container {
     constructor(emitter) {
         // call the super constructor
         super(
-            game.viewport.pos.x,
-            game.viewport.pos.y,
-            game.viewport.width,
-            game.viewport.height
+            viewport.pos.x,
+            viewport.pos.y,
+            viewport.width,
+            viewport.height
         );
 
         // don't sort the particles by z-index
@@ -61,7 +61,7 @@ class ParticleContainer extends Container {
         this._dt = 0;
 
         // Update particles and remove them if they are dead
-        var viewport = game.viewport;
+        var viewport = viewport;
         for (var i = this.children.length - 1; i >= 0; --i) {
             var particle = this.children[i];
             particle.inViewport = viewport.isVisible(particle, this.floating);

@@ -1,6 +1,6 @@
 import timer from "./../system/timer.js";
 import event from "./../system/event.js";
-import game from "./../game.js";
+import { world } from "./../game.js";
 import { Easing } from "./easing.js";
 import { Interpolation } from "./interpolation.js";
 
@@ -195,7 +195,7 @@ class Tween {
             _onStartCallbackFired = false;
 
             // add the tween to the object pool on start
-            game.world.addChild(this);
+            world.addChild(this);
 
             _startTime = (typeof(_time) === 'undefined' ? timer.getTime() : _time) + _delayTime;
 
@@ -237,7 +237,7 @@ class Tween {
          */
         this.stop = function () {
             // remove the tween from the world container
-            game.world.removeChildNow(this);
+            world.removeChildNow(this);
             return this;
         };
 
@@ -469,7 +469,7 @@ class Tween {
 
                 } else {
                     // remove the tween from the world container
-                    game.world.removeChildNow(this);
+                    world.removeChildNow(this);
 
                     if ( _onCompleteCallback !== null ) {
 

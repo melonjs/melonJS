@@ -1,7 +1,7 @@
 import { renderer } from "./../video/video.js";
 import event from "./../system/event.js";
 import pool from "./../system/pooling.js";
-import game from "./../game.js";
+import { viewport } from "./../game.js";
 import Sprite from "./sprite.js";
 import utils from "./../utils/utils.js";
 
@@ -147,7 +147,7 @@ class ImageLayer extends Sprite {
                 this.repeatY = true;
                 break;
         }
-        this.resize(game.viewport.width, game.viewport.height);
+        this.resize(viewport.width, viewport.height);
         this.createPattern();
     }
 
@@ -160,13 +160,13 @@ class ImageLayer extends Sprite {
         this.vpResizeHdlr = event.subscribe(event.VIEWPORT_ONRESIZE, this.resize.bind(this));
         this.vpLoadedHdlr = event.subscribe(event.LEVEL_LOADED, function() {
             // force a first refresh when the level is loaded
-            _updateLayerFn(game.viewport.pos);
+            _updateLayerFn(viewport.pos);
         });
         // in case the level is not added to the root container,
         // the onActivateEvent call happens after the LEVEL_LOADED event
         // so we need to force a first update
         if (this.ancestor.root !== true) {
-            this.updateLayer(game.viewport.pos);
+            this.updateLayer(viewport.pos);
         }
     }
 
@@ -208,8 +208,7 @@ class ImageLayer extends Sprite {
             return;
         }
 
-        var viewport = game.viewport,
-            width = this.width,
+        var width = this.width,
             height = this.height,
             bw = viewport.bounds.width,
             bh = viewport.bounds.height,
@@ -263,8 +262,7 @@ class ImageLayer extends Sprite {
      * @ignore
      */
     draw(renderer) {
-        var viewport = game.viewport,
-            width = this.width,
+        var width = this.width,
             height = this.height,
             bw = viewport.bounds.width,
             bh = viewport.bounds.height,

@@ -1,4 +1,4 @@
-import game from "./../game.js";
+import { world, viewport } from "./../game.js";
 import { createCanvas, renderer } from "./../video/video.js";
 import event from "./../system/event.js";
 import {nextPowerOfTwo} from "./../math/math.js";
@@ -57,10 +57,10 @@ class ProgressBar extends Renderable {
 
         // draw the progress bar
         renderer.setColor("black");
-        renderer.fillRect(this.pos.x, game.viewport.centerY, renderer.getWidth(), this.barHeight / 2);
+        renderer.fillRect(this.pos.x, viewport.centerY, renderer.getWidth(), this.barHeight / 2);
 
         renderer.setColor("#55aa00");
-        renderer.fillRect(this.pos.x, game.viewport.centerY, this.progress, this.barHeight / 2);
+        renderer.fillRect(this.pos.x, viewport.centerY, this.progress, this.barHeight / 2);
     }
 
     /**
@@ -208,7 +208,7 @@ var defaultLoadingScreen = new Stage({
         var barHeight = 8;
 
         // progress bar
-        game.world.addChild(new ProgressBar(
+        world.addChild(new ProgressBar(
             0,
             renderer.getHeight() / 2,
             renderer.getWidth(),
@@ -216,14 +216,14 @@ var defaultLoadingScreen = new Stage({
         ), 1);
 
         // melonJS logo
-        game.world.addChild(new IconLogo(
+        world.addChild(new IconLogo(
             renderer.getWidth() / 2,
             (renderer.getHeight() / 2) - (barHeight * 2) - 35
 
         ), 2);
 
         // melonJS text
-        game.world.addChild(new TextLogo(
+        world.addChild(new TextLogo(
             renderer.getWidth(),
             renderer.getHeight()
         ), 2);

@@ -11,7 +11,7 @@ import Pointer from "./pointer.js";
 import Rect from "./../shapes/rectangle.js";
 import Container from "./../renderable/container.js";
 import Renderable from "./../renderable/renderable.js";
-import game from "./../game.js";
+import { world, viewport } from "./../game.js";
 
 
 /**
@@ -279,10 +279,11 @@ function dispatchEvent(normalizedEvents) {
             event.publish(event.POINTERMOVE, [pointer]);
         }
 
-        var candidates = game.world.broadphase.retrieve(currentPointer, Container.prototype._sortReverseZ);
+        // fetch valid candiates from the game world container
+        var candidates = world.broadphase.retrieve(currentPointer, Container.prototype._sortReverseZ);
 
-        // add the main viewport to the list of candidates
-        candidates = candidates.concat([ game.viewport ]);
+        // add the main game viewport to the list of candidates
+        candidates = candidates.concat([ viewport ]);
 
         for (var c = candidates.length, candidate; c--, (candidate = candidates[c]);) {
             if (eventHandlers.has(candidate) && (candidate.isKinematic !== true)) {

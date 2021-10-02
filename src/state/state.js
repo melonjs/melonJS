@@ -2,7 +2,7 @@ import { pauseTrack, resumeTrack } from "./../audio/audio.js";
 import utils from "./../utils/utils.js";
 import event from "./../system/event.js";
 import timer from "./../system/timer.js";
-import game from "./../game.js";
+import * as game from "./../game.js";
 import Stage from "./../state/stage.js";
 import defaultLoadingScreen from "./../loader/loadingscreen.js";
 

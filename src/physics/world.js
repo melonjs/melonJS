@@ -1,5 +1,4 @@
 import Vector2d from "./../math/vector2.js";
-import game from "./../game.js";
 import event from "./../system/event.js";
 import QuadTree from "./quadtree.js";
 import Container from "./../renderable/container.js";
@@ -80,10 +79,10 @@ class World extends Container {
         event.subscribe(event.GAME_RESET, this.reset.bind(this));
 
         // update the broadband world bounds if a new level is loaded
-        event.subscribe(event.LEVEL_LOADED, function () {
+        event.subscribe(event.LEVEL_LOADED, (function () {
             // reset the quadtree
-            game.world.broadphase.clear(game.world.getBounds());
-        });
+            this.broadphase.clear(this.getBounds());
+        }).bind(this));
     }
 
     /**

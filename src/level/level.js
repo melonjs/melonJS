@@ -2,7 +2,7 @@ import utils from "./../utils/utils.js";
 import event from "./../system/event.js";
 import state from "./../state/state.js";
 import loader from "./../loader/loader.js";
-import game from "./../game.js";
+import * as game from "./../game.js";
 import TMXTileMap from "./tiled/TMXTileMap.js";
 
 

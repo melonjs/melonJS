@@ -3,7 +3,7 @@ import collision from "./../physics/collision.js";
 import Body from "./../physics/body.js";
 import Rect from "./../shapes/rectangle.js";
 import level from "./../level/level.js";
-import game from "./../game.js";
+import { world, viewport } from "./../game.js";
 
 /**
  * classdesc
@@ -85,7 +85,7 @@ class Trigger extends Renderable {
      getTriggerSettings() {
          // Lookup for the container instance
          if (typeof(this.triggerSettings.container) === "string") {
-             this.triggerSettings.container = game.world.getChildByName(this.triggerSettings.container)[0];
+             this.triggerSettings.container = world.getChildByName(this.triggerSettings.container)[0];
          }
          return this.triggerSettings;
      }
@@ -95,7 +95,7 @@ class Trigger extends Renderable {
      */
     onFadeComplete() {
         level.load(this.gotolevel, this.getTriggerSettings());
-        game.viewport.fadeOut(this.fade, this.duration);
+        viewport.fadeOut(this.fade, this.duration);
     }
 
     /**
@@ -116,7 +116,7 @@ class Trigger extends Renderable {
             if (this.fade && this.duration) {
                 if (!this.fading) {
                     this.fading = true;
-                    game.viewport.fadeIn(this.fade, this.duration,
+                    viewport.fadeIn(this.fade, this.duration,
                             this.onFadeComplete.bind(this));
                 }
             } else {

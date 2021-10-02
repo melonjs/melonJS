@@ -1,7 +1,7 @@
 import Vector2d from "./../math/vector2.js";
 import device from "./../system/device.js";
 import Rect from "./../shapes/rectangle.js";
-import game from "./../game.js";
+import { viewport } from "./../game.js";
 import { globalToLocal } from "./input.js";
 
 
@@ -321,9 +321,9 @@ class Pointer extends Rect {
         this.gameScreenX = this.pos.x;
         this.gameScreenY = this.pos.y;
 
-        // get the current screen to world offset
-        if (typeof game.viewport !== "undefined") {
-            game.viewport.localToWorld(this.gameScreenX, this.gameScreenY, viewportOffset);
+        // get the current screen to game world offset
+        if (typeof viewport !== "undefined") {
+            viewport.localToWorld(this.gameScreenX, this.gameScreenY, viewportOffset);
         }
 
         /* Initialize the two coordinate space properties. */

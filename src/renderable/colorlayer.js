@@ -1,5 +1,5 @@
 import pool from "./../system/pooling.js";
-import game from "./../game.js";
+import { viewport } from "./../game.js";
 import Renderable from "./renderable.js";
 
 
@@ -51,7 +51,7 @@ class ColorLayer extends Renderable {
      */
     draw(renderer, rect) {
         var color = renderer.getColor();
-        var vpos = game.viewport.pos;
+        var vpos = viewport.pos;
         renderer.setColor(this.color);
         renderer.fillRect(
             rect.left - vpos.x, rect.top - vpos.y,

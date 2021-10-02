@@ -4,7 +4,7 @@ import * as TMXUtils from "./TMXUtils.js";
 import Tile from "./TMXTile.js";
 import Renderable from "./../../renderable/renderable.js";
 import CanvasRenderer from "./../../video/canvas/canvas_renderer";
-import game from "./../../game.js";
+import { world } from "./../../game.js";
 
 /**
  * Create required arrays for the given layer object
@@ -176,7 +176,7 @@ class TMXLayer extends Renderable {
 
         // check for the correct rendering method
         if (typeof (this.preRender) === "undefined") {
-            this.preRender = game.world.preRender;
+            this.preRender = world.preRender;
         }
 
         // set a renderer
