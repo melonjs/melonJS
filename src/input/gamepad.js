@@ -5,17 +5,6 @@ import event from "./../system/event.js";
 var deadzone = 0.1;
 
 /**
- * A function that returns a normalized value in range [-1.0..1.0], or 0.0 if the axis is unknown.
- * @callback me.input~normalize_fn
- * @param {Number} value The raw value read from the gamepad driver
- * @param {Number} axis The axis index from the standard mapping, or -1 if not an axis
- * @param {Number} button The button index from the standard mapping, or -1 if not a button
- */
-function defaultNormalizeFn(value) {
-    return value;
-}
-
-/**
  * Normalize axis values for wired Xbox 360
  * @ignore
  */
@@ -82,7 +71,7 @@ function addMapping(id, mapping) {
     mapping.analog = mapping.analog || mapping.buttons.map(function () {
         return -1;
     });
-    mapping.normalize_fn = mapping.normalize_fn || defaultNormalizeFn;
+    mapping.normalize_fn = mapping.normalize_fn || function (value) { return value; };
 
     remap.set(expanded_id, mapping);
     remap.set(sparse_id, mapping);
@@ -484,7 +473,7 @@ export function setGamepadDeadzone(value) {
  * @param {Number[]} mapping.axes Standard analog control stick axis locations
  * @param {Number[]} mapping.buttons Standard digital button locations
  * @param {Number[]} [mapping.analog] Analog axis locations for buttons
- * @param {me.input~normalize_fn} [mapping.normalize_fn] Axis normalization function
+ * @param {Function} [mapping.normalize_fn] a function that returns a normalized value in range [-1.0..1.0] for the given value, axis and button
  * @example
  * // A weird controller that has its axis mappings reversed
  * me.input.setGamepadMapping("Generic USB Controller", {
