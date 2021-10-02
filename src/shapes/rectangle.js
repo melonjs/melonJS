@@ -58,7 +58,7 @@ var Rect = Polygon.extend({
 
         this.setVertices(points);
         return this;
-    }
+    },
 
     /**
      * resize the rectangle
