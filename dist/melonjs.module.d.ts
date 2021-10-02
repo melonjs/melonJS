@@ -1,9 +1,3 @@
-export namespace me {
-    /**
-     * ~normalize_fn
-     */
-    type input = (value: number, axis: number, button: number) => any;
-}
 /**
  * a bitmap font object
  * @class
@@ -248,7 +242,6 @@ export class Body {
      */
     public collisionType: number;
     vel: Vector2d;
-    accel: Vector2d;
     force: Vector2d;
     friction: Vector2d;
     /**
@@ -498,21 +491,6 @@ export class Body {
      * @return {me.Body} Reference to this object for method chaining
      */
     rotate(angle: number, v?: any | any): any;
-    /**
-     * Sets accel to Velocity if x or y is not 0.  Net effect is to set the maxVel.x/y to the passed values for x/y<br>
-     * note: This does not set the vel member of the body object. This is identical to the setMaxVelocity call except that the
-     * accel property is updated to match the passed x and y.
-     * setMaxVelocity if needed<br>
-     * @name setVelocity
-     * @memberOf me.Body
-     * @function
-     * @param {Number} x velocity on x axis
-     * @param {Number} y velocity on y axis
-     * @protected
-     * @deprecated
-     * @see me.Body.force
-     */
-    protected setVelocity(x: number, y: number): void;
     /**
      * cap the body velocity (body.maxVel property) to the specified value<br>
      * @name setMaxVelocity
@@ -1814,9 +1792,17 @@ export class ColorLayer {
      * @ignore
      */
     constructor(name: any, color: any, z: any);
+    /**
+     * the layer color component
+     * @public
+     * @type me.Color
+     * @name color
+     * @memberOf me.ColorLayer#
+     */
+    public color: any;
+    onResetEvent(name: any, color: any, z: any): void;
     name: any;
     floating: boolean;
-    color: any;
     /**
      * draw the color layer
      * @ignore
@@ -4290,11 +4276,12 @@ export class Particle {
      * @ignore
      */
     constructor(emitter: any);
+    vel: Vector2d;
+    onResetEvent(emitter: any, newInstance?: boolean): void;
     alwaysUpdate: boolean;
     image: any;
-    vel: Vector2d;
-    life: number;
-    startLife: number;
+    life: any;
+    startLife: any;
     startScale: number;
     endScale: number;
     gravity: any;
@@ -4861,6 +4848,22 @@ export class Polygon {
      */
     translate(...args: any[]): any;
     /**
+     * Shifts the Polygon to the given position vector.
+     * @name shift
+     * @memberOf me.Polygon
+     * @function
+     * @param {me.Vector2d} position
+     */
+    /**
+     * Shifts the Polygon to the given x, y position.
+     * @name shift
+     * @memberOf me.Polygon
+     * @function
+     * @param {Number} x
+     * @param {Number} y
+     */
+    shift(...args: any[]): void;
+    /**
      * Returns true if the polygon contains the given point.
      * (Note: it is highly recommended to first do a hit test on the corresponding <br>
      *  bounding rect, as the function can be highly consuming with complex shapes)
@@ -5163,40 +5166,6 @@ export class Rect {
      * @return {me.Rect} new rectangle
      */
     copy(rect: any): any;
-    /**
-     * translate the rect by the specified offset
-     * @name translate
-     * @memberOf me.Rect.prototype
-     * @function
-     * @param {Number} x x offset
-     * @param {Number} y y offset
-     * @return {me.Rect} this rectangle
-     */
-    /**
-     * translate the rect by the specified vector
-     * @name translate
-     * @memberOf me.Rect.prototype
-     * @function
-     * @param {me.Vector2d} v vector offset
-     * @return {me.Rect} this rectangle
-     */
-    translate(...args: any[]): any;
-    /**
-     * Shifts the rect to the given position vector.
-     * @name shift
-     * @memberOf me.Rect
-     * @function
-     * @param {me.Vector2d} position
-     */
-    /**
-     * Shifts the rect to the given x, y position.
-     * @name shift
-     * @memberOf me.Rect
-     * @function
-     * @param {Number} x
-     * @param {Number} y
-     */
-    shift(...args: any[]): void;
     /**
      * merge this rectangle with another one
      * @name union
@@ -7269,7 +7238,7 @@ export class Text {
      * @param {me.Rect|me.Bounds} [ret] a object in which to store the text metrics
      * @returns {TextMetrics} a TextMetrics object with two properties: `width` and `height`, defining the output dimensions
      */
-    measureText(renderer?: any | any, text?: string, ret?: any | any): TextMetrics;
+    measureText(_renderer: any, text?: string, ret?: any | any): TextMetrics;
     width: any;
     /**
      * @ignore
@@ -7460,6 +7429,7 @@ export class Trigger {
 * https://github.com/tweenjs/tween.js
 */
 /**
+ * @classdesc
  * Javascript Tweening Engine<p>
  * Super simple, fast and easy to use tweening engine which incorporates optimised Robert Penner's equation<p>
  * <a href="https://github.com/sole/Tween.js">https://github.com/sole/Tween.js</a><p>
@@ -7471,7 +7441,7 @@ export class Trigger {
  * author Paul Lewis / http://www.aerotwist.com/<br>
  * author lechecacharro<br>
  * author Josh Faul / http://jocafa.com/
- * @class
+ * @class Tween
  * @memberOf me
  * @constructor
  * @param {Object} object object on which to apply the tween
@@ -7490,39 +7460,90 @@ export class Tween {
     static get Easing(): any;
     static get Interpolation(): any;
     constructor(object: any);
+    object: any;
+    valuesStart: any;
+    valuesEnd: any;
+    valuesStartRepeat: any;
+    duration: any;
+    /**
+     * Repeat the tween
+     * @name repeat
+     * @memberOf me.Tween
+     * @public
+     * @function
+     * @param {Number} times amount of times the tween should be repeated
+     */
+    public repeat(times: number): Tween;
+    /**
+     * Allows the tween to bounce back to their original value when finished.
+     * To be used together with repeat to create endless loops.
+     * @name yoyo
+     * @memberOf me.Tween
+     * @public
+     * @function
+     * @see me.Tween#repeat
+     * @param {Boolean} yoyo
+     */
+    public yoyo(yoyo: boolean): Tween;
+    reversed: any;
+    delayTime: any;
+    startTime: any;
+    easingFunction: any;
+    interpolationFunction: any;
+    chainedTweens: any;
+    onStartCallback: any;
+    onStartCallbackFired: any;
+    onUpdateCallback: any;
+    onCompleteCallback: any;
+    tweenTimeTracker: any;
     isRenderable: boolean;
-    /**
-     * @ignore
-     */
-    _resumeCallback: (elapsed: any) => void;
-    /**
-    * @typedef {Function} SetProperties
-    * @param {Object.<string, any>} object
-    * @returns {void}
-    */
-    /**
-     * @ignore
-     * @type {SetProperties}
-     */
-    setProperties: Function;
     /**
      * reset the tween object to default value
      * @ignore
      */
-    onResetEvent: (object: any) => void;
+    onResetEvent(object: any): void;
+    /**
+     * @ignore
+     */
+    setProperties(object: any): void;
+    _object: any;
+    _valuesStart: {};
+    _valuesEnd: any;
+    _valuesStartRepeat: {};
+    _duration: any;
+    _repeat: number;
+    _yoyo: boolean;
+    _reversed: any;
+    _delayTime: number;
+    _startTime: any;
+    _easingFunction: any;
+    _interpolationFunction: any;
+    _chainedTweens: IArguments | any[];
+    _onStartCallback: any;
+    _onStartCallbackFired: boolean;
+    _onUpdateCallback: any;
+    _onCompleteCallback: any;
+    _tweenTimeTracker: any;
+    isPersistent: boolean;
+    updateWhenPaused: boolean;
+    /**
+     * @ignore
+     */
+    _resumeCallback(elapsed: any): void;
     /**
      * subscribe to the resume event when added
      * @ignore
      */
-    onActivateEvent: () => void;
+    onActivateEvent(): void;
     /**
      * Unsubscribe when tween is removed
      * @ignore
      */
-    onDeactivateEvent: () => void;
+    onDeactivateEvent(): void;
     /**
      * object properties to be updated and duration
-     * @name me.Tween#to
+     * @name to
+     * @memberOf me.Tween
      * @public
      * @function
      * @param {Object} properties hash of properties
@@ -7535,97 +7556,88 @@ export class Tween {
      * @param {me.Tween.Interpolation} [options.interpolation] interpolation function
      * @param {Boolean} [options.autoStart] allow this tween to start automatically. Otherwise call me.Tween.start().
      */
-    public to: (properties: any, options?: any | number) => Tween;
+    public to(properties: any, options?: any | number): Tween;
     /**
      * start the tween
-     * @name me.Tween#start
+     * @name start
+     * @memberOf me.Tween
      * @public
      * @function
      */
-    public start: (_time: any) => Tween;
+    public start(time?: number): Tween;
     /**
      * stop the tween
-     * @name me.Tween#stop
+     * @name stop
+     * @memberOf me.Tween
      * @public
      * @function
      */
-    public stop: () => Tween;
+    public stop(): Tween;
     /**
      * delay the tween
-     * @name me.Tween#delay
+     * @name delay
+     * @memberOf me.Tween
      * @public
      * @function
      * @param {Number} amount delay amount expressed in milliseconds
      */
-    public delay: (amount: number) => Tween;
-    /**
-     * Repeat the tween
-     * @name me.Tween#repeat
-     * @public
-     * @function
-     * @param {Number} times amount of times the tween should be repeated
-     */
-    public repeat: (times: number) => Tween;
-    /**
-     * Allows the tween to bounce back to their original value when finished.
-     * To be used together with repeat to create endless loops.
-     * @name me.Tween#yoyo
-     * @public
-     * @function
-     * @see me.Tween#repeat
-     * @param {Boolean} yoyo
-     */
-    public yoyo: (yoyo: boolean) => Tween;
+    public delay(amount: number): Tween;
     /**
      * set the easing function
-     * @name me.Tween#easing
+     * @name easing
+     * @memberOf me.Tween
      * @public
      * @function
      * @param {me.Tween.Easing} fn easing function
      */
-    public easing: (easing: any) => Tween;
+    public easing(easing: any): Tween;
     /**
      * set the interpolation function
-     * @name me.Tween#interpolation
+     * @name interpolation
+     * @memberOf me.Tween
      * @public
      * @function
      * @param {me.Tween.Interpolation} fn interpolation function
      */
-    public interpolation: (interpolation: any) => Tween;
+    public interpolation(interpolation: any): Tween;
     /**
      * chain the tween
-     * @name me.Tween#chain
+     * @name chain
+     * @memberOf me.Tween
      * @public
      * @function
      * @param {me.Tween} chainedTween Tween to be chained
      */
-    public chain: (...args: any[]) => Tween;
+    public chain(...args: any[]): Tween;
     /**
      * onStart callback
-     * @name me.Tween#onStart
+     * @name onStart
+     * @memberOf me.Tween
      * @public
      * @function
      * @param {Function} onStartCallback callback
      */
-    public onStart: (callback: any) => Tween;
+    public onStart(callback: any): Tween;
     /**
      * onUpdate callback
-     * @name me.Tween#onUpdate
+     * @name onUpdate
+     * @memberOf me.Tween
      * @public
      * @function
      * @param {Function} onUpdateCallback callback
      */
-    public onUpdate: (callback: any) => Tween;
+    public onUpdate(callback: any): Tween;
     /**
      * onComplete callback
-     * @name me.Tween#onComplete
+     * @name onComplete
+     * @memberOf me.Tween
      * @public
      * @function
      * @param {Function} onCompleteCallback callback
      */
-    public onComplete: (callback: any) => Tween;
+    public onComplete(callback: any): Tween;
     /** @ignore */
-    update: (dt: any) => boolean;
+    update(dt: any): boolean;
 }
 /**
  * @classdesc
@@ -9075,36 +9087,37 @@ export class World {
      */
     update(dt: any): any;
 }
-declare namespace audio$1 {
-    const stopOnAudioError: boolean;
-    const init: Function;
-    function hasFormat(codec: any): any;
-    function hasAudio(): boolean;
-    function enable(): void;
-    function disable(): void;
-    function load(sound: any, html5: any, onload_cb: any, onerror_cb: any): number;
-    function play(sound_name: string, loop?: boolean, onend?: Function, volume?: number): number;
-    function fade(sound_name: string, from: number, to: number, duration: number, id?: number): void;
-    function seek(sound_name: string, seek?: number, id?: number, ...args: any[]): any;
-    function rate(sound_name: string, rate?: number, id?: number, ...args: any[]): any;
-    function stop(sound_name?: string, id?: number): void;
-    function pause(sound_name: string, id?: number): void;
-    function resume(sound_name: string, id?: number): void;
-    function playTrack(sound_name: string, volume?: number): number;
-    function stopTrack(): void;
-    function pauseTrack(): void;
-    function resumeTrack(): void;
-    function getCurrentTrack(): string;
-    function setVolume(volume: number): void;
-    function getVolume(): number;
-    function mute(sound_name: string, id?: number, mute?: boolean): void;
-    function unmute(sound_name: string, id?: number): void;
-    function muteAll(): void;
-    function unmuteAll(): void;
-    function muted(): boolean;
-    function unload(sound_name: string): boolean;
-    function unloadAll(): void;
-}
+export var audio: Readonly<{
+    __proto__: any;
+    stopOnAudioError: boolean;
+    init: typeof init$1;
+    hasFormat: typeof hasFormat;
+    hasAudio: typeof hasAudio;
+    enable: typeof enable;
+    disable: typeof disable;
+    load: typeof load;
+    play: typeof play;
+    fade: typeof fade;
+    seek: typeof seek;
+    rate: typeof rate;
+    stop: typeof stop;
+    pause: typeof pause;
+    resume: typeof resume;
+    playTrack: typeof playTrack;
+    stopTrack: typeof stopTrack;
+    pauseTrack: typeof pauseTrack;
+    resumeTrack: typeof resumeTrack;
+    getCurrentTrack: typeof getCurrentTrack;
+    setVolume: typeof setVolume;
+    getVolume: typeof getVolume;
+    mute: typeof mute;
+    unmute: typeof unmute;
+    muteAll: typeof muteAll;
+    unmuteAll: typeof unmuteAll;
+    muted: typeof muted;
+    unload: typeof unload;
+    unloadAll: typeof unloadAll;
+}>;
 /**
  * initialize the melonJS library.
  * this is automatically called unless me.skipAutoInit is set to true,
@@ -9321,21 +9334,21 @@ export namespace event {
     const subscribe: any;
     const unsubscribe: any;
 }
-declare namespace game$1 {
-    export const viewport: any;
-    export const world: any;
-    export const mergeGroup: boolean;
-    export const sortOn: string;
-    export function onLevelLoaded(): void;
-    const init_1: Function;
-    export { init_1 as init };
-    export const reset: Function;
-    export function updateFrameRate(): void;
-    export function getParentContainer(child: any): any;
-    export function repaint(): void;
-    export function update(time: number, stage: any): void;
-    export function draw(stage: any): void;
-}
+export var game: Readonly<{
+    __proto__: any;
+    readonly viewport: any;
+    readonly world: any;
+    mergeGroup: boolean;
+    sortOn: string;
+    onLevelLoaded: typeof onLevelLoaded;
+    init: typeof init$2;
+    reset: typeof reset;
+    updateFrameRate: typeof updateFrameRate;
+    getParentContainer: typeof getParentContainer;
+    repaint: typeof repaint;
+    update: typeof update;
+    draw: typeof draw;
+}>;
 /**
 * a flag indicating that melonJS is fully initialized
 * @type {Boolean}
@@ -10250,7 +10263,7 @@ export namespace pool {
     /**
      * register an object to the pool. <br>
      * Pooling must be set to true if more than one such objects will be created. <br>
-     * (note) If pooling is enabled, you shouldn't instantiate objects with `new`.
+     * (Note: for an object to be poolable, it must implements a `onResetEvent` method)
      * See examples in {@link me.pool#pull}
      * @name register
      * @memberOf me.pool
@@ -10258,20 +10271,23 @@ export namespace pool {
      * @function
      * @param {String} className as defined in the Name field of the Object Properties (in Tiled)
      * @param {Object} class corresponding Class to be instantiated
-     * @param {Boolean} [objectPooling=false] enables object pooling for the specified class
-     * - speeds up the game by reusing existing objects
+     * @param {Boolean} [recycling=false] enables object recycling for the specified class
      * @example
-     * // add our users defined entities in the object pool
-     * me.pool.register("playerspawnpoint", PlayerEntity);
+     * // implement CherryEntity
+     * class CherryEntity extends Spritesheet {
+     *    onResetEvent() {
+     *        // reset object mutable properties
+     *        this.lifeBar = 100;
+     *    }
+     * };
+     * // add our users defined entities in the object pool and enable object recycling
      * me.pool.register("cherryentity", CherryEntity, true);
-     * me.pool.register("heartentity", HeartEntity, true);
-     * me.pool.register("starentity", StarEntity, true);
      */
-    function register(className: string, classObj: any, pooling: any): void;
+    function register(className: string, classObj: any, recycling?: boolean): void;
     /**
      * register an object to the pool. <br>
      * Pooling must be set to true if more than one such objects will be created. <br>
-     * (note) If pooling is enabled, you shouldn't instantiate objects with `new`.
+     * (Note: for an object to be poolable, it must implements a `onResetEvent` method)
      * See examples in {@link me.pool#pull}
      * @name register
      * @memberOf me.pool
@@ -10279,16 +10295,19 @@ export namespace pool {
      * @function
      * @param {String} className as defined in the Name field of the Object Properties (in Tiled)
      * @param {Object} class corresponding Class to be instantiated
-     * @param {Boolean} [objectPooling=false] enables object pooling for the specified class
-     * - speeds up the game by reusing existing objects
+     * @param {Boolean} [recycling=false] enables object recycling for the specified class
      * @example
-     * // add our users defined entities in the object pool
-     * me.pool.register("playerspawnpoint", PlayerEntity);
+     * // implement CherryEntity
+     * class CherryEntity extends Spritesheet {
+     *    onResetEvent() {
+     *        // reset object mutable properties
+     *        this.lifeBar = 100;
+     *    }
+     * };
+     * // add our users defined entities in the object pool and enable object recycling
      * me.pool.register("cherryentity", CherryEntity, true);
-     * me.pool.register("heartentity", HeartEntity, true);
-     * me.pool.register("starentity", StarEntity, true);
      */
-    function register(className: string, classObj: any, pooling: any): void;
+    function register(className: string, classObj: any, recycling?: boolean): void;
     /**
      * Pull a new instance of the requested object (if added into the object pool)
      * @name pull
@@ -10397,7 +10416,7 @@ export namespace pool {
      * @memberOf me.pool
      * @public
      * @function
-     * @param {String} name of the registered object
+     * @param {String} name of the registered object class
      * @return {Boolean} true if the classname is registered
      */
     function exists(name: string): boolean;
@@ -10407,10 +10426,42 @@ export namespace pool {
      * @memberOf me.pool
      * @public
      * @function
-     * @param {String} name of the registered object
+     * @param {String} name of the registered object class
      * @return {Boolean} true if the classname is registered
      */
     function exists(name: string): boolean;
+    /**
+     * Check if an object with the provided name is poolable
+     * (was properly registered with the recycling feature enable)
+     * @name poolable
+     * @memberOf me.pool
+     * @public
+     * @see me.pool.register
+     * @function
+     * @param {String} name of the registered object class
+     * @return {Boolean} true if the classname is poolable
+     * @example
+     * if (!me.pool.poolable("CherryEntity")) {
+     *     // object was not properly registered
+     * }
+     */
+    function poolable(name: string): boolean;
+    /**
+     * Check if an object with the provided name is poolable
+     * (was properly registered with the recycling feature enable)
+     * @name poolable
+     * @memberOf me.pool
+     * @public
+     * @see me.pool.register
+     * @function
+     * @param {String} name of the registered object class
+     * @return {Boolean} true if the classname is poolable
+     * @example
+     * if (!me.pool.poolable("CherryEntity")) {
+     *     // object was not properly registered
+     * }
+     */
+    function poolable(name: string): boolean;
     /**
      * returns the amount of object instance currently in the pool
      * @name getInstanceCount
@@ -10496,7 +10547,7 @@ export namespace save {
  * @memberOf me
  */
 export var skipAutoInit: boolean;
-declare namespace state$1 {
+export namespace state {
     export const LOADING: number;
     export const MENU: number;
     export const READY: number;
@@ -10834,7 +10885,7 @@ declare namespace state$1 {
      */
     export function isCurrent(state: number): boolean;
 }
-declare namespace timer$1 {
+export namespace timer {
     const tick: number;
     const fps: number;
     const maxfps: number;
@@ -11017,7 +11068,7 @@ declare namespace timer$1 {
      */
     function countFPS(): void;
 }
-declare namespace utils$1 {
+export namespace utils {
     export { agentUtils as agent };
     export { arrayUtils as array };
     export { fileUtils as file };
@@ -11043,19 +11094,19 @@ declare namespace utils$1 {
  * @type {string}
  */
 export const version: string;
-declare namespace video$1 {
-    export const CANVAS: number;
-    export const WEBGL: number;
-    export const AUTO: number;
-    export const parent: HTMLElement;
-    export const scaleRatio: any;
-    const init_2: Function;
-    export { init_2 as init };
-    export function createCanvas(width: number, height: number, offscreen?: boolean): any;
-    export function getParent(): HTMLElement;
-    export function onresize(): void;
-    export function scale(x: number, y: number): void;
-}
+export var video: Readonly<{
+    __proto__: any;
+    CANVAS: number;
+    WEBGL: number;
+    AUTO: number;
+    readonly parent: HTMLElement;
+    scaleRatio: any;
+    readonly renderer: any;
+    init: typeof init;
+    createCanvas: typeof createCanvas;
+    getParent: typeof getParent;
+    scale: typeof scale;
+}>;
 /**
  * a basic texture cache object
  * @ignore
@@ -11713,6 +11764,263 @@ declare class Bounds {
     toPolygon(): any;
 }
 /**
+ * Initialize and configure the audio support.<br>
+ * melonJS supports a wide array of audio codecs that have varying browser support :
+ * <i> ("mp3", "mpeg", opus", "ogg", "oga", "wav", "aac", "caf", "m4a", "m4b", "mp4", "weba", "webm", "dolby", "flac")</i>.<br>
+ * For a maximum browser coverage the recommendation is to use at least two of them,
+ * typically default to webm and then fallback to mp3 for the best balance of small filesize and high quality,
+ * webm has nearly full browser coverage with a great combination of compression and quality, and mp3 will fallback gracefully for other browsers.
+ * It is important to remember that melonJS selects the first compatible sound based on the list of extensions and given order passed here.
+ * So if you want webm to be used before mp3, you need to put the audio format in that order.
+ * @function me.audio.init
+ * @param {String} [format="mp3"] audio format to prioritize
+ * @returns {Boolean} Indicates whether audio initialization was successful
+ * @example
+ * // initialize the "sound engine", giving "webm" as default desired audio format, and "mp3" as a fallback
+ * if (!me.audio.init("webm,mp3")) {
+ *     alert("Sorry but your browser does not support html 5 audio !");
+ *     return;
+ * }
+ */
+declare function init$1(format?: string): boolean;
+/**
+ * check if the given audio format is supported
+ * @function me.audio.hasFormat
+ * @param {String} format audio format : "mp3", "mpeg", opus", "ogg", "oga", "wav", "aac", "caf", "m4a", "m4b", "mp4", "weba", "webm", "dolby", "flac"
+ * @returns {Boolean} return true if the given audio format is supported
+ */
+declare function hasFormat(codec: any): boolean;
+/**
+ * check if audio (HTML5 or WebAudio) is supported
+ * @function me.audio.hasAudio
+ * @returns {Boolean} return true if audio (HTML5 or WebAudio) is supported
+ */
+declare function hasAudio(): boolean;
+/**
+ * enable audio output <br>
+ * only useful if audio supported and previously disabled through
+ * @function me.audio.enable
+ * @see me.audio#disable
+ */
+declare function enable(): void;
+/**
+ * disable audio output
+ * @function me.audio.disable
+ */
+declare function disable(): void;
+/**
+ * Load an audio file.<br>
+ * <br>
+ * sound item must contain the following fields :<br>
+ * - name    : name of the sound<br>
+ * - src     : source path<br>
+ * @ignore
+ */
+declare function load(sound: any, html5: any, onload_cb: any, onerror_cb: any): number;
+/**
+ * play the specified sound
+ * @function me.audio.play
+ * @param {String} sound_name audio clip name - case sensitive
+ * @param {Boolean} [loop=false] loop audio
+ * @param {Function} [onend] Function to call when sound instance ends playing.
+ * @param {Number} [volume=default] Float specifying volume (0.0 - 1.0 values accepted).
+ * @return {Number} the sound instance ID.
+ * @example
+ * // play the "cling" audio clip
+ * me.audio.play("cling");
+ * // play & repeat the "engine" audio clip
+ * me.audio.play("engine", true);
+ * // play the "gameover_sfx" audio clip and call myFunc when finished
+ * me.audio.play("gameover_sfx", false, myFunc);
+ * // play the "gameover_sfx" audio clip with a lower volume level
+ * me.audio.play("gameover_sfx", false, null, 0.5);
+ */
+declare function play(sound_name: string, loop?: boolean, onend?: Function, volume?: number): number;
+/**
+ * Fade a currently playing sound between two volumee.
+ * @function me.audio.fade
+ * @param {String} sound_name audio clip name - case sensitive
+ * @param {Number} from Volume to fade from (0.0 to 1.0).
+ * @param {Number} to Volume to fade to (0.0 to 1.0).
+ * @param {Number} duration Time in milliseconds to fade.
+ * @param {Number} [id] the sound instance ID. If none is passed, all sounds in group will fade.
+ */
+declare function fade(sound_name: string, from: number, to: number, duration: number, id?: number): void;
+/**
+ * get/set the position of playback for a sound.
+ * @function me.audio.seek
+ * @param {String} sound_name audio clip name - case sensitive
+ * @param {Number} [seek]  The position to move current playback to (in seconds).
+ * @param {Number} [id] the sound instance ID. If none is passed, all sounds in group will changed.
+ * @return return the current seek position (if no extra parameters were given)
+ * @example
+ * // return the current position of the background music
+ * var current_pos = me.audio.seek("dst-gameforest");
+ * // set back the position of the background music to the beginning
+ * me.audio.seek("dst-gameforest", 0);
+ */
+declare function seek(sound_name: string, seek?: number, id?: number, ...args: any[]): any;
+/**
+ * get or set the rate of playback for a sound.
+ * @function me.audio.rate
+ * @param {String} sound_name audio clip name - case sensitive
+ * @param {Number} [rate] playback rate : 0.5 to 4.0, with 1.0 being normal speed.
+ * @param {Number} [id] the sound instance ID. If none is passed, all sounds in group will be changed.
+ * @return return the current playback rate (if no extra parameters were given)
+ * @example
+ * // get the playback rate of the background music
+ * var rate = me.audio.rate("dst-gameforest");
+ * // speed up the playback of the background music
+ * me.audio.rate("dst-gameforest", 2.0);
+ */
+declare function rate(sound_name: string, rate?: number, id?: number, ...args: any[]): any;
+/**
+ * stop the specified sound on all channels
+ * @function me.audio.stop
+ * @param {String} [sound_name] audio clip name (case sensitive). If none is passed, all sounds are stopped.
+ * @param {Number} [id] the sound instance ID. If none is passed, all sounds in group will stop.
+ * @example
+ * me.audio.stop("cling");
+ */
+declare function stop(sound_name?: string, id?: number): void;
+/**
+ * pause the specified sound on all channels<br>
+ * this function does not reset the currentTime property
+ * @function me.audio.pause
+ * @param {String} sound_name audio clip name - case sensitive
+ * @param {Number} [id] the sound instance ID. If none is passed, all sounds in group will pause.
+ * @example
+ * me.audio.pause("cling");
+ */
+declare function pause(sound_name: string, id?: number): void;
+/**
+ * resume the specified sound on all channels<br>
+ * @function me.audio.resume
+ * @param {String} sound_name audio clip name - case sensitive
+ * @param {Number} [id] the sound instance ID. If none is passed, all sounds in group will resume.
+ * @example
+ * // play a audio clip
+ * var id = me.audio.play("myClip");
+ * ...
+ * // pause it
+ * me.audio.pause("myClip", id);
+ * ...
+ * // resume
+ * me.audio.resume("myClip", id);
+ */
+declare function resume(sound_name: string, id?: number): void;
+/**
+ * play the specified audio track<br>
+ * this function automatically set the loop property to true<br>
+ * and keep track of the current sound being played.
+ * @function me.audio.playTrack
+ * @param {String} sound_name audio track name - case sensitive
+ * @param {Number} [volume=default] Float specifying volume (0.0 - 1.0 values accepted).
+ * @return {Number} the sound instance ID.
+ * @example
+ * me.audio.playTrack("awesome_music");
+ */
+declare function playTrack(sound_name: string, volume?: number): number;
+/**
+ * stop the current audio track
+ * @function me.audio.stopTrack
+ * @see me.audio#playTrack
+ * @example
+ * // play a awesome music
+ * me.audio.playTrack("awesome_music");
+ * // stop the current music
+ * me.audio.stopTrack();
+ */
+declare function stopTrack(): void;
+/**
+ * pause the current audio track
+ * @function me.audio.pauseTrack
+ * @example
+ * me.audio.pauseTrack();
+ */
+declare function pauseTrack(): void;
+/**
+ * resume the previously paused audio track
+ * @function me.audio.resumeTrack
+ * @example
+ * // play an awesome music
+ * me.audio.playTrack("awesome_music");
+ * // pause the audio track
+ * me.audio.pauseTrack();
+ * // resume the music
+ * me.audio.resumeTrack();
+ */
+declare function resumeTrack(): void;
+/**
+ * returns the current track Id
+ * @function me.audio.getCurrentTrack
+ * @return {String} audio track name
+ */
+declare function getCurrentTrack(): string;
+/**
+ * set the default global volume
+ * @function me.audio.setVolume
+ * @param {Number} volume Float specifying volume (0.0 - 1.0 values accepted).
+ */
+declare function setVolume(volume: number): void;
+/**
+ * get the default global volume
+ * @function me.audio.getVolume
+ * @returns {Number} current volume value in Float [0.0 - 1.0] .
+ */
+declare function getVolume(): number;
+/**
+ * mute or unmute the specified sound, but does not pause the playback.
+ * @function me.audio.mute
+ * @param {String} sound_name audio clip name - case sensitive
+ * @param {Number} [id] the sound instance ID. If none is passed, all sounds in group will mute.
+ * @param {Boolean} [mute=true] True to mute and false to unmute
+ * @example
+ * // mute the background music
+ * me.audio.mute("awesome_music");
+ */
+declare function mute(sound_name: string, id?: number, mute?: boolean): void;
+/**
+ * unmute the specified sound
+ * @function me.audio.unmute
+ * @param {String} sound_name audio clip name
+ * @param {Number} [id] the sound instance ID. If none is passed, all sounds in group will unmute.
+ */
+declare function unmute(sound_name: string, id?: number): void;
+/**
+ * mute all audio
+ * @function me.audio.muteAll
+ */
+declare function muteAll(): void;
+/**
+ * unmute all audio
+ * @function me.audio.unmuteAll
+ */
+declare function unmuteAll(): void;
+/**
+ * Returns true if audio is muted globally.
+ * @function me.audio.muted
+ * @return {Boolean} true if audio is muted globally
+ */
+declare function muted(): boolean;
+/**
+ * unload specified audio track to free memory
+ * @function me.audio.unload
+ * @param {String} sound_name audio track name - case sensitive
+ * @return {Boolean} true if unloaded
+ * @example
+ * me.audio.unload("awesome_music");
+ */
+declare function unload(sound_name: string): boolean;
+/**
+ * unload all audio to free memory
+ * @function me.audio.unloadAll
+ * @function
+ * @example
+ * me.audio.unloadAll();
+ */
+declare function unloadAll(): void;
+/**
  * placeholder for all deprecated classes and corresponding alias for backward compatibility
  * @namespace deprecated
  * @memberOf me
@@ -11735,6 +12043,63 @@ declare function warning(deprecated: string, replacement: string, version: strin
  * @function apply
  */
 declare function apply(): void;
+/**
+ * Fired when a level is fully loaded and <br>
+ * and all entities instantiated. <br>
+ * Additionnaly the level id will also be passed
+ * to the called function.
+ * @function me.game.onLevelLoaded
+ * @example
+ * // call myFunction () everytime a level is loaded
+ * me.game.onLevelLoaded = this.myFunction.bind(this);
+ */
+declare function onLevelLoaded(): void;
+/**
+ * Initialize the game manager
+ * @function me.game.init
+ * @ignore
+ */
+declare function init$2(): void;
+/**
+ * reset the game Object manager<br>
+ * destroy all current objects
+ * @function me.game.reset
+ */
+declare function reset(): void;
+/**
+ * Update the renderer framerate using the system config variables.
+ * @function me.game.updateFrameRate
+ * @see me.timer.maxfps
+ * @see me.game.world.fps
+ */
+declare function updateFrameRate(): void;
+/**
+ * Returns the parent container of the specified Child in the game world
+ * @function me.game.getParentContainer
+ * @param {me.Renderable} child
+ * @return {me.Container}
+ */
+declare function getParentContainer(child: any): any;
+/**
+ * force the redraw (not update) of all objects
+ * @function me.game.repaint
+ */
+declare function repaint(): void;
+/**
+ * update all objects of the game manager
+ * @ignore
+ * @function me.game.update
+ * @param {Number} time current timestamp as provided by the RAF callback
+ * @param {me.Stage} stage the current stage
+ */
+declare function update(time: number, stage: any): void;
+/**
+ * draw the current scene/stage
+ * @function me.game.draw
+ * @ignore
+ * @param {me.Stage} stage the current stage
+ */
+declare function draw(stage: any): void;
 /**
  * Translate the specified x and y values from the global (absolute)
  * coordinate to local (viewport) relative coordinate.
@@ -12009,6 +12374,85 @@ declare var fnUtils: Readonly<{
     throttle: typeof throttle;
 }>;
 /**
+ * Initialize the "video" system (create a canvas based on the given arguments, and the related renderer). <br>
+ * melonJS support various scaling mode, that can be enabled <u>once the scale option is set to <b>`auto`</b></u> : <br>
+ *  - <i><b>`fit`</b></i> : Letterboxed; content is scaled to design aspect ratio <br>
+ * <center><img src="images/scale-fit.png"/></center><br>
+ *  - <i><b>`fill-min`</b></i> : Canvas is resized to fit minimum design resolution; content is scaled to design aspect ratio <br>
+ * <center><img src="images/scale-fill-min.png"/></center><br>
+ *  - <i><b>`fill-max`</b></i> : Canvas is resized to fit maximum design resolution; content is scaled to design aspect ratio <br>
+ * <center><img src="images/scale-fill-max.png"/></center><br>
+ *  - <i><b>`flex`</b><</i> : Canvas width & height is resized to fit; content is scaled to design aspect ratio <br>
+ * <center><img src="images/scale-flex.png"/></center><br>
+ *  - <i><b>`flex-width`</b></i> : Canvas width is resized to fit; content is scaled to design aspect ratio <br>
+ * <center><img src="images/scale-flex-width.png"/></center><br>
+ *  - <i><b>`flex-height`</b></i> : Canvas height is resized to fit; content is scaled to design aspect ratio <br>
+ * <center><img src="images/scale-flex-height.png"/></center><br>
+ *  - <i><b>`stretch`</b></i> : Canvas is resized to fit; content is scaled to screen aspect ratio
+ * <center><img src="images/scale-stretch.png"/></center><br>
+ * @function me.video.init
+ * @param {Number} width The width of the canvas viewport
+ * @param {Number} height The height of the canvas viewport
+ * @param {Object} [options] The optional video/renderer parameters.<br> (see Renderer(s) documentation for further specific options)
+ * @param {String|HTMLElement} [options.parent=document.body] the DOM parent element to hold the canvas in the HTML file
+ * @param {Number} [options.renderer=me.video.AUTO] renderer to use (me.video.CANVAS, me.video.WEBGL, me.video.AUTO)
+ * @param {Boolean} [options.doubleBuffering=false] enable/disable double buffering
+ * @param {Number|String} [options.scale=1.0] enable scaling of the canvas ('auto' for automatic scaling)
+ * @param {String} [options.scaleMethod="fit"] screen scaling modes ('fit','fill-min','fill-max','flex','flex-width','flex-height','stretch')
+ * @param {Boolean} [options.preferWebGL1=false] if true the renderer will only use WebGL 1
+ * @param {String} [options.powerPreference="default"] a hint to the user agent indicating what configuration of GPU is suitable for the WebGL context ("default", "high-performance", "low-power"). To be noted that Safari and Chrome (since version 80) both default to "low-power" to save battery life and improve the user experience on these dual-GPU machines.
+ * @param {Boolean} [options.transparent=false] whether to allow transparent pixels in the front buffer (screen).
+ * @param {Boolean} [options.antiAlias=false] whether to enable or not video scaling interpolation
+ * @param {Boolean} [options.consoleHeader=true] whether to display melonJS version and basic device information in the console
+ * @return {Boolean} false if initialization failed (canvas not supported)
+ * @example
+ * // init the video with a 640x480 canvas
+ * me.video.init(640, 480, {
+ *     parent : "screen",
+ *     renderer : me.video.AUTO,
+ *     scale : "auto",
+ *     scaleMethod : "fit",
+ *     doubleBuffering : true
+ * });
+ */
+declare function init(game_width: any, game_height: any, options?: {
+    parent?: string | HTMLElement;
+    renderer?: number;
+    doubleBuffering?: boolean;
+    scale?: number | string;
+    scaleMethod?: string;
+    preferWebGL1?: boolean;
+    powerPreference?: string;
+    transparent?: boolean;
+    antiAlias?: boolean;
+    consoleHeader?: boolean;
+}): boolean;
+/**
+ * Create and return a new Canvas element
+ * @function me.video.createCanvas
+ * @param {Number} width width
+ * @param {Number} height height
+ * @param {Boolean} [offscreen=false] will returns an OffscreenCanvas if supported
+ * @return {HTMLCanvasElement|OffscreenCanvas}
+ */
+declare function createCanvas(width: number, height: number, offscreen?: boolean): HTMLCanvasElement | any;
+/**
+ * return a reference to the parent DOM element holding the main canvas
+ * @function me.video.getParent
+ * @return {HTMLElement}
+ */
+declare function getParent(): HTMLElement;
+/**
+ * scale the "displayed" canvas by the given scalar.
+ * this will modify the size of canvas element directly.
+ * Only use this if you are not using the automatic scaling feature.
+ * @function me.video.scale
+ * @see me.video.init
+ * @param {Number} x x scaling multiplier
+ * @param {Number} y y scaling multiplier
+ */
+declare function scale(x: number, y: number): void;
+/**
  * Get a vendor-prefixed property
  * @public
  * @name prefixed
@@ -12194,4 +12638,4 @@ declare function defer(fn: Function, scope: any, ...args: any[]): number;
  * @param {no_trailing} no_trailing disable the execution on the trailing edge
  */
 declare function throttle(fn: Function, delay: number, no_trailing: any): (...args: any[]) => any;
-export { Bounds$1 as Bounds, math as Math, audio$1 as audio, game$1 as game, state$1 as state, timer$1 as timer, utils$1 as utils, video$1 as video };
+export { Bounds$1 as Bounds, math as Math };

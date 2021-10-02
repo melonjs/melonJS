@@ -5,22 +5,17 @@
  * http://www.opensource.org/licenses/mit-license
  * @copyright (C) 2011 - 2021 Olivier Biot
  */
-/* eslint-disable no-global-assign, no-native-reassign */
-if (typeof console === "undefined") {
-    /**
-     * Dummy console.log to avoid crash
-     * in case the browser does not support it
-     * @ignore
-     */
-    console = {
-        log : function () {},
-        info : function () {},
-        error : function () {
+if (typeof window !== "undefined") {
+    if (typeof window.console === "undefined") {
+        window.console = {};
+        window.console.log = function() {};
+        window.console.assert = function() {};
+        window.console.warn = function() {};
+        window.console.error = function() {
             alert(Array.prototype.slice.call(arguments).join(", "));
-        }
-    };
+        };
+    }
 }
-/* eslint-enable no-global-assign, no-native-reassign */
 
 /**
  * a collection of string utility functions
@@ -623,7 +618,7 @@ var pool = {
     /**
      * register an object to the pool. <br>
      * Pooling must be set to true if more than one such objects will be created. <br>
-     * (note) If pooling is enabled, you shouldn't instantiate objects with `new`.
+     * (Note: for an object to be poolable, it must implements a `onResetEvent` method)
      * See examples in {@link me.pool#pull}
      * @name register
      * @memberOf me.pool
@@ -631,20 +626,23 @@ var pool = {
      * @function
      * @param {String} className as defined in the Name field of the Object Properties (in Tiled)
      * @param {Object} class corresponding Class to be instantiated
-     * @param {Boolean} [objectPooling=false] enables object pooling for the specified class
-     * - speeds up the game by reusing existing objects
+     * @param {Boolean} [recycling=false] enables object recycling for the specified class
      * @example
-     * // add our users defined entities in the object pool
-     * me.pool.register("playerspawnpoint", PlayerEntity);
+     * // implement CherryEntity
+     * class CherryEntity extends Spritesheet {
+     *    onResetEvent() {
+     *        // reset object mutable properties
+     *        this.lifeBar = 100;
+     *    }
+     * };
+     * // add our users defined entities in the object pool and enable object recycling
      * me.pool.register("cherryentity", CherryEntity, true);
-     * me.pool.register("heartentity", HeartEntity, true);
-     * me.pool.register("starentity", StarEntity, true);
      */
-     register(className, classObj, pooling) {
+     register(className, classObj, recycling = false) {
          if (typeof (classObj) !== "undefined") {
              objectClass[className] = {
                  "class" : classObj,
-                 "pool" : (pooling ? [] : undefined)
+                 "pool" : (recycling ? [] : undefined)
              };
          } else {
              throw new Error("Cannot register object '" + className + "', invalid class");
@@ -691,6 +689,7 @@ var pool = {
                 obj;
 
             if (poolArray && ((obj = poolArray.pop()))) {
+                // pull an existing instance from the pool
                 args.shift();
                 // call the object onResetEvent function if defined
                 if (typeof(obj.onResetEvent) === "function") {
@@ -699,6 +698,7 @@ var pool = {
                 instance_counter--;
             }
             else {
+                // create a new instance
                 args[0] = proto;
                 obj = new (proto.bind.apply(proto, args))();
                 if (poolArray) {
@@ -741,8 +741,11 @@ var pool = {
      */
     push(obj) {
         var name = obj.className;
-        if (typeof(name) === "undefined" || !objectClass[name]) {
-            // object is not registered, don't do anything
+        if (!this.poolable(name)) {
+            // object can not be recycled, call the destroy function
+            if (typeof obj.destroy === "function") {
+                obj.destroy();
+            }
             return;
         }
         // store back the object instance for later recycling
@@ -756,11 +759,30 @@ var pool = {
      * @memberOf me.pool
      * @public
      * @function
-     * @param {String} name of the registered object
+     * @param {String} name of the registered object class
      * @return {Boolean} true if the classname is registered
      */
     exists(name) {
         return name in objectClass;
+    },
+
+    /**
+     * Check if an object with the provided name is poolable
+     * (was properly registered with the recycling feature enable)
+     * @name poolable
+     * @memberOf me.pool
+     * @public
+     * @see me.pool.register
+     * @function
+     * @param {String} name of the registered object class
+     * @return {Boolean} true if the classname is poolable
+     * @example
+     * if (!me.pool.poolable("CherryEntity")) {
+     *     // object was not properly registered
+     * }
+     */
+    poolable(name) {
+        return (name in objectClass) && (objectClass[name].pool !== "undefined");
     },
 
     /**
@@ -9471,6 +9493,37 @@ class Polygon {
     }
 
     /**
+     * Shifts the Polygon to the given position vector.
+     * @name shift
+     * @memberOf me.Polygon
+     * @function
+     * @param {me.Vector2d} position
+     */
+    /**
+     * Shifts the Polygon to the given x, y position.
+     * @name shift
+     * @memberOf me.Polygon
+     * @function
+     * @param {Number} x
+     * @param {Number} y
+     */
+    shift() {
+        var _x, _y;
+        if (arguments.length === 2) {
+            // x, y
+            _x = arguments[0];
+            _y = arguments[1];
+        } else {
+            // vector
+            _x = arguments[0].x;
+            _y = arguments[0].y;
+        }
+        this.pos.x = _x;
+        this.pos.y = _y;
+        this.updateBounds();
+    }
+
+    /**
      * Returns true if the polygon contains the given point.
      * (Note: it is highly recommended to first do a hit test on the corresponding <br>
      *  bounding rect, as the function can be highly consuming with complex shapes)
@@ -9780,7 +9833,7 @@ class Rect extends Polygon {
             return this.height;
         }
     }
-    
+
     /**
      * @ignore
      */
@@ -9839,67 +9892,6 @@ class Rect extends Polygon {
      */
     copy(rect) {
         return this.setShape(rect.pos.x, rect.pos.y, rect.width, rect.height);
-    }
-
-    /**
-     * translate the rect by the specified offset
-     * @name translate
-     * @memberOf me.Rect.prototype
-     * @function
-     * @param {Number} x x offset
-     * @param {Number} y y offset
-     * @return {me.Rect} this rectangle
-     */
-    /**
-     * translate the rect by the specified vector
-     * @name translate
-     * @memberOf me.Rect.prototype
-     * @function
-     * @param {me.Vector2d} v vector offset
-     * @return {me.Rect} this rectangle
-     */
-    translate() {
-        var _x, _y;
-
-        if (arguments.length === 2) {
-            // x, y
-            _x = arguments[0];
-            _y = arguments[1];
-        } else {
-            // vector
-            _x = arguments[0].x;
-            _y = arguments[0].y;
-        }
-
-        this.pos.x += _x;
-        this.pos.y += _y;
-
-        return this;
-    }
-
-    /**
-     * Shifts the rect to the given position vector.
-     * @name shift
-     * @memberOf me.Rect
-     * @function
-     * @param {me.Vector2d} position
-     */
-    /**
-     * Shifts the rect to the given x, y position.
-     * @name shift
-     * @memberOf me.Rect
-     * @function
-     * @param {Number} x
-     * @param {Number} y
-     */
-    shift() {
-        if (arguments.length === 2) {
-            // x, y
-            this.pos.set(arguments[0], arguments[1]);
-        } else {
-            // vector
-            this.pos.setV(arguments[0]);
-        }
     }
 
     /**
@@ -10813,9 +10805,9 @@ class Pointer extends Rect {
         this.gameScreenX = this.pos.x;
         this.gameScreenY = this.pos.y;
 
-        // get the current screen to world offset
-        if (typeof game$1.viewport !== "undefined") {
-            game$1.viewport.localToWorld(this.gameScreenX, this.gameScreenY, viewportOffset);
+        // get the current screen to game world offset
+        if (typeof viewport !== "undefined") {
+            viewport.localToWorld(this.gameScreenX, this.gameScreenY, viewportOffset);
         }
 
         /* Initialize the two coordinate space properties. */
@@ -10952,7 +10944,7 @@ function enablePointerEvent() {
 
         if (pointerEventTarget === null) {
             // default pointer event target
-            pointerEventTarget = video$1.renderer.getScreenCanvas();
+            pointerEventTarget = renderer.getScreenCanvas();
         }
 
         if (device.PointerEvent) {
@@ -10971,7 +10963,7 @@ function enablePointerEvent() {
         // set the PointerMove/touchMove/MouseMove event
         if (typeof(throttlingInterval) === "undefined") {
             // set the default value
-            throttlingInterval = ~~(1000 / timer$1.maxfps);
+            throttlingInterval = ~~(1000 / timer.maxfps);
         }
 
         if (device.autoFocus === true) {
@@ -11005,7 +10997,7 @@ function enablePointerEvent() {
                 if (activeEventList.indexOf(events[i]) !== -1) {
                     pointerEventTarget.addEventListener(
                         events[i],
-                        utils$1.function.throttle(
+                        utils.function.throttle(
                             onMoveEvent,
                             throttlingInterval,
                             false
@@ -11102,10 +11094,11 @@ function dispatchEvent(normalizedEvents) {
             event.publish(event.POINTERMOVE, [pointer]);
         }
 
-        var candidates = game$1.world.broadphase.retrieve(currentPointer, Container.prototype._sortReverseZ);
+        // fetch valid candiates from the game world container
+        var candidates = world.broadphase.retrieve(currentPointer, Container.prototype._sortReverseZ);
 
-        // add the main viewport to the list of candidates
-        candidates = candidates.concat([ game$1.viewport ]);
+        // add the main game viewport to the list of candidates
+        candidates = candidates.concat([ viewport ]);
 
         for (var c = candidates.length, candidate; c--, (candidate = candidates[c]);) {
             if (eventHandlers.has(candidate) && (candidate.isKinematic !== true)) {
@@ -11367,11 +11360,11 @@ var throttlingInterval;
  */
 function globalToLocal(x, y, v) {
     v = v || new Vector2d();
-    var rect = device.getElementBounds(video$1.renderer.getScreenCanvas());
+    var rect = device.getElementBounds(renderer.getScreenCanvas());
     var pixelRatio = device.devicePixelRatio;
     x -= rect.left + (window.pageXOffset || 0);
     y -= rect.top + (window.pageYOffset || 0);
-    var scale = video$1.scaleRatio;
+    var scale = scaleRatio;
     if (scale.x !== 1.0 || scale.y !== 1.0) {
         x /= scale.x;
         y /= scale.y;
@@ -11544,7 +11537,7 @@ function releasePointerEvent(eventType, region, callback) {
             eventType = eventTypes[i];
             if (handlers.callbacks[eventType]) {
                 if (typeof (callback) !== "undefined") {
-                    utils$1.array.remove(handlers.callbacks[eventType], callback);
+                    utils.array.remove(handlers.callbacks[eventType], callback);
                 } else {
                     while (handlers.callbacks[eventType].length > 0) {
                         handlers.callbacks[eventType].pop();
@@ -11581,17 +11574,6 @@ function releaseAllPointerEvents(region) {
 
 // Analog deadzone
 var deadzone = 0.1;
-
-/**
- * A function that returns a normalized value in range [-1.0..1.0], or 0.0 if the axis is unknown.
- * @callback me.input~normalize_fn
- * @param {Number} value The raw value read from the gamepad driver
- * @param {Number} axis The axis index from the standard mapping, or -1 if not an axis
- * @param {Number} button The button index from the standard mapping, or -1 if not a button
- */
-function defaultNormalizeFn(value) {
-    return value;
-}
 
 /**
  * Normalize axis values for wired Xbox 360
@@ -11660,7 +11642,7 @@ function addMapping(id, mapping) {
     mapping.analog = mapping.analog || mapping.buttons.map(function () {
         return -1;
     });
-    mapping.normalize_fn = mapping.normalize_fn || defaultNormalizeFn;
+    mapping.normalize_fn = mapping.normalize_fn || function (value) { return value; };
 
     remap.set(expanded_id, mapping);
     remap.set(sparse_id, mapping);
@@ -12059,7 +12041,7 @@ function setGamepadDeadzone(value) {
  * @param {Number[]} mapping.axes Standard analog control stick axis locations
  * @param {Number[]} mapping.buttons Standard digital button locations
  * @param {Number[]} [mapping.analog] Analog axis locations for buttons
- * @param {me.input~normalize_fn} [mapping.normalize_fn] Axis normalization function
+ * @param {Function} [mapping.normalize_fn] a function that returns a normalized value in range [-1.0..1.0] for the given value, axis and button
  * @example
  * // A weird controller that has its axis mappings reversed
  * me.input.setGamepadMapping("Generic USB Controller", {
@@ -12990,7 +12972,7 @@ class Container extends Renderable {
     /**
      * @ignore
      */
-    constructor(x = 0, y = 0, width = game$1.viewport.width, height = game$1.viewport.height, root = false) {
+    constructor(x = 0, y = 0, width = viewport.width, height = viewport.height, root = false) {
 
         // call the super constructor
         super(x, y, width, height);
@@ -13026,7 +13008,7 @@ class Container extends Renderable {
          * @name sortOn
          * @memberOf me.Container
          */
-        this.sortOn = game$1.sortOn;
+        this.sortOn = sortOn;
 
         /**
          * Specify if the children list should be automatically sorted when adding a new child
@@ -13153,7 +13135,7 @@ class Container extends Renderable {
             // (e.g. move one child from one container to another)
             if (child.isRenderable) {
                 // allocated a GUID value (use child.id as based index if defined)
-                child.GUID = utils$1.createGUID(child.id);
+                child.GUID = utils.createGUID(child.id);
             }
         }
 
@@ -13179,7 +13161,7 @@ class Container extends Renderable {
 
         // force repaint in case this is a static non-animated object
         if (this.isAttachedToRoot() === true) {
-            game$1.repaint();
+            repaint();
         }
 
         // force bounds update if required
@@ -13212,7 +13194,7 @@ class Container extends Renderable {
                 // (e.g. move one child from one container to another)
                 if (child.isRenderable) {
                     // allocated a GUID value
-                    child.GUID = utils$1.createGUID();
+                    child.GUID = utils.createGUID();
                 }
             }
             child.ancestor = this;
@@ -13225,7 +13207,7 @@ class Container extends Renderable {
 
             // force repaint in case this is a static non-animated object
             if (this.isAttachedToRoot() === true) {
-                game$1.repaint();
+                repaint();
             }
 
             // force bounds update if required
@@ -13586,7 +13568,7 @@ class Container extends Renderable {
      */
     removeChild(child, keepalive) {
         if (this.hasChild(child)) {
-            utils$1.function.defer(deferredRemove, this, child, keepalive);
+            utils.function.defer(deferredRemove, this, child, keepalive);
         }
         else {
             throw new Error("Child is not mine.");
@@ -13610,11 +13592,12 @@ class Container extends Renderable {
             }
 
             if (!keepalive) {
-                if (typeof (child.destroy) === "function") {
+                // only push back in the pool if implementing "onResetEvent";
+                if (typeof child.onResetEvent === "function") {
+                    pool.push(child);
+                } else if (typeof child.destroy === "function") {
                     child.destroy();
                 }
-
-                pool.push(child);
             }
 
             // Don't cache the child index; another element might have been removed
@@ -13627,7 +13610,7 @@ class Container extends Renderable {
 
             // force repaint in case this is a static non-animated object
             if (this.isAttachedToRoot() === true) {
-                game$1.repaint();
+                repaint();
             }
 
             // force bounds update if required
@@ -13744,13 +13727,13 @@ class Container extends Renderable {
                 });
             }
             /** @ignore */
-            this.pendingSort = utils$1.function.defer(function (self) {
+            this.pendingSort = utils.function.defer(function (self) {
                 // sort everything in this container
                 self.getChildren().sort(self["_sort" + self.sortOn.toUpperCase()]);
                 // clear the defer id
                 self.pendingSort = null;
                 // make sure we redraw everything
-                game$1.repaint();
+                repaint();
             }, this, this);
         }
     }
@@ -13826,7 +13809,7 @@ class Container extends Renderable {
 
         var isDirty = false;
         var isFloating = false;
-        var isPaused = state$1.isPaused();
+        var isPaused = state.isPaused();
 
         var children = this.getChildren();
         for (var i = children.length, obj; i--, (obj = children[i]);) {
@@ -13844,7 +13827,7 @@ class Container extends Renderable {
                 // check if object is in any active cameras
                 obj.inViewport = false;
                 // iterate through all cameras
-                state$1.current().cameras.forEach(function(camera) {
+                state.current().cameras.forEach(function(camera) {
                     if (camera.isVisible(obj, isFloating)) {
                         obj.inViewport = true;
                     }                });
@@ -14042,9 +14025,9 @@ class QuadTree {
     getIndex(item) {
         var pos;
 
-        // use world coordinates for floating items
+        // use game world coordinates for floating items
         if (item.floating || (item.ancestor && item.ancestor.floating)) {
-            pos = game$1.viewport.localToWorld(item.left, item.top, QT_VECTOR);
+            pos = viewport.localToWorld(item.left, item.top, QT_VECTOR);
         } else {
             pos = QT_VECTOR.set(item.left, item.top);
         }
@@ -14212,7 +14195,7 @@ class QuadTree {
             var index = this.getIndex(item);
 
             if (index !== -1) {
-                found = utils$1.array.remove(this.nodes[index], item);
+                found = utils.array.remove(this.nodes[index], item);
                 // trim node if empty
                 if (found && this.nodes[index].isPrunable()) {
                     this.nodes.splice(index, 1);
@@ -14223,7 +14206,7 @@ class QuadTree {
         if (found === false) {
             // try and remove the item from the list of items in this node
             if (this.objects.indexOf(item) !== -1) {
-                utils$1.array.remove(this.objects, item);
+                utils.array.remove(this.objects, item);
                 found = true;
             }
         }
@@ -14986,8 +14969,8 @@ var collision = {
         var collision = 0;
         var response = responseObject || this.response;
 
-        // retreive a list of potential colliding objects
-        var candidates = game$1.world.broadphase.retrieve(objA);
+        // retreive a list of potential colliding objects from the game world
+        var candidates = world.broadphase.retrieve(objA);
 
         for (var i = candidates.length, objB; i--, (objB = candidates[i]);) {
 
@@ -15078,8 +15061,8 @@ var collision = {
         var collision = 0;
         var result = resultArray || [];
 
-        // retrieve a list of potential colliding objects
-        var candidates = game$1.world.broadphase.retrieve(line);
+        // retrieve a list of potential colliding objects from the game world
+        var candidates = world.broadphase.retrieve(line);
 
         for (var i = candidates.length, objB; i--, (objB = candidates[i]);) {
 
@@ -15201,10 +15184,10 @@ class World extends Container {
         event.subscribe(event.GAME_RESET, this.reset.bind(this));
 
         // update the broadband world bounds if a new level is loaded
-        event.subscribe(event.LEVEL_LOADED, function () {
+        event.subscribe(event.LEVEL_LOADED, (function () {
             // reset the quadtree
-            game$1.world.broadphase.clear(game$1.world.getBounds());
-        });
+            this.broadphase.clear(this.getBounds());
+        }).bind(this));
     }
 
     /**
@@ -15274,230 +15257,205 @@ var lastUpdateStart = null;
 var updateAverageDelta = 0;
 
 
-var game = {
 
-    /**
-     * a reference to the current active stage "default" camera
-     * @public
-     * @type {me.Camera2d}
-     * @name viewport
-     * @memberOf me.game
-     */
-    viewport : undefined,
+/**
+ * a reference to the current active stage "default" camera
+ * @public
+ * @type {me.Camera2d}
+ * @name viewport
+ * @memberOf me.game
+ */
+let viewport;
 
-    /**
-     * a reference to the game world, <br>
-     * a world is a virtual environment containing all the game objects
-     * @public
-     * @type {me.World}
-     * @name world
-     * @memberOf me.game
-     */
-    world : null,
+/**
+ * a reference to the game world, <br>
+ * a world is a virtual environment containing all the game objects
+ * @public
+ * @type {me.World}
+ * @name world
+ * @memberOf me.game
+ */
+let world;
 
-    /**
-     * when true, all objects will be added under the root world container.<br>
-     * When false, a `me.Container` object will be created for each corresponding groups
-     * @public
-     * @type {boolean}
-     * @default true
-     * @name mergeGroup
-     * @memberOf me.game
-     */
-    mergeGroup : true,
+/**
+ * when true, all objects will be added under the root world container.<br>
+ * When false, a `me.Container` object will be created for each corresponding groups
+ * @public
+ * @type {boolean}
+ * @default true
+ * @name mergeGroup
+ * @memberOf me.game
+ */
+let mergeGroup = true;
 
-    /**
-     * Specify the property to be used when sorting entities.
-     * Accepted values : "x", "y", "z"
-     * @public
-     * @type {string}
-     * @default "z"
-     * @name sortOn
-     * @memberOf me.game
-     */
-    sortOn : "z",
+/**
+ * Specify the property to be used when sorting entities.
+ * Accepted values : "x", "y", "z"
+ * @public
+ * @type {string}
+ * @default "z"
+ * @name sortOn
+ * @memberOf me.game
+ */
+let sortOn = "z";
 
-    /**
-     * Fired when a level is fully loaded and <br>
-     * and all entities instantiated. <br>
-     * Additionnaly the level id will also be passed
-     * to the called function.
-     * @public
-     * @function
-     * @name onLevelLoaded
-     * @memberOf me.game
-     * @example
-     * // call myFunction () everytime a level is loaded
-     * me.game.onLevelLoaded = this.myFunction.bind(this);
-     */
-    onLevelLoaded : function () {},
+/**
+ * Fired when a level is fully loaded and <br>
+ * and all entities instantiated. <br>
+ * Additionnaly the level id will also be passed
+ * to the called function.
+ * @function me.game.onLevelLoaded
+ * @example
+ * // call myFunction () everytime a level is loaded
+ * me.game.onLevelLoaded = this.myFunction.bind(this);
+ */
+function onLevelLoaded() {}
 
-    /**
-     * @typedef {Function} EmptyCallback
-     * @return {void}
-     */
+/**
+ * Initialize the game manager
+ * @function me.game.init
+ * @ignore
+ */
+function init$2() {
+    // the root object of our world is an entity container
+    world = new World();
 
-    /**
-     * Initialize the game manager
-     * @name init
-     * @memberOf me.game
-     * @ignore
-     * @function
-     * @type {EmptyCallback}
-     */
-    init : function () {
-        // the root object of our world is an entity container
-        this.world = new World();
+    // publish init notification
+    event.publish(event.GAME_INIT);
+}
+/**
+ * reset the game Object manager<br>
+ * destroy all current objects
+ * @function me.game.reset
+ */
+function reset () {
+    // point to the current active stage "default" camera
+    var current = state.current();
+    if (typeof current !== "undefined") {
+        viewport = current.cameras.get("default");
+    }
 
-        // publish init notification
-        event.publish(event.GAME_INIT);
+    // publish reset notification
+    event.publish(event.GAME_RESET);
 
-        // make display dirty by default
-        isDirty = true;
-    },
+    // Refresh internal variables for framerate  limiting
+    updateFrameRate();
+}
 
-    /**
-     * reset the game Object manager<br>
-     * destroy all current objects
-     * @name reset
-     * @memberOf me.game
-     * @public
-     * @function
-     * @type {EmptyCallback}
-     */
-    reset : function () {
-        // point to the current active stage "default" camera
-        var current = state$1.current();
-        if (typeof current !== "undefined") {
-            this.viewport = state$1.current().cameras.get("default");
-        }
+/**
+ * Update the renderer framerate using the system config variables.
+ * @function me.game.updateFrameRate
+ * @see me.timer.maxfps
+ * @see me.game.world.fps
+ */
+function updateFrameRate() {
+    // reset the frame counter
+    frameCounter = 0;
+    frameRate = ~~(0.5 + 60 / timer.maxfps);
 
-        // publish reset notification
-        event.publish(event.GAME_RESET);
+    // set step size based on the updatesPerSecond
+    stepSize = (1000 / world.fps);
+    accumulator = 0.0;
+    accumulatorMax = stepSize * 10;
 
-        // Refresh internal variables for framerate  limiting
-        this.updateFrameRate();
-    },
+    // display should always re-draw when update speed doesn't match fps
+    // this means the user intends to write position prediction drawing logic
+    isAlwaysDirty = (timer.maxfps > world.fps);
+}
+/**
+ * Returns the parent container of the specified Child in the game world
+ * @function me.game.getParentContainer
+ * @param {me.Renderable} child
+ * @return {me.Container}
+ */
+function getParentContainer(child) {
+    return child.ancestor;
+}
+/**
+ * force the redraw (not update) of all objects
+ * @function me.game.repaint
+ */
+function repaint() {
+    isDirty = true;
+}
 
-    /**
-     * Update the renderer framerate using the system config variables.
-     * @name updateFrameRate
-     * @memberOf me.game
-     * @public
-     * @function
-     * @see me.timer.maxfps
-     * @see me.game.world.fps
-     */
-    updateFrameRate : function () {
+/**
+ * update all objects of the game manager
+ * @ignore
+ * @function me.game.update
+ * @param {Number} time current timestamp as provided by the RAF callback
+ * @param {me.Stage} stage the current stage
+ */
+function update(time, stage) {
+    // handle frame skipping if required
+    if ((++frameCounter % frameRate) === 0) {
         // reset the frame counter
         frameCounter = 0;
-        frameRate = ~~(0.5 + 60 / timer$1.maxfps);
 
-        // set step size based on the updatesPerSecond
-        stepSize = (1000 / this.world.fps);
-        accumulator = 0.0;
-        accumulatorMax = stepSize * 10;
+        // game update event
+        event.publish(event.GAME_UPDATE, [ time ]);
 
-        // display should always re-draw when update speed doesn't match fps
-        // this means the user intends to write position prediction drawing logic
-        isAlwaysDirty = (timer$1.maxfps > this.world.fps);
-    },
+        accumulator += timer.getDelta();
+        accumulator = Math.min(accumulator, accumulatorMax);
 
-    /**
-     * Returns the parent container of the specified Child in the game world
-     * @name getParentContainer
-     * @memberOf me.game
-     * @function
-     * @param {me.Renderable} child
-     * @return {me.Container}
-     */
-    getParentContainer : function (child) {
-        return child.ancestor;
-    },
+        updateDelta = (timer.interpolation) ? timer.getDelta() : stepSize;
+        accumulatorUpdateDelta = (timer.interpolation) ? updateDelta : Math.max(updateDelta, updateAverageDelta);
 
-    /**
-     * force the redraw (not update) of all objects
-     * @name repaint
-     * @memberOf me.game
-     * @public
-     * @function
-     */
+        while (accumulator >= accumulatorUpdateDelta || timer.interpolation) {
+            lastUpdateStart = window.performance.now();
 
-    repaint : function () {
-        isDirty = true;
-    },
+            // update all objects (and pass the elapsed time since last frame)
+            isDirty = stage.update(updateDelta) || isDirty;
 
+            timer.lastUpdate = window.performance.now();
+            updateAverageDelta = timer.lastUpdate - lastUpdateStart;
 
-    /**
-     * update all objects of the game manager
-     * @name update
-     * @memberOf me.game
-     * @ignore
-     * @function
-     * @param {Number} time current timestamp as provided by the RAF callback
-     * @param {me.Stage} stage the current stage
-     */
-    update : function (time, stage) {
-        // handle frame skipping if required
-        if ((++frameCounter % frameRate) === 0) {
-            // reset the frame counter
-            frameCounter = 0;
-
-            // game update event
-            event.publish(event.GAME_UPDATE, [ time ]);
-
-            accumulator += timer$1.getDelta();
-            accumulator = Math.min(accumulator, accumulatorMax);
-
-            updateDelta = (timer$1.interpolation) ? timer$1.getDelta() : stepSize;
-            accumulatorUpdateDelta = (timer$1.interpolation) ? updateDelta : Math.max(updateDelta, updateAverageDelta);
-
-            while (accumulator >= accumulatorUpdateDelta || timer$1.interpolation) {
-                lastUpdateStart = window.performance.now();
-
-                // update all objects (and pass the elapsed time since last frame)
-                isDirty = stage.update(updateDelta) || isDirty;
-
-                timer$1.lastUpdate = window.performance.now();
-                updateAverageDelta = timer$1.lastUpdate - lastUpdateStart;
-
-                accumulator -= accumulatorUpdateDelta;
-                if (timer$1.interpolation) {
-                    accumulator = 0;
-                    break;
-                }
+            accumulator -= accumulatorUpdateDelta;
+            if (timer.interpolation) {
+                accumulator = 0;
+                break;
             }
         }
-    },
-
-    /**
-     * draw the current scene/stage
-     * @name draw
-     * @memberOf me.game
-     * @ignore
-     * @function
-     * @param {me.Stage} stage the current stage
-     */
-    draw : function (stage) {
-        var renderer = video$1.renderer;
-
-        if (renderer.isContextValid === true && (isDirty || isAlwaysDirty)) {
-            // prepare renderer to draw a new frame
-            renderer.clear();
-
-            // render the stage
-            stage.draw(renderer);
-
-            // set back to flag
-            isDirty = false;
-
-            // flush/render our frame
-            renderer.flush();
-        }
     }
-};
+}
+/**
+ * draw the current scene/stage
+ * @function me.game.draw
+ * @ignore
+ * @param {me.Stage} stage the current stage
+ */
+function draw(stage) {
 
-var game$1 = game;
+    if (renderer.isContextValid === true && (isDirty || isAlwaysDirty)) {
+        // prepare renderer to draw a new frame
+        renderer.clear();
+
+        // render the stage
+        stage.draw(renderer);
+
+        // set back to flag
+        isDirty = false;
+
+        // flush/render our frame
+        renderer.flush();
+    }
+}
+
+var game = /*#__PURE__*/Object.freeze({
+    __proto__: null,
+    get viewport () { return viewport; },
+    get world () { return world; },
+    mergeGroup: mergeGroup,
+    sortOn: sortOn,
+    onLevelLoaded: onLevelLoaded,
+    init: init$2,
+    reset: reset,
+    updateFrameRate: updateFrameRate,
+    getParentContainer: getParentContainer,
+    repaint: repaint,
+    update: update,
+    draw: draw
+});
 
 // some ref shortcut
 var MIN = Math.min, MAX = Math.max;
@@ -16123,7 +16081,7 @@ class Camera2d extends Renderable {
     isVisible(obj, floating = obj.floating) {
         if (floating === true || obj.floating === true) {
             // check against screen coordinates
-            return video$1.renderer.overlaps(obj.getBounds());
+            return renderer.overlaps(obj.getBounds());
         } else {
             // check if within the current camera
             return obj.getBounds().overlaps(this);
@@ -16144,7 +16102,7 @@ class Camera2d extends Renderable {
     localToWorld(x, y, v) {
         // TODO memoization for one set of coords (multitouch)
         v = v || new Vector2d();
-        v.set(x, y).add(this.pos).sub(game$1.world.pos);
+        v.set(x, y).add(this.pos).sub(world.pos);
         if (!this.currentTransform.isIdentity()) {
             this.invCurrentTransform.apply(v);
         }
@@ -16169,7 +16127,7 @@ class Camera2d extends Renderable {
         if (!this.currentTransform.isIdentity()) {
             this.currentTransform.apply(v);
         }
-        return v.sub(this.pos).add(game$1.world.pos);
+        return v.sub(this.pos).add(world.pos);
     }
 
     /**
@@ -16320,8 +16278,8 @@ class Stage {
         // empty or no default camera
         if (this.cameras.has("default") === false) {
             if (typeof default_camera === "undefined") {
-                var width = video$1.renderer.getWidth();
-                var height = video$1.renderer.getHeight();
+                var width = renderer.getWidth();
+                var height = renderer.getHeight();
                 // new default camera instance
                 default_camera = new Camera2d(0, 0, width, height);
             }
@@ -16329,7 +16287,7 @@ class Stage {
         }
 
         // reset the game
-        game$1.reset();
+        reset();
 
         // call the onReset Function
         this.onResetEvent.apply(this, arguments);
@@ -16346,7 +16304,7 @@ class Stage {
      **/
     update(dt) {
         // update all objects (and pass the elapsed time since last frame)
-        var isDirty = game$1.world.update(dt);
+        var isDirty = world.update(dt);
 
         // update the camera/viewport
         // iterate through all cameras
@@ -16370,7 +16328,7 @@ class Stage {
         // iterate through all cameras
         this.cameras.forEach(function(camera) {
             // render the root container
-            camera.draw(renderer, game$1.world);
+            camera.draw(renderer, world);
         });
     }
 
@@ -16468,10 +16426,10 @@ class ProgressBar extends Renderable {
 
         // draw the progress bar
         renderer.setColor("black");
-        renderer.fillRect(this.pos.x, game$1.viewport.centerY, renderer.getWidth(), this.barHeight / 2);
+        renderer.fillRect(this.pos.x, viewport.centerY, renderer.getWidth(), this.barHeight / 2);
 
         renderer.setColor("#55aa00");
-        renderer.fillRect(this.pos.x, game$1.viewport.centerY, this.progress, this.barHeight / 2);
+        renderer.fillRect(this.pos.x, viewport.centerY, this.progress, this.barHeight / 2);
     }
 
     /**
@@ -16494,12 +16452,12 @@ class IconLogo extends Renderable {
     constructor(x, y) {
         super(x, y, 100, 85);
 
-        this.iconCanvas = video$1.createCanvas(
+        this.iconCanvas = createCanvas(
             nextPowerOfTwo(this.width),
             nextPowerOfTwo(this.height),
         false);
 
-        var context = video$1.renderer.getContext2d(this.iconCanvas);
+        var context = renderer.getContext2d(this.iconCanvas);
 
         context.beginPath();
         context.moveTo(0.7, 48.9);
@@ -16548,8 +16506,8 @@ class TextLogo extends Renderable {
         this.textWidth = 0;
 
         // offscreen cache canvas
-        this.fontCanvas = video$1.createCanvas(256, 64, true);
-        this.drawFont(video$1.renderer.getContext2d(this.fontCanvas));
+        this.fontCanvas = createCanvas(256, 64, true);
+        this.drawFont(renderer.getContext2d(this.fontCanvas));
 
         this.anchorPoint.set(0, 0.5);
     }
@@ -16616,24 +16574,24 @@ var defaultLoadingScreen = new Stage({
         var barHeight = 8;
 
         // progress bar
-        game$1.world.addChild(new ProgressBar(
+        world.addChild(new ProgressBar(
             0,
-            video$1.renderer.getHeight() / 2,
-            video$1.renderer.getWidth(),
+            renderer.getHeight() / 2,
+            renderer.getWidth(),
             barHeight
         ), 1);
 
         // melonJS logo
-        game$1.world.addChild(new IconLogo(
-            video$1.renderer.getWidth() / 2,
-            (video$1.renderer.getHeight() / 2) - (barHeight * 2) - 35
+        world.addChild(new IconLogo(
+            renderer.getWidth() / 2,
+            (renderer.getHeight() / 2) - (barHeight * 2) - 35
 
         ), 2);
 
         // melonJS text
-        game$1.world.addChild(new TextLogo(
-            video$1.renderer.getWidth(),
-            video$1.renderer.getHeight()
+        world.addChild(new TextLogo(
+            renderer.getWidth(),
+            renderer.getHeight()
         ), 2);
     }
 });
@@ -16673,7 +16631,7 @@ function _startRunLoop() {
     // ensure nothing is running first and in valid state
     if ((_animFrameId === -1) && (_state !== -1)) {
         // reset the timer
-        timer$1.reset();
+        timer.reset();
 
         // start the main loop
         _animFrameId = window.requestAnimationFrame(_renderFrame);
@@ -16688,7 +16646,7 @@ function _resumeRunLoop() {
     // ensure game is actually paused and in valid state
     if (_isPaused && (_state !== -1)) {
         // reset the timer
-        timer$1.reset();
+        timer.reset();
 
         _isPaused = false;
     }
@@ -16711,9 +16669,9 @@ function _pauseRunLoop() {
 function _renderFrame(time) {
     var stage = _stages[_state].stage;
     // update all game objects
-    game$1.update(time, stage);
+    update(time, stage);
     // render all game objects
-    game$1.draw(stage);
+    draw(stage);
     // schedule the next frame update
     if (_animFrameId !== -1) {
         _animFrameId = window.requestAnimationFrame(_renderFrame);
@@ -16761,7 +16719,7 @@ function _switchState(state) {
         }
 
         // force repaint
-        game$1.repaint();
+        repaint();
     }
 }
 
@@ -16930,7 +16888,7 @@ var state = {
             _stopRunLoop();
             // current music stop
             if (music === true) {
-                audio$1.pauseTrack();
+                pauseTrack();
             }
 
             // store time when stopped
@@ -16960,7 +16918,7 @@ var state = {
             _pauseRunLoop();
             // current music stop
             if (music === true) {
-                audio$1.pauseTrack();
+                pauseTrack();
             }
 
             // store time when paused
@@ -16989,14 +16947,14 @@ var state = {
             _startRunLoop();
             // current music stop
             if (music === true) {
-                audio$1.resumeTrack();
+                resumeTrack();
             }
 
             // calculate the elpased time
             _pauseTime = window.performance.now() - _pauseTime;
 
             // force repaint
-            game$1.repaint();
+            repaint();
 
             // publish the restart notification
             event.publish(event.STATE_RESTART, [ _pauseTime ]);
@@ -17021,7 +16979,7 @@ var state = {
             _resumeRunLoop();
             // current music stop
             if (music === true) {
-                audio$1.resumeTrack();
+                resumeTrack();
             }
 
             // calculate the elpased time
@@ -17198,13 +17156,13 @@ var state = {
         if (_fade.duration && _stages[state].transition) {
             /** @ignore */
             _onSwitchComplete = function() {
-                game$1.viewport.fadeOut(_fade.color, _fade.duration);
+                viewport.fadeOut(_fade.color, _fade.duration);
             };
-            game$1.viewport.fadeIn(
+            viewport.fadeIn(
                 _fade.color,
                 _fade.duration,
                 function () {
-                    utils$1.function.defer(_switchState, this, state);
+                    utils.function.defer(_switchState, this, state);
                 }
             );
 
@@ -17216,7 +17174,7 @@ var state = {
             if (forceChange === true) {
                 _switchState(state);
             } else {
-                utils$1.function.defer(_switchState, this, state);
+                utils.function.defer(_switchState, this, state);
             }
         }
     },
@@ -17234,7 +17192,6 @@ var state = {
     }
 
 };
-var state$1 = state;
 
 /**
  * @classdesc
@@ -18054,8 +18011,7 @@ class Body {
         this.collisionType = collision.types.ENEMY_OBJECT;
 
         /**
-         * body velocity<br>
-         *
+         * body velocity
          * @public
          * @type me.Vector2d
          * @default <0,0>
@@ -18066,22 +18022,6 @@ class Body {
             this.vel = new Vector2d();
         }
         this.vel.set(0, 0);
-
-        /**
-         * body acceleration <br>
-         * Not fully implemented yet.  At this time accel is used to set the MaximumVelocity allowed.
-         * @public
-         * @type me.Vector2d
-         * @default <0,0>
-         * @name accel
-         * @deprecated
-         * @see me.Body.force
-         * @memberOf me.Body
-         */
-        if (typeof this.accel === "undefined") {
-            this.accel = new Vector2d();
-        }
-        this.accel.set(0, 0);
 
         /**
          * body force or acceleration (automatically) applied to the body.
@@ -18409,7 +18349,7 @@ class Body {
         // clear the current bounds
         this.bounds.clear();
         // remove the shape from shape list
-        utils$1.array.remove(this.shapes, shape);
+        utils.array.remove(this.shapes, shape);
         // add everything left back
         for (var s = 0; s < this.shapes.length; s++) {
             this.addShape(this.shapes[s]);
@@ -18505,7 +18445,7 @@ class Body {
             }
 
             // cancel the falling an jumping flags if necessary
-            var dir = Math.sign(game$1.world.gravity.y * this.gravityScale) || 1;
+            var dir = Math.sign(world.gravity.y * this.gravityScale) || 1;
             this.falling = overlap.y >= dir;
             this.jumping = overlap.y <= -dir;
         }
@@ -18622,28 +18562,6 @@ class Body {
     }
 
     /**
-     * Sets accel to Velocity if x or y is not 0.  Net effect is to set the maxVel.x/y to the passed values for x/y<br>
-     * note: This does not set the vel member of the body object. This is identical to the setMaxVelocity call except that the
-     * accel property is updated to match the passed x and y.
-     * setMaxVelocity if needed<br>
-     * @name setVelocity
-     * @memberOf me.Body
-     * @function
-     * @param {Number} x velocity on x axis
-     * @param {Number} y velocity on y axis
-     * @protected
-     * @deprecated
-     * @see me.Body.force
-     */
-    setVelocity(x, y) {
-        this.accel.x = x !== 0 ? x : this.accel.x;
-        this.accel.y = y !== 0 ? y : this.accel.y;
-
-        // limit by default to the same max value
-        this.setMaxVelocity(x, y);
-    }
-
-    /**
      * cap the body velocity (body.maxVel property) to the specified value<br>
      * @name setMaxVelocity
      * @memberOf me.Body
@@ -18676,10 +18594,10 @@ class Body {
      * @ignore
      */
     applyFriction(vel) {
-        var fx = this.friction.x * timer$1.tick,
+        var fx = this.friction.x * timer.tick,
             nx = vel.x + fx,
             x = vel.x - fx,
-            fy = this.friction.y * timer$1.tick,
+            fy = this.friction.y * timer.tick,
             ny = vel.y + fy,
             y = vel.y - fy;
 
@@ -18700,10 +18618,10 @@ class Body {
     computeVelocity(vel) {
         // apply fore if defined
         if (this.force.x) {
-            vel.x += this.force.x * timer$1.tick;
+            vel.x += this.force.x * timer.tick;
         }
         if (this.force.y) {
-            vel.y += this.force.y * timer$1.tick;
+            vel.y += this.force.y * timer.tick;
         }
 
         // apply friction
@@ -18712,10 +18630,10 @@ class Body {
         }
 
         if (!this.ignoreGravity) {
-            var worldGravity = game$1.world.gravity;
+            var worldGravity = world.gravity;
             // apply gravity if defined
-            vel.x += worldGravity.x * this.gravityScale * this.mass * timer$1.tick;
-            vel.y += worldGravity.y * this.gravityScale * this.mass * timer$1.tick;
+            vel.x += worldGravity.x * this.gravityScale * this.mass * timer.tick;
+            vel.y += worldGravity.y * this.gravityScale * this.mass * timer.tick;
             // check if falling / jumping
             this.falling = (vel.y * Math.sign(worldGravity.y * this.gravityScale)) > 0;
             this.jumping = (this.falling ? false : this.jumping);
@@ -18798,11 +18716,11 @@ function setTMXValue(name, type, value) {
 
         default :
             // try to parse it anyway
-            if (!value || utils$1.string.isBoolean(value)) {
+            if (!value || utils.string.isBoolean(value)) {
                 // if value not defined or boolean
                 value = value ? (value === "true") : true;
             }
-            else if (utils$1.string.isNumeric(value)) {
+            else if (utils.string.isNumeric(value)) {
                 // check if numeric
                 value = Number(value);
             }
@@ -19171,7 +19089,7 @@ class TextureCache {
     get(image, atlas) {
         if (!this.cache.has(image)) {
             if (!atlas) {
-                atlas = createAtlas(image.width, image.height, image.src ? utils$1.file.getBasename(image.src) : undefined);
+                atlas = createAtlas(image.width, image.height, image.src ? utils.file.getBasename(image.src) : undefined);
             }
             this.set(image, new Texture(atlas, image, false));
         }
@@ -19190,7 +19108,7 @@ class TextureCache {
         }
 
         if (!image_cache.has(color)) {
-            image_cache.set(color, video$1.renderer.tint(src, color, "multiply"));
+            image_cache.set(color, renderer.tint(src, color, "multiply"));
         }
 
         return image_cache.get(color);
@@ -19204,7 +19122,7 @@ class TextureCache {
         var height = image.height;
 
         // warn if a non POT texture is added to the cache when using WebGL1
-        if (video$1.renderer.WebGLVersion === 1 && (!isPowerOfTwo(width) || !isPowerOfTwo(height))) {
+        if (renderer.WebGLVersion === 1 && (!isPowerOfTwo(width) || !isPowerOfTwo(height))) {
             var src = typeof image.src !== "undefined" ? image.src : image;
             console.warn(
                 "[Texture] " + src + " is not a POT texture " +
@@ -19384,7 +19302,7 @@ class Texture {
                 if (cache instanceof TextureCache) {
                     cache.set(source, this);
                 } else {
-                    video$1.renderer.cache.set(source, this);
+                    renderer.cache.set(source, this);
                 }
             });
         }
@@ -19494,7 +19412,7 @@ class Texture {
      */
     addUvsMap(atlas, frame, w, h) {
         // ignore if using the Canvas Renderer
-        if (video$1.renderer instanceof WebGLRenderer) {
+        if (renderer instanceof WebGLRenderer) {
             // Source coordinates
             var s = atlas[frame].offset;
             var sw = atlas[frame].width;
@@ -19519,7 +19437,7 @@ class Texture {
      */
     addQuadRegion(name, x, y, w, h) {
         // TODO: Require proper atlas regions instead of caching arbitrary region keys
-        if (video$1.renderer.settings.verbose === true) {
+        if (renderer.settings.verbose === true) {
             console.warn("Adding texture region", name, "for texture", this);
         }
 
@@ -19882,7 +19800,7 @@ class Sprite extends Renderable {
             // update the default "current" frame size
             this.current.width = settings.framewidth = settings.framewidth || this.image.width;
             this.current.height = settings.frameheight = settings.frameheight || this.image.height;
-            this.source = video$1.renderer.cache.get(this.image, settings);
+            this.source = renderer.cache.get(this.image, settings);
             this.textureAtlas = this.source.getAtlas();
         }
 
@@ -20721,7 +20639,7 @@ class Renderer {
         } else if (typeof this.settings.canvas !== "undefined") {
             this.canvas = this.settings.canvas;
         } else {
-            this.canvas = video$1.createCanvas(this.settings.zoomX, this.settings.zoomY);
+            this.canvas = createCanvas(this.settings.zoomX, this.settings.zoomY);
         }
 
         // canvas object and context
@@ -20744,7 +20662,7 @@ class Renderer {
 
         // reset the instantiated renderer on game reset
         event.subscribe(event.GAME_RESET, function () {
-            video$1.renderer.reset();
+            renderer.reset();
         });
 
         return this;
@@ -21016,7 +20934,7 @@ class Renderer {
      * @return {HTMLCanvasElement|OffscreenCanvas} a new canvas element representing the tinted image
      */
     tint(src, color, mode) {
-        var canvas = video$1.createCanvas(src.width, src.height, true);
+        var canvas = createCanvas(src.width, src.height, true);
         var context = this.getContext2d(canvas);
 
         context.save();
@@ -21126,7 +21044,7 @@ class CanvasRenderer extends Renderer {
 
         // create the back buffer if we use double buffering
         if (this.settings.doubleBuffering) {
-            this.backBufferCanvas = video$1.createCanvas(this.settings.width, this.settings.height, true);
+            this.backBufferCanvas = createCanvas(this.settings.width, this.settings.height, true);
             this.backBufferContext2D = this.getContext2d(this.backBufferCanvas);
         }
         else {
@@ -22008,7 +21926,7 @@ class TMXLayer extends Renderable {
 
         // check for the correct rendering method
         if (typeof (this.preRender) === "undefined") {
-            this.preRender = game$1.world.preRender;
+            this.preRender = world.preRender;
         }
 
         // set a renderer
@@ -22056,7 +21974,7 @@ class TMXLayer extends Renderable {
         // if pre-rendering method is use, create an offline canvas/renderer
         if ((this.preRender === true) && (!this.canvasRenderer)) {
             this.canvasRenderer = new CanvasRenderer({
-                canvas : video$1.createCanvas(this.width, this.height),
+                canvas : createCanvas(this.width, this.height),
                 widht : this.width,
                 heigth : this.height,
                 transparent : true
@@ -23816,10 +23734,10 @@ class TMXTileset {
         // check if an external tileset is defined
         if (typeof(tileset.source) !== "undefined") {
             var src = tileset.source;
-            var ext = utils$1.file.getExtension(src);
+            var ext = utils.file.getExtension(src);
             if (ext === "tsx" || ext === "json") {
                 // load the external tileset (TSX/JSON)
-                tileset = loader.getTMX(utils$1.file.getBasename(src));
+                tileset = loader.getTMX(utils.file.getBasename(src));
                 if (!tileset) {
                     throw new Error(src + " external TSX/JSON tileset not found");
                 }
@@ -23930,7 +23848,7 @@ class TMXTileset {
             }
 
             // create a texture atlas for the given tileset
-            this.texture = video$1.renderer.cache.get(this.image, {
+            this.texture = renderer.cache.get(this.image, {
                 framewidth : this.tilewidth,
                 frameheight : this.tileheight,
                 margin : this.margin,
@@ -24024,7 +23942,7 @@ class TMXTileset {
     // update tile animations
     update(dt) {
         var duration = 0,
-            now = timer$1.getTime(),
+            now = timer.getTime(),
             result = false;
 
         if (this._lastUpdate !== now) {
@@ -25004,7 +24922,7 @@ class TMXTileMap {
         // callback funtion for the viewport resize event
         function _setBounds(width, height) {
             // adjust the viewport bounds if level is smaller
-            game$1.viewport.setBounds(
+            viewport.setBounds(
                 0, 0,
                 Math.max(levelBounds.width, width),
                 Math.max(levelBounds.height, height)
@@ -25020,7 +24938,7 @@ class TMXTileMap {
 
         if (setViewportBounds === true) {
             // force viewport bounds update
-            _setBounds(game$1.viewport.width, game$1.viewport.height);
+            _setBounds(viewport.width, viewport.height);
             // Replace the resize handler
             if (onresize_handler) {
                 event.unsubscribe(onresize_handler);
@@ -25219,7 +25137,7 @@ function safeLoadLevel(levelId, options, restart) {
     options.container.reset();
 
     // reset the renderer
-    game$1.reset();
+    reset();
 
     // clean the current (previous) level
     if (levels[level.getCurrentLevelId()]) {
@@ -25240,7 +25158,7 @@ function safeLoadLevel(levelId, options, restart) {
 
     if (restart) {
         // resume the game loop if it was previously running
-        state$1.restart();
+        state.restart();
     }
 }
 /**
@@ -25260,7 +25178,7 @@ function loadTMXLevel(levelId, container, flatten, setViewportBounds) {
 
     // reset the GUID generator
     // and pass the level id as parameter
-    utils$1.resetGUID(levelId, level.nextobjectid);
+    utils.resetGUID(levelId, level.nextobjectid);
 
     // Tiled use 0,0 anchor coordinates
     container.anchorPoint.set(0, 0);
@@ -25356,9 +25274,9 @@ var level = {
      */
     load(levelId, options) {
         options = Object.assign({
-            "container"         : game$1.world,
-            "onLoaded"          : game$1.onLevelLoaded,
-            "flatten"           : game$1.mergeGroup,
+            "container"         : world,
+            "onLoaded"          : onLevelLoaded,
+            "flatten"           : mergeGroup,
             "setViewportBounds" : true
         }, options || {});
 
@@ -25370,14 +25288,14 @@ var level = {
         if (levels[levelId] instanceof TMXTileMap) {
 
             // check the status of the state mngr
-            var wasRunning = state$1.isRunning();
+            var wasRunning = state.isRunning();
 
             if (wasRunning) {
                 // stop the game loop to avoid
                 // some silly side effects
-                state$1.stop();
+                state.stop();
 
-                utils$1.function.defer(safeLoadLevel, this, levelId, options, true);
+                utils.function.defer(safeLoadLevel, this, levelId, options, true);
             }
             else {
                 safeLoadLevel(levelId, options);
@@ -25599,7 +25517,7 @@ function preloadTMX(tmxData, onload, onerror) {
 
     var xmlhttp = new XMLHttpRequest();
     // check the data format ('tmx', 'json')
-    var format = utils$1.file.getExtension(tmxData.src);
+    var format = utils.file.getExtension(tmxData.src);
 
     if (xmlhttp.overrideMimeType) {
         if (format === "json") {
@@ -25967,7 +25885,7 @@ var loader = {
 
         if (switchToLoadState !== false) {
             // swith to the loading screen
-            state$1.change(state$1.LOADING);
+            state.change(state.LOADING);
         }
 
         // check load status
@@ -26031,7 +25949,7 @@ var loader = {
                 return 1;
 
             case "audio":
-                audio$1.load(res, !!res.stream, onload, onerror);
+                load(res, !!res.stream, onload, onerror);
                 return 1;
 
             case "fontface":
@@ -26096,7 +26014,7 @@ var loader = {
                 return true;
 
             case "audio":
-                return audio$1.unload(res.name);
+                return unload(res.name);
 
             default:
                 throw new Error("unload : unknown or invalid resource type : " + res.type);
@@ -26155,7 +26073,7 @@ var loader = {
         }
 
         // unload all audio resources
-        audio$1.unloadAll();
+        unloadAll();
     },
 
     /**
@@ -26205,7 +26123,7 @@ var loader = {
      */
     getImage(image) {
         // force as string and extract the base name
-        image = utils$1.file.getBasename("" + image);
+        image = utils.file.getBasename("" + image);
         if (image in imgList) {
             // return the corresponding Image object
             return imgList[image];
@@ -26235,35 +26153,45 @@ var loader = {
 
 // external import
 
-// audio channel list
+/**
+ * @namespace audio
+ * @memberOf me
+ */
+
+/**
+ * audio channel list
+ * @ignore
+ */
 var audioTracks = {};
 
-// current music
+/**
+ * current active track
+ * @ignore
+ */
 var current_track_id = null;
 
-// a retry counter
+/**
+ * error retry counter
+ * @ignore
+ */
 var retry_counter = 0;
+
+/**
+ * list of active audio formats
+ * @ignore
+ */
+var audioExts = [];
 
 /**
  * event listener callback on load error
  * @ignore
  */
-var soundLoadError = function(sound_name, onerror_cb) {
+var soundLoadError = function (sound_name, onerror_cb) {
     // check the retry counter
     if (retry_counter++ > 3) {
         // something went wrong
         var errmsg = "melonJS: failed loading " + sound_name;
-        if (audio.stopOnAudioError === false) {
-            // disable audio
-            audio.disable();
-            // call error callback if defined
-            if (onerror_cb) {
-                onerror_cb();
-            }
-            // warning
-            console.log(errmsg + ", disabling audio");
-        }
-        else {
+        {
             // throw an exception and stop everything !
             throw new Error(errmsg);
         }
@@ -26275,569 +26203,478 @@ var soundLoadError = function(sound_name, onerror_cb) {
 };
 
 /**
- * @namespace me.audio
- * @memberOf me
+ * Specify either to stop on audio loading error or not<br>
+ * if true, melonJS will throw an exception and stop loading<br>
+ * if false, melonJS will disable sounds and output a warning message
+ * in the console<br>
+ * @name stopOnAudioError
+ * @type {Boolean}
+ * @default true
+ * @memberOf me.audio
  */
-var audio = {
+let stopOnAudioError = true;
 
-    /**
-     * Specify either to stop on audio loading error or not<br>
-     * if true, melonJS will throw an exception and stop loading<br>
-     * if false, melonJS will disable sounds and output a warning message
-     * in the console<br>
-     * @type {Boolean}
-     * @default true
-     * @memberOf me.audio
-     */
-    stopOnAudioError : true,
+/**
+ * Initialize and configure the audio support.<br>
+ * melonJS supports a wide array of audio codecs that have varying browser support :
+ * <i> ("mp3", "mpeg", opus", "ogg", "oga", "wav", "aac", "caf", "m4a", "m4b", "mp4", "weba", "webm", "dolby", "flac")</i>.<br>
+ * For a maximum browser coverage the recommendation is to use at least two of them,
+ * typically default to webm and then fallback to mp3 for the best balance of small filesize and high quality,
+ * webm has nearly full browser coverage with a great combination of compression and quality, and mp3 will fallback gracefully for other browsers.
+ * It is important to remember that melonJS selects the first compatible sound based on the list of extensions and given order passed here.
+ * So if you want webm to be used before mp3, you need to put the audio format in that order.
+ * @function me.audio.init
+ * @param {String} [format="mp3"] audio format to prioritize
+ * @returns {Boolean} Indicates whether audio initialization was successful
+ * @example
+ * // initialize the "sound engine", giving "webm" as default desired audio format, and "mp3" as a fallback
+ * if (!me.audio.init("webm,mp3")) {
+ *     alert("Sorry but your browser does not support html 5 audio !");
+ *     return;
+ * }
+ */
+ function init$1(format = "mp3") {
+    // convert it into an array
+    audioExts = format.split(",");
 
-    /**
-     * @typedef {Function} Init
-     * @param {String} [audioFormat="mp3"] audio format to prioritize
-     * @returns {Boolean} Indicates whether audio initialization was successful
-     */
-
-    /**
-     * Initialize and configure the audio support.<br>
-     * melonJS supports a wide array of audio codecs that have varying browser support :
-     * <i> ("mp3", "mpeg", opus", "ogg", "oga", "wav", "aac", "caf", "m4a", "m4b", "mp4", "weba", "webm", "dolby", "flac")</i>.<br>
-     * For a maximum browser coverage the recommendation is to use at least two of them,
-     * typically default to webm and then fallback to mp3 for the best balance of small filesize and high quality,
-     * webm has nearly full browser coverage with a great combination of compression and quality, and mp3 will fallback gracefully for other browsers.
-     * It is important to remember that melonJS selects the first compatible sound based on the list of extensions and given order passed here.
-     * So if you want webm to be used before mp3, you need to put the audio format in that order.
-     * @name init
-     * @memberOf me.audio
-     * @public
-     * @function
-     * @type {Init}
-     * @example
-     * // initialize the "sound engine", giving "webm" as default desired audio format, and "mp3" as a fallback
-     * if (!me.audio.init("webm,mp3")) {
-     *     alert("Sorry but your browser does not support html 5 audio !");
-     *     return;
-     * }
-     */
-     init : function (audioFormat) {
-        // if no param is given to init we use mp3 by default
-        audioFormat = typeof audioFormat === "string" ? audioFormat : "mp3";
-        // convert it into an array
-        this.audioFormats = audioFormat.split(",");
-
-        return !howler.Howler.noAudio;
-    },
-
-
-    /**
-     * return true if the given audio format is supported
-     * @name hasFormat
-     * @param {String} format audio format : "mp3", "mpeg", opus", "ogg", "oga", "wav", "aac", "caf", "m4a", "m4b", "mp4", "weba", "webm", "dolby", "flac"
-     * @memberOf me.audio
-     * @public
-     * @function
-     */
-    hasFormat:function (codec) {
-        return this.hasAudio && howler.Howler.codecs(codec);
-    },
-
-    /**
-     * return true if audio (HTML5 or WebAudio) is supported
-     * @name hasAudio
-     * @memberOf me.audio
-     * @public
-     * @function
-     */
-    hasAudio :function () {
-        return !howler.Howler.noAudio;
-    },
-
-    /**
-     * enable audio output <br>
-     * only useful if audio supported and previously disabled through
-     * @see me.audio#disable
-     * @name enable
-     * @memberOf me.audio
-     * @public
-     * @function
-     */
-    enable : function () {
-        this.unmuteAll();
-    },
-
-    /**
-     * disable audio output
-     *
-     * @name disable
-     * @memberOf me.audio
-     * @public
-     * @function
-     */
-    disable : function () {
-        this.muteAll();
-    },
-
-    /**
-     * Load an audio file.<br>
-     * <br>
-     * sound item must contain the following fields :<br>
-     * - name    : name of the sound<br>
-     * - src     : source path<br>
-     * @ignore
-     */
-    load : function (sound, html5, onload_cb, onerror_cb) {
-        var urls = [];
-        if (typeof(this.audioFormats) === "undefined" || this.audioFormats.length === 0) {
-            throw new Error("target audio extension(s) should be set through me.audio.init() before calling the preloader.");
-        }
-        for (var i = 0; i < this.audioFormats.length; i++) {
-            urls.push(sound.src + sound.name + "." + this.audioFormats[i] + loader.nocache);
-        }
-        audioTracks[sound.name] = new howler.Howl({
-            src : urls,
-            volume : howler.Howler.volume(),
-            html5 : html5 === true,
-            xhrWithCredentials : loader.withCredentials,
-            /**
-             * @ignore
-             */
-            onloaderror : function () {
-                soundLoadError.call(this, sound.name, onerror_cb);
-            },
-            /**
-             * @ignore
-             */
-            onload : function () {
-                retry_counter = 0;
-                if (onload_cb) {
-                    onload_cb();
-                }
+    return !howler.Howler.noAudio;
+}
+/**
+ * check if the given audio format is supported
+ * @function me.audio.hasFormat
+ * @param {String} format audio format : "mp3", "mpeg", opus", "ogg", "oga", "wav", "aac", "caf", "m4a", "m4b", "mp4", "weba", "webm", "dolby", "flac"
+ * @returns {Boolean} return true if the given audio format is supported
+ */
+function hasFormat(codec) {
+    return hasAudio() && howler.Howler.codecs(codec);
+}
+/**
+ * check if audio (HTML5 or WebAudio) is supported
+ * @function me.audio.hasAudio
+ * @returns {Boolean} return true if audio (HTML5 or WebAudio) is supported
+ */
+function hasAudio() {
+    return !howler.Howler.noAudio;
+}
+/**
+ * enable audio output <br>
+ * only useful if audio supported and previously disabled through
+ * @function me.audio.enable
+ * @see me.audio#disable
+ */
+function enable() {
+    unmuteAll();
+}
+/**
+ * disable audio output
+ * @function me.audio.disable
+ */
+function disable() {
+    muteAll();
+}
+/**
+ * Load an audio file.<br>
+ * <br>
+ * sound item must contain the following fields :<br>
+ * - name    : name of the sound<br>
+ * - src     : source path<br>
+ * @ignore
+ */
+function load(sound, html5, onload_cb, onerror_cb) {
+    var urls = [];
+    if (audioExts.length === 0) {
+        throw new Error("target audio extension(s) should be set through me.audio.init() before calling the preloader.");
+    }
+    for (var i = 0; i < audioExts.length; i++) {
+        urls.push(sound.src + sound.name + "." + audioExts[i] + loader.nocache);
+    }
+    audioTracks[sound.name] = new howler.Howl({
+        src : urls,
+        volume : howler.Howler.volume(),
+        html5 : html5 === true,
+        xhrWithCredentials : loader.withCredentials,
+        /**
+         * @ignore
+         */
+        onloaderror() {
+            soundLoadError.call(this, sound.name, onerror_cb);
+        },
+        /**
+         * @ignore
+         */
+        onload() {
+            retry_counter = 0;
+            if (onload_cb) {
+                onload_cb();
             }
-        });
+        }
+    });
 
-        return 1;
-    },
-
-    /**
-     * play the specified sound
-     * @name play
-     * @memberOf me.audio
-     * @public
-     * @function
-     * @param {String} sound_name audio clip name - case sensitive
-     * @param {Boolean} [loop=false] loop audio
-     * @param {Function} [onend] Function to call when sound instance ends playing.
-     * @param {Number} [volume=default] Float specifying volume (0.0 - 1.0 values accepted).
-     * @return {Number} the sound instance ID.
-     * @example
-     * // play the "cling" audio clip
-     * me.audio.play("cling");
-     * // play & repeat the "engine" audio clip
-     * me.audio.play("engine", true);
-     * // play the "gameover_sfx" audio clip and call myFunc when finished
-     * me.audio.play("gameover_sfx", false, myFunc);
-     * // play the "gameover_sfx" audio clip with a lower volume level
-     * me.audio.play("gameover_sfx", false, null, 0.5);
-     */
-    play : function (sound_name, loop = false, onend, volume) {
-        var sound = audioTracks[sound_name];
-        if (sound && typeof sound !== "undefined") {
-            var id = sound.play();
-            if (typeof loop === "boolean") {
-                // arg[0] can take different types in howler 2.0
-                sound.loop(loop, id);
+    return 1;
+}
+/**
+ * play the specified sound
+ * @function me.audio.play
+ * @param {String} sound_name audio clip name - case sensitive
+ * @param {Boolean} [loop=false] loop audio
+ * @param {Function} [onend] Function to call when sound instance ends playing.
+ * @param {Number} [volume=default] Float specifying volume (0.0 - 1.0 values accepted).
+ * @return {Number} the sound instance ID.
+ * @example
+ * // play the "cling" audio clip
+ * me.audio.play("cling");
+ * // play & repeat the "engine" audio clip
+ * me.audio.play("engine", true);
+ * // play the "gameover_sfx" audio clip and call myFunc when finished
+ * me.audio.play("gameover_sfx", false, myFunc);
+ * // play the "gameover_sfx" audio clip with a lower volume level
+ * me.audio.play("gameover_sfx", false, null, 0.5);
+ */
+function play(sound_name, loop = false, onend, volume) {
+    var sound = audioTracks[sound_name];
+    if (sound && typeof sound !== "undefined") {
+        var id = sound.play();
+        if (typeof loop === "boolean") {
+            // arg[0] can take different types in howler 2.0
+            sound.loop(loop, id);
+        }
+        sound.volume(typeof(volume) === "number" ? clamp(volume, 0.0, 1.0) : howler.Howler.volume(), id);
+        if (typeof(onend) === "function") {
+            if (loop === true) {
+                sound.on("end", onend, id);
             }
-            sound.volume(typeof(volume) === "number" ? clamp(volume, 0.0, 1.0) : howler.Howler.volume(), id);
-            if (typeof(onend) === "function") {
-                if (loop === true) {
-                    sound.on("end", onend, id);
-                }
-                else {
-                    sound.once("end", onend, id);
-                }
+            else {
+                sound.once("end", onend, id);
             }
-            return id;
-        } else {
-            throw new Error("audio clip " + sound_name + " does not exist");
         }
-    },
-
-    /**
-     * Fade a currently playing sound between two volumee.
-     * @name fade
-     * @memberOf me.audio
-     * @public
-     * @function
-     * @param {String} sound_name audio clip name - case sensitive
-     * @param {Number} from Volume to fade from (0.0 to 1.0).
-     * @param {Number} to Volume to fade to (0.0 to 1.0).
-     * @param {Number} duration Time in milliseconds to fade.
-     * @param {Number} [id] the sound instance ID. If none is passed, all sounds in group will fade.
-     */
-    fade : function (sound_name, from, to, duration, id) {
+        return id;
+    } else {
+        throw new Error("audio clip " + sound_name + " does not exist");
+    }
+}
+/**
+ * Fade a currently playing sound between two volumee.
+ * @function me.audio.fade
+ * @param {String} sound_name audio clip name - case sensitive
+ * @param {Number} from Volume to fade from (0.0 to 1.0).
+ * @param {Number} to Volume to fade to (0.0 to 1.0).
+ * @param {Number} duration Time in milliseconds to fade.
+ * @param {Number} [id] the sound instance ID. If none is passed, all sounds in group will fade.
+ */
+function fade(sound_name, from, to, duration, id) {
+    var sound = audioTracks[sound_name];
+    if (sound && typeof sound !== "undefined") {
+        sound.fade(from, to, duration, id);
+    } else {
+        throw new Error("audio clip " + sound_name + " does not exist");
+    }
+}
+/**
+ * get/set the position of playback for a sound.
+ * @function me.audio.seek
+ * @param {String} sound_name audio clip name - case sensitive
+ * @param {Number} [seek]  The position to move current playback to (in seconds).
+ * @param {Number} [id] the sound instance ID. If none is passed, all sounds in group will changed.
+ * @return return the current seek position (if no extra parameters were given)
+ * @example
+ * // return the current position of the background music
+ * var current_pos = me.audio.seek("dst-gameforest");
+ * // set back the position of the background music to the beginning
+ * me.audio.seek("dst-gameforest", 0);
+ */
+function seek(sound_name, seek, id) {
+    var sound = audioTracks[sound_name];
+    if (sound && typeof sound !== "undefined") {
+        return sound.seek.apply(sound, Array.prototype.slice.call(arguments, 1));
+    } else {
+        throw new Error("audio clip " + sound_name + " does not exist");
+    }
+}
+/**
+ * get or set the rate of playback for a sound.
+ * @function me.audio.rate
+ * @param {String} sound_name audio clip name - case sensitive
+ * @param {Number} [rate] playback rate : 0.5 to 4.0, with 1.0 being normal speed.
+ * @param {Number} [id] the sound instance ID. If none is passed, all sounds in group will be changed.
+ * @return return the current playback rate (if no extra parameters were given)
+ * @example
+ * // get the playback rate of the background music
+ * var rate = me.audio.rate("dst-gameforest");
+ * // speed up the playback of the background music
+ * me.audio.rate("dst-gameforest", 2.0);
+ */
+function rate(sound_name, rate, id) {
+    var sound = audioTracks[sound_name];
+    if (sound && typeof sound !== "undefined") {
+        return sound.rate.apply(sound, Array.prototype.slice.call(arguments, 1));
+    } else {
+        throw new Error("audio clip " + sound_name + " does not exist");
+    }
+}
+/**
+ * stop the specified sound on all channels
+ * @function me.audio.stop
+ * @param {String} [sound_name] audio clip name (case sensitive). If none is passed, all sounds are stopped.
+ * @param {Number} [id] the sound instance ID. If none is passed, all sounds in group will stop.
+ * @example
+ * me.audio.stop("cling");
+ */
+function stop(sound_name, id) {
+    if (typeof sound_name !== "undefined") {
         var sound = audioTracks[sound_name];
         if (sound && typeof sound !== "undefined") {
-            sound.fade(from, to, duration, id);
+            sound.stop(id);
+            // remove the defined onend callback (if any defined)
+            sound.off("end", undefined, id);
         } else {
             throw new Error("audio clip " + sound_name + " does not exist");
         }
-    },
+    } else {
+        howler.Howler.stop();
+    }
+}
+/**
+ * pause the specified sound on all channels<br>
+ * this function does not reset the currentTime property
+ * @function me.audio.pause
+ * @param {String} sound_name audio clip name - case sensitive
+ * @param {Number} [id] the sound instance ID. If none is passed, all sounds in group will pause.
+ * @example
+ * me.audio.pause("cling");
+ */
+function pause(sound_name, id) {
+    var sound = audioTracks[sound_name];
+    if (sound && typeof sound !== "undefined") {
+        sound.pause(id);
+    } else {
+        throw new Error("audio clip " + sound_name + " does not exist");
+    }
+}
+/**
+ * resume the specified sound on all channels<br>
+ * @function me.audio.resume
+ * @param {String} sound_name audio clip name - case sensitive
+ * @param {Number} [id] the sound instance ID. If none is passed, all sounds in group will resume.
+ * @example
+ * // play a audio clip
+ * var id = me.audio.play("myClip");
+ * ...
+ * // pause it
+ * me.audio.pause("myClip", id);
+ * ...
+ * // resume
+ * me.audio.resume("myClip", id);
+ */
+function resume(sound_name, id) {
+    var sound = audioTracks[sound_name];
+    if (sound && typeof sound !== "undefined") {
+        sound.play(id);
+    } else {
+        throw new Error("audio clip " + sound_name + " does not exist");
+    }
+}
+/**
+ * play the specified audio track<br>
+ * this function automatically set the loop property to true<br>
+ * and keep track of the current sound being played.
+ * @function me.audio.playTrack
+ * @param {String} sound_name audio track name - case sensitive
+ * @param {Number} [volume=default] Float specifying volume (0.0 - 1.0 values accepted).
+ * @return {Number} the sound instance ID.
+ * @example
+ * me.audio.playTrack("awesome_music");
+ */
+function playTrack(sound_name, volume) {
+    current_track_id = sound_name;
+    return play(
+        current_track_id,
+        true,
+        null,
+        volume
+    );
+}
+/**
+ * stop the current audio track
+ * @function me.audio.stopTrack
+ * @see me.audio#playTrack
+ * @example
+ * // play a awesome music
+ * me.audio.playTrack("awesome_music");
+ * // stop the current music
+ * me.audio.stopTrack();
+ */
+function stopTrack() {
+    if (current_track_id !== null) {
+        audioTracks[current_track_id].stop();
+        current_track_id = null;
+    }
+}
+/**
+ * pause the current audio track
+ * @function me.audio.pauseTrack
+ * @example
+ * me.audio.pauseTrack();
+ */
+function pauseTrack() {
+    if (current_track_id !== null) {
+        audioTracks[current_track_id].pause();
+    }
+}
+/**
+ * resume the previously paused audio track
+ * @function me.audio.resumeTrack
+ * @example
+ * // play an awesome music
+ * me.audio.playTrack("awesome_music");
+ * // pause the audio track
+ * me.audio.pauseTrack();
+ * // resume the music
+ * me.audio.resumeTrack();
+ */
+function resumeTrack() {
+    if (current_track_id !== null) {
+        audioTracks[current_track_id].play();
+    }
+}
+/**
+ * returns the current track Id
+ * @function me.audio.getCurrentTrack
+ * @return {String} audio track name
+ */
+function getCurrentTrack() {
+    return current_track_id;
+}
+/**
+ * set the default global volume
+ * @function me.audio.setVolume
+ * @param {Number} volume Float specifying volume (0.0 - 1.0 values accepted).
+ */
+function setVolume(volume) {
+    howler.Howler.volume(volume);
+}
+/**
+ * get the default global volume
+ * @function me.audio.getVolume
+ * @returns {Number} current volume value in Float [0.0 - 1.0] .
+ */
+function getVolume() {
+    return howler.Howler.volume();
+}
+/**
+ * mute or unmute the specified sound, but does not pause the playback.
+ * @function me.audio.mute
+ * @param {String} sound_name audio clip name - case sensitive
+ * @param {Number} [id] the sound instance ID. If none is passed, all sounds in group will mute.
+ * @param {Boolean} [mute=true] True to mute and false to unmute
+ * @example
+ * // mute the background music
+ * me.audio.mute("awesome_music");
+ */
+function mute(sound_name, id, mute) {
+    // if not defined : true
+    mute = (typeof(mute) === "undefined" ? true : !!mute);
+    var sound = audioTracks[sound_name];
+    if (sound && typeof(sound) !== "undefined") {
+        sound.mute(mute, id);
+    } else {
+        throw new Error("audio clip " + sound_name + " does not exist");
+    }
+}
+/**
+ * unmute the specified sound
+ * @function me.audio.unmute
+ * @param {String} sound_name audio clip name
+ * @param {Number} [id] the sound instance ID. If none is passed, all sounds in group will unmute.
+ */
+function unmute(sound_name, id) {
+    mute(sound_name, id, false);
+}
+/**
+ * mute all audio
+ * @function me.audio.muteAll
+ */
+function muteAll() {
+    howler.Howler.mute(true);
+}
+/**
+ * unmute all audio
+ * @function me.audio.unmuteAll
+ */
+function unmuteAll() {
+    howler.Howler.mute(false);
+}
+/**
+ * Returns true if audio is muted globally.
+ * @function me.audio.muted
+ * @return {Boolean} true if audio is muted globally
+ */
+function muted() {
+    return howler.Howler._muted;
+}
+/**
+ * unload specified audio track to free memory
+ * @function me.audio.unload
+ * @param {String} sound_name audio track name - case sensitive
+ * @return {Boolean} true if unloaded
+ * @example
+ * me.audio.unload("awesome_music");
+ */
+function unload(sound_name) {
+    if (!(sound_name in audioTracks)) {
+        return false;
+    }
 
-    /**
-     * get/set the position of playback for a sound.
-     * @name seek
-     * @memberOf me.audio
-     * @public
-     * @function
-     * @param {String} sound_name audio clip name - case sensitive
-     * @param {Number} [seek]  The position to move current playback to (in seconds).
-     * @param {Number} [id] the sound instance ID. If none is passed, all sounds in group will changed.
-     * @return return the current seek position (if no extra parameters were given)
-     * @example
-     * // return the current position of the background music
-     * var current_pos = me.audio.seek("dst-gameforest");
-     * // set back the position of the background music to the beginning
-     * me.audio.seek("dst-gameforest", 0);
-     */
-    seek : function (sound_name, seek, id) {
-        var sound = audioTracks[sound_name];
-        if (sound && typeof sound !== "undefined") {
-            return sound.seek.apply(sound, Array.prototype.slice.call(arguments, 1));
-        } else {
-            throw new Error("audio clip " + sound_name + " does not exist");
-        }
-    },
-
-    /**
-     * get or set the rate of playback for a sound.
-     * @name rate
-     * @memberOf me.audio
-     * @public
-     * @function
-     * @param {String} sound_name audio clip name - case sensitive
-     * @param {Number} [rate] playback rate : 0.5 to 4.0, with 1.0 being normal speed.
-     * @param {Number} [id] the sound instance ID. If none is passed, all sounds in group will be changed.
-     * @return return the current playback rate (if no extra parameters were given)
-     * @example
-     * // get the playback rate of the background music
-     * var rate = me.audio.rate("dst-gameforest");
-     * // speed up the playback of the background music
-     * me.audio.rate("dst-gameforest", 2.0);
-     */
-    rate : function (sound_name, rate, id) {
-        var sound = audioTracks[sound_name];
-        if (sound && typeof sound !== "undefined") {
-            return sound.rate.apply(sound, Array.prototype.slice.call(arguments, 1));
-        } else {
-            throw new Error("audio clip " + sound_name + " does not exist");
-        }
-    },
-
-    /**
-     * stop the specified sound on all channels
-     * @name stop
-     * @memberOf me.audio
-     * @public
-     * @function
-     * @param {String} [sound_name] audio clip name (case sensitive). If none is passed, all sounds are stopped.
-     * @param {Number} [id] the sound instance ID. If none is passed, all sounds in group will stop.
-     * @example
-     * me.audio.stop("cling");
-     */
-    stop : function (sound_name, id) {
-        if (typeof sound_name !== "undefined") {
-            var sound = audioTracks[sound_name];
-            if (sound && typeof sound !== "undefined") {
-                sound.stop(id);
-                // remove the defined onend callback (if any defined)
-                sound.off("end", undefined, id);
-            } else {
-                throw new Error("audio clip " + sound_name + " does not exist");
-            }
-        } else {
-            howler.Howler.stop();
-        }
-    },
-
-    /**
-     * pause the specified sound on all channels<br>
-     * this function does not reset the currentTime property
-     * @name pause
-     * @memberOf me.audio
-     * @public
-     * @function
-     * @param {String} sound_name audio clip name - case sensitive
-     * @param {Number} [id] the sound instance ID. If none is passed, all sounds in group will pause.
-     * @example
-     * me.audio.pause("cling");
-     */
-    pause : function (sound_name, id) {
-        var sound = audioTracks[sound_name];
-        if (sound && typeof sound !== "undefined") {
-            sound.pause(id);
-        } else {
-            throw new Error("audio clip " + sound_name + " does not exist");
-        }
-    },
-
-    /**
-     * resume the specified sound on all channels<br>
-     * @name resume
-     * @memberOf me.audio
-     * @public
-     * @function
-     * @param {String} sound_name audio clip name - case sensitive
-     * @param {Number} [id] the sound instance ID. If none is passed, all sounds in group will resume.
-     * @example
-     * // play a audio clip
-     * var id = me.audio.play("myClip");
-     * ...
-     * // pause it
-     * me.audio.pause("myClip", id);
-     * ...
-     * // resume
-     * me.audio.resume("myClip", id);
-     */
-    resume : function (sound_name, id) {
-        var sound = audioTracks[sound_name];
-        if (sound && typeof sound !== "undefined") {
-            sound.play(id);
-        } else {
-            throw new Error("audio clip " + sound_name + " does not exist");
-        }
-    },
-
-    /**
-     * play the specified audio track<br>
-     * this function automatically set the loop property to true<br>
-     * and keep track of the current sound being played.
-     * @name playTrack
-     * @memberOf me.audio
-     * @public
-     * @function
-     * @param {String} sound_name audio track name - case sensitive
-     * @param {Number} [volume=default] Float specifying volume (0.0 - 1.0 values accepted).
-     * @return {Number} the sound instance ID.
-     * @example
-     * me.audio.playTrack("awesome_music");
-     */
-    playTrack : function (sound_name, volume) {
-        current_track_id = sound_name;
-        return this.play(
-            current_track_id,
-            true,
-            null,
-            volume
-        );
-    },
-
-    /**
-     * stop the current audio track
-     *
-     * @see me.audio#playTrack
-     * @name stopTrack
-     * @memberOf me.audio
-     * @public
-     * @function
-     * @example
-     * // play a awesome music
-     * me.audio.playTrack("awesome_music");
-     * // stop the current music
-     * me.audio.stopTrack();
-     */
-    stopTrack : function () {
-        if (current_track_id !== null) {
-            audioTracks[current_track_id].stop();
-            current_track_id = null;
-        }
-    },
-
-    /**
-     * pause the current audio track
-     *
-     * @name pauseTrack
-     * @memberOf me.audio
-     * @public
-     * @function
-     * @example
-     * me.audio.pauseTrack();
-     */
-    pauseTrack : function () {
-        if (current_track_id !== null) {
-            audioTracks[current_track_id].pause();
-        }
-    },
-
-    /**
-     * resume the previously paused audio track
-     *
-     * @name resumeTrack
-     * @memberOf me.audio
-     * @public
-     * @function
-     * @example
-     * // play an awesome music
-     * me.audio.playTrack("awesome_music");
-     * // pause the audio track
-     * me.audio.pauseTrack();
-     * // resume the music
-     * me.audio.resumeTrack();
-     */
-    resumeTrack : function () {
-        if (current_track_id !== null) {
-            audioTracks[current_track_id].play();
-        }
-    },
-
-    /**
-     * returns the current track Id
-     * @name getCurrentTrack
-     * @memberOf me.audio
-     * @public
-     * @function
-     * @return {String} audio track name
-     */
-    getCurrentTrack : function () {
-        return current_track_id;
-    },
-
-    /**
-     * set the default global volume
-     * @name setVolume
-     * @memberOf me.audio
-     * @public
-     * @function
-     * @param {Number} volume Float specifying volume (0.0 - 1.0 values accepted).
-     */
-    setVolume : function (volume) {
-        howler.Howler.volume(volume);
-    },
-
-    /**
-     * get the default global volume
-     * @name getVolume
-     * @memberOf me.audio
-     * @public
-     * @function
-     * @returns {Number} current volume value in Float [0.0 - 1.0] .
-     */
-    getVolume : function () {
-        return howler.Howler.volume();
-    },
-
-    /**
-     * mute or unmute the specified sound, but does not pause the playback.
-     * @name mute
-     * @memberOf me.audio
-     * @public
-     * @function
-     * @param {String} sound_name audio clip name - case sensitive
-     * @param {Number} [id] the sound instance ID. If none is passed, all sounds in group will mute.
-     * @param {Boolean} [mute=true] True to mute and false to unmute
-     * @example
-     * // mute the background music
-     * me.audio.mute("awesome_music");
-     */
-    mute : function (sound_name, id, mute) {
-        // if not defined : true
-        mute = (typeof(mute) === "undefined" ? true : !!mute);
-        var sound = audioTracks[sound_name];
-        if (sound && typeof(sound) !== "undefined") {
-            sound.mute(mute, id);
-        } else {
-            throw new Error("audio clip " + sound_name + " does not exist");
-        }
-    },
-
-    /**
-     * unmute the specified sound
-     * @name unmute
-     * @memberOf me.audio
-     * @public
-     * @function
-     * @param {String} sound_name audio clip name
-     * @param {Number} [id] the sound instance ID. If none is passed, all sounds in group will unmute.
-     */
-    unmute : function (sound_name, id) {
-        this.mute(sound_name, id, false);
-    },
-
-    /**
-     * mute all audio
-     * @name muteAll
-     * @memberOf me.audio
-     * @public
-     * @function
-     */
-    muteAll : function () {
-        howler.Howler.mute(true);
-    },
-
-    /**
-     * unmute all audio
-     * @name unmuteAll
-     * @memberOf me.audio
-     * @public
-     * @function
-     */
-    unmuteAll : function () {
-        howler.Howler.mute(false);
-    },
-
-    /**
-     * Returns true if audio is muted globally.
-     * @name muted
-     * @memberOf me.audio
-     * @public
-     * @function
-     * @return {Boolean} true if audio is muted globally
-     */
-    muted : function () {
-        return howler.Howler._muted;
-    },
-
-    /**
-     * unload specified audio track to free memory
-     *
-     * @name unload
-     * @memberOf me.audio
-     * @public
-     * @function
-     * @param {String} sound_name audio track name - case sensitive
-     * @return {Boolean} true if unloaded
-     * @example
-     * me.audio.unload("awesome_music");
-     */
-    unload : function (sound_name) {
-        if (!(sound_name in audioTracks)) {
-            return false;
-        }
-
-        // destroy the Howl object
-        audioTracks[sound_name].unload();
-        delete audioTracks[sound_name];
-        return true;
-    },
-
-    /**
-     * unload all audio to free memory
-     *
-     * @name unloadAll
-     * @memberOf me.audio
-     * @public
-     * @function
-     * @example
-     * me.audio.unloadAll();
-     */
-    unloadAll : function () {
-        for (var sound_name in audioTracks) {
-            if (audioTracks.hasOwnProperty(sound_name)) {
-                this.unload(sound_name);
-            }
+    // destroy the Howl object
+    audioTracks[sound_name].unload();
+    delete audioTracks[sound_name];
+    return true;
+}
+/**
+ * unload all audio to free memory
+ * @function me.audio.unloadAll
+ * @function
+ * @example
+ * me.audio.unloadAll();
+ */
+function unloadAll() {
+    for (var sound_name in audioTracks) {
+        if (audioTracks.hasOwnProperty(sound_name)) {
+            unload(sound_name);
         }
     }
-};
+}
 
-var audio$1 = audio;
+var audio = /*#__PURE__*/Object.freeze({
+    __proto__: null,
+    stopOnAudioError: stopOnAudioError,
+    init: init$1,
+    hasFormat: hasFormat,
+    hasAudio: hasAudio,
+    enable: enable,
+    disable: disable,
+    load: load,
+    play: play,
+    fade: fade,
+    seek: seek,
+    rate: rate,
+    stop: stop,
+    pause: pause,
+    resume: resume,
+    playTrack: playTrack,
+    stopTrack: stopTrack,
+    pauseTrack: pauseTrack,
+    resumeTrack: resumeTrack,
+    getCurrentTrack: getCurrentTrack,
+    setVolume: setVolume,
+    getVolume: getVolume,
+    mute: mute,
+    unmute: unmute,
+    muteAll: muteAll,
+    unmuteAll: unmuteAll,
+    muted: muted,
+    unload: unload,
+    unloadAll: unloadAll
+});
 
 /**
  * allow to access and manage the device localStorage
@@ -27106,27 +26943,27 @@ let device = {
         }
 
         // set pause/stop action on losing focus
-        window.addEventListener("blur", function () {
+        window.addEventListener("blur", (function () {
             if (this.stopOnBlur) {
-                state$1.stop(true);
+                state.stop(true);
             }
             if (this.pauseOnBlur) {
-                state$1.pause(true);
+                state.pause(true);
             }
-        }, false);
+        }).bind(this), false);
         // set restart/resume action on gaining focus
-        window.addEventListener("focus", function () {
+        window.addEventListener("focus", (function () {
             if (this.stopOnBlur) {
-                state$1.restart(true);
+                state.restart(true);
             }
             if (this.resumeOnFocus) {
-                state$1.resume(true);
+                state.resume(true);
             }
             // force focus if autofocus is on
             if (this.autoFocus) {
                 this.focus();
             }
-        }, false);
+        }).bind(this), false);
 
 
         // Set the name of the hidden property and the change event for visibility
@@ -27150,23 +26987,23 @@ let device = {
         if (typeof (visibilityChange) === "string") {
             // add the corresponding event listener
             document.addEventListener(visibilityChange,
-                function () {
+                (function () {
                     if (document[hidden]) {
                         if (this.stopOnBlur) {
-                            state$1.stop(true);
+                            state.stop(true);
                         }
                         if (this.pauseOnBlur) {
-                            state$1.pause(true);
+                            state.pause(true);
                         }
                     } else {
                         if (this.stopOnBlur) {
-                            state$1.restart(true);
+                            state.restart(true);
                         }
                         if (this.resumeOnFocus) {
-                            state$1.resume(true);
+                            state.resume(true);
                         }
                     }
-                }, false
+                }).bind(this), false
             );
         }
     },
@@ -27647,7 +27484,7 @@ let device = {
      */
     requestFullscreen(element) {
         if (this.hasFullscreenSupport) {
-            element = element || video$1.getParent();
+            element = element || getParent();
             element.requestFullscreen = prefixed("requestFullscreen", element) ||
                                         element.mozRequestFullScreen;
 
@@ -27962,7 +27799,7 @@ let device = {
      */
     turnOnPointerLock() {
         if (this.hasPointerLockSupport) {
-            var element = video$1.getParent();
+            var element = getParent();
             if (this.ua.match(/Firefox/i)) {
                 var fullscreenchange = function() {
                     if ((prefixed("fullscreenElement", document) ||
@@ -28193,7 +28030,7 @@ Object.defineProperty(device, "sound", {
      * @ignore
      */
     get: function () {
-        return audio$1.hasAudio();
+        return hasAudio();
     }
 });
 
@@ -29349,7 +29186,7 @@ class WebGLRenderer extends Renderer {
                 }
             }
 
-            var image = video$1.createCanvas(width, height, true);
+            var image = createCanvas(width, height, true);
 
             /**
              * @ignore
@@ -29385,7 +29222,7 @@ class WebGLRenderer extends Renderer {
      */
     createPattern(image, repeat) {
 
-        if (video$1.renderer.WebGLVersion === 1 && (!isPowerOfTwo(image.width) || !isPowerOfTwo(image.height))) {
+        if (renderer.WebGLVersion === 1 && (!isPowerOfTwo(image.width) || !isPowerOfTwo(image.height))) {
             var src = typeof image.src !== "undefined" ? image.src : image;
             throw new Error(
                 "[WebGL Renderer] " + src + " is not a POT texture " +
@@ -30245,6 +30082,12 @@ class WebGLRenderer extends Renderer {
     }
 }
 
+/**
+ * video functions
+ * @namespace me.video
+ * @memberOf me
+ */
+
 var designRatio = 1;
 var designWidth = 0;
 var designHeight = 0;
@@ -30283,445 +30126,425 @@ function autoDetectRenderer(options) {
     return new CanvasRenderer(options);
 }
 /**
- * video functions
- * @namespace me.video
- * @memberOf me
+ * callback for window resize event
+ * @ignore
  */
-var video = {
+function onresize() {
+    var settings = renderer.settings;
+    var scaleX = 1, scaleY = 1;
 
-    /**
-     * Select the HTML5 Canvas renderer
-     * @public
-     * @name CANVAS
-     * @memberOf me.video
-     * @enum {Number}
-     */
-    CANVAS : 0,
+    if (settings.autoScale) {
 
-    /**
-     * Select the WebGL renderer
-     * @public
-     * @name WEBGL
-     * @memberOf me.video
-     * @enum {Number}
-     */
-    WEBGL : 1,
+        // set max the canvas max size if CSS values are defined
+        var canvasMaxWidth = Infinity;
+        var canvasMaxHeight = Infinity;
 
-    /**
-     * Auto-select the renderer (Attempt WebGL first, with fallback to Canvas)
-     * @public
-     * @name AUTO
-     * @memberOf me.video
-     * @enum {Number}
-     */
-    AUTO : 2,
-
-    /**
-     * the parent container of the main canvas element
-     * @ignore
-     * @type {HTMLElement}
-     * @readonly
-     * @name parent
-     * @memberOf me.video
-     */
-    parent : null,
-
-    /**
-     * the scaling ratio to be applied to the display canvas
-     * @type {me.Vector2d}
-     * @default <1,1>
-     * @memberOf me.video
-     */
-    scaleRatio : new Vector2d(1, 1),
-
-    /**
-     * @typedef {Function} Init
-     * @param {Number} width The width of the canvas viewport
-     * @param {Number} height The height of the canvas viewport
-     * @param {Object} [options] The optional video/renderer parameters.<br> (see Renderer(s) documentation for further specific options)
-     * @param {String|HTMLElement} [options.parent=document.body] the DOM parent element to hold the canvas in the HTML file
-     * @param {Number} [options.renderer=me.video.AUTO] renderer to use (me.video.CANVAS, me.video.WEBGL, me.video.AUTO)
-     * @param {Boolean} [options.doubleBuffering=false] enable/disable double buffering
-     * @param {Number|String} [options.scale=1.0] enable scaling of the canvas ('auto' for automatic scaling)
-     * @param {String} [options.scaleMethod="fit"] screen scaling modes ('fit','fill-min','fill-max','flex','flex-width','flex-height','stretch')
-     * @param {Boolean} [options.preferWebGL1=false] if true the renderer will only use WebGL 1
-     * @param {String} [options.powerPreference="default"] a hint to the user agent indicating what configuration of GPU is suitable for the WebGL context ("default", "high-performance", "low-power"). To be noted that Safari and Chrome (since version 80) both default to "low-power" to save battery life and improve the user experience on these dual-GPU machines.
-     * @param {Boolean} [options.transparent=false] whether to allow transparent pixels in the front buffer (screen).
-     * @param {Boolean} [options.antiAlias=false] whether to enable or not video scaling interpolation
-     * @param {Boolean} [options.consoleHeader=true] whether to display melonJS version and basic device information in the console
-     * @return {Boolean} false if initialization failed (canvas not supported)
-    */
-
-
-    /**
-     * Initialize the "video" system (create a canvas based on the given arguments, and the related renderer). <br>
-     * melonJS support various scaling mode, that can be enabled <u>once the scale option is set to <b>`auto`</b></u> : <br>
-     *  - <i><b>`fit`</b></i> : Letterboxed; content is scaled to design aspect ratio <br>
-     * <center><img src="images/scale-fit.png"/></center><br>
-     *  - <i><b>`fill-min`</b></i> : Canvas is resized to fit minimum design resolution; content is scaled to design aspect ratio <br>
-     * <center><img src="images/scale-fill-min.png"/></center><br>
-     *  - <i><b>`fill-max`</b></i> : Canvas is resized to fit maximum design resolution; content is scaled to design aspect ratio <br>
-     * <center><img src="images/scale-fill-max.png"/></center><br>
-     *  - <i><b>`flex`</b><</i> : Canvas width & height is resized to fit; content is scaled to design aspect ratio <br>
-     * <center><img src="images/scale-flex.png"/></center><br>
-     *  - <i><b>`flex-width`</b></i> : Canvas width is resized to fit; content is scaled to design aspect ratio <br>
-     * <center><img src="images/scale-flex-width.png"/></center><br>
-     *  - <i><b>`flex-height`</b></i> : Canvas height is resized to fit; content is scaled to design aspect ratio <br>
-     * <center><img src="images/scale-flex-height.png"/></center><br>
-     *  - <i><b>`stretch`</b></i> : Canvas is resized to fit; content is scaled to screen aspect ratio
-     * <center><img src="images/scale-stretch.png"/></center><br>
-     * @name init
-     * @memberOf me.video
-     * @function
-
-     * @see me.CanvasRenderer
-     * @see me.WebGLRenderer
-     * @example
-     * // init the video with a 640x480 canvas
-     * me.video.init(640, 480, {
-     *     parent : "screen",
-     *     renderer : me.video.AUTO,
-     *     scale : "auto",
-     *     scaleMethod : "fit",
-     *     doubleBuffering : true
-     * });
-     * @type {Init}
-     */
-    init : function (game_width, game_height, options) {
-
-        // ensure melonjs has been properly initialized
-        if (!initialized) {
-            throw new Error("me.video.init() called before engine initialization.");
+        if (window.getComputedStyle) {
+            var style = window.getComputedStyle(renderer.getScreenCanvas(), null);
+            canvasMaxWidth = parseInt(style.maxWidth, 10) || Infinity;
+            canvasMaxHeight = parseInt(style.maxHeight, 10) || Infinity;
         }
 
-        // revert to default options if not defined
-        settings = Object.assign(settings, options || {});
+        // get the maximum canvas size within the parent div containing the canvas container
+        var nodeBounds = device.getParentBounds(getParent());
 
-        // sanitize potential given parameters
-        settings.width = game_width;
-        settings.height = game_height;
-        settings.doubleBuffering = !!(settings.doubleBuffering);
-        settings.transparent = !!(settings.transparent);
-        settings.antiAlias = !!(settings.antiAlias);
-        settings.failIfMajorPerformanceCaveat = !!(settings.failIfMajorPerformanceCaveat);
-        settings.subPixel = !!(settings.subPixel);
-        settings.verbose = !!(settings.verbose);
-        if (settings.scaleMethod.search(/^(fill-(min|max)|fit|flex(-(width|height))?|stretch)$/) !== -1) {
-            settings.autoScale = (settings.scale === "auto") || true;
-        } else {
-            // default scaling method
-            settings.scaleMethod = "fit";
-            settings.autoScale = (settings.scale === "auto") || false;
+        var _max_width = Math.min(canvasMaxWidth, nodeBounds.width);
+        var _max_height = Math.min(canvasMaxHeight, nodeBounds.height);
+
+        // calculate final canvas width & height
+        var screenRatio = _max_width / _max_height;
+
+        if ((settings.scaleMethod === "fill-min" && screenRatio > designRatio) ||
+            (settings.scaleMethod === "fill-max" && screenRatio < designRatio) ||
+            (settings.scaleMethod === "flex-width")
+        ) {
+            // resize the display canvas to fill the parent container
+            var sWidth = Math.min(canvasMaxWidth, designHeight * screenRatio);
+            scaleX = scaleY = _max_width / sWidth;
+            renderer.resize(Math.floor(sWidth), designHeight);
         }
-
-        // display melonJS version
-        if (settings.consoleHeader !== false) {
-            // output video information in the console
-            console.log("melonJS 2 (v" + version + ") | http://melonjs.org" );
+        else if ((settings.scaleMethod === "fill-min" && screenRatio < designRatio) ||
+                 (settings.scaleMethod === "fill-max" && screenRatio > designRatio) ||
+                 (settings.scaleMethod === "flex-height")
+        ) {
+            // resize the display canvas to fill the parent container
+            var sHeight = Math.min(canvasMaxHeight, designWidth * (_max_height / _max_width));
+            scaleX = scaleY = _max_height / sHeight;
+            renderer.resize(designWidth, Math.floor(sHeight));
         }
-
-        // override renderer settings if &webgl is defined in the URL
-        var uriFragment = utils$1.getUriFragment();
-        if (uriFragment.webgl === true || uriFragment.webgl1 === true || uriFragment.webgl2 === true) {
-            settings.renderer = this.WEBGL;
-            if (uriFragment.webgl1 === true) {
-                settings.preferWebGL1 = true;
-            }
+        else if (settings.scaleMethod === "flex") {
+            // resize the display canvas to fill the parent container
+            renderer.resize(Math.floor(_max_width), Math.floor(_max_height));
         }
-
-        // normalize scale
-        settings.scale = (settings.autoScale) ? 1.0 : (+settings.scale || 1.0);
-        this.scaleRatio.set(settings.scale, settings.scale);
-
-        // force double buffering if scaling is required
-        if (settings.autoScale || (settings.scale !== 1.0)) {
-            settings.doubleBuffering = true;
+        else if (settings.scaleMethod === "stretch") {
+            // scale the display canvas to fit with the parent container
+            scaleX = _max_width / designWidth;
+            scaleY = _max_height / designHeight;
         }
-
-        // hold the requested video size ratio
-        designRatio = game_width / game_height;
-        designWidth = game_width;
-        designHeight = game_height;
-
-        // default scaled size value
-        settings.zoomX = game_width * this.scaleRatio.x;
-        settings.zoomY = game_height * this.scaleRatio.y;
-
-        //add a channel for the onresize/onorientationchange event
-        window.addEventListener(
-            "resize",
-            utils$1.function.throttle(
-                function (e) {
-                    event.publish(event.WINDOW_ONRESIZE, [ e ]);
-                }, 100
-            ), false
-        );
-
-        // Screen Orientation API
-        window.addEventListener(
-            "orientationchange",
-            function (e) {
-                event.publish(event.WINDOW_ONORIENTATION_CHANGE, [ e ]);
-            },
-            false
-        );
-        // pre-fixed implementation on mozzila
-        window.addEventListener(
-            "onmozorientationchange",
-            function (e) {
-                event.publish(event.WINDOW_ONORIENTATION_CHANGE, [ e ]);
-            },
-            false
-        );
-        if (typeof window.screen !== "undefined") {
-            // is this one required ?
-            window.screen.onorientationchange = function (e) {
-                event.publish(event.WINDOW_ONORIENTATION_CHANGE, [ e ]);
-            };
-        }
-
-        // Automatically update relative canvas position on scroll
-        window.addEventListener("scroll", utils$1.function.throttle(
-            function (e) {
-                event.publish(event.WINDOW_ONSCROLL, [ e ]);
-            }, 100
-        ), false);
-
-        // register to the channel
-        event.subscribe(
-            event.WINDOW_ONRESIZE,
-            this.onresize.bind(this)
-        );
-        event.subscribe(
-            event.WINDOW_ONORIENTATION_CHANGE,
-            this.onresize.bind(this)
-        );
-
-        try {
-            /**
-             * A reference to the current video renderer
-             * @public
-             * @memberOf me.video
-             * @name renderer
-             * @type {me.Renderer|me.CanvasRenderer|me.WebGLRenderer}
-             */
-            switch (settings.renderer) {
-                case this.AUTO:
-                case this.WEBGL:
-                    this.renderer = autoDetectRenderer(settings);
-                    break;
-                default:
-                    this.renderer = new CanvasRenderer(settings);
-                    break;
-            }
-        } catch (e) {
-            console(e.message);
-            // me.video.init() returns false if failing at creating/using a HTML5 canvas
-            return false;
-        }
-
-        // add our canvas (default to document.body if settings.parent is undefined)
-        this.parent = device.getElement(settings.parent);
-        this.parent.appendChild(this.renderer.getScreenCanvas());
-
-        // trigger an initial resize();
-        this.onresize();
-
-        // add an observer to detect when the dom tree is modified
-        if ("MutationObserver" in window) {
-            // Create an observer instance linked to the callback function
-            var observer = new MutationObserver(this.onresize.bind(this));
-
-            // Start observing the target node for configured mutations
-            observer.observe(this.parent, {
-                attributes: false, childList: true, subtree: true
-            });
-        }
-
-        if (settings.consoleHeader !== false) {
-            var renderType = (this.renderer instanceof CanvasRenderer) ? "CANVAS" : "WebGL" + this.renderer.WebGLVersion;
-            var audioType = device.hasWebAudio ? "Web Audio" : "HTML5 Audio";
-            var gpu_renderer = (typeof this.renderer.GPURenderer === "string") ? " (" + this.renderer.GPURenderer + ")" : "";
-            // output video information in the console
-            console.log(
-                renderType + " renderer" + gpu_renderer + " | " +
-                audioType + " | " +
-                "pixel ratio " + device.devicePixelRatio + " | " +
-                (device.isMobile ? "mobile" : "desktop") + " | " +
-                device.getScreenOrientation() + " | " +
-                device.language
-            );
-            console.log( "resolution: " + "requested " + game_width + "x" + game_height +
-                ", got " + this.renderer.getWidth() + "x" + this.renderer.getHeight()
-            );
-        }
-
-        // notify the video has been initialized
-        event.publish(event.VIDEO_INIT);
-
-        return true;
-    },
-
-    /**
-     * Create and return a new Canvas element
-     * @name createCanvas
-     * @memberOf me.video
-     * @function
-     * @param {Number} width width
-     * @param {Number} height height
-     * @param {Boolean} [offscreen=false] will returns an OffscreenCanvas if supported
-     * @return {HTMLCanvasElement|OffscreenCanvas}
-     */
-    createCanvas : function (width, height, offscreen) {
-        var _canvas;
-
-        if (width === 0 || height === 0) {
-            throw new Error("width or height was zero, Canvas could not be initialized !");
-        }
-
-        if (device.OffscreenCanvas === true && offscreen === true) {
-            _canvas = new OffscreenCanvas(0, 0);
-            // stubbing style for compatibility,
-            // as OffscreenCanvas is detached from the DOM
-            if (typeof _canvas.style === "undefined") {
-                _canvas.style = {};
-            }
-        } else {
-            // "else" create a "standard" canvas
-            _canvas = document.createElement("canvas");
-        }
-        _canvas.width = width;
-        _canvas.height = height;
-
-        return _canvas;
-    },
-
-    /**
-     * return a reference to the parent DOM element holding the main canvas
-     * @name getParent
-     * @memberOf me.video
-     * @function
-     * @return {HTMLElement}
-     */
-    getParent : function () {
-        return this.parent;
-    },
-
-    /**
-     * callback for window resize event
-     * @ignore
-     */
-    onresize : function () {
-        var renderer = this.renderer;
-        var settings = renderer.settings;
-        var scaleX = 1, scaleY = 1;
-
-        if (settings.autoScale) {
-
-            // set max the canvas max size if CSS values are defined
-            var canvasMaxWidth = Infinity;
-            var canvasMaxHeight = Infinity;
-
-            if (window.getComputedStyle) {
-                var style = window.getComputedStyle(renderer.getScreenCanvas(), null);
-                canvasMaxWidth = parseInt(style.maxWidth, 10) || Infinity;
-                canvasMaxHeight = parseInt(style.maxHeight, 10) || Infinity;
-            }
-
-            // get the maximum canvas size within the parent div containing the canvas container
-            var nodeBounds = device.getParentBounds(this.getParent());
-
-            var _max_width = Math.min(canvasMaxWidth, nodeBounds.width);
-            var _max_height = Math.min(canvasMaxHeight, nodeBounds.height);
-
-            // calculate final canvas width & height
-            var screenRatio = _max_width / _max_height;
-
-            if ((settings.scaleMethod === "fill-min" && screenRatio > designRatio) ||
-                (settings.scaleMethod === "fill-max" && screenRatio < designRatio) ||
-                (settings.scaleMethod === "flex-width")
-            ) {
-                // resize the display canvas to fill the parent container
-                var sWidth = Math.min(canvasMaxWidth, designHeight * screenRatio);
-                scaleX = scaleY = _max_width / sWidth;
-                renderer.resize(Math.floor(sWidth), designHeight);
-            }
-            else if ((settings.scaleMethod === "fill-min" && screenRatio < designRatio) ||
-                     (settings.scaleMethod === "fill-max" && screenRatio > designRatio) ||
-                     (settings.scaleMethod === "flex-height")
-            ) {
-                // resize the display canvas to fill the parent container
-                var sHeight = Math.min(canvasMaxHeight, designWidth * (_max_height / _max_width));
-                scaleX = scaleY = _max_height / sHeight;
-                renderer.resize(designWidth, Math.floor(sHeight));
-            }
-            else if (settings.scaleMethod === "flex") {
-                // resize the display canvas to fill the parent container
-                renderer.resize(Math.floor(_max_width), Math.floor(_max_height));
-            }
-            else if (settings.scaleMethod === "stretch") {
-                // scale the display canvas to fit with the parent container
-                scaleX = _max_width / designWidth;
-                scaleY = _max_height / designHeight;
+        else {
+            // scale the display canvas to fit the parent container
+            // make sure we maintain the original aspect ratio
+            if (screenRatio < designRatio) {
+                scaleX = scaleY = _max_width / designWidth;
             }
             else {
-                // scale the display canvas to fit the parent container
-                // make sure we maintain the original aspect ratio
-                if (screenRatio < designRatio) {
-                    scaleX = scaleY = _max_width / designWidth;
-                }
-                else {
-                    scaleX = scaleY = _max_height / designHeight;
-                }
+                scaleX = scaleY = _max_height / designHeight;
             }
-
-            // adjust scaling ratio based on the new scaling ratio
-            this.scale(scaleX, scaleY);
         }
-    },
 
-    /**
-     * scale the "displayed" canvas by the given scalar.
-     * this will modify the size of canvas element directly.
-     * Only use this if you are not using the automatic scaling feature.
-     * @name scale
-     * @memberOf me.video
-     * @function
-     * @see me.video.init
-     * @param {Number} x x scaling multiplier
-     * @param {Number} y y scaling multiplier
-     */
-    scale : function (x, y) {
-        var renderer = this.renderer;
-        var canvas = renderer.getScreenCanvas();
-        var context = renderer.getScreenContext();
-        var settings = renderer.settings;
-        var pixelRatio = device.devicePixelRatio;
-
-        var w = settings.zoomX = canvas.width * x * pixelRatio;
-        var h = settings.zoomY = canvas.height * y * pixelRatio;
-
-        // update the global scale variable
-        this.scaleRatio.set(x * pixelRatio, y * pixelRatio);
-
-        // adjust CSS style based on device pixel ratio
-        canvas.style.width = (w / pixelRatio) + "px";
-        canvas.style.height = (h / pixelRatio) + "px";
-
-        // if anti-alias and blend mode were resetted (e.g. Canvas mode)
-        renderer.setAntiAlias(context, settings.antiAlias);
-        renderer.setBlendMode(settings.blendMode, context);
-
-        // force repaint
-        game$1.repaint();
+        // adjust scaling ratio based on the new scaling ratio
+        scale(scaleX, scaleY);
     }
-};
+}
+/**
+ * Select the HTML5 Canvas renderer
+ * @name CANVAS
+ * @memberOf me.video
+ * @constant
+ */
+const CANVAS = 0;
 
-var video$1 = video;
+/**
+ * Select the WebGL renderer
+ * @name WEBGL
+ * @memberOf me.video
+ * @constant
+ */
+const WEBGL = 1;
+
+/**
+ * Auto-select the renderer (Attempt WebGL first, with fallback to Canvas)
+ * @name AUTO
+ * @memberOf me.video
+ * @constant
+ */
+const AUTO = 2;
+
+/**
+ * the parent container of the main canvas element
+ * @ignore
+ * @type {HTMLElement}
+ * @readonly
+ * @name parent
+ * @memberOf me.video
+ */
+let parent = null;
+
+/**
+ * the scaling ratio to be applied to the display canvas
+ * @name scaleRatio
+ * @type {me.Vector2d}
+ * @default <1,1>
+ * @memberOf me.video
+ */
+let scaleRatio = new Vector2d(1, 1);
+
+ /**
+  * A reference to the active Canvas or WebGL active renderer renderer
+  * @name renderer
+  * @type {me.CanvasRenderer|me.WebGLRenderer}
+  * @memberOf me.video
+  */
+let renderer = null;
+
+/**
+ * Initialize the "video" system (create a canvas based on the given arguments, and the related renderer). <br>
+ * melonJS support various scaling mode, that can be enabled <u>once the scale option is set to <b>`auto`</b></u> : <br>
+ *  - <i><b>`fit`</b></i> : Letterboxed; content is scaled to design aspect ratio <br>
+ * <center><img src="images/scale-fit.png"/></center><br>
+ *  - <i><b>`fill-min`</b></i> : Canvas is resized to fit minimum design resolution; content is scaled to design aspect ratio <br>
+ * <center><img src="images/scale-fill-min.png"/></center><br>
+ *  - <i><b>`fill-max`</b></i> : Canvas is resized to fit maximum design resolution; content is scaled to design aspect ratio <br>
+ * <center><img src="images/scale-fill-max.png"/></center><br>
+ *  - <i><b>`flex`</b><</i> : Canvas width & height is resized to fit; content is scaled to design aspect ratio <br>
+ * <center><img src="images/scale-flex.png"/></center><br>
+ *  - <i><b>`flex-width`</b></i> : Canvas width is resized to fit; content is scaled to design aspect ratio <br>
+ * <center><img src="images/scale-flex-width.png"/></center><br>
+ *  - <i><b>`flex-height`</b></i> : Canvas height is resized to fit; content is scaled to design aspect ratio <br>
+ * <center><img src="images/scale-flex-height.png"/></center><br>
+ *  - <i><b>`stretch`</b></i> : Canvas is resized to fit; content is scaled to screen aspect ratio
+ * <center><img src="images/scale-stretch.png"/></center><br>
+ * @function me.video.init
+ * @param {Number} width The width of the canvas viewport
+ * @param {Number} height The height of the canvas viewport
+ * @param {Object} [options] The optional video/renderer parameters.<br> (see Renderer(s) documentation for further specific options)
+ * @param {String|HTMLElement} [options.parent=document.body] the DOM parent element to hold the canvas in the HTML file
+ * @param {Number} [options.renderer=me.video.AUTO] renderer to use (me.video.CANVAS, me.video.WEBGL, me.video.AUTO)
+ * @param {Boolean} [options.doubleBuffering=false] enable/disable double buffering
+ * @param {Number|String} [options.scale=1.0] enable scaling of the canvas ('auto' for automatic scaling)
+ * @param {String} [options.scaleMethod="fit"] screen scaling modes ('fit','fill-min','fill-max','flex','flex-width','flex-height','stretch')
+ * @param {Boolean} [options.preferWebGL1=false] if true the renderer will only use WebGL 1
+ * @param {String} [options.powerPreference="default"] a hint to the user agent indicating what configuration of GPU is suitable for the WebGL context ("default", "high-performance", "low-power"). To be noted that Safari and Chrome (since version 80) both default to "low-power" to save battery life and improve the user experience on these dual-GPU machines.
+ * @param {Boolean} [options.transparent=false] whether to allow transparent pixels in the front buffer (screen).
+ * @param {Boolean} [options.antiAlias=false] whether to enable or not video scaling interpolation
+ * @param {Boolean} [options.consoleHeader=true] whether to display melonJS version and basic device information in the console
+ * @return {Boolean} false if initialization failed (canvas not supported)
+ * @example
+ * // init the video with a 640x480 canvas
+ * me.video.init(640, 480, {
+ *     parent : "screen",
+ *     renderer : me.video.AUTO,
+ *     scale : "auto",
+ *     scaleMethod : "fit",
+ *     doubleBuffering : true
+ * });
+ */
+function init(game_width, game_height, options) {
+
+    // ensure melonjs has been properly initialized
+    if (!initialized) {
+        throw new Error("me.video.init() called before engine initialization.");
+    }
+
+    // revert to default options if not defined
+    settings = Object.assign(settings, options || {});
+
+    // sanitize potential given parameters
+    settings.width = game_width;
+    settings.height = game_height;
+    settings.doubleBuffering = !!(settings.doubleBuffering);
+    settings.transparent = !!(settings.transparent);
+    settings.antiAlias = !!(settings.antiAlias);
+    settings.failIfMajorPerformanceCaveat = !!(settings.failIfMajorPerformanceCaveat);
+    settings.subPixel = !!(settings.subPixel);
+    settings.verbose = !!(settings.verbose);
+    if (settings.scaleMethod.search(/^(fill-(min|max)|fit|flex(-(width|height))?|stretch)$/) !== -1) {
+        settings.autoScale = (settings.scale === "auto") || true;
+    } else {
+        // default scaling method
+        settings.scaleMethod = "fit";
+        settings.autoScale = (settings.scale === "auto") || false;
+    }
+
+    // display melonJS version
+    if (settings.consoleHeader !== false) {
+        // output video information in the console
+        console.log("melonJS 2 (v" + version + ") | http://melonjs.org" );
+    }
+
+    // override renderer settings if &webgl is defined in the URL
+    var uriFragment = utils.getUriFragment();
+    if (uriFragment.webgl === true || uriFragment.webgl1 === true || uriFragment.webgl2 === true) {
+        settings.renderer = WEBGL;
+        if (uriFragment.webgl1 === true) {
+            settings.preferWebGL1 = true;
+        }
+    }
+
+    // normalize scale
+    settings.scale = (settings.autoScale) ? 1.0 : (+settings.scale || 1.0);
+    scaleRatio.set(settings.scale, settings.scale);
+
+    // force double buffering if scaling is required
+    if (settings.autoScale || (settings.scale !== 1.0)) {
+        settings.doubleBuffering = true;
+    }
+
+    // hold the requested video size ratio
+    designRatio = game_width / game_height;
+    designWidth = game_width;
+    designHeight = game_height;
+
+    // default scaled size value
+    settings.zoomX = game_width * scaleRatio.x;
+    settings.zoomY = game_height * scaleRatio.y;
+
+    //add a channel for the onresize/onorientationchange event
+    window.addEventListener(
+        "resize",
+        utils.function.throttle(
+            function (e) {
+                event.publish(event.WINDOW_ONRESIZE, [ e ]);
+            }, 100
+        ), false
+    );
+
+    // Screen Orientation API
+    window.addEventListener(
+        "orientationchange",
+        function (e) {
+            event.publish(event.WINDOW_ONORIENTATION_CHANGE, [ e ]);
+        },
+        false
+    );
+    // pre-fixed implementation on mozzila
+    window.addEventListener(
+        "onmozorientationchange",
+        function (e) {
+            event.publish(event.WINDOW_ONORIENTATION_CHANGE, [ e ]);
+        },
+        false
+    );
+    if (typeof window.screen !== "undefined") {
+        // is this one required ?
+        window.screen.onorientationchange = function (e) {
+            event.publish(event.WINDOW_ONORIENTATION_CHANGE, [ e ]);
+        };
+    }
+
+    // Automatically update relative canvas position on scroll
+    window.addEventListener("scroll", utils.function.throttle(
+        function (e) {
+            event.publish(event.WINDOW_ONSCROLL, [ e ]);
+        }, 100
+    ), false);
+
+    // register to the channel
+    event.subscribe(
+        event.WINDOW_ONRESIZE,
+        onresize.bind(this)
+    );
+    event.subscribe(
+        event.WINDOW_ONORIENTATION_CHANGE,
+        onresize.bind(this)
+    );
+
+    try {
+        switch (settings.renderer) {
+            case AUTO:
+            case WEBGL:
+                renderer = autoDetectRenderer(settings);
+                break;
+            default:
+                renderer = new CanvasRenderer(settings);
+                break;
+        }
+    } catch (e) {
+        console(e.message);
+        // me.video.init() returns false if failing at creating/using a HTML5 canvas
+        return false;
+    }
+
+    // add our canvas (default to document.body if settings.parent is undefined)
+    parent = device.getElement(settings.parent);
+    parent.appendChild(renderer.getScreenCanvas());
+
+    // trigger an initial resize();
+    onresize();
+
+    // add an observer to detect when the dom tree is modified
+    if ("MutationObserver" in window) {
+        // Create an observer instance linked to the callback function
+        var observer = new MutationObserver(onresize.bind(this));
+
+        // Start observing the target node for configured mutations
+        observer.observe(parent, {
+            attributes: false, childList: true, subtree: true
+        });
+    }
+
+    if (settings.consoleHeader !== false) {
+        var renderType = (renderer instanceof CanvasRenderer) ? "CANVAS" : "WebGL" + renderer.WebGLVersion;
+        var audioType = device.hasWebAudio ? "Web Audio" : "HTML5 Audio";
+        var gpu_renderer = (typeof renderer.GPURenderer === "string") ? " (" + renderer.GPURenderer + ")" : "";
+        // output video information in the console
+        console.log(
+            renderType + " renderer" + gpu_renderer + " | " +
+            audioType + " | " +
+            "pixel ratio " + device.devicePixelRatio + " | " +
+            (device.isMobile ? "mobile" : "desktop") + " | " +
+            device.getScreenOrientation() + " | " +
+            device.language
+        );
+        console.log( "resolution: " + "requested " + game_width + "x" + game_height +
+            ", got " + renderer.getWidth() + "x" + renderer.getHeight()
+        );
+    }
+
+    // notify the video has been initialized
+    event.publish(event.VIDEO_INIT);
+
+    return true;
+}
+/**
+ * Create and return a new Canvas element
+ * @function me.video.createCanvas
+ * @param {Number} width width
+ * @param {Number} height height
+ * @param {Boolean} [offscreen=false] will returns an OffscreenCanvas if supported
+ * @return {HTMLCanvasElement|OffscreenCanvas}
+ */
+function createCanvas(width, height, offscreen) {
+    var _canvas;
+
+    if (width === 0 || height === 0) {
+        throw new Error("width or height was zero, Canvas could not be initialized !");
+    }
+
+    if (device.OffscreenCanvas === true && offscreen === true) {
+        _canvas = new OffscreenCanvas(0, 0);
+        // stubbing style for compatibility,
+        // as OffscreenCanvas is detached from the DOM
+        if (typeof _canvas.style === "undefined") {
+            _canvas.style = {};
+        }
+    } else {
+        // "else" create a "standard" canvas
+        _canvas = document.createElement("canvas");
+    }
+    _canvas.width = width;
+    _canvas.height = height;
+
+    return _canvas;
+}
+/**
+ * return a reference to the parent DOM element holding the main canvas
+ * @function me.video.getParent
+ * @return {HTMLElement}
+ */
+function getParent() {
+    return parent;
+}
+/**
+ * scale the "displayed" canvas by the given scalar.
+ * this will modify the size of canvas element directly.
+ * Only use this if you are not using the automatic scaling feature.
+ * @function me.video.scale
+ * @see me.video.init
+ * @param {Number} x x scaling multiplier
+ * @param {Number} y y scaling multiplier
+ */
+function scale(x, y) {
+    var canvas = renderer.getScreenCanvas();
+    var context = renderer.getScreenContext();
+    var settings = renderer.settings;
+    var pixelRatio = device.devicePixelRatio;
+
+    var w = settings.zoomX = canvas.width * x * pixelRatio;
+    var h = settings.zoomY = canvas.height * y * pixelRatio;
+
+    // update the global scale variable
+    scaleRatio.set(x * pixelRatio, y * pixelRatio);
+
+    // adjust CSS style based on device pixel ratio
+    canvas.style.width = (w / pixelRatio) + "px";
+    canvas.style.height = (h / pixelRatio) + "px";
+
+    // if anti-alias and blend mode were resetted (e.g. Canvas mode)
+    renderer.setAntiAlias(context, settings.antiAlias);
+    renderer.setBlendMode(settings.blendMode, context);
+
+    // force repaint
+    repaint();
+}
+
+var video = /*#__PURE__*/Object.freeze({
+    __proto__: null,
+    CANVAS: CANVAS,
+    WEBGL: WEBGL,
+    AUTO: AUTO,
+    get parent () { return parent; },
+    scaleRatio: scaleRatio,
+    get renderer () { return renderer; },
+    init: init,
+    createCanvas: createCanvas,
+    getParent: getParent,
+    scale: scale
+});
 
 /**
  * a collection of utility functions
- * @namespace me.utils
+ * @namespace utils
  * @memberOf me
  */
 
@@ -30749,7 +30572,7 @@ var utils = {
     getPixels : function (arg) {
         if (arg instanceof HTMLImageElement) {
             var _context = CanvasRenderer.getContext2d(
-                video$1.createCanvas(arg.width, arg.height)
+                createCanvas(arg.width, arg.height)
             );
             _context.drawImage(arg, 0, 0);
             return _context.getImageData(0, 0, arg.width, arg.height);
@@ -30867,8 +30690,6 @@ var utils = {
     }
 };
 
-var utils$1 = utils;
-
 //hold element to display fps
 var framecount = 0;
 var framedelta = 0;
@@ -30915,7 +30736,7 @@ function updateTimers(time) {
 
     for (var i = 0, len = timers.length; i < len; i++) {
         var _timer = timers[i];
-        if (!(_timer.pauseable && state$1.isPaused())) {
+        if (!(_timer.pauseable && state.isPaused())) {
             _timer.elapsed += delta;
         }
         if (_timer.elapsed >= _timer.delay) {
@@ -31090,7 +30911,7 @@ var timer = {
          * @param {Number} timeoutID ID of the timeout to be cleared
          */
         clearTimeout(timeoutID) {
-            utils$1.function.defer(clearTimer, this, timeoutID);
+            utils.function.defer(clearTimer, this, timeoutID);
         },
 
         /**
@@ -31101,7 +30922,7 @@ var timer = {
          * @param {Number} intervalID ID of the interval to be cleared
          */
         clearInterval(intervalID) {
-            utils$1.function.defer(clearTimer, this, intervalID);
+            utils.function.defer(clearTimer, this, intervalID);
         },
 
         /**
@@ -31145,8 +30966,6 @@ var timer = {
         }
 };
 
-var timer$1 = timer;
-
 var lastTime = 0;
 var vendors = ["ms", "moz", "webkit", "o"];
 var x;
@@ -31168,7 +30987,7 @@ for (x = 0; x < vendors.length && !cancelAnimationFrame; ++x) {
 if (!requestAnimationFrame || !cancelAnimationFrame) {
     requestAnimationFrame = function (callback) {
         var currTime = window.performance.now();
-        var timeToCall = Math.max(0, (1000 / timer$1.maxfps) - (currTime - lastTime));
+        var timeToCall = Math.max(0, (1000 / timer.maxfps) - (currTime - lastTime));
         var id = window.setTimeout(function () {
             callback(currTime + timeToCall);
         }, timeToCall);
@@ -31312,7 +31131,7 @@ var plugin = {
         }
 
         // compatibility testing
-        if (utils$1.checkVersion(instance.version) > 0) {
+        if (utils.checkVersion(instance.version) > 0) {
             throw new Error("Plugin version mismatch, expected: " + instance.version + ", got: " + version);
         }
 
@@ -31649,14 +31468,10 @@ let Easing = {
 
 };
 
-/* eslint-enable quotes, keyword-spacing, comma-spacing, no-return-assign */
-
 /**
 * Tween.js - Licensed under the MIT license
 * https://github.com/tweenjs/tween.js
 */
-
-/* eslint-disable quotes, keyword-spacing, comma-spacing, no-return-assign */
 
 /**
  * Interpolation Function :<br>
@@ -31725,7 +31540,7 @@ let Interpolation = {
 
         },
         /** @ignore */
-        Bernstein: function ( n , i ) {
+        Bernstein: function ( n, i ) {
 
             var fc = Interpolation.Utils.Factorial;
             return fc( n ) / fc( i ) / fc( n - i );
@@ -31741,7 +31556,8 @@ let Interpolation = {
                 var s = 1, i;
                 if ( a[ n ] ) return a[ n ];
                 for ( i = n; i > 1; i-- ) s *= i;
-                return a[ n ] = s;
+                a[ n ] = s;
+                return s;
 
             };
 
@@ -31751,23 +31567,18 @@ let Interpolation = {
 
             var v0 = ( p2 - p0 ) * 0.5, v1 = ( p3 - p1 ) * 0.5, t2 = t * t, t3 = t * t2;
             return ( 2 * p1 - 2 * p2 + v0 + v1 ) * t3 + ( - 3 * p1 + 3 * p2 - 2 * v0 - v1 ) * t2 + v0 * t + p1;
-
         }
-
     }
 
 };
-
-/* eslint-enable quotes, keyword-spacing, comma-spacing, no-return-assign */
 
 /**
 * Tween.js - Licensed under the MIT license
 * https://github.com/tweenjs/tween.js
 */
 
-/* eslint-disable quotes, keyword-spacing, comma-spacing, no-return-assign */
-
 /**
+ * @classdesc
  * Javascript Tweening Engine<p>
  * Super simple, fast and easy to use tweening engine which incorporates optimised Robert Penner's equation<p>
  * <a href="https://github.com/sole/Tween.js">https://github.com/sole/Tween.js</a><p>
@@ -31779,7 +31590,7 @@ let Interpolation = {
  * author Paul Lewis / http://www.aerotwist.com/<br>
  * author lechecacharro<br>
  * author Josh Faul / http://jocafa.com/
- * @class
+ * @class Tween
  * @memberOf me
  * @constructor
  * @param {Object} object object on which to apply the tween
@@ -31798,450 +31609,449 @@ class Tween {
 
     // constructor
     constructor ( object ) {
-
-        var _object = null;
-        var _valuesStart = null;
-        var _valuesEnd = null;
-        var _valuesStartRepeat = null;
-        var _duration = null;
-        var _repeat = null;
-        var _yoyo = null;
-        var _delayTime = null;
-        var _startTime = null;
-        var _easingFunction = null;
-        var _interpolationFunction = null;
-        var _chainedTweens = null;
-        var _onStartCallback = null;
-        var _onStartCallbackFired = null;
-        var _onUpdateCallback = null;
-        var _onCompleteCallback = null;
-        var _tweenTimeTracker = null;
-
+        this.object = null;
+        this.valuesStart = null;
+        this.valuesEnd = null;
+        this.valuesStartRepeat = null;
+        this.duration = null;
+        this.repeat = null;
+        this.yoyo = null;
+        this.reversed = null;
+        this.delayTime = null;
+        this.startTime = null;
+        this.easingFunction = null;
+        this.interpolationFunction = null;
+        this.chainedTweens = null;
+        this.onStartCallback = null;
+        this.onStartCallbackFired = null;
+        this.onUpdateCallback = null;
+        this.onCompleteCallback = null;
+        this.tweenTimeTracker = null;
         // comply with the container contract
         this.isRenderable = false;
 
-        /**
-         * @ignore
-         */
-        this._resumeCallback = function (elapsed) {
-            if (_startTime) {
-                _startTime += elapsed;
-            }
-        };
-
-        /**
-        * @typedef {Function} SetProperties
-        * @param {Object.<string, any>} object
-        * @returns {void}
-        */
-
-        /**
-         * @ignore
-         * @type {SetProperties}
-         */
-        this.setProperties = function (object) {
-            _object = object;
-            _valuesStart = {};
-            _valuesEnd = {};
-            _valuesStartRepeat = {};
-            _duration = 1000;
-            _repeat = 0;
-            _yoyo = false;
-            _delayTime = 0;
-            _startTime = null;
-            _easingFunction = Easing.Linear.None;
-            _interpolationFunction = Interpolation.Linear;
-            _chainedTweens = [];
-            _onStartCallback = null;
-            _onStartCallbackFired = false;
-            _onUpdateCallback = null;
-            _onCompleteCallback = null;
-            _tweenTimeTracker = timer$1.lastUpdate;
-
-            // reset flags to default value
-            this.isPersistent = false;
-            // this is not really supported
-            this.updateWhenPaused = false;
-
-            // Set all starting values present on the target object
-            for ( var field in object ) {
-                if(typeof object !== 'object') {
-                    _valuesStart[ field ] = parseFloat(object[field]);
-                }
-            }
-        };
-
         this.setProperties(object);
+    }
 
-        /**
-         * reset the tween object to default value
-         * @ignore
-         */
-        this.onResetEvent = function ( object ) {
-            this.setProperties(object);
-        };
+    /**
+     * reset the tween object to default value
+     * @ignore
+     */
+    onResetEvent( object ) {
+        this.setProperties(object);
+    }
 
-        /**
-         * subscribe to the resume event when added
-         * @ignore
-         */
-        this.onActivateEvent = function () {
-            event.subscribe(event.STATE_RESUME, this._resumeCallback);
-        };
+    /**
+     * @ignore
+     */
+    setProperties(object) {
+        this._object = object;
+        this._valuesStart = {};
+        this._valuesEnd = {};
+        this._valuesStartRepeat = {};
+        this._duration = 1000;
+        this._repeat = 0;
+        this._yoyo = false;
+        this._reversed = false;
+        this._delayTime = 0;
+        this._startTime = null;
+        this._easingFunction = Easing.Linear.None;
+        this._interpolationFunction = Interpolation.Linear;
+        this._chainedTweens = [];
+        this._onStartCallback = null;
+        this._onStartCallbackFired = false;
+        this._onUpdateCallback = null;
+        this._onCompleteCallback = null;
+        this._tweenTimeTracker = timer.lastUpdate;
 
-        /**
-         * Unsubscribe when tween is removed
-         * @ignore
-         */
-        this.onDeactivateEvent = function () {
-            event.unsubscribe(event.STATE_RESUME, this._resumeCallback);
-        };
+        // reset flags to default value
+        this.isPersistent = false;
+        // this is not really supported
+        this.updateWhenPaused = false;
 
-        /**
-         * object properties to be updated and duration
-         * @name me.Tween#to
-         * @public
-         * @function
-         * @param {Object} properties hash of properties
-         * @param {Object|Number} [options] object of tween properties, or a duration if a numeric value is passed
-         * @param {Number} [options.duration] tween duration
-         * @param {me.Tween.Easing} [options.easing] easing function
-         * @param {Number} [options.delay] delay amount expressed in milliseconds
-         * @param {Boolean} [options.yoyo] allows the tween to bounce back to their original value when finished. To be used together with repeat to create endless loops.
-         * @param {Number} [options.repeat] amount of times the tween should be repeated
-         * @param {me.Tween.Interpolation} [options.interpolation] interpolation function
-         * @param {Boolean} [options.autoStart] allow this tween to start automatically. Otherwise call me.Tween.start().
-         */
-        this.to = function ( properties, options ) {
+        // Set all starting values present on the target object
+        for ( var field in object ) {
+            if (typeof object !== "object") {
+                this._valuesStart[ field ] = parseFloat(object[field]);
+            }
+        }
+    }
 
-            _valuesEnd = properties;
+    /**
+     * @ignore
+     */
+    _resumeCallback(elapsed) {
+        if (this._startTime) {
+            this._startTime += elapsed;
+        }
+    }
 
-            if (typeof options !== "undefined") {
-                if (typeof options === 'number') {
-                    // for backward compatiblity
-                    _duration = options;
-                } else if (typeof options === 'object') {
-                    if (options.duration) { _duration = options.duration; }
-                    if (options.yoyo) { this.yoyo(options.yoyo); }
-                    if (options.easing) { this.easing(options.easing); }
-                    if (options.repeat) { this.repeat(options.repeat); }
-                    if (options.delay) { this.delay(options.delay); }
-                    if (options.interpolation) { this.interpolation(options.interpolation); }
 
-                    if (options.autoStart) {
-                        this.start();
-                    }
+
+    /**
+     * subscribe to the resume event when added
+     * @ignore
+     */
+    onActivateEvent() {
+        event.subscribe(event.STATE_RESUME, this._resumeCallback);
+    }
+
+    /**
+     * Unsubscribe when tween is removed
+     * @ignore
+     */
+    onDeactivateEvent() {
+        event.unsubscribe(event.STATE_RESUME, this._resumeCallback);
+    }
+
+    /**
+     * object properties to be updated and duration
+     * @name to
+     * @memberOf me.Tween
+     * @public
+     * @function
+     * @param {Object} properties hash of properties
+     * @param {Object|Number} [options] object of tween properties, or a duration if a numeric value is passed
+     * @param {Number} [options.duration] tween duration
+     * @param {me.Tween.Easing} [options.easing] easing function
+     * @param {Number} [options.delay] delay amount expressed in milliseconds
+     * @param {Boolean} [options.yoyo] allows the tween to bounce back to their original value when finished. To be used together with repeat to create endless loops.
+     * @param {Number} [options.repeat] amount of times the tween should be repeated
+     * @param {me.Tween.Interpolation} [options.interpolation] interpolation function
+     * @param {Boolean} [options.autoStart] allow this tween to start automatically. Otherwise call me.Tween.start().
+     */
+    to( properties, options ) {
+
+        this._valuesEnd = properties;
+
+        if (typeof options !== "undefined") {
+            if (typeof options === "number") {
+                // for backward compatiblity
+                this._duration = options;
+            } else if (typeof options === "object") {
+                if (options.duration) { this._duration = options.duration; }
+                if (options.yoyo) { this.yoyo(options.yoyo); }
+                if (options.easing) { this.easing(options.easing); }
+                if (options.repeat) { this.repeat(options.repeat); }
+                if (options.delay) { this.delay(options.delay); }
+                if (options.interpolation) { this.interpolation(options.interpolation); }
+
+                if (options.autoStart) {
+                    this.start();
                 }
             }
+        }
 
-            return this;
+        return this;
 
-        };
+    }
 
-        /**
-         * start the tween
-         * @name me.Tween#start
-         * @public
-         * @function
-         */
-        this.start = function ( _time ) {
+    /**
+     * start the tween
+     * @name start
+     * @memberOf me.Tween
+     * @public
+     * @function
+     */
+    start( time = timer.getTime() ) {
 
-            _onStartCallbackFired = false;
+        this._onStartCallbackFired = false;
 
-            // add the tween to the object pool on start
-            game$1.world.addChild(this);
+        // add the tween to the object pool on start
+        world.addChild(this);
 
-            _startTime = (typeof(_time) === 'undefined' ? timer$1.getTime() : _time) + _delayTime;
+        this._startTime =  time + this._delayTime;
 
-            for ( var property in _valuesEnd ) {
+        for ( var property in this._valuesEnd ) {
 
-                // check if an Array was provided as property value
-                if ( _valuesEnd[ property ] instanceof Array ) {
+            // check if an Array was provided as property value
+            if ( this._valuesEnd[ property ] instanceof Array ) {
 
-                    if ( _valuesEnd[ property ].length === 0 ) {
+                if ( this._valuesEnd[ property ].length === 0 ) {
 
-                        continue;
-
-                    }
-
-                    // create a local copy of the Array with the start value at the front
-                    _valuesEnd[ property ] = [ _object[ property ] ].concat( _valuesEnd[ property ] );
-
-                }
-
-                _valuesStart[ property ] = _object[ property ];
-
-                if( ( _valuesStart[ property ] instanceof Array ) === false ) {
-                    _valuesStart[ property ] *= 1.0; // Ensures we're using numbers, not strings
-                }
-
-                _valuesStartRepeat[ property ] = _valuesStart[ property ] || 0;
-
-            }
-
-            return this;
-
-        };
-
-        /**
-         * stop the tween
-         * @name me.Tween#stop
-         * @public
-         * @function
-         */
-        this.stop = function () {
-            // remove the tween from the world container
-            game$1.world.removeChildNow(this);
-            return this;
-        };
-
-        /**
-         * delay the tween
-         * @name me.Tween#delay
-         * @public
-         * @function
-         * @param {Number} amount delay amount expressed in milliseconds
-         */
-        this.delay = function ( amount ) {
-
-            _delayTime = amount;
-            return this;
-
-        };
-
-        /**
-         * Repeat the tween
-         * @name me.Tween#repeat
-         * @public
-         * @function
-         * @param {Number} times amount of times the tween should be repeated
-         */
-        this.repeat = function ( times ) {
-
-            _repeat = times;
-            return this;
-
-        };
-
-        /**
-         * Allows the tween to bounce back to their original value when finished.
-         * To be used together with repeat to create endless loops.
-         * @name me.Tween#yoyo
-         * @public
-         * @function
-         * @see me.Tween#repeat
-         * @param {Boolean} yoyo
-         */
-        this.yoyo = function( yoyo ) {
-
-            _yoyo = yoyo;
-            return this;
-
-        };
-
-        /**
-         * set the easing function
-         * @name me.Tween#easing
-         * @public
-         * @function
-         * @param {me.Tween.Easing} fn easing function
-         */
-        this.easing = function ( easing ) {
-            if (typeof easing !== 'function') {
-                throw new Error("invalid easing function for me.Tween.easing()");
-            }
-            _easingFunction = easing;
-            return this;
-
-        };
-
-        /**
-         * set the interpolation function
-         * @name me.Tween#interpolation
-         * @public
-         * @function
-         * @param {me.Tween.Interpolation} fn interpolation function
-         */
-        this.interpolation = function ( interpolation ) {
-
-            _interpolationFunction = interpolation;
-            return this;
-
-        };
-
-        /**
-         * chain the tween
-         * @name me.Tween#chain
-         * @public
-         * @function
-         * @param {me.Tween} chainedTween Tween to be chained
-         */
-        this.chain = function () {
-
-            _chainedTweens = arguments;
-            return this;
-
-        };
-
-        /**
-         * onStart callback
-         * @name me.Tween#onStart
-         * @public
-         * @function
-         * @param {Function} onStartCallback callback
-         */
-        this.onStart = function ( callback ) {
-
-            _onStartCallback = callback;
-            return this;
-
-        };
-
-        /**
-         * onUpdate callback
-         * @name me.Tween#onUpdate
-         * @public
-         * @function
-         * @param {Function} onUpdateCallback callback
-         */
-        this.onUpdate = function ( callback ) {
-
-            _onUpdateCallback = callback;
-            return this;
-
-        };
-
-        /**
-         * onComplete callback
-         * @name me.Tween#onComplete
-         * @public
-         * @function
-         * @param {Function} onCompleteCallback callback
-         */
-        this.onComplete = function ( callback ) {
-
-            _onCompleteCallback = callback;
-            return this;
-
-        };
-
-        /** @ignore */
-        this.update = function ( dt ) {
-
-            // the original Tween implementation expect
-            // a timestamp and not a time delta
-            _tweenTimeTracker = (timer$1.lastUpdate > _tweenTimeTracker) ? timer$1.lastUpdate : _tweenTimeTracker + dt;
-            var time = _tweenTimeTracker;
-
-            var property;
-
-            if ( time < _startTime ) {
-
-                return true;
-
-            }
-
-            if ( _onStartCallbackFired === false ) {
-
-                if ( _onStartCallback !== null ) {
-
-                    _onStartCallback.call( _object );
+                    continue;
 
                 }
 
-                _onStartCallbackFired = true;
+                // create a local copy of the Array with the start value at the front
+                this._valuesEnd[ property ] = [ this._object[ property ] ].concat( this._valuesEnd[ property ] );
 
             }
 
-            var elapsed = ( time - _startTime ) / _duration;
-            elapsed = elapsed > 1 ? 1 : elapsed;
+            this._valuesStart[ property ] = this._object[ property ];
 
-            var value = _easingFunction( elapsed );
-
-            for ( property in _valuesEnd ) {
-
-                var start = _valuesStart[ property ] || 0;
-                var end = _valuesEnd[ property ];
-
-                if ( end instanceof Array ) {
-
-                    _object[ property ] = _interpolationFunction( end, value );
-
-                } else {
-
-                    // Parses relative end values with start as base (e.g.: +10, -3)
-                    if ( typeof(end) === "string" ) {
-                        end = start + parseFloat(end);
-                    }
-
-                    // protect against non numeric properties.
-                    if ( typeof(end) === "number" ) {
-                        _object[ property ] = start + ( end - start ) * value;
-                    }
-
-                }
-
+            if ( ( this._valuesStart[ property ] instanceof Array ) === false ) {
+                this._valuesStart[ property ] *= 1.0; // Ensures we're using numbers, not strings
             }
 
-            if ( _onUpdateCallback !== null ) {
+            this._valuesStartRepeat[ property ] = this._valuesStart[ property ] || 0;
 
-                _onUpdateCallback.call( _object, value );
+        }
 
-            }
+        return this;
 
-            if ( elapsed === 1 ) {
+    }
 
-                if ( _repeat > 0 ) {
+    /**
+     * stop the tween
+     * @name stop
+     * @memberOf me.Tween
+     * @public
+     * @function
+     */
+    stop() {
+        // remove the tween from the world container
+        world.removeChildNow(this);
+        return this;
+    }
 
-                    if( isFinite( _repeat ) ) {
-                        _repeat--;
-                    }
+    /**
+     * delay the tween
+     * @name delay
+     * @memberOf me.Tween
+     * @public
+     * @function
+     * @param {Number} amount delay amount expressed in milliseconds
+     */
+    delay( amount ) {
 
-                    // reassign starting values, restart by making startTime = now
-                    for( property in _valuesStartRepeat ) {
+        this._delayTime = amount;
+        return this;
 
-                        if ( typeof( _valuesEnd[ property ] ) === "string" ) {
-                            _valuesStartRepeat[ property ] = _valuesStartRepeat[ property ] + parseFloat(_valuesEnd[ property ]);
-                        }
+    }
 
-                        if (_yoyo) {
-                            var tmp = _valuesStartRepeat[ property ];
-                            _valuesStartRepeat[ property ] = _valuesEnd[ property ];
-                            _valuesEnd[ property ] = tmp;
-                        }
-                        _valuesStart[ property ] = _valuesStartRepeat[ property ];
+    /**
+     * Repeat the tween
+     * @name repeat
+     * @memberOf me.Tween
+     * @public
+     * @function
+     * @param {Number} times amount of times the tween should be repeated
+     */
+    repeat( times ) {
 
-                    }
+        this._repeat = times;
+        return this;
 
-                    _startTime = time + _delayTime;
+    }
 
-                    return true;
+    /**
+     * Allows the tween to bounce back to their original value when finished.
+     * To be used together with repeat to create endless loops.
+     * @name yoyo
+     * @memberOf me.Tween
+     * @public
+     * @function
+     * @see me.Tween#repeat
+     * @param {Boolean} yoyo
+     */
+    yoyo( yoyo ) {
 
-                } else {
-                    // remove the tween from the world container
-                    game$1.world.removeChildNow(this);
+        this._yoyo = yoyo;
+        return this;
 
-                    if ( _onCompleteCallback !== null ) {
+    }
 
-                        _onCompleteCallback.call( _object );
+    /**
+     * set the easing function
+     * @name easing
+     * @memberOf me.Tween
+     * @public
+     * @function
+     * @param {me.Tween.Easing} fn easing function
+     */
+    easing( easing ) {
+        if (typeof easing !== "function") {
+            throw new Error("invalid easing function for me.Tween.easing()");
+        }
+        this._easingFunction = easing;
+        return this;
 
-                    }
+    }
 
-                    for ( var i = 0, numChainedTweens = _chainedTweens.length; i < numChainedTweens; i ++ ) {
+    /**
+     * set the interpolation function
+     * @name interpolation
+     * @memberOf me.Tween
+     * @public
+     * @function
+     * @param {me.Tween.Interpolation} fn interpolation function
+     */
+    interpolation( interpolation ) {
+        this._interpolationFunction = interpolation;
+        return this;
+    }
 
-                        _chainedTweens[ i ].start( time );
+    /**
+     * chain the tween
+     * @name chain
+     * @memberOf me.Tween
+     * @public
+     * @function
+     * @param {me.Tween} chainedTween Tween to be chained
+     */
+    chain() {
+        this._chainedTweens = arguments;
+        return this;
+    }
 
-                    }
+    /**
+     * onStart callback
+     * @name onStart
+     * @memberOf me.Tween
+     * @public
+     * @function
+     * @param {Function} onStartCallback callback
+     */
+    onStart( callback ) {
+        this._onStartCallback = callback;
+        return this;
+    }
 
-                    return false;
+    /**
+     * onUpdate callback
+     * @name onUpdate
+     * @memberOf me.Tween
+     * @public
+     * @function
+     * @param {Function} onUpdateCallback callback
+     */
+    onUpdate( callback ) {
+        this._onUpdateCallback = callback;
+        return this;
+    }
 
-                }
+    /**
+     * onComplete callback
+     * @name onComplete
+     * @memberOf me.Tween
+     * @public
+     * @function
+     * @param {Function} onCompleteCallback callback
+     */
+    onComplete( callback ) {
+        this._onCompleteCallback = callback;
+        return this;
+    };
 
-            }
+    /** @ignore */
+    update( dt ) {
+
+        // the original Tween implementation expect
+        // a timestamp and not a time delta
+        this._tweenTimeTracker = (timer.lastUpdate > this._tweenTimeTracker) ? timer.lastUpdate : this._tweenTimeTracker + dt;
+        var time = this._tweenTimeTracker;
+
+        var property;
+
+        if ( time < this._startTime ) {
 
             return true;
 
-        };
+        }
+
+        if ( this._onStartCallbackFired === false ) {
+
+            if ( this._onStartCallback !== null ) {
+
+                this._onStartCallback.call( this._object );
+
+            }
+
+            this._onStartCallbackFired = true;
+
+        }
+
+        var elapsed = ( time - this._startTime ) / this._duration;
+        elapsed = elapsed > 1 ? 1 : elapsed;
+
+        var value = this._easingFunction( elapsed );
+
+        for ( property in this._valuesEnd ) {
+
+            var start = this._valuesStart[ property ] || 0;
+            var end = this._valuesEnd[ property ];
+
+            if ( end instanceof Array ) {
+
+                this._object[ property ] = this._interpolationFunction( end, value );
+
+            } else {
+
+                // Parses relative end values with start as base (e.g.: +10, -3)
+                if ( typeof(end) === "string" ) {
+                    end = start + parseFloat(end);
+                }
+
+                // protect against non numeric properties.
+                if ( typeof(end) === "number" ) {
+                    this._object[ property ] = start + ( end - start ) * value;
+                }
+
+            }
+
+        }
+
+        if ( this._onUpdateCallback !== null ) {
+
+            this._onUpdateCallback.call( this._object, value );
+
+        }
+
+        if ( elapsed === 1 ) {
+
+            if ( this._repeat > 0 ) {
+
+                if ( isFinite( this._repeat ) ) {
+                    this._repeat--;
+                }
+
+                // reassign starting values, restart by making startTime = now
+                for ( property in this._valuesStartRepeat ) {
+
+                    if ( typeof( this._valuesEnd[ property ] ) === "string" ) {
+                        this._valuesStartRepeat[ property ] = this._valuesStartRepeat[ property ] + parseFloat(this._valuesEnd[ property ]);
+                    }
+
+                    if (this._yoyo) {
+                        var tmp = this._valuesStartRepeat[ property ];
+                        this._valuesStartRepeat[ property ] = this._valuesEnd[ property ];
+                        this._valuesEnd[ property ] = tmp;
+                    }
+                    this._valuesStart[ property ] = this._valuesStartRepeat[ property ];
+
+                }
+
+                if (this._yoyo) {
+                    this._reversed = !this._reversed;
+                }
+
+                this._startTime = time + this._delayTime;
+
+                return true;
+
+            } else {
+                // remove the tween from the world container
+                world.removeChildNow(this);
+
+                if ( this._onCompleteCallback !== null ) {
+
+                    this._onCompleteCallback.call( this._object );
+
+                }
+
+                for ( var i = 0, numChainedTweens = this._chainedTweens.length; i < numChainedTweens; i ++ ) {
+
+                    this._chainedTweens[ i ].start( time );
+
+                }
+
+                return false;
+
+            }
+
+        }
+        return true;
     }
 
     // export easing function as static class property
@@ -32536,16 +32346,16 @@ class Text extends Renderable {
      * @param {me.Rect|me.Bounds} [ret] a object in which to store the text metrics
      * @returns {TextMetrics} a TextMetrics object with two properties: `width` and `height`, defining the output dimensions
      */
-    measureText(renderer, text, ret) {
+    measureText(_renderer, text, ret) {
         var context;
 
-        if (typeof renderer === "undefined") {
-            context = video$1.renderer.getFontContext();
-        } else if (renderer instanceof Renderer) {
+        if (typeof _renderer === "undefined") {
             context = renderer.getFontContext();
+        } else if (_renderer instanceof Renderer) {
+            context = _renderer.getFontContext();
         } else {
             // else it's a 2d rendering context object
-            context = renderer;
+            context = _renderer;
         }
 
         var textMetrics = ret || this.getBounds();
@@ -32562,7 +32372,7 @@ class Text extends Renderable {
         // compute the bounding box size
         this.height = this.width = 0;
         for (var i = 0; i < strings.length; i++) {
-            this.width = Math.max(context.measureText(utils$1.string.trimRight(""+strings[i])).width, this.width);
+            this.width = Math.max(context.measureText(utils.string.trimRight(""+strings[i])).width, this.width);
             this.height += lineHeight;
         }
         textMetrics.width = Math.ceil(this.width);
@@ -32675,7 +32485,7 @@ class Text extends Renderable {
 
         var lineHeight = this.fontSize * this.lineHeight;
         for (var i = 0; i < text.length; i++) {
-            var string = utils$1.string.trimRight(""+text[i]);
+            var string = utils.string.trimRight(""+text[i]);
             // draw the string
             context[stroke ? "strokeText" : "fillText"](string, x, y);
             // add leading space
@@ -33005,7 +32815,7 @@ class BitmapText extends Renderable {
 
         for (var i = 0; i < this._text.length; i++) {
             x = lX;
-            var string = utils$1.string.trimRight(this._text[i]);
+            var string = utils.string.trimRight(this._text[i]);
             // adjust x pos based on alignment value
             var stringWidth = measureTextWidth(this, string);
             switch (this.textAlign) {
@@ -33361,11 +33171,6 @@ class ColorLayer extends Renderable {
         // parent constructor
         super(0, 0, Infinity, Infinity);
 
-        // apply given parameters
-        this.name = name;
-        this.pos.z = z;
-        this.floating = true;
-
         /**
          * the layer color component
          * @public
@@ -33373,14 +33178,19 @@ class ColorLayer extends Renderable {
          * @name color
          * @memberOf me.ColorLayer#
          */
-        // parse the given color
-        if (color instanceof Color) {
-            this.color = color;
-        } else {
-            // string (#RGB, #ARGB, #RRGGBB, #AARRGGBB)
-            this.color = pool.pull("Color").parseCSS(color);
-        }
-        this.anchorPoint.set(0, 0);
+         this.color = pool.pull("Color").parseCSS(color);
+
+         this.onResetEvent(name, color, z);
+
+    }
+
+    onResetEvent(name, color, z) {
+        // apply given parameters
+        this.name = name;
+        this.pos.z = z;
+        this.floating = true;
+        // string (#RGB, #ARGB, #RRGGBB, #AARRGGBB)
+        this.color.parseCSS(color);
     }
 
     /**
@@ -33389,7 +33199,7 @@ class ColorLayer extends Renderable {
      */
     draw(renderer, rect) {
         var color = renderer.getColor();
-        var vpos = game$1.viewport.pos;
+        var vpos = viewport.pos;
         renderer.setColor(this.color);
         renderer.fillRect(
             rect.left - vpos.x, rect.top - vpos.y,
@@ -33466,7 +33276,7 @@ class ImageLayer extends Sprite {
 
         if (typeof(settings.ratio) !== "undefined") {
             // little hack for backward compatiblity
-            if (utils$1.string.isNumeric(settings.ratio)) {
+            if (utils.string.isNumeric(settings.ratio)) {
                 this.ratio.set(settings.ratio, +settings.ratio);
             } else /* vector */ {
                 this.ratio.setV(settings.ratio);
@@ -33551,7 +33361,7 @@ class ImageLayer extends Sprite {
                 this.repeatY = true;
                 break;
         }
-        this.resize(game$1.viewport.width, game$1.viewport.height);
+        this.resize(viewport.width, viewport.height);
         this.createPattern();
     }
 
@@ -33564,13 +33374,13 @@ class ImageLayer extends Sprite {
         this.vpResizeHdlr = event.subscribe(event.VIEWPORT_ONRESIZE, this.resize.bind(this));
         this.vpLoadedHdlr = event.subscribe(event.LEVEL_LOADED, function() {
             // force a first refresh when the level is loaded
-            _updateLayerFn(game$1.viewport.pos);
+            _updateLayerFn(viewport.pos);
         });
         // in case the level is not added to the root container,
         // the onActivateEvent call happens after the LEVEL_LOADED event
         // so we need to force a first update
         if (this.ancestor.root !== true) {
-            this.updateLayer(game$1.viewport.pos);
+            this.updateLayer(viewport.pos);
         }
     }
 
@@ -33595,7 +33405,7 @@ class ImageLayer extends Sprite {
      * @function
      */
     createPattern() {
-        this._pattern = video$1.renderer.createPattern(this.image, this._repeat);
+        this._pattern = renderer.createPattern(this.image, this._repeat);
     }
 
     /**
@@ -33612,8 +33422,7 @@ class ImageLayer extends Sprite {
             return;
         }
 
-        var viewport = game$1.viewport,
-            width = this.width,
+        var width = this.width,
             height = this.height,
             bw = viewport.bounds.width,
             bh = viewport.bounds.height,
@@ -33667,8 +33476,7 @@ class ImageLayer extends Sprite {
      * @ignore
      */
     draw(renderer) {
-        var viewport = game$1.viewport,
-            width = this.width,
+        var width = this.width,
             height = this.height,
             bw = viewport.bounds.width,
             bh = viewport.bounds.height,
@@ -33841,9 +33649,9 @@ class GUI_Object extends Sprite {
             this.released = false;
             if (this.isHoldable) {
                 if (this.holdTimeout !== null) {
-                    timer$1.clearTimeout(this.holdTimeout);
+                    timer.clearTimeout(this.holdTimeout);
                 }
-                this.holdTimeout = timer$1.setTimeout(this.hold.bind(this), this.holdThreshold, false);
+                this.holdTimeout = timer.setTimeout(this.hold.bind(this), this.holdThreshold, false);
                 this.released = false;
             }
             return this.onClick.call(this, event);
@@ -33912,7 +33720,7 @@ class GUI_Object extends Sprite {
     release(event) {
         if (this.released === false) {
             this.released = true;
-            timer$1.clearTimeout(this.holdTimeout);
+            timer.clearTimeout(this.holdTimeout);
             return this.onRelease.call(this, event);
         }
     }
@@ -33936,7 +33744,7 @@ class GUI_Object extends Sprite {
      * @ignore
      */
     hold() {
-        timer$1.clearTimeout(this.holdTimeout);
+        timer.clearTimeout(this.holdTimeout);
         if (!this.released) {
             this.onHold.call(this);
         }
@@ -33976,7 +33784,7 @@ class GUI_Object extends Sprite {
         releasePointerEvent("pointercancel", this);
         releasePointerEvent("pointerenter", this);
         releasePointerEvent("pointerleave", this);
-        timer$1.clearTimeout(this.holdTimeout);
+        timer.clearTimeout(this.holdTimeout);
     }
 }
 
@@ -34101,7 +33909,7 @@ class Trigger extends Renderable {
      getTriggerSettings() {
          // Lookup for the container instance
          if (typeof(this.triggerSettings.container) === "string") {
-             this.triggerSettings.container = game$1.world.getChildByName(this.triggerSettings.container)[0];
+             this.triggerSettings.container = world.getChildByName(this.triggerSettings.container)[0];
          }
          return this.triggerSettings;
      }
@@ -34111,7 +33919,7 @@ class Trigger extends Renderable {
      */
     onFadeComplete() {
         level.load(this.gotolevel, this.getTriggerSettings());
-        game$1.viewport.fadeOut(this.fade, this.duration);
+        viewport.fadeOut(this.fade, this.duration);
     }
 
     /**
@@ -34132,7 +33940,7 @@ class Trigger extends Renderable {
             if (this.fade && this.duration) {
                 if (!this.fading) {
                     this.fading = true;
-                    game$1.viewport.fadeIn(this.fade, this.duration,
+                    viewport.fadeIn(this.fade, this.duration,
                             this.onFadeComplete.bind(this));
                 }
             } else {
@@ -34170,10 +33978,10 @@ class ParticleContainer extends Container {
     constructor(emitter) {
         // call the super constructor
         super(
-            game$1.viewport.pos.x,
-            game$1.viewport.pos.y,
-            game$1.viewport.width,
-            game$1.viewport.height
+            viewport.pos.x,
+            viewport.pos.y,
+            viewport.width,
+            viewport.height
         );
 
         // don't sort the particles by z-index
@@ -34213,7 +34021,7 @@ class ParticleContainer extends Container {
         this._dt = 0;
 
         // Update particles and remove them if they are dead
-        var viewport = game$1.viewport;
+        var viewport = viewport;
         for (var i = this.children.length - 1; i >= 0; --i) {
             var particle = this.children[i];
             particle.inViewport = viewport.isVisible(particle, this.floating);
@@ -34249,7 +34057,7 @@ class ParticleContainer extends Container {
 
 // generate a default image for the particles
 var pixel = (function () {
-    var canvas = video$1.createCanvas(1, 1);
+    var canvas = createCanvas(1, 1);
     var context = canvas.getContext("2d");
     context.fillStyle = "#fff";
     context.fillRect(0, 0, 1, 1);
@@ -34831,6 +34639,21 @@ class Particle extends Renderable {
             emitter.image.height
         );
 
+        // particle velocity
+        this.vel = new Vector2d();
+        this.onResetEvent(emitter, true);
+    }
+
+    onResetEvent(emitter, newInstance = false) {
+        if (newInstance === false) {
+            super.onResetEvent(
+                emitter.getRandomPointX(),
+                emitter.getRandomPointY(),
+                emitter.image.width,
+                emitter.image.height
+            );
+        }
+
         // Particle will always update
         this.alwaysUpdate = true;
 
@@ -34842,7 +34665,7 @@ class Particle extends Renderable {
         var speed = emitter.speed + ((emitter.speedVariation > 0) ? (randomFloat(0, 2) - 1) * emitter.speedVariation : 0);
 
         // Set the start particle Velocity
-        this.vel = new Vector2d(speed * Math.cos(angle), -speed * Math.sin(angle));
+        this.vel.set(speed * Math.cos(angle), -speed * Math.sin(angle));
 
         // Set the start particle Time of Life as defined in emitter
         this.life = randomFloat(emitter.minLife, emitter.maxLife);
@@ -34875,7 +34698,7 @@ class Particle extends Renderable {
         this.pos.z = emitter.z;
 
         // cache inverse of the expected delta time
-        this._deltaInv = timer$1.maxfps / 1000;
+        this._deltaInv = timer.maxfps / 1000;
 
         // Set the start particle rotation as defined in emitter
         // if the particle not follow trajectory
@@ -35607,9 +35430,9 @@ function boot() {
     pool.register("me.Sprite", Sprite);
     pool.register("me.Renderable", Renderable);
     pool.register("me.Text", Text, true);
-    pool.register("me.BitmapText", BitmapText, true);
+    pool.register("me.BitmapText", BitmapText);
     pool.register("me.BitmapTextData", BitmapTextData, true);
-    pool.register("me.ImageLayer", ImageLayer, true);
+    pool.register("me.ImageLayer", ImageLayer);
     pool.register("me.ColorLayer", ColorLayer, true);
     pool.register("me.Vector2d", Vector2d, true);
     pool.register("me.Vector3d", Vector3d, true);
@@ -35633,9 +35456,9 @@ function boot() {
     pool.register("Sprite", Sprite);
     pool.register("Renderable", Renderable);
     pool.register("Text", Text, true);
-    pool.register("BitmapText", BitmapText, true);
+    pool.register("BitmapText", BitmapText);
     pool.register("BitmapTextData", BitmapTextData, true);
-    pool.register("ImageLayer", ImageLayer, true);
+    pool.register("ImageLayer", ImageLayer);
     pool.register("ColorLayer", ColorLayer, true);
     pool.register("Vector2d", Vector2d, true);
     pool.register("Vector3d", Vector3d, true);
@@ -35653,19 +35476,19 @@ function boot() {
     save.init();
 
     // init the FPS counter if needed
-    timer$1.init();
+    timer.init();
 
     // enable/disable the cache
-    loader.setNocache( utils$1.getUriFragment().nocache || false );
+    loader.setNocache( utils.getUriFragment().nocache || false );
 
     // init the stage Manager
-    state$1.init();
+    state.init();
 
     // automatically enable keyboard events
     initKeyboardEvent();
 
-    // game instance init
-    game$1.init();
+    // game init
+    init$2();
 
     // mark melonJS as initialized
     initialized = true;
@@ -35677,4 +35500,4 @@ device.onReady(function () {
     }
 });
 
-export { BitmapText, BitmapTextData, Body, Bounds$1 as Bounds, Camera2d, CanvasRenderer, Collectable, Color, ColorLayer, Container, DraggableEntity, DroptargetEntity, Ellipse, Entity, GLShader, GUI_Object, ImageLayer, Line, math as Math, Matrix2d, Matrix3d, ObservableVector2d, ObservableVector3d, Particle, ParticleEmitter, Pointer, Polygon, QuadTree, Rect, Renderable, Renderer, Sprite, Stage, TMXHexagonalRenderer, TMXIsometricRenderer, TMXLayer, TMXOrthogonalRenderer, TMXRenderer, TMXStaggeredRenderer, TMXTileMap, TMXTileset, TMXTilesetGroup, Text, Tile, Trigger, Tween, Vector2d, Vector3d, WebGLCompositor, WebGLRenderer, World, audio$1 as audio, boot, collision, deprecated, device, event, game$1 as game, initialized, input, level, loader, plugin, plugins, pool, save, skipAutoInit, state$1 as state, timer$1 as timer, utils$1 as utils, version, video$1 as video };
+export { BitmapText, BitmapTextData, Body, Bounds$1 as Bounds, Camera2d, CanvasRenderer, Collectable, Color, ColorLayer, Container, DraggableEntity, DroptargetEntity, Ellipse, Entity, GLShader, GUI_Object, ImageLayer, Line, math as Math, Matrix2d, Matrix3d, ObservableVector2d, ObservableVector3d, Particle, ParticleEmitter, Pointer, Polygon, QuadTree, Rect, Renderable, Renderer, Sprite, Stage, TMXHexagonalRenderer, TMXIsometricRenderer, TMXLayer, TMXOrthogonalRenderer, TMXRenderer, TMXStaggeredRenderer, TMXTileMap, TMXTileset, TMXTilesetGroup, Text, Tile, Trigger, Tween, Vector2d, Vector3d, WebGLCompositor, WebGLRenderer, World, audio, boot, collision, deprecated, device, event, game, initialized, input, level, loader, plugin, plugins, pool, save, skipAutoInit, state, timer, utils, version, video };
