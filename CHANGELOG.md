@@ -13,8 +13,11 @@
 ### Deprecated
 - all deprecated API from the legacy melonJS version have been removed
 
+## [9.1.2] - _2021-10-03_
+
 ### Fixed
 - fix a regression with state pause & resume when losing & gaining window focus
+- remove duplicated translate method for basic shapes and add missing shift method to Polygon
 
 ## [9.1.1] - _2021-09-26_
 
@@ -979,6 +982,7 @@
 - first public version with alex4 !
 - www.melonjs.org is live :)
 
+[9.1.2]: https://github.com/melonjs/melonJS/compare/9.1.1...9.1.2
 [9.1.1]: https://github.com/melonjs/melonJS/compare/9.1.0...9.1.1
 [9.1.0]: https://github.com/melonjs/melonJS/compare/9.0.2...9.1.0
 [9.0.2]: https://github.com/melonjs/melonJS/compare/9.0.1...9.0.2
