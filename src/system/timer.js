@@ -20,22 +20,10 @@ var timers = [];
 var timerId = 0;
 
 /**
+ * update
  * @ignore
  */
-function clearTimer(timerId) {
-    for (var i = 0, len = timers.length; i < len; i++) {
-        if (timers[i].timerId === timerId) {
-            timers.splice(i, 1);
-            break;
-        }
-    }
-};
-
-/**
- * update timers
- * @ignore
- */
-function updateTimers(time) {
+function update(time) {
     last = now;
     now = time;
     delta = (now - last);
@@ -48,6 +36,29 @@ function updateTimers(time) {
     // get the game tick
     timer.tick = (delta > minstep && timer.interpolation) ? delta / step : 1;
 
+
+    updateTimers(time);
+};
+
+/**
+ * clear Timers
+ * @ignore
+ */
+function clearTimer(timerId) {
+    for (var i = 0, len = timers.length; i < len; i++) {
+        if (timers[i].timerId === timerId) {
+            timers.splice(i, 1);
+            break;
+        }
+    }
+};
+
+
+/**
+ * update timers
+ * @ignore
+ */
+function updateTimers(time) {
     for (var i = 0, len = timers.length; i < len; i++) {
         var _timer = timers[i];
         if (!(_timer.pauseable && state.isPaused())) {
@@ -118,18 +129,6 @@ var timer = {
         interpolation : false,
 
         /**
-         * Last update time.<br/>
-         * Use this value to implement frame prediction in drawing events,
-         * for creating smooth motion while running game update logic at
-         * a lower fps.
-         * @public
-         * @type Date
-         * @name lastUpdate
-         * @memberOf me.timer
-         */
-        lastUpdate : window.performance.now(),
-
-        /**
          * init the timer
          * @ignore
          */
@@ -138,7 +137,7 @@ var timer = {
             this.reset();
             now = last = 0;
             // register to the game update event
-            event.subscribe(event.GAME_UPDATE, updateTimers);
+            event.subscribe(event.GAME_UPDATE, update);
         },
 
         /**

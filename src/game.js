@@ -78,10 +78,20 @@ export let mergeGroup = true;
 export let sortOn = "z";
 
 /**
- * Fired when a level is fully loaded and <br>
- * and all entities instantiated. <br>
- * Additionnaly the level id will also be passed
- * to the called function.
+ * Last time the game update loop was executed. <br>
+ * Use this value to implement frame prediction in drawing events,
+ * for creating smooth motion while running game update logic at
+ * a lower fps.
+ * @public
+ * @type {DOMHighResTimeStamp}
+ * @name lastUpdate
+ * @memberOf me.game
+ */
+export let lastUpdate = window.performance.now();
+
+/**
+ * Fired when a level is fully loaded and all entities instantiated. <br>
+ * Additionnaly the level id will also be passed to the called function.
  * @function me.game.onLevelLoaded
  * @example
  * // call myFunction () everytime a level is loaded
@@ -190,8 +200,8 @@ export function update(time, stage) {
             // update all objects (and pass the elapsed time since last frame)
             isDirty = stage.update(updateDelta) || isDirty;
 
-            timer.lastUpdate = window.performance.now();
-            updateAverageDelta = timer.lastUpdate - lastUpdateStart;
+            lastUpdate = window.performance.now();
+            updateAverageDelta = lastUpdate - lastUpdateStart;
 
             accumulator -= accumulatorUpdateDelta;
             if (timer.interpolation) {

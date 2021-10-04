@@ -1,6 +1,6 @@
 import timer from "./../system/timer.js";
 import * as event from "./../system/event.js";
-import { world } from "./../game.js";
+import { world, lastUpdate } from "./../game.js";
 import { Easing } from "./easing.js";
 import { Interpolation } from "./interpolation.js";
 
@@ -94,7 +94,8 @@ class Tween {
         this._onStartCallbackFired = false;
         this._onUpdateCallback = null;
         this._onCompleteCallback = null;
-        this._tweenTimeTracker = timer.lastUpdate;
+        // tweens are synchronized with the game update loop
+        this._tweenTimeTracker = lastUpdate;
 
         // reset flags to default value
         this.isPersistent = false;
@@ -371,7 +372,7 @@ class Tween {
 
         // the original Tween implementation expect
         // a timestamp and not a time delta
-        this._tweenTimeTracker = (timer.lastUpdate > this._tweenTimeTracker) ? timer.lastUpdate : this._tweenTimeTracker + dt;
+        this._tweenTimeTracker = (lastUpdate > this._tweenTimeTracker) ? lastUpdate : this._tweenTimeTracker + dt;
         var time = this._tweenTimeTracker;
 
         var property;
