@@ -3,6 +3,7 @@ import { getParent } from "./../video/video.js";
 import save from "./../system/save.js";
 import { prefixed } from "./../utils/agent.js";
 import state from "./../state/state.js";
+import * as event from "./../system/event.js";
 
 // private properties
 let accelInitialized = false;
@@ -23,6 +24,11 @@ let readyBound = false, isReady = false, readyList = [];
 
 // a cache DOMRect object
 let _domRect = {left: 0, top: 0, x: 0, y: 0, width: 0, height: 0, right: 0, bottom: 0};
+
+// Initialize me.timer on Boot event
+event.subscribe(event.BOOT, function () {
+    device._check();
+});
 
 /**
  * The device capabilities and specific events

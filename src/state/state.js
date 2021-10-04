@@ -134,6 +134,18 @@ function _switchState(state) {
     }
 }
 
+// initialize me.state on system boot
+event.subscribe(event.BOOT, function () {
+    // set the built-in loading stage
+    state.set(state.LOADING, defaultLoadingScreen);
+    // set and enable the default stage
+    state.set(state.DEFAULT, new Stage());
+    // enable by default as soon as the display is initialized
+    event.subscribe(event.VIDEO_INIT, function () {
+        state.change(state.DEFAULT, true);
+    });
+});
+
 
 /**
  * a State Manager (state machine)
@@ -268,21 +280,6 @@ var state = {
      * @memberOf me.state
      */
     onRestart : null,
-
-    /**
-     * @ignore
-     */
-    init() {
-        // set the built-in loading stage
-        this.set(this.LOADING, defaultLoadingScreen);
-        // set and enable the default stage
-        this.set(this.DEFAULT, new Stage());
-        // enable by default as soon as the display is initialized
-        var _state = this;
-        event.subscribe(event.VIDEO_INIT, function () {
-            _state.change(_state.DEFAULT, true);
-        });
-    },
 
     /**
      * Stop the current screen object.

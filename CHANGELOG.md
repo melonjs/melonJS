@@ -5,6 +5,7 @@
 ### Added
 - melonJS is now a pure ES6 library, for class definition, inheritance and semantic
 - melonJS now includes typescript definition for the ESM bundle (`melonjs.module.d.ts`)
+- Core : new me.event.BOOT event that will be triggered when melonJS is initialized
 
 ### Changed
 - Jay Inheritance has been replaced with ES6 standard inheritance

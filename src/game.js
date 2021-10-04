@@ -35,6 +35,14 @@ var lastUpdateStart = null;
 var updateAverageDelta = 0;
 
 
+ // initialize the game manager on system boot
+event.subscribe(event.BOOT, function () {
+    // the root object of our world is an entity container
+    world = new World();
+    // publish init notification
+    event.publish(event.GAME_INIT);
+});
+
 
 /**
  * a reference to the current active stage "default" camera
@@ -98,20 +106,6 @@ export let lastUpdate = window.performance.now();
  * me.game.onLevelLoaded = this.myFunction.bind(this);
  */
 export function onLevelLoaded() {};
-
-
-/**
- * Initialize the game manager
- * @function me.game.init
- * @ignore
- */
-export function init() {
-    // the root object of our world is an entity container
-    world = new World();
-
-    // publish init notification
-    event.publish(event.GAME_INIT);
-};
 
 /**
  * reset the game Object manager<br>

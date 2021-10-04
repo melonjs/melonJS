@@ -75,6 +75,15 @@ function updateTimers(time) {
     }
 };
 
+// Initialize me.timer on Boot event
+event.subscribe(event.BOOT, function () {
+    // reset variables to initial state
+    timer.reset();
+    now = last = 0;
+    // register to the game update event
+    event.subscribe(event.GAME_UPDATE, update);
+});
+
 
 /**
  * a Timer class to manage timing related function (FPS, Game Tick, Time...)
@@ -127,18 +136,6 @@ var timer = {
          * @memberOf me.timer
          */
         interpolation : false,
-
-        /**
-         * init the timer
-         * @ignore
-         */
-        init() {
-            // reset variables to initial state
-            this.reset();
-            now = last = 0;
-            // register to the game update event
-            event.subscribe(event.GAME_UPDATE, update);
-        },
 
         /**
          * reset time (e.g. usefull in case of pause)

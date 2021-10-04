@@ -7,6 +7,18 @@ import MinPubSub from "minpubsub";
 */
 
 /**
+ * Channel Constant for when the system is booting
+ * @public
+ * @constant
+ * @type String
+ * @name BOOT
+ * @memberOf me.event
+ * @see me.event.subscribe
+ */
+export const BOOT = "me.boot";
+
+
+/**
  * Channel Constant when the game is paused <br>
  * Data passed : none <br>
  * @public

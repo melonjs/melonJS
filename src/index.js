@@ -211,9 +211,6 @@ export function boot() {
         return;
     }
 
-    // check the device capabilites
-    device._check();
-
     // register all built-ins objects into the object pool
     pool.register("me.Entity", Entity);
     pool.register("me.Collectable", Collectable);
@@ -266,23 +263,14 @@ export function boot() {
     pool.register("Ellipse", Ellipse, true);
     pool.register("Bounds", Bounds, true);
 
-    // initialize me.save
-    save.init();
-
-    // init the FPS counter if needed
-    timer.init();
+    // publish Boot notification
+    event.publish(event.BOOT);
 
     // enable/disable the cache
     loader.setNocache( utils.getUriFragment().nocache || false );
 
-    // init the stage Manager
-    state.init();
-
     // automatically enable keyboard events
     input.initKeyboardEvent();
-
-    // game init
-    game.init();
 
     // mark melonJS as initialized
     initialized = true;

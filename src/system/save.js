@@ -1,4 +1,6 @@
 import device from "./../system/device.js";
+import * as event from "./../system/event.js";
+
 /**
  * allow to access and manage the device localStorage
  * @example
@@ -37,26 +39,25 @@ import device from "./../system/device.js";
  // a function to check if the given key is a reserved word
  function isReserved(key) {
      return (key === "add" || key === "remove");
- };
+ }
+
+
+// Initialize me.save on Boot event
+event.subscribe(event.BOOT, function() {
+    // Load previous data if local Storage is supported
+    if (device.localStorage === true) {
+        var me_save_content = localStorage.getItem("me.save");
+
+        if (typeof me_save_content === "string" && me_save_content.length > 0) {
+            var keys = JSON.parse(me_save_content) || [];
+            keys.forEach(function (key) {
+                data[key] = JSON.parse(localStorage.getItem("me.save." + key));
+            });
+        }
+    }
+});
 
 var save = {
-
-    /**
-     * @ignore
-     */
-    init() {
-        // Load previous data if local Storage is supported
-        if (device.localStorage === true) {
-            var me_save_content = localStorage.getItem("me.save");
-
-            if (typeof me_save_content === "string" && me_save_content.length > 0) {
-                var keys = JSON.parse(me_save_content) || [];
-                keys.forEach(function (key) {
-                    data[key] = JSON.parse(localStorage.getItem("me.save." + key));
-                });
-            }
-        }
-    },
 
     /**
      * Add new keys to localStorage and set them to the given default values if they do not exist
