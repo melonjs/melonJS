@@ -9297,13 +9297,599 @@ export var deprecated: Readonly<{
     warning: typeof warning;
     apply: typeof apply;
 }>;
-export namespace device {
-    const devicePixelRatio: number;
-    const isFullscreen: boolean;
-    const sound: boolean;
+declare namespace device$1 {
+    const ua: string;
+    const localStorage: boolean;
+    const hasAccelerometer: boolean;
+    const hasDeviceOrientation: boolean;
+    const hasFullscreenSupport: boolean;
+    const hasPointerLockSupport: boolean;
+    const hasWebAudio: boolean;
+    const nativeBase64: boolean;
+    const maxTouchPoints: number;
+    const touch: boolean;
+    const wheel: boolean;
+    const isMobile: boolean;
+    const iOS: boolean;
+    const android: boolean;
+    const android2: boolean;
+    const linux: boolean;
+    const ejecta: boolean;
+    const isWeixin: boolean;
+    const chromeOS: boolean;
+    const wp: boolean;
+    const BlackBerry: boolean;
+    const Kindle: boolean;
+    const accelerationX: number;
+    const accelerationY: number;
+    const accelerationZ: number;
+    const gamma: number;
+    const beta: number;
+    const alpha: number;
+    const language: string;
+    const pauseOnBlur: boolean;
+    const resumeOnFocus: boolean;
+    const autoFocus: boolean;
+    const stopOnBlur: boolean;
+    const OffscreenCanvas: boolean;
+    /**
+     * specify a function to execute when the Device is fully loaded and ready
+     * @function me.device.onReady
+     * @param {Function} fn the function to be executed
+     * @example
+     * // small game skeleton
+     * var game = {
+     *    // called by the me.device.onReady function
+     *    onload : function () {
+     *       // init video
+     *       if (!me.video.init('screen', 640, 480, true)) {
+     *          alert("Sorry but your browser does not support html 5 canvas.");
+     *          return;
+     *       }
+     *
+     *       // initialize the "audio"
+     *       me.audio.init("mp3,ogg");
+     *
+     *       // set callback for ressources loaded event
+     *       me.loader.onload = this.loaded.bind(this);
+     *
+     *       // set all ressources to be loaded
+     *       me.loader.preload(game.assets);
+     *
+     *       // load everything & display a loading screen
+     *       me.state.change(me.state.LOADING);
+     *    },
+     *
+     *    // callback when everything is loaded
+     *    loaded : function () {
+     *       // define stuff
+     *       // ....
+     *
+     *       // change to the menu screen
+     *       me.state.change(me.state.PLAY);
+     *    }
+     * }, // game
+     *
+     * // "bootstrap"
+     * me.device.onReady(function () {
+     *    game.onload();
+     * });
+     */
+    function onReady(fn: Function): void;
+    /**
+     * specify a function to execute when the Device is fully loaded and ready
+     * @function me.device.onReady
+     * @param {Function} fn the function to be executed
+     * @example
+     * // small game skeleton
+     * var game = {
+     *    // called by the me.device.onReady function
+     *    onload : function () {
+     *       // init video
+     *       if (!me.video.init('screen', 640, 480, true)) {
+     *          alert("Sorry but your browser does not support html 5 canvas.");
+     *          return;
+     *       }
+     *
+     *       // initialize the "audio"
+     *       me.audio.init("mp3,ogg");
+     *
+     *       // set callback for ressources loaded event
+     *       me.loader.onload = this.loaded.bind(this);
+     *
+     *       // set all ressources to be loaded
+     *       me.loader.preload(game.assets);
+     *
+     *       // load everything & display a loading screen
+     *       me.state.change(me.state.LOADING);
+     *    },
+     *
+     *    // callback when everything is loaded
+     *    loaded : function () {
+     *       // define stuff
+     *       // ....
+     *
+     *       // change to the menu screen
+     *       me.state.change(me.state.PLAY);
+     *    }
+     * }, // game
+     *
+     * // "bootstrap"
+     * me.device.onReady(function () {
+     *    game.onload();
+     * });
+     */
+    function onReady(fn: Function): void;
+    /**
+     * enable/disable swipe on WebView.
+     * @function me.device.enableSwipe
+     * @param {Boolean} [enable=true] enable or disable swipe.
+     */
+    function enableSwipe(enable?: boolean): void;
+    /**
+     * enable/disable swipe on WebView.
+     * @function me.device.enableSwipe
+     * @param {Boolean} [enable=true] enable or disable swipe.
+     */
+    function enableSwipe(enable?: boolean): void;
+    /**
+     * Triggers a fullscreen request. Requires fullscreen support from the browser/device.
+     * @function me.device.requestFullscreen
+     * @param {Object} [element=default canvas object] the element to be set in full-screen mode.
+     * @example
+     * // add a keyboard shortcut to toggle Fullscreen mode on/off
+     * me.input.bindKey(me.input.KEY.F, "toggleFullscreen");
+     * me.event.subscribe(me.event.KEYDOWN, function (action, keyCode, edge) {
+     *    // toggle fullscreen on/off
+     *    if (action === "toggleFullscreen") {
+     *       if (!me.device.isFullscreen) {
+     *          me.device.requestFullscreen();
+     *       } else {
+     *          me.device.exitFullscreen();
+     *       }
+     *    }
+     * });
+     */
+    function requestFullscreen(element?: any): void;
+    /**
+     * Triggers a fullscreen request. Requires fullscreen support from the browser/device.
+     * @function me.device.requestFullscreen
+     * @param {Object} [element=default canvas object] the element to be set in full-screen mode.
+     * @example
+     * // add a keyboard shortcut to toggle Fullscreen mode on/off
+     * me.input.bindKey(me.input.KEY.F, "toggleFullscreen");
+     * me.event.subscribe(me.event.KEYDOWN, function (action, keyCode, edge) {
+     *    // toggle fullscreen on/off
+     *    if (action === "toggleFullscreen") {
+     *       if (!me.device.isFullscreen) {
+     *          me.device.requestFullscreen();
+     *       } else {
+     *          me.device.exitFullscreen();
+     *       }
+     *    }
+     * });
+     */
+    function requestFullscreen(element?: any): void;
+    /**
+     * Exit fullscreen mode. Requires fullscreen support from the browser/device.
+     * @function me.device.exitFullscreen
+     */
+    function exitFullscreen(): void;
+    /**
+     * Exit fullscreen mode. Requires fullscreen support from the browser/device.
+     * @function me.device.exitFullscreen
+     */
+    function exitFullscreen(): void;
+    /**
+     * Return a string representing the orientation of the device screen.
+     * It can be "any", "natural", "landscape", "portrait", "portrait-primary", "portrait-secondary", "landscape-primary", "landscape-secondary"
+     * @function me.device.getScreenOrientation
+     * @see https://developer.mozilla.org/en-US/docs/Web/API/Screen/orientation
+     * @return {String} the screen orientation
+     */
+    function getScreenOrientation(): string;
+    /**
+     * Return a string representing the orientation of the device screen.
+     * It can be "any", "natural", "landscape", "portrait", "portrait-primary", "portrait-secondary", "landscape-primary", "landscape-secondary"
+     * @function me.device.getScreenOrientation
+     * @see https://developer.mozilla.org/en-US/docs/Web/API/Screen/orientation
+     * @return {String} the screen orientation
+     */
+    function getScreenOrientation(): string;
+    /**
+     * locks the device screen into the specified orientation.<br>
+     * This method only works for installed Web apps or for Web pages in full-screen mode.
+     * @function me.device.lockOrientation
+     * @see https://developer.mozilla.org/en-US/docs/Web/API/Screen/lockOrientation
+     * @return {Boolean} true if the orientation was unsuccessfully locked
+     */
+    function lockOrientation(orientation: any): boolean;
+    /**
+     * locks the device screen into the specified orientation.<br>
+     * This method only works for installed Web apps or for Web pages in full-screen mode.
+     * @function me.device.lockOrientation
+     * @see https://developer.mozilla.org/en-US/docs/Web/API/Screen/lockOrientation
+     * @return {Boolean} true if the orientation was unsuccessfully locked
+     */
+    function lockOrientation(orientation: any): boolean;
+    /**
+     * unlocks the device screen into the specified orientation.<br>
+     * This method only works for installed Web apps or for Web pages in full-screen mode.
+     * @function me.device.unlockOrientation
+     * @see https://developer.mozilla.org/en-US/docs/Web/API/Screen/lockOrientation
+     * @return {Boolean} true if the orientation was unsuccessfully unlocked
+     */
+    function unlockOrientation(orientation: any): boolean;
+    /**
+     * unlocks the device screen into the specified orientation.<br>
+     * This method only works for installed Web apps or for Web pages in full-screen mode.
+     * @function me.device.unlockOrientation
+     * @see https://developer.mozilla.org/en-US/docs/Web/API/Screen/lockOrientation
+     * @return {Boolean} true if the orientation was unsuccessfully unlocked
+     */
+    function unlockOrientation(orientation: any): boolean;
+    /**
+     * return true if the device screen orientation is in Portrait mode
+     * @function me.device.isPortrait
+     * @return {Boolean}
+     */
+    function isPortrait(): boolean;
+    /**
+     * return true if the device screen orientation is in Portrait mode
+     * @function me.device.isPortrait
+     * @return {Boolean}
+     */
+    function isPortrait(): boolean;
+    /**
+     * return true if the device screen orientation is in Portrait mode
+     * @function me.device.isLandscape
+     * @return {Boolean}
+     */
+    function isLandscape(): boolean;
+    /**
+     * return true if the device screen orientation is in Portrait mode
+     * @function me.device.isLandscape
+     * @return {Boolean}
+     */
+    function isLandscape(): boolean;
+    /**
+     * return the device storage
+     * @function me.device.getStorage
+     * @see me.save
+     * @param {String} [type="local"]
+     * @return {Object} a reference to the device storage
+     */
+    function getStorage(type?: string): any;
+    /**
+     * return the device storage
+     * @function me.device.getStorage
+     * @see me.save
+     * @param {String} [type="local"]
+     * @return {Object} a reference to the device storage
+     */
+    function getStorage(type?: string): any;
+    /**
+     * return the parent DOM element for the given parent name or HTMLElement object
+     * @function me.device.getParentElement
+     * @param {String|HTMLElement} element the parent element name or a HTMLElement object
+     * @return {HTMLElement} the parent Element
+     */
+    function getParentElement(element: string | HTMLElement): HTMLElement;
+    /**
+     * return the parent DOM element for the given parent name or HTMLElement object
+     * @function me.device.getParentElement
+     * @param {String|HTMLElement} element the parent element name or a HTMLElement object
+     * @return {HTMLElement} the parent Element
+     */
+    function getParentElement(element: string | HTMLElement): HTMLElement;
+    /**
+     * return the DOM element for the given element name or HTMLElement object
+     * @function me.device.getElement
+     * @param {String|HTMLElement} element the parent element name or a HTMLElement object
+     * @return {HTMLElement} the corresponding DOM Element or null if not existing
+     */
+    function getElement(element: string | HTMLElement): HTMLElement;
+    /**
+     * return the DOM element for the given element name or HTMLElement object
+     * @function me.device.getElement
+     * @param {String|HTMLElement} element the parent element name or a HTMLElement object
+     * @return {HTMLElement} the corresponding DOM Element or null if not existing
+     */
+    function getElement(element: string | HTMLElement): HTMLElement;
+    /**
+     * returns the size of the given HTMLElement and its position relative to the viewport
+     * <br><img src="images/element-box-diagram.png"/>
+     * @see https://developer.mozilla.org/en-US/docs/Web/API/DOMRect
+     * @function me.device.getElementBounds
+     * @param {String|HTMLElement} element an HTMLElement object
+     * @return {DOMRect} the size and position of the element relatively to the viewport
+     */
+    function getElementBounds(element: string | HTMLElement): DOMRect;
+    /**
+     * returns the size of the given HTMLElement and its position relative to the viewport
+     * <br><img src="images/element-box-diagram.png"/>
+     * @see https://developer.mozilla.org/en-US/docs/Web/API/DOMRect
+     * @function me.device.getElementBounds
+     * @param {String|HTMLElement} element an HTMLElement object
+     * @return {DOMRect} the size and position of the element relatively to the viewport
+     */
+    function getElementBounds(element: string | HTMLElement): DOMRect;
+    /**
+     * returns the size of the given HTMLElement Parent and its position relative to the viewport
+     * <br><img src="images/element-box-diagram.png"/>
+     * @see https://developer.mozilla.org/en-US/docs/Web/API/DOMRect
+     * @function me.device.getParentBounds
+     * @param {String|HTMLElement} element an HTMLElement object
+     * @return {DOMRect} the size and position of the given element parent relative to the viewport
+     */
+    function getParentBounds(element: string | HTMLElement): DOMRect;
+    /**
+     * returns the size of the given HTMLElement Parent and its position relative to the viewport
+     * <br><img src="images/element-box-diagram.png"/>
+     * @see https://developer.mozilla.org/en-US/docs/Web/API/DOMRect
+     * @function me.device.getParentBounds
+     * @param {String|HTMLElement} element an HTMLElement object
+     * @return {DOMRect} the size and position of the given element parent relative to the viewport
+     */
+    function getParentBounds(element: string | HTMLElement): DOMRect;
+    /**
+     * returns true if the device supports WebGL
+     * @function me.device.isWebGLSupported
+     * @param {Object} [options] context creation options
+     * @param {Boolean} [options.failIfMajorPerformanceCaveat=true] If true, the renderer will switch to CANVAS mode if the performances of a WebGL context would be dramatically lower than that of a native application making equivalent OpenGL calls.
+     * @return {Boolean} true if WebGL is supported
+     */
+    function isWebGLSupported(options?: {
+        failIfMajorPerformanceCaveat?: boolean;
+    }): boolean;
+    /**
+     * returns true if the device supports WebGL
+     * @function me.device.isWebGLSupported
+     * @param {Object} [options] context creation options
+     * @param {Boolean} [options.failIfMajorPerformanceCaveat=true] If true, the renderer will switch to CANVAS mode if the performances of a WebGL context would be dramatically lower than that of a native application making equivalent OpenGL calls.
+     * @return {Boolean} true if WebGL is supported
+     */
+    function isWebGLSupported(options?: {
+        failIfMajorPerformanceCaveat?: boolean;
+    }): boolean;
+    /**
+     * return the highest precision format supported by this device for GL Shaders
+     * @function me.device.getMaxShaderPrecision
+     * @param {WebGLRenderingContext} gl
+     * @return {Boolean} "lowp", "mediump", or "highp"
+     */
+    function getMaxShaderPrecision(gl: WebGLRenderingContext): boolean;
+    /**
+     * return the highest precision format supported by this device for GL Shaders
+     * @function me.device.getMaxShaderPrecision
+     * @param {WebGLRenderingContext} gl
+     * @return {Boolean} "lowp", "mediump", or "highp"
+     */
+    function getMaxShaderPrecision(gl: WebGLRenderingContext): boolean;
+    /**
+     * Makes a request to bring this device window to the front.
+     * @function me.device.focus
+     * @example
+     *  if (clicked) {
+     *    me.device.focus();
+     *  }
+     */
+    function focus(): void;
+    /**
+     * Makes a request to bring this device window to the front.
+     * @function me.device.focus
+     * @example
+     *  if (clicked) {
+     *    me.device.focus();
+     *  }
+     */
+    function focus(): void;
+    /**
+     * event management (Accelerometer)
+     * http://www.mobilexweb.com/samples/ball.html
+     * http://www.mobilexweb.com/blog/safari-ios-accelerometer-websockets-html5
+     * @ignore
+     */
+    function onDeviceMotion(e: any): void;
+    /**
+     * event management (Accelerometer)
+     * http://www.mobilexweb.com/samples/ball.html
+     * http://www.mobilexweb.com/blog/safari-ios-accelerometer-websockets-html5
+     * @ignore
+     */
+    function onDeviceMotion(e: any): void;
+    /**
+     * event management (Accelerometer)
+     * @ignore
+     */
+    function onDeviceRotate(e: any): void;
+    /**
+     * event management (Accelerometer)
+     * @ignore
+     */
+    function onDeviceRotate(e: any): void;
+    /**
+     * Enters pointer lock, requesting it from the user first. Works on supported devices & browsers
+     * Must be called in a click event or an event that requires user interaction.
+     * If you need to run handle events for errors or change of the pointer lock, see below.
+     * @function me.device.turnOnPointerLock
+     * @example
+     * document.addEventListener("pointerlockchange", pointerlockchange, false);
+     * document.addEventListener("mozpointerlockchange", pointerlockchange, false);
+     * document.addEventListener("webkitpointerlockchange", pointerlockchange, false);
+     *
+     * document.addEventListener("pointerlockerror", pointerlockerror, false);
+     * document.addEventListener("mozpointerlockerror", pointerlockerror, false);
+     * document.addEventListener("webkitpointerlockerror", pointerlockerror, false);
+     */
+    function turnOnPointerLock(): void;
+    /**
+     * Enters pointer lock, requesting it from the user first. Works on supported devices & browsers
+     * Must be called in a click event or an event that requires user interaction.
+     * If you need to run handle events for errors or change of the pointer lock, see below.
+     * @function me.device.turnOnPointerLock
+     * @example
+     * document.addEventListener("pointerlockchange", pointerlockchange, false);
+     * document.addEventListener("mozpointerlockchange", pointerlockchange, false);
+     * document.addEventListener("webkitpointerlockchange", pointerlockchange, false);
+     *
+     * document.addEventListener("pointerlockerror", pointerlockerror, false);
+     * document.addEventListener("mozpointerlockerror", pointerlockerror, false);
+     * document.addEventListener("webkitpointerlockerror", pointerlockerror, false);
+     */
+    function turnOnPointerLock(): void;
+    /**
+     * Exits pointer lock. Works on supported devices & browsers
+     * @function me.device.turnOffPointerLock
+     * @function
+     */
+    function turnOffPointerLock(): void;
+    /**
+     * Exits pointer lock. Works on supported devices & browsers
+     * @function me.device.turnOffPointerLock
+     * @function
+     */
+    function turnOffPointerLock(): void;
+    /**
+     * Enable monitor of the device accelerator to detect the amount of physical force of acceleration the device is receiving.
+     * (one some device a first user gesture will be required before calling this function)
+     * @function me.device.watchAccelerometer
+     * @see me.device.accelerationX
+     * @see me.device.accelerationY
+     * @see me.device.accelerationZ
+     * @return {Boolean} false if not supported or permission not granted by the user
+     * @example
+     * // try to enable device accelerometer event on user gesture
+     * me.input.registerPointerEvent("pointerleave", me.game.viewport, function() {
+     *     if (me.device.watchAccelerometer() === true) {
+     *         // Success
+     *         me.input.releasePointerEvent("pointerleave", me.game.viewport);
+     *     } else {
+     *         // ... fail at enabling the device accelerometer event
+     *     }
+     * });
+     */
+    function watchAccelerometer(): boolean;
+    /**
+     * Enable monitor of the device accelerator to detect the amount of physical force of acceleration the device is receiving.
+     * (one some device a first user gesture will be required before calling this function)
+     * @function me.device.watchAccelerometer
+     * @see me.device.accelerationX
+     * @see me.device.accelerationY
+     * @see me.device.accelerationZ
+     * @return {Boolean} false if not supported or permission not granted by the user
+     * @example
+     * // try to enable device accelerometer event on user gesture
+     * me.input.registerPointerEvent("pointerleave", me.game.viewport, function() {
+     *     if (me.device.watchAccelerometer() === true) {
+     *         // Success
+     *         me.input.releasePointerEvent("pointerleave", me.game.viewport);
+     *     } else {
+     *         // ... fail at enabling the device accelerometer event
+     *     }
+     * });
+     */
+    function watchAccelerometer(): boolean;
+    /**
+     * unwatch Accelerometor event
+     * @function me.device.unwatchAccelerometer
+     */
+    function unwatchAccelerometer(): void;
+    /**
+     * unwatch Accelerometor event
+     * @function me.device.unwatchAccelerometer
+     */
+    function unwatchAccelerometer(): void;
+    /**
+     * Enable monitor of the device orientation to detect the current orientation of the device as compared to the Earth coordinate frame.
+     * (one some device a first user gesture will be required before calling this function)
+     * @function me.device.watchDeviceOrientation
+     * @see me.device.alpha
+     * @see me.device.beta
+     * @see me.device.gamma
+     * @return {Boolean} false if not supported or permission not granted by the user
+     * @example
+     * // try to enable device orientation event on user gesture
+     * me.input.registerPointerEvent("pointerleave", me.game.viewport, function() {
+     *     if (me.device.watchDeviceOrientation() === true) {
+     *         // Success
+     *         me.input.releasePointerEvent("pointerleave", me.game.viewport);
+     *     } else {
+     *         // ... fail at enabling the device orientation event
+     *     }
+     * });
+     */
+    function watchDeviceOrientation(): boolean;
+    /**
+     * Enable monitor of the device orientation to detect the current orientation of the device as compared to the Earth coordinate frame.
+     * (one some device a first user gesture will be required before calling this function)
+     * @function me.device.watchDeviceOrientation
+     * @see me.device.alpha
+     * @see me.device.beta
+     * @see me.device.gamma
+     * @return {Boolean} false if not supported or permission not granted by the user
+     * @example
+     * // try to enable device orientation event on user gesture
+     * me.input.registerPointerEvent("pointerleave", me.game.viewport, function() {
+     *     if (me.device.watchDeviceOrientation() === true) {
+     *         // Success
+     *         me.input.releasePointerEvent("pointerleave", me.game.viewport);
+     *     } else {
+     *         // ... fail at enabling the device orientation event
+     *     }
+     * });
+     */
+    function watchDeviceOrientation(): boolean;
+    /**
+     * unwatch Device orientation event
+     * @function me.device.unwatchDeviceOrientation
+     */
+    function unwatchDeviceOrientation(): void;
+    /**
+     * unwatch Device orientation event
+     * @function me.device.unwatchDeviceOrientation
+     */
+    function unwatchDeviceOrientation(): void;
+    /**
+     * the vibrate method pulses the vibration hardware on the device, <br>
+     * If the device doesn't support vibration, this method has no effect. <br>
+     * If a vibration pattern is already in progress when this method is called,
+     * the previous pattern is halted and the new one begins instead.
+     * @function me.device.vibrate
+     * @param {Number|Number[]} pattern pattern of vibration and pause intervals
+     * @example
+     * // vibrate for 1000 ms
+     * me.device.vibrate(1000);
+     * // or alternatively
+     * me.device.vibrate([1000]);
+     * // vibrate for 50 ms, be still for 100 ms, and then vibrate for 150 ms:
+     * me.device.vibrate([50, 100, 150]);
+     * // cancel any existing vibrations
+     * me.device.vibrate(0);
+     */
+    function vibrate(pattern: number | number[]): void;
+    /**
+     * the vibrate method pulses the vibration hardware on the device, <br>
+     * If the device doesn't support vibration, this method has no effect. <br>
+     * If a vibration pattern is already in progress when this method is called,
+     * the previous pattern is halted and the new one begins instead.
+     * @function me.device.vibrate
+     * @param {Number|Number[]} pattern pattern of vibration and pause intervals
+     * @example
+     * // vibrate for 1000 ms
+     * me.device.vibrate(1000);
+     * // or alternatively
+     * me.device.vibrate([1000]);
+     * // vibrate for 50 ms, be still for 100 ms, and then vibrate for 150 ms:
+     * me.device.vibrate([50, 100, 150]);
+     * // cancel any existing vibrations
+     * me.device.vibrate(0);
+     */
+    function vibrate(pattern: number | number[]): void;
 }
 export var event: Readonly<{
     __proto__: any;
+    BOOT: string;
     STATE_PAUSE: string;
     STATE_RESUME: string;
     STATE_STOP: string;
@@ -9341,13 +9927,13 @@ export var game: Readonly<{
     readonly world: any;
     mergeGroup: boolean;
     sortOn: string;
+    readonly lastUpdate: number;
     onLevelLoaded: typeof onLevelLoaded;
-    init: typeof init$2;
     reset: typeof reset;
     updateFrameRate: typeof updateFrameRate;
     getParentContainer: typeof getParentContainer;
     repaint: typeof repaint;
-    update: typeof update;
+    update: typeof update$1;
     draw: typeof draw;
 }>;
 /**
@@ -10484,14 +11070,6 @@ export namespace pool {
 }
 export namespace save {
     /**
-     * @ignore
-     */
-    function init(): void;
-    /**
-     * @ignore
-     */
-    function init(): void;
-    /**
      * Add new keys to localStorage and set them to the given default values if they do not exist
      * @name add
      * @memberOf me.save
@@ -10566,14 +11144,6 @@ export namespace state {
     export const onStop: any;
     export const onRestart: any;
     /**
-     * @ignore
-     */
-    export function init(): void;
-    /**
-     * @ignore
-     */
-    export function init(): void;
-    /**
      * Stop the current screen object.
      * @name stop
      * @memberOf me.state
@@ -10886,22 +11456,11 @@ export namespace state {
      */
     export function isCurrent(state: number): boolean;
 }
-export namespace timer {
+declare namespace timer$1 {
     const tick: number;
     const fps: number;
     const maxfps: number;
     const interpolation: boolean;
-    const lastUpdate: Date;
-    /**
-     * init the timer
-     * @ignore
-     */
-    function init(): void;
-    /**
-     * init the timer
-     * @ignore
-     */
-    function init(): void;
     /**
      * reset time (e.g. usefull in case of pause)
      * @name reset
@@ -11069,7 +11628,7 @@ export namespace timer {
      */
     function countFPS(): void;
 }
-export namespace utils {
+declare namespace utils$1 {
     export { agentUtils as agent };
     export { arrayUtils as array };
     export { fileUtils as file };
@@ -12087,22 +12646,14 @@ declare function subscribe(channel: string, callback: Function): any;
  */
 declare function unsubscribe(handle: any[] | string, callback?: Function): void;
 /**
- * Fired when a level is fully loaded and <br>
- * and all entities instantiated. <br>
- * Additionnaly the level id will also be passed
- * to the called function.
+ * Fired when a level is fully loaded and all entities instantiated. <br>
+ * Additionnaly the level id will also be passed to the called function.
  * @function me.game.onLevelLoaded
  * @example
  * // call myFunction () everytime a level is loaded
  * me.game.onLevelLoaded = this.myFunction.bind(this);
  */
 declare function onLevelLoaded(): void;
-/**
- * Initialize the game manager
- * @function me.game.init
- * @ignore
- */
-declare function init$2(): void;
 /**
  * reset the game Object manager<br>
  * destroy all current objects
@@ -12135,7 +12686,7 @@ declare function repaint(): void;
  * @param {Number} time current timestamp as provided by the RAF callback
  * @param {me.Stage} stage the current stage
  */
-declare function update(time: number, stage: any): void;
+declare function update$1(time: number, stage: any): void;
 /**
  * draw the current scene/stage
  * @function me.game.draw
@@ -12681,4 +13232,4 @@ declare function defer(fn: Function, scope: any, ...args: any[]): number;
  * @param {no_trailing} no_trailing disable the execution on the trailing edge
  */
 declare function throttle(fn: Function, delay: number, no_trailing: any): (...args: any[]) => any;
-export { Bounds$1 as Bounds, math as Math };
+export { Bounds$1 as Bounds, math as Math, device$1 as device, timer$1 as timer, utils$1 as utils };

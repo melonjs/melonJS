@@ -3255,6 +3255,18 @@ var MinPubSub = minpubsub_src.exports;
 */
 
 /**
+ * Channel Constant for when the system is booting
+ * @public
+ * @constant
+ * @type String
+ * @name BOOT
+ * @memberOf me.event
+ * @see me.event.subscribe
+ */
+const BOOT = "me.boot";
+
+
+/**
  * Channel Constant when the game is paused <br>
  * Data passed : none <br>
  * @public
@@ -3668,6 +3680,7 @@ function unsubscribe (handle, callback) { MinPubSub.unsubscribe(handle, callback
 
 var event = /*#__PURE__*/Object.freeze({
     __proto__: null,
+    BOOT: BOOT,
     STATE_PAUSE: STATE_PAUSE,
     STATE_RESUME: STATE_RESUME,
     STATE_STOP: STATE_STOP,
@@ -10359,7 +10372,7 @@ var KEY = {
  */
 function initKeyboardEvent() {
     // make sure the keyboard is enable
-    if (keyBoardEventTarget === null && device.isMobile === false) {
+    if (keyBoardEventTarget === null && device$1.isMobile === false) {
         keyBoardEventTarget = window;
         keyBoardEventTarget.addEventListener("keydown", keyDownEvent, false);
         keyBoardEventTarget.addEventListener("keyup", keyUpEvent, false);
@@ -10792,7 +10805,7 @@ class Pointer extends Rect {
         globalToLocal(this.pageX, this.pageY, this.pos);
 
         // true if not originally a pointer event
-        this.isNormalized = !device.PointerEvent || (device.PointerEvent && !(event instanceof window.PointerEvent));
+        this.isNormalized = !device$1.PointerEvent || (device$1.PointerEvent && !(event instanceof window.PointerEvent));
 
         if (event.type === "wheel") {
             this.deltaMode = event.deltaMode || 0;
@@ -10951,7 +10964,7 @@ function enablePointerEvent() {
         pointer = new Pointer(0, 0, 1, 1);
 
         // instantiate a pool of pointer catched
-        for (var v = 0; v < device.maxTouchPoints; v++) {
+        for (var v = 0; v < device$1.maxTouchPoints; v++) {
             T_POINTERS.push(new Pointer());
         }
 
@@ -10960,14 +10973,14 @@ function enablePointerEvent() {
             pointerEventTarget = renderer.getScreenCanvas();
         }
 
-        if (device.PointerEvent) {
+        if (device$1.PointerEvent) {
             // standard Pointer Events
             activeEventList = pointerEventList;
         } else {
             // Regular Mouse events
             activeEventList = mouseEventList;
         }
-        if (device.touch && !device.PointerEvent) {
+        if (device$1.touch && !device$1.PointerEvent) {
             // touch event on mobile devices
             activeEventList = activeEventList.concat(touchEventList);
         }
@@ -10976,15 +10989,15 @@ function enablePointerEvent() {
         // set the PointerMove/touchMove/MouseMove event
         if (typeof(throttlingInterval) === "undefined") {
             // set the default value
-            throttlingInterval = ~~(1000 / timer.maxfps);
+            throttlingInterval = ~~(1000 / timer$1.maxfps);
         }
 
-        if (device.autoFocus === true) {
-            device.focus();
+        if (device$1.autoFocus === true) {
+            device$1.focus();
             pointerEventTarget.addEventListener(
                 activeEventList[2], // MOUSE/POINTER DOWN
                 function () {
-                    device.focus();
+                    device$1.focus();
                 },
                 { passive: (preventDefault === false) }
             );
@@ -11010,7 +11023,7 @@ function enablePointerEvent() {
                 if (activeEventList.indexOf(events[i]) !== -1) {
                     pointerEventTarget.addEventListener(
                         events[i],
-                        utils.function.throttle(
+                        utils$1.function.throttle(
                             onMoveEvent,
                             throttlingInterval,
                             false
@@ -11242,7 +11255,7 @@ function normalizeEvent(originalEvent) {
     var pointer;
 
     // PointerEvent or standard Mouse event
-    if (device.TouchEvent && originalEvent.changedTouches) {
+    if (device$1.TouchEvent && originalEvent.changedTouches) {
         // iOS/Android Touch event
         for (var i = 0, l = originalEvent.changedTouches.length; i < l; i++) {
             var touchEvent = originalEvent.changedTouches[i];
@@ -11373,8 +11386,8 @@ var throttlingInterval;
  */
 function globalToLocal(x, y, v) {
     v = v || new Vector2d();
-    var rect = device.getElementBounds(renderer.getScreenCanvas());
-    var pixelRatio = device.devicePixelRatio;
+    var rect = device$1.getElementBounds(renderer.getScreenCanvas());
+    var pixelRatio = device$1.devicePixelRatio;
     x -= rect.left + (window.pageXOffset || 0);
     y -= rect.top + (window.pageYOffset || 0);
     var scale = scaleRatio;
@@ -11550,7 +11563,7 @@ function releasePointerEvent(eventType, region, callback) {
             eventType = eventTypes[i];
             if (handlers.callbacks[eventType]) {
                 if (typeof (callback) !== "undefined") {
-                    utils.array.remove(handlers.callbacks[eventType], callback);
+                    utils$1.array.remove(handlers.callbacks[eventType], callback);
                 } else {
                     while (handlers.callbacks[eventType].length > 0) {
                         handlers.callbacks[eventType].pop();
@@ -13148,7 +13161,7 @@ class Container extends Renderable {
             // (e.g. move one child from one container to another)
             if (child.isRenderable) {
                 // allocated a GUID value (use child.id as based index if defined)
-                child.GUID = utils.createGUID(child.id);
+                child.GUID = utils$1.createGUID(child.id);
             }
         }
 
@@ -13207,7 +13220,7 @@ class Container extends Renderable {
                 // (e.g. move one child from one container to another)
                 if (child.isRenderable) {
                     // allocated a GUID value
-                    child.GUID = utils.createGUID();
+                    child.GUID = utils$1.createGUID();
                 }
             }
             child.ancestor = this;
@@ -13581,7 +13594,7 @@ class Container extends Renderable {
      */
     removeChild(child, keepalive) {
         if (this.hasChild(child)) {
-            utils.function.defer(deferredRemove, this, child, keepalive);
+            utils$1.function.defer(deferredRemove, this, child, keepalive);
         }
         else {
             throw new Error("Child is not mine.");
@@ -13740,7 +13753,7 @@ class Container extends Renderable {
                 });
             }
             /** @ignore */
-            this.pendingSort = utils.function.defer(function (self) {
+            this.pendingSort = utils$1.function.defer(function (self) {
                 // sort everything in this container
                 self.getChildren().sort(self["_sort" + self.sortOn.toUpperCase()]);
                 // clear the defer id
@@ -14208,7 +14221,7 @@ class QuadTree {
             var index = this.getIndex(item);
 
             if (index !== -1) {
-                found = utils.array.remove(this.nodes[index], item);
+                found = utils$1.array.remove(this.nodes[index], item);
                 // trim node if empty
                 if (found && this.nodes[index].isPrunable()) {
                     this.nodes.splice(index, 1);
@@ -14219,7 +14232,7 @@ class QuadTree {
         if (found === false) {
             // try and remove the item from the list of items in this node
             if (this.objects.indexOf(item) !== -1) {
-                utils.array.remove(this.objects, item);
+                utils$1.array.remove(this.objects, item);
                 found = true;
             }
         }
@@ -15270,6 +15283,14 @@ var lastUpdateStart = null;
 var updateAverageDelta = 0;
 
 
+ // initialize the game manager on system boot
+subscribe(BOOT, function () {
+    // the root object of our world is an entity container
+    world = new World();
+    // publish init notification
+    publish(GAME_INIT);
+});
+
 
 /**
  * a reference to the current active stage "default" camera
@@ -15313,29 +15334,26 @@ let mergeGroup = true;
 let sortOn = "z";
 
 /**
- * Fired when a level is fully loaded and <br>
- * and all entities instantiated. <br>
- * Additionnaly the level id will also be passed
- * to the called function.
+ * Last time the game update loop was executed. <br>
+ * Use this value to implement frame prediction in drawing events,
+ * for creating smooth motion while running game update logic at
+ * a lower fps.
+ * @public
+ * @type {DOMHighResTimeStamp}
+ * @name lastUpdate
+ * @memberOf me.game
+ */
+let lastUpdate = window.performance.now();
+
+/**
+ * Fired when a level is fully loaded and all entities instantiated. <br>
+ * Additionnaly the level id will also be passed to the called function.
  * @function me.game.onLevelLoaded
  * @example
  * // call myFunction () everytime a level is loaded
  * me.game.onLevelLoaded = this.myFunction.bind(this);
  */
 function onLevelLoaded() {}
-
-/**
- * Initialize the game manager
- * @function me.game.init
- * @ignore
- */
-function init$2() {
-    // the root object of our world is an entity container
-    world = new World();
-
-    // publish init notification
-    publish(GAME_INIT);
-}
 /**
  * reset the game Object manager<br>
  * destroy all current objects
@@ -15364,7 +15382,7 @@ function reset () {
 function updateFrameRate() {
     // reset the frame counter
     frameCounter = 0;
-    frameRate = ~~(0.5 + 60 / timer.maxfps);
+    frameRate = ~~(0.5 + 60 / timer$1.maxfps);
 
     // set step size based on the updatesPerSecond
     stepSize = (1000 / world.fps);
@@ -15373,7 +15391,7 @@ function updateFrameRate() {
 
     // display should always re-draw when update speed doesn't match fps
     // this means the user intends to write position prediction drawing logic
-    isAlwaysDirty = (timer.maxfps > world.fps);
+    isAlwaysDirty = (timer$1.maxfps > world.fps);
 }
 /**
  * Returns the parent container of the specified Child in the game world
@@ -15399,7 +15417,7 @@ function repaint() {
  * @param {Number} time current timestamp as provided by the RAF callback
  * @param {me.Stage} stage the current stage
  */
-function update(time, stage) {
+function update$1(time, stage) {
     // handle frame skipping if required
     if ((++frameCounter % frameRate) === 0) {
         // reset the frame counter
@@ -15408,23 +15426,23 @@ function update(time, stage) {
         // game update event
         publish(GAME_UPDATE, [ time ]);
 
-        accumulator += timer.getDelta();
+        accumulator += timer$1.getDelta();
         accumulator = Math.min(accumulator, accumulatorMax);
 
-        updateDelta = (timer.interpolation) ? timer.getDelta() : stepSize;
-        accumulatorUpdateDelta = (timer.interpolation) ? updateDelta : Math.max(updateDelta, updateAverageDelta);
+        updateDelta = (timer$1.interpolation) ? timer$1.getDelta() : stepSize;
+        accumulatorUpdateDelta = (timer$1.interpolation) ? updateDelta : Math.max(updateDelta, updateAverageDelta);
 
-        while (accumulator >= accumulatorUpdateDelta || timer.interpolation) {
+        while (accumulator >= accumulatorUpdateDelta || timer$1.interpolation) {
             lastUpdateStart = window.performance.now();
 
             // update all objects (and pass the elapsed time since last frame)
             isDirty = stage.update(updateDelta) || isDirty;
 
-            timer.lastUpdate = window.performance.now();
-            updateAverageDelta = timer.lastUpdate - lastUpdateStart;
+            lastUpdate = window.performance.now();
+            updateAverageDelta = lastUpdate - lastUpdateStart;
 
             accumulator -= accumulatorUpdateDelta;
-            if (timer.interpolation) {
+            if (timer$1.interpolation) {
                 accumulator = 0;
                 break;
             }
@@ -15460,13 +15478,13 @@ var game = /*#__PURE__*/Object.freeze({
     get world () { return world; },
     mergeGroup: mergeGroup,
     sortOn: sortOn,
+    get lastUpdate () { return lastUpdate; },
     onLevelLoaded: onLevelLoaded,
-    init: init$2,
     reset: reset,
     updateFrameRate: updateFrameRate,
     getParentContainer: getParentContainer,
     repaint: repaint,
-    update: update,
+    update: update$1,
     draw: draw
 });
 
@@ -16644,7 +16662,7 @@ function _startRunLoop() {
     // ensure nothing is running first and in valid state
     if ((_animFrameId === -1) && (_state !== -1)) {
         // reset the timer
-        timer.reset();
+        timer$1.reset();
 
         // start the main loop
         _animFrameId = window.requestAnimationFrame(_renderFrame);
@@ -16659,7 +16677,7 @@ function _resumeRunLoop() {
     // ensure game is actually paused and in valid state
     if (_isPaused && (_state !== -1)) {
         // reset the timer
-        timer.reset();
+        timer$1.reset();
 
         _isPaused = false;
     }
@@ -16682,7 +16700,7 @@ function _pauseRunLoop() {
 function _renderFrame(time) {
     var stage = _stages[_state].stage;
     // update all game objects
-    update(time, stage);
+    update$1(time, stage);
     // render all game objects
     draw(stage);
     // schedule the next frame update
@@ -16735,6 +16753,18 @@ function _switchState(state) {
         repaint();
     }
 }
+
+// initialize me.state on system boot
+subscribe(BOOT, function () {
+    // set the built-in loading stage
+    state.set(state.LOADING, defaultLoadingScreen);
+    // set and enable the default stage
+    state.set(state.DEFAULT, new Stage());
+    // enable by default as soon as the display is initialized
+    subscribe(VIDEO_INIT, function () {
+        state.change(state.DEFAULT, true);
+    });
+});
 
 
 /**
@@ -16870,21 +16900,6 @@ var state = {
      * @memberOf me.state
      */
     onRestart : null,
-
-    /**
-     * @ignore
-     */
-    init() {
-        // set the built-in loading stage
-        this.set(this.LOADING, defaultLoadingScreen);
-        // set and enable the default stage
-        this.set(this.DEFAULT, new Stage());
-        // enable by default as soon as the display is initialized
-        var _state = this;
-        subscribe(VIDEO_INIT, function () {
-            _state.change(_state.DEFAULT, true);
-        });
-    },
 
     /**
      * Stop the current screen object.
@@ -17175,7 +17190,7 @@ var state = {
                 _fade.color,
                 _fade.duration,
                 function () {
-                    utils.function.defer(_switchState, this, state);
+                    utils$1.function.defer(_switchState, this, state);
                 }
             );
 
@@ -17187,7 +17202,7 @@ var state = {
             if (forceChange === true) {
                 _switchState(state);
             } else {
-                utils.function.defer(_switchState, this, state);
+                utils$1.function.defer(_switchState, this, state);
             }
         }
     },
@@ -18362,7 +18377,7 @@ class Body {
         // clear the current bounds
         this.bounds.clear();
         // remove the shape from shape list
-        utils.array.remove(this.shapes, shape);
+        utils$1.array.remove(this.shapes, shape);
         // add everything left back
         for (var s = 0; s < this.shapes.length; s++) {
             this.addShape(this.shapes[s]);
@@ -18607,10 +18622,10 @@ class Body {
      * @ignore
      */
     applyFriction(vel) {
-        var fx = this.friction.x * timer.tick,
+        var fx = this.friction.x * timer$1.tick,
             nx = vel.x + fx,
             x = vel.x - fx,
-            fy = this.friction.y * timer.tick,
+            fy = this.friction.y * timer$1.tick,
             ny = vel.y + fy,
             y = vel.y - fy;
 
@@ -18631,10 +18646,10 @@ class Body {
     computeVelocity(vel) {
         // apply fore if defined
         if (this.force.x) {
-            vel.x += this.force.x * timer.tick;
+            vel.x += this.force.x * timer$1.tick;
         }
         if (this.force.y) {
-            vel.y += this.force.y * timer.tick;
+            vel.y += this.force.y * timer$1.tick;
         }
 
         // apply friction
@@ -18645,8 +18660,8 @@ class Body {
         if (!this.ignoreGravity) {
             var worldGravity = world.gravity;
             // apply gravity if defined
-            vel.x += worldGravity.x * this.gravityScale * this.mass * timer.tick;
-            vel.y += worldGravity.y * this.gravityScale * this.mass * timer.tick;
+            vel.x += worldGravity.x * this.gravityScale * this.mass * timer$1.tick;
+            vel.y += worldGravity.y * this.gravityScale * this.mass * timer$1.tick;
             // check if falling / jumping
             this.falling = (vel.y * Math.sign(worldGravity.y * this.gravityScale)) > 0;
             this.jumping = (this.falling ? false : this.jumping);
@@ -18729,11 +18744,11 @@ function setTMXValue(name, type, value) {
 
         default :
             // try to parse it anyway
-            if (!value || utils.string.isBoolean(value)) {
+            if (!value || utils$1.string.isBoolean(value)) {
                 // if value not defined or boolean
                 value = value ? (value === "true") : true;
             }
-            else if (utils.string.isNumeric(value)) {
+            else if (utils$1.string.isNumeric(value)) {
                 // check if numeric
                 value = Number(value);
             }
@@ -19102,7 +19117,7 @@ class TextureCache {
     get(image, atlas) {
         if (!this.cache.has(image)) {
             if (!atlas) {
-                atlas = createAtlas(image.width, image.height, image.src ? utils.file.getBasename(image.src) : undefined);
+                atlas = createAtlas(image.width, image.height, image.src ? utils$1.file.getBasename(image.src) : undefined);
             }
             this.set(image, new Texture(atlas, image, false));
         }
@@ -20643,7 +20658,7 @@ class Renderer {
         this.currentBlendMode = "normal";
 
         // create the main screen canvas
-        if (device.ejecta === true) {
+        if (device$1.ejecta === true) {
             // a main canvas is already automatically created by Ejecta
             this.canvas = document.getElementById("canvas");
         } else if (typeof window.canvas !== "undefined") {
@@ -23747,10 +23762,10 @@ class TMXTileset {
         // check if an external tileset is defined
         if (typeof(tileset.source) !== "undefined") {
             var src = tileset.source;
-            var ext = utils.file.getExtension(src);
+            var ext = utils$1.file.getExtension(src);
             if (ext === "tsx" || ext === "json") {
                 // load the external tileset (TSX/JSON)
-                tileset = loader.getTMX(utils.file.getBasename(src));
+                tileset = loader.getTMX(utils$1.file.getBasename(src));
                 if (!tileset) {
                     throw new Error(src + " external TSX/JSON tileset not found");
                 }
@@ -23955,7 +23970,7 @@ class TMXTileset {
     // update tile animations
     update(dt) {
         var duration = 0,
-            now = timer.getTime(),
+            now = timer$1.getTime(),
             result = false;
 
         if (this._lastUpdate !== now) {
@@ -25191,7 +25206,7 @@ function loadTMXLevel(levelId, container, flatten, setViewportBounds) {
 
     // reset the GUID generator
     // and pass the level id as parameter
-    utils.resetGUID(levelId, level.nextobjectid);
+    utils$1.resetGUID(levelId, level.nextobjectid);
 
     // Tiled use 0,0 anchor coordinates
     container.anchorPoint.set(0, 0);
@@ -25308,7 +25323,7 @@ var level = {
                 // some silly side effects
                 state.stop();
 
-                utils.function.defer(safeLoadLevel, this, levelId, options, true);
+                utils$1.function.defer(safeLoadLevel, this, levelId, options, true);
             }
             else {
                 safeLoadLevel(levelId, options);
@@ -25530,7 +25545,7 @@ function preloadTMX(tmxData, onload, onerror) {
 
     var xmlhttp = new XMLHttpRequest();
     // check the data format ('tmx', 'json')
-    var format = utils.file.getExtension(tmxData.src);
+    var format = utils$1.file.getExtension(tmxData.src);
 
     if (xmlhttp.overrideMimeType) {
         if (format === "json") {
@@ -25558,7 +25573,7 @@ function preloadTMX(tmxData, onload, onerror) {
                     case "tmx":
                     case "tsx":
                         // ie9 does not fully implement the responseXML
-                        if (device.ua.match(/msie/i) || !xmlhttp.responseXML) {
+                        if (device$1.ua.match(/msie/i) || !xmlhttp.responseXML) {
                             if (window.DOMParser) {
                                 // manually create the XML DOM
                                 result = (new DOMParser()).parseFromString(xmlhttp.responseText, "text/xml");
@@ -26136,7 +26151,7 @@ var loader = {
      */
     getImage(image) {
         // force as string and extract the base name
-        image = utils.file.getBasename("" + image);
+        image = utils$1.file.getBasename("" + image);
         if (image in imgList) {
             // return the corresponding Image object
             return imgList[image];
@@ -26728,24 +26743,24 @@ var audio = /*#__PURE__*/Object.freeze({
  function isReserved(key) {
      return (key === "add" || key === "remove");
  }
-var save = {
 
-    /**
-     * @ignore
-     */
-    init() {
-        // Load previous data if local Storage is supported
-        if (device.localStorage === true) {
-            var me_save_content = localStorage.getItem("me.save");
 
-            if (typeof me_save_content === "string" && me_save_content.length > 0) {
-                var keys = JSON.parse(me_save_content) || [];
-                keys.forEach(function (key) {
-                    data[key] = JSON.parse(localStorage.getItem("me.save." + key));
-                });
-            }
+// Initialize me.save on Boot event
+subscribe(BOOT, function() {
+    // Load previous data if local Storage is supported
+    if (device$1.localStorage === true) {
+        var me_save_content = localStorage.getItem("me.save");
+
+        if (typeof me_save_content === "string" && me_save_content.length > 0) {
+            var keys = JSON.parse(me_save_content) || [];
+            keys.forEach(function (key) {
+                data[key] = JSON.parse(localStorage.getItem("me.save." + key));
+            });
         }
-    },
+    }
+});
+
+var save = {
 
     /**
      * Add new keys to localStorage and set them to the given default values if they do not exist
@@ -26782,7 +26797,7 @@ var save = {
                      */
                     set (value) {
                         data[prop] = value;
-                        if (device.localStorage === true) {
+                        if (device$1.localStorage === true) {
                             localStorage.setItem("me.save." + prop, JSON.stringify(value));
                         }
                     }
@@ -26796,7 +26811,7 @@ var save = {
         });
 
         // Save keys
-        if (device.localStorage === true) {
+        if (device$1.localStorage === true) {
             localStorage.setItem("me.save", JSON.stringify(Object.keys(data)));
         }
     },
@@ -26815,7 +26830,7 @@ var save = {
         if (!isReserved(key)) {
             if (typeof data[key] !== "undefined") {
                 delete data[key];
-                if (device.localStorage === true) {
+                if (device$1.localStorage === true) {
                     localStorage.removeItem("me.save." + key);
                     localStorage.setItem("me.save", JSON.stringify(Object.keys(data)));
                 }
@@ -26824,13 +26839,19 @@ var save = {
     }
 };
 
+/**
+ * The device capabilities and specific events
+ * @namespace me.device
+ * @memberOf me
+ */
+
 // private properties
 let accelInitialized = false;
 let deviceOrientationInitialized = false;
 
 // swipe utility fn & flag
 let swipeEnabled = true;
-function disableSwipeFn(e) {
+function _disableSwipeFn(e) {
     e.preventDefault();
     if (typeof window.scroll === "function") {
         window.scroll(0, 0);
@@ -26840,219 +26861,209 @@ function disableSwipeFn(e) {
 // DOM loading stuff
 let readyBound = false, isReady = false, readyList = [];
 
+// called to check if the device is ready
+function _domReady(fn) {
+    // Make sure that the DOM is not already loaded
+    if (!isReady) {
+        // be sure document.body is there
+        if (!document.body) {
+            return setTimeout(_domReady, 13);
+        }
+
+        // clean up loading event
+        if (document.removeEventListener) {
+            document.removeEventListener(
+                "DOMContentLoaded",
+                this._domReady,
+                false
+            );
+        }
+        // remove the event on window.onload (always added in `onReady`)
+        window.removeEventListener("load", _domReady, false);
+
+        // execute all callbacks
+        while (readyList.length) {
+            readyList.shift().call(window, []);
+        }
+
+        // Remember that the DOM is ready
+        isReady = true;
+    }
+}
 // a cache DOMRect object
 let _domRect = {left: 0, top: 0, x: 0, y: 0, width: 0, height: 0, right: 0, bottom: 0};
 
-/**
- * The device capabilities and specific events
- * @namespace me.device
- * @memberOf me
- */
-let device = {
 
-    /**
-     * called to check if the device is ready
-     * @ignore
-     */
-    _domReady(fn) {
-        // Make sure that the DOM is not already loaded
-        if (!isReady) {
-            // be sure document.body is there
-            if (!document.body) {
-                return setTimeout(this._domReady, 13);
-            }
+// detect the device type
+function _detectDevice() {
+    // iOS Device ?
+    device.iOS = /iPhone|iPad|iPod/i.test(device.ua);
+    // Android Device ?
+    device.android = /Android/i.test(device.ua);
+    device.android2 = /Android 2/i.test(device.ua);
+    // Linux platform
+    device.linux = /Linux/i.test(device.ua);
+    // Chrome OS ?
+    device.chromeOS = /CrOS/.test(device.ua);
+    // Windows Device ?
+    device.wp = /Windows Phone/i.test(device.ua);
+    // Blackberry device ?
+    device.BlackBerry = /BlackBerry/i.test(device.ua);
+    // Kindle device ?
+    device.Kindle = /Kindle|Silk.*Mobile Safari/i.test(device.ua);
+    // Mobile platform
+    device.isMobile = /Mobi/i.test(device.ua) ||
+                         device.iOS ||
+                         device.android ||
+                         device.wp ||
+                         device.BlackBerry ||
+                         device.Kindle || false;
+    // ejecta
+    device.ejecta = (typeof window.ejecta !== "undefined");
+    // Wechat
+    device.isWeixin = /MicroMessenger/i.test(device.ua);
+}
+// check the device capapbilities
+function _checkCapabilities() {
 
-            // clean up loading event
-            if (document.removeEventListener) {
-                document.removeEventListener(
-                    "DOMContentLoaded",
-                    this._domReady,
-                    false
-                );
-            }
-            // remove the event on window.onload (always added in `onReady`)
-            window.removeEventListener("load", this._domReady, false);
+    // detect device type/platform
+    _detectDevice();
 
-            // execute all callbacks
-            while (readyList.length) {
-                readyList.shift().call(window, []);
-            }
+    // Mobile browser hacks
+    if (device.isMobile) {
+        // Prevent the webview from moving on a swipe
+        device.enableSwipe(false);
+    }
 
-            // Remember that the DOM is ready
-            isReady = true;
+    // Touch/Gesture Event feature detection
+    device.TouchEvent = !!("ontouchstart" in window);
+    device.PointerEvent = !!window.PointerEvent;
+    window.gesture = prefixed("gesture");
+
+    // detect touch capabilities
+    device.touch = device.TouchEvent || device.PointerEvent;
+
+    // max amount of touch points ; always at least return 1 (e.g. headless chrome will return 0)
+    device.maxTouchPoints = device.touch ? (device.PointerEvent ? navigator.maxTouchPoints || 1 : 10) : 1;
+
+    // detect wheel event support
+    // Modern browsers support "wheel", Webkit and IE support at least "mousewheel
+    device.wheel = ("onwheel" in document.createElement("div"));
+
+    // pointerlock detection
+    device.hasPointerLockSupport = prefixed("pointerLockElement", document);
+
+    if (device.hasPointerLockSupport) {
+        document.exitPointerLock = prefixed("exitPointerLock", document);
+    }
+    // device accelerometer and orientation detection
+    device.hasDeviceOrientation = !!window.DeviceOrientationEvent;
+    device.hasAccelerometer = !!window.DeviceMotionEvent;
+
+    // fullscreen api detection & polyfill when possible
+    device.hasFullscreenSupport = prefixed("fullscreenEnabled", document) ||
+                                document.mozFullScreenEnabled;
+
+    document.exitFullscreen = prefixed("cancelFullScreen", document) ||
+                              prefixed("exitFullscreen", document);
+
+    // vibration API poyfill
+    navigator.vibrate = prefixed("vibrate", navigator);
+
+    // web Audio detection
+    device.hasWebAudio = !!(window.AudioContext || window.webkitAudioContext);
+
+    try {
+        device.localStorage = !!window.localStorage;
+    } catch (e) {
+        // the above generates an exception when cookies are blocked
+        device.localStorage = false;
+    }
+
+    try {
+        // some browser (e.g. Safari) implements WebGL1 and WebGL2 contexts only
+        // https://bugzilla.mozilla.org/show_bug.cgi?id=801176
+        device.OffscreenCanvas =
+            (typeof window.OffscreenCanvas !== "undefined") &&
+            ((new OffscreenCanvas(0, 0).getContext( "2d" )) !== null);
+    } catch (e) {
+        device.OffscreenCanvas = false;
+    }
+
+    // set pause/stop action on losing focus
+    window.addEventListener("blur", function () {
+        if (device.stopOnBlur) {
+            state.stop(true);
         }
-    },
-
-
-
-    /**
-     * check the device capapbilities
-     * @ignore
-     */
-    _check() {
-
-        // detect device type/platform
-        this._detectDevice();
-
-        // Mobile browser hacks
-        if (this.isMobile) {
-            // Prevent the webview from moving on a swipe
-            this.enableSwipe(false);
+        if (device.pauseOnBlur) {
+            state.pause(true);
         }
-
-        // Touch/Gesture Event feature detection
-        this.TouchEvent = !!("ontouchstart" in window);
-        this.PointerEvent = !!window.PointerEvent;
-        window.gesture = prefixed("gesture");
-
-        // detect touch capabilities
-        this.touch = this.TouchEvent || this.PointerEvent;
-
-        // max amount of touch points ; always at least return 1 (e.g. headless chrome will return 0)
-        this.maxTouchPoints = this.touch ? (this.PointerEvent ? navigator.maxTouchPoints || 1 : 10) : 1;
-
-        // detect wheel event support
-        // Modern browsers support "wheel", Webkit and IE support at least "mousewheel
-        this.wheel = ("onwheel" in document.createElement("div"));
-
-        // pointerlock detection
-        this.hasPointerLockSupport = prefixed("pointerLockElement", document);
-
-        if (this.hasPointerLockSupport) {
-            document.exitPointerLock = prefixed("exitPointerLock", document);
+    }, false);
+    // set restart/resume action on gaining focus
+    window.addEventListener("focus", function () {
+        if (device.stopOnBlur) {
+            state.restart(true);
         }
-        // device accelerometer and orientation detection
-        this.hasDeviceOrientation = !!window.DeviceOrientationEvent;
-        this.hasAccelerometer = !!window.DeviceMotionEvent;
-
-        // fullscreen api detection & polyfill when possible
-        this.hasFullscreenSupport = prefixed("fullscreenEnabled", document) ||
-                                    document.mozFullScreenEnabled;
-
-        document.exitFullscreen = prefixed("cancelFullScreen", document) ||
-                                  prefixed("exitFullscreen", document);
-
-        // vibration API poyfill
-        navigator.vibrate = prefixed("vibrate", navigator);
-
-        // web Audio detection
-        this.hasWebAudio = !!(window.AudioContext || window.webkitAudioContext);
-
-        try {
-            this.localStorage = !!window.localStorage;
-        } catch (e) {
-            // the above generates an exception when cookies are blocked
-            this.localStorage = false;
+        if (device.resumeOnFocus) {
+            state.resume(true);
         }
-
-        try {
-            // some browser (e.g. Safari) implements WebGL1 and WebGL2 contexts only
-            // https://bugzilla.mozilla.org/show_bug.cgi?id=801176
-            this.OffscreenCanvas =
-                (typeof window.OffscreenCanvas !== "undefined") &&
-                ((new OffscreenCanvas(0, 0).getContext( "2d" )) !== null);
-        } catch (e) {
-            this.OffscreenCanvas = false;
+        // force focus if autofocus is on
+        if (device.autoFocus) {
+            device.focus();
         }
-
-        // set pause/stop action on losing focus
-        window.addEventListener("blur", (function () {
-            if (this.stopOnBlur) {
-                state.stop(true);
-            }
-            if (this.pauseOnBlur) {
-                state.pause(true);
-            }
-        }).bind(this), false);
-        // set restart/resume action on gaining focus
-        window.addEventListener("focus", (function () {
-            if (this.stopOnBlur) {
-                state.restart(true);
-            }
-            if (this.resumeOnFocus) {
-                state.resume(true);
-            }
-            // force focus if autofocus is on
-            if (this.autoFocus) {
-                this.focus();
-            }
-        }).bind(this), false);
+    }, false);
 
 
-        // Set the name of the hidden property and the change event for visibility
-        var hidden, visibilityChange;
-        if (typeof document.hidden !== "undefined") {
-            // Opera 12.10 and Firefox 18 and later support
-            hidden = "hidden";
-            visibilityChange = "visibilitychange";
-        } else if (typeof document.mozHidden !== "undefined") {
-            hidden = "mozHidden";
-            visibilityChange = "mozvisibilitychange";
-        } else if (typeof document.msHidden !== "undefined") {
-            hidden = "msHidden";
-            visibilityChange = "msvisibilitychange";
-        } else if (typeof document.webkitHidden !== "undefined") {
-            hidden = "webkitHidden";
-            visibilityChange = "webkitvisibilitychange";
-        }
+    // Set the name of the hidden property and the change event for visibility
+    var hidden, visibilityChange;
+    if (typeof document.hidden !== "undefined") {
+        // Opera 12.10 and Firefox 18 and later support
+        hidden = "hidden";
+        visibilityChange = "visibilitychange";
+    } else if (typeof document.mozHidden !== "undefined") {
+        hidden = "mozHidden";
+        visibilityChange = "mozvisibilitychange";
+    } else if (typeof document.msHidden !== "undefined") {
+        hidden = "msHidden";
+        visibilityChange = "msvisibilitychange";
+    } else if (typeof document.webkitHidden !== "undefined") {
+        hidden = "webkitHidden";
+        visibilityChange = "webkitvisibilitychange";
+    }
 
-        // register on the event if supported
-        if (typeof (visibilityChange) === "string") {
-            // add the corresponding event listener
-            document.addEventListener(visibilityChange,
-                (function () {
-                    if (document[hidden]) {
-                        if (this.stopOnBlur) {
-                            state.stop(true);
-                        }
-                        if (this.pauseOnBlur) {
-                            state.pause(true);
-                        }
-                    } else {
-                        if (this.stopOnBlur) {
-                            state.restart(true);
-                        }
-                        if (this.resumeOnFocus) {
-                            state.resume(true);
-                        }
+    // register on the event if supported
+    if (typeof (visibilityChange) === "string") {
+        // add the corresponding event listener
+        document.addEventListener(visibilityChange,
+            function () {
+                if (document[hidden]) {
+                    if (device.stopOnBlur) {
+                        state.stop(true);
                     }
-                }).bind(this), false
-            );
-        }
-    },
+                    if (device.pauseOnBlur) {
+                        state.pause(true);
+                    }
+                } else {
+                    if (device.stopOnBlur) {
+                        state.restart(true);
+                    }
+                    if (device.resumeOnFocus) {
+                        state.resume(true);
+                    }
+                }
+            }, false
+        );
+    }
+}
 
-    /**
-     * detect the device type
-     * @ignore
-     */
-    _detectDevice() {
-        // iOS Device ?
-        this.iOS = /iPhone|iPad|iPod/i.test(this.ua);
-        // Android Device ?
-        this.android = /Android/i.test(this.ua);
-        this.android2 = /Android 2/i.test(this.ua);
-        // Linux platform
-        this.linux = /Linux/i.test(this.ua);
-        // Chrome OS ?
-        this.chromeOS = /CrOS/.test(this.ua);
-        // Windows Device ?
-        this.wp = /Windows Phone/i.test(this.ua);
-        // Blackberry device ?
-        this.BlackBerry = /BlackBerry/i.test(this.ua);
-        // Kindle device ?
-        this.Kindle = /Kindle|Silk.*Mobile Safari/i.test(this.ua);
-        // Mobile platform
-        this.isMobile = /Mobi/i.test(this.ua) ||
-                             this.iOS ||
-                             this.android ||
-                             this.wp ||
-                             this.BlackBerry ||
-                             this.Kindle || false;
-        // ejecta
-        this.ejecta = (typeof window.ejecta !== "undefined");
-        // Wechat
-        this.isWeixin = /MicroMessenger/i.test(this.ua);
-    },
+// Initialize me.timer on Boot event
+subscribe(BOOT, function () {
+    _checkCapabilities();
+});
+
+
+// public export
+let device = {
 
     /**
      * the `ua` read-only property returns the user agent string for the current browser.
@@ -27365,7 +27376,7 @@ let device = {
     /**
      * Specify whether to stop the game when losing focus or not.
      * The engine restarts on focus if this is enabled.
-     * @type {boolean}
+     * @type {Boolean}
      * @default false
      * @memberOf me.device
      */
@@ -27383,9 +27394,7 @@ let device = {
 
    /**
     * specify a function to execute when the Device is fully loaded and ready
-    * @name onReady
-    * @memberOf me.device
-    * @function
+    * @function me.device.onReady
     * @param {Function} fn the function to be executed
     * @example
     * // small game skeleton
@@ -27441,15 +27450,15 @@ let device = {
                 // directly call domReady if document is already "ready"
                 if (document.readyState === "complete") {
                     // defer the fn call to ensure our script is fully loaded
-                    window.setTimeout(this._domReady, 0);
+                    window.setTimeout(_domReady, 0);
                 }
                 else {
                     if (document.addEventListener) {
                         // Use the handy event callback
-                        document.addEventListener("DOMContentLoaded", this._domReady, false);
+                        document.addEventListener("DOMContentLoaded", _domReady, false);
                     }
                     // A fallback to window.onload, that will always work
-                    window.addEventListener("load", this._domReady, false);
+                    window.addEventListener("load", _domReady, false);
                 }
                 readyBound = true;
             }
@@ -27458,28 +27467,24 @@ let device = {
 
     /**
      * enable/disable swipe on WebView.
-     * @name enableSwipe
-     * @memberOf me.device
-     * @function
-     * @param {boolean} [enable=true] enable or disable swipe.
+     * @function me.device.enableSwipe
+     * @param {Boolean} [enable=true] enable or disable swipe.
      */
     enableSwipe(enable) {
         if (enable !== false) {
             if (swipeEnabled === false) {
-                window.document.removeEventListener("touchmove", disableSwipeFn, false);
+                window.document.removeEventListener("touchmove", _disableSwipeFn, false);
                 swipeEnabled = true;
             }
         } else if (swipeEnabled === true) {
-            window.document.addEventListener("touchmove", disableSwipeFn, false);
+            window.document.addEventListener("touchmove", _disableSwipeFn, false);
             swipeEnabled = false;
         }
     },
 
     /**
      * Triggers a fullscreen request. Requires fullscreen support from the browser/device.
-     * @name requestFullscreen
-     * @memberOf me.device
-     * @function
+     * @function me.device.requestFullscreen
      * @param {Object} [element=default canvas object] the element to be set in full-screen mode.
      * @example
      * // add a keyboard shortcut to toggle Fullscreen mode on/off
@@ -27507,9 +27512,7 @@ let device = {
 
     /**
      * Exit fullscreen mode. Requires fullscreen support from the browser/device.
-     * @name exitFullscreen
-     * @memberOf me.device
-     * @function
+     * @function me.device.exitFullscreen
      */
     exitFullscreen() {
         if (this.hasFullscreenSupport) {
@@ -27520,10 +27523,8 @@ let device = {
     /**
      * Return a string representing the orientation of the device screen.
      * It can be "any", "natural", "landscape", "portrait", "portrait-primary", "portrait-secondary", "landscape-primary", "landscape-secondary"
-     * @name getScreenOrientation
-     * @memberOf me.device
+     * @function me.device.getScreenOrientation
      * @see https://developer.mozilla.org/en-US/docs/Web/API/Screen/orientation
-     * @function
      * @return {String} the screen orientation
      */
     getScreenOrientation() {
@@ -27556,10 +27557,8 @@ let device = {
     /**
      * locks the device screen into the specified orientation.<br>
      * This method only works for installed Web apps or for Web pages in full-screen mode.
-     * @name lockOrientation
-     * @memberOf me.device
+     * @function me.device.lockOrientation
      * @see https://developer.mozilla.org/en-US/docs/Web/API/Screen/lockOrientation
-     * @function
      * @return {Boolean} true if the orientation was unsuccessfully locked
      */
     lockOrientation(orientation) {
@@ -27576,10 +27575,8 @@ let device = {
     /**
      * unlocks the device screen into the specified orientation.<br>
      * This method only works for installed Web apps or for Web pages in full-screen mode.
-     * @name unlockOrientation
-     * @memberOf me.device
+     * @function me.device.unlockOrientation
      * @see https://developer.mozilla.org/en-US/docs/Web/API/Screen/lockOrientation
-     * @function
      * @return {Boolean} true if the orientation was unsuccessfully unlocked
      */
     unlockOrientation(orientation) {
@@ -27595,9 +27592,7 @@ let device = {
 
     /**
      * return true if the device screen orientation is in Portrait mode
-     * @name isPortrait
-     * @memberOf me.device
-     * @function
+     * @function me.device.isPortrait
      * @return {Boolean}
      */
     isPortrait() {
@@ -27606,9 +27601,7 @@ let device = {
 
     /**
      * return true if the device screen orientation is in Portrait mode
-     * @name isLandscape
-     * @memberOf me.device
-     * @function
+     * @function me.device.isLandscape
      * @return {Boolean}
      */
     isLandscape() {
@@ -27617,11 +27610,9 @@ let device = {
 
     /**
      * return the device storage
-     * @name getStorage
-     * @memberOf me.device
-     * @function
-     * @param {String} [type="local"]
+     * @function me.device.getStorage
      * @see me.save
+     * @param {String} [type="local"]
      * @return {Object} a reference to the device storage
      */
     getStorage(type = "local") {
@@ -27636,9 +27627,7 @@ let device = {
 
     /**
      * return the parent DOM element for the given parent name or HTMLElement object
-     * @name getParentElement
-     * @memberOf me.device
-     * @function
+     * @function me.device.getParentElement
      * @param {String|HTMLElement} element the parent element name or a HTMLElement object
      * @return {HTMLElement} the parent Element
      */
@@ -27654,9 +27643,7 @@ let device = {
 
     /**
      * return the DOM element for the given element name or HTMLElement object
-     * @name getElement
-     * @memberOf me.device
-     * @function
+     * @function me.device.getElement
      * @param {String|HTMLElement} element the parent element name or a HTMLElement object
      * @return {HTMLElement} the corresponding DOM Element or null if not existing
      */
@@ -27683,10 +27670,8 @@ let device = {
     /**
      * returns the size of the given HTMLElement and its position relative to the viewport
      * <br><img src="images/element-box-diagram.png"/>
-     * @name getElementBounds
      * @see https://developer.mozilla.org/en-US/docs/Web/API/DOMRect
-     * @memberOf me.device
-     * @function
+     * @function me.device.getElementBounds
      * @param {String|HTMLElement} element an HTMLElement object
      * @return {DOMRect} the size and position of the element relatively to the viewport
      */
@@ -27702,10 +27687,8 @@ let device = {
     /**
      * returns the size of the given HTMLElement Parent and its position relative to the viewport
      * <br><img src="images/element-box-diagram.png"/>
-     * @name getParentBounds
      * @see https://developer.mozilla.org/en-US/docs/Web/API/DOMRect
-     * @memberOf me.device
-     * @function
+     * @function me.device.getParentBounds
      * @param {String|HTMLElement} element an HTMLElement object
      * @return {DOMRect} the size and position of the given element parent relative to the viewport
      */
@@ -27715,9 +27698,7 @@ let device = {
 
     /**
      * returns true if the device supports WebGL
-     * @name isWebGLSupported
-     * @memberOf me.device
-     * @function
+     * @function me.device.isWebGLSupported
      * @param {Object} [options] context creation options
      * @param {Boolean} [options.failIfMajorPerformanceCaveat=true] If true, the renderer will switch to CANVAS mode if the performances of a WebGL context would be dramatically lower than that of a native application making equivalent OpenGL calls.
      * @return {Boolean} true if WebGL is supported
@@ -27740,9 +27721,7 @@ let device = {
 
     /**
      * return the highest precision format supported by this device for GL Shaders
-     * @name getMaxShaderPrecision
-     * @memberOf me.device
-     * @function
+     * @function me.device.getMaxShaderPrecision
      * @param {WebGLRenderingContext} gl
      * @return {Boolean} "lowp", "mediump", or "highp"
      */
@@ -27760,9 +27739,7 @@ let device = {
 
     /**
      * Makes a request to bring this device window to the front.
-     * @name focus
-     * @memberOf me.device
-     * @function
+     * @function me.device.focus
      * @example
      *  if (clicked) {
      *    me.device.focus();
@@ -27788,6 +27765,10 @@ let device = {
         this.accelerationZ = e.accelerationIncludingGravity.z;
     },
 
+    /**
+     * event management (Accelerometer)
+     * @ignore
+     */
     onDeviceRotate(e) {
         this.gamma = e.gamma;
         this.beta = e.beta;
@@ -27798,9 +27779,7 @@ let device = {
      * Enters pointer lock, requesting it from the user first. Works on supported devices & browsers
      * Must be called in a click event or an event that requires user interaction.
      * If you need to run handle events for errors or change of the pointer lock, see below.
-     * @name turnOnPointerLock
-     * @memberOf me.device
-     * @function
+     * @function me.device.turnOnPointerLock
      * @example
      * document.addEventListener("pointerlockchange", pointerlockchange, false);
      * document.addEventListener("mozpointerlockchange", pointerlockchange, false);
@@ -27839,8 +27818,7 @@ let device = {
 
     /**
      * Exits pointer lock. Works on supported devices & browsers
-     * @name turnOffPointerLock
-     * @memberOf me.device
+     * @function me.device.turnOffPointerLock
      * @function
      */
     turnOffPointerLock() {
@@ -27852,10 +27830,7 @@ let device = {
     /**
      * Enable monitor of the device accelerator to detect the amount of physical force of acceleration the device is receiving.
      * (one some device a first user gesture will be required before calling this function)
-     * @name watchAccelerometer
-     * @memberOf me.device
-     * @public
-     * @function
+     * @function me.device.watchAccelerometer
      * @see me.device.accelerationX
      * @see me.device.accelerationY
      * @see me.device.accelerationZ
@@ -27893,10 +27868,7 @@ let device = {
 
     /**
      * unwatch Accelerometor event
-     * @name unwatchAccelerometer
-     * @memberOf me.device
-     * @public
-     * @function
+     * @function me.device.unwatchAccelerometer
      */
     unwatchAccelerometer() {
         if (accelInitialized) {
@@ -27909,10 +27881,7 @@ let device = {
     /**
      * Enable monitor of the device orientation to detect the current orientation of the device as compared to the Earth coordinate frame.
      * (one some device a first user gesture will be required before calling this function)
-     * @name watchDeviceOrientation
-     * @memberOf me.device
-     * @public
-     * @function
+     * @function me.device.watchDeviceOrientation
      * @see me.device.alpha
      * @see me.device.beta
      * @see me.device.gamma
@@ -27948,10 +27917,7 @@ let device = {
 
     /**
      * unwatch Device orientation event
-     * @name unwatchDeviceOrientation
-     * @memberOf me.device
-     * @public
-     * @function
+     * @function me.device.unwatchDeviceOrientation
      */
     unwatchDeviceOrientation() {
         if (deviceOrientationInitialized) {
@@ -27965,10 +27931,7 @@ let device = {
      * If the device doesn't support vibration, this method has no effect. <br>
      * If a vibration pattern is already in progress when this method is called,
      * the previous pattern is halted and the new one begins instead.
-     * @name vibrate
-     * @memberOf me.device
-     * @public
-     * @function
+     * @function me.device.vibrate
      * @param {Number|Number[]} pattern pattern of vibration and pause intervals
      * @example
      * // vibrate for 1000 ms
@@ -27993,7 +27956,7 @@ let device = {
  * @name devicePixelRatio
  * @memberOf me.device
  * @public
- * @type Number
+ * @type {Number}
  * @readonly
  * @return {Number}
  */
@@ -28011,9 +27974,9 @@ Object.defineProperty(device, "devicePixelRatio", {
  * @name isFullscreen
  * @memberOf me.device
  * @public
- * @type Boolean
+ * @type {Boolean}
  * @readonly
- * @return {boolean}
+ * @return {Boolean}
  */
 Object.defineProperty(device, "isFullscreen", {
     /**
@@ -28034,9 +27997,9 @@ Object.defineProperty(device, "isFullscreen", {
  * @name sound
  * @memberOf me.device
  * @public
- * @type Boolean
+ * @type {Boolean}
  * @readonly
- * @return {boolean}
+ * @return {Boolean}
  */
 Object.defineProperty(device, "sound", {
     /**
@@ -28046,6 +28009,8 @@ Object.defineProperty(device, "sound", {
         return hasAudio();
     }
 });
+
+var device$1 = device;
 
 /**
  * @private
@@ -28286,7 +28251,7 @@ class GLShader {
          * @name vertex
          * @memberOf me.GLShader
          */
-        this.vertex = setPrecision(minify(vertex), precision || device.getMaxShaderPrecision(this.gl));
+        this.vertex = setPrecision(minify(vertex), precision || device$1.getMaxShaderPrecision(this.gl));
 
         /**
          * the fragment shader source code
@@ -28295,7 +28260,7 @@ class GLShader {
          * @name vertex
          * @memberOf me.GLShader
          */
-        this.fragment = setPrecision(minify(fragment), precision || device.getMaxShaderPrecision(this.gl));
+        this.fragment = setPrecision(minify(fragment), precision || device$1.getMaxShaderPrecision(this.gl));
 
         /**
          * the location attributes of the shader
@@ -30130,7 +30095,7 @@ var settings = {
  */
 function autoDetectRenderer(options) {
     try {
-        if (device.isWebGLSupported(options)) {
+        if (device$1.isWebGLSupported(options)) {
             return new WebGLRenderer(options);
         }
     } catch (e) {
@@ -30159,7 +30124,7 @@ function onresize() {
         }
 
         // get the maximum canvas size within the parent div containing the canvas container
-        var nodeBounds = device.getParentBounds(getParent());
+        var nodeBounds = device$1.getParentBounds(getParent());
 
         var _max_width = Math.min(canvasMaxWidth, nodeBounds.width);
         var _max_height = Math.min(canvasMaxHeight, nodeBounds.height);
@@ -30336,7 +30301,7 @@ function init(game_width, game_height, options) {
     }
 
     // override renderer settings if &webgl is defined in the URL
-    var uriFragment = utils.getUriFragment();
+    var uriFragment = utils$1.getUriFragment();
     if (uriFragment.webgl === true || uriFragment.webgl1 === true || uriFragment.webgl2 === true) {
         settings.renderer = WEBGL;
         if (uriFragment.webgl1 === true) {
@@ -30365,7 +30330,7 @@ function init(game_width, game_height, options) {
     //add a channel for the onresize/onorientationchange event
     window.addEventListener(
         "resize",
-        utils.function.throttle(
+        utils$1.function.throttle(
             function (e) {
                 publish(WINDOW_ONRESIZE, [ e ]);
             }, 100
@@ -30396,7 +30361,7 @@ function init(game_width, game_height, options) {
     }
 
     // Automatically update relative canvas position on scroll
-    window.addEventListener("scroll", utils.function.throttle(
+    window.addEventListener("scroll", utils$1.function.throttle(
         function (e) {
             publish(WINDOW_ONSCROLL, [ e ]);
         }, 100
@@ -30429,7 +30394,7 @@ function init(game_width, game_height, options) {
     }
 
     // add our canvas (default to document.body if settings.parent is undefined)
-    parent = device.getElement(settings.parent);
+    parent = device$1.getElement(settings.parent);
     parent.appendChild(renderer.getScreenCanvas());
 
     // trigger an initial resize();
@@ -30448,16 +30413,16 @@ function init(game_width, game_height, options) {
 
     if (settings.consoleHeader !== false) {
         var renderType = (renderer instanceof CanvasRenderer) ? "CANVAS" : "WebGL" + renderer.WebGLVersion;
-        var audioType = device.hasWebAudio ? "Web Audio" : "HTML5 Audio";
+        var audioType = device$1.hasWebAudio ? "Web Audio" : "HTML5 Audio";
         var gpu_renderer = (typeof renderer.GPURenderer === "string") ? " (" + renderer.GPURenderer + ")" : "";
         // output video information in the console
         console.log(
             renderType + " renderer" + gpu_renderer + " | " +
             audioType + " | " +
-            "pixel ratio " + device.devicePixelRatio + " | " +
-            (device.isMobile ? "mobile" : "desktop") + " | " +
-            device.getScreenOrientation() + " | " +
-            device.language
+            "pixel ratio " + device$1.devicePixelRatio + " | " +
+            (device$1.isMobile ? "mobile" : "desktop") + " | " +
+            device$1.getScreenOrientation() + " | " +
+            device$1.language
         );
         console.log( "resolution: " + "requested " + game_width + "x" + game_height +
             ", got " + renderer.getWidth() + "x" + renderer.getHeight()
@@ -30484,7 +30449,7 @@ function createCanvas(width, height, offscreen) {
         throw new Error("width or height was zero, Canvas could not be initialized !");
     }
 
-    if (device.OffscreenCanvas === true && offscreen === true) {
+    if (device$1.OffscreenCanvas === true && offscreen === true) {
         _canvas = new OffscreenCanvas(0, 0);
         // stubbing style for compatibility,
         // as OffscreenCanvas is detached from the DOM
@@ -30521,7 +30486,7 @@ function scale(x, y) {
     var canvas = renderer.getScreenCanvas();
     var context = renderer.getScreenContext();
     var settings = renderer.settings;
-    var pixelRatio = device.devicePixelRatio;
+    var pixelRatio = device$1.devicePixelRatio;
 
     var w = settings.zoomX = canvas.width * x * pixelRatio;
     var h = settings.zoomY = canvas.height * y * pixelRatio;
@@ -30703,6 +30668,8 @@ var utils = {
     }
 };
 
+var utils$1 = utils;
+
 //hold element to display fps
 var framecount = 0;
 var framedelta = 0;
@@ -30720,21 +30687,10 @@ var timers = [];
 var timerId = 0;
 
 /**
+ * update
  * @ignore
  */
-function clearTimer(timerId) {
-    for (var i = 0, len = timers.length; i < len; i++) {
-        if (timers[i].timerId === timerId) {
-            timers.splice(i, 1);
-            break;
-        }
-    }
-}
-/**
- * update timers
- * @ignore
- */
-function updateTimers(time) {
+function update(time) {
     last = now;
     now = time;
     delta = (now - last);
@@ -30747,6 +30703,27 @@ function updateTimers(time) {
     // get the game tick
     timer.tick = (delta > minstep && timer.interpolation) ? delta / step : 1;
 
+
+    updateTimers();
+}
+/**
+ * clear Timers
+ * @ignore
+ */
+function clearTimer(timerId) {
+    for (var i = 0, len = timers.length; i < len; i++) {
+        if (timers[i].timerId === timerId) {
+            timers.splice(i, 1);
+            break;
+        }
+    }
+}
+
+/**
+ * update timers
+ * @ignore
+ */
+function updateTimers(time) {
     for (var i = 0, len = timers.length; i < len; i++) {
         var _timer = timers[i];
         if (!(_timer.pauseable && state.isPaused())) {
@@ -30762,6 +30739,15 @@ function updateTimers(time) {
         }
     }
 }
+// Initialize me.timer on Boot event
+subscribe(BOOT, function () {
+    // reset variables to initial state
+    timer.reset();
+    now = last = 0;
+    // register to the game update event
+    subscribe(GAME_UPDATE, update);
+});
+
 
 /**
  * a Timer class to manage timing related function (FPS, Game Tick, Time...)
@@ -30814,30 +30800,6 @@ var timer = {
          * @memberOf me.timer
          */
         interpolation : false,
-
-        /**
-         * Last update time.<br/>
-         * Use this value to implement frame prediction in drawing events,
-         * for creating smooth motion while running game update logic at
-         * a lower fps.
-         * @public
-         * @type Date
-         * @name lastUpdate
-         * @memberOf me.timer
-         */
-        lastUpdate : window.performance.now(),
-
-        /**
-         * init the timer
-         * @ignore
-         */
-        init() {
-            // reset variables to initial state
-            this.reset();
-            now = last = 0;
-            // register to the game update event
-            subscribe(GAME_UPDATE, updateTimers);
-        },
 
         /**
          * reset time (e.g. usefull in case of pause)
@@ -30924,7 +30886,7 @@ var timer = {
          * @param {Number} timeoutID ID of the timeout to be cleared
          */
         clearTimeout(timeoutID) {
-            utils.function.defer(clearTimer, this, timeoutID);
+            utils$1.function.defer(clearTimer, this, timeoutID);
         },
 
         /**
@@ -30935,7 +30897,7 @@ var timer = {
          * @param {Number} intervalID ID of the interval to be cleared
          */
         clearInterval(intervalID) {
-            utils.function.defer(clearTimer, this, intervalID);
+            utils$1.function.defer(clearTimer, this, intervalID);
         },
 
         /**
@@ -30979,6 +30941,8 @@ var timer = {
         }
 };
 
+var timer$1 = timer;
+
 var lastTime = 0;
 var vendors = ["ms", "moz", "webkit", "o"];
 var x;
@@ -31000,7 +30964,7 @@ for (x = 0; x < vendors.length && !cancelAnimationFrame; ++x) {
 if (!requestAnimationFrame || !cancelAnimationFrame) {
     requestAnimationFrame = function (callback) {
         var currTime = window.performance.now();
-        var timeToCall = Math.max(0, (1000 / timer.maxfps) - (currTime - lastTime));
+        var timeToCall = Math.max(0, (1000 / timer$1.maxfps) - (currTime - lastTime));
         var id = window.setTimeout(function () {
             callback(currTime + timeToCall);
         }, timeToCall);
@@ -31144,7 +31108,7 @@ var plugin = {
         }
 
         // compatibility testing
-        if (utils.checkVersion(instance.version) > 0) {
+        if (utils$1.checkVersion(instance.version) > 0) {
             throw new Error("Plugin version mismatch, expected: " + instance.version + ", got: " + version);
         }
 
@@ -31675,7 +31639,8 @@ class Tween {
         this._onStartCallbackFired = false;
         this._onUpdateCallback = null;
         this._onCompleteCallback = null;
-        this._tweenTimeTracker = timer.lastUpdate;
+        // tweens are synchronized with the game update loop
+        this._tweenTimeTracker = lastUpdate;
 
         // reset flags to default value
         this.isPersistent = false;
@@ -31766,7 +31731,7 @@ class Tween {
      * @public
      * @function
      */
-    start( time = timer.getTime() ) {
+    start( time = timer$1.getTime() ) {
 
         this._onStartCallbackFired = false;
 
@@ -31952,7 +31917,7 @@ class Tween {
 
         // the original Tween implementation expect
         // a timestamp and not a time delta
-        this._tweenTimeTracker = (timer.lastUpdate > this._tweenTimeTracker) ? timer.lastUpdate : this._tweenTimeTracker + dt;
+        this._tweenTimeTracker = (lastUpdate > this._tweenTimeTracker) ? lastUpdate : this._tweenTimeTracker + dt;
         var time = this._tweenTimeTracker;
 
         var property;
@@ -32385,7 +32350,7 @@ class Text extends Renderable {
         // compute the bounding box size
         this.height = this.width = 0;
         for (var i = 0; i < strings.length; i++) {
-            this.width = Math.max(context.measureText(utils.string.trimRight(""+strings[i])).width, this.width);
+            this.width = Math.max(context.measureText(utils$1.string.trimRight(""+strings[i])).width, this.width);
             this.height += lineHeight;
         }
         textMetrics.width = Math.ceil(this.width);
@@ -32498,7 +32463,7 @@ class Text extends Renderable {
 
         var lineHeight = this.fontSize * this.lineHeight;
         for (var i = 0; i < text.length; i++) {
-            var string = utils.string.trimRight(""+text[i]);
+            var string = utils$1.string.trimRight(""+text[i]);
             // draw the string
             context[stroke ? "strokeText" : "fillText"](string, x, y);
             // add leading space
@@ -32828,7 +32793,7 @@ class BitmapText extends Renderable {
 
         for (var i = 0; i < this._text.length; i++) {
             x = lX;
-            var string = utils.string.trimRight(this._text[i]);
+            var string = utils$1.string.trimRight(this._text[i]);
             // adjust x pos based on alignment value
             var stringWidth = measureTextWidth(this, string);
             switch (this.textAlign) {
@@ -33289,7 +33254,7 @@ class ImageLayer extends Sprite {
 
         if (typeof(settings.ratio) !== "undefined") {
             // little hack for backward compatiblity
-            if (utils.string.isNumeric(settings.ratio)) {
+            if (utils$1.string.isNumeric(settings.ratio)) {
                 this.ratio.set(settings.ratio, +settings.ratio);
             } else /* vector */ {
                 this.ratio.setV(settings.ratio);
@@ -33662,9 +33627,9 @@ class GUI_Object extends Sprite {
             this.released = false;
             if (this.isHoldable) {
                 if (this.holdTimeout !== null) {
-                    timer.clearTimeout(this.holdTimeout);
+                    timer$1.clearTimeout(this.holdTimeout);
                 }
-                this.holdTimeout = timer.setTimeout(this.hold.bind(this), this.holdThreshold, false);
+                this.holdTimeout = timer$1.setTimeout(this.hold.bind(this), this.holdThreshold, false);
                 this.released = false;
             }
             return this.onClick.call(this, event);
@@ -33733,7 +33698,7 @@ class GUI_Object extends Sprite {
     release(event) {
         if (this.released === false) {
             this.released = true;
-            timer.clearTimeout(this.holdTimeout);
+            timer$1.clearTimeout(this.holdTimeout);
             return this.onRelease.call(this, event);
         }
     }
@@ -33757,7 +33722,7 @@ class GUI_Object extends Sprite {
      * @ignore
      */
     hold() {
-        timer.clearTimeout(this.holdTimeout);
+        timer$1.clearTimeout(this.holdTimeout);
         if (!this.released) {
             this.onHold.call(this);
         }
@@ -33797,7 +33762,7 @@ class GUI_Object extends Sprite {
         releasePointerEvent("pointercancel", this);
         releasePointerEvent("pointerenter", this);
         releasePointerEvent("pointerleave", this);
-        timer.clearTimeout(this.holdTimeout);
+        timer$1.clearTimeout(this.holdTimeout);
     }
 }
 
@@ -34711,7 +34676,7 @@ class Particle extends Renderable {
         this.pos.z = emitter.z;
 
         // cache inverse of the expected delta time
-        this._deltaInv = timer.maxfps / 1000;
+        this._deltaInv = timer$1.maxfps / 1000;
 
         // Set the start particle rotation as defined in emitter
         // if the particle not follow trajectory
@@ -35430,9 +35395,6 @@ function boot() {
         return;
     }
 
-    // check the device capabilites
-    device._check();
-
     // register all built-ins objects into the object pool
     pool.register("me.Entity", Entity);
     pool.register("me.Collectable", Collectable);
@@ -35485,32 +35447,23 @@ function boot() {
     pool.register("Ellipse", Ellipse, true);
     pool.register("Bounds", Bounds$1, true);
 
-    // initialize me.save
-    save.init();
-
-    // init the FPS counter if needed
-    timer.init();
+    // publish Boot notification
+    publish(BOOT);
 
     // enable/disable the cache
-    loader.setNocache( utils.getUriFragment().nocache || false );
-
-    // init the stage Manager
-    state.init();
+    loader.setNocache( utils$1.getUriFragment().nocache || false );
 
     // automatically enable keyboard events
     initKeyboardEvent();
-
-    // game init
-    init$2();
 
     // mark melonJS as initialized
     initialized = true;
 }
 // call the library init function when ready
-device.onReady(function () {
+device$1.onReady(function () {
     {
        boot();
     }
 });
 
-export { BitmapText, BitmapTextData, Body, Bounds$1 as Bounds, Camera2d, CanvasRenderer, Collectable, Color, ColorLayer, Container, DraggableEntity, DroptargetEntity, Ellipse, Entity, GLShader, GUI_Object, ImageLayer, Line, math as Math, Matrix2d, Matrix3d, ObservableVector2d, ObservableVector3d, Particle, ParticleEmitter, Pointer, Polygon, QuadTree, Rect, Renderable, Renderer, Sprite, Stage, TMXHexagonalRenderer, TMXIsometricRenderer, TMXLayer, TMXOrthogonalRenderer, TMXRenderer, TMXStaggeredRenderer, TMXTileMap, TMXTileset, TMXTilesetGroup, Text, Tile, Trigger, Tween, Vector2d, Vector3d, WebGLCompositor, WebGLRenderer, World, audio, boot, collision, deprecated, device, event, game, initialized, input, level, loader, plugin, plugins, pool, save, skipAutoInit, state, timer, utils, version, video };
+export { BitmapText, BitmapTextData, Body, Bounds$1 as Bounds, Camera2d, CanvasRenderer, Collectable, Color, ColorLayer, Container, DraggableEntity, DroptargetEntity, Ellipse, Entity, GLShader, GUI_Object, ImageLayer, Line, math as Math, Matrix2d, Matrix3d, ObservableVector2d, ObservableVector3d, Particle, ParticleEmitter, Pointer, Polygon, QuadTree, Rect, Renderable, Renderer, Sprite, Stage, TMXHexagonalRenderer, TMXIsometricRenderer, TMXLayer, TMXOrthogonalRenderer, TMXRenderer, TMXStaggeredRenderer, TMXTileMap, TMXTileset, TMXTilesetGroup, Text, Tile, Trigger, Tween, Vector2d, Vector3d, WebGLCompositor, WebGLRenderer, World, audio, boot, collision, deprecated, device$1 as device, event, game, initialized, input, level, loader, plugin, plugins, pool, save, skipAutoInit, state, timer$1 as timer, utils$1 as utils, version, video };
