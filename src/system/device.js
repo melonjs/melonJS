@@ -5,13 +5,19 @@ import { prefixed } from "./../utils/agent.js";
 import state from "./../state/state.js";
 import * as event from "./../system/event.js";
 
+/**
+ * The device capabilities and specific events
+ * @namespace me.device
+ * @memberOf me
+ */
+
 // private properties
 let accelInitialized = false;
 let deviceOrientationInitialized = false;
 
 // swipe utility fn & flag
 let swipeEnabled = true;
-function disableSwipeFn(e) {
+function _disableSwipeFn(e) {
     e.preventDefault();
     if (typeof window.scroll === "function") {
         window.scroll(0, 0);
@@ -22,229 +28,217 @@ function disableSwipeFn(e) {
 // DOM loading stuff
 let readyBound = false, isReady = false, readyList = [];
 
+// called to check if the device is ready
+function _domReady(fn) {
+    // Make sure that the DOM is not already loaded
+    if (!isReady) {
+        // be sure document.body is there
+        if (!document.body) {
+            return setTimeout(_domReady, 13);
+        }
+
+        // clean up loading event
+        if (document.removeEventListener) {
+            document.removeEventListener(
+                "DOMContentLoaded",
+                this._domReady,
+                false
+            );
+        }
+        // remove the event on window.onload (always added in `onReady`)
+        window.removeEventListener("load", _domReady, false);
+
+        // execute all callbacks
+        while (readyList.length) {
+            readyList.shift().call(window, []);
+        }
+
+        // Remember that the DOM is ready
+        isReady = true;
+    }
+};
+
 // a cache DOMRect object
 let _domRect = {left: 0, top: 0, x: 0, y: 0, width: 0, height: 0, right: 0, bottom: 0};
 
+
+// detect the device type
+function _detectDevice() {
+    // iOS Device ?
+    device.iOS = /iPhone|iPad|iPod/i.test(device.ua);
+    // Android Device ?
+    device.android = /Android/i.test(device.ua);
+    device.android2 = /Android 2/i.test(device.ua);
+    // Linux platform
+    device.linux = /Linux/i.test(device.ua);
+    // Chrome OS ?
+    device.chromeOS = /CrOS/.test(device.ua);
+    // Windows Device ?
+    device.wp = /Windows Phone/i.test(device.ua);
+    // Blackberry device ?
+    device.BlackBerry = /BlackBerry/i.test(device.ua);
+    // Kindle device ?
+    device.Kindle = /Kindle|Silk.*Mobile Safari/i.test(device.ua);
+    // Mobile platform
+    device.isMobile = /Mobi/i.test(device.ua) ||
+                         device.iOS ||
+                         device.android ||
+                         device.wp ||
+                         device.BlackBerry ||
+                         device.Kindle || false;
+    // ejecta
+    device.ejecta = (typeof window.ejecta !== "undefined");
+    // Wechat
+    device.isWeixin = /MicroMessenger/i.test(device.ua);
+};
+
+// check the device capapbilities
+function _checkCapabilities() {
+
+    // detect device type/platform
+    _detectDevice();
+
+    // Mobile browser hacks
+    if (device.isMobile) {
+        // Prevent the webview from moving on a swipe
+        device.enableSwipe(false);
+    }
+
+    // Touch/Gesture Event feature detection
+    device.TouchEvent = !!("ontouchstart" in window);
+    device.PointerEvent = !!window.PointerEvent;
+    window.gesture = prefixed("gesture");
+
+    // detect touch capabilities
+    device.touch = device.TouchEvent || device.PointerEvent;
+
+    // max amount of touch points ; always at least return 1 (e.g. headless chrome will return 0)
+    device.maxTouchPoints = device.touch ? (device.PointerEvent ? navigator.maxTouchPoints || 1 : 10) : 1;
+
+    // detect wheel event support
+    // Modern browsers support "wheel", Webkit and IE support at least "mousewheel
+    device.wheel = ("onwheel" in document.createElement("div"));
+
+    // pointerlock detection
+    device.hasPointerLockSupport = prefixed("pointerLockElement", document);
+
+    if (device.hasPointerLockSupport) {
+        document.exitPointerLock = prefixed("exitPointerLock", document);
+    }
+
+    // device orientation and motion detection
+    if (window.DeviceOrientationEvent) {
+
+    }
+    // device accelerometer and orientation detection
+    device.hasDeviceOrientation = !!window.DeviceOrientationEvent;
+    device.hasAccelerometer = !!window.DeviceMotionEvent;
+
+    // fullscreen api detection & polyfill when possible
+    device.hasFullscreenSupport = prefixed("fullscreenEnabled", document) ||
+                                document.mozFullScreenEnabled;
+
+    document.exitFullscreen = prefixed("cancelFullScreen", document) ||
+                              prefixed("exitFullscreen", document);
+
+    // vibration API poyfill
+    navigator.vibrate = prefixed("vibrate", navigator);
+
+    // web Audio detection
+    device.hasWebAudio = !!(window.AudioContext || window.webkitAudioContext);
+
+    try {
+        device.localStorage = !!window.localStorage;
+    } catch (e) {
+        // the above generates an exception when cookies are blocked
+        device.localStorage = false;
+    }
+
+    try {
+        // some browser (e.g. Safari) implements WebGL1 and WebGL2 contexts only
+        // https://bugzilla.mozilla.org/show_bug.cgi?id=801176
+        device.OffscreenCanvas =
+            (typeof window.OffscreenCanvas !== "undefined") &&
+            ((new OffscreenCanvas(0, 0).getContext( "2d" )) !== null);
+    } catch (e) {
+        device.OffscreenCanvas = false;
+    }
+
+    // set pause/stop action on losing focus
+    window.addEventListener("blur", function () {
+        if (device.stopOnBlur) {
+            state.stop(true);
+        }
+        if (device.pauseOnBlur) {
+            state.pause(true);
+        }
+    }, false);
+    // set restart/resume action on gaining focus
+    window.addEventListener("focus", function () {
+        if (device.stopOnBlur) {
+            state.restart(true);
+        }
+        if (device.resumeOnFocus) {
+            state.resume(true);
+        }
+        // force focus if autofocus is on
+        if (device.autoFocus) {
+            device.focus();
+        }
+    }, false);
+
+
+    // Set the name of the hidden property and the change event for visibility
+    var hidden, visibilityChange;
+    if (typeof document.hidden !== "undefined") {
+        // Opera 12.10 and Firefox 18 and later support
+        hidden = "hidden";
+        visibilityChange = "visibilitychange";
+    } else if (typeof document.mozHidden !== "undefined") {
+        hidden = "mozHidden";
+        visibilityChange = "mozvisibilitychange";
+    } else if (typeof document.msHidden !== "undefined") {
+        hidden = "msHidden";
+        visibilityChange = "msvisibilitychange";
+    } else if (typeof document.webkitHidden !== "undefined") {
+        hidden = "webkitHidden";
+        visibilityChange = "webkitvisibilitychange";
+    }
+
+    // register on the event if supported
+    if (typeof (visibilityChange) === "string") {
+        // add the corresponding event listener
+        document.addEventListener(visibilityChange,
+            function () {
+                if (document[hidden]) {
+                    if (device.stopOnBlur) {
+                        state.stop(true);
+                    }
+                    if (device.pauseOnBlur) {
+                        state.pause(true);
+                    }
+                } else {
+                    if (device.stopOnBlur) {
+                        state.restart(true);
+                    }
+                    if (device.resumeOnFocus) {
+                        state.resume(true);
+                    }
+                }
+            }, false
+        );
+    }
+};
+
+
 // Initialize me.timer on Boot event
 event.subscribe(event.BOOT, function () {
-    device._check();
+    _checkCapabilities();
 });
 
-/**
- * The device capabilities and specific events
- * @namespace me.device
- * @memberOf me
- */
+
+// public export
 let device = {
-
-    /**
-     * called to check if the device is ready
-     * @ignore
-     */
-    _domReady(fn) {
-        // Make sure that the DOM is not already loaded
-        if (!isReady) {
-            // be sure document.body is there
-            if (!document.body) {
-                return setTimeout(this._domReady, 13);
-            }
-
-            // clean up loading event
-            if (document.removeEventListener) {
-                document.removeEventListener(
-                    "DOMContentLoaded",
-                    this._domReady,
-                    false
-                );
-            }
-            // remove the event on window.onload (always added in `onReady`)
-            window.removeEventListener("load", this._domReady, false);
-
-            // execute all callbacks
-            while (readyList.length) {
-                readyList.shift().call(window, []);
-            }
-
-            // Remember that the DOM is ready
-            isReady = true;
-        }
-    },
-
-
-
-    /**
-     * check the device capapbilities
-     * @ignore
-     */
-    _check() {
-
-        // detect device type/platform
-        this._detectDevice();
-
-        // Mobile browser hacks
-        if (this.isMobile) {
-            // Prevent the webview from moving on a swipe
-            this.enableSwipe(false);
-        }
-
-        // Touch/Gesture Event feature detection
-        this.TouchEvent = !!("ontouchstart" in window);
-        this.PointerEvent = !!window.PointerEvent;
-        window.gesture = prefixed("gesture");
-
-        // detect touch capabilities
-        this.touch = this.TouchEvent || this.PointerEvent;
-
-        // max amount of touch points ; always at least return 1 (e.g. headless chrome will return 0)
-        this.maxTouchPoints = this.touch ? (this.PointerEvent ? navigator.maxTouchPoints || 1 : 10) : 1;
-
-        // detect wheel event support
-        // Modern browsers support "wheel", Webkit and IE support at least "mousewheel
-        this.wheel = ("onwheel" in document.createElement("div"));
-
-        // pointerlock detection
-        this.hasPointerLockSupport = prefixed("pointerLockElement", document);
-
-        if (this.hasPointerLockSupport) {
-            document.exitPointerLock = prefixed("exitPointerLock", document);
-        }
-
-        // device orientation and motion detection
-        if (window.DeviceOrientationEvent) {
-
-        }
-        // device accelerometer and orientation detection
-        this.hasDeviceOrientation = !!window.DeviceOrientationEvent;
-        this.hasAccelerometer = !!window.DeviceMotionEvent;
-
-        // fullscreen api detection & polyfill when possible
-        this.hasFullscreenSupport = prefixed("fullscreenEnabled", document) ||
-                                    document.mozFullScreenEnabled;
-
-        document.exitFullscreen = prefixed("cancelFullScreen", document) ||
-                                  prefixed("exitFullscreen", document);
-
-        // vibration API poyfill
-        navigator.vibrate = prefixed("vibrate", navigator);
-
-        // web Audio detection
-        this.hasWebAudio = !!(window.AudioContext || window.webkitAudioContext);
-
-        try {
-            this.localStorage = !!window.localStorage;
-        } catch (e) {
-            // the above generates an exception when cookies are blocked
-            this.localStorage = false;
-        }
-
-        try {
-            // some browser (e.g. Safari) implements WebGL1 and WebGL2 contexts only
-            // https://bugzilla.mozilla.org/show_bug.cgi?id=801176
-            this.OffscreenCanvas =
-                (typeof window.OffscreenCanvas !== "undefined") &&
-                ((new OffscreenCanvas(0, 0).getContext( "2d" )) !== null);
-        } catch (e) {
-            this.OffscreenCanvas = false;
-        }
-
-        // set pause/stop action on losing focus
-        window.addEventListener("blur", (function () {
-            if (this.stopOnBlur) {
-                state.stop(true);
-            }
-            if (this.pauseOnBlur) {
-                state.pause(true);
-            }
-        }).bind(this), false);
-        // set restart/resume action on gaining focus
-        window.addEventListener("focus", (function () {
-            if (this.stopOnBlur) {
-                state.restart(true);
-            }
-            if (this.resumeOnFocus) {
-                state.resume(true);
-            }
-            // force focus if autofocus is on
-            if (this.autoFocus) {
-                this.focus();
-            }
-        }).bind(this), false);
-
-
-        // Set the name of the hidden property and the change event for visibility
-        var hidden, visibilityChange;
-        if (typeof document.hidden !== "undefined") {
-            // Opera 12.10 and Firefox 18 and later support
-            hidden = "hidden";
-            visibilityChange = "visibilitychange";
-        } else if (typeof document.mozHidden !== "undefined") {
-            hidden = "mozHidden";
-            visibilityChange = "mozvisibilitychange";
-        } else if (typeof document.msHidden !== "undefined") {
-            hidden = "msHidden";
-            visibilityChange = "msvisibilitychange";
-        } else if (typeof document.webkitHidden !== "undefined") {
-            hidden = "webkitHidden";
-            visibilityChange = "webkitvisibilitychange";
-        }
-
-        // register on the event if supported
-        if (typeof (visibilityChange) === "string") {
-            // add the corresponding event listener
-            document.addEventListener(visibilityChange,
-                (function () {
-                    if (document[hidden]) {
-                        if (this.stopOnBlur) {
-                            state.stop(true);
-                        }
-                        if (this.pauseOnBlur) {
-                            state.pause(true);
-                        }
-                    } else {
-                        if (this.stopOnBlur) {
-                            state.restart(true);
-                        }
-                        if (this.resumeOnFocus) {
-                            state.resume(true);
-                        }
-                    }
-                }).bind(this), false
-            );
-        }
-    },
-
-    /**
-     * detect the device type
-     * @ignore
-     */
-    _detectDevice() {
-        // iOS Device ?
-        this.iOS = /iPhone|iPad|iPod/i.test(this.ua);
-        // Android Device ?
-        this.android = /Android/i.test(this.ua);
-        this.android2 = /Android 2/i.test(this.ua);
-        // Linux platform
-        this.linux = /Linux/i.test(this.ua);
-        // Chrome OS ?
-        this.chromeOS = /CrOS/.test(this.ua);
-        // Windows Device ?
-        this.wp = /Windows Phone/i.test(this.ua);
-        // Blackberry device ?
-        this.BlackBerry = /BlackBerry/i.test(this.ua);
-        // Kindle device ?
-        this.Kindle = /Kindle|Silk.*Mobile Safari/i.test(this.ua);
-        // Mobile platform
-        this.isMobile = /Mobi/i.test(this.ua) ||
-                             this.iOS ||
-                             this.android ||
-                             this.wp ||
-                             this.BlackBerry ||
-                             this.Kindle || false;
-        // ejecta
-        this.ejecta = (typeof window.ejecta !== "undefined");
-        // Wechat
-        this.isWeixin = /MicroMessenger/i.test(this.ua);
-    },
 
     /**
      * the `ua` read-only property returns the user agent string for the current browser.
@@ -557,7 +551,7 @@ let device = {
     /**
      * Specify whether to stop the game when losing focus or not.
      * The engine restarts on focus if this is enabled.
-     * @type {boolean}
+     * @type {Boolean}
      * @default false
      * @memberOf me.device
      */
@@ -575,9 +569,7 @@ let device = {
 
    /**
     * specify a function to execute when the Device is fully loaded and ready
-    * @name onReady
-    * @memberOf me.device
-    * @function
+    * @function me.device.onReady
     * @param {Function} fn the function to be executed
     * @example
     * // small game skeleton
@@ -633,15 +625,15 @@ let device = {
                 // directly call domReady if document is already "ready"
                 if (document.readyState === "complete") {
                     // defer the fn call to ensure our script is fully loaded
-                    window.setTimeout(this._domReady, 0);
+                    window.setTimeout(_domReady, 0);
                 }
                 else {
                     if (document.addEventListener) {
                         // Use the handy event callback
-                        document.addEventListener("DOMContentLoaded", this._domReady, false);
+                        document.addEventListener("DOMContentLoaded", _domReady, false);
                     }
                     // A fallback to window.onload, that will always work
-                    window.addEventListener("load", this._domReady, false);
+                    window.addEventListener("load", _domReady, false);
                 }
                 readyBound = true;
             }
@@ -650,28 +642,24 @@ let device = {
 
     /**
      * enable/disable swipe on WebView.
-     * @name enableSwipe
-     * @memberOf me.device
-     * @function
-     * @param {boolean} [enable=true] enable or disable swipe.
+     * @function me.device.enableSwipe
+     * @param {Boolean} [enable=true] enable or disable swipe.
      */
     enableSwipe(enable) {
         if (enable !== false) {
             if (swipeEnabled === false) {
-                window.document.removeEventListener("touchmove", disableSwipeFn, false);
+                window.document.removeEventListener("touchmove", _disableSwipeFn, false);
                 swipeEnabled = true;
             }
         } else if (swipeEnabled === true) {
-            window.document.addEventListener("touchmove", disableSwipeFn, false);
+            window.document.addEventListener("touchmove", _disableSwipeFn, false);
             swipeEnabled = false;
         }
     },
 
     /**
      * Triggers a fullscreen request. Requires fullscreen support from the browser/device.
-     * @name requestFullscreen
-     * @memberOf me.device
-     * @function
+     * @function me.device.requestFullscreen
      * @param {Object} [element=default canvas object] the element to be set in full-screen mode.
      * @example
      * // add a keyboard shortcut to toggle Fullscreen mode on/off
@@ -699,9 +687,7 @@ let device = {
 
     /**
      * Exit fullscreen mode. Requires fullscreen support from the browser/device.
-     * @name exitFullscreen
-     * @memberOf me.device
-     * @function
+     * @function me.device.exitFullscreen
      */
     exitFullscreen() {
         if (this.hasFullscreenSupport) {
@@ -712,10 +698,8 @@ let device = {
     /**
      * Return a string representing the orientation of the device screen.
      * It can be "any", "natural", "landscape", "portrait", "portrait-primary", "portrait-secondary", "landscape-primary", "landscape-secondary"
-     * @name getScreenOrientation
-     * @memberOf me.device
+     * @function me.device.getScreenOrientation
      * @see https://developer.mozilla.org/en-US/docs/Web/API/Screen/orientation
-     * @function
      * @return {String} the screen orientation
      */
     getScreenOrientation() {
@@ -748,10 +732,8 @@ let device = {
     /**
      * locks the device screen into the specified orientation.<br>
      * This method only works for installed Web apps or for Web pages in full-screen mode.
-     * @name lockOrientation
-     * @memberOf me.device
+     * @function me.device.lockOrientation
      * @see https://developer.mozilla.org/en-US/docs/Web/API/Screen/lockOrientation
-     * @function
      * @return {Boolean} true if the orientation was unsuccessfully locked
      */
     lockOrientation(orientation) {
@@ -768,10 +750,8 @@ let device = {
     /**
      * unlocks the device screen into the specified orientation.<br>
      * This method only works for installed Web apps or for Web pages in full-screen mode.
-     * @name unlockOrientation
-     * @memberOf me.device
+     * @function me.device.unlockOrientation
      * @see https://developer.mozilla.org/en-US/docs/Web/API/Screen/lockOrientation
-     * @function
      * @return {Boolean} true if the orientation was unsuccessfully unlocked
      */
     unlockOrientation(orientation) {
@@ -787,9 +767,7 @@ let device = {
 
     /**
      * return true if the device screen orientation is in Portrait mode
-     * @name isPortrait
-     * @memberOf me.device
-     * @function
+     * @function me.device.isPortrait
      * @return {Boolean}
      */
     isPortrait() {
@@ -798,9 +776,7 @@ let device = {
 
     /**
      * return true if the device screen orientation is in Portrait mode
-     * @name isLandscape
-     * @memberOf me.device
-     * @function
+     * @function me.device.isLandscape
      * @return {Boolean}
      */
     isLandscape() {
@@ -809,11 +785,9 @@ let device = {
 
     /**
      * return the device storage
-     * @name getStorage
-     * @memberOf me.device
-     * @function
-     * @param {String} [type="local"]
+     * @function me.device.getStorage
      * @see me.save
+     * @param {String} [type="local"]
      * @return {Object} a reference to the device storage
      */
     getStorage(type = "local") {
@@ -828,9 +802,7 @@ let device = {
 
     /**
      * return the parent DOM element for the given parent name or HTMLElement object
-     * @name getParentElement
-     * @memberOf me.device
-     * @function
+     * @function me.device.getParentElement
      * @param {String|HTMLElement} element the parent element name or a HTMLElement object
      * @return {HTMLElement} the parent Element
      */
@@ -846,9 +818,7 @@ let device = {
 
     /**
      * return the DOM element for the given element name or HTMLElement object
-     * @name getElement
-     * @memberOf me.device
-     * @function
+     * @function me.device.getElement
      * @param {String|HTMLElement} element the parent element name or a HTMLElement object
      * @return {HTMLElement} the corresponding DOM Element or null if not existing
      */
@@ -875,10 +845,8 @@ let device = {
     /**
      * returns the size of the given HTMLElement and its position relative to the viewport
      * <br><img src="images/element-box-diagram.png"/>
-     * @name getElementBounds
      * @see https://developer.mozilla.org/en-US/docs/Web/API/DOMRect
-     * @memberOf me.device
-     * @function
+     * @function me.device.getElementBounds
      * @param {String|HTMLElement} element an HTMLElement object
      * @return {DOMRect} the size and position of the element relatively to the viewport
      */
@@ -895,10 +863,8 @@ let device = {
     /**
      * returns the size of the given HTMLElement Parent and its position relative to the viewport
      * <br><img src="images/element-box-diagram.png"/>
-     * @name getParentBounds
      * @see https://developer.mozilla.org/en-US/docs/Web/API/DOMRect
-     * @memberOf me.device
-     * @function
+     * @function me.device.getParentBounds
      * @param {String|HTMLElement} element an HTMLElement object
      * @return {DOMRect} the size and position of the given element parent relative to the viewport
      */
@@ -908,9 +874,7 @@ let device = {
 
     /**
      * returns true if the device supports WebGL
-     * @name isWebGLSupported
-     * @memberOf me.device
-     * @function
+     * @function me.device.isWebGLSupported
      * @param {Object} [options] context creation options
      * @param {Boolean} [options.failIfMajorPerformanceCaveat=true] If true, the renderer will switch to CANVAS mode if the performances of a WebGL context would be dramatically lower than that of a native application making equivalent OpenGL calls.
      * @return {Boolean} true if WebGL is supported
@@ -933,9 +897,7 @@ let device = {
 
     /**
      * return the highest precision format supported by this device for GL Shaders
-     * @name getMaxShaderPrecision
-     * @memberOf me.device
-     * @function
+     * @function me.device.getMaxShaderPrecision
      * @param {WebGLRenderingContext} gl
      * @return {Boolean} "lowp", "mediump", or "highp"
      */
@@ -953,9 +915,7 @@ let device = {
 
     /**
      * Makes a request to bring this device window to the front.
-     * @name focus
-     * @memberOf me.device
-     * @function
+     * @function me.device.focus
      * @example
      *  if (clicked) {
      *    me.device.focus();
@@ -981,6 +941,10 @@ let device = {
         this.accelerationZ = e.accelerationIncludingGravity.z;
     },
 
+    /**
+     * event management (Accelerometer)
+     * @ignore
+     */
     onDeviceRotate(e) {
         this.gamma = e.gamma;
         this.beta = e.beta;
@@ -991,9 +955,7 @@ let device = {
      * Enters pointer lock, requesting it from the user first. Works on supported devices & browsers
      * Must be called in a click event or an event that requires user interaction.
      * If you need to run handle events for errors or change of the pointer lock, see below.
-     * @name turnOnPointerLock
-     * @memberOf me.device
-     * @function
+     * @function me.device.turnOnPointerLock
      * @example
      * document.addEventListener("pointerlockchange", pointerlockchange, false);
      * document.addEventListener("mozpointerlockchange", pointerlockchange, false);
@@ -1032,8 +994,7 @@ let device = {
 
     /**
      * Exits pointer lock. Works on supported devices & browsers
-     * @name turnOffPointerLock
-     * @memberOf me.device
+     * @function me.device.turnOffPointerLock
      * @function
      */
     turnOffPointerLock() {
@@ -1045,10 +1006,7 @@ let device = {
     /**
      * Enable monitor of the device accelerator to detect the amount of physical force of acceleration the device is receiving.
      * (one some device a first user gesture will be required before calling this function)
-     * @name watchAccelerometer
-     * @memberOf me.device
-     * @public
-     * @function
+     * @function me.device.watchAccelerometer
      * @see me.device.accelerationX
      * @see me.device.accelerationY
      * @see me.device.accelerationZ
@@ -1086,10 +1044,7 @@ let device = {
 
     /**
      * unwatch Accelerometor event
-     * @name unwatchAccelerometer
-     * @memberOf me.device
-     * @public
-     * @function
+     * @function me.device.unwatchAccelerometer
      */
     unwatchAccelerometer() {
         if (accelInitialized) {
@@ -1102,10 +1057,7 @@ let device = {
     /**
      * Enable monitor of the device orientation to detect the current orientation of the device as compared to the Earth coordinate frame.
      * (one some device a first user gesture will be required before calling this function)
-     * @name watchDeviceOrientation
-     * @memberOf me.device
-     * @public
-     * @function
+     * @function me.device.watchDeviceOrientation
      * @see me.device.alpha
      * @see me.device.beta
      * @see me.device.gamma
@@ -1141,10 +1093,7 @@ let device = {
 
     /**
      * unwatch Device orientation event
-     * @name unwatchDeviceOrientation
-     * @memberOf me.device
-     * @public
-     * @function
+     * @function me.device.unwatchDeviceOrientation
      */
     unwatchDeviceOrientation() {
         if (deviceOrientationInitialized) {
@@ -1158,10 +1107,7 @@ let device = {
      * If the device doesn't support vibration, this method has no effect. <br>
      * If a vibration pattern is already in progress when this method is called,
      * the previous pattern is halted and the new one begins instead.
-     * @name vibrate
-     * @memberOf me.device
-     * @public
-     * @function
+     * @function me.device.vibrate
      * @param {Number|Number[]} pattern pattern of vibration and pause intervals
      * @example
      * // vibrate for 1000 ms
@@ -1186,7 +1132,7 @@ let device = {
  * @name devicePixelRatio
  * @memberOf me.device
  * @public
- * @type Number
+ * @type {Number}
  * @readonly
  * @return {Number}
  */
@@ -1204,9 +1150,9 @@ Object.defineProperty(device, "devicePixelRatio", {
  * @name isFullscreen
  * @memberOf me.device
  * @public
- * @type Boolean
+ * @type {Boolean}
  * @readonly
- * @return {boolean}
+ * @return {Boolean}
  */
 Object.defineProperty(device, "isFullscreen", {
     /**
@@ -1227,9 +1173,9 @@ Object.defineProperty(device, "isFullscreen", {
  * @name sound
  * @memberOf me.device
  * @public
- * @type Boolean
+ * @type {Boolean}
  * @readonly
- * @return {boolean}
+ * @return {Boolean}
  */
 Object.defineProperty(device, "sound", {
     /**
