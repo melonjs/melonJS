@@ -568,4 +568,5 @@ class ParticleEmitter extends Renderable {
     }
 
 };
-export default ParticleEmitter;
+
+export { ParticleEmitterSettings, ParticleEmitter };
