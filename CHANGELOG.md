@@ -5,7 +5,7 @@
 ### Added
 - melonJS is now a pure ES6 library, for class definition, inheritance and semantic
 - melonJS now includes typescript definition for the ESM bundle (`melonjs.module.d.ts`)
-- Core : new me.event.BOOT event that will be triggered when melonJS is initialized
+- Core : new `me.event.BOOT` event that will be triggered when melonJS is initialized
 
 ### Changed
 - Jay Inheritance has been replaced with ES6 standard inheritance
@@ -15,7 +15,7 @@
 - all deprecated API from the legacy melonJS version have been removed
 
 ### Fixed
-- Renderer: fix the stencil masking feature on renderable components (for both in WebGL and Canvas mode)
+- Renderer: fix the stencil masking feature on renderable components (for both WebGL and Canvas mode)
 
 ## [9.1.2] - _2021-10-03_
 
