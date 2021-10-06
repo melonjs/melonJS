@@ -704,8 +704,9 @@ class Renderable extends Rect {
         var ax = bounds.width * this.anchorPoint.x,
             ay = bounds.height * this.anchorPoint.y;
 
-        // save context
+        // save renderer context
         renderer.save();
+
         // apply the defined alpha value
         renderer.setGlobalAlpha(renderer.globalAlpha() * this.getOpacity());
 
@@ -719,6 +720,13 @@ class Renderable extends Rect {
             renderer.translate(-dx, -dy);
         }
 
+        // apply stencil mask if defined
+        if (typeof this.mask !== "undefined") {
+            renderer.translate(this.pos.x, this.pos.y);
+            renderer.setMask(this.mask);
+            renderer.translate(-this.pos.x, -this.pos.y);
+        }
+
         if ((this.autoTransform === true) && (!this.currentTransform.isIdentity())) {
             // apply the renderable transformation matrix
             renderer.translate(this.pos.x, this.pos.y);
@@ -728,11 +736,6 @@ class Renderable extends Rect {
 
         // offset by the anchor point
         renderer.translate(-ax, -ay);
-
-
-        if (typeof this.mask !== "undefined") {
-            renderer.setMask(this.mask);
-        }
 
         // apply the defined tint, if any
         renderer.setTint(this.tint);
@@ -761,18 +764,20 @@ class Renderable extends Rect {
      * @param {me.CanvasRenderer|me.WebGLRenderer} renderer a renderer object
      **/
     postDraw(renderer) {
-        if (typeof this.mask !== "undefined") {
-            renderer.clearMask();
-        }
 
         // remove the previously applied tint
         renderer.clearTint();
 
-        // reset the dirty flag
-        this.isDirty = false;
+        // clear the mask if set
+        if (typeof this.mask !== "undefined") {
+            renderer.clearMask();
+        }
 
         // restore the context
         renderer.restore();
+
+        // reset the dirty flag
+        this.isDirty = false;
     }
 
     /**

@@ -699,6 +699,8 @@ class CanvasRenderer extends Renderer {
         var context = this.backBufferContext2D;
         var _x = mask.pos.x, _y = mask.pos.y;
 
+        context.save();
+
         // https://github.com/melonjs/melonJS/issues/648
         if (mask instanceof Ellipse) {
             var hw = mask.radiusV.x,
@@ -722,7 +724,6 @@ class CanvasRenderer extends Renderer {
             context.bezierCurveTo(xmin, by, lx, ymax, lx, _y);
             context.bezierCurveTo(lx, ymin, xmin, ty, _x, ty);
         } else {
-            context.save();
             context.beginPath();
             context.moveTo(_x + mask.points[0].x, _y + mask.points[0].y);
             var point;
@@ -730,8 +731,8 @@ class CanvasRenderer extends Renderer {
                 point = mask.points[i];
                 context.lineTo(_x + point.x, _y + point.y);
             }
-            context.closePath();
         }
+
         context.clip();
     }
 

@@ -14,6 +14,9 @@
 ### Deprecated
 - all deprecated API from the legacy melonJS version have been removed
 
+### Fixed
+- Renderer: fix the stencil masking feature on renderable components (for both in WebGL and Canvas mode)
+
 ## [9.1.2] - _2021-10-03_
 
 ### Fixed
