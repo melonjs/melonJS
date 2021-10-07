@@ -4437,6 +4437,34 @@ export class ParticleEmitter extends Rect {
      */
     update(dt: any): boolean;
 }
+export namespace ParticleEmitterSettings {
+    export const width: number;
+    export const height: number;
+    export { pixel as image };
+    export const totalParticles: number;
+    export const angle: number;
+    export const angleVariation: number;
+    export const minLife: number;
+    export const maxLife: number;
+    export const speed: number;
+    export const speedVariation: number;
+    export const minRotation: number;
+    export const maxRotation: number;
+    export const minStartScale: number;
+    export const maxStartScale: number;
+    export const minEndScale: number;
+    export const maxEndScale: number;
+    export const gravity: number;
+    export const wind: number;
+    export const followTrajectory: boolean;
+    export const textureAdditive: boolean;
+    export const onlyInViewport: boolean;
+    export const floating: boolean;
+    export const maxParticles: number;
+    export const frequency: number;
+    export const duration: number;
+    export const framesToSkip: number;
+}
 /**
  * @classdesc
  * a pointer object, representing a single finger on a touch enabled device.
@@ -7460,43 +7488,6 @@ export class Tween {
     static get Easing(): any;
     static get Interpolation(): any;
     constructor(object: any);
-    object: any;
-    valuesStart: any;
-    valuesEnd: any;
-    valuesStartRepeat: any;
-    duration: any;
-    /**
-     * Repeat the tween
-     * @name repeat
-     * @memberOf me.Tween
-     * @public
-     * @function
-     * @param {Number} times amount of times the tween should be repeated
-     */
-    public repeat(times: number): Tween;
-    /**
-     * Allows the tween to bounce back to their original value when finished.
-     * To be used together with repeat to create endless loops.
-     * @name yoyo
-     * @memberOf me.Tween
-     * @public
-     * @function
-     * @see me.Tween#repeat
-     * @param {Boolean} yoyo
-     */
-    public yoyo(yoyo: boolean): Tween;
-    reversed: any;
-    delayTime: any;
-    startTime: any;
-    easingFunction: any;
-    interpolationFunction: any;
-    chainedTweens: any;
-    onStartCallback: any;
-    onStartCallbackFired: any;
-    onUpdateCallback: any;
-    onCompleteCallback: any;
-    tweenTimeTracker: any;
-    isRenderable: boolean;
     /**
      * reset the tween object to default value
      * @ignore
@@ -7526,6 +7517,7 @@ export class Tween {
     _tweenTimeTracker: any;
     isPersistent: boolean;
     updateWhenPaused: boolean;
+    isRenderable: boolean;
     /**
      * @ignore
      */
@@ -7582,6 +7574,26 @@ export class Tween {
      * @param {Number} amount delay amount expressed in milliseconds
      */
     public delay(amount: number): Tween;
+    /**
+     * Repeat the tween
+     * @name repeat
+     * @memberOf me.Tween
+     * @public
+     * @function
+     * @param {Number} times amount of times the tween should be repeated
+     */
+    public repeat(times: number): Tween;
+    /**
+     * Allows the tween to bounce back to their original value when finished.
+     * To be used together with repeat to create endless loops.
+     * @name yoyo
+     * @memberOf me.Tween
+     * @public
+     * @function
+     * @see me.Tween#repeat
+     * @param {Boolean} yoyo
+     */
+    public yoyo(yoyo: boolean): Tween;
     /**
      * set the easing function
      * @name easing
@@ -10851,11 +10863,7 @@ export namespace pool {
      * register an object to the pool. <br>
      * Pooling must be set to true if more than one such objects will be created. <br>
      * (Note: for an object to be poolable, it must implements a `onResetEvent` method)
-     * See examples in {@link me.pool#pull}
-     * @name register
-     * @memberOf me.pool
-     * @public
-     * @function
+     * @function me.pool.register
      * @param {String} className as defined in the Name field of the Object Properties (in Tiled)
      * @param {Object} class corresponding Class to be instantiated
      * @param {Boolean} [recycling=false] enables object recycling for the specified class
@@ -10875,11 +10883,7 @@ export namespace pool {
      * register an object to the pool. <br>
      * Pooling must be set to true if more than one such objects will be created. <br>
      * (Note: for an object to be poolable, it must implements a `onResetEvent` method)
-     * See examples in {@link me.pool#pull}
-     * @name register
-     * @memberOf me.pool
-     * @public
-     * @function
+     * @function me.pool.register
      * @param {String} className as defined in the Name field of the Object Properties (in Tiled)
      * @param {Object} class corresponding Class to be instantiated
      * @param {Boolean} [recycling=false] enables object recycling for the specified class
@@ -10897,16 +10901,10 @@ export namespace pool {
     function register(className: string, classObj: any, recycling?: boolean): void;
     /**
      * Pull a new instance of the requested object (if added into the object pool)
-     * @name pull
-     * @memberOf me.pool
-     * @public
-     * @function
+     * @function me.pool.pull
      * @param {String} className as used in {@link me.pool.register}
      * @param {} [arguments...] arguments to be passed when instantiating/reinitializing the object
      * @return {Object} the instance of the requested object
-     * @example
-     * me.pool.register("player", PlayerEntity);
-     * var player = me.pool.pull("player");
      * @example
      * me.pool.register("bullet", BulletEntity, true);
      * me.pool.register("enemy", EnemyEntity, true);
@@ -10926,16 +10924,10 @@ export namespace pool {
     function pull(name: any, ...args: any[]): any;
     /**
      * Pull a new instance of the requested object (if added into the object pool)
-     * @name pull
-     * @memberOf me.pool
-     * @public
-     * @function
+     * @function me.pool.pull
      * @param {String} className as used in {@link me.pool.register}
      * @param {} [arguments...] arguments to be passed when instantiating/reinitializing the object
      * @return {Object} the instance of the requested object
-     * @example
-     * me.pool.register("player", PlayerEntity);
-     * var player = me.pool.pull("player");
      * @example
      * me.pool.register("bullet", BulletEntity, true);
      * me.pool.register("enemy", EnemyEntity, true);
@@ -10957,20 +10949,14 @@ export namespace pool {
      * purge the object pool from any inactive object <br>
      * Object pooling must be enabled for this function to work<br>
      * note: this will trigger the garbage collector
-     * @name purge
-     * @memberOf me.pool
-     * @public
-     * @function
+     * @function me.pool.purge
      */
     function purge(): void;
     /**
      * purge the object pool from any inactive object <br>
      * Object pooling must be enabled for this function to work<br>
      * note: this will trigger the garbage collector
-     * @name purge
-     * @memberOf me.pool
-     * @public
-     * @function
+     * @function me.pool.purge
      */
     function purge(): void;
     /**
@@ -10978,92 +10964,74 @@ export namespace pool {
      * Object pooling for the object class must be enabled,
      * and object must have been instantiated using {@link me.pool#pull},
      * otherwise this function won't work
-     * @name push
-     * @memberOf me.pool
-     * @public
-     * @function
+     * @function me.pool.push
+     * @throws will throw an error if the object cannot be recycled
      * @param {Object} instance to be recycled
+     * @param {Boolean} [throwOnError=true] throw an exception if the object cannot be recycled
+     * @return {Boolean} true if the object was successfully recycled in the object pool
      */
-    function push(obj: any): void;
+    function push(obj: any, throwOnError?: boolean): boolean;
     /**
      * Push back an object instance into the object pool <br>
      * Object pooling for the object class must be enabled,
      * and object must have been instantiated using {@link me.pool#pull},
      * otherwise this function won't work
-     * @name push
-     * @memberOf me.pool
-     * @public
-     * @function
+     * @function me.pool.push
+     * @throws will throw an error if the object cannot be recycled
      * @param {Object} instance to be recycled
+     * @param {Boolean} [throwOnError=true] throw an exception if the object cannot be recycled
+     * @return {Boolean} true if the object was successfully recycled in the object pool
      */
-    function push(obj: any): void;
+    function push(obj: any, throwOnError?: boolean): boolean;
     /**
      * Check if an object with the provided name is registered
-     * @name exists
-     * @memberOf me.pool
-     * @public
-     * @function
+     * @function me.pool.exists
      * @param {String} name of the registered object class
      * @return {Boolean} true if the classname is registered
      */
     function exists(name: string): boolean;
     /**
      * Check if an object with the provided name is registered
-     * @name exists
-     * @memberOf me.pool
-     * @public
-     * @function
+     * @function me.pool.exists
      * @param {String} name of the registered object class
      * @return {Boolean} true if the classname is registered
      */
     function exists(name: string): boolean;
     /**
-     * Check if an object with the provided name is poolable
+     * Check if an object is poolable
      * (was properly registered with the recycling feature enable)
-     * @name poolable
-     * @memberOf me.pool
-     * @public
+     * @function me.pool.poolable
      * @see me.pool.register
-     * @function
-     * @param {String} name of the registered object class
-     * @return {Boolean} true if the classname is poolable
+     * @param {Object} object
+     * @return {Boolean} true if the object is poolable
      * @example
-     * if (!me.pool.poolable("CherryEntity")) {
+     * if (!me.pool.poolable(myCherryEntity)) {
      *     // object was not properly registered
      * }
      */
-    function poolable(name: string): boolean;
+    function poolable(obj: any): boolean;
     /**
-     * Check if an object with the provided name is poolable
+     * Check if an object is poolable
      * (was properly registered with the recycling feature enable)
-     * @name poolable
-     * @memberOf me.pool
-     * @public
+     * @function me.pool.poolable
      * @see me.pool.register
-     * @function
-     * @param {String} name of the registered object class
-     * @return {Boolean} true if the classname is poolable
+     * @param {Object} object
+     * @return {Boolean} true if the object is poolable
      * @example
-     * if (!me.pool.poolable("CherryEntity")) {
+     * if (!me.pool.poolable(myCherryEntity)) {
      *     // object was not properly registered
      * }
      */
-    function poolable(name: string): boolean;
+    function poolable(obj: any): boolean;
     /**
      * returns the amount of object instance currently in the pool
-     * @name getInstanceCount
-     * @memberOf me.pool
-     * @public
-     * @function
+     * @function me.pool.getInstanceCount
      * @return {Number} amount of object instance
      */
     function getInstanceCount(name: any): number;
     /**
      * returns the amount of object instance currently in the pool
-     * @name getInstanceCount
-     * @memberOf me.pool
-     * @public
-     * @function
+     * @function me.pool.getInstanceCount
      * @return {Number} amount of object instance
      */
     function getInstanceCount(name: any): number;
@@ -11920,6 +11888,7 @@ declare class ParticleContainer {
      */
     draw(renderer: any, rect: any): void;
 }
+declare var pixel: any;
 declare class Texture {
     constructor(atlases: any, src: any, cache: any);
     /**

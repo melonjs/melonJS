@@ -629,11 +629,7 @@
          * register an object to the pool. <br>
          * Pooling must be set to true if more than one such objects will be created. <br>
          * (Note: for an object to be poolable, it must implements a `onResetEvent` method)
-         * See examples in {@link me.pool#pull}
-         * @name register
-         * @memberOf me.pool
-         * @public
-         * @function
+         * @function me.pool.register
          * @param {String} className as defined in the Name field of the Object Properties (in Tiled)
          * @param {Object} class corresponding Class to be instantiated
          * @param {Boolean} [recycling=false] enables object recycling for the specified class
@@ -663,16 +659,10 @@
 
         /**
          * Pull a new instance of the requested object (if added into the object pool)
-         * @name pull
-         * @memberOf me.pool
-         * @public
-         * @function
+         * @function me.pool.pull
          * @param {String} className as used in {@link me.pool.register}
          * @param {} [arguments...] arguments to be passed when instantiating/reinitializing the object
          * @return {Object} the instance of the requested object
-         * @example
-         * me.pool.register("player", PlayerEntity);
-         * var player = me.pool.pull("player");
          * @example
          * me.pool.register("bullet", BulletEntity, true);
          * me.pool.register("enemy", EnemyEntity, true);
@@ -728,10 +718,7 @@
          * purge the object pool from any inactive object <br>
          * Object pooling must be enabled for this function to work<br>
          * note: this will trigger the garbage collector
-         * @name purge
-         * @memberOf me.pool
-         * @public
-         * @function
+         * @function me.pool.purge
          */
         purge: function purge() {
             for (var className in objectClass) {
@@ -747,32 +734,33 @@
          * Object pooling for the object class must be enabled,
          * and object must have been instantiated using {@link me.pool#pull},
          * otherwise this function won't work
-         * @name push
-         * @memberOf me.pool
-         * @public
-         * @function
+         * @function me.pool.push
+         * @throws will throw an error if the object cannot be recycled
          * @param {Object} instance to be recycled
+         * @param {Boolean} [throwOnError=true] throw an exception if the object cannot be recycled
+         * @return {Boolean} true if the object was successfully recycled in the object pool
          */
-        push: function push(obj) {
-            var name = obj.className;
-            if (!this.poolable(name)) {
-                // object can not be recycled, call the destroy function
-                if (typeof obj.destroy === "function") {
-                    obj.destroy();
+        push: function push(obj, throwOnError) {
+            if ( throwOnError === void 0 ) throwOnError = true;
+
+            if (!this.poolable(obj)) {
+                if (throwOnError === true ) {
+                    throw new Error("me.pool: object " + obj + " cannot be recycled");
+                } else {
+                    return false;
                 }
-                return;
             }
+
             // store back the object instance for later recycling
-            objectClass[name].pool.push(obj);
+            objectClass[obj.className].pool.push(obj);
             instance_counter++;
+
+            return true;
         },
 
         /**
          * Check if an object with the provided name is registered
-         * @name exists
-         * @memberOf me.pool
-         * @public
-         * @function
+         * @function me.pool.exists
          * @param {String} name of the registered object class
          * @return {Boolean} true if the classname is registered
          */
@@ -781,30 +769,29 @@
         },
 
         /**
-         * Check if an object with the provided name is poolable
+         * Check if an object is poolable
          * (was properly registered with the recycling feature enable)
-         * @name poolable
-         * @memberOf me.pool
-         * @public
+         * @function me.pool.poolable
          * @see me.pool.register
-         * @function
-         * @param {String} name of the registered object class
-         * @return {Boolean} true if the classname is poolable
+         * @param {Object} object
+         * @return {Boolean} true if the object is poolable
          * @example
-         * if (!me.pool.poolable("CherryEntity")) {
+         * if (!me.pool.poolable(myCherryEntity)) {
          *     // object was not properly registered
          * }
          */
-        poolable: function poolable(name) {
-            return (name in objectClass) && (objectClass[name].pool !== "undefined");
+        poolable: function poolable(obj) {
+            var className = obj.className;
+            return (typeof className !== "undefined") &&
+                    (typeof obj.onResetEvent === "function") &&
+                    (className in objectClass) &&
+                    (objectClass[className].pool !== "undefined");
+
         },
 
         /**
          * returns the amount of object instance currently in the pool
-         * @name getInstanceCount
-         * @memberOf me.pool
-         * @public
-         * @function
+         * @function me.pool.getInstanceCount
          * @return {Number} amount of object instance
          */
         getInstanceCount: function getInstanceCount(name) {
@@ -12951,8 +12938,9 @@
             var ax = bounds.width * this.anchorPoint.x,
                 ay = bounds.height * this.anchorPoint.y;
 
-            // save context
+            // save renderer context
             renderer.save();
+
             // apply the defined alpha value
             renderer.setGlobalAlpha(renderer.globalAlpha() * this.getOpacity());
 
@@ -12966,6 +12954,13 @@
                 renderer.translate(-dx, -dy);
             }
 
+            // apply stencil mask if defined
+            if (typeof this.mask !== "undefined") {
+                renderer.translate(this.pos.x, this.pos.y);
+                renderer.setMask(this.mask);
+                renderer.translate(-this.pos.x, -this.pos.y);
+            }
+
             if ((this.autoTransform === true) && (!this.currentTransform.isIdentity())) {
                 // apply the renderable transformation matrix
                 renderer.translate(this.pos.x, this.pos.y);
@@ -12975,11 +12970,6 @@
 
             // offset by the anchor point
             renderer.translate(-ax, -ay);
-
-
-            if (typeof this.mask !== "undefined") {
-                renderer.setMask(this.mask);
-            }
 
             // apply the defined tint, if any
             renderer.setTint(this.tint);
@@ -13008,18 +12998,20 @@
          * @param {me.CanvasRenderer|me.WebGLRenderer} renderer a renderer object
          **/
         Renderable.prototype.postDraw = function postDraw (renderer) {
-            if (typeof this.mask !== "undefined") {
-                renderer.clearMask();
-            }
 
             // remove the previously applied tint
             renderer.clearTint();
 
-            // reset the dirty flag
-            this.isDirty = false;
+            // clear the mask if set
+            if (typeof this.mask !== "undefined") {
+                renderer.clearMask();
+            }
 
             // restore the context
             renderer.restore();
+
+            // reset the dirty flag
+            this.isDirty = false;
         };
 
         /**
@@ -13745,11 +13737,12 @@
                 }
 
                 if (!keepalive) {
-                    // only push back in the pool if implementing "onResetEvent";
-                    if (typeof child.onResetEvent === "function") {
-                        pool.push(child);
-                    } else if (typeof child.destroy === "function") {
-                        child.destroy();
+                    // attempt at recycling the object
+                    if (pool.push(child, false) === false ) {
+                        //  else just destroy it
+                        if (typeof child.destroy === "function") {
+                            child.destroy();
+                        }
                     }
                 }
 
@@ -21880,6 +21873,8 @@
             var context = this.backBufferContext2D;
             var _x = mask.pos.x, _y = mask.pos.y;
 
+            context.save();
+
             // https://github.com/melonjs/melonJS/issues/648
             if (mask instanceof Ellipse) {
                 var hw = mask.radiusV.x,
@@ -21903,7 +21898,6 @@
                 context.bezierCurveTo(xmin, by, lx, ymax, lx, _y);
                 context.bezierCurveTo(lx, ymin, xmin, ty, _x, ty);
             } else {
-                context.save();
                 context.beginPath();
                 context.moveTo(_x + mask.points[0].x, _y + mask.points[0].y);
                 var point;
@@ -21911,8 +21905,8 @@
                     point = mask.points[i];
                     context.lineTo(_x + point.x, _y + point.y);
                 }
-                context.closePath();
             }
+
             context.clip();
         };
 
@@ -31761,27 +31755,6 @@
      * }).onComplete(myFunc);
      */
     var Tween = function Tween ( object ) {
-        this.object = null;
-        this.valuesStart = null;
-        this.valuesEnd = null;
-        this.valuesStartRepeat = null;
-        this.duration = null;
-        this.repeat = null;
-        this.yoyo = null;
-        this.reversed = null;
-        this.delayTime = null;
-        this.startTime = null;
-        this.easingFunction = null;
-        this.interpolationFunction = null;
-        this.chainedTweens = null;
-        this.onStartCallback = null;
-        this.onStartCallbackFired = null;
-        this.onUpdateCallback = null;
-        this.onCompleteCallback = null;
-        this.tweenTimeTracker = null;
-        // comply with the container contract
-        this.isRenderable = false;
-
         this.setProperties(object);
     };
 
@@ -31823,6 +31796,8 @@
         this.isPersistent = false;
         // this is not really supported
         this.updateWhenPaused = false;
+        // comply with the container contract
+        this.isRenderable = false;
 
         // Set all starting values present on the target object
         for ( var field in object ) {
@@ -34199,7 +34174,6 @@
             this._dt = 0;
 
             // Update particles and remove them if they are dead
-            var viewport = viewport;
             for (var i = this.children.length - 1; i >= 0; --i) {
                 var particle = this.children[i];
                 particle.inViewport = viewport.isVisible(particle, this.floating);
@@ -35697,6 +35671,7 @@
     exports.ObservableVector3d = ObservableVector3d;
     exports.Particle = Particle;
     exports.ParticleEmitter = ParticleEmitter;
+    exports.ParticleEmitterSettings = ParticleEmitterSettings;
     exports.Pointer = Pointer;
     exports.Polygon = Polygon;
     exports.QuadTree = QuadTree;
