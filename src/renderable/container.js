@@ -653,11 +653,12 @@ class Container extends Renderable {
             }
 
             if (!keepalive) {
-                // only push back in the pool if implementing "onResetEvent";
-                if (typeof child.onResetEvent === "function") {
-                    pool.push(child);
-                } else if (typeof child.destroy === "function") {
-                    child.destroy();
+                // attempt at recycling the object
+                if (pool.push(child, false) === false ) {
+                    //  else just destroy it
+                    if (typeof child.destroy === "function") {
+                        child.destroy();
+                    }
                 }
             }
 

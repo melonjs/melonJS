@@ -9,7 +9,8 @@
 
 ### Changed
 - Jay Inheritance has been replaced with ES6 standard inheritance
-- object using the pooling function *must* now implement a `onResetEvent` method and use the `recycling` flag when registered
+- Core: object using the pooling function *must* now implement a `onResetEvent` method and use the `recycling` flag when registered
+- Core : manually pushing a non recyclable object into the object pool will now throw an exception instead of silently failing
 
 ### Deprecated
 - all deprecated API from the legacy melonJS version have been removed

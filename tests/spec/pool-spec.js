@@ -46,22 +46,12 @@ describe("pool", function () {
         });
 
         it("object is not recycled when pushed and pulled back again", function () {
-            // add a hidden property
-            obj._recycled = true;
+            function nonPoolableObject() {
+                me.pool.push(obj);
+            };
 
-            // push it back to the object pool
-            me.pool.push(obj);
-
-            // destroy method was called
-            expect(obj.alive).toEqual(false);
-
-            // pull one similar object again
-            obj = me.pool.pull("dummyClass");
-
-            // should not be the same object
-            expect(obj.alive).toEqual(true);
-            expect(obj._recycled).toBeUndefined();
-
+            // pushing it into the object pool should throw an exception
+            expect(nonPoolableObject).toThrow();
         });
     });
 

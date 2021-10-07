@@ -140,20 +140,25 @@ var pool = {
      * @memberOf me.pool
      * @public
      * @function
+     * @throws will throw an error if the object cannot be recycled
      * @param {Object} instance to be recycled
+     * @param {Boolean} [throwOnError=true] throw an exception if the object cannot be recycled
+     * @return {Boolean} true if the object was successfully recycled in the object pool
      */
-    push(obj) {
-        var name = obj.className;
-        if (!this.poolable(name)) {
-            // object can not be recycled, call the destroy function
-            if (typeof obj.destroy === "function") {
-                obj.destroy();
+    push(obj, throwOnError = true) {
+        if (!this.poolable(obj)) {
+            if (throwOnError === true ) {
+                throw new Error("me.pool: object " + obj + " cannot be recycled");
+            } else {
+                return false;
             }
-            return;
         }
+
         // store back the object instance for later recycling
-        objectClass[name].pool.push(obj);
+        objectClass[obj.className].pool.push(obj);
         instance_counter++;
+
+        return true;
     },
 
     /**
@@ -170,22 +175,27 @@ var pool = {
     },
 
     /**
-     * Check if an object with the provided name is poolable
+     * Check if an object is poolable
      * (was properly registered with the recycling feature enable)
      * @name poolable
      * @memberOf me.pool
      * @public
      * @see me.pool.register
      * @function
-     * @param {String} name of the registered object class
-     * @return {Boolean} true if the classname is poolable
+     * @param {Object} object
+     * @return {Boolean} true if the object is poolable
      * @example
-     * if (!me.pool.poolable("CherryEntity")) {
+     * if (!me.pool.poolable(myCherryEntity)) {
      *     // object was not properly registered
      * }
      */
-    poolable(name) {
-        return (name in objectClass) && (objectClass[name].pool !== "undefined");
+    poolable(obj) {
+        var className = obj.className;
+        return (typeof className !== "undefined") &&
+                (typeof obj.onResetEvent === "function") &&
+                (className in objectClass) &&
+                (objectClass[className].pool !== "undefined");
+
     },
 
     /**
