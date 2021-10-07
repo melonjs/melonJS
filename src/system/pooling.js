@@ -22,11 +22,7 @@ var pool = {
      * register an object to the pool. <br>
      * Pooling must be set to true if more than one such objects will be created. <br>
      * (Note: for an object to be poolable, it must implements a `onResetEvent` method)
-     * See examples in {@link me.pool#pull}
-     * @name register
-     * @memberOf me.pool
-     * @public
-     * @function
+     * @function me.pool.register
      * @param {String} className as defined in the Name field of the Object Properties (in Tiled)
      * @param {Object} class corresponding Class to be instantiated
      * @param {Boolean} [recycling=false] enables object recycling for the specified class
@@ -54,16 +50,10 @@ var pool = {
 
     /**
      * Pull a new instance of the requested object (if added into the object pool)
-     * @name pull
-     * @memberOf me.pool
-     * @public
-     * @function
+     * @function me.pool.pull
      * @param {String} className as used in {@link me.pool.register}
      * @param {} [arguments...] arguments to be passed when instantiating/reinitializing the object
      * @return {Object} the instance of the requested object
-     * @example
-     * me.pool.register("player", PlayerEntity);
-     * var player = me.pool.pull("player");
      * @example
      * me.pool.register("bullet", BulletEntity, true);
      * me.pool.register("enemy", EnemyEntity, true);
@@ -117,10 +107,7 @@ var pool = {
      * purge the object pool from any inactive object <br>
      * Object pooling must be enabled for this function to work<br>
      * note: this will trigger the garbage collector
-     * @name purge
-     * @memberOf me.pool
-     * @public
-     * @function
+     * @function me.pool.purge
      */
     purge() {
         for (var className in objectClass) {
@@ -136,10 +123,7 @@ var pool = {
      * Object pooling for the object class must be enabled,
      * and object must have been instantiated using {@link me.pool#pull},
      * otherwise this function won't work
-     * @name push
-     * @memberOf me.pool
-     * @public
-     * @function
+     * @function me.pool.push
      * @throws will throw an error if the object cannot be recycled
      * @param {Object} instance to be recycled
      * @param {Boolean} [throwOnError=true] throw an exception if the object cannot be recycled
@@ -163,10 +147,7 @@ var pool = {
 
     /**
      * Check if an object with the provided name is registered
-     * @name exists
-     * @memberOf me.pool
-     * @public
-     * @function
+     * @function me.pool.exists
      * @param {String} name of the registered object class
      * @return {Boolean} true if the classname is registered
      */
@@ -177,11 +158,8 @@ var pool = {
     /**
      * Check if an object is poolable
      * (was properly registered with the recycling feature enable)
-     * @name poolable
-     * @memberOf me.pool
-     * @public
+     * @function me.pool.poolable
      * @see me.pool.register
-     * @function
      * @param {Object} object
      * @return {Boolean} true if the object is poolable
      * @example
@@ -200,10 +178,7 @@ var pool = {
 
     /**
      * returns the amount of object instance currently in the pool
-     * @name getInstanceCount
-     * @memberOf me.pool
-     * @public
-     * @function
+     * @function me.pool.getInstanceCount
      * @return {Number} amount of object instance
      */
     getInstanceCount(name) {
