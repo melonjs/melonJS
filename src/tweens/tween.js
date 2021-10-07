@@ -41,27 +41,6 @@ class Tween {
 
     // constructor
     constructor ( object ) {
-        this.object = null;
-        this.valuesStart = null;
-        this.valuesEnd = null;
-        this.valuesStartRepeat = null;
-        this.duration = null;
-        this.repeat = null;
-        this.yoyo = null;
-        this.reversed = null;
-        this.delayTime = null;
-        this.startTime = null;
-        this.easingFunction = null;
-        this.interpolationFunction = null;
-        this.chainedTweens = null;
-        this.onStartCallback = null;
-        this.onStartCallbackFired = null;
-        this.onUpdateCallback = null;
-        this.onCompleteCallback = null;
-        this.tweenTimeTracker = null;
-        // comply with the container contract
-        this.isRenderable = false;
-
         this.setProperties(object);
     }
 
@@ -101,6 +80,8 @@ class Tween {
         this.isPersistent = false;
         // this is not really supported
         this.updateWhenPaused = false;
+        // comply with the container contract
+        this.isRenderable = false;
 
         // Set all starting values present on the target object
         for ( var field in object ) {
