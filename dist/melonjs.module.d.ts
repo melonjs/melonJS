@@ -1785,7 +1785,7 @@ export class Color {
  * @constructor
  * @param {String} name Layer name
  * @param {me.Color|String} color CSS color
- * @param {Number} z z-index position
+ * @param {Number} [z = 0] z-index position
  */
 export class ColorLayer {
     /**
@@ -1800,7 +1800,7 @@ export class ColorLayer {
      * @memberOf me.ColorLayer#
      */
     public color: any;
-    onResetEvent(name: any, color: any, z: any): void;
+    onResetEvent(name: any, color: any, z?: number): void;
     name: any;
     floating: boolean;
     /**
@@ -1834,7 +1834,7 @@ export class Container {
      * keep track of pending sort
      * @ignore
      */
-    pendingSort: number;
+    pendingSort: any;
     /**
      * whether the container is the root of the scene
      * @public
@@ -2538,7 +2538,7 @@ export class Ellipse {
      * @param  {Number} y y coordinate
      * @return {boolean} true if contains
      */
-    contains(x: number, y: number, ...args: any[]): boolean;
+    contains(...args: any[]): boolean;
     /**
      * returns the bounding box for this shape, the smallest Rectangle object completely containing this shape.
      * @name getBounds
@@ -3590,7 +3590,7 @@ export class Matrix3d {
      * @param {me.Vector2d|me.Vector3d} v the vector to translate the matrix by
      * @return {me.Matrix3d} Reference to this object for method chaining
      */
-    translate(x: any, y: any, z: any, ...args: any[]): any;
+    translate(...args: any[]): any;
     /**
      * returns true if the matrix is an identity matrix.
      * @name isIdentity
@@ -4853,10 +4853,9 @@ export class Polygon {
      * @name getIndices
      * @memberOf me.Polygon.prototype
      * @function
-     * @param {Vector2d[]} a list of vector
-     * @return {me.Polygon} this Polygon
+     * @return {Array} an array of vertex indices for all triangles forming this polygon.
      */
-    getIndices(x: any, y: any): any;
+    getIndices(): any[];
     /**
      * translate the Polygon by the specified offset
      * @name translate
@@ -8880,7 +8879,7 @@ export class WebGLRenderer {
      * @param {Number} end end angle in radians
      * @param {Boolean} [antiClockwise=false] draw arc anti-clockwise
      */
-    fillArc(x: number, y: number, radius: number, start: number, end: number, antiClockwise?: boolean): void;
+    fillArc(x: number, y: number, radius: number, start: number, end: number): void;
     /**
      * Stroke an ellipse at the specified coordinates with given radius
      * @name strokeEllipse
@@ -11028,13 +11027,13 @@ export namespace pool {
      * @function me.pool.getInstanceCount
      * @return {Number} amount of object instance
      */
-    function getInstanceCount(name: any): number;
+    function getInstanceCount(): number;
     /**
      * returns the amount of object instance currently in the pool
      * @function me.pool.getInstanceCount
      * @return {Number} amount of object instance
      */
-    function getInstanceCount(name: any): number;
+    function getInstanceCount(): number;
 }
 export namespace save {
     /**
@@ -11604,7 +11603,7 @@ declare namespace utils$1 {
     export { fnUtils as function };
     export function getPixels(arg: any): ImageData;
     export function checkVersion(first: string, second?: string): number;
-    export function getUriFragment(url: any): {};
+    export function getUriFragment(url?: string): any;
     export function resetGUID(base: any, index?: number): void;
     export function createGUID(index?: number): string;
 }
@@ -12388,7 +12387,7 @@ declare function fade(sound_name: string, from: number, to: number, duration: nu
  * // set back the position of the background music to the beginning
  * me.audio.seek("dst-gameforest", 0);
  */
-declare function seek(sound_name: string, seek?: number, id?: number, ...args: any[]): any;
+declare function seek(sound_name: string, ...args: any[]): any;
 /**
  * get or set the rate of playback for a sound.
  * @function me.audio.rate
@@ -12402,7 +12401,7 @@ declare function seek(sound_name: string, seek?: number, id?: number, ...args: a
  * // speed up the playback of the background music
  * me.audio.rate("dst-gameforest", 2.0);
  */
-declare function rate(sound_name: string, rate?: number, id?: number, ...args: any[]): any;
+declare function rate(sound_name: string, ...args: any[]): any;
 /**
  * stop the specified sound on all channels
  * @function me.audio.stop
@@ -13178,17 +13177,16 @@ declare function toHex$1(str: any): string;
  * @memberOf me.utils.function
  * @name defer
  * @param {Function} fn The function to be deferred.
- * @param {Object} scope The execution scope of the deferred function.
- * @param {} [arguments...] Optional additional arguments to carry for the
- * function.
+ * @param {Object} thisArg The value to be passed as the this parameter to the target function when the deferred function is called
+ * @param {...*} [args] Optional additional arguments to carry for the function.
  * @return {Number} id that can be used to clear the deferred function using
  * clearTimeout
  * @example
  * // execute myFunc() when the stack is empty,
- * // with the current context and 'myArgument' as parameter
- * me.utils.function.defer(fn, this, 'myArgument');
+ * // with the current context and [1, 2, 3] as parameter
+ * me.utils.function.defer(myFunc, this, 1, 2, 3);
  */
-declare function defer(fn: Function, scope: any, ...args: any[]): number;
+declare function defer(func: any, thisArg: any, ...args?: any[]): number;
 /**
  * returns a function that, when invoked will only be triggered at most
  * once during a given window of time

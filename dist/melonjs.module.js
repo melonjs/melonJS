@@ -537,19 +537,17 @@ var fileUtils = /*#__PURE__*/Object.freeze({
  * @memberOf me.utils.function
  * @name defer
  * @param {Function} fn The function to be deferred.
- * @param {Object} scope The execution scope of the deferred function.
- * @param {} [arguments...] Optional additional arguments to carry for the
- * function.
+ * @param {Object} thisArg The value to be passed as the this parameter to the target function when the deferred function is called
+ * @param {...*} [args] Optional additional arguments to carry for the function.
  * @return {Number} id that can be used to clear the deferred function using
  * clearTimeout
  * @example
  * // execute myFunc() when the stack is empty,
- * // with the current context and 'myArgument' as parameter
- * me.utils.function.defer(fn, this, 'myArgument');
+ * // with the current context and [1, 2, 3] as parameter
+ * me.utils.function.defer(myFunc, this, 1, 2, 3);
  */
-function defer(fn, scope) {
-    var args = Array.prototype.slice.call(arguments, 1);
-    return setTimeout(fn.bind.apply(fn, args), 0.01);
+function defer(func, thisArg, ...args) {
+    return setTimeout(func.bind(thisArg), 0.01, ...args);
 }
 /**
  * returns a function that, when invoked will only be triggered at most
@@ -778,7 +776,7 @@ var pool = {
      * @function me.pool.getInstanceCount
      * @return {Number} amount of object instance
      */
-    getInstanceCount(name) {
+    getInstanceCount() {
         return instance_counter;
     }
 };
@@ -2495,7 +2493,7 @@ class Matrix3d {
      * @param {me.Vector2d|me.Vector3d} v the vector to translate the matrix by
      * @return {me.Matrix3d} Reference to this object for method chaining
      */
-    translate(x, y, z) {
+    translate() {
         var a = this.val;
         var _x, _y, _z;
 
@@ -9456,10 +9454,9 @@ class Polygon {
      * @name getIndices
      * @memberOf me.Polygon.prototype
      * @function
-     * @param {Vector2d[]} a list of vector
-     * @return {me.Polygon} this Polygon
+     * @return {Array} an array of vertex indices for all triangles forming this polygon.
      */
-    getIndices(x, y) {
+    getIndices() {
         if (this.indices.length === 0) {
             this.indices = earcut$1(this.points.flatMap(p => [p.x, p.y]));
         }
@@ -13744,14 +13741,14 @@ class Container extends Renderable {
                 });
             }
             /** @ignore */
-            this.pendingSort = utils$1.function.defer(function (self) {
+            this.pendingSort = utils$1.function.defer(function () {
                 // sort everything in this container
-                self.getChildren().sort(self["_sort" + self.sortOn.toUpperCase()]);
+                this.getChildren().sort(this["_sort" + this.sortOn.toUpperCase()]);
                 // clear the defer id
-                self.pendingSort = null;
+                this.pendingSort = null;
                 // make sure we redraw everything
                 repaint();
-            }, this, this);
+            }, this);
         }
     }
 
@@ -16398,6 +16395,75 @@ class Stage {
     }
 }
 
+/**
+ * @classdesc
+ * a generic Color Layer Object.  Fills the entire Canvas with the color not just the container the object belongs to.
+ * @class
+ * @extends me.Renderable
+ * @memberOf me
+ * @constructor
+ * @param {String} name Layer name
+ * @param {me.Color|String} color CSS color
+ * @param {Number} [z = 0] z-index position
+ */
+class ColorLayer extends Renderable {
+
+    /**
+     * @ignore
+     */
+    constructor(name, color, z) {
+        // parent constructor
+        super(0, 0, Infinity, Infinity);
+
+        /**
+         * the layer color component
+         * @public
+         * @type me.Color
+         * @name color
+         * @memberOf me.ColorLayer#
+         */
+         this.color = pool.pull("Color").parseCSS(color);
+
+         this.onResetEvent(name, color, z);
+
+    }
+
+    onResetEvent(name, color, z = 0) {
+        // apply given parameters
+        this.name = name;
+        this.pos.z = z;
+        this.floating = true;
+        // string (#RGB, #ARGB, #RRGGBB, #AARRGGBB)
+        this.color.parseCSS(color);
+    }
+
+    /**
+     * draw the color layer
+     * @ignore
+     */
+    draw(renderer, rect) {
+        var color = renderer.getColor();
+        var vpos = viewport.pos;
+        renderer.setColor(this.color);
+        renderer.fillRect(
+            rect.left - vpos.x, rect.top - vpos.y,
+            rect.width, rect.height
+        );
+        renderer.setColor(color);
+    }
+
+    /**
+     * Destroy function
+     * @ignore
+     */
+    destroy() {
+        pool.push(this.color);
+        this.color = undefined;
+        super.destroy();
+    }
+
+}
+
 // a basic progress bar object
 class ProgressBar extends Renderable {
     /**
@@ -16443,9 +16509,6 @@ class ProgressBar extends Renderable {
      * @ignore
      */
     draw (renderer) {
-        // clear the background
-        renderer.clearColor("#202020");
-
         // draw the progress bar
         renderer.setColor("black");
         renderer.fillRect(this.pos.x, viewport.centerY, renderer.getWidth(), this.barHeight / 2);
@@ -16594,6 +16657,9 @@ var defaultLoadingScreen = new Stage({
      */
     onResetEvent : function () {
         var barHeight = 8;
+
+        // clear the background
+        world.addChild(new ColorLayer("background", "#202020"), 0);
 
         // progress bar
         world.addChild(new ProgressBar(
@@ -17437,7 +17503,7 @@ class Ellipse {
      * @param  {Number} y y coordinate
      * @return {boolean} true if contains
      */
-    contains(x, y) {
+    contains() {
         var _x, _y;
 
         if (arguments.length === 2) {
@@ -25507,7 +25573,7 @@ function preloadFontFace(data, onload, onerror) {
         document.body.style.fontFamily = data.name;
         // onloaded callback
         onload();
-    }, function (e) {
+    }, function () {
         // rejected
         onerror(data.name);
     });
@@ -26402,10 +26468,10 @@ function fade(sound_name, from, to, duration, id) {
  * // set back the position of the background music to the beginning
  * me.audio.seek("dst-gameforest", 0);
  */
-function seek(sound_name, seek, id) {
+function seek(sound_name, ...args) {
     var sound = audioTracks[sound_name];
     if (sound && typeof sound !== "undefined") {
-        return sound.seek.apply(sound, Array.prototype.slice.call(arguments, 1));
+        return sound.seek.call(sound, ...args);
     } else {
         throw new Error("audio clip " + sound_name + " does not exist");
     }
@@ -26423,10 +26489,10 @@ function seek(sound_name, seek, id) {
  * // speed up the playback of the background music
  * me.audio.rate("dst-gameforest", 2.0);
  */
-function rate(sound_name, rate, id) {
+function rate(sound_name, ...args) {
     var sound = audioTracks[sound_name];
     if (sound && typeof sound !== "undefined") {
-        return sound.rate.apply(sound, Array.prototype.slice.call(arguments, 1));
+        return sound.rate.call(sound, ...args);
     } else {
         throw new Error("audio clip " + sound_name + " does not exist");
     }
@@ -26854,7 +26920,7 @@ function _disableSwipeFn(e) {
 let readyBound = false, isReady = false, readyList = [];
 
 // called to check if the device is ready
-function _domReady(fn) {
+function _domReady() {
     // Make sure that the DOM is not already loaded
     if (!isReady) {
         // be sure document.body is there
@@ -26948,7 +27014,8 @@ function _checkCapabilities() {
     if (device.hasPointerLockSupport) {
         document.exitPointerLock = prefixed("exitPointerLock", document);
     }
-    // device accelerometer and orientation detection
+
+    // device orientation and motion detection
     device.hasDeviceOrientation = !!window.DeviceOrientationEvent;
     device.hasAccelerometer = !!window.DeviceMotionEvent;
 
@@ -29076,13 +29143,13 @@ class WebGLRenderer extends Renderer {
         // ctx.loseContext()
         // reference to this renderer
         var renderer = this;
-        this.getScreenCanvas().addEventListener("webglcontextlost", function (e) {
+        this.getScreenCanvas().addEventListener("webglcontextlost", function () {
             undefined();
             renderer.isContextValid = false;
             publish(WEBGL_ONCONTEXT_LOST, [ renderer ]);
         }, false );
         // ctx.restoreContext()
-        this.getScreenCanvas().addEventListener("webglcontextrestored", function (e) {
+        this.getScreenCanvas().addEventListener("webglcontextrestored", function () {
             renderer.reset();
             renderer.isContextValid = true;
             publish(WEBGL_ONCONTEXT_RESTORED, [ renderer ]);
@@ -29659,7 +29726,7 @@ class WebGLRenderer extends Renderer {
      * @param {Number} end end angle in radians
      * @param {Boolean} [antiClockwise=false] draw arc anti-clockwise
      */
-    fillArc(x, y, radius, start, end, antiClockwise = false) {
+    fillArc(x, y, radius, start, end /*, antiClockwise = false*/) {
         // XXX to be optimzed using a specific shader
         var points = this._glPoints;
         var i, index = 0;
@@ -30605,36 +30672,46 @@ var utils = {
      * var UriFragment = me.utils.getUriFragment();
      * console.log(UriFragment["mytag"]); //> "value"
      */
-    getUriFragment : (function (url) {
+    getUriFragment : function (url) {
         var UriFragments = {};
         var parsed = false;
-        return function (url) {
-            var hash;
-            if (typeof url === "undefined") {
-                hash = UriFragments;
-                if (parsed === true) {
-                    return hash;
-                }
-                url = document.location;
-                parsed = true;
+        var hash = {};
+
+        if (typeof url === "undefined") {
+            var location = document.location;
+            hash = UriFragments;
+            if (parsed === true) {
+                return hash;
+            }
+            if (location && location.hash) {
+                url = location.hash;
             } else {
-                // never cache if a url is passed as parameter
-                hash = {};
+                // No "document.location" exist for Wechat mini game platform.
+                return hash;
             }
-            // No "document.location" exist for Wechat mini game platform.
-            if (url && url.hash) {
-                url.hash.substr(1).split("&").filter(function (value) {
-                    return (value !== "");
-                }).forEach(function (value) {
-                    var kv = value.split("=");
-                    var k = kv.shift();
-                    var v = kv.join("=");
-                    hash[k] = v || true;
-                });
+            parsed = true;
+        } else {
+            // never cache if a url is passed as parameter
+            var index = url.indexOf("#");
+            if (index !== -1) {
+                url = url.substr(index, url.length);
+            } else {
+                return hash;
             }
-            return hash;
-        };
-    })(),
+        }
+
+        // parse the url
+        url.substr(1).split("&").filter(function (value) {
+            return (value !== "");
+        }).forEach(function (value) {
+            var kv = value.split("=");
+            var k = kv.shift();
+            var v = kv.join("=");
+            hash[k] = v || true;
+        });
+
+        return hash;
+    },
 
     /**
      * reset the GUID Base Name
@@ -30715,7 +30792,7 @@ function clearTimer(timerId) {
  * update timers
  * @ignore
  */
-function updateTimers(time) {
+function updateTimers() {
     for (var i = 0, len = timers.length; i < len; i++) {
         var _timer = timers[i];
         if (!(_timer.pauseable && state.isPaused())) {
@@ -33100,75 +33177,6 @@ class BitmapTextData {
         }
         this.capHeight -= padY;
     }
-}
-
-/**
- * @classdesc
- * a generic Color Layer Object.  Fills the entire Canvas with the color not just the container the object belongs to.
- * @class
- * @extends me.Renderable
- * @memberOf me
- * @constructor
- * @param {String} name Layer name
- * @param {me.Color|String} color CSS color
- * @param {Number} z z-index position
- */
-class ColorLayer extends Renderable {
-
-    /**
-     * @ignore
-     */
-    constructor(name, color, z) {
-        // parent constructor
-        super(0, 0, Infinity, Infinity);
-
-        /**
-         * the layer color component
-         * @public
-         * @type me.Color
-         * @name color
-         * @memberOf me.ColorLayer#
-         */
-         this.color = pool.pull("Color").parseCSS(color);
-
-         this.onResetEvent(name, color, z);
-
-    }
-
-    onResetEvent(name, color, z) {
-        // apply given parameters
-        this.name = name;
-        this.pos.z = z;
-        this.floating = true;
-        // string (#RGB, #ARGB, #RRGGBB, #AARRGGBB)
-        this.color.parseCSS(color);
-    }
-
-    /**
-     * draw the color layer
-     * @ignore
-     */
-    draw(renderer, rect) {
-        var color = renderer.getColor();
-        var vpos = viewport.pos;
-        renderer.setColor(this.color);
-        renderer.fillRect(
-            rect.left - vpos.x, rect.top - vpos.y,
-            rect.width, rect.height
-        );
-        renderer.setColor(color);
-    }
-
-    /**
-     * Destroy function
-     * @ignore
-     */
-    destroy() {
-        pool.push(this.color);
-        this.color = undefined;
-        super.destroy();
-    }
-
 }
 
 /**
