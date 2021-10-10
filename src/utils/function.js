@@ -12,19 +12,17 @@
  * @memberOf me.utils.function
  * @name defer
  * @param {Function} fn The function to be deferred.
- * @param {Object} scope The execution scope of the deferred function.
- * @param {} [arguments...] Optional additional arguments to carry for the
- * function.
+ * @param {Object} thisArg The value to be passed as the this parameter to the target function when the deferred function is called
+ * @param {...*} [args] Optional additional arguments to carry for the function.
  * @return {Number} id that can be used to clear the deferred function using
  * clearTimeout
  * @example
  * // execute myFunc() when the stack is empty,
- * // with the current context and 'myArgument' as parameter
- * me.utils.function.defer(fn, this, 'myArgument');
+ * // with the current context and [1, 2, 3] as parameter
+ * me.utils.function.defer(myFunc, this, 1, 2, 3);
  */
-export function defer(fn, scope) {
-    var args = Array.prototype.slice.call(arguments, 1);
-    return setTimeout(fn.bind.apply(fn, args), 0.01);
+export function defer(func, thisArg, ...args) {
+    return setTimeout(func.bind(thisArg), 0.01, ...args);
 };
 
 /**

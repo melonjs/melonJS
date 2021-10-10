@@ -789,14 +789,14 @@ class Container extends Renderable {
                 });
             }
             /** @ignore */
-            this.pendingSort = utils.function.defer(function (self) {
+            this.pendingSort = utils.function.defer(function () {
                 // sort everything in this container
-                self.getChildren().sort(self["_sort" + self.sortOn.toUpperCase()]);
+                this.getChildren().sort(this["_sort" + this.sortOn.toUpperCase()]);
                 // clear the defer id
-                self.pendingSort = null;
+                this.pendingSort = null;
                 // make sure we redraw everything
                 game.repaint();
-            }, this, this);
+            }, this);
         }
     }
 
