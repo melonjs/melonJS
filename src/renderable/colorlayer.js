@@ -12,7 +12,7 @@ import Renderable from "./renderable.js";
  * @constructor
  * @param {String} name Layer name
  * @param {me.Color|String} color CSS color
- * @param {Number} z z-index position
+ * @param {Number} [z = 0] z-index position
  */
 class ColorLayer extends Renderable {
 
@@ -36,7 +36,7 @@ class ColorLayer extends Renderable {
 
     }
 
-    onResetEvent(name, color, z) {
+    onResetEvent(name, color, z = 0) {
         // apply given parameters
         this.name = name;
         this.pos.z = z;
