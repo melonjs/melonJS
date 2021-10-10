@@ -101,24 +101,17 @@ var utils = {
      * console.log(UriFragment["mytag"]); //> "value"
      */
     getUriFragment : function (url) {
-        var UriFragments = {};
-        var parsed = false;
-        var params;
         var hash = {};
 
         if (typeof url === "undefined") {
             var location = document.location;
-            hash = UriFragments;
-            if (parsed === true) {
-                return hash;
-            }
+
             if (location && location.hash) {
                 url = location.hash;
             } else {
                 // No "document.location" exist for Wechat mini game platform.
                 return hash;
             }
-            parsed = true;
         } else {
             // never cache if a url is passed as parameter
             var index = url.indexOf("#");
