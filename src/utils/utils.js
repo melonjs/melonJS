@@ -100,36 +100,47 @@ var utils = {
      * var UriFragment = me.utils.getUriFragment();
      * console.log(UriFragment["mytag"]); //> "value"
      */
-    getUriFragment : (function (url) {
+    getUriFragment : function (url) {
         var UriFragments = {};
         var parsed = false;
-        return function (url) {
-            var hash;
-            if (typeof url === "undefined") {
-                hash = UriFragments;
-                if (parsed === true) {
-                    return hash;
-                }
-                url = document.location;
-                parsed = true;
+        var params;
+        var hash = {};
+
+        if (typeof url === "undefined") {
+            var location = document.location;
+            hash = UriFragments;
+            if (parsed === true) {
+                return hash;
+            }
+            if (location && location.hash) {
+                url = location.hash;
             } else {
-                // never cache if a url is passed as parameter
-                hash = {};
+                // No "document.location" exist for Wechat mini game platform.
+                return hash;
             }
-            // No "document.location" exist for Wechat mini game platform.
-            if (url && url.hash) {
-                url.hash.substr(1).split("&").filter(function (value) {
-                    return (value !== "");
-                }).forEach(function (value) {
-                    var kv = value.split("=");
-                    var k = kv.shift();
-                    var v = kv.join("=");
-                    hash[k] = v || true;
-                });
+            parsed = true;
+        } else {
+            // never cache if a url is passed as parameter
+            var index = url.indexOf("#");
+            if (index !== -1) {
+                url = url.substr(index, url.length);
+            } else {
+                return hash;
             }
-            return hash;
-        };
-    })(),
+        }
+
+        // parse the url
+        url.substr(1).split("&").filter(function (value) {
+            return (value !== "");
+        }).forEach(function (value) {
+            var kv = value.split("=");
+            var k = kv.shift();
+            var v = kv.join("=");
+            hash[k] = v || true;
+        });
+
+        return hash;
+    },
 
     /**
      * reset the GUID Base Name

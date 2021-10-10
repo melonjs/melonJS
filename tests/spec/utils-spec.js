@@ -83,4 +83,21 @@ describe("utils", function () {
             expect(me.utils.string.isNumeric("+123")).toEqual(true);
         });
     });
+
+    describe("UriFragment", function () {
+        var url1 = "http://www.example.com/index.html";
+        var url2 = "http://www.example.com/index.html#debug&hitbox=true&mytag=value";
+
+        it("empty arguments", function () {
+            var params = me.utils.getUriFragment(url1);
+            expect(Object.entries(params).length).toEqual(0);
+        });
+
+        it("extract arguments", function () {
+            var params = me.utils.getUriFragment(url2);
+            expect(params.debug).toEqual(true);
+            expect(params.hitbox).toEqual("true");
+            expect(params.mytag).toEqual("value");
+        });
+    });
 });
