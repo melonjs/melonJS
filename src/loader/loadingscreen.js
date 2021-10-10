@@ -4,6 +4,7 @@ import * as event from "./../system/event.js";
 import {nextPowerOfTwo} from "./../math/math.js";
 import pool from "./../system/pooling.js";
 import Renderable from "./../renderable/renderable.js";
+import ColorLayer from "./../renderable/colorlayer.js";
 import Stage from "./../state/stage.js";
 
 
@@ -52,9 +53,6 @@ class ProgressBar extends Renderable {
      * @ignore
      */
     draw (renderer) {
-        // clear the background
-        renderer.clearColor("#202020");
-
         // draw the progress bar
         renderer.setColor("black");
         renderer.fillRect(this.pos.x, viewport.centerY, renderer.getWidth(), this.barHeight / 2);
@@ -206,6 +204,9 @@ var defaultLoadingScreen = new Stage({
      */
     onResetEvent : function () {
         var barHeight = 8;
+
+        // clear the background
+        world.addChild(new ColorLayer("background", "#202020"), 0);
 
         // progress bar
         world.addChild(new ProgressBar(
