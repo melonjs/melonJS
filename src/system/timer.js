@@ -37,7 +37,7 @@ function update(time) {
     timer.tick = (delta > minstep && timer.interpolation) ? delta / step : 1;
 
 
-    updateTimers(time);
+    updateTimers();
 };
 
 /**
@@ -58,7 +58,7 @@ function clearTimer(timerId) {
  * update timers
  * @ignore
  */
-function updateTimers(time) {
+function updateTimers() {
     for (var i = 0, len = timers.length; i < len; i++) {
         var _timer = timers[i];
         if (!(_timer.pauseable && state.isPaused())) {

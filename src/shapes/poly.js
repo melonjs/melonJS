@@ -281,10 +281,9 @@ class Polygon {
      * @name getIndices
      * @memberOf me.Polygon.prototype
      * @function
-     * @param {Vector2d[]} a list of vector
-     * @return {me.Polygon} this Polygon
+     * @return {Array} an array of vertex indices for all triangles forming this polygon.
      */
-    getIndices(x, y) {
+    getIndices() {
         if (this.indices.length === 0) {
             this.indices = earcut(this.points.flatMap(p => [p.x, p.y]));
         }

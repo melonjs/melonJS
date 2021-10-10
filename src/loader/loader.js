@@ -91,7 +91,7 @@ function preloadFontFace(data, onload, onerror) {
         document.body.style.fontFamily = data.name;
         // onloaded callback
         onload();
-    }, function (e) {
+    }, function () {
         // rejected
         onerror(data.name);
     });

@@ -29,7 +29,7 @@ function _disableSwipeFn(e) {
 let readyBound = false, isReady = false, readyList = [];
 
 // called to check if the device is ready
-function _domReady(fn) {
+function _domReady() {
     // Make sure that the DOM is not already loaded
     if (!isReady) {
         // be sure document.body is there
@@ -127,10 +127,6 @@ function _checkCapabilities() {
     }
 
     // device orientation and motion detection
-    if (window.DeviceOrientationEvent) {
-
-    }
-    // device accelerometer and orientation detection
     device.hasDeviceOrientation = !!window.DeviceOrientationEvent;
     device.hasAccelerometer = !!window.DeviceMotionEvent;
 

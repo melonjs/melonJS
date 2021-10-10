@@ -569,7 +569,7 @@ class Matrix3d {
      * @param {me.Vector2d|me.Vector3d} v the vector to translate the matrix by
      * @return {me.Matrix3d} Reference to this object for method chaining
      */
-    translate(x, y, z) {
+    translate() {
         var a = this.val;
         var _x, _y, _z;
 

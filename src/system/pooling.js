@@ -181,7 +181,7 @@ var pool = {
      * @function me.pool.getInstanceCount
      * @return {Number} amount of object instance
      */
-    getInstanceCount(name) {
+    getInstanceCount() {
         return instance_counter;
     }
 };

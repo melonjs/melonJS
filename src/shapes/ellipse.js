@@ -226,7 +226,7 @@ class Ellipse {
      * @param  {Number} y y coordinate
      * @return {boolean} true if contains
      */
-    contains(x, y) {
+    contains() {
         var _x, _y;
 
         if (arguments.length === 2) {

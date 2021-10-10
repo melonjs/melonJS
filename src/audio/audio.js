@@ -250,10 +250,10 @@ export function fade(sound_name, from, to, duration, id) {
  * // set back the position of the background music to the beginning
  * me.audio.seek("dst-gameforest", 0);
  */
-export function seek(sound_name, seek, id) {
+export function seek(sound_name, ...args) {
     var sound = audioTracks[sound_name];
     if (sound && typeof sound !== "undefined") {
-        return sound.seek.apply(sound, Array.prototype.slice.call(arguments, 1));
+        return sound.seek.call(sound, ...args);
     } else {
         throw new Error("audio clip " + sound_name + " does not exist");
     }
@@ -272,10 +272,10 @@ export function seek(sound_name, seek, id) {
  * // speed up the playback of the background music
  * me.audio.rate("dst-gameforest", 2.0);
  */
-export function rate(sound_name, rate, id) {
+export function rate(sound_name, ...args) {
     var sound = audioTracks[sound_name];
     if (sound && typeof sound !== "undefined") {
-        return sound.rate.apply(sound, Array.prototype.slice.call(arguments, 1));
+        return sound.rate.call(sound, ...args);
     } else {
         throw new Error("audio clip " + sound_name + " does not exist");
     }

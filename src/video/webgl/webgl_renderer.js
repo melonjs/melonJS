@@ -156,13 +156,13 @@ class WebGLRenderer extends Renderer {
         // ctx.loseContext()
         // reference to this renderer
         var renderer = this;
-        this.getScreenCanvas().addEventListener("webglcontextlost", function (e) {
+        this.getScreenCanvas().addEventListener("webglcontextlost", function () {
             event.preventDefault();
             renderer.isContextValid = false;
             event.publish(event.WEBGL_ONCONTEXT_LOST, [ renderer ]);
         }, false );
         // ctx.restoreContext()
-        this.getScreenCanvas().addEventListener("webglcontextrestored", function (e) {
+        this.getScreenCanvas().addEventListener("webglcontextrestored", function () {
             renderer.reset();
             renderer.isContextValid = true;
             event.publish(event.WEBGL_ONCONTEXT_RESTORED, [ renderer ]);
@@ -739,7 +739,7 @@ class WebGLRenderer extends Renderer {
      * @param {Number} end end angle in radians
      * @param {Boolean} [antiClockwise=false] draw arc anti-clockwise
      */
-    fillArc(x, y, radius, start, end, antiClockwise = false) {
+    fillArc(x, y, radius, start, end /*, antiClockwise = false*/) {
         // XXX to be optimzed using a specific shader
         var points = this._glPoints;
         var i, index = 0;
