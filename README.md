@@ -148,6 +148,8 @@ Or can simply be added to your html, through a content delivery network (CDN) UR
 <!-- add ".min" to any JS/CSS file to get a minified version -->
 <script src="https://cdn.jsdelivr.net/npm/melonjs@10.0.0/dist/melonjs.min.js"></script>
 ```
+> Note: "official" CDN and NPM install are only available from version 7.0.0 and onwards.
+
 and of course the debug panel :
 ```html
 <!-- load the latest debug panel -->
@@ -155,8 +157,6 @@ and of course the debug panel :
 <!-- or a specific corresponding release -->
 <script src="https://cdn.jsdelivr.net/npm/melonjs@9.0.0/plugins/debug/debugPanel.js"></script>
 ```
-
-> Note: "official" CDN and NPM install are only available from version 7.0.0 and onwards.
 > Note: current version of the debugPanel is not compatible with the ES6 ESM version.
 
 Building melonJS
