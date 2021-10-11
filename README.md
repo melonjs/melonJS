@@ -14,7 +14,7 @@ A fresh, _modern_ & lightweight HTML5 game engine
 
 melonJS 2 is a modern version of the melonJS game engine. It has been rebuilt almost entirely using ES6 class, inheritance and semantic, and is bundled using Rollup to provide modern features such as transpiling and tree-shaking.
 
->Note: melonJS 2 is a work in progress and will break your game (No more Jay inheritance, and no backward compatibility with deprecated APIs),  unless you want to contribute to the development or want to live on the edge, use the current unstable version at your "own risk". If you are looking at the stable legacy version of melonJS, you can find it [here](https://github.com/melonjs/melonJS/tree/legacy) under the _legacy_ branch.
+>Note: migrating an existing project to melonJS 2 (version 10.0 and higher) will definitely break your game (ES6 semantic, no more Jay inheritance, and no backward compatibility with deprecated APIs), and you might want to read first this small step by step guide on [upgrading to melonJS 2](https://github.com/melonjs/melonJS/wiki/Upgrading-to-melonJS-2). If you are looking at the legacy version (9.x and lower) of melonJS, you can find it [here](https://github.com/melonjs/melonJS/tree/legacy) under the _legacy_ branch.
 
 [melonJS](http://melonjs.org/) is open-source, licensed under the [MIT License](LICENSE.md), and actively developed and maintained with the help of a small team of enthusiasts at AltByte in Singapore.
 
@@ -105,9 +105,11 @@ For your first time using melonJS, follow these tutorials :
 - [Platformer](http://melonjs.github.io/tutorial-platformer/) Step by Step Tutorial.
 - [Space Invaders](http://melonjs.github.io/tutorial-space-invaders/) Step by Step Tutorial.
 
+> Note: current version of both the tutorials are not compatible with the ES6 version.
+
 You may find it useful to skim the overview found at the wiki [Details & Usage](https://github.com/melonjs/melonJS/wiki#details--usage)
 
-When starting your own projects, checkout the [boilerplate](https://github.com/melonjs/boilerplate)
+When starting your own projects, checkout our [es6 boilerplate](https://github.com/melonjs/es6-boilerplate)
 
 Download melonJS
 -------------------------------------------------------------------------------
@@ -155,7 +157,7 @@ and of course the debug panel :
 ```
 
 > Note: "official" CDN and NPM install are only available from version 7.0.0 and onwards.
-> Note: current version of both the tutorials and the debugPanel are not compatible with the ES6 version.
+> Note: current version of the debugPanel is not compatible with the ES6 ESM version.
 
 Building melonJS
 -------------------------------------------------------------------------------
