@@ -21,28 +21,35 @@ melonJS 2 is a modern version of the melonJS game engine. It has been rebuilt al
 About melonJS
 -------------------------------------------------------------------------------
 
-[melonJS](http://melonjs.org/) is the result of our enthusiasm & experiments with Javascript,
-and currently features :
+[melonJS](http://melonjs.org/) is a fully featured game engine :
 
-- A fresh & lightweight 2D sprite-based engine
+Compatibility
 - Standalone library (does not rely on anything else, except a HTML5 capable browser)
 - Compatible with all major browsers (Chrome, Safari, Firefox, Opera, Edge) and mobile devices
-- Fast WebGL renderer for desktop and mobile devices with fallback to Canvas rendering
+
+Graphics
+- 2D sprite-based graphic engine
+- Fast WebGL 1 & 2 renderer for desktop and mobile devices with fallback to Canvas rendering
 - High DPI resolution & Canvas advanced auto scaling
-- Web Audio support with fallback to Multi-channel HTML5 audio
-- Lightweight physics implementation to ensure low cpu requirements
+- Sprite with Animation management
+- built-in effects such as tinting and masking
+- Standard spritesheet, single and multiple Packed Textures support
+- System & Bitmap Text
+
+Sound
+- Web Audio support with spatial audio or stereo panning based on [Howler](https://howlerjs.com)
+- fallback to Multi-channel HTML5 audio for legacy browsers
+
+Physic
+- Lightweight 2d physics implementation to ensure low cpu requirements
 - Polygon (SAT) based collision algorithm for accurate detection and response
 - Fast Broad-phase collision detection using spatial partitioning
-- 3rd party tools support for physic body definition such as [PhysicsEditor](https://www.codeandweb.com/physicseditor)
-- Advanced math API for Vector and Matrix
-- Tween Effects, Transition effects
-- Basic set of Object Entities and GUI elements included
-- Pooling support for object recycling
-- Basic Particle System
-- Sprite with Animation management
-- Standard spritesheet, single and multiple Packed Textures support
-- 3rd party tools support for Texture Packing such as [TexturePacker](https://www.codeandweb.com/texturepacker), [Free Texture Packer](http://free-tex-packer.com), [ShoeBox](https://renderhjs.net/shoebox/)
-- A state manager (to easily manage loading, menu, options, in-game state)
+
+Input
+- Mouse and Touch device support (with mouse emulation)
+- Device motion & accelerometer support
+
+Level Editor
 - Tiled map format version +1.0 integration for easy level design
     - Uncompressed Plain, Base64, CSV and JSON encoded XML tilemap loading
     - Orthogonal, Isometric and Hexagonal maps (both normal and staggered)
@@ -56,13 +63,29 @@ and currently features :
     - Dynamic Layer and Object/Group ordering
     - Dynamic Entity loading
     - Shape based Tile collision support
-- System & Bitmap fonts
-- Mouse and Touch device support (with mouse emulation)
-- Device motion & accelerometer support
-- Built-in support for 3rd party Application Wrappers such as [Cordova](https://cordova.apache.org)
-- Asynchronous publish/subscribe pattern messaging support (minPubSub)
+
+Assets
+- Asynchronous asset loading
 - A fully customizable preloader
-- As light as [~70kb](https://bundlephobia.com/result?p=melonjs@latest) minified & gzipped, before tree-shaking
+
+And Also
+- A state manager (to easily manage loading, menu, options, in-game state)
+- Tween Effects, Transition effects
+- Pooling support for object recycling
+- Basic Particle System
+- Asynchronous publish/subscribe pattern messaging support (minPubSub)
+
+Tools integration
+-------------------------------------------------------------------------------
+ [![Free Texture Packer](https://user-images.githubusercontent.com/4033090/136762061-1d3a0dfe-dbe0-4d3d-808d-47a49ecf5309.png "Free Texture Packer")](http://free-tex-packer.com)
+ [![TexturePacker](https://user-images.githubusercontent.com/4033090/136762472-bc55a638-c69b-4ff5-9d03-c684c8bea0ea.png "TexturePacker")](https://www.codeandweb.com/texturepacker)
+ [![PhysicsEditor](https://user-images.githubusercontent.com/4033090/136762890-b1010c7f-cb19-4d35-a3f1-f5048db07835.png "PhysicsEditor")](https://www.codeandweb.com/physicseditor)
+ [![ShoeBox](https://user-images.githubusercontent.com/4033090/136762705-92027d94-d87c-4a95-b051-26647410248d.png "ShoeBox")](https://renderhjs.net/shoebox/)
+ [![Tiled](https://user-images.githubusercontent.com/4033090/136762999-5a7f377b-4136-4205-9fe0-83728c90cb9b.png "Tiled")](https://www.mapeditor.org)
+ [![Cordova](https://user-images.githubusercontent.com/4033090/136763147-6d157ce6-6921-437e-bb8f-0287b86109da.png "Cordova")](https://cordova.apache.org)
+
+Tools integration and usage with melonJS is documented in our [Wiki](https://github.com/melonjs/melonJS/wiki).
+
 
 Using melonJS
 -------------------------------------------------------------------------------
