@@ -2892,7 +2892,7 @@ export class GUI_Object {
      * function callback for the pointerdown event
      * @ignore
      */
-    clicked(event: any): any;
+    clicked(event: any): boolean;
     /**
      * function called when the object is pressed <br>
      * to be extended <br>
@@ -2908,7 +2908,7 @@ export class GUI_Object {
      * function callback for the pointerEnter event
      * @ignore
      */
-    enter(event: any): any;
+    enter(event: any): void;
     /**
      * function called when the pointer is over the object
      * @name onOver
@@ -2922,7 +2922,7 @@ export class GUI_Object {
      * function callback for the pointerLeave event
      * @ignore
      */
-    leave(event: any): any;
+    leave(event: any): void;
     /**
      * function called when the pointer is leaving the object area
      * @name onOut
@@ -2936,7 +2936,7 @@ export class GUI_Object {
      * function callback for the pointerup event
      * @ignore
      */
-    release(event: any): any;
+    release(event: any): boolean;
     /**
      * function called when the object is pressed and released <br>
      * to be extended <br>
@@ -4957,10 +4957,10 @@ export class Polygon {
  * @param {Number} [level] deepth level, required for subnodes
  */
 export class QuadTree {
-    constructor(bounds: any, max_objects: any, max_levels: any, level: any);
-    max_objects: any;
-    max_levels: any;
-    level: any;
+    constructor(bounds: any, max_objects?: number, max_levels?: number, level?: number);
+    max_objects: number;
+    max_levels: number;
+    level: number;
     bounds: any;
     objects: any[];
     nodes: any[];
@@ -9214,72 +9214,6 @@ export namespace collision {
         const ALL_OBJECT: number;
     }
     const response: any;
-    /**
-     * Checks if the specified object collides with others
-     * @name check
-     * @memberOf me.collision
-     * @public
-     * @function
-     * @param {me.Renderable} obj object to be tested for collision
-     * @param {me.collision.ResponseObject} [respObj=me.collision.response] a user defined response object that will be populated if they intersect.
-     * @return {Boolean} in case of collision, false otherwise
-     * @example
-     * update : function (dt) {
-     *    // ...
-     *
-     *    // handle collisions against other shapes
-     *    me.collision.check(this);
-     *
-     *    // ...
-     * },
-     *
-     * // colision handler
-     * onCollision : function (response) {
-     *     if (response.b.body.collisionType === me.collision.types.ENEMY_OBJECT) {
-     *         // makes the other object solid, by substracting the overlap vector to the current position
-     *         this.pos.sub(response.overlapV);
-     *         this.hurt();
-     *         // not solid
-     *         return false;
-     *     }
-     *     // Make the object solid
-     *     return true;
-     * },
-     */
-    function check(objA: any, responseObject: any): boolean;
-    /**
-     * Checks if the specified object collides with others
-     * @name check
-     * @memberOf me.collision
-     * @public
-     * @function
-     * @param {me.Renderable} obj object to be tested for collision
-     * @param {me.collision.ResponseObject} [respObj=me.collision.response] a user defined response object that will be populated if they intersect.
-     * @return {Boolean} in case of collision, false otherwise
-     * @example
-     * update : function (dt) {
-     *    // ...
-     *
-     *    // handle collisions against other shapes
-     *    me.collision.check(this);
-     *
-     *    // ...
-     * },
-     *
-     * // colision handler
-     * onCollision : function (response) {
-     *     if (response.b.body.collisionType === me.collision.types.ENEMY_OBJECT) {
-     *         // makes the other object solid, by substracting the overlap vector to the current position
-     *         this.pos.sub(response.overlapV);
-     *         this.hurt();
-     *         // not solid
-     *         return false;
-     *     }
-     *     // Make the object solid
-     *     return true;
-     * },
-     */
-    function check(objA: any, responseObject: any): boolean;
     /**
      * Checks for object colliding with the given line
      * @name rayCast
