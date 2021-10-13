@@ -1,6 +1,5 @@
 import Vector2d from "./../math/vector2.js";
 import * as event from "./../system/event.js";
-import Body from "./body.js";
 import QuadTree from "./quadtree.js";
 import Container from "./../renderable/container.js";
 import collision from "./collision.js";

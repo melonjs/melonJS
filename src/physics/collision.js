@@ -1,6 +1,5 @@
 import Vector2d from "./../math/vector2.js";
 import { rayCast } from "./detector.js";
-import { world } from "./../game.js";
 
 /**
  * Collision detection (and projection-based collision response) of 2D shapes.<br>
@@ -8,26 +7,6 @@ import { world } from "./../game.js";
  * @namespace collision
  * @memberOf me
  */
-
-/**
- * a callback used to determine if two objects should collide (based on both respective objects collision mask and type).<br>
- * you can redefine this function if you need any specific rules over what should collide with what.
- * @name shouldCollide
- * @memberOf me.collision
- * @ignore
- * @function
- * @param {me.Renderable} a a reference to the object A.
- * @param {me.Renderable} b a reference to the object B.
- * @return {Boolean} true if they should collide, false otherwise
- */
-function shouldCollide(a, b) {
-    return (
-        a.isKinematic !== true && b.isKinematic !== true &&
-        a.body && b.body &&
-        (a.body.collisionMask & b.body.collisionType) !== 0 &&
-        (a.body.collisionType & b.body.collisionMask) !== 0
-    );
-}
 
 /**
  * @classdesc
