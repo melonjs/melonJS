@@ -4,6 +4,7 @@ import Body from "./body.js";
 import QuadTree from "./quadtree.js";
 import Container from "./../renderable/container.js";
 import collision from "./collision.js";
+import { collisionCheck } from "./detector.js";
 import state from "./../state/state.js";
 
 /**
@@ -175,7 +176,7 @@ class World extends Container {
                         ancestor.isDirty = true;
                     };
                     // handle collisions against other objects
-                    collision.check(ancestor);
+                    collisionCheck(ancestor);
                 }
             }
         });
