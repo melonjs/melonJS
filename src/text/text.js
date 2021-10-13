@@ -421,7 +421,7 @@ class Text extends Renderable {
      * @param {Number} y
      */
     drawStroke(renderer, text, x, y) {
-        this.draw.call(this, renderer, text, x, y, true);
+        this.draw(renderer, text, x, y, true);
     }
 
     /**

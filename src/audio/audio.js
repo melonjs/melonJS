@@ -253,7 +253,7 @@ export function fade(sound_name, from, to, duration, id) {
 export function seek(sound_name, ...args) {
     var sound = audioTracks[sound_name];
     if (sound && typeof sound !== "undefined") {
-        return sound.seek.call(sound, ...args);
+        return sound.seek(...args);
     } else {
         throw new Error("audio clip " + sound_name + " does not exist");
     }
@@ -275,7 +275,7 @@ export function seek(sound_name, ...args) {
 export function rate(sound_name, ...args) {
     var sound = audioTracks[sound_name];
     if (sound && typeof sound !== "undefined") {
-        return sound.rate.call(sound, ...args);
+        return sound.rate(...args);
     } else {
         throw new Error("audio clip " + sound_name + " does not exist");
     }

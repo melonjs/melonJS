@@ -136,7 +136,7 @@ class GUI_Object extends Sprite {
                 this.holdTimeout = timer.setTimeout(this.hold.bind(this), this.holdThreshold, false);
                 this.released = false;
             }
-            return this.onClick.call(this, event);
+            return this.onClick(event);
         }
     }
 
@@ -160,7 +160,7 @@ class GUI_Object extends Sprite {
      */
     enter(event) {
         this.hover = true;
-        return this.onOver.call(this, event);
+        return this.onOver(event);
     }
 
     /**
@@ -179,8 +179,8 @@ class GUI_Object extends Sprite {
      */
     leave(event) {
         this.hover = false;
-        this.release.call(this, event);
-        return this.onOut.call(this, event);
+        this.release(event);
+        return this.onOut(event);
     }
 
     /**
@@ -192,7 +192,7 @@ class GUI_Object extends Sprite {
      * @param {Event} event the event object
      */
     onOut(/* event */) {
-        
+
     }
 
     /**
@@ -203,7 +203,7 @@ class GUI_Object extends Sprite {
         if (this.released === false) {
             this.released = true;
             timer.clearTimeout(this.holdTimeout);
-            return this.onRelease.call(this, event);
+            return this.onRelease(event);
         }
     }
 
@@ -228,7 +228,7 @@ class GUI_Object extends Sprite {
     hold() {
         timer.clearTimeout(this.holdTimeout);
         if (!this.released) {
-            this.onHold.call(this);
+            this.onHold();
         }
     }
 
