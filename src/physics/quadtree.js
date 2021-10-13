@@ -21,13 +21,13 @@ var QT_ARRAY = [];
  * or create a new one if the array is empty
  * @ignore
  */
-function QT_ARRAY_POP(bounds, max_objects, max_levels, level) {
+function QT_ARRAY_POP(bounds, max_objects = 4, max_levels = 4, level = 0) {
     if (QT_ARRAY.length > 0) {
         var _qt =  QT_ARRAY.pop();
         _qt.bounds = bounds;
-        _qt.max_objects = max_objects || 4;
-        _qt.max_levels  = max_levels || 4;
-        _qt.level = level || 0;
+        _qt.max_objects = max_objects;
+        _qt.max_levels  = max_levels;
+        _qt.level = level;
         return _qt;
     } else {
         return new QuadTree(bounds, max_objects, max_levels, level);
@@ -63,11 +63,11 @@ var QT_VECTOR = new Vector2d();
  */
 class QuadTree {
 
-    constructor(bounds, max_objects, max_levels, level) {
-        this.max_objects = max_objects || 4;
-        this.max_levels  = max_levels || 4;
+    constructor(bounds, max_objects = 4, max_levels = 4, level = 0) {
+        this.max_objects = max_objects;
+        this.max_levels  = max_levels;
 
-        this.level = level || 0;
+        this.level = level;
         this.bounds = bounds;
 
         this.objects = [];

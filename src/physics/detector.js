@@ -137,9 +137,8 @@ export function collisionCheck(objA, response = collision.response) {
  *        // ...
  *    }
  */
-export function rayCast(line, resultArray) {
+export function rayCast(line, result = []) {
     var collision = 0;
-    var result = resultArray || [];
 
     // retrieve a list of potential colliding objects from the game world
     var candidates = world.broadphase.retrieve(line);
