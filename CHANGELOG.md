@@ -6,18 +6,21 @@
 - melonJS is now a pure ES6 library, for class definition, inheritance and semantic
 - melonJS now includes typescript definition for the ESM bundle (`melonjs.module.d.ts`)
 - Core : new `me.event.BOOT` event that will be triggered when melonJS is initialized
+- Physic : physic bodies can now be configured as static bodies (which do not move automatically and do not check for collision with others)
 
 ### Changed
 - Jay Inheritance has been replaced with ES6 standard inheritance
-- Core: object using the pooling function *must* now implement a `onResetEvent` method and use the `recycling` flag when registered
+- Core : object using the pooling function *must* now implement a `onResetEvent` method and use the `recycling` flag when registered
 - Core : manually pushing a non recyclable object into the object pool will now throw an exception instead of silently failing
+- Physic : physic body update and collision check is now automatically done through the world simulation update loop
+- Physic : fixed gravitational acceleration (thanks @neilsf)
 
 ### Deprecated
 - all deprecated API from the legacy melonJS version have been removed
 
 ### Fixed
 - Renderer: fix the stencil masking feature on renderable components (for both WebGL and Canvas mode)
-- Loader: fix a graphic glitch in the default preloading screen 
+- Loader: fix a graphic glitch in the default preloading screen
 
 ## [9.1.2] - _2021-10-03_
 

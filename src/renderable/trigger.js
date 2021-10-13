@@ -76,6 +76,9 @@ class Trigger extends Renderable {
         // physic body to check for collision against
         this.body = new Body(this, settings.shapes || new Rect(0, 0, this.width, this.height));
         this.body.collisionType = collision.types.ACTION_OBJECT;
+        // by default only collides with PLAYER_OBJECT
+        this.body.setCollisionMask(collision.types.PLAYER_OBJECT);
+        this.body.setStatic(true);
         this.resize(this.body.getBounds().width, this.body.getBounds().height);
     }
 

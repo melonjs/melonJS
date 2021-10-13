@@ -523,6 +523,7 @@ export default class TMXTileMap {
                     // check if a me.Tile object is embedded
                     obj = settings.tile.getRenderable(settings);
                     obj.body = new Body(obj, settings.shapes || new Rect(0, 0, this.width, this.height));
+                    obj.body.setStatic(true);
                     // set the obj z order
                     obj.pos.setMuted(settings.x, settings.y, settings.z);
                 } else {
@@ -545,6 +546,7 @@ export default class TMXTileMap {
                         obj.type = settings.type;
                         obj.id = settings.id;
                         obj.body = new Body(obj, settings.shapes || new Rect(0, 0, obj.width, obj.height));
+                        obj.body.setStatic(true);
                         obj.resize(obj.body.getBounds().width, obj.body.getBounds().height);
                     }
                     // set the obj z order

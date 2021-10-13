@@ -4,6 +4,7 @@ import * as event from "./../system/event.js";
 import pool from "./../system/pooling.js";
 import state from "./../state/state.js";
 import Renderable from "./renderable.js";
+import Body from "./../physics/body.js";
 
 /**
  * Private function to re-use for object removal in a defer
@@ -229,6 +230,12 @@ class Container extends Renderable {
         if (this.enableChildBoundsUpdate) {
             this.updateBounds(true);
         }
+
+        // if a physic body is defined, add it to the game world
+        if (child.body instanceof Body) {
+            game.world.addBody(child.body);
+        }
+
         // triggered callback if defined
         this.onChildChange.call(this, this.getChildren().length - 1);
 
@@ -275,6 +282,12 @@ class Container extends Renderable {
             if (this.enableChildBoundsUpdate) {
                 this.updateBounds(true);
             }
+
+            // if a physic body is defined, add it to the game world
+            if (child.body instanceof Body) {
+                game.world.addBody(child.body);
+            }
+
             // triggered callback if defined
             this.onChildChange.call(this, index);
 
@@ -652,6 +665,12 @@ class Container extends Renderable {
                 child.onDeactivateEvent();
             }
 
+            // remove the body first to avoid a condition where a body can be detached
+            // from its parent, before the body is removed from the game world
+            if (child.body instanceof Body) {
+                game.world.removeBody(child.body);
+            }
+
             if (!keepalive) {
                 // attempt at recycling the object
                 if (pool.push(child, false) === false ) {
@@ -679,6 +698,7 @@ class Container extends Renderable {
             if (this.enableChildBoundsUpdate) {
                 this.updateBounds(true);
             }
+
             // triggered callback if defined
             this.onChildChange.call(this, childIndex);
         }
@@ -866,14 +886,10 @@ class Container extends Renderable {
      * @ignore
      */
     update(dt) {
-        // call the parent method
-        super.update(dt);
-
-        var isDirty = false;
         var isFloating = false;
         var isPaused = state.isPaused();
-
         var children = this.getChildren();
+
         for (var i = children.length, obj; i--, (obj = children[i]);) {
             if (isPaused && (!obj.updateWhenPaused)) {
                 // skip this object
@@ -896,7 +912,7 @@ class Container extends Renderable {
                 });
 
                 // update our object
-                isDirty = ((obj.inViewport || obj.alwaysUpdate) && obj.update(dt)) || isDirty;
+                this.isDirty |= ((obj.inViewport || obj.alwaysUpdate) && obj.update(dt));
 
                 if (globalFloatingCounter > 0) {
                     globalFloatingCounter--;
@@ -904,11 +920,12 @@ class Container extends Renderable {
             }
             else {
                 // just directly call update() for non renderable object
-                isDirty = obj.update(dt) || isDirty;
+                this.isDirty |= obj.update(dt);
             }
         }
 
-        return isDirty;
+        // call the parent method
+        return super.update(dt);
     }
 
     /**

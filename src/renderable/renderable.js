@@ -70,9 +70,10 @@ class Renderable extends Rect {
          *          this.body = new me.Body(this);
          *          // add a default collision shape
          *          this.body.addShape(new me.Rect(0, 0, this.width, this.height));
-         *          // configure max speed and friction
+         *          // configure max speed, friction, and initial force to be applied
          *          this.body.setMaxVelocity(3, 15);
          *          this.body.setFriction(0.4, 0);
+         *          this.body.force.set(3, 0);
          *
          *          // set the display to follow our position on both axis
          *          me.game.viewport.follow(this.pos, me.game.viewport.AXIS.BOTH);
@@ -778,6 +779,33 @@ class Renderable extends Rect {
 
         // reset the dirty flag
         this.isDirty = false;
+    }
+
+    /**
+     * onCollision callback, triggered in case of collision,
+     * when this renderable body is colliding with another one
+     * @name onCollision
+     * @memberOf me.Renderable.prototype
+     * @function
+     * @param {me.collision.ResponseObject} response the collision response object
+     * @param {me.Renderable} other the other renderable touching this one (a reference to response.a or response.b)
+     * @return {Boolean} true if the object should respond to the collision (its position and velocity will be corrected)
+     * @example
+     * // colision handler
+     * onCollision(response) {
+     *     if (response.b.body.collisionType === me.collision.types.ENEMY_OBJECT) {
+     *         // makes the other object solid, by substracting the overlap vector to the current position
+     *         this.pos.sub(response.overlapV);
+     *         this.hurt();
+     *         // not solid
+     *         return false;
+     *     }
+     *     // Make the object solid
+     *     return true;
+     * },
+     */
+    onCollision() {
+        return false;
     }
 
     /**

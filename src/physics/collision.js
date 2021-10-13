@@ -65,6 +65,26 @@ class ResponseObject {
 }
 
 /**
+ * a callback used to determine if two objects should collide (based on both respective objects collision mask and type).<br>
+ * you can redefine this function if you need any specific rules over what should collide with what.
+ * @name shouldCollide
+ * @memberOf me.collision
+ * @ignore
+ * @function
+ * @param {me.Renderable} a a reference to the object A.
+ * @param {me.Renderable} b a reference to the object B.
+ * @return {Boolean} true if they should collide, false otherwise
+ */
+function shouldCollide(a, b) {
+    return (
+        a.isKinematic !== true && b.isKinematic !== true &&
+        a.body && b.body &&
+        (a.body.collisionMask & b.body.collisionType) !== 0 &&
+        (a.body.collisionType & b.body.collisionMask) !== 0
+    );
+}
+
+/**
  * A singleton for managing collision detection (and projection-based collision response) of 2D shapes.<br>
  * Based on the Separating Axis Theorem and supports detecting collisions between simple Axis-Aligned Boxes, convex polygons and circles based shapes.
  * @namespace me.collision
@@ -169,26 +189,6 @@ var collision = {
     response : new ResponseObject(),
 
     /**
-     * a callback used to determine if two objects should collide (based on both respective objects collision mask and type).<br>
-     * you can redefine this function if you need any specific rules over what should collide with what.
-     * @name shouldCollide
-     * @memberOf me.collision
-     * @public
-     * @function
-     * @param {me.Renderable} a a reference to the object A.
-     * @param {me.Renderable} b a reference to the object B.
-     * @return {Boolean} true if they should collide, false otherwise
-     */
-    shouldCollide(a, b) {
-        return (
-            a.isKinematic !== true && b.isKinematic !== true &&
-            a.body && b.body &&
-            (a.body.collisionMask & b.body.collisionType) !== 0 &&
-            (a.body.collisionType & b.body.collisionMask) !== 0
-        );
-    },
-
-    /**
      * Checks if the specified object collides with others
      * @name check
      * @memberOf me.collision
@@ -230,7 +230,7 @@ var collision = {
         for (var i = candidates.length, objB; i--, (objB = candidates[i]);) {
 
             // check if both objects "should" collide
-            if ((objB !== objA) && this.shouldCollide(objA, objB) &&
+            if ((objB !== objA) && shouldCollide(objA, objB) &&
                 // fast AABB check if both bounding boxes are overlaping
                 objA.body.getBounds().overlaps(objB.body.getBounds())) {
 

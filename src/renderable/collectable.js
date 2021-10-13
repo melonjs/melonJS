@@ -31,6 +31,9 @@ class Collectable extends Sprite {
         // add and configure the physic body
         this.body = new Body(this, settings.shapes || new Rect(0, 0, this.width, this.height));
         this.body.collisionType = collision.types.COLLECTABLE_OBJECT;
+        // by default only collides with PLAYER_OBJECT
+        this.body.setCollisionMask(collision.types.PLAYER_OBJECT);
+        this.body.setStatic(true);
 
         // Update anchorPoint
         if (settings.anchorPoint) {

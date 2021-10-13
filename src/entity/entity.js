@@ -160,7 +160,7 @@ class Entity extends Renderable {
     /** @ignore */
     update(dt) {
         if (this.renderable) {
-            return this.renderable.update(dt);
+            this.isDirty |= this.renderable.update(dt);
         }
         return super.update(dt);
     }
@@ -252,19 +252,6 @@ class Entity extends Renderable {
         }
     }
 
-    /**
-     * onCollision callback<br>
-     * triggered in case of collision, when this entity body is being "touched" by another one<br>
-     * @name onCollision
-     * @memberOf me.Entity
-     * @function
-     * @param {me.collision.ResponseObject} response the collision response object
-     * @param {me.Entity} other the other entity touching this one (a reference to response.a or response.b)
-     * @return {Boolean} true if the object should respond to the collision (its position and velocity will be corrected)
-     */
-    onCollision() {
-        return false;
-    }
 };
 
 export default Entity;

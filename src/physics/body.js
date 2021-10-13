@@ -180,6 +180,19 @@ class Body {
         // cap by default to half the default gravity force
         this.maxVel.set(490, 490);
 
+
+        /**
+         * either this body is a static body or not
+         * @readonly
+         * @public
+         * @type Boolean
+         * @default false
+         * @name isStatic
+         * @memberOf me.Body
+         */
+        this.isStatic = false;
+
+
         /**
          * The degree to which this body is affected by the world gravity
          * @public
@@ -247,6 +260,19 @@ class Body {
 
         // automatically enable physic when a body is added to a renderable
         this.ancestor.isKinematic = false;
+    }
+
+    /**
+     * set the body as a static body
+     * static body do not move automatically and do not check againt collision with others
+     * @name setStatic
+     * @memberOf me.Body
+     * @public
+     * @function
+     * @param {Boolean} [isStatic=true]
+     */
+    setStatic(isStatic = true) {
+        this.isStatic = isStatic === true;
     }
 
     /**
@@ -662,69 +688,70 @@ class Body {
      * @param {Number} y vertical friction
      * @protected
      */
-    setFriction(x, y) {
-        this.friction.x = x || 0;
-        this.friction.y = y || 0;
-    }
-
-    /**
-     * apply friction to a vector
-     * @ignore
-     */
-    applyFriction(vel) {
-        var fx = this.friction.x * timer.tick,
-            nx = vel.x + fx,
-            x = vel.x - fx,
-            fy = this.friction.y * timer.tick,
-            ny = vel.y + fy,
-            y = vel.y - fy;
-
-        vel.x = (
-            (nx < 0) ? nx :
-            ( x > 0) ? x  : 0
-        );
-        vel.y = (
-            (ny < 0) ? ny :
-            ( y > 0) ? y  : 0
-        );
+    setFriction(x = 0, y = 0) {
+        this.friction.x = x;
+        this.friction.y = y;
     }
 
     /**
      * compute the new velocity value
      * @ignore
      */
-    computeVelocity(vel) {
-        // apply fore if defined
-        if (this.force.x) {
-            vel.x += this.force.x * timer.tick;
-        }
-        if (this.force.y) {
-            vel.y += this.force.y * timer.tick;
-        }
+    computeVelocity(/* dt */) {
+        // apply timer.tick to delta time for linear interpolation (when enabled)
+        // #761 add delta time in body update
+        var deltaTime = /* dt * */ timer.tick;
 
-        // apply friction
-        if (this.friction.x || this.friction.y) {
-            this.applyFriction(vel);
-        }
-
+        // apply gravity to the current velocity
         if (!this.ignoreGravity) {
             var worldGravity = world.gravity;
+
             // apply gravity if defined
-            vel.x += worldGravity.x * this.gravityScale * this.mass * timer.tick;
-            vel.y += worldGravity.y * this.gravityScale * this.mass * timer.tick;
+            this.vel.x += worldGravity.x * this.gravityScale * deltaTime;
+            this.vel.y += worldGravity.y * this.gravityScale * deltaTime;
+
             // check if falling / jumping
-            this.falling = (vel.y * Math.sign(worldGravity.y * this.gravityScale)) > 0;
+            this.falling = (this.vel.y * Math.sign(worldGravity.y * this.gravityScale)) > 0;
             this.jumping = (this.falling ? false : this.jumping);
         }
 
-        // cap velocity
-        if (vel.y !== 0) {
-            vel.y = clamp(vel.y, -this.maxVel.y, this.maxVel.y);
+        // apply force if defined
+        if (this.force.x !== 0) {
+            this.vel.x += this.force.x * deltaTime;
         }
-        if (vel.x !== 0) {
-            vel.x = clamp(vel.x, -this.maxVel.x, this.maxVel.x);
+        if (this.force.y !== 0) {
+            this.vel.y += this.force.y * deltaTime;
         }
 
+        // apply friction if defined
+        if (this.friction.x > 0) {
+            var fx = this.friction.x * deltaTime,
+                nx = this.vel.x + fx,
+                x = this.vel.x - fx;
+
+            this.vel.x = (
+                (nx < 0) ? nx :
+                ( x > 0) ? x  : 0
+            );
+        }
+        if (this.friction.y > 0) {
+            var fy = this.friction.y * deltaTime,
+                ny = this.vel.y + fy,
+                y = this.vel.y - fy;
+
+            this.vel.y = (
+                (ny < 0) ? ny :
+                ( y > 0) ? y  : 0
+            );
+        }
+
+        // cap velocity
+        if (this.vel.y !== 0) {
+            this.vel.y = clamp(this.vel.y, -this.maxVel.y, this.maxVel.y);
+        }
+        if (this.vel.x !== 0) {
+            this.vel.x = clamp(this.vel.x, -this.maxVel.x, this.maxVel.x);
+        }
     }
 
     /**
@@ -741,14 +768,15 @@ class Body {
      *
      * At this time a call to Body.Update does not call the onBodyUpdate callback that is listed in the init: function.
      * @name update
+     * @ignore
      * @memberOf me.Body
      * @function
      * @return {boolean} true if resulting velocity is different than 0
      * @see source code for me.Body.computeVelocity (private member)
      */
-    update(/* dt */) {
+    update(dt) {
         // update the velocity
-        this.computeVelocity(this.vel);
+        this.computeVelocity(dt);
 
         // update the body ancestor position
         this.ancestor.pos.add(this.vel);
@@ -765,6 +793,7 @@ class Body {
         this.onBodyUpdate = undefined;
         this.ancestor = undefined;
         this.bounds = undefined;
+        this.setStatic(false);
         this.shapes.length = 0;
     }
 };

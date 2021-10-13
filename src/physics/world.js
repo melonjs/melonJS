@@ -1,8 +1,10 @@
 import Vector2d from "./../math/vector2.js";
 import * as event from "./../system/event.js";
+import Body from "./body.js";
 import QuadTree from "./quadtree.js";
 import Container from "./../renderable/container.js";
 import collision from "./collision.js";
+import state from "./../state/state.js";
 
 /**
  * an object representing the physic world, and responsible for managing and updating all childs and physics
@@ -67,6 +69,15 @@ class World extends Container {
         this.preRender = false;
 
         /**
+         * the active physic bodies in this simulation
+         * @name bodies
+         * @memberOf me.World
+         * @public
+         * @type {Set}
+         */
+        this.bodies = new Set();
+
+        /**
          * the instance of the game world quadtree used for broadphase
          * @name broadphase
          * @memberOf me.World
@@ -98,8 +109,42 @@ class World extends Container {
         // reset the anchorPoint
         this.anchorPoint.set(0, 0);
 
-        // call the super constructor
+        // call the parent method
         super.reset();
+
+        // empty the list of active physic bodies
+        // Note: this should be empty already when calling the parent method
+        this.bodies.clear();
+    }
+
+    /**
+     * Add a physic body to the game world
+     * @name addBody
+     * @memberOf me.World
+     * @see me.Container.addChild
+     * @function
+     * @param {me.Body} body
+     * @return {me.World} this game world
+     */
+    addBody(body) {
+        //add it to the list of active body
+        this.bodies.add(body);
+        return this;
+    }
+
+    /**
+     * Remove a physic body from the game world
+     * @name removeBody
+     * @memberOf me.World
+     * @see me.Container.removeChild
+     * @function
+     * @param {me.Body} body
+     * @return {me.World} this game world
+     */
+    removeBody(body) {
+        //remove from the list of active body
+        this.bodies.delete(body);
+        return this;
     }
 
     /**
@@ -109,11 +154,31 @@ class World extends Container {
      * @function
      */
     update (dt) {
+        var isPaused = state.isPaused();
+
         // clear the quadtree
         this.broadphase.clear();
 
         // insert the world container (children) into the quadtree
         this.broadphase.insertContainer(this);
+
+        // iterate through all bodies
+        this.bodies.forEach((body) => {
+            if (!body.isStatic) {
+                var ancestor = body.ancestor;
+                // if the game is not paused, and ancestor can be updated
+                if (!(isPaused && (!ancestor.updateWhenPaused)) &&
+                   (ancestor.inViewport || ancestor.alwaysUpdate)) {
+                    // apply physics to the body (this moves it)
+                    if (body.update(dt) === true) {
+                        // mark ancestor as dirty
+                        ancestor.isDirty = true;
+                    };
+                    // handle collisions against other objects
+                    collision.check(ancestor);
+                }
+            }
+        });
 
         // call the super constructor
         return super.update(dt);
