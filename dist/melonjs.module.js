@@ -6929,6 +6929,3926 @@ var howler = {};
 })();
 }(howler));
 
+var earcut$2 = {exports: {}};
+
+earcut$2.exports = earcut;
+earcut$2.exports.default = earcut;
+
+function earcut(data, holeIndices, dim) {
+
+    dim = dim || 2;
+
+    var hasHoles = holeIndices && holeIndices.length,
+        outerLen = hasHoles ? holeIndices[0] * dim : data.length,
+        outerNode = linkedList(data, 0, outerLen, dim, true),
+        triangles = [];
+
+    if (!outerNode || outerNode.next === outerNode.prev) return triangles;
+
+    var minX, minY, maxX, maxY, x, y, invSize;
+
+    if (hasHoles) outerNode = eliminateHoles(data, holeIndices, outerNode, dim);
+
+    // if the shape is not too simple, we'll use z-order curve hash later; calculate polygon bbox
+    if (data.length > 80 * dim) {
+        minX = maxX = data[0];
+        minY = maxY = data[1];
+
+        for (var i = dim; i < outerLen; i += dim) {
+            x = data[i];
+            y = data[i + 1];
+            if (x < minX) minX = x;
+            if (y < minY) minY = y;
+            if (x > maxX) maxX = x;
+            if (y > maxY) maxY = y;
+        }
+
+        // minX, minY and invSize are later used to transform coords into integers for z-order calculation
+        invSize = Math.max(maxX - minX, maxY - minY);
+        invSize = invSize !== 0 ? 1 / invSize : 0;
+    }
+
+    earcutLinked(outerNode, triangles, dim, minX, minY, invSize);
+
+    return triangles;
+}
+
+// create a circular doubly linked list from polygon points in the specified winding order
+function linkedList(data, start, end, dim, clockwise) {
+    var i, last;
+
+    if (clockwise === (signedArea(data, start, end, dim) > 0)) {
+        for (i = start; i < end; i += dim) last = insertNode(i, data[i], data[i + 1], last);
+    } else {
+        for (i = end - dim; i >= start; i -= dim) last = insertNode(i, data[i], data[i + 1], last);
+    }
+
+    if (last && equals(last, last.next)) {
+        removeNode(last);
+        last = last.next;
+    }
+
+    return last;
+}
+
+// eliminate colinear or duplicate points
+function filterPoints(start, end) {
+    if (!start) return start;
+    if (!end) end = start;
+
+    var p = start,
+        again;
+    do {
+        again = false;
+
+        if (!p.steiner && (equals(p, p.next) || area(p.prev, p, p.next) === 0)) {
+            removeNode(p);
+            p = end = p.prev;
+            if (p === p.next) break;
+            again = true;
+
+        } else {
+            p = p.next;
+        }
+    } while (again || p !== end);
+
+    return end;
+}
+
+// main ear slicing loop which triangulates a polygon (given as a linked list)
+function earcutLinked(ear, triangles, dim, minX, minY, invSize, pass) {
+    if (!ear) return;
+
+    // interlink polygon nodes in z-order
+    if (!pass && invSize) indexCurve(ear, minX, minY, invSize);
+
+    var stop = ear,
+        prev, next;
+
+    // iterate through ears, slicing them one by one
+    while (ear.prev !== ear.next) {
+        prev = ear.prev;
+        next = ear.next;
+
+        if (invSize ? isEarHashed(ear, minX, minY, invSize) : isEar(ear)) {
+            // cut off the triangle
+            triangles.push(prev.i / dim);
+            triangles.push(ear.i / dim);
+            triangles.push(next.i / dim);
+
+            removeNode(ear);
+
+            // skipping the next vertex leads to less sliver triangles
+            ear = next.next;
+            stop = next.next;
+
+            continue;
+        }
+
+        ear = next;
+
+        // if we looped through the whole remaining polygon and can't find any more ears
+        if (ear === stop) {
+            // try filtering points and slicing again
+            if (!pass) {
+                earcutLinked(filterPoints(ear), triangles, dim, minX, minY, invSize, 1);
+
+            // if this didn't work, try curing all small self-intersections locally
+            } else if (pass === 1) {
+                ear = cureLocalIntersections(filterPoints(ear), triangles, dim);
+                earcutLinked(ear, triangles, dim, minX, minY, invSize, 2);
+
+            // as a last resort, try splitting the remaining polygon into two
+            } else if (pass === 2) {
+                splitEarcut(ear, triangles, dim, minX, minY, invSize);
+            }
+
+            break;
+        }
+    }
+}
+
+// check whether a polygon node forms a valid ear with adjacent nodes
+function isEar(ear) {
+    var a = ear.prev,
+        b = ear,
+        c = ear.next;
+
+    if (area(a, b, c) >= 0) return false; // reflex, can't be an ear
+
+    // now make sure we don't have other points inside the potential ear
+    var p = ear.next.next;
+
+    while (p !== ear.prev) {
+        if (pointInTriangle(a.x, a.y, b.x, b.y, c.x, c.y, p.x, p.y) &&
+            area(p.prev, p, p.next) >= 0) return false;
+        p = p.next;
+    }
+
+    return true;
+}
+
+function isEarHashed(ear, minX, minY, invSize) {
+    var a = ear.prev,
+        b = ear,
+        c = ear.next;
+
+    if (area(a, b, c) >= 0) return false; // reflex, can't be an ear
+
+    // triangle bbox; min & max are calculated like this for speed
+    var minTX = a.x < b.x ? (a.x < c.x ? a.x : c.x) : (b.x < c.x ? b.x : c.x),
+        minTY = a.y < b.y ? (a.y < c.y ? a.y : c.y) : (b.y < c.y ? b.y : c.y),
+        maxTX = a.x > b.x ? (a.x > c.x ? a.x : c.x) : (b.x > c.x ? b.x : c.x),
+        maxTY = a.y > b.y ? (a.y > c.y ? a.y : c.y) : (b.y > c.y ? b.y : c.y);
+
+    // z-order range for the current triangle bbox;
+    var minZ = zOrder(minTX, minTY, minX, minY, invSize),
+        maxZ = zOrder(maxTX, maxTY, minX, minY, invSize);
+
+    var p = ear.prevZ,
+        n = ear.nextZ;
+
+    // look for points inside the triangle in both directions
+    while (p && p.z >= minZ && n && n.z <= maxZ) {
+        if (p !== ear.prev && p !== ear.next &&
+            pointInTriangle(a.x, a.y, b.x, b.y, c.x, c.y, p.x, p.y) &&
+            area(p.prev, p, p.next) >= 0) return false;
+        p = p.prevZ;
+
+        if (n !== ear.prev && n !== ear.next &&
+            pointInTriangle(a.x, a.y, b.x, b.y, c.x, c.y, n.x, n.y) &&
+            area(n.prev, n, n.next) >= 0) return false;
+        n = n.nextZ;
+    }
+
+    // look for remaining points in decreasing z-order
+    while (p && p.z >= minZ) {
+        if (p !== ear.prev && p !== ear.next &&
+            pointInTriangle(a.x, a.y, b.x, b.y, c.x, c.y, p.x, p.y) &&
+            area(p.prev, p, p.next) >= 0) return false;
+        p = p.prevZ;
+    }
+
+    // look for remaining points in increasing z-order
+    while (n && n.z <= maxZ) {
+        if (n !== ear.prev && n !== ear.next &&
+            pointInTriangle(a.x, a.y, b.x, b.y, c.x, c.y, n.x, n.y) &&
+            area(n.prev, n, n.next) >= 0) return false;
+        n = n.nextZ;
+    }
+
+    return true;
+}
+
+// go through all polygon nodes and cure small local self-intersections
+function cureLocalIntersections(start, triangles, dim) {
+    var p = start;
+    do {
+        var a = p.prev,
+            b = p.next.next;
+
+        if (!equals(a, b) && intersects(a, p, p.next, b) && locallyInside(a, b) && locallyInside(b, a)) {
+
+            triangles.push(a.i / dim);
+            triangles.push(p.i / dim);
+            triangles.push(b.i / dim);
+
+            // remove two nodes involved
+            removeNode(p);
+            removeNode(p.next);
+
+            p = start = b;
+        }
+        p = p.next;
+    } while (p !== start);
+
+    return filterPoints(p);
+}
+
+// try splitting polygon into two and triangulate them independently
+function splitEarcut(start, triangles, dim, minX, minY, invSize) {
+    // look for a valid diagonal that divides the polygon into two
+    var a = start;
+    do {
+        var b = a.next.next;
+        while (b !== a.prev) {
+            if (a.i !== b.i && isValidDiagonal(a, b)) {
+                // split the polygon in two by the diagonal
+                var c = splitPolygon(a, b);
+
+                // filter colinear points around the cuts
+                a = filterPoints(a, a.next);
+                c = filterPoints(c, c.next);
+
+                // run earcut on each half
+                earcutLinked(a, triangles, dim, minX, minY, invSize);
+                earcutLinked(c, triangles, dim, minX, minY, invSize);
+                return;
+            }
+            b = b.next;
+        }
+        a = a.next;
+    } while (a !== start);
+}
+
+// link every hole into the outer loop, producing a single-ring polygon without holes
+function eliminateHoles(data, holeIndices, outerNode, dim) {
+    var queue = [],
+        i, len, start, end, list;
+
+    for (i = 0, len = holeIndices.length; i < len; i++) {
+        start = holeIndices[i] * dim;
+        end = i < len - 1 ? holeIndices[i + 1] * dim : data.length;
+        list = linkedList(data, start, end, dim, false);
+        if (list === list.next) list.steiner = true;
+        queue.push(getLeftmost(list));
+    }
+
+    queue.sort(compareX);
+
+    // process holes from left to right
+    for (i = 0; i < queue.length; i++) {
+        outerNode = eliminateHole(queue[i], outerNode);
+        outerNode = filterPoints(outerNode, outerNode.next);
+    }
+
+    return outerNode;
+}
+
+function compareX(a, b) {
+    return a.x - b.x;
+}
+
+// find a bridge between vertices that connects hole with an outer ring and and link it
+function eliminateHole(hole, outerNode) {
+    var bridge = findHoleBridge(hole, outerNode);
+    if (!bridge) {
+        return outerNode;
+    }
+
+    var bridgeReverse = splitPolygon(bridge, hole);
+
+    // filter collinear points around the cuts
+    var filteredBridge = filterPoints(bridge, bridge.next);
+    filterPoints(bridgeReverse, bridgeReverse.next);
+
+    // Check if input node was removed by the filtering
+    return outerNode === bridge ? filteredBridge : outerNode;
+}
+
+// David Eberly's algorithm for finding a bridge between hole and outer polygon
+function findHoleBridge(hole, outerNode) {
+    var p = outerNode,
+        hx = hole.x,
+        hy = hole.y,
+        qx = -Infinity,
+        m;
+
+    // find a segment intersected by a ray from the hole's leftmost point to the left;
+    // segment's endpoint with lesser x will be potential connection point
+    do {
+        if (hy <= p.y && hy >= p.next.y && p.next.y !== p.y) {
+            var x = p.x + (hy - p.y) * (p.next.x - p.x) / (p.next.y - p.y);
+            if (x <= hx && x > qx) {
+                qx = x;
+                if (x === hx) {
+                    if (hy === p.y) return p;
+                    if (hy === p.next.y) return p.next;
+                }
+                m = p.x < p.next.x ? p : p.next;
+            }
+        }
+        p = p.next;
+    } while (p !== outerNode);
+
+    if (!m) return null;
+
+    if (hx === qx) return m; // hole touches outer segment; pick leftmost endpoint
+
+    // look for points inside the triangle of hole point, segment intersection and endpoint;
+    // if there are no points found, we have a valid connection;
+    // otherwise choose the point of the minimum angle with the ray as connection point
+
+    var stop = m,
+        mx = m.x,
+        my = m.y,
+        tanMin = Infinity,
+        tan;
+
+    p = m;
+
+    do {
+        if (hx >= p.x && p.x >= mx && hx !== p.x &&
+                pointInTriangle(hy < my ? hx : qx, hy, mx, my, hy < my ? qx : hx, hy, p.x, p.y)) {
+
+            tan = Math.abs(hy - p.y) / (hx - p.x); // tangential
+
+            if (locallyInside(p, hole) &&
+                (tan < tanMin || (tan === tanMin && (p.x > m.x || (p.x === m.x && sectorContainsSector(m, p)))))) {
+                m = p;
+                tanMin = tan;
+            }
+        }
+
+        p = p.next;
+    } while (p !== stop);
+
+    return m;
+}
+
+// whether sector in vertex m contains sector in vertex p in the same coordinates
+function sectorContainsSector(m, p) {
+    return area(m.prev, m, p.prev) < 0 && area(p.next, m, m.next) < 0;
+}
+
+// interlink polygon nodes in z-order
+function indexCurve(start, minX, minY, invSize) {
+    var p = start;
+    do {
+        if (p.z === null) p.z = zOrder(p.x, p.y, minX, minY, invSize);
+        p.prevZ = p.prev;
+        p.nextZ = p.next;
+        p = p.next;
+    } while (p !== start);
+
+    p.prevZ.nextZ = null;
+    p.prevZ = null;
+
+    sortLinked(p);
+}
+
+// Simon Tatham's linked list merge sort algorithm
+// http://www.chiark.greenend.org.uk/~sgtatham/algorithms/listsort.html
+function sortLinked(list) {
+    var i, p, q, e, tail, numMerges, pSize, qSize,
+        inSize = 1;
+
+    do {
+        p = list;
+        list = null;
+        tail = null;
+        numMerges = 0;
+
+        while (p) {
+            numMerges++;
+            q = p;
+            pSize = 0;
+            for (i = 0; i < inSize; i++) {
+                pSize++;
+                q = q.nextZ;
+                if (!q) break;
+            }
+            qSize = inSize;
+
+            while (pSize > 0 || (qSize > 0 && q)) {
+
+                if (pSize !== 0 && (qSize === 0 || !q || p.z <= q.z)) {
+                    e = p;
+                    p = p.nextZ;
+                    pSize--;
+                } else {
+                    e = q;
+                    q = q.nextZ;
+                    qSize--;
+                }
+
+                if (tail) tail.nextZ = e;
+                else list = e;
+
+                e.prevZ = tail;
+                tail = e;
+            }
+
+            p = q;
+        }
+
+        tail.nextZ = null;
+        inSize *= 2;
+
+    } while (numMerges > 1);
+
+    return list;
+}
+
+// z-order of a point given coords and inverse of the longer side of data bbox
+function zOrder(x, y, minX, minY, invSize) {
+    // coords are transformed into non-negative 15-bit integer range
+    x = 32767 * (x - minX) * invSize;
+    y = 32767 * (y - minY) * invSize;
+
+    x = (x | (x << 8)) & 0x00FF00FF;
+    x = (x | (x << 4)) & 0x0F0F0F0F;
+    x = (x | (x << 2)) & 0x33333333;
+    x = (x | (x << 1)) & 0x55555555;
+
+    y = (y | (y << 8)) & 0x00FF00FF;
+    y = (y | (y << 4)) & 0x0F0F0F0F;
+    y = (y | (y << 2)) & 0x33333333;
+    y = (y | (y << 1)) & 0x55555555;
+
+    return x | (y << 1);
+}
+
+// find the leftmost node of a polygon ring
+function getLeftmost(start) {
+    var p = start,
+        leftmost = start;
+    do {
+        if (p.x < leftmost.x || (p.x === leftmost.x && p.y < leftmost.y)) leftmost = p;
+        p = p.next;
+    } while (p !== start);
+
+    return leftmost;
+}
+
+// check if a point lies within a convex triangle
+function pointInTriangle(ax, ay, bx, by, cx, cy, px, py) {
+    return (cx - px) * (ay - py) - (ax - px) * (cy - py) >= 0 &&
+           (ax - px) * (by - py) - (bx - px) * (ay - py) >= 0 &&
+           (bx - px) * (cy - py) - (cx - px) * (by - py) >= 0;
+}
+
+// check if a diagonal between two polygon nodes is valid (lies in polygon interior)
+function isValidDiagonal(a, b) {
+    return a.next.i !== b.i && a.prev.i !== b.i && !intersectsPolygon(a, b) && // dones't intersect other edges
+           (locallyInside(a, b) && locallyInside(b, a) && middleInside(a, b) && // locally visible
+            (area(a.prev, a, b.prev) || area(a, b.prev, b)) || // does not create opposite-facing sectors
+            equals(a, b) && area(a.prev, a, a.next) > 0 && area(b.prev, b, b.next) > 0); // special zero-length case
+}
+
+// signed area of a triangle
+function area(p, q, r) {
+    return (q.y - p.y) * (r.x - q.x) - (q.x - p.x) * (r.y - q.y);
+}
+
+// check if two points are equal
+function equals(p1, p2) {
+    return p1.x === p2.x && p1.y === p2.y;
+}
+
+// check if two segments intersect
+function intersects(p1, q1, p2, q2) {
+    var o1 = sign(area(p1, q1, p2));
+    var o2 = sign(area(p1, q1, q2));
+    var o3 = sign(area(p2, q2, p1));
+    var o4 = sign(area(p2, q2, q1));
+
+    if (o1 !== o2 && o3 !== o4) return true; // general case
+
+    if (o1 === 0 && onSegment(p1, p2, q1)) return true; // p1, q1 and p2 are collinear and p2 lies on p1q1
+    if (o2 === 0 && onSegment(p1, q2, q1)) return true; // p1, q1 and q2 are collinear and q2 lies on p1q1
+    if (o3 === 0 && onSegment(p2, p1, q2)) return true; // p2, q2 and p1 are collinear and p1 lies on p2q2
+    if (o4 === 0 && onSegment(p2, q1, q2)) return true; // p2, q2 and q1 are collinear and q1 lies on p2q2
+
+    return false;
+}
+
+// for collinear points p, q, r, check if point q lies on segment pr
+function onSegment(p, q, r) {
+    return q.x <= Math.max(p.x, r.x) && q.x >= Math.min(p.x, r.x) && q.y <= Math.max(p.y, r.y) && q.y >= Math.min(p.y, r.y);
+}
+
+function sign(num) {
+    return num > 0 ? 1 : num < 0 ? -1 : 0;
+}
+
+// check if a polygon diagonal intersects any polygon segments
+function intersectsPolygon(a, b) {
+    var p = a;
+    do {
+        if (p.i !== a.i && p.next.i !== a.i && p.i !== b.i && p.next.i !== b.i &&
+                intersects(p, p.next, a, b)) return true;
+        p = p.next;
+    } while (p !== a);
+
+    return false;
+}
+
+// check if a polygon diagonal is locally inside the polygon
+function locallyInside(a, b) {
+    return area(a.prev, a, a.next) < 0 ?
+        area(a, b, a.next) >= 0 && area(a, a.prev, b) >= 0 :
+        area(a, b, a.prev) < 0 || area(a, a.next, b) < 0;
+}
+
+// check if the middle point of a polygon diagonal is inside the polygon
+function middleInside(a, b) {
+    var p = a,
+        inside = false,
+        px = (a.x + b.x) / 2,
+        py = (a.y + b.y) / 2;
+    do {
+        if (((p.y > py) !== (p.next.y > py)) && p.next.y !== p.y &&
+                (px < (p.next.x - p.x) * (py - p.y) / (p.next.y - p.y) + p.x))
+            inside = !inside;
+        p = p.next;
+    } while (p !== a);
+
+    return inside;
+}
+
+// link two polygon vertices with a bridge; if the vertices belong to the same ring, it splits polygon into two;
+// if one belongs to the outer ring and another to a hole, it merges it into a single ring
+function splitPolygon(a, b) {
+    var a2 = new Node$1(a.i, a.x, a.y),
+        b2 = new Node$1(b.i, b.x, b.y),
+        an = a.next,
+        bp = b.prev;
+
+    a.next = b;
+    b.prev = a;
+
+    a2.next = an;
+    an.prev = a2;
+
+    b2.next = a2;
+    a2.prev = b2;
+
+    bp.next = b2;
+    b2.prev = bp;
+
+    return b2;
+}
+
+// create a node and optionally link it with previous one (in a circular doubly linked list)
+function insertNode(i, x, y, last) {
+    var p = new Node$1(i, x, y);
+
+    if (!last) {
+        p.prev = p;
+        p.next = p;
+
+    } else {
+        p.next = last.next;
+        p.prev = last;
+        last.next.prev = p;
+        last.next = p;
+    }
+    return p;
+}
+
+function removeNode(p) {
+    p.next.prev = p.prev;
+    p.prev.next = p.next;
+
+    if (p.prevZ) p.prevZ.nextZ = p.nextZ;
+    if (p.nextZ) p.nextZ.prevZ = p.prevZ;
+}
+
+function Node$1(i, x, y) {
+    // vertex index in coordinates array
+    this.i = i;
+
+    // vertex coordinates
+    this.x = x;
+    this.y = y;
+
+    // previous and next vertex nodes in a polygon ring
+    this.prev = null;
+    this.next = null;
+
+    // z-order curve value
+    this.z = null;
+
+    // previous and next nodes in z-order
+    this.prevZ = null;
+    this.nextZ = null;
+
+    // indicates whether this is a steiner point
+    this.steiner = false;
+}
+
+// return a percentage difference between the polygon area and its triangulation area;
+// used to verify correctness of triangulation
+earcut.deviation = function (data, holeIndices, dim, triangles) {
+    var hasHoles = holeIndices && holeIndices.length;
+    var outerLen = hasHoles ? holeIndices[0] * dim : data.length;
+
+    var polygonArea = Math.abs(signedArea(data, 0, outerLen, dim));
+    if (hasHoles) {
+        for (var i = 0, len = holeIndices.length; i < len; i++) {
+            var start = holeIndices[i] * dim;
+            var end = i < len - 1 ? holeIndices[i + 1] * dim : data.length;
+            polygonArea -= Math.abs(signedArea(data, start, end, dim));
+        }
+    }
+
+    var trianglesArea = 0;
+    for (i = 0; i < triangles.length; i += 3) {
+        var a = triangles[i] * dim;
+        var b = triangles[i + 1] * dim;
+        var c = triangles[i + 2] * dim;
+        trianglesArea += Math.abs(
+            (data[a] - data[c]) * (data[b + 1] - data[a + 1]) -
+            (data[a] - data[b]) * (data[c + 1] - data[a + 1]));
+    }
+
+    return polygonArea === 0 && trianglesArea === 0 ? 0 :
+        Math.abs((trianglesArea - polygonArea) / polygonArea);
+};
+
+function signedArea(data, start, end, dim) {
+    var sum = 0;
+    for (var i = start, j = end - dim; i < end; i += dim) {
+        sum += (data[j] - data[i]) * (data[i + 1] + data[j + 1]);
+        j = i;
+    }
+    return sum;
+}
+
+// turn a polygon in a multi-dimensional array form (e.g. as in GeoJSON) into a form Earcut accepts
+earcut.flatten = function (data) {
+    var dim = data[0][0].length,
+        result = {vertices: [], holes: [], dimensions: dim},
+        holeIndex = 0;
+
+    for (var i = 0; i < data.length; i++) {
+        for (var j = 0; j < data[i].length; j++) {
+            for (var d = 0; d < dim; d++) result.vertices.push(data[i][j][d]);
+        }
+        if (i > 0) {
+            holeIndex += data[i - 1].length;
+            result.holes.push(holeIndex);
+        }
+    }
+    return result;
+};
+
+var earcut$1 = earcut$2.exports;
+
+/**
+ * @classdesc
+ * a polygon Object.<br>
+ * Please do note that melonJS implements a simple Axis-Aligned Boxes collision algorithm, which requires all polygons used for collision to be convex with all vertices defined with clockwise winding.
+ * A polygon is convex when all line segments connecting two points in the interior do not cross any edge of the polygon
+ * (which means that all angles are less than 180 degrees), as described here below : <br>
+ * <center><img src="images/convex_polygon.png"/></center><br>
+ * A polygon's `winding` is clockwise iff its vertices (points) are declared turning to the right. The image above shows COUNTERCLOCKWISE winding.
+ * @class Polygon
+ * @memberOf me
+ * @constructor
+ * @param {Number} x origin point of the Polygon
+ * @param {Number} y origin point of the Polygon
+ * @param {me.Vector2d[]} points array of vector defining the Polygon
+ */
+
+class Polygon {
+
+    constructor(x, y, points) {
+        /**
+         * origin point of the Polygon
+         * @public
+         * @type {me.Vector2d}
+         * @name pos
+         * @memberof me.Polygon#
+         */
+        this.pos = new Vector2d();
+
+        /**
+         * The bounding rectangle for this shape
+         * @ignore
+         * @type {me.Bounds}
+         * @name _bounds
+         * @memberOf me.Polygon#
+         */
+        this._bounds;
+
+        /**
+         * Array of points defining the Polygon <br>
+         * Note: If you manually change `points`, you **must** call `recalc`afterwards so that the changes get applied correctly.
+         * @public
+         * @type {me.Vector2d[]}
+         * @name points
+         * @memberOf me.Polygon#
+         */
+        this.points = null;
+
+        /**
+         * The edges here are the direction of the `n`th edge of the polygon, relative to
+         * the `n`th point. If you want to draw a given edge from the edge value, you must
+         * first translate to the position of the starting point.
+         * @ignore
+         */
+        this.edges = [];
+
+        /**
+         * a list of indices for all vertices composing this polygon (@see earcut)
+         * @ignore
+         */
+        this.indices = [];
+
+        /**
+         * The normals here are the direction of the normal for the `n`th edge of the polygon, relative
+         * to the position of the `n`th point. If you want to draw an edge normal, you must first
+         * translate to the position of the starting point.
+         * @ignore
+         */
+        this.normals = [];
+
+        // the shape type
+        this.shapeType = "Polygon";
+        this.setShape(x, y, points);
+    }
+
+    /** @ignore */
+    onResetEvent(x, y, points) {
+        this.setShape(x, y, points);
+    }
+
+    /**
+     * set new value to the Polygon
+     * @name setShape
+     * @memberOf me.Polygon.prototype
+     * @function
+     * @param {Number} x position of the Polygon
+     * @param {Number} y position of the Polygon
+     * @param {me.Vector2d[]|Number[]} points array of vector or vertice defining the Polygon
+     */
+    setShape(x, y, points) {
+        this.pos.set(x, y);
+        this.setVertices(points);
+        return this;
+    }
+
+    /**
+     * set the vertices defining this Polygon
+     * @name setVertices
+     * @memberOf me.Polygon.prototype
+     * @function
+     * @param {me.Vector2d[]} points array of vector or vertice defining the Polygon
+     */
+    setVertices(vertices) {
+
+        if (!Array.isArray(vertices)) {
+            return this;
+        }
+
+        // convert given points to me.Vector2d if required
+        if (!(vertices[0] instanceof Vector2d)) {
+            var _points = this.points = [];
+
+            if (typeof vertices[0] === "object") {
+                // array of {x,y} object
+                vertices.forEach(function (vertice) {
+                   _points.push(new Vector2d(vertice.x, vertice.y));
+                });
+
+            } else {
+                // it's a flat array
+                for (var p = 0; p < vertices.length; p += 2) {
+                    _points.push(new Vector2d(vertices[p], vertices[p + 1]));
+                }
+            }
+        } else {
+            // array of me.Vector2d
+            this.points = vertices;
+        }
+
+        this.recalc();
+        this.updateBounds();
+        return this;
+    }
+
+    /**
+     * apply the given transformation matrix to this Polygon
+     * @name transform
+     * @memberOf me.Polygon.prototype
+     * @function
+     * @param {me.Matrix2d} matrix the transformation matrix
+     * @return {me.Polygon} Reference to this object for method chaining
+     */
+    transform(m) {
+        var points = this.points;
+        var len = points.length;
+        for (var i = 0; i < len; i++) {
+            m.apply(points[i]);
+        }
+        this.recalc();
+        this.updateBounds();
+        return this;
+    }
+
+    /**
+     * apply an isometric projection to this shape
+     * @name toIso
+     * @memberOf me.Polygon.prototype
+     * @function
+     * @return {me.Polygon} Reference to this object for method chaining
+     */
+    toIso() {
+        return this.rotate(Math.PI / 4).scale(Math.SQRT2, Math.SQRT1_2);
+    }
+
+    /**
+     * apply a 2d projection to this shape
+     * @name to2d
+     * @memberOf me.Polygon.prototype
+     * @function
+     * @return {me.Polygon} Reference to this object for method chaining
+     */
+    to2d() {
+        return this.scale(Math.SQRT1_2, Math.SQRT2).rotate(-Math.PI / 4);
+    }
+
+    /**
+     * Rotate this Polygon (counter-clockwise) by the specified angle (in radians).
+     * @name rotate
+     * @memberOf me.Polygon.prototype
+     * @function
+     * @param {Number} angle The angle to rotate (in radians)
+     * @param {me.Vector2d|me.ObservableVector2d} [v] an optional point to rotate around
+     * @return {me.Polygon} Reference to this object for method chaining
+     */
+    rotate(angle, v) {
+        if (angle !== 0) {
+            var points = this.points;
+            var len = points.length;
+            for (var i = 0; i < len; i++) {
+                points[i].rotate(angle, v);
+            }
+            this.recalc();
+            this.updateBounds();
+        }
+        return this;
+    }
+
+    /**
+     * Scale this Polygon by the given scalar.
+     * @name scale
+     * @memberOf me.Polygon.prototype
+     * @function
+     * @param {Number} x
+     * @param {Number} [y=x]
+     * @return {me.Polygon} Reference to this object for method chaining
+     */
+    scale(x, y) {
+        y = typeof (y) !== "undefined" ? y : x;
+
+        var points = this.points;
+        var len = points.length;
+        for (var i = 0; i < len; i++) {
+            points[i].scale(x, y);
+        }
+        this.recalc();
+        this.updateBounds();
+        return this;
+    }
+
+    /**
+     * Scale this Polygon by the given vector
+     * @name scaleV
+     * @memberOf me.Polygon.prototype
+     * @function
+     * @param {me.Vector2d} v
+     * @return {me.Polygon} Reference to this object for method chaining
+     */
+    scaleV(v) {
+        return this.scale(v.x, v.y);
+    }
+
+    /**
+     * Computes the calculated collision polygon.
+     * This **must** be called if the `points` array, `angle`, or `offset` is modified manually.
+     * @name recalc
+     * @memberOf me.Polygon.prototype
+     * @function
+     * @return {me.Polygon} Reference to this object for method chaining
+     */
+    recalc() {
+        var i;
+        var edges = this.edges;
+        var normals = this.normals;
+        var indices = this.indices;
+
+        // Copy the original points array and apply the offset/angle
+        var points = this.points;
+        var len = points.length;
+
+        if (len < 3) {
+            throw new Error("Requires at least 3 points");
+        }
+
+        // Calculate the edges/normals
+        for (i = 0; i < len; i++) {
+            if (edges[i] === undefined) {
+                edges[i] = new Vector2d();
+            }
+            edges[i].copy(points[(i + 1) % len]).sub(points[i]);
+
+            if (normals[i] === undefined) {
+                normals[i] = new Vector2d();
+            }
+            normals[i].copy(edges[i]).perp().normalize();
+        }
+        // trunc array
+        edges.length = len;
+        normals.length = len;
+        // do not do anything here, indices will be computed by
+        // toIndices if array is empty upon function call
+        indices.length = 0;
+
+        return this;
+    }
+
+    /**
+     * returns a list of indices for all triangles defined in this polygon
+     * @name getIndices
+     * @memberOf me.Polygon.prototype
+     * @function
+     * @return {Array} an array of vertex indices for all triangles forming this polygon.
+     */
+    getIndices() {
+        if (this.indices.length === 0) {
+            this.indices = earcut$1(this.points.flatMap(p => [p.x, p.y]));
+        }
+        return this.indices;
+    }
+
+    /**
+     * translate the Polygon by the specified offset
+     * @name translate
+     * @memberOf me.Polygon.prototype
+     * @function
+     * @param {Number} x x offset
+     * @param {Number} y y offset
+     * @return {me.Polygon} this Polygon
+     */
+    /**
+     * translate the Polygon by the specified vector
+     * @name translate
+     * @memberOf me.Polygon.prototype
+     * @function
+     * @param {me.Vector2d} v vector offset
+     * @return {me.Polygon} Reference to this object for method chaining
+     */
+    translate() {
+        var _x, _y;
+
+        if (arguments.length === 2) {
+            // x, y
+            _x = arguments[0];
+            _y = arguments[1];
+        } else {
+            // vector
+            _x = arguments[0].x;
+            _y = arguments[0].y;
+        }
+
+        this.pos.x += _x;
+        this.pos.y += _y;
+        this.getBounds().translate(_x, _y);
+
+        return this;
+    }
+
+    /**
+     * Shifts the Polygon to the given position vector.
+     * @name shift
+     * @memberOf me.Polygon
+     * @function
+     * @param {me.Vector2d} position
+     */
+    /**
+     * Shifts the Polygon to the given x, y position.
+     * @name shift
+     * @memberOf me.Polygon
+     * @function
+     * @param {Number} x
+     * @param {Number} y
+     */
+    shift() {
+        var _x, _y;
+        if (arguments.length === 2) {
+            // x, y
+            _x = arguments[0];
+            _y = arguments[1];
+        } else {
+            // vector
+            _x = arguments[0].x;
+            _y = arguments[0].y;
+        }
+        this.pos.x = _x;
+        this.pos.y = _y;
+        this.updateBounds();
+    }
+
+    /**
+     * Returns true if the polygon contains the given point.
+     * (Note: it is highly recommended to first do a hit test on the corresponding <br>
+     *  bounding rect, as the function can be highly consuming with complex shapes)
+     * @name contains
+     * @memberOf me.Polygon.prototype
+     * @function
+     * @param  {me.Vector2d} point
+     * @return {boolean} true if contains
+     */
+
+    /**
+     * Returns true if the polygon contains the given point. <br>
+     * (Note: it is highly recommended to first do a hit test on the corresponding <br>
+     *  bounding rect, as the function can be highly consuming with complex shapes)
+     * @name contains
+     * @memberOf me.Polygon.prototype
+     * @function
+     * @param  {Number} x x coordinate
+     * @param  {Number} y y coordinate
+     * @return {boolean} true if contains
+     */
+    contains() {
+        var _x, _y;
+
+        if (arguments.length === 2) {
+          // x, y
+          _x = arguments[0];
+          _y = arguments[1];
+        } else {
+          // vector
+          _x = arguments[0].x;
+          _y = arguments[0].y;
+        }
+
+        var intersects = false;
+        var posx = this.pos.x, posy = this.pos.y;
+        var points = this.points;
+        var len = points.length;
+
+        //http://www.ecse.rpi.edu/Homepages/wrf/Research/Short_Notes/pnpoly.html
+        for (var i = 0, j = len - 1; i < len; j = i++) {
+            var iy = points[i].y + posy, ix = points[i].x + posx,
+                jy = points[j].y + posy, jx = points[j].x + posx;
+            if (((iy > _y) !== (jy > _y)) && (_x < (jx - ix) * (_y - iy) / (jy - iy) + ix)) {
+                intersects = !intersects;
+            }
+        }
+        return intersects;
+    }
+
+    /**
+     * returns the bounding box for this shape, the smallest Rectangle object completely containing this shape.
+     * @name getBounds
+     * @memberOf me.Polygon.prototype
+     * @function
+     * @return {me.Bounds} this shape bounding box Rectangle object
+     */
+    getBounds() {
+        if (typeof this._bounds === "undefined") {
+            this._bounds = pool.pull("Bounds");
+        }
+        return this._bounds;
+    }
+
+    /**
+     * update the bounding box for this shape.
+     * @ignore
+     * @name updateBounds
+     * @memberOf me.Polygon.prototype
+     * @function
+     * @return {me.Bounds} this shape bounding box Rectangle object
+     */
+    updateBounds() {
+        var bounds = this.getBounds();
+
+        bounds.update(this.points);
+        bounds.translate(this.pos);
+
+        return bounds;
+    }
+
+    /**
+     * clone this Polygon
+     * @name clone
+     * @memberOf me.Polygon.prototype
+     * @function
+     * @return {me.Polygon} new Polygon
+     */
+    clone() {
+        var copy = [];
+        this.points.forEach(function (point) {
+            copy.push(point.clone());
+        });
+        return new Polygon(this.pos.x, this.pos.y, copy);
+    }
+}
+
+/**
+ * @classdesc
+ * a rectangle Object
+ * @class
+ * @extends me.Polygon
+ * @memberOf me
+ * @constructor
+ * @param {Number} x position of the Rectangle
+ * @param {Number} y position of the Rectangle
+ * @param {Number} w width of the rectangle
+ * @param {Number} h height of the rectangle
+ */
+
+class Rect extends Polygon {
+
+    constructor(x, y, w, h) {
+        // parent constructor
+        super(x, y, [
+            new Vector2d(0, 0), // 0, 0
+            new Vector2d(w, 0), // 1, 0
+            new Vector2d(w, h), // 1, 1
+            new Vector2d(0, h)  // 0, 1
+        ]);
+        this.shapeType = "Rectangle";
+    }
+
+    /** @ignore */
+    onResetEvent(x, y, w, h) {
+        this.setShape(x, y, w, h);
+    }
+
+    /**
+     * set new value to the rectangle shape
+     * @name setShape
+     * @memberOf me.Rect.prototype
+     * @function
+     * @param {Number} x position of the Rectangle
+     * @param {Number} y position of the Rectangle
+     * @param {Number|Array} w|points width of the rectangle, or an array of vector defining the rectangle
+     * @param {Number} [h] height of the rectangle, if a numeral width parameter is specified
+     * @return {me.Rect} this rectangle
+     */
+    setShape(x, y, w, h) {
+        var points = w; // assume w is an array by default
+
+        this.pos.set(x, y);
+
+        if (arguments.length === 4) {
+            points = this.points;
+            points[0].set(0, 0); // 0, 0
+            points[1].set(w, 0); // 1, 0
+            points[2].set(w, h); // 1, 1
+            points[3].set(0, h); // 0, 1
+        }
+
+        this.setVertices(points);
+        return this;
+    }
+
+
+    /**
+     * left coordinate of the Rectangle
+     * @public
+     * @type {Number}
+     * @name left
+     * @memberOf me.Rect
+     */
+
+    /**
+     * @ignore
+     */
+    get left() {
+        return this.pos.x;
+    }
+
+    /**
+     * right coordinate of the Rectangle
+     * @public
+     * @type {Number}
+     * @name right
+     * @memberOf me.Rect
+     */
+
+    /**
+     * @ignore
+     */
+    get right() {
+        var w = this.width;
+        return (this.pos.x + w) || w;
+    }
+
+    /**
+     * top coordinate of the Rectangle
+     * @public
+     * @type {Number}
+     * @name top
+     * @memberOf me.Rect
+     */
+
+    /**
+     * @ignore
+     */
+    get top() {
+        return this.pos.y;
+    }
+
+    /**
+     * bottom coordinate of the Rectangle
+     * @public
+     * @type {Number}
+     * @name bottom
+     * @memberOf me.Rect
+     */
+
+    /**
+     * @ignore
+     */
+    get bottom() {
+        var h = this.height;
+        return (this.pos.y + h) || h;
+    }
+
+    /**
+     * width of the Rectangle
+     * @public
+     * @type {Number}
+     * @name width
+     * @memberOf me.Rect
+     */
+
+    /**
+     * @ignore
+     */
+    get width() {
+        return this.points[2].x;
+    }
+    /**
+     * @ignore
+     */
+    set width(value) {
+        this.points[1].x = this.points[2].x = value;
+        this.recalc();
+        this.updateBounds();
+    }
+
+    /**
+     * height of the Rectangle
+     * @public
+     * @type {Number}
+     * @name height
+     * @memberOf me.Rect
+     */
+
+    /**
+     * @ignore
+     */
+    get height() {
+        return this.points[2].y;
+    }
+    /**
+     * @ignore
+     */
+    set height(value) {
+        this.points[2].y = this.points[3].y = value;
+        this.recalc();
+        this.updateBounds();
+    }
+
+    /**
+     * absolute center of this rectangle on the horizontal axis
+     * @public
+     * @type {Number}
+     * @name centerX
+     * @memberOf me.Rect
+     */
+
+    /**
+     * @ignore
+     */
+    get centerX() {
+        if (isFinite(this.width)) {
+            return this.pos.x + (this.width / 2);
+        } else {
+            return this.width;
+        }
+    }
+
+    /**
+     * @ignore
+     */
+    set centerX (value) {
+        this.pos.x = value - (this.width / 2);
+    }
+
+    /**
+     * absolute center of this rectangle on the vertical axis
+     * @public
+     * @type {Number}
+     * @name centerY
+     * @memberOf me.Rect
+     */
+
+    /**
+     * @ignore
+     */
+    get centerY() {
+        if (isFinite(this.height)) {
+            return this.pos.y + (this.height / 2);
+        } else {
+            return this.height;
+        }
+    }
+
+    /**
+     * @ignore
+     */
+    set centerY(value) {
+        this.pos.y = value - (this.height / 2);
+    }
+
+    /**
+     * resize the rectangle
+     * @name resize
+     * @memberOf me.Rect.prototype
+     * @function
+     * @param {Number} w new width of the rectangle
+     * @param {Number} h new height of the rectangle
+     * @return {me.Rect} this rectangle
+     */
+    resize(w, h) {
+        this.width = w;
+        this.height = h;
+        return this;
+    }
+
+    /**
+     * scale the rectangle
+     * @name scale
+     * @memberOf me.Rect.prototype
+     * @function
+     * @param {Number} x a number representing the abscissa of the scaling vector.
+     * @param {Number} [y=x] a number representing the ordinate of the scaling vector.
+     * @return {me.Rect} this rectangle
+     */
+    scale(x, y = x) {
+        this.width *= x;
+        this.height *= y;
+        return this;
+    }
+
+    /**
+     * clone this rectangle
+     * @name clone
+     * @memberOf me.Rect.prototype
+     * @function
+     * @return {me.Rect} new rectangle
+     */
+    clone() {
+        return new Rect(this.pos.x, this.pos.y, this.width, this.height);
+    }
+
+    /**
+     * copy the position and size of the given rectangle into this one
+     * @name copy
+     * @memberOf me.Rect.prototype
+     * @function
+     * @param {me.Rect} rect Source rectangle
+     * @return {me.Rect} new rectangle
+     */
+    copy(rect) {
+        return this.setShape(rect.pos.x, rect.pos.y, rect.width, rect.height);
+    }
+
+    /**
+     * merge this rectangle with another one
+     * @name union
+     * @memberOf me.Rect.prototype
+     * @function
+     * @param {me.Rect} rect other rectangle to union with
+     * @return {me.Rect} the union(ed) rectangle
+     */
+    union(/** {me.Rect} */ r) {
+        var x1 = Math.min(this.left, r.left);
+        var y1 = Math.min(this.top, r.top);
+
+        this.resize(
+            Math.max(this.right, r.right) - x1,
+            Math.max(this.bottom, r.bottom) - y1
+        );
+
+        this.pos.set(x1, y1);
+
+        return this;
+    }
+
+    /**
+     * check if this rectangle is intersecting with the specified one
+     * @name overlaps
+     * @memberOf me.Rect.prototype
+     * @function
+     * @param  {me.Rect} rect
+     * @return {boolean} true if overlaps
+     */
+    overlaps(r) {
+        return (
+            this.left < r.right &&
+            r.left < this.right &&
+            this.top < r.bottom &&
+            r.top < this.bottom
+        );
+    }
+
+    /**
+     * Returns true if the rectangle contains the given rectangle
+     * @name contains
+     * @memberOf me.Rect.prototype
+     * @function
+     * @param {me.Rect} rect
+     * @return {boolean} true if contains
+     */
+
+    /**
+     * Returns true if the rectangle contains the given point
+     * @name contains
+     * @memberOf me.Rect.prototype
+     * @function
+     * @param  {Number} x x coordinate
+     * @param  {Number} y y coordinate
+     * @return {boolean} true if contains
+     */
+
+    /**
+     * Returns true if the rectangle contains the given point
+     * @name contains
+     * @memberOf me.Rect
+     * @function
+     * @param {me.Vector2d} point
+     * @return {boolean} true if contains
+     */
+    contains() {
+        var arg0 = arguments[0];
+        var _x1, _x2, _y1, _y2;
+        if (arguments.length === 2) {
+             // x, y
+             _x1 = _x2 = arg0;
+             _y1 = _y2 = arguments[1];
+         } else {
+             if (arg0 instanceof Rect) {
+                 // me.Rect
+                 _x1 = arg0.left;
+                 _x2 = arg0.right;
+                 _y1 = arg0.top;
+                 _y2 = arg0.bottom;
+             } else {
+                 // vector
+                 _x1 = _x2 = arg0.x;
+                 _y1 = _y2 = arg0.y;
+             }
+         }
+         return (
+             _x1 >= this.left &&
+             _x2 <= this.right &&
+             _y1 >= this.top &&
+             _y2 <= this.bottom
+         );
+    }
+
+    /**
+     * check if this rectangle is identical to the specified one
+     * @name equals
+     * @memberOf me.Rect.prototype
+     * @function
+     * @param  {me.Rect} rect
+     * @return {boolean} true if equals
+     */
+    equals(r) {
+        return (
+            r.left === this.left &&
+            r.right === this.right &&
+            r.top === this.top &&
+            r.bottom === this.bottom
+        );
+    }
+
+    /**
+     * determines whether all coordinates of this rectangle are finite numbers.
+     * @name isFinite
+     * @memberOf me.Rect.prototype
+     * @function
+     * @return {boolean} false if all coordinates are positive or negative Infinity or NaN; otherwise, true.
+     */
+    isFinite() {
+        return (isFinite(this.pos.x) && isFinite(this.pos.y) && isFinite(this.width) && isFinite(this.height));
+    }
+
+    /**
+     * Returns a polygon whose edges are the same as this box.
+     * @name toPolygon
+     * @memberOf me.Rect.prototype
+     * @function
+     * @return {me.Polygon} a new Polygon that represents this rectangle.
+     */
+    toPolygon() {
+        return new Polygon(
+            this.pos.x, this.pos.y, this.points
+        );
+    }
+}
+
+/**
+ * @classdesc
+ * an ellipse Object
+ * @class
+ * @extends me.Object
+ * @memberOf me
+ * @constructor
+ * @param {Number} x the center x coordinate of the ellipse
+ * @param {Number} y the center y coordinate of the ellipse
+ * @param {Number} w width (diameter) of the ellipse
+ * @param {Number} h height (diameter) of the ellipse
+ */
+
+class Ellipse {
+
+    constructor(x, y, w, h) {
+        /**
+         * the center coordinates of the ellipse
+         * @public
+         * @type {me.Vector2d}
+         * @name pos
+         * @memberOf me.Ellipse#
+         */
+        this.pos = new Vector2d();
+
+        /**
+         * The bounding rectangle for this shape
+         * @private
+         * @type {me.Bounds}
+         * @name _bounds
+         * @memberOf me.Ellipse#
+         */
+        this._bounds = undefined;
+
+        /**
+         * Maximum radius of the ellipse
+         * @public
+         * @type {Number}
+         * @name radius
+         * @memberOf me.Ellipse
+         */
+        this.radius = NaN;
+
+        /**
+         * Pre-scaled radius vector for ellipse
+         * @public
+         * @type {me.Vector2d}
+         * @name radiusV
+         * @memberOf me.Ellipse#
+         */
+        this.radiusV = new Vector2d();
+
+        /**
+         * Radius squared, for pythagorean theorom
+         * @public
+         * @type {me.Vector2d}
+         * @name radiusSq
+         * @memberOf me.Ellipse#
+         */
+        this.radiusSq = new Vector2d();
+
+        /**
+         * x/y scaling ratio for ellipse
+         * @public
+         * @type {me.Vector2d}
+         * @name ratio
+         * @memberOf me.Ellipse#
+         */
+        this.ratio = new Vector2d();
+
+        // the shape type
+        this.shapeType = "Ellipse";
+        this.setShape(x, y, w, h);
+    }
+
+    /** @ignore */
+    onResetEvent(x, y, w, h) {
+        this.setShape(x, y, w, h);
+    }
+
+    /**
+     * set new value to the Ellipse shape
+     * @name setShape
+     * @memberOf me.Ellipse.prototype
+     * @function
+     * @param {Number} x the center x coordinate of the ellipse
+     * @param {Number} y the center y coordinate of the ellipse
+     * @param {Number} w width (diameter) of the ellipse
+     * @param {Number} h height (diameter) of the ellipse
+     */
+    setShape(x, y, w, h) {
+        var hW = w / 2;
+        var hH = h / 2;
+
+        this.pos.set(x, y);
+        this.radius = Math.max(hW, hH);
+        this.ratio.set(hW / this.radius, hH / this.radius);
+        this.radiusV.set(this.radius, this.radius).scaleV(this.ratio);
+        var r = this.radius * this.radius;
+        this.radiusSq.set(r, r).scaleV(this.ratio);
+
+        // update the corresponding bounds
+        this.getBounds().setMinMax(x, y, x + w, x + h);
+        // elipse position is the center of the cirble, bounds position are top left
+        this.getBounds().translate(-this.radiusV.x, -this.radiusV.y);
+
+        return this;
+    }
+
+    /**
+     * Rotate this Ellipse (counter-clockwise) by the specified angle (in radians).
+     * @name rotate
+     * @memberOf me.Ellipse.prototype
+     * @function
+     * @param {Number} angle The angle to rotate (in radians)
+     * @param {me.Vector2d|me.ObservableVector2d} [v] an optional point to rotate around
+     * @return {me.Ellipse} Reference to this object for method chaining
+     */
+    rotate(angle, v) {
+        // TODO : only works for circle
+        this.pos.rotate(angle, v);
+        this.getBounds().shift(this.pos);
+        this.getBounds().translate(-this.radiusV.x, -this.radiusV.y);
+        return this;
+    }
+
+    /**
+     * Scale this Ellipse by the specified scalar.
+     * @name scale
+     * @memberOf me.Ellipse.prototype
+     * @function
+     * @param {Number} x
+     * @param {Number} [y=x]
+     * @return {me.Ellipse} Reference to this object for method chaining
+     */
+    scale(x, y) {
+        y = typeof (y) !== "undefined" ? y : x;
+        return this.setShape(
+            this.pos.x,
+            this.pos.y,
+            this.radiusV.x * 2 * x,
+            this.radiusV.y * 2 * y
+        );
+    }
+
+    /**
+     * Scale this Ellipse by the specified vector.
+     * @name scale
+     * @memberOf me.Ellipse.prototype
+     * @function
+     * @param {me.Vector2d} v
+     * @return {me.Ellipse} Reference to this object for method chaining
+     */
+    scaleV(v) {
+        return this.scale(v.x, v.y);
+    }
+
+    /**
+     * apply the given transformation matrix to this ellipse
+     * @name transform
+     * @memberOf me.Ellipse.prototype
+     * @function
+     * @param {me.Matrix2d} matrix the transformation matrix
+     * @return {me.Polygon} Reference to this object for method chaining
+     */
+    transform(/* m */) {
+        // TODO
+        return this;
+    }
+
+    /**
+     * translate the circle/ellipse by the specified offset
+     * @name translate
+     * @memberOf me.Ellipse.prototype
+     * @function
+     * @param {Number} x x offset
+     * @param {Number} y y offset
+     * @return {me.Ellipse} this ellipse
+     */
+    /**
+     * translate the circle/ellipse by the specified vector
+     * @name translate
+     * @memberOf me.Ellipse.prototype
+     * @function
+     * @param {me.Vector2d} v vector offset
+     * @return {me.Ellipse} this ellipse
+     */
+    translate() {
+        var _x, _y;
+
+        if (arguments.length === 2) {
+            // x, y
+            _x = arguments[0];
+            _y = arguments[1];
+        } else {
+            // vector
+            _x = arguments[0].x;
+            _y = arguments[0].y;
+        }
+
+        this.pos.x += _x;
+        this.pos.y += _y;
+        this.getBounds().translate(_x, _y);
+
+        return this;
+    }
+
+    /**
+     * check if this circle/ellipse contains the specified point
+     * @name contains
+     * @memberOf me.Ellipse.prototype
+     * @function
+     * @param  {me.Vector2d} point
+     * @return {boolean} true if contains
+     */
+
+    /**
+     * check if this circle/ellipse contains the specified point
+     * @name contains
+     * @memberOf me.Ellipse.prototype
+     * @function
+     * @param  {Number} x x coordinate
+     * @param  {Number} y y coordinate
+     * @return {boolean} true if contains
+     */
+    contains() {
+        var _x, _y;
+
+        if (arguments.length === 2) {
+          // x, y
+          _x = arguments[0];
+          _y = arguments[1];
+        } else {
+          // vector
+          _x = arguments[0].x;
+          _y = arguments[0].y;
+        }
+
+        // Make position relative to object center point.
+        _x -= this.pos.x;
+        _y -= this.pos.y;
+        // Pythagorean theorem.
+        return (
+            ((_x * _x) / this.radiusSq.x) +
+            ((_y * _y) / this.radiusSq.y)
+        ) <= 1.0;
+    }
+
+    /**
+     * returns the bounding box for this shape, the smallest Rectangle object completely containing this shape.
+     * @name getBounds
+     * @memberOf me.Ellipse.prototype
+     * @function
+     * @return {me.Bounds} this shape bounding box Rectangle object
+     */
+    getBounds() {
+        if (typeof this._bounds === "undefined") {
+            this._bounds = pool.pull("Bounds");
+        }
+        return this._bounds;
+    }
+
+    /**
+     * clone this Ellipse
+     * @name clone
+     * @memberOf me.Ellipse.prototype
+     * @function
+     * @return {me.Ellipse} new Ellipse
+     */
+    clone() {
+        return new Ellipse(
+            this.pos.x,
+            this.pos.y,
+            this.radiusV.x * 2,
+            this.radiusV.y * 2
+        );
+    }
+}
+
+/**
+ * @classdesc
+ * a bound object contains methods for creating and manipulating axis-aligned bounding boxes (AABB).
+ * @class Bounds
+ * @memberOf me
+ * @constructor
+ * @memberOf me
+ * @param {me.Vector2d[]} [vertices] an array of me.Vector2d points
+ * @return {me.Bounds} A new bounds object
+ */
+
+class Bounds$1 {
+
+    constructor(vertices) {
+        this.onResetEvent(vertices);
+    }
+
+    onResetEvent(vertices) {
+        if (typeof this.min === "undefined") {
+            this.min = { x: Infinity,  y: Infinity };
+            this.max = { x: -Infinity, y: -Infinity };
+        } else {
+            this.clear();
+        }
+        if (typeof vertices !== "undefined") {
+            this.update(vertices);
+        }
+
+        // @ignore
+        this._center = new Vector2d();
+    }
+
+    /**
+     * reset the bound
+     * @name clear
+     * @memberOf me.Bounds
+     * @function
+     */
+    clear() {
+        this.setMinMax(Infinity, Infinity, -Infinity, -Infinity);
+
+    }
+
+    /**
+     * sets the bounds to the given min and max value
+     * @name setMinMax
+     * @memberOf me.Bounds
+     * @function
+     * @param {Number} minX
+     * @param {Number} minY
+     * @param {Number} maxX
+     * @param {Number} maxY
+     */
+    setMinMax(minX, minY, maxX, maxY) {
+        this.min.x = minX;
+        this.min.y = minY;
+
+        this.max.x = maxX;
+        this.max.y = maxY;
+    }
+
+    /**
+     * x position of the bound
+     * @public
+     * @type {Number}
+     * @name x
+     * @memberOf me.Bounds
+     */
+    get x() {
+        return this.min.x;
+    }
+
+    set x(value) {
+        var deltaX = this.max.x - this.min.x;
+        this.min.x = value;
+        this.max.x = value + deltaX;
+    }
+
+    /**
+     * y position of the bounds
+     * @public
+     * @type {Number}
+     * @name y
+     * @memberOf me.Bounds
+     */
+    get y() {
+        return this.min.y;
+    }
+
+    set y(value) {
+        var deltaY = this.max.y - this.min.y;
+
+        this.min.y = value;
+        this.max.y = value + deltaY;
+    }
+
+    /**
+     * width of the bounds
+     * @public
+     * @type {Number}
+     * @name width
+     * @memberOf me.Bounds
+     */
+    get width() {
+        return this.max.x - this.min.x;
+    }
+
+    set width(value) {
+        this.max.x = this.min.x + value;
+    }
+
+    /**
+     * width of the bounds
+     * @public
+     * @type {Number}
+     * @name width
+     * @memberOf me.Bounds
+     */
+    get height() {
+        return this.max.y - this.min.y;
+    }
+
+    set height(value) {
+        this.max.y = this.min.y + value;
+    }
+
+    /**
+     * left coordinate of the bound
+     * @public
+     * @type {Number}
+     * @name left
+     * @memberOf me.Bounds
+     */
+    get left() {
+        return this.min.x;
+    }
+
+    /**
+     * right coordinate of the bound
+     * @public
+     * @type {Number}
+     * @name right
+     * @memberOf me.Bounds
+     */
+    get right() {
+        return this.max.x;
+    }
+
+    /**
+     * top coordinate of the bound
+     * @public
+     * @type {Number}
+     * @name top
+     * @memberOf me.Bounds
+     */
+    get top() {
+        return this.min.y;
+    }
+
+    /**
+     * bottom coordinate of the bound
+     * @public
+     * @type {Number}
+     * @name bottom
+     * @memberOf me.Bounds
+     */
+    get bottom() {
+        return this.max.y;
+    }
+
+    /**
+     * center position of the bound on the x axis
+     * @public
+     * @type {Number}
+     * @name centerX
+     * @memberOf me.Bounds
+     */
+    get centerX() {
+        return this.min.x + (this.width / 2);
+    }
+
+    /**
+     * center position of the bound on the y axis
+     * @public
+     * @type {Number}
+     * @name centerY
+     * @memberOf me.Bounds
+     */
+    get centerY() {
+        return this.min.y + (this.height / 2);
+    }
+
+    /**
+     * return the center position of the bound
+     * @public
+     * @type {me.Vector2d}
+     * @name center
+     * @memberOf me.Bounds
+     */
+    get center() {
+        return this._center.set(this.centerX, this.centerY);
+    }
+
+    /**
+     * Updates bounds using the given vertices
+     * @name update
+     * @memberOf me.Bounds
+     * @function
+     * @param {me.Vector2d[]} vertices an array of me.Vector2d points
+     */
+    update(vertices) {
+        this.add(vertices, true);
+    }
+
+    /**
+     * add the given vertices to the bounds definition.
+     * @name add
+     * @memberOf me.Bounds
+     * @function
+     * @param {me.Vector2d[]} vertices an array of me.Vector2d points
+     * @param {boolean} [clear=false] either to reset the bounds before adding the new vertices
+     */
+    add(vertices, clear = false) {
+        if (clear === true) {
+            this.clear();
+        }
+        for (var i = 0; i < vertices.length; i++) {
+            var vertex = vertices[i];
+            if (vertex.x > this.max.x) this.max.x = vertex.x;
+            if (vertex.x < this.min.x) this.min.x = vertex.x;
+            if (vertex.y > this.max.y) this.max.y = vertex.y;
+            if (vertex.y < this.min.y) this.min.y = vertex.y;
+        }
+    }
+
+    /**
+     * add the given bounds to the bounds definition.
+     * @name addBounds
+     * @memberOf me.Bounds
+     * @function
+     * @param {me.Bounds} bounds
+     * @param {boolean} [clear=false] either to reset the bounds before adding the new vertices
+     */
+    addBounds(bounds, clear = false) {
+        if (clear === true) {
+            this.clear();
+        }
+
+        if (bounds.max.x > this.max.x) this.max.x = bounds.max.x;
+        if (bounds.min.x < this.min.x) this.min.x = bounds.min.x;
+        if (bounds.max.y > this.max.y) this.max.y = bounds.max.y;
+        if (bounds.min.y < this.min.y) this.min.y = bounds.min.y;
+    }
+
+    /**
+     * add the given point to the bounds definition.
+     * @name addPoint
+     * @memberOf me.Bounds
+     * @function
+     * @param {me.Vector2d} vector
+     * @param {me.Matrix2d} [matrix] an optional transform to apply to the given point
+     */
+    addPoint(v, m) {
+        if (typeof m !== "undefined") {
+            v = m.apply(v);
+        }
+        this.min.x = Math.min(this.min.x, v.x);
+        this.max.x = Math.max(this.max.x, v.x);
+        this.min.y = Math.min(this.min.y, v.y);
+        this.max.y = Math.max(this.max.y, v.y);
+    }
+
+    /**
+     * add the given quad coordinates to this bound definition, multiplied by the given matrix
+     * @name addFrame
+     * @memberOf me.Bounds
+     * @function
+     * @param {Number} x0 - left X coordinates of the quad
+     * @param {Number} y0 - top Y coordinates of the quad
+     * @param {Number} x1 - right X coordinates of the quad
+     * @param {Number} y1 - bottom y coordinates of the quad
+     * @param {me.Matrix2d} [matrix] an optional transform to apply to the given frame coordinates
+     */
+    addFrame(x0, y0, x1, y1, m) {
+        var v = me.pool.pull("Vector2d");
+
+        // transform all points and add to the bound definition
+        this.addPoint(v.set(x0, y0), m);
+        this.addPoint(v.set(x1, y0), m);
+        this.addPoint(v.set(x0, y1), m);
+        this.addPoint(v.set(x1, y1), m);
+
+        me.pool.push(v);
+    }
+
+    /**
+     * Returns true if the bounds contains the given point.
+     * @name contains
+     * @memberOf me.Bounds
+     * @function
+     * @param {me.Vector2d} point
+     * @return {boolean} True if the bounds contain the point, otherwise false
+     */
+    /**
+     * Returns true if the bounds contains the given point.
+     * @name contains
+     * @memberOf me.Bounds
+     * @function
+     * @param {Number} x
+     * @param {Number} y
+     * @return {boolean} True if the bounds contain the point, otherwise false
+     */
+    contains() {
+        var arg0 = arguments[0];
+        var _x1, _x2, _y1, _y2;
+        if (arguments.length === 2) {
+            // x, y
+            _x1 = _x2 = arg0;
+            _y1 = _y2 = arguments[1];
+        } else {
+            if (arg0 instanceof Bounds$1) {
+                // bounds
+                _x1 = arg0.min.x;
+                _x2 = arg0.max.x;
+                _y1 = arg0.min.y;
+                _y2 = arg0.max.y;
+            } else {
+                // vector
+                _x1 = _x2 = arg0.x;
+                _y1 = _y2 = arg0.y;
+            }
+        }
+
+        return _x1 >= this.min.x && _x2 <= this.max.x
+            && _y1 >= this.min.y && _y2 <= this.max.y;
+    }
+
+    /**
+     * Returns true if the two bounds intersect.
+     * @name overlaps
+     * @memberOf me.Bounds
+     * @function
+     * @param {me.Bounds|me.Rect} bounds
+     * @return {boolean} True if the bounds overlap, otherwise false
+     */
+    overlaps(bounds) {
+        return (this.left <= bounds.right && this.right >= bounds.left
+            && this.bottom >= bounds.top && this.top <= bounds.bottom);
+    }
+
+    /**
+     * determines whether all coordinates of this bounds are finite numbers.
+     * @name isFinite
+     * @memberOf me.Bounds
+     * @function
+     * @return {boolean} false if all coordinates are positive or negative Infinity or NaN; otherwise, true.
+     */
+    isFinite() {
+        return (isFinite(this.min.x) && isFinite(this.max.x) && isFinite(this.min.y) && isFinite(this.max.y));
+    }
+
+    /**
+     * Translates the bounds by the given vector.
+     * @name translate
+     * @memberOf me.Bounds
+     * @function
+     * @param {me.Vector2d} vector
+     */
+    /**
+     * Translates the bounds by x on the x axis, and y on the y axis
+     * @name translate
+     * @memberOf me.Bounds
+     * @function
+     * @param {Number} x
+     * @param {Number} y
+     */
+    translate() {
+        var _x, _y;
+        if (arguments.length === 2) {
+            // x, y
+            _x = arguments[0];
+            _y = arguments[1];
+        } else {
+            // vector
+            _x = arguments[0].x;
+            _y = arguments[0].y;
+        }
+        this.min.x += _x;
+        this.max.x += _x;
+        this.min.y += _y;
+        this.max.y += _y;
+    }
+
+    /**
+     * Shifts the bounds to the given position vector.
+     * @name shift
+     * @memberOf me.Bounds
+     * @function
+     * @param {me.Vector2d} position
+     */
+    /**
+     * Shifts the bounds to the given x, y position.
+     * @name shift
+     * @memberOf me.Bounds
+     * @function
+     * @param {Number} x
+     * @param {Number} y
+     */
+    shift() {
+        var _x, _y;
+
+        if (arguments.length === 2) {
+            // x, y
+            _x = arguments[0];
+            _y = arguments[1];
+        } else {
+            // vector
+            _x = arguments[0].x;
+            _y = arguments[0].y;
+        }
+
+        var deltaX = this.max.x - this.min.x,
+            deltaY = this.max.y - this.min.y;
+
+        this.min.x = _x;
+        this.max.x = _x + deltaX;
+        this.min.y = _y;
+        this.max.y = _y + deltaY;
+    }
+
+    /**
+     * clone this bounds
+     * @name clone
+     * @memberOf me.Bounds
+     * @function
+     * @return {me.Bounds}
+     */
+    clone() {
+        var bounds = new Bounds$1();
+        bounds.addBounds(this);
+        return bounds;
+    }
+
+    /**
+     * Returns a polygon whose edges are the same as this bounds.
+     * @name toPolygon
+     * @memberOf me.Bounds
+     * @function
+     * @return {me.Polygon} a new Polygon that represents this bounds.
+     */
+    toPolygon () {
+        return new Polygon(this.x, this.y, [
+            new Vector2d(0,          0),
+            new Vector2d(this.width, 0),
+            new Vector2d(this.width, this.height),
+            new Vector2d(0,          this.height)
+        ]);
+    }
+
+}
+
+/*
+* Separating Axis Theorem implementation, based on the SAT.js library by Jim Riecken <jimr@jimr.ca>
+* Available under the MIT License - https://github.com/jriecken/sat-js
+*/
+
+/**
+ * Constants for Vornoi regions
+ * @ignore
+ */
+var LEFT_VORNOI_REGION = -1;
+
+/**
+ * Constants for Vornoi regions
+ * @ignore
+ */
+var MIDDLE_VORNOI_REGION = 0;
+
+/**
+ * Constants for Vornoi regions
+ * @ignore
+ */
+var RIGHT_VORNOI_REGION = 1;
+
+
+/**
+ * A pool of `Vector` objects that are used in calculations to avoid allocating memory.
+ * @type {Array.<Vector>}
+ * @ignore
+ */
+var T_VECTORS = [];
+for (var v = 0; v < 10; v++) { T_VECTORS.push(new Vector2d()); }
+
+/**
+ * A pool of arrays of numbers used in calculations to avoid allocating memory.
+ * @type {Array.<Array.<number>>}
+ * @ignore
+ */
+var T_ARRAYS = [];
+for (var a = 0; a < 5; a++) { T_ARRAYS.push([]); }
+
+
+/**
+ * Flattens the specified array of points onto a unit vector axis,
+ * resulting in a one dimensional range of the minimum and
+ * maximum value on that axis.
+ * @ignore
+ * @param {Array.<Vector>} points The points to flatten.
+ * @param {Vector} normal The unit vector axis to flatten on.
+ * @param {Array.<number>} result An array.  After calling this function,
+ *   result[0] will be the minimum value,
+ *   result[1] will be the maximum value.
+ */
+function flattenPointsOn(points, normal, result) {
+    var min = Number.MAX_VALUE;
+    var max = -Number.MAX_VALUE;
+    var len = points.length;
+    for (var i = 0; i < len; i++) {
+        // The magnitude of the projection of the point onto the normal
+        var dot = points[i].dotProduct(normal);
+        if (dot < min) { min = dot; }
+        if (dot > max) { max = dot; }
+    }
+    result[0] = min;
+    result[1] = max;
+}
+
+/**
+ * Check whether two convex polygons are separated by the specified
+ * axis (must be a unit vector).
+ * @ignore
+ * @param {Vector} aPos The position of the first polygon.
+ * @param {Vector} bPos The position of the second polygon.
+ * @param {Array.<Vector>} aPoints The points in the first polygon.
+ * @param {Array.<Vector>} bPoints The points in the second polygon.
+ * @param {Vector} axis The axis (unit sized) to test against.  The points of both polygons
+ *   will be projected onto this axis.
+ * @param {Response=} response A Response object (optional) which will be populated
+ *   if the axis is not a separating axis.
+ * @return {boolean} true if it is a separating axis, false otherwise.  If false,
+ *   and a response is passed in, information about how much overlap and
+ *   the direction of the overlap will be populated.
+ */
+function isSeparatingAxis(aPos, bPos, aPoints, bPoints, axis, response) {
+    var rangeA = T_ARRAYS.pop();
+    var rangeB = T_ARRAYS.pop();
+    // The magnitude of the offset between the two polygons
+    var offsetV = T_VECTORS.pop().copy(bPos).sub(aPos);
+    var projectedOffset = offsetV.dotProduct(axis);
+
+    // Project the polygons onto the axis.
+    flattenPointsOn(aPoints, axis, rangeA);
+    flattenPointsOn(bPoints, axis, rangeB);
+    // Move B's range to its position relative to A.
+    rangeB[0] += projectedOffset;
+    rangeB[1] += projectedOffset;
+    // Check if there is a gap. If there is, this is a separating axis and we can stop
+    if (rangeA[0] > rangeB[1] || rangeB[0] > rangeA[1]) {
+        T_VECTORS.push(offsetV);
+        T_ARRAYS.push(rangeA);
+        T_ARRAYS.push(rangeB);
+        return true;
+    }
+
+    // This is not a separating axis. If we're calculating a response, calculate the overlap.
+    if (response) {
+        var overlap = 0;
+        // A starts further left than B
+        if (rangeA[0] < rangeB[0]) {
+            response.aInB = false;
+            // A ends before B does. We have to pull A out of B
+            if (rangeA[1] < rangeB[1]) {
+                overlap = rangeA[1] - rangeB[0];
+                response.bInA = false;
+            // B is fully inside A.  Pick the shortest way out.
+            } else {
+                var option1 = rangeA[1] - rangeB[0];
+                var option2 = rangeB[1] - rangeA[0];
+                overlap = option1 < option2 ? option1 : -option2;
+            }
+        // B starts further left than A
+        } else {
+            response.bInA = false;
+            // B ends before A ends. We have to push A out of B
+            if (rangeA[1] > rangeB[1]) {
+                overlap = rangeA[0] - rangeB[1];
+                response.aInB = false;
+            // A is fully inside B.  Pick the shortest way out.
+            } else {
+                var option11 = rangeA[1] - rangeB[0];
+                var option22 = rangeB[1] - rangeA[0];
+                overlap = option11 < option22 ? option11 : -option22;
+            }
+        }
+
+        // If this is the smallest amount of overlap we've seen so far, set it as the minimum overlap.
+        var absOverlap = Math.abs(overlap);
+        if (absOverlap < response.overlap) {
+            response.overlap = absOverlap;
+            response.overlapN.copy(axis);
+            if (overlap < 0) {
+                response.overlapN.negateSelf();
+            }
+        }
+    }
+    T_VECTORS.push(offsetV);
+    T_ARRAYS.push(rangeA);
+    T_ARRAYS.push(rangeB);
+    return false;
+}
+
+
+/**
+ * Calculates which Vornoi region a point is on a line segment. <br>
+ * It is assumed that both the line and the point are relative to `(0,0)`<br>
+ * <pre>
+ *             |       (0)      |
+ *      (-1)  [S]--------------[E]  (1)
+ *             |       (0)      |
+ * </pre>
+ *
+ * @ignore
+ * @param {Vector} line The line segment.
+ * @param {Vector} point The point.
+ * @return  {number} LEFT_VORNOI_REGION (-1) if it is the left region,
+ *          MIDDLE_VORNOI_REGION (0) if it is the middle region,
+ *          RIGHT_VORNOI_REGION (1) if it is the right region.
+ */
+function vornoiRegion(line, point) {
+    var len2 = line.length2();
+    var dp = point.dotProduct(line);
+    if (dp < 0) {
+        // If the point is beyond the start of the line, it is in the
+        // left vornoi region.
+        return LEFT_VORNOI_REGION;
+    } else if (dp > len2) {
+        // If the point is beyond the end of the line, it is in the
+        // right vornoi region.
+        return RIGHT_VORNOI_REGION;
+    } else {
+        // Otherwise, it's in the middle one.
+        return MIDDLE_VORNOI_REGION;
+    }
+}
+
+/**
+ * Checks whether polygons collide.
+ * @ignore
+ * @param {me.Renderable} a a reference to the object A.
+ * @param {me.Polygon} polyA a reference to the object A Polygon to be tested
+ * @param {me.Renderable} b a reference to the object B.
+ * @param {me.Polygon} polyB a reference to the object B Polygon to be tested
+ * @param {Response=} response Response object (optional) that will be populated if they intersect.
+ * @return {boolean} true if they intersect, false if they don't.
+ */
+function testPolygonPolygon(a, polyA, b, polyB, response) {
+    // specific point for
+    var aPoints = polyA.points;
+    var aNormals = polyA.normals;
+    var aLen = aNormals.length;
+    var bPoints = polyB.points;
+    var bNormals = polyB.normals;
+    var bLen = bNormals.length;
+    // aboslute shape position
+    var posA = T_VECTORS.pop().copy(a.pos).add(a.ancestor.getAbsolutePosition()).add(polyA.pos);
+    var posB = T_VECTORS.pop().copy(b.pos).add(b.ancestor.getAbsolutePosition()).add(polyB.pos);
+    var i;
+
+    // If any of the edge normals of A is a separating axis, no intersection.
+    for (i = 0; i < aLen; i++) {
+        if (isSeparatingAxis(posA, posB, aPoints, bPoints, aNormals[i], response)) {
+            T_VECTORS.push(posA);
+            T_VECTORS.push(posB);
+            return false;
+        }
+    }
+
+    // If any of the edge normals of B is a separating axis, no intersection.
+    for (i = 0; i < bLen; i++) {
+        if (isSeparatingAxis(posA, posB, aPoints, bPoints, bNormals[i], response)) {
+            T_VECTORS.push(posA);
+            T_VECTORS.push(posB);
+            return false;
+        }
+    }
+
+    // Since none of the edge normals of A or B are a separating axis, there is an intersection
+    // and we've already calculated the smallest overlap (in isSeparatingAxis).  Calculate the
+    // final overlap vector.
+    if (response) {
+        response.a = a;
+        response.b = b;
+        response.overlapV.copy(response.overlapN).scale(response.overlap);
+    }
+    T_VECTORS.push(posA);
+    T_VECTORS.push(posB);
+    return true;
+}
+
+/**
+ * Check if two Ellipse collide.
+ * @ignore
+ * @param {me.Renderable} a a reference to the object A.
+ * @param {me.Ellipse} ellipseA a reference to the object A Ellipse to be tested
+ * @param {me.Renderable} b a reference to the object B.
+ * @param {me.Ellipse} ellipseB a reference to the object B Ellipse to be tested
+ * @param {Response=} response Response object (optional) that will be populated if
+ *   the circles intersect.
+ * @return {boolean} true if the circles intersect, false if they don't.
+ */
+function testEllipseEllipse(a, ellipseA, b, ellipseB, response) {
+    // Check if the distance between the centers of the two
+    // circles is greater than their combined radius.
+    var differenceV = T_VECTORS.pop().copy(b.pos).add(b.ancestor.getAbsolutePosition()).add(ellipseB.pos)
+        .sub(a.pos).add(a.ancestor.getAbsolutePosition()).sub(ellipseA.pos);
+    var radiusA = ellipseA.radius;
+    var radiusB = ellipseB.radius;
+    var totalRadius = radiusA + radiusB;
+    var totalRadiusSq = totalRadius * totalRadius;
+    var distanceSq = differenceV.length2();
+    // If the distance is bigger than the combined radius, they don't intersect.
+    if (distanceSq > totalRadiusSq) {
+        T_VECTORS.push(differenceV);
+        return false;
+    }
+    // They intersect.  If we're calculating a response, calculate the overlap.
+    if (response) {
+        var dist = Math.sqrt(distanceSq);
+        response.a = a;
+        response.b = b;
+        response.overlap = totalRadius - dist;
+        response.overlapN.copy(differenceV.normalize());
+        response.overlapV.copy(differenceV).scale(response.overlap);
+        response.aInB = radiusA <= radiusB && dist <= radiusB - radiusA;
+        response.bInA = radiusB <= radiusA && dist <= radiusA - radiusB;
+    }
+    T_VECTORS.push(differenceV);
+    return true;
+}
+
+/**
+ * Check if a polygon and an ellipse collide.
+ * @ignore
+ * @param {me.Renderable} a a reference to the object A.
+ * @param {me.Polygon} polyA a reference to the object A Polygon to be tested
+ * @param {me.Renderable} b a reference to the object B.
+ * @param {me.Ellipse} ellipseB a reference to the object B Ellipse to be tested
+ * @param {Response=} response Response object (optional) that will be populated if they intersect.
+ * @return {boolean} true if they intersect, false if they don't.
+ */
+function testPolygonEllipse(a, polyA, b, ellipseB, response) {
+    // Get the position of the circle relative to the polygon.
+    var circlePos = T_VECTORS.pop().copy(b.pos).add(b.ancestor.getAbsolutePosition()).add(ellipseB.pos)
+        .sub(a.pos).add(a.ancestor.getAbsolutePosition()).sub(polyA.pos);
+    var radius = ellipseB.radius;
+    var radius2 = radius * radius;
+    var points = polyA.points;
+    var edges = polyA.edges;
+    var len = edges.length;
+    var edge = T_VECTORS.pop();
+    var normal = T_VECTORS.pop();
+    var point = T_VECTORS.pop();
+    var dist = 0;
+
+    // For each edge in the polygon:
+    for (var i = 0; i < len; i++) {
+        var next = i === len - 1 ? 0 : i + 1;
+        var prev = i === 0 ? len - 1 : i - 1;
+        var overlap = 0;
+        var overlapN = null;
+
+        // Get the edge.
+        edge.copy(edges[i]);
+        // Calculate the center of the circle relative to the starting point of the edge.
+        point.copy(circlePos).sub(points[i]);
+
+        // If the distance between the center of the circle and the point
+        // is bigger than the radius, the polygon is definitely not fully in
+        // the circle.
+        if (response && point.length2() > radius2) {
+            response.aInB = false;
+        }
+
+        // Calculate which Vornoi region the center of the circle is in.
+        var region = vornoiRegion(edge, point);
+        var inRegion = true;
+        // If it's the left region:
+        if (region === LEFT_VORNOI_REGION) {
+            var point2 = null;
+            if (len > 1) {
+                // We need to make sure we're in the RIGHT_VORNOI_REGION of the previous edge.
+                edge.copy(edges[prev]);
+                // Calculate the center of the circle relative the starting point of the previous edge
+                point2 = T_VECTORS.pop().copy(circlePos).sub(points[prev]);
+                region = vornoiRegion(edge, point2);
+                if (region !== RIGHT_VORNOI_REGION) {
+                    inRegion = false;
+                }
+            }
+
+            if (inRegion) {
+                // It's in the region we want.  Check if the circle intersects the point.
+                dist = point.length();
+                if (dist > radius) {
+                    // No intersection
+                    T_VECTORS.push(circlePos);
+                    T_VECTORS.push(edge);
+                    T_VECTORS.push(normal);
+                    T_VECTORS.push(point);
+                    if (point2) {
+                        T_VECTORS.push(point2);
+                    }
+                    return false;
+                } else if (response) {
+                    // It intersects, calculate the overlap.
+                    response.bInA = false;
+                    overlapN = point.normalize();
+                    overlap = radius - dist;
+                }
+            }
+
+            if (point2) {
+                T_VECTORS.push(point2);
+            }
+        // If it's the right region:
+        } else if (region === RIGHT_VORNOI_REGION) {
+            if (len > 1) {
+                // We need to make sure we're in the left region on the next edge
+                edge.copy(edges[next]);
+                // Calculate the center of the circle relative to the starting point of the next edge.
+                point.copy(circlePos).sub(points[next]);
+                region = vornoiRegion(edge, point);
+                if (region !== LEFT_VORNOI_REGION) {
+                    inRegion = false;
+                }
+            }
+
+            if (inRegion) {
+                // It's in the region we want.  Check if the circle intersects the point.
+                dist = point.length();
+                if (dist > radius) {
+                    // No intersection
+                    T_VECTORS.push(circlePos);
+                    T_VECTORS.push(edge);
+                    T_VECTORS.push(normal);
+                    T_VECTORS.push(point);
+                    return false;
+                } else if (response) {
+                    // It intersects, calculate the overlap.
+                    response.bInA = false;
+                    overlapN = point.normalize();
+                    overlap = radius - dist;
+                }
+            }
+        // Otherwise, it's the middle region:
+        } else {
+            // Need to check if the circle is intersecting the edge,
+            // Get the normal.
+            normal.copy(polyA.normals[i]);
+            // Find the perpendicular distance between the center of the
+            // circle and the edge.
+            dist = point.dotProduct(normal);
+            var distAbs = Math.abs(dist);
+            // If the circle is on the outside of the edge, there is no intersection.
+            if ((len === 1 || dist > 0) && distAbs > radius) {
+                // No intersection
+                T_VECTORS.push(circlePos);
+                T_VECTORS.push(edge);
+                T_VECTORS.push(normal);
+                T_VECTORS.push(point);
+                return false;
+            } else if (response) {
+                // It intersects, calculate the overlap.
+                overlapN = normal;
+                overlap = radius - dist;
+                // If the center of the circle is on the outside of the edge, or part of the
+                // circle is on the outside, the circle is not fully inside the polygon.
+                if (dist >= 0 || overlap < 2 * radius) {
+                    response.bInA = false;
+                }
+            }
+        }
+
+        // If this is the smallest overlap we've seen, keep it.
+        // (overlapN may be null if the circle was in the wrong Vornoi region).
+        if (overlapN && response && Math.abs(overlap) < Math.abs(response.overlap)) {
+            response.overlap = overlap;
+            response.overlapN.copy(overlapN);
+        }
+    }
+
+    // Calculate the final overlap vector - based on the smallest overlap.
+    if (response) {
+        response.a = a;
+        response.b = b;
+        response.overlapV.copy(response.overlapN).scale(response.overlap);
+    }
+    T_VECTORS.push(circlePos);
+    T_VECTORS.push(edge);
+    T_VECTORS.push(normal);
+    T_VECTORS.push(point);
+    return true;
+}
+
+/**
+ * Check if an ellipse and a polygon collide. <br>
+ * **NOTE:** This is slightly less efficient than testPolygonEllipse as it just
+ * runs testPolygonEllipse and reverses the response at the end.
+ * @ignore
+ * @param {me.Renderable} a a reference to the object A.
+ * @param {me.Ellipse} ellipseA a reference to the object A Ellipse to be tested
+ * @param {me.Renderable} a a reference to the object B.
+ * @param {me.Polygon} polyB a reference to the object B Polygon to be tested
+ * @param {Response=} response Response object (optional) that will be populated if
+ *   they intersect.
+ * @return {boolean} true if they intersect, false if they don't.
+ */
+function testEllipsePolygon(a, ellipseA, b, polyB, response) {
+    // Test the polygon against the circle.
+    var result = this.testPolygonEllipse(b, polyB, a, ellipseA, response);
+    if (result && response) {
+        // Swap A and B in the response.
+        var resa = response.a;
+        var aInB = response.aInB;
+        response.overlapN.negateSelf();
+        response.overlapV.negateSelf();
+        response.a = response.b;
+        response.b = resa;
+        response.aInB = response.bInA;
+        response.bInA = aInB;
+    }
+    return result;
+}
+
+var SAT = /*#__PURE__*/Object.freeze({
+    __proto__: null,
+    testPolygonPolygon: testPolygonPolygon,
+    testEllipseEllipse: testEllipseEllipse,
+    testPolygonEllipse: testPolygonEllipse,
+    testEllipsePolygon: testEllipsePolygon
+});
+
+// a dummy object when using Line for raycasting
+var dummyObj = {
+    pos : new Vector2d(0, 0),
+    ancestor : {
+        _absPos : new Vector2d(0, 0),
+        getAbsolutePosition : function () {
+            return this._absPos;
+        }
+    }
+};
+
+/**
+ * @classdesc
+ * An object representing the result of an intersection.
+ * @property {me.Renderable} a The first object participating in the intersection
+ * @property {me.Renderable} b The second object participating in the intersection
+ * @property {Number} overlap Magnitude of the overlap on the shortest colliding axis
+ * @property {me.Vector2d} overlapV The overlap vector (i.e. `overlapN.scale(overlap, overlap)`). If this vector is subtracted from the position of a, a and b will no longer be colliding
+ * @property {me.Vector2d} overlapN The shortest colliding axis (unit-vector)
+ * @property {Boolean} aInB Whether the first object is entirely inside the second
+ * @property {Boolean} bInA Whether the second object is entirely inside the first
+ * @property {Number} indexShapeA The index of the colliding shape for the object a body
+ * @property {Number} indexShapeB The index of the colliding shape for the object b body
+ * @name ResponseObject
+ * @memberOf me.collision
+ * @public
+ * @see me.collision.check
+ */
+class ResponseObject {
+    constructor() {
+        this.a = null;
+        this.b = null;
+        this.overlapN = new Vector2d();
+        this.overlapV = new Vector2d();
+        this.aInB = true;
+        this.bInA = true;
+        this.indexShapeA = -1;
+        this.indexShapeB = -1;
+        this.overlap = Number.MAX_VALUE;
+        return this;
+    }
+
+    /**
+     * Set some values of the response back to their defaults. <br>
+     * Call this between tests if you are going to reuse a single <br>
+     * Response object for multiple intersection tests <br>
+     * (recommended as it will avoid allocating extra memory) <br>
+     * @name clear
+     * @memberOf me.collision.ResponseObject
+     * @public
+     * @function
+     */
+    clear () {
+        this.aInB = true;
+        this.bInA = true;
+        this.overlap = Number.MAX_VALUE;
+        this.indexShapeA = -1;
+        this.indexShapeB = -1;
+        return this;
+    }
+}
+
+/**
+ * a callback used to determine if two objects should collide (based on both respective objects collision mask and type).<br>
+ * you can redefine this function if you need any specific rules over what should collide with what.
+ * @name shouldCollide
+ * @memberOf me.collision
+ * @ignore
+ * @function
+ * @param {me.Renderable} a a reference to the object A.
+ * @param {me.Renderable} b a reference to the object B.
+ * @return {Boolean} true if they should collide, false otherwise
+ */
+function shouldCollide(a, b) {
+    return (
+        a.isKinematic !== true && b.isKinematic !== true &&
+        a.body && b.body &&
+        (a.body.collisionMask & b.body.collisionType) !== 0 &&
+        (a.body.collisionType & b.body.collisionMask) !== 0
+    );
+}
+
+/**
+ * A singleton for managing collision detection (and projection-based collision response) of 2D shapes.<br>
+ * Based on the Separating Axis Theorem and supports detecting collisions between simple Axis-Aligned Boxes, convex polygons and circles based shapes.
+ * @namespace me.collision
+ * @memberOf me
+ */
+
+var collision = {
+
+     /**
+      * The maximum number of children that a quadtree node can contain before it is split into sub-nodes.
+      * @name maxChildren
+      * @memberOf me.collision
+      * @public
+      * @type {Number}
+      * @default 8
+      * @see me.game.world.broadphase
+      */
+     maxChildren : 8,
+
+     /**
+      * The maximum number of levels that the quadtree will create.
+      * @name maxDepth
+      * @memberOf me.collision
+      * @public
+      * @type {Number}
+      * @default 4
+      * @see me.game.world.broadphase
+      *
+      */
+     maxDepth : 4,
+
+    /**
+     * Enum for collision type values.
+     * @property NO_OBJECT to disable collision check
+     * @property PLAYER_OBJECT
+     * @property NPC_OBJECT
+     * @property ENEMY_OBJECT
+     * @property COLLECTABLE_OBJECT
+     * @property ACTION_OBJECT e.g. doors
+     * @property PROJECTILE_OBJECT e.g. missiles
+     * @property WORLD_SHAPE e.g. walls; for map collision shapes
+     * @property USER user-defined collision types (see example)
+     * @property ALL_OBJECT all of the above (including user-defined types)
+     * @readonly
+     * @enum {Number}
+     * @name types
+     * @memberOf me.collision
+     * @see me.body.setCollisionMask
+     * @see me.body.collisionType
+     * @example
+     * // set the body collision type
+     * myEntity.body.collisionType = me.collision.types.PLAYER_OBJECT;
+     *
+     * // filter collision detection with collision shapes, enemies and collectables
+     * myEntity.body.setCollisionMask(
+     *     me.collision.types.WORLD_SHAPE |
+     *     me.collision.types.ENEMY_OBJECT |
+     *     me.collision.types.COLLECTABLE_OBJECT
+     * );
+     *
+     * // User-defined collision types are defined using BITWISE LEFT-SHIFT:
+     * game.collisionTypes = {
+     *     LOCKED_DOOR : me.collision.types.USER << 0,
+     *     OPEN_DOOR   : me.collision.types.USER << 1,
+     *     LOOT        : me.collision.types.USER << 2,
+     * };
+     *
+     * // Set collision type for a door entity
+     * myDoorEntity.body.collisionType = game.collisionTypes.LOCKED_DOOR;
+     *
+     * // Set collision mask for the player entity, so it collides with locked doors and loot
+     * myPlayerEntity.body.setCollisionMask(
+     *     me.collision.types.ENEMY_OBJECT |
+     *     me.collision.types.WORLD_SHAPE |
+     *     game.collisionTypes.LOCKED_DOOR |
+     *     game.collisionTypes.LOOT
+     * );
+     */
+    types : {
+        /** to disable collision check */
+        NO_OBJECT           : 0,
+        PLAYER_OBJECT       : 1 << 0,
+        NPC_OBJECT          : 1 << 1,
+        ENEMY_OBJECT        : 1 << 2,
+        COLLECTABLE_OBJECT  : 1 << 3,
+        ACTION_OBJECT       : 1 << 4, // door, etc...
+        PROJECTILE_OBJECT   : 1 << 5, // missiles, etc...
+        WORLD_SHAPE         : 1 << 6, // walls, etc...
+        USER                : 1 << 7, // user-defined types start here...
+        ALL_OBJECT          : 0xFFFFFFFF // all objects
+    },
+
+
+    /**
+     * a global instance of a response object used for collision detection <br>
+     * this object will be reused amongst collision detection call if not user-defined response is specified
+     * @name response
+     * @memberOf me.collision
+     * @public
+     * @type {me.collision.ResponseObject}
+     */
+    response : new ResponseObject(),
+
+    /**
+     * Checks if the specified object collides with others
+     * @name check
+     * @memberOf me.collision
+     * @public
+     * @function
+     * @param {me.Renderable} obj object to be tested for collision
+     * @param {me.collision.ResponseObject} [respObj=me.collision.response] a user defined response object that will be populated if they intersect.
+     * @return {Boolean} in case of collision, false otherwise
+     * @example
+     * update : function (dt) {
+     *    // ...
+     *
+     *    // handle collisions against other shapes
+     *    me.collision.check(this);
+     *
+     *    // ...
+     * },
+     *
+     * // colision handler
+     * onCollision : function (response) {
+     *     if (response.b.body.collisionType === me.collision.types.ENEMY_OBJECT) {
+     *         // makes the other object solid, by substracting the overlap vector to the current position
+     *         this.pos.sub(response.overlapV);
+     *         this.hurt();
+     *         // not solid
+     *         return false;
+     *     }
+     *     // Make the object solid
+     *     return true;
+     * },
+     */
+    check(objA, responseObject) {
+        var collision = 0;
+        var response = responseObject || this.response;
+
+        // retreive a list of potential colliding objects from the game world
+        var candidates = world.broadphase.retrieve(objA);
+
+        for (var i = candidates.length, objB; i--, (objB = candidates[i]);) {
+
+            // check if both objects "should" collide
+            if ((objB !== objA) && shouldCollide(objA, objB) &&
+                // fast AABB check if both bounding boxes are overlaping
+                objA.body.getBounds().overlaps(objB.body.getBounds())) {
+
+                // go trough all defined shapes in A
+                var aLen = objA.body.shapes.length;
+                var bLen = objB.body.shapes.length;
+                if (aLen === 0 || bLen === 0) {
+                    continue;
+                }
+
+                var indexA = 0;
+                do {
+                    var shapeA = objA.body.getShape(indexA);
+                    // go through all defined shapes in B
+                    var indexB = 0;
+                    do {
+                        var shapeB = objB.body.getShape(indexB);
+
+                        // full SAT collision check
+                        if (SAT["test" + shapeA.shapeType + shapeB.shapeType]
+                            .call(
+                                this,
+                                objA, // a reference to the object A
+                                shapeA,
+                                objB,  // a reference to the object B
+                                shapeB,
+                                 // clear response object before reusing
+                                response.clear()) === true
+                        ) {
+                            // we touched something !
+                            collision++;
+
+                            // set the shape index
+                            response.indexShapeA = indexA;
+                            response.indexShapeB = indexB;
+
+                            // execute the onCollision callback
+                            if (objA.onCollision && objA.onCollision(response, objB) !== false) {
+                                objA.body.respondToCollision.call(objA.body, response);
+                            }
+                            if (objB.onCollision && objB.onCollision(response, objA) !== false) {
+                                objB.body.respondToCollision.call(objB.body, response);
+                            }
+                        }
+                        indexB++;
+                    } while (indexB < bLen);
+                    indexA++;
+                } while (indexA < aLen);
+            }
+        }
+        // we could return the amount of objects we collided with ?
+        return collision > 0;
+    },
+
+    /**
+     * Checks for object colliding with the given line
+     * @name rayCast
+     * @memberOf me.collision
+     * @public
+     * @function
+     * @param {me.Line} line line to be tested for collision
+     * @param {Array.<me.Renderable>} [result] a user defined array that will be populated with intersecting physic objects.
+     * @return {Array.<me.Renderable>} an array of intersecting physic objects
+     * @example
+     *    // define a line accross the viewport
+     *    var ray = new me.Line(
+     *        // absolute position of the line
+     *        0, 0, [
+     *        // starting point relative to the initial position
+     *        new me.Vector2d(0, 0),
+     *        // ending point
+     *        new me.Vector2d(me.game.viewport.width, me.game.viewport.height)
+     *    ]);
+     *
+     *    // check for collition
+     *    result = me.collision.rayCast(ray);
+     *
+     *    if (result.length > 0) {
+     *        // ...
+     *    }
+     */
+    rayCast(line, resultArray) {
+        var collision = 0;
+        var result = resultArray || [];
+
+        // retrieve a list of potential colliding objects from the game world
+        var candidates = world.broadphase.retrieve(line);
+
+        for (var i = candidates.length, objB; i--, (objB = candidates[i]);) {
+
+            // fast AABB check if both bounding boxes are overlaping
+            if (objB.body && line.getBounds().overlaps(objB.getBounds())) {
+
+                // go trough all defined shapes in B (if any)
+                var bLen = objB.body.shapes.length;
+                if ( objB.body.shapes.length === 0) {
+                    continue;
+                }
+
+                var shapeA = line;
+
+                // go through all defined shapes in B
+                var indexB = 0;
+                do {
+                    var shapeB = objB.body.getShape(indexB);
+
+                    // full SAT collision check
+                    if (SAT["test" + shapeA.shapeType + shapeB.shapeType]
+                        .call(
+                            this,
+                            dummyObj, // a reference to the object A
+                            shapeA,
+                            objB,  // a reference to the object B
+                            shapeB
+                    )) {
+                        // we touched something !
+                        result[collision] = objB;
+                        collision++;
+                    }
+                    indexB++;
+                } while (indexB < bLen);
+            }
+        }
+
+        // cap result in case it was not empty
+        result.length = collision;
+
+        // return the list of colliding objects
+        return result;
+    }
+
+};
+
+/**
+ * a Generic Body Object with some physic properties and behavior functionality<br>
+ The body object is attached as a member of a Renderable.  The Body object can handle movements of the parent with
+ the body.update call.  It is important to know that when body.update is called there are several things that happen related to
+ the movement and positioning of the parent renderable object.  1) The force/gravity/friction parameters are used
+ to calculate a new velocity and 2) the parent position is updated by adding this to the parent.pos (position me.Vector2d)
+ value. Thus Affecting the movement of the parent.  Look at the source code for /src/physics/body.js:update (me.Body.update) for
+ a better understanding.
+ * @class Body
+ * @memberOf me
+ * @constructor
+ * @param {me.Renderable} ancestor the parent object this body is attached to
+ * @param {me.Rect|me.Rect[]|me.Polygon|me.Polygon[]|me.Line|me.Line[]|me.Ellipse|me.Ellipse[]|me.Bounds|me.Bounds[]|Object} [shapes] a initial shape, list of shapes, or JSON object defining the body
+ * @param {Function} [onBodyUpdate] callback for when the body is updated (e.g. add/remove shapes)
+ */
+class Body {
+
+    constructor(parent, shapes, onBodyUpdate) {
+
+        /**
+         * a reference to the parent object that contains this body,
+         * or undefined if it has not been added to one.
+         * @public
+         * @type me.Renderable
+         * @default undefined
+         * @name me.Body#ancestor
+         */
+        this.ancestor = parent;
+
+        /**
+         * The AABB bounds box reprensenting this body
+         * @public
+         * @type {me.Bounds}
+         * @name bounds
+         * @memberOf me.Body
+         */
+        if (typeof this.bounds === "undefined") {
+            this.bounds = new Bounds$1();
+        }
+
+        /**
+         * The collision shapes of the body
+         * @ignore
+         * @type {me.Polygon[]|me.Line[]|me.Ellipse[]}
+         * @name shapes
+         * @memberOf me.Body
+         */
+        if (typeof this.shapes === "undefined") {
+            this.shapes = [];
+        }
+
+        /**
+         * The body collision mask, that defines what should collide with what.<br>
+         * (by default will collide with all entities)
+         * @ignore
+         * @type Number
+         * @default me.collision.types.ALL_OBJECT
+         * @name collisionMask
+         * @see me.collision.types
+         * @memberOf me.Body
+         */
+        this.collisionMask = collision.types.ALL_OBJECT;
+
+        /**
+         * define the collision type of the body for collision filtering
+         * @public
+         * @type Number
+         * @default me.collision.types.ENEMY_OBJECT
+         * @name collisionType
+         * @see me.collision.types
+         * @memberOf me.Body
+         * @example
+         * // set the body collision type
+         * myEntity.body.collisionType = me.collision.types.PLAYER_OBJECT;
+         */
+        this.collisionType = collision.types.ENEMY_OBJECT;
+
+        /**
+         * body velocity
+         * @public
+         * @type me.Vector2d
+         * @default <0,0>
+         * @name vel
+         * @memberOf me.Body
+         */
+        if (typeof this.vel === "undefined") {
+            this.vel = new Vector2d();
+        }
+        this.vel.set(0, 0);
+
+        /**
+         * body force or acceleration (automatically) applied to the body.
+         * when defining a force, user should also define a max velocity
+         * @public
+         * @type me.Vector2d
+         * @default <0,0>
+         * @name force
+         * @see me.Body.setMaxVelocity
+         * @memberOf me.Body
+         * @example
+         * // define a default maximum acceleration, initial force and friction
+         * this.body.force.set(0, 0);
+         * this.body.friction.set(0.4, 0);
+         * this.body.setMaxVelocity(3, 15);
+         *
+         * // apply a postive or negative force when pressing left of right key
+         * update(dt) {
+         *     if (me.input.isKeyPressed("left"))    {
+         *          this.body.force.x = -this.body.maxVel.x;
+         *      } else if (me.input.isKeyPressed("right")) {
+         *         this.body.force.x = this.body.maxVel.x;
+         *     } else {
+         *         this.body.force.x = 0;
+         *     }
+         * }
+         */
+        if (typeof this.force === "undefined") {
+            this.force = new Vector2d();
+        }
+        this.force.set(0, 0);
+
+
+        /**
+         * body friction
+         * @public
+         * @type me.Vector2d
+         * @default <0,0>
+         * @name friction
+         * @memberOf me.Body
+         */
+        if (typeof this.friction === "undefined") {
+            this.friction = new Vector2d();
+        }
+        this.friction.set(0, 0);
+
+        /**
+         * the body bouciness level when colliding with other solid bodies :
+         * a value of 0 will not bounce, a value of 1 will fully rebound.
+         * @public
+         * @type {Number}
+         * @default 0
+         * @name bounce
+         * @memberOf me.Body
+         */
+        this.bounce = 0;
+
+        /**
+         * the body mass
+         * @public
+         * @type {Number}
+         * @default 1
+         * @name mass
+         * @memberOf me.Body
+         */
+        this.mass = 1;
+
+        /**
+         * max velocity (to limit body velocity)
+         * @public
+         * @type me.Vector2d
+         * @default <490,490>
+         * @name maxVel
+         * @memberOf me.Body
+         */
+        if (typeof this.maxVel === "undefined") {
+            this.maxVel = new Vector2d();
+        }
+        // cap by default to half the default gravity force
+        this.maxVel.set(490, 490);
+
+
+        /**
+         * either this body is a static body or not
+         * @readonly
+         * @public
+         * @type Boolean
+         * @default false
+         * @name isStatic
+         * @memberOf me.Body
+         */
+        this.isStatic = false;
+
+
+        /**
+         * The degree to which this body is affected by the world gravity
+         * @public
+         * @see me.World.gravity
+         * @type Number
+         * @default 1.0
+         * @name gravityScale
+         * @memberOf me.Body
+         */
+        this.gravityScale = 1.0;
+
+        /**
+         * If true this body won't be affected by the world gravity
+         * @public
+         * @see me.World.gravity
+         * @type Boolean
+         * @default false
+         * @name ignoreGravity
+         * @memberOf me.Body
+         */
+        this.ignoreGravity = false;
+
+        /**
+         * falling state of the body<br>
+         * true if the object is falling<br>
+         * false if the object is standing on something<br>
+         * @readonly
+         * @public
+         * @type Boolean
+         * @default false
+         * @name falling
+         * @memberOf me.Body
+         */
+        this.falling = false;
+
+        /**
+         * jumping state of the body<br>
+         * equal true if the body is jumping<br>
+         * @readonly
+         * @public
+         * @type Boolean
+         * @default false
+         * @name jumping
+         * @memberOf me.Body
+         */
+        this.jumping = false;
+
+
+        if (typeof onBodyUpdate === "function") {
+            this.onBodyUpdate = onBodyUpdate;
+        }
+
+        this.bounds.clear();
+
+        // parses the given shapes array and add them
+        if (typeof shapes !== "undefined") {
+            if (Array.isArray(shapes)) {
+                for (var s = 0; s < shapes.length; s++) {
+                    this.addShape(shapes[s]);
+                }
+            } else {
+                this.addShape(shapes);
+            }
+        }
+
+        // automatically enable physic when a body is added to a renderable
+        this.ancestor.isKinematic = false;
+    }
+
+    /**
+     * set the body as a static body
+     * static body do not move automatically and do not check againt collision with others
+     * @name setStatic
+     * @memberOf me.Body
+     * @public
+     * @function
+     * @param {Boolean} [isStatic=true]
+     */
+    setStatic(isStatic = true) {
+        this.isStatic = isStatic === true;
+    }
+
+    /**
+     * add a collision shape to this body <br>
+     * (note: me.Rect objects will be converted to me.Polygon before being added)
+     * @name addShape
+     * @memberOf me.Body
+     * @public
+     * @function
+     * @param {me.Rect|me.Polygon|me.Line|me.Ellipse|me.Bounds|Object} shape a shape or JSON object
+     * @return {Number} the shape array length
+     * @example
+     * // add a rectangle shape
+     * this.body.addShape(new me.Rect(0, 0, image.width, image.height));
+     * // add a shape from a JSON object
+     * this.body.addShape(me.loader.getJSON("shapesdef").banana);
+     */
+    addShape(shape) {
+        if (shape instanceof Rect || shape instanceof Bounds$1) {
+            var poly = shape.toPolygon();
+            this.shapes.push(poly);
+            // update the body bounds
+            this.bounds.add(poly.points);
+            this.bounds.translate(poly.pos);
+        } else if (shape instanceof Ellipse) {
+            if (!this.shapes.includes(shape)) {
+                // see removeShape
+                this.shapes.push(shape);
+            }
+            // update the body bounds
+            this.bounds.addBounds(shape.getBounds());
+            // use bounds position as ellipse position is center
+            this.bounds.translate(
+                shape.getBounds().x,
+                shape.getBounds().y
+            );
+        } else if (shape instanceof Polygon) {
+            if (!this.shapes.includes(shape)) {
+                // see removeShape
+                this.shapes.push(shape);
+            }
+            // update the body bounds
+            this.bounds.add(shape.points);
+            this.bounds.translate(shape.pos);
+        } else {
+            // JSON object
+            this.fromJSON(shape);
+        }
+
+        if (typeof this.onBodyUpdate === "function") {
+            this.onBodyUpdate(this);
+        }
+
+        // return the length of the shape list
+        return this.shapes.length;
+    }
+
+    /**
+     * set the body vertices to the given one
+     * @name setVertices
+     * @memberOf me.Body
+     * @public
+     * @function
+     * @param {me.Vector2d[]} vertices an array of me.Vector2d points defining a convex hull
+     * @param {Number} [index=0] the shape object for which to set the vertices
+     * @param {boolean} [clear=true] either to reset the body definition before adding the new vertices
+     */
+    setVertices(vertices, index = 0, clear = true) {
+        var polygon = this.getShape(index);
+        if (polygon instanceof Polygon) {
+            polygon.setShape(0, 0, vertices);
+        } else {
+            // this will replace any other non polygon shape type if defined
+            this.shapes[index] = new Polygon(0, 0, vertices);
+        }
+
+        // update the body bounds to take in account the new vertices
+        this.bounds.add(this.shapes[index].points, clear);
+
+        if (typeof this.onBodyUpdate === "function") {
+            this.onBodyUpdate(this);
+        }
+    }
+
+    /**
+     * add the given vertices to the body shape
+     * @name addVertices
+     * @memberOf me.Body
+     * @public
+     * @function
+     * @param {me.Vector2d[]} vertices an array of me.Vector2d points defining a convex hull
+     * @param {Number} [index=0] the shape object for which to set the vertices
+     */
+    addVertices(vertices, index = 0) {
+        this.setVertices(vertices, index, false);
+    }
+
+    /**
+     * add collision mesh based on a JSON object
+     * (this will also apply any physic properties defined in the given JSON file)
+     * @name fromJSON
+     * @memberOf me.Body
+     * @public
+     * @function
+     * @param {Object} json a JSON object as exported from a Physics Editor tool
+     * @param {String} [id] an optional shape identifier within the given the json object
+     * @see https://www.codeandweb.com/physicseditor
+     * @return {Number} how many shapes were added to the body
+     * @example
+     * // define the body based on the banana shape
+     * this.body.fromJSON(me.loader.getJSON("shapesdef").banana);
+     * // or ...
+     * this.body.fromJSON(me.loader.getJSON("shapesdef"), "banana");
+     */
+    fromJSON(json, id) {
+        var data = json;
+
+        if (typeof id !== "undefined" ) {
+            data = json[id];
+        }
+
+        // Physic Editor Format (https://www.codeandweb.com/physicseditor)
+        if (typeof data === "undefined") {
+            throw new Error("Identifier (" + id + ") undefined for the given JSON object)");
+        }
+
+        if (data.length) {
+            // go through all shapes and add them to the body
+            for (var i = 0; i < data.length; i++) {
+                this.addVertices(data[i].shape, i);
+            }
+            // apply density, friction and bounce properties from the first shape
+            // Note : how to manage different mass or friction for all different shapes?
+            this.mass = data[0].density || 0;
+            this.friction.set(data[0].friction || 0, data[0].friction || 0);
+            this.bounce = data[0].bounce || 0;
+        }
+
+        // return the amount of shapes added to the body
+        return data.length;
+    }
+
+    /**
+     * return the collision shape at the given index
+     * @name getShape
+     * @memberOf me.Body
+     * @public
+     * @function
+     * @param {Number} [index=0] the shape object at the specified index
+     * @return {me.Polygon|me.Line|me.Ellipse} shape a shape object if defined
+     */
+    getShape(index) {
+        return this.shapes[index || 0];
+    }
+
+    /**
+     * returns the AABB bounding box for this body
+     * @name getBounds
+     * @memberOf me.Body
+     * @function
+     * @return {me.Bounds} bounding box Rectangle object
+     */
+    getBounds() {
+        return this.bounds;
+    }
+
+    /**
+     * remove the specified shape from the body shape list
+     * @name removeShape
+     * @memberOf me.Body
+     * @public
+     * @function
+     * @param {me.Polygon|me.Line|me.Ellipse} shape a shape object
+     * @return {Number} the shape array length
+     */
+    removeShape(shape) {
+        // clear the current bounds
+        this.bounds.clear();
+        // remove the shape from shape list
+        utils$1.array.remove(this.shapes, shape);
+        // add everything left back
+        for (var s = 0; s < this.shapes.length; s++) {
+            this.addShape(this.shapes[s]);
+        }
+        // return the length of the shape list
+        return this.shapes.length;
+    }
+
+    /**
+     * remove the shape at the given index from the body shape list
+     * @name removeShapeAt
+     * @memberOf me.Body
+     * @public
+     * @function
+     * @param {Number} index the shape object at the specified index
+     * @return {Number} the shape array length
+     */
+    removeShapeAt(index) {
+        return this.removeShape(this.getShape(index));
+    }
+
+    /**
+     * By default all entities are able to collide with all other entities, <br>
+     * but it's also possible to specify 'collision filters' to provide a finer <br>
+     * control over which entities can collide with each other.
+     * @name setCollisionMask
+     * @memberOf me.Body
+     * @public
+     * @function
+     * @see me.collision.types
+     * @param {Number} [bitmask = me.collision.types.ALL_OBJECT] the collision mask
+     * @example
+     * // filter collision detection with collision shapes, enemies and collectables
+     * myEntity.body.setCollisionMask(me.collision.types.WORLD_SHAPE | me.collision.types.ENEMY_OBJECT | me.collision.types.COLLECTABLE_OBJECT);
+     * ...
+     * // disable collision detection with all other objects
+     * myEntity.body.setCollisionMask(me.collision.types.NO_OBJECT);
+     */
+    setCollisionMask(bitmask = collision.types.ALL_OBJECT) {
+        this.collisionMask = bitmask;
+    }
+
+    /**
+     * define the collision type of the body for collision filtering
+     * @name setCollisionType
+     * @memberOf me.Body
+     * @public
+     * @function
+     * @see me.collision.types
+     * @param {Number} type the collision type
+     * @example
+     * // set the body collision type
+     * myEntity.body.collisionType = me.collision.types.PLAYER_OBJECT;
+     */
+    setCollisionType(type) {
+        if (typeof type !== "undefined") {
+            if (typeof collision.types[type] !== "undefined") {
+                this.collisionType = collision.types[type];
+            } else {
+                throw new Error("Invalid value for the collisionType property");
+            }
+        }
+    }
+
+    /**
+     * the built-in function to solve the collision response
+     * @protected
+     * @name respondToCollision
+     * @memberOf me.Body
+     * @function
+     * @param {me.collision.ResponseObject} response the collision response object
+     */
+    respondToCollision(response) {
+        // the overlap vector
+        var overlap = response.overlapV;
+
+        // FIXME: Respond proportionally to object mass
+
+        // Move out of the other object shape
+        this.ancestor.pos.sub(overlap);
+
+        // adjust velocity
+        if (overlap.x !== 0) {
+            this.vel.x = ~~(0.5 + this.vel.x - overlap.x) || 0;
+            if (this.bounce > 0) {
+                this.vel.x *= -this.bounce;
+            }
+        }
+        if (overlap.y !== 0) {
+            this.vel.y = ~~(0.5 + this.vel.y - overlap.y) || 0;
+            if (this.bounce > 0) {
+                this.vel.y *= -this.bounce;
+            }
+
+            // cancel the falling an jumping flags if necessary
+            var dir = Math.sign(world.gravity.y * this.gravityScale) || 1;
+            this.falling = overlap.y >= dir;
+            this.jumping = overlap.y <= -dir;
+        }
+    }
+
+    /**
+     * The forEach() method executes a provided function once per body shape element. <br>
+     * the callback function is invoked with three arguments: <br>
+     *    - The current element being processed in the array <br>
+     *    - The index of element in the array. <br>
+     *    - The array forEach() was called upon. <br>
+     * @name forEach
+     * @memberOf me.Body.prototype
+     * @function
+     * @param {Function} callback fnction to execute on each element
+     * @param {Object} [thisArg] value to use as this(i.e reference Object) when executing callback.
+     * @example
+     * // iterate through all shapes of the physic body
+     * mySprite.body.forEach((shape) => {
+     *    shape.doSomething();
+     * });
+     * mySprite.body.forEach((shape, index) => { ... });
+     * mySprite.body.forEach((shape, index, array) => { ... });
+     * mySprite.body.forEach((shape, index, array) => { ... }, thisArg);
+     */
+    forEach(callback, thisArg) {
+        var context = this, i = 0;
+        var shapes = this.shapes;
+
+        var len = shapes.length;
+
+        if (typeof callback !== "function") {
+            throw new Error(callback + " is not a function");
+        }
+
+        if (arguments.length > 1) {
+            context = thisArg;
+        }
+
+        while (i < len) {
+            callback.call(context, shapes[i], i, shapes);
+            i++;
+        }
+    }
+
+
+    /**
+     * Returns true if the any of the shape composing the body contains the given point.
+     * @name contains
+     * @memberOf me.Body
+     * @function
+     * @param  {me.Vector2d} point
+     * @return {boolean} true if contains
+     */
+
+    /**
+     * Returns true if the any of the shape composing the body contains the given point.
+     * @name contains
+     * @memberOf me.Body
+     * @function
+     * @param  {Number} x x coordinate
+     * @param  {Number} y y coordinate
+     * @return {boolean} true if contains
+     */
+    contains() {
+        var _x, _y;
+
+        if (arguments.length === 2) {
+          // x, y
+          _x = arguments[0];
+          _y = arguments[1];
+        } else {
+          // vector
+          _x = arguments[0].x;
+          _y = arguments[0].y;
+        }
+
+        if (this.getBounds().contains(_x, _y)) {
+             // cannot use forEach here as cannot break out with a return
+             for (var i = this.shapes.length, shape; i--, (shape = this.shapes[i]);) {
+                if (shape.contains(_x, _y)) {
+                    return true;
+                }
+            }        }
+        return false;
+    }
+
+    /**
+     * Rotate this body (counter-clockwise) by the specified angle (in radians).
+     * Unless specified the body will be rotated around its center point
+     * @name rotate
+     * @memberOf me.Body
+     * @function
+     * @param {Number} angle The angle to rotate (in radians)
+     * @param {me.Vector2d|me.ObservableVector2d} [v=me.Body.getBounds().center] an optional point to rotate around
+     * @return {me.Body} Reference to this object for method chaining
+     */
+    rotate(angle, v = this.getBounds().center) {
+        this.bounds.clear();
+        this.forEach((shape) => {
+            shape.rotate(angle, v);
+            this.bounds.addBounds(shape.getBounds());
+            if (shape instanceof Ellipse) {
+                // use bounds position as ellipse position is center
+                this.bounds.translate(
+                    shape.getBounds().x,
+                    shape.getBounds().y
+                );
+            } else {
+                this.bounds.translate(shape.pos);
+            }
+        });
+        return this;
+    }
+
+    /**
+     * cap the body velocity (body.maxVel property) to the specified value<br>
+     * @name setMaxVelocity
+     * @memberOf me.Body
+     * @function
+     * @param {Number} x max velocity on x axis
+     * @param {Number} y max velocity on y axis
+     * @protected
+     */
+    setMaxVelocity(x, y) {
+        this.maxVel.x = x;
+        this.maxVel.y = y;
+    }
+
+    /**
+     * set the body default friction
+     * @name setFriction
+     * @memberOf me.Body
+     * @function
+     * @param {Number} x horizontal friction
+     * @param {Number} y vertical friction
+     * @protected
+     */
+    setFriction(x = 0, y = 0) {
+        this.friction.x = x;
+        this.friction.y = y;
+    }
+
+    /**
+     * compute the new velocity value
+     * @ignore
+     */
+    computeVelocity(/* dt */) {
+        // apply timer.tick to delta time for linear interpolation (when enabled)
+        // #761 add delta time in body update
+        var deltaTime = /* dt * */ timer$1.tick;
+
+        // apply gravity to the current velocity
+        if (!this.ignoreGravity) {
+            var worldGravity = world.gravity;
+
+            // apply gravity if defined
+            this.vel.x += worldGravity.x * this.gravityScale * deltaTime;
+            this.vel.y += worldGravity.y * this.gravityScale * deltaTime;
+
+            // check if falling / jumping
+            this.falling = (this.vel.y * Math.sign(worldGravity.y * this.gravityScale)) > 0;
+            this.jumping = (this.falling ? false : this.jumping);
+        }
+
+        // apply force if defined
+        if (this.force.x !== 0) {
+            this.vel.x += this.force.x * deltaTime;
+        }
+        if (this.force.y !== 0) {
+            this.vel.y += this.force.y * deltaTime;
+        }
+
+        // apply friction if defined
+        if (this.friction.x > 0) {
+            var fx = this.friction.x * deltaTime,
+                nx = this.vel.x + fx,
+                x = this.vel.x - fx;
+
+            this.vel.x = (
+                (nx < 0) ? nx :
+                ( x > 0) ? x  : 0
+            );
+        }
+        if (this.friction.y > 0) {
+            var fy = this.friction.y * deltaTime,
+                ny = this.vel.y + fy,
+                y = this.vel.y - fy;
+
+            this.vel.y = (
+                (ny < 0) ? ny :
+                ( y > 0) ? y  : 0
+            );
+        }
+
+        // cap velocity
+        if (this.vel.y !== 0) {
+            this.vel.y = clamp(this.vel.y, -this.maxVel.y, this.maxVel.y);
+        }
+        if (this.vel.x !== 0) {
+            this.vel.x = clamp(this.vel.x, -this.maxVel.x, this.maxVel.x);
+        }
+    }
+
+    /**
+     * Updates the parent's position as well as computes the new body's velocity based
+     * on the values of force/friction/gravity.  Velocity chages are proportional to the
+     * me.timer.tick value (which can be used to scale velocities).  The approach to moving the
+     * parent Entity is to compute new values of the Body.vel property then add them to
+     * the parent.pos value thus changing the postion the amount of Body.vel each time the
+     * update call is made. <br>
+     * Updates to Body.vel are bounded by maxVel (which defaults to viewport size if not set) <br>
+     *
+     * In addition, when the gravity calcuation is made, if the Body.vel.y > 0 then the Body.falling
+     * property is set to true and Body.jumping is set to !Body.falling.
+     *
+     * At this time a call to Body.Update does not call the onBodyUpdate callback that is listed in the init: function.
+     * @name update
+     * @ignore
+     * @memberOf me.Body
+     * @function
+     * @return {boolean} true if resulting velocity is different than 0
+     * @see source code for me.Body.computeVelocity (private member)
+     */
+    update(dt) {
+        // update the velocity
+        this.computeVelocity(dt);
+
+        // update the body ancestor position
+        this.ancestor.pos.add(this.vel);
+
+        // returns true if vel is different from 0
+        return (this.vel.x !== 0 || this.vel.y !== 0);
+    }
+
+    /**
+     * Destroy function<br>
+     * @ignore
+     */
+    destroy() {
+        this.onBodyUpdate = undefined;
+        this.ancestor = undefined;
+        this.bounds = undefined;
+        this.setStatic(false);
+        this.shapes.length = 0;
+    }
+}
+
 /**
  * @classdesc
  * A Vector2d object that provide notification by executing the given callback when the vector is changed.
@@ -8485,1556 +12405,6 @@ class ObservableVector3d extends Vector3d {
      */
     toString() {
         return "x:" + this._x + ",y:" + this._y + ",z:" + this._z;
-    }
-}
-
-var earcut$2 = {exports: {}};
-
-earcut$2.exports = earcut;
-earcut$2.exports.default = earcut;
-
-function earcut(data, holeIndices, dim) {
-
-    dim = dim || 2;
-
-    var hasHoles = holeIndices && holeIndices.length,
-        outerLen = hasHoles ? holeIndices[0] * dim : data.length,
-        outerNode = linkedList(data, 0, outerLen, dim, true),
-        triangles = [];
-
-    if (!outerNode || outerNode.next === outerNode.prev) return triangles;
-
-    var minX, minY, maxX, maxY, x, y, invSize;
-
-    if (hasHoles) outerNode = eliminateHoles(data, holeIndices, outerNode, dim);
-
-    // if the shape is not too simple, we'll use z-order curve hash later; calculate polygon bbox
-    if (data.length > 80 * dim) {
-        minX = maxX = data[0];
-        minY = maxY = data[1];
-
-        for (var i = dim; i < outerLen; i += dim) {
-            x = data[i];
-            y = data[i + 1];
-            if (x < minX) minX = x;
-            if (y < minY) minY = y;
-            if (x > maxX) maxX = x;
-            if (y > maxY) maxY = y;
-        }
-
-        // minX, minY and invSize are later used to transform coords into integers for z-order calculation
-        invSize = Math.max(maxX - minX, maxY - minY);
-        invSize = invSize !== 0 ? 1 / invSize : 0;
-    }
-
-    earcutLinked(outerNode, triangles, dim, minX, minY, invSize);
-
-    return triangles;
-}
-
-// create a circular doubly linked list from polygon points in the specified winding order
-function linkedList(data, start, end, dim, clockwise) {
-    var i, last;
-
-    if (clockwise === (signedArea(data, start, end, dim) > 0)) {
-        for (i = start; i < end; i += dim) last = insertNode(i, data[i], data[i + 1], last);
-    } else {
-        for (i = end - dim; i >= start; i -= dim) last = insertNode(i, data[i], data[i + 1], last);
-    }
-
-    if (last && equals(last, last.next)) {
-        removeNode(last);
-        last = last.next;
-    }
-
-    return last;
-}
-
-// eliminate colinear or duplicate points
-function filterPoints(start, end) {
-    if (!start) return start;
-    if (!end) end = start;
-
-    var p = start,
-        again;
-    do {
-        again = false;
-
-        if (!p.steiner && (equals(p, p.next) || area(p.prev, p, p.next) === 0)) {
-            removeNode(p);
-            p = end = p.prev;
-            if (p === p.next) break;
-            again = true;
-
-        } else {
-            p = p.next;
-        }
-    } while (again || p !== end);
-
-    return end;
-}
-
-// main ear slicing loop which triangulates a polygon (given as a linked list)
-function earcutLinked(ear, triangles, dim, minX, minY, invSize, pass) {
-    if (!ear) return;
-
-    // interlink polygon nodes in z-order
-    if (!pass && invSize) indexCurve(ear, minX, minY, invSize);
-
-    var stop = ear,
-        prev, next;
-
-    // iterate through ears, slicing them one by one
-    while (ear.prev !== ear.next) {
-        prev = ear.prev;
-        next = ear.next;
-
-        if (invSize ? isEarHashed(ear, minX, minY, invSize) : isEar(ear)) {
-            // cut off the triangle
-            triangles.push(prev.i / dim);
-            triangles.push(ear.i / dim);
-            triangles.push(next.i / dim);
-
-            removeNode(ear);
-
-            // skipping the next vertex leads to less sliver triangles
-            ear = next.next;
-            stop = next.next;
-
-            continue;
-        }
-
-        ear = next;
-
-        // if we looped through the whole remaining polygon and can't find any more ears
-        if (ear === stop) {
-            // try filtering points and slicing again
-            if (!pass) {
-                earcutLinked(filterPoints(ear), triangles, dim, minX, minY, invSize, 1);
-
-            // if this didn't work, try curing all small self-intersections locally
-            } else if (pass === 1) {
-                ear = cureLocalIntersections(filterPoints(ear), triangles, dim);
-                earcutLinked(ear, triangles, dim, minX, minY, invSize, 2);
-
-            // as a last resort, try splitting the remaining polygon into two
-            } else if (pass === 2) {
-                splitEarcut(ear, triangles, dim, minX, minY, invSize);
-            }
-
-            break;
-        }
-    }
-}
-
-// check whether a polygon node forms a valid ear with adjacent nodes
-function isEar(ear) {
-    var a = ear.prev,
-        b = ear,
-        c = ear.next;
-
-    if (area(a, b, c) >= 0) return false; // reflex, can't be an ear
-
-    // now make sure we don't have other points inside the potential ear
-    var p = ear.next.next;
-
-    while (p !== ear.prev) {
-        if (pointInTriangle(a.x, a.y, b.x, b.y, c.x, c.y, p.x, p.y) &&
-            area(p.prev, p, p.next) >= 0) return false;
-        p = p.next;
-    }
-
-    return true;
-}
-
-function isEarHashed(ear, minX, minY, invSize) {
-    var a = ear.prev,
-        b = ear,
-        c = ear.next;
-
-    if (area(a, b, c) >= 0) return false; // reflex, can't be an ear
-
-    // triangle bbox; min & max are calculated like this for speed
-    var minTX = a.x < b.x ? (a.x < c.x ? a.x : c.x) : (b.x < c.x ? b.x : c.x),
-        minTY = a.y < b.y ? (a.y < c.y ? a.y : c.y) : (b.y < c.y ? b.y : c.y),
-        maxTX = a.x > b.x ? (a.x > c.x ? a.x : c.x) : (b.x > c.x ? b.x : c.x),
-        maxTY = a.y > b.y ? (a.y > c.y ? a.y : c.y) : (b.y > c.y ? b.y : c.y);
-
-    // z-order range for the current triangle bbox;
-    var minZ = zOrder(minTX, minTY, minX, minY, invSize),
-        maxZ = zOrder(maxTX, maxTY, minX, minY, invSize);
-
-    var p = ear.prevZ,
-        n = ear.nextZ;
-
-    // look for points inside the triangle in both directions
-    while (p && p.z >= minZ && n && n.z <= maxZ) {
-        if (p !== ear.prev && p !== ear.next &&
-            pointInTriangle(a.x, a.y, b.x, b.y, c.x, c.y, p.x, p.y) &&
-            area(p.prev, p, p.next) >= 0) return false;
-        p = p.prevZ;
-
-        if (n !== ear.prev && n !== ear.next &&
-            pointInTriangle(a.x, a.y, b.x, b.y, c.x, c.y, n.x, n.y) &&
-            area(n.prev, n, n.next) >= 0) return false;
-        n = n.nextZ;
-    }
-
-    // look for remaining points in decreasing z-order
-    while (p && p.z >= minZ) {
-        if (p !== ear.prev && p !== ear.next &&
-            pointInTriangle(a.x, a.y, b.x, b.y, c.x, c.y, p.x, p.y) &&
-            area(p.prev, p, p.next) >= 0) return false;
-        p = p.prevZ;
-    }
-
-    // look for remaining points in increasing z-order
-    while (n && n.z <= maxZ) {
-        if (n !== ear.prev && n !== ear.next &&
-            pointInTriangle(a.x, a.y, b.x, b.y, c.x, c.y, n.x, n.y) &&
-            area(n.prev, n, n.next) >= 0) return false;
-        n = n.nextZ;
-    }
-
-    return true;
-}
-
-// go through all polygon nodes and cure small local self-intersections
-function cureLocalIntersections(start, triangles, dim) {
-    var p = start;
-    do {
-        var a = p.prev,
-            b = p.next.next;
-
-        if (!equals(a, b) && intersects(a, p, p.next, b) && locallyInside(a, b) && locallyInside(b, a)) {
-
-            triangles.push(a.i / dim);
-            triangles.push(p.i / dim);
-            triangles.push(b.i / dim);
-
-            // remove two nodes involved
-            removeNode(p);
-            removeNode(p.next);
-
-            p = start = b;
-        }
-        p = p.next;
-    } while (p !== start);
-
-    return filterPoints(p);
-}
-
-// try splitting polygon into two and triangulate them independently
-function splitEarcut(start, triangles, dim, minX, minY, invSize) {
-    // look for a valid diagonal that divides the polygon into two
-    var a = start;
-    do {
-        var b = a.next.next;
-        while (b !== a.prev) {
-            if (a.i !== b.i && isValidDiagonal(a, b)) {
-                // split the polygon in two by the diagonal
-                var c = splitPolygon(a, b);
-
-                // filter colinear points around the cuts
-                a = filterPoints(a, a.next);
-                c = filterPoints(c, c.next);
-
-                // run earcut on each half
-                earcutLinked(a, triangles, dim, minX, minY, invSize);
-                earcutLinked(c, triangles, dim, minX, minY, invSize);
-                return;
-            }
-            b = b.next;
-        }
-        a = a.next;
-    } while (a !== start);
-}
-
-// link every hole into the outer loop, producing a single-ring polygon without holes
-function eliminateHoles(data, holeIndices, outerNode, dim) {
-    var queue = [],
-        i, len, start, end, list;
-
-    for (i = 0, len = holeIndices.length; i < len; i++) {
-        start = holeIndices[i] * dim;
-        end = i < len - 1 ? holeIndices[i + 1] * dim : data.length;
-        list = linkedList(data, start, end, dim, false);
-        if (list === list.next) list.steiner = true;
-        queue.push(getLeftmost(list));
-    }
-
-    queue.sort(compareX);
-
-    // process holes from left to right
-    for (i = 0; i < queue.length; i++) {
-        outerNode = eliminateHole(queue[i], outerNode);
-        outerNode = filterPoints(outerNode, outerNode.next);
-    }
-
-    return outerNode;
-}
-
-function compareX(a, b) {
-    return a.x - b.x;
-}
-
-// find a bridge between vertices that connects hole with an outer ring and and link it
-function eliminateHole(hole, outerNode) {
-    var bridge = findHoleBridge(hole, outerNode);
-    if (!bridge) {
-        return outerNode;
-    }
-
-    var bridgeReverse = splitPolygon(bridge, hole);
-
-    // filter collinear points around the cuts
-    var filteredBridge = filterPoints(bridge, bridge.next);
-    filterPoints(bridgeReverse, bridgeReverse.next);
-
-    // Check if input node was removed by the filtering
-    return outerNode === bridge ? filteredBridge : outerNode;
-}
-
-// David Eberly's algorithm for finding a bridge between hole and outer polygon
-function findHoleBridge(hole, outerNode) {
-    var p = outerNode,
-        hx = hole.x,
-        hy = hole.y,
-        qx = -Infinity,
-        m;
-
-    // find a segment intersected by a ray from the hole's leftmost point to the left;
-    // segment's endpoint with lesser x will be potential connection point
-    do {
-        if (hy <= p.y && hy >= p.next.y && p.next.y !== p.y) {
-            var x = p.x + (hy - p.y) * (p.next.x - p.x) / (p.next.y - p.y);
-            if (x <= hx && x > qx) {
-                qx = x;
-                if (x === hx) {
-                    if (hy === p.y) return p;
-                    if (hy === p.next.y) return p.next;
-                }
-                m = p.x < p.next.x ? p : p.next;
-            }
-        }
-        p = p.next;
-    } while (p !== outerNode);
-
-    if (!m) return null;
-
-    if (hx === qx) return m; // hole touches outer segment; pick leftmost endpoint
-
-    // look for points inside the triangle of hole point, segment intersection and endpoint;
-    // if there are no points found, we have a valid connection;
-    // otherwise choose the point of the minimum angle with the ray as connection point
-
-    var stop = m,
-        mx = m.x,
-        my = m.y,
-        tanMin = Infinity,
-        tan;
-
-    p = m;
-
-    do {
-        if (hx >= p.x && p.x >= mx && hx !== p.x &&
-                pointInTriangle(hy < my ? hx : qx, hy, mx, my, hy < my ? qx : hx, hy, p.x, p.y)) {
-
-            tan = Math.abs(hy - p.y) / (hx - p.x); // tangential
-
-            if (locallyInside(p, hole) &&
-                (tan < tanMin || (tan === tanMin && (p.x > m.x || (p.x === m.x && sectorContainsSector(m, p)))))) {
-                m = p;
-                tanMin = tan;
-            }
-        }
-
-        p = p.next;
-    } while (p !== stop);
-
-    return m;
-}
-
-// whether sector in vertex m contains sector in vertex p in the same coordinates
-function sectorContainsSector(m, p) {
-    return area(m.prev, m, p.prev) < 0 && area(p.next, m, m.next) < 0;
-}
-
-// interlink polygon nodes in z-order
-function indexCurve(start, minX, minY, invSize) {
-    var p = start;
-    do {
-        if (p.z === null) p.z = zOrder(p.x, p.y, minX, minY, invSize);
-        p.prevZ = p.prev;
-        p.nextZ = p.next;
-        p = p.next;
-    } while (p !== start);
-
-    p.prevZ.nextZ = null;
-    p.prevZ = null;
-
-    sortLinked(p);
-}
-
-// Simon Tatham's linked list merge sort algorithm
-// http://www.chiark.greenend.org.uk/~sgtatham/algorithms/listsort.html
-function sortLinked(list) {
-    var i, p, q, e, tail, numMerges, pSize, qSize,
-        inSize = 1;
-
-    do {
-        p = list;
-        list = null;
-        tail = null;
-        numMerges = 0;
-
-        while (p) {
-            numMerges++;
-            q = p;
-            pSize = 0;
-            for (i = 0; i < inSize; i++) {
-                pSize++;
-                q = q.nextZ;
-                if (!q) break;
-            }
-            qSize = inSize;
-
-            while (pSize > 0 || (qSize > 0 && q)) {
-
-                if (pSize !== 0 && (qSize === 0 || !q || p.z <= q.z)) {
-                    e = p;
-                    p = p.nextZ;
-                    pSize--;
-                } else {
-                    e = q;
-                    q = q.nextZ;
-                    qSize--;
-                }
-
-                if (tail) tail.nextZ = e;
-                else list = e;
-
-                e.prevZ = tail;
-                tail = e;
-            }
-
-            p = q;
-        }
-
-        tail.nextZ = null;
-        inSize *= 2;
-
-    } while (numMerges > 1);
-
-    return list;
-}
-
-// z-order of a point given coords and inverse of the longer side of data bbox
-function zOrder(x, y, minX, minY, invSize) {
-    // coords are transformed into non-negative 15-bit integer range
-    x = 32767 * (x - minX) * invSize;
-    y = 32767 * (y - minY) * invSize;
-
-    x = (x | (x << 8)) & 0x00FF00FF;
-    x = (x | (x << 4)) & 0x0F0F0F0F;
-    x = (x | (x << 2)) & 0x33333333;
-    x = (x | (x << 1)) & 0x55555555;
-
-    y = (y | (y << 8)) & 0x00FF00FF;
-    y = (y | (y << 4)) & 0x0F0F0F0F;
-    y = (y | (y << 2)) & 0x33333333;
-    y = (y | (y << 1)) & 0x55555555;
-
-    return x | (y << 1);
-}
-
-// find the leftmost node of a polygon ring
-function getLeftmost(start) {
-    var p = start,
-        leftmost = start;
-    do {
-        if (p.x < leftmost.x || (p.x === leftmost.x && p.y < leftmost.y)) leftmost = p;
-        p = p.next;
-    } while (p !== start);
-
-    return leftmost;
-}
-
-// check if a point lies within a convex triangle
-function pointInTriangle(ax, ay, bx, by, cx, cy, px, py) {
-    return (cx - px) * (ay - py) - (ax - px) * (cy - py) >= 0 &&
-           (ax - px) * (by - py) - (bx - px) * (ay - py) >= 0 &&
-           (bx - px) * (cy - py) - (cx - px) * (by - py) >= 0;
-}
-
-// check if a diagonal between two polygon nodes is valid (lies in polygon interior)
-function isValidDiagonal(a, b) {
-    return a.next.i !== b.i && a.prev.i !== b.i && !intersectsPolygon(a, b) && // dones't intersect other edges
-           (locallyInside(a, b) && locallyInside(b, a) && middleInside(a, b) && // locally visible
-            (area(a.prev, a, b.prev) || area(a, b.prev, b)) || // does not create opposite-facing sectors
-            equals(a, b) && area(a.prev, a, a.next) > 0 && area(b.prev, b, b.next) > 0); // special zero-length case
-}
-
-// signed area of a triangle
-function area(p, q, r) {
-    return (q.y - p.y) * (r.x - q.x) - (q.x - p.x) * (r.y - q.y);
-}
-
-// check if two points are equal
-function equals(p1, p2) {
-    return p1.x === p2.x && p1.y === p2.y;
-}
-
-// check if two segments intersect
-function intersects(p1, q1, p2, q2) {
-    var o1 = sign(area(p1, q1, p2));
-    var o2 = sign(area(p1, q1, q2));
-    var o3 = sign(area(p2, q2, p1));
-    var o4 = sign(area(p2, q2, q1));
-
-    if (o1 !== o2 && o3 !== o4) return true; // general case
-
-    if (o1 === 0 && onSegment(p1, p2, q1)) return true; // p1, q1 and p2 are collinear and p2 lies on p1q1
-    if (o2 === 0 && onSegment(p1, q2, q1)) return true; // p1, q1 and q2 are collinear and q2 lies on p1q1
-    if (o3 === 0 && onSegment(p2, p1, q2)) return true; // p2, q2 and p1 are collinear and p1 lies on p2q2
-    if (o4 === 0 && onSegment(p2, q1, q2)) return true; // p2, q2 and q1 are collinear and q1 lies on p2q2
-
-    return false;
-}
-
-// for collinear points p, q, r, check if point q lies on segment pr
-function onSegment(p, q, r) {
-    return q.x <= Math.max(p.x, r.x) && q.x >= Math.min(p.x, r.x) && q.y <= Math.max(p.y, r.y) && q.y >= Math.min(p.y, r.y);
-}
-
-function sign(num) {
-    return num > 0 ? 1 : num < 0 ? -1 : 0;
-}
-
-// check if a polygon diagonal intersects any polygon segments
-function intersectsPolygon(a, b) {
-    var p = a;
-    do {
-        if (p.i !== a.i && p.next.i !== a.i && p.i !== b.i && p.next.i !== b.i &&
-                intersects(p, p.next, a, b)) return true;
-        p = p.next;
-    } while (p !== a);
-
-    return false;
-}
-
-// check if a polygon diagonal is locally inside the polygon
-function locallyInside(a, b) {
-    return area(a.prev, a, a.next) < 0 ?
-        area(a, b, a.next) >= 0 && area(a, a.prev, b) >= 0 :
-        area(a, b, a.prev) < 0 || area(a, a.next, b) < 0;
-}
-
-// check if the middle point of a polygon diagonal is inside the polygon
-function middleInside(a, b) {
-    var p = a,
-        inside = false,
-        px = (a.x + b.x) / 2,
-        py = (a.y + b.y) / 2;
-    do {
-        if (((p.y > py) !== (p.next.y > py)) && p.next.y !== p.y &&
-                (px < (p.next.x - p.x) * (py - p.y) / (p.next.y - p.y) + p.x))
-            inside = !inside;
-        p = p.next;
-    } while (p !== a);
-
-    return inside;
-}
-
-// link two polygon vertices with a bridge; if the vertices belong to the same ring, it splits polygon into two;
-// if one belongs to the outer ring and another to a hole, it merges it into a single ring
-function splitPolygon(a, b) {
-    var a2 = new Node$1(a.i, a.x, a.y),
-        b2 = new Node$1(b.i, b.x, b.y),
-        an = a.next,
-        bp = b.prev;
-
-    a.next = b;
-    b.prev = a;
-
-    a2.next = an;
-    an.prev = a2;
-
-    b2.next = a2;
-    a2.prev = b2;
-
-    bp.next = b2;
-    b2.prev = bp;
-
-    return b2;
-}
-
-// create a node and optionally link it with previous one (in a circular doubly linked list)
-function insertNode(i, x, y, last) {
-    var p = new Node$1(i, x, y);
-
-    if (!last) {
-        p.prev = p;
-        p.next = p;
-
-    } else {
-        p.next = last.next;
-        p.prev = last;
-        last.next.prev = p;
-        last.next = p;
-    }
-    return p;
-}
-
-function removeNode(p) {
-    p.next.prev = p.prev;
-    p.prev.next = p.next;
-
-    if (p.prevZ) p.prevZ.nextZ = p.nextZ;
-    if (p.nextZ) p.nextZ.prevZ = p.prevZ;
-}
-
-function Node$1(i, x, y) {
-    // vertex index in coordinates array
-    this.i = i;
-
-    // vertex coordinates
-    this.x = x;
-    this.y = y;
-
-    // previous and next vertex nodes in a polygon ring
-    this.prev = null;
-    this.next = null;
-
-    // z-order curve value
-    this.z = null;
-
-    // previous and next nodes in z-order
-    this.prevZ = null;
-    this.nextZ = null;
-
-    // indicates whether this is a steiner point
-    this.steiner = false;
-}
-
-// return a percentage difference between the polygon area and its triangulation area;
-// used to verify correctness of triangulation
-earcut.deviation = function (data, holeIndices, dim, triangles) {
-    var hasHoles = holeIndices && holeIndices.length;
-    var outerLen = hasHoles ? holeIndices[0] * dim : data.length;
-
-    var polygonArea = Math.abs(signedArea(data, 0, outerLen, dim));
-    if (hasHoles) {
-        for (var i = 0, len = holeIndices.length; i < len; i++) {
-            var start = holeIndices[i] * dim;
-            var end = i < len - 1 ? holeIndices[i + 1] * dim : data.length;
-            polygonArea -= Math.abs(signedArea(data, start, end, dim));
-        }
-    }
-
-    var trianglesArea = 0;
-    for (i = 0; i < triangles.length; i += 3) {
-        var a = triangles[i] * dim;
-        var b = triangles[i + 1] * dim;
-        var c = triangles[i + 2] * dim;
-        trianglesArea += Math.abs(
-            (data[a] - data[c]) * (data[b + 1] - data[a + 1]) -
-            (data[a] - data[b]) * (data[c + 1] - data[a + 1]));
-    }
-
-    return polygonArea === 0 && trianglesArea === 0 ? 0 :
-        Math.abs((trianglesArea - polygonArea) / polygonArea);
-};
-
-function signedArea(data, start, end, dim) {
-    var sum = 0;
-    for (var i = start, j = end - dim; i < end; i += dim) {
-        sum += (data[j] - data[i]) * (data[i + 1] + data[j + 1]);
-        j = i;
-    }
-    return sum;
-}
-
-// turn a polygon in a multi-dimensional array form (e.g. as in GeoJSON) into a form Earcut accepts
-earcut.flatten = function (data) {
-    var dim = data[0][0].length,
-        result = {vertices: [], holes: [], dimensions: dim},
-        holeIndex = 0;
-
-    for (var i = 0; i < data.length; i++) {
-        for (var j = 0; j < data[i].length; j++) {
-            for (var d = 0; d < dim; d++) result.vertices.push(data[i][j][d]);
-        }
-        if (i > 0) {
-            holeIndex += data[i - 1].length;
-            result.holes.push(holeIndex);
-        }
-    }
-    return result;
-};
-
-var earcut$1 = earcut$2.exports;
-
-/**
- * @classdesc
- * a polygon Object.<br>
- * Please do note that melonJS implements a simple Axis-Aligned Boxes collision algorithm, which requires all polygons used for collision to be convex with all vertices defined with clockwise winding.
- * A polygon is convex when all line segments connecting two points in the interior do not cross any edge of the polygon
- * (which means that all angles are less than 180 degrees), as described here below : <br>
- * <center><img src="images/convex_polygon.png"/></center><br>
- * A polygon's `winding` is clockwise iff its vertices (points) are declared turning to the right. The image above shows COUNTERCLOCKWISE winding.
- * @class Polygon
- * @memberOf me
- * @constructor
- * @param {Number} x origin point of the Polygon
- * @param {Number} y origin point of the Polygon
- * @param {me.Vector2d[]} points array of vector defining the Polygon
- */
-
-class Polygon {
-
-    constructor(x, y, points) {
-        /**
-         * origin point of the Polygon
-         * @public
-         * @type {me.Vector2d}
-         * @name pos
-         * @memberof me.Polygon#
-         */
-        this.pos = new Vector2d();
-
-        /**
-         * The bounding rectangle for this shape
-         * @ignore
-         * @type {me.Bounds}
-         * @name _bounds
-         * @memberOf me.Polygon#
-         */
-        this._bounds;
-
-        /**
-         * Array of points defining the Polygon <br>
-         * Note: If you manually change `points`, you **must** call `recalc`afterwards so that the changes get applied correctly.
-         * @public
-         * @type {me.Vector2d[]}
-         * @name points
-         * @memberOf me.Polygon#
-         */
-        this.points = null;
-
-        /**
-         * The edges here are the direction of the `n`th edge of the polygon, relative to
-         * the `n`th point. If you want to draw a given edge from the edge value, you must
-         * first translate to the position of the starting point.
-         * @ignore
-         */
-        this.edges = [];
-
-        /**
-         * a list of indices for all vertices composing this polygon (@see earcut)
-         * @ignore
-         */
-        this.indices = [];
-
-        /**
-         * The normals here are the direction of the normal for the `n`th edge of the polygon, relative
-         * to the position of the `n`th point. If you want to draw an edge normal, you must first
-         * translate to the position of the starting point.
-         * @ignore
-         */
-        this.normals = [];
-
-        // the shape type
-        this.shapeType = "Polygon";
-        this.setShape(x, y, points);
-    }
-
-    /** @ignore */
-    onResetEvent(x, y, points) {
-        this.setShape(x, y, points);
-    }
-
-    /**
-     * set new value to the Polygon
-     * @name setShape
-     * @memberOf me.Polygon.prototype
-     * @function
-     * @param {Number} x position of the Polygon
-     * @param {Number} y position of the Polygon
-     * @param {me.Vector2d[]|Number[]} points array of vector or vertice defining the Polygon
-     */
-    setShape(x, y, points) {
-        this.pos.set(x, y);
-        this.setVertices(points);
-        return this;
-    }
-
-    /**
-     * set the vertices defining this Polygon
-     * @name setVertices
-     * @memberOf me.Polygon.prototype
-     * @function
-     * @param {me.Vector2d[]} points array of vector or vertice defining the Polygon
-     */
-    setVertices(vertices) {
-
-        if (!Array.isArray(vertices)) {
-            return this;
-        }
-
-        // convert given points to me.Vector2d if required
-        if (!(vertices[0] instanceof Vector2d)) {
-            var _points = this.points = [];
-
-            if (typeof vertices[0] === "object") {
-                // array of {x,y} object
-                vertices.forEach(function (vertice) {
-                   _points.push(new Vector2d(vertice.x, vertice.y));
-                });
-
-            } else {
-                // it's a flat array
-                for (var p = 0; p < vertices.length; p += 2) {
-                    _points.push(new Vector2d(vertices[p], vertices[p + 1]));
-                }
-            }
-        } else {
-            // array of me.Vector2d
-            this.points = vertices;
-        }
-
-        this.recalc();
-        this.updateBounds();
-        return this;
-    }
-
-    /**
-     * apply the given transformation matrix to this Polygon
-     * @name transform
-     * @memberOf me.Polygon.prototype
-     * @function
-     * @param {me.Matrix2d} matrix the transformation matrix
-     * @return {me.Polygon} Reference to this object for method chaining
-     */
-    transform(m) {
-        var points = this.points;
-        var len = points.length;
-        for (var i = 0; i < len; i++) {
-            m.apply(points[i]);
-        }
-        this.recalc();
-        this.updateBounds();
-        return this;
-    }
-
-    /**
-     * apply an isometric projection to this shape
-     * @name toIso
-     * @memberOf me.Polygon.prototype
-     * @function
-     * @return {me.Polygon} Reference to this object for method chaining
-     */
-    toIso() {
-        return this.rotate(Math.PI / 4).scale(Math.SQRT2, Math.SQRT1_2);
-    }
-
-    /**
-     * apply a 2d projection to this shape
-     * @name to2d
-     * @memberOf me.Polygon.prototype
-     * @function
-     * @return {me.Polygon} Reference to this object for method chaining
-     */
-    to2d() {
-        return this.scale(Math.SQRT1_2, Math.SQRT2).rotate(-Math.PI / 4);
-    }
-
-    /**
-     * Rotate this Polygon (counter-clockwise) by the specified angle (in radians).
-     * @name rotate
-     * @memberOf me.Polygon.prototype
-     * @function
-     * @param {Number} angle The angle to rotate (in radians)
-     * @param {me.Vector2d|me.ObservableVector2d} [v] an optional point to rotate around
-     * @return {me.Polygon} Reference to this object for method chaining
-     */
-    rotate(angle, v) {
-        if (angle !== 0) {
-            var points = this.points;
-            var len = points.length;
-            for (var i = 0; i < len; i++) {
-                points[i].rotate(angle, v);
-            }
-            this.recalc();
-            this.updateBounds();
-        }
-        return this;
-    }
-
-    /**
-     * Scale this Polygon by the given scalar.
-     * @name scale
-     * @memberOf me.Polygon.prototype
-     * @function
-     * @param {Number} x
-     * @param {Number} [y=x]
-     * @return {me.Polygon} Reference to this object for method chaining
-     */
-    scale(x, y) {
-        y = typeof (y) !== "undefined" ? y : x;
-
-        var points = this.points;
-        var len = points.length;
-        for (var i = 0; i < len; i++) {
-            points[i].scale(x, y);
-        }
-        this.recalc();
-        this.updateBounds();
-        return this;
-    }
-
-    /**
-     * Scale this Polygon by the given vector
-     * @name scaleV
-     * @memberOf me.Polygon.prototype
-     * @function
-     * @param {me.Vector2d} v
-     * @return {me.Polygon} Reference to this object for method chaining
-     */
-    scaleV(v) {
-        return this.scale(v.x, v.y);
-    }
-
-    /**
-     * Computes the calculated collision polygon.
-     * This **must** be called if the `points` array, `angle`, or `offset` is modified manually.
-     * @name recalc
-     * @memberOf me.Polygon.prototype
-     * @function
-     * @return {me.Polygon} Reference to this object for method chaining
-     */
-    recalc() {
-        var i;
-        var edges = this.edges;
-        var normals = this.normals;
-        var indices = this.indices;
-
-        // Copy the original points array and apply the offset/angle
-        var points = this.points;
-        var len = points.length;
-
-        if (len < 3) {
-            throw new Error("Requires at least 3 points");
-        }
-
-        // Calculate the edges/normals
-        for (i = 0; i < len; i++) {
-            if (edges[i] === undefined) {
-                edges[i] = new Vector2d();
-            }
-            edges[i].copy(points[(i + 1) % len]).sub(points[i]);
-
-            if (normals[i] === undefined) {
-                normals[i] = new Vector2d();
-            }
-            normals[i].copy(edges[i]).perp().normalize();
-        }
-        // trunc array
-        edges.length = len;
-        normals.length = len;
-        // do not do anything here, indices will be computed by
-        // toIndices if array is empty upon function call
-        indices.length = 0;
-
-        return this;
-    }
-
-    /**
-     * returns a list of indices for all triangles defined in this polygon
-     * @name getIndices
-     * @memberOf me.Polygon.prototype
-     * @function
-     * @return {Array} an array of vertex indices for all triangles forming this polygon.
-     */
-    getIndices() {
-        if (this.indices.length === 0) {
-            this.indices = earcut$1(this.points.flatMap(p => [p.x, p.y]));
-        }
-        return this.indices;
-    }
-
-    /**
-     * translate the Polygon by the specified offset
-     * @name translate
-     * @memberOf me.Polygon.prototype
-     * @function
-     * @param {Number} x x offset
-     * @param {Number} y y offset
-     * @return {me.Polygon} this Polygon
-     */
-    /**
-     * translate the Polygon by the specified vector
-     * @name translate
-     * @memberOf me.Polygon.prototype
-     * @function
-     * @param {me.Vector2d} v vector offset
-     * @return {me.Polygon} Reference to this object for method chaining
-     */
-    translate() {
-        var _x, _y;
-
-        if (arguments.length === 2) {
-            // x, y
-            _x = arguments[0];
-            _y = arguments[1];
-        } else {
-            // vector
-            _x = arguments[0].x;
-            _y = arguments[0].y;
-        }
-
-        this.pos.x += _x;
-        this.pos.y += _y;
-        this.getBounds().translate(_x, _y);
-
-        return this;
-    }
-
-    /**
-     * Shifts the Polygon to the given position vector.
-     * @name shift
-     * @memberOf me.Polygon
-     * @function
-     * @param {me.Vector2d} position
-     */
-    /**
-     * Shifts the Polygon to the given x, y position.
-     * @name shift
-     * @memberOf me.Polygon
-     * @function
-     * @param {Number} x
-     * @param {Number} y
-     */
-    shift() {
-        var _x, _y;
-        if (arguments.length === 2) {
-            // x, y
-            _x = arguments[0];
-            _y = arguments[1];
-        } else {
-            // vector
-            _x = arguments[0].x;
-            _y = arguments[0].y;
-        }
-        this.pos.x = _x;
-        this.pos.y = _y;
-        this.updateBounds();
-    }
-
-    /**
-     * Returns true if the polygon contains the given point.
-     * (Note: it is highly recommended to first do a hit test on the corresponding <br>
-     *  bounding rect, as the function can be highly consuming with complex shapes)
-     * @name contains
-     * @memberOf me.Polygon.prototype
-     * @function
-     * @param  {me.Vector2d} point
-     * @return {boolean} true if contains
-     */
-
-    /**
-     * Returns true if the polygon contains the given point. <br>
-     * (Note: it is highly recommended to first do a hit test on the corresponding <br>
-     *  bounding rect, as the function can be highly consuming with complex shapes)
-     * @name contains
-     * @memberOf me.Polygon.prototype
-     * @function
-     * @param  {Number} x x coordinate
-     * @param  {Number} y y coordinate
-     * @return {boolean} true if contains
-     */
-    contains() {
-        var _x, _y;
-
-        if (arguments.length === 2) {
-          // x, y
-          _x = arguments[0];
-          _y = arguments[1];
-        } else {
-          // vector
-          _x = arguments[0].x;
-          _y = arguments[0].y;
-        }
-
-        var intersects = false;
-        var posx = this.pos.x, posy = this.pos.y;
-        var points = this.points;
-        var len = points.length;
-
-        //http://www.ecse.rpi.edu/Homepages/wrf/Research/Short_Notes/pnpoly.html
-        for (var i = 0, j = len - 1; i < len; j = i++) {
-            var iy = points[i].y + posy, ix = points[i].x + posx,
-                jy = points[j].y + posy, jx = points[j].x + posx;
-            if (((iy > _y) !== (jy > _y)) && (_x < (jx - ix) * (_y - iy) / (jy - iy) + ix)) {
-                intersects = !intersects;
-            }
-        }
-        return intersects;
-    }
-
-    /**
-     * returns the bounding box for this shape, the smallest Rectangle object completely containing this shape.
-     * @name getBounds
-     * @memberOf me.Polygon.prototype
-     * @function
-     * @return {me.Bounds} this shape bounding box Rectangle object
-     */
-    getBounds() {
-        if (typeof this._bounds === "undefined") {
-            this._bounds = pool.pull("Bounds");
-        }
-        return this._bounds;
-    }
-
-    /**
-     * update the bounding box for this shape.
-     * @ignore
-     * @name updateBounds
-     * @memberOf me.Polygon.prototype
-     * @function
-     * @return {me.Bounds} this shape bounding box Rectangle object
-     */
-    updateBounds() {
-        var bounds = this.getBounds();
-
-        bounds.update(this.points);
-        bounds.translate(this.pos);
-
-        return bounds;
-    }
-
-    /**
-     * clone this Polygon
-     * @name clone
-     * @memberOf me.Polygon.prototype
-     * @function
-     * @return {me.Polygon} new Polygon
-     */
-    clone() {
-        var copy = [];
-        this.points.forEach(function (point) {
-            copy.push(point.clone());
-        });
-        return new Polygon(this.pos.x, this.pos.y, copy);
-    }
-}
-
-/**
- * @classdesc
- * a rectangle Object
- * @class
- * @extends me.Polygon
- * @memberOf me
- * @constructor
- * @param {Number} x position of the Rectangle
- * @param {Number} y position of the Rectangle
- * @param {Number} w width of the rectangle
- * @param {Number} h height of the rectangle
- */
-
-class Rect extends Polygon {
-
-    constructor(x, y, w, h) {
-        // parent constructor
-        super(x, y, [
-            new Vector2d(0, 0), // 0, 0
-            new Vector2d(w, 0), // 1, 0
-            new Vector2d(w, h), // 1, 1
-            new Vector2d(0, h)  // 0, 1
-        ]);
-        this.shapeType = "Rectangle";
-    }
-
-    /** @ignore */
-    onResetEvent(x, y, w, h) {
-        this.setShape(x, y, w, h);
-    }
-
-    /**
-     * set new value to the rectangle shape
-     * @name setShape
-     * @memberOf me.Rect.prototype
-     * @function
-     * @param {Number} x position of the Rectangle
-     * @param {Number} y position of the Rectangle
-     * @param {Number|Array} w|points width of the rectangle, or an array of vector defining the rectangle
-     * @param {Number} [h] height of the rectangle, if a numeral width parameter is specified
-     * @return {me.Rect} this rectangle
-     */
-    setShape(x, y, w, h) {
-        var points = w; // assume w is an array by default
-
-        this.pos.set(x, y);
-
-        if (arguments.length === 4) {
-            points = this.points;
-            points[0].set(0, 0); // 0, 0
-            points[1].set(w, 0); // 1, 0
-            points[2].set(w, h); // 1, 1
-            points[3].set(0, h); // 0, 1
-        }
-
-        this.setVertices(points);
-        return this;
-    }
-
-
-    /**
-     * left coordinate of the Rectangle
-     * @public
-     * @type {Number}
-     * @name left
-     * @memberOf me.Rect
-     */
-
-    /**
-     * @ignore
-     */
-    get left() {
-        return this.pos.x;
-    }
-
-    /**
-     * right coordinate of the Rectangle
-     * @public
-     * @type {Number}
-     * @name right
-     * @memberOf me.Rect
-     */
-
-    /**
-     * @ignore
-     */
-    get right() {
-        var w = this.width;
-        return (this.pos.x + w) || w;
-    }
-
-    /**
-     * top coordinate of the Rectangle
-     * @public
-     * @type {Number}
-     * @name top
-     * @memberOf me.Rect
-     */
-
-    /**
-     * @ignore
-     */
-    get top() {
-        return this.pos.y;
-    }
-
-    /**
-     * bottom coordinate of the Rectangle
-     * @public
-     * @type {Number}
-     * @name bottom
-     * @memberOf me.Rect
-     */
-
-    /**
-     * @ignore
-     */
-    get bottom() {
-        var h = this.height;
-        return (this.pos.y + h) || h;
-    }
-
-    /**
-     * width of the Rectangle
-     * @public
-     * @type {Number}
-     * @name width
-     * @memberOf me.Rect
-     */
-
-    /**
-     * @ignore
-     */
-    get width() {
-        return this.points[2].x;
-    }
-    /**
-     * @ignore
-     */
-    set width(value) {
-        this.points[1].x = this.points[2].x = value;
-        this.recalc();
-        this.updateBounds();
-    }
-
-    /**
-     * height of the Rectangle
-     * @public
-     * @type {Number}
-     * @name height
-     * @memberOf me.Rect
-     */
-
-    /**
-     * @ignore
-     */
-    get height() {
-        return this.points[2].y;
-    }
-    /**
-     * @ignore
-     */
-    set height(value) {
-        this.points[2].y = this.points[3].y = value;
-        this.recalc();
-        this.updateBounds();
-    }
-
-    /**
-     * absolute center of this rectangle on the horizontal axis
-     * @public
-     * @type {Number}
-     * @name centerX
-     * @memberOf me.Rect
-     */
-
-    /**
-     * @ignore
-     */
-    get centerX() {
-        if (isFinite(this.width)) {
-            return this.pos.x + (this.width / 2);
-        } else {
-            return this.width;
-        }
-    }
-
-    /**
-     * @ignore
-     */
-    set centerX (value) {
-        this.pos.x = value - (this.width / 2);
-    }
-
-    /**
-     * absolute center of this rectangle on the vertical axis
-     * @public
-     * @type {Number}
-     * @name centerY
-     * @memberOf me.Rect
-     */
-
-    /**
-     * @ignore
-     */
-    get centerY() {
-        if (isFinite(this.height)) {
-            return this.pos.y + (this.height / 2);
-        } else {
-            return this.height;
-        }
-    }
-
-    /**
-     * @ignore
-     */
-    set centerY(value) {
-        this.pos.y = value - (this.height / 2);
-    }
-
-    /**
-     * resize the rectangle
-     * @name resize
-     * @memberOf me.Rect.prototype
-     * @function
-     * @param {Number} w new width of the rectangle
-     * @param {Number} h new height of the rectangle
-     * @return {me.Rect} this rectangle
-     */
-    resize(w, h) {
-        this.width = w;
-        this.height = h;
-        return this;
-    }
-
-    /**
-     * scale the rectangle
-     * @name scale
-     * @memberOf me.Rect.prototype
-     * @function
-     * @param {Number} x a number representing the abscissa of the scaling vector.
-     * @param {Number} [y=x] a number representing the ordinate of the scaling vector.
-     * @return {me.Rect} this rectangle
-     */
-    scale(x, y = x) {
-        this.width *= x;
-        this.height *= y;
-        return this;
-    }
-
-    /**
-     * clone this rectangle
-     * @name clone
-     * @memberOf me.Rect.prototype
-     * @function
-     * @return {me.Rect} new rectangle
-     */
-    clone() {
-        return new Rect(this.pos.x, this.pos.y, this.width, this.height);
-    }
-
-    /**
-     * copy the position and size of the given rectangle into this one
-     * @name copy
-     * @memberOf me.Rect.prototype
-     * @function
-     * @param {me.Rect} rect Source rectangle
-     * @return {me.Rect} new rectangle
-     */
-    copy(rect) {
-        return this.setShape(rect.pos.x, rect.pos.y, rect.width, rect.height);
-    }
-
-    /**
-     * merge this rectangle with another one
-     * @name union
-     * @memberOf me.Rect.prototype
-     * @function
-     * @param {me.Rect} rect other rectangle to union with
-     * @return {me.Rect} the union(ed) rectangle
-     */
-    union(/** {me.Rect} */ r) {
-        var x1 = Math.min(this.left, r.left);
-        var y1 = Math.min(this.top, r.top);
-
-        this.resize(
-            Math.max(this.right, r.right) - x1,
-            Math.max(this.bottom, r.bottom) - y1
-        );
-
-        this.pos.set(x1, y1);
-
-        return this;
-    }
-
-    /**
-     * check if this rectangle is intersecting with the specified one
-     * @name overlaps
-     * @memberOf me.Rect.prototype
-     * @function
-     * @param  {me.Rect} rect
-     * @return {boolean} true if overlaps
-     */
-    overlaps(r) {
-        return (
-            this.left < r.right &&
-            r.left < this.right &&
-            this.top < r.bottom &&
-            r.top < this.bottom
-        );
-    }
-
-    /**
-     * Returns true if the rectangle contains the given rectangle
-     * @name contains
-     * @memberOf me.Rect.prototype
-     * @function
-     * @param {me.Rect} rect
-     * @return {boolean} true if contains
-     */
-
-    /**
-     * Returns true if the rectangle contains the given point
-     * @name contains
-     * @memberOf me.Rect.prototype
-     * @function
-     * @param  {Number} x x coordinate
-     * @param  {Number} y y coordinate
-     * @return {boolean} true if contains
-     */
-
-    /**
-     * Returns true if the rectangle contains the given point
-     * @name contains
-     * @memberOf me.Rect
-     * @function
-     * @param {me.Vector2d} point
-     * @return {boolean} true if contains
-     */
-    contains() {
-        var arg0 = arguments[0];
-        var _x1, _x2, _y1, _y2;
-        if (arguments.length === 2) {
-             // x, y
-             _x1 = _x2 = arg0;
-             _y1 = _y2 = arguments[1];
-         } else {
-             if (arg0 instanceof Rect) {
-                 // me.Rect
-                 _x1 = arg0.left;
-                 _x2 = arg0.right;
-                 _y1 = arg0.top;
-                 _y2 = arg0.bottom;
-             } else {
-                 // vector
-                 _x1 = _x2 = arg0.x;
-                 _y1 = _y2 = arg0.y;
-             }
-         }
-         return (
-             _x1 >= this.left &&
-             _x2 <= this.right &&
-             _y1 >= this.top &&
-             _y2 <= this.bottom
-         );
-    }
-
-    /**
-     * check if this rectangle is identical to the specified one
-     * @name equals
-     * @memberOf me.Rect.prototype
-     * @function
-     * @param  {me.Rect} rect
-     * @return {boolean} true if equals
-     */
-    equals(r) {
-        return (
-            r.left === this.left &&
-            r.right === this.right &&
-            r.top === this.top &&
-            r.bottom === this.bottom
-        );
-    }
-
-    /**
-     * determines whether all coordinates of this rectangle are finite numbers.
-     * @name isFinite
-     * @memberOf me.Rect.prototype
-     * @function
-     * @return {boolean} false if all coordinates are positive or negative Infinity or NaN; otherwise, true.
-     */
-    isFinite() {
-        return (isFinite(this.pos.x) && isFinite(this.pos.y) && isFinite(this.width) && isFinite(this.height));
-    }
-
-    /**
-     * Returns a polygon whose edges are the same as this box.
-     * @name toPolygon
-     * @memberOf me.Rect.prototype
-     * @function
-     * @return {me.Polygon} a new Polygon that represents this rectangle.
-     */
-    toPolygon() {
-        return new Polygon(
-            this.pos.x, this.pos.y, this.points
-        );
     }
 }
 
@@ -12185,9 +14555,10 @@ class Renderable extends Rect {
          *          this.body = new me.Body(this);
          *          // add a default collision shape
          *          this.body.addShape(new me.Rect(0, 0, this.width, this.height));
-         *          // configure max speed and friction
+         *          // configure max speed, friction, and initial force to be applied
          *          this.body.setMaxVelocity(3, 15);
          *          this.body.setFriction(0.4, 0);
+         *          this.body.force.set(3, 0);
          *
          *          // set the display to follow our position on both axis
          *          me.game.viewport.follow(this.pos, me.game.viewport.AXIS.BOTH);
@@ -12896,6 +15267,33 @@ class Renderable extends Rect {
     }
 
     /**
+     * onCollision callback, triggered in case of collision,
+     * when this renderable body is colliding with another one
+     * @name onCollision
+     * @memberOf me.Renderable.prototype
+     * @function
+     * @param {me.collision.ResponseObject} response the collision response object
+     * @param {me.Renderable} other the other renderable touching this one (a reference to response.a or response.b)
+     * @return {Boolean} true if the object should respond to the collision (its position and velocity will be corrected)
+     * @example
+     * // colision handler
+     * onCollision(response) {
+     *     if (response.b.body.collisionType === me.collision.types.ENEMY_OBJECT) {
+     *         // makes the other object solid, by substracting the overlap vector to the current position
+     *         this.pos.sub(response.overlapV);
+     *         this.hurt();
+     *         // not solid
+     *         return false;
+     *     }
+     *     // Make the object solid
+     *     return true;
+     * },
+     */
+    onCollision() {
+        return false;
+    }
+
+    /**
      * Destroy function<br>
      * @ignore
      */
@@ -13181,6 +15579,12 @@ class Container extends Renderable {
         if (this.enableChildBoundsUpdate) {
             this.updateBounds(true);
         }
+
+        // if a physic body is defined, add it to the game world
+        if (child.body instanceof Body) {
+            world.addBody(child.body);
+        }
+
         // triggered callback if defined
         this.onChildChange.call(this, this.getChildren().length - 1);
 
@@ -13227,6 +15631,12 @@ class Container extends Renderable {
             if (this.enableChildBoundsUpdate) {
                 this.updateBounds(true);
             }
+
+            // if a physic body is defined, add it to the game world
+            if (child.body instanceof Body) {
+                world.addBody(child.body);
+            }
+
             // triggered callback if defined
             this.onChildChange.call(this, index);
 
@@ -13604,6 +16014,12 @@ class Container extends Renderable {
                 child.onDeactivateEvent();
             }
 
+            // remove the body first to avoid a condition where a body can be detached
+            // from its parent, before the body is removed from the game world
+            if (child.body instanceof Body) {
+                world.removeBody(child.body);
+            }
+
             if (!keepalive) {
                 // attempt at recycling the object
                 if (pool.push(child, false) === false ) {
@@ -13631,6 +16047,7 @@ class Container extends Renderable {
             if (this.enableChildBoundsUpdate) {
                 this.updateBounds(true);
             }
+
             // triggered callback if defined
             this.onChildChange.call(this, childIndex);
         }
@@ -13818,14 +16235,10 @@ class Container extends Renderable {
      * @ignore
      */
     update(dt) {
-        // call the parent method
-        super.update(dt);
-
-        var isDirty = false;
         var isFloating = false;
         var isPaused = state.isPaused();
-
         var children = this.getChildren();
+
         for (var i = children.length, obj; i--, (obj = children[i]);) {
             if (isPaused && (!obj.updateWhenPaused)) {
                 // skip this object
@@ -13847,7 +16260,7 @@ class Container extends Renderable {
                     }                });
 
                 // update our object
-                isDirty = ((obj.inViewport || obj.alwaysUpdate) && obj.update(dt)) || isDirty;
+                this.isDirty |= ((obj.inViewport || obj.alwaysUpdate) && obj.update(dt));
 
                 if (globalFloatingCounter > 0) {
                     globalFloatingCounter--;
@@ -13855,11 +16268,12 @@ class Container extends Renderable {
             }
             else {
                 // just directly call update() for non renderable object
-                isDirty = obj.update(dt) || isDirty;
+                this.isDirty |= obj.update(dt);
             }
         }
 
-        return isDirty;
+        // call the parent method
+        return super.update(dt);
     }
 
     /**
@@ -14280,849 +16694,6 @@ class QuadTree {
     }
 }
 
-/*
-* Separating Axis Theorem implementation, based on the SAT.js library by Jim Riecken <jimr@jimr.ca>
-* Available under the MIT License - https://github.com/jriecken/sat-js
-*/
-
-/**
- * Constants for Vornoi regions
- * @ignore
- */
-var LEFT_VORNOI_REGION = -1;
-
-/**
- * Constants for Vornoi regions
- * @ignore
- */
-var MIDDLE_VORNOI_REGION = 0;
-
-/**
- * Constants for Vornoi regions
- * @ignore
- */
-var RIGHT_VORNOI_REGION = 1;
-
-
-/**
- * A pool of `Vector` objects that are used in calculations to avoid allocating memory.
- * @type {Array.<Vector>}
- * @ignore
- */
-var T_VECTORS = [];
-for (var v = 0; v < 10; v++) { T_VECTORS.push(new Vector2d()); }
-
-/**
- * A pool of arrays of numbers used in calculations to avoid allocating memory.
- * @type {Array.<Array.<number>>}
- * @ignore
- */
-var T_ARRAYS = [];
-for (var a = 0; a < 5; a++) { T_ARRAYS.push([]); }
-
-
-/**
- * Flattens the specified array of points onto a unit vector axis,
- * resulting in a one dimensional range of the minimum and
- * maximum value on that axis.
- * @ignore
- * @param {Array.<Vector>} points The points to flatten.
- * @param {Vector} normal The unit vector axis to flatten on.
- * @param {Array.<number>} result An array.  After calling this function,
- *   result[0] will be the minimum value,
- *   result[1] will be the maximum value.
- */
-function flattenPointsOn(points, normal, result) {
-    var min = Number.MAX_VALUE;
-    var max = -Number.MAX_VALUE;
-    var len = points.length;
-    for (var i = 0; i < len; i++) {
-        // The magnitude of the projection of the point onto the normal
-        var dot = points[i].dotProduct(normal);
-        if (dot < min) { min = dot; }
-        if (dot > max) { max = dot; }
-    }
-    result[0] = min;
-    result[1] = max;
-}
-
-/**
- * Check whether two convex polygons are separated by the specified
- * axis (must be a unit vector).
- * @ignore
- * @param {Vector} aPos The position of the first polygon.
- * @param {Vector} bPos The position of the second polygon.
- * @param {Array.<Vector>} aPoints The points in the first polygon.
- * @param {Array.<Vector>} bPoints The points in the second polygon.
- * @param {Vector} axis The axis (unit sized) to test against.  The points of both polygons
- *   will be projected onto this axis.
- * @param {Response=} response A Response object (optional) which will be populated
- *   if the axis is not a separating axis.
- * @return {boolean} true if it is a separating axis, false otherwise.  If false,
- *   and a response is passed in, information about how much overlap and
- *   the direction of the overlap will be populated.
- */
-function isSeparatingAxis(aPos, bPos, aPoints, bPoints, axis, response) {
-    var rangeA = T_ARRAYS.pop();
-    var rangeB = T_ARRAYS.pop();
-    // The magnitude of the offset between the two polygons
-    var offsetV = T_VECTORS.pop().copy(bPos).sub(aPos);
-    var projectedOffset = offsetV.dotProduct(axis);
-
-    // Project the polygons onto the axis.
-    flattenPointsOn(aPoints, axis, rangeA);
-    flattenPointsOn(bPoints, axis, rangeB);
-    // Move B's range to its position relative to A.
-    rangeB[0] += projectedOffset;
-    rangeB[1] += projectedOffset;
-    // Check if there is a gap. If there is, this is a separating axis and we can stop
-    if (rangeA[0] > rangeB[1] || rangeB[0] > rangeA[1]) {
-        T_VECTORS.push(offsetV);
-        T_ARRAYS.push(rangeA);
-        T_ARRAYS.push(rangeB);
-        return true;
-    }
-
-    // This is not a separating axis. If we're calculating a response, calculate the overlap.
-    if (response) {
-        var overlap = 0;
-        // A starts further left than B
-        if (rangeA[0] < rangeB[0]) {
-            response.aInB = false;
-            // A ends before B does. We have to pull A out of B
-            if (rangeA[1] < rangeB[1]) {
-                overlap = rangeA[1] - rangeB[0];
-                response.bInA = false;
-            // B is fully inside A.  Pick the shortest way out.
-            } else {
-                var option1 = rangeA[1] - rangeB[0];
-                var option2 = rangeB[1] - rangeA[0];
-                overlap = option1 < option2 ? option1 : -option2;
-            }
-        // B starts further left than A
-        } else {
-            response.bInA = false;
-            // B ends before A ends. We have to push A out of B
-            if (rangeA[1] > rangeB[1]) {
-                overlap = rangeA[0] - rangeB[1];
-                response.aInB = false;
-            // A is fully inside B.  Pick the shortest way out.
-            } else {
-                var option11 = rangeA[1] - rangeB[0];
-                var option22 = rangeB[1] - rangeA[0];
-                overlap = option11 < option22 ? option11 : -option22;
-            }
-        }
-
-        // If this is the smallest amount of overlap we've seen so far, set it as the minimum overlap.
-        var absOverlap = Math.abs(overlap);
-        if (absOverlap < response.overlap) {
-            response.overlap = absOverlap;
-            response.overlapN.copy(axis);
-            if (overlap < 0) {
-                response.overlapN.negateSelf();
-            }
-        }
-    }
-    T_VECTORS.push(offsetV);
-    T_ARRAYS.push(rangeA);
-    T_ARRAYS.push(rangeB);
-    return false;
-}
-
-
-/**
- * Calculates which Vornoi region a point is on a line segment. <br>
- * It is assumed that both the line and the point are relative to `(0,0)`<br>
- * <pre>
- *             |       (0)      |
- *      (-1)  [S]--------------[E]  (1)
- *             |       (0)      |
- * </pre>
- *
- * @ignore
- * @param {Vector} line The line segment.
- * @param {Vector} point The point.
- * @return  {number} LEFT_VORNOI_REGION (-1) if it is the left region,
- *          MIDDLE_VORNOI_REGION (0) if it is the middle region,
- *          RIGHT_VORNOI_REGION (1) if it is the right region.
- */
-function vornoiRegion(line, point) {
-    var len2 = line.length2();
-    var dp = point.dotProduct(line);
-    if (dp < 0) {
-        // If the point is beyond the start of the line, it is in the
-        // left vornoi region.
-        return LEFT_VORNOI_REGION;
-    } else if (dp > len2) {
-        // If the point is beyond the end of the line, it is in the
-        // right vornoi region.
-        return RIGHT_VORNOI_REGION;
-    } else {
-        // Otherwise, it's in the middle one.
-        return MIDDLE_VORNOI_REGION;
-    }
-}
-
-/**
- * Checks whether polygons collide.
- * @ignore
- * @param {me.Renderable} a a reference to the object A.
- * @param {me.Polygon} polyA a reference to the object A Polygon to be tested
- * @param {me.Renderable} b a reference to the object B.
- * @param {me.Polygon} polyB a reference to the object B Polygon to be tested
- * @param {Response=} response Response object (optional) that will be populated if they intersect.
- * @return {boolean} true if they intersect, false if they don't.
- */
-function testPolygonPolygon(a, polyA, b, polyB, response) {
-    // specific point for
-    var aPoints = polyA.points;
-    var aNormals = polyA.normals;
-    var aLen = aNormals.length;
-    var bPoints = polyB.points;
-    var bNormals = polyB.normals;
-    var bLen = bNormals.length;
-    // aboslute shape position
-    var posA = T_VECTORS.pop().copy(a.pos).add(a.ancestor.getAbsolutePosition()).add(polyA.pos);
-    var posB = T_VECTORS.pop().copy(b.pos).add(b.ancestor.getAbsolutePosition()).add(polyB.pos);
-    var i;
-
-    // If any of the edge normals of A is a separating axis, no intersection.
-    for (i = 0; i < aLen; i++) {
-        if (isSeparatingAxis(posA, posB, aPoints, bPoints, aNormals[i], response)) {
-            T_VECTORS.push(posA);
-            T_VECTORS.push(posB);
-            return false;
-        }
-    }
-
-    // If any of the edge normals of B is a separating axis, no intersection.
-    for (i = 0; i < bLen; i++) {
-        if (isSeparatingAxis(posA, posB, aPoints, bPoints, bNormals[i], response)) {
-            T_VECTORS.push(posA);
-            T_VECTORS.push(posB);
-            return false;
-        }
-    }
-
-    // Since none of the edge normals of A or B are a separating axis, there is an intersection
-    // and we've already calculated the smallest overlap (in isSeparatingAxis).  Calculate the
-    // final overlap vector.
-    if (response) {
-        response.a = a;
-        response.b = b;
-        response.overlapV.copy(response.overlapN).scale(response.overlap);
-    }
-    T_VECTORS.push(posA);
-    T_VECTORS.push(posB);
-    return true;
-}
-
-/**
- * Check if two Ellipse collide.
- * @ignore
- * @param {me.Renderable} a a reference to the object A.
- * @param {me.Ellipse} ellipseA a reference to the object A Ellipse to be tested
- * @param {me.Renderable} b a reference to the object B.
- * @param {me.Ellipse} ellipseB a reference to the object B Ellipse to be tested
- * @param {Response=} response Response object (optional) that will be populated if
- *   the circles intersect.
- * @return {boolean} true if the circles intersect, false if they don't.
- */
-function testEllipseEllipse(a, ellipseA, b, ellipseB, response) {
-    // Check if the distance between the centers of the two
-    // circles is greater than their combined radius.
-    var differenceV = T_VECTORS.pop().copy(b.pos).add(b.ancestor.getAbsolutePosition()).add(ellipseB.pos)
-        .sub(a.pos).add(a.ancestor.getAbsolutePosition()).sub(ellipseA.pos);
-    var radiusA = ellipseA.radius;
-    var radiusB = ellipseB.radius;
-    var totalRadius = radiusA + radiusB;
-    var totalRadiusSq = totalRadius * totalRadius;
-    var distanceSq = differenceV.length2();
-    // If the distance is bigger than the combined radius, they don't intersect.
-    if (distanceSq > totalRadiusSq) {
-        T_VECTORS.push(differenceV);
-        return false;
-    }
-    // They intersect.  If we're calculating a response, calculate the overlap.
-    if (response) {
-        var dist = Math.sqrt(distanceSq);
-        response.a = a;
-        response.b = b;
-        response.overlap = totalRadius - dist;
-        response.overlapN.copy(differenceV.normalize());
-        response.overlapV.copy(differenceV).scale(response.overlap);
-        response.aInB = radiusA <= radiusB && dist <= radiusB - radiusA;
-        response.bInA = radiusB <= radiusA && dist <= radiusA - radiusB;
-    }
-    T_VECTORS.push(differenceV);
-    return true;
-}
-
-/**
- * Check if a polygon and an ellipse collide.
- * @ignore
- * @param {me.Renderable} a a reference to the object A.
- * @param {me.Polygon} polyA a reference to the object A Polygon to be tested
- * @param {me.Renderable} b a reference to the object B.
- * @param {me.Ellipse} ellipseB a reference to the object B Ellipse to be tested
- * @param {Response=} response Response object (optional) that will be populated if they intersect.
- * @return {boolean} true if they intersect, false if they don't.
- */
-function testPolygonEllipse(a, polyA, b, ellipseB, response) {
-    // Get the position of the circle relative to the polygon.
-    var circlePos = T_VECTORS.pop().copy(b.pos).add(b.ancestor.getAbsolutePosition()).add(ellipseB.pos)
-        .sub(a.pos).add(a.ancestor.getAbsolutePosition()).sub(polyA.pos);
-    var radius = ellipseB.radius;
-    var radius2 = radius * radius;
-    var points = polyA.points;
-    var edges = polyA.edges;
-    var len = edges.length;
-    var edge = T_VECTORS.pop();
-    var normal = T_VECTORS.pop();
-    var point = T_VECTORS.pop();
-    var dist = 0;
-
-    // For each edge in the polygon:
-    for (var i = 0; i < len; i++) {
-        var next = i === len - 1 ? 0 : i + 1;
-        var prev = i === 0 ? len - 1 : i - 1;
-        var overlap = 0;
-        var overlapN = null;
-
-        // Get the edge.
-        edge.copy(edges[i]);
-        // Calculate the center of the circle relative to the starting point of the edge.
-        point.copy(circlePos).sub(points[i]);
-
-        // If the distance between the center of the circle and the point
-        // is bigger than the radius, the polygon is definitely not fully in
-        // the circle.
-        if (response && point.length2() > radius2) {
-            response.aInB = false;
-        }
-
-        // Calculate which Vornoi region the center of the circle is in.
-        var region = vornoiRegion(edge, point);
-        var inRegion = true;
-        // If it's the left region:
-        if (region === LEFT_VORNOI_REGION) {
-            var point2 = null;
-            if (len > 1) {
-                // We need to make sure we're in the RIGHT_VORNOI_REGION of the previous edge.
-                edge.copy(edges[prev]);
-                // Calculate the center of the circle relative the starting point of the previous edge
-                point2 = T_VECTORS.pop().copy(circlePos).sub(points[prev]);
-                region = vornoiRegion(edge, point2);
-                if (region !== RIGHT_VORNOI_REGION) {
-                    inRegion = false;
-                }
-            }
-
-            if (inRegion) {
-                // It's in the region we want.  Check if the circle intersects the point.
-                dist = point.length();
-                if (dist > radius) {
-                    // No intersection
-                    T_VECTORS.push(circlePos);
-                    T_VECTORS.push(edge);
-                    T_VECTORS.push(normal);
-                    T_VECTORS.push(point);
-                    if (point2) {
-                        T_VECTORS.push(point2);
-                    }
-                    return false;
-                } else if (response) {
-                    // It intersects, calculate the overlap.
-                    response.bInA = false;
-                    overlapN = point.normalize();
-                    overlap = radius - dist;
-                }
-            }
-
-            if (point2) {
-                T_VECTORS.push(point2);
-            }
-        // If it's the right region:
-        } else if (region === RIGHT_VORNOI_REGION) {
-            if (len > 1) {
-                // We need to make sure we're in the left region on the next edge
-                edge.copy(edges[next]);
-                // Calculate the center of the circle relative to the starting point of the next edge.
-                point.copy(circlePos).sub(points[next]);
-                region = vornoiRegion(edge, point);
-                if (region !== LEFT_VORNOI_REGION) {
-                    inRegion = false;
-                }
-            }
-
-            if (inRegion) {
-                // It's in the region we want.  Check if the circle intersects the point.
-                dist = point.length();
-                if (dist > radius) {
-                    // No intersection
-                    T_VECTORS.push(circlePos);
-                    T_VECTORS.push(edge);
-                    T_VECTORS.push(normal);
-                    T_VECTORS.push(point);
-                    return false;
-                } else if (response) {
-                    // It intersects, calculate the overlap.
-                    response.bInA = false;
-                    overlapN = point.normalize();
-                    overlap = radius - dist;
-                }
-            }
-        // Otherwise, it's the middle region:
-        } else {
-            // Need to check if the circle is intersecting the edge,
-            // Get the normal.
-            normal.copy(polyA.normals[i]);
-            // Find the perpendicular distance between the center of the
-            // circle and the edge.
-            dist = point.dotProduct(normal);
-            var distAbs = Math.abs(dist);
-            // If the circle is on the outside of the edge, there is no intersection.
-            if ((len === 1 || dist > 0) && distAbs > radius) {
-                // No intersection
-                T_VECTORS.push(circlePos);
-                T_VECTORS.push(edge);
-                T_VECTORS.push(normal);
-                T_VECTORS.push(point);
-                return false;
-            } else if (response) {
-                // It intersects, calculate the overlap.
-                overlapN = normal;
-                overlap = radius - dist;
-                // If the center of the circle is on the outside of the edge, or part of the
-                // circle is on the outside, the circle is not fully inside the polygon.
-                if (dist >= 0 || overlap < 2 * radius) {
-                    response.bInA = false;
-                }
-            }
-        }
-
-        // If this is the smallest overlap we've seen, keep it.
-        // (overlapN may be null if the circle was in the wrong Vornoi region).
-        if (overlapN && response && Math.abs(overlap) < Math.abs(response.overlap)) {
-            response.overlap = overlap;
-            response.overlapN.copy(overlapN);
-        }
-    }
-
-    // Calculate the final overlap vector - based on the smallest overlap.
-    if (response) {
-        response.a = a;
-        response.b = b;
-        response.overlapV.copy(response.overlapN).scale(response.overlap);
-    }
-    T_VECTORS.push(circlePos);
-    T_VECTORS.push(edge);
-    T_VECTORS.push(normal);
-    T_VECTORS.push(point);
-    return true;
-}
-
-/**
- * Check if an ellipse and a polygon collide. <br>
- * **NOTE:** This is slightly less efficient than testPolygonEllipse as it just
- * runs testPolygonEllipse and reverses the response at the end.
- * @ignore
- * @param {me.Renderable} a a reference to the object A.
- * @param {me.Ellipse} ellipseA a reference to the object A Ellipse to be tested
- * @param {me.Renderable} a a reference to the object B.
- * @param {me.Polygon} polyB a reference to the object B Polygon to be tested
- * @param {Response=} response Response object (optional) that will be populated if
- *   they intersect.
- * @return {boolean} true if they intersect, false if they don't.
- */
-function testEllipsePolygon(a, ellipseA, b, polyB, response) {
-    // Test the polygon against the circle.
-    var result = this.testPolygonEllipse(b, polyB, a, ellipseA, response);
-    if (result && response) {
-        // Swap A and B in the response.
-        var resa = response.a;
-        var aInB = response.aInB;
-        response.overlapN.negateSelf();
-        response.overlapV.negateSelf();
-        response.a = response.b;
-        response.b = resa;
-        response.aInB = response.bInA;
-        response.bInA = aInB;
-    }
-    return result;
-}
-
-var SAT = /*#__PURE__*/Object.freeze({
-    __proto__: null,
-    testPolygonPolygon: testPolygonPolygon,
-    testEllipseEllipse: testEllipseEllipse,
-    testPolygonEllipse: testPolygonEllipse,
-    testEllipsePolygon: testEllipsePolygon
-});
-
-// a dummy object when using Line for raycasting
-var dummyObj = {
-    pos : new Vector2d(0, 0),
-    ancestor : {
-        _absPos : new Vector2d(0, 0),
-        getAbsolutePosition : function () {
-            return this._absPos;
-        }
-    }
-};
-
-/**
- * @classdesc
- * An object representing the result of an intersection.
- * @property {me.Renderable} a The first object participating in the intersection
- * @property {me.Renderable} b The second object participating in the intersection
- * @property {Number} overlap Magnitude of the overlap on the shortest colliding axis
- * @property {me.Vector2d} overlapV The overlap vector (i.e. `overlapN.scale(overlap, overlap)`). If this vector is subtracted from the position of a, a and b will no longer be colliding
- * @property {me.Vector2d} overlapN The shortest colliding axis (unit-vector)
- * @property {Boolean} aInB Whether the first object is entirely inside the second
- * @property {Boolean} bInA Whether the second object is entirely inside the first
- * @property {Number} indexShapeA The index of the colliding shape for the object a body
- * @property {Number} indexShapeB The index of the colliding shape for the object b body
- * @name ResponseObject
- * @memberOf me.collision
- * @public
- * @see me.collision.check
- */
-class ResponseObject {
-    constructor() {
-        this.a = null;
-        this.b = null;
-        this.overlapN = new Vector2d();
-        this.overlapV = new Vector2d();
-        this.aInB = true;
-        this.bInA = true;
-        this.indexShapeA = -1;
-        this.indexShapeB = -1;
-        this.overlap = Number.MAX_VALUE;
-        return this;
-    }
-
-    /**
-     * Set some values of the response back to their defaults. <br>
-     * Call this between tests if you are going to reuse a single <br>
-     * Response object for multiple intersection tests <br>
-     * (recommended as it will avoid allocating extra memory) <br>
-     * @name clear
-     * @memberOf me.collision.ResponseObject
-     * @public
-     * @function
-     */
-    clear () {
-        this.aInB = true;
-        this.bInA = true;
-        this.overlap = Number.MAX_VALUE;
-        this.indexShapeA = -1;
-        this.indexShapeB = -1;
-        return this;
-    }
-}
-
-/**
- * A singleton for managing collision detection (and projection-based collision response) of 2D shapes.<br>
- * Based on the Separating Axis Theorem and supports detecting collisions between simple Axis-Aligned Boxes, convex polygons and circles based shapes.
- * @namespace me.collision
- * @memberOf me
- */
-
-var collision = {
-
-     /**
-      * The maximum number of children that a quadtree node can contain before it is split into sub-nodes.
-      * @name maxChildren
-      * @memberOf me.collision
-      * @public
-      * @type {Number}
-      * @default 8
-      * @see me.game.world.broadphase
-      */
-     maxChildren : 8,
-
-     /**
-      * The maximum number of levels that the quadtree will create.
-      * @name maxDepth
-      * @memberOf me.collision
-      * @public
-      * @type {Number}
-      * @default 4
-      * @see me.game.world.broadphase
-      *
-      */
-     maxDepth : 4,
-
-    /**
-     * Enum for collision type values.
-     * @property NO_OBJECT to disable collision check
-     * @property PLAYER_OBJECT
-     * @property NPC_OBJECT
-     * @property ENEMY_OBJECT
-     * @property COLLECTABLE_OBJECT
-     * @property ACTION_OBJECT e.g. doors
-     * @property PROJECTILE_OBJECT e.g. missiles
-     * @property WORLD_SHAPE e.g. walls; for map collision shapes
-     * @property USER user-defined collision types (see example)
-     * @property ALL_OBJECT all of the above (including user-defined types)
-     * @readonly
-     * @enum {Number}
-     * @name types
-     * @memberOf me.collision
-     * @see me.body.setCollisionMask
-     * @see me.body.collisionType
-     * @example
-     * // set the body collision type
-     * myEntity.body.collisionType = me.collision.types.PLAYER_OBJECT;
-     *
-     * // filter collision detection with collision shapes, enemies and collectables
-     * myEntity.body.setCollisionMask(
-     *     me.collision.types.WORLD_SHAPE |
-     *     me.collision.types.ENEMY_OBJECT |
-     *     me.collision.types.COLLECTABLE_OBJECT
-     * );
-     *
-     * // User-defined collision types are defined using BITWISE LEFT-SHIFT:
-     * game.collisionTypes = {
-     *     LOCKED_DOOR : me.collision.types.USER << 0,
-     *     OPEN_DOOR   : me.collision.types.USER << 1,
-     *     LOOT        : me.collision.types.USER << 2,
-     * };
-     *
-     * // Set collision type for a door entity
-     * myDoorEntity.body.collisionType = game.collisionTypes.LOCKED_DOOR;
-     *
-     * // Set collision mask for the player entity, so it collides with locked doors and loot
-     * myPlayerEntity.body.setCollisionMask(
-     *     me.collision.types.ENEMY_OBJECT |
-     *     me.collision.types.WORLD_SHAPE |
-     *     game.collisionTypes.LOCKED_DOOR |
-     *     game.collisionTypes.LOOT
-     * );
-     */
-    types : {
-        /** to disable collision check */
-        NO_OBJECT           : 0,
-        PLAYER_OBJECT       : 1 << 0,
-        NPC_OBJECT          : 1 << 1,
-        ENEMY_OBJECT        : 1 << 2,
-        COLLECTABLE_OBJECT  : 1 << 3,
-        ACTION_OBJECT       : 1 << 4, // door, etc...
-        PROJECTILE_OBJECT   : 1 << 5, // missiles, etc...
-        WORLD_SHAPE         : 1 << 6, // walls, etc...
-        USER                : 1 << 7, // user-defined types start here...
-        ALL_OBJECT          : 0xFFFFFFFF // all objects
-    },
-
-
-    /**
-     * a global instance of a response object used for collision detection <br>
-     * this object will be reused amongst collision detection call if not user-defined response is specified
-     * @name response
-     * @memberOf me.collision
-     * @public
-     * @type {me.collision.ResponseObject}
-     */
-    response : new ResponseObject(),
-
-    /**
-     * a callback used to determine if two objects should collide (based on both respective objects collision mask and type).<br>
-     * you can redefine this function if you need any specific rules over what should collide with what.
-     * @name shouldCollide
-     * @memberOf me.collision
-     * @public
-     * @function
-     * @param {me.Renderable} a a reference to the object A.
-     * @param {me.Renderable} b a reference to the object B.
-     * @return {Boolean} true if they should collide, false otherwise
-     */
-    shouldCollide(a, b) {
-        return (
-            a.isKinematic !== true && b.isKinematic !== true &&
-            a.body && b.body &&
-            (a.body.collisionMask & b.body.collisionType) !== 0 &&
-            (a.body.collisionType & b.body.collisionMask) !== 0
-        );
-    },
-
-    /**
-     * Checks if the specified object collides with others
-     * @name check
-     * @memberOf me.collision
-     * @public
-     * @function
-     * @param {me.Renderable} obj object to be tested for collision
-     * @param {me.collision.ResponseObject} [respObj=me.collision.response] a user defined response object that will be populated if they intersect.
-     * @return {Boolean} in case of collision, false otherwise
-     * @example
-     * update : function (dt) {
-     *    // ...
-     *
-     *    // handle collisions against other shapes
-     *    me.collision.check(this);
-     *
-     *    // ...
-     * },
-     *
-     * // colision handler
-     * onCollision : function (response) {
-     *     if (response.b.body.collisionType === me.collision.types.ENEMY_OBJECT) {
-     *         // makes the other object solid, by substracting the overlap vector to the current position
-     *         this.pos.sub(response.overlapV);
-     *         this.hurt();
-     *         // not solid
-     *         return false;
-     *     }
-     *     // Make the object solid
-     *     return true;
-     * },
-     */
-    check(objA, responseObject) {
-        var collision = 0;
-        var response = responseObject || this.response;
-
-        // retreive a list of potential colliding objects from the game world
-        var candidates = world.broadphase.retrieve(objA);
-
-        for (var i = candidates.length, objB; i--, (objB = candidates[i]);) {
-
-            // check if both objects "should" collide
-            if ((objB !== objA) && this.shouldCollide(objA, objB) &&
-                // fast AABB check if both bounding boxes are overlaping
-                objA.body.getBounds().overlaps(objB.body.getBounds())) {
-
-                // go trough all defined shapes in A
-                var aLen = objA.body.shapes.length;
-                var bLen = objB.body.shapes.length;
-                if (aLen === 0 || bLen === 0) {
-                    continue;
-                }
-
-                var indexA = 0;
-                do {
-                    var shapeA = objA.body.getShape(indexA);
-                    // go through all defined shapes in B
-                    var indexB = 0;
-                    do {
-                        var shapeB = objB.body.getShape(indexB);
-
-                        // full SAT collision check
-                        if (SAT["test" + shapeA.shapeType + shapeB.shapeType]
-                            .call(
-                                this,
-                                objA, // a reference to the object A
-                                shapeA,
-                                objB,  // a reference to the object B
-                                shapeB,
-                                 // clear response object before reusing
-                                response.clear()) === true
-                        ) {
-                            // we touched something !
-                            collision++;
-
-                            // set the shape index
-                            response.indexShapeA = indexA;
-                            response.indexShapeB = indexB;
-
-                            // execute the onCollision callback
-                            if (objA.onCollision && objA.onCollision(response, objB) !== false) {
-                                objA.body.respondToCollision.call(objA.body, response);
-                            }
-                            if (objB.onCollision && objB.onCollision(response, objA) !== false) {
-                                objB.body.respondToCollision.call(objB.body, response);
-                            }
-                        }
-                        indexB++;
-                    } while (indexB < bLen);
-                    indexA++;
-                } while (indexA < aLen);
-            }
-        }
-        // we could return the amount of objects we collided with ?
-        return collision > 0;
-    },
-
-    /**
-     * Checks for object colliding with the given line
-     * @name rayCast
-     * @memberOf me.collision
-     * @public
-     * @function
-     * @param {me.Line} line line to be tested for collision
-     * @param {Array.<me.Renderable>} [result] a user defined array that will be populated with intersecting physic objects.
-     * @return {Array.<me.Renderable>} an array of intersecting physic objects
-     * @example
-     *    // define a line accross the viewport
-     *    var ray = new me.Line(
-     *        // absolute position of the line
-     *        0, 0, [
-     *        // starting point relative to the initial position
-     *        new me.Vector2d(0, 0),
-     *        // ending point
-     *        new me.Vector2d(me.game.viewport.width, me.game.viewport.height)
-     *    ]);
-     *
-     *    // check for collition
-     *    result = me.collision.rayCast(ray);
-     *
-     *    if (result.length > 0) {
-     *        // ...
-     *    }
-     */
-    rayCast(line, resultArray) {
-        var collision = 0;
-        var result = resultArray || [];
-
-        // retrieve a list of potential colliding objects from the game world
-        var candidates = world.broadphase.retrieve(line);
-
-        for (var i = candidates.length, objB; i--, (objB = candidates[i]);) {
-
-            // fast AABB check if both bounding boxes are overlaping
-            if (objB.body && line.getBounds().overlaps(objB.getBounds())) {
-
-                // go trough all defined shapes in B (if any)
-                var bLen = objB.body.shapes.length;
-                if ( objB.body.shapes.length === 0) {
-                    continue;
-                }
-
-                var shapeA = line;
-
-                // go through all defined shapes in B
-                var indexB = 0;
-                do {
-                    var shapeB = objB.body.getShape(indexB);
-
-                    // full SAT collision check
-                    if (SAT["test" + shapeA.shapeType + shapeB.shapeType]
-                        .call(
-                            this,
-                            dummyObj, // a reference to the object A
-                            shapeA,
-                            objB,  // a reference to the object B
-                            shapeB
-                    )) {
-                        // we touched something !
-                        result[collision] = objB;
-                        collision++;
-                    }
-                    indexB++;
-                } while (indexB < bLen);
-            }
-        }
-
-        // cap result in case it was not empty
-        result.length = collision;
-
-        // return the list of colliding objects
-        return result;
-    }
-
-};
-
 /**
  * an object representing the physic world, and responsible for managing and updating all childs and physics
  * @class
@@ -15186,6 +16757,15 @@ class World extends Container {
         this.preRender = false;
 
         /**
+         * the active physic bodies in this simulation
+         * @name bodies
+         * @memberOf me.World
+         * @public
+         * @type {Set}
+         */
+        this.bodies = new Set();
+
+        /**
          * the instance of the game world quadtree used for broadphase
          * @name broadphase
          * @memberOf me.World
@@ -15217,8 +16797,42 @@ class World extends Container {
         // reset the anchorPoint
         this.anchorPoint.set(0, 0);
 
-        // call the super constructor
+        // call the parent method
         super.reset();
+
+        // empty the list of active physic bodies
+        // Note: this should be empty already when calling the parent method
+        this.bodies.clear();
+    }
+
+    /**
+     * Add a physic body to the game world
+     * @name addBody
+     * @memberOf me.World
+     * @see me.Container.addChild
+     * @function
+     * @param {me.Body} body
+     * @return {me.World} this game world
+     */
+    addBody(body) {
+        //add it to the list of active body
+        this.bodies.add(body);
+        return this;
+    }
+
+    /**
+     * Remove a physic body from the game world
+     * @name removeBody
+     * @memberOf me.World
+     * @see me.Container.removeChild
+     * @function
+     * @param {me.Body} body
+     * @return {me.World} this game world
+     */
+    removeBody(body) {
+        //remove from the list of active body
+        this.bodies.delete(body);
+        return this;
     }
 
     /**
@@ -15228,11 +16842,30 @@ class World extends Container {
      * @function
      */
     update (dt) {
+        var isPaused = state.isPaused();
+
         // clear the quadtree
         this.broadphase.clear();
 
         // insert the world container (children) into the quadtree
         this.broadphase.insertContainer(this);
+
+        // iterate through all bodies
+        this.bodies.forEach((body) => {
+            if (!body.isStatic) {
+                var ancestor = body.ancestor;
+                // if the game is not paused, and ancestor can be updated
+                if (!(isPaused && (!ancestor.updateWhenPaused)) &&
+                   (ancestor.inViewport || ancestor.alwaysUpdate)) {
+                    // apply physics to the body (this moves it)
+                    if (body.update(dt) === true) {
+                        // mark ancestor as dirty
+                        ancestor.isDirty = true;
+                    }                    // handle collisions against other objects
+                    collision.check(ancestor);
+                }
+            }
+        });
 
         // call the super constructor
         return super.update(dt);
@@ -17277,1504 +18910,6 @@ var state = {
     }
 
 };
-
-/**
- * @classdesc
- * an ellipse Object
- * @class
- * @extends me.Object
- * @memberOf me
- * @constructor
- * @param {Number} x the center x coordinate of the ellipse
- * @param {Number} y the center y coordinate of the ellipse
- * @param {Number} w width (diameter) of the ellipse
- * @param {Number} h height (diameter) of the ellipse
- */
-
-class Ellipse {
-
-    constructor(x, y, w, h) {
-        /**
-         * the center coordinates of the ellipse
-         * @public
-         * @type {me.Vector2d}
-         * @name pos
-         * @memberOf me.Ellipse#
-         */
-        this.pos = new Vector2d();
-
-        /**
-         * The bounding rectangle for this shape
-         * @private
-         * @type {me.Bounds}
-         * @name _bounds
-         * @memberOf me.Ellipse#
-         */
-        this._bounds = undefined;
-
-        /**
-         * Maximum radius of the ellipse
-         * @public
-         * @type {Number}
-         * @name radius
-         * @memberOf me.Ellipse
-         */
-        this.radius = NaN;
-
-        /**
-         * Pre-scaled radius vector for ellipse
-         * @public
-         * @type {me.Vector2d}
-         * @name radiusV
-         * @memberOf me.Ellipse#
-         */
-        this.radiusV = new Vector2d();
-
-        /**
-         * Radius squared, for pythagorean theorom
-         * @public
-         * @type {me.Vector2d}
-         * @name radiusSq
-         * @memberOf me.Ellipse#
-         */
-        this.radiusSq = new Vector2d();
-
-        /**
-         * x/y scaling ratio for ellipse
-         * @public
-         * @type {me.Vector2d}
-         * @name ratio
-         * @memberOf me.Ellipse#
-         */
-        this.ratio = new Vector2d();
-
-        // the shape type
-        this.shapeType = "Ellipse";
-        this.setShape(x, y, w, h);
-    }
-
-    /** @ignore */
-    onResetEvent(x, y, w, h) {
-        this.setShape(x, y, w, h);
-    }
-
-    /**
-     * set new value to the Ellipse shape
-     * @name setShape
-     * @memberOf me.Ellipse.prototype
-     * @function
-     * @param {Number} x the center x coordinate of the ellipse
-     * @param {Number} y the center y coordinate of the ellipse
-     * @param {Number} w width (diameter) of the ellipse
-     * @param {Number} h height (diameter) of the ellipse
-     */
-    setShape(x, y, w, h) {
-        var hW = w / 2;
-        var hH = h / 2;
-
-        this.pos.set(x, y);
-        this.radius = Math.max(hW, hH);
-        this.ratio.set(hW / this.radius, hH / this.radius);
-        this.radiusV.set(this.radius, this.radius).scaleV(this.ratio);
-        var r = this.radius * this.radius;
-        this.radiusSq.set(r, r).scaleV(this.ratio);
-
-        // update the corresponding bounds
-        this.getBounds().setMinMax(x, y, x + w, x + h);
-        // elipse position is the center of the cirble, bounds position are top left
-        this.getBounds().translate(-this.radiusV.x, -this.radiusV.y);
-
-        return this;
-    }
-
-    /**
-     * Rotate this Ellipse (counter-clockwise) by the specified angle (in radians).
-     * @name rotate
-     * @memberOf me.Ellipse.prototype
-     * @function
-     * @param {Number} angle The angle to rotate (in radians)
-     * @param {me.Vector2d|me.ObservableVector2d} [v] an optional point to rotate around
-     * @return {me.Ellipse} Reference to this object for method chaining
-     */
-    rotate(angle, v) {
-        // TODO : only works for circle
-        this.pos.rotate(angle, v);
-        this.getBounds().shift(this.pos);
-        this.getBounds().translate(-this.radiusV.x, -this.radiusV.y);
-        return this;
-    }
-
-    /**
-     * Scale this Ellipse by the specified scalar.
-     * @name scale
-     * @memberOf me.Ellipse.prototype
-     * @function
-     * @param {Number} x
-     * @param {Number} [y=x]
-     * @return {me.Ellipse} Reference to this object for method chaining
-     */
-    scale(x, y) {
-        y = typeof (y) !== "undefined" ? y : x;
-        return this.setShape(
-            this.pos.x,
-            this.pos.y,
-            this.radiusV.x * 2 * x,
-            this.radiusV.y * 2 * y
-        );
-    }
-
-    /**
-     * Scale this Ellipse by the specified vector.
-     * @name scale
-     * @memberOf me.Ellipse.prototype
-     * @function
-     * @param {me.Vector2d} v
-     * @return {me.Ellipse} Reference to this object for method chaining
-     */
-    scaleV(v) {
-        return this.scale(v.x, v.y);
-    }
-
-    /**
-     * apply the given transformation matrix to this ellipse
-     * @name transform
-     * @memberOf me.Ellipse.prototype
-     * @function
-     * @param {me.Matrix2d} matrix the transformation matrix
-     * @return {me.Polygon} Reference to this object for method chaining
-     */
-    transform(/* m */) {
-        // TODO
-        return this;
-    }
-
-    /**
-     * translate the circle/ellipse by the specified offset
-     * @name translate
-     * @memberOf me.Ellipse.prototype
-     * @function
-     * @param {Number} x x offset
-     * @param {Number} y y offset
-     * @return {me.Ellipse} this ellipse
-     */
-    /**
-     * translate the circle/ellipse by the specified vector
-     * @name translate
-     * @memberOf me.Ellipse.prototype
-     * @function
-     * @param {me.Vector2d} v vector offset
-     * @return {me.Ellipse} this ellipse
-     */
-    translate() {
-        var _x, _y;
-
-        if (arguments.length === 2) {
-            // x, y
-            _x = arguments[0];
-            _y = arguments[1];
-        } else {
-            // vector
-            _x = arguments[0].x;
-            _y = arguments[0].y;
-        }
-
-        this.pos.x += _x;
-        this.pos.y += _y;
-        this.getBounds().translate(_x, _y);
-
-        return this;
-    }
-
-    /**
-     * check if this circle/ellipse contains the specified point
-     * @name contains
-     * @memberOf me.Ellipse.prototype
-     * @function
-     * @param  {me.Vector2d} point
-     * @return {boolean} true if contains
-     */
-
-    /**
-     * check if this circle/ellipse contains the specified point
-     * @name contains
-     * @memberOf me.Ellipse.prototype
-     * @function
-     * @param  {Number} x x coordinate
-     * @param  {Number} y y coordinate
-     * @return {boolean} true if contains
-     */
-    contains() {
-        var _x, _y;
-
-        if (arguments.length === 2) {
-          // x, y
-          _x = arguments[0];
-          _y = arguments[1];
-        } else {
-          // vector
-          _x = arguments[0].x;
-          _y = arguments[0].y;
-        }
-
-        // Make position relative to object center point.
-        _x -= this.pos.x;
-        _y -= this.pos.y;
-        // Pythagorean theorem.
-        return (
-            ((_x * _x) / this.radiusSq.x) +
-            ((_y * _y) / this.radiusSq.y)
-        ) <= 1.0;
-    }
-
-    /**
-     * returns the bounding box for this shape, the smallest Rectangle object completely containing this shape.
-     * @name getBounds
-     * @memberOf me.Ellipse.prototype
-     * @function
-     * @return {me.Bounds} this shape bounding box Rectangle object
-     */
-    getBounds() {
-        if (typeof this._bounds === "undefined") {
-            this._bounds = pool.pull("Bounds");
-        }
-        return this._bounds;
-    }
-
-    /**
-     * clone this Ellipse
-     * @name clone
-     * @memberOf me.Ellipse.prototype
-     * @function
-     * @return {me.Ellipse} new Ellipse
-     */
-    clone() {
-        return new Ellipse(
-            this.pos.x,
-            this.pos.y,
-            this.radiusV.x * 2,
-            this.radiusV.y * 2
-        );
-    }
-}
-
-/**
- * @classdesc
- * a bound object contains methods for creating and manipulating axis-aligned bounding boxes (AABB).
- * @class Bounds
- * @memberOf me
- * @constructor
- * @memberOf me
- * @param {me.Vector2d[]} [vertices] an array of me.Vector2d points
- * @return {me.Bounds} A new bounds object
- */
-
-class Bounds$1 {
-
-    constructor(vertices) {
-        this.onResetEvent(vertices);
-    }
-
-    onResetEvent(vertices) {
-        if (typeof this.min === "undefined") {
-            this.min = { x: Infinity,  y: Infinity };
-            this.max = { x: -Infinity, y: -Infinity };
-        } else {
-            this.clear();
-        }
-        if (typeof vertices !== "undefined") {
-            this.update(vertices);
-        }
-
-        // @ignore
-        this._center = new Vector2d();
-    }
-
-    /**
-     * reset the bound
-     * @name clear
-     * @memberOf me.Bounds
-     * @function
-     */
-    clear() {
-        this.setMinMax(Infinity, Infinity, -Infinity, -Infinity);
-
-    }
-
-    /**
-     * sets the bounds to the given min and max value
-     * @name setMinMax
-     * @memberOf me.Bounds
-     * @function
-     * @param {Number} minX
-     * @param {Number} minY
-     * @param {Number} maxX
-     * @param {Number} maxY
-     */
-    setMinMax(minX, minY, maxX, maxY) {
-        this.min.x = minX;
-        this.min.y = minY;
-
-        this.max.x = maxX;
-        this.max.y = maxY;
-    }
-
-    /**
-     * x position of the bound
-     * @public
-     * @type {Number}
-     * @name x
-     * @memberOf me.Bounds
-     */
-    get x() {
-        return this.min.x;
-    }
-
-    set x(value) {
-        var deltaX = this.max.x - this.min.x;
-        this.min.x = value;
-        this.max.x = value + deltaX;
-    }
-
-    /**
-     * y position of the bounds
-     * @public
-     * @type {Number}
-     * @name y
-     * @memberOf me.Bounds
-     */
-    get y() {
-        return this.min.y;
-    }
-
-    set y(value) {
-        var deltaY = this.max.y - this.min.y;
-
-        this.min.y = value;
-        this.max.y = value + deltaY;
-    }
-
-    /**
-     * width of the bounds
-     * @public
-     * @type {Number}
-     * @name width
-     * @memberOf me.Bounds
-     */
-    get width() {
-        return this.max.x - this.min.x;
-    }
-
-    set width(value) {
-        this.max.x = this.min.x + value;
-    }
-
-    /**
-     * width of the bounds
-     * @public
-     * @type {Number}
-     * @name width
-     * @memberOf me.Bounds
-     */
-    get height() {
-        return this.max.y - this.min.y;
-    }
-
-    set height(value) {
-        this.max.y = this.min.y + value;
-    }
-
-    /**
-     * left coordinate of the bound
-     * @public
-     * @type {Number}
-     * @name left
-     * @memberOf me.Bounds
-     */
-    get left() {
-        return this.min.x;
-    }
-
-    /**
-     * right coordinate of the bound
-     * @public
-     * @type {Number}
-     * @name right
-     * @memberOf me.Bounds
-     */
-    get right() {
-        return this.max.x;
-    }
-
-    /**
-     * top coordinate of the bound
-     * @public
-     * @type {Number}
-     * @name top
-     * @memberOf me.Bounds
-     */
-    get top() {
-        return this.min.y;
-    }
-
-    /**
-     * bottom coordinate of the bound
-     * @public
-     * @type {Number}
-     * @name bottom
-     * @memberOf me.Bounds
-     */
-    get bottom() {
-        return this.max.y;
-    }
-
-    /**
-     * center position of the bound on the x axis
-     * @public
-     * @type {Number}
-     * @name centerX
-     * @memberOf me.Bounds
-     */
-    get centerX() {
-        return this.min.x + (this.width / 2);
-    }
-
-    /**
-     * center position of the bound on the y axis
-     * @public
-     * @type {Number}
-     * @name centerY
-     * @memberOf me.Bounds
-     */
-    get centerY() {
-        return this.min.y + (this.height / 2);
-    }
-
-    /**
-     * return the center position of the bound
-     * @public
-     * @type {me.Vector2d}
-     * @name center
-     * @memberOf me.Bounds
-     */
-    get center() {
-        return this._center.set(this.centerX, this.centerY);
-    }
-
-    /**
-     * Updates bounds using the given vertices
-     * @name update
-     * @memberOf me.Bounds
-     * @function
-     * @param {me.Vector2d[]} vertices an array of me.Vector2d points
-     */
-    update(vertices) {
-        this.add(vertices, true);
-    }
-
-    /**
-     * add the given vertices to the bounds definition.
-     * @name add
-     * @memberOf me.Bounds
-     * @function
-     * @param {me.Vector2d[]} vertices an array of me.Vector2d points
-     * @param {boolean} [clear=false] either to reset the bounds before adding the new vertices
-     */
-    add(vertices, clear = false) {
-        if (clear === true) {
-            this.clear();
-        }
-        for (var i = 0; i < vertices.length; i++) {
-            var vertex = vertices[i];
-            if (vertex.x > this.max.x) this.max.x = vertex.x;
-            if (vertex.x < this.min.x) this.min.x = vertex.x;
-            if (vertex.y > this.max.y) this.max.y = vertex.y;
-            if (vertex.y < this.min.y) this.min.y = vertex.y;
-        }
-    }
-
-    /**
-     * add the given bounds to the bounds definition.
-     * @name addBounds
-     * @memberOf me.Bounds
-     * @function
-     * @param {me.Bounds} bounds
-     * @param {boolean} [clear=false] either to reset the bounds before adding the new vertices
-     */
-    addBounds(bounds, clear = false) {
-        if (clear === true) {
-            this.clear();
-        }
-
-        if (bounds.max.x > this.max.x) this.max.x = bounds.max.x;
-        if (bounds.min.x < this.min.x) this.min.x = bounds.min.x;
-        if (bounds.max.y > this.max.y) this.max.y = bounds.max.y;
-        if (bounds.min.y < this.min.y) this.min.y = bounds.min.y;
-    }
-
-    /**
-     * add the given point to the bounds definition.
-     * @name addPoint
-     * @memberOf me.Bounds
-     * @function
-     * @param {me.Vector2d} vector
-     * @param {me.Matrix2d} [matrix] an optional transform to apply to the given point
-     */
-    addPoint(v, m) {
-        if (typeof m !== "undefined") {
-            v = m.apply(v);
-        }
-        this.min.x = Math.min(this.min.x, v.x);
-        this.max.x = Math.max(this.max.x, v.x);
-        this.min.y = Math.min(this.min.y, v.y);
-        this.max.y = Math.max(this.max.y, v.y);
-    }
-
-    /**
-     * add the given quad coordinates to this bound definition, multiplied by the given matrix
-     * @name addFrame
-     * @memberOf me.Bounds
-     * @function
-     * @param {Number} x0 - left X coordinates of the quad
-     * @param {Number} y0 - top Y coordinates of the quad
-     * @param {Number} x1 - right X coordinates of the quad
-     * @param {Number} y1 - bottom y coordinates of the quad
-     * @param {me.Matrix2d} [matrix] an optional transform to apply to the given frame coordinates
-     */
-    addFrame(x0, y0, x1, y1, m) {
-        var v = me.pool.pull("Vector2d");
-
-        // transform all points and add to the bound definition
-        this.addPoint(v.set(x0, y0), m);
-        this.addPoint(v.set(x1, y0), m);
-        this.addPoint(v.set(x0, y1), m);
-        this.addPoint(v.set(x1, y1), m);
-
-        me.pool.push(v);
-    }
-
-    /**
-     * Returns true if the bounds contains the given point.
-     * @name contains
-     * @memberOf me.Bounds
-     * @function
-     * @param {me.Vector2d} point
-     * @return {boolean} True if the bounds contain the point, otherwise false
-     */
-    /**
-     * Returns true if the bounds contains the given point.
-     * @name contains
-     * @memberOf me.Bounds
-     * @function
-     * @param {Number} x
-     * @param {Number} y
-     * @return {boolean} True if the bounds contain the point, otherwise false
-     */
-    contains() {
-        var arg0 = arguments[0];
-        var _x1, _x2, _y1, _y2;
-        if (arguments.length === 2) {
-            // x, y
-            _x1 = _x2 = arg0;
-            _y1 = _y2 = arguments[1];
-        } else {
-            if (arg0 instanceof Bounds$1) {
-                // bounds
-                _x1 = arg0.min.x;
-                _x2 = arg0.max.x;
-                _y1 = arg0.min.y;
-                _y2 = arg0.max.y;
-            } else {
-                // vector
-                _x1 = _x2 = arg0.x;
-                _y1 = _y2 = arg0.y;
-            }
-        }
-
-        return _x1 >= this.min.x && _x2 <= this.max.x
-            && _y1 >= this.min.y && _y2 <= this.max.y;
-    }
-
-    /**
-     * Returns true if the two bounds intersect.
-     * @name overlaps
-     * @memberOf me.Bounds
-     * @function
-     * @param {me.Bounds|me.Rect} bounds
-     * @return {boolean} True if the bounds overlap, otherwise false
-     */
-    overlaps(bounds) {
-        return (this.left <= bounds.right && this.right >= bounds.left
-            && this.bottom >= bounds.top && this.top <= bounds.bottom);
-    }
-
-    /**
-     * determines whether all coordinates of this bounds are finite numbers.
-     * @name isFinite
-     * @memberOf me.Bounds
-     * @function
-     * @return {boolean} false if all coordinates are positive or negative Infinity or NaN; otherwise, true.
-     */
-    isFinite() {
-        return (isFinite(this.min.x) && isFinite(this.max.x) && isFinite(this.min.y) && isFinite(this.max.y));
-    }
-
-    /**
-     * Translates the bounds by the given vector.
-     * @name translate
-     * @memberOf me.Bounds
-     * @function
-     * @param {me.Vector2d} vector
-     */
-    /**
-     * Translates the bounds by x on the x axis, and y on the y axis
-     * @name translate
-     * @memberOf me.Bounds
-     * @function
-     * @param {Number} x
-     * @param {Number} y
-     */
-    translate() {
-        var _x, _y;
-        if (arguments.length === 2) {
-            // x, y
-            _x = arguments[0];
-            _y = arguments[1];
-        } else {
-            // vector
-            _x = arguments[0].x;
-            _y = arguments[0].y;
-        }
-        this.min.x += _x;
-        this.max.x += _x;
-        this.min.y += _y;
-        this.max.y += _y;
-    }
-
-    /**
-     * Shifts the bounds to the given position vector.
-     * @name shift
-     * @memberOf me.Bounds
-     * @function
-     * @param {me.Vector2d} position
-     */
-    /**
-     * Shifts the bounds to the given x, y position.
-     * @name shift
-     * @memberOf me.Bounds
-     * @function
-     * @param {Number} x
-     * @param {Number} y
-     */
-    shift() {
-        var _x, _y;
-
-        if (arguments.length === 2) {
-            // x, y
-            _x = arguments[0];
-            _y = arguments[1];
-        } else {
-            // vector
-            _x = arguments[0].x;
-            _y = arguments[0].y;
-        }
-
-        var deltaX = this.max.x - this.min.x,
-            deltaY = this.max.y - this.min.y;
-
-        this.min.x = _x;
-        this.max.x = _x + deltaX;
-        this.min.y = _y;
-        this.max.y = _y + deltaY;
-    }
-
-    /**
-     * clone this bounds
-     * @name clone
-     * @memberOf me.Bounds
-     * @function
-     * @return {me.Bounds}
-     */
-    clone() {
-        var bounds = new Bounds$1();
-        bounds.addBounds(this);
-        return bounds;
-    }
-
-    /**
-     * Returns a polygon whose edges are the same as this bounds.
-     * @name toPolygon
-     * @memberOf me.Bounds
-     * @function
-     * @return {me.Polygon} a new Polygon that represents this bounds.
-     */
-    toPolygon () {
-        return new Polygon(this.x, this.y, [
-            new Vector2d(0,          0),
-            new Vector2d(this.width, 0),
-            new Vector2d(this.width, this.height),
-            new Vector2d(0,          this.height)
-        ]);
-    }
-
-}
-
-/**
- * a Generic Body Object with some physic properties and behavior functionality<br>
- The body object is attached as a member of a Renderable.  The Body object can handle movements of the parent with
- the body.update call.  It is important to know that when body.update is called there are several things that happen related to
- the movement and positioning of the parent renderable object.  1) The force/gravity/friction parameters are used
- to calculate a new velocity and 2) the parent position is updated by adding this to the parent.pos (position me.Vector2d)
- value. Thus Affecting the movement of the parent.  Look at the source code for /src/physics/body.js:update (me.Body.update) for
- a better understanding.
- * @class Body
- * @memberOf me
- * @constructor
- * @param {me.Renderable} ancestor the parent object this body is attached to
- * @param {me.Rect|me.Rect[]|me.Polygon|me.Polygon[]|me.Line|me.Line[]|me.Ellipse|me.Ellipse[]|me.Bounds|me.Bounds[]|Object} [shapes] a initial shape, list of shapes, or JSON object defining the body
- * @param {Function} [onBodyUpdate] callback for when the body is updated (e.g. add/remove shapes)
- */
-class Body {
-
-    constructor(parent, shapes, onBodyUpdate) {
-
-        /**
-         * a reference to the parent object that contains this body,
-         * or undefined if it has not been added to one.
-         * @public
-         * @type me.Renderable
-         * @default undefined
-         * @name me.Body#ancestor
-         */
-        this.ancestor = parent;
-
-        /**
-         * The AABB bounds box reprensenting this body
-         * @public
-         * @type {me.Bounds}
-         * @name bounds
-         * @memberOf me.Body
-         */
-        if (typeof this.bounds === "undefined") {
-            this.bounds = new Bounds$1();
-        }
-
-        /**
-         * The collision shapes of the body
-         * @ignore
-         * @type {me.Polygon[]|me.Line[]|me.Ellipse[]}
-         * @name shapes
-         * @memberOf me.Body
-         */
-        if (typeof this.shapes === "undefined") {
-            this.shapes = [];
-        }
-
-        /**
-         * The body collision mask, that defines what should collide with what.<br>
-         * (by default will collide with all entities)
-         * @ignore
-         * @type Number
-         * @default me.collision.types.ALL_OBJECT
-         * @name collisionMask
-         * @see me.collision.types
-         * @memberOf me.Body
-         */
-        this.collisionMask = collision.types.ALL_OBJECT;
-
-        /**
-         * define the collision type of the body for collision filtering
-         * @public
-         * @type Number
-         * @default me.collision.types.ENEMY_OBJECT
-         * @name collisionType
-         * @see me.collision.types
-         * @memberOf me.Body
-         * @example
-         * // set the body collision type
-         * myEntity.body.collisionType = me.collision.types.PLAYER_OBJECT;
-         */
-        this.collisionType = collision.types.ENEMY_OBJECT;
-
-        /**
-         * body velocity
-         * @public
-         * @type me.Vector2d
-         * @default <0,0>
-         * @name vel
-         * @memberOf me.Body
-         */
-        if (typeof this.vel === "undefined") {
-            this.vel = new Vector2d();
-        }
-        this.vel.set(0, 0);
-
-        /**
-         * body force or acceleration (automatically) applied to the body.
-         * when defining a force, user should also define a max velocity
-         * @public
-         * @type me.Vector2d
-         * @default <0,0>
-         * @name force
-         * @see me.Body.setMaxVelocity
-         * @memberOf me.Body
-         * @example
-         * // define a default maximum acceleration, initial force and friction
-         * this.body.force.set(0, 0);
-         * this.body.friction.set(0.4, 0);
-         * this.body.setMaxVelocity(3, 15);
-         *
-         * // apply a postive or negative force when pressing left of right key
-         * update(dt) {
-         *     if (me.input.isKeyPressed("left"))    {
-         *          this.body.force.x = -this.body.maxVel.x;
-         *      } else if (me.input.isKeyPressed("right")) {
-         *         this.body.force.x = this.body.maxVel.x;
-         *     } else {
-         *         this.body.force.x = 0;
-         *     }
-         * }
-         */
-        if (typeof this.force === "undefined") {
-            this.force = new Vector2d();
-        }
-        this.force.set(0, 0);
-
-
-        /**
-         * body friction
-         * @public
-         * @type me.Vector2d
-         * @default <0,0>
-         * @name friction
-         * @memberOf me.Body
-         */
-        if (typeof this.friction === "undefined") {
-            this.friction = new Vector2d();
-        }
-        this.friction.set(0, 0);
-
-        /**
-         * the body bouciness level when colliding with other solid bodies :
-         * a value of 0 will not bounce, a value of 1 will fully rebound.
-         * @public
-         * @type {Number}
-         * @default 0
-         * @name bounce
-         * @memberOf me.Body
-         */
-        this.bounce = 0;
-
-        /**
-         * the body mass
-         * @public
-         * @type {Number}
-         * @default 1
-         * @name mass
-         * @memberOf me.Body
-         */
-        this.mass = 1;
-
-        /**
-         * max velocity (to limit body velocity)
-         * @public
-         * @type me.Vector2d
-         * @default <490,490>
-         * @name maxVel
-         * @memberOf me.Body
-         */
-        if (typeof this.maxVel === "undefined") {
-            this.maxVel = new Vector2d();
-        }
-        // cap by default to half the default gravity force
-        this.maxVel.set(490, 490);
-
-        /**
-         * The degree to which this body is affected by the world gravity
-         * @public
-         * @see me.World.gravity
-         * @type Number
-         * @default 1.0
-         * @name gravityScale
-         * @memberOf me.Body
-         */
-        this.gravityScale = 1.0;
-
-        /**
-         * If true this body won't be affected by the world gravity
-         * @public
-         * @see me.World.gravity
-         * @type Boolean
-         * @default false
-         * @name ignoreGravity
-         * @memberOf me.Body
-         */
-        this.ignoreGravity = false;
-
-        /**
-         * falling state of the body<br>
-         * true if the object is falling<br>
-         * false if the object is standing on something<br>
-         * @readonly
-         * @public
-         * @type Boolean
-         * @default false
-         * @name falling
-         * @memberOf me.Body
-         */
-        this.falling = false;
-
-        /**
-         * jumping state of the body<br>
-         * equal true if the body is jumping<br>
-         * @readonly
-         * @public
-         * @type Boolean
-         * @default false
-         * @name jumping
-         * @memberOf me.Body
-         */
-        this.jumping = false;
-
-
-        if (typeof onBodyUpdate === "function") {
-            this.onBodyUpdate = onBodyUpdate;
-        }
-
-        this.bounds.clear();
-
-        // parses the given shapes array and add them
-        if (typeof shapes !== "undefined") {
-            if (Array.isArray(shapes)) {
-                for (var s = 0; s < shapes.length; s++) {
-                    this.addShape(shapes[s]);
-                }
-            } else {
-                this.addShape(shapes);
-            }
-        }
-
-        // automatically enable physic when a body is added to a renderable
-        this.ancestor.isKinematic = false;
-    }
-
-    /**
-     * add a collision shape to this body <br>
-     * (note: me.Rect objects will be converted to me.Polygon before being added)
-     * @name addShape
-     * @memberOf me.Body
-     * @public
-     * @function
-     * @param {me.Rect|me.Polygon|me.Line|me.Ellipse|me.Bounds|Object} shape a shape or JSON object
-     * @return {Number} the shape array length
-     * @example
-     * // add a rectangle shape
-     * this.body.addShape(new me.Rect(0, 0, image.width, image.height));
-     * // add a shape from a JSON object
-     * this.body.addShape(me.loader.getJSON("shapesdef").banana);
-     */
-    addShape(shape) {
-        if (shape instanceof Rect || shape instanceof Bounds$1) {
-            var poly = shape.toPolygon();
-            this.shapes.push(poly);
-            // update the body bounds
-            this.bounds.add(poly.points);
-            this.bounds.translate(poly.pos);
-        } else if (shape instanceof Ellipse) {
-            if (!this.shapes.includes(shape)) {
-                // see removeShape
-                this.shapes.push(shape);
-            }
-            // update the body bounds
-            this.bounds.addBounds(shape.getBounds());
-            // use bounds position as ellipse position is center
-            this.bounds.translate(
-                shape.getBounds().x,
-                shape.getBounds().y
-            );
-        } else if (shape instanceof Polygon) {
-            if (!this.shapes.includes(shape)) {
-                // see removeShape
-                this.shapes.push(shape);
-            }
-            // update the body bounds
-            this.bounds.add(shape.points);
-            this.bounds.translate(shape.pos);
-        } else {
-            // JSON object
-            this.fromJSON(shape);
-        }
-
-        if (typeof this.onBodyUpdate === "function") {
-            this.onBodyUpdate(this);
-        }
-
-        // return the length of the shape list
-        return this.shapes.length;
-    }
-
-    /**
-     * set the body vertices to the given one
-     * @name setVertices
-     * @memberOf me.Body
-     * @public
-     * @function
-     * @param {me.Vector2d[]} vertices an array of me.Vector2d points defining a convex hull
-     * @param {Number} [index=0] the shape object for which to set the vertices
-     * @param {boolean} [clear=true] either to reset the body definition before adding the new vertices
-     */
-    setVertices(vertices, index = 0, clear = true) {
-        var polygon = this.getShape(index);
-        if (polygon instanceof Polygon) {
-            polygon.setShape(0, 0, vertices);
-        } else {
-            // this will replace any other non polygon shape type if defined
-            this.shapes[index] = new Polygon(0, 0, vertices);
-        }
-
-        // update the body bounds to take in account the new vertices
-        this.bounds.add(this.shapes[index].points, clear);
-
-        if (typeof this.onBodyUpdate === "function") {
-            this.onBodyUpdate(this);
-        }
-    }
-
-    /**
-     * add the given vertices to the body shape
-     * @name addVertices
-     * @memberOf me.Body
-     * @public
-     * @function
-     * @param {me.Vector2d[]} vertices an array of me.Vector2d points defining a convex hull
-     * @param {Number} [index=0] the shape object for which to set the vertices
-     */
-    addVertices(vertices, index = 0) {
-        this.setVertices(vertices, index, false);
-    }
-
-    /**
-     * add collision mesh based on a JSON object
-     * (this will also apply any physic properties defined in the given JSON file)
-     * @name fromJSON
-     * @memberOf me.Body
-     * @public
-     * @function
-     * @param {Object} json a JSON object as exported from a Physics Editor tool
-     * @param {String} [id] an optional shape identifier within the given the json object
-     * @see https://www.codeandweb.com/physicseditor
-     * @return {Number} how many shapes were added to the body
-     * @example
-     * // define the body based on the banana shape
-     * this.body.fromJSON(me.loader.getJSON("shapesdef").banana);
-     * // or ...
-     * this.body.fromJSON(me.loader.getJSON("shapesdef"), "banana");
-     */
-    fromJSON(json, id) {
-        var data = json;
-
-        if (typeof id !== "undefined" ) {
-            data = json[id];
-        }
-
-        // Physic Editor Format (https://www.codeandweb.com/physicseditor)
-        if (typeof data === "undefined") {
-            throw new Error("Identifier (" + id + ") undefined for the given JSON object)");
-        }
-
-        if (data.length) {
-            // go through all shapes and add them to the body
-            for (var i = 0; i < data.length; i++) {
-                this.addVertices(data[i].shape, i);
-            }
-            // apply density, friction and bounce properties from the first shape
-            // Note : how to manage different mass or friction for all different shapes?
-            this.mass = data[0].density || 0;
-            this.friction.set(data[0].friction || 0, data[0].friction || 0);
-            this.bounce = data[0].bounce || 0;
-        }
-
-        // return the amount of shapes added to the body
-        return data.length;
-    }
-
-    /**
-     * return the collision shape at the given index
-     * @name getShape
-     * @memberOf me.Body
-     * @public
-     * @function
-     * @param {Number} [index=0] the shape object at the specified index
-     * @return {me.Polygon|me.Line|me.Ellipse} shape a shape object if defined
-     */
-    getShape(index) {
-        return this.shapes[index || 0];
-    }
-
-    /**
-     * returns the AABB bounding box for this body
-     * @name getBounds
-     * @memberOf me.Body
-     * @function
-     * @return {me.Bounds} bounding box Rectangle object
-     */
-    getBounds() {
-        return this.bounds;
-    }
-
-    /**
-     * remove the specified shape from the body shape list
-     * @name removeShape
-     * @memberOf me.Body
-     * @public
-     * @function
-     * @param {me.Polygon|me.Line|me.Ellipse} shape a shape object
-     * @return {Number} the shape array length
-     */
-    removeShape(shape) {
-        // clear the current bounds
-        this.bounds.clear();
-        // remove the shape from shape list
-        utils$1.array.remove(this.shapes, shape);
-        // add everything left back
-        for (var s = 0; s < this.shapes.length; s++) {
-            this.addShape(this.shapes[s]);
-        }
-        // return the length of the shape list
-        return this.shapes.length;
-    }
-
-    /**
-     * remove the shape at the given index from the body shape list
-     * @name removeShapeAt
-     * @memberOf me.Body
-     * @public
-     * @function
-     * @param {Number} index the shape object at the specified index
-     * @return {Number} the shape array length
-     */
-    removeShapeAt(index) {
-        return this.removeShape(this.getShape(index));
-    }
-
-    /**
-     * By default all entities are able to collide with all other entities, <br>
-     * but it's also possible to specify 'collision filters' to provide a finer <br>
-     * control over which entities can collide with each other.
-     * @name setCollisionMask
-     * @memberOf me.Body
-     * @public
-     * @function
-     * @see me.collision.types
-     * @param {Number} [bitmask = me.collision.types.ALL_OBJECT] the collision mask
-     * @example
-     * // filter collision detection with collision shapes, enemies and collectables
-     * myEntity.body.setCollisionMask(me.collision.types.WORLD_SHAPE | me.collision.types.ENEMY_OBJECT | me.collision.types.COLLECTABLE_OBJECT);
-     * ...
-     * // disable collision detection with all other objects
-     * myEntity.body.setCollisionMask(me.collision.types.NO_OBJECT);
-     */
-    setCollisionMask(bitmask = collision.types.ALL_OBJECT) {
-        this.collisionMask = bitmask;
-    }
-
-    /**
-     * define the collision type of the body for collision filtering
-     * @name setCollisionType
-     * @memberOf me.Body
-     * @public
-     * @function
-     * @see me.collision.types
-     * @param {Number} type the collision type
-     * @example
-     * // set the body collision type
-     * myEntity.body.collisionType = me.collision.types.PLAYER_OBJECT;
-     */
-    setCollisionType(type) {
-        if (typeof type !== "undefined") {
-            if (typeof collision.types[type] !== "undefined") {
-                this.collisionType = collision.types[type];
-            } else {
-                throw new Error("Invalid value for the collisionType property");
-            }
-        }
-    }
-
-    /**
-     * the built-in function to solve the collision response
-     * @protected
-     * @name respondToCollision
-     * @memberOf me.Body
-     * @function
-     * @param {me.collision.ResponseObject} response the collision response object
-     */
-    respondToCollision(response) {
-        // the overlap vector
-        var overlap = response.overlapV;
-
-        // FIXME: Respond proportionally to object mass
-
-        // Move out of the other object shape
-        this.ancestor.pos.sub(overlap);
-
-        // adjust velocity
-        if (overlap.x !== 0) {
-            this.vel.x = ~~(0.5 + this.vel.x - overlap.x) || 0;
-            if (this.bounce > 0) {
-                this.vel.x *= -this.bounce;
-            }
-        }
-        if (overlap.y !== 0) {
-            this.vel.y = ~~(0.5 + this.vel.y - overlap.y) || 0;
-            if (this.bounce > 0) {
-                this.vel.y *= -this.bounce;
-            }
-
-            // cancel the falling an jumping flags if necessary
-            var dir = Math.sign(world.gravity.y * this.gravityScale) || 1;
-            this.falling = overlap.y >= dir;
-            this.jumping = overlap.y <= -dir;
-        }
-    }
-
-    /**
-     * The forEach() method executes a provided function once per body shape element. <br>
-     * the callback function is invoked with three arguments: <br>
-     *    - The current element being processed in the array <br>
-     *    - The index of element in the array. <br>
-     *    - The array forEach() was called upon. <br>
-     * @name forEach
-     * @memberOf me.Body.prototype
-     * @function
-     * @param {Function} callback fnction to execute on each element
-     * @param {Object} [thisArg] value to use as this(i.e reference Object) when executing callback.
-     * @example
-     * // iterate through all shapes of the physic body
-     * mySprite.body.forEach((shape) => {
-     *    shape.doSomething();
-     * });
-     * mySprite.body.forEach((shape, index) => { ... });
-     * mySprite.body.forEach((shape, index, array) => { ... });
-     * mySprite.body.forEach((shape, index, array) => { ... }, thisArg);
-     */
-    forEach(callback, thisArg) {
-        var context = this, i = 0;
-        var shapes = this.shapes;
-
-        var len = shapes.length;
-
-        if (typeof callback !== "function") {
-            throw new Error(callback + " is not a function");
-        }
-
-        if (arguments.length > 1) {
-            context = thisArg;
-        }
-
-        while (i < len) {
-            callback.call(context, shapes[i], i, shapes);
-            i++;
-        }
-    }
-
-
-    /**
-     * Returns true if the any of the shape composing the body contains the given point.
-     * @name contains
-     * @memberOf me.Body
-     * @function
-     * @param  {me.Vector2d} point
-     * @return {boolean} true if contains
-     */
-
-    /**
-     * Returns true if the any of the shape composing the body contains the given point.
-     * @name contains
-     * @memberOf me.Body
-     * @function
-     * @param  {Number} x x coordinate
-     * @param  {Number} y y coordinate
-     * @return {boolean} true if contains
-     */
-    contains() {
-        var _x, _y;
-
-        if (arguments.length === 2) {
-          // x, y
-          _x = arguments[0];
-          _y = arguments[1];
-        } else {
-          // vector
-          _x = arguments[0].x;
-          _y = arguments[0].y;
-        }
-
-        if (this.getBounds().contains(_x, _y)) {
-             // cannot use forEach here as cannot break out with a return
-             for (var i = this.shapes.length, shape; i--, (shape = this.shapes[i]);) {
-                if (shape.contains(_x, _y)) {
-                    return true;
-                }
-            }        }
-        return false;
-    }
-
-    /**
-     * Rotate this body (counter-clockwise) by the specified angle (in radians).
-     * Unless specified the body will be rotated around its center point
-     * @name rotate
-     * @memberOf me.Body
-     * @function
-     * @param {Number} angle The angle to rotate (in radians)
-     * @param {me.Vector2d|me.ObservableVector2d} [v=me.Body.getBounds().center] an optional point to rotate around
-     * @return {me.Body} Reference to this object for method chaining
-     */
-    rotate(angle, v = this.getBounds().center) {
-        this.bounds.clear();
-        this.forEach((shape) => {
-            shape.rotate(angle, v);
-            this.bounds.addBounds(shape.getBounds());
-            if (shape instanceof Ellipse) {
-                // use bounds position as ellipse position is center
-                this.bounds.translate(
-                    shape.getBounds().x,
-                    shape.getBounds().y
-                );
-            } else {
-                this.bounds.translate(shape.pos);
-            }
-        });
-        return this;
-    }
-
-    /**
-     * cap the body velocity (body.maxVel property) to the specified value<br>
-     * @name setMaxVelocity
-     * @memberOf me.Body
-     * @function
-     * @param {Number} x max velocity on x axis
-     * @param {Number} y max velocity on y axis
-     * @protected
-     */
-    setMaxVelocity(x, y) {
-        this.maxVel.x = x;
-        this.maxVel.y = y;
-    }
-
-    /**
-     * set the body default friction
-     * @name setFriction
-     * @memberOf me.Body
-     * @function
-     * @param {Number} x horizontal friction
-     * @param {Number} y vertical friction
-     * @protected
-     */
-    setFriction(x, y) {
-        this.friction.x = x || 0;
-        this.friction.y = y || 0;
-    }
-
-    /**
-     * apply friction to a vector
-     * @ignore
-     */
-    applyFriction(vel) {
-        var fx = this.friction.x * timer$1.tick,
-            nx = vel.x + fx,
-            x = vel.x - fx,
-            fy = this.friction.y * timer$1.tick,
-            ny = vel.y + fy,
-            y = vel.y - fy;
-
-        vel.x = (
-            (nx < 0) ? nx :
-            ( x > 0) ? x  : 0
-        );
-        vel.y = (
-            (ny < 0) ? ny :
-            ( y > 0) ? y  : 0
-        );
-    }
-
-    /**
-     * compute the new velocity value
-     * @ignore
-     */
-    computeVelocity(vel) {
-        // apply fore if defined
-        if (this.force.x) {
-            vel.x += this.force.x * timer$1.tick;
-        }
-        if (this.force.y) {
-            vel.y += this.force.y * timer$1.tick;
-        }
-
-        // apply friction
-        if (this.friction.x || this.friction.y) {
-            this.applyFriction(vel);
-        }
-
-        if (!this.ignoreGravity) {
-            var worldGravity = world.gravity;
-            // apply gravity if defined
-            vel.x += worldGravity.x * this.gravityScale * this.mass * timer$1.tick;
-            vel.y += worldGravity.y * this.gravityScale * this.mass * timer$1.tick;
-            // check if falling / jumping
-            this.falling = (vel.y * Math.sign(worldGravity.y * this.gravityScale)) > 0;
-            this.jumping = (this.falling ? false : this.jumping);
-        }
-
-        // cap velocity
-        if (vel.y !== 0) {
-            vel.y = clamp(vel.y, -this.maxVel.y, this.maxVel.y);
-        }
-        if (vel.x !== 0) {
-            vel.x = clamp(vel.x, -this.maxVel.x, this.maxVel.x);
-        }
-
-    }
-
-    /**
-     * Updates the parent's position as well as computes the new body's velocity based
-     * on the values of force/friction/gravity.  Velocity chages are proportional to the
-     * me.timer.tick value (which can be used to scale velocities).  The approach to moving the
-     * parent Entity is to compute new values of the Body.vel property then add them to
-     * the parent.pos value thus changing the postion the amount of Body.vel each time the
-     * update call is made. <br>
-     * Updates to Body.vel are bounded by maxVel (which defaults to viewport size if not set) <br>
-     *
-     * In addition, when the gravity calcuation is made, if the Body.vel.y > 0 then the Body.falling
-     * property is set to true and Body.jumping is set to !Body.falling.
-     *
-     * At this time a call to Body.Update does not call the onBodyUpdate callback that is listed in the init: function.
-     * @name update
-     * @memberOf me.Body
-     * @function
-     * @return {boolean} true if resulting velocity is different than 0
-     * @see source code for me.Body.computeVelocity (private member)
-     */
-    update(/* dt */) {
-        // update the velocity
-        this.computeVelocity(this.vel);
-
-        // update the body ancestor position
-        this.ancestor.pos.add(this.vel);
-
-        // returns true if vel is different from 0
-        return (this.vel.x !== 0 || this.vel.y !== 0);
-    }
-
-    /**
-     * Destroy function<br>
-     * @ignore
-     */
-    destroy() {
-        this.onBodyUpdate = undefined;
-        this.ancestor = undefined;
-        this.bounds = undefined;
-        this.shapes.length = 0;
-    }
-}
 
 /**
  * set and interpret a TMX property value
@@ -25119,6 +25254,7 @@ class TMXTileMap {
                     // check if a me.Tile object is embedded
                     obj = settings.tile.getRenderable(settings);
                     obj.body = new Body(obj, settings.shapes || new Rect(0, 0, this.width, this.height));
+                    obj.body.setStatic(true);
                     // set the obj z order
                     obj.pos.setMuted(settings.x, settings.y, settings.z);
                 } else {
@@ -25141,6 +25277,7 @@ class TMXTileMap {
                         obj.type = settings.type;
                         obj.id = settings.id;
                         obj.body = new Body(obj, settings.shapes || new Rect(0, 0, obj.width, obj.height));
+                        obj.body.setStatic(true);
                         obj.resize(obj.body.getBounds().width, obj.body.getBounds().height);
                     }
                     // set the obj z order
@@ -30673,23 +30810,17 @@ var utils = {
      * console.log(UriFragment["mytag"]); //> "value"
      */
     getUriFragment : function (url) {
-        var UriFragments = {};
-        var parsed = false;
         var hash = {};
 
         if (typeof url === "undefined") {
             var location = document.location;
-            hash = UriFragments;
-            if (parsed === true) {
-                return hash;
-            }
+
             if (location && location.hash) {
                 url = location.hash;
             } else {
                 // No "document.location" exist for Wechat mini game platform.
                 return hash;
             }
-            parsed = true;
         } else {
             // never cache if a url is passed as parameter
             var index = url.indexOf("#");
@@ -33775,6 +33906,9 @@ class Collectable extends Sprite {
         // add and configure the physic body
         this.body = new Body(this, settings.shapes || new Rect(0, 0, this.width, this.height));
         this.body.collisionType = collision.types.COLLECTABLE_OBJECT;
+        // by default only collides with PLAYER_OBJECT
+        this.body.setCollisionMask(collision.types.PLAYER_OBJECT);
+        this.body.setStatic(true);
 
         // Update anchorPoint
         if (settings.anchorPoint) {
@@ -33859,6 +33993,9 @@ class Trigger extends Renderable {
         // physic body to check for collision against
         this.body = new Body(this, settings.shapes || new Rect(0, 0, this.width, this.height));
         this.body.collisionType = collision.types.ACTION_OBJECT;
+        // by default only collides with PLAYER_OBJECT
+        this.body.setCollisionMask(collision.types.PLAYER_OBJECT);
+        this.body.setStatic(true);
         this.resize(this.body.getBounds().width, this.body.getBounds().height);
     }
 
@@ -34904,7 +35041,7 @@ class Entity extends Renderable {
     /** @ignore */
     update(dt) {
         if (this.renderable) {
-            return this.renderable.update(dt);
+            this.isDirty |= this.renderable.update(dt);
         }
         return super.update(dt);
     }
@@ -34996,19 +35133,6 @@ class Entity extends Renderable {
         }
     }
 
-    /**
-     * onCollision callback<br>
-     * triggered in case of collision, when this entity body is being "touched" by another one<br>
-     * @name onCollision
-     * @memberOf me.Entity
-     * @function
-     * @param {me.collision.ResponseObject} response the collision response object
-     * @param {me.Entity} other the other entity touching this one (a reference to response.a or response.b)
-     * @return {Boolean} true if the object should respond to the collision (its position and velocity will be corrected)
-     */
-    onCollision() {
-        return false;
-    }
 }
 
 /**

@@ -265,6 +265,16 @@ export class Body {
     public mass: number;
     maxVel: Vector2d;
     /**
+     * either this body is a static body or not
+     * @readonly
+     * @public
+     * @type Boolean
+     * @default false
+     * @name isStatic
+     * @memberOf me.Body
+     */
+    public readonly isStatic: boolean;
+    /**
      * The degree to which this body is affected by the world gravity
      * @public
      * @see me.World.gravity
@@ -308,6 +318,16 @@ export class Body {
      */
     public readonly jumping: boolean;
     onBodyUpdate: any;
+    /**
+     * set the body as a static body
+     * static body do not move automatically and do not check againt collision with others
+     * @name setStatic
+     * @memberOf me.Body
+     * @public
+     * @function
+     * @param {Boolean} [isStatic=true]
+     */
+    public setStatic(isStatic?: boolean): void;
     /**
      * add a collision shape to this body <br>
      * (note: me.Rect objects will be converted to me.Polygon before being added)
@@ -510,17 +530,12 @@ export class Body {
      * @param {Number} y vertical friction
      * @protected
      */
-    protected setFriction(x: number, y: number): void;
-    /**
-     * apply friction to a vector
-     * @ignore
-     */
-    applyFriction(vel: any): void;
+    protected setFriction(x?: number, y?: number): void;
     /**
      * compute the new velocity value
      * @ignore
      */
-    computeVelocity(vel: any): void;
+    computeVelocity(): void;
     /**
      * Updates the parent's position as well as computes the new body's velocity based
      * on the values of force/friction/gravity.  Velocity chages are proportional to the
@@ -535,12 +550,13 @@ export class Body {
      *
      * At this time a call to Body.Update does not call the onBodyUpdate callback that is listed in the init: function.
      * @name update
+     * @ignore
      * @memberOf me.Body
      * @function
      * @return {boolean} true if resulting velocity is different than 0
      * @see source code for me.Body.computeVelocity (private member)
      */
-    update(): boolean;
+    update(dt: any): boolean;
     /**
      * Destroy function<br>
      * @ignore
@@ -2216,7 +2232,7 @@ export class Container {
     /**
      * @ignore
      */
-    update(dt: any): boolean;
+    update(dt: any): any;
     /**
      * @ignore
      */
@@ -2668,17 +2684,6 @@ export class Entity {
      * @function
      */
     onDeactivateEvent(): void;
-    /**
-     * onCollision callback<br>
-     * triggered in case of collision, when this entity body is being "touched" by another one<br>
-     * @name onCollision
-     * @memberOf me.Entity
-     * @function
-     * @param {me.collision.ResponseObject} response the collision response object
-     * @param {me.Entity} other the other entity touching this one (a reference to response.a or response.b)
-     * @return {Boolean} true if the object should respond to the collision (its position and velocity will be corrected)
-     */
-    onCollision(): boolean;
 }
 /**
  * @classdesc
@@ -5320,9 +5325,10 @@ export class Renderable {
      *          this.body = new me.Body(this);
      *          // add a default collision shape
      *          this.body.addShape(new me.Rect(0, 0, this.width, this.height));
-     *          // configure max speed and friction
+     *          // configure max speed, friction, and initial force to be applied
      *          this.body.setMaxVelocity(3, 15);
      *          this.body.setFriction(0.4, 0);
+     *          this.body.force.set(3, 0);
      *
      *          // set the display to follow our position on both axis
      *          me.game.viewport.follow(this.pos, me.game.viewport.AXIS.BOTH);
@@ -5730,6 +5736,30 @@ export class Renderable {
      * @param {me.CanvasRenderer|me.WebGLRenderer} renderer a renderer object
      **/
     protected postDraw(renderer: any | any): void;
+    /**
+     * onCollision callback, triggered in case of collision,
+     * when this renderable body is colliding with another one
+     * @name onCollision
+     * @memberOf me.Renderable.prototype
+     * @function
+     * @param {me.collision.ResponseObject} response the collision response object
+     * @param {me.Renderable} other the other renderable touching this one (a reference to response.a or response.b)
+     * @return {Boolean} true if the object should respond to the collision (its position and velocity will be corrected)
+     * @example
+     * // colision handler
+     * onCollision(response) {
+     *     if (response.b.body.collisionType === me.collision.types.ENEMY_OBJECT) {
+     *         // makes the other object solid, by substracting the overlap vector to the current position
+     *         this.pos.sub(response.overlapV);
+     *         this.hurt();
+     *         // not solid
+     *         return false;
+     *     }
+     *     // Make the object solid
+     *     return true;
+     * },
+     */
+    onCollision(): boolean;
     /**
      * Destroy function<br>
      * @ignore
@@ -9076,6 +9106,14 @@ export class World {
      */
     preRender: boolean;
     /**
+     * the active physic bodies in this simulation
+     * @name bodies
+     * @memberOf me.World
+     * @public
+     * @type {Set}
+     */
+    public bodies: Set<any>;
+    /**
      * the instance of the game world quadtree used for broadphase
      * @name broadphase
      * @memberOf me.World
@@ -9090,6 +9128,26 @@ export class World {
      * @function
      */
     reset(): void;
+    /**
+     * Add a physic body to the game world
+     * @name addBody
+     * @memberOf me.World
+     * @see me.Container.addChild
+     * @function
+     * @param {me.Body} body
+     * @return {me.World} this game world
+     */
+    addBody(body: any): any;
+    /**
+     * Remove a physic body from the game world
+     * @name removeBody
+     * @memberOf me.World
+     * @see me.Container.removeChild
+     * @function
+     * @param {me.Body} body
+     * @return {me.World} this game world
+     */
+    removeBody(body: any): any;
     /**
      * update the game world
      * @name reset
@@ -9156,30 +9214,6 @@ export namespace collision {
         const ALL_OBJECT: number;
     }
     const response: any;
-    /**
-     * a callback used to determine if two objects should collide (based on both respective objects collision mask and type).<br>
-     * you can redefine this function if you need any specific rules over what should collide with what.
-     * @name shouldCollide
-     * @memberOf me.collision
-     * @public
-     * @function
-     * @param {me.Renderable} a a reference to the object A.
-     * @param {me.Renderable} b a reference to the object B.
-     * @return {Boolean} true if they should collide, false otherwise
-     */
-    function shouldCollide(a: any, b: any): boolean;
-    /**
-     * a callback used to determine if two objects should collide (based on both respective objects collision mask and type).<br>
-     * you can redefine this function if you need any specific rules over what should collide with what.
-     * @name shouldCollide
-     * @memberOf me.collision
-     * @public
-     * @function
-     * @param {me.Renderable} a a reference to the object A.
-     * @param {me.Renderable} b a reference to the object B.
-     * @return {Boolean} true if they should collide, false otherwise
-     */
-    function shouldCollide(a: any, b: any): boolean;
     /**
      * Checks if the specified object collides with others
      * @name check
