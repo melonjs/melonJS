@@ -1,3 +1,5 @@
+/* eslint-disable no-unused-vars */
+
 import pool from "./../../../system/pooling.js";
 import TMXLayer from "./../TMXLayer.js";
 import Bounds from "./../../../physics/Bounds.js";
@@ -118,3 +120,5 @@ class TMXRenderer {
 };
 
 export default TMXRenderer;
+
+/* eslint-enable no-unused-vars */

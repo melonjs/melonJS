@@ -405,6 +405,7 @@ class Renderer {
      * @function
      * @param {me.Rect|me.Polygon|me.Line|me.Ellipse} [mask] the shape defining the mask to be applied
      */
+    // eslint-disable-next-line no-unused-vars
     setMask(mask) {}
 
     /**

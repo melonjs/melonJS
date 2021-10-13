@@ -77,8 +77,7 @@
     "no-unmodified-loop-condition": "error",
     "no-unneeded-ternary": ["off", { "defaultAssignment": false }],
     "no-unreachable": "error",
-    // to 'allow' for base class interface definition
-    "no-unused-vars" : "off",
+    "no-unused-vars" : "error",
     "no-useless-call": "off",
     "no-useless-computed-key": "error",
     "no-useless-constructor": "error",
