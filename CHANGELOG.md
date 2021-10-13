@@ -4,7 +4,7 @@
 
 ### Added
 - melonJS is now a pure ES6 library, for class definition, inheritance and semantic
-- melonJS now includes typescript definition for the ESM bundle (`melonjs.module.d.ts`)
+- melonJS now includes typescript definition for the ESM `melonjs.module.d.ts` bundle (thanks @qpwo)
 - Core : new `me.event.BOOT` event that will be triggered when melonJS is initialized
 - Physic : physic bodies can now be configured as static bodies (which do not move automatically and do not check for collision with others)
 
