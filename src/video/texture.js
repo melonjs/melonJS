@@ -177,8 +177,8 @@ export class Texture {
      */
     parse(data) {
         var atlas = {};
-        var self = this;
-        data.frames.forEach(function (frame) {
+
+        data.frames.forEach((frame) => {
             // fix wrongly formatted JSON (e.g. last dummy object in ShoeBox)
             if (frame.hasOwnProperty("filename")) {
                 // Source coordinates
@@ -202,7 +202,7 @@ export class Texture {
                     height       : s.h,
                     angle        : (frame.rotated === true) ? -ETA : 0
                 };
-                self.addUvsMap(atlas, frame.filename, data.meta.size.w, data.meta.size.h);
+                this.addUvsMap(atlas, frame.filename, data.meta.size.w, data.meta.size.h);
             }
         });
         return atlas;

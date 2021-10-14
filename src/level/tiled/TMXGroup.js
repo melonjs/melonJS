@@ -77,26 +77,22 @@ export default class TMXGroup {
         applyTMXProperties(this, data);
 
         // parse all child objects/layers
-        var self = this;
-
         if (data.objects) {
-            var _objects = data.objects;
-            _objects.forEach(function (object) {
-                object.tintcolor = self.tintcolor;
-                self.objects.push(new TMXObject(map, object, z));
+            data.objects.forEach((object) => {
+                object.tintcolor = this.tintcolor;
+                this.objects.push(new TMXObject(map, object, z));
             });
         }
 
         if (data.layers) {
-            var _layers = data.layers;
-            _layers.forEach(function (data) {
+            data.layers.forEach((data) => {
                 var layer = new TMXLayer(map, data, map.tilewidth, map.tileheight, map.orientation, map.tilesets, z++);
                 // set a renderer
                 layer.setRenderer(map.getRenderer());
                 // resize container accordingly
-                self.width = Math.max(self.width, layer.width);
-                self.height = Math.max(self.height, layer.height);
-                self.objects.push(layer);
+                this.width = Math.max(this.width, layer.width);
+                this.height = Math.max(this.height, layer.height);
+                this.objects.push(layer);
             });
         }
     }

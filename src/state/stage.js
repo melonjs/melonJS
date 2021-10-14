@@ -57,11 +57,10 @@ class Stage {
      * @ignore
      */
     reset() {
-        var self = this;
-
+        
         // add all defined cameras
-        this.settings.cameras.forEach(function(camera) {
-            self.cameras.set(camera.name, camera);
+        this.settings.cameras.forEach((camera) => {
+            this.cameras.set(camera.name, camera);
         });
 
         // empty or no default camera

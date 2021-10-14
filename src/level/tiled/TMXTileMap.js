@@ -297,7 +297,6 @@ export default class TMXTileMap {
 
         // to automatically increment z index
         var zOrder = 0;
-        var self = this;
 
         // Tileset information
         if (!this.tilesets) {
@@ -308,9 +307,9 @@ export default class TMXTileMap {
         // parse all tileset objects
         if (typeof (data.tilesets) !== "undefined") {
             var tilesets = data.tilesets;
-            tilesets.forEach(function (tileset) {
+            tilesets.forEach((tileset) => {
                 // add the new tileset
-                self.tilesets.add(readTileset(tileset));
+                this.tilesets.add(readTileset(tileset));
             });
         }
 
@@ -338,24 +337,24 @@ export default class TMXTileMap {
             ));
         }
 
-        data.layers.forEach(function (layer) {
+        data.layers.forEach((layer) => {
             switch (layer.type) {
                 case "imagelayer":
-                    self.layers.push(readImageLayer(self, layer, zOrder++));
+                    this.layers.push(readImageLayer(this, layer, zOrder++));
                     break;
 
                 case "tilelayer":
-                    self.layers.push(readLayer(self, layer, zOrder++));
+                    this.layers.push(readLayer(this, layer, zOrder++));
                     break;
 
                 // get the object groups information
                 case "objectgroup":
-                    self.objectGroups.push(readObjectGroup(self, layer, zOrder++));
+                    this.objectGroups.push(readObjectGroup(this, layer, zOrder++));
                     break;
 
                 // get the object groups information
                 case "group":
-                    self.objectGroups.push(readObjectGroup(self, layer, zOrder++));
+                    this.objectGroups.push(readObjectGroup(this, layer, zOrder++));
                     break;
 
                 default:

@@ -45,7 +45,6 @@ class DraggableEntity extends Entity {
      * @function
      */
     initEvents() {
-        var self = this;
         /**
          * @ignore
          */
@@ -62,14 +61,14 @@ class DraggableEntity extends Entity {
         this.onPointerEvent("pointerup", this, this.mouseUp.bind(this));
         this.onPointerEvent("pointercancel", this, this.mouseUp.bind(this));
         event.subscribe(event.POINTERMOVE, this.dragMove.bind(this));
-        event.subscribe(event.DRAGSTART, function (e, draggable) {
-            if (draggable === self) {
-                self.dragStart(e);
+        event.subscribe(event.DRAGSTART, (e, draggable) => {
+            if (draggable === this) {
+                this.dragStart(e);
             }
         });
-        event.subscribe(event.DRAGEND, function (e, draggable) {
-            if (draggable === self) {
-                self.dragEnd(e);
+        event.subscribe(event.DRAGEND, (e, draggable) => {
+            if (draggable === this) {
+                this.dragEnd(e);
             }
         });
     }

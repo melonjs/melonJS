@@ -14,23 +14,19 @@ class ProgressBar extends Renderable {
      * @ignore
      */
     constructor(x, y, w, h) {
-
         super(x, y, w, h);
 
-        var self = this;
-
         this.barHeight = h;
-
         this.anchorPoint.set(0, 0);
 
         this.loaderHdlr = event.subscribe(
             event.LOADER_PROGRESS,
-            self.onProgressUpdate.bind(self)
+            this.onProgressUpdate.bind(this)
         );
 
         this.resizeHdlr = event.subscribe(
             event.VIEWPORT_ONRESIZE,
-            self.resize.bind(self)
+            this.resize.bind(this)
         );
 
         this.anchorPoint.set(0, 0);
