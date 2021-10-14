@@ -41,10 +41,9 @@ Sound
 - fallback to Multi-channel HTML5 audio for legacy browsers
 
 Physic
-- Lightweight 2d physics implementation to ensure low cpu requirements
 - Polygon (SAT) based collision algorithm for accurate detection and response
 - Fast Broad-phase collision detection using spatial partitioning
-- Collision filtering for optimized automatic collision detection 
+- Collision filtering for optimized automatic collision detection
 
 Input
 - Mouse and Touch device support (with mouse emulation)
@@ -153,7 +152,7 @@ Alternatively, the latest version of melonJS can be installed through [NPM](http
 
     $ npm install melonjs
 
-If you need to import the ES6 module of melonjs (for Webpack):
+If you need to import the ES6 module of melonjs (e.g. for Webpack):
 
     $ import * as me from 'melonjs/dist/melonjs.module.js';
 
@@ -172,16 +171,7 @@ Or can simply be added to your html, through a content delivery network (CDN) UR
 <!-- add ".min" to any JS/CSS file to get a minified version -->
 <script src="https://cdn.jsdelivr.net/npm/melonjs@10.0.0/dist/melonjs.min.js"></script>
 ```
-> Note: "official" CDN and NPM install are only available from version 7.0.0 and onwards.
-
-and of course the debug panel :
-```html
-<!-- load the latest debug panel -->
-<script src="https://cdn.jsdelivr.net/npm/melonjs/plugins/debug/debugPanel.js"></script>
-<!-- or a specific corresponding release -->
-<script src="https://cdn.jsdelivr.net/npm/melonjs@9.0.0/plugins/debug/debugPanel.js"></script>
-```
-> Note: current version of the debugPanel is not compatible with the ES6 ESM version.
+> Note: starting from the 10.0.0 version, the debug plugin is no longer provided as part of the melonJS library release, and has been moved to the official [boilerplate](https://github.com/melonjs/es6-boilerplate)
 
 Building melonJS
 -------------------------------------------------------------------------------
