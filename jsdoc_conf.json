@@ -29,7 +29,7 @@
         "dictionaries": ["jsdoc","closure"]
     },
     "source": {
-        "include": ["./README.md", "./src/", "./plugins/debug/debugPanel.js" ],
+        "include": ["./README.md", "./src/"],
         "exclude": [],
         "includePattern": ".+\\.js(doc|x)?$",
         "excludePattern": "(^|\\/|\\\\)_"
