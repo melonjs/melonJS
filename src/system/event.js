@@ -105,6 +105,30 @@ export const GAME_INIT = "me.game.onInit";
 export const GAME_RESET = "me.game.onReset";
 
 /**
+ * Channel Constant for the start of the update loop
+ * Data passed : {Number} time the current time stamp
+ * @public
+ * @constant
+ * @type String
+ * @name GAME_BEFORE_UPDATE
+ * @memberOf me.event
+ * @see me.event.subscribe
+ */
+export const GAME_BEFORE_UPDATE = "me.game.beforeUpdate";
+
+/**
+ * Channel Constant for the end of the update loop
+ * Data passed : {Number} time the current time stamp
+ * @public
+ * @constant
+ * @type String
+ * @name GAME_AFTER_UPDATE
+ * @memberOf me.event
+ * @see me.event.subscribe
+ */
+export const GAME_AFTER_UPDATE = "me.game.afterUpdate";
+
+/**
  * Channel Constant for when the game manager is updated (start of the update loop) <br>
  * Data passed : {Number} time the current time stamp
  * @public
@@ -115,6 +139,31 @@ export const GAME_RESET = "me.game.onReset";
  * @see me.event.subscribe
  */
 export const GAME_UPDATE = "me.game.onUpdate";
+
+/**
+ * Channel Constant for the end of the draw loop
+ * Data passed : {Number} time the current time stamp
+ * @public
+ * @constant
+ * @type String
+ * @name GAME_BEFORE_DRAW
+ * @memberOf me.event
+ * @see me.event.subscribe
+ */
+export const GAME_BEFORE_DRAW = "me.game.beforeDraw";
+
+/**
+ * Channel Constant for the start of the draw loop
+ * Data passed : {Number} time the current time stamp
+ * @public
+ * @constant
+ * @type String
+ * @name GAME_AFTER_DRAW
+ * @memberOf me.event
+ * @see me.event.subscribe
+ */
+export const GAME_AFTER_DRAW = "me.game.afterDraw";
+
 
 /**
  * Channel Constant for when a level is loaded <br>

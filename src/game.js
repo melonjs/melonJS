@@ -179,6 +179,9 @@ export function update(time, stage) {
         // reset the frame counter
         frameCounter = 0;
 
+        // publish notification
+        event.publish(event.GAME_BEFORE_UPDATE);
+
         // game update event
         event.publish(event.GAME_UPDATE, [ time ]);
 
@@ -203,6 +206,9 @@ export function update(time, stage) {
                 break;
             }
         }
+
+        // publish notification
+        event.publish(event.GAME_AFTER_UPDATE);
     }
 };
 
@@ -215,6 +221,9 @@ export function update(time, stage) {
 export function draw(stage) {
 
     if (renderer.isContextValid === true && (isDirty || isAlwaysDirty)) {
+        // publish notification
+        event.publish(event.GAME_BEFORE_DRAW);
+
         // prepare renderer to draw a new frame
         renderer.clear();
 
@@ -226,5 +235,8 @@ export function draw(stage) {
 
         // flush/render our frame
         renderer.flush();
+
+        // publish notification
+        event.publish(event.GAME_AFTER_DRAW);
     }
 };
