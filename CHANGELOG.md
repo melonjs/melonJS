@@ -7,7 +7,7 @@
 - melonJS now includes typescript definition for the ESM `melonjs.module` bundle (thanks @qpwo)
 - Core : new `me.event.BOOT` event that will be triggered when melonJS is initialized
 - Physic : physic bodies can now be configured as static bodies (which do not move automatically and do not check for collision with others)
-- Event : new system events at the beginning and end of the both the update and draw loop
+- Event : new system events at the beginning and end of the both the update and draw "loop"
 
 ### Changed
 - Jay Inheritance has been replaced with ES6 standard inheritance
