@@ -156,8 +156,8 @@ class WebGLRenderer extends Renderer {
         // ctx.loseContext()
         // reference to this renderer
         var renderer = this;
-        this.getScreenCanvas().addEventListener("webglcontextlost", function () {
-            event.preventDefault();
+        this.getScreenCanvas().addEventListener("webglcontextlost", function (e) {
+            e.preventDefault();
             renderer.isContextValid = false;
             event.emit(event.WEBGL_ONCONTEXT_LOST, renderer);
         }, false );
