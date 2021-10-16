@@ -107,7 +107,7 @@ class Tween {
      * @ignore
      */
     onActivateEvent() {
-        event.subscribe(event.STATE_RESUME, this._resumeCallback);
+        event.on(event.STATE_RESUME, this._resumeCallback, this);
     }
 
     /**
@@ -115,7 +115,7 @@ class Tween {
      * @ignore
      */
     onDeactivateEvent() {
-        event.unsubscribe(event.STATE_RESUME, this._resumeCallback);
+        event.off(event.STATE_RESUME, this._resumeCallback);
     }
 
     /**

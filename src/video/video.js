@@ -281,7 +281,7 @@ export function init(game_width, game_height, options) {
         "resize",
         utils.function.throttle(
             function (e) {
-                event.publish(event.WINDOW_ONRESIZE, [ e ]);
+                event.emit(event.WINDOW_ONRESIZE, e);
             }, 100
         ), false
     );
@@ -290,7 +290,7 @@ export function init(game_width, game_height, options) {
     window.addEventListener(
         "orientationchange",
         function (e) {
-            event.publish(event.WINDOW_ONORIENTATION_CHANGE, [ e ]);
+            event.emit(event.WINDOW_ONORIENTATION_CHANGE, e);
         },
         false
     );
@@ -298,33 +298,27 @@ export function init(game_width, game_height, options) {
     window.addEventListener(
         "onmozorientationchange",
         function (e) {
-            event.publish(event.WINDOW_ONORIENTATION_CHANGE, [ e ]);
+            event.emit(event.WINDOW_ONORIENTATION_CHANGE, e);
         },
         false
     );
     if (typeof window.screen !== "undefined") {
         // is this one required ?
         window.screen.onorientationchange = function (e) {
-            event.publish(event.WINDOW_ONORIENTATION_CHANGE, [ e ]);
+            event.emit(event.WINDOW_ONORIENTATION_CHANGE, e);
         };
     }
 
     // Automatically update relative canvas position on scroll
     window.addEventListener("scroll", utils.function.throttle(
         function (e) {
-            event.publish(event.WINDOW_ONSCROLL, [ e ]);
+            event.emit(event.WINDOW_ONSCROLL, e);
         }, 100
     ), false);
 
     // register to the channel
-    event.subscribe(
-        event.WINDOW_ONRESIZE,
-        onresize.bind(this)
-    );
-    event.subscribe(
-        event.WINDOW_ONORIENTATION_CHANGE,
-        onresize.bind(this)
-    );
+    event.on(event.WINDOW_ONRESIZE, onresize, this);
+    event.on(event.WINDOW_ONORIENTATION_CHANGE, onresize, this);
 
     try {
         switch (settings.renderer) {
@@ -379,7 +373,7 @@ export function init(game_width, game_height, options) {
     }
 
     // notify the video has been initialized
-    event.publish(event.VIDEO_INIT);
+    event.emit(event.VIDEO_INIT);
 
     return true;
 };

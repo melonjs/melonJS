@@ -38,7 +38,7 @@ function checkLoadStatus(onload) {
             var callback = onload || loader.onload;
             setTimeout(function () {
                 callback();
-                event.publish(event.LOADER_COMPLETE);
+                event.emit(event.LOADER_COMPLETE);
             }, 300);
         }
         else {
@@ -385,7 +385,7 @@ var loader = {
             // pass the load progress in percent, as parameter
             this.onProgress(progress, res);
         }
-        event.publish(event.LOADER_PROGRESS, [progress, res]);
+        event.emit(event.LOADER_PROGRESS, progress, res);
     },
 
     /**

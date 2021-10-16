@@ -87,13 +87,13 @@ class World extends Container {
         this.broadphase = new QuadTree(this.getBounds().clone(), collision.maxChildren, collision.maxDepth);
 
         // reset the world container on the game reset signal
-        event.subscribe(event.GAME_RESET, this.reset.bind(this));
+        event.on(event.GAME_RESET, this.reset, this);
 
         // update the broadband world bounds if a new level is loaded
-        event.subscribe(event.LEVEL_LOADED, (function () {
+        event.on(event.LEVEL_LOADED, () => {
             // reset the quadtree
             this.broadphase.clear(this.getBounds());
-        }).bind(this));
+        });
     }
 
     /**

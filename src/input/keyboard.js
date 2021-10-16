@@ -29,11 +29,11 @@ var keyDownEvent = function (e, keyCode, mouseButton) {
     var action = _keyBindings[keyCode];
 
     // publish a message for keydown event
-    event.publish(event.KEYDOWN, [
+    event.emit(event.KEYDOWN,
         action,
         keyCode,
         action ? !_keyLocked[action] : true
-    ]);
+    );
 
     if (action) {
         if (!_keyLocked[action]) {
@@ -66,7 +66,7 @@ var keyUpEvent = function (e, keyCode, mouseButton) {
     var action = _keyBindings[keyCode];
 
     // publish a message for keydown event
-    event.publish(event.KEYUP, [ action, keyCode ]);
+    event.emit(event.KEYUP, action, keyCode);
 
     if (action) {
         var trigger = (typeof mouseButton !== "undefined") ? mouseButton : keyCode;

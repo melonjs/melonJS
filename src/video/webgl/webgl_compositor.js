@@ -141,12 +141,10 @@ class WebGLCompositor {
         gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, this.createIB(), gl.STATIC_DRAW);
 
         // register to the CANVAS resize channel
-        event.subscribe(
-            event.CANVAS_ONRESIZE, (function(width, height) {
-                this.flush();
-                this.setViewport(0, 0, width, height);
-            }).bind(this)
-        );
+        event.on(event.CANVAS_ONRESIZE, (width, height) => {
+            this.flush();
+            this.setViewport(0, 0, width, height);
+        });
 
         this.reset();
     }

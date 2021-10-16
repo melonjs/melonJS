@@ -32,7 +32,7 @@ function safeLoadLevel(levelId, options, restart) {
     loadTMXLevel(levelId, options.container, options.flatten, options.setViewportBounds);
 
     // publish the corresponding message
-    event.publish(event.LEVEL_LOADED, [ levelId ]);
+    event.emit(event.LEVEL_LOADED, levelId);
 
     // fire the callback
     options.onLoaded(levelId);

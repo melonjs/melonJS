@@ -135,13 +135,13 @@ function _switchState(state) {
 }
 
 // initialize me.state on system boot
-event.subscribe(event.BOOT, function () {
+event.on(event.BOOT, () => {
     // set the built-in loading stage
     state.set(state.LOADING, defaultLoadingScreen);
     // set and enable the default stage
     state.set(state.DEFAULT, new Stage());
     // enable by default as soon as the display is initialized
-    event.subscribe(event.VIDEO_INIT, function () {
+    event.on(event.VIDEO_INIT, () => {
         state.change(state.DEFAULT, true);
     });
 });
@@ -303,7 +303,7 @@ var state = {
             _pauseTime = window.performance.now();
 
             // publish the stop notification
-            event.publish(event.STATE_STOP);
+            event.emit(event.STATE_STOP);
             // any callback defined ?
             if (typeof(this.onStop) === "function") {
                 this.onStop();
@@ -333,7 +333,7 @@ var state = {
             _pauseTime = window.performance.now();
 
             // publish the pause event
-            event.publish(event.STATE_PAUSE);
+            event.emit(event.STATE_PAUSE);
             // any callback defined ?
             if (typeof(this.onPause) === "function") {
                 this.onPause();
@@ -365,7 +365,7 @@ var state = {
             game.repaint();
 
             // publish the restart notification
-            event.publish(event.STATE_RESTART, [ _pauseTime ]);
+            event.emit(event.STATE_RESTART, _pauseTime);
             // any callback defined ?
             if (typeof(this.onRestart) === "function") {
                 this.onRestart();
@@ -394,7 +394,7 @@ var state = {
             _pauseTime = window.performance.now() - _pauseTime;
 
             // publish the resume event
-            event.publish(event.STATE_RESUME, [ _pauseTime ]);
+            event.emit(event.STATE_RESUME, _pauseTime);
             // any callback defined ?
             if (typeof(this.onResume) === "function") {
                 this.onResume();

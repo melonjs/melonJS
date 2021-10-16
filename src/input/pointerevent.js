@@ -276,7 +276,7 @@ function dispatchEvent(normalizedEvents) {
         if (POINTER_MOVE.includes(pointer.type)) {
             pointer.gameX = pointer.gameLocalX = pointer.gameScreenX;
             pointer.gameY = pointer.gameLocalY = pointer.gameScreenY;
-            event.publish(event.POINTERMOVE, [pointer]);
+            event.emit(event.POINTERMOVE, pointer);
         }
 
         // fetch valid candiates from the game world container

@@ -73,7 +73,7 @@ And Also
 - Tween Effects, Transition effects
 - Pooling support for object recycling
 - Basic Particle System
-- Asynchronous publish/subscribe pattern messaging support (minPubSub)
+- nodeJS EventEmitter based event system
 
 Tools integration
 -------------------------------------------------------------------------------

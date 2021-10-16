@@ -19,15 +19,8 @@ class ProgressBar extends Renderable {
         this.barHeight = h;
         this.anchorPoint.set(0, 0);
 
-        this.loaderHdlr = event.subscribe(
-            event.LOADER_PROGRESS,
-            this.onProgressUpdate.bind(this)
-        );
-
-        this.resizeHdlr = event.subscribe(
-            event.VIEWPORT_ONRESIZE,
-            this.resize.bind(this)
-        );
+        event.on(event.LOADER_PROGRESS, this.onProgressUpdate, this);
+        event.on(event.VIEWPORT_ONRESIZE, this.resize, this);
 
         this.anchorPoint.set(0, 0);
 
@@ -63,9 +56,8 @@ class ProgressBar extends Renderable {
      */
     onDestroyEvent() {
         // cancel the callback
-        event.unsubscribe(this.loaderHdlr);
-        event.unsubscribe(this.resizeHdlr);
-        this.loaderHdlr = this.resizeHdlr = null;
+        event.off(event.LOADER_PROGRESS, this.onProgressUpdate);
+        event.off(event.VIEWPORT_ONRESIZE, this.resize);
     }
 
 };

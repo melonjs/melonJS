@@ -265,7 +265,7 @@ export function boot() {
     pool.register("Bounds", Bounds, true);
 
     // publish Boot notification
-    event.publish(event.BOOT);
+    event.emit(event.BOOT);
 
     // enable/disable the cache
     loader.setNocache( utils.getUriFragment().nocache || false );

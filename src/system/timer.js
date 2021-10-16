@@ -76,12 +76,12 @@ function updateTimers() {
 };
 
 // Initialize me.timer on Boot event
-event.subscribe(event.BOOT, function () {
+event.on(event.BOOT, () => {
     // reset variables to initial state
     timer.reset();
     now = last = 0;
     // register to the game update event
-    event.subscribe(event.GAME_UPDATE, update);
+    event.on(event.GAME_UPDATE, update);
 });
 
 

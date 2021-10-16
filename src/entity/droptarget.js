@@ -51,7 +51,7 @@ class DroptargetEntity extends Entity {
          * @memberOf me.DroptargetEntity
          */
         this.checkMethod = null;
-        event.subscribe(event.DRAGEND, this.checkOnMe.bind(this));
+        event.on(event.DRAGEND, this.checkOnMe, this);
         this.checkMethod = this[this.CHECKMETHOD_OVERLAP];
     }
 
@@ -102,7 +102,7 @@ class DroptargetEntity extends Entity {
      * @function
      */
     destroy() {
-        event.unsubscribe(event.DRAGEND, this.checkOnMe);
+        event.off(event.DRAGEND, this.checkOnMe);
     }
 };
 export default DroptargetEntity;

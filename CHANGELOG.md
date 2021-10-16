@@ -15,6 +15,7 @@
 - Core : manually pushing a non recyclable object into the object pool will now throw an exception instead of silently failing
 - Physic : physic body update and collision check is now automatically done through the world simulation update loop
 - Physic : fixed gravitational acceleration (thanks @neilsf)
+- Event: minPubSub event based implementation has been replaced by a nodeJS event emitter based implementation
 
 ### Deprecated
 - all deprecated API from the legacy melonJS version have been removed

@@ -94,7 +94,7 @@ class Renderer {
         this.Texture = Texture;
 
         // reset the instantiated renderer on game reset
-        event.subscribe(event.GAME_RESET, function () {
+        event.on(event.GAME_RESET, () => {
             renderer.reset();
         });
 
@@ -288,7 +288,7 @@ class Renderer {
             this.currentScissor[2] = width;
             this.currentScissor[3] = height;
             // publish the corresponding event
-            event.publish(event.CANVAS_ONRESIZE, [ width, height ]);
+            event.emit(event.CANVAS_ONRESIZE, width, height);
         }
     }
 

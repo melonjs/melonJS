@@ -141,7 +141,7 @@ class Container extends Renderable {
         // subscribe on the canvas resize event
         if (this.root === true) {
             // Workaround for not updating container child-bounds automatically (it's expensive!)
-            event.subscribe(event.CANVAS_ONRESIZE, this.updateBounds.bind(this, true));
+            event.on(event.CANVAS_ONRESIZE, this.updateBounds.bind(this, true));
         }
     }
 

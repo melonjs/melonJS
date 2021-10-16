@@ -228,7 +228,7 @@ function _checkCapabilities() {
 
 
 // Initialize me.timer on Boot event
-event.subscribe(event.BOOT, function () {
+event.on(event.BOOT, () => {
     _checkCapabilities();
 });
 
@@ -660,7 +660,7 @@ let device = {
      * @example
      * // add a keyboard shortcut to toggle Fullscreen mode on/off
      * me.input.bindKey(me.input.KEY.F, "toggleFullscreen");
-     * me.event.subscribe(me.event.KEYDOWN, function (action, keyCode, edge) {
+     * me.event.on(me.event.KEYDOWN, function (action, keyCode, edge) {
      *    // toggle fullscreen on/off
      *    if (action === "toggleFullscreen") {
      *       if (!me.device.isFullscreen) {

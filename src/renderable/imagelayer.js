@@ -100,7 +100,7 @@ class ImageLayer extends Sprite {
         this.repeat = settings.repeat || "repeat";
 
         // on context lost, all previous textures are destroyed
-        event.subscribe(event.WEBGL_ONCONTEXT_RESTORED, this.createPattern.bind(this));
+        event.on(event.WEBGL_ONCONTEXT_RESTORED, this.createPattern.bind(this));
     }
 
     /**
@@ -154,13 +154,12 @@ class ImageLayer extends Sprite {
 
     // called when the layer is added to the game world or a container
     onActivateEvent() {
-        var _updateLayerFn = this.updateLayer.bind(this);
         // register to the viewport change notification
-        this.vpChangeHdlr = event.subscribe(event.VIEWPORT_ONCHANGE, _updateLayerFn);
-        this.vpResizeHdlr = event.subscribe(event.VIEWPORT_ONRESIZE, this.resize.bind(this));
-        this.vpLoadedHdlr = event.subscribe(event.LEVEL_LOADED, function() {
-            // force a first refresh when the level is loaded
-            _updateLayerFn(viewport.pos);
+        event.on(event.VIEWPORT_ONCHANGE, this.updateLayer, this);
+        event.on(event.VIEWPORT_ONRESIZE, this.resize, this);
+        // force a first refresh when the level is loaded
+        event.once(event.LEVEL_LOADED, () => {
+            this.updateLayer(viewport.pos);
         });
         // in case the level is not added to the root container,
         // the onActivateEvent call happens after the LEVEL_LOADED event
@@ -290,9 +289,8 @@ class ImageLayer extends Sprite {
     // called when the layer is removed from the game world or a container
     onDeactivateEvent() {
         // cancel all event subscriptions
-        event.unsubscribe(this.vpChangeHdlr);
-        event.unsubscribe(this.vpResizeHdlr);
-        event.unsubscribe(this.vpLoadedHdlr);
+        event.off(event.VIEWPORT_ONCHANGE, this.updateLayer);
+        event.off(event.VIEWPORT_ONRESIZE, this.resize);
     }
 
     /**

@@ -36,11 +36,11 @@ var updateAverageDelta = 0;
 
 
  // initialize the game manager on system boot
-event.subscribe(event.BOOT, function () {
+event.on(event.BOOT, () => {
     // the root object of our world is an entity container
     world = new World();
     // publish init notification
-    event.publish(event.GAME_INIT);
+    event.emit(event.GAME_INIT);
 });
 
 
@@ -120,7 +120,7 @@ export function reset () {
     }
 
     // publish reset notification
-    event.publish(event.GAME_RESET);
+    event.emit(event.GAME_RESET);
 
     // Refresh internal variables for framerate  limiting
     updateFrameRate();
@@ -180,10 +180,10 @@ export function update(time, stage) {
         frameCounter = 0;
 
         // publish notification
-        event.publish(event.GAME_BEFORE_UPDATE);
+        event.emit(event.GAME_BEFORE_UPDATE);
 
         // game update event
-        event.publish(event.GAME_UPDATE, [ time ]);
+        event.emit(event.GAME_UPDATE, time);
 
         accumulator += timer.getDelta();
         accumulator = Math.min(accumulator, accumulatorMax);
@@ -208,7 +208,7 @@ export function update(time, stage) {
         }
 
         // publish notification
-        event.publish(event.GAME_AFTER_UPDATE);
+        event.emit(event.GAME_AFTER_UPDATE);
     }
 };
 
@@ -222,7 +222,7 @@ export function draw(stage) {
 
     if (renderer.isContextValid === true && (isDirty || isAlwaysDirty)) {
         // publish notification
-        event.publish(event.GAME_BEFORE_DRAW);
+        event.emit(event.GAME_BEFORE_DRAW);
 
         // prepare renderer to draw a new frame
         renderer.clear();
@@ -237,6 +237,6 @@ export function draw(stage) {
         renderer.flush();
 
         // publish notification
-        event.publish(event.GAME_AFTER_DRAW);
+        event.emit(event.GAME_AFTER_DRAW);
     }
 };

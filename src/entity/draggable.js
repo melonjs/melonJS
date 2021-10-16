@@ -60,17 +60,9 @@ class DraggableEntity extends Entity {
         this.onPointerEvent("pointerdown", this, this.mouseDown.bind(this));
         this.onPointerEvent("pointerup", this, this.mouseUp.bind(this));
         this.onPointerEvent("pointercancel", this, this.mouseUp.bind(this));
-        event.subscribe(event.POINTERMOVE, this.dragMove.bind(this));
-        event.subscribe(event.DRAGSTART, (e, draggable) => {
-            if (draggable === this) {
-                this.dragStart(e);
-            }
-        });
-        event.subscribe(event.DRAGEND, (e, draggable) => {
-            if (draggable === this) {
-                this.dragEnd(e);
-            }
-        });
+        event.on(event.POINTERMOVE, this.dragMove, this);
+        event.on(event.DRAGSTART, this.dragStart, this);
+        event.on(event.DRAGEND, this.dragEnd, this);
     }
 
     /**
@@ -79,11 +71,10 @@ class DraggableEntity extends Entity {
      * @memberOf me.DraggableEntity
      * @function
      * @param {Object} e the pointer event you want to translate
-     * @param {String} translation the me.event you want to translate
-     * the event to
+     * @param {String} translation the me.event you want to translate the event to
      */
     translatePointerEvent(e, translation) {
-        event.publish(translation, [e, this]);
+        event.emit(translation, e);
     }
 
     /**
@@ -137,9 +128,9 @@ class DraggableEntity extends Entity {
      * @function
      */
     destroy() {
-        event.unsubscribe(event.POINTERMOVE, this.dragMove);
-        event.unsubscribe(event.DRAGSTART, this.dragStart);
-        event.unsubscribe(event.DRAGEND, this.dragEnd);
+        event.off(event.POINTERMOVE, this.dragMove);
+        event.off(event.DRAGSTART, this.dragStart);
+        event.off(event.DRAGEND, this.dragEnd);
         this.removePointerEvent("pointerdown", this);
         this.removePointerEvent("pointerup", this);
     }

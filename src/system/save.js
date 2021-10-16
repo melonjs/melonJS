@@ -43,7 +43,7 @@ import * as event from "./../system/event.js";
 
 
 // Initialize me.save on Boot event
-event.subscribe(event.BOOT, function() {
+event.on(event.BOOT, () => {
     // Load previous data if local Storage is supported
     if (device.localStorage === true) {
         var me_save_content = localStorage.getItem("me.save");

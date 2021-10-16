@@ -54,8 +54,8 @@
   ],
   "dependencies": {
     "earcut": "2.2.3",
-    "howler": "2.2.3",
-    "minpubsub": "0.0.2"
+    "eventemitter3": "^4.0.7",
+    "howler": "2.2.3"
   },
   "devDependencies": {
     "@rollup/plugin-buble": "^0.21.3",

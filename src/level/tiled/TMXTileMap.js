@@ -19,9 +19,6 @@ import Rect from "./../../shapes/rectangle.js";
 // constant to identify the collision object layer
 var COLLISION_GROUP = "collision";
 
-// onresize handler
-var onresize_handler = null;
-
 /**
  * set a compatible renderer object
  * for the specified map
@@ -426,13 +423,11 @@ export default class TMXTileMap {
         }
 
         if (setViewportBounds === true) {
+            event.off(event.VIEWPORT_ONRESIZE, _setBounds);
             // force viewport bounds update
             _setBounds(viewport.width, viewport.height);
             // Replace the resize handler
-            if (onresize_handler) {
-                event.unsubscribe(onresize_handler);
-            }
-            onresize_handler = event.subscribe(event.VIEWPORT_ONRESIZE, _setBounds);
+            event.on(event.VIEWPORT_ONRESIZE, _setBounds, this);
         }
 
         //  set back auto-sort and auto-depth

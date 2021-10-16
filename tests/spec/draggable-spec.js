@@ -36,9 +36,9 @@
             // drags an entity from a start to an end location
             drag = function (startFrom, moveTo) {
                 // mock user drag events
-                Event.publish(Event.DRAGSTART, [{gameX: startFrom.x, gameY: startFrom.y, pointerId: 1}, draggable]);
-                Event.publish(Event.POINTERMOVE, [{gameX: moveTo.x, gameY: moveTo.y, pointerId: 1}, draggable]);
-                Event.publish(Event.DRAGEND, [{gameX: moveTo.x, gameY: moveTo.y, pointerId: 1}, draggable]);
+                Event.emit(Event.DRAGSTART, {gameX: startFrom.x, gameY: startFrom.y, pointerId: 1}, draggable);
+                Event.emit(Event.POINTERMOVE, {gameX: moveTo.x, gameY: moveTo.y, pointerId: 1}, draggable);
+                Event.emit(Event.DRAGEND, {gameX: moveTo.x, gameY: moveTo.y, pointerId: 1}, draggable);
             };
 
         beforeEach(function () {

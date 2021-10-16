@@ -173,9 +173,9 @@ class Camera2d extends Renderable {
         this._updateProjectionMatrix();
 
         // subscribe to the game reset event
-        event.subscribe(event.GAME_RESET, this.reset.bind(this));
+        event.on(event.GAME_RESET, this.reset.bind(this));
         // subscribe to the canvas resize event
-        event.subscribe(event.CANVAS_ONRESIZE, this.resize.bind(this));
+        event.on(event.CANVAS_ONRESIZE, this.resize.bind(this));
     }
 
     // -- some private function ---
@@ -298,7 +298,7 @@ class Camera2d extends Renderable {
         this._updateProjectionMatrix();
 
         // publish the viewport resize event
-        event.publish(event.VIEWPORT_ONRESIZE, [ this.width, this.height ]);
+        event.emit(event.VIEWPORT_ONRESIZE, this.width, this.height);
 
         return this;
     }
@@ -418,7 +418,7 @@ class Camera2d extends Renderable {
 
         //publish the VIEWPORT_ONCHANGE event if necessary
         if (_x !== this.pos.x || _y !== this.pos.y) {
-            event.publish(event.VIEWPORT_ONCHANGE, [this.pos]);
+            event.emit(event.VIEWPORT_ONCHANGE, this.pos);
         }
     }
 
@@ -499,7 +499,7 @@ class Camera2d extends Renderable {
 
         if (updated === true) {
             //publish the corresponding message
-            event.publish(event.VIEWPORT_ONCHANGE, [this.pos]);
+            event.emit(event.VIEWPORT_ONCHANGE, this.pos);
         }
 
         // check for fade/flash effect
