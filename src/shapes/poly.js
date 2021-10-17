@@ -270,7 +270,7 @@ class Polygon {
         edges.length = len;
         normals.length = len;
         // do not do anything here, indices will be computed by
-        // toIndices if array is empty upon function call
+        // getIndices if array is empty upon function call
         indices.length = 0;
 
         return this;
