@@ -39,12 +39,6 @@ describe("Shape : me.Line", function () {
             expect(line.contains(14, 30)).toEqual(true);
         });
 
-        it("line can be cloned", function () {
-            var clone = line.clone();
-            expect(clone.contains(0, 0)).toEqual(true);
-            expect(clone.contains(14, 30)).toEqual(true);
-        });
-
         it("contains the point (60, -28) after rotating the line by -90 degrees", function () {
             line.rotate(-Math.PI / 2);
             expect(line.points[1].x).toBeCloseTo(60, 3);

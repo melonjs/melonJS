@@ -101,7 +101,11 @@ class Line extends Polygon {
      * @return {me.Line} new Line
      */
     clone() {
-        return new Line(this.pos.x, this.pos.y, [...this.points]);
+        var copy = [];
+        this.points.forEach(function (point) {
+            copy.push(point.clone());
+        });
+        return new Line(this.pos.x, this.pos.y, copy);
     }
 
 };

@@ -81,16 +81,6 @@ describe("Shape : me.Polygon", function () {
             expect(bounds.x).toEqual(-94);
             expect(bounds.y).toEqual(0);
         });
-
-        it("polygon can be cloned", function () {
-            var clone = stars.clone();
-            var starsBounds = clone.getBounds();
-            // bounds should have the same dimension than the original
-            expect(starsBounds.x).toEqual(-94);
-            expect(starsBounds.y).toEqual(0);
-            expect(starsBounds.width).toEqual(188);
-            expect(starsBounds.height).toEqual(180);
-        });
     });
 
     describe("Polygon transformation", function () {
