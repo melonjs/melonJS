@@ -1,4 +1,4 @@
-import utils from "./../utils/utils.js";
+import * as fileUtil from "./../utils/file.js";
 import * as event from "./../system/event.js";
 import device from "./../system/device.js";
 import * as audio from "./../audio/audio.js";
@@ -122,7 +122,7 @@ function preloadTMX(tmxData, onload, onerror) {
 
     var xmlhttp = new XMLHttpRequest();
     // check the data format ('tmx', 'json')
-    var format = utils.file.getExtension(tmxData.src);
+    var format = fileUtil.getExtension(tmxData.src);
 
     if (xmlhttp.overrideMimeType) {
         if (format === "json") {
@@ -732,7 +732,7 @@ var loader = {
      */
     getImage(image) {
         // force as string and extract the base name
-        image = utils.file.getBasename("" + image);
+        image = fileUtil.getBasename("" + image);
         if (image in imgList) {
             // return the corresponding Image object
             return imgList[image];

@@ -1,5 +1,5 @@
 import Color from "./../math/color.js";
-import utils from "./../utils/utils.js";
+import * as stringUtil from "./../utils/string.js";
 import pool from "./../system/pooling.js";
 import loader from "./../loader/loader.js";
 import Renderable from "./../renderable/renderable.js";
@@ -313,7 +313,7 @@ class BitmapText extends Renderable {
 
         for (var i = 0; i < this._text.length; i++) {
             x = lX;
-            var string = utils.string.trimRight(this._text[i]);
+            var string = stringUtil.trimRight(this._text[i]);
             // adjust x pos based on alignment value
             var stringWidth = measureTextWidth(this, string);
             switch (this.textAlign) {

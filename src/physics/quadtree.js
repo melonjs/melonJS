@@ -1,6 +1,6 @@
 import Vector2d from "./../math/vector2.js";
 import Container from "./../renderable/container.js";
-import utils from "./../utils/utils.js";
+import * as arrayUtil from "./../utils/array.js";
 import { viewport } from "./../game.js";
 
 /*
@@ -295,7 +295,7 @@ class QuadTree {
             var index = this.getIndex(item);
 
             if (index !== -1) {
-                found = utils.array.remove(this.nodes[index], item);
+                found = arrayUtil.remove(this.nodes[index], item);
                 // trim node if empty
                 if (found && this.nodes[index].isPrunable()) {
                     this.nodes.splice(index, 1);
@@ -306,7 +306,7 @@ class QuadTree {
         if (found === false) {
             // try and remove the item from the list of items in this node
             if (this.objects.indexOf(item) !== -1) {
-                utils.array.remove(this.objects, item);
+                arrayUtil.remove(this.objects, item);
                 found = true;
             }
         }

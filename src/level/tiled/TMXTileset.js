@@ -1,6 +1,6 @@
 import Vector2d from "./../../math/vector2.js";
 import { renderer } from "./../../video/video.js";
-import utils from "./../../utils/utils.js";
+import * as fileUtil from "./../../utils/file.js";
 import timer from "./../../system/timer.js";
 import loader from "./../../loader/loader.js";
 
@@ -29,10 +29,10 @@ export default class TMXTileset {
         // check if an external tileset is defined
         if (typeof(tileset.source) !== "undefined") {
             var src = tileset.source;
-            var ext = utils.file.getExtension(src);
+            var ext = fileUtil.getExtension(src);
             if (ext === "tsx" || ext === "json") {
                 // load the external tileset (TSX/JSON)
-                tileset = loader.getTMX(utils.file.getBasename(src));
+                tileset = loader.getTMX(fileUtil.getBasename(src));
                 if (!tileset) {
                     throw new Error(src + " external TSX/JSON tileset not found");
                 }

@@ -1,7 +1,7 @@
 import Color from "./../math/color.js";
 import Renderer from "./../video/renderer.js";
 import { renderer } from "./../video/video.js";
-import utils from "./../utils/utils.js";
+import * as stringUtil from "./../utils/string.js";
 import pool from "./../system/pooling.js";
 import Renderable from "./../renderable/renderable.js";
 
@@ -319,7 +319,7 @@ class Text extends Renderable {
         // compute the bounding box size
         this.height = this.width = 0;
         for (var i = 0; i < strings.length; i++) {
-            this.width = Math.max(context.measureText(utils.string.trimRight(""+strings[i])).width, this.width);
+            this.width = Math.max(context.measureText(stringUtil.trimRight(""+strings[i])).width, this.width);
             this.height += lineHeight;
         }
         textMetrics.width = Math.ceil(this.width);
@@ -432,7 +432,7 @@ class Text extends Renderable {
 
         var lineHeight = this.fontSize * this.lineHeight;
         for (var i = 0; i < text.length; i++) {
-            var string = utils.string.trimRight(""+text[i]);
+            var string = stringUtil.trimRight(""+text[i]);
             // draw the string
             context[stroke ? "strokeText" : "fillText"](string, x, y);
             // add leading space

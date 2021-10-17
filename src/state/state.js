@@ -1,5 +1,5 @@
 import { pauseTrack, resumeTrack } from "./../audio/audio.js";
-import utils from "./../utils/utils.js";
+import * as fctUtil from "./../utils/function.js";
 import * as event from "./../system/event.js";
 import timer from "./../system/timer.js";
 import * as game from "./../game.js";
@@ -570,7 +570,7 @@ var state = {
                 _fade.color,
                 _fade.duration,
                 function () {
-                    utils.function.defer(_switchState, this, state);
+                    fctUtil.defer(_switchState, this, state);
                 }
             );
 
@@ -582,7 +582,7 @@ var state = {
             if (forceChange === true) {
                 _switchState(state);
             } else {
-                utils.function.defer(_switchState, this, state);
+                fctUtil.defer(_switchState, this, state);
             }
         }
     },

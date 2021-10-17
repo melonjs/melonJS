@@ -4,7 +4,7 @@ import Ellipse from "./../shapes/ellipse.js";
 import Polygon from "./../shapes/poly.js";
 import Bounds from "./bounds.js";
 import collision from "./collision.js";
-import utils from "./../utils/utils.js";
+import * as arrayUtil from "./../utils/array.js";
 import timer from "./../system/timer.js";
 import { clamp } from "./../math/math.js";
 import { world } from "./../game.js";
@@ -452,7 +452,7 @@ class Body {
         // clear the current bounds
         this.bounds.clear();
         // remove the shape from shape list
-        utils.array.remove(this.shapes, shape);
+        arrayUtil.remove(this.shapes, shape);
         // add everything left back
         for (var s = 0; s < this.shapes.length; s++) {
             this.addShape(this.shapes[s]);

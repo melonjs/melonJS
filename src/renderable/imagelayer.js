@@ -3,7 +3,7 @@ import * as event from "./../system/event.js";
 import pool from "./../system/pooling.js";
 import { viewport } from "./../game.js";
 import Sprite from "./sprite.js";
-import utils from "./../utils/utils.js";
+import * as stringUtil from "./../utils/string.js";
 
 
 /**
@@ -62,7 +62,7 @@ class ImageLayer extends Sprite {
 
         if (typeof(settings.ratio) !== "undefined") {
             // little hack for backward compatiblity
-            if (utils.string.isNumeric(settings.ratio)) {
+            if (stringUtil.isNumeric(settings.ratio)) {
                 this.ratio.set(settings.ratio, +settings.ratio);
             } else /* vector */ {
                 this.ratio.setV(settings.ratio);
