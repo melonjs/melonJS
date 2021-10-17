@@ -15,7 +15,6 @@
 
 beforeAll(function (done) {
     console.log("Initializing melonJS");
-    me.audio.stopOnAudioError = false;
 
     me.boot();
 
