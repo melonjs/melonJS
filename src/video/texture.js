@@ -161,7 +161,7 @@ export class Texture {
 
         // Add self to TextureCache if cache !== false
         if (cache !== false) {
-            this.sources.forEach(function (source) {
+            this.sources.forEach((source) => {
                 if (cache instanceof TextureCache) {
                     cache.set(source, this);
                 } else {
