@@ -448,11 +448,7 @@ class Polygon {
      * @return {me.Polygon} new Polygon
      */
     clone() {
-        var copy = [];
-        this.points.forEach(function (point) {
-            copy.push(point.clone());
-        });
-        return new Polygon(this.pos.x, this.pos.y, copy);
+        return new Polygon(this.pos.x, this.pos.y, [...this.points]);
     }
 };
 
