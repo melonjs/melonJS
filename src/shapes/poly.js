@@ -47,7 +47,7 @@ class Polygon {
          * @name points
          * @memberOf me.Polygon#
          */
-        this.points = null;
+        this.points = [];
 
         /**
          * The edges here are the direction of the `n`th edge of the polygon, relative to
@@ -111,18 +111,18 @@ class Polygon {
 
         // convert given points to me.Vector2d if required
         if (!(vertices[0] instanceof Vector2d)) {
-            var _points = this.points = [];
+            this.points.length = 0;
 
             if (typeof vertices[0] === "object") {
                 // array of {x,y} object
-                vertices.forEach(function (vertice) {
-                   _points.push(new Vector2d(vertice.x, vertice.y));
+                vertices.forEach((vertice) => {
+                   this.points.push(new Vector2d(vertice.x, vertice.y));
                 });
 
             } else {
                 // it's a flat array
                 for (var p = 0; p < vertices.length; p += 2) {
-                    _points.push(new Vector2d(vertices[p], vertices[p + 1]));
+                    this.points.push(new Vector2d(vertices[p], vertices[p + 1]));
                 }
             }
         } else {
