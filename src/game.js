@@ -180,10 +180,7 @@ export function update(time, stage) {
         frameCounter = 0;
 
         // publish notification
-        event.emit(event.GAME_BEFORE_UPDATE);
-
-        // game update event
-        event.emit(event.GAME_UPDATE, time);
+        event.emit(event.GAME_BEFORE_UPDATE, time);
 
         accumulator += timer.getDelta();
         accumulator = Math.min(accumulator, accumulatorMax);
@@ -193,6 +190,11 @@ export function update(time, stage) {
 
         while (accumulator >= accumulatorUpdateDelta || timer.interpolation) {
             lastUpdateStart = window.performance.now();
+
+            // game update event
+            if (state.isPaused() !== true) {
+                event.emit(event.GAME_UPDATE, time);
+            }
 
             // update all objects (and pass the elapsed time since last frame)
             isDirty = stage.update(updateDelta) || isDirty;
@@ -208,7 +210,7 @@ export function update(time, stage) {
         }
 
         // publish notification
-        event.emit(event.GAME_AFTER_UPDATE);
+        event.emit(event.GAME_AFTER_UPDATE, lastUpdate);
     }
 };
 
@@ -222,7 +224,7 @@ export function draw(stage) {
 
     if (renderer.isContextValid === true && (isDirty || isAlwaysDirty)) {
         // publish notification
-        event.emit(event.GAME_BEFORE_DRAW);
+        event.emit(event.GAME_BEFORE_DRAW, window.performance.now());
 
         // prepare renderer to draw a new frame
         renderer.clear();
@@ -237,6 +239,6 @@ export function draw(stage) {
         renderer.flush();
 
         // publish notification
-        event.emit(event.GAME_AFTER_DRAW);
+        event.emit(event.GAME_AFTER_DRAW, window.performance.now());
     }
 };

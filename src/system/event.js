@@ -106,7 +106,7 @@ export const GAME_INIT = "me.game.onInit";
 export const GAME_RESET = "me.game.onReset";
 
 /**
- * eventfor the start of the update loop
+ * event for when the engine is about to start a new game loop
  * Data passed : {Number} time the current time stamp
  * @public
  * @constant
@@ -130,7 +130,7 @@ export const GAME_BEFORE_UPDATE = "me.game.beforeUpdate";
 export const GAME_AFTER_UPDATE = "me.game.afterUpdate";
 
 /**
- * Event for when the game manager is updated (start of the update loop) <br>
+ * Event for when the game is updated (will be impacted by frame skip, frame interpolation and pause/resume state) <br>
  * Data passed : {Number} time the current time stamp
  * @public
  * @constant

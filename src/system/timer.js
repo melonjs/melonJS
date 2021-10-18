@@ -80,8 +80,8 @@ event.on(event.BOOT, () => {
     // reset variables to initial state
     timer.reset();
     now = last = 0;
-    // register to the game update event
-    event.on(event.GAME_UPDATE, update);
+    // register to the game before update event
+    event.on(event.GAME_BEFORE_UPDATE, update);
 });
 
 

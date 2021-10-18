@@ -384,7 +384,7 @@ export function bindGamepad(index, button, keyCode) {
     // register to the the update event if not yet done and supported by the browser
     // if not supported, the function will fail silently (-> update loop won't be called)
     if (typeof updateEventHandler === "undefined" && typeof navigator.getGamepads === "function") {
-        updateEventHandler = event.on(event.GAME_UPDATE, updateGamepads);
+        updateEventHandler = event.on(event.GAME_BEFORE_UPDATE, updateGamepads);
     }
 
     // Allocate bindings if not defined
