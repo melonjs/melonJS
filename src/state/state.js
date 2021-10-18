@@ -250,38 +250,6 @@ var state = {
     USER : 100,
 
     /**
-     * onPause callback
-     * @function
-     * @name onPause
-     * @memberOf me.state
-     */
-    onPause : null,
-
-    /**
-     * onResume callback
-     * @function
-     * @name onResume
-     * @memberOf me.state
-     */
-    onResume : null,
-
-    /**
-     * onStop callback
-     * @function
-     * @name onStop
-     * @memberOf me.state
-     */
-    onStop : null,
-
-    /**
-     * onRestart callback
-     * @function
-     * @name onRestart
-     * @memberOf me.state
-     */
-    onRestart : null,
-
-    /**
      * Stop the current screen object.
      * @name stop
      * @memberOf me.state
@@ -304,10 +272,6 @@ var state = {
 
             // publish the stop notification
             event.emit(event.STATE_STOP);
-            // any callback defined ?
-            if (typeof(this.onStop) === "function") {
-                this.onStop();
-            }
         }
     },
 
@@ -334,10 +298,6 @@ var state = {
 
             // publish the pause event
             event.emit(event.STATE_PAUSE);
-            // any callback defined ?
-            if (typeof(this.onPause) === "function") {
-                this.onPause();
-            }
         }
     },
 
@@ -366,10 +326,6 @@ var state = {
 
             // publish the restart notification
             event.emit(event.STATE_RESTART, _pauseTime);
-            // any callback defined ?
-            if (typeof(this.onRestart) === "function") {
-                this.onRestart();
-            }
         }
     },
 
@@ -395,10 +351,6 @@ var state = {
 
             // publish the resume event
             event.emit(event.STATE_RESUME, _pauseTime);
-            // any callback defined ?
-            if (typeof(this.onResume) === "function") {
-                this.onResume();
-            }
         }
     },
 
@@ -472,7 +424,7 @@ var state = {
      *
      * me.state.set(me.state.MENU, new MenuScreen());
      */
-    set(state, stage, start) {
+    set(state, stage, start = false) {
         if (!(stage instanceof Stage)) {
             throw new Error(stage + " is not an instance of me.Stage");
         }
