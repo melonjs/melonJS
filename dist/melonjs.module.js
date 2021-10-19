@@ -3133,172 +3133,418 @@ class Matrix2d {
 
 var commonjsGlobal = typeof globalThis !== 'undefined' ? globalThis : typeof window !== 'undefined' ? window : typeof global !== 'undefined' ? global : typeof self !== 'undefined' ? self : {};
 
-var minpubsub_src = {exports: {}};
+var eventemitter3 = {exports: {}};
 
-/*!
- * MinPubSub
- * Copyright(c) 2011 Daniel Lamb <daniellmb.com>
- * MIT Licensed
- */
+(function (module) {
 
-(function (module, exports) {
-(function (context) {
-  var MinPubSub = {};
-
-  // the topic/subscription hash
-  var cache = context.c_ || {}; //check for 'c_' cache for unit testing
-
-  MinPubSub.publish = function ( /* String */ topic, /* Array? */ args) {
-    // summary: 
-    //    Publish some data on a named topic.
-    // topic: String
-    //    The channel to publish on
-    // args: Array?
-    //    The data to publish. Each array item is converted into an ordered
-    //    arguments on the subscribed functions. 
-    //
-    // example:
-    //    Publish stuff on '/some/topic'. Anything subscribed will be called
-    //    with a function signature like: function(a,b,c){ ... }
-    //
-    //    publish('/some/topic', ['a','b','c']);
-
-    var subs = cache[topic],
-      len = subs ? subs.length : 0;
-
-    //can change loop or reverse array if the order matters
-    while (len--) {
-      subs[len].apply(context, args || []);
-    }
-  };
-
-  MinPubSub.subscribe = function ( /* String */ topic, /* Function */ callback) {
-    // summary:
-    //    Register a callback on a named topic.
-    // topic: String
-    //    The channel to subscribe to
-    // callback: Function
-    //    The handler event. Anytime something is publish'ed on a 
-    //    subscribed channel, the callback will be called with the
-    //    published array as ordered arguments.
-    //
-    // returns: Array
-    //    A handle which can be used to unsubscribe this particular subscription.
-    //        
-    // example:
-    //    subscribe('/some/topic', function(a, b, c){ /* handle data */ });
-
-    if (!cache[topic]) {
-      cache[topic] = [];
-    }
-    cache[topic].push(callback);
-    return [topic, callback]; // Array
-  };
-
-  MinPubSub.unsubscribe = function ( /* Array */ handle, /* Function? */ callback) {
-    // summary:
-    //    Disconnect a subscribed function for a topic.
-    // handle: Array
-    //    The return value from a subscribe call.
-    // example:
-    //    var handle = subscribe('/some/topic', function(){});
-    //    unsubscribe(handle);
-
-    var subs = cache[callback ? handle : handle[0]],
-      callback = callback || handle[1],
-      len = subs ? subs.length : 0;
-
-    while (len--) {
-      if (subs[len] === callback) {
-        subs.splice(len, 1);
-      }
-    }
-  };
-
-  // UMD definition to allow for CommonJS, AMD and legacy window
-  if (module.exports) {
-    // CommonJS, just export
-    module.exports = MinPubSub;
-  } else if (typeof context === 'object') {
-    // If no AMD and we are in the browser, attach to window
-    context.publish = MinPubSub.publish;
-    context.subscribe = MinPubSub.subscribe;
-    context.unsubscribe = MinPubSub.unsubscribe;
-  }
-
-})(commonjsGlobal.window);
-}(minpubsub_src));
-
-var MinPubSub = minpubsub_src.exports;
+var has = Object.prototype.hasOwnProperty
+  , prefix = '~';
 
 /**
-* an event system based on a micro publish/subscribe messaging framework
+ * Constructor to create a storage for our `EE` objects.
+ * An `Events` instance is a plain object whose properties are event names.
+ *
+ * @constructor
+ * @private
+ */
+function Events() {}
+
+//
+// We try to not inherit from `Object.prototype`. In some engines creating an
+// instance in this way is faster than calling `Object.create(null)` directly.
+// If `Object.create(null)` is not supported we prefix the event names with a
+// character to make sure that the built-in object properties are not
+// overridden or used as an attack vector.
+//
+if (Object.create) {
+  Events.prototype = Object.create(null);
+
+  //
+  // This hack is needed because the `__proto__` property is still inherited in
+  // some old browsers like Android 4, iPhone 5.1, Opera 11 and Safari 5.
+  //
+  if (!new Events().__proto__) prefix = false;
+}
+
+/**
+ * Representation of a single event listener.
+ *
+ * @param {Function} fn The listener function.
+ * @param {*} context The context to invoke the listener with.
+ * @param {Boolean} [once=false] Specify if the listener is a one-time listener.
+ * @constructor
+ * @private
+ */
+function EE(fn, context, once) {
+  this.fn = fn;
+  this.context = context;
+  this.once = once || false;
+}
+
+/**
+ * Add a listener for a given event.
+ *
+ * @param {EventEmitter} emitter Reference to the `EventEmitter` instance.
+ * @param {(String|Symbol)} event The event name.
+ * @param {Function} fn The listener function.
+ * @param {*} context The context to invoke the listener with.
+ * @param {Boolean} once Specify if the listener is a one-time listener.
+ * @returns {EventEmitter}
+ * @private
+ */
+function addListener(emitter, event, fn, context, once) {
+  if (typeof fn !== 'function') {
+    throw new TypeError('The listener must be a function');
+  }
+
+  var listener = new EE(fn, context || emitter, once)
+    , evt = prefix ? prefix + event : event;
+
+  if (!emitter._events[evt]) emitter._events[evt] = listener, emitter._eventsCount++;
+  else if (!emitter._events[evt].fn) emitter._events[evt].push(listener);
+  else emitter._events[evt] = [emitter._events[evt], listener];
+
+  return emitter;
+}
+
+/**
+ * Clear event by name.
+ *
+ * @param {EventEmitter} emitter Reference to the `EventEmitter` instance.
+ * @param {(String|Symbol)} evt The Event name.
+ * @private
+ */
+function clearEvent(emitter, evt) {
+  if (--emitter._eventsCount === 0) emitter._events = new Events();
+  else delete emitter._events[evt];
+}
+
+/**
+ * Minimal `EventEmitter` interface that is molded against the Node.js
+ * `EventEmitter` interface.
+ *
+ * @constructor
+ * @public
+ */
+function EventEmitter() {
+  this._events = new Events();
+  this._eventsCount = 0;
+}
+
+/**
+ * Return an array listing the events for which the emitter has registered
+ * listeners.
+ *
+ * @returns {Array}
+ * @public
+ */
+EventEmitter.prototype.eventNames = function eventNames() {
+  var names = []
+    , events
+    , name;
+
+  if (this._eventsCount === 0) return names;
+
+  for (name in (events = this._events)) {
+    if (has.call(events, name)) names.push(prefix ? name.slice(1) : name);
+  }
+
+  if (Object.getOwnPropertySymbols) {
+    return names.concat(Object.getOwnPropertySymbols(events));
+  }
+
+  return names;
+};
+
+/**
+ * Return the listeners registered for a given event.
+ *
+ * @param {(String|Symbol)} event The event name.
+ * @returns {Array} The registered listeners.
+ * @public
+ */
+EventEmitter.prototype.listeners = function listeners(event) {
+  var evt = prefix ? prefix + event : event
+    , handlers = this._events[evt];
+
+  if (!handlers) return [];
+  if (handlers.fn) return [handlers.fn];
+
+  for (var i = 0, l = handlers.length, ee = new Array(l); i < l; i++) {
+    ee[i] = handlers[i].fn;
+  }
+
+  return ee;
+};
+
+/**
+ * Return the number of listeners listening to a given event.
+ *
+ * @param {(String|Symbol)} event The event name.
+ * @returns {Number} The number of listeners.
+ * @public
+ */
+EventEmitter.prototype.listenerCount = function listenerCount(event) {
+  var evt = prefix ? prefix + event : event
+    , listeners = this._events[evt];
+
+  if (!listeners) return 0;
+  if (listeners.fn) return 1;
+  return listeners.length;
+};
+
+/**
+ * Calls each of the listeners registered for a given event.
+ *
+ * @param {(String|Symbol)} event The event name.
+ * @returns {Boolean} `true` if the event had listeners, else `false`.
+ * @public
+ */
+EventEmitter.prototype.emit = function emit(event, a1, a2, a3, a4, a5) {
+  var evt = prefix ? prefix + event : event;
+
+  if (!this._events[evt]) return false;
+
+  var listeners = this._events[evt]
+    , len = arguments.length
+    , args
+    , i;
+
+  if (listeners.fn) {
+    if (listeners.once) this.removeListener(event, listeners.fn, undefined, true);
+
+    switch (len) {
+      case 1: return listeners.fn.call(listeners.context), true;
+      case 2: return listeners.fn.call(listeners.context, a1), true;
+      case 3: return listeners.fn.call(listeners.context, a1, a2), true;
+      case 4: return listeners.fn.call(listeners.context, a1, a2, a3), true;
+      case 5: return listeners.fn.call(listeners.context, a1, a2, a3, a4), true;
+      case 6: return listeners.fn.call(listeners.context, a1, a2, a3, a4, a5), true;
+    }
+
+    for (i = 1, args = new Array(len -1); i < len; i++) {
+      args[i - 1] = arguments[i];
+    }
+
+    listeners.fn.apply(listeners.context, args);
+  } else {
+    var length = listeners.length
+      , j;
+
+    for (i = 0; i < length; i++) {
+      if (listeners[i].once) this.removeListener(event, listeners[i].fn, undefined, true);
+
+      switch (len) {
+        case 1: listeners[i].fn.call(listeners[i].context); break;
+        case 2: listeners[i].fn.call(listeners[i].context, a1); break;
+        case 3: listeners[i].fn.call(listeners[i].context, a1, a2); break;
+        case 4: listeners[i].fn.call(listeners[i].context, a1, a2, a3); break;
+        default:
+          if (!args) for (j = 1, args = new Array(len -1); j < len; j++) {
+            args[j - 1] = arguments[j];
+          }
+
+          listeners[i].fn.apply(listeners[i].context, args);
+      }
+    }
+  }
+
+  return true;
+};
+
+/**
+ * Add a listener for a given event.
+ *
+ * @param {(String|Symbol)} event The event name.
+ * @param {Function} fn The listener function.
+ * @param {*} [context=this] The context to invoke the listener with.
+ * @returns {EventEmitter} `this`.
+ * @public
+ */
+EventEmitter.prototype.on = function on(event, fn, context) {
+  return addListener(this, event, fn, context, false);
+};
+
+/**
+ * Add a one-time listener for a given event.
+ *
+ * @param {(String|Symbol)} event The event name.
+ * @param {Function} fn The listener function.
+ * @param {*} [context=this] The context to invoke the listener with.
+ * @returns {EventEmitter} `this`.
+ * @public
+ */
+EventEmitter.prototype.once = function once(event, fn, context) {
+  return addListener(this, event, fn, context, true);
+};
+
+/**
+ * Remove the listeners of a given event.
+ *
+ * @param {(String|Symbol)} event The event name.
+ * @param {Function} fn Only remove the listeners that match this function.
+ * @param {*} context Only remove the listeners that have this context.
+ * @param {Boolean} once Only remove one-time listeners.
+ * @returns {EventEmitter} `this`.
+ * @public
+ */
+EventEmitter.prototype.removeListener = function removeListener(event, fn, context, once) {
+  var evt = prefix ? prefix + event : event;
+
+  if (!this._events[evt]) return this;
+  if (!fn) {
+    clearEvent(this, evt);
+    return this;
+  }
+
+  var listeners = this._events[evt];
+
+  if (listeners.fn) {
+    if (
+      listeners.fn === fn &&
+      (!once || listeners.once) &&
+      (!context || listeners.context === context)
+    ) {
+      clearEvent(this, evt);
+    }
+  } else {
+    for (var i = 0, events = [], length = listeners.length; i < length; i++) {
+      if (
+        listeners[i].fn !== fn ||
+        (once && !listeners[i].once) ||
+        (context && listeners[i].context !== context)
+      ) {
+        events.push(listeners[i]);
+      }
+    }
+
+    //
+    // Reset the array, or remove it completely if we have no more listeners.
+    //
+    if (events.length) this._events[evt] = events.length === 1 ? events[0] : events;
+    else clearEvent(this, evt);
+  }
+
+  return this;
+};
+
+/**
+ * Remove all listeners, or those of the specified event.
+ *
+ * @param {(String|Symbol)} [event] The event name.
+ * @returns {EventEmitter} `this`.
+ * @public
+ */
+EventEmitter.prototype.removeAllListeners = function removeAllListeners(event) {
+  var evt;
+
+  if (event) {
+    evt = prefix ? prefix + event : event;
+    if (this._events[evt]) clearEvent(this, evt);
+  } else {
+    this._events = new Events();
+    this._eventsCount = 0;
+  }
+
+  return this;
+};
+
+//
+// Alias methods names because people roll like that.
+//
+EventEmitter.prototype.off = EventEmitter.prototype.removeListener;
+EventEmitter.prototype.addListener = EventEmitter.prototype.on;
+
+//
+// Expose the prefix.
+//
+EventEmitter.prefixed = prefix;
+
+//
+// Allow `EventEmitter` to be imported as module namespace.
+//
+EventEmitter.EventEmitter = EventEmitter;
+
+//
+// Expose the module.
+//
+{
+  module.exports = EventEmitter;
+}
+}(eventemitter3));
+
+var EventEmitter = eventemitter3.exports;
+
+/**
+* an event system based on nodeJS EventEmitter interface
 * @namespace event
 * @memberOf me
 */
 
+// internal instance of the event emiter
+var eventEmitter = new EventEmitter();
+
 /**
- * Channel Constant for when the system is booting
+ * event when the system is booting
  * @public
  * @constant
  * @type String
  * @name BOOT
  * @memberOf me.event
- * @see me.event.subscribe
+ * @see me.event.on
  */
 const BOOT = "me.boot";
 
-
 /**
- * Channel Constant when the game is paused <br>
+ * event when the game is paused <br>
  * Data passed : none <br>
  * @public
  * @constant
  * @type String
  * @name STATE_PAUSE
  * @memberOf me.event
- * @see me.event.subscribe
+ * @see me.event.on
  */
 const STATE_PAUSE = "me.state.onPause";
 
 /**
- * Channel Constant for when the game is resumed <br>
+ * event for when the game is resumed <br>
  * Data passed : {Number} time in ms the game was paused
  * @public
  * @constant
  * @type String
  * @name STATE_RESUME
  * @memberOf me.event
- * @see me.event.subscribe
+ * @see me.event.on
  */
 const STATE_RESUME = "me.state.onResume";
 
 /**
- * Channel Constant when the game is stopped <br>
+ * event when the game is stopped <br>
  * Data passed : none <br>
  * @public
  * @constant
  * @type String
  * @name STATE_STOP
  * @memberOf me.event
- * @see me.event.subscribe
+ * @see me.event.on
  */
 const STATE_STOP = "me.state.onStop";
 
 /**
- * Channel Constant for when the game is restarted <br>
+ * event for when the game is restarted <br>
  * Data passed : {Number} time in ms the game was stopped
  * @public
  * @constant
  * @type String
  * @name STATE_RESTART
  * @memberOf me.event
- * @see me.event.subscribe
+ * @see me.event.on
  */
 const STATE_RESTART = "me.state.onRestart";
 
 /**
- * Channel Constant for when the video is initialized<br>
+ * event for when the video is initialized<br>
  * Data passed : none <br>
  * @public
  * @constant
@@ -3306,85 +3552,132 @@ const STATE_RESTART = "me.state.onRestart";
  * @name VIDEO_INIT
  * @memberOf me.event
  * @see me.video.init
- * @see me.event.subscribe
+ * @see me.event.on
  */
 const VIDEO_INIT = "me.video.onInit";
 
-
 /**
- * Channel Constant for when the game manager is initialized <br>
+ * event for when the game manager is initialized <br>
  * Data passed : none <br>
  * @public
  * @constant
  * @type String
  * @name GAME_INIT
  * @memberOf me.event
- * @see me.event.subscribe
+ * @see me.event.on
  */
 const GAME_INIT = "me.game.onInit";
 
 /**
- * Channel Constant for when the game manager is resetted <br>
+ * event for when the game manager is resetted <br>
  * Data passed : none <br>
  * @public
  * @constant
  * @type String
  * @name GAME_RESET
  * @memberOf me.event
- * @see me.event.subscribe
+ * @see me.event.on
  */
 const GAME_RESET = "me.game.onReset";
 
 /**
- * Channel Constant for when the game manager is updated (start of the update loop) <br>
+ * event for when the engine is about to start a new game loop
+ * Data passed : {Number} time the current time stamp
+ * @public
+ * @constant
+ * @type String
+ * @name GAME_BEFORE_UPDATE
+ * @memberOf me.event
+ * @see me.event.on
+ */
+const GAME_BEFORE_UPDATE = "me.game.beforeUpdate";
+
+/**
+ * event for the end of the update loop
+ * Data passed : {Number} time the current time stamp
+ * @public
+ * @constant
+ * @type String
+ * @name GAME_AFTER_UPDATE
+ * @memberOf me.event
+ * @see me.event.on
+ */
+const GAME_AFTER_UPDATE = "me.game.afterUpdate";
+
+/**
+ * Event for when the game is updated (will be impacted by frame skip, frame interpolation and pause/resume state) <br>
  * Data passed : {Number} time the current time stamp
  * @public
  * @constant
  * @type String
  * @name GAME_UPDATE
  * @memberOf me.event
- * @see me.event.subscribe
+ * @see me.event.on
  */
 const GAME_UPDATE = "me.game.onUpdate";
 
 /**
- * Channel Constant for when a level is loaded <br>
+ * Event for the end of the draw loop
+ * Data passed : {Number} time the current time stamp
+ * @public
+ * @constant
+ * @type String
+ * @name GAME_BEFORE_DRAW
+ * @memberOf me.event
+ * @see me.event.on
+ */
+const GAME_BEFORE_DRAW = "me.game.beforeDraw";
+
+/**
+ * Event for the start of the draw loop
+ * Data passed : {Number} time the current time stamp
+ * @public
+ * @constant
+ * @type String
+ * @name GAME_AFTER_DRAW
+ * @memberOf me.event
+ * @see me.event.on
+ */
+const GAME_AFTER_DRAW = "me.game.afterDraw";
+
+/**
+ * Event for when a level is loaded <br>
  * Data passed : {String} Level Name
  * @public
  * @constant
  * @type String
  * @name LEVEL_LOADED
  * @memberOf me.event
- * @see me.event.subscribe
+ * @see me.event.on
  */
 const LEVEL_LOADED = "me.game.onLevelLoaded";
 
 /**
- * Channel Constant for when everything has loaded <br>
+ * Event for when everything has loaded <br>
  * Data passed : none <br>
  * @public
  * @constant
  * @type String
  * @name LOADER_COMPLETE
  * @memberOf me.event
- * @see me.event.subscribe
+ * @see me.event.on
  */
 const LOADER_COMPLETE = "me.loader.onload";
 
 /**
- * Channel Constant for displaying a load progress indicator <br>
+ * Event for displaying a load progress indicator <br>
  * Data passed : {Number} [0 .. 1], {Resource} resource object<br>
  * @public
  * @constant
  * @type String
  * @name LOADER_PROGRESS
  * @memberOf me.event
- * @see me.event.subscribe
+ * @see me.event.on
  */
 const LOADER_PROGRESS = "me.loader.onProgress";
 
 /**
- * Channel Constant for pressing a binded key <br>
+ * Event for pressing a binded key <br>
  * Data passed : {String} user-defined action, {Number} keyCode,
  * {Boolean} edge state <br>
  * Edge-state is for detecting "locked" key bindings. When a locked key
@@ -3396,11 +3689,11 @@ const LOADER_PROGRESS = "me.loader.onProgress";
  * @type String
  * @name KEYDOWN
  * @memberOf me.event
- * @see me.event.subscribe
+ * @see me.event.on
  * @example
  * me.input.bindKey(me.input.KEY.X, "jump", true); // Edge-triggered
  * me.input.bindKey(me.input.KEY.Z, "shoot"); // Level-triggered
- * me.event.subscribe(me.event.KEYDOWN, function (action, keyCode, edge) {
+ * me.event.on(me.event.KEYDOWN, (action, keyCode, edge) => {
  *   // Checking bound keys
  *   if (action === "jump") {
  *       if (edge) {
@@ -3415,16 +3708,16 @@ const LOADER_PROGRESS = "me.loader.onProgress";
 const KEYDOWN = "me.input.keydown";
 
 /**
- * Channel Constant for releasing a binded key <br>
+ * Event for releasing a binded key <br>
  * Data passed : {String} user-defined action, {Number} keyCode
  * @public
  * @constant
  * @type String
  * @name KEYUP
  * @memberOf me.event
- * @see me.event.subscribe
+ * @see me.event.on
  * @example
- * me.event.subscribe(me.event.KEYUP, function (action, keyCode) {
+ * me.event.on(me.event.KEYUP, (action, keyCode) => {
  *   // Checking unbound keys
  *   if (keyCode == me.input.KEY.ESC) {
  *       if (me.state.isPaused()) {
@@ -3439,31 +3732,31 @@ const KEYDOWN = "me.input.keydown";
 const KEYUP = "me.input.keyup";
 
 /**
- * Channel Constant for when a gamepad is connected <br>
+ * Event for when a gamepad is connected <br>
  * Data passed : {Object} gamepad object
  * @public
  * @constant
  * @type String
  * @name GAMEPAD_CONNECTED
  * @memberOf me.event
- * @see me.event.subscribe
+ * @see me.event.on
  */
 const GAMEPAD_CONNECTED = "gamepad.connected";
 
 /**
- * Channel Constant for when a gamepad is disconnected <br>
+ * Event for when a gamepad is disconnected <br>
  * Data passed : {Object} gamepad object
  * @public
  * @constant
  * @type String
  * @name GAMEPAD_DISCONNECTED
  * @memberOf me.event
- * @see me.event.subscribe
+ * @see me.event.on
  */
 const GAMEPAD_DISCONNECTED = "gamepad.disconnected";
 
 /**
- * Channel Constant for when gamepad button/axis state is updated <br>
+ * Event for when gamepad button/axis state is updated <br>
  * Data passed : {Number} index <br>
  * Data passed : {String} type : "axes" or "buttons" <br>
  * Data passed : {Number} button <br>
@@ -3474,24 +3767,24 @@ const GAMEPAD_DISCONNECTED = "gamepad.disconnected";
  * @type String
  * @name GAMEPAD_UPDATE
  * @memberOf me.event
- * @see me.event.subscribe
+ * @see me.event.on
  */
 const GAMEPAD_UPDATE = "gamepad.update";
 
 /**
- * Channel Constant for pointermove events on the screen area <br>
+ * Event for pointermove events on the screen area <br>
  * Data passed : {me.Pointer} a Pointer object
  * @public
  * @constant
  * @type String
  * @name POINTERMOVE
  * @memberOf me.event
- * @see me.event.subscribe
+ * @see me.event.on
  */
 const POINTERMOVE = "me.event.pointermove";
 
 /**
- * Channel Constant for dragstart events on a Draggable entity <br>
+ * Event for dragstart events on a Draggable entity <br>
  * Data passed:
  * {Object} the drag event <br>
  * {Object} the Draggable entity
@@ -3500,12 +3793,12 @@ const POINTERMOVE = "me.event.pointermove";
  * @type String
  * @name DRAGSTART
  * @memberOf me.event
- * @see me.event.subscribe
+ * @see me.event.on
  */
 const DRAGSTART = "me.game.dragstart";
 
 /**
- * Channel Constant for dragend events on a Draggable entity <br>
+ * Event for dragend events on a Draggable entity <br>
  * Data passed:
  * {Object} the drag event <br>
  * {Object} the Draggable entity
@@ -3514,24 +3807,24 @@ const DRAGSTART = "me.game.dragstart";
  * @type String
  * @name DRAGEND
  * @memberOf me.event
- * @see me.event.subscribe
+ * @see me.event.on
  */
 const DRAGEND = "me.game.dragend";
 
 /**
- * Channel Constant for when the (browser) window is resized <br>
+ * Event for when the (browser) window is resized <br>
  * Data passed : {Event} Event object
  * @public
  * @constant
  * @type String
  * @name WINDOW_ONRESIZE
  * @memberOf me.event
- * @see me.event.subscribe
+ * @see me.event.on
  */
 const WINDOW_ONRESIZE = "window.onresize";
 
 /**
- * Channel Constant for when the canvas is resized <br>
+ * Event for when the canvas is resized <br>
  * (this usually follows a WINDOW_ONRESIZE event).<br>
  * Data passed : {Number} canvas width <br>
  * Data passed : {Number} canvas height
@@ -3540,12 +3833,12 @@ const WINDOW_ONRESIZE = "window.onresize";
  * @type String
  * @name CANVAS_ONRESIZE
  * @memberOf me.event
- * @see me.event.subscribe
+ * @see me.event.on
  */
 const CANVAS_ONRESIZE = "canvas.onresize";
 
 /**
- * Channel Constant for when the viewport is resized <br>
+ * Event for when the viewport is resized <br>
  * (this usually follows a WINDOW_ONRESIZE event, when using the `flex` scaling mode is used and after the viewport was updated).<br>
  * Data passed : {Number} viewport width <br>
  * Data passed : {Number} viewport height
@@ -3554,112 +3847,123 @@ const CANVAS_ONRESIZE = "canvas.onresize";
  * @type String
  * @name VIEWPORT_ONRESIZE
  * @memberOf me.event
- * @see me.event.subscribe
+ * @see me.event.on
  */
 const VIEWPORT_ONRESIZE = "viewport.onresize";
 
 /**
- * Channel Constant for when the device is rotated <br>
+ * Event for when the device is rotated <br>
  * Data passed : {Event} Event object <br>
  * @public
  * @constant
  * @type String
  * @name WINDOW_ONORIENTATION_CHANGE
  * @memberOf me.event
- * @see me.event.subscribe
+ * @see me.event.on
  */
 const WINDOW_ONORIENTATION_CHANGE = "window.orientationchange";
 
 /**
- * Channel Constant for when the (browser) window is scrolled <br>
+ * Event for when the (browser) window is scrolled <br>
  * Data passed : {Event} Event object
  * @public
  * @constant
  * @type String
  * @name WINDOW_ONSCROLL
  * @memberOf me.event
- * @see me.event.subscribe
+ * @see me.event.on
  */
 const WINDOW_ONSCROLL = "window.onscroll";
 
 /**
- * Channel Constant for when the viewport position is updated <br>
+ * Event for when the viewport position is updated <br>
  * Data passed : {me.Vector2d} viewport position vector
  * @public
  * @constant
  * @type String
  * @name VIEWPORT_ONCHANGE
  * @memberOf me.event
- * @see me.event.subscribe
+ * @see me.event.on
  */
 const VIEWPORT_ONCHANGE = "viewport.onchange";
 
 /**
- * Channel Constant for when WebGL context is lost <br>
+ * Event for when WebGL context is lost <br>
  * Data passed : {me.WebGLRenderer} the current webgl renderer instance`
  * @public
  * @constant
  * @type String
  * @name WEBGL_ONCONTEXT_LOST
  * @memberOf me.event
- * @see me.event.subscribe
+ * @see me.event.on
  */
 const WEBGL_ONCONTEXT_LOST = "renderer.webglcontextlost";
 
 /**
- * Channel Constant for when WebGL context is restored <br>
+ * Event for when WebGL context is restored <br>
  * Data passed : {me.WebGLRenderer} the current webgl renderer instance`
  * @public
  * @constant
  * @type String
  * @name WEBGL_ONCONTEXT_RESTORED
  * @memberOf me.event
- * @see me.event.subscribe
+ * @see me.event.on
  */
 const WEBGL_ONCONTEXT_RESTORED = "renderer.webglcontextrestored";
 
 /**
- * Publish some data on a channel
- * @function me.event.publish
- * @param {String} channel The channel to publish on
- * @param {Array} arguments The data to publish
+ * calls each of the listeners registered for a given event.
+ * @function me.event.emit
+ * @param {(String|Symbol)} event The event name.
+ * @param {...*} arguments arguments to be passed to all listeners
+ * @return true if the event had listeners, false otherwise.
  * @example
- * // Publish stuff on '/some/channel'.
- * // Anything subscribed will be called with a function
- * // signature like: function (a,b,c){ ... }
- * me.event.publish("/some/channel", ["a","b","c"]);
+ * me.event.emit("event-name", a, b, c);
  */
-function publish (channel, data) { MinPubSub.publish(channel, data); }
+function emit(eventName, ...args) {
+    return eventEmitter.emit(eventName, ...args);
+}
 /**
- * Register a callback on a named channel.
- * @function me.event.subscribe
- * @param {String} channel The channel to subscribe to
- * @param {Function} callback The event handler, any time something is
- * published on a subscribed channel, the callback will be called
- * with the published array as ordered arguments
- * @return {handle} A handle which can be used to unsubscribe this
- * particular subscription
+ * Add a listener for a given event.
+ * @function me.event.on
+ * @param {(String|Symbol)} event The event name.
+ * @param {Function} fn The listener function.
+ * @param {*} [context=this] The context to invoke the listener with.
+ * @returns {EventEmitter} `this`.
+ * @public
  * @example
- * me.event.subscribe("/some/channel", function (a, b, c){ doSomething(); });
+ * me.event.on("event-name", myFunction, this);
  */
-function subscribe (channel, callback) { return MinPubSub.subscribe(channel, callback); }
+function on(eventName, listener, context) {
+    return eventEmitter.on(eventName, listener, context);
+}
 /**
- * Disconnect a subscribed function for a channel.
- * @function me.event.unsubscribe
- * @param {Array|String} handle The return value from a subscribe call or the
- * name of a channel as a String
- * @param {Function} [callback] The callback to be unsubscribed.
+ * Add a one-time listener for a given event.
+ * @function me.event.once
+ * @param {(String|Symbol)} event The event name.
+ * @param {Function} fn The listener function.
+ * @param {*} [context=this] The context to invoke the listener with.
+ * @returns {EventEmitter} `this`.
+ * @public
  * @example
- * var handle = me.event.subscribe("/some/channel", function (){});
- * me.event.unsubscribe(handle);
- *
- * // Or alternatively ...
- *
- * var callback = function (){};
- * me.event.subscribe("/some/channel", callback);
- * me.event.unsubscribe("/some/channel", callback);
+ * me.event.once("event-name", myFunction, this);
  */
-function unsubscribe (handle, callback) { MinPubSub.unsubscribe(handle, callback); }
+function once(eventName, listener, context) {
+    return eventEmitter.once(eventName, listener, context);
+}
+/**
+ * remove the given listener for a given event.
+ * @function me.event.off
+ * @param {(String|Symbol)} event The event name.
+ * @param {Function} fn The listener function.
+ * @returns {EventEmitter} `this`.
+ * @public
+ * @example
+ * me.event.off("event-name", myFunction);
+ */
+function off(eventName, listener) {
+    return eventEmitter.off(eventName, listener);
+}
 
 var event = /*#__PURE__*/Object.freeze({
     __proto__: null,
@@ -3671,7 +3975,11 @@ var event = /*#__PURE__*/Object.freeze({
     VIDEO_INIT: VIDEO_INIT,
     GAME_INIT: GAME_INIT,
     GAME_RESET: GAME_RESET,
+    GAME_BEFORE_UPDATE: GAME_BEFORE_UPDATE,
+    GAME_AFTER_UPDATE: GAME_AFTER_UPDATE,
     GAME_UPDATE: GAME_UPDATE,
+    GAME_BEFORE_DRAW: GAME_BEFORE_DRAW,
+    GAME_AFTER_DRAW: GAME_AFTER_DRAW,
     LEVEL_LOADED: LEVEL_LOADED,
     LOADER_COMPLETE: LOADER_COMPLETE,
     LOADER_PROGRESS: LOADER_PROGRESS,
@@ -3691,9 +3999,10 @@ var event = /*#__PURE__*/Object.freeze({
     VIEWPORT_ONCHANGE: VIEWPORT_ONCHANGE,
     WEBGL_ONCONTEXT_LOST: WEBGL_ONCONTEXT_LOST,
     WEBGL_ONCONTEXT_RESTORED: WEBGL_ONCONTEXT_RESTORED,
-    publish: publish,
-    subscribe: subscribe,
-    unsubscribe: unsubscribe
+    emit: emit,
+    on: on,
+    once: once,
+    off: off
 });
 
 var howler = {};
@@ -9220,7 +9529,7 @@ class Polygon {
          * @name points
          * @memberOf me.Polygon#
          */
-        this.points = null;
+        this.points = [];
 
         /**
          * The edges here are the direction of the `n`th edge of the polygon, relative to
@@ -9284,18 +9593,18 @@ class Polygon {
 
         // convert given points to me.Vector2d if required
         if (!(vertices[0] instanceof Vector2d)) {
-            var _points = this.points = [];
+            this.points.length = 0;
 
             if (typeof vertices[0] === "object") {
                 // array of {x,y} object
-                vertices.forEach(function (vertice) {
-                   _points.push(new Vector2d(vertice.x, vertice.y));
+                vertices.forEach((vertice) => {
+                   this.points.push(new Vector2d(vertice.x, vertice.y));
                 });
 
             } else {
                 // it's a flat array
                 for (var p = 0; p < vertices.length; p += 2) {
-                    _points.push(new Vector2d(vertices[p], vertices[p + 1]));
+                    this.points.push(new Vector2d(vertices[p], vertices[p + 1]));
                 }
             }
         } else {
@@ -9443,7 +9752,7 @@ class Polygon {
         edges.length = len;
         normals.length = len;
         // do not do anything here, indices will be computed by
-        // toIndices if array is empty upon function call
+        // getIndices if array is empty upon function call
         indices.length = 0;
 
         return this;
@@ -10065,11 +10374,11 @@ var keyDownEvent = function (e, keyCode, mouseButton) {
     var action = _keyBindings[keyCode];
 
     // publish a message for keydown event
-    publish(KEYDOWN, [
+    emit(KEYDOWN,
         action,
         keyCode,
         action ? !_keyLocked[action] : true
-    ]);
+    );
 
     if (action) {
         if (!_keyLocked[action]) {
@@ -10102,7 +10411,7 @@ var keyUpEvent = function (e, keyCode, mouseButton) {
     var action = _keyBindings[keyCode];
 
     // publish a message for keydown event
-    publish(KEYUP, [ action, keyCode ]);
+    emit(KEYUP, action, keyCode);
 
     if (action) {
         var trigger = (typeof mouseButton !== "undefined") ? mouseButton : keyCode;
@@ -11005,7 +11314,7 @@ function enablePointerEvent() {
                 if (activeEventList.indexOf(events[i]) !== -1) {
                     pointerEventTarget.addEventListener(
                         events[i],
-                        utils$1.function.throttle(
+                        throttle(
                             onMoveEvent,
                             throttlingInterval,
                             false
@@ -11099,7 +11408,7 @@ function dispatchEvent(normalizedEvents) {
         if (POINTER_MOVE.includes(pointer.type)) {
             pointer.gameX = pointer.gameLocalX = pointer.gameScreenX;
             pointer.gameY = pointer.gameLocalY = pointer.gameScreenY;
-            publish(POINTERMOVE, [pointer]);
+            emit(POINTERMOVE, pointer);
         }
 
         // fetch valid candiates from the game world container
@@ -11545,7 +11854,7 @@ function releasePointerEvent(eventType, region, callback) {
             eventType = eventTypes[i];
             if (handlers.callbacks[eventType]) {
                 if (typeof (callback) !== "undefined") {
-                    utils$1.array.remove(handlers.callbacks[eventType], callback);
+                    remove(handlers.callbacks[eventType], callback);
                 } else {
                     while (handlers.callbacks[eventType].length > 0) {
                         handlers.callbacks[eventType].pop();
@@ -11770,7 +12079,7 @@ var updateGamepads = function () {
                 }
             }
 
-            publish(GAMEPAD_UPDATE, [ index, "buttons", +button, current ]);
+            emit(GAMEPAD_UPDATE, index, "buttons", +button, current);
 
             // Edge detection
             if (!last.pressed && current.pressed) {
@@ -11814,7 +12123,7 @@ var updateGamepads = function () {
             }
             var pressed = (Math.abs(value) >= (deadzone + Math.abs(last[range].threshold)));
 
-            publish(GAMEPAD_UPDATE, [ index, "axes", +axis, value ]);
+            emit(GAMEPAD_UPDATE, index, "axes", +axis, value);
 
             // Edge detection
             if (!last[range].pressed && pressed) {
@@ -11844,7 +12153,7 @@ var updateGamepads = function () {
  * @ignore
  */
 window.addEventListener("gamepadconnected", function (e) {
-    publish(GAMEPAD_CONNECTED, [ e.gamepad ]);
+    emit(GAMEPAD_CONNECTED, e.gamepad);
 }, false);
 
 /**
@@ -11852,7 +12161,7 @@ window.addEventListener("gamepadconnected", function (e) {
  * @ignore
  */
 window.addEventListener("gamepaddisconnected", function (e) {
-    publish(GAMEPAD_DISCONNECTED, [ e.gamepad ]);
+    emit(GAMEPAD_DISCONNECTED, e.gamepad);
 }, false);
 
 /*
@@ -11963,7 +12272,7 @@ function bindGamepad(index, button, keyCode) {
     // register to the the update event if not yet done and supported by the browser
     // if not supported, the function will fail silently (-> update loop won't be called)
     if (typeof updateEventHandler === "undefined" && typeof navigator.getGamepads === "function") {
-        updateEventHandler = subscribe(GAME_UPDATE, updateGamepads);
+        updateEventHandler = on(GAME_BEFORE_UPDATE, updateGamepads);
     }
 
     // Allocate bindings if not defined
@@ -15017,7 +15326,7 @@ class Body {
         // clear the current bounds
         this.bounds.clear();
         // remove the shape from shape list
-        utils$1.array.remove(this.shapes, shape);
+        remove(this.shapes, shape);
         // add everything left back
         for (var s = 0; s < this.shapes.length; s++) {
             this.addShape(this.shapes[s]);
@@ -15497,7 +15806,7 @@ class Container extends Renderable {
         // subscribe on the canvas resize event
         if (this.root === true) {
             // Workaround for not updating container child-bounds automatically (it's expensive!)
-            subscribe(CANVAS_ONRESIZE, this.updateBounds.bind(this, true));
+            on(CANVAS_ONRESIZE, this.updateBounds.bind(this, true));
         }
     }
 
@@ -15552,7 +15861,7 @@ class Container extends Renderable {
             // (e.g. move one child from one container to another)
             if (child.isRenderable) {
                 // allocated a GUID value (use child.id as based index if defined)
-                child.GUID = utils$1.createGUID(child.id);
+                child.GUID = utils.createGUID(child.id);
             }
         }
 
@@ -15617,7 +15926,7 @@ class Container extends Renderable {
                 // (e.g. move one child from one container to another)
                 if (child.isRenderable) {
                     // allocated a GUID value
-                    child.GUID = utils$1.createGUID();
+                    child.GUID = utils.createGUID();
                 }
             }
             child.ancestor = this;
@@ -15997,7 +16306,7 @@ class Container extends Renderable {
      */
     removeChild(child, keepalive) {
         if (this.hasChild(child)) {
-            utils$1.function.defer(deferredRemove, this, child, keepalive);
+            utils.function.defer(deferredRemove, this, child, keepalive);
         }
         else {
             throw new Error("Child is not mine.");
@@ -16164,7 +16473,7 @@ class Container extends Renderable {
                 });
             }
             /** @ignore */
-            this.pendingSort = utils$1.function.defer(function () {
+            this.pendingSort = utils.function.defer(function () {
                 // sort everything in this container
                 this.getChildren().sort(this["_sort" + this.sortOn.toUpperCase()]);
                 // clear the defer id
@@ -16629,7 +16938,7 @@ class QuadTree {
             var index = this.getIndex(item);
 
             if (index !== -1) {
-                found = utils$1.array.remove(this.nodes[index], item);
+                found = remove(this.nodes[index], item);
                 // trim node if empty
                 if (found && this.nodes[index].isPrunable()) {
                     this.nodes.splice(index, 1);
@@ -16640,7 +16949,7 @@ class QuadTree {
         if (found === false) {
             // try and remove the item from the list of items in this node
             if (this.objects.indexOf(item) !== -1) {
-                utils$1.array.remove(this.objects, item);
+                remove(this.objects, item);
                 found = true;
             }
         }
@@ -16781,13 +17090,13 @@ class World extends Container {
         this.broadphase = new QuadTree(this.getBounds().clone(), collision.maxChildren, collision.maxDepth);
 
         // reset the world container on the game reset signal
-        subscribe(GAME_RESET, this.reset.bind(this));
+        on(GAME_RESET, this.reset, this);
 
         // update the broadband world bounds if a new level is loaded
-        subscribe(LEVEL_LOADED, (function () {
+        on(LEVEL_LOADED, () => {
             // reset the quadtree
             this.broadphase.clear(this.getBounds());
-        }).bind(this));
+        });
     }
 
     /**
@@ -16911,11 +17220,11 @@ var updateAverageDelta = 0;
 
 
  // initialize the game manager on system boot
-subscribe(BOOT, function () {
+on(BOOT, () => {
     // the root object of our world is an entity container
     world = new World();
     // publish init notification
-    publish(GAME_INIT);
+    emit(GAME_INIT);
 });
 
 
@@ -16994,7 +17303,7 @@ function reset () {
     }
 
     // publish reset notification
-    publish(GAME_RESET);
+    emit(GAME_RESET);
 
     // Refresh internal variables for framerate  limiting
     updateFrameRate();
@@ -17050,8 +17359,8 @@ function update$1(time, stage) {
         // reset the frame counter
         frameCounter = 0;
 
-        // game update event
-        publish(GAME_UPDATE, [ time ]);
+        // publish notification
+        emit(GAME_BEFORE_UPDATE, time);
 
         accumulator += timer$1.getDelta();
         accumulator = Math.min(accumulator, accumulatorMax);
@@ -17061,6 +17370,11 @@ function update$1(time, stage) {
 
         while (accumulator >= accumulatorUpdateDelta || timer$1.interpolation) {
             lastUpdateStart = window.performance.now();
+
+            // game update event
+            if (state.isPaused() !== true) {
+                emit(GAME_UPDATE, time);
+            }
 
             // update all objects (and pass the elapsed time since last frame)
             isDirty = stage.update(updateDelta) || isDirty;
@@ -17074,6 +17388,9 @@ function update$1(time, stage) {
                 break;
             }
         }
+
+        // publish notification
+        emit(GAME_AFTER_UPDATE, lastUpdate);
     }
 }
 /**
@@ -17085,6 +17402,9 @@ function update$1(time, stage) {
 function draw(stage) {
 
     if (renderer.isContextValid === true && (isDirty || isAlwaysDirty)) {
+        // publish notification
+        emit(GAME_BEFORE_DRAW, window.performance.now());
+
         // prepare renderer to draw a new frame
         renderer.clear();
 
@@ -17096,6 +17416,9 @@ function draw(stage) {
 
         // flush/render our frame
         renderer.flush();
+
+        // publish notification
+        emit(GAME_AFTER_DRAW, window.performance.now());
     }
 }
 
@@ -17275,9 +17598,9 @@ class Camera2d extends Renderable {
         this._updateProjectionMatrix();
 
         // subscribe to the game reset event
-        subscribe(GAME_RESET, this.reset.bind(this));
+        on(GAME_RESET, this.reset.bind(this));
         // subscribe to the canvas resize event
-        subscribe(CANVAS_ONRESIZE, this.resize.bind(this));
+        on(CANVAS_ONRESIZE, this.resize.bind(this));
     }
 
     // -- some private function ---
@@ -17400,7 +17723,7 @@ class Camera2d extends Renderable {
         this._updateProjectionMatrix();
 
         // publish the viewport resize event
-        publish(VIEWPORT_ONRESIZE, [ this.width, this.height ]);
+        emit(VIEWPORT_ONRESIZE, this.width, this.height);
 
         return this;
     }
@@ -17520,7 +17843,7 @@ class Camera2d extends Renderable {
 
         //publish the VIEWPORT_ONCHANGE event if necessary
         if (_x !== this.pos.x || _y !== this.pos.y) {
-            publish(VIEWPORT_ONCHANGE, [this.pos]);
+            emit(VIEWPORT_ONCHANGE, this.pos);
         }
     }
 
@@ -17598,7 +17921,7 @@ class Camera2d extends Renderable {
 
         if (updated === true) {
             //publish the corresponding message
-            publish(VIEWPORT_ONCHANGE, [this.pos]);
+            emit(VIEWPORT_ONCHANGE, this.pos);
         }
 
         // check for fade/flash effect
@@ -17926,11 +18249,10 @@ class Stage {
      * @ignore
      */
     reset() {
-        var self = this;
-
+        
         // add all defined cameras
-        this.settings.cameras.forEach(function(camera) {
-            self.cameras.set(camera.name, camera);
+        this.settings.cameras.forEach((camera) => {
+            this.cameras.set(camera.name, camera);
         });
 
         // empty or no default camera
@@ -18109,24 +18431,13 @@ class ProgressBar extends Renderable {
      * @ignore
      */
     constructor(x, y, w, h) {
-
         super(x, y, w, h);
 
-        var self = this;
-
         this.barHeight = h;
-
         this.anchorPoint.set(0, 0);
 
-        this.loaderHdlr = subscribe(
-            LOADER_PROGRESS,
-            self.onProgressUpdate.bind(self)
-        );
-
-        this.resizeHdlr = subscribe(
-            VIEWPORT_ONRESIZE,
-            self.resize.bind(self)
-        );
+        on(LOADER_PROGRESS, this.onProgressUpdate, this);
+        on(VIEWPORT_ONRESIZE, this.resize, this);
 
         this.anchorPoint.set(0, 0);
 
@@ -18162,9 +18473,8 @@ class ProgressBar extends Renderable {
      */
     onDestroyEvent() {
         // cancel the callback
-        unsubscribe(this.loaderHdlr);
-        unsubscribe(this.resizeHdlr);
-        this.loaderHdlr = this.resizeHdlr = null;
+        off(LOADER_PROGRESS, this.onProgressUpdate);
+        off(VIEWPORT_ONRESIZE, this.resize);
     }
 
 }
@@ -18451,13 +18761,13 @@ function _switchState(state) {
 }
 
 // initialize me.state on system boot
-subscribe(BOOT, function () {
+on(BOOT, () => {
     // set the built-in loading stage
     state.set(state.LOADING, defaultLoadingScreen);
     // set and enable the default stage
     state.set(state.DEFAULT, new Stage());
     // enable by default as soon as the display is initialized
-    subscribe(VIDEO_INIT, function () {
+    on(VIDEO_INIT, () => {
         state.change(state.DEFAULT, true);
     });
 });
@@ -18566,38 +18876,6 @@ var state = {
     USER : 100,
 
     /**
-     * onPause callback
-     * @function
-     * @name onPause
-     * @memberOf me.state
-     */
-    onPause : null,
-
-    /**
-     * onResume callback
-     * @function
-     * @name onResume
-     * @memberOf me.state
-     */
-    onResume : null,
-
-    /**
-     * onStop callback
-     * @function
-     * @name onStop
-     * @memberOf me.state
-     */
-    onStop : null,
-
-    /**
-     * onRestart callback
-     * @function
-     * @name onRestart
-     * @memberOf me.state
-     */
-    onRestart : null,
-
-    /**
      * Stop the current screen object.
      * @name stop
      * @memberOf me.state
@@ -18619,11 +18897,7 @@ var state = {
             _pauseTime = window.performance.now();
 
             // publish the stop notification
-            publish(STATE_STOP);
-            // any callback defined ?
-            if (typeof(this.onStop) === "function") {
-                this.onStop();
-            }
+            emit(STATE_STOP);
         }
     },
 
@@ -18649,11 +18923,7 @@ var state = {
             _pauseTime = window.performance.now();
 
             // publish the pause event
-            publish(STATE_PAUSE);
-            // any callback defined ?
-            if (typeof(this.onPause) === "function") {
-                this.onPause();
-            }
+            emit(STATE_PAUSE);
         }
     },
 
@@ -18681,11 +18951,7 @@ var state = {
             repaint();
 
             // publish the restart notification
-            publish(STATE_RESTART, [ _pauseTime ]);
-            // any callback defined ?
-            if (typeof(this.onRestart) === "function") {
-                this.onRestart();
-            }
+            emit(STATE_RESTART, _pauseTime);
         }
     },
 
@@ -18710,11 +18976,7 @@ var state = {
             _pauseTime = window.performance.now() - _pauseTime;
 
             // publish the resume event
-            publish(STATE_RESUME, [ _pauseTime ]);
-            // any callback defined ?
-            if (typeof(this.onResume) === "function") {
-                this.onResume();
-            }
+            emit(STATE_RESUME, _pauseTime);
         }
     },
 
@@ -18788,7 +19050,7 @@ var state = {
      *
      * me.state.set(me.state.MENU, new MenuScreen());
      */
-    set(state, stage, start) {
+    set(state, stage, start = false) {
         if (!(stage instanceof Stage)) {
             throw new Error(stage + " is not an instance of me.Stage");
         }
@@ -18886,7 +19148,7 @@ var state = {
                 _fade.color,
                 _fade.duration,
                 function () {
-                    utils$1.function.defer(_switchState, this, state);
+                    defer(_switchState, this, state);
                 }
             );
 
@@ -18898,7 +19160,7 @@ var state = {
             if (forceChange === true) {
                 _switchState(state);
             } else {
-                utils$1.function.defer(_switchState, this, state);
+                defer(_switchState, this, state);
             }
         }
     },
@@ -18942,11 +19204,11 @@ function setTMXValue(name, type, value) {
 
         default :
             // try to parse it anyway
-            if (!value || utils$1.string.isBoolean(value)) {
+            if (!value || isBoolean(value)) {
                 // if value not defined or boolean
                 value = value ? (value === "true") : true;
             }
-            else if (utils$1.string.isNumeric(value)) {
+            else if (isNumeric(value)) {
                 // check if numeric
                 value = Number(value);
             }
@@ -19315,7 +19577,7 @@ class TextureCache {
     get(image, atlas) {
         if (!this.cache.has(image)) {
             if (!atlas) {
-                atlas = createAtlas(image.width, image.height, image.src ? utils$1.file.getBasename(image.src) : undefined);
+                atlas = createAtlas(image.width, image.height, image.src ? getBasename(image.src) : undefined);
             }
             this.set(image, new Texture(atlas, image, false));
         }
@@ -19524,7 +19786,7 @@ class Texture {
 
         // Add self to TextureCache if cache !== false
         if (cache !== false) {
-            this.sources.forEach(function (source) {
+            this.sources.forEach((source) => {
                 if (cache instanceof TextureCache) {
                     cache.set(source, this);
                 } else {
@@ -19540,8 +19802,8 @@ class Texture {
      */
     parse(data) {
         var atlas = {};
-        var self = this;
-        data.frames.forEach(function (frame) {
+
+        data.frames.forEach((frame) => {
             // fix wrongly formatted JSON (e.g. last dummy object in ShoeBox)
             if (frame.hasOwnProperty("filename")) {
                 // Source coordinates
@@ -19565,7 +19827,7 @@ class Texture {
                     height       : s.h,
                     angle        : (frame.rotated === true) ? -ETA : 0
                 };
-                self.addUvsMap(atlas, frame.filename, data.meta.size.w, data.meta.size.h);
+                this.addUvsMap(atlas, frame.filename, data.meta.size.w, data.meta.size.h);
             }
         });
         return atlas;
@@ -20887,7 +21149,7 @@ class Renderer {
         this.Texture = Texture;
 
         // reset the instantiated renderer on game reset
-        subscribe(GAME_RESET, function () {
+        on(GAME_RESET, () => {
             renderer.reset();
         });
 
@@ -21081,7 +21343,7 @@ class Renderer {
             this.currentScissor[2] = width;
             this.currentScissor[3] = height;
             // publish the corresponding event
-            publish(CANVAS_ONRESIZE, [ width, height ]);
+            emit(CANVAS_ONRESIZE, width, height);
         }
     }
 
@@ -23965,10 +24227,10 @@ class TMXTileset {
         // check if an external tileset is defined
         if (typeof(tileset.source) !== "undefined") {
             var src = tileset.source;
-            var ext = utils$1.file.getExtension(src);
+            var ext = getExtension(src);
             if (ext === "tsx" || ext === "json") {
                 // load the external tileset (TSX/JSON)
-                tileset = loader.getTMX(utils$1.file.getBasename(src));
+                tileset = loader.getTMX(getBasename(src));
                 if (!tileset) {
                     throw new Error(src + " external TSX/JSON tileset not found");
                 }
@@ -24707,26 +24969,22 @@ class TMXGroup {
         applyTMXProperties(this, data);
 
         // parse all child objects/layers
-        var self = this;
-
         if (data.objects) {
-            var _objects = data.objects;
-            _objects.forEach(function (object) {
-                object.tintcolor = self.tintcolor;
-                self.objects.push(new TMXObject(map, object, z));
+            data.objects.forEach((object) => {
+                object.tintcolor = this.tintcolor;
+                this.objects.push(new TMXObject(map, object, z));
             });
         }
 
         if (data.layers) {
-            var _layers = data.layers;
-            _layers.forEach(function (data) {
+            data.layers.forEach((data) => {
                 var layer = new TMXLayer(map, data, map.tilewidth, map.tileheight, map.orientation, map.tilesets, z++);
                 // set a renderer
                 layer.setRenderer(map.getRenderer());
                 // resize container accordingly
-                self.width = Math.max(self.width, layer.width);
-                self.height = Math.max(self.height, layer.height);
-                self.objects.push(layer);
+                this.width = Math.max(this.width, layer.width);
+                this.height = Math.max(this.height, layer.height);
+                this.objects.push(layer);
             });
         }
     }
@@ -24763,9 +25021,6 @@ class TMXGroup {
 
 // constant to identify the collision object layer
 var COLLISION_GROUP = "collision";
-
-// onresize handler
-var onresize_handler = null;
 
 /**
  * set a compatible renderer object
@@ -25041,7 +25296,6 @@ class TMXTileMap {
 
         // to automatically increment z index
         var zOrder = 0;
-        var self = this;
 
         // Tileset information
         if (!this.tilesets) {
@@ -25052,9 +25306,9 @@ class TMXTileMap {
         // parse all tileset objects
         if (typeof (data.tilesets) !== "undefined") {
             var tilesets = data.tilesets;
-            tilesets.forEach(function (tileset) {
+            tilesets.forEach((tileset) => {
                 // add the new tileset
-                self.tilesets.add(readTileset(tileset));
+                this.tilesets.add(readTileset(tileset));
             });
         }
 
@@ -25082,24 +25336,24 @@ class TMXTileMap {
             ));
         }
 
-        data.layers.forEach(function (layer) {
+        data.layers.forEach((layer) => {
             switch (layer.type) {
                 case "imagelayer":
-                    self.layers.push(readImageLayer(self, layer, zOrder++));
+                    this.layers.push(readImageLayer(this, layer, zOrder++));
                     break;
 
                 case "tilelayer":
-                    self.layers.push(readLayer(self, layer, zOrder++));
+                    this.layers.push(readLayer(this, layer, zOrder++));
                     break;
 
                 // get the object groups information
                 case "objectgroup":
-                    self.objectGroups.push(readObjectGroup(self, layer, zOrder++));
+                    this.objectGroups.push(readObjectGroup(this, layer, zOrder++));
                     break;
 
                 // get the object groups information
                 case "group":
-                    self.objectGroups.push(readObjectGroup(self, layer, zOrder++));
+                    this.objectGroups.push(readObjectGroup(this, layer, zOrder++));
                     break;
             }
         });
@@ -25168,13 +25422,11 @@ class TMXTileMap {
         }
 
         if (setViewportBounds === true) {
+            off(VIEWPORT_ONRESIZE, _setBounds);
             // force viewport bounds update
             _setBounds(viewport.width, viewport.height);
             // Replace the resize handler
-            if (onresize_handler) {
-                unsubscribe(onresize_handler);
-            }
-            onresize_handler = subscribe(VIEWPORT_ONRESIZE, _setBounds);
+            on(VIEWPORT_ONRESIZE, _setBounds, this);
         }
 
         //  set back auto-sort and auto-depth
@@ -25384,7 +25636,7 @@ function safeLoadLevel(levelId, options, restart) {
     loadTMXLevel(levelId, options.container, options.flatten, options.setViewportBounds);
 
     // publish the corresponding message
-    publish(LEVEL_LOADED, [ levelId ]);
+    emit(LEVEL_LOADED, levelId);
 
     // fire the callback
     options.onLoaded(levelId);
@@ -25411,7 +25663,7 @@ function loadTMXLevel(levelId, container, flatten, setViewportBounds) {
 
     // reset the GUID generator
     // and pass the level id as parameter
-    utils$1.resetGUID(levelId, level.nextobjectid);
+    utils.resetGUID(levelId, level.nextobjectid);
 
     // Tiled use 0,0 anchor coordinates
     container.anchorPoint.set(0, 0);
@@ -25528,7 +25780,7 @@ var level = {
                 // some silly side effects
                 state.stop();
 
-                utils$1.function.defer(safeLoadLevel, this, levelId, options, true);
+                utils.function.defer(safeLoadLevel, this, levelId, options, true);
             }
             else {
                 safeLoadLevel(levelId, options);
@@ -25669,7 +25921,7 @@ function checkLoadStatus(onload) {
             var callback = onload || loader.onload;
             setTimeout(function () {
                 callback();
-                publish(LOADER_COMPLETE);
+                emit(LOADER_COMPLETE);
             }, 300);
         }
         else {
@@ -25750,7 +26002,7 @@ function preloadTMX(tmxData, onload, onerror) {
 
     var xmlhttp = new XMLHttpRequest();
     // check the data format ('tmx', 'json')
-    var format = utils$1.file.getExtension(tmxData.src);
+    var format = getExtension(tmxData.src);
 
     if (xmlhttp.overrideMimeType) {
         if (format === "json") {
@@ -26009,7 +26261,7 @@ var loader = {
             // pass the load progress in percent, as parameter
             this.onProgress(progress, res);
         }
-        publish(LOADER_PROGRESS, [progress, res]);
+        emit(LOADER_PROGRESS, progress, res);
     },
 
     /**
@@ -26356,7 +26608,7 @@ var loader = {
      */
     getImage(image) {
         // force as string and extract the base name
-        image = utils$1.file.getBasename("" + image);
+        image = getBasename("" + image);
         if (image in imgList) {
             // return the corresponding Image object
             return imgList[image];
@@ -26951,7 +27203,7 @@ var audio = /*#__PURE__*/Object.freeze({
 
 
 // Initialize me.save on Boot event
-subscribe(BOOT, function() {
+on(BOOT, () => {
     // Load previous data if local Storage is supported
     if (device$1.localStorage === true) {
         var me_save_content = localStorage.getItem("me.save");
@@ -27263,7 +27515,7 @@ function _checkCapabilities() {
 }
 
 // Initialize me.timer on Boot event
-subscribe(BOOT, function () {
+on(BOOT, () => {
     _checkCapabilities();
 });
 
@@ -27695,7 +27947,7 @@ let device = {
      * @example
      * // add a keyboard shortcut to toggle Fullscreen mode on/off
      * me.input.bindKey(me.input.KEY.F, "toggleFullscreen");
-     * me.event.subscribe(me.event.KEYDOWN, function (action, keyCode, edge) {
+     * me.event.on(me.event.KEYDOWN, function (action, keyCode, edge) {
      *    // toggle fullscreen on/off
      *    if (action === "toggleFullscreen") {
      *       if (!me.device.isFullscreen) {
@@ -28497,7 +28749,7 @@ class GLShader {
         this.uniforms = extractUniforms(this.gl, this);
 
         // destroy the shader on context lost (will be recreated on context restore)
-        subscribe(WEBGL_ONCONTEXT_LOST, this.destroy.bind(this));
+        on(WEBGL_ONCONTEXT_LOST, this.destroy.bind(this));
 
         return this;
     }
@@ -28708,12 +28960,10 @@ class WebGLCompositor {
         gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, this.createIB(), gl.STATIC_DRAW);
 
         // register to the CANVAS resize channel
-        subscribe(
-            CANVAS_ONRESIZE, (function(width, height) {
-                this.flush();
-                this.setViewport(0, 0, width, height);
-            }).bind(this)
-        );
+        on(CANVAS_ONRESIZE, (width, height) => {
+            this.flush();
+            this.setViewport(0, 0, width, height);
+        });
 
         this.reset();
     }
@@ -29288,18 +29538,16 @@ class WebGLRenderer extends Renderer {
         // to simulate context lost and restore :
         // var ctx = me.video.renderer.context.getExtension('WEBGL_lose_context');
         // ctx.loseContext()
-        // reference to this renderer
-        var renderer = this;
-        this.getScreenCanvas().addEventListener("webglcontextlost", function () {
-            undefined();
-            renderer.isContextValid = false;
-            publish(WEBGL_ONCONTEXT_LOST, [ renderer ]);
+        this.getScreenCanvas().addEventListener("webglcontextlost", (e) => {
+            e.preventDefault();
+            this.isContextValid = false;
+            emit(WEBGL_ONCONTEXT_LOST, this);
         }, false );
         // ctx.restoreContext()
-        this.getScreenCanvas().addEventListener("webglcontextrestored", function () {
-            renderer.reset();
-            renderer.isContextValid = true;
-            publish(WEBGL_ONCONTEXT_RESTORED, [ renderer ]);
+        this.getScreenCanvas().addEventListener("webglcontextrestored", () => {
+            this.reset();
+            this.isContextValid = true;
+            emit(WEBGL_ONCONTEXT_RESTORED, this);
         }, false );
 
         return this;
@@ -30507,7 +30755,7 @@ function init(game_width, game_height, options) {
     }
 
     // override renderer settings if &webgl is defined in the URL
-    var uriFragment = utils$1.getUriFragment();
+    var uriFragment = utils.getUriFragment();
     if (uriFragment.webgl === true || uriFragment.webgl1 === true || uriFragment.webgl2 === true) {
         settings.renderer = WEBGL;
         if (uriFragment.webgl1 === true) {
@@ -30536,9 +30784,9 @@ function init(game_width, game_height, options) {
     //add a channel for the onresize/onorientationchange event
     window.addEventListener(
         "resize",
-        utils$1.function.throttle(
+        utils.function.throttle(
             function (e) {
-                publish(WINDOW_ONRESIZE, [ e ]);
+                emit(WINDOW_ONRESIZE, e);
             }, 100
         ), false
     );
@@ -30547,7 +30795,7 @@ function init(game_width, game_height, options) {
     window.addEventListener(
         "orientationchange",
         function (e) {
-            publish(WINDOW_ONORIENTATION_CHANGE, [ e ]);
+            emit(WINDOW_ONORIENTATION_CHANGE, e);
         },
         false
     );
@@ -30555,33 +30803,27 @@ function init(game_width, game_height, options) {
     window.addEventListener(
         "onmozorientationchange",
         function (e) {
-            publish(WINDOW_ONORIENTATION_CHANGE, [ e ]);
+            emit(WINDOW_ONORIENTATION_CHANGE, e);
         },
         false
     );
     if (typeof window.screen !== "undefined") {
         // is this one required ?
         window.screen.onorientationchange = function (e) {
-            publish(WINDOW_ONORIENTATION_CHANGE, [ e ]);
+            emit(WINDOW_ONORIENTATION_CHANGE, e);
         };
     }
 
     // Automatically update relative canvas position on scroll
-    window.addEventListener("scroll", utils$1.function.throttle(
+    window.addEventListener("scroll", utils.function.throttle(
         function (e) {
-            publish(WINDOW_ONSCROLL, [ e ]);
+            emit(WINDOW_ONSCROLL, e);
         }, 100
     ), false);
 
     // register to the channel
-    subscribe(
-        WINDOW_ONRESIZE,
-        onresize.bind(this)
-    );
-    subscribe(
-        WINDOW_ONORIENTATION_CHANGE,
-        onresize.bind(this)
-    );
+    on(WINDOW_ONRESIZE, onresize, this);
+    on(WINDOW_ONORIENTATION_CHANGE, onresize, this);
 
     try {
         switch (settings.renderer) {
@@ -30636,7 +30878,7 @@ function init(game_width, game_height, options) {
     }
 
     // notify the video has been initialized
-    publish(VIDEO_INIT);
+    emit(VIDEO_INIT);
 
     return true;
 }
@@ -30878,8 +31120,6 @@ var utils = {
     }
 };
 
-var utils$1 = utils;
-
 //hold element to display fps
 var framecount = 0;
 var framedelta = 0;
@@ -30950,12 +31190,12 @@ function updateTimers() {
     }
 }
 // Initialize me.timer on Boot event
-subscribe(BOOT, function () {
+on(BOOT, () => {
     // reset variables to initial state
     timer.reset();
     now = last = 0;
-    // register to the game update event
-    subscribe(GAME_UPDATE, update);
+    // register to the game before update event
+    on(GAME_BEFORE_UPDATE, update);
 });
 
 
@@ -31096,7 +31336,7 @@ var timer = {
          * @param {Number} timeoutID ID of the timeout to be cleared
          */
         clearTimeout(timeoutID) {
-            utils$1.function.defer(clearTimer, this, timeoutID);
+            utils.function.defer(clearTimer, this, timeoutID);
         },
 
         /**
@@ -31107,7 +31347,7 @@ var timer = {
          * @param {Number} intervalID ID of the interval to be cleared
          */
         clearInterval(intervalID) {
-            utils$1.function.defer(clearTimer, this, intervalID);
+            utils.function.defer(clearTimer, this, intervalID);
         },
 
         /**
@@ -31318,7 +31558,7 @@ var plugin = {
         }
 
         // compatibility testing
-        if (utils$1.checkVersion(instance.version) > 0) {
+        if (utils.checkVersion(instance.version) > 0) {
             throw new Error("Plugin version mismatch, expected: " + instance.version + ", got: " + version);
         }
 
@@ -31862,7 +32102,7 @@ class Tween {
      * @ignore
      */
     onActivateEvent() {
-        subscribe(STATE_RESUME, this._resumeCallback);
+        on(STATE_RESUME, this._resumeCallback, this);
     }
 
     /**
@@ -31870,7 +32110,7 @@ class Tween {
      * @ignore
      */
     onDeactivateEvent() {
-        unsubscribe(STATE_RESUME, this._resumeCallback);
+        off(STATE_RESUME, this._resumeCallback);
     }
 
     /**
@@ -32541,7 +32781,7 @@ class Text extends Renderable {
         // compute the bounding box size
         this.height = this.width = 0;
         for (var i = 0; i < strings.length; i++) {
-            this.width = Math.max(context.measureText(utils$1.string.trimRight(""+strings[i])).width, this.width);
+            this.width = Math.max(context.measureText(trimRight(""+strings[i])).width, this.width);
             this.height += lineHeight;
         }
         textMetrics.width = Math.ceil(this.width);
@@ -32654,7 +32894,7 @@ class Text extends Renderable {
 
         var lineHeight = this.fontSize * this.lineHeight;
         for (var i = 0; i < text.length; i++) {
-            var string = utils$1.string.trimRight(""+text[i]);
+            var string = trimRight(""+text[i]);
             // draw the string
             context[stroke ? "strokeText" : "fillText"](string, x, y);
             // add leading space
@@ -32984,7 +33224,7 @@ class BitmapText extends Renderable {
 
         for (var i = 0; i < this._text.length; i++) {
             x = lX;
-            var string = utils$1.string.trimRight(this._text[i]);
+            var string = trimRight(this._text[i]);
             // adjust x pos based on alignment value
             var stringWidth = measureTextWidth(this, string);
             switch (this.textAlign) {
@@ -33376,7 +33616,7 @@ class ImageLayer extends Sprite {
 
         if (typeof(settings.ratio) !== "undefined") {
             // little hack for backward compatiblity
-            if (utils$1.string.isNumeric(settings.ratio)) {
+            if (isNumeric(settings.ratio)) {
                 this.ratio.set(settings.ratio, +settings.ratio);
             } else /* vector */ {
                 this.ratio.setV(settings.ratio);
@@ -33414,7 +33654,7 @@ class ImageLayer extends Sprite {
         this.repeat = settings.repeat || "repeat";
 
         // on context lost, all previous textures are destroyed
-        subscribe(WEBGL_ONCONTEXT_RESTORED, this.createPattern.bind(this));
+        on(WEBGL_ONCONTEXT_RESTORED, this.createPattern.bind(this));
     }
 
     /**
@@ -33468,13 +33708,12 @@ class ImageLayer extends Sprite {
 
     // called when the layer is added to the game world or a container
     onActivateEvent() {
-        var _updateLayerFn = this.updateLayer.bind(this);
         // register to the viewport change notification
-        this.vpChangeHdlr = subscribe(VIEWPORT_ONCHANGE, _updateLayerFn);
-        this.vpResizeHdlr = subscribe(VIEWPORT_ONRESIZE, this.resize.bind(this));
-        this.vpLoadedHdlr = subscribe(LEVEL_LOADED, function() {
-            // force a first refresh when the level is loaded
-            _updateLayerFn(viewport.pos);
+        on(VIEWPORT_ONCHANGE, this.updateLayer, this);
+        on(VIEWPORT_ONRESIZE, this.resize, this);
+        // force a first refresh when the level is loaded
+        once(LEVEL_LOADED, () => {
+            this.updateLayer(viewport.pos);
         });
         // in case the level is not added to the root container,
         // the onActivateEvent call happens after the LEVEL_LOADED event
@@ -33604,9 +33843,8 @@ class ImageLayer extends Sprite {
     // called when the layer is removed from the game world or a container
     onDeactivateEvent() {
         // cancel all event subscriptions
-        unsubscribe(this.vpChangeHdlr);
-        unsubscribe(this.vpResizeHdlr);
-        unsubscribe(this.vpLoadedHdlr);
+        off(VIEWPORT_ONCHANGE, this.updateLayer);
+        off(VIEWPORT_ONRESIZE, this.resize);
     }
 
     /**
@@ -33709,7 +33947,6 @@ class GUI_Object extends Sprite {
 
         // object has been updated (clicked,etc..)
         this.holdTimeout = null;
-        this.updated = false;
         this.released = true;
 
         // GUI items use screen coordinates
@@ -33720,32 +33957,13 @@ class GUI_Object extends Sprite {
     }
 
     /**
-     * return true if the object has been clicked
-     * @ignore
-     */
-    update(dt) {
-        // call the parent constructor
-        var updated = super.update(dt);
-        // check if the button was updated
-        if (this.updated) {
-            // clear the flag
-            if (!this.released) {
-                this.updated = false;
-            }
-            return true;
-        }
-        // else only return true/false based on the parent function
-        return updated;
-    }
-
-    /**
      * function callback for the pointerdown event
      * @ignore
      */
     clicked(event) {
         // Check if left mouse button is pressed
         if (event.button === 0 && this.isClickable) {
-            this.updated = true;
+            this.dirty = true;
             this.released = false;
             if (this.isHoldable) {
                 if (this.holdTimeout !== null) {
@@ -33778,6 +33996,7 @@ class GUI_Object extends Sprite {
      */
     enter(event) {
         this.hover = true;
+        this.dirty = true;
         return this.onOver(event);
     }
 
@@ -33797,6 +34016,7 @@ class GUI_Object extends Sprite {
      */
     leave(event) {
         this.hover = false;
+        this.dirty = true;
         this.release(event);
         return this.onOut(event);
     }
@@ -33820,6 +34040,7 @@ class GUI_Object extends Sprite {
     release(event) {
         if (this.released === false) {
             this.released = true;
+            this.dirty = true;
             timer$1.clearTimeout(this.holdTimeout);
             return this.onRelease(event);
         }
@@ -33845,6 +34066,7 @@ class GUI_Object extends Sprite {
      */
     hold() {
         timer$1.clearTimeout(this.holdTimeout);
+        this.dirty = true;
         if (!this.released) {
             this.onHold();
         }
@@ -35187,7 +35409,6 @@ class DraggableEntity extends Entity {
      * @function
      */
     initEvents() {
-        var self = this;
         /**
          * @ignore
          */
@@ -35203,17 +35424,9 @@ class DraggableEntity extends Entity {
         this.onPointerEvent("pointerdown", this, this.mouseDown.bind(this));
         this.onPointerEvent("pointerup", this, this.mouseUp.bind(this));
         this.onPointerEvent("pointercancel", this, this.mouseUp.bind(this));
-        subscribe(POINTERMOVE, this.dragMove.bind(this));
-        subscribe(DRAGSTART, function (e, draggable) {
-            if (draggable === self) {
-                self.dragStart(e);
-            }
-        });
-        subscribe(DRAGEND, function (e, draggable) {
-            if (draggable === self) {
-                self.dragEnd(e);
-            }
-        });
+        on(POINTERMOVE, this.dragMove, this);
+        on(DRAGSTART, this.dragStart, this);
+        on(DRAGEND, this.dragEnd, this);
     }
 
     /**
@@ -35222,11 +35435,10 @@ class DraggableEntity extends Entity {
      * @memberOf me.DraggableEntity
      * @function
      * @param {Object} e the pointer event you want to translate
-     * @param {String} translation the me.event you want to translate
-     * the event to
+     * @param {String} translation the me.event you want to translate the event to
      */
     translatePointerEvent(e, translation) {
-        publish(translation, [e, this]);
+        emit(translation, e);
     }
 
     /**
@@ -35280,9 +35492,9 @@ class DraggableEntity extends Entity {
      * @function
      */
     destroy() {
-        unsubscribe(POINTERMOVE, this.dragMove);
-        unsubscribe(DRAGSTART, this.dragStart);
-        unsubscribe(DRAGEND, this.dragEnd);
+        off(POINTERMOVE, this.dragMove);
+        off(DRAGSTART, this.dragStart);
+        off(DRAGEND, this.dragEnd);
         this.removePointerEvent("pointerdown", this);
         this.removePointerEvent("pointerup", this);
     }
@@ -35338,7 +35550,7 @@ class DroptargetEntity extends Entity {
          * @memberOf me.DroptargetEntity
          */
         this.checkMethod = null;
-        subscribe(DRAGEND, this.checkOnMe.bind(this));
+        on(DRAGEND, this.checkOnMe, this);
         this.checkMethod = this[this.CHECKMETHOD_OVERLAP];
     }
 
@@ -35389,7 +35601,7 @@ class DroptargetEntity extends Entity {
      * @function
      */
     destroy() {
-        unsubscribe(DRAGEND, this.checkOnMe);
+        off(DRAGEND, this.checkOnMe);
     }
 }
 
@@ -35562,10 +35774,10 @@ function boot() {
     pool.register("Bounds", Bounds$1, true);
 
     // publish Boot notification
-    publish(BOOT);
+    emit(BOOT);
 
     // enable/disable the cache
-    loader.setNocache( utils$1.getUriFragment().nocache || false );
+    loader.setNocache( utils.getUriFragment().nocache || false );
 
     // automatically enable keyboard events
     initKeyboardEvent();
@@ -35580,4 +35792,4 @@ device$1.onReady(function () {
     }
 });
 
-export { BitmapText, BitmapTextData, Body, Bounds$1 as Bounds, Camera2d, CanvasRenderer, Collectable, Color, ColorLayer, Container, DraggableEntity, DroptargetEntity, Ellipse, Entity, GLShader, GUI_Object, ImageLayer, Line, math as Math, Matrix2d, Matrix3d, ObservableVector2d, ObservableVector3d, Particle, ParticleEmitter, ParticleEmitterSettings, Pointer, Polygon, QuadTree, Rect, Renderable, Renderer, Sprite, Stage, TMXHexagonalRenderer, TMXIsometricRenderer, TMXLayer, TMXOrthogonalRenderer, TMXRenderer, TMXStaggeredRenderer, TMXTileMap, TMXTileset, TMXTilesetGroup, Text, Tile, Trigger, Tween, Vector2d, Vector3d, WebGLCompositor, WebGLRenderer, World, audio, boot, collision, deprecated, device$1 as device, event, game, initialized, input, level, loader, plugin, plugins, pool, save, skipAutoInit, state, timer$1 as timer, utils$1 as utils, version, video };
+export { BitmapText, BitmapTextData, Body, Bounds$1 as Bounds, Camera2d, CanvasRenderer, Collectable, Color, ColorLayer, Container, DraggableEntity, DroptargetEntity, Ellipse, Entity, GLShader, GUI_Object, ImageLayer, Line, math as Math, Matrix2d, Matrix3d, ObservableVector2d, ObservableVector3d, Particle, ParticleEmitter, ParticleEmitterSettings, Pointer, Polygon, QuadTree, Rect, Renderable, Renderer, Sprite, Stage, TMXHexagonalRenderer, TMXIsometricRenderer, TMXLayer, TMXOrthogonalRenderer, TMXRenderer, TMXStaggeredRenderer, TMXTileMap, TMXTileset, TMXTilesetGroup, Text, Tile, Trigger, Tween, Vector2d, Vector3d, WebGLCompositor, WebGLRenderer, World, audio, boot, collision, deprecated, device$1 as device, event, game, initialized, input, level, loader, plugin, plugins, pool, save, skipAutoInit, state, timer$1 as timer, utils, version, video };

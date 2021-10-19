@@ -2289,8 +2289,7 @@ export class DraggableEntity {
      * @memberOf me.DraggableEntity
      * @function
      * @param {Object} e the pointer event you want to translate
-     * @param {String} translation the me.event you want to translate
-     * the event to
+     * @param {String} translation the me.event you want to translate the event to
      */
     translatePointerEvent(e: any, translation: string): void;
     /**
@@ -2879,20 +2878,15 @@ export class GUI_Object {
      */
     public hover: boolean;
     holdTimeout: number;
-    updated: boolean;
     released: boolean;
     floating: boolean;
     isKinematic: boolean;
-    /**
-     * return true if the object has been clicked
-     * @ignore
-     */
-    update(dt: any): any;
     /**
      * function callback for the pointerdown event
      * @ignore
      */
     clicked(event: any): boolean;
+    dirty: boolean;
     /**
      * function called when the object is pressed <br>
      * to be extended <br>
@@ -3041,9 +3035,6 @@ export class ImageLayer {
     repeatX: boolean;
     repeatY: boolean;
     onActivateEvent(): void;
-    vpChangeHdlr: any;
-    vpResizeHdlr: any;
-    vpLoadedHdlr: any;
     /**
      * resize the Image Layer to match the given size
      * @name resize
@@ -8661,6 +8652,7 @@ export class WebGLRenderer {
      */
     currentCompositor: any;
     cache: TextureCache;
+    isContextValid: boolean;
     /**
      * Reset context state
      * @name reset
@@ -9418,7 +9410,7 @@ declare namespace device$1 {
      * @example
      * // add a keyboard shortcut to toggle Fullscreen mode on/off
      * me.input.bindKey(me.input.KEY.F, "toggleFullscreen");
-     * me.event.subscribe(me.event.KEYDOWN, function (action, keyCode, edge) {
+     * me.event.on(me.event.KEYDOWN, function (action, keyCode, edge) {
      *    // toggle fullscreen on/off
      *    if (action === "toggleFullscreen") {
      *       if (!me.device.isFullscreen) {
@@ -9437,7 +9429,7 @@ declare namespace device$1 {
      * @example
      * // add a keyboard shortcut to toggle Fullscreen mode on/off
      * me.input.bindKey(me.input.KEY.F, "toggleFullscreen");
-     * me.event.subscribe(me.event.KEYDOWN, function (action, keyCode, edge) {
+     * me.event.on(me.event.KEYDOWN, function (action, keyCode, edge) {
      *    // toggle fullscreen on/off
      *    if (action === "toggleFullscreen") {
      *       if (!me.device.isFullscreen) {
@@ -9876,7 +9868,11 @@ export var event: Readonly<{
     VIDEO_INIT: string;
     GAME_INIT: string;
     GAME_RESET: string;
+    GAME_BEFORE_UPDATE: string;
+    GAME_AFTER_UPDATE: string;
     GAME_UPDATE: string;
+    GAME_BEFORE_DRAW: string;
+    GAME_AFTER_DRAW: string;
     LEVEL_LOADED: string;
     LOADER_COMPLETE: string;
     LOADER_PROGRESS: string;
@@ -9896,9 +9892,10 @@ export var event: Readonly<{
     VIEWPORT_ONCHANGE: string;
     WEBGL_ONCONTEXT_LOST: string;
     WEBGL_ONCONTEXT_RESTORED: string;
-    publish: typeof publish;
-    subscribe: typeof subscribe;
-    unsubscribe: typeof unsubscribe;
+    emit: typeof emit;
+    on: typeof on;
+    once: typeof once;
+    off: typeof off;
 }>;
 export var game: Readonly<{
     __proto__: any;
@@ -11074,10 +11071,6 @@ export namespace state {
     export const DEFAULT: number;
     const USER_1: number;
     export { USER_1 as USER };
-    export const onPause: any;
-    export const onResume: any;
-    export const onStop: any;
-    export const onRestart: any;
     /**
      * Stop the current screen object.
      * @name stop
@@ -11563,7 +11556,7 @@ declare namespace timer$1 {
      */
     function countFPS(): void;
 }
-declare namespace utils$1 {
+export namespace utils {
     export { agentUtils as agent };
     export { arrayUtils as array };
     export { fileUtils as file };
@@ -12540,47 +12533,50 @@ declare function warning(deprecated: string, replacement: string, version: strin
  */
 declare function apply(): void;
 /**
- * Publish some data on a channel
- * @function me.event.publish
- * @param {String} channel The channel to publish on
- * @param {Array} arguments The data to publish
+ * calls each of the listeners registered for a given event.
+ * @function me.event.emit
+ * @param {(String|Symbol)} event The event name.
+ * @param {...*} arguments arguments to be passed to all listeners
+ * @return true if the event had listeners, false otherwise.
  * @example
- * // Publish stuff on '/some/channel'.
- * // Anything subscribed will be called with a function
- * // signature like: function (a,b,c){ ... }
- * me.event.publish("/some/channel", ["a","b","c"]);
+ * me.event.emit("event-name", a, b, c);
  */
-declare function publish(channel: string, data: any): void;
+declare function emit(eventName: any, ...args: any[]): any;
 /**
- * Register a callback on a named channel.
- * @function me.event.subscribe
- * @param {String} channel The channel to subscribe to
- * @param {Function} callback The event handler, any time something is
- * published on a subscribed channel, the callback will be called
- * with the published array as ordered arguments
- * @return {handle} A handle which can be used to unsubscribe this
- * particular subscription
+ * Add a listener for a given event.
+ * @function me.event.on
+ * @param {(String|Symbol)} event The event name.
+ * @param {Function} fn The listener function.
+ * @param {*} [context=this] The context to invoke the listener with.
+ * @returns {EventEmitter} `this`.
+ * @public
  * @example
- * me.event.subscribe("/some/channel", function (a, b, c){ doSomething(); });
+ * me.event.on("event-name", myFunction, this);
  */
-declare function subscribe(channel: string, callback: Function): any;
+declare function on(eventName: any, listener: any, context?: any): {};
 /**
- * Disconnect a subscribed function for a channel.
- * @function me.event.unsubscribe
- * @param {Array|String} handle The return value from a subscribe call or the
- * name of a channel as a String
- * @param {Function} [callback] The callback to be unsubscribed.
+ * Add a one-time listener for a given event.
+ * @function me.event.once
+ * @param {(String|Symbol)} event The event name.
+ * @param {Function} fn The listener function.
+ * @param {*} [context=this] The context to invoke the listener with.
+ * @returns {EventEmitter} `this`.
+ * @public
  * @example
- * var handle = me.event.subscribe("/some/channel", function (){});
- * me.event.unsubscribe(handle);
- *
- * // Or alternatively ...
- *
- * var callback = function (){};
- * me.event.subscribe("/some/channel", callback);
- * me.event.unsubscribe("/some/channel", callback);
+ * me.event.once("event-name", myFunction, this);
  */
-declare function unsubscribe(handle: any[] | string, callback?: Function): void;
+declare function once(eventName: any, listener: any, context?: any): {};
+/**
+ * remove the given listener for a given event.
+ * @function me.event.off
+ * @param {(String|Symbol)} event The event name.
+ * @param {Function} fn The listener function.
+ * @returns {EventEmitter} `this`.
+ * @public
+ * @example
+ * me.event.off("event-name", myFunction);
+ */
+declare function off(eventName: any, listener: any): {};
 /**
  * Fired when a level is fully loaded and all entities instantiated. <br>
  * Additionnaly the level id will also be passed to the called function.
@@ -13167,4 +13163,4 @@ declare function defer(func: any, thisArg: any, ...args?: any[]): number;
  * @param {no_trailing} no_trailing disable the execution on the trailing edge
  */
 declare function throttle(fn: Function, delay: number, no_trailing: any): (...args: any[]) => any;
-export { Bounds$1 as Bounds, math as Math, device$1 as device, timer$1 as timer, utils$1 as utils };
+export { Bounds$1 as Bounds, math as Math, device$1 as device, timer$1 as timer };
