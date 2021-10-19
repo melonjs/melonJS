@@ -430,10 +430,10 @@ class Renderable extends Rect {
      * @name flipX
      * @memberOf me.Renderable.prototype
      * @function
-     * @param {Boolean} [flip=false] `true` to flip this renderable.
+     * @param {Boolean} [flip=true] `true` to flip this renderable.
      * @return {me.Renderable} Reference to this object for method chaining
      */
-    flipX(flip) {
+    flipX(flip = true) {
         this._flip.x = !!flip;
         this.isDirty = true;
         return this;
@@ -445,10 +445,10 @@ class Renderable extends Rect {
      * @name flipY
      * @memberOf me.Renderable.prototype
      * @function
-     * @param {Boolean} [flip=false] `true` to flip this renderable.
+     * @param {Boolean} [flip=true] `true` to flip this renderable.
      * @return {me.Renderable} Reference to this object for method chaining
      */
-    flipY(flip) {
+    flipY(flip = true) {
         this._flip.y = !!flip;
         this.isDirty = true;
         return this;

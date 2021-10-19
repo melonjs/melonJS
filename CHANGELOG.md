@@ -16,6 +16,7 @@
 - Physic : physic body update and collision check is now automatically done through the world simulation update loop
 - Physic : fixed gravitational acceleration (thanks @neilsf)
 - Event: minPubSub event based implementation has been replaced by a nodeJS event emitter based implementation
+- Renderable: calling `flipX/Y()` without argument will now flip the renderable as expected
 
 ### Deprecated
 - all deprecated API from the legacy melonJS version have been removed
