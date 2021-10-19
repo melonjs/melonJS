@@ -91,7 +91,6 @@ class GUI_Object extends Sprite {
 
         // object has been updated (clicked,etc..)
         this.holdTimeout = null;
-        this.updated = false;
         this.released = true;
 
         // GUI items use screen coordinates
@@ -102,32 +101,13 @@ class GUI_Object extends Sprite {
     }
 
     /**
-     * return true if the object has been clicked
-     * @ignore
-     */
-    update(dt) {
-        // call the parent constructor
-        var updated = super.update(dt);
-        // check if the button was updated
-        if (this.updated) {
-            // clear the flag
-            if (!this.released) {
-                this.updated = false;
-            }
-            return true;
-        }
-        // else only return true/false based on the parent function
-        return updated;
-    }
-
-    /**
      * function callback for the pointerdown event
      * @ignore
      */
     clicked(event) {
         // Check if left mouse button is pressed
         if (event.button === 0 && this.isClickable) {
-            this.updated = true;
+            this.dirty = true;
             this.released = false;
             if (this.isHoldable) {
                 if (this.holdTimeout !== null) {
@@ -160,6 +140,7 @@ class GUI_Object extends Sprite {
      */
     enter(event) {
         this.hover = true;
+        this.dirty = true;
         return this.onOver(event);
     }
 
@@ -179,6 +160,7 @@ class GUI_Object extends Sprite {
      */
     leave(event) {
         this.hover = false;
+        this.dirty = true;
         this.release(event);
         return this.onOut(event);
     }
@@ -202,6 +184,7 @@ class GUI_Object extends Sprite {
     release(event) {
         if (this.released === false) {
             this.released = true;
+            this.dirty = true;
             timer.clearTimeout(this.holdTimeout);
             return this.onRelease(event);
         }
@@ -227,6 +210,7 @@ class GUI_Object extends Sprite {
      */
     hold() {
         timer.clearTimeout(this.holdTimeout);
+        this.dirty = true;
         if (!this.released) {
             this.onHold();
         }
