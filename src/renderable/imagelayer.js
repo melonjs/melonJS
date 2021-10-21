@@ -100,7 +100,7 @@ class ImageLayer extends Sprite {
         this.repeat = settings.repeat || "repeat";
 
         // on context lost, all previous textures are destroyed
-        event.on(event.WEBGL_ONCONTEXT_RESTORED, this.createPattern.bind(this));
+        event.on(event.WEBGL_ONCONTEXT_RESTORED, this.createPattern, this);
     }
 
     /**
@@ -300,6 +300,7 @@ class ImageLayer extends Sprite {
     destroy() {
         pool.push(this.ratio);
         this.ratio = undefined;
+        event.off(event.WEBGL_ONCONTEXT_RESTORED, this.createPattern);
         super.destroy();
     }
 
