@@ -766,7 +766,7 @@ class Body {
      * In addition, when the gravity calcuation is made, if the Body.vel.y > 0 then the Body.falling
      * property is set to true and Body.jumping is set to !Body.falling.
      *
-     * At this time a call to Body.Update does not call the onBodyUpdate callback that is listed in the init: function.
+     * At this time a call to Body.Update does not call the onBodyUpdate callback that is listed in the constructor arguments.
      * @name update
      * @ignore
      * @memberOf me.Body
