@@ -286,7 +286,7 @@ class GLShader {
         this.uniforms = extractUniforms(this.gl, this);
 
         // destroy the shader on context lost (will be recreated on context restore)
-        event.on(event.WEBGL_ONCONTEXT_LOST, this.destroy.bind(this));
+        event.on(event.WEBGL_ONCONTEXT_LOST, this.destroy, this);
 
         return this;
     }
