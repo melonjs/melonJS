@@ -121,7 +121,6 @@ me.device.onReady(function () {
 Documentation :
 
 * [Online API](http://melonjs.github.io/melonJS/docs/) ([offline](https://github.com/melonjs/melonJS/archive/gh-pages.zip) version under the `docs` directory)
-* [Examples](https://melonjs.github.io/examples/)
 
 For your first time using melonJS, follow these tutorials :
 
@@ -133,6 +132,20 @@ For your first time using melonJS, follow these tutorials :
 You may find it useful to skim the overview found at the wiki [Details & Usage](https://github.com/melonjs/melonJS/wiki#details--usage)
 
 When starting your own projects, checkout our [es6 boilerplate](https://github.com/melonjs/es6-boilerplate)
+
+Demos
+-------------------------------------------------------------------------------
+
+A few demos of melonJS capabilities :
+
+* [Platformer Demo](https://melonjs.github.io/examples/examples/platformer/)
+* [Isometric Demo](https://melonjs.github.io/examples/examples/isometric_rpg/)
+* [Sprite Demo](https://melonjs.github.io/examples/examples/sprite/)
+* [Masking Demo](https://melonjs.github.io/examples/examples/masking/)
+* [Primitive Drawing Demo](https://melonjs.github.io/examples/examples/graphics/)
+* [UI Demo](https://melonjs.github.io/examples/examples/UI/)
+
+More examples are available [here](https://melonjs.github.io/examples/)
 
 Download melonJS
 -------------------------------------------------------------------------------
