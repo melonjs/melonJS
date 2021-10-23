@@ -548,7 +548,7 @@ export class Body {
      * In addition, when the gravity calcuation is made, if the Body.vel.y > 0 then the Body.falling
      * property is set to true and Body.jumping is set to !Body.falling.
      *
-     * At this time a call to Body.Update does not call the onBodyUpdate callback that is listed in the init: function.
+     * At this time a call to Body.Update does not call the onBodyUpdate callback that is listed in the constructor arguments.
      * @name update
      * @ignore
      * @memberOf me.Body
@@ -5567,7 +5567,7 @@ export class Renderable {
      * @name flipX
      * @memberOf me.Renderable.prototype
      * @function
-     * @param {Boolean} [flip=false] `true` to flip this renderable.
+     * @param {Boolean} [flip=true] `true` to flip this renderable.
      * @return {me.Renderable} Reference to this object for method chaining
      */
     flipX(flip?: boolean): any;
@@ -5577,7 +5577,7 @@ export class Renderable {
      * @name flipY
      * @memberOf me.Renderable.prototype
      * @function
-     * @param {Boolean} [flip=false] `true` to flip this renderable.
+     * @param {Boolean} [flip=true] `true` to flip this renderable.
      * @return {me.Renderable} Reference to this object for method chaining
      */
     flipY(flip?: boolean): any;

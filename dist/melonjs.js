@@ -12980,10 +12980,12 @@
          * @name flipX
          * @memberOf me.Renderable.prototype
          * @function
-         * @param {Boolean} [flip=false] `true` to flip this renderable.
+         * @param {Boolean} [flip=true] `true` to flip this renderable.
          * @return {me.Renderable} Reference to this object for method chaining
          */
         Renderable.prototype.flipX = function flipX (flip) {
+            if ( flip === void 0 ) flip = true;
+
             this._flip.x = !!flip;
             this.isDirty = true;
             return this;
@@ -12995,10 +12997,12 @@
          * @name flipY
          * @memberOf me.Renderable.prototype
          * @function
-         * @param {Boolean} [flip=false] `true` to flip this renderable.
+         * @param {Boolean} [flip=true] `true` to flip this renderable.
          * @return {me.Renderable} Reference to this object for method chaining
          */
         Renderable.prototype.flipY = function flipY (flip) {
+            if ( flip === void 0 ) flip = true;
+
             this._flip.y = !!flip;
             this.isDirty = true;
             return this;
@@ -15784,7 +15788,7 @@
      * In addition, when the gravity calcuation is made, if the Body.vel.y > 0 then the Body.falling
      * property is set to true and Body.jumping is set to !Body.falling.
      *
-     * At this time a call to Body.Update does not call the onBodyUpdate callback that is listed in the init: function.
+     * At this time a call to Body.Update does not call the onBodyUpdate callback that is listed in the constructor arguments.
      * @name update
      * @ignore
      * @memberOf me.Body
@@ -17763,9 +17767,9 @@
             this._updateProjectionMatrix();
 
             // subscribe to the game reset event
-            on(GAME_RESET, this.reset.bind(this));
+            on(GAME_RESET, this.reset, this);
             // subscribe to the canvas resize event
-            on(CANVAS_ONRESIZE, this.resize.bind(this));
+            on(CANVAS_ONRESIZE, this.resize, this);
         }
 
         if ( Renderable ) Camera2d.__proto__ = Renderable;
@@ -28961,7 +28965,7 @@
         this.uniforms = extractUniforms(this.gl, this);
 
         // destroy the shader on context lost (will be recreated on context restore)
-        on(WEBGL_ONCONTEXT_LOST, this.destroy.bind(this));
+        on(WEBGL_ONCONTEXT_LOST, this.destroy, this);
 
         return this;
     };
@@ -33893,7 +33897,7 @@
             this.repeat = settings.repeat || "repeat";
 
             // on context lost, all previous textures are destroyed
-            on(WEBGL_ONCONTEXT_RESTORED, this.createPattern.bind(this));
+            on(WEBGL_ONCONTEXT_RESTORED, this.createPattern, this);
         }
 
        if ( Sprite ) ImageLayer.__proto__ = Sprite;
@@ -34101,6 +34105,7 @@
         ImageLayer.prototype.destroy = function destroy () {
             pool.push(this.ratio);
             this.ratio = undefined;
+            off(WEBGL_ONCONTEXT_RESTORED, this.createPattern);
             Sprite.prototype.destroy.call(this);
         };
 

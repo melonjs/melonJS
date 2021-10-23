@@ -1,6 +1,6 @@
 # Changelog
 
-## [10.0.0] (melonJS 2) - _unreleased_
+## [10.0.0] (melonJS 2) - _2021-10-23_
 
 ### Added
 - melonJS is now a pure ES6 library, for class definition, inheritance and semantic
@@ -994,6 +994,7 @@
 - first public version with alex4 !
 - www.melonjs.org is live :)
 
+[10.0.0]: https://github.com/melonjs/melonJS/compare/9.1.2...10.0.0
 [9.1.2]: https://github.com/melonjs/melonJS/compare/9.1.1...9.1.2
 [9.1.1]: https://github.com/melonjs/melonJS/compare/9.1.0...9.1.1
 [9.1.0]: https://github.com/melonjs/melonJS/compare/9.0.2...9.1.0

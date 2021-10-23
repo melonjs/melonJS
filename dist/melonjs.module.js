@@ -12854,10 +12854,10 @@ class Renderable extends Rect {
      * @name flipX
      * @memberOf me.Renderable.prototype
      * @function
-     * @param {Boolean} [flip=false] `true` to flip this renderable.
+     * @param {Boolean} [flip=true] `true` to flip this renderable.
      * @return {me.Renderable} Reference to this object for method chaining
      */
-    flipX(flip) {
+    flipX(flip = true) {
         this._flip.x = !!flip;
         this.isDirty = true;
         return this;
@@ -12869,10 +12869,10 @@ class Renderable extends Rect {
      * @name flipY
      * @memberOf me.Renderable.prototype
      * @function
-     * @param {Boolean} [flip=false] `true` to flip this renderable.
+     * @param {Boolean} [flip=true] `true` to flip this renderable.
      * @return {me.Renderable} Reference to this object for method chaining
      */
-    flipY(flip) {
+    flipY(flip = true) {
         this._flip.y = !!flip;
         this.isDirty = true;
         return this;
@@ -15639,7 +15639,7 @@ class Body {
      * In addition, when the gravity calcuation is made, if the Body.vel.y > 0 then the Body.falling
      * property is set to true and Body.jumping is set to !Body.falling.
      *
-     * At this time a call to Body.Update does not call the onBodyUpdate callback that is listed in the init: function.
+     * At this time a call to Body.Update does not call the onBodyUpdate callback that is listed in the constructor arguments.
      * @name update
      * @ignore
      * @memberOf me.Body
@@ -17598,9 +17598,9 @@ class Camera2d extends Renderable {
         this._updateProjectionMatrix();
 
         // subscribe to the game reset event
-        on(GAME_RESET, this.reset.bind(this));
+        on(GAME_RESET, this.reset, this);
         // subscribe to the canvas resize event
-        on(CANVAS_ONRESIZE, this.resize.bind(this));
+        on(CANVAS_ONRESIZE, this.resize, this);
     }
 
     // -- some private function ---
@@ -28749,7 +28749,7 @@ class GLShader {
         this.uniforms = extractUniforms(this.gl, this);
 
         // destroy the shader on context lost (will be recreated on context restore)
-        on(WEBGL_ONCONTEXT_LOST, this.destroy.bind(this));
+        on(WEBGL_ONCONTEXT_LOST, this.destroy, this);
 
         return this;
     }
@@ -33654,7 +33654,7 @@ class ImageLayer extends Sprite {
         this.repeat = settings.repeat || "repeat";
 
         // on context lost, all previous textures are destroyed
-        on(WEBGL_ONCONTEXT_RESTORED, this.createPattern.bind(this));
+        on(WEBGL_ONCONTEXT_RESTORED, this.createPattern, this);
     }
 
     /**
@@ -33854,6 +33854,7 @@ class ImageLayer extends Sprite {
     destroy() {
         pool.push(this.ratio);
         this.ratio = undefined;
+        off(WEBGL_ONCONTEXT_RESTORED, this.createPattern);
         super.destroy();
     }
 
