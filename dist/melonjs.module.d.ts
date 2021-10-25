@@ -9191,9 +9191,9 @@ export var audio: Readonly<{
  */
 export function boot(): void;
 export namespace collision {
-    const maxChildren: number;
-    const maxDepth: number;
-    namespace types {
+    export const maxChildren: number;
+    export const maxDepth: number;
+    export namespace types {
         const NO_OBJECT: number;
         const PLAYER_OBJECT: number;
         const NPC_OBJECT: number;
@@ -9205,7 +9205,7 @@ export namespace collision {
         const USER: number;
         const ALL_OBJECT: number;
     }
-    const response: any;
+    export { globalResponse as response };
     /**
      * Checks for object colliding with the given line
      * @name rayCast
@@ -9233,7 +9233,7 @@ export namespace collision {
      *        // ...
      *    }
      */
-    function rayCast(line: any, resultArray: any): any[];
+    export function rayCast(line: any, resultArray: any): any[];
     /**
      * Checks for object colliding with the given line
      * @name rayCast
@@ -9261,7 +9261,7 @@ export namespace collision {
      *        // ...
      *    }
      */
-    function rayCast(line: any, resultArray: any): any[];
+    export function rayCast(line: any, resultArray: any): any[];
 }
 export var deprecated: Readonly<{
     __proto__: any;
@@ -12509,6 +12509,7 @@ declare function unload(sound_name: string): boolean;
  * me.audio.unloadAll();
  */
 declare function unloadAll(): void;
+declare var globalResponse: ResponseObject;
 /**
  * placeholder for all deprecated classes and corresponding alias for backward compatibility
  * @namespace deprecated
@@ -12864,7 +12865,7 @@ declare class BasePlugin {
      * this can be overridden by the plugin
      * @public
      * @type String
-     * @default "10.0.0"
+     * @default "10.0.1"
      * @name me.plugin.Base#version
      */
     public version: string;
@@ -12978,6 +12979,45 @@ declare function getParent(): HTMLElement;
  * @param {Number} y y scaling multiplier
  */
 declare function scale(x: number, y: number): void;
+/**
+ * @classdesc
+ * An object representing the result of an intersection.
+ * @property {me.Renderable} a The first object participating in the intersection
+ * @property {me.Renderable} b The second object participating in the intersection
+ * @property {Number} overlap Magnitude of the overlap on the shortest colliding axis
+ * @property {me.Vector2d} overlapV The overlap vector (i.e. `overlapN.scale(overlap, overlap)`). If this vector is subtracted from the position of a, a and b will no longer be colliding
+ * @property {me.Vector2d} overlapN The shortest colliding axis (unit-vector)
+ * @property {Boolean} aInB Whether the first object is entirely inside the second
+ * @property {Boolean} bInA Whether the second object is entirely inside the first
+ * @property {Number} indexShapeA The index of the colliding shape for the object a body
+ * @property {Number} indexShapeB The index of the colliding shape for the object b body
+ * @name ResponseObject
+ * @memberOf me.collision
+ * @public
+ * @see me.collision.check
+ */
+declare class ResponseObject {
+    a: any;
+    b: any;
+    overlapN: Vector2d;
+    overlapV: Vector2d;
+    aInB: boolean;
+    bInA: boolean;
+    indexShapeA: number;
+    indexShapeB: number;
+    overlap: number;
+    /**
+     * Set some values of the response back to their defaults. <br>
+     * Call this between tests if you are going to reuse a single <br>
+     * Response object for multiple intersection tests <br>
+     * (recommended as it will avoid allocating extra memory) <br>
+     * @name clear
+     * @memberOf me.collision.ResponseObject
+     * @public
+     * @function
+     */
+    public clear(): ResponseObject;
+}
 /**
  * Get a vendor-prefixed property
  * @public
