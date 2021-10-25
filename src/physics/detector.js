@@ -1,8 +1,6 @@
 import * as SAT from "./sat.js";
 import Vector2d from "./../math/vector2.js";
 import { world } from "./../game.js";
-import collision from "./collision.js";
-
 
 // a dummy object when using Line for raycasting
 var dummyObj = {
@@ -35,20 +33,71 @@ function shouldCollide(a, b) {
     );
 };
 
+/**
+ * @classdesc
+ * An object representing the result of an intersection.
+ * @property {me.Renderable} a The first object participating in the intersection
+ * @property {me.Renderable} b The second object participating in the intersection
+ * @property {Number} overlap Magnitude of the overlap on the shortest colliding axis
+ * @property {me.Vector2d} overlapV The overlap vector (i.e. `overlapN.scale(overlap, overlap)`). If this vector is subtracted from the position of a, a and b will no longer be colliding
+ * @property {me.Vector2d} overlapN The shortest colliding axis (unit-vector)
+ * @property {Boolean} aInB Whether the first object is entirely inside the second
+ * @property {Boolean} bInA Whether the second object is entirely inside the first
+ * @property {Number} indexShapeA The index of the colliding shape for the object a body
+ * @property {Number} indexShapeB The index of the colliding shape for the object b body
+ * @name ResponseObject
+ * @memberOf me.collision
+ * @public
+ * @see me.collision.check
+ */
+class ResponseObject {
+    constructor() {
+        this.a = null;
+        this.b = null;
+        this.overlapN = new Vector2d();
+        this.overlapV = new Vector2d();
+        this.aInB = true;
+        this.bInA = true;
+        this.indexShapeA = -1;
+        this.indexShapeB = -1;
+        this.overlap = Number.MAX_VALUE;
+        return this;
+    }
+
+    /**
+     * Set some values of the response back to their defaults. <br>
+     * Call this between tests if you are going to reuse a single <br>
+     * Response object for multiple intersection tests <br>
+     * (recommended as it will avoid allocating extra memory) <br>
+     * @name clear
+     * @memberOf me.collision.ResponseObject
+     * @public
+     * @function
+     */
+    clear () {
+        this.aInB = true;
+        this.bInA = true;
+        this.overlap = Number.MAX_VALUE;
+        this.indexShapeA = -1;
+        this.indexShapeB = -1;
+        return this;
+    }
+}
+
+// @ignore
+export var globalResponse = new ResponseObject();
 
 /**
  * find all the collisions for the specified object
  * @name collisionCheck
- * @memberOf me.collision
  * @ignore
  * @function
  * @param {me.Renderable} obj object to be tested for collision
  * @param {me.collision.ResponseObject} [response=me.collision.response] a user defined response object that will be populated if they intersect.
  * @return {Boolean} in case of collision, false otherwise
  */
-export function collisionCheck(objA, response = collision.response) {
-    var collision = 0;
-
+export function collisionCheck(objA, response = globalResponse) {
+    var collisionCounter = 0;
     // retreive a list of potential colliding objects from the game world
     var candidates = world.broadphase.retrieve(objA);
 
@@ -86,7 +135,7 @@ export function collisionCheck(objA, response = collision.response) {
                             response.clear()) === true
                     ) {
                         // we touched something !
-                        collision++;
+                        collisionCounter++;
 
                         // set the shape index
                         response.indexShapeA = indexA;
@@ -107,13 +156,12 @@ export function collisionCheck(objA, response = collision.response) {
         }
     }
     // we could return the amount of objects we collided with ?
-    return collision > 0;
+    return collisionCounter > 0;
 };
 
 /**
  * Checks for object colliding with the given line
  * @name rayCast
- * @memberOf me.collision
  * @ignore
  * @function
  * @param {me.Line} line line to be tested for collision
@@ -138,7 +186,7 @@ export function collisionCheck(objA, response = collision.response) {
  *    }
  */
 export function rayCast(line, result = []) {
-    var collision = 0;
+    var collisionCounter = 0;
 
     // retrieve a list of potential colliding objects from the game world
     var candidates = world.broadphase.retrieve(line);
@@ -171,8 +219,8 @@ export function rayCast(line, result = []) {
                         shapeB
                 )) {
                     // we touched something !
-                    result[collision] = objB;
-                    collision++;
+                    result[collisionCounter] = objB;
+                    collisionCounter++;
                 }
                 indexB++;
             } while (indexB < bLen);
@@ -180,7 +228,7 @@ export function rayCast(line, result = []) {
     }
 
     // cap result in case it was not empty
-    result.length = collision;
+    result.length = collisionCounter;
 
     // return the list of colliding objects
     return result;

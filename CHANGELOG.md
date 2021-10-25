@@ -1,5 +1,10 @@
 # Changelog
 
+## [10.0.1] (melonJS 2) - _2021-10-25_
+
+### Fixed
+- Physic: fix a regression (crash) with undefined reference in the minified ES6 module
+
 ## [10.0.0] (melonJS 2) - _2021-10-23_
 
 ### Added
