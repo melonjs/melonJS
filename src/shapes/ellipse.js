@@ -4,7 +4,7 @@ import pool from "./../system/pooling.js";
 /**
  * @classdesc
  * an ellipse Object
- * @class
+ * @class Ellipse
  * @extends me.Object
  * @memberOf me
  * @constructor

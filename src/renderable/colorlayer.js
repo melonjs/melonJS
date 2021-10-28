@@ -6,7 +6,7 @@ import Renderable from "./renderable.js";
 /**
  * @classdesc
  * a generic Color Layer Object.  Fills the entire Canvas with the color not just the container the object belongs to.
- * @class
+ * @class ColorLayer
  * @extends me.Renderable
  * @memberOf me
  * @constructor

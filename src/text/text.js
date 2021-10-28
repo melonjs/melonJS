@@ -34,8 +34,9 @@ var setContextStyle = function(context, font, stroke) {
 };
 
 /**
+ * @classdesc
  * a generic system font object.
- * @class
+ * @class Text
  * @extends me.Renderable
  * @memberOf me
  * @constructor

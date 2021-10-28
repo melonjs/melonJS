@@ -5,8 +5,9 @@ import Renderable from "./../renderable/renderable.js";
 
 
 /**
+ * @classdesc
  * Single Particle Object.
- * @class
+ * @class Particle
  * @extends me.Renderable
  * @memberOf me
  * @constructor

@@ -4,11 +4,12 @@ import { registerPointerEvent, releasePointerEvent} from "./../input/input.js";
 
 
 /**
+ * @classdesc
  * GUI Object<br>
  * A very basic object to manage GUI elements <br>
  * The object simply register on the "pointerdown" <br>
  * or "touchstart" event and call the onClick function"
- * @class
+ * @class GUI_Object
  * @extends me.Sprite
  * @memberOf me
  * @constructor

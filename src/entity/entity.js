@@ -7,7 +7,7 @@ import Polygon from "./../shapes/poly.js";
 
 /**
  * a Generic Object Entity
- * @class
+ * @class Entity
  * @extends me.Renderable
  * @memberOf me
  * @see me.Renderable

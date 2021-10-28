@@ -9,7 +9,7 @@ import * as stringUtil from "./../utils/string.js";
 /**
  * @classdesc
  * a generic Image Layer Object
- * @class
+ * @class ImageLayer
  * @extends me.Renderable
  * @memberOf me
  * @constructor

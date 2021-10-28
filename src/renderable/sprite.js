@@ -9,7 +9,7 @@ import Renderable from "./renderable.js";
 /**
  * @classdesc
  * An object to display a fixed or animated sprite on screen.
- * @class
+ * @class Sprite
  * @extends me.Renderable
  * @memberOf me
  * @constructor

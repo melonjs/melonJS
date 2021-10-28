@@ -1,5 +1,10 @@
 # Changelog
 
+## [10.0.2] (melonJS 2) - _2021-10-29_
+
+### Fixed
+- Documentation: fix missing class definition after the 10.0.0 release
+
 ## [10.0.1] (melonJS 2) - _2021-10-25_
 
 ### Fixed

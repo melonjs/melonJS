@@ -60,6 +60,7 @@ function createSpaceGlyph(glyphs) {
  * Class for storing relevant data from the font file.
  * @class me.BitmapTextData
  * @memberOf me
+ * @private
  * @param data {String} - The bitmap font data pulled from the resource loader using me.loader.getBinary()
  * @constructor
  */

@@ -6,9 +6,9 @@ import level from "./../level/level.js";
 import { world, viewport } from "./../game.js";
 
 /**
- * classdesc
+ * @classdesc
  * trigger an event when colliding with another object
- * @class
+ * @class Trigger
  * @extends me.Renderable
  * @memberOf me
  * @constructor

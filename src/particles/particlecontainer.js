@@ -2,8 +2,9 @@ import Container from "./../renderable/container.js";
 import { viewport } from "./../game.js";
 
 /**
+ * @classdesc
  * Particle Container Object.
- * @class
+ * @class ParticleContainer
  * @extends me.Container
  * @memberOf me
  * @constructor

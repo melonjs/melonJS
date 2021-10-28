@@ -7,8 +7,9 @@ import { releaseAllPointerEvents } from "./../input/input.js";
 import { clamp } from "./../math/math.js";
 
 /**
+ * @classdesc
  * A base class for renderable objects.
- * @class
+ * @class Renderable
  * @extends me.Rect
  * @memberOf me
  * @constructor

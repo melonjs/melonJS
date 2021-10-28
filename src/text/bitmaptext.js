@@ -32,8 +32,9 @@ var measureTextHeight = function(font) {
 };
 
 /**
+ * @classdesc
  * a bitmap font object
- * @class
+ * @class BitmapText
  * @extends me.Renderable
  * @memberOf me
  * @constructor

@@ -18,7 +18,7 @@ var globalFloatingCounter = 0;
 
 /**
  * me.Container represents a collection of child objects
- * @class
+ * @class Container
  * @extends me.Renderable
  * @memberOf me
  * @constructor

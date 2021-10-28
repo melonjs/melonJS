@@ -4,7 +4,7 @@ import Polygon from "./poly.js";
 /**
  * @classdesc
  * a rectangle Object
- * @class
+ * @class Rect
  * @extends me.Polygon
  * @memberOf me
  * @constructor
