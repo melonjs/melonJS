@@ -1,5 +1,5 @@
 /*!
- * melonJS Game Engine - v10.0.1
+ * melonJS Game Engine - v10.0.2
  * http://www.melonjs.org
  * melonjs is licensed under the MIT License.
  * http://www.opensource.org/licenses/mit-license
@@ -10040,7 +10040,7 @@
     /**
      * @classdesc
      * a rectangle Object
-     * @class
+     * @class Rect
      * @extends me.Polygon
      * @memberOf me
      * @constructor
@@ -12555,8 +12555,9 @@
     });
 
     /**
+     * @classdesc
      * A base class for renderable objects.
-     * @class
+     * @class Renderable
      * @extends me.Rect
      * @memberOf me
      * @constructor
@@ -13431,7 +13432,7 @@
     /**
      * @classdesc
      * an ellipse Object
-     * @class
+     * @class Ellipse
      * @extends me.Object
      * @memberOf me
      * @constructor
@@ -15827,7 +15828,7 @@
 
     /**
      * me.Container represents a collection of child objects
-     * @class
+     * @class Container
      * @extends me.Renderable
      * @memberOf me
      * @constructor
@@ -18531,7 +18532,7 @@
     /**
      * @classdesc
      * a generic Color Layer Object.  Fills the entire Canvas with the color not just the container the object belongs to.
-     * @class
+     * @class ColorLayer
      * @extends me.Renderable
      * @memberOf me
      * @constructor
@@ -20322,7 +20323,7 @@
     /**
      * @classdesc
      * An object to display a fixed or animated sprite on screen.
-     * @class
+     * @class Sprite
      * @extends me.Renderable
      * @memberOf me
      * @constructor
@@ -21149,7 +21150,7 @@
     /**
      * @classdesc
      * a line segment Object
-     * @class
+     * @class Line
      * @extends me.Polygon
      * @memberOf me
      * @constructor
@@ -31681,10 +31682,10 @@
          * this can be overridden by the plugin
          * @public
          * @type String
-         * @default "10.0.1"
+         * @default "10.0.2"
          * @name me.plugin.Base#version
          */
-        this.version = "10.0.1";
+        this.version = "10.0.2";
     };
 
     /**
@@ -32729,8 +32730,9 @@
     };
 
     /**
+     * @classdesc
      * a generic system font object.
-     * @class
+     * @class Text
      * @extends me.Renderable
      * @memberOf me
      * @constructor
@@ -33181,8 +33183,9 @@
     };
 
     /**
+     * @classdesc
      * a bitmap font object
-     * @class
+     * @class BitmapText
      * @extends me.Renderable
      * @memberOf me
      * @constructor
@@ -33669,6 +33672,7 @@
      * Class for storing relevant data from the font file.
      * @class me.BitmapTextData
      * @memberOf me
+     * @private
      * @param data {String} - The bitmap font data pulled from the resource loader using me.loader.getBinary()
      * @constructor
      */
@@ -33806,7 +33810,7 @@
     /**
      * @classdesc
      * a generic Image Layer Object
-     * @class
+     * @class ImageLayer
      * @extends me.Renderable
      * @memberOf me
      * @constructor
@@ -34111,11 +34115,12 @@
     }(Sprite));
 
     /**
+     * @classdesc
      * GUI Object<br>
      * A very basic object to manage GUI elements <br>
      * The object simply register on the "pointerdown" <br>
      * or "touchstart" event and call the onClick function"
-     * @class
+     * @class GUI_Object
      * @extends me.Sprite
      * @memberOf me
      * @constructor
@@ -34366,7 +34371,7 @@
     /**
      * @classdesc
      * a basic collectable helper class for immovable object (e.g. a coin)
-     * @class
+     * @class Collectable
      * @extends me.Sprite
      * @memberOf me
      * @constructor
@@ -34410,9 +34415,9 @@
     }(Sprite));
 
     /**
-     * classdesc
+     * @classdesc
      * trigger an event when colliding with another object
-     * @class
+     * @class Trigger
      * @extends me.Renderable
      * @memberOf me
      * @constructor
@@ -34546,8 +34551,9 @@
     }(Renderable));
 
     /**
+     * @classdesc
      * Particle Container Object.
-     * @class
+     * @class ParticleContainer
      * @extends me.Container
      * @memberOf me
      * @constructor
@@ -35205,8 +35211,9 @@
     }(Renderable));
 
     /**
+     * @classdesc
      * Single Particle Object.
-     * @class
+     * @class Particle
      * @extends me.Renderable
      * @memberOf me
      * @constructor
@@ -35384,7 +35391,7 @@
 
     /**
      * a Generic Object Entity
-     * @class
+     * @class Entity
      * @extends me.Renderable
      * @memberOf me
      * @see me.Renderable
@@ -35945,7 +35952,7 @@
      * @name version
      * @type {string}
      */
-    var version = "10.0.1";
+    var version = "10.0.2";
 
 
     /**

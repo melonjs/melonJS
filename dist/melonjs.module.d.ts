@@ -1,6 +1,7 @@
 /**
+ * @classdesc
  * a bitmap font object
- * @class
+ * @class BitmapText
  * @extends me.Renderable
  * @memberOf me
  * @constructor
@@ -157,6 +158,7 @@ export class BitmapText {
  * Class for storing relevant data from the font file.
  * @class me.BitmapTextData
  * @memberOf me
+ * @private
  * @param data {String} - The bitmap font data pulled from the resource loader using me.loader.getBinary()
  * @constructor
  */
@@ -1539,7 +1541,7 @@ export class CanvasRenderer {
 /**
  * @classdesc
  * a basic collectable helper class for immovable object (e.g. a coin)
- * @class
+ * @class Collectable
  * @extends me.Sprite
  * @memberOf me
  * @constructor
@@ -1795,7 +1797,7 @@ export class Color {
 /**
  * @classdesc
  * a generic Color Layer Object.  Fills the entire Canvas with the color not just the container the object belongs to.
- * @class
+ * @class ColorLayer
  * @extends me.Renderable
  * @memberOf me
  * @constructor
@@ -1832,7 +1834,7 @@ export class ColorLayer {
 }
 /**
  * me.Container represents a collection of child objects
- * @class
+ * @class Container
  * @extends me.Renderable
  * @memberOf me
  * @constructor
@@ -2407,7 +2409,7 @@ export class DroptargetEntity {
 /**
  * @classdesc
  * an ellipse Object
- * @class
+ * @class Ellipse
  * @extends me.Object
  * @memberOf me
  * @constructor
@@ -2573,7 +2575,7 @@ export class Ellipse {
 }
 /**
  * a Generic Object Entity
- * @class
+ * @class Entity
  * @extends me.Renderable
  * @memberOf me
  * @see me.Renderable
@@ -2802,11 +2804,12 @@ export class GLShader {
     destroy(): void;
 }
 /**
+ * @classdesc
  * GUI Object<br>
  * A very basic object to manage GUI elements <br>
  * The object simply register on the "pointerdown" <br>
  * or "touchstart" event and call the onClick function"
- * @class
+ * @class GUI_Object
  * @extends me.Sprite
  * @memberOf me
  * @constructor
@@ -2970,7 +2973,7 @@ export class GUI_Object {
 /**
  * @classdesc
  * a generic Image Layer Object
- * @class
+ * @class ImageLayer
  * @extends me.Renderable
  * @memberOf me
  * @constructor
@@ -3073,7 +3076,7 @@ export class ImageLayer {
 /**
  * @classdesc
  * a line segment Object
- * @class
+ * @class Line
  * @extends me.Polygon
  * @memberOf me
  * @constructor
@@ -4260,8 +4263,9 @@ export class ObservableVector3d {
     toString(): string;
 }
 /**
+ * @classdesc
  * Single Particle Object.
- * @class
+ * @class Particle
  * @extends me.Renderable
  * @memberOf me
  * @constructor
@@ -5022,7 +5026,7 @@ export class QuadTree {
 /**
  * @classdesc
  * a rectangle Object
- * @class
+ * @class Rect
  * @extends me.Polygon
  * @memberOf me
  * @constructor
@@ -5260,8 +5264,9 @@ export class Rect {
     toPolygon(): any;
 }
 /**
+ * @classdesc
  * A base class for renderable objects.
- * @class
+ * @class Renderable
  * @extends me.Rect
  * @memberOf me
  * @constructor
@@ -6014,7 +6019,7 @@ export class Renderer {
 /**
  * @classdesc
  * An object to display a fixed or animated sprite on screen.
- * @class
+ * @class Sprite
  * @extends me.Renderable
  * @memberOf me
  * @constructor
@@ -7154,8 +7159,9 @@ export class TMXTilesetGroup {
     public getTilesetByGid(gid: number): any;
 }
 /**
+ * @classdesc
  * a generic system font object.
- * @class
+ * @class Text
  * @extends me.Renderable
  * @memberOf me
  * @constructor
@@ -7405,9 +7411,9 @@ export class Tile {
     public getRenderable(settings?: any): any;
 }
 /**
- * classdesc
+ * @classdesc
  * trigger an event when colliding with another object
- * @class
+ * @class Trigger
  * @extends me.Renderable
  * @memberOf me
  * @constructor
@@ -11821,8 +11827,9 @@ declare function round(num: number, dec?: number): number;
  */
 declare function toBeCloseTo(expected: number, actual: number, precision?: number): boolean;
 /**
+ * @classdesc
  * Particle Container Object.
- * @class
+ * @class ParticleContainer
  * @extends me.Container
  * @memberOf me
  * @constructor
@@ -12865,7 +12872,7 @@ declare class BasePlugin {
      * this can be overridden by the plugin
      * @public
      * @type String
-     * @default "10.0.1"
+     * @default "10.0.2"
      * @name me.plugin.Base#version
      */
     public version: string;
