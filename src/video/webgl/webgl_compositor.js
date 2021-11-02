@@ -435,7 +435,11 @@ class WebGLCompositor {
             var vertexSize = vertex.vertexSize;
 
             // Copy data into stream buffer
-            gl.bufferData(gl.ARRAY_BUFFER, vertex.toFloat32(0, vertexCount * vertexSize), gl.STREAM_DRAW);
+            if (this.renderer.WebGLVersion === 2) {
+                gl.bufferData(gl.ARRAY_BUFFER, vertex.toFloat32(), gl.STREAM_DRAW, 0, vertexCount * vertexSize);
+            } else {
+                gl.bufferData(gl.ARRAY_BUFFER, vertex.toFloat32(0, vertexCount * vertexSize), gl.STREAM_DRAW);
+            }
             // Draw the stream buffer
             gl.drawElements(this.mode, vertexCount / vertex.quadSize * INDICES_PER_QUAD, gl.UNSIGNED_SHORT, 0);
 
@@ -456,6 +460,7 @@ class WebGLCompositor {
     drawVertices(mode, verts, vertexCount = verts.length) {
         var gl = this.gl;
         var vertex = this.vertexBuffer;
+        var vertexSize = vertex.vertexSize;
 
         // use the primitive shader
         this.useShader(this.primitiveShader);
@@ -476,7 +481,11 @@ class WebGLCompositor {
         }
 
         // Copy data into the vertex array buffer
-        gl.bufferData(gl.ARRAY_BUFFER, vertex.toFloat32(0, vertexCount * vertex.vertexSize), gl.STREAM_DRAW);
+        if (this.renderer.WebGLVersion === 2) {
+            gl.bufferData(gl.ARRAY_BUFFER, vertex.toFloat32(), gl.STREAM_DRAW, 0, vertexCount * vertexSize);
+        } else {
+            gl.bufferData(gl.ARRAY_BUFFER, vertex.toFloat32(0, vertexCount * vertexSize), gl.STREAM_DRAW);
+        }
 
         // Draw the stream buffer
         gl.drawArrays(mode, 0, vertexCount);
