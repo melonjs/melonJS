@@ -3,8 +3,8 @@ melonJS 2
 [![Build Status](https://travis-ci.org/melonjs/melonJS.svg)](https://travis-ci.org/melonjs/melonJS)
 [![Language grade: JavaScript](https://img.shields.io/lgtm/grade/javascript/g/melonjs/melonJS.svg?logo=lgtm&logoWidth=18)](https://lgtm.com/projects/g/melonjs/melonJS/context:javascript)
 [![Build Size](https://badgen.net/bundlephobia/min/melonjs)](https://bundlephobia.com/result?p=melonjs)
-[![Dependencies](https://img.shields.io/david/melonjs/melonJS.svg)](https://david-dm.org/melonjs/melonJS)
 [![NPM Package](https://img.shields.io/npm/v/melonjs)](https://www.npmjs.com/package/melonjs)
+[![jsDeliver](https://data.jsdelivr.com/v1/package/npm/melonjs/badge)](https://www.jsdelivr.com/package/npm/melonjs)
 [![Boss Bounty Badge](https://img.shields.io/endpoint.svg?url=https://api.boss.dev/badge/enabled/melonjs/melonJS)](https://www.boss.dev/issues/repo/melonjs/melonJS)
 
 
@@ -169,7 +169,7 @@ If you need to import the ES6 module of melonjs (e.g. for Webpack):
 
     $ import * as me from 'melonjs/dist/melonjs.module.js';
 
-Or can simply be added to your html, through a content delivery network (CDN) URL, using for example :
+Or can simply be added to your html, using [jsDeliver](https://www.jsdelivr.com/package/npm/melonjs) content delivery network (CDN) :
 
 ```html
 <!-- load the ES5 UMD bundle of melonJS v10.0.0 -->
