@@ -551,6 +551,22 @@ class Color {
     }
 
     /**
+     * Pack this color into a Uint32
+     * @name toUint32
+     * @memberOf me.Color
+     * @function
+     * @return {Uint32}
+     */
+    toUint32() {
+        var r = (this.r & 0xff);
+        var g = (this.g & 0xff);
+        var b = (this.b & 0xff);
+        var a = (this.a & 0xff);
+
+        return ((a << 24) | (r << 16) | (g << 8) | b) >>> 0;
+    }
+
+    /**
      * return an array representation of this object
      * @name toArray
      * @memberOf me.Color
@@ -560,6 +576,7 @@ class Color {
     toArray() {
         return this.glArray;
     }
+
 
     /**
      * Get the color in "#RRGGBB" format
