@@ -41,14 +41,6 @@ class WebGLRenderer extends Renderer {
         super(options);
 
         /**
-         * The WebGL context
-         * @name gl
-         * @memberOf me.WebGLRenderer
-         * type {WebGLRenderingContext}
-         */
-        this.context = this.gl = this.getContextGL(this.getScreenCanvas(), options.transparent);
-
-        /**
          * The WebGL version used by this renderer (1 or 2)
          * @name WebGLVersion
          * @memberOf me.WebGLRenderer
@@ -56,7 +48,7 @@ class WebGLRenderer extends Renderer {
          * @default 1
          * @readonly
          */
-        this.webGLVersion = 1;
+        this.WebGLVersion = 1;
 
         /**
          * The vendor string of the underlying graphics driver.
@@ -77,6 +69,14 @@ class WebGLRenderer extends Renderer {
          * @readonly
          */
         this.GPURenderer = null;
+
+        /**
+         * The WebGL context
+         * @name gl
+         * @memberOf me.WebGLRenderer
+         * type {WebGLRenderingContext}
+         */
+        this.context = this.gl = this.getContextGL(this.getScreenCanvas(), options.transparent);
 
         /**
          * Maximum number of texture unit supported under the current context
