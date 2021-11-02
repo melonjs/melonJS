@@ -1,5 +1,6 @@
 import Vector2d from "./../../math/vector2.js";
 import GLShader from "./glshader.js";
+import VertexArrayBuffer from "./buffer/vertex.js";
 import * as event from "./../../system/event.js";
 import { isPowerOfTwo } from "./../../math/math.js";
 
@@ -9,6 +10,13 @@ import quadVertex from "./shaders/quad.vert";
 import quadFragment from "./shaders/quad.frag";
 
 
+// a pool of resuable vectors
+var V_ARRAY = [
+    new Vector2d(),
+    new Vector2d(),
+    new Vector2d(),
+    new Vector2d()
+];
 
 // Handy constants
 var VERTEX_SIZE = 2;
@@ -18,14 +26,31 @@ var COLOR_SIZE = 4;
 var ELEMENT_SIZE = VERTEX_SIZE + REGION_SIZE + COLOR_SIZE;
 var ELEMENT_OFFSET = ELEMENT_SIZE * Float32Array.BYTES_PER_ELEMENT;
 
-var VERTEX_ELEMENT = 0;
-var REGION_ELEMENT = VERTEX_ELEMENT + VERTEX_SIZE;
-var COLOR_ELEMENT = REGION_ELEMENT + REGION_SIZE;
-
 var ELEMENTS_PER_QUAD = 4;
 var INDICES_PER_QUAD = 6;
 
 var MAX_LENGTH = 16000;
+
+/**
+ * Create a full index buffer for the element array
+ * @ignore
+ */
+function createIB() {
+    var indices = [
+        0, 1, 2,
+        2, 1, 3
+    ];
+
+    // ~384KB index buffer
+    var data = new Array(MAX_LENGTH * INDICES_PER_QUAD);
+    for (var i = 0; i < data.length; i++) {
+        data[i] = indices[i % INDICES_PER_QUAD] +
+            ~~(i / INDICES_PER_QUAD) * ELEMENTS_PER_QUAD;
+    }
+
+    return new Uint16Array(data);
+};
+
 
 /**
  * @classdesc
@@ -57,19 +82,11 @@ class WebGLCompositor {
          * @type Number
          * @readonly
          */
-        this.length = 0;
+        //this.length = 0;
 
         // list of active texture units
         this.currentTextureUnit = -1;
         this.boundTextures = [];
-
-        // Vector pool
-        this.v = [
-            new Vector2d(),
-            new Vector2d(),
-            new Vector2d(),
-            new Vector2d()
-        ];
 
         // the associated renderer
         this.renderer = renderer;
@@ -120,7 +137,7 @@ class WebGLCompositor {
         this.addAttribute("aRegion", 2, gl.FLOAT, false, 2 * Float32Array.BYTES_PER_ELEMENT); // 1
         this.addAttribute("aColor",  4, gl.FLOAT, false, 4 * Float32Array.BYTES_PER_ELEMENT); // 2
 
-        // Stream buffer
+        // vertex buffer
         gl.bindBuffer(gl.ARRAY_BUFFER, gl.createBuffer());
         gl.bufferData(
             gl.ARRAY_BUFFER,
@@ -128,17 +145,11 @@ class WebGLCompositor {
             gl.STREAM_DRAW
         );
 
-        this.sbSize = 256;
-        this.sbIndex = 0;
+        this.vertexBuffer = new VertexArrayBuffer(ELEMENT_SIZE, ELEMENTS_PER_QUAD);
 
-        // Quad stream buffer
-        this.stream = new Float32Array(
-            this.sbSize * ELEMENT_SIZE * ELEMENTS_PER_QUAD
-        );
-
-        // Index buffer
+        // Cache index buffer (TODO Remove use for cache by replacing drawElements by drawArrays)
         gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, gl.createBuffer());
-        gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, this.createIB(), gl.STATIC_DRAW);
+        gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, createIB(), gl.STATIC_DRAW);
 
         // register to the CANVAS resize channel
         event.on(event.CANVAS_ONRESIZE, (width, height) => {
@@ -154,9 +165,6 @@ class WebGLCompositor {
      * @ignore
      */
     reset() {
-        this.sbIndex = 0;
-        this.length = 0;
-
         // WebGL context
         this.gl = this.renderer.gl;
 
@@ -322,37 +330,6 @@ class WebGLCompositor {
     }
 
     /**
-     * Create a full index buffer for the element array
-     * @ignore
-     */
-    createIB() {
-        var indices = [
-            0, 1, 2,
-            2, 1, 3
-        ];
-
-        // ~384KB index buffer
-        var data = new Array(MAX_LENGTH * INDICES_PER_QUAD);
-        for (var i = 0; i < data.length; i++) {
-            data[i] = indices[i % INDICES_PER_QUAD] +
-                ~~(i / INDICES_PER_QUAD) * ELEMENTS_PER_QUAD;
-        }
-
-        return new Uint16Array(data);
-    }
-
-    /**
-     * Resize the stream buffer, retaining its original contents
-     * @ignore
-     */
-    resizeSB() {
-        this.sbSize <<= 1;
-        var stream = new Float32Array(this.sbSize * ELEMENT_SIZE * ELEMENTS_PER_QUAD);
-        stream.set(this.stream);
-        this.stream = stream;
-    }
-
-    /**
      * Select the shader to use for compositing
      * @name useShader
      * @see me.GLShader
@@ -396,23 +373,16 @@ class WebGLCompositor {
      * @param {Number} h Destination height
      */
     addQuad(texture, key, x, y, w, h) {
-        //var gl = this.gl;
-        var color = this.color.toArray();
-        var tint = this.tint.toArray();
+        var color = this.color;
 
-        if (color[3] < 1 / 255) {
+        if (color.alpha < 1 / 255) {
             // Fast path: don't send fully transparent quads
             return;
-        } else {
-            // use the global alpha
-            tint[3] = color[3];
         }
 
-        if (this.length >= MAX_LENGTH) {
+        if (this.vertexBuffer.isFull(4)) {
+            // is the vertex buffer full if we add 4 more vertices
             this.flush();
-        }
-        if (this.length >= this.sbSize) {
-            this.resizeSB();
         }
 
         this.useShader(this.quadShader);
@@ -424,10 +394,10 @@ class WebGLCompositor {
 
         // Transform vertices
         var m = this.viewMatrix,
-            v0 = this.v[0].set(x, y),
-            v1 = this.v[1].set(x + w, y),
-            v2 = this.v[2].set(x, y + h),
-            v3 = this.v[3].set(x + w, y + h);
+            v0 = V_ARRAY[0].set(x, y),
+            v1 = V_ARRAY[1].set(x + w, y),
+            v2 = V_ARRAY[2].set(x, y + h),
+            v3 = V_ARRAY[3].set(x + w, y + h);
 
         if (!m.isIdentity()) {
             m.apply(v0);
@@ -436,44 +406,18 @@ class WebGLCompositor {
             m.apply(v3);
         }
 
-        // Array index computation
-        var idx0 = this.sbIndex,
-            idx1 = idx0 + ELEMENT_SIZE,
-            idx2 = idx1 + ELEMENT_SIZE,
-            idx3 = idx2 + ELEMENT_SIZE;
-
-        // Fill vertex buffer
-        // FIXME: Pack each vertex vector into single float
-        this.stream[idx0 + VERTEX_ELEMENT + 0] = v0.x;
-        this.stream[idx0 + VERTEX_ELEMENT + 1] = v0.y;
-        this.stream[idx1 + VERTEX_ELEMENT + 0] = v1.x;
-        this.stream[idx1 + VERTEX_ELEMENT + 1] = v1.y;
-        this.stream[idx2 + VERTEX_ELEMENT + 0] = v2.x;
-        this.stream[idx2 + VERTEX_ELEMENT + 1] = v2.y;
-        this.stream[idx3 + VERTEX_ELEMENT + 0] = v3.x;
-        this.stream[idx3 + VERTEX_ELEMENT + 1] = v3.y;
-
-        // Fill texture coordinates buffer
+        // texture uvs
         var uvs = texture.getUVs(key);
-        // FIXME: Pack each texture coordinate into single floats
-        this.stream[idx0 + REGION_ELEMENT + 0] = uvs[0];
-        this.stream[idx0 + REGION_ELEMENT + 1] = uvs[1];
-        this.stream[idx1 + REGION_ELEMENT + 0] = uvs[2];
-        this.stream[idx1 + REGION_ELEMENT + 1] = uvs[1];
-        this.stream[idx2 + REGION_ELEMENT + 0] = uvs[0];
-        this.stream[idx2 + REGION_ELEMENT + 1] = uvs[3];
-        this.stream[idx3 + REGION_ELEMENT + 0] = uvs[2];
-        this.stream[idx3 + REGION_ELEMENT + 1] = uvs[3];
 
-        // Fill color buffer
-        // FIXME: Pack color vector into single float
-        this.stream.set(tint, idx0 + COLOR_ELEMENT);
-        this.stream.set(tint, idx1 + COLOR_ELEMENT);
-        this.stream.set(tint, idx2 + COLOR_ELEMENT);
-        this.stream.set(tint, idx3 + COLOR_ELEMENT);
+        // texture tint
+        // XX TODO : Pack as UInt32 before passing to shader
+        var tint = this.tint.toArray();
+        tint[3] = color.alpha;
 
-        this.sbIndex += ELEMENT_SIZE * ELEMENTS_PER_QUAD;
-        this.length++;
+        this.vertexBuffer.push(v0.x, v0.y, uvs[0], uvs[1], tint);
+        this.vertexBuffer.push(v1.x, v1.y, uvs[2], uvs[1], tint);
+        this.vertexBuffer.push(v2.x, v2.y, uvs[0], uvs[3], tint);
+        this.vertexBuffer.push(v3.x, v3.y, uvs[2], uvs[3], tint);
     }
 
     /**
@@ -483,27 +427,20 @@ class WebGLCompositor {
      * @function
      */
     flush() {
-        if (this.length) {
+        var vertex = this.vertexBuffer;
+        var vertexCount = vertex.vertexCount;
+
+        if (vertexCount > 0) {
             var gl = this.gl;
+            var vertexSize = vertex.vertexSize;
 
             // Copy data into stream buffer
-            var len = this.length * ELEMENT_SIZE * ELEMENTS_PER_QUAD;
-            gl.bufferData(
-                gl.ARRAY_BUFFER,
-                this.stream.subarray(0, len),
-                gl.STREAM_DRAW
-            );
-
+            gl.bufferData(gl.ARRAY_BUFFER, vertex.toFloat32(0, vertexCount * vertexSize), gl.STREAM_DRAW);
             // Draw the stream buffer
-            gl.drawElements(
-                this.mode,
-                this.length * INDICES_PER_QUAD,
-                gl.UNSIGNED_SHORT,
-                0
-            );
+            gl.drawElements(this.mode, vertexCount / vertex.quadSize * INDICES_PER_QUAD, gl.UNSIGNED_SHORT, 0);
 
-            this.sbIndex = 0;
-            this.length = 0;
+            // clear the vertex buffer
+            vertex.clear();
         }
     }
 
@@ -512,14 +449,13 @@ class WebGLCompositor {
      * @name drawVertices
      * @memberOf me.WebGLCompositor
      * @function
-     * @param {GLENUM} [mode=gl.TRIANGLES] primitive type to render (gl.POINTS, gl.LINE_STRIP, gl.LINE_LOOP, gl.LINES, gl.TRIANGLE_STRIP, gl.TRIANGLE_FAN, gl.TRIANGLES)
-     * @param {me.Vector2d[]} [verts=[]] vertices
+     * @param {GLENUM} mode primitive type to render (gl.POINTS, gl.LINE_STRIP, gl.LINE_LOOP, gl.LINES, gl.TRIANGLE_STRIP, gl.TRIANGLE_FAN, gl.TRIANGLES)
+     * @param {me.Vector2d[]} verts vertices
      * @param {Number} [vertexCount=verts.length] amount of points defined in the points array
      */
-    drawVertices(mode, verts, vertexCount) {
+    drawVertices(mode, verts, vertexCount = verts.length) {
         var gl = this.gl;
-
-        vertexCount = vertexCount || verts.length;
+        var vertex = this.vertexBuffer;
 
         // use the primitive shader
         this.useShader(this.primitiveShader);
@@ -527,28 +463,25 @@ class WebGLCompositor {
         // Set the line color
         this.primitiveShader.setUniform("uColor", this.color);
 
-        // Put vertex data into the stream buffer
-        var offset = 0;
+        // clear the vertex buffer
+        vertex.clear();
+
         var m = this.viewMatrix;
         var m_isIdentity = m.isIdentity();
         for (var i = 0; i < vertexCount; i++) {
             if (!m_isIdentity) {
                 m.apply(verts[i]);
             }
-            this.stream[offset + 0] = verts[i].x;
-            this.stream[offset + 1] = verts[i].y;
-            offset += ELEMENT_SIZE;
+            vertex.push(verts[i].x, verts[i].y);
         }
 
-        // Copy data into the stream buffer
-        gl.bufferData(
-            gl.ARRAY_BUFFER,
-            this.stream.subarray(0, vertexCount * ELEMENT_SIZE),
-            gl.STREAM_DRAW
-        );
+        // Copy data into the vertex array buffer
+        gl.bufferData(gl.ARRAY_BUFFER, vertex.toFloat32(0, vertexCount * vertex.vertexSize), gl.STREAM_DRAW);
 
         // Draw the stream buffer
         gl.drawArrays(mode, 0, vertexCount);
+
+        vertex.clear();
     }
 
     /**

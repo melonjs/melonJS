@@ -924,7 +924,7 @@ class WebGLRenderer extends Renderer {
         }
 
         // calculate all vertices
-        for (i = 0; i < indices.length; i ++ ) {
+        for (i = 0; i < indices.length; i++ ) {
             glPoints[i].set(x + points[indices[i]].x, y + points[indices[i]].y);
         }
 
