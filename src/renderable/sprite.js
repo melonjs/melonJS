@@ -182,7 +182,7 @@ class Sprite extends Renderable {
         // set the default rotation angle is defined in the settings
         // * WARNING: rotating sprites decreases performance with Canvas Renderer
         if (typeof (settings.rotation) !== "undefined") {
-            this.currentTransform.rotate(settings.rotation);
+            this.rotate(settings.rotation);
         }
 
         // update anchorPoint
