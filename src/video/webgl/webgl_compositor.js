@@ -380,12 +380,12 @@ class WebGLCompositor {
             return;
         }
 
+        this.useShader(this.quadShader);
+
         if (this.vertexBuffer.isFull(4)) {
             // is the vertex buffer full if we add 4 more vertices
             this.flush();
         }
-
-        this.useShader(this.quadShader);
 
         // upload and activate the texture if necessary
         var unit = this.uploadTexture(texture);
@@ -426,7 +426,7 @@ class WebGLCompositor {
      * @memberOf me.WebGLCompositor
      * @function
      */
-    flush() {
+    flush(mode = this.mode) {
         var vertex = this.vertexBuffer;
         var vertexCount = vertex.vertexCount;
 
@@ -440,8 +440,15 @@ class WebGLCompositor {
             } else {
                 gl.bufferData(gl.ARRAY_BUFFER, vertex.toFloat32(0, vertexCount * vertexSize), gl.STREAM_DRAW);
             }
+
             // Draw the stream buffer
-            gl.drawElements(this.mode, vertexCount / vertex.quadSize * INDICES_PER_QUAD, gl.UNSIGNED_SHORT, 0);
+            // TODO : finalize the WebGLCompositor implementation (splitting this one into two)
+            // so that different compositor with different attributes/uniforms & drawing method can be used
+            if (this.activeShader === this.primitiveShader) {
+                gl.drawArrays(mode, 0, vertexCount);
+            } else {
+                gl.drawElements(mode, vertexCount / vertex.quadSize * INDICES_PER_QUAD, gl.UNSIGNED_SHORT, 0);
+            }
 
             // clear the vertex buffer
             vertex.clear();
@@ -458,21 +465,15 @@ class WebGLCompositor {
      * @param {Number} [vertexCount=verts.length] amount of points defined in the points array
      */
     drawVertices(mode, verts, vertexCount = verts.length) {
-        var gl = this.gl;
-        var vertex = this.vertexBuffer;
-        var vertexSize = vertex.vertexSize;
-
         // use the primitive shader
         this.useShader(this.primitiveShader);
-
         // Set the line color
         this.primitiveShader.setUniform("uColor", this.color);
 
-        // clear the vertex buffer
-        vertex.clear();
-
         var m = this.viewMatrix;
+        var vertex = this.vertexBuffer;
         var m_isIdentity = m.isIdentity();
+
         for (var i = 0; i < vertexCount; i++) {
             if (!m_isIdentity) {
                 m.apply(verts[i]);
@@ -480,17 +481,8 @@ class WebGLCompositor {
             vertex.push(verts[i].x, verts[i].y);
         }
 
-        // Copy data into the vertex array buffer
-        if (this.renderer.WebGLVersion === 2) {
-            gl.bufferData(gl.ARRAY_BUFFER, vertex.toFloat32(), gl.STREAM_DRAW, 0, vertexCount * vertexSize);
-        } else {
-            gl.bufferData(gl.ARRAY_BUFFER, vertex.toFloat32(0, vertexCount * vertexSize), gl.STREAM_DRAW);
-        }
-
-        // Draw the stream buffer
-        gl.drawArrays(mode, 0, vertexCount);
-
-        vertex.clear();
+        // flush
+        this.flush(mode);
     }
 
     /**
