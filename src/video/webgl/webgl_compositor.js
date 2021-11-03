@@ -250,8 +250,8 @@ class WebGLCompositor {
         var gl = this.gl;
         var isPOT = isPowerOfTwo(w || image.width) && isPowerOfTwo(h || image.height);
         var texture = gl.createTexture();
-        var rs = (repeat.search(/^repeat(-x)?$/) === 0) && (isPOT || this.renderer.WebGLVersion === 2) ? gl.REPEAT : gl.CLAMP_TO_EDGE;
-        var rt = (repeat.search(/^repeat(-y)?$/) === 0) && (isPOT || this.renderer.WebGLVersion === 2) ? gl.REPEAT : gl.CLAMP_TO_EDGE;
+        var rs = (repeat.search(/^repeat(-x)?$/) === 0) && (isPOT || this.renderer.WebGLVersion > 1) ? gl.REPEAT : gl.CLAMP_TO_EDGE;
+        var rt = (repeat.search(/^repeat(-y)?$/) === 0) && (isPOT || this.renderer.WebGLVersion > 1) ? gl.REPEAT : gl.CLAMP_TO_EDGE;
 
         this.setTexture2D(texture, unit);
 
@@ -435,7 +435,7 @@ class WebGLCompositor {
             var vertexSize = vertex.vertexSize;
 
             // Copy data into stream buffer
-            if (this.renderer.WebGLVersion === 2) {
+            if (this.renderer.WebGLVersion > 1) {
                 gl.bufferData(gl.ARRAY_BUFFER, vertex.toFloat32(), gl.STREAM_DRAW, 0, vertexCount * vertexSize);
             } else {
                 gl.bufferData(gl.ARRAY_BUFFER, vertex.toFloat32(0, vertexCount * vertexSize), gl.STREAM_DRAW);
