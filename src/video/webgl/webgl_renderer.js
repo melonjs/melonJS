@@ -354,14 +354,17 @@ class WebGLRenderer extends Renderer {
         this.currentCompositor.uploadTexture(this.fontTexture, 0, 0, 0, true);
 
         // Add the new quad
-        var key = bounds.left + "," + bounds.top + "," + bounds.width + "," + bounds.height;
+        var uvs = this.fontTexture.getUVs(bounds.left + "," + bounds.top + "," + bounds.width + "," + bounds.height);
         this.currentCompositor.addQuad(
             this.fontTexture,
-            key,
             bounds.left,
             bounds.top,
             bounds.width,
-            bounds.height
+            bounds.height,
+            uvs[0],
+            uvs[1],
+            uvs[2],
+            uvs[3]
         );
 
         // Clear font context2D
@@ -421,8 +424,9 @@ class WebGLRenderer extends Renderer {
             dy |= 0;
         }
 
-        var key = sx + "," + sy + "," + sw + "," + sh;
-        this.currentCompositor.addQuad(this.cache.get(image), key, dx, dy, dw, dh);
+        var texture = this.cache.get(image);
+        var uvs = texture.getUVs(sx + "," + sy + "," + sw + "," + sh);
+        this.currentCompositor.addQuad(texture, dx, dy, dw, dh, uvs[0], uvs[1], uvs[2], uvs[3]);
     }
 
     /**
@@ -438,8 +442,8 @@ class WebGLRenderer extends Renderer {
      * @see me.WebGLRenderer#createPattern
      */
     drawPattern(pattern, x, y, width, height) {
-        var key = "0,0," + width + "," + height;
-        this.currentCompositor.addQuad(pattern, key, x, y, width, height);
+        var uvs = pattern.getUVs("0,0," + width + "," + height);
+        this.currentCompositor.addQuad(pattern, x, y, width, height, uvs[0], uvs[1], uvs[2], uvs[3]);
     }
 
 

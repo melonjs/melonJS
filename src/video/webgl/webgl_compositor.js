@@ -366,13 +366,16 @@ class WebGLCompositor {
      * @memberOf me.WebGLCompositor
      * @function
      * @param {me.Renderer.Texture} texture Source texture
-     * @param {String} key Source texture region name
      * @param {Number} x Destination x-coordinate
      * @param {Number} y Destination y-coordinate
      * @param {Number} w Destination width
      * @param {Number} h Destination height
+     * @param {number} u0 Texture UV (u0) value.
+     * @param {number} v0 Texture UV (v0) value.
+     * @param {number} u1 Texture UV (u1) value.
+     * @param {number} v1 Texture UV (v1) value.
      */
-    addQuad(texture, key, x, y, w, h) {
+    addQuad(texture, x, y, w, h, u0, v0, u1, v1) {
         var color = this.color;
 
         if (color.alpha < 1 / 255) {
@@ -394,30 +397,27 @@ class WebGLCompositor {
 
         // Transform vertices
         var m = this.viewMatrix,
-            v0 = V_ARRAY[0].set(x, y),
-            v1 = V_ARRAY[1].set(x + w, y),
-            v2 = V_ARRAY[2].set(x, y + h),
-            v3 = V_ARRAY[3].set(x + w, y + h);
+            vec0 = V_ARRAY[0].set(x, y),
+            vec1 = V_ARRAY[1].set(x + w, y),
+            vec2 = V_ARRAY[2].set(x, y + h),
+            vec3 = V_ARRAY[3].set(x + w, y + h);
 
         if (!m.isIdentity()) {
-            m.apply(v0);
-            m.apply(v1);
-            m.apply(v2);
-            m.apply(v3);
+            m.apply(vec0);
+            m.apply(vec1);
+            m.apply(vec2);
+            m.apply(vec3);
         }
-
-        // texture uvs
-        var uvs = texture.getUVs(key);
 
         // texture tint
         // XX TODO : Pack as UInt32 before passing to shader
         var tint = this.tint.toArray();
         tint[3] = color.alpha;
 
-        this.vertexBuffer.push(v0.x, v0.y, uvs[0], uvs[1], tint);
-        this.vertexBuffer.push(v1.x, v1.y, uvs[2], uvs[1], tint);
-        this.vertexBuffer.push(v2.x, v2.y, uvs[0], uvs[3], tint);
-        this.vertexBuffer.push(v3.x, v3.y, uvs[2], uvs[3], tint);
+        this.vertexBuffer.push(vec0.x, vec0.y, u0, v0, tint);
+        this.vertexBuffer.push(vec1.x, vec1.y, u1, v0, tint);
+        this.vertexBuffer.push(vec2.x, vec2.y, u0, v1, tint);
+        this.vertexBuffer.push(vec3.x, vec3.y, u1, v1, tint);
     }
 
     /**

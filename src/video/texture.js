@@ -282,10 +282,10 @@ export class Texture {
             var sh = atlas[frame].height;
 
             atlas[frame].uvs = new Float32Array([
-                s.x / w,        // Left
-                s.y / h,        // Top
-                (s.x + sw) / w, // Right
-                (s.y + sh) / h  // Bottom
+                s.x / w,        // u0 (left)
+                s.y / h,        // v0 (top)
+                (s.x + sw) / w, // u1 (right)
+                (s.y + sh) / h  // v1 (bottom)
             ]);
             // Cache source coordinates
             // TODO: Remove this when the Batcher only accepts a region name
