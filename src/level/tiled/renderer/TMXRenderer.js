@@ -2,7 +2,7 @@
 
 import pool from "./../../../system/pooling.js";
 import TMXLayer from "./../TMXLayer.js";
-import Bounds from "./../../../physics/Bounds.js";
+import Bounds from "./../../../physics/bounds.js";
 
 /**
  * @classdesc

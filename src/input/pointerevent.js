@@ -14,7 +14,6 @@ import Container from "./../renderable/container.js";
 import Renderable from "./../renderable/renderable.js";
 import { world, viewport } from "./../game.js";
 
-
 /**
  * A pool of `Pointer` objects to cache pointer/touch event coordinates.
  * @type {Array.<Vector>}
@@ -108,95 +107,6 @@ function registerEventListener(eventList, callback) {
         if (POINTER_MOVE.indexOf(eventList[x]) === -1) {
             pointerEventTarget.addEventListener(eventList[x], callback, { passive: (preventDefault === false) });
         }
-    }
-}
-
-/**
- * enable pointer event (Pointer/Mouse/Touch)
- * @ignore
- */
-function enablePointerEvent() {
-    if (!pointerInitialized) {
-
-        // the current pointer area
-        currentPointer = new Rect(0, 0, 1, 1);
-
-        pointer = new Pointer(0, 0, 1, 1);
-
-        // instantiate a pool of pointer catched
-        for (var v = 0; v < device.maxTouchPoints; v++) {
-            T_POINTERS.push(new Pointer());
-        }
-
-        if (pointerEventTarget === null) {
-            // default pointer event target
-            pointerEventTarget = renderer.getScreenCanvas();
-        }
-
-        if (device.PointerEvent) {
-            // standard Pointer Events
-            activeEventList = pointerEventList;
-        } else {
-            // Regular Mouse events
-            activeEventList = mouseEventList;
-        }
-        if (device.touch && !device.PointerEvent) {
-            // touch event on mobile devices
-            activeEventList = activeEventList.concat(touchEventList);
-        }
-        registerEventListener(activeEventList, onPointerEvent);
-
-        // set the PointerMove/touchMove/MouseMove event
-        if (typeof(throttlingInterval) === "undefined") {
-            // set the default value
-            throttlingInterval = ~~(1000 / timer.maxfps);
-        }
-
-        if (device.autoFocus === true) {
-            device.focus();
-            pointerEventTarget.addEventListener(
-                activeEventList[2], // MOUSE/POINTER DOWN
-                function () {
-                    device.focus();
-                },
-                { passive: (preventDefault === false) }
-            );
-        }
-
-        // if time interval <= 16, disable the feature
-        var i;
-        var events = findAllActiveEvents(activeEventList, POINTER_MOVE);
-        if (throttlingInterval < 17) {
-            for (i = 0; i < events.length; i++) {
-                if (activeEventList.indexOf(events[i]) !== -1) {
-                    pointerEventTarget.addEventListener(
-                        events[i],
-                        onMoveEvent,
-                        { passive: true } // do not preventDefault on Move events
-                    );
-                }
-
-            }
-        }
-        else {
-            for (i = 0; i < events.length; i++) {
-                if (activeEventList.indexOf(events[i]) !== -1) {
-                    pointerEventTarget.addEventListener(
-                        events[i],
-                        fctUtil.throttle(
-                            onMoveEvent,
-                            throttlingInterval,
-                            false
-                        ),
-                        { passive: true } // do not preventDefault on Move events
-                    );
-                }
-            }
-        }
-        // disable all gesture by default
-        setTouchAction(pointerEventTarget);
-
-        pointerInitialized = true;
     }
 }
 
@@ -764,3 +674,106 @@ export function releaseAllPointerEvents(region) {
         }
     };
 };
+
+/**
+ * enable pointer event (Pointer/Mouse/Touch)
+ *
+ * me.video.init()
+ * // ...
+ * me.input.enablePointEvents()
+ * // ...
+ * me.state.change(me.state.MENU)
+ *
+ */
+export function enablePointerEvents() {
+    if (!pointerInitialized) {
+
+        // the current pointer area
+        currentPointer = new Rect(0, 0, 1, 1);
+
+        pointer = new Pointer(0, 0, 1, 1);
+
+        // instantiate a pool of pointer catched
+        for (var v = 0; v < device.maxTouchPoints; v++) {
+            T_POINTERS.push(new Pointer());
+        }
+
+        if (pointerEventTarget === null) {
+            // default pointer event target
+            pointerEventTarget = renderer.getScreenCanvas();
+        }
+
+        if (device.PointerEvent) {
+            // standard Pointer Events
+            activeEventList = pointerEventList;
+        } else {
+            // Regular Mouse events
+            activeEventList = mouseEventList;
+        }
+        if (device.touch && !device.PointerEvent) {
+            // touch event on mobile devices
+            activeEventList = activeEventList.concat(touchEventList);
+        }
+        registerEventListener(activeEventList, onPointerEvent);
+
+        // set the PointerMove/touchMove/MouseMove event
+        if (typeof(throttlingInterval) === "undefined") {
+            // set the default value
+            throttlingInterval = ~~(1000 / timer.maxfps);
+        }
+
+        if (device.autoFocus === true) {
+            device.focus();
+            pointerEventTarget.addEventListener(
+                activeEventList[2], // MOUSE/POINTER DOWN
+                function () {
+                    device.focus();
+                },
+                { passive: (preventDefault === false) }
+            );
+        }
+
+        // if time interval <= 16, disable the feature
+        var i;
+        var events = findAllActiveEvents(activeEventList, POINTER_MOVE);
+        if (throttlingInterval < 17) {
+            for (i = 0; i < events.length; i++) {
+                if (activeEventList.indexOf(events[i]) !== -1) {
+                    pointerEventTarget.addEventListener(
+                        events[i],
+                        onMoveEvent,
+                        { passive: true } // do not preventDefault on Move events
+                    );
+                }
+
+            }
+        }
+        else {
+            for (i = 0; i < events.length; i++) {
+                if (activeEventList.indexOf(events[i]) !== -1) {
+                    pointerEventTarget.addEventListener(
+                        events[i],
+                        fctUtil.throttle(
+                            onMoveEvent,
+                            throttlingInterval,
+                            false
+                        ),
+                        { passive: true } // do not preventDefault on Move events
+                    );
+                }
+            }
+        }
+        // disable all gesture by default
+        setTouchAction(pointerEventTarget);
+
+        pointerInitialized = true;
+    }
+}
+
+/**
+ * this is a backwards compatibility definition so any code using enablePointerEvent internally does not break
+ *
+ * @deprecated
+ * @type {enablePointerEvents}
+ */
+const enablePointerEvent = enablePointerEvents;
