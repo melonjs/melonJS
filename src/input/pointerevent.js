@@ -680,7 +680,7 @@ export function releaseAllPointerEvents(region) {
  *
  * me.video.init()
  * // ...
- * me.input.enablePointEvents()
+ * me.input.enablePointerEvents()
  * // ...
  * me.state.change(me.state.MENU)
  *
