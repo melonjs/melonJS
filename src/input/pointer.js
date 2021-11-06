@@ -1,25 +1,25 @@
 import Vector2d from "./../math/vector2.js";
 import device from "./../system/device.js";
-import Rect from "./../shapes/rectangle.js";
+import Bounds from "./../physics/bounds.js";
 import { viewport } from "./../game.js";
 import { globalToLocal } from "./input.js";
 
 
 /**
- * cache value for the offset of the canvas position within the page
+ * a temporary vector object
  * @ignore
  */
-var viewportOffset = new Vector2d();
+var tmpVec = new Vector2d();
 
 /**
  * @classdesc
  * a pointer object, representing a single finger on a touch enabled device.
  * @class
- * @extends me.Rect
+ * @extends me.Bounds
  * @memberOf me
  * @constructor
  */
-class Pointer extends Rect {
+class Pointer extends Bounds {
 
     /**
      * @ignore
@@ -27,7 +27,10 @@ class Pointer extends Rect {
     constructor(x = 0, y = 0, w = 1, h = 1) {
 
         // parent constructor
-        super(x, y, w, h);
+        super();
+
+        // initial coordinates/size
+        this.setMinMax(x, y, x + w, y + h);
 
         /**
          * constant for left button
@@ -280,9 +283,6 @@ class Pointer extends Rect {
      * @param {Number} [pointedId=1] the Pointer, Touch or Mouse event Id (1)
      */
     setEvent(event, pageX = 0, pageY = 0, clientX = 0, clientY = 0, pointerId = 1) {
-        var width = 1;
-        var height = 1;
-
         // the original event object
         this.event = event;
 
@@ -292,7 +292,9 @@ class Pointer extends Rect {
         this.clientY = clientY;
 
         // translate to local coordinates
-        globalToLocal(this.pageX, this.pageY, this.pos);
+        globalToLocal(this.pageX, this.pageY, tmpVec);
+        this.gameScreenX = this.x = tmpVec.x;
+        this.gameScreenY = this.y = tmpVec.y;
 
         // true if not originally a pointer event
         this.isNormalized = !device.PointerEvent || (device.PointerEvent && !(event instanceof window.PointerEvent));
@@ -318,30 +320,29 @@ class Pointer extends Rect {
 
         this.type = event.type;
 
-        this.gameScreenX = this.pos.x;
-        this.gameScreenY = this.pos.y;
+
 
         // get the current screen to game world offset
         if (typeof viewport !== "undefined") {
-            viewport.localToWorld(this.gameScreenX, this.gameScreenY, viewportOffset);
+            viewport.localToWorld(this.gameScreenX, this.gameScreenY, tmpVec);
         }
 
         /* Initialize the two coordinate space properties. */
-        this.gameWorldX = viewportOffset.x;
-        this.gameWorldY = viewportOffset.y;
+        this.gameWorldX = tmpVec.x;
+        this.gameWorldY = tmpVec.y;
 
         // get the pointer size
         if (this.isNormalized === false) {
             // native PointerEvent
-            width = event.width || 1;
-            height = event.height || 1;
+            this.width = event.width || 1;
+            this.height = event.height || 1;
         } else if (typeof(event.radiusX) === "number") {
             // TouchEvent
-            width = (event.radiusX * 2) || 1;
-            height = (event.radiusY * 2) || 1;
+            this.width = (event.radiusX * 2) || 1;
+            this.height = (event.radiusY * 2) || 1;
+        } else {
+            this.width = this.height = 1;
         }
-        // resize the pointer object accordingly
-        this.resize(width, height);
     }
 };
 

@@ -297,7 +297,7 @@ class TMXLayer extends Renderable {
      * // get the TMX Map Layer called "Front layer"
      * var layer = me.game.world.getChildByName("Front Layer")[0];
      * // get the tile object corresponding to the latest pointer position
-     * var tile = layer.getTile(me.input.pointer.pos.x, me.input.pointer.pos.y);
+     * var tile = layer.getTile(me.input.pointer.x, me.input.pointer.y);
      */
     getTile(x, y) {
         var tile = null;

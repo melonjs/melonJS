@@ -121,8 +121,6 @@ function enablePointerEvent() {
         // the current pointer area
         currentPointer = new Rect(0, 0, 1, 1);
 
-        pointer = new Pointer(0, 0, 1, 1);
-
         // instantiate a pool of pointer catched
         for (var v = 0; v < device.maxTouchPoints; v++) {
             T_POINTERS.push(new Pointer());
@@ -513,7 +511,7 @@ function onPointerEvent(e) {
  * @name pointer
  * @memberOf me.input
  */
-export var pointer;
+export var pointer = new Pointer(0, 0, 1, 1);
 
 /**
  * time interval for event throttling in milliseconds<br>
@@ -535,8 +533,8 @@ export var throttlingInterval;
  * @function
  * @param {Number} x the global x coordinate to be translated.
  * @param {Number} y the global y coordinate to be translated.
- * @param {Number} [v] an optional vector object where to set the
- * @return {me.Vector2d} A vector object with the corresponding translated coordinates.
+ * @param {me.Vector2d} [v] an optional vector object where to set the translated coordinates
+ * @return {me.Vector2d} A vector object with the corresponding translated coordinates
  * @example
  * onMouseEvent : function (pointer) {
  *    // convert the given into local (viewport) relative coordinates

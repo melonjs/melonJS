@@ -1,5 +1,13 @@
 # Changelog
 
+## [10.1.0] (melonJS 2) - _2021-XX-XX_
+
+### Changed
+- Input: refactor me.Pointer by extending me.Bounds instead of me.Rect (simplify implementation and memory usage when using pointer Event)
+
+### Fixed
+- Input: fix a regression, throwing an undefined property exception, when accessing me.input.pointer before registering on any events (thanks @kkeiper1103)
+
 ## [10.0.2] (melonJS 2) - _2021-10-29_
 
 ### Fixed
