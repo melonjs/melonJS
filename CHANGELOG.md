@@ -1,6 +1,6 @@
 # Changelog
 
-## [10.1.0] (melonJS 2) - _2021-XX-XX_
+## [10.1.0] (melonJS 2) - _2021-11-08_
 
 ### Changed
 - Input: refactor me.Pointer by extending me.Bounds instead of me.Rect (simplify implementation and memory usage when using pointer Event)
@@ -1017,6 +1017,9 @@
 - first public version with alex4 !
 - www.melonjs.org is live :)
 
+[10.1.0]: https://github.com/melonjs/melonJS/compare/10.0.2...10.1.0
+[10.0.2]: https://github.com/melonjs/melonJS/compare/10.0.1...10.0.2
+[10.0.1]: https://github.com/melonjs/melonJS/compare/10.0.0...10.0.1
 [10.0.0]: https://github.com/melonjs/melonJS/compare/9.1.2...10.0.0
 [9.1.2]: https://github.com/melonjs/melonJS/compare/9.1.1...9.1.2
 [9.1.1]: https://github.com/melonjs/melonJS/compare/9.1.0...9.1.1
