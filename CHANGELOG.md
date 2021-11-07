@@ -4,9 +4,13 @@
 
 ### Changed
 - Input: refactor me.Pointer by extending me.Bounds instead of me.Rect (simplify implementation and memory usage when using pointer Event)
+- WebGL: refactor/simplify the WebGLCompositor implementation to be more generic ()
+- WebGL: prevent temporary Array Buffer Allocation when using WebGL2
+- WebGL: tint color are now packed into Uint32 before passing them to the Vertex Shader
 
 ### Fixed
 - Input: fix a regression, throwing an undefined property exception, when accessing me.input.pointer before registering on any events (thanks @kkeiper1103)
+- WebGL: fix initial declaration of the WebGLVersion property
 
 ## [10.0.2] (melonJS 2) - _2021-10-29_
 
