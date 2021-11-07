@@ -97,9 +97,6 @@ class WebGLCompositor {
         // Global fill color
         this.color = renderer.currentColor;
 
-        // Global tint color
-        this.tint = renderer.currentTint;
-
         // Global transformation matrix
         this.viewMatrix = renderer.currentTransform;
 
@@ -135,7 +132,7 @@ class WebGLCompositor {
         /// define all vertex attributes
         this.addAttribute("aVertex", 2, gl.FLOAT, false, 0 * Float32Array.BYTES_PER_ELEMENT); // 0
         this.addAttribute("aRegion", 2, gl.FLOAT, false, 2 * Float32Array.BYTES_PER_ELEMENT); // 1
-        this.addAttribute("aColor",  4, gl.FLOAT, false, 4 * Float32Array.BYTES_PER_ELEMENT); // 2
+        this.addAttribute("aColor",  4, gl.UNSIGNED_BYTE, true, 4 * Float32Array.BYTES_PER_ELEMENT); // 2
 
         // vertex buffer
         gl.bindBuffer(gl.ARRAY_BUFFER, gl.createBuffer());
@@ -202,7 +199,7 @@ class WebGLCompositor {
      * @param {String} name name of the attribute in the vertex shader
      * @param {Number} size number of components per vertex attribute. Must be 1, 2, 3, or 4.
      * @param {GLenum} type data type of each component in the array
-     * @param {Boolean} normalized whether integer data values should be normalized into a certain
+     * @param {Boolean} normalized whether integer data values should be normalized into a certain range when being cast to a float
      * @param {Number} offset offset in bytes of the first component in the vertex attribute array
      */
     addAttribute(name, size, type, normalized, offset) {
@@ -374,11 +371,11 @@ class WebGLCompositor {
      * @param {number} v0 Texture UV (v0) value.
      * @param {number} u1 Texture UV (u1) value.
      * @param {number} v1 Texture UV (v1) value.
+     * @param {number} tint tint color to be applied to the texture in UINT32 format
      */
-    addQuad(texture, x, y, w, h, u0, v0, u1, v1) {
-        var color = this.color;
+    addQuad(texture, x, y, w, h, u0, v0, u1, v1, tint) {
 
-        if (color.alpha < 1 / 255) {
+        if (this.color.alpha < 1 / 255) {
             // Fast path: don't send fully transparent quads
             return;
         }
@@ -408,11 +405,6 @@ class WebGLCompositor {
             m.apply(vec2);
             m.apply(vec3);
         }
-
-        // texture tint
-        // XX TODO : Pack as UInt32 before passing to shader
-        var tint = this.tint.toArray();
-        tint[3] = color.alpha;
 
         this.vertexBuffer.push(vec0.x, vec0.y, u0, v0, tint);
         this.vertexBuffer.push(vec1.x, vec1.y, u1, v0, tint);

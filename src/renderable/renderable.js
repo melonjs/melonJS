@@ -739,8 +739,8 @@ class Renderable extends Rect {
         // offset by the anchor point
         renderer.translate(-ax, -ay);
 
-        // apply the defined tint, if any
-        renderer.setTint(this.tint);
+        // apply the current tint and opacity
+        renderer.setTint(this.tint, this.getOpacity());
     }
 
     /**

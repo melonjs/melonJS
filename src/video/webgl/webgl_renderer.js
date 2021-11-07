@@ -364,7 +364,8 @@ class WebGLRenderer extends Renderer {
             uvs[0],
             uvs[1],
             uvs[2],
-            uvs[3]
+            uvs[3],
+            this.currentTint.toUint32()
         );
 
         // Clear font context2D
@@ -426,7 +427,7 @@ class WebGLRenderer extends Renderer {
 
         var texture = this.cache.get(image);
         var uvs = texture.getUVs(sx + "," + sy + "," + sw + "," + sh);
-        this.currentCompositor.addQuad(texture, dx, dy, dw, dh, uvs[0], uvs[1], uvs[2], uvs[3]);
+        this.currentCompositor.addQuad(texture, dx, dy, dw, dh, uvs[0], uvs[1], uvs[2], uvs[3], this.currentTint.toUint32());
     }
 
     /**
@@ -443,7 +444,7 @@ class WebGLRenderer extends Renderer {
      */
     drawPattern(pattern, x, y, width, height) {
         var uvs = pattern.getUVs("0,0," + width + "," + height);
-        this.currentCompositor.addQuad(pattern, x, y, width, height, uvs[0], uvs[1], uvs[2], uvs[3]);
+        this.currentCompositor.addQuad(pattern, x, y, width, height, uvs[0], uvs[1], uvs[2], uvs[3], this.currentTint.toUint32());
     }
 
 
@@ -657,7 +658,7 @@ class WebGLRenderer extends Renderer {
      * @param {Number} alpha 0.0 to 1.0 values accepted.
      */
     setGlobalAlpha(a) {
-        this.currentColor.glArray[3] = a;
+        this.currentColor.alpha = a;
     }
 
     /**
@@ -669,9 +670,9 @@ class WebGLRenderer extends Renderer {
      * @param {me.Color|String} color css color string.
      */
     setColor(color) {
-        var alpha = this.currentColor.glArray[3];
+        var alpha = this.currentColor.alpha;
         this.currentColor.copy(color);
-        this.currentColor.glArray[3] *= alpha;
+        this.currentColor.alpha *= alpha;
     }
 
     /**

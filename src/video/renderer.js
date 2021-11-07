@@ -422,11 +422,13 @@ class Renderer {
      * @name setTint
      * @memberOf me.Renderer.prototype
      * @function
-     * @param {me.Color} [tint] the tint color
+     * @param {me.Color} tint the tint color
+     * @param {Number} [alpha] an alpha value to be applied to the tint
      */
-    setTint(tint) {
+    setTint(tint, alpha = tint.alpha) {
         // global tint color
         this.currentTint.copy(tint);
+        this.currentTint.alpha *= alpha;
     }
 
     /**

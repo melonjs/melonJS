@@ -18,9 +18,11 @@ class VertexArrayBuffer {
         this.vertexCount = 0;
 
         // the actual vertex data buffer
-        this.buffer = new Float32Array(this.maxVertex * this.vertexSize * this.quadSize);
-        // a Uint8 view of the vertex data array buffer
-        this.bytes = new Uint8Array(this.buffer);
+        this.buffer = new ArrayBuffer(this.maxVertex * this.vertexSize * this.quadSize);
+        // Float32 and Uint32 view of the vertex data array buffer
+        this.bufferF32 = new Float32Array(this.buffer);
+        this.bufferU32 = new Uint32Array(this.buffer);
+
 
         return this;
     }
@@ -31,6 +33,7 @@ class VertexArrayBuffer {
     clear() {
         this.vertexCount = 0;
     }
+
 
     /**
      * return true if full
@@ -43,11 +46,19 @@ class VertexArrayBuffer {
      * resize the vertex buffer, retaining its original contents
      */
     resize() {
+        // double the vertex size
         this.maxVertex <<= 1;
-        var data = new Float32Array(this.maxVertex * this.vertexSize * this.quadSize);
-        data.set(this.buffer);
-        this.buffer = data;
-        this.bytes = new Uint8Array(this.buffer);
+        // save a reference to the previous data
+        var data = this.bufferF32;
+
+        // recreate ArrayBuffer and views
+        this.buffer = new ArrayBuffer(this.maxVertex * this.vertexSize * this.quadSize);
+        this.bufferF32 = new Float32Array(this.buffer);
+        this.bufferU32 = new Uint32Array(this.buffer);
+
+        // copy previous data
+        this.bufferF32.set(data);
+
         return this;
     }
 
@@ -55,26 +66,22 @@ class VertexArrayBuffer {
      * push a new vertex to the buffer
      */
     push(x, y, u, v, tint) {
-        var buffer = this.buffer;
         var offset = this.vertexCount * this.vertexSize;
 
         if (this.vertexCount >= this.maxVertex) {
             this.resize();
         }
 
-        buffer[offset + 0] = x;
-        buffer[offset + 1] = y;
+        this.bufferF32[offset + 0] = x;
+        this.bufferF32[offset + 1] = y;
 
         if (typeof u !== "undefined") {
-            buffer[offset + 2] = u;
-            buffer[offset + 3] = v;
+            this.bufferF32[offset + 2] = u;
+            this.bufferF32[offset + 3] = v;
         }
 
         if (typeof tint !== "undefined") {
-            buffer[offset + 4] = tint[0];
-            buffer[offset + 5] = tint[1];
-            buffer[offset + 6] = tint[2];
-            buffer[offset + 7] = tint[3];
+            this.bufferU32[offset + 4] = tint;
         }
 
         this.vertexCount++;
@@ -87,20 +94,20 @@ class VertexArrayBuffer {
      */
     toFloat32(begin, end) {
         if (typeof end !== "undefined") {
-            return this.buffer.subarray(begin, end);
+            return this.bufferF32.subarray(begin, end);
         } else {
-            return this.buffer;
+            return this.bufferF32;
         }
     }
 
     /**
-     * return a reference to the data in Uint8 format
+     * return a reference to the data in Uint32 format
      */
-    toUint8(begin, end) {
+    toUint32(begin, end) {
         if (typeof end !== "undefined") {
-            return this.bytes.subarray(begin, end);
+            return this.bufferU32.subarray(begin, end);
         } else {
-            return this.bytes;
+            return this.bufferU32;
         }
     }
 
