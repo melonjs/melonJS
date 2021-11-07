@@ -202,7 +202,7 @@ class Color {
     }
 
     /**
-     * Color Red Component
+     * Color Red Component [0 .. 255]
      * @type Number
      * @name r
      * @readonly
@@ -224,7 +224,7 @@ class Color {
 
 
     /**
-     * Color Green Component
+     * Color Green Component [0 .. 255]
      * @type Number
      * @name g
      * @readonly
@@ -246,7 +246,7 @@ class Color {
 
 
     /**
-     * Color Blue Component
+     * Color Blue Component [0 .. 255]
      * @type Number
      * @name b
      * @readonly
@@ -266,7 +266,7 @@ class Color {
     }
 
     /**
-     * Color Alpha Component
+     * Color Alpha Component [0.0 .. 1.0]
      * @type Number
      * @name alpha
      * @readonly
@@ -551,19 +551,20 @@ class Color {
     }
 
     /**
-     * Pack this color into a Uint32
+     * Pack this color into a Uint32 ARGB representation
      * @name toUint32
      * @memberOf me.Color
      * @function
+     * @param {Number} [alpha=1.0] alpha value [0.0 .. 1.0]
      * @return {Uint32}
      */
-    toUint32() {
-        var r = (this.r & 0xff);
-        var g = (this.g & 0xff);
-        var b = (this.b & 0xff);
-        var a = (this.a & 0xff);
+    toUint32(alpha = this.alpha) {
+        var ur = this.r & 0xff;
+        var ug = this.g & 0xff;
+        var ub = this.b & 0xff;
+        var ua = (alpha * 255) & 0xff;
 
-        return ((a << 24) | (r << 16) | (g << 8) | b) >>> 0;
+        return (ua << 24) + (ur << 16) + (ug << 8) + ub;
     }
 
     /**
