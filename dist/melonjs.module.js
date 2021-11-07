@@ -1,5 +1,5 @@
 /*!
- * melonJS Game Engine - v10.0.2
+ * melonJS Game Engine - v10.1.0
  * http://www.melonjs.org
  * melonjs is licensed under the MIT License.
  * http://www.opensource.org/licenses/mit-license
@@ -1500,7 +1500,7 @@ class Color {
     }
 
     /**
-     * Color Red Component
+     * Color Red Component [0 .. 255]
      * @type Number
      * @name r
      * @readonly
@@ -1522,7 +1522,7 @@ class Color {
 
 
     /**
-     * Color Green Component
+     * Color Green Component [0 .. 255]
      * @type Number
      * @name g
      * @readonly
@@ -1544,7 +1544,7 @@ class Color {
 
 
     /**
-     * Color Blue Component
+     * Color Blue Component [0 .. 255]
      * @type Number
      * @name b
      * @readonly
@@ -1564,7 +1564,7 @@ class Color {
     }
 
     /**
-     * Color Alpha Component
+     * Color Alpha Component [0.0 .. 1.0]
      * @type Number
      * @name alpha
      * @readonly
@@ -1849,6 +1849,23 @@ class Color {
     }
 
     /**
+     * Pack this color into a Uint32 ARGB representation
+     * @name toUint32
+     * @memberOf me.Color
+     * @function
+     * @param {Number} [alpha=1.0] alpha value [0.0 .. 1.0]
+     * @return {Uint32}
+     */
+    toUint32(alpha = this.alpha) {
+        var ur = this.r & 0xff;
+        var ug = this.g & 0xff;
+        var ub = this.b & 0xff;
+        var ua = (alpha * 255) & 0xff;
+
+        return (ua << 24) + (ur << 16) + (ug << 8) + ub;
+    }
+
+    /**
      * return an array representation of this object
      * @name toArray
      * @memberOf me.Color
@@ -1858,6 +1875,7 @@ class Color {
     toArray() {
         return this.glArray;
     }
+
 
     /**
      * Get the color in "#RRGGBB" format
@@ -10807,20 +10825,481 @@ function unbindKey(keycode) {
 }
 
 /**
- * cache value for the offset of the canvas position within the page
+ * @classdesc
+ * a bound object contains methods for creating and manipulating axis-aligned bounding boxes (AABB).
+ * @class Bounds
+ * @memberOf me
+ * @constructor
+ * @memberOf me
+ * @param {me.Vector2d[]} [vertices] an array of me.Vector2d points
+ * @return {me.Bounds} A new bounds object
+ */
+
+class Bounds$1 {
+
+    constructor(vertices) {
+        this.onResetEvent(vertices);
+    }
+
+    onResetEvent(vertices) {
+        if (typeof this.min === "undefined") {
+            this.min = { x: Infinity,  y: Infinity };
+            this.max = { x: -Infinity, y: -Infinity };
+        } else {
+            this.clear();
+        }
+        if (typeof vertices !== "undefined") {
+            this.update(vertices);
+        }
+
+        // @ignore
+        this._center = new Vector2d();
+    }
+
+    /**
+     * reset the bound
+     * @name clear
+     * @memberOf me.Bounds
+     * @function
+     */
+    clear() {
+        this.setMinMax(Infinity, Infinity, -Infinity, -Infinity);
+
+    }
+
+    /**
+     * sets the bounds to the given min and max value
+     * @name setMinMax
+     * @memberOf me.Bounds
+     * @function
+     * @param {Number} minX
+     * @param {Number} minY
+     * @param {Number} maxX
+     * @param {Number} maxY
+     */
+    setMinMax(minX, minY, maxX, maxY) {
+        this.min.x = minX;
+        this.min.y = minY;
+
+        this.max.x = maxX;
+        this.max.y = maxY;
+    }
+
+    /**
+     * x position of the bound
+     * @public
+     * @type {Number}
+     * @name x
+     * @memberOf me.Bounds
+     */
+    get x() {
+        return this.min.x;
+    }
+
+    set x(value) {
+        var deltaX = this.max.x - this.min.x;
+        this.min.x = value;
+        this.max.x = value + deltaX;
+    }
+
+    /**
+     * y position of the bounds
+     * @public
+     * @type {Number}
+     * @name y
+     * @memberOf me.Bounds
+     */
+    get y() {
+        return this.min.y;
+    }
+
+    set y(value) {
+        var deltaY = this.max.y - this.min.y;
+
+        this.min.y = value;
+        this.max.y = value + deltaY;
+    }
+
+    /**
+     * width of the bounds
+     * @public
+     * @type {Number}
+     * @name width
+     * @memberOf me.Bounds
+     */
+    get width() {
+        return this.max.x - this.min.x;
+    }
+
+    set width(value) {
+        this.max.x = this.min.x + value;
+    }
+
+    /**
+     * width of the bounds
+     * @public
+     * @type {Number}
+     * @name width
+     * @memberOf me.Bounds
+     */
+    get height() {
+        return this.max.y - this.min.y;
+    }
+
+    set height(value) {
+        this.max.y = this.min.y + value;
+    }
+
+    /**
+     * left coordinate of the bound
+     * @public
+     * @type {Number}
+     * @name left
+     * @memberOf me.Bounds
+     */
+    get left() {
+        return this.min.x;
+    }
+
+    /**
+     * right coordinate of the bound
+     * @public
+     * @type {Number}
+     * @name right
+     * @memberOf me.Bounds
+     */
+    get right() {
+        return this.max.x;
+    }
+
+    /**
+     * top coordinate of the bound
+     * @public
+     * @type {Number}
+     * @name top
+     * @memberOf me.Bounds
+     */
+    get top() {
+        return this.min.y;
+    }
+
+    /**
+     * bottom coordinate of the bound
+     * @public
+     * @type {Number}
+     * @name bottom
+     * @memberOf me.Bounds
+     */
+    get bottom() {
+        return this.max.y;
+    }
+
+    /**
+     * center position of the bound on the x axis
+     * @public
+     * @type {Number}
+     * @name centerX
+     * @memberOf me.Bounds
+     */
+    get centerX() {
+        return this.min.x + (this.width / 2);
+    }
+
+    /**
+     * center position of the bound on the y axis
+     * @public
+     * @type {Number}
+     * @name centerY
+     * @memberOf me.Bounds
+     */
+    get centerY() {
+        return this.min.y + (this.height / 2);
+    }
+
+    /**
+     * return the center position of the bound
+     * @public
+     * @type {me.Vector2d}
+     * @name center
+     * @memberOf me.Bounds
+     */
+    get center() {
+        return this._center.set(this.centerX, this.centerY);
+    }
+
+    /**
+     * Updates bounds using the given vertices
+     * @name update
+     * @memberOf me.Bounds
+     * @function
+     * @param {me.Vector2d[]} vertices an array of me.Vector2d points
+     */
+    update(vertices) {
+        this.add(vertices, true);
+    }
+
+    /**
+     * add the given vertices to the bounds definition.
+     * @name add
+     * @memberOf me.Bounds
+     * @function
+     * @param {me.Vector2d[]} vertices an array of me.Vector2d points
+     * @param {boolean} [clear=false] either to reset the bounds before adding the new vertices
+     */
+    add(vertices, clear = false) {
+        if (clear === true) {
+            this.clear();
+        }
+        for (var i = 0; i < vertices.length; i++) {
+            var vertex = vertices[i];
+            if (vertex.x > this.max.x) this.max.x = vertex.x;
+            if (vertex.x < this.min.x) this.min.x = vertex.x;
+            if (vertex.y > this.max.y) this.max.y = vertex.y;
+            if (vertex.y < this.min.y) this.min.y = vertex.y;
+        }
+    }
+
+    /**
+     * add the given bounds to the bounds definition.
+     * @name addBounds
+     * @memberOf me.Bounds
+     * @function
+     * @param {me.Bounds} bounds
+     * @param {boolean} [clear=false] either to reset the bounds before adding the new vertices
+     */
+    addBounds(bounds, clear = false) {
+        if (clear === true) {
+            this.clear();
+        }
+
+        if (bounds.max.x > this.max.x) this.max.x = bounds.max.x;
+        if (bounds.min.x < this.min.x) this.min.x = bounds.min.x;
+        if (bounds.max.y > this.max.y) this.max.y = bounds.max.y;
+        if (bounds.min.y < this.min.y) this.min.y = bounds.min.y;
+    }
+
+    /**
+     * add the given point to the bounds definition.
+     * @name addPoint
+     * @memberOf me.Bounds
+     * @function
+     * @param {me.Vector2d} vector
+     * @param {me.Matrix2d} [matrix] an optional transform to apply to the given point
+     */
+    addPoint(v, m) {
+        if (typeof m !== "undefined") {
+            v = m.apply(v);
+        }
+        this.min.x = Math.min(this.min.x, v.x);
+        this.max.x = Math.max(this.max.x, v.x);
+        this.min.y = Math.min(this.min.y, v.y);
+        this.max.y = Math.max(this.max.y, v.y);
+    }
+
+    /**
+     * add the given quad coordinates to this bound definition, multiplied by the given matrix
+     * @name addFrame
+     * @memberOf me.Bounds
+     * @function
+     * @param {Number} x0 - left X coordinates of the quad
+     * @param {Number} y0 - top Y coordinates of the quad
+     * @param {Number} x1 - right X coordinates of the quad
+     * @param {Number} y1 - bottom y coordinates of the quad
+     * @param {me.Matrix2d} [matrix] an optional transform to apply to the given frame coordinates
+     */
+    addFrame(x0, y0, x1, y1, m) {
+        var v = me.pool.pull("Vector2d");
+
+        // transform all points and add to the bound definition
+        this.addPoint(v.set(x0, y0), m);
+        this.addPoint(v.set(x1, y0), m);
+        this.addPoint(v.set(x0, y1), m);
+        this.addPoint(v.set(x1, y1), m);
+
+        me.pool.push(v);
+    }
+
+    /**
+     * Returns true if the bounds contains the given point.
+     * @name contains
+     * @memberOf me.Bounds
+     * @function
+     * @param {me.Vector2d} point
+     * @return {boolean} True if the bounds contain the point, otherwise false
+     */
+    /**
+     * Returns true if the bounds contains the given point.
+     * @name contains
+     * @memberOf me.Bounds
+     * @function
+     * @param {Number} x
+     * @param {Number} y
+     * @return {boolean} True if the bounds contain the point, otherwise false
+     */
+    contains() {
+        var arg0 = arguments[0];
+        var _x1, _x2, _y1, _y2;
+        if (arguments.length === 2) {
+            // x, y
+            _x1 = _x2 = arg0;
+            _y1 = _y2 = arguments[1];
+        } else {
+            if (arg0 instanceof Bounds$1) {
+                // bounds
+                _x1 = arg0.min.x;
+                _x2 = arg0.max.x;
+                _y1 = arg0.min.y;
+                _y2 = arg0.max.y;
+            } else {
+                // vector
+                _x1 = _x2 = arg0.x;
+                _y1 = _y2 = arg0.y;
+            }
+        }
+
+        return _x1 >= this.min.x && _x2 <= this.max.x
+            && _y1 >= this.min.y && _y2 <= this.max.y;
+    }
+
+    /**
+     * Returns true if the two bounds intersect.
+     * @name overlaps
+     * @memberOf me.Bounds
+     * @function
+     * @param {me.Bounds|me.Rect} bounds
+     * @return {boolean} True if the bounds overlap, otherwise false
+     */
+    overlaps(bounds) {
+        return (this.left <= bounds.right && this.right >= bounds.left
+            && this.bottom >= bounds.top && this.top <= bounds.bottom);
+    }
+
+    /**
+     * determines whether all coordinates of this bounds are finite numbers.
+     * @name isFinite
+     * @memberOf me.Bounds
+     * @function
+     * @return {boolean} false if all coordinates are positive or negative Infinity or NaN; otherwise, true.
+     */
+    isFinite() {
+        return (isFinite(this.min.x) && isFinite(this.max.x) && isFinite(this.min.y) && isFinite(this.max.y));
+    }
+
+    /**
+     * Translates the bounds by the given vector.
+     * @name translate
+     * @memberOf me.Bounds
+     * @function
+     * @param {me.Vector2d} vector
+     */
+    /**
+     * Translates the bounds by x on the x axis, and y on the y axis
+     * @name translate
+     * @memberOf me.Bounds
+     * @function
+     * @param {Number} x
+     * @param {Number} y
+     */
+    translate() {
+        var _x, _y;
+        if (arguments.length === 2) {
+            // x, y
+            _x = arguments[0];
+            _y = arguments[1];
+        } else {
+            // vector
+            _x = arguments[0].x;
+            _y = arguments[0].y;
+        }
+        this.min.x += _x;
+        this.max.x += _x;
+        this.min.y += _y;
+        this.max.y += _y;
+    }
+
+    /**
+     * Shifts the bounds to the given position vector.
+     * @name shift
+     * @memberOf me.Bounds
+     * @function
+     * @param {me.Vector2d} position
+     */
+    /**
+     * Shifts the bounds to the given x, y position.
+     * @name shift
+     * @memberOf me.Bounds
+     * @function
+     * @param {Number} x
+     * @param {Number} y
+     */
+    shift() {
+        var _x, _y;
+
+        if (arguments.length === 2) {
+            // x, y
+            _x = arguments[0];
+            _y = arguments[1];
+        } else {
+            // vector
+            _x = arguments[0].x;
+            _y = arguments[0].y;
+        }
+
+        var deltaX = this.max.x - this.min.x,
+            deltaY = this.max.y - this.min.y;
+
+        this.min.x = _x;
+        this.max.x = _x + deltaX;
+        this.min.y = _y;
+        this.max.y = _y + deltaY;
+    }
+
+    /**
+     * clone this bounds
+     * @name clone
+     * @memberOf me.Bounds
+     * @function
+     * @return {me.Bounds}
+     */
+    clone() {
+        var bounds = new Bounds$1();
+        bounds.addBounds(this);
+        return bounds;
+    }
+
+    /**
+     * Returns a polygon whose edges are the same as this bounds.
+     * @name toPolygon
+     * @memberOf me.Bounds
+     * @function
+     * @return {me.Polygon} a new Polygon that represents this bounds.
+     */
+    toPolygon () {
+        return new Polygon(this.x, this.y, [
+            new Vector2d(0,          0),
+            new Vector2d(this.width, 0),
+            new Vector2d(this.width, this.height),
+            new Vector2d(0,          this.height)
+        ]);
+    }
+
+}
+
+/**
+ * a temporary vector object
  * @ignore
  */
-var viewportOffset = new Vector2d();
+var tmpVec = new Vector2d();
 
 /**
  * @classdesc
  * a pointer object, representing a single finger on a touch enabled device.
  * @class
- * @extends me.Rect
+ * @extends me.Bounds
  * @memberOf me
  * @constructor
  */
-class Pointer extends Rect {
+class Pointer extends Bounds$1 {
 
     /**
      * @ignore
@@ -10828,7 +11307,10 @@ class Pointer extends Rect {
     constructor(x = 0, y = 0, w = 1, h = 1) {
 
         // parent constructor
-        super(x, y, w, h);
+        super();
+
+        // initial coordinates/size
+        this.setMinMax(x, y, x + w, y + h);
 
         /**
          * constant for left button
@@ -11081,9 +11563,6 @@ class Pointer extends Rect {
      * @param {Number} [pointedId=1] the Pointer, Touch or Mouse event Id (1)
      */
     setEvent(event, pageX = 0, pageY = 0, clientX = 0, clientY = 0, pointerId = 1) {
-        var width = 1;
-        var height = 1;
-
         // the original event object
         this.event = event;
 
@@ -11093,7 +11572,9 @@ class Pointer extends Rect {
         this.clientY = clientY;
 
         // translate to local coordinates
-        globalToLocal(this.pageX, this.pageY, this.pos);
+        globalToLocal(this.pageX, this.pageY, tmpVec);
+        this.gameScreenX = this.x = tmpVec.x;
+        this.gameScreenY = this.y = tmpVec.y;
 
         // true if not originally a pointer event
         this.isNormalized = !device$1.PointerEvent || (device$1.PointerEvent && !(event instanceof window.PointerEvent));
@@ -11119,30 +11600,29 @@ class Pointer extends Rect {
 
         this.type = event.type;
 
-        this.gameScreenX = this.pos.x;
-        this.gameScreenY = this.pos.y;
+
 
         // get the current screen to game world offset
         if (typeof viewport !== "undefined") {
-            viewport.localToWorld(this.gameScreenX, this.gameScreenY, viewportOffset);
+            viewport.localToWorld(this.gameScreenX, this.gameScreenY, tmpVec);
         }
 
         /* Initialize the two coordinate space properties. */
-        this.gameWorldX = viewportOffset.x;
-        this.gameWorldY = viewportOffset.y;
+        this.gameWorldX = tmpVec.x;
+        this.gameWorldY = tmpVec.y;
 
         // get the pointer size
         if (this.isNormalized === false) {
             // native PointerEvent
-            width = event.width || 1;
-            height = event.height || 1;
+            this.width = event.width || 1;
+            this.height = event.height || 1;
         } else if (typeof(event.radiusX) === "number") {
             // TouchEvent
-            width = (event.radiusX * 2) || 1;
-            height = (event.radiusY * 2) || 1;
+            this.width = (event.radiusX * 2) || 1;
+            this.height = (event.radiusY * 2) || 1;
+        } else {
+            this.width = this.height = 1;
         }
-        // resize the pointer object accordingly
-        this.resize(width, height);
     }
 }
 
@@ -11251,8 +11731,6 @@ function enablePointerEvent() {
 
         // the current pointer area
         currentPointer = new Rect(0, 0, 1, 1);
-
-        pointer = new Pointer(0, 0, 1, 1);
 
         // instantiate a pool of pointer catched
         for (var v = 0; v < device$1.maxTouchPoints; v++) {
@@ -11644,7 +12122,7 @@ function onPointerEvent(e) {
  * @name pointer
  * @memberOf me.input
  */
-var pointer;
+var pointer = new Pointer(0, 0, 1, 1);
 
 /**
  * time interval for event throttling in milliseconds<br>
@@ -11666,8 +12144,8 @@ var throttlingInterval;
  * @function
  * @param {Number} x the global x coordinate to be translated.
  * @param {Number} y the global y coordinate to be translated.
- * @param {Number} [v] an optional vector object where to set the
- * @return {me.Vector2d} A vector object with the corresponding translated coordinates.
+ * @param {me.Vector2d} [v] an optional vector object where to set the translated coordinates
+ * @return {me.Vector2d} A vector object with the corresponding translated coordinates
  * @example
  * onMouseEvent : function (pointer) {
  *    // convert the given into local (viewport) relative coordinates
@@ -12404,7 +12882,7 @@ var input = /*#__PURE__*/Object.freeze({
     __proto__: null,
     preventDefault: preventDefault,
     get pointerEventTarget () { return pointerEventTarget; },
-    get pointer () { return pointer; },
+    pointer: pointer,
     get throttlingInterval () { return throttlingInterval; },
     globalToLocal: globalToLocal,
     setTouchAction: setTouchAction,
@@ -13163,8 +13641,8 @@ class Renderable extends Rect {
         // offset by the anchor point
         renderer.translate(-ax, -ay);
 
-        // apply the defined tint, if any
-        renderer.setTint(this.tint);
+        // apply the current tint and opacity
+        renderer.setTint(this.tint, this.getOpacity());
     }
 
     /**
@@ -13573,467 +14051,6 @@ class Ellipse {
             this.radiusV.y * 2
         );
     }
-}
-
-/**
- * @classdesc
- * a bound object contains methods for creating and manipulating axis-aligned bounding boxes (AABB).
- * @class Bounds
- * @memberOf me
- * @constructor
- * @memberOf me
- * @param {me.Vector2d[]} [vertices] an array of me.Vector2d points
- * @return {me.Bounds} A new bounds object
- */
-
-class Bounds$1 {
-
-    constructor(vertices) {
-        this.onResetEvent(vertices);
-    }
-
-    onResetEvent(vertices) {
-        if (typeof this.min === "undefined") {
-            this.min = { x: Infinity,  y: Infinity };
-            this.max = { x: -Infinity, y: -Infinity };
-        } else {
-            this.clear();
-        }
-        if (typeof vertices !== "undefined") {
-            this.update(vertices);
-        }
-
-        // @ignore
-        this._center = new Vector2d();
-    }
-
-    /**
-     * reset the bound
-     * @name clear
-     * @memberOf me.Bounds
-     * @function
-     */
-    clear() {
-        this.setMinMax(Infinity, Infinity, -Infinity, -Infinity);
-
-    }
-
-    /**
-     * sets the bounds to the given min and max value
-     * @name setMinMax
-     * @memberOf me.Bounds
-     * @function
-     * @param {Number} minX
-     * @param {Number} minY
-     * @param {Number} maxX
-     * @param {Number} maxY
-     */
-    setMinMax(minX, minY, maxX, maxY) {
-        this.min.x = minX;
-        this.min.y = minY;
-
-        this.max.x = maxX;
-        this.max.y = maxY;
-    }
-
-    /**
-     * x position of the bound
-     * @public
-     * @type {Number}
-     * @name x
-     * @memberOf me.Bounds
-     */
-    get x() {
-        return this.min.x;
-    }
-
-    set x(value) {
-        var deltaX = this.max.x - this.min.x;
-        this.min.x = value;
-        this.max.x = value + deltaX;
-    }
-
-    /**
-     * y position of the bounds
-     * @public
-     * @type {Number}
-     * @name y
-     * @memberOf me.Bounds
-     */
-    get y() {
-        return this.min.y;
-    }
-
-    set y(value) {
-        var deltaY = this.max.y - this.min.y;
-
-        this.min.y = value;
-        this.max.y = value + deltaY;
-    }
-
-    /**
-     * width of the bounds
-     * @public
-     * @type {Number}
-     * @name width
-     * @memberOf me.Bounds
-     */
-    get width() {
-        return this.max.x - this.min.x;
-    }
-
-    set width(value) {
-        this.max.x = this.min.x + value;
-    }
-
-    /**
-     * width of the bounds
-     * @public
-     * @type {Number}
-     * @name width
-     * @memberOf me.Bounds
-     */
-    get height() {
-        return this.max.y - this.min.y;
-    }
-
-    set height(value) {
-        this.max.y = this.min.y + value;
-    }
-
-    /**
-     * left coordinate of the bound
-     * @public
-     * @type {Number}
-     * @name left
-     * @memberOf me.Bounds
-     */
-    get left() {
-        return this.min.x;
-    }
-
-    /**
-     * right coordinate of the bound
-     * @public
-     * @type {Number}
-     * @name right
-     * @memberOf me.Bounds
-     */
-    get right() {
-        return this.max.x;
-    }
-
-    /**
-     * top coordinate of the bound
-     * @public
-     * @type {Number}
-     * @name top
-     * @memberOf me.Bounds
-     */
-    get top() {
-        return this.min.y;
-    }
-
-    /**
-     * bottom coordinate of the bound
-     * @public
-     * @type {Number}
-     * @name bottom
-     * @memberOf me.Bounds
-     */
-    get bottom() {
-        return this.max.y;
-    }
-
-    /**
-     * center position of the bound on the x axis
-     * @public
-     * @type {Number}
-     * @name centerX
-     * @memberOf me.Bounds
-     */
-    get centerX() {
-        return this.min.x + (this.width / 2);
-    }
-
-    /**
-     * center position of the bound on the y axis
-     * @public
-     * @type {Number}
-     * @name centerY
-     * @memberOf me.Bounds
-     */
-    get centerY() {
-        return this.min.y + (this.height / 2);
-    }
-
-    /**
-     * return the center position of the bound
-     * @public
-     * @type {me.Vector2d}
-     * @name center
-     * @memberOf me.Bounds
-     */
-    get center() {
-        return this._center.set(this.centerX, this.centerY);
-    }
-
-    /**
-     * Updates bounds using the given vertices
-     * @name update
-     * @memberOf me.Bounds
-     * @function
-     * @param {me.Vector2d[]} vertices an array of me.Vector2d points
-     */
-    update(vertices) {
-        this.add(vertices, true);
-    }
-
-    /**
-     * add the given vertices to the bounds definition.
-     * @name add
-     * @memberOf me.Bounds
-     * @function
-     * @param {me.Vector2d[]} vertices an array of me.Vector2d points
-     * @param {boolean} [clear=false] either to reset the bounds before adding the new vertices
-     */
-    add(vertices, clear = false) {
-        if (clear === true) {
-            this.clear();
-        }
-        for (var i = 0; i < vertices.length; i++) {
-            var vertex = vertices[i];
-            if (vertex.x > this.max.x) this.max.x = vertex.x;
-            if (vertex.x < this.min.x) this.min.x = vertex.x;
-            if (vertex.y > this.max.y) this.max.y = vertex.y;
-            if (vertex.y < this.min.y) this.min.y = vertex.y;
-        }
-    }
-
-    /**
-     * add the given bounds to the bounds definition.
-     * @name addBounds
-     * @memberOf me.Bounds
-     * @function
-     * @param {me.Bounds} bounds
-     * @param {boolean} [clear=false] either to reset the bounds before adding the new vertices
-     */
-    addBounds(bounds, clear = false) {
-        if (clear === true) {
-            this.clear();
-        }
-
-        if (bounds.max.x > this.max.x) this.max.x = bounds.max.x;
-        if (bounds.min.x < this.min.x) this.min.x = bounds.min.x;
-        if (bounds.max.y > this.max.y) this.max.y = bounds.max.y;
-        if (bounds.min.y < this.min.y) this.min.y = bounds.min.y;
-    }
-
-    /**
-     * add the given point to the bounds definition.
-     * @name addPoint
-     * @memberOf me.Bounds
-     * @function
-     * @param {me.Vector2d} vector
-     * @param {me.Matrix2d} [matrix] an optional transform to apply to the given point
-     */
-    addPoint(v, m) {
-        if (typeof m !== "undefined") {
-            v = m.apply(v);
-        }
-        this.min.x = Math.min(this.min.x, v.x);
-        this.max.x = Math.max(this.max.x, v.x);
-        this.min.y = Math.min(this.min.y, v.y);
-        this.max.y = Math.max(this.max.y, v.y);
-    }
-
-    /**
-     * add the given quad coordinates to this bound definition, multiplied by the given matrix
-     * @name addFrame
-     * @memberOf me.Bounds
-     * @function
-     * @param {Number} x0 - left X coordinates of the quad
-     * @param {Number} y0 - top Y coordinates of the quad
-     * @param {Number} x1 - right X coordinates of the quad
-     * @param {Number} y1 - bottom y coordinates of the quad
-     * @param {me.Matrix2d} [matrix] an optional transform to apply to the given frame coordinates
-     */
-    addFrame(x0, y0, x1, y1, m) {
-        var v = me.pool.pull("Vector2d");
-
-        // transform all points and add to the bound definition
-        this.addPoint(v.set(x0, y0), m);
-        this.addPoint(v.set(x1, y0), m);
-        this.addPoint(v.set(x0, y1), m);
-        this.addPoint(v.set(x1, y1), m);
-
-        me.pool.push(v);
-    }
-
-    /**
-     * Returns true if the bounds contains the given point.
-     * @name contains
-     * @memberOf me.Bounds
-     * @function
-     * @param {me.Vector2d} point
-     * @return {boolean} True if the bounds contain the point, otherwise false
-     */
-    /**
-     * Returns true if the bounds contains the given point.
-     * @name contains
-     * @memberOf me.Bounds
-     * @function
-     * @param {Number} x
-     * @param {Number} y
-     * @return {boolean} True if the bounds contain the point, otherwise false
-     */
-    contains() {
-        var arg0 = arguments[0];
-        var _x1, _x2, _y1, _y2;
-        if (arguments.length === 2) {
-            // x, y
-            _x1 = _x2 = arg0;
-            _y1 = _y2 = arguments[1];
-        } else {
-            if (arg0 instanceof Bounds$1) {
-                // bounds
-                _x1 = arg0.min.x;
-                _x2 = arg0.max.x;
-                _y1 = arg0.min.y;
-                _y2 = arg0.max.y;
-            } else {
-                // vector
-                _x1 = _x2 = arg0.x;
-                _y1 = _y2 = arg0.y;
-            }
-        }
-
-        return _x1 >= this.min.x && _x2 <= this.max.x
-            && _y1 >= this.min.y && _y2 <= this.max.y;
-    }
-
-    /**
-     * Returns true if the two bounds intersect.
-     * @name overlaps
-     * @memberOf me.Bounds
-     * @function
-     * @param {me.Bounds|me.Rect} bounds
-     * @return {boolean} True if the bounds overlap, otherwise false
-     */
-    overlaps(bounds) {
-        return (this.left <= bounds.right && this.right >= bounds.left
-            && this.bottom >= bounds.top && this.top <= bounds.bottom);
-    }
-
-    /**
-     * determines whether all coordinates of this bounds are finite numbers.
-     * @name isFinite
-     * @memberOf me.Bounds
-     * @function
-     * @return {boolean} false if all coordinates are positive or negative Infinity or NaN; otherwise, true.
-     */
-    isFinite() {
-        return (isFinite(this.min.x) && isFinite(this.max.x) && isFinite(this.min.y) && isFinite(this.max.y));
-    }
-
-    /**
-     * Translates the bounds by the given vector.
-     * @name translate
-     * @memberOf me.Bounds
-     * @function
-     * @param {me.Vector2d} vector
-     */
-    /**
-     * Translates the bounds by x on the x axis, and y on the y axis
-     * @name translate
-     * @memberOf me.Bounds
-     * @function
-     * @param {Number} x
-     * @param {Number} y
-     */
-    translate() {
-        var _x, _y;
-        if (arguments.length === 2) {
-            // x, y
-            _x = arguments[0];
-            _y = arguments[1];
-        } else {
-            // vector
-            _x = arguments[0].x;
-            _y = arguments[0].y;
-        }
-        this.min.x += _x;
-        this.max.x += _x;
-        this.min.y += _y;
-        this.max.y += _y;
-    }
-
-    /**
-     * Shifts the bounds to the given position vector.
-     * @name shift
-     * @memberOf me.Bounds
-     * @function
-     * @param {me.Vector2d} position
-     */
-    /**
-     * Shifts the bounds to the given x, y position.
-     * @name shift
-     * @memberOf me.Bounds
-     * @function
-     * @param {Number} x
-     * @param {Number} y
-     */
-    shift() {
-        var _x, _y;
-
-        if (arguments.length === 2) {
-            // x, y
-            _x = arguments[0];
-            _y = arguments[1];
-        } else {
-            // vector
-            _x = arguments[0].x;
-            _y = arguments[0].y;
-        }
-
-        var deltaX = this.max.x - this.min.x,
-            deltaY = this.max.y - this.min.y;
-
-        this.min.x = _x;
-        this.max.x = _x + deltaX;
-        this.min.y = _y;
-        this.max.y = _y + deltaY;
-    }
-
-    /**
-     * clone this bounds
-     * @name clone
-     * @memberOf me.Bounds
-     * @function
-     * @return {me.Bounds}
-     */
-    clone() {
-        var bounds = new Bounds$1();
-        bounds.addBounds(this);
-        return bounds;
-    }
-
-    /**
-     * Returns a polygon whose edges are the same as this bounds.
-     * @name toPolygon
-     * @memberOf me.Bounds
-     * @function
-     * @return {me.Polygon} a new Polygon that represents this bounds.
-     */
-    toPolygon () {
-        return new Polygon(this.x, this.y, [
-            new Vector2d(0,          0),
-            new Vector2d(this.width, 0),
-            new Vector2d(this.width, this.height),
-            new Vector2d(0,          this.height)
-        ]);
-    }
-
 }
 
 /*
@@ -19904,10 +19921,10 @@ class Texture {
             var sh = atlas[frame].height;
 
             atlas[frame].uvs = new Float32Array([
-                s.x / w,        // Left
-                s.y / h,        // Top
-                (s.x + sw) / w, // Right
-                (s.y + sh) / h  // Bottom
+                s.x / w,        // u0 (left)
+                s.y / h,        // v0 (top)
+                (s.x + sw) / w, // u1 (right)
+                (s.y + sh) / h  // v1 (bottom)
             ]);
             // Cache source coordinates
             // TODO: Remove this when the Batcher only accepts a region name
@@ -20310,7 +20327,7 @@ class Sprite extends Renderable {
         // set the default rotation angle is defined in the settings
         // * WARNING: rotating sprites decreases performance with Canvas Renderer
         if (typeof (settings.rotation) !== "undefined") {
-            this.currentTransform.rotate(settings.rotation);
+            this.rotate(settings.rotation);
         }
 
         // update anchorPoint
@@ -21474,11 +21491,13 @@ class Renderer {
      * @name setTint
      * @memberOf me.Renderer.prototype
      * @function
-     * @param {me.Color} [tint] the tint color
+     * @param {me.Color} tint the tint color
+     * @param {Number} [alpha] an alpha value to be applied to the tint
      */
-    setTint(tint) {
+    setTint(tint, alpha = tint.alpha) {
         // global tint color
         this.currentTint.copy(tint);
+        this.currentTint.alpha *= alpha;
     }
 
     /**
@@ -22534,7 +22553,7 @@ class TMXLayer extends Renderable {
      * // get the TMX Map Layer called "Front layer"
      * var layer = me.game.world.getChildByName("Front Layer")[0];
      * // get the tile object corresponding to the latest pointer position
-     * var tile = layer.getTile(me.input.pointer.pos.x, me.input.pointer.pos.y);
+     * var tile = layer.getTile(me.input.pointer.x, me.input.pointer.y);
      */
     getTile(x, y) {
         var tile = null;
@@ -27415,6 +27434,10 @@ function _checkCapabilities() {
     device.hasDeviceOrientation = !!window.DeviceOrientationEvent;
     device.hasAccelerometer = !!window.DeviceMotionEvent;
 
+    // support the ScreenOrientation API
+    device.ScreenOrientation = (typeof screen !== "undefined") &&
+                               (typeof screen.orientation !== "undefined");
+
     // fullscreen api detection & polyfill when possible
     device.hasFullscreenSupport = prefixed("fullscreenEnabled", document) ||
                                 document.mozFullScreenEnabled;
@@ -27556,6 +27579,16 @@ let device = {
      * @memberOf me.device
      */
     hasDeviceOrientation : false,
+
+    /**
+     * Supports the ScreenOrientation API
+     * @see https://developer.mozilla.org/en-US/docs/Web/API/ScreenOrientation/onchange
+     * @type Boolean
+     * @readonly
+     * @name ScreenOrientation
+     * @memberOf me.device
+     */
+    ScreenOrientation : false,
 
     /**
      * Browser full screen support
@@ -27989,7 +28022,7 @@ let device = {
         var screen = window.screen;
 
         // first try using "standard" values
-        if (typeof screen !== "undefined") {
+        if (this.ScreenOrientation === true) {
             var orientation = prefixed("orientation", screen);
             if (typeof orientation !== "undefined" && typeof orientation.type === "string") {
                 // Screen Orientation API specification
@@ -28818,13 +28851,150 @@ class GLShader {
     }
 }
 
+/**
+ * @classdesc
+ * a Vertex Buffer object
+ * @class VertexArrayBuffer
+ * @private
+ */
+
+class VertexArrayBuffer {
+
+    constructor(vertex_size, vertex_per_quad) {
+        // the size of one vertex
+        this.vertexSize = vertex_size;
+        // size of a quad in vertex
+        this.quadSize = vertex_per_quad;
+        // the maximum number of vertices the vertex array buffer can hold
+        this.maxVertex = 256;
+        // the current number of vertices added to the vertex array buffer
+        this.vertexCount = 0;
+
+        // the actual vertex data buffer
+        this.buffer = new ArrayBuffer(this.maxVertex * this.vertexSize * this.quadSize);
+        // Float32 and Uint32 view of the vertex data array buffer
+        this.bufferF32 = new Float32Array(this.buffer);
+        this.bufferU32 = new Uint32Array(this.buffer);
+
+
+        return this;
+    }
+
+    /**
+     * clear the vertex array buffer
+     */
+    clear() {
+        this.vertexCount = 0;
+    }
+
+
+    /**
+     * return true if full
+     */
+    isFull(vertex = 0) {
+         return (this.vertexCount + vertex >= this.maxVertex);
+    }
+
+    /**
+     * resize the vertex buffer, retaining its original contents
+     */
+    resize() {
+        // double the vertex size
+        this.maxVertex <<= 1;
+        // save a reference to the previous data
+        var data = this.bufferF32;
+
+        // recreate ArrayBuffer and views
+        this.buffer = new ArrayBuffer(this.maxVertex * this.vertexSize * this.quadSize);
+        this.bufferF32 = new Float32Array(this.buffer);
+        this.bufferU32 = new Uint32Array(this.buffer);
+
+        // copy previous data
+        this.bufferF32.set(data);
+
+        return this;
+    }
+
+    /**
+     * push a new vertex to the buffer
+     */
+    push(x, y, u, v, tint) {
+        var offset = this.vertexCount * this.vertexSize;
+
+        if (this.vertexCount >= this.maxVertex) {
+            this.resize();
+        }
+
+        this.bufferF32[offset + 0] = x;
+        this.bufferF32[offset + 1] = y;
+
+        if (typeof u !== "undefined") {
+            this.bufferF32[offset + 2] = u;
+            this.bufferF32[offset + 3] = v;
+        }
+
+        if (typeof tint !== "undefined") {
+            this.bufferU32[offset + 4] = tint;
+        }
+
+        this.vertexCount++;
+
+        return this;
+    }
+
+    /**
+     * return a reference to the data in Float32 format
+     */
+    toFloat32(begin, end) {
+        if (typeof end !== "undefined") {
+            return this.bufferF32.subarray(begin, end);
+        } else {
+            return this.bufferF32;
+        }
+    }
+
+    /**
+     * return a reference to the data in Uint32 format
+     */
+    toUint32(begin, end) {
+        if (typeof end !== "undefined") {
+            return this.bufferU32.subarray(begin, end);
+        } else {
+            return this.bufferU32;
+        }
+    }
+
+    /**
+     * return the size of the vertex in vertex
+     */
+    length() {
+        return this.vertexCount;
+    }
+
+    /**
+     * return true if empty
+     */
+    isEmpty() {
+        return this.vertexCount === 0;
+    }
+
+}
+
 var primitiveVertex = "// Current vertex point\nattribute vec2 aVertex;\n\n// Projection matrix\nuniform mat4 uProjectionMatrix;\n\n// Vertex color\nuniform vec4 uColor;\n\n// Fragment color\nvarying vec4 vColor;\n\nvoid main(void) {\n    // Transform the vertex position by the projection matrix\n    gl_Position = uProjectionMatrix * vec4(aVertex, 0.0, 1.0);\n    // Pass the remaining attributes to the fragment shader\n    vColor = vec4(uColor.rgb * uColor.a, uColor.a);\n}\n";
 
 var primitiveFragment = "varying vec4 vColor;\n\nvoid main(void) {\n    gl_FragColor = vColor;\n}\n";
 
-var quadVertex = "attribute vec2 aVertex;\nattribute vec2 aRegion;\nattribute vec4 aColor;\n\nuniform mat4 uProjectionMatrix;\n\nvarying vec2 vRegion;\nvarying vec4 vColor;\n\nvoid main(void) {\n    // Transform the vertex position by the projection matrix\n     gl_Position = uProjectionMatrix * vec4(aVertex, 0.0, 1.0);\n    // Pass the remaining attributes to the fragment shader\n    vColor = vec4(aColor.rgb * aColor.a, aColor.a);\n    vRegion = aRegion;\n}\n";
+var quadVertex = "attribute vec2 aVertex;\nattribute vec2 aRegion;\nattribute vec4 aColor;\n\nuniform mat4 uProjectionMatrix;\n\nvarying vec2 vRegion;\nvarying vec4 vColor;\n\nvoid main(void) {\n    // Transform the vertex position by the projection matrix\n     gl_Position = uProjectionMatrix * vec4(aVertex, 0.0, 1.0);\n    // Pass the remaining attributes to the fragment shader\n    vColor = vec4(aColor.bgr * aColor.a, aColor.a);\n    vRegion = aRegion;\n}\n";
 
 var quadFragment = "uniform sampler2D uSampler;\nvarying vec4 vColor;\nvarying vec2 vRegion;\n\nvoid main(void) {\n    gl_FragColor = texture2D(uSampler, vRegion) * vColor;\n}\n";
+
+// a pool of resuable vectors
+var V_ARRAY = [
+    new Vector2d(),
+    new Vector2d(),
+    new Vector2d(),
+    new Vector2d()
+];
 
 // Handy constants
 var VERTEX_SIZE = 2;
@@ -28834,14 +29004,30 @@ var COLOR_SIZE = 4;
 var ELEMENT_SIZE = VERTEX_SIZE + REGION_SIZE + COLOR_SIZE;
 var ELEMENT_OFFSET = ELEMENT_SIZE * Float32Array.BYTES_PER_ELEMENT;
 
-var VERTEX_ELEMENT = 0;
-var REGION_ELEMENT = VERTEX_ELEMENT + VERTEX_SIZE;
-var COLOR_ELEMENT = REGION_ELEMENT + REGION_SIZE;
-
 var ELEMENTS_PER_QUAD = 4;
 var INDICES_PER_QUAD = 6;
 
 var MAX_LENGTH = 16000;
+
+/**
+ * Create a full index buffer for the element array
+ * @ignore
+ */
+function createIB() {
+    var indices = [
+        0, 1, 2,
+        2, 1, 3
+    ];
+
+    // ~384KB index buffer
+    var data = new Array(MAX_LENGTH * INDICES_PER_QUAD);
+    for (var i = 0; i < data.length; i++) {
+        data[i] = indices[i % INDICES_PER_QUAD] +
+            ~~(i / INDICES_PER_QUAD) * ELEMENTS_PER_QUAD;
+    }
+
+    return new Uint16Array(data);
+}
 
 /**
  * @classdesc
@@ -28873,19 +29059,11 @@ class WebGLCompositor {
          * @type Number
          * @readonly
          */
-        this.length = 0;
+        //this.length = 0;
 
         // list of active texture units
         this.currentTextureUnit = -1;
         this.boundTextures = [];
-
-        // Vector pool
-        this.v = [
-            new Vector2d(),
-            new Vector2d(),
-            new Vector2d(),
-            new Vector2d()
-        ];
 
         // the associated renderer
         this.renderer = renderer;
@@ -28895,9 +29073,6 @@ class WebGLCompositor {
 
         // Global fill color
         this.color = renderer.currentColor;
-
-        // Global tint color
-        this.tint = renderer.currentTint;
 
         // Global transformation matrix
         this.viewMatrix = renderer.currentTransform;
@@ -28934,9 +29109,9 @@ class WebGLCompositor {
         /// define all vertex attributes
         this.addAttribute("aVertex", 2, gl.FLOAT, false, 0 * Float32Array.BYTES_PER_ELEMENT); // 0
         this.addAttribute("aRegion", 2, gl.FLOAT, false, 2 * Float32Array.BYTES_PER_ELEMENT); // 1
-        this.addAttribute("aColor",  4, gl.FLOAT, false, 4 * Float32Array.BYTES_PER_ELEMENT); // 2
+        this.addAttribute("aColor",  4, gl.UNSIGNED_BYTE, true, 4 * Float32Array.BYTES_PER_ELEMENT); // 2
 
-        // Stream buffer
+        // vertex buffer
         gl.bindBuffer(gl.ARRAY_BUFFER, gl.createBuffer());
         gl.bufferData(
             gl.ARRAY_BUFFER,
@@ -28944,17 +29119,11 @@ class WebGLCompositor {
             gl.STREAM_DRAW
         );
 
-        this.sbSize = 256;
-        this.sbIndex = 0;
+        this.vertexBuffer = new VertexArrayBuffer(ELEMENT_SIZE, ELEMENTS_PER_QUAD);
 
-        // Quad stream buffer
-        this.stream = new Float32Array(
-            this.sbSize * ELEMENT_SIZE * ELEMENTS_PER_QUAD
-        );
-
-        // Index buffer
+        // Cache index buffer (TODO Remove use for cache by replacing drawElements by drawArrays)
         gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, gl.createBuffer());
-        gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, this.createIB(), gl.STATIC_DRAW);
+        gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, createIB(), gl.STATIC_DRAW);
 
         // register to the CANVAS resize channel
         on(CANVAS_ONRESIZE, (width, height) => {
@@ -28970,9 +29139,6 @@ class WebGLCompositor {
      * @ignore
      */
     reset() {
-        this.sbIndex = 0;
-        this.length = 0;
-
         // WebGL context
         this.gl = this.renderer.gl;
 
@@ -29010,7 +29176,7 @@ class WebGLCompositor {
      * @param {String} name name of the attribute in the vertex shader
      * @param {Number} size number of components per vertex attribute. Must be 1, 2, 3, or 4.
      * @param {GLenum} type data type of each component in the array
-     * @param {Boolean} normalized whether integer data values should be normalized into a certain
+     * @param {Boolean} normalized whether integer data values should be normalized into a certain range when being cast to a float
      * @param {Number} offset offset in bytes of the first component in the vertex attribute array
      */
     addAttribute(name, size, type, normalized, offset) {
@@ -29058,8 +29224,8 @@ class WebGLCompositor {
         var gl = this.gl;
         var isPOT = isPowerOfTwo(w || image.width) && isPowerOfTwo(h || image.height);
         var texture = gl.createTexture();
-        var rs = (repeat.search(/^repeat(-x)?$/) === 0) && (isPOT || this.renderer.WebGLVersion === 2) ? gl.REPEAT : gl.CLAMP_TO_EDGE;
-        var rt = (repeat.search(/^repeat(-y)?$/) === 0) && (isPOT || this.renderer.WebGLVersion === 2) ? gl.REPEAT : gl.CLAMP_TO_EDGE;
+        var rs = (repeat.search(/^repeat(-x)?$/) === 0) && (isPOT || this.renderer.WebGLVersion > 1) ? gl.REPEAT : gl.CLAMP_TO_EDGE;
+        var rt = (repeat.search(/^repeat(-y)?$/) === 0) && (isPOT || this.renderer.WebGLVersion > 1) ? gl.REPEAT : gl.CLAMP_TO_EDGE;
 
         this.setTexture2D(texture, unit);
 
@@ -29138,37 +29304,6 @@ class WebGLCompositor {
     }
 
     /**
-     * Create a full index buffer for the element array
-     * @ignore
-     */
-    createIB() {
-        var indices = [
-            0, 1, 2,
-            2, 1, 3
-        ];
-
-        // ~384KB index buffer
-        var data = new Array(MAX_LENGTH * INDICES_PER_QUAD);
-        for (var i = 0; i < data.length; i++) {
-            data[i] = indices[i % INDICES_PER_QUAD] +
-                ~~(i / INDICES_PER_QUAD) * ELEMENTS_PER_QUAD;
-        }
-
-        return new Uint16Array(data);
-    }
-
-    /**
-     * Resize the stream buffer, retaining its original contents
-     * @ignore
-     */
-    resizeSB() {
-        this.sbSize <<= 1;
-        var stream = new Float32Array(this.sbSize * ELEMENT_SIZE * ELEMENTS_PER_QUAD);
-        stream.set(this.stream);
-        this.stream = stream;
-    }
-
-    /**
      * Select the shader to use for compositing
      * @name useShader
      * @see me.GLShader
@@ -29205,33 +29340,29 @@ class WebGLCompositor {
      * @memberOf me.WebGLCompositor
      * @function
      * @param {me.Renderer.Texture} texture Source texture
-     * @param {String} key Source texture region name
      * @param {Number} x Destination x-coordinate
      * @param {Number} y Destination y-coordinate
      * @param {Number} w Destination width
      * @param {Number} h Destination height
+     * @param {number} u0 Texture UV (u0) value.
+     * @param {number} v0 Texture UV (v0) value.
+     * @param {number} u1 Texture UV (u1) value.
+     * @param {number} v1 Texture UV (v1) value.
+     * @param {number} tint tint color to be applied to the texture in UINT32 format
      */
-    addQuad(texture, key, x, y, w, h) {
-        //var gl = this.gl;
-        var color = this.color.toArray();
-        var tint = this.tint.toArray();
+    addQuad(texture, x, y, w, h, u0, v0, u1, v1, tint) {
 
-        if (color[3] < 1 / 255) {
+        if (this.color.alpha < 1 / 255) {
             // Fast path: don't send fully transparent quads
             return;
-        } else {
-            // use the global alpha
-            tint[3] = color[3];
-        }
-
-        if (this.length >= MAX_LENGTH) {
-            this.flush();
-        }
-        if (this.length >= this.sbSize) {
-            this.resizeSB();
         }
 
         this.useShader(this.quadShader);
+
+        if (this.vertexBuffer.isFull(4)) {
+            // is the vertex buffer full if we add 4 more vertices
+            this.flush();
+        }
 
         // upload and activate the texture if necessary
         var unit = this.uploadTexture(texture);
@@ -29240,56 +29371,22 @@ class WebGLCompositor {
 
         // Transform vertices
         var m = this.viewMatrix,
-            v0 = this.v[0].set(x, y),
-            v1 = this.v[1].set(x + w, y),
-            v2 = this.v[2].set(x, y + h),
-            v3 = this.v[3].set(x + w, y + h);
+            vec0 = V_ARRAY[0].set(x, y),
+            vec1 = V_ARRAY[1].set(x + w, y),
+            vec2 = V_ARRAY[2].set(x, y + h),
+            vec3 = V_ARRAY[3].set(x + w, y + h);
 
         if (!m.isIdentity()) {
-            m.apply(v0);
-            m.apply(v1);
-            m.apply(v2);
-            m.apply(v3);
+            m.apply(vec0);
+            m.apply(vec1);
+            m.apply(vec2);
+            m.apply(vec3);
         }
 
-        // Array index computation
-        var idx0 = this.sbIndex,
-            idx1 = idx0 + ELEMENT_SIZE,
-            idx2 = idx1 + ELEMENT_SIZE,
-            idx3 = idx2 + ELEMENT_SIZE;
-
-        // Fill vertex buffer
-        // FIXME: Pack each vertex vector into single float
-        this.stream[idx0 + VERTEX_ELEMENT + 0] = v0.x;
-        this.stream[idx0 + VERTEX_ELEMENT + 1] = v0.y;
-        this.stream[idx1 + VERTEX_ELEMENT + 0] = v1.x;
-        this.stream[idx1 + VERTEX_ELEMENT + 1] = v1.y;
-        this.stream[idx2 + VERTEX_ELEMENT + 0] = v2.x;
-        this.stream[idx2 + VERTEX_ELEMENT + 1] = v2.y;
-        this.stream[idx3 + VERTEX_ELEMENT + 0] = v3.x;
-        this.stream[idx3 + VERTEX_ELEMENT + 1] = v3.y;
-
-        // Fill texture coordinates buffer
-        var uvs = texture.getUVs(key);
-        // FIXME: Pack each texture coordinate into single floats
-        this.stream[idx0 + REGION_ELEMENT + 0] = uvs[0];
-        this.stream[idx0 + REGION_ELEMENT + 1] = uvs[1];
-        this.stream[idx1 + REGION_ELEMENT + 0] = uvs[2];
-        this.stream[idx1 + REGION_ELEMENT + 1] = uvs[1];
-        this.stream[idx2 + REGION_ELEMENT + 0] = uvs[0];
-        this.stream[idx2 + REGION_ELEMENT + 1] = uvs[3];
-        this.stream[idx3 + REGION_ELEMENT + 0] = uvs[2];
-        this.stream[idx3 + REGION_ELEMENT + 1] = uvs[3];
-
-        // Fill color buffer
-        // FIXME: Pack color vector into single float
-        this.stream.set(tint, idx0 + COLOR_ELEMENT);
-        this.stream.set(tint, idx1 + COLOR_ELEMENT);
-        this.stream.set(tint, idx2 + COLOR_ELEMENT);
-        this.stream.set(tint, idx3 + COLOR_ELEMENT);
-
-        this.sbIndex += ELEMENT_SIZE * ELEMENTS_PER_QUAD;
-        this.length++;
+        this.vertexBuffer.push(vec0.x, vec0.y, u0, v0, tint);
+        this.vertexBuffer.push(vec1.x, vec1.y, u1, v0, tint);
+        this.vertexBuffer.push(vec2.x, vec2.y, u0, v1, tint);
+        this.vertexBuffer.push(vec3.x, vec3.y, u1, v1, tint);
     }
 
     /**
@@ -29298,28 +29395,32 @@ class WebGLCompositor {
      * @memberOf me.WebGLCompositor
      * @function
      */
-    flush() {
-        if (this.length) {
+    flush(mode = this.mode) {
+        var vertex = this.vertexBuffer;
+        var vertexCount = vertex.vertexCount;
+
+        if (vertexCount > 0) {
             var gl = this.gl;
+            var vertexSize = vertex.vertexSize;
 
             // Copy data into stream buffer
-            var len = this.length * ELEMENT_SIZE * ELEMENTS_PER_QUAD;
-            gl.bufferData(
-                gl.ARRAY_BUFFER,
-                this.stream.subarray(0, len),
-                gl.STREAM_DRAW
-            );
+            if (this.renderer.WebGLVersion > 1) {
+                gl.bufferData(gl.ARRAY_BUFFER, vertex.toFloat32(), gl.STREAM_DRAW, 0, vertexCount * vertexSize);
+            } else {
+                gl.bufferData(gl.ARRAY_BUFFER, vertex.toFloat32(0, vertexCount * vertexSize), gl.STREAM_DRAW);
+            }
 
             // Draw the stream buffer
-            gl.drawElements(
-                this.mode,
-                this.length * INDICES_PER_QUAD,
-                gl.UNSIGNED_SHORT,
-                0
-            );
+            // TODO : finalize the WebGLCompositor implementation (splitting this one into two)
+            // so that different compositor with different attributes/uniforms & drawing method can be used
+            if (this.activeShader === this.primitiveShader) {
+                gl.drawArrays(mode, 0, vertexCount);
+            } else {
+                gl.drawElements(mode, vertexCount / vertex.quadSize * INDICES_PER_QUAD, gl.UNSIGNED_SHORT, 0);
+            }
 
-            this.sbIndex = 0;
-            this.length = 0;
+            // clear the vertex buffer
+            vertex.clear();
         }
     }
 
@@ -29328,43 +29429,29 @@ class WebGLCompositor {
      * @name drawVertices
      * @memberOf me.WebGLCompositor
      * @function
-     * @param {GLENUM} [mode=gl.TRIANGLES] primitive type to render (gl.POINTS, gl.LINE_STRIP, gl.LINE_LOOP, gl.LINES, gl.TRIANGLE_STRIP, gl.TRIANGLE_FAN, gl.TRIANGLES)
-     * @param {me.Vector2d[]} [verts=[]] vertices
+     * @param {GLENUM} mode primitive type to render (gl.POINTS, gl.LINE_STRIP, gl.LINE_LOOP, gl.LINES, gl.TRIANGLE_STRIP, gl.TRIANGLE_FAN, gl.TRIANGLES)
+     * @param {me.Vector2d[]} verts vertices
      * @param {Number} [vertexCount=verts.length] amount of points defined in the points array
      */
-    drawVertices(mode, verts, vertexCount) {
-        var gl = this.gl;
-
-        vertexCount = vertexCount || verts.length;
-
+    drawVertices(mode, verts, vertexCount = verts.length) {
         // use the primitive shader
         this.useShader(this.primitiveShader);
-
         // Set the line color
         this.primitiveShader.setUniform("uColor", this.color);
 
-        // Put vertex data into the stream buffer
-        var offset = 0;
         var m = this.viewMatrix;
+        var vertex = this.vertexBuffer;
         var m_isIdentity = m.isIdentity();
+
         for (var i = 0; i < vertexCount; i++) {
             if (!m_isIdentity) {
                 m.apply(verts[i]);
             }
-            this.stream[offset + 0] = verts[i].x;
-            this.stream[offset + 1] = verts[i].y;
-            offset += ELEMENT_SIZE;
+            vertex.push(verts[i].x, verts[i].y);
         }
 
-        // Copy data into the stream buffer
-        gl.bufferData(
-            gl.ARRAY_BUFFER,
-            this.stream.subarray(0, vertexCount * ELEMENT_SIZE),
-            gl.STREAM_DRAW
-        );
-
-        // Draw the stream buffer
-        gl.drawArrays(mode, 0, vertexCount);
+        // flush
+        this.flush(mode);
     }
 
     /**
@@ -29422,14 +29509,6 @@ class WebGLRenderer extends Renderer {
         super(options);
 
         /**
-         * The WebGL context
-         * @name gl
-         * @memberOf me.WebGLRenderer
-         * type {WebGLRenderingContext}
-         */
-        this.context = this.gl = this.getContextGL(this.getScreenCanvas(), options.transparent);
-
-        /**
          * The WebGL version used by this renderer (1 or 2)
          * @name WebGLVersion
          * @memberOf me.WebGLRenderer
@@ -29437,7 +29516,7 @@ class WebGLRenderer extends Renderer {
          * @default 1
          * @readonly
          */
-        this.webGLVersion = 1;
+        this.WebGLVersion = 1;
 
         /**
          * The vendor string of the underlying graphics driver.
@@ -29458,6 +29537,14 @@ class WebGLRenderer extends Renderer {
          * @readonly
          */
         this.GPURenderer = null;
+
+        /**
+         * The WebGL context
+         * @name gl
+         * @memberOf me.WebGLRenderer
+         * type {WebGLRenderingContext}
+         */
+        this.context = this.gl = this.getContextGL(this.getScreenCanvas(), options.transparent);
 
         /**
          * Maximum number of texture unit supported under the current context
@@ -29735,14 +29822,18 @@ class WebGLRenderer extends Renderer {
         this.currentCompositor.uploadTexture(this.fontTexture, 0, 0, 0, true);
 
         // Add the new quad
-        var key = bounds.left + "," + bounds.top + "," + bounds.width + "," + bounds.height;
+        var uvs = this.fontTexture.getUVs(bounds.left + "," + bounds.top + "," + bounds.width + "," + bounds.height);
         this.currentCompositor.addQuad(
             this.fontTexture,
-            key,
             bounds.left,
             bounds.top,
             bounds.width,
-            bounds.height
+            bounds.height,
+            uvs[0],
+            uvs[1],
+            uvs[2],
+            uvs[3],
+            this.currentTint.toUint32()
         );
 
         // Clear font context2D
@@ -29802,8 +29893,9 @@ class WebGLRenderer extends Renderer {
             dy |= 0;
         }
 
-        var key = sx + "," + sy + "," + sw + "," + sh;
-        this.currentCompositor.addQuad(this.cache.get(image), key, dx, dy, dw, dh);
+        var texture = this.cache.get(image);
+        var uvs = texture.getUVs(sx + "," + sy + "," + sw + "," + sh);
+        this.currentCompositor.addQuad(texture, dx, dy, dw, dh, uvs[0], uvs[1], uvs[2], uvs[3], this.currentTint.toUint32());
     }
 
     /**
@@ -29819,8 +29911,8 @@ class WebGLRenderer extends Renderer {
      * @see me.WebGLRenderer#createPattern
      */
     drawPattern(pattern, x, y, width, height) {
-        var key = "0,0," + width + "," + height;
-        this.currentCompositor.addQuad(pattern, key, x, y, width, height);
+        var uvs = pattern.getUVs("0,0," + width + "," + height);
+        this.currentCompositor.addQuad(pattern, x, y, width, height, uvs[0], uvs[1], uvs[2], uvs[3], this.currentTint.toUint32());
     }
 
 
@@ -30034,7 +30126,7 @@ class WebGLRenderer extends Renderer {
      * @param {Number} alpha 0.0 to 1.0 values accepted.
      */
     setGlobalAlpha(a) {
-        this.currentColor.glArray[3] = a;
+        this.currentColor.alpha = a;
     }
 
     /**
@@ -30046,9 +30138,9 @@ class WebGLRenderer extends Renderer {
      * @param {me.Color|String} color css color string.
      */
     setColor(color) {
-        var alpha = this.currentColor.glArray[3];
+        var alpha = this.currentColor.alpha;
         this.currentColor.copy(color);
-        this.currentColor.glArray[3] *= alpha;
+        this.currentColor.alpha *= alpha;
     }
 
     /**
@@ -30305,7 +30397,7 @@ class WebGLRenderer extends Renderer {
         }
 
         // calculate all vertices
-        for (i = 0; i < indices.length; i ++ ) {
+        for (i = 0; i < indices.length; i++ ) {
             glPoints[i].set(x + points[indices[i]].x, y + points[indices[i]].y);
         }
 
@@ -30804,9 +30896,9 @@ function init(game_width, game_height, options) {
         },
         false
     );
-    if (typeof window.screen !== "undefined") {
-        // is this one required ?
-        window.screen.onorientationchange = function (e) {
+
+    if (device$1.ScreenOrientation === true) {
+        window.screen.orientation.onchange = function (e) {
             emit(WINDOW_ONORIENTATION_CHANGE, e);
         };
     }
@@ -31445,10 +31537,10 @@ class BasePlugin {
          * this can be overridden by the plugin
          * @public
          * @type String
-         * @default "10.0.2"
+         * @default "10.1.0"
          * @name me.plugin.Base#version
          */
-        this.version = "10.0.2";
+        this.version = "10.1.0";
     }
 }
 
@@ -35688,7 +35780,7 @@ var deprecated = /*#__PURE__*/Object.freeze({
  * @name version
  * @type {string}
  */
-const version = "10.0.2";
+const version = "10.1.0";
 
 
 /**

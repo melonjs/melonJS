@@ -1582,7 +1582,7 @@ export class Color {
      */
     set r(arg: number);
     /**
-     * Color Red Component
+     * Color Red Component [0 .. 255]
      * @type Number
      * @name r
      * @readonly
@@ -1597,7 +1597,7 @@ export class Color {
      */
     set g(arg: number);
     /**
-     * Color Green Component
+     * Color Green Component [0 .. 255]
      * @type Number
      * @name g
      * @readonly
@@ -1612,7 +1612,7 @@ export class Color {
      */
     set b(arg: number);
     /**
-     * Color Blue Component
+     * Color Blue Component [0 .. 255]
      * @type Number
      * @name b
      * @readonly
@@ -1627,7 +1627,7 @@ export class Color {
      */
     set alpha(arg: number);
     /**
-     * Color Alpha Component
+     * Color Alpha Component [0.0 .. 1.0]
      * @type Number
      * @name alpha
      * @readonly
@@ -1753,6 +1753,15 @@ export class Color {
      * @return {me.Color} Reference to this object for method chaining
      */
     parseHex(hexColor: any, argb?: boolean): any;
+    /**
+     * Pack this color into a Uint32 ARGB representation
+     * @name toUint32
+     * @memberOf me.Color
+     * @function
+     * @param {Number} [alpha=1.0] alpha value [0.0 .. 1.0]
+     * @return {Uint32}
+     */
+    toUint32(alpha?: number): any;
     /**
      * return an array representation of this object
      * @name toArray
@@ -4469,7 +4478,7 @@ export namespace ParticleEmitterSettings {
  * @classdesc
  * a pointer object, representing a single finger on a touch enabled device.
  * @class
- * @extends me.Rect
+ * @extends me.Bounds
  * @memberOf me
  * @constructor
  */
@@ -4701,7 +4710,11 @@ export class Pointer {
      * @param {Number} [pointedId=1] the Pointer, Touch or Mouse event Id (1)
      */
     private setEvent;
+    x: any;
+    y: any;
     isNormalized: boolean;
+    width: any;
+    height: any;
 }
 /**
  * @classdesc
@@ -6000,9 +6013,10 @@ export class Renderer {
      * @name setTint
      * @memberOf me.Renderer.prototype
      * @function
-     * @param {me.Color} [tint] the tint color
+     * @param {me.Color} tint the tint color
+     * @param {Number} [alpha] an alpha value to be applied to the tint
      */
-    setTint(tint?: any): void;
+    setTint(tint: any, alpha?: number): void;
     /**
      * clear the rendering tint set through setTint.
      * @name clearTint
@@ -6638,7 +6652,7 @@ export class TMXLayer {
      * // get the TMX Map Layer called "Front layer"
      * var layer = me.game.world.getChildByName("Front Layer")[0];
      * // get the tile object corresponding to the latest pointer position
-     * var tile = layer.getTile(me.input.pointer.pos.x, me.input.pointer.pos.y);
+     * var tile = layer.getTile(me.input.pointer.x, me.input.pointer.y);
      */
     public getTile(x: number, y: number): any;
     /**
@@ -8397,14 +8411,11 @@ export class WebGLCompositor {
      * @type Number
      * @readonly
      */
-    readonly length: number;
-    currentTextureUnit: any;
+    readonly currentTextureUnit: number;
     boundTextures: any[];
-    v: Vector2d[];
     renderer: any;
     gl: any;
     color: any;
-    tint: any;
     viewMatrix: any;
     /**
      * a reference to the active WebGL shader
@@ -8430,9 +8441,7 @@ export class WebGLCompositor {
     attributes: any[];
     primitiveShader: GLShader;
     quadShader: GLShader;
-    sbSize: number;
-    sbIndex: number;
-    stream: Float32Array;
+    vertexBuffer: VertexArrayBuffer;
     /**
      * Reset compositor internal state
      * @ignore
@@ -8446,7 +8455,7 @@ export class WebGLCompositor {
      * @param {String} name name of the attribute in the vertex shader
      * @param {Number} size number of components per vertex attribute. Must be 1, 2, 3, or 4.
      * @param {GLenum} type data type of each component in the array
-     * @param {Boolean} normalized whether integer data values should be normalized into a certain
+     * @param {Boolean} normalized whether integer data values should be normalized into a certain range when being cast to a float
      * @param {Number} offset offset in bytes of the first component in the vertex attribute array
      */
     addAttribute(name: string, size: number, type: GLenum, normalized: boolean, offset: number): void;
@@ -8491,17 +8500,7 @@ export class WebGLCompositor {
     /**
      * @ignore
      */
-    uploadTexture(texture: any, w: any, h: any, b: any, force: any): any;
-    /**
-     * Create a full index buffer for the element array
-     * @ignore
-     */
-    createIB(): Uint16Array;
-    /**
-     * Resize the stream buffer, retaining its original contents
-     * @ignore
-     */
-    resizeSB(): void;
+    uploadTexture(texture: any, w: any, h: any, b: any, force: any): number;
     /**
      * Select the shader to use for compositing
      * @name useShader
@@ -8517,30 +8516,34 @@ export class WebGLCompositor {
      * @memberOf me.WebGLCompositor
      * @function
      * @param {me.Renderer.Texture} texture Source texture
-     * @param {String} key Source texture region name
      * @param {Number} x Destination x-coordinate
      * @param {Number} y Destination y-coordinate
      * @param {Number} w Destination width
      * @param {Number} h Destination height
+     * @param {number} u0 Texture UV (u0) value.
+     * @param {number} v0 Texture UV (v0) value.
+     * @param {number} u1 Texture UV (u1) value.
+     * @param {number} v1 Texture UV (v1) value.
+     * @param {number} tint tint color to be applied to the texture in UINT32 format
      */
-    addQuad(texture: any, key: string, x: number, y: number, w: number, h: number): void;
+    addQuad(texture: any, x: number, y: number, w: number, h: number, u0: number, v0: number, u1: number, v1: number, tint: number): void;
     /**
      * Flush batched texture operations to the GPU
      * @param
      * @memberOf me.WebGLCompositor
      * @function
      */
-    flush(): void;
+    flush(mode?: any): void;
     /**
      * Draw an array of vertices
      * @name drawVertices
      * @memberOf me.WebGLCompositor
      * @function
-     * @param {GLENUM} [mode=gl.TRIANGLES] primitive type to render (gl.POINTS, gl.LINE_STRIP, gl.LINE_LOOP, gl.LINES, gl.TRIANGLE_STRIP, gl.TRIANGLE_FAN, gl.TRIANGLES)
-     * @param {me.Vector2d[]} [verts=[]] vertices
+     * @param {GLENUM} mode primitive type to render (gl.POINTS, gl.LINE_STRIP, gl.LINE_LOOP, gl.LINES, gl.TRIANGLE_STRIP, gl.TRIANGLE_FAN, gl.TRIANGLES)
+     * @param {me.Vector2d[]} verts vertices
      * @param {Number} [vertexCount=verts.length] amount of points defined in the points array
      */
-    drawVertices(mode?: any, verts?: any[], vertexCount?: number): void;
+    drawVertices(mode: any, verts: any[], vertexCount?: number): void;
     /**
      * Specify the color values used when clearing color buffers. The values are clamped between 0 and 1.
      * @name clearColor
@@ -8585,14 +8588,6 @@ export class WebGLCompositor {
 export class WebGLRenderer {
     constructor(options: any);
     /**
-     * The WebGL context
-     * @name gl
-     * @memberOf me.WebGLRenderer
-     * type {WebGLRenderingContext}
-     */
-    context: WebGLRenderingContext;
-    gl: WebGLRenderingContext;
-    /**
      * The WebGL version used by this renderer (1 or 2)
      * @name WebGLVersion
      * @memberOf me.WebGLRenderer
@@ -8600,7 +8595,7 @@ export class WebGLRenderer {
      * @default 1
      * @readonly
      */
-    readonly webGLVersion: number;
+    readonly WebGLVersion: number;
     /**
      * The vendor string of the underlying graphics driver.
      * @name GPUVendor
@@ -8619,6 +8614,14 @@ export class WebGLRenderer {
      * @readonly
      */
     readonly GPURenderer: string;
+    /**
+     * The WebGL context
+     * @name gl
+     * @memberOf me.WebGLRenderer
+     * type {WebGLRenderingContext}
+     */
+    context: WebGLRenderingContext;
+    gl: WebGLRenderingContext;
     /**
      * Maximum number of texture unit supported under the current context
      * @name maxTextures
@@ -8795,7 +8798,6 @@ export class WebGLRenderer {
      * @return {WebGLRenderingContext}
      */
     getContextGL(canvas: any, transparent?: boolean): WebGLRenderingContext;
-    WebGLVersion: number;
     /**
      * Returns the WebGLContext instance for the renderer
      * return a reference to the system 2d Context
@@ -9279,6 +9281,7 @@ declare namespace device$1 {
     const localStorage: boolean;
     const hasAccelerometer: boolean;
     const hasDeviceOrientation: boolean;
+    const ScreenOrientation: boolean;
     const hasFullscreenSupport: boolean;
     const hasPointerLockSupport: boolean;
     const hasWebAudio: boolean;
@@ -9930,7 +9933,7 @@ export var input: Readonly<{
     __proto__: any;
     preventDefault: boolean;
     readonly pointerEventTarget: EventTarget;
-    readonly pointer: any;
+    pointer: any;
     readonly throttlingInterval: number;
     globalToLocal: typeof globalToLocal;
     setTouchAction: typeof setTouchAction;
@@ -12260,6 +12263,54 @@ declare class Bounds {
     toPolygon(): any;
 }
 /**
+ * @classdesc
+ * a Vertex Buffer object
+ * @class VertexArrayBuffer
+ * @private
+ */
+declare class VertexArrayBuffer {
+    constructor(vertex_size: any, vertex_per_quad: any);
+    vertexSize: any;
+    quadSize: any;
+    maxVertex: number;
+    vertexCount: number;
+    buffer: ArrayBuffer;
+    bufferF32: Float32Array;
+    bufferU32: Uint32Array;
+    /**
+     * clear the vertex array buffer
+     */
+    clear(): void;
+    /**
+     * return true if full
+     */
+    isFull(vertex?: number): boolean;
+    /**
+     * resize the vertex buffer, retaining its original contents
+     */
+    resize(): VertexArrayBuffer;
+    /**
+     * push a new vertex to the buffer
+     */
+    push(x: any, y: any, u: any, v: any, tint: any): VertexArrayBuffer;
+    /**
+     * return a reference to the data in Float32 format
+     */
+    toFloat32(begin: any, end: any): Float32Array;
+    /**
+     * return a reference to the data in Uint32 format
+     */
+    toUint32(begin: any, end: any): Uint32Array;
+    /**
+     * return the size of the vertex in vertex
+     */
+    length(): number;
+    /**
+     * return true if empty
+     */
+    isEmpty(): boolean;
+}
+/**
  * Initialize and configure the audio support.<br>
  * melonJS supports a wide array of audio codecs that have varying browser support :
  * <i> ("mp3", "mpeg", opus", "ogg", "oga", "wav", "aac", "caf", "m4a", "m4b", "mp4", "weba", "webm", "dolby", "flac")</i>.<br>
@@ -12643,8 +12694,8 @@ declare function draw(stage: any): void;
  * @function
  * @param {Number} x the global x coordinate to be translated.
  * @param {Number} y the global y coordinate to be translated.
- * @param {Number} [v] an optional vector object where to set the
- * @return {me.Vector2d} A vector object with the corresponding translated coordinates.
+ * @param {me.Vector2d} [v] an optional vector object where to set the translated coordinates
+ * @return {me.Vector2d} A vector object with the corresponding translated coordinates
  * @example
  * onMouseEvent : function (pointer) {
  *    // convert the given into local (viewport) relative coordinates
@@ -12652,7 +12703,7 @@ declare function draw(stage: any): void;
  *    // do something with pos !
  * };
  */
-declare function globalToLocal(x: number, y: number, v?: number): any;
+declare function globalToLocal(x: number, y: number, v?: any): any;
 /**
  * enable/disable all gestures on the given element.<br>
  * by default melonJS will disable browser handling of all panning and zooming gestures.
@@ -12872,7 +12923,7 @@ declare class BasePlugin {
      * this can be overridden by the plugin
      * @public
      * @type String
-     * @default "10.0.2"
+     * @default "10.1.0"
      * @name me.plugin.Base#version
      */
     public version: string;
