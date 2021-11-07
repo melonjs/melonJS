@@ -302,9 +302,9 @@ export function init(game_width, game_height, options) {
         },
         false
     );
-    if (typeof window.screen !== "undefined") {
-        // is this one required ?
-        window.screen.onorientationchange = function (e) {
+
+    if (device.ScreenOrientation === true) {
+        window.screen.orientation.onchange = function (e) {
             event.emit(event.WINDOW_ONORIENTATION_CHANGE, e);
         };
     }

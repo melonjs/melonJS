@@ -130,6 +130,10 @@ function _checkCapabilities() {
     device.hasDeviceOrientation = !!window.DeviceOrientationEvent;
     device.hasAccelerometer = !!window.DeviceMotionEvent;
 
+    // support the ScreenOrientation API
+    device.ScreenOrientation = (typeof screen !== "undefined") &&
+                               (typeof screen.orientation !== "undefined");
+
     // fullscreen api detection & polyfill when possible
     device.hasFullscreenSupport = prefixed("fullscreenEnabled", document) ||
                                 document.mozFullScreenEnabled;
@@ -272,6 +276,16 @@ let device = {
      * @memberOf me.device
      */
     hasDeviceOrientation : false,
+
+    /**
+     * Supports the ScreenOrientation API
+     * @see https://developer.mozilla.org/en-US/docs/Web/API/ScreenOrientation/onchange
+     * @type Boolean
+     * @readonly
+     * @name ScreenOrientation
+     * @memberOf me.device
+     */
+    ScreenOrientation : false,
 
     /**
      * Browser full screen support
@@ -705,7 +719,7 @@ let device = {
         var screen = window.screen;
 
         // first try using "standard" values
-        if (typeof screen !== "undefined") {
+        if (this.ScreenOrientation === true) {
             var orientation = prefixed("orientation", screen);
             if (typeof orientation !== "undefined" && typeof orientation.type === "string") {
                 // Screen Orientation API specification

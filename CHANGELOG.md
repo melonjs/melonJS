@@ -7,6 +7,7 @@
 - WebGL: refactor/simplify the WebGLCompositor implementation to be more generic ()
 - WebGL: prevent temporary Array Buffer Allocation when using WebGL2
 - WebGL: tint color are now packed into Uint32 before passing them to the Vertex Shader
+- Device: replace use of deprecated `onorientationchange()` event listener by the standard ScreenOrientation one
 
 ### Fixed
 - Input: fix a regression, throwing an undefined property exception, when accessing me.input.pointer before registering on any events (thanks @kkeiper1103)
