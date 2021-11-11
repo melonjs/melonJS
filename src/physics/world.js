@@ -7,8 +7,9 @@ import { collisionCheck } from "./detector.js";
 import state from "./../state/state.js";
 
 /**
+* @classdesc
  * an object representing the physic world, and responsible for managing and updating all childs and physics
- * @class
+ * @class World
  * @extends me.Container
  * @memberOf me
  * @constructor

@@ -17,6 +17,7 @@ var deferredRemove = function (child, keepalive) {
 var globalFloatingCounter = 0;
 
 /**
+ * @classdesc
  * me.Container represents a collection of child objects
  * @class Container
  * @extends me.Renderable
