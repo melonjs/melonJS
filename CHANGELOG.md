@@ -1,5 +1,11 @@
 # Changelog
 
+## [10.1.1] (melonJS 2) - _2021-11-11_
+
+### Fixed
+- documentation: add missing pages for `Container` and `World` object
+- Renderable: also flag as "dirty" when changing opacity, or when viewport change is triggering an `ImageLayer` update
+
 ## [10.1.0] (melonJS 2) - _2021-11-08_
 
 ### Changed
