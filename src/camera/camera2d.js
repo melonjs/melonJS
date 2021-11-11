@@ -221,10 +221,10 @@ class Camera2d extends Renderable {
      * @param {Number} [x=0]
      * @param {Number} [y=0]
      */
-    reset(x, y) {
+    reset(x = 0, y = 0) {
         // reset the initial camera position to 0,0
-        this.pos.x = x || 0;
-        this.pos.y = y || 0;
+        this.pos.x = x;
+        this.pos.y = y;
 
         // reset the target
         this.unfollow();
