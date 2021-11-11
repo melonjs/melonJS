@@ -93,7 +93,7 @@ Using melonJS
 Basic Example
 
 ```JavaScript
-import * as me from "melonjs.module.js";
+import * as me from "https://cdn.jsdelivr.net/npm/melonjs/dist/melonjs.module.js";
 
 me.device.onReady(function () {
     // initialize the display canvas once the device/browser is ready
@@ -126,8 +126,6 @@ For your first time using melonJS, follow these tutorials :
 
 - [Platformer](http://melonjs.github.io/tutorial-platformer/) Step by Step Tutorial.
 - [Space Invaders](http://melonjs.github.io/tutorial-space-invaders/) Step by Step Tutorial.
-
-> Note: current version of both the tutorials are not compatible with the ES6 version.
 
 You may find it useful to skim the overview found at the wiki [Details & Usage](https://github.com/melonjs/melonJS/wiki#details--usage)
 
