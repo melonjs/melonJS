@@ -239,6 +239,8 @@ class ImageLayer extends Sprite {
         else {
             this.pos.y = y;
         }
+
+        this.isDirty = true;
     }
 
    /*
