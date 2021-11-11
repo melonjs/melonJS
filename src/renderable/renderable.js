@@ -422,6 +422,7 @@ class Renderable extends Rect {
             if (isNaN(this.alpha)) {
                 this.alpha = 1.0;
             }
+            this.isDirty = true;
         }
     }
 
