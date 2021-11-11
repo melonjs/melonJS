@@ -1,5 +1,5 @@
 /*!
- * melonJS Game Engine - v10.1.0
+ * melonJS Game Engine - v10.1.1
  * http://www.melonjs.org
  * melonjs is licensed under the MIT License.
  * http://www.opensource.org/licenses/mit-license
@@ -13324,6 +13324,7 @@ class Renderable extends Rect {
             if (isNaN(this.alpha)) {
                 this.alpha = 1.0;
             }
+            this.isDirty = true;
         }
     }
 
@@ -15696,6 +15697,7 @@ var deferredRemove = function (child, keepalive) {
 var globalFloatingCounter = 0;
 
 /**
+ * @classdesc
  * me.Container represents a collection of child objects
  * @class Container
  * @extends me.Renderable
@@ -17024,8 +17026,9 @@ class QuadTree {
 }
 
 /**
+* @classdesc
  * an object representing the physic world, and responsible for managing and updating all childs and physics
- * @class
+ * @class World
  * @extends me.Container
  * @memberOf me
  * @constructor
@@ -17660,10 +17663,10 @@ class Camera2d extends Renderable {
      * @param {Number} [x=0]
      * @param {Number} [y=0]
      */
-    reset(x, y) {
+    reset(x = 0, y = 0) {
         // reset the initial camera position to 0,0
-        this.pos.x = x || 0;
-        this.pos.y = y || 0;
+        this.pos.x = x;
+        this.pos.y = y;
 
         // reset the target
         this.unfollow();
@@ -31537,10 +31540,10 @@ class BasePlugin {
          * this can be overridden by the plugin
          * @public
          * @type String
-         * @default "10.1.0"
+         * @default "10.1.1"
          * @name me.plugin.Base#version
          */
-        this.version = "10.1.0";
+        this.version = "10.1.1";
     }
 }
 
@@ -33885,6 +33888,8 @@ class ImageLayer extends Sprite {
         else {
             this.pos.y = y;
         }
+
+        this.isDirty = true;
     }
 
    /*
@@ -35780,7 +35785,7 @@ var deprecated = /*#__PURE__*/Object.freeze({
  * @name version
  * @type {string}
  */
-const version = "10.1.0";
+const version = "10.1.1";
 
 
 /**

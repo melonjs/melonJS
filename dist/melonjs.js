@@ -1,5 +1,5 @@
 /*!
- * melonJS Game Engine - v10.1.0
+ * melonJS Game Engine - v10.1.1
  * http://www.melonjs.org
  * melonjs is licensed under the MIT License.
  * http://www.opensource.org/licenses/mit-license
@@ -13456,6 +13456,7 @@
                 if (isNaN(this.alpha)) {
                     this.alpha = 1.0;
                 }
+                this.isDirty = true;
             }
         };
 
@@ -15846,6 +15847,7 @@
     var globalFloatingCounter = 0;
 
     /**
+     * @classdesc
      * me.Container represents a collection of child objects
      * @class Container
      * @extends me.Renderable
@@ -17191,8 +17193,9 @@
     };
 
     /**
+    * @classdesc
      * an object representing the physic world, and responsible for managing and updating all childs and physics
-     * @class
+     * @class World
      * @extends me.Container
      * @memberOf me
      * @constructor
@@ -17836,9 +17839,12 @@
          * @param {Number} [y=0]
          */
         Camera2d.prototype.reset = function reset (x, y) {
+            if ( x === void 0 ) x = 0;
+            if ( y === void 0 ) y = 0;
+
             // reset the initial camera position to 0,0
-            this.pos.x = x || 0;
-            this.pos.y = y || 0;
+            this.pos.x = x;
+            this.pos.y = y;
 
             // reset the target
             this.unfollow();
@@ -31780,10 +31786,10 @@
          * this can be overridden by the plugin
          * @public
          * @type String
-         * @default "10.1.0"
+         * @default "10.1.1"
          * @name me.plugin.Base#version
          */
-        this.version = "10.1.0";
+        this.version = "10.1.1";
     };
 
     /**
@@ -34142,6 +34148,8 @@
             else {
                 this.pos.y = y;
             }
+
+            this.isDirty = true;
         };
 
        /*
@@ -36050,7 +36058,7 @@
      * @name version
      * @type {string}
      */
-    var version = "10.1.0";
+    var version = "10.1.1";
 
 
     /**

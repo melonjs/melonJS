@@ -1842,6 +1842,7 @@ export class ColorLayer {
     destroy(): void;
 }
 /**
+ * @classdesc
  * me.Container represents a collection of child objects
  * @class Container
  * @extends me.Renderable
@@ -3069,6 +3070,7 @@ export class ImageLayer {
      * @function
      */
     updateLayer(vpos: any): void;
+    isDirty: boolean;
     preDraw(renderer: any): void;
     /**
      * draw the image layer
@@ -9056,8 +9058,9 @@ export class WebGLRenderer {
     clearMask(): void;
 }
 /**
+* @classdesc
  * an object representing the physic world, and responsible for managing and updating all childs and physics
- * @class
+ * @class World
  * @extends me.Container
  * @memberOf me
  * @constructor
@@ -12923,7 +12926,7 @@ declare class BasePlugin {
      * this can be overridden by the plugin
      * @public
      * @type String
-     * @default "10.1.0"
+     * @default "10.1.1"
      * @name me.plugin.Base#version
      */
     public version: string;
