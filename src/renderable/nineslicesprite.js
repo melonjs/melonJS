@@ -39,6 +39,11 @@ class NineSliceSprite extends Sprite {
         // call the super constructor
         super(x, y, settings);
 
+        // ensure mandatory properties are defined
+        if ((typeof settings.width !== "number") || (typeof settings.height !== "number")) {
+            throw new Error("height and width properties are mandatory");
+        }
+
         // override the renderable sprite with the given one
         // resize based on the active frame
         this.width = settings.width;
@@ -127,15 +132,23 @@ class NineSliceSprite extends Sprite {
 
 
         // DRAW SIDES and CENTER
+        var image_center_width = w - (corner_width << 1);
+        var image_center_height = h - (corner_height << 1);
+
+        var target_center_width = this.width - (corner_width << 1);
+        var target_center_height = this.height - (corner_height << 1);
 
         //Top center
         renderer.drawImage(
             this.image,
-            sx + corner_width,                              // sx
-            sy,                                             // sy
-            w - corner_width * 2, corner_height,            // sw,sh
-            dx + corner_width, dy,                          // dx,dy
-            this.width - corner_width * 2, corner_height    // dw,dh
+            sx + corner_width,         // sx
+            sy,                        // sy
+            image_center_width,        // sw
+            corner_height,             // sh
+            dx + corner_width,         // dx
+            dy,                        // dy
+            target_center_width,       // dw
+            corner_height              // dh
         );
 
         //Bottom center
@@ -143,25 +156,25 @@ class NineSliceSprite extends Sprite {
             this.image,
             sx + corner_width,                  // sx
             sy + h - corner_height,             // sy
-            w - corner_width * 2,               // sw
-            corner_height,                      // sw
+            image_center_width,                 // sw
+            corner_height,                      // sh
             dx + corner_width,                  // dx
             dy + this.height - corner_height,   // dx
-            this.width - corner_width * 2,      // dw
+            target_center_width,                // dw
             corner_height                       // dh
         );
 
         // Middle Left
         renderer.drawImage(
             this.image,
-            sx,                             // sx
-            sy + corner_height,             // sy
-            corner_width,                   // sw
-            w - corner_width * 2,           // sh
-            dx,                             // dx
-            dy + corner_height,             // dy
-            corner_width,                   // dw
-            this.height - corner_width * 2  // dh
+            sx,                   // sx
+            sy + corner_height,   // sy
+            corner_width,         // sw
+            image_center_height,  // sh
+            dx,                   // dx
+            dy + corner_height,   // dy
+            corner_width,         // dw
+            target_center_height  // dh
         );
 
         // Middle Right
@@ -170,24 +183,24 @@ class NineSliceSprite extends Sprite {
             sx + w - corner_width,          // sx
             sy + corner_height,             // sy
             corner_width,                   // sw
-            w - corner_width * 2,           // sh
+            image_center_height,            // sh
             dx + this.width - corner_width, // dx
             dy + corner_height,             // dy
             corner_width,                   // dw
-            this.height - corner_width * 2  // dh
+            target_center_height            // dh
         );
 
         // Middle Center
         renderer.drawImage(
             this.image,
-            sx + corner_width,              // sx
-            sy + corner_height,             // sy
-            w - corner_width * 2,           // sw
-            w - corner_width * 2,           // sh
-            dx + corner_width,              // dx
-            dy + corner_height,             // dy
-            this.width - corner_width * 2,  // dw
-            this.height - corner_width * 2  // dh
+            sx + corner_width,    // sx
+            sy + corner_height,   // sy
+            image_center_width,   // sw
+            image_center_height,  // sh
+            dx + corner_width,    // dx
+            dy + corner_height,   // dy
+            target_center_width,  // dw
+            target_center_height  // dh
         );
     }
 };
