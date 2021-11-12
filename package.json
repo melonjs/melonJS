@@ -1,6 +1,6 @@
 {
   "name": "melonjs",
-  "version": "10.1.1",
+  "version": "10.2.0",
   "description": "melonJS Game Engine",
   "homepage": "http://www.melonjs.org/",
   "keywords": [
@@ -75,7 +75,7 @@
     "karma-jasmine": "^4.0.1",
     "karma-nyan-reporter": "0.2.5",
     "qs": "^6.10.1",
-    "rollup": "^2.59.0",
+    "rollup": "^2.60.0",
     "rollup-plugin-bundle-size": "^1.0.3",
     "rollup-plugin-string": "^3.0.0",
     "terser": "^5.8.0",
