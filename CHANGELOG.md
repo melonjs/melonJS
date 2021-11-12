@@ -1,5 +1,10 @@
 # Changelog
 
+## [10.2.0] (melonJS 2) - _2021-11-xx
+
+### Added
+- renderable: added a basic `NineSliceSprite` renderable object
+
 ## [10.1.1] (melonJS 2) - _2021-11-12_
 
 ### Fixed

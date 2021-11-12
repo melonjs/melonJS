@@ -48,6 +48,7 @@ import BitmapTextData from "./text/bitmaptextdata.js";
 import ColorLayer from "./renderable/colorlayer.js";
 import ImageLayer from "./renderable/imagelayer.js";
 import Sprite from "./renderable/sprite.js";
+import NineSliceSprite from "./renderable/nineslicesprite.js";
 import GUI_Object from "./renderable/GUI.js";
 import Collectable from "./renderable/collectable.js";
 import Trigger from "./renderable/trigger.js";
@@ -145,6 +146,7 @@ export {
     ColorLayer,
     ImageLayer,
     Sprite,
+    NineSliceSprite,
     GUI_Object,
     Collectable,
     Trigger,
