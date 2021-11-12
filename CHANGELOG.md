@@ -1,6 +1,6 @@
 # Changelog
 
-## [10.1.1] (melonJS 2) - _2021-11-11_
+## [10.1.1] (melonJS 2) - _2021-11-12_
 
 ### Fixed
 - documentation: add missing pages for `Container` and `World` object
@@ -1023,6 +1023,7 @@
 - first public version with alex4 !
 - www.melonjs.org is live :)
 
+[10.1.1]: https://github.com/melonjs/melonJS/compare/10.1.0...10.1.1
 [10.1.0]: https://github.com/melonjs/melonJS/compare/10.0.2...10.1.0
 [10.0.2]: https://github.com/melonjs/melonJS/compare/10.0.1...10.0.2
 [10.0.1]: https://github.com/melonjs/melonJS/compare/10.0.0...10.0.1
