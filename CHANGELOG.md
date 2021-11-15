@@ -15,7 +15,7 @@
 
 ### Changed
 - Input: refactor me.Pointer by extending me.Bounds instead of me.Rect (simplify implementation and memory usage when using pointer Event)
-- WebGL: refactor/simplify the WebGLCompositor implementation to be more generic ()
+- WebGL: refactor/simplify the WebGLCompositor implementation to be more generic
 - WebGL: prevent temporary Array Buffer Allocation when using WebGL2
 - WebGL: tint color are now packed into Uint32 before passing them to the Vertex Shader
 - Device: replace use of deprecated `onorientationchange()` event listener by the standard ScreenOrientation one
@@ -1028,6 +1028,7 @@
 - first public version with alex4 !
 - www.melonjs.org is live :)
 
+[10.2.0]: https://github.com/melonjs/melonJS/compare/10.1.1...10.2.0
 [10.1.1]: https://github.com/melonjs/melonJS/compare/10.1.0...10.1.1
 [10.1.0]: https://github.com/melonjs/melonJS/compare/10.0.2...10.1.0
 [10.0.2]: https://github.com/melonjs/melonJS/compare/10.0.1...10.0.2
