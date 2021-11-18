@@ -180,7 +180,7 @@ class Renderer {
      * @function
      * @param {HTMLCanvasElement} canvas
      * @param {Boolean} [transparent=true] use false to disable transparency
-     * @return {Context2d}
+     * @return {CanvasRenderingContext2D}
      */
     getContext2d(c, transparent) {
         if (typeof c === "undefined" || c === null) {
