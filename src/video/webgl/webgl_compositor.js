@@ -250,7 +250,7 @@ class WebGLCompositor {
         var rs = (repeat.search(/^repeat(-x)?$/) === 0) && (isPOT || this.renderer.WebGLVersion > 1) ? gl.REPEAT : gl.CLAMP_TO_EDGE;
         var rt = (repeat.search(/^repeat(-y)?$/) === 0) && (isPOT || this.renderer.WebGLVersion > 1) ? gl.REPEAT : gl.CLAMP_TO_EDGE;
 
-        this.setTexture2D(texture, unit);
+        this.bindTexture2D(texture, unit);
 
         gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, rs);
         gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, rt);
@@ -274,13 +274,13 @@ class WebGLCompositor {
 
     /**
      * assign the given WebGL texture to the current batch
-     * @name setTexture2D
+     * @name bindTexture2D
      * @memberOf me.WebGLCompositor
      * @function
      * @param {WebGLTexture} a WebGL texture
      * @param {Number} unit Texture unit to which the given texture is bound
      */
-    setTexture2D(texture, unit) {
+    bindTexture2D(texture, unit) {
         var gl = this.gl;
 
         if (texture !== this.boundTextures[unit]) {
@@ -300,6 +300,17 @@ class WebGLCompositor {
         }
     }
 
+    /**
+     * unbind the given WebGL texture, forcing it to be reuploaded
+     * @name unbindTexture2D
+     * @memberOf me.WebGLCompositor
+     * @function
+     * @param {WebGLTexture} a WebGL texture
+     */
+    unbindTexture2D(texture) {
+        var unit = this.renderer.cache.getUnit(texture);
+        this.boundTextures[unit] = null;
+    }
 
     /**
      * @ignore
@@ -320,7 +331,7 @@ class WebGLCompositor {
                 texture.premultipliedAlpha
             );
         } else {
-            this.setTexture2D(texture2D, unit);
+            this.bindTexture2D(texture2D, unit);
         }
 
         return this.currentTextureUnit;
