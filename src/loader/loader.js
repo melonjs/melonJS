@@ -478,7 +478,7 @@ var loader = {
      * // set all resources to be loaded
      * me.loader.preload(game.resources, this.loaded.bind(this));
      */
-    preload(res, onload, switchToLoadState) {
+    preload(res, onload, switchToLoadState = true) {
         // parse the resources
         for (var i = 0; i < res.length; i++) {
             resourceCount += this.load(
@@ -492,7 +492,7 @@ var loader = {
             this.onload = onload;
         }
 
-        if (switchToLoadState !== false) {
+        if (switchToLoadState === true) {
             // swith to the loading screen
             state.change(state.LOADING);
         }
