@@ -60,6 +60,17 @@ class TextureCache {
     /**
      * @ignore
      */
+    remove(image) {
+        if (!this.cache.has(image)) {
+            if (this.cache.remove(image) === true) {
+                this.length--;
+            }
+        }
+    }
+
+    /**
+     * @ignore
+     */
     tint(src, color) {
         // make sure the src is in the cache
         var image_cache = this.tinted.get(src);
