@@ -68,7 +68,7 @@
     "ghpages": "0.0.10",
     "jasmine-core": "^3.10.1",
     "jsdoc": "^3.6.7",
-    "karma": "^6.3.8",
+    "karma": "^6.3.9",
     "karma-chrome-launcher": "^3.1.0",
     "karma-coverage": "^2.0.3",
     "karma-html-detailed-reporter": "^2.1.0",
@@ -78,7 +78,7 @@
     "rollup": "^2.60.0",
     "rollup-plugin-bundle-size": "^1.0.3",
     "rollup-plugin-string": "^3.0.0",
-    "terser": "^5.8.0",
+    "terser": "^5.10.0",
     "typescript": "^4.4.4"
   },
   "scripts": {
