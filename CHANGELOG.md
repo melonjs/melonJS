@@ -7,6 +7,9 @@
 - Renderable: added a basic `NineSliceSprite` renderable object
 - Renderable: new `offScreenCanvas` option for me.Text allowing to use an individual offscreen canvas texture per text element
 
+### Fixed
+- Loader: fix a "double initialization and double reset" bug with the default loading screen
+
 ## [10.1.1] (melonJS 2) - _2021-11-12_
 
 ### Fixed

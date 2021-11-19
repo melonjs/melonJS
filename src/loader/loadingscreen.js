@@ -121,12 +121,12 @@ class IconLogo extends Renderable {
  * @ignore
  * @constructor
  */
-var defaultLoadingScreen = new Stage({
+class DefaultLoadingScreen extends Stage {
     /**
      * call when the loader is resetted
      * @ignore
      */
-    onResetEvent : function () {
+    onResetEvent() {
         var barHeight = 8;
 
         // clear the background
@@ -185,6 +185,6 @@ var defaultLoadingScreen = new Stage({
         world.addChild(logo1, 2);
         world.addChild(logo2, 2);
     }
-});
+};
 
-export default defaultLoadingScreen;
+export default DefaultLoadingScreen;

@@ -4,7 +4,7 @@ import * as event from "./../system/event.js";
 import timer from "./../system/timer.js";
 import * as game from "./../game.js";
 import Stage from "./../state/stage.js";
-import defaultLoadingScreen from "./../loader/loadingscreen.js";
+import DefaultLoadingScreen from "./../loader/loadingscreen.js";
 
 
 // current state
@@ -137,7 +137,7 @@ function _switchState(state) {
 // initialize me.state on system boot
 event.on(event.BOOT, () => {
     // set the built-in loading stage
-    state.set(state.LOADING, defaultLoadingScreen);
+    state.set(state.LOADING, new DefaultLoadingScreen());
     // set and enable the default stage
     state.set(state.DEFAULT, new Stage());
     // enable by default as soon as the display is initialized
