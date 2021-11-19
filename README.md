@@ -31,7 +31,7 @@ Graphics
 - 2D sprite-based graphic engine
 - Fast WebGL 1 & 2 renderer for desktop and mobile devices with fallback to Canvas rendering
 - High DPI resolution & Canvas advanced auto scaling
-- Sprite with Animation management
+- Sprite with 9-slice scaling option, and animation management
 - built-in effects such as tinting and masking
 - Standard spritesheet, single and multiple Packed Textures support
 - System & Bitmap Text
