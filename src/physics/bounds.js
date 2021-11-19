@@ -347,8 +347,8 @@ class Bounds {
      * @return {boolean} True if the bounds overlap, otherwise false
      */
     overlaps(bounds) {
-        return (this.left <= bounds.right && this.right >= bounds.left
-            && this.bottom >= bounds.top && this.top <= bounds.bottom);
+        return !(this.right < bounds.left || this.left > bounds.right ||
+                 this.bottom < bounds.top || this.top > bounds.bottom);
     }
 
     /**
