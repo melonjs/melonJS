@@ -6,7 +6,8 @@ describe("Font : me.Text", function () {
         font = new me.Text(0, 0, {
             font:"Arial",
             size:8,
-            fillStyle:"white"
+            fillStyle:"white",
+            text:"test"
         });
     });
 

@@ -114,70 +114,6 @@ class IconLogo extends Renderable {
     }
 };
 
-// the melonJS Text Logo
-class TextLogo extends Renderable {
-    /**
-     * @ignore
-     */
-    constructor(w, h) {
-        super(0, 0, w, h);
-
-        this.textWidth = 0;
-
-        // offscreen cache canvas
-        this.fontCanvas = createCanvas(256, 64, true);
-        this.drawFont(renderer.getContext2d(this.fontCanvas));
-
-        this.anchorPoint.set(0, 0.5);
-    }
-
-    drawFont(context) {
-        var logo1 = pool.pull("Text", 0, 0, {
-            font: "century gothic",
-            size: 32,
-            fillStyle: "white",
-            textAlign: "middle",
-            textBaseline : "top",
-            text: "melon"
-        });
-        var logo2 = pool.pull("Text", 0, 0, {
-            font: "century gothic",
-            size: 32,
-            fillStyle: "#55aa00",
-            textAlign: "middle",
-            textBaseline : "top",
-            bold: true,
-            text: "JS"
-        });
-
-
-        // compute both logo respective size
-        var logo1_width = logo1.measureText(context).width;
-        var logo2_width = logo2.measureText(context).width;
-
-        this.textWidth = logo1_width + logo2_width;
-
-        // calculate the final rendering position
-        this.pos.x = Math.round(this.width - this.textWidth / 2);
-        this.pos.y = Math.round(this.height + 16);
-
-        // use the private _drawFont method to directly draw on the canvas context
-        logo1._drawFont(context, ["melon"], 0, 0);
-        logo2._drawFont(context, ["JS"], logo1_width, 0);
-
-        // put them back into the object pool
-        pool.push(logo1);
-        pool.push(logo2);
-    }
-
-    /**
-     * @ignore
-     */
-    draw(renderer) {
-        renderer.drawImage(this.fontCanvas, Math.round((renderer.getWidth() - this.textWidth) / 2), this.pos.y);
-    }
-
-};
 
 /**
  * a default loading screen
@@ -211,11 +147,43 @@ var defaultLoadingScreen = new Stage({
 
         ), 2);
 
+        var logo1 = pool.pull("Text",
+            renderer.getWidth() / 2,
+            (renderer.getHeight() / 2) + 16, {
+                font: "century gothic",
+                size: 32,
+                fillStyle: "white",
+                textAlign: "left",
+                textBaseline : "top",
+                text: "melon",
+                offScreenCanvas: true
+            }
+        );
+        logo1.anchorPoint.set(0, 0);
+
+        var logo2 = pool.pull("Text",
+            renderer.getWidth() / 2,
+            (renderer.getHeight() / 2) + 16, {
+                font: "century gothic",
+                size: 32,
+                fillStyle: "#55aa00",
+                textAlign: "left",
+                textBaseline : "top",
+                bold: true,
+                text: "JS",
+                offScreenCanvas: true
+            }
+        );
+        logo2.anchorPoint.set(0, 0);
+
+        // adjust position of both text
+        var text_width = logo1.getBounds().width + logo2.getBounds().width;
+        logo1.pos.x = renderer.getWidth() / 2 - text_width / 2;
+        logo2.pos.x = logo1.pos.x + logo1.getBounds().width;
+
         // melonJS text
-        world.addChild(new TextLogo(
-            renderer.getWidth(),
-            renderer.getHeight()
-        ), 2);
+        world.addChild(logo1, 2);
+        world.addChild(logo2, 2);
     }
 });
 

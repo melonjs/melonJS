@@ -3,8 +3,9 @@
 ## [10.2.0] (melonJS 2) - _2021-11-xx
 
 ### Added
-- renderable: added a basic `NineSliceSprite` renderable object
-- bounds: faster condition assessment for the `overlaps` method
+- Bounds: faster condition assessment for the `overlaps` method
+- Renderable: added a basic `NineSliceSprite` renderable object
+- Renderable: new `offScreenCanvas` option for me.Text allowing to use an individual offscreen canvas texture per text element
 
 ## [10.1.1] (melonJS 2) - _2021-11-12_
 

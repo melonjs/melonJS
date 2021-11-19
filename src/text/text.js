@@ -1,9 +1,11 @@
 import Color from "./../math/color.js";
 import Renderer from "./../video/renderer.js";
-import { renderer } from "./../video/video.js";
+import WebGLRenderer from "./../video/webgl/webgl_renderer.js";
+import { renderer, createCanvas } from "./../video/video.js";
 import * as stringUtil from "./../utils/string.js";
 import pool from "./../system/pooling.js";
 import Renderable from "./../renderable/renderable.js";
+import { nextPowerOfTwo } from "./../math/math.js";
 
 
 /*
@@ -22,7 +24,7 @@ var toPX = [12, 24, 0.75, 1];
  * apply the current font style to the given context
  * @ignore
  */
-var setContextStyle = function(context, font, stroke) {
+var setContextStyle = function(context, font, stroke = false) {
     context.font = font.font;
     context.fillStyle = font.fillStyle.toRGBA();
     if (stroke === true) {
@@ -52,6 +54,7 @@ var setContextStyle = function(context, font, stroke) {
  * @param {String} [settings.textBaseline="top"] the text baseline
  * @param {Number} [settings.lineHeight=1.0] line spacing height
  * @param {me.Vector2d} [settings.anchorPoint={x:0.0, y:0.0}] anchor point to draw the text at
+ * @param {Boolean} [settings.offScreenCanvas] whether to draw the font to an individual "cache" texture first
  * @param {(String|String[])} [settings.text] a string, or an array of strings
  * @example
  * var font = new me.Text(0, 0, {font: "Arial", size: 8, fillStyle: this.color});
@@ -144,6 +147,17 @@ class Text extends Renderable {
         this.lineHeight = settings.lineHeight || 1.0;
 
         /**
+         * whether to draw the font to a indidividual offscreen canvas texture first <br>
+         * Note: this will improve performances when using WebGL, but will impact
+         * memory consumption as every text element will have its own canvas texture
+         * @public
+         * @type Boolean
+         * @default false
+         * @name me.Text#offScreenCanvas
+         */
+        this.offScreenCanvas = false;
+
+        /**
          * the text to be displayed
          * @private
          * @type {String[]}
@@ -185,8 +199,31 @@ class Text extends Renderable {
             this.italic();
         }
 
+        if (settings.offScreenCanvas === true) {
+            this.offScreenCanvas = true;
+            this.canvas = createCanvas(2, 2, true);
+            this.context = this.canvas.getContext("2d");
+        }
+
         // set the text
         this.setText(settings.text);
+
+        // force update bounds on object creation
+        this.update(0);
+    }
+
+    /** @ignore */
+    onDeactivateEvent() {
+        // free the canvas and potential corresponding texture when deactivated
+        if (this.offScreenCanvas === true) {
+            if (renderer instanceof WebGLRenderer) {
+                renderer.currentCompositor.unbindTexture2D(renderer.cache.get(this.canvas));
+                renderer.cache.remove(this.canvas);
+            }
+            this.canvas.width = this.canvas.height = 0;
+            this.context = undefined;
+            this.canvas = undefined;
+        }
     }
 
     /**
@@ -267,11 +304,7 @@ class Text extends Renderable {
      * @param {Number|String|String[]} value a string, or an array of strings
      * @return this object for chaining
      */
-    setText(value) {
-        if (typeof value === "undefined") {
-            value = "";
-        }
-
+    setText(value = "") {
         if (this._text.toString() !== value.toString()) {
             if (!Array.isArray(value)) {
                 this._text = ("" + value).split("\n");
@@ -289,27 +322,24 @@ class Text extends Renderable {
      * @name measureText
      * @memberOf me.Text.prototype
      * @function
-     * @param {me.CanvasRenderer|me.WebGLRenderer} [renderer] reference a renderer instance
+     * @param {me.CanvasRenderer|me.WebGLRenderer} [renderer] reference to the active renderer
      * @param {String} [text] the text to be measured
      * @param {me.Rect|me.Bounds} [ret] a object in which to store the text metrics
      * @returns {TextMetrics} a TextMetrics object with two properties: `width` and `height`, defining the output dimensions
      */
     measureText(_renderer, text, ret) {
         var context;
+        var textMetrics = ret || this.getBounds();
+        var lineHeight = this.fontSize * this.lineHeight;
+        var strings = typeof text !== "undefined" ? ("" + (text)).split("\n") : this._text;
 
-        if (typeof _renderer === "undefined") {
-            context = renderer.getFontContext();
+        if (this.offScreenCanvas === true) {
+            context = this.context;
         } else if (_renderer instanceof Renderer) {
             context = _renderer.getFontContext();
         } else {
-            // else it's a 2d rendering context object
-            context = _renderer;
+            context = renderer.getFontContext();
         }
-
-        var textMetrics = ret || this.getBounds();
-        var lineHeight = this.fontSize * this.lineHeight;
-
-        var strings = typeof text !== "undefined" ? ("" + (text)).split("\n") : this._text;
 
         // save the previous context
         context.save();
@@ -346,7 +376,33 @@ class Text extends Renderable {
      */
     update(/* dt */) {
         if (this.isDirty === true) {
-            this.measureText();
+            var bounds = this.measureText(renderer);
+            if (this.offScreenCanvas === true) {
+                var width = Math.round(bounds.width),
+                    height = Math.round(bounds.height);
+
+                if (renderer instanceof WebGLRenderer) {
+                    // invalidate the previous corresponding texture so that it can reuploaded once changed
+                    renderer.currentCompositor.unbindTexture2D(renderer.cache.get(this.canvas));
+
+                    if (renderer.WebGLVersion === 1) {
+                        // round size to next Pow2
+                        width = nextPowerOfTwo(bounds.width);
+                        height = nextPowerOfTwo(bounds.height);
+                    }
+                }
+
+                // resize the cache canvas if necessary
+                if (this.canvas.width < width || this.canvas.height < height) {
+                    this.canvas.width = width;
+                    this.canvas.height = height;
+                    // resizing the canvas will automatically clear its content
+                } else {
+                    this.context.clearRect(0, 0, this.canvas.width, this.canvas.height);
+                }
+                this._drawFont(this.context, this._text,  this.pos.x - bounds.x, this.pos.y - bounds.y, false);
+
+            }
         }
         return this.isDirty;
     }
@@ -396,7 +452,12 @@ class Text extends Renderable {
         }
 
         // draw the text
-        renderer.drawFont(this._drawFont(renderer.getFontContext(), this._text, x, y, stroke || false));
+        if (this.offScreenCanvas === true) {
+            renderer.drawImage(this.canvas, this.getBounds().x, this.getBounds().y);
+        } else {
+            renderer.drawFont(this._drawFont(renderer.getFontContext(), this._text, x, y, stroke));
+        }
+
 
         // for backward compatibilty
         if (typeof this.ancestor === "undefined") {
@@ -428,7 +489,7 @@ class Text extends Renderable {
     /**
      * @ignore
      */
-    _drawFont(context, text, x, y, stroke) {
+    _drawFont(context, text, x, y, stroke = false) {
         setContextStyle(context, this, stroke);
 
         var lineHeight = this.fontSize * this.lineHeight;
