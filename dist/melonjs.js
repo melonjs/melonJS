@@ -11287,8 +11287,8 @@
      * @return {boolean} True if the bounds overlap, otherwise false
      */
     Bounds$1.prototype.overlaps = function overlaps (bounds) {
-        return (this.left <= bounds.right && this.right >= bounds.left
-            && this.bottom >= bounds.top && this.top <= bounds.bottom);
+        return !(this.right < bounds.left || this.left > bounds.right ||
+                 this.bottom < bounds.top || this.top > bounds.bottom);
     };
 
     /**
@@ -18735,72 +18735,7 @@
 
         return IconLogo;
     }(Renderable));
-    // the melonJS Text Logo
-    var TextLogo = /*@__PURE__*/(function (Renderable) {
-        function TextLogo(w, h) {
-            Renderable.call(this, 0, 0, w, h);
 
-            this.textWidth = 0;
-
-            // offscreen cache canvas
-            this.fontCanvas = createCanvas(256, 64, true);
-            this.drawFont(renderer.getContext2d(this.fontCanvas));
-
-            this.anchorPoint.set(0, 0.5);
-        }
-
-        if ( Renderable ) TextLogo.__proto__ = Renderable;
-        TextLogo.prototype = Object.create( Renderable && Renderable.prototype );
-        TextLogo.prototype.constructor = TextLogo;
-
-        TextLogo.prototype.drawFont = function drawFont (context) {
-            var logo1 = pool.pull("Text", 0, 0, {
-                font: "century gothic",
-                size: 32,
-                fillStyle: "white",
-                textAlign: "middle",
-                textBaseline : "top",
-                text: "melon"
-            });
-            var logo2 = pool.pull("Text", 0, 0, {
-                font: "century gothic",
-                size: 32,
-                fillStyle: "#55aa00",
-                textAlign: "middle",
-                textBaseline : "top",
-                bold: true,
-                text: "JS"
-            });
-
-
-            // compute both logo respective size
-            var logo1_width = logo1.measureText(context).width;
-            var logo2_width = logo2.measureText(context).width;
-
-            this.textWidth = logo1_width + logo2_width;
-
-            // calculate the final rendering position
-            this.pos.x = Math.round(this.width - this.textWidth / 2);
-            this.pos.y = Math.round(this.height + 16);
-
-            // use the private _drawFont method to directly draw on the canvas context
-            logo1._drawFont(context, ["melon"], 0, 0);
-            logo2._drawFont(context, ["JS"], logo1_width, 0);
-
-            // put them back into the object pool
-            pool.push(logo1);
-            pool.push(logo2);
-        };
-
-        /**
-         * @ignore
-         */
-        TextLogo.prototype.draw = function draw (renderer) {
-            renderer.drawImage(this.fontCanvas, Math.round((renderer.getWidth() - this.textWidth) / 2), this.pos.y);
-        };
-
-        return TextLogo;
-    }(Renderable));
     /**
      * a default loading screen
      * @memberOf me
@@ -18833,11 +18768,43 @@
 
             ), 2);
 
+            var logo1 = pool.pull("Text",
+                renderer.getWidth() / 2,
+                (renderer.getHeight() / 2) + 16, {
+                    font: "century gothic",
+                    size: 32,
+                    fillStyle: "white",
+                    textAlign: "left",
+                    textBaseline : "top",
+                    text: "melon",
+                    offScreenCanvas: true
+                }
+            );
+            logo1.anchorPoint.set(0, 0);
+
+            var logo2 = pool.pull("Text",
+                renderer.getWidth() / 2,
+                (renderer.getHeight() / 2) + 16, {
+                    font: "century gothic",
+                    size: 32,
+                    fillStyle: "#55aa00",
+                    textAlign: "left",
+                    textBaseline : "top",
+                    bold: true,
+                    text: "JS",
+                    offScreenCanvas: true
+                }
+            );
+            logo2.anchorPoint.set(0, 0);
+
+            // adjust position of both text
+            var text_width = logo1.getBounds().width + logo2.getBounds().width;
+            logo1.pos.x = renderer.getWidth() / 2 - text_width / 2;
+            logo2.pos.x = logo1.pos.x + logo1.getBounds().width;
+
             // melonJS text
-            world.addChild(new TextLogo(
-                renderer.getWidth(),
-                renderer.getHeight()
-            ), 2);
+            world.addChild(logo1, 2);
+            world.addChild(logo2, 2);
         }
     });
 
@@ -19787,6 +19754,17 @@
             this.set(image, new Texture(atlas, image, false));
         }
         return this.cache.get(image);
+    };
+
+    /**
+     * @ignore
+     */
+    TextureCache.prototype.remove = function remove (image) {
+        if (!this.cache.has(image)) {
+            if (this.cache.remove(image) === true) {
+                this.length--;
+            }
+        }
     };
 
     /**
@@ -21438,7 +21416,7 @@
      * @function
      * @param {HTMLCanvasElement} canvas
      * @param {Boolean} [transparent=true] use false to disable transparency
-     * @return {Context2d}
+     * @return {CanvasRenderingContext2D}
      */
     Renderer.prototype.getContext2d = function getContext2d (c, transparent) {
         if (typeof c === "undefined" || c === null) {
@@ -23248,8 +23226,8 @@
      * @return {boolean} True if the bounds overlap, otherwise false
      */
     Bounds.prototype.overlaps = function overlaps (bounds) {
-        return (this.left <= bounds.right && this.right >= bounds.left
-            && this.bottom >= bounds.top && this.top <= bounds.bottom);
+        return !(this.right < bounds.left || this.left > bounds.right ||
+                 this.bottom < bounds.top || this.top > bounds.bottom);
     };
 
     /**
@@ -26583,6 +26561,8 @@
          * me.loader.preload(game.resources, this.loaded.bind(this));
          */
         preload: function preload(res, onload, switchToLoadState) {
+            if ( switchToLoadState === void 0 ) switchToLoadState = true;
+
             // parse the resources
             for (var i = 0; i < res.length; i++) {
                 resourceCount += this.load(
@@ -26596,7 +26576,7 @@
                 this.onload = onload;
             }
 
-            if (switchToLoadState !== false) {
+            if (switchToLoadState === true) {
                 // swith to the loading screen
                 state.change(state.LOADING);
             }
@@ -29454,7 +29434,7 @@
         var rs = (repeat.search(/^repeat(-x)?$/) === 0) && (isPOT || this.renderer.WebGLVersion > 1) ? gl.REPEAT : gl.CLAMP_TO_EDGE;
         var rt = (repeat.search(/^repeat(-y)?$/) === 0) && (isPOT || this.renderer.WebGLVersion > 1) ? gl.REPEAT : gl.CLAMP_TO_EDGE;
 
-        this.setTexture2D(texture, unit);
+        this.bindTexture2D(texture, unit);
 
         gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, rs);
         gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, rt);
@@ -29478,13 +29458,13 @@
 
     /**
      * assign the given WebGL texture to the current batch
-     * @name setTexture2D
+     * @name bindTexture2D
      * @memberOf me.WebGLCompositor
      * @function
      * @param {WebGLTexture} a WebGL texture
      * @param {Number} unit Texture unit to which the given texture is bound
      */
-    WebGLCompositor.prototype.setTexture2D = function setTexture2D (texture, unit) {
+    WebGLCompositor.prototype.bindTexture2D = function bindTexture2D (texture, unit) {
         var gl = this.gl;
 
         if (texture !== this.boundTextures[unit]) {
@@ -29504,6 +29484,17 @@
         }
     };
 
+    /**
+     * unbind the given WebGL texture, forcing it to be reuploaded
+     * @name unbindTexture2D
+     * @memberOf me.WebGLCompositor
+     * @function
+     * @param {WebGLTexture} a WebGL texture
+     */
+    WebGLCompositor.prototype.unbindTexture2D = function unbindTexture2D (texture) {
+        var unit = this.renderer.cache.getUnit(texture);
+        this.boundTextures[unit] = null;
+    };
 
     /**
      * @ignore
@@ -29524,7 +29515,7 @@
                 texture.premultipliedAlpha
             );
         } else {
-            this.setTexture2D(texture2D, unit);
+            this.bindTexture2D(texture2D, unit);
         }
 
         return this.currentTextureUnit;
@@ -32823,6 +32814,8 @@
      * @ignore
      */
     var setContextStyle = function(context, font, stroke) {
+        if ( stroke === void 0 ) stroke = false;
+
         context.font = font.font;
         context.fillStyle = font.fillStyle.toRGBA();
         if (stroke === true) {
@@ -32852,6 +32845,7 @@
      * @param {String} [settings.textBaseline="top"] the text baseline
      * @param {Number} [settings.lineHeight=1.0] line spacing height
      * @param {me.Vector2d} [settings.anchorPoint={x:0.0, y:0.0}] anchor point to draw the text at
+     * @param {Boolean} [settings.offScreenCanvas] whether to draw the font to an individual "cache" texture first
      * @param {(String|String[])} [settings.text] a string, or an array of strings
      * @example
      * var font = new me.Text(0, 0, {font: "Arial", size: 8, fillStyle: this.color});
@@ -32946,6 +32940,17 @@
             this.lineHeight = settings.lineHeight || 1.0;
 
             /**
+             * whether to draw the font to a indidividual offscreen canvas texture first <br>
+             * Note: this will improve performances when using WebGL, but will impact
+             * memory consumption as every text element will have its own canvas texture
+             * @public
+             * @type Boolean
+             * @default false
+             * @name me.Text#offScreenCanvas
+             */
+            this.offScreenCanvas = false;
+
+            /**
              * the text to be displayed
              * @private
              * @type {String[]}
@@ -32987,8 +32992,31 @@
                 this.italic();
             }
 
+            if (settings.offScreenCanvas === true) {
+                this.offScreenCanvas = true;
+                this.canvas = createCanvas(2, 2, true);
+                this.context = this.canvas.getContext("2d");
+            }
+
             // set the text
             this.setText(settings.text);
+
+            // force update bounds on object creation
+            this.update(0);
+        };
+
+        /** @ignore */
+        Text.prototype.onDeactivateEvent = function onDeactivateEvent () {
+            // free the canvas and potential corresponding texture when deactivated
+            if (this.offScreenCanvas === true) {
+                if (renderer instanceof WebGLRenderer) {
+                    renderer.currentCompositor.unbindTexture2D(renderer.cache.get(this.canvas));
+                    renderer.cache.remove(this.canvas);
+                }
+                this.canvas.width = this.canvas.height = 0;
+                this.context = undefined;
+                this.canvas = undefined;
+            }
         };
 
         /**
@@ -33070,9 +33098,7 @@
          * @return this object for chaining
          */
         Text.prototype.setText = function setText (value) {
-            if (typeof value === "undefined") {
-                value = "";
-            }
+            if ( value === void 0 ) value = "";
 
             if (this._text.toString() !== value.toString()) {
                 if (!Array.isArray(value)) {
@@ -33091,27 +33117,24 @@
          * @name measureText
          * @memberOf me.Text.prototype
          * @function
-         * @param {me.CanvasRenderer|me.WebGLRenderer} [renderer] reference a renderer instance
+         * @param {me.CanvasRenderer|me.WebGLRenderer} [renderer] reference to the active renderer
          * @param {String} [text] the text to be measured
          * @param {me.Rect|me.Bounds} [ret] a object in which to store the text metrics
          * @returns {TextMetrics} a TextMetrics object with two properties: `width` and `height`, defining the output dimensions
          */
         Text.prototype.measureText = function measureText (_renderer, text, ret) {
             var context;
+            var textMetrics = ret || this.getBounds();
+            var lineHeight = this.fontSize * this.lineHeight;
+            var strings = typeof text !== "undefined" ? ("" + (text)).split("\n") : this._text;
 
-            if (typeof _renderer === "undefined") {
-                context = renderer.getFontContext();
+            if (this.offScreenCanvas === true) {
+                context = this.context;
             } else if (_renderer instanceof Renderer) {
                 context = _renderer.getFontContext();
             } else {
-                // else it's a 2d rendering context object
-                context = _renderer;
+                context = renderer.getFontContext();
             }
-
-            var textMetrics = ret || this.getBounds();
-            var lineHeight = this.fontSize * this.lineHeight;
-
-            var strings = typeof text !== "undefined" ? ("" + (text)).split("\n") : this._text;
 
             // save the previous context
             context.save();
@@ -33148,7 +33171,33 @@
          */
         Text.prototype.update = function update (/* dt */) {
             if (this.isDirty === true) {
-                this.measureText();
+                var bounds = this.measureText(renderer);
+                if (this.offScreenCanvas === true) {
+                    var width = Math.round(bounds.width),
+                        height = Math.round(bounds.height);
+
+                    if (renderer instanceof WebGLRenderer) {
+                        // invalidate the previous corresponding texture so that it can reuploaded once changed
+                        renderer.currentCompositor.unbindTexture2D(renderer.cache.get(this.canvas));
+
+                        if (renderer.WebGLVersion === 1) {
+                            // round size to next Pow2
+                            width = nextPowerOfTwo(bounds.width);
+                            height = nextPowerOfTwo(bounds.height);
+                        }
+                    }
+
+                    // resize the cache canvas if necessary
+                    if (this.canvas.width < width || this.canvas.height < height) {
+                        this.canvas.width = width;
+                        this.canvas.height = height;
+                        // resizing the canvas will automatically clear its content
+                    } else {
+                        this.context.clearRect(0, 0, this.canvas.width, this.canvas.height);
+                    }
+                    this._drawFont(this.context, this._text,  this.pos.x - bounds.x, this.pos.y - bounds.y, false);
+
+                }
             }
             return this.isDirty;
         };
@@ -33198,7 +33247,12 @@
             }
 
             // draw the text
-            renderer.drawFont(this._drawFont(renderer.getFontContext(), this._text, x, y, stroke || false));
+            if (this.offScreenCanvas === true) {
+                renderer.drawImage(this.canvas, this.getBounds().x, this.getBounds().y);
+            } else {
+                renderer.drawFont(this._drawFont(renderer.getFontContext(), this._text, x, y, stroke));
+            }
+
 
             // for backward compatibilty
             if (typeof this.ancestor === "undefined") {
@@ -33231,6 +33285,8 @@
          * @ignore
          */
         Text.prototype._drawFont = function _drawFont (context, text, x, y, stroke) {
+            if ( stroke === void 0 ) stroke = false;
+
             setContextStyle(context, this, stroke);
 
             var lineHeight = this.fontSize * this.lineHeight;

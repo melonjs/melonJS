@@ -5936,9 +5936,9 @@ export class Renderer {
      * @function
      * @param {HTMLCanvasElement} canvas
      * @param {Boolean} [transparent=true] use false to disable transparency
-     * @return {Context2d}
+     * @return {CanvasRenderingContext2D}
      */
-    getContext2d(c: any, transparent?: boolean): any;
+    getContext2d(c: any, transparent?: boolean): CanvasRenderingContext2D;
     /**
      * return the width of the system Canvas
      * @name getWidth
@@ -7234,6 +7234,7 @@ export class TMXTilesetGroup {
  * @param {String} [settings.textBaseline="top"] the text baseline
  * @param {Number} [settings.lineHeight=1.0] line spacing height
  * @param {me.Vector2d} [settings.anchorPoint={x:0.0, y:0.0}] anchor point to draw the text at
+ * @param {Boolean} [settings.offScreenCanvas] whether to draw the font to an individual "cache" texture first
  * @param {(String|String[])} [settings.text] a string, or an array of strings
  * @example
  * var font = new me.Text(0, 0, {font: "Arial", size: 8, fillStyle: this.color});
@@ -7281,6 +7282,16 @@ export class Text {
      */
     public lineHeight: number;
     /**
+     * whether to draw the font to a indidividual offscreen canvas texture first <br>
+     * Note: this will improve performances when using WebGL, but will impact
+     * memory consumption as every text element will have its own canvas texture
+     * @public
+     * @type Boolean
+     * @default false
+     * @name me.Text#offScreenCanvas
+     */
+    public offScreenCanvas: boolean;
+    /**
      * the text to be displayed
      * @private
      * @type {String[]}
@@ -7298,6 +7309,10 @@ export class Text {
     */
     public fontSize: number;
     floating: boolean;
+    canvas: any;
+    context: any;
+    /** @ignore */
+    onDeactivateEvent(): void;
     /**
      * make the font bold
      * @name bold
@@ -7338,13 +7353,13 @@ export class Text {
      * @param {Number|String|String[]} value a string, or an array of strings
      * @return this object for chaining
      */
-    setText(value: number | string | string[]): Text;
+    setText(value?: number | string | string[]): Text;
     /**
      * measure the given text size in pixels
      * @name measureText
      * @memberOf me.Text.prototype
      * @function
-     * @param {me.CanvasRenderer|me.WebGLRenderer} [renderer] reference a renderer instance
+     * @param {me.CanvasRenderer|me.WebGLRenderer} [renderer] reference to the active renderer
      * @param {String} [text] the text to be measured
      * @param {me.Rect|me.Bounds} [ret] a object in which to store the text metrics
      * @returns {TextMetrics} a TextMetrics object with two properties: `width` and `height`, defining the output dimensions
@@ -7382,7 +7397,7 @@ export class Text {
     /**
      * @ignore
      */
-    _drawFont(context: any, text: any, x: any, y: any, stroke: any): any;
+    _drawFont(context: any, text: any, x: any, y: any, stroke?: boolean): any;
     /**
      * Destroy function
      * @ignore
@@ -8533,13 +8548,21 @@ export class WebGLCompositor {
     createTexture2D(unit: number, image: (new (width?: number, height?: number) => HTMLImageElement) | any | ImageData | any[] | Float32Array[], filter: number, repeat?: string, w?: number, h?: number, b?: number, premultipliedAlpha?: boolean, mipmap?: boolean): WebGLTexture;
     /**
      * assign the given WebGL texture to the current batch
-     * @name setTexture2D
+     * @name bindTexture2D
      * @memberOf me.WebGLCompositor
      * @function
      * @param {WebGLTexture} a WebGL texture
      * @param {Number} unit Texture unit to which the given texture is bound
      */
-    setTexture2D(texture: any, unit: number): void;
+    bindTexture2D(texture: any, unit: number): void;
+    /**
+     * unbind the given WebGL texture, forcing it to be reuploaded
+     * @name unbindTexture2D
+     * @memberOf me.WebGLCompositor
+     * @function
+     * @param {WebGLTexture} a WebGL texture
+     */
+    unbindTexture2D(texture: any): void;
     /**
      * @ignore
      */
@@ -11674,6 +11697,10 @@ declare class TextureCache {
      * @ignore
      */
     get(image: any, atlas: any): any;
+    /**
+     * @ignore
+     */
+    remove(image: any): void;
     /**
      * @ignore
      */
