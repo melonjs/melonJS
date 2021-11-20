@@ -8,7 +8,9 @@
 - Renderable: new `offScreenCanvas` option for me.Text allowing to use an individual offscreen canvas texture per text element
 
 ### Fixed
+- Input: fix a regression with me.input.pointer not being updated on pointer events
 - Loader: fix a "double initialization and double reset" bug with the default loading screen
+
 
 ## [10.1.1] (melonJS 2) - _2021-11-12_
 

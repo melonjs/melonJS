@@ -410,15 +410,15 @@ function dispatchEvent(normalizedEvents) {
  * @ignore
  */
 function normalizeEvent(originalEvent) {
-    var pointer;
+    var _pointer;
 
     // PointerEvent or standard Mouse event
     if (device.TouchEvent && originalEvent.changedTouches) {
         // iOS/Android Touch event
         for (var i = 0, l = originalEvent.changedTouches.length; i < l; i++) {
             var touchEvent = originalEvent.changedTouches[i];
-            pointer = T_POINTERS.pop();
-            pointer.setEvent(
+            _pointer = T_POINTERS.pop();
+            _pointer.setEvent(
                 originalEvent,
                 touchEvent.pageX,
                 touchEvent.pageY,
@@ -426,12 +426,12 @@ function normalizeEvent(originalEvent) {
                 touchEvent.clientY,
                 touchEvent.identifier
             );
-            normalizedEvents.push(pointer);
+            normalizedEvents.push(_pointer);
         }
     } else {
         // Mouse or PointerEvent
-        pointer = T_POINTERS.pop();
-        pointer.setEvent(
+        _pointer = T_POINTERS.pop();
+        _pointer.setEvent(
             originalEvent,
             originalEvent.pageX,
             originalEvent.pageY,
@@ -439,7 +439,7 @@ function normalizeEvent(originalEvent) {
             originalEvent.clientY,
             originalEvent.pointerId
         );
-        normalizedEvents.push(pointer);
+        normalizedEvents.push(_pointer);
     }
 
     // if event.isPrimary is defined and false, return
