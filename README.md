@@ -93,7 +93,7 @@ Using melonJS
 Basic Example
 
 ```JavaScript
-import * as me from "https://cdn.jsdelivr.net/npm/melonjs/dist/melonjs.module.js";
+import * as me from "https://esm.run/melonjs";
 
 me.device.onReady(function () {
     // initialize the display canvas once the device/browser is ready
@@ -170,15 +170,11 @@ If you need to import the ES6 module of melonjs (e.g. for Webpack):
 Or can simply be added to your html, using [jsDeliver](https://www.jsdelivr.com/package/npm/melonjs) content delivery network (CDN) :
 
 ```html
-<!-- load the ES5 UMD bundle of melonJS v10.0.0 -->
-<script src="https://cdn.jsdelivr.net/npm/melonjs@10.0.0/dist/melonjs.js"></script>
-<!-- load the ES6 module bundle of melonJS v10.0.0 -->
-<script src="https://cdn.jsdelivr.net/npm/melonjs@10.0.0/dist/melonjs.module.js"></script>
+<!-- load the ES6 module bundle of melonJS v10.0 -->
+<script src="https://esm.run/melonjs@10.0"></script>
 <!-- omit the version completely to get the latest one -->
 <!-- you should NOT use this in production -->
-<script src="https://cdn.jsdelivr.net/npm/melonjs/dist/melonjs.js"></script>
-<!-- add ".min" to any JS/CSS file to get a minified version -->
-<script src="https://cdn.jsdelivr.net/npm/melonjs@10.0.0/dist/melonjs.min.js"></script>
+<script src="https://esm.run/melonjs"></script>
 ```
 > Note: starting from the 10.0.0 version, the debug plugin is no longer provided as part of the melonJS library release, and has been moved to the official [boilerplate](https://github.com/melonjs/es6-boilerplate)
 
