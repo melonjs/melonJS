@@ -12151,15 +12151,15 @@
      * @ignore
      */
     function normalizeEvent(originalEvent) {
-        var pointer;
+        var _pointer;
 
         // PointerEvent or standard Mouse event
         if (device$1.TouchEvent && originalEvent.changedTouches) {
             // iOS/Android Touch event
             for (var i = 0, l = originalEvent.changedTouches.length; i < l; i++) {
                 var touchEvent = originalEvent.changedTouches[i];
-                pointer = T_POINTERS.pop();
-                pointer.setEvent(
+                _pointer = T_POINTERS.pop();
+                _pointer.setEvent(
                     originalEvent,
                     touchEvent.pageX,
                     touchEvent.pageY,
@@ -12167,12 +12167,12 @@
                     touchEvent.clientY,
                     touchEvent.identifier
                 );
-                normalizedEvents.push(pointer);
+                normalizedEvents.push(_pointer);
             }
         } else {
             // Mouse or PointerEvent
-            pointer = T_POINTERS.pop();
-            pointer.setEvent(
+            _pointer = T_POINTERS.pop();
+            _pointer.setEvent(
                 originalEvent,
                 originalEvent.pageX,
                 originalEvent.pageY,
@@ -12180,7 +12180,7 @@
                 originalEvent.clientY,
                 originalEvent.pointerId
             );
-            normalizedEvents.push(pointer);
+            normalizedEvents.push(_pointer);
         }
 
         // if event.isPrimary is defined and false, return
@@ -18742,12 +18742,16 @@
      * @ignore
      * @constructor
      */
-    var defaultLoadingScreen = new Stage({
-        /**
-         * call when the loader is resetted
-         * @ignore
-         */
-        onResetEvent : function () {
+    var DefaultLoadingScreen = /*@__PURE__*/(function (Stage) {
+        function DefaultLoadingScreen () {
+            Stage.apply(this, arguments);
+        }
+
+        if ( Stage ) DefaultLoadingScreen.__proto__ = Stage;
+        DefaultLoadingScreen.prototype = Object.create( Stage && Stage.prototype );
+        DefaultLoadingScreen.prototype.constructor = DefaultLoadingScreen;
+
+        DefaultLoadingScreen.prototype.onResetEvent = function onResetEvent () {
             var barHeight = 8;
 
             // clear the background
@@ -18805,8 +18809,10 @@
             // melonJS text
             world.addChild(logo1, 2);
             world.addChild(logo2, 2);
-        }
-    });
+        };
+
+        return DefaultLoadingScreen;
+    }(Stage));
 
     // current state
     var _state = -1;
@@ -18938,7 +18944,7 @@
     // initialize me.state on system boot
     on(BOOT, function () {
         // set the built-in loading stage
-        state.set(state.LOADING, defaultLoadingScreen);
+        state.set(state.LOADING, new DefaultLoadingScreen());
         // set and enable the default stage
         state.set(state.DEFAULT, new Stage());
         // enable by default as soon as the display is initialized
@@ -34278,7 +34284,10 @@
 
     /**
      * @classdesc
-     * A NineSliceSprite is similar to a Sprite, but it it can strech its inner area to fit the size of the Renderable
+     * A NineSliceSprite is similar to a Sprite, but it uses 9-slice scaling to strech its inner area to fit the size of the Renderable,
+     * by proportionally scaling a sprite by splitting it in a grid of nine parts (with only parts 1, 3, 7, 9 not being scaled). <br>
+     * <img src="images/9-slice-scaling.png"/><br>
+     * @see https://en.wikipedia.org/wiki/9-slice_scaling
      * @class NineSliceSprite
      * @extends me.Sprite
      * @memberOf me
