@@ -48,7 +48,6 @@ function shouldCollide(a, b) {
  * @name ResponseObject
  * @memberOf me.collision
  * @public
- * @see me.collision.check
  */
 class ResponseObject {
     constructor() {

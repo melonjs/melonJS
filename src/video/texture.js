@@ -435,6 +435,15 @@ export class Texture {
      * var sprite = game.texture.createSpriteFromName("coin.png");
      * // set the renderable position to bottom center
      * sprite.anchorPoint.set(0.5, 1.0);
+     * ...
+     * ...
+     * // create a 9-slice sprite
+     * var dialogPanel = game.texture.createSpriteFromName(
+     *    "rpg_dialo.png",
+     *    // width & height are mandatory for 9-slice sprites
+     *    { width: this.width, height: this.height },
+     *    true
+     * );
      */
     createSpriteFromName(name, settings, nineSlice = false) {
         // instantiate a new sprite object

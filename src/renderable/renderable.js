@@ -49,7 +49,6 @@ class Renderable extends Rect {
          * @public
          * @type {me.Body}
          * @see me.Body
-         * @see me.collision#check
          * @name body
          * @memberOf me.Renderable#
          * @example

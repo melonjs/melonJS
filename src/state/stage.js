@@ -20,7 +20,7 @@ var default_settings = {
  * @memberOf me
  * @constructor
  * @param {Object} [options] The stage` parameters
- * @param {Boolean} [options.cameras=[new me.Camera2d()]] a list of cameras (experimental)
+ * @param {me.Camera2d[]} [options.cameras=[new me.Camera2d()]] a list of cameras (experimental)
  * @param {Function} [options.onResetEvent] called by the state manager when reseting the object
  * @param {Function} [options.onDestroyEvent] called by the state manager before switching to another state
  * @see me.state
@@ -57,7 +57,7 @@ class Stage {
      * @ignore
      */
     reset() {
-        
+
         // add all defined cameras
         this.settings.cameras.forEach((camera) => {
             this.cameras.set(camera.name, camera);

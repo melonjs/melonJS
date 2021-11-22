@@ -54,8 +54,8 @@ var setContextStyle = function(context, font, stroke = false) {
  * @param {String} [settings.textBaseline="top"] the text baseline
  * @param {Number} [settings.lineHeight=1.0] line spacing height
  * @param {me.Vector2d} [settings.anchorPoint={x:0.0, y:0.0}] anchor point to draw the text at
- * @param {Boolean} [settings.offScreenCanvas] whether to draw the font to an individual "cache" texture first
- * @param {(String|String[])} [settings.text] a string, or an array of strings
+ * @param {Boolean} [settings.offScreenCanvas=false] whether to draw the font to an individual "cache" texture first
+ * @param {(String|String[])} [settings.text=""] a string, or an array of strings
  * @example
  * var font = new me.Text(0, 0, {font: "Arial", size: 8, fillStyle: this.color});
  */
