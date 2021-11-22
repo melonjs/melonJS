@@ -130,7 +130,7 @@ export function reset () {
  * Update the renderer framerate using the system config variables.
  * @function me.game.updateFrameRate
  * @see me.timer.maxfps
- * @see me.game.world.fps
+ * @see me.World.fps
  */
 export function updateFrameRate() {
     // reset the frame counter

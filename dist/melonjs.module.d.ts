@@ -12732,7 +12732,7 @@ declare function reset(): void;
  * Update the renderer framerate using the system config variables.
  * @function me.game.updateFrameRate
  * @see me.timer.maxfps
- * @see me.game.world.fps
+ * @see me.World.fps
  */
 declare function updateFrameRate(): void;
 /**
