@@ -13077,7 +13077,6 @@
              * @public
              * @type {me.Body}
              * @see me.Body
-             * @see me.collision#check
              * @name body
              * @memberOf me.Renderable#
              * @example
@@ -14716,7 +14715,6 @@
      * @name ResponseObject
      * @memberOf me.collision
      * @public
-     * @see me.collision.check
      */
     var ResponseObject = function ResponseObject() {
         this.a = null;
@@ -15038,13 +15036,7 @@
     };
 
     /**
-     * a Generic Body Object with some physic properties and behavior functionality<br>
-     The body object is attached as a member of a Renderable.  The Body object can handle movements of the parent with
-     the body.update call.  It is important to know that when body.update is called there are several things that happen related to
-     the movement and positioning of the parent renderable object.  1) The force/gravity/friction parameters are used
-     to calculate a new velocity and 2) the parent position is updated by adding this to the parent.pos (position me.Vector2d)
-     value. Thus Affecting the movement of the parent.  Look at the source code for /src/physics/body.js:update (me.Body.update) for
-     a better understanding.
+     * a Generic Physic Body Object with some physic properties and behavior functionality, to as a member of a Renderable.
      * @class Body
      * @memberOf me
      * @constructor
@@ -18414,7 +18406,7 @@
      * @memberOf me
      * @constructor
      * @param {Object} [options] The stage` parameters
-     * @param {Boolean} [options.cameras=[new me.Camera2d()]] a list of cameras (experimental)
+     * @param {me.Camera2d[]} [options.cameras=[new me.Camera2d()]] a list of cameras (experimental)
      * @param {Function} [options.onResetEvent] called by the state manager when reseting the object
      * @param {Function} [options.onDestroyEvent] called by the state manager before switching to another state
      * @see me.state
@@ -18448,7 +18440,7 @@
     Stage.prototype.reset = function reset$1 () {
             var this$1$1 = this;
 
-            
+
         // add all defined cameras
         this.settings.cameras.forEach(function (camera) {
             this$1$1.cameras.set(camera.name, camera);
@@ -20239,7 +20231,8 @@
        * @function
        * @param {String} name name of the sprite
        * @param {Object} [settings] Additional settings passed to the {@link me.Sprite} contructor
-       * @return {me.Sprite}
+       * @param {Boolean} [nineSlice=false] if true returns a 9-slice sprite
+       * @return {me.Sprite|me.NineSliceSprite}
        * @example
        * // create a new texture object under the `game` namespace
        * game.texture = new me.video.renderer.Texture(
@@ -20252,11 +20245,22 @@
        * var sprite = game.texture.createSpriteFromName("coin.png");
        * // set the renderable position to bottom center
        * sprite.anchorPoint.set(0.5, 1.0);
+       * ...
+       * ...
+       * // create a 9-slice sprite
+       * var dialogPanel = game.texture.createSpriteFromName(
+       *  "rpg_dialo.png",
+       *  // width & height are mandatory for 9-slice sprites
+       *  { width: this.width, height: this.height },
+       *  true
+       * );
        */
-      Texture.prototype.createSpriteFromName = function createSpriteFromName (name, settings) {
+      Texture.prototype.createSpriteFromName = function createSpriteFromName (name, settings, nineSlice) {
+            if ( nineSlice === void 0 ) nineSlice = false;
+
           // instantiate a new sprite object
           return pool.pull(
-              "me.Sprite",
+              nineSlice === true ? "me.NineSliceSprite" : "me.Sprite",
               0, 0,
               Object.assign({
                   image: this,
@@ -20344,7 +20348,7 @@
      * @param {String} [settings.region] region name of a specific region to use when using a texture atlas, see {@link me.Renderer.Texture}
      * @param {Number} [settings.framewidth] Width of a single frame within the spritesheet
      * @param {Number} [settings.frameheight] Height of a single frame within the spritesheet
-     * @param {String|Color} [settings.tint] a tint to be applied to this sprite
+     * @param {String|me.Color} [settings.tint] a tint to be applied to this sprite
      * @param {Number} [settings.flipX] flip the sprite on the horizontal axis
      * @param {Number} [settings.flipY] flip the sprite on the vertical axis
      * @param {me.Vector2d} [settings.anchorPoint={x:0.5, y:0.5}] Anchor point to draw the frame at (defaults to the center of the frame).
@@ -32851,8 +32855,8 @@
      * @param {String} [settings.textBaseline="top"] the text baseline
      * @param {Number} [settings.lineHeight=1.0] line spacing height
      * @param {me.Vector2d} [settings.anchorPoint={x:0.0, y:0.0}] anchor point to draw the text at
-     * @param {Boolean} [settings.offScreenCanvas] whether to draw the font to an individual "cache" texture first
-     * @param {(String|String[])} [settings.text] a string, or an array of strings
+     * @param {Boolean} [settings.offScreenCanvas=false] whether to draw the font to an individual "cache" texture first
+     * @param {(String|String[])} [settings.text=""] a string, or an array of strings
      * @example
      * var font = new me.Text(0, 0, {font: "Arial", size: 8, fillStyle: this.color});
      */
@@ -34302,7 +34306,7 @@
      * @param {String} [settings.region] region name of a specific region to use when using a texture atlas, see {@link me.Renderer.Texture}
      * @param {Number} [settings.framewidth] Width of a single frame within the spritesheet
      * @param {Number} [settings.frameheight] Height of a single frame within the spritesheet
-     * @param {String|Color} [settings.tint] a tint to be applied to this sprite
+     * @param {String|me.Color} [settings.tint] a tint to be applied to this sprite
      * @param {Number} [settings.flipX] flip the sprite on the horizontal axis
      * @param {Number} [settings.flipY] flip the sprite on the vertical axis
      * @param {me.Vector2d} [settings.anchorPoint={x:0.5, y:0.5}] Anchor point to draw the frame at (defaults to the center of the frame).
@@ -36375,6 +36379,7 @@
         pool.register("me.Color", Color, true);
         pool.register("me.Particle", Particle, true);
         pool.register("me.Sprite", Sprite);
+        pool.register("me.NineSliceSprite", NineSliceSprite);
         pool.register("me.Renderable", Renderable);
         pool.register("me.Text", Text, true);
         pool.register("me.BitmapText", BitmapText);
@@ -36401,6 +36406,7 @@
         pool.register("Color", Color, true);
         pool.register("Particle", Particle, true);
         pool.register("Sprite", Sprite);
+        pool.register("NineSliceSprite", NineSliceSprite);
         pool.register("Renderable", Renderable);
         pool.register("Text", Text, true);
         pool.register("BitmapText", BitmapText);
