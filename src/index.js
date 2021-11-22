@@ -222,6 +222,7 @@ export function boot() {
     pool.register("me.Color", Color, true);
     pool.register("me.Particle", Particle, true);
     pool.register("me.Sprite", Sprite);
+    pool.register("me.NineSliceSprite", NineSliceSprite);
     pool.register("me.Renderable", Renderable);
     pool.register("me.Text", Text, true);
     pool.register("me.BitmapText", BitmapText);
@@ -248,6 +249,7 @@ export function boot() {
     pool.register("Color", Color, true);
     pool.register("Particle", Particle, true);
     pool.register("Sprite", Sprite);
+    pool.register("NineSliceSprite", NineSliceSprite);
     pool.register("Renderable", Renderable);
     pool.register("Text", Text, true);
     pool.register("BitmapText", BitmapText);

@@ -421,7 +421,8 @@ export class Texture {
      * @function
      * @param {String} name name of the sprite
      * @param {Object} [settings] Additional settings passed to the {@link me.Sprite} contructor
-     * @return {me.Sprite}
+     * @param {Boolean} [nineSlice=false] if true returns a 9-slice sprite
+     * @return {me.Sprite|me.NineSliceSprite}
      * @example
      * // create a new texture object under the `game` namespace
      * game.texture = new me.video.renderer.Texture(
@@ -435,10 +436,10 @@ export class Texture {
      * // set the renderable position to bottom center
      * sprite.anchorPoint.set(0.5, 1.0);
      */
-    createSpriteFromName(name, settings) {
+    createSpriteFromName(name, settings, nineSlice = false) {
         // instantiate a new sprite object
         return pool.pull(
-            "me.Sprite",
+            nineSlice === true ? "me.NineSliceSprite" : "me.Sprite",
             0, 0,
             Object.assign({
                 image: this,
