@@ -90,7 +90,7 @@ Tools integration and usage with melonJS is documented in our [Wiki](https://git
 Using melonJS
 -------------------------------------------------------------------------------
 
-Basic Example
+Basic [Hello World](https://jsfiddle.net/obiot/4o9f02tc/) Example
 
 ```JavaScript
 import * as me from "https://esm.run/melonjs";
