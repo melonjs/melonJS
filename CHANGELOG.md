@@ -1,6 +1,11 @@
 # Changelog
 
-## [10.2.0] (melonJS 2) - _2021-11-xx
+## [10.2.1] (melonJS 2) - _2021-11-23
+
+### Fixed
+- changelog release date and links
+
+## [10.2.0] (melonJS 2) - _2021-11-23
 
 ### Added
 - Bounds: faster condition assessment for the `overlaps` method
@@ -10,7 +15,6 @@
 ### Fixed
 - Input: fix a regression with me.input.pointer not being updated on pointer events
 - Loader: fix a "double initialization and double reset" bug with the default loading screen
-
 
 ## [10.1.1] (melonJS 2) - _2021-11-12_
 
@@ -1035,6 +1039,7 @@
 - first public version with alex4 !
 - www.melonjs.org is live :)
 
+[10.2.1]: https://github.com/melonjs/melonJS/compare/10.2.0...10.2.1
 [10.2.0]: https://github.com/melonjs/melonJS/compare/10.1.1...10.2.0
 [10.1.1]: https://github.com/melonjs/melonJS/compare/10.1.0...10.1.1
 [10.1.0]: https://github.com/melonjs/melonJS/compare/10.0.2...10.1.0

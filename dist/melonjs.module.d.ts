@@ -13000,7 +13000,7 @@ declare class BasePlugin {
      * this can be overridden by the plugin
      * @public
      * @type String
-     * @default "10.2.0"
+     * @default "10.2.1"
      * @name me.plugin.Base#version
      */
     public version: string;
