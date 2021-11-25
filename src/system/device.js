@@ -710,7 +710,7 @@ let device = {
      * It can be "any", "natural", "landscape", "portrait", "portrait-primary", "portrait-secondary", "landscape-primary", "landscape-secondary"
      * @function me.device.getScreenOrientation
      * @see https://developer.mozilla.org/en-US/docs/Web/API/Screen/orientation
-     * @return {String} the screen orientation
+     * @returns {String} the screen orientation
      */
     getScreenOrientation() {
         var PORTRAIT = "portrait";
@@ -744,7 +744,7 @@ let device = {
      * This method only works for installed Web apps or for Web pages in full-screen mode.
      * @function me.device.lockOrientation
      * @see https://developer.mozilla.org/en-US/docs/Web/API/Screen/lockOrientation
-     * @return {Boolean} true if the orientation was unsuccessfully locked
+     * @returns {Boolean} true if the orientation was unsuccessfully locked
      */
     lockOrientation(orientation) {
         var screen = window.screen;
@@ -762,7 +762,7 @@ let device = {
      * This method only works for installed Web apps or for Web pages in full-screen mode.
      * @function me.device.unlockOrientation
      * @see https://developer.mozilla.org/en-US/docs/Web/API/Screen/lockOrientation
-     * @return {Boolean} true if the orientation was unsuccessfully unlocked
+     * @returns {Boolean} true if the orientation was unsuccessfully unlocked
      */
     unlockOrientation(orientation) {
         var screen = window.screen;
@@ -778,7 +778,7 @@ let device = {
     /**
      * return true if the device screen orientation is in Portrait mode
      * @function me.device.isPortrait
-     * @return {Boolean}
+     * @returns {Boolean}
      */
     isPortrait() {
         return this.getScreenOrientation().includes("portrait");
@@ -787,7 +787,7 @@ let device = {
     /**
      * return true if the device screen orientation is in Portrait mode
      * @function me.device.isLandscape
-     * @return {Boolean}
+     * @returns {Boolean}
      */
     isLandscape() {
         return this.getScreenOrientation().includes("landscape");
@@ -798,7 +798,7 @@ let device = {
      * @function me.device.getStorage
      * @see me.save
      * @param {String} [type="local"]
-     * @return {Object} a reference to the device storage
+     * @returns {Object} a reference to the device storage
      */
     getStorage(type = "local") {
         switch (type) {
@@ -814,7 +814,7 @@ let device = {
      * return the parent DOM element for the given parent name or HTMLElement object
      * @function me.device.getParentElement
      * @param {String|HTMLElement} element the parent element name or a HTMLElement object
-     * @return {HTMLElement} the parent Element
+     * @returns {HTMLElement} the parent Element
      */
     getParentElement(element) {
         var target = this.getElement(element);
@@ -830,7 +830,7 @@ let device = {
      * return the DOM element for the given element name or HTMLElement object
      * @function me.device.getElement
      * @param {String|HTMLElement} element the parent element name or a HTMLElement object
-     * @return {HTMLElement} the corresponding DOM Element or null if not existing
+     * @returns {HTMLElement} the corresponding DOM Element or null if not existing
      */
     getElement(element) {
         var target = null;
@@ -858,7 +858,7 @@ let device = {
      * @see https://developer.mozilla.org/en-US/docs/Web/API/DOMRect
      * @function me.device.getElementBounds
      * @param {String|HTMLElement} element an HTMLElement object
-     * @return {DOMRect} the size and position of the element relatively to the viewport
+     * @returns {DOMRect} the size and position of the element relatively to the viewport
      */
     getElementBounds(element) {
         if (typeof element === "object" && element !== document.body && typeof element.getBoundingClientRect !== "undefined") {
@@ -876,7 +876,7 @@ let device = {
      * @see https://developer.mozilla.org/en-US/docs/Web/API/DOMRect
      * @function me.device.getParentBounds
      * @param {String|HTMLElement} element an HTMLElement object
-     * @return {DOMRect} the size and position of the given element parent relative to the viewport
+     * @returns {DOMRect} the size and position of the given element parent relative to the viewport
      */
     getParentBounds(element) {
         return this.getElementBounds(this.getParentElement(element));
@@ -887,7 +887,7 @@ let device = {
      * @function me.device.isWebGLSupported
      * @param {Object} [options] context creation options
      * @param {Boolean} [options.failIfMajorPerformanceCaveat=true] If true, the renderer will switch to CANVAS mode if the performances of a WebGL context would be dramatically lower than that of a native application making equivalent OpenGL calls.
-     * @return {Boolean} true if WebGL is supported
+     * @returns {Boolean} true if WebGL is supported
      */
     isWebGLSupported(options) {
         var _supported = false;
@@ -909,7 +909,7 @@ let device = {
      * return the highest precision format supported by this device for GL Shaders
      * @function me.device.getMaxShaderPrecision
      * @param {WebGLRenderingContext} gl
-     * @return {Boolean} "lowp", "mediump", or "highp"
+     * @returns {Boolean} "lowp", "mediump", or "highp"
      */
     getMaxShaderPrecision(gl) {
         if (gl.getShaderPrecisionFormat(gl.VERTEX_SHADER, gl.HIGH_FLOAT ).precision > 0 &&
@@ -1020,7 +1020,7 @@ let device = {
      * @see me.device.accelerationX
      * @see me.device.accelerationY
      * @see me.device.accelerationZ
-     * @return {Boolean} false if not supported or permission not granted by the user
+     * @returns {Boolean} false if not supported or permission not granted by the user
      * @example
      * // try to enable device accelerometer event on user gesture
      * me.input.registerPointerEvent("pointerleave", me.game.viewport, function() {
@@ -1071,7 +1071,7 @@ let device = {
      * @see me.device.alpha
      * @see me.device.beta
      * @see me.device.gamma
-     * @return {Boolean} false if not supported or permission not granted by the user
+     * @returns {Boolean} false if not supported or permission not granted by the user
      * @example
      * // try to enable device orientation event on user gesture
      * me.input.registerPointerEvent("pointerleave", me.game.viewport, function() {
@@ -1144,7 +1144,7 @@ let device = {
  * @public
  * @type {Number}
  * @readonly
- * @return {Number}
+ * @returns {Number}
  */
 Object.defineProperty(device, "devicePixelRatio", {
     /**
@@ -1162,7 +1162,7 @@ Object.defineProperty(device, "devicePixelRatio", {
  * @public
  * @type {Boolean}
  * @readonly
- * @return {Boolean}
+ * @returns {Boolean}
  */
 Object.defineProperty(device, "isFullscreen", {
     /**
@@ -1185,7 +1185,7 @@ Object.defineProperty(device, "isFullscreen", {
  * @public
  * @type {Boolean}
  * @readonly
- * @return {Boolean}
+ * @returns {Boolean}
  */
 Object.defineProperty(device, "sound", {
     /**

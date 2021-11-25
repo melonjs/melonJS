@@ -139,15 +139,10 @@ class Entity extends Renderable {
      * @memberOf me.Entity
      */
 
-    /**
-     * @ignore
-     */
     get renderable() {
         return this.children[0];
     }
-    /**
-     * @ignore
-     */
+
     set renderable(value) {
         if (value instanceof Renderable) {
             this.children[0] = value;

@@ -45,7 +45,7 @@ class TMXIsometricRenderer extends TMXRenderer {
      * @public
      * @function
      * @param {me.TMXLayer} [layer] calculate the bounding rect for a specific layer (will return a new bounds object)
-     * @return {me.Bounds}
+     * @returns {me.Bounds}
      */
     getBounds(layer) {
         var bounds = layer instanceof TMXLayer ? pool.pull("Bounds") : this.bounds;

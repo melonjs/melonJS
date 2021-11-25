@@ -43,20 +43,15 @@ class ObservableVector3d extends Vector3d {
     /**
      * x value of the vector
      * @public
-     * @type Number
+     * @type {Number}
      * @name x
      * @memberOf me.ObservableVector3d
      */
 
-    /**
-     * @ignore
-     */
     get x() {
         return this._x;
     }
-    /**
-     * @ignore
-     */
+
     set x(value) {
         var ret = this.onUpdate.call(this.scope, value, this._y, this._z, this._x, this._y, this._z);
         if (ret && "x" in ret) {
@@ -69,20 +64,15 @@ class ObservableVector3d extends Vector3d {
     /**
      * y value of the vector
      * @public
-     * @type Number
+     * @type {Number}
      * @name y
      * @memberOf me.ObservableVector3d
      */
 
-    /**
-     * @ignore
-     */
     get y() {
         return this._y;
     }
-    /**
-     * @ignore
-     */
+
     set y(value) {
         var ret = this.onUpdate.call(this.scope, this._x, value, this._z, this._x, this._y, this._z);
         if (ret && "y" in ret) {
@@ -96,20 +86,16 @@ class ObservableVector3d extends Vector3d {
     /**
      * z value of the vector
      * @public
-     * @type Number
+     * @type {Number}
      * @name z
      * @memberOf me.ObservableVector3d
      */
 
-    /**
-     * @ignore
-     */
+
     get z() {
         return this._z;
     }
-    /**
-     * @ignore
-     */
+
     set z(value) {
         var ret = this.onUpdate.call(this.scope, this._x, this._y, value, this._x, this._y, this._z);
         if (ret && "z" in ret) {
@@ -118,7 +104,6 @@ class ObservableVector3d extends Vector3d {
             this._z = value;
         }
     }
-
 
     /**
      * @ignore */
@@ -144,7 +129,7 @@ class ObservableVector3d extends Vector3d {
      * @param {Number} x x value of the vector
      * @param {Number} y y value of the vector
      * @param {Number} [z=0] z value of the vector
-     * @return {me.ObservableVector3d} Reference to this object for method chaining
+     * @returns {me.ObservableVector3d} Reference to this object for method chaining
      */
     setMuted(x, y, z) {
         this._x = x;
@@ -160,7 +145,7 @@ class ObservableVector3d extends Vector3d {
      * @function
      * @param {function} onUpdate callback
      * @param {function} [scope=null] scope
-     * @return {me.ObservableVector3d} Reference to this object for method chaining
+     * @returns {me.ObservableVector3d} Reference to this object for method chaining
      */
     setCallback(fn, scope = null) {
         if (typeof(fn) !== "function") {
@@ -179,7 +164,7 @@ class ObservableVector3d extends Vector3d {
      * @memberOf me.ObservableVector3d
      * @function
      * @param {me.Vector2d|me.Vector3d|me.ObservableVector2d|me.ObservableVector3d} v
-     * @return {me.ObservableVector3d} Reference to this object for method chaining
+     * @returns {me.ObservableVector3d} Reference to this object for method chaining
      */
     add(v) {
         return this._set(this._x + v.x, this._y + v.y, this._z + (v.z || 0));
@@ -191,7 +176,7 @@ class ObservableVector3d extends Vector3d {
      * @memberOf me.ObservableVector3d
      * @function
      * @param {me.Vector2d|me.Vector3d|me.ObservableVector2d|me.ObservableVector3d} v
-     * @return {me.ObservableVector3d} Reference to this object for method chaining
+     * @returns {me.ObservableVector3d} Reference to this object for method chaining
      */
     sub(v) {
         return this._set(this._x - v.x, this._y - v.y, this._z - (v.z || 0));
@@ -205,7 +190,7 @@ class ObservableVector3d extends Vector3d {
      * @param {Number} x
      * @param {Number} [y=x]
      * @param {Number} [z=1]
-     * @return {me.ObservableVector3d} Reference to this object for method chaining
+     * @returns {me.ObservableVector3d} Reference to this object for method chaining
      */
     scale(x, y, z) {
         y = (typeof (y) !== "undefined" ? y : x);
@@ -218,7 +203,7 @@ class ObservableVector3d extends Vector3d {
      * @memberOf me.ObservableVector3d
      * @function
      * @param {me.Vector2d|me.Vector3d|me.ObservableVector2d|me.ObservableVector3d} v
-     * @return {me.ObservableVector3d} Reference to this object for method chaining
+     * @returns {me.ObservableVector3d} Reference to this object for method chaining
      */
     scaleV(v) {
         return this._set(this._x * v.x, this._y * v.y, this._z * (v.z || 1));
@@ -230,7 +215,7 @@ class ObservableVector3d extends Vector3d {
      * @memberOf me.ObservableVector3d
      * @function
      * @param {Number} value
-     * @return {me.ObservableVector3d} Reference to this object for method chaining
+     * @returns {me.ObservableVector3d} Reference to this object for method chaining
      */
     div(n) {
         return this._set(this._x / n, this._y / n, this._z / n);
@@ -241,7 +226,7 @@ class ObservableVector3d extends Vector3d {
      * @name abs
      * @memberOf me.ObservableVector3d
      * @function
-     * @return {me.ObservableVector3d} Reference to this object for method chaining
+     * @returns {me.ObservableVector3d} Reference to this object for method chaining
      */
     abs() {
         return this._set(
@@ -258,7 +243,7 @@ class ObservableVector3d extends Vector3d {
      * @function
      * @param {Number} low
      * @param {Number} high
-     * @return {me.ObservableVector3d} new me.ObservableVector3d
+     * @returns {me.ObservableVector3d} new me.ObservableVector3d
      */
     clamp(low, high) {
         return new ObservableVector3d(
@@ -276,7 +261,7 @@ class ObservableVector3d extends Vector3d {
      * @function
      * @param {Number} low
      * @param {Number} high
-     * @return {me.ObservableVector3d} Reference to this object for method chaining
+     * @returns {me.ObservableVector3d} Reference to this object for method chaining
      */
     clampSelf(low, high) {
         return this._set(
@@ -292,7 +277,7 @@ class ObservableVector3d extends Vector3d {
      * @memberOf me.ObservableVector3d
      * @function
      * @param {me.Vector2d|me.Vector3d|me.ObservableVector2d|me.ObservableVector3d} v
-     * @return {me.ObservableVector3d} Reference to this object for method chaining
+     * @returns {me.ObservableVector3d} Reference to this object for method chaining
      */
     minV(v) {
         var _vz = v.z || 0;
@@ -309,7 +294,7 @@ class ObservableVector3d extends Vector3d {
      * @memberOf me.ObservableVector3d
      * @function
      * @param {me.Vector2d|me.Vector3d|me.ObservableVector2d|me.ObservableVector3d} v
-     * @return {me.ObservableVector3d} Reference to this object for method chaining
+     * @returns {me.ObservableVector3d} Reference to this object for method chaining
      */
     maxV(v) {
         var _vz = v.z || 0;
@@ -325,7 +310,7 @@ class ObservableVector3d extends Vector3d {
      * @name floor
      * @memberOf me.ObservableVector3d
      * @function
-     * @return {me.ObservableVector3d} new me.ObservableVector3d
+     * @returns {me.ObservableVector3d} new me.ObservableVector3d
      */
     floor() {
         return new ObservableVector3d(
@@ -341,7 +326,7 @@ class ObservableVector3d extends Vector3d {
      * @name floorSelf
      * @memberOf me.ObservableVector3d
      * @function
-     * @return {me.ObservableVector3d} Reference to this object for method chaining
+     * @returns {me.ObservableVector3d} Reference to this object for method chaining
      */
     floorSelf() {
         return this._set(Math.floor(this._x), Math.floor(this._y), Math.floor(this._z));
@@ -352,7 +337,7 @@ class ObservableVector3d extends Vector3d {
      * @name ceil
      * @memberOf me.ObservableVector3d
      * @function
-     * @return {me.ObservableVector3d} new me.ObservableVector3d
+     * @returns {me.ObservableVector3d} new me.ObservableVector3d
      */
     ceil() {
         return new ObservableVector3d(
@@ -368,7 +353,7 @@ class ObservableVector3d extends Vector3d {
      * @name ceilSelf
      * @memberOf me.ObservableVector3d
      * @function
-     * @return {me.ObservableVector3d} Reference to this object for method chaining
+     * @returns {me.ObservableVector3d} Reference to this object for method chaining
      */
     ceilSelf() {
         return this._set(Math.ceil(this._x), Math.ceil(this._y), Math.ceil(this._z));
@@ -379,7 +364,7 @@ class ObservableVector3d extends Vector3d {
      * @name negate
      * @memberOf me.ObservableVector3d
      * @function
-     * @return {me.ObservableVector3d} new me.ObservableVector3d
+     * @returns {me.ObservableVector3d} new me.ObservableVector3d
      */
     negate() {
         return new ObservableVector3d(
@@ -395,7 +380,7 @@ class ObservableVector3d extends Vector3d {
      * @name negateSelf
      * @memberOf me.ObservableVector3d
      * @function
-     * @return {me.ObservableVector3d} Reference to this object for method chaining
+     * @returns {me.ObservableVector3d} Reference to this object for method chaining
      */
     negateSelf() {
         return this._set(-this._x, -this._y, -this._z);
@@ -407,7 +392,7 @@ class ObservableVector3d extends Vector3d {
      * @memberOf me.ObservableVector3d
      * @function
      * @param {me.Vector2d|me.Vector3d|me.ObservableVector2d|me.ObservableVector3d} v
-     * @return {me.ObservableVector3d} Reference to this object for method chaining
+     * @returns {me.ObservableVector3d} Reference to this object for method chaining
      */
     copy(v) {
         return this._set(v.x, v.y, v.z || 0);
@@ -419,7 +404,7 @@ class ObservableVector3d extends Vector3d {
      * @memberOf me.ObservableVector3d
      * @function
      * @param {me.Vector2d|me.Vector3d|me.ObservableVector2d|me.ObservableVector3d} v
-     * @return {Boolean}
+     * @returns {Boolean}
      */
     equals(v) {
         return ((this._x === v.x) && (this._y === v.y) && (this._z === (v.z || this._z)));
@@ -431,7 +416,7 @@ class ObservableVector3d extends Vector3d {
      * @name perp
      * @memberOf me.ObservableVector3d
      * @function
-     * @return {me.ObservableVector3d} Reference to this object for method chaining
+     * @returns {me.ObservableVector3d} Reference to this object for method chaining
      */
     perp() {
         return this._set(this._y, -this._x, this._z);
@@ -444,7 +429,7 @@ class ObservableVector3d extends Vector3d {
      * @function
      * @param {number} angle The angle to rotate (in radians)
      * @param {me.Vector2d|me.ObservableVector2d} [v] an optional point to rotate around (on the same z axis)
-     * @return {me.ObservableVector3d} Reference to this object for method chaining
+     * @returns {me.ObservableVector3d} Reference to this object for method chaining
      */
     rotate(angle, v) {
         var cx = 0;
@@ -471,7 +456,7 @@ class ObservableVector3d extends Vector3d {
      * @memberOf me.ObservableVector3d
      * @function
      * @param {me.Vector2d|me.Vector3d|me.ObservableVector2d|me.ObservableVector3d} v
-     * @return {Number} The dot product.
+     * @returns {Number} The dot product.
      */
     dotProduct(v) {
         return this._x * v.x + this._y * v.y + this._z * (v.z || 1);
@@ -484,7 +469,7 @@ class ObservableVector3d extends Vector3d {
      * @function
      * @param {me.Vector3d|me.ObservableVector3d} v
      * @param {Number} alpha distance along the line (alpha = 0 will be this vector, and alpha = 1 will be the given one).
-     * @return {me.ObservableVector3d} Reference to this object for method chaining
+     * @returns {me.ObservableVector3d} Reference to this object for method chaining
      */
     lerp(v, alpha) {
         this._x += ( v.x - this._x ) * alpha;
@@ -499,7 +484,7 @@ class ObservableVector3d extends Vector3d {
      * @memberOf me.ObservableVector3d
      * @function
      * @param {me.Vector2d|me.Vector3d|me.ObservableVector2d|me.ObservableVector3d} v
-     * @return {Number}
+     * @returns {Number}
      */
     distance(v) {
         var dx = this._x - v.x;
@@ -513,7 +498,7 @@ class ObservableVector3d extends Vector3d {
      * @name clone
      * @memberOf me.ObservableVector3d
      * @function
-     * @return {me.ObservableVector3d} new me.ObservableVector3d
+     * @returns {me.ObservableVector3d} new me.ObservableVector3d
      */
     clone() {
         return pool.pull("ObservableVector3d",
@@ -529,7 +514,7 @@ class ObservableVector3d extends Vector3d {
      * @name toVector3d
      * @memberOf me.ObservableVector3d
      * @function
-     * @return {me.Vector3d} new me.Vector3d
+     * @returns {me.Vector3d} new me.Vector3d
      */
     toVector3d() {
         return pool.pull("Vector3d", this._x, this._y, this._z);
@@ -540,7 +525,7 @@ class ObservableVector3d extends Vector3d {
      * @name toString
      * @memberOf me.ObservableVector3d
      * @function
-     * @return {String}
+     * @returns {String}
      */
     toString() {
         return "x:" + this._x + ",y:" + this._y + ",z:" + this._z;

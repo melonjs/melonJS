@@ -53,7 +53,7 @@ var pool = {
      * @function me.pool.pull
      * @param {String} className as used in {@link me.pool.register}
      * @param {} [arguments...] arguments to be passed when instantiating/reinitializing the object
-     * @return {Object} the instance of the requested object
+     * @returns {Object} the instance of the requested object
      * @example
      * me.pool.register("bullet", BulletEntity, true);
      * me.pool.register("enemy", EnemyEntity, true);
@@ -127,7 +127,7 @@ var pool = {
      * @throws will throw an error if the object cannot be recycled
      * @param {Object} instance to be recycled
      * @param {Boolean} [throwOnError=true] throw an exception if the object cannot be recycled
-     * @return {Boolean} true if the object was successfully recycled in the object pool
+     * @returns {Boolean} true if the object was successfully recycled in the object pool
      */
     push(obj, throwOnError = true) {
         if (!this.poolable(obj)) {
@@ -149,7 +149,7 @@ var pool = {
      * Check if an object with the provided name is registered
      * @function me.pool.exists
      * @param {String} name of the registered object class
-     * @return {Boolean} true if the classname is registered
+     * @returns {Boolean} true if the classname is registered
      */
     exists(name) {
         return name in objectClass;
@@ -161,7 +161,7 @@ var pool = {
      * @function me.pool.poolable
      * @see me.pool.register
      * @param {Object} object
-     * @return {Boolean} true if the object is poolable
+     * @returns {Boolean} true if the object is poolable
      * @example
      * if (!me.pool.poolable(myCherryEntity)) {
      *     // object was not properly registered
@@ -179,7 +179,7 @@ var pool = {
     /**
      * returns the amount of object instance currently in the pool
      * @function me.pool.getInstanceCount
-     * @return {Number} amount of object instance
+     * @returns {Number} amount of object instance
      */
     getInstanceCount() {
         return instance_counter;

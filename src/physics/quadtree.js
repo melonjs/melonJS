@@ -120,7 +120,7 @@ class QuadTree {
     /*
      * Determine which node the object belongs to
      * @param {me.Rect} rect bounds of the area to be checked
-     * @return Integer index of the subnode (0-3), or -1 if rect cannot completely fit within a subnode and is part of the parent node
+     * @returns Integer index of the subnode (0-3), or -1 if rect cannot completely fit within a subnode and is part of the parent node
      */
     getIndex(item) {
         var pos;
@@ -244,7 +244,7 @@ class QuadTree {
      * @function
      * @param {Object} object object to be checked against
      * @param {Object} [function] a sorting function for the returned array
-     * @return {Object[]} array with all detected objects
+     * @returns {Object[]} array with all detected objects
      */
     retrieve(item, fn) {
         var returnObjects = this.objects;
@@ -279,7 +279,7 @@ class QuadTree {
      * @memberOf me.QuadTree
      * @function
      * @param {Object} object object to be removed
-     * @return true if the item was found and removed.
+     * @returns {Boolean} true if the item was found and removed.
      */
      remove(item) {
         var found = false;
@@ -319,7 +319,7 @@ class QuadTree {
      * @name isPrunable
      * @memberOf me.QuadTree
      * @function
-     * @return true if the node is prunable
+     * @returns {Boolean} true if the node is prunable
      */
     isPrunable() {
         return !(this.hasChildren() || (this.objects.length > 0));
@@ -330,7 +330,7 @@ class QuadTree {
      * @name hasChildren
      * @memberOf me.QuadTree
      * @function
-     * @return true if the node has any children
+     * @returns {Boolean} true if the node has any children
      */
     hasChildren() {
         for (var i = 0; i < this.nodes.length; i = i + 1) {

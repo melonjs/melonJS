@@ -318,22 +318,16 @@ class Renderable extends Rect {
      * Whether the renderable object is visible and within the viewport
      * @public
      * @readonly
-     * @type Boolean
+     * @type {Boolean}
      * @default false
      * @name inViewport
      * @memberOf me.Renderable
      */
 
-    /**
-     * @ignore
-     */
     get inViewport() {
         return this._inViewport;
     }
 
-    /**
-     * @ignore
-     */
     set inViewport(value) {
         if (this._inViewport !== value) {
             this._inViewport = value;
@@ -352,9 +346,6 @@ class Renderable extends Rect {
      * @memberOf me.Renderable
      */
 
-    /**
-     * @ignore
-     */
     get isFlippedX() {
         return this._flip.x === true;
     }
@@ -368,9 +359,6 @@ class Renderable extends Rect {
      * @memberOf me.Renderable
      */
 
-    /**
-     * @ignore
-     */
     get isFlippedY() {
         return this._flip.y === true;
     }
@@ -380,7 +368,7 @@ class Renderable extends Rect {
      * @name getBounds
      * @memberOf me.Renderable.prototype
      * @function
-     * @return {me.Bounds} bounding box Rectangle object
+     * @returns {me.Bounds} bounding box Rectangle object
      */
     getBounds() {
         if (typeof this._bounds === "undefined") {
@@ -401,7 +389,7 @@ class Renderable extends Rect {
      * @name getOpacity
      * @memberOf me.Renderable.prototype
      * @function
-     * @return {Number} current opacity value between 0 and 1
+     * @returns {Number} current opacity value between 0 and 1
      */
     getOpacity() {
         return this.alpha;
@@ -432,7 +420,7 @@ class Renderable extends Rect {
      * @memberOf me.Renderable.prototype
      * @function
      * @param {Boolean} [flip=true] `true` to flip this renderable.
-     * @return {me.Renderable} Reference to this object for method chaining
+     * @returns {me.Renderable} Reference to this object for method chaining
      */
     flipX(flip = true) {
         this._flip.x = !!flip;
@@ -447,7 +435,7 @@ class Renderable extends Rect {
      * @memberOf me.Renderable.prototype
      * @function
      * @param {Boolean} [flip=true] `true` to flip this renderable.
-     * @return {me.Renderable} Reference to this object for method chaining
+     * @returns {me.Renderable} Reference to this object for method chaining
      */
     flipY(flip = true) {
         this._flip.y = !!flip;
@@ -462,7 +450,7 @@ class Renderable extends Rect {
      * @see me.Renderable#currentTransform
      * @function
      * @param {me.Matrix2d} matrix the transformation matrix
-     * @return {me.Renderable} Reference to this object for method chaining
+     * @returns {me.Renderable} Reference to this object for method chaining
      */
     transform(m) {
         this.currentTransform.multiply(m);
@@ -478,7 +466,7 @@ class Renderable extends Rect {
      * @memberOf me.Renderable
      * @function
      * @param {me.Renderable|me.Vector2d|me.Vector3d} target
-     * @return {Number} angle in radians
+     * @returns {Number} angle in radians
      */
     angleTo(target) {
         var a = this.getBounds();
@@ -502,7 +490,7 @@ class Renderable extends Rect {
      * @memberOf me.Renderable
      * @function
      * @param {me.Renderable|me.Vector2d|me.Vector3d} target
-     * @return {Number} distance
+     * @returns {Number} distance
      */
     distanceTo(target) {
         var a = this.getBounds();
@@ -526,7 +514,7 @@ class Renderable extends Rect {
      * @memberOf me.Renderable.prototype
      * @function
      * @param {me.Renderable|me.Vector2d|me.Vector3d} target the renderable or position to look at
-     * @return {me.Renderable} Reference to this object for method chaining
+     * @returns {me.Renderable} Reference to this object for method chaining
      */
     lookAt(target) {
         var position;
@@ -551,7 +539,7 @@ class Renderable extends Rect {
      * @function
      * @param {Number} angle The angle to rotate (in radians)
      * @param {me.Vector2d|me.ObservableVector2d} [v] an optional point to rotate around
-     * @return {me.Renderable} Reference to this object for method chaining
+     * @returns {me.Renderable} Reference to this object for method chaining
      */
     rotate(angle) {
         if (!isNaN(angle)) {
@@ -573,7 +561,7 @@ class Renderable extends Rect {
      * @function
      * @param {Number} x a number representing the abscissa of the scaling vector.
      * @param {Number} [y=x] a number representing the ordinate of the scaling vector.
-     * @return {me.Renderable} Reference to this object for method chaining
+     * @returns {me.Renderable} Reference to this object for method chaining
      */
     scale(x, y) {
         this.currentTransform.scale(x, y);
@@ -588,7 +576,7 @@ class Renderable extends Rect {
      * @memberOf me.Renderable.prototype
      * @function
      * @param {me.Vector2d} vector scaling vector
-     * @return {me.Renderable} Reference to this object for method chaining
+     * @returns {me.Renderable} Reference to this object for method chaining
      */
     scaleV(v) {
         this.scale(v.x, v.y);
@@ -603,7 +591,7 @@ class Renderable extends Rect {
      * @function
      * @protected
      * @param {Number} dt time since the last update in milliseconds.
-     * @return false
+     * @returns {Boolean} true if the renderable is dirty
      **/
     update(/* dt */) {
         return this.isDirty;
@@ -615,7 +603,7 @@ class Renderable extends Rect {
      * @name updateBounds
      * @memberOf me.Renderable.prototype
      * @function
-     * @return {me.Bounds} this shape bounding box Rectangle object
+     * @returns {me.Bounds} this shape bounding box Rectangle object
      */
     updateBounds() {
         super.updateBounds();
@@ -661,7 +649,7 @@ class Renderable extends Rect {
       * @name getAbsolutePosition
       * @memberOf me.Renderable.prototype
       * @function
-      * @return {me.Vector2d}
+      * @returns {me.Vector2d}
       */
       getAbsolutePosition() {
           if (typeof this._absPos === "undefined") {
@@ -689,7 +677,6 @@ class Renderable extends Rect {
          // then call updateBounds
          this.updateBoundsPos(this.pos.x, this.pos.y);
      }
-
 
     /**
      * prepare the rendering context before drawing
@@ -790,7 +777,7 @@ class Renderable extends Rect {
      * @function
      * @param {me.collision.ResponseObject} response the collision response object
      * @param {me.Renderable} other the other renderable touching this one (a reference to response.a or response.b)
-     * @return {Boolean} true if the object should respond to the collision (its position and velocity will be corrected)
+     * @returns {Boolean} true if the object should respond to the collision (its position and velocity will be corrected)
      * @example
      * // colision handler
      * onCollision(response) {

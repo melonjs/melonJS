@@ -108,7 +108,7 @@ class Tile extends Bounds {
 
     /**
      * set the transformation matrix for this tile
-     * @return {me.Matrix2d) a transformation matrix
+     * @returns {me.Matrix2d) a transformation matrix
      * @ignore
      */
     setTileTransform(transform) {
@@ -136,7 +136,7 @@ class Tile extends Bounds {
      * @public
      * @function
      * @param {Object} [settings] see {@link me.Sprite}
-     * @return {me.Renderable} a me.Sprite object
+     * @returns {me.Renderable} a me.Sprite object
      */
     getRenderable(settings) {
         var renderable;

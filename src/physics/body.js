@@ -277,7 +277,7 @@ class Body {
      * @public
      * @function
      * @param {me.Rect|me.Polygon|me.Line|me.Ellipse|me.Bounds|Object} shape a shape or JSON object
-     * @return {Number} the shape array length
+     * @returns {Number} the shape array length
      * @example
      * // add a rectangle shape
      * this.body.addShape(new me.Rect(0, 0, image.width, image.height));
@@ -374,7 +374,7 @@ class Body {
      * @param {Object} json a JSON object as exported from a Physics Editor tool
      * @param {String} [id] an optional shape identifier within the given the json object
      * @see https://www.codeandweb.com/physicseditor
-     * @return {Number} how many shapes were added to the body
+     * @returns {Number} how many shapes were added to the body
      * @example
      * // define the body based on the banana shape
      * this.body.fromJSON(me.loader.getJSON("shapesdef").banana);
@@ -416,7 +416,7 @@ class Body {
      * @public
      * @function
      * @param {Number} [index=0] the shape object at the specified index
-     * @return {me.Polygon|me.Line|me.Ellipse} shape a shape object if defined
+     * @returns {me.Polygon|me.Line|me.Ellipse} shape a shape object if defined
      */
     getShape(index) {
         return this.shapes[index || 0];
@@ -427,7 +427,7 @@ class Body {
      * @name getBounds
      * @memberOf me.Body
      * @function
-     * @return {me.Bounds} bounding box Rectangle object
+     * @returns {me.Bounds} bounding box Rectangle object
      */
     getBounds() {
         return this.bounds;
@@ -440,7 +440,7 @@ class Body {
      * @public
      * @function
      * @param {me.Polygon|me.Line|me.Ellipse} shape a shape object
-     * @return {Number} the shape array length
+     * @returns {Number} the shape array length
      */
     removeShape(shape) {
         // clear the current bounds
@@ -462,7 +462,7 @@ class Body {
      * @public
      * @function
      * @param {Number} index the shape object at the specified index
-     * @return {Number} the shape array length
+     * @returns {Number} the shape array length
      */
     removeShapeAt(index) {
         return this.removeShape(this.getShape(index));
@@ -595,7 +595,7 @@ class Body {
      * @memberOf me.Body
      * @function
      * @param  {me.Vector2d} point
-     * @return {boolean} true if contains
+     * @returns {boolean} true if contains
      */
 
     /**
@@ -605,7 +605,7 @@ class Body {
      * @function
      * @param  {Number} x x coordinate
      * @param  {Number} y y coordinate
-     * @return {boolean} true if contains
+     * @returns {boolean} true if contains
      */
     contains() {
         var _x, _y;
@@ -639,7 +639,7 @@ class Body {
      * @function
      * @param {Number} angle The angle to rotate (in radians)
      * @param {me.Vector2d|me.ObservableVector2d} [v=me.Body.getBounds().center] an optional point to rotate around
-     * @return {me.Body} Reference to this object for method chaining
+     * @returns {me.Body} Reference to this object for method chaining
      */
     rotate(angle, v = this.getBounds().center) {
         this.bounds.clear();
@@ -765,7 +765,7 @@ class Body {
      * @ignore
      * @memberOf me.Body
      * @function
-     * @return {boolean} true if resulting velocity is different than 0
+     * @returns {boolean} true if resulting velocity is different than 0
      * @see source code for me.Body.computeVelocity (private member)
      */
     update(dt) {

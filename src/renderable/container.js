@@ -187,7 +187,7 @@ class Container extends Renderable {
      * @function
      * @param {me.Renderable} child
      * @param {number} [z] forces the z index of the child to the specified value
-     * @return {me.Renderable} the added child
+     * @returns {me.Renderable} the added child
      */
     addChild(child, z) {
         if (child.ancestor instanceof Container) {
@@ -251,7 +251,7 @@ class Container extends Renderable {
      * @function
      * @param {me.Renderable} child
      * @param {Number} index
-     * @return {me.Renderable} the added child
+     * @returns {me.Renderable} the added child
      */
     addChildAt(child, index) {
         if (index >= 0 && index < this.getChildren().length) {
@@ -388,6 +388,7 @@ class Container extends Renderable {
      * @memberOf me.Container.prototype
      * @function
      * @param {me.Renderable} child
+     * @returns {Number} index
      */
     getChildIndex(child) {
         return this.getChildren().indexOf(child);
@@ -399,6 +400,7 @@ class Container extends Renderable {
      * @memberOf me.Container
      * @function
      * @param {me.Renderable} child
+     * @returns {me.Renderable} child
      */
     getNextChild(child) {
         var index = this.getChildren().indexOf(child) - 1;
@@ -414,7 +416,7 @@ class Container extends Renderable {
      * @memberOf me.Container.prototype
      * @function
      * @param {me.Renderable} child
-     * @return {Boolean}
+     * @returns {Boolean}
      */
     hasChild(child) {
         return this === child.ancestor;
@@ -430,7 +432,7 @@ class Container extends Renderable {
      * @function
      * @param {String} prop Property name
      * @param {String|RegExp|Number|Boolean} value Value of the property
-     * @return {me.Renderable[]} Array of childs
+     * @returns {me.Renderable[]} Array of childs
      * @example
      * // get the first child object called "mainPlayer" in a specific container :
      * var ent = myContainer.getChildByProp("name", "mainPlayer");
@@ -478,7 +480,7 @@ class Container extends Renderable {
      * @public
      * @function
      * @param {Object} class type
-     * @return {me.Renderable[]} Array of children
+     * @returns {me.Renderable[]} Array of children
      */
     getChildByType(_class) {
         var objList = [];
@@ -505,7 +507,7 @@ class Container extends Renderable {
      * @public
      * @function
      * @param {String|RegExp|Number|Boolean} name child name
-     * @return {me.Renderable[]} Array of children
+     * @returns {me.Renderable[]} Array of children
      */
     getChildByName(name) {
         return this.getChildByProp("name", name);
@@ -520,7 +522,7 @@ class Container extends Renderable {
      * @public
      * @function
      * @param {String|RegExp|Number|Boolean} GUID child GUID
-     * @return {me.Renderable} corresponding child or null
+     * @returns {me.Renderable} corresponding child or null
      */
     getChildByGUID(guid) {
         var obj = this.getChildByProp("GUID", guid);
@@ -535,7 +537,7 @@ class Container extends Renderable {
      * @memberOf me.Container.prototype
      * @public
      * @function
-     * @return {me.Renderable[]} an array of renderable object
+     * @returns {me.Renderable[]} an array of renderable object
      */
     getChildren() {
         if (typeof this.children === "undefined") {
@@ -550,7 +552,7 @@ class Container extends Renderable {
      * @name updateBounds
      * @memberOf me.Renderable.prototype
      * @function
-     * @return {me.Bounds} this shape bounding box Rectangle object
+     * @returns {me.Bounds} this shape bounding box Rectangle object
      */
     updateBounds(forceUpdateChildBounds = false) {
 
@@ -579,7 +581,7 @@ class Container extends Renderable {
      * @name isAttachedToRoot
      * @memberOf me.Container.prototype
      * @function
-     * @returns Boolean
+     * @returns {Boolean}
      */
     isAttachedToRoot() {
         if (this.root === true) {

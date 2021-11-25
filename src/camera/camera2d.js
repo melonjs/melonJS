@@ -279,7 +279,7 @@ class Camera2d extends Renderable {
      * @function
      * @param {Number} w new width of the camera
      * @param {Number} h new height of the camera
-     * @return {me.Camera2d} this camera
+     * @returns {me.Camera2d} this camera
     */
     resize(w, h) {
         // parent consctructor, resize camera rect
@@ -596,7 +596,7 @@ class Camera2d extends Renderable {
      * @name getWidth
      * @memberOf me.Camera2d
      * @function
-     * @return {Number}
+     * @returns {Number}
      */
     getWidth() {
         return this.width;
@@ -607,7 +607,7 @@ class Camera2d extends Renderable {
      * @name getHeight
      * @memberOf me.Camera2d
      * @function
-     * @return {Number}
+     * @returns {Number}
      */
     getHeight() {
         return this.height;
@@ -635,7 +635,7 @@ class Camera2d extends Renderable {
      * @function
      * @param {me.Renderable} object
      * @param {Boolean} [floating===object.floating] if visibility check should be done against screen coordinates
-     * @return {Boolean}
+     * @returns {Boolean}
      */
     isVisible(obj, floating = obj.floating) {
         if (floating === true || obj.floating === true) {
@@ -656,7 +656,7 @@ class Camera2d extends Renderable {
      * @param {Number} y
      * @param {Number} [v] an optional vector object where to set the
      * converted value
-     * @return {me.Vector2d}
+     * @returns {me.Vector2d}
      */
     localToWorld(x, y, v) {
         // TODO memoization for one set of coords (multitouch)
@@ -677,7 +677,7 @@ class Camera2d extends Renderable {
      * @param {Number} y
      * @param {Number} [v] an optional vector object where to set the
      * converted value
-     * @return {me.Vector2d}
+     * @returns {me.Vector2d}
      */
     worldToLocal(x, y, v) {
         // TODO memoization for one set of coords (multitouch)

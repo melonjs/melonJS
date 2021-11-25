@@ -117,16 +117,10 @@ class ImageLayer extends Sprite {
      * @name me.ImageLayer#repeat
      */
 
-    /**
-     * @ignore
-     */
     get repeat() {
         return this._repeat;
     }
 
-    /**
-     * @ignore
-     */
     set repeat(value) {
         this._repeat = value;
         switch (this._repeat) {

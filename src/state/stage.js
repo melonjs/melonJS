@@ -47,7 +47,7 @@ class Stage {
          * @public
          * @name settings
          * @memberOf me.Stage
-         * @enum {Object}
+         * @type {Object}
          */
         this.settings = Object.assign(default_settings, settings || {});
     }
@@ -88,7 +88,7 @@ class Stage {
      * @ignore
      * @function
      * @param {Number} dt time since the last update in milliseconds.
-     * @return false
+     * @returns {Boolean}
      **/
     update(dt) {
         // update all objects (and pass the elapsed time since last frame)

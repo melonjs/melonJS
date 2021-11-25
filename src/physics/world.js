@@ -125,7 +125,7 @@ class World extends Container {
      * @see me.Container.addChild
      * @function
      * @param {me.Body} body
-     * @return {me.World} this game world
+     * @returns {me.World} this game world
      */
     addBody(body) {
         //add it to the list of active body
@@ -140,7 +140,7 @@ class World extends Container {
      * @see me.Container.removeChild
      * @function
      * @param {me.Body} body
-     * @return {me.World} this game world
+     * @returns {me.World} this game world
      */
     removeBody(body) {
         //remove from the list of active body
@@ -153,6 +153,7 @@ class World extends Container {
      * @name reset
      * @memberOf me.World
      * @function
+     * @returns {Boolean} true if the word is dirty
      */
     update (dt) {
         var isPaused = state.isPaused();

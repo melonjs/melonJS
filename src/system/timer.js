@@ -164,7 +164,7 @@ var timer = {
          * @param {Number} delay the number of milliseconds (thousandths of a second) that the function call should be delayed by.
          * @param {Boolean} [pauseable=true] respects the pause state of the engine.
          * @param {...*} [param] optional parameters which are passed through to the function specified by fn once the timer expires.
-         * @return {Number} The numerical ID of the timer, which can be used later with me.timer.clearTimeout().
+         * @returns {Number} The numerical ID of the timer, which can be used later with me.timer.clearTimeout().
          * @function
          * @example
          * // set a timer to call "myFunction" after 1000ms
@@ -193,7 +193,7 @@ var timer = {
          * @param {Number} delay the number of milliseconds (thousandths of a second) on how often to execute the function
          * @param {Boolean} [pauseable=true] respects the pause state of the engine.
          * @param {...*} [param] optional parameters which are passed through to the function specified by fn once the timer expires.
-         * @return {Number} The numerical ID of the timer, which can be used later with me.timer.clearInterval().
+         * @returns {Number} The numerical ID of the timer, which can be used later with me.timer.clearInterval().
          * @function
          * @example
          * // set a timer to call "myFunction" every 1000ms
@@ -241,7 +241,7 @@ var timer = {
          * since the game has started or since linux epoch (based on browser support for High Resolution Timer)
          * @name getTime
          * @memberOf me.timer
-         * @return {Number}
+         * @returns {Number}
          * @function
          */
         getTime() {
@@ -252,7 +252,7 @@ var timer = {
          * Return elapsed time in milliseconds since the last update
          * @name getDelta
          * @memberOf me.timer
-         * @return {Number}
+         * @returns {Number}
          * @function
          */
         getDelta() {

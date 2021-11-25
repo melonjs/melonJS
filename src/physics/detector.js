@@ -22,7 +22,7 @@ var dummyObj = {
  * @function
  * @param {me.Renderable} a a reference to the object A.
  * @param {me.Renderable} b a reference to the object B.
- * @return {Boolean} true if they should collide, false otherwise
+ * @returns {Boolean} true if they should collide, false otherwise
  */
 function shouldCollide(a, b) {
     return (
@@ -93,7 +93,7 @@ export var globalResponse = new ResponseObject();
  * @function
  * @param {me.Renderable} obj object to be tested for collision
  * @param {me.collision.ResponseObject} [response=me.collision.response] a user defined response object that will be populated if they intersect.
- * @return {Boolean} in case of collision, false otherwise
+ * @returns {Boolean} in case of collision, false otherwise
  */
 export function collisionCheck(objA, response = globalResponse) {
     var collisionCounter = 0;
@@ -165,7 +165,7 @@ export function collisionCheck(objA, response = globalResponse) {
  * @function
  * @param {me.Line} line line to be tested for collision
  * @param {Array.<me.Renderable>} [result] a user defined array that will be populated with intersecting physic objects.
- * @return {Array.<me.Renderable>} an array of intersecting physic objects
+ * @returns {Array.<me.Renderable>} an array of intersecting physic objects
  * @example
  *    // define a line accross the viewport
  *    var ray = new me.Line(

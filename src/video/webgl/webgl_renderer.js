@@ -260,7 +260,7 @@ class WebGLRenderer extends Renderer {
      * @function
      * @param {image} image Source image
      * @param {String} repeat Define how the pattern should be repeated
-     * @return {me.Renderer.Texture}
+     * @returns {me.Renderer.Texture}
      * @see me.ImageLayer#repeat
      * @example
      * var tileable   = renderer.createPattern(image, "repeat");
@@ -453,7 +453,7 @@ class WebGLRenderer extends Renderer {
      * @name getScreenContext
      * @memberOf me.WebGLRenderer.prototype
      * @function
-     * @return {WebGLRenderingContext}
+     * @returns {WebGLRenderingContext}
      */
     getScreenContext() {
         return this.gl;
@@ -466,7 +466,7 @@ class WebGLRenderer extends Renderer {
      * @function
      * @param {Canvas} canvas
      * @param {Boolean} [transparent=true] use false to disable transparency
-     * @return {WebGLRenderingContext}
+     * @returns {WebGLRenderingContext}
      */
     getContextGL(canvas, transparent) {
         if (typeof canvas === "undefined" || canvas === null) {
@@ -522,7 +522,7 @@ class WebGLRenderer extends Renderer {
      * @name getContext
      * @memberOf me.WebGLRenderer.prototype
      * @function
-     * @return {WebGLRenderingContext}
+     * @returns {WebGLRenderingContext}
      */
     getContext() {
         return this.gl;

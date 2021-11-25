@@ -112,7 +112,7 @@ var collision = {
      * @function
      * @param {me.Line} line line to be tested for collision
      * @param {Array.<me.Renderable>} [result] a user defined array that will be populated with intersecting physic objects.
-     * @return {Array.<me.Renderable>} an array of intersecting physic objects
+     * @returns {Array.<me.Renderable>} an array of intersecting physic objects
      * @example
      *    // define a line accross the viewport
      *    var ray = new me.Line(

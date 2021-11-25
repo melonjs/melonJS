@@ -307,7 +307,7 @@ class GLShader {
      * @memberOf me.GLShader
      * @function
      * @param {String} name the name of the attribute variable whose location to get.
-     * @return {GLint} number indicating the location of the variable name if found. Returns -1 otherwise
+     * @returns {GLint} number indicating the location of the variable name if found. Returns -1 otherwise
      */
     getAttribLocation(name) {
         var attr = this.attributes[name];

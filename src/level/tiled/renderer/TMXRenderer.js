@@ -31,7 +31,7 @@ class TMXRenderer {
      * @public
      * @function
      * @param {me.TMXTileMap|me.TMXLayer} component TMX Map or Layer
-     * @return {boolean}
+     * @returns {boolean}
      */
     canRender(component) {
         return (
@@ -52,7 +52,7 @@ class TMXRenderer {
      * @public
      * @function
      * @param {me.TMXLayer} [layer] calculate the bounding rect for a specific layer (will return a new bounds object)
-     * @return {me.Bounds}
+     * @returns {me.Bounds}
      */
     getBounds(layer) {
         var bounds = layer instanceof TMXLayer ? pool.pull("Bounds") : this.bounds;
@@ -72,7 +72,7 @@ class TMXRenderer {
      * @param {Number} x X coordinate
      * @param {Number} y Y coordinate
      * @param {me.Vector2d} [vector] an optional vector object where to put the return values
-     * @return {me.Vector2d}
+     * @returns {me.Vector2d}
      */
     pixelToTileCoords(x, y, v) {
         return v;
@@ -86,7 +86,7 @@ class TMXRenderer {
      * @param {Number} col tile horizontal position
      * @param {Number} row tile vertical position
      * @param {me.Vector2d} [vector] an optional vector object where to put the return values
-     * @return {me.Vector2d}
+     * @returns {me.Vector2d}
      */
     tileToPixelCoords(x, y, v) {
         return v;

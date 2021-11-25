@@ -41,7 +41,7 @@ class Rect extends Polygon {
      * @param {Number} y position of the Rectangle
      * @param {Number|Array} w|points width of the rectangle, or an array of vector defining the rectangle
      * @param {Number} [h] height of the rectangle, if a numeral width parameter is specified
-     * @return {me.Rect} this rectangle
+     * @returns {me.Rect} this rectangle
      */
     setShape(x, y, w, h) {
         var points = w; // assume w is an array by default
@@ -68,10 +68,6 @@ class Rect extends Polygon {
      * @name left
      * @memberOf me.Rect
      */
-
-    /**
-     * @ignore
-     */
     get left() {
         return this.pos.x;
     }
@@ -82,10 +78,6 @@ class Rect extends Polygon {
      * @type {Number}
      * @name right
      * @memberOf me.Rect
-     */
-
-    /**
-     * @ignore
      */
     get right() {
         var w = this.width;
@@ -99,10 +91,6 @@ class Rect extends Polygon {
      * @name top
      * @memberOf me.Rect
      */
-
-    /**
-     * @ignore
-     */
     get top() {
         return this.pos.y;
     }
@@ -113,10 +101,6 @@ class Rect extends Polygon {
      * @type {Number}
      * @name bottom
      * @memberOf me.Rect
-     */
-
-    /**
-     * @ignore
      */
     get bottom() {
         var h = this.height;
@@ -130,16 +114,9 @@ class Rect extends Polygon {
      * @name width
      * @memberOf me.Rect
      */
-
-    /**
-     * @ignore
-     */
     get width() {
         return this.points[2].x;
     }
-    /**
-     * @ignore
-     */
     set width(value) {
         this.points[1].x = this.points[2].x = value;
         this.recalc();
@@ -153,16 +130,9 @@ class Rect extends Polygon {
      * @name height
      * @memberOf me.Rect
      */
-
-    /**
-     * @ignore
-     */
     get height() {
         return this.points[2].y;
     }
-    /**
-     * @ignore
-     */
     set height(value) {
         this.points[2].y = this.points[3].y = value;
         this.recalc();
@@ -176,10 +146,6 @@ class Rect extends Polygon {
      * @name centerX
      * @memberOf me.Rect
      */
-
-    /**
-     * @ignore
-     */
     get centerX() {
         if (isFinite(this.width)) {
             return this.pos.x + (this.width / 2);
@@ -187,10 +153,6 @@ class Rect extends Polygon {
             return this.width;
         }
     }
-
-    /**
-     * @ignore
-     */
     set centerX (value) {
         this.pos.x = value - (this.width / 2);
     }
@@ -202,10 +164,6 @@ class Rect extends Polygon {
      * @name centerY
      * @memberOf me.Rect
      */
-
-    /**
-     * @ignore
-     */
     get centerY() {
         if (isFinite(this.height)) {
             return this.pos.y + (this.height / 2);
@@ -213,10 +171,6 @@ class Rect extends Polygon {
             return this.height;
         }
     }
-
-    /**
-     * @ignore
-     */
     set centerY(value) {
         this.pos.y = value - (this.height / 2);
     }
@@ -228,7 +182,7 @@ class Rect extends Polygon {
      * @function
      * @param {Number} w new width of the rectangle
      * @param {Number} h new height of the rectangle
-     * @return {me.Rect} this rectangle
+     * @returns {me.Rect} this rectangle
      */
     resize(w, h) {
         this.width = w;
@@ -243,7 +197,7 @@ class Rect extends Polygon {
      * @function
      * @param {Number} x a number representing the abscissa of the scaling vector.
      * @param {Number} [y=x] a number representing the ordinate of the scaling vector.
-     * @return {me.Rect} this rectangle
+     * @returns {me.Rect} this rectangle
      */
     scale(x, y = x) {
         this.width *= x;
@@ -256,7 +210,7 @@ class Rect extends Polygon {
      * @name clone
      * @memberOf me.Rect.prototype
      * @function
-     * @return {me.Rect} new rectangle
+     * @returns {me.Rect} new rectangle
      */
     clone() {
         return new Rect(this.pos.x, this.pos.y, this.width, this.height);
@@ -268,7 +222,7 @@ class Rect extends Polygon {
      * @memberOf me.Rect.prototype
      * @function
      * @param {me.Rect} rect Source rectangle
-     * @return {me.Rect} new rectangle
+     * @returns {me.Rect} new rectangle
      */
     copy(rect) {
         return this.setShape(rect.pos.x, rect.pos.y, rect.width, rect.height);
@@ -280,7 +234,7 @@ class Rect extends Polygon {
      * @memberOf me.Rect.prototype
      * @function
      * @param {me.Rect} rect other rectangle to union with
-     * @return {me.Rect} the union(ed) rectangle
+     * @returns {me.Rect} the union(ed) rectangle
      */
     union(/** {me.Rect} */ r) {
         var x1 = Math.min(this.left, r.left);
@@ -302,7 +256,7 @@ class Rect extends Polygon {
      * @memberOf me.Rect.prototype
      * @function
      * @param  {me.Rect} rect
-     * @return {boolean} true if overlaps
+     * @returns {boolean} true if overlaps
      */
     overlaps(r) {
         return (
@@ -319,7 +273,7 @@ class Rect extends Polygon {
      * @memberOf me.Rect.prototype
      * @function
      * @param {me.Rect} rect
-     * @return {boolean} true if contains
+     * @returns {boolean} true if contains
      */
 
     /**
@@ -329,7 +283,7 @@ class Rect extends Polygon {
      * @function
      * @param  {Number} x x coordinate
      * @param  {Number} y y coordinate
-     * @return {boolean} true if contains
+     * @returns {boolean} true if contains
      */
 
     /**
@@ -338,7 +292,7 @@ class Rect extends Polygon {
      * @memberOf me.Rect
      * @function
      * @param {me.Vector2d} point
-     * @return {boolean} true if contains
+     * @returns {boolean} true if contains
      */
     contains() {
         var arg0 = arguments[0];
@@ -374,7 +328,7 @@ class Rect extends Polygon {
      * @memberOf me.Rect.prototype
      * @function
      * @param  {me.Rect} rect
-     * @return {boolean} true if equals
+     * @returns {boolean} true if equals
      */
     equals(r) {
         return (
@@ -390,7 +344,7 @@ class Rect extends Polygon {
      * @name isFinite
      * @memberOf me.Rect.prototype
      * @function
-     * @return {boolean} false if all coordinates are positive or negative Infinity or NaN; otherwise, true.
+     * @returns {boolean} false if all coordinates are positive or negative Infinity or NaN; otherwise, true.
      */
     isFinite() {
         return (isFinite(this.pos.x) && isFinite(this.pos.y) && isFinite(this.width) && isFinite(this.height));
@@ -401,7 +355,7 @@ class Rect extends Polygon {
      * @name toPolygon
      * @memberOf me.Rect.prototype
      * @function
-     * @return {me.Polygon} a new Polygon that represents this rectangle.
+     * @returns {me.Polygon} a new Polygon that represents this rectangle.
      */
     toPolygon() {
         return new Polygon(

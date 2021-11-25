@@ -262,7 +262,7 @@ class TMXLayer extends Renderable {
      * @memberOf me.TMXLayer
      * @public
      * @function
-     * @return {me.TMXRenderer} renderer
+     * @returns {me.TMXRenderer} renderer
      */
     getRenderer() {
         return this.renderer;
@@ -277,7 +277,7 @@ class TMXLayer extends Renderable {
      * @function
      * @param {Number} x X coordinate (in world/pixels coordinates)
      * @param {Number} y Y coordinate (in world/pixels coordinates)
-     * @return {Number} TileId or null if there is no Tile at the given position
+     * @returns {Number} TileId or null if there is no Tile at the given position
      */
     getTileId(x, y) {
         var tile = this.getTile(x, y);
@@ -292,7 +292,7 @@ class TMXLayer extends Renderable {
      * @function
      * @param {Number} x X coordinate (in world/pixels coordinates)
      * @param {Number} y Y coordinate (in world/pixels coordinates)
-     * @return {me.Tile} corresponding tile or null if there is no defined tile at the coordinate or if outside of the layer bounds
+     * @returns {me.Tile} corresponding tile or null if there is no defined tile at the coordinate or if outside of the layer bounds
      * @example
      * // get the TMX Map Layer called "Front layer"
      * var layer = me.game.world.getChildByName("Front Layer")[0];
@@ -316,10 +316,10 @@ class TMXLayer extends Renderable {
      * @memberOf me.TMXLayer
      * @public
      * @function
-     * @return {me.Tile} a Tile object
+     * @returns {me.Tile} a Tile object
      * @param {Number} x X coordinate (in world/pixels coordinates)
      * @param {Number} y Y coordinate (in world/pixels coordinates)
-     * @return {me.Tile} the tile object
+     * @returns {me.Tile} the tile object
      */
     setTile(tile, x, y) {
         this.layerData[x][y] = tile;
@@ -335,7 +335,7 @@ class TMXLayer extends Renderable {
      * @param {Number} tileId tileId
      * @param {Number} x X coordinate (in world/pixels coordinates)
      * @param {Number} y Y coordinate (in world/pixels coordinates)
-     * @return {me.Tile} the tile object
+     * @returns {me.Tile} the tile object
      */
     getTileById(tileId, x, y) {
         if (!this.tileset.contains(tileId)) {
@@ -354,7 +354,7 @@ class TMXLayer extends Renderable {
      * @param {Number} x x position of the tile (in Tile unit)
      * @param {Number} y x position of the tile (in Tile unit)
      * @param {Number} [boundsCheck=true] check first if within the layer bounds
-     * @return {me.Tile} corresponding tile or null if there is no defined tile at the position or if outside of the layer bounds
+     * @returns {me.Tile} corresponding tile or null if there is no defined tile at the position or if outside of the layer bounds
      * @example
      * // return the first tile at offset 0, 0
      * var tile = layer.cellAt(0, 0);

@@ -87,7 +87,7 @@ var level = {
      * @param {String} format level format (only "tmx" supported)
      * @param {String} levelId the level id (or name)
      * @param {Function} [callback] a function to be called once the level is loaded
-     * @return {Boolean} true if the level was loaded
+     * @returns {Boolean} true if the level was loaded
      */
     add(format, levelId, callback) {
         switch (format) {
@@ -196,7 +196,7 @@ var level = {
      * @memberOf me.level
      * @public
      * @function
-     * @return {String}
+     * @returns {String}
      */
     getCurrentLevelId() {
         return levelIdx[currentLevelIdx];
@@ -210,7 +210,7 @@ var level = {
      * @memberOf me.level
      * @public
      * @function
-     * @return {me.TMXTileMap}
+     * @returns {me.TMXTileMap}
      */
     getCurrentLevel() {
         return levels[this.getCurrentLevelId()];

@@ -79,7 +79,7 @@ class Matrix3d {
      * @name identity
      * @memberOf me.Matrix3d
      * @function
-     * @return {me.Matrix3d} Reference to this object for method chaining
+     * @returns {me.Matrix3d} Reference to this object for method chaining
      */
     identity() {
         return this.setTransform(
@@ -111,7 +111,7 @@ class Matrix3d {
      * @param {Number} m31
      * @param {Number} m32
      * @param {Number} m33
-     * @return {me.Matrix3d} Reference to this object for method chaining
+     * @returns {me.Matrix3d} Reference to this object for method chaining
      */
     setTransform(m00, m01, m02, m03, m10, m11, m12, m13, m20, m21, m22, m23, m30, m31, m32, m33) {
         var a = this.val;
@@ -142,7 +142,7 @@ class Matrix3d {
      * @memberOf me.Matrix3d
      * @function
      * @param {me.Matrix3d} m the matrix object to copy from
-     * @return {me.Matrix3d} Reference to this object for method chaining
+     * @returns {me.Matrix3d} Reference to this object for method chaining
      */
     copy(b) {
         this.val.set(b.val);
@@ -155,7 +155,7 @@ class Matrix3d {
      * @memberOf me.Matrix3d
      * @function
      * @param {me.Matrix2d} m the matrix object to copy from
-     * @return {me.Matrix2d} Reference to this object for method chaining
+     * @returns {me.Matrix2d} Reference to this object for method chaining
      */
     fromMat2d(m) {
         var b = m.val;
@@ -174,7 +174,7 @@ class Matrix3d {
      * @memberOf me.Matrix3d
      * @function
      * @param {me.Matrix3d} m Other matrix
-     * @return {me.Matrix3d} Reference to this object for method chaining
+     * @returns {me.Matrix3d} Reference to this object for method chaining
      */
     multiply(m) {
         var a = this.val;
@@ -229,7 +229,7 @@ class Matrix3d {
      * @name transpose
      * @memberOf me.Matrix3d
      * @function
-     * @return {me.Matrix3d} Reference to this object for method chaining
+     * @returns {me.Matrix3d} Reference to this object for method chaining
      */
     transpose() {
         var a = this.val,
@@ -261,7 +261,7 @@ class Matrix3d {
      * @name invert
      * @memberOf me.Matrix3d
      * @function
-     * @return {me.Matrix3d} Reference to this object for method chaining
+     * @returns {me.Matrix3d} Reference to this object for method chaining
      */
     invert() {
          var a = this.val;
@@ -322,7 +322,7 @@ class Matrix3d {
      * @memberOf me.Matrix3d
      * @function
      * @param {me.Vector2d|me.Vector3d} vector the vector object to be transformed
-     * @return {me.Vector2d|me.Vector3d} result vector object.
+     * @returns {me.Vector2d|me.Vector3d} result vector object.
      */
      apply(v) {
         var a = this.val,
@@ -348,7 +348,7 @@ class Matrix3d {
       * @memberOf me.Matrix3d
       * @function
       * @param {me.Vector2d|me.Vector3d} vector the vector object to be transformed
-      * @return {me.Vector2d|me.Vector3d} result vector object.
+      * @returns {me.Vector2d|me.Vector3d} result vector object.
       */
      applyInverse(v) {
          // invert the current matrix
@@ -374,7 +374,7 @@ class Matrix3d {
      * @param {Number} top farthest up on the y-axis
      * @param {Number} near distance to the near clipping plane along the -Z axis
      * @param {Number} far distance to the far clipping plane along the -Z axis
-     * @return {me.Matrix3d} Reference to this object for method chaining
+     * @returns {me.Matrix3d} Reference to this object for method chaining
      */
     ortho(left, right, bottom, top, near, far) {
         var a = this.val;
@@ -410,7 +410,7 @@ class Matrix3d {
      * @param {Number} x a number representing the abscissa of the scaling vector.
      * @param {Number} [y=x] a number representing the ordinate of the scaling vector.
      * @param {Number} [z=0] a number representing the depth vector
-     * @return {me.Matrix3d} Reference to this object for method chaining
+     * @returns {me.Matrix3d} Reference to this object for method chaining
      */
     scale(x, y, z) {
         var a = this.val,
@@ -442,7 +442,7 @@ class Matrix3d {
      * @memberOf me.Matrix3d
      * @function
      * @param {me.Vector2d|me.Vector3d} vector scaling vector
-     * @return {me.Matrix3d} Reference to this object for method chaining
+     * @returns {me.Matrix3d} Reference to this object for method chaining
      */
     scaleV(v) {
         return this.scale(v.x, v.y, v.z);
@@ -454,7 +454,7 @@ class Matrix3d {
      * @memberOf me.Matrix3d
      * @function
      * @param {Number} x x scaling vector
-     * @return {me.Matrix3d} Reference to this object for method chaining
+     * @returns {me.Matrix3d} Reference to this object for method chaining
      */
     scaleX(x) {
         return this.scale(x, 1);
@@ -466,7 +466,7 @@ class Matrix3d {
      * @memberOf me.Matrix3d
      * @function
      * @param {Number} y y scaling vector
-     * @return {me.Matrix3d} Reference to this object for method chaining
+     * @returns {me.Matrix3d} Reference to this object for method chaining
      */
     scaleY(y) {
         return this.scale(1, y);
@@ -479,7 +479,7 @@ class Matrix3d {
      * @function
      * @param {Number} angle Rotation angle in radians.
      * @param {me.Vector3d} axis the axis to rotate around
-     * @return {me.Matrix3d} Reference to this object for method chaining
+     * @returns {me.Matrix3d} Reference to this object for method chaining
      */
     rotate(angle, v) {
         var a = this.val,
@@ -559,7 +559,7 @@ class Matrix3d {
      * @param {Number} x a number representing the abscissa of the vector.
      * @param {Number} [y=x] a number representing the ordinate of the vector.
      * @param {Number} [z=0] a number representing the depth of the vector
-     * @return {me.Matrix3d} Reference to this object for method chaining
+     * @returns {me.Matrix3d} Reference to this object for method chaining
      */
     /**
      * translate the matrix by a vector on the horizontal and vertical axis
@@ -567,7 +567,7 @@ class Matrix3d {
      * @memberOf me.Matrix3d
      * @function
      * @param {me.Vector2d|me.Vector3d} v the vector to translate the matrix by
-     * @return {me.Matrix3d} Reference to this object for method chaining
+     * @returns {me.Matrix3d} Reference to this object for method chaining
      */
     translate() {
         var a = this.val;
@@ -598,7 +598,7 @@ class Matrix3d {
      * @name isIdentity
      * @memberOf me.Matrix3d
      * @function
-     * @return {Boolean}
+     * @returns {Boolean}
      **/
     isIdentity() {
         var a = this.val;
@@ -629,7 +629,7 @@ class Matrix3d {
      * @memberOf me.Matrix3d
      * @function
      * @param {me.Matrix3d} m the other matrix
-     * @return {Boolean} true if both are equals
+     * @returns {Boolean} true if both are equals
      */
     equals(m) {
         var b = m.val;
@@ -660,7 +660,7 @@ class Matrix3d {
      * @name clone
      * @memberOf me.Matrix3d
      * @function
-     * @return {me.Matrix3d}
+     * @returns {me.Matrix3d}
      */
     clone() {
         return pool.pull("Matrix3d", this);
@@ -671,7 +671,7 @@ class Matrix3d {
      * @name toArray
      * @memberOf me.Matrix3d
      * @function
-     * @return {Float32Array}
+     * @returns {Float32Array}
      */
     toArray() {
         return this.val;
@@ -682,7 +682,7 @@ class Matrix3d {
      * @name toString
      * @memberOf me.Matrix3d
      * @function
-     * @return {String}
+     * @returns {String}
      */
     toString() {
         var a = this.val;

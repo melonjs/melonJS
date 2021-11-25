@@ -172,7 +172,7 @@ class CanvasRenderer extends Renderer {
      * @function
      * @param {image} image Source image
      * @param {String} repeat Define how the pattern should be repeated
-     * @return {CanvasPattern}
+     * @returns {CanvasPattern}
      * @see me.ImageLayer#repeat
      * @example
      * var tileable   = renderer.createPattern(image, "repeat");
@@ -496,7 +496,7 @@ class CanvasRenderer extends Renderer {
      * @name getContext
      * @memberOf me.CanvasRenderer.prototype
      * @function
-     * @return {CanvasRenderingContext2D}
+     * @returns {CanvasRenderingContext2D}
      */
     getContext() {
         return this.backBufferContext2D;

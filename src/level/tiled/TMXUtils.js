@@ -99,7 +99,7 @@ function parseAttributes(obj, elt) {
  * @name decompress
  * @param  {Number[]} data Array of bytes
  * @param  {String} format compressed data format ("gzip","zlib")
- * @return {Number[]} Decompressed data
+ * @returns {Number[]} Decompressed data
  */
 export function decompress() {
     throw new Error("GZIP/ZLIB compressed TMX Tile Map not supported!");
@@ -111,7 +111,7 @@ export function decompress() {
  * @function
  * @name decodeCSV
  * @param  {String} input CSV formatted data (only numbers, everything else will be converted to NaN)
- * @return {Number[]} Decoded data
+ * @returns {Number[]} Decoded data
  */
 export function decodeCSV(input) {
     var entries = input.replace("\n", "").trim().split(",");
@@ -130,7 +130,7 @@ export function decodeCSV(input) {
  * @name decodeBase64AsArray
  * @param {String} input Base64 encoded data
  * @param {Number} [bytes] number of bytes per array entry
- * @return {Uint32Array} Decoded data
+ * @returns {Uint32Array} Decoded data
  */
 export function decodeBase64AsArray(input, bytes) {
     bytes = bytes || 1;

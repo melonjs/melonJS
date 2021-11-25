@@ -32,7 +32,7 @@ var utils = {
      * @memberOf me.utils
      * @name getPixels
      * @param {Image|Canvas} image Image to read
-     * @return {ImageData} Canvas ImageData object
+     * @returns {ImageData} Canvas ImageData object
      */
     getPixels : function (arg) {
         if (arg instanceof HTMLImageElement) {
@@ -56,7 +56,7 @@ var utils = {
      * @name checkVersion
      * @param {String} first First version string to compare
      * @param {String} [second=me.version] Second version string to compare
-     * @return {Number} comparison result <br>&lt; 0 : first &lt; second<br>
+     * @returns {Number} comparison result <br>&lt; 0 : first &lt; second<br>
      * 0 : first == second<br>
      * &gt; 0 : first &gt; second
      * @example
@@ -88,7 +88,7 @@ var utils = {
      * @memberOf me.utils
      * @name getUriFragment
      * @param {String} [url=document.location] an optional params string or URL containing fragment (hash) params to be parsed
-     * @return {Object} an object representing the deserialized params string.
+     * @returns {Object} an object representing the deserialized params string.
      * @property {Boolean} [hitbox=false] draw the hitbox in the debug panel (if enabled)
      * @property {Boolean} [velocity=false] draw the entities velocity in the debug panel (if enabled)
      * @property {Boolean} [quadtree=false] draw the quadtree in the debug panel (if enabled)

@@ -9,7 +9,7 @@ import Polygon from "./../shapes/poly.js";
  * @constructor
  * @memberOf me
  * @param {me.Vector2d[]} [vertices] an array of me.Vector2d points
- * @return {me.Bounds} A new bounds object
+ * @returns {me.Bounds} A new bounds object
  */
 
 class Bounds {
@@ -302,7 +302,7 @@ class Bounds {
      * @memberOf me.Bounds
      * @function
      * @param {me.Vector2d} point
-     * @return {boolean} True if the bounds contain the point, otherwise false
+     * @returns {boolean} True if the bounds contain the point, otherwise false
      */
     /**
      * Returns true if the bounds contains the given point.
@@ -311,7 +311,7 @@ class Bounds {
      * @function
      * @param {Number} x
      * @param {Number} y
-     * @return {boolean} True if the bounds contain the point, otherwise false
+     * @returns {boolean} True if the bounds contain the point, otherwise false
      */
     contains() {
         var arg0 = arguments[0];
@@ -344,7 +344,7 @@ class Bounds {
      * @memberOf me.Bounds
      * @function
      * @param {me.Bounds|me.Rect} bounds
-     * @return {boolean} True if the bounds overlap, otherwise false
+     * @returns {boolean} True if the bounds overlap, otherwise false
      */
     overlaps(bounds) {
         return !(this.right < bounds.left || this.left > bounds.right ||
@@ -356,7 +356,7 @@ class Bounds {
      * @name isFinite
      * @memberOf me.Bounds
      * @function
-     * @return {boolean} false if all coordinates are positive or negative Infinity or NaN; otherwise, true.
+     * @returns {boolean} false if all coordinates are positive or negative Infinity or NaN; otherwise, true.
      */
     isFinite() {
         return (isFinite(this.min.x) && isFinite(this.max.x) && isFinite(this.min.y) && isFinite(this.max.y));
@@ -436,7 +436,7 @@ class Bounds {
      * @name clone
      * @memberOf me.Bounds
      * @function
-     * @return {me.Bounds}
+     * @returns {me.Bounds}
      */
     clone() {
         var bounds = new Bounds();
@@ -449,7 +449,7 @@ class Bounds {
      * @name toPolygon
      * @memberOf me.Bounds
      * @function
-     * @return {me.Polygon} a new Polygon that represents this bounds.
+     * @returns {me.Polygon} a new Polygon that represents this bounds.
      */
     toPolygon () {
         return new Polygon(this.x, this.y, [

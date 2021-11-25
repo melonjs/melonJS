@@ -78,7 +78,7 @@ function flattenPointsOn(points, normal, result) {
  *   will be projected onto this axis.
  * @param {Response=} response A Response object (optional) which will be populated
  *   if the axis is not a separating axis.
- * @return {boolean} true if it is a separating axis, false otherwise.  If false,
+ * @returns {boolean} true if it is a separating axis, false otherwise.  If false,
  *   and a response is passed in, information about how much overlap and
  *   the direction of the overlap will be populated.
  */
@@ -163,7 +163,7 @@ function isSeparatingAxis(aPos, bPos, aPoints, bPoints, axis, response) {
  * @ignore
  * @param {Vector} line The line segment.
  * @param {Vector} point The point.
- * @return  {number} LEFT_VORNOI_REGION (-1) if it is the left region,
+ * @returns  {number} LEFT_VORNOI_REGION (-1) if it is the left region,
  *          MIDDLE_VORNOI_REGION (0) if it is the middle region,
  *          RIGHT_VORNOI_REGION (1) if it is the right region.
  */
@@ -192,7 +192,7 @@ function vornoiRegion(line, point) {
  * @param {me.Renderable} b a reference to the object B.
  * @param {me.Polygon} polyB a reference to the object B Polygon to be tested
  * @param {Response=} response Response object (optional) that will be populated if they intersect.
- * @return {boolean} true if they intersect, false if they don't.
+ * @returns {boolean} true if they intersect, false if they don't.
  */
 export function testPolygonPolygon(a, polyA, b, polyB, response) {
     // specific point for
@@ -247,7 +247,7 @@ export function testPolygonPolygon(a, polyA, b, polyB, response) {
  * @param {me.Ellipse} ellipseB a reference to the object B Ellipse to be tested
  * @param {Response=} response Response object (optional) that will be populated if
  *   the circles intersect.
- * @return {boolean} true if the circles intersect, false if they don't.
+ * @returns {boolean} true if the circles intersect, false if they don't.
  */
 export function testEllipseEllipse(a, ellipseA, b, ellipseB, response) {
     // Check if the distance between the centers of the two
@@ -287,7 +287,7 @@ export function testEllipseEllipse(a, ellipseA, b, ellipseB, response) {
  * @param {me.Renderable} b a reference to the object B.
  * @param {me.Ellipse} ellipseB a reference to the object B Ellipse to be tested
  * @param {Response=} response Response object (optional) that will be populated if they intersect.
- * @return {boolean} true if they intersect, false if they don't.
+ * @returns {boolean} true if they intersect, false if they don't.
  */
 export function testPolygonEllipse(a, polyA, b, ellipseB, response) {
     // Get the position of the circle relative to the polygon.
@@ -454,7 +454,7 @@ export function testPolygonEllipse(a, polyA, b, ellipseB, response) {
  * @param {me.Polygon} polyB a reference to the object B Polygon to be tested
  * @param {Response=} response Response object (optional) that will be populated if
  *   they intersect.
- * @return {boolean} true if they intersect, false if they don't.
+ * @returns {boolean} true if they intersect, false if they don't.
  */
 export function testEllipsePolygon(a, ellipseA, b, polyB, response) {
     // Test the polygon against the circle.

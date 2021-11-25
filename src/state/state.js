@@ -360,7 +360,7 @@ var state = {
      * @memberOf me.state
      * @public
      * @function
-     * @return {Boolean} true if a "process is running"
+     * @returns {Boolean} true if a "process is running"
      */
     isRunning() {
         return _animFrameId !== -1;
@@ -372,7 +372,7 @@ var state = {
      * @memberOf me.state
      * @public
      * @function
-     * @return {Boolean} true if the game is paused
+     * @returns {Boolean} true if the game is paused
      */
     isPaused() {
         return _isPaused;
@@ -444,7 +444,7 @@ var state = {
      * @memberOf me.state
      * @public
      * @function
-     * @return {me.Stage}
+     * @returns {me.Stage}
      */
     current() {
         if (typeof _stages[_state] !== "undefined") {

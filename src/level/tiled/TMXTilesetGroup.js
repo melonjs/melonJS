@@ -34,7 +34,7 @@ export default class TMXTilesetGroup {
      * @public
      * @function
      * @param {Number} i
-     * @return {me.TMXTileset} corresponding tileset
+     * @returns {me.TMXTileset} corresponding tileset
      */
     getTilesetByIndex(i) {
         return this.tilesets[i];
@@ -47,7 +47,7 @@ export default class TMXTilesetGroup {
      * @public
      * @function
      * @param {Number} gid
-     * @return {me.TMXTileset} corresponding tileset
+     * @returns {me.TMXTileset} corresponding tileset
      */
     getTilesetByGid(gid) {
         var invalidRange = -1;

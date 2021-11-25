@@ -252,7 +252,7 @@ export default class TMXObject {
      * @memberOf me.TMXObject
      * @private
      * @function
-     * @return {me.Polygon[]|me.Line[]|me.Ellipse[]} an array of shape objects
+     * @returns {me.Polygon[]|me.Line[]|me.Ellipse[]} an array of shape objects
      */
     parseTMXShapes() {
         var i = 0;

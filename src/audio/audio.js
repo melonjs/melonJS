@@ -185,7 +185,7 @@ export function load(sound, html5, onload_cb, onerror_cb) {
  * @param {Boolean} [loop=false] loop audio
  * @param {Function} [onend] Function to call when sound instance ends playing.
  * @param {Number} [volume=default] Float specifying volume (0.0 - 1.0 values accepted).
- * @return {Number} the sound instance ID.
+ * @returns {Number} the sound instance ID.
  * @example
  * // play the "cling" audio clip
  * me.audio.play("cling");
@@ -243,7 +243,7 @@ export function fade(sound_name, from, to, duration, id) {
  * @param {String} sound_name audio clip name - case sensitive
  * @param {Number} [seek]  The position to move current playback to (in seconds).
  * @param {Number} [id] the sound instance ID. If none is passed, all sounds in group will changed.
- * @return return the current seek position (if no extra parameters were given)
+ * @returns {Number} return the current seek position (if no extra parameters were given)
  * @example
  * // return the current position of the background music
  * var current_pos = me.audio.seek("dst-gameforest");
@@ -265,7 +265,7 @@ export function seek(sound_name, ...args) {
  * @param {String} sound_name audio clip name - case sensitive
  * @param {Number} [rate] playback rate : 0.5 to 4.0, with 1.0 being normal speed.
  * @param {Number} [id] the sound instance ID. If none is passed, all sounds in group will be changed.
- * @return return the current playback rate (if no extra parameters were given)
+ * @returns {Number} return the current playback rate (if no extra parameters were given)
  * @example
  * // get the playback rate of the background music
  * var rate = me.audio.rate("dst-gameforest");
@@ -353,7 +353,7 @@ export function resume(sound_name, id) {
  * @function me.audio.playTrack
  * @param {String} sound_name audio track name - case sensitive
  * @param {Number} [volume=default] Float specifying volume (0.0 - 1.0 values accepted).
- * @return {Number} the sound instance ID.
+ * @returns {Number} the sound instance ID.
  * @example
  * me.audio.playTrack("awesome_music");
  */
@@ -416,7 +416,7 @@ export function resumeTrack() {
 /**
  * returns the current track Id
  * @function me.audio.getCurrentTrack
- * @return {String} audio track name
+ * @returns {String} audio track name
  */
 export function getCurrentTrack() {
     return current_track_id;
@@ -490,7 +490,7 @@ export function unmuteAll() {
 /**
  * Returns true if audio is muted globally.
  * @function me.audio.muted
- * @return {Boolean} true if audio is muted globally
+ * @returns {Boolean} true if audio is muted globally
  */
 export function muted() {
     return Howler._muted;
@@ -500,7 +500,7 @@ export function muted() {
  * unload specified audio track to free memory
  * @function me.audio.unload
  * @param {String} sound_name audio track name - case sensitive
- * @return {Boolean} true if unloaded
+ * @returns {Boolean} true if unloaded
  * @example
  * me.audio.unload("awesome_music");
  */

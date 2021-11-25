@@ -56,7 +56,7 @@ export const EPSILON = 0.000001;
  * @memberOf me.Math
  * @name isPowerOfTwo
  * @param {Number} val
- * @return {boolean}
+ * @returns {boolean}
  */
 export function isPowerOfTwo(val) {
     return (val & (val - 1)) === 0;
@@ -69,7 +69,7 @@ export function isPowerOfTwo(val) {
  * @memberOf me.Math
  * @name nextPowerOfTwo
  * @param {Number} val
- * @return {boolean}
+ * @returns {boolean}
  */
 export function nextPowerOfTwo(val) {
     val --;
@@ -89,7 +89,7 @@ export function nextPowerOfTwo(val) {
  * @memberOf me.Math
  * @name degToRad
  * @param {number} angle angle in degrees
- * @return {number} corresponding angle in radians
+ * @returns {number} corresponding angle in radians
  * @example
  * // convert a specific angle
  * me.Math.degToRad(60); // return 1.0471...
@@ -105,7 +105,7 @@ export function degToRad(angle) {
  * @memberOf me.Math
  * @name radToDeg
  * @param {number} radians angle in radians
- * @return {number} corresponding angle in degrees
+ * @returns {number} corresponding angle in degrees
  * @example
  * // convert a specific angle
  * me.Math.radToDeg(1.0471975511965976); // return 60
@@ -123,7 +123,7 @@ export function radToDeg(radians) {
  * @param {number} val the value to clamp
  * @param {number} low lower limit
  * @param {number} high higher limit
- * @return {number} clamped value
+ * @returns {number} clamped value
  */
 export function clamp(val, low, high) {
     return val < low ? low : val > high ? high : +val;
@@ -137,7 +137,7 @@ export function clamp(val, low, high) {
  * @name random
  * @param {number} min minimum value.
  * @param {number} max maximum value.
- * @return {number} random value
+ * @returns {number} random value
  * @example
  * // Print a random number; one of 5, 6, 7, 8, 9
  * console.log(me.Math.random(5, 10) );
@@ -154,7 +154,7 @@ export function random(min, max) {
  * @name randomFloat
  * @param {number} min minimum value.
  * @param {number} max maximum value.
- * @return {number} random value
+ * @returns {number} random value
  * @example
  * // Print a random number; one of 5, 6, 7, 8, 9
  * console.log(me.Math.randomFloat(5, 10) );
@@ -171,7 +171,7 @@ export function randomFloat(min, max) {
  * @name weightedRandom
  * @param {number} min minimum value.
  * @param {number} max maximum value.
- * @return {number} random value
+ * @returns {number} random value
  * @example
  * // Print a random number; one of 5, 6, 7, 8, 9
  * console.log(me.Math.weightedRandom(5, 10) );
@@ -188,7 +188,7 @@ export function weightedRandom(min, max) {
  * @name round
  * @param {number} num value to be rounded.
  * @param {number} [dec=0] number of decimal digit to be rounded to.
- * @return {number} rounded value
+ * @returns {number} rounded value
  * @example
  * // round a specific value to 2 digits
  * me.Math.round(10.33333, 2); // return 10.33
@@ -208,7 +208,7 @@ export function round(num, dec = 0) {
  * @param {number} expected value to be compared with.
  * @param {number} actual actual value to compare
  * @param {number} [precision=2] float precision for the comparison
- * @return {boolean} if close to
+ * @returns {boolean} if close to
  * @example
  * // test if the given value is close to 10
  * if (me.Math.toBeCloseTo(10, value)) {

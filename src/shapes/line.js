@@ -21,7 +21,7 @@ class Line extends Polygon {
      * @memberOf me.Line.prototype
      * @function
      * @param  {me.Vector2d} point
-     * @return {boolean} true if contains
+     * @returns {boolean} true if contains
      */
 
     /**
@@ -31,7 +31,7 @@ class Line extends Polygon {
      * @function
      * @param  {Number} x x coordinate
      * @param  {Number} y y coordinate
-     * @return {boolean} true if contains
+     * @returns {boolean} true if contains
      */
     contains() {
         var _x, _y;
@@ -98,7 +98,7 @@ class Line extends Polygon {
      * @name clone
      * @memberOf me.Line.prototype
      * @function
-     * @return {me.Line} new Line
+     * @returns {me.Line} new Line
      */
     clone() {
         var copy = [];

@@ -577,7 +577,7 @@ var loader = {
      * @public
      * @function
      * @param {Object} resource
-     * @return {Boolean} true if unloaded
+     * @returns {Boolean} true if unloaded
      * @example me.loader.unload({name: "avatar",  type:"image",  src: "data/avatar.png"});
      */
     unload(res) {
@@ -692,7 +692,7 @@ var loader = {
      * @public
      * @function
      * @param {String} tmx name of the tmx/tsx element ("map1");
-     * @return {XML|Object} requested element or null if not found
+     * @returns {XML|Object} requested element or null if not found
      */
     getTMX(elt) {
         // force as string
@@ -710,7 +710,7 @@ var loader = {
      * @public
      * @function
      * @param {String} name of the binary object ("ymTrack");
-     * @return {Object} requested element or null if not found
+     * @returns {Object} requested element or null if not found
      */
     getBinary(elt) {
         // force as string
@@ -728,7 +728,7 @@ var loader = {
      * @public
      * @function
      * @param {String} image name of the Image element ("tileset-platformer");
-     * @return {HTMLImageElement} requested element or null if not found
+     * @returns {HTMLImageElement} requested element or null if not found
      */
     getImage(image) {
         // force as string and extract the base name
@@ -747,7 +747,7 @@ var loader = {
      * @public
      * @function
      * @param {String} Name for the json file to load
-     * @return {Object}
+     * @returns {Object}
      */
     getJSON(elt) {
         // force as string

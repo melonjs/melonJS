@@ -241,7 +241,7 @@ class WebGLCompositor {
      * @param {Number} [b] Source image border (Only use with UInt8Array[] or Float32Array[] source image)
      * @param {Boolean} [premultipliedAlpha=true] Multiplies the alpha channel into the other color channels
      * @param {Boolean} [mipmap=true] Whether mipmap levels should be generated for this texture
-     * @return {WebGLTexture} a WebGL texture
+     * @returns {WebGLTexture} a WebGL texture
      */
     createTexture2D(unit, image, filter, repeat = "no-repeat", w, h, b, premultipliedAlpha = true, mipmap = true) {
         var gl = this.gl;

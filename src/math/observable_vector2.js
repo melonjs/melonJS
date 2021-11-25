@@ -42,21 +42,15 @@ class ObservableVector2d extends Vector2d {
     /**
      * x value of the vector
      * @public
-     * @type Number
+     * @type {Number}
      * @name x
      * @memberOf me.ObservableVector2d
      */
 
-    /**
-     * @ignore
-     */
     get x() {
         return this._x;
     }
 
-    /**
-     * @ignore
-     */
     set x(value) {
         var ret = this.onUpdate.call(this.scope, value, this._y, this._x, this._y);
         if (ret && "x" in ret) {
@@ -70,21 +64,15 @@ class ObservableVector2d extends Vector2d {
     /**
      * y value of the vector
      * @public
-     * @type Number
+     * @type {Number}
      * @name y
      * @memberOf me.ObservableVector2d
      */
 
-    /**
-     * @ignore
-     */
     get y() {
         return this._y;
     }
 
-    /**
-     * @ignore
-     */
     set y(value) {
         var ret = this.onUpdate.call(this.scope, this._x, value, this._x, this._y);
         if (ret && "y" in ret) {
@@ -114,7 +102,7 @@ class ObservableVector2d extends Vector2d {
      * @function
      * @param {Number} x x value of the vector
      * @param {Number} y y value of the vector
-     * @return {me.ObservableVector2d} Reference to this object for method chaining
+     * @returns {me.ObservableVector2d} Reference to this object for method chaining
      */
     setMuted(x, y) {
         this._x = x;
@@ -129,7 +117,7 @@ class ObservableVector2d extends Vector2d {
      * @function
      * @param {function} onUpdate callback
      * @param {function} [scope=null] scope
-     * @return {me.ObservableVector2d} Reference to this object for method chaining
+     * @returns {me.ObservableVector2d} Reference to this object for method chaining
      */
     setCallback(fn, scope = null) {
         if (typeof(fn) !== "function") {
@@ -148,7 +136,7 @@ class ObservableVector2d extends Vector2d {
      * @memberOf me.ObservableVector2d
      * @function
      * @param {me.ObservableVector2d} v
-     * @return {me.ObservableVector2d} Reference to this object for method chaining
+     * @returns {me.ObservableVector2d} Reference to this object for method chaining
      */
     add(v) {
         return this._set(this._x + v.x, this._y + v.y);
@@ -160,7 +148,7 @@ class ObservableVector2d extends Vector2d {
      * @memberOf me.ObservableVector2d
      * @function
      * @param {me.ObservableVector2d} v
-     * @return {me.ObservableVector2d} Reference to this object for method chaining
+     * @returns {me.ObservableVector2d} Reference to this object for method chaining
      */
     sub(v) {
         return this._set(this._x - v.x, this._y - v.y);
@@ -173,7 +161,7 @@ class ObservableVector2d extends Vector2d {
      * @function
      * @param {Number} x
      * @param {Number} [y=x]
-     * @return {me.ObservableVector2d} Reference to this object for method chaining
+     * @returns {me.ObservableVector2d} Reference to this object for method chaining
      */
     scale(x, y) {
         return this._set(this._x * x, this._y * (typeof (y) !== "undefined" ? y : x));
@@ -185,7 +173,7 @@ class ObservableVector2d extends Vector2d {
      * @memberOf me.ObservableVector2d
      * @function
      * @param {me.ObservableVector2d} v
-     * @return {me.ObservableVector2d} Reference to this object for method chaining
+     * @returns {me.ObservableVector2d} Reference to this object for method chaining
      */
     scaleV(v) {
         return this._set(this._x * v.x, this._y * v.y);
@@ -197,7 +185,7 @@ class ObservableVector2d extends Vector2d {
      * @memberOf me.ObservableVector2d
      * @function
      * @param {Number} value
-     * @return {me.ObservableVector2d} Reference to this object for method chaining
+     * @returns {me.ObservableVector2d} Reference to this object for method chaining
      */
     div(n) {
         return this._set(this._x / n, this._y / n);
@@ -208,7 +196,7 @@ class ObservableVector2d extends Vector2d {
      * @name abs
      * @memberOf me.ObservableVector2d
      * @function
-     * @return {me.ObservableVector2d} Reference to this object for method chaining
+     * @returns {me.ObservableVector2d} Reference to this object for method chaining
      */
     abs() {
         return this._set((this._x < 0) ? -this._x : this._x, (this._y < 0) ? -this._y : this._y);
@@ -221,7 +209,7 @@ class ObservableVector2d extends Vector2d {
      * @function
      * @param {Number} low
      * @param {Number} high
-     * @return {me.ObservableVector2d} new me.ObservableVector2d
+     * @returns {me.ObservableVector2d} new me.ObservableVector2d
      */
     clamp(low, high) {
         return new ObservableVector2d(clamp(this.x, low, high), clamp(this.y, low, high), {onUpdate: this.onUpdate, scope: this.scope});
@@ -234,7 +222,7 @@ class ObservableVector2d extends Vector2d {
      * @function
      * @param {Number} low
      * @param {Number} high
-     * @return {me.ObservableVector2d} Reference to this object for method chaining
+     * @returns {me.ObservableVector2d} Reference to this object for method chaining
      */
     clampSelf(low, high) {
         return this._set(clamp(this._x, low, high), clamp(this._y, low, high));
@@ -246,7 +234,7 @@ class ObservableVector2d extends Vector2d {
      * @memberOf me.ObservableVector2d
      * @function
      * @param {me.ObservableVector2d} v
-     * @return {me.ObservableVector2d} Reference to this object for method chaining
+     * @returns {me.ObservableVector2d} Reference to this object for method chaining
      */
     minV(v) {
         return this._set((this._x < v.x) ? this._x : v.x, (this._y < v.y) ? this._y : v.y);
@@ -258,7 +246,7 @@ class ObservableVector2d extends Vector2d {
      * @memberOf me.ObservableVector2d
      * @function
      * @param {me.ObservableVector2d} v
-     * @return {me.ObservableVector2d} Reference to this object for method chaining
+     * @returns {me.ObservableVector2d} Reference to this object for method chaining
      */
     maxV(v) {
         return this._set((this._x > v.x) ? this._x : v.x, (this._y > v.y) ? this._y : v.y);
@@ -269,7 +257,7 @@ class ObservableVector2d extends Vector2d {
      * @name floor
      * @memberOf me.ObservableVector2d
      * @function
-     * @return {me.ObservableVector2d} new me.ObservableVector2d
+     * @returns {me.ObservableVector2d} new me.ObservableVector2d
      */
     floor() {
         return new ObservableVector2d(Math.floor(this._x), Math.floor(this._y), {onUpdate: this.onUpdate, scope: this.scope});
@@ -280,7 +268,7 @@ class ObservableVector2d extends Vector2d {
      * @name floorSelf
      * @memberOf me.ObservableVector2d
      * @function
-     * @return {me.ObservableVector2d} Reference to this object for method chaining
+     * @returns {me.ObservableVector2d} Reference to this object for method chaining
      */
     floorSelf() {
         return this._set(Math.floor(this._x), Math.floor(this._y));
@@ -291,7 +279,7 @@ class ObservableVector2d extends Vector2d {
      * @name ceil
      * @memberOf me.ObservableVector2d
      * @function
-     * @return {me.ObservableVector2d} new me.ObservableVector2d
+     * @returns {me.ObservableVector2d} new me.ObservableVector2d
      */
     ceil() {
         return new ObservableVector2d(Math.ceil(this._x), Math.ceil(this._y), {onUpdate: this.onUpdate, scope: this.scope});
@@ -302,7 +290,7 @@ class ObservableVector2d extends Vector2d {
      * @name ceilSelf
      * @memberOf me.ObservableVector2d
      * @function
-     * @return {me.ObservableVector2d} Reference to this object for method chaining
+     * @returns {me.ObservableVector2d} Reference to this object for method chaining
      */
     ceilSelf() {
         return this._set(Math.ceil(this._x), Math.ceil(this._y));
@@ -313,7 +301,7 @@ class ObservableVector2d extends Vector2d {
      * @name negate
      * @memberOf me.ObservableVector2d
      * @function
-     * @return {me.ObservableVector2d} new me.ObservableVector2d
+     * @returns {me.ObservableVector2d} new me.ObservableVector2d
      */
     negate() {
         return new ObservableVector2d(-this._x, -this._y, {onUpdate: this.onUpdate, scope: this.scope});
@@ -324,7 +312,7 @@ class ObservableVector2d extends Vector2d {
      * @name negateSelf
      * @memberOf me.ObservableVector2d
      * @function
-     * @return {me.ObservableVector2d} Reference to this object for method chaining
+     * @returns {me.ObservableVector2d} Reference to this object for method chaining
      */
     negateSelf() {
         return this._set(-this._x, -this._y);
@@ -336,7 +324,7 @@ class ObservableVector2d extends Vector2d {
      * @memberOf me.ObservableVector2d
      * @function
      * @param {me.ObservableVector2d} v
-     * @return {me.ObservableVector2d} Reference to this object for method chaining
+     * @returns {me.ObservableVector2d} Reference to this object for method chaining
      */
     copy(v) {
         return this._set(v.x, v.y);
@@ -348,7 +336,7 @@ class ObservableVector2d extends Vector2d {
      * @memberOf me.ObservableVector2d
      * @function
      * @param {me.ObservableVector2d} v
-     * @return {Boolean}
+     * @returns {Boolean}
      */
     equals(v) {
         return ((this._x === v.x) && (this._y === v.y));
@@ -360,7 +348,7 @@ class ObservableVector2d extends Vector2d {
      * @name perp
      * @memberOf me.ObservableVector2d
      * @function
-     * @return {me.ObservableVector2d} Reference to this object for method chaining
+     * @returns {me.ObservableVector2d} Reference to this object for method chaining
      */
     perp() {
         return this._set(this._y, -this._x);
@@ -373,7 +361,7 @@ class ObservableVector2d extends Vector2d {
      * @function
      * @param {number} angle The angle to rotate (in radians)
      * @param {me.Vector2d|me.ObservableVector2d} [v] an optional point to rotate around
-     * @return {me.ObservableVector2d} Reference to this object for method chaining
+     * @returns {me.ObservableVector2d} Reference to this object for method chaining
      */
     rotate(angle, v) {
         var cx = 0;
@@ -399,7 +387,7 @@ class ObservableVector2d extends Vector2d {
      * @memberOf me.ObservableVector2d
      * @function
      * @param {me.Vector2d|me.ObservableVector2d} v
-     * @return {Number} The dot product.
+     * @returns {Number} The dot product.
      */
     dotProduct(v) {
         return this._x * v.x + this._y * v.y;
@@ -412,7 +400,7 @@ class ObservableVector2d extends Vector2d {
      * @function
      * @param {me.Vector2d|me.ObservableVector2d} v
      * @param {Number} alpha distance along the line (alpha = 0 will be this vector, and alpha = 1 will be the given one).
-     * @return {me.ObservableVector2d} Reference to this object for method chaining
+     * @returns {me.ObservableVector2d} Reference to this object for method chaining
      */
     lerp(v, alpha) {
         this._x += ( v.x - this._x ) * alpha;
@@ -426,7 +414,7 @@ class ObservableVector2d extends Vector2d {
      * @memberOf me.ObservableVector2d
      * @function
      * @param {me.ObservableVector2d} v
-     * @return {Number}
+     * @returns {Number}
      */
     distance(v) {
         return Math.sqrt((this._x - v.x) * (this._x - v.x) + (this._y - v.y) * (this._y - v.y));
@@ -437,7 +425,7 @@ class ObservableVector2d extends Vector2d {
      * @name clone
      * @memberOf me.ObservableVector2d
      * @function
-     * @return {me.ObservableVector2d} new me.ObservableVector2d
+     * @returns {me.ObservableVector2d} new me.ObservableVector2d
      */
     clone() {
         return pool.pull("ObservableVector2d", this._x, this._y, {onUpdate: this.onUpdate, scope: this.scope});
@@ -448,7 +436,7 @@ class ObservableVector2d extends Vector2d {
      * @name toVector2d
      * @memberOf me.ObservableVector2d
      * @function
-     * @return {me.Vector2d} new me.Vector2d
+     * @returns {me.Vector2d} new me.Vector2d
      */
     toVector2d() {
         return pool.pull("Vector2d", this._x, this._y);
@@ -459,7 +447,7 @@ class ObservableVector2d extends Vector2d {
      * @name toString
      * @memberOf me.ObservableVector2d
      * @function
-     * @return {String}
+     * @returns {String}
      */
     toString() {
         return "x:" + this._x + ",y:" + this._y;

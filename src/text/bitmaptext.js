@@ -169,7 +169,7 @@ class BitmapText extends Renderable {
      * @function
      * @param {String} textAlign ("left", "center", "right")
      * @param {Number} [scale]
-     * @return this object for chaining
+     * @returns this object for chaining
      */
     set(textAlign, scale) {
         this.textAlign = textAlign;
@@ -188,7 +188,7 @@ class BitmapText extends Renderable {
      * @memberOf me.BitmapText.prototype
      * @function
      * @param {Number|String|String[]} value a string, or an array of strings
-     * @return this object for chaining
+     * @returns this object for chaining
      */
     setText(value) {
         if (typeof value === "undefined") {
@@ -215,16 +215,9 @@ class BitmapText extends Renderable {
      * @see me.Renderable#tint
      * @memberOf me.BitmapText
      */
-
-    /**
-     * @ignore
-     */
     get fillStyle() {
         return this.tint;
     }
-    /**
-     * @ignore
-     */
     set fillStyle(value) {
         this.tint = value;
     }
@@ -235,7 +228,7 @@ class BitmapText extends Renderable {
      * @memberOf me.BitmapText.prototype
      * @function
      * @param {Number} scale ratio
-     * @return this object for chaining
+     * @returns this object for chaining
      */
     resize(scale) {
         this.fontScale.set(scale, scale);

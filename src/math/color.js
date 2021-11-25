@@ -203,21 +203,16 @@ class Color {
 
     /**
      * Color Red Component [0 .. 255]
-     * @type Number
+     * @type {Number}
      * @name r
      * @readonly
      * @memberOf me.Color
      */
 
-    /**
-     * @ignore
-     */
     get r() {
         return ~~(this.glArray[0] * 255);
     }
-    /**
-     * @ignore
-     */
+
     set r(value) {
         this.glArray[0] = clamp(~~value || 0, 0, 255) / 255.0;
     }
@@ -225,21 +220,16 @@ class Color {
 
     /**
      * Color Green Component [0 .. 255]
-     * @type Number
+     * @type {Number}
      * @name g
      * @readonly
      * @memberOf me.Color
      */
 
-    /**
-     * @ignore
-     */
     get g() {
         return ~~(this.glArray[1] * 255);
     }
-    /**
-     * @ignore
-     */
+
     set g(value) {
         this.glArray[1] = clamp(~~value || 0, 0, 255) / 255.0;
     }
@@ -247,41 +237,32 @@ class Color {
 
     /**
      * Color Blue Component [0 .. 255]
-     * @type Number
+     * @type {Number}
      * @name b
      * @readonly
      * @memberOf me.Color
      */
-    /**
-     * @ignore
-     */
+
     get b() {
         return ~~(this.glArray[2] * 255);
     }
-    /**
-     * @ignore
-     */
+
     set b(value) {
         this.glArray[2] = clamp(~~value || 0, 0, 255) / 255.0;
     }
 
     /**
      * Color Alpha Component [0.0 .. 1.0]
-     * @type Number
+     * @type {Number}
      * @name alpha
      * @readonly
      * @memberOf me.Color
      */
 
-    /**
-     * @ignore
-     */
     get alpha() {
         return this.glArray[3];
     }
-    /**
-     * @ignore
-     */
+
     set alpha(value) {
         this.glArray[3] = typeof(value) === "undefined" ? 1.0 : clamp(+value, 0, 1.0);
     }
@@ -296,7 +277,7 @@ class Color {
      * @param {Number} g green component [0 .. 255]
      * @param {Number} b blue component [0 .. 255]
      * @param {Number} [alpha=1.0] alpha value [0.0 .. 1.0]
-     * @return {me.Color} Reference to this object for method chaining
+     * @returns {me.Color} Reference to this object for method chaining
      */
     setColor(r, g, b, alpha = 1.0) {
         // Private initialization: copy Color value directly
@@ -316,7 +297,7 @@ class Color {
      * @name clone
      * @memberOf me.Color
      * @function
-     * @return {me.Color} Reference to the newly cloned object
+     * @returns {me.Color} Reference to the newly cloned object
      */
     clone() {
         return pool.pull("Color", this);
@@ -328,7 +309,7 @@ class Color {
      * @memberOf me.Color
      * @function
      * @param {me.Color|String} color
-     * @return {me.Color} Reference to this object for method chaining
+     * @returns {me.Color} Reference to this object for method chaining
      */
     copy(color) {
         if (color instanceof Color) {
@@ -345,7 +326,7 @@ class Color {
      * @memberOf me.Color
      * @function
      * @param {me.Color} color
-     * @return {me.Color} Reference to this object for method chaining
+     * @returns {me.Color} Reference to this object for method chaining
      */
     add(color) {
         this.glArray[0] = clamp(this.glArray[0] + color.glArray[0], 0, 1);
@@ -362,7 +343,7 @@ class Color {
      * @memberOf me.Color
      * @function
      * @param {Number} scale
-     * @return {me.Color} Reference to this object for method chaining
+     * @returns {me.Color} Reference to this object for method chaining
      */
     darken(scale) {
         scale = clamp(scale, 0, 1);
@@ -380,7 +361,7 @@ class Color {
      * @function
      * @param {me.Color} color
      * @param {Number} alpha with alpha = 0 being this color, and alpha = 1 being the given one.
-     * @return {me.Color} Reference to this object for method chaining
+     * @returns {me.Color} Reference to this object for method chaining
      */
     lerp(color, alpha) {
         alpha = clamp(alpha, 0, 1);
@@ -397,7 +378,7 @@ class Color {
      * @memberOf me.Color
      * @function
      * @param {Number} scale
-     * @return {me.Color} Reference to this object for method chaining
+     * @returns {me.Color} Reference to this object for method chaining
      */
     lighten(scale) {
         scale = clamp(scale, 0, 1);
@@ -415,7 +396,7 @@ class Color {
      * @function
      * @param {Number} [min=0] minimum value for the random range
      * @param {Number} [max=255] maxmium value for the random range
-     * @return {me.Color} Reference to this object for method chaining
+     * @returns {me.Color} Reference to this object for method chaining
      */
     random(min = 0, max = 255) {
         if (min < 0) {
@@ -440,7 +421,7 @@ class Color {
      * @memberOf me.Color
      * @function
      * @param {me.Color} color
-     * @return {Boolean}
+     * @returns {Boolean}
      */
     equals(color) {
         return (
@@ -458,7 +439,7 @@ class Color {
      * @memberOf me.Color
      * @function
      * @param {String} color
-     * @return {me.Color} Reference to this object for method chaining
+     * @returns {me.Color} Reference to this object for method chaining
      */
     parseCSS(cssColor) {
         // TODO : Memoize this function by caching its input
@@ -476,7 +457,7 @@ class Color {
      * @memberOf me.Color
      * @function
      * @param {String} color
-     * @return {me.Color} Reference to this object for method chaining
+     * @returns {me.Color} Reference to this object for method chaining
      */
     parseRGB(rgbColor) {
         // TODO : Memoize this function by caching its input
@@ -497,7 +478,7 @@ class Color {
      * @function
      * @param {String} color
      * @param {boolean} [argb = false] true if format is #ARGB, or #AARRGGBB (as opposed to #RGBA or #RGGBBAA)
-     * @return {me.Color} Reference to this object for method chaining
+     * @returns {me.Color} Reference to this object for method chaining
      */
     parseHex(hexColor, argb = false) {
         // TODO : Memoize this function by caching its input
@@ -556,7 +537,7 @@ class Color {
      * @memberOf me.Color
      * @function
      * @param {Number} [alpha=1.0] alpha value [0.0 .. 1.0]
-     * @return {Uint32}
+     * @returns {Uint32}
      */
     toUint32(alpha = this.alpha) {
         var ur = this.r & 0xff;
@@ -572,7 +553,7 @@ class Color {
      * @name toArray
      * @memberOf me.Color
      * @function
-     * @return {Float32Array}
+     * @returns {Float32Array}
      */
     toArray() {
         return this.glArray;
@@ -584,7 +565,7 @@ class Color {
      * @name toHex
      * @memberOf me.Color
      * @function
-     * @return {String}
+     * @returns {String}
      */
     toHex() {
         // TODO : Memoize this function by caching its result until any of
@@ -598,7 +579,7 @@ class Color {
      * @name toHex8
      * @memberOf me.Color
      * @function
-     * @return {String}
+     * @returns {String}
      */
     toHex8() {
         // TODO : Memoize this function by caching its result until any of
@@ -612,7 +593,7 @@ class Color {
      * @name toRGB
      * @memberOf me.Color
      * @function
-     * @return {String}
+     * @returns {String}
      */
     toRGB() {
         // TODO : Memoize this function by caching its result until any of
@@ -630,7 +611,7 @@ class Color {
      * @name toRGBA
      * @memberOf me.Color
      * @function
-     * @return {String}
+     * @returns {String}
      */
     toRGBA() {
         // TODO : Memoize this function by caching its result until any of

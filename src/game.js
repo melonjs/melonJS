@@ -151,7 +151,7 @@ export function updateFrameRate() {
  * Returns the parent container of the specified Child in the game world
  * @function me.game.getParentContainer
  * @param {me.Renderable} child
- * @return {me.Container}
+ * @returns {me.Container}
  */
 export function getParentContainer(child) {
     return child.ancestor;

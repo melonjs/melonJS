@@ -205,7 +205,7 @@ export let renderer = null;
  * @param {Boolean} [options.transparent=false] whether to allow transparent pixels in the front buffer (screen).
  * @param {Boolean} [options.antiAlias=false] whether to enable or not video scaling interpolation
  * @param {Boolean} [options.consoleHeader=true] whether to display melonJS version and basic device information in the console
- * @return {Boolean} false if initialization failed (canvas not supported)
+ * @returns {Boolean} false if initialization failed (canvas not supported)
  * @example
  * // init the video with a 640x480 canvas
  * me.video.init(640, 480, {
@@ -384,7 +384,7 @@ export function init(game_width, game_height, options) {
  * @param {Number} width width
  * @param {Number} height height
  * @param {Boolean} [offscreen=false] will returns an OffscreenCanvas if supported
- * @return {HTMLCanvasElement|OffscreenCanvas}
+ * @returns {HTMLCanvasElement|OffscreenCanvas}
  */
 export function createCanvas(width, height, offscreen) {
     var _canvas;
@@ -413,7 +413,7 @@ export function createCanvas(width, height, offscreen) {
 /**
  * return a reference to the parent DOM element holding the main canvas
  * @function me.video.getParent
- * @return {HTMLElement}
+ * @returns {HTMLElement}
  */
 export function getParent() {
     return parent;

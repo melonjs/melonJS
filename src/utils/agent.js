@@ -19,7 +19,7 @@ var vendors = [ "ms", "MS", "moz", "webkit", "o" ];
  * @function
  * @param {String} name Property name
  * @param {Object} [obj=window] Object or element reference to access
- * @return {Mixed} Value of property
+ * @returns {Mixed} Value of property
  * @memberOf me.utils.agent
  */
 export function prefixed(name, obj) {
@@ -46,7 +46,7 @@ export function prefixed(name, obj) {
  * @param {String} name Property name
  * @param {Mixed} value Property value
  * @param {Object} [obj=window] Object or element reference to access
- * @return true if one of the vendor-prefixed property was found
+ * @returns {Boolean} true if one of the vendor-prefixed property was found
  * @memberOf me.utils.agent
  */
 export function setPrefixed(name, value, obj) {

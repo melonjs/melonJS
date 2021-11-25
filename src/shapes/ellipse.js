@@ -117,7 +117,7 @@ class Ellipse {
      * @function
      * @param {Number} angle The angle to rotate (in radians)
      * @param {me.Vector2d|me.ObservableVector2d} [v] an optional point to rotate around
-     * @return {me.Ellipse} Reference to this object for method chaining
+     * @returns {me.Ellipse} Reference to this object for method chaining
      */
     rotate(angle, v) {
         // TODO : only works for circle
@@ -134,7 +134,7 @@ class Ellipse {
      * @function
      * @param {Number} x
      * @param {Number} [y=x]
-     * @return {me.Ellipse} Reference to this object for method chaining
+     * @returns {me.Ellipse} Reference to this object for method chaining
      */
     scale(x, y) {
         y = typeof (y) !== "undefined" ? y : x;
@@ -152,7 +152,7 @@ class Ellipse {
      * @memberOf me.Ellipse.prototype
      * @function
      * @param {me.Vector2d} v
-     * @return {me.Ellipse} Reference to this object for method chaining
+     * @returns {me.Ellipse} Reference to this object for method chaining
      */
     scaleV(v) {
         return this.scale(v.x, v.y);
@@ -164,7 +164,7 @@ class Ellipse {
      * @memberOf me.Ellipse.prototype
      * @function
      * @param {me.Matrix2d} matrix the transformation matrix
-     * @return {me.Polygon} Reference to this object for method chaining
+     * @returns {me.Polygon} Reference to this object for method chaining
      */
     transform(/* m */) {
         // TODO
@@ -178,7 +178,7 @@ class Ellipse {
      * @function
      * @param {Number} x x offset
      * @param {Number} y y offset
-     * @return {me.Ellipse} this ellipse
+     * @returns {me.Ellipse} this ellipse
      */
     /**
      * translate the circle/ellipse by the specified vector
@@ -186,7 +186,7 @@ class Ellipse {
      * @memberOf me.Ellipse.prototype
      * @function
      * @param {me.Vector2d} v vector offset
-     * @return {me.Ellipse} this ellipse
+     * @returns {me.Ellipse} this ellipse
      */
     translate() {
         var _x, _y;
@@ -214,7 +214,7 @@ class Ellipse {
      * @memberOf me.Ellipse.prototype
      * @function
      * @param  {me.Vector2d} point
-     * @return {boolean} true if contains
+     * @returns {boolean} true if contains
      */
 
     /**
@@ -224,7 +224,7 @@ class Ellipse {
      * @function
      * @param  {Number} x x coordinate
      * @param  {Number} y y coordinate
-     * @return {boolean} true if contains
+     * @returns {boolean} true if contains
      */
     contains() {
         var _x, _y;
@@ -254,7 +254,7 @@ class Ellipse {
      * @name getBounds
      * @memberOf me.Ellipse.prototype
      * @function
-     * @return {me.Bounds} this shape bounding box Rectangle object
+     * @returns {me.Bounds} this shape bounding box Rectangle object
      */
     getBounds() {
         if (typeof this._bounds === "undefined") {
@@ -268,7 +268,7 @@ class Ellipse {
      * @name clone
      * @memberOf me.Ellipse.prototype
      * @function
-     * @return {me.Ellipse} new Ellipse
+     * @returns {me.Ellipse} new Ellipse
      */
     clone() {
         return new Ellipse(

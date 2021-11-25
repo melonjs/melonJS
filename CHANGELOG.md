@@ -1,5 +1,10 @@
 # Changelog
 
+## [10.2.2] (melonJS 2) - _2021-XX-XX
+
+### Fixed
+- TypeScript: fix most of function return type declaration when applicable
+
 ## [10.2.1] (melonJS 2) - _2021-11-23
 
 ### Fixed

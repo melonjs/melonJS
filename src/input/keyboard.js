@@ -332,7 +332,7 @@ export function initKeyboardEvent() {
  * @public
  * @function
  * @param {String} action user defined corresponding action
- * @return {Boolean} true if pressed
+ * @returns {Boolean} true if pressed
  * @example
  * if (me.input.isKeyPressed('left'))
  * {
@@ -361,7 +361,7 @@ export function isKeyPressed(action) {
  * @public
  * @function
  * @param {String} action user defined corresponding action
- * @return {Boolean} down (true) or up(false)
+ * @returns {Boolean} down (true) or up(false)
  */
 export function keyStatus(action) {
     return (_keyStatus[action] > 0);
@@ -424,7 +424,7 @@ export function bindKey(keycode, action, lock, preventDefault = preventDefaultAc
  * @public
  * @function
  * @param {me.input.KEY} keycode
- * @return {String} user defined associated action
+ * @returns {String} user defined associated action
  */
 export function getBindingKey(keycode) {
     return _keyBindings[keycode];

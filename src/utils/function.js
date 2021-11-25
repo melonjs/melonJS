@@ -14,7 +14,7 @@
  * @param {Function} fn The function to be deferred.
  * @param {Object} thisArg The value to be passed as the this parameter to the target function when the deferred function is called
  * @param {...*} [args] Optional additional arguments to carry for the function.
- * @return {Number} id that can be used to clear the deferred function using
+ * @returns {Number} id that can be used to clear the deferred function using
  * clearTimeout
  * @example
  * // execute myFunc() when the stack is empty,

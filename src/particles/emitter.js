@@ -432,7 +432,7 @@ class ParticleEmitter extends Renderable {
      * @name getRandomPointX
      * @memberOf me.ParticleEmitter
      * @function
-     * @return {Number}
+     * @returns {Number}
      */
     getRandomPointX() {
         return this.pos.x + randomFloat(0, this.width);
@@ -443,7 +443,7 @@ class ParticleEmitter extends Renderable {
      * @name getRandomPointY
      * @memberOf me.ParticleEmitter
      * @function
-     * @return {Number}
+     * @returns {Number}
      */
     getRandomPointY() {
         return this.pos.y + randomFloat(0, this.height);

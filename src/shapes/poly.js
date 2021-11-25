@@ -141,7 +141,7 @@ class Polygon {
      * @memberOf me.Polygon.prototype
      * @function
      * @param {me.Matrix2d} matrix the transformation matrix
-     * @return {me.Polygon} Reference to this object for method chaining
+     * @returns {me.Polygon} Reference to this object for method chaining
      */
     transform(m) {
         var points = this.points;
@@ -159,7 +159,7 @@ class Polygon {
      * @name toIso
      * @memberOf me.Polygon.prototype
      * @function
-     * @return {me.Polygon} Reference to this object for method chaining
+     * @returns {me.Polygon} Reference to this object for method chaining
      */
     toIso() {
         return this.rotate(Math.PI / 4).scale(Math.SQRT2, Math.SQRT1_2);
@@ -170,7 +170,7 @@ class Polygon {
      * @name to2d
      * @memberOf me.Polygon.prototype
      * @function
-     * @return {me.Polygon} Reference to this object for method chaining
+     * @returns {me.Polygon} Reference to this object for method chaining
      */
     to2d() {
         return this.scale(Math.SQRT1_2, Math.SQRT2).rotate(-Math.PI / 4);
@@ -183,7 +183,7 @@ class Polygon {
      * @function
      * @param {Number} angle The angle to rotate (in radians)
      * @param {me.Vector2d|me.ObservableVector2d} [v] an optional point to rotate around
-     * @return {me.Polygon} Reference to this object for method chaining
+     * @returns {me.Polygon} Reference to this object for method chaining
      */
     rotate(angle, v) {
         if (angle !== 0) {
@@ -205,7 +205,7 @@ class Polygon {
      * @function
      * @param {Number} x
      * @param {Number} [y=x]
-     * @return {me.Polygon} Reference to this object for method chaining
+     * @returns {me.Polygon} Reference to this object for method chaining
      */
     scale(x, y) {
         y = typeof (y) !== "undefined" ? y : x;
@@ -226,7 +226,7 @@ class Polygon {
      * @memberOf me.Polygon.prototype
      * @function
      * @param {me.Vector2d} v
-     * @return {me.Polygon} Reference to this object for method chaining
+     * @returns {me.Polygon} Reference to this object for method chaining
      */
     scaleV(v) {
         return this.scale(v.x, v.y);
@@ -238,7 +238,7 @@ class Polygon {
      * @name recalc
      * @memberOf me.Polygon.prototype
      * @function
-     * @return {me.Polygon} Reference to this object for method chaining
+     * @returns {me.Polygon} Reference to this object for method chaining
      */
     recalc() {
         var i;
@@ -281,7 +281,7 @@ class Polygon {
      * @name getIndices
      * @memberOf me.Polygon.prototype
      * @function
-     * @return {Array} an array of vertex indices for all triangles forming this polygon.
+     * @returns {Array} an array of vertex indices for all triangles forming this polygon.
      */
     getIndices() {
         if (this.indices.length === 0) {
@@ -297,7 +297,7 @@ class Polygon {
      * @function
      * @param {Number} x x offset
      * @param {Number} y y offset
-     * @return {me.Polygon} this Polygon
+     * @returns {me.Polygon} this Polygon
      */
     /**
      * translate the Polygon by the specified vector
@@ -305,7 +305,7 @@ class Polygon {
      * @memberOf me.Polygon.prototype
      * @function
      * @param {me.Vector2d} v vector offset
-     * @return {me.Polygon} Reference to this object for method chaining
+     * @returns {me.Polygon} Reference to this object for method chaining
      */
     translate() {
         var _x, _y;
@@ -366,7 +366,7 @@ class Polygon {
      * @memberOf me.Polygon.prototype
      * @function
      * @param  {me.Vector2d} point
-     * @return {boolean} true if contains
+     * @returns {boolean} true if contains
      */
 
     /**
@@ -378,7 +378,7 @@ class Polygon {
      * @function
      * @param  {Number} x x coordinate
      * @param  {Number} y y coordinate
-     * @return {boolean} true if contains
+     * @returns {boolean} true if contains
      */
     contains() {
         var _x, _y;
@@ -414,7 +414,7 @@ class Polygon {
      * @name getBounds
      * @memberOf me.Polygon.prototype
      * @function
-     * @return {me.Bounds} this shape bounding box Rectangle object
+     * @returns {me.Bounds} this shape bounding box Rectangle object
      */
     getBounds() {
         if (typeof this._bounds === "undefined") {
@@ -429,7 +429,7 @@ class Polygon {
      * @name updateBounds
      * @memberOf me.Polygon.prototype
      * @function
-     * @return {me.Bounds} this shape bounding box Rectangle object
+     * @returns {me.Bounds} this shape bounding box Rectangle object
      */
     updateBounds() {
         var bounds = this.getBounds();
@@ -445,7 +445,7 @@ class Polygon {
      * @name clone
      * @memberOf me.Polygon.prototype
      * @function
-     * @return {me.Polygon} new Polygon
+     * @returns {me.Polygon} new Polygon
      */
     clone() {
         var copy = [];

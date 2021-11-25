@@ -328,7 +328,7 @@ export class Texture {
      * @memberOf me.Renderer.Texture
      * @function
      * @param {String} [name] atlas name in case of multipack textures
-     * @return {Object}
+     * @returns {Object}
      */
     getAtlas(key) {
         if (typeof key === "string") {
@@ -343,7 +343,7 @@ export class Texture {
      * @name getFormat
      * @memberOf me.Renderer.Texture
      * @function
-     * @return {String} will return "texturepacker", or "ShoeBox", or "melonJS", or "Spritesheet (fixed cell size)"
+     * @returns {String} will return "texturepacker", or "ShoeBox", or "melonJS", or "Spritesheet (fixed cell size)"
      */
     getFormat() {
         return this.format;
@@ -355,7 +355,7 @@ export class Texture {
      * @memberOf me.Renderer.Texture
      * @function
      * @param {Object} [region] region name in case of multipack textures
-     * @return {HTMLImageElement|HTMLCanvasElement}
+     * @returns {HTMLImageElement|HTMLCanvasElement}
      */
     getTexture(region) {
         if ((typeof region === "object") && (typeof region.texture === "string")) {
@@ -372,7 +372,7 @@ export class Texture {
      * @function
      * @param {String} name name of the sprite
      * @param {String} [atlas] name of a specific atlas where to search for the region
-     * @return {Object}
+     * @returns {Object}
      */
     getRegion(name, atlas) {
         var region;
@@ -396,7 +396,7 @@ export class Texture {
      * @memberOf me.Renderer.Texture
      * @function
      * @param {Object} region region (or frame) name
-     * @return {Float32Array} region Uvs
+     * @returns {Float32Array} region Uvs
      */
     getUVs(name) {
         // Get the source texture region
@@ -422,7 +422,7 @@ export class Texture {
      * @param {String} name name of the sprite
      * @param {Object} [settings] Additional settings passed to the {@link me.Sprite} contructor
      * @param {Boolean} [nineSlice=false] if true returns a 9-slice sprite
-     * @return {me.Sprite|me.NineSliceSprite}
+     * @returns {me.Sprite|me.NineSliceSprite}
      * @example
      * // create a new texture object under the `game` namespace
      * game.texture = new me.video.renderer.Texture(
@@ -465,7 +465,7 @@ export class Texture {
      * @param {String[]|Number[]} names list of names for each sprite
      * (when manually creating a Texture out of a spritesheet, only numeric values are authorized)
      * @param {Object} [settings] Additional settings passed to the {@link me.Sprite} contructor
-     * @return {me.Sprite}
+     * @returns {me.Sprite}
      * @example
      * // create a new texture object under the `game` namespace
      * game.texture = new me.video.renderer.Texture(

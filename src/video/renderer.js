@@ -132,7 +132,7 @@ class Renderer {
      * @name getCanvas
      * @memberOf me.Renderer.prototype
      * @function
-     * @return {HTMLCanvasElement}
+     * @returns {HTMLCanvasElement}
      */
     getCanvas() {
         return this.backBufferCanvas;
@@ -143,7 +143,7 @@ class Renderer {
      * @name getScreenCanvas
      * @memberOf me.Renderer.prototype
      * @function
-     * @return {HTMLCanvasElement}
+     * @returns {HTMLCanvasElement}
      */
     getScreenCanvas() {
         return this.canvas;
@@ -155,7 +155,7 @@ class Renderer {
      * @name getScreenContext
      * @memberOf me.Renderer.prototype
      * @function
-     * @return {Context2d}
+     * @returns {Context2d}
      */
     getScreenContext() {
         return this.context;
@@ -166,7 +166,7 @@ class Renderer {
      * @name getBlendMode
      * @memberOf me.Renderer.prototype
      * @function
-     * @return {String} blend mode
+     * @returns {String} blend mode
      */
     getBlendMode() {
         return this.currentBlendMode;
@@ -180,7 +180,7 @@ class Renderer {
      * @function
      * @param {HTMLCanvasElement} canvas
      * @param {Boolean} [transparent=true] use false to disable transparency
-     * @return {CanvasRenderingContext2D}
+     * @returns {CanvasRenderingContext2D}
      */
     getContext2d(c, transparent) {
         if (typeof c === "undefined" || c === null) {
@@ -216,7 +216,7 @@ class Renderer {
      * @name getWidth
      * @memberOf me.Renderer.prototype
      * @function
-     * @return {Number}
+     * @returns {Number}
      */
     getWidth() {
         return this.backBufferCanvas.width;
@@ -227,7 +227,7 @@ class Renderer {
      * @name getHeight
      * @memberOf me.Renderer.prototype
      * @function
-     * @return {Number}
+     * @returns {Number}
      */
     getHeight() {
         return this.backBufferCanvas.height;
@@ -249,7 +249,7 @@ class Renderer {
      * @name globalAlpha
      * @memberOf me.Renderer.prototype
      * @function
-     * @return {Number}
+     * @returns {Number}
      */
     globalAlpha() {
         return this.currentColor.glArray[3];
@@ -261,7 +261,7 @@ class Renderer {
      * @memberOf me.Renderer.prototype
      * @function
      * @param  {me.Rect|me.Bounds} bounds
-     * @return {boolean} true if overlaps
+     * @returns {boolean} true if overlaps
      */
     overlaps(bounds) {
         return (
@@ -364,7 +364,7 @@ class Renderer {
      * @param {HTMLImageElement|HTMLCanvasElement|OffscreenCanvas} image the source image to be tinted
      * @param {me.Color|String} color the color that will be used to tint the image
      * @param {String} [mode="multiply"] the composition mode used to tint the image
-     * @return {HTMLCanvasElement|OffscreenCanvas} a new canvas element representing the tinted image
+     * @returns {HTMLCanvasElement|OffscreenCanvas} a new canvas element representing the tinted image
      */
     tint(src, color, mode) {
         var canvas = createCanvas(src.width, src.height, true);

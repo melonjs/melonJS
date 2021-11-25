@@ -174,7 +174,7 @@ export default class TMXTileset {
      * @public
      * @function
      * @param {Number} gid
-     * @return {Image} corresponding image or undefined
+     * @returns {Image} corresponding image or undefined
      */
     getTileImage(gid) {
         return this.imageCollection[gid];
@@ -197,7 +197,7 @@ export default class TMXTileset {
      * @public
      * @function
      * @param {Number} gid
-     * @return {Boolean}
+     * @returns {Boolean}
      */
     contains(gid) {
         return gid >= this.firstgid && gid <= this.lastgid;
@@ -209,7 +209,7 @@ export default class TMXTileset {
      * @public
      * @function
      * @param {Number} gid Global tile ID
-     * @return {Number} View tile ID
+     * @returns {Number} View tile ID
      */
     getViewTileId(gid) {
         var localId = gid - this.firstgid;
@@ -228,7 +228,7 @@ export default class TMXTileset {
      * @public
      * @function
      * @param {Number} tileId
-     * @return {Object}
+     * @returns {Object}
      */
     getTileProperties(tileId) {
         return this.TileProperties[tileId];

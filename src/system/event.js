@@ -441,7 +441,7 @@ export const WEBGL_ONCONTEXT_RESTORED = "renderer.webglcontextrestored";
  * @function me.event.emit
  * @param {(String|Symbol)} event The event name.
  * @param {...*} arguments arguments to be passed to all listeners
- * @return true if the event had listeners, false otherwise.
+ * @returns {Boolean} true if the event had listeners, false otherwise.
  * @example
  * me.event.emit("event-name", a, b, c);
  */

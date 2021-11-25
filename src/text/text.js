@@ -231,7 +231,7 @@ class Text extends Renderable {
      * @name bold
      * @memberOf me.Text.prototype
      * @function
-     * @return this object for chaining
+     * @returns {me.Text} this object for chaining
      */
     bold() {
         this.font = "bold " + this.font;
@@ -244,7 +244,7 @@ class Text extends Renderable {
      * @name italic
      * @memberOf me.Text.prototype
      * @function
-     * @return this object for chaining
+     * @returns {me.Text} this object for chaining
      */
     italic() {
         this.font = "italic " + this.font;
@@ -259,7 +259,7 @@ class Text extends Renderable {
      * @function
      * @param {String} font a CSS font name
      * @param {Number|String} [size=10] size in px, or size + suffix (px, em, pt)
-     * @return this object for chaining
+     * @returns {me.Text} this object for chaining
      * @example
      * font.setFont("Arial", 20);
      * font.setFont("Arial", "1.5em");
@@ -302,7 +302,7 @@ class Text extends Renderable {
      * @memberOf me.Text.prototype
      * @function
      * @param {Number|String|String[]} value a string, or an array of strings
-     * @return this object for chaining
+     * @returns {me.Text} this object for chaining
      */
     setText(value = "") {
         if (this._text.toString() !== value.toString()) {

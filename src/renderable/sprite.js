@@ -219,7 +219,7 @@ class Sprite extends Renderable {
      * @name isFlickering
      * @memberOf me.Sprite.prototype
      * @function
-     * @return {Boolean}
+     * @returns {Boolean}
      */
     isFlickering() {
         return this._flicker.isFlickering;
@@ -232,7 +232,7 @@ class Sprite extends Renderable {
      * @function
      * @param {Number} duration expressed in milliseconds
      * @param {Function} callback Function to call when flickering ends
-     * @return {me.Sprite} Reference to this object for method chaining
+     * @returns {me.Sprite} Reference to this object for method chaining
      * @example
      * // make the object flicker for 1 second
      * // and then remove it
@@ -265,7 +265,7 @@ class Sprite extends Renderable {
      * @param {Number[]|String[]|Object[]} index list of sprite index or name
      * defining the animation. Can also use objects to specify delay for each frame, see below
      * @param {Number} [animationspeed] cycling speed for animation in ms
-     * @return {Number} frame amount of frame added to the animation (delay between each frame).
+     * @returns {Number} frame amount of frame added to the animation (delay between each frame).
      * @see me.Sprite#animationspeed
      * @example
      * // walking animation
@@ -363,7 +363,7 @@ class Sprite extends Renderable {
      * @function
      * @param {String} name animation id
      * @param {String|Function} [onComplete] animation id to switch to when complete, or callback
-     * @return {me.Sprite} Reference to this object for method chaining
+     * @returns {me.Sprite} Reference to this object for method chaining
      * @example
      * // set "walk" animation
      * this.setCurrentAnimation("walk");
@@ -422,7 +422,7 @@ class Sprite extends Renderable {
      * @memberOf me.Sprite.prototype
      * @function
      * @param {String} [name] animation id
-     * @return {me.Sprite} Reference to this object for method chaining
+     * @returns {me.Sprite} Reference to this object for method chaining
      * @see me.Sprite#animationspeed
      */
     reverseAnimation(name) {
@@ -441,7 +441,7 @@ class Sprite extends Renderable {
      * @memberOf me.Sprite.prototype
      * @function
      * @param {String} name animation id
-     * @return {Boolean}
+     * @returns {Boolean}
      * @example
      * if (!this.isCurrentAnimation("walk")) {
      *     // do something funny...
@@ -458,7 +458,7 @@ class Sprite extends Renderable {
      * @memberOf me.Sprite.prototype
      * @function
      * @param {Object} region typically returned through me.Texture.getRegion()
-     * @return {me.Sprite} Reference to this object for method chaining
+     * @returns {me.Sprite} Reference to this object for method chaining
      * @example
      * // change the sprite to "shadedDark13.png";
      * mySprite.setRegion(game.texture.getRegion("shadedDark13.png"));
@@ -490,7 +490,7 @@ class Sprite extends Renderable {
      * @memberOf me.Sprite.prototype
      * @function
      * @param {Number} [index=0] animation frame index
-     * @return {me.Sprite} Reference to this object for method chaining
+     * @returns {me.Sprite} Reference to this object for method chaining
      * @example
      * // reset the current animation to the first frame
      * this.setAnimationFrame();
@@ -505,7 +505,7 @@ class Sprite extends Renderable {
      * @name getCurrentAnimationFrame
      * @memberOf me.Sprite.prototype
      * @function
-     * @return {Number} current animation frame index
+     * @returns {Number} current animation frame index
      */
     getCurrentAnimationFrame() {
         return this.current.idx;
@@ -517,7 +517,7 @@ class Sprite extends Renderable {
      * @memberOf me.Sprite.prototype
      * @function
      * @private
-     * @return {Number} if using number indices. Returns {Object} containing frame data if using texture atlas
+     * @returns {Number} if using number indices. Returns {Object} containing frame data if using texture atlas
      */
     getAnimationFrameObjectByIndex(id) {
         return this.anim[this.current.name].frames[id];

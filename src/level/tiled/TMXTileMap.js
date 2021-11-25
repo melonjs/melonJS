@@ -261,7 +261,7 @@ export default class TMXTileMap {
      * @memberOf me.TMXTileMap
      * @public
      * @function
-     * @return {me.TMXRenderer} a TMX renderer
+     * @returns {me.TMXRenderer} a TMX renderer
      */
     getRenderer() {
         if ((typeof(this.renderer) === "undefined") || (!this.renderer.canRender(this))) {
@@ -275,7 +275,7 @@ export default class TMXTileMap {
      * @name me.TMXRenderer#getBounds
      * @public
      * @function
-     * @return {me.Bounds}
+     * @returns {me.Bounds}
      */
     getBounds() {
         // calculated in the constructor
@@ -442,7 +442,7 @@ export default class TMXTileMap {
      * @function
      * @param {boolean} [flatten=true] if true, flatten all objects into the returned array.
      * when false, a `me.Container` object will be created for each corresponding groups
-     * @return {me.Renderable[]} Array of Objects
+     * @returns {me.Renderable[]} Array of Objects
      */
     getObjects(flatten) {
         var objects = [];
@@ -589,7 +589,7 @@ export default class TMXTileMap {
      * @name me.TMXTileMap#getLayers
      * @public
      * @function
-     * @return {me.TMXLayer[]} Array of Layers
+     * @returns {me.TMXLayer[]} Array of Layers
      */
     getLayers() {
         // parse the map for objects
