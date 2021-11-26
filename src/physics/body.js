@@ -765,8 +765,8 @@ class Body {
      * @ignore
      * @memberOf me.Body
      * @function
+     * @param {Number} dt time since the last update in milliseconds.
      * @returns {boolean} true if resulting velocity is different than 0
-     * @see source code for me.Body.computeVelocity (private member)
      */
     update(dt) {
         // update the velocity

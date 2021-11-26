@@ -260,8 +260,8 @@ class Bounds {
      * @name addPoint
      * @memberOf me.Bounds
      * @function
-     * @param {me.Vector2d} vector
-     * @param {me.Matrix2d} [matrix] an optional transform to apply to the given point
+     * @param {me.Vector2d} v
+     * @param {me.Matrix2d} [m] an optional transform to apply to the given point
      */
     addPoint(v, m) {
         if (typeof m !== "undefined") {
@@ -282,7 +282,7 @@ class Bounds {
      * @param {Number} y0 - top Y coordinates of the quad
      * @param {Number} x1 - right X coordinates of the quad
      * @param {Number} y1 - bottom y coordinates of the quad
-     * @param {me.Matrix2d} [matrix] an optional transform to apply to the given frame coordinates
+     * @param {me.Matrix2d} [m] an optional transform to apply to the given frame coordinates
      */
     addFrame(x0, y0, x1, y1, m) {
         var v = me.pool.pull("Vector2d");

@@ -38,7 +38,8 @@ var measureTextHeight = function(font) {
  * @extends me.Renderable
  * @memberOf me
  * @constructor
- * @param {Number} [scale=1.0]
+ * @param {Number} x position of the text object
+ * @param {Number} y position of the text object
  * @param {Object} settings the text configuration
  * @param {String|Image} settings.font a font name to identify the corresponing source image
  * @param {String} [settings.fontData=settings.font] the bitmap font data corresponding name, or the bitmap font data itself

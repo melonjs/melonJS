@@ -258,7 +258,7 @@ class WebGLRenderer extends Renderer {
      * @name createPattern
      * @memberOf me.WebGLRenderer.prototype
      * @function
-     * @param {image} image Source image
+     * @param {Image} image Source image
      * @param {String} repeat Define how the pattern should be repeated
      * @returns {me.Renderer.Texture}
      * @see me.ImageLayer#repeat
@@ -301,19 +301,19 @@ class WebGLRenderer extends Renderer {
      * @name clearColor
      * @memberOf me.WebGLRenderer.prototype
      * @function
-     * @param {me.Color|String} [color] CSS color.
+     * @param {me.Color|String} color CSS color.
      * @param {Boolean} [opaque=false] Allow transparency [default] or clear the surface completely [true]
      */
-    clearColor(col, opaque) {
+    clearColor(color, opaque) {
         var glArray;
 
         this.save();
 
-        if (col instanceof Color) {
-            glArray = col.toArray();
+        if (color instanceof Color) {
+            glArray = color.toArray();
         } else {
             // reuse temporary the renderer default color object
-            glArray = this.getColor().parseCSS(col).toArray();
+            glArray = this.getColor().parseCSS(color).toArray();
         }
 
         // clear gl context with the specified color
@@ -389,8 +389,8 @@ class WebGLRenderer extends Renderer {
      * @param {Number} sh The height of the sub-rectangle of the source image to draw into the destination context.
      * @param {Number} dx The X coordinate in the destination canvas at which to place the top-left corner of the source image.
      * @param {Number} dy The Y coordinate in the destination canvas at which to place the top-left corner of the source image.
-     * @param {Number} dWidth The width to draw the image in the destination canvas. This allows scaling of the drawn image. If not specified, the image is not scaled in width when drawn.
-     * @param {Number} dHeight The height to draw the image in the destination canvas. This allows scaling of the drawn image. If not specified, the image is not scaled in height when drawn.
+     * @param {Number} dw The width to draw the image in the destination canvas. This allows scaling of the drawn image. If not specified, the image is not scaled in width when drawn.
+     * @param {Number} dh The height to draw the image in the destination canvas. This allows scaling of the drawn image. If not specified, the image is not scaled in height when drawn.
      * @example
      * // Position the image on the canvas:
      * renderer.drawImage(image, dx, dy);

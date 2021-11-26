@@ -14,7 +14,7 @@ var tmpVec = new Vector2d();
 /**
  * @classdesc
  * a pointer object, representing a single finger on a touch enabled device.
- * @class
+ * @class Pointer
  * @extends me.Bounds
  * @memberOf me
  * @constructor
@@ -265,6 +265,15 @@ class Pointer extends Bounds {
          * @see https://developer.mozilla.org/en-US/docs/Web/API/PointerEvent/pointerId
          */
         this.pointerId = undefined;
+
+        /**
+         * true if not originally a pointer event
+         * @public
+         * @type {Boolean}
+         * @name isNormalized
+         * @memberOf me.Pointer
+         */
+        this.isNormalized = false;
 
         // bind list for mouse buttons
         this.bind = [ 0, 0, 0 ];

@@ -237,7 +237,7 @@ class ImageLayer extends Sprite {
         this.isDirty = true;
     }
 
-   /*
+   /**
     * override the default predraw function
     * as repeat and anchor are managed directly in the draw method
     * @ignore
@@ -253,9 +253,14 @@ class ImageLayer extends Sprite {
     }
 
     /**
-     * draw the image layer
-     * @ignore
-     */
+     * draw the ImageLayer. <br>
+     * automatically called by the game manager {@link me.game}
+     * @name draw
+     * @memberOf me.ImageLayer.prototype
+     * @function
+     * @protected
+     * @param {me.CanvasRenderer|me.WebGLRenderer} renderer a renderer object
+     **/
     draw(renderer) {
         var width = this.width,
             height = this.height,

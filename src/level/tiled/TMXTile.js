@@ -108,7 +108,7 @@ class Tile extends Bounds {
 
     /**
      * set the transformation matrix for this tile
-     * @returns {me.Matrix2d) a transformation matrix
+     * @returns {me.Matrix2d) transform a transformation matrix
      * @ignore
      */
     setTileTransform(transform) {

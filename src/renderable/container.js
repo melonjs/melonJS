@@ -479,18 +479,18 @@ class Container extends Renderable {
      * @memberOf me.Container.prototype
      * @public
      * @function
-     * @param {Object} class type
+     * @param {Object} classType
      * @returns {me.Renderable[]} Array of children
      */
-    getChildByType(_class) {
+    getChildByType(classType) {
         var objList = [];
 
         this.forEach((child) => {
-            if (child instanceof _class) {
+            if (child instanceof classType) {
                 objList.push(child);
             }
             if (child instanceof Container) {
-                objList = objList.concat(child.getChildByType(_class));
+                objList = objList.concat(child.getChildByType(classType));
             }
         });
 
@@ -521,7 +521,7 @@ class Container extends Renderable {
      * @memberOf me.Container.prototype
      * @public
      * @function
-     * @param {String|RegExp|Number|Boolean} GUID child GUID
+     * @param {String|RegExp|Number|Boolean} guid child GUID
      * @returns {me.Renderable} corresponding child or null
      */
     getChildByGUID(guid) {
@@ -712,16 +712,16 @@ class Container extends Renderable {
      * @name setChildsProperty
      * @memberOf me.Container.prototype
      * @function
-     * @param {String} property property name
+     * @param {String} prop property name
      * @param {Object} value property value
      * @param {Boolean} [recursive=false] recursively apply the value to child containers if true
      */
-    setChildsProperty(prop, val, recursive) {
+    setChildsProperty(prop, value, recursive) {
         this.forEach((child) => {
             if ((recursive === true) && (child instanceof Container)) {
-                child.setChildsProperty(prop, val, recursive);
+                child.setChildsProperty(prop, value, recursive);
             }
-            child[prop] = val;
+            child[prop] = value;
         });
     }
 
@@ -886,8 +886,15 @@ class Container extends Renderable {
     }
 
     /**
-     * @ignore
-     */
+     * container update function. <br>
+     * automatically called by the game manager {@link me.game}
+     * @name update
+     * @memberOf me.Container.prototype
+     * @function
+     * @protected
+     * @param {Number} dt time since the last update in milliseconds.
+     * @returns {Boolean} true if the Container is dirty
+     **/
     update(dt) {
         var isFloating = false;
         var isPaused = state.isPaused();
@@ -932,8 +939,15 @@ class Container extends Renderable {
     }
 
     /**
-     * @ignore
-     */
+     * draw the container. <br>
+     * automatically called by the game manager {@link me.game}
+     * @name draw
+     * @memberOf me.Container.prototype
+     * @function
+     * @protected
+     * @param {me.CanvasRenderer|me.WebGLRenderer} renderer a renderer object
+     * @param {me.Rect|me.Bounds} [rect] the area or viewport to (re)draw
+     **/
     draw(renderer, rect) {
         var isFloating = false;
         var bounds = this.getBounds();

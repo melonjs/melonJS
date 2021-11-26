@@ -316,9 +316,9 @@ class TMXLayer extends Renderable {
      * @memberOf me.TMXLayer
      * @public
      * @function
-     * @returns {me.Tile} a Tile object
-     * @param {Number} x X coordinate (in world/pixels coordinates)
-     * @param {Number} y Y coordinate (in world/pixels coordinates)
+     * @returns {me.Tile} tile a Tile object
+     * @param {Number} x x coordinate (in world/pixels coordinates)
+     * @param {Number} y y coordinate (in world/pixels coordinates)
      * @returns {me.Tile} the tile object
      */
     setTile(tile, x, y) {

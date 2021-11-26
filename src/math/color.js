@@ -438,7 +438,7 @@ class Color {
      * @name parseCSS
      * @memberOf me.Color
      * @function
-     * @param {String} color
+     * @param {String} cssColor
      * @returns {me.Color} Reference to this object for method chaining
      */
     parseCSS(cssColor) {
@@ -456,7 +456,7 @@ class Color {
      * @name parseRGB
      * @memberOf me.Color
      * @function
-     * @param {String} color
+     * @param {String} rgbColor
      * @returns {me.Color} Reference to this object for method chaining
      */
     parseRGB(rgbColor) {
@@ -476,7 +476,7 @@ class Color {
      * @name parseHex
      * @memberOf me.Color
      * @function
-     * @param {String} color
+     * @param {String} hexColor
      * @param {boolean} [argb = false] true if format is #ARGB, or #AARRGGBB (as opposed to #RGBA or #RGGBBAA)
      * @returns {me.Color} Reference to this object for method chaining
      */

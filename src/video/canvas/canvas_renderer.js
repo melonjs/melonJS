@@ -142,11 +142,11 @@ class CanvasRenderer extends Renderer {
      * @param {me.Color|String} color CSS color.
      * @param {Boolean} [opaque=false] Allow transparency [default] or clear the surface completely [true]
      */
-    clearColor(col, opaque) {
+    clearColor(color, opaque) {
         this.save();
         this.resetTransform();
         this.backBufferContext2D.globalCompositeOperation = opaque ? "copy" : "source-over";
-        this.backBufferContext2D.fillStyle = (col instanceof Color) ? col.toRGBA() : col;
+        this.backBufferContext2D.fillStyle = (color instanceof Color) ? color.toRGBA() : color;
         this.fillRect(0, 0, this.backBufferCanvas.width, this.backBufferCanvas.height);
         this.restore();
     }
@@ -170,7 +170,7 @@ class CanvasRenderer extends Renderer {
      * @name createPattern
      * @memberOf me.CanvasRenderer.prototype
      * @function
-     * @param {image} image Source image
+     * @param {Image} image Source image
      * @param {String} repeat Define how the pattern should be repeated
      * @returns {CanvasPattern}
      * @see me.ImageLayer#repeat
@@ -196,8 +196,8 @@ class CanvasRenderer extends Renderer {
      * @param {Number} sh The height of the sub-rectangle of the source image to draw into the destination context.
      * @param {Number} dx The X coordinate in the destination canvas at which to place the top-left corner of the source image.
      * @param {Number} dy The Y coordinate in the destination canvas at which to place the top-left corner of the source image.
-     * @param {Number} dWidth The width to draw the image in the destination canvas. This allows scaling of the drawn image. If not specified, the image is not scaled in width when drawn.
-     * @param {Number} dHeight The height to draw the image in the destination canvas. This allows scaling of the drawn image. If not specified, the image is not scaled in height when drawn.
+     * @param {Number} dw The width to draw the image in the destination canvas. This allows scaling of the drawn image. If not specified, the image is not scaled in width when drawn.
+     * @param {Number} dh The height to draw the image in the destination canvas. This allows scaling of the drawn image. If not specified, the image is not scaled in height when drawn.
      * @example
      * // Position the image on the canvas:
      * renderer.drawImage(image, dx, dy);
@@ -583,8 +583,8 @@ class CanvasRenderer extends Renderer {
      * @function
      * @param {Number} alpha 0.0 to 1.0 values accepted.
      */
-    setGlobalAlpha(a) {
-        this.backBufferContext2D.globalAlpha = this.currentColor.glArray[3] = a;
+    setGlobalAlpha(alpha) {
+        this.backBufferContext2D.globalAlpha = this.currentColor.glArray[3] = alpha;
     }
 
     /**

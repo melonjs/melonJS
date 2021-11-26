@@ -1773,7 +1773,7 @@
      * @name parseCSS
      * @memberOf me.Color
      * @function
-     * @param {String} color
+     * @param {String} cssColor
      * @returns {me.Color} Reference to this object for method chaining
      */
     Color.prototype.parseCSS = function parseCSS (cssColor) {
@@ -1791,7 +1791,7 @@
      * @name parseRGB
      * @memberOf me.Color
      * @function
-     * @param {String} color
+     * @param {String} rgbColor
      * @returns {me.Color} Reference to this object for method chaining
      */
     Color.prototype.parseRGB = function parseRGB (rgbColor) {
@@ -1811,7 +1811,7 @@
      * @name parseHex
      * @memberOf me.Color
      * @function
-     * @param {String} color
+     * @param {String} hexColor
      * @param {boolean} [argb = false] true if format is #ARGB, or #AARRGGBB (as opposed to #RGBA or #RGGBBAA)
      * @returns {me.Color} Reference to this object for method chaining
      */
@@ -3969,7 +3969,7 @@
      * @function me.event.emit
      * @param {(String|Symbol)} event The event name.
      * @param {...*} arguments arguments to be passed to all listeners
-     * @returns true if the event had listeners, false otherwise.
+     * @returns {Boolean} true if the event had listeners, false otherwise.
      * @example
      * me.event.emit("event-name", a, b, c);
      */
@@ -9655,7 +9655,7 @@
      * @name setVertices
      * @memberOf me.Polygon.prototype
      * @function
-     * @param {me.Vector2d[]} points array of vector or vertice defining the Polygon
+     * @param {me.Vector2d[]} vertices array of vector or vertice defining the Polygon
      */
     Polygon.prototype.setVertices = function setVertices (vertices) {
             var this$1$1 = this;
@@ -9696,7 +9696,7 @@
      * @name transform
      * @memberOf me.Polygon.prototype
      * @function
-     * @param {me.Matrix2d} matrix the transformation matrix
+     * @param {me.Matrix2d} m the transformation matrix
      * @returns {me.Polygon} Reference to this object for method chaining
      */
     Polygon.prototype.transform = function transform (m) {
@@ -10252,13 +10252,13 @@
          * @param {me.Rect} rect other rectangle to union with
          * @returns {me.Rect} the union(ed) rectangle
          */
-        Rect.prototype.union = function union (/** {me.Rect} */ r) {
-            var x1 = Math.min(this.left, r.left);
-            var y1 = Math.min(this.top, r.top);
+        Rect.prototype.union = function union (rect) {
+            var x1 = Math.min(this.left, rect.left);
+            var y1 = Math.min(this.top, rect.top);
 
             this.resize(
-                Math.max(this.right, r.right) - x1,
-                Math.max(this.bottom, r.bottom) - y1
+                Math.max(this.right, rect.right) - x1,
+                Math.max(this.bottom, rect.bottom) - y1
             );
 
             this.pos.set(x1, y1);
@@ -10274,12 +10274,12 @@
          * @param  {me.Rect} rect
          * @returns {boolean} true if overlaps
          */
-        Rect.prototype.overlaps = function overlaps (r) {
+        Rect.prototype.overlaps = function overlaps (rect) {
             return (
-                this.left < r.right &&
-                r.left < this.right &&
-                this.top < r.bottom &&
-                r.top < this.bottom
+                this.left < rect.right &&
+                rect.left < this.right &&
+                this.top < rect.bottom &&
+                rect.top < this.bottom
             );
         };
 
@@ -10346,12 +10346,12 @@
          * @param  {me.Rect} rect
          * @returns {boolean} true if equals
          */
-        Rect.prototype.equals = function equals (r) {
+        Rect.prototype.equals = function equals (rect) {
             return (
-                r.left === this.left &&
-                r.right === this.right &&
-                r.top === this.top &&
-                r.bottom === this.bottom
+                rect.left === this.left &&
+                rect.right === this.right &&
+                rect.top === this.top &&
+                rect.bottom === this.bottom
             );
         };
 
@@ -11108,8 +11108,8 @@
      * @name addPoint
      * @memberOf me.Bounds
      * @function
-     * @param {me.Vector2d} vector
-     * @param {me.Matrix2d} [matrix] an optional transform to apply to the given point
+     * @param {me.Vector2d} v
+     * @param {me.Matrix2d} [m] an optional transform to apply to the given point
      */
     Bounds$1.prototype.addPoint = function addPoint (v, m) {
         if (typeof m !== "undefined") {
@@ -11130,7 +11130,7 @@
      * @param {Number} y0 - top Y coordinates of the quad
      * @param {Number} x1 - right X coordinates of the quad
      * @param {Number} y1 - bottom y coordinates of the quad
-     * @param {me.Matrix2d} [matrix] an optional transform to apply to the given frame coordinates
+     * @param {me.Matrix2d} [m] an optional transform to apply to the given frame coordinates
      */
     Bounds$1.prototype.addFrame = function addFrame (x0, y0, x1, y1, m) {
         var v = me.pool.pull("Vector2d");
@@ -11319,7 +11319,7 @@
     /**
      * @classdesc
      * a pointer object, representing a single finger on a touch enabled device.
-     * @class
+     * @class Pointer
      * @extends me.Bounds
      * @memberOf me
      * @constructor
@@ -11571,6 +11571,15 @@
              * @see https://developer.mozilla.org/en-US/docs/Web/API/PointerEvent/pointerId
              */
             this.pointerId = undefined;
+
+            /**
+             * true if not originally a pointer event
+             * @public
+             * @type {Boolean}
+             * @name isNormalized
+             * @memberOf me.Pointer
+             */
+            this.isNormalized = false;
 
             // bind list for mouse buttons
             this.bind = [ 0, 0, 0 ];
@@ -13395,7 +13404,7 @@
          * @memberOf me.Renderable.prototype
          * @see me.Renderable#currentTransform
          * @function
-         * @param {me.Matrix2d} matrix the transformation matrix
+         * @param {me.Matrix2d} m the transformation matrix
          * @returns {me.Renderable} Reference to this object for method chaining
          */
         Renderable.prototype.transform = function transform (m) {
@@ -13521,7 +13530,7 @@
          * @name scaleV
          * @memberOf me.Renderable.prototype
          * @function
-         * @param {me.Vector2d} vector scaling vector
+         * @param {me.Vector2d} v scaling vector
          * @returns {me.Renderable} Reference to this object for method chaining
          */
         Renderable.prototype.scaleV = function scaleV (v) {
@@ -15697,8 +15706,8 @@
      * @ignore
      * @memberOf me.Body
      * @function
+     * @param {Number} dt time since the last update in milliseconds.
      * @returns {boolean} true if resulting velocity is different than 0
-     * @see source code for me.Body.computeVelocity (private member)
      */
     Body.prototype.update = function update (dt) {
         // update the velocity
@@ -16201,18 +16210,18 @@
          * @memberOf me.Container.prototype
          * @public
          * @function
-         * @param {Object} class type
+         * @param {Object} classType
          * @returns {me.Renderable[]} Array of children
          */
-        Container.prototype.getChildByType = function getChildByType (_class) {
+        Container.prototype.getChildByType = function getChildByType (classType) {
             var objList = [];
 
             this.forEach(function (child) {
-                if (child instanceof _class) {
+                if (child instanceof classType) {
                     objList.push(child);
                 }
                 if (child instanceof Container) {
-                    objList = objList.concat(child.getChildByType(_class));
+                    objList = objList.concat(child.getChildByType(classType));
                 }
             });
 
@@ -16243,7 +16252,7 @@
          * @memberOf me.Container.prototype
          * @public
          * @function
-         * @param {String|RegExp|Number|Boolean} GUID child GUID
+         * @param {String|RegExp|Number|Boolean} guid child GUID
          * @returns {me.Renderable} corresponding child or null
          */
         Container.prototype.getChildByGUID = function getChildByGUID (guid) {
@@ -16438,16 +16447,16 @@
          * @name setChildsProperty
          * @memberOf me.Container.prototype
          * @function
-         * @param {String} property property name
+         * @param {String} prop property name
          * @param {Object} value property value
          * @param {Boolean} [recursive=false] recursively apply the value to child containers if true
          */
-        Container.prototype.setChildsProperty = function setChildsProperty (prop, val, recursive) {
+        Container.prototype.setChildsProperty = function setChildsProperty (prop, value, recursive) {
             this.forEach(function (child) {
                 if ((recursive === true) && (child instanceof Container)) {
-                    child.setChildsProperty(prop, val, recursive);
+                    child.setChildsProperty(prop, value, recursive);
                 }
-                child[prop] = val;
+                child[prop] = value;
             });
         };
 
@@ -16612,8 +16621,15 @@
         };
 
         /**
-         * @ignore
-         */
+         * container update function. <br>
+         * automatically called by the game manager {@link me.game}
+         * @name update
+         * @memberOf me.Container.prototype
+         * @function
+         * @protected
+         * @param {Number} dt time since the last update in milliseconds.
+         * @returns {Boolean} true if the Container is dirty
+         **/
         Container.prototype.update = function update (dt) {
             var isFloating = false;
             var isPaused = state.isPaused();
@@ -16657,8 +16673,15 @@
         };
 
         /**
-         * @ignore
-         */
+         * draw the container. <br>
+         * automatically called by the game manager {@link me.game}
+         * @name draw
+         * @memberOf me.Container.prototype
+         * @function
+         * @protected
+         * @param {me.CanvasRenderer|me.WebGLRenderer} renderer a renderer object
+         * @param {me.Rect|me.Bounds} [rect] the area or viewport to (re)draw
+         **/
         Container.prototype.draw = function draw (renderer, rect) {
             var isFloating = false;
             var bounds = this.getBounds();
@@ -20586,7 +20609,7 @@
          * @memberOf me.Sprite.prototype
          * @function
          * @param {String} name animation id
-         * @param {String|Function} [onComplete] animation id to switch to when complete, or callback
+         * @param {String|Function} [resetAnim] animation id to switch to when complete, or callback
          * @returns {me.Sprite} Reference to this object for method chaining
          * @example
          * // set "walk" animation
@@ -20713,7 +20736,7 @@
          * @name setAnimationFrame
          * @memberOf me.Sprite.prototype
          * @function
-         * @param {Number} [index=0] animation frame index
+         * @param {Number} [idx=0] animation frame index
          * @returns {me.Sprite} Reference to this object for method chaining
          * @example
          * // reset the current animation to the first frame
@@ -20748,10 +20771,16 @@
         };
 
         /**
-         * @ignore
-         */
+         * update function. <br>
+         * automatically called by the game manager {@link me.game}
+         * @name update
+         * @memberOf me.Sprite.prototype
+         * @function
+         * @protected
+         * @param {Number} dt time since the last update in milliseconds.
+         * @returns {Boolean} true if the Sprite is dirty
+         **/
         Sprite.prototype.update = function update (dt) {
-
             // Update animation if necessary
             if (!this.animationpause && this.current && this.current.length > 0) {
                 var duration = this.getAnimationFrameObjectByIndex(this.current.idx).delay;
@@ -20821,8 +20850,14 @@
         };
 
         /**
-         * @ignore
-         */
+         * sprite draw. <br>
+         * automatically called by the game manager {@link me.game}
+         * @name draw
+         * @memberOf me.Sprite.prototype
+         * @function
+         * @protected
+         * @param {me.CanvasRenderer|me.WebGLRenderer} renderer a renderer object
+         **/
         Sprite.prototype.draw = function draw (renderer) {
             // do nothing if we are flickering
             if (this._flicker.isFlickering) {
@@ -20978,7 +21013,7 @@
 
         /**
          * set the transformation matrix for this tile
-         * @returns {me.Matrix2d) a transformation matrix
+         * @returns {me.Matrix2d) transform a transformation matrix
          * @ignore
          */
         Tile.prototype.setTileTransform = function setTileTransform (transform) {
@@ -21733,11 +21768,11 @@
          * @param {me.Color|String} color CSS color.
          * @param {Boolean} [opaque=false] Allow transparency [default] or clear the surface completely [true]
          */
-        CanvasRenderer.prototype.clearColor = function clearColor (col, opaque) {
+        CanvasRenderer.prototype.clearColor = function clearColor (color, opaque) {
             this.save();
             this.resetTransform();
             this.backBufferContext2D.globalCompositeOperation = opaque ? "copy" : "source-over";
-            this.backBufferContext2D.fillStyle = (col instanceof Color) ? col.toRGBA() : col;
+            this.backBufferContext2D.fillStyle = (color instanceof Color) ? color.toRGBA() : color;
             this.fillRect(0, 0, this.backBufferCanvas.width, this.backBufferCanvas.height);
             this.restore();
         };
@@ -21761,7 +21796,7 @@
          * @name createPattern
          * @memberOf me.CanvasRenderer.prototype
          * @function
-         * @param {image} image Source image
+         * @param {Image} image Source image
          * @param {String} repeat Define how the pattern should be repeated
          * @returns {CanvasPattern}
          * @see me.ImageLayer#repeat
@@ -21787,8 +21822,8 @@
          * @param {Number} sh The height of the sub-rectangle of the source image to draw into the destination context.
          * @param {Number} dx The X coordinate in the destination canvas at which to place the top-left corner of the source image.
          * @param {Number} dy The Y coordinate in the destination canvas at which to place the top-left corner of the source image.
-         * @param {Number} dWidth The width to draw the image in the destination canvas. This allows scaling of the drawn image. If not specified, the image is not scaled in width when drawn.
-         * @param {Number} dHeight The height to draw the image in the destination canvas. This allows scaling of the drawn image. If not specified, the image is not scaled in height when drawn.
+         * @param {Number} dw The width to draw the image in the destination canvas. This allows scaling of the drawn image. If not specified, the image is not scaled in width when drawn.
+         * @param {Number} dh The height to draw the image in the destination canvas. This allows scaling of the drawn image. If not specified, the image is not scaled in height when drawn.
          * @example
          * // Position the image on the canvas:
          * renderer.drawImage(image, dx, dy);
@@ -22182,8 +22217,8 @@
          * @function
          * @param {Number} alpha 0.0 to 1.0 values accepted.
          */
-        CanvasRenderer.prototype.setGlobalAlpha = function setGlobalAlpha (a) {
-            this.backBufferContext2D.globalAlpha = this.currentColor.glArray[3] = a;
+        CanvasRenderer.prototype.setGlobalAlpha = function setGlobalAlpha (alpha) {
+            this.backBufferContext2D.globalAlpha = this.currentColor.glArray[3] = alpha;
         };
 
         /**
@@ -22660,9 +22695,9 @@
          * @memberOf me.TMXLayer
          * @public
          * @function
-         * @returns {me.Tile} a Tile object
-         * @param {Number} x X coordinate (in world/pixels coordinates)
-         * @param {Number} y Y coordinate (in world/pixels coordinates)
+         * @returns {me.Tile} tile a Tile object
+         * @param {Number} x x coordinate (in world/pixels coordinates)
+         * @param {Number} y y coordinate (in world/pixels coordinates)
          * @returns {me.Tile} the tile object
          */
         TMXLayer.prototype.setTile = function setTile (tile, x, y) {
@@ -23047,8 +23082,8 @@
      * @name addPoint
      * @memberOf me.Bounds
      * @function
-     * @param {me.Vector2d} vector
-     * @param {me.Matrix2d} [matrix] an optional transform to apply to the given point
+     * @param {me.Vector2d} v
+     * @param {me.Matrix2d} [m] an optional transform to apply to the given point
      */
     Bounds.prototype.addPoint = function addPoint (v, m) {
         if (typeof m !== "undefined") {
@@ -23069,7 +23104,7 @@
      * @param {Number} y0 - top Y coordinates of the quad
      * @param {Number} x1 - right X coordinates of the quad
      * @param {Number} y1 - bottom y coordinates of the quad
-     * @param {me.Matrix2d} [matrix] an optional transform to apply to the given frame coordinates
+     * @param {me.Matrix2d} [m] an optional transform to apply to the given frame coordinates
      */
     Bounds.prototype.addFrame = function addFrame (x0, y0, x1, y1, m) {
         var v = me.pool.pull("Vector2d");
@@ -29860,7 +29895,7 @@
          * @name createPattern
          * @memberOf me.WebGLRenderer.prototype
          * @function
-         * @param {image} image Source image
+         * @param {Image} image Source image
          * @param {String} repeat Define how the pattern should be repeated
          * @returns {me.Renderer.Texture}
          * @see me.ImageLayer#repeat
@@ -29903,19 +29938,19 @@
          * @name clearColor
          * @memberOf me.WebGLRenderer.prototype
          * @function
-         * @param {me.Color|String} [color] CSS color.
+         * @param {me.Color|String} color CSS color.
          * @param {Boolean} [opaque=false] Allow transparency [default] or clear the surface completely [true]
          */
-        WebGLRenderer.prototype.clearColor = function clearColor (col, opaque) {
+        WebGLRenderer.prototype.clearColor = function clearColor (color, opaque) {
             var glArray;
 
             this.save();
 
-            if (col instanceof Color) {
-                glArray = col.toArray();
+            if (color instanceof Color) {
+                glArray = color.toArray();
             } else {
                 // reuse temporary the renderer default color object
-                glArray = this.getColor().parseCSS(col).toArray();
+                glArray = this.getColor().parseCSS(color).toArray();
             }
 
             // clear gl context with the specified color
@@ -29991,8 +30026,8 @@
          * @param {Number} sh The height of the sub-rectangle of the source image to draw into the destination context.
          * @param {Number} dx The X coordinate in the destination canvas at which to place the top-left corner of the source image.
          * @param {Number} dy The Y coordinate in the destination canvas at which to place the top-left corner of the source image.
-         * @param {Number} dWidth The width to draw the image in the destination canvas. This allows scaling of the drawn image. If not specified, the image is not scaled in width when drawn.
-         * @param {Number} dHeight The height to draw the image in the destination canvas. This allows scaling of the drawn image. If not specified, the image is not scaled in height when drawn.
+         * @param {Number} dw The width to draw the image in the destination canvas. This allows scaling of the drawn image. If not specified, the image is not scaled in width when drawn.
+         * @param {Number} dh The height to draw the image in the destination canvas. This allows scaling of the drawn image. If not specified, the image is not scaled in height when drawn.
          * @example
          * // Position the image on the canvas:
          * renderer.drawImage(image, dx, dy);
@@ -33030,7 +33065,7 @@
          * @param {me.Rect|me.Bounds} [ret] a object in which to store the text metrics
          * @returns {TextMetrics} a TextMetrics object with two properties: `width` and `height`, defining the output dimensions
          */
-        Text.prototype.measureText = function measureText (_renderer, text, ret) {
+        Text.prototype.measureText = function measureText (renderer, text, ret) {
             var context;
             var textMetrics = ret || this.getBounds();
             var lineHeight = this.fontSize * this.lineHeight;
@@ -33038,8 +33073,6 @@
 
             if (this.offScreenCanvas === true) {
                 context = this.context;
-            } else if (_renderer instanceof Renderer) {
-                context = _renderer.getFontContext();
             } else {
                 context = renderer.getFontContext();
             }
@@ -33257,7 +33290,8 @@
      * @extends me.Renderable
      * @memberOf me
      * @constructor
-     * @param {Number} [scale=1.0]
+     * @param {Number} x position of the text object
+     * @param {Number} y position of the text object
      * @param {Object} settings the text configuration
      * @param {String|Image} settings.font a font name to identify the corresponing source image
      * @param {String} [settings.fontData=settings.font] the bitmap font data corresponding name, or the bitmap font data itself
@@ -34103,7 +34137,7 @@
             this.isDirty = true;
         };
 
-       /*
+       /**
         * override the default predraw function
         * as repeat and anchor are managed directly in the draw method
         * @ignore
@@ -34119,9 +34153,14 @@
         };
 
         /**
-         * draw the image layer
-         * @ignore
-         */
+         * draw the ImageLayer. <br>
+         * automatically called by the game manager {@link me.game}
+         * @name draw
+         * @memberOf me.ImageLayer.prototype
+         * @function
+         * @protected
+         * @param {me.CanvasRenderer|me.WebGLRenderer} renderer a renderer object
+         **/
         ImageLayer.prototype.draw = function draw (renderer) {
             var width = this.width,
                 height = this.height,
@@ -34507,7 +34546,7 @@
          * @memberOf me.GUI_Object.prototype
          * @public
          * @function
-         * @param {Event} event the event object
+         * @param {me.Pointer} event the event object
          */
         GUI_Object.prototype.onClick = function onClick (/* event */) {
             return false;
@@ -34529,7 +34568,7 @@
          * @memberOf me.GUI_Object.prototype
          * @public
          * @function
-         * @param {Event} event the event object
+         * @param {me.Pointer}} event the event object
          */
         GUI_Object.prototype.onOver = function onOver (/* event */) {};
 
@@ -34550,7 +34589,7 @@
          * @memberOf me.GUI_Object.prototype
          * @public
          * @function
-         * @param {Event} event the event object
+         * @param {me.Pointer}} event the event object
          */
         GUI_Object.prototype.onOut = function onOut (/* event */) {
 
@@ -34577,7 +34616,6 @@
          * @memberOf me.GUI_Object.prototype
          * @public
          * @function
-         * @param {Event} event the event object
          */
         GUI_Object.prototype.onRelease = function onRelease () {
             return false;

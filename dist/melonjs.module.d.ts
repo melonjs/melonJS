@@ -5,7 +5,8 @@
  * @extends me.Renderable
  * @memberOf me
  * @constructor
- * @param {Number} [scale=1.0]
+ * @param {Number} x position of the text object
+ * @param {Number} y position of the text object
  * @param {Object} settings the text configuration
  * @param {String|Image} settings.font a font name to identify the corresponing source image
  * @param {String} [settings.fontData=settings.font] the bitmap font data corresponding name, or the bitmap font data itself
@@ -543,10 +544,10 @@ export class Body {
      * @ignore
      * @memberOf me.Body
      * @function
+     * @param {Number} dt time since the last update in milliseconds.
      * @returns {boolean} true if resulting velocity is different than 0
-     * @see source code for me.Body.computeVelocity (private member)
      */
-    update(dt: any): boolean;
+    update(dt: number): boolean;
     /**
      * Destroy function<br>
      * @ignore
@@ -716,10 +717,10 @@ declare class Bounds$1 {
      * @name addPoint
      * @memberOf me.Bounds
      * @function
-     * @param {me.Vector2d} vector
-     * @param {me.Matrix2d} [matrix] an optional transform to apply to the given point
+     * @param {me.Vector2d} v
+     * @param {me.Matrix2d} [m] an optional transform to apply to the given point
      */
-    addPoint(v: any, m: any): void;
+    addPoint(v: me.Vector2d, m?: me.Matrix2d): void;
     /**
      * add the given quad coordinates to this bound definition, multiplied by the given matrix
      * @name addFrame
@@ -729,9 +730,9 @@ declare class Bounds$1 {
      * @param {Number} y0 - top Y coordinates of the quad
      * @param {Number} x1 - right X coordinates of the quad
      * @param {Number} y1 - bottom y coordinates of the quad
-     * @param {me.Matrix2d} [matrix] an optional transform to apply to the given frame coordinates
+     * @param {me.Matrix2d} [m] an optional transform to apply to the given frame coordinates
      */
-    addFrame(x0: number, y0: number, x1: number, y1: number, m: any): void;
+    addFrame(x0: number, y0: number, x1: number, y1: number, m?: me.Matrix2d): void;
     /**
      * Returns true if the bounds contains the given point.
      * @name contains
@@ -1221,7 +1222,7 @@ export class CanvasRenderer {
      * @param {me.Color|String} color CSS color.
      * @param {Boolean} [opaque=false] Allow transparency [default] or clear the surface completely [true]
      */
-    clearColor(col: any, opaque?: boolean): void;
+    clearColor(color: me.Color | string, opaque?: boolean): void;
     /**
      * Erase the pixels in the given rectangular area by setting them to transparent black (rgba(0,0,0,0)).
      * @name clearRect
@@ -1238,7 +1239,7 @@ export class CanvasRenderer {
      * @name createPattern
      * @memberOf me.CanvasRenderer.prototype
      * @function
-     * @param {image} image Source image
+     * @param {Image} image Source image
      * @param {String} repeat Define how the pattern should be repeated
      * @returns {CanvasPattern}
      * @see me.ImageLayer#repeat
@@ -1248,7 +1249,7 @@ export class CanvasRenderer {
      * var vertical   = renderer.createPattern(image, "repeat-y");
      * var basic      = renderer.createPattern(image, "no-repeat");
      */
-    createPattern(image: any, repeat: string): CanvasPattern;
+    createPattern(image: new (width?: number, height?: number) => HTMLImageElement, repeat: string): CanvasPattern;
     /**
      * Draw an image onto the main using the canvas api
      * @name drawImage
@@ -1261,8 +1262,8 @@ export class CanvasRenderer {
      * @param {Number} sh The height of the sub-rectangle of the source image to draw into the destination context.
      * @param {Number} dx The X coordinate in the destination canvas at which to place the top-left corner of the source image.
      * @param {Number} dy The Y coordinate in the destination canvas at which to place the top-left corner of the source image.
-     * @param {Number} dWidth The width to draw the image in the destination canvas. This allows scaling of the drawn image. If not specified, the image is not scaled in width when drawn.
-     * @param {Number} dHeight The height to draw the image in the destination canvas. This allows scaling of the drawn image. If not specified, the image is not scaled in height when drawn.
+     * @param {Number} dw The width to draw the image in the destination canvas. This allows scaling of the drawn image. If not specified, the image is not scaled in width when drawn.
+     * @param {Number} dh The height to draw the image in the destination canvas. This allows scaling of the drawn image. If not specified, the image is not scaled in height when drawn.
      * @example
      * // Position the image on the canvas:
      * renderer.drawImage(image, dx, dy);
@@ -1271,7 +1272,7 @@ export class CanvasRenderer {
      * // Clip the image and position the clipped part on the canvas:
      * renderer.drawImage(image, sx, sy, sWidth, sHeight, dx, dy, dWidth, dHeight);
      */
-    drawImage(image: new (width?: number, height?: number) => HTMLImageElement, sx: number, sy: number, sw: number, sh: number, dx: number, dy: number, dw: any, dh: any): void;
+    drawImage(image: new (width?: number, height?: number) => HTMLImageElement, sx: number, sy: number, sw: number, sh: number, dx: number, dy: number, dw: number, dh: number): void;
     /**
      * Draw a pattern within the given rectangle.
      * @name drawPattern
@@ -1457,7 +1458,7 @@ export class CanvasRenderer {
      * @function
      * @param {Number} alpha 0.0 to 1.0 values accepted.
      */
-    setGlobalAlpha(a: any): void;
+    setGlobalAlpha(alpha: number): void;
     /**
      * Set the line width on the context
      * @name setLineWidth
@@ -1693,30 +1694,30 @@ export class Color {
      * @name parseCSS
      * @memberOf me.Color
      * @function
-     * @param {String} color
+     * @param {String} cssColor
      * @returns {me.Color} Reference to this object for method chaining
      */
-    parseCSS(cssColor: any): me.Color;
+    parseCSS(cssColor: string): me.Color;
     /**
      * Parse an RGB or RGBA CSS color string
      * @name parseRGB
      * @memberOf me.Color
      * @function
-     * @param {String} color
+     * @param {String} rgbColor
      * @returns {me.Color} Reference to this object for method chaining
      */
-    parseRGB(rgbColor: any): me.Color;
+    parseRGB(rgbColor: string): me.Color;
     /**
      * Parse a Hex color ("#RGB", "#RGBA" or "#RRGGBB", "#RRGGBBAA" format) and set this color to
      * the corresponding r,g,b,a values
      * @name parseHex
      * @memberOf me.Color
      * @function
-     * @param {String} color
+     * @param {String} hexColor
      * @param {boolean} [argb = false] true if format is #ARGB, or #AARRGGBB (as opposed to #RGBA or #RGGBBAA)
      * @returns {me.Color} Reference to this object for method chaining
      */
-    parseHex(hexColor: any, argb?: boolean): me.Color;
+    parseHex(hexColor: string, argb?: boolean): me.Color;
     /**
      * Pack this color into a Uint32 ARGB representation
      * @name toUint32
@@ -2037,10 +2038,10 @@ export class Container {
      * @memberOf me.Container.prototype
      * @public
      * @function
-     * @param {Object} class type
+     * @param {Object} classType
      * @returns {me.Renderable[]} Array of children
      */
-    public getChildByType(_class: any): me.Renderable[];
+    public getChildByType(classType: any): me.Renderable[];
     /**
      * returns the list of childs with the specified name<br>
      * as defined in Tiled (Name field of the Object Properties)<br>
@@ -2062,10 +2063,10 @@ export class Container {
      * @memberOf me.Container.prototype
      * @public
      * @function
-     * @param {String|RegExp|Number|Boolean} GUID child GUID
+     * @param {String|RegExp|Number|Boolean} guid child GUID
      * @returns {me.Renderable} corresponding child or null
      */
-    public getChildByGUID(guid: any): me.Renderable;
+    public getChildByGUID(guid: string | RegExp | number | boolean): me.Renderable;
     /**
      * return all child in this container
 
@@ -2132,11 +2133,11 @@ export class Container {
      * @name setChildsProperty
      * @memberOf me.Container.prototype
      * @function
-     * @param {String} property property name
+     * @param {String} prop property name
      * @param {Object} value property value
      * @param {Boolean} [recursive=false] recursively apply the value to child containers if true
      */
-    setChildsProperty(prop: any, val: any, recursive?: boolean): void;
+    setChildsProperty(prop: string, value: any, recursive?: boolean): void;
     /**
      * Move the child in the group one step forward (z depth).
      * @name moveUp
@@ -2208,13 +2209,27 @@ export class Container {
      */
     destroy(...args: any[]): void;
     /**
-     * @ignore
-     */
-    update(dt: any): any;
+     * container update function. <br>
+     * automatically called by the game manager {@link me.game}
+     * @name update
+     * @memberOf me.Container.prototype
+     * @function
+     * @protected
+     * @param {Number} dt time since the last update in milliseconds.
+     * @returns {Boolean} true if the Container is dirty
+     **/
+    protected update(dt: number): boolean;
     /**
-     * @ignore
-     */
-    draw(renderer: any, rect: any): void;
+     * draw the container. <br>
+     * automatically called by the game manager {@link me.game}
+     * @name draw
+     * @memberOf me.Container.prototype
+     * @function
+     * @protected
+     * @param {me.CanvasRenderer|me.WebGLRenderer} renderer a renderer object
+     * @param {me.Rect|me.Bounds} [rect] the area or viewport to (re)draw
+     **/
+    protected draw(renderer: me.CanvasRenderer | me.WebGLRenderer, rect?: me.Rect | me.Bounds): void;
 }
 /**
 * Used to make a game entity draggable
@@ -2868,7 +2883,7 @@ export class GUI_Object {
      * @memberOf me.GUI_Object.prototype
      * @public
      * @function
-     * @param {Event} event the event object
+     * @param {me.Pointer} event the event object
      */
     public onClick(): boolean;
     /**
@@ -2882,7 +2897,7 @@ export class GUI_Object {
      * @memberOf me.GUI_Object.prototype
      * @public
      * @function
-     * @param {Event} event the event object
+     * @param {me.Pointer}} event the event object
      */
     public onOver(): void;
     /**
@@ -2896,7 +2911,7 @@ export class GUI_Object {
      * @memberOf me.GUI_Object.prototype
      * @public
      * @function
-     * @param {Event} event the event object
+     * @param {me.Pointer}} event the event object
      */
     public onOut(): void;
     /**
@@ -2912,7 +2927,6 @@ export class GUI_Object {
      * @memberOf me.GUI_Object.prototype
      * @public
      * @function
-     * @param {Event} event the event object
      */
     public onRelease(): boolean;
     /**
@@ -3025,12 +3039,22 @@ export class ImageLayer {
      */
     updateLayer(vpos: any): void;
     isDirty: boolean;
-    preDraw(renderer: any): void;
     /**
-     * draw the image layer
+     * override the default predraw function
+     * as repeat and anchor are managed directly in the draw method
      * @ignore
      */
-    draw(renderer: any): void;
+    preDraw(renderer: any): void;
+    /**
+     * draw the ImageLayer. <br>
+     * automatically called by the game manager {@link me.game}
+     * @name draw
+     * @memberOf me.ImageLayer.prototype
+     * @function
+     * @protected
+     * @param {me.CanvasRenderer|me.WebGLRenderer} renderer a renderer object
+     **/
+    protected draw(renderer: me.CanvasRenderer | me.WebGLRenderer): void;
     onDeactivateEvent(): void;
     /**
      * Destroy function<br>
@@ -4447,7 +4471,7 @@ export namespace ParticleEmitterSettings {
 /**
  * @classdesc
  * a pointer object, representing a single finger on a touch enabled device.
- * @class
+ * @class Pointer
  * @extends me.Bounds
  * @memberOf me
  * @constructor
@@ -4666,6 +4690,14 @@ export class Pointer {
       * @see https://developer.mozilla.org/en-US/docs/Web/API/PointerEvent/pointerId
       */
     public pointerId: number;
+    /**
+     * true if not originally a pointer event
+     * @public
+     * @type {Boolean}
+     * @name isNormalized
+     * @memberOf me.Pointer
+     */
+    public isNormalized: boolean;
     bind: number[];
     /**
      * initialize the Pointer object using the given Event Object
@@ -4682,7 +4714,6 @@ export class Pointer {
     private setEvent;
     x: any;
     y: any;
-    isNormalized: boolean;
     width: any;
     height: any;
 }
@@ -4765,18 +4796,18 @@ export class Polygon {
      * @name setVertices
      * @memberOf me.Polygon.prototype
      * @function
-     * @param {me.Vector2d[]} points array of vector or vertice defining the Polygon
+     * @param {me.Vector2d[]} vertices array of vector or vertice defining the Polygon
      */
-    setVertices(vertices: any): Polygon;
+    setVertices(vertices: me.Vector2d[]): Polygon;
     /**
      * apply the given transformation matrix to this Polygon
      * @name transform
      * @memberOf me.Polygon.prototype
      * @function
-     * @param {me.Matrix2d} matrix the transformation matrix
+     * @param {me.Matrix2d} m the transformation matrix
      * @returns {me.Polygon} Reference to this object for method chaining
      */
-    transform(m: any): me.Polygon;
+    transform(m: me.Matrix2d): me.Polygon;
     /**
      * apply an isometric projection to this shape
      * @name toIso
@@ -5148,7 +5179,7 @@ export class Rect {
      * @param {me.Rect} rect other rectangle to union with
      * @returns {me.Rect} the union(ed) rectangle
      */
-    union(r: any): me.Rect;
+    union(rect: me.Rect): me.Rect;
     /**
      * check if this rectangle is intersecting with the specified one
      * @name overlaps
@@ -5157,7 +5188,7 @@ export class Rect {
      * @param  {me.Rect} rect
      * @returns {boolean} true if overlaps
      */
-    overlaps(r: any): boolean;
+    overlaps(rect: me.Rect): boolean;
     /**
      * Returns true if the rectangle contains the given rectangle
      * @name contains
@@ -5192,7 +5223,7 @@ export class Rect {
      * @param  {me.Rect} rect
      * @returns {boolean} true if equals
      */
-    equals(r: any): boolean;
+    equals(rect: me.Rect): boolean;
     /**
      * determines whether all coordinates of this rectangle are finite numbers.
      * @name isFinite
@@ -5526,10 +5557,10 @@ export class Renderable {
      * @memberOf me.Renderable.prototype
      * @see me.Renderable#currentTransform
      * @function
-     * @param {me.Matrix2d} matrix the transformation matrix
+     * @param {me.Matrix2d} m the transformation matrix
      * @returns {me.Renderable} Reference to this object for method chaining
      */
-    transform(m: any): me.Renderable;
+    transform(m: me.Matrix2d): me.Renderable;
     /**
      * return the angle to the specified target
      * @name angleTo
@@ -5586,10 +5617,10 @@ export class Renderable {
      * @name scaleV
      * @memberOf me.Renderable.prototype
      * @function
-     * @param {me.Vector2d} vector scaling vector
+     * @param {me.Vector2d} v scaling vector
      * @returns {me.Renderable} Reference to this object for method chaining
      */
-    scaleV(v: any): me.Renderable;
+    scaleV(v: me.Vector2d): me.Renderable;
     /**
      * update function. <br>
      * automatically called by the game manager {@link me.game}
@@ -6118,7 +6149,7 @@ export class Sprite {
      * @memberOf me.Sprite.prototype
      * @function
      * @param {String} name animation id
-     * @param {String|Function} [onComplete] animation id to switch to when complete, or callback
+     * @param {String|Function} [resetAnim] animation id to switch to when complete, or callback
      * @returns {me.Sprite} Reference to this object for method chaining
      * @example
      * // set "walk" animation
@@ -6150,7 +6181,7 @@ export class Sprite {
      *    return false; // do not reset to first frame
      * }).bind(this));
      **/
-    setCurrentAnimation(name: string, resetAnim: any, _preserve_dt: any): me.Sprite;
+    setCurrentAnimation(name: string, resetAnim?: string | Function, _preserve_dt: any): me.Sprite;
     isDirty: boolean;
     /**
      * reverse the given or current animation if none is specified
@@ -6193,13 +6224,13 @@ export class Sprite {
      * @name setAnimationFrame
      * @memberOf me.Sprite.prototype
      * @function
-     * @param {Number} [index=0] animation frame index
+     * @param {Number} [idx=0] animation frame index
      * @returns {me.Sprite} Reference to this object for method chaining
      * @example
      * // reset the current animation to the first frame
      * this.setAnimationFrame();
      */
-    setAnimationFrame(idx: any): me.Sprite;
+    setAnimationFrame(idx?: number): me.Sprite;
     /**
      * return the current animation frame index.
      * @name getCurrentAnimationFrame
@@ -6218,18 +6249,31 @@ export class Sprite {
      */
     private getAnimationFrameObjectByIndex;
     /**
-     * @ignore
-     */
-    update(dt: any): boolean;
+     * update function. <br>
+     * automatically called by the game manager {@link me.game}
+     * @name update
+     * @memberOf me.Sprite.prototype
+     * @function
+     * @protected
+     * @param {Number} dt time since the last update in milliseconds.
+     * @returns {Boolean} true if the Sprite is dirty
+     **/
+    protected update(dt: number): boolean;
     /**
      * Destroy function<br>
      * @ignore
      */
     destroy(): void;
     /**
-     * @ignore
-     */
-    draw(renderer: any): void;
+     * sprite draw. <br>
+     * automatically called by the game manager {@link me.game}
+     * @name draw
+     * @memberOf me.Sprite.prototype
+     * @function
+     * @protected
+     * @param {me.CanvasRenderer|me.WebGLRenderer} renderer a renderer object
+     **/
+    protected draw(renderer: me.CanvasRenderer | me.WebGLRenderer): void;
 }
 /**
  * @classdesc
@@ -6582,9 +6626,9 @@ export class TMXLayer {
      * @memberOf me.TMXLayer
      * @public
      * @function
-     * @returns {me.Tile} a Tile object
-     * @param {Number} x X coordinate (in world/pixels coordinates)
-     * @param {Number} y Y coordinate (in world/pixels coordinates)
+     * @returns {me.Tile} tile a Tile object
+     * @param {Number} x x coordinate (in world/pixels coordinates)
+     * @param {Number} y y coordinate (in world/pixels coordinates)
      * @returns {me.Tile} the tile object
      */
     public setTile(tile: any, x: number, y: number): me.Tile;
@@ -7242,7 +7286,7 @@ export class Text {
      * @param {me.Rect|me.Bounds} [ret] a object in which to store the text metrics
      * @returns {TextMetrics} a TextMetrics object with two properties: `width` and `height`, defining the output dimensions
      */
-    measureText(_renderer: any, text?: string, ret?: me.Rect | me.Bounds): TextMetrics;
+    measureText(renderer?: me.CanvasRenderer | me.WebGLRenderer, text?: string, ret?: me.Rect | me.Bounds): TextMetrics;
     width: any;
     /**
      * @ignore
@@ -7346,7 +7390,7 @@ export class Tile {
     public flipped: boolean;
     /**
      * set the transformation matrix for this tile
-     * @returns {me.Matrix2d) a transformation matrix
+     * @returns {me.Matrix2d) transform a transformation matrix
      * @ignore
      */
     setTileTransform(transform: any): me.Matrix2d;
@@ -8646,7 +8690,7 @@ export class WebGLRenderer {
      * @name createPattern
      * @memberOf me.WebGLRenderer.prototype
      * @function
-     * @param {image} image Source image
+     * @param {Image} image Source image
      * @param {String} repeat Define how the pattern should be repeated
      * @returns {me.Renderer.Texture}
      * @see me.ImageLayer#repeat
@@ -8656,7 +8700,7 @@ export class WebGLRenderer {
      * var vertical   = renderer.createPattern(image, "repeat-y");
      * var basic      = renderer.createPattern(image, "no-repeat");
      */
-    createPattern(image: any, repeat: string): me.Renderer.Texture;
+    createPattern(image: new (width?: number, height?: number) => HTMLImageElement, repeat: string): me.Renderer.Texture;
     /**
      * Flush the compositor to the frame buffer
      * @name flush
@@ -8669,10 +8713,10 @@ export class WebGLRenderer {
      * @name clearColor
      * @memberOf me.WebGLRenderer.prototype
      * @function
-     * @param {me.Color|String} [color] CSS color.
+     * @param {me.Color|String} color CSS color.
      * @param {Boolean} [opaque=false] Allow transparency [default] or clear the surface completely [true]
      */
-    clearColor(col: any, opaque?: boolean): void;
+    clearColor(color: me.Color | string, opaque?: boolean): void;
     /**
      * Erase the pixels in the given rectangular area by setting them to transparent black (rgba(0,0,0,0)).
      * @name clearRect
@@ -8700,8 +8744,8 @@ export class WebGLRenderer {
      * @param {Number} sh The height of the sub-rectangle of the source image to draw into the destination context.
      * @param {Number} dx The X coordinate in the destination canvas at which to place the top-left corner of the source image.
      * @param {Number} dy The Y coordinate in the destination canvas at which to place the top-left corner of the source image.
-     * @param {Number} dWidth The width to draw the image in the destination canvas. This allows scaling of the drawn image. If not specified, the image is not scaled in width when drawn.
-     * @param {Number} dHeight The height to draw the image in the destination canvas. This allows scaling of the drawn image. If not specified, the image is not scaled in height when drawn.
+     * @param {Number} dw The width to draw the image in the destination canvas. This allows scaling of the drawn image. If not specified, the image is not scaled in width when drawn.
+     * @param {Number} dh The height to draw the image in the destination canvas. This allows scaling of the drawn image. If not specified, the image is not scaled in height when drawn.
      * @example
      * // Position the image on the canvas:
      * renderer.drawImage(image, dx, dy);
@@ -8710,7 +8754,7 @@ export class WebGLRenderer {
      * // Clip the image and position the clipped part on the canvas:
      * renderer.drawImage(image, sx, sy, sWidth, sHeight, dx, dy, dWidth, dHeight);
      */
-    drawImage(image: new (width?: number, height?: number) => HTMLImageElement, sx: number, sy: number, sw: number, sh: number, dx: number, dy: number, dw: any, dh: any): void;
+    drawImage(image: new (width?: number, height?: number) => HTMLImageElement, sx: number, sy: number, sw: number, sh: number, dx: number, dy: number, dw: number, dh: number): void;
     /**
      * Draw a pattern within the given rectangle.
      * @name drawPattern
@@ -12122,10 +12166,10 @@ declare class Bounds {
      * @name addPoint
      * @memberOf me.Bounds
      * @function
-     * @param {me.Vector2d} vector
-     * @param {me.Matrix2d} [matrix] an optional transform to apply to the given point
+     * @param {me.Vector2d} v
+     * @param {me.Matrix2d} [m] an optional transform to apply to the given point
      */
-    addPoint(v: any, m: any): void;
+    addPoint(v: me.Vector2d, m?: me.Matrix2d): void;
     /**
      * add the given quad coordinates to this bound definition, multiplied by the given matrix
      * @name addFrame
@@ -12135,9 +12179,9 @@ declare class Bounds {
      * @param {Number} y0 - top Y coordinates of the quad
      * @param {Number} x1 - right X coordinates of the quad
      * @param {Number} y1 - bottom y coordinates of the quad
-     * @param {me.Matrix2d} [matrix] an optional transform to apply to the given frame coordinates
+     * @param {me.Matrix2d} [m] an optional transform to apply to the given frame coordinates
      */
-    addFrame(x0: number, y0: number, x1: number, y1: number, m: any): void;
+    addFrame(x0: number, y0: number, x1: number, y1: number, m?: me.Matrix2d): void;
     /**
      * Returns true if the bounds contains the given point.
      * @name contains
@@ -12556,11 +12600,11 @@ declare function apply(): void;
  * @function me.event.emit
  * @param {(String|Symbol)} event The event name.
  * @param {...*} arguments arguments to be passed to all listeners
- * @returns true if the event had listeners, false otherwise.
+ * @returns {Boolean} true if the event had listeners, false otherwise.
  * @example
  * me.event.emit("event-name", a, b, c);
  */
-declare function emit(eventName: any, ...args: any[]): any;
+declare function emit(eventName: any, ...args: any[]): boolean;
 /**
  * Add a listener for a given event.
  * @function me.event.on

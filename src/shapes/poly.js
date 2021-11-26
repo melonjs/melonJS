@@ -101,7 +101,7 @@ class Polygon {
      * @name setVertices
      * @memberOf me.Polygon.prototype
      * @function
-     * @param {me.Vector2d[]} points array of vector or vertice defining the Polygon
+     * @param {me.Vector2d[]} vertices array of vector or vertice defining the Polygon
      */
     setVertices(vertices) {
 
@@ -140,7 +140,7 @@ class Polygon {
      * @name transform
      * @memberOf me.Polygon.prototype
      * @function
-     * @param {me.Matrix2d} matrix the transformation matrix
+     * @param {me.Matrix2d} m the transformation matrix
      * @returns {me.Polygon} Reference to this object for method chaining
      */
     transform(m) {

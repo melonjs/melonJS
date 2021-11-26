@@ -129,7 +129,7 @@ class GUI_Object extends Sprite {
      * @memberOf me.GUI_Object.prototype
      * @public
      * @function
-     * @param {Event} event the event object
+     * @param {me.Pointer} event the event object
      */
     onClick(/* event */) {
         return false;
@@ -151,7 +151,7 @@ class GUI_Object extends Sprite {
      * @memberOf me.GUI_Object.prototype
      * @public
      * @function
-     * @param {Event} event the event object
+     * @param {me.Pointer}} event the event object
      */
     onOver(/* event */) {}
 
@@ -172,7 +172,7 @@ class GUI_Object extends Sprite {
      * @memberOf me.GUI_Object.prototype
      * @public
      * @function
-     * @param {Event} event the event object
+     * @param {me.Pointer}} event the event object
      */
     onOut(/* event */) {
 
@@ -199,7 +199,6 @@ class GUI_Object extends Sprite {
      * @memberOf me.GUI_Object.prototype
      * @public
      * @function
-     * @param {Event} event the event object
      */
     onRelease() {
         return false;

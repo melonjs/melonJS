@@ -236,13 +236,13 @@ class Rect extends Polygon {
      * @param {me.Rect} rect other rectangle to union with
      * @returns {me.Rect} the union(ed) rectangle
      */
-    union(/** {me.Rect} */ r) {
-        var x1 = Math.min(this.left, r.left);
-        var y1 = Math.min(this.top, r.top);
+    union(rect) {
+        var x1 = Math.min(this.left, rect.left);
+        var y1 = Math.min(this.top, rect.top);
 
         this.resize(
-            Math.max(this.right, r.right) - x1,
-            Math.max(this.bottom, r.bottom) - y1
+            Math.max(this.right, rect.right) - x1,
+            Math.max(this.bottom, rect.bottom) - y1
         );
 
         this.pos.set(x1, y1);
@@ -258,12 +258,12 @@ class Rect extends Polygon {
      * @param  {me.Rect} rect
      * @returns {boolean} true if overlaps
      */
-    overlaps(r) {
+    overlaps(rect) {
         return (
-            this.left < r.right &&
-            r.left < this.right &&
-            this.top < r.bottom &&
-            r.top < this.bottom
+            this.left < rect.right &&
+            rect.left < this.right &&
+            this.top < rect.bottom &&
+            rect.top < this.bottom
         );
     }
 
@@ -330,12 +330,12 @@ class Rect extends Polygon {
      * @param  {me.Rect} rect
      * @returns {boolean} true if equals
      */
-    equals(r) {
+    equals(rect) {
         return (
-            r.left === this.left &&
-            r.right === this.right &&
-            r.top === this.top &&
-            r.bottom === this.bottom
+            rect.left === this.left &&
+            rect.right === this.right &&
+            rect.top === this.top &&
+            rect.bottom === this.bottom
         );
     }
 

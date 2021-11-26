@@ -362,7 +362,7 @@ class Sprite extends Renderable {
      * @memberOf me.Sprite.prototype
      * @function
      * @param {String} name animation id
-     * @param {String|Function} [onComplete] animation id to switch to when complete, or callback
+     * @param {String|Function} [resetAnim] animation id to switch to when complete, or callback
      * @returns {me.Sprite} Reference to this object for method chaining
      * @example
      * // set "walk" animation
@@ -489,7 +489,7 @@ class Sprite extends Renderable {
      * @name setAnimationFrame
      * @memberOf me.Sprite.prototype
      * @function
-     * @param {Number} [index=0] animation frame index
+     * @param {Number} [idx=0] animation frame index
      * @returns {me.Sprite} Reference to this object for method chaining
      * @example
      * // reset the current animation to the first frame
@@ -524,10 +524,16 @@ class Sprite extends Renderable {
     }
 
     /**
-     * @ignore
-     */
+     * update function. <br>
+     * automatically called by the game manager {@link me.game}
+     * @name update
+     * @memberOf me.Sprite.prototype
+     * @function
+     * @protected
+     * @param {Number} dt time since the last update in milliseconds.
+     * @returns {Boolean} true if the Sprite is dirty
+     **/
     update(dt) {
-
         // Update animation if necessary
         if (!this.animationpause && this.current && this.current.length > 0) {
             var duration = this.getAnimationFrameObjectByIndex(this.current.idx).delay;
@@ -597,8 +603,14 @@ class Sprite extends Renderable {
     }
 
     /**
-     * @ignore
-     */
+     * sprite draw. <br>
+     * automatically called by the game manager {@link me.game}
+     * @name draw
+     * @memberOf me.Sprite.prototype
+     * @function
+     * @protected
+     * @param {me.CanvasRenderer|me.WebGLRenderer} renderer a renderer object
+     **/
     draw(renderer) {
         // do nothing if we are flickering
         if (this._flicker.isFlickering) {

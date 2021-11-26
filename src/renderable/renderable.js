@@ -449,7 +449,7 @@ class Renderable extends Rect {
      * @memberOf me.Renderable.prototype
      * @see me.Renderable#currentTransform
      * @function
-     * @param {me.Matrix2d} matrix the transformation matrix
+     * @param {me.Matrix2d} m the transformation matrix
      * @returns {me.Renderable} Reference to this object for method chaining
      */
     transform(m) {
@@ -575,7 +575,7 @@ class Renderable extends Rect {
      * @name scaleV
      * @memberOf me.Renderable.prototype
      * @function
-     * @param {me.Vector2d} vector scaling vector
+     * @param {me.Vector2d} v scaling vector
      * @returns {me.Renderable} Reference to this object for method chaining
      */
     scaleV(v) {
