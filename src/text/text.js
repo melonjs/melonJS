@@ -1,5 +1,4 @@
 import Color from "./../math/color.js";
-import Renderer from "./../video/renderer.js";
 import WebGLRenderer from "./../video/webgl/webgl_renderer.js";
 import { renderer, createCanvas } from "./../video/video.js";
 import * as stringUtil from "./../utils/string.js";
@@ -327,7 +326,7 @@ class Text extends Renderable {
      * @param {me.Rect|me.Bounds} [ret] a object in which to store the text metrics
      * @returns {TextMetrics} a TextMetrics object with two properties: `width` and `height`, defining the output dimensions
      */
-    measureText(_renderer, text, ret) {
+    measureText(renderer, text, ret) {
         var context;
         var textMetrics = ret || this.getBounds();
         var lineHeight = this.fontSize * this.lineHeight;
@@ -335,8 +334,6 @@ class Text extends Renderable {
 
         if (this.offScreenCanvas === true) {
             context = this.context;
-        } else if (_renderer instanceof Renderer) {
-            context = _renderer.getFontContext();
         } else {
             context = renderer.getFontContext();
         }
