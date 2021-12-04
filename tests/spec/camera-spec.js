@@ -39,6 +39,9 @@ describe("me.Camera2d", function () {
     it("isVisible function test", function () {
         // default camera
         var camera = new me.Camera2d(0, 0, 1000, 1000);
+        var infiniteCamera = new me.Camera2d(-Infinity, -Infinity, Infinity, Infinity);
+
+        // object to test for visibility
         var obj = new me.Renderable(0, 0, 10, 10);
 
         // make it easier by setting anchor point to 0, 0
@@ -58,6 +61,13 @@ describe("me.Camera2d", function () {
         obj.floating = true;
         // should be visible again
         expect(camera.isVisible(obj)).toEqual(true);
+
+        // should always be visible if camera size is Infinite
+        obj.floating = false;
+        expect(infiniteCamera.isVisible(obj)).toEqual(true);
+        // should always be visible if camera size is Infinite
+        obj.floating = true;
+        expect(infiniteCamera.isVisible(obj)).toEqual(true);
 
     });
 });
