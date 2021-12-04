@@ -592,28 +592,6 @@ class Camera2d extends Renderable {
     }
 
     /**
-     * return the camera width
-     * @name getWidth
-     * @memberOf me.Camera2d
-     * @function
-     * @returns {Number}
-     */
-    getWidth() {
-        return this.width;
-    }
-
-    /**
-     * return the camera height
-     * @name getHeight
-     * @memberOf me.Camera2d
-     * @function
-     * @returns {Number}
-     */
-    getHeight() {
-        return this.height;
-    }
-
-    /**
      * set the camera position around the specified object
      * @name focusOn
      * @memberOf me.Camera2d
