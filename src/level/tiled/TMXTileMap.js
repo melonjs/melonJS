@@ -106,8 +106,8 @@ function readObjectGroup(map, data, z) {
  * @class TMXTileMap
  * @memberOf me
  * @constructor
- * @param {String} levelId name of TMX map
- * @param {Object} data TMX map in JSON format
+ * @param {string} levelId name of TMX map
+ * @param {object} data TMX map in JSON format
  * @example
  * // create a new level object based on the TMX JSON object
  * var level = new me.TMXTileMap(levelId, me.loader.getTMX(levelId));
@@ -128,7 +128,7 @@ export default class TMXTileMap {
         /**
          * name of the tilemap
          * @public
-         * @type {String}
+         * @type {string}
          * @name me.TMXTileMap#name
          */
         this.name = levelId;
@@ -136,14 +136,14 @@ export default class TMXTileMap {
         /**
          * width of the tilemap in tiles
          * @public
-         * @type {Number}
+         * @type {number}
          * @name me.TMXTileMap#cols
          */
         this.cols = +data.width;
         /**
          * height of the tilemap in tiles
          * @public
-         * @type {Number}
+         * @type {number}
          * @name me.TMXTileMap#rows
          */
         this.rows = +data.height;
@@ -151,7 +151,7 @@ export default class TMXTileMap {
         /**
          * Tile width
          * @public
-         * @type {Number}
+         * @type {number}
          * @name me.TMXTileMap#tilewidth
          */
         this.tilewidth = +data.tilewidth;
@@ -159,7 +159,7 @@ export default class TMXTileMap {
         /**
          * Tile height
          * @public
-         * @type {Number}
+         * @type {number}
          * @name me.TMXTileMap#tileheight
          */
         this.tileheight = +data.tileheight;
@@ -167,7 +167,7 @@ export default class TMXTileMap {
         /**
          * is the map an infinite map
          * @public
-         * @type {Number}
+         * @type {number}
          * @default 0
          * @name me.TMXTileMap#infinite
          */
@@ -176,17 +176,17 @@ export default class TMXTileMap {
         /**
          * the map orientation type. melonJS supports “orthogonal”, “isometric”, “staggered” and “hexagonal”.
          * @public
-         * @type {String}
+         * @type {string}
          * @default "orthogonal"
          * @name me.TMXTileMap#orientation
          */
         this.orientation = data.orientation;
 
         /**
-        * the order in which tiles on orthogonal tile layers are rendered.
-        * (valid values are "left-down", "left-up", "right-down", "right-up")
+         * the order in which tiles on orthogonal tile layers are rendered.
+         * (valid values are "left-down", "left-up", "right-down", "right-up")
          * @public
-         * @type {String}
+         * @type {string}
          * @default "right-down"
          * @name me.TMXTileMap#renderorder
          */
@@ -195,7 +195,7 @@ export default class TMXTileMap {
         /**
          * the TMX format version
          * @public
-         * @type {String}
+         * @type {string}
          * @name me.TMXTileMap#version
          */
         this.version = data.version;
@@ -203,7 +203,7 @@ export default class TMXTileMap {
         /**
          * The Tiled version used to save the file (since Tiled 1.0.1).
          * @public
-         * @type {String}
+         * @type {string}
          * @name me.TMXTileMap#tiledversion
          */
         this.tiledversion = data.tiledversion;
@@ -369,7 +369,7 @@ export default class TMXTileMap {
      * @name me.TMXTileMap#addTo
      * @public
      * @function
-     * @param {me.Container} target container
+     * @param {me.Container} container target container
      * @param {boolean} [flatten=true] if true, flatten all objects into the given container, else a `me.Container` object will be created for each corresponding groups
      * @param {boolean} [setViewportBounds=false] if true, set the viewport bounds to the map size, this should be set to true especially if adding a level to the game world container.
      * @example
@@ -404,8 +404,10 @@ export default class TMXTileMap {
         // sort everything (recursively)
         container.sort(true);
 
-
-        // callback funtion for the viewport resize event
+        /**
+         * callback funtion for the viewport resize event
+         * @ignore
+         */
         function _setBounds(width, height) {
             // adjust the viewport bounds if level is smaller
             viewport.setBounds(

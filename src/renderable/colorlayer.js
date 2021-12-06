@@ -10,9 +10,9 @@ import Renderable from "./renderable.js";
  * @extends me.Renderable
  * @memberOf me
  * @constructor
- * @param {String} name Layer name
- * @param {me.Color|String} color CSS color
- * @param {Number} [z = 0] z-index position
+ * @param {string} name Layer name
+ * @param {me.Color|string} color CSS color
+ * @param {number} [z = 0] z-index position
  */
 class ColorLayer extends Renderable {
 
@@ -26,7 +26,7 @@ class ColorLayer extends Renderable {
         /**
          * the layer color component
          * @public
-         * @type me.Color
+         * @type {me.Color}
          * @name color
          * @memberOf me.ColorLayer#
          */

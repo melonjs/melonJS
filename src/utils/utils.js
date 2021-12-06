@@ -31,20 +31,20 @@ var utils = {
      * @function
      * @memberOf me.utils
      * @name getPixels
-     * @param {Image|Canvas} image Image to read
-     * @returns {ImageData} Canvas ImageData object
+     * @param {HTMLImageElement|HTMLCanvasElement} image Image to read
+     * @returns {ImageData} ImageData object
      */
-    getPixels : function (arg) {
-        if (arg instanceof HTMLImageElement) {
+    getPixels : function (image) {
+        if (image instanceof HTMLImageElement) {
             var _context = CanvasRenderer.getContext2d(
-                createCanvas(arg.width, arg.height)
+                createCanvas(image.width, image.height)
             );
-            _context.drawImage(arg, 0, 0);
-            return _context.getImageData(0, 0, arg.width, arg.height);
+            _context.drawImage(image, 0, 0);
+            return _context.getImageData(0, 0, image.width, image.height);
         }
         else {
             // canvas !
-            return arg.getContext("2d").getImageData(0, 0, arg.width, arg.height);
+            return image.getContext("2d").getImageData(0, 0, image.width, image.height);
         }
     },
 
@@ -54,9 +54,9 @@ var utils = {
      * @function
      * @memberOf me.utils
      * @name checkVersion
-     * @param {String} first First version string to compare
-     * @param {String} [second=me.version] Second version string to compare
-     * @returns {Number} comparison result <br>&lt; 0 : first &lt; second<br>
+     * @param {string} first First version string to compare
+     * @param {string} [second=me.version] Second version string to compare
+     * @returns {number} comparison result <br>&lt; 0 : first &lt; second<br>
      * 0 : first == second<br>
      * &gt; 0 : first &gt; second
      * @example
@@ -87,14 +87,14 @@ var utils = {
      * @function
      * @memberOf me.utils
      * @name getUriFragment
-     * @param {String} [url=document.location] an optional params string or URL containing fragment (hash) params to be parsed
-     * @returns {Object} an object representing the deserialized params string.
-     * @property {Boolean} [hitbox=false] draw the hitbox in the debug panel (if enabled)
-     * @property {Boolean} [velocity=false] draw the entities velocity in the debug panel (if enabled)
-     * @property {Boolean} [quadtree=false] draw the quadtree in the debug panel (if enabled)
-     * @property {Boolean} [webgl=false] force the renderer to WebGL
-     * @property {Boolean} [debug=false] display the debug panel (if preloaded)
-     * @property {String} [debugToggleKey="s"] show/hide the debug panel (if preloaded)
+     * @param {string} [url=document.location] an optional params string or URL containing fragment (hash) params to be parsed
+     * @returns {object} an object representing the deserialized params string.
+     * @property {boolean} [hitbox=false] draw the hitbox in the debug panel (if enabled)
+     * @property {boolean} [velocity=false] draw the entities velocity in the debug panel (if enabled)
+     * @property {boolean} [quadtree=false] draw the quadtree in the debug panel (if enabled)
+     * @property {boolean} [webgl=false] force the renderer to WebGL
+     * @property {boolean} [debug=false] display the debug panel (if preloaded)
+     * @property {string} [debugToggleKey="s"] show/hide the debug panel (if preloaded)
      * @example
      * // http://www.example.com/index.html#debug&hitbox=true&mytag=value
      * var UriFragment = me.utils.getUriFragment();

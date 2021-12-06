@@ -100,7 +100,7 @@ var timer = {
          * use it.
          * @public
          * @see me.timer.interpolation
-         * @type {Number}
+         * @type {number}
          * @name tick
          * @memberOf me.timer
          */
@@ -110,7 +110,7 @@ var timer = {
          * Last measured fps rate.<br/>
          * This feature is disabled by default, unless the debugPanel is enabled/visible
          * @public
-         * @type {Number}
+         * @type {number}
          * @name fps
          * @memberOf me.timer
          */
@@ -120,7 +120,7 @@ var timer = {
          * Set the maximum target display frame per second
          * @public
          * @see me.timer.tick
-         * @type {Number}
+         * @type {number}
          * @name maxfps
          * @default 60
          * @memberOf me.timer
@@ -130,7 +130,7 @@ var timer = {
         /**
          * Enable/disable frame interpolation
          * @see me.timer.tick
-         * @type {Boolean}
+         * @type {boolean}
          * @default false
          * @name interpolation
          * @memberOf me.timer
@@ -161,10 +161,10 @@ var timer = {
          * @name setTimeout
          * @memberOf me.timer
          * @param {Function} fn the function you want to execute after delay milliseconds.
-         * @param {Number} delay the number of milliseconds (thousandths of a second) that the function call should be delayed by.
-         * @param {Boolean} [pauseable=true] respects the pause state of the engine.
-         * @param {...*} [param] optional parameters which are passed through to the function specified by fn once the timer expires.
-         * @returns {Number} The numerical ID of the timer, which can be used later with me.timer.clearTimeout().
+         * @param {number} delay the number of milliseconds (thousandths of a second) that the function call should be delayed by.
+         * @param {boolean} [pauseable=true] respects the pause state of the engine.
+         * @param {object} [args] optional parameters which are passed through to the function specified by fn once the timer expires.
+         * @returns {number} The numerical ID of the timer, which can be used later with me.timer.clearTimeout().
          * @function
          * @example
          * // set a timer to call "myFunction" after 1000ms
@@ -172,7 +172,7 @@ var timer = {
          * // set a timer to call "myFunction" after 1000ms (respecting the pause state) and passing param1 and param2
          * me.timer.setTimeout(myFunction, 1000, true, param1, param2);
          */
-        setTimeout(fn, delay, pauseable) {
+        setTimeout(fn, delay, pauseable, ...args) {
             timers.push({
                 fn : fn,
                 delay : delay,
@@ -180,7 +180,7 @@ var timer = {
                 repeat : false,
                 timerId : ++timerId,
                 pauseable : pauseable === true || true,
-                args : arguments.length > 3 ? Array.prototype.slice.call(arguments, 3) : undefined
+                args : args
             });
             return timerId;
         },
@@ -190,10 +190,10 @@ var timer = {
          * @name setInterval
          * @memberOf me.timer
          * @param {Function} fn the function to execute
-         * @param {Number} delay the number of milliseconds (thousandths of a second) on how often to execute the function
-         * @param {Boolean} [pauseable=true] respects the pause state of the engine.
-         * @param {...*} [param] optional parameters which are passed through to the function specified by fn once the timer expires.
-         * @returns {Number} The numerical ID of the timer, which can be used later with me.timer.clearInterval().
+         * @param {number} delay the number of milliseconds (thousandths of a second) on how often to execute the function
+         * @param {boolean} [pauseable=true] respects the pause state of the engine.
+         * @param {object} [args] optional parameters which are passed through to the function specified by fn once the timer expires.
+         * @returns {number} The numerical ID of the timer, which can be used later with me.timer.clearInterval().
          * @function
          * @example
          * // set a timer to call "myFunction" every 1000ms
@@ -201,7 +201,7 @@ var timer = {
          * // set a timer to call "myFunction" every 1000ms (respecting the pause state) and passing param1 and param2
          * me.timer.setInterval(myFunction, 1000, true, param1, param2);
          */
-        setInterval(fn, delay, pauseable) {
+        setInterval(fn, delay, pauseable, ...args) {
             timers.push({
                 fn : fn,
                 delay : delay,
@@ -209,7 +209,7 @@ var timer = {
                 repeat : true,
                 timerId : ++timerId,
                 pauseable : pauseable === true || true,
-                args : arguments.length > 3 ? Array.prototype.slice.call(arguments, 3) : undefined
+                args : args
             });
             return timerId;
         },
@@ -219,7 +219,7 @@ var timer = {
          * @name clearTimeout
          * @memberOf me.timer
          * @function
-         * @param {Number} timeoutID ID of the timeout to be cleared
+         * @param {number} timeoutID ID of the timeout to be cleared
          */
         clearTimeout(timeoutID) {
             utils.function.defer(clearTimer, this, timeoutID);
@@ -230,7 +230,7 @@ var timer = {
          * @name clearInterval
          * @memberOf me.timer
          * @function
-         * @param {Number} intervalID ID of the interval to be cleared
+         * @param {number} intervalID ID of the interval to be cleared
          */
         clearInterval(intervalID) {
             utils.function.defer(clearTimer, this, intervalID);
@@ -241,7 +241,7 @@ var timer = {
          * since the game has started or since linux epoch (based on browser support for High Resolution Timer)
          * @name getTime
          * @memberOf me.timer
-         * @returns {Number}
+         * @returns {number}
          * @function
          */
         getTime() {
@@ -252,7 +252,7 @@ var timer = {
          * Return elapsed time in milliseconds since the last update
          * @name getDelta
          * @memberOf me.timer
-         * @returns {Number}
+         * @returns {number}
          * @function
          */
         getDelta() {

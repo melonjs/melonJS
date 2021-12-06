@@ -13,8 +13,8 @@ import pool from "./../system/pooling.js";
  * @class Polygon
  * @memberOf me
  * @constructor
- * @param {Number} x origin point of the Polygon
- * @param {Number} y origin point of the Polygon
+ * @param {number} x origin point of the Polygon
+ * @param {number} y origin point of the Polygon
  * @param {me.Vector2d[]} points array of vector defining the Polygon
  */
 
@@ -86,9 +86,10 @@ class Polygon {
      * @name setShape
      * @memberOf me.Polygon.prototype
      * @function
-     * @param {Number} x position of the Polygon
-     * @param {Number} y position of the Polygon
-     * @param {me.Vector2d[]|Number[]} points array of vector or vertice defining the Polygon
+     * @param {number} x position of the Polygon
+     * @param {number} y position of the Polygon
+     * @param {me.Vector2d[]|number[]} points array of vector or vertice defining the Polygon
+     * @returns {me.Polygon} this instance for objecf chaining
      */
     setShape(x, y, points) {
         this.pos.set(x, y);
@@ -102,6 +103,7 @@ class Polygon {
      * @memberOf me.Polygon.prototype
      * @function
      * @param {me.Vector2d[]} vertices array of vector or vertice defining the Polygon
+     * @returns {me.Polygon} this instance for objecf chaining
      */
     setVertices(vertices) {
 
@@ -181,7 +183,7 @@ class Polygon {
      * @name rotate
      * @memberOf me.Polygon.prototype
      * @function
-     * @param {Number} angle The angle to rotate (in radians)
+     * @param {number} angle The angle to rotate (in radians)
      * @param {me.Vector2d|me.ObservableVector2d} [v] an optional point to rotate around
      * @returns {me.Polygon} Reference to this object for method chaining
      */
@@ -203,8 +205,8 @@ class Polygon {
      * @name scale
      * @memberOf me.Polygon.prototype
      * @function
-     * @param {Number} x
-     * @param {Number} [y=x]
+     * @param {number} x
+     * @param {number} [y=x]
      * @returns {me.Polygon} Reference to this object for method chaining
      */
     scale(x, y) {
@@ -295,8 +297,8 @@ class Polygon {
      * @name translate
      * @memberOf me.Polygon.prototype
      * @function
-     * @param {Number} x x offset
-     * @param {Number} y y offset
+     * @param {number} x x offset
+     * @param {number} y y offset
      * @returns {me.Polygon} this Polygon
      */
     /**
@@ -339,8 +341,8 @@ class Polygon {
      * @name shift
      * @memberOf me.Polygon
      * @function
-     * @param {Number} x
-     * @param {Number} y
+     * @param {number} x
+     * @param {number} y
      */
     shift() {
         var _x, _y;
@@ -376,8 +378,8 @@ class Polygon {
      * @name contains
      * @memberOf me.Polygon.prototype
      * @function
-     * @param  {Number} x x coordinate
-     * @param  {Number} y y coordinate
+     * @param  {number} x x coordinate
+     * @param  {number} y y coordinate
      * @returns {boolean} true if contains
      */
     contains() {

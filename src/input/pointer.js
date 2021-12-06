@@ -35,7 +35,7 @@ class Pointer extends Bounds {
         /**
          * constant for left button
          * @public
-         * @type {Number}
+         * @type {number}
          * @name LEFT
          * @memberOf me.Pointer
          */
@@ -44,7 +44,7 @@ class Pointer extends Bounds {
         /**
          * constant for middle button
          * @public
-         * @type {Number}
+         * @type {number}
          * @name MIDDLE
          * @memberOf me.Pointer
          */
@@ -53,7 +53,7 @@ class Pointer extends Bounds {
         /**
          * constant for right button
          * @public
-         * @type {Number}
+         * @type {number}
          * @name RIGHT
          * @memberOf me.Pointer
          */
@@ -74,7 +74,7 @@ class Pointer extends Bounds {
         /**
          * a string containing the event's type.
          * @public
-         * @type {String}
+         * @type {string}
          * @name type
          * @see https://developer.mozilla.org/en-US/docs/Web/API/Event/type
          * @memberOf me.Pointer
@@ -85,7 +85,7 @@ class Pointer extends Bounds {
         /**
          * the button property indicates which button was pressed on the mouse to trigger the event.
          * @public
-         * @type {Number}
+         * @type {number}
          * @name button
          * @see https://developer.mozilla.org/en-US/docs/Web/API/MouseEvent/button
          * @memberOf me.Pointer
@@ -95,7 +95,7 @@ class Pointer extends Bounds {
         /**
          * indicates whether or not the pointer device that created the event is the primary pointer.
          * @public
-         * @type {Boolean}
+         * @type {boolean}
          * @name isPrimary
          * @see https://developer.mozilla.org/en-US/docs/Web/API/PointerEvent/isPrimary
          * @memberOf me.Pointer
@@ -105,7 +105,7 @@ class Pointer extends Bounds {
         /**
          * the horizontal coordinate at which the event occurred, relative to the left edge of the entire document.
          * @public
-         * @type {Number}
+         * @type {number}
          * @name pageX
          * @see https://developer.mozilla.org/en-US/docs/Web/API/MouseEvent/pageX
          * @memberOf me.Pointer
@@ -115,7 +115,7 @@ class Pointer extends Bounds {
         /**
          * the vertical coordinate at which the event occurred, relative to the left edge of the entire document.
          * @public
-         * @type {Number}
+         * @type {number}
          * @name pageY
          * @see https://developer.mozilla.org/en-US/docs/Web/API/MouseEvent/pageY
          * @memberOf me.Pointer
@@ -125,7 +125,7 @@ class Pointer extends Bounds {
         /**
          * the horizontal coordinate within the application's client area at which the event occurred
          * @public
-         * @type {Number}
+         * @type {number}
          * @name clientX
          * @see https://developer.mozilla.org/en-US/docs/Web/API/MouseEvent/clientX
          * @memberOf me.Pointer
@@ -135,7 +135,7 @@ class Pointer extends Bounds {
        /**
         * the vertical coordinate within the application's client area at which the event occurred
         * @public
-        * @type {Number}
+        * @type {number}
         * @name clientY
         * @see https://developer.mozilla.org/en-US/docs/Web/API/MouseEvent/clientY
         * @memberOf me.Pointer
@@ -145,7 +145,7 @@ class Pointer extends Bounds {
         /**
          * an unsigned long representing the unit of the delta values scroll amount
          * @public
-         * @type {Number}
+         * @type {number}
          * @name deltaMode
          * @see https://developer.mozilla.org/en-US/docs/Web/API/WheelEvent/deltaMode
          * @memberOf me.Pointer
@@ -155,7 +155,7 @@ class Pointer extends Bounds {
         /**
          * a double representing the horizontal scroll amount in the Wheel Event deltaMode unit.
          * @public
-         * @type {Number}
+         * @type {number}
          * @name deltaX
          * @see https://developer.mozilla.org/en-US/docs/Web/API/WheelEvent/deltaX
          * @memberOf me.Pointer
@@ -165,7 +165,7 @@ class Pointer extends Bounds {
         /**
          * a double representing the vertical scroll amount in the Wheel Event deltaMode unit.
          * @public
-         * @type {Number}
+         * @type {number}
          * @name deltaY
          * @see https://developer.mozilla.org/en-US/docs/Web/API/WheelEvent/deltaY
          * @memberOf me.Pointer
@@ -175,7 +175,7 @@ class Pointer extends Bounds {
         /**
          * a double representing the scroll amount in the z-axis, in the Wheel Event deltaMode unit.
          * @public
-         * @type {Number}
+         * @type {number}
          * @name deltaZ
          * @see https://developer.mozilla.org/en-US/docs/Web/API/WheelEvent/deltaZ
          * @memberOf me.Pointer
@@ -186,7 +186,7 @@ class Pointer extends Bounds {
          * Event normalized X coordinate within the game canvas itself<br>
          * <img src="images/event_coord.png"/>
          * @public
-         * @type {Number}
+         * @type {number}
          * @name gameX
          * @memberOf me.Pointer
          */
@@ -196,7 +196,7 @@ class Pointer extends Bounds {
          * Event normalized Y coordinate within the game canvas itself<br>
          * <img src="images/event_coord.png"/>
          * @public
-         * @type {Number}
+         * @type {number}
          * @name gameY
          * @memberOf me.Pointer
          */
@@ -205,7 +205,7 @@ class Pointer extends Bounds {
         /**
          * Event X coordinate relative to the viewport
          * @public
-         * @type {Number}
+         * @type {number}
          * @name gameScreenX
          * @memberOf me.Pointer
          */
@@ -214,7 +214,7 @@ class Pointer extends Bounds {
         /**
          * Event Y coordinate relative to the viewport
          * @public
-         * @type {Number}
+         * @type {number}
          * @name gameScreenY
          * @memberOf me.Pointer
          */
@@ -223,7 +223,7 @@ class Pointer extends Bounds {
         /**
          * Event X coordinate relative to the map
          * @public
-         * @type {Number}
+         * @type {number}
          * @name gameWorldX
          * @memberOf me.Pointer
          */
@@ -232,7 +232,7 @@ class Pointer extends Bounds {
         /**
          * Event Y coordinate relative to the map
          * @public
-         * @type {Number}
+         * @type {number}
          * @name gameWorldY
          * @memberOf me.Pointer
          */
@@ -241,7 +241,7 @@ class Pointer extends Bounds {
         /**
          * Event X coordinate relative to the holding container
          * @public
-         * @type {Number}
+         * @type {number}
          * @name gameLocalX
          * @memberOf me.Pointer
          */
@@ -250,26 +250,26 @@ class Pointer extends Bounds {
         /**
          * Event Y coordinate relative to the holding container
          * @public
-         * @type {Number}
+         * @type {number}
          * @name gameLocalY
          * @memberOf me.Pointer
          */
         this.gameLocalY = 0;
 
        /**
-         * The unique identifier of the contact for a touch, mouse or pen
-         * @public
-         * @type {Number}
-         * @name pointerId
-         * @memberOf me.Pointer
-         * @see https://developer.mozilla.org/en-US/docs/Web/API/PointerEvent/pointerId
-         */
+        * The unique identifier of the contact for a touch, mouse or pen
+        * @public
+        * @type {number}
+        * @name pointerId
+        * @memberOf me.Pointer
+        * @see https://developer.mozilla.org/en-US/docs/Web/API/PointerEvent/pointerId
+        */
         this.pointerId = undefined;
 
         /**
          * true if not originally a pointer event
          * @public
-         * @type {Boolean}
+         * @type {boolean}
          * @name isNormalized
          * @memberOf me.Pointer
          */
@@ -285,11 +285,11 @@ class Pointer extends Bounds {
      * @private
      * @function
      * @param {Event} event the original Event object
-     * @param {Number} [pageX=0] the horizontal coordinate at which the event occurred, relative to the left edge of the entire document
-     * @param {Number} [pageY=0] the vertical coordinate at which the event occurred, relative to the left edge of the entire document
-     * @param {Number} [clientX=0] the horizontal coordinate within the application's client area at which the event occurred
-     * @param {Number} [clientX=0] the vertical coordinate within the application's client area at which the event occurred
-     * @param {Number} [pointedId=1] the Pointer, Touch or Mouse event Id (1)
+     * @param {number} [pageX=0] the horizontal coordinate at which the event occurred, relative to the left edge of the entire document
+     * @param {number} [pageY=0] the vertical coordinate at which the event occurred, relative to the left edge of the entire document
+     * @param {number} [clientX=0] the horizontal coordinate within the application's client area at which the event occurred
+     * @param {number} [clientY=0] the vertical coordinate within the application's client area at which the event occurred
+     * @param {number} [pointerId=1] the Pointer, Touch or Mouse event Id (1)
      */
     setEvent(event, pageX = 0, pageY = 0, clientX = 0, clientY = 0, pointerId = 1) {
         // the original event object

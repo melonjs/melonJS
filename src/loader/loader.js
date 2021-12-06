@@ -102,6 +102,9 @@ function preloadFontFace(data, onload, onerror) {
  * @ignore
  */
 function preloadTMX(tmxData, onload, onerror) {
+    /**
+     * @ignore
+     */
     function addToTMXList(data) {
         // set the TMX content
         tmxList[tmxData.name] = data;
@@ -337,7 +340,7 @@ var loader = {
      * The "anonymous" keyword means that there will be no exchange of user credentials via cookies,
      * client-side SSL certificates or HTTP authentication as described in the Terminology section of the CORS specification.<br>
      * @public
-     * @type String
+     * @type {string}
      * @name crossOrigin
      * @default undefined
      * @memberOf me.loader
@@ -355,7 +358,7 @@ var loader = {
      * indicates whether or not cross-site Access-Control requests should be made using credentials such as cookies,
      * authorization headers or TLS client certificates. Setting withCredentials has no effect on same-site requests.
      * @public
-     * @type Boolean
+     * @type {boolean}
      * @name withCredentials
      * @default false
      * @memberOf me.loader
@@ -411,8 +414,8 @@ var loader = {
      * @memberOf me.loader
      * @public
      * @function
-     * @param {String} type  "*", "audio", binary", "image", "json", "js", "tmx", "tsx"
-     * @param {String} [url="./"] default base URL
+     * @param {string} type  "*", "audio", binary", "image", "json", "js", "tmx", "tsx"
+     * @param {string} [url="./"] default base URL
      * @example
      * // change the base URL relative address for audio assets
      * me.loader.setBaseURL("audio", "data/audio/");
@@ -442,12 +445,12 @@ var loader = {
      * @memberOf me.loader
      * @public
      * @function
-     * @param {Object[]} resources
-     * @param {String} resources.name internal name of the resource
-     * @param {String} resources.type  "audio", binary", "image", "json","js", "tmx", "tsx", "fontface"
-     * @param {String} resources.src  path and/or file name of the resource (for audio assets only the path is required)
-     * @param {Boolean} [resources.stream] Set to true to force HTML5 Audio, which allows not to wait for large file to be downloaded before playing.
-     * @param {function} [onload=me.loader.onload] function to be called when all resources are loaded
+     * @param {object[]} res
+     * @param {string} res.name internal name of the resource
+     * @param {string} res.type  "audio", binary", "image", "json","js", "tmx", "tsx", "fontface"
+     * @param {string} res.src  path and/or file name of the resource (for audio assets only the path is required)
+     * @param {boolean} [res.stream] Set to true to force HTML5 Audio, which allows not to wait for large file to be downloaded before playing.
+     * @param {Function} [onload=me.loader.onload] function to be called when all resources are loaded
      * @param {boolean} [switchToLoadState=true] automatically switch to the loading screen
      * @example
      * game_resources = [
@@ -507,13 +510,14 @@ var loader = {
      * @memberOf me.loader
      * @public
      * @function
-     * @param {Object} resource
-     * @param {String} resource.name internal name of the resource
-     * @param {String} resource.type  "audio", binary", "image", "json", "tmx", "tsx"
-     * @param {String} resource.src  path and/or file name of the resource (for audio assets only the path is required)
-     * @param {Boolean} [resource.stream] Set to true to force HTML5 Audio, which allows not to wait for large file to be downloaded before playing.
+     * @param {object} res
+     * @param {string} res.name internal name of the resource
+     * @param {string} res.type  "audio", binary", "image", "json", "tmx", "tsx"
+     * @param {string} res.src  path and/or file name of the resource (for audio assets only the path is required)
+     * @param {boolean} [res.stream] Set to true to force HTML5 Audio, which allows not to wait for large file to be downloaded before playing.
      * @param {Function} onload function to be called when the resource is loaded
      * @param {Function} onerror function to be called in case of error
+     * @returns {number} the amount of corresponding resource to be preloaded
      * @example
      * // load an image asset
      * me.loader.load({name: "avatar",  type:"image",  src: "data/avatar.png"}, this.onload.bind(this), this.onerror.bind(this));
@@ -576,8 +580,8 @@ var loader = {
      * @memberOf me.loader
      * @public
      * @function
-     * @param {Object} resource
-     * @returns {Boolean} true if unloaded
+     * @param {object} res
+     * @returns {boolean} true if unloaded
      * @example me.loader.unload({name: "avatar",  type:"image",  src: "data/avatar.png"});
      */
     unload(res) {
@@ -691,8 +695,8 @@ var loader = {
      * @memberOf me.loader
      * @public
      * @function
-     * @param {String} tmx name of the tmx/tsx element ("map1");
-     * @returns {XML|Object} requested element or null if not found
+     * @param {string} elt name of the tmx/tsx element ("map1");
+     * @returns {object} requested element or null if not found
      */
     getTMX(elt) {
         // force as string
@@ -709,8 +713,8 @@ var loader = {
      * @memberOf me.loader
      * @public
      * @function
-     * @param {String} name of the binary object ("ymTrack");
-     * @returns {Object} requested element or null if not found
+     * @param {string} elt name of the binary object ("ymTrack");
+     * @returns {object} requested element or null if not found
      */
     getBinary(elt) {
         // force as string
@@ -727,7 +731,7 @@ var loader = {
      * @memberOf me.loader
      * @public
      * @function
-     * @param {String} image name of the Image element ("tileset-platformer");
+     * @param {string} image name of the Image element ("tileset-platformer");
      * @returns {HTMLImageElement} requested element or null if not found
      */
     getImage(image) {
@@ -746,8 +750,8 @@ var loader = {
      * @memberOf me.loader
      * @public
      * @function
-     * @param {String} Name for the json file to load
-     * @returns {Object}
+     * @param {string} elt name of the json file to load
+     * @returns {object}
      */
     getJSON(elt) {
         // force as string

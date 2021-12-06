@@ -2,7 +2,7 @@ import * as event from "./../../system/event.js";
 import device from "./../../system/device.js";
 
 /**
- * @private
+ * @ignore
  */
 function extractUniforms(gl, shader) {
     var uniforms = {},
@@ -46,9 +46,9 @@ function extractUniforms(gl, shader) {
                 }
                 else {
                     /**
-                    * A generic setter for uniform vectors
-                    * @ignore
-                    */
+                     * A generic setter for uniform vectors
+                     * @ignore
+                     */
                     return function (val) {
                         var fnv = fn;
                         if (val.length && fn.substr(-1) !== "v") {
@@ -66,7 +66,7 @@ function extractUniforms(gl, shader) {
 };
 
 /**
- * @private
+ * @ignore
  */
 function extractAttributes(gl, shader) {
     var attributes = {},
@@ -83,7 +83,7 @@ function extractAttributes(gl, shader) {
 };
 
 /**
- * @private
+ * @ignore
  */
 function compileShader(gl, type, source) {
     var shader = gl.createShader(type);
@@ -99,7 +99,7 @@ function compileShader(gl, type, source) {
 
 /**
  * Compile GLSL into a shader object
- * @private
+ * @ignore
  */
 function compileProgram(gl, vertex, fragment, attributes) {
     var vertShader = compileShader(gl, gl.VERTEX_SHADER, vertex);
@@ -144,7 +144,7 @@ function compileProgram(gl, vertex, fragment, attributes) {
 
 /**
  * Hash map of GLSL data types to WebGL Uniform methods
- * @private
+ * @ignore
  */
 var fnHash = {
     "bool"      : "1i",
@@ -168,7 +168,7 @@ var fnHash = {
 /**
  * set precision for the fiven shader source
  * won't do anything if the precision is already specified
- * @private
+ * @ignore
  */
 function setPrecision(src, precision) {
     if (src.substring(0, 9) !== "precision") {
@@ -179,7 +179,7 @@ function setPrecision(src, precision) {
 
 /**
  * clean the given source from space, comments, etc...
- * @private
+ * @ignore
  */
 function minify(src) {
     // remove comments
@@ -200,9 +200,9 @@ function minify(src) {
  * @class GLShader
  * @memberOf me
  * @param {WebGLRenderingContext} gl the current WebGL rendering context
- * @param {String} vertex a string containing the GLSL source code to set
- * @param {String} fragment a string containing the GLSL source code to set
- * @param {String} [precision=auto detected] float precision ('lowp', 'mediump' or 'highp').
+ * @param {string} vertex a string containing the GLSL source code to set
+ * @param {string} fragment a string containing the GLSL source code to set
+ * @param {string} [precision=auto detected] float precision ('lowp', 'mediump' or 'highp').
  * @constructor
  * @see https://developer.mozilla.org/en-US/docs/Games/Techniques/3D_on_the_web/GLSL_Shaders
  * @example
@@ -242,7 +242,7 @@ class GLShader {
         /**
          * the vertex shader source code
          * @public
-         * @type {String}
+         * @type {string}
          * @name vertex
          * @memberOf me.GLShader
          */
@@ -251,7 +251,7 @@ class GLShader {
         /**
          * the fragment shader source code
          * @public
-         * @type {String}
+         * @type {string}
          * @name vertex
          * @memberOf me.GLShader
          */
@@ -279,7 +279,7 @@ class GLShader {
         /**
          * the uniforms of the shader
          * @public
-         * @type {Object}
+         * @type {object}
          * @name uniforms
          * @memberOf me.GLShader
          */
@@ -306,7 +306,7 @@ class GLShader {
      * @name getAttribLocation
      * @memberOf me.GLShader
      * @function
-     * @param {String} name the name of the attribute variable whose location to get.
+     * @param {string} name the name of the attribute variable whose location to get.
      * @returns {GLint} number indicating the location of the variable name if found. Returns -1 otherwise
      */
     getAttribLocation(name) {
@@ -323,8 +323,8 @@ class GLShader {
      * @name setUniform
      * @memberOf me.GLShader
      * @function
-     * @param {String} name the uniform name
-     * @param {Object|Float32Array} value the value to assign to that uniform
+     * @param {string} name the uniform name
+     * @param {object|Float32Array} value the value to assign to that uniform
      * @example
      * myShader.setUniform("uProjectionMatrix", this.projectionMatrix);
      */

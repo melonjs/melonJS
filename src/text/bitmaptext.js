@@ -38,19 +38,19 @@ var measureTextHeight = function(font) {
  * @extends me.Renderable
  * @memberOf me
  * @constructor
- * @param {Number} x position of the text object
- * @param {Number} y position of the text object
- * @param {Object} settings the text configuration
- * @param {String|Image} settings.font a font name to identify the corresponing source image
- * @param {String} [settings.fontData=settings.font] the bitmap font data corresponding name, or the bitmap font data itself
- * @param {Number} [settings.size] size a scaling ratio
- * @param {me.Color|String} [settings.fillStyle] a CSS color value used to tint the bitmapText (@see me.BitmapText.tint)
- * @param {Number} [settings.lineWidth=1] line width, in pixels, when drawing stroke
- * @param {String} [settings.textAlign="left"] horizontal text alignment
- * @param {String} [settings.textBaseline="top"] the text baseline
- * @param {Number} [settings.lineHeight=1.0] line spacing height
+ * @param {number} x position of the text object
+ * @param {number} y position of the text object
+ * @param {object} settings the text configuration
+ * @param {string|Image} settings.font a font name to identify the corresponing source image
+ * @param {string} [settings.fontData=settings.font] the bitmap font data corresponding name, or the bitmap font data itself
+ * @param {number} [settings.size] size a scaling ratio
+ * @param {me.Color|string} [settings.fillStyle] a CSS color value used to tint the bitmapText (@see me.BitmapText.tint)
+ * @param {number} [settings.lineWidth=1] line width, in pixels, when drawing stroke
+ * @param {string} [settings.textAlign="left"] horizontal text alignment
+ * @param {string} [settings.textBaseline="top"] the text baseline
+ * @param {number} [settings.lineHeight=1.0] line spacing height
  * @param {me.Vector2d} [settings.anchorPoint={x:0.0, y:0.0}] anchor point to draw the text at
- * @param {(String|String[])} [settings.text] a string, or an array of strings
+ * @param {(string|string[])} [settings.text] a string, or an array of strings
  * @example
  * // Use me.loader.preload or me.loader.load to load assets
  * me.loader.preload([
@@ -77,7 +77,7 @@ class BitmapText extends Renderable {
          * Set the default text alignment (or justification),<br>
          * possible values are "left", "right", and "center".
          * @public
-         * @type String
+         * @type {string}
          * @default "left"
          * @name textAlign
          * @memberOf me.BitmapText
@@ -88,7 +88,7 @@ class BitmapText extends Renderable {
          * Set the text baseline (e.g. the Y-coordinate for the draw operation), <br>
          * possible values are "top", "hanging, "middle, "alphabetic, "ideographic, "bottom"<br>
          * @public
-         * @type String
+         * @type {string}
          * @default "top"
          * @name textBaseline
          * @memberOf me.BitmapText
@@ -99,7 +99,7 @@ class BitmapText extends Renderable {
          * Set the line spacing height (when displaying multi-line strings). <br>
          * Current font height will be multiplied with this value to set the line height.
          * @public
-         * @type Number
+         * @type {number}
          * @default 1.0
          * @name lineHeight
          * @memberOf me.BitmapText
@@ -109,7 +109,7 @@ class BitmapText extends Renderable {
         /**
          * the text to be displayed
          * @private
-         * @type {String[]}
+         * @type {string[]}
          * @name _text
          * @memberOf me.BitmapText
          */
@@ -168,9 +168,9 @@ class BitmapText extends Renderable {
      * @name set
      * @memberOf me.BitmapText.prototype
      * @function
-     * @param {String} textAlign ("left", "center", "right")
-     * @param {Number} [scale]
-     * @returns this object for chaining
+     * @param {string} textAlign ("left", "center", "right")
+     * @param {number} [scale]
+     * @returns {me.BitmapText} this object for chaining
      */
     set(textAlign, scale) {
         this.textAlign = textAlign;
@@ -188,8 +188,8 @@ class BitmapText extends Renderable {
      * @name setText
      * @memberOf me.BitmapText.prototype
      * @function
-     * @param {Number|String|String[]} value a string, or an array of strings
-     * @returns this object for chaining
+     * @param {number|string|string[]} value a string, or an array of strings
+     * @returns {me.BitmapText} this object for chaining
      */
     setText(value) {
         if (typeof value === "undefined") {
@@ -228,8 +228,8 @@ class BitmapText extends Renderable {
      * @name resize
      * @memberOf me.BitmapText.prototype
      * @function
-     * @param {Number} scale ratio
-     * @returns this object for chaining
+     * @param {number} scale ratio
+     * @returns {me.BitmapText} this object for chaining
      */
     resize(scale) {
         this.fontScale.set(scale, scale);
@@ -244,7 +244,7 @@ class BitmapText extends Renderable {
      * @name measureText
      * @memberOf me.BitmapText.prototype
      * @function
-     * @param {String} [text]
+     * @param {string} [text]
      * @param {me.Rect} [ret] a object in which to store the text metrics
      * @returns {TextMetrics} a TextMetrics object with two properties: `width` and `height`, defining the output dimensions
      */
@@ -280,9 +280,9 @@ class BitmapText extends Renderable {
      * @memberOf me.BitmapText.prototype
      * @function
      * @param {me.CanvasRenderer|me.WebGLRenderer} renderer Reference to the destination renderer instance
-     * @param {String} [text]
-     * @param {Number} [x]
-     * @param {Number} [y]
+     * @param {string} [text]
+     * @param {number} [x]
+     * @param {number} [y]
      */
     draw(renderer, text, x, y) {
         // save the previous global alpha value

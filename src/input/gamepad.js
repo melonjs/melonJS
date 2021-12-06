@@ -296,7 +296,7 @@ export var GAMEPAD = {
      * </ul>
      * @public
      * @name AXES
-     * @enum {Number}
+     * @enum {number}
      * @memberOf me.input.GAMEPAD
      * @see https://w3c.github.io/gamepad/#remapping
      */
@@ -323,7 +323,7 @@ export var GAMEPAD = {
      * </ul>
      * @public
      * @name BUTTONS
-     * @enum {Number}
+     * @enum {number}
      * @memberOf me.input.GAMEPAD
      * @see https://w3c.github.io/gamepad/#remapping
      */
@@ -360,11 +360,11 @@ export var GAMEPAD = {
  * @memberOf me.input
  * @public
  * @function
- * @param {Number} index Gamepad index
- * @param {Object} button Button/Axis definition
- * @param {String} button.type "buttons" or "axes"
+ * @param {number} index Gamepad index
+ * @param {object} button Button/Axis definition
+ * @param {string} button.type "buttons" or "axes"
  * @param {me.input.GAMEPAD.BUTTONS|me.input.GAMEPAD.AXES} button.code button or axis code id
- * @param {Number} [button.threshold=1] value indicating when the axis should trigger the keycode (e.g. -0.5 or 0.5)
+ * @param {number} [button.threshold=1] value indicating when the axis should trigger the keycode (e.g. -0.5 or 0.5)
  * @param {me.input.KEY} keyCode
  * @example
  * // enable the keyboard
@@ -435,7 +435,7 @@ export function bindGamepad(index, button, keyCode) {
  * @memberOf me.input
  * @public
  * @function
- * @param {Number} index Gamepad index
+ * @param {number} index Gamepad index
  * @param {me.input.GAMEPAD.BUTTONS} button
  * @example
  * me.input.unbindGamepad(0, me.input.GAMEPAD.BUTTONS.FACE_1);
@@ -454,7 +454,7 @@ export function unbindGamepad(index, button) {
  * @memberOf me.input
  * @public
  * @function
- * @param {Number} value Deadzone value
+ * @param {number} value Deadzone value
  */
 export function setGamepadDeadzone(value) {
     deadzone = value;
@@ -468,11 +468,11 @@ export function setGamepadDeadzone(value) {
  * @memberOf me.input
  * @public
  * @function
- * @param {String} id Gamepad id string
- * @param {Object} mapping A hash table
- * @param {Number[]} mapping.axes Standard analog control stick axis locations
- * @param {Number[]} mapping.buttons Standard digital button locations
- * @param {Number[]} [mapping.analog] Analog axis locations for buttons
+ * @param {string} id Gamepad id string
+ * @param {object} mapping A hash table
+ * @param {number[]} mapping.axes Standard analog control stick axis locations
+ * @param {number[]} mapping.buttons Standard digital button locations
+ * @param {number[]} [mapping.analog] Analog axis locations for buttons
  * @param {Function} [mapping.normalize_fn] a function that returns a normalized value in range [-1.0..1.0] for the given value, axis and button
  * @example
  * // A weird controller that has its axis mappings reversed

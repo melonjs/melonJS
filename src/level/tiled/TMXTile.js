@@ -14,9 +14,9 @@ var TMX_FLIP_H          = 0x80000000,
  * @extends me.Bounds
  * @memberOf me
  * @constructor
- * @param {Number} x x index of the Tile in the map
- * @param {Number} y y index of the Tile in the map
- * @param {Number} gid tile gid
+ * @param {number} x x index of the Tile in the map
+ * @param {number} y y index of the Tile in the map
+ * @param {number} gid tile gid
  * @param {me.TMXTileset} tileset the corresponding tileset object
  */
 class Tile extends Bounds {
@@ -42,7 +42,7 @@ class Tile extends Bounds {
         /**
          * tileset
          * @public
-         * @type me.TMXTileset
+         * @type {me.TMXTileset}
          * @name me.Tile#tileset
          */
         this.tileset = tileset;
@@ -60,28 +60,28 @@ class Tile extends Bounds {
         /**
          * tileId
          * @public
-         * @type Number
+         * @type {number}
          * @name me.Tile#tileId
          */
         this.tileId = gid;
         /**
          * True if the tile is flipped horizontally<br>
          * @public
-         * @type Boolean
+         * @type {boolean}
          * @name me.Tile#flipX
          */
         this.flippedX  = (this.tileId & TMX_FLIP_H) !== 0;
         /**
          * True if the tile is flipped vertically<br>
          * @public
-         * @type Boolean
+         * @type {boolean}
          * @name me.Tile#flippedY
          */
         this.flippedY  = (this.tileId & TMX_FLIP_V) !== 0;
         /**
          * True if the tile is flipped anti-diagonally<br>
          * @public
-         * @type Boolean
+         * @type {boolean}
          * @name me.Tile#flippedAD
          */
         this.flippedAD = (this.tileId & TMX_FLIP_AD) !== 0;
@@ -89,7 +89,7 @@ class Tile extends Bounds {
         /**
          * Global flag that indicates if the tile is flipped<br>
          * @public
-         * @type Boolean
+         * @type {boolean}
          * @name me.Tile#flipped
          */
         this.flipped = this.flippedX || this.flippedY || this.flippedAD;
@@ -108,7 +108,6 @@ class Tile extends Bounds {
 
     /**
      * set the transformation matrix for this tile
-     * @returns {me.Matrix2d) transform a transformation matrix
      * @ignore
      */
     setTileTransform(transform) {
@@ -135,7 +134,7 @@ class Tile extends Bounds {
      * @name me.Tile#getRenderable
      * @public
      * @function
-     * @param {Object} [settings] see {@link me.Sprite}
+     * @param {object} [settings] see {@link me.Sprite}
      * @returns {me.Renderable} a me.Sprite object
      */
     getRenderable(settings) {

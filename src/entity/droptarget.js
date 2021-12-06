@@ -2,15 +2,15 @@ import * as event from "./../system/event.js";
 import Entity from "./entity.js";
 
 /**
-* Used to make a game entity a droptarget
-* @class
-* @extends me.Entity
-* @memberOf me
-* @constructor
-* @param {Number} x the x coordinates of the entity object
-* @param {Number} y the y coordinates of the entity object
-* @param {Object} settings Entity properties (see {@link me.Entity})
-*/
+ * Used to make a game entity a droptarget
+ * @class
+ * @extends me.Entity
+ * @memberOf me
+ * @constructor
+ * @param {number} x the x coordinates of the entity object
+ * @param {number} y the y coordinates of the entity object
+ * @param {object} settings Entity properties (see {@link me.Entity})
+ */
 
 class DroptargetEntity extends Entity {
     /**
@@ -18,9 +18,9 @@ class DroptargetEntity extends Entity {
      * @name init
      * @memberOf me.DroptargetEntity
      * @function
-     * @param {Number} x the x postion of the entity
-     * @param {Number} y the y postion of the entity
-     * @param {Object} settings the additional entity settings
+     * @param {number} x the x postion of the entity
+     * @param {number} y the y postion of the entity
+     * @param {object} settings the additional entity settings
      */
     constructor(x, y, settings) {
         super(x, y, settings);
@@ -28,7 +28,7 @@ class DroptargetEntity extends Entity {
          * constant for the overlaps method
          * @public
          * @constant
-         * @type String
+         * @type {string}
          * @name CHECKMETHOD_OVERLAP
          * @memberOf me.DroptargetEntity
          */
@@ -37,7 +37,7 @@ class DroptargetEntity extends Entity {
          * constant for the contains method
          * @public
          * @constant
-         * @type String
+         * @type {string}
          * @name CHECKMETHOD_CONTAINS
          * @memberOf me.DroptargetEntity
          */
@@ -46,7 +46,7 @@ class DroptargetEntity extends Entity {
          * the checkmethod we want to use
          * @public
          * @constant
-         * @type String
+         * @type {string}
          * @name checkMethod
          * @memberOf me.DroptargetEntity
          */
@@ -60,7 +60,7 @@ class DroptargetEntity extends Entity {
      * @name setCheckMethod
      * @memberOf me.DroptargetEntity
      * @function
-     * @param {Constant} checkMethod the checkmethod (defaults to CHECKMETHOD_OVERLAP)
+     * @param {string} checkMethod the checkmethod (defaults to CHECKMETHOD_OVERLAP)
      */
     setCheckMethod(checkMethod) {
         //  We can improve this check,
@@ -75,7 +75,8 @@ class DroptargetEntity extends Entity {
      * @name checkOnMe
      * @memberOf me.DroptargetEntity
      * @function
-     * @param {Object} draggableEntity the draggable entity that is dropped
+     * @param {object} e the triggering event
+     * @param {object} draggableEntity the draggable entity that is dropped
      */
     checkOnMe(e, draggableEntity) {
         if (draggableEntity && this.checkMethod(draggableEntity.getBounds())) {
@@ -89,7 +90,7 @@ class DroptargetEntity extends Entity {
      * @name drop
      * @memberOf me.DroptargetEntity
      * @function
-     * @param {Object} draggableEntity the draggable entity that is dropped
+     * @param {object} draggableEntity the draggable entity that is dropped
      */
     drop() {
 

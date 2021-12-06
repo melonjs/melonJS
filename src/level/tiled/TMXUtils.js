@@ -76,6 +76,9 @@ function setTMXValue(name, type, value) {
     return value;
 }
 
+/**
+ * @ignore
+ */
 function parseAttributes(obj, elt) {
     // do attributes
     if (elt.attributes && elt.attributes.length > 0) {
@@ -97,9 +100,8 @@ function parseAttributes(obj, elt) {
  * @ignore
  * @function
  * @name decompress
- * @param  {Number[]} data Array of bytes
- * @param  {String} format compressed data format ("gzip","zlib")
- * @returns {Number[]} Decompressed data
+ * @param  {number[]} data Array of bytes
+ * @param  {string} format compressed data format ("gzip","zlib")
  */
 export function decompress() {
     throw new Error("GZIP/ZLIB compressed TMX Tile Map not supported!");
@@ -110,8 +112,8 @@ export function decompress() {
  * @ignore
  * @function
  * @name decodeCSV
- * @param  {String} input CSV formatted data (only numbers, everything else will be converted to NaN)
- * @returns {Number[]} Decoded data
+ * @param  {string} input CSV formatted data (only numbers, everything else will be converted to NaN)
+ * @returns {number[]} Decoded data
  */
 export function decodeCSV(input) {
     var entries = input.replace("\n", "").trim().split(",");
@@ -128,8 +130,8 @@ export function decodeCSV(input) {
  * @ignore
  * @function
  * @name decodeBase64AsArray
- * @param {String} input Base64 encoded data
- * @param {Number} [bytes] number of bytes per array entry
+ * @param {string} input Base64 encoded data
+ * @param {number} [bytes] number of bytes per array entry
  * @returns {Uint32Array} Decoded data
  */
 export function decodeBase64AsArray(input, bytes) {
@@ -149,9 +151,9 @@ export function decodeBase64AsArray(input, bytes) {
 };
 
 /**
-* Decode the given data
-* @ignore
-*/
+ * Decode the given data
+ * @ignore
+ */
 export function decode(data, encoding, compression) {
     compression = compression || "none";
     encoding = encoding || "none";

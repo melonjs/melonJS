@@ -22,7 +22,7 @@ var dummyObj = {
  * @function
  * @param {me.Renderable} a a reference to the object A.
  * @param {me.Renderable} b a reference to the object B.
- * @returns {Boolean} true if they should collide, false otherwise
+ * @returns {boolean} true if they should collide, false otherwise
  */
 function shouldCollide(a, b) {
     return (
@@ -38,13 +38,13 @@ function shouldCollide(a, b) {
  * An object representing the result of an intersection.
  * @property {me.Renderable} a The first object participating in the intersection
  * @property {me.Renderable} b The second object participating in the intersection
- * @property {Number} overlap Magnitude of the overlap on the shortest colliding axis
+ * @property {number} overlap Magnitude of the overlap on the shortest colliding axis
  * @property {me.Vector2d} overlapV The overlap vector (i.e. `overlapN.scale(overlap, overlap)`). If this vector is subtracted from the position of a, a and b will no longer be colliding
  * @property {me.Vector2d} overlapN The shortest colliding axis (unit-vector)
- * @property {Boolean} aInB Whether the first object is entirely inside the second
- * @property {Boolean} bInA Whether the second object is entirely inside the first
- * @property {Number} indexShapeA The index of the colliding shape for the object a body
- * @property {Number} indexShapeB The index of the colliding shape for the object b body
+ * @property {boolean} aInB Whether the first object is entirely inside the second
+ * @property {boolean} bInA Whether the second object is entirely inside the first
+ * @property {number} indexShapeA The index of the colliding shape for the object a body
+ * @property {number} indexShapeB The index of the colliding shape for the object b body
  * @name ResponseObject
  * @memberOf me.collision
  * @public
@@ -60,7 +60,6 @@ class ResponseObject {
         this.indexShapeA = -1;
         this.indexShapeB = -1;
         this.overlap = Number.MAX_VALUE;
-        return this;
     }
 
     /**
@@ -72,6 +71,7 @@ class ResponseObject {
      * @memberOf me.collision.ResponseObject
      * @public
      * @function
+     * @returns {object} this object for chaining
      */
     clear () {
         this.aInB = true;
@@ -91,9 +91,9 @@ export var globalResponse = new ResponseObject();
  * @name collisionCheck
  * @ignore
  * @function
- * @param {me.Renderable} obj object to be tested for collision
+ * @param {me.Renderable} objA object to be tested for collision
  * @param {me.collision.ResponseObject} [response=me.collision.response] a user defined response object that will be populated if they intersect.
- * @returns {Boolean} in case of collision, false otherwise
+ * @returns {boolean} in case of collision, false otherwise
  */
 export function collisionCheck(objA, response = globalResponse) {
     var collisionCounter = 0;

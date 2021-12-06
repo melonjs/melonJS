@@ -18,7 +18,7 @@ export default class TMXGroup {
         /**
          * group name
          * @public
-         * @type String
+         * @type {string}
          * @name name
          * @memberOf me.TMXGroup
          */
@@ -27,7 +27,7 @@ export default class TMXGroup {
         /**
          * group width
          * @public
-         * @type Number
+         * @type {number}
          * @name width
          * @memberOf me.TMXGroup
          */
@@ -36,7 +36,7 @@ export default class TMXGroup {
         /**
          * group height
          * @public
-         * @type Number
+         * @type {number}
          * @name height
          * @memberOf me.TMXGroup
          */
@@ -45,7 +45,7 @@ export default class TMXGroup {
         /**
          * tint color
          * @public
-         * @type String
+         * @type {string}
          * @name tintcolor
          * @memberOf me.TMXGroup
          */
@@ -54,7 +54,7 @@ export default class TMXGroup {
         /**
          * group z order
          * @public
-         * @type Number
+         * @type {number}
          * @name z
          * @memberOf me.TMXGroup
          */
@@ -64,7 +64,7 @@ export default class TMXGroup {
          * group objects list definition
          * @see me.TMXObject
          * @public
-         * @type Array
+         * @type {object[]}
          * @name name
          * @memberOf me.TMXGroup
          */

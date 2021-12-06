@@ -7,9 +7,9 @@ import pool from "./../system/pooling.js";
  * @class Vector3d
  * @memberOf me
  * @constructor
- * @param {Number} [x=0] x value of the vector
- * @param {Number} [y=0] y value of the vector
- * @param {Number} [z=0] z value of the vector
+ * @param {number} [x=0] x value of the vector
+ * @param {number} [y=0] y value of the vector
+ * @param {number} [z=0] z value of the vector
  */
 
 class Vector3d {
@@ -30,7 +30,8 @@ class Vector3d {
     }
 
     /**
-     * @ignore */
+     * @ignore
+     */
     _set(x, y, z = 0) {
         this.x = x;
         this.y = y;
@@ -43,9 +44,9 @@ class Vector3d {
      * @name set
      * @memberOf me.Vector3d
      * @function
-     * @param {Number} x
-     * @param {Number} y
-     * @param {Number} [z=0]
+     * @param {number} x
+     * @param {number} y
+     * @param {number} [z=0]
      * @returns {me.Vector3d} Reference to this object for method chaining
      */
     set(x, y, z) {
@@ -58,7 +59,7 @@ class Vector3d {
         /**
          * x value of the vector
          * @public
-         * @type Number
+         * @type {number}
          * @name x
          * @memberOf me.Vector3d
          */
@@ -67,7 +68,7 @@ class Vector3d {
         /**
          * y value of the vector
          * @public
-         * @type Number
+         * @type {number}
          * @name y
          * @memberOf me.Vector3d
          */
@@ -76,7 +77,7 @@ class Vector3d {
         /**
          * z value of the vector
          * @public
-         * @type Number
+         * @type {number}
          * @name z
          * @memberOf me.Vector3d
          */
@@ -137,9 +138,9 @@ class Vector3d {
      * @name scale
      * @memberOf me.Vector3d
      * @function
-     * @param {Number} x
-     * @param {Number} [y=x]
-     * @param {Number} [z=1]
+     * @param {number} x
+     * @param {number} [y=x]
+     * @param {number} [z=1]
      * @returns {me.Vector3d} Reference to this object for method chaining
      */
     scale(x, y, z) {
@@ -186,7 +187,7 @@ class Vector3d {
      * @name div
      * @memberOf me.Vector3d
      * @function
-     * @param {Number} value
+     * @param {number} n the value to divide the vector by
      * @returns {me.Vector3d} Reference to this object for method chaining
      */
     div(n) {
@@ -209,8 +210,8 @@ class Vector3d {
      * @name clamp
      * @memberOf me.Vector3d
      * @function
-     * @param {Number} low
-     * @param {Number} high
+     * @param {number} low
+     * @param {number} high
      * @returns {me.Vector3d} new me.Vector3d
      */
     clamp(low, high) {
@@ -222,8 +223,8 @@ class Vector3d {
      * @name clampSelf
      * @memberOf me.Vector3d
      * @function
-     * @param {Number} low
-     * @param {Number} high
+     * @param {number} low
+     * @param {number} high
      * @returns {me.Vector3d} Reference to this object for method chaining
      */
     clampSelf(low, high) {
@@ -340,17 +341,17 @@ class Vector3d {
      * @memberOf me.Vector3d
      * @function
      * @param {me.Vector2d|me.Vector3d} v
-     * @returns {Boolean}
+     * @returns {boolean}
      */
     /**
      * return true if this vector is equal to the given values
      * @name equals
      * @memberOf me.Vector3d
      * @function
-     * @param {Number} x
-     * @param {Number} y
-     * @param {Number} [z]
-     * @returns {Boolean}
+     * @param {number} x
+     * @param {number} y
+     * @param {number} [z]
+     * @returns {boolean}
      */
     equals() {
         var _x, _y, _z;
@@ -430,19 +431,19 @@ class Vector3d {
      * @memberOf me.Vector3d
      * @function
      * @param {me.Vector2d|me.Vector3d} v
-     * @returns {Number} The dot product.
+     * @returns {number} The dot product.
      */
     dotProduct(v) {
         return this.x * v.x + this.y * v.y + this.z * (typeof(v.z) !== "undefined" ? v.z : this.z);
     }
 
    /**
-     * return the square length of this vector
-     * @name length2
-     * @memberOf me.Vector3d
-     * @function
-     * @returns {Number} The length^2 of this vector.
-     */
+    * return the square length of this vector
+    * @name length2
+    * @memberOf me.Vector3d
+    * @function
+    * @returns {number} The length^2 of this vector.
+    */
     length2() {
         return this.dotProduct(this);
     }
@@ -452,7 +453,7 @@ class Vector3d {
      * @name length
      * @memberOf me.Vector3d
      * @function
-     * @returns {Number} the length of this vector
+     * @returns {number} the length of this vector
      */
     length() {
         return Math.sqrt(this.length2());
@@ -464,7 +465,7 @@ class Vector3d {
      * @memberOf me.Vector3d
      * @function
      * @param {me.Vector3d} v
-     * @param {Number} alpha distance along the line (alpha = 0 will be this vector, and alpha = 1 will be the given one).
+     * @param {number} alpha distance along the line (alpha = 0 will be this vector, and alpha = 1 will be the given one).
      * @returns {me.Vector3d} Reference to this object for method chaining
      */
     lerp(v, alpha) {
@@ -480,7 +481,7 @@ class Vector3d {
      * @memberOf me.Vector3d
      * @function
      * @param {me.Vector2d|me.Vector3d} v
-     * @returns {Number}
+     * @returns {number}
      */
     distance(v) {
         var dx = this.x - v.x;
@@ -495,7 +496,7 @@ class Vector3d {
      * @memberOf me.Vector3d
      * @function
      * @param {me.Vector2d|me.Vector3d} v
-     * @returns {Number} angle in radians
+     * @returns {number} angle in radians
      */
     angle(v) {
         return Math.acos(clamp(this.dotProduct(v) / (this.length() * v.length()), -1, 1));
@@ -544,7 +545,7 @@ class Vector3d {
      * @name toString
      * @memberOf me.Vector3d
      * @function
-     * @returns {String}
+     * @returns {string}
      */
     toString() {
         return "x:" + this.x + ",y:" + this.y + ",z:" + this.z;

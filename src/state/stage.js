@@ -19,7 +19,7 @@ var default_settings = {
  * @extends me.Object
  * @memberOf me
  * @constructor
- * @param {Object} [options] The stage` parameters
+ * @param {object} [options] The stage` parameters
  * @param {me.Camera2d[]} [options.cameras=[new me.Camera2d()]] a list of cameras (experimental)
  * @param {Function} [options.onResetEvent] called by the state manager when reseting the object
  * @param {Function} [options.onDestroyEvent] called by the state manager before switching to another state
@@ -47,7 +47,7 @@ class Stage {
          * @public
          * @name settings
          * @memberOf me.Stage
-         * @type {Object}
+         * @type {object}
          */
         this.settings = Object.assign(default_settings, settings || {});
     }
@@ -87,9 +87,9 @@ class Stage {
      * @memberOf me.Stage
      * @ignore
      * @function
-     * @param {Number} dt time since the last update in milliseconds.
-     * @returns {Boolean}
-     **/
+     * @param {number} dt time since the last update in milliseconds.
+     * @returns {boolean}
+     */
     update(dt) {
         // update all objects (and pass the elapsed time since last frame)
         var isDirty = game.world.update(dt);
@@ -139,7 +139,7 @@ class Stage {
      * @name onResetEvent
      * @memberOf me.Stage
      * @function
-     * @param {} [arguments...] optional arguments passed when switching state
+     * @param {object} [...arguments] optional arguments passed when switching state
      * @see me.state#change
      */
     onResetEvent() {

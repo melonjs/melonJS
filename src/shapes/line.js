@@ -8,8 +8,8 @@ import Polygon from "./poly.js";
  * @extends me.Polygon
  * @memberOf me
  * @constructor
- * @param {Number} x origin point of the Line
- * @param {Number} y origin point of the Line
+ * @param {number} x origin point of the Line
+ * @param {number} y origin point of the Line
  * @param {me.Vector2d[]} points array of vectors defining the Line
  */
 
@@ -29,8 +29,8 @@ class Line extends Polygon {
      * @name contains
      * @memberOf me.Line.prototype
      * @function
-     * @param  {Number} x x coordinate
-     * @param  {Number} y y coordinate
+     * @param  {number} x x coordinate
+     * @param  {number} y y coordinate
      * @returns {boolean} true if contains
      */
     contains() {
@@ -63,6 +63,7 @@ class Line extends Polygon {
      * @name recalc
      * @memberOf me.Line.prototype
      * @function
+     * @returns {me.Line} this instance for objecf chaining
      */
     recalc() {
         var edges = this.edges;

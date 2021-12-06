@@ -7,16 +7,16 @@ import { collisionCheck } from "./detector.js";
 import state from "./../state/state.js";
 
 /**
-* @classdesc
+ * @classdesc
  * an object representing the physic world, and responsible for managing and updating all childs and physics
  * @class World
  * @extends me.Container
  * @memberOf me
  * @constructor
- * @param {Number} [x=0] position of the container (accessible via the inherited pos.x property)
- * @param {Number} [y=0] position of the container (accessible via the inherited pos.y property)
- * @param {Number} [w=me.game.viewport.width] width of the container
- * @param {Number} [h=me.game.viewport.height] height of the container
+ * @param {number} [x=0] position of the container (accessible via the inherited pos.x property)
+ * @param {number} [y=0] position of the container (accessible via the inherited pos.y property)
+ * @param {number} [w=me.game.viewport.width] width of the container
+ * @param {number} [h=me.game.viewport.height] height of the container
  */
 class World extends Container {
     /**
@@ -37,7 +37,7 @@ class World extends Container {
          * the rate at which the game world is updated,
          * may be greater than or lower than the display fps
          * @public
-         * @type me.Vector2d
+         * @type {me.Vector2d}
          * @default 60
          * @name fps
          * @memberOf me.World
@@ -48,7 +48,7 @@ class World extends Container {
         /**
          * world gravity
          * @public
-         * @type me.Vector2d
+         * @type {me.Vector2d}
          * @default <0,0.98>
          * @name gravity
          * @memberOf me.World
@@ -63,7 +63,7 @@ class World extends Container {
          * (amount of layer, layer size, amount of tiles per layer, etc.)<br>
          * note : rendering method is also configurable per layer by adding this
          * property to your layer (in Tiled).
-         * @type {Boolean}
+         * @type {boolean}
          * @default false
          * @memberOf me.World
          */
@@ -153,7 +153,8 @@ class World extends Container {
      * @name reset
      * @memberOf me.World
      * @function
-     * @returns {Boolean} true if the word is dirty
+     * @param {number} dt the time passed since the last frame update
+     * @returns {boolean} true if the word is dirty
      */
     update (dt) {
         var isPaused = state.isPaused();

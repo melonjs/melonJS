@@ -10,9 +10,9 @@ import collision from "./../physics/collision.js";
  * @extends me.Sprite
  * @memberOf me
  * @constructor
- * @param {Number} x the x coordinates of the collectable
- * @param {Number} y the y coordinates of the collectable
- * @param {Object} settings See {@link me.Sprite}
+ * @param {number} x the x coordinates of the collectable
+ * @param {number} y the y coordinates of the collectable
+ * @param {object} settings See {@link me.Sprite}
  */
 
 class Collectable extends Sprite {

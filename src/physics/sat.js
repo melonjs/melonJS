@@ -26,7 +26,7 @@ var RIGHT_VORNOI_REGION = 1;
 
 /**
  * A pool of `Vector` objects that are used in calculations to avoid allocating memory.
- * @type {Array.<Vector>}
+ * @type {Array.<me.Vector2d>}
  * @ignore
  */
 var T_VECTORS = [];
@@ -46,8 +46,8 @@ for (var a = 0; a < 5; a++) { T_ARRAYS.push([]); }
  * resulting in a one dimensional range of the minimum and
  * maximum value on that axis.
  * @ignore
- * @param {Array.<Vector>} points The points to flatten.
- * @param {Vector} normal The unit vector axis to flatten on.
+ * @param {Array.<me.Vector2d>} points The points to flatten.
+ * @param {me.Vector2d} normal The unit vector axis to flatten on.
  * @param {Array.<number>} result An array.  After calling this function,
  *   result[0] will be the minimum value,
  *   result[1] will be the maximum value.
@@ -70,11 +70,11 @@ function flattenPointsOn(points, normal, result) {
  * Check whether two convex polygons are separated by the specified
  * axis (must be a unit vector).
  * @ignore
- * @param {Vector} aPos The position of the first polygon.
- * @param {Vector} bPos The position of the second polygon.
- * @param {Array.<Vector>} aPoints The points in the first polygon.
- * @param {Array.<Vector>} bPoints The points in the second polygon.
- * @param {Vector} axis The axis (unit sized) to test against.  The points of both polygons
+ * @param {me.Vector2d} aPos The position of the first polygon.
+ * @param {me.Vector2d} bPos The position of the second polygon.
+ * @param {Array.<me.Vector2d>} aPoints The points in the first polygon.
+ * @param {Array.<me.Vector2d>} bPoints The points in the second polygon.
+ * @param {me.Vector2d} axis The axis (unit sized) to test against.  The points of both polygons
  *   will be projected onto this axis.
  * @param {Response=} response A Response object (optional) which will be populated
  *   if the axis is not a separating axis.
@@ -161,8 +161,8 @@ function isSeparatingAxis(aPos, bPos, aPoints, bPoints, axis, response) {
  * </pre>
  *
  * @ignore
- * @param {Vector} line The line segment.
- * @param {Vector} point The point.
+ * @param {me.Vector2d} line The line segment.
+ * @param {me.Vector2d} point The point.
  * @returns  {number} LEFT_VORNOI_REGION (-1) if it is the left region,
  *          MIDDLE_VORNOI_REGION (0) if it is the middle region,
  *          RIGHT_VORNOI_REGION (1) if it is the right region.
@@ -450,7 +450,7 @@ export function testPolygonEllipse(a, polyA, b, ellipseB, response) {
  * @ignore
  * @param {me.Renderable} a a reference to the object A.
  * @param {me.Ellipse} ellipseA a reference to the object A Ellipse to be tested
- * @param {me.Renderable} a a reference to the object B.
+ * @param {me.Renderable} b a reference to the object B.
  * @param {me.Polygon} polyB a reference to the object B Polygon to be tested
  * @param {Response=} response Response object (optional) that will be populated if
  *   they intersect.

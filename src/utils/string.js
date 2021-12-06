@@ -11,7 +11,7 @@
  * @function
  * @memberOf me.utils.string
  * @name capitalize
- * @param {String} string the string to be capitalized
+ * @param {string} str the string to be capitalized
  * @returns {string} the capitalized string
  */
 export function capitalize(str) {
@@ -24,7 +24,7 @@ export function capitalize(str) {
  * @function
  * @memberOf me.utils.string
  * @name trimLeft
- * @param {String} string the string to be trimmed
+ * @param {string} str the string to be trimmed
  * @returns {string} trimmed string
  */
 export function trimLeft(str) {
@@ -37,7 +37,7 @@ export function trimLeft(str) {
  * @function
  * @memberOf me.utils.string
  * @name trimRight
- * @param {String} string the string to be trimmed
+ * @param {string} str the string to be trimmed
  * @returns {string} trimmed string
  */
 export function trimRight(str) {
@@ -50,8 +50,8 @@ export function trimRight(str) {
  * @function
  * @memberOf me.utils.string
  * @name isNumeric
- * @param {String} string the string to be tested
- * @returns {Boolean} true if string contains only digits
+ * @param {string} str the string to be tested
+ * @returns {boolean} true if string contains only digits
  */
 export function isNumeric(str) {
     if (typeof str === "string") {
@@ -66,8 +66,8 @@ export function isNumeric(str) {
  * @function
  * @memberOf me.utils.string
  * @name isBoolean
- * @param {String} string the string to be tested
- * @returns {Boolean} true if the string is either true or false
+ * @param {string} str the string to be tested
+ * @returns {boolean} true if the string is either true or false
  */
 export function isBoolean(str) {
     var trimmed = str.trim();
@@ -80,8 +80,8 @@ export function isBoolean(str) {
  * @function
  * @memberOf me.utils.string
  * @name toHex
- * @param {String} string the string to be converted
- * @returns {String}
+ * @param {string} str the string to be converted
+ * @returns {string} the converted hexadecimal value
  */
 export function toHex(str) {
     var res = "", c = 0;

@@ -13,11 +13,10 @@ import { registerPointerEvent, releasePointerEvent} from "./../input/input.js";
  * @extends me.Sprite
  * @memberOf me
  * @constructor
- * @param {Number} x the x coordinate of the GUI Object
- * @param {Number} y the y coordinate of the GUI Object
- * @param {Object} settings See {@link me.Sprite}
+ * @param {number} x the x coordinate of the GUI Object
+ * @param {number} y the y coordinate of the GUI Object
+ * @param {object} settings See {@link me.Sprite}
  * @example
- *
  * // create a basic GUI Object
  * class myButton extends GUI_Object {
  *    constructor(x, y) {
@@ -42,7 +41,6 @@ import { registerPointerEvent, releasePointerEvent} from "./../input/input.js";
  *
  * // add the object at pos (10,10)
  * me.game.world.addChild(new myButton(10,10));
- *
  */
 
 class GUI_Object extends Sprite {
@@ -58,7 +56,7 @@ class GUI_Object extends Sprite {
         /**
          * object can be clicked or not
          * @public
-         * @type boolean
+         * @type {boolean}
          * @default true
          * @name me.GUI_Object#isClickable
          */
@@ -75,7 +73,7 @@ class GUI_Object extends Sprite {
         /**
          * object can be tap and hold
          * @public
-         * @type boolean
+         * @type {boolean}
          * @default false
          * @name me.GUI_Object#isHoldable
          */
@@ -84,7 +82,7 @@ class GUI_Object extends Sprite {
         /**
          * true if the pointer is over the object
          * @public
-         * @type boolean
+         * @type {boolean}
          * @default false
          * @name me.GUI_Object#hover
          */
@@ -122,14 +120,13 @@ class GUI_Object extends Sprite {
     }
 
     /**
-     * function called when the object is pressed <br>
-     * to be extended <br>
-     * return false if we need to stop propagating the event
+     * function called when the object is pressed (to be extended)
      * @name onClick
      * @memberOf me.GUI_Object.prototype
      * @public
      * @function
      * @param {me.Pointer} event the event object
+     * @returns {boolean} return false if we need to stop propagating the event
      */
     onClick(/* event */) {
         return false;
@@ -151,7 +148,7 @@ class GUI_Object extends Sprite {
      * @memberOf me.GUI_Object.prototype
      * @public
      * @function
-     * @param {me.Pointer}} event the event object
+     * @param {me.Pointer} event the event object
      */
     onOver(/* event */) {}
 
@@ -172,7 +169,7 @@ class GUI_Object extends Sprite {
      * @memberOf me.GUI_Object.prototype
      * @public
      * @function
-     * @param {me.Pointer}} event the event object
+     * @param {me.Pointer} event the event object
      */
     onOut(/* event */) {
 
@@ -192,13 +189,12 @@ class GUI_Object extends Sprite {
     }
 
     /**
-     * function called when the object is pressed and released <br>
-     * to be extended <br>
-     * return false if we need to stop propagating the event
+     * function called when the object is pressed and released (to be extended)
      * @name onRelease
      * @memberOf me.GUI_Object.prototype
      * @public
      * @function
+     * @returns {boolean} return false if we need to stop propagating the event
      */
     onRelease() {
         return false;

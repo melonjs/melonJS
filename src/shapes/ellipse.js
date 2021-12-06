@@ -8,10 +8,10 @@ import pool from "./../system/pooling.js";
  * @extends me.Object
  * @memberOf me
  * @constructor
- * @param {Number} x the center x coordinate of the ellipse
- * @param {Number} y the center y coordinate of the ellipse
- * @param {Number} w width (diameter) of the ellipse
- * @param {Number} h height (diameter) of the ellipse
+ * @param {number} x the center x coordinate of the ellipse
+ * @param {number} y the center y coordinate of the ellipse
+ * @param {number} w width (diameter) of the ellipse
+ * @param {number} h height (diameter) of the ellipse
  */
 
 class Ellipse {
@@ -38,7 +38,7 @@ class Ellipse {
         /**
          * Maximum radius of the ellipse
          * @public
-         * @type {Number}
+         * @type {number}
          * @name radius
          * @memberOf me.Ellipse
          */
@@ -86,10 +86,11 @@ class Ellipse {
      * @name setShape
      * @memberOf me.Ellipse.prototype
      * @function
-     * @param {Number} x the center x coordinate of the ellipse
-     * @param {Number} y the center y coordinate of the ellipse
-     * @param {Number} w width (diameter) of the ellipse
-     * @param {Number} h height (diameter) of the ellipse
+     * @param {number} x the center x coordinate of the ellipse
+     * @param {number} y the center y coordinate of the ellipse
+     * @param {number} w width (diameter) of the ellipse
+     * @param {number} h height (diameter) of the ellipse
+     * @returns {me.Ellipse} this instance for objecf chaining
      */
     setShape(x, y, w, h) {
         var hW = w / 2;
@@ -115,7 +116,7 @@ class Ellipse {
      * @name rotate
      * @memberOf me.Ellipse.prototype
      * @function
-     * @param {Number} angle The angle to rotate (in radians)
+     * @param {number} angle The angle to rotate (in radians)
      * @param {me.Vector2d|me.ObservableVector2d} [v] an optional point to rotate around
      * @returns {me.Ellipse} Reference to this object for method chaining
      */
@@ -132,8 +133,8 @@ class Ellipse {
      * @name scale
      * @memberOf me.Ellipse.prototype
      * @function
-     * @param {Number} x
-     * @param {Number} [y=x]
+     * @param {number} x
+     * @param {number} [y=x]
      * @returns {me.Ellipse} Reference to this object for method chaining
      */
     scale(x, y) {
@@ -176,8 +177,8 @@ class Ellipse {
      * @name translate
      * @memberOf me.Ellipse.prototype
      * @function
-     * @param {Number} x x offset
-     * @param {Number} y y offset
+     * @param {number} x x offset
+     * @param {number} y y offset
      * @returns {me.Ellipse} this ellipse
      */
     /**
@@ -222,8 +223,8 @@ class Ellipse {
      * @name contains
      * @memberOf me.Ellipse.prototype
      * @function
-     * @param  {Number} x x coordinate
-     * @param  {Number} y y coordinate
+     * @param  {number} x x coordinate
+     * @param  {number} y y coordinate
      * @returns {boolean} true if contains
      */
     contains() {

@@ -17,6 +17,10 @@ let deviceOrientationInitialized = false;
 
 // swipe utility fn & flag
 let swipeEnabled = true;
+
+/**
+ * @ignore
+ */
 function _disableSwipeFn(e) {
     e.preventDefault();
     if (typeof window.scroll === "function") {
@@ -28,7 +32,10 @@ function _disableSwipeFn(e) {
 // DOM loading stuff
 let readyBound = false, isReady = false, readyList = [];
 
-// called to check if the device is ready
+/**
+ * // called to check if the device is ready
+ * @ignore
+ */
 function _domReady() {
     // Make sure that the DOM is not already loaded
     if (!isReady) {
@@ -61,8 +68,10 @@ function _domReady() {
 // a cache DOMRect object
 let _domRect = {left: 0, top: 0, x: 0, y: 0, width: 0, height: 0, right: 0, bottom: 0};
 
-
-// detect the device type
+/**
+ * detect the device type
+ * @ignore
+ */
 function _detectDevice() {
     // iOS Device ?
     device.iOS = /iPhone|iPad|iPod/i.test(device.ua);
@@ -92,7 +101,10 @@ function _detectDevice() {
     device.isWeixin = /MicroMessenger/i.test(device.ua);
 };
 
-// check the device capapbilities
+/**
+ * check the device capapbilities
+ * @ignore
+ */
 function _checkCapabilities() {
 
     // detect device type/platform
@@ -242,7 +254,7 @@ let device = {
 
     /**
      * the `ua` read-only property returns the user agent string for the current browser.
-     * @type String
+     * @type {string}
      * @readonly
      * @name ua
      * @memberOf me.device
@@ -252,7 +264,7 @@ let device = {
     /**
      * Browser Local Storage capabilities <br>
      * (this flag will be set to false if cookies are blocked)
-     * @type Boolean
+     * @type {boolean}
      * @readonly
      * @name localStorage
      * @memberOf me.device
@@ -261,7 +273,7 @@ let device = {
 
     /**
      * Browser accelerometer capabilities
-     * @type Boolean
+     * @type {boolean}
      * @readonly
      * @name hasAccelerometer
      * @memberOf me.device
@@ -270,7 +282,7 @@ let device = {
 
     /**
      * Browser device orientation
-     * @type Boolean
+     * @type {boolean}
      * @readonly
      * @name hasDeviceOrientation
      * @memberOf me.device
@@ -280,7 +292,7 @@ let device = {
     /**
      * Supports the ScreenOrientation API
      * @see https://developer.mozilla.org/en-US/docs/Web/API/ScreenOrientation/onchange
-     * @type Boolean
+     * @type {boolean}
      * @readonly
      * @name ScreenOrientation
      * @memberOf me.device
@@ -289,16 +301,16 @@ let device = {
 
     /**
      * Browser full screen support
-     * @type Boolean
+     * @type {boolean}
      * @readonly
      * @name hasFullscreenSupport
      * @memberOf me.device
      */
     hasFullscreenSupport : false,
 
-     /**
+    /**
      * Browser pointerlock api support
-     * @type Boolean
+     * @type {boolean}
      * @readonly
      * @name hasPointerLockSupport
      * @memberOf me.device
@@ -306,17 +318,17 @@ let device = {
     hasPointerLockSupport : false,
 
     /**
-    * Device WebAudio Support
-    * @type Boolean
-    * @readonly
-    * @name hasWebAudio
-    * @memberOf me.device
-    */
-   hasWebAudio : false,
+     * Device WebAudio Support
+     * @type {boolean}
+     * @readonly
+     * @name hasWebAudio
+     * @memberOf me.device
+     */
+    hasWebAudio : false,
 
     /**
      * Browser Base64 decoding capability
-     * @type Boolean
+     * @type {boolean}
      * @readonly
      * @name nativeBase64
      * @memberOf me.device
@@ -325,7 +337,7 @@ let device = {
 
     /**
      * Return the maximum number of simultaneous touch contact points are supported by the current device.
-     * @type Number
+     * @type {number}
      * @readonly
      * @name maxTouchPoints
      * @memberOf me.device
@@ -338,7 +350,7 @@ let device = {
 
     /**
      * Touch capabilities
-     * @type Boolean
+     * @type {boolean}
      * @readonly
      * @name touch
      * @memberOf me.device
@@ -347,7 +359,7 @@ let device = {
 
     /**
      * W3C standard wheel events
-     * @type Boolean
+     * @type {boolean}
      * @readonly
      * @name wheel
      * @memberOf me.device
@@ -357,7 +369,7 @@ let device = {
     /**
      * equals to true if a mobile device <br>
      * (Android | iPhone | iPad | iPod | BlackBerry | Windows Phone | Kindle)
-     * @type Boolean
+     * @type {boolean}
      * @readonly
      * @name isMobile
      * @memberOf me.device
@@ -366,7 +378,7 @@ let device = {
 
     /**
      * equals to true if the device is an iOS platform.
-     * @type Boolean
+     * @type {boolean}
      * @readonly
      * @name iOS
      * @memberOf me.device
@@ -375,7 +387,7 @@ let device = {
 
     /**
      * equals to true if the device is an Android platform.
-     * @type Boolean
+     * @type {boolean}
      * @readonly
      * @name android
      * @memberOf me.device
@@ -384,7 +396,7 @@ let device = {
 
     /**
      * equals to true if the device is an Android 2.x platform.
-     * @type Boolean
+     * @type {boolean}
      * @readonly
      * @name android2
      * @memberOf me.device
@@ -393,7 +405,7 @@ let device = {
 
     /**
      * equals to true if the device is a Linux platform.
-     * @type Boolean
+     * @type {boolean}
      * @readonly
      * @name linux
      * @memberOf me.device
@@ -402,7 +414,7 @@ let device = {
 
    /**
     * equals to true if the game is running under Ejecta.
-    * @type Boolean
+    * @type {boolean}
     * @readonly
     * @see http://impactjs.com/ejecta
     * @name ejecta
@@ -412,7 +424,7 @@ let device = {
 
     /**
      * equals to true if the game is running under Wechat.
-     * @type Boolean
+     * @type {boolean}
      * @readonly
      * @name isWeixin
      * @memberOf me.device
@@ -421,16 +433,16 @@ let device = {
 
     /**
      * equals to true if the device is running on ChromeOS.
-     * @type Boolean
+     * @type {boolean}
      * @readonly
      * @name chromeOS
      * @memberOf me.device
      */
     chromeOS : false,
 
-     /**
+    /**
      * equals to true if the device is a Windows Phone platform.
-     * @type Boolean
+     * @type {boolean}
      * @readonly
      * @name wp
      * @memberOf me.device
@@ -439,7 +451,7 @@ let device = {
 
     /**
      * equals to true if the device is a BlackBerry platform.
-     * @type Boolean
+     * @type {boolean}
      * @readonly
      * @name BlackBerry
      * @memberOf me.device
@@ -448,7 +460,7 @@ let device = {
 
     /**
      * equals to true if the device is a Kindle platform.
-     * @type Boolean
+     * @type {boolean}
      * @readonly
      * @name Kindle
      * @memberOf me.device
@@ -458,7 +470,7 @@ let device = {
     /**
      * contains the g-force acceleration along the x-axis.
      * @public
-     * @type Number
+     * @type {number}
      * @readonly
      * @name accelerationX
      * @see me.device.watchAccelerometer
@@ -469,7 +481,7 @@ let device = {
     /**
      * contains the g-force acceleration along the y-axis.
      * @public
-     * @type Number
+     * @type {number}
      * @readonly
      * @name accelerationY
      * @see me.device.watchAccelerometer
@@ -480,7 +492,7 @@ let device = {
     /**
      * contains the g-force acceleration along the z-axis.
      * @public
-     * @type Number
+     * @type {number}
      * @readonly
      * @name accelerationZ
      * @see me.device.watchAccelerometer
@@ -491,7 +503,7 @@ let device = {
     /**
      * Device orientation Gamma property. Gives angle on tilting a portrait held phone left or right
      * @public
-     * @type Number
+     * @type {number}
      * @readonly
      * @name gamma
      * @see me.device.watchDeviceOrientation
@@ -502,7 +514,7 @@ let device = {
     /**
      * Device orientation Beta property. Gives angle on tilting a portrait held phone forward or backward
      * @public
-     * @type Number
+     * @type {number}
      * @readonly
      * @name beta
      * @see me.device.watchDeviceOrientation
@@ -514,7 +526,7 @@ let device = {
      * Device orientation Alpha property. Gives angle based on the rotation of the phone around its z axis.
      * The z-axis is perpendicular to the phone, facing out from the center of the screen.
      * @public
-     * @type Number
+     * @type {number}
      * @readonly
      * @name alpha
      * @see me.device.watchDeviceOrientation
@@ -526,7 +538,7 @@ let device = {
      * a string representing the preferred language of the user, usually the language of the browser UI.
      * (will default to "en" if the information is not available)
      * @public
-     * @type String
+     * @type {string}
      * @readonly
      * @see http://www.w3schools.com/tags/ref_language_codes.asp
      * @name language
@@ -536,7 +548,7 @@ let device = {
 
     /**
      * Specify whether to pause the game when losing focus
-     * @type {Boolean}
+     * @type {boolean}
      * @default true
      * @memberOf me.device
      */
@@ -544,7 +556,7 @@ let device = {
 
     /**
      * Specify whether to unpause the game when gaining focus
-     * @type {Boolean}
+     * @type {boolean}
      * @default true
      * @memberOf me.device
      */
@@ -552,7 +564,7 @@ let device = {
 
     /**
      * Specify whether to automatically bring the window to the front
-     * @type {Boolean}
+     * @type {boolean}
      * @default true
      * @memberOf me.device
      */
@@ -561,7 +573,7 @@ let device = {
     /**
      * Specify whether to stop the game when losing focus or not.
      * The engine restarts on focus if this is enabled.
-     * @type {Boolean}
+     * @type {boolean}
      * @default false
      * @memberOf me.device
      */
@@ -569,7 +581,7 @@ let device = {
 
     /**
      * equals to true if the device browser supports OffScreenCanvas.
-     * @type Boolean
+     * @type {boolean}
      * @readonly
      * @name OffScreenCanvas
      * @memberOf me.device
@@ -653,7 +665,7 @@ let device = {
     /**
      * enable/disable swipe on WebView.
      * @function me.device.enableSwipe
-     * @param {Boolean} [enable=true] enable or disable swipe.
+     * @param {boolean} [enable=true] enable or disable swipe.
      */
     enableSwipe(enable) {
         if (enable !== false) {
@@ -670,7 +682,7 @@ let device = {
     /**
      * Triggers a fullscreen request. Requires fullscreen support from the browser/device.
      * @function me.device.requestFullscreen
-     * @param {Object} [element=default canvas object] the element to be set in full-screen mode.
+     * @param {object} [element=default canvas object] the element to be set in full-screen mode.
      * @example
      * // add a keyboard shortcut to toggle Fullscreen mode on/off
      * me.input.bindKey(me.input.KEY.F, "toggleFullscreen");
@@ -710,7 +722,7 @@ let device = {
      * It can be "any", "natural", "landscape", "portrait", "portrait-primary", "portrait-secondary", "landscape-primary", "landscape-secondary"
      * @function me.device.getScreenOrientation
      * @see https://developer.mozilla.org/en-US/docs/Web/API/Screen/orientation
-     * @returns {String} the screen orientation
+     * @returns {string} the screen orientation
      */
     getScreenOrientation() {
         var PORTRAIT = "portrait";
@@ -744,14 +756,15 @@ let device = {
      * This method only works for installed Web apps or for Web pages in full-screen mode.
      * @function me.device.lockOrientation
      * @see https://developer.mozilla.org/en-US/docs/Web/API/Screen/lockOrientation
-     * @returns {Boolean} true if the orientation was unsuccessfully locked
+     * @param {string|string[]} orientation The orientation into which to lock the screen.
+     * @returns {boolean} true if the orientation was unsuccessfully locked
      */
     lockOrientation(orientation) {
         var screen = window.screen;
         if (typeof screen !== "undefined") {
-            var lockOrientation = prefixed("lockOrientation", screen);
-            if (typeof lockOrientation !== "undefined") {
-                return lockOrientation(orientation);
+            var _lockOrientation = prefixed("lockOrientation", screen);
+            if (typeof _lockOrientation !== "undefined") {
+                return _lockOrientation(orientation);
             }
         }
         return false;
@@ -762,14 +775,14 @@ let device = {
      * This method only works for installed Web apps or for Web pages in full-screen mode.
      * @function me.device.unlockOrientation
      * @see https://developer.mozilla.org/en-US/docs/Web/API/Screen/lockOrientation
-     * @returns {Boolean} true if the orientation was unsuccessfully unlocked
+     * @returns {boolean} true if the orientation was unsuccessfully unlocked
      */
-    unlockOrientation(orientation) {
+    unlockOrientation() {
         var screen = window.screen;
         if (typeof screen !== "undefined") {
-            var unlockOrientation = prefixed("unlockOrientation", screen);
-            if (typeof unlockOrientation !== "undefined") {
-                return unlockOrientation(orientation);
+            var _unlockOrientation = prefixed("unlockOrientation", screen);
+            if (typeof _unlockOrientation !== "undefined") {
+                return _unlockOrientation();
             }
         }
         return false;
@@ -778,7 +791,7 @@ let device = {
     /**
      * return true if the device screen orientation is in Portrait mode
      * @function me.device.isPortrait
-     * @returns {Boolean}
+     * @returns {boolean}
      */
     isPortrait() {
         return this.getScreenOrientation().includes("portrait");
@@ -787,7 +800,7 @@ let device = {
     /**
      * return true if the device screen orientation is in Portrait mode
      * @function me.device.isLandscape
-     * @returns {Boolean}
+     * @returns {boolean}
      */
     isLandscape() {
         return this.getScreenOrientation().includes("landscape");
@@ -797,8 +810,8 @@ let device = {
      * return the device storage
      * @function me.device.getStorage
      * @see me.save
-     * @param {String} [type="local"]
-     * @returns {Object} a reference to the device storage
+     * @param {string} [type="local"]
+     * @returns {object} a reference to the device storage
      */
     getStorage(type = "local") {
         switch (type) {
@@ -813,7 +826,7 @@ let device = {
     /**
      * return the parent DOM element for the given parent name or HTMLElement object
      * @function me.device.getParentElement
-     * @param {String|HTMLElement} element the parent element name or a HTMLElement object
+     * @param {string|HTMLElement} element the parent element name or a HTMLElement object
      * @returns {HTMLElement} the parent Element
      */
     getParentElement(element) {
@@ -829,7 +842,7 @@ let device = {
     /**
      * return the DOM element for the given element name or HTMLElement object
      * @function me.device.getElement
-     * @param {String|HTMLElement} element the parent element name or a HTMLElement object
+     * @param {string|HTMLElement} element the parent element name or a HTMLElement object
      * @returns {HTMLElement} the corresponding DOM Element or null if not existing
      */
     getElement(element) {
@@ -857,7 +870,7 @@ let device = {
      * <br><img src="images/element-box-diagram.png"/>
      * @see https://developer.mozilla.org/en-US/docs/Web/API/DOMRect
      * @function me.device.getElementBounds
-     * @param {String|HTMLElement} element an HTMLElement object
+     * @param {string|HTMLElement} element an HTMLElement object
      * @returns {DOMRect} the size and position of the element relatively to the viewport
      */
     getElementBounds(element) {
@@ -875,7 +888,7 @@ let device = {
      * <br><img src="images/element-box-diagram.png"/>
      * @see https://developer.mozilla.org/en-US/docs/Web/API/DOMRect
      * @function me.device.getParentBounds
-     * @param {String|HTMLElement} element an HTMLElement object
+     * @param {string|HTMLElement} element an HTMLElement object
      * @returns {DOMRect} the size and position of the given element parent relative to the viewport
      */
     getParentBounds(element) {
@@ -885,9 +898,9 @@ let device = {
     /**
      * returns true if the device supports WebGL
      * @function me.device.isWebGLSupported
-     * @param {Object} [options] context creation options
-     * @param {Boolean} [options.failIfMajorPerformanceCaveat=true] If true, the renderer will switch to CANVAS mode if the performances of a WebGL context would be dramatically lower than that of a native application making equivalent OpenGL calls.
-     * @returns {Boolean} true if WebGL is supported
+     * @param {object} [options] context creation options
+     * @param {boolean} [options.failIfMajorPerformanceCaveat=true] If true, the renderer will switch to CANVAS mode if the performances of a WebGL context would be dramatically lower than that of a native application making equivalent OpenGL calls.
+     * @returns {boolean} true if WebGL is supported
      */
     isWebGLSupported(options) {
         var _supported = false;
@@ -909,7 +922,7 @@ let device = {
      * return the highest precision format supported by this device for GL Shaders
      * @function me.device.getMaxShaderPrecision
      * @param {WebGLRenderingContext} gl
-     * @returns {Boolean} "lowp", "mediump", or "highp"
+     * @returns {boolean} "lowp", "mediump", or "highp"
      */
     getMaxShaderPrecision(gl) {
         if (gl.getShaderPrecisionFormat(gl.VERTEX_SHADER, gl.HIGH_FLOAT ).precision > 0 &&
@@ -1020,7 +1033,7 @@ let device = {
      * @see me.device.accelerationX
      * @see me.device.accelerationY
      * @see me.device.accelerationZ
-     * @returns {Boolean} false if not supported or permission not granted by the user
+     * @returns {boolean} false if not supported or permission not granted by the user
      * @example
      * // try to enable device accelerometer event on user gesture
      * me.input.registerPointerEvent("pointerleave", me.game.viewport, function() {
@@ -1071,7 +1084,7 @@ let device = {
      * @see me.device.alpha
      * @see me.device.beta
      * @see me.device.gamma
-     * @returns {Boolean} false if not supported or permission not granted by the user
+     * @returns {boolean} false if not supported or permission not granted by the user
      * @example
      * // try to enable device orientation event on user gesture
      * me.input.registerPointerEvent("pointerleave", me.game.viewport, function() {
@@ -1118,7 +1131,7 @@ let device = {
      * If a vibration pattern is already in progress when this method is called,
      * the previous pattern is halted and the new one begins instead.
      * @function me.device.vibrate
-     * @param {Number|Number[]} pattern pattern of vibration and pause intervals
+     * @param {number|number[]} pattern pattern of vibration and pause intervals
      * @example
      * // vibrate for 1000 ms
      * me.device.vibrate(1000);
@@ -1142,9 +1155,9 @@ let device = {
  * @name devicePixelRatio
  * @memberOf me.device
  * @public
- * @type {Number}
+ * @type {number}
  * @readonly
- * @returns {Number}
+ * @returns {number}
  */
 Object.defineProperty(device, "devicePixelRatio", {
     /**
@@ -1160,9 +1173,9 @@ Object.defineProperty(device, "devicePixelRatio", {
  * @name isFullscreen
  * @memberOf me.device
  * @public
- * @type {Boolean}
+ * @type {boolean}
  * @readonly
- * @returns {Boolean}
+ * @returns {boolean}
  */
 Object.defineProperty(device, "isFullscreen", {
     /**
@@ -1183,9 +1196,9 @@ Object.defineProperty(device, "isFullscreen", {
  * @name sound
  * @memberOf me.device
  * @public
- * @type {Boolean}
+ * @type {boolean}
  * @readonly
- * @returns {Boolean}
+ * @returns {boolean}
  */
 Object.defineProperty(device, "sound", {
     /**

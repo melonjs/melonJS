@@ -13,17 +13,17 @@ import Renderable from "./renderable.js";
  * @extends me.Renderable
  * @memberOf me
  * @constructor
- * @param {Number} x the x coordinates of the sprite object
- * @param {Number} y the y coordinates of the sprite object
- * @param {Object} settings Configuration parameters for the Sprite object
- * @param {me.Renderer.Texture|HTMLImageElement|HTMLCanvasElement|String} settings.image reference to a texture, spritesheet image or to a texture atlas
- * @param {String} [settings.name=""] name of this object
- * @param {String} [settings.region] region name of a specific region to use when using a texture atlas, see {@link me.Renderer.Texture}
- * @param {Number} [settings.framewidth] Width of a single frame within the spritesheet
- * @param {Number} [settings.frameheight] Height of a single frame within the spritesheet
- * @param {String|me.Color} [settings.tint] a tint to be applied to this sprite
- * @param {Number} [settings.flipX] flip the sprite on the horizontal axis
- * @param {Number} [settings.flipY] flip the sprite on the vertical axis
+ * @param {number} x the x coordinates of the sprite object
+ * @param {number} y the y coordinates of the sprite object
+ * @param {object} settings Configuration parameters for the Sprite object
+ * @param {me.Renderer.Texture|HTMLImageElement|HTMLCanvasElement|string} settings.image reference to a texture, spritesheet image or to a texture atlas
+ * @param {string} [settings.name=""] name of this object
+ * @param {string} [settings.region] region name of a specific region to use when using a texture atlas, see {@link me.Renderer.Texture}
+ * @param {number} [settings.framewidth] Width of a single frame within the spritesheet
+ * @param {number} [settings.frameheight] Height of a single frame within the spritesheet
+ * @param {string|me.Color} [settings.tint] a tint to be applied to this sprite
+ * @param {number} [settings.flipX] flip the sprite on the horizontal axis
+ * @param {number} [settings.flipY] flip the sprite on the vertical axis
  * @param {me.Vector2d} [settings.anchorPoint={x:0.5, y:0.5}] Anchor point to draw the frame at (defaults to the center of the frame).
  * @example
  * // create a single sprite from a standalone image, with anchor in the center
@@ -58,7 +58,7 @@ class Sprite extends Renderable {
         /**
          * pause and resume animation
          * @public
-         * @type Boolean
+         * @type {boolean}
          * @default false
          * @name me.Sprite#animationpause
          */
@@ -67,7 +67,7 @@ class Sprite extends Renderable {
         /**
          * animation cycling speed (delay between frame in ms)
          * @public
-         * @type Number
+         * @type {number}
          * @default 100
          * @name me.Sprite#animationspeed
          */
@@ -76,7 +76,7 @@ class Sprite extends Renderable {
         /**
          * global offset for the position to draw from on the source image.
          * @public
-         * @type me.Vector2d
+         * @type {me.Vector2d}
          * @default <0.0,0.0>
          * @name offset
          * @memberOf me.Sprite#
@@ -86,7 +86,7 @@ class Sprite extends Renderable {
         /**
          * The source texture object this sprite object is using
          * @public
-         * @type me.Renderer.Texture
+         * @type {me.Renderer.Texture}
          * @name source
          * @memberOf me.Sprite#
          */
@@ -148,7 +148,7 @@ class Sprite extends Renderable {
                 }
             }
         } else {
-            // HTMLImageElement/Canvas or String
+            // HTMLImageElement/Canvas or {string}
             this.image = (typeof settings.image === "object") ? settings.image : loader.getImage(settings.image);
             // throw an error if image ends up being null/undefined
             if (!this.image) {
@@ -219,7 +219,7 @@ class Sprite extends Renderable {
      * @name isFlickering
      * @memberOf me.Sprite.prototype
      * @function
-     * @returns {Boolean}
+     * @returns {boolean}
      */
     isFlickering() {
         return this._flicker.isFlickering;
@@ -230,7 +230,7 @@ class Sprite extends Renderable {
      * @name flicker
      * @memberOf me.Sprite.prototype
      * @function
-     * @param {Number} duration expressed in milliseconds
+     * @param {number} duration expressed in milliseconds
      * @param {Function} callback Function to call when flickering ends
      * @returns {me.Sprite} Reference to this object for method chaining
      * @example
@@ -261,11 +261,11 @@ class Sprite extends Renderable {
      * @name addAnimation
      * @memberOf me.Sprite.prototype
      * @function
-     * @param {String} name animation id
-     * @param {Number[]|String[]|Object[]} index list of sprite index or name
+     * @param {string} name animation id
+     * @param {number[]|string[]|object[]} index list of sprite index or name
      * defining the animation. Can also use objects to specify delay for each frame, see below
-     * @param {Number} [animationspeed] cycling speed for animation in ms
-     * @returns {Number} frame amount of frame added to the animation (delay between each frame).
+     * @param {number} [animationspeed] cycling speed for animation in ms
+     * @returns {number} frame amount of frame added to the animation (delay between each frame).
      * @see me.Sprite#animationspeed
      * @example
      * // walking animation
@@ -361,8 +361,9 @@ class Sprite extends Renderable {
      * @name setCurrentAnimation
      * @memberOf me.Sprite.prototype
      * @function
-     * @param {String} name animation id
-     * @param {String|Function} [resetAnim] animation id to switch to when complete, or callback
+     * @param {string} name animation id
+     * @param {string|Function} [resetAnim] animation id to switch to when complete, or callback
+     * @param {boolean} [preserve_dt=false] if false will reset the elapsed time counter since last frame
      * @returns {me.Sprite} Reference to this object for method chaining
      * @example
      * // set "walk" animation
@@ -393,8 +394,8 @@ class Sprite extends Renderable {
      *
      *    return false; // do not reset to first frame
      * }).bind(this));
-     **/
-    setCurrentAnimation(name, resetAnim, _preserve_dt) {
+     */
+    setCurrentAnimation(name, resetAnim, preserve_dt) {
         if (this.anim[name]) {
             this.current.name = name;
             this.current.length = this.anim[this.current.name].length;
@@ -406,7 +407,7 @@ class Sprite extends Renderable {
                 this.resetAnim = undefined;
             }
             this.setAnimationFrame(this.current.idx);
-            if (!_preserve_dt) {
+            if (!preserve_dt) {
                 this.dt = 0;
             }
             this.isDirty = true;
@@ -421,7 +422,7 @@ class Sprite extends Renderable {
      * @name reverseAnimation
      * @memberOf me.Sprite.prototype
      * @function
-     * @param {String} [name] animation id
+     * @param {string} [name] animation id
      * @returns {me.Sprite} Reference to this object for method chaining
      * @see me.Sprite#animationspeed
      */
@@ -440,8 +441,8 @@ class Sprite extends Renderable {
      * @name isCurrentAnimation
      * @memberOf me.Sprite.prototype
      * @function
-     * @param {String} name animation id
-     * @returns {Boolean}
+     * @param {string} name animation id
+     * @returns {boolean}
      * @example
      * if (!this.isCurrentAnimation("walk")) {
      *     // do something funny...
@@ -457,7 +458,7 @@ class Sprite extends Renderable {
      * @name setRegion
      * @memberOf me.Sprite.prototype
      * @function
-     * @param {Object} region typically returned through me.Texture.getRegion()
+     * @param {object} region typically returned through me.Texture.getRegion()
      * @returns {me.Sprite} Reference to this object for method chaining
      * @example
      * // change the sprite to "shadedDark13.png";
@@ -489,7 +490,7 @@ class Sprite extends Renderable {
      * @name setAnimationFrame
      * @memberOf me.Sprite.prototype
      * @function
-     * @param {Number} [idx=0] animation frame index
+     * @param {number} [idx=0] animation frame index
      * @returns {me.Sprite} Reference to this object for method chaining
      * @example
      * // reset the current animation to the first frame
@@ -505,7 +506,7 @@ class Sprite extends Renderable {
      * @name getCurrentAnimationFrame
      * @memberOf me.Sprite.prototype
      * @function
-     * @returns {Number} current animation frame index
+     * @returns {number} current animation frame index
      */
     getCurrentAnimationFrame() {
         return this.current.idx;
@@ -516,8 +517,9 @@ class Sprite extends Renderable {
      * @name getAnimationFrameObjectByIndex
      * @memberOf me.Sprite.prototype
      * @function
-     * @private
-     * @returns {Number} if using number indices. Returns {Object} containing frame data if using texture atlas
+     * @ignore
+     * @param {number} id the frame id
+     * @returns {number} if using number indices. Returns {object} containing frame data if using texture atlas
      */
     getAnimationFrameObjectByIndex(id) {
         return this.anim[this.current.name].frames[id];
@@ -530,9 +532,9 @@ class Sprite extends Renderable {
      * @memberOf me.Sprite.prototype
      * @function
      * @protected
-     * @param {Number} dt time since the last update in milliseconds.
-     * @returns {Boolean} true if the Sprite is dirty
-     **/
+     * @param {number} dt time since the last update in milliseconds.
+     * @returns {boolean} true if the Sprite is dirty
+     */
     update(dt) {
         // Update animation if necessary
         if (!this.animationpause && this.current && this.current.length > 0) {
@@ -610,7 +612,7 @@ class Sprite extends Renderable {
      * @function
      * @protected
      * @param {me.CanvasRenderer|me.WebGLRenderer} renderer a renderer object
-     **/
+     */
     draw(renderer) {
         // do nothing if we are flickering
         if (this._flicker.isFlickering) {

@@ -23,10 +23,10 @@ var globalFloatingCounter = 0;
  * @extends me.Renderable
  * @memberOf me
  * @constructor
- * @param {Number} [x=0] position of the container (accessible via the inherited pos.x property)
- * @param {Number} [y=0] position of the container (accessible via the inherited pos.y property)
- * @param {Number} [w=me.game.viewport.width] width of the container
- * @param {Number} [h=me.game.viewport.height] height of the container
+ * @param {number} [x=0] position of the container (accessible via the inherited pos.x property)
+ * @param {number} [y=0] position of the container (accessible via the inherited pos.y property)
+ * @param {number} [w=me.game.viewport.width] width of the container
+ * @param {number} [h=me.game.viewport.height] height of the container
  */
 
 class Container extends Renderable {
@@ -48,7 +48,7 @@ class Container extends Renderable {
         /**
          * whether the container is the root of the scene
          * @public
-         * @type Boolean
+         * @type {boolean}
          * @default false
          * @name root
          * @memberOf me.Container
@@ -65,7 +65,7 @@ class Container extends Renderable {
          * The property of the child object that should be used to sort on <br>
          * value : "x", "y", "z"
          * @public
-         * @type String
+         * @type {string}
          * @default me.game.sortOn
          * @name sortOn
          * @memberOf me.Container
@@ -75,7 +75,7 @@ class Container extends Renderable {
         /**
          * Specify if the children list should be automatically sorted when adding a new child
          * @public
-         * @type Boolean
+         * @type {boolean}
          * @default true
          * @name autoSort
          * @memberOf me.Container
@@ -85,7 +85,7 @@ class Container extends Renderable {
         /**
          * Specify if the children z index should automatically be managed by the parent container
          * @public
-         * @type Boolean
+         * @type {boolean}
          * @default true
          * @name autoDepth
          * @memberOf me.Container
@@ -95,7 +95,7 @@ class Container extends Renderable {
         /**
          * Specify if the container draw operation should clip his children to its own bounds
          * @public
-         * @type Boolean
+         * @type {boolean}
          * @default false
          * @name clipping
          * @memberOf me.Container
@@ -107,7 +107,7 @@ class Container extends Renderable {
          * @name onChildChange
          * @memberOf me.Container#
          * @function
-         * @param {Number} index added or removed child index
+         * @param {number} index added or removed child index
          */
         this.onChildChange = function (/* index */) {
             // to be extended
@@ -118,7 +118,7 @@ class Container extends Renderable {
          * all child bounds when updated (this is expensive and disabled by default,
          * only enable if necessary)
          * @public
-         * @type Boolean
+         * @type {boolean}
          * @default false
          * @name enableChildBoundsUpdate
          * @memberOf me.Container
@@ -250,7 +250,7 @@ class Container extends Renderable {
      * @memberOf me.Container.prototype
      * @function
      * @param {me.Renderable} child
-     * @param {Number} index
+     * @param {number} index
      * @returns {me.Renderable} the added child
      */
     addChildAt(child, index) {
@@ -309,7 +309,7 @@ class Container extends Renderable {
      * @memberOf me.Container.prototype
      * @function
      * @param {Function} callback fnction to execute on each element
-     * @param {Object} [thisArg] value to use as this(i.e reference Object) when executing callback.
+     * @param {object} [thisArg] value to use as this(i.e reference Object) when executing callback.
      * @example
      * // iterate through all children of the root container
      * me.game.world.forEach((child) => {
@@ -371,7 +371,8 @@ class Container extends Renderable {
      * @name getChildAt
      * @memberOf me.Container.prototype
      * @function
-     * @param {Number} index
+     * @param {number} index
+     * @returns {me.Renderable} the child at the specified index
      */
     getChildAt(index) {
         if (index >= 0 && index < this.getChildren().length) {
@@ -388,7 +389,7 @@ class Container extends Renderable {
      * @memberOf me.Container.prototype
      * @function
      * @param {me.Renderable} child
-     * @returns {Number} index
+     * @returns {number} index
      */
     getChildIndex(child) {
         return this.getChildren().indexOf(child);
@@ -416,7 +417,7 @@ class Container extends Renderable {
      * @memberOf me.Container.prototype
      * @function
      * @param {me.Renderable} child
-     * @returns {Boolean}
+     * @returns {boolean}
      */
     hasChild(child) {
         return this === child.ancestor;
@@ -430,8 +431,8 @@ class Container extends Renderable {
      * @memberOf me.Container.prototype
      * @public
      * @function
-     * @param {String} prop Property name
-     * @param {String|RegExp|Number|Boolean} value Value of the property
+     * @param {string} prop Property name
+     * @param {string|RegExp|number|boolean} value Value of the property
      * @returns {me.Renderable[]} Array of childs
      * @example
      * // get the first child object called "mainPlayer" in a specific container :
@@ -451,6 +452,9 @@ class Container extends Renderable {
     getChildByProp(prop, value)    {
         var objList = [];
 
+        /**
+         * @ignore
+         */
         function compare(obj, prop) {
             var v = obj[prop];
             if (value instanceof RegExp && typeof(v) === "string") {
@@ -479,7 +483,7 @@ class Container extends Renderable {
      * @memberOf me.Container.prototype
      * @public
      * @function
-     * @param {Object} classType
+     * @param {object} classType
      * @returns {me.Renderable[]} Array of children
      */
     getChildByType(classType) {
@@ -506,7 +510,7 @@ class Container extends Renderable {
      * @memberOf me.Container.prototype
      * @public
      * @function
-     * @param {String|RegExp|Number|Boolean} name child name
+     * @param {string|RegExp|number|boolean} name child name
      * @returns {me.Renderable[]} Array of children
      */
     getChildByName(name) {
@@ -521,7 +525,7 @@ class Container extends Renderable {
      * @memberOf me.Container.prototype
      * @public
      * @function
-     * @param {String|RegExp|Number|Boolean} guid child GUID
+     * @param {string|RegExp|number|boolean} guid child GUID
      * @returns {me.Renderable} corresponding child or null
      */
     getChildByGUID(guid) {
@@ -529,10 +533,8 @@ class Container extends Renderable {
         return (obj.length > 0) ? obj[0] : null;
     }
 
-
     /**
      * return all child in this container
-
      * @name getChildren
      * @memberOf me.Container.prototype
      * @public
@@ -581,7 +583,7 @@ class Container extends Renderable {
      * @name isAttachedToRoot
      * @memberOf me.Container.prototype
      * @function
-     * @returns {Boolean}
+     * @returns {boolean}
      */
     isAttachedToRoot() {
         if (this.root === true) {
@@ -600,7 +602,7 @@ class Container extends Renderable {
 
     /**
      * update the cointainer's bounding rect (private)
-     * @private
+     * @ignore
      * @name updateBoundsPos
      * @memberOf me.Container.prototype
      * @function
@@ -641,7 +643,7 @@ class Container extends Renderable {
      * @public
      * @function
      * @param {me.Renderable} child
-     * @param {Boolean} [keepalive=False] True to prevent calling child.destroy()
+     * @param {boolean} [keepalive=False] True to prevent calling child.destroy()
      */
     removeChild(child, keepalive) {
         if (this.hasChild(child)) {
@@ -660,7 +662,7 @@ class Container extends Renderable {
      * @memberOf me.Container.prototype
      * @function
      * @param {me.Renderable} child
-     * @param {Boolean} [keepalive=False] True to prevent calling child.destroy()
+     * @param {boolean} [keepalive=False] True to prevent calling child.destroy()
      */
     removeChildNow(child, keepalive) {
         if (this.hasChild(child) && (this.getChildIndex(child) >= 0)) {
@@ -712,9 +714,9 @@ class Container extends Renderable {
      * @name setChildsProperty
      * @memberOf me.Container.prototype
      * @function
-     * @param {String} prop property name
-     * @param {Object} value property value
-     * @param {Boolean} [recursive=false] recursively apply the value to child containers if true
+     * @param {string} prop property name
+     * @param {object} value property value
+     * @param {boolean} [recursive=false] recursively apply the value to child containers if true
      */
     setChildsProperty(prop, value, recursive) {
         this.forEach((child) => {
@@ -797,7 +799,7 @@ class Container extends Renderable {
      * @memberOf me.Container.prototype
      * @public
      * @function
-     * @param {Boolean} [recursive=false] recursively sort all containers if true
+     * @param {boolean} [recursive=false] recursively sort all containers if true
      */
     sort(recursive) {
         // do nothing if there is already a pending sort
@@ -892,9 +894,9 @@ class Container extends Renderable {
      * @memberOf me.Container.prototype
      * @function
      * @protected
-     * @param {Number} dt time since the last update in milliseconds.
-     * @returns {Boolean} true if the Container is dirty
-     **/
+     * @param {number} dt time since the last update in milliseconds.
+     * @returns {boolean} true if the Container is dirty
+     */
     update(dt) {
         var isFloating = false;
         var isPaused = state.isPaused();
@@ -947,7 +949,7 @@ class Container extends Renderable {
      * @protected
      * @param {me.CanvasRenderer|me.WebGLRenderer} renderer a renderer object
      * @param {me.Rect|me.Bounds} [rect] the area or viewport to (re)draw
-     **/
+     */
     draw(renderer, rect) {
         var isFloating = false;
         var bounds = this.getBounds();

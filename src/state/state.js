@@ -74,7 +74,7 @@ function _pauseRunLoop() {
 
 /**
  * this is only called when using requestAnimFrame stuff
- * @param {Number} time current timestamp in milliseconds
+ * @param {number} time current timestamp in milliseconds
  * @ignore
  */
 function _renderFrame(time) {
@@ -255,15 +255,16 @@ var state = {
      * @memberOf me.state
      * @public
      * @function
-     * @param {Boolean} pauseTrack pause current track on screen stop.
+     * @param {boolean} [pauseTrack=false] pause current track on screen stop.
      */
-    stop(music) {
+    stop(pauseTrack=false) {
         // only stop when we are not loading stuff
         if ((_state !== this.LOADING) && this.isRunning()) {
             // stop the main loop
             _stopRunLoop();
+
             // current music stop
-            if (music === true) {
+            if (pauseTrack === true) {
                 pauseTrack();
             }
 
@@ -281,15 +282,15 @@ var state = {
      * @memberOf me.state
      * @public
      * @function
-     * @param {Boolean} pauseTrack pause current track on screen pause
+     * @param {boolean} [pauseTrack=false] pause current track on screen pause
      */
-    pause(music) {
+    pause(pauseTrack=false) {
         // only pause when we are not loading stuff
         if ((_state !== this.LOADING) && !this.isPaused()) {
             // stop the main loop
             _pauseRunLoop();
             // current music stop
-            if (music === true) {
+            if (pauseTrack === true) {
                 pauseTrack();
             }
 
@@ -307,14 +308,14 @@ var state = {
      * @memberOf me.state
      * @public
      * @function
-     * @param {Boolean} resumeTrack resume current track on screen resume
+     * @param {boolean} [resumeTrack=false] resume current track on screen resume
      */
-    restart(music) {
+    restart(resumeTrack=false) {
         if (!this.isRunning()) {
             // restart the main loop
             _startRunLoop();
             // current music stop
-            if (music === true) {
+            if (resumeTrack === true) {
                 resumeTrack();
             }
 
@@ -335,14 +336,14 @@ var state = {
      * @memberOf me.state
      * @public
      * @function
-     * @param {Boolean} resumeTrack resume current track on screen resume
+     * @param {boolean} [resumeTrack=false] resume current track on screen resume
      */
-    resume(music) {
+    resume(resumeTrack=false) {
         if (this.isPaused()) {
             // resume the main loop
             _resumeRunLoop();
             // current music stop
-            if (music === true) {
+            if (resumeTrack === true) {
                 resumeTrack();
             }
 
@@ -360,7 +361,7 @@ var state = {
      * @memberOf me.state
      * @public
      * @function
-     * @returns {Boolean} true if a "process is running"
+     * @returns {boolean} true if a "process is running"
      */
     isRunning() {
         return _animFrameId !== -1;
@@ -372,7 +373,7 @@ var state = {
      * @memberOf me.state
      * @public
      * @function
-     * @returns {Boolean} true if the game is paused
+     * @returns {boolean} true if the game is paused
      */
     isPaused() {
         return _isPaused;
@@ -384,9 +385,9 @@ var state = {
      * @memberOf me.state
      * @public
      * @function
-     * @param {Number} state State ID (see constants)
+     * @param {number} state State ID (see constants)
      * @param {me.Stage} stage Instantiated Stage to associate with state ID
-     * @param {Boolean} [start = false] if true the state will be changed immediately after adding it.
+     * @param {boolean} [start = false] if true the state will be changed immediately after adding it.
      * @example
      * class MenuButton extends me.GUI_Object {
      *     onClick() {
@@ -458,9 +459,9 @@ var state = {
      * @memberOf me.state
      * @public
      * @function
-     * @param {String} effect (only "fade" is supported for now)
-     * @param {me.Color|String} color a CSS color value
-     * @param {Number} [duration=1000] expressed in milliseconds
+     * @param {string} effect (only "fade" is supported for now)
+     * @param {me.Color|string} color a CSS color value
+     * @param {number} [duration=1000] expressed in milliseconds
      */
     transition(effect, color, duration) {
         if (effect === "fade") {
@@ -475,8 +476,8 @@ var state = {
      * @memberOf me.state
      * @public
      * @function
-     * @param {Number} state State ID (see constants)
-     * @param {Boolean} enable
+     * @param {number} state State ID (see constants)
+     * @param {boolean} enable
      */
     setTransition(state, enable) {
         _stages[state].transition = enable;
@@ -488,9 +489,9 @@ var state = {
      * @memberOf me.state
      * @public
      * @function
-     * @param {Number} state State ID (see constants)
-     * @param {Boolean} forceChange if true the state will be changed immediately
-     * @param {} [arguments...] extra arguments to be passed to the reset functions
+     * @param {number} state State ID (see constants)
+     * @param {boolean} forceChange if true the state will be changed immediately
+     * @param {object} [...arguments] extra arguments to be passed to the reset functions
      * @example
      * // The onResetEvent method on the play screen will receive two args:
      * // "level_1" and the number 3
@@ -502,39 +503,37 @@ var state = {
             throw new Error("Undefined Stage for state '" + state + "'");
         }
 
-        if (this.isCurrent(state)) {
-            // do nothing if already the current state
-            return;
-        }
+        // do nothing if already the current state
+        if (!this.isCurrent(state)) {
+            _extraArgs = null;
+            if (arguments.length > 1) {
+                // store extra arguments if any
+                _extraArgs = Array.prototype.slice.call(arguments, 1);
+            }
+            // if fading effect
+            if (_fade.duration && _stages[state].transition) {
+                /** @ignore */
+                _onSwitchComplete = function() {
+                    game.viewport.fadeOut(_fade.color, _fade.duration);
+                };
+                game.viewport.fadeIn(
+                    _fade.color,
+                    _fade.duration,
+                    function () {
+                        fctUtil.defer(_switchState, this, state);
+                    }
+                );
 
-        _extraArgs = null;
-        if (arguments.length > 1) {
-            // store extra arguments if any
-            _extraArgs = Array.prototype.slice.call(arguments, 1);
-        }
-        // if fading effect
-        if (_fade.duration && _stages[state].transition) {
-            /** @ignore */
-            _onSwitchComplete = function() {
-                game.viewport.fadeOut(_fade.color, _fade.duration);
-            };
-            game.viewport.fadeIn(
-                _fade.color,
-                _fade.duration,
-                function () {
+            }
+            // else just switch without any effects
+            else {
+                // wait for the last frame to be
+                // "finished" before switching
+                if (forceChange === true) {
+                    _switchState(state);
+                } else {
                     fctUtil.defer(_switchState, this, state);
                 }
-            );
-
-        }
-        // else just switch without any effects
-        else {
-            // wait for the last frame to be
-            // "finished" before switching
-            if (forceChange === true) {
-                _switchState(state);
-            } else {
-                fctUtil.defer(_switchState, this, state);
             }
         }
     },
@@ -545,7 +544,8 @@ var state = {
      * @memberOf me.state
      * @public
      * @function
-     * @param {Number} state State ID (see constants)
+     * @param {number} state State ID (see constants)
+     * @returns {boolean} true if the specified state is the current one
      */
     isCurrent(state) {
         return _state === state;

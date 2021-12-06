@@ -5,7 +5,7 @@ var capChars = ["M", "N", "B", "D", "C", "E", "F", "K", "A", "G", "H", "I", "J",
 
 /**
  * Gets the value from a string of pairs.
- * @private
+ * @ignore
  */
 function getValueFromPair(string, pattern) {
     var value = string.match(pattern);
@@ -18,11 +18,11 @@ function getValueFromPair(string, pattern) {
 
 /**
  * Gets the first glyph in the map that is not a space character
- * @private
+ * @ignore
  * @name _getFirstGlyph
  * @memberOf me.BitmapTextData
  * @function
- * @param {Object} glyphs the map of glyphs, each key is a char code
+ * @param {object} glyphs the map of glyphs, each key is a char code
  * @returns {me.Glyph}
  */
 function getFirstGlyph(glyphs) {
@@ -37,11 +37,11 @@ function getFirstGlyph(glyphs) {
 
 /**
  * Creates a glyph to use for the space character
- * @private
+ * @ignore
  * @name createSpaceGlyph
  * @memberOf me.BitmapTextData
  * @function
- * @param {Object} glyphs the map of glyphs, each key is a char code
+ * @param {object} glyphs the map of glyphs, each key is a char code
  */
 function createSpaceGlyph(glyphs) {
     var spaceCharCode = " ".charCodeAt(0);
@@ -60,8 +60,8 @@ function createSpaceGlyph(glyphs) {
  * Class for storing relevant data from the font file.
  * @class me.BitmapTextData
  * @memberOf me
- * @private
- * @param data {String} - The bitmap font data pulled from the resource loader using me.loader.getBinary()
+ * @ignore
+ * @param data {string} - The bitmap font data pulled from the resource loader using me.loader.getBinary()
  * @constructor
  */
 class BitmapTextData {
@@ -88,7 +88,7 @@ class BitmapTextData {
         /**
          * The map of glyphs, each key is a char code.
          * @name glyphs
-         * @type {Object}
+         * @type {object}
          * @memberOf me.BitmapTextData
          */
         this.glyphs = {};
@@ -102,7 +102,7 @@ class BitmapTextData {
      * @name parse
      * @memberOf me.BitmapTextData
      * @function
-     * @param {String} fontData
+     * @param {string} fontData
      */
     parse(fontData) {
         if (!fontData) {

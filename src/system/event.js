@@ -1,10 +1,10 @@
 import EventEmitter from "eventemitter3";
 
 /**
-* an event system based on nodeJS EventEmitter interface
-* @namespace event
-* @memberOf me
-*/
+ * an event system based on nodeJS EventEmitter interface
+ * @namespace event
+ * @memberOf me
+ */
 
 // internal instance of the event emiter
 var eventEmitter = new EventEmitter();
@@ -13,7 +13,7 @@ var eventEmitter = new EventEmitter();
  * event when the system is booting
  * @public
  * @constant
- * @type String
+ * @type {string}
  * @name BOOT
  * @memberOf me.event
  * @see me.event.on
@@ -25,7 +25,7 @@ export const BOOT = "me.boot";
  * Data passed : none <br>
  * @public
  * @constant
- * @type String
+ * @type {string}
  * @name STATE_PAUSE
  * @memberOf me.event
  * @see me.event.on
@@ -34,10 +34,10 @@ export const STATE_PAUSE = "me.state.onPause";
 
 /**
  * event for when the game is resumed <br>
- * Data passed : {Number} time in ms the game was paused
+ * Data passed : {number} time in ms the game was paused
  * @public
  * @constant
- * @type String
+ * @type {string}
  * @name STATE_RESUME
  * @memberOf me.event
  * @see me.event.on
@@ -49,7 +49,7 @@ export const STATE_RESUME = "me.state.onResume";
  * Data passed : none <br>
  * @public
  * @constant
- * @type String
+ * @type {string}
  * @name STATE_STOP
  * @memberOf me.event
  * @see me.event.on
@@ -58,10 +58,10 @@ export const STATE_STOP = "me.state.onStop";
 
 /**
  * event for when the game is restarted <br>
- * Data passed : {Number} time in ms the game was stopped
+ * Data passed : {number} time in ms the game was stopped
  * @public
  * @constant
- * @type String
+ * @type {string}
  * @name STATE_RESTART
  * @memberOf me.event
  * @see me.event.on
@@ -73,7 +73,7 @@ export const STATE_RESTART = "me.state.onRestart";
  * Data passed : none <br>
  * @public
  * @constant
- * @type String
+ * @type {string}
  * @name VIDEO_INIT
  * @memberOf me.event
  * @see me.video.init
@@ -86,7 +86,7 @@ export const VIDEO_INIT = "me.video.onInit";
  * Data passed : none <br>
  * @public
  * @constant
- * @type String
+ * @type {string}
  * @name GAME_INIT
  * @memberOf me.event
  * @see me.event.on
@@ -98,7 +98,7 @@ export const GAME_INIT = "me.game.onInit";
  * Data passed : none <br>
  * @public
  * @constant
- * @type String
+ * @type {string}
  * @name GAME_RESET
  * @memberOf me.event
  * @see me.event.on
@@ -107,10 +107,10 @@ export const GAME_RESET = "me.game.onReset";
 
 /**
  * event for when the engine is about to start a new game loop
- * Data passed : {Number} time the current time stamp
+ * Data passed : {number} time the current time stamp
  * @public
  * @constant
- * @type String
+ * @type {string}
  * @name GAME_BEFORE_UPDATE
  * @memberOf me.event
  * @see me.event.on
@@ -119,10 +119,10 @@ export const GAME_BEFORE_UPDATE = "me.game.beforeUpdate";
 
 /**
  * event for the end of the update loop
- * Data passed : {Number} time the current time stamp
+ * Data passed : {number} time the current time stamp
  * @public
  * @constant
- * @type String
+ * @type {string}
  * @name GAME_AFTER_UPDATE
  * @memberOf me.event
  * @see me.event.on
@@ -131,10 +131,10 @@ export const GAME_AFTER_UPDATE = "me.game.afterUpdate";
 
 /**
  * Event for when the game is updated (will be impacted by frame skip, frame interpolation and pause/resume state) <br>
- * Data passed : {Number} time the current time stamp
+ * Data passed : {number} time the current time stamp
  * @public
  * @constant
- * @type String
+ * @type {string}
  * @name GAME_UPDATE
  * @memberOf me.event
  * @see me.event.on
@@ -143,10 +143,10 @@ export const GAME_UPDATE = "me.game.onUpdate";
 
 /**
  * Event for the end of the draw loop
- * Data passed : {Number} time the current time stamp
+ * Data passed : {number} time the current time stamp
  * @public
  * @constant
- * @type String
+ * @type {string}
  * @name GAME_BEFORE_DRAW
  * @memberOf me.event
  * @see me.event.on
@@ -155,10 +155,10 @@ export const GAME_BEFORE_DRAW = "me.game.beforeDraw";
 
 /**
  * Event for the start of the draw loop
- * Data passed : {Number} time the current time stamp
+ * Data passed : {number} time the current time stamp
  * @public
  * @constant
- * @type String
+ * @type {string}
  * @name GAME_AFTER_DRAW
  * @memberOf me.event
  * @see me.event.on
@@ -167,10 +167,10 @@ export const GAME_AFTER_DRAW = "me.game.afterDraw";
 
 /**
  * Event for when a level is loaded <br>
- * Data passed : {String} Level Name
+ * Data passed : {string} Level Name
  * @public
  * @constant
- * @type String
+ * @type {string}
  * @name LEVEL_LOADED
  * @memberOf me.event
  * @see me.event.on
@@ -182,7 +182,7 @@ export const LEVEL_LOADED = "me.game.onLevelLoaded";
  * Data passed : none <br>
  * @public
  * @constant
- * @type String
+ * @type {string}
  * @name LOADER_COMPLETE
  * @memberOf me.event
  * @see me.event.on
@@ -191,10 +191,10 @@ export const LOADER_COMPLETE = "me.loader.onload";
 
 /**
  * Event for displaying a load progress indicator <br>
- * Data passed : {Number} [0 .. 1], {Resource} resource object<br>
+ * Data passed : {number} [0 .. 1], {Resource} resource object<br>
  * @public
  * @constant
- * @type String
+ * @type {string}
  * @name LOADER_PROGRESS
  * @memberOf me.event
  * @see me.event.on
@@ -203,15 +203,15 @@ export const LOADER_PROGRESS = "me.loader.onProgress";
 
 /**
  * Event for pressing a binded key <br>
- * Data passed : {String} user-defined action, {Number} keyCode,
- * {Boolean} edge state <br>
+ * Data passed : {string} user-defined action, {number} keyCode,
+ * {boolean} edge state <br>
  * Edge-state is for detecting "locked" key bindings. When a locked key
  * is pressed and held, the first event will have the third argument
  * set true. Subsequent events will continue firing with the third
  * argument set false.
  * @public
  * @constant
- * @type String
+ * @type {string}
  * @name KEYDOWN
  * @memberOf me.event
  * @see me.event.on
@@ -234,10 +234,10 @@ export const KEYDOWN = "me.input.keydown";
 
 /**
  * Event for releasing a binded key <br>
- * Data passed : {String} user-defined action, {Number} keyCode
+ * Data passed : {string} user-defined action, {number} keyCode
  * @public
  * @constant
- * @type String
+ * @type {string}
  * @name KEYUP
  * @memberOf me.event
  * @see me.event.on
@@ -258,10 +258,10 @@ export const KEYUP = "me.input.keyup";
 
 /**
  * Event for when a gamepad is connected <br>
- * Data passed : {Object} gamepad object
+ * Data passed : {object} gamepad object
  * @public
  * @constant
- * @type String
+ * @type {string}
  * @name GAMEPAD_CONNECTED
  * @memberOf me.event
  * @see me.event.on
@@ -270,10 +270,10 @@ export const GAMEPAD_CONNECTED = "gamepad.connected";
 
 /**
  * Event for when a gamepad is disconnected <br>
- * Data passed : {Object} gamepad object
+ * Data passed : {object} gamepad object
  * @public
  * @constant
- * @type String
+ * @type {string}
  * @name GAMEPAD_DISCONNECTED
  * @memberOf me.event
  * @see me.event.on
@@ -282,14 +282,14 @@ export const GAMEPAD_DISCONNECTED = "gamepad.disconnected";
 
 /**
  * Event for when gamepad button/axis state is updated <br>
- * Data passed : {Number} index <br>
- * Data passed : {String} type : "axes" or "buttons" <br>
- * Data passed : {Number} button <br>
- * Data passed : {Number} current.value <br>
- * Data passed : {Boolean} current.pressed
+ * Data passed : {number} index <br>
+ * Data passed : {string} type : "axes" or "buttons" <br>
+ * Data passed : {number} button <br>
+ * Data passed : {number} current.value <br>
+ * Data passed : {boolean} current.pressed
  * @public
  * @constant
- * @type String
+ * @type {string}
  * @name GAMEPAD_UPDATE
  * @memberOf me.event
  * @see me.event.on
@@ -301,7 +301,7 @@ export const GAMEPAD_UPDATE = "gamepad.update";
  * Data passed : {me.Pointer} a Pointer object
  * @public
  * @constant
- * @type String
+ * @type {string}
  * @name POINTERMOVE
  * @memberOf me.event
  * @see me.event.on
@@ -311,11 +311,11 @@ export const POINTERMOVE = "me.event.pointermove";
 /**
  * Event for dragstart events on a Draggable entity <br>
  * Data passed:
- * {Object} the drag event <br>
- * {Object} the Draggable entity
+ * {object} the drag event <br>
+ * {object} the Draggable entity
  * @public
  * @constant
- * @type String
+ * @type {string}
  * @name DRAGSTART
  * @memberOf me.event
  * @see me.event.on
@@ -325,11 +325,11 @@ export const DRAGSTART = "me.game.dragstart";
 /**
  * Event for dragend events on a Draggable entity <br>
  * Data passed:
- * {Object} the drag event <br>
- * {Object} the Draggable entity
+ * {object} the drag event <br>
+ * {object} the Draggable entity
  * @public
  * @constant
- * @type String
+ * @type {string}
  * @name DRAGEND
  * @memberOf me.event
  * @see me.event.on
@@ -341,7 +341,7 @@ export const DRAGEND = "me.game.dragend";
  * Data passed : {Event} Event object
  * @public
  * @constant
- * @type String
+ * @type {string}
  * @name WINDOW_ONRESIZE
  * @memberOf me.event
  * @see me.event.on
@@ -351,11 +351,11 @@ export const WINDOW_ONRESIZE = "window.onresize";
 /**
  * Event for when the canvas is resized <br>
  * (this usually follows a WINDOW_ONRESIZE event).<br>
- * Data passed : {Number} canvas width <br>
- * Data passed : {Number} canvas height
+ * Data passed : {number} canvas width <br>
+ * Data passed : {number} canvas height
  * @public
  * @constant
- * @type String
+ * @type {string}
  * @name CANVAS_ONRESIZE
  * @memberOf me.event
  * @see me.event.on
@@ -365,11 +365,11 @@ export const CANVAS_ONRESIZE = "canvas.onresize";
 /**
  * Event for when the viewport is resized <br>
  * (this usually follows a WINDOW_ONRESIZE event, when using the `flex` scaling mode is used and after the viewport was updated).<br>
- * Data passed : {Number} viewport width <br>
- * Data passed : {Number} viewport height
+ * Data passed : {number} viewport width <br>
+ * Data passed : {number} viewport height
  * @public
  * @constant
- * @type String
+ * @type {string}
  * @name VIEWPORT_ONRESIZE
  * @memberOf me.event
  * @see me.event.on
@@ -381,7 +381,7 @@ export const VIEWPORT_ONRESIZE = "viewport.onresize";
  * Data passed : {Event} Event object <br>
  * @public
  * @constant
- * @type String
+ * @type {string}
  * @name WINDOW_ONORIENTATION_CHANGE
  * @memberOf me.event
  * @see me.event.on
@@ -393,7 +393,7 @@ export const WINDOW_ONORIENTATION_CHANGE = "window.orientationchange";
  * Data passed : {Event} Event object
  * @public
  * @constant
- * @type String
+ * @type {string}
  * @name WINDOW_ONSCROLL
  * @memberOf me.event
  * @see me.event.on
@@ -405,7 +405,7 @@ export const WINDOW_ONSCROLL = "window.onscroll";
  * Data passed : {me.Vector2d} viewport position vector
  * @public
  * @constant
- * @type String
+ * @type {string}
  * @name VIEWPORT_ONCHANGE
  * @memberOf me.event
  * @see me.event.on
@@ -417,7 +417,7 @@ export const VIEWPORT_ONCHANGE = "viewport.onchange";
  * Data passed : {me.WebGLRenderer} the current webgl renderer instance`
  * @public
  * @constant
- * @type String
+ * @type {string}
  * @name WEBGL_ONCONTEXT_LOST
  * @memberOf me.event
  * @see me.event.on
@@ -429,7 +429,7 @@ export const WEBGL_ONCONTEXT_LOST = "renderer.webglcontextlost";
  * Data passed : {me.WebGLRenderer} the current webgl renderer instance`
  * @public
  * @constant
- * @type String
+ * @type {string}
  * @name WEBGL_ONCONTEXT_RESTORED
  * @memberOf me.event
  * @see me.event.on
@@ -439,9 +439,9 @@ export const WEBGL_ONCONTEXT_RESTORED = "renderer.webglcontextrestored";
 /**
  * calls each of the listeners registered for a given event.
  * @function me.event.emit
- * @param {(String|Symbol)} event The event name.
- * @param {...*} arguments arguments to be passed to all listeners
- * @returns {Boolean} true if the event had listeners, false otherwise.
+ * @param {string|symbol} eventName The event name.
+ * @param {object} [...arguments] arguments to be passed to all listeners
+ * @returns {boolean} true if the event had listeners, false otherwise.
  * @example
  * me.event.emit("event-name", a, b, c);
  */
@@ -452,8 +452,8 @@ export function emit(eventName, ...args) {
 /**
  * Add a listener for a given event.
  * @function me.event.on
- * @param {(String|Symbol)} event The event name.
- * @param {Function} fn The listener function.
+ * @param {string|symbol} eventName The event name.
+ * @param {Function} listener The listener function.
  * @param {*} [context=this] The context to invoke the listener with.
  * @returns {EventEmitter} `this`.
  * @public
@@ -467,8 +467,8 @@ export function on(eventName, listener, context) {
 /**
  * Add a one-time listener for a given event.
  * @function me.event.once
- * @param {(String|Symbol)} event The event name.
- * @param {Function} fn The listener function.
+ * @param {string|symbol} eventName The event name.
+ * @param {Function} listener The listener function.
  * @param {*} [context=this] The context to invoke the listener with.
  * @returns {EventEmitter} `this`.
  * @public
@@ -482,8 +482,8 @@ export function once(eventName, listener, context) {
 /**
  * remove the given listener for a given event.
  * @function me.event.off
- * @param {(String|Symbol)} event The event name.
- * @param {Function} fn The listener function.
+ * @param {string|symbol} eventName The event name.
+ * @param {Function} listener The listener function.
  * @returns {EventEmitter} `this`.
  * @public
  * @example

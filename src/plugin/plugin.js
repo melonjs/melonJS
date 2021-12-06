@@ -17,7 +17,7 @@ class BasePlugin {
          * define the minimum required version of melonJS<br>
          * this can be overridden by the plugin
          * @public
-         * @type String
+         * @type {string}
          * @default "__VERSION__"
          * @name me.plugin.Base#version
          */
@@ -49,8 +49,8 @@ export var plugin = {
      * @memberOf me.plugin
      * @public
      * @function
-     * @param {Object} proto target object
-     * @param {String} name target function
+     * @param {object} proto target object
+     * @param {string} name target function
      * @param {Function} fn replacement function
      * @example
      * // redefine the me.game.update function with a new one
@@ -95,9 +95,9 @@ export var plugin = {
      * @see me.plugin.Base
      * @public
      * @function
-     * @param {me.plugin.Base} plugin Plugin to instiantiate and register
-     * @param {String} name
-     * @param {} [arguments...] all extra parameters will be passed to the plugin constructor
+     * @param {me.plugin.Base} pluginObj Plugin object to instantiate and register
+     * @param {string} name
+     * @param {object} [...arguments] all extra parameters will be passed to the plugin constructor
      * @example
      * // register a new plugin
      * me.plugin.register(TestPlugin, "testPlugin");

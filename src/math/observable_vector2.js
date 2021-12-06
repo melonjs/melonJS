@@ -9,9 +9,9 @@ import {clamp} from "./math.js";
  * @extends me.Vector2d
  * @memberOf me
  * @constructor
- * @param {Number} [x=0] x value of the vector
- * @param {Number} [y=0] y value of the vector
- * @param {Object} settings additional required parameters
+ * @param {number} [x=0] x value of the vector
+ * @param {number} [y=0] y value of the vector
+ * @param {object} settings additional required parameters
  * @param {Function} settings.onUpdate the callback to be executed when the vector is changed
  * @param {Function} [settings.scope] the value to use as this when calling onUpdate
  */
@@ -42,7 +42,7 @@ class ObservableVector2d extends Vector2d {
     /**
      * x value of the vector
      * @public
-     * @type {Number}
+     * @type {number}
      * @name x
      * @memberOf me.ObservableVector2d
      */
@@ -64,7 +64,7 @@ class ObservableVector2d extends Vector2d {
     /**
      * y value of the vector
      * @public
-     * @type {Number}
+     * @type {number}
      * @name y
      * @memberOf me.ObservableVector2d
      */
@@ -100,8 +100,8 @@ class ObservableVector2d extends Vector2d {
      * @name setMuted
      * @memberOf me.ObservableVector2d
      * @function
-     * @param {Number} x x value of the vector
-     * @param {Number} y y value of the vector
+     * @param {number} x x value of the vector
+     * @param {number} y y value of the vector
      * @returns {me.ObservableVector2d} Reference to this object for method chaining
      */
     setMuted(x, y) {
@@ -115,8 +115,8 @@ class ObservableVector2d extends Vector2d {
      * @name setCallback
      * @memberOf me.ObservableVector2d
      * @function
-     * @param {function} onUpdate callback
-     * @param {function} [scope=null] scope
+     * @param {Function} fn callback
+     * @param {Function} [scope=null] scope
      * @returns {me.ObservableVector2d} Reference to this object for method chaining
      */
     setCallback(fn, scope = null) {
@@ -159,8 +159,8 @@ class ObservableVector2d extends Vector2d {
      * @name scale
      * @memberOf me.ObservableVector2d
      * @function
-     * @param {Number} x
-     * @param {Number} [y=x]
+     * @param {number} x
+     * @param {number} [y=x]
      * @returns {me.ObservableVector2d} Reference to this object for method chaining
      */
     scale(x, y) {
@@ -184,7 +184,7 @@ class ObservableVector2d extends Vector2d {
      * @name div
      * @memberOf me.ObservableVector2d
      * @function
-     * @param {Number} value
+     * @param {number} n the value to divide the vector by
      * @returns {me.ObservableVector2d} Reference to this object for method chaining
      */
     div(n) {
@@ -207,8 +207,8 @@ class ObservableVector2d extends Vector2d {
      * @name clamp
      * @memberOf me.ObservableVector2d
      * @function
-     * @param {Number} low
-     * @param {Number} high
+     * @param {number} low
+     * @param {number} high
      * @returns {me.ObservableVector2d} new me.ObservableVector2d
      */
     clamp(low, high) {
@@ -220,8 +220,8 @@ class ObservableVector2d extends Vector2d {
      * @name clampSelf
      * @memberOf me.ObservableVector2d
      * @function
-     * @param {Number} low
-     * @param {Number} high
+     * @param {number} low
+     * @param {number} high
      * @returns {me.ObservableVector2d} Reference to this object for method chaining
      */
     clampSelf(low, high) {
@@ -336,7 +336,7 @@ class ObservableVector2d extends Vector2d {
      * @memberOf me.ObservableVector2d
      * @function
      * @param {me.ObservableVector2d} v
-     * @returns {Boolean}
+     * @returns {boolean}
      */
     equals(v) {
         return ((this._x === v.x) && (this._y === v.y));
@@ -387,7 +387,7 @@ class ObservableVector2d extends Vector2d {
      * @memberOf me.ObservableVector2d
      * @function
      * @param {me.Vector2d|me.ObservableVector2d} v
-     * @returns {Number} The dot product.
+     * @returns {number} The dot product.
      */
     dotProduct(v) {
         return this._x * v.x + this._y * v.y;
@@ -399,7 +399,7 @@ class ObservableVector2d extends Vector2d {
      * @memberOf me.ObservableVector2d
      * @function
      * @param {me.Vector2d|me.ObservableVector2d} v
-     * @param {Number} alpha distance along the line (alpha = 0 will be this vector, and alpha = 1 will be the given one).
+     * @param {number} alpha distance along the line (alpha = 0 will be this vector, and alpha = 1 will be the given one).
      * @returns {me.ObservableVector2d} Reference to this object for method chaining
      */
     lerp(v, alpha) {
@@ -414,7 +414,7 @@ class ObservableVector2d extends Vector2d {
      * @memberOf me.ObservableVector2d
      * @function
      * @param {me.ObservableVector2d} v
-     * @returns {Number}
+     * @returns {number}
      */
     distance(v) {
         return Math.sqrt((this._x - v.x) * (this._x - v.x) + (this._y - v.y) * (this._y - v.y));
@@ -447,7 +447,7 @@ class ObservableVector2d extends Vector2d {
      * @name toString
      * @memberOf me.ObservableVector2d
      * @function
-     * @returns {String}
+     * @returns {string}
      */
     toString() {
         return "x:" + this._x + ",y:" + this._y;

@@ -175,10 +175,10 @@ var cssToRGB = new Map();
  * @class Color
  * @memberOf me
  * @constructor
- * @param {Number|Float32Array} [r=0] red component or array of color components
- * @param {Number} [g=0] green component
- * @param {Number} [b=0] blue component
- * @param {Number} [alpha=1.0] alpha value
+ * @param {number|Float32Array} [r=0] red component or array of color components
+ * @param {number} [g=0] green component
+ * @param {number} [b=0] blue component
+ * @param {number} [alpha=1.0] alpha value
  */
 class Color {
 
@@ -203,7 +203,7 @@ class Color {
 
     /**
      * Color Red Component [0 .. 255]
-     * @type {Number}
+     * @type {number}
      * @name r
      * @readonly
      * @memberOf me.Color
@@ -220,7 +220,7 @@ class Color {
 
     /**
      * Color Green Component [0 .. 255]
-     * @type {Number}
+     * @type {number}
      * @name g
      * @readonly
      * @memberOf me.Color
@@ -237,7 +237,7 @@ class Color {
 
     /**
      * Color Blue Component [0 .. 255]
-     * @type {Number}
+     * @type {number}
      * @name b
      * @readonly
      * @memberOf me.Color
@@ -253,7 +253,7 @@ class Color {
 
     /**
      * Color Alpha Component [0.0 .. 1.0]
-     * @type {Number}
+     * @type {number}
      * @name alpha
      * @readonly
      * @memberOf me.Color
@@ -273,10 +273,10 @@ class Color {
      * @name setColor
      * @memberOf me.Color
      * @function
-     * @param {Number} r red component [0 .. 255]
-     * @param {Number} g green component [0 .. 255]
-     * @param {Number} b blue component [0 .. 255]
-     * @param {Number} [alpha=1.0] alpha value [0.0 .. 1.0]
+     * @param {number} r red component [0 .. 255]
+     * @param {number} g green component [0 .. 255]
+     * @param {number} b blue component [0 .. 255]
+     * @param {number} [alpha=1.0] alpha value [0.0 .. 1.0]
      * @returns {me.Color} Reference to this object for method chaining
      */
     setColor(r, g, b, alpha = 1.0) {
@@ -308,7 +308,7 @@ class Color {
      * @name copy
      * @memberOf me.Color
      * @function
-     * @param {me.Color|String} color
+     * @param {me.Color|string} color
      * @returns {me.Color} Reference to this object for method chaining
      */
     copy(color) {
@@ -342,7 +342,7 @@ class Color {
      * @name darken
      * @memberOf me.Color
      * @function
-     * @param {Number} scale
+     * @param {number} scale
      * @returns {me.Color} Reference to this object for method chaining
      */
     darken(scale) {
@@ -360,7 +360,7 @@ class Color {
      * @memberOf me.Color
      * @function
      * @param {me.Color} color
-     * @param {Number} alpha with alpha = 0 being this color, and alpha = 1 being the given one.
+     * @param {number} alpha with alpha = 0 being this color, and alpha = 1 being the given one.
      * @returns {me.Color} Reference to this object for method chaining
      */
     lerp(color, alpha) {
@@ -377,7 +377,7 @@ class Color {
      * @name lighten
      * @memberOf me.Color
      * @function
-     * @param {Number} scale
+     * @param {number} scale
      * @returns {me.Color} Reference to this object for method chaining
      */
     lighten(scale) {
@@ -394,8 +394,8 @@ class Color {
      * @name random
      * @memberOf me.Color
      * @function
-     * @param {Number} [min=0] minimum value for the random range
-     * @param {Number} [max=255] maxmium value for the random range
+     * @param {number} [min=0] minimum value for the random range
+     * @param {number} [max=255] maxmium value for the random range
      * @returns {me.Color} Reference to this object for method chaining
      */
     random(min = 0, max = 255) {
@@ -421,7 +421,7 @@ class Color {
      * @memberOf me.Color
      * @function
      * @param {me.Color} color
-     * @returns {Boolean}
+     * @returns {boolean}
      */
     equals(color) {
         return (
@@ -438,7 +438,7 @@ class Color {
      * @name parseCSS
      * @memberOf me.Color
      * @function
-     * @param {String} cssColor
+     * @param {string} cssColor
      * @returns {me.Color} Reference to this object for method chaining
      */
     parseCSS(cssColor) {
@@ -456,7 +456,7 @@ class Color {
      * @name parseRGB
      * @memberOf me.Color
      * @function
-     * @param {String} rgbColor
+     * @param {string} rgbColor
      * @returns {me.Color} Reference to this object for method chaining
      */
     parseRGB(rgbColor) {
@@ -476,7 +476,7 @@ class Color {
      * @name parseHex
      * @memberOf me.Color
      * @function
-     * @param {String} hexColor
+     * @param {string} hexColor
      * @param {boolean} [argb = false] true if format is #ARGB, or #AARRGGBB (as opposed to #RGBA or #RGGBBAA)
      * @returns {me.Color} Reference to this object for method chaining
      */
@@ -536,7 +536,7 @@ class Color {
      * @name toUint32
      * @memberOf me.Color
      * @function
-     * @param {Number} [alpha=1.0] alpha value [0.0 .. 1.0]
+     * @param {number} [alpha=1.0] alpha value [0.0 .. 1.0]
      * @returns {Uint32}
      */
     toUint32(alpha = this.alpha) {
@@ -565,7 +565,7 @@ class Color {
      * @name toHex
      * @memberOf me.Color
      * @function
-     * @returns {String}
+     * @returns {string}
      */
     toHex() {
         // TODO : Memoize this function by caching its result until any of
@@ -579,7 +579,7 @@ class Color {
      * @name toHex8
      * @memberOf me.Color
      * @function
-     * @returns {String}
+     * @returns {string}
      */
     toHex8() {
         // TODO : Memoize this function by caching its result until any of
@@ -593,7 +593,7 @@ class Color {
      * @name toRGB
      * @memberOf me.Color
      * @function
-     * @returns {String}
+     * @returns {string}
      */
     toRGB() {
         // TODO : Memoize this function by caching its result until any of
@@ -611,7 +611,7 @@ class Color {
      * @name toRGBA
      * @memberOf me.Color
      * @function
-     * @returns {String}
+     * @returns {string}
      */
     toRGBA() {
         // TODO : Memoize this function by caching its result until any of

@@ -17,7 +17,7 @@ import { world, viewport } from "./../game.js";
 
 /**
  * A pool of `Pointer` objects to cache pointer/touch event coordinates.
- * @type {Array.<Vector>}
+ * @type {Array.<me.Vector2d>}
  * @ignore
  */
 var T_POINTERS = [];
@@ -498,7 +498,7 @@ function onPointerEvent(e) {
  /**
   * the default target element for pointer events (usually the canvas element in which the game is rendered)
   * @public
-  * @type EventTarget
+  * @type {EventTarget}
   * @name pointerEventTarget
   * @memberOf me.input
   */
@@ -518,7 +518,7 @@ export var pointer = new Pointer(0, 0, 1, 1);
  * default value : "1000/me.timer.maxfps" ms<br>
  * set to 0 ms to disable the feature
  * @public
- * @type Number
+ * @type {number}
  * @name throttlingInterval
  * @memberOf me.input
  */
@@ -531,8 +531,8 @@ export var throttlingInterval;
  * @memberOf me.input
  * @public
  * @function
- * @param {Number} x the global x coordinate to be translated.
- * @param {Number} y the global y coordinate to be translated.
+ * @param {number} x the global x coordinate to be translated.
+ * @param {number} y the global y coordinate to be translated.
  * @param {me.Vector2d} [v] an optional vector object where to set the translated coordinates
  * @returns {me.Vector2d} A vector object with the corresponding translated coordinates
  * @example
@@ -565,7 +565,7 @@ export function globalToLocal(x, y, v) {
  * @public
  * @function
  * @param {HTMLCanvasElement} element
- * @param {String} [value="none"]
+ * @param {string} [value="none"]
  */
 export function setTouchAction(element, value) {
     element.style["touch-action"] = value || "none";
@@ -580,7 +580,7 @@ export function setTouchAction(element, value) {
  * @memberOf me.input
  * @public
  * @function
- * @param {Number} [button=me.input.pointer.LEFT] (accordingly to W3C values : 0,1,2 for left, middle and right buttons)
+ * @param {number} [button=me.input.pointer.LEFT] (accordingly to W3C values : 0,1,2 for left, middle and right buttons)
  * @param {me.input.KEY} keyCode
  * @example
  * // enable the keyboard
@@ -611,7 +611,7 @@ export function bindPointer() {
  * @memberOf me.input
  * @public
  * @function
- * @param {Number} [button=me.input.pointer.LEFT] (accordingly to W3C values : 0,1,2 for left, middle and right buttons)
+ * @param {number} [button=me.input.pointer.LEFT] (accordingly to W3C values : 0,1,2 for left, middle and right buttons)
  * @example
  * me.input.unbindPointer(me.input.pointer.LEFT);
  */
@@ -633,7 +633,7 @@ export function unbindPointer(button) {
  * @memberOf me.input
  * @public
  * @function
- * @param {String} eventType The event type for which the object is registering <br>
+ * @param {string} eventType The event type for which the object is registering <br>
  * melonJS currently supports: <br>
  * <ul>
  *   <li><code>"pointermove"</code></li>
@@ -705,7 +705,7 @@ export function registerPointerEvent(eventType, region, callback) {
  * @memberOf me.input
  * @public
  * @function
- * @param {String} eventType The event type for which the object was registered. See {@link me.input.registerPointerEvent}
+ * @param {string} eventType The event type for which the object was registered. See {@link me.input.registerPointerEvent}
  * @param {me.Rect|me.Polygon|me.Line|me.Ellipse} region the registered region to release for this event
  * @param {Function} [callback="all"] if specified unregister the event only for the specific callback
  * @example

@@ -4,17 +4,16 @@
  * @memberOf me
  */
 
-
 /**
  * Executes a function as soon as the interpreter is idle (stack empty).
  * @public
  * @function
  * @memberOf me.utils.function
  * @name defer
- * @param {Function} fn The function to be deferred.
- * @param {Object} thisArg The value to be passed as the this parameter to the target function when the deferred function is called
+ * @param {Function} func The function to be deferred.
+ * @param {object} thisArg The value to be passed as the this parameter to the target function when the deferred function is called
  * @param {...*} [args] Optional additional arguments to carry for the function.
- * @returns {Number} id that can be used to clear the deferred function using
+ * @returns {number} id that can be used to clear the deferred function using
  * clearTimeout
  * @example
  * // execute myFunc() when the stack is empty,
@@ -33,8 +32,9 @@ export function defer(func, thisArg, ...args) {
  * @memberOf me.utils.function
  * @name throttle
  * @param {Function} fn the function to be throttled.
- * @param {Number} delay The delay in ms
+ * @param {number} delay The delay in ms
  * @param {no_trailing} no_trailing disable the execution on the trailing edge
+ * @returns {Function} the function that will be throttled
  */
 export function throttle(fn, delay, no_trailing) {
     var last = window.performance.now(), deferTimer;

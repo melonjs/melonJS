@@ -17,19 +17,19 @@ import Bounds from "./../physics/bounds.js";
  * @class Renderer
  * @memberOf me
  * @constructor
- * @param {Object} options The renderer parameters
- * @param {Number} options.width The width of the canvas without scaling
- * @param {Number} options.height The height of the canvas without scaling
+ * @param {object} options The renderer parameters
+ * @param {number} options.width The width of the canvas without scaling
+ * @param {number} options.height The height of the canvas without scaling
  * @param {HTMLCanvasElement} [options.canvas] The html canvas to draw to on screen
- * @param {Boolean} [options.doubleBuffering=false] Whether to enable double buffering
- * @param {Boolean} [options.antiAlias=false] Whether to enable anti-aliasing, use false (default) for a pixelated effect.
- * @param {Boolean} [options.failIfMajorPerformanceCaveat=true] If true, the renderer will switch to CANVAS mode if the performances of a WebGL context would be dramatically lower than that of a native application making equivalent OpenGL calls.
- * @param {Boolean} [options.transparent=false] Whether to enable transparency on the canvas (performance hit when enabled)
- * @param {Boolean} [options.blendMode="normal"] the default blend mode to use ("normal", "multiply")
- * @param {Boolean} [options.subPixel=false] Whether to enable subpixel rendering (performance hit when enabled)
- * @param {Boolean} [options.verbose=false] Enable the verbose mode that provides additional details as to what the renderer is doing
- * @param {Number} [options.zoomX=width] The actual width of the canvas with scaling applied
- * @param {Number} [options.zoomY=height] The actual height of the canvas with scaling applied
+ * @param {boolean} [options.doubleBuffering=false] Whether to enable double buffering
+ * @param {boolean} [options.antiAlias=false] Whether to enable anti-aliasing, use false (default) for a pixelated effect.
+ * @param {boolean} [options.failIfMajorPerformanceCaveat=true] If true, the renderer will switch to CANVAS mode if the performances of a WebGL context would be dramatically lower than that of a native application making equivalent OpenGL calls.
+ * @param {boolean} [options.transparent=false] Whether to enable transparency on the canvas (performance hit when enabled)
+ * @param {boolean} [options.blendMode="normal"] the default blend mode to use ("normal", "multiply")
+ * @param {boolean} [options.subPixel=false] Whether to enable subpixel rendering (performance hit when enabled)
+ * @param {boolean} [options.verbose=false] Enable the verbose mode that provides additional details as to what the renderer is doing
+ * @param {number} [options.zoomX=width] The actual width of the canvas with scaling applied
+ * @param {number} [options.zoomY=height] The actual height of the canvas with scaling applied
  */
 class Renderer {
 
@@ -39,7 +39,7 @@ class Renderer {
          * @public
          * @name settings
          * @memberOf me.Renderer#
-         * @enum {Object}
+         * @enum {object}
          */
         this.settings = options;
 
@@ -48,7 +48,7 @@ class Renderer {
          * @name isContextValid
          * @memberOf me.Renderer
          * @default true
-         * type {Boolean}
+         * type {boolean}
          */
         this.isContextValid = true;
 
@@ -155,7 +155,7 @@ class Renderer {
      * @name getScreenContext
      * @memberOf me.Renderer.prototype
      * @function
-     * @returns {Context2d}
+     * @returns {CanvasRenderingContext2D}
      */
     getScreenContext() {
         return this.context;
@@ -166,7 +166,7 @@ class Renderer {
      * @name getBlendMode
      * @memberOf me.Renderer.prototype
      * @function
-     * @returns {String} blend mode
+     * @returns {string} blend mode
      */
     getBlendMode() {
         return this.currentBlendMode;
@@ -179,18 +179,18 @@ class Renderer {
      * @memberOf me.Renderer.prototype
      * @function
      * @param {HTMLCanvasElement} canvas
-     * @param {Boolean} [transparent=true] use false to disable transparency
+     * @param {boolean} [transparent=true] use false to disable transparency
      * @returns {CanvasRenderingContext2D}
      */
-    getContext2d(c, transparent) {
-        if (typeof c === "undefined" || c === null) {
+    getContext2d(canvas, transparent) {
+        if (typeof canvas === "undefined" || canvas === null) {
             throw new Error(
                 "You must pass a canvas element in order to create " +
                 "a 2d context"
             );
         }
 
-        if (typeof c.getContext === "undefined") {
+        if (typeof canvas.getContext === "undefined") {
             throw new Error(
                 "Your browser does not support HTML5 canvas."
             );
@@ -200,12 +200,12 @@ class Renderer {
             transparent = true;
         }
 
-        var _context = c.getContext("2d", {
+        var _context = canvas.getContext("2d", {
                 "alpha" : transparent
         });
 
         if (!_context.canvas) {
-            _context.canvas = c;
+            _context.canvas = canvas;
         }
         this.setAntiAlias(_context, this.settings.antiAlias);
         return _context;
@@ -216,7 +216,7 @@ class Renderer {
      * @name getWidth
      * @memberOf me.Renderer.prototype
      * @function
-     * @returns {Number}
+     * @returns {number}
      */
     getWidth() {
         return this.backBufferCanvas.width;
@@ -227,7 +227,7 @@ class Renderer {
      * @name getHeight
      * @memberOf me.Renderer.prototype
      * @function
-     * @returns {Number}
+     * @returns {number} height of the system Canvas
      */
     getHeight() {
         return this.backBufferCanvas.height;
@@ -238,7 +238,7 @@ class Renderer {
      * @name getColor
      * @memberOf me.Renderer.prototype
      * @function
-     * @param {me.Color} current global color
+     * @returns {me.Color} current global color
      */
     getColor() {
         return this.currentColor;
@@ -249,7 +249,7 @@ class Renderer {
      * @name globalAlpha
      * @memberOf me.Renderer.prototype
      * @function
-     * @returns {Number}
+     * @returns {number}
      */
     globalAlpha() {
         return this.currentColor.glArray[3];
@@ -276,8 +276,8 @@ class Renderer {
      * @name resize
      * @memberOf me.Renderer.prototype
      * @function
-     * @param {Number} width new width of the canvas
-     * @param {Number} height new height of the canvas
+     * @param {number} width new width of the canvas
+     * @param {number} height new height of the canvas
      */
     resize(width, height) {
         if (width !== this.backBufferCanvas.width || height !== this.backBufferCanvas.height) {
@@ -297,8 +297,8 @@ class Renderer {
      * @name setAntiAlias
      * @memberOf me.Renderer.prototype
      * @function
-     * @param {Context2d} context
-     * @param {Boolean} [enable=false]
+     * @param {CanvasRenderingContext2D} context
+     * @param {boolean} [enable=false]
      */
     setAntiAlias(context, enable) {
         var canvas = context.canvas;
@@ -339,6 +339,7 @@ class Renderer {
      * @memberOf me.Renderer.prototype
      * @function
      * @param {me.Rect|me.Polygon|me.Line|me.Ellipse} shape a shape object to stroke
+     * @param {boolean} [fill=false] fill the shape with the current color if true
      */
     stroke(shape, fill) {
         if (shape instanceof Rect || shape instanceof Bounds) {
@@ -361,9 +362,9 @@ class Renderer {
      * @name tint
      * @memberOf me.Renderer.prototype
      * @function
-     * @param {HTMLImageElement|HTMLCanvasElement|OffscreenCanvas} image the source image to be tinted
-     * @param {me.Color|String} color the color that will be used to tint the image
-     * @param {String} [mode="multiply"] the composition mode used to tint the image
+     * @param {HTMLImageElement|HTMLCanvasElement|OffscreenCanvas} src the source image to be tinted
+     * @param {me.Color|string} color the color that will be used to tint the image
+     * @param {string} [mode="multiply"] the composition mode used to tint the image
      * @returns {HTMLCanvasElement|OffscreenCanvas} a new canvas element representing the tinted image
      */
     tint(src, color, mode) {
@@ -423,7 +424,7 @@ class Renderer {
      * @memberOf me.Renderer.prototype
      * @function
      * @param {me.Color} tint the tint color
-     * @param {Number} [alpha] an alpha value to be applied to the tint
+     * @param {number} [alpha] an alpha value to be applied to the tint
      */
     setTint(tint, alpha = tint.alpha) {
         // global tint color

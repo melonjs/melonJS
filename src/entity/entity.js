@@ -12,20 +12,20 @@ import Polygon from "./../shapes/poly.js";
  * @memberOf me
  * @see me.Renderable
  * @constructor
- * @param {Number} x the x coordinates of the entity object
- * @param {Number} y the y coordinates of the entity object
- * @param {Object} settings Entity properties, to be defined through Tiled or when calling the entity constructor
+ * @param {number} x the x coordinates of the entity object
+ * @param {number} y the y coordinates of the entity object
+ * @param {object} settings Entity properties, to be defined through Tiled or when calling the entity constructor
  * <img src="images/object_properties.png"/>
- * @param {Number} settings.width the physical width the entity takes up in game
- * @param {Number} settings.height the physical height the entity takes up in game
- * @param {String} [settings.name] object entity name
- * @param {String} [settings.id] object unique IDs
- * @param {Image|String} [settings.image] resource name of a spritesheet to use for the entity renderable component
+ * @param {number} settings.width the physical width the entity takes up in game
+ * @param {number} settings.height the physical height the entity takes up in game
+ * @param {string} [settings.name] object entity name
+ * @param {string} [settings.id] object unique IDs
+ * @param {Image|string} [settings.image] resource name of a spritesheet to use for the entity renderable component
  * @param {me.Vector2d} [settings.anchorPoint=0.0] Entity anchor point
- * @param {Number} [settings.framewidth=settings.width] width of a single frame in the given spritesheet
- * @param {Number} [settings.frameheight=settings.width] height of a single frame in the given spritesheet
- * @param {String} [settings.type] object type
- * @param {Number} [settings.collisionMask] Mask collision detection for this object
+ * @param {number} [settings.framewidth=settings.width] width of a single frame in the given spritesheet
+ * @param {number} [settings.frameheight=settings.width] height of a single frame in the given spritesheet
+ * @param {string} [settings.type] object type
+ * @param {number} [settings.collisionMask] Mask collision detection for this object
  * @param {me.Rect[]|me.Polygon[]|me.Line[]|me.Ellipse[]} [settings.shapes] the initial list of collision shapes (usually populated through Tiled)
  */
 
@@ -74,7 +74,7 @@ class Entity extends Renderable {
         /**
          * object type (as defined in Tiled)
          * @public
-         * @type String
+         * @type {string}
          * @name type
          * @memberOf me.Entity
          */
@@ -83,7 +83,7 @@ class Entity extends Renderable {
         /**
          * object unique ID (as defined in Tiled)
          * @public
-         * @type Number
+         * @type {number}
          * @name id
          * @memberOf me.Entity
          */
@@ -93,7 +93,7 @@ class Entity extends Renderable {
          * dead/living state of the entity<br>
          * default value : true
          * @public
-         * @type Boolean
+         * @type {boolean}
          * @name alive
          * @memberOf me.Entity
          */
@@ -102,7 +102,7 @@ class Entity extends Renderable {
         /**
          * the entity body object
          * @public
-         * @type me.Body
+         * @type {me.Body}
          * @name body
          * @memberOf me.Entity
          */
@@ -134,7 +134,7 @@ class Entity extends Renderable {
     /**
      * The entity renderable component (can be any objects deriving from me.Renderable, like me.Sprite for example)
      * @public
-     * @type me.Renderable
+     * @type {me.Renderable}
      * @name renderable
      * @memberOf me.Entity
      */
@@ -162,10 +162,11 @@ class Entity extends Renderable {
 
     /**
      * update the bounds position when the body is modified
-     * @private
+     * @ignore
      * @name onBodyUpdate
      * @memberOf me.Entity
      * @function
+     * @param {me.Body} the body whose bounds to update
      */
     onBodyUpdate(body) {
         // update the entity bounds to include the body bounds
@@ -203,8 +204,8 @@ class Entity extends Renderable {
      * @function
      * @protected
      * @param {me.CanvasRenderer|me.WebGLRenderer} renderer a renderer object
-     * @param {me.Rect} region to draw
-     **/
+     * @param {me.Rect} rect region to draw
+     */
     draw(renderer, rect) {
         var renderable = this.renderable;
         if (renderable instanceof Renderable) {

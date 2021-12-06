@@ -7,7 +7,7 @@
 /**
  * constant to convert from degrees to radians
  * @public
- * @type {Number}
+ * @type {number}
  * @name DEG_TO_RAD
  * @memberOf me.Math
  */
@@ -16,7 +16,7 @@ export const DEG_TO_RAD = Math.PI / 180.0;
 /**
  * constant to convert from radians to degrees
  * @public
- * @type {Number}
+ * @type {number}
  * @name RAD_TO_DEG
  * @memberOf me.Math
  */
@@ -25,7 +25,7 @@ export const RAD_TO_DEG = 180.0 / Math.PI;
 /**
  * constant equals to 2 times pi
  * @public
- * @type {Number}
+ * @type {number}
  * @name TAU
  * @memberOf me.Math
  */
@@ -34,7 +34,7 @@ export const TAU = Math.PI * 2;
 /**
  * constant equals to half pi
  * @public
- * @type {Number}
+ * @type {number}
  * @name ETA
  * @memberOf me.Math
  */
@@ -43,7 +43,7 @@ export const ETA = Math.PI * 0.5;
 /**
  * the difference between 1 and the smallest floating point number greater than 1
  * @public
- * @type {Number}
+ * @type {number}
  * @name EPSILON
  * @memberOf me.Math
  */
@@ -55,7 +55,7 @@ export const EPSILON = 0.000001;
  * @function
  * @memberOf me.Math
  * @name isPowerOfTwo
- * @param {Number} val
+ * @param {number} val
  * @returns {boolean}
  */
 export function isPowerOfTwo(val) {
@@ -68,7 +68,7 @@ export function isPowerOfTwo(val) {
  * @function
  * @memberOf me.Math
  * @name nextPowerOfTwo
- * @param {Number} val
+ * @param {number} val
  * @returns {boolean}
  */
 export function nextPowerOfTwo(val) {

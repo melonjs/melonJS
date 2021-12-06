@@ -1,7 +1,7 @@
 /**
-* Tween.js - Licensed under the MIT license
-* https://github.com/tweenjs/tween.js
-*/
+ * Tween.js - Licensed under the MIT license
+ * https://github.com/tweenjs/tween.js
+ */
 
 /**
  * Interpolation Function :<br>
@@ -12,7 +12,7 @@
  * </p>
  * @public
  * @constant
- * @type enum
+ * @enum {Function}
  * @name Interpolation
  * @memberOf me.Tween
  */

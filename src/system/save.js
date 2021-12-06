@@ -36,7 +36,10 @@ import * as event from "./../system/event.js";
  // Variable to hold the object data
  var data = {};
 
- // a function to check if the given key is a reserved word
+ /**
+  * a function to check if the given key is a reserved word
+  * @ignore
+  */
  function isReserved(key) {
      return (key === "add" || key === "remove");
  }
@@ -64,7 +67,7 @@ var save = {
      * @name add
      * @memberOf me.save
      * @function
-     * @param {Object} props key and corresponding values
+     * @param {object} props key and corresponding values
      * @example
      * // Initialize "score" and "lives" with default values
      * me.save.add({ score : 0, lives : 3 });
@@ -118,7 +121,7 @@ var save = {
      * @name remove
      * @memberOf me.save
      * @function
-     * @param {String} key key to be removed
+     * @param {string} key key to be removed
      * @example
      * // Remove the "score" key from localStorage
      * me.save.remove("score");

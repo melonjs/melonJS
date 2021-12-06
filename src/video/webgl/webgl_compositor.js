@@ -79,7 +79,7 @@ class WebGLCompositor {
          * The number of quads held in the batch
          * @name length
          * @memberOf me.WebGLCompositor
-         * @type Number
+         * @type {number}
          * @readonly
          */
         //this.length = 0;
@@ -196,11 +196,11 @@ class WebGLCompositor {
      * @name addAttribute
      * @memberOf me.WebGLCompositor
      * @function
-     * @param {String} name name of the attribute in the vertex shader
-     * @param {Number} size number of components per vertex attribute. Must be 1, 2, 3, or 4.
+     * @param {string} name name of the attribute in the vertex shader
+     * @param {number} size number of components per vertex attribute. Must be 1, 2, 3, or 4.
      * @param {GLenum} type data type of each component in the array
-     * @param {Boolean} normalized whether integer data values should be normalized into a certain range when being cast to a float
-     * @param {Number} offset offset in bytes of the first component in the vertex attribute array
+     * @param {boolean} normalized whether integer data values should be normalized into a certain range when being cast to a float
+     * @param {number} offset offset in bytes of the first component in the vertex attribute array
      */
     addAttribute(name, size, type, normalized, offset) {
         this.attributes.push({
@@ -217,10 +217,10 @@ class WebGLCompositor {
      * @name setViewport
      * @memberOf me.WebGLCompositor
      * @function
-     * @param {Number} x x position of viewport
-     * @param {Number} y y position of viewport
-     * @param {Number} width width of viewport
-     * @param {Number} height height of viewport
+     * @param {number} x x position of viewport
+     * @param {number} y y position of viewport
+     * @param {number} w width of viewport
+     * @param {number} h height of viewport
      */
     setViewport(x, y, w, h) {
         this.gl.viewport(x, y, w, h);
@@ -231,16 +231,15 @@ class WebGLCompositor {
      * @name createTexture2D
      * @memberOf me.WebGLCompositor
      * @function
-     * @param {Number} unit Destination texture unit
-     * @param {Image|Canvas|ImageData|UInt8Array[]|Float32Array[]} image Source image
-     * @param {Number} filter gl.LINEAR or gl.NEAREST
-     * @param {String} [repeat="no-repeat"] Image repeat behavior (see {@link me.ImageLayer#repeat})
-     * @param {Number} [w] Source image width (Only use with UInt8Array[] or Float32Array[] source image)
-     * @param {Number} [h] Source image height (Only use with UInt8Array[] or Float32Array[] source image)
-     * @param {Number} [b] Source image border (Only use with UInt8Array[] or Float32Array[] source image)
-     * @param {Number} [b] Source image border (Only use with UInt8Array[] or Float32Array[] source image)
-     * @param {Boolean} [premultipliedAlpha=true] Multiplies the alpha channel into the other color channels
-     * @param {Boolean} [mipmap=true] Whether mipmap levels should be generated for this texture
+     * @param {number} unit Destination texture unit
+     * @param {Image|HTMLCanvasElement|ImageData|Uint8Array[]|Float32Array[]} image Source image
+     * @param {number} filter gl.LINEAR or gl.NEAREST
+     * @param {string} [repeat="no-repeat"] Image repeat behavior (see {@link me.ImageLayer#repeat})
+     * @param {number} [w] Source image width (Only use with UInt8Array[] or Float32Array[] source image)
+     * @param {number} [h] Source image height (Only use with UInt8Array[] or Float32Array[] source image)
+     * @param {number} [b] Source image border (Only use with UInt8Array[] or Float32Array[] source image)
+     * @param {boolean} [premultipliedAlpha=true] Multiplies the alpha channel into the other color channels
+     * @param {boolean} [mipmap=true] Whether mipmap levels should be generated for this texture
      * @returns {WebGLTexture} a WebGL texture
      */
     createTexture2D(unit, image, filter, repeat = "no-repeat", w, h, b, premultipliedAlpha = true, mipmap = true) {
@@ -277,8 +276,8 @@ class WebGLCompositor {
      * @name bindTexture2D
      * @memberOf me.WebGLCompositor
      * @function
-     * @param {WebGLTexture} a WebGL texture
-     * @param {Number} unit Texture unit to which the given texture is bound
+     * @param {WebGLTexture} texture a WebGL texture
+     * @param {number} unit Texture unit to which the given texture is bound
      */
     bindTexture2D(texture, unit) {
         var gl = this.gl;
@@ -305,7 +304,7 @@ class WebGLCompositor {
      * @name unbindTexture2D
      * @memberOf me.WebGLCompositor
      * @function
-     * @param {WebGLTexture} a WebGL texture
+     * @param {WebGLTexture} texture a WebGL texture
      */
     unbindTexture2D(texture) {
         var unit = this.renderer.cache.getUnit(texture);
@@ -374,10 +373,10 @@ class WebGLCompositor {
      * @memberOf me.WebGLCompositor
      * @function
      * @param {me.Renderer.Texture} texture Source texture
-     * @param {Number} x Destination x-coordinate
-     * @param {Number} y Destination y-coordinate
-     * @param {Number} w Destination width
-     * @param {Number} h Destination height
+     * @param {number} x Destination x-coordinate
+     * @param {number} y Destination y-coordinate
+     * @param {number} w Destination width
+     * @param {number} h Destination height
      * @param {number} u0 Texture UV (u0) value.
      * @param {number} v0 Texture UV (v0) value.
      * @param {number} u1 Texture UV (u1) value.
@@ -425,7 +424,7 @@ class WebGLCompositor {
 
     /**
      * Flush batched texture operations to the GPU
-     * @param
+     * @param {number} [mode=gl.TRIANGLES] the GL drawing mode
      * @memberOf me.WebGLCompositor
      * @function
      */
@@ -463,9 +462,9 @@ class WebGLCompositor {
      * @name drawVertices
      * @memberOf me.WebGLCompositor
      * @function
-     * @param {GLENUM} mode primitive type to render (gl.POINTS, gl.LINE_STRIP, gl.LINE_LOOP, gl.LINES, gl.TRIANGLE_STRIP, gl.TRIANGLE_FAN, gl.TRIANGLES)
+     * @param {GLenum} mode primitive type to render (gl.POINTS, gl.LINE_STRIP, gl.LINE_LOOP, gl.LINES, gl.TRIANGLE_STRIP, gl.TRIANGLE_FAN, gl.TRIANGLES)
      * @param {me.Vector2d[]} verts vertices
-     * @param {Number} [vertexCount=verts.length] amount of points defined in the points array
+     * @param {number} [vertexCount=verts.length] amount of points defined in the points array
      */
     drawVertices(mode, verts, vertexCount = verts.length) {
         // use the primitive shader
@@ -493,10 +492,10 @@ class WebGLCompositor {
      * @name clearColor
      * @memberOf me.WebGLCompositor
      * @function
-     * @param {Number} r - the red color value used when the color buffers are cleared
-     * @param {Number} g - the green color value used when the color buffers are cleared
-     * @param {Number} b - the blue color value used when the color buffers are cleared
-     * @param {Number} a - the alpha color value used when the color buffers are cleared
+     * @param {number} r - the red color value used when the color buffers are cleared
+     * @param {number} g - the green color value used when the color buffers are cleared
+     * @param {number} b - the blue color value used when the color buffers are cleared
+     * @param {number} a - the alpha color value used when the color buffers are cleared
      */
     clearColor(r, g, b, a) {
         this.gl.clearColor(r, g, b, a);

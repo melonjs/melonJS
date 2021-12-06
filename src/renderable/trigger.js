@@ -12,19 +12,19 @@ import { world, viewport } from "./../game.js";
  * @extends me.Renderable
  * @memberOf me
  * @constructor
- * @param {Number} x the x coordinates of the trigger area
- * @param {Number} y the y coordinates of the trigger area
- * @param {Number} [settings.width] width of the trigger area
- * @param {Number} [settings.height] height of the trigger area
+ * @param {number} x the x coordinates of the trigger area
+ * @param {number} y the y coordinates of the trigger area
+ * @param {number} [settings.width] width of the trigger area
+ * @param {number} [settings.height] height of the trigger area
  * @param {me.Rect[]|me.Polygon[]|me.Line[]|me.Ellipse[]} [settings.shapes] collision shape(s) that will trigger the event
- * @param {String} [settings.duration] Fade duration (in ms)
- * @param {String|me.Color} [settings.color] Fade color
- * @param {String} [settings.event="level"] the type of event to trigger (only "level" supported for now)
- * @param {String} [settings.to] level to load if level trigger
- * @param {String|me.Container} [settings.container] Target container. See {@link me.level.load}
+ * @param {string} [settings.duration] Fade duration (in ms)
+ * @param {string|me.Color} [settings.color] Fade color
+ * @param {string} [settings.event="level"] the type of event to trigger (only "level" supported for now)
+ * @param {string} [settings.to] level to load if level trigger
+ * @param {string|me.Container} [settings.container] Target container. See {@link me.level.load}
  * @param {Function} [settings.onLoaded] Level loaded callback. See {@link me.level.load}
- * @param {Boolean} [settings.flatten] Flatten all objects into the target container. See {@link me.level.load}
- * @param {Boolean} [settings.setViewportBounds] Resize the viewport to match the level. See {@link me.level.load}
+ * @param {boolean} [settings.flatten] Flatten all objects into the target container. See {@link me.level.load}
+ * @param {boolean} [settings.setViewportBounds] Resize the viewport to match the level. See {@link me.level.load}
  * @example
  * me.game.world.addChild(new me.Trigger(
  *     x, y, {
@@ -102,11 +102,10 @@ class Trigger extends Renderable {
     }
 
     /**
-     * go to the specified level
-     * @name goTo
-     * @memberOf me.LevelEntity
+     * trigger this event
+     * @name triggerEvent
+     * @memberOf me.Trigger
      * @function
-     * @param {String} [level=this.nextlevel] name of the level to load
      * @protected
      */
     triggerEvent() {

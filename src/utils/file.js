@@ -16,8 +16,8 @@ const REMOVE_EXT = /\.[^\.]*$/;
  * @function
  * @memberOf me.utils.file
  * @name getBasename
- * @param  {String} path path containing the filename
- * @returns {String} the base name without path information.
+ * @param  {string} path path containing the filename
+ * @returns {string} the base name without path information.
  */
 export function getBasename(path) {
     return path.replace(REMOVE_PATH, "").replace(REMOVE_EXT, "");
@@ -29,8 +29,8 @@ export function getBasename(path) {
  * @function
  * @memberOf me.utils.file
  * @name getExtension
- * @param  {String} path path containing the filename
- * @returns {String} filename extension.
+ * @param  {string} path path containing the filename
+ * @returns {string} filename extension.
  */
 export function getExtension(path) {
     return path.substring(path.lastIndexOf(".") + 1, path.length);

@@ -10,10 +10,10 @@ import Bounds from "./../../../physics/Bounds.js";
  * @class TMXRenderer
  * @memberOf me
  * @constructor
- * @param {Number} cols width of the tilemap in tiles
- * @param {Number} rows height of the tilemap in tiles
- * @param {Number} tilewidth width of each tile in pixels
- * @param {Number} tileheight height of each tile in pixels
+ * @param {number} cols width of the tilemap in tiles
+ * @param {number} rows height of the tilemap in tiles
+ * @param {number} tilewidth width of each tile in pixels
+ * @param {number} tileheight height of each tile in pixels
  */
 class TMXRenderer {
 
@@ -69,9 +69,9 @@ class TMXRenderer {
      * @name me.TMXRenderer#pixelToTileCoords
      * @public
      * @function
-     * @param {Number} x X coordinate
-     * @param {Number} y Y coordinate
-     * @param {me.Vector2d} [vector] an optional vector object where to put the return values
+     * @param {number} x X coordinate
+     * @param {number} y Y coordinate
+     * @param {me.Vector2d} [v] an optional vector object where to put the return values
      * @returns {me.Vector2d}
      */
     pixelToTileCoords(x, y, v) {
@@ -83,12 +83,12 @@ class TMXRenderer {
      * @name me.TMXRenderer#tileToPixelCoords
      * @public
      * @function
-     * @param {Number} col tile horizontal position
-     * @param {Number} row tile vertical position
-     * @param {me.Vector2d} [vector] an optional vector object where to put the return values
+     * @param {number} col tile horizontal position
+     * @param {number} row tile vertical position
+     * @param {me.Vector2d} [v] an optional vector object where to put the return values
      * @returns {me.Vector2d}
      */
-    tileToPixelCoords(x, y, v) {
+    tileToPixelCoords(col, row, v) {
         return v;
     }
 
@@ -98,8 +98,8 @@ class TMXRenderer {
      * @public
      * @function
      * @param {me.CanvasRenderer|me.WebGLRenderer} renderer a renderer object
-     * @param {Number} x X coordinate where to draw the tile
-     * @param {Number} y Y coordinate where to draw the tile
+     * @param {number} x X coordinate where to draw the tile
+     * @param {number} y Y coordinate where to draw the tile
      * @param {me.Tile} tile the tile object to draw
      */
     drawTile(renderer, x, y, tile) {

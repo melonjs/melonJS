@@ -2,7 +2,7 @@
  * @classdesc
  * a Vertex Buffer object
  * @class VertexArrayBuffer
- * @private
+ * @ignore
  */
 
 class VertexArrayBuffer {
@@ -29,6 +29,7 @@ class VertexArrayBuffer {
 
     /**
      * clear the vertex array buffer
+     * @ignore
      */
     clear() {
         this.vertexCount = 0;
@@ -37,6 +38,7 @@ class VertexArrayBuffer {
 
     /**
      * return true if full
+     * @ignore
      */
     isFull(vertex = 0) {
          return (this.vertexCount + vertex >= this.maxVertex);
@@ -44,6 +46,7 @@ class VertexArrayBuffer {
 
     /**
      * resize the vertex buffer, retaining its original contents
+     * @ignore
      */
     resize() {
         // double the vertex size
@@ -64,6 +67,7 @@ class VertexArrayBuffer {
 
     /**
      * push a new vertex to the buffer
+     * @ignore
      */
     push(x, y, u, v, tint) {
         var offset = this.vertexCount * this.vertexSize;
@@ -91,6 +95,7 @@ class VertexArrayBuffer {
 
     /**
      * return a reference to the data in Float32 format
+     * @ignore
      */
     toFloat32(begin, end) {
         if (typeof end !== "undefined") {
@@ -102,6 +107,7 @@ class VertexArrayBuffer {
 
     /**
      * return a reference to the data in Uint32 format
+     * @ignore
      */
     toUint32(begin, end) {
         if (typeof end !== "undefined") {
@@ -113,6 +119,7 @@ class VertexArrayBuffer {
 
     /**
      * return the size of the vertex in vertex
+     * @ignore
      */
     length() {
         return this.vertexCount;
@@ -120,6 +127,7 @@ class VertexArrayBuffer {
 
     /**
      * return true if empty
+     * @ignore
      */
     isEmpty() {
         return this.vertexCount === 0;

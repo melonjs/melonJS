@@ -5,9 +5,9 @@ import { Easing } from "./easing.js";
 import { Interpolation } from "./interpolation.js";
 
 /**
-* Tween.js - Licensed under the MIT license
-* https://github.com/tweenjs/tween.js
-*/
+ * Tween.js - Licensed under the MIT license
+ * https://github.com/tweenjs/tween.js
+ */
 
 /**
  * @classdesc
@@ -25,7 +25,7 @@ import { Interpolation } from "./interpolation.js";
  * @class Tween
  * @memberOf me
  * @constructor
- * @param {Object} object object on which to apply the tween
+ * @param {object} object object on which to apply the tween
  * @example
  * // add a tween to change the object pos.x and pos.y variable to 200 in 3 seconds
  * tween = new me.Tween(myObject.pos).to({
@@ -124,15 +124,16 @@ class Tween {
      * @memberOf me.Tween
      * @public
      * @function
-     * @param {Object} properties hash of properties
-     * @param {Object|Number} [options] object of tween properties, or a duration if a numeric value is passed
-     * @param {Number} [options.duration] tween duration
+     * @param {object} properties hash of properties
+     * @param {object|number} [options] object of tween properties, or a duration if a numeric value is passed
+     * @param {number} [options.duration] tween duration
      * @param {me.Tween.Easing} [options.easing] easing function
-     * @param {Number} [options.delay] delay amount expressed in milliseconds
-     * @param {Boolean} [options.yoyo] allows the tween to bounce back to their original value when finished. To be used together with repeat to create endless loops.
-     * @param {Number} [options.repeat] amount of times the tween should be repeated
+     * @param {number} [options.delay] delay amount expressed in milliseconds
+     * @param {boolean} [options.yoyo] allows the tween to bounce back to their original value when finished. To be used together with repeat to create endless loops.
+     * @param {number} [options.repeat] amount of times the tween should be repeated
      * @param {me.Tween.Interpolation} [options.interpolation] interpolation function
-     * @param {Boolean} [options.autoStart] allow this tween to start automatically. Otherwise call me.Tween.start().
+     * @param {boolean} [options.autoStart] allow this tween to start automatically. Otherwise call me.Tween.start().
+     * @returns {me.Tween} this instance for object chaining
      */
     to( properties, options ) {
 
@@ -157,7 +158,6 @@ class Tween {
         }
 
         return this;
-
     }
 
     /**
@@ -166,6 +166,8 @@ class Tween {
      * @memberOf me.Tween
      * @public
      * @function
+     * @param {number} [time] the current time when the tween was started
+     * @returns {me.Tween} this instance for object chaining
      */
     start( time = timer.getTime() ) {
 
@@ -203,7 +205,6 @@ class Tween {
         }
 
         return this;
-
     }
 
     /**
@@ -212,6 +213,7 @@ class Tween {
      * @memberOf me.Tween
      * @public
      * @function
+     * @returns {me.Tween} this instance for object chaining
      */
     stop() {
         // remove the tween from the world container
@@ -225,7 +227,8 @@ class Tween {
      * @memberOf me.Tween
      * @public
      * @function
-     * @param {Number} amount delay amount expressed in milliseconds
+     * @param {number} amount delay amount expressed in milliseconds
+     * @returns {me.Tween} this instance for object chaining
      */
     delay( amount ) {
 
@@ -240,7 +243,8 @@ class Tween {
      * @memberOf me.Tween
      * @public
      * @function
-     * @param {Number} times amount of times the tween should be repeated
+     * @param {number} times amount of times the tween should be repeated
+     * @returns {me.Tween} this instance for object chaining
      */
     repeat( times ) {
 
@@ -257,7 +261,8 @@ class Tween {
      * @public
      * @function
      * @see me.Tween#repeat
-     * @param {Boolean} yoyo
+     * @param {boolean} yoyo
+     * @returns {me.Tween} this instance for object chaining
      */
     yoyo( yoyo ) {
 
@@ -272,7 +277,8 @@ class Tween {
      * @memberOf me.Tween
      * @public
      * @function
-     * @param {me.Tween.Easing} fn easing function
+     * @param {me.Tween.Easing} easing easing function
+     * @returns {me.Tween} this instance for object chaining
      */
     easing( easing ) {
         if (typeof easing !== "function") {
@@ -280,7 +286,6 @@ class Tween {
         }
         this._easingFunction = easing;
         return this;
-
     }
 
     /**
@@ -289,7 +294,8 @@ class Tween {
      * @memberOf me.Tween
      * @public
      * @function
-     * @param {me.Tween.Interpolation} fn interpolation function
+     * @param {me.Tween.Interpolation} interpolation interpolation function
+     * @returns {me.Tween} this instance for object chaining
      */
     interpolation( interpolation ) {
         this._interpolationFunction = interpolation;
@@ -302,9 +308,10 @@ class Tween {
      * @memberOf me.Tween
      * @public
      * @function
-     * @param {me.Tween} chainedTween Tween to be chained
+     * @param {...me.Tween} chainedTween Tween(s) to be chained
+     * @returns {me.Tween} this instance for object chaining
      */
-    chain() {
+    chain( chainedTween ) {
         this._chainedTweens = arguments;
         return this;
     }
@@ -316,9 +323,10 @@ class Tween {
      * @public
      * @function
      * @param {Function} onStartCallback callback
+     * @returns {me.Tween} this instance for object chaining
      */
-    onStart( callback ) {
-        this._onStartCallback = callback;
+    onStart( onStartCallback ) {
+        this._onStartCallback = onStartCallback;
         return this;
     }
 
@@ -329,9 +337,10 @@ class Tween {
      * @public
      * @function
      * @param {Function} onUpdateCallback callback
+     * @returns {me.Tween} this instance for object chaining
      */
-    onUpdate( callback ) {
-        this._onUpdateCallback = callback;
+    onUpdate( onUpdateCallback ) {
+        this._onUpdateCallback = onUpdateCallback;
         return this;
     }
 
@@ -342,9 +351,10 @@ class Tween {
      * @public
      * @function
      * @param {Function} onCompleteCallback callback
+     * @returns {me.Tween} this instance for object chaining
      */
-    onComplete( callback ) {
-        this._onCompleteCallback = callback;
+    onComplete( onCompleteCallback ) {
+        this._onCompleteCallback = onCompleteCallback;
         return this;
     };
 

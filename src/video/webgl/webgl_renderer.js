@@ -18,19 +18,19 @@ import { isPowerOfTwo, nextPowerOfTwo, TAU } from "./../../math/math.js";
  * @extends me.Renderer
  * @memberOf me
  * @constructor
- * @param {Object} options The renderer parameters
- * @param {Number} options.width The width of the canvas without scaling
- * @param {Number} options.height The height of the canvas without scaling
+ * @param {object} options The renderer parameters
+ * @param {number} options.width The width of the canvas without scaling
+ * @param {number} options.height The height of the canvas without scaling
  * @param {HTMLCanvasElement} [options.canvas] The html canvas to draw to on screen
- * @param {Boolean} [options.doubleBuffering=false] Whether to enable double buffering
- * @param {Boolean} [options.antiAlias=false] Whether to enable anti-aliasing
- * @param {Boolean} [options.failIfMajorPerformanceCaveat=true] If true, the renderer will switch to CANVAS mode if the performances of a WebGL context would be dramatically lower than that of a native application making equivalent OpenGL calls.
- * @param {Boolean} [options.transparent=false] Whether to enable transparency on the canvas (performance hit when enabled)
- * @param {Boolean} [options.subPixel=false] Whether to enable subpixel renderering (performance hit when enabled)
- * @param {Boolean} [options.preferWebGL1=false] if true the renderer will only use WebGL 1
- * @param {String} [options.powerPreference="default"] a hint to the user agent indicating what configuration of GPU is suitable for the WebGL context ("default", "high-performance", "low-power"). To be noted that Safari and Chrome (since version 80) both default to "low-power" to save battery life and improve the user experience on these dual-GPU machines.
- * @param {Number} [options.zoomX=width] The actual width of the canvas with scaling applied
- * @param {Number} [options.zoomY=height] The actual height of the canvas with scaling applied
+ * @param {boolean} [options.doubleBuffering=false] Whether to enable double buffering
+ * @param {boolean} [options.antiAlias=false] Whether to enable anti-aliasing
+ * @param {boolean} [options.failIfMajorPerformanceCaveat=true] If true, the renderer will switch to CANVAS mode if the performances of a WebGL context would be dramatically lower than that of a native application making equivalent OpenGL calls.
+ * @param {boolean} [options.transparent=false] Whether to enable transparency on the canvas (performance hit when enabled)
+ * @param {boolean} [options.subPixel=false] Whether to enable subpixel renderering (performance hit when enabled)
+ * @param {boolean} [options.preferWebGL1=false] if true the renderer will only use WebGL 1
+ * @param {string} [options.powerPreference="default"] a hint to the user agent indicating what configuration of GPU is suitable for the WebGL context ("default", "high-performance", "low-power"). To be noted that Safari and Chrome (since version 80) both default to "low-power" to save battery life and improve the user experience on these dual-GPU machines.
+ * @param {number} [options.zoomX=width] The actual width of the canvas with scaling applied
+ * @param {number} [options.zoomY=height] The actual height of the canvas with scaling applied
  * @param {me.WebGLCompositor} [options.compositor] A class that implements the compositor API
  */
 class WebGLRenderer extends Renderer {
@@ -44,7 +44,7 @@ class WebGLRenderer extends Renderer {
          * The WebGL version used by this renderer (1 or 2)
          * @name WebGLVersion
          * @memberOf me.WebGLRenderer
-         * @type {Number}
+         * @type {number}
          * @default 1
          * @readonly
          */
@@ -54,7 +54,7 @@ class WebGLRenderer extends Renderer {
          * The vendor string of the underlying graphics driver.
          * @name GPUVendor
          * @memberOf me.WebGLRenderer
-         * @type {String}
+         * @type {string}
          * @default null
          * @readonly
          */
@@ -64,7 +64,7 @@ class WebGLRenderer extends Renderer {
          * The renderer string of the underlying graphics driver.
          * @name GPURenderer
          * @memberOf me.WebGLRenderer
-         * @type {String}
+         * @type {string}
          * @default null
          * @readonly
          */
@@ -82,7 +82,7 @@ class WebGLRenderer extends Renderer {
          * Maximum number of texture unit supported under the current context
          * @name maxTextures
          * @memberOf me.WebGLRenderer
-         * @type {Number}
+         * @type {number}
          * @readonly
          */
         this.maxTextures = this.gl.getParameter(this.gl.MAX_TEXTURE_IMAGE_UNITS);
@@ -115,7 +115,7 @@ class WebGLRenderer extends Renderer {
         /**
          * The current transformation matrix used for transformations on the overall scene
          * @name currentTransform
-         * @type me.Matrix2d
+         * @type {me.Matrix2d}
          * @memberOf me.WebGLRenderer#
          */
         this.currentTransform = new Matrix2d();
@@ -123,7 +123,7 @@ class WebGLRenderer extends Renderer {
         /**
          * The current compositor used by the renderer
          * @name currentCompositor
-         * @type me.WebGLCompositor
+         * @type {me.WebGLCompositor}
          * @memberOf me.WebGLRenderer#
          */
         this.currentCompositor = null;
@@ -259,7 +259,7 @@ class WebGLRenderer extends Renderer {
      * @memberOf me.WebGLRenderer.prototype
      * @function
      * @param {Image} image Source image
-     * @param {String} repeat Define how the pattern should be repeated
+     * @param {string} repeat Define how the pattern should be repeated
      * @returns {me.Renderer.Texture}
      * @see me.ImageLayer#repeat
      * @example
@@ -301,8 +301,8 @@ class WebGLRenderer extends Renderer {
      * @name clearColor
      * @memberOf me.WebGLRenderer.prototype
      * @function
-     * @param {me.Color|String} color CSS color.
-     * @param {Boolean} [opaque=false] Allow transparency [default] or clear the surface completely [true]
+     * @param {me.Color|string} color CSS color.
+     * @param {boolean} [opaque=false] Allow transparency [default] or clear the surface completely [true]
      */
     clearColor(color, opaque) {
         var glArray;
@@ -331,10 +331,10 @@ class WebGLRenderer extends Renderer {
      * @name clearRect
      * @memberOf me.WebGLRenderer.prototype
      * @function
-     * @param {Number} x x axis of the coordinate for the rectangle starting point.
-     * @param {Number} y y axis of the coordinate for the rectangle starting point.
-     * @param {Number} width The rectangle's width.
-     * @param {Number} height The rectangle's height.
+     * @param {number} x x axis of the coordinate for the rectangle starting point.
+     * @param {number} y y axis of the coordinate for the rectangle starting point.
+     * @param {number} width The rectangle's width.
+     * @param {number} height The rectangle's height.
      */
     clearRect(x, y, width, height) {
         var color = this.currentColor.clone();
@@ -383,14 +383,14 @@ class WebGLRenderer extends Renderer {
      * @memberOf me.WebGLRenderer.prototype
      * @function
      * @param {Image} image An element to draw into the context. The specification permits any canvas image source (CanvasImageSource), specifically, a CSSImageValue, an HTMLImageElement, an SVGImageElement, an HTMLVideoElement, an HTMLCanvasElement, an ImageBitmap, or an OffscreenCanvas.
-     * @param {Number} sx The X coordinate of the top left corner of the sub-rectangle of the source image to draw into the destination context.
-     * @param {Number} sy The Y coordinate of the top left corner of the sub-rectangle of the source image to draw into the destination context.
-     * @param {Number} sw The width of the sub-rectangle of the source image to draw into the destination context. If not specified, the entire rectangle from the coordinates specified by sx and sy to the bottom-right corner of the image is used.
-     * @param {Number} sh The height of the sub-rectangle of the source image to draw into the destination context.
-     * @param {Number} dx The X coordinate in the destination canvas at which to place the top-left corner of the source image.
-     * @param {Number} dy The Y coordinate in the destination canvas at which to place the top-left corner of the source image.
-     * @param {Number} dw The width to draw the image in the destination canvas. This allows scaling of the drawn image. If not specified, the image is not scaled in width when drawn.
-     * @param {Number} dh The height to draw the image in the destination canvas. This allows scaling of the drawn image. If not specified, the image is not scaled in height when drawn.
+     * @param {number} sx The X coordinate of the top left corner of the sub-rectangle of the source image to draw into the destination context.
+     * @param {number} sy The Y coordinate of the top left corner of the sub-rectangle of the source image to draw into the destination context.
+     * @param {number} sw The width of the sub-rectangle of the source image to draw into the destination context. If not specified, the entire rectangle from the coordinates specified by sx and sy to the bottom-right corner of the image is used.
+     * @param {number} sh The height of the sub-rectangle of the source image to draw into the destination context.
+     * @param {number} dx The X coordinate in the destination canvas at which to place the top-left corner of the source image.
+     * @param {number} dy The Y coordinate in the destination canvas at which to place the top-left corner of the source image.
+     * @param {number} dw The width to draw the image in the destination canvas. This allows scaling of the drawn image. If not specified, the image is not scaled in width when drawn.
+     * @param {number} dh The height to draw the image in the destination canvas. This allows scaling of the drawn image. If not specified, the image is not scaled in height when drawn.
      * @example
      * // Position the image on the canvas:
      * renderer.drawImage(image, dx, dy);
@@ -436,10 +436,10 @@ class WebGLRenderer extends Renderer {
      * @memberOf me.WebGLRenderer.prototype
      * @function
      * @param {me.Renderer.Texture} pattern Pattern object
-     * @param {Number} x
-     * @param {Number} y
-     * @param {Number} width
-     * @param {Number} height
+     * @param {number} x
+     * @param {number} y
+     * @param {number} width
+     * @param {number} height
      * @see me.WebGLRenderer#createPattern
      */
     drawPattern(pattern, x, y, width, height) {
@@ -464,8 +464,8 @@ class WebGLRenderer extends Renderer {
      * @name getContextGL
      * @memberOf me.WebGLRenderer.prototype
      * @function
-     * @param {Canvas} canvas
-     * @param {Boolean} [transparent=true] use false to disable transparency
+     * @param {HTMLCanvasElement} canvas
+     * @param {boolean} [transparent=true] use false to disable transparency
      * @returns {WebGLRenderingContext}
      */
     getContextGL(canvas, transparent) {
@@ -533,7 +533,7 @@ class WebGLRenderer extends Renderer {
      * @name setBlendMode
      * @memberOf me.WebGLRenderer.prototype
      * @function
-     * @param {String} [mode="normal"] blend mode : "normal", "multiply"
+     * @param {string} [mode="normal"] blend mode : "normal", "multiply"
      * @param {WebGLRenderingContext} [gl]
      */
     setBlendMode(mode, gl) {
@@ -623,7 +623,7 @@ class WebGLRenderer extends Renderer {
      * @name rotate
      * @memberOf me.WebGLRenderer.prototype
      * @function
-     * @param {Number} angle in radians
+     * @param {number} angle in radians
      */
     rotate(angle) {
         this.currentTransform.rotate(angle);
@@ -634,8 +634,8 @@ class WebGLRenderer extends Renderer {
      * @name scale
      * @memberOf me.WebGLRenderer.prototype
      * @function
-     * @param {Number} x
-     * @param {Number} y
+     * @param {number} x
+     * @param {number} y
      */
     scale(x, y) {
         this.currentTransform.scale(x, y);
@@ -655,10 +655,10 @@ class WebGLRenderer extends Renderer {
      * @name setGlobalAlpha
      * @memberOf me.WebGLRenderer.prototype
      * @function
-     * @param {Number} alpha 0.0 to 1.0 values accepted.
+     * @param {number} alpha 0.0 to 1.0 values accepted.
      */
-    setGlobalAlpha(a) {
-        this.currentColor.alpha = a;
+    setGlobalAlpha(alpha) {
+        this.currentColor.alpha = alpha;
     }
 
     /**
@@ -667,7 +667,7 @@ class WebGLRenderer extends Renderer {
      * @name setColor
      * @memberOf me.WebGLRenderer.prototype
      * @function
-     * @param {me.Color|String} color css color string.
+     * @param {me.Color|string} color css color string.
      */
     setColor(color) {
         var alpha = this.currentColor.alpha;
@@ -680,7 +680,7 @@ class WebGLRenderer extends Renderer {
      * @name setLineWidth
      * @memberOf me.WebGLRenderer.prototype
      * @function
-     * @param {Number} width Line width
+     * @param {number} width Line width
      */
     setLineWidth(width) {
         this.getScreenContext().lineWidth(width);
@@ -691,13 +691,13 @@ class WebGLRenderer extends Renderer {
      * @name strokeArc
      * @memberOf me.WebGLRenderer.prototype
      * @function
-     * @param {Number} x arc center point x-axis
-     * @param {Number} y arc center point y-axis
-     * @param {Number} radius
-     * @param {Number} start start angle in radians
-     * @param {Number} end end angle in radians
-     * @param {Boolean} [antiClockwise=false] draw arc anti-clockwise
-     * @param {Boolean} [fill=false]
+     * @param {number} x arc center point x-axis
+     * @param {number} y arc center point y-axis
+     * @param {number} radius
+     * @param {number} start start angle in radians
+     * @param {number} end end angle in radians
+     * @param {boolean} [antiClockwise=false] draw arc anti-clockwise
+     * @param {boolean} [fill=false]
      */
     strokeArc(x, y, radius, start, end, antiClockwise = false, fill) {
         if (fill === true ) {
@@ -735,12 +735,12 @@ class WebGLRenderer extends Renderer {
      * @name fillArc
      * @memberOf me.WebGLRenderer.prototype
      * @function
-     * @param {Number} x arc center point x-axis
-     * @param {Number} y arc center point y-axis
-     * @param {Number} radius
-     * @param {Number} start start angle in radians
-     * @param {Number} end end angle in radians
-     * @param {Boolean} [antiClockwise=false] draw arc anti-clockwise
+     * @param {number} x arc center point x-axis
+     * @param {number} y arc center point y-axis
+     * @param {number} radius
+     * @param {number} start start angle in radians
+     * @param {number} end end angle in radians
+     * @param {boolean} [antiClockwise=false] draw arc anti-clockwise
      */
     fillArc(x, y, radius, start, end /*, antiClockwise = false*/) {
         // XXX to be optimzed using a specific shader
@@ -778,11 +778,11 @@ class WebGLRenderer extends Renderer {
      * @name strokeEllipse
      * @memberOf me.WebGLRenderer.prototype
      * @function
-     * @param {Number} x ellipse center point x-axis
-     * @param {Number} y ellipse center point y-axis
-     * @param {Number} w horizontal radius of the ellipse
-     * @param {Number} h vertical radius of the ellipse
-     * @param {Boolean} [fill=false] also fill the shape with the current color if true
+     * @param {number} x ellipse center point x-axis
+     * @param {number} y ellipse center point y-axis
+     * @param {number} w horizontal radius of the ellipse
+     * @param {number} h vertical radius of the ellipse
+     * @param {boolean} [fill=false] also fill the shape with the current color if true
      */
     strokeEllipse(x, y, w, h, fill = false) {
         if (fill === true ) {
@@ -815,10 +815,10 @@ class WebGLRenderer extends Renderer {
      * @name fillEllipse
      * @memberOf me.WebGLRenderer.prototype
      * @function
-     * @param {Number} x ellipse center point x-axis
-     * @param {Number} y ellipse center point y-axis
-     * @param {Number} w horizontal radius of the ellipse
-     * @param {Number} h vertical radius of the ellipse
+     * @param {number} x ellipse center point x-axis
+     * @param {number} y ellipse center point y-axis
+     * @param {number} w horizontal radius of the ellipse
+     * @param {number} h vertical radius of the ellipse
      */
     fillEllipse(x, y, w, h) {
         // XXX to be optimzed using a specific shader
@@ -850,10 +850,10 @@ class WebGLRenderer extends Renderer {
      * @name strokeLine
      * @memberOf me.WebGLRenderer.prototype
      * @function
-     * @param {Number} startX the start x coordinate
-     * @param {Number} startY the start y coordinate
-     * @param {Number} endX the end x coordinate
-     * @param {Number} endY the end y coordinate
+     * @param {number} startX the start x coordinate
+     * @param {number} startY the start y coordinate
+     * @param {number} endX the end x coordinate
+     * @param {number} endY the end y coordinate
      */
     strokeLine(startX, startY, endX, endY) {
         var points = this._glPoints;
@@ -870,10 +870,10 @@ class WebGLRenderer extends Renderer {
      * @name fillLine
      * @memberOf me.WebGLRenderer.prototype
      * @function
-     * @param {Number} startX the start x coordinate
-     * @param {Number} startY the start y coordinate
-     * @param {Number} endX the end x coordinate
-     * @param {Number} endY the end y coordinate
+     * @param {number} startX the start x coordinate
+     * @param {number} startY the start y coordinate
+     * @param {number} endX the end x coordinate
+     * @param {number} endY the end y coordinate
      */
     fillLine(startX, startY, endX, endY) {
         this.strokeLine(startX, startY, endX, endY);
@@ -885,7 +885,7 @@ class WebGLRenderer extends Renderer {
      * @memberOf me.WebGLRenderer.prototype
      * @function
      * @param {me.Polygon} poly the shape to draw
-     * @param {Boolean} [fill=false] also fill the shape with the current color if true
+     * @param {boolean} [fill=false] also fill the shape with the current color if true
      */
     strokePolygon(poly, fill = false) {
         if (fill === true ) {
@@ -915,7 +915,7 @@ class WebGLRenderer extends Renderer {
      * @memberOf me.WebGLRenderer.prototype
      * @function
      * @param {me.Polygon} poly the shape to draw
-    */
+     */
     fillPolygon(poly) {
         var points = poly.points;
         var glPoints = this._glPoints;
@@ -942,11 +942,11 @@ class WebGLRenderer extends Renderer {
      * @name strokeRect
      * @memberOf me.WebGLRenderer.prototype
      * @function
-     * @param {Number} x
-     * @param {Number} y
-     * @param {Number} width
-     * @param {Number} height
-     * @param {Boolean} [fill=false] also fill the shape with the current color if true
+     * @param {number} x
+     * @param {number} y
+     * @param {number} width
+     * @param {number} height
+     * @param {boolean} [fill=false] also fill the shape with the current color if true
      */
     strokeRect(x, y, width, height, fill = false) {
         if (fill === true ) {
@@ -970,10 +970,10 @@ class WebGLRenderer extends Renderer {
      * @name fillRect
      * @memberOf me.WebGLRenderer.prototype
      * @function
-     * @param {Number} x
-     * @param {Number} y
-     * @param {Number} width
-     * @param {Number} height
+     * @param {number} x
+     * @param {number} y
+     * @param {number} width
+     * @param {number} height
      */
     fillRect(x, y, width, height) {
         var glPoints = this._glPoints;
@@ -1024,8 +1024,8 @@ class WebGLRenderer extends Renderer {
      * @name translate
      * @memberOf me.WebGLRenderer.prototype
      * @function
-     * @param {Number} x
-     * @param {Number} y
+     * @param {number} x
+     * @param {number} y
      */
     translate(x, y) {
         var currentTransform = this.currentTransform;
@@ -1047,10 +1047,10 @@ class WebGLRenderer extends Renderer {
      * @name clipRect
      * @memberOf me.WebGLRenderer.prototype
      * @function
-     * @param {Number} x
-     * @param {Number} y
-     * @param {Number} width
-     * @param {Number} height
+     * @param {number} x
+     * @param {number} y
+     * @param {number} width
+     * @param {number} height
      */
     clipRect(x, y, width, height) {
         var canvas = this.backBufferCanvas;

@@ -170,7 +170,7 @@ export function repaint() {
  * update all objects of the game manager
  * @ignore
  * @function me.game.update
- * @param {Number} time current timestamp as provided by the RAF callback
+ * @param {number} time current timestamp as provided by the RAF callback
  * @param {me.Stage} stage the current stage
  */
 export function update(time, stage) {

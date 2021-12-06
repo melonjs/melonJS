@@ -23,9 +23,9 @@ var pool = {
      * Pooling must be set to true if more than one such objects will be created. <br>
      * (Note: for an object to be poolable, it must implements a `onResetEvent` method)
      * @function me.pool.register
-     * @param {String} className as defined in the Name field of the Object Properties (in Tiled)
-     * @param {Object} class corresponding Class to be instantiated
-     * @param {Boolean} [recycling=false] enables object recycling for the specified class
+     * @param {string} className as defined in the Name field of the Object Properties (in Tiled)
+     * @param {object} classObj corresponding Class to be instantiated
+     * @param {boolean} [recycling=false] enables object recycling for the specified class
      * @example
      * // implement CherryEntity
      * class CherryEntity extends Spritesheet {
@@ -51,9 +51,9 @@ var pool = {
     /**
      * Pull a new instance of the requested object (if added into the object pool)
      * @function me.pool.pull
-     * @param {String} className as used in {@link me.pool.register}
-     * @param {} [arguments...] arguments to be passed when instantiating/reinitializing the object
-     * @returns {Object} the instance of the requested object
+     * @param {string} name as used in {@link me.pool.register}
+     * @param {object} [...arguments] arguments to be passed when instantiating/reinitializing the object
+     * @returns {object} the instance of the requested object
      * @example
      * me.pool.register("bullet", BulletEntity, true);
      * me.pool.register("enemy", EnemyEntity, true);
@@ -125,9 +125,9 @@ var pool = {
      * otherwise this function won't work
      * @function me.pool.push
      * @throws will throw an error if the object cannot be recycled
-     * @param {Object} instance to be recycled
-     * @param {Boolean} [throwOnError=true] throw an exception if the object cannot be recycled
-     * @returns {Boolean} true if the object was successfully recycled in the object pool
+     * @param {object} obj instance to be recycled
+     * @param {boolean} [throwOnError=true] throw an exception if the object cannot be recycled
+     * @returns {boolean} true if the object was successfully recycled in the object pool
      */
     push(obj, throwOnError = true) {
         if (!this.poolable(obj)) {
@@ -148,8 +148,8 @@ var pool = {
     /**
      * Check if an object with the provided name is registered
      * @function me.pool.exists
-     * @param {String} name of the registered object class
-     * @returns {Boolean} true if the classname is registered
+     * @param {string} name of the registered object class
+     * @returns {boolean} true if the classname is registered
      */
     exists(name) {
         return name in objectClass;
@@ -160,8 +160,8 @@ var pool = {
      * (was properly registered with the recycling feature enable)
      * @function me.pool.poolable
      * @see me.pool.register
-     * @param {Object} object
-     * @returns {Boolean} true if the object is poolable
+     * @param {object} obj object to be checked
+     * @returns {boolean} true if the object is poolable
      * @example
      * if (!me.pool.poolable(myCherryEntity)) {
      *     // object was not properly registered
@@ -179,7 +179,7 @@ var pool = {
     /**
      * returns the amount of object instance currently in the pool
      * @function me.pool.getInstanceCount
-     * @returns {Number} amount of object instance
+     * @returns {number} amount of object instance
      */
     getInstanceCount() {
         return instance_counter;

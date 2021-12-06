@@ -41,20 +41,20 @@ var setContextStyle = function(context, font, stroke = false) {
  * @extends me.Renderable
  * @memberOf me
  * @constructor
- * @param {Number} x position of the text object
- * @param {Number} y position of the text object
- * @param {Object} settings the text configuration
- * @param {String} settings.font a CSS family font name
- * @param {Number|String} settings.size size, or size + suffix (px, em, pt)
- * @param {me.Color|String} [settings.fillStyle="#000000"] a CSS color value
- * @param {me.Color|String} [settings.strokeStyle="#000000"] a CSS color value
- * @param {Number} [settings.lineWidth=1] line width, in pixels, when drawing stroke
- * @param {String} [settings.textAlign="left"] horizontal text alignment
- * @param {String} [settings.textBaseline="top"] the text baseline
- * @param {Number} [settings.lineHeight=1.0] line spacing height
+ * @param {number} x position of the text object
+ * @param {number} y position of the text object
+ * @param {object} settings the text configuration
+ * @param {string} settings.font a CSS family font name
+ * @param {number|string} settings.size size, or size + suffix (px, em, pt)
+ * @param {me.Color|string} [settings.fillStyle="#000000"] a CSS color value
+ * @param {me.Color|string} [settings.strokeStyle="#000000"] a CSS color value
+ * @param {number} [settings.lineWidth=1] line width, in pixels, when drawing stroke
+ * @param {string} [settings.textAlign="left"] horizontal text alignment
+ * @param {string} [settings.textBaseline="top"] the text baseline
+ * @param {number} [settings.lineHeight=1.0] line spacing height
  * @param {me.Vector2d} [settings.anchorPoint={x:0.0, y:0.0}] anchor point to draw the text at
- * @param {Boolean} [settings.offScreenCanvas=false] whether to draw the font to an individual "cache" texture first
- * @param {(String|String[])} [settings.text=""] a string, or an array of strings
+ * @param {boolean} [settings.offScreenCanvas=false] whether to draw the font to an individual "cache" texture first
+ * @param {(string|string[])} [settings.text=""] a string, or an array of strings
  * @example
  * var font = new me.Text(0, 0, {font: "Arial", size: 8, fillStyle: this.color});
  */
@@ -73,7 +73,7 @@ class Text extends Renderable {
         /**
          * defines the color used to draw the font.<br>
          * @public
-         * @type me.Color
+         * @type {me.Color}
          * @default black
          * @name me.Text#fillStyle
          */
@@ -91,7 +91,7 @@ class Text extends Renderable {
         /**
          * defines the color used to draw the font stroke.<br>
          * @public
-         * @type me.Color
+         * @type {me.Color}
          * @default black
          * @name me.Text#strokeStyle
          */
@@ -109,7 +109,7 @@ class Text extends Renderable {
         /**
          * sets the current line width, in pixels, when drawing stroke
          * @public
-         * @type Number
+         * @type {number}
          * @default 1
          * @name me.Text#lineWidth
          */
@@ -119,7 +119,7 @@ class Text extends Renderable {
          * Set the default text alignment (or justification),<br>
          * possible values are "left", "right", and "center".<br>
          * @public
-         * @type String
+         * @type {string}
          * @default "left"
          * @name me.Text#textAlign
          */
@@ -129,7 +129,7 @@ class Text extends Renderable {
          * Set the text baseline (e.g. the Y-coordinate for the draw operation), <br>
          * possible values are "top", "hanging, "middle, "alphabetic, "ideographic, "bottom"<br>
          * @public
-         * @type String
+         * @type {string}
          * @default "top"
          * @name me.Text#textBaseline
          */
@@ -139,7 +139,7 @@ class Text extends Renderable {
          * Set the line spacing height (when displaying multi-line strings). <br>
          * Current font height will be multiplied with this value to set the line height.
          * @public
-         * @type Number
+         * @type {number}
          * @default 1.0
          * @name me.Text#lineHeight
          */
@@ -150,7 +150,7 @@ class Text extends Renderable {
          * Note: this will improve performances when using WebGL, but will impact
          * memory consumption as every text element will have its own canvas texture
          * @public
-         * @type Boolean
+         * @type {boolean}
          * @default false
          * @name me.Text#offScreenCanvas
          */
@@ -159,7 +159,7 @@ class Text extends Renderable {
         /**
          * the text to be displayed
          * @private
-         * @type {String[]}
+         * @type {string[]}
          * @name _text
          * @memberOf me.Text
          */
@@ -168,11 +168,11 @@ class Text extends Renderable {
         /**
          * the font size (in px)
          * @public
-         * @type {Number}
+         * @type {number}
          * @name fontSize
          * @default 10
          * @memberOf me.Text
-        */
+         */
         this.fontSize = 10;
 
         // anchor point
@@ -256,8 +256,8 @@ class Text extends Renderable {
      * @name setFont
      * @memberOf me.Text.prototype
      * @function
-     * @param {String} font a CSS font name
-     * @param {Number|String} [size=10] size in px, or size + suffix (px, em, pt)
+     * @param {string} font a CSS font name
+     * @param {number|string} [size=10] size in px, or size + suffix (px, em, pt)
      * @returns {me.Text} this object for chaining
      * @example
      * font.setFont("Arial", 20);
@@ -300,7 +300,7 @@ class Text extends Renderable {
      * @name setText
      * @memberOf me.Text.prototype
      * @function
-     * @param {Number|String|String[]} value a string, or an array of strings
+     * @param {number|string|string[]} value a string, or an array of strings
      * @returns {me.Text} this object for chaining
      */
     setText(value = "") {
@@ -322,7 +322,7 @@ class Text extends Renderable {
      * @memberOf me.Text.prototype
      * @function
      * @param {me.CanvasRenderer|me.WebGLRenderer} [renderer] reference to the active renderer
-     * @param {String} [text] the text to be measured
+     * @param {string} [text] the text to be measured
      * @param {me.Rect|me.Bounds} [ret] a object in which to store the text metrics
      * @returns {TextMetrics} a TextMetrics object with two properties: `width` and `height`, defining the output dimensions
      */
@@ -410,9 +410,10 @@ class Text extends Renderable {
      * @memberOf me.Text.prototype
      * @function
      * @param {me.CanvasRenderer|me.WebGLRenderer} renderer Reference to the destination renderer instance
-     * @param {String} [text]
-     * @param {Number} [x]
-     * @param {Number} [y]
+     * @param {string} [text]
+     * @param {number} [x]
+     * @param {number} [y]
+     * @param {boolean} [stroke=false] draw stroke the the text if true
      */
     draw(renderer, text, x, y, stroke) {
         // "hacky patch" for backward compatibilty
@@ -475,9 +476,9 @@ class Text extends Renderable {
      * @memberOf me.Text.prototype
      * @function
      * @param {me.CanvasRenderer|me.WebGLRenderer} renderer Reference to the destination renderer instance
-     * @param {String} text
-     * @param {Number} x
-     * @param {Number} y
+     * @param {string} text
+     * @param {number} x
+     * @param {number} y
      */
     drawStroke(renderer, text, x, y) {
         this.draw(renderer, text, x, y, true);

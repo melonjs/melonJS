@@ -13,7 +13,7 @@ import {random as mathRandom, weightedRandom as mathWeightedRandom} from "./../m
  * @memberOf me.utils.array
  * @name remove
  * @param {Array} arr array from which to remove an object
- * @param {Object} object to be removed
+ * @param {object} obj to be removed
  * @returns {Array} the modified Array
  * var arr = [ "foo", "bar", "baz" ];
  * // remove "foo" from the array

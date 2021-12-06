@@ -98,7 +98,7 @@ var keyUpEvent = function (e, keyCode, mouseButton) {
  /**
   * the default target element for keyboard events (usually the window element in which the game is running)
   * @public
-  * @type EventTarget
+  * @type {EventTarget}
   * @name keyBoardEventTarget
   * @memberOf me.input
   */
@@ -331,18 +331,15 @@ export function initKeyboardEvent() {
  * @memberOf me.input
  * @public
  * @function
- * @param {String} action user defined corresponding action
- * @returns {Boolean} true if pressed
+ * @param {string} action user defined corresponding action
+ * @returns {boolean} true if pressed
  * @example
- * if (me.input.isKeyPressed('left'))
- * {
+ * if (me.input.isKeyPressed('left')) {
  *    //do something
  * }
- * else if (me.input.isKeyPressed('right'))
- * {
+ * else if (me.input.isKeyPressed('right')) {
  *    //do something else...
  * }
- *
  */
 export function isKeyPressed(action) {
     if (_keyStatus[action] && !_keyLocked[action]) {
@@ -360,8 +357,8 @@ export function isKeyPressed(action) {
  * @memberOf me.input
  * @public
  * @function
- * @param {String} action user defined corresponding action
- * @returns {Boolean} down (true) or up(false)
+ * @param {string} action user defined corresponding action
+ * @returns {boolean} down (true) or up(false)
  */
 export function keyStatus(action) {
     return (_keyStatus[action] > 0);
@@ -375,7 +372,8 @@ export function keyStatus(action) {
  * @public
  * @function
  * @param {me.input.KEY} keycode
- * @param {Boolean} [status=false] true to trigger a key down event, or false for key up event
+ * @param {boolean} [status=false] true to trigger a key down event, or false for key up event
+ * @param {number} [mouseButton] the mouse button to trigger
  * @example
  * // trigger a key press
  * me.input.triggerKeyEvent(me.input.KEY.LEFT, true);
@@ -397,9 +395,9 @@ export function triggerKeyEvent(keycode, status, mouseButton) {
  * @public
  * @function
  * @param {me.input.KEY} keycode
- * @param {String} action user defined corresponding action
- * @param {Boolean} [lock=false] cancel the keypress event once read
- * @param {Boolean} [preventDefault=me.input.preventDefault] prevent default browser action
+ * @param {string} action user defined corresponding action
+ * @param {boolean} [lock=false] cancel the keypress event once read
+ * @param {boolean} [preventDefault=me.input.preventDefault] prevent default browser action
  * @example
  * // enable the keyboard
  * me.input.bindKey(me.input.KEY.LEFT,  "left");
@@ -424,7 +422,7 @@ export function bindKey(keycode, action, lock, preventDefault = preventDefaultAc
  * @public
  * @function
  * @param {me.input.KEY} keycode
- * @returns {String} user defined associated action
+ * @returns {string} user defined associated action
  */
 export function getBindingKey(keycode) {
     return _keyBindings[keycode];
@@ -436,7 +434,7 @@ export function getBindingKey(keycode) {
  * @memberOf me.input
  * @public
  * @function
- * @param {String} action user defined corresponding action
+ * @param {string} action user defined corresponding action
  * @example
  * // Unlock jump when touching the ground
  * if (!this.falling && !this.jumping) {

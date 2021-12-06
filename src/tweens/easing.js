@@ -1,7 +1,7 @@
 /**
-* Tween.js - Licensed under the MIT license
-* https://github.com/tweenjs/tween.js
-*/
+ * Tween.js - Licensed under the MIT license
+ * https://github.com/tweenjs/tween.js
+ */
 
 /* eslint-disable quotes, keyword-spacing, comma-spacing, no-return-assign */
 
@@ -42,7 +42,7 @@
  * </p>
  * @public
  * @constant
- * @type enum
+ * @enum {Function}
  * @name Easing
  * @memberOf me.Tween
  */

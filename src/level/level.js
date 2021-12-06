@@ -13,6 +13,9 @@ var levelIdx = [];
 // current level index
 var currentLevelIdx = 0;
 
+/**
+ * @ignore
+ */
 function safeLoadLevel(levelId, options, restart) {
     // clean the destination container
     options.container.reset();
@@ -48,8 +51,8 @@ function safeLoadLevel(levelId, options, restart) {
  * @name loadTMXLevel
  * @memberOf me.level
  * @private
- * @param {String} level level id
- * @param {me.Container} target container
+ * @param {string} levelId level id
+ * @param {me.Container} container target container
  * @param {boolean} [flatten=true] if true, flatten all objects into the given container
  * @param {boolean} [setViewportBounds=false] if true, set the viewport bounds to the map size, this should be set to true especially if adding a level to the game world container.
  * @ignore
@@ -84,10 +87,10 @@ var level = {
      * @memberOf me.level
      * @public
      * @function
-     * @param {String} format level format (only "tmx" supported)
-     * @param {String} levelId the level id (or name)
+     * @param {string} format level format (only "tmx" supported)
+     * @param {string} levelId the level id (or name)
      * @param {Function} [callback] a function to be called once the level is loaded
-     * @returns {Boolean} true if the level was loaded
+     * @returns {boolean} true if the level was loaded
      */
     add(format, levelId, callback) {
         switch (format) {
@@ -123,12 +126,13 @@ var level = {
      * @memberOf me.level
      * @public
      * @function
-     * @param {String} level level id
-     * @param {Object} [options] additional optional parameters
+     * @param {string} levelId level id
+     * @param {object} [options] additional optional parameters
      * @param {me.Container} [options.container=me.game.world] container in which to load the specified level
-     * @param {function} [options.onLoaded=me.game.onLevelLoaded] callback for when the level is fully loaded
+     * @param {Function} [options.onLoaded=me.game.onLevelLoaded] callback for when the level is fully loaded
      * @param {boolean} [options.flatten=me.game.mergeGroup] if true, flatten all objects into the given container
      * @param {boolean} [options.setViewportBounds=true] if true, set the viewport bounds to the map size
+     * @returns {boolean} true if the level was successfully loaded
      * @example
      * // the game assets to be be preloaded
      * // TMX maps
@@ -196,7 +200,7 @@ var level = {
      * @memberOf me.level
      * @public
      * @function
-     * @returns {String}
+     * @returns {string}
      */
     getCurrentLevelId() {
         return levelIdx[currentLevelIdx];
@@ -222,10 +226,11 @@ var level = {
      * @memberOf me.level
      * @public
      * @function
-     * @param {Object} [options] additional optional parameters
+     * @param {object} [options] additional optional parameters
      * @param {me.Container} [options.container=me.game.world] container in which to load the specified level
-     * @param {function} [options.onLoaded=me.game.onLevelLoaded] callback for when the level is fully loaded
+     * @param {Function} [options.onLoaded=me.game.onLevelLoaded] callback for when the level is fully loaded
      * @param {boolean} [options.flatten=me.game.mergeGroup] if true, flatten all objects into the given container
+     * @returns {object} the current level
      */
     reload(options) {
         // reset the level to initial state
@@ -239,10 +244,11 @@ var level = {
      * @memberOf me.level
      * @public
      * @function
-     * @param {Object} [options] additional optional parameters
+     * @param {object} [options] additional optional parameters
      * @param {me.Container} [options.container=me.game.world] container in which to load the specified level
-     * @param {function} [options.onLoaded=me.game.onLevelLoaded] callback for when the level is fully loaded
+     * @param {Function} [options.onLoaded=me.game.onLevelLoaded] callback for when the level is fully loaded
      * @param {boolean} [options.flatten=me.game.mergeGroup] if true, flatten all objects into the given container
+     * @returns {boolean} true if the next level was successfully loaded
      */
     next(options) {
         //go to the next level
@@ -260,10 +266,11 @@ var level = {
      * @memberOf me.level
      * @public
      * @function
-     * @param {Object} [options] additional optional parameters
+     * @param {object} [options] additional optional parameters
      * @param {me.Container} [options.container=me.game.world] container in which to load the specified level
-     * @param {function} [options.onLoaded=me.game.onLevelLoaded] callback for when the level is fully loaded
+     * @param {Function} [options.onLoaded=me.game.onLevelLoaded] callback for when the level is fully loaded
      * @param {boolean} [options.flatten=me.game.mergeGroup] if true, flatten all objects into the given container
+     * @returns {boolean} true if the previous level was successfully loaded
      */
     previous(options) {
         // go to previous level
@@ -281,6 +288,7 @@ var level = {
      * @memberOf me.level
      * @public
      * @function
+     * @returns {number} the amount of level preloaded
      */
     levelCount() {
         return levelIdx.length;

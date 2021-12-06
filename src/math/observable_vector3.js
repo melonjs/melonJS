@@ -9,12 +9,12 @@ import pool from "./../system/pooling.js";
  * @extends me.Vector3d
  * @memberOf me
  * @constructor
- * @param {Number} [x=0] x value of the vector
- * @param {Number} [y=0] y value of the vector
- * @param {Number} [z=0] z value of the vector
- * @param {Object} settings additional required parameters
+ * @param {number} [x=0] x value of the vector
+ * @param {number} [y=0] y value of the vector
+ * @param {number} [z=0] z value of the vector
+ * @param {object} settings additional required parameters
  * @param {Function} settings.onUpdate the callback to be executed when the vector is changed
- * @param {Object} [settings.scope] the value to use as this when calling onUpdate
+ * @param {object} [settings.scope] the value to use as this when calling onUpdate
  */
 class ObservableVector3d extends Vector3d {
 
@@ -43,7 +43,7 @@ class ObservableVector3d extends Vector3d {
     /**
      * x value of the vector
      * @public
-     * @type {Number}
+     * @type {number}
      * @name x
      * @memberOf me.ObservableVector3d
      */
@@ -64,7 +64,7 @@ class ObservableVector3d extends Vector3d {
     /**
      * y value of the vector
      * @public
-     * @type {Number}
+     * @type {number}
      * @name y
      * @memberOf me.ObservableVector3d
      */
@@ -86,7 +86,7 @@ class ObservableVector3d extends Vector3d {
     /**
      * z value of the vector
      * @public
-     * @type {Number}
+     * @type {number}
      * @name z
      * @memberOf me.ObservableVector3d
      */
@@ -106,7 +106,8 @@ class ObservableVector3d extends Vector3d {
     }
 
     /**
-     * @ignore */
+     * @ignore
+     */
     _set(x, y, z) {
         var ret = this.onUpdate.call(this.scope, x, y, z, this._x, this._y, this._z);
         if (ret && "x" in ret && "y" in ret && "z" in ret) {
@@ -126,9 +127,9 @@ class ObservableVector3d extends Vector3d {
      * @name setMuted
      * @memberOf me.ObservableVector3d
      * @function
-     * @param {Number} x x value of the vector
-     * @param {Number} y y value of the vector
-     * @param {Number} [z=0] z value of the vector
+     * @param {number} x x value of the vector
+     * @param {number} y y value of the vector
+     * @param {number} [z=0] z value of the vector
      * @returns {me.ObservableVector3d} Reference to this object for method chaining
      */
     setMuted(x, y, z) {
@@ -143,8 +144,8 @@ class ObservableVector3d extends Vector3d {
      * @name setCallback
      * @memberOf me.ObservableVector3d
      * @function
-     * @param {function} onUpdate callback
-     * @param {function} [scope=null] scope
+     * @param {Function} fn callback
+     * @param {Function} [scope=null] scope
      * @returns {me.ObservableVector3d} Reference to this object for method chaining
      */
     setCallback(fn, scope = null) {
@@ -187,9 +188,9 @@ class ObservableVector3d extends Vector3d {
      * @name scale
      * @memberOf me.ObservableVector3d
      * @function
-     * @param {Number} x
-     * @param {Number} [y=x]
-     * @param {Number} [z=1]
+     * @param {number} x
+     * @param {number} [y=x]
+     * @param {number} [z=1]
      * @returns {me.ObservableVector3d} Reference to this object for method chaining
      */
     scale(x, y, z) {
@@ -214,7 +215,7 @@ class ObservableVector3d extends Vector3d {
      * @name div
      * @memberOf me.ObservableVector3d
      * @function
-     * @param {Number} value
+     * @param {number} n the value to divide the vector by
      * @returns {me.ObservableVector3d} Reference to this object for method chaining
      */
     div(n) {
@@ -241,8 +242,8 @@ class ObservableVector3d extends Vector3d {
      * @name clamp
      * @memberOf me.ObservableVector3d
      * @function
-     * @param {Number} low
-     * @param {Number} high
+     * @param {number} low
+     * @param {number} high
      * @returns {me.ObservableVector3d} new me.ObservableVector3d
      */
     clamp(low, high) {
@@ -259,8 +260,8 @@ class ObservableVector3d extends Vector3d {
      * @name clampSelf
      * @memberOf me.ObservableVector3d
      * @function
-     * @param {Number} low
-     * @param {Number} high
+     * @param {number} low
+     * @param {number} high
      * @returns {me.ObservableVector3d} Reference to this object for method chaining
      */
     clampSelf(low, high) {
@@ -404,7 +405,7 @@ class ObservableVector3d extends Vector3d {
      * @memberOf me.ObservableVector3d
      * @function
      * @param {me.Vector2d|me.Vector3d|me.ObservableVector2d|me.ObservableVector3d} v
-     * @returns {Boolean}
+     * @returns {boolean}
      */
     equals(v) {
         return ((this._x === v.x) && (this._y === v.y) && (this._z === (v.z || this._z)));
@@ -456,7 +457,7 @@ class ObservableVector3d extends Vector3d {
      * @memberOf me.ObservableVector3d
      * @function
      * @param {me.Vector2d|me.Vector3d|me.ObservableVector2d|me.ObservableVector3d} v
-     * @returns {Number} The dot product.
+     * @returns {number} The dot product.
      */
     dotProduct(v) {
         return this._x * v.x + this._y * v.y + this._z * (v.z || 1);
@@ -468,7 +469,7 @@ class ObservableVector3d extends Vector3d {
      * @memberOf me.ObservableVector3d
      * @function
      * @param {me.Vector3d|me.ObservableVector3d} v
-     * @param {Number} alpha distance along the line (alpha = 0 will be this vector, and alpha = 1 will be the given one).
+     * @param {number} alpha distance along the line (alpha = 0 will be this vector, and alpha = 1 will be the given one).
      * @returns {me.ObservableVector3d} Reference to this object for method chaining
      */
     lerp(v, alpha) {
@@ -484,7 +485,7 @@ class ObservableVector3d extends Vector3d {
      * @memberOf me.ObservableVector3d
      * @function
      * @param {me.Vector2d|me.Vector3d|me.ObservableVector2d|me.ObservableVector3d} v
-     * @returns {Number}
+     * @returns {number}
      */
     distance(v) {
         var dx = this._x - v.x;
@@ -525,7 +526,7 @@ class ObservableVector3d extends Vector3d {
      * @name toString
      * @memberOf me.ObservableVector3d
      * @function
-     * @returns {String}
+     * @returns {string}
      */
     toString() {
         return "x:" + this._x + ",y:" + this._y + ",z:" + this._z;

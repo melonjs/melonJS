@@ -101,7 +101,7 @@ class Particle extends Renderable {
      * @memberOf me.Particle
      * @function
      * @ignore
-     * @param {Number} dt time since the last update in milliseconds
+     * @param {number} dt time since the last update in milliseconds
      */
     update(dt) {
         // move things forward independent of the current frame rate

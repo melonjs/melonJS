@@ -8,10 +8,10 @@ import Polygon from "./poly.js";
  * @extends me.Polygon
  * @memberOf me
  * @constructor
- * @param {Number} x position of the Rectangle
- * @param {Number} y position of the Rectangle
- * @param {Number} w width of the rectangle
- * @param {Number} h height of the rectangle
+ * @param {number} x position of the Rectangle
+ * @param {number} y position of the Rectangle
+ * @param {number} w width of the rectangle
+ * @param {number} h height of the rectangle
  */
 
 class Rect extends Polygon {
@@ -37,10 +37,10 @@ class Rect extends Polygon {
      * @name setShape
      * @memberOf me.Rect.prototype
      * @function
-     * @param {Number} x position of the Rectangle
-     * @param {Number} y position of the Rectangle
-     * @param {Number|Array} w|points width of the rectangle, or an array of vector defining the rectangle
-     * @param {Number} [h] height of the rectangle, if a numeral width parameter is specified
+     * @param {number} x position of the Rectangle
+     * @param {number} y position of the Rectangle
+     * @param {number|me.Vector2d[]} w width of the rectangle, or an array of vector defining the rectangle
+     * @param {number} [h] height of the rectangle, if a numeral width parameter is specified
      * @returns {me.Rect} this rectangle
      */
     setShape(x, y, w, h) {
@@ -64,7 +64,7 @@ class Rect extends Polygon {
     /**
      * left coordinate of the Rectangle
      * @public
-     * @type {Number}
+     * @type {number}
      * @name left
      * @memberOf me.Rect
      */
@@ -75,7 +75,7 @@ class Rect extends Polygon {
     /**
      * right coordinate of the Rectangle
      * @public
-     * @type {Number}
+     * @type {number}
      * @name right
      * @memberOf me.Rect
      */
@@ -87,7 +87,7 @@ class Rect extends Polygon {
     /**
      * top coordinate of the Rectangle
      * @public
-     * @type {Number}
+     * @type {number}
      * @name top
      * @memberOf me.Rect
      */
@@ -98,7 +98,7 @@ class Rect extends Polygon {
     /**
      * bottom coordinate of the Rectangle
      * @public
-     * @type {Number}
+     * @type {number}
      * @name bottom
      * @memberOf me.Rect
      */
@@ -110,7 +110,7 @@ class Rect extends Polygon {
     /**
      * width of the Rectangle
      * @public
-     * @type {Number}
+     * @type {number}
      * @name width
      * @memberOf me.Rect
      */
@@ -126,7 +126,7 @@ class Rect extends Polygon {
     /**
      * height of the Rectangle
      * @public
-     * @type {Number}
+     * @type {number}
      * @name height
      * @memberOf me.Rect
      */
@@ -142,7 +142,7 @@ class Rect extends Polygon {
     /**
      * absolute center of this rectangle on the horizontal axis
      * @public
-     * @type {Number}
+     * @type {number}
      * @name centerX
      * @memberOf me.Rect
      */
@@ -160,7 +160,7 @@ class Rect extends Polygon {
     /**
      * absolute center of this rectangle on the vertical axis
      * @public
-     * @type {Number}
+     * @type {number}
      * @name centerY
      * @memberOf me.Rect
      */
@@ -180,8 +180,8 @@ class Rect extends Polygon {
      * @name resize
      * @memberOf me.Rect.prototype
      * @function
-     * @param {Number} w new width of the rectangle
-     * @param {Number} h new height of the rectangle
+     * @param {number} w new width of the rectangle
+     * @param {number} h new height of the rectangle
      * @returns {me.Rect} this rectangle
      */
     resize(w, h) {
@@ -195,8 +195,8 @@ class Rect extends Polygon {
      * @name scale
      * @memberOf me.Rect.prototype
      * @function
-     * @param {Number} x a number representing the abscissa of the scaling vector.
-     * @param {Number} [y=x] a number representing the ordinate of the scaling vector.
+     * @param {number} x a number representing the abscissa of the scaling vector.
+     * @param {number} [y=x] a number representing the ordinate of the scaling vector.
      * @returns {me.Rect} this rectangle
      */
     scale(x, y = x) {
@@ -281,8 +281,8 @@ class Rect extends Polygon {
      * @name contains
      * @memberOf me.Rect.prototype
      * @function
-     * @param  {Number} x x coordinate
-     * @param  {Number} y y coordinate
+     * @param  {number} x x coordinate
+     * @param  {number} y y coordinate
      * @returns {boolean} true if contains
      */
 

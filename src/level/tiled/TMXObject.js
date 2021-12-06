@@ -20,7 +20,7 @@ export default class TMXObject {
         /**
          * point list in JSON format
          * @public
-         * @type Object[]
+         * @type {object[]}
          * @name points
          * @memberOf me.TMXObject
          */
@@ -29,7 +29,7 @@ export default class TMXObject {
         /**
          * object name
          * @public
-         * @type String
+         * @type {string}
          * @name name
          * @memberOf me.TMXObject
          */
@@ -38,7 +38,7 @@ export default class TMXObject {
         /**
          * object x position
          * @public
-         * @type Number
+         * @type {number}
          * @name x
          * @memberOf me.TMXObject
          */
@@ -47,7 +47,7 @@ export default class TMXObject {
         /**
          * object y position
          * @public
-         * @type Number
+         * @type {number}
          * @name y
          * @memberOf me.TMXObject
          */
@@ -56,7 +56,7 @@ export default class TMXObject {
         /**
          * object z order
          * @public
-         * @type Number
+         * @type {number}
          * @name z
          * @memberOf me.TMXObject
          */
@@ -65,7 +65,7 @@ export default class TMXObject {
         /**
          * object width
          * @public
-         * @type Number
+         * @type {number}
          * @name width
          * @memberOf me.TMXObject
          */
@@ -74,7 +74,7 @@ export default class TMXObject {
         /**
          * object height
          * @public
-         * @type Number
+         * @type {number}
          * @name height
          * @memberOf me.TMXObject
          */
@@ -84,7 +84,7 @@ export default class TMXObject {
          * object gid value
          * when defined the object is a tiled object
          * @public
-         * @type Number
+         * @type {number}
          * @name gid
          * @memberOf me.TMXObject
          */
@@ -93,7 +93,7 @@ export default class TMXObject {
         /**
          * tint color
          * @public
-         * @type String
+         * @type {string}
          * @name tintcolor
          * @memberOf me.TMXObject
          */
@@ -102,7 +102,7 @@ export default class TMXObject {
         /**
          * object type
          * @public
-         * @type String
+         * @type {string}
          * @name type
          * @memberOf me.TMXObject
          */
@@ -111,7 +111,7 @@ export default class TMXObject {
         /**
          * object text
          * @public
-         * @type Object
+         * @type {object}
          * @see http://docs.mapeditor.org/en/stable/reference/tmx-map-format/#text
          * @name type
          * @memberOf me.TMXObject
@@ -121,7 +121,7 @@ export default class TMXObject {
         /**
          * The rotation of the object in radians clockwise (defaults to 0)
          * @public
-         * @type Number
+         * @type {number}
          * @name rotation
          * @memberOf me.TMXObject
          */
@@ -130,7 +130,7 @@ export default class TMXObject {
         /**
          * object unique identifier per level (Tiled 0.11.x+)
          * @public
-         * @type Number
+         * @type {number}
          * @name id
          * @memberOf me.TMXObject
          */
@@ -139,7 +139,7 @@ export default class TMXObject {
         /**
          * object orientation (orthogonal or isometric)
          * @public
-         * @type String
+         * @type {string}
          * @name orientation
          * @memberOf me.TMXObject
          */
@@ -148,7 +148,7 @@ export default class TMXObject {
         /**
          * the collision shapes defined for this object
          * @public
-         * @type Array
+         * @type {object[]}
          * @name shapes
          * @memberOf me.TMXObject
          */
@@ -157,7 +157,7 @@ export default class TMXObject {
         /**
          * if true, the object is an Ellipse
          * @public
-         * @type Boolean
+         * @type {boolean}
          * @name isEllipse
          * @memberOf me.TMXObject
          */
@@ -166,7 +166,7 @@ export default class TMXObject {
         /**
          * if true, the object is a Polygon
          * @public
-         * @type Boolean
+         * @type {boolean}
          * @name isPolygon
          * @memberOf me.TMXObject
          */
@@ -175,7 +175,7 @@ export default class TMXObject {
         /**
          * if true, the object is a PolyLine
          * @public
-         * @type Boolean
+         * @type {boolean}
          * @name isPolyLine
          * @memberOf me.TMXObject
          */

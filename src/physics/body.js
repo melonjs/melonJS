@@ -16,7 +16,7 @@ import { world } from "./../game.js";
  * @memberOf me
  * @constructor
  * @param {me.Renderable} ancestor the parent object this body is attached to
- * @param {me.Rect|me.Rect[]|me.Polygon|me.Polygon[]|me.Line|me.Line[]|me.Ellipse|me.Ellipse[]|me.Bounds|me.Bounds[]|Object} [shapes] a initial shape, list of shapes, or JSON object defining the body
+ * @param {me.Rect|me.Rect[]|me.Polygon|me.Polygon[]|me.Line|me.Line[]|me.Ellipse|me.Ellipse[]|me.Bounds|me.Bounds[]|object} [shapes] a initial shape, list of shapes, or JSON object defining the body
  * @param {Function} [onBodyUpdate] callback for when the body is updated (e.g. add/remove shapes)
  */
 class Body {
@@ -27,7 +27,7 @@ class Body {
          * a reference to the parent object that contains this body,
          * or undefined if it has not been added to one.
          * @public
-         * @type me.Renderable
+         * @type {me.Renderable}
          * @default undefined
          * @name me.Body#ancestor
          */
@@ -59,7 +59,7 @@ class Body {
          * The body collision mask, that defines what should collide with what.<br>
          * (by default will collide with all entities)
          * @ignore
-         * @type Number
+         * @type {number}
          * @default me.collision.types.ALL_OBJECT
          * @name collisionMask
          * @see me.collision.types
@@ -70,7 +70,7 @@ class Body {
         /**
          * define the collision type of the body for collision filtering
          * @public
-         * @type Number
+         * @type {number}
          * @default me.collision.types.ENEMY_OBJECT
          * @name collisionType
          * @see me.collision.types
@@ -84,7 +84,7 @@ class Body {
         /**
          * body velocity
          * @public
-         * @type me.Vector2d
+         * @type {me.Vector2d}
          * @default <0,0>
          * @name vel
          * @memberOf me.Body
@@ -98,7 +98,7 @@ class Body {
          * body force or acceleration (automatically) applied to the body.
          * when defining a force, user should also define a max velocity
          * @public
-         * @type me.Vector2d
+         * @type {me.Vector2d}
          * @default <0,0>
          * @name force
          * @see me.Body.setMaxVelocity
@@ -129,7 +129,7 @@ class Body {
         /**
          * body friction
          * @public
-         * @type me.Vector2d
+         * @type {me.Vector2d}
          * @default <0,0>
          * @name friction
          * @memberOf me.Body
@@ -143,7 +143,7 @@ class Body {
          * the body bouciness level when colliding with other solid bodies :
          * a value of 0 will not bounce, a value of 1 will fully rebound.
          * @public
-         * @type {Number}
+         * @type {number}
          * @default 0
          * @name bounce
          * @memberOf me.Body
@@ -153,7 +153,7 @@ class Body {
         /**
          * the body mass
          * @public
-         * @type {Number}
+         * @type {number}
          * @default 1
          * @name mass
          * @memberOf me.Body
@@ -163,7 +163,7 @@ class Body {
         /**
          * max velocity (to limit body velocity)
          * @public
-         * @type me.Vector2d
+         * @type {me.Vector2d}
          * @default <490,490>
          * @name maxVel
          * @memberOf me.Body
@@ -179,7 +179,7 @@ class Body {
          * either this body is a static body or not
          * @readonly
          * @public
-         * @type Boolean
+         * @type {boolean}
          * @default false
          * @name isStatic
          * @memberOf me.Body
@@ -191,7 +191,7 @@ class Body {
          * The degree to which this body is affected by the world gravity
          * @public
          * @see me.World.gravity
-         * @type Number
+         * @type {number}
          * @default 1.0
          * @name gravityScale
          * @memberOf me.Body
@@ -202,7 +202,7 @@ class Body {
          * If true this body won't be affected by the world gravity
          * @public
          * @see me.World.gravity
-         * @type Boolean
+         * @type {boolean}
          * @default false
          * @name ignoreGravity
          * @memberOf me.Body
@@ -215,7 +215,7 @@ class Body {
          * false if the object is standing on something<br>
          * @readonly
          * @public
-         * @type Boolean
+         * @type {boolean}
          * @default false
          * @name falling
          * @memberOf me.Body
@@ -227,7 +227,7 @@ class Body {
          * equal true if the body is jumping<br>
          * @readonly
          * @public
-         * @type Boolean
+         * @type {boolean}
          * @default false
          * @name jumping
          * @memberOf me.Body
@@ -263,7 +263,7 @@ class Body {
      * @memberOf me.Body
      * @public
      * @function
-     * @param {Boolean} [isStatic=true]
+     * @param {boolean} [isStatic=true]
      */
     setStatic(isStatic = true) {
         this.isStatic = isStatic === true;
@@ -276,8 +276,8 @@ class Body {
      * @memberOf me.Body
      * @public
      * @function
-     * @param {me.Rect|me.Polygon|me.Line|me.Ellipse|me.Bounds|Object} shape a shape or JSON object
-     * @returns {Number} the shape array length
+     * @param {me.Rect|me.Polygon|me.Line|me.Ellipse|me.Bounds|object} shape a shape or JSON object
+     * @returns {number} the shape array length
      * @example
      * // add a rectangle shape
      * this.body.addShape(new me.Rect(0, 0, image.width, image.height));
@@ -331,7 +331,7 @@ class Body {
      * @public
      * @function
      * @param {me.Vector2d[]} vertices an array of me.Vector2d points defining a convex hull
-     * @param {Number} [index=0] the shape object for which to set the vertices
+     * @param {number} [index=0] the shape object for which to set the vertices
      * @param {boolean} [clear=true] either to reset the body definition before adding the new vertices
      */
     setVertices(vertices, index = 0, clear = true) {
@@ -358,7 +358,7 @@ class Body {
      * @public
      * @function
      * @param {me.Vector2d[]} vertices an array of me.Vector2d points defining a convex hull
-     * @param {Number} [index=0] the shape object for which to set the vertices
+     * @param {number} [index=0] the shape object for which to set the vertices
      */
     addVertices(vertices, index = 0) {
         this.setVertices(vertices, index, false);
@@ -371,10 +371,10 @@ class Body {
      * @memberOf me.Body
      * @public
      * @function
-     * @param {Object} json a JSON object as exported from a Physics Editor tool
-     * @param {String} [id] an optional shape identifier within the given the json object
+     * @param {object} json a JSON object as exported from a Physics Editor tool
+     * @param {string} [id] an optional shape identifier within the given the json object
      * @see https://www.codeandweb.com/physicseditor
-     * @returns {Number} how many shapes were added to the body
+     * @returns {number} how many shapes were added to the body
      * @example
      * // define the body based on the banana shape
      * this.body.fromJSON(me.loader.getJSON("shapesdef").banana);
@@ -415,7 +415,7 @@ class Body {
      * @memberOf me.Body
      * @public
      * @function
-     * @param {Number} [index=0] the shape object at the specified index
+     * @param {number} [index=0] the shape object at the specified index
      * @returns {me.Polygon|me.Line|me.Ellipse} shape a shape object if defined
      */
     getShape(index) {
@@ -440,7 +440,7 @@ class Body {
      * @public
      * @function
      * @param {me.Polygon|me.Line|me.Ellipse} shape a shape object
-     * @returns {Number} the shape array length
+     * @returns {number} the shape array length
      */
     removeShape(shape) {
         // clear the current bounds
@@ -461,8 +461,8 @@ class Body {
      * @memberOf me.Body
      * @public
      * @function
-     * @param {Number} index the shape object at the specified index
-     * @returns {Number} the shape array length
+     * @param {number} index the shape object at the specified index
+     * @returns {number} the shape array length
      */
     removeShapeAt(index) {
         return this.removeShape(this.getShape(index));
@@ -477,7 +477,7 @@ class Body {
      * @public
      * @function
      * @see me.collision.types
-     * @param {Number} [bitmask = me.collision.types.ALL_OBJECT] the collision mask
+     * @param {number} [bitmask = me.collision.types.ALL_OBJECT] the collision mask
      * @example
      * // filter collision detection with collision shapes, enemies and collectables
      * myEntity.body.setCollisionMask(me.collision.types.WORLD_SHAPE | me.collision.types.ENEMY_OBJECT | me.collision.types.COLLECTABLE_OBJECT);
@@ -496,7 +496,7 @@ class Body {
      * @public
      * @function
      * @see me.collision.types
-     * @param {Number} type the collision type
+     * @param {number} type the collision type
      * @example
      * // set the body collision type
      * myEntity.body.collisionType = me.collision.types.PLAYER_OBJECT;
@@ -558,7 +558,7 @@ class Body {
      * @memberOf me.Body.prototype
      * @function
      * @param {Function} callback fnction to execute on each element
-     * @param {Object} [thisArg] value to use as this(i.e reference Object) when executing callback.
+     * @param {object} [thisArg] value to use as this(i.e reference Object) when executing callback.
      * @example
      * // iterate through all shapes of the physic body
      * mySprite.body.forEach((shape) => {
@@ -603,8 +603,8 @@ class Body {
      * @name contains
      * @memberOf me.Body
      * @function
-     * @param  {Number} x x coordinate
-     * @param  {Number} y y coordinate
+     * @param  {number} x x coordinate
+     * @param  {number} y y coordinate
      * @returns {boolean} true if contains
      */
     contains() {
@@ -637,7 +637,7 @@ class Body {
      * @name rotate
      * @memberOf me.Body
      * @function
-     * @param {Number} angle The angle to rotate (in radians)
+     * @param {number} angle The angle to rotate (in radians)
      * @param {me.Vector2d|me.ObservableVector2d} [v=me.Body.getBounds().center] an optional point to rotate around
      * @returns {me.Body} Reference to this object for method chaining
      */
@@ -664,8 +664,8 @@ class Body {
      * @name setMaxVelocity
      * @memberOf me.Body
      * @function
-     * @param {Number} x max velocity on x axis
-     * @param {Number} y max velocity on y axis
+     * @param {number} x max velocity on x axis
+     * @param {number} y max velocity on y axis
      * @protected
      */
     setMaxVelocity(x, y) {
@@ -678,8 +678,8 @@ class Body {
      * @name setFriction
      * @memberOf me.Body
      * @function
-     * @param {Number} x horizontal friction
-     * @param {Number} y vertical friction
+     * @param {number} x horizontal friction
+     * @param {number} y vertical friction
      * @protected
      */
     setFriction(x = 0, y = 0) {
@@ -765,7 +765,7 @@ class Body {
      * @ignore
      * @memberOf me.Body
      * @function
-     * @param {Number} dt time since the last update in milliseconds.
+     * @param {number} dt time since the last update in milliseconds.
      * @returns {boolean} true if resulting velocity is different than 0
      */
     update(dt) {

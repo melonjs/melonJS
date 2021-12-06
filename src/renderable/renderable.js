@@ -13,10 +13,10 @@ import { clamp } from "./../math/math.js";
  * @extends me.Rect
  * @memberOf me
  * @constructor
- * @param {Number} x position of the renderable object (accessible through inherited pos.x property)
- * @param {Number} y position of the renderable object (accessible through inherited pos.y property)
- * @param {Number} width object width
- * @param {Number} height object height
+ * @param {number} x position of the renderable object (accessible through inherited pos.x property)
+ * @param {number} y position of the renderable object (accessible through inherited pos.y property)
+ * @param {number} width object width
+ * @param {number} height object height
  */
 class Renderable extends Rect {
 
@@ -37,7 +37,7 @@ class Renderable extends Rect {
         /**
          * If true then physic collision and input events will not impact this renderable
          * @public
-         * @type Boolean
+         * @type {boolean}
          * @default true
          * @name isKinematic
          * @memberOf me.Renderable
@@ -88,7 +88,7 @@ class Renderable extends Rect {
         /**
          * the renderable default transformation matrix
          * @public
-         * @type me.Matrix2d
+         * @type {me.Matrix2d}
          * @name currentTransform
          * @memberOf me.Renderable#
          */
@@ -102,7 +102,7 @@ class Renderable extends Rect {
         * a GUID will be allocated for any renderable object added <br>
         * to an object container (including the `me.game.world` container)
         * @public
-        * @type String
+        * @type {string}
         * @name GUID
         * @memberOf me.Renderable
         */
@@ -111,7 +111,7 @@ class Renderable extends Rect {
         /**
          * an event handler that is called when the renderable leave or enter a camera viewport
          * @public
-         * @type function
+         * @type {Function}
          * @default undefined
          * @name onVisibilityChange
          * @memberOf me.Renderable#
@@ -127,7 +127,7 @@ class Renderable extends Rect {
         /**
          * Whether the renderable object will always update, even when outside of the viewport<br>
          * @public
-         * @type Boolean
+         * @type {boolean}
          * @default false
          * @name alwaysUpdate
          * @memberOf me.Renderable
@@ -137,7 +137,7 @@ class Renderable extends Rect {
         /**
          * Whether to update this object when the game is paused.
          * @public
-         * @type Boolean
+         * @type {boolean}
          * @default false
          * @name updateWhenPaused
          * @memberOf me.Renderable
@@ -147,7 +147,7 @@ class Renderable extends Rect {
         /**
          * make the renderable object persistent over level changes<br>
          * @public
-         * @type Boolean
+         * @type {boolean}
          * @default false
          * @name isPersistent
          * @memberOf me.Renderable
@@ -158,7 +158,7 @@ class Renderable extends Rect {
          * If true, this renderable will be rendered using screen coordinates,
          * as opposed to world coordinates. Use this, for example, to define UI elements.
          * @public
-         * @type Boolean
+         * @type {boolean}
          * @default false
          * @name floating
          * @memberOf me.Renderable
@@ -174,7 +174,7 @@ class Renderable extends Rect {
          * <i><b>Note:</b> Object created through Tiled will have their anchorPoint set to (0, 0) to match Tiled Level editor implementation.
          * To specify a value through Tiled, use a json expression like `json:{"x":0.5,"y":0.5}`. </i>
          * @public
-         * @type me.ObservableVector2d
+         * @type {me.ObservableVector2d}
          * @default <0.5,0.5>
          * @name anchorPoint
          * @memberOf me.Renderable#
@@ -189,7 +189,7 @@ class Renderable extends Rect {
          * When enabled, an object container will automatically apply
          * any defined transformation before calling the child draw method.
          * @public
-         * @type Boolean
+         * @type {boolean}
          * @default true
          * @name autoTransform
          * @memberOf me.Renderable
@@ -213,7 +213,7 @@ class Renderable extends Rect {
          * @see me.Renderable#setOpacity
          * @see me.Renderable#getOpacity
          * @public
-         * @type Number
+         * @type {number}
          * @default 1.0
          * @name me.Renderable#alpha
          */
@@ -222,7 +222,7 @@ class Renderable extends Rect {
         /**
          * a reference to the parent object that contains this renderable
          * @public
-         * @type me.Container|me.Entity
+         * @type {me.Container|me.Entity}
          * @default undefined
          * @name me.Renderable#ancestor
          */
@@ -272,7 +272,7 @@ class Renderable extends Rect {
         /**
          * The name of the renderable
          * @public
-         * @type {String}
+         * @type {string}
          * @name name
          * @default ""
          * @memberOf me.Renderable
@@ -294,7 +294,7 @@ class Renderable extends Rect {
 
         /**
          * when true the renderable will be redrawn during the next update cycle
-         * @type {Boolean}
+         * @type {boolean}
          * @name isDirty
          * @default false
          * @memberOf me.Renderable#
@@ -318,7 +318,7 @@ class Renderable extends Rect {
      * Whether the renderable object is visible and within the viewport
      * @public
      * @readonly
-     * @type {Boolean}
+     * @type {boolean}
      * @default false
      * @name inViewport
      * @memberOf me.Renderable
@@ -341,7 +341,7 @@ class Renderable extends Rect {
      * returns true if this renderable is flipped on the horizontal axis
      * @public
      * @see me.Renderable#flipX
-     * @type {Boolean}
+     * @type {boolean}
      * @name isFlippedX
      * @memberOf me.Renderable
      */
@@ -354,7 +354,7 @@ class Renderable extends Rect {
      * returns true if this renderable is flipped on the vertical axis
      * @public
      * @see me.Renderable#flipY
-     * @type {Boolean}
+     * @type {boolean}
      * @name isFlippedY
      * @memberOf me.Renderable
      */
@@ -389,7 +389,7 @@ class Renderable extends Rect {
      * @name getOpacity
      * @memberOf me.Renderable.prototype
      * @function
-     * @returns {Number} current opacity value between 0 and 1
+     * @returns {number} current opacity value between 0 and 1
      */
     getOpacity() {
         return this.alpha;
@@ -400,7 +400,7 @@ class Renderable extends Rect {
      * @name setOpacity
      * @memberOf me.Renderable.prototype
      * @function
-     * @param {Number} alpha opacity value between 0.0 and 1.0
+     * @param {number} alpha opacity value between 0.0 and 1.0
      */
     setOpacity(alpha) {
         if (typeof (alpha) === "number") {
@@ -419,7 +419,7 @@ class Renderable extends Rect {
      * @name flipX
      * @memberOf me.Renderable.prototype
      * @function
-     * @param {Boolean} [flip=true] `true` to flip this renderable.
+     * @param {boolean} [flip=true] `true` to flip this renderable.
      * @returns {me.Renderable} Reference to this object for method chaining
      */
     flipX(flip = true) {
@@ -434,7 +434,7 @@ class Renderable extends Rect {
      * @name flipY
      * @memberOf me.Renderable.prototype
      * @function
-     * @param {Boolean} [flip=true] `true` to flip this renderable.
+     * @param {boolean} [flip=true] `true` to flip this renderable.
      * @returns {me.Renderable} Reference to this object for method chaining
      */
     flipY(flip = true) {
@@ -466,7 +466,7 @@ class Renderable extends Rect {
      * @memberOf me.Renderable
      * @function
      * @param {me.Renderable|me.Vector2d|me.Vector3d} target
-     * @returns {Number} angle in radians
+     * @returns {number} angle in radians
      */
     angleTo(target) {
         var a = this.getBounds();
@@ -490,7 +490,7 @@ class Renderable extends Rect {
      * @memberOf me.Renderable
      * @function
      * @param {me.Renderable|me.Vector2d|me.Vector3d} target
-     * @returns {Number} distance
+     * @returns {number} distance
      */
     distanceTo(target) {
         var a = this.getBounds();
@@ -537,13 +537,13 @@ class Renderable extends Rect {
      * @name rotate
      * @memberOf me.Renderable.prototype
      * @function
-     * @param {Number} angle The angle to rotate (in radians)
+     * @param {number} angle The angle to rotate (in radians)
      * @param {me.Vector2d|me.ObservableVector2d} [v] an optional point to rotate around
      * @returns {me.Renderable} Reference to this object for method chaining
      */
-    rotate(angle) {
+    rotate(angle, v) {
         if (!isNaN(angle)) {
-            this.currentTransform.rotate(angle);
+            this.currentTransform.rotate(angle, v);
             //this.updateBoundsPos(this.pos.x, this.pos.y);
             this.isDirty = true;
         }
@@ -559,8 +559,8 @@ class Renderable extends Rect {
      * @name scale
      * @memberOf me.Renderable.prototype
      * @function
-     * @param {Number} x a number representing the abscissa of the scaling vector.
-     * @param {Number} [y=x] a number representing the ordinate of the scaling vector.
+     * @param {number} x a number representing the abscissa of the scaling vector.
+     * @param {number} [y=x] a number representing the ordinate of the scaling vector.
      * @returns {me.Renderable} Reference to this object for method chaining
      */
     scale(x, y) {
@@ -590,9 +590,9 @@ class Renderable extends Rect {
      * @memberOf me.Renderable.prototype
      * @function
      * @protected
-     * @param {Number} dt time since the last update in milliseconds.
-     * @returns {Boolean} true if the renderable is dirty
-     **/
+     * @param {number} dt time since the last update in milliseconds.
+     * @returns {boolean} true if the renderable is dirty
+     */
     update(/* dt */) {
         return this.isDirty;
     }
@@ -669,11 +669,13 @@ class Renderable extends Rect {
      * @name onAnchorUpdate
      * @memberOf me.Renderable.prototype
      * @function
+     * @param {number} x the new X value to be set for the anchor
+     * @param {number} y the new Y value to be set for the anchor
      */
-     onAnchorUpdate(newX, newY) {
+     onAnchorUpdate(x, y) {
          // since the callback is called before setting the new value
          // manually update the anchor point (required for updateBoundsPos)
-         this.anchorPoint.setMuted(newX, newY);
+         this.anchorPoint.setMuted(x, y);
          // then call updateBounds
          this.updateBoundsPos(this.pos.x, this.pos.y);
      }
@@ -687,7 +689,7 @@ class Renderable extends Rect {
      * @function
      * @protected
      * @param {me.CanvasRenderer|me.WebGLRenderer} renderer a renderer object
-     **/
+     */
     preDraw(renderer) {
         var bounds = this.getBounds();
         var ax = bounds.width * this.anchorPoint.x,
@@ -738,7 +740,7 @@ class Renderable extends Rect {
      * @function
      * @protected
      * @param {me.CanvasRenderer|me.WebGLRenderer} renderer a renderer object
-     **/
+     */
     draw(/*renderer*/) {
         // empty one !
     }
@@ -751,7 +753,7 @@ class Renderable extends Rect {
      * @function
      * @protected
      * @param {me.CanvasRenderer|me.WebGLRenderer} renderer a renderer object
-     **/
+     */
     postDraw(renderer) {
 
         // remove the previously applied tint
@@ -777,7 +779,7 @@ class Renderable extends Rect {
      * @function
      * @param {me.collision.ResponseObject} response the collision response object
      * @param {me.Renderable} other the other renderable touching this one (a reference to response.a or response.b)
-     * @returns {Boolean} true if the object should respond to the collision (its position and velocity will be corrected)
+     * @returns {boolean} true if the object should respond to the collision (its position and velocity will be corrected)
      * @example
      * // colision handler
      * onCollision(response) {

@@ -25,10 +25,10 @@ var targetV = new Vector2d();
  * @extends me.Renderable
  * @memberOf me
  * @constructor
- * @param {Number} minX start x offset
- * @param {Number} minY start y offset
- * @param {Number} maxX end x offset
- * @param {Number} maxY end y offset
+ * @param {number} minX start x offset
+ * @param {number} minY start y offset
+ * @param {number} maxX end x offset
+ * @param {number} maxY end y offset
  */
 class Camera2d extends Renderable {
 
@@ -40,13 +40,13 @@ class Camera2d extends Renderable {
 
         /**
          * Axis definition
-         * @property NONE
-         * @property HORIZONTAL
-         * @property VERTICAL
-         * @property BOTH
+         * @property {number} NONE no axis
+         * @property {number} HORIZONTAL horizontal axis only
+         * @property {number} VERTICAL vertical axis only
+         * @property {number} BOTH both axis
          * @public
          * @constant
-         * @enum {Number}
+         * @enum {number}
          * @name AXIS
          * @memberOf me.Camera2d
          */
@@ -60,7 +60,7 @@ class Camera2d extends Renderable {
         /**
          * Camera bounds
          * @public
-         * @type me.Bounds
+         * @type {me.Bounds}
          * @name bounds
          * @memberOf me.Camera2d
          */
@@ -69,7 +69,7 @@ class Camera2d extends Renderable {
         /**
          * [IMTERNAL] enable or disable damping
          * @private
-         * @type {Boolean}
+         * @type {boolean}
          * @name smoothFollow
          * @see me.Camera2d.damping
          * @default true
@@ -81,7 +81,7 @@ class Camera2d extends Renderable {
          * Camera damping for smooth transition [0 .. 1].
          * 1 being the maximum value and will snap the camera to the target position
          * @public
-         * @type {Number}
+         * @type {number}
          * @name damping
          * @default 1.0
          * @memberOf me.Camera2d
@@ -91,7 +91,7 @@ class Camera2d extends Renderable {
         /**
          * the closest point relative to the camera
          * @public
-         * @type {Number}
+         * @type {number}
          * @name near
          * @default -1000
          * @memberOf me.Camera2d
@@ -101,7 +101,7 @@ class Camera2d extends Renderable {
         /**
          * the furthest point relative to the camera.
          * @public
-         * @type {Number}
+         * @type {number}
          * @name far
          * @default 1000
          * @memberOf me.Camera2d
@@ -218,8 +218,8 @@ class Camera2d extends Renderable {
      * @name reset
      * @memberOf me.Camera2d
      * @function
-     * @param {Number} [x=0]
-     * @param {Number} [y=0]
+     * @param {number} [x=0]
+     * @param {number} [y=0]
      */
     reset(x = 0, y = 0) {
         // reset the initial camera position to 0,0
@@ -249,8 +249,8 @@ class Camera2d extends Renderable {
      * @see me.Camera2d.follow
      * @memberOf me.Camera2d
      * @function
-     * @param {Number} w deadzone width
-     * @param {Number} h deadzone height
+     * @param {number} w deadzone width
+     * @param {number} h deadzone height
      */
     setDeadzone(w, h) {
         if (typeof(this.deadzone) === "undefined") {
@@ -277,10 +277,10 @@ class Camera2d extends Renderable {
      * @name resize
      * @memberOf me.Camera2d
      * @function
-     * @param {Number} w new width of the camera
-     * @param {Number} h new height of the camera
+     * @param {number} w new width of the camera
+     * @param {number} h new height of the camera
      * @returns {me.Camera2d} this camera
-    */
+     */
     resize(w, h) {
         // parent consctructor, resize camera rect
         super.resize(w, h);
@@ -309,10 +309,10 @@ class Camera2d extends Renderable {
      * @name setBounds
      * @memberOf me.Camera2d
      * @function
-     * @param {Number} x world left limit
-     * @param {Number} y world top limit
-     * @param {Number} w world width limit
-     * @param {Number} h world height limit
+     * @param {number} x world left limit
+     * @param {number} y world top limit
+     * @param {number} w world width limit
+     * @param {number} h world height limit
      */
     setBounds(x, y, w, h) {
         this.smoothFollow = false;
@@ -330,7 +330,7 @@ class Camera2d extends Renderable {
      * @function
      * @param {me.Renderable|me.Vector2d} target renderable or position vector to follow
      * @param {me.Camera2d.AXIS} [axis=this.AXIS.BOTH] Which axis to follow
-     * @param {Number} [damping=1] default damping value
+     * @param {number} [damping=1] default damping value
      * @example
      * // set the camera to follow this renderable on both axis, and enable damping
      * me.game.viewport.follow(this, me.game.viewport.AXIS.BOTH, 0.1);
@@ -382,8 +382,8 @@ class Camera2d extends Renderable {
      * @memberOf me.Camera2d
      * @see me.Camera2d.focusOn
      * @function
-     * @param {Number} x
-     * @param {Number} y
+     * @param {number} x
+     * @param {number} y
      * @example
      * // Move the camera up by four pixels
      * me.game.viewport.move(0, -4);
@@ -398,8 +398,8 @@ class Camera2d extends Renderable {
      * @memberOf me.Camera2d
      * @see me.Camera2d.focusOn
      * @function
-     * @param {Number} x
-     * @param {Number} y
+     * @param {number} x
+     * @param {number} y
      */
     moveTo(x, y) {
         var _x = this.pos.x;
@@ -521,13 +521,13 @@ class Camera2d extends Renderable {
      * @name shake
      * @memberOf me.Camera2d
      * @function
-     * @param {Number} intensity maximum offset that the screen can be moved
+     * @param {number} intensity maximum offset that the screen can be moved
      * while shaking
-     * @param {Number} duration expressed in milliseconds
+     * @param {number} duration expressed in milliseconds
      * @param {me.Camera2d.AXIS} [axis=this.AXIS.BOTH] specify on which axis you
      *   want the shake effect
      * @param {Function} [onComplete] callback once shaking effect is over
-     * @param {Boolean} [force] if true this will override the current effect
+     * @param {boolean} [force] if true this will override the current effect
      * @example
      * // shake it baby !
      * me.game.viewport.shake(10, 500, me.game.viewport.AXIS.BOTH);
@@ -547,8 +547,8 @@ class Camera2d extends Renderable {
      * @name fadeOut
      * @memberOf me.Camera2d
      * @function
-     * @param {me.Color|String} color a CSS color value
-     * @param {Number} [duration=1000] expressed in milliseconds
+     * @param {me.Color|string} color a CSS color value
+     * @param {number} [duration=1000] expressed in milliseconds
      * @param {Function} [onComplete] callback once effect is over
      * @example
      * // fade the camera to white upon dying, reload the level, and then fade out back
@@ -573,8 +573,8 @@ class Camera2d extends Renderable {
      * @name fadeIn
      * @memberOf me.Camera2d
      * @function
-     * @param {me.Color|String} color a CSS color value
-     * @param {Number} [duration=1000] expressed in milliseconds
+     * @param {me.Color|string} color a CSS color value
+     * @param {number} [duration=1000] expressed in milliseconds
      * @param {Function} [onComplete] callback once effect is over
      * @example
      * // flash the camera to white for 75ms
@@ -596,7 +596,7 @@ class Camera2d extends Renderable {
      * @name focusOn
      * @memberOf me.Camera2d
      * @function
-     * @param {me.Renderable}
+     * @param {me.Renderable} target the renderable to focus the camera on
      */
     focusOn(target) {
         var bounds = target.getBounds();
@@ -611,9 +611,9 @@ class Camera2d extends Renderable {
      * @name isVisible
      * @memberOf me.Camera2d
      * @function
-     * @param {me.Renderable} object
-     * @param {Boolean} [floating===object.floating] if visibility check should be done against screen coordinates
-     * @returns {Boolean}
+     * @param {me.Renderable} obj to be checked against
+     * @param {boolean} [floating = obj.floating] if visibility check should be done against screen coordinates
+     * @returns {boolean}
      */
     isVisible(obj, floating = obj.floating) {
         if (floating === true || obj.floating === true) {
@@ -630,9 +630,9 @@ class Camera2d extends Renderable {
      * @name localToWorld
      * @memberOf me.Camera2d
      * @function
-     * @param {Number} x
-     * @param {Number} y
-     * @param {Number} [v] an optional vector object where to set the
+     * @param {number} x
+     * @param {number} y
+     * @param {number} [v] an optional vector object where to set the
      * converted value
      * @returns {me.Vector2d}
      */
@@ -651,9 +651,9 @@ class Camera2d extends Renderable {
      * @name worldToLocal
      * @memberOf me.Camera2d
      * @function
-     * @param {Number} x
-     * @param {Number} y
-     * @param {Number} [v] an optional vector object where to set the
+     * @param {number} x
+     * @param {number} y
+     * @param {number} [v] an optional vector object where to set the
      * converted value
      * @returns {me.Vector2d}
      */

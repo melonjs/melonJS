@@ -49,10 +49,10 @@ class Bounds {
      * @name setMinMax
      * @memberOf me.Bounds
      * @function
-     * @param {Number} minX
-     * @param {Number} minY
-     * @param {Number} maxX
-     * @param {Number} maxY
+     * @param {number} minX
+     * @param {number} minY
+     * @param {number} maxX
+     * @param {number} maxY
      */
     setMinMax(minX, minY, maxX, maxY) {
         this.min.x = minX;
@@ -65,7 +65,7 @@ class Bounds {
     /**
      * x position of the bound
      * @public
-     * @type {Number}
+     * @type {number}
      * @name x
      * @memberOf me.Bounds
      */
@@ -82,7 +82,7 @@ class Bounds {
     /**
      * y position of the bounds
      * @public
-     * @type {Number}
+     * @type {number}
      * @name y
      * @memberOf me.Bounds
      */
@@ -100,7 +100,7 @@ class Bounds {
     /**
      * width of the bounds
      * @public
-     * @type {Number}
+     * @type {number}
      * @name width
      * @memberOf me.Bounds
      */
@@ -115,7 +115,7 @@ class Bounds {
     /**
      * width of the bounds
      * @public
-     * @type {Number}
+     * @type {number}
      * @name width
      * @memberOf me.Bounds
      */
@@ -130,7 +130,7 @@ class Bounds {
     /**
      * left coordinate of the bound
      * @public
-     * @type {Number}
+     * @type {number}
      * @name left
      * @memberOf me.Bounds
      */
@@ -141,7 +141,7 @@ class Bounds {
     /**
      * right coordinate of the bound
      * @public
-     * @type {Number}
+     * @type {number}
      * @name right
      * @memberOf me.Bounds
      */
@@ -152,7 +152,7 @@ class Bounds {
     /**
      * top coordinate of the bound
      * @public
-     * @type {Number}
+     * @type {number}
      * @name top
      * @memberOf me.Bounds
      */
@@ -163,7 +163,7 @@ class Bounds {
     /**
      * bottom coordinate of the bound
      * @public
-     * @type {Number}
+     * @type {number}
      * @name bottom
      * @memberOf me.Bounds
      */
@@ -174,7 +174,7 @@ class Bounds {
     /**
      * center position of the bound on the x axis
      * @public
-     * @type {Number}
+     * @type {number}
      * @name centerX
      * @memberOf me.Bounds
      */
@@ -185,7 +185,7 @@ class Bounds {
     /**
      * center position of the bound on the y axis
      * @public
-     * @type {Number}
+     * @type {number}
      * @name centerY
      * @memberOf me.Bounds
      */
@@ -278,10 +278,10 @@ class Bounds {
      * @name addFrame
      * @memberOf me.Bounds
      * @function
-     * @param {Number} x0 - left X coordinates of the quad
-     * @param {Number} y0 - top Y coordinates of the quad
-     * @param {Number} x1 - right X coordinates of the quad
-     * @param {Number} y1 - bottom y coordinates of the quad
+     * @param {number} x0 - left X coordinates of the quad
+     * @param {number} y0 - top Y coordinates of the quad
+     * @param {number} x1 - right X coordinates of the quad
+     * @param {number} y1 - bottom y coordinates of the quad
      * @param {me.Matrix2d} [m] an optional transform to apply to the given frame coordinates
      */
     addFrame(x0, y0, x1, y1, m) {
@@ -309,8 +309,8 @@ class Bounds {
      * @name contains
      * @memberOf me.Bounds
      * @function
-     * @param {Number} x
-     * @param {Number} y
+     * @param {number} x
+     * @param {number} y
      * @returns {boolean} True if the bounds contain the point, otherwise false
      */
     contains() {
@@ -374,8 +374,8 @@ class Bounds {
      * @name translate
      * @memberOf me.Bounds
      * @function
-     * @param {Number} x
-     * @param {Number} y
+     * @param {number} x
+     * @param {number} y
      */
     translate() {
         var _x, _y;
@@ -406,8 +406,8 @@ class Bounds {
      * @name shift
      * @memberOf me.Bounds
      * @function
-     * @param {Number} x
-     * @param {Number} y
+     * @param {number} x
+     * @param {number} y
      */
     shift() {
         var _x, _y;

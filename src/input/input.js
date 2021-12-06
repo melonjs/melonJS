@@ -6,7 +6,7 @@
 /**
  * specify if melonJS should prevent all default browser action on registered events.
  * @public
- * @type Boolean
+ * @type {boolean}
  * @default true
  * @name preventDefault
  * @memberOf me.input

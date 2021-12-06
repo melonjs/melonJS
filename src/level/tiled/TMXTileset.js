@@ -10,7 +10,7 @@ import loader from "./../../loader/loader.js";
  * @class TMXTileset
  * @memberOf me
  * @constructor
- * @param {Object} tileset tileset data in JSON format ({@link http://docs.mapeditor.org/en/stable/reference/tmx-map-format/#tileset})
+ * @param {object} tileset tileset data in JSON format ({@link http://docs.mapeditor.org/en/stable/reference/tmx-map-format/#tileset})
  */
 export default class TMXTileset {
 
@@ -51,7 +51,7 @@ export default class TMXTileset {
         /**
          * Tileset contains animated tiles
          * @public
-         * @type Boolean
+         * @type {boolean}
          * @name me.TMXTileset#isAnimated
          */
         this.isAnimated = false;
@@ -59,7 +59,7 @@ export default class TMXTileset {
         /**
          * true if the tileset is a "Collection of Image" Tileset
          * @public
-         * @type Boolean
+         * @type {boolean}
          * @name me.TMXTileset#isCollection
          */
         this.isCollection = false;
@@ -67,7 +67,7 @@ export default class TMXTileset {
         /**
          * Tileset animations
          * @private
-         * @type Map
+         * @type {Map}
          * @name me.TMXTileset#animations
          */
         this.animations = new Map();
@@ -75,7 +75,7 @@ export default class TMXTileset {
         /**
          * Remember the last update timestamp to prevent too many animation updates
          * @private
-         * @type Map
+         * @type {Map}
          * @name me.TMXTileset#_lastUpdate
          */
         this._lastUpdate = 0;
@@ -173,7 +173,7 @@ export default class TMXTileset {
      * @name me.TMXTileset#getTileImage
      * @public
      * @function
-     * @param {Number} gid
+     * @param {number} gid
      * @returns {Image} corresponding image or undefined
      */
     getTileImage(gid) {
@@ -196,8 +196,8 @@ export default class TMXTileset {
      * @name me.TMXTileset#contains
      * @public
      * @function
-     * @param {Number} gid
-     * @returns {Boolean}
+     * @param {number} gid
+     * @returns {boolean}
      */
     contains(gid) {
         return gid >= this.firstgid && gid <= this.lastgid;
@@ -208,8 +208,8 @@ export default class TMXTileset {
      * @name me.TMXTileset#getViewTileId
      * @public
      * @function
-     * @param {Number} gid Global tile ID
-     * @returns {Number} View tile ID
+     * @param {number} gid Global tile ID
+     * @returns {number} View tile ID
      */
     getViewTileId(gid) {
         var localId = gid - this.firstgid;
@@ -227,8 +227,8 @@ export default class TMXTileset {
      * @name me.TMXTileset#getTileProperties
      * @public
      * @function
-     * @param {Number} tileId
-     * @returns {Object}
+     * @param {number} tileId
+     * @returns {object}
      */
     getTileProperties(tileId) {
         return this.TileProperties[tileId];

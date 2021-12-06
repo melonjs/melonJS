@@ -10,19 +10,19 @@ import Sprite from "./sprite.js";
  * @extends me.Sprite
  * @memberOf me
  * @constructor
- * @param {Number} x the x coordinates of the sprite object
- * @param {Number} y the y coordinates of the sprite object
- * @param {Object} settings Configuration parameters for the Sprite object
- * @param {Number} settings.width the width of the Renderable over which the sprite needs to be stretched
- * @param {Number} settings.height the height of the Renderable over which the sprite needs to be stretched
- * @param {me.Renderer.Texture|HTMLImageElement|HTMLCanvasElement|String} settings.image reference to a texture, spritesheet image or to a texture atlas
- * @param {String} [settings.name=""] name of this object
- * @param {String} [settings.region] region name of a specific region to use when using a texture atlas, see {@link me.Renderer.Texture}
- * @param {Number} [settings.framewidth] Width of a single frame within the spritesheet
- * @param {Number} [settings.frameheight] Height of a single frame within the spritesheet
- * @param {String|me.Color} [settings.tint] a tint to be applied to this sprite
- * @param {Number} [settings.flipX] flip the sprite on the horizontal axis
- * @param {Number} [settings.flipY] flip the sprite on the vertical axis
+ * @param {number} x the x coordinates of the sprite object
+ * @param {number} y the y coordinates of the sprite object
+ * @param {object} settings Configuration parameters for the Sprite object
+ * @param {number} settings.width the width of the Renderable over which the sprite needs to be stretched
+ * @param {number} settings.height the height of the Renderable over which the sprite needs to be stretched
+ * @param {me.Renderer.Texture|HTMLImageElement|HTMLCanvasElement|string} settings.image reference to a texture, spritesheet image or to a texture atlas
+ * @param {string} [settings.name=""] name of this object
+ * @param {string} [settings.region] region name of a specific region to use when using a texture atlas, see {@link me.Renderer.Texture}
+ * @param {number} [settings.framewidth] Width of a single frame within the spritesheet
+ * @param {number} [settings.frameheight] Height of a single frame within the spritesheet
+ * @param {string|me.Color} [settings.tint] a tint to be applied to this sprite
+ * @param {number} [settings.flipX] flip the sprite on the horizontal axis
+ * @param {number} [settings.flipY] flip the sprite on the vertical axis
  * @param {me.Vector2d} [settings.anchorPoint={x:0.5, y:0.5}] Anchor point to draw the frame at (defaults to the center of the frame).
  * @example
  * this.panelSprite = new me.NineSliceSprite(0, 0, {

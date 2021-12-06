@@ -7,8 +7,8 @@ import pool from "./../system/pooling.js";
  * @class Vector2d
  * @memberOf me
  * @constructor
- * @param {Number} [x=0] x value of the vector
- * @param {Number} [y=0] y value of the vector
+ * @param {number} [x=0] x value of the vector
+ * @param {number} [y=0] y value of the vector
  */
 class Vector2d {
 
@@ -27,7 +27,8 @@ class Vector2d {
     }
 
     /**
-     * @ignore */
+     * @ignore
+     */
     _set(x, y) {
         this.x = x;
         this.y = y;
@@ -39,8 +40,8 @@ class Vector2d {
      * @name set
      * @memberOf me.Vector2d
      * @function
-     * @param {Number} x
-     * @param {Number} y
+     * @param {number} x
+     * @param {number} y
      * @returns {me.Vector2d} Reference to this object for method chaining
      */
     set(x, y) {
@@ -53,7 +54,7 @@ class Vector2d {
         /**
          * x value of the vector
          * @public
-         * @type Number
+         * @type {number}
          * @name x
          * @memberOf me.Vector2d
          */
@@ -62,7 +63,7 @@ class Vector2d {
         /**
          * y value of the vector
          * @public
-         * @type Number
+         * @type {number}
          * @name y
          * @memberOf me.Vector2d
          */
@@ -123,8 +124,8 @@ class Vector2d {
      * @name scale
      * @memberOf me.Vector2d
      * @function
-     * @param {Number} x
-     * @param {Number} [y=x]
+     * @param {number} x
+     * @param {number} [y=x]
      * @returns {me.Vector2d} Reference to this object for method chaining
      */
     scale(x, y) {
@@ -170,7 +171,7 @@ class Vector2d {
      * @name div
      * @memberOf me.Vector2d
      * @function
-     * @param {Number} value
+     * @param {number} n the value to divide the vector by
      * @returns {me.Vector2d} Reference to this object for method chaining
      */
     div(n) {
@@ -193,8 +194,8 @@ class Vector2d {
      * @name clamp
      * @memberOf me.Vector2d
      * @function
-     * @param {Number} low
-     * @param {Number} high
+     * @param {number} low
+     * @param {number} high
      * @returns {me.Vector2d} new me.Vector2d
      */
     clamp(low, high) {
@@ -206,8 +207,8 @@ class Vector2d {
      * @name clampSelf
      * @memberOf me.Vector2d
      * @function
-     * @param {Number} low
-     * @param {Number} high
+     * @param {number} low
+     * @param {number} high
      * @returns {me.Vector2d} Reference to this object for method chaining
      */
     clampSelf(low, high) {
@@ -322,16 +323,16 @@ class Vector2d {
      * @memberOf me.Vector2d
      * @function
      * @param {me.Vector2d} v
-     * @returns {Boolean}
+     * @returns {boolean}
      */
     /**
      * return true if this vector is equal to the given values
      * @name equals
      * @memberOf me.Vector2d
      * @function
-     * @param {Number} x
-     * @param {Number} y
-     * @returns {Boolean}
+     * @param {number} x
+     * @param {number} y
+     * @returns {boolean}
      */
     equals() {
         var _x, _y;
@@ -403,19 +404,19 @@ class Vector2d {
      * @memberOf me.Vector2d
      * @function
      * @param {me.Vector2d} v
-     * @returns {Number} The dot product.
+     * @returns {number} The dot product.
      */
     dotProduct(v) {
         return this.x * v.x + this.y * v.y;
     }
 
    /**
-     * return the square length of this vector
-     * @name length2
-     * @memberOf me.Vector2d
-     * @function
-     * @returns {Number} The length^2 of this vector.
-     */
+    * return the square length of this vector
+    * @name length2
+    * @memberOf me.Vector2d
+    * @function
+    * @returns {number} The length^2 of this vector.
+    */
     length2() {
         return this.dotProduct(this);
     }
@@ -425,7 +426,7 @@ class Vector2d {
      * @name length
      * @memberOf me.Vector2d
      * @function
-     * @returns {Number} the length of this vector
+     * @returns {number} the length of this vector
      */
     length() {
         return Math.sqrt(this.length2());
@@ -437,7 +438,7 @@ class Vector2d {
      * @memberOf me.Vector2d
      * @function
      * @param {me.Vector2d} v
-     * @param {Number} alpha distance along the line (alpha = 0 will be this vector, and alpha = 1 will be the given one).
+     * @param {number} alpha distance along the line (alpha = 0 will be this vector, and alpha = 1 will be the given one).
      * @returns {me.Vector2d} Reference to this object for method chaining
      */
     lerp(v, alpha) {
@@ -452,7 +453,7 @@ class Vector2d {
      * @memberOf me.Vector2d
      * @function
      * @param {me.Vector2d} v
-     * @returns {Number}
+     * @returns {number}
      */
     distance(v) {
         var dx = this.x - v.x, dy = this.y - v.y;
@@ -465,7 +466,7 @@ class Vector2d {
      * @memberOf me.Vector2d
      * @function
      * @param {me.Vector2d} v
-     * @returns {Number} angle in radians
+     * @returns {number} angle in radians
      */
     angle(v) {
         return Math.acos(clamp(this.dotProduct(v) / (this.length() * v.length()), -1, 1));
@@ -512,7 +513,7 @@ class Vector2d {
      * @name toString
      * @memberOf me.Vector2d
      * @function
-     * @returns {String}
+     * @returns {string}
      */
     toString() {
         return "x:" + this.x + ",y:" + this.y;

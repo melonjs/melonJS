@@ -33,7 +33,7 @@ export default class TMXTilesetGroup {
      * @name me.TMXTilesetGroup#getTilesetByIndex
      * @public
      * @function
-     * @param {Number} i
+     * @param {number} i
      * @returns {me.TMXTileset} corresponding tileset
      */
     getTilesetByIndex(i) {
@@ -46,7 +46,7 @@ export default class TMXTilesetGroup {
      * @name me.TMXTilesetGroup#getTilesetByGid
      * @public
      * @function
-     * @param {Number} gid
+     * @param {number} gid
      * @returns {me.TMXTileset} corresponding tileset
      */
     getTilesetByGid(gid) {

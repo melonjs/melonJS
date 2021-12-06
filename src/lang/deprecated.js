@@ -10,9 +10,9 @@
  * @function
  * @memberOf me.deprecated
  * @name warning
- * @param {String} deprecated deprecated class,function or property name
- * @param {String} replacement the replacement class, function, or property name
- * @param {String} version the version since when the lass,function or property is deprecated
+ * @param {string} deprecated deprecated class,function or property name
+ * @param {string} replacement the replacement class, function, or property name
+ * @param {string} version the version since when the lass,function or property is deprecated
  */
 export function warning(deprecated, replacement, version) {
     var msg = "melonJS: %s is deprecated since version %s, please use %s";

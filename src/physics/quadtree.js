@@ -57,9 +57,9 @@ var QT_VECTOR = new Vector2d();
  * @constructor
  * @see me.game.world.broadphase
  * @param {me.Bounds} bounds bounds of the node
- * @param {Number} [max_objects=4] max objects a node can hold before splitting into 4 subnodes
- * @param {Number} [max_levels=4] total max levels inside root Quadtree
- * @param {Number} [level] deepth level, required for subnodes
+ * @param {number} [max_objects=4] max objects a node can hold before splitting into 4 subnodes
+ * @param {number} [max_levels=4] total max levels inside root Quadtree
+ * @param {number} [level] deepth level, required for subnodes
  */
 class QuadTree {
 
@@ -197,7 +197,7 @@ class QuadTree {
      * @name insert
      * @memberOf me.QuadTree
      * @function
-     * @param {Object} item object to be added
+     * @param {object} item object to be added
      */
     insert(item) {
         var index = -1;
@@ -242,9 +242,9 @@ class QuadTree {
      * @name retrieve
      * @memberOf me.QuadTree
      * @function
-     * @param {Object} object object to be checked against
-     * @param {Object} [function] a sorting function for the returned array
-     * @returns {Object[]} array with all detected objects
+     * @param {object} item object to be checked against
+     * @param {object} [fn] a sorting function for the returned array
+     * @returns {object[]} array with all detected objects
      */
     retrieve(item, fn) {
         var returnObjects = this.objects;
@@ -278,8 +278,8 @@ class QuadTree {
      * @name remove
      * @memberOf me.QuadTree
      * @function
-     * @param {Object} object object to be removed
-     * @returns {Boolean} true if the item was found and removed.
+     * @param {object} item object to be removed
+     * @returns {boolean} true if the item was found and removed.
      */
      remove(item) {
         var found = false;
@@ -319,7 +319,7 @@ class QuadTree {
      * @name isPrunable
      * @memberOf me.QuadTree
      * @function
-     * @returns {Boolean} true if the node is prunable
+     * @returns {boolean} true if the node is prunable
      */
     isPrunable() {
         return !(this.hasChildren() || (this.objects.length > 0));
@@ -330,7 +330,7 @@ class QuadTree {
      * @name hasChildren
      * @memberOf me.QuadTree
      * @function
-     * @returns {Boolean} true if the node has any children
+     * @returns {boolean} true if the node has any children
      */
     hasChildren() {
         for (var i = 0; i < this.nodes.length; i = i + 1) {
@@ -347,6 +347,7 @@ class QuadTree {
      * @name clear
      * @memberOf me.QuadTree
      * @function
+     * @param {me.Bounds} [bounds=this.bounds] the bounds to be cleared
      */
     clear(bounds) {
         this.objects.length = 0;

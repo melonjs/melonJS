@@ -14,7 +14,7 @@ var collision = {
       * @name maxChildren
       * @memberOf me.collision
       * @public
-      * @type {Number}
+      * @type {number}
       * @default 8
       * @see me.game.world.broadphase
       */
@@ -25,27 +25,26 @@ var collision = {
       * @name maxDepth
       * @memberOf me.collision
       * @public
-      * @type {Number}
+      * @type {number}
       * @default 4
       * @see me.game.world.broadphase
-      *
       */
      maxDepth : 4,
 
     /**
      * Enum for collision type values.
-     * @property NO_OBJECT to disable collision check
-     * @property PLAYER_OBJECT
-     * @property NPC_OBJECT
-     * @property ENEMY_OBJECT
-     * @property COLLECTABLE_OBJECT
-     * @property ACTION_OBJECT e.g. doors
-     * @property PROJECTILE_OBJECT e.g. missiles
-     * @property WORLD_SHAPE e.g. walls; for map collision shapes
-     * @property USER user-defined collision types (see example)
-     * @property ALL_OBJECT all of the above (including user-defined types)
+     * @property {number} NO_OBJECT to disable collision check
+     * @property {number} PLAYER_OBJECT playbable characters
+     * @property {number} NPC_OBJECT non playable characters
+     * @property {number} ENEMY_OBJECT enemies objects
+     * @property {number} COLLECTABLE_OBJECT collectable objects
+     * @property {number} ACTION_OBJECT e.g. doors
+     * @property {number} PROJECTILE_OBJECT e.g. missiles
+     * @property {number} WORLD_SHAPE e.g. walls; for map collision shapes
+     * @property {number} USER user-defined collision types (see example)
+     * @property {number} ALL_OBJECT all of the above (including user-defined types)
      * @readonly
-     * @enum {Number}
+     * @enum {number}
      * @name types
      * @memberOf me.collision
      * @see me.body.setCollisionMask
@@ -131,7 +130,7 @@ var collision = {
      *        // ...
      *    }
      */
-    rayCast(line, resultArray) { return rayCast(line, resultArray); }
+    rayCast(line, result) { return rayCast(line, result); }
 };
 
 export default collision;
