@@ -1,6 +1,6 @@
 {
   "name": "melonjs",
-  "version": "9.1.2",
+  "version": "9.1.3",
   "description": "melonJS Game Engine",
   "homepage": "http://www.melonjs.org/",
   "keywords": [
@@ -57,12 +57,12 @@
   },
   "devDependencies": {
     "@rollup/plugin-buble": "^0.21.3",
-    "@rollup/plugin-commonjs": "^20.0.0",
+    "@rollup/plugin-commonjs": "^21.0.1",
     "@rollup/plugin-node-resolve": "^13.0.4",
     "@rollup/plugin-replace": "^3.0.0",
     "cheerio": "^1.0.0-rc.10",
     "del-cli": "^4.0.1",
-    "eslint": "^7.32.0",
+    "eslint": "^8.4.1",
     "ghpages": "0.0.10",
     "jasmine-core": "^3.9.0",
     "jsdoc": "^3.6.7",
