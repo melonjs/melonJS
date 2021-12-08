@@ -347,7 +347,7 @@ export function warning(deprecated, replacement, version) {
      * @see me.video.getParent
      */
     me.video.getWrapper = function() {
-        warning("me.video.getWrapper()", "me.device.getParent()", "8.0.0");
+        warning("me.video.getWrapper()", "me.video.getParent()", "8.0.0");
         return me.video.getParent();
     };
 

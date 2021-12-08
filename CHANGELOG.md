@@ -1,5 +1,10 @@
 # Changelog
 
+## [9.1.3] - _2021-10-03_
+
+### Fixed
+- fix wrong warning message for deprecated `me.video.getWrapper`
+
 ## [9.1.2] - _2021-10-03_
 
 ### Fixed
