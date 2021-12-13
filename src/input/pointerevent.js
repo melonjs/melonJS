@@ -1,6 +1,5 @@
 import {preventDefault} from "./input.js";
 import {getBindingKey, triggerKeyEvent} from "./keyboard.js";
-import Vector2d from "./../math/vector2.js";
 import { renderer, scaleRatio } from "./../video/video.js";
 import * as fctUtil from "./../utils/function.js";
 import * as arrayUtil from "./../utils/array.js";
@@ -11,9 +10,7 @@ import device from "./../system/device.js";
 import Pointer from "./pointer.js";
 import Rect from "./../shapes/rectangle.js";
 import Container from "./../renderable/container.js";
-import Renderable from "./../renderable/renderable.js";
 import { world, viewport } from "./../game.js";
-
 
 /**
  * A pool of `Pointer` objects to cache pointer/touch event coordinates.
@@ -308,10 +305,11 @@ function dispatchEvent(normalizedEvents) {
                     pointer.gameLocalY = pointer.gameY - parentBounds.y;
                 }
 
+                var gameX = pointer.gameX;
+                var gameY = pointer.gameY;
+
                 // apply inverse transformation for renderable
-                if (region instanceof Renderable) {
-                    var gameX = pointer.gameX;
-                    var gameY = pointer.gameY;
+                if (typeof region.currentTransform !== "undefined") {
                     if (!region.currentTransform.isIdentity()) {
                         var invV = region.currentTransform.applyInverse(
                             pool.pull("Vector2d", gameX, gameY)
@@ -320,14 +318,8 @@ function dispatchEvent(normalizedEvents) {
                         gameY = invV.y;
                         pool.push(invV);
                     }
-                    eventInBounds = bounds.contains(gameX, gameY);
-                } else {
-                    eventInBounds =
-                        bounds.contains(pointer.gameX, pointer.gameY) &&
-                        (bounds === region ||
-                        // if the given target is another shape than me.Rect
-                        region.contains(pointer.gameLocalX, pointer.gameLocalY));
                 }
+                eventInBounds = bounds.contains(gameX, gameY);
 
                 switch (pointer.type) {
                     case POINTER_MOVE[0]:
@@ -543,7 +535,7 @@ export var throttlingInterval;
  * };
  */
 export function globalToLocal(x, y, v) {
-    v = v || new Vector2d();
+    v = v || pool.pull("Vector2d");
     var rect = device.getElementBounds(renderer.getScreenCanvas());
     var pixelRatio = device.devicePixelRatio;
     x -= rect.left + (window.pageXOffset || 0);

@@ -329,8 +329,6 @@ class Pointer extends Bounds {
 
         this.type = event.type;
 
-
-
         // get the current screen to game world offset
         if (typeof viewport !== "undefined") {
             viewport.localToWorld(this.gameScreenX, this.gameScreenY, tmpVec);
