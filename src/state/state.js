@@ -336,14 +336,14 @@ var state = {
      * @memberOf me.state
      * @public
      * @function
-     * @param {boolean} [resumeTrack=false] resume current track on screen resume
+     * @param {boolean} [music=false] resume current music track on screen resume
      */
-    resume(resumeTrack=false) {
+    resume(music=false) {
         if (this.isPaused()) {
             // resume the main loop
             _resumeRunLoop();
             // current music stop
-            if (resumeTrack === true) {
+            if (music === true) {
                 resumeTrack();
             }
 
