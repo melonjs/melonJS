@@ -282,15 +282,15 @@ var state = {
      * @memberOf me.state
      * @public
      * @function
-     * @param {boolean} [pauseTrack=false] pause current track on screen pause
+     * @param {boolean} [music=false] pause current music track on screen pause
      */
-    pause(pauseTrack=false) {
+    pause(music=false) {
         // only pause when we are not loading stuff
         if ((_state !== this.LOADING) && !this.isPaused()) {
             // stop the main loop
             _pauseRunLoop();
             // current music stop
-            if (pauseTrack === true) {
+            if (music === true) {
                 pauseTrack();
             }
 
@@ -308,14 +308,14 @@ var state = {
      * @memberOf me.state
      * @public
      * @function
-     * @param {boolean} [resumeTrack=false] resume current track on screen resume
+     * @param {boolean} [music=false] resume current music track on screen resume
      */
-    restart(resumeTrack=false) {
+    restart(music=false) {
         if (!this.isRunning()) {
             // restart the main loop
             _startRunLoop();
             // current music stop
-            if (resumeTrack === true) {
+            if (music === true) {
                 resumeTrack();
             }
 
