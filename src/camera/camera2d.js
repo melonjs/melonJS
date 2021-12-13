@@ -638,7 +638,7 @@ class Camera2d extends Renderable {
      */
     localToWorld(x, y, v) {
         // TODO memoization for one set of coords (multitouch)
-        v = v || new Vector2d();
+        v = v || pool.pull("Vector2d");
         v.set(x, y).add(this.pos).sub(world.pos);
         if (!this.currentTransform.isIdentity()) {
             this.invCurrentTransform.apply(v);
@@ -659,7 +659,7 @@ class Camera2d extends Renderable {
      */
     worldToLocal(x, y, v) {
         // TODO memoization for one set of coords (multitouch)
-        v = v || new Vector2d();
+        v = v || pool.pull("Vector2d");
         v.set(x, y);
         if (!this.currentTransform.isIdentity()) {
             this.currentTransform.apply(v);
