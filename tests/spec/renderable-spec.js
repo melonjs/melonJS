@@ -59,5 +59,17 @@ describe("me.Renderable", function () {
             expect(renderable.getBounds().x).toEqual(400); // 200 + 200
             expect(renderable.getBounds().y).toEqual(400); // 100 + 300
         });
+
+        it("renderable in a floating container", function () {
+            expect(renderable.isFloating).toEqual(false);
+            childContainer.floating = true;
+            expect(renderable.isFloating).toEqual(true);
+        });
+
+        it("floating renderable in a container", function () {
+            childContainer.floating = false;
+            renderable.floating = true;
+            expect(renderable.isFloating).toEqual(true);
+        });
     });
 });

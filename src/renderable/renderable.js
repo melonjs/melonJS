@@ -315,6 +315,19 @@ class Renderable extends Rect {
     }
 
     /**
+     * Whether the renderable object is floating, or contained in a floating container
+     * @public
+     * @see me.Renderable#floating
+     * @readonly
+     * @type {boolean}
+     * @name isFloating
+     * @memberOf me.Renderable
+     */
+    get isFloating() {
+        return this.floating === true || (typeof this.ancestor !== "undefined" && this.ancestor.floating === true);
+    }
+
+    /**
      * Whether the renderable object is visible and within the viewport
      * @public
      * @readonly

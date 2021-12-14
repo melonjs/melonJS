@@ -1,16 +1,19 @@
 # Changelog
 
-## [10.2.2] (melonJS 2) - _2021-XX-XX
+## [10.2.2] (melonJS 2) - _2021-XX-XX_
+
+### Added
+- Renderable: new `isFloating` getter returning true if the renderable is a floating object or contained in a floating container
 
 ### Fixed
 - TypeScript: fix most of function return type declaration when applicable
 
-## [10.2.1] (melonJS 2) - _2021-11-23
+## [10.2.1] (melonJS 2) - _2021-11-23_
 
 ### Fixed
 - changelog release date and links
 
-## [10.2.0] (melonJS 2) - _2021-11-23
+## [10.2.0] (melonJS 2) - _2021-11-23_
 
 ### Added
 - Bounds: faster condition assessment for the `overlaps` method
