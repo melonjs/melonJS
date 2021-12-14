@@ -7,6 +7,7 @@
 
 ### Fixed
 - TypeScript: fix most of function return type declaration when applicable
+- Input: fix an issue with pointer event detection on nested floating items
 
 ## [10.2.1] (melonJS 2) - _2021-11-23_
 

@@ -124,19 +124,20 @@ class QuadTree {
      */
     getIndex(item) {
         var pos;
+        var bounds = item.getBounds();
 
         // use game world coordinates for floating items
-        if (item.floating || (item.ancestor && item.ancestor.floating)) {
-            pos = viewport.localToWorld(item.left, item.top, QT_VECTOR);
+        if (item.isFloating === true) {
+            pos = viewport.localToWorld(bounds.left, bounds.top, QT_VECTOR);
         } else {
-            pos = QT_VECTOR.set(item.left, item.top);
+            pos = QT_VECTOR.set(bounds.left, bounds.top);
         }
 
         var index = -1,
             rx = pos.x,
             ry = pos.y,
-            rw = item.width,
-            rh = item.height,
+            rw = bounds.width,
+            rh = bounds.height,
             verticalMidpoint = this.bounds.left + (this.bounds.width / 2),
             horizontalMidpoint = this.bounds.top + (this.bounds.height / 2),
             //rect can completely fit within the top quadrants

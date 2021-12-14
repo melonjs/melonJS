@@ -289,7 +289,7 @@ function dispatchEvent(normalizedEvents) {
                 var bounds = region.getBounds();
                 var eventInBounds = false;
 
-                if (region.floating === true) {
+                if (region.isFloating === true) {
                     pointer.gameX = pointer.gameLocalX = pointer.gameScreenX;
                     pointer.gameY = pointer.gameLocalY = pointer.gameScreenY;
                 } else {
