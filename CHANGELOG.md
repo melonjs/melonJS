@@ -1,6 +1,6 @@
 # Changelog
 
-## [10.2.2] (melonJS 2) - _2021-XX-XX_
+## [10.2.2] (melonJS 2) - _2021-12-14_
 
 ### Added
 - Renderable: new `isFloating` getter returning true if the renderable is a floating object or contained in a floating container
@@ -1048,6 +1048,7 @@
 - first public version with alex4 !
 - www.melonjs.org is live :)
 
+[10.2.2]: https://github.com/melonjs/melonJS/compare/10.2.1...10.2.2
 [10.2.1]: https://github.com/melonjs/melonJS/compare/10.2.0...10.2.1
 [10.2.0]: https://github.com/melonjs/melonJS/compare/10.1.1...10.2.0
 [10.1.1]: https://github.com/melonjs/melonJS/compare/10.1.0...10.1.1
