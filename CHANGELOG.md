@@ -6,7 +6,7 @@
 - Renderable: new `isFloating` getter returning true if the renderable is a floating object or contained in a floating container
 
 ### Fixed
-- TypeScript: fix most of function return type declaration when applicable
+- TypeScript: fix most of method parameters and return type declaration when applicable
 - Input: fix an issue with pointer event detection on nested floating items
 
 ## [10.2.1] (melonJS 2) - _2021-11-23_
