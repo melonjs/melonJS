@@ -5465,6 +5465,16 @@ export class Renderable {
         y: boolean;
     };
     _inViewport: boolean;
+    /**
+     * Whether the renderable object is floating, or contained in a floating container
+     * @public
+     * @see me.Renderable#floating
+     * @readonly
+     * @type {boolean}
+     * @name isFloating
+     * @memberOf me.Renderable
+     */
+    public readonly get isFloating(): boolean;
     public readonly set inViewport(arg: boolean);
     /**
      * Whether the renderable object is visible and within the viewport
@@ -11134,54 +11144,54 @@ export namespace state {
      * @memberOf me.state
      * @public
      * @function
-     * @param {boolean} [pauseTrack=false] pause current track on screen pause
+     * @param {boolean} [music=false] pause current music track on screen pause
      */
-    export function pause(pauseTrack?: boolean): void;
+    export function pause(music?: boolean): void;
     /**
      * pause the current screen object
      * @name pause
      * @memberOf me.state
      * @public
      * @function
-     * @param {boolean} [pauseTrack=false] pause current track on screen pause
+     * @param {boolean} [music=false] pause current music track on screen pause
      */
-    export function pause(pauseTrack?: boolean): void;
+    export function pause(music?: boolean): void;
     /**
      * Restart the screen object from a full stop.
      * @name restart
      * @memberOf me.state
      * @public
      * @function
-     * @param {boolean} [resumeTrack=false] resume current track on screen resume
+     * @param {boolean} [music=false] resume current music track on screen resume
      */
-    export function restart(resumeTrack?: boolean): void;
+    export function restart(music?: boolean): void;
     /**
      * Restart the screen object from a full stop.
      * @name restart
      * @memberOf me.state
      * @public
      * @function
-     * @param {boolean} [resumeTrack=false] resume current track on screen resume
+     * @param {boolean} [music=false] resume current music track on screen resume
      */
-    export function restart(resumeTrack?: boolean): void;
+    export function restart(music?: boolean): void;
     /**
      * resume the screen object
      * @name resume
      * @memberOf me.state
      * @public
      * @function
-     * @param {boolean} [resumeTrack=false] resume current track on screen resume
+     * @param {boolean} [music=false] resume current music track on screen resume
      */
-    export function resume(resumeTrack?: boolean): void;
+    export function resume(music?: boolean): void;
     /**
      * resume the screen object
      * @name resume
      * @memberOf me.state
      * @public
      * @function
-     * @param {boolean} [resumeTrack=false] resume current track on screen resume
+     * @param {boolean} [music=false] resume current music track on screen resume
      */
-    export function resume(resumeTrack?: boolean): void;
+    export function resume(music?: boolean): void;
     /**
      * return the running state of the state manager
      * @name isRunning

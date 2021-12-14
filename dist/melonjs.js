@@ -11649,8 +11649,6 @@
 
             this.type = event.type;
 
-
-
             // get the current screen to game world offset
             if (typeof viewport !== "undefined") {
                 viewport.localToWorld(this.gameScreenX, this.gameScreenY, tmpVec);
@@ -11954,7 +11952,7 @@
                     var bounds = region.getBounds();
                     var eventInBounds = false;
 
-                    if (region.floating === true) {
+                    if (region.isFloating === true) {
                         pointer.gameX = pointer.gameLocalX = pointer.gameScreenX;
                         pointer.gameY = pointer.gameLocalY = pointer.gameScreenY;
                     } else {
@@ -11970,10 +11968,11 @@
                         pointer.gameLocalY = pointer.gameY - parentBounds.y;
                     }
 
+                    var gameX = pointer.gameX;
+                    var gameY = pointer.gameY;
+
                     // apply inverse transformation for renderable
-                    if (region instanceof Renderable) {
-                        var gameX = pointer.gameX;
-                        var gameY = pointer.gameY;
+                    if (typeof region.currentTransform !== "undefined") {
                         if (!region.currentTransform.isIdentity()) {
                             var invV = region.currentTransform.applyInverse(
                                 pool.pull("Vector2d", gameX, gameY)
@@ -11982,14 +11981,8 @@
                             gameY = invV.y;
                             pool.push(invV);
                         }
-                        eventInBounds = bounds.contains(gameX, gameY);
-                    } else {
-                        eventInBounds =
-                            bounds.contains(pointer.gameX, pointer.gameY) &&
-                            (bounds === region ||
-                            // if the given target is another shape than me.Rect
-                            region.contains(pointer.gameLocalX, pointer.gameLocalY));
                     }
+                    eventInBounds = bounds.contains(gameX, gameY);
 
                     switch (pointer.type) {
                         case POINTER_MOVE[0]:
@@ -12205,7 +12198,7 @@
      * };
      */
     function globalToLocal(x, y, v) {
-        v = v || new Vector2d();
+        v = v || pool.pull("Vector2d");
         var rect = device$1.getElementBounds(renderer.getScreenCanvas());
         var pixelRatio = device$1.devicePixelRatio;
         x -= rect.left + (window.pageXOffset || 0);
@@ -13267,7 +13260,20 @@
         Renderable.prototype = Object.create( Rect && Rect.prototype );
         Renderable.prototype.constructor = Renderable;
 
-        var prototypeAccessors = { inViewport: { configurable: true },isFlippedX: { configurable: true },isFlippedY: { configurable: true } };
+        var prototypeAccessors = { isFloating: { configurable: true },inViewport: { configurable: true },isFlippedX: { configurable: true },isFlippedY: { configurable: true } };
+
+        /**
+         * Whether the renderable object is floating, or contained in a floating container
+         * @public
+         * @see me.Renderable#floating
+         * @readonly
+         * @type {boolean}
+         * @name isFloating
+         * @memberOf me.Renderable
+         */
+        prototypeAccessors.isFloating.get = function () {
+            return this.floating === true || (typeof this.ancestor !== "undefined" && this.ancestor.floating === true);
+        };
 
         /**
          * Whether the renderable object is visible and within the viewport
@@ -16871,19 +16877,20 @@
      */
     QuadTree.prototype.getIndex = function getIndex (item) {
         var pos;
+        var bounds = item.getBounds();
 
         // use game world coordinates for floating items
-        if (item.floating || (item.ancestor && item.ancestor.floating)) {
-            pos = viewport.localToWorld(item.left, item.top, QT_VECTOR);
+        if (item.isFloating === true) {
+            pos = viewport.localToWorld(bounds.left, bounds.top, QT_VECTOR);
         } else {
-            pos = QT_VECTOR.set(item.left, item.top);
+            pos = QT_VECTOR.set(bounds.left, bounds.top);
         }
 
         var index = -1,
             rx = pos.x,
             ry = pos.y,
-            rw = item.width,
-            rh = item.height,
+            rw = bounds.width,
+            rh = bounds.height,
             verticalMidpoint = this.bounds.left + (this.bounds.width / 2),
             horizontalMidpoint = this.bounds.top + (this.bounds.height / 2),
             //rect can completely fit within the top quadrants
@@ -18184,7 +18191,7 @@
          */
         Camera2d.prototype.localToWorld = function localToWorld (x, y, v) {
             // TODO memoization for one set of coords (multitouch)
-            v = v || new Vector2d();
+            v = v || pool.pull("Vector2d");
             v.set(x, y).add(this.pos).sub(world.pos);
             if (!this.currentTransform.isIdentity()) {
                 this.invCurrentTransform.apply(v);
@@ -18205,7 +18212,7 @@
          */
         Camera2d.prototype.worldToLocal = function worldToLocal (x, y, v) {
             // TODO memoization for one set of coords (multitouch)
-            v = v || new Vector2d();
+            v = v || pool.pull("Vector2d");
             v.set(x, y);
             if (!this.currentTransform.isIdentity()) {
                 this.currentTransform.apply(v);
@@ -18992,17 +18999,17 @@
          * @memberOf me.state
          * @public
          * @function
-         * @param {boolean} [pauseTrack=false] pause current track on screen pause
+         * @param {boolean} [music=false] pause current music track on screen pause
          */
-        pause: function pause(pauseTrack) {
-            if ( pauseTrack === void 0 ) pauseTrack=false;
+        pause: function pause(music) {
+            if ( music === void 0 ) music=false;
 
             // only pause when we are not loading stuff
             if ((_state !== this.LOADING) && !this.isPaused()) {
                 // stop the main loop
                 _pauseRunLoop();
                 // current music stop
-                if (pauseTrack === true) {
+                if (music === true) {
                     pauseTrack();
                 }
 
@@ -19020,16 +19027,16 @@
          * @memberOf me.state
          * @public
          * @function
-         * @param {boolean} [resumeTrack=false] resume current track on screen resume
+         * @param {boolean} [music=false] resume current music track on screen resume
          */
-        restart: function restart(resumeTrack) {
-            if ( resumeTrack === void 0 ) resumeTrack=false;
+        restart: function restart(music) {
+            if ( music === void 0 ) music=false;
 
             if (!this.isRunning()) {
                 // restart the main loop
                 _startRunLoop();
                 // current music stop
-                if (resumeTrack === true) {
+                if (music === true) {
                     resumeTrack();
                 }
 
@@ -19050,16 +19057,16 @@
          * @memberOf me.state
          * @public
          * @function
-         * @param {boolean} [resumeTrack=false] resume current track on screen resume
+         * @param {boolean} [music=false] resume current music track on screen resume
          */
-        resume: function resume(resumeTrack) {
-            if ( resumeTrack === void 0 ) resumeTrack=false;
+        resume: function resume(music) {
+            if ( music === void 0 ) music=false;
 
             if (this.isPaused()) {
                 // resume the main loop
                 _resumeRunLoop();
                 // current music stop
-                if (resumeTrack === true) {
+                if (music === true) {
                     resumeTrack();
                 }
 
