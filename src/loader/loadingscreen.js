@@ -71,9 +71,10 @@ class IconLogo extends Renderable {
         super(x, y, 100, 85);
 
         this.iconCanvas = createCanvas(
-            nextPowerOfTwo(this.width),
-            nextPowerOfTwo(this.height),
-        false);
+            renderer.WebGLVersion > 1 ? this.width : nextPowerOfTwo(this.width),
+            renderer.WebGLVersion > 1 ? this.height : nextPowerOfTwo(this.height),
+            false
+        );
 
         var context = renderer.getContext2d(this.iconCanvas);
 
@@ -156,7 +157,7 @@ class DefaultLoadingScreen extends Stage {
                 textAlign: "left",
                 textBaseline : "top",
                 text: "melon",
-                offScreenCanvas: true
+                offScreenCanvas: renderer.WebGLVersion >= 1
             }
         );
         logo1.anchorPoint.set(0, 0);
@@ -171,7 +172,7 @@ class DefaultLoadingScreen extends Stage {
                 textBaseline : "top",
                 bold: true,
                 text: "JS",
-                offScreenCanvas: true
+                offScreenCanvas: renderer.WebGLVersion >= 1
             }
         );
         logo2.anchorPoint.set(0, 0);
