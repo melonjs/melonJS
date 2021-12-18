@@ -181,9 +181,9 @@ class WebGLCompositor {
         for (var i = 0; i < this.renderer.maxTextures; i++) {
             var texture = this.boundTextures[i];
             if (texture !== null) {
+                this.boundTextures[i] = null;
                 this.gl.deleteTexture(texture);
             }
-            this.boundTextures[i] = null;
         }
         this.currentTextureUnit = -1;
 
