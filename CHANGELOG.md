@@ -1,5 +1,10 @@
 # Changelog
 
+## [10.2.3] (melonJS 2) - _2021-12-15_
+
+### Fixed
+- fix a regression with the quadtree and non floating objects
+
 ## [10.2.2] (melonJS 2) - _2021-12-14_
 
 ### Added
