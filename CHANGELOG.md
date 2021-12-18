@@ -1,10 +1,10 @@
 # Changelog
 
-## [10.2.3] (melonJS 2) - _2021-12-15_
+## [10.2.3] (melonJS 2) - _2021-12-18_
 
 ### Fixed
-- fix a regression with the quadtree and non floating objects
-- preloader : optimize cache canvas size when using webgl 2
+- Core: fix a regression with the quadtree implementation and non floating objects
+- Preloader: optimize defined cache canvas size in the default loading screen when using WebGL2
 
 ## [10.2.2] (melonJS 2) - _2021-12-14_
 
