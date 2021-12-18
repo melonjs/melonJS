@@ -75,15 +75,6 @@ class WebGLCompositor {
         // local reference
         var gl = renderer.gl;
 
-        /**
-         * The number of quads held in the batch
-         * @name length
-         * @memberOf me.WebGLCompositor
-         * @type {number}
-         * @readonly
-         */
-        //this.length = 0;
-
         // list of active texture units
         this.currentTextureUnit = -1;
         this.boundTextures = [];
