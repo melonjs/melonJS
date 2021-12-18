@@ -1054,6 +1054,7 @@
 - first public version with alex4 !
 - www.melonjs.org is live :)
 
+[10.2.3]: https://github.com/melonjs/melonJS/compare/10.2.2...10.2.3
 [10.2.2]: https://github.com/melonjs/melonJS/compare/10.2.0...10.2.2
 [10.2.1]: https://github.com/melonjs/melonJS/compare/10.2.0...10.2.1
 [10.2.0]: https://github.com/melonjs/melonJS/compare/10.1.1...10.2.0
