@@ -1,5 +1,5 @@
 /*!
- * melonJS Game Engine - v10.2.2
+ * melonJS Game Engine - v10.2.3
  * http://www.melonjs.org
  * melonjs is licensed under the MIT License.
  * http://www.opensource.org/licenses/mit-license
@@ -16883,7 +16883,7 @@
         if (item.isFloating === true) {
             pos = viewport.localToWorld(bounds.left, bounds.top, QT_VECTOR);
         } else {
-            pos = QT_VECTOR.set(bounds.left, bounds.top);
+            pos = QT_VECTOR.set(item.left, item.top);
         }
 
         var index = -1,
@@ -18595,9 +18595,10 @@
             Renderable.call(this, x, y, 100, 85);
 
             this.iconCanvas = createCanvas(
-                nextPowerOfTwo(this.width),
-                nextPowerOfTwo(this.height),
-            false);
+                renderer.WebGLVersion > 1 ? this.width : nextPowerOfTwo(this.width),
+                renderer.WebGLVersion > 1 ? this.height : nextPowerOfTwo(this.height),
+                false
+            );
 
             var context = renderer.getContext2d(this.iconCanvas);
 
@@ -18689,7 +18690,7 @@
                     textAlign: "left",
                     textBaseline : "top",
                     text: "melon",
-                    offScreenCanvas: true
+                    offScreenCanvas: renderer.WebGLVersion >= 1
                 }
             );
             logo1.anchorPoint.set(0, 0);
@@ -18704,7 +18705,7 @@
                     textBaseline : "top",
                     bold: true,
                     text: "JS",
-                    offScreenCanvas: true
+                    offScreenCanvas: renderer.WebGLVersion >= 1
                 }
             );
             logo2.anchorPoint.set(0, 0);
@@ -29243,15 +29244,6 @@
         // local reference
         var gl = renderer.gl;
 
-        /**
-         * The number of quads held in the batch
-         * @name length
-         * @memberOf me.WebGLCompositor
-         * @type {number}
-         * @readonly
-         */
-        //this.length = 0;
-
         // list of active texture units
         this.currentTextureUnit = -1;
         this.boundTextures = [];
@@ -29349,9 +29341,9 @@
         for (var i = 0; i < this.renderer.maxTextures; i++) {
             var texture = this.boundTextures[i];
             if (texture !== null) {
+                this.boundTextures[i] = null;
                 this.gl.deleteTexture(texture);
             }
-            this.boundTextures[i] = null;
         }
         this.currentTextureUnit = -1;
 
@@ -31203,6 +31195,8 @@
      * @returns {HTMLCanvasElement|OffscreenCanvas}
      */
     function createCanvas(width, height, offscreen) {
+        if ( offscreen === void 0 ) offscreen = false;
+
         var _canvas;
 
         if (width === 0 || height === 0) {
@@ -31770,10 +31764,10 @@
          * this can be overridden by the plugin
          * @public
          * @type {string}
-         * @default "10.2.2"
+         * @default "10.2.3"
          * @name me.plugin.Base#version
          */
-        this.version = "10.2.2";
+        this.version = "10.2.3";
     };
 
     /**
@@ -36309,7 +36303,7 @@
      * @name version
      * @type {string}
      */
-    var version = "10.2.2";
+    var version = "10.2.3";
 
 
     /**

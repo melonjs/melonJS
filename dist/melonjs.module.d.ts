@@ -8400,14 +8400,7 @@ export class WebGLCompositor {
      * @ignore
      */
     init(renderer: any): void;
-    /**
-     * The number of quads held in the batch
-     * @name length
-     * @memberOf me.WebGLCompositor
-     * @type {number}
-     * @readonly
-     */
-    readonly currentTextureUnit: number;
+    currentTextureUnit: any;
     boundTextures: any[];
     renderer: any;
     gl: any;
@@ -8503,7 +8496,7 @@ export class WebGLCompositor {
     /**
      * @ignore
      */
-    uploadTexture(texture: any, w: any, h: any, b: any, force: any): number;
+    uploadTexture(texture: any, w: any, h: any, b: any, force: any): any;
     /**
      * Select the shader to use for compositing
      * @name useShader
@@ -13022,7 +13015,7 @@ declare class BasePlugin {
      * this can be overridden by the plugin
      * @public
      * @type {string}
-     * @default "10.2.2"
+     * @default "10.2.3"
      * @name me.plugin.Base#version
      */
     public version: string;
