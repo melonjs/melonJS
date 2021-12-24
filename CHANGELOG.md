@@ -2,6 +2,9 @@
 
 ## [10.3.0] (melonJS 2) - _202x-xx-xx_
 
+### Added
+- TMX: melonJS will now throw an error if collision polygons defined in Tiled are not forming a convex shape
+
 ### Fixed
 - Core: fix a regression with the quadtree implementation and non floating objects
 - Preloader: optimize defined cache canvas size in the default loading screen when using WebGL2

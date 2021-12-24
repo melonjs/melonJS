@@ -278,6 +278,7 @@ class Polygon {
         return this;
     }
 
+
     /**
      * returns a list of indices for all triangles defined in this polygon
      * @name getIndices
@@ -290,6 +291,53 @@ class Polygon {
             this.indices = earcut(this.points.flatMap(p => [p.x, p.y]));
         }
         return this.indices;
+    }
+
+    /**
+     * Returns true if the vertices composing this polygon form a convex shape (vertices must be in clockwise order).
+     * @name isConvex
+     * @memberOf me.Polygon.prototype
+     * @function
+     * @returns {boolean} true if the vertices are convex, false if not, null if not computable
+     */
+    isConvex() {
+        // http://paulbourke.net/geometry/polygonmesh/
+        // Copyright (c) Paul Bourke (use permitted)
+
+        var flag = 0,
+            vertices = this.points,
+            n = vertices.length,
+            i,
+            j,
+            k,
+            z;
+
+        if (n < 3) {
+            return null;
+        }
+
+        for (i = 0; i < n; i++) {
+            j = (i + 1) % n;
+            k = (i + 2) % n;
+            z = (vertices[j].x - vertices[i].x) * (vertices[k].y - vertices[j].y);
+            z -= (vertices[j].y - vertices[i].y) * (vertices[k].x - vertices[j].x);
+
+            if (z < 0) {
+                flag |= 1;
+            } else if (z > 0) {
+                flag |= 2;
+            }
+
+            if (flag === 3) {
+                return false;
+            }
+        }
+
+        if (flag !== 0) {
+            return true;
+        } else {
+            return null;
+        }
     }
 
     /**

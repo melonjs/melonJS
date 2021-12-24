@@ -267,39 +267,46 @@ export default class TMXObject {
                 this.width,
                 this.height
             )).rotate(this.rotation));
-        }
+        } else {
 
-        // add a polygon
-        else if (this.isPolygon === true) {
-            shapes.push((new Polygon(0, 0, this.points)).rotate(this.rotation));
-        }
-
-        // add a polyline
-        else if (this.isPolyLine === true) {
-            var p = this.points;
-            var p1, p2;
-            var segments = p.length - 1;
-            for (i = 0; i < segments; i++) {
-                // clone the value before, as [i + 1]
-                // is reused later by the next segment
-                p1 = new Vector2d(p[i].x, p[i].y);
-                p2 = new Vector2d(p[i + 1].x, p[i + 1].y);
-                if (this.rotation !== 0) {
-                    p1 = p1.rotate(this.rotation);
-                    p2 = p2.rotate(this.rotation);
+            // add a polygon
+            if (this.isPolygon === true) {
+                var _polygon = new Polygon(0, 0, this.points);
+                // make sure it's a convex polygon
+                if (_polygon.isConvex() === false ) {
+                    throw new Error("collision polygones in Tiled should be defined as Convex");
                 }
-                shapes.push(new Line(0, 0, [ p1, p2 ]));
+                shapes.push(_polygon.rotate(this.rotation));
             }
-        }
 
-        // it's a rectangle, returns a polygon object anyway
-        else {
-            shapes.push((new Polygon(
-                0, 0, [
-                    new Vector2d(), new Vector2d(this.width, 0),
-                    new Vector2d(this.width, this.height), new Vector2d(0, this.height)
-                ]
-            )).rotate(this.rotation));
+            // add a polyline
+            else if (this.isPolyLine === true) {
+                var p = this.points;
+                var p1, p2;
+                var segments = p.length - 1;
+                for (i = 0; i < segments; i++) {
+                    // clone the value before, as [i + 1]
+                    // is reused later by the next segment
+                    p1 = new Vector2d(p[i].x, p[i].y);
+                    p2 = new Vector2d(p[i + 1].x, p[i + 1].y);
+                    if (this.rotation !== 0) {
+                        p1 = p1.rotate(this.rotation);
+                        p2 = p2.rotate(this.rotation);
+                    }
+                    shapes.push(new Line(0, 0, [ p1, p2 ]));
+                }
+            }
+
+            // it's a rectangle, returns a polygon object anyway
+            else {
+                shapes.push((new Polygon(
+                    0, 0, [
+                        new Vector2d(), new Vector2d(this.width, 0),
+                        new Vector2d(this.width, this.height), new Vector2d(0, this.height)
+                    ]
+                )).rotate(this.rotation));
+            }
+
         }
 
         // Apply isometric projection
