@@ -1,6 +1,6 @@
 # Changelog
 
-## [10.2.3] (melonJS 2) - _2021-12-18_
+## [10.3.0] (melonJS 2) - _202x-xx-xx_
 
 ### Fixed
 - Core: fix a regression with the quadtree implementation and non floating objects
