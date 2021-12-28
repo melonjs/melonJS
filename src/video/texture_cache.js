@@ -60,11 +60,9 @@ class TextureCache {
     /**
      * @ignore
      */
-    remove(image) {
+    delete(image) {
         if (!this.cache.has(image)) {
-            if (this.cache.remove(image) === true) {
-                this.length--;
-            }
+            this.cache.delete(image);
         }
     }
 
