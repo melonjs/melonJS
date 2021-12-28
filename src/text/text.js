@@ -215,13 +215,12 @@ class Text extends Renderable {
     onDeactivateEvent() {
         // free the canvas and potential corresponding texture when deactivated
         if (this.offScreenCanvas === true) {
-            if (renderer instanceof WebGLRenderer) {
-                renderer.currentCompositor.unbindTexture2D(renderer.cache.get(this.canvas));
-                renderer.cache.remove(this.canvas);
-            }
+            renderer.currentCompositor.deleteTexture2D(renderer.currentCompositor.getTexture2D(this.glTextureUnit));
+            renderer.cache.delete(this.canvas);
             this.canvas.width = this.canvas.height = 0;
             this.context = undefined;
             this.canvas = undefined;
+            this.glTextureUnit = undefined;
         }
     }
 
@@ -380,7 +379,8 @@ class Text extends Renderable {
 
                 if (renderer instanceof WebGLRenderer) {
                     // invalidate the previous corresponding texture so that it can reuploaded once changed
-                    renderer.currentCompositor.unbindTexture2D(renderer.cache.get(this.canvas));
+                    this.glTextureUnit = renderer.cache.getUnit(renderer.cache.get(this.canvas));
+                    renderer.currentCompositor.unbindTexture2D(null, this.glTextureUnit);
 
                     if (renderer.WebGLVersion === 1) {
                         // round size to next Pow2
