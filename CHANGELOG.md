@@ -6,6 +6,9 @@
 - TMX: melonJS will now throw an error if collision polygons defined in Tiled are not forming a convex shape
 
 ### Fixed
+- Renderable : properly delete me.Text cache WebGL texture upon deactivation (if created)
+
+### Fixed
 - Core: fix a regression with the quadtree implementation and non floating objects
 - Preloader: optimize defined cache canvas size in the default loading screen when using WebGL2
 
@@ -1057,6 +1060,7 @@
 - first public version with alex4 !
 - www.melonjs.org is live :)
 
+[10.3.0]: https://github.com/melonjs/melonJS/compare/10.2.3...10.3.0
 [10.2.3]: https://github.com/melonjs/melonJS/compare/10.2.2...10.2.3
 [10.2.2]: https://github.com/melonjs/melonJS/compare/10.2.0...10.2.2
 [10.2.1]: https://github.com/melonjs/melonJS/compare/10.2.0...10.2.1
