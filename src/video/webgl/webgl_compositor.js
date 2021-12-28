@@ -144,8 +144,6 @@ class WebGLCompositor {
             this.flush();
             this.setViewport(0, 0, width, height);
         });
-
-        this.reset();
     }
 
     /**
@@ -170,10 +168,9 @@ class WebGLCompositor {
 
         // delete all related bound texture
         for (var i = 0; i < this.renderer.maxTextures; i++) {
-            var texture = this.boundTextures[i];
-            if (texture !== null) {
-                this.boundTextures[i] = null;
-                this.gl.deleteTexture(texture);
+            var texture2D = this.getTexture2D(i);
+            if (typeof texture2D !== "undefined") {
+                this.deleteTexture2D(texture2D);
             }
         }
         this.currentTextureUnit = -1;
@@ -263,6 +260,31 @@ class WebGLCompositor {
     }
 
     /**
+     * delete the given WebGL texture
+     * @name bindTexture2D
+     * @memberOf me.WebGLCompositor
+     * @function
+     * @param {WebGLTexture} [texture] a WebGL texture to delete
+     * @param {number} [unit] Texture unit to delete
+     */
+    deleteTexture2D(texture) {
+        this.gl.deleteTexture(texture);
+        this.unbindTexture2D(texture);
+    }
+
+    /**
+     * returns the WebGL texture associated to the given texture unit
+     * @name bindTexture2D
+     * @memberOf me.WebGLCompositor
+     * @function
+     * @param {number} unit Texture unit to which a texture is bound
+     * @returns {WebGLTexture} texture a WebGL texture
+     */
+    getTexture2D(unit) {
+        return this.boundTextures[unit];
+    }
+
+    /**
      * assign the given WebGL texture to the current batch
      * @name bindTexture2D
      * @memberOf me.WebGLCompositor
@@ -295,21 +317,31 @@ class WebGLCompositor {
      * @name unbindTexture2D
      * @memberOf me.WebGLCompositor
      * @function
-     * @param {WebGLTexture} texture a WebGL texture
+     * @param {WebGLTexture} [texture] a WebGL texture
+     * @param {number} [unit] a WebGL texture
+     * @returns {number} unit the unit number that was associated with the given texture
      */
-    unbindTexture2D(texture) {
-        var unit = this.renderer.cache.getUnit(texture);
-        this.boundTextures[unit] = null;
+    unbindTexture2D(texture, unit) {
+        if (typeof unit === "undefined") {
+            unit = this.boundTextures.indexOf(texture);
+        }
+        if (typeof unit !== -1) {
+            delete this.boundTextures[unit];
+            if (unit === this.currentTextureUnit) {
+                this.currentTextureUnit = -1;
+            }
+        }
+        return unit;
     }
 
     /**
      * @ignore
      */
-    uploadTexture(texture, w, h, b, force) {
+    uploadTexture(texture, w, h, b, force = false) {
         var unit = this.renderer.cache.getUnit(texture);
         var texture2D = this.boundTextures[unit];
 
-        if (texture2D === null || force) {
+        if (typeof texture2D === "undefined" || force) {
             this.createTexture2D(
                 unit,
                 texture.getTexture(),

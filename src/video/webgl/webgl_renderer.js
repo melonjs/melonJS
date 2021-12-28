@@ -128,9 +128,18 @@ class WebGLRenderer extends Renderer {
          */
         this.currentCompositor = null;
 
-        // Create a compositor
-        var Compositor = this.settings.compositor || WebGLCompositor;
-        this.setCompositor(new Compositor(this));
+        /**
+         * The list of active compositors
+         * @name compositors
+         * @type {Map}
+         * @memberOf me.WebGLRenderer#
+         */
+        this.compositors = new Map();
+
+        // Create a default compositor
+        var compositor = new (this.settings.compositor || WebGLCompositor)(this);
+        this.compositors.set("default", compositor);
+        this.setCompositor(compositor);
 
 
         // default WebGL state(s)
@@ -177,12 +186,16 @@ class WebGLRenderer extends Renderer {
      */
     reset() {
         super.reset();
-        if (this.isContextValid === false) {
-            // on context lost/restore
-            this.currentCompositor.init(this);
-        } else {
-            this.currentCompositor.reset();
-        }
+
+        this.compositors.forEach((compositor) => {
+            if (this.isContextValid === false) {
+                // on context lost/restore
+                compositor.init(this);
+            } else {
+                compositor.reset();
+            }
+        });
+
         this.gl.disable(this.gl.SCISSOR_TEST);
         if (typeof this.fontContext2D !== "undefined" ) {
             this.createFontTexture(this.cache);
@@ -191,19 +204,31 @@ class WebGLRenderer extends Renderer {
     }
 
     /**
-     * assign a compositor to this renderer
+     * set the active compositor for this renderer
      * @name setCompositor
      * @function
-     * @param {WebGLCompositor} compositor a compositor instance
+     * @param {me.WebGLCompositor|string} compositor a compositor name or instance
      * @memberOf me.WebGLRenderer.prototype
      * @function
      */
-    setCompositor(compositor) {
-        if (this.currentCompositor !== null && this.currentCompositor !== compositor) {
-            // flush the current compositor
-            this.currentCompositor.flush();
+    setCompositor(compositor = "default") {
+
+        if (typeof compositor === "string") {
+            compositor = this.compositors.get(compositor);
         }
-        this.currentCompositor = compositor;
+
+        if (typeof compositor === undefined) {
+            throw new Error("Invalid WebGL Compositor");
+        }
+
+        if (this.currentCompositor !== compositor) {
+            if (this.currentCompositor !== null) {
+                // flush the current compositor
+                this.currentCompositor.flush();
+            }
+            // set given one as current
+            this.currentCompositor = compositor;
+        }
     }
 
     /**
