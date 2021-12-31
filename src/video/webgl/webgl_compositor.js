@@ -404,7 +404,7 @@ class WebGLCompositor {
      * @param {number} v0 Texture UV (v0) value.
      * @param {number} u1 Texture UV (u1) value.
      * @param {number} v1 Texture UV (v1) value.
-     * @param {number} tint tint color to be applied to the texture in UINT32 format
+     * @param {number} tint tint color to be applied to the texture in UINT32 (argb) format
      */
     addQuad(texture, x, y, w, h, u0, v0, u1, v1, tint) {
 
