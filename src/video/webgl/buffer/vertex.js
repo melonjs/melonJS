@@ -8,7 +8,7 @@
 class VertexArrayBuffer {
 
     constructor(vertex_size, vertex_per_quad) {
-        // the size of one vertex
+        // the size of one vertex in float
         this.vertexSize = vertex_size;
         // size of a quad in vertex
         this.quadSize = vertex_per_quad;

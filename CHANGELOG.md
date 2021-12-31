@@ -4,6 +4,7 @@
 
 ### Added
 - TMX: melonJS will now throw an error if collision polygons defined in Tiled are not forming a convex shape
+- WebGL : vertex element and buffer size are now dynamically calculated based on attribute definition
 
 ### Fixed
 - Renderable : properly delete me.Text cache WebGL texture upon deactivation (if created)

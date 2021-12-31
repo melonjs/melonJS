@@ -9,7 +9,6 @@ import primitiveFragment from "./shaders/primitive.frag";
 import quadVertex from "./shaders/quad.vert";
 import quadFragment from "./shaders/quad.frag";
 
-
 // a pool of resuable vectors
 var V_ARRAY = [
     new Vector2d(),
@@ -19,13 +18,6 @@ var V_ARRAY = [
 ];
 
 // Handy constants
-var VERTEX_SIZE = 2;
-var REGION_SIZE = 2;
-var COLOR_SIZE = 1;
-
-var ELEMENT_SIZE = VERTEX_SIZE + REGION_SIZE + COLOR_SIZE;
-var ELEMENT_OFFSET = ELEMENT_SIZE * Float32Array.BYTES_PER_ELEMENT;
-
 var ELEMENTS_PER_QUAD = 4;
 var INDICES_PER_QUAD = 6;
 
@@ -116,6 +108,24 @@ class WebGLCompositor {
          */
         this.attributes = [];
 
+        /**
+         * the size of a single vertex in bytes
+         * (will automatically be calculated as attributes definitions are added)
+         * @name vertexByteSize
+         * @see me.WebGLCompositor.addAttribute
+         * @memberOf me.WebGLCompositor
+         */
+        this.vertexByteSize = 0;
+
+        /**
+         * the size of a single vertex in floats
+         * (will automatically be calculated as attributes definitions are added)
+         * @name vertexSize
+         * @see me.WebGLCompositor.addAttribute
+         * @memberOf me.WebGLCompositor
+         */
+        this.vertexSize = 0;
+
         // Load and create shader programs
         this.primitiveShader = new GLShader(this.gl, primitiveVertex, primitiveFragment);
         this.quadShader = new GLShader(this.gl, quadVertex, quadFragment);
@@ -129,11 +139,11 @@ class WebGLCompositor {
         gl.bindBuffer(gl.ARRAY_BUFFER, gl.createBuffer());
         gl.bufferData(
             gl.ARRAY_BUFFER,
-            MAX_LENGTH * ELEMENT_OFFSET * ELEMENTS_PER_QUAD,
+            MAX_LENGTH * this.vertexByteSize * ELEMENTS_PER_QUAD,
             gl.STREAM_DRAW
         );
 
-        this.vertexBuffer = new VertexArrayBuffer(ELEMENT_SIZE, ELEMENTS_PER_QUAD);
+        this.vertexBuffer = new VertexArrayBuffer(this.vertexSize, ELEMENTS_PER_QUAD);
 
         // Cache index buffer (TODO Remove use for cache by replacing drawElements by drawArrays)
         gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, gl.createBuffer());
@@ -198,6 +208,33 @@ class WebGLCompositor {
             normalized: normalized,
             offset: offset
         });
+
+        switch (type) {
+            case this.gl.BYTE:
+                this.vertexByteSize += size * Int8Array.BYTES_PER_ELEMENT;
+                break;
+            case this.gl.UNSIGNED_BYTE:
+                this.vertexByteSize += size * Uint8Array.BYTES_PER_ELEMENT;
+                break;
+            case this.gl.SHORT:
+                this.vertexByteSize += size * Int16Array.BYTES_PER_ELEMENT;
+                break;
+            case this.gl.UNSIGNED_SHORT:
+                this.vertexByteSize += size * Uint16Array.BYTES_PER_ELEMENT;
+                break;
+            case this.gl.INT:
+                this.vertexByteSize += size * Int32Array.BYTES_PER_ELEMENT;
+                break;
+            case this.gl.UNSIGNED_INT:
+                this.vertexByteSize += size * Uint32Array.BYTES_PER_ELEMENT;
+                break;
+            case this.gl.FLOAT:
+                this.vertexByteSize += size * Float32Array.BYTES_PER_ELEMENT;
+                break;
+            default:
+                throw new Error("Invalid GL Attribute type");
+        }
+        this.vertexSize = this.vertexByteSize / Float32Array.BYTES_PER_ELEMENT;
     }
 
     /**
@@ -382,7 +419,7 @@ class WebGLCompositor {
 
                 if (location !== -1) {
                     gl.enableVertexAttribArray(location);
-                    gl.vertexAttribPointer(location, element.size, element.type, element.normalized, ELEMENT_OFFSET, element.offset);
+                    gl.vertexAttribPointer(location, element.size, element.type, element.normalized, this.vertexByteSize, element.offset);
                 } else {
                     gl.disableVertexAttribArray(index);
                 }
