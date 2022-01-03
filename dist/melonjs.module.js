@@ -1,9 +1,9 @@
 /*!
- * melonJS Game Engine - v10.2.3
+ * melonJS Game Engine - v10.3.0
  * http://www.melonjs.org
  * melonjs is licensed under the MIT License.
  * http://www.opensource.org/licenses/mit-license
- * @copyright (C) 2011 - 2021 Olivier Biot
+ * @copyright (C) 2011 - 2022 Olivier Biot
  */
 if (typeof window !== "undefined") {
     if (typeof window.console === "undefined") {
@@ -9736,6 +9736,7 @@ class Polygon {
         return this;
     }
 
+
     /**
      * returns a list of indices for all triangles defined in this polygon
      * @name getIndices
@@ -9748,6 +9749,53 @@ class Polygon {
             this.indices = earcut$1(this.points.flatMap(p => [p.x, p.y]));
         }
         return this.indices;
+    }
+
+    /**
+     * Returns true if the vertices composing this polygon form a convex shape (vertices must be in clockwise order).
+     * @name isConvex
+     * @memberOf me.Polygon.prototype
+     * @function
+     * @returns {boolean} true if the vertices are convex, false if not, null if not computable
+     */
+    isConvex() {
+        // http://paulbourke.net/geometry/polygonmesh/
+        // Copyright (c) Paul Bourke (use permitted)
+
+        var flag = 0,
+            vertices = this.points,
+            n = vertices.length,
+            i,
+            j,
+            k,
+            z;
+
+        if (n < 3) {
+            return null;
+        }
+
+        for (i = 0; i < n; i++) {
+            j = (i + 1) % n;
+            k = (i + 2) % n;
+            z = (vertices[j].x - vertices[i].x) * (vertices[k].y - vertices[j].y);
+            z -= (vertices[j].y - vertices[i].y) * (vertices[k].x - vertices[j].x);
+
+            if (z < 0) {
+                flag |= 1;
+            } else if (z > 0) {
+                flag |= 2;
+            }
+
+            if (flag === 3) {
+                return false;
+            }
+        }
+
+        if (flag !== 0) {
+            return true;
+        } else {
+            return null;
+        }
     }
 
     /**
@@ -18328,14 +18376,14 @@ class ColorLayer extends Renderable {
      * @ignore
      */
     draw(renderer, rect) {
-        var color = renderer.getColor();
         var vpos = viewport.pos;
-        renderer.setColor(this.color);
-        renderer.fillRect(
+        renderer.save();
+        renderer.clipRect(
             rect.left - vpos.x, rect.top - vpos.y,
             rect.width, rect.height
         );
-        renderer.setColor(color);
+        renderer.clearColor(this.color);
+        renderer.restore();
     }
 
     /**
@@ -19484,11 +19532,9 @@ class TextureCache {
     /**
      * @ignore
      */
-    remove(image) {
+    delete(image) {
         if (!this.cache.has(image)) {
-            if (this.cache.remove(image) === true) {
-                this.length--;
-            }
+            this.cache.delete(image);
         }
     }
 
@@ -24774,39 +24820,46 @@ class TMXObject {
                 this.width,
                 this.height
             )).rotate(this.rotation));
-        }
+        } else {
 
-        // add a polygon
-        else if (this.isPolygon === true) {
-            shapes.push((new Polygon(0, 0, this.points)).rotate(this.rotation));
-        }
-
-        // add a polyline
-        else if (this.isPolyLine === true) {
-            var p = this.points;
-            var p1, p2;
-            var segments = p.length - 1;
-            for (i = 0; i < segments; i++) {
-                // clone the value before, as [i + 1]
-                // is reused later by the next segment
-                p1 = new Vector2d(p[i].x, p[i].y);
-                p2 = new Vector2d(p[i + 1].x, p[i + 1].y);
-                if (this.rotation !== 0) {
-                    p1 = p1.rotate(this.rotation);
-                    p2 = p2.rotate(this.rotation);
+            // add a polygon
+            if (this.isPolygon === true) {
+                var _polygon = new Polygon(0, 0, this.points);
+                // make sure it's a convex polygon
+                if (_polygon.isConvex() === false ) {
+                    throw new Error("collision polygones in Tiled should be defined as Convex");
                 }
-                shapes.push(new Line(0, 0, [ p1, p2 ]));
+                shapes.push(_polygon.rotate(this.rotation));
             }
-        }
 
-        // it's a rectangle, returns a polygon object anyway
-        else {
-            shapes.push((new Polygon(
-                0, 0, [
-                    new Vector2d(), new Vector2d(this.width, 0),
-                    new Vector2d(this.width, this.height), new Vector2d(0, this.height)
-                ]
-            )).rotate(this.rotation));
+            // add a polyline
+            else if (this.isPolyLine === true) {
+                var p = this.points;
+                var p1, p2;
+                var segments = p.length - 1;
+                for (i = 0; i < segments; i++) {
+                    // clone the value before, as [i + 1]
+                    // is reused later by the next segment
+                    p1 = new Vector2d(p[i].x, p[i].y);
+                    p2 = new Vector2d(p[i + 1].x, p[i + 1].y);
+                    if (this.rotation !== 0) {
+                        p1 = p1.rotate(this.rotation);
+                        p2 = p2.rotate(this.rotation);
+                    }
+                    shapes.push(new Line(0, 0, [ p1, p2 ]));
+                }
+            }
+
+            // it's a rectangle, returns a polygon object anyway
+            else {
+                shapes.push((new Polygon(
+                    0, 0, [
+                        new Vector2d(), new Vector2d(this.width, 0),
+                        new Vector2d(this.width, this.height), new Vector2d(0, this.height)
+                    ]
+                )).rotate(this.rotation));
+            }
+
         }
 
         // Apply isometric projection
@@ -28809,7 +28862,7 @@ class GLShader {
 class VertexArrayBuffer {
 
     constructor(vertex_size, vertex_per_quad) {
-        // the size of one vertex
+        // the size of one vertex in float
         this.vertexSize = vertex_size;
         // size of a quad in vertex
         this.quadSize = vertex_per_quad;
@@ -28841,7 +28894,7 @@ class VertexArrayBuffer {
      * return true if full
      * @ignore
      */
-    isFull(vertex = 0) {
+    isFull(vertex = this.quadSize) {
          return (this.vertexCount + vertex >= this.maxVertex);
     }
 
@@ -28952,39 +29005,6 @@ var V_ARRAY = [
     new Vector2d()
 ];
 
-// Handy constants
-var VERTEX_SIZE = 2;
-var REGION_SIZE = 2;
-var COLOR_SIZE = 4;
-
-var ELEMENT_SIZE = VERTEX_SIZE + REGION_SIZE + COLOR_SIZE;
-var ELEMENT_OFFSET = ELEMENT_SIZE * Float32Array.BYTES_PER_ELEMENT;
-
-var ELEMENTS_PER_QUAD = 4;
-var INDICES_PER_QUAD = 6;
-
-var MAX_LENGTH = 16000;
-
-/**
- * Create a full index buffer for the element array
- * @ignore
- */
-function createIB() {
-    var indices = [
-        0, 1, 2,
-        2, 1, 3
-    ];
-
-    // ~384KB index buffer
-    var data = new Array(MAX_LENGTH * INDICES_PER_QUAD);
-    for (var i = 0; i < data.length; i++) {
-        data[i] = indices[i % INDICES_PER_QUAD] +
-            ~~(i / INDICES_PER_QUAD) * ELEMENTS_PER_QUAD;
-    }
-
-    return new Uint16Array(data);
-}
-
 /**
  * @classdesc
  * A WebGL Compositor object. This class handles all of the WebGL state<br>
@@ -29049,6 +29069,24 @@ class WebGLCompositor {
          */
         this.attributes = [];
 
+        /**
+         * the size of a single vertex in bytes
+         * (will automatically be calculated as attributes definitions are added)
+         * @name vertexByteSize
+         * @see me.WebGLCompositor.addAttribute
+         * @memberOf me.WebGLCompositor
+         */
+        this.vertexByteSize = 0;
+
+        /**
+         * the size of a single vertex in floats
+         * (will automatically be calculated as attributes definitions are added)
+         * @name vertexSize
+         * @see me.WebGLCompositor.addAttribute
+         * @memberOf me.WebGLCompositor
+         */
+        this.vertexSize = 0;
+
         // Load and create shader programs
         this.primitiveShader = new GLShader(this.gl, primitiveVertex, primitiveFragment);
         this.quadShader = new GLShader(this.gl, quadVertex, quadFragment);
@@ -29058,27 +29096,17 @@ class WebGLCompositor {
         this.addAttribute("aRegion", 2, gl.FLOAT, false, 2 * Float32Array.BYTES_PER_ELEMENT); // 1
         this.addAttribute("aColor",  4, gl.UNSIGNED_BYTE, true, 4 * Float32Array.BYTES_PER_ELEMENT); // 2
 
+        this.vertexBuffer = new VertexArrayBuffer(this.vertexSize, 6); // 6 vertices per quad
+
         // vertex buffer
         gl.bindBuffer(gl.ARRAY_BUFFER, gl.createBuffer());
-        gl.bufferData(
-            gl.ARRAY_BUFFER,
-            MAX_LENGTH * ELEMENT_OFFSET * ELEMENTS_PER_QUAD,
-            gl.STREAM_DRAW
-        );
-
-        this.vertexBuffer = new VertexArrayBuffer(ELEMENT_SIZE, ELEMENTS_PER_QUAD);
-
-        // Cache index buffer (TODO Remove use for cache by replacing drawElements by drawArrays)
-        gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, gl.createBuffer());
-        gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, createIB(), gl.STATIC_DRAW);
+        gl.bufferData(gl.ARRAY_BUFFER, this.vertexBuffer.buffer, gl.STREAM_DRAW);
 
         // register to the CANVAS resize channel
         on(CANVAS_ONRESIZE, (width, height) => {
             this.flush();
             this.setViewport(0, 0, width, height);
         });
-
-        this.reset();
     }
 
     /**
@@ -29103,10 +29131,9 @@ class WebGLCompositor {
 
         // delete all related bound texture
         for (var i = 0; i < this.renderer.maxTextures; i++) {
-            var texture = this.boundTextures[i];
-            if (texture !== null) {
-                this.boundTextures[i] = null;
-                this.gl.deleteTexture(texture);
+            var texture2D = this.getTexture2D(i);
+            if (typeof texture2D !== "undefined") {
+                this.deleteTexture2D(texture2D);
             }
         }
         this.currentTextureUnit = -1;
@@ -29134,6 +29161,33 @@ class WebGLCompositor {
             normalized: normalized,
             offset: offset
         });
+
+        switch (type) {
+            case this.gl.BYTE:
+                this.vertexByteSize += size * Int8Array.BYTES_PER_ELEMENT;
+                break;
+            case this.gl.UNSIGNED_BYTE:
+                this.vertexByteSize += size * Uint8Array.BYTES_PER_ELEMENT;
+                break;
+            case this.gl.SHORT:
+                this.vertexByteSize += size * Int16Array.BYTES_PER_ELEMENT;
+                break;
+            case this.gl.UNSIGNED_SHORT:
+                this.vertexByteSize += size * Uint16Array.BYTES_PER_ELEMENT;
+                break;
+            case this.gl.INT:
+                this.vertexByteSize += size * Int32Array.BYTES_PER_ELEMENT;
+                break;
+            case this.gl.UNSIGNED_INT:
+                this.vertexByteSize += size * Uint32Array.BYTES_PER_ELEMENT;
+                break;
+            case this.gl.FLOAT:
+                this.vertexByteSize += size * Float32Array.BYTES_PER_ELEMENT;
+                break;
+            default:
+                throw new Error("Invalid GL Attribute type");
+        }
+        this.vertexSize = this.vertexByteSize / Float32Array.BYTES_PER_ELEMENT;
     }
 
     /**
@@ -29196,6 +29250,31 @@ class WebGLCompositor {
     }
 
     /**
+     * delete the given WebGL texture
+     * @name bindTexture2D
+     * @memberOf me.WebGLCompositor
+     * @function
+     * @param {WebGLTexture} [texture] a WebGL texture to delete
+     * @param {number} [unit] Texture unit to delete
+     */
+    deleteTexture2D(texture) {
+        this.gl.deleteTexture(texture);
+        this.unbindTexture2D(texture);
+    }
+
+    /**
+     * returns the WebGL texture associated to the given texture unit
+     * @name bindTexture2D
+     * @memberOf me.WebGLCompositor
+     * @function
+     * @param {number} unit Texture unit to which a texture is bound
+     * @returns {WebGLTexture} texture a WebGL texture
+     */
+    getTexture2D(unit) {
+        return this.boundTextures[unit];
+    }
+
+    /**
      * assign the given WebGL texture to the current batch
      * @name bindTexture2D
      * @memberOf me.WebGLCompositor
@@ -29228,21 +29307,31 @@ class WebGLCompositor {
      * @name unbindTexture2D
      * @memberOf me.WebGLCompositor
      * @function
-     * @param {WebGLTexture} texture a WebGL texture
+     * @param {WebGLTexture} [texture] a WebGL texture
+     * @param {number} [unit] a WebGL texture
+     * @returns {number} unit the unit number that was associated with the given texture
      */
-    unbindTexture2D(texture) {
-        var unit = this.renderer.cache.getUnit(texture);
-        this.boundTextures[unit] = null;
+    unbindTexture2D(texture, unit) {
+        if (typeof unit === "undefined") {
+            unit = this.boundTextures.indexOf(texture);
+        }
+        if (typeof unit !== -1) {
+            delete this.boundTextures[unit];
+            if (unit === this.currentTextureUnit) {
+                this.currentTextureUnit = -1;
+            }
+        }
+        return unit;
     }
 
     /**
      * @ignore
      */
-    uploadTexture(texture, w, h, b, force) {
+    uploadTexture(texture, w, h, b, force = false) {
         var unit = this.renderer.cache.getUnit(texture);
         var texture2D = this.boundTextures[unit];
 
-        if (texture2D === null || force) {
+        if (typeof texture2D === "undefined" || force) {
             this.createTexture2D(
                 unit,
                 texture.getTexture(),
@@ -29283,7 +29372,7 @@ class WebGLCompositor {
 
                 if (location !== -1) {
                     gl.enableVertexAttribArray(location);
-                    gl.vertexAttribPointer(location, element.size, element.type, element.normalized, ELEMENT_OFFSET, element.offset);
+                    gl.vertexAttribPointer(location, element.size, element.type, element.normalized, this.vertexByteSize, element.offset);
                 } else {
                     gl.disableVertexAttribArray(index);
                 }
@@ -29305,7 +29394,7 @@ class WebGLCompositor {
      * @param {number} v0 Texture UV (v0) value.
      * @param {number} u1 Texture UV (u1) value.
      * @param {number} v1 Texture UV (v1) value.
-     * @param {number} tint tint color to be applied to the texture in UINT32 format
+     * @param {number} tint tint color to be applied to the texture in UINT32 (argb) format
      */
     addQuad(texture, x, y, w, h, u0, v0, u1, v1, tint) {
 
@@ -29316,8 +29405,8 @@ class WebGLCompositor {
 
         this.useShader(this.quadShader);
 
-        if (this.vertexBuffer.isFull(4)) {
-            // is the vertex buffer full if we add 4 more vertices
+        if (this.vertexBuffer.isFull(6)) {
+            // is the vertex buffer full if we add 6 more vertices
             this.flush();
         }
 
@@ -29343,6 +29432,8 @@ class WebGLCompositor {
         this.vertexBuffer.push(vec0.x, vec0.y, u0, v0, tint);
         this.vertexBuffer.push(vec1.x, vec1.y, u1, v0, tint);
         this.vertexBuffer.push(vec2.x, vec2.y, u0, v1, tint);
+        this.vertexBuffer.push(vec2.x, vec2.y, u0, v1, tint);
+        this.vertexBuffer.push(vec1.x, vec1.y, u1, v0, tint);
         this.vertexBuffer.push(vec3.x, vec3.y, u1, v1, tint);
     }
 
@@ -29367,14 +29458,7 @@ class WebGLCompositor {
                 gl.bufferData(gl.ARRAY_BUFFER, vertex.toFloat32(0, vertexCount * vertexSize), gl.STREAM_DRAW);
             }
 
-            // Draw the stream buffer
-            // TODO : finalize the WebGLCompositor implementation (splitting this one into two)
-            // so that different compositor with different attributes/uniforms & drawing method can be used
-            if (this.activeShader === this.primitiveShader) {
-                gl.drawArrays(mode, 0, vertexCount);
-            } else {
-                gl.drawElements(mode, vertexCount / vertex.quadSize * INDICES_PER_QUAD, gl.UNSIGNED_SHORT, 0);
-            }
+            gl.drawArrays(mode, 0, vertexCount);
 
             // clear the vertex buffer
             vertex.clear();
@@ -29553,9 +29637,18 @@ class WebGLRenderer extends Renderer {
          */
         this.currentCompositor = null;
 
-        // Create a compositor
-        var Compositor = this.settings.compositor || WebGLCompositor;
-        this.setCompositor(new Compositor(this));
+        /**
+         * The list of active compositors
+         * @name compositors
+         * @type {Map}
+         * @memberOf me.WebGLRenderer#
+         */
+        this.compositors = new Map();
+
+        // Create a default compositor
+        var compositor = new (this.settings.compositor || WebGLCompositor)(this);
+        this.compositors.set("default", compositor);
+        this.setCompositor(compositor);
 
 
         // default WebGL state(s)
@@ -29602,12 +29695,16 @@ class WebGLRenderer extends Renderer {
      */
     reset() {
         super.reset();
-        if (this.isContextValid === false) {
-            // on context lost/restore
-            this.currentCompositor.init(this);
-        } else {
-            this.currentCompositor.reset();
-        }
+
+        this.compositors.forEach((compositor) => {
+            if (this.isContextValid === false) {
+                // on context lost/restore
+                compositor.init(this);
+            } else {
+                compositor.reset();
+            }
+        });
+
         this.gl.disable(this.gl.SCISSOR_TEST);
         if (typeof this.fontContext2D !== "undefined" ) {
             this.createFontTexture(this.cache);
@@ -29616,19 +29713,31 @@ class WebGLRenderer extends Renderer {
     }
 
     /**
-     * assign a compositor to this renderer
+     * set the active compositor for this renderer
      * @name setCompositor
      * @function
-     * @param {WebGLCompositor} compositor a compositor instance
+     * @param {me.WebGLCompositor|string} compositor a compositor name or instance
      * @memberOf me.WebGLRenderer.prototype
      * @function
      */
-    setCompositor(compositor) {
-        if (this.currentCompositor !== null && this.currentCompositor !== compositor) {
-            // flush the current compositor
-            this.currentCompositor.flush();
+    setCompositor(compositor = "default") {
+
+        if (typeof compositor === "string") {
+            compositor = this.compositors.get(compositor);
         }
-        this.currentCompositor = compositor;
+
+        if (typeof compositor === undefined) {
+            throw new Error("Invalid WebGL Compositor");
+        }
+
+        if (this.currentCompositor !== compositor) {
+            if (this.currentCompositor !== null) {
+                // flush the current compositor
+                this.currentCompositor.flush();
+            }
+            // set given one as current
+            this.currentCompositor = compositor;
+        }
     }
 
     /**
@@ -29729,7 +29838,7 @@ class WebGLRenderer extends Renderer {
      * @param {me.Color|string} color CSS color.
      * @param {boolean} [opaque=false] Allow transparency [default] or clear the surface completely [true]
      */
-    clearColor(color, opaque) {
+    clearColor(color, opaque = false) {
         var glArray;
 
         this.save();
@@ -31494,10 +31603,10 @@ class BasePlugin {
          * this can be overridden by the plugin
          * @public
          * @type {string}
-         * @default "10.2.3"
+         * @default "10.3.0"
          * @name me.plugin.Base#version
          */
-        this.version = "10.2.3";
+        this.version = "10.3.0";
     }
 }
 
@@ -32732,13 +32841,12 @@ class Text extends Renderable {
     onDeactivateEvent() {
         // free the canvas and potential corresponding texture when deactivated
         if (this.offScreenCanvas === true) {
-            if (renderer instanceof WebGLRenderer) {
-                renderer.currentCompositor.unbindTexture2D(renderer.cache.get(this.canvas));
-                renderer.cache.remove(this.canvas);
-            }
+            renderer.currentCompositor.deleteTexture2D(renderer.currentCompositor.getTexture2D(this.glTextureUnit));
+            renderer.cache.delete(this.canvas);
             this.canvas.width = this.canvas.height = 0;
             this.context = undefined;
             this.canvas = undefined;
+            this.glTextureUnit = undefined;
         }
     }
 
@@ -32897,7 +33005,8 @@ class Text extends Renderable {
 
                 if (renderer instanceof WebGLRenderer) {
                     // invalidate the previous corresponding texture so that it can reuploaded once changed
-                    renderer.currentCompositor.unbindTexture2D(renderer.cache.get(this.canvas));
+                    this.glTextureUnit = renderer.cache.getUnit(renderer.cache.get(this.canvas));
+                    renderer.currentCompositor.unbindTexture2D(null, this.glTextureUnit);
 
                     if (renderer.WebGLVersion === 1) {
                         // round size to next Pow2
@@ -35998,7 +36107,7 @@ var deprecated = /*#__PURE__*/Object.freeze({
  * @name version
  * @type {string}
  */
-const version = "10.2.3";
+const version = "10.3.0";
 
 
 /**

@@ -4857,6 +4857,14 @@ export class Polygon {
      */
     getIndices(): any[];
     /**
+     * Returns true if the vertices composing this polygon form a convex shape (vertices must be in clockwise order).
+     * @name isConvex
+     * @memberOf me.Polygon.prototype
+     * @function
+     * @returns {boolean} true if the vertices are convex, false if not, null if not computable
+     */
+    isConvex(): boolean;
+    /**
      * translate the Polygon by the specified offset
      * @name translate
      * @memberOf me.Polygon.prototype
@@ -7237,6 +7245,7 @@ export class Text {
     context: any;
     /** @ignore */
     onDeactivateEvent(): void;
+    glTextureUnit: any;
     /**
      * make the font bold
      * @name bold
@@ -8428,6 +8437,22 @@ export class WebGLCompositor {
      * @memberOf me.WebGLCompositor
      */
     attributes: any[];
+    /**
+     * the size of a single vertex in bytes
+     * (will automatically be calculated as attributes definitions are added)
+     * @name vertexByteSize
+     * @see me.WebGLCompositor.addAttribute
+     * @memberOf me.WebGLCompositor
+     */
+    vertexByteSize: number;
+    /**
+     * the size of a single vertex in floats
+     * (will automatically be calculated as attributes definitions are added)
+     * @name vertexSize
+     * @see me.WebGLCompositor.addAttribute
+     * @memberOf me.WebGLCompositor
+     */
+    vertexSize: number;
     primitiveShader: GLShader;
     quadShader: GLShader;
     vertexBuffer: VertexArrayBuffer;
@@ -8477,6 +8502,24 @@ export class WebGLCompositor {
      */
     createTexture2D(unit: number, image: (new (width?: number, height?: number) => HTMLImageElement) | HTMLCanvasElement | ImageData | Uint8Array[] | Float32Array[], filter: number, repeat?: string, w?: number, h?: number, b?: number, premultipliedAlpha?: boolean, mipmap?: boolean): WebGLTexture;
     /**
+     * delete the given WebGL texture
+     * @name bindTexture2D
+     * @memberOf me.WebGLCompositor
+     * @function
+     * @param {WebGLTexture} [texture] a WebGL texture to delete
+     * @param {number} [unit] Texture unit to delete
+     */
+    deleteTexture2D(texture?: WebGLTexture): void;
+    /**
+     * returns the WebGL texture associated to the given texture unit
+     * @name bindTexture2D
+     * @memberOf me.WebGLCompositor
+     * @function
+     * @param {number} unit Texture unit to which a texture is bound
+     * @returns {WebGLTexture} texture a WebGL texture
+     */
+    getTexture2D(unit: number): WebGLTexture;
+    /**
      * assign the given WebGL texture to the current batch
      * @name bindTexture2D
      * @memberOf me.WebGLCompositor
@@ -8490,13 +8533,15 @@ export class WebGLCompositor {
      * @name unbindTexture2D
      * @memberOf me.WebGLCompositor
      * @function
-     * @param {WebGLTexture} texture a WebGL texture
+     * @param {WebGLTexture} [texture] a WebGL texture
+     * @param {number} [unit] a WebGL texture
+     * @returns {number} unit the unit number that was associated with the given texture
      */
-    unbindTexture2D(texture: WebGLTexture): void;
+    unbindTexture2D(texture?: WebGLTexture, unit?: number): number;
     /**
      * @ignore
      */
-    uploadTexture(texture: any, w: any, h: any, b: any, force: any): any;
+    uploadTexture(texture: any, w: any, h: any, b: any, force?: boolean): any;
     /**
      * Select the shader to use for compositing
      * @name useShader
@@ -8520,7 +8565,7 @@ export class WebGLCompositor {
      * @param {number} v0 Texture UV (v0) value.
      * @param {number} u1 Texture UV (u1) value.
      * @param {number} v1 Texture UV (v1) value.
-     * @param {number} tint tint color to be applied to the texture in UINT32 format
+     * @param {number} tint tint color to be applied to the texture in UINT32 (argb) format
      */
     addQuad(texture: me.Renderer.Texture, x: number, y: number, w: number, h: number, u0: number, v0: number, u1: number, v1: number, tint: number): void;
     /**
@@ -8656,6 +8701,13 @@ export class WebGLRenderer {
      * @memberOf me.WebGLRenderer#
      */
     currentCompositor: me.WebGLCompositor;
+    /**
+     * The list of active compositors
+     * @name compositors
+     * @type {Map}
+     * @memberOf me.WebGLRenderer#
+     */
+    compositors: Map<any, any>;
     cache: TextureCache;
     isContextValid: boolean;
     /**
@@ -8666,14 +8718,14 @@ export class WebGLRenderer {
      */
     reset(): void;
     /**
-     * assign a compositor to this renderer
+     * set the active compositor for this renderer
      * @name setCompositor
      * @function
-     * @param {WebGLCompositor} compositor a compositor instance
+     * @param {me.WebGLCompositor|string} compositor a compositor name or instance
      * @memberOf me.WebGLRenderer.prototype
      * @function
      */
-    setCompositor(compositor: WebGLCompositor): void;
+    setCompositor(compositor?: me.WebGLCompositor | string): void;
     /**
      * Reset the gl transform to identity
      * @name resetTransform
@@ -11668,7 +11720,7 @@ declare class TextureCache {
     /**
      * @ignore
      */
-    remove(image: any): void;
+    delete(image: any): void;
     /**
      * @ignore
      */
@@ -12372,7 +12424,7 @@ declare class VertexArrayBuffer {
      * return true if full
      * @ignore
      */
-    isFull(vertex?: number): boolean;
+    isFull(vertex?: any): boolean;
     /**
      * resize the vertex buffer, retaining its original contents
      * @ignore
@@ -13015,7 +13067,7 @@ declare class BasePlugin {
      * this can be overridden by the plugin
      * @public
      * @type {string}
-     * @default "10.2.3"
+     * @default "10.3.0"
      * @name me.plugin.Base#version
      */
     public version: string;
