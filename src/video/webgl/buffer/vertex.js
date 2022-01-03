@@ -40,7 +40,7 @@ class VertexArrayBuffer {
      * return true if full
      * @ignore
      */
-    isFull(vertex = 0) {
+    isFull(vertex = this.quadSize) {
          return (this.vertexCount + vertex >= this.maxVertex);
     }
 

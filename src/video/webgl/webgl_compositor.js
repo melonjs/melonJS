@@ -17,32 +17,6 @@ var V_ARRAY = [
     new Vector2d()
 ];
 
-// Handy constants
-var ELEMENTS_PER_QUAD = 4;
-var INDICES_PER_QUAD = 6;
-
-var MAX_LENGTH = 16000;
-
-/**
- * Create a full index buffer for the element array
- * @ignore
- */
-function createIB() {
-    var indices = [
-        0, 1, 2,
-        2, 1, 3
-    ];
-
-    // ~384KB index buffer
-    var data = new Array(MAX_LENGTH * INDICES_PER_QUAD);
-    for (var i = 0; i < data.length; i++) {
-        data[i] = indices[i % INDICES_PER_QUAD] +
-            ~~(i / INDICES_PER_QUAD) * ELEMENTS_PER_QUAD;
-    }
-
-    return new Uint16Array(data);
-};
-
 /**
  * @classdesc
  * A WebGL Compositor object. This class handles all of the WebGL state<br>
@@ -134,19 +108,11 @@ class WebGLCompositor {
         this.addAttribute("aRegion", 2, gl.FLOAT, false, 2 * Float32Array.BYTES_PER_ELEMENT); // 1
         this.addAttribute("aColor",  4, gl.UNSIGNED_BYTE, true, 4 * Float32Array.BYTES_PER_ELEMENT); // 2
 
-        this.vertexBuffer = new VertexArrayBuffer(this.vertexSize, ELEMENTS_PER_QUAD);
+        this.vertexBuffer = new VertexArrayBuffer(this.vertexSize, 6); // 6 vertices per quad
 
         // vertex buffer
         gl.bindBuffer(gl.ARRAY_BUFFER, gl.createBuffer());
-        gl.bufferData(
-            gl.ARRAY_BUFFER,
-            this.vertexBuffer.buffer,
-            gl.STREAM_DRAW
-        );
-
-        // Cache index buffer (TODO Remove use for cache by replacing drawElements by drawArrays)
-        gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, gl.createBuffer());
-        gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, createIB(), gl.STATIC_DRAW);
+        gl.bufferData(gl.ARRAY_BUFFER, this.vertexBuffer.buffer, gl.STREAM_DRAW);
 
         // register to the CANVAS resize channel
         event.on(event.CANVAS_ONRESIZE, (width, height) => {
@@ -451,8 +417,8 @@ class WebGLCompositor {
 
         this.useShader(this.quadShader);
 
-        if (this.vertexBuffer.isFull(4)) {
-            // is the vertex buffer full if we add 4 more vertices
+        if (this.vertexBuffer.isFull(6)) {
+            // is the vertex buffer full if we add 6 more vertices
             this.flush();
         }
 
@@ -478,6 +444,8 @@ class WebGLCompositor {
         this.vertexBuffer.push(vec0.x, vec0.y, u0, v0, tint);
         this.vertexBuffer.push(vec1.x, vec1.y, u1, v0, tint);
         this.vertexBuffer.push(vec2.x, vec2.y, u0, v1, tint);
+        this.vertexBuffer.push(vec2.x, vec2.y, u0, v1, tint);
+        this.vertexBuffer.push(vec1.x, vec1.y, u1, v0, tint);
         this.vertexBuffer.push(vec3.x, vec3.y, u1, v1, tint);
     }
 
@@ -502,14 +470,7 @@ class WebGLCompositor {
                 gl.bufferData(gl.ARRAY_BUFFER, vertex.toFloat32(0, vertexCount * vertexSize), gl.STREAM_DRAW);
             }
 
-            // Draw the stream buffer
-            // TODO : finalize the WebGLCompositor implementation (splitting this one into two)
-            // so that different compositor with different attributes/uniforms & drawing method can be used
-            if (this.activeShader === this.primitiveShader) {
-                gl.drawArrays(mode, 0, vertexCount);
-            } else {
-                gl.drawElements(mode, vertexCount / vertex.quadSize * INDICES_PER_QUAD, gl.UNSIGNED_SHORT, 0);
-            }
+            gl.drawArrays(mode, 0, vertexCount);
 
             // clear the vertex buffer
             vertex.clear();
