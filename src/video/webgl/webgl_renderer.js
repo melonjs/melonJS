@@ -329,7 +329,7 @@ class WebGLRenderer extends Renderer {
      * @param {me.Color|string} color CSS color.
      * @param {boolean} [opaque=false] Allow transparency [default] or clear the surface completely [true]
      */
-    clearColor(color, opaque) {
+    clearColor(color, opaque = false) {
         var glArray;
 
         this.save();
