@@ -10,6 +10,8 @@
 - Renderable : properly delete me.Text cache WebGL texture upon deactivation (if created)
 - WebGL : Optimize vertex buffer allocated size following tint color packing into Uint32
 
+## [10.2.3] (melonJS 2) - _2021-12-18_
+
 ### Fixed
 - Core: fix a regression with the quadtree implementation and non floating objects
 - Preloader: optimize defined cache canvas size in the default loading screen when using WebGL2
