@@ -43,7 +43,6 @@ function createIB() {
     return new Uint16Array(data);
 };
 
-
 /**
  * @classdesc
  * A WebGL Compositor object. This class handles all of the WebGL state<br>
@@ -135,15 +134,15 @@ class WebGLCompositor {
         this.addAttribute("aRegion", 2, gl.FLOAT, false, 2 * Float32Array.BYTES_PER_ELEMENT); // 1
         this.addAttribute("aColor",  4, gl.UNSIGNED_BYTE, true, 4 * Float32Array.BYTES_PER_ELEMENT); // 2
 
+        this.vertexBuffer = new VertexArrayBuffer(this.vertexSize, ELEMENTS_PER_QUAD);
+
         // vertex buffer
         gl.bindBuffer(gl.ARRAY_BUFFER, gl.createBuffer());
         gl.bufferData(
             gl.ARRAY_BUFFER,
-            MAX_LENGTH * this.vertexByteSize * ELEMENTS_PER_QUAD,
+            this.vertexBuffer.buffer,
             gl.STREAM_DRAW
         );
-
-        this.vertexBuffer = new VertexArrayBuffer(this.vertexSize, ELEMENTS_PER_QUAD);
 
         // Cache index buffer (TODO Remove use for cache by replacing drawElements by drawArrays)
         gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, gl.createBuffer());
