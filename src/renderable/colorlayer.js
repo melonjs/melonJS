@@ -50,14 +50,14 @@ class ColorLayer extends Renderable {
      * @ignore
      */
     draw(renderer, rect) {
-        var color = renderer.getColor();
         var vpos = viewport.pos;
-        renderer.setColor(this.color);
-        renderer.fillRect(
+        renderer.save();
+        renderer.clipRect(
             rect.left - vpos.x, rect.top - vpos.y,
             rect.width, rect.height
         );
-        renderer.setColor(color);
+        renderer.clearColor(this.color);
+        renderer.restore();
     }
 
     /**
