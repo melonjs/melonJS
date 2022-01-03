@@ -25,7 +25,7 @@ module.exports = function(config) {
             random: false,
             seed: '4321',
             oneFailurePerSpec: false,
-            failFast: true,
+            stopOnSpecFailure: true,
             timeoutInterval: 1000
         }
     },
