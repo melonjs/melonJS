@@ -8,7 +8,7 @@
 
 ### Changed
 - WebGL : switch from drawElements to drawArrays when drawing quads
-- Renderable : optimize ColorLayer drawing by preventing using geometries in WebGL
+- WebGL : optimize ColorLayer rendering and `clearRect` method by using `clipRect` & `clearColor` instead of drawing primitives
 
 ### Fixed
 - Renderable : properly delete me.Text cache WebGL texture upon deactivation (if created)

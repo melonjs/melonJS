@@ -326,21 +326,20 @@ class WebGLRenderer extends Renderer {
      * @name clearColor
      * @memberOf me.WebGLRenderer.prototype
      * @function
-     * @param {me.Color|string} color CSS color.
+     * @param {me.Color|string} [color="#000000"] CSS color.
      * @param {boolean} [opaque=false] Allow transparency [default] or clear the surface completely [true]
      */
-    clearColor(color, opaque = false) {
+    clearColor(color = "#000000", opaque = false) {
         var glArray;
-
-        this.save();
 
         if (color instanceof Color) {
             glArray = color.toArray();
         } else {
+            var _color = pool.pull("me.Color");
             // reuse temporary the renderer default color object
-            glArray = this.getColor().parseCSS(color).toArray();
+            glArray = _color.parseCSS(color).toArray();
+            pool.push(_color);
         }
-
         // clear gl context with the specified color
         this.currentCompositor.clearColor(glArray[0], glArray[1], glArray[2], (opaque === true) ? 1.0 : glArray[3]);
         this.currentCompositor.clear();
@@ -348,7 +347,6 @@ class WebGLRenderer extends Renderer {
         // restore default clear Color black
         this.currentCompositor.clearColor(0.0, 0.0, 0.0, 0.0);
 
-        this.restore();
     }
 
     /**
@@ -362,11 +360,10 @@ class WebGLRenderer extends Renderer {
      * @param {number} height The rectangle's height.
      */
     clearRect(x, y, width, height) {
-        var color = this.currentColor.clone();
-        this.currentColor.copy("#000000");
-        this.fillRect(x, y, width, height);
-        this.currentColor.copy(color);
-        pool.push(color);
+        this.save();
+        this.clipRect(x, y, width, height);
+        this.clearColor();
+        this.restore();
     }
 
     /**

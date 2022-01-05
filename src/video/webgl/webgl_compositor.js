@@ -512,10 +512,10 @@ class WebGLCompositor {
      * @name clearColor
      * @memberOf me.WebGLCompositor
      * @function
-     * @param {number} r - the red color value used when the color buffers are cleared
-     * @param {number} g - the green color value used when the color buffers are cleared
-     * @param {number} b - the blue color value used when the color buffers are cleared
-     * @param {number} a - the alpha color value used when the color buffers are cleared
+     * @param {number} [r=0] - the red color value used when the color buffers are cleared
+     * @param {number} [g=0] - the green color value used when the color buffers are cleared
+     * @param {number} [b=0] - the blue color value used when the color buffers are cleared
+     * @param {number} [a=0] - the alpha color value used when the color buffers are cleared
      */
     clearColor(r, g, b, a) {
         this.gl.clearColor(r, g, b, a);

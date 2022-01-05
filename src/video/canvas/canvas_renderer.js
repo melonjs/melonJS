@@ -139,10 +139,10 @@ class CanvasRenderer extends Renderer {
      * @name clearColor
      * @memberOf me.CanvasRenderer.prototype
      * @function
-     * @param {me.Color|string} color CSS color.
+     * @param {me.Color|string} [color="#000000"] CSS color.
      * @param {boolean} [opaque=false] Allow transparency [default] or clear the surface completely [true]
      */
-    clearColor(color, opaque) {
+    clearColor(color = "#000000", opaque) {
         this.save();
         this.resetTransform();
         this.backBufferContext2D.globalCompositeOperation = opaque ? "copy" : "source-over";
