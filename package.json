@@ -60,7 +60,7 @@
   "devDependencies": {
     "@rollup/plugin-buble": "^0.21.3",
     "@rollup/plugin-commonjs": "^21.0.1",
-    "@rollup/plugin-node-resolve": "^13.1.2",
+    "@rollup/plugin-node-resolve": "^13.1.3",
     "@rollup/plugin-replace": "^3.0.1",
     "cheerio": "^1.0.0-rc.10",
     "del-cli": "^4.0.1",
@@ -75,7 +75,7 @@
     "karma-jasmine": "^4.0.1",
     "karma-nyan-reporter": "0.2.5",
     "qs": "^6.10.2",
-    "rollup": "^2.62.0",
+    "rollup": "^2.63.0",
     "rollup-plugin-bundle-size": "^1.0.3",
     "rollup-plugin-string": "^3.0.0",
     "terser": "^5.10.0",
