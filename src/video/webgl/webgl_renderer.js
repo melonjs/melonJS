@@ -217,7 +217,7 @@ class WebGLRenderer extends Renderer {
             compositor = this.compositors.get(compositor);
         }
 
-        if (typeof compositor === undefined) {
+        if (typeof compositor === "undefined") {
             throw new Error("Invalid WebGL Compositor");
         }
 

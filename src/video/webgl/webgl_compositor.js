@@ -327,7 +327,7 @@ class WebGLCompositor {
         if (typeof unit === "undefined") {
             unit = this.boundTextures.indexOf(texture);
         }
-        if (typeof unit !== -1) {
+        if (unit !== -1) {
             delete this.boundTextures[unit];
             if (unit === this.currentTextureUnit) {
                 this.currentTextureUnit = -1;
