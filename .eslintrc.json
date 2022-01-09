@@ -106,6 +106,7 @@
     "spaced-comment": ["off", "always", { "line": { "markers": ["*package", "!", ","] }, "block": { "balanced": true, "markers": ["*package", "!", ","], "exceptions": ["*"] } }],
     "template-curly-spacing": ["error", "never"],
     "unicode-bom": ["error", "never"],
+    "valid-typeof": ["error", { "requireStringLiterals": true }],
     "yield-star-spacing": ["error", "both"],
     "yoda": ["error", "never"],
     // override default jsdoc rules
