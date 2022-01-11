@@ -75,7 +75,7 @@
     "no-self-compare": "error",
     "no-sequences": "off",
     "no-tabs": "error",
-    "no-template-curly-in-string": "error",
+    "no-template-curly-in-string": "off",
     "no-throw-literal": "off",
     "no-trailing-spaces": "off",
     "no-undef-init": "error",
