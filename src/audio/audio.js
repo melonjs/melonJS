@@ -241,7 +241,7 @@ export function fade(sound_name, from, to, duration, id) {
  * get/set the position of playback for a sound.
  * @function me.audio.seek
  * @param {string} sound_name audio clip name - case sensitive
- * @param {number} [seek]  The position to move current playback to (in seconds).
+ * @param {number} [seek] the position to move current playback to (in seconds).
  * @param {number} [id] the sound instance ID. If none is passed, all sounds in group will changed.
  * @returns {number} return the current seek position (if no extra parameters were given)
  * @example

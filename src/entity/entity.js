@@ -166,7 +166,7 @@ class Entity extends Renderable {
      * @name onBodyUpdate
      * @memberof me.Entity
      * @function
-     * @param {me.Body} the body whose bounds to update
+     * @param {me.Body} body the body whose bounds to update
      */
     onBodyUpdate(body) {
         // update the entity bounds to include the body bounds
