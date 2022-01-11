@@ -32,15 +32,11 @@ export default [
                 sourceMap: false
             }),
             replace({
-                "__VERSION__": pkg.version,
-                delimiters: ["", ""],
-                preventAssignment : true
-            }
-            //, {
-            //    '/this\._super\(\s*([\w\.]+)\s*,\s*"(\w+)"\s*(,\s*)?/g' : '$1.prototype.$2.apply(this$3',
-            //    delimiters: ['', '']
-            //  }
-            ),
+                values: {
+                    __VERSION__: pkg.version
+                },
+                preventAssignment: true
+            }),
             string({
                 include: [
                     "**/*.frag",
@@ -72,15 +68,11 @@ export default [
                 sourceMap: false
             }),
             replace({
-                "__VERSION__": pkg.version,
-                delimiters: ["", ""],
-                preventAssignment : true
-            }
-            //, {
-            //    '/this\._super\(\s*([\w\.]+)\s*,\s*"(\w+)"\s*(,\s*)?/g' : '$1.prototype.$2.apply(this$3',
-            //    delimiters: ['', '']
-            //  }
-            ),
+                values: {
+                    __VERSION__: pkg.version
+                },
+                preventAssignment: true
+            }),
             string({
                 include: [
                     "**/*.frag",
