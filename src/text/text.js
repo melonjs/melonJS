@@ -38,9 +38,8 @@ var setContextStyle = function(context, font, stroke = false) {
  * @classdesc
  * a generic system font object.
  * @class Text
- * @extends me.Renderable
- * @memberOf me
- * @constructor
+ * @augments me.Renderable
+ * @memberof me
  * @param {number} x position of the text object
  * @param {number} y position of the text object
  * @param {object} settings the text configuration
@@ -161,7 +160,7 @@ class Text extends Renderable {
          * @private
          * @type {string[]}
          * @name _text
-         * @memberOf me.Text
+         * @memberof me.Text
          */
         this._text = [];
 
@@ -171,7 +170,7 @@ class Text extends Renderable {
          * @type {number}
          * @name fontSize
          * @default 10
-         * @memberOf me.Text
+         * @memberof me.Text
          */
         this.fontSize = 10;
 
@@ -227,7 +226,7 @@ class Text extends Renderable {
     /**
      * make the font bold
      * @name bold
-     * @memberOf me.Text.prototype
+     * @memberof me.Text.prototype
      * @function
      * @returns {me.Text} this object for chaining
      */
@@ -240,7 +239,7 @@ class Text extends Renderable {
     /**
      * make the font italic
      * @name italic
-     * @memberOf me.Text.prototype
+     * @memberof me.Text.prototype
      * @function
      * @returns {me.Text} this object for chaining
      */
@@ -253,7 +252,7 @@ class Text extends Renderable {
     /**
      * set the font family and size
      * @name setFont
-     * @memberOf me.Text.prototype
+     * @memberof me.Text.prototype
      * @function
      * @param {string} font a CSS font name
      * @param {number|string} [size=10] size in px, or size + suffix (px, em, pt)
@@ -297,7 +296,7 @@ class Text extends Renderable {
     /**
      * change the text to be displayed
      * @name setText
-     * @memberOf me.Text.prototype
+     * @memberof me.Text.prototype
      * @function
      * @param {number|string|string[]} value a string, or an array of strings
      * @returns {me.Text} this object for chaining
@@ -318,7 +317,7 @@ class Text extends Renderable {
     /**
      * measure the given text size in pixels
      * @name measureText
-     * @memberOf me.Text.prototype
+     * @memberof me.Text.prototype
      * @function
      * @param {me.CanvasRenderer|me.WebGLRenderer} [renderer] reference to the active renderer
      * @param {string} [text] the text to be measured
@@ -407,7 +406,7 @@ class Text extends Renderable {
     /**
      * draw a text at the specified coord
      * @name draw
-     * @memberOf me.Text.prototype
+     * @memberof me.Text.prototype
      * @function
      * @param {me.CanvasRenderer|me.WebGLRenderer} renderer Reference to the destination renderer instance
      * @param {string} [text]
@@ -473,7 +472,7 @@ class Text extends Renderable {
      * by the `lineWidth` and `fillStroke` properties. <br>
      * Note : using drawStroke is not recommended for performance reasons
      * @name drawStroke
-     * @memberOf me.Text.prototype
+     * @memberof me.Text.prototype
      * @function
      * @param {me.CanvasRenderer|me.WebGLRenderer} renderer Reference to the destination renderer instance
      * @param {string} text

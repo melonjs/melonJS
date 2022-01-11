@@ -7,9 +7,8 @@ import Renderable from "./renderable.js";
  * @classdesc
  * a generic Color Layer Object.  Fills the entire Canvas with the color not just the container the object belongs to.
  * @class ColorLayer
- * @extends me.Renderable
- * @memberOf me
- * @constructor
+ * @augments me.Renderable
+ * @memberof me
  * @param {string} name Layer name
  * @param {me.Color|string} color CSS color
  * @param {number} [z = 0] z-index position
@@ -28,7 +27,7 @@ class ColorLayer extends Renderable {
          * @public
          * @type {me.Color}
          * @name color
-         * @memberOf me.ColorLayer#
+         * @memberof me.ColorLayer#
          */
          this.color = pool.pull("Color").parseCSS(color);
 

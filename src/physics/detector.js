@@ -17,7 +17,7 @@ var dummyObj = {
  * a function used to determine if two objects should collide (based on both respective objects collision mask and type).<br>
  * you can redefine this function if you need any specific rules over what should collide with what.
  * @name shouldCollide
- * @memberOf me.collision
+ * @memberof me.collision
  * @ignore
  * @function
  * @param {me.Renderable} a a reference to the object A.
@@ -46,7 +46,7 @@ function shouldCollide(a, b) {
  * @property {number} indexShapeA The index of the colliding shape for the object a body
  * @property {number} indexShapeB The index of the colliding shape for the object b body
  * @name ResponseObject
- * @memberOf me.collision
+ * @memberof me.collision
  * @public
  */
 class ResponseObject {
@@ -68,7 +68,7 @@ class ResponseObject {
      * Response object for multiple intersection tests <br>
      * (recommended as it will avoid allocating extra memory) <br>
      * @name clear
-     * @memberOf me.collision.ResponseObject
+     * @memberof me.collision.ResponseObject
      * @public
      * @function
      * @returns {object} this object for chaining

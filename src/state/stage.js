@@ -16,9 +16,8 @@ var default_settings = {
  * every "stage" object (title screen, credits, ingame, etc...) to be managed
  * through the state manager must inherit from this base class.
  * @class Stage
- * @extends me.Object
- * @memberOf me
- * @constructor
+ * @augments me.Object
+ * @memberof me
  * @param {object} [options] The stage` parameters
  * @param {me.Camera2d[]} [options.cameras=[new me.Camera2d()]] a list of cameras (experimental)
  * @param {Function} [options.onResetEvent] called by the state manager when reseting the object
@@ -38,7 +37,7 @@ class Stage {
          * @public
          * @type {Map}
          * @name cameras
-         * @memberOf me.Stage
+         * @memberof me.Stage
          */
         this.cameras = new Map();
 
@@ -46,7 +45,7 @@ class Stage {
          * The given constructor options
          * @public
          * @name settings
-         * @memberOf me.Stage
+         * @memberof me.Stage
          * @type {object}
          */
         this.settings = Object.assign(default_settings, settings || {});
@@ -84,7 +83,7 @@ class Stage {
     /**
      * update function
      * @name update
-     * @memberOf me.Stage
+     * @memberof me.Stage
      * @ignore
      * @function
      * @param {number} dt time since the last update in milliseconds.
@@ -108,7 +107,7 @@ class Stage {
     /**
      * draw the current stage
      * @name draw
-     * @memberOf me.Stage
+     * @memberof me.Stage
      * @ignore
      * @function
      * @param {me.CanvasRenderer|me.WebGLRenderer} renderer a renderer object
@@ -137,7 +136,7 @@ class Stage {
      * called by the state manager when reseting the object
      * this is typically where you will load a level, add renderables, etc...
      * @name onResetEvent
-     * @memberOf me.Stage
+     * @memberof me.Stage
      * @function
      * @param {object} [...arguments] optional arguments passed when switching state
      * @see me.state#change
@@ -154,7 +153,7 @@ class Stage {
      * onDestroyEvent function<br>
      * called by the state manager before switching to another state
      * @name onDestroyEvent
-     * @memberOf me.Stage
+     * @memberof me.Stage
      * @function
      */
     onDestroyEvent() {

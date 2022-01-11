@@ -10,9 +10,8 @@ import * as stringUtil from "./../utils/string.js";
  * @classdesc
  * a generic Image Layer Object
  * @class ImageLayer
- * @extends me.Renderable
- * @memberOf me
- * @constructor
+ * @augments me.Renderable
+ * @memberof me
  * @param {number} x x coordinate
  * @param {number} y y coordinate
  * @param {object} settings ImageLayer properties
@@ -166,7 +165,7 @@ class ImageLayer extends Sprite {
     /**
      * resize the Image Layer to match the given size
      * @name resize
-     * @memberOf me.ImageLayer.prototype
+     * @memberof me.ImageLayer.prototype
      * @function
      * @param {number} w new width
      * @param {number} h new height
@@ -256,7 +255,7 @@ class ImageLayer extends Sprite {
      * draw the ImageLayer. <br>
      * automatically called by the game manager {@link me.game}
      * @name draw
-     * @memberOf me.ImageLayer.prototype
+     * @memberof me.ImageLayer.prototype
      * @function
      * @protected
      * @param {me.CanvasRenderer|me.WebGLRenderer} renderer a renderer object

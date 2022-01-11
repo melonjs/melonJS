@@ -9,9 +9,8 @@ import { world, viewport } from "./../game.js";
  * @classdesc
  * trigger an event when colliding with another object
  * @class Trigger
- * @extends me.Renderable
- * @memberOf me
- * @constructor
+ * @augments me.Renderable
+ * @memberof me
  * @param {number} x the x coordinates of the trigger area
  * @param {number} y the y coordinates of the trigger area
  * @param {number} [settings.width] width of the trigger area
@@ -104,7 +103,7 @@ class Trigger extends Renderable {
     /**
      * trigger this event
      * @name triggerEvent
-     * @memberOf me.Trigger
+     * @memberof me.Trigger
      * @function
      * @protected
      */

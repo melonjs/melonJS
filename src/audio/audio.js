@@ -5,7 +5,7 @@ import loader from "./../loader/loader.js";
 
 /**
  * @namespace audio
- * @memberOf me
+ * @memberof me
  */
 
 /**
@@ -70,7 +70,7 @@ var soundLoadError = function (sound_name, onerror_cb) {
  * @name stopOnAudioError
  * @type {boolean}
  * @default true
- * @memberOf me.audio
+ * @memberof me.audio
  */
 export let stopOnAudioError = true;
 

@@ -20,7 +20,7 @@ function getValueFromPair(string, pattern) {
  * Gets the first glyph in the map that is not a space character
  * @ignore
  * @name _getFirstGlyph
- * @memberOf me.BitmapTextData
+ * @memberof me.BitmapTextData
  * @function
  * @param {object} glyphs the map of glyphs, each key is a char code
  * @returns {me.Glyph}
@@ -39,7 +39,7 @@ function getFirstGlyph(glyphs) {
  * Creates a glyph to use for the space character
  * @ignore
  * @name createSpaceGlyph
- * @memberOf me.BitmapTextData
+ * @memberof me.BitmapTextData
  * @function
  * @param {object} glyphs the map of glyphs, each key is a char code
  */
@@ -59,10 +59,9 @@ function createSpaceGlyph(glyphs) {
 /**
  * Class for storing relevant data from the font file.
  * @class me.BitmapTextData
- * @memberOf me
+ * @memberof me
  * @ignore
  * @param data {string} - The bitmap font data pulled from the resource loader using me.loader.getBinary()
- * @constructor
  */
 class BitmapTextData {
 
@@ -89,7 +88,7 @@ class BitmapTextData {
          * The map of glyphs, each key is a char code.
          * @name glyphs
          * @type {object}
-         * @memberOf me.BitmapTextData
+         * @memberof me.BitmapTextData
          */
         this.glyphs = {};
 
@@ -100,7 +99,7 @@ class BitmapTextData {
     /**
      * This parses the font data text and builds a map of glyphs containing the data for each character
      * @name parse
-     * @memberOf me.BitmapTextData
+     * @memberof me.BitmapTextData
      * @function
      * @param {string} fontData
      */

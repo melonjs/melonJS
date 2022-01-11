@@ -35,9 +35,8 @@ var measureTextHeight = function(font) {
  * @classdesc
  * a bitmap font object
  * @class BitmapText
- * @extends me.Renderable
- * @memberOf me
- * @constructor
+ * @augments me.Renderable
+ * @memberof me
  * @param {number} x position of the text object
  * @param {number} y position of the text object
  * @param {object} settings the text configuration
@@ -80,7 +79,7 @@ class BitmapText extends Renderable {
          * @type {string}
          * @default "left"
          * @name textAlign
-         * @memberOf me.BitmapText
+         * @memberof me.BitmapText
          */
         this.textAlign = settings.textAlign || "left";
 
@@ -91,7 +90,7 @@ class BitmapText extends Renderable {
          * @type {string}
          * @default "top"
          * @name textBaseline
-         * @memberOf me.BitmapText
+         * @memberof me.BitmapText
          */
         this.textBaseline = settings.textBaseline || "top";
 
@@ -102,7 +101,7 @@ class BitmapText extends Renderable {
          * @type {number}
          * @default 1.0
          * @name lineHeight
-         * @memberOf me.BitmapText
+         * @memberof me.BitmapText
          */
         this.lineHeight = settings.lineHeight || 1.0;
 
@@ -111,7 +110,7 @@ class BitmapText extends Renderable {
          * @private
          * @type {string[]}
          * @name _text
-         * @memberOf me.BitmapText
+         * @memberof me.BitmapText
          */
         this._text = [];
 
@@ -166,7 +165,7 @@ class BitmapText extends Renderable {
     /**
      * change the font settings
      * @name set
-     * @memberOf me.BitmapText.prototype
+     * @memberof me.BitmapText.prototype
      * @function
      * @param {string} textAlign ("left", "center", "right")
      * @param {number} [scale]
@@ -186,7 +185,7 @@ class BitmapText extends Renderable {
     /**
      * change the text to be displayed
      * @name setText
-     * @memberOf me.BitmapText.prototype
+     * @memberof me.BitmapText.prototype
      * @function
      * @param {number|string|string[]} value a string, or an array of strings
      * @returns {me.BitmapText} this object for chaining
@@ -214,7 +213,7 @@ class BitmapText extends Renderable {
      * @type {me.Color}
      * @name fillStyle
      * @see me.Renderable#tint
-     * @memberOf me.BitmapText
+     * @memberof me.BitmapText
      */
     get fillStyle() {
         return this.tint;
@@ -226,7 +225,7 @@ class BitmapText extends Renderable {
     /**
      * change the font display size
      * @name resize
-     * @memberOf me.BitmapText.prototype
+     * @memberof me.BitmapText.prototype
      * @function
      * @param {number} scale ratio
      * @returns {me.BitmapText} this object for chaining
@@ -242,7 +241,7 @@ class BitmapText extends Renderable {
     /**
      * measure the given text size in pixels
      * @name measureText
-     * @memberOf me.BitmapText.prototype
+     * @memberof me.BitmapText.prototype
      * @function
      * @param {string} [text]
      * @param {me.Rect} [ret] a object in which to store the text metrics
@@ -277,7 +276,7 @@ class BitmapText extends Renderable {
     /**
      * draw the bitmap font
      * @name draw
-     * @memberOf me.BitmapText.prototype
+     * @memberof me.BitmapText.prototype
      * @function
      * @param {me.CanvasRenderer|me.WebGLRenderer} renderer Reference to the destination renderer instance
      * @param {string} [text]

@@ -7,9 +7,8 @@ import Sprite from "./sprite.js";
  * <img src="images/9-slice-scaling.png"/><br>
  * @see https://en.wikipedia.org/wiki/9-slice_scaling
  * @class NineSliceSprite
- * @extends me.Sprite
- * @memberOf me
- * @constructor
+ * @augments me.Sprite
+ * @memberof me
  * @param {number} x the x coordinates of the sprite object
  * @param {number} y the y coordinates of the sprite object
  * @param {object} settings Configuration parameters for the Sprite object

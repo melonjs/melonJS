@@ -7,8 +7,7 @@ import Matrix3d from "./matrix3.js";
  * the identity matrix and parameters position : <br>
  * <img src="images/identity-matrix_2x.png"/>
  * @class Matrix2d
- * @memberOf me
- * @constructor
+ * @memberof me
  * @param {me.Matrix2d} [mat2d] An instance of me.Matrix2d to copy from
  * @param {number[]} [arguments...] Matrix elements. See {@link me.Matrix2d.setTransform}
  */
@@ -49,7 +48,7 @@ class Matrix2d {
      * @readonly
      * @see me.Matrix2d.translate
      * @name tx
-     * @memberOf me.Matrix2d
+     * @memberof me.Matrix2d
      */
     get tx() {
         return this.val[6];
@@ -62,7 +61,7 @@ class Matrix2d {
      * @readonly
      * @see me.Matrix2d.translate
      * @name ty
-     * @memberOf me.Matrix2d
+     * @memberof me.Matrix2d
      */
     get ty() {
         return this.val[7];
@@ -73,7 +72,7 @@ class Matrix2d {
      * the identity matrix and parameters position : <br>
      * <img src="images/identity-matrix_2x.png"/>
      * @name identity
-     * @memberOf me.Matrix2d
+     * @memberof me.Matrix2d
      * @function
      * @returns {me.Matrix2d} Reference to this object for method chaining
      */
@@ -89,7 +88,7 @@ class Matrix2d {
     /**
      * set the matrix to the specified value
      * @name setTransform
-     * @memberOf me.Matrix2d
+     * @memberof me.Matrix2d
      * @function
      * @param {number} a
      * @param {number} b
@@ -133,7 +132,7 @@ class Matrix2d {
     /**
      * Copies over the values from another me.Matrix2d.
      * @name copy
-     * @memberOf me.Matrix2d
+     * @memberof me.Matrix2d
      * @function
      * @param {me.Matrix2d} m the matrix object to copy from
      * @returns {me.Matrix2d} Reference to this object for method chaining
@@ -146,7 +145,7 @@ class Matrix2d {
     /**
      * Copies over the upper-left 3x3 values from the given me.Matrix3d
      * @name fromMat3d
-     * @memberOf me.Matrix2d
+     * @memberof me.Matrix2d
      * @function
      * @param {me.Matrix3d} m the matrix object to copy from
      * @returns {me.Matrix2d} Reference to this object for method chaining
@@ -171,7 +170,7 @@ class Matrix2d {
     /**
      * multiply both matrix
      * @name multiply
-     * @memberOf me.Matrix2d
+     * @memberof me.Matrix2d
      * @function
      * @param {me.Matrix2d} m the other matrix
      * @returns {me.Matrix2d} Reference to this object for method chaining
@@ -203,7 +202,7 @@ class Matrix2d {
     /**
      * Transpose the value of this matrix.
      * @name transpose
-     * @memberOf me.Matrix2d
+     * @memberof me.Matrix2d
      * @function
      * @returns {me.Matrix2d} Reference to this object for method chaining
      */
@@ -226,7 +225,7 @@ class Matrix2d {
     /**
      * invert this matrix, causing it to apply the opposite transformation.
      * @name invert
-     * @memberOf me.Matrix2d
+     * @memberof me.Matrix2d
      * @function
      * @returns {me.Matrix2d} Reference to this object for method chaining
      */
@@ -261,7 +260,7 @@ class Matrix2d {
    /**
     * apply the current transform to the given 2d vector
     * @name apply
-    * @memberOf me.Matrix2d
+    * @memberof me.Matrix2d
     * @function
     * @param {me.Vector2d} v the vector object to be transformed
     * @returns {me.Vector2d} result vector object.
@@ -280,7 +279,7 @@ class Matrix2d {
     /**
      * apply the inverted current transform to the given 2d vector
      * @name applyInverse
-     * @memberOf me.Matrix2d
+     * @memberof me.Matrix2d
      * @function
      * @param {me.Vector2d} v the vector object to be transformed
      * @returns {me.Vector2d} result vector object.
@@ -301,7 +300,7 @@ class Matrix2d {
     /**
      * scale the matrix
      * @name scale
-     * @memberOf me.Matrix2d
+     * @memberof me.Matrix2d
      * @function
      * @param {number} x a number representing the abscissa of the scaling vector.
      * @param {number} [y=x] a number representing the ordinate of the scaling vector.
@@ -323,7 +322,7 @@ class Matrix2d {
     /**
      * adds a 2D scaling transformation.
      * @name scaleV
-     * @memberOf me.Matrix2d
+     * @memberof me.Matrix2d
      * @function
      * @param {me.Vector2d} v scaling vector
      * @returns {me.Matrix2d} Reference to this object for method chaining
@@ -335,7 +334,7 @@ class Matrix2d {
     /**
      * specifies a 2D scale operation using the [sx, 1] scaling vector
      * @name scaleX
-     * @memberOf me.Matrix2d
+     * @memberof me.Matrix2d
      * @function
      * @param {number} x x scaling vector
      * @returns {me.Matrix2d} Reference to this object for method chaining
@@ -347,7 +346,7 @@ class Matrix2d {
     /**
      * specifies a 2D scale operation using the [1,sy] scaling vector
      * @name scaleY
-     * @memberOf me.Matrix2d
+     * @memberof me.Matrix2d
      * @function
      * @param {number} y y scaling vector
      * @returns {me.Matrix2d} Reference to this object for method chaining
@@ -359,7 +358,7 @@ class Matrix2d {
     /**
      * rotate the matrix (counter-clockwise) by the specified angle (in radians).
      * @name rotate
-     * @memberOf me.Matrix2d
+     * @memberof me.Matrix2d
      * @function
      * @param {number} angle Rotation angle in radians.
      * @returns {me.Matrix2d} Reference to this object for method chaining
@@ -390,7 +389,7 @@ class Matrix2d {
     /**
      * translate the matrix position on the horizontal and vertical axis
      * @name translate
-     * @memberOf me.Matrix2d
+     * @memberof me.Matrix2d
      * @function
      * @param {number} x the x coordindates to translate the matrix by
      * @param {number} y the y coordindates to translate the matrix by
@@ -399,7 +398,7 @@ class Matrix2d {
     /**
      * translate the matrix by a vector on the horizontal and vertical axis
      * @name translateV
-     * @memberOf me.Matrix2d
+     * @memberof me.Matrix2d
      * @function
      * @param {me.Vector2d} v the vector to translate the matrix by
      * @returns {me.Matrix2d} Reference to this object for method chaining
@@ -427,7 +426,7 @@ class Matrix2d {
     /**
      * returns true if the matrix is an identity matrix.
      * @name isIdentity
-     * @memberOf me.Matrix2d
+     * @memberof me.Matrix2d
      * @function
      * @returns {boolean}
      */
@@ -450,7 +449,7 @@ class Matrix2d {
     /**
      * return true if the two matrices are identical
      * @name equals
-     * @memberOf me.Matrix2d
+     * @memberof me.Matrix2d
      * @function
      * @param {me.Matrix2d} m the other matrix
      * @returns {boolean} true if both are equals
@@ -475,7 +474,7 @@ class Matrix2d {
     /**
      * Clone the Matrix
      * @name clone
-     * @memberOf me.Matrix2d
+     * @memberof me.Matrix2d
      * @function
      * @returns {me.Matrix2d}
      */
@@ -486,7 +485,7 @@ class Matrix2d {
     /**
      * return an array representation of this Matrix
      * @name toArray
-     * @memberOf me.Matrix2d
+     * @memberof me.Matrix2d
      * @function
      * @returns {Float32Array}
      */
@@ -497,7 +496,7 @@ class Matrix2d {
     /**
      * convert the object to a string representation
      * @name toString
-     * @memberOf me.Matrix2d
+     * @memberof me.Matrix2d
      * @function
      * @returns {string}
      */

@@ -1,7 +1,7 @@
 /**
  * a collection of math utility functions
  * @namespace Math
- * @memberOf me
+ * @memberof me
  */
 
 /**
@@ -9,7 +9,7 @@
  * @public
  * @type {number}
  * @name DEG_TO_RAD
- * @memberOf me.Math
+ * @memberof me.Math
  */
 export const DEG_TO_RAD = Math.PI / 180.0;
 
@@ -18,7 +18,7 @@ export const DEG_TO_RAD = Math.PI / 180.0;
  * @public
  * @type {number}
  * @name RAD_TO_DEG
- * @memberOf me.Math
+ * @memberof me.Math
  */
 export const RAD_TO_DEG = 180.0 / Math.PI;
 
@@ -27,7 +27,7 @@ export const RAD_TO_DEG = 180.0 / Math.PI;
  * @public
  * @type {number}
  * @name TAU
- * @memberOf me.Math
+ * @memberof me.Math
  */
 export const TAU = Math.PI * 2;
 
@@ -36,7 +36,7 @@ export const TAU = Math.PI * 2;
  * @public
  * @type {number}
  * @name ETA
- * @memberOf me.Math
+ * @memberof me.Math
  */
 export const ETA = Math.PI * 0.5;
 
@@ -45,7 +45,7 @@ export const ETA = Math.PI * 0.5;
  * @public
  * @type {number}
  * @name EPSILON
- * @memberOf me.Math
+ * @memberof me.Math
  */
 export const EPSILON = 0.000001;
 
@@ -53,7 +53,7 @@ export const EPSILON = 0.000001;
  * returns true if the given value is a power of two
  * @public
  * @function
- * @memberOf me.Math
+ * @memberof me.Math
  * @name isPowerOfTwo
  * @param {number} val
  * @returns {boolean}
@@ -66,7 +66,7 @@ export function isPowerOfTwo(val) {
  * returns the next power of two for the given value
  * @public
  * @function
- * @memberOf me.Math
+ * @memberof me.Math
  * @name nextPowerOfTwo
  * @param {number} val
  * @returns {boolean}
@@ -86,7 +86,7 @@ export function nextPowerOfTwo(val) {
  * Converts an angle in degrees to an angle in radians
  * @public
  * @function
- * @memberOf me.Math
+ * @memberof me.Math
  * @name degToRad
  * @param {number} angle angle in degrees
  * @returns {number} corresponding angle in radians
@@ -102,7 +102,7 @@ export function degToRad(angle) {
  * Converts an angle in radians to an angle in degrees.
  * @public
  * @function
- * @memberOf me.Math
+ * @memberof me.Math
  * @name radToDeg
  * @param {number} radians angle in radians
  * @returns {number} corresponding angle in degrees
@@ -118,7 +118,7 @@ export function radToDeg(radians) {
  * clamp the given value
  * @public
  * @function
- * @memberOf me.Math
+ * @memberof me.Math
  * @name clamp
  * @param {number} val the value to clamp
  * @param {number} low lower limit
@@ -133,7 +133,7 @@ export function clamp(val, low, high) {
  * return a random integer between min (included) and max (excluded)
  * @public
  * @function
- * @memberOf me.Math
+ * @memberof me.Math
  * @name random
  * @param {number} min minimum value.
  * @param {number} max maximum value.
@@ -150,7 +150,7 @@ export function random(min, max) {
  * return a random float between min, max (exclusive)
  * @public
  * @function
- * @memberOf me.Math
+ * @memberof me.Math
  * @name randomFloat
  * @param {number} min minimum value.
  * @param {number} max maximum value.
@@ -167,7 +167,7 @@ export function randomFloat(min, max) {
  * return a weighted random between min, max (exclusive)
  * @public
  * @function
- * @memberOf me.Math
+ * @memberof me.Math
  * @name weightedRandom
  * @param {number} min minimum value.
  * @param {number} max maximum value.
@@ -184,7 +184,7 @@ export function weightedRandom(min, max) {
  * round a value to the specified number of digit
  * @public
  * @function
- * @memberOf me.Math
+ * @memberof me.Math
  * @name round
  * @param {number} num value to be rounded.
  * @param {number} [dec=0] number of decimal digit to be rounded to.
@@ -203,7 +203,7 @@ export function round(num, dec = 0) {
  * check if the given value is close to the expected one
  * @public
  * @function
- * @memberOf me.Math
+ * @memberof me.Math
  * @name toBeCloseTo
  * @param {number} expected value to be compared with.
  * @param {number} actual actual value to compare

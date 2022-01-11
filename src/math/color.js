@@ -173,8 +173,7 @@ var cssToRGB = new Map();
  * @classdesc
  * A color manipulation object.
  * @class Color
- * @memberOf me
- * @constructor
+ * @memberof me
  * @param {number|Float32Array} [r=0] red component or array of color components
  * @param {number} [g=0] green component
  * @param {number} [b=0] blue component
@@ -206,7 +205,7 @@ class Color {
      * @type {number}
      * @name r
      * @readonly
-     * @memberOf me.Color
+     * @memberof me.Color
      */
 
     get r() {
@@ -223,7 +222,7 @@ class Color {
      * @type {number}
      * @name g
      * @readonly
-     * @memberOf me.Color
+     * @memberof me.Color
      */
 
     get g() {
@@ -240,7 +239,7 @@ class Color {
      * @type {number}
      * @name b
      * @readonly
-     * @memberOf me.Color
+     * @memberof me.Color
      */
 
     get b() {
@@ -256,7 +255,7 @@ class Color {
      * @type {number}
      * @name alpha
      * @readonly
-     * @memberOf me.Color
+     * @memberof me.Color
      */
 
     get alpha() {
@@ -271,7 +270,7 @@ class Color {
     /**
      * Set this color to the specified value.
      * @name setColor
-     * @memberOf me.Color
+     * @memberof me.Color
      * @function
      * @param {number} r red component [0 .. 255]
      * @param {number} g green component [0 .. 255]
@@ -295,7 +294,7 @@ class Color {
     /**
      * Create a new copy of this color object.
      * @name clone
-     * @memberOf me.Color
+     * @memberof me.Color
      * @function
      * @returns {me.Color} Reference to the newly cloned object
      */
@@ -306,7 +305,7 @@ class Color {
     /**
      * Copy a color object or CSS color into this one.
      * @name copy
-     * @memberOf me.Color
+     * @memberof me.Color
      * @function
      * @param {me.Color|string} color
      * @returns {me.Color} Reference to this object for method chaining
@@ -323,7 +322,7 @@ class Color {
     /**
      * Blend this color with the given one using addition.
      * @name add
-     * @memberOf me.Color
+     * @memberof me.Color
      * @function
      * @param {me.Color} color
      * @returns {me.Color} Reference to this object for method chaining
@@ -340,7 +339,7 @@ class Color {
     /**
      * Darken this color value by 0..1
      * @name darken
-     * @memberOf me.Color
+     * @memberof me.Color
      * @function
      * @param {number} scale
      * @returns {me.Color} Reference to this object for method chaining
@@ -357,7 +356,7 @@ class Color {
     /**
      * Linearly interpolate between this color and the given one.
      * @name lerp
-     * @memberOf me.Color
+     * @memberof me.Color
      * @function
      * @param {me.Color} color
      * @param {number} alpha with alpha = 0 being this color, and alpha = 1 being the given one.
@@ -375,7 +374,7 @@ class Color {
     /**
      * Lighten this color value by 0..1
      * @name lighten
-     * @memberOf me.Color
+     * @memberof me.Color
      * @function
      * @param {number} scale
      * @returns {me.Color} Reference to this object for method chaining
@@ -392,7 +391,7 @@ class Color {
     /**
      * Generate random r,g,b values for this color object
      * @name random
-     * @memberOf me.Color
+     * @memberof me.Color
      * @function
      * @param {number} [min=0] minimum value for the random range
      * @param {number} [max=255] maxmium value for the random range
@@ -418,7 +417,7 @@ class Color {
      * Return true if the r,g,b,a values of this color are equal with the
      * given one.
      * @name equals
-     * @memberOf me.Color
+     * @memberof me.Color
      * @function
      * @param {me.Color} color
      * @returns {boolean}
@@ -436,7 +435,7 @@ class Color {
      * Parse a CSS color string and set this color to the corresponding
      * r,g,b values
      * @name parseCSS
-     * @memberOf me.Color
+     * @memberof me.Color
      * @function
      * @param {string} cssColor
      * @returns {me.Color} Reference to this object for method chaining
@@ -454,7 +453,7 @@ class Color {
     /**
      * Parse an RGB or RGBA CSS color string
      * @name parseRGB
-     * @memberOf me.Color
+     * @memberof me.Color
      * @function
      * @param {string} rgbColor
      * @returns {me.Color} Reference to this object for method chaining
@@ -474,7 +473,7 @@ class Color {
      * Parse a Hex color ("#RGB", "#RGBA" or "#RRGGBB", "#RRGGBBAA" format) and set this color to
      * the corresponding r,g,b,a values
      * @name parseHex
-     * @memberOf me.Color
+     * @memberof me.Color
      * @function
      * @param {string} hexColor
      * @param {boolean} [argb = false] true if format is #ARGB, or #AARRGGBB (as opposed to #RGBA or #RGGBBAA)
@@ -534,7 +533,7 @@ class Color {
     /**
      * Pack this color into a Uint32 ARGB representation
      * @name toUint32
-     * @memberOf me.Color
+     * @memberof me.Color
      * @function
      * @param {number} [alpha=1.0] alpha value [0.0 .. 1.0]
      * @returns {Uint32}
@@ -551,7 +550,7 @@ class Color {
     /**
      * return an array representation of this object
      * @name toArray
-     * @memberOf me.Color
+     * @memberof me.Color
      * @function
      * @returns {Float32Array}
      */
@@ -563,7 +562,7 @@ class Color {
     /**
      * Get the color in "#RRGGBB" format
      * @name toHex
-     * @memberOf me.Color
+     * @memberof me.Color
      * @function
      * @returns {string}
      */
@@ -577,7 +576,7 @@ class Color {
     /**
      * Get the color in "#RRGGBBAA" format
      * @name toHex8
-     * @memberOf me.Color
+     * @memberof me.Color
      * @function
      * @returns {string}
      */
@@ -591,7 +590,7 @@ class Color {
     /**
      * Get the color in "rgb(R,G,B)" format
      * @name toRGB
-     * @memberOf me.Color
+     * @memberof me.Color
      * @function
      * @returns {string}
      */
@@ -609,7 +608,7 @@ class Color {
     /**
      * Get the color in "rgba(R,G,B,A)" format
      * @name toRGBA
-     * @memberOf me.Color
+     * @memberof me.Color
      * @function
      * @returns {string}
      */

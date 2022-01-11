@@ -15,8 +15,7 @@ import Bounds from "./../physics/bounds.js";
  * @classdesc
  * a base renderer object
  * @class Renderer
- * @memberOf me
- * @constructor
+ * @memberof me
  * @param {object} options The renderer parameters
  * @param {number} options.width The width of the canvas without scaling
  * @param {number} options.height The height of the canvas without scaling
@@ -38,7 +37,7 @@ class Renderer {
          * The given constructor options
          * @public
          * @name settings
-         * @memberOf me.Renderer#
+         * @memberof me.Renderer#
          * @enum {object}
          */
         this.settings = options;
@@ -46,7 +45,7 @@ class Renderer {
         /**
          * true if the current rendering context is valid
          * @name isContextValid
-         * @memberOf me.Renderer
+         * @memberof me.Renderer
          * @default true
          * type {boolean}
          */
@@ -104,7 +103,7 @@ class Renderer {
     /**
      * prepare the framebuffer for drawing a new frame
      * @name clear
-     * @memberOf me.Renderer.prototype
+     * @memberof me.Renderer.prototype
      * @function
      */
     clear() {}
@@ -112,7 +111,7 @@ class Renderer {
     /**
      * Reset context state
      * @name reset
-     * @memberOf me.Renderer.prototype
+     * @memberof me.Renderer.prototype
      * @function
      */
     reset() {
@@ -130,7 +129,7 @@ class Renderer {
     /**
      * return a reference to the system canvas
      * @name getCanvas
-     * @memberOf me.Renderer.prototype
+     * @memberof me.Renderer.prototype
      * @function
      * @returns {HTMLCanvasElement}
      */
@@ -141,7 +140,7 @@ class Renderer {
     /**
      * return a reference to the screen canvas
      * @name getScreenCanvas
-     * @memberOf me.Renderer.prototype
+     * @memberof me.Renderer.prototype
      * @function
      * @returns {HTMLCanvasElement}
      */
@@ -153,7 +152,7 @@ class Renderer {
      * return a reference to the screen canvas corresponding 2d Context<br>
      * (will return buffered context if double buffering is enabled, or a reference to the Screen Context)
      * @name getScreenContext
-     * @memberOf me.Renderer.prototype
+     * @memberof me.Renderer.prototype
      * @function
      * @returns {CanvasRenderingContext2D}
      */
@@ -164,7 +163,7 @@ class Renderer {
     /**
      * returns the current blend mode for this renderer
      * @name getBlendMode
-     * @memberOf me.Renderer.prototype
+     * @memberof me.Renderer.prototype
      * @function
      * @returns {string} blend mode
      */
@@ -176,7 +175,7 @@ class Renderer {
      * Returns the 2D Context object of the given Canvas<br>
      * Also configures anti-aliasing and blend modes based on constructor options.
      * @name getContext2d
-     * @memberOf me.Renderer.prototype
+     * @memberof me.Renderer.prototype
      * @function
      * @param {HTMLCanvasElement} canvas
      * @param {boolean} [transparent=true] use false to disable transparency
@@ -214,7 +213,7 @@ class Renderer {
     /**
      * return the width of the system Canvas
      * @name getWidth
-     * @memberOf me.Renderer.prototype
+     * @memberof me.Renderer.prototype
      * @function
      * @returns {number}
      */
@@ -225,7 +224,7 @@ class Renderer {
     /**
      * return the height of the system Canvas
      * @name getHeight
-     * @memberOf me.Renderer.prototype
+     * @memberof me.Renderer.prototype
      * @function
      * @returns {number} height of the system Canvas
      */
@@ -236,7 +235,7 @@ class Renderer {
     /**
      * get the current fill & stroke style color.
      * @name getColor
-     * @memberOf me.Renderer.prototype
+     * @memberof me.Renderer.prototype
      * @function
      * @returns {me.Color} current global color
      */
@@ -247,7 +246,7 @@ class Renderer {
     /**
      * return the current global alpha
      * @name globalAlpha
-     * @memberOf me.Renderer.prototype
+     * @memberof me.Renderer.prototype
      * @function
      * @returns {number}
      */
@@ -258,7 +257,7 @@ class Renderer {
     /**
      * check if the given rect or bounds overlaps with the renderer screen coordinates
      * @name overlaps
-     * @memberOf me.Renderer.prototype
+     * @memberof me.Renderer.prototype
      * @function
      * @param  {me.Rect|me.Bounds} bounds
      * @returns {boolean} true if overlaps
@@ -274,7 +273,7 @@ class Renderer {
     /**
      * resizes the system canvas
      * @name resize
-     * @memberOf me.Renderer.prototype
+     * @memberof me.Renderer.prototype
      * @function
      * @param {number} width new width of the canvas
      * @param {number} height new height of the canvas
@@ -295,7 +294,7 @@ class Renderer {
     /**
      * enable/disable image smoothing (scaling interpolation) for the given context
      * @name setAntiAlias
-     * @memberOf me.Renderer.prototype
+     * @memberof me.Renderer.prototype
      * @function
      * @param {CanvasRenderingContext2D} context
      * @param {boolean} [enable=false]
@@ -325,7 +324,7 @@ class Renderer {
     /**
      * set/change the current projection matrix (WebGL only)
      * @name setProjection
-     * @memberOf me.Renderer.prototype
+     * @memberof me.Renderer.prototype
      * @function
      * @param {me.Matrix3d} matrix
      */
@@ -336,7 +335,7 @@ class Renderer {
     /**
      * stroke the given shape
      * @name stroke
-     * @memberOf me.Renderer.prototype
+     * @memberof me.Renderer.prototype
      * @function
      * @param {me.Rect|me.Polygon|me.Line|me.Ellipse} shape a shape object to stroke
      * @param {boolean} [fill=false] fill the shape with the current color if true
@@ -360,7 +359,7 @@ class Renderer {
     /**
      * tint the given image or canvas using the given color
      * @name tint
-     * @memberOf me.Renderer.prototype
+     * @memberof me.Renderer.prototype
      * @function
      * @param {HTMLImageElement|HTMLCanvasElement|OffscreenCanvas} src the source image to be tinted
      * @param {me.Color|string} color the color that will be used to tint the image
@@ -389,7 +388,7 @@ class Renderer {
     /**
      * fill the given shape
      * @name fill
-     * @memberOf me.Renderer.prototype
+     * @memberof me.Renderer.prototype
      * @function
      * @param {me.Rect|me.Polygon|me.Line|me.Ellipse} shape a shape object to fill
      */
@@ -402,7 +401,7 @@ class Renderer {
      * So, if the renderable is larger than the mask, only the intersecting part of the renderable will be visible.
      * Mask are not preserved through renderer context save and restore.
      * @name setMask
-     * @memberOf me.Renderer.prototype
+     * @memberof me.Renderer.prototype
      * @function
      * @param {me.Rect|me.Polygon|me.Line|me.Ellipse} [mask] the shape defining the mask to be applied
      */
@@ -413,7 +412,7 @@ class Renderer {
      * disable (remove) the rendering mask set through setMask.
      * @name clearMask
      * @see me.Renderer#setMask
-     * @memberOf me.Renderer.prototype
+     * @memberof me.Renderer.prototype
      * @function
      */
     clearMask() {}
@@ -421,7 +420,7 @@ class Renderer {
     /**
      * set a coloring tint for sprite based renderables
      * @name setTint
-     * @memberOf me.Renderer.prototype
+     * @memberof me.Renderer.prototype
      * @function
      * @param {me.Color} tint the tint color
      * @param {number} [alpha] an alpha value to be applied to the tint
@@ -436,7 +435,7 @@ class Renderer {
      * clear the rendering tint set through setTint.
      * @name clearTint
      * @see me.Renderer#setTint
-     * @memberOf me.Renderer.prototype
+     * @memberof me.Renderer.prototype
      * @function
      */
     clearTint() {

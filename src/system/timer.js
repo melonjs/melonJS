@@ -88,7 +88,7 @@ event.on(event.BOOT, () => {
 /**
  * a Timer class to manage timing related function (FPS, Game Tick, Time...)
  * @namespace me.timer
- * @memberOf me
+ * @memberof me
  */
 var timer = {
 
@@ -102,7 +102,7 @@ var timer = {
          * @see me.timer.interpolation
          * @type {number}
          * @name tick
-         * @memberOf me.timer
+         * @memberof me.timer
          */
         tick : 1.0,
 
@@ -112,7 +112,7 @@ var timer = {
          * @public
          * @type {number}
          * @name fps
-         * @memberOf me.timer
+         * @memberof me.timer
          */
         fps : 0,
 
@@ -123,7 +123,7 @@ var timer = {
          * @type {number}
          * @name maxfps
          * @default 60
-         * @memberOf me.timer
+         * @memberof me.timer
          */
         maxfps : 60,
 
@@ -133,14 +133,14 @@ var timer = {
          * @type {boolean}
          * @default false
          * @name interpolation
-         * @memberOf me.timer
+         * @memberof me.timer
          */
         interpolation : false,
 
         /**
          * reset time (e.g. usefull in case of pause)
          * @name reset
-         * @memberOf me.timer
+         * @memberof me.timer
          * @ignore
          * @function
          */
@@ -159,7 +159,7 @@ var timer = {
         /**
          * Calls a function once after a specified delay. See me.timer.setInterval to repeativly call a function.
          * @name setTimeout
-         * @memberOf me.timer
+         * @memberof me.timer
          * @param {Function} fn the function you want to execute after delay milliseconds.
          * @param {number} delay the number of milliseconds (thousandths of a second) that the function call should be delayed by.
          * @param {boolean} [pauseable=true] respects the pause state of the engine.
@@ -188,7 +188,7 @@ var timer = {
         /**
          * Calls a function continously at the specified interval.  See setTimeout to call function a single time.
          * @name setInterval
-         * @memberOf me.timer
+         * @memberof me.timer
          * @param {Function} fn the function to execute
          * @param {number} delay the number of milliseconds (thousandths of a second) on how often to execute the function
          * @param {boolean} [pauseable=true] respects the pause state of the engine.
@@ -217,7 +217,7 @@ var timer = {
         /**
          * Clears the delay set by me.timer.setTimeout().
          * @name clearTimeout
-         * @memberOf me.timer
+         * @memberof me.timer
          * @function
          * @param {number} timeoutID ID of the timeout to be cleared
          */
@@ -228,7 +228,7 @@ var timer = {
         /**
          * Clears the Interval set by me.timer.setInterval().
          * @name clearInterval
-         * @memberOf me.timer
+         * @memberof me.timer
          * @function
          * @param {number} intervalID ID of the interval to be cleared
          */
@@ -240,7 +240,7 @@ var timer = {
          * Return the current timestamp in milliseconds <br>
          * since the game has started or since linux epoch (based on browser support for High Resolution Timer)
          * @name getTime
-         * @memberOf me.timer
+         * @memberof me.timer
          * @returns {number}
          * @function
          */
@@ -251,7 +251,7 @@ var timer = {
         /**
          * Return elapsed time in milliseconds since the last update
          * @name getDelta
-         * @memberOf me.timer
+         * @memberof me.timer
          * @returns {number}
          * @function
          */
@@ -263,7 +263,7 @@ var timer = {
          * compute the actual frame time and fps rate
          * @name computeFPS
          * @ignore
-         * @memberOf me.timer
+         * @memberof me.timer
          * @function
          */
         countFPS() {

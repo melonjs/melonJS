@@ -1,7 +1,7 @@
 /**
  * a collection of string utility functions
  * @namespace me.utils.string
- * @memberOf me
+ * @memberof me
  */
 
 
@@ -9,7 +9,7 @@
  * converts the first character of the given string to uppercase
  * @public
  * @function
- * @memberOf me.utils.string
+ * @memberof me.utils.string
  * @name capitalize
  * @param {string} str the string to be capitalized
  * @returns {string} the capitalized string
@@ -22,7 +22,7 @@ export function capitalize(str) {
  * returns the string stripped of whitespace from the left.
  * @public
  * @function
- * @memberOf me.utils.string
+ * @memberof me.utils.string
  * @name trimLeft
  * @param {string} str the string to be trimmed
  * @returns {string} trimmed string
@@ -35,7 +35,7 @@ export function trimLeft(str) {
  * returns the string stripped of whitespace from the right.
  * @public
  * @function
- * @memberOf me.utils.string
+ * @memberof me.utils.string
  * @name trimRight
  * @param {string} str the string to be trimmed
  * @returns {string} trimmed string
@@ -48,7 +48,7 @@ export function trimRight(str) {
  * returns true if the given string contains a numeric integer or float value
  * @public
  * @function
- * @memberOf me.utils.string
+ * @memberof me.utils.string
  * @name isNumeric
  * @param {string} str the string to be tested
  * @returns {boolean} true if string contains only digits
@@ -64,7 +64,7 @@ export function isNumeric(str) {
  * returns true if the given string contains a true or false
  * @public
  * @function
- * @memberOf me.utils.string
+ * @memberof me.utils.string
  * @name isBoolean
  * @param {string} str the string to be tested
  * @returns {boolean} true if the string is either true or false
@@ -78,7 +78,7 @@ export function isBoolean(str) {
  * convert a string to the corresponding hexadecimal value
  * @public
  * @function
- * @memberOf me.utils.string
+ * @memberof me.utils.string
  * @name toHex
  * @param {string} str the string to be converted
  * @returns {string} the converted hexadecimal value

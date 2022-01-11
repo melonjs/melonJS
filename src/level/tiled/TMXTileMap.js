@@ -104,8 +104,7 @@ function readObjectGroup(map, data, z) {
  * a TMX Tile Map Object
  * Tiled QT +0.7.x format
  * @class TMXTileMap
- * @memberOf me
- * @constructor
+ * @memberof me
  * @param {string} levelId name of TMX map
  * @param {object} data TMX map in JSON format
  * @example
@@ -258,7 +257,7 @@ export default class TMXTileMap {
     /**
      * Return the map default renderer
      * @name getRenderer
-     * @memberOf me.TMXTileMap
+     * @memberof me.TMXTileMap
      * @public
      * @function
      * @returns {me.TMXRenderer} a TMX renderer

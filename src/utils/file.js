@@ -2,7 +2,7 @@
 /**
  * a collection of file utility functions
  * @namespace me.utils.file
- * @memberOf me
+ * @memberof me
  */
 
 // regexp to deal with file name & path
@@ -14,7 +14,7 @@ const REMOVE_EXT = /\.[^\.]*$/;
  * return the base name of the file without path info
  * @public
  * @function
- * @memberOf me.utils.file
+ * @memberof me.utils.file
  * @name getBasename
  * @param  {string} path path containing the filename
  * @returns {string} the base name without path information.
@@ -27,7 +27,7 @@ export function getBasename(path) {
  * return the extension of the file in the given path
  * @public
  * @function
- * @memberOf me.utils.file
+ * @memberof me.utils.file
  * @name getExtension
  * @param  {string} path path containing the filename
  * @returns {string} filename extension.

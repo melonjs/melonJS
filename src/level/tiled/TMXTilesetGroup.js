@@ -6,8 +6,7 @@ var TMX_CLEAR_BIT_MASK = ~(0x80000000 | 0x40000000 | 0x20000000);
  * @classdesc
  * an object containing all tileset
  * @class TMXTilesetGroup
- * @memberOf me
- * @constructor
+ * @memberof me
  */
 export default class TMXTilesetGroup {
 

@@ -284,7 +284,7 @@ window.addEventListener("gamepaddisconnected", function (e) {
  * Namespace for standard gamepad mapping constants
  * @public
  * @namespace GAMEPAD
- * @memberOf me.input
+ * @memberof me.input
  */
 export var GAMEPAD = {
     /**
@@ -297,7 +297,7 @@ export var GAMEPAD = {
      * @public
      * @name AXES
      * @enum {number}
-     * @memberOf me.input.GAMEPAD
+     * @memberof me.input.GAMEPAD
      * @see https://w3c.github.io/gamepad/#remapping
      */
     "AXES" : {
@@ -324,7 +324,7 @@ export var GAMEPAD = {
      * @public
      * @name BUTTONS
      * @enum {number}
-     * @memberOf me.input.GAMEPAD
+     * @memberof me.input.GAMEPAD
      * @see https://w3c.github.io/gamepad/#remapping
      */
     "BUTTONS" : {
@@ -357,7 +357,7 @@ export var GAMEPAD = {
 /**
  * Associate a gamepad event to a keycode
  * @name bindGamepad
- * @memberOf me.input
+ * @memberof me.input
  * @public
  * @function
  * @param {number} index Gamepad index
@@ -432,7 +432,7 @@ export function bindGamepad(index, button, keyCode) {
 /**
  * unbind the defined keycode
  * @name unbindGamepad
- * @memberOf me.input
+ * @memberof me.input
  * @public
  * @function
  * @param {number} index Gamepad index
@@ -451,7 +451,7 @@ export function unbindGamepad(index, button) {
  * Set deadzone for analog gamepad inputs<br>
  * The default deadzone is 0.1 (10%) Analog values less than this will be ignored
  * @name setGamepadDeadzone
- * @memberOf me.input
+ * @memberof me.input
  * @public
  * @function
  * @param {number} value Deadzone value
@@ -465,7 +465,7 @@ export function setGamepadDeadzone(value) {
  * see below for the default mapping : <br>
  * <center><img src="images/gamepad_diagram.png"/></center><br>
  * @name setGamepadMapping
- * @memberOf me.input
+ * @memberof me.input
  * @public
  * @function
  * @param {string} id Gamepad id string

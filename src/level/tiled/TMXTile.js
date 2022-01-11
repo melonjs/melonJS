@@ -11,9 +11,8 @@ var TMX_FLIP_H          = 0x80000000,
 /**
  * a basic tile object
  * @class
- * @extends me.Bounds
- * @memberOf me
- * @constructor
+ * @augments me.Bounds
+ * @memberof me
  * @param {number} x x index of the Tile in the map
  * @param {number} y y index of the Tile in the map
  * @param {number} gid tile gid

@@ -22,9 +22,8 @@ var targetV = new Vector2d();
  * @classdesc
  * a 2D orthographic camera
  * @class Camera2d
- * @extends me.Renderable
- * @memberOf me
- * @constructor
+ * @augments me.Renderable
+ * @memberof me
  * @param {number} minX start x offset
  * @param {number} minY start y offset
  * @param {number} maxX end x offset
@@ -48,7 +47,7 @@ class Camera2d extends Renderable {
          * @constant
          * @enum {number}
          * @name AXIS
-         * @memberOf me.Camera2d
+         * @memberof me.Camera2d
          */
         this.AXIS = {
             NONE : 0,
@@ -62,7 +61,7 @@ class Camera2d extends Renderable {
          * @public
          * @type {me.Bounds}
          * @name bounds
-         * @memberOf me.Camera2d
+         * @memberof me.Camera2d
          */
         this.bounds = pool.pull("Bounds");
 
@@ -73,7 +72,7 @@ class Camera2d extends Renderable {
          * @name smoothFollow
          * @see me.Camera2d.damping
          * @default true
-         * @memberOf me.Camera2d
+         * @memberof me.Camera2d
          */
         this.smoothFollow = true;
 
@@ -84,7 +83,7 @@ class Camera2d extends Renderable {
          * @type {number}
          * @name damping
          * @default 1.0
-         * @memberOf me.Camera2d
+         * @memberof me.Camera2d
          */
         this.damping = 1.0;
 
@@ -94,7 +93,7 @@ class Camera2d extends Renderable {
          * @type {number}
          * @name near
          * @default -1000
-         * @memberOf me.Camera2d
+         * @memberof me.Camera2d
          */
         this.near = -1000;
 
@@ -104,7 +103,7 @@ class Camera2d extends Renderable {
          * @type {number}
          * @name far
          * @default 1000
-         * @memberOf me.Camera2d
+         * @memberof me.Camera2d
          */
         this.far = 1000;
 
@@ -114,7 +113,7 @@ class Camera2d extends Renderable {
          * @public
          * @type {me.Matrix3d}
          * @name projectionMatrix
-         * @memberOf me.Camera2d
+         * @memberof me.Camera2d
          */
         this.projectionMatrix = new Matrix3d();
 
@@ -123,7 +122,7 @@ class Camera2d extends Renderable {
          * @ignore
          * @type {me.Matrix2d}
          * @name invCurrentTransform
-         * @memberOf me.Camera2d
+         * @memberof me.Camera2d
          */
         this.invCurrentTransform = new Matrix2d();
 
@@ -216,7 +215,7 @@ class Camera2d extends Renderable {
     /**
      * reset the camera position to specified coordinates
      * @name reset
-     * @memberOf me.Camera2d
+     * @memberof me.Camera2d
      * @function
      * @param {number} [x=0]
      * @param {number} [y=0]
@@ -247,7 +246,7 @@ class Camera2d extends Renderable {
      * the followed renderable can move without scrolling the camera.
      * @name setDeadzone
      * @see me.Camera2d.follow
-     * @memberOf me.Camera2d
+     * @memberof me.Camera2d
      * @function
      * @param {number} w deadzone width
      * @param {number} h deadzone height
@@ -275,7 +274,7 @@ class Camera2d extends Renderable {
     /**
      * resize the camera
      * @name resize
-     * @memberOf me.Camera2d
+     * @memberof me.Camera2d
      * @function
      * @param {number} w new width of the camera
      * @param {number} h new height of the camera
@@ -307,7 +306,7 @@ class Camera2d extends Renderable {
      * set the camera boundaries (set to the world limit by default).
      * the camera is bound to the given coordinates and cannot move/be scrolled outside of it.
      * @name setBounds
-     * @memberOf me.Camera2d
+     * @memberof me.Camera2d
      * @function
      * @param {number} x world left limit
      * @param {number} y world top limit
@@ -326,7 +325,7 @@ class Camera2d extends Renderable {
      * set the camera to follow the specified renderable. <br>
      * (this will put the camera center around the given target)
      * @name follow
-     * @memberOf me.Camera2d
+     * @memberof me.Camera2d
      * @function
      * @param {me.Renderable|me.Vector2d} target renderable or position vector to follow
      * @param {me.Camera2d.AXIS} [axis=this.AXIS.BOTH] Which axis to follow
@@ -368,7 +367,7 @@ class Camera2d extends Renderable {
     /**
      * unfollow the current target
      * @name unfollow
-     * @memberOf me.Camera2d
+     * @memberof me.Camera2d
      * @function
      */
     unfollow() {
@@ -379,7 +378,7 @@ class Camera2d extends Renderable {
     /**
      * move the camera upper-left position by the specified offset.
      * @name move
-     * @memberOf me.Camera2d
+     * @memberof me.Camera2d
      * @see me.Camera2d.focusOn
      * @function
      * @param {number} x
@@ -395,7 +394,7 @@ class Camera2d extends Renderable {
     /**
      * move the camera upper-left position to the specified coordinates
      * @name moveTo
-     * @memberOf me.Camera2d
+     * @memberof me.Camera2d
      * @see me.Camera2d.focusOn
      * @function
      * @param {number} x
@@ -519,7 +518,7 @@ class Camera2d extends Renderable {
     /**
      * shake the camera
      * @name shake
-     * @memberOf me.Camera2d
+     * @memberof me.Camera2d
      * @function
      * @param {number} intensity maximum offset that the screen can be moved
      * while shaking
@@ -545,7 +544,7 @@ class Camera2d extends Renderable {
      * fadeOut(flash) effect<p>
      * screen is filled with the specified color and slowly goes back to normal
      * @name fadeOut
-     * @memberOf me.Camera2d
+     * @memberof me.Camera2d
      * @function
      * @param {me.Color|string} color a CSS color value
      * @param {number} [duration=1000] expressed in milliseconds
@@ -571,7 +570,7 @@ class Camera2d extends Renderable {
      * fadeIn effect <p>
      * fade to the specified color
      * @name fadeIn
-     * @memberOf me.Camera2d
+     * @memberof me.Camera2d
      * @function
      * @param {me.Color|string} color a CSS color value
      * @param {number} [duration=1000] expressed in milliseconds
@@ -594,7 +593,7 @@ class Camera2d extends Renderable {
     /**
      * set the camera position around the specified object
      * @name focusOn
-     * @memberOf me.Camera2d
+     * @memberof me.Camera2d
      * @function
      * @param {me.Renderable} target the renderable to focus the camera on
      */
@@ -609,7 +608,7 @@ class Camera2d extends Renderable {
     /**
      * check if the specified renderable is in the camera
      * @name isVisible
-     * @memberOf me.Camera2d
+     * @memberof me.Camera2d
      * @function
      * @param {me.Renderable} obj to be checked against
      * @param {boolean} [floating = obj.floating] if visibility check should be done against screen coordinates
@@ -628,7 +627,7 @@ class Camera2d extends Renderable {
     /**
      * convert the given "local" (screen) coordinates into world coordinates
      * @name localToWorld
-     * @memberOf me.Camera2d
+     * @memberof me.Camera2d
      * @function
      * @param {number} x
      * @param {number} y
@@ -649,7 +648,7 @@ class Camera2d extends Renderable {
     /**
      * convert the given world coordinates into "local" (screen) coordinates
      * @name worldToLocal
-     * @memberOf me.Camera2d
+     * @memberof me.Camera2d
      * @function
      * @param {number} x
      * @param {number} y

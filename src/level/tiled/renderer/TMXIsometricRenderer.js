@@ -8,9 +8,8 @@ import TMXLayer from "./../TMXLayer.js";
  * @classdesc
  * an Isometric Map Renderder
  * @class TMXIsometricRenderer
- * @memberOf me
- * @extends me.TMXRenderer
- * @constructor
+ * @memberof me
+ * @augments me.TMXRenderer
  * @param {me.TMXTileMap} map the TMX map
  */
 class TMXIsometricRenderer extends TMXRenderer {

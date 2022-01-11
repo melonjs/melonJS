@@ -23,8 +23,7 @@ import { Interpolation } from "./interpolation.js";
  * author lechecacharro<br>
  * author Josh Faul / http://jocafa.com/
  * @class Tween
- * @memberOf me
- * @constructor
+ * @memberof me
  * @param {object} object object on which to apply the tween
  * @example
  * // add a tween to change the object pos.x and pos.y variable to 200 in 3 seconds
@@ -121,7 +120,7 @@ class Tween {
     /**
      * object properties to be updated and duration
      * @name to
-     * @memberOf me.Tween
+     * @memberof me.Tween
      * @public
      * @function
      * @param {object} properties hash of properties
@@ -163,7 +162,7 @@ class Tween {
     /**
      * start the tween
      * @name start
-     * @memberOf me.Tween
+     * @memberof me.Tween
      * @public
      * @function
      * @param {number} [time] the current time when the tween was started
@@ -210,7 +209,7 @@ class Tween {
     /**
      * stop the tween
      * @name stop
-     * @memberOf me.Tween
+     * @memberof me.Tween
      * @public
      * @function
      * @returns {me.Tween} this instance for object chaining
@@ -224,7 +223,7 @@ class Tween {
     /**
      * delay the tween
      * @name delay
-     * @memberOf me.Tween
+     * @memberof me.Tween
      * @public
      * @function
      * @param {number} amount delay amount expressed in milliseconds
@@ -240,7 +239,7 @@ class Tween {
     /**
      * Repeat the tween
      * @name repeat
-     * @memberOf me.Tween
+     * @memberof me.Tween
      * @public
      * @function
      * @param {number} times amount of times the tween should be repeated
@@ -257,7 +256,7 @@ class Tween {
      * Allows the tween to bounce back to their original value when finished.
      * To be used together with repeat to create endless loops.
      * @name yoyo
-     * @memberOf me.Tween
+     * @memberof me.Tween
      * @public
      * @function
      * @see me.Tween#repeat
@@ -274,7 +273,7 @@ class Tween {
     /**
      * set the easing function
      * @name easing
-     * @memberOf me.Tween
+     * @memberof me.Tween
      * @public
      * @function
      * @param {me.Tween.Easing} easing easing function
@@ -291,7 +290,7 @@ class Tween {
     /**
      * set the interpolation function
      * @name interpolation
-     * @memberOf me.Tween
+     * @memberof me.Tween
      * @public
      * @function
      * @param {me.Tween.Interpolation} interpolation interpolation function
@@ -305,7 +304,7 @@ class Tween {
     /**
      * chain the tween
      * @name chain
-     * @memberOf me.Tween
+     * @memberof me.Tween
      * @public
      * @function
      * @param {...me.Tween} chainedTween Tween(s) to be chained
@@ -319,7 +318,7 @@ class Tween {
     /**
      * onStart callback
      * @name onStart
-     * @memberOf me.Tween
+     * @memberof me.Tween
      * @public
      * @function
      * @param {Function} onStartCallback callback
@@ -333,7 +332,7 @@ class Tween {
     /**
      * onUpdate callback
      * @name onUpdate
-     * @memberOf me.Tween
+     * @memberof me.Tween
      * @public
      * @function
      * @param {Function} onUpdateCallback callback
@@ -347,7 +346,7 @@ class Tween {
     /**
      * onComplete callback
      * @name onComplete
-     * @memberOf me.Tween
+     * @memberof me.Tween
      * @public
      * @function
      * @param {Function} onCompleteCallback callback

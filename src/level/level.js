@@ -49,7 +49,7 @@ function safeLoadLevel(levelId, options, restart) {
 /**
  * Load a TMX level
  * @name loadTMXLevel
- * @memberOf me.level
+ * @memberof me.level
  * @private
  * @param {string} levelId level id
  * @param {me.Container} container target container
@@ -76,7 +76,7 @@ function loadTMXLevel(levelId, container, flatten, setViewportBounds) {
 /**
  * a level manager. once ressources loaded, the level manager contains all references of defined levels.
  * @namespace level
- * @memberOf me
+ * @memberof me
  */
 
 var level = {
@@ -84,7 +84,7 @@ var level = {
     /**
      * add a level into the game manager (usually called by the preloader)
      * @name add
-     * @memberOf me.level
+     * @memberof me.level
      * @public
      * @function
      * @param {string} format level format (only "tmx" supported)
@@ -123,7 +123,7 @@ var level = {
      * load a level into the game manager<br>
      * (will also create all level defined entities, etc..)
      * @name load
-     * @memberOf me.level
+     * @memberof me.level
      * @public
      * @function
      * @param {string} levelId level id
@@ -197,7 +197,7 @@ var level = {
     /**
      * return the current level id<br>
      * @name getCurrentLevelId
-     * @memberOf me.level
+     * @memberof me.level
      * @public
      * @function
      * @returns {string}
@@ -211,7 +211,7 @@ var level = {
      * for a reference to the live instantiated level,
      * rather use the container in which it was loaded (e.g. me.game.world)
      * @name getCurrentLevel
-     * @memberOf me.level
+     * @memberof me.level
      * @public
      * @function
      * @returns {me.TMXTileMap}
@@ -223,7 +223,7 @@ var level = {
     /**
      * reload the current level
      * @name reload
-     * @memberOf me.level
+     * @memberof me.level
      * @public
      * @function
      * @param {object} [options] additional optional parameters
@@ -241,7 +241,7 @@ var level = {
     /**
      * load the next level
      * @name next
-     * @memberOf me.level
+     * @memberof me.level
      * @public
      * @function
      * @param {object} [options] additional optional parameters
@@ -263,7 +263,7 @@ var level = {
     /**
      * load the previous level<br>
      * @name previous
-     * @memberOf me.level
+     * @memberof me.level
      * @public
      * @function
      * @param {object} [options] additional optional parameters
@@ -285,7 +285,7 @@ var level = {
     /**
      * return the amount of level preloaded
      * @name levelCount
-     * @memberOf me.level
+     * @memberof me.level
      * @public
      * @function
      * @returns {number} the amount of level preloaded

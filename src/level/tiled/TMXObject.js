@@ -10,7 +10,6 @@ import { degToRad } from "./../../math/math.js";
  * a TMX Object defintion, as defined in Tiled
  * (Object definition is translated into the virtual `me.game.world` using `me.Renderable`)
  * @class TMXObject
- * @constructor
  * @ignore
  */
 export default class TMXObject {
@@ -22,7 +21,7 @@ export default class TMXObject {
          * @public
          * @type {object[]}
          * @name points
-         * @memberOf me.TMXObject
+         * @memberof me.TMXObject
          */
         this.points = undefined;
 
@@ -31,7 +30,7 @@ export default class TMXObject {
          * @public
          * @type {string}
          * @name name
-         * @memberOf me.TMXObject
+         * @memberof me.TMXObject
          */
         this.name = settings.name;
 
@@ -40,7 +39,7 @@ export default class TMXObject {
          * @public
          * @type {number}
          * @name x
-         * @memberOf me.TMXObject
+         * @memberof me.TMXObject
          */
         this.x = +settings.x;
 
@@ -49,7 +48,7 @@ export default class TMXObject {
          * @public
          * @type {number}
          * @name y
-         * @memberOf me.TMXObject
+         * @memberof me.TMXObject
          */
         this.y = +settings.y;
 
@@ -58,7 +57,7 @@ export default class TMXObject {
          * @public
          * @type {number}
          * @name z
-         * @memberOf me.TMXObject
+         * @memberof me.TMXObject
          */
         this.z = +z;
 
@@ -67,7 +66,7 @@ export default class TMXObject {
          * @public
          * @type {number}
          * @name width
-         * @memberOf me.TMXObject
+         * @memberof me.TMXObject
          */
         this.width = +settings.width || 0;
 
@@ -76,7 +75,7 @@ export default class TMXObject {
          * @public
          * @type {number}
          * @name height
-         * @memberOf me.TMXObject
+         * @memberof me.TMXObject
          */
         this.height = +settings.height || 0;
 
@@ -86,7 +85,7 @@ export default class TMXObject {
          * @public
          * @type {number}
          * @name gid
-         * @memberOf me.TMXObject
+         * @memberof me.TMXObject
          */
         this.gid = +settings.gid || null;
 
@@ -95,7 +94,7 @@ export default class TMXObject {
          * @public
          * @type {string}
          * @name tintcolor
-         * @memberOf me.TMXObject
+         * @memberof me.TMXObject
          */
         this.tintcolor = settings.tintcolor;
 
@@ -104,7 +103,7 @@ export default class TMXObject {
          * @public
          * @type {string}
          * @name type
-         * @memberOf me.TMXObject
+         * @memberof me.TMXObject
          */
         this.type = settings.type;
 
@@ -114,7 +113,7 @@ export default class TMXObject {
          * @type {object}
          * @see http://docs.mapeditor.org/en/stable/reference/tmx-map-format/#text
          * @name type
-         * @memberOf me.TMXObject
+         * @memberof me.TMXObject
          */
         this.type = settings.type;
 
@@ -123,7 +122,7 @@ export default class TMXObject {
          * @public
          * @type {number}
          * @name rotation
-         * @memberOf me.TMXObject
+         * @memberof me.TMXObject
          */
         this.rotation = degToRad(+settings.rotation || 0);
 
@@ -132,7 +131,7 @@ export default class TMXObject {
          * @public
          * @type {number}
          * @name id
-         * @memberOf me.TMXObject
+         * @memberof me.TMXObject
          */
         this.id = +settings.id || undefined;
 
@@ -141,7 +140,7 @@ export default class TMXObject {
          * @public
          * @type {string}
          * @name orientation
-         * @memberOf me.TMXObject
+         * @memberof me.TMXObject
          */
         this.orientation = map.orientation;
 
@@ -150,7 +149,7 @@ export default class TMXObject {
          * @public
          * @type {object[]}
          * @name shapes
-         * @memberOf me.TMXObject
+         * @memberof me.TMXObject
          */
         this.shapes = undefined;
 
@@ -159,7 +158,7 @@ export default class TMXObject {
          * @public
          * @type {boolean}
          * @name isEllipse
-         * @memberOf me.TMXObject
+         * @memberof me.TMXObject
          */
         this.isEllipse = false;
 
@@ -168,7 +167,7 @@ export default class TMXObject {
          * @public
          * @type {boolean}
          * @name isPolygon
-         * @memberOf me.TMXObject
+         * @memberof me.TMXObject
          */
         this.isPolygon = false;
 
@@ -177,7 +176,7 @@ export default class TMXObject {
          * @public
          * @type {boolean}
          * @name isPolyLine
-         * @memberOf me.TMXObject
+         * @memberof me.TMXObject
          */
         this.isPolyLine = false;
 
@@ -249,7 +248,7 @@ export default class TMXObject {
     /**
      * parses the TMX shape definition and returns a corresponding array of me.Shape object
      * @name parseTMXShapes
-     * @memberOf me.TMXObject
+     * @memberof me.TMXObject
      * @private
      * @function
      * @returns {me.Polygon[]|me.Line[]|me.Ellipse[]} an array of shape objects

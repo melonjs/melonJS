@@ -6,9 +6,8 @@ import TMXRenderer from "./TMXRenderer.js";
  * @classdesc
  * an Orthogonal Map Renderder
  * @class TMXOrthogonalRenderer
- * @memberOf me
- * @extends me.TMXRenderer
- * @constructor
+ * @memberof me
+ * @augments me.TMXRenderer
  * @param {me.TMXTileMap} map the TMX map
  */
 class TMXOrthogonalRenderer extends TMXRenderer {

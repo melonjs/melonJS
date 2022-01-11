@@ -4,7 +4,7 @@ import { rayCast, globalResponse } from "./detector.js";
  * Collision detection (and projection-based collision response) of 2D shapes.<br>
  * Based on the Separating Axis Theorem and supports detecting collisions between simple Axis-Aligned Boxes, convex polygons and circles based shapes.
  * @namespace collision
- * @memberOf me
+ * @memberof me
  */
 
 var collision = {
@@ -12,7 +12,7 @@ var collision = {
      /**
       * The maximum number of children that a quadtree node can contain before it is split into sub-nodes.
       * @name maxChildren
-      * @memberOf me.collision
+      * @memberof me.collision
       * @public
       * @type {number}
       * @default 8
@@ -23,7 +23,7 @@ var collision = {
      /**
       * The maximum number of levels that the quadtree will create.
       * @name maxDepth
-      * @memberOf me.collision
+      * @memberof me.collision
       * @public
       * @type {number}
       * @default 4
@@ -46,7 +46,7 @@ var collision = {
      * @readonly
      * @enum {number}
      * @name types
-     * @memberOf me.collision
+     * @memberof me.collision
      * @see me.body.setCollisionMask
      * @see me.body.collisionType
      * @example
@@ -97,7 +97,7 @@ var collision = {
      * a global instance of a response object used for collision detection <br>
      * this object will be reused amongst collision detection call if not user-defined response is specified
      * @name response
-     * @memberOf me.collision
+     * @memberof me.collision
      * @public
      * @type {me.collision.ResponseObject}
      */
@@ -106,7 +106,7 @@ var collision = {
     /**
      * Checks for object colliding with the given line
      * @name rayCast
-     * @memberOf me.collision
+     * @memberof me.collision
      * @public
      * @function
      * @param {me.Line} line line to be tested for collision

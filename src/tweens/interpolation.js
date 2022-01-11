@@ -14,7 +14,7 @@
  * @constant
  * @enum {Function}
  * @name Interpolation
- * @memberOf me.Tween
+ * @memberof me.Tween
  */
 export let Interpolation = {
     /** @ignore */

@@ -8,7 +8,7 @@ import * as event from "./../system/event.js";
 /**
  * The device capabilities and specific events
  * @namespace me.device
- * @memberOf me
+ * @memberof me
  */
 
 // private properties
@@ -257,7 +257,7 @@ let device = {
      * @type {string}
      * @readonly
      * @name ua
-     * @memberOf me.device
+     * @memberof me.device
      */
     ua : navigator.userAgent,
 
@@ -267,7 +267,7 @@ let device = {
      * @type {boolean}
      * @readonly
      * @name localStorage
-     * @memberOf me.device
+     * @memberof me.device
      */
     localStorage : false,
 
@@ -276,7 +276,7 @@ let device = {
      * @type {boolean}
      * @readonly
      * @name hasAccelerometer
-     * @memberOf me.device
+     * @memberof me.device
      */
     hasAccelerometer : false,
 
@@ -285,7 +285,7 @@ let device = {
      * @type {boolean}
      * @readonly
      * @name hasDeviceOrientation
-     * @memberOf me.device
+     * @memberof me.device
      */
     hasDeviceOrientation : false,
 
@@ -295,7 +295,7 @@ let device = {
      * @type {boolean}
      * @readonly
      * @name ScreenOrientation
-     * @memberOf me.device
+     * @memberof me.device
      */
     ScreenOrientation : false,
 
@@ -304,7 +304,7 @@ let device = {
      * @type {boolean}
      * @readonly
      * @name hasFullscreenSupport
-     * @memberOf me.device
+     * @memberof me.device
      */
     hasFullscreenSupport : false,
 
@@ -313,7 +313,7 @@ let device = {
      * @type {boolean}
      * @readonly
      * @name hasPointerLockSupport
-     * @memberOf me.device
+     * @memberof me.device
      */
     hasPointerLockSupport : false,
 
@@ -322,7 +322,7 @@ let device = {
      * @type {boolean}
      * @readonly
      * @name hasWebAudio
-     * @memberOf me.device
+     * @memberof me.device
      */
     hasWebAudio : false,
 
@@ -331,7 +331,7 @@ let device = {
      * @type {boolean}
      * @readonly
      * @name nativeBase64
-     * @memberOf me.device
+     * @memberof me.device
      */
     nativeBase64 : (typeof(window.atob) === "function"),
 
@@ -340,7 +340,7 @@ let device = {
      * @type {number}
      * @readonly
      * @name maxTouchPoints
-     * @memberOf me.device
+     * @memberof me.device
      * @example
      * if (me.device.maxTouchPoints > 1) {
      *     // device supports multi-touch
@@ -353,7 +353,7 @@ let device = {
      * @type {boolean}
      * @readonly
      * @name touch
-     * @memberOf me.device
+     * @memberof me.device
      */
     touch : false,
 
@@ -362,7 +362,7 @@ let device = {
      * @type {boolean}
      * @readonly
      * @name wheel
-     * @memberOf me.device
+     * @memberof me.device
      */
     wheel : false,
 
@@ -372,7 +372,7 @@ let device = {
      * @type {boolean}
      * @readonly
      * @name isMobile
-     * @memberOf me.device
+     * @memberof me.device
      */
     isMobile : false,
 
@@ -381,7 +381,7 @@ let device = {
      * @type {boolean}
      * @readonly
      * @name iOS
-     * @memberOf me.device
+     * @memberof me.device
      */
     iOS : false,
 
@@ -390,7 +390,7 @@ let device = {
      * @type {boolean}
      * @readonly
      * @name android
-     * @memberOf me.device
+     * @memberof me.device
      */
     android : false,
 
@@ -399,7 +399,7 @@ let device = {
      * @type {boolean}
      * @readonly
      * @name android2
-     * @memberOf me.device
+     * @memberof me.device
      */
     android2 : false,
 
@@ -408,7 +408,7 @@ let device = {
      * @type {boolean}
      * @readonly
      * @name linux
-     * @memberOf me.device
+     * @memberof me.device
      */
     linux : false,
 
@@ -418,7 +418,7 @@ let device = {
     * @readonly
     * @see http://impactjs.com/ejecta
     * @name ejecta
-    * @memberOf me.device
+    * @memberof me.device
     */
     ejecta : false,
 
@@ -427,7 +427,7 @@ let device = {
      * @type {boolean}
      * @readonly
      * @name isWeixin
-     * @memberOf me.device
+     * @memberof me.device
      */
      isWeixin : false,
 
@@ -436,7 +436,7 @@ let device = {
      * @type {boolean}
      * @readonly
      * @name chromeOS
-     * @memberOf me.device
+     * @memberof me.device
      */
     chromeOS : false,
 
@@ -445,7 +445,7 @@ let device = {
      * @type {boolean}
      * @readonly
      * @name wp
-     * @memberOf me.device
+     * @memberof me.device
      */
     wp : false,
 
@@ -454,7 +454,7 @@ let device = {
      * @type {boolean}
      * @readonly
      * @name BlackBerry
-     * @memberOf me.device
+     * @memberof me.device
      */
     BlackBerry : false,
 
@@ -463,7 +463,7 @@ let device = {
      * @type {boolean}
      * @readonly
      * @name Kindle
-     * @memberOf me.device
+     * @memberof me.device
      */
     Kindle : false,
 
@@ -474,7 +474,7 @@ let device = {
      * @readonly
      * @name accelerationX
      * @see me.device.watchAccelerometer
-     * @memberOf me.device
+     * @memberof me.device
      */
     accelerationX : 0,
 
@@ -485,7 +485,7 @@ let device = {
      * @readonly
      * @name accelerationY
      * @see me.device.watchAccelerometer
-     * @memberOf me.device
+     * @memberof me.device
      */
     accelerationY : 0,
 
@@ -496,7 +496,7 @@ let device = {
      * @readonly
      * @name accelerationZ
      * @see me.device.watchAccelerometer
-     * @memberOf me.device
+     * @memberof me.device
      */
     accelerationZ : 0,
 
@@ -507,7 +507,7 @@ let device = {
      * @readonly
      * @name gamma
      * @see me.device.watchDeviceOrientation
-     * @memberOf me.device
+     * @memberof me.device
      */
     gamma : 0,
 
@@ -518,7 +518,7 @@ let device = {
      * @readonly
      * @name beta
      * @see me.device.watchDeviceOrientation
-     * @memberOf me.device
+     * @memberof me.device
      */
     beta: 0,
 
@@ -530,7 +530,7 @@ let device = {
      * @readonly
      * @name alpha
      * @see me.device.watchDeviceOrientation
-     * @memberOf me.device
+     * @memberof me.device
      */
     alpha : 0,
 
@@ -542,7 +542,7 @@ let device = {
      * @readonly
      * @see http://www.w3schools.com/tags/ref_language_codes.asp
      * @name language
-     * @memberOf me.device
+     * @memberof me.device
      */
     language : navigator.language || navigator.browserLanguage || navigator.userLanguage || "en",
 
@@ -550,7 +550,7 @@ let device = {
      * Specify whether to pause the game when losing focus
      * @type {boolean}
      * @default true
-     * @memberOf me.device
+     * @memberof me.device
      */
     pauseOnBlur : true,
 
@@ -558,7 +558,7 @@ let device = {
      * Specify whether to unpause the game when gaining focus
      * @type {boolean}
      * @default true
-     * @memberOf me.device
+     * @memberof me.device
      */
     resumeOnFocus : true,
 
@@ -566,7 +566,7 @@ let device = {
      * Specify whether to automatically bring the window to the front
      * @type {boolean}
      * @default true
-     * @memberOf me.device
+     * @memberof me.device
      */
     autoFocus : true,
 
@@ -575,7 +575,7 @@ let device = {
      * The engine restarts on focus if this is enabled.
      * @type {boolean}
      * @default false
-     * @memberOf me.device
+     * @memberof me.device
      */
     stopOnBlur : false,
 
@@ -584,7 +584,7 @@ let device = {
      * @type {boolean}
      * @readonly
      * @name OffScreenCanvas
-     * @memberOf me.device
+     * @memberof me.device
      */
     OffscreenCanvas : false,
 
@@ -1153,7 +1153,7 @@ let device = {
 /**
  * Ratio of the resolution in physical pixels to the resolution in CSS pixels for the current display device.
  * @name devicePixelRatio
- * @memberOf me.device
+ * @memberof me.device
  * @public
  * @type {number}
  * @readonly
@@ -1171,7 +1171,7 @@ Object.defineProperty(device, "devicePixelRatio", {
 /**
  * Returns true if the browser/device is in full screen mode.
  * @name isFullscreen
- * @memberOf me.device
+ * @memberof me.device
  * @public
  * @type {boolean}
  * @readonly
@@ -1194,7 +1194,7 @@ Object.defineProperty(device, "isFullscreen", {
 /**
  * Returns true if the browser/device has audio capabilities.
  * @name sound
- * @memberOf me.device
+ * @memberof me.device
  * @public
  * @type {boolean}
  * @readonly

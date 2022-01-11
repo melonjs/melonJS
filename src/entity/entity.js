@@ -6,12 +6,12 @@ import Polygon from "./../shapes/poly.js";
 
 
 /**
+ * @classdesc
  * a Generic Object Entity
  * @class Entity
- * @extends me.Renderable
- * @memberOf me
+ * @augments me.Renderable
+ * @memberof me
  * @see me.Renderable
- * @constructor
  * @param {number} x the x coordinates of the entity object
  * @param {number} y the y coordinates of the entity object
  * @param {object} settings Entity properties, to be defined through Tiled or when calling the entity constructor
@@ -76,7 +76,7 @@ class Entity extends Renderable {
          * @public
          * @type {string}
          * @name type
-         * @memberOf me.Entity
+         * @memberof me.Entity
          */
         this.type = settings.type || "";
 
@@ -85,7 +85,7 @@ class Entity extends Renderable {
          * @public
          * @type {number}
          * @name id
-         * @memberOf me.Entity
+         * @memberof me.Entity
          */
         this.id = settings.id || "";
 
@@ -95,7 +95,7 @@ class Entity extends Renderable {
          * @public
          * @type {boolean}
          * @name alive
-         * @memberOf me.Entity
+         * @memberof me.Entity
          */
         this.alive = true;
 
@@ -104,7 +104,7 @@ class Entity extends Renderable {
          * @public
          * @type {me.Body}
          * @name body
-         * @memberOf me.Entity
+         * @memberof me.Entity
          */
         // initialize the default body
         if (typeof settings.shapes === "undefined") {
@@ -136,7 +136,7 @@ class Entity extends Renderable {
      * @public
      * @type {me.Renderable}
      * @name renderable
-     * @memberOf me.Entity
+     * @memberof me.Entity
      */
 
     get renderable() {
@@ -164,7 +164,7 @@ class Entity extends Renderable {
      * update the bounds position when the body is modified
      * @ignore
      * @name onBodyUpdate
-     * @memberOf me.Entity
+     * @memberof me.Entity
      * @function
      * @param {me.Body} the body whose bounds to update
      */
@@ -200,7 +200,7 @@ class Entity extends Renderable {
      * not to be called by the end user<br>
      * called by the game manager on each game loop
      * @name draw
-     * @memberOf me.Entity
+     * @memberof me.Entity
      * @function
      * @protected
      * @param {me.CanvasRenderer|me.WebGLRenderer} renderer a renderer object
@@ -239,7 +239,7 @@ class Entity extends Renderable {
      * onDeactivateEvent Notification function<br>
      * Called by engine before deleting the object
      * @name onDeactivateEvent
-     * @memberOf me.Entity
+     * @memberof me.Entity
      * @function
      */
     onDeactivateEvent() {

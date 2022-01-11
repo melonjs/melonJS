@@ -11,8 +11,7 @@ import pool from "./../system/pooling.js";
  * <center><img src="images/convex_polygon.png"/></center><br>
  * A polygon's `winding` is clockwise iff its vertices (points) are declared turning to the right. The image above shows COUNTERCLOCKWISE winding.
  * @class Polygon
- * @memberOf me
- * @constructor
+ * @memberof me
  * @param {number} x origin point of the Polygon
  * @param {number} y origin point of the Polygon
  * @param {me.Vector2d[]} points array of vector defining the Polygon
@@ -35,7 +34,7 @@ class Polygon {
          * @ignore
          * @type {me.Bounds}
          * @name _bounds
-         * @memberOf me.Polygon#
+         * @memberof me.Polygon#
          */
         this._bounds;
 
@@ -45,7 +44,7 @@ class Polygon {
          * @public
          * @type {me.Vector2d[]}
          * @name points
-         * @memberOf me.Polygon#
+         * @memberof me.Polygon#
          */
         this.points = [];
 
@@ -84,7 +83,7 @@ class Polygon {
     /**
      * set new value to the Polygon
      * @name setShape
-     * @memberOf me.Polygon.prototype
+     * @memberof me.Polygon.prototype
      * @function
      * @param {number} x position of the Polygon
      * @param {number} y position of the Polygon
@@ -100,7 +99,7 @@ class Polygon {
     /**
      * set the vertices defining this Polygon
      * @name setVertices
-     * @memberOf me.Polygon.prototype
+     * @memberof me.Polygon.prototype
      * @function
      * @param {me.Vector2d[]} vertices array of vector or vertice defining the Polygon
      * @returns {me.Polygon} this instance for objecf chaining
@@ -140,7 +139,7 @@ class Polygon {
     /**
      * apply the given transformation matrix to this Polygon
      * @name transform
-     * @memberOf me.Polygon.prototype
+     * @memberof me.Polygon.prototype
      * @function
      * @param {me.Matrix2d} m the transformation matrix
      * @returns {me.Polygon} Reference to this object for method chaining
@@ -159,7 +158,7 @@ class Polygon {
     /**
      * apply an isometric projection to this shape
      * @name toIso
-     * @memberOf me.Polygon.prototype
+     * @memberof me.Polygon.prototype
      * @function
      * @returns {me.Polygon} Reference to this object for method chaining
      */
@@ -170,7 +169,7 @@ class Polygon {
     /**
      * apply a 2d projection to this shape
      * @name to2d
-     * @memberOf me.Polygon.prototype
+     * @memberof me.Polygon.prototype
      * @function
      * @returns {me.Polygon} Reference to this object for method chaining
      */
@@ -181,7 +180,7 @@ class Polygon {
     /**
      * Rotate this Polygon (counter-clockwise) by the specified angle (in radians).
      * @name rotate
-     * @memberOf me.Polygon.prototype
+     * @memberof me.Polygon.prototype
      * @function
      * @param {number} angle The angle to rotate (in radians)
      * @param {me.Vector2d|me.ObservableVector2d} [v] an optional point to rotate around
@@ -203,7 +202,7 @@ class Polygon {
     /**
      * Scale this Polygon by the given scalar.
      * @name scale
-     * @memberOf me.Polygon.prototype
+     * @memberof me.Polygon.prototype
      * @function
      * @param {number} x
      * @param {number} [y=x]
@@ -225,7 +224,7 @@ class Polygon {
     /**
      * Scale this Polygon by the given vector
      * @name scaleV
-     * @memberOf me.Polygon.prototype
+     * @memberof me.Polygon.prototype
      * @function
      * @param {me.Vector2d} v
      * @returns {me.Polygon} Reference to this object for method chaining
@@ -238,7 +237,7 @@ class Polygon {
      * Computes the calculated collision polygon.
      * This **must** be called if the `points` array, `angle`, or `offset` is modified manually.
      * @name recalc
-     * @memberOf me.Polygon.prototype
+     * @memberof me.Polygon.prototype
      * @function
      * @returns {me.Polygon} Reference to this object for method chaining
      */
@@ -282,7 +281,7 @@ class Polygon {
     /**
      * returns a list of indices for all triangles defined in this polygon
      * @name getIndices
-     * @memberOf me.Polygon.prototype
+     * @memberof me.Polygon.prototype
      * @function
      * @returns {Array} an array of vertex indices for all triangles forming this polygon.
      */
@@ -296,7 +295,7 @@ class Polygon {
     /**
      * Returns true if the vertices composing this polygon form a convex shape (vertices must be in clockwise order).
      * @name isConvex
-     * @memberOf me.Polygon.prototype
+     * @memberof me.Polygon.prototype
      * @function
      * @returns {boolean} true if the vertices are convex, false if not, null if not computable
      */
@@ -343,7 +342,7 @@ class Polygon {
     /**
      * translate the Polygon by the specified offset
      * @name translate
-     * @memberOf me.Polygon.prototype
+     * @memberof me.Polygon.prototype
      * @function
      * @param {number} x x offset
      * @param {number} y y offset
@@ -352,7 +351,7 @@ class Polygon {
     /**
      * translate the Polygon by the specified vector
      * @name translate
-     * @memberOf me.Polygon.prototype
+     * @memberof me.Polygon.prototype
      * @function
      * @param {me.Vector2d} v vector offset
      * @returns {me.Polygon} Reference to this object for method chaining
@@ -380,14 +379,14 @@ class Polygon {
     /**
      * Shifts the Polygon to the given position vector.
      * @name shift
-     * @memberOf me.Polygon
+     * @memberof me.Polygon
      * @function
      * @param {me.Vector2d} position
      */
     /**
      * Shifts the Polygon to the given x, y position.
      * @name shift
-     * @memberOf me.Polygon
+     * @memberof me.Polygon
      * @function
      * @param {number} x
      * @param {number} y
@@ -413,7 +412,7 @@ class Polygon {
      * (Note: it is highly recommended to first do a hit test on the corresponding <br>
      *  bounding rect, as the function can be highly consuming with complex shapes)
      * @name contains
-     * @memberOf me.Polygon.prototype
+     * @memberof me.Polygon.prototype
      * @function
      * @param  {me.Vector2d} point
      * @returns {boolean} true if contains
@@ -424,7 +423,7 @@ class Polygon {
      * (Note: it is highly recommended to first do a hit test on the corresponding <br>
      *  bounding rect, as the function can be highly consuming with complex shapes)
      * @name contains
-     * @memberOf me.Polygon.prototype
+     * @memberof me.Polygon.prototype
      * @function
      * @param  {number} x x coordinate
      * @param  {number} y y coordinate
@@ -462,7 +461,7 @@ class Polygon {
     /**
      * returns the bounding box for this shape, the smallest Rectangle object completely containing this shape.
      * @name getBounds
-     * @memberOf me.Polygon.prototype
+     * @memberof me.Polygon.prototype
      * @function
      * @returns {me.Bounds} this shape bounding box Rectangle object
      */
@@ -477,7 +476,7 @@ class Polygon {
      * update the bounding box for this shape.
      * @ignore
      * @name updateBounds
-     * @memberOf me.Polygon.prototype
+     * @memberof me.Polygon.prototype
      * @function
      * @returns {me.Bounds} this shape bounding box Rectangle object
      */
@@ -493,7 +492,7 @@ class Polygon {
     /**
      * clone this Polygon
      * @name clone
-     * @memberOf me.Polygon.prototype
+     * @memberof me.Polygon.prototype
      * @function
      * @returns {me.Polygon} new Polygon
      */

@@ -198,12 +198,11 @@ function minify(src) {
  * @classdesc
  * a base GL Shader object
  * @class GLShader
- * @memberOf me
+ * @memberof me
  * @param {WebGLRenderingContext} gl the current WebGL rendering context
  * @param {string} vertex a string containing the GLSL source code to set
  * @param {string} fragment a string containing the GLSL source code to set
  * @param {string} [precision=auto detected] float precision ('lowp', 'mediump' or 'highp').
- * @constructor
  * @see https://developer.mozilla.org/en-US/docs/Games/Techniques/3D_on_the_web/GLSL_Shaders
  * @example
  * // create a basic shader
@@ -235,7 +234,7 @@ class GLShader {
          * @public
          * @type {WebGLRenderingContext}
          * @name gl
-         * @memberOf me.GLShader
+         * @memberof me.GLShader
          */
         this.gl = gl;
 
@@ -244,7 +243,7 @@ class GLShader {
          * @public
          * @type {string}
          * @name vertex
-         * @memberOf me.GLShader
+         * @memberof me.GLShader
          */
         this.vertex = setPrecision(minify(vertex), precision || device.getMaxShaderPrecision(this.gl));
 
@@ -253,7 +252,7 @@ class GLShader {
          * @public
          * @type {string}
          * @name vertex
-         * @memberOf me.GLShader
+         * @memberof me.GLShader
          */
         this.fragment = setPrecision(minify(fragment), precision || device.getMaxShaderPrecision(this.gl));
 
@@ -262,7 +261,7 @@ class GLShader {
          * @public
          * @type {GLint[]}
          * @name attributes
-         * @memberOf me.GLShader
+         * @memberof me.GLShader
          */
         this.attributes = extractAttributes(this.gl, this);
 
@@ -272,7 +271,7 @@ class GLShader {
          * @public
          * @type {WebGLProgram}
          * @name program
-         * @memberOf me.GLShader
+         * @memberof me.GLShader
          */
         this.program = compileProgram(this.gl, this.vertex, this.fragment, this.attributes);
 
@@ -281,7 +280,7 @@ class GLShader {
          * @public
          * @type {object}
          * @name uniforms
-         * @memberOf me.GLShader
+         * @memberof me.GLShader
          */
         this.uniforms = extractUniforms(this.gl, this);
 
@@ -294,7 +293,7 @@ class GLShader {
     /**
      * Installs this shader program as part of current rendering state
      * @name bind
-     * @memberOf me.GLShader
+     * @memberof me.GLShader
      * @function
      */
     bind() {
@@ -304,7 +303,7 @@ class GLShader {
     /**
      * returns the location of an attribute variable in this shader program
      * @name getAttribLocation
-     * @memberOf me.GLShader
+     * @memberof me.GLShader
      * @function
      * @param {string} name the name of the attribute variable whose location to get.
      * @returns {GLint} number indicating the location of the variable name if found. Returns -1 otherwise
@@ -321,7 +320,7 @@ class GLShader {
     /**
      * Set the uniform to the given value
      * @name setUniform
-     * @memberOf me.GLShader
+     * @memberof me.GLShader
      * @function
      * @param {string} name the uniform name
      * @param {object|Float32Array} value the value to assign to that uniform
@@ -344,7 +343,7 @@ class GLShader {
     /**
      * destroy this shader objects resources (program, attributes, uniforms)
      * @name destroy
-     * @memberOf me.GLShader
+     * @memberof me.GLShader
      * @function
      */
     destroy() {

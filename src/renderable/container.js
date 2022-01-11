@@ -20,9 +20,8 @@ var globalFloatingCounter = 0;
  * @classdesc
  * me.Container represents a collection of child objects
  * @class Container
- * @extends me.Renderable
- * @memberOf me
- * @constructor
+ * @augments me.Renderable
+ * @memberof me
  * @param {number} [x=0] position of the container (accessible via the inherited pos.x property)
  * @param {number} [y=0] position of the container (accessible via the inherited pos.y property)
  * @param {number} [w=me.game.viewport.width] width of the container
@@ -51,7 +50,7 @@ class Container extends Renderable {
          * @type {boolean}
          * @default false
          * @name root
-         * @memberOf me.Container
+         * @memberof me.Container
          */
         this.root = root;
 
@@ -68,7 +67,7 @@ class Container extends Renderable {
          * @type {string}
          * @default me.game.sortOn
          * @name sortOn
-         * @memberOf me.Container
+         * @memberof me.Container
          */
         this.sortOn = game.sortOn;
 
@@ -78,7 +77,7 @@ class Container extends Renderable {
          * @type {boolean}
          * @default true
          * @name autoSort
-         * @memberOf me.Container
+         * @memberof me.Container
          */
         this.autoSort = true;
 
@@ -88,7 +87,7 @@ class Container extends Renderable {
          * @type {boolean}
          * @default true
          * @name autoDepth
-         * @memberOf me.Container
+         * @memberof me.Container
          */
         this.autoDepth = true;
 
@@ -98,14 +97,14 @@ class Container extends Renderable {
          * @type {boolean}
          * @default false
          * @name clipping
-         * @memberOf me.Container
+         * @memberof me.Container
          */
         this.clipping = false;
 
         /**
          * a callback to be extended, triggered after a child has been added or removed
          * @name onChildChange
-         * @memberOf me.Container#
+         * @memberof me.Container#
          * @function
          * @param {number} index added or removed child index
          */
@@ -121,7 +120,7 @@ class Container extends Renderable {
          * @type {boolean}
          * @default false
          * @name enableChildBoundsUpdate
-         * @memberOf me.Container
+         * @memberof me.Container
          */
         this.enableChildBoundsUpdate = false;
 
@@ -149,7 +148,7 @@ class Container extends Renderable {
     /**
      * reset the container, removing all childrens, and reseting transforms.
      * @name reset
-     * @memberOf me.Container
+     * @memberof me.Container
      * @function
      */
     reset() {
@@ -183,7 +182,7 @@ class Container extends Renderable {
      * orginal container.  Then when the me.game.world.reset() is called the renderable
      * will not be in any container.
      * @name addChild
-     * @memberOf me.Container.prototype
+     * @memberof me.Container.prototype
      * @function
      * @param {me.Renderable} child
      * @param {number} [z] forces the z index of the child to the specified value
@@ -247,7 +246,7 @@ class Container extends Renderable {
      * Add a child to the container at the specified index<br>
      * (the list won't be sorted after insertion)
      * @name addChildAt
-     * @memberOf me.Container.prototype
+     * @memberof me.Container.prototype
      * @function
      * @param {me.Renderable} child
      * @param {number} index
@@ -306,7 +305,7 @@ class Container extends Renderable {
      *    - The index of element in the array. <br>
      *    - The array forEach() was called upon. <br>
      * @name forEach
-     * @memberOf me.Container.prototype
+     * @memberof me.Container.prototype
      * @function
      * @param {Function} callback fnction to execute on each element
      * @param {object} [thisArg] value to use as this(i.e reference Object) when executing callback.
@@ -343,7 +342,7 @@ class Container extends Renderable {
     /**
      * Swaps the position (z-index) of 2 children
      * @name swapChildren
-     * @memberOf me.Container.prototype
+     * @memberof me.Container.prototype
      * @function
      * @param {me.Renderable} child
      * @param {me.Renderable} child2
@@ -369,7 +368,7 @@ class Container extends Renderable {
     /**
      * Returns the Child at the specified index
      * @name getChildAt
-     * @memberOf me.Container.prototype
+     * @memberof me.Container.prototype
      * @function
      * @param {number} index
      * @returns {me.Renderable} the child at the specified index
@@ -386,7 +385,7 @@ class Container extends Renderable {
     /**
      * Returns the index of the given Child
      * @name getChildIndex
-     * @memberOf me.Container.prototype
+     * @memberof me.Container.prototype
      * @function
      * @param {me.Renderable} child
      * @returns {number} index
@@ -398,7 +397,7 @@ class Container extends Renderable {
     /**
      * Returns the next child within the container or undefined if none
      * @name getNextChild
-     * @memberOf me.Container
+     * @memberof me.Container
      * @function
      * @param {me.Renderable} child
      * @returns {me.Renderable} child
@@ -414,7 +413,7 @@ class Container extends Renderable {
     /**
      * Returns true if contains the specified Child
      * @name hasChild
-     * @memberOf me.Container.prototype
+     * @memberof me.Container.prototype
      * @function
      * @param {me.Renderable} child
      * @returns {boolean}
@@ -428,7 +427,7 @@ class Container extends Renderable {
      * note : avoid calling this function every frame since
      * it parses the whole object tree each time
      * @name getChildByProp
-     * @memberOf me.Container.prototype
+     * @memberof me.Container.prototype
      * @public
      * @function
      * @param {string} prop Property name
@@ -480,7 +479,7 @@ class Container extends Renderable {
     /**
      * returns the list of childs with the specified class type
      * @name getChildByType
-     * @memberOf me.Container.prototype
+     * @memberof me.Container.prototype
      * @public
      * @function
      * @param {object} classType
@@ -507,7 +506,7 @@ class Container extends Renderable {
      * note : avoid calling this function every frame since
      * it parses the whole object list each time
      * @name getChildByName
-     * @memberOf me.Container.prototype
+     * @memberof me.Container.prototype
      * @public
      * @function
      * @param {string|RegExp|number|boolean} name child name
@@ -522,7 +521,7 @@ class Container extends Renderable {
      * note : avoid calling this function every frame since
      * it parses the whole object list each time
      * @name getChildByGUID
-     * @memberOf me.Container.prototype
+     * @memberof me.Container.prototype
      * @public
      * @function
      * @param {string|RegExp|number|boolean} guid child GUID
@@ -536,7 +535,7 @@ class Container extends Renderable {
     /**
      * return all child in this container
      * @name getChildren
-     * @memberOf me.Container.prototype
+     * @memberof me.Container.prototype
      * @public
      * @function
      * @returns {me.Renderable[]} an array of renderable object
@@ -552,7 +551,7 @@ class Container extends Renderable {
      * update the bounding box for this shape.
      * @ignore
      * @name updateBounds
-     * @memberOf me.Renderable.prototype
+     * @memberof me.Renderable.prototype
      * @function
      * @returns {me.Bounds} this shape bounding box Rectangle object
      */
@@ -581,7 +580,7 @@ class Container extends Renderable {
      * Checks if this container is root or if it's attached to the root container.
      * @private
      * @name isAttachedToRoot
-     * @memberOf me.Container.prototype
+     * @memberof me.Container.prototype
      * @function
      * @returns {boolean}
      */
@@ -604,7 +603,7 @@ class Container extends Renderable {
      * update the cointainer's bounding rect (private)
      * @ignore
      * @name updateBoundsPos
-     * @memberOf me.Container.prototype
+     * @memberof me.Container.prototype
      * @function
      */
     updateBoundsPos(newX, newY) {
@@ -639,7 +638,7 @@ class Container extends Renderable {
     /**
      * Invokes the removeChildNow in a defer, to ensure the child is removed safely after the update & draw stack has completed
      * @name removeChild
-     * @memberOf me.Container.prototype
+     * @memberof me.Container.prototype
      * @public
      * @function
      * @param {me.Renderable} child
@@ -659,7 +658,7 @@ class Container extends Renderable {
      * (removal is immediate and unconditional)<br>
      * Never use keepalive=true with objects from {@link me.pool}. Doing so will create a memory leak.
      * @name removeChildNow
-     * @memberOf me.Container.prototype
+     * @memberof me.Container.prototype
      * @function
      * @param {me.Renderable} child
      * @param {boolean} [keepalive=False] True to prevent calling child.destroy()
@@ -712,7 +711,7 @@ class Container extends Renderable {
     /**
      * Automatically set the specified property of all childs to the given value
      * @name setChildsProperty
-     * @memberOf me.Container.prototype
+     * @memberof me.Container.prototype
      * @function
      * @param {string} prop property name
      * @param {object} value property value
@@ -730,7 +729,7 @@ class Container extends Renderable {
     /**
      * Move the child in the group one step forward (z depth).
      * @name moveUp
-     * @memberOf me.Container.prototype
+     * @memberof me.Container.prototype
      * @function
      * @param {me.Renderable} child
      */
@@ -745,7 +744,7 @@ class Container extends Renderable {
     /**
      * Move the child in the group one step backward (z depth).
      * @name moveDown
-     * @memberOf me.Container.prototype
+     * @memberof me.Container.prototype
      * @function
      * @param {me.Renderable} child
      */
@@ -760,7 +759,7 @@ class Container extends Renderable {
     /**
      * Move the specified child to the top(z depth).
      * @name moveToTop
-     * @memberOf me.Container.prototype
+     * @memberof me.Container.prototype
      * @function
      * @param {me.Renderable} child
      */
@@ -778,7 +777,7 @@ class Container extends Renderable {
     /**
      * Move the specified child the bottom (z depth).
      * @name moveToBottom
-     * @memberOf me.Container.prototype
+     * @memberof me.Container.prototype
      * @function
      * @param {me.Renderable} child
      */
@@ -796,7 +795,7 @@ class Container extends Renderable {
     /**
      * Manually trigger the sort of all the childs in the container</p>
      * @name sort
-     * @memberOf me.Container.prototype
+     * @memberof me.Container.prototype
      * @public
      * @function
      * @param {boolean} [recursive=false] recursively sort all containers if true
@@ -891,7 +890,7 @@ class Container extends Renderable {
      * container update function. <br>
      * automatically called by the game manager {@link me.game}
      * @name update
-     * @memberOf me.Container.prototype
+     * @memberof me.Container.prototype
      * @function
      * @protected
      * @param {number} dt time since the last update in milliseconds.
@@ -944,7 +943,7 @@ class Container extends Renderable {
      * draw the container. <br>
      * automatically called by the game manager {@link me.game}
      * @name draw
-     * @memberOf me.Container.prototype
+     * @memberof me.Container.prototype
      * @function
      * @protected
      * @param {me.CanvasRenderer|me.WebGLRenderer} renderer a renderer object

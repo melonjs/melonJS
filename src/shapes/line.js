@@ -5,9 +5,8 @@ import Polygon from "./poly.js";
  * @classdesc
  * a line segment Object
  * @class Line
- * @extends me.Polygon
- * @memberOf me
- * @constructor
+ * @augments me.Polygon
+ * @memberof me
  * @param {number} x origin point of the Line
  * @param {number} y origin point of the Line
  * @param {me.Vector2d[]} points array of vectors defining the Line
@@ -18,7 +17,7 @@ class Line extends Polygon {
     /**
      * Returns true if the Line contains the given point
      * @name contains
-     * @memberOf me.Line.prototype
+     * @memberof me.Line.prototype
      * @function
      * @param  {me.Vector2d} point
      * @returns {boolean} true if contains
@@ -27,7 +26,7 @@ class Line extends Polygon {
     /**
      * Returns true if the Line contains the given point
      * @name contains
-     * @memberOf me.Line.prototype
+     * @memberof me.Line.prototype
      * @function
      * @param  {number} x x coordinate
      * @param  {number} y y coordinate
@@ -61,7 +60,7 @@ class Line extends Polygon {
      * Computes the calculated collision edges and normals.
      * This **must** be called if the `points` array, `angle`, or `offset` is modified manually.
      * @name recalc
-     * @memberOf me.Line.prototype
+     * @memberof me.Line.prototype
      * @function
      * @returns {me.Line} this instance for objecf chaining
      */
@@ -97,7 +96,7 @@ class Line extends Polygon {
     /**
      * clone this line segment
      * @name clone
-     * @memberOf me.Line.prototype
+     * @memberof me.Line.prototype
      * @function
      * @returns {me.Line} new Line
      */

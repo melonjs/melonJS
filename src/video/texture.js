@@ -35,8 +35,7 @@ export function createAtlas(width, height, name = "default", repeat = "no-repeat
  * - [Free Texture Packer]{@link http://free-tex-packer.com/app/} : through JSON export (standard and multipack texture atlas) <br>
  * - Standard (fixed cell size) spritesheet : through a {framewidth:xx, frameheight:xx, anchorPoint:me.Vector2d} object
  * @class Texture
- * @memberOf me.Renderer
- * @constructor
+ * @memberof me.Renderer
  * @param {object|object[]} atlases atlas information. See {@link me.loader.getJSON}
  * @param {HTMLImageElement|HTMLCanvasElement|string|HTMLImageElement[]|HTMLCanvasElement[]|string[]} [src=atlas.meta.image] Image source
  * @param {boolean} [cache=false] Use true to skip caching this Texture
@@ -324,7 +323,7 @@ export class Texture {
     /**
      * return the default or specified atlas dictionnary
      * @name getAtlas
-     * @memberOf me.Renderer.Texture
+     * @memberof me.Renderer.Texture
      * @function
      * @param {string} [name] atlas name in case of multipack textures
      * @returns {object}
@@ -340,7 +339,7 @@ export class Texture {
     /**
      * return the format of the atlas dictionnary
      * @name getFormat
-     * @memberOf me.Renderer.Texture
+     * @memberof me.Renderer.Texture
      * @function
      * @returns {string} will return "texturepacker", or "ShoeBox", or "melonJS", or "Spritesheet (fixed cell size)"
      */
@@ -351,7 +350,7 @@ export class Texture {
     /**
      * return the source texture for the given region (or default one if none specified)
      * @name getTexture
-     * @memberOf me.Renderer.Texture
+     * @memberof me.Renderer.Texture
      * @function
      * @param {object} [region] region name in case of multipack textures
      * @returns {HTMLImageElement|HTMLCanvasElement}
@@ -367,7 +366,7 @@ export class Texture {
     /**
      * return a normalized region (or frame) information for the specified sprite name
      * @name getRegion
-     * @memberOf me.Renderer.Texture
+     * @memberof me.Renderer.Texture
      * @function
      * @param {string} name name of the sprite
      * @param {string} [atlas] name of a specific atlas where to search for the region
@@ -392,7 +391,7 @@ export class Texture {
     /**
      * return the uvs mapping for the given region
      * @name getUVs
-     * @memberOf me.Renderer.Texture
+     * @memberof me.Renderer.Texture
      * @function
      * @param {object} name region (or frame) name
      * @returns {Float32Array} region Uvs
@@ -416,7 +415,7 @@ export class Texture {
     /**
      * Create a sprite object using the first region found using the specified name
      * @name createSpriteFromName
-     * @memberOf me.Renderer.Texture
+     * @memberof me.Renderer.Texture
      * @function
      * @param {string} name name of the sprite
      * @param {object} [settings] Additional settings passed to the {@link me.Sprite} contructor
@@ -459,7 +458,7 @@ export class Texture {
     /**
      * Create an animation object using the first region found using all specified names
      * @name createAnimationFromName
-     * @memberOf me.Renderer.Texture
+     * @memberof me.Renderer.Texture
      * @function
      * @param {string[]|number[]} names list of names for each sprite
      * (when manually creating a Texture out of a spritesheet, only numeric values are authorized)

@@ -10,9 +10,8 @@ import state from "./../state/state.js";
  * @classdesc
  * an object representing the physic world, and responsible for managing and updating all childs and physics
  * @class World
- * @extends me.Container
- * @memberOf me
- * @constructor
+ * @augments me.Container
+ * @memberof me
  * @param {number} [x=0] position of the container (accessible via the inherited pos.x property)
  * @param {number} [y=0] position of the container (accessible via the inherited pos.y property)
  * @param {number} [w=me.game.viewport.width] width of the container
@@ -40,7 +39,7 @@ class World extends Container {
          * @type {me.Vector2d}
          * @default 60
          * @name fps
-         * @memberOf me.World
+         * @memberof me.World
          * @see me.timer.maxfps
          */
         this.fps = 60;
@@ -51,7 +50,7 @@ class World extends Container {
          * @type {me.Vector2d}
          * @default <0,0.98>
          * @name gravity
-         * @memberOf me.World
+         * @memberof me.World
          */
         this.gravity = new Vector2d(0, 0.98);
 
@@ -65,14 +64,14 @@ class World extends Container {
          * property to your layer (in Tiled).
          * @type {boolean}
          * @default false
-         * @memberOf me.World
+         * @memberof me.World
          */
         this.preRender = false;
 
         /**
          * the active physic bodies in this simulation
          * @name bodies
-         * @memberOf me.World
+         * @memberof me.World
          * @public
          * @type {Set}
          */
@@ -81,7 +80,7 @@ class World extends Container {
         /**
          * the instance of the game world quadtree used for broadphase
          * @name broadphase
-         * @memberOf me.World
+         * @memberof me.World
          * @public
          * @type {me.QuadTree}
          */
@@ -100,7 +99,7 @@ class World extends Container {
     /**
      * reset the game world
      * @name reset
-     * @memberOf me.World
+     * @memberof me.World
      * @function
      */
     reset() {
@@ -121,7 +120,7 @@ class World extends Container {
     /**
      * Add a physic body to the game world
      * @name addBody
-     * @memberOf me.World
+     * @memberof me.World
      * @see me.Container.addChild
      * @function
      * @param {me.Body} body
@@ -136,7 +135,7 @@ class World extends Container {
     /**
      * Remove a physic body from the game world
      * @name removeBody
-     * @memberOf me.World
+     * @memberof me.World
      * @see me.Container.removeChild
      * @function
      * @param {me.Body} body
@@ -151,7 +150,7 @@ class World extends Container {
     /**
      * update the game world
      * @name reset
-     * @memberOf me.World
+     * @memberof me.World
      * @function
      * @param {number} dt the time passed since the last frame update
      * @returns {boolean} true if the word is dirty

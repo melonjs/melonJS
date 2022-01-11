@@ -8,8 +8,7 @@ import loader from "./../../loader/loader.js";
  * @classdesc
  * a TMX Tile Set Object
  * @class TMXTileset
- * @memberOf me
- * @constructor
+ * @memberof me
  * @param {object} tileset tileset data in JSON format ({@link http://docs.mapeditor.org/en/stable/reference/tmx-map-format/#tileset})
  */
 export default class TMXTileset {

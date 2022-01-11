@@ -5,9 +5,8 @@ import Polygon from "./poly.js";
  * @classdesc
  * a rectangle Object
  * @class Rect
- * @extends me.Polygon
- * @memberOf me
- * @constructor
+ * @augments me.Polygon
+ * @memberof me
  * @param {number} x position of the Rectangle
  * @param {number} y position of the Rectangle
  * @param {number} w width of the rectangle
@@ -35,7 +34,7 @@ class Rect extends Polygon {
     /**
      * set new value to the rectangle shape
      * @name setShape
-     * @memberOf me.Rect.prototype
+     * @memberof me.Rect.prototype
      * @function
      * @param {number} x position of the Rectangle
      * @param {number} y position of the Rectangle
@@ -66,7 +65,7 @@ class Rect extends Polygon {
      * @public
      * @type {number}
      * @name left
-     * @memberOf me.Rect
+     * @memberof me.Rect
      */
     get left() {
         return this.pos.x;
@@ -77,7 +76,7 @@ class Rect extends Polygon {
      * @public
      * @type {number}
      * @name right
-     * @memberOf me.Rect
+     * @memberof me.Rect
      */
     get right() {
         var w = this.width;
@@ -89,7 +88,7 @@ class Rect extends Polygon {
      * @public
      * @type {number}
      * @name top
-     * @memberOf me.Rect
+     * @memberof me.Rect
      */
     get top() {
         return this.pos.y;
@@ -100,7 +99,7 @@ class Rect extends Polygon {
      * @public
      * @type {number}
      * @name bottom
-     * @memberOf me.Rect
+     * @memberof me.Rect
      */
     get bottom() {
         var h = this.height;
@@ -112,7 +111,7 @@ class Rect extends Polygon {
      * @public
      * @type {number}
      * @name width
-     * @memberOf me.Rect
+     * @memberof me.Rect
      */
     get width() {
         return this.points[2].x;
@@ -128,7 +127,7 @@ class Rect extends Polygon {
      * @public
      * @type {number}
      * @name height
-     * @memberOf me.Rect
+     * @memberof me.Rect
      */
     get height() {
         return this.points[2].y;
@@ -144,7 +143,7 @@ class Rect extends Polygon {
      * @public
      * @type {number}
      * @name centerX
-     * @memberOf me.Rect
+     * @memberof me.Rect
      */
     get centerX() {
         if (isFinite(this.width)) {
@@ -162,7 +161,7 @@ class Rect extends Polygon {
      * @public
      * @type {number}
      * @name centerY
-     * @memberOf me.Rect
+     * @memberof me.Rect
      */
     get centerY() {
         if (isFinite(this.height)) {
@@ -178,7 +177,7 @@ class Rect extends Polygon {
     /**
      * resize the rectangle
      * @name resize
-     * @memberOf me.Rect.prototype
+     * @memberof me.Rect.prototype
      * @function
      * @param {number} w new width of the rectangle
      * @param {number} h new height of the rectangle
@@ -193,7 +192,7 @@ class Rect extends Polygon {
     /**
      * scale the rectangle
      * @name scale
-     * @memberOf me.Rect.prototype
+     * @memberof me.Rect.prototype
      * @function
      * @param {number} x a number representing the abscissa of the scaling vector.
      * @param {number} [y=x] a number representing the ordinate of the scaling vector.
@@ -208,7 +207,7 @@ class Rect extends Polygon {
     /**
      * clone this rectangle
      * @name clone
-     * @memberOf me.Rect.prototype
+     * @memberof me.Rect.prototype
      * @function
      * @returns {me.Rect} new rectangle
      */
@@ -219,7 +218,7 @@ class Rect extends Polygon {
     /**
      * copy the position and size of the given rectangle into this one
      * @name copy
-     * @memberOf me.Rect.prototype
+     * @memberof me.Rect.prototype
      * @function
      * @param {me.Rect} rect Source rectangle
      * @returns {me.Rect} new rectangle
@@ -231,7 +230,7 @@ class Rect extends Polygon {
     /**
      * merge this rectangle with another one
      * @name union
-     * @memberOf me.Rect.prototype
+     * @memberof me.Rect.prototype
      * @function
      * @param {me.Rect} rect other rectangle to union with
      * @returns {me.Rect} the union(ed) rectangle
@@ -253,7 +252,7 @@ class Rect extends Polygon {
     /**
      * check if this rectangle is intersecting with the specified one
      * @name overlaps
-     * @memberOf me.Rect.prototype
+     * @memberof me.Rect.prototype
      * @function
      * @param  {me.Rect} rect
      * @returns {boolean} true if overlaps
@@ -270,7 +269,7 @@ class Rect extends Polygon {
     /**
      * Returns true if the rectangle contains the given rectangle
      * @name contains
-     * @memberOf me.Rect.prototype
+     * @memberof me.Rect.prototype
      * @function
      * @param {me.Rect} rect
      * @returns {boolean} true if contains
@@ -279,7 +278,7 @@ class Rect extends Polygon {
     /**
      * Returns true if the rectangle contains the given point
      * @name contains
-     * @memberOf me.Rect.prototype
+     * @memberof me.Rect.prototype
      * @function
      * @param  {number} x x coordinate
      * @param  {number} y y coordinate
@@ -289,7 +288,7 @@ class Rect extends Polygon {
     /**
      * Returns true if the rectangle contains the given point
      * @name contains
-     * @memberOf me.Rect
+     * @memberof me.Rect
      * @function
      * @param {me.Vector2d} point
      * @returns {boolean} true if contains
@@ -325,7 +324,7 @@ class Rect extends Polygon {
     /**
      * check if this rectangle is identical to the specified one
      * @name equals
-     * @memberOf me.Rect.prototype
+     * @memberof me.Rect.prototype
      * @function
      * @param  {me.Rect} rect
      * @returns {boolean} true if equals
@@ -342,7 +341,7 @@ class Rect extends Polygon {
     /**
      * determines whether all coordinates of this rectangle are finite numbers.
      * @name isFinite
-     * @memberOf me.Rect.prototype
+     * @memberof me.Rect.prototype
      * @function
      * @returns {boolean} false if all coordinates are positive or negative Infinity or NaN; otherwise, true.
      */
@@ -353,7 +352,7 @@ class Rect extends Polygon {
     /**
      * Returns a polygon whose edges are the same as this box.
      * @name toPolygon
-     * @memberOf me.Rect.prototype
+     * @memberof me.Rect.prototype
      * @function
      * @returns {me.Polygon} a new Polygon that represents this rectangle.
      */

@@ -5,7 +5,7 @@ import { version } from "./../index.js";
  * This namespace is a container for all registered plugins.
  * @see me.plugin.register
  * @namespace me.plugins
- * @memberOf me
+ * @memberof me
  */
 export var plugins = {};
 
@@ -27,7 +27,7 @@ class BasePlugin {
 
 /**
  * @namespace plugin
- * @memberOf me
+ * @memberof me
  */
 export var plugin = {
 
@@ -36,17 +36,16 @@ export var plugin = {
      * plugin must be installed using the register function
      * @see me.plugin
      * @class
-     * @extends me.Object
+     * @augments me.Object
      * @name plugin.Base
-     * @memberOf me
-     * @constructor
+     * @memberof me
      */
     Base : BasePlugin,
 
     /**
      * patch a melonJS function
      * @name patch
-     * @memberOf me.plugin
+     * @memberof me.plugin
      * @public
      * @function
      * @param {object} proto target object
@@ -91,7 +90,7 @@ export var plugin = {
     /**
      * Register a plugin.
      * @name register
-     * @memberOf me.plugin
+     * @memberof me.plugin
      * @see me.plugin.Base
      * @public
      * @function

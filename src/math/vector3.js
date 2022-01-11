@@ -5,8 +5,7 @@ import pool from "./../system/pooling.js";
  * @classdesc
  * a generic 3D Vector Object
  * @class Vector3d
- * @memberOf me
- * @constructor
+ * @memberof me
  * @param {number} [x=0] x value of the vector
  * @param {number} [y=0] y value of the vector
  * @param {number} [z=0] z value of the vector
@@ -42,7 +41,7 @@ class Vector3d {
     /**
      * set the Vector x and y properties to the given values<br>
      * @name set
-     * @memberOf me.Vector3d
+     * @memberof me.Vector3d
      * @function
      * @param {number} x
      * @param {number} y
@@ -61,7 +60,7 @@ class Vector3d {
          * @public
          * @type {number}
          * @name x
-         * @memberOf me.Vector3d
+         * @memberof me.Vector3d
          */
         //this.x = x;
 
@@ -70,7 +69,7 @@ class Vector3d {
          * @public
          * @type {number}
          * @name y
-         * @memberOf me.Vector3d
+         * @memberof me.Vector3d
          */
         //this.y = y;
 
@@ -79,7 +78,7 @@ class Vector3d {
          * @public
          * @type {number}
          * @name z
-         * @memberOf me.Vector3d
+         * @memberof me.Vector3d
          */
         //this.z = z;
 
@@ -89,7 +88,7 @@ class Vector3d {
     /**
      * set the Vector x and y properties to 0
      * @name setZero
-     * @memberOf me.Vector3d
+     * @memberof me.Vector3d
      * @function
      * @returns {me.Vector3d} Reference to this object for method chaining
      */
@@ -100,7 +99,7 @@ class Vector3d {
     /**
      * set the Vector x and y properties using the passed vector
      * @name setV
-     * @memberOf me.Vector3d
+     * @memberof me.Vector3d
      * @function
      * @param {me.Vector2d|me.Vector3d} v
      * @returns {me.Vector3d} Reference to this object for method chaining
@@ -112,7 +111,7 @@ class Vector3d {
     /**
      * Add the passed vector to this vector
      * @name add
-     * @memberOf me.Vector3d
+     * @memberof me.Vector3d
      * @function
      * @param {me.Vector2d|me.Vector3d} v
      * @returns {me.Vector3d} Reference to this object for method chaining
@@ -124,7 +123,7 @@ class Vector3d {
     /**
      * Substract the passed vector to this vector
      * @name sub
-     * @memberOf me.Vector3d
+     * @memberof me.Vector3d
      * @function
      * @param {me.Vector2d|me.Vector3d} v
      * @returns {me.Vector3d} Reference to this object for method chaining
@@ -136,7 +135,7 @@ class Vector3d {
     /**
      * Multiply this vector values by the given scalar
      * @name scale
-     * @memberOf me.Vector3d
+     * @memberof me.Vector3d
      * @function
      * @param {number} x
      * @param {number} [y=x]
@@ -151,7 +150,7 @@ class Vector3d {
     /**
      * Multiply this vector values by the passed vector
      * @name scaleV
-     * @memberOf me.Vector3d
+     * @memberof me.Vector3d
      * @function
      * @param {me.Vector2d|me.Vector3d} v
      * @returns {me.Vector3d} Reference to this object for method chaining
@@ -163,7 +162,7 @@ class Vector3d {
     /**
      * Convert this vector into isometric coordinate space
      * @name toIso
-     * @memberOf me.Vector3d
+     * @memberof me.Vector3d
      * @function
      * @returns {me.Vector3d} Reference to this object for method chaining
      */
@@ -174,7 +173,7 @@ class Vector3d {
     /**
      * Convert this vector into 2d coordinate space
      * @name to2d
-     * @memberOf me.Vector3d
+     * @memberof me.Vector3d
      * @function
      * @returns {me.Vector3d} Reference to this object for method chaining
      */
@@ -185,7 +184,7 @@ class Vector3d {
     /**
      * Divide this vector values by the passed value
      * @name div
-     * @memberOf me.Vector3d
+     * @memberof me.Vector3d
      * @function
      * @param {number} n the value to divide the vector by
      * @returns {me.Vector3d} Reference to this object for method chaining
@@ -197,7 +196,7 @@ class Vector3d {
     /**
      * Update this vector values to absolute values
      * @name abs
-     * @memberOf me.Vector3d
+     * @memberof me.Vector3d
      * @function
      * @returns {me.Vector3d} Reference to this object for method chaining
      */
@@ -208,7 +207,7 @@ class Vector3d {
     /**
      * Clamp the vector value within the specified value range
      * @name clamp
-     * @memberOf me.Vector3d
+     * @memberof me.Vector3d
      * @function
      * @param {number} low
      * @param {number} high
@@ -221,7 +220,7 @@ class Vector3d {
     /**
      * Clamp this vector value within the specified value range
      * @name clampSelf
-     * @memberOf me.Vector3d
+     * @memberof me.Vector3d
      * @function
      * @param {number} low
      * @param {number} high
@@ -234,7 +233,7 @@ class Vector3d {
     /**
      * Update this vector with the minimum value between this and the passed vector
      * @name minV
-     * @memberOf me.Vector3d
+     * @memberof me.Vector3d
      * @function
      * @param {me.Vector2d|me.Vector3d} v
      * @returns {me.Vector3d} Reference to this object for method chaining
@@ -247,7 +246,7 @@ class Vector3d {
     /**
      * Update this vector with the maximum value between this and the passed vector
      * @name maxV
-     * @memberOf me.Vector3d
+     * @memberof me.Vector3d
      * @function
      * @param {me.Vector2d|me.Vector3d} v
      * @returns {me.Vector3d} Reference to this object for method chaining
@@ -260,7 +259,7 @@ class Vector3d {
     /**
      * Floor the vector values
      * @name floor
-     * @memberOf me.Vector3d
+     * @memberof me.Vector3d
      * @function
      * @returns {me.Vector3d} new me.Vector3d
      */
@@ -271,7 +270,7 @@ class Vector3d {
     /**
      * Floor this vector values
      * @name floorSelf
-     * @memberOf me.Vector3d
+     * @memberof me.Vector3d
      * @function
      * @returns {me.Vector3d} Reference to this object for method chaining
      */
@@ -282,7 +281,7 @@ class Vector3d {
     /**
      * Ceil the vector values
      * @name ceil
-     * @memberOf me.Vector3d
+     * @memberof me.Vector3d
      * @function
      * @returns {me.Vector3d} new me.Vector3d
      */
@@ -293,7 +292,7 @@ class Vector3d {
     /**
      * Ceil this vector values
      * @name ceilSelf
-     * @memberOf me.Vector3d
+     * @memberof me.Vector3d
      * @function
      * @returns {me.Vector3d} Reference to this object for method chaining
      */
@@ -304,7 +303,7 @@ class Vector3d {
     /**
      * Negate the vector values
      * @name negate
-     * @memberOf me.Vector3d
+     * @memberof me.Vector3d
      * @function
      * @returns {me.Vector3d} new me.Vector3d
      */
@@ -315,7 +314,7 @@ class Vector3d {
     /**
      * Negate this vector values
      * @name negateSelf
-     * @memberOf me.Vector3d
+     * @memberof me.Vector3d
      * @function
      * @returns {me.Vector3d} Reference to this object for method chaining
      */
@@ -326,7 +325,7 @@ class Vector3d {
     /**
      * Copy the components of the given vector into this one
      * @name copy
-     * @memberOf me.Vector3d
+     * @memberof me.Vector3d
      * @function
      * @param {me.Vector2d|me.Vector3d} v
      * @returns {me.Vector3d} Reference to this object for method chaining
@@ -338,7 +337,7 @@ class Vector3d {
     /**
      * return true if the two vectors are the same
      * @name equals
-     * @memberOf me.Vector3d
+     * @memberof me.Vector3d
      * @function
      * @param {me.Vector2d|me.Vector3d} v
      * @returns {boolean}
@@ -346,7 +345,7 @@ class Vector3d {
     /**
      * return true if this vector is equal to the given values
      * @name equals
-     * @memberOf me.Vector3d
+     * @memberof me.Vector3d
      * @function
      * @param {number} x
      * @param {number} y
@@ -377,7 +376,7 @@ class Vector3d {
     /**
      * normalize this vector (scale the vector so that its magnitude is 1)
      * @name normalize
-     * @memberOf me.Vector3d
+     * @memberof me.Vector3d
      * @function
      * @returns {me.Vector3d} Reference to this object for method chaining
      */
@@ -389,7 +388,7 @@ class Vector3d {
      * change this vector to be perpendicular to what it was before.<br>
      * (Effectively rotates it 90 degrees in a clockwise direction around the z axis)
      * @name perp
-     * @memberOf me.Vector3d
+     * @memberof me.Vector3d
      * @function
      * @returns {me.Vector3d} Reference to this object for method chaining
      */
@@ -400,7 +399,7 @@ class Vector3d {
     /**
      * Rotate this vector (counter-clockwise) by the specified angle (in radians) around the z axis
      * @name rotate
-     * @memberOf me.Vector3d
+     * @memberof me.Vector3d
      * @function
      * @param {number} angle The angle to rotate (in radians)
      * @param {me.Vector2d|me.ObservableVector2d} [v] an optional point to rotate around (on the same z axis)
@@ -428,7 +427,7 @@ class Vector3d {
     /**
      * return the dot product of this vector and the passed one
      * @name dotProduct
-     * @memberOf me.Vector3d
+     * @memberof me.Vector3d
      * @function
      * @param {me.Vector2d|me.Vector3d} v
      * @returns {number} The dot product.
@@ -440,7 +439,7 @@ class Vector3d {
    /**
     * return the square length of this vector
     * @name length2
-    * @memberOf me.Vector3d
+    * @memberof me.Vector3d
     * @function
     * @returns {number} The length^2 of this vector.
     */
@@ -451,7 +450,7 @@ class Vector3d {
     /**
      * return the length (magnitude) of this vector
      * @name length
-     * @memberOf me.Vector3d
+     * @memberof me.Vector3d
      * @function
      * @returns {number} the length of this vector
      */
@@ -462,7 +461,7 @@ class Vector3d {
     /**
      * Linearly interpolate between this vector and the given one.
      * @name lerp
-     * @memberOf me.Vector3d
+     * @memberof me.Vector3d
      * @function
      * @param {me.Vector3d} v
      * @param {number} alpha distance along the line (alpha = 0 will be this vector, and alpha = 1 will be the given one).
@@ -478,7 +477,7 @@ class Vector3d {
     /**
      * return the distance between this vector and the passed one
      * @name distance
-     * @memberOf me.Vector3d
+     * @memberof me.Vector3d
      * @function
      * @param {me.Vector2d|me.Vector3d} v
      * @returns {number}
@@ -493,7 +492,7 @@ class Vector3d {
     /**
      * return the angle between this vector and the passed one
      * @name angle
-     * @memberOf me.Vector3d
+     * @memberof me.Vector3d
      * @function
      * @param {me.Vector2d|me.Vector3d} v
      * @returns {number} angle in radians
@@ -505,7 +504,7 @@ class Vector3d {
     /**
      * project this vector on to another vector.
      * @name project
-     * @memberOf me.Vector3d
+     * @memberof me.Vector3d
      * @function
      * @param {me.Vector2d|me.Vector3d} v The vector to project onto.
      * @returns {me.Vector3d} Reference to this object for method chaining
@@ -519,7 +518,7 @@ class Vector3d {
      * Project this vector onto a vector of unit length.<br>
      * This is slightly more efficient than `project` when dealing with unit vectors.
      * @name projectN
-     * @memberOf me.Vector3d
+     * @memberof me.Vector3d
      * @function
      * @param {me.Vector2d|me.Vector3d} v The unit vector to project onto.
      * @returns {me.Vector3d} Reference to this object for method chaining
@@ -532,7 +531,7 @@ class Vector3d {
     /**
      * return a clone copy of this vector
      * @name clone
-     * @memberOf me.Vector3d
+     * @memberof me.Vector3d
      * @function
      * @returns {me.Vector3d} new me.Vector3d
      */
@@ -543,7 +542,7 @@ class Vector3d {
     /**
      * convert the object to a string representation
      * @name toString
-     * @memberOf me.Vector3d
+     * @memberof me.Vector3d
      * @function
      * @returns {string}
      */

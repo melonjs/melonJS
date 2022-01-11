@@ -15,9 +15,8 @@ import { isPowerOfTwo, nextPowerOfTwo, TAU } from "./../../math/math.js";
  * @classdesc
  * a WebGL renderer object
  * @class WebGLRenderer
- * @extends me.Renderer
- * @memberOf me
- * @constructor
+ * @augments me.Renderer
+ * @memberof me
  * @param {object} options The renderer parameters
  * @param {number} options.width The width of the canvas without scaling
  * @param {number} options.height The height of the canvas without scaling
@@ -43,7 +42,7 @@ class WebGLRenderer extends Renderer {
         /**
          * The WebGL version used by this renderer (1 or 2)
          * @name WebGLVersion
-         * @memberOf me.WebGLRenderer
+         * @memberof me.WebGLRenderer
          * @type {number}
          * @default 1
          * @readonly
@@ -53,7 +52,7 @@ class WebGLRenderer extends Renderer {
         /**
          * The vendor string of the underlying graphics driver.
          * @name GPUVendor
-         * @memberOf me.WebGLRenderer
+         * @memberof me.WebGLRenderer
          * @type {string}
          * @default null
          * @readonly
@@ -63,7 +62,7 @@ class WebGLRenderer extends Renderer {
         /**
          * The renderer string of the underlying graphics driver.
          * @name GPURenderer
-         * @memberOf me.WebGLRenderer
+         * @memberof me.WebGLRenderer
          * @type {string}
          * @default null
          * @readonly
@@ -73,7 +72,7 @@ class WebGLRenderer extends Renderer {
         /**
          * The WebGL context
          * @name gl
-         * @memberOf me.WebGLRenderer
+         * @memberof me.WebGLRenderer
          * type {WebGLRenderingContext}
          */
         this.context = this.gl = this.getContextGL(this.getScreenCanvas(), options.transparent);
@@ -81,7 +80,7 @@ class WebGLRenderer extends Renderer {
         /**
          * Maximum number of texture unit supported under the current context
          * @name maxTextures
-         * @memberOf me.WebGLRenderer
+         * @memberof me.WebGLRenderer
          * @type {number}
          * @readonly
          */
@@ -116,7 +115,7 @@ class WebGLRenderer extends Renderer {
          * The current transformation matrix used for transformations on the overall scene
          * @name currentTransform
          * @type {me.Matrix2d}
-         * @memberOf me.WebGLRenderer#
+         * @memberof me.WebGLRenderer#
          */
         this.currentTransform = new Matrix2d();
 
@@ -124,7 +123,7 @@ class WebGLRenderer extends Renderer {
          * The current compositor used by the renderer
          * @name currentCompositor
          * @type {me.WebGLCompositor}
-         * @memberOf me.WebGLRenderer#
+         * @memberof me.WebGLRenderer#
          */
         this.currentCompositor = null;
 
@@ -132,7 +131,7 @@ class WebGLRenderer extends Renderer {
          * The list of active compositors
          * @name compositors
          * @type {Map}
-         * @memberOf me.WebGLRenderer#
+         * @memberof me.WebGLRenderer#
          */
         this.compositors = new Map();
 
@@ -181,7 +180,7 @@ class WebGLRenderer extends Renderer {
     /**
      * Reset context state
      * @name reset
-     * @memberOf me.WebGLRenderer.prototype
+     * @memberof me.WebGLRenderer.prototype
      * @function
      */
     reset() {
@@ -208,7 +207,7 @@ class WebGLRenderer extends Renderer {
      * @name setCompositor
      * @function
      * @param {me.WebGLCompositor|string} compositor a compositor name or instance
-     * @memberOf me.WebGLRenderer.prototype
+     * @memberof me.WebGLRenderer.prototype
      * @function
      */
     setCompositor(compositor = "default") {
@@ -234,7 +233,7 @@ class WebGLRenderer extends Renderer {
     /**
      * Reset the gl transform to identity
      * @name resetTransform
-     * @memberOf me.WebGLRenderer.prototype
+     * @memberof me.WebGLRenderer.prototype
      * @function
      */
     resetTransform() {
@@ -281,7 +280,7 @@ class WebGLRenderer extends Renderer {
     /**
      * Create a pattern with the specified repetition
      * @name createPattern
-     * @memberOf me.WebGLRenderer.prototype
+     * @memberof me.WebGLRenderer.prototype
      * @function
      * @param {Image} image Source image
      * @param {string} repeat Define how the pattern should be repeated
@@ -314,7 +313,7 @@ class WebGLRenderer extends Renderer {
     /**
      * Flush the compositor to the frame buffer
      * @name flush
-     * @memberOf me.WebGLRenderer.prototype
+     * @memberof me.WebGLRenderer.prototype
      * @function
      */
     flush() {
@@ -324,7 +323,7 @@ class WebGLRenderer extends Renderer {
     /**
      * Clears the gl context with the given color.
      * @name clearColor
-     * @memberOf me.WebGLRenderer.prototype
+     * @memberof me.WebGLRenderer.prototype
      * @function
      * @param {me.Color|string} [color="#000000"] CSS color.
      * @param {boolean} [opaque=false] Allow transparency [default] or clear the surface completely [true]
@@ -352,7 +351,7 @@ class WebGLRenderer extends Renderer {
     /**
      * Erase the pixels in the given rectangular area by setting them to transparent black (rgba(0,0,0,0)).
      * @name clearRect
-     * @memberOf me.WebGLRenderer.prototype
+     * @memberof me.WebGLRenderer.prototype
      * @function
      * @param {number} x x axis of the coordinate for the rectangle starting point.
      * @param {number} y y axis of the coordinate for the rectangle starting point.
@@ -402,7 +401,7 @@ class WebGLRenderer extends Renderer {
     /**
      * Draw an image to the gl context
      * @name drawImage
-     * @memberOf me.WebGLRenderer.prototype
+     * @memberof me.WebGLRenderer.prototype
      * @function
      * @param {Image} image An element to draw into the context. The specification permits any canvas image source (CanvasImageSource), specifically, a CSSImageValue, an HTMLImageElement, an SVGImageElement, an HTMLVideoElement, an HTMLCanvasElement, an ImageBitmap, or an OffscreenCanvas.
      * @param {number} sx The X coordinate of the top left corner of the sub-rectangle of the source image to draw into the destination context.
@@ -455,7 +454,7 @@ class WebGLRenderer extends Renderer {
     /**
      * Draw a pattern within the given rectangle.
      * @name drawPattern
-     * @memberOf me.WebGLRenderer.prototype
+     * @memberof me.WebGLRenderer.prototype
      * @function
      * @param {me.Renderer.Texture} pattern Pattern object
      * @param {number} x
@@ -473,7 +472,7 @@ class WebGLRenderer extends Renderer {
     /**
      * return a reference to the screen canvas corresponding WebGL Context
      * @name getScreenContext
-     * @memberOf me.WebGLRenderer.prototype
+     * @memberof me.WebGLRenderer.prototype
      * @function
      * @returns {WebGLRenderingContext}
      */
@@ -484,7 +483,7 @@ class WebGLRenderer extends Renderer {
     /**
      * Returns the WebGL Context object of the given Canvas
      * @name getContextGL
-     * @memberOf me.WebGLRenderer.prototype
+     * @memberof me.WebGLRenderer.prototype
      * @function
      * @param {HTMLCanvasElement} canvas
      * @param {boolean} [transparent=true] use false to disable transparency
@@ -542,7 +541,7 @@ class WebGLRenderer extends Renderer {
      * Returns the WebGLContext instance for the renderer
      * return a reference to the system 2d Context
      * @name getContext
-     * @memberOf me.WebGLRenderer.prototype
+     * @memberof me.WebGLRenderer.prototype
      * @function
      * @returns {WebGLRenderingContext}
      */
@@ -553,7 +552,7 @@ class WebGLRenderer extends Renderer {
     /**
      * set a blend mode for the given context
      * @name setBlendMode
-     * @memberOf me.WebGLRenderer.prototype
+     * @memberof me.WebGLRenderer.prototype
      * @function
      * @param {string} [mode="normal"] blend mode : "normal", "multiply"
      * @param {WebGLRenderingContext} [gl]
@@ -593,7 +592,7 @@ class WebGLRenderer extends Renderer {
     /**
      * restores the canvas context
      * @name restore
-     * @memberOf me.WebGLRenderer.prototype
+     * @memberof me.WebGLRenderer.prototype
      * @function
      */
     restore() {
@@ -627,7 +626,7 @@ class WebGLRenderer extends Renderer {
     /**
      * saves the canvas context
      * @name save
-     * @memberOf me.WebGLRenderer.prototype
+     * @memberof me.WebGLRenderer.prototype
      * @function
      */
     save() {
@@ -643,7 +642,7 @@ class WebGLRenderer extends Renderer {
     /**
      * rotates the uniform matrix
      * @name rotate
-     * @memberOf me.WebGLRenderer.prototype
+     * @memberof me.WebGLRenderer.prototype
      * @function
      * @param {number} angle in radians
      */
@@ -654,7 +653,7 @@ class WebGLRenderer extends Renderer {
     /**
      * scales the uniform matrix
      * @name scale
-     * @memberOf me.WebGLRenderer.prototype
+     * @memberof me.WebGLRenderer.prototype
      * @function
      * @param {number} x
      * @param {number} y
@@ -675,7 +674,7 @@ class WebGLRenderer extends Renderer {
     /**
      * Set the global alpha
      * @name setGlobalAlpha
-     * @memberOf me.WebGLRenderer.prototype
+     * @memberof me.WebGLRenderer.prototype
      * @function
      * @param {number} alpha 0.0 to 1.0 values accepted.
      */
@@ -687,7 +686,7 @@ class WebGLRenderer extends Renderer {
      * Set the current fill & stroke style color.
      * By default, or upon reset, the value is set to #000000.
      * @name setColor
-     * @memberOf me.WebGLRenderer.prototype
+     * @memberof me.WebGLRenderer.prototype
      * @function
      * @param {me.Color|string} color css color string.
      */
@@ -700,7 +699,7 @@ class WebGLRenderer extends Renderer {
     /**
      * Set the line width
      * @name setLineWidth
-     * @memberOf me.WebGLRenderer.prototype
+     * @memberof me.WebGLRenderer.prototype
      * @function
      * @param {number} width Line width
      */
@@ -711,7 +710,7 @@ class WebGLRenderer extends Renderer {
     /**
      * Stroke an arc at the specified coordinates with given radius, start and end points
      * @name strokeArc
-     * @memberOf me.WebGLRenderer.prototype
+     * @memberof me.WebGLRenderer.prototype
      * @function
      * @param {number} x arc center point x-axis
      * @param {number} y arc center point y-axis
@@ -755,7 +754,7 @@ class WebGLRenderer extends Renderer {
     /**
      * Fill an arc at the specified coordinates with given radius, start and end points
      * @name fillArc
-     * @memberOf me.WebGLRenderer.prototype
+     * @memberof me.WebGLRenderer.prototype
      * @function
      * @param {number} x arc center point x-axis
      * @param {number} y arc center point y-axis
@@ -798,7 +797,7 @@ class WebGLRenderer extends Renderer {
     /**
      * Stroke an ellipse at the specified coordinates with given radius
      * @name strokeEllipse
-     * @memberOf me.WebGLRenderer.prototype
+     * @memberof me.WebGLRenderer.prototype
      * @function
      * @param {number} x ellipse center point x-axis
      * @param {number} y ellipse center point y-axis
@@ -835,7 +834,7 @@ class WebGLRenderer extends Renderer {
     /**
      * Fill an ellipse at the specified coordinates with given radius
      * @name fillEllipse
-     * @memberOf me.WebGLRenderer.prototype
+     * @memberof me.WebGLRenderer.prototype
      * @function
      * @param {number} x ellipse center point x-axis
      * @param {number} y ellipse center point y-axis
@@ -870,7 +869,7 @@ class WebGLRenderer extends Renderer {
     /**
      * Stroke a line of the given two points
      * @name strokeLine
-     * @memberOf me.WebGLRenderer.prototype
+     * @memberof me.WebGLRenderer.prototype
      * @function
      * @param {number} startX the start x coordinate
      * @param {number} startY the start y coordinate
@@ -890,7 +889,7 @@ class WebGLRenderer extends Renderer {
     /**
      * Fill a line of the given two points
      * @name fillLine
-     * @memberOf me.WebGLRenderer.prototype
+     * @memberof me.WebGLRenderer.prototype
      * @function
      * @param {number} startX the start x coordinate
      * @param {number} startY the start y coordinate
@@ -904,7 +903,7 @@ class WebGLRenderer extends Renderer {
     /**
      * Stroke a me.Polygon on the screen with a specified color
      * @name strokePolygon
-     * @memberOf me.WebGLRenderer.prototype
+     * @memberof me.WebGLRenderer.prototype
      * @function
      * @param {me.Polygon} poly the shape to draw
      * @param {boolean} [fill=false] also fill the shape with the current color if true
@@ -934,7 +933,7 @@ class WebGLRenderer extends Renderer {
     /**
      * Fill a me.Polygon on the screen
      * @name fillPolygon
-     * @memberOf me.WebGLRenderer.prototype
+     * @memberof me.WebGLRenderer.prototype
      * @function
      * @param {me.Polygon} poly the shape to draw
      */
@@ -962,7 +961,7 @@ class WebGLRenderer extends Renderer {
     /**
      * Draw a stroke rectangle at the specified coordinates
      * @name strokeRect
-     * @memberOf me.WebGLRenderer.prototype
+     * @memberof me.WebGLRenderer.prototype
      * @function
      * @param {number} x
      * @param {number} y
@@ -990,7 +989,7 @@ class WebGLRenderer extends Renderer {
     /**
      * Draw a filled rectangle at the specified coordinates
      * @name fillRect
-     * @memberOf me.WebGLRenderer.prototype
+     * @memberof me.WebGLRenderer.prototype
      * @function
      * @param {number} x
      * @param {number} y
@@ -1014,7 +1013,7 @@ class WebGLRenderer extends Renderer {
      * Reset (overrides) the renderer transformation matrix to the
      * identity one, and then apply the given transformation matrix.
      * @name setTransform
-     * @memberOf me.WebGLRenderer.prototype
+     * @memberof me.WebGLRenderer.prototype
      * @function
      * @param {me.Matrix2d} mat2d Matrix to transform by
      */
@@ -1026,7 +1025,7 @@ class WebGLRenderer extends Renderer {
     /**
      * Multiply given matrix into the renderer tranformation matrix
      * @name transform
-     * @memberOf me.WebGLRenderer.prototype
+     * @memberof me.WebGLRenderer.prototype
      * @function
      * @param {me.Matrix2d} mat2d Matrix to transform by
      */
@@ -1044,7 +1043,7 @@ class WebGLRenderer extends Renderer {
     /**
      * Translates the uniform matrix by the given coordinates
      * @name translate
-     * @memberOf me.WebGLRenderer.prototype
+     * @memberof me.WebGLRenderer.prototype
      * @function
      * @param {number} x
      * @param {number} y
@@ -1067,7 +1066,7 @@ class WebGLRenderer extends Renderer {
      * and restore it (with the restore() method) any time in the future.
      * (<u>this is an experimental feature !</u>)
      * @name clipRect
-     * @memberOf me.WebGLRenderer.prototype
+     * @memberof me.WebGLRenderer.prototype
      * @function
      * @param {number} x
      * @param {number} y
@@ -1115,7 +1114,7 @@ class WebGLRenderer extends Renderer {
      * So, if the renderable is larger than the mask, only the intersecting part of the renderable will be visible.
      * Mask are not preserved through renderer context save and restore.
      * @name setMask
-     * @memberOf me.WebGLRenderer.prototype
+     * @memberof me.WebGLRenderer.prototype
      * @function
      * @param {me.Rect|me.Polygon|me.Line|me.Ellipse} [mask] the shape defining the mask to be applied
      */
@@ -1147,7 +1146,7 @@ class WebGLRenderer extends Renderer {
      * disable (remove) the rendering mask set through setMask.
      * @name clearMask
      * @see me.WebGLRenderer#setMask
-     * @memberOf me.WebGLRenderer.prototype
+     * @memberof me.WebGLRenderer.prototype
      * @function
      */
     clearMask() {

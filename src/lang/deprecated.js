@@ -1,14 +1,14 @@
 /**
  * placeholder for all deprecated classes and corresponding alias for backward compatibility
  * @namespace deprecated
- * @memberOf me
+ * @memberof me
  */
 
 /**
  * display a deprecation warning in the console
  * @public
  * @function
- * @memberOf me.deprecated
+ * @memberof me.deprecated
  * @name warning
  * @param {string} deprecated deprecated class,function or property name
  * @param {string} replacement the replacement class, function, or property name

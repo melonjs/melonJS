@@ -10,9 +10,8 @@ import { registerPointerEvent, releasePointerEvent} from "./../input/input.js";
  * The object simply register on the "pointerdown" <br>
  * or "touchstart" event and call the onClick function"
  * @class GUI_Object
- * @extends me.Sprite
- * @memberOf me
- * @constructor
+ * @augments me.Sprite
+ * @memberof me
  * @param {number} x the x coordinate of the GUI Object
  * @param {number} y the y coordinate of the GUI Object
  * @param {object} settings See {@link me.Sprite}
@@ -122,7 +121,7 @@ class GUI_Object extends Sprite {
     /**
      * function called when the object is pressed (to be extended)
      * @name onClick
-     * @memberOf me.GUI_Object.prototype
+     * @memberof me.GUI_Object.prototype
      * @public
      * @function
      * @param {me.Pointer} event the event object
@@ -145,7 +144,7 @@ class GUI_Object extends Sprite {
     /**
      * function called when the pointer is over the object
      * @name onOver
-     * @memberOf me.GUI_Object.prototype
+     * @memberof me.GUI_Object.prototype
      * @public
      * @function
      * @param {me.Pointer} event the event object
@@ -166,7 +165,7 @@ class GUI_Object extends Sprite {
     /**
      * function called when the pointer is leaving the object area
      * @name onOut
-     * @memberOf me.GUI_Object.prototype
+     * @memberof me.GUI_Object.prototype
      * @public
      * @function
      * @param {me.Pointer} event the event object
@@ -191,7 +190,7 @@ class GUI_Object extends Sprite {
     /**
      * function called when the object is pressed and released (to be extended)
      * @name onRelease
-     * @memberOf me.GUI_Object.prototype
+     * @memberof me.GUI_Object.prototype
      * @public
      * @function
      * @returns {boolean} return false if we need to stop propagating the event
@@ -216,7 +215,7 @@ class GUI_Object extends Sprite {
      * function called when the object is pressed and held<br>
      * to be extended <br>
      * @name onHold
-     * @memberOf me.GUI_Object.prototype
+     * @memberof me.GUI_Object.prototype
      * @public
      * @function
      */

@@ -9,7 +9,7 @@ import World from "./physics/world.js";
  * tilemap layers, current viewport, collision map, etc...<br>
  * me.game is also responsible for updating (each frame) the object status and draw them.
  * @namespace me.game
- * @memberOf me
+ * @memberof me
  */
 
 // to know when we have to refresh the display
@@ -49,7 +49,7 @@ event.on(event.BOOT, () => {
  * @public
  * @type {me.Camera2d}
  * @name viewport
- * @memberOf me.game
+ * @memberof me.game
  */
 export let viewport;
 
@@ -59,7 +59,7 @@ export let viewport;
  * @public
  * @type {me.World}
  * @name world
- * @memberOf me.game
+ * @memberof me.game
  */
 export let world;
 
@@ -70,7 +70,7 @@ export let world;
  * @type {boolean}
  * @default true
  * @name mergeGroup
- * @memberOf me.game
+ * @memberof me.game
  */
 export let mergeGroup = true;
 
@@ -81,7 +81,7 @@ export let mergeGroup = true;
  * @type {string}
  * @default "z"
  * @name sortOn
- * @memberOf me.game
+ * @memberof me.game
  */
 export let sortOn = "z";
 
@@ -93,7 +93,7 @@ export let sortOn = "z";
  * @public
  * @type {DOMHighResTimeStamp}
  * @name lastUpdate
- * @memberOf me.game
+ * @memberof me.game
  */
 export let lastUpdate = window.performance.now();
 

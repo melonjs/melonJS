@@ -294,7 +294,7 @@ function preloadJavascript(data, onload, onerror) {
 /**
  * a small class to manage loading of stuff and manage resources
  * @namespace loader
- * @memberOf me
+ * @memberof me
  */
 var loader = {
 
@@ -313,7 +313,7 @@ var loader = {
      * @public
      * @function
      * @name onload
-     * @memberOf me.loader
+     * @memberof me.loader
      * @example
      * // set a callback when everything is loaded
      * me.loader.onload = this.loaded.bind(this);
@@ -327,7 +327,7 @@ var loader = {
      * @public
      * @function
      * @name onProgress
-     * @memberOf me.loader
+     * @memberof me.loader
      * @example
      * // set a callback for progress notification
      * me.loader.onProgress = this.updateProgress.bind(this);
@@ -343,7 +343,7 @@ var loader = {
      * @type {string}
      * @name crossOrigin
      * @default undefined
-     * @memberOf me.loader
+     * @memberof me.loader
      * @see https://developer.mozilla.org/en-US/docs/Web/HTML/CORS_settings_attributes
      * @example
      *  // allow for cross-origin texture loading in WebGL
@@ -361,7 +361,7 @@ var loader = {
      * @type {boolean}
      * @name withCredentials
      * @default false
-     * @memberOf me.loader
+     * @memberof me.loader
      * @see https://developer.mozilla.org/en-US/docs/Web/API/XMLHttpRequest/withCredentials
      * @example
      *  // enable withCredentials
@@ -411,7 +411,7 @@ var loader = {
      * change the default baseURL for the given asset type.<br>
      * (this will prepend the asset URL and must finish with a '/')
      * @name setBaseURL
-     * @memberOf me.loader
+     * @memberof me.loader
      * @public
      * @function
      * @param {string} type  "*", "audio", binary", "image", "json", "js", "tmx", "tsx"
@@ -442,7 +442,7 @@ var loader = {
     /**
      * set all the specified game resources to be preloaded.
      * @name preload
-     * @memberOf me.loader
+     * @memberof me.loader
      * @public
      * @function
      * @param {object[]} res
@@ -507,7 +507,7 @@ var loader = {
     /**
      * Load a single resource (to be used if you need to load additional resource during the game)
      * @name load
-     * @memberOf me.loader
+     * @memberof me.loader
      * @public
      * @function
      * @param {object} res
@@ -577,7 +577,7 @@ var loader = {
     /**
      * unload specified resource to free memory
      * @name unload
-     * @memberOf me.loader
+     * @memberof me.loader
      * @public
      * @function
      * @param {object} res
@@ -637,7 +637,7 @@ var loader = {
     /**
      * unload all resources to free memory
      * @name unloadAll
-     * @memberOf me.loader
+     * @memberof me.loader
      * @public
      * @function
      * @example me.loader.unloadAll();
@@ -692,7 +692,7 @@ var loader = {
     /**
      * return the specified TMX/TSX object
      * @name getTMX
-     * @memberOf me.loader
+     * @memberof me.loader
      * @public
      * @function
      * @param {string} elt name of the tmx/tsx element ("map1");
@@ -710,7 +710,7 @@ var loader = {
     /**
      * return the specified Binary object
      * @name getBinary
-     * @memberOf me.loader
+     * @memberof me.loader
      * @public
      * @function
      * @param {string} elt name of the binary object ("ymTrack");
@@ -728,7 +728,7 @@ var loader = {
     /**
      * return the specified Image Object
      * @name getImage
-     * @memberOf me.loader
+     * @memberof me.loader
      * @public
      * @function
      * @param {string} image name of the Image element ("tileset-platformer");
@@ -747,7 +747,7 @@ var loader = {
     /**
      * return the specified JSON Object
      * @name getJSON
-     * @memberOf me.loader
+     * @memberof me.loader
      * @public
      * @function
      * @param {string} elt name of the json file to load

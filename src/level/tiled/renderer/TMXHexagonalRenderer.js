@@ -23,9 +23,8 @@ var offsetsStaggerY = [
  * @classdesc
  * an Hexagonal Map Renderder
  * @class TMXHexagonalRenderer
- * @memberOf me
- * @extends me.TMXRenderer
- * @constructor
+ * @memberof me
+ * @augments me.TMXRenderer
  * @param {me.TMXTileMap} map the TMX map
  */
 class TMXHexagonalRenderer extends TMXRenderer {

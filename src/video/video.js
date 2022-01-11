@@ -10,7 +10,7 @@ import { initialized, version } from "./../index.js";
 /**
  * video functions
  * @namespace me.video
- * @memberOf me
+ * @memberof me
  */
 
 var designRatio = 1;
@@ -126,7 +126,7 @@ function onresize() {
 /**
  * Select the HTML5 Canvas renderer
  * @name CANVAS
- * @memberOf me.video
+ * @memberof me.video
  * @constant
  */
 export const CANVAS = 0;
@@ -134,7 +134,7 @@ export const CANVAS = 0;
 /**
  * Select the WebGL renderer
  * @name WEBGL
- * @memberOf me.video
+ * @memberof me.video
  * @constant
  */
 export const WEBGL = 1;
@@ -142,7 +142,7 @@ export const WEBGL = 1;
 /**
  * Auto-select the renderer (Attempt WebGL first, with fallback to Canvas)
  * @name AUTO
- * @memberOf me.video
+ * @memberof me.video
  * @constant
  */
 export const AUTO = 2;
@@ -153,7 +153,7 @@ export const AUTO = 2;
  * @type {HTMLElement}
  * @readonly
  * @name parent
- * @memberOf me.video
+ * @memberof me.video
  */
 export let parent = null;
 
@@ -162,7 +162,7 @@ export let parent = null;
  * @name scaleRatio
  * @type {me.Vector2d}
  * @default <1,1>
- * @memberOf me.video
+ * @memberof me.video
  */
 export let scaleRatio = new Vector2d(1, 1);
 
@@ -170,7 +170,7 @@ export let scaleRatio = new Vector2d(1, 1);
   * A reference to the active Canvas or WebGL active renderer renderer
   * @name renderer
   * @type {me.CanvasRenderer|me.WebGLRenderer}
-  * @memberOf me.video
+  * @memberof me.video
   */
 export let renderer = null;
 

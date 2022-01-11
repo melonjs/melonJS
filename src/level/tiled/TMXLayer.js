@@ -66,9 +66,8 @@ function preRenderLayer(layer, renderer) {
  * a TMX Tile Layer Object
  * Tiled QT 0.7.x format
  * @class
- * @extends me.Renderable
- * @memberOf me
- * @constructor
+ * @augments me.Renderable
+ * @memberof me
  * @param {object} map layer data in JSON format ({@link http://docs.mapeditor.org/en/stable/reference/tmx-map-format/#layer})
  * @param {object} data layer data in JSON format ({@link http://docs.mapeditor.org/en/stable/reference/tmx-map-format/#layer})
  * @param {number} tilewidth width of each tile in pixels
@@ -243,7 +242,7 @@ class TMXLayer extends Renderable {
     /**
      * Set the TMX renderer for this layer object
      * @name setRenderer
-     * @memberOf me.TMXLayer
+     * @memberof me.TMXLayer
      * @public
      * @function
      * @param {me.TMXRenderer} renderer
@@ -259,7 +258,7 @@ class TMXLayer extends Renderable {
     /**
      * Return the layer current renderer object
      * @name getRenderer
-     * @memberOf me.TMXLayer
+     * @memberof me.TMXLayer
      * @public
      * @function
      * @returns {me.TMXRenderer} renderer
@@ -272,7 +271,7 @@ class TMXLayer extends Renderable {
     /**
      * Return the TileId of the Tile at the specified position
      * @name getTileId
-     * @memberOf me.TMXLayer
+     * @memberof me.TMXLayer
      * @public
      * @function
      * @param {number} x X coordinate (in world/pixels coordinates)
@@ -287,7 +286,7 @@ class TMXLayer extends Renderable {
     /**
      * Return the Tile object at the specified position
      * @name getTile
-     * @memberOf me.TMXLayer
+     * @memberof me.TMXLayer
      * @public
      * @function
      * @param {number} x X coordinate (in world/pixels coordinates)
@@ -313,7 +312,7 @@ class TMXLayer extends Renderable {
     /**
      * assign the given Tile object to the specified position
      * @name getTile
-     * @memberOf me.TMXLayer
+     * @memberof me.TMXLayer
      * @public
      * @function
      * @param {me.Tile} tile the tile object to be assigned
@@ -329,7 +328,7 @@ class TMXLayer extends Renderable {
     /**
      * return a new the Tile object corresponding to the given tile id
      * @name setTile
-     * @memberOf me.TMXLayer
+     * @memberof me.TMXLayer
      * @public
      * @function
      * @param {number} tileId tileId
@@ -348,7 +347,7 @@ class TMXLayer extends Renderable {
     /**
      * Return the Tile object at the specified tile coordinates
      * @name cellAt
-     * @memberOf me.TMXLayer
+     * @memberof me.TMXLayer
      * @public
      * @function
      * @param {number} x x position of the tile (in Tile unit)
@@ -375,7 +374,7 @@ class TMXLayer extends Renderable {
     /**
      * clear the tile at the specified position
      * @name clearTile
-     * @memberOf me.TMXLayer
+     * @memberof me.TMXLayer
      * @public
      * @function
      * @param {number} x X coordinate (in map coordinates: row/column)

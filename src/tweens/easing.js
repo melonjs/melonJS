@@ -44,7 +44,7 @@
  * @constant
  * @enum {Function}
  * @name Easing
- * @memberOf me.Tween
+ * @memberof me.Tween
  */
 export let Easing = {
 

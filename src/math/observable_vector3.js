@@ -6,9 +6,8 @@ import pool from "./../system/pooling.js";
  * A Vector3d object that provide notification by executing the given callback when the vector is changed.
  * @classdesc
  * @class ObservableVector3d
- * @extends me.Vector3d
- * @memberOf me
- * @constructor
+ * @augments me.Vector3d
+ * @memberof me
  * @param {number} [x=0] x value of the vector
  * @param {number} [y=0] y value of the vector
  * @param {number} [z=0] z value of the vector
@@ -45,7 +44,7 @@ class ObservableVector3d extends Vector3d {
      * @public
      * @type {number}
      * @name x
-     * @memberOf me.ObservableVector3d
+     * @memberof me.ObservableVector3d
      */
 
     get x() {
@@ -66,7 +65,7 @@ class ObservableVector3d extends Vector3d {
      * @public
      * @type {number}
      * @name y
-     * @memberOf me.ObservableVector3d
+     * @memberof me.ObservableVector3d
      */
 
     get y() {
@@ -88,7 +87,7 @@ class ObservableVector3d extends Vector3d {
      * @public
      * @type {number}
      * @name z
-     * @memberOf me.ObservableVector3d
+     * @memberof me.ObservableVector3d
      */
 
 
@@ -125,7 +124,7 @@ class ObservableVector3d extends Vector3d {
     /**
      * set the vector value without triggering the callback
      * @name setMuted
-     * @memberOf me.ObservableVector3d
+     * @memberof me.ObservableVector3d
      * @function
      * @param {number} x x value of the vector
      * @param {number} y y value of the vector
@@ -142,7 +141,7 @@ class ObservableVector3d extends Vector3d {
     /**
      * set the callback to be executed when the vector is changed
      * @name setCallback
-     * @memberOf me.ObservableVector3d
+     * @memberof me.ObservableVector3d
      * @function
      * @param {Function} fn callback
      * @param {Function} [scope=null] scope
@@ -162,7 +161,7 @@ class ObservableVector3d extends Vector3d {
     /**
      * Add the passed vector to this vector
      * @name add
-     * @memberOf me.ObservableVector3d
+     * @memberof me.ObservableVector3d
      * @function
      * @param {me.Vector2d|me.Vector3d|me.ObservableVector2d|me.ObservableVector3d} v
      * @returns {me.ObservableVector3d} Reference to this object for method chaining
@@ -174,7 +173,7 @@ class ObservableVector3d extends Vector3d {
     /**
      * Substract the passed vector to this vector
      * @name sub
-     * @memberOf me.ObservableVector3d
+     * @memberof me.ObservableVector3d
      * @function
      * @param {me.Vector2d|me.Vector3d|me.ObservableVector2d|me.ObservableVector3d} v
      * @returns {me.ObservableVector3d} Reference to this object for method chaining
@@ -186,7 +185,7 @@ class ObservableVector3d extends Vector3d {
     /**
      * Multiply this vector values by the given scalar
      * @name scale
-     * @memberOf me.ObservableVector3d
+     * @memberof me.ObservableVector3d
      * @function
      * @param {number} x
      * @param {number} [y=x]
@@ -201,7 +200,7 @@ class ObservableVector3d extends Vector3d {
     /**
      * Multiply this vector values by the passed vector
      * @name scaleV
-     * @memberOf me.ObservableVector3d
+     * @memberof me.ObservableVector3d
      * @function
      * @param {me.Vector2d|me.Vector3d|me.ObservableVector2d|me.ObservableVector3d} v
      * @returns {me.ObservableVector3d} Reference to this object for method chaining
@@ -213,7 +212,7 @@ class ObservableVector3d extends Vector3d {
     /**
      * Divide this vector values by the passed value
      * @name div
-     * @memberOf me.ObservableVector3d
+     * @memberof me.ObservableVector3d
      * @function
      * @param {number} n the value to divide the vector by
      * @returns {me.ObservableVector3d} Reference to this object for method chaining
@@ -225,7 +224,7 @@ class ObservableVector3d extends Vector3d {
     /**
      * Update this vector values to absolute values
      * @name abs
-     * @memberOf me.ObservableVector3d
+     * @memberof me.ObservableVector3d
      * @function
      * @returns {me.ObservableVector3d} Reference to this object for method chaining
      */
@@ -240,7 +239,7 @@ class ObservableVector3d extends Vector3d {
     /**
      * Clamp the vector value within the specified value range
      * @name clamp
-     * @memberOf me.ObservableVector3d
+     * @memberof me.ObservableVector3d
      * @function
      * @param {number} low
      * @param {number} high
@@ -258,7 +257,7 @@ class ObservableVector3d extends Vector3d {
     /**
      * Clamp this vector value within the specified value range
      * @name clampSelf
-     * @memberOf me.ObservableVector3d
+     * @memberof me.ObservableVector3d
      * @function
      * @param {number} low
      * @param {number} high
@@ -275,7 +274,7 @@ class ObservableVector3d extends Vector3d {
     /**
      * Update this vector with the minimum value between this and the passed vector
      * @name minV
-     * @memberOf me.ObservableVector3d
+     * @memberof me.ObservableVector3d
      * @function
      * @param {me.Vector2d|me.Vector3d|me.ObservableVector2d|me.ObservableVector3d} v
      * @returns {me.ObservableVector3d} Reference to this object for method chaining
@@ -292,7 +291,7 @@ class ObservableVector3d extends Vector3d {
     /**
      * Update this vector with the maximum value between this and the passed vector
      * @name maxV
-     * @memberOf me.ObservableVector3d
+     * @memberof me.ObservableVector3d
      * @function
      * @param {me.Vector2d|me.Vector3d|me.ObservableVector2d|me.ObservableVector3d} v
      * @returns {me.ObservableVector3d} Reference to this object for method chaining
@@ -309,7 +308,7 @@ class ObservableVector3d extends Vector3d {
     /**
      * Floor the vector values
      * @name floor
-     * @memberOf me.ObservableVector3d
+     * @memberof me.ObservableVector3d
      * @function
      * @returns {me.ObservableVector3d} new me.ObservableVector3d
      */
@@ -325,7 +324,7 @@ class ObservableVector3d extends Vector3d {
     /**
      * Floor this vector values
      * @name floorSelf
-     * @memberOf me.ObservableVector3d
+     * @memberof me.ObservableVector3d
      * @function
      * @returns {me.ObservableVector3d} Reference to this object for method chaining
      */
@@ -336,7 +335,7 @@ class ObservableVector3d extends Vector3d {
     /**
      * Ceil the vector values
      * @name ceil
-     * @memberOf me.ObservableVector3d
+     * @memberof me.ObservableVector3d
      * @function
      * @returns {me.ObservableVector3d} new me.ObservableVector3d
      */
@@ -352,7 +351,7 @@ class ObservableVector3d extends Vector3d {
     /**
      * Ceil this vector values
      * @name ceilSelf
-     * @memberOf me.ObservableVector3d
+     * @memberof me.ObservableVector3d
      * @function
      * @returns {me.ObservableVector3d} Reference to this object for method chaining
      */
@@ -363,7 +362,7 @@ class ObservableVector3d extends Vector3d {
     /**
      * Negate the vector values
      * @name negate
-     * @memberOf me.ObservableVector3d
+     * @memberof me.ObservableVector3d
      * @function
      * @returns {me.ObservableVector3d} new me.ObservableVector3d
      */
@@ -379,7 +378,7 @@ class ObservableVector3d extends Vector3d {
     /**
      * Negate this vector values
      * @name negateSelf
-     * @memberOf me.ObservableVector3d
+     * @memberof me.ObservableVector3d
      * @function
      * @returns {me.ObservableVector3d} Reference to this object for method chaining
      */
@@ -390,7 +389,7 @@ class ObservableVector3d extends Vector3d {
     /**
      * Copy the components of the given vector into this one
      * @name copy
-     * @memberOf me.ObservableVector3d
+     * @memberof me.ObservableVector3d
      * @function
      * @param {me.Vector2d|me.Vector3d|me.ObservableVector2d|me.ObservableVector3d} v
      * @returns {me.ObservableVector3d} Reference to this object for method chaining
@@ -402,7 +401,7 @@ class ObservableVector3d extends Vector3d {
     /**
      * return true if the two vectors are the same
      * @name equals
-     * @memberOf me.ObservableVector3d
+     * @memberof me.ObservableVector3d
      * @function
      * @param {me.Vector2d|me.Vector3d|me.ObservableVector2d|me.ObservableVector3d} v
      * @returns {boolean}
@@ -415,7 +414,7 @@ class ObservableVector3d extends Vector3d {
      * change this vector to be perpendicular to what it was before.<br>
      * (Effectively rotates it 90 degrees in a clockwise direction)
      * @name perp
-     * @memberOf me.ObservableVector3d
+     * @memberof me.ObservableVector3d
      * @function
      * @returns {me.ObservableVector3d} Reference to this object for method chaining
      */
@@ -426,7 +425,7 @@ class ObservableVector3d extends Vector3d {
     /**
      * Rotate this vector (counter-clockwise) by the specified angle (in radians).
      * @name rotate
-     * @memberOf me.ObservableVector3d
+     * @memberof me.ObservableVector3d
      * @function
      * @param {number} angle The angle to rotate (in radians)
      * @param {me.Vector2d|me.ObservableVector2d} [v] an optional point to rotate around (on the same z axis)
@@ -454,7 +453,7 @@ class ObservableVector3d extends Vector3d {
     /**
      * return the dot product of this vector and the passed one
      * @name dotProduct
-     * @memberOf me.ObservableVector3d
+     * @memberof me.ObservableVector3d
      * @function
      * @param {me.Vector2d|me.Vector3d|me.ObservableVector2d|me.ObservableVector3d} v
      * @returns {number} The dot product.
@@ -466,7 +465,7 @@ class ObservableVector3d extends Vector3d {
     /**
      * Linearly interpolate between this vector and the given one.
      * @name lerp
-     * @memberOf me.ObservableVector3d
+     * @memberof me.ObservableVector3d
      * @function
      * @param {me.Vector3d|me.ObservableVector3d} v
      * @param {number} alpha distance along the line (alpha = 0 will be this vector, and alpha = 1 will be the given one).
@@ -482,7 +481,7 @@ class ObservableVector3d extends Vector3d {
     /**
      * return the distance between this vector and the passed one
      * @name distance
-     * @memberOf me.ObservableVector3d
+     * @memberof me.ObservableVector3d
      * @function
      * @param {me.Vector2d|me.Vector3d|me.ObservableVector2d|me.ObservableVector3d} v
      * @returns {number}
@@ -497,7 +496,7 @@ class ObservableVector3d extends Vector3d {
     /**
      * return a clone copy of this vector
      * @name clone
-     * @memberOf me.ObservableVector3d
+     * @memberof me.ObservableVector3d
      * @function
      * @returns {me.ObservableVector3d} new me.ObservableVector3d
      */
@@ -513,7 +512,7 @@ class ObservableVector3d extends Vector3d {
     /**
      * return a `me.Vector3d` copy of this `me.ObservableVector3d` object
      * @name toVector3d
-     * @memberOf me.ObservableVector3d
+     * @memberof me.ObservableVector3d
      * @function
      * @returns {me.Vector3d} new me.Vector3d
      */
@@ -524,7 +523,7 @@ class ObservableVector3d extends Vector3d {
     /**
      * convert the object to a string representation
      * @name toString
-     * @memberOf me.ObservableVector3d
+     * @memberof me.ObservableVector3d
      * @function
      * @returns {string}
      */

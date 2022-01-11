@@ -6,9 +6,8 @@ import {clamp} from "./math.js";
  * @classdesc
  * A Vector2d object that provide notification by executing the given callback when the vector is changed.
  * @class ObservableVector2d
- * @extends me.Vector2d
- * @memberOf me
- * @constructor
+ * @augments me.Vector2d
+ * @memberof me
  * @param {number} [x=0] x value of the vector
  * @param {number} [y=0] y value of the vector
  * @param {object} settings additional required parameters
@@ -44,7 +43,7 @@ class ObservableVector2d extends Vector2d {
      * @public
      * @type {number}
      * @name x
-     * @memberOf me.ObservableVector2d
+     * @memberof me.ObservableVector2d
      */
 
     get x() {
@@ -66,7 +65,7 @@ class ObservableVector2d extends Vector2d {
      * @public
      * @type {number}
      * @name y
-     * @memberOf me.ObservableVector2d
+     * @memberof me.ObservableVector2d
      */
 
     get y() {
@@ -98,7 +97,7 @@ class ObservableVector2d extends Vector2d {
     /**
      * set the vector value without triggering the callback
      * @name setMuted
-     * @memberOf me.ObservableVector2d
+     * @memberof me.ObservableVector2d
      * @function
      * @param {number} x x value of the vector
      * @param {number} y y value of the vector
@@ -113,7 +112,7 @@ class ObservableVector2d extends Vector2d {
     /**
      * set the callback to be executed when the vector is changed
      * @name setCallback
-     * @memberOf me.ObservableVector2d
+     * @memberof me.ObservableVector2d
      * @function
      * @param {Function} fn callback
      * @param {Function} [scope=null] scope
@@ -133,7 +132,7 @@ class ObservableVector2d extends Vector2d {
     /**
      * Add the passed vector to this vector
      * @name add
-     * @memberOf me.ObservableVector2d
+     * @memberof me.ObservableVector2d
      * @function
      * @param {me.ObservableVector2d} v
      * @returns {me.ObservableVector2d} Reference to this object for method chaining
@@ -145,7 +144,7 @@ class ObservableVector2d extends Vector2d {
     /**
      * Substract the passed vector to this vector
      * @name sub
-     * @memberOf me.ObservableVector2d
+     * @memberof me.ObservableVector2d
      * @function
      * @param {me.ObservableVector2d} v
      * @returns {me.ObservableVector2d} Reference to this object for method chaining
@@ -157,7 +156,7 @@ class ObservableVector2d extends Vector2d {
     /**
      * Multiply this vector values by the given scalar
      * @name scale
-     * @memberOf me.ObservableVector2d
+     * @memberof me.ObservableVector2d
      * @function
      * @param {number} x
      * @param {number} [y=x]
@@ -170,7 +169,7 @@ class ObservableVector2d extends Vector2d {
     /**
      * Multiply this vector values by the passed vector
      * @name scaleV
-     * @memberOf me.ObservableVector2d
+     * @memberof me.ObservableVector2d
      * @function
      * @param {me.ObservableVector2d} v
      * @returns {me.ObservableVector2d} Reference to this object for method chaining
@@ -182,7 +181,7 @@ class ObservableVector2d extends Vector2d {
     /**
      * Divide this vector values by the passed value
      * @name div
-     * @memberOf me.ObservableVector2d
+     * @memberof me.ObservableVector2d
      * @function
      * @param {number} n the value to divide the vector by
      * @returns {me.ObservableVector2d} Reference to this object for method chaining
@@ -194,7 +193,7 @@ class ObservableVector2d extends Vector2d {
     /**
      * Update this vector values to absolute values
      * @name abs
-     * @memberOf me.ObservableVector2d
+     * @memberof me.ObservableVector2d
      * @function
      * @returns {me.ObservableVector2d} Reference to this object for method chaining
      */
@@ -205,7 +204,7 @@ class ObservableVector2d extends Vector2d {
     /**
      * Clamp the vector value within the specified value range
      * @name clamp
-     * @memberOf me.ObservableVector2d
+     * @memberof me.ObservableVector2d
      * @function
      * @param {number} low
      * @param {number} high
@@ -218,7 +217,7 @@ class ObservableVector2d extends Vector2d {
     /**
      * Clamp this vector value within the specified value range
      * @name clampSelf
-     * @memberOf me.ObservableVector2d
+     * @memberof me.ObservableVector2d
      * @function
      * @param {number} low
      * @param {number} high
@@ -231,7 +230,7 @@ class ObservableVector2d extends Vector2d {
     /**
      * Update this vector with the minimum value between this and the passed vector
      * @name minV
-     * @memberOf me.ObservableVector2d
+     * @memberof me.ObservableVector2d
      * @function
      * @param {me.ObservableVector2d} v
      * @returns {me.ObservableVector2d} Reference to this object for method chaining
@@ -243,7 +242,7 @@ class ObservableVector2d extends Vector2d {
     /**
      * Update this vector with the maximum value between this and the passed vector
      * @name maxV
-     * @memberOf me.ObservableVector2d
+     * @memberof me.ObservableVector2d
      * @function
      * @param {me.ObservableVector2d} v
      * @returns {me.ObservableVector2d} Reference to this object for method chaining
@@ -255,7 +254,7 @@ class ObservableVector2d extends Vector2d {
     /**
      * Floor the vector values
      * @name floor
-     * @memberOf me.ObservableVector2d
+     * @memberof me.ObservableVector2d
      * @function
      * @returns {me.ObservableVector2d} new me.ObservableVector2d
      */
@@ -266,7 +265,7 @@ class ObservableVector2d extends Vector2d {
     /**
      * Floor this vector values
      * @name floorSelf
-     * @memberOf me.ObservableVector2d
+     * @memberof me.ObservableVector2d
      * @function
      * @returns {me.ObservableVector2d} Reference to this object for method chaining
      */
@@ -277,7 +276,7 @@ class ObservableVector2d extends Vector2d {
     /**
      * Ceil the vector values
      * @name ceil
-     * @memberOf me.ObservableVector2d
+     * @memberof me.ObservableVector2d
      * @function
      * @returns {me.ObservableVector2d} new me.ObservableVector2d
      */
@@ -288,7 +287,7 @@ class ObservableVector2d extends Vector2d {
     /**
      * Ceil this vector values
      * @name ceilSelf
-     * @memberOf me.ObservableVector2d
+     * @memberof me.ObservableVector2d
      * @function
      * @returns {me.ObservableVector2d} Reference to this object for method chaining
      */
@@ -299,7 +298,7 @@ class ObservableVector2d extends Vector2d {
     /**
      * Negate the vector values
      * @name negate
-     * @memberOf me.ObservableVector2d
+     * @memberof me.ObservableVector2d
      * @function
      * @returns {me.ObservableVector2d} new me.ObservableVector2d
      */
@@ -310,7 +309,7 @@ class ObservableVector2d extends Vector2d {
     /**
      * Negate this vector values
      * @name negateSelf
-     * @memberOf me.ObservableVector2d
+     * @memberof me.ObservableVector2d
      * @function
      * @returns {me.ObservableVector2d} Reference to this object for method chaining
      */
@@ -321,7 +320,7 @@ class ObservableVector2d extends Vector2d {
     /**
      * Copy the x,y values of the passed vector to this one
      * @name copy
-     * @memberOf me.ObservableVector2d
+     * @memberof me.ObservableVector2d
      * @function
      * @param {me.ObservableVector2d} v
      * @returns {me.ObservableVector2d} Reference to this object for method chaining
@@ -333,7 +332,7 @@ class ObservableVector2d extends Vector2d {
     /**
      * return true if the two vectors are the same
      * @name equals
-     * @memberOf me.ObservableVector2d
+     * @memberof me.ObservableVector2d
      * @function
      * @param {me.ObservableVector2d} v
      * @returns {boolean}
@@ -346,7 +345,7 @@ class ObservableVector2d extends Vector2d {
      * change this vector to be perpendicular to what it was before.<br>
      * (Effectively rotates it 90 degrees in a clockwise direction)
      * @name perp
-     * @memberOf me.ObservableVector2d
+     * @memberof me.ObservableVector2d
      * @function
      * @returns {me.ObservableVector2d} Reference to this object for method chaining
      */
@@ -357,7 +356,7 @@ class ObservableVector2d extends Vector2d {
     /**
      * Rotate this vector (counter-clockwise) by the specified angle (in radians).
      * @name rotate
-     * @memberOf me.ObservableVector2d
+     * @memberof me.ObservableVector2d
      * @function
      * @param {number} angle The angle to rotate (in radians)
      * @param {me.Vector2d|me.ObservableVector2d} [v] an optional point to rotate around
@@ -384,7 +383,7 @@ class ObservableVector2d extends Vector2d {
     /**
      * return the dot product of this vector and the passed one
      * @name dotProduct
-     * @memberOf me.ObservableVector2d
+     * @memberof me.ObservableVector2d
      * @function
      * @param {me.Vector2d|me.ObservableVector2d} v
      * @returns {number} The dot product.
@@ -396,7 +395,7 @@ class ObservableVector2d extends Vector2d {
     /**
      * Linearly interpolate between this vector and the given one.
      * @name lerp
-     * @memberOf me.ObservableVector2d
+     * @memberof me.ObservableVector2d
      * @function
      * @param {me.Vector2d|me.ObservableVector2d} v
      * @param {number} alpha distance along the line (alpha = 0 will be this vector, and alpha = 1 will be the given one).
@@ -411,7 +410,7 @@ class ObservableVector2d extends Vector2d {
     /**
      * return the distance between this vector and the passed one
      * @name distance
-     * @memberOf me.ObservableVector2d
+     * @memberof me.ObservableVector2d
      * @function
      * @param {me.ObservableVector2d} v
      * @returns {number}
@@ -423,7 +422,7 @@ class ObservableVector2d extends Vector2d {
     /**
      * return a clone copy of this vector
      * @name clone
-     * @memberOf me.ObservableVector2d
+     * @memberof me.ObservableVector2d
      * @function
      * @returns {me.ObservableVector2d} new me.ObservableVector2d
      */
@@ -434,7 +433,7 @@ class ObservableVector2d extends Vector2d {
     /**
      * return a `me.Vector2d` copy of this `me.ObservableVector2d` object
      * @name toVector2d
-     * @memberOf me.ObservableVector2d
+     * @memberof me.ObservableVector2d
      * @function
      * @returns {me.Vector2d} new me.Vector2d
      */
@@ -445,7 +444,7 @@ class ObservableVector2d extends Vector2d {
     /**
      * convert the object to a string representation
      * @name toString
-     * @memberOf me.ObservableVector2d
+     * @memberof me.ObservableVector2d
      * @function
      * @returns {string}
      */

@@ -3,14 +3,14 @@ import {random as mathRandom, weightedRandom as mathWeightedRandom} from "./../m
 /**
  * a collection of array utility functions
  * @namespace me.utils.array
- * @memberOf me
+ * @memberof me
  */
 
 /**
  * Remove the specified object from the given Array
  * @public
  * @function
- * @memberOf me.utils.array
+ * @memberof me.utils.array
  * @name remove
  * @param {Array} arr array from which to remove an object
  * @param {object} obj to be removed
@@ -31,7 +31,7 @@ export function remove(arr, obj) {
  * return a random array element
  * @public
  * @function
- * @memberOf me.utils.array
+ * @memberof me.utils.array
  * @name random
  * @param {Array} arr array to pick a element
  * @returns {any} random member of array
@@ -48,7 +48,7 @@ export function random(arr) {
  * return a weighted random array element, favoring the earlier entries
  * @public
  * @function
- * @memberOf me.utils.array
+ * @memberof me.utils.array
  * @name weightedRandom
  * @param {Array} arr array to pick a element
  * @returns {any} random member of array

@@ -185,7 +185,7 @@ export {
  * @type {boolean}
  * @default false
  * @readonly
- * @memberOf me
+ * @memberof me
  */
 export var initialized = false;
 
@@ -194,7 +194,7 @@ export var initialized = false;
  * @type {boolean}
  * @default false
  * @see me.boot
- * @memberOf me
+ * @memberof me
  */
 export var skipAutoInit = false;
 
@@ -203,7 +203,7 @@ export var skipAutoInit = false;
  * this is automatically called unless me.skipAutoInit is set to true,
  * to allow asynchronous loaders to work.
  * @name boot
- * @memberOf me
+ * @memberof me
  * @see me.skipAutoInit
  * @public
  * @function

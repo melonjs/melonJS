@@ -15,9 +15,8 @@ var tmpVec = new Vector2d();
  * @classdesc
  * a pointer object, representing a single finger on a touch enabled device.
  * @class Pointer
- * @extends me.Bounds
- * @memberOf me
- * @constructor
+ * @augments me.Bounds
+ * @memberof me
  */
 class Pointer extends Bounds {
 
@@ -37,7 +36,7 @@ class Pointer extends Bounds {
          * @public
          * @type {number}
          * @name LEFT
-         * @memberOf me.Pointer
+         * @memberof me.Pointer
          */
         this.LEFT = 0;
 
@@ -46,7 +45,7 @@ class Pointer extends Bounds {
          * @public
          * @type {number}
          * @name MIDDLE
-         * @memberOf me.Pointer
+         * @memberof me.Pointer
          */
         this.MIDDLE = 1;
 
@@ -55,7 +54,7 @@ class Pointer extends Bounds {
          * @public
          * @type {number}
          * @name RIGHT
-         * @memberOf me.Pointer
+         * @memberof me.Pointer
          */
         this.RIGHT = 2;
 
@@ -67,7 +66,7 @@ class Pointer extends Bounds {
          * @see https://developer.mozilla.org/en-US/docs/Web/API/PointerEvent
          * @see https://developer.mozilla.org/en-US/docs/Web/API/TouchEvent
          * @see https://developer.mozilla.org/en-US/docs/Web/API/MouseEvent
-         * @memberOf me.Pointer
+         * @memberof me.Pointer
          */
         this.event = undefined;
 
@@ -77,7 +76,7 @@ class Pointer extends Bounds {
          * @type {string}
          * @name type
          * @see https://developer.mozilla.org/en-US/docs/Web/API/Event/type
-         * @memberOf me.Pointer
+         * @memberof me.Pointer
          */
         this.type = undefined;
 
@@ -88,7 +87,7 @@ class Pointer extends Bounds {
          * @type {number}
          * @name button
          * @see https://developer.mozilla.org/en-US/docs/Web/API/MouseEvent/button
-         * @memberOf me.Pointer
+         * @memberof me.Pointer
          */
         this.button = 0;
 
@@ -98,7 +97,7 @@ class Pointer extends Bounds {
          * @type {boolean}
          * @name isPrimary
          * @see https://developer.mozilla.org/en-US/docs/Web/API/PointerEvent/isPrimary
-         * @memberOf me.Pointer
+         * @memberof me.Pointer
          */
         this.isPrimary = false;
 
@@ -108,7 +107,7 @@ class Pointer extends Bounds {
          * @type {number}
          * @name pageX
          * @see https://developer.mozilla.org/en-US/docs/Web/API/MouseEvent/pageX
-         * @memberOf me.Pointer
+         * @memberof me.Pointer
          */
         this.pageX = 0;
 
@@ -118,7 +117,7 @@ class Pointer extends Bounds {
          * @type {number}
          * @name pageY
          * @see https://developer.mozilla.org/en-US/docs/Web/API/MouseEvent/pageY
-         * @memberOf me.Pointer
+         * @memberof me.Pointer
          */
         this.pageY = 0;
 
@@ -128,7 +127,7 @@ class Pointer extends Bounds {
          * @type {number}
          * @name clientX
          * @see https://developer.mozilla.org/en-US/docs/Web/API/MouseEvent/clientX
-         * @memberOf me.Pointer
+         * @memberof me.Pointer
          */
         this.clientX = 0;
 
@@ -138,7 +137,7 @@ class Pointer extends Bounds {
         * @type {number}
         * @name clientY
         * @see https://developer.mozilla.org/en-US/docs/Web/API/MouseEvent/clientY
-        * @memberOf me.Pointer
+        * @memberof me.Pointer
         */
         this.clientY = 0;
 
@@ -148,7 +147,7 @@ class Pointer extends Bounds {
          * @type {number}
          * @name deltaMode
          * @see https://developer.mozilla.org/en-US/docs/Web/API/WheelEvent/deltaMode
-         * @memberOf me.Pointer
+         * @memberof me.Pointer
          */
         this.deltaMode = 0;
 
@@ -158,7 +157,7 @@ class Pointer extends Bounds {
          * @type {number}
          * @name deltaX
          * @see https://developer.mozilla.org/en-US/docs/Web/API/WheelEvent/deltaX
-         * @memberOf me.Pointer
+         * @memberof me.Pointer
          */
         this.deltaX = 0;
 
@@ -168,7 +167,7 @@ class Pointer extends Bounds {
          * @type {number}
          * @name deltaY
          * @see https://developer.mozilla.org/en-US/docs/Web/API/WheelEvent/deltaY
-         * @memberOf me.Pointer
+         * @memberof me.Pointer
          */
         this.deltaY = 0;
 
@@ -178,7 +177,7 @@ class Pointer extends Bounds {
          * @type {number}
          * @name deltaZ
          * @see https://developer.mozilla.org/en-US/docs/Web/API/WheelEvent/deltaZ
-         * @memberOf me.Pointer
+         * @memberof me.Pointer
          */
         this.deltaZ = 0;
 
@@ -188,7 +187,7 @@ class Pointer extends Bounds {
          * @public
          * @type {number}
          * @name gameX
-         * @memberOf me.Pointer
+         * @memberof me.Pointer
          */
         this.gameX = 0;
 
@@ -198,7 +197,7 @@ class Pointer extends Bounds {
          * @public
          * @type {number}
          * @name gameY
-         * @memberOf me.Pointer
+         * @memberof me.Pointer
          */
         this.gameY = 0;
 
@@ -207,7 +206,7 @@ class Pointer extends Bounds {
          * @public
          * @type {number}
          * @name gameScreenX
-         * @memberOf me.Pointer
+         * @memberof me.Pointer
          */
         this.gameScreenX = 0;
 
@@ -216,7 +215,7 @@ class Pointer extends Bounds {
          * @public
          * @type {number}
          * @name gameScreenY
-         * @memberOf me.Pointer
+         * @memberof me.Pointer
          */
         this.gameScreenY = 0;
 
@@ -225,7 +224,7 @@ class Pointer extends Bounds {
          * @public
          * @type {number}
          * @name gameWorldX
-         * @memberOf me.Pointer
+         * @memberof me.Pointer
          */
         this.gameWorldX = 0;
 
@@ -234,7 +233,7 @@ class Pointer extends Bounds {
          * @public
          * @type {number}
          * @name gameWorldY
-         * @memberOf me.Pointer
+         * @memberof me.Pointer
          */
         this.gameWorldY = 0;
 
@@ -243,7 +242,7 @@ class Pointer extends Bounds {
          * @public
          * @type {number}
          * @name gameLocalX
-         * @memberOf me.Pointer
+         * @memberof me.Pointer
          */
         this.gameLocalX = 0;
 
@@ -252,7 +251,7 @@ class Pointer extends Bounds {
          * @public
          * @type {number}
          * @name gameLocalY
-         * @memberOf me.Pointer
+         * @memberof me.Pointer
          */
         this.gameLocalY = 0;
 
@@ -261,7 +260,7 @@ class Pointer extends Bounds {
         * @public
         * @type {number}
         * @name pointerId
-        * @memberOf me.Pointer
+        * @memberof me.Pointer
         * @see https://developer.mozilla.org/en-US/docs/Web/API/PointerEvent/pointerId
         */
         this.pointerId = undefined;
@@ -271,7 +270,7 @@ class Pointer extends Bounds {
          * @public
          * @type {boolean}
          * @name isNormalized
-         * @memberOf me.Pointer
+         * @memberof me.Pointer
          */
         this.isNormalized = false;
 

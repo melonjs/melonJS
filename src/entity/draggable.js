@@ -4,26 +4,17 @@ import * as event from "./../system/event.js";
 import Entity from "./entity.js";
 
 /**
+ * @classdesc
  * Used to make a game entity draggable
- * @class
- * @extends me.Entity
- * @memberOf me
- * @constructor
+ * @class DraggableEntity
+ * @augments me.Entity
+ * @memberof me
  * @param {number} x the x coordinates of the entity object
  * @param {number} y the y coordinates of the entity object
  * @param {object} settings Entity properties (see {@link me.Entity})
  */
 class DraggableEntity extends Entity {
 
-    /**
-     * Constructor
-     * @name init
-     * @memberOf me.DraggableEntity
-     * @function
-     * @param {number} x the x postion of the entity
-     * @param {number} y the y postion of the entity
-     * @param {object} settings the additional entity settings
-     */
     constructor(x, y, settings) {
         super(x, y, settings);
         this.dragging = false;
@@ -41,7 +32,7 @@ class DraggableEntity extends Entity {
      * this module testable. Then we subscribe this module to the
      * transformed events.
      * @name initEvents
-     * @memberOf me.DraggableEntity
+     * @memberof me.DraggableEntity
      * @function
      */
     initEvents() {
@@ -68,7 +59,7 @@ class DraggableEntity extends Entity {
     /**
      * Translates a pointer event to a me.event
      * @name translatePointerEvent
-     * @memberOf me.DraggableEntity
+     * @memberof me.DraggableEntity
      * @function
      * @param {object} e the pointer event you want to translate
      * @param {string} translation the me.event you want to translate the event to
@@ -80,7 +71,7 @@ class DraggableEntity extends Entity {
     /**
      * Gets called when the user starts dragging the entity
      * @name dragStart
-     * @memberOf me.DraggableEntity
+     * @memberof me.DraggableEntity
      * @function
      * @param {object} e the pointer event
      * @returns {boolean} false if the object is being dragged
@@ -97,7 +88,7 @@ class DraggableEntity extends Entity {
     /**
      * Gets called when the user drags this entity around
      * @name dragMove
-     * @memberOf me.DraggableEntity
+     * @memberof me.DraggableEntity
      * @function
      * @param {object} e the pointer event
      */
@@ -111,7 +102,7 @@ class DraggableEntity extends Entity {
     /**
      * Gets called when the user stops dragging the entity
      * @name dragEnd
-     * @memberOf me.DraggableEntity
+     * @memberof me.DraggableEntity
      * @function
      * @returns {boolean} false if the object stopped being dragged
      */
@@ -125,7 +116,7 @@ class DraggableEntity extends Entity {
     /**
      * Destructor
      * @name destroy
-     * @memberOf me.DraggableEntity
+     * @memberof me.DraggableEntity
      * @function
      */
     destroy() {

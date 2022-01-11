@@ -113,7 +113,6 @@
     "jsdoc/newline-after-description" : "off",
     "jsdoc/require-param-description" : "off",
     "jsdoc/require-returns-description" : "off",
-    "jsdoc/check-tag-names": "off", // off until all jsdoc is converted to proper es6 documentation
     "jsdoc/check-param-names" : "off", // error due to "function polymorphism" and "class interface"
     "jsdoc/require-param" : "off", // error due to es6 rest parameters
     "jsdoc/valid-types" : "off", // error in me.utils.function namepath

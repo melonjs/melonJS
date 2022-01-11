@@ -13,8 +13,7 @@ import { world } from "./../game.js";
 /**
  * a Generic Physic Body Object with some physic properties and behavior functionality, to as a member of a Renderable.
  * @class Body
- * @memberOf me
- * @constructor
+ * @memberof me
  * @param {me.Renderable} ancestor the parent object this body is attached to
  * @param {me.Rect|me.Rect[]|me.Polygon|me.Polygon[]|me.Line|me.Line[]|me.Ellipse|me.Ellipse[]|me.Bounds|me.Bounds[]|object} [shapes] a initial shape, list of shapes, or JSON object defining the body
  * @param {Function} [onBodyUpdate] callback for when the body is updated (e.g. add/remove shapes)
@@ -38,7 +37,7 @@ class Body {
          * @public
          * @type {me.Bounds}
          * @name bounds
-         * @memberOf me.Body
+         * @memberof me.Body
          */
         if (typeof this.bounds === "undefined") {
             this.bounds = new Bounds();
@@ -49,7 +48,7 @@ class Body {
          * @ignore
          * @type {me.Polygon[]|me.Line[]|me.Ellipse[]}
          * @name shapes
-         * @memberOf me.Body
+         * @memberof me.Body
          */
         if (typeof this.shapes === "undefined") {
             this.shapes = [];
@@ -63,7 +62,7 @@ class Body {
          * @default me.collision.types.ALL_OBJECT
          * @name collisionMask
          * @see me.collision.types
-         * @memberOf me.Body
+         * @memberof me.Body
          */
         this.collisionMask = collision.types.ALL_OBJECT;
 
@@ -74,7 +73,7 @@ class Body {
          * @default me.collision.types.ENEMY_OBJECT
          * @name collisionType
          * @see me.collision.types
-         * @memberOf me.Body
+         * @memberof me.Body
          * @example
          * // set the body collision type
          * myEntity.body.collisionType = me.collision.types.PLAYER_OBJECT;
@@ -87,7 +86,7 @@ class Body {
          * @type {me.Vector2d}
          * @default <0,0>
          * @name vel
-         * @memberOf me.Body
+         * @memberof me.Body
          */
         if (typeof this.vel === "undefined") {
             this.vel = new Vector2d();
@@ -102,7 +101,7 @@ class Body {
          * @default <0,0>
          * @name force
          * @see me.Body.setMaxVelocity
-         * @memberOf me.Body
+         * @memberof me.Body
          * @example
          * // define a default maximum acceleration, initial force and friction
          * this.body.force.set(0, 0);
@@ -132,7 +131,7 @@ class Body {
          * @type {me.Vector2d}
          * @default <0,0>
          * @name friction
-         * @memberOf me.Body
+         * @memberof me.Body
          */
         if (typeof this.friction === "undefined") {
             this.friction = new Vector2d();
@@ -146,7 +145,7 @@ class Body {
          * @type {number}
          * @default 0
          * @name bounce
-         * @memberOf me.Body
+         * @memberof me.Body
          */
         this.bounce = 0;
 
@@ -156,7 +155,7 @@ class Body {
          * @type {number}
          * @default 1
          * @name mass
-         * @memberOf me.Body
+         * @memberof me.Body
          */
         this.mass = 1;
 
@@ -166,7 +165,7 @@ class Body {
          * @type {me.Vector2d}
          * @default <490,490>
          * @name maxVel
-         * @memberOf me.Body
+         * @memberof me.Body
          */
         if (typeof this.maxVel === "undefined") {
             this.maxVel = new Vector2d();
@@ -182,7 +181,7 @@ class Body {
          * @type {boolean}
          * @default false
          * @name isStatic
-         * @memberOf me.Body
+         * @memberof me.Body
          */
         this.isStatic = false;
 
@@ -194,7 +193,7 @@ class Body {
          * @type {number}
          * @default 1.0
          * @name gravityScale
-         * @memberOf me.Body
+         * @memberof me.Body
          */
         this.gravityScale = 1.0;
 
@@ -205,7 +204,7 @@ class Body {
          * @type {boolean}
          * @default false
          * @name ignoreGravity
-         * @memberOf me.Body
+         * @memberof me.Body
          */
         this.ignoreGravity = false;
 
@@ -218,7 +217,7 @@ class Body {
          * @type {boolean}
          * @default false
          * @name falling
-         * @memberOf me.Body
+         * @memberof me.Body
          */
         this.falling = false;
 
@@ -230,7 +229,7 @@ class Body {
          * @type {boolean}
          * @default false
          * @name jumping
-         * @memberOf me.Body
+         * @memberof me.Body
          */
         this.jumping = false;
 
@@ -260,7 +259,7 @@ class Body {
      * set the body as a static body
      * static body do not move automatically and do not check againt collision with others
      * @name setStatic
-     * @memberOf me.Body
+     * @memberof me.Body
      * @public
      * @function
      * @param {boolean} [isStatic=true]
@@ -273,7 +272,7 @@ class Body {
      * add a collision shape to this body <br>
      * (note: me.Rect objects will be converted to me.Polygon before being added)
      * @name addShape
-     * @memberOf me.Body
+     * @memberof me.Body
      * @public
      * @function
      * @param {me.Rect|me.Polygon|me.Line|me.Ellipse|me.Bounds|object} shape a shape or JSON object
@@ -327,7 +326,7 @@ class Body {
     /**
      * set the body vertices to the given one
      * @name setVertices
-     * @memberOf me.Body
+     * @memberof me.Body
      * @public
      * @function
      * @param {me.Vector2d[]} vertices an array of me.Vector2d points defining a convex hull
@@ -354,7 +353,7 @@ class Body {
     /**
      * add the given vertices to the body shape
      * @name addVertices
-     * @memberOf me.Body
+     * @memberof me.Body
      * @public
      * @function
      * @param {me.Vector2d[]} vertices an array of me.Vector2d points defining a convex hull
@@ -368,7 +367,7 @@ class Body {
      * add collision mesh based on a JSON object
      * (this will also apply any physic properties defined in the given JSON file)
      * @name fromJSON
-     * @memberOf me.Body
+     * @memberof me.Body
      * @public
      * @function
      * @param {object} json a JSON object as exported from a Physics Editor tool
@@ -412,7 +411,7 @@ class Body {
     /**
      * return the collision shape at the given index
      * @name getShape
-     * @memberOf me.Body
+     * @memberof me.Body
      * @public
      * @function
      * @param {number} [index=0] the shape object at the specified index
@@ -425,7 +424,7 @@ class Body {
     /**
      * returns the AABB bounding box for this body
      * @name getBounds
-     * @memberOf me.Body
+     * @memberof me.Body
      * @function
      * @returns {me.Bounds} bounding box Rectangle object
      */
@@ -436,7 +435,7 @@ class Body {
     /**
      * remove the specified shape from the body shape list
      * @name removeShape
-     * @memberOf me.Body
+     * @memberof me.Body
      * @public
      * @function
      * @param {me.Polygon|me.Line|me.Ellipse} shape a shape object
@@ -458,7 +457,7 @@ class Body {
     /**
      * remove the shape at the given index from the body shape list
      * @name removeShapeAt
-     * @memberOf me.Body
+     * @memberof me.Body
      * @public
      * @function
      * @param {number} index the shape object at the specified index
@@ -473,7 +472,7 @@ class Body {
      * but it's also possible to specify 'collision filters' to provide a finer <br>
      * control over which entities can collide with each other.
      * @name setCollisionMask
-     * @memberOf me.Body
+     * @memberof me.Body
      * @public
      * @function
      * @see me.collision.types
@@ -492,7 +491,7 @@ class Body {
     /**
      * define the collision type of the body for collision filtering
      * @name setCollisionType
-     * @memberOf me.Body
+     * @memberof me.Body
      * @public
      * @function
      * @see me.collision.types
@@ -515,7 +514,7 @@ class Body {
      * the built-in function to solve the collision response
      * @protected
      * @name respondToCollision
-     * @memberOf me.Body
+     * @memberof me.Body
      * @function
      * @param {me.collision.ResponseObject} response the collision response object
      */
@@ -555,7 +554,7 @@ class Body {
      *    - The index of element in the array. <br>
      *    - The array forEach() was called upon. <br>
      * @name forEach
-     * @memberOf me.Body.prototype
+     * @memberof me.Body.prototype
      * @function
      * @param {Function} callback fnction to execute on each element
      * @param {object} [thisArg] value to use as this(i.e reference Object) when executing callback.
@@ -592,7 +591,7 @@ class Body {
     /**
      * Returns true if the any of the shape composing the body contains the given point.
      * @name contains
-     * @memberOf me.Body
+     * @memberof me.Body
      * @function
      * @param  {me.Vector2d} point
      * @returns {boolean} true if contains
@@ -601,7 +600,7 @@ class Body {
     /**
      * Returns true if the any of the shape composing the body contains the given point.
      * @name contains
-     * @memberOf me.Body
+     * @memberof me.Body
      * @function
      * @param  {number} x x coordinate
      * @param  {number} y y coordinate
@@ -635,7 +634,7 @@ class Body {
      * Rotate this body (counter-clockwise) by the specified angle (in radians).
      * Unless specified the body will be rotated around its center point
      * @name rotate
-     * @memberOf me.Body
+     * @memberof me.Body
      * @function
      * @param {number} angle The angle to rotate (in radians)
      * @param {me.Vector2d|me.ObservableVector2d} [v=me.Body.getBounds().center] an optional point to rotate around
@@ -662,7 +661,7 @@ class Body {
     /**
      * cap the body velocity (body.maxVel property) to the specified value<br>
      * @name setMaxVelocity
-     * @memberOf me.Body
+     * @memberof me.Body
      * @function
      * @param {number} x max velocity on x axis
      * @param {number} y max velocity on y axis
@@ -676,7 +675,7 @@ class Body {
     /**
      * set the body default friction
      * @name setFriction
-     * @memberOf me.Body
+     * @memberof me.Body
      * @function
      * @param {number} x horizontal friction
      * @param {number} y vertical friction
@@ -763,7 +762,7 @@ class Body {
      * At this time a call to Body.Update does not call the onBodyUpdate callback that is listed in the constructor arguments.
      * @name update
      * @ignore
-     * @memberOf me.Body
+     * @memberof me.Body
      * @function
      * @param {number} dt time since the last update in milliseconds.
      * @returns {boolean} true if resulting velocity is different than 0

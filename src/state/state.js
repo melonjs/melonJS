@@ -150,7 +150,7 @@ event.on(event.BOOT, () => {
 /**
  * a State Manager (state machine)
  * @namespace state
- * @memberOf me
+ * @memberof me
  */
 
 var state = {
@@ -159,7 +159,7 @@ var state = {
      * default state ID for Loading Stage
      * @constant
      * @name LOADING
-     * @memberOf me.state
+     * @memberof me.state
      */
     LOADING : 0,
 
@@ -167,7 +167,7 @@ var state = {
      * default state ID for Menu Stage
      * @constant
      * @name MENU
-     * @memberOf me.state
+     * @memberof me.state
      */
     MENU : 1,
 
@@ -175,7 +175,7 @@ var state = {
      * default state ID for "Ready" Stage
      * @constant
      * @name READY
-     * @memberOf me.state
+     * @memberof me.state
      */
     READY : 2,
 
@@ -183,7 +183,7 @@ var state = {
      * default state ID for Play Stage
      * @constant
      * @name PLAY
-     * @memberOf me.state
+     * @memberof me.state
      */
     PLAY : 3,
 
@@ -191,7 +191,7 @@ var state = {
      * default state ID for Game Over Stage
      * @constant
      * @name GAMEOVER
-     * @memberOf me.state
+     * @memberof me.state
      */
     GAMEOVER : 4,
 
@@ -199,7 +199,7 @@ var state = {
      * default state ID for Game End Stage
      * @constant
      * @name GAME_END
-     * @memberOf me.state
+     * @memberof me.state
      */
     GAME_END : 5,
 
@@ -207,7 +207,7 @@ var state = {
      * default state ID for High Score Stage
      * @constant
      * @name SCORE
-     * @memberOf me.state
+     * @memberof me.state
      */
     SCORE : 6,
 
@@ -215,7 +215,7 @@ var state = {
      * default state ID for Credits Stage
      * @constant
      * @name CREDITS
-     * @memberOf me.state
+     * @memberof me.state
      */
     CREDITS : 7,
 
@@ -223,7 +223,7 @@ var state = {
      * default state ID for Settings Stage
      * @constant
      * @name SETTINGS
-     * @memberOf me.state
+     * @memberof me.state
      */
     SETTINGS : 8,
 
@@ -232,7 +232,7 @@ var state = {
      * (the default stage is the one running as soon as melonJS is started)
      * @constant
      * @name SETTINGS
-     * @memberOf me.state
+     * @memberof me.state
      */
     DEFAULT : 9,
 
@@ -240,7 +240,7 @@ var state = {
      * default state ID for user defined constants<br>
      * @constant
      * @name USER
-     * @memberOf me.state
+     * @memberof me.state
      * @example
      * var STATE_INFO = me.state.USER + 0;
      * var STATE_WARN = me.state.USER + 1;
@@ -252,7 +252,7 @@ var state = {
     /**
      * Stop the current screen object.
      * @name stop
-     * @memberOf me.state
+     * @memberof me.state
      * @public
      * @function
      * @param {boolean} [pauseTrack=false] pause current track on screen stop.
@@ -279,7 +279,7 @@ var state = {
     /**
      * pause the current screen object
      * @name pause
-     * @memberOf me.state
+     * @memberof me.state
      * @public
      * @function
      * @param {boolean} [music=false] pause current music track on screen pause
@@ -305,7 +305,7 @@ var state = {
     /**
      * Restart the screen object from a full stop.
      * @name restart
-     * @memberOf me.state
+     * @memberof me.state
      * @public
      * @function
      * @param {boolean} [music=false] resume current music track on screen resume
@@ -333,7 +333,7 @@ var state = {
     /**
      * resume the screen object
      * @name resume
-     * @memberOf me.state
+     * @memberof me.state
      * @public
      * @function
      * @param {boolean} [music=false] resume current music track on screen resume
@@ -358,7 +358,7 @@ var state = {
     /**
      * return the running state of the state manager
      * @name isRunning
-     * @memberOf me.state
+     * @memberof me.state
      * @public
      * @function
      * @returns {boolean} true if a "process is running"
@@ -370,7 +370,7 @@ var state = {
     /**
      * Return the pause state of the state manager
      * @name isPaused
-     * @memberOf me.state
+     * @memberof me.state
      * @public
      * @function
      * @returns {boolean} true if the game is paused
@@ -382,7 +382,7 @@ var state = {
     /**
      * associate the specified state with a Stage
      * @name set
-     * @memberOf me.state
+     * @memberof me.state
      * @public
      * @function
      * @param {number} state State ID (see constants)
@@ -442,7 +442,7 @@ var state = {
      * return a reference to the current screen object<br>
      * useful to call a object specific method
      * @name current
-     * @memberOf me.state
+     * @memberof me.state
      * @public
      * @function
      * @returns {me.Stage}
@@ -456,7 +456,7 @@ var state = {
     /**
      * specify a global transition effect
      * @name transition
-     * @memberOf me.state
+     * @memberof me.state
      * @public
      * @function
      * @param {string} effect (only "fade" is supported for now)
@@ -473,7 +473,7 @@ var state = {
     /**
      * enable/disable transition for a specific state (by default enabled for all)
      * @name setTransition
-     * @memberOf me.state
+     * @memberof me.state
      * @public
      * @function
      * @param {number} state State ID (see constants)
@@ -486,7 +486,7 @@ var state = {
     /**
      * change the game/app state
      * @name change
-     * @memberOf me.state
+     * @memberof me.state
      * @public
      * @function
      * @param {number} state State ID (see constants)
@@ -541,7 +541,7 @@ var state = {
     /**
      * return true if the specified state is the current one
      * @name isCurrent
-     * @memberOf me.state
+     * @memberof me.state
      * @public
      * @function
      * @param {number} state State ID (see constants)

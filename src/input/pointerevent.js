@@ -492,7 +492,7 @@ function onPointerEvent(e) {
   * @public
   * @type {EventTarget}
   * @name pointerEventTarget
-  * @memberOf me.input
+  * @memberof me.input
   */
  export var pointerEventTarget = null;
 
@@ -501,7 +501,7 @@ function onPointerEvent(e) {
  * @public
  * @type {me.Rect}
  * @name pointer
- * @memberOf me.input
+ * @memberof me.input
  */
 export var pointer = new Pointer(0, 0, 1, 1);
 
@@ -512,7 +512,7 @@ export var pointer = new Pointer(0, 0, 1, 1);
  * @public
  * @type {number}
  * @name throttlingInterval
- * @memberOf me.input
+ * @memberof me.input
  */
 export var throttlingInterval;
 
@@ -520,7 +520,7 @@ export var throttlingInterval;
  * Translate the specified x and y values from the global (absolute)
  * coordinate to local (viewport) relative coordinate.
  * @name globalToLocal
- * @memberOf me.input
+ * @memberof me.input
  * @public
  * @function
  * @param {number} x the global x coordinate to be translated.
@@ -552,7 +552,7 @@ export function globalToLocal(x, y, v) {
  * enable/disable all gestures on the given element.<br>
  * by default melonJS will disable browser handling of all panning and zooming gestures.
  * @name setTouchAction
- * @memberOf me.input
+ * @memberof me.input
  * @see https://developer.mozilla.org/en-US/docs/Web/CSS/touch-action
  * @public
  * @function
@@ -569,7 +569,7 @@ export function setTouchAction(element, value) {
  * Middle button – 1
  * Right button – 2
  * @name bindPointer
- * @memberOf me.input
+ * @memberof me.input
  * @public
  * @function
  * @param {number} [button=me.input.pointer.LEFT] (accordingly to W3C values : 0,1,2 for left, middle and right buttons)
@@ -600,7 +600,7 @@ export function bindPointer() {
 /**
  * unbind the defined keycode
  * @name unbindPointer
- * @memberOf me.input
+ * @memberof me.input
  * @public
  * @function
  * @param {number} [button=me.input.pointer.LEFT] (accordingly to W3C values : 0,1,2 for left, middle and right buttons)
@@ -622,7 +622,7 @@ export function unbindPointer(button) {
  * @see me.Pointer
  * @see {@link http://www.w3.org/TR/pointerevents/#list-of-pointer-events|W3C Pointer Event list}
  * @name registerPointerEvent
- * @memberOf me.input
+ * @memberof me.input
  * @public
  * @function
  * @param {string} eventType The event type for which the object is registering <br>
@@ -694,7 +694,7 @@ export function registerPointerEvent(eventType, region, callback) {
  * allows the removal of event listeners from the object target.
  * @see {@link http://www.w3.org/TR/pointerevents/#list-of-pointer-events|W3C Pointer Event list}
  * @name releasePointerEvent
- * @memberOf me.input
+ * @memberof me.input
  * @public
  * @function
  * @param {string} eventType The event type for which the object was registered. See {@link me.input.registerPointerEvent}
@@ -739,7 +739,7 @@ export function releasePointerEvent(eventType, region, callback) {
 /**
  * allows the removal of all registered event listeners from the object target.
  * @name releaseAllPointerEvents
- * @memberOf me.input
+ * @memberof me.input
  * @public
  * @function
  * @param {me.Rect|me.Polygon|me.Line|me.Ellipse} region the registered region to release event from

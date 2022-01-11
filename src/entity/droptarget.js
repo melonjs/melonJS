@@ -2,26 +2,18 @@ import * as event from "./../system/event.js";
 import Entity from "./entity.js";
 
 /**
+ * @classdesc
  * Used to make a game entity a droptarget
- * @class
- * @extends me.Entity
- * @memberOf me
- * @constructor
+ * @class DroptargetEntity
+ * @augments me.Entity
+ * @memberof me
  * @param {number} x the x coordinates of the entity object
  * @param {number} y the y coordinates of the entity object
  * @param {object} settings Entity properties (see {@link me.Entity})
  */
 
 class DroptargetEntity extends Entity {
-    /**
-     * Constructor
-     * @name init
-     * @memberOf me.DroptargetEntity
-     * @function
-     * @param {number} x the x postion of the entity
-     * @param {number} y the y postion of the entity
-     * @param {object} settings the additional entity settings
-     */
+
     constructor(x, y, settings) {
         super(x, y, settings);
         /**
@@ -30,7 +22,7 @@ class DroptargetEntity extends Entity {
          * @constant
          * @type {string}
          * @name CHECKMETHOD_OVERLAP
-         * @memberOf me.DroptargetEntity
+         * @memberof me.DroptargetEntity
          */
         this.CHECKMETHOD_OVERLAP = "overlaps";
         /**
@@ -39,7 +31,7 @@ class DroptargetEntity extends Entity {
          * @constant
          * @type {string}
          * @name CHECKMETHOD_CONTAINS
-         * @memberOf me.DroptargetEntity
+         * @memberof me.DroptargetEntity
          */
         this.CHECKMETHOD_CONTAINS = "contains";
         /**
@@ -48,7 +40,7 @@ class DroptargetEntity extends Entity {
          * @constant
          * @type {string}
          * @name checkMethod
-         * @memberOf me.DroptargetEntity
+         * @memberof me.DroptargetEntity
          */
         this.checkMethod = null;
         event.on(event.DRAGEND, this.checkOnMe, this);
@@ -58,7 +50,7 @@ class DroptargetEntity extends Entity {
     /**
      * Sets the collision method which is going to be used to check a valid drop
      * @name setCheckMethod
-     * @memberOf me.DroptargetEntity
+     * @memberof me.DroptargetEntity
      * @function
      * @param {string} checkMethod the checkmethod (defaults to CHECKMETHOD_OVERLAP)
      */
@@ -73,7 +65,7 @@ class DroptargetEntity extends Entity {
     /**
      * Checks if a dropped entity is dropped on the current entity
      * @name checkOnMe
-     * @memberOf me.DroptargetEntity
+     * @memberof me.DroptargetEntity
      * @function
      * @param {object} e the triggering event
      * @param {object} draggableEntity the draggable entity that is dropped
@@ -88,7 +80,7 @@ class DroptargetEntity extends Entity {
     /**
      * Gets called when a draggable entity is dropped on the current entity
      * @name drop
-     * @memberOf me.DroptargetEntity
+     * @memberof me.DroptargetEntity
      * @function
      * @param {object} draggableEntity the draggable entity that is dropped
      */
@@ -99,7 +91,7 @@ class DroptargetEntity extends Entity {
     /**
      * Destructor
      * @name destroy
-     * @memberOf me.DroptargetEntity
+     * @memberof me.DroptargetEntity
      * @function
      */
     destroy() {

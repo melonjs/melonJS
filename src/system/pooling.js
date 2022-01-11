@@ -13,7 +13,7 @@ var instance_counter = 0;
  * found in the map, based on the user defined name in each Object Properties<br>
  * <img src="images/object_properties.png"/><br>
  * @namespace me.pool
- * @memberOf me
+ * @memberof me
  */
 
 var pool = {

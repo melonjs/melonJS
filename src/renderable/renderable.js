@@ -10,9 +10,8 @@ import { clamp } from "./../math/math.js";
  * @classdesc
  * A base class for renderable objects.
  * @class Renderable
- * @extends me.Rect
- * @memberOf me
- * @constructor
+ * @augments me.Rect
+ * @memberof me
  * @param {number} x position of the renderable object (accessible through inherited pos.x property)
  * @param {number} y position of the renderable object (accessible through inherited pos.y property)
  * @param {number} width object width
@@ -40,7 +39,7 @@ class Renderable extends Rect {
          * @type {boolean}
          * @default true
          * @name isKinematic
-         * @memberOf me.Renderable
+         * @memberof me.Renderable
          */
         this.isKinematic = true;
 
@@ -50,7 +49,7 @@ class Renderable extends Rect {
          * @type {me.Body}
          * @see me.Body
          * @name body
-         * @memberOf me.Renderable#
+         * @memberof me.Renderable#
          * @example
          *  // define a new Player Class
          *  class PlayerEntity extends me.Sprite {
@@ -90,7 +89,7 @@ class Renderable extends Rect {
          * @public
          * @type {me.Matrix2d}
          * @name currentTransform
-         * @memberOf me.Renderable#
+         * @memberof me.Renderable#
          */
         if (typeof this.currentTransform === "undefined") {
             this.currentTransform = pool.pull("Matrix2d");
@@ -104,7 +103,7 @@ class Renderable extends Rect {
         * @public
         * @type {string}
         * @name GUID
-        * @memberOf me.Renderable
+        * @memberof me.Renderable
         */
         this.GUID = undefined;
 
@@ -114,7 +113,7 @@ class Renderable extends Rect {
          * @type {Function}
          * @default undefined
          * @name onVisibilityChange
-         * @memberOf me.Renderable#
+         * @memberof me.Renderable#
          * @example
          * this.onVisibilityChange = function(inViewport) {
          *     if (inViewport === true) {
@@ -130,7 +129,7 @@ class Renderable extends Rect {
          * @type {boolean}
          * @default false
          * @name alwaysUpdate
-         * @memberOf me.Renderable
+         * @memberof me.Renderable
          */
         this.alwaysUpdate = false;
 
@@ -140,7 +139,7 @@ class Renderable extends Rect {
          * @type {boolean}
          * @default false
          * @name updateWhenPaused
-         * @memberOf me.Renderable
+         * @memberof me.Renderable
          */
         this.updateWhenPaused = false;
 
@@ -150,7 +149,7 @@ class Renderable extends Rect {
          * @type {boolean}
          * @default false
          * @name isPersistent
-         * @memberOf me.Renderable
+         * @memberof me.Renderable
          */
         this.isPersistent = false;
 
@@ -161,7 +160,7 @@ class Renderable extends Rect {
          * @type {boolean}
          * @default false
          * @name floating
-         * @memberOf me.Renderable
+         * @memberof me.Renderable
          */
         this.floating = false;
 
@@ -177,7 +176,7 @@ class Renderable extends Rect {
          * @type {me.ObservableVector2d}
          * @default <0.5,0.5>
          * @name anchorPoint
-         * @memberOf me.Renderable#
+         * @memberof me.Renderable#
          */
         if (this.anchorPoint instanceof ObservableVector2d) {
             this.anchorPoint.setMuted(0.5, 0.5).setCallback(this.onAnchorUpdate, this);
@@ -192,7 +191,7 @@ class Renderable extends Rect {
          * @type {boolean}
          * @default true
          * @name autoTransform
-         * @memberOf me.Renderable
+         * @memberof me.Renderable
          * @example
          * // enable "automatic" transformation when the object is activated
          * onActivateEvent: function () {
@@ -235,7 +234,7 @@ class Renderable extends Rect {
          * @type {me.Rect|me.Polygon|me.Line|me.Ellipse}
          * @name mask
          * @default undefined
-         * @memberOf me.Renderable#
+         * @memberof me.Renderable#
          * @example
          * // apply a mask in the shape of a Star
          * myNPCSprite.mask = new me.Polygon(myNPCSprite.width / 2, 0, [
@@ -260,7 +259,7 @@ class Renderable extends Rect {
          * @type {me.Color}
          * @name tint
          * @default (255, 255, 255)
-         * @memberOf me.Renderable#
+         * @memberof me.Renderable#
          * @example
          * // add a red tint to this renderable
          * this.tint.setColor(255, 128, 128);
@@ -275,7 +274,7 @@ class Renderable extends Rect {
          * @type {string}
          * @name name
          * @default ""
-         * @memberOf me.Renderable
+         * @memberof me.Renderable
          */
         this.name = "";
 
@@ -284,7 +283,7 @@ class Renderable extends Rect {
          * @public
          * @type {me.ObservableVector3d}
          * @name pos
-         * @memberOf me.Renderable#
+         * @memberof me.Renderable#
          */
         if (this.pos instanceof ObservableVector3d) {
             this.pos.setMuted(x, y, 0).setCallback(this.updateBoundsPos, this);
@@ -297,7 +296,7 @@ class Renderable extends Rect {
          * @type {boolean}
          * @name isDirty
          * @default false
-         * @memberOf me.Renderable#
+         * @memberof me.Renderable#
          */
         this.isDirty = false;
 
@@ -321,7 +320,7 @@ class Renderable extends Rect {
      * @readonly
      * @type {boolean}
      * @name isFloating
-     * @memberOf me.Renderable
+     * @memberof me.Renderable
      */
     get isFloating() {
         return this.floating === true || (typeof this.ancestor !== "undefined" && this.ancestor.floating === true);
@@ -334,7 +333,7 @@ class Renderable extends Rect {
      * @type {boolean}
      * @default false
      * @name inViewport
-     * @memberOf me.Renderable
+     * @memberof me.Renderable
      */
 
     get inViewport() {
@@ -356,7 +355,7 @@ class Renderable extends Rect {
      * @see me.Renderable#flipX
      * @type {boolean}
      * @name isFlippedX
-     * @memberOf me.Renderable
+     * @memberof me.Renderable
      */
 
     get isFlippedX() {
@@ -369,7 +368,7 @@ class Renderable extends Rect {
      * @see me.Renderable#flipY
      * @type {boolean}
      * @name isFlippedY
-     * @memberOf me.Renderable
+     * @memberof me.Renderable
      */
 
     get isFlippedY() {
@@ -379,7 +378,7 @@ class Renderable extends Rect {
     /**
      * returns the bounding box for this renderable
      * @name getBounds
-     * @memberOf me.Renderable.prototype
+     * @memberof me.Renderable.prototype
      * @function
      * @returns {me.Bounds} bounding box Rectangle object
      */
@@ -400,7 +399,7 @@ class Renderable extends Rect {
     /**
      * get the renderable alpha channel value<br>
      * @name getOpacity
-     * @memberOf me.Renderable.prototype
+     * @memberof me.Renderable.prototype
      * @function
      * @returns {number} current opacity value between 0 and 1
      */
@@ -411,7 +410,7 @@ class Renderable extends Rect {
     /**
      * set the renderable alpha channel value<br>
      * @name setOpacity
-     * @memberOf me.Renderable.prototype
+     * @memberof me.Renderable.prototype
      * @function
      * @param {number} alpha opacity value between 0.0 and 1.0
      */
@@ -430,7 +429,7 @@ class Renderable extends Rect {
      * flip the renderable on the horizontal axis (around the center of the renderable)
      * @see me.Matrix2d#scaleX
      * @name flipX
-     * @memberOf me.Renderable.prototype
+     * @memberof me.Renderable.prototype
      * @function
      * @param {boolean} [flip=true] `true` to flip this renderable.
      * @returns {me.Renderable} Reference to this object for method chaining
@@ -445,7 +444,7 @@ class Renderable extends Rect {
      * flip the renderable on the vertical axis (around the center of the renderable)
      * @see me.Matrix2d#scaleY
      * @name flipY
-     * @memberOf me.Renderable.prototype
+     * @memberof me.Renderable.prototype
      * @function
      * @param {boolean} [flip=true] `true` to flip this renderable.
      * @returns {me.Renderable} Reference to this object for method chaining
@@ -459,7 +458,7 @@ class Renderable extends Rect {
     /**
      * multiply the renderable currentTransform with the given matrix
      * @name transform
-     * @memberOf me.Renderable.prototype
+     * @memberof me.Renderable.prototype
      * @see me.Renderable#currentTransform
      * @function
      * @param {me.Matrix2d} m the transformation matrix
@@ -476,7 +475,7 @@ class Renderable extends Rect {
     /**
      * return the angle to the specified target
      * @name angleTo
-     * @memberOf me.Renderable
+     * @memberof me.Renderable
      * @function
      * @param {me.Renderable|me.Vector2d|me.Vector3d} target
      * @returns {number} angle in radians
@@ -500,7 +499,7 @@ class Renderable extends Rect {
     /**
      * return the distance to the specified target
      * @name distanceTo
-     * @memberOf me.Renderable
+     * @memberof me.Renderable
      * @function
      * @param {me.Renderable|me.Vector2d|me.Vector3d} target
      * @returns {number} distance
@@ -524,7 +523,7 @@ class Renderable extends Rect {
     /**
      * Rotate this renderable towards the given target.
      * @name lookAt
-     * @memberOf me.Renderable.prototype
+     * @memberof me.Renderable.prototype
      * @function
      * @param {me.Renderable|me.Vector2d|me.Vector3d} target the renderable or position to look at
      * @returns {me.Renderable} Reference to this object for method chaining
@@ -548,7 +547,7 @@ class Renderable extends Rect {
     /**
      * Rotate this renderable by the specified angle (in radians).
      * @name rotate
-     * @memberOf me.Renderable.prototype
+     * @memberof me.Renderable.prototype
      * @function
      * @param {number} angle The angle to rotate (in radians)
      * @param {me.Vector2d|me.ObservableVector2d} [v] an optional point to rotate around
@@ -570,7 +569,7 @@ class Renderable extends Rect {
      * is an image, the image.width and image.height properties are unaltered but the currentTransform
      * member will be changed.
      * @name scale
-     * @memberOf me.Renderable.prototype
+     * @memberof me.Renderable.prototype
      * @function
      * @param {number} x a number representing the abscissa of the scaling vector.
      * @param {number} [y=x] a number representing the ordinate of the scaling vector.
@@ -586,7 +585,7 @@ class Renderable extends Rect {
     /**
      * scale the renderable around his anchor point
      * @name scaleV
-     * @memberOf me.Renderable.prototype
+     * @memberof me.Renderable.prototype
      * @function
      * @param {me.Vector2d} v scaling vector
      * @returns {me.Renderable} Reference to this object for method chaining
@@ -600,7 +599,7 @@ class Renderable extends Rect {
      * update function. <br>
      * automatically called by the game manager {@link me.game}
      * @name update
-     * @memberOf me.Renderable.prototype
+     * @memberof me.Renderable.prototype
      * @function
      * @protected
      * @param {number} dt time since the last update in milliseconds.
@@ -614,7 +613,7 @@ class Renderable extends Rect {
      * update the bounding box for this shape.
      * @ignore
      * @name updateBounds
-     * @memberOf me.Renderable.prototype
+     * @memberof me.Renderable.prototype
      * @function
      * @returns {me.Bounds} this shape bounding box Rectangle object
      */
@@ -628,7 +627,7 @@ class Renderable extends Rect {
      * update the renderable's bounding rect (private)
      * @ignore
      * @name updateBoundsPos
-     * @memberOf me.Renderable.prototype
+     * @memberof me.Renderable.prototype
      * @function
      */
      updateBoundsPos(newX, newY) {
@@ -660,7 +659,7 @@ class Renderable extends Rect {
      /**
       * return the renderable absolute position in the game world
       * @name getAbsolutePosition
-      * @memberOf me.Renderable.prototype
+      * @memberof me.Renderable.prototype
       * @function
       * @returns {me.Vector2d}
       */
@@ -680,7 +679,7 @@ class Renderable extends Rect {
      * called when the anchor point value is changed
      * @private
      * @name onAnchorUpdate
-     * @memberOf me.Renderable.prototype
+     * @memberof me.Renderable.prototype
      * @function
      * @param {number} x the new X value to be set for the anchor
      * @param {number} y the new Y value to be set for the anchor
@@ -698,7 +697,7 @@ class Renderable extends Rect {
      * (apply defined transforms, anchor point). <br>
      * automatically called by the game manager {@link me.game}
      * @name preDraw
-     * @memberOf me.Renderable.prototype
+     * @memberof me.Renderable.prototype
      * @function
      * @protected
      * @param {me.CanvasRenderer|me.WebGLRenderer} renderer a renderer object
@@ -749,7 +748,7 @@ class Renderable extends Rect {
      * object draw. <br>
      * automatically called by the game manager {@link me.game}
      * @name draw
-     * @memberOf me.Renderable.prototype
+     * @memberof me.Renderable.prototype
      * @function
      * @protected
      * @param {me.CanvasRenderer|me.WebGLRenderer} renderer a renderer object
@@ -762,7 +761,7 @@ class Renderable extends Rect {
      * restore the rendering context after drawing. <br>
      * automatically called by the game manager {@link me.game}
      * @name postDraw
-     * @memberOf me.Renderable.prototype
+     * @memberof me.Renderable.prototype
      * @function
      * @protected
      * @param {me.CanvasRenderer|me.WebGLRenderer} renderer a renderer object
@@ -788,7 +787,7 @@ class Renderable extends Rect {
      * onCollision callback, triggered in case of collision,
      * when this renderable body is colliding with another one
      * @name onCollision
-     * @memberOf me.Renderable.prototype
+     * @memberof me.Renderable.prototype
      * @function
      * @param {me.collision.ResponseObject} response the collision response object
      * @param {me.Renderable} other the other renderable touching this one (a reference to response.a or response.b)
@@ -865,7 +864,7 @@ class Renderable extends Rect {
      * OnDestroy Notification function<br>
      * Called by engine before deleting the object
      * @name onDestroyEvent
-     * @memberOf me.Renderable
+     * @memberof me.Renderable
      * @function
      */
     onDestroyEvent() {

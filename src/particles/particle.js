@@ -8,9 +8,8 @@ import Renderable from "./../renderable/renderable.js";
  * @classdesc
  * Single Particle Object.
  * @class Particle
- * @extends me.Renderable
- * @memberOf me
- * @constructor
+ * @augments me.Renderable
+ * @memberof me
  * @param {me.ParticleEmitter} particle emitter
  */
 class Particle extends Renderable {
@@ -98,7 +97,7 @@ class Particle extends Renderable {
      * Update the Particle <br>
      * This is automatically called by the game manager {@link me.game}
      * @name update
-     * @memberOf me.Particle
+     * @memberof me.Particle
      * @function
      * @ignore
      * @param {number} dt time since the last update in milliseconds

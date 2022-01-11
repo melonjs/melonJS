@@ -53,8 +53,7 @@ var QT_VECTOR = new Vector2d();
  * a QuadTree implementation in JavaScript, a 2d spatial subdivision algorithm.
  * @class
  * @name QuadTree
- * @memberOf me
- * @constructor
+ * @memberof me
  * @see me.game.world.broadphase
  * @param {me.Bounds} bounds bounds of the node
  * @param {number} [max_objects=4] max objects a node can hold before splitting into 4 subnodes
@@ -167,7 +166,7 @@ class QuadTree {
     /**
      * Insert the given object container into the node.
      * @name insertContainer
-     * @memberOf me.QuadTree
+     * @memberof me.QuadTree
      * @function
      * @param {me.Container} container group of objects to be added
      */
@@ -196,7 +195,7 @@ class QuadTree {
      * exceeds the capacity, it will split and add all
      * objects to their corresponding subnodes.
      * @name insert
-     * @memberOf me.QuadTree
+     * @memberof me.QuadTree
      * @function
      * @param {object} item object to be added
      */
@@ -241,7 +240,7 @@ class QuadTree {
     /**
      * Return all objects that could collide with the given object
      * @name retrieve
-     * @memberOf me.QuadTree
+     * @memberof me.QuadTree
      * @function
      * @param {object} item object to be checked against
      * @param {object} [fn] a sorting function for the returned array
@@ -277,7 +276,7 @@ class QuadTree {
      * Remove the given item from the quadtree.
      * (this function won't recalculate the impacted node)
      * @name remove
-     * @memberOf me.QuadTree
+     * @memberof me.QuadTree
      * @function
      * @param {object} item object to be removed
      * @returns {boolean} true if the item was found and removed.
@@ -318,7 +317,7 @@ class QuadTree {
     /**
      * return true if the node is prunable
      * @name isPrunable
-     * @memberOf me.QuadTree
+     * @memberof me.QuadTree
      * @function
      * @returns {boolean} true if the node is prunable
      */
@@ -329,7 +328,7 @@ class QuadTree {
     /**
      * return true if the node has any children
      * @name hasChildren
-     * @memberOf me.QuadTree
+     * @memberof me.QuadTree
      * @function
      * @returns {boolean} true if the node has any children
      */
@@ -346,7 +345,7 @@ class QuadTree {
     /**
      * clear the quadtree
      * @name clear
-     * @memberOf me.QuadTree
+     * @memberof me.QuadTree
      * @function
      * @param {me.Bounds} [bounds=this.bounds] the bounds to be cleared
      */
