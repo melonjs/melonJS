@@ -310,7 +310,7 @@ class Tween {
      * @param {...me.Tween} chainedTween Tween(s) to be chained
      * @returns {me.Tween} this instance for object chaining
      */
-    chain( chainedTween ) {
+    chain() {
         this._chainedTweens = arguments;
         return this;
     }
