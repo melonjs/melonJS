@@ -309,6 +309,18 @@ export const GAMEPAD_UPDATE = "gamepad.update";
 export const POINTERMOVE = "me.event.pointermove";
 
 /**
+ * Event for onPointerLockChange event <br>
+ * Data passed : {boolean} pointer lock status (true/false)
+ * @public
+ * @constant
+ * @type {string}
+ * @name POINTERLOCKCHANGE
+ * @memberof me.event
+ * @see me.event.on
+ */
+export const POINTERLOCKCHANGE = "me.event.pointerlockChange";
+
+/**
  * Event for dragstart events on a Draggable entity <br>
  * Data passed:
  * {object} the drag event <br>

@@ -3,6 +3,7 @@ import device from "./../system/device.js";
 import Bounds from "./../physics/bounds.js";
 import { viewport } from "./../game.js";
 import { globalToLocal } from "./input.js";
+import { locked } from "./pointerevent.js";
 
 
 /**
@@ -142,6 +143,26 @@ class Pointer extends Bounds {
         this.clientY = 0;
 
         /**
+         * the difference in the X coordinate of the pointer since the previous move event
+         * @public
+         * @type {number}
+         * @name movementX
+         * @see https://developer.mozilla.org/en-US/docs/Web/API/MouseEvent/movementX
+         * @memberof me.Pointer
+         */
+        this.movementX = 0;
+
+       /**
+        * the difference in the Y coordinate of the pointer since the previous move event
+        * @public
+        * @type {number}
+        * @name movementY
+        * @see https://developer.mozilla.org/en-US/docs/Web/API/MouseEvent/movementY
+        * @memberof me.Pointer
+        */
+        this.movementY = 0;
+
+        /**
          * an unsigned long representing the unit of the delta values scroll amount
          * @public
          * @type {number}
@@ -274,6 +295,15 @@ class Pointer extends Bounds {
          */
         this.isNormalized = false;
 
+        /**
+         * true if the pointer is currently locked
+         * @public
+         * @type {boolean}
+         * @name locked
+         * @memberof me.Pointer
+         */
+        this.locked = false;
+
         // bind list for mouse buttons
         this.bind = [ 0, 0, 0 ];
     }
@@ -306,6 +336,10 @@ class Pointer extends Bounds {
 
         // true if not originally a pointer event
         this.isNormalized = !device.PointerEvent || (device.PointerEvent && !(event instanceof window.PointerEvent));
+
+        this.locked = locked;
+        this.movementX = event.movementX || 0;
+        this.movementY = event.movementY || 0;
 
         if (event.type === "wheel") {
             this.deltaMode = event.deltaMode || 0;

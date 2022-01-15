@@ -131,12 +131,8 @@ function _checkCapabilities() {
     // Modern browsers support "wheel", Webkit and IE support at least "mousewheel
     device.wheel = ("onwheel" in document.createElement("div"));
 
-    // pointerlock detection
-    device.hasPointerLockSupport = prefixed("pointerLockElement", document);
-
-    if (device.hasPointerLockSupport) {
-        document.exitPointerLock = prefixed("exitPointerLock", document);
-    }
+    // pointerlock detection (pointerLockElement can be null when the feature is supported)
+    device.hasPointerLockSupport = typeof document.pointerLockElement !== "undefined";
 
     // device orientation and motion detection
     device.hasDeviceOrientation = !!window.DeviceOrientationEvent;
@@ -972,58 +968,6 @@ let device = {
         this.gamma = e.gamma;
         this.beta = e.beta;
         this.alpha = e.alpha;
-    },
-
-    /**
-     * Enters pointer lock, requesting it from the user first. Works on supported devices & browsers
-     * Must be called in a click event or an event that requires user interaction.
-     * If you need to run handle events for errors or change of the pointer lock, see below.
-     * @function me.device.turnOnPointerLock
-     * @example
-     * document.addEventListener("pointerlockchange", pointerlockchange, false);
-     * document.addEventListener("mozpointerlockchange", pointerlockchange, false);
-     * document.addEventListener("webkitpointerlockchange", pointerlockchange, false);
-     *
-     * document.addEventListener("pointerlockerror", pointerlockerror, false);
-     * document.addEventListener("mozpointerlockerror", pointerlockerror, false);
-     * document.addEventListener("webkitpointerlockerror", pointerlockerror, false);
-     */
-    turnOnPointerLock() {
-        if (this.hasPointerLockSupport) {
-            var element = getParent();
-            if (this.ua.match(/Firefox/i)) {
-                var fullscreenchange = function() {
-                    if ((prefixed("fullscreenElement", document) ||
-                        document.mozFullScreenElement) === element) {
-
-                        document.removeEventListener("fullscreenchange", fullscreenchange);
-                        document.removeEventListener("mozfullscreenchange", fullscreenchange);
-                        element.requestPointerLock = prefixed("requestPointerLock", element);
-                        element.requestPointerLock();
-                    }
-                };
-
-                document.addEventListener("fullscreenchange", fullscreenchange, false);
-                document.addEventListener("mozfullscreenchange", fullscreenchange, false);
-
-                this.requestFullscreen();
-
-            }
-            else {
-                element.requestPointerLock();
-            }
-        }
-    },
-
-    /**
-     * Exits pointer lock. Works on supported devices & browsers
-     * @function me.device.turnOffPointerLock
-     * @function
-     */
-    turnOffPointerLock() {
-        if (this.hasPointerLockSupport) {
-            document.exitPointerLock();
-        }
     },
 
     /**

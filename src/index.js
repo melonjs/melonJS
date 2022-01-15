@@ -173,8 +173,7 @@ export {
     DroptargetEntity
 };
 
-// Backward compatibility for deprecated method or properties are
-// automatically applied when generating the UMD module through rollup
+// Backward compatibility for deprecated method or properties
 export {
     deprecated
 };

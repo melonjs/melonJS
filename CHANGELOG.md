@@ -9,10 +9,12 @@
 ### Changed
 - WebGL : switch from drawElements to drawArrays when drawing quads
 - WebGL : optimize ColorLayer rendering and `clearRect` method by using `clipRect` & `clearColor` instead of drawing primitives
+- Device : modernize the `pointerLock` implementation (2.0 specs) and moved it under `me.input`
 
 ### Fixed
 - Renderable : properly delete me.Text cache WebGL texture upon deactivation (if created)
 - WebGL : Optimize vertex buffer allocated size following tint color packing into Uint32
+- Device : fix `pointerLock` feature detection
 
 ## [10.2.3] (melonJS 2) - _2021-12-18_
 

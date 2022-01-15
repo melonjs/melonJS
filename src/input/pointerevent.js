@@ -1,8 +1,8 @@
 import {preventDefault} from "./input.js";
 import {getBindingKey, triggerKeyEvent} from "./keyboard.js";
-import { renderer, scaleRatio } from "./../video/video.js";
-import * as fctUtil from "./../utils/function.js";
-import * as arrayUtil from "./../utils/array.js";
+import { renderer, scaleRatio, getParent } from "./../video/video.js";
+import { throttle } from "./../utils/function.js";
+import { remove } from "./../utils/array.js";
 import * as event from "./../system/event.js";
 import timer from "./../system/timer.js";
 import pool from "./../system/pooling.js";
@@ -178,7 +178,7 @@ function enablePointerEvent() {
                 if (activeEventList.indexOf(events[i]) !== -1) {
                     pointerEventTarget.addEventListener(
                         events[i],
-                        fctUtil.throttle(
+                        throttle(
                             onMoveEvent,
                             throttlingInterval,
                             false
@@ -191,6 +191,17 @@ function enablePointerEvent() {
         // disable all gesture by default
         setTouchAction(pointerEventTarget);
 
+        // set a on change listener on pointerlock if supported
+        if (device.hasPointerLockSupport) {
+            document.addEventListener("pointerlockchange", () => {
+                // change the locked status accordingly
+                locked = document.pointerLockElement === getParent();
+                // emit the corresponding internal event
+                event.emit(event.POINTERLOCKCHANGE, locked);
+            }, true);
+        }
+
+        // all done !
         pointerInitialized = true;
     }
 }
@@ -505,6 +516,16 @@ function onPointerEvent(e) {
  */
 export var pointer = new Pointer(0, 0, 1, 1);
 
+
+/**
+ * indicates if the pointer is currently locked
+ * @public
+ * @type {boolean}
+ * @name locked
+ * @memberof me.input
+ */
+export var locked = false;
+
 /**
  * time interval for event throttling in milliseconds<br>
  * default value : "1000/me.timer.maxfps" ms<br>
@@ -718,7 +739,7 @@ export function releasePointerEvent(eventType, region, callback) {
             eventType = eventTypes[i];
             if (handlers.callbacks[eventType]) {
                 if (typeof (callback) !== "undefined") {
-                    arrayUtil.remove(handlers.callbacks[eventType], callback);
+                    remove(handlers.callbacks[eventType], callback);
                 } else {
                     while (handlers.callbacks[eventType].length > 0) {
                         handlers.callbacks[eventType].pop();
@@ -754,3 +775,45 @@ export function releaseAllPointerEvents(region) {
         }
     };
 };
+
+/**
+ * request for the pointer to be locked on the parent DOM element.
+ * (Must be called in a click event or an event that requires user interaction)
+ * @name requestPointerLock
+ * @memberof me.input
+ * @public
+ * @function
+ * @param {Function} [success] callback if the request is successful
+ * @returns {boolean} return true if the request was successfully submitted
+ * @example
+ * // register on the pointer lock change event
+ * event.on(event.POINTERLOCKCHANGE, (locked)=> {
+ *     console.log("pointer lock: " + locked);
+ * });
+ * // request for pointer lock
+ * me.input.requestPointerLock();
+ */
+export function requestPointerLock() {
+    if (device.hasPointerLockSupport) {
+        var element = getParent();
+        element.requestPointerLock();
+        return true;
+    }
+    return false;
+}
+
+/**
+ * Initiates an exit from pointer lock state
+ * @name exitPointerLock
+ * @memberof me.input
+ * @public
+ * @function
+ * @returns {boolean} return true if the request was successfully submitted
+ */
+export function exitPointerLock() {
+    if (device.hasPointerLockSupport) {
+        document.exitPointerLock();
+        return true;
+    }
+    return false;
+}
