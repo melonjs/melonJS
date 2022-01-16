@@ -358,43 +358,36 @@ class ParticleEmitter extends Renderable {
 
         this.container = new ParticleContainer(this);
 
-        /**
-         * @ignore
-         */
-        Object.defineProperty(this.pos, "z", {
-            /**
-             * @ignore
-             */
-            get : (function () { return this.container.pos.z; }).bind(this),
-            /**
-             * @ignore
-             */
-            set : (function (value) { this.container.pos.z = value; }).bind(this),
-            enumerable : true,
-            configurable : true
-        });
-
-        /**
-         * Floating property for particles, value is forwarded to the particle container <br>
-         * @type {boolean}
-         * @name floating
-         * @memberof me.ParticleEmitter
-         */
-        Object.defineProperty(this, "floating", {
-            /**
-             * @ignore
-             */
-            get : function () { return this.container.floating; },
-            /**
-             * @ignore
-             */
-            set : function (value) { this.container.floating = value; },
-            enumerable : true,
-            configurable : true
-        });
-
         // Reset the emitter to defaults
         this.reset(settings);
+    }
+
+    /**
+     * @ignore
+     */
+    get z() {
+        return this.container.pos.z;
+    }
+
+    /**
+     * @ignore
+     */
+    set z(value) {
+        this.container.pos.z = value;
+    }
+
+    /**
+     * Floating property for particles, value is forwarded to the particle container <br>
+     * @type {boolean}
+     * @name floating
+     * @memberof me.ParticleEmitter
+     */
+    get floating() {
+        return this.container.floating;
+    }
+
+    set floating(value) {
+        this.container.floating = value;
     }
 
     /**

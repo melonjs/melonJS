@@ -45,7 +45,7 @@
     "no-eval": "error",
     "no-extend-native": "error",
     "no-extra-bind": "error",
-    "no-extra-parens": ["off", "functions"],
+    "no-extra-parens": ["error", "functions"],
     // lazy to fix them all...
     "no-extra-semi": "off",
     "no-floating-decimal": "error",
