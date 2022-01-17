@@ -426,14 +426,33 @@ class Vector3d {
 
     /**
      * return the dot product of this vector and the passed one
-     * @name dotProduct
+     * @name dot
      * @memberof me.Vector3d
      * @function
      * @param {me.Vector2d|me.Vector3d} v
      * @returns {number} The dot product.
      */
-    dotProduct(v) {
+    dot(v) {
         return this.x * v.x + this.y * v.y + this.z * (typeof(v.z) !== "undefined" ? v.z : this.z);
+    }
+
+    /**
+     * calculate the cross product of this vector and the passed one
+     * @name cross
+     * @memberof me.Vector3d
+     * @function
+     * @param {me.Vector3d} v
+     * @returns {me.Vector3d} Reference to this object for method chaining
+     */
+    cross(v) {
+        var ax = this.x, ay = this.y, az = this.z;
+        var bx = v.x, by = v.y, bz = v.z;
+
+        this.x = ay * bz - az * by;
+        this.y = az * bx - ax * bz;
+        this.z = ax * by - ay * bx;
+
+        return this;
     }
 
    /**
@@ -444,7 +463,7 @@ class Vector3d {
     * @returns {number} The length^2 of this vector.
     */
     length2() {
-        return this.dotProduct(this);
+        return this.dot(this);
     }
 
     /**
@@ -498,7 +517,7 @@ class Vector3d {
      * @returns {number} angle in radians
      */
     angle(v) {
-        return Math.acos(clamp(this.dotProduct(v) / (this.length() * v.length()), -1, 1));
+        return Math.acos(clamp(this.dot(v) / (this.length() * v.length()), -1, 1));
     }
 
     /**
@@ -510,7 +529,7 @@ class Vector3d {
      * @returns {me.Vector3d} Reference to this object for method chaining
      */
     project(v) {
-        var ratio = this.dotProduct(v) / v.length2();
+        var ratio = this.dot(v) / v.length2();
         return this.scale(ratio, ratio, ratio);
     }
 
@@ -524,7 +543,7 @@ class Vector3d {
      * @returns {me.Vector3d} Reference to this object for method chaining
      */
     projectN(v) {
-        var ratio = this.dotProduct(v) / v.length2();
+        var ratio = this.dot(v) / v.length2();
         return this.scale(ratio, ratio, ratio);
     }
 

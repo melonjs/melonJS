@@ -58,7 +58,7 @@ function flattenPointsOn(points, normal, result) {
     var len = points.length;
     for (var i = 0; i < len; i++) {
         // The magnitude of the projection of the point onto the normal
-        var dot = points[i].dotProduct(normal);
+        var dot = points[i].dot(normal);
         if (dot < min) { min = dot; }
         if (dot > max) { max = dot; }
     }
@@ -87,7 +87,7 @@ function isSeparatingAxis(aPos, bPos, aPoints, bPoints, axis, response) {
     var rangeB = T_ARRAYS.pop();
     // The magnitude of the offset between the two polygons
     var offsetV = T_VECTORS.pop().copy(bPos).sub(aPos);
-    var projectedOffset = offsetV.dotProduct(axis);
+    var projectedOffset = offsetV.dot(axis);
 
     // Project the polygons onto the axis.
     flattenPointsOn(aPoints, axis, rangeA);
@@ -169,7 +169,7 @@ function isSeparatingAxis(aPos, bPos, aPoints, bPoints, axis, response) {
  */
 function vornoiRegion(line, point) {
     var len2 = line.length2();
-    var dp = point.dotProduct(line);
+    var dp = point.dot(line);
     if (dp < 0) {
         // If the point is beyond the start of the line, it is in the
         // left vornoi region.
@@ -400,7 +400,7 @@ export function testPolygonEllipse(a, polyA, b, ellipseB, response) {
             normal.copy(polyA.normals[i]);
             // Find the perpendicular distance between the center of the
             // circle and the edge.
-            dist = point.dotProduct(normal);
+            dist = point.dot(normal);
             var distAbs = Math.abs(dist);
             // If the circle is on the outside of the edge, there is no intersection.
             if ((len === 1 || dist > 0) && distAbs > radius) {

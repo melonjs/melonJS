@@ -70,13 +70,27 @@ describe("me.Vector3d", function () {
         expect(a.negateSelf().toString()).toEqual("x:"+-x+",y:"+-y+",z:"+-z);
     });
 
-    it("dotProduct (1, 2, 3) and (-1, -2, -3)", function () {
+    it("dot Product (1, 2, 3) and (-1, -2, -3)", function () {
         a.set(x, y, z);
         b.set(-x, -y, -z);
 
         // calculate the dot product
-        expect(a.dotProduct(b)).toEqual(-x*x-y*y-z*z);
+        expect(a.dot(b)).toEqual(-x*x-y*y-z*z);
     });
+
+    it("cross Product(2, 3, 4) and (5, 6, 7)", function () {
+        a.set(2, 3, 4);
+        b.set(5, 6, 7);
+
+        var crossed = new me.Vector3d(-3, 6, -3);
+
+        // calculate the cross product
+        a.cross(b);
+        expect(Math.abs(a.x - crossed.x)).toBeCloseTo(0, 4);
+        expect(Math.abs(a.y - crossed.y)).toBeCloseTo(0, 4);
+        expect(Math.abs(a.z - crossed.z)).toBeCloseTo(0, 4);
+    });
+
 
     it("length/lengthSqrt functions", function () {
         a.set( x, 0, 0 );

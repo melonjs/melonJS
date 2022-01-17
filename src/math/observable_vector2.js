@@ -382,14 +382,26 @@ class ObservableVector2d extends Vector2d {
 
     /**
      * return the dot product of this vector and the passed one
-     * @name dotProduct
+     * @name dot
      * @memberof me.ObservableVector2d
      * @function
      * @param {me.Vector2d|me.ObservableVector2d} v
      * @returns {number} The dot product.
      */
-    dotProduct(v) {
+    dot(v) {
         return this._x * v.x + this._y * v.y;
+    }
+
+    /**
+     * return the cross product of this vector and the passed one
+     * @name cross
+     * @memberof me.ObservableVector2d
+     * @function
+     * @param {me.Vector2d|me.ObservableVector2d} v
+     * @returns {number} The cross product.
+     */
+    cross(v) {
+        return this._x * v.y - this._y * v.x;
     }
 
     /**

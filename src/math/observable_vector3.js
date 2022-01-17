@@ -452,14 +452,33 @@ class ObservableVector3d extends Vector3d {
 
     /**
      * return the dot product of this vector and the passed one
-     * @name dotProduct
+     * @name dot
      * @memberof me.ObservableVector3d
      * @function
      * @param {me.Vector2d|me.Vector3d|me.ObservableVector2d|me.ObservableVector3d} v
      * @returns {number} The dot product.
      */
-    dotProduct(v) {
+    dot(v) {
         return this._x * v.x + this._y * v.y + this._z * (v.z || 1);
+    }
+
+    /**
+     * calculate the cross product of this vector and the passed one
+     * @name cross
+     * @memberof me.ObservableVector3d
+     * @function
+     * @param {me.Vector3d|me.ObservableVector3d} v
+     * @returns {me.ObservableVector3d} Reference to this object for method chaining
+     */
+    cross(v) {
+        var ax = this._x, ay = this._y, az = this._z;
+        var bx = v.x, by = v.y, bz = v.z;
+
+        return this._set(
+            ay * bz - az * by,
+            az * bx - ax * bz,
+            ax * by - ay * bx
+        );
     }
 
     /**

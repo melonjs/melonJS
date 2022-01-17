@@ -53,12 +53,20 @@ describe("me.Vector2d", function () {
         expect(a.negateSelf().toString()).toEqual("x:"+-x+",y:"+-y);
     });
 
-    it("dotProduct (1, 2) and (-1, -2)", function () {
+    it("dot Product (1, 2) and (-1, -2)", function () {
         a.set(x, y);
         b.set(-x, -y);
 
         // calculate the dot product
-        expect(a.dotProduct(b)).toEqual((-x*x-y*y));
+        expect(a.dot(b)).toEqual((-x*x-y*y));
+    });
+
+    it("cross Product (2, 3) and (5, 6)", function () {
+        a.set(2, 3);
+        b.set(5, 6);
+
+        // calculate the cross product
+        expect(a.cross(b)).toEqual(-3);
     });
 
     it("length/lengthSqrt functions", function () {

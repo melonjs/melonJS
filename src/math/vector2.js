@@ -399,14 +399,26 @@ class Vector2d {
 
     /**
      * return the dot product of this vector and the passed one
-     * @name dotProduct
+     * @name dot
      * @memberof me.Vector2d
      * @function
      * @param {me.Vector2d} v
      * @returns {number} The dot product.
      */
-    dotProduct(v) {
+    dot(v) {
         return this.x * v.x + this.y * v.y;
+    }
+
+    /**
+     * return the cross product of this vector and the passed one
+     * @name cross
+     * @memberof me.Vector2d
+     * @function
+     * @param {me.Vector2d} v
+     * @returns {number} The cross product.
+     */
+    cross(v) {
+        return this.x * v.y - this.y * v.x;
     }
 
    /**
@@ -417,7 +429,7 @@ class Vector2d {
     * @returns {number} The length^2 of this vector.
     */
     length2() {
-        return this.dotProduct(this);
+        return this.dot(this);
     }
 
     /**
@@ -468,7 +480,7 @@ class Vector2d {
      * @returns {number} angle in radians
      */
     angle(v) {
-        return Math.acos(clamp(this.dotProduct(v) / (this.length() * v.length()), -1, 1));
+        return Math.acos(clamp(this.dot(v) / (this.length() * v.length()), -1, 1));
     }
 
     /**
@@ -480,7 +492,7 @@ class Vector2d {
      * @returns {me.Vector2d} Reference to this object for method chaining
      */
     project(v) {
-        return this.scale(this.dotProduct(v) / v.length2());
+        return this.scale(this.dot(v) / v.length2());
     }
 
     /**
@@ -493,7 +505,7 @@ class Vector2d {
      * @returns {me.Vector2d} Reference to this object for method chaining
      */
     projectN(v) {
-        return this.scale(this.dotProduct(v));
+        return this.scale(this.dot(v));
     }
 
     /**
