@@ -1,5 +1,5 @@
 import Vector2d from "./../math/vector2.js";
-import Polygon from "./../shapes/poly.js";
+import Polygon from "./../geometries/poly.js";
 
 /**
  * @classdesc

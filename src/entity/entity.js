@@ -2,7 +2,7 @@ import Vector2d from "./../math/vector2.js";
 import Renderable from "./../renderable/renderable.js";
 import Sprite from "./../renderable/sprite.js";
 import Body from "./../physics/body.js";
-import Polygon from "./../shapes/poly.js";
+import Polygon from "./../geometries/poly.js";
 
 
 /**

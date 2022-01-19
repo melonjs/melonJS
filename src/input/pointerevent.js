@@ -8,7 +8,7 @@ import timer from "./../system/timer.js";
 import pool from "./../system/pooling.js";
 import device from "./../system/device.js";
 import Pointer from "./pointer.js";
-import Rect from "./../shapes/rectangle.js";
+import Rect from "./../geometries/rectangle.js";
 import Container from "./../renderable/container.js";
 import { world, viewport } from "./../game.js";
 

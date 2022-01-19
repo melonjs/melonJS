@@ -1,6 +1,6 @@
 import ObservableVector2d from "./../math/observable_vector2.js";
 import ObservableVector3d from "./../math/observable_vector3.js";
-import Rect from "./../shapes/rectangle.js";
+import Rect from "./../geometries/rectangle.js";
 import Container from "./container.js";
 import pool from "./../system/pooling.js";
 import { releaseAllPointerEvents } from "./../input/input.js";

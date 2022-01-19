@@ -1,7 +1,7 @@
 import Renderable from "./renderable.js";
 import collision from "./../physics/collision.js";
 import Body from "./../physics/body.js";
-import Rect from "./../shapes/rectangle.js";
+import Rect from "./../geometries/rectangle.js";
 import level from "./../level/level.js";
 import { world, viewport } from "./../game.js";
 

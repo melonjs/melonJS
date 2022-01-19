@@ -1,7 +1,7 @@
 import Vector2d from "./../math/vector2.js";
-import Rect from "./../shapes/rectangle.js";
-import Ellipse from "./../shapes/ellipse.js";
-import Polygon from "./../shapes/poly.js";
+import Rect from "./../geometries/rectangle.js";
+import Ellipse from "./../geometries/ellipse.js";
+import Polygon from "./../geometries/poly.js";
 import Bounds from "./bounds.js";
 import collision from "./collision.js";
 import * as arrayUtil from "./../utils/array.js";

@@ -1,6 +1,6 @@
 import Sprite from "./sprite.js";
 import Body from "./../physics/body.js";
-import Rect from "./../shapes/rectangle.js";
+import Rect from "./../geometries/rectangle.js";
 import collision from "./../physics/collision.js";
 
 /**

@@ -1,9 +1,9 @@
 import Vector2d from "./../../math/vector2.js";
 import { applyTMXProperties } from "./TMXUtils.js";
 import Tile from "./TMXTile.js";
-import Ellipse from "./../../shapes/ellipse.js";
-import Polygon from "./../../shapes/poly.js";
-import Line from "./../../shapes/line.js";
+import Ellipse from "./../../geometries/ellipse.js";
+import Polygon from "./../../geometries/poly.js";
+import Line from "./../../geometries/line.js";
 import { degToRad } from "./../../math/math.js";
 
 /**

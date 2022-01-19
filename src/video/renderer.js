@@ -5,10 +5,10 @@ import * as event from "./../system/event.js";
 import device from "./../system/device.js";
 import { setPrefixed } from "./../utils/agent.js";
 import { Texture } from "./texture.js";
-import Rect from "./../shapes/rectangle.js";
-import Ellipse from "./../shapes/ellipse.js";
-import Polygon from "./../shapes/poly.js";
-import Line from "./../shapes/line.js";
+import Rect from "./../geometries/rectangle.js";
+import Ellipse from "./../geometries/ellipse.js";
+import Polygon from "./../geometries/poly.js";
+import Line from "./../geometries/line.js";
 import Bounds from "./../physics/bounds.js";
 
 /**

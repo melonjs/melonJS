@@ -14,7 +14,7 @@ import TMXLayer from "./TMXLayer.js";
 import { applyTMXProperties } from "./TMXUtils.js";
 import Renderable from "./../../renderable/renderable.js";
 import Container from "./../../renderable/container.js";
-import Rect from "./../../shapes/rectangle.js";
+import Rect from "./../../geometries/rectangle.js";
 
 // constant to identify the collision object layer
 var COLLISION_GROUP = "collision";
