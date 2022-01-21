@@ -7,14 +7,15 @@ import resolve from "@rollup/plugin-node-resolve";
 
 const pkg = require("./package.json");
 
+
 // credit/license information
 const license = [
     "/*!",
-    " * ${pkg.description} - v${pkg.version}",
+    " * " + pkg.description + " - v" + pkg.version,
     " * http://www.melonjs.org",
-    " * ${pkg.name} is licensed under the MIT License.",
+    " * " + pkg.name + " is licensed under the MIT License.",
     " * http://www.opensource.org/licenses/mit-license",
-    " * @copyright (C) 2011 - ${(new Date()).getFullYear()} ${pkg.author.name}",
+    " * @copyright (C) 2011 - " + (new Date()).getFullYear() + " " + pkg.author.name,
     " */"
 ].join("\n");
 
