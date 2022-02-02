@@ -1,6 +1,6 @@
 # Changelog
 
-## [10.3.0] (melonJS 2) - _202x-xx-xx_
+## [10.3.0] (melonJS 2) - _2022-01-02_
 
 ### Added
 - TMX: melonJS will now throw an error if collision polygons defined in Tiled are not forming a convex shape
