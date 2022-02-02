@@ -26813,8 +26813,10 @@
          * @public
          * @function
          * @param {object} res
+         * @param {string} res.name internal name of the resource
+         * @param {string} res.type  "audio", binary", "image", "json", "tmx", "tsx"
          * @returns {boolean} true if unloaded
-         * @example me.loader.unload({name: "avatar",  type:"image",  src: "data/avatar.png"});
+         * @example me.loader.unload({name: "avatar",  type:"image"});
          */
         unload: function unload$1(res) {
             switch (res.type) {

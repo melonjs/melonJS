@@ -10215,10 +10215,15 @@ export namespace loader {
      * @public
      * @function
      * @param {object} res
+     * @param {string} res.name internal name of the resource
+     * @param {string} res.type  "audio", binary", "image", "json", "tmx", "tsx"
      * @returns {boolean} true if unloaded
-     * @example me.loader.unload({name: "avatar",  type:"image",  src: "data/avatar.png"});
+     * @example me.loader.unload({name: "avatar",  type:"image"});
      */
-    function unload(res: any): boolean;
+    function unload(res: {
+        name: string;
+        type: string;
+    }): boolean;
     /**
      * unload specified resource to free memory
      * @name unload
@@ -10226,10 +10231,15 @@ export namespace loader {
      * @public
      * @function
      * @param {object} res
+     * @param {string} res.name internal name of the resource
+     * @param {string} res.type  "audio", binary", "image", "json", "tmx", "tsx"
      * @returns {boolean} true if unloaded
-     * @example me.loader.unload({name: "avatar",  type:"image",  src: "data/avatar.png"});
+     * @example me.loader.unload({name: "avatar",  type:"image"});
      */
-    function unload(res: any): boolean;
+    function unload(res: {
+        name: string;
+        type: string;
+    }): boolean;
     /**
      * unload all resources to free memory
      * @name unloadAll
