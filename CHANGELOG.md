@@ -1,5 +1,7 @@
 # Changelog
 
+## [10.4.0] (melonJS 2) - _2022-02-xx_
+
 ## [10.3.0] (melonJS 2) - _2022-02-02_
 
 ### Added
