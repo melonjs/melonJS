@@ -309,17 +309,6 @@ export default class TMXTileMap {
             });
         }
 
-        // check if a user-defined background color is defined
-        if (this.backgroundcolor) {
-            this.layers.push(
-                pool.pull("ColorLayer",
-                    "background_color",
-                    this.backgroundcolor,
-                    zOrder++
-                )
-            );
-        }
-
         // check if a background image is defined
         if (this.background_image) {
             // add a new image layer
@@ -386,6 +375,10 @@ export default class TMXTileMap {
         // disable auto-sort and auto-depth
         container.autoSort = false;
         container.autoDepth = false;
+
+        if (this.backgroundcolor) {
+            container.backgroundColor.parseCSS(this.backgroundcolor);
+        }
 
         // add all layers instances
         this.getLayers().forEach(function (layer) {

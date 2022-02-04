@@ -2,6 +2,9 @@
 
 ## [10.4.0] (melonJS 2) - _2022-02-xx_
 
+### Added
+- Renderable : containers now define a `backgroundColor` property allowing to defined a background color for a specific container
+
 ## [10.3.0] (melonJS 2) - _2022-02-02_
 
 ### Added

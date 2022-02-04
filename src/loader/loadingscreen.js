@@ -4,7 +4,6 @@ import * as event from "./../system/event.js";
 import {nextPowerOfTwo} from "./../math/math.js";
 import pool from "./../system/pooling.js";
 import Renderable from "./../renderable/renderable.js";
-import ColorLayer from "./../renderable/colorlayer.js";
 import Stage from "./../state/stage.js";
 
 
@@ -129,8 +128,8 @@ class DefaultLoadingScreen extends Stage {
     onResetEvent() {
         var barHeight = 8;
 
-        // clear the background
-        world.addChild(new ColorLayer("background", "#202020"), 0);
+        // set a background color
+        world.backgroundColor.parseCSS("#202020");
 
         // progress bar
         world.addChild(new ProgressBar(

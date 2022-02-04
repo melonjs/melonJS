@@ -125,6 +125,19 @@ class Container extends Renderable {
         this.enableChildBoundsUpdate = false;
 
         /**
+         * define a background color for this container
+         * @public
+         * @type {me.Color}
+         * @name backgroundColor
+         * @default (0, 0, 0, 0.0)
+         * @memberof me.Container
+         * @example
+         * // add a red background color to this container
+         * this.backgroundColor.setColor(255, 0, 0);
+         */
+        this.backgroundColor = pool.pull("Color", 0, 0, 0, 0.0);
+
+        /**
          * Used by the debug panel plugin
          * @ignore
          */
@@ -171,6 +184,8 @@ class Container extends Renderable {
             // just reset some variables
             this.currentTransform.identity();
         }
+
+        this.backgroundColor.setColor(0, 0, 0, 0.0);
     }
 
     /**
@@ -967,6 +982,11 @@ class Container extends Renderable {
 
         // adjust position if required (e.g. canvas/window centering)
         renderer.translate(this.pos.x, this.pos.y);
+
+        // color background if defined
+        if (this.backgroundColor.alpha > 1 / 255) {
+            renderer.clearColor(this.backgroundColor);
+        }
 
         var children = this.getChildren();
         for (var i = children.length, obj; i--, (obj = children[i]);) {
