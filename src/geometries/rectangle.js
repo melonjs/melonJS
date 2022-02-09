@@ -4,17 +4,16 @@ import Polygon from "./poly.js";
 /**
  * @classdesc
  * a rectangle Object
- * @class Rect
  * @augments me.Polygon
  * @memberof me
- * @param {number} x position of the Rectangle
- * @param {number} y position of the Rectangle
- * @param {number} w width of the rectangle
- * @param {number} h height of the rectangle
  */
-
 class Rect extends Polygon {
-
+    /**
+     * @param {number} x position of the Rectangle
+     * @param {number} y position of the Rectangle
+     * @param {number} w width of the rectangle
+     * @param {number} h height of the rectangle
+     */
     constructor(x, y, w, h) {
         // parent constructor
         super(x, y, [

@@ -4,16 +4,15 @@ import pool from "./../system/pooling.js";
 /**
  * @classdesc
  * an ellipse Object
- * @class Ellipse
  * @memberof me
- * @param {number} x the center x coordinate of the ellipse
- * @param {number} y the center y coordinate of the ellipse
- * @param {number} w width (diameter) of the ellipse
- * @param {number} h height (diameter) of the ellipse
  */
-
 class Ellipse {
-
+    /**
+     * @param {number} x the center x coordinate of the ellipse
+     * @param {number} y the center y coordinate of the ellipse
+     * @param {number} w width (diameter) of the ellipse
+     * @param {number} h height (diameter) of the ellipse
+     */
     constructor(x, y, w, h) {
         /**
          * the center coordinates of the ellipse

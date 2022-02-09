@@ -10,15 +10,16 @@ import pool from "./../system/pooling.js";
  * (which means that all angles are less than 180 degrees), as described here below : <br>
  * <center><img src="images/convex_polygon.png"/></center><br>
  * A polygon's `winding` is clockwise iff its vertices (points) are declared turning to the right. The image above shows COUNTERCLOCKWISE winding.
- * @class Polygon
  * @memberof me
- * @param {number} x origin point of the Polygon
- * @param {number} y origin point of the Polygon
- * @param {me.Vector2d[]} points array of vector defining the Polygon
  */
 
 class Polygon {
 
+    /**
+     * @param {number} x origin point of the Polygon
+     * @param {number} y origin point of the Polygon
+     * @param {me.Vector2d[]} points array of vector defining the Polygon
+     */
     constructor(x, y, points) {
         /**
          * origin point of the Polygon

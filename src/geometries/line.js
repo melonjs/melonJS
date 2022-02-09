@@ -4,7 +4,6 @@ import Polygon from "./poly.js";
 /**
  * @classdesc
  * a line segment Object
- * @class Line
  * @augments me.Polygon
  * @memberof me
  * @param {number} x origin point of the Line
