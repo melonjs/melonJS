@@ -19,19 +19,15 @@ var globalFloatingCounter = 0;
 /**
  * @classdesc
  * me.Container represents a collection of child objects
- * @class Container
  * @augments me.Renderable
  * @memberof me
- * @param {number} [x=0] position of the container (accessible via the inherited pos.x property)
- * @param {number} [y=0] position of the container (accessible via the inherited pos.y property)
- * @param {number} [w=me.game.viewport.width] width of the container
- * @param {number} [h=me.game.viewport.height] height of the container
  */
-
 class Container extends Renderable {
-
     /**
-     * @ignore
+     * @param {number} [x=0] position of the container (accessible via the inherited pos.x property)
+     * @param {number} [y=0] position of the container (accessible via the inherited pos.y property)
+     * @param {number} [w=me.game.viewport.width] width of the container
+     * @param {number} [h=me.game.viewport.height] height of the container
      */
     constructor(x = 0, y = 0, width = game.viewport.width, height = game.viewport.height, root = false) {
 

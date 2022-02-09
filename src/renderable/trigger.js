@@ -8,40 +8,36 @@ import { world, viewport } from "./../game.js";
 /**
  * @classdesc
  * trigger an event when colliding with another object
- * @class Trigger
  * @augments me.Renderable
  * @memberof me
- * @param {number} x the x coordinates of the trigger area
- * @param {number} y the y coordinates of the trigger area
- * @param {number} [settings.width] width of the trigger area
- * @param {number} [settings.height] height of the trigger area
- * @param {me.Rect[]|me.Polygon[]|me.Line[]|me.Ellipse[]} [settings.shapes] collision shape(s) that will trigger the event
- * @param {string} [settings.duration] Fade duration (in ms)
- * @param {string|me.Color} [settings.color] Fade color
- * @param {string} [settings.event="level"] the type of event to trigger (only "level" supported for now)
- * @param {string} [settings.to] level to load if level trigger
- * @param {string|me.Container} [settings.container] Target container. See {@link me.level.load}
- * @param {Function} [settings.onLoaded] Level loaded callback. See {@link me.level.load}
- * @param {boolean} [settings.flatten] Flatten all objects into the target container. See {@link me.level.load}
- * @param {boolean} [settings.setViewportBounds] Resize the viewport to match the level. See {@link me.level.load}
- * @example
- * me.game.world.addChild(new me.Trigger(
- *     x, y, {
- *         shapes: [new me.Rect(0, 0, 100, 100)],
- *         "duration" : 250,
- *         "color" : "#000",
- *         "to" : "mymap2"
- *     }
- * ));
  */
-
 class Trigger extends Renderable {
-
     /**
-     * @ignore
+     * @param {number} x the x coordinates of the trigger area
+     * @param {number} y the y coordinates of the trigger area
+     * @param {number} [settings.width] width of the trigger area
+     * @param {number} [settings.height] height of the trigger area
+     * @param {me.Rect[]|me.Polygon[]|me.Line[]|me.Ellipse[]} [settings.shapes] collision shape(s) that will trigger the event
+     * @param {string} [settings.duration] Fade duration (in ms)
+     * @param {string|me.Color} [settings.color] Fade color
+     * @param {string} [settings.event="level"] the type of event to trigger (only "level" supported for now)
+     * @param {string} [settings.to] level to load if level trigger
+     * @param {string|me.Container} [settings.container] Target container. See {@link me.level.load}
+     * @param {Function} [settings.onLoaded] Level loaded callback. See {@link me.level.load}
+     * @param {boolean} [settings.flatten] Flatten all objects into the target container. See {@link me.level.load}
+     * @param {boolean} [settings.setViewportBounds] Resize the viewport to match the level. See {@link me.level.load}
+     * @example
+     * me.game.world.addChild(new me.Trigger(
+     *     x, y, {
+     *         shapes: [new me.Rect(0, 0, 100, 100)],
+     *         "duration" : 250,
+     *         "color" : "#000",
+     *         "to" : "mymap2"
+     *     }
+     * ));
      */
     constructor(x, y, settings) {
-
+        // call the parent constructor
         super(x, y, settings.width || 0, settings.height || 0);
 
         // for backward compatibility

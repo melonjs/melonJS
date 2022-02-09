@@ -5,49 +5,44 @@ import loader from "./../loader/loader.js";
 import {Texture } from "./../video/texture.js";
 import Renderable from "./renderable.js";
 
-
 /**
  * @classdesc
  * An object to display a fixed or animated sprite on screen.
- * @class Sprite
  * @augments me.Renderable
  * @memberof me
- * @param {number} x the x coordinates of the sprite object
- * @param {number} y the y coordinates of the sprite object
- * @param {object} settings Configuration parameters for the Sprite object
- * @param {me.Renderer.Texture|HTMLImageElement|HTMLCanvasElement|string} settings.image reference to a texture, spritesheet image or to a texture atlas
- * @param {string} [settings.name=""] name of this object
- * @param {string} [settings.region] region name of a specific region to use when using a texture atlas, see {@link me.Renderer.Texture}
- * @param {number} [settings.framewidth] Width of a single frame within the spritesheet
- * @param {number} [settings.frameheight] Height of a single frame within the spritesheet
- * @param {string|me.Color} [settings.tint] a tint to be applied to this sprite
- * @param {number} [settings.flipX] flip the sprite on the horizontal axis
- * @param {number} [settings.flipY] flip the sprite on the vertical axis
- * @param {me.Vector2d} [settings.anchorPoint={x:0.5, y:0.5}] Anchor point to draw the frame at (defaults to the center of the frame).
- * @example
- * // create a single sprite from a standalone image, with anchor in the center
- * var sprite = new me.Sprite(0, 0, {
- *     image : "PlayerTexture",
- *     framewidth : 64,
- *     frameheight : 64,
- *     anchorPoint : new me.Vector2d(0.5, 0.5)
- * });
- *
- * // create a single sprite from a packed texture
- * game.texture = new me.video.renderer.Texture(
- *     me.loader.getJSON("texture"),
- *     me.loader.getImage("texture")
- * );
- * var sprite = new me.Sprite(0, 0, {
- *     image : game.texture,
- *     region : "npc2.png",
- * });
  */
-
 class Sprite extends Renderable {
-
     /**
-     * @ignore
+     * @param {number} x the x coordinates of the sprite object
+     * @param {number} y the y coordinates of the sprite object
+     * @param {object} settings Configuration parameters for the Sprite object
+     * @param {me.Renderer.Texture|HTMLImageElement|HTMLCanvasElement|string} settings.image reference to a texture, spritesheet image or to a texture atlas
+     * @param {string} [settings.name=""] name of this object
+     * @param {string} [settings.region] region name of a specific region to use when using a texture atlas, see {@link me.Renderer.Texture}
+     * @param {number} [settings.framewidth] Width of a single frame within the spritesheet
+     * @param {number} [settings.frameheight] Height of a single frame within the spritesheet
+     * @param {string|me.Color} [settings.tint] a tint to be applied to this sprite
+     * @param {number} [settings.flipX] flip the sprite on the horizontal axis
+     * @param {number} [settings.flipY] flip the sprite on the vertical axis
+     * @param {me.Vector2d} [settings.anchorPoint={x:0.5, y:0.5}] Anchor point to draw the frame at (defaults to the center of the frame).
+     * @example
+     * // create a single sprite from a standalone image, with anchor in the center
+     * var sprite = new me.Sprite(0, 0, {
+     *     image : "PlayerTexture",
+     *     framewidth : 64,
+     *     frameheight : 64,
+     *     anchorPoint : new me.Vector2d(0.5, 0.5)
+     * });
+     *
+     * // create a single sprite from a packed texture
+     * game.texture = new me.video.renderer.Texture(
+     *     me.loader.getJSON("texture"),
+     *     me.loader.getImage("texture")
+     * );
+     * var sprite = new me.Sprite(0, 0, {
+     *     image : game.texture,
+     *     region : "npc2.png",
+     * });
      */
     constructor(x, y, settings) {
 

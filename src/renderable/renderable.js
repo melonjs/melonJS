@@ -9,18 +9,15 @@ import { clamp } from "./../math/math.js";
 /**
  * @classdesc
  * A base class for renderable objects.
- * @class Renderable
  * @augments me.Rect
  * @memberof me
- * @param {number} x position of the renderable object (accessible through inherited pos.x property)
- * @param {number} y position of the renderable object (accessible through inherited pos.y property)
- * @param {number} width object width
- * @param {number} height object height
  */
 class Renderable extends Rect {
-
     /**
-     * @ignore
+     * @param {number} x position of the renderable object (accessible through inherited pos.x property)
+     * @param {number} y position of the renderable object (accessible through inherited pos.y property)
+     * @param {number} width object width
+     * @param {number} height object height
      */
     constructor(x, y, width, height) {
 

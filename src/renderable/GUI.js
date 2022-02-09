@@ -9,43 +9,39 @@ import { registerPointerEvent, releasePointerEvent} from "./../input/input.js";
  * A very basic object to manage GUI elements <br>
  * The object simply register on the "pointerdown" <br>
  * or "touchstart" event and call the onClick function"
- * @class GUI_Object
  * @augments me.Sprite
  * @memberof me
- * @param {number} x the x coordinate of the GUI Object
- * @param {number} y the y coordinate of the GUI Object
- * @param {object} settings See {@link me.Sprite}
- * @example
- * // create a basic GUI Object
- * class myButton extends GUI_Object {
- *    constructor(x, y) {
- *       var settings = {}
- *       settings.image = "button";
- *       settings.framewidth = 100;
- *       settings.frameheight = 50;
- *       // super constructor
- *       super(x, y, settings);
- *       // define the object z order
- *       this.pos.z = 4;
- *    }
- *
- *    // output something in the console
- *    // when the object is clicked
- *    onClick:function (event) {
- *       console.log("clicked!");
- *       // don't propagate the event
- *       return false;
- *    }
- * });
- *
- * // add the object at pos (10,10)
- * me.game.world.addChild(new myButton(10,10));
  */
-
 class GUI_Object extends Sprite {
-
     /**
-     * @ignore
+     * @param {number} x the x coordinate of the GUI Object
+     * @param {number} y the y coordinate of the GUI Object
+     * @param {object} settings See {@link me.Sprite}
+     * @example
+     * // create a basic GUI Object
+     * class myButton extends GUI_Object {
+     *    constructor(x, y) {
+     *       var settings = {}
+     *       settings.image = "button";
+     *       settings.framewidth = 100;
+     *       settings.frameheight = 50;
+     *       // super constructor
+     *       super(x, y, settings);
+     *       // define the object z order
+     *       this.pos.z = 4;
+     *    }
+     *
+     *    // output something in the console
+     *    // when the object is clicked
+     *    onClick:function (event) {
+     *       console.log("clicked!");
+     *       // don't propagate the event
+     *       return false;
+     *    }
+     * });
+     *
+     * // add the object at pos (10,10)
+     * me.game.world.addChild(new myButton(10,10));
      */
     constructor(x, y, settings) {
 

@@ -6,17 +6,14 @@ import collision from "./../physics/collision.js";
 /**
  * @classdesc
  * a basic collectable helper class for immovable object (e.g. a coin)
- * @class Collectable
  * @augments me.Sprite
  * @memberof me
- * @param {number} x the x coordinates of the collectable
- * @param {number} y the y coordinates of the collectable
- * @param {object} settings See {@link me.Sprite}
  */
-
 class Collectable extends Sprite {
     /**
-     * @ignore
+     * @param {number} x the x coordinates of the collectable
+     * @param {number} y the y coordinates of the collectable
+     * @param {object} settings See {@link me.Sprite}
      */
     constructor(x, y, settings) {
 
