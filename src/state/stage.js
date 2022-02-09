@@ -16,7 +16,6 @@ var default_settings = {
  * every "stage" object (title screen, credits, ingame, etc...) to be managed
  * through the state manager must inherit from this base class.
  * @class Stage
- * @augments me.Object
  * @memberof me
  * @param {object} [options] The stage` parameters
  * @param {me.Camera2d[]} [options.cameras=[new me.Camera2d()]] a list of cameras (experimental)

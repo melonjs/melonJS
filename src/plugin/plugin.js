@@ -36,7 +36,6 @@ export var plugin = {
      * plugin must be installed using the register function
      * @see me.plugin
      * @class
-     * @augments me.Object
      * @name plugin.Base
      * @memberof me
      */
@@ -65,7 +64,7 @@ export var plugin = {
         if (typeof proto.prototype !== "undefined") {
             proto = proto.prototype;
         }
-        // reuse the logic behind me.Object.extend
+        // reuse the logic behind object extends
         if (typeof(proto[name]) === "function") {
             // save the original function
             var _parent = proto[name];
