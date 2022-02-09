@@ -1,39 +1,50 @@
 /**
  * @classdesc
  * a bitmap font object
- * @class BitmapText
  * @augments me.Renderable
  * @memberof me
- * @param {number} x position of the text object
- * @param {number} y position of the text object
- * @param {object} settings the text configuration
- * @param {string|Image} settings.font a font name to identify the corresponing source image
- * @param {string} [settings.fontData=settings.font] the bitmap font data corresponding name, or the bitmap font data itself
- * @param {number} [settings.size] size a scaling ratio
- * @param {me.Color|string} [settings.fillStyle] a CSS color value used to tint the bitmapText (@see me.BitmapText.tint)
- * @param {number} [settings.lineWidth=1] line width, in pixels, when drawing stroke
- * @param {string} [settings.textAlign="left"] horizontal text alignment
- * @param {string} [settings.textBaseline="top"] the text baseline
- * @param {number} [settings.lineHeight=1.0] line spacing height
- * @param {me.Vector2d} [settings.anchorPoint={x:0.0, y:0.0}] anchor point to draw the text at
- * @param {(string|string[])} [settings.text] a string, or an array of strings
- * @example
- * // Use me.loader.preload or me.loader.load to load assets
- * me.loader.preload([
- *     { name: "arial", type: "binary" src: "data/font/arial.fnt" },
- *     { name: "arial", type: "image" src: "data/font/arial.png" },
- * ])
- * // Then create an instance of your bitmap font:
- * var myFont = new me.BitmapText(x, y, {font:"arial", text:"Hello"});
- * // two possibilities for using "myFont"
- * // either call the draw function from your Renderable draw function
- * myFont.draw(renderer, "Hello!", 0, 0);
- * // or just add it to the word container
- * me.game.world.addChild(myFont);
  */
 export class BitmapText {
-    /** @ignore */
-    constructor(x: any, y: any, settings: any);
+    /**
+     * @param {number} x position of the text object
+     * @param {number} y position of the text object
+     * @param {object} settings the text configuration
+     * @param {string|Image} settings.font a font name to identify the corresponing source image
+     * @param {string} [settings.fontData=settings.font] the bitmap font data corresponding name, or the bitmap font data itself
+     * @param {number} [settings.size] size a scaling ratio
+     * @param {me.Color|string} [settings.fillStyle] a CSS color value used to tint the bitmapText (@see me.BitmapText.tint)
+     * @param {number} [settings.lineWidth=1] line width, in pixels, when drawing stroke
+     * @param {string} [settings.textAlign="left"] horizontal text alignment
+     * @param {string} [settings.textBaseline="top"] the text baseline
+     * @param {number} [settings.lineHeight=1.0] line spacing height
+     * @param {me.Vector2d} [settings.anchorPoint={x:0.0, y:0.0}] anchor point to draw the text at
+     * @param {(string|string[])} [settings.text] a string, or an array of strings
+     * @example
+     * // Use me.loader.preload or me.loader.load to load assets
+     * me.loader.preload([
+     *     { name: "arial", type: "binary" src: "data/font/arial.fnt" },
+     *     { name: "arial", type: "image" src: "data/font/arial.png" },
+     * ])
+     * // Then create an instance of your bitmap font:
+     * var myFont = new me.BitmapText(x, y, {font:"arial", text:"Hello"});
+     * // two possibilities for using "myFont"
+     * // either call the draw function from your Renderable draw function
+     * myFont.draw(renderer, "Hello!", 0, 0);
+     * // or just add it to the word container
+     * me.game.world.addChild(myFont);
+     */
+    constructor(x: number, y: number, settings: {
+        font: string | (new (width?: number, height?: number) => HTMLImageElement);
+        fontData?: string;
+        size?: number;
+        fillStyle?: me.Color | string;
+        lineWidth?: number;
+        textAlign?: string;
+        textBaseline?: string;
+        lineHeight?: number;
+        anchorPoint?: me.Vector2d;
+        text?: (string | string[]);
+    });
     /**
      * Set the default text alignment (or justification),<br>
      * possible values are "left", "right", and "center".
@@ -74,7 +85,7 @@ export class BitmapText {
     private _text;
     /** @ignore */
     fontScale: any;
-    fontImage: any;
+    fontImage: HTMLImageElement;
     fontData: any;
     floating: boolean;
     /**
@@ -150,13 +161,14 @@ export class BitmapText {
 }
 /**
  * Class for storing relevant data from the font file.
- * @class me.BitmapTextData
  * @memberof me
  * @ignore
- * @param data {string} - The bitmap font data pulled from the resource loader using me.loader.getBinary()
  */
 export class BitmapTextData {
-    constructor(...args: any[]);
+    /**
+     * @param {string} data - The bitmap font data pulled from the resource loader using me.loader.getBinary()
+     */
+    constructor(data: string);
     /**
      * @ignore
      */
@@ -1507,18 +1519,16 @@ export class CanvasRenderer {
 /**
  * @classdesc
  * a basic collectable helper class for immovable object (e.g. a coin)
- * @class Collectable
  * @augments me.Sprite
  * @memberof me
- * @param {number} x the x coordinates of the collectable
- * @param {number} y the y coordinates of the collectable
- * @param {object} settings See {@link me.Sprite}
  */
 export class Collectable {
     /**
-     * @ignore
+     * @param {number} x the x coordinates of the collectable
+     * @param {number} y the y coordinates of the collectable
+     * @param {object} settings See {@link me.Sprite}
      */
-    constructor(x: any, y: any, settings: any);
+    constructor(x: number, y: number, settings: object);
     name: any;
     type: any;
     id: any;
@@ -1746,18 +1756,16 @@ export class Color {
 /**
  * @classdesc
  * a generic Color Layer Object.  Fills the entire Canvas with the color not just the container the object belongs to.
- * @class ColorLayer
  * @augments me.Renderable
  * @memberof me
- * @param {string} name Layer name
- * @param {me.Color|string} color CSS color
- * @param {number} [z = 0] z-index position
  */
 export class ColorLayer {
     /**
-     * @ignore
+     * @param {string} name Layer name
+     * @param {me.Color|string} color CSS color
+     * @param {number} [z = 0] z-index position
      */
-    constructor(name: any, color: any, z: any);
+    constructor(name: string, color: me.Color | string, z?: number);
     /**
      * the layer color component
      * @public
@@ -1783,17 +1791,15 @@ export class ColorLayer {
 /**
  * @classdesc
  * me.Container represents a collection of child objects
- * @class Container
  * @augments me.Renderable
  * @memberof me
- * @param {number} [x=0] position of the container (accessible via the inherited pos.x property)
- * @param {number} [y=0] position of the container (accessible via the inherited pos.y property)
- * @param {number} [w=me.game.viewport.width] width of the container
- * @param {number} [h=me.game.viewport.height] height of the container
  */
 export class Container {
     /**
-     * @ignore
+     * @param {number} [x=0] position of the container (accessible via the inherited pos.x property)
+     * @param {number} [y=0] position of the container (accessible via the inherited pos.y property)
+     * @param {number} [w=me.game.viewport.width] width of the container
+     * @param {number} [h=me.game.viewport.height] height of the container
      */
     constructor(x?: number, y?: number, width?: any, height?: any, root?: boolean);
     /**
@@ -1871,6 +1877,18 @@ export class Container {
      * @memberof me.Container
      */
     public enableChildBoundsUpdate: boolean;
+    /**
+     * define a background color for this container
+     * @public
+     * @type {me.Color}
+     * @name backgroundColor
+     * @default (0, 0, 0, 0.0)
+     * @memberof me.Container
+     * @example
+     * // add a red background color to this container
+     * this.backgroundColor.setColor(255, 0, 0);
+     */
+    public backgroundColor: me.Color;
     /**
      * Used by the debug panel plugin
      * @ignore
@@ -2357,16 +2375,16 @@ export class DroptargetEntity {
 /**
  * @classdesc
  * an ellipse Object
- * @class Ellipse
- * @augments me.Object
  * @memberof me
- * @param {number} x the center x coordinate of the ellipse
- * @param {number} y the center y coordinate of the ellipse
- * @param {number} w width (diameter) of the ellipse
- * @param {number} h height (diameter) of the ellipse
  */
 export class Ellipse {
-    constructor(x: any, y: any, w: any, h: any);
+    /**
+     * @param {number} x the center x coordinate of the ellipse
+     * @param {number} y the center y coordinate of the ellipse
+     * @param {number} w width (diameter) of the ellipse
+     * @param {number} h height (diameter) of the ellipse
+     */
+    constructor(x: number, y: number, w: number, h: number);
     /**
      * the center coordinates of the ellipse
      * @public
@@ -2751,43 +2769,41 @@ export class GLShader {
  * A very basic object to manage GUI elements <br>
  * The object simply register on the "pointerdown" <br>
  * or "touchstart" event and call the onClick function"
- * @class GUI_Object
  * @augments me.Sprite
  * @memberof me
- * @param {number} x the x coordinate of the GUI Object
- * @param {number} y the y coordinate of the GUI Object
- * @param {object} settings See {@link me.Sprite}
- * @example
- * // create a basic GUI Object
- * class myButton extends GUI_Object {
- *    constructor(x, y) {
- *       var settings = {}
- *       settings.image = "button";
- *       settings.framewidth = 100;
- *       settings.frameheight = 50;
- *       // super constructor
- *       super(x, y, settings);
- *       // define the object z order
- *       this.pos.z = 4;
- *    }
- *
- *    // output something in the console
- *    // when the object is clicked
- *    onClick:function (event) {
- *       console.log("clicked!");
- *       // don't propagate the event
- *       return false;
- *    }
- * });
- *
- * // add the object at pos (10,10)
- * me.game.world.addChild(new myButton(10,10));
  */
 export class GUI_Object {
     /**
-     * @ignore
+     * @param {number} x the x coordinate of the GUI Object
+     * @param {number} y the y coordinate of the GUI Object
+     * @param {object} settings See {@link me.Sprite}
+     * @example
+     * // create a basic GUI Object
+     * class myButton extends GUI_Object {
+     *    constructor(x, y) {
+     *       var settings = {}
+     *       settings.image = "button";
+     *       settings.framewidth = 100;
+     *       settings.frameheight = 50;
+     *       // super constructor
+     *       super(x, y, settings);
+     *       // define the object z order
+     *       this.pos.z = 4;
+     *    }
+     *
+     *    // output something in the console
+     *    // when the object is clicked
+     *    onClick:function (event) {
+     *       console.log("clicked!");
+     *       // don't propagate the event
+     *       return false;
+     *    }
+     * });
+     *
+     * // add the object at pos (10,10)
+     * me.game.world.addChild(new myButton(10,10));
      */
-    constructor(x: any, y: any, settings: any);
+    constructor(x: number, y: number, settings: object);
     /**
      * object can be clicked or not
      * @public
@@ -2909,31 +2925,35 @@ export class GUI_Object {
 /**
  * @classdesc
  * a generic Image Layer Object
- * @class ImageLayer
  * @augments me.Renderable
  * @memberof me
- * @param {number} x x coordinate
- * @param {number} y y coordinate
- * @param {object} settings ImageLayer properties
- * @param {HTMLImageElement|HTMLCanvasElement|string} settings.image Image reference. See {@link me.loader.getImage}
- * @param {string} [settings.name="me.ImageLayer"] layer name
- * @param {number} [settings.z=0] z-index position
- * @param {number|me.Vector2d} [settings.ratio=1.0] Scrolling ratio to be applied. See {@link me.ImageLayer#ratio}
- * @param {string} [settings.repeat='repeat'] define if and how an Image Layer should be repeated (accepted values are 'repeat',
-'repeat-x', 'repeat-y', 'no-repeat'). See {@link me.ImageLayer#repeat}
- * @param {number|me.Vector2d} [settings.anchorPoint=0.0] Image origin. See {@link me.ImageLayer#anchorPoint}
- * @example
- * // create a repetitive background pattern on the X axis using the citycloud image asset
- * me.game.world.addChild(new me.ImageLayer(0, 0, {
- *     image:"citycloud",
- *     repeat :"repeat-x"
- * }), 1);
  */
 export class ImageLayer {
     /**
-     * @ignore
+     * @param {number} x x coordinate
+     * @param {number} y y coordinate
+     * @param {object} settings ImageLayer properties
+     * @param {HTMLImageElement|HTMLCanvasElement|string} settings.image Image reference. See {@link me.loader.getImage}
+     * @param {string} [settings.name="me.ImageLayer"] layer name
+     * @param {number} [settings.z=0] z-index position
+     * @param {number|me.Vector2d} [settings.ratio=1.0] Scrolling ratio to be applied. See {@link me.ImageLayer#ratio}
+     * @param {string} [settings.repeat='repeat'] define if and how an Image Layer should be repeated (accepted values are 'repeat', 'repeat-x', 'repeat-y', 'no-repeat'). See {@link me.ImageLayer#repeat}
+     * @param {number|me.Vector2d} [settings.anchorPoint=0.0] Image origin. See {@link me.ImageLayer#anchorPoint}
+     * @example
+     * // create a repetitive background pattern on the X axis using the citycloud image asset
+     * me.game.world.addChild(new me.ImageLayer(0, 0, {
+     *     image:"citycloud",
+     *     repeat :"repeat-x"
+     * }), 1);
      */
-    constructor(x: any, y: any, settings: any);
+    constructor(x: number, y: number, settings: {
+        image: HTMLImageElement | HTMLCanvasElement | string;
+        name?: string;
+        z?: number;
+        ratio?: number | me.Vector2d;
+        repeat?: string;
+        anchorPoint?: number | me.Vector2d;
+    });
     floating: boolean;
     /**
      * Define the image scrolling ratio<br>
@@ -3016,7 +3036,6 @@ export class ImageLayer {
 /**
  * @classdesc
  * a line segment Object
- * @class Line
  * @augments me.Polygon
  * @memberof me
  * @param {number} x origin point of the Line
@@ -3576,38 +3595,48 @@ export class Matrix3d {
  * by proportionally scaling a sprite by splitting it in a grid of nine parts (with only parts 1, 3, 7, 9 not being scaled). <br>
  * <img src="images/9-slice-scaling.png"/><br>
  * @see https://en.wikipedia.org/wiki/9-slice_scaling
- * @class NineSliceSprite
  * @augments me.Sprite
  * @memberof me
- * @param {number} x the x coordinates of the sprite object
- * @param {number} y the y coordinates of the sprite object
- * @param {object} settings Configuration parameters for the Sprite object
- * @param {number} settings.width the width of the Renderable over which the sprite needs to be stretched
- * @param {number} settings.height the height of the Renderable over which the sprite needs to be stretched
- * @param {me.Renderer.Texture|HTMLImageElement|HTMLCanvasElement|string} settings.image reference to a texture, spritesheet image or to a texture atlas
- * @param {string} [settings.name=""] name of this object
- * @param {string} [settings.region] region name of a specific region to use when using a texture atlas, see {@link me.Renderer.Texture}
- * @param {number} [settings.framewidth] Width of a single frame within the spritesheet
- * @param {number} [settings.frameheight] Height of a single frame within the spritesheet
- * @param {string|me.Color} [settings.tint] a tint to be applied to this sprite
- * @param {number} [settings.flipX] flip the sprite on the horizontal axis
- * @param {number} [settings.flipY] flip the sprite on the vertical axis
- * @param {me.Vector2d} [settings.anchorPoint={x:0.5, y:0.5}] Anchor point to draw the frame at (defaults to the center of the frame).
- * @example
- * this.panelSprite = new me.NineSliceSprite(0, 0, {
- *     image : game.texture,
- *     region : "grey_panel",
- *     width : this.width,
- *     height : this.height
- * });
  */
 export class NineSliceSprite {
     /**
-     * @ignore
+     * @param {number} x the x coordinates of the sprite object
+     * @param {number} y the y coordinates of the sprite object
+     * @param {object} settings Configuration parameters for the Sprite object
+     * @param {number} settings.width the width of the Renderable over which the sprite needs to be stretched
+     * @param {number} settings.height the height of the Renderable over which the sprite needs to be stretched
+     * @param {me.Renderer.Texture|HTMLImageElement|HTMLCanvasElement|string} settings.image reference to a texture, spritesheet image or to a texture atlas
+     * @param {string} [settings.name=""] name of this object
+     * @param {string} [settings.region] region name of a specific region to use when using a texture atlas, see {@link me.Renderer.Texture}
+     * @param {number} [settings.framewidth] Width of a single frame within the spritesheet
+     * @param {number} [settings.frameheight] Height of a single frame within the spritesheet
+     * @param {string|me.Color} [settings.tint] a tint to be applied to this sprite
+     * @param {number} [settings.flipX] flip the sprite on the horizontal axis
+     * @param {number} [settings.flipY] flip the sprite on the vertical axis
+     * @param {me.Vector2d} [settings.anchorPoint={x:0.5, y:0.5}] Anchor point to draw the frame at (defaults to the center of the frame).
+     * @example
+     * this.panelSprite = new me.NineSliceSprite(0, 0, {
+     *     image : game.texture,
+     *     region : "grey_panel",
+     *     width : this.width,
+     *     height : this.height
+     * });
      */
-    constructor(x: any, y: any, settings: any);
-    width: any;
-    height: any;
+    constructor(x: number, y: number, settings: {
+        width: number;
+        height: number;
+        image: me.Renderer.Texture | HTMLImageElement | HTMLCanvasElement | string;
+        name?: string;
+        region?: string;
+        framewidth?: number;
+        frameheight?: number;
+        tint?: string | me.Color;
+        flipX?: number;
+        flipY?: number;
+        anchorPoint?: me.Vector2d;
+    });
+    width: number;
+    height: number;
     /**
      * @ignore
      */
@@ -4727,14 +4756,15 @@ export class Pointer {
  * (which means that all angles are less than 180 degrees), as described here below : <br>
  * <center><img src="images/convex_polygon.png"/></center><br>
  * A polygon's `winding` is clockwise iff its vertices (points) are declared turning to the right. The image above shows COUNTERCLOCKWISE winding.
- * @class Polygon
  * @memberof me
- * @param {number} x origin point of the Polygon
- * @param {number} y origin point of the Polygon
- * @param {me.Vector2d[]} points array of vector defining the Polygon
  */
 export class Polygon {
-    constructor(x: any, y: any, points: any);
+    /**
+     * @param {number} x origin point of the Polygon
+     * @param {number} y origin point of the Polygon
+     * @param {me.Vector2d[]} points array of vector defining the Polygon
+     */
+    constructor(x: number, y: number, points: me.Vector2d[]);
     /**
      * origin point of the Polygon
      * @public
@@ -5051,16 +5081,17 @@ export class QuadTree {
 /**
  * @classdesc
  * a rectangle Object
- * @class Rect
  * @augments me.Polygon
  * @memberof me
- * @param {number} x position of the Rectangle
- * @param {number} y position of the Rectangle
- * @param {number} w width of the rectangle
- * @param {number} h height of the rectangle
  */
 export class Rect {
-    constructor(x: any, y: any, w: any, h: any);
+    /**
+     * @param {number} x position of the Rectangle
+     * @param {number} y position of the Rectangle
+     * @param {number} w width of the rectangle
+     * @param {number} h height of the rectangle
+     */
+    constructor(x: number, y: number, w: number, h: number);
     shapeType: string;
     /** @ignore */
     onResetEvent(x: any, y: any, w: any, h: any): void;
@@ -5254,19 +5285,17 @@ export class Rect {
 /**
  * @classdesc
  * A base class for renderable objects.
- * @class Renderable
  * @augments me.Rect
  * @memberof me
- * @param {number} x position of the renderable object (accessible through inherited pos.x property)
- * @param {number} y position of the renderable object (accessible through inherited pos.y property)
- * @param {number} width object width
- * @param {number} height object height
  */
 export class Renderable {
     /**
-     * @ignore
+     * @param {number} x position of the renderable object (accessible through inherited pos.x property)
+     * @param {number} y position of the renderable object (accessible through inherited pos.y property)
+     * @param {number} width object width
+     * @param {number} height object height
      */
-    constructor(x: any, y: any, width: any, height: any);
+    constructor(x: number, y: number, width: number, height: number);
     /**
      * to identify the object as a renderable object
      * @ignore
@@ -6006,45 +6035,53 @@ export class Renderer {
 /**
  * @classdesc
  * An object to display a fixed or animated sprite on screen.
- * @class Sprite
  * @augments me.Renderable
  * @memberof me
- * @param {number} x the x coordinates of the sprite object
- * @param {number} y the y coordinates of the sprite object
- * @param {object} settings Configuration parameters for the Sprite object
- * @param {me.Renderer.Texture|HTMLImageElement|HTMLCanvasElement|string} settings.image reference to a texture, spritesheet image or to a texture atlas
- * @param {string} [settings.name=""] name of this object
- * @param {string} [settings.region] region name of a specific region to use when using a texture atlas, see {@link me.Renderer.Texture}
- * @param {number} [settings.framewidth] Width of a single frame within the spritesheet
- * @param {number} [settings.frameheight] Height of a single frame within the spritesheet
- * @param {string|me.Color} [settings.tint] a tint to be applied to this sprite
- * @param {number} [settings.flipX] flip the sprite on the horizontal axis
- * @param {number} [settings.flipY] flip the sprite on the vertical axis
- * @param {me.Vector2d} [settings.anchorPoint={x:0.5, y:0.5}] Anchor point to draw the frame at (defaults to the center of the frame).
- * @example
- * // create a single sprite from a standalone image, with anchor in the center
- * var sprite = new me.Sprite(0, 0, {
- *     image : "PlayerTexture",
- *     framewidth : 64,
- *     frameheight : 64,
- *     anchorPoint : new me.Vector2d(0.5, 0.5)
- * });
- *
- * // create a single sprite from a packed texture
- * game.texture = new me.video.renderer.Texture(
- *     me.loader.getJSON("texture"),
- *     me.loader.getImage("texture")
- * );
- * var sprite = new me.Sprite(0, 0, {
- *     image : game.texture,
- *     region : "npc2.png",
- * });
  */
 export class Sprite {
     /**
-     * @ignore
+     * @param {number} x the x coordinates of the sprite object
+     * @param {number} y the y coordinates of the sprite object
+     * @param {object} settings Configuration parameters for the Sprite object
+     * @param {me.Renderer.Texture|HTMLImageElement|HTMLCanvasElement|string} settings.image reference to a texture, spritesheet image or to a texture atlas
+     * @param {string} [settings.name=""] name of this object
+     * @param {string} [settings.region] region name of a specific region to use when using a texture atlas, see {@link me.Renderer.Texture}
+     * @param {number} [settings.framewidth] Width of a single frame within the spritesheet
+     * @param {number} [settings.frameheight] Height of a single frame within the spritesheet
+     * @param {string|me.Color} [settings.tint] a tint to be applied to this sprite
+     * @param {number} [settings.flipX] flip the sprite on the horizontal axis
+     * @param {number} [settings.flipY] flip the sprite on the vertical axis
+     * @param {me.Vector2d} [settings.anchorPoint={x:0.5, y:0.5}] Anchor point to draw the frame at (defaults to the center of the frame).
+     * @example
+     * // create a single sprite from a standalone image, with anchor in the center
+     * var sprite = new me.Sprite(0, 0, {
+     *     image : "PlayerTexture",
+     *     framewidth : 64,
+     *     frameheight : 64,
+     *     anchorPoint : new me.Vector2d(0.5, 0.5)
+     * });
+     *
+     * // create a single sprite from a packed texture
+     * game.texture = new me.video.renderer.Texture(
+     *     me.loader.getJSON("texture"),
+     *     me.loader.getImage("texture")
+     * );
+     * var sprite = new me.Sprite(0, 0, {
+     *     image : game.texture,
+     *     region : "npc2.png",
+     * });
      */
-    constructor(x: any, y: any, settings: any);
+    constructor(x: number, y: number, settings: {
+        image: me.Renderer.Texture | HTMLImageElement | HTMLCanvasElement | string;
+        name?: string;
+        region?: string;
+        framewidth?: number;
+        frameheight?: number;
+        tint?: string | me.Color;
+        flipX?: number;
+        flipY?: number;
+        anchorPoint?: me.Vector2d;
+    });
     /**
      * pause and resume animation
      * @public
@@ -6101,7 +6138,7 @@ export class Sprite {
     atlasIndices: any;
     width: number;
     height: number;
-    name: any;
+    name: string;
     autoTransform: boolean;
     /**
      * return the flickering state of the object
@@ -6303,7 +6340,6 @@ export class Sprite {
  * every "stage" object (title screen, credits, ingame, etc...) to be managed
  * through the state manager must inherit from this base class.
  * @class Stage
- * @augments me.Object
  * @memberof me
  * @param {object} [options] The stage` parameters
  * @param {me.Camera2d[]} [options.cameras=[new me.Camera2d()]] a list of cameras (experimental)
@@ -7152,29 +7188,41 @@ export class TMXTilesetGroup {
 /**
  * @classdesc
  * a generic system font object.
- * @class Text
  * @augments me.Renderable
  * @memberof me
- * @param {number} x position of the text object
- * @param {number} y position of the text object
- * @param {object} settings the text configuration
- * @param {string} settings.font a CSS family font name
- * @param {number|string} settings.size size, or size + suffix (px, em, pt)
- * @param {me.Color|string} [settings.fillStyle="#000000"] a CSS color value
- * @param {me.Color|string} [settings.strokeStyle="#000000"] a CSS color value
- * @param {number} [settings.lineWidth=1] line width, in pixels, when drawing stroke
- * @param {string} [settings.textAlign="left"] horizontal text alignment
- * @param {string} [settings.textBaseline="top"] the text baseline
- * @param {number} [settings.lineHeight=1.0] line spacing height
- * @param {me.Vector2d} [settings.anchorPoint={x:0.0, y:0.0}] anchor point to draw the text at
- * @param {boolean} [settings.offScreenCanvas=false] whether to draw the font to an individual "cache" texture first
- * @param {(string|string[])} [settings.text=""] a string, or an array of strings
- * @example
- * var font = new me.Text(0, 0, {font: "Arial", size: 8, fillStyle: this.color});
  */
 export class Text {
-    /** @ignore */
-    constructor(x: any, y: any, settings: any);
+    /**
+     * @param {number} x position of the text object
+     * @param {number} y position of the text object
+     * @param {object} settings the text configuration
+     * @param {string} settings.font a CSS family font name
+     * @param {number|string} settings.size size, or size + suffix (px, em, pt)
+     * @param {me.Color|string} [settings.fillStyle="#000000"] a CSS color value
+     * @param {me.Color|string} [settings.strokeStyle="#000000"] a CSS color value
+     * @param {number} [settings.lineWidth=1] line width, in pixels, when drawing stroke
+     * @param {string} [settings.textAlign="left"] horizontal text alignment
+     * @param {string} [settings.textBaseline="top"] the text baseline
+     * @param {number} [settings.lineHeight=1.0] line spacing height
+     * @param {me.Vector2d} [settings.anchorPoint={x:0.0, y:0.0}] anchor point to draw the text at
+     * @param {boolean} [settings.offScreenCanvas=false] whether to draw the font to an individual "cache" texture first
+     * @param {(string|string[])} [settings.text=""] a string, or an array of strings
+     * @example
+     * var font = new me.Text(0, 0, {font: "Arial", size: 8, fillStyle: this.color});
+     */
+    constructor(x: number, y: number, settings: {
+        font: string;
+        size: number | string;
+        fillStyle?: me.Color | string;
+        strokeStyle?: me.Color | string;
+        lineWidth?: number;
+        textAlign?: string;
+        textBaseline?: string;
+        lineHeight?: number;
+        anchorPoint?: me.Vector2d;
+        offScreenCanvas?: boolean;
+        text?: (string | string[]);
+    });
     /** @ignore */
     onResetEvent(x: any, y: any, settings: any): void;
     fillStyle: any;
@@ -7418,37 +7466,35 @@ export class Tile {
 /**
  * @classdesc
  * trigger an event when colliding with another object
- * @class Trigger
  * @augments me.Renderable
  * @memberof me
- * @param {number} x the x coordinates of the trigger area
- * @param {number} y the y coordinates of the trigger area
- * @param {number} [settings.width] width of the trigger area
- * @param {number} [settings.height] height of the trigger area
- * @param {me.Rect[]|me.Polygon[]|me.Line[]|me.Ellipse[]} [settings.shapes] collision shape(s) that will trigger the event
- * @param {string} [settings.duration] Fade duration (in ms)
- * @param {string|me.Color} [settings.color] Fade color
- * @param {string} [settings.event="level"] the type of event to trigger (only "level" supported for now)
- * @param {string} [settings.to] level to load if level trigger
- * @param {string|me.Container} [settings.container] Target container. See {@link me.level.load}
- * @param {Function} [settings.onLoaded] Level loaded callback. See {@link me.level.load}
- * @param {boolean} [settings.flatten] Flatten all objects into the target container. See {@link me.level.load}
- * @param {boolean} [settings.setViewportBounds] Resize the viewport to match the level. See {@link me.level.load}
- * @example
- * me.game.world.addChild(new me.Trigger(
- *     x, y, {
- *         shapes: [new me.Rect(0, 0, 100, 100)],
- *         "duration" : 250,
- *         "color" : "#000",
- *         "to" : "mymap2"
- *     }
- * ));
  */
 export class Trigger {
     /**
-     * @ignore
+     * @param {number} x the x coordinates of the trigger area
+     * @param {number} y the y coordinates of the trigger area
+     * @param {number} [settings.width] width of the trigger area
+     * @param {number} [settings.height] height of the trigger area
+     * @param {me.Rect[]|me.Polygon[]|me.Line[]|me.Ellipse[]} [settings.shapes] collision shape(s) that will trigger the event
+     * @param {string} [settings.duration] Fade duration (in ms)
+     * @param {string|me.Color} [settings.color] Fade color
+     * @param {string} [settings.event="level"] the type of event to trigger (only "level" supported for now)
+     * @param {string} [settings.to] level to load if level trigger
+     * @param {string|me.Container} [settings.container] Target container. See {@link me.level.load}
+     * @param {Function} [settings.onLoaded] Level loaded callback. See {@link me.level.load}
+     * @param {boolean} [settings.flatten] Flatten all objects into the target container. See {@link me.level.load}
+     * @param {boolean} [settings.setViewportBounds] Resize the viewport to match the level. See {@link me.level.load}
+     * @example
+     * me.game.world.addChild(new me.Trigger(
+     *     x, y, {
+     *         shapes: [new me.Rect(0, 0, 100, 100)],
+     *         "duration" : 250,
+     *         "color" : "#000",
+     *         "to" : "mymap2"
+     *     }
+     * ));
      */
-    constructor(x: any, y: any, settings: any);
+    constructor(x: number, y: number, settings: any);
     fade: any;
     duration: any;
     fading: boolean;
@@ -12513,7 +12559,7 @@ declare class BasePlugin {
      * this can be overridden by the plugin
      * @public
      * @type {string}
-     * @default "10.3.0"
+     * @default "10.4.0"
      * @name me.plugin.Base#version
      */
     public version: string;

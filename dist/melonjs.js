@@ -1,5 +1,5 @@
 /*!
- * melonJS Game Engine - v10.3.0
+ * melonJS Game Engine - v10.4.0
  * http://www.melonjs.org
  * melonjs is licensed under the MIT License.
  * http://www.opensource.org/licenses/mit-license
@@ -9638,11 +9638,7 @@
      * (which means that all angles are less than 180 degrees), as described here below : <br>
      * <center><img src="images/convex_polygon.png"/></center><br>
      * A polygon's `winding` is clockwise iff its vertices (points) are declared turning to the right. The image above shows COUNTERCLOCKWISE winding.
-     * @class Polygon
      * @memberof me
-     * @param {number} x origin point of the Polygon
-     * @param {number} y origin point of the Polygon
-     * @param {me.Vector2d[]} points array of vector defining the Polygon
      */
 
     var Polygon = function Polygon(x, y, points) {
@@ -10135,15 +10131,9 @@
     /**
      * @classdesc
      * a rectangle Object
-     * @class Rect
      * @augments me.Polygon
      * @memberof me
-     * @param {number} x position of the Rectangle
-     * @param {number} y position of the Rectangle
-     * @param {number} w width of the rectangle
-     * @param {number} h height of the rectangle
      */
-
     var Rect = /*@__PURE__*/(function (Polygon) {
         function Rect(x, y, w, h) {
             // parent constructor
@@ -13164,13 +13154,8 @@
     /**
      * @classdesc
      * A base class for renderable objects.
-     * @class Renderable
      * @augments me.Rect
      * @memberof me
-     * @param {number} x position of the renderable object (accessible through inherited pos.x property)
-     * @param {number} y position of the renderable object (accessible through inherited pos.y property)
-     * @param {number} width object width
-     * @param {number} height object height
      */
     var Renderable = /*@__PURE__*/(function (Rect) {
         function Renderable(x, y, width, height) {
@@ -14040,15 +14025,8 @@
     /**
      * @classdesc
      * an ellipse Object
-     * @class Ellipse
-     * @augments me.Object
      * @memberof me
-     * @param {number} x the center x coordinate of the ellipse
-     * @param {number} y the center y coordinate of the ellipse
-     * @param {number} w width (diameter) of the ellipse
-     * @param {number} h height (diameter) of the ellipse
      */
-
     var Ellipse = function Ellipse(x, y, w, h) {
         /**
          * the center coordinates of the ellipse
@@ -15963,15 +15941,9 @@
     /**
      * @classdesc
      * me.Container represents a collection of child objects
-     * @class Container
      * @augments me.Renderable
      * @memberof me
-     * @param {number} [x=0] position of the container (accessible via the inherited pos.x property)
-     * @param {number} [y=0] position of the container (accessible via the inherited pos.y property)
-     * @param {number} [w=me.game.viewport.width] width of the container
-     * @param {number} [h=me.game.viewport.height] height of the container
      */
-
     var Container = /*@__PURE__*/(function (Renderable) {
         function Container(x, y, width, height, root) {
             if ( x === void 0 ) x = 0;
@@ -16071,6 +16043,19 @@
             this.enableChildBoundsUpdate = false;
 
             /**
+             * define a background color for this container
+             * @public
+             * @type {me.Color}
+             * @name backgroundColor
+             * @default (0, 0, 0, 0.0)
+             * @memberof me.Container
+             * @example
+             * // add a red background color to this container
+             * this.backgroundColor.setColor(255, 0, 0);
+             */
+            this.backgroundColor = pool.pull("Color", 0, 0, 0, 0.0);
+
+            /**
              * Used by the debug panel plugin
              * @ignore
              */
@@ -16120,6 +16105,8 @@
                 // just reset some variables
                 this.currentTransform.identity();
             }
+
+            this.backgroundColor.setColor(0, 0, 0, 0.0);
         };
 
         /**
@@ -16919,6 +16906,11 @@
 
             // adjust position if required (e.g. canvas/window centering)
             renderer.translate(this.pos.x, this.pos.y);
+
+            // color background if defined
+            if (this.backgroundColor.alpha > 1 / 255) {
+                renderer.clearColor(this.backgroundColor);
+            }
 
             var children = this.getChildren();
             for (var i = children.length, obj; i--, (obj = children[i]);) {
@@ -18520,7 +18512,6 @@
      * every "stage" object (title screen, credits, ingame, etc...) to be managed
      * through the state manager must inherit from this base class.
      * @class Stage
-     * @augments me.Object
      * @memberof me
      * @param {object} [options] The stage` parameters
      * @param {me.Camera2d[]} [options.cameras=[new me.Camera2d()]] a list of cameras (experimental)
@@ -18663,77 +18654,6 @@
         }
     };
 
-    /**
-     * @classdesc
-     * a generic Color Layer Object.  Fills the entire Canvas with the color not just the container the object belongs to.
-     * @class ColorLayer
-     * @augments me.Renderable
-     * @memberof me
-     * @param {string} name Layer name
-     * @param {me.Color|string} color CSS color
-     * @param {number} [z = 0] z-index position
-     */
-    var ColorLayer = /*@__PURE__*/(function (Renderable) {
-        function ColorLayer(name, color, z) {
-            // parent constructor
-            Renderable.call(this, 0, 0, Infinity, Infinity);
-
-            /**
-             * the layer color component
-             * @public
-             * @type {me.Color}
-             * @name color
-             * @memberof me.ColorLayer#
-             */
-             this.color = pool.pull("Color").parseCSS(color);
-
-             this.onResetEvent(name, color, z);
-
-        }
-
-        if ( Renderable ) ColorLayer.__proto__ = Renderable;
-        ColorLayer.prototype = Object.create( Renderable && Renderable.prototype );
-        ColorLayer.prototype.constructor = ColorLayer;
-
-        ColorLayer.prototype.onResetEvent = function onResetEvent (name, color, z) {
-            if ( z === void 0 ) z = 0;
-
-            // apply given parameters
-            this.name = name;
-            this.pos.z = z;
-            this.floating = true;
-            // string (#RGB, #ARGB, #RRGGBB, #AARRGGBB)
-            this.color.parseCSS(color);
-        };
-
-        /**
-         * draw the color layer
-         * @ignore
-         */
-        ColorLayer.prototype.draw = function draw (renderer, rect) {
-            var vpos = viewport.pos;
-            renderer.save();
-            renderer.clipRect(
-                rect.left - vpos.x, rect.top - vpos.y,
-                rect.width, rect.height
-            );
-            renderer.clearColor(this.color);
-            renderer.restore();
-        };
-
-        /**
-         * Destroy function
-         * @ignore
-         */
-        ColorLayer.prototype.destroy = function destroy () {
-            pool.push(this.color);
-            this.color = undefined;
-            Renderable.prototype.destroy.call(this);
-        };
-
-        return ColorLayer;
-    }(Renderable));
-
     // a basic progress bar object
     var ProgressBar = /*@__PURE__*/(function (Renderable) {
         function ProgressBar(x, y, w, h) {
@@ -18862,8 +18782,8 @@
         DefaultLoadingScreen.prototype.onResetEvent = function onResetEvent () {
             var barHeight = 8;
 
-            // clear the background
-            world.addChild(new ColorLayer("background", "#202020"), 0);
+            // set a background color
+            world.backgroundColor.parseCSS("#202020");
 
             // progress bar
             world.addChild(new ProgressBar(
@@ -20458,41 +20378,9 @@
     /**
      * @classdesc
      * An object to display a fixed or animated sprite on screen.
-     * @class Sprite
      * @augments me.Renderable
      * @memberof me
-     * @param {number} x the x coordinates of the sprite object
-     * @param {number} y the y coordinates of the sprite object
-     * @param {object} settings Configuration parameters for the Sprite object
-     * @param {me.Renderer.Texture|HTMLImageElement|HTMLCanvasElement|string} settings.image reference to a texture, spritesheet image or to a texture atlas
-     * @param {string} [settings.name=""] name of this object
-     * @param {string} [settings.region] region name of a specific region to use when using a texture atlas, see {@link me.Renderer.Texture}
-     * @param {number} [settings.framewidth] Width of a single frame within the spritesheet
-     * @param {number} [settings.frameheight] Height of a single frame within the spritesheet
-     * @param {string|me.Color} [settings.tint] a tint to be applied to this sprite
-     * @param {number} [settings.flipX] flip the sprite on the horizontal axis
-     * @param {number} [settings.flipY] flip the sprite on the vertical axis
-     * @param {me.Vector2d} [settings.anchorPoint={x:0.5, y:0.5}] Anchor point to draw the frame at (defaults to the center of the frame).
-     * @example
-     * // create a single sprite from a standalone image, with anchor in the center
-     * var sprite = new me.Sprite(0, 0, {
-     *     image : "PlayerTexture",
-     *     framewidth : 64,
-     *     frameheight : 64,
-     *     anchorPoint : new me.Vector2d(0.5, 0.5)
-     * });
-     *
-     * // create a single sprite from a packed texture
-     * game.texture = new me.video.renderer.Texture(
-     *     me.loader.getJSON("texture"),
-     *     me.loader.getImage("texture")
-     * );
-     * var sprite = new me.Sprite(0, 0, {
-     *     image : game.texture,
-     *     region : "npc2.png",
-     * });
      */
-
     var Sprite = /*@__PURE__*/(function (Renderable) {
         function Sprite(x, y, settings) {
 
@@ -21296,7 +21184,6 @@
     /**
      * @classdesc
      * a line segment Object
-     * @class Line
      * @augments me.Polygon
      * @memberof me
      * @param {number} x origin point of the Line
@@ -25657,17 +25544,6 @@
             });
         }
 
-        // check if a user-defined background color is defined
-        if (this.backgroundcolor) {
-            this.layers.push(
-                pool.pull("ColorLayer",
-                    "background_color",
-                    this.backgroundcolor,
-                    zOrder++
-                )
-            );
-        }
-
         // check if a background image is defined
         if (this.background_image) {
             // add a new image layer
@@ -25731,6 +25607,10 @@
         // disable auto-sort and auto-depth
         container.autoSort = false;
         container.autoDepth = false;
+
+        if (this.backgroundcolor) {
+            container.backgroundColor.parseCSS(this.backgroundcolor);
+        }
 
         // add all layers instances
         this.getLayers().forEach(function (layer) {
@@ -31956,10 +31836,10 @@
          * this can be overridden by the plugin
          * @public
          * @type {string}
-         * @default "10.3.0"
+         * @default "10.4.0"
          * @name me.plugin.Base#version
          */
-        this.version = "10.3.0";
+        this.version = "10.4.0";
     };
 
     /**
@@ -31973,7 +31853,6 @@
          * plugin must be installed using the register function
          * @see me.plugin
          * @class
-         * @augments me.Object
          * @name plugin.Base
          * @memberof me
          */
@@ -32002,7 +31881,7 @@
             if (typeof proto.prototype !== "undefined") {
                 proto = proto.prototype;
             }
-            // reuse the logic behind me.Object.extend
+            // reuse the logic behind object extends
             if (typeof(proto[name]) === "function") {
                 // save the original function
                 var _parent = proto[name];
@@ -33016,25 +32895,8 @@
     /**
      * @classdesc
      * a generic system font object.
-     * @class Text
      * @augments me.Renderable
      * @memberof me
-     * @param {number} x position of the text object
-     * @param {number} y position of the text object
-     * @param {object} settings the text configuration
-     * @param {string} settings.font a CSS family font name
-     * @param {number|string} settings.size size, or size + suffix (px, em, pt)
-     * @param {me.Color|string} [settings.fillStyle="#000000"] a CSS color value
-     * @param {me.Color|string} [settings.strokeStyle="#000000"] a CSS color value
-     * @param {number} [settings.lineWidth=1] line width, in pixels, when drawing stroke
-     * @param {string} [settings.textAlign="left"] horizontal text alignment
-     * @param {string} [settings.textBaseline="top"] the text baseline
-     * @param {number} [settings.lineHeight=1.0] line spacing height
-     * @param {me.Vector2d} [settings.anchorPoint={x:0.0, y:0.0}] anchor point to draw the text at
-     * @param {boolean} [settings.offScreenCanvas=false] whether to draw the font to an individual "cache" texture first
-     * @param {(string|string[])} [settings.text=""] a string, or an array of strings
-     * @example
-     * var font = new me.Text(0, 0, {font: "Arial", size: 8, fillStyle: this.color});
      */
     var Text = /*@__PURE__*/(function (Renderable) {
         function Text(x, y, settings) {
@@ -33530,37 +33392,9 @@
     /**
      * @classdesc
      * a bitmap font object
-     * @class BitmapText
      * @augments me.Renderable
      * @memberof me
-     * @param {number} x position of the text object
-     * @param {number} y position of the text object
-     * @param {object} settings the text configuration
-     * @param {string|Image} settings.font a font name to identify the corresponing source image
-     * @param {string} [settings.fontData=settings.font] the bitmap font data corresponding name, or the bitmap font data itself
-     * @param {number} [settings.size] size a scaling ratio
-     * @param {me.Color|string} [settings.fillStyle] a CSS color value used to tint the bitmapText (@see me.BitmapText.tint)
-     * @param {number} [settings.lineWidth=1] line width, in pixels, when drawing stroke
-     * @param {string} [settings.textAlign="left"] horizontal text alignment
-     * @param {string} [settings.textBaseline="top"] the text baseline
-     * @param {number} [settings.lineHeight=1.0] line spacing height
-     * @param {me.Vector2d} [settings.anchorPoint={x:0.0, y:0.0}] anchor point to draw the text at
-     * @param {(string|string[])} [settings.text] a string, or an array of strings
-     * @example
-     * // Use me.loader.preload or me.loader.load to load assets
-     * me.loader.preload([
-     *     { name: "arial", type: "binary" src: "data/font/arial.fnt" },
-     *     { name: "arial", type: "image" src: "data/font/arial.png" },
-     * ])
-     * // Then create an instance of your bitmap font:
-     * var myFont = new me.BitmapText(x, y, {font:"arial", text:"Hello"});
-     * // two possibilities for using "myFont"
-     * // either call the draw function from your Renderable draw function
-     * myFont.draw(renderer, "Hello!", 0, 0);
-     * // or just add it to the word container
-     * me.game.world.addChild(myFont);
      */
-
     var BitmapText = /*@__PURE__*/(function (Renderable) {
         function BitmapText(x, y, settings) {
             // call the parent constructor
@@ -34008,166 +33842,209 @@
 
     /**
      * Class for storing relevant data from the font file.
-     * @class me.BitmapTextData
      * @memberof me
      * @ignore
-     * @param data {string} - The bitmap font data pulled from the resource loader using me.loader.getBinary()
      */
-    var BitmapTextData = function BitmapTextData() {
-        var ref;
+    var BitmapTextData = function BitmapTextData(data) {
+         this.onResetEvent(data);
+     };
 
-        var args = [], len = arguments.length;
-        while ( len-- ) args[ len ] = arguments[ len ];
-        (ref = this).onResetEvent.apply(ref, args);
-    };
+     /**
+      * @ignore
+      */
+     BitmapTextData.prototype.onResetEvent = function onResetEvent (data) {
+         this.padTop = 0;
+         this.padRight = 0;
+         this.padBottom = 0;
+         this.padLeft = 0;
+         this.lineHeight = 0;
+         // The distance from the top of most uppercase characters to the baseline. Since the drawing position is the cap height of
+         // the first line, the cap height can be used to get the location of the baseline.
+         this.capHeight = 1;
+         // The distance from the bottom of the glyph that extends the lowest to the baseline. This number is negative.
+         this.descent = 0;
+
+         /**
+          * The map of glyphs, each key is a char code.
+          * @name glyphs
+          * @type {object}
+          * @memberof me.BitmapTextData
+          */
+         this.glyphs = {};
+
+         // parse the data
+         this.parse(data);
+     };
+
+     /**
+      * This parses the font data text and builds a map of glyphs containing the data for each character
+      * @name parse
+      * @memberof me.BitmapTextData
+      * @function
+      * @param {string} fontData
+      */
+     BitmapTextData.prototype.parse = function parse (fontData) {
+         if (!fontData) {
+             throw new Error("File containing font data was empty, cannot load the bitmap font.");
+         }
+         var lines = fontData.split(/\r\n|\n/);
+         var padding = fontData.match(/padding\=\d+,\d+,\d+,\d+/g);
+         if (!padding) {
+             throw new Error("Padding not found in first line");
+         }
+         var paddingValues = padding[0].split("=")[1].split(",");
+         this.padTop = parseFloat(paddingValues[0]);
+         this.padLeft = parseFloat(paddingValues[1]);
+         this.padBottom = parseFloat(paddingValues[2]);
+         this.padRight = parseFloat(paddingValues[3]);
+
+         this.lineHeight = parseFloat(getValueFromPair(lines[1], /lineHeight\=\d+/g));
+
+         var baseLine = parseFloat(getValueFromPair(lines[1], /base\=\d+/g));
+
+         var padY = this.padTop + this.padBottom;
+
+         var glyph = null;
+
+         var i;
+
+         for (i = 4; i < lines.length; i++) {
+             var line = lines[i];
+             var characterValues = line.split(/=|\s+/);
+             if (!line || /^kernings/.test(line)) {
+                 continue;
+             }
+             if (/^kerning\s/.test(line)) {
+                 var first = parseFloat(characterValues[2]);
+                 var second = parseFloat(characterValues[4]);
+                 var amount = parseFloat(characterValues[6]);
+
+                 glyph = this.glyphs[first];
+                 if (glyph !== null && typeof glyph !== "undefined") {
+                     glyph.setKerning(second, amount);
+                 }
+             } else {
+                 glyph = new Glyph();
+
+                 var ch = parseFloat(characterValues[2]);
+                 glyph.id = ch;
+                 glyph.x = parseFloat(characterValues[4]);
+                 glyph.y = parseFloat(characterValues[6]);
+                 glyph.width = parseFloat(characterValues[8]);
+                 glyph.height = parseFloat(characterValues[10]);
+                 glyph.xoffset = parseFloat(characterValues[12]);
+                 glyph.yoffset = parseFloat(characterValues[14]);
+                 glyph.xadvance = parseFloat(characterValues[16]);
+
+                 if (glyph.width > 0 && glyph.height > 0) {
+                     this.descent = Math.min(baseLine + glyph.yoffset, this.descent);
+                 }
+
+                 this.glyphs[ch] = glyph;
+             }
+         }
+
+         this.descent += this.padBottom;
+
+         createSpaceGlyph(this.glyphs);
+
+         var capGlyph = null;
+         for (i = 0; i < capChars.length; i++) {
+             var capChar = capChars[i];
+             capGlyph = this.glyphs[capChar.charCodeAt(0)];
+             if (capGlyph) {
+                 break;
+             }
+         }
+         if (!capGlyph) {
+             for (var charCode in this.glyphs) {
+                 if (this.glyphs.hasOwnProperty(charCode)) {
+                     glyph = this.glyphs[charCode];
+                     if (glyph.height === 0 || glyph.width === 0) {
+                         continue;
+                     }
+                     this.capHeight = Math.max(this.capHeight, glyph.height);
+                 }
+             }
+         } else {
+             this.capHeight = capGlyph.height;
+         }
+         this.capHeight -= padY;
+     };
 
     /**
-     * @ignore
+     * @classdesc
+     * a generic Color Layer Object.  Fills the entire Canvas with the color not just the container the object belongs to.
+     * @augments me.Renderable
+     * @memberof me
      */
-    BitmapTextData.prototype.onResetEvent = function onResetEvent (data) {
-        this.padTop = 0;
-        this.padRight = 0;
-        this.padBottom = 0;
-        this.padLeft = 0;
-        this.lineHeight = 0;
-        // The distance from the top of most uppercase characters to the baseline. Since the drawing position is the cap height of
-        // the first line, the cap height can be used to get the location of the baseline.
-        this.capHeight = 1;
-        // The distance from the bottom of the glyph that extends the lowest to the baseline. This number is negative.
-        this.descent = 0;
+    var ColorLayer = /*@__PURE__*/(function (Renderable) {
+        function ColorLayer(name, color, z) {
+            // parent constructor
+            Renderable.call(this, 0, 0, Infinity, Infinity);
+
+            /**
+             * the layer color component
+             * @public
+             * @type {me.Color}
+             * @name color
+             * @memberof me.ColorLayer#
+             */
+             this.color = pool.pull("Color").parseCSS(color);
+
+             this.onResetEvent(name, color, z);
+
+        }
+
+        if ( Renderable ) ColorLayer.__proto__ = Renderable;
+        ColorLayer.prototype = Object.create( Renderable && Renderable.prototype );
+        ColorLayer.prototype.constructor = ColorLayer;
+
+        ColorLayer.prototype.onResetEvent = function onResetEvent (name, color, z) {
+            if ( z === void 0 ) z = 0;
+
+            // apply given parameters
+            this.name = name;
+            this.pos.z = z;
+            this.floating = true;
+            // string (#RGB, #ARGB, #RRGGBB, #AARRGGBB)
+            this.color.parseCSS(color);
+        };
 
         /**
-         * The map of glyphs, each key is a char code.
-         * @name glyphs
-         * @type {object}
-         * @memberof me.BitmapTextData
+         * draw the color layer
+         * @ignore
          */
-        this.glyphs = {};
+        ColorLayer.prototype.draw = function draw (renderer, rect) {
+            var vpos = viewport.pos;
+            renderer.save();
+            renderer.clipRect(
+                rect.left - vpos.x, rect.top - vpos.y,
+                rect.width, rect.height
+            );
+            renderer.clearColor(this.color);
+            renderer.restore();
+        };
 
-        // parse the data
-        this.parse(data);
-    };
+        /**
+         * Destroy function
+         * @ignore
+         */
+        ColorLayer.prototype.destroy = function destroy () {
+            pool.push(this.color);
+            this.color = undefined;
+            Renderable.prototype.destroy.call(this);
+        };
 
-    /**
-     * This parses the font data text and builds a map of glyphs containing the data for each character
-     * @name parse
-     * @memberof me.BitmapTextData
-     * @function
-     * @param {string} fontData
-     */
-    BitmapTextData.prototype.parse = function parse (fontData) {
-        if (!fontData) {
-            throw new Error("File containing font data was empty, cannot load the bitmap font.");
-        }
-        var lines = fontData.split(/\r\n|\n/);
-        var padding = fontData.match(/padding\=\d+,\d+,\d+,\d+/g);
-        if (!padding) {
-            throw new Error("Padding not found in first line");
-        }
-        var paddingValues = padding[0].split("=")[1].split(",");
-        this.padTop = parseFloat(paddingValues[0]);
-        this.padLeft = parseFloat(paddingValues[1]);
-        this.padBottom = parseFloat(paddingValues[2]);
-        this.padRight = parseFloat(paddingValues[3]);
-
-        this.lineHeight = parseFloat(getValueFromPair(lines[1], /lineHeight\=\d+/g));
-
-        var baseLine = parseFloat(getValueFromPair(lines[1], /base\=\d+/g));
-
-        var padY = this.padTop + this.padBottom;
-
-        var glyph = null;
-
-        var i;
-
-        for (i = 4; i < lines.length; i++) {
-            var line = lines[i];
-            var characterValues = line.split(/=|\s+/);
-            if (!line || /^kernings/.test(line)) {
-                continue;
-            }
-            if (/^kerning\s/.test(line)) {
-                var first = parseFloat(characterValues[2]);
-                var second = parseFloat(characterValues[4]);
-                var amount = parseFloat(characterValues[6]);
-
-                glyph = this.glyphs[first];
-                if (glyph !== null && typeof glyph !== "undefined") {
-                    glyph.setKerning(second, amount);
-                }
-            } else {
-                glyph = new Glyph();
-
-                var ch = parseFloat(characterValues[2]);
-                glyph.id = ch;
-                glyph.x = parseFloat(characterValues[4]);
-                glyph.y = parseFloat(characterValues[6]);
-                glyph.width = parseFloat(characterValues[8]);
-                glyph.height = parseFloat(characterValues[10]);
-                glyph.xoffset = parseFloat(characterValues[12]);
-                glyph.yoffset = parseFloat(characterValues[14]);
-                glyph.xadvance = parseFloat(characterValues[16]);
-
-                if (glyph.width > 0 && glyph.height > 0) {
-                    this.descent = Math.min(baseLine + glyph.yoffset, this.descent);
-                }
-
-                this.glyphs[ch] = glyph;
-            }
-        }
-
-        this.descent += this.padBottom;
-
-        createSpaceGlyph(this.glyphs);
-
-        var capGlyph = null;
-        for (i = 0; i < capChars.length; i++) {
-            var capChar = capChars[i];
-            capGlyph = this.glyphs[capChar.charCodeAt(0)];
-            if (capGlyph) {
-                break;
-            }
-        }
-        if (!capGlyph) {
-            for (var charCode in this.glyphs) {
-                if (this.glyphs.hasOwnProperty(charCode)) {
-                    glyph = this.glyphs[charCode];
-                    if (glyph.height === 0 || glyph.width === 0) {
-                        continue;
-                    }
-                    this.capHeight = Math.max(this.capHeight, glyph.height);
-                }
-            }
-        } else {
-            this.capHeight = capGlyph.height;
-        }
-        this.capHeight -= padY;
-    };
+        return ColorLayer;
+    }(Renderable));
 
     /**
      * @classdesc
      * a generic Image Layer Object
-     * @class ImageLayer
      * @augments me.Renderable
      * @memberof me
-     * @param {number} x x coordinate
-     * @param {number} y y coordinate
-     * @param {object} settings ImageLayer properties
-     * @param {HTMLImageElement|HTMLCanvasElement|string} settings.image Image reference. See {@link me.loader.getImage}
-     * @param {string} [settings.name="me.ImageLayer"] layer name
-     * @param {number} [settings.z=0] z-index position
-     * @param {number|me.Vector2d} [settings.ratio=1.0] Scrolling ratio to be applied. See {@link me.ImageLayer#ratio}
-     * @param {string} [settings.repeat='repeat'] define if and how an Image Layer should be repeated (accepted values are 'repeat',
-    'repeat-x', 'repeat-y', 'no-repeat'). See {@link me.ImageLayer#repeat}
-     * @param {number|me.Vector2d} [settings.anchorPoint=0.0] Image origin. See {@link me.ImageLayer#anchorPoint}
-     * @example
-     * // create a repetitive background pattern on the X axis using the citycloud image asset
-     * me.game.world.addChild(new me.ImageLayer(0, 0, {
-     *     image:"citycloud",
-     *     repeat :"repeat-x"
-     * }), 1);
      */
-
     var ImageLayer = /*@__PURE__*/(function (Sprite) {
        function ImageLayer(x, y, settings) {
             // call the constructor
@@ -34457,32 +34334,9 @@
      * by proportionally scaling a sprite by splitting it in a grid of nine parts (with only parts 1, 3, 7, 9 not being scaled). <br>
      * <img src="images/9-slice-scaling.png"/><br>
      * @see https://en.wikipedia.org/wiki/9-slice_scaling
-     * @class NineSliceSprite
      * @augments me.Sprite
      * @memberof me
-     * @param {number} x the x coordinates of the sprite object
-     * @param {number} y the y coordinates of the sprite object
-     * @param {object} settings Configuration parameters for the Sprite object
-     * @param {number} settings.width the width of the Renderable over which the sprite needs to be stretched
-     * @param {number} settings.height the height of the Renderable over which the sprite needs to be stretched
-     * @param {me.Renderer.Texture|HTMLImageElement|HTMLCanvasElement|string} settings.image reference to a texture, spritesheet image or to a texture atlas
-     * @param {string} [settings.name=""] name of this object
-     * @param {string} [settings.region] region name of a specific region to use when using a texture atlas, see {@link me.Renderer.Texture}
-     * @param {number} [settings.framewidth] Width of a single frame within the spritesheet
-     * @param {number} [settings.frameheight] Height of a single frame within the spritesheet
-     * @param {string|me.Color} [settings.tint] a tint to be applied to this sprite
-     * @param {number} [settings.flipX] flip the sprite on the horizontal axis
-     * @param {number} [settings.flipY] flip the sprite on the vertical axis
-     * @param {me.Vector2d} [settings.anchorPoint={x:0.5, y:0.5}] Anchor point to draw the frame at (defaults to the center of the frame).
-     * @example
-     * this.panelSprite = new me.NineSliceSprite(0, 0, {
-     *     image : game.texture,
-     *     region : "grey_panel",
-     *     width : this.width,
-     *     height : this.height
-     * });
      */
-
     var NineSliceSprite = /*@__PURE__*/(function (Sprite) {
         function NineSliceSprite(x, y, settings) {
             // call the super constructor
@@ -34666,39 +34520,9 @@
      * A very basic object to manage GUI elements <br>
      * The object simply register on the "pointerdown" <br>
      * or "touchstart" event and call the onClick function"
-     * @class GUI_Object
      * @augments me.Sprite
      * @memberof me
-     * @param {number} x the x coordinate of the GUI Object
-     * @param {number} y the y coordinate of the GUI Object
-     * @param {object} settings See {@link me.Sprite}
-     * @example
-     * // create a basic GUI Object
-     * class myButton extends GUI_Object {
-     *    constructor(x, y) {
-     *       var settings = {}
-     *       settings.image = "button";
-     *       settings.framewidth = 100;
-     *       settings.frameheight = 50;
-     *       // super constructor
-     *       super(x, y, settings);
-     *       // define the object z order
-     *       this.pos.z = 4;
-     *    }
-     *
-     *    // output something in the console
-     *    // when the object is clicked
-     *    onClick:function (event) {
-     *       console.log("clicked!");
-     *       // don't propagate the event
-     *       return false;
-     *    }
-     * });
-     *
-     * // add the object at pos (10,10)
-     * me.game.world.addChild(new myButton(10,10));
      */
-
     var GUI_Object = /*@__PURE__*/(function (Sprite) {
         function GUI_Object(x, y, settings) {
 
@@ -34911,14 +34735,9 @@
     /**
      * @classdesc
      * a basic collectable helper class for immovable object (e.g. a coin)
-     * @class Collectable
      * @augments me.Sprite
      * @memberof me
-     * @param {number} x the x coordinates of the collectable
-     * @param {number} y the y coordinates of the collectable
-     * @param {object} settings See {@link me.Sprite}
      */
-
     var Collectable = /*@__PURE__*/(function (Sprite) {
         function Collectable(x, y, settings) {
 
@@ -34956,36 +34775,12 @@
     /**
      * @classdesc
      * trigger an event when colliding with another object
-     * @class Trigger
      * @augments me.Renderable
      * @memberof me
-     * @param {number} x the x coordinates of the trigger area
-     * @param {number} y the y coordinates of the trigger area
-     * @param {number} [settings.width] width of the trigger area
-     * @param {number} [settings.height] height of the trigger area
-     * @param {me.Rect[]|me.Polygon[]|me.Line[]|me.Ellipse[]} [settings.shapes] collision shape(s) that will trigger the event
-     * @param {string} [settings.duration] Fade duration (in ms)
-     * @param {string|me.Color} [settings.color] Fade color
-     * @param {string} [settings.event="level"] the type of event to trigger (only "level" supported for now)
-     * @param {string} [settings.to] level to load if level trigger
-     * @param {string|me.Container} [settings.container] Target container. See {@link me.level.load}
-     * @param {Function} [settings.onLoaded] Level loaded callback. See {@link me.level.load}
-     * @param {boolean} [settings.flatten] Flatten all objects into the target container. See {@link me.level.load}
-     * @param {boolean} [settings.setViewportBounds] Resize the viewport to match the level. See {@link me.level.load}
-     * @example
-     * me.game.world.addChild(new me.Trigger(
-     *     x, y, {
-     *         shapes: [new me.Rect(0, 0, 100, 100)],
-     *         "duration" : 250,
-     *         "color" : "#000",
-     *         "to" : "mymap2"
-     *     }
-     * ));
      */
-
     var Trigger = /*@__PURE__*/(function (Renderable) {
         function Trigger(x, y, settings) {
-
+            // call the parent constructor
             Renderable.call(this, x, y, settings.width || 0, settings.height || 0);
 
             // for backward compatibility
@@ -36487,7 +36282,7 @@
      * @name version
      * @type {string}
      */
-    var version = "10.3.0";
+    var version = "10.4.0";
 
 
     /**
