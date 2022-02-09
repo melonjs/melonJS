@@ -34,40 +34,38 @@ var measureTextHeight = function(font) {
 /**
  * @classdesc
  * a bitmap font object
- * @class BitmapText
  * @augments me.Renderable
  * @memberof me
- * @param {number} x position of the text object
- * @param {number} y position of the text object
- * @param {object} settings the text configuration
- * @param {string|Image} settings.font a font name to identify the corresponing source image
- * @param {string} [settings.fontData=settings.font] the bitmap font data corresponding name, or the bitmap font data itself
- * @param {number} [settings.size] size a scaling ratio
- * @param {me.Color|string} [settings.fillStyle] a CSS color value used to tint the bitmapText (@see me.BitmapText.tint)
- * @param {number} [settings.lineWidth=1] line width, in pixels, when drawing stroke
- * @param {string} [settings.textAlign="left"] horizontal text alignment
- * @param {string} [settings.textBaseline="top"] the text baseline
- * @param {number} [settings.lineHeight=1.0] line spacing height
- * @param {me.Vector2d} [settings.anchorPoint={x:0.0, y:0.0}] anchor point to draw the text at
- * @param {(string|string[])} [settings.text] a string, or an array of strings
- * @example
- * // Use me.loader.preload or me.loader.load to load assets
- * me.loader.preload([
- *     { name: "arial", type: "binary" src: "data/font/arial.fnt" },
- *     { name: "arial", type: "image" src: "data/font/arial.png" },
- * ])
- * // Then create an instance of your bitmap font:
- * var myFont = new me.BitmapText(x, y, {font:"arial", text:"Hello"});
- * // two possibilities for using "myFont"
- * // either call the draw function from your Renderable draw function
- * myFont.draw(renderer, "Hello!", 0, 0);
- * // or just add it to the word container
- * me.game.world.addChild(myFont);
  */
-
 class BitmapText extends Renderable {
-
-    /** @ignore */
+    /**
+     * @param {number} x position of the text object
+     * @param {number} y position of the text object
+     * @param {object} settings the text configuration
+     * @param {string|Image} settings.font a font name to identify the corresponing source image
+     * @param {string} [settings.fontData=settings.font] the bitmap font data corresponding name, or the bitmap font data itself
+     * @param {number} [settings.size] size a scaling ratio
+     * @param {me.Color|string} [settings.fillStyle] a CSS color value used to tint the bitmapText (@see me.BitmapText.tint)
+     * @param {number} [settings.lineWidth=1] line width, in pixels, when drawing stroke
+     * @param {string} [settings.textAlign="left"] horizontal text alignment
+     * @param {string} [settings.textBaseline="top"] the text baseline
+     * @param {number} [settings.lineHeight=1.0] line spacing height
+     * @param {me.Vector2d} [settings.anchorPoint={x:0.0, y:0.0}] anchor point to draw the text at
+     * @param {(string|string[])} [settings.text] a string, or an array of strings
+     * @example
+     * // Use me.loader.preload or me.loader.load to load assets
+     * me.loader.preload([
+     *     { name: "arial", type: "binary" src: "data/font/arial.fnt" },
+     *     { name: "arial", type: "image" src: "data/font/arial.png" },
+     * ])
+     * // Then create an instance of your bitmap font:
+     * var myFont = new me.BitmapText(x, y, {font:"arial", text:"Hello"});
+     * // two possibilities for using "myFont"
+     * // either call the draw function from your Renderable draw function
+     * myFont.draw(renderer, "Hello!", 0, 0);
+     * // or just add it to the word container
+     * me.game.world.addChild(myFont);
+     */
     constructor(x, y, settings) {
         // call the parent constructor
         super(x, y, settings.width || 0, settings.height || 0);

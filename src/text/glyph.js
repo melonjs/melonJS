@@ -8,6 +8,9 @@ var PAGE_SIZE = 1 << LOG2_PAGE_SIZE;
  * @ignore
  */
 class Glyph {
+    /**
+     * @ignore
+     */
     constructor() {
         this.id = 0;
         this.x = 0;

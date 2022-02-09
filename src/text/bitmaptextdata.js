@@ -58,15 +58,16 @@ function createSpaceGlyph(glyphs) {
 
 /**
  * Class for storing relevant data from the font file.
- * @class me.BitmapTextData
  * @memberof me
  * @ignore
- * @param data {string} - The bitmap font data pulled from the resource loader using me.loader.getBinary()
  */
 class BitmapTextData {
 
-    constructor(...args) {
-        this.onResetEvent(...args);
+   /**
+    * @param {string} data - The bitmap font data pulled from the resource loader using me.loader.getBinary()
+    */
+    constructor(data) {
+        this.onResetEvent(data);
     }
 
     /**

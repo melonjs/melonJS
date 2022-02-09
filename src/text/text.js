@@ -37,29 +37,28 @@ var setContextStyle = function(context, font, stroke = false) {
 /**
  * @classdesc
  * a generic system font object.
- * @class Text
  * @augments me.Renderable
  * @memberof me
- * @param {number} x position of the text object
- * @param {number} y position of the text object
- * @param {object} settings the text configuration
- * @param {string} settings.font a CSS family font name
- * @param {number|string} settings.size size, or size + suffix (px, em, pt)
- * @param {me.Color|string} [settings.fillStyle="#000000"] a CSS color value
- * @param {me.Color|string} [settings.strokeStyle="#000000"] a CSS color value
- * @param {number} [settings.lineWidth=1] line width, in pixels, when drawing stroke
- * @param {string} [settings.textAlign="left"] horizontal text alignment
- * @param {string} [settings.textBaseline="top"] the text baseline
- * @param {number} [settings.lineHeight=1.0] line spacing height
- * @param {me.Vector2d} [settings.anchorPoint={x:0.0, y:0.0}] anchor point to draw the text at
- * @param {boolean} [settings.offScreenCanvas=false] whether to draw the font to an individual "cache" texture first
- * @param {(string|string[])} [settings.text=""] a string, or an array of strings
- * @example
- * var font = new me.Text(0, 0, {font: "Arial", size: 8, fillStyle: this.color});
  */
 class Text extends Renderable {
-
-    /** @ignore */
+    /**
+     * @param {number} x position of the text object
+     * @param {number} y position of the text object
+     * @param {object} settings the text configuration
+     * @param {string} settings.font a CSS family font name
+     * @param {number|string} settings.size size, or size + suffix (px, em, pt)
+     * @param {me.Color|string} [settings.fillStyle="#000000"] a CSS color value
+     * @param {me.Color|string} [settings.strokeStyle="#000000"] a CSS color value
+     * @param {number} [settings.lineWidth=1] line width, in pixels, when drawing stroke
+     * @param {string} [settings.textAlign="left"] horizontal text alignment
+     * @param {string} [settings.textBaseline="top"] the text baseline
+     * @param {number} [settings.lineHeight=1.0] line spacing height
+     * @param {me.Vector2d} [settings.anchorPoint={x:0.0, y:0.0}] anchor point to draw the text at
+     * @param {boolean} [settings.offScreenCanvas=false] whether to draw the font to an individual "cache" texture first
+     * @param {(string|string[])} [settings.text=""] a string, or an array of strings
+     * @example
+     * var font = new me.Text(0, 0, {font: "Arial", size: 8, fillStyle: this.color});
+     */
     constructor(x, y, settings) {
         // call the parent constructor
         super(x, y, settings.width || 0, settings.height || 0);
