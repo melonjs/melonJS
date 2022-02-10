@@ -1620,11 +1620,6 @@
     Color.prototype.setColor = function setColor (r, g, b, alpha) {
             if ( alpha === void 0 ) alpha = 1.0;
 
-        // Private initialization: copy Color value directly
-        if (r instanceof Color) {
-            this.glArray.set(r.glArray);
-            return r;
-        }
         this.r = r;
         this.g = g;
         this.b = b;
@@ -1640,7 +1635,7 @@
      * @returns {me.Color} Reference to the newly cloned object
      */
     Color.prototype.clone = function clone () {
-        return pool.pull("Color", this);
+        return pool.pull("Color").copy(this);
     };
 
     /**
@@ -1976,13 +1971,9 @@
 
     /**
      * @classdesc
-     * a 4x4 Matrix3d Object<br>
-     * @class Matrix3d
+     * a 4x4 Matrix3d Object
      * @memberof me
-     * @param {me.Matrix3d} [mat3d] An instance of me.Matrix3d to copy from
-     * @param {number[]} [arguments...] Matrix elements. See {@link me.Matrix3d.setTransform}
      */
-
     var Matrix3d = function Matrix3d() {
         var ref;
 
@@ -2678,12 +2669,8 @@
      * a Matrix2d Object.<br>
      * the identity matrix and parameters position : <br>
      * <img src="images/identity-matrix_2x.png"/>
-     * @class Matrix2d
      * @memberof me
-     * @param {me.Matrix2d} [mat2d] An instance of me.Matrix2d to copy from
-     * @param {number[]} [arguments...] Matrix elements. See {@link me.Matrix2d.setTransform}
      */
-
     var Matrix2d = function Matrix2d() {
          var ref;
 

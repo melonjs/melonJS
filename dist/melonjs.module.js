@@ -1590,11 +1590,6 @@ class Color {
      * @returns {me.Color} Reference to this object for method chaining
      */
     setColor(r, g, b, alpha = 1.0) {
-        // Private initialization: copy Color value directly
-        if (r instanceof Color) {
-            this.glArray.set(r.glArray);
-            return r;
-        }
         this.r = r;
         this.g = g;
         this.b = b;
@@ -1610,7 +1605,7 @@ class Color {
      * @returns {me.Color} Reference to the newly cloned object
      */
     clone() {
-        return pool.pull("Color", this);
+        return pool.pull("Color").copy(this);
     }
 
     /**
@@ -1938,15 +1933,13 @@ class Color {
 
 /**
  * @classdesc
- * a 4x4 Matrix3d Object<br>
- * @class Matrix3d
+ * a 4x4 Matrix3d Object
  * @memberof me
- * @param {me.Matrix3d} [mat3d] An instance of me.Matrix3d to copy from
- * @param {number[]} [arguments...] Matrix elements. See {@link me.Matrix3d.setTransform}
  */
-
 class Matrix3d {
-
+    /**
+     * @param {...(me.Matrix3d|number)} [args] An instance of me.Matrix3d to copy from, or individual Matrix components. See {@link me.Matrix3d.setTransform}
+     */
     constructor(...args) {
         this.onResetEvent(...args);
     }
@@ -2635,14 +2628,12 @@ class Matrix3d {
  * a Matrix2d Object.<br>
  * the identity matrix and parameters position : <br>
  * <img src="images/identity-matrix_2x.png"/>
- * @class Matrix2d
  * @memberof me
- * @param {me.Matrix2d} [mat2d] An instance of me.Matrix2d to copy from
- * @param {number[]} [arguments...] Matrix elements. See {@link me.Matrix2d.setTransform}
  */
-
 class Matrix2d {
-
+    /**
+     * @param {...(me.Matrix2d|me.Matrix3d|number)} [args] an instance of me.Matrix2d pr me.Matrix3d to copy from, or individual matrix components. See {@link me.Matrix2d.setTransform}
+     */
     constructor(...args) {
         this.onResetEvent(...args);
     }
