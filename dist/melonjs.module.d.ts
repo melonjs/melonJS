@@ -3646,17 +3646,21 @@ export class NineSliceSprite {
 /**
  * @classdesc
  * A Vector2d object that provide notification by executing the given callback when the vector is changed.
- * @class ObservableVector2d
  * @augments me.Vector2d
  * @memberof me
- * @param {number} [x=0] x value of the vector
- * @param {number} [y=0] y value of the vector
- * @param {object} settings additional required parameters
- * @param {Function} settings.onUpdate the callback to be executed when the vector is changed
- * @param {Function} [settings.scope] the value to use as this when calling onUpdate
  */
 export class ObservableVector2d {
-    constructor(x: number, y: number, settings: any);
+    /**
+     * @param {number} [x=0] x value of the vector
+     * @param {number} [y=0] y value of the vector
+     * @param {object} settings additional required parameters
+     * @param {Function} settings.onUpdate the callback to be executed when the vector is changed
+     * @param {Function} [settings.scope] the value to use as this when calling onUpdate
+     */
+    constructor(x?: number, y?: number, settings: {
+        onUpdate: Function;
+        scope?: Function;
+    });
     /**
      * @ignore
      */
@@ -3945,20 +3949,24 @@ export class ObservableVector2d {
     toString(): string;
 }
 /**
- * A Vector3d object that provide notification by executing the given callback when the vector is changed.
  * @classdesc
- * @class ObservableVector3d
+ * A Vector3d object that provide notification by executing the given callback when the vector is changed.
  * @augments me.Vector3d
  * @memberof me
- * @param {number} [x=0] x value of the vector
- * @param {number} [y=0] y value of the vector
- * @param {number} [z=0] z value of the vector
- * @param {object} settings additional required parameters
- * @param {Function} settings.onUpdate the callback to be executed when the vector is changed
- * @param {object} [settings.scope] the value to use as this when calling onUpdate
  */
 export class ObservableVector3d {
-    constructor(x: number, y: number, z: number, settings: any);
+    /**
+     * @param {number} [x=0] x value of the vector
+     * @param {number} [y=0] y value of the vector
+     * @param {number} [z=0] z value of the vector
+     * @param {object} settings additional required parameters
+     * @param {Function} settings.onUpdate the callback to be executed when the vector is changed
+     * @param {object} [settings.scope] the value to use as this when calling onUpdate
+     */
+    constructor(x?: number, y?: number, z?: number, settings: {
+        onUpdate: Function;
+        scope?: object;
+    });
     /**
      * @ignore
      */
@@ -7742,13 +7750,14 @@ export class Tween {
 /**
  * @classdesc
  * a generic 2D Vector Object
- * @class Vector2d
  * @memberof me
- * @param {number} [x=0] x value of the vector
- * @param {number} [y=0] y value of the vector
  */
 export class Vector2d {
-    constructor(...args: any[]);
+    /**
+     * @param {number} [x=0] x value of the vector
+     * @param {number} [y=0] y value of the vector
+     */
+    constructor(x?: number, y?: number);
     /**
      * @ignore
      */
@@ -8097,14 +8106,15 @@ export class Vector2d {
 /**
  * @classdesc
  * a generic 3D Vector Object
- * @class Vector3d
  * @memberof me
- * @param {number} [x=0] x value of the vector
- * @param {number} [y=0] y value of the vector
- * @param {number} [z=0] z value of the vector
  */
 export class Vector3d {
-    constructor(...args: any[]);
+    /**
+     * @param {number} [x=0] x value of the vector
+     * @param {number} [y=0] y value of the vector
+     * @param {number} [z=0] z value of the vector
+     */
+    constructor(x?: number, y?: number, z?: number);
     /**
      * @ignore
      */

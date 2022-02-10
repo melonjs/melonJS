@@ -4,17 +4,16 @@ import pool from "./../system/pooling.js";
 /**
  * @classdesc
  * a generic 3D Vector Object
- * @class Vector3d
  * @memberof me
- * @param {number} [x=0] x value of the vector
- * @param {number} [y=0] y value of the vector
- * @param {number} [z=0] z value of the vector
  */
-
 class Vector3d {
-
-    constructor(...args) {
-        this.onResetEvent(...args);
+    /**
+     * @param {number} [x=0] x value of the vector
+     * @param {number} [y=0] y value of the vector
+     * @param {number} [z=0] z value of the vector
+     */
+    constructor(x = 0, y = 0, z = 0) {
+        this.onResetEvent(x, y, z);
     }
 
     /**

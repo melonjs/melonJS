@@ -785,15 +785,15 @@ var pool = {
 /**
  * @classdesc
  * a generic 2D Vector Object
- * @class Vector2d
  * @memberof me
- * @param {number} [x=0] x value of the vector
- * @param {number} [y=0] y value of the vector
  */
 class Vector2d {
-
-    constructor(...args) {
-        this.onResetEvent(...args);
+    /**
+     * @param {number} [x=0] x value of the vector
+     * @param {number} [y=0] y value of the vector
+     */
+    constructor(x = 0, y = 0) {
+        this.onResetEvent(x, y);
     }
 
     /**
@@ -7254,17 +7254,17 @@ var howler = {};
 /**
  * @classdesc
  * A Vector2d object that provide notification by executing the given callback when the vector is changed.
- * @class ObservableVector2d
  * @augments me.Vector2d
  * @memberof me
- * @param {number} [x=0] x value of the vector
- * @param {number} [y=0] y value of the vector
- * @param {object} settings additional required parameters
- * @param {Function} settings.onUpdate the callback to be executed when the vector is changed
- * @param {Function} [settings.scope] the value to use as this when calling onUpdate
  */
 class ObservableVector2d extends Vector2d {
-
+    /**
+     * @param {number} [x=0] x value of the vector
+     * @param {number} [y=0] y value of the vector
+     * @param {object} settings additional required parameters
+     * @param {Function} settings.onUpdate the callback to be executed when the vector is changed
+     * @param {Function} [settings.scope] the value to use as this when calling onUpdate
+     */
     constructor(x = 0, y = 0, settings) {
         super(x, y);
         if (typeof(settings) === "undefined") {
@@ -7717,17 +7717,16 @@ class ObservableVector2d extends Vector2d {
 /**
  * @classdesc
  * a generic 3D Vector Object
- * @class Vector3d
  * @memberof me
- * @param {number} [x=0] x value of the vector
- * @param {number} [y=0] y value of the vector
- * @param {number} [z=0] z value of the vector
  */
-
 class Vector3d {
-
-    constructor(...args) {
-        this.onResetEvent(...args);
+    /**
+     * @param {number} [x=0] x value of the vector
+     * @param {number} [y=0] y value of the vector
+     * @param {number} [z=0] z value of the vector
+     */
+    constructor(x = 0, y = 0, z = 0) {
+        this.onResetEvent(x, y, z);
     }
 
     /**
@@ -8284,20 +8283,20 @@ class Vector3d {
 }
 
 /**
- * A Vector3d object that provide notification by executing the given callback when the vector is changed.
  * @classdesc
- * @class ObservableVector3d
+ * A Vector3d object that provide notification by executing the given callback when the vector is changed.
  * @augments me.Vector3d
  * @memberof me
- * @param {number} [x=0] x value of the vector
- * @param {number} [y=0] y value of the vector
- * @param {number} [z=0] z value of the vector
- * @param {object} settings additional required parameters
- * @param {Function} settings.onUpdate the callback to be executed when the vector is changed
- * @param {object} [settings.scope] the value to use as this when calling onUpdate
  */
 class ObservableVector3d extends Vector3d {
-
+    /**
+     * @param {number} [x=0] x value of the vector
+     * @param {number} [y=0] y value of the vector
+     * @param {number} [z=0] z value of the vector
+     * @param {object} settings additional required parameters
+     * @param {Function} settings.onUpdate the callback to be executed when the vector is changed
+     * @param {object} [settings.scope] the value to use as this when calling onUpdate
+     */
     constructor(x = 0, y = 0, z = 0, settings) {
         super(x, y, z);
         if (typeof(settings) === "undefined") {

@@ -3,20 +3,20 @@ import {clamp} from "./math.js";
 import pool from "./../system/pooling.js";
 
 /**
- * A Vector3d object that provide notification by executing the given callback when the vector is changed.
  * @classdesc
- * @class ObservableVector3d
+ * A Vector3d object that provide notification by executing the given callback when the vector is changed.
  * @augments me.Vector3d
  * @memberof me
- * @param {number} [x=0] x value of the vector
- * @param {number} [y=0] y value of the vector
- * @param {number} [z=0] z value of the vector
- * @param {object} settings additional required parameters
- * @param {Function} settings.onUpdate the callback to be executed when the vector is changed
- * @param {object} [settings.scope] the value to use as this when calling onUpdate
  */
 class ObservableVector3d extends Vector3d {
-
+    /**
+     * @param {number} [x=0] x value of the vector
+     * @param {number} [y=0] y value of the vector
+     * @param {number} [z=0] z value of the vector
+     * @param {object} settings additional required parameters
+     * @param {Function} settings.onUpdate the callback to be executed when the vector is changed
+     * @param {object} [settings.scope] the value to use as this when calling onUpdate
+     */
     constructor(x = 0, y = 0, z = 0, settings) {
         super(x, y, z);
         if (typeof(settings) === "undefined") {

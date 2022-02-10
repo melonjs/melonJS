@@ -804,17 +804,13 @@
     /**
      * @classdesc
      * a generic 2D Vector Object
-     * @class Vector2d
      * @memberof me
-     * @param {number} [x=0] x value of the vector
-     * @param {number} [y=0] y value of the vector
      */
-    var Vector2d = function Vector2d() {
-         var ref;
+    var Vector2d = function Vector2d(x, y) {
+         if ( x === void 0 ) x = 0;
+         if ( y === void 0 ) y = 0;
 
-         var args = [], len = arguments.length;
-         while ( len-- ) args[ len ] = arguments[ len ];
-         (ref = this).onResetEvent.apply(ref, args);
+         this.onResetEvent(x, y);
      };
 
      /**
@@ -7305,14 +7301,8 @@
     /**
      * @classdesc
      * A Vector2d object that provide notification by executing the given callback when the vector is changed.
-     * @class ObservableVector2d
      * @augments me.Vector2d
      * @memberof me
-     * @param {number} [x=0] x value of the vector
-     * @param {number} [y=0] y value of the vector
-     * @param {object} settings additional required parameters
-     * @param {Function} settings.onUpdate the callback to be executed when the vector is changed
-     * @param {Function} [settings.scope] the value to use as this when calling onUpdate
      */
     var ObservableVector2d = /*@__PURE__*/(function (Vector2d) {
         function ObservableVector2d(x, y, settings) {
@@ -7785,19 +7775,14 @@
     /**
      * @classdesc
      * a generic 3D Vector Object
-     * @class Vector3d
      * @memberof me
-     * @param {number} [x=0] x value of the vector
-     * @param {number} [y=0] y value of the vector
-     * @param {number} [z=0] z value of the vector
      */
+    var Vector3d = function Vector3d(x, y, z) {
+         if ( x === void 0 ) x = 0;
+         if ( y === void 0 ) y = 0;
+         if ( z === void 0 ) z = 0;
 
-    var Vector3d = function Vector3d() {
-         var ref;
-
-         var args = [], len = arguments.length;
-         while ( len-- ) args[ len ] = arguments[ len ];
-         (ref = this).onResetEvent.apply(ref, args);
+         this.onResetEvent(x, y, z);
      };
 
      /**
@@ -8359,17 +8344,10 @@
      };
 
     /**
-     * A Vector3d object that provide notification by executing the given callback when the vector is changed.
      * @classdesc
-     * @class ObservableVector3d
+     * A Vector3d object that provide notification by executing the given callback when the vector is changed.
      * @augments me.Vector3d
      * @memberof me
-     * @param {number} [x=0] x value of the vector
-     * @param {number} [y=0] y value of the vector
-     * @param {number} [z=0] z value of the vector
-     * @param {object} settings additional required parameters
-     * @param {Function} settings.onUpdate the callback to be executed when the vector is changed
-     * @param {object} [settings.scope] the value to use as this when calling onUpdate
      */
     var ObservableVector3d = /*@__PURE__*/(function (Vector3d) {
         function ObservableVector3d(x, y, z, settings) {

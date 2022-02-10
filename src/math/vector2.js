@@ -4,15 +4,15 @@ import pool from "./../system/pooling.js";
 /**
  * @classdesc
  * a generic 2D Vector Object
- * @class Vector2d
  * @memberof me
- * @param {number} [x=0] x value of the vector
- * @param {number} [y=0] y value of the vector
  */
 class Vector2d {
-
-    constructor(...args) {
-        this.onResetEvent(...args);
+    /**
+     * @param {number} [x=0] x value of the vector
+     * @param {number} [y=0] y value of the vector
+     */
+    constructor(x = 0, y = 0) {
+        this.onResetEvent(x, y);
     }
 
     /**
