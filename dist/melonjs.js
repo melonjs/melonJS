@@ -10917,18 +10917,17 @@
     /**
      * @classdesc
      * a bound object contains methods for creating and manipulating axis-aligned bounding boxes (AABB).
-     * @class Bounds
      * @memberof me
-     * @param {me.Vector2d[]} [vertices] an array of me.Vector2d points
-     * @returns {me.Bounds} A new bounds object
      */
-
     var Bounds$1 = function Bounds(vertices) {
         this.onResetEvent(vertices);
     };
 
     var prototypeAccessors$1 = { x: { configurable: true },y: { configurable: true },width: { configurable: true },height: { configurable: true },left: { configurable: true },right: { configurable: true },top: { configurable: true },bottom: { configurable: true },centerX: { configurable: true },centerY: { configurable: true },center: { configurable: true } };
 
+    /**
+     * @ignore
+     */
     Bounds$1.prototype.onResetEvent = function onResetEvent (vertices) {
         if (typeof this.min === "undefined") {
             this.min = { x: Infinity,  y: Infinity };
@@ -15098,12 +15097,9 @@
     };
 
     /**
+     * @classdesc
      * a Generic Physic Body Object with some physic properties and behavior functionality, to as a member of a Renderable.
-     * @class Body
      * @memberof me
-     * @param {me.Renderable} ancestor the parent object this body is attached to
-     * @param {me.Rect|me.Rect[]|me.Polygon|me.Polygon[]|me.Line|me.Line[]|me.Ellipse|me.Ellipse[]|me.Bounds|me.Bounds[]|object} [shapes] a initial shape, list of shapes, or JSON object defining the body
-     * @param {Function} [onBodyUpdate] callback for when the body is updated (e.g. add/remove shapes)
      */
     var Body = function Body(parent, shapes, onBodyUpdate) {
 
@@ -17280,13 +17276,8 @@
     /**
      * @classdesc
      * an object representing the physic world, and responsible for managing and updating all childs and physics
-     * @class World
      * @augments me.Container
      * @memberof me
-     * @param {number} [x=0] position of the container (accessible via the inherited pos.x property)
-     * @param {number} [y=0] position of the container (accessible via the inherited pos.y property)
-     * @param {number} [w=me.game.viewport.width] width of the container
-     * @param {number} [h=me.game.viewport.height] height of the container
      */
     var World = /*@__PURE__*/(function (Container) {
         function World(x, y, width, height) {
@@ -17724,13 +17715,8 @@
     /**
      * @classdesc
      * a 2D orthographic camera
-     * @class Camera2d
      * @augments me.Renderable
      * @memberof me
-     * @param {number} minX start x offset
-     * @param {number} minY start y offset
-     * @param {number} maxX end x offset
-     * @param {number} maxY end y offset
      */
     var Camera2d = /*@__PURE__*/(function (Renderable) {
         function Camera2d(minX, minY, maxX, maxY) {
@@ -22870,18 +22856,17 @@
     /**
      * @classdesc
      * a bound object contains methods for creating and manipulating axis-aligned bounding boxes (AABB).
-     * @class Bounds
      * @memberof me
-     * @param {me.Vector2d[]} [vertices] an array of me.Vector2d points
-     * @returns {me.Bounds} A new bounds object
      */
-
     var Bounds = function Bounds(vertices) {
         this.onResetEvent(vertices);
     };
 
     var prototypeAccessors = { x: { configurable: true },y: { configurable: true },width: { configurable: true },height: { configurable: true },left: { configurable: true },right: { configurable: true },top: { configurable: true },bottom: { configurable: true },centerX: { configurable: true },centerY: { configurable: true },center: { configurable: true } };
 
+    /**
+     * @ignore
+     */
     Bounds.prototype.onResetEvent = function onResetEvent (vertices) {
         if (typeof this.min === "undefined") {
             this.min = { x: Infinity,  y: Infinity };
@@ -35677,27 +35662,10 @@
     /**
      * @classdesc
      * a Generic Object Entity
-     * @class Entity
      * @augments me.Renderable
      * @memberof me
      * @see me.Renderable
-     * @param {number} x the x coordinates of the entity object
-     * @param {number} y the y coordinates of the entity object
-     * @param {object} settings Entity properties, to be defined through Tiled or when calling the entity constructor
-     * <img src="images/object_properties.png"/>
-     * @param {number} settings.width the physical width the entity takes up in game
-     * @param {number} settings.height the physical height the entity takes up in game
-     * @param {string} [settings.name] object entity name
-     * @param {string} [settings.id] object unique IDs
-     * @param {Image|string} [settings.image] resource name of a spritesheet to use for the entity renderable component
-     * @param {me.Vector2d} [settings.anchorPoint=0.0] Entity anchor point
-     * @param {number} [settings.framewidth=settings.width] width of a single frame in the given spritesheet
-     * @param {number} [settings.frameheight=settings.width] height of a single frame in the given spritesheet
-     * @param {string} [settings.type] object type
-     * @param {number} [settings.collisionMask] Mask collision detection for this object
-     * @param {me.Rect[]|me.Polygon[]|me.Line[]|me.Ellipse[]} [settings.shapes] the initial list of collision shapes (usually populated through Tiled)
      */
-
     var Entity = /*@__PURE__*/(function (Renderable) {
         function Entity(x, y, settings) {
 
@@ -35926,12 +35894,8 @@
     /**
      * @classdesc
      * Used to make a game entity draggable
-     * @class DraggableEntity
      * @augments me.Entity
      * @memberof me
-     * @param {number} x the x coordinates of the entity object
-     * @param {number} y the y coordinates of the entity object
-     * @param {object} settings Entity properties (see {@link me.Entity})
      */
     var DraggableEntity = /*@__PURE__*/(function (Entity) {
         function DraggableEntity(x, y, settings) {
@@ -36056,14 +36020,9 @@
     /**
      * @classdesc
      * Used to make a game entity a droptarget
-     * @class DroptargetEntity
      * @augments me.Entity
      * @memberof me
-     * @param {number} x the x coordinates of the entity object
-     * @param {number} y the y coordinates of the entity object
-     * @param {object} settings Entity properties (see {@link me.Entity})
      */
-
     var DroptargetEntity = /*@__PURE__*/(function (Entity) {
         function DroptargetEntity(x, y, settings) {
             Entity.call(this, x, y, settings);

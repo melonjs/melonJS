@@ -197,15 +197,17 @@ export class BitmapTextData {
     parse(fontData: string): void;
 }
 /**
+ * @classdesc
  * a Generic Physic Body Object with some physic properties and behavior functionality, to as a member of a Renderable.
- * @class Body
  * @memberof me
- * @param {me.Renderable} ancestor the parent object this body is attached to
- * @param {me.Rect|me.Rect[]|me.Polygon|me.Polygon[]|me.Line|me.Line[]|me.Ellipse|me.Ellipse[]|me.Bounds|me.Bounds[]|object} [shapes] a initial shape, list of shapes, or JSON object defining the body
- * @param {Function} [onBodyUpdate] callback for when the body is updated (e.g. add/remove shapes)
  */
 export class Body {
-    constructor(parent: any, shapes: any, onBodyUpdate: any);
+    /**
+     * @param {me.Renderable} ancestor the parent object this body is attached to
+     * @param {me.Rect|me.Rect[]|me.Polygon|me.Polygon[]|me.Line|me.Line[]|me.Ellipse|me.Ellipse[]|me.Bounds|me.Bounds[]|object} [shapes] a initial shape, list of shapes, or JSON object defining the body
+     * @param {Function} [onBodyUpdate] callback for when the body is updated (e.g. add/remove shapes)
+     */
+    constructor(parent: any, shapes?: me.Rect | me.Rect[] | me.Polygon | me.Polygon[] | me.Line | me.Line[] | me.Ellipse | me.Ellipse[] | me.Bounds | me.Bounds[] | object, onBodyUpdate?: Function);
     /**
      * a reference to the parent object that contains this body,
      * or undefined if it has not been added to one.
@@ -317,7 +319,7 @@ export class Body {
      * @memberof me.Body
      */
     public readonly jumping: boolean;
-    onBodyUpdate: any;
+    onBodyUpdate: Function;
     /**
      * set the body as a static body
      * static body do not move automatically and do not check againt collision with others
@@ -566,13 +568,17 @@ export class Body {
 /**
  * @classdesc
  * a bound object contains methods for creating and manipulating axis-aligned bounding boxes (AABB).
- * @class Bounds
  * @memberof me
- * @param {me.Vector2d[]} [vertices] an array of me.Vector2d points
- * @returns {me.Bounds} A new bounds object
  */
 declare class Bounds$1 {
-    constructor(vertices: any);
+    /**
+     * @param {me.Vector2d[]} [vertices] an array of me.Vector2d points
+     * @returns {me.Bounds} A new bounds object
+     */
+    constructor(vertices?: me.Vector2d[]);
+    /**
+     * @ignore
+     */
     onResetEvent(vertices: any): void;
     min: {
         x: number;
@@ -827,19 +833,17 @@ declare class Bounds$1 {
 /**
  * @classdesc
  * a 2D orthographic camera
- * @class Camera2d
  * @augments me.Renderable
  * @memberof me
- * @param {number} minX start x offset
- * @param {number} minY start y offset
- * @param {number} maxX end x offset
- * @param {number} maxY end y offset
  */
 export class Camera2d {
     /**
-     * @ignore
+     * @param {number} minX start x offset
+     * @param {number} minY start y offset
+     * @param {number} maxX end x offset
+     * @param {number} maxY end y offset
      */
-    constructor(minX: any, minY: any, maxX: any, maxY: any);
+    constructor(minX: number, minY: number, maxX: number, maxY: number);
     /**
      * Axis definition
      * @property {number} NONE no axis
@@ -2226,15 +2230,16 @@ export class Container {
 /**
  * @classdesc
  * Used to make a game entity draggable
- * @class DraggableEntity
  * @augments me.Entity
  * @memberof me
- * @param {number} x the x coordinates of the entity object
- * @param {number} y the y coordinates of the entity object
- * @param {object} settings Entity properties (see {@link me.Entity})
  */
 export class DraggableEntity {
-    constructor(x: any, y: any, settings: any);
+    /**
+     * @param {number} x the x coordinates of the entity object
+     * @param {number} y the y coordinates of the entity object
+     * @param {object} settings Entity properties (see {@link me.Entity})
+     */
+    constructor(x: number, y: number, settings: object);
     dragging: boolean;
     dragId: any;
     grabOffset: Vector2d;
@@ -2304,15 +2309,16 @@ export class DraggableEntity {
 /**
  * @classdesc
  * Used to make a game entity a droptarget
- * @class DroptargetEntity
  * @augments me.Entity
  * @memberof me
- * @param {number} x the x coordinates of the entity object
- * @param {number} y the y coordinates of the entity object
- * @param {object} settings Entity properties (see {@link me.Entity})
  */
 export class DroptargetEntity {
-    constructor(x: any, y: any, settings: any);
+    /**
+     * @param {number} x the x coordinates of the entity object
+     * @param {number} y the y coordinates of the entity object
+     * @param {object} settings Entity properties (see {@link me.Entity})
+     */
+    constructor(x: number, y: number, settings: object);
     /**
      * constant for the overlaps method
      * @public
@@ -2543,31 +2549,41 @@ export class Ellipse {
 /**
  * @classdesc
  * a Generic Object Entity
- * @class Entity
  * @augments me.Renderable
  * @memberof me
  * @see me.Renderable
- * @param {number} x the x coordinates of the entity object
- * @param {number} y the y coordinates of the entity object
- * @param {object} settings Entity properties, to be defined through Tiled or when calling the entity constructor
- * <img src="images/object_properties.png"/>
- * @param {number} settings.width the physical width the entity takes up in game
- * @param {number} settings.height the physical height the entity takes up in game
- * @param {string} [settings.name] object entity name
- * @param {string} [settings.id] object unique IDs
- * @param {Image|string} [settings.image] resource name of a spritesheet to use for the entity renderable component
- * @param {me.Vector2d} [settings.anchorPoint=0.0] Entity anchor point
- * @param {number} [settings.framewidth=settings.width] width of a single frame in the given spritesheet
- * @param {number} [settings.frameheight=settings.width] height of a single frame in the given spritesheet
- * @param {string} [settings.type] object type
- * @param {number} [settings.collisionMask] Mask collision detection for this object
- * @param {me.Rect[]|me.Polygon[]|me.Line[]|me.Ellipse[]} [settings.shapes] the initial list of collision shapes (usually populated through Tiled)
  */
 export class Entity {
     /**
-     * @ignore
+     * @param {number} x the x coordinates of the entity object
+     * @param {number} y the y coordinates of the entity object
+     * @param {object} settings Entity properties, to be defined through Tiled or when calling the entity constructor
+     * <img src="images/object_properties.png"/>
+     * @param {number} settings.width the physical width the entity takes up in game
+     * @param {number} settings.height the physical height the entity takes up in game
+     * @param {string} [settings.name] object entity name
+     * @param {string} [settings.id] object unique IDs
+     * @param {Image|string} [settings.image] resource name of a spritesheet to use for the entity renderable component
+     * @param {me.Vector2d} [settings.anchorPoint=0.0] Entity anchor point
+     * @param {number} [settings.framewidth=settings.width] width of a single frame in the given spritesheet
+     * @param {number} [settings.frameheight=settings.width] height of a single frame in the given spritesheet
+     * @param {string} [settings.type] object type
+     * @param {number} [settings.collisionMask] Mask collision detection for this object
+     * @param {me.Rect[]|me.Polygon[]|me.Line[]|me.Ellipse[]} [settings.shapes] the initial list of collision shapes (usually populated through Tiled)
      */
-    constructor(x: any, y: any, settings: any);
+    constructor(x: number, y: number, settings: {
+        width: number;
+        height: number;
+        name?: string;
+        id?: string;
+        image?: (new (width?: number, height?: number) => HTMLImageElement) | string;
+        anchorPoint?: me.Vector2d;
+        framewidth?: number;
+        frameheight?: number;
+        type?: string;
+        collisionMask?: number;
+        shapes?: me.Rect[] | me.Polygon[] | me.Line[] | me.Ellipse[];
+    });
     /**
      * The array of renderable children of this entity.
      * @ignore
@@ -2582,7 +2598,7 @@ export class Entity {
      * @memberof me.Entity
      */
     public get renderable(): me.Renderable;
-    name: any;
+    name: string;
     /**
      * object type (as defined in Tiled)
      * @public
@@ -9175,17 +9191,15 @@ export class WebGLRenderer {
 /**
  * @classdesc
  * an object representing the physic world, and responsible for managing and updating all childs and physics
- * @class World
  * @augments me.Container
  * @memberof me
- * @param {number} [x=0] position of the container (accessible via the inherited pos.x property)
- * @param {number} [y=0] position of the container (accessible via the inherited pos.y property)
- * @param {number} [w=me.game.viewport.width] width of the container
- * @param {number} [h=me.game.viewport.height] height of the container
  */
 export class World {
     /**
-     * @ignore
+     * @param {number} [x=0] position of the container (accessible via the inherited pos.x property)
+     * @param {number} [y=0] position of the container (accessible via the inherited pos.y property)
+     * @param {number} [w=me.game.viewport.width] width of the container
+     * @param {number} [h=me.game.viewport.height] height of the container
      */
     constructor(x?: number, y?: number, width?: number, height?: number);
     name: string;
@@ -11630,13 +11644,17 @@ declare class Texture {
 /**
  * @classdesc
  * a bound object contains methods for creating and manipulating axis-aligned bounding boxes (AABB).
- * @class Bounds
  * @memberof me
- * @param {me.Vector2d[]} [vertices] an array of me.Vector2d points
- * @returns {me.Bounds} A new bounds object
  */
 declare class Bounds {
-    constructor(vertices: any);
+    /**
+     * @param {me.Vector2d[]} [vertices] an array of me.Vector2d points
+     * @returns {me.Bounds} A new bounds object
+     */
+    constructor(vertices?: me.Vector2d[]);
+    /**
+     * @ignore
+     */
     onResetEvent(vertices: any): void;
     min: {
         x: number;
