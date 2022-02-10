@@ -8,32 +8,27 @@ import Polygon from "./../geometries/poly.js";
 /**
  * @classdesc
  * a Generic Object Entity
- * @class Entity
  * @augments me.Renderable
  * @memberof me
  * @see me.Renderable
- * @param {number} x the x coordinates of the entity object
- * @param {number} y the y coordinates of the entity object
- * @param {object} settings Entity properties, to be defined through Tiled or when calling the entity constructor
- * <img src="images/object_properties.png"/>
- * @param {number} settings.width the physical width the entity takes up in game
- * @param {number} settings.height the physical height the entity takes up in game
- * @param {string} [settings.name] object entity name
- * @param {string} [settings.id] object unique IDs
- * @param {Image|string} [settings.image] resource name of a spritesheet to use for the entity renderable component
- * @param {me.Vector2d} [settings.anchorPoint=0.0] Entity anchor point
- * @param {number} [settings.framewidth=settings.width] width of a single frame in the given spritesheet
- * @param {number} [settings.frameheight=settings.width] height of a single frame in the given spritesheet
- * @param {string} [settings.type] object type
- * @param {number} [settings.collisionMask] Mask collision detection for this object
- * @param {me.Rect[]|me.Polygon[]|me.Line[]|me.Ellipse[]} [settings.shapes] the initial list of collision shapes (usually populated through Tiled)
  */
-
 class Entity extends Renderable {
-
-
     /**
-     * @ignore
+     * @param {number} x the x coordinates of the entity object
+     * @param {number} y the y coordinates of the entity object
+     * @param {object} settings Entity properties, to be defined through Tiled or when calling the entity constructor
+     * <img src="images/object_properties.png"/>
+     * @param {number} settings.width the physical width the entity takes up in game
+     * @param {number} settings.height the physical height the entity takes up in game
+     * @param {string} [settings.name] object entity name
+     * @param {string} [settings.id] object unique IDs
+     * @param {Image|string} [settings.image] resource name of a spritesheet to use for the entity renderable component
+     * @param {me.Vector2d} [settings.anchorPoint=0.0] Entity anchor point
+     * @param {number} [settings.framewidth=settings.width] width of a single frame in the given spritesheet
+     * @param {number} [settings.frameheight=settings.width] height of a single frame in the given spritesheet
+     * @param {string} [settings.type] object type
+     * @param {number} [settings.collisionMask] Mask collision detection for this object
+     * @param {me.Rect[]|me.Polygon[]|me.Line[]|me.Ellipse[]} [settings.shapes] the initial list of collision shapes (usually populated through Tiled)
      */
     constructor(x, y, settings) {
 

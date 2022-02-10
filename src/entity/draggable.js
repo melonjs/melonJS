@@ -6,15 +6,15 @@ import Entity from "./entity.js";
 /**
  * @classdesc
  * Used to make a game entity draggable
- * @class DraggableEntity
  * @augments me.Entity
  * @memberof me
- * @param {number} x the x coordinates of the entity object
- * @param {number} y the y coordinates of the entity object
- * @param {object} settings Entity properties (see {@link me.Entity})
  */
 class DraggableEntity extends Entity {
-
+    /**
+     * @param {number} x the x coordinates of the entity object
+     * @param {number} y the y coordinates of the entity object
+     * @param {object} settings Entity properties (see {@link me.Entity})
+     */
     constructor(x, y, settings) {
         super(x, y, settings);
         this.dragging = false;
