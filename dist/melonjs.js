@@ -1506,19 +1506,15 @@
     /**
      * @classdesc
      * A color manipulation object.
-     * @class Color
      * @memberof me
-     * @param {number|Float32Array} [r=0] red component or array of color components
-     * @param {number} [g=0] green component
-     * @param {number} [b=0] blue component
-     * @param {number} [alpha=1.0] alpha value
      */
-    var Color = function Color() {
-        var ref;
+    var Color = function Color(r, g, b, alpha) {
+        if ( r === void 0 ) r = 0;
+        if ( g === void 0 ) g = 0;
+        if ( b === void 0 ) b = 0;
+        if ( alpha === void 0 ) alpha = 1.0;
 
-        var args = [], len = arguments.length;
-        while ( len-- ) args[ len ] = arguments[ len ];
-        (ref = this).onResetEvent.apply(ref, args);
+        this.onResetEvent(r, g, b, alpha);
     };
 
     var prototypeAccessors$4 = { r: { configurable: true },g: { configurable: true },b: { configurable: true },alpha: { configurable: true } };

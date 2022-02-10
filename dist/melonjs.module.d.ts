@@ -1537,15 +1537,16 @@ export class Collectable {
 /**
  * @classdesc
  * A color manipulation object.
- * @class Color
  * @memberof me
- * @param {number|Float32Array} [r=0] red component or array of color components
- * @param {number} [g=0] green component
- * @param {number} [b=0] blue component
- * @param {number} [alpha=1.0] alpha value
  */
 export class Color {
-    constructor(...args: any[]);
+    /**
+     * @param {number} [r=0] red component or array of color components
+     * @param {number} [g=0] green component
+     * @param {number} [b=0] blue component
+     * @param {number} [alpha=1.0] alpha value
+     */
+    constructor(r?: number, g?: number, b?: number, alpha?: number);
     /**
      * @ignore
      */

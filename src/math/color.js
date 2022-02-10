@@ -172,17 +172,17 @@ var cssToRGB = new Map();
 /**
  * @classdesc
  * A color manipulation object.
- * @class Color
  * @memberof me
- * @param {number|Float32Array} [r=0] red component or array of color components
- * @param {number} [g=0] green component
- * @param {number} [b=0] blue component
- * @param {number} [alpha=1.0] alpha value
  */
 class Color {
-
-    constructor(...args) {
-        this.onResetEvent(...args);
+    /**
+     * @param {number} [r=0] red component or array of color components
+     * @param {number} [g=0] green component
+     * @param {number} [b=0] blue component
+     * @param {number} [alpha=1.0] alpha value
+     */
+    constructor(r = 0, g = 0, b = 0, alpha = 1.0) {
+        this.onResetEvent(r, g, b, alpha);
     }
 
     /**
@@ -279,11 +279,6 @@ class Color {
      * @returns {me.Color} Reference to this object for method chaining
      */
     setColor(r, g, b, alpha = 1.0) {
-        // Private initialization: copy Color value directly
-        if (r instanceof Color) {
-            this.glArray.set(r.glArray);
-            return r;
-        }
         this.r = r;
         this.g = g;
         this.b = b;
@@ -299,7 +294,7 @@ class Color {
      * @returns {me.Color} Reference to the newly cloned object
      */
     clone() {
-        return pool.pull("Color", this);
+        return pool.pull("Color").copy(this);
     }
 
     /**

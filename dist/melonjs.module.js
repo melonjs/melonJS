@@ -1483,17 +1483,17 @@ var cssToRGB = new Map();
 /**
  * @classdesc
  * A color manipulation object.
- * @class Color
  * @memberof me
- * @param {number|Float32Array} [r=0] red component or array of color components
- * @param {number} [g=0] green component
- * @param {number} [b=0] blue component
- * @param {number} [alpha=1.0] alpha value
  */
 class Color {
-
-    constructor(...args) {
-        this.onResetEvent(...args);
+    /**
+     * @param {number} [r=0] red component or array of color components
+     * @param {number} [g=0] green component
+     * @param {number} [b=0] blue component
+     * @param {number} [alpha=1.0] alpha value
+     */
+    constructor(r = 0, g = 0, b = 0, alpha = 1.0) {
+        this.onResetEvent(r, g, b, alpha);
     }
 
     /**
