@@ -21,18 +21,15 @@ var targetV = new Vector2d();
 /**
  * @classdesc
  * a 2D orthographic camera
- * @class Camera2d
  * @augments me.Renderable
  * @memberof me
- * @param {number} minX start x offset
- * @param {number} minY start y offset
- * @param {number} maxX end x offset
- * @param {number} maxY end y offset
  */
 class Camera2d extends Renderable {
-
     /**
-     * @ignore
+     * @param {number} minX start x offset
+     * @param {number} minY start y offset
+     * @param {number} maxX end x offset
+     * @param {number} maxY end y offset
      */
     constructor(minX, minY, maxX, maxY) {
         super(minX, minY, maxX - minX, maxY - minY);
