@@ -9,17 +9,15 @@ import state from "./../state/state.js";
 /**
  * @classdesc
  * an object representing the physic world, and responsible for managing and updating all childs and physics
- * @class World
  * @augments me.Container
  * @memberof me
- * @param {number} [x=0] position of the container (accessible via the inherited pos.x property)
- * @param {number} [y=0] position of the container (accessible via the inherited pos.y property)
- * @param {number} [w=me.game.viewport.width] width of the container
- * @param {number} [h=me.game.viewport.height] height of the container
  */
 class World extends Container {
     /**
-     * @ignore
+     * @param {number} [x=0] position of the container (accessible via the inherited pos.x property)
+     * @param {number} [y=0] position of the container (accessible via the inherited pos.y property)
+     * @param {number} [w=me.game.viewport.width] width of the container
+     * @param {number} [h=me.game.viewport.height] height of the container
      */
     constructor(x = 0, y = 0, width = Infinity, height = Infinity) {
 

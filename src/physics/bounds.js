@@ -4,18 +4,20 @@ import Polygon from "./../geometries/poly.js";
 /**
  * @classdesc
  * a bound object contains methods for creating and manipulating axis-aligned bounding boxes (AABB).
- * @class Bounds
  * @memberof me
- * @param {me.Vector2d[]} [vertices] an array of me.Vector2d points
- * @returns {me.Bounds} A new bounds object
  */
-
 class Bounds {
-
+    /**
+     * @param {me.Vector2d[]} [vertices] an array of me.Vector2d points
+     * @returns {me.Bounds} A new bounds object
+     */
     constructor(vertices) {
         this.onResetEvent(vertices);
     }
 
+    /**
+     * @ignore
+     */
     onResetEvent(vertices) {
         if (typeof this.min === "undefined") {
             this.min = { x: Infinity,  y: Infinity };

@@ -11,15 +11,16 @@ import { world } from "./../game.js";
 
 
 /**
+ * @classdesc
  * a Generic Physic Body Object with some physic properties and behavior functionality, to as a member of a Renderable.
- * @class Body
  * @memberof me
- * @param {me.Renderable} ancestor the parent object this body is attached to
- * @param {me.Rect|me.Rect[]|me.Polygon|me.Polygon[]|me.Line|me.Line[]|me.Ellipse|me.Ellipse[]|me.Bounds|me.Bounds[]|object} [shapes] a initial shape, list of shapes, or JSON object defining the body
- * @param {Function} [onBodyUpdate] callback for when the body is updated (e.g. add/remove shapes)
  */
 class Body {
-
+    /**
+     * @param {me.Renderable} ancestor the parent object this body is attached to
+     * @param {me.Rect|me.Rect[]|me.Polygon|me.Polygon[]|me.Line|me.Line[]|me.Ellipse|me.Ellipse[]|me.Bounds|me.Bounds[]|object} [shapes] a initial shape, list of shapes, or JSON object defining the body
+     * @param {Function} [onBodyUpdate] callback for when the body is updated (e.g. add/remove shapes)
+     */
     constructor(parent, shapes, onBodyUpdate) {
 
         /**
