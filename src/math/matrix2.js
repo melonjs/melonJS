@@ -6,14 +6,12 @@ import Matrix3d from "./matrix3.js";
  * a Matrix2d Object.<br>
  * the identity matrix and parameters position : <br>
  * <img src="images/identity-matrix_2x.png"/>
- * @class Matrix2d
  * @memberof me
- * @param {me.Matrix2d} [mat2d] An instance of me.Matrix2d to copy from
- * @param {number[]} [arguments...] Matrix elements. See {@link me.Matrix2d.setTransform}
  */
-
 class Matrix2d {
-
+    /**
+     * @param {...(me.Matrix2d|me.Matrix3d|number)} [args] an instance of me.Matrix2d pr me.Matrix3d to copy from, or individual matrix components. See {@link me.Matrix2d.setTransform}
+     */
     constructor(...args) {
         this.onResetEvent(...args);
     }

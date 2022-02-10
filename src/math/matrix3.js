@@ -3,15 +3,13 @@ import { EPSILON } from "./math.js";
 
 /**
  * @classdesc
- * a 4x4 Matrix3d Object<br>
- * @class Matrix3d
+ * a 4x4 Matrix3d Object
  * @memberof me
- * @param {me.Matrix3d} [mat3d] An instance of me.Matrix3d to copy from
- * @param {number[]} [arguments...] Matrix elements. See {@link me.Matrix3d.setTransform}
  */
-
 class Matrix3d {
-
+    /**
+     * @param {...(me.Matrix3d|number)} [args] An instance of me.Matrix3d to copy from, or individual Matrix components. See {@link me.Matrix3d.setTransform}
+     */
     constructor(...args) {
         this.onResetEvent(...args);
     }
