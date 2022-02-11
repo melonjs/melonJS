@@ -7,13 +7,13 @@ import TMXLayer from "./../TMXLayer.js";
 /**
  * @classdesc
  * an Isometric Map Renderder
- * @class TMXIsometricRenderer
  * @memberof me
  * @augments me.TMXRenderer
- * @param {me.TMXTileMap} map the TMX map
  */
 class TMXIsometricRenderer extends TMXRenderer {
-    // constructor
+    /**
+     * @param {me.TMXTileMap} map the TMX map
+     */
     constructor(map) {
         super(
             map.cols,

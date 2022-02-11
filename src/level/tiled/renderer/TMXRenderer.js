@@ -7,15 +7,15 @@ import Bounds from "./../../../physics/Bounds.js";
 /**
  * @classdesc
  * The map renderer base class
- * @class TMXRenderer
  * @memberof me
- * @param {number} cols width of the tilemap in tiles
- * @param {number} rows height of the tilemap in tiles
- * @param {number} tilewidth width of each tile in pixels
- * @param {number} tileheight height of each tile in pixels
  */
 class TMXRenderer {
-
+    /**
+     * @param {number} cols width of the tilemap in tiles
+     * @param {number} rows height of the tilemap in tiles
+     * @param {number} tilewidth width of each tile in pixels
+     * @param {number} tileheight height of each tile in pixels
+     */
     constructor(cols, rows, tilewidth, tileheight) {
         this.cols = cols;
         this.rows = rows;

@@ -6447,13 +6447,14 @@ export class Stage {
 /**
  * @classdesc
  * an Hexagonal Map Renderder
- * @class TMXHexagonalRenderer
  * @memberof me
  * @augments me.TMXRenderer
- * @param {me.TMXTileMap} map the TMX map
  */
 export class TMXHexagonalRenderer {
-    constructor(map: any);
+    /**
+     * @param {me.TMXTileMap} map the TMX map
+     */
+    constructor(map: me.TMXTileMap);
     hexsidelength: any;
     staggerX: boolean;
     staggerEven: boolean;
@@ -6532,13 +6533,14 @@ export class TMXHexagonalRenderer {
 /**
  * @classdesc
  * an Isometric Map Renderder
- * @class TMXIsometricRenderer
  * @memberof me
  * @augments me.TMXRenderer
- * @param {me.TMXTileMap} map the TMX map
  */
 export class TMXIsometricRenderer {
-    constructor(map: any);
+    /**
+     * @param {me.TMXTileMap} map the TMX map
+     */
+    constructor(map: me.TMXTileMap);
     hTilewidth: number;
     hTileheight: number;
     originX: number;
@@ -6584,27 +6586,26 @@ export class TMXIsometricRenderer {
     drawTileLayer(renderer: any, layer: any, rect: any): void;
 }
 /**
+ * @classdesc
  * a TMX Tile Layer Object
  * Tiled QT 0.7.x format
- * @class
  * @augments me.Renderable
  * @memberof me
- * @param {object} map layer data in JSON format ({@link http://docs.mapeditor.org/en/stable/reference/tmx-map-format/#layer})
- * @param {object} data layer data in JSON format ({@link http://docs.mapeditor.org/en/stable/reference/tmx-map-format/#layer})
- * @param {number} tilewidth width of each tile in pixels
- * @param {number} tileheight height of each tile in pixels
- * @param {string} orientation "isometric" or "orthogonal"
- * @param {me.TMXTilesetGroup} tilesets tileset as defined in Tiled
- * @param {number} z z-index position
  */
 export class TMXLayer {
     /**
-     * @ignore
+     * @param {object} map layer data in JSON format ({@link http://docs.mapeditor.org/en/stable/reference/tmx-map-format/#layer})
+     * @param {object} data layer data in JSON format ({@link http://docs.mapeditor.org/en/stable/reference/tmx-map-format/#layer})
+     * @param {number} tilewidth width of each tile in pixels
+     * @param {number} tileheight height of each tile in pixels
+     * @param {string} orientation "isometric" or "orthogonal"
+     * @param {me.TMXTilesetGroup} tilesets tileset as defined in Tiled
+     * @param {number} z z-index position
      */
-    constructor(map: any, data: any, tilewidth: any, tileheight: any, orientation: any, tilesets: any, z: any);
+    constructor(map: object, data: object, tilewidth: number, tileheight: number, orientation: string, tilesets: me.TMXTilesetGroup, z: number);
     tilewidth: any;
     tileheight: any;
-    orientation: any;
+    orientation: string;
     /**
      * The Layer corresponding Tilesets
      * @public
@@ -6767,13 +6768,14 @@ export class TMXLayer {
 /**
  * @classdesc
  * an Orthogonal Map Renderder
- * @class TMXOrthogonalRenderer
  * @memberof me
  * @augments me.TMXRenderer
- * @param {me.TMXTileMap} map the TMX map
  */
 export class TMXOrthogonalRenderer {
-    constructor(map: any);
+    /**
+     * @param {me.TMXTileMap} map the TMX map
+     */
+    constructor(map: me.TMXTileMap);
     /**
      * return true if the renderer can render the specified layer
      * @ignore
@@ -6809,19 +6811,20 @@ export class TMXOrthogonalRenderer {
 /**
  * @classdesc
  * The map renderer base class
- * @class TMXRenderer
  * @memberof me
- * @param {number} cols width of the tilemap in tiles
- * @param {number} rows height of the tilemap in tiles
- * @param {number} tilewidth width of each tile in pixels
- * @param {number} tileheight height of each tile in pixels
  */
 export class TMXRenderer {
-    constructor(cols: any, rows: any, tilewidth: any, tileheight: any);
-    cols: any;
-    rows: any;
-    tilewidth: any;
-    tileheight: any;
+    /**
+     * @param {number} cols width of the tilemap in tiles
+     * @param {number} rows height of the tilemap in tiles
+     * @param {number} tilewidth width of each tile in pixels
+     * @param {number} tileheight height of each tile in pixels
+     */
+    constructor(cols: number, rows: number, tilewidth: number, tileheight: number);
+    cols: number;
+    rows: number;
+    tilewidth: number;
+    tileheight: number;
     bounds: Bounds;
     /**
      * return true if the renderer can render the specified map or layer
@@ -6888,10 +6891,8 @@ export class TMXRenderer {
 /**
  * @classdesc
  * a Staggered Map Renderder
- * @class TMXStaggeredRenderer
  * @memberof me
  * @augments me.TMXHexagonalRenderer
- * @param {me.TMXTileMap} map the TMX map
  */
 export class TMXStaggeredRenderer {
     /**
@@ -6909,18 +6910,19 @@ export class TMXStaggeredRenderer {
  * @classdesc
  * a TMX Tile Map Object
  * Tiled QT +0.7.x format
- * @class TMXTileMap
  * @memberof me
- * @param {string} levelId name of TMX map
- * @param {object} data TMX map in JSON format
- * @example
- * // create a new level object based on the TMX JSON object
- * var level = new me.TMXTileMap(levelId, me.loader.getTMX(levelId));
- * // add the level to the game world container
- * level.addTo(me.game.world, true);
  */
 export class TMXTileMap {
-    constructor(levelId: any, data: any);
+    /**
+     * @param {string} levelId name of TMX map
+     * @param {object} data TMX map in JSON format
+     * @example
+     * // create a new level object based on the TMX JSON object
+     * var level = new me.TMXTileMap(levelId, me.loader.getTMX(levelId));
+     * // add the level to the game world container
+     * level.addTo(me.game.world, true);
+     */
+    constructor(levelId: string, data: object);
     /**
      * the level data (JSON)
      * @ignore
@@ -7081,12 +7083,13 @@ export class TMXTileMap {
 /**
  * @classdesc
  * a TMX Tile Set Object
- * @class TMXTileset
  * @memberof me
- * @param {object} tileset tileset data in JSON format ({@link http://docs.mapeditor.org/en/stable/reference/tmx-map-format/#tileset})
  */
 export class TMXTileset {
-    constructor(tileset: any);
+    /**
+     *  @param {object} tileset tileset data in JSON format ({@link http://docs.mapeditor.org/en/stable/reference/tmx-map-format/#tileset})
+     */
+    constructor(tileset: object);
     TileProperties: any[];
     imageCollection: HTMLImageElement[];
     firstgid: number;
@@ -7176,7 +7179,6 @@ export class TMXTileset {
 /**
  * @classdesc
  * an object containing all tileset
- * @class TMXTilesetGroup
  * @memberof me
  */
 export class TMXTilesetGroup {
@@ -7413,17 +7415,19 @@ export class Text {
     destroy(): void;
 }
 /**
+ * @classdesc
  * a basic tile object
- * @class
  * @augments me.Bounds
  * @memberof me
- * @param {number} x x index of the Tile in the map
- * @param {number} y y index of the Tile in the map
- * @param {number} gid tile gid
- * @param {me.TMXTileset} tileset the corresponding tileset object
  */
 export class Tile {
-    constructor(x: any, y: any, gid: any, tileset: any);
+    /**
+     * @param {number} x x index of the Tile in the map
+     * @param {number} y y index of the Tile in the map
+     * @param {number} gid tile gid
+     * @param {me.TMXTileset} tileset the corresponding tileset object
+     */
+    constructor(x: number, y: number, gid: number, tileset: me.TMXTileset);
     /**
      * tileset
      * @public
@@ -7436,8 +7440,8 @@ export class Tile {
      * @ignore
      */
     currentTransform: Matrix2d;
-    col: any;
-    row: any;
+    col: number;
+    row: number;
     /**
      * tileId
      * @public

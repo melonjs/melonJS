@@ -9,17 +9,18 @@ var TMX_FLIP_H          = 0x80000000,
     TMX_CLEAR_BIT_MASK  = ~(0x80000000 | 0x40000000 | 0x20000000);
 
 /**
+ * @classdesc
  * a basic tile object
- * @class
  * @augments me.Bounds
  * @memberof me
- * @param {number} x x index of the Tile in the map
- * @param {number} y y index of the Tile in the map
- * @param {number} gid tile gid
- * @param {me.TMXTileset} tileset the corresponding tileset object
  */
 class Tile extends Bounds {
-
+    /**
+     * @param {number} x x index of the Tile in the map
+     * @param {number} y y index of the Tile in the map
+     * @param {number} gid tile gid
+     * @param {me.TMXTileset} tileset the corresponding tileset object
+     */
     constructor(x, y, gid, tileset) {
         var width, height;
 

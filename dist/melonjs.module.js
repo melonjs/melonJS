@@ -20832,17 +20832,18 @@ var TMX_FLIP_H          = 0x80000000,
     TMX_CLEAR_BIT_MASK$1  = ~(0x80000000 | 0x40000000 | 0x20000000);
 
 /**
+ * @classdesc
  * a basic tile object
- * @class
  * @augments me.Bounds
  * @memberof me
- * @param {number} x x index of the Tile in the map
- * @param {number} y y index of the Tile in the map
- * @param {number} gid tile gid
- * @param {me.TMXTileset} tileset the corresponding tileset object
  */
 class Tile extends Bounds$1 {
-
+    /**
+     * @param {number} x x index of the Tile in the map
+     * @param {number} y y index of the Tile in the map
+     * @param {number} gid tile gid
+     * @param {me.TMXTileset} tileset the corresponding tileset object
+     */
     constructor(x, y, gid, tileset) {
         var width, height;
 
@@ -22353,22 +22354,21 @@ function preRenderLayer(layer, renderer) {
 }
 
 /**
+ * @classdesc
  * a TMX Tile Layer Object
  * Tiled QT 0.7.x format
- * @class
  * @augments me.Renderable
  * @memberof me
- * @param {object} map layer data in JSON format ({@link http://docs.mapeditor.org/en/stable/reference/tmx-map-format/#layer})
- * @param {object} data layer data in JSON format ({@link http://docs.mapeditor.org/en/stable/reference/tmx-map-format/#layer})
- * @param {number} tilewidth width of each tile in pixels
- * @param {number} tileheight height of each tile in pixels
- * @param {string} orientation "isometric" or "orthogonal"
- * @param {me.TMXTilesetGroup} tilesets tileset as defined in Tiled
- * @param {number} z z-index position
  */
 class TMXLayer extends Renderable {
     /**
-     * @ignore
+     * @param {object} map layer data in JSON format ({@link http://docs.mapeditor.org/en/stable/reference/tmx-map-format/#layer})
+     * @param {object} data layer data in JSON format ({@link http://docs.mapeditor.org/en/stable/reference/tmx-map-format/#layer})
+     * @param {number} tilewidth width of each tile in pixels
+     * @param {number} tileheight height of each tile in pixels
+     * @param {string} orientation "isometric" or "orthogonal"
+     * @param {me.TMXTilesetGroup} tilesets tileset as defined in Tiled
+     * @param {number} z z-index position
      */
     constructor(map, data, tilewidth, tileheight, orientation, tilesets, z) {
         // super constructor
@@ -23193,15 +23193,15 @@ class Bounds {
 /**
  * @classdesc
  * The map renderer base class
- * @class TMXRenderer
  * @memberof me
- * @param {number} cols width of the tilemap in tiles
- * @param {number} rows height of the tilemap in tiles
- * @param {number} tilewidth width of each tile in pixels
- * @param {number} tileheight height of each tile in pixels
  */
 class TMXRenderer {
-
+    /**
+     * @param {number} cols width of the tilemap in tiles
+     * @param {number} rows height of the tilemap in tiles
+     * @param {number} tilewidth width of each tile in pixels
+     * @param {number} tileheight height of each tile in pixels
+     */
     constructor(cols, rows, tilewidth, tileheight) {
         this.cols = cols;
         this.rows = rows;
@@ -23308,13 +23308,13 @@ class TMXRenderer {
 /**
  * @classdesc
  * an Orthogonal Map Renderder
- * @class TMXOrthogonalRenderer
  * @memberof me
  * @augments me.TMXRenderer
- * @param {me.TMXTileMap} map the TMX map
  */
 class TMXOrthogonalRenderer extends TMXRenderer {
-    // constructor
+    /**
+     * @param {me.TMXTileMap} map the TMX map
+     */
     constructor(map) {
         super(
             map.cols,
@@ -23452,13 +23452,13 @@ class TMXOrthogonalRenderer extends TMXRenderer {
 /**
  * @classdesc
  * an Isometric Map Renderder
- * @class TMXIsometricRenderer
  * @memberof me
  * @augments me.TMXRenderer
- * @param {me.TMXTileMap} map the TMX map
  */
 class TMXIsometricRenderer extends TMXRenderer {
-    // constructor
+    /**
+     * @param {me.TMXTileMap} map the TMX map
+     */
     constructor(map) {
         super(
             map.cols,
@@ -23673,13 +23673,13 @@ var offsetsStaggerY = [
 /**
  * @classdesc
  * an Hexagonal Map Renderder
- * @class TMXHexagonalRenderer
  * @memberof me
  * @augments me.TMXRenderer
- * @param {me.TMXTileMap} map the TMX map
  */
 class TMXHexagonalRenderer extends TMXRenderer {
-    // constructor
+    /**
+     * @param {me.TMXTileMap} map the TMX map
+     */
     constructor(map) {
         super(
             map.cols,
@@ -24152,10 +24152,8 @@ class TMXHexagonalRenderer extends TMXRenderer {
 /**
  * @classdesc
  * a Staggered Map Renderder
- * @class TMXStaggeredRenderer
  * @memberof me
  * @augments me.TMXHexagonalRenderer
- * @param {me.TMXTileMap} map the TMX map
  */
 class TMXStaggeredRenderer extends TMXHexagonalRenderer {
 
@@ -24249,12 +24247,12 @@ class TMXStaggeredRenderer extends TMXHexagonalRenderer {
 /**
  * @classdesc
  * a TMX Tile Set Object
- * @class TMXTileset
  * @memberof me
- * @param {object} tileset tileset data in JSON format ({@link http://docs.mapeditor.org/en/stable/reference/tmx-map-format/#tileset})
  */
 class TMXTileset {
-
+    /**
+     *  @param {object} tileset tileset data in JSON format ({@link http://docs.mapeditor.org/en/stable/reference/tmx-map-format/#tileset})
+     */
     constructor(tileset) {
         var i = 0;
         // first gid
@@ -24549,7 +24547,6 @@ var TMX_CLEAR_BIT_MASK = ~(0x80000000 | 0x40000000 | 0x20000000);
 /**
  * @classdesc
  * an object containing all tileset
- * @class TMXTilesetGroup
  * @memberof me
  */
 class TMXTilesetGroup {
@@ -24622,9 +24619,9 @@ class TMXTilesetGroup {
 }
 
 /**
+ * @classdesc
  * a TMX Object defintion, as defined in Tiled
  * (Object definition is translated into the virtual `me.game.world` using `me.Renderable`)
- * @class TMXObject
  * @ignore
  */
 class TMXObject {
@@ -24947,8 +24944,8 @@ class TMXObject {
  * @classdesc
  * object group definition as defined in Tiled.
  * (group definition is translated into the virtual `me.game.world` using `me.Container`)
- * @class TMXGroup
  * @ignore
+ * @memberof me
  */
 class TMXGroup {
 
@@ -25153,19 +25150,18 @@ function readObjectGroup(map, data, z) {
  * @classdesc
  * a TMX Tile Map Object
  * Tiled QT +0.7.x format
- * @class TMXTileMap
  * @memberof me
- * @param {string} levelId name of TMX map
- * @param {object} data TMX map in JSON format
- * @example
- * // create a new level object based on the TMX JSON object
- * var level = new me.TMXTileMap(levelId, me.loader.getTMX(levelId));
- * // add the level to the game world container
- * level.addTo(me.game.world, true);
  */
 class TMXTileMap {
-
-    // constructor
+    /**
+     * @param {string} levelId name of TMX map
+     * @param {object} data TMX map in JSON format
+     * @example
+     * // create a new level object based on the TMX JSON object
+     * var level = new me.TMXTileMap(levelId, me.loader.getTMX(levelId));
+     * // add the level to the game world container
+     * level.addTo(me.game.world, true);
+     */
     constructor(levelId, data) {
 
         /**

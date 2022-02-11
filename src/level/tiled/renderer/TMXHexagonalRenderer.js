@@ -22,13 +22,13 @@ var offsetsStaggerY = [
 /**
  * @classdesc
  * an Hexagonal Map Renderder
- * @class TMXHexagonalRenderer
  * @memberof me
  * @augments me.TMXRenderer
- * @param {me.TMXTileMap} map the TMX map
  */
 class TMXHexagonalRenderer extends TMXRenderer {
-    // constructor
+    /**
+     * @param {me.TMXTileMap} map the TMX map
+     */
     constructor(map) {
         super(
             map.cols,

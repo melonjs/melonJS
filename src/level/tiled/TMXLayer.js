@@ -63,22 +63,21 @@ function preRenderLayer(layer, renderer) {
 }
 
 /**
+ * @classdesc
  * a TMX Tile Layer Object
  * Tiled QT 0.7.x format
- * @class
  * @augments me.Renderable
  * @memberof me
- * @param {object} map layer data in JSON format ({@link http://docs.mapeditor.org/en/stable/reference/tmx-map-format/#layer})
- * @param {object} data layer data in JSON format ({@link http://docs.mapeditor.org/en/stable/reference/tmx-map-format/#layer})
- * @param {number} tilewidth width of each tile in pixels
- * @param {number} tileheight height of each tile in pixels
- * @param {string} orientation "isometric" or "orthogonal"
- * @param {me.TMXTilesetGroup} tilesets tileset as defined in Tiled
- * @param {number} z z-index position
  */
 class TMXLayer extends Renderable {
     /**
-     * @ignore
+     * @param {object} map layer data in JSON format ({@link http://docs.mapeditor.org/en/stable/reference/tmx-map-format/#layer})
+     * @param {object} data layer data in JSON format ({@link http://docs.mapeditor.org/en/stable/reference/tmx-map-format/#layer})
+     * @param {number} tilewidth width of each tile in pixels
+     * @param {number} tileheight height of each tile in pixels
+     * @param {string} orientation "isometric" or "orthogonal"
+     * @param {me.TMXTilesetGroup} tilesets tileset as defined in Tiled
+     * @param {number} z z-index position
      */
     constructor(map, data, tilewidth, tileheight, orientation, tilesets, z) {
         // super constructor

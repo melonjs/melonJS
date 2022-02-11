@@ -7,9 +7,9 @@ import Line from "./../../geometries/line.js";
 import { degToRad } from "./../../math/math.js";
 
 /**
+ * @classdesc
  * a TMX Object defintion, as defined in Tiled
  * (Object definition is translated into the virtual `me.game.world` using `me.Renderable`)
- * @class TMXObject
  * @ignore
  */
 export default class TMXObject {

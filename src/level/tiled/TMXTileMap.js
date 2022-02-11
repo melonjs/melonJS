@@ -103,19 +103,18 @@ function readObjectGroup(map, data, z) {
  * @classdesc
  * a TMX Tile Map Object
  * Tiled QT +0.7.x format
- * @class TMXTileMap
  * @memberof me
- * @param {string} levelId name of TMX map
- * @param {object} data TMX map in JSON format
- * @example
- * // create a new level object based on the TMX JSON object
- * var level = new me.TMXTileMap(levelId, me.loader.getTMX(levelId));
- * // add the level to the game world container
- * level.addTo(me.game.world, true);
  */
-export default class TMXTileMap {
-
-    // constructor
+class TMXTileMap {
+    /**
+     * @param {string} levelId name of TMX map
+     * @param {object} data TMX map in JSON format
+     * @example
+     * // create a new level object based on the TMX JSON object
+     * var level = new me.TMXTileMap(levelId, me.loader.getTMX(levelId));
+     * // add the level to the game world container
+     * level.addTo(me.game.world, true);
+     */
     constructor(levelId, data) {
 
         /**
@@ -604,3 +603,5 @@ export default class TMXTileMap {
         this.initialized = false;
     }
 };
+
+export default TMXTileMap;

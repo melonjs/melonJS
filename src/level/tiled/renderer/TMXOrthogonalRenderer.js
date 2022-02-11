@@ -5,13 +5,13 @@ import TMXRenderer from "./TMXRenderer.js";
 /**
  * @classdesc
  * an Orthogonal Map Renderder
- * @class TMXOrthogonalRenderer
  * @memberof me
  * @augments me.TMXRenderer
- * @param {me.TMXTileMap} map the TMX map
  */
 class TMXOrthogonalRenderer extends TMXRenderer {
-    // constructor
+    /**
+     * @param {me.TMXTileMap} map the TMX map
+     */
     constructor(map) {
         super(
             map.cols,

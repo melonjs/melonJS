@@ -7,12 +7,12 @@ import loader from "./../../loader/loader.js";
 /**
  * @classdesc
  * a TMX Tile Set Object
- * @class TMXTileset
  * @memberof me
- * @param {object} tileset tileset data in JSON format ({@link http://docs.mapeditor.org/en/stable/reference/tmx-map-format/#tileset})
  */
-export default class TMXTileset {
-
+class TMXTileset {
+    /**
+     *  @param {object} tileset tileset data in JSON format ({@link http://docs.mapeditor.org/en/stable/reference/tmx-map-format/#tileset})
+     */
     constructor(tileset) {
         var i = 0;
         // first gid
@@ -300,3 +300,5 @@ export default class TMXTileset {
         }
     }
 };
+
+export default TMXTileset;
