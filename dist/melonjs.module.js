@@ -32156,23 +32156,23 @@ let Interpolation = {
  * author Paul Lewis / http://www.aerotwist.com/<br>
  * author lechecacharro<br>
  * author Josh Faul / http://jocafa.com/
- * @class Tween
  * @memberof me
- * @param {object} object object on which to apply the tween
- * @example
- * // add a tween to change the object pos.x and pos.y variable to 200 in 3 seconds
- * tween = new me.Tween(myObject.pos).to({
- *       x: 200,
- *       y: 200,
- *    }, {
- *       duration: 3000,
- *       easing: me.Tween.Easing.Bounce.Out,
- *       autoStart : true
- * }).onComplete(myFunc);
  */
 class Tween {
 
-    // constructor
+    /**
+     * @param {object} object object on which to apply the tween
+     * @example
+     * // add a tween to change the object pos.x and pos.y variable to 200 in 3 seconds
+     * tween = new me.Tween(myObject.pos).to({
+     *       x: 200,
+     *       y: 200,
+     *    }, {
+     *       duration: 3000,
+     *       easing: me.Tween.Easing.Bounce.Out,
+     *       autoStart : true
+     * }).onComplete(myFunc);
+     */
     constructor ( object ) {
         this.setProperties(object);
     }
