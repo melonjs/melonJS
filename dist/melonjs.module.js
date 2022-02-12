@@ -13098,14 +13098,14 @@ class Renderable extends Rect {
          */
         this.body = undefined;
 
-        /**
-         * the renderable default transformation matrix
-         * @public
-         * @type {me.Matrix2d}
-         * @name currentTransform
-         * @memberof me.Renderable#
-         */
         if (typeof this.currentTransform === "undefined") {
+            /**
+             * the renderable default transformation matrix
+             * @public
+             * @type {me.Matrix2d}
+             * @name currentTransform
+             * @memberof me.Renderable#
+             */
             this.currentTransform = pool.pull("Matrix2d");
         }
         this.currentTransform.identity();
@@ -13178,23 +13178,23 @@ class Renderable extends Rect {
          */
         this.floating = false;
 
-        /**
-         * The anchor point is used for attachment behavior, and/or when applying transformations.<br>
-         * The coordinate system places the origin at the top left corner of the frame (0, 0) and (1, 1) means the bottom-right corner<br>
-         * <img src="images/anchor_point.png"/><br>
-         * a Renderable's anchor point defaults to (0.5,0.5), which corresponds to the center position.<br>
-         * <br>
-         * <i><b>Note:</b> Object created through Tiled will have their anchorPoint set to (0, 0) to match Tiled Level editor implementation.
-         * To specify a value through Tiled, use a json expression like `json:{"x":0.5,"y":0.5}`. </i>
-         * @public
-         * @type {me.ObservableVector2d}
-         * @default <0.5,0.5>
-         * @name anchorPoint
-         * @memberof me.Renderable#
-         */
         if (this.anchorPoint instanceof ObservableVector2d) {
             this.anchorPoint.setMuted(0.5, 0.5).setCallback(this.onAnchorUpdate, this);
         } else {
+            /**
+             * The anchor point is used for attachment behavior, and/or when applying transformations.<br>
+             * The coordinate system places the origin at the top left corner of the frame (0, 0) and (1, 1) means the bottom-right corner<br>
+             * <img src="images/anchor_point.png"/><br>
+             * a Renderable's anchor point defaults to (0.5,0.5), which corresponds to the center position.<br>
+             * <br>
+             * <i><b>Note:</b> Object created through Tiled will have their anchorPoint set to (0, 0) to match Tiled Level editor implementation.
+             * To specify a value through Tiled, use a json expression like `json:{"x":0.5,"y":0.5}`. </i>
+             * @public
+             * @type {me.ObservableVector2d}
+             * @default <0.5,0.5>
+             * @name anchorPoint
+             * @memberof me.Renderable#
+             */
             this.anchorPoint = pool.pull("ObservableVector2d", 0.5, 0.5, { onUpdate: this.onAnchorUpdate, scope: this });
         }
 
@@ -13292,16 +13292,16 @@ class Renderable extends Rect {
          */
         this.name = "";
 
-        /**
-         * Position of the Renderable relative to its parent container
-         * @public
-         * @type {me.ObservableVector3d}
-         * @name pos
-         * @memberof me.Renderable#
-         */
         if (this.pos instanceof ObservableVector3d) {
             this.pos.setMuted(x, y, 0).setCallback(this.updateBoundsPos, this);
         } else {
+            /**
+             * Position of the Renderable relative to its parent container
+             * @public
+             * @type {me.ObservableVector3d}
+             * @name pos
+             * @memberof me.Renderable#
+             */
             this.pos = pool.pull("ObservableVector3d", x, y, 0, { onUpdate: this.updateBoundsPos, scope: this});
         }
 
@@ -15026,29 +15026,30 @@ class Body {
          * @public
          * @type {me.Renderable}
          * @default undefined
-         * @name me.Body#ancestor
+         * @name ancestor
+         * @memberof me.Body
          */
         this.ancestor = ancestor;
 
-        /**
-         * The AABB bounds box reprensenting this body
-         * @public
-         * @type {me.Bounds}
-         * @name bounds
-         * @memberof me.Body
-         */
         if (typeof this.bounds === "undefined") {
+            /**
+             * The AABB bounds box reprensenting this body
+             * @public
+             * @type {me.Bounds}
+             * @name bounds
+             * @memberof me.Body
+             */
             this.bounds = new Bounds$1();
         }
 
-        /**
-         * The collision shapes of the body
-         * @ignore
-         * @type {me.Polygon[]|me.Line[]|me.Ellipse[]}
-         * @name shapes
-         * @memberof me.Body
-         */
         if (typeof this.shapes === "undefined") {
+            /**
+             * The collision shapes of the body
+             * @ignore
+             * @type {me.Polygon[]|me.Line[]|me.Ellipse[]}
+             * @name shapes
+             * @memberof me.Body
+             */
             this.shapes = [];
         }
 
@@ -15808,8 +15809,8 @@ class Container extends Renderable {
     /**
      * @param {number} [x=0] position of the container (accessible via the inherited pos.x property)
      * @param {number} [y=0] position of the container (accessible via the inherited pos.y property)
-     * @param {number} [w=me.game.viewport.width] width of the container
-     * @param {number} [h=me.game.viewport.height] height of the container
+     * @param {number} [width=me.game.viewport.width] width of the container
+     * @param {number} [height=me.game.viewport.height] height of the container
      */
     constructor(x = 0, y = 0, width = viewport.width, height = viewport.height, root = false) {
 
@@ -33229,14 +33230,32 @@ class BitmapText extends Renderable {
          */
         this._text = [];
 
-        /** @ignore */
-        // scaled font size;
+        /**
+         * scaled font size
+         * @private
+         * @type {me.Vector2d}
+         * @name fontScale
+         * @memberof me.BitmapText
+         */
         this.fontScale = pool.pull("Vector2d", 1.0, 1.0);
 
-        // get the corresponding image
+        /**
+         * font image
+         * @private
+         * @type {HTMLImageElement}
+         * @name fontImage
+         * @memberof me.BitmapText
+         */
         this.fontImage = (typeof settings.font === "object") ? settings.font : loader.getImage(settings.font);
 
         if (typeof settings.fontData !== "string") {
+            /**
+             * font data
+             * @private
+             * @type {BitmapTextData}
+             * @name fontData
+             * @memberof me.BitmapText
+             */
             // use settings.font to retreive the data from the loader
             this.fontData = pool.pull("BitmapTextData", loader.getBinary(settings.font));
         } else {

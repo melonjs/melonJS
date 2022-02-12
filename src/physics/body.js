@@ -29,29 +29,30 @@ class Body {
          * @public
          * @type {me.Renderable}
          * @default undefined
-         * @name me.Body#ancestor
+         * @name ancestor
+         * @memberof me.Body
          */
         this.ancestor = ancestor;
 
-        /**
-         * The AABB bounds box reprensenting this body
-         * @public
-         * @type {me.Bounds}
-         * @name bounds
-         * @memberof me.Body
-         */
         if (typeof this.bounds === "undefined") {
+            /**
+             * The AABB bounds box reprensenting this body
+             * @public
+             * @type {me.Bounds}
+             * @name bounds
+             * @memberof me.Body
+             */
             this.bounds = new Bounds();
         }
 
-        /**
-         * The collision shapes of the body
-         * @ignore
-         * @type {me.Polygon[]|me.Line[]|me.Ellipse[]}
-         * @name shapes
-         * @memberof me.Body
-         */
         if (typeof this.shapes === "undefined") {
+            /**
+             * The collision shapes of the body
+             * @ignore
+             * @type {me.Polygon[]|me.Line[]|me.Ellipse[]}
+             * @name shapes
+             * @memberof me.Body
+             */
             this.shapes = [];
         }
 

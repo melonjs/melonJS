@@ -26,8 +26,8 @@ class Container extends Renderable {
     /**
      * @param {number} [x=0] position of the container (accessible via the inherited pos.x property)
      * @param {number} [y=0] position of the container (accessible via the inherited pos.y property)
-     * @param {number} [w=me.game.viewport.width] width of the container
-     * @param {number} [h=me.game.viewport.height] height of the container
+     * @param {number} [width=me.game.viewport.width] width of the container
+     * @param {number} [height=me.game.viewport.height] height of the container
      */
     constructor(x = 0, y = 0, width = game.viewport.width, height = game.viewport.height, root = false) {
 

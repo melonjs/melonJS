@@ -83,10 +83,30 @@ export class BitmapText {
      * @memberof me.BitmapText
      */
     private _text;
-    /** @ignore */
-    fontScale: any;
-    fontImage: HTMLImageElement;
-    fontData: any;
+    /**
+     * scaled font size
+     * @private
+     * @type {me.Vector2d}
+     * @name fontScale
+     * @memberof me.BitmapText
+     */
+    private fontScale;
+    /**
+     * font image
+     * @private
+     * @type {HTMLImageElement}
+     * @name fontImage
+     * @memberof me.BitmapText
+     */
+    private fontImage;
+    /**
+     * font data
+     * @private
+     * @type {BitmapTextData}
+     * @name fontData
+     * @memberof me.BitmapText
+     */
+    private fontData;
     floating: boolean;
     /**
      * change the font settings
@@ -214,11 +234,26 @@ export class Body {
      * @public
      * @type {me.Renderable}
      * @default undefined
-     * @name me.Body#ancestor
+     * @name ancestor
+     * @memberof me.Body
      */
     public ancestor: me.Renderable;
-    bounds: Bounds$1;
-    shapes: any[];
+    /**
+     * The AABB bounds box reprensenting this body
+     * @public
+     * @type {me.Bounds}
+     * @name bounds
+     * @memberof me.Body
+     */
+    public bounds: me.Bounds;
+    /**
+     * The collision shapes of the body
+     * @ignore
+     * @type {me.Polygon[]|me.Line[]|me.Ellipse[]}
+     * @name shapes
+     * @memberof me.Body
+     */
+    shapes: me.Polygon[] | me.Line[] | me.Ellipse[];
     /**
      * The body collision mask, that defines what should collide with what.<br>
      * (by default will collide with all entities)
@@ -1803,10 +1838,10 @@ export class Container {
     /**
      * @param {number} [x=0] position of the container (accessible via the inherited pos.x property)
      * @param {number} [y=0] position of the container (accessible via the inherited pos.y property)
-     * @param {number} [w=me.game.viewport.width] width of the container
-     * @param {number} [h=me.game.viewport.height] height of the container
+     * @param {number} [width=me.game.viewport.width] width of the container
+     * @param {number} [height=me.game.viewport.height] height of the container
      */
-    constructor(x?: number, y?: number, width?: any, height?: any, root?: boolean);
+    constructor(x?: number, y?: number, width?: number, height?: number, root?: boolean);
     /**
      * keep track of pending sort
      * @ignore
@@ -5375,7 +5410,14 @@ export class Renderable {
      * }
      */
     public body: me.Body;
-    currentTransform: any;
+    /**
+     * the renderable default transformation matrix
+     * @public
+     * @type {me.Matrix2d}
+     * @name currentTransform
+     * @memberof me.Renderable#
+     */
+    public currentTransform: me.Matrix2d;
     /**
      * (G)ame (U)nique (Id)entifier" <br>
      * a GUID will be allocated for any renderable object added <br>
@@ -5438,7 +5480,21 @@ export class Renderable {
      * @memberof me.Renderable
      */
     public floating: boolean;
-    anchorPoint: any;
+    /**
+     * The anchor point is used for attachment behavior, and/or when applying transformations.<br>
+     * The coordinate system places the origin at the top left corner of the frame (0, 0) and (1, 1) means the bottom-right corner<br>
+     * <img src="images/anchor_point.png"/><br>
+     * a Renderable's anchor point defaults to (0.5,0.5), which corresponds to the center position.<br>
+     * <br>
+     * <i><b>Note:</b> Object created through Tiled will have their anchorPoint set to (0, 0) to match Tiled Level editor implementation.
+     * To specify a value through Tiled, use a json expression like `json:{"x":0.5,"y":0.5}`. </i>
+     * @public
+     * @type {me.ObservableVector2d}
+     * @default <0.5,0.5>
+     * @name anchorPoint
+     * @memberof me.Renderable#
+     */
+    public anchorPoint: me.ObservableVector2d;
     /**
      * When enabled, an object container will automatically apply
      * any defined transformation before calling the child draw method.
@@ -5527,7 +5583,14 @@ export class Renderable {
      * @memberof me.Renderable
      */
     public name: string;
-    pos: any;
+    /**
+     * Position of the Renderable relative to its parent container
+     * @public
+     * @type {me.ObservableVector3d}
+     * @name pos
+     * @memberof me.Renderable#
+     */
+    public pos: me.ObservableVector3d;
     /**
      * when true the renderable will be redrawn during the next update cycle
      * @type {boolean}

@@ -81,14 +81,14 @@ class Renderable extends Rect {
          */
         this.body = undefined;
 
-        /**
-         * the renderable default transformation matrix
-         * @public
-         * @type {me.Matrix2d}
-         * @name currentTransform
-         * @memberof me.Renderable#
-         */
         if (typeof this.currentTransform === "undefined") {
+            /**
+             * the renderable default transformation matrix
+             * @public
+             * @type {me.Matrix2d}
+             * @name currentTransform
+             * @memberof me.Renderable#
+             */
             this.currentTransform = pool.pull("Matrix2d");
         }
         this.currentTransform.identity();
@@ -161,23 +161,23 @@ class Renderable extends Rect {
          */
         this.floating = false;
 
-        /**
-         * The anchor point is used for attachment behavior, and/or when applying transformations.<br>
-         * The coordinate system places the origin at the top left corner of the frame (0, 0) and (1, 1) means the bottom-right corner<br>
-         * <img src="images/anchor_point.png"/><br>
-         * a Renderable's anchor point defaults to (0.5,0.5), which corresponds to the center position.<br>
-         * <br>
-         * <i><b>Note:</b> Object created through Tiled will have their anchorPoint set to (0, 0) to match Tiled Level editor implementation.
-         * To specify a value through Tiled, use a json expression like `json:{"x":0.5,"y":0.5}`. </i>
-         * @public
-         * @type {me.ObservableVector2d}
-         * @default <0.5,0.5>
-         * @name anchorPoint
-         * @memberof me.Renderable#
-         */
         if (this.anchorPoint instanceof ObservableVector2d) {
             this.anchorPoint.setMuted(0.5, 0.5).setCallback(this.onAnchorUpdate, this);
         } else {
+            /**
+             * The anchor point is used for attachment behavior, and/or when applying transformations.<br>
+             * The coordinate system places the origin at the top left corner of the frame (0, 0) and (1, 1) means the bottom-right corner<br>
+             * <img src="images/anchor_point.png"/><br>
+             * a Renderable's anchor point defaults to (0.5,0.5), which corresponds to the center position.<br>
+             * <br>
+             * <i><b>Note:</b> Object created through Tiled will have their anchorPoint set to (0, 0) to match Tiled Level editor implementation.
+             * To specify a value through Tiled, use a json expression like `json:{"x":0.5,"y":0.5}`. </i>
+             * @public
+             * @type {me.ObservableVector2d}
+             * @default <0.5,0.5>
+             * @name anchorPoint
+             * @memberof me.Renderable#
+             */
             this.anchorPoint = pool.pull("ObservableVector2d", 0.5, 0.5, { onUpdate: this.onAnchorUpdate, scope: this });
         }
 
@@ -275,16 +275,16 @@ class Renderable extends Rect {
          */
         this.name = "";
 
-        /**
-         * Position of the Renderable relative to its parent container
-         * @public
-         * @type {me.ObservableVector3d}
-         * @name pos
-         * @memberof me.Renderable#
-         */
         if (this.pos instanceof ObservableVector3d) {
             this.pos.setMuted(x, y, 0).setCallback(this.updateBoundsPos, this);
         } else {
+            /**
+             * Position of the Renderable relative to its parent container
+             * @public
+             * @type {me.ObservableVector3d}
+             * @name pos
+             * @memberof me.Renderable#
+             */
             this.pos = pool.pull("ObservableVector3d", x, y, 0, { onUpdate: this.updateBoundsPos, scope: this});
         }
 

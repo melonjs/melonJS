@@ -112,14 +112,32 @@ class BitmapText extends Renderable {
          */
         this._text = [];
 
-        /** @ignore */
-        // scaled font size;
+        /**
+         * scaled font size
+         * @private
+         * @type {me.Vector2d}
+         * @name fontScale
+         * @memberof me.BitmapText
+         */
         this.fontScale = pool.pull("Vector2d", 1.0, 1.0);
 
-        // get the corresponding image
+        /**
+         * font image
+         * @private
+         * @type {HTMLImageElement}
+         * @name fontImage
+         * @memberof me.BitmapText
+         */
         this.fontImage = (typeof settings.font === "object") ? settings.font : loader.getImage(settings.font);
 
         if (typeof settings.fontData !== "string") {
+            /**
+             * font data
+             * @private
+             * @type {BitmapTextData}
+             * @name fontData
+             * @memberof me.BitmapText
+             */
             // use settings.font to retreive the data from the loader
             this.fontData = pool.pull("BitmapTextData", loader.getBinary(settings.font));
         } else {
