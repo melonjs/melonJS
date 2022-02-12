@@ -15018,7 +15018,7 @@ class Body {
      * @param {me.Rect|me.Rect[]|me.Polygon|me.Polygon[]|me.Line|me.Line[]|me.Ellipse|me.Ellipse[]|me.Bounds|me.Bounds[]|object} [shapes] a initial shape, list of shapes, or JSON object defining the body
      * @param {Function} [onBodyUpdate] callback for when the body is updated (e.g. add/remove shapes)
      */
-    constructor(parent, shapes, onBodyUpdate) {
+    constructor(ancestor, shapes, onBodyUpdate) {
 
         /**
          * a reference to the parent object that contains this body,
@@ -15028,7 +15028,7 @@ class Body {
          * @default undefined
          * @name me.Body#ancestor
          */
-        this.ancestor = parent;
+        this.ancestor = ancestor;
 
         /**
          * The AABB bounds box reprensenting this body

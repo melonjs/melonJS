@@ -15101,7 +15101,7 @@
      * a Generic Physic Body Object with some physic properties and behavior functionality, to as a member of a Renderable.
      * @memberof me
      */
-    var Body = function Body(parent, shapes, onBodyUpdate) {
+    var Body = function Body(ancestor, shapes, onBodyUpdate) {
 
         /**
          * a reference to the parent object that contains this body,
@@ -15111,7 +15111,7 @@
          * @default undefined
          * @name me.Body#ancestor
          */
-        this.ancestor = parent;
+        this.ancestor = ancestor;
 
         /**
          * The AABB bounds box reprensenting this body

@@ -207,7 +207,7 @@ export class Body {
      * @param {me.Rect|me.Rect[]|me.Polygon|me.Polygon[]|me.Line|me.Line[]|me.Ellipse|me.Ellipse[]|me.Bounds|me.Bounds[]|object} [shapes] a initial shape, list of shapes, or JSON object defining the body
      * @param {Function} [onBodyUpdate] callback for when the body is updated (e.g. add/remove shapes)
      */
-    constructor(parent: any, shapes?: me.Rect | me.Rect[] | me.Polygon | me.Polygon[] | me.Line | me.Line[] | me.Ellipse | me.Ellipse[] | me.Bounds | me.Bounds[] | object, onBodyUpdate?: Function);
+    constructor(ancestor: me.Renderable, shapes?: me.Rect | me.Rect[] | me.Polygon | me.Polygon[] | me.Line | me.Line[] | me.Ellipse | me.Ellipse[] | me.Bounds | me.Bounds[] | object, onBodyUpdate?: Function);
     /**
      * a reference to the parent object that contains this body,
      * or undefined if it has not been added to one.
