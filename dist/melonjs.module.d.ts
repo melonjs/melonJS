@@ -6364,19 +6364,21 @@ export class Sprite {
  * a default "Stage" object.
  * every "stage" object (title screen, credits, ingame, etc...) to be managed
  * through the state manager must inherit from this base class.
- * @class Stage
  * @memberof me
- * @param {object} [options] The stage` parameters
- * @param {me.Camera2d[]} [options.cameras=[new me.Camera2d()]] a list of cameras (experimental)
- * @param {Function} [options.onResetEvent] called by the state manager when reseting the object
- * @param {Function} [options.onDestroyEvent] called by the state manager before switching to another state
  * @see me.state
  */
 export class Stage {
     /**
-     * @ignore
+     * @param {object} [settings] The stage` parameters
+     * @param {me.Camera2d[]} [settings.cameras=[new me.Camera2d()]] a list of cameras (experimental)
+     * @param {Function} [settings.onResetEvent] called by the state manager when reseting the object
+     * @param {Function} [settings.onDestroyEvent] called by the state manager before switching to another state
      */
-    constructor(settings: any);
+    constructor(settings?: {
+        cameras?: me.Camera2d[];
+        onResetEvent?: Function;
+        onDestroyEvent?: Function;
+    });
     /**
      * The list of active cameras in this stage.
      * Cameras will be renderered based on this order defined in this list.

@@ -18458,12 +18458,7 @@
      * a default "Stage" object.
      * every "stage" object (title screen, credits, ingame, etc...) to be managed
      * through the state manager must inherit from this base class.
-     * @class Stage
      * @memberof me
-     * @param {object} [options] The stage` parameters
-     * @param {me.Camera2d[]} [options.cameras=[new me.Camera2d()]] a list of cameras (experimental)
-     * @param {Function} [options.onResetEvent] called by the state manager when reseting the object
-     * @param {Function} [options.onDestroyEvent] called by the state manager before switching to another state
      * @see me.state
      */
     var Stage = function Stage(settings) {
