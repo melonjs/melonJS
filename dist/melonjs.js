@@ -21221,21 +21221,7 @@
     /**
      * @classdesc
      * a base renderer object
-     * @class Renderer
      * @memberof me
-     * @param {object} options The renderer parameters
-     * @param {number} options.width The width of the canvas without scaling
-     * @param {number} options.height The height of the canvas without scaling
-     * @param {HTMLCanvasElement} [options.canvas] The html canvas to draw to on screen
-     * @param {boolean} [options.doubleBuffering=false] Whether to enable double buffering
-     * @param {boolean} [options.antiAlias=false] Whether to enable anti-aliasing, use false (default) for a pixelated effect.
-     * @param {boolean} [options.failIfMajorPerformanceCaveat=true] If true, the renderer will switch to CANVAS mode if the performances of a WebGL context would be dramatically lower than that of a native application making equivalent OpenGL calls.
-     * @param {boolean} [options.transparent=false] Whether to enable transparency on the canvas (performance hit when enabled)
-     * @param {boolean} [options.blendMode="normal"] the default blend mode to use ("normal", "multiply")
-     * @param {boolean} [options.subPixel=false] Whether to enable subpixel rendering (performance hit when enabled)
-     * @param {boolean} [options.verbose=false] Enable the verbose mode that provides additional details as to what the renderer is doing
-     * @param {number} [options.zoomX=width] The actual width of the canvas with scaling applied
-     * @param {number} [options.zoomY=height] The actual height of the canvas with scaling applied
      */
     var Renderer = function Renderer(options) {
         /**
@@ -21658,20 +21644,8 @@
     /**
      * @classdesc
      * a canvas renderer object
-     * @class CanvasRenderer
      * @augments me.Renderer
      * @memberof me
-     * @param {object} options The renderer parameters
-     * @param {number} options.width The width of the canvas without scaling
-     * @param {number} options.height The height of the canvas without scaling
-     * @param {HTMLCanvasElement} [options.canvas] The html canvas to draw to on screen
-     * @param {boolean} [options.doubleBuffering=false] Whether to enable double buffering
-     * @param {boolean} [options.antiAlias=false] Whether to enable anti-aliasing
-     * @param {boolean} [options.transparent=false] Whether to enable transparency on the canvas (performance hit when enabled)
-     * @param {boolean} [options.subPixel=false] Whether to enable subpixel renderering (performance hit when enabled)
-     * @param {boolean} [options.textureSeamFix=true] enable the texture seam fix when rendering Tile when antiAlias is off for the canvasRenderer
-     * @param {number} [options.zoomX=width] The actual width of the canvas with scaling applied
-     * @param {number} [options.zoomY=height] The actual height of the canvas with scaling applied
      */
     var CanvasRenderer = /*@__PURE__*/(function (Renderer) {
         function CanvasRenderer(options) {
@@ -28799,33 +28773,7 @@
     /**
      * @classdesc
      * a base GL Shader object
-     * @class GLShader
      * @memberof me
-     * @param {WebGLRenderingContext} gl the current WebGL rendering context
-     * @param {string} vertex a string containing the GLSL source code to set
-     * @param {string} fragment a string containing the GLSL source code to set
-     * @param {string} [precision=auto detected] float precision ('lowp', 'mediump' or 'highp').
-     * @see https://developer.mozilla.org/en-US/docs/Games/Techniques/3D_on_the_web/GLSL_Shaders
-     * @example
-     * // create a basic shader
-     * var myShader = new me.GLShader(
-     *    // WebGL rendering context
-     *    gl,
-     *    // vertex shader
-     *    [
-     *        "void main() {",
-     *        "    gl_Position = doMathToMakeClipspaceCoordinates;",
-     *        "}"
-     *    ].join("\n"),
-     *    // fragment shader
-     *    [
-     *        "void main() {",
-     *        "    gl_FragColor = doMathToMakeAColor;",
-     *        "}"
-     *    ].join("\n")
-     *  )
-     * // use the shader
-     * myShader.bind();
      */
     var GLShader = function GLShader(gl, vertex, fragment, precision) {
 
@@ -29111,9 +29059,7 @@
      * @classdesc
      * A WebGL Compositor object. This class handles all of the WebGL state<br>
      * Pushes texture regions or shape geometry into WebGL buffers, automatically flushes to GPU
-     * @class WebGLCompositor
      * @memberof me
-     * @param {me.WebGLRenderer} renderer the current WebGL renderer session
      */
     var WebGLCompositor = function WebGLCompositor (renderer) {
         this.init(renderer);
@@ -29633,23 +29579,8 @@
     /**
      * @classdesc
      * a WebGL renderer object
-     * @class WebGLRenderer
      * @augments me.Renderer
      * @memberof me
-     * @param {object} options The renderer parameters
-     * @param {number} options.width The width of the canvas without scaling
-     * @param {number} options.height The height of the canvas without scaling
-     * @param {HTMLCanvasElement} [options.canvas] The html canvas to draw to on screen
-     * @param {boolean} [options.doubleBuffering=false] Whether to enable double buffering
-     * @param {boolean} [options.antiAlias=false] Whether to enable anti-aliasing
-     * @param {boolean} [options.failIfMajorPerformanceCaveat=true] If true, the renderer will switch to CANVAS mode if the performances of a WebGL context would be dramatically lower than that of a native application making equivalent OpenGL calls.
-     * @param {boolean} [options.transparent=false] Whether to enable transparency on the canvas (performance hit when enabled)
-     * @param {boolean} [options.subPixel=false] Whether to enable subpixel renderering (performance hit when enabled)
-     * @param {boolean} [options.preferWebGL1=false] if true the renderer will only use WebGL 1
-     * @param {string} [options.powerPreference="default"] a hint to the user agent indicating what configuration of GPU is suitable for the WebGL context ("default", "high-performance", "low-power"). To be noted that Safari and Chrome (since version 80) both default to "low-power" to save battery life and improve the user experience on these dual-GPU machines.
-     * @param {number} [options.zoomX=width] The actual width of the canvas with scaling applied
-     * @param {number} [options.zoomY=height] The actual height of the canvas with scaling applied
-     * @param {me.WebGLCompositor} [options.compositor] A class that implements the compositor API
      */
     var WebGLRenderer = /*@__PURE__*/(function (Renderer) {
         function WebGLRenderer(options) {

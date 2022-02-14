@@ -21,12 +21,12 @@ var V_ARRAY = [
  * @classdesc
  * A WebGL Compositor object. This class handles all of the WebGL state<br>
  * Pushes texture regions or shape geometry into WebGL buffers, automatically flushes to GPU
- * @class WebGLCompositor
  * @memberof me
- * @param {me.WebGLRenderer} renderer the current WebGL renderer session
  */
 class WebGLCompositor {
-
+    /**
+     * @param {me.WebGLRenderer} renderer the current WebGL renderer session
+     */
     constructor (renderer) {
         this.init(renderer);
     }

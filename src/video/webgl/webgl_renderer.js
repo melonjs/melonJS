@@ -14,26 +14,26 @@ import { isPowerOfTwo, nextPowerOfTwo, TAU } from "./../../math/math.js";
 /**
  * @classdesc
  * a WebGL renderer object
- * @class WebGLRenderer
  * @augments me.Renderer
  * @memberof me
- * @param {object} options The renderer parameters
- * @param {number} options.width The width of the canvas without scaling
- * @param {number} options.height The height of the canvas without scaling
- * @param {HTMLCanvasElement} [options.canvas] The html canvas to draw to on screen
- * @param {boolean} [options.doubleBuffering=false] Whether to enable double buffering
- * @param {boolean} [options.antiAlias=false] Whether to enable anti-aliasing
- * @param {boolean} [options.failIfMajorPerformanceCaveat=true] If true, the renderer will switch to CANVAS mode if the performances of a WebGL context would be dramatically lower than that of a native application making equivalent OpenGL calls.
- * @param {boolean} [options.transparent=false] Whether to enable transparency on the canvas (performance hit when enabled)
- * @param {boolean} [options.subPixel=false] Whether to enable subpixel renderering (performance hit when enabled)
- * @param {boolean} [options.preferWebGL1=false] if true the renderer will only use WebGL 1
- * @param {string} [options.powerPreference="default"] a hint to the user agent indicating what configuration of GPU is suitable for the WebGL context ("default", "high-performance", "low-power"). To be noted that Safari and Chrome (since version 80) both default to "low-power" to save battery life and improve the user experience on these dual-GPU machines.
- * @param {number} [options.zoomX=width] The actual width of the canvas with scaling applied
- * @param {number} [options.zoomY=height] The actual height of the canvas with scaling applied
- * @param {me.WebGLCompositor} [options.compositor] A class that implements the compositor API
  */
 class WebGLRenderer extends Renderer {
-
+    /**
+     * @param {object} options The renderer parameters
+     * @param {number} options.width The width of the canvas without scaling
+     * @param {number} options.height The height of the canvas without scaling
+     * @param {HTMLCanvasElement} [options.canvas] The html canvas to draw to on screen
+     * @param {boolean} [options.doubleBuffering=false] Whether to enable double buffering
+     * @param {boolean} [options.antiAlias=false] Whether to enable anti-aliasing
+     * @param {boolean} [options.failIfMajorPerformanceCaveat=true] If true, the renderer will switch to CANVAS mode if the performances of a WebGL context would be dramatically lower than that of a native application making equivalent OpenGL calls.
+     * @param {boolean} [options.transparent=false] Whether to enable transparency on the canvas (performance hit when enabled)
+     * @param {boolean} [options.subPixel=false] Whether to enable subpixel renderering (performance hit when enabled)
+     * @param {boolean} [options.preferWebGL1=false] if true the renderer will only use WebGL 1
+     * @param {string} [options.powerPreference="default"] a hint to the user agent indicating what configuration of GPU is suitable for the WebGL context ("default", "high-performance", "low-power"). To be noted that Safari and Chrome (since version 80) both default to "low-power" to save battery life and improve the user experience on these dual-GPU machines.
+     * @param {number} [options.zoomX=width] The actual width of the canvas with scaling applied
+     * @param {number} [options.zoomY=height] The actual height of the canvas with scaling applied
+     * @param {me.WebGLCompositor} [options.compositor] A class that implements the compositor API
+     */
     constructor(options) {
 
         // parent contructor

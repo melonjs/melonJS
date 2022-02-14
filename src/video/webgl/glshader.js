@@ -197,36 +197,36 @@ function minify(src) {
 /**
  * @classdesc
  * a base GL Shader object
- * @class GLShader
  * @memberof me
- * @param {WebGLRenderingContext} gl the current WebGL rendering context
- * @param {string} vertex a string containing the GLSL source code to set
- * @param {string} fragment a string containing the GLSL source code to set
- * @param {string} [precision=auto detected] float precision ('lowp', 'mediump' or 'highp').
- * @see https://developer.mozilla.org/en-US/docs/Games/Techniques/3D_on_the_web/GLSL_Shaders
- * @example
- * // create a basic shader
- * var myShader = new me.GLShader(
- *    // WebGL rendering context
- *    gl,
- *    // vertex shader
- *    [
- *        "void main() {",
- *        "    gl_Position = doMathToMakeClipspaceCoordinates;",
- *        "}"
- *    ].join("\n"),
- *    // fragment shader
- *    [
- *        "void main() {",
- *        "    gl_FragColor = doMathToMakeAColor;",
- *        "}"
- *    ].join("\n")
- *  )
- * // use the shader
- * myShader.bind();
  */
 class GLShader {
-
+    /**
+     * @param {WebGLRenderingContext} gl the current WebGL rendering context
+     * @param {string} vertex a string containing the GLSL source code to set
+     * @param {string} fragment a string containing the GLSL source code to set
+     * @param {string} [precision=auto detected] float precision ('lowp', 'mediump' or 'highp').
+     * @see https://developer.mozilla.org/en-US/docs/Games/Techniques/3D_on_the_web/GLSL_Shaders
+     * @example
+     * // create a basic shader
+     * var myShader = new me.GLShader(
+     *    // WebGL rendering context
+     *    gl,
+     *    // vertex shader
+     *    [
+     *        "void main() {",
+     *        "    gl_Position = doMathToMakeClipspaceCoordinates;",
+     *        "}"
+     *    ].join("\n"),
+     *    // fragment shader
+     *    [
+     *        "void main() {",
+     *        "    gl_FragColor = doMathToMakeAColor;",
+     *        "}"
+     *    ].join("\n")
+     *  )
+     * // use the shader
+     * myShader.bind();
+     */
     constructor(gl, vertex, fragment, precision) {
 
         /**
