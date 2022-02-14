@@ -16957,14 +16957,8 @@
     /**
      * @classdesc
      * a QuadTree implementation in JavaScript, a 2d spatial subdivision algorithm.
-     * @class
-     * @name QuadTree
      * @memberof me
      * @see me.game.world.broadphase
-     * @param {me.Bounds} bounds bounds of the node
-     * @param {number} [max_objects=4] max objects a node can hold before splitting into 4 subnodes
-     * @param {number} [max_levels=4] total max levels inside root Quadtree
-     * @param {number} [level] deepth level, required for subnodes
      */
     var QuadTree = function QuadTree(bounds, max_objects, max_levels, level) {
         if ( max_objects === void 0 ) max_objects = 4;

@@ -9,7 +9,6 @@ import Polygon from "./../geometries/poly.js";
 class Bounds {
     /**
      * @param {me.Vector2d[]} [vertices] an array of me.Vector2d points
-     * @returns {me.Bounds} A new bounds object
      */
     constructor(vertices) {
         this.onResetEvent(vertices);

@@ -51,17 +51,16 @@ var QT_VECTOR = new Vector2d();
 /**
  * @classdesc
  * a QuadTree implementation in JavaScript, a 2d spatial subdivision algorithm.
- * @class
- * @name QuadTree
  * @memberof me
  * @see me.game.world.broadphase
- * @param {me.Bounds} bounds bounds of the node
- * @param {number} [max_objects=4] max objects a node can hold before splitting into 4 subnodes
- * @param {number} [max_levels=4] total max levels inside root Quadtree
- * @param {number} [level] deepth level, required for subnodes
  */
 class QuadTree {
-
+    /**
+     * @param {me.Bounds} bounds bounds of the node
+     * @param {number} [max_objects=4] max objects a node can hold before splitting into 4 subnodes
+     * @param {number} [max_levels=4] total max levels inside root Quadtree
+     * @param {number} [level] deepth level, required for subnodes
+     */
     constructor(bounds, max_objects = 4, max_levels = 4, level = 0) {
         this.max_objects = max_objects;
         this.max_levels  = max_levels;

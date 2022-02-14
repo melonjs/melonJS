@@ -608,7 +608,6 @@ export class Body {
 declare class Bounds$1 {
     /**
      * @param {me.Vector2d[]} [vertices] an array of me.Vector2d points
-     * @returns {me.Bounds} A new bounds object
      */
     constructor(vertices?: me.Vector2d[]);
     /**
@@ -5069,21 +5068,21 @@ export class Polygon {
 /**
  * @classdesc
  * a QuadTree implementation in JavaScript, a 2d spatial subdivision algorithm.
- * @class
- * @name QuadTree
  * @memberof me
  * @see me.game.world.broadphase
- * @param {me.Bounds} bounds bounds of the node
- * @param {number} [max_objects=4] max objects a node can hold before splitting into 4 subnodes
- * @param {number} [max_levels=4] total max levels inside root Quadtree
- * @param {number} [level] deepth level, required for subnodes
  */
 export class QuadTree {
-    constructor(bounds: any, max_objects?: number, max_levels?: number, level?: number);
+    /**
+     * @param {me.Bounds} bounds bounds of the node
+     * @param {number} [max_objects=4] max objects a node can hold before splitting into 4 subnodes
+     * @param {number} [max_levels=4] total max levels inside root Quadtree
+     * @param {number} [level] deepth level, required for subnodes
+     */
+    constructor(bounds: me.Bounds, max_objects?: number, max_levels?: number, level?: number);
     max_objects: number;
     max_levels: number;
     level: number;
-    bounds: any;
+    bounds: me.Bounds;
     objects: any[];
     nodes: any[];
     split(): void;
@@ -11775,7 +11774,6 @@ declare class Texture {
 declare class Bounds {
     /**
      * @param {me.Vector2d[]} [vertices] an array of me.Vector2d points
-     * @returns {me.Bounds} A new bounds object
      */
     constructor(vertices?: me.Vector2d[]);
     /**
