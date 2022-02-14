@@ -136,12 +136,12 @@ Demos
 
 A few demos of melonJS capabilities :
 
-* [Platformer Demo](https://melonjs.github.io/examples/examples/platformer/)
-* [Isometric Demo](https://melonjs.github.io/examples/examples/isometric_rpg/)
-* [Sprite Demo](https://melonjs.github.io/examples/examples/sprite/)
-* [Masking Demo](https://melonjs.github.io/examples/examples/masking/)
-* [Primitive Drawing Demo](https://melonjs.github.io/examples/examples/graphics/)
-* [UI Demo](https://melonjs.github.io/examples/examples/UI/)
+* [Platformer Demo](https://melonjs.github.io/examples/platformer/)
+* [Isometric Demo](https://melonjs.github.io/examples/isometric_rpg/)
+* [Sprite Demo](https://melonjs.github.io/examples/sprite/)
+* [Masking Demo](https://melonjs.github.io/examples/masking/)
+* [Primitive Drawing Demo](https://melonjs.github.io/examples/graphics/)
+* [UI Demo](https://melonjs.github.io/examples/UI/)
 
 More examples are available [here](https://melonjs.github.io/examples/)
 
