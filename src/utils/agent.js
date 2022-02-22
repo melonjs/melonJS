@@ -2,8 +2,7 @@ import { capitalize } from "./string.js";
 
 /**
  * a collection of utility functons to ease porting between different user agents.
- * @namespace me.utils.agent
- * @memberof me
+ * @namespace utils.agent
  */
 
 /**
@@ -20,7 +19,7 @@ var vendors = [ "ms", "MS", "moz", "webkit", "o" ];
  * @param {string} name Property name
  * @param {object} [obj=window] Object or element reference to access
  * @returns {string} Value of property
- * @memberof me.utils.agent
+ * @memberof utils.agent
  */
 export function prefixed(name, obj) {
     obj = obj || window;
@@ -47,7 +46,7 @@ export function prefixed(name, obj) {
  * @param {string} value Property value
  * @param {object} [obj=window] Object or element reference to access
  * @returns {boolean} true if one of the vendor-prefixed property was found
- * @memberof me.utils.agent
+ * @memberof utils.agent
  */
 export function setPrefixed(name, value, obj) {
     obj = obj || window;

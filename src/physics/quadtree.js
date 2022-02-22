@@ -51,12 +51,11 @@ var QT_VECTOR = new Vector2d();
 /**
  * @classdesc
  * a QuadTree implementation in JavaScript, a 2d spatial subdivision algorithm.
- * @memberof me
- * @see me.game.world.broadphase
+ * @see game.world.broadphase
  */
 class QuadTree {
     /**
-     * @param {me.Bounds} bounds bounds of the node
+     * @param {Bounds} bounds bounds of the node
      * @param {number} [max_objects=4] max objects a node can hold before splitting into 4 subnodes
      * @param {number} [max_levels=4] total max levels inside root Quadtree
      * @param {number} [level] deepth level, required for subnodes
@@ -117,7 +116,7 @@ class QuadTree {
 
     /*
      * Determine which node the object belongs to
-     * @param {me.Rect} rect bounds of the area to be checked
+     * @param {Rect} rect bounds of the area to be checked
      * @returns Integer index of the subnode (0-3), or -1 if rect cannot completely fit within a subnode and is part of the parent node
      */
     getIndex(item) {
@@ -165,9 +164,9 @@ class QuadTree {
     /**
      * Insert the given object container into the node.
      * @name insertContainer
-     * @memberof me.QuadTree
+     * @memberof QuadTree
      * @function
-     * @param {me.Container} container group of objects to be added
+     * @param {Container} container group of objects to be added
      */
     insertContainer(container) {
         for (var i = container.children.length, child; i--, (child = container.children[i]);) {
@@ -194,7 +193,7 @@ class QuadTree {
      * exceeds the capacity, it will split and add all
      * objects to their corresponding subnodes.
      * @name insert
-     * @memberof me.QuadTree
+     * @memberof QuadTree
      * @function
      * @param {object} item object to be added
      */
@@ -239,7 +238,7 @@ class QuadTree {
     /**
      * Return all objects that could collide with the given object
      * @name retrieve
-     * @memberof me.QuadTree
+     * @memberof QuadTree
      * @function
      * @param {object} item object to be checked against
      * @param {object} [fn] a sorting function for the returned array
@@ -275,7 +274,7 @@ class QuadTree {
      * Remove the given item from the quadtree.
      * (this function won't recalculate the impacted node)
      * @name remove
-     * @memberof me.QuadTree
+     * @memberof QuadTree
      * @function
      * @param {object} item object to be removed
      * @returns {boolean} true if the item was found and removed.
@@ -316,7 +315,7 @@ class QuadTree {
     /**
      * return true if the node is prunable
      * @name isPrunable
-     * @memberof me.QuadTree
+     * @memberof QuadTree
      * @function
      * @returns {boolean} true if the node is prunable
      */
@@ -327,7 +326,7 @@ class QuadTree {
     /**
      * return true if the node has any children
      * @name hasChildren
-     * @memberof me.QuadTree
+     * @memberof QuadTree
      * @function
      * @returns {boolean} true if the node has any children
      */
@@ -344,9 +343,9 @@ class QuadTree {
     /**
      * clear the quadtree
      * @name clear
-     * @memberof me.QuadTree
+     * @memberof QuadTree
      * @function
-     * @param {me.Bounds} [bounds=this.bounds] the bounds to be cleared
+     * @param {Bounds} [bounds=this.bounds] the bounds to be cleared
      */
     clear(bounds) {
         this.objects.length = 0;

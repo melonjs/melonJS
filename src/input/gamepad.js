@@ -1,6 +1,7 @@
 import {getBindingKey, triggerKeyEvent} from "./keyboard.js";
 import * as event from "./../system/event.js";
 
+
 // Analog deadzone
 var deadzone = 0.1;
 
@@ -284,7 +285,7 @@ window.addEventListener("gamepaddisconnected", function (e) {
  * Namespace for standard gamepad mapping constants
  * @public
  * @namespace GAMEPAD
- * @memberof me.input
+ * @memberof input
  */
 export var GAMEPAD = {
     /**
@@ -297,7 +298,7 @@ export var GAMEPAD = {
      * @public
      * @name AXES
      * @enum {number}
-     * @memberof me.input.GAMEPAD
+     * @memberof input.GAMEPAD
      * @see https://w3c.github.io/gamepad/#remapping
      */
     "AXES" : {
@@ -324,7 +325,7 @@ export var GAMEPAD = {
      * @public
      * @name BUTTONS
      * @enum {number}
-     * @memberof me.input.GAMEPAD
+     * @memberof input.GAMEPAD
      * @see https://w3c.github.io/gamepad/#remapping
      */
     "BUTTONS" : {
@@ -357,15 +358,15 @@ export var GAMEPAD = {
 /**
  * Associate a gamepad event to a keycode
  * @name bindGamepad
- * @memberof me.input
+ * @memberof input
  * @public
  * @function
  * @param {number} index Gamepad index
  * @param {object} button Button/Axis definition
  * @param {string} button.type "buttons" or "axes"
- * @param {me.input.GAMEPAD.BUTTONS|me.input.GAMEPAD.AXES} button.code button or axis code id
+ * @param {input.GAMEPAD.BUTTONS|input.GAMEPAD.AXES} button.code button or axis code id
  * @param {number} [button.threshold=1] value indicating when the axis should trigger the keycode (e.g. -0.5 or 0.5)
- * @param {me.input.KEY} keyCode
+ * @param {input.KEY} keyCode
  * @example
  * // enable the keyboard
  * me.input.bindKey(me.input.KEY.X, "shoot");
@@ -432,11 +433,11 @@ export function bindGamepad(index, button, keyCode) {
 /**
  * unbind the defined keycode
  * @name unbindGamepad
- * @memberof me.input
+ * @memberof input
  * @public
  * @function
  * @param {number} index Gamepad index
- * @param {me.input.GAMEPAD.BUTTONS} button
+ * @param {input.GAMEPAD.BUTTONS} button
  * @example
  * me.input.unbindGamepad(0, me.input.GAMEPAD.BUTTONS.FACE_1);
  */
@@ -451,7 +452,7 @@ export function unbindGamepad(index, button) {
  * Set deadzone for analog gamepad inputs<br>
  * The default deadzone is 0.1 (10%) Analog values less than this will be ignored
  * @name setGamepadDeadzone
- * @memberof me.input
+ * @memberof input
  * @public
  * @function
  * @param {number} value Deadzone value
@@ -465,7 +466,7 @@ export function setGamepadDeadzone(value) {
  * see below for the default mapping : <br>
  * <center><img src="images/gamepad_diagram.png"/></center><br>
  * @name setGamepadMapping
- * @memberof me.input
+ * @memberof input
  * @public
  * @function
  * @param {string} id Gamepad id string

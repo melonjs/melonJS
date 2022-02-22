@@ -46,12 +46,12 @@ export function warning(deprecated, replacement, version) {
  * @public
  * @type {Function}
  * @name turnOnPointerLock
- * @memberof me.device
+ * @memberof device
  * @deprecated since 10.3.0
- * @see me.input.requestPointerLock
+ * @see input.requestPointerLock
  */
 device.turnOnPointerLock = function () {
-    warning("me.device.turnOnPointerLock()", "me.input.requestPointerLock()", "10.3.0");
+    warning("device.turnOnPointerLock()", "input.requestPointerLock()", "10.3.0");
     return requestPointerLock();
 };
 
@@ -59,11 +59,11 @@ device.turnOnPointerLock = function () {
  * @public
  * @type {Function}
  * @name turnOffPointerLock
- * @memberof me.device
+ * @memberof device
  * @deprecated since 10.3.0
- * @see me.input.exitPointerLock
+ * @see input.exitPointerLock
  */
 device.turnOffPointerLock = function () {
-    warning("me.device.turnOffPointerLock()", "me.input.exitPointerLock()", "10.3.0");
+    warning("device.turnOffPointerLock()", "input.exitPointerLock()", "10.3.0");
     return exitPointerLock();
 };

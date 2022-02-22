@@ -4,7 +4,6 @@ import { rayCast, globalResponse } from "./detector.js";
  * Collision detection (and projection-based collision response) of 2D shapes.<br>
  * Based on the Separating Axis Theorem and supports detecting collisions between simple Axis-Aligned Boxes, convex polygons and circles based shapes.
  * @namespace collision
- * @memberof me
  */
 
 var collision = {
@@ -12,22 +11,22 @@ var collision = {
      /**
       * The maximum number of children that a quadtree node can contain before it is split into sub-nodes.
       * @name maxChildren
-      * @memberof me.collision
+      * @memberof collision
       * @public
       * @type {number}
       * @default 8
-      * @see me.game.world.broadphase
+      * @see game.world.broadphase
       */
      maxChildren : 8,
 
      /**
       * The maximum number of levels that the quadtree will create.
       * @name maxDepth
-      * @memberof me.collision
+      * @memberof collision
       * @public
       * @type {number}
       * @default 4
-      * @see me.game.world.broadphase
+      * @see game.world.broadphase
       */
      maxDepth : 4,
 
@@ -46,9 +45,9 @@ var collision = {
      * @readonly
      * @enum {number}
      * @name types
-     * @memberof me.collision
-     * @see me.body.setCollisionMask
-     * @see me.body.collisionType
+     * @memberof collision
+     * @see Body.setCollisionMask
+     * @see Body.collisionType
      * @example
      * // set the body collision type
      * myEntity.body.collisionType = me.collision.types.PLAYER_OBJECT;
@@ -97,21 +96,21 @@ var collision = {
      * a global instance of a response object used for collision detection <br>
      * this object will be reused amongst collision detection call if not user-defined response is specified
      * @name response
-     * @memberof me.collision
+     * @memberof collision
      * @public
-     * @type {me.collision.ResponseObject}
+     * @type {collision.ResponseObject}
      */
     response : globalResponse,
 
     /**
      * Checks for object colliding with the given line
      * @name rayCast
-     * @memberof me.collision
+     * @memberof collision
      * @public
      * @function
-     * @param {me.Line} line line to be tested for collision
-     * @param {Array.<me.Renderable>} [result] a user defined array that will be populated with intersecting physic objects.
-     * @returns {Array.<me.Renderable>} an array of intersecting physic objects
+     * @param {Line} line line to be tested for collision
+     * @param {Array.<Renderable>} [result] a user defined array that will be populated with intersecting physic objects.
+     * @returns {Array.<Renderable>} an array of intersecting physic objects
      * @example
      *    // define a line accross the viewport
      *    var ray = new me.Line(

@@ -5,7 +5,6 @@ var TMX_CLEAR_BIT_MASK = ~(0x80000000 | 0x40000000 | 0x20000000);
 /**
  * @classdesc
  * an object containing all tileset
- * @memberof me
  */
 class TMXTilesetGroup {
 
@@ -16,10 +15,10 @@ class TMXTilesetGroup {
 
     /**
      * add a tileset to the tileset group
-     * @name me.TMXTilesetGroup#add
+     * @name TMXTilesetGroup#add
      * @public
      * @function
-     * @param  {me.TMXTileset} tileset
+     * @param {TMXTileset} tileset
      */
     add(tileset) {
         this.tilesets.push(tileset);
@@ -28,11 +27,11 @@ class TMXTilesetGroup {
 
     /**
      * return the tileset at the specified index
-     * @name me.TMXTilesetGroup#getTilesetByIndex
+     * @name TMXTilesetGroup#getTilesetByIndex
      * @public
      * @function
      * @param {number} i
-     * @returns {me.TMXTileset} corresponding tileset
+     * @returns {TMXTileset} corresponding tileset
      */
     getTilesetByIndex(i) {
         return this.tilesets[i];
@@ -41,11 +40,11 @@ class TMXTilesetGroup {
     /**
      * return the tileset corresponding to the specified id <br>
      * will throw an exception if no matching tileset is found
-     * @name me.TMXTilesetGroup#getTilesetByGid
+     * @name TMXTilesetGroup#getTilesetByGid
      * @public
      * @function
      * @param {number} gid
-     * @returns {me.TMXTileset} corresponding tileset
+     * @returns {TMXTileset} corresponding tileset
      */
     getTilesetByGid(gid) {
         var invalidRange = -1;

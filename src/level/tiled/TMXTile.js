@@ -11,15 +11,14 @@ var TMX_FLIP_H          = 0x80000000,
 /**
  * @classdesc
  * a basic tile object
- * @augments me.Bounds
- * @memberof me
+ * @augments Bounds
  */
 class Tile extends Bounds {
     /**
      * @param {number} x x index of the Tile in the map
      * @param {number} y y index of the Tile in the map
      * @param {number} gid tile gid
-     * @param {me.TMXTileset} tileset the corresponding tileset object
+     * @param {TMXTileset} tileset the corresponding tileset object
      */
     constructor(x, y, gid, tileset) {
         var width, height;
@@ -42,8 +41,8 @@ class Tile extends Bounds {
         /**
          * tileset
          * @public
-         * @type {me.TMXTileset}
-         * @name me.Tile#tileset
+         * @type {TMXTileset}
+         * @name Tile#tileset
          */
         this.tileset = tileset;
 
@@ -61,28 +60,28 @@ class Tile extends Bounds {
          * tileId
          * @public
          * @type {number}
-         * @name me.Tile#tileId
+         * @name Tile#tileId
          */
         this.tileId = gid;
         /**
          * True if the tile is flipped horizontally<br>
          * @public
          * @type {boolean}
-         * @name me.Tile#flipX
+         * @name Tile#flipX
          */
         this.flippedX  = (this.tileId & TMX_FLIP_H) !== 0;
         /**
          * True if the tile is flipped vertically<br>
          * @public
          * @type {boolean}
-         * @name me.Tile#flippedY
+         * @name Tile#flippedY
          */
         this.flippedY  = (this.tileId & TMX_FLIP_V) !== 0;
         /**
          * True if the tile is flipped anti-diagonally<br>
          * @public
          * @type {boolean}
-         * @name me.Tile#flippedAD
+         * @name Tile#flippedAD
          */
         this.flippedAD = (this.tileId & TMX_FLIP_AD) !== 0;
 
@@ -90,7 +89,7 @@ class Tile extends Bounds {
          * Global flag that indicates if the tile is flipped<br>
          * @public
          * @type {boolean}
-         * @name me.Tile#flipped
+         * @name Tile#flipped
          */
         this.flipped = this.flippedX || this.flippedY || this.flippedAD;
 
@@ -131,11 +130,11 @@ class Tile extends Bounds {
 
     /**
      * return a renderable object for this Tile object
-     * @name me.Tile#getRenderable
+     * @name Tile#getRenderable
      * @public
      * @function
-     * @param {object} [settings] see {@link me.Sprite}
-     * @returns {me.Renderable} a me.Sprite object
+     * @param {object} [settings] see {@link Sprite}
+     * @returns {Renderable} a me.Sprite object
      */
     getRenderable(settings) {
         var renderable;

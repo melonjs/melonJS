@@ -6,8 +6,7 @@ import Sprite from "./sprite.js";
  * by proportionally scaling a sprite by splitting it in a grid of nine parts (with only parts 1, 3, 7, 9 not being scaled). <br>
  * <img src="images/9-slice-scaling.png"/><br>
  * @see https://en.wikipedia.org/wiki/9-slice_scaling
- * @augments me.Sprite
- * @memberof me
+ * @augments Sprite
  */
 class NineSliceSprite extends Sprite {
     /**
@@ -16,15 +15,15 @@ class NineSliceSprite extends Sprite {
      * @param {object} settings Configuration parameters for the Sprite object
      * @param {number} settings.width the width of the Renderable over which the sprite needs to be stretched
      * @param {number} settings.height the height of the Renderable over which the sprite needs to be stretched
-     * @param {me.Renderer.Texture|HTMLImageElement|HTMLCanvasElement|string} settings.image reference to a texture, spritesheet image or to a texture atlas
+     * @param {Renderer.Texture|HTMLImageElement|HTMLCanvasElement|string} settings.image reference to a texture, spritesheet image or to a texture atlas
      * @param {string} [settings.name=""] name of this object
-     * @param {string} [settings.region] region name of a specific region to use when using a texture atlas, see {@link me.Renderer.Texture}
+     * @param {string} [settings.region] region name of a specific region to use when using a texture atlas, see {@link Renderer.Texture}
      * @param {number} [settings.framewidth] Width of a single frame within the spritesheet
      * @param {number} [settings.frameheight] Height of a single frame within the spritesheet
-     * @param {string|me.Color} [settings.tint] a tint to be applied to this sprite
+     * @param {string|Color} [settings.tint] a tint to be applied to this sprite
      * @param {number} [settings.flipX] flip the sprite on the horizontal axis
      * @param {number} [settings.flipY] flip the sprite on the vertical axis
-     * @param {me.Vector2d} [settings.anchorPoint={x:0.5, y:0.5}] Anchor point to draw the frame at (defaults to the center of the frame).
+     * @param {Vector2d} [settings.anchorPoint={x:0.5, y:0.5}] Anchor point to draw the frame at (defaults to the center of the frame).
      * @example
      * this.panelSprite = new me.NineSliceSprite(0, 0, {
      *     image : game.texture,

@@ -21,11 +21,10 @@ var V_ARRAY = [
  * @classdesc
  * A WebGL Compositor object. This class handles all of the WebGL state<br>
  * Pushes texture regions or shape geometry into WebGL buffers, automatically flushes to GPU
- * @memberof me
  */
 class WebGLCompositor {
     /**
-     * @param {me.WebGLRenderer} renderer the current WebGL renderer session
+     * @param {WebGLRenderer} renderer the current WebGL renderer session
      */
     constructor (renderer) {
         this.init(renderer);
@@ -58,16 +57,16 @@ class WebGLCompositor {
         /**
          * a reference to the active WebGL shader
          * @name activeShader
-         * @memberof me.WebGLCompositor
-         * @type {me.GLShader}
+         * @memberof WebGLCompositor
+         * @type {GLShader}
          */
         this.activeShader = null;
 
         /**
          * primitive type to render (gl.POINTS, gl.LINE_STRIP, gl.LINE_LOOP, gl.LINES, gl.TRIANGLE_STRIP, gl.TRIANGLE_FAN, gl.TRIANGLES)
          * @name mode
-         * @see me.WebGLCompositor
-         * @memberof me.WebGLCompositor
+         * @see WebGLCompositor
+         * @memberof WebGLCompositor
          * @default gl.TRIANGLES
          */
         this.mode = gl.TRIANGLES;
@@ -75,8 +74,8 @@ class WebGLCompositor {
         /**
          * an array of vertex attribute properties
          * @name attributes
-         * @see me.WebGLCompositor.addAttribute
-         * @memberof me.WebGLCompositor
+         * @see WebGLCompositor.addAttribute
+         * @memberof WebGLCompositor
          */
         this.attributes = [];
 
@@ -84,8 +83,8 @@ class WebGLCompositor {
          * the size of a single vertex in bytes
          * (will automatically be calculated as attributes definitions are added)
          * @name vertexByteSize
-         * @see me.WebGLCompositor.addAttribute
-         * @memberof me.WebGLCompositor
+         * @see WebGLCompositor.addAttribute
+         * @memberof WebGLCompositor
          */
         this.vertexByteSize = 0;
 
@@ -93,8 +92,8 @@ class WebGLCompositor {
          * the size of a single vertex in floats
          * (will automatically be calculated as attributes definitions are added)
          * @name vertexSize
-         * @see me.WebGLCompositor.addAttribute
-         * @memberof me.WebGLCompositor
+         * @see WebGLCompositor.addAttribute
+         * @memberof WebGLCompositor
          */
         this.vertexSize = 0;
 
@@ -156,7 +155,7 @@ class WebGLCompositor {
     /**
      * add vertex attribute property definition to the compositor
      * @name addAttribute
-     * @memberof me.WebGLCompositor
+     * @memberof WebGLCompositor
      * @function
      * @param {string} name name of the attribute in the vertex shader
      * @param {number} size number of components per vertex attribute. Must be 1, 2, 3, or 4.
@@ -204,7 +203,7 @@ class WebGLCompositor {
     /**
      * Sets the viewport
      * @name setViewport
-     * @memberof me.WebGLCompositor
+     * @memberof WebGLCompositor
      * @function
      * @param {number} x x position of viewport
      * @param {number} y y position of viewport
@@ -218,12 +217,12 @@ class WebGLCompositor {
     /**
      * Create a WebGL texture from an image
      * @name createTexture2D
-     * @memberof me.WebGLCompositor
+     * @memberof WebGLCompositor
      * @function
      * @param {number} unit Destination texture unit
      * @param {Image|HTMLCanvasElement|ImageData|Uint8Array[]|Float32Array[]} image Source image
      * @param {number} filter gl.LINEAR or gl.NEAREST
-     * @param {string} [repeat="no-repeat"] Image repeat behavior (see {@link me.ImageLayer#repeat})
+     * @param {string} [repeat="no-repeat"] Image repeat behavior (see {@link ImageLayer#repeat})
      * @param {number} [w] Source image width (Only use with UInt8Array[] or Float32Array[] source image)
      * @param {number} [h] Source image height (Only use with UInt8Array[] or Float32Array[] source image)
      * @param {number} [b] Source image border (Only use with UInt8Array[] or Float32Array[] source image)
@@ -263,7 +262,7 @@ class WebGLCompositor {
     /**
      * delete the given WebGL texture
      * @name bindTexture2D
-     * @memberof me.WebGLCompositor
+     * @memberof WebGLCompositor
      * @function
      * @param {WebGLTexture} [texture] a WebGL texture to delete
      * @param {number} [unit] Texture unit to delete
@@ -276,7 +275,7 @@ class WebGLCompositor {
     /**
      * returns the WebGL texture associated to the given texture unit
      * @name bindTexture2D
-     * @memberof me.WebGLCompositor
+     * @memberof WebGLCompositor
      * @function
      * @param {number} unit Texture unit to which a texture is bound
      * @returns {WebGLTexture} texture a WebGL texture
@@ -288,7 +287,7 @@ class WebGLCompositor {
     /**
      * assign the given WebGL texture to the current batch
      * @name bindTexture2D
-     * @memberof me.WebGLCompositor
+     * @memberof WebGLCompositor
      * @function
      * @param {WebGLTexture} texture a WebGL texture
      * @param {number} unit Texture unit to which the given texture is bound
@@ -316,7 +315,7 @@ class WebGLCompositor {
     /**
      * unbind the given WebGL texture, forcing it to be reuploaded
      * @name unbindTexture2D
-     * @memberof me.WebGLCompositor
+     * @memberof WebGLCompositor
      * @function
      * @param {WebGLTexture} [texture] a WebGL texture
      * @param {number} [unit] a WebGL texture
@@ -363,10 +362,10 @@ class WebGLCompositor {
     /**
      * Select the shader to use for compositing
      * @name useShader
-     * @see me.GLShader
-     * @memberof me.WebGLCompositor
+     * @see GLShader
+     * @memberof WebGLCompositor
      * @function
-     * @param {me.GLShader} shader a reference to a GLShader instance
+     * @param {GLShader} shader a reference to a GLShader instance
      */
     useShader(shader) {
         if (this.activeShader !== shader) {
@@ -394,9 +393,9 @@ class WebGLCompositor {
     /**
      * Add a textured quad
      * @name addQuad
-     * @memberof me.WebGLCompositor
+     * @memberof WebGLCompositor
      * @function
-     * @param {me.Renderer.Texture} texture Source texture
+     * @param {Renderer.Texture} texture Source texture
      * @param {number} x Destination x-coordinate
      * @param {number} y Destination y-coordinate
      * @param {number} w Destination width
@@ -451,7 +450,7 @@ class WebGLCompositor {
     /**
      * Flush batched texture operations to the GPU
      * @param {number} [mode=gl.TRIANGLES] the GL drawing mode
-     * @memberof me.WebGLCompositor
+     * @memberof WebGLCompositor
      * @function
      */
     flush(mode = this.mode) {
@@ -479,10 +478,10 @@ class WebGLCompositor {
     /**
      * Draw an array of vertices
      * @name drawVertices
-     * @memberof me.WebGLCompositor
+     * @memberof WebGLCompositor
      * @function
      * @param {GLenum} mode primitive type to render (gl.POINTS, gl.LINE_STRIP, gl.LINE_LOOP, gl.LINES, gl.TRIANGLE_STRIP, gl.TRIANGLE_FAN, gl.TRIANGLES)
-     * @param {me.Vector2d[]} verts vertices
+     * @param {Vector2d[]} verts vertices
      * @param {number} [vertexCount=verts.length] amount of points defined in the points array
      */
     drawVertices(mode, verts, vertexCount = verts.length) {
@@ -509,7 +508,7 @@ class WebGLCompositor {
     /**
      * Specify the color values used when clearing color buffers. The values are clamped between 0 and 1.
      * @name clearColor
-     * @memberof me.WebGLCompositor
+     * @memberof WebGLCompositor
      * @function
      * @param {number} [r=0] - the red color value used when the color buffers are cleared
      * @param {number} [g=0] - the green color value used when the color buffers are cleared
@@ -523,7 +522,7 @@ class WebGLCompositor {
     /**
      * Clear the frame buffer
      * @name clear
-     * @memberof me.WebGLCompositor
+     * @memberof WebGLCompositor
      * @function
      */
     clear() {

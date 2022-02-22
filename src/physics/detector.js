@@ -17,11 +17,11 @@ var dummyObj = {
  * a function used to determine if two objects should collide (based on both respective objects collision mask and type).<br>
  * you can redefine this function if you need any specific rules over what should collide with what.
  * @name shouldCollide
- * @memberof me.collision
+ * @memberof collision
  * @ignore
  * @function
- * @param {me.Renderable} a a reference to the object A.
- * @param {me.Renderable} b a reference to the object B.
+ * @param {Renderable} a a reference to the object A.
+ * @param {Renderable} b a reference to the object B.
  * @returns {boolean} true if they should collide, false otherwise
  */
 function shouldCollide(a, b) {
@@ -36,17 +36,17 @@ function shouldCollide(a, b) {
 /**
  * @classdesc
  * An object representing the result of an intersection.
- * @property {me.Renderable} a The first object participating in the intersection
- * @property {me.Renderable} b The second object participating in the intersection
+ * @property {Renderable} a The first object participating in the intersection
+ * @property {Renderable} b The second object participating in the intersection
  * @property {number} overlap Magnitude of the overlap on the shortest colliding axis
- * @property {me.Vector2d} overlapV The overlap vector (i.e. `overlapN.scale(overlap, overlap)`). If this vector is subtracted from the position of a, a and b will no longer be colliding
- * @property {me.Vector2d} overlapN The shortest colliding axis (unit-vector)
+ * @property {Vector2d} overlapV The overlap vector (i.e. `overlapN.scale(overlap, overlap)`). If this vector is subtracted from the position of a, a and b will no longer be colliding
+ * @property {Vector2d} overlapN The shortest colliding axis (unit-vector)
  * @property {boolean} aInB Whether the first object is entirely inside the second
  * @property {boolean} bInA Whether the second object is entirely inside the first
  * @property {number} indexShapeA The index of the colliding shape for the object a body
  * @property {number} indexShapeB The index of the colliding shape for the object b body
  * @name ResponseObject
- * @memberof me.collision
+ * @memberof collision
  * @public
  */
 class ResponseObject {
@@ -68,7 +68,7 @@ class ResponseObject {
      * Response object for multiple intersection tests <br>
      * (recommended as it will avoid allocating extra memory) <br>
      * @name clear
-     * @memberof me.collision.ResponseObject
+     * @memberof collision.ResponseObject
      * @public
      * @function
      * @returns {object} this object for chaining
@@ -91,8 +91,8 @@ export var globalResponse = new ResponseObject();
  * @name collisionCheck
  * @ignore
  * @function
- * @param {me.Renderable} objA object to be tested for collision
- * @param {me.collision.ResponseObject} [response=me.collision.response] a user defined response object that will be populated if they intersect.
+ * @param {Renderable} objA object to be tested for collision
+ * @param {collision.ResponseObject} [response=collision.response] a user defined response object that will be populated if they intersect.
  * @returns {boolean} in case of collision, false otherwise
  */
 export function collisionCheck(objA, response = globalResponse) {
@@ -163,9 +163,9 @@ export function collisionCheck(objA, response = globalResponse) {
  * @name rayCast
  * @ignore
  * @function
- * @param {me.Line} line line to be tested for collision
- * @param {Array.<me.Renderable>} [result] a user defined array that will be populated with intersecting physic objects.
- * @returns {Array.<me.Renderable>} an array of intersecting physic objects
+ * @param {Line} line line to be tested for collision
+ * @param {Array.<Renderable>} [result] a user defined array that will be populated with intersecting physic objects.
+ * @returns {Array.<Renderable>} an array of intersecting physic objects
  * @example
  *    // define a line accross the viewport
  *    var ray = new me.Line(

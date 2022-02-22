@@ -7,7 +7,6 @@ import loader from "./../../loader/loader.js";
 /**
  * @classdesc
  * a TMX Tile Set Object
- * @memberof me
  */
 class TMXTileset {
     /**
@@ -51,7 +50,7 @@ class TMXTileset {
          * Tileset contains animated tiles
          * @public
          * @type {boolean}
-         * @name me.TMXTileset#isAnimated
+         * @name TMXTileset#isAnimated
          */
         this.isAnimated = false;
 
@@ -59,7 +58,7 @@ class TMXTileset {
          * true if the tileset is a "Collection of Image" Tileset
          * @public
          * @type {boolean}
-         * @name me.TMXTileset#isCollection
+         * @name TMXTileset#isCollection
          */
         this.isCollection = false;
 
@@ -67,7 +66,7 @@ class TMXTileset {
          * Tileset animations
          * @private
          * @type {Map}
-         * @name me.TMXTileset#animations
+         * @name TMXTileset#animations
          */
         this.animations = new Map();
 
@@ -75,7 +74,7 @@ class TMXTileset {
          * Remember the last update timestamp to prevent too many animation updates
          * @private
          * @type {Map}
-         * @name me.TMXTileset#_lastUpdate
+         * @name TMXTileset#_lastUpdate
          */
         this._lastUpdate = 0;
 
@@ -169,7 +168,7 @@ class TMXTileset {
 
     /**
      * return the tile image from a "Collection of Image" tileset
-     * @name me.TMXTileset#getTileImage
+     * @name TMXTileset#getTileImage
      * @public
      * @function
      * @param {number} gid
@@ -192,7 +191,7 @@ class TMXTileset {
 
     /**
      * return true if the gid belongs to the tileset
-     * @name me.TMXTileset#contains
+     * @name TMXTileset#contains
      * @public
      * @function
      * @param {number} gid
@@ -204,7 +203,7 @@ class TMXTileset {
 
     /**
      * Get the view (local) tile ID from a GID, with animations applied
-     * @name me.TMXTileset#getViewTileId
+     * @name TMXTileset#getViewTileId
      * @public
      * @function
      * @param {number} gid Global tile ID
@@ -223,7 +222,7 @@ class TMXTileset {
 
     /**
      * return the properties of the specified tile
-     * @name me.TMXTileset#getTileProperties
+     * @name TMXTileset#getTileProperties
      * @public
      * @function
      * @param {number} tileId

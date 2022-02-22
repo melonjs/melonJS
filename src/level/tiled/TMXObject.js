@@ -21,7 +21,7 @@ export default class TMXObject {
          * @public
          * @type {object[]}
          * @name points
-         * @memberof me.TMXObject
+         * @memberof TMXObject
          */
         this.points = undefined;
 
@@ -30,7 +30,7 @@ export default class TMXObject {
          * @public
          * @type {string}
          * @name name
-         * @memberof me.TMXObject
+         * @memberof TMXObject
          */
         this.name = settings.name;
 
@@ -39,7 +39,7 @@ export default class TMXObject {
          * @public
          * @type {number}
          * @name x
-         * @memberof me.TMXObject
+         * @memberof TMXObject
          */
         this.x = +settings.x;
 
@@ -48,7 +48,7 @@ export default class TMXObject {
          * @public
          * @type {number}
          * @name y
-         * @memberof me.TMXObject
+         * @memberof TMXObject
          */
         this.y = +settings.y;
 
@@ -57,7 +57,7 @@ export default class TMXObject {
          * @public
          * @type {number}
          * @name z
-         * @memberof me.TMXObject
+         * @memberof TMXObject
          */
         this.z = +z;
 
@@ -66,7 +66,7 @@ export default class TMXObject {
          * @public
          * @type {number}
          * @name width
-         * @memberof me.TMXObject
+         * @memberof TMXObject
          */
         this.width = +settings.width || 0;
 
@@ -75,7 +75,7 @@ export default class TMXObject {
          * @public
          * @type {number}
          * @name height
-         * @memberof me.TMXObject
+         * @memberof TMXObject
          */
         this.height = +settings.height || 0;
 
@@ -85,7 +85,7 @@ export default class TMXObject {
          * @public
          * @type {number}
          * @name gid
-         * @memberof me.TMXObject
+         * @memberof TMXObject
          */
         this.gid = +settings.gid || null;
 
@@ -94,7 +94,7 @@ export default class TMXObject {
          * @public
          * @type {string}
          * @name tintcolor
-         * @memberof me.TMXObject
+         * @memberof TMXObject
          */
         this.tintcolor = settings.tintcolor;
 
@@ -103,7 +103,7 @@ export default class TMXObject {
          * @public
          * @type {string}
          * @name type
-         * @memberof me.TMXObject
+         * @memberof TMXObject
          */
         this.type = settings.type;
 
@@ -113,7 +113,7 @@ export default class TMXObject {
          * @type {object}
          * @see http://docs.mapeditor.org/en/stable/reference/tmx-map-format/#text
          * @name type
-         * @memberof me.TMXObject
+         * @memberof TMXObject
          */
         this.type = settings.type;
 
@@ -122,7 +122,7 @@ export default class TMXObject {
          * @public
          * @type {number}
          * @name rotation
-         * @memberof me.TMXObject
+         * @memberof TMXObject
          */
         this.rotation = degToRad(+settings.rotation || 0);
 
@@ -131,7 +131,7 @@ export default class TMXObject {
          * @public
          * @type {number}
          * @name id
-         * @memberof me.TMXObject
+         * @memberof TMXObject
          */
         this.id = +settings.id || undefined;
 
@@ -140,7 +140,7 @@ export default class TMXObject {
          * @public
          * @type {string}
          * @name orientation
-         * @memberof me.TMXObject
+         * @memberof TMXObject
          */
         this.orientation = map.orientation;
 
@@ -149,7 +149,7 @@ export default class TMXObject {
          * @public
          * @type {object[]}
          * @name shapes
-         * @memberof me.TMXObject
+         * @memberof TMXObject
          */
         this.shapes = undefined;
 
@@ -158,7 +158,7 @@ export default class TMXObject {
          * @public
          * @type {boolean}
          * @name isEllipse
-         * @memberof me.TMXObject
+         * @memberof TMXObject
          */
         this.isEllipse = false;
 
@@ -167,7 +167,7 @@ export default class TMXObject {
          * @public
          * @type {boolean}
          * @name isPolygon
-         * @memberof me.TMXObject
+         * @memberof TMXObject
          */
         this.isPolygon = false;
 
@@ -176,7 +176,7 @@ export default class TMXObject {
          * @public
          * @type {boolean}
          * @name isPolyLine
-         * @memberof me.TMXObject
+         * @memberof TMXObject
          */
         this.isPolyLine = false;
 
@@ -248,10 +248,10 @@ export default class TMXObject {
     /**
      * parses the TMX shape definition and returns a corresponding array of me.Shape object
      * @name parseTMXShapes
-     * @memberof me.TMXObject
+     * @memberof TMXObject
      * @private
      * @function
-     * @returns {me.Polygon[]|me.Line[]|me.Ellipse[]} an array of shape objects
+     * @returns {Polygon[]|Line[]|Ellipse[]} an array of shape objects
      */
     parseTMXShapes() {
         var i = 0;

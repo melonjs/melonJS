@@ -3,9 +3,8 @@ import { version } from "./../index.js";
 
 /**
  * This namespace is a container for all registered plugins.
- * @see me.plugin.register
- * @namespace me.plugins
- * @memberof me
+ * @see plugin.register
+ * @namespace plugins
  */
 export var plugins = {};
 
@@ -19,7 +18,7 @@ class BasePlugin {
          * @public
          * @type {string}
          * @default "__VERSION__"
-         * @name me.plugin.Base#version
+         * @name plugin.Base#version
          */
         this.version = "__VERSION__";
     }
@@ -27,24 +26,23 @@ class BasePlugin {
 
 /**
  * @namespace plugin
- * @memberof me
  */
 export var plugin = {
 
     /**
      * a base Object for plugin <br>
      * plugin must be installed using the register function
-     * @see me.plugin
+     * @see plugin
      * @class
-     * @name plugin.Base
-     * @memberof me
+     * @name Base
+     * @memberof plugin
      */
     Base : BasePlugin,
 
     /**
      * patch a melonJS function
      * @name patch
-     * @memberof me.plugin
+     * @memberof plugin
      * @public
      * @function
      * @param {object} proto target object
@@ -89,11 +87,11 @@ export var plugin = {
     /**
      * Register a plugin.
      * @name register
-     * @memberof me.plugin
-     * @see me.plugin.Base
+     * @memberof plugin
+     * @see Base
      * @public
      * @function
-     * @param {me.plugin.Base} pluginObj Plugin object to instantiate and register
+     * @param {plugin.Base} pluginObj Plugin object to instantiate and register
      * @param {string} name
      * @param {object} [...arguments] all extra parameters will be passed to the plugin constructor
      * @example

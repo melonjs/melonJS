@@ -103,7 +103,6 @@ function readObjectGroup(map, data, z) {
  * @classdesc
  * a TMX Tile Map Object
  * Tiled QT +0.7.x format
- * @memberof me
  */
 class TMXTileMap {
     /**
@@ -127,7 +126,7 @@ class TMXTileMap {
          * name of the tilemap
          * @public
          * @type {string}
-         * @name me.TMXTileMap#name
+         * @name TMXTileMap#name
          */
         this.name = levelId;
 
@@ -135,14 +134,14 @@ class TMXTileMap {
          * width of the tilemap in tiles
          * @public
          * @type {number}
-         * @name me.TMXTileMap#cols
+         * @name TMXTileMap#cols
          */
         this.cols = +data.width;
         /**
          * height of the tilemap in tiles
          * @public
          * @type {number}
-         * @name me.TMXTileMap#rows
+         * @name TMXTileMap#rows
          */
         this.rows = +data.height;
 
@@ -150,7 +149,7 @@ class TMXTileMap {
          * Tile width
          * @public
          * @type {number}
-         * @name me.TMXTileMap#tilewidth
+         * @name TMXTileMap#tilewidth
          */
         this.tilewidth = +data.tilewidth;
 
@@ -158,7 +157,7 @@ class TMXTileMap {
          * Tile height
          * @public
          * @type {number}
-         * @name me.TMXTileMap#tileheight
+         * @name TMXTileMap#tileheight
          */
         this.tileheight = +data.tileheight;
 
@@ -167,7 +166,7 @@ class TMXTileMap {
          * @public
          * @type {number}
          * @default 0
-         * @name me.TMXTileMap#infinite
+         * @name TMXTileMap#infinite
          */
         this.infinite = +data.infinite;
 
@@ -176,7 +175,7 @@ class TMXTileMap {
          * @public
          * @type {string}
          * @default "orthogonal"
-         * @name me.TMXTileMap#orientation
+         * @name TMXTileMap#orientation
          */
         this.orientation = data.orientation;
 
@@ -186,7 +185,7 @@ class TMXTileMap {
          * @public
          * @type {string}
          * @default "right-down"
-         * @name me.TMXTileMap#renderorder
+         * @name TMXTileMap#renderorder
          */
         this.renderorder = data.renderorder || "right-down";
 
@@ -194,7 +193,7 @@ class TMXTileMap {
          * the TMX format version
          * @public
          * @type {string}
-         * @name me.TMXTileMap#version
+         * @name TMXTileMap#version
          */
         this.version = data.version;
 
@@ -202,7 +201,7 @@ class TMXTileMap {
          * The Tiled version used to save the file (since Tiled 1.0.1).
          * @public
          * @type {string}
-         * @name me.TMXTileMap#tiledversion
+         * @name TMXTileMap#tiledversion
          */
         this.tiledversion = data.tiledversion;
 
@@ -256,10 +255,10 @@ class TMXTileMap {
     /**
      * Return the map default renderer
      * @name getRenderer
-     * @memberof me.TMXTileMap
+     * @memberof TMXTileMap
      * @public
      * @function
-     * @returns {me.TMXRenderer} a TMX renderer
+     * @returns {TMXRenderer} a TMX renderer
      */
     getRenderer() {
         if ((typeof(this.renderer) === "undefined") || (!this.renderer.canRender(this))) {
@@ -270,10 +269,10 @@ class TMXTileMap {
 
     /**
      * return the map bounding rect
-     * @name me.TMXRenderer#getBounds
+     * @name TMXRenderer#getBounds
      * @public
      * @function
-     * @returns {me.Bounds}
+     * @returns {Bounds}
      */
     getBounds() {
         // calculated in the constructor
@@ -353,10 +352,10 @@ class TMXTileMap {
     /**
      * add all the map layers and objects to the given container.
      * note : this will not automatically update the camera viewport
-     * @name me.TMXTileMap#addTo
+     * @name TMXTileMap#addTo
      * @public
      * @function
-     * @param {me.Container} container target container
+     * @param {Container} container target container
      * @param {boolean} [flatten=true] if true, flatten all objects into the given container, else a `me.Container` object will be created for each corresponding groups
      * @param {boolean} [setViewportBounds=false] if true, set the viewport bounds to the map size, this should be set to true especially if adding a level to the game world container.
      * @example
@@ -430,12 +429,12 @@ class TMXTileMap {
 
     /**
      * return an Array of instantiated objects, based on the map object definition
-     * @name me.TMXTileMap#getObjects
+     * @name TMXTileMap#getObjects
      * @public
      * @function
      * @param {boolean} [flatten=true] if true, flatten all objects into the returned array.
      * when false, a `me.Container` object will be created for each corresponding groups
-     * @returns {me.Renderable[]} Array of Objects
+     * @returns {Renderable[]} Array of Objects
      */
     getObjects(flatten) {
         var objects = [];
@@ -579,10 +578,10 @@ class TMXTileMap {
 
     /**
      * return all the existing layers
-     * @name me.TMXTileMap#getLayers
+     * @name TMXTileMap#getLayers
      * @public
      * @function
-     * @returns {me.TMXLayer[]} Array of Layers
+     * @returns {TMXLayer[]} Array of Layers
      */
     getLayers() {
         // parse the map for objects
@@ -592,7 +591,7 @@ class TMXTileMap {
 
     /**
      * destroy function, clean all allocated objects
-     * @name me.TMXTileMap#destroy
+     * @name TMXTileMap#destroy
      * @public
      * @function
      */

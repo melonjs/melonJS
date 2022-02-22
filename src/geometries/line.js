@@ -4,11 +4,10 @@ import Polygon from "./poly.js";
 /**
  * @classdesc
  * a line segment Object
- * @augments me.Polygon
- * @memberof me
+ * @augments Polygon
  * @param {number} x origin point of the Line
  * @param {number} y origin point of the Line
- * @param {me.Vector2d[]} points array of vectors defining the Line
+ * @param {Vector2d[]} points array of vectors defining the Line
  */
 
 class Line extends Polygon {
@@ -16,16 +15,16 @@ class Line extends Polygon {
     /**
      * Returns true if the Line contains the given point
      * @name contains
-     * @memberof me.Line.prototype
+     * @memberof Line.prototype
      * @function
-     * @param  {me.Vector2d} point
+     * @param {Vector2d} point
      * @returns {boolean} true if contains
      */
 
     /**
      * Returns true if the Line contains the given point
      * @name contains
-     * @memberof me.Line.prototype
+     * @memberof Line.prototype
      * @function
      * @param  {number} x x coordinate
      * @param  {number} y y coordinate
@@ -59,9 +58,9 @@ class Line extends Polygon {
      * Computes the calculated collision edges and normals.
      * This **must** be called if the `points` array, `angle`, or `offset` is modified manually.
      * @name recalc
-     * @memberof me.Line.prototype
+     * @memberof Line.prototype
      * @function
-     * @returns {me.Line} this instance for objecf chaining
+     * @returns {Line} this instance for objecf chaining
      */
     recalc() {
         var edges = this.edges;
@@ -95,9 +94,9 @@ class Line extends Polygon {
     /**
      * clone this line segment
      * @name clone
-     * @memberof me.Line.prototype
+     * @memberof Line.prototype
      * @function
-     * @returns {me.Line} new Line
+     * @returns {Line} new Line
      */
     clone() {
         var copy = [];

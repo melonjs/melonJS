@@ -10,7 +10,6 @@ import pool from "./../system/pooling.js";
  * (which means that all angles are less than 180 degrees), as described here below : <br>
  * <center><img src="images/convex_polygon.png"/></center><br>
  * A polygon's `winding` is clockwise iff its vertices (points) are declared turning to the right. The image above shows COUNTERCLOCKWISE winding.
- * @memberof me
  */
 
 class Polygon {
@@ -18,24 +17,24 @@ class Polygon {
     /**
      * @param {number} x origin point of the Polygon
      * @param {number} y origin point of the Polygon
-     * @param {me.Vector2d[]} points array of vector defining the Polygon
+     * @param {Vector2d[]} points array of vector defining the Polygon
      */
     constructor(x, y, points) {
         /**
          * origin point of the Polygon
          * @public
-         * @type {me.Vector2d}
+         * @type {Vector2d}
          * @name pos
-         * @memberof me.Polygon#
+         * @memberof Polygon#
          */
         this.pos = new Vector2d();
 
         /**
          * The bounding rectangle for this shape
          * @ignore
-         * @type {me.Bounds}
+         * @type {Bounds}
          * @name _bounds
-         * @memberof me.Polygon#
+         * @memberof Polygon#
          */
         this._bounds;
 
@@ -43,9 +42,9 @@ class Polygon {
          * Array of points defining the Polygon <br>
          * Note: If you manually change `points`, you **must** call `recalc`afterwards so that the changes get applied correctly.
          * @public
-         * @type {me.Vector2d[]}
+         * @type {Vector2d[]}
          * @name points
-         * @memberof me.Polygon#
+         * @memberof Polygon#
          */
         this.points = [];
 
@@ -84,12 +83,12 @@ class Polygon {
     /**
      * set new value to the Polygon
      * @name setShape
-     * @memberof me.Polygon.prototype
+     * @memberof Polygon.prototype
      * @function
      * @param {number} x position of the Polygon
      * @param {number} y position of the Polygon
-     * @param {me.Vector2d[]|number[]} points array of vector or vertice defining the Polygon
-     * @returns {me.Polygon} this instance for objecf chaining
+     * @param {Vector2d[]|number[]} points array of vector or vertice defining the Polygon
+     * @returns {Polygon} this instance for objecf chaining
      */
     setShape(x, y, points) {
         this.pos.set(x, y);
@@ -100,10 +99,10 @@ class Polygon {
     /**
      * set the vertices defining this Polygon
      * @name setVertices
-     * @memberof me.Polygon.prototype
+     * @memberof Polygon.prototype
      * @function
-     * @param {me.Vector2d[]} vertices array of vector or vertice defining the Polygon
-     * @returns {me.Polygon} this instance for objecf chaining
+     * @param {Vector2d[]} vertices array of vector or vertice defining the Polygon
+     * @returns {Polygon} this instance for objecf chaining
      */
     setVertices(vertices) {
 
@@ -140,10 +139,10 @@ class Polygon {
     /**
      * apply the given transformation matrix to this Polygon
      * @name transform
-     * @memberof me.Polygon.prototype
+     * @memberof Polygon.prototype
      * @function
-     * @param {me.Matrix2d} m the transformation matrix
-     * @returns {me.Polygon} Reference to this object for method chaining
+     * @param {Matrix2d} m the transformation matrix
+     * @returns {Polygon} Reference to this object for method chaining
      */
     transform(m) {
         var points = this.points;
@@ -159,9 +158,9 @@ class Polygon {
     /**
      * apply an isometric projection to this shape
      * @name toIso
-     * @memberof me.Polygon.prototype
+     * @memberof Polygon.prototype
      * @function
-     * @returns {me.Polygon} Reference to this object for method chaining
+     * @returns {Polygon} Reference to this object for method chaining
      */
     toIso() {
         return this.rotate(Math.PI / 4).scale(Math.SQRT2, Math.SQRT1_2);
@@ -170,9 +169,9 @@ class Polygon {
     /**
      * apply a 2d projection to this shape
      * @name to2d
-     * @memberof me.Polygon.prototype
+     * @memberof Polygon.prototype
      * @function
-     * @returns {me.Polygon} Reference to this object for method chaining
+     * @returns {Polygon} Reference to this object for method chaining
      */
     to2d() {
         return this.scale(Math.SQRT1_2, Math.SQRT2).rotate(-Math.PI / 4);
@@ -181,11 +180,11 @@ class Polygon {
     /**
      * Rotate this Polygon (counter-clockwise) by the specified angle (in radians).
      * @name rotate
-     * @memberof me.Polygon.prototype
+     * @memberof Polygon.prototype
      * @function
      * @param {number} angle The angle to rotate (in radians)
-     * @param {me.Vector2d|me.ObservableVector2d} [v] an optional point to rotate around
-     * @returns {me.Polygon} Reference to this object for method chaining
+     * @param {Vector2d|ObservableVector2d} [v] an optional point to rotate around
+     * @returns {Polygon} Reference to this object for method chaining
      */
     rotate(angle, v) {
         if (angle !== 0) {
@@ -203,11 +202,11 @@ class Polygon {
     /**
      * Scale this Polygon by the given scalar.
      * @name scale
-     * @memberof me.Polygon.prototype
+     * @memberof Polygon.prototype
      * @function
      * @param {number} x
      * @param {number} [y=x]
-     * @returns {me.Polygon} Reference to this object for method chaining
+     * @returns {Polygon} Reference to this object for method chaining
      */
     scale(x, y) {
         y = typeof (y) !== "undefined" ? y : x;
@@ -225,10 +224,10 @@ class Polygon {
     /**
      * Scale this Polygon by the given vector
      * @name scaleV
-     * @memberof me.Polygon.prototype
+     * @memberof Polygon.prototype
      * @function
-     * @param {me.Vector2d} v
-     * @returns {me.Polygon} Reference to this object for method chaining
+     * @param {Vector2d} v
+     * @returns {Polygon} Reference to this object for method chaining
      */
     scaleV(v) {
         return this.scale(v.x, v.y);
@@ -238,9 +237,9 @@ class Polygon {
      * Computes the calculated collision polygon.
      * This **must** be called if the `points` array, `angle`, or `offset` is modified manually.
      * @name recalc
-     * @memberof me.Polygon.prototype
+     * @memberof Polygon.prototype
      * @function
-     * @returns {me.Polygon} Reference to this object for method chaining
+     * @returns {Polygon} Reference to this object for method chaining
      */
     recalc() {
         var i;
@@ -282,7 +281,7 @@ class Polygon {
     /**
      * returns a list of indices for all triangles defined in this polygon
      * @name getIndices
-     * @memberof me.Polygon.prototype
+     * @memberof Polygon.prototype
      * @function
      * @returns {Array} an array of vertex indices for all triangles forming this polygon.
      */
@@ -296,7 +295,7 @@ class Polygon {
     /**
      * Returns true if the vertices composing this polygon form a convex shape (vertices must be in clockwise order).
      * @name isConvex
-     * @memberof me.Polygon.prototype
+     * @memberof Polygon.prototype
      * @function
      * @returns {boolean} true if the vertices are convex, false if not, null if not computable
      */
@@ -343,19 +342,19 @@ class Polygon {
     /**
      * translate the Polygon by the specified offset
      * @name translate
-     * @memberof me.Polygon.prototype
+     * @memberof Polygon.prototype
      * @function
      * @param {number} x x offset
      * @param {number} y y offset
-     * @returns {me.Polygon} this Polygon
+     * @returns {Polygon} this Polygon
      */
     /**
      * translate the Polygon by the specified vector
      * @name translate
-     * @memberof me.Polygon.prototype
+     * @memberof Polygon.prototype
      * @function
-     * @param {me.Vector2d} v vector offset
-     * @returns {me.Polygon} Reference to this object for method chaining
+     * @param {Vector2d} v vector offset
+     * @returns {Polygon} Reference to this object for method chaining
      */
     translate() {
         var _x, _y;
@@ -380,14 +379,14 @@ class Polygon {
     /**
      * Shifts the Polygon to the given position vector.
      * @name shift
-     * @memberof me.Polygon
+     * @memberof Polygon
      * @function
-     * @param {me.Vector2d} position
+     * @param {Vector2d} position
      */
     /**
      * Shifts the Polygon to the given x, y position.
      * @name shift
-     * @memberof me.Polygon
+     * @memberof Polygon
      * @function
      * @param {number} x
      * @param {number} y
@@ -413,9 +412,9 @@ class Polygon {
      * (Note: it is highly recommended to first do a hit test on the corresponding <br>
      *  bounding rect, as the function can be highly consuming with complex shapes)
      * @name contains
-     * @memberof me.Polygon.prototype
+     * @memberof Polygon.prototype
      * @function
-     * @param  {me.Vector2d} point
+     * @param {Vector2d} point
      * @returns {boolean} true if contains
      */
 
@@ -424,7 +423,7 @@ class Polygon {
      * (Note: it is highly recommended to first do a hit test on the corresponding <br>
      *  bounding rect, as the function can be highly consuming with complex shapes)
      * @name contains
-     * @memberof me.Polygon.prototype
+     * @memberof Polygon.prototype
      * @function
      * @param  {number} x x coordinate
      * @param  {number} y y coordinate
@@ -462,9 +461,9 @@ class Polygon {
     /**
      * returns the bounding box for this shape, the smallest Rectangle object completely containing this shape.
      * @name getBounds
-     * @memberof me.Polygon.prototype
+     * @memberof Polygon.prototype
      * @function
-     * @returns {me.Bounds} this shape bounding box Rectangle object
+     * @returns {Bounds} this shape bounding box Rectangle object
      */
     getBounds() {
         if (typeof this._bounds === "undefined") {
@@ -477,9 +476,9 @@ class Polygon {
      * update the bounding box for this shape.
      * @ignore
      * @name updateBounds
-     * @memberof me.Polygon.prototype
+     * @memberof Polygon.prototype
      * @function
-     * @returns {me.Bounds} this shape bounding box Rectangle object
+     * @returns {Bounds} this shape bounding box Rectangle object
      */
     updateBounds() {
         var bounds = this.getBounds();
@@ -493,9 +492,9 @@ class Polygon {
     /**
      * clone this Polygon
      * @name clone
-     * @memberof me.Polygon.prototype
+     * @memberof Polygon.prototype
      * @function
-     * @returns {me.Polygon} new Polygon
+     * @returns {Polygon} new Polygon
      */
     clone() {
         var copy = [];

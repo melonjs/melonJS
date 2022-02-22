@@ -15,14 +15,13 @@ var default_settings = {
  * a default "Stage" object.
  * every "stage" object (title screen, credits, ingame, etc...) to be managed
  * through the state manager must inherit from this base class.
- * @memberof me
- * @see me.state
+ * @see state
  */
 class Stage {
 
     /**
      * @param {object} [settings] The stage` parameters
-     * @param {me.Camera2d[]} [settings.cameras=[new me.Camera2d()]] a list of cameras (experimental)
+     * @param {Camera2d[]} [settings.cameras=[new me.Camera2d()]] a list of cameras (experimental)
      * @param {Function} [settings.onResetEvent] called by the state manager when reseting the object
      * @param {Function} [settings.onDestroyEvent] called by the state manager before switching to another state
      */
@@ -34,7 +33,7 @@ class Stage {
          * @public
          * @type {Map}
          * @name cameras
-         * @memberof me.Stage
+         * @memberof Stage
          */
         this.cameras = new Map();
 
@@ -42,7 +41,7 @@ class Stage {
          * The given constructor options
          * @public
          * @name settings
-         * @memberof me.Stage
+         * @memberof Stage
          * @type {object}
          */
         this.settings = Object.assign(default_settings, settings || {});
@@ -80,7 +79,7 @@ class Stage {
     /**
      * update function
      * @name update
-     * @memberof me.Stage
+     * @memberof Stage
      * @ignore
      * @function
      * @param {number} dt time since the last update in milliseconds.
@@ -104,10 +103,10 @@ class Stage {
     /**
      * draw the current stage
      * @name draw
-     * @memberof me.Stage
+     * @memberof Stage
      * @ignore
      * @function
-     * @param {me.CanvasRenderer|me.WebGLRenderer} renderer a renderer object
+     * @param {CanvasRenderer|WebGLRenderer} renderer a renderer object
      */
     draw(renderer) {
         // iterate through all cameras
@@ -133,10 +132,10 @@ class Stage {
      * called by the state manager when reseting the object
      * this is typically where you will load a level, add renderables, etc...
      * @name onResetEvent
-     * @memberof me.Stage
+     * @memberof Stage
      * @function
      * @param {object} [...arguments] optional arguments passed when switching state
-     * @see me.state#change
+     * @see state#change
      */
     onResetEvent() {
         // execute onResetEvent function if given through the constructor
@@ -150,7 +149,7 @@ class Stage {
      * onDestroyEvent function<br>
      * called by the state manager before switching to another state
      * @name onDestroyEvent
-     * @memberof me.Stage
+     * @memberof Stage
      * @function
      */
     onDestroyEvent() {

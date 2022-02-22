@@ -8,9 +8,8 @@ import Polygon from "./../geometries/poly.js";
 /**
  * @classdesc
  * a Generic Object Entity
- * @augments me.Renderable
- * @memberof me
- * @see me.Renderable
+ * @augments Renderable
+ * @see Renderable
  */
 class Entity extends Renderable {
     /**
@@ -23,12 +22,12 @@ class Entity extends Renderable {
      * @param {string} [settings.name] object entity name
      * @param {string} [settings.id] object unique IDs
      * @param {Image|string} [settings.image] resource name of a spritesheet to use for the entity renderable component
-     * @param {me.Vector2d} [settings.anchorPoint=0.0] Entity anchor point
+     * @param {Vector2d} [settings.anchorPoint=0.0] Entity anchor point
      * @param {number} [settings.framewidth=settings.width] width of a single frame in the given spritesheet
      * @param {number} [settings.frameheight=settings.width] height of a single frame in the given spritesheet
      * @param {string} [settings.type] object type
      * @param {number} [settings.collisionMask] Mask collision detection for this object
-     * @param {me.Rect[]|me.Polygon[]|me.Line[]|me.Ellipse[]} [settings.shapes] the initial list of collision shapes (usually populated through Tiled)
+     * @param {Rect[]|Polygon[]|Line[]|Ellipse[]} [settings.shapes] the initial list of collision shapes (usually populated through Tiled)
      */
     constructor(x, y, settings) {
 
@@ -71,7 +70,7 @@ class Entity extends Renderable {
          * @public
          * @type {string}
          * @name type
-         * @memberof me.Entity
+         * @memberof Entity
          */
         this.type = settings.type || "";
 
@@ -80,7 +79,7 @@ class Entity extends Renderable {
          * @public
          * @type {number}
          * @name id
-         * @memberof me.Entity
+         * @memberof Entity
          */
         this.id = settings.id || "";
 
@@ -90,16 +89,16 @@ class Entity extends Renderable {
          * @public
          * @type {boolean}
          * @name alive
-         * @memberof me.Entity
+         * @memberof Entity
          */
         this.alive = true;
 
         /**
          * the entity body object
          * @public
-         * @type {me.Body}
+         * @type {Body}
          * @name body
-         * @memberof me.Entity
+         * @memberof Entity
          */
         // initialize the default body
         if (typeof settings.shapes === "undefined") {
@@ -129,9 +128,9 @@ class Entity extends Renderable {
     /**
      * The entity renderable component (can be any objects deriving from me.Renderable, like me.Sprite for example)
      * @public
-     * @type {me.Renderable}
+     * @type {Renderable}
      * @name renderable
-     * @memberof me.Entity
+     * @memberof Entity
      */
 
     get renderable() {
@@ -159,9 +158,9 @@ class Entity extends Renderable {
      * update the bounds position when the body is modified
      * @ignore
      * @name onBodyUpdate
-     * @memberof me.Entity
+     * @memberof Entity
      * @function
-     * @param {me.Body} body the body whose bounds to update
+     * @param {Body} body the body whose bounds to update
      */
     onBodyUpdate(body) {
         // update the entity bounds to include the body bounds
@@ -195,11 +194,11 @@ class Entity extends Renderable {
      * not to be called by the end user<br>
      * called by the game manager on each game loop
      * @name draw
-     * @memberof me.Entity
+     * @memberof Entity
      * @function
      * @protected
-     * @param {me.CanvasRenderer|me.WebGLRenderer} renderer a renderer object
-     * @param {me.Rect} rect region to draw
+     * @param {CanvasRenderer|WebGLRenderer} renderer a renderer object
+     * @param {Rect} rect region to draw
      */
     draw(renderer, rect) {
         var renderable = this.renderable;
@@ -234,7 +233,7 @@ class Entity extends Renderable {
      * onDeactivateEvent Notification function<br>
      * Called by engine before deleting the object
      * @name onDeactivateEvent
-     * @memberof me.Entity
+     * @memberof Entity
      * @function
      */
     onDeactivateEvent() {

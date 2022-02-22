@@ -21,8 +21,7 @@ var targetV = new Vector2d();
 /**
  * @classdesc
  * a 2D orthographic camera
- * @augments me.Renderable
- * @memberof me
+ * @augments Renderable
  */
 class Camera2d extends Renderable {
     /**
@@ -44,7 +43,7 @@ class Camera2d extends Renderable {
          * @constant
          * @enum {number}
          * @name AXIS
-         * @memberof me.Camera2d
+         * @memberof Camera2d
          */
         this.AXIS = {
             NONE : 0,
@@ -56,9 +55,9 @@ class Camera2d extends Renderable {
         /**
          * Camera bounds
          * @public
-         * @type {me.Bounds}
+         * @type {Bounds}
          * @name bounds
-         * @memberof me.Camera2d
+         * @memberof Camera2d
          */
         this.bounds = pool.pull("Bounds");
 
@@ -67,9 +66,9 @@ class Camera2d extends Renderable {
          * @private
          * @type {boolean}
          * @name smoothFollow
-         * @see me.Camera2d.damping
+         * @see Camera2d.damping
          * @default true
-         * @memberof me.Camera2d
+         * @memberof Camera2d
          */
         this.smoothFollow = true;
 
@@ -80,7 +79,7 @@ class Camera2d extends Renderable {
          * @type {number}
          * @name damping
          * @default 1.0
-         * @memberof me.Camera2d
+         * @memberof Camera2d
          */
         this.damping = 1.0;
 
@@ -90,7 +89,7 @@ class Camera2d extends Renderable {
          * @type {number}
          * @name near
          * @default -1000
-         * @memberof me.Camera2d
+         * @memberof Camera2d
          */
         this.near = -1000;
 
@@ -100,7 +99,7 @@ class Camera2d extends Renderable {
          * @type {number}
          * @name far
          * @default 1000
-         * @memberof me.Camera2d
+         * @memberof Camera2d
          */
         this.far = 1000;
 
@@ -108,18 +107,18 @@ class Camera2d extends Renderable {
          * the default camera projection matrix
          * (2d cameras use an orthographic projection by default).
          * @public
-         * @type {me.Matrix3d}
+         * @type {Matrix3d}
          * @name projectionMatrix
-         * @memberof me.Camera2d
+         * @memberof Camera2d
          */
         this.projectionMatrix = new Matrix3d();
 
         /**
          * the invert camera transform used to unproject points
          * @ignore
-         * @type {me.Matrix2d}
+         * @type {Matrix2d}
          * @name invCurrentTransform
-         * @memberof me.Camera2d
+         * @memberof Camera2d
          */
         this.invCurrentTransform = new Matrix2d();
 
@@ -212,7 +211,7 @@ class Camera2d extends Renderable {
     /**
      * reset the camera position to specified coordinates
      * @name reset
-     * @memberof me.Camera2d
+     * @memberof Camera2d
      * @function
      * @param {number} [x=0]
      * @param {number} [y=0]
@@ -242,8 +241,8 @@ class Camera2d extends Renderable {
      * the "deadzone" defines an area within the current camera in which
      * the followed renderable can move without scrolling the camera.
      * @name setDeadzone
-     * @see me.Camera2d.follow
-     * @memberof me.Camera2d
+     * @see Camera2d.follow
+     * @memberof Camera2d
      * @function
      * @param {number} w deadzone width
      * @param {number} h deadzone height
@@ -271,11 +270,11 @@ class Camera2d extends Renderable {
     /**
      * resize the camera
      * @name resize
-     * @memberof me.Camera2d
+     * @memberof Camera2d
      * @function
      * @param {number} w new width of the camera
      * @param {number} h new height of the camera
-     * @returns {me.Camera2d} this camera
+     * @returns {Camera2d} this camera
      */
     resize(w, h) {
         // parent consctructor, resize camera rect
@@ -303,7 +302,7 @@ class Camera2d extends Renderable {
      * set the camera boundaries (set to the world limit by default).
      * the camera is bound to the given coordinates and cannot move/be scrolled outside of it.
      * @name setBounds
-     * @memberof me.Camera2d
+     * @memberof Camera2d
      * @function
      * @param {number} x world left limit
      * @param {number} y world top limit
@@ -322,10 +321,10 @@ class Camera2d extends Renderable {
      * set the camera to follow the specified renderable. <br>
      * (this will put the camera center around the given target)
      * @name follow
-     * @memberof me.Camera2d
+     * @memberof Camera2d
      * @function
-     * @param {me.Renderable|me.Vector2d} target renderable or position vector to follow
-     * @param {me.Camera2d.AXIS} [axis=this.AXIS.BOTH] Which axis to follow
+     * @param {Renderable|Vector2d} target renderable or position vector to follow
+     * @param {Camera2d.AXIS} [axis=this.AXIS.BOTH] Which axis to follow
      * @param {number} [damping=1] default damping value
      * @example
      * // set the camera to follow this renderable on both axis, and enable damping
@@ -364,7 +363,7 @@ class Camera2d extends Renderable {
     /**
      * unfollow the current target
      * @name unfollow
-     * @memberof me.Camera2d
+     * @memberof Camera2d
      * @function
      */
     unfollow() {
@@ -375,8 +374,8 @@ class Camera2d extends Renderable {
     /**
      * move the camera upper-left position by the specified offset.
      * @name move
-     * @memberof me.Camera2d
-     * @see me.Camera2d.focusOn
+     * @memberof Camera2d
+     * @see Camera2d.focusOn
      * @function
      * @param {number} x
      * @param {number} y
@@ -391,8 +390,8 @@ class Camera2d extends Renderable {
     /**
      * move the camera upper-left position to the specified coordinates
      * @name moveTo
-     * @memberof me.Camera2d
-     * @see me.Camera2d.focusOn
+     * @memberof Camera2d
+     * @see Camera2d.focusOn
      * @function
      * @param {number} x
      * @param {number} y
@@ -515,12 +514,12 @@ class Camera2d extends Renderable {
     /**
      * shake the camera
      * @name shake
-     * @memberof me.Camera2d
+     * @memberof Camera2d
      * @function
      * @param {number} intensity maximum offset that the screen can be moved
      * while shaking
      * @param {number} duration expressed in milliseconds
-     * @param {me.Camera2d.AXIS} [axis=this.AXIS.BOTH] specify on which axis you
+     * @param {Camera2d.AXIS} [axis=this.AXIS.BOTH] specify on which axis you
      *   want the shake effect
      * @param {Function} [onComplete] callback once shaking effect is over
      * @param {boolean} [force] if true this will override the current effect
@@ -541,9 +540,9 @@ class Camera2d extends Renderable {
      * fadeOut(flash) effect<p>
      * screen is filled with the specified color and slowly goes back to normal
      * @name fadeOut
-     * @memberof me.Camera2d
+     * @memberof Camera2d
      * @function
-     * @param {me.Color|string} color a CSS color value
+     * @param {Color|string} color a CSS color value
      * @param {number} [duration=1000] expressed in milliseconds
      * @param {Function} [onComplete] callback once effect is over
      * @example
@@ -567,9 +566,9 @@ class Camera2d extends Renderable {
      * fadeIn effect <p>
      * fade to the specified color
      * @name fadeIn
-     * @memberof me.Camera2d
+     * @memberof Camera2d
      * @function
-     * @param {me.Color|string} color a CSS color value
+     * @param {Color|string} color a CSS color value
      * @param {number} [duration=1000] expressed in milliseconds
      * @param {Function} [onComplete] callback once effect is over
      * @example
@@ -590,9 +589,9 @@ class Camera2d extends Renderable {
     /**
      * set the camera position around the specified object
      * @name focusOn
-     * @memberof me.Camera2d
+     * @memberof Camera2d
      * @function
-     * @param {me.Renderable} target the renderable to focus the camera on
+     * @param {Renderable} target the renderable to focus the camera on
      */
     focusOn(target) {
         var bounds = target.getBounds();
@@ -605,9 +604,9 @@ class Camera2d extends Renderable {
     /**
      * check if the specified renderable is in the camera
      * @name isVisible
-     * @memberof me.Camera2d
+     * @memberof Camera2d
      * @function
-     * @param {me.Renderable} obj to be checked against
+     * @param {Renderable} obj to be checked against
      * @param {boolean} [floating = obj.floating] if visibility check should be done against screen coordinates
      * @returns {boolean}
      */
@@ -624,13 +623,13 @@ class Camera2d extends Renderable {
     /**
      * convert the given "local" (screen) coordinates into world coordinates
      * @name localToWorld
-     * @memberof me.Camera2d
+     * @memberof Camera2d
      * @function
      * @param {number} x
      * @param {number} y
      * @param {number} [v] an optional vector object where to set the
      * converted value
-     * @returns {me.Vector2d}
+     * @returns {Vector2d}
      */
     localToWorld(x, y, v) {
         // TODO memoization for one set of coords (multitouch)
@@ -645,13 +644,13 @@ class Camera2d extends Renderable {
     /**
      * convert the given world coordinates into "local" (screen) coordinates
      * @name worldToLocal
-     * @memberof me.Camera2d
+     * @memberof Camera2d
      * @function
      * @param {number} x
      * @param {number} y
      * @param {number} [v] an optional vector object where to set the
      * converted value
-     * @returns {me.Vector2d}
+     * @returns {Vector2d}
      */
     worldToLocal(x, y, v) {
         // TODO memoization for one set of coords (multitouch)

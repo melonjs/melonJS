@@ -79,22 +79,13 @@ import DroptargetEntity from "./entity/droptarget.js";
 import * as deprecated from "./lang/deprecated.js";
 
 /**
- * (<b>m</b>)elonJS (<b>e</b>)ngine : All melonJS functions are defined inside this namespace.
- * You generally should not add new properties to this namespace as it may be overwritten in future versions.
- * @namespace me
- */
-
-/**
  * current melonJS version
  * @static
  * @constant
- * @memberof me
  * @name version
  * @type {string}
  */
 export const version = "__VERSION__";
-
-// namespace "me" will be created by rollup automatically
 
 // export all utility function
 export {
@@ -184,7 +175,6 @@ export {
  * @type {boolean}
  * @default false
  * @readonly
- * @memberof me
  */
 export var initialized = false;
 
@@ -192,8 +182,7 @@ export var initialized = false;
  * disable melonJS auto-initialization
  * @type {boolean}
  * @default false
- * @see me.boot
- * @memberof me
+ * @see boot
  */
 export var skipAutoInit = false;
 
@@ -202,8 +191,7 @@ export var skipAutoInit = false;
  * this is automatically called unless me.skipAutoInit is set to true,
  * to allow asynchronous loaders to work.
  * @name boot
- * @memberof me
- * @see me.skipAutoInit
+ * @see skipAutoInit
  * @public
  * @function
  */

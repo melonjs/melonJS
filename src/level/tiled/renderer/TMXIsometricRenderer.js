@@ -7,12 +7,11 @@ import TMXLayer from "./../TMXLayer.js";
 /**
  * @classdesc
  * an Isometric Map Renderder
- * @memberof me
- * @augments me.TMXRenderer
+ * @augments TMXRenderer
  */
 class TMXIsometricRenderer extends TMXRenderer {
     /**
-     * @param {me.TMXTileMap} map the TMX map
+     * @param {TMXTileMap} map the TMX map
      */
     constructor(map) {
         super(
@@ -40,11 +39,11 @@ class TMXIsometricRenderer extends TMXRenderer {
 
     /**
      * return the bounding rect for this map renderer
-     * @name me.TMXIsometricRenderer#getBounds
+     * @name TMXIsometricRenderer#getBounds
      * @public
      * @function
-     * @param {me.TMXLayer} [layer] calculate the bounding rect for a specific layer (will return a new bounds object)
-     * @returns {me.Bounds}
+     * @param {TMXLayer} [layer] calculate the bounding rect for a specific layer (will return a new bounds object)
+     * @returns {Bounds}
      */
     getBounds(layer) {
         var bounds = layer instanceof TMXLayer ? pool.pull("Bounds") : this.bounds;

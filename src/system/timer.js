@@ -87,22 +87,21 @@ event.on(event.BOOT, () => {
 
 /**
  * a Timer class to manage timing related function (FPS, Game Tick, Time...)
- * @namespace me.timer
- * @memberof me
+ * @namespace timer
  */
 var timer = {
 
         /**
          * Last game tick value.<br/>
          * Use this value to scale velocities during frame drops due to slow
-         * hardware or when setting an FPS limit. (See {@link me.timer.maxfps})
+         * hardware or when setting an FPS limit. (See {@link timer.maxfps})
          * This feature is disabled by default. Enable me.timer.interpolation to
          * use it.
          * @public
-         * @see me.timer.interpolation
+         * @see timer.interpolation
          * @type {number}
          * @name tick
-         * @memberof me.timer
+         * @memberof timer
          */
         tick : 1.0,
 
@@ -112,35 +111,35 @@ var timer = {
          * @public
          * @type {number}
          * @name fps
-         * @memberof me.timer
+         * @memberof timer
          */
         fps : 0,
 
         /**
          * Set the maximum target display frame per second
          * @public
-         * @see me.timer.tick
+         * @see timer.tick
          * @type {number}
          * @name maxfps
          * @default 60
-         * @memberof me.timer
+         * @memberof timer
          */
         maxfps : 60,
 
         /**
          * Enable/disable frame interpolation
-         * @see me.timer.tick
+         * @see timer.tick
          * @type {boolean}
          * @default false
          * @name interpolation
-         * @memberof me.timer
+         * @memberof timer
          */
         interpolation : false,
 
         /**
          * reset time (e.g. usefull in case of pause)
          * @name reset
-         * @memberof me.timer
+         * @memberof timer
          * @ignore
          * @function
          */
@@ -159,7 +158,7 @@ var timer = {
         /**
          * Calls a function once after a specified delay. See me.timer.setInterval to repeativly call a function.
          * @name setTimeout
-         * @memberof me.timer
+         * @memberof timer
          * @param {Function} fn the function you want to execute after delay milliseconds.
          * @param {number} delay the number of milliseconds (thousandths of a second) that the function call should be delayed by.
          * @param {boolean} [pauseable=true] respects the pause state of the engine.
@@ -188,7 +187,7 @@ var timer = {
         /**
          * Calls a function continously at the specified interval.  See setTimeout to call function a single time.
          * @name setInterval
-         * @memberof me.timer
+         * @memberof timer
          * @param {Function} fn the function to execute
          * @param {number} delay the number of milliseconds (thousandths of a second) on how often to execute the function
          * @param {boolean} [pauseable=true] respects the pause state of the engine.
@@ -217,7 +216,7 @@ var timer = {
         /**
          * Clears the delay set by me.timer.setTimeout().
          * @name clearTimeout
-         * @memberof me.timer
+         * @memberof timer
          * @function
          * @param {number} timeoutID ID of the timeout to be cleared
          */
@@ -228,7 +227,7 @@ var timer = {
         /**
          * Clears the Interval set by me.timer.setInterval().
          * @name clearInterval
-         * @memberof me.timer
+         * @memberof timer
          * @function
          * @param {number} intervalID ID of the interval to be cleared
          */
@@ -240,7 +239,7 @@ var timer = {
          * Return the current timestamp in milliseconds <br>
          * since the game has started or since linux epoch (based on browser support for High Resolution Timer)
          * @name getTime
-         * @memberof me.timer
+         * @memberof timer
          * @returns {number}
          * @function
          */
@@ -251,7 +250,7 @@ var timer = {
         /**
          * Return elapsed time in milliseconds since the last update
          * @name getDelta
-         * @memberof me.timer
+         * @memberof timer
          * @returns {number}
          * @function
          */
@@ -263,7 +262,7 @@ var timer = {
          * compute the actual frame time and fps rate
          * @name computeFPS
          * @ignore
-         * @memberof me.timer
+         * @memberof timer
          * @function
          */
         countFPS() {

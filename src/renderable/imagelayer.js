@@ -9,20 +9,19 @@ import * as stringUtil from "./../utils/string.js";
 /**
  * @classdesc
  * a generic Image Layer Object
- * @augments me.Renderable
- * @memberof me
+ * @augments Renderable
  */
 class ImageLayer extends Sprite {
     /**
      * @param {number} x x coordinate
      * @param {number} y y coordinate
      * @param {object} settings ImageLayer properties
-     * @param {HTMLImageElement|HTMLCanvasElement|string} settings.image Image reference. See {@link me.loader.getImage}
+     * @param {HTMLImageElement|HTMLCanvasElement|string} settings.image Image reference. See {@link loader.getImage}
      * @param {string} [settings.name="me.ImageLayer"] layer name
      * @param {number} [settings.z=0] z-index position
-     * @param {number|me.Vector2d} [settings.ratio=1.0] Scrolling ratio to be applied. See {@link me.ImageLayer#ratio}
-     * @param {string} [settings.repeat='repeat'] define if and how an Image Layer should be repeated (accepted values are 'repeat', 'repeat-x', 'repeat-y', 'no-repeat'). See {@link me.ImageLayer#repeat}
-     * @param {number|me.Vector2d} [settings.anchorPoint=0.0] Image origin. See {@link me.ImageLayer#anchorPoint}
+     * @param {number|Vector2d} [settings.ratio=1.0] Scrolling ratio to be applied. See {@link ImageLayer#ratio}
+     * @param {string} [settings.repeat='repeat'] define if and how an Image Layer should be repeated (accepted values are 'repeat', 'repeat-x', 'repeat-y', 'no-repeat'). See {@link ImageLayer#repeat}
+     * @param {number|Vector2d} [settings.anchorPoint=0.0] Image origin. See {@link ImageLayer#anchorPoint}
      * @example
      * // create a repetitive background pattern on the X axis using the citycloud image asset
      * me.game.world.addChild(new me.ImageLayer(0, 0, {
@@ -48,9 +47,9 @@ class ImageLayer extends Sprite {
          * - a number, to change the value for both axis <br>
          * - a json expression like `json:{"x":0.5,"y":0.5}` if you wish to specify a different value for both x and y
          * @public
-         * @type {me.Vector2d}
+         * @type {Vector2d}
          * @default <1.0,1.0>
-         * @name me.ImageLayer#ratio
+         * @name ImageLayer#ratio
          */
         this.ratio = pool.pull("Vector2d", 1.0, 1.0);
 
@@ -76,9 +75,9 @@ class ImageLayer extends Sprite {
              * - a number, to change the value for both axis <br>
              * - a json expression like `json:{"x":0.5,"y":0.5}` if you wish to specify a different value for both x and y
              * @public
-             * @type {me.Vector2d}
+             * @type {Vector2d}
              * @default <0.0,0.0>
-             * @name me.ImageLayer#anchorPoint
+             * @name ImageLayer#anchorPoint
              */
             this.anchorPoint.set(0, 0);
         }
@@ -108,7 +107,7 @@ class ImageLayer extends Sprite {
      * @public
      * @type {string}
      * @default 'repeat'
-     * @name me.ImageLayer#repeat
+     * @name ImageLayer#repeat
      */
 
     get repeat() {
@@ -160,7 +159,7 @@ class ImageLayer extends Sprite {
     /**
      * resize the Image Layer to match the given size
      * @name resize
-     * @memberof me.ImageLayer.prototype
+     * @memberof ImageLayer.prototype
      * @function
      * @param {number} w new width
      * @param {number} h new height
@@ -248,12 +247,12 @@ class ImageLayer extends Sprite {
 
     /**
      * draw the ImageLayer. <br>
-     * automatically called by the game manager {@link me.game}
+     * automatically called by the game manager {@link game}
      * @name draw
-     * @memberof me.ImageLayer.prototype
+     * @memberof ImageLayer.prototype
      * @function
      * @protected
-     * @param {me.CanvasRenderer|me.WebGLRenderer} renderer a renderer object
+     * @param {CanvasRenderer|WebGLRenderer} renderer a renderer object
      */
     draw(renderer) {
         var width = this.width,

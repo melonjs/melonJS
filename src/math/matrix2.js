@@ -6,11 +6,10 @@ import Matrix3d from "./matrix3.js";
  * a Matrix2d Object.<br>
  * the identity matrix and parameters position : <br>
  * <img src="images/identity-matrix_2x.png"/>
- * @memberof me
  */
 class Matrix2d {
     /**
-     * @param {...(me.Matrix2d|me.Matrix3d|number)} [args] an instance of me.Matrix2d pr me.Matrix3d to copy from, or individual matrix components. See {@link me.Matrix2d.setTransform}
+     * @param {...(Matrix2d|Matrix3d|number)} [args] an instance of me.Matrix2d or me.Matrix3d to copy from, or individual matrix components. See {@link Matrix2d.setTransform}
      */
     constructor(...args) {
         this.onResetEvent(...args);
@@ -43,10 +42,9 @@ class Matrix2d {
      * tx component of the matrix
      * @public
      * @type {number}
-     * @readonly
-     * @see me.Matrix2d.translate
+     * @see Matrix2d.translate
      * @name tx
-     * @memberof me.Matrix2d
+     * @memberof Matrix2d
      */
     get tx() {
         return this.val[6];
@@ -56,10 +54,9 @@ class Matrix2d {
      * ty component of the matrix
      * @public
      * @type {number}
-     * @readonly
-     * @see me.Matrix2d.translate
+     * @see Matrix2d.translate
      * @name ty
-     * @memberof me.Matrix2d
+     * @memberof Matrix2d
      */
     get ty() {
         return this.val[7];
@@ -70,9 +67,9 @@ class Matrix2d {
      * the identity matrix and parameters position : <br>
      * <img src="images/identity-matrix_2x.png"/>
      * @name identity
-     * @memberof me.Matrix2d
+     * @memberof Matrix2d
      * @function
-     * @returns {me.Matrix2d} Reference to this object for method chaining
+     * @returns {Matrix2d} Reference to this object for method chaining
      */
     identity() {
         this.setTransform(
@@ -86,7 +83,7 @@ class Matrix2d {
     /**
      * set the matrix to the specified value
      * @name setTransform
-     * @memberof me.Matrix2d
+     * @memberof Matrix2d
      * @function
      * @param {number} a
      * @param {number} b
@@ -97,7 +94,7 @@ class Matrix2d {
      * @param {number} [g=0]
      * @param {number} [h=0]
      * @param {number} [i=1]
-     * @returns {me.Matrix2d} Reference to this object for method chaining
+     * @returns {Matrix2d} Reference to this object for method chaining
      */
     setTransform() {
         var a = this.val;
@@ -130,10 +127,10 @@ class Matrix2d {
     /**
      * Copies over the values from another me.Matrix2d.
      * @name copy
-     * @memberof me.Matrix2d
+     * @memberof Matrix2d
      * @function
-     * @param {me.Matrix2d} m the matrix object to copy from
-     * @returns {me.Matrix2d} Reference to this object for method chaining
+     * @param {Matrix2d} m the matrix object to copy from
+     * @returns {Matrix2d} Reference to this object for method chaining
      */
     copy(m) {
         this.val.set(m.val);
@@ -143,10 +140,10 @@ class Matrix2d {
     /**
      * Copies over the upper-left 3x3 values from the given me.Matrix3d
      * @name fromMat3d
-     * @memberof me.Matrix2d
+     * @memberof Matrix2d
      * @function
-     * @param {me.Matrix3d} m the matrix object to copy from
-     * @returns {me.Matrix2d} Reference to this object for method chaining
+     * @param {Matrix3d} m the matrix object to copy from
+     * @returns {Matrix2d} Reference to this object for method chaining
      */
     fromMat3d(m) {
         var b = m.val;
@@ -168,10 +165,10 @@ class Matrix2d {
     /**
      * multiply both matrix
      * @name multiply
-     * @memberof me.Matrix2d
+     * @memberof Matrix2d
      * @function
-     * @param {me.Matrix2d} m the other matrix
-     * @returns {me.Matrix2d} Reference to this object for method chaining
+     * @param {Matrix2d} m the other matrix
+     * @returns {Matrix2d} Reference to this object for method chaining
      */
     multiply(m) {
         var b = m.val;
@@ -200,9 +197,9 @@ class Matrix2d {
     /**
      * Transpose the value of this matrix.
      * @name transpose
-     * @memberof me.Matrix2d
+     * @memberof Matrix2d
      * @function
-     * @returns {me.Matrix2d} Reference to this object for method chaining
+     * @returns {Matrix2d} Reference to this object for method chaining
      */
     transpose() {
         var a = this.val,
@@ -223,9 +220,9 @@ class Matrix2d {
     /**
      * invert this matrix, causing it to apply the opposite transformation.
      * @name invert
-     * @memberof me.Matrix2d
+     * @memberof Matrix2d
      * @function
-     * @returns {me.Matrix2d} Reference to this object for method chaining
+     * @returns {Matrix2d} Reference to this object for method chaining
      */
     invert() {
         var val = this.val;
@@ -258,10 +255,10 @@ class Matrix2d {
    /**
     * apply the current transform to the given 2d vector
     * @name apply
-    * @memberof me.Matrix2d
+    * @memberof Matrix2d
     * @function
-    * @param {me.Vector2d} v the vector object to be transformed
-    * @returns {me.Vector2d} result vector object.
+    * @param {Vector2d} v the vector object to be transformed
+    * @returns {Vector2d} result vector object.
     */
     apply(v) {
         var a = this.val,
@@ -277,10 +274,10 @@ class Matrix2d {
     /**
      * apply the inverted current transform to the given 2d vector
      * @name applyInverse
-     * @memberof me.Matrix2d
+     * @memberof Matrix2d
      * @function
-     * @param {me.Vector2d} v the vector object to be transformed
-     * @returns {me.Vector2d} result vector object.
+     * @param {Vector2d} v the vector object to be transformed
+     * @returns {Vector2d} result vector object.
      */
     applyInverse(v) {
         var a = this.val,
@@ -298,11 +295,11 @@ class Matrix2d {
     /**
      * scale the matrix
      * @name scale
-     * @memberof me.Matrix2d
+     * @memberof Matrix2d
      * @function
      * @param {number} x a number representing the abscissa of the scaling vector.
      * @param {number} [y=x] a number representing the ordinate of the scaling vector.
-     * @returns {me.Matrix2d} Reference to this object for method chaining
+     * @returns {Matrix2d} Reference to this object for method chaining
      */
     scale(x, y) {
         var a = this.val,
@@ -320,10 +317,10 @@ class Matrix2d {
     /**
      * adds a 2D scaling transformation.
      * @name scaleV
-     * @memberof me.Matrix2d
+     * @memberof Matrix2d
      * @function
-     * @param {me.Vector2d} v scaling vector
-     * @returns {me.Matrix2d} Reference to this object for method chaining
+     * @param {Vector2d} v scaling vector
+     * @returns {Matrix2d} Reference to this object for method chaining
      */
     scaleV(v) {
         return this.scale(v.x, v.y);
@@ -332,10 +329,10 @@ class Matrix2d {
     /**
      * specifies a 2D scale operation using the [sx, 1] scaling vector
      * @name scaleX
-     * @memberof me.Matrix2d
+     * @memberof Matrix2d
      * @function
      * @param {number} x x scaling vector
-     * @returns {me.Matrix2d} Reference to this object for method chaining
+     * @returns {Matrix2d} Reference to this object for method chaining
      */
     scaleX(x) {
         return this.scale(x, 1);
@@ -344,10 +341,10 @@ class Matrix2d {
     /**
      * specifies a 2D scale operation using the [1,sy] scaling vector
      * @name scaleY
-     * @memberof me.Matrix2d
+     * @memberof Matrix2d
      * @function
      * @param {number} y y scaling vector
-     * @returns {me.Matrix2d} Reference to this object for method chaining
+     * @returns {Matrix2d} Reference to this object for method chaining
      */
     scaleY(y) {
         return this.scale(1, y);
@@ -356,10 +353,10 @@ class Matrix2d {
     /**
      * rotate the matrix (counter-clockwise) by the specified angle (in radians).
      * @name rotate
-     * @memberof me.Matrix2d
+     * @memberof Matrix2d
      * @function
      * @param {number} angle Rotation angle in radians.
-     * @returns {me.Matrix2d} Reference to this object for method chaining
+     * @returns {Matrix2d} Reference to this object for method chaining
      */
     rotate(angle) {
         if (angle !== 0) {
@@ -387,19 +384,19 @@ class Matrix2d {
     /**
      * translate the matrix position on the horizontal and vertical axis
      * @name translate
-     * @memberof me.Matrix2d
+     * @memberof Matrix2d
      * @function
      * @param {number} x the x coordindates to translate the matrix by
      * @param {number} y the y coordindates to translate the matrix by
-     * @returns {me.Matrix2d} Reference to this object for method chaining
+     * @returns {Matrix2d} Reference to this object for method chaining
      */
     /**
      * translate the matrix by a vector on the horizontal and vertical axis
      * @name translateV
-     * @memberof me.Matrix2d
+     * @memberof Matrix2d
      * @function
-     * @param {me.Vector2d} v the vector to translate the matrix by
-     * @returns {me.Matrix2d} Reference to this object for method chaining
+     * @param {Vector2d} v the vector to translate the matrix by
+     * @returns {Matrix2d} Reference to this object for method chaining
      */
     translate() {
         var a = this.val;
@@ -424,7 +421,7 @@ class Matrix2d {
     /**
      * returns true if the matrix is an identity matrix.
      * @name isIdentity
-     * @memberof me.Matrix2d
+     * @memberof Matrix2d
      * @function
      * @returns {boolean}
      */
@@ -447,9 +444,9 @@ class Matrix2d {
     /**
      * return true if the two matrices are identical
      * @name equals
-     * @memberof me.Matrix2d
+     * @memberof Matrix2d
      * @function
-     * @param {me.Matrix2d} m the other matrix
+     * @param {Matrix2d} m the other matrix
      * @returns {boolean} true if both are equals
      */
     equals(m) {
@@ -472,9 +469,9 @@ class Matrix2d {
     /**
      * Clone the Matrix
      * @name clone
-     * @memberof me.Matrix2d
+     * @memberof Matrix2d
      * @function
-     * @returns {me.Matrix2d}
+     * @returns {Matrix2d}
      */
     clone() {
         return pool.pull("Matrix2d", this);
@@ -483,7 +480,7 @@ class Matrix2d {
     /**
      * return an array representation of this Matrix
      * @name toArray
-     * @memberof me.Matrix2d
+     * @memberof Matrix2d
      * @function
      * @returns {Float32Array}
      */
@@ -494,7 +491,7 @@ class Matrix2d {
     /**
      * convert the object to a string representation
      * @name toString
-     * @memberof me.Matrix2d
+     * @memberof Matrix2d
      * @function
      * @returns {string}
      */

@@ -10,7 +10,6 @@ import { version } from "./../index.js";
 /**
  * a collection of utility functions
  * @namespace utils
- * @memberof me
  */
 
 // guid default value
@@ -29,7 +28,7 @@ var utils = {
      * Get image pixels
      * @public
      * @function
-     * @memberof me.utils
+     * @memberof utils
      * @name getPixels
      * @param {HTMLImageElement|HTMLCanvasElement} image Image to read
      * @returns {ImageData} ImageData object
@@ -52,10 +51,10 @@ var utils = {
      * Compare two version strings
      * @public
      * @function
-     * @memberof me.utils
+     * @memberof utils
      * @name checkVersion
      * @param {string} first First version string to compare
-     * @param {string} [second=me.version] Second version string to compare
+     * @param {string} [second=version] Second version string to compare
      * @returns {number} comparison result <br>&lt; 0 : first &lt; second<br>
      * 0 : first == second<br>
      * &gt; 0 : first &gt; second
@@ -85,7 +84,7 @@ var utils = {
      * parse the fragment (hash) from a URL and returns them into
      * @public
      * @function
-     * @memberof me.utils
+     * @memberof utils
      * @name getUriFragment
      * @param {string} [url=document.location] an optional params string or URL containing fragment (hash) params to be parsed
      * @returns {object} an object representing the deserialized params string.

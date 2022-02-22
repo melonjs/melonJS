@@ -8,8 +8,7 @@ import World from "./physics/world.js";
  * me.game represents your current game, it contains all the objects,
  * tilemap layers, current viewport, collision map, etc...<br>
  * me.game is also responsible for updating (each frame) the object status and draw them.
- * @namespace me.game
- * @memberof me
+ * @namespace game
  */
 
 // to know when we have to refresh the display
@@ -47,9 +46,9 @@ event.on(event.BOOT, () => {
 /**
  * a reference to the current active stage "default" camera
  * @public
- * @type {me.Camera2d}
+ * @type {Camera2d}
  * @name viewport
- * @memberof me.game
+ * @memberof game
  */
 export let viewport;
 
@@ -57,9 +56,9 @@ export let viewport;
  * a reference to the game world, <br>
  * a world is a virtual environment containing all the game objects
  * @public
- * @type {me.World}
+ * @type {World}
  * @name world
- * @memberof me.game
+ * @memberof game
  */
 export let world;
 
@@ -70,7 +69,7 @@ export let world;
  * @type {boolean}
  * @default true
  * @name mergeGroup
- * @memberof me.game
+ * @memberof game
  */
 export let mergeGroup = true;
 
@@ -81,7 +80,7 @@ export let mergeGroup = true;
  * @type {string}
  * @default "z"
  * @name sortOn
- * @memberof me.game
+ * @memberof game
  */
 export let sortOn = "z";
 
@@ -93,14 +92,14 @@ export let sortOn = "z";
  * @public
  * @type {DOMHighResTimeStamp}
  * @name lastUpdate
- * @memberof me.game
+ * @memberof game
  */
 export let lastUpdate = window.performance.now();
 
 /**
  * Fired when a level is fully loaded and all entities instantiated. <br>
  * Additionnaly the level id will also be passed to the called function.
- * @function me.game.onLevelLoaded
+ * @function game.onLevelLoaded
  * @example
  * // call myFunction () everytime a level is loaded
  * me.game.onLevelLoaded = this.myFunction.bind(this);
@@ -110,7 +109,7 @@ export function onLevelLoaded() {};
 /**
  * reset the game Object manager<br>
  * destroy all current objects
- * @function me.game.reset
+ * @function game.reset
  */
 export function reset () {
     // point to the current active stage "default" camera
@@ -128,9 +127,9 @@ export function reset () {
 
 /**
  * Update the renderer framerate using the system config variables.
- * @function me.game.updateFrameRate
- * @see me.timer.maxfps
- * @see me.World.fps
+ * @function game.updateFrameRate
+ * @see timer.maxfps
+ * @see World.fps
  */
 export function updateFrameRate() {
     // reset the frame counter
@@ -149,9 +148,9 @@ export function updateFrameRate() {
 
 /**
  * Returns the parent container of the specified Child in the game world
- * @function me.game.getParentContainer
- * @param {me.Renderable} child
- * @returns {me.Container}
+ * @function game.getParentContainer
+ * @param {Renderable} child
+ * @returns {Container}
  */
 export function getParentContainer(child) {
     return child.ancestor;
@@ -159,7 +158,7 @@ export function getParentContainer(child) {
 
 /**
  * force the redraw (not update) of all objects
- * @function me.game.repaint
+ * @function game.repaint
  */
 export function repaint() {
     isDirty = true;
@@ -169,9 +168,9 @@ export function repaint() {
 /**
  * update all objects of the game manager
  * @ignore
- * @function me.game.update
+ * @function game.update
  * @param {number} time current timestamp as provided by the RAF callback
- * @param {me.Stage} stage the current stage
+ * @param {Stage} stage the current stage
  */
 export function update(time, stage) {
     // handle frame skipping if required
@@ -216,9 +215,9 @@ export function update(time, stage) {
 
 /**
  * draw the current scene/stage
- * @function me.game.draw
+ * @function game.draw
  * @ignore
- * @param {me.Stage} stage the current stage
+ * @param {Stage} stage the current stage
  */
 export function draw(stage) {
 

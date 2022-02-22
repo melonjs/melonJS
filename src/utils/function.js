@@ -1,14 +1,13 @@
 /**
  * a collection of utility functions
- * @namespace me.utils.function
- * @memberof me
+ * @namespace utils.function
  */
 
 /**
  * Executes a function as soon as the interpreter is idle (stack empty).
  * @public
  * @function
- * @memberof me.utils.function
+ * @memberof utils.function
  * @name defer
  * @param {Function} func The function to be deferred.
  * @param {object} thisArg The value to be passed as the this parameter to the target function when the deferred function is called
@@ -29,7 +28,7 @@ export function defer(func, thisArg, ...args) {
  * once during a given window of time
  * @public
  * @function
- * @memberof me.utils.function
+ * @memberof utils.function
  * @name throttle
  * @param {Function} fn the function to be throttled.
  * @param {number} delay The delay in ms

@@ -9,8 +9,7 @@ import { initialized, version } from "./../index.js";
 
 /**
  * video functions
- * @namespace me.video
- * @memberof me
+ * @namespace video
  */
 
 var designRatio = 1;
@@ -126,7 +125,7 @@ function onresize() {
 /**
  * Select the HTML5 Canvas renderer
  * @name CANVAS
- * @memberof me.video
+ * @memberof video
  * @constant
  */
 export const CANVAS = 0;
@@ -134,7 +133,7 @@ export const CANVAS = 0;
 /**
  * Select the WebGL renderer
  * @name WEBGL
- * @memberof me.video
+ * @memberof video
  * @constant
  */
 export const WEBGL = 1;
@@ -142,7 +141,7 @@ export const WEBGL = 1;
 /**
  * Auto-select the renderer (Attempt WebGL first, with fallback to Canvas)
  * @name AUTO
- * @memberof me.video
+ * @memberof video
  * @constant
  */
 export const AUTO = 2;
@@ -153,24 +152,24 @@ export const AUTO = 2;
  * @type {HTMLElement}
  * @readonly
  * @name parent
- * @memberof me.video
+ * @memberof video
  */
 export let parent = null;
 
 /**
  * the scaling ratio to be applied to the display canvas
  * @name scaleRatio
- * @type {me.Vector2d}
+ * @type {Vector2d}
  * @default <1,1>
- * @memberof me.video
+ * @memberof video
  */
 export let scaleRatio = new Vector2d(1, 1);
 
  /**
   * A reference to the active Canvas or WebGL active renderer renderer
   * @name renderer
-  * @type {me.CanvasRenderer|me.WebGLRenderer}
-  * @memberof me.video
+  * @type {CanvasRenderer|WebGLRenderer}
+  * @memberof video
   */
 export let renderer = null;
 
@@ -191,12 +190,12 @@ export let renderer = null;
  * <center><img src="images/scale-flex-height.png"/></center><br>
  *  - <i><b>`stretch`</b></i> : Canvas is resized to fit; content is scaled to screen aspect ratio
  * <center><img src="images/scale-stretch.png"/></center><br>
- * @function me.video.init
+ * @function video.init
  * @param {number} width The width of the canvas viewport
  * @param {number} height The height of the canvas viewport
  * @param {object} [options] The optional video/renderer parameters.<br> (see Renderer(s) documentation for further specific options)
  * @param {string|HTMLElement} [options.parent=document.body] the DOM parent element to hold the canvas in the HTML file
- * @param {number} [options.renderer=me.video.AUTO] renderer to use (me.video.CANVAS, me.video.WEBGL, me.video.AUTO)
+ * @param {number} [options.renderer=video.AUTO] renderer to use (me.video.CANVAS, me.video.WEBGL, me.video.AUTO)
  * @param {boolean} [options.doubleBuffering=false] enable/disable double buffering
  * @param {number|string} [options.scale=1.0] enable scaling of the canvas ('auto' for automatic scaling)
  * @param {string} [options.scaleMethod="fit"] screen scaling modes ('fit','fill-min','fill-max','flex','flex-width','flex-height','stretch')
@@ -380,7 +379,7 @@ export function init(width, height, options) {
 
 /**
  * Create and return a new Canvas element
- * @function me.video.createCanvas
+ * @function video.createCanvas
  * @param {number} width width
  * @param {number} height height
  * @param {boolean} [offscreen=false] will returns an OffscreenCanvas if supported
@@ -412,7 +411,7 @@ export function createCanvas(width, height, offscreen = false) {
 
 /**
  * return a reference to the parent DOM element holding the main canvas
- * @function me.video.getParent
+ * @function video.getParent
  * @returns {HTMLElement}
  */
 export function getParent() {
@@ -423,8 +422,8 @@ export function getParent() {
  * scale the "displayed" canvas by the given scalar.
  * this will modify the size of canvas element directly.
  * Only use this if you are not using the automatic scaling feature.
- * @function me.video.scale
- * @see me.video.init
+ * @function video.scale
+ * @see video.init
  * @param {number} x x scaling multiplier
  * @param {number} y y scaling multiplier
  */

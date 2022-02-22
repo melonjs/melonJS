@@ -19,8 +19,7 @@ var pixel = (function () {
  * me.ParticleEmitterSettings contains the default settings for me.ParticleEmitter
  * @ignore
  * @class
- * @memberof me
- * @see me.ParticleEmitter
+ * @see ParticleEmitter
  */
 var ParticleEmitterSettings = {
     /**
@@ -28,7 +27,7 @@ var ParticleEmitterSettings = {
      * @public
      * @type {number}
      * @name width
-     * @memberof me.ParticleEmitterSettings
+     * @memberof ParticleEmitterSettings
      * @default 0
      */
     width : 0,
@@ -38,7 +37,7 @@ var ParticleEmitterSettings = {
      * @public
      * @type {number}
      * @name height
-     * @memberof me.ParticleEmitterSettings
+     * @memberof ParticleEmitterSettings
      * @default 0
      */
     height : 0,
@@ -48,7 +47,7 @@ var ParticleEmitterSettings = {
      * @public
      * @type {CanvasImageSource}
      * @name image
-     * @memberof me.ParticleEmitterSettings
+     * @memberof ParticleEmitterSettings
      * @default 1x1 white pixel
      * @see http://www.whatwg.org/specs/web-apps/current-work/multipage/the-canvas-element.html#canvasimagesource
      */
@@ -60,7 +59,7 @@ var ParticleEmitterSettings = {
      * @type {number}
      * @name totalParticles
      * @default 50
-     * @memberof me.ParticleEmitterSettings
+     * @memberof ParticleEmitterSettings
      */
     totalParticles : 50,
 
@@ -70,7 +69,7 @@ var ParticleEmitterSettings = {
      * @type {number}
      * @name angle
      * @default Math.PI / 2
-     * @memberof me.ParticleEmitterSettings
+     * @memberof ParticleEmitterSettings
      */
     angle : Math.PI / 2,
 
@@ -80,7 +79,7 @@ var ParticleEmitterSettings = {
      * @type {number}
      * @name angleVariation
      * @default 0
-     * @memberof me.ParticleEmitterSettings
+     * @memberof ParticleEmitterSettings
      */
     angleVariation : 0,
 
@@ -90,7 +89,7 @@ var ParticleEmitterSettings = {
      * @type {number}
      * @name minLife
      * @default 1000
-     * @memberof me.ParticleEmitterSettings
+     * @memberof ParticleEmitterSettings
      */
     minLife : 1000,
 
@@ -100,7 +99,7 @@ var ParticleEmitterSettings = {
      * @type {number}
      * @name maxLife
      * @default 3000
-     * @memberof me.ParticleEmitterSettings
+     * @memberof ParticleEmitterSettings
      */
     maxLife : 3000,
 
@@ -110,7 +109,7 @@ var ParticleEmitterSettings = {
      * @type {number}
      * @name speed
      * @default 2
-     * @memberof me.ParticleEmitterSettings
+     * @memberof ParticleEmitterSettings
      */
     speed : 2,
 
@@ -120,7 +119,7 @@ var ParticleEmitterSettings = {
      * @type {number}
      * @name speedVariation
      * @default 1
-     * @memberof me.ParticleEmitterSettings
+     * @memberof ParticleEmitterSettings
      */
     speedVariation : 1,
 
@@ -130,7 +129,7 @@ var ParticleEmitterSettings = {
      * @type {number}
      * @name minRotation
      * @default 0
-     * @memberof me.ParticleEmitterSettings
+     * @memberof ParticleEmitterSettings
      */
     minRotation : 0,
 
@@ -140,7 +139,7 @@ var ParticleEmitterSettings = {
      * @type {number}
      * @name maxRotation
      * @default 0
-     * @memberof me.ParticleEmitterSettings
+     * @memberof ParticleEmitterSettings
      */
     maxRotation : 0,
 
@@ -150,7 +149,7 @@ var ParticleEmitterSettings = {
      * @type {number}
      * @name minStartScale
      * @default 1
-     * @memberof me.ParticleEmitterSettings
+     * @memberof ParticleEmitterSettings
      */
     minStartScale : 1,
 
@@ -160,7 +159,7 @@ var ParticleEmitterSettings = {
      * @type {number}
      * @name maxStartScale
      * @default 1
-     * @memberof me.ParticleEmitterSettings
+     * @memberof ParticleEmitterSettings
      */
     maxStartScale : 1,
 
@@ -170,7 +169,7 @@ var ParticleEmitterSettings = {
      * @type {number}
      * @name minEndScale
      * @default 0
-     * @memberof me.ParticleEmitterSettings
+     * @memberof ParticleEmitterSettings
      */
     minEndScale : 0,
 
@@ -180,7 +179,7 @@ var ParticleEmitterSettings = {
      * @type {number}
      * @name maxEndScale
      * @default 0
-     * @memberof me.ParticleEmitterSettings
+     * @memberof ParticleEmitterSettings
      */
     maxEndScale : 0,
 
@@ -190,8 +189,8 @@ var ParticleEmitterSettings = {
      * @type {number}
      * @name gravity
      * @default 0
-     * @memberof me.ParticleEmitterSettings
-     * @see me.game.world.gravity
+     * @memberof ParticleEmitterSettings
+     * @see game.world.gravity
      */
     gravity : 0,
 
@@ -201,7 +200,7 @@ var ParticleEmitterSettings = {
      * @type {number}
      * @name wind
      * @default 0
-     * @memberof me.ParticleEmitterSettings
+     * @memberof ParticleEmitterSettings
      */
     wind : 0,
 
@@ -213,7 +212,7 @@ var ParticleEmitterSettings = {
      * @type {boolean}
      * @name followTrajectory
      * @default false
-     * @memberof me.ParticleEmitterSettings
+     * @memberof ParticleEmitterSettings
      */
     followTrajectory : false,
 
@@ -224,7 +223,7 @@ var ParticleEmitterSettings = {
      * @type {boolean}
      * @name textureAdditive
      * @default false
-     * @memberof me.ParticleEmitterSettings
+     * @memberof ParticleEmitterSettings
      */
     textureAdditive : false,
 
@@ -234,7 +233,7 @@ var ParticleEmitterSettings = {
      * @type {boolean}
      * @name onlyInViewport
      * @default true
-     * @memberof me.ParticleEmitterSettings
+     * @memberof ParticleEmitterSettings
      */
     onlyInViewport : true,
 
@@ -244,7 +243,7 @@ var ParticleEmitterSettings = {
      * @type {boolean}
      * @name floating
      * @default false
-     * @memberof me.ParticleEmitterSettings
+     * @memberof ParticleEmitterSettings
      */
     floating : false,
 
@@ -254,7 +253,7 @@ var ParticleEmitterSettings = {
      * @type {number}
      * @name maxParticles
      * @default 10
-     * @memberof me.ParticleEmitterSettings
+     * @memberof ParticleEmitterSettings
      */
     maxParticles : 10,
 
@@ -265,7 +264,7 @@ var ParticleEmitterSettings = {
      * @type {number}
      * @name frequency
      * @default 100
-     * @memberof me.ParticleEmitterSettings
+     * @memberof ParticleEmitterSettings
      */
     frequency : 100,
 
@@ -276,7 +275,7 @@ var ParticleEmitterSettings = {
      * @type {number}
      * @name duration
      * @default Infinity
-     * @memberof me.ParticleEmitterSettings
+     * @memberof ParticleEmitterSettings
      */
     duration : Infinity,
 
@@ -287,7 +286,7 @@ var ParticleEmitterSettings = {
      * @type {number}
      * @name framesToSkip
      * @default 0
-     * @memberof me.ParticleEmitterSettings
+     * @memberof ParticleEmitterSettings
      */
     framesToSkip : 0
 };
@@ -296,10 +295,9 @@ var ParticleEmitterSettings = {
  * Particle Emitter Object.
  * @class
  * @augments Rect
- * @memberof me
  * @param {number} x x-position of the particle emitter
  * @param {number} y y-position of the particle emitter
- * @param {object} settings An object containing the settings for the particle emitter. See {@link me.ParticleEmitterSettings}
+ * @param {object} settings An object containing the settings for the particle emitter. See {@link ParticleEmitterSettings}
  * @example
  * // Create a basic emitter at position 100, 100
  * var emitter = new me.ParticleEmitter(100, 100);
@@ -380,7 +378,7 @@ class ParticleEmitter extends Renderable {
      * Floating property for particles, value is forwarded to the particle container <br>
      * @type {boolean}
      * @name floating
-     * @memberof me.ParticleEmitter
+     * @memberof ParticleEmitter
      */
     get floating() {
         return this.container.floating;
@@ -420,7 +418,7 @@ class ParticleEmitter extends Renderable {
     /**
      * returns a random point inside the bounds x axis of this emitter
      * @name getRandomPointX
-     * @memberof me.ParticleEmitter
+     * @memberof ParticleEmitter
      * @function
      * @returns {number}
      */
@@ -431,7 +429,7 @@ class ParticleEmitter extends Renderable {
     /**
      * returns a random point inside the bounds y axis of this emitter
      * @name getRandomPointY
-     * @memberof me.ParticleEmitter
+     * @memberof ParticleEmitter
      * @function
      * @returns {number}
      */
@@ -442,9 +440,9 @@ class ParticleEmitter extends Renderable {
     /**
      * Reset the emitter with default values.<br>
      * @function
-     * @param {object} settings [optional] object with emitter settings. See {@link me.ParticleEmitterSettings}
+     * @param {object} settings [optional] object with emitter settings. See {@link ParticleEmitterSettings}
      * @name reset
-     * @memberof me.ParticleEmitter
+     * @memberof ParticleEmitter
      */
     reset(settings) {
         // check if settings exists and create a dummy object if necessary
@@ -476,7 +474,7 @@ class ParticleEmitter extends Renderable {
      * @function
      * @returns {boolean} Emitter is Stream and is launching particles
      * @name isRunning
-     * @memberof me.ParticleEmitter
+     * @memberof ParticleEmitter
      */
     isRunning() {
         return this._enabled && this._stream;
@@ -488,7 +486,7 @@ class ParticleEmitter extends Renderable {
      * @param {number} duration [optional] time that the emitter releases particles in ms
      * @function
      * @name streamParticles
-     * @memberof me.ParticleEmitter
+     * @memberof ParticleEmitter
      */
     streamParticles(duration) {
         this._enabled = true;
@@ -501,7 +499,7 @@ class ParticleEmitter extends Renderable {
      * Stop the emitter from generating new particles (used only if emitter is Stream) <br>
      * @function
      * @name stopStream
-     * @memberof me.ParticleEmitter
+     * @memberof ParticleEmitter
      */
     stopStream() {
         this._enabled = false;
@@ -513,7 +511,7 @@ class ParticleEmitter extends Renderable {
      * @param {number} total [optional] number of particles to launch
      * @function
      * @name burstParticles
-     * @memberof me.ParticleEmitter
+     * @memberof ParticleEmitter
      */
     burstParticles(total) {
         this._enabled = true;

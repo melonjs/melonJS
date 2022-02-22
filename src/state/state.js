@@ -150,7 +150,6 @@ event.on(event.BOOT, () => {
 /**
  * a State Manager (state machine)
  * @namespace state
- * @memberof me
  */
 
 var state = {
@@ -159,7 +158,7 @@ var state = {
      * default state ID for Loading Stage
      * @constant
      * @name LOADING
-     * @memberof me.state
+     * @memberof state
      */
     LOADING : 0,
 
@@ -167,7 +166,7 @@ var state = {
      * default state ID for Menu Stage
      * @constant
      * @name MENU
-     * @memberof me.state
+     * @memberof state
      */
     MENU : 1,
 
@@ -175,7 +174,7 @@ var state = {
      * default state ID for "Ready" Stage
      * @constant
      * @name READY
-     * @memberof me.state
+     * @memberof state
      */
     READY : 2,
 
@@ -183,7 +182,7 @@ var state = {
      * default state ID for Play Stage
      * @constant
      * @name PLAY
-     * @memberof me.state
+     * @memberof state
      */
     PLAY : 3,
 
@@ -191,7 +190,7 @@ var state = {
      * default state ID for Game Over Stage
      * @constant
      * @name GAMEOVER
-     * @memberof me.state
+     * @memberof state
      */
     GAMEOVER : 4,
 
@@ -199,7 +198,7 @@ var state = {
      * default state ID for Game End Stage
      * @constant
      * @name GAME_END
-     * @memberof me.state
+     * @memberof state
      */
     GAME_END : 5,
 
@@ -207,7 +206,7 @@ var state = {
      * default state ID for High Score Stage
      * @constant
      * @name SCORE
-     * @memberof me.state
+     * @memberof state
      */
     SCORE : 6,
 
@@ -215,7 +214,7 @@ var state = {
      * default state ID for Credits Stage
      * @constant
      * @name CREDITS
-     * @memberof me.state
+     * @memberof state
      */
     CREDITS : 7,
 
@@ -223,7 +222,7 @@ var state = {
      * default state ID for Settings Stage
      * @constant
      * @name SETTINGS
-     * @memberof me.state
+     * @memberof state
      */
     SETTINGS : 8,
 
@@ -232,7 +231,7 @@ var state = {
      * (the default stage is the one running as soon as melonJS is started)
      * @constant
      * @name SETTINGS
-     * @memberof me.state
+     * @memberof state
      */
     DEFAULT : 9,
 
@@ -240,7 +239,7 @@ var state = {
      * default state ID for user defined constants<br>
      * @constant
      * @name USER
-     * @memberof me.state
+     * @memberof state
      * @example
      * var STATE_INFO = me.state.USER + 0;
      * var STATE_WARN = me.state.USER + 1;
@@ -252,7 +251,7 @@ var state = {
     /**
      * Stop the current screen object.
      * @name stop
-     * @memberof me.state
+     * @memberof state
      * @public
      * @function
      * @param {boolean} [pauseTrack=false] pause current track on screen stop.
@@ -279,7 +278,7 @@ var state = {
     /**
      * pause the current screen object
      * @name pause
-     * @memberof me.state
+     * @memberof state
      * @public
      * @function
      * @param {boolean} [music=false] pause current music track on screen pause
@@ -305,7 +304,7 @@ var state = {
     /**
      * Restart the screen object from a full stop.
      * @name restart
-     * @memberof me.state
+     * @memberof state
      * @public
      * @function
      * @param {boolean} [music=false] resume current music track on screen resume
@@ -333,7 +332,7 @@ var state = {
     /**
      * resume the screen object
      * @name resume
-     * @memberof me.state
+     * @memberof state
      * @public
      * @function
      * @param {boolean} [music=false] resume current music track on screen resume
@@ -358,7 +357,7 @@ var state = {
     /**
      * return the running state of the state manager
      * @name isRunning
-     * @memberof me.state
+     * @memberof state
      * @public
      * @function
      * @returns {boolean} true if a "process is running"
@@ -370,7 +369,7 @@ var state = {
     /**
      * Return the pause state of the state manager
      * @name isPaused
-     * @memberof me.state
+     * @memberof state
      * @public
      * @function
      * @returns {boolean} true if the game is paused
@@ -382,11 +381,11 @@ var state = {
     /**
      * associate the specified state with a Stage
      * @name set
-     * @memberof me.state
+     * @memberof state
      * @public
      * @function
      * @param {number} state State ID (see constants)
-     * @param {me.Stage} stage Instantiated Stage to associate with state ID
+     * @param {Stage} stage Instantiated Stage to associate with state ID
      * @param {boolean} [start = false] if true the state will be changed immediately after adding it.
      * @example
      * class MenuButton extends me.GUI_Object {
@@ -442,10 +441,10 @@ var state = {
      * return a reference to the current screen object<br>
      * useful to call a object specific method
      * @name current
-     * @memberof me.state
+     * @memberof state
      * @public
      * @function
-     * @returns {me.Stage}
+     * @returns {Stage}
      */
     current() {
         if (typeof _stages[_state] !== "undefined") {
@@ -456,11 +455,11 @@ var state = {
     /**
      * specify a global transition effect
      * @name transition
-     * @memberof me.state
+     * @memberof state
      * @public
      * @function
      * @param {string} effect (only "fade" is supported for now)
-     * @param {me.Color|string} color a CSS color value
+     * @param {Color|string} color a CSS color value
      * @param {number} [duration=1000] expressed in milliseconds
      */
     transition(effect, color, duration) {
@@ -473,7 +472,7 @@ var state = {
     /**
      * enable/disable transition for a specific state (by default enabled for all)
      * @name setTransition
-     * @memberof me.state
+     * @memberof state
      * @public
      * @function
      * @param {number} state State ID (see constants)
@@ -486,7 +485,7 @@ var state = {
     /**
      * change the game/app state
      * @name change
-     * @memberof me.state
+     * @memberof state
      * @public
      * @function
      * @param {number} state State ID (see constants)
@@ -541,7 +540,7 @@ var state = {
     /**
      * return true if the specified state is the current one
      * @name isCurrent
-     * @memberof me.state
+     * @memberof state
      * @public
      * @function
      * @param {number} state State ID (see constants)

@@ -8,7 +8,6 @@ import { clamp } from "./../../math/math.js";
  * object group definition as defined in Tiled.
  * (group definition is translated into the virtual `me.game.world` using `me.Container`)
  * @ignore
- * @memberof me
  */
 export default class TMXGroup {
 
@@ -19,7 +18,7 @@ export default class TMXGroup {
          * @public
          * @type {string}
          * @name name
-         * @memberof me.TMXGroup
+         * @memberof TMXGroup
          */
         this.name = data.name;
 
@@ -28,7 +27,7 @@ export default class TMXGroup {
          * @public
          * @type {number}
          * @name width
-         * @memberof me.TMXGroup
+         * @memberof TMXGroup
          */
         this.width = data.width || 0;
 
@@ -37,7 +36,7 @@ export default class TMXGroup {
          * @public
          * @type {number}
          * @name height
-         * @memberof me.TMXGroup
+         * @memberof TMXGroup
          */
         this.height = data.height || 0;
 
@@ -46,7 +45,7 @@ export default class TMXGroup {
          * @public
          * @type {string}
          * @name tintcolor
-         * @memberof me.TMXGroup
+         * @memberof TMXGroup
          */
         this.tintcolor = data.tintcolor;
 
@@ -55,17 +54,17 @@ export default class TMXGroup {
          * @public
          * @type {number}
          * @name z
-         * @memberof me.TMXGroup
+         * @memberof TMXGroup
          */
         this.z = z;
 
         /**
          * group objects list definition
-         * @see me.TMXObject
+         * @see TMXObject
          * @public
          * @type {object[]}
          * @name name
-         * @memberof me.TMXGroup
+         * @memberof TMXGroup
          */
         this.objects = [];
 

@@ -3,7 +3,6 @@ import EventEmitter from "eventemitter3";
 /**
  * an event system based on nodeJS EventEmitter interface
  * @namespace event
- * @memberof me
  */
 
 // internal instance of the event emiter
@@ -15,8 +14,8 @@ var eventEmitter = new EventEmitter();
  * @constant
  * @type {string}
  * @name BOOT
- * @memberof me.event
- * @see me.event.on
+ * @memberof event
+ * @see event.on
  */
 export const BOOT = "me.boot";
 
@@ -27,8 +26,8 @@ export const BOOT = "me.boot";
  * @constant
  * @type {string}
  * @name STATE_PAUSE
- * @memberof me.event
- * @see me.event.on
+ * @memberof event
+ * @see event.on
  */
 export const STATE_PAUSE = "me.state.onPause";
 
@@ -39,8 +38,8 @@ export const STATE_PAUSE = "me.state.onPause";
  * @constant
  * @type {string}
  * @name STATE_RESUME
- * @memberof me.event
- * @see me.event.on
+ * @memberof event
+ * @see event.on
  */
 export const STATE_RESUME = "me.state.onResume";
 
@@ -51,8 +50,8 @@ export const STATE_RESUME = "me.state.onResume";
  * @constant
  * @type {string}
  * @name STATE_STOP
- * @memberof me.event
- * @see me.event.on
+ * @memberof event
+ * @see event.on
  */
 export const STATE_STOP = "me.state.onStop";
 
@@ -63,8 +62,8 @@ export const STATE_STOP = "me.state.onStop";
  * @constant
  * @type {string}
  * @name STATE_RESTART
- * @memberof me.event
- * @see me.event.on
+ * @memberof event
+ * @see event.on
  */
 export const STATE_RESTART = "me.state.onRestart";
 
@@ -75,9 +74,9 @@ export const STATE_RESTART = "me.state.onRestart";
  * @constant
  * @type {string}
  * @name VIDEO_INIT
- * @memberof me.event
- * @see me.video.init
- * @see me.event.on
+ * @memberof event
+ * @see video.init
+ * @see event.on
  */
 export const VIDEO_INIT = "me.video.onInit";
 
@@ -88,8 +87,8 @@ export const VIDEO_INIT = "me.video.onInit";
  * @constant
  * @type {string}
  * @name GAME_INIT
- * @memberof me.event
- * @see me.event.on
+ * @memberof event
+ * @see event.on
  */
 export const GAME_INIT = "me.game.onInit";
 
@@ -100,8 +99,8 @@ export const GAME_INIT = "me.game.onInit";
  * @constant
  * @type {string}
  * @name GAME_RESET
- * @memberof me.event
- * @see me.event.on
+ * @memberof event
+ * @see event.on
  */
 export const GAME_RESET = "me.game.onReset";
 
@@ -112,8 +111,8 @@ export const GAME_RESET = "me.game.onReset";
  * @constant
  * @type {string}
  * @name GAME_BEFORE_UPDATE
- * @memberof me.event
- * @see me.event.on
+ * @memberof event
+ * @see event.on
  */
 export const GAME_BEFORE_UPDATE = "me.game.beforeUpdate";
 
@@ -124,8 +123,8 @@ export const GAME_BEFORE_UPDATE = "me.game.beforeUpdate";
  * @constant
  * @type {string}
  * @name GAME_AFTER_UPDATE
- * @memberof me.event
- * @see me.event.on
+ * @memberof event
+ * @see event.on
  */
 export const GAME_AFTER_UPDATE = "me.game.afterUpdate";
 
@@ -136,8 +135,8 @@ export const GAME_AFTER_UPDATE = "me.game.afterUpdate";
  * @constant
  * @type {string}
  * @name GAME_UPDATE
- * @memberof me.event
- * @see me.event.on
+ * @memberof event
+ * @see event.on
  */
 export const GAME_UPDATE = "me.game.onUpdate";
 
@@ -148,8 +147,8 @@ export const GAME_UPDATE = "me.game.onUpdate";
  * @constant
  * @type {string}
  * @name GAME_BEFORE_DRAW
- * @memberof me.event
- * @see me.event.on
+ * @memberof event
+ * @see event.on
  */
 export const GAME_BEFORE_DRAW = "me.game.beforeDraw";
 
@@ -160,8 +159,8 @@ export const GAME_BEFORE_DRAW = "me.game.beforeDraw";
  * @constant
  * @type {string}
  * @name GAME_AFTER_DRAW
- * @memberof me.event
- * @see me.event.on
+ * @memberof event
+ * @see event.on
  */
 export const GAME_AFTER_DRAW = "me.game.afterDraw";
 
@@ -172,8 +171,8 @@ export const GAME_AFTER_DRAW = "me.game.afterDraw";
  * @constant
  * @type {string}
  * @name LEVEL_LOADED
- * @memberof me.event
- * @see me.event.on
+ * @memberof event
+ * @see event.on
  */
 export const LEVEL_LOADED = "me.game.onLevelLoaded";
 
@@ -184,8 +183,8 @@ export const LEVEL_LOADED = "me.game.onLevelLoaded";
  * @constant
  * @type {string}
  * @name LOADER_COMPLETE
- * @memberof me.event
- * @see me.event.on
+ * @memberof event
+ * @see event.on
  */
 export const LOADER_COMPLETE = "me.loader.onload";
 
@@ -196,8 +195,8 @@ export const LOADER_COMPLETE = "me.loader.onload";
  * @constant
  * @type {string}
  * @name LOADER_PROGRESS
- * @memberof me.event
- * @see me.event.on
+ * @memberof event
+ * @see event.on
  */
 export const LOADER_PROGRESS = "me.loader.onProgress";
 
@@ -213,8 +212,8 @@ export const LOADER_PROGRESS = "me.loader.onProgress";
  * @constant
  * @type {string}
  * @name KEYDOWN
- * @memberof me.event
- * @see me.event.on
+ * @memberof event
+ * @see event.on
  * @example
  * me.input.bindKey(me.input.KEY.X, "jump", true); // Edge-triggered
  * me.input.bindKey(me.input.KEY.Z, "shoot"); // Level-triggered
@@ -239,8 +238,8 @@ export const KEYDOWN = "me.input.keydown";
  * @constant
  * @type {string}
  * @name KEYUP
- * @memberof me.event
- * @see me.event.on
+ * @memberof event
+ * @see event.on
  * @example
  * me.event.on(me.event.KEYUP, (action, keyCode) => {
  *   // Checking unbound keys
@@ -263,8 +262,8 @@ export const KEYUP = "me.input.keyup";
  * @constant
  * @type {string}
  * @name GAMEPAD_CONNECTED
- * @memberof me.event
- * @see me.event.on
+ * @memberof event
+ * @see event.on
  */
 export const GAMEPAD_CONNECTED = "gamepad.connected";
 
@@ -275,8 +274,8 @@ export const GAMEPAD_CONNECTED = "gamepad.connected";
  * @constant
  * @type {string}
  * @name GAMEPAD_DISCONNECTED
- * @memberof me.event
- * @see me.event.on
+ * @memberof event
+ * @see event.on
  */
 export const GAMEPAD_DISCONNECTED = "gamepad.disconnected";
 
@@ -291,8 +290,8 @@ export const GAMEPAD_DISCONNECTED = "gamepad.disconnected";
  * @constant
  * @type {string}
  * @name GAMEPAD_UPDATE
- * @memberof me.event
- * @see me.event.on
+ * @memberof event
+ * @see event.on
  */
 export const GAMEPAD_UPDATE = "gamepad.update";
 
@@ -303,8 +302,8 @@ export const GAMEPAD_UPDATE = "gamepad.update";
  * @constant
  * @type {string}
  * @name POINTERMOVE
- * @memberof me.event
- * @see me.event.on
+ * @memberof event
+ * @see event.on
  */
 export const POINTERMOVE = "me.event.pointermove";
 
@@ -315,8 +314,8 @@ export const POINTERMOVE = "me.event.pointermove";
  * @constant
  * @type {string}
  * @name POINTERLOCKCHANGE
- * @memberof me.event
- * @see me.event.on
+ * @memberof event
+ * @see event.on
  */
 export const POINTERLOCKCHANGE = "me.event.pointerlockChange";
 
@@ -329,8 +328,8 @@ export const POINTERLOCKCHANGE = "me.event.pointerlockChange";
  * @constant
  * @type {string}
  * @name DRAGSTART
- * @memberof me.event
- * @see me.event.on
+ * @memberof event
+ * @see event.on
  */
 export const DRAGSTART = "me.game.dragstart";
 
@@ -343,8 +342,8 @@ export const DRAGSTART = "me.game.dragstart";
  * @constant
  * @type {string}
  * @name DRAGEND
- * @memberof me.event
- * @see me.event.on
+ * @memberof event
+ * @see event.on
  */
 export const DRAGEND = "me.game.dragend";
 
@@ -355,8 +354,8 @@ export const DRAGEND = "me.game.dragend";
  * @constant
  * @type {string}
  * @name WINDOW_ONRESIZE
- * @memberof me.event
- * @see me.event.on
+ * @memberof event
+ * @see event.on
  */
 export const WINDOW_ONRESIZE = "window.onresize";
 
@@ -369,8 +368,8 @@ export const WINDOW_ONRESIZE = "window.onresize";
  * @constant
  * @type {string}
  * @name CANVAS_ONRESIZE
- * @memberof me.event
- * @see me.event.on
+ * @memberof event
+ * @see event.on
  */
 export const CANVAS_ONRESIZE = "canvas.onresize";
 
@@ -383,8 +382,8 @@ export const CANVAS_ONRESIZE = "canvas.onresize";
  * @constant
  * @type {string}
  * @name VIEWPORT_ONRESIZE
- * @memberof me.event
- * @see me.event.on
+ * @memberof event
+ * @see event.on
  */
 export const VIEWPORT_ONRESIZE = "viewport.onresize";
 
@@ -395,8 +394,8 @@ export const VIEWPORT_ONRESIZE = "viewport.onresize";
  * @constant
  * @type {string}
  * @name WINDOW_ONORIENTATION_CHANGE
- * @memberof me.event
- * @see me.event.on
+ * @memberof event
+ * @see event.on
  */
 export const WINDOW_ONORIENTATION_CHANGE = "window.orientationchange";
 
@@ -407,8 +406,8 @@ export const WINDOW_ONORIENTATION_CHANGE = "window.orientationchange";
  * @constant
  * @type {string}
  * @name WINDOW_ONSCROLL
- * @memberof me.event
- * @see me.event.on
+ * @memberof event
+ * @see event.on
  */
 export const WINDOW_ONSCROLL = "window.onscroll";
 
@@ -419,8 +418,8 @@ export const WINDOW_ONSCROLL = "window.onscroll";
  * @constant
  * @type {string}
  * @name VIEWPORT_ONCHANGE
- * @memberof me.event
- * @see me.event.on
+ * @memberof event
+ * @see event.on
  */
 export const VIEWPORT_ONCHANGE = "viewport.onchange";
 
@@ -431,8 +430,8 @@ export const VIEWPORT_ONCHANGE = "viewport.onchange";
  * @constant
  * @type {string}
  * @name WEBGL_ONCONTEXT_LOST
- * @memberof me.event
- * @see me.event.on
+ * @memberof event
+ * @see event.on
  */
 export const WEBGL_ONCONTEXT_LOST = "renderer.webglcontextlost";
 
@@ -443,14 +442,14 @@ export const WEBGL_ONCONTEXT_LOST = "renderer.webglcontextlost";
  * @constant
  * @type {string}
  * @name WEBGL_ONCONTEXT_RESTORED
- * @memberof me.event
- * @see me.event.on
+ * @memberof event
+ * @see event.on
  */
 export const WEBGL_ONCONTEXT_RESTORED = "renderer.webglcontextrestored";
 
 /**
  * calls each of the listeners registered for a given event.
- * @function me.event.emit
+ * @function event.emit
  * @param {string|symbol} eventName The event name.
  * @param {object} [...arguments] arguments to be passed to all listeners
  * @returns {boolean} true if the event had listeners, false otherwise.
@@ -463,7 +462,7 @@ export function emit(eventName, ...args) {
 
 /**
  * Add a listener for a given event.
- * @function me.event.on
+ * @function event.on
  * @param {string|symbol} eventName The event name.
  * @param {Function} listener The listener function.
  * @param {*} [context=this] The context to invoke the listener with.
@@ -478,7 +477,7 @@ export function on(eventName, listener, context) {
 
 /**
  * Add a one-time listener for a given event.
- * @function me.event.once
+ * @function event.once
  * @param {string|symbol} eventName The event name.
  * @param {Function} listener The listener function.
  * @param {*} [context=this] The context to invoke the listener with.
@@ -493,7 +492,7 @@ export function once(eventName, listener, context) {
 
 /**
  * remove the given listener for a given event.
- * @function me.event.off
+ * @function event.off
  * @param {string|symbol} eventName The event name.
  * @param {Function} listener The listener function.
  * @returns {EventEmitter} `this`.

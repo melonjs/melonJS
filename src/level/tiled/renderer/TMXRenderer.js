@@ -7,7 +7,6 @@ import Bounds from "./../../../physics/Bounds.js";
 /**
  * @classdesc
  * The map renderer base class
- * @memberof me
  */
 class TMXRenderer {
     /**
@@ -26,10 +25,10 @@ class TMXRenderer {
 
     /**
      * return true if the renderer can render the specified map or layer
-     * @name me.TMXRenderer#canRender
+     * @name TMXRenderer#canRender
      * @public
      * @function
-     * @param {me.TMXTileMap|me.TMXLayer} component TMX Map or Layer
+     * @param {TMXTileMap|TMXLayer} component TMX Map or Layer
      * @returns {boolean}
      */
     canRender(component) {
@@ -47,11 +46,11 @@ class TMXRenderer {
 
     /**
      * return the bounding rect for this map renderer
-     * @name me.TMXRenderer#getBounds
+     * @name TMXRenderer#getBounds
      * @public
      * @function
-     * @param {me.TMXLayer} [layer] calculate the bounding rect for a specific layer (will return a new bounds object)
-     * @returns {me.Bounds}
+     * @param {TMXLayer} [layer] calculate the bounding rect for a specific layer (will return a new bounds object)
+     * @returns {Bounds}
      */
     getBounds(layer) {
         var bounds = layer instanceof TMXLayer ? pool.pull("Bounds") : this.bounds;
@@ -65,13 +64,13 @@ class TMXRenderer {
 
     /**
      * return the tile position corresponding to the specified pixel
-     * @name me.TMXRenderer#pixelToTileCoords
+     * @name TMXRenderer#pixelToTileCoords
      * @public
      * @function
      * @param {number} x X coordinate
      * @param {number} y Y coordinate
-     * @param {me.Vector2d} [v] an optional vector object where to put the return values
-     * @returns {me.Vector2d}
+     * @param {Vector2d} [v] an optional vector object where to put the return values
+     * @returns {Vector2d}
      */
     pixelToTileCoords(x, y, v) {
         return v;
@@ -79,13 +78,13 @@ class TMXRenderer {
 
     /**
      * return the pixel position corresponding of the specified tile
-     * @name me.TMXRenderer#tileToPixelCoords
+     * @name TMXRenderer#tileToPixelCoords
      * @public
      * @function
      * @param {number} col tile horizontal position
      * @param {number} row tile vertical position
-     * @param {me.Vector2d} [v] an optional vector object where to put the return values
-     * @returns {me.Vector2d}
+     * @param {Vector2d} [v] an optional vector object where to put the return values
+     * @returns {Vector2d}
      */
     tileToPixelCoords(col, row, v) {
         return v;
@@ -93,25 +92,25 @@ class TMXRenderer {
 
     /**
      * draw the given tile at the specified layer
-     * @name me.TMXRenderer#drawTile
+     * @name TMXRenderer#drawTile
      * @public
      * @function
-     * @param {me.CanvasRenderer|me.WebGLRenderer} renderer a renderer object
+     * @param {CanvasRenderer|WebGLRenderer} renderer a renderer object
      * @param {number} x X coordinate where to draw the tile
      * @param {number} y Y coordinate where to draw the tile
-     * @param {me.Tile} tile the tile object to draw
+     * @param {Tile} tile the tile object to draw
      */
     drawTile(renderer, x, y, tile) {
     }
 
     /**
      * draw the given TMX Layer for the given area
-     * @name me.TMXRenderer#drawTileLayer
+     * @name TMXRenderer#drawTileLayer
      * @public
      * @function
-     * @param {me.CanvasRenderer|me.WebGLRenderer} renderer a renderer object
-     * @param {me.TMXLayer} layer a TMX Layer object
-     * @param {me.Rect} rect the area of the layer to draw
+     * @param {CanvasRenderer|WebGLRenderer} renderer a renderer object
+     * @param {TMXLayer} layer a TMX Layer object
+     * @param {Rect} rect the area of the layer to draw
      */
     drawTileLayer(renderer, layer, rect) {
     }

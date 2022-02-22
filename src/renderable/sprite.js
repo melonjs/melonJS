@@ -8,23 +8,22 @@ import Renderable from "./renderable.js";
 /**
  * @classdesc
  * An object to display a fixed or animated sprite on screen.
- * @augments me.Renderable
- * @memberof me
+ * @augments Renderable
  */
 class Sprite extends Renderable {
     /**
      * @param {number} x the x coordinates of the sprite object
      * @param {number} y the y coordinates of the sprite object
      * @param {object} settings Configuration parameters for the Sprite object
-     * @param {me.Renderer.Texture|HTMLImageElement|HTMLCanvasElement|string} settings.image reference to a texture, spritesheet image or to a texture atlas
+     * @param {Renderer.Texture|HTMLImageElement|HTMLCanvasElement|string} settings.image reference to a texture, spritesheet image or to a texture atlas
      * @param {string} [settings.name=""] name of this object
-     * @param {string} [settings.region] region name of a specific region to use when using a texture atlas, see {@link me.Renderer.Texture}
+     * @param {string} [settings.region] region name of a specific region to use when using a texture atlas, see {@link Renderer.Texture}
      * @param {number} [settings.framewidth] Width of a single frame within the spritesheet
      * @param {number} [settings.frameheight] Height of a single frame within the spritesheet
-     * @param {string|me.Color} [settings.tint] a tint to be applied to this sprite
+     * @param {string|Color} [settings.tint] a tint to be applied to this sprite
      * @param {number} [settings.flipX] flip the sprite on the horizontal axis
      * @param {number} [settings.flipY] flip the sprite on the vertical axis
-     * @param {me.Vector2d} [settings.anchorPoint={x:0.5, y:0.5}] Anchor point to draw the frame at (defaults to the center of the frame).
+     * @param {Vector2d} [settings.anchorPoint={x:0.5, y:0.5}] Anchor point to draw the frame at (defaults to the center of the frame).
      * @example
      * // create a single sprite from a standalone image, with anchor in the center
      * var sprite = new me.Sprite(0, 0, {
@@ -54,7 +53,7 @@ class Sprite extends Renderable {
          * @public
          * @type {boolean}
          * @default false
-         * @name me.Sprite#animationpause
+         * @name Sprite#animationpause
          */
         this.animationpause = false;
 
@@ -63,26 +62,26 @@ class Sprite extends Renderable {
          * @public
          * @type {number}
          * @default 100
-         * @name me.Sprite#animationspeed
+         * @name Sprite#animationspeed
          */
         this.animationspeed = 100;
 
         /**
          * global offset for the position to draw from on the source image.
          * @public
-         * @type {me.Vector2d}
+         * @type {Vector2d}
          * @default <0.0,0.0>
          * @name offset
-         * @memberof me.Sprite#
+         * @memberof Sprite#
          */
         this.offset = pool.pull("Vector2d", 0, 0);
 
         /**
          * The source texture object this sprite object is using
          * @public
-         * @type {me.Renderer.Texture}
+         * @type {Renderer.Texture}
          * @name source
-         * @memberof me.Sprite#
+         * @memberof Sprite#
          */
         this.source = null;
 
@@ -211,7 +210,7 @@ class Sprite extends Renderable {
     /**
      * return the flickering state of the object
      * @name isFlickering
-     * @memberof me.Sprite.prototype
+     * @memberof Sprite.prototype
      * @function
      * @returns {boolean}
      */
@@ -222,11 +221,11 @@ class Sprite extends Renderable {
     /**
      * make the object flicker
      * @name flicker
-     * @memberof me.Sprite.prototype
+     * @memberof Sprite.prototype
      * @function
      * @param {number} duration expressed in milliseconds
      * @param {Function} callback Function to call when flickering ends
-     * @returns {me.Sprite} Reference to this object for method chaining
+     * @returns {Sprite} Reference to this object for method chaining
      * @example
      * // make the object flicker for 1 second
      * // and then remove it
@@ -253,14 +252,14 @@ class Sprite extends Renderable {
      * logic as per the following example :<br>
      * <img src="images/spritesheet_grid.png"/>
      * @name addAnimation
-     * @memberof me.Sprite.prototype
+     * @memberof Sprite.prototype
      * @function
      * @param {string} name animation id
      * @param {number[]|string[]|object[]} index list of sprite index or name
      * defining the animation. Can also use objects to specify delay for each frame, see below
      * @param {number} [animationspeed] cycling speed for animation in ms
      * @returns {number} frame amount of frame added to the animation (delay between each frame).
-     * @see me.Sprite#animationspeed
+     * @see Sprite#animationspeed
      * @example
      * // walking animation
      * this.addAnimation("walk", [ 0, 1, 2, 3, 4, 5 ]);
@@ -353,12 +352,12 @@ class Sprite extends Renderable {
      * set the current animation
      * this will always change the animation & set the frame to zero
      * @name setCurrentAnimation
-     * @memberof me.Sprite.prototype
+     * @memberof Sprite.prototype
      * @function
      * @param {string} name animation id
      * @param {string|Function} [resetAnim] animation id to switch to when complete, or callback
      * @param {boolean} [preserve_dt=false] if false will reset the elapsed time counter since last frame
-     * @returns {me.Sprite} Reference to this object for method chaining
+     * @returns {Sprite} Reference to this object for method chaining
      * @example
      * // set "walk" animation
      * this.setCurrentAnimation("walk");
@@ -414,11 +413,11 @@ class Sprite extends Renderable {
     /**
      * reverse the given or current animation if none is specified
      * @name reverseAnimation
-     * @memberof me.Sprite.prototype
+     * @memberof Sprite.prototype
      * @function
      * @param {string} [name] animation id
-     * @returns {me.Sprite} Reference to this object for method chaining
-     * @see me.Sprite#animationspeed
+     * @returns {Sprite} Reference to this object for method chaining
+     * @see Sprite#animationspeed
      */
     reverseAnimation(name) {
         if (typeof name !== "undefined" && typeof this.anim[name] !== "undefined") {
@@ -433,7 +432,7 @@ class Sprite extends Renderable {
     /**
      * return true if the specified animation is the current one.
      * @name isCurrentAnimation
-     * @memberof me.Sprite.prototype
+     * @memberof Sprite.prototype
      * @function
      * @param {string} name animation id
      * @returns {boolean}
@@ -448,12 +447,12 @@ class Sprite extends Renderable {
 
     /**
      * change the current texture atlas region for this sprite
-     * @see me.Texture.getRegion
+     * @see Texture.getRegion
      * @name setRegion
-     * @memberof me.Sprite.prototype
+     * @memberof Sprite.prototype
      * @function
      * @param {object} region typically returned through me.Texture.getRegion()
-     * @returns {me.Sprite} Reference to this object for method chaining
+     * @returns {Sprite} Reference to this object for method chaining
      * @example
      * // change the sprite to "shadedDark13.png";
      * mySprite.setRegion(game.texture.getRegion("shadedDark13.png"));
@@ -482,10 +481,10 @@ class Sprite extends Renderable {
     /**
      * force the current animation frame index.
      * @name setAnimationFrame
-     * @memberof me.Sprite.prototype
+     * @memberof Sprite.prototype
      * @function
      * @param {number} [idx=0] animation frame index
-     * @returns {me.Sprite} Reference to this object for method chaining
+     * @returns {Sprite} Reference to this object for method chaining
      * @example
      * // reset the current animation to the first frame
      * this.setAnimationFrame();
@@ -498,7 +497,7 @@ class Sprite extends Renderable {
     /**
      * return the current animation frame index.
      * @name getCurrentAnimationFrame
-     * @memberof me.Sprite.prototype
+     * @memberof Sprite.prototype
      * @function
      * @returns {number} current animation frame index
      */
@@ -509,7 +508,7 @@ class Sprite extends Renderable {
     /**
      * Returns the frame object by the index.
      * @name getAnimationFrameObjectByIndex
-     * @memberof me.Sprite.prototype
+     * @memberof Sprite.prototype
      * @function
      * @ignore
      * @param {number} id the frame id
@@ -521,9 +520,9 @@ class Sprite extends Renderable {
 
     /**
      * update function. <br>
-     * automatically called by the game manager {@link me.game}
+     * automatically called by the game manager {@link game}
      * @name update
-     * @memberof me.Sprite.prototype
+     * @memberof Sprite.prototype
      * @function
      * @protected
      * @param {number} dt time since the last update in milliseconds.
@@ -600,12 +599,12 @@ class Sprite extends Renderable {
 
     /**
      * sprite draw. <br>
-     * automatically called by the game manager {@link me.game}
+     * automatically called by the game manager {@link game}
      * @name draw
-     * @memberof me.Sprite.prototype
+     * @memberof Sprite.prototype
      * @function
      * @protected
-     * @param {me.CanvasRenderer|me.WebGLRenderer} renderer a renderer object
+     * @param {CanvasRenderer|WebGLRenderer} renderer a renderer object
      */
     draw(renderer) {
         // do nothing if we are flickering

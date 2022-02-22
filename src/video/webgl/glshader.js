@@ -197,7 +197,6 @@ function minify(src) {
 /**
  * @classdesc
  * a base GL Shader object
- * @memberof me
  */
 class GLShader {
     /**
@@ -234,7 +233,7 @@ class GLShader {
          * @public
          * @type {WebGLRenderingContext}
          * @name gl
-         * @memberof me.GLShader
+         * @memberof GLShader
          */
         this.gl = gl;
 
@@ -243,7 +242,7 @@ class GLShader {
          * @public
          * @type {string}
          * @name vertex
-         * @memberof me.GLShader
+         * @memberof GLShader
          */
         this.vertex = setPrecision(minify(vertex), precision || device.getMaxShaderPrecision(this.gl));
 
@@ -252,7 +251,7 @@ class GLShader {
          * @public
          * @type {string}
          * @name vertex
-         * @memberof me.GLShader
+         * @memberof GLShader
          */
         this.fragment = setPrecision(minify(fragment), precision || device.getMaxShaderPrecision(this.gl));
 
@@ -261,7 +260,7 @@ class GLShader {
          * @public
          * @type {GLint[]}
          * @name attributes
-         * @memberof me.GLShader
+         * @memberof GLShader
          */
         this.attributes = extractAttributes(this.gl, this);
 
@@ -271,7 +270,7 @@ class GLShader {
          * @public
          * @type {WebGLProgram}
          * @name program
-         * @memberof me.GLShader
+         * @memberof GLShader
          */
         this.program = compileProgram(this.gl, this.vertex, this.fragment, this.attributes);
 
@@ -280,7 +279,7 @@ class GLShader {
          * @public
          * @type {object}
          * @name uniforms
-         * @memberof me.GLShader
+         * @memberof GLShader
          */
         this.uniforms = extractUniforms(this.gl, this);
 
@@ -293,7 +292,7 @@ class GLShader {
     /**
      * Installs this shader program as part of current rendering state
      * @name bind
-     * @memberof me.GLShader
+     * @memberof GLShader
      * @function
      */
     bind() {
@@ -303,7 +302,7 @@ class GLShader {
     /**
      * returns the location of an attribute variable in this shader program
      * @name getAttribLocation
-     * @memberof me.GLShader
+     * @memberof GLShader
      * @function
      * @param {string} name the name of the attribute variable whose location to get.
      * @returns {GLint} number indicating the location of the variable name if found. Returns -1 otherwise
@@ -320,7 +319,7 @@ class GLShader {
     /**
      * Set the uniform to the given value
      * @name setUniform
-     * @memberof me.GLShader
+     * @memberof GLShader
      * @function
      * @param {string} name the uniform name
      * @param {object|Float32Array} value the value to assign to that uniform
@@ -343,7 +342,7 @@ class GLShader {
     /**
      * destroy this shader objects resources (program, attributes, uniforms)
      * @name destroy
-     * @memberof me.GLShader
+     * @memberof GLShader
      * @function
      */
     destroy() {

@@ -294,7 +294,6 @@ function preloadJavascript(data, onload, onerror) {
 /**
  * a small class to manage loading of stuff and manage resources
  * @namespace loader
- * @memberof me
  */
 var loader = {
 
@@ -313,7 +312,7 @@ var loader = {
      * @public
      * @function
      * @name onload
-     * @memberof me.loader
+     * @memberof loader
      * @example
      * // set a callback when everything is loaded
      * me.loader.onload = this.loaded.bind(this);
@@ -327,7 +326,7 @@ var loader = {
      * @public
      * @function
      * @name onProgress
-     * @memberof me.loader
+     * @memberof loader
      * @example
      * // set a callback for progress notification
      * me.loader.onProgress = this.updateProgress.bind(this);
@@ -343,7 +342,7 @@ var loader = {
      * @type {string}
      * @name crossOrigin
      * @default undefined
-     * @memberof me.loader
+     * @memberof loader
      * @see https://developer.mozilla.org/en-US/docs/Web/HTML/CORS_settings_attributes
      * @example
      *  // allow for cross-origin texture loading in WebGL
@@ -361,7 +360,7 @@ var loader = {
      * @type {boolean}
      * @name withCredentials
      * @default false
-     * @memberof me.loader
+     * @memberof loader
      * @see https://developer.mozilla.org/en-US/docs/Web/API/XMLHttpRequest/withCredentials
      * @example
      *  // enable withCredentials
@@ -411,7 +410,7 @@ var loader = {
      * change the default baseURL for the given asset type.<br>
      * (this will prepend the asset URL and must finish with a '/')
      * @name setBaseURL
-     * @memberof me.loader
+     * @memberof loader
      * @public
      * @function
      * @param {string} type  "*", "audio", binary", "image", "json", "js", "tmx", "tsx"
@@ -442,7 +441,7 @@ var loader = {
     /**
      * set all the specified game resources to be preloaded.
      * @name preload
-     * @memberof me.loader
+     * @memberof loader
      * @public
      * @function
      * @param {object[]} res
@@ -450,7 +449,7 @@ var loader = {
      * @param {string} res.type  "audio", binary", "image", "json","js", "tmx", "tsx", "fontface"
      * @param {string} res.src  path and/or file name of the resource (for audio assets only the path is required)
      * @param {boolean} [res.stream] Set to true to force HTML5 Audio, which allows not to wait for large file to be downloaded before playing.
-     * @param {Function} [onload=me.loader.onload] function to be called when all resources are loaded
+     * @param {Function} [onload=loader.onload] function to be called when all resources are loaded
      * @param {boolean} [switchToLoadState=true] automatically switch to the loading screen
      * @example
      * game_resources = [
@@ -507,7 +506,7 @@ var loader = {
     /**
      * Load a single resource (to be used if you need to load additional resource during the game)
      * @name load
-     * @memberof me.loader
+     * @memberof loader
      * @public
      * @function
      * @param {object} res
@@ -577,7 +576,7 @@ var loader = {
     /**
      * unload specified resource to free memory
      * @name unload
-     * @memberof me.loader
+     * @memberof loader
      * @public
      * @function
      * @param {object} res
@@ -639,7 +638,7 @@ var loader = {
     /**
      * unload all resources to free memory
      * @name unloadAll
-     * @memberof me.loader
+     * @memberof loader
      * @public
      * @function
      * @example me.loader.unloadAll();
@@ -694,7 +693,7 @@ var loader = {
     /**
      * return the specified TMX/TSX object
      * @name getTMX
-     * @memberof me.loader
+     * @memberof loader
      * @public
      * @function
      * @param {string} elt name of the tmx/tsx element ("map1");
@@ -712,7 +711,7 @@ var loader = {
     /**
      * return the specified Binary object
      * @name getBinary
-     * @memberof me.loader
+     * @memberof loader
      * @public
      * @function
      * @param {string} elt name of the binary object ("ymTrack");
@@ -730,7 +729,7 @@ var loader = {
     /**
      * return the specified Image Object
      * @name getImage
-     * @memberof me.loader
+     * @memberof loader
      * @public
      * @function
      * @param {string} image name of the Image element ("tileset-platformer");
@@ -749,7 +748,7 @@ var loader = {
     /**
      * return the specified JSON Object
      * @name getJSON
-     * @memberof me.loader
+     * @memberof loader
      * @public
      * @function
      * @param {string} elt name of the json file to load

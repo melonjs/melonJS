@@ -7,8 +7,7 @@ import { degToRad } from "./../../../math/math.js";
 /**
  * @classdesc
  * a Staggered Map Renderder
- * @memberof me
- * @augments me.TMXHexagonalRenderer
+ * @augments TMXHexagonalRenderer
  */
 class TMXStaggeredRenderer extends TMXHexagonalRenderer {
 

@@ -1,6 +1,5 @@
 /**
- * @namespace me.input
- * @memberof me
+ * @namespace input
  */
 
 /**
@@ -9,7 +8,7 @@
  * @type {boolean}
  * @default true
  * @name preventDefault
- * @memberof me.input
+ * @memberof input
  */
 export var preventDefault = true;
 

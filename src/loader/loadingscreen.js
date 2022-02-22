@@ -117,7 +117,6 @@ class IconLogo extends Renderable {
 
 /**
  * a default loading screen
- * @memberof me
  * @ignore
  */
 class DefaultLoadingScreen extends Stage {

@@ -1,10 +1,9 @@
 /**
  * @classdesc
  * a bitmap font object
- * @augments me.Renderable
- * @memberof me
+ * @augments Renderable
  */
-export class BitmapText {
+export class BitmapText extends Renderable {
     /**
      * @param {number} x position of the text object
      * @param {number} y position of the text object
@@ -12,12 +11,12 @@ export class BitmapText {
      * @param {string|Image} settings.font a font name to identify the corresponing source image
      * @param {string} [settings.fontData=settings.font] the bitmap font data corresponding name, or the bitmap font data itself
      * @param {number} [settings.size] size a scaling ratio
-     * @param {me.Color|string} [settings.fillStyle] a CSS color value used to tint the bitmapText (@see me.BitmapText.tint)
+     * @param {Color|string} [settings.fillStyle] a CSS color value used to tint the bitmapText (@see BitmapText.tint)
      * @param {number} [settings.lineWidth=1] line width, in pixels, when drawing stroke
      * @param {string} [settings.textAlign="left"] horizontal text alignment
      * @param {string} [settings.textBaseline="top"] the text baseline
      * @param {number} [settings.lineHeight=1.0] line spacing height
-     * @param {me.Vector2d} [settings.anchorPoint={x:0.0, y:0.0}] anchor point to draw the text at
+     * @param {Vector2d} [settings.anchorPoint={x:0.0, y:0.0}] anchor point to draw the text at
      * @param {(string|string[])} [settings.text] a string, or an array of strings
      * @example
      * // Use me.loader.preload or me.loader.load to load assets
@@ -37,12 +36,12 @@ export class BitmapText {
         font: string | (new (width?: number, height?: number) => HTMLImageElement);
         fontData?: string;
         size?: number;
-        fillStyle?: me.Color | string;
+        fillStyle?: Color | string;
         lineWidth?: number;
         textAlign?: string;
         textBaseline?: string;
         lineHeight?: number;
-        anchorPoint?: me.Vector2d;
+        anchorPoint?: Vector2d;
         text?: (string | string[]);
     });
     /**
@@ -52,7 +51,7 @@ export class BitmapText {
      * @type {string}
      * @default "left"
      * @name textAlign
-     * @memberof me.BitmapText
+     * @memberof BitmapText
      */
     public textAlign: string;
     /**
@@ -62,7 +61,7 @@ export class BitmapText {
      * @type {string}
      * @default "top"
      * @name textBaseline
-     * @memberof me.BitmapText
+     * @memberof BitmapText
      */
     public textBaseline: string;
     /**
@@ -72,7 +71,7 @@ export class BitmapText {
      * @type {number}
      * @default 1.0
      * @name lineHeight
-     * @memberof me.BitmapText
+     * @memberof BitmapText
      */
     public lineHeight: number;
     /**
@@ -80,15 +79,15 @@ export class BitmapText {
      * @private
      * @type {string[]}
      * @name _text
-     * @memberof me.BitmapText
+     * @memberof BitmapText
      */
     private _text;
     /**
      * scaled font size
      * @private
-     * @type {me.Vector2d}
+     * @type {Vector2d}
      * @name fontScale
-     * @memberof me.BitmapText
+     * @memberof BitmapText
      */
     private fontScale;
     /**
@@ -96,7 +95,7 @@ export class BitmapText {
      * @private
      * @type {HTMLImageElement}
      * @name fontImage
-     * @memberof me.BitmapText
+     * @memberof BitmapText
      */
     private fontImage;
     /**
@@ -104,84 +103,51 @@ export class BitmapText {
      * @private
      * @type {BitmapTextData}
      * @name fontData
-     * @memberof me.BitmapText
+     * @memberof BitmapText
      */
     private fontData;
-    floating: boolean;
     /**
      * change the font settings
      * @name set
-     * @memberof me.BitmapText.prototype
+     * @memberof BitmapText.prototype
      * @function
      * @param {string} textAlign ("left", "center", "right")
      * @param {number} [scale]
-     * @returns {me.BitmapText} this object for chaining
+     * @returns {BitmapText} this object for chaining
      */
-    set(textAlign: string, scale?: number): me.BitmapText;
-    isDirty: boolean;
+    set(textAlign: string, scale?: number): BitmapText;
     /**
      * change the text to be displayed
      * @name setText
-     * @memberof me.BitmapText.prototype
+     * @memberof BitmapText.prototype
      * @function
      * @param {number|string|string[]} value a string, or an array of strings
-     * @returns {me.BitmapText} this object for chaining
+     * @returns {BitmapText} this object for chaining
      */
-    setText(value: number | string | string[]): me.BitmapText;
-    public set fillStyle(arg: me.Color);
+    setText(value: number | string | string[]): BitmapText;
+    public set fillStyle(arg: Color);
     /**
      * defines the color used to tint the bitmap text
      * @public
-     * @type {me.Color}
+     * @type {Color}
      * @name fillStyle
-     * @see me.Renderable#tint
-     * @memberof me.BitmapText
+     * @see Renderable#tint
+     * @memberof BitmapText
      */
-    public get fillStyle(): me.Color;
-    tint: me.Color;
-    /**
-     * change the font display size
-     * @name resize
-     * @memberof me.BitmapText.prototype
-     * @function
-     * @param {number} scale ratio
-     * @returns {me.BitmapText} this object for chaining
-     */
-    resize(scale: number): me.BitmapText;
+    public get fillStyle(): Color;
     /**
      * measure the given text size in pixels
      * @name measureText
-     * @memberof me.BitmapText.prototype
+     * @memberof BitmapText.prototype
      * @function
      * @param {string} [text]
-     * @param {me.Rect} [ret] a object in which to store the text metrics
+     * @param {Rect} [ret] a object in which to store the text metrics
      * @returns {TextMetrics} a TextMetrics object with two properties: `width` and `height`, defining the output dimensions
      */
-    measureText(text?: string, ret?: me.Rect): TextMetrics;
-    /**
-     * @ignore
-     */
-    update(): boolean;
-    /**
-     * draw the bitmap font
-     * @name draw
-     * @memberof me.BitmapText.prototype
-     * @function
-     * @param {me.CanvasRenderer|me.WebGLRenderer} renderer Reference to the destination renderer instance
-     * @param {string} [text]
-     * @param {number} [x]
-     * @param {number} [y]
-     */
-    draw(renderer: me.CanvasRenderer | me.WebGLRenderer, text?: string, x?: number, y?: number): void;
-    /**
-     * Destroy function
-     * @ignore
-     */
-    destroy(): void;
+    measureText(text?: string, ret?: Rect): TextMetrics;
 }
 /**
  * Class for storing relevant data from the font file.
- * @memberof me
  * @ignore
  */
 export class BitmapTextData {
@@ -204,13 +170,13 @@ export class BitmapTextData {
      * The map of glyphs, each key is a char code.
      * @name glyphs
      * @type {object}
-     * @memberof me.BitmapTextData
+     * @memberof BitmapTextData
      */
     glyphs: object;
     /**
      * This parses the font data text and builds a map of glyphs containing the data for each character
      * @name parse
-     * @memberof me.BitmapTextData
+     * @memberof BitmapTextData
      * @function
      * @param {string} fontData
      */
@@ -219,60 +185,49 @@ export class BitmapTextData {
 /**
  * @classdesc
  * a Generic Physic Body Object with some physic properties and behavior functionality, to as a member of a Renderable.
- * @memberof me
  */
 export class Body {
     /**
-     * @param {me.Renderable} ancestor the parent object this body is attached to
-     * @param {me.Rect|me.Rect[]|me.Polygon|me.Polygon[]|me.Line|me.Line[]|me.Ellipse|me.Ellipse[]|me.Bounds|me.Bounds[]|object} [shapes] a initial shape, list of shapes, or JSON object defining the body
+     * @param {Renderable} ancestor the parent object this body is attached to
+     * @param {Rect|Rect[]|Polygon|Polygon[]|Line|Line[]|Ellipse|Ellipse[]|Bounds|Bounds[]|object} [shapes] a initial shape, list of shapes, or JSON object defining the body
      * @param {Function} [onBodyUpdate] callback for when the body is updated (e.g. add/remove shapes)
      */
-    constructor(ancestor: me.Renderable, shapes?: me.Rect | me.Rect[] | me.Polygon | me.Polygon[] | me.Line | me.Line[] | me.Ellipse | me.Ellipse[] | me.Bounds | me.Bounds[] | object, onBodyUpdate?: Function);
+    constructor(ancestor: Renderable, shapes?: Rect | Rect[] | Polygon | Polygon[] | Line | Line[] | Ellipse | Ellipse[] | Bounds | Bounds[] | object, onBodyUpdate?: Function);
     /**
      * a reference to the parent object that contains this body,
      * or undefined if it has not been added to one.
      * @public
-     * @type {me.Renderable}
+     * @type {Renderable}
      * @default undefined
-     * @name ancestor
-     * @memberof me.Body
      */
-    public ancestor: me.Renderable;
+    public ancestor: Renderable;
     /**
      * The AABB bounds box reprensenting this body
      * @public
-     * @type {me.Bounds}
-     * @name bounds
-     * @memberof me.Body
+     * @type {Bounds}
      */
-    public bounds: me.Bounds;
+    public bounds: Bounds;
     /**
      * The collision shapes of the body
      * @ignore
-     * @type {me.Polygon[]|me.Line[]|me.Ellipse[]}
-     * @name shapes
-     * @memberof me.Body
+     * @type {Polygon[]|Line[]|Ellipse[]}
      */
-    shapes: me.Polygon[] | me.Line[] | me.Ellipse[];
+    shapes: Polygon[] | Line[] | Ellipse[];
     /**
      * The body collision mask, that defines what should collide with what.<br>
      * (by default will collide with all entities)
      * @ignore
      * @type {number}
-     * @default me.collision.types.ALL_OBJECT
-     * @name collisionMask
-     * @see me.collision.types
-     * @memberof me.Body
+     * @default collision.types.ALL_OBJECT
+     * @see collision.types
      */
     collisionMask: number;
     /**
      * define the collision type of the body for collision filtering
      * @public
      * @type {number}
-     * @default me.collision.types.ENEMY_OBJECT
-     * @name collisionType
-     * @see me.collision.types
-     * @memberof me.Body
+     * @default collision.types.ENEMY_OBJECT
+     * @see collision.types
      * @example
      * // set the body collision type
      * myEntity.body.collisionType = me.collision.types.PLAYER_OBJECT;
@@ -287,8 +242,6 @@ export class Body {
      * @public
      * @type {number}
      * @default 0
-     * @name bounce
-     * @memberof me.Body
      */
     public bounce: number;
     /**
@@ -296,8 +249,6 @@ export class Body {
      * @public
      * @type {number}
      * @default 1
-     * @name mass
-     * @memberof me.Body
      */
     public mass: number;
     maxVel: Vector2d;
@@ -307,28 +258,22 @@ export class Body {
      * @public
      * @type {boolean}
      * @default false
-     * @name isStatic
-     * @memberof me.Body
      */
     public readonly isStatic: boolean;
     /**
      * The degree to which this body is affected by the world gravity
      * @public
-     * @see me.World.gravity
+     * @see World.gravity
      * @type {number}
      * @default 1.0
-     * @name gravityScale
-     * @memberof me.Body
      */
     public gravityScale: number;
     /**
      * If true this body won't be affected by the world gravity
      * @public
-     * @see me.World.gravity
+     * @see World.gravity
      * @type {boolean}
      * @default false
-     * @name ignoreGravity
-     * @memberof me.Body
      */
     public ignoreGravity: boolean;
     /**
@@ -339,8 +284,6 @@ export class Body {
      * @public
      * @type {boolean}
      * @default false
-     * @name falling
-     * @memberof me.Body
      */
     public readonly falling: boolean;
     /**
@@ -350,29 +293,19 @@ export class Body {
      * @public
      * @type {boolean}
      * @default false
-     * @name jumping
-     * @memberof me.Body
      */
     public readonly jumping: boolean;
     onBodyUpdate: Function;
     /**
      * set the body as a static body
      * static body do not move automatically and do not check againt collision with others
-     * @name setStatic
-     * @memberof me.Body
-     * @public
-     * @function
      * @param {boolean} [isStatic=true]
      */
-    public setStatic(isStatic?: boolean): void;
+    setStatic(isStatic?: boolean): void;
     /**
      * add a collision shape to this body <br>
      * (note: me.Rect objects will be converted to me.Polygon before being added)
-     * @name addShape
-     * @memberof me.Body
-     * @public
-     * @function
-     * @param {me.Rect|me.Polygon|me.Line|me.Ellipse|me.Bounds|object} shape a shape or JSON object
+     * @param {Rect|Polygon|Line|Ellipse|Bounds|object} shape a shape or JSON object
      * @returns {number} the shape array length
      * @example
      * // add a rectangle shape
@@ -380,35 +313,23 @@ export class Body {
      * // add a shape from a JSON object
      * this.body.addShape(me.loader.getJSON("shapesdef").banana);
      */
-    public addShape(shape: me.Rect | me.Polygon | me.Line | me.Ellipse | me.Bounds | object): number;
+    addShape(shape: Rect | Polygon | Line | Ellipse | Bounds | object): number;
     /**
      * set the body vertices to the given one
-     * @name setVertices
-     * @memberof me.Body
-     * @public
-     * @function
-     * @param {me.Vector2d[]} vertices an array of me.Vector2d points defining a convex hull
+     * @param {Vector2d[]} vertices an array of me.Vector2d points defining a convex hull
      * @param {number} [index=0] the shape object for which to set the vertices
      * @param {boolean} [clear=true] either to reset the body definition before adding the new vertices
      */
-    public setVertices(vertices: me.Vector2d[], index?: number, clear?: boolean): void;
+    setVertices(vertices: Vector2d[], index?: number, clear?: boolean): void;
     /**
      * add the given vertices to the body shape
-     * @name addVertices
-     * @memberof me.Body
-     * @public
-     * @function
-     * @param {me.Vector2d[]} vertices an array of me.Vector2d points defining a convex hull
+     * @param {Vector2d[]} vertices an array of me.Vector2d points defining a convex hull
      * @param {number} [index=0] the shape object for which to set the vertices
      */
-    public addVertices(vertices: me.Vector2d[], index?: number): void;
+    addVertices(vertices: Vector2d[], index?: number): void;
     /**
      * add collision mesh based on a JSON object
      * (this will also apply any physic properties defined in the given JSON file)
-     * @name fromJSON
-     * @memberof me.Body
-     * @public
-     * @function
      * @param {object} json a JSON object as exported from a Physics Editor tool
      * @param {string} [id] an optional shape identifier within the given the json object
      * @see https://www.codeandweb.com/physicseditor
@@ -419,55 +340,37 @@ export class Body {
      * // or ...
      * this.body.fromJSON(me.loader.getJSON("shapesdef"), "banana");
      */
-    public fromJSON(json: object, id?: string): number;
+    fromJSON(json: object, id?: string): number;
     /**
      * return the collision shape at the given index
-     * @name getShape
-     * @memberof me.Body
-     * @public
-     * @function
      * @param {number} [index=0] the shape object at the specified index
-     * @returns {me.Polygon|me.Line|me.Ellipse} shape a shape object if defined
+     * @returns {Polygon|Line|Ellipse} shape a shape object if defined
      */
-    public getShape(index?: number): me.Polygon | me.Line | me.Ellipse;
+    getShape(index?: number): Polygon | Line | Ellipse;
     /**
      * returns the AABB bounding box for this body
-     * @name getBounds
-     * @memberof me.Body
      * @function
-     * @returns {me.Bounds} bounding box Rectangle object
+     * @returns {Bounds} bounding box Rectangle object
      */
-    getBounds(): me.Bounds;
+    getBounds(): Bounds;
     /**
      * remove the specified shape from the body shape list
-     * @name removeShape
-     * @memberof me.Body
-     * @public
-     * @function
-     * @param {me.Polygon|me.Line|me.Ellipse} shape a shape object
+     * @param {Polygon|Line|Ellipse} shape a shape object
      * @returns {number} the shape array length
      */
-    public removeShape(shape: me.Polygon | me.Line | me.Ellipse): number;
+    removeShape(shape: Polygon | Line | Ellipse): number;
     /**
      * remove the shape at the given index from the body shape list
-     * @name removeShapeAt
-     * @memberof me.Body
-     * @public
-     * @function
      * @param {number} index the shape object at the specified index
      * @returns {number} the shape array length
      */
-    public removeShapeAt(index: number): number;
+    removeShapeAt(index: number): number;
     /**
      * By default all entities are able to collide with all other entities, <br>
      * but it's also possible to specify 'collision filters' to provide a finer <br>
      * control over which entities can collide with each other.
-     * @name setCollisionMask
-     * @memberof me.Body
-     * @public
-     * @function
-     * @see me.collision.types
-     * @param {number} [bitmask = me.collision.types.ALL_OBJECT] the collision mask
+     * @see collision.types
+     * @param {number} [bitmask = collision.types.ALL_OBJECT] the collision mask
      * @example
      * // filter collision detection with collision shapes, enemies and collectables
      * myEntity.body.setCollisionMask(me.collision.types.WORLD_SHAPE | me.collision.types.ENEMY_OBJECT | me.collision.types.COLLECTABLE_OBJECT);
@@ -475,38 +378,27 @@ export class Body {
      * // disable collision detection with all other objects
      * myEntity.body.setCollisionMask(me.collision.types.NO_OBJECT);
      */
-    public setCollisionMask(bitmask?: number): void;
+    setCollisionMask(bitmask?: number): void;
     /**
      * define the collision type of the body for collision filtering
-     * @name setCollisionType
-     * @memberof me.Body
-     * @public
-     * @function
-     * @see me.collision.types
+     * @see collision.types
      * @param {number} type the collision type
      * @example
      * // set the body collision type
      * myEntity.body.collisionType = me.collision.types.PLAYER_OBJECT;
      */
-    public setCollisionType(type: number): void;
+    setCollisionType(type: number): void;
     /**
      * the built-in function to solve the collision response
-     * @protected
-     * @name respondToCollision
-     * @memberof me.Body
-     * @function
-     * @param {me.collision.ResponseObject} response the collision response object
+     * @param {collision.ResponseObject} response the collision response object
      */
-    protected respondToCollision(response: me.collision.ResponseObject): void;
+    respondToCollision(response: collision.ResponseObject): void;
     /**
      * The forEach() method executes a provided function once per body shape element. <br>
      * the callback function is invoked with three arguments: <br>
      *    - The current element being processed in the array <br>
      *    - The index of element in the array. <br>
      *    - The array forEach() was called upon. <br>
-     * @name forEach
-     * @memberof me.Body.prototype
-     * @function
      * @param {Function} callback fnction to execute on each element
      * @param {object} [thisArg] value to use as this(i.e reference Object) when executing callback.
      * @example
@@ -521,17 +413,11 @@ export class Body {
     forEach(callback: Function, thisArg?: object, ...args: any[]): void;
     /**
      * Returns true if the any of the shape composing the body contains the given point.
-     * @name contains
-     * @memberof me.Body
-     * @function
-     * @param  {me.Vector2d} point
+     * @param {Vector2d} point
      * @returns {boolean} true if contains
      */
     /**
      * Returns true if the any of the shape composing the body contains the given point.
-     * @name contains
-     * @memberof me.Body
-     * @function
      * @param  {number} x x coordinate
      * @param  {number} y y coordinate
      * @returns {boolean} true if contains
@@ -540,19 +426,13 @@ export class Body {
     /**
      * Rotate this body (counter-clockwise) by the specified angle (in radians).
      * Unless specified the body will be rotated around its center point
-     * @name rotate
-     * @memberof me.Body
-     * @function
      * @param {number} angle The angle to rotate (in radians)
-     * @param {me.Vector2d|me.ObservableVector2d} [v=me.Body.getBounds().center] an optional point to rotate around
-     * @returns {me.Body} Reference to this object for method chaining
+     * @param {Vector2d|ObservableVector2d} [v=Body.getBounds().center] an optional point to rotate around
+     * @returns {Body} Reference to this object for method chaining
      */
-    rotate(angle: number, v?: me.Vector2d | me.ObservableVector2d): me.Body;
+    rotate(angle: number, v?: Vector2d | ObservableVector2d): Body;
     /**
      * cap the body velocity (body.maxVel property) to the specified value<br>
-     * @name setMaxVelocity
-     * @memberof me.Body
-     * @function
      * @param {number} x max velocity on x axis
      * @param {number} y max velocity on y axis
      * @protected
@@ -560,9 +440,6 @@ export class Body {
     protected setMaxVelocity(x: number, y: number): void;
     /**
      * set the body default friction
-     * @name setFriction
-     * @memberof me.Body
-     * @function
      * @param {number} x horizontal friction
      * @param {number} y vertical friction
      * @protected
@@ -586,14 +463,11 @@ export class Body {
      * property is set to true and Body.jumping is set to !Body.falling.
      *
      * At this time a call to Body.Update does not call the onBodyUpdate callback that is listed in the constructor arguments.
-     * @name update
-     * @ignore
-     * @memberof me.Body
-     * @function
+     * @protected
      * @param {number} dt time since the last update in milliseconds.
      * @returns {boolean} true if resulting velocity is different than 0
      */
-    update(dt: number): boolean;
+    protected update(dt: number): boolean;
     /**
      * Destroy function<br>
      * @ignore
@@ -603,13 +477,12 @@ export class Body {
 /**
  * @classdesc
  * a bound object contains methods for creating and manipulating axis-aligned bounding boxes (AABB).
- * @memberof me
  */
 declare class Bounds$1 {
     /**
-     * @param {me.Vector2d[]} [vertices] an array of me.Vector2d points
+     * @param {Vector2d[]} [vertices] an array of me.Vector2d points
      */
-    constructor(vertices?: me.Vector2d[]);
+    constructor(vertices?: Vector2d[]);
     /**
      * @ignore
      */
@@ -626,14 +499,14 @@ declare class Bounds$1 {
     /**
      * reset the bound
      * @name clear
-     * @memberof me.Bounds
+     * @memberof Bounds
      * @function
      */
     clear(): void;
     /**
      * sets the bounds to the given min and max value
      * @name setMinMax
-     * @memberof me.Bounds
+     * @memberof Bounds
      * @function
      * @param {number} minX
      * @param {number} minY
@@ -647,7 +520,7 @@ declare class Bounds$1 {
      * @public
      * @type {number}
      * @name x
-     * @memberof me.Bounds
+     * @memberof Bounds
      */
     public get x(): number;
     public set y(arg: number);
@@ -656,7 +529,7 @@ declare class Bounds$1 {
      * @public
      * @type {number}
      * @name y
-     * @memberof me.Bounds
+     * @memberof Bounds
      */
     public get y(): number;
     public set width(arg: number);
@@ -665,7 +538,7 @@ declare class Bounds$1 {
      * @public
      * @type {number}
      * @name width
-     * @memberof me.Bounds
+     * @memberof Bounds
      */
     public get width(): number;
     public set height(arg: number);
@@ -674,7 +547,7 @@ declare class Bounds$1 {
      * @public
      * @type {number}
      * @name width
-     * @memberof me.Bounds
+     * @memberof Bounds
      */
     public get height(): number;
     /**
@@ -682,7 +555,7 @@ declare class Bounds$1 {
      * @public
      * @type {number}
      * @name left
-     * @memberof me.Bounds
+     * @memberof Bounds
      */
     public get left(): number;
     /**
@@ -690,7 +563,7 @@ declare class Bounds$1 {
      * @public
      * @type {number}
      * @name right
-     * @memberof me.Bounds
+     * @memberof Bounds
      */
     public get right(): number;
     /**
@@ -698,7 +571,7 @@ declare class Bounds$1 {
      * @public
      * @type {number}
      * @name top
-     * @memberof me.Bounds
+     * @memberof Bounds
      */
     public get top(): number;
     /**
@@ -706,7 +579,7 @@ declare class Bounds$1 {
      * @public
      * @type {number}
      * @name bottom
-     * @memberof me.Bounds
+     * @memberof Bounds
      */
     public get bottom(): number;
     /**
@@ -714,7 +587,7 @@ declare class Bounds$1 {
      * @public
      * @type {number}
      * @name centerX
-     * @memberof me.Bounds
+     * @memberof Bounds
      */
     public get centerX(): number;
     /**
@@ -722,76 +595,76 @@ declare class Bounds$1 {
      * @public
      * @type {number}
      * @name centerY
-     * @memberof me.Bounds
+     * @memberof Bounds
      */
     public get centerY(): number;
     /**
      * return the center position of the bound
      * @public
-     * @type {me.Vector2d}
+     * @type {Vector2d}
      * @name center
-     * @memberof me.Bounds
+     * @memberof Bounds
      */
-    public get center(): me.Vector2d;
+    public get center(): Vector2d;
     /**
      * Updates bounds using the given vertices
      * @name update
-     * @memberof me.Bounds
+     * @memberof Bounds
      * @function
-     * @param {me.Vector2d[]} vertices an array of me.Vector2d points
+     * @param {Vector2d[]} vertices an array of me.Vector2d points
      */
-    update(vertices: me.Vector2d[]): void;
+    update(vertices: Vector2d[]): void;
     /**
      * add the given vertices to the bounds definition.
      * @name add
-     * @memberof me.Bounds
+     * @memberof Bounds
      * @function
-     * @param {me.Vector2d[]} vertices an array of me.Vector2d points
+     * @param {Vector2d[]} vertices an array of me.Vector2d points
      * @param {boolean} [clear=false] either to reset the bounds before adding the new vertices
      */
-    add(vertices: me.Vector2d[], clear?: boolean): void;
+    add(vertices: Vector2d[], clear?: boolean): void;
     /**
      * add the given bounds to the bounds definition.
      * @name addBounds
-     * @memberof me.Bounds
+     * @memberof Bounds
      * @function
-     * @param {me.Bounds} bounds
+     * @param {Bounds} bounds
      * @param {boolean} [clear=false] either to reset the bounds before adding the new vertices
      */
-    addBounds(bounds: me.Bounds, clear?: boolean): void;
+    addBounds(bounds: Bounds, clear?: boolean): void;
     /**
      * add the given point to the bounds definition.
      * @name addPoint
-     * @memberof me.Bounds
+     * @memberof Bounds
      * @function
-     * @param {me.Vector2d} v
-     * @param {me.Matrix2d} [m] an optional transform to apply to the given point
+     * @param {Vector2d} v
+     * @param {Matrix2d} [m] an optional transform to apply to the given point
      */
-    addPoint(v: me.Vector2d, m?: me.Matrix2d): void;
+    addPoint(v: Vector2d, m?: Matrix2d): void;
     /**
      * add the given quad coordinates to this bound definition, multiplied by the given matrix
      * @name addFrame
-     * @memberof me.Bounds
+     * @memberof Bounds
      * @function
      * @param {number} x0 - left X coordinates of the quad
      * @param {number} y0 - top Y coordinates of the quad
      * @param {number} x1 - right X coordinates of the quad
      * @param {number} y1 - bottom y coordinates of the quad
-     * @param {me.Matrix2d} [m] an optional transform to apply to the given frame coordinates
+     * @param {Matrix2d} [m] an optional transform to apply to the given frame coordinates
      */
-    addFrame(x0: number, y0: number, x1: number, y1: number, m?: me.Matrix2d): void;
+    addFrame(x0: number, y0: number, x1: number, y1: number, m?: Matrix2d): void;
     /**
      * Returns true if the bounds contains the given point.
      * @name contains
-     * @memberof me.Bounds
+     * @memberof Bounds
      * @function
-     * @param {me.Vector2d} point
+     * @param {Vector2d} point
      * @returns {boolean} True if the bounds contain the point, otherwise false
      */
     /**
      * Returns true if the bounds contains the given point.
      * @name contains
-     * @memberof me.Bounds
+     * @memberof Bounds
      * @function
      * @param {number} x
      * @param {number} y
@@ -801,16 +674,16 @@ declare class Bounds$1 {
     /**
      * Returns true if the two bounds intersect.
      * @name overlaps
-     * @memberof me.Bounds
+     * @memberof Bounds
      * @function
-     * @param {me.Bounds|me.Rect} bounds
+     * @param {Bounds|Rect} bounds
      * @returns {boolean} True if the bounds overlap, otherwise false
      */
-    overlaps(bounds: me.Bounds | me.Rect): boolean;
+    overlaps(bounds: Bounds | Rect): boolean;
     /**
      * determines whether all coordinates of this bounds are finite numbers.
      * @name isFinite
-     * @memberof me.Bounds
+     * @memberof Bounds
      * @function
      * @returns {boolean} false if all coordinates are positive or negative Infinity or NaN; otherwise, true.
      */
@@ -818,14 +691,14 @@ declare class Bounds$1 {
     /**
      * Translates the bounds by the given vector.
      * @name translate
-     * @memberof me.Bounds
+     * @memberof Bounds
      * @function
-     * @param {me.Vector2d} vector
+     * @param {Vector2d} vector
      */
     /**
      * Translates the bounds by x on the x axis, and y on the y axis
      * @name translate
-     * @memberof me.Bounds
+     * @memberof Bounds
      * @function
      * @param {number} x
      * @param {number} y
@@ -834,14 +707,14 @@ declare class Bounds$1 {
     /**
      * Shifts the bounds to the given position vector.
      * @name shift
-     * @memberof me.Bounds
+     * @memberof Bounds
      * @function
-     * @param {me.Vector2d} position
+     * @param {Vector2d} position
      */
     /**
      * Shifts the bounds to the given x, y position.
      * @name shift
-     * @memberof me.Bounds
+     * @memberof Bounds
      * @function
      * @param {number} x
      * @param {number} y
@@ -850,34 +723,26 @@ declare class Bounds$1 {
     /**
      * clone this bounds
      * @name clone
-     * @memberof me.Bounds
+     * @memberof Bounds
      * @function
-     * @returns {me.Bounds}
+     * @returns {Bounds}
      */
-    clone(): me.Bounds;
+    clone(): Bounds;
     /**
      * Returns a polygon whose edges are the same as this bounds.
      * @name toPolygon
-     * @memberof me.Bounds
+     * @memberof Bounds
      * @function
-     * @returns {me.Polygon} a new Polygon that represents this bounds.
+     * @returns {Polygon} a new Polygon that represents this bounds.
      */
-    toPolygon(): me.Polygon;
+    toPolygon(): Polygon;
 }
 /**
  * @classdesc
  * a 2D orthographic camera
- * @augments me.Renderable
- * @memberof me
+ * @augments Renderable
  */
-export class Camera2d {
-    /**
-     * @param {number} minX start x offset
-     * @param {number} minY start y offset
-     * @param {number} maxX end x offset
-     * @param {number} maxY end y offset
-     */
-    constructor(minX: number, minY: number, maxX: number, maxY: number);
+export class Camera2d extends Renderable {
     /**
      * Axis definition
      * @property {number} NONE no axis
@@ -888,7 +753,7 @@ export class Camera2d {
      * @constant
      * @enum {number}
      * @name AXIS
-     * @memberof me.Camera2d
+     * @memberof Camera2d
      */
     public AXIS: {
         NONE: number;
@@ -899,19 +764,19 @@ export class Camera2d {
     /**
      * Camera bounds
      * @public
-     * @type {me.Bounds}
+     * @type {Bounds}
      * @name bounds
-     * @memberof me.Camera2d
+     * @memberof Camera2d
      */
-    public bounds: me.Bounds;
+    public bounds: Bounds;
     /**
      * [IMTERNAL] enable or disable damping
      * @private
      * @type {boolean}
      * @name smoothFollow
-     * @see me.Camera2d.damping
+     * @see Camera2d.damping
      * @default true
-     * @memberof me.Camera2d
+     * @memberof Camera2d
      */
     private smoothFollow;
     /**
@@ -921,7 +786,7 @@ export class Camera2d {
      * @type {number}
      * @name damping
      * @default 1.0
-     * @memberof me.Camera2d
+     * @memberof Camera2d
      */
     public damping: number;
     /**
@@ -930,7 +795,7 @@ export class Camera2d {
      * @type {number}
      * @name near
      * @default -1000
-     * @memberof me.Camera2d
+     * @memberof Camera2d
      */
     public near: number;
     /**
@@ -939,28 +804,28 @@ export class Camera2d {
      * @type {number}
      * @name far
      * @default 1000
-     * @memberof me.Camera2d
+     * @memberof Camera2d
      */
     public far: number;
     /**
      * the default camera projection matrix
      * (2d cameras use an orthographic projection by default).
      * @public
-     * @type {me.Matrix3d}
+     * @type {Matrix3d}
      * @name projectionMatrix
-     * @memberof me.Camera2d
+     * @memberof Camera2d
      */
-    public projectionMatrix: me.Matrix3d;
+    public projectionMatrix: Matrix3d;
     /**
      * the invert camera transform used to unproject points
      * @ignore
-     * @type {me.Matrix2d}
+     * @type {Matrix2d}
      * @name invCurrentTransform
-     * @memberof me.Camera2d
+     * @memberof Camera2d
      */
-    invCurrentTransform: me.Matrix2d;
+    invCurrentTransform: Matrix2d;
     offset: Vector2d;
-    target: any;
+    target: Vector2d | ObservableVector3d;
     follow_axis: number;
     _shake: {
         intensity: number;
@@ -976,18 +841,16 @@ export class Camera2d {
         color: any;
         tween: any;
     };
-    name: string;
-    isKinematic: boolean;
     /** @ignore */
     _updateProjectionMatrix(): void;
     /** @ignore */
-    _followH(target: any): any;
+    _followH(target: any): number;
     /** @ignore */
-    _followV(target: any): any;
+    _followV(target: any): number;
     /**
      * reset the camera position to specified coordinates
      * @name reset
-     * @memberof me.Camera2d
+     * @memberof Camera2d
      * @function
      * @param {number} [x=0]
      * @param {number} [y=0]
@@ -998,8 +861,8 @@ export class Camera2d {
      * the "deadzone" defines an area within the current camera in which
      * the followed renderable can move without scrolling the camera.
      * @name setDeadzone
-     * @see me.Camera2d.follow
-     * @memberof me.Camera2d
+     * @see Camera2d.follow
+     * @memberof Camera2d
      * @function
      * @param {number} w deadzone width
      * @param {number} h deadzone height
@@ -1007,20 +870,10 @@ export class Camera2d {
     setDeadzone(w: number, h: number): void;
     deadzone: Rect;
     /**
-     * resize the camera
-     * @name resize
-     * @memberof me.Camera2d
-     * @function
-     * @param {number} w new width of the camera
-     * @param {number} h new height of the camera
-     * @returns {me.Camera2d} this camera
-     */
-    resize(w: number, h: number): me.Camera2d;
-    /**
      * set the camera boundaries (set to the world limit by default).
      * the camera is bound to the given coordinates and cannot move/be scrolled outside of it.
      * @name setBounds
-     * @memberof me.Camera2d
+     * @memberof Camera2d
      * @function
      * @param {number} x world left limit
      * @param {number} y world top limit
@@ -1032,28 +885,28 @@ export class Camera2d {
      * set the camera to follow the specified renderable. <br>
      * (this will put the camera center around the given target)
      * @name follow
-     * @memberof me.Camera2d
+     * @memberof Camera2d
      * @function
-     * @param {me.Renderable|me.Vector2d} target renderable or position vector to follow
-     * @param {me.Camera2d.AXIS} [axis=this.AXIS.BOTH] Which axis to follow
+     * @param {Renderable|Vector2d} target renderable or position vector to follow
+     * @param {Camera2d.AXIS} [axis=this.AXIS.BOTH] Which axis to follow
      * @param {number} [damping=1] default damping value
      * @example
      * // set the camera to follow this renderable on both axis, and enable damping
      * me.game.viewport.follow(this, me.game.viewport.AXIS.BOTH, 0.1);
      */
-    follow(target: me.Renderable | me.Vector2d, axis?: me.Camera2d.AXIS, damping?: number): void;
+    follow(target: Renderable | Vector2d, axis?: Camera2d.AXIS, damping?: number): void;
     /**
      * unfollow the current target
      * @name unfollow
-     * @memberof me.Camera2d
+     * @memberof Camera2d
      * @function
      */
     unfollow(): void;
     /**
      * move the camera upper-left position by the specified offset.
      * @name move
-     * @memberof me.Camera2d
-     * @see me.Camera2d.focusOn
+     * @memberof Camera2d
+     * @see Camera2d.focusOn
      * @function
      * @param {number} x
      * @param {number} y
@@ -1065,8 +918,8 @@ export class Camera2d {
     /**
      * move the camera upper-left position to the specified coordinates
      * @name moveTo
-     * @memberof me.Camera2d
-     * @see me.Camera2d.focusOn
+     * @memberof Camera2d
+     * @see Camera2d.focusOn
      * @function
      * @param {number} x
      * @param {number} y
@@ -1074,17 +927,15 @@ export class Camera2d {
     moveTo(x: number, y: number): void;
     /** @ignore */
     updateTarget(): boolean;
-    /** @ignore */
-    update(dt: any): boolean;
     /**
      * shake the camera
      * @name shake
-     * @memberof me.Camera2d
+     * @memberof Camera2d
      * @function
      * @param {number} intensity maximum offset that the screen can be moved
      * while shaking
      * @param {number} duration expressed in milliseconds
-     * @param {me.Camera2d.AXIS} [axis=this.AXIS.BOTH] specify on which axis you
+     * @param {Camera2d.AXIS} [axis=this.AXIS.BOTH] specify on which axis you
      *   want the shake effect
      * @param {Function} [onComplete] callback once shaking effect is over
      * @param {boolean} [force] if true this will override the current effect
@@ -1092,14 +943,14 @@ export class Camera2d {
      * // shake it baby !
      * me.game.viewport.shake(10, 500, me.game.viewport.AXIS.BOTH);
      */
-    shake(intensity: number, duration: number, axis?: me.Camera2d.AXIS, onComplete?: Function, force?: boolean): void;
+    shake(intensity: number, duration: number, axis?: Camera2d.AXIS, onComplete?: Function, force?: boolean): void;
     /**
      * fadeOut(flash) effect<p>
      * screen is filled with the specified color and slowly goes back to normal
      * @name fadeOut
-     * @memberof me.Camera2d
+     * @memberof Camera2d
      * @function
-     * @param {me.Color|string} color a CSS color value
+     * @param {Color|string} color a CSS color value
      * @param {number} [duration=1000] expressed in milliseconds
      * @param {Function} [onComplete] callback once effect is over
      * @example
@@ -1110,81 +961,75 @@ export class Camera2d {
      *     me.game.viewport.fadeOut("#fff", 150);
      * });
      */
-    fadeOut(color: me.Color | string, duration?: number, onComplete?: Function): void;
+    fadeOut(color: Color | string, duration?: number, onComplete?: Function): void;
     /**
      * fadeIn effect <p>
      * fade to the specified color
      * @name fadeIn
-     * @memberof me.Camera2d
+     * @memberof Camera2d
      * @function
-     * @param {me.Color|string} color a CSS color value
+     * @param {Color|string} color a CSS color value
      * @param {number} [duration=1000] expressed in milliseconds
      * @param {Function} [onComplete] callback once effect is over
      * @example
      * // flash the camera to white for 75ms
      * me.game.viewport.fadeIn("#FFFFFF", 75);
      */
-    fadeIn(color: me.Color | string, duration?: number, onComplete?: Function): void;
+    fadeIn(color: Color | string, duration?: number, onComplete?: Function): void;
     /**
      * set the camera position around the specified object
      * @name focusOn
-     * @memberof me.Camera2d
+     * @memberof Camera2d
      * @function
-     * @param {me.Renderable} target the renderable to focus the camera on
+     * @param {Renderable} target the renderable to focus the camera on
      */
-    focusOn(target: me.Renderable): void;
+    focusOn(target: Renderable): void;
     /**
      * check if the specified renderable is in the camera
      * @name isVisible
-     * @memberof me.Camera2d
+     * @memberof Camera2d
      * @function
-     * @param {me.Renderable} obj to be checked against
+     * @param {Renderable} obj to be checked against
      * @param {boolean} [floating = obj.floating] if visibility check should be done against screen coordinates
      * @returns {boolean}
      */
-    isVisible(obj: me.Renderable, floating?: boolean): boolean;
+    isVisible(obj: Renderable, floating?: boolean): boolean;
     /**
      * convert the given "local" (screen) coordinates into world coordinates
      * @name localToWorld
-     * @memberof me.Camera2d
+     * @memberof Camera2d
      * @function
      * @param {number} x
      * @param {number} y
      * @param {number} [v] an optional vector object where to set the
      * converted value
-     * @returns {me.Vector2d}
+     * @returns {Vector2d}
      */
-    localToWorld(x: number, y: number, v?: number): me.Vector2d;
+    localToWorld(x: number, y: number, v?: number): Vector2d;
     /**
      * convert the given world coordinates into "local" (screen) coordinates
      * @name worldToLocal
-     * @memberof me.Camera2d
+     * @memberof Camera2d
      * @function
      * @param {number} x
      * @param {number} y
      * @param {number} [v] an optional vector object where to set the
      * converted value
-     * @returns {me.Vector2d}
+     * @returns {Vector2d}
      */
-    worldToLocal(x: number, y: number, v?: number): me.Vector2d;
+    worldToLocal(x: number, y: number, v?: number): Vector2d;
     /**
      * render the camera effects
      * @ignore
      */
     drawFX(renderer: any): void;
-    /**
-     * draw all object visibile in this viewport
-     * @ignore
-     */
-    draw(renderer: any, container: any): void;
 }
 /**
  * @classdesc
  * a canvas renderer object
- * @augments me.Renderer
- * @memberof me
+ * @augments Renderer
  */
-export class CanvasRenderer {
+export class CanvasRenderer extends Renderer {
     /**
      * @param {object} options The renderer parameters
      * @param {number} options.width The width of the canvas without scaling
@@ -1210,62 +1055,44 @@ export class CanvasRenderer {
         zoomX?: number;
         zoomY?: number;
     });
-    context: any;
-    backBufferCanvas: any;
-    backBufferContext2D: any;
+    backBufferContext2D: CanvasRenderingContext2D;
     cache: TextureCache;
-    uvOffset: number;
-    /**
-     * Reset context state
-     * @name reset
-     * @memberof me.CanvasRenderer.prototype
-     * @function
-     */
-    reset(): void;
     /**
      * Reset the canvas transform to identity
      * @name resetTransform
-     * @memberof me.CanvasRenderer.prototype
+     * @memberof CanvasRenderer.prototype
      * @function
      */
     resetTransform(): void;
     /**
      * Set a blend mode for the given context
      * @name setBlendMode
-     * @memberof me.CanvasRenderer.prototype
+     * @memberof CanvasRenderer.prototype
      * @function
      * @param {string} [mode="normal"] blend mode : "normal", "multiply"
      * @param {CanvasRenderingContext2D} [context]
      */
     setBlendMode(mode?: string, context?: CanvasRenderingContext2D): void;
-    currentBlendMode: string;
-    /**
-     * prepare the framebuffer for drawing a new frame
-     * @name clear
-     * @memberof me.CanvasRenderer.prototype
-     * @function
-     */
-    clear(): void;
     /**
      * render the main framebuffer on screen
      * @name flush
-     * @memberof me.CanvasRenderer.prototype
+     * @memberof CanvasRenderer.prototype
      * @function
      */
     flush(): void;
     /**
      * Clears the main framebuffer with the given color
      * @name clearColor
-     * @memberof me.CanvasRenderer.prototype
+     * @memberof CanvasRenderer.prototype
      * @function
-     * @param {me.Color|string} [color="#000000"] CSS color.
+     * @param {Color|string} [color="#000000"] CSS color.
      * @param {boolean} [opaque=false] Allow transparency [default] or clear the surface completely [true]
      */
-    clearColor(color?: me.Color | string, opaque?: boolean): void;
+    clearColor(color?: Color | string, opaque?: boolean): void;
     /**
      * Erase the pixels in the given rectangular area by setting them to transparent black (rgba(0,0,0,0)).
      * @name clearRect
-     * @memberof me.CanvasRenderer.prototype
+     * @memberof CanvasRenderer.prototype
      * @function
      * @param {number} x x axis of the coordinate for the rectangle starting point.
      * @param {number} y y axis of the coordinate for the rectangle starting point.
@@ -1276,12 +1103,12 @@ export class CanvasRenderer {
     /**
      * Create a pattern with the specified repetition
      * @name createPattern
-     * @memberof me.CanvasRenderer.prototype
+     * @memberof CanvasRenderer.prototype
      * @function
      * @param {Image} image Source image
      * @param {string} repeat Define how the pattern should be repeated
      * @returns {CanvasPattern}
-     * @see me.ImageLayer#repeat
+     * @see ImageLayer#repeat
      * @example
      * var tileable   = renderer.createPattern(image, "repeat");
      * var horizontal = renderer.createPattern(image, "repeat-x");
@@ -1292,7 +1119,7 @@ export class CanvasRenderer {
     /**
      * Draw an image onto the main using the canvas api
      * @name drawImage
-     * @memberof me.CanvasRenderer.prototype
+     * @memberof CanvasRenderer.prototype
      * @function
      * @param {Image} image An element to draw into the context. The specification permits any canvas image source (CanvasImageSource), specifically, a CSSImageValue, an HTMLImageElement, an SVGImageElement, an HTMLVideoElement, an HTMLCanvasElement, an ImageBitmap, or an OffscreenCanvas.
      * @param {number} sx The X coordinate of the top left corner of the sub-rectangle of the source image to draw into the destination context.
@@ -1315,20 +1142,20 @@ export class CanvasRenderer {
     /**
      * Draw a pattern within the given rectangle.
      * @name drawPattern
-     * @memberof me.CanvasRenderer.prototype
+     * @memberof CanvasRenderer.prototype
      * @function
      * @param {CanvasPattern} pattern Pattern object
      * @param {number} x
      * @param {number} y
      * @param {number} width
      * @param {number} height
-     * @see me.CanvasRenderer#createPattern
+     * @see CanvasRenderer#createPattern
      */
     drawPattern(pattern: CanvasPattern, x: number, y: number, width: number, height: number): void;
     /**
      * Stroke an arc at the specified coordinates with given radius, start and end points
      * @name strokeArc
-     * @memberof me.CanvasRenderer.prototype
+     * @memberof CanvasRenderer.prototype
      * @function
      * @param {number} x arc center point x-axis
      * @param {number} y arc center point y-axis
@@ -1342,7 +1169,7 @@ export class CanvasRenderer {
     /**
      * Fill an arc at the specified coordinates with given radius, start and end points
      * @name fillArc
-     * @memberof me.CanvasRenderer.prototype
+     * @memberof CanvasRenderer.prototype
      * @function
      * @param {number} x arc center point x-axis
      * @param {number} y arc center point y-axis
@@ -1355,7 +1182,7 @@ export class CanvasRenderer {
     /**
      * Stroke an ellipse at the specified coordinates with given radius
      * @name strokeEllipse
-     * @memberof me.CanvasRenderer.prototype
+     * @memberof CanvasRenderer.prototype
      * @function
      * @param {number} x ellipse center point x-axis
      * @param {number} y ellipse center point y-axis
@@ -1367,7 +1194,7 @@ export class CanvasRenderer {
     /**
      * Fill an ellipse at the specified coordinates with given radius
      * @name fillEllipse
-     * @memberof me.CanvasRenderer.prototype
+     * @memberof CanvasRenderer.prototype
      * @function
      * @param {number} x ellipse center point x-axis
      * @param {number} y ellipse center point y-axis
@@ -1378,7 +1205,7 @@ export class CanvasRenderer {
     /**
      * Stroke a line of the given two points
      * @name strokeLine
-     * @memberof me.CanvasRenderer.prototype
+     * @memberof CanvasRenderer.prototype
      * @function
      * @param {number} startX the start x coordinate
      * @param {number} startY the start y coordinate
@@ -1389,7 +1216,7 @@ export class CanvasRenderer {
     /**
      * Fill a line of the given two points
      * @name fillLine
-     * @memberof me.CanvasRenderer.prototype
+     * @memberof CanvasRenderer.prototype
      * @function
      * @param {number} startX the start x coordinate
      * @param {number} startY the start y coordinate
@@ -1400,24 +1227,24 @@ export class CanvasRenderer {
     /**
      * Stroke the given me.Polygon on the screen
      * @name strokePolygon
-     * @memberof me.CanvasRenderer.prototype
+     * @memberof CanvasRenderer.prototype
      * @function
-     * @param {me.Polygon} poly the shape to draw
+     * @param {Polygon} poly the shape to draw
      * @param {boolean} [fill=false] also fill the shape with the current color if true
      */
-    strokePolygon(poly: me.Polygon, fill?: boolean): void;
+    strokePolygon(poly: Polygon, fill?: boolean): void;
     /**
      * Fill the given me.Polygon on the screen
      * @name fillPolygon
-     * @memberof me.CanvasRenderer.prototype
+     * @memberof CanvasRenderer.prototype
      * @function
-     * @param {me.Polygon} poly the shape to draw
+     * @param {Polygon} poly the shape to draw
      */
-    fillPolygon(poly: me.Polygon): void;
+    fillPolygon(poly: Polygon): void;
     /**
      * Stroke a rectangle at the specified coordinates
      * @name strokeRect
-     * @memberof me.CanvasRenderer.prototype
+     * @memberof CanvasRenderer.prototype
      * @function
      * @param {number} x
      * @param {number} y
@@ -1429,7 +1256,7 @@ export class CanvasRenderer {
     /**
      * Draw a filled rectangle at the specified coordinates
      * @name fillRect
-     * @memberof me.CanvasRenderer.prototype
+     * @memberof CanvasRenderer.prototype
      * @function
      * @param {number} x
      * @param {number} y
@@ -1440,7 +1267,7 @@ export class CanvasRenderer {
     /**
      * return a reference to the system 2d Context
      * @name getContext
-     * @memberof me.CanvasRenderer.prototype
+     * @memberof CanvasRenderer.prototype
      * @function
      * @returns {CanvasRenderingContext2D}
      */
@@ -1453,21 +1280,21 @@ export class CanvasRenderer {
     /**
      * save the canvas context
      * @name save
-     * @memberof me.CanvasRenderer.prototype
+     * @memberof CanvasRenderer.prototype
      * @function
      */
     save(): void;
     /**
      * restores the canvas context
      * @name restore
-     * @memberof me.CanvasRenderer.prototype
+     * @memberof CanvasRenderer.prototype
      * @function
      */
     restore(): void;
     /**
      * rotates the canvas context
      * @name rotate
-     * @memberof me.CanvasRenderer.prototype
+     * @memberof CanvasRenderer.prototype
      * @function
      * @param {number} angle in radians
      */
@@ -1475,7 +1302,7 @@ export class CanvasRenderer {
     /**
      * scales the canvas context
      * @name scale
-     * @memberof me.CanvasRenderer.prototype
+     * @memberof CanvasRenderer.prototype
      * @function
      * @param {number} x
      * @param {number} y
@@ -1485,15 +1312,15 @@ export class CanvasRenderer {
      * Set the current fill & stroke style color.
      * By default, or upon reset, the value is set to #000000.
      * @name setColor
-     * @memberof me.CanvasRenderer.prototype
+     * @memberof CanvasRenderer.prototype
      * @function
-     * @param {me.Color|string} color css color value
+     * @param {Color|string} color css color value
      */
-    setColor(color: me.Color | string): void;
+    setColor(color: Color | string): void;
     /**
      * Set the global alpha on the canvas context
      * @name setGlobalAlpha
-     * @memberof me.CanvasRenderer.prototype
+     * @memberof CanvasRenderer.prototype
      * @function
      * @param {number} alpha 0.0 to 1.0 values accepted.
      */
@@ -1501,7 +1328,7 @@ export class CanvasRenderer {
     /**
      * Set the line width on the context
      * @name setLineWidth
-     * @memberof me.CanvasRenderer.prototype
+     * @memberof CanvasRenderer.prototype
      * @function
      * @param {number} width Line width
      */
@@ -1510,23 +1337,23 @@ export class CanvasRenderer {
      * Reset (overrides) the renderer transformation matrix to the
      * identity one, and then apply the given transformation matrix.
      * @name setTransform
-     * @memberof me.CanvasRenderer.prototype
+     * @memberof CanvasRenderer.prototype
      * @function
-     * @param {me.Matrix2d} mat2d Matrix to transform by
+     * @param {Matrix2d} mat2d Matrix to transform by
      */
-    setTransform(mat2d: me.Matrix2d): void;
+    setTransform(mat2d: Matrix2d): void;
     /**
      * Multiply given matrix into the renderer tranformation matrix
      * @name transform
-     * @memberof me.CanvasRenderer.prototype
+     * @memberof CanvasRenderer.prototype
      * @function
-     * @param {me.Matrix2d} mat2d Matrix to transform by
+     * @param {Matrix2d} mat2d Matrix to transform by
      */
-    transform(mat2d: me.Matrix2d): void;
+    transform(mat2d: Matrix2d): void;
     /**
      * Translates the context to the given position
      * @name translate
-     * @memberof me.CanvasRenderer.prototype
+     * @memberof CanvasRenderer.prototype
      * @function
      * @param {number} x
      * @param {number} y
@@ -1539,7 +1366,7 @@ export class CanvasRenderer {
      * and restore it (with the restore() method) any time in the future.
      * (<u>this is an experimental feature !</u>)
      * @name clipRect
-     * @memberof me.CanvasRenderer.prototype
+     * @memberof CanvasRenderer.prototype
      * @function
      * @param {number} x
      * @param {number} y
@@ -1547,47 +1374,25 @@ export class CanvasRenderer {
      * @param {number} height
      */
     clipRect(x: number, y: number, width: number, height: number): void;
-    /**
-     * A mask limits rendering elements to the shape and position of the given mask object.
-     * So, if the renderable is larger than the mask, only the intersecting part of the renderable will be visible.
-     * Mask are not preserved through renderer context save and restore.
-     * @name setMask
-     * @memberof me.CanvasRenderer.prototype
-     * @function
-     * @param {me.Rect|me.Polygon|me.Line|me.Ellipse} [mask] the shape defining the mask to be applied
-     */
-    setMask(mask?: me.Rect | me.Polygon | me.Line | me.Ellipse): void;
-    /**
-     * disable (remove) the rendering mask set through setMask.
-     * @name clearMask
-     * @see me.CanvasRenderer#setMask
-     * @memberof me.CanvasRenderer.prototype
-     * @function
-     */
-    clearMask(): void;
 }
 /**
  * @classdesc
  * a basic collectable helper class for immovable object (e.g. a coin)
- * @augments me.Sprite
- * @memberof me
+ * @augments Sprite
  */
-export class Collectable {
+export class Collectable extends Sprite {
     /**
      * @param {number} x the x coordinates of the collectable
      * @param {number} y the y coordinates of the collectable
-     * @param {object} settings See {@link me.Sprite}
+     * @param {object} settings See {@link Sprite}
      */
     constructor(x: number, y: number, settings: object);
-    name: any;
     type: any;
     id: any;
-    body: Body;
 }
 /**
  * @classdesc
  * A color manipulation object.
- * @memberof me
  */
 export class Color {
     /**
@@ -1600,164 +1405,156 @@ export class Color {
     /**
      * @ignore
      */
-    onResetEvent(r?: number, g?: number, b?: number, alpha?: number): me.Color;
+    onResetEvent(r?: number, g?: number, b?: number, alpha?: number): Color;
     glArray: Float32Array;
-    readonly set r(arg: number);
+    set r(arg: number);
     /**
      * Color Red Component [0 .. 255]
      * @type {number}
-     * @name r
-     * @readonly
-     * @memberof me.Color
+     * @memberof Color
      */
-    readonly get r(): number;
-    readonly set g(arg: number);
+    get r(): number;
+    set g(arg: number);
     /**
      * Color Green Component [0 .. 255]
      * @type {number}
-     * @name g
-     * @readonly
-     * @memberof me.Color
+     * @memberof Color
      */
-    readonly get g(): number;
-    readonly set b(arg: number);
+    get g(): number;
+    set b(arg: number);
     /**
      * Color Blue Component [0 .. 255]
      * @type {number}
-     * @name b
-     * @readonly
-     * @memberof me.Color
+     * @memberof Color
      */
-    readonly get b(): number;
-    readonly set alpha(arg: number);
+    get b(): number;
+    set alpha(arg: number);
     /**
      * Color Alpha Component [0.0 .. 1.0]
      * @type {number}
-     * @name alpha
-     * @readonly
-     * @memberof me.Color
+     * @memberof Color
      */
-    readonly get alpha(): number;
+    get alpha(): number;
     /**
      * Set this color to the specified value.
      * @name setColor
-     * @memberof me.Color
+     * @memberof Color
      * @function
      * @param {number} r red component [0 .. 255]
      * @param {number} g green component [0 .. 255]
      * @param {number} b blue component [0 .. 255]
      * @param {number} [alpha=1.0] alpha value [0.0 .. 1.0]
-     * @returns {me.Color} Reference to this object for method chaining
+     * @returns {Color} Reference to this object for method chaining
      */
-    setColor(r: number, g: number, b: number, alpha?: number): me.Color;
+    setColor(r: number, g: number, b: number, alpha?: number): Color;
     /**
      * Create a new copy of this color object.
      * @name clone
-     * @memberof me.Color
+     * @memberof Color
      * @function
-     * @returns {me.Color} Reference to the newly cloned object
+     * @returns {Color} Reference to the newly cloned object
      */
-    clone(): me.Color;
+    clone(): Color;
     /**
      * Copy a color object or CSS color into this one.
      * @name copy
-     * @memberof me.Color
+     * @memberof Color
      * @function
-     * @param {me.Color|string} color
-     * @returns {me.Color} Reference to this object for method chaining
+     * @param {Color|string} color
+     * @returns {Color} Reference to this object for method chaining
      */
-    copy(color: me.Color | string): me.Color;
+    copy(color: Color | string): Color;
     /**
      * Blend this color with the given one using addition.
      * @name add
-     * @memberof me.Color
+     * @memberof Color
      * @function
-     * @param {me.Color} color
-     * @returns {me.Color} Reference to this object for method chaining
+     * @param {Color} color
+     * @returns {Color} Reference to this object for method chaining
      */
-    add(color: me.Color): me.Color;
+    add(color: Color): Color;
     /**
      * Darken this color value by 0..1
      * @name darken
-     * @memberof me.Color
+     * @memberof Color
      * @function
      * @param {number} scale
-     * @returns {me.Color} Reference to this object for method chaining
+     * @returns {Color} Reference to this object for method chaining
      */
-    darken(scale: number): me.Color;
+    darken(scale: number): Color;
     /**
      * Linearly interpolate between this color and the given one.
      * @name lerp
-     * @memberof me.Color
+     * @memberof Color
      * @function
-     * @param {me.Color} color
+     * @param {Color} color
      * @param {number} alpha with alpha = 0 being this color, and alpha = 1 being the given one.
-     * @returns {me.Color} Reference to this object for method chaining
+     * @returns {Color} Reference to this object for method chaining
      */
-    lerp(color: me.Color, alpha: number): me.Color;
+    lerp(color: Color, alpha: number): Color;
     /**
      * Lighten this color value by 0..1
      * @name lighten
-     * @memberof me.Color
+     * @memberof Color
      * @function
      * @param {number} scale
-     * @returns {me.Color} Reference to this object for method chaining
+     * @returns {Color} Reference to this object for method chaining
      */
-    lighten(scale: number): me.Color;
+    lighten(scale: number): Color;
     /**
      * Generate random r,g,b values for this color object
      * @name random
-     * @memberof me.Color
+     * @memberof Color
      * @function
      * @param {number} [min=0] minimum value for the random range
      * @param {number} [max=255] maxmium value for the random range
-     * @returns {me.Color} Reference to this object for method chaining
+     * @returns {Color} Reference to this object for method chaining
      */
-    random(min?: number, max?: number): me.Color;
+    random(min?: number, max?: number): Color;
     /**
      * Return true if the r,g,b,a values of this color are equal with the
      * given one.
      * @name equals
-     * @memberof me.Color
+     * @memberof Color
      * @function
-     * @param {me.Color} color
+     * @param {Color} color
      * @returns {boolean}
      */
-    equals(color: me.Color): boolean;
+    equals(color: Color): boolean;
     /**
      * Parse a CSS color string and set this color to the corresponding
      * r,g,b values
      * @name parseCSS
-     * @memberof me.Color
+     * @memberof Color
      * @function
      * @param {string} cssColor
-     * @returns {me.Color} Reference to this object for method chaining
+     * @returns {Color} Reference to this object for method chaining
      */
-    parseCSS(cssColor: string): me.Color;
+    parseCSS(cssColor: string): Color;
     /**
      * Parse an RGB or RGBA CSS color string
      * @name parseRGB
-     * @memberof me.Color
+     * @memberof Color
      * @function
      * @param {string} rgbColor
-     * @returns {me.Color} Reference to this object for method chaining
+     * @returns {Color} Reference to this object for method chaining
      */
-    parseRGB(rgbColor: string): me.Color;
+    parseRGB(rgbColor: string): Color;
     /**
      * Parse a Hex color ("#RGB", "#RGBA" or "#RRGGBB", "#RRGGBBAA" format) and set this color to
      * the corresponding r,g,b,a values
      * @name parseHex
-     * @memberof me.Color
+     * @memberof Color
      * @function
      * @param {string} hexColor
      * @param {boolean} [argb = false] true if format is #ARGB, or #AARRGGBB (as opposed to #RGBA or #RGGBBAA)
-     * @returns {me.Color} Reference to this object for method chaining
+     * @returns {Color} Reference to this object for method chaining
      */
-    parseHex(hexColor: string, argb?: boolean): me.Color;
+    parseHex(hexColor: string, argb?: boolean): Color;
     /**
      * Pack this color into a Uint32 ARGB representation
      * @name toUint32
-     * @memberof me.Color
+     * @memberof Color
      * @function
      * @param {number} [alpha=1.0] alpha value [0.0 .. 1.0]
      * @returns {Uint32}
@@ -1766,7 +1563,7 @@ export class Color {
     /**
      * return an array representation of this object
      * @name toArray
-     * @memberof me.Color
+     * @memberof Color
      * @function
      * @returns {Float32Array}
      */
@@ -1774,7 +1571,7 @@ export class Color {
     /**
      * Get the color in "#RRGGBB" format
      * @name toHex
-     * @memberof me.Color
+     * @memberof Color
      * @function
      * @returns {string}
      */
@@ -1782,7 +1579,7 @@ export class Color {
     /**
      * Get the color in "#RRGGBBAA" format
      * @name toHex8
-     * @memberof me.Color
+     * @memberof Color
      * @function
      * @returns {string}
      */
@@ -1790,7 +1587,7 @@ export class Color {
     /**
      * Get the color in "rgb(R,G,B)" format
      * @name toRGB
-     * @memberof me.Color
+     * @memberof Color
      * @function
      * @returns {string}
      */
@@ -1798,7 +1595,7 @@ export class Color {
     /**
      * Get the color in "rgba(R,G,B,A)" format
      * @name toRGBA
-     * @memberof me.Color
+     * @memberof Color
      * @function
      * @returns {string}
      */
@@ -1807,50 +1604,35 @@ export class Color {
 /**
  * @classdesc
  * a generic Color Layer Object.  Fills the entire Canvas with the color not just the container the object belongs to.
- * @augments me.Renderable
- * @memberof me
+ * @augments Renderable
  */
-export class ColorLayer {
+export class ColorLayer extends Renderable {
     /**
      * @param {string} name Layer name
-     * @param {me.Color|string} color CSS color
+     * @param {Color|string} color CSS color
      * @param {number} [z = 0] z-index position
      */
-    constructor(name: string, color: me.Color | string, z?: number);
+    constructor(name: string, color: Color | string, z?: number);
     /**
      * the layer color component
      * @public
-     * @type {me.Color}
+     * @type {Color}
      * @name color
-     * @memberof me.ColorLayer#
+     * @memberof ColorLayer#
      */
-    public color: me.Color;
-    onResetEvent(name: any, color: any, z?: number): void;
-    name: any;
-    floating: boolean;
-    /**
-     * draw the color layer
-     * @ignore
-     */
-    draw(renderer: any, rect: any): void;
-    /**
-     * Destroy function
-     * @ignore
-     */
-    destroy(): void;
+    public color: Color;
 }
 /**
  * @classdesc
  * me.Container represents a collection of child objects
- * @augments me.Renderable
- * @memberof me
+ * @augments Renderable
  */
-export class Container {
+export class Container extends Renderable {
     /**
      * @param {number} [x=0] position of the container (accessible via the inherited pos.x property)
      * @param {number} [y=0] position of the container (accessible via the inherited pos.y property)
-     * @param {number} [width=me.game.viewport.width] width of the container
-     * @param {number} [height=me.game.viewport.height] height of the container
+     * @param {number} [width=game.viewport.width] width of the container
+     * @param {number} [height=game.viewport.height] height of the container
      */
     constructor(x?: number, y?: number, width?: number, height?: number, root?: boolean);
     /**
@@ -1864,7 +1646,7 @@ export class Container {
      * @type {boolean}
      * @default false
      * @name root
-     * @memberof me.Container
+     * @memberof Container
      */
     public root: boolean;
     /**
@@ -1879,7 +1661,7 @@ export class Container {
      * @type {string}
      * @default me.game.sortOn
      * @name sortOn
-     * @memberof me.Container
+     * @memberof Container
      */
     public sortOn: string;
     /**
@@ -1888,7 +1670,7 @@ export class Container {
      * @type {boolean}
      * @default true
      * @name autoSort
-     * @memberof me.Container
+     * @memberof Container
      */
     public autoSort: boolean;
     /**
@@ -1897,7 +1679,7 @@ export class Container {
      * @type {boolean}
      * @default true
      * @name autoDepth
-     * @memberof me.Container
+     * @memberof Container
      */
     public autoDepth: boolean;
     /**
@@ -1906,13 +1688,13 @@ export class Container {
      * @type {boolean}
      * @default false
      * @name clipping
-     * @memberof me.Container
+     * @memberof Container
      */
     public clipping: boolean;
     /**
      * a callback to be extended, triggered after a child has been added or removed
      * @name onChildChange
-     * @memberof me.Container#
+     * @memberof Container#
      * @function
      * @param {number} index added or removed child index
      */
@@ -1925,32 +1707,30 @@ export class Container {
      * @type {boolean}
      * @default false
      * @name enableChildBoundsUpdate
-     * @memberof me.Container
+     * @memberof Container
      */
     public enableChildBoundsUpdate: boolean;
     /**
      * define a background color for this container
      * @public
-     * @type {me.Color}
+     * @type {Color}
      * @name backgroundColor
      * @default (0, 0, 0, 0.0)
-     * @memberof me.Container
+     * @memberof Container
      * @example
      * // add a red background color to this container
      * this.backgroundColor.setColor(255, 0, 0);
      */
-    public backgroundColor: me.Color;
+    public backgroundColor: Color;
     /**
      * Used by the debug panel plugin
      * @ignore
      */
     drawCount: number;
-    autoTransform: boolean;
-    isKinematic: boolean;
     /**
      * reset the container, removing all childrens, and reseting transforms.
      * @name reset
-     * @memberof me.Container
+     * @memberof Container
      * @function
      */
     reset(): void;
@@ -1963,24 +1743,24 @@ export class Container {
      * orginal container.  Then when the me.game.world.reset() is called the renderable
      * will not be in any container.
      * @name addChild
-     * @memberof me.Container.prototype
+     * @memberof Container.prototype
      * @function
-     * @param {me.Renderable} child
+     * @param {Renderable} child
      * @param {number} [z] forces the z index of the child to the specified value
-     * @returns {me.Renderable} the added child
+     * @returns {Renderable} the added child
      */
-    addChild(child: me.Renderable, z?: number): me.Renderable;
+    addChild(child: Renderable, z?: number): Renderable;
     /**
      * Add a child to the container at the specified index<br>
      * (the list won't be sorted after insertion)
      * @name addChildAt
-     * @memberof me.Container.prototype
+     * @memberof Container.prototype
      * @function
-     * @param {me.Renderable} child
+     * @param {Renderable} child
      * @param {number} index
-     * @returns {me.Renderable} the added child
+     * @returns {Renderable} the added child
      */
-    addChildAt(child: me.Renderable, index: number): me.Renderable;
+    addChildAt(child: Renderable, index: number): Renderable;
     /**
      * The forEach() method executes a provided function once per child element. <br>
      * the callback function is invoked with three arguments: <br>
@@ -1988,7 +1768,7 @@ export class Container {
      *    - The index of element in the array. <br>
      *    - The array forEach() was called upon. <br>
      * @name forEach
-     * @memberof me.Container.prototype
+     * @memberof Container.prototype
      * @function
      * @param {Function} callback fnction to execute on each element
      * @param {object} [thisArg] value to use as this(i.e reference Object) when executing callback.
@@ -2006,59 +1786,59 @@ export class Container {
     /**
      * Swaps the position (z-index) of 2 children
      * @name swapChildren
-     * @memberof me.Container.prototype
+     * @memberof Container.prototype
      * @function
-     * @param {me.Renderable} child
-     * @param {me.Renderable} child2
+     * @param {Renderable} child
+     * @param {Renderable} child2
      */
-    swapChildren(child: me.Renderable, child2: me.Renderable): void;
+    swapChildren(child: Renderable, child2: Renderable): void;
     /**
      * Returns the Child at the specified index
      * @name getChildAt
-     * @memberof me.Container.prototype
+     * @memberof Container.prototype
      * @function
      * @param {number} index
-     * @returns {me.Renderable} the child at the specified index
+     * @returns {Renderable} the child at the specified index
      */
-    getChildAt(index: number): me.Renderable;
+    getChildAt(index: number): Renderable;
     /**
      * Returns the index of the given Child
      * @name getChildIndex
-     * @memberof me.Container.prototype
+     * @memberof Container.prototype
      * @function
-     * @param {me.Renderable} child
+     * @param {Renderable} child
      * @returns {number} index
      */
-    getChildIndex(child: me.Renderable): number;
+    getChildIndex(child: Renderable): number;
     /**
      * Returns the next child within the container or undefined if none
      * @name getNextChild
-     * @memberof me.Container
+     * @memberof Container
      * @function
-     * @param {me.Renderable} child
-     * @returns {me.Renderable} child
+     * @param {Renderable} child
+     * @returns {Renderable} child
      */
-    getNextChild(child: me.Renderable): me.Renderable;
+    getNextChild(child: Renderable): Renderable;
     /**
      * Returns true if contains the specified Child
      * @name hasChild
-     * @memberof me.Container.prototype
+     * @memberof Container.prototype
      * @function
-     * @param {me.Renderable} child
+     * @param {Renderable} child
      * @returns {boolean}
      */
-    hasChild(child: me.Renderable): boolean;
+    hasChild(child: Renderable): boolean;
     /**
      * return the child corresponding to the given property and value.<br>
      * note : avoid calling this function every frame since
      * it parses the whole object tree each time
      * @name getChildByProp
-     * @memberof me.Container.prototype
+     * @memberof Container.prototype
      * @public
      * @function
      * @param {string} prop Property name
      * @param {string|RegExp|number|boolean} value Value of the property
-     * @returns {me.Renderable[]} Array of childs
+     * @returns {Renderable[]} Array of childs
      * @example
      * // get the first child object called "mainPlayer" in a specific container :
      * var ent = myContainer.getChildByProp("name", "mainPlayer");
@@ -2074,77 +1854,60 @@ export class Container {
      * var zIndex10 = me.game.world.getChildByProp("z", 10);
      * var inViewport = me.game.world.getChildByProp("inViewport", true);
      */
-    public getChildByProp(prop: string, value: string | RegExp | number | boolean): me.Renderable[];
+    public getChildByProp(prop: string, value: string | RegExp | number | boolean): Renderable[];
     /**
      * returns the list of childs with the specified class type
      * @name getChildByType
-     * @memberof me.Container.prototype
+     * @memberof Container.prototype
      * @public
      * @function
      * @param {object} classType
-     * @returns {me.Renderable[]} Array of children
+     * @returns {Renderable[]} Array of children
      */
-    public getChildByType(classType: object): me.Renderable[];
+    public getChildByType(classType: object): Renderable[];
     /**
      * returns the list of childs with the specified name<br>
      * as defined in Tiled (Name field of the Object Properties)<br>
      * note : avoid calling this function every frame since
      * it parses the whole object list each time
      * @name getChildByName
-     * @memberof me.Container.prototype
+     * @memberof Container.prototype
      * @public
      * @function
      * @param {string|RegExp|number|boolean} name child name
-     * @returns {me.Renderable[]} Array of children
+     * @returns {Renderable[]} Array of children
      */
-    public getChildByName(name: string | RegExp | number | boolean): me.Renderable[];
+    public getChildByName(name: string | RegExp | number | boolean): Renderable[];
     /**
      * return the child corresponding to the specified GUID<br>
      * note : avoid calling this function every frame since
      * it parses the whole object list each time
      * @name getChildByGUID
-     * @memberof me.Container.prototype
+     * @memberof Container.prototype
      * @public
      * @function
      * @param {string|RegExp|number|boolean} guid child GUID
-     * @returns {me.Renderable} corresponding child or null
+     * @returns {Renderable} corresponding child or null
      */
-    public getChildByGUID(guid: string | RegExp | number | boolean): me.Renderable;
+    public getChildByGUID(guid: string | RegExp | number | boolean): Renderable;
     /**
      * return all child in this container
      * @name getChildren
-     * @memberof me.Container.prototype
+     * @memberof Container.prototype
      * @public
      * @function
-     * @returns {me.Renderable[]} an array of renderable object
+     * @returns {Renderable[]} an array of renderable object
      */
-    public getChildren(): me.Renderable[];
-    /**
-     * update the bounding box for this shape.
-     * @ignore
-     * @name updateBounds
-     * @memberof me.Renderable.prototype
-     * @function
-     * @returns {me.Bounds} this shape bounding box Rectangle object
-     */
-    updateBounds(forceUpdateChildBounds?: boolean): me.Bounds;
+    public getChildren(): Renderable[];
     /**
      * Checks if this container is root or if it's attached to the root container.
      * @private
      * @name isAttachedToRoot
-     * @memberof me.Container.prototype
+     * @memberof Container.prototype
      * @function
      * @returns {boolean}
      */
     private isAttachedToRoot;
-    /**
-     * update the cointainer's bounding rect (private)
-     * @ignore
-     * @name updateBoundsPos
-     * @memberof me.Container.prototype
-     * @function
-     */
-    updateBoundsPos(newX: any, newY: any): any;
     /**
      * @ignore
      */
@@ -2152,28 +1915,28 @@ export class Container {
     /**
      * Invokes the removeChildNow in a defer, to ensure the child is removed safely after the update & draw stack has completed
      * @name removeChild
-     * @memberof me.Container.prototype
+     * @memberof Container.prototype
      * @public
      * @function
-     * @param {me.Renderable} child
+     * @param {Renderable} child
      * @param {boolean} [keepalive=False] True to prevent calling child.destroy()
      */
-    public removeChild(child: me.Renderable, keepalive?: boolean): void;
+    public removeChild(child: Renderable, keepalive?: boolean): void;
     /**
      * Removes (and optionally destroys) a child from the container.<br>
      * (removal is immediate and unconditional)<br>
-     * Never use keepalive=true with objects from {@link me.pool}. Doing so will create a memory leak.
+     * Never use keepalive=true with objects from {@link pool}. Doing so will create a memory leak.
      * @name removeChildNow
-     * @memberof me.Container.prototype
+     * @memberof Container.prototype
      * @function
-     * @param {me.Renderable} child
+     * @param {Renderable} child
      * @param {boolean} [keepalive=False] True to prevent calling child.destroy()
      */
-    removeChildNow(child: me.Renderable, keepalive?: boolean): void;
+    removeChildNow(child: Renderable, keepalive?: boolean): void;
     /**
      * Automatically set the specified property of all childs to the given value
      * @name setChildsProperty
-     * @memberof me.Container.prototype
+     * @memberof Container.prototype
      * @function
      * @param {string} prop property name
      * @param {object} value property value
@@ -2183,39 +1946,39 @@ export class Container {
     /**
      * Move the child in the group one step forward (z depth).
      * @name moveUp
-     * @memberof me.Container.prototype
+     * @memberof Container.prototype
      * @function
-     * @param {me.Renderable} child
+     * @param {Renderable} child
      */
-    moveUp(child: me.Renderable): void;
+    moveUp(child: Renderable): void;
     /**
      * Move the child in the group one step backward (z depth).
      * @name moveDown
-     * @memberof me.Container.prototype
+     * @memberof Container.prototype
      * @function
-     * @param {me.Renderable} child
+     * @param {Renderable} child
      */
-    moveDown(child: me.Renderable): void;
+    moveDown(child: Renderable): void;
     /**
      * Move the specified child to the top(z depth).
      * @name moveToTop
-     * @memberof me.Container.prototype
+     * @memberof Container.prototype
      * @function
-     * @param {me.Renderable} child
+     * @param {Renderable} child
      */
-    moveToTop(child: me.Renderable): void;
+    moveToTop(child: Renderable): void;
     /**
      * Move the specified child the bottom (z depth).
      * @name moveToBottom
-     * @memberof me.Container.prototype
+     * @memberof Container.prototype
      * @function
-     * @param {me.Renderable} child
+     * @param {Renderable} child
      */
-    moveToBottom(child: me.Renderable): void;
+    moveToBottom(child: Renderable): void;
     /**
      * Manually trigger the sort of all the childs in the container</p>
      * @name sort
-     * @memberof me.Container.prototype
+     * @memberof Container.prototype
      * @public
      * @function
      * @param {boolean} [recursive=false] recursively sort all containers if true
@@ -2245,45 +2008,17 @@ export class Container {
      * @ignore
      */
     _sortY(a: any, b: any): number;
-    /**
-     * Destroy function<br>
-     * @ignore
-     */
-    destroy(...args: any[]): void;
-    /**
-     * container update function. <br>
-     * automatically called by the game manager {@link me.game}
-     * @name update
-     * @memberof me.Container.prototype
-     * @function
-     * @protected
-     * @param {number} dt time since the last update in milliseconds.
-     * @returns {boolean} true if the Container is dirty
-     */
-    protected update(dt: number): boolean;
-    /**
-     * draw the container. <br>
-     * automatically called by the game manager {@link me.game}
-     * @name draw
-     * @memberof me.Container.prototype
-     * @function
-     * @protected
-     * @param {me.CanvasRenderer|me.WebGLRenderer} renderer a renderer object
-     * @param {me.Rect|me.Bounds} [rect] the area or viewport to (re)draw
-     */
-    protected draw(renderer: me.CanvasRenderer | me.WebGLRenderer, rect?: me.Rect | me.Bounds): void;
 }
 /**
  * @classdesc
  * Used to make a game entity draggable
- * @augments me.Entity
- * @memberof me
+ * @augments Entity
  */
-export class DraggableEntity {
+export class DraggableEntity extends Entity {
     /**
      * @param {number} x the x coordinates of the entity object
      * @param {number} y the y coordinates of the entity object
-     * @param {object} settings Entity properties (see {@link me.Entity})
+     * @param {object} settings Entity properties (see {@link Entity})
      */
     constructor(x: number, y: number, settings: object);
     dragging: boolean;
@@ -2298,7 +2033,7 @@ export class DraggableEntity {
      * this module testable. Then we subscribe this module to the
      * transformed events.
      * @name initEvents
-     * @memberof me.DraggableEntity
+     * @memberof DraggableEntity
      * @function
      */
     initEvents(): void;
@@ -2313,7 +2048,7 @@ export class DraggableEntity {
     /**
      * Translates a pointer event to a me.event
      * @name translatePointerEvent
-     * @memberof me.DraggableEntity
+     * @memberof DraggableEntity
      * @function
      * @param {object} e the pointer event you want to translate
      * @param {string} translation the me.event you want to translate the event to
@@ -2322,7 +2057,7 @@ export class DraggableEntity {
     /**
      * Gets called when the user starts dragging the entity
      * @name dragStart
-     * @memberof me.DraggableEntity
+     * @memberof DraggableEntity
      * @function
      * @param {object} e the pointer event
      * @returns {boolean} false if the object is being dragged
@@ -2331,7 +2066,7 @@ export class DraggableEntity {
     /**
      * Gets called when the user drags this entity around
      * @name dragMove
-     * @memberof me.DraggableEntity
+     * @memberof DraggableEntity
      * @function
      * @param {object} e the pointer event
      */
@@ -2339,30 +2074,22 @@ export class DraggableEntity {
     /**
      * Gets called when the user stops dragging the entity
      * @name dragEnd
-     * @memberof me.DraggableEntity
+     * @memberof DraggableEntity
      * @function
      * @returns {boolean} false if the object stopped being dragged
      */
     dragEnd(): boolean;
-    /**
-     * Destructor
-     * @name destroy
-     * @memberof me.DraggableEntity
-     * @function
-     */
-    destroy(): void;
 }
 /**
  * @classdesc
  * Used to make a game entity a droptarget
- * @augments me.Entity
- * @memberof me
+ * @augments Entity
  */
-export class DroptargetEntity {
+export class DroptargetEntity extends Entity {
     /**
      * @param {number} x the x coordinates of the entity object
      * @param {number} y the y coordinates of the entity object
-     * @param {object} settings Entity properties (see {@link me.Entity})
+     * @param {object} settings Entity properties (see {@link Entity})
      */
     constructor(x: number, y: number, settings: object);
     /**
@@ -2371,7 +2098,7 @@ export class DroptargetEntity {
      * @constant
      * @type {string}
      * @name CHECKMETHOD_OVERLAP
-     * @memberof me.DroptargetEntity
+     * @memberof DroptargetEntity
      */
     public CHECKMETHOD_OVERLAP: string;
     /**
@@ -2380,7 +2107,7 @@ export class DroptargetEntity {
      * @constant
      * @type {string}
      * @name CHECKMETHOD_CONTAINS
-     * @memberof me.DroptargetEntity
+     * @memberof DroptargetEntity
      */
     public CHECKMETHOD_CONTAINS: string;
     /**
@@ -2389,13 +2116,13 @@ export class DroptargetEntity {
      * @constant
      * @type {string}
      * @name checkMethod
-     * @memberof me.DroptargetEntity
+     * @memberof DroptargetEntity
      */
     public checkMethod: string;
     /**
      * Sets the collision method which is going to be used to check a valid drop
      * @name setCheckMethod
-     * @memberof me.DroptargetEntity
+     * @memberof DroptargetEntity
      * @function
      * @param {string} checkMethod the checkmethod (defaults to CHECKMETHOD_OVERLAP)
      */
@@ -2403,7 +2130,7 @@ export class DroptargetEntity {
     /**
      * Checks if a dropped entity is dropped on the current entity
      * @name checkOnMe
-     * @memberof me.DroptargetEntity
+     * @memberof DroptargetEntity
      * @function
      * @param {object} e the triggering event
      * @param {object} draggableEntity the draggable entity that is dropped
@@ -2412,23 +2139,15 @@ export class DroptargetEntity {
     /**
      * Gets called when a draggable entity is dropped on the current entity
      * @name drop
-     * @memberof me.DroptargetEntity
+     * @memberof DroptargetEntity
      * @function
      * @param {object} draggableEntity the draggable entity that is dropped
      */
     drop(): void;
-    /**
-     * Destructor
-     * @name destroy
-     * @memberof me.DroptargetEntity
-     * @function
-     */
-    destroy(): void;
 }
 /**
  * @classdesc
  * an ellipse Object
- * @memberof me
  */
 export class Ellipse {
     /**
@@ -2441,17 +2160,17 @@ export class Ellipse {
     /**
      * the center coordinates of the ellipse
      * @public
-     * @type {me.Vector2d}
+     * @type {Vector2d}
      * @name pos
-     * @memberof me.Ellipse#
+     * @memberof Ellipse#
      */
-    public pos: me.Vector2d;
+    public pos: Vector2d;
     /**
      * The bounding rectangle for this shape
      * @private
-     * @type {me.Bounds}
+     * @type {Bounds}
      * @name _bounds
-     * @memberof me.Ellipse#
+     * @memberof Ellipse#
      */
     private _bounds;
     /**
@@ -2459,116 +2178,116 @@ export class Ellipse {
      * @public
      * @type {number}
      * @name radius
-     * @memberof me.Ellipse
+     * @memberof Ellipse
      */
     public radius: number;
     /**
      * Pre-scaled radius vector for ellipse
      * @public
-     * @type {me.Vector2d}
+     * @type {Vector2d}
      * @name radiusV
-     * @memberof me.Ellipse#
+     * @memberof Ellipse#
      */
-    public radiusV: me.Vector2d;
+    public radiusV: Vector2d;
     /**
      * Radius squared, for pythagorean theorom
      * @public
-     * @type {me.Vector2d}
+     * @type {Vector2d}
      * @name radiusSq
-     * @memberof me.Ellipse#
+     * @memberof Ellipse#
      */
-    public radiusSq: me.Vector2d;
+    public radiusSq: Vector2d;
     /**
      * x/y scaling ratio for ellipse
      * @public
-     * @type {me.Vector2d}
+     * @type {Vector2d}
      * @name ratio
-     * @memberof me.Ellipse#
+     * @memberof Ellipse#
      */
-    public ratio: me.Vector2d;
+    public ratio: Vector2d;
     shapeType: string;
     /** @ignore */
     onResetEvent(x: any, y: any, w: any, h: any): void;
     /**
      * set new value to the Ellipse shape
      * @name setShape
-     * @memberof me.Ellipse.prototype
+     * @memberof Ellipse.prototype
      * @function
      * @param {number} x the center x coordinate of the ellipse
      * @param {number} y the center y coordinate of the ellipse
      * @param {number} w width (diameter) of the ellipse
      * @param {number} h height (diameter) of the ellipse
-     * @returns {me.Ellipse} this instance for objecf chaining
+     * @returns {Ellipse} this instance for objecf chaining
      */
-    setShape(x: number, y: number, w: number, h: number): me.Ellipse;
+    setShape(x: number, y: number, w: number, h: number): Ellipse;
     /**
      * Rotate this Ellipse (counter-clockwise) by the specified angle (in radians).
      * @name rotate
-     * @memberof me.Ellipse.prototype
+     * @memberof Ellipse.prototype
      * @function
      * @param {number} angle The angle to rotate (in radians)
-     * @param {me.Vector2d|me.ObservableVector2d} [v] an optional point to rotate around
-     * @returns {me.Ellipse} Reference to this object for method chaining
+     * @param {Vector2d|ObservableVector2d} [v] an optional point to rotate around
+     * @returns {Ellipse} Reference to this object for method chaining
      */
-    rotate(angle: number, v?: me.Vector2d | me.ObservableVector2d): me.Ellipse;
+    rotate(angle: number, v?: Vector2d | ObservableVector2d): Ellipse;
     /**
      * Scale this Ellipse by the specified scalar.
      * @name scale
-     * @memberof me.Ellipse.prototype
+     * @memberof Ellipse.prototype
      * @function
      * @param {number} x
      * @param {number} [y=x]
-     * @returns {me.Ellipse} Reference to this object for method chaining
+     * @returns {Ellipse} Reference to this object for method chaining
      */
-    scale(x: number, y?: number): me.Ellipse;
+    scale(x: number, y?: number): Ellipse;
     /**
      * Scale this Ellipse by the specified vector.
      * @name scale
-     * @memberof me.Ellipse.prototype
+     * @memberof Ellipse.prototype
      * @function
-     * @param {me.Vector2d} v
-     * @returns {me.Ellipse} Reference to this object for method chaining
+     * @param {Vector2d} v
+     * @returns {Ellipse} Reference to this object for method chaining
      */
-    scaleV(v: me.Vector2d): me.Ellipse;
+    scaleV(v: Vector2d): Ellipse;
     /**
      * apply the given transformation matrix to this ellipse
      * @name transform
-     * @memberof me.Ellipse.prototype
+     * @memberof Ellipse.prototype
      * @function
-     * @param {me.Matrix2d} matrix the transformation matrix
-     * @returns {me.Polygon} Reference to this object for method chaining
+     * @param {Matrix2d} matrix the transformation matrix
+     * @returns {Polygon} Reference to this object for method chaining
      */
-    transform(): me.Polygon;
+    transform(): Polygon;
     /**
      * translate the circle/ellipse by the specified offset
      * @name translate
-     * @memberof me.Ellipse.prototype
+     * @memberof Ellipse.prototype
      * @function
      * @param {number} x x offset
      * @param {number} y y offset
-     * @returns {me.Ellipse} this ellipse
+     * @returns {Ellipse} this ellipse
      */
     /**
      * translate the circle/ellipse by the specified vector
      * @name translate
-     * @memberof me.Ellipse.prototype
+     * @memberof Ellipse.prototype
      * @function
-     * @param {me.Vector2d} v vector offset
-     * @returns {me.Ellipse} this ellipse
+     * @param {Vector2d} v vector offset
+     * @returns {Ellipse} this ellipse
      */
-    translate(...args: any[]): me.Ellipse;
+    translate(...args: any[]): Ellipse;
     /**
      * check if this circle/ellipse contains the specified point
      * @name contains
-     * @memberof me.Ellipse.prototype
+     * @memberof Ellipse.prototype
      * @function
-     * @param  {me.Vector2d} point
+     * @param {Vector2d} point
      * @returns {boolean} true if contains
      */
     /**
      * check if this circle/ellipse contains the specified point
      * @name contains
-     * @memberof me.Ellipse.prototype
+     * @memberof Ellipse.prototype
      * @function
      * @param  {number} x x coordinate
      * @param  {number} y y coordinate
@@ -2578,28 +2297,27 @@ export class Ellipse {
     /**
      * returns the bounding box for this shape, the smallest Rectangle object completely containing this shape.
      * @name getBounds
-     * @memberof me.Ellipse.prototype
+     * @memberof Ellipse.prototype
      * @function
-     * @returns {me.Bounds} this shape bounding box Rectangle object
+     * @returns {Bounds} this shape bounding box Rectangle object
      */
-    getBounds(): me.Bounds;
+    getBounds(): Bounds;
     /**
      * clone this Ellipse
      * @name clone
-     * @memberof me.Ellipse.prototype
+     * @memberof Ellipse.prototype
      * @function
-     * @returns {me.Ellipse} new Ellipse
+     * @returns {Ellipse} new Ellipse
      */
-    clone(): me.Ellipse;
+    clone(): Ellipse;
 }
 /**
  * @classdesc
  * a Generic Object Entity
- * @augments me.Renderable
- * @memberof me
- * @see me.Renderable
+ * @augments Renderable
+ * @see Renderable
  */
-export class Entity {
+export class Entity extends Renderable {
     /**
      * @param {number} x the x coordinates of the entity object
      * @param {number} y the y coordinates of the entity object
@@ -2610,12 +2328,12 @@ export class Entity {
      * @param {string} [settings.name] object entity name
      * @param {string} [settings.id] object unique IDs
      * @param {Image|string} [settings.image] resource name of a spritesheet to use for the entity renderable component
-     * @param {me.Vector2d} [settings.anchorPoint=0.0] Entity anchor point
+     * @param {Vector2d} [settings.anchorPoint=0.0] Entity anchor point
      * @param {number} [settings.framewidth=settings.width] width of a single frame in the given spritesheet
      * @param {number} [settings.frameheight=settings.width] height of a single frame in the given spritesheet
      * @param {string} [settings.type] object type
      * @param {number} [settings.collisionMask] Mask collision detection for this object
-     * @param {me.Rect[]|me.Polygon[]|me.Line[]|me.Ellipse[]} [settings.shapes] the initial list of collision shapes (usually populated through Tiled)
+     * @param {Rect[]|Polygon[]|Line[]|Ellipse[]} [settings.shapes] the initial list of collision shapes (usually populated through Tiled)
      */
     constructor(x: number, y: number, settings: {
         width: number;
@@ -2623,34 +2341,33 @@ export class Entity {
         name?: string;
         id?: string;
         image?: (new (width?: number, height?: number) => HTMLImageElement) | string;
-        anchorPoint?: me.Vector2d;
+        anchorPoint?: Vector2d;
         framewidth?: number;
         frameheight?: number;
         type?: string;
         collisionMask?: number;
-        shapes?: me.Rect[] | me.Polygon[] | me.Line[] | me.Ellipse[];
+        shapes?: Rect[] | Polygon[] | Line[] | Ellipse[];
     });
     /**
      * The array of renderable children of this entity.
      * @ignore
      */
     children: any[];
-    public set renderable(arg: me.Renderable);
+    public set renderable(arg: Renderable);
     /**
      * The entity renderable component (can be any objects deriving from me.Renderable, like me.Sprite for example)
      * @public
-     * @type {me.Renderable}
+     * @type {Renderable}
      * @name renderable
-     * @memberof me.Entity
+     * @memberof Entity
      */
-    public get renderable(): me.Renderable;
-    name: string;
+    public get renderable(): Renderable;
     /**
      * object type (as defined in Tiled)
      * @public
      * @type {string}
      * @name type
-     * @memberof me.Entity
+     * @memberof Entity
      */
     public type: string;
     /**
@@ -2658,7 +2375,7 @@ export class Entity {
      * @public
      * @type {number}
      * @name id
-     * @memberof me.Entity
+     * @memberof Entity
      */
     public id: number;
     /**
@@ -2667,45 +2384,23 @@ export class Entity {
      * @public
      * @type {boolean}
      * @name alive
-     * @memberof me.Entity
+     * @memberof Entity
      */
     public alive: boolean;
-    body: Body;
-    autoTransform: boolean;
-    /** @ignore */
-    update(dt: any): any;
     /**
      * update the bounds position when the body is modified
      * @ignore
      * @name onBodyUpdate
-     * @memberof me.Entity
+     * @memberof Entity
      * @function
-     * @param {me.Body} body the body whose bounds to update
+     * @param {Body} body the body whose bounds to update
      */
-    onBodyUpdate(body: me.Body): void;
-    preDraw(renderer: any): void;
-    /**
-     * object draw<br>
-     * not to be called by the end user<br>
-     * called by the game manager on each game loop
-     * @name draw
-     * @memberof me.Entity
-     * @function
-     * @protected
-     * @param {me.CanvasRenderer|me.WebGLRenderer} renderer a renderer object
-     * @param {me.Rect} rect region to draw
-     */
-    protected draw(renderer: me.CanvasRenderer | me.WebGLRenderer, rect: me.Rect): void;
-    /**
-     * Destroy function<br>
-     * @ignore
-     */
-    destroy(...args: any[]): void;
+    onBodyUpdate(body: Body): void;
     /**
      * onDeactivateEvent Notification function<br>
      * Called by engine before deleting the object
      * @name onDeactivateEvent
-     * @memberof me.Entity
+     * @memberof Entity
      * @function
      */
     onDeactivateEvent(): void;
@@ -2713,7 +2408,6 @@ export class Entity {
 /**
  * @classdesc
  * a base GL Shader object
- * @memberof me
  */
 export class GLShader {
     /**
@@ -2749,7 +2443,7 @@ export class GLShader {
      * @public
      * @type {WebGLRenderingContext}
      * @name gl
-     * @memberof me.GLShader
+     * @memberof GLShader
      */
     public gl: WebGLRenderingContext;
     /**
@@ -2757,7 +2451,7 @@ export class GLShader {
      * @public
      * @type {string}
      * @name vertex
-     * @memberof me.GLShader
+     * @memberof GLShader
      */
     public vertex: string;
     /**
@@ -2765,7 +2459,7 @@ export class GLShader {
      * @public
      * @type {string}
      * @name vertex
-     * @memberof me.GLShader
+     * @memberof GLShader
      */
     public fragment: string;
     /**
@@ -2773,7 +2467,7 @@ export class GLShader {
      * @public
      * @type {GLint[]}
      * @name attributes
-     * @memberof me.GLShader
+     * @memberof GLShader
      */
     public attributes: GLint[];
     /**
@@ -2781,7 +2475,7 @@ export class GLShader {
      * @public
      * @type {WebGLProgram}
      * @name program
-     * @memberof me.GLShader
+     * @memberof GLShader
      */
     public program: WebGLProgram;
     /**
@@ -2789,20 +2483,20 @@ export class GLShader {
      * @public
      * @type {object}
      * @name uniforms
-     * @memberof me.GLShader
+     * @memberof GLShader
      */
     public uniforms: object;
     /**
      * Installs this shader program as part of current rendering state
      * @name bind
-     * @memberof me.GLShader
+     * @memberof GLShader
      * @function
      */
     bind(): void;
     /**
      * returns the location of an attribute variable in this shader program
      * @name getAttribLocation
-     * @memberof me.GLShader
+     * @memberof GLShader
      * @function
      * @param {string} name the name of the attribute variable whose location to get.
      * @returns {GLint} number indicating the location of the variable name if found. Returns -1 otherwise
@@ -2811,7 +2505,7 @@ export class GLShader {
     /**
      * Set the uniform to the given value
      * @name setUniform
-     * @memberof me.GLShader
+     * @memberof GLShader
      * @function
      * @param {string} name the uniform name
      * @param {object|Float32Array} value the value to assign to that uniform
@@ -2822,7 +2516,7 @@ export class GLShader {
     /**
      * destroy this shader objects resources (program, attributes, uniforms)
      * @name destroy
-     * @memberof me.GLShader
+     * @memberof GLShader
      * @function
      */
     destroy(): void;
@@ -2833,14 +2527,13 @@ export class GLShader {
  * A very basic object to manage GUI elements <br>
  * The object simply register on the "pointerdown" <br>
  * or "touchstart" event and call the onClick function"
- * @augments me.Sprite
- * @memberof me
+ * @augments Sprite
  */
-export class GUI_Object {
+export class GUI_Object extends Sprite {
     /**
      * @param {number} x the x coordinate of the GUI Object
      * @param {number} y the y coordinate of the GUI Object
-     * @param {object} settings See {@link me.Sprite}
+     * @param {object} settings See {@link Sprite}
      * @example
      * // create a basic GUI Object
      * class myButton extends GUI_Object {
@@ -2873,14 +2566,14 @@ export class GUI_Object {
      * @public
      * @type {boolean}
      * @default true
-     * @name me.GUI_Object#isClickable
+     * @name GUI_Object#isClickable
      */
     public isClickable: boolean;
     /**
      * Tap and hold threshold timeout in ms
      * @type {number}
      * @default 250
-     * @name me.GUI_Object#holdThreshold
+     * @name GUI_Object#holdThreshold
      */
     holdThreshold: number;
     /**
@@ -2888,7 +2581,7 @@ export class GUI_Object {
      * @public
      * @type {boolean}
      * @default false
-     * @name me.GUI_Object#isHoldable
+     * @name GUI_Object#isHoldable
      */
     public isHoldable: boolean;
     /**
@@ -2896,13 +2589,11 @@ export class GUI_Object {
      * @public
      * @type {boolean}
      * @default false
-     * @name me.GUI_Object#hover
+     * @name GUI_Object#hover
      */
     public hover: boolean;
     holdTimeout: number;
     released: boolean;
-    floating: boolean;
-    isKinematic: boolean;
     /**
      * function callback for the pointerdown event
      * @ignore
@@ -2912,10 +2603,10 @@ export class GUI_Object {
     /**
      * function called when the object is pressed (to be extended)
      * @name onClick
-     * @memberof me.GUI_Object.prototype
+     * @memberof GUI_Object.prototype
      * @public
      * @function
-     * @param {me.Pointer} event the event object
+     * @param {Pointer} event the event object
      * @returns {boolean} return false if we need to stop propagating the event
      */
     public onClick(): boolean;
@@ -2927,10 +2618,10 @@ export class GUI_Object {
     /**
      * function called when the pointer is over the object
      * @name onOver
-     * @memberof me.GUI_Object.prototype
+     * @memberof GUI_Object.prototype
      * @public
      * @function
-     * @param {me.Pointer} event the event object
+     * @param {Pointer} event the event object
      */
     public onOver(): void;
     /**
@@ -2941,10 +2632,10 @@ export class GUI_Object {
     /**
      * function called when the pointer is leaving the object area
      * @name onOut
-     * @memberof me.GUI_Object.prototype
+     * @memberof GUI_Object.prototype
      * @public
      * @function
-     * @param {me.Pointer} event the event object
+     * @param {Pointer} event the event object
      */
     public onOut(): void;
     /**
@@ -2955,7 +2646,7 @@ export class GUI_Object {
     /**
      * function called when the object is pressed and released (to be extended)
      * @name onRelease
-     * @memberof me.GUI_Object.prototype
+     * @memberof GUI_Object.prototype
      * @public
      * @function
      * @returns {boolean} return false if we need to stop propagating the event
@@ -2970,7 +2661,7 @@ export class GUI_Object {
      * function called when the object is pressed and held<br>
      * to be extended <br>
      * @name onHold
-     * @memberof me.GUI_Object.prototype
+     * @memberof GUI_Object.prototype
      * @public
      * @function
      */
@@ -2989,20 +2680,19 @@ export class GUI_Object {
 /**
  * @classdesc
  * a generic Image Layer Object
- * @augments me.Renderable
- * @memberof me
+ * @augments Renderable
  */
-export class ImageLayer {
+export class ImageLayer extends Renderable {
     /**
      * @param {number} x x coordinate
      * @param {number} y y coordinate
      * @param {object} settings ImageLayer properties
-     * @param {HTMLImageElement|HTMLCanvasElement|string} settings.image Image reference. See {@link me.loader.getImage}
+     * @param {HTMLImageElement|HTMLCanvasElement|string} settings.image Image reference. See {@link loader.getImage}
      * @param {string} [settings.name="me.ImageLayer"] layer name
      * @param {number} [settings.z=0] z-index position
-     * @param {number|me.Vector2d} [settings.ratio=1.0] Scrolling ratio to be applied. See {@link me.ImageLayer#ratio}
-     * @param {string} [settings.repeat='repeat'] define if and how an Image Layer should be repeated (accepted values are 'repeat', 'repeat-x', 'repeat-y', 'no-repeat'). See {@link me.ImageLayer#repeat}
-     * @param {number|me.Vector2d} [settings.anchorPoint=0.0] Image origin. See {@link me.ImageLayer#anchorPoint}
+     * @param {number|Vector2d} [settings.ratio=1.0] Scrolling ratio to be applied. See {@link ImageLayer#ratio}
+     * @param {string} [settings.repeat='repeat'] define if and how an Image Layer should be repeated (accepted values are 'repeat', 'repeat-x', 'repeat-y', 'no-repeat'). See {@link ImageLayer#repeat}
+     * @param {number|Vector2d} [settings.anchorPoint=0.0] Image origin. See {@link ImageLayer#anchorPoint}
      * @example
      * // create a repetitive background pattern on the X axis using the citycloud image asset
      * me.game.world.addChild(new me.ImageLayer(0, 0, {
@@ -3014,11 +2704,10 @@ export class ImageLayer {
         image: HTMLImageElement | HTMLCanvasElement | string;
         name?: string;
         z?: number;
-        ratio?: number | me.Vector2d;
+        ratio?: number | Vector2d;
         repeat?: string;
-        anchorPoint?: number | me.Vector2d;
+        anchorPoint?: number | Vector2d;
     });
-    floating: boolean;
     /**
      * Define the image scrolling ratio<br>
      * Scrolling speed is defined by multiplying the viewport delta position by the specified ratio.
@@ -3027,11 +2716,11 @@ export class ImageLayer {
      * - a number, to change the value for both axis <br>
      * - a json expression like `json:{"x":0.5,"y":0.5}` if you wish to specify a different value for both x and y
      * @public
-     * @type {me.Vector2d}
+     * @type {Vector2d}
      * @default <1.0,1.0>
-     * @name me.ImageLayer#ratio
+     * @name ImageLayer#ratio
      */
-    public ratio: me.Vector2d;
+    public ratio: Vector2d;
     public set repeat(arg: string);
     /**
      * Define if and how an Image Layer should be repeated.<br>
@@ -3044,22 +2733,13 @@ export class ImageLayer {
      * @public
      * @type {string}
      * @default 'repeat'
-     * @name me.ImageLayer#repeat
+     * @name ImageLayer#repeat
      */
     public get repeat(): string;
     _repeat: string;
     repeatX: boolean;
     repeatY: boolean;
     onActivateEvent(): void;
-    /**
-     * resize the Image Layer to match the given size
-     * @name resize
-     * @memberof me.ImageLayer.prototype
-     * @function
-     * @param {number} w new width
-     * @param {number} h new height
-     */
-    resize(w: number, h: number): void;
     /**
      * createPattern function
      * @ignore
@@ -3073,75 +2753,17 @@ export class ImageLayer {
      * @function
      */
     updateLayer(vpos: any): void;
-    isDirty: boolean;
-    /**
-     * override the default predraw function
-     * as repeat and anchor are managed directly in the draw method
-     * @ignore
-     */
-    preDraw(renderer: any): void;
-    /**
-     * draw the ImageLayer. <br>
-     * automatically called by the game manager {@link me.game}
-     * @name draw
-     * @memberof me.ImageLayer.prototype
-     * @function
-     * @protected
-     * @param {me.CanvasRenderer|me.WebGLRenderer} renderer a renderer object
-     */
-    protected draw(renderer: me.CanvasRenderer | me.WebGLRenderer): void;
     onDeactivateEvent(): void;
-    /**
-     * Destroy function<br>
-     * @ignore
-     */
-    destroy(): void;
 }
 /**
  * @classdesc
  * a line segment Object
- * @augments me.Polygon
- * @memberof me
+ * @augments Polygon
  * @param {number} x origin point of the Line
  * @param {number} y origin point of the Line
- * @param {me.Vector2d[]} points array of vectors defining the Line
+ * @param {Vector2d[]} points array of vectors defining the Line
  */
-export class Line {
-    /**
-     * Returns true if the Line contains the given point
-     * @name contains
-     * @memberof me.Line.prototype
-     * @function
-     * @param  {me.Vector2d} point
-     * @returns {boolean} true if contains
-     */
-    /**
-     * Returns true if the Line contains the given point
-     * @name contains
-     * @memberof me.Line.prototype
-     * @function
-     * @param  {number} x x coordinate
-     * @param  {number} y y coordinate
-     * @returns {boolean} true if contains
-     */
-    contains(...args: any[]): boolean;
-    /**
-     * Computes the calculated collision edges and normals.
-     * This **must** be called if the `points` array, `angle`, or `offset` is modified manually.
-     * @name recalc
-     * @memberof me.Line.prototype
-     * @function
-     * @returns {me.Line} this instance for objecf chaining
-     */
-    recalc(): me.Line;
-    /**
-     * clone this line segment
-     * @name clone
-     * @memberof me.Line.prototype
-     * @function
-     * @returns {me.Line} new Line
-     */
-    clone(): me.Line;
+export class Line extends Polygon {
 }
 declare var math: Readonly<{
     __proto__: any;
@@ -3166,13 +2788,12 @@ declare var math: Readonly<{
  * a Matrix2d Object.<br>
  * the identity matrix and parameters position : <br>
  * <img src="images/identity-matrix_2x.png"/>
- * @memberof me
  */
 export class Matrix2d {
     /**
-     * @param {...(me.Matrix2d|me.Matrix3d|number)} [args] an instance of me.Matrix2d pr me.Matrix3d to copy from, or individual matrix components. See {@link me.Matrix2d.setTransform}
+     * @param {...(Matrix2d|Matrix3d|number)} [args] an instance of me.Matrix2d or me.Matrix3d to copy from, or individual matrix components. See {@link Matrix2d.setTransform}
      */
-    constructor(...args?: (me.Matrix2d | me.Matrix3d | number)[]);
+    constructor(...args?: (Matrix2d | Matrix3d | number)[]);
     /**
      * @ignore
      */
@@ -3182,36 +2803,34 @@ export class Matrix2d {
      * tx component of the matrix
      * @public
      * @type {number}
-     * @readonly
-     * @see me.Matrix2d.translate
+     * @see Matrix2d.translate
      * @name tx
-     * @memberof me.Matrix2d
+     * @memberof Matrix2d
      */
-    public readonly get tx(): number;
+    public get tx(): number;
     /**
      * ty component of the matrix
      * @public
      * @type {number}
-     * @readonly
-     * @see me.Matrix2d.translate
+     * @see Matrix2d.translate
      * @name ty
-     * @memberof me.Matrix2d
+     * @memberof Matrix2d
      */
-    public readonly get ty(): number;
+    public get ty(): number;
     /**
      * reset the transformation matrix to the identity matrix (no transformation).<br>
      * the identity matrix and parameters position : <br>
      * <img src="images/identity-matrix_2x.png"/>
      * @name identity
-     * @memberof me.Matrix2d
+     * @memberof Matrix2d
      * @function
-     * @returns {me.Matrix2d} Reference to this object for method chaining
+     * @returns {Matrix2d} Reference to this object for method chaining
      */
-    identity(): me.Matrix2d;
+    identity(): Matrix2d;
     /**
      * set the matrix to the specified value
      * @name setTransform
-     * @memberof me.Matrix2d
+     * @memberof Matrix2d
      * @function
      * @param {number} a
      * @param {number} b
@@ -3222,138 +2841,138 @@ export class Matrix2d {
      * @param {number} [g=0]
      * @param {number} [h=0]
      * @param {number} [i=1]
-     * @returns {me.Matrix2d} Reference to this object for method chaining
+     * @returns {Matrix2d} Reference to this object for method chaining
      */
-    setTransform(...args: any[]): me.Matrix2d;
+    setTransform(...args: any[]): Matrix2d;
     /**
      * Copies over the values from another me.Matrix2d.
      * @name copy
-     * @memberof me.Matrix2d
+     * @memberof Matrix2d
      * @function
-     * @param {me.Matrix2d} m the matrix object to copy from
-     * @returns {me.Matrix2d} Reference to this object for method chaining
+     * @param {Matrix2d} m the matrix object to copy from
+     * @returns {Matrix2d} Reference to this object for method chaining
      */
-    copy(m: me.Matrix2d): me.Matrix2d;
+    copy(m: Matrix2d): Matrix2d;
     /**
      * Copies over the upper-left 3x3 values from the given me.Matrix3d
      * @name fromMat3d
-     * @memberof me.Matrix2d
+     * @memberof Matrix2d
      * @function
-     * @param {me.Matrix3d} m the matrix object to copy from
-     * @returns {me.Matrix2d} Reference to this object for method chaining
+     * @param {Matrix3d} m the matrix object to copy from
+     * @returns {Matrix2d} Reference to this object for method chaining
      */
-    fromMat3d(m: me.Matrix3d): me.Matrix2d;
+    fromMat3d(m: Matrix3d): Matrix2d;
     /**
      * multiply both matrix
      * @name multiply
-     * @memberof me.Matrix2d
+     * @memberof Matrix2d
      * @function
-     * @param {me.Matrix2d} m the other matrix
-     * @returns {me.Matrix2d} Reference to this object for method chaining
+     * @param {Matrix2d} m the other matrix
+     * @returns {Matrix2d} Reference to this object for method chaining
      */
-    multiply(m: me.Matrix2d): me.Matrix2d;
+    multiply(m: Matrix2d): Matrix2d;
     /**
      * Transpose the value of this matrix.
      * @name transpose
-     * @memberof me.Matrix2d
+     * @memberof Matrix2d
      * @function
-     * @returns {me.Matrix2d} Reference to this object for method chaining
+     * @returns {Matrix2d} Reference to this object for method chaining
      */
-    transpose(): me.Matrix2d;
+    transpose(): Matrix2d;
     /**
      * invert this matrix, causing it to apply the opposite transformation.
      * @name invert
-     * @memberof me.Matrix2d
+     * @memberof Matrix2d
      * @function
-     * @returns {me.Matrix2d} Reference to this object for method chaining
+     * @returns {Matrix2d} Reference to this object for method chaining
      */
-    invert(): me.Matrix2d;
+    invert(): Matrix2d;
     /**
      * apply the current transform to the given 2d vector
      * @name apply
-     * @memberof me.Matrix2d
+     * @memberof Matrix2d
      * @function
-     * @param {me.Vector2d} v the vector object to be transformed
-     * @returns {me.Vector2d} result vector object.
+     * @param {Vector2d} v the vector object to be transformed
+     * @returns {Vector2d} result vector object.
      */
-    apply(v: me.Vector2d): me.Vector2d;
+    apply(v: Vector2d): Vector2d;
     /**
      * apply the inverted current transform to the given 2d vector
      * @name applyInverse
-     * @memberof me.Matrix2d
+     * @memberof Matrix2d
      * @function
-     * @param {me.Vector2d} v the vector object to be transformed
-     * @returns {me.Vector2d} result vector object.
+     * @param {Vector2d} v the vector object to be transformed
+     * @returns {Vector2d} result vector object.
      */
-    applyInverse(v: me.Vector2d): me.Vector2d;
+    applyInverse(v: Vector2d): Vector2d;
     /**
      * scale the matrix
      * @name scale
-     * @memberof me.Matrix2d
+     * @memberof Matrix2d
      * @function
      * @param {number} x a number representing the abscissa of the scaling vector.
      * @param {number} [y=x] a number representing the ordinate of the scaling vector.
-     * @returns {me.Matrix2d} Reference to this object for method chaining
+     * @returns {Matrix2d} Reference to this object for method chaining
      */
-    scale(x: number, y?: number): me.Matrix2d;
+    scale(x: number, y?: number): Matrix2d;
     /**
      * adds a 2D scaling transformation.
      * @name scaleV
-     * @memberof me.Matrix2d
+     * @memberof Matrix2d
      * @function
-     * @param {me.Vector2d} v scaling vector
-     * @returns {me.Matrix2d} Reference to this object for method chaining
+     * @param {Vector2d} v scaling vector
+     * @returns {Matrix2d} Reference to this object for method chaining
      */
-    scaleV(v: me.Vector2d): me.Matrix2d;
+    scaleV(v: Vector2d): Matrix2d;
     /**
      * specifies a 2D scale operation using the [sx, 1] scaling vector
      * @name scaleX
-     * @memberof me.Matrix2d
+     * @memberof Matrix2d
      * @function
      * @param {number} x x scaling vector
-     * @returns {me.Matrix2d} Reference to this object for method chaining
+     * @returns {Matrix2d} Reference to this object for method chaining
      */
-    scaleX(x: number): me.Matrix2d;
+    scaleX(x: number): Matrix2d;
     /**
      * specifies a 2D scale operation using the [1,sy] scaling vector
      * @name scaleY
-     * @memberof me.Matrix2d
+     * @memberof Matrix2d
      * @function
      * @param {number} y y scaling vector
-     * @returns {me.Matrix2d} Reference to this object for method chaining
+     * @returns {Matrix2d} Reference to this object for method chaining
      */
-    scaleY(y: number): me.Matrix2d;
+    scaleY(y: number): Matrix2d;
     /**
      * rotate the matrix (counter-clockwise) by the specified angle (in radians).
      * @name rotate
-     * @memberof me.Matrix2d
+     * @memberof Matrix2d
      * @function
      * @param {number} angle Rotation angle in radians.
-     * @returns {me.Matrix2d} Reference to this object for method chaining
+     * @returns {Matrix2d} Reference to this object for method chaining
      */
-    rotate(angle: number): me.Matrix2d;
+    rotate(angle: number): Matrix2d;
     /**
      * translate the matrix position on the horizontal and vertical axis
      * @name translate
-     * @memberof me.Matrix2d
+     * @memberof Matrix2d
      * @function
      * @param {number} x the x coordindates to translate the matrix by
      * @param {number} y the y coordindates to translate the matrix by
-     * @returns {me.Matrix2d} Reference to this object for method chaining
+     * @returns {Matrix2d} Reference to this object for method chaining
      */
     /**
      * translate the matrix by a vector on the horizontal and vertical axis
      * @name translateV
-     * @memberof me.Matrix2d
+     * @memberof Matrix2d
      * @function
-     * @param {me.Vector2d} v the vector to translate the matrix by
-     * @returns {me.Matrix2d} Reference to this object for method chaining
+     * @param {Vector2d} v the vector to translate the matrix by
+     * @returns {Matrix2d} Reference to this object for method chaining
      */
-    translate(...args: any[]): me.Matrix2d;
+    translate(...args: any[]): Matrix2d;
     /**
      * returns true if the matrix is an identity matrix.
      * @name isIdentity
-     * @memberof me.Matrix2d
+     * @memberof Matrix2d
      * @function
      * @returns {boolean}
      */
@@ -3361,24 +2980,24 @@ export class Matrix2d {
     /**
      * return true if the two matrices are identical
      * @name equals
-     * @memberof me.Matrix2d
+     * @memberof Matrix2d
      * @function
-     * @param {me.Matrix2d} m the other matrix
+     * @param {Matrix2d} m the other matrix
      * @returns {boolean} true if both are equals
      */
-    equals(m: me.Matrix2d): boolean;
+    equals(m: Matrix2d): boolean;
     /**
      * Clone the Matrix
      * @name clone
-     * @memberof me.Matrix2d
+     * @memberof Matrix2d
      * @function
-     * @returns {me.Matrix2d}
+     * @returns {Matrix2d}
      */
-    clone(): me.Matrix2d;
+    clone(): Matrix2d;
     /**
      * return an array representation of this Matrix
      * @name toArray
-     * @memberof me.Matrix2d
+     * @memberof Matrix2d
      * @function
      * @returns {Float32Array}
      */
@@ -3386,7 +3005,7 @@ export class Matrix2d {
     /**
      * convert the object to a string representation
      * @name toString
-     * @memberof me.Matrix2d
+     * @memberof Matrix2d
      * @function
      * @returns {string}
      */
@@ -3395,13 +3014,12 @@ export class Matrix2d {
 /**
  * @classdesc
  * a 4x4 Matrix3d Object
- * @memberof me
  */
 export class Matrix3d {
     /**
-     * @param {...(me.Matrix3d|number)} [args] An instance of me.Matrix3d to copy from, or individual Matrix components. See {@link me.Matrix3d.setTransform}
+     * @param {...(Matrix3d|number)} [args] An instance of me.Matrix3d to copy from, or individual Matrix components. See {@link Matrix3d.setTransform}
      */
-    constructor(...args?: (me.Matrix3d | number)[]);
+    constructor(...args?: (Matrix3d | number)[]);
     /**
      * @ignore
      */
@@ -3411,43 +3029,40 @@ export class Matrix3d {
      * tx component of the matrix
      * @public
      * @type {number}
-     * @readonly
      * @name tx
-     * @memberof me.Matrix3d
+     * @memberof Matrix3d
      */
-    public readonly get tx(): number;
+    public get tx(): number;
     /**
      * ty component of the matrix
      * @public
      * @type {number}
-     * @readonly
      * @name ty
-     * @memberof me.Matrix3d
+     * @memberof Matrix3d
      */
-    public readonly get ty(): number;
+    public get ty(): number;
     /**
      * ty component of the matrix
      * @public
      * @type {number}
-     * @readonly
      * @name tz
-     * @memberof me.Matrix3d
+     * @memberof Matrix3d
      */
-    public readonly get tz(): number;
+    public get tz(): number;
     /**
      * reset the transformation matrix to the identity matrix (no transformation).<br>
      * the identity matrix and parameters position : <br>
      * <img src="images/identity-matrix_2x.png"/>
      * @name identity
-     * @memberof me.Matrix3d
+     * @memberof Matrix3d
      * @function
-     * @returns {me.Matrix3d} Reference to this object for method chaining
+     * @returns {Matrix3d} Reference to this object for method chaining
      */
-    identity(): me.Matrix3d;
+    identity(): Matrix3d;
     /**
      * set the matrix to the specified value
      * @name setTransform
-     * @memberof me.Matrix3d
+     * @memberof Matrix3d
      * @function
      * @param {number} m00
      * @param {number} m01
@@ -3465,75 +3080,75 @@ export class Matrix3d {
      * @param {number} m31
      * @param {number} m32
      * @param {number} m33
-     * @returns {me.Matrix3d} Reference to this object for method chaining
+     * @returns {Matrix3d} Reference to this object for method chaining
      */
-    setTransform(m00: number, m01: number, m02: number, m03: number, m10: number, m11: number, m12: number, m13: number, m20: number, m21: number, m22: number, m23: number, m30: number, m31: number, m32: number, m33: number): me.Matrix3d;
+    setTransform(m00: number, m01: number, m02: number, m03: number, m10: number, m11: number, m12: number, m13: number, m20: number, m21: number, m22: number, m23: number, m30: number, m31: number, m32: number, m33: number): Matrix3d;
     /**
      * Copies over the values from another me.Matrix3d.
      * @name copy
-     * @memberof me.Matrix3d
+     * @memberof Matrix3d
      * @function
-     * @param {me.Matrix3d} m the matrix object to copy from
-     * @returns {me.Matrix3d} Reference to this object for method chaining
+     * @param {Matrix3d} m the matrix object to copy from
+     * @returns {Matrix3d} Reference to this object for method chaining
      */
-    copy(m: me.Matrix3d): me.Matrix3d;
+    copy(m: Matrix3d): Matrix3d;
     /**
      * Copies over the upper-left 2x2 values from the given me.Matrix2d
      * @name fromMat2d
-     * @memberof me.Matrix3d
+     * @memberof Matrix3d
      * @function
-     * @param {me.Matrix2d} m the matrix object to copy from
-     * @returns {me.Matrix2d} Reference to this object for method chaining
+     * @param {Matrix2d} m the matrix object to copy from
+     * @returns {Matrix2d} Reference to this object for method chaining
      */
-    fromMat2d(m: me.Matrix2d): me.Matrix2d;
+    fromMat2d(m: Matrix2d): Matrix2d;
     /**
      * multiply both matrix
      * @name multiply
-     * @memberof me.Matrix3d
+     * @memberof Matrix3d
      * @function
-     * @param {me.Matrix3d} m Other matrix
-     * @returns {me.Matrix3d} Reference to this object for method chaining
+     * @param {Matrix3d} m Other matrix
+     * @returns {Matrix3d} Reference to this object for method chaining
      */
-    multiply(m: me.Matrix3d): me.Matrix3d;
+    multiply(m: Matrix3d): Matrix3d;
     /**
      * Transpose the value of this matrix.
      * @name transpose
-     * @memberof me.Matrix3d
+     * @memberof Matrix3d
      * @function
-     * @returns {me.Matrix3d} Reference to this object for method chaining
+     * @returns {Matrix3d} Reference to this object for method chaining
      */
-    transpose(): me.Matrix3d;
+    transpose(): Matrix3d;
     /**
      * invert this matrix, causing it to apply the opposite transformation.
      * @name invert
-     * @memberof me.Matrix3d
+     * @memberof Matrix3d
      * @function
-     * @returns {me.Matrix3d} Reference to this object for method chaining
+     * @returns {Matrix3d} Reference to this object for method chaining
      */
-    invert(): me.Matrix3d;
+    invert(): Matrix3d;
     /**
      * apply the current transform to the given 2d or 3d vector
      * @name apply
-     * @memberof me.Matrix3d
+     * @memberof Matrix3d
      * @function
-     * @param {me.Vector2d|me.Vector3d} v the vector object to be transformed
-     * @returns {me.Vector2d|me.Vector3d} result vector object.
+     * @param {Vector2d|Vector3d} v the vector object to be transformed
+     * @returns {Vector2d|Vector3d} result vector object.
      */
-    apply(v: me.Vector2d | me.Vector3d): me.Vector2d | me.Vector3d;
+    apply(v: Vector2d | Vector3d): Vector2d | Vector3d;
     /**
      * apply the inverted current transform to the given 2d or 3d vector
      * @name applyInverse
-     * @memberof me.Matrix3d
+     * @memberof Matrix3d
      * @function
-     * @param {me.Vector2d|me.Vector3d} v the vector object to be transformed
-     * @returns {me.Vector2d|me.Vector3d} result vector object.
+     * @param {Vector2d|Vector3d} v the vector object to be transformed
+     * @returns {Vector2d|Vector3d} result vector object.
      */
-    applyInverse(v: me.Vector2d | me.Vector3d): me.Vector2d | me.Vector3d;
+    applyInverse(v: Vector2d | Vector3d): Vector2d | Vector3d;
     /**
      * generate an orthogonal projection matrix, with the result replacing the current matrix
      * <img src="images/glOrtho.gif"/><br>
      * @name ortho
-     * @memberof me.Matrix3d
+     * @memberof Matrix3d
      * @function
      * @param {number} left farthest left on the x-axis
      * @param {number} right farthest right on the x-axis
@@ -3541,80 +3156,80 @@ export class Matrix3d {
      * @param {number} top farthest up on the y-axis
      * @param {number} near distance to the near clipping plane along the -Z axis
      * @param {number} far distance to the far clipping plane along the -Z axis
-     * @returns {me.Matrix3d} Reference to this object for method chaining
+     * @returns {Matrix3d} Reference to this object for method chaining
      */
-    ortho(left: number, right: number, bottom: number, top: number, near: number, far: number): me.Matrix3d;
+    ortho(left: number, right: number, bottom: number, top: number, near: number, far: number): Matrix3d;
     /**
      * scale the matrix
      * @name scale
-     * @memberof me.Matrix3d
+     * @memberof Matrix3d
      * @function
      * @param {number} x a number representing the abscissa of the scaling vector.
      * @param {number} [y=x] a number representing the ordinate of the scaling vector.
      * @param {number} [z=0] a number representing the depth vector
-     * @returns {me.Matrix3d} Reference to this object for method chaining
+     * @returns {Matrix3d} Reference to this object for method chaining
      */
-    scale(x: number, y?: number, z?: number): me.Matrix3d;
+    scale(x: number, y?: number, z?: number): Matrix3d;
     /**
      * adds a 2D scaling transformation.
      * @name scaleV
-     * @memberof me.Matrix3d
+     * @memberof Matrix3d
      * @function
-     * @param {me.Vector2d|me.Vector3d} v scaling vector
-     * @returns {me.Matrix3d} Reference to this object for method chaining
+     * @param {Vector2d|Vector3d} v scaling vector
+     * @returns {Matrix3d} Reference to this object for method chaining
      */
-    scaleV(v: me.Vector2d | me.Vector3d): me.Matrix3d;
+    scaleV(v: Vector2d | Vector3d): Matrix3d;
     /**
      * specifies a 2D scale operation using the [sx, 1] scaling vector
      * @name scaleX
-     * @memberof me.Matrix3d
+     * @memberof Matrix3d
      * @function
      * @param {number} x x scaling vector
-     * @returns {me.Matrix3d} Reference to this object for method chaining
+     * @returns {Matrix3d} Reference to this object for method chaining
      */
-    scaleX(x: number): me.Matrix3d;
+    scaleX(x: number): Matrix3d;
     /**
      * specifies a 2D scale operation using the [1,sy] scaling vector
      * @name scaleY
-     * @memberof me.Matrix3d
+     * @memberof Matrix3d
      * @function
      * @param {number} y y scaling vector
-     * @returns {me.Matrix3d} Reference to this object for method chaining
+     * @returns {Matrix3d} Reference to this object for method chaining
      */
-    scaleY(y: number): me.Matrix3d;
+    scaleY(y: number): Matrix3d;
     /**
      * rotate this matrix (counter-clockwise) by the specified angle (in radians).
      * @name rotate
-     * @memberof me.Matrix3d
+     * @memberof Matrix3d
      * @function
      * @param {number} angle Rotation angle in radians.
-     * @param {me.Vector3d} v the axis to rotate around
-     * @returns {me.Matrix3d} Reference to this object for method chaining
+     * @param {Vector3d} v the axis to rotate around
+     * @returns {Matrix3d} Reference to this object for method chaining
      */
-    rotate(angle: number, v: me.Vector3d): me.Matrix3d;
+    rotate(angle: number, v: Vector3d): Matrix3d;
     /**
      * translate the matrix position using the given vector
      * @name translate
-     * @memberof me.Matrix3d
+     * @memberof Matrix3d
      * @function
      * @param {number} x a number representing the abscissa of the vector.
      * @param {number} [y=x] a number representing the ordinate of the vector.
      * @param {number} [z=0] a number representing the depth of the vector
-     * @returns {me.Matrix3d} Reference to this object for method chaining
+     * @returns {Matrix3d} Reference to this object for method chaining
      */
     /**
      * translate the matrix by a vector on the horizontal and vertical axis
      * @name translateV
-     * @memberof me.Matrix3d
+     * @memberof Matrix3d
      * @function
-     * @param {me.Vector2d|me.Vector3d} v the vector to translate the matrix by
-     * @returns {me.Matrix3d} Reference to this object for method chaining
+     * @param {Vector2d|Vector3d} v the vector to translate the matrix by
+     * @returns {Matrix3d} Reference to this object for method chaining
      */
-    translate(...args: any[]): me.Matrix3d;
+    translate(...args: any[]): Matrix3d;
     /**
      * returns true if the matrix is an identity matrix.
      * @name isIdentity
-     * @memberof me.Matrix3d
+     * @memberof Matrix3d
      * @function
      * @returns {boolean}
      */
@@ -3622,24 +3237,24 @@ export class Matrix3d {
     /**
      * return true if the two matrices are identical
      * @name equals
-     * @memberof me.Matrix3d
+     * @memberof Matrix3d
      * @function
-     * @param {me.Matrix3d} m the other matrix
+     * @param {Matrix3d} m the other matrix
      * @returns {boolean} true if both are equals
      */
-    equals(m: me.Matrix3d): boolean;
+    equals(m: Matrix3d): boolean;
     /**
      * Clone the Matrix
      * @name clone
-     * @memberof me.Matrix3d
+     * @memberof Matrix3d
      * @function
-     * @returns {me.Matrix3d}
+     * @returns {Matrix3d}
      */
-    clone(): me.Matrix3d;
+    clone(): Matrix3d;
     /**
      * return an array representation of this Matrix
      * @name toArray
-     * @memberof me.Matrix3d
+     * @memberof Matrix3d
      * @function
      * @returns {Float32Array}
      */
@@ -3647,7 +3262,7 @@ export class Matrix3d {
     /**
      * convert the object to a string representation
      * @name toString
-     * @memberof me.Matrix3d
+     * @memberof Matrix3d
      * @function
      * @returns {string}
      */
@@ -3659,25 +3274,24 @@ export class Matrix3d {
  * by proportionally scaling a sprite by splitting it in a grid of nine parts (with only parts 1, 3, 7, 9 not being scaled). <br>
  * <img src="images/9-slice-scaling.png"/><br>
  * @see https://en.wikipedia.org/wiki/9-slice_scaling
- * @augments me.Sprite
- * @memberof me
+ * @augments Sprite
  */
-export class NineSliceSprite {
+export class NineSliceSprite extends Sprite {
     /**
      * @param {number} x the x coordinates of the sprite object
      * @param {number} y the y coordinates of the sprite object
      * @param {object} settings Configuration parameters for the Sprite object
      * @param {number} settings.width the width of the Renderable over which the sprite needs to be stretched
      * @param {number} settings.height the height of the Renderable over which the sprite needs to be stretched
-     * @param {me.Renderer.Texture|HTMLImageElement|HTMLCanvasElement|string} settings.image reference to a texture, spritesheet image or to a texture atlas
+     * @param {Renderer.Texture|HTMLImageElement|HTMLCanvasElement|string} settings.image reference to a texture, spritesheet image or to a texture atlas
      * @param {string} [settings.name=""] name of this object
-     * @param {string} [settings.region] region name of a specific region to use when using a texture atlas, see {@link me.Renderer.Texture}
+     * @param {string} [settings.region] region name of a specific region to use when using a texture atlas, see {@link Renderer.Texture}
      * @param {number} [settings.framewidth] Width of a single frame within the spritesheet
      * @param {number} [settings.frameheight] Height of a single frame within the spritesheet
-     * @param {string|me.Color} [settings.tint] a tint to be applied to this sprite
+     * @param {string|Color} [settings.tint] a tint to be applied to this sprite
      * @param {number} [settings.flipX] flip the sprite on the horizontal axis
      * @param {number} [settings.flipY] flip the sprite on the vertical axis
-     * @param {me.Vector2d} [settings.anchorPoint={x:0.5, y:0.5}] Anchor point to draw the frame at (defaults to the center of the frame).
+     * @param {Vector2d} [settings.anchorPoint={x:0.5, y:0.5}] Anchor point to draw the frame at (defaults to the center of the frame).
      * @example
      * this.panelSprite = new me.NineSliceSprite(0, 0, {
      *     image : game.texture,
@@ -3689,664 +3303,133 @@ export class NineSliceSprite {
     constructor(x: number, y: number, settings: {
         width: number;
         height: number;
-        image: me.Renderer.Texture | HTMLImageElement | HTMLCanvasElement | string;
+        image: Renderer.Texture | HTMLImageElement | HTMLCanvasElement | string;
         name?: string;
         region?: string;
         framewidth?: number;
         frameheight?: number;
-        tint?: string | me.Color;
+        tint?: string | Color;
         flipX?: number;
         flipY?: number;
-        anchorPoint?: me.Vector2d;
+        anchorPoint?: Vector2d;
     });
-    width: number;
-    height: number;
-    /**
-     * @ignore
-     */
-    draw(renderer: any): void;
 }
 /**
  * @classdesc
  * A Vector2d object that provide notification by executing the given callback when the vector is changed.
- * @augments me.Vector2d
- * @memberof me
+ * @augments Vector2d
  */
-export class ObservableVector2d {
+export class ObservableVector2d extends Vector2d {
     /**
-     * @param {number} [x=0] x value of the vector
-     * @param {number} [y=0] y value of the vector
+     * @param {number} x x value of the vector
+     * @param {number} y y value of the vector
      * @param {object} settings additional required parameters
      * @param {Function} settings.onUpdate the callback to be executed when the vector is changed
      * @param {Function} [settings.scope] the value to use as this when calling onUpdate
      */
-    constructor(x?: number, y?: number, settings: {
+    constructor(x: number, y: number, settings: {
         onUpdate: Function;
         scope?: Function;
     });
-    /**
-     * @ignore
-     */
-    onResetEvent(x: number, y: number, settings: any): ObservableVector2d;
-    public set x(arg: number);
-    /**
-     * x value of the vector
-     * @public
-     * @type {number}
-     * @name x
-     * @memberof me.ObservableVector2d
-     */
-    public get x(): number;
     _x: any;
-    public set y(arg: number);
-    /**
-     * y value of the vector
-     * @public
-     * @type {number}
-     * @name y
-     * @memberof me.ObservableVector2d
-     */
-    public get y(): number;
     _y: any;
-    /** @ignore */
-    _set(x: any, y: any): ObservableVector2d;
     /**
      * set the vector value without triggering the callback
      * @name setMuted
-     * @memberof me.ObservableVector2d
+     * @memberof ObservableVector2d
      * @function
      * @param {number} x x value of the vector
      * @param {number} y y value of the vector
-     * @returns {me.ObservableVector2d} Reference to this object for method chaining
+     * @returns {ObservableVector2d} Reference to this object for method chaining
      */
-    setMuted(x: number, y: number): me.ObservableVector2d;
+    setMuted(x: number, y: number): ObservableVector2d;
     /**
      * set the callback to be executed when the vector is changed
      * @name setCallback
-     * @memberof me.ObservableVector2d
+     * @memberof ObservableVector2d
      * @function
      * @param {Function} fn callback
      * @param {Function} [scope=null] scope
-     * @returns {me.ObservableVector2d} Reference to this object for method chaining
+     * @returns {ObservableVector2d} Reference to this object for method chaining
      */
-    setCallback(fn: Function, scope?: Function): me.ObservableVector2d;
+    setCallback(fn: Function, scope?: Function): ObservableVector2d;
     onUpdate: Function;
     scope: Function;
     /**
-     * Add the passed vector to this vector
-     * @name add
-     * @memberof me.ObservableVector2d
-     * @function
-     * @param {me.ObservableVector2d} v
-     * @returns {me.ObservableVector2d} Reference to this object for method chaining
-     */
-    add(v: me.ObservableVector2d): me.ObservableVector2d;
-    /**
-     * Substract the passed vector to this vector
-     * @name sub
-     * @memberof me.ObservableVector2d
-     * @function
-     * @param {me.ObservableVector2d} v
-     * @returns {me.ObservableVector2d} Reference to this object for method chaining
-     */
-    sub(v: me.ObservableVector2d): me.ObservableVector2d;
-    /**
-     * Multiply this vector values by the given scalar
-     * @name scale
-     * @memberof me.ObservableVector2d
-     * @function
-     * @param {number} x
-     * @param {number} [y=x]
-     * @returns {me.ObservableVector2d} Reference to this object for method chaining
-     */
-    scale(x: number, y?: number): me.ObservableVector2d;
-    /**
-     * Multiply this vector values by the passed vector
-     * @name scaleV
-     * @memberof me.ObservableVector2d
-     * @function
-     * @param {me.ObservableVector2d} v
-     * @returns {me.ObservableVector2d} Reference to this object for method chaining
-     */
-    scaleV(v: me.ObservableVector2d): me.ObservableVector2d;
-    /**
-     * Divide this vector values by the passed value
-     * @name div
-     * @memberof me.ObservableVector2d
-     * @function
-     * @param {number} n the value to divide the vector by
-     * @returns {me.ObservableVector2d} Reference to this object for method chaining
-     */
-    div(n: number): me.ObservableVector2d;
-    /**
-     * Update this vector values to absolute values
-     * @name abs
-     * @memberof me.ObservableVector2d
-     * @function
-     * @returns {me.ObservableVector2d} Reference to this object for method chaining
-     */
-    abs(): me.ObservableVector2d;
-    /**
-     * Clamp the vector value within the specified value range
-     * @name clamp
-     * @memberof me.ObservableVector2d
-     * @function
-     * @param {number} low
-     * @param {number} high
-     * @returns {me.ObservableVector2d} new me.ObservableVector2d
-     */
-    clamp(low: number, high: number): me.ObservableVector2d;
-    /**
-     * Clamp this vector value within the specified value range
-     * @name clampSelf
-     * @memberof me.ObservableVector2d
-     * @function
-     * @param {number} low
-     * @param {number} high
-     * @returns {me.ObservableVector2d} Reference to this object for method chaining
-     */
-    clampSelf(low: number, high: number): me.ObservableVector2d;
-    /**
-     * Update this vector with the minimum value between this and the passed vector
-     * @name minV
-     * @memberof me.ObservableVector2d
-     * @function
-     * @param {me.ObservableVector2d} v
-     * @returns {me.ObservableVector2d} Reference to this object for method chaining
-     */
-    minV(v: me.ObservableVector2d): me.ObservableVector2d;
-    /**
-     * Update this vector with the maximum value between this and the passed vector
-     * @name maxV
-     * @memberof me.ObservableVector2d
-     * @function
-     * @param {me.ObservableVector2d} v
-     * @returns {me.ObservableVector2d} Reference to this object for method chaining
-     */
-    maxV(v: me.ObservableVector2d): me.ObservableVector2d;
-    /**
-     * Floor the vector values
-     * @name floor
-     * @memberof me.ObservableVector2d
-     * @function
-     * @returns {me.ObservableVector2d} new me.ObservableVector2d
-     */
-    floor(): me.ObservableVector2d;
-    /**
-     * Floor this vector values
-     * @name floorSelf
-     * @memberof me.ObservableVector2d
-     * @function
-     * @returns {me.ObservableVector2d} Reference to this object for method chaining
-     */
-    floorSelf(): me.ObservableVector2d;
-    /**
-     * Ceil the vector values
-     * @name ceil
-     * @memberof me.ObservableVector2d
-     * @function
-     * @returns {me.ObservableVector2d} new me.ObservableVector2d
-     */
-    ceil(): me.ObservableVector2d;
-    /**
-     * Ceil this vector values
-     * @name ceilSelf
-     * @memberof me.ObservableVector2d
-     * @function
-     * @returns {me.ObservableVector2d} Reference to this object for method chaining
-     */
-    ceilSelf(): me.ObservableVector2d;
-    /**
-     * Negate the vector values
-     * @name negate
-     * @memberof me.ObservableVector2d
-     * @function
-     * @returns {me.ObservableVector2d} new me.ObservableVector2d
-     */
-    negate(): me.ObservableVector2d;
-    /**
-     * Negate this vector values
-     * @name negateSelf
-     * @memberof me.ObservableVector2d
-     * @function
-     * @returns {me.ObservableVector2d} Reference to this object for method chaining
-     */
-    negateSelf(): me.ObservableVector2d;
-    /**
-     * Copy the x,y values of the passed vector to this one
-     * @name copy
-     * @memberof me.ObservableVector2d
-     * @function
-     * @param {me.ObservableVector2d} v
-     * @returns {me.ObservableVector2d} Reference to this object for method chaining
-     */
-    copy(v: me.ObservableVector2d): me.ObservableVector2d;
-    /**
-     * return true if the two vectors are the same
-     * @name equals
-     * @memberof me.ObservableVector2d
-     * @function
-     * @param {me.ObservableVector2d} v
-     * @returns {boolean}
-     */
-    equals(v: me.ObservableVector2d): boolean;
-    /**
-     * change this vector to be perpendicular to what it was before.<br>
-     * (Effectively rotates it 90 degrees in a clockwise direction)
-     * @name perp
-     * @memberof me.ObservableVector2d
-     * @function
-     * @returns {me.ObservableVector2d} Reference to this object for method chaining
-     */
-    perp(): me.ObservableVector2d;
-    /**
-     * Rotate this vector (counter-clockwise) by the specified angle (in radians).
-     * @name rotate
-     * @memberof me.ObservableVector2d
-     * @function
-     * @param {number} angle The angle to rotate (in radians)
-     * @param {me.Vector2d|me.ObservableVector2d} [v] an optional point to rotate around
-     * @returns {me.ObservableVector2d} Reference to this object for method chaining
-     */
-    rotate(angle: number, v?: me.Vector2d | me.ObservableVector2d): me.ObservableVector2d;
-    /**
-     * return the dot product of this vector and the passed one
-     * @name dot
-     * @memberof me.ObservableVector2d
-     * @function
-     * @param {me.Vector2d|me.ObservableVector2d} v
-     * @returns {number} The dot product.
-     */
-    dot(v: me.Vector2d | me.ObservableVector2d): number;
-    /**
-     * return the cross product of this vector and the passed one
-     * @name cross
-     * @memberof me.ObservableVector2d
-     * @function
-     * @param {me.Vector2d|me.ObservableVector2d} v
-     * @returns {number} The cross product.
-     */
-    cross(v: me.Vector2d | me.ObservableVector2d): number;
-    /**
-     * Linearly interpolate between this vector and the given one.
-     * @name lerp
-     * @memberof me.ObservableVector2d
-     * @function
-     * @param {me.Vector2d|me.ObservableVector2d} v
-     * @param {number} alpha distance along the line (alpha = 0 will be this vector, and alpha = 1 will be the given one).
-     * @returns {me.ObservableVector2d} Reference to this object for method chaining
-     */
-    lerp(v: me.Vector2d | me.ObservableVector2d, alpha: number): me.ObservableVector2d;
-    /**
-     * return the distance between this vector and the passed one
-     * @name distance
-     * @memberof me.ObservableVector2d
-     * @function
-     * @param {me.ObservableVector2d} v
-     * @returns {number}
-     */
-    distance(v: me.ObservableVector2d): number;
-    /**
-     * return a clone copy of this vector
-     * @name clone
-     * @memberof me.ObservableVector2d
-     * @function
-     * @returns {me.ObservableVector2d} new me.ObservableVector2d
-     */
-    clone(): me.ObservableVector2d;
-    /**
      * return a `me.Vector2d` copy of this `me.ObservableVector2d` object
      * @name toVector2d
-     * @memberof me.ObservableVector2d
+     * @memberof ObservableVector2d
      * @function
-     * @returns {me.Vector2d} new me.Vector2d
+     * @returns {Vector2d} new me.Vector2d
      */
-    toVector2d(): me.Vector2d;
-    /**
-     * convert the object to a string representation
-     * @name toString
-     * @memberof me.ObservableVector2d
-     * @function
-     * @returns {string}
-     */
-    toString(): string;
+    toVector2d(): Vector2d;
 }
 /**
  * @classdesc
  * A Vector3d object that provide notification by executing the given callback when the vector is changed.
- * @augments me.Vector3d
- * @memberof me
+ * @augments Vector3d
  */
-export class ObservableVector3d {
+export class ObservableVector3d extends Vector3d {
     /**
-     * @param {number} [x=0] x value of the vector
-     * @param {number} [y=0] y value of the vector
-     * @param {number} [z=0] z value of the vector
+     * @param {number} x x value of the vector
+     * @param {number} y y value of the vector
+     * @param {number} z z value of the vector
      * @param {object} settings additional required parameters
      * @param {Function} settings.onUpdate the callback to be executed when the vector is changed
      * @param {object} [settings.scope] the value to use as this when calling onUpdate
      */
-    constructor(x?: number, y?: number, z?: number, settings: {
+    constructor(x: number, y: number, z: number, settings: {
         onUpdate: Function;
         scope?: object;
     });
-    /**
-     * @ignore
-     */
-    onResetEvent(x: number, y: number, z: number, settings: any): ObservableVector3d;
-    public set x(arg: number);
-    /**
-     * x value of the vector
-     * @public
-     * @type {number}
-     * @name x
-     * @memberof me.ObservableVector3d
-     */
-    public get x(): number;
     _x: any;
-    public set y(arg: number);
-    /**
-     * y value of the vector
-     * @public
-     * @type {number}
-     * @name y
-     * @memberof me.ObservableVector3d
-     */
-    public get y(): number;
     _y: any;
-    public set z(arg: number);
-    /**
-     * z value of the vector
-     * @public
-     * @type {number}
-     * @name z
-     * @memberof me.ObservableVector3d
-     */
-    public get z(): number;
     _z: any;
-    /**
-     * @ignore
-     */
-    _set(x: any, y: any, z: any): ObservableVector3d;
     /**
      * set the vector value without triggering the callback
      * @name setMuted
-     * @memberof me.ObservableVector3d
+     * @memberof ObservableVector3d
      * @function
      * @param {number} x x value of the vector
      * @param {number} y y value of the vector
      * @param {number} [z=0] z value of the vector
-     * @returns {me.ObservableVector3d} Reference to this object for method chaining
+     * @returns {ObservableVector3d} Reference to this object for method chaining
      */
-    setMuted(x: number, y: number, z?: number): me.ObservableVector3d;
+    setMuted(x: number, y: number, z?: number): ObservableVector3d;
     /**
      * set the callback to be executed when the vector is changed
      * @name setCallback
-     * @memberof me.ObservableVector3d
+     * @memberof ObservableVector3d
      * @function
      * @param {Function} fn callback
      * @param {Function} [scope=null] scope
-     * @returns {me.ObservableVector3d} Reference to this object for method chaining
+     * @returns {ObservableVector3d} Reference to this object for method chaining
      */
-    setCallback(fn: Function, scope?: Function): me.ObservableVector3d;
+    setCallback(fn: Function, scope?: Function): ObservableVector3d;
     onUpdate: Function;
     scope: Function;
     /**
-     * Add the passed vector to this vector
-     * @name add
-     * @memberof me.ObservableVector3d
-     * @function
-     * @param {me.Vector2d|me.Vector3d|me.ObservableVector2d|me.ObservableVector3d} v
-     * @returns {me.ObservableVector3d} Reference to this object for method chaining
-     */
-    add(v: me.Vector2d | me.Vector3d | me.ObservableVector2d | me.ObservableVector3d): me.ObservableVector3d;
-    /**
-     * Substract the passed vector to this vector
-     * @name sub
-     * @memberof me.ObservableVector3d
-     * @function
-     * @param {me.Vector2d|me.Vector3d|me.ObservableVector2d|me.ObservableVector3d} v
-     * @returns {me.ObservableVector3d} Reference to this object for method chaining
-     */
-    sub(v: me.Vector2d | me.Vector3d | me.ObservableVector2d | me.ObservableVector3d): me.ObservableVector3d;
-    /**
-     * Multiply this vector values by the given scalar
-     * @name scale
-     * @memberof me.ObservableVector3d
-     * @function
-     * @param {number} x
-     * @param {number} [y=x]
-     * @param {number} [z=1]
-     * @returns {me.ObservableVector3d} Reference to this object for method chaining
-     */
-    scale(x: number, y?: number, z?: number): me.ObservableVector3d;
-    /**
-     * Multiply this vector values by the passed vector
-     * @name scaleV
-     * @memberof me.ObservableVector3d
-     * @function
-     * @param {me.Vector2d|me.Vector3d|me.ObservableVector2d|me.ObservableVector3d} v
-     * @returns {me.ObservableVector3d} Reference to this object for method chaining
-     */
-    scaleV(v: me.Vector2d | me.Vector3d | me.ObservableVector2d | me.ObservableVector3d): me.ObservableVector3d;
-    /**
-     * Divide this vector values by the passed value
-     * @name div
-     * @memberof me.ObservableVector3d
-     * @function
-     * @param {number} n the value to divide the vector by
-     * @returns {me.ObservableVector3d} Reference to this object for method chaining
-     */
-    div(n: number): me.ObservableVector3d;
-    /**
-     * Update this vector values to absolute values
-     * @name abs
-     * @memberof me.ObservableVector3d
-     * @function
-     * @returns {me.ObservableVector3d} Reference to this object for method chaining
-     */
-    abs(): me.ObservableVector3d;
-    /**
-     * Clamp the vector value within the specified value range
-     * @name clamp
-     * @memberof me.ObservableVector3d
-     * @function
-     * @param {number} low
-     * @param {number} high
-     * @returns {me.ObservableVector3d} new me.ObservableVector3d
-     */
-    clamp(low: number, high: number): me.ObservableVector3d;
-    /**
-     * Clamp this vector value within the specified value range
-     * @name clampSelf
-     * @memberof me.ObservableVector3d
-     * @function
-     * @param {number} low
-     * @param {number} high
-     * @returns {me.ObservableVector3d} Reference to this object for method chaining
-     */
-    clampSelf(low: number, high: number): me.ObservableVector3d;
-    /**
-     * Update this vector with the minimum value between this and the passed vector
-     * @name minV
-     * @memberof me.ObservableVector3d
-     * @function
-     * @param {me.Vector2d|me.Vector3d|me.ObservableVector2d|me.ObservableVector3d} v
-     * @returns {me.ObservableVector3d} Reference to this object for method chaining
-     */
-    minV(v: me.Vector2d | me.Vector3d | me.ObservableVector2d | me.ObservableVector3d): me.ObservableVector3d;
-    /**
-     * Update this vector with the maximum value between this and the passed vector
-     * @name maxV
-     * @memberof me.ObservableVector3d
-     * @function
-     * @param {me.Vector2d|me.Vector3d|me.ObservableVector2d|me.ObservableVector3d} v
-     * @returns {me.ObservableVector3d} Reference to this object for method chaining
-     */
-    maxV(v: me.Vector2d | me.Vector3d | me.ObservableVector2d | me.ObservableVector3d): me.ObservableVector3d;
-    /**
-     * Floor the vector values
-     * @name floor
-     * @memberof me.ObservableVector3d
-     * @function
-     * @returns {me.ObservableVector3d} new me.ObservableVector3d
-     */
-    floor(): me.ObservableVector3d;
-    /**
-     * Floor this vector values
-     * @name floorSelf
-     * @memberof me.ObservableVector3d
-     * @function
-     * @returns {me.ObservableVector3d} Reference to this object for method chaining
-     */
-    floorSelf(): me.ObservableVector3d;
-    /**
-     * Ceil the vector values
-     * @name ceil
-     * @memberof me.ObservableVector3d
-     * @function
-     * @returns {me.ObservableVector3d} new me.ObservableVector3d
-     */
-    ceil(): me.ObservableVector3d;
-    /**
-     * Ceil this vector values
-     * @name ceilSelf
-     * @memberof me.ObservableVector3d
-     * @function
-     * @returns {me.ObservableVector3d} Reference to this object for method chaining
-     */
-    ceilSelf(): me.ObservableVector3d;
-    /**
-     * Negate the vector values
-     * @name negate
-     * @memberof me.ObservableVector3d
-     * @function
-     * @returns {me.ObservableVector3d} new me.ObservableVector3d
-     */
-    negate(): me.ObservableVector3d;
-    /**
-     * Negate this vector values
-     * @name negateSelf
-     * @memberof me.ObservableVector3d
-     * @function
-     * @returns {me.ObservableVector3d} Reference to this object for method chaining
-     */
-    negateSelf(): me.ObservableVector3d;
-    /**
-     * Copy the components of the given vector into this one
-     * @name copy
-     * @memberof me.ObservableVector3d
-     * @function
-     * @param {me.Vector2d|me.Vector3d|me.ObservableVector2d|me.ObservableVector3d} v
-     * @returns {me.ObservableVector3d} Reference to this object for method chaining
-     */
-    copy(v: me.Vector2d | me.Vector3d | me.ObservableVector2d | me.ObservableVector3d): me.ObservableVector3d;
-    /**
-     * return true if the two vectors are the same
-     * @name equals
-     * @memberof me.ObservableVector3d
-     * @function
-     * @param {me.Vector2d|me.Vector3d|me.ObservableVector2d|me.ObservableVector3d} v
-     * @returns {boolean}
-     */
-    equals(v: me.Vector2d | me.Vector3d | me.ObservableVector2d | me.ObservableVector3d): boolean;
-    /**
-     * change this vector to be perpendicular to what it was before.<br>
-     * (Effectively rotates it 90 degrees in a clockwise direction)
-     * @name perp
-     * @memberof me.ObservableVector3d
-     * @function
-     * @returns {me.ObservableVector3d} Reference to this object for method chaining
-     */
-    perp(): me.ObservableVector3d;
-    /**
-     * Rotate this vector (counter-clockwise) by the specified angle (in radians).
-     * @name rotate
-     * @memberof me.ObservableVector3d
-     * @function
-     * @param {number} angle The angle to rotate (in radians)
-     * @param {me.Vector2d|me.ObservableVector2d} [v] an optional point to rotate around (on the same z axis)
-     * @returns {me.ObservableVector3d} Reference to this object for method chaining
-     */
-    rotate(angle: number, v?: me.Vector2d | me.ObservableVector2d): me.ObservableVector3d;
-    /**
-     * return the dot product of this vector and the passed one
-     * @name dot
-     * @memberof me.ObservableVector3d
-     * @function
-     * @param {me.Vector2d|me.Vector3d|me.ObservableVector2d|me.ObservableVector3d} v
-     * @returns {number} The dot product.
-     */
-    dot(v: me.Vector2d | me.Vector3d | me.ObservableVector2d | me.ObservableVector3d): number;
-    /**
-     * calculate the cross product of this vector and the passed one
-     * @name cross
-     * @memberof me.ObservableVector3d
-     * @function
-     * @param {me.Vector3d|me.ObservableVector3d} v
-     * @returns {me.ObservableVector3d} Reference to this object for method chaining
-     */
-    cross(v: me.Vector3d | me.ObservableVector3d): me.ObservableVector3d;
-    /**
-     * Linearly interpolate between this vector and the given one.
-     * @name lerp
-     * @memberof me.ObservableVector3d
-     * @function
-     * @param {me.Vector3d|me.ObservableVector3d} v
-     * @param {number} alpha distance along the line (alpha = 0 will be this vector, and alpha = 1 will be the given one).
-     * @returns {me.ObservableVector3d} Reference to this object for method chaining
-     */
-    lerp(v: me.Vector3d | me.ObservableVector3d, alpha: number): me.ObservableVector3d;
-    /**
-     * return the distance between this vector and the passed one
-     * @name distance
-     * @memberof me.ObservableVector3d
-     * @function
-     * @param {me.Vector2d|me.Vector3d|me.ObservableVector2d|me.ObservableVector3d} v
-     * @returns {number}
-     */
-    distance(v: me.Vector2d | me.Vector3d | me.ObservableVector2d | me.ObservableVector3d): number;
-    /**
-     * return a clone copy of this vector
-     * @name clone
-     * @memberof me.ObservableVector3d
-     * @function
-     * @returns {me.ObservableVector3d} new me.ObservableVector3d
-     */
-    clone(): me.ObservableVector3d;
-    /**
      * return a `me.Vector3d` copy of this `me.ObservableVector3d` object
      * @name toVector3d
-     * @memberof me.ObservableVector3d
+     * @memberof ObservableVector3d
      * @function
-     * @returns {me.Vector3d} new me.Vector3d
+     * @returns {Vector3d} new me.Vector3d
      */
-    toVector3d(): me.Vector3d;
-    /**
-     * convert the object to a string representation
-     * @name toString
-     * @memberof me.ObservableVector3d
-     * @function
-     * @returns {string}
-     */
-    toString(): string;
+    toVector3d(): Vector3d;
 }
 /**
  * @classdesc
  * Single Particle Object.
  * @class Particle
- * @augments me.Renderable
- * @memberof me
- * @param {me.ParticleEmitter} particle emitter
+ * @augments Renderable
+ * @param {ParticleEmitter} particle emitter
  */
-export class Particle {
+export class Particle extends Renderable {
     /**
      * @ignore
      */
     constructor(emitter: any);
     vel: Vector2d;
-    onResetEvent(emitter: any, newInstance?: boolean): void;
-    alwaysUpdate: boolean;
     image: any;
     life: any;
     startLife: any;
@@ -4358,34 +3441,14 @@ export class Particle {
     onlyInViewport: any;
     _deltaInv: number;
     angle: number;
-    /**
-     * Update the Particle <br>
-     * This is automatically called by the game manager {@link me.game}
-     * @name update
-     * @memberof me.Particle
-     * @function
-     * @ignore
-     * @param {number} dt time since the last update in milliseconds
-     */
-    update(dt: number): boolean;
-    alpha: number;
-    /**
-     * @ignore
-     */
-    preDraw(renderer: any): void;
-    /**
-     * @ignore
-     */
-    draw(renderer: any): void;
 }
 /**
  * Particle Emitter Object.
  * @class
  * @augments Rect
- * @memberof me
  * @param {number} x x-position of the particle emitter
  * @param {number} y y-position of the particle emitter
- * @param {object} settings An object containing the settings for the particle emitter. See {@link me.ParticleEmitterSettings}
+ * @param {object} settings An object containing the settings for the particle emitter. See {@link ParticleEmitterSettings}
  * @example
  * // Create a basic emitter at position 100, 100
  * var emitter = new me.ParticleEmitter(100, 100);
@@ -4428,17 +3491,17 @@ export class ParticleEmitter extends Rect {
     /**
      * @ignore
      */
-    set z(arg: any);
+    set z(arg: number);
     /**
      * @ignore
      */
-    get z(): any;
+    get z(): number;
     set floating(arg: boolean);
     /**
      * Floating property for particles, value is forwarded to the particle container <br>
      * @type {boolean}
      * @name floating
-     * @memberof me.ParticleEmitter
+     * @memberof ParticleEmitter
      */
     get floating(): boolean;
     /**
@@ -4456,7 +3519,7 @@ export class ParticleEmitter extends Rect {
     /**
      * returns a random point inside the bounds x axis of this emitter
      * @name getRandomPointX
-     * @memberof me.ParticleEmitter
+     * @memberof ParticleEmitter
      * @function
      * @returns {number}
      */
@@ -4464,7 +3527,7 @@ export class ParticleEmitter extends Rect {
     /**
      * returns a random point inside the bounds y axis of this emitter
      * @name getRandomPointY
-     * @memberof me.ParticleEmitter
+     * @memberof ParticleEmitter
      * @function
      * @returns {number}
      */
@@ -4472,9 +3535,9 @@ export class ParticleEmitter extends Rect {
     /**
      * Reset the emitter with default values.<br>
      * @function
-     * @param {object} settings [optional] object with emitter settings. See {@link me.ParticleEmitterSettings}
+     * @param {object} settings [optional] object with emitter settings. See {@link ParticleEmitterSettings}
      * @name reset
-     * @memberof me.ParticleEmitter
+     * @memberof ParticleEmitter
      */
     reset(settings: object): void;
     /** @ignore */
@@ -4484,7 +3547,7 @@ export class ParticleEmitter extends Rect {
      * @function
      * @returns {boolean} Emitter is Stream and is launching particles
      * @name isRunning
-     * @memberof me.ParticleEmitter
+     * @memberof ParticleEmitter
      */
     isRunning(): boolean;
     /**
@@ -4493,7 +3556,7 @@ export class ParticleEmitter extends Rect {
      * @param {number} duration [optional] time that the emitter releases particles in ms
      * @function
      * @name streamParticles
-     * @memberof me.ParticleEmitter
+     * @memberof ParticleEmitter
      */
     streamParticles(duration: number): void;
     frequency: any;
@@ -4501,7 +3564,7 @@ export class ParticleEmitter extends Rect {
      * Stop the emitter from generating new particles (used only if emitter is Stream) <br>
      * @function
      * @name stopStream
-     * @memberof me.ParticleEmitter
+     * @memberof ParticleEmitter
      */
     stopStream(): void;
     /**
@@ -4510,7 +3573,7 @@ export class ParticleEmitter extends Rect {
      * @param {number} total [optional] number of particles to launch
      * @function
      * @name burstParticles
-     * @memberof me.ParticleEmitter
+     * @memberof ParticleEmitter
      */
     burstParticles(total: number): void;
     /**
@@ -4550,10 +3613,9 @@ export namespace ParticleEmitterSettings {
  * @classdesc
  * a pointer object, representing a single finger on a touch enabled device.
  * @class Pointer
- * @augments me.Bounds
- * @memberof me
+ * @augments Bounds
  */
-export class Pointer {
+export class Pointer extends Bounds {
     /**
      * @ignore
      */
@@ -4563,7 +3625,7 @@ export class Pointer {
      * @public
      * @type {number}
      * @name LEFT
-     * @memberof me.Pointer
+     * @memberof Pointer
      */
     public LEFT: number;
     /**
@@ -4571,7 +3633,7 @@ export class Pointer {
      * @public
      * @type {number}
      * @name MIDDLE
-     * @memberof me.Pointer
+     * @memberof Pointer
      */
     public MIDDLE: number;
     /**
@@ -4579,7 +3641,7 @@ export class Pointer {
      * @public
      * @type {number}
      * @name RIGHT
-     * @memberof me.Pointer
+     * @memberof Pointer
      */
     public RIGHT: number;
     /**
@@ -4590,7 +3652,7 @@ export class Pointer {
      * @see https://developer.mozilla.org/en-US/docs/Web/API/PointerEvent
      * @see https://developer.mozilla.org/en-US/docs/Web/API/TouchEvent
      * @see https://developer.mozilla.org/en-US/docs/Web/API/MouseEvent
-     * @memberof me.Pointer
+     * @memberof Pointer
      */
     public event: PointerEvent | TouchEvent | MouseEvent;
     /**
@@ -4599,7 +3661,7 @@ export class Pointer {
      * @type {string}
      * @name type
      * @see https://developer.mozilla.org/en-US/docs/Web/API/Event/type
-     * @memberof me.Pointer
+     * @memberof Pointer
      */
     public type: string;
     /**
@@ -4608,7 +3670,7 @@ export class Pointer {
      * @type {number}
      * @name button
      * @see https://developer.mozilla.org/en-US/docs/Web/API/MouseEvent/button
-     * @memberof me.Pointer
+     * @memberof Pointer
      */
     public button: number;
     /**
@@ -4617,7 +3679,7 @@ export class Pointer {
      * @type {boolean}
      * @name isPrimary
      * @see https://developer.mozilla.org/en-US/docs/Web/API/PointerEvent/isPrimary
-     * @memberof me.Pointer
+     * @memberof Pointer
      */
     public isPrimary: boolean;
     /**
@@ -4626,7 +3688,7 @@ export class Pointer {
      * @type {number}
      * @name pageX
      * @see https://developer.mozilla.org/en-US/docs/Web/API/MouseEvent/pageX
-     * @memberof me.Pointer
+     * @memberof Pointer
      */
     public pageX: number;
     /**
@@ -4635,7 +3697,7 @@ export class Pointer {
      * @type {number}
      * @name pageY
      * @see https://developer.mozilla.org/en-US/docs/Web/API/MouseEvent/pageY
-     * @memberof me.Pointer
+     * @memberof Pointer
      */
     public pageY: number;
     /**
@@ -4644,7 +3706,7 @@ export class Pointer {
      * @type {number}
      * @name clientX
      * @see https://developer.mozilla.org/en-US/docs/Web/API/MouseEvent/clientX
-     * @memberof me.Pointer
+     * @memberof Pointer
      */
     public clientX: number;
     /**
@@ -4653,7 +3715,7 @@ export class Pointer {
      * @type {number}
      * @name clientY
      * @see https://developer.mozilla.org/en-US/docs/Web/API/MouseEvent/clientY
-     * @memberof me.Pointer
+     * @memberof Pointer
      */
     public clientY: number;
     /**
@@ -4662,7 +3724,7 @@ export class Pointer {
      * @type {number}
      * @name movementX
      * @see https://developer.mozilla.org/en-US/docs/Web/API/MouseEvent/movementX
-     * @memberof me.Pointer
+     * @memberof Pointer
      */
     public movementX: number;
     /**
@@ -4671,7 +3733,7 @@ export class Pointer {
      * @type {number}
      * @name movementY
      * @see https://developer.mozilla.org/en-US/docs/Web/API/MouseEvent/movementY
-     * @memberof me.Pointer
+     * @memberof Pointer
      */
     public movementY: number;
     /**
@@ -4680,7 +3742,7 @@ export class Pointer {
      * @type {number}
      * @name deltaMode
      * @see https://developer.mozilla.org/en-US/docs/Web/API/WheelEvent/deltaMode
-     * @memberof me.Pointer
+     * @memberof Pointer
      */
     public deltaMode: number;
     /**
@@ -4689,7 +3751,7 @@ export class Pointer {
      * @type {number}
      * @name deltaX
      * @see https://developer.mozilla.org/en-US/docs/Web/API/WheelEvent/deltaX
-     * @memberof me.Pointer
+     * @memberof Pointer
      */
     public deltaX: number;
     /**
@@ -4698,7 +3760,7 @@ export class Pointer {
      * @type {number}
      * @name deltaY
      * @see https://developer.mozilla.org/en-US/docs/Web/API/WheelEvent/deltaY
-     * @memberof me.Pointer
+     * @memberof Pointer
      */
     public deltaY: number;
     /**
@@ -4707,7 +3769,7 @@ export class Pointer {
      * @type {number}
      * @name deltaZ
      * @see https://developer.mozilla.org/en-US/docs/Web/API/WheelEvent/deltaZ
-     * @memberof me.Pointer
+     * @memberof Pointer
      */
     public deltaZ: number;
     /**
@@ -4716,7 +3778,7 @@ export class Pointer {
      * @public
      * @type {number}
      * @name gameX
-     * @memberof me.Pointer
+     * @memberof Pointer
      */
     public gameX: number;
     /**
@@ -4725,7 +3787,7 @@ export class Pointer {
      * @public
      * @type {number}
      * @name gameY
-     * @memberof me.Pointer
+     * @memberof Pointer
      */
     public gameY: number;
     /**
@@ -4733,7 +3795,7 @@ export class Pointer {
      * @public
      * @type {number}
      * @name gameScreenX
-     * @memberof me.Pointer
+     * @memberof Pointer
      */
     public gameScreenX: number;
     /**
@@ -4741,7 +3803,7 @@ export class Pointer {
      * @public
      * @type {number}
      * @name gameScreenY
-     * @memberof me.Pointer
+     * @memberof Pointer
      */
     public gameScreenY: number;
     /**
@@ -4749,7 +3811,7 @@ export class Pointer {
      * @public
      * @type {number}
      * @name gameWorldX
-     * @memberof me.Pointer
+     * @memberof Pointer
      */
     public gameWorldX: number;
     /**
@@ -4757,7 +3819,7 @@ export class Pointer {
      * @public
      * @type {number}
      * @name gameWorldY
-     * @memberof me.Pointer
+     * @memberof Pointer
      */
     public gameWorldY: number;
     /**
@@ -4765,7 +3827,7 @@ export class Pointer {
      * @public
      * @type {number}
      * @name gameLocalX
-     * @memberof me.Pointer
+     * @memberof Pointer
      */
     public gameLocalX: number;
     /**
@@ -4773,7 +3835,7 @@ export class Pointer {
      * @public
      * @type {number}
      * @name gameLocalY
-     * @memberof me.Pointer
+     * @memberof Pointer
      */
     public gameLocalY: number;
     /**
@@ -4781,7 +3843,7 @@ export class Pointer {
      * @public
      * @type {number}
      * @name pointerId
-     * @memberof me.Pointer
+     * @memberof Pointer
      * @see https://developer.mozilla.org/en-US/docs/Web/API/PointerEvent/pointerId
      */
     public pointerId: number;
@@ -4790,7 +3852,7 @@ export class Pointer {
      * @public
      * @type {boolean}
      * @name isNormalized
-     * @memberof me.Pointer
+     * @memberof Pointer
      */
     public isNormalized: boolean;
     /**
@@ -4798,13 +3860,13 @@ export class Pointer {
      * @public
      * @type {boolean}
      * @name locked
-     * @memberof me.Pointer
+     * @memberof Pointer
      */
     public locked: boolean;
     bind: number[];
     /**
      * initialize the Pointer object using the given Event Object
-     * @name me.Pointer#set
+     * @name Pointer#set
      * @private
      * @function
      * @param {Event} event the original Event object
@@ -4815,10 +3877,6 @@ export class Pointer {
      * @param {number} [pointerId=1] the Pointer, Touch or Mouse event Id (1)
      */
     private setEvent;
-    x: any;
-    y: any;
-    width: any;
-    height: any;
 }
 /**
  * @classdesc
@@ -4828,40 +3886,39 @@ export class Pointer {
  * (which means that all angles are less than 180 degrees), as described here below : <br>
  * <center><img src="images/convex_polygon.png"/></center><br>
  * A polygon's `winding` is clockwise iff its vertices (points) are declared turning to the right. The image above shows COUNTERCLOCKWISE winding.
- * @memberof me
  */
 export class Polygon {
     /**
      * @param {number} x origin point of the Polygon
      * @param {number} y origin point of the Polygon
-     * @param {me.Vector2d[]} points array of vector defining the Polygon
+     * @param {Vector2d[]} points array of vector defining the Polygon
      */
-    constructor(x: number, y: number, points: me.Vector2d[]);
+    constructor(x: number, y: number, points: Vector2d[]);
     /**
      * origin point of the Polygon
      * @public
-     * @type {me.Vector2d}
+     * @type {Vector2d}
      * @name pos
-     * @memberof me.Polygon#
+     * @memberof Polygon#
      */
-    public pos: me.Vector2d;
+    public pos: Vector2d;
     /**
      * The bounding rectangle for this shape
      * @ignore
-     * @type {me.Bounds}
+     * @type {Bounds}
      * @name _bounds
-     * @memberof me.Polygon#
+     * @memberof Polygon#
      */
-    _bounds: me.Bounds;
+    _bounds: Bounds;
     /**
      * Array of points defining the Polygon <br>
      * Note: If you manually change `points`, you **must** call `recalc`afterwards so that the changes get applied correctly.
      * @public
-     * @type {me.Vector2d[]}
+     * @type {Vector2d[]}
      * @name points
-     * @memberof me.Polygon#
+     * @memberof Polygon#
      */
-    public points: me.Vector2d[];
+    public points: Vector2d[];
     /**
      * The edges here are the direction of the `n`th edge of the polygon, relative to
      * the `n`th point. If you want to draw a given edge from the edge value, you must
@@ -4887,90 +3944,90 @@ export class Polygon {
     /**
      * set new value to the Polygon
      * @name setShape
-     * @memberof me.Polygon.prototype
+     * @memberof Polygon.prototype
      * @function
      * @param {number} x position of the Polygon
      * @param {number} y position of the Polygon
-     * @param {me.Vector2d[]|number[]} points array of vector or vertice defining the Polygon
-     * @returns {me.Polygon} this instance for objecf chaining
+     * @param {Vector2d[]|number[]} points array of vector or vertice defining the Polygon
+     * @returns {Polygon} this instance for objecf chaining
      */
-    setShape(x: number, y: number, points: me.Vector2d[] | number[]): me.Polygon;
+    setShape(x: number, y: number, points: Vector2d[] | number[]): Polygon;
     /**
      * set the vertices defining this Polygon
      * @name setVertices
-     * @memberof me.Polygon.prototype
+     * @memberof Polygon.prototype
      * @function
-     * @param {me.Vector2d[]} vertices array of vector or vertice defining the Polygon
-     * @returns {me.Polygon} this instance for objecf chaining
+     * @param {Vector2d[]} vertices array of vector or vertice defining the Polygon
+     * @returns {Polygon} this instance for objecf chaining
      */
-    setVertices(vertices: me.Vector2d[]): me.Polygon;
+    setVertices(vertices: Vector2d[]): Polygon;
     /**
      * apply the given transformation matrix to this Polygon
      * @name transform
-     * @memberof me.Polygon.prototype
+     * @memberof Polygon.prototype
      * @function
-     * @param {me.Matrix2d} m the transformation matrix
-     * @returns {me.Polygon} Reference to this object for method chaining
+     * @param {Matrix2d} m the transformation matrix
+     * @returns {Polygon} Reference to this object for method chaining
      */
-    transform(m: me.Matrix2d): me.Polygon;
+    transform(m: Matrix2d): Polygon;
     /**
      * apply an isometric projection to this shape
      * @name toIso
-     * @memberof me.Polygon.prototype
+     * @memberof Polygon.prototype
      * @function
-     * @returns {me.Polygon} Reference to this object for method chaining
+     * @returns {Polygon} Reference to this object for method chaining
      */
-    toIso(): me.Polygon;
+    toIso(): Polygon;
     /**
      * apply a 2d projection to this shape
      * @name to2d
-     * @memberof me.Polygon.prototype
+     * @memberof Polygon.prototype
      * @function
-     * @returns {me.Polygon} Reference to this object for method chaining
+     * @returns {Polygon} Reference to this object for method chaining
      */
-    to2d(): me.Polygon;
+    to2d(): Polygon;
     /**
      * Rotate this Polygon (counter-clockwise) by the specified angle (in radians).
      * @name rotate
-     * @memberof me.Polygon.prototype
+     * @memberof Polygon.prototype
      * @function
      * @param {number} angle The angle to rotate (in radians)
-     * @param {me.Vector2d|me.ObservableVector2d} [v] an optional point to rotate around
-     * @returns {me.Polygon} Reference to this object for method chaining
+     * @param {Vector2d|ObservableVector2d} [v] an optional point to rotate around
+     * @returns {Polygon} Reference to this object for method chaining
      */
-    rotate(angle: number, v?: me.Vector2d | me.ObservableVector2d): me.Polygon;
+    rotate(angle: number, v?: Vector2d | ObservableVector2d): Polygon;
     /**
      * Scale this Polygon by the given scalar.
      * @name scale
-     * @memberof me.Polygon.prototype
+     * @memberof Polygon.prototype
      * @function
      * @param {number} x
      * @param {number} [y=x]
-     * @returns {me.Polygon} Reference to this object for method chaining
+     * @returns {Polygon} Reference to this object for method chaining
      */
-    scale(x: number, y?: number): me.Polygon;
+    scale(x: number, y?: number): Polygon;
     /**
      * Scale this Polygon by the given vector
      * @name scaleV
-     * @memberof me.Polygon.prototype
+     * @memberof Polygon.prototype
      * @function
-     * @param {me.Vector2d} v
-     * @returns {me.Polygon} Reference to this object for method chaining
+     * @param {Vector2d} v
+     * @returns {Polygon} Reference to this object for method chaining
      */
-    scaleV(v: me.Vector2d): me.Polygon;
+    scaleV(v: Vector2d): Polygon;
     /**
      * Computes the calculated collision polygon.
      * This **must** be called if the `points` array, `angle`, or `offset` is modified manually.
      * @name recalc
-     * @memberof me.Polygon.prototype
+     * @memberof Polygon.prototype
      * @function
-     * @returns {me.Polygon} Reference to this object for method chaining
+     * @returns {Polygon} Reference to this object for method chaining
      */
-    recalc(): me.Polygon;
+    recalc(): Polygon;
     /**
      * returns a list of indices for all triangles defined in this polygon
      * @name getIndices
-     * @memberof me.Polygon.prototype
+     * @memberof Polygon.prototype
      * @function
      * @returns {Array} an array of vertex indices for all triangles forming this polygon.
      */
@@ -4978,7 +4035,7 @@ export class Polygon {
     /**
      * Returns true if the vertices composing this polygon form a convex shape (vertices must be in clockwise order).
      * @name isConvex
-     * @memberof me.Polygon.prototype
+     * @memberof Polygon.prototype
      * @function
      * @returns {boolean} true if the vertices are convex, false if not, null if not computable
      */
@@ -4986,32 +4043,32 @@ export class Polygon {
     /**
      * translate the Polygon by the specified offset
      * @name translate
-     * @memberof me.Polygon.prototype
+     * @memberof Polygon.prototype
      * @function
      * @param {number} x x offset
      * @param {number} y y offset
-     * @returns {me.Polygon} this Polygon
+     * @returns {Polygon} this Polygon
      */
     /**
      * translate the Polygon by the specified vector
      * @name translate
-     * @memberof me.Polygon.prototype
+     * @memberof Polygon.prototype
      * @function
-     * @param {me.Vector2d} v vector offset
-     * @returns {me.Polygon} Reference to this object for method chaining
+     * @param {Vector2d} v vector offset
+     * @returns {Polygon} Reference to this object for method chaining
      */
-    translate(...args: any[]): me.Polygon;
+    translate(...args: any[]): Polygon;
     /**
      * Shifts the Polygon to the given position vector.
      * @name shift
-     * @memberof me.Polygon
+     * @memberof Polygon
      * @function
-     * @param {me.Vector2d} position
+     * @param {Vector2d} position
      */
     /**
      * Shifts the Polygon to the given x, y position.
      * @name shift
-     * @memberof me.Polygon
+     * @memberof Polygon
      * @function
      * @param {number} x
      * @param {number} y
@@ -5022,9 +4079,9 @@ export class Polygon {
      * (Note: it is highly recommended to first do a hit test on the corresponding <br>
      *  bounding rect, as the function can be highly consuming with complex shapes)
      * @name contains
-     * @memberof me.Polygon.prototype
+     * @memberof Polygon.prototype
      * @function
-     * @param  {me.Vector2d} point
+     * @param {Vector2d} point
      * @returns {boolean} true if contains
      */
     /**
@@ -5032,7 +4089,7 @@ export class Polygon {
      * (Note: it is highly recommended to first do a hit test on the corresponding <br>
      *  bounding rect, as the function can be highly consuming with complex shapes)
      * @name contains
-     * @memberof me.Polygon.prototype
+     * @memberof Polygon.prototype
      * @function
      * @param  {number} x x coordinate
      * @param  {number} y y coordinate
@@ -5042,47 +4099,46 @@ export class Polygon {
     /**
      * returns the bounding box for this shape, the smallest Rectangle object completely containing this shape.
      * @name getBounds
-     * @memberof me.Polygon.prototype
+     * @memberof Polygon.prototype
      * @function
-     * @returns {me.Bounds} this shape bounding box Rectangle object
+     * @returns {Bounds} this shape bounding box Rectangle object
      */
-    getBounds(): me.Bounds;
+    getBounds(): Bounds;
     /**
      * update the bounding box for this shape.
      * @ignore
      * @name updateBounds
-     * @memberof me.Polygon.prototype
+     * @memberof Polygon.prototype
      * @function
-     * @returns {me.Bounds} this shape bounding box Rectangle object
+     * @returns {Bounds} this shape bounding box Rectangle object
      */
-    updateBounds(): me.Bounds;
+    updateBounds(): Bounds;
     /**
      * clone this Polygon
      * @name clone
-     * @memberof me.Polygon.prototype
+     * @memberof Polygon.prototype
      * @function
-     * @returns {me.Polygon} new Polygon
+     * @returns {Polygon} new Polygon
      */
-    clone(): me.Polygon;
+    clone(): Polygon;
 }
 /**
  * @classdesc
  * a QuadTree implementation in JavaScript, a 2d spatial subdivision algorithm.
- * @memberof me
- * @see me.game.world.broadphase
+ * @see game.world.broadphase
  */
 export class QuadTree {
     /**
-     * @param {me.Bounds} bounds bounds of the node
+     * @param {Bounds} bounds bounds of the node
      * @param {number} [max_objects=4] max objects a node can hold before splitting into 4 subnodes
      * @param {number} [max_levels=4] total max levels inside root Quadtree
      * @param {number} [level] deepth level, required for subnodes
      */
-    constructor(bounds: me.Bounds, max_objects?: number, max_levels?: number, level?: number);
+    constructor(bounds: Bounds, max_objects?: number, max_levels?: number, level?: number);
     max_objects: number;
     max_levels: number;
     level: number;
-    bounds: me.Bounds;
+    bounds: Bounds;
     objects: any[];
     nodes: any[];
     split(): void;
@@ -5090,17 +4146,17 @@ export class QuadTree {
     /**
      * Insert the given object container into the node.
      * @name insertContainer
-     * @memberof me.QuadTree
+     * @memberof QuadTree
      * @function
-     * @param {me.Container} container group of objects to be added
+     * @param {Container} container group of objects to be added
      */
-    insertContainer(container: me.Container): void;
+    insertContainer(container: Container): void;
     /**
      * Insert the given object into the node. If the node
      * exceeds the capacity, it will split and add all
      * objects to their corresponding subnodes.
      * @name insert
-     * @memberof me.QuadTree
+     * @memberof QuadTree
      * @function
      * @param {object} item object to be added
      */
@@ -5108,7 +4164,7 @@ export class QuadTree {
     /**
      * Return all objects that could collide with the given object
      * @name retrieve
-     * @memberof me.QuadTree
+     * @memberof QuadTree
      * @function
      * @param {object} item object to be checked against
      * @param {object} [fn] a sorting function for the returned array
@@ -5119,7 +4175,7 @@ export class QuadTree {
      * Remove the given item from the quadtree.
      * (this function won't recalculate the impacted node)
      * @name remove
-     * @memberof me.QuadTree
+     * @memberof QuadTree
      * @function
      * @param {object} item object to be removed
      * @returns {boolean} true if the item was found and removed.
@@ -5128,7 +4184,7 @@ export class QuadTree {
     /**
      * return true if the node is prunable
      * @name isPrunable
-     * @memberof me.QuadTree
+     * @memberof QuadTree
      * @function
      * @returns {boolean} true if the node is prunable
      */
@@ -5136,7 +4192,7 @@ export class QuadTree {
     /**
      * return true if the node has any children
      * @name hasChildren
-     * @memberof me.QuadTree
+     * @memberof QuadTree
      * @function
      * @returns {boolean} true if the node has any children
      */
@@ -5144,19 +4200,18 @@ export class QuadTree {
     /**
      * clear the quadtree
      * @name clear
-     * @memberof me.QuadTree
+     * @memberof QuadTree
      * @function
-     * @param {me.Bounds} [bounds=this.bounds] the bounds to be cleared
+     * @param {Bounds} [bounds=this.bounds] the bounds to be cleared
      */
-    clear(bounds?: me.Bounds): void;
+    clear(bounds?: Bounds): void;
 }
 /**
  * @classdesc
  * a rectangle Object
- * @augments me.Polygon
- * @memberof me
+ * @augments Polygon
  */
-export class Rect {
+export class Rect extends Polygon {
     /**
      * @param {number} x position of the Rectangle
      * @param {number} y position of the Rectangle
@@ -5164,27 +4219,12 @@ export class Rect {
      * @param {number} h height of the rectangle
      */
     constructor(x: number, y: number, w: number, h: number);
-    shapeType: string;
-    /** @ignore */
-    onResetEvent(x: any, y: any, w: any, h: any): void;
-    /**
-     * set new value to the rectangle shape
-     * @name setShape
-     * @memberof me.Rect.prototype
-     * @function
-     * @param {number} x position of the Rectangle
-     * @param {number} y position of the Rectangle
-     * @param {number|me.Vector2d[]} w width of the rectangle, or an array of vector defining the rectangle
-     * @param {number} [h] height of the rectangle, if a numeral width parameter is specified
-     * @returns {me.Rect} this rectangle
-     */
-    setShape(x: number, y: number, w: number | me.Vector2d[], h?: number, ...args: any[]): me.Rect;
     /**
      * left coordinate of the Rectangle
      * @public
      * @type {number}
      * @name left
-     * @memberof me.Rect
+     * @memberof Rect
      */
     public get left(): number;
     /**
@@ -5192,7 +4232,7 @@ export class Rect {
      * @public
      * @type {number}
      * @name right
-     * @memberof me.Rect
+     * @memberof Rect
      */
     public get right(): number;
     /**
@@ -5200,7 +4240,7 @@ export class Rect {
      * @public
      * @type {number}
      * @name top
-     * @memberof me.Rect
+     * @memberof Rect
      */
     public get top(): number;
     /**
@@ -5208,7 +4248,7 @@ export class Rect {
      * @public
      * @type {number}
      * @name bottom
-     * @memberof me.Rect
+     * @memberof Rect
      */
     public get bottom(): number;
     public set width(arg: number);
@@ -5217,7 +4257,7 @@ export class Rect {
      * @public
      * @type {number}
      * @name width
-     * @memberof me.Rect
+     * @memberof Rect
      */
     public get width(): number;
     public set height(arg: number);
@@ -5226,7 +4266,7 @@ export class Rect {
      * @public
      * @type {number}
      * @name height
-     * @memberof me.Rect
+     * @memberof Rect
      */
     public get height(): number;
     public set centerX(arg: number);
@@ -5235,7 +4275,7 @@ export class Rect {
      * @public
      * @type {number}
      * @name centerX
-     * @memberof me.Rect
+     * @memberof Rect
      */
     public get centerX(): number;
     public set centerY(arg: number);
@@ -5244,103 +4284,59 @@ export class Rect {
      * @public
      * @type {number}
      * @name centerY
-     * @memberof me.Rect
+     * @memberof Rect
      */
     public get centerY(): number;
     /**
      * resize the rectangle
      * @name resize
-     * @memberof me.Rect.prototype
+     * @memberof Rect.prototype
      * @function
      * @param {number} w new width of the rectangle
      * @param {number} h new height of the rectangle
-     * @returns {me.Rect} this rectangle
+     * @returns {Rect} this rectangle
      */
-    resize(w: number, h: number): me.Rect;
-    /**
-     * scale the rectangle
-     * @name scale
-     * @memberof me.Rect.prototype
-     * @function
-     * @param {number} x a number representing the abscissa of the scaling vector.
-     * @param {number} [y=x] a number representing the ordinate of the scaling vector.
-     * @returns {me.Rect} this rectangle
-     */
-    scale(x: number, y?: number): me.Rect;
-    /**
-     * clone this rectangle
-     * @name clone
-     * @memberof me.Rect.prototype
-     * @function
-     * @returns {me.Rect} new rectangle
-     */
-    clone(): me.Rect;
+    resize(w: number, h: number): Rect;
     /**
      * copy the position and size of the given rectangle into this one
      * @name copy
-     * @memberof me.Rect.prototype
+     * @memberof Rect.prototype
      * @function
-     * @param {me.Rect} rect Source rectangle
-     * @returns {me.Rect} new rectangle
+     * @param {Rect} rect Source rectangle
+     * @returns {Rect} new rectangle
      */
-    copy(rect: me.Rect): me.Rect;
+    copy(rect: Rect): Rect;
     /**
      * merge this rectangle with another one
      * @name union
-     * @memberof me.Rect.prototype
+     * @memberof Rect.prototype
      * @function
-     * @param {me.Rect} rect other rectangle to union with
-     * @returns {me.Rect} the union(ed) rectangle
+     * @param {Rect} rect other rectangle to union with
+     * @returns {Rect} the union(ed) rectangle
      */
-    union(rect: me.Rect): me.Rect;
+    union(rect: Rect): Rect;
     /**
      * check if this rectangle is intersecting with the specified one
      * @name overlaps
-     * @memberof me.Rect.prototype
+     * @memberof Rect.prototype
      * @function
-     * @param  {me.Rect} rect
+     * @param {Rect} rect
      * @returns {boolean} true if overlaps
      */
-    overlaps(rect: me.Rect): boolean;
-    /**
-     * Returns true if the rectangle contains the given rectangle
-     * @name contains
-     * @memberof me.Rect.prototype
-     * @function
-     * @param {me.Rect} rect
-     * @returns {boolean} true if contains
-     */
-    /**
-     * Returns true if the rectangle contains the given point
-     * @name contains
-     * @memberof me.Rect.prototype
-     * @function
-     * @param  {number} x x coordinate
-     * @param  {number} y y coordinate
-     * @returns {boolean} true if contains
-     */
-    /**
-     * Returns true if the rectangle contains the given point
-     * @name contains
-     * @memberof me.Rect
-     * @function
-     * @param {me.Vector2d} point
-     * @returns {boolean} true if contains
-     */
-    contains(...args: any[]): boolean;
+    overlaps(rect: Rect): boolean;
     /**
      * check if this rectangle is identical to the specified one
      * @name equals
-     * @memberof me.Rect.prototype
+     * @memberof Rect.prototype
      * @function
-     * @param  {me.Rect} rect
+     * @param {Rect} rect
      * @returns {boolean} true if equals
      */
-    equals(rect: me.Rect): boolean;
+    equals(rect: Rect): boolean;
     /**
      * determines whether all coordinates of this rectangle are finite numbers.
      * @name isFinite
-     * @memberof me.Rect.prototype
+     * @memberof Rect.prototype
      * @function
      * @returns {boolean} false if all coordinates are positive or negative Infinity or NaN; otherwise, true.
      */
@@ -5348,26 +4344,18 @@ export class Rect {
     /**
      * Returns a polygon whose edges are the same as this box.
      * @name toPolygon
-     * @memberof me.Rect.prototype
+     * @memberof Rect.prototype
      * @function
-     * @returns {me.Polygon} a new Polygon that represents this rectangle.
+     * @returns {Polygon} a new Polygon that represents this rectangle.
      */
-    toPolygon(): me.Polygon;
+    toPolygon(): Polygon;
 }
 /**
  * @classdesc
  * A base class for renderable objects.
- * @augments me.Rect
- * @memberof me
+ * @augments Rect
  */
-export class Renderable {
-    /**
-     * @param {number} x position of the renderable object (accessible through inherited pos.x property)
-     * @param {number} y position of the renderable object (accessible through inherited pos.y property)
-     * @param {number} width object width
-     * @param {number} height object height
-     */
-    constructor(x: number, y: number, width: number, height: number);
+export class Renderable extends Rect {
     /**
      * to identify the object as a renderable object
      * @ignore
@@ -5379,16 +4367,16 @@ export class Renderable {
      * @type {boolean}
      * @default true
      * @name isKinematic
-     * @memberof me.Renderable
+     * @memberof Renderable
      */
     public isKinematic: boolean;
     /**
      * the renderable physic body
      * @public
-     * @type {me.Body}
-     * @see me.Body
+     * @type {Body}
+     * @see Body
      * @name body
-     * @memberof me.Renderable#
+     * @memberof Renderable#
      * @example
      *  // define a new Player Class
      *  class PlayerEntity extends me.Sprite {
@@ -5421,15 +4409,15 @@ export class Renderable {
      *
      * }
      */
-    public body: me.Body;
+    public body: Body;
     /**
      * the renderable default transformation matrix
      * @public
-     * @type {me.Matrix2d}
+     * @type {Matrix2d}
      * @name currentTransform
-     * @memberof me.Renderable#
+     * @memberof Renderable#
      */
-    public currentTransform: me.Matrix2d;
+    public currentTransform: Matrix2d;
     /**
      * (G)ame (U)nique (Id)entifier" <br>
      * a GUID will be allocated for any renderable object added <br>
@@ -5437,7 +4425,7 @@ export class Renderable {
      * @public
      * @type {string}
      * @name GUID
-     * @memberof me.Renderable
+     * @memberof Renderable
      */
     public GUID: string;
     /**
@@ -5446,7 +4434,7 @@ export class Renderable {
      * @type {Function}
      * @default undefined
      * @name onVisibilityChange
-     * @memberof me.Renderable#
+     * @memberof Renderable#
      * @example
      * this.onVisibilityChange = function(inViewport) {
      *     if (inViewport === true) {
@@ -5461,7 +4449,7 @@ export class Renderable {
      * @type {boolean}
      * @default false
      * @name alwaysUpdate
-     * @memberof me.Renderable
+     * @memberof Renderable
      */
     public alwaysUpdate: boolean;
     /**
@@ -5470,7 +4458,7 @@ export class Renderable {
      * @type {boolean}
      * @default false
      * @name updateWhenPaused
-     * @memberof me.Renderable
+     * @memberof Renderable
      */
     public updateWhenPaused: boolean;
     /**
@@ -5479,7 +4467,7 @@ export class Renderable {
      * @type {boolean}
      * @default false
      * @name isPersistent
-     * @memberof me.Renderable
+     * @memberof Renderable
      */
     public isPersistent: boolean;
     /**
@@ -5489,7 +4477,7 @@ export class Renderable {
      * @type {boolean}
      * @default false
      * @name floating
-     * @memberof me.Renderable
+     * @memberof Renderable
      */
     public floating: boolean;
     /**
@@ -5501,12 +4489,12 @@ export class Renderable {
      * <i><b>Note:</b> Object created through Tiled will have their anchorPoint set to (0, 0) to match Tiled Level editor implementation.
      * To specify a value through Tiled, use a json expression like `json:{"x":0.5,"y":0.5}`. </i>
      * @public
-     * @type {me.ObservableVector2d}
+     * @type {ObservableVector2d}
      * @default <0.5,0.5>
      * @name anchorPoint
-     * @memberof me.Renderable#
+     * @memberof Renderable#
      */
-    public anchorPoint: me.ObservableVector2d;
+    public anchorPoint: ObservableVector2d;
     /**
      * When enabled, an object container will automatically apply
      * any defined transformation before calling the child draw method.
@@ -5514,7 +4502,7 @@ export class Renderable {
      * @type {boolean}
      * @default true
      * @name autoTransform
-     * @memberof me.Renderable
+     * @memberof Renderable
      * @example
      * // enable "automatic" transformation when the object is activated
      * onActivateEvent: function () {
@@ -5531,30 +4519,30 @@ export class Renderable {
     /**
      * Define the renderable opacity<br>
      * Set to zero if you do not wish an object to be drawn
-     * @see me.Renderable#setOpacity
-     * @see me.Renderable#getOpacity
+     * @see Renderable#setOpacity
+     * @see Renderable#getOpacity
      * @public
      * @type {number}
      * @default 1.0
-     * @name me.Renderable#alpha
+     * @name Renderable#alpha
      */
     public alpha: number;
     /**
      * a reference to the parent object that contains this renderable
      * @public
-     * @type {me.Container|me.Entity}
+     * @type {Container|Entity}
      * @default undefined
-     * @name me.Renderable#ancestor
+     * @name Renderable#ancestor
      */
-    public ancestor: me.Container | me.Entity;
+    public ancestor: Container | Entity;
     /**
      * A mask limits rendering elements to the shape and position of the given mask object.
      * So, if the renderable is larger than the mask, only the intersecting part of the renderable will be visible.
      * @public
-     * @type {me.Rect|me.Polygon|me.Line|me.Ellipse}
+     * @type {Rect|Polygon|Line|Ellipse}
      * @name mask
      * @default undefined
-     * @memberof me.Renderable#
+     * @memberof Renderable#
      * @example
      * // apply a mask in the shape of a Star
      * myNPCSprite.mask = new me.Polygon(myNPCSprite.width / 2, 0, [
@@ -5571,44 +4559,36 @@ export class Renderable {
      *    {x: -14, y: 30}
      * ]);
      */
-    public mask: me.Rect | me.Polygon | me.Line | me.Ellipse;
+    public mask: Rect | Polygon | Line | Ellipse;
     /**
      * define a tint for this renderable. a (255, 255, 255) r, g, b value will remove the tint effect.
      * @public
-     * @type {me.Color}
+     * @type {Color}
      * @name tint
      * @default (255, 255, 255)
-     * @memberof me.Renderable#
+     * @memberof Renderable#
      * @example
      * // add a red tint to this renderable
      * this.tint.setColor(255, 128, 128);
      * // remove the tint
      * this.tint.setColor(255, 255, 255);
      */
-    public tint: me.Color;
+    public tint: Color;
     /**
      * The name of the renderable
      * @public
      * @type {string}
      * @name name
      * @default ""
-     * @memberof me.Renderable
+     * @memberof Renderable
      */
     public name: string;
-    /**
-     * Position of the Renderable relative to its parent container
-     * @public
-     * @type {me.ObservableVector3d}
-     * @name pos
-     * @memberof me.Renderable#
-     */
-    public pos: me.ObservableVector3d;
     /**
      * when true the renderable will be redrawn during the next update cycle
      * @type {boolean}
      * @name isDirty
      * @default false
-     * @memberof me.Renderable#
+     * @memberof Renderable#
      */
     isDirty: boolean;
     _flip: {
@@ -5619,54 +4599,44 @@ export class Renderable {
     /**
      * Whether the renderable object is floating, or contained in a floating container
      * @public
-     * @see me.Renderable#floating
-     * @readonly
+     * @see Renderable#floating
      * @type {boolean}
      * @name isFloating
-     * @memberof me.Renderable
+     * @memberof Renderable
      */
-    public readonly get isFloating(): boolean;
-    public readonly set inViewport(arg: boolean);
+    public get isFloating(): boolean;
+    public set inViewport(arg: boolean);
     /**
      * Whether the renderable object is visible and within the viewport
      * @public
-     * @readonly
      * @type {boolean}
      * @default false
      * @name inViewport
-     * @memberof me.Renderable
+     * @memberof Renderable
      */
-    public readonly get inViewport(): boolean;
+    public get inViewport(): boolean;
     /**
      * returns true if this renderable is flipped on the horizontal axis
      * @public
-     * @see me.Renderable#flipX
+     * @see Renderable#flipX
      * @type {boolean}
      * @name isFlippedX
-     * @memberof me.Renderable
+     * @memberof Renderable
      */
     public get isFlippedX(): boolean;
     /**
      * returns true if this renderable is flipped on the vertical axis
      * @public
-     * @see me.Renderable#flipY
+     * @see Renderable#flipY
      * @type {boolean}
      * @name isFlippedY
-     * @memberof me.Renderable
+     * @memberof Renderable
      */
     public get isFlippedY(): boolean;
     /**
-     * returns the bounding box for this renderable
-     * @name getBounds
-     * @memberof me.Renderable.prototype
-     * @function
-     * @returns {me.Bounds} bounding box Rectangle object
-     */
-    getBounds(): me.Bounds;
-    /**
      * get the renderable alpha channel value<br>
      * @name getOpacity
-     * @memberof me.Renderable.prototype
+     * @memberof Renderable.prototype
      * @function
      * @returns {number} current opacity value between 0 and 1
      */
@@ -5674,106 +4644,63 @@ export class Renderable {
     /**
      * set the renderable alpha channel value<br>
      * @name setOpacity
-     * @memberof me.Renderable.prototype
+     * @memberof Renderable.prototype
      * @function
      * @param {number} alpha opacity value between 0.0 and 1.0
      */
     setOpacity(alpha: number): void;
     /**
      * flip the renderable on the horizontal axis (around the center of the renderable)
-     * @see me.Matrix2d#scaleX
+     * @see Matrix2d#scaleX
      * @name flipX
-     * @memberof me.Renderable.prototype
+     * @memberof Renderable.prototype
      * @function
      * @param {boolean} [flip=true] `true` to flip this renderable.
-     * @returns {me.Renderable} Reference to this object for method chaining
+     * @returns {Renderable} Reference to this object for method chaining
      */
-    flipX(flip?: boolean): me.Renderable;
+    flipX(flip?: boolean): Renderable;
     /**
      * flip the renderable on the vertical axis (around the center of the renderable)
-     * @see me.Matrix2d#scaleY
+     * @see Matrix2d#scaleY
      * @name flipY
-     * @memberof me.Renderable.prototype
+     * @memberof Renderable.prototype
      * @function
      * @param {boolean} [flip=true] `true` to flip this renderable.
-     * @returns {me.Renderable} Reference to this object for method chaining
+     * @returns {Renderable} Reference to this object for method chaining
      */
-    flipY(flip?: boolean): me.Renderable;
-    /**
-     * multiply the renderable currentTransform with the given matrix
-     * @name transform
-     * @memberof me.Renderable.prototype
-     * @see me.Renderable#currentTransform
-     * @function
-     * @param {me.Matrix2d} m the transformation matrix
-     * @returns {me.Renderable} Reference to this object for method chaining
-     */
-    transform(m: me.Matrix2d): me.Renderable;
+    flipY(flip?: boolean): Renderable;
     /**
      * return the angle to the specified target
      * @name angleTo
-     * @memberof me.Renderable
+     * @memberof Renderable
      * @function
-     * @param {me.Renderable|me.Vector2d|me.Vector3d} target
+     * @param {Renderable|Vector2d|Vector3d} target
      * @returns {number} angle in radians
      */
-    angleTo(target: me.Renderable | me.Vector2d | me.Vector3d): number;
+    angleTo(target: Renderable | Vector2d | Vector3d): number;
     /**
      * return the distance to the specified target
      * @name distanceTo
-     * @memberof me.Renderable
+     * @memberof Renderable
      * @function
-     * @param {me.Renderable|me.Vector2d|me.Vector3d} target
+     * @param {Renderable|Vector2d|Vector3d} target
      * @returns {number} distance
      */
-    distanceTo(target: me.Renderable | me.Vector2d | me.Vector3d): number;
+    distanceTo(target: Renderable | Vector2d | Vector3d): number;
     /**
      * Rotate this renderable towards the given target.
      * @name lookAt
-     * @memberof me.Renderable.prototype
+     * @memberof Renderable.prototype
      * @function
-     * @param {me.Renderable|me.Vector2d|me.Vector3d} target the renderable or position to look at
-     * @returns {me.Renderable} Reference to this object for method chaining
+     * @param {Renderable|Vector2d|Vector3d} target the renderable or position to look at
+     * @returns {Renderable} Reference to this object for method chaining
      */
-    lookAt(target: me.Renderable | me.Vector2d | me.Vector3d): me.Renderable;
-    /**
-     * Rotate this renderable by the specified angle (in radians).
-     * @name rotate
-     * @memberof me.Renderable.prototype
-     * @function
-     * @param {number} angle The angle to rotate (in radians)
-     * @param {me.Vector2d|me.ObservableVector2d} [v] an optional point to rotate around
-     * @returns {me.Renderable} Reference to this object for method chaining
-     */
-    rotate(angle: number, v?: me.Vector2d | me.ObservableVector2d): me.Renderable;
-    /**
-     * scale the renderable around his anchor point.  Scaling actually applies changes
-     * to the currentTransform member wich is used by the renderer to scale the object
-     * when rendering.  It does not scale the object itself.  For example if the renderable
-     * is an image, the image.width and image.height properties are unaltered but the currentTransform
-     * member will be changed.
-     * @name scale
-     * @memberof me.Renderable.prototype
-     * @function
-     * @param {number} x a number representing the abscissa of the scaling vector.
-     * @param {number} [y=x] a number representing the ordinate of the scaling vector.
-     * @returns {me.Renderable} Reference to this object for method chaining
-     */
-    scale(x: number, y?: number): me.Renderable;
-    /**
-     * scale the renderable around his anchor point
-     * @name scaleV
-     * @memberof me.Renderable.prototype
-     * @function
-     * @param {me.Vector2d} v scaling vector
-     * @returns {me.Renderable} Reference to this object for method chaining
-     */
-    scaleV(v: me.Vector2d): me.Renderable;
+    lookAt(target: Renderable | Vector2d | Vector3d): Renderable;
     /**
      * update function. <br>
-     * automatically called by the game manager {@link me.game}
+     * automatically called by the game manager {@link game}
      * @name update
-     * @memberof me.Renderable.prototype
+     * @memberof Renderable.prototype
      * @function
      * @protected
      * @param {number} dt time since the last update in milliseconds.
@@ -5781,36 +4708,27 @@ export class Renderable {
      */
     protected update(): boolean;
     /**
-     * update the bounding box for this shape.
-     * @ignore
-     * @name updateBounds
-     * @memberof me.Renderable.prototype
-     * @function
-     * @returns {me.Bounds} this shape bounding box Rectangle object
-     */
-    updateBounds(): me.Bounds;
-    /**
      * update the renderable's bounding rect (private)
      * @ignore
      * @name updateBoundsPos
-     * @memberof me.Renderable.prototype
+     * @memberof Renderable.prototype
      * @function
      */
     updateBoundsPos(newX: any, newY: any): void;
     /**
      * return the renderable absolute position in the game world
      * @name getAbsolutePosition
-     * @memberof me.Renderable.prototype
+     * @memberof Renderable.prototype
      * @function
-     * @returns {me.Vector2d}
+     * @returns {Vector2d}
      */
-    getAbsolutePosition(): me.Vector2d;
+    getAbsolutePosition(): Vector2d;
     _absPos: any;
     /**
      * called when the anchor point value is changed
      * @private
      * @name onAnchorUpdate
-     * @memberof me.Renderable.prototype
+     * @memberof Renderable.prototype
      * @function
      * @param {number} x the new X value to be set for the anchor
      * @param {number} y the new Y value to be set for the anchor
@@ -5819,42 +4737,42 @@ export class Renderable {
     /**
      * prepare the rendering context before drawing
      * (apply defined transforms, anchor point). <br>
-     * automatically called by the game manager {@link me.game}
+     * automatically called by the game manager {@link game}
      * @name preDraw
-     * @memberof me.Renderable.prototype
+     * @memberof Renderable.prototype
      * @function
      * @protected
-     * @param {me.CanvasRenderer|me.WebGLRenderer} renderer a renderer object
+     * @param {CanvasRenderer|WebGLRenderer} renderer a renderer object
      */
-    protected preDraw(renderer: me.CanvasRenderer | me.WebGLRenderer): void;
+    protected preDraw(renderer: CanvasRenderer | WebGLRenderer): void;
     /**
      * object draw. <br>
-     * automatically called by the game manager {@link me.game}
+     * automatically called by the game manager {@link game}
      * @name draw
-     * @memberof me.Renderable.prototype
+     * @memberof Renderable.prototype
      * @function
      * @protected
-     * @param {me.CanvasRenderer|me.WebGLRenderer} renderer a renderer object
+     * @param {CanvasRenderer|WebGLRenderer} renderer a renderer object
      */
     protected draw(): void;
     /**
      * restore the rendering context after drawing. <br>
-     * automatically called by the game manager {@link me.game}
+     * automatically called by the game manager {@link game}
      * @name postDraw
-     * @memberof me.Renderable.prototype
+     * @memberof Renderable.prototype
      * @function
      * @protected
-     * @param {me.CanvasRenderer|me.WebGLRenderer} renderer a renderer object
+     * @param {CanvasRenderer|WebGLRenderer} renderer a renderer object
      */
-    protected postDraw(renderer: me.CanvasRenderer | me.WebGLRenderer): void;
+    protected postDraw(renderer: CanvasRenderer | WebGLRenderer): void;
     /**
      * onCollision callback, triggered in case of collision,
      * when this renderable body is colliding with another one
      * @name onCollision
-     * @memberof me.Renderable.prototype
+     * @memberof Renderable.prototype
      * @function
-     * @param {me.collision.ResponseObject} response the collision response object
-     * @param {me.Renderable} other the other renderable touching this one (a reference to response.a or response.b)
+     * @param {collision.ResponseObject} response the collision response object
+     * @param {Renderable} other the other renderable touching this one (a reference to response.a or response.b)
      * @returns {boolean} true if the object should respond to the collision (its position and velocity will be corrected)
      * @example
      * // colision handler
@@ -5876,12 +4794,11 @@ export class Renderable {
      * @ignore
      */
     destroy(...args: any[]): void;
-    _bounds: any;
     /**
      * OnDestroy Notification function<br>
      * Called by engine before deleting the object
      * @name onDestroyEvent
-     * @memberof me.Renderable
+     * @memberof Renderable
      * @function
      */
     onDestroyEvent(): void;
@@ -5889,7 +4806,6 @@ export class Renderable {
 /**
  * @classdesc
  * a base renderer object
- * @memberof me
  */
 export class Renderer {
     /**
@@ -5925,7 +4841,7 @@ export class Renderer {
      * The given constructor options
      * @public
      * @name settings
-     * @memberof me.Renderer#
+     * @memberof Renderer#
      * @enum {object}
      */
     public settings: {
@@ -5945,7 +4861,7 @@ export class Renderer {
     /**
      * true if the current rendering context is valid
      * @name isContextValid
-     * @memberof me.Renderer
+     * @memberof Renderer
      * @default true
      * type {boolean}
      */
@@ -5969,21 +4885,21 @@ export class Renderer {
     /**
      * prepare the framebuffer for drawing a new frame
      * @name clear
-     * @memberof me.Renderer.prototype
+     * @memberof Renderer.prototype
      * @function
      */
     clear(): void;
     /**
      * Reset context state
      * @name reset
-     * @memberof me.Renderer.prototype
+     * @memberof Renderer.prototype
      * @function
      */
     reset(): void;
     /**
      * return a reference to the system canvas
      * @name getCanvas
-     * @memberof me.Renderer.prototype
+     * @memberof Renderer.prototype
      * @function
      * @returns {HTMLCanvasElement}
      */
@@ -5991,7 +4907,7 @@ export class Renderer {
     /**
      * return a reference to the screen canvas
      * @name getScreenCanvas
-     * @memberof me.Renderer.prototype
+     * @memberof Renderer.prototype
      * @function
      * @returns {HTMLCanvasElement}
      */
@@ -6000,7 +4916,7 @@ export class Renderer {
      * return a reference to the screen canvas corresponding 2d Context<br>
      * (will return buffered context if double buffering is enabled, or a reference to the Screen Context)
      * @name getScreenContext
-     * @memberof me.Renderer.prototype
+     * @memberof Renderer.prototype
      * @function
      * @returns {CanvasRenderingContext2D}
      */
@@ -6008,7 +4924,7 @@ export class Renderer {
     /**
      * returns the current blend mode for this renderer
      * @name getBlendMode
-     * @memberof me.Renderer.prototype
+     * @memberof Renderer.prototype
      * @function
      * @returns {string} blend mode
      */
@@ -6017,7 +4933,7 @@ export class Renderer {
      * Returns the 2D Context object of the given Canvas<br>
      * Also configures anti-aliasing and blend modes based on constructor options.
      * @name getContext2d
-     * @memberof me.Renderer.prototype
+     * @memberof Renderer.prototype
      * @function
      * @param {HTMLCanvasElement} canvas
      * @param {boolean} [transparent=true] use false to disable transparency
@@ -6027,7 +4943,7 @@ export class Renderer {
     /**
      * return the width of the system Canvas
      * @name getWidth
-     * @memberof me.Renderer.prototype
+     * @memberof Renderer.prototype
      * @function
      * @returns {number}
      */
@@ -6035,7 +4951,7 @@ export class Renderer {
     /**
      * return the height of the system Canvas
      * @name getHeight
-     * @memberof me.Renderer.prototype
+     * @memberof Renderer.prototype
      * @function
      * @returns {number} height of the system Canvas
      */
@@ -6043,15 +4959,15 @@ export class Renderer {
     /**
      * get the current fill & stroke style color.
      * @name getColor
-     * @memberof me.Renderer.prototype
+     * @memberof Renderer.prototype
      * @function
-     * @returns {me.Color} current global color
+     * @returns {Color} current global color
      */
-    getColor(): me.Color;
+    getColor(): Color;
     /**
      * return the current global alpha
      * @name globalAlpha
-     * @memberof me.Renderer.prototype
+     * @memberof Renderer.prototype
      * @function
      * @returns {number}
      */
@@ -6059,16 +4975,16 @@ export class Renderer {
     /**
      * check if the given rect or bounds overlaps with the renderer screen coordinates
      * @name overlaps
-     * @memberof me.Renderer.prototype
+     * @memberof Renderer.prototype
      * @function
-     * @param  {me.Rect|me.Bounds} bounds
+     * @param {Rect|Bounds} bounds
      * @returns {boolean} true if overlaps
      */
-    overlaps(bounds: me.Rect | me.Bounds): boolean;
+    overlaps(bounds: Rect | Bounds): boolean;
     /**
      * resizes the system canvas
      * @name resize
-     * @memberof me.Renderer.prototype
+     * @memberof Renderer.prototype
      * @function
      * @param {number} width new width of the canvas
      * @param {number} height new height of the canvas
@@ -6077,7 +4993,7 @@ export class Renderer {
     /**
      * enable/disable image smoothing (scaling interpolation) for the given context
      * @name setAntiAlias
-     * @memberof me.Renderer.prototype
+     * @memberof Renderer.prototype
      * @function
      * @param {CanvasRenderingContext2D} context
      * @param {boolean} [enable=false]
@@ -6086,71 +5002,71 @@ export class Renderer {
     /**
      * set/change the current projection matrix (WebGL only)
      * @name setProjection
-     * @memberof me.Renderer.prototype
+     * @memberof Renderer.prototype
      * @function
-     * @param {me.Matrix3d} matrix
+     * @param {Matrix3d} matrix
      */
-    setProjection(matrix: me.Matrix3d): void;
+    setProjection(matrix: Matrix3d): void;
     /**
      * stroke the given shape
      * @name stroke
-     * @memberof me.Renderer.prototype
+     * @memberof Renderer.prototype
      * @function
-     * @param {me.Rect|me.Polygon|me.Line|me.Ellipse} shape a shape object to stroke
+     * @param {Rect|Polygon|Line|Ellipse} shape a shape object to stroke
      * @param {boolean} [fill=false] fill the shape with the current color if true
      */
-    stroke(shape: me.Rect | me.Polygon | me.Line | me.Ellipse, fill?: boolean): void;
+    stroke(shape: Rect | Polygon | Line | Ellipse, fill?: boolean): void;
     /**
      * tint the given image or canvas using the given color
      * @name tint
-     * @memberof me.Renderer.prototype
+     * @memberof Renderer.prototype
      * @function
      * @param {HTMLImageElement|HTMLCanvasElement|OffscreenCanvas} src the source image to be tinted
-     * @param {me.Color|string} color the color that will be used to tint the image
+     * @param {Color|string} color the color that will be used to tint the image
      * @param {string} [mode="multiply"] the composition mode used to tint the image
      * @returns {HTMLCanvasElement|OffscreenCanvas} a new canvas element representing the tinted image
      */
-    tint(src: HTMLImageElement | HTMLCanvasElement | OffscreenCanvas, color: me.Color | string, mode?: string): HTMLCanvasElement | OffscreenCanvas;
+    tint(src: HTMLImageElement | HTMLCanvasElement | OffscreenCanvas, color: Color | string, mode?: string): HTMLCanvasElement | OffscreenCanvas;
     /**
      * fill the given shape
      * @name fill
-     * @memberof me.Renderer.prototype
+     * @memberof Renderer.prototype
      * @function
-     * @param {me.Rect|me.Polygon|me.Line|me.Ellipse} shape a shape object to fill
+     * @param {Rect|Polygon|Line|Ellipse} shape a shape object to fill
      */
-    fill(shape: me.Rect | me.Polygon | me.Line | me.Ellipse): void;
+    fill(shape: Rect | Polygon | Line | Ellipse): void;
     /**
      * A mask limits rendering elements to the shape and position of the given mask object.
      * So, if the renderable is larger than the mask, only the intersecting part of the renderable will be visible.
      * Mask are not preserved through renderer context save and restore.
      * @name setMask
-     * @memberof me.Renderer.prototype
+     * @memberof Renderer.prototype
      * @function
-     * @param {me.Rect|me.Polygon|me.Line|me.Ellipse} [mask] the shape defining the mask to be applied
+     * @param {Rect|Polygon|Line|Ellipse} [mask] the shape defining the mask to be applied
      */
-    setMask(mask?: me.Rect | me.Polygon | me.Line | me.Ellipse): void;
+    setMask(mask?: Rect | Polygon | Line | Ellipse): void;
     /**
      * disable (remove) the rendering mask set through setMask.
      * @name clearMask
-     * @see me.Renderer#setMask
-     * @memberof me.Renderer.prototype
+     * @see Renderer#setMask
+     * @memberof Renderer.prototype
      * @function
      */
     clearMask(): void;
     /**
      * set a coloring tint for sprite based renderables
      * @name setTint
-     * @memberof me.Renderer.prototype
+     * @memberof Renderer.prototype
      * @function
-     * @param {me.Color} tint the tint color
+     * @param {Color} tint the tint color
      * @param {number} [alpha] an alpha value to be applied to the tint
      */
-    setTint(tint: me.Color, alpha?: number): void;
+    setTint(tint: Color, alpha?: number): void;
     /**
      * clear the rendering tint set through setTint.
      * @name clearTint
-     * @see me.Renderer#setTint
-     * @memberof me.Renderer.prototype
+     * @see Renderer#setTint
+     * @memberof Renderer.prototype
      * @function
      */
     clearTint(): void;
@@ -6162,23 +5078,22 @@ export class Renderer {
 /**
  * @classdesc
  * An object to display a fixed or animated sprite on screen.
- * @augments me.Renderable
- * @memberof me
+ * @augments Renderable
  */
-export class Sprite {
+export class Sprite extends Renderable {
     /**
      * @param {number} x the x coordinates of the sprite object
      * @param {number} y the y coordinates of the sprite object
      * @param {object} settings Configuration parameters for the Sprite object
-     * @param {me.Renderer.Texture|HTMLImageElement|HTMLCanvasElement|string} settings.image reference to a texture, spritesheet image or to a texture atlas
+     * @param {Renderer.Texture|HTMLImageElement|HTMLCanvasElement|string} settings.image reference to a texture, spritesheet image or to a texture atlas
      * @param {string} [settings.name=""] name of this object
-     * @param {string} [settings.region] region name of a specific region to use when using a texture atlas, see {@link me.Renderer.Texture}
+     * @param {string} [settings.region] region name of a specific region to use when using a texture atlas, see {@link Renderer.Texture}
      * @param {number} [settings.framewidth] Width of a single frame within the spritesheet
      * @param {number} [settings.frameheight] Height of a single frame within the spritesheet
-     * @param {string|me.Color} [settings.tint] a tint to be applied to this sprite
+     * @param {string|Color} [settings.tint] a tint to be applied to this sprite
      * @param {number} [settings.flipX] flip the sprite on the horizontal axis
      * @param {number} [settings.flipY] flip the sprite on the vertical axis
-     * @param {me.Vector2d} [settings.anchorPoint={x:0.5, y:0.5}] Anchor point to draw the frame at (defaults to the center of the frame).
+     * @param {Vector2d} [settings.anchorPoint={x:0.5, y:0.5}] Anchor point to draw the frame at (defaults to the center of the frame).
      * @example
      * // create a single sprite from a standalone image, with anchor in the center
      * var sprite = new me.Sprite(0, 0, {
@@ -6199,22 +5114,22 @@ export class Sprite {
      * });
      */
     constructor(x: number, y: number, settings: {
-        image: me.Renderer.Texture | HTMLImageElement | HTMLCanvasElement | string;
+        image: Renderer.Texture | HTMLImageElement | HTMLCanvasElement | string;
         name?: string;
         region?: string;
         framewidth?: number;
         frameheight?: number;
-        tint?: string | me.Color;
+        tint?: string | Color;
         flipX?: number;
         flipY?: number;
-        anchorPoint?: me.Vector2d;
+        anchorPoint?: Vector2d;
     });
     /**
      * pause and resume animation
      * @public
      * @type {boolean}
      * @default false
-     * @name me.Sprite#animationpause
+     * @name Sprite#animationpause
      */
     public animationpause: boolean;
     /**
@@ -6222,26 +5137,26 @@ export class Sprite {
      * @public
      * @type {number}
      * @default 100
-     * @name me.Sprite#animationspeed
+     * @name Sprite#animationspeed
      */
     public animationspeed: number;
     /**
      * global offset for the position to draw from on the source image.
      * @public
-     * @type {me.Vector2d}
+     * @type {Vector2d}
      * @default <0.0,0.0>
      * @name offset
-     * @memberof me.Sprite#
+     * @memberof Sprite#
      */
-    public offset: me.Vector2d;
+    public offset: Vector2d;
     /**
      * The source texture object this sprite object is using
      * @public
-     * @type {me.Renderer.Texture}
+     * @type {Renderer.Texture}
      * @name source
-     * @memberof me.Sprite#
+     * @memberof Sprite#
      */
-    public source: me.Renderer.Texture;
+    public source: Renderer.Texture;
     anim: {};
     resetAnim: any;
     current: {
@@ -6263,14 +5178,10 @@ export class Sprite {
     image: any;
     textureAtlas: any;
     atlasIndices: any;
-    width: number;
-    height: number;
-    name: string;
-    autoTransform: boolean;
     /**
      * return the flickering state of the object
      * @name isFlickering
-     * @memberof me.Sprite.prototype
+     * @memberof Sprite.prototype
      * @function
      * @returns {boolean}
      */
@@ -6278,11 +5189,11 @@ export class Sprite {
     /**
      * make the object flicker
      * @name flicker
-     * @memberof me.Sprite.prototype
+     * @memberof Sprite.prototype
      * @function
      * @param {number} duration expressed in milliseconds
      * @param {Function} callback Function to call when flickering ends
-     * @returns {me.Sprite} Reference to this object for method chaining
+     * @returns {Sprite} Reference to this object for method chaining
      * @example
      * // make the object flicker for 1 second
      * // and then remove it
@@ -6290,21 +5201,21 @@ export class Sprite {
      *     me.game.world.removeChild(this);
      * });
      */
-    flicker(duration: number, callback: Function): me.Sprite;
+    flicker(duration: number, callback: Function): Sprite;
     /**
      * add an animation <br>
      * For fixed-sized cell sprite sheet, the index list must follow the
      * logic as per the following example :<br>
      * <img src="images/spritesheet_grid.png"/>
      * @name addAnimation
-     * @memberof me.Sprite.prototype
+     * @memberof Sprite.prototype
      * @function
      * @param {string} name animation id
      * @param {number[]|string[]|object[]} index list of sprite index or name
      * defining the animation. Can also use objects to specify delay for each frame, see below
      * @param {number} [animationspeed] cycling speed for animation in ms
      * @returns {number} frame amount of frame added to the animation (delay between each frame).
-     * @see me.Sprite#animationspeed
+     * @see Sprite#animationspeed
      * @example
      * // walking animation
      * this.addAnimation("walk", [ 0, 1, 2, 3, 4, 5 ]);
@@ -6330,12 +5241,12 @@ export class Sprite {
      * set the current animation
      * this will always change the animation & set the frame to zero
      * @name setCurrentAnimation
-     * @memberof me.Sprite.prototype
+     * @memberof Sprite.prototype
      * @function
      * @param {string} name animation id
      * @param {string|Function} [resetAnim] animation id to switch to when complete, or callback
      * @param {boolean} [preserve_dt=false] if false will reset the elapsed time counter since last frame
-     * @returns {me.Sprite} Reference to this object for method chaining
+     * @returns {Sprite} Reference to this object for method chaining
      * @example
      * // set "walk" animation
      * this.setCurrentAnimation("walk");
@@ -6366,22 +5277,21 @@ export class Sprite {
      *    return false; // do not reset to first frame
      * }).bind(this));
      */
-    setCurrentAnimation(name: string, resetAnim?: string | Function, preserve_dt?: boolean): me.Sprite;
-    isDirty: boolean;
+    setCurrentAnimation(name: string, resetAnim?: string | Function, preserve_dt?: boolean): Sprite;
     /**
      * reverse the given or current animation if none is specified
      * @name reverseAnimation
-     * @memberof me.Sprite.prototype
+     * @memberof Sprite.prototype
      * @function
      * @param {string} [name] animation id
-     * @returns {me.Sprite} Reference to this object for method chaining
-     * @see me.Sprite#animationspeed
+     * @returns {Sprite} Reference to this object for method chaining
+     * @see Sprite#animationspeed
      */
-    reverseAnimation(name?: string): me.Sprite;
+    reverseAnimation(name?: string): Sprite;
     /**
      * return true if the specified animation is the current one.
      * @name isCurrentAnimation
-     * @memberof me.Sprite.prototype
+     * @memberof Sprite.prototype
      * @function
      * @param {string} name animation id
      * @returns {boolean}
@@ -6393,33 +5303,33 @@ export class Sprite {
     isCurrentAnimation(name: string): boolean;
     /**
      * change the current texture atlas region for this sprite
-     * @see me.Texture.getRegion
+     * @see Texture.getRegion
      * @name setRegion
-     * @memberof me.Sprite.prototype
+     * @memberof Sprite.prototype
      * @function
      * @param {object} region typically returned through me.Texture.getRegion()
-     * @returns {me.Sprite} Reference to this object for method chaining
+     * @returns {Sprite} Reference to this object for method chaining
      * @example
      * // change the sprite to "shadedDark13.png";
      * mySprite.setRegion(game.texture.getRegion("shadedDark13.png"));
      */
-    setRegion(region: object): me.Sprite;
+    setRegion(region: object): Sprite;
     /**
      * force the current animation frame index.
      * @name setAnimationFrame
-     * @memberof me.Sprite.prototype
+     * @memberof Sprite.prototype
      * @function
      * @param {number} [idx=0] animation frame index
-     * @returns {me.Sprite} Reference to this object for method chaining
+     * @returns {Sprite} Reference to this object for method chaining
      * @example
      * // reset the current animation to the first frame
      * this.setAnimationFrame();
      */
-    setAnimationFrame(idx?: number): me.Sprite;
+    setAnimationFrame(idx?: number): Sprite;
     /**
      * return the current animation frame index.
      * @name getCurrentAnimationFrame
-     * @memberof me.Sprite.prototype
+     * @memberof Sprite.prototype
      * @function
      * @returns {number} current animation frame index
      */
@@ -6427,57 +5337,30 @@ export class Sprite {
     /**
      * Returns the frame object by the index.
      * @name getAnimationFrameObjectByIndex
-     * @memberof me.Sprite.prototype
+     * @memberof Sprite.prototype
      * @function
      * @ignore
      * @param {number} id the frame id
      * @returns {number} if using number indices. Returns {object} containing frame data if using texture atlas
      */
     getAnimationFrameObjectByIndex(id: number): number;
-    /**
-     * update function. <br>
-     * automatically called by the game manager {@link me.game}
-     * @name update
-     * @memberof me.Sprite.prototype
-     * @function
-     * @protected
-     * @param {number} dt time since the last update in milliseconds.
-     * @returns {boolean} true if the Sprite is dirty
-     */
-    protected update(dt: number): boolean;
-    /**
-     * Destroy function<br>
-     * @ignore
-     */
-    destroy(): void;
-    /**
-     * sprite draw. <br>
-     * automatically called by the game manager {@link me.game}
-     * @name draw
-     * @memberof me.Sprite.prototype
-     * @function
-     * @protected
-     * @param {me.CanvasRenderer|me.WebGLRenderer} renderer a renderer object
-     */
-    protected draw(renderer: me.CanvasRenderer | me.WebGLRenderer): void;
 }
 /**
  * @classdesc
  * a default "Stage" object.
  * every "stage" object (title screen, credits, ingame, etc...) to be managed
  * through the state manager must inherit from this base class.
- * @memberof me
- * @see me.state
+ * @see state
  */
 export class Stage {
     /**
      * @param {object} [settings] The stage` parameters
-     * @param {me.Camera2d[]} [settings.cameras=[new me.Camera2d()]] a list of cameras (experimental)
+     * @param {Camera2d[]} [settings.cameras=[new me.Camera2d()]] a list of cameras (experimental)
      * @param {Function} [settings.onResetEvent] called by the state manager when reseting the object
      * @param {Function} [settings.onDestroyEvent] called by the state manager before switching to another state
      */
     constructor(settings?: {
-        cameras?: me.Camera2d[];
+        cameras?: Camera2d[];
         onResetEvent?: Function;
         onDestroyEvent?: Function;
     });
@@ -6488,14 +5371,14 @@ export class Stage {
      * @public
      * @type {Map}
      * @name cameras
-     * @memberof me.Stage
+     * @memberof Stage
      */
     public cameras: Map<any, any>;
     /**
      * The given constructor options
      * @public
      * @name settings
-     * @memberof me.Stage
+     * @memberof Stage
      * @type {object}
      */
     public settings: object;
@@ -6507,7 +5390,7 @@ export class Stage {
     /**
      * update function
      * @name update
-     * @memberof me.Stage
+     * @memberof Stage
      * @ignore
      * @function
      * @param {number} dt time since the last update in milliseconds.
@@ -6517,12 +5400,12 @@ export class Stage {
     /**
      * draw the current stage
      * @name draw
-     * @memberof me.Stage
+     * @memberof Stage
      * @ignore
      * @function
-     * @param {me.CanvasRenderer|me.WebGLRenderer} renderer a renderer object
+     * @param {CanvasRenderer|WebGLRenderer} renderer a renderer object
      */
-    draw(renderer: me.CanvasRenderer | me.WebGLRenderer): void;
+    draw(renderer: CanvasRenderer | WebGLRenderer): void;
     /**
      * destroy function
      * @ignore
@@ -6533,17 +5416,17 @@ export class Stage {
      * called by the state manager when reseting the object
      * this is typically where you will load a level, add renderables, etc...
      * @name onResetEvent
-     * @memberof me.Stage
+     * @memberof Stage
      * @function
      * @param {object} [...arguments] optional arguments passed when switching state
-     * @see me.state#change
+     * @see state#change
      */
     onResetEvent(...args: any[]): void;
     /**
      * onDestroyEvent function<br>
      * called by the state manager before switching to another state
      * @name onDestroyEvent
-     * @memberof me.Stage
+     * @memberof Stage
      * @function
      */
     onDestroyEvent(...args: any[]): void;
@@ -6551,38 +5434,23 @@ export class Stage {
 /**
  * @classdesc
  * an Hexagonal Map Renderder
- * @memberof me
- * @augments me.TMXRenderer
+ * @augments TMXRenderer
  */
-export class TMXHexagonalRenderer {
+export class TMXHexagonalRenderer extends TMXRenderer {
     /**
-     * @param {me.TMXTileMap} map the TMX map
+     * @param {TMXTileMap} map the TMX map
      */
-    constructor(map: me.TMXTileMap);
-    hexsidelength: any;
+    constructor(map: TMXTileMap);
+    hexsidelength: number;
     staggerX: boolean;
     staggerEven: boolean;
-    sidelengthx: any;
-    sidelengthy: any;
+    sidelengthx: number;
+    sidelengthy: number;
     sideoffsetx: number;
     sideoffsety: number;
-    columnwidth: any;
-    rowheight: any;
+    columnwidth: number;
+    rowheight: number;
     centers: Vector2d[];
-    /**
-     * return true if the renderer can render the specified layer
-     * @ignore
-     */
-    canRender(layer: any): any;
-    /**
-     * return the bounding rect for this map renderer
-     * @name me.TMXHexagonalRenderer#getBounds
-     * @public
-     * @function
-     * @param {me.TMXLayer} [layer] calculate the bounding rect for a specific layer (will return a new bounds object)
-     * @returns {me.Bounds}
-     */
-    public getBounds(layer?: me.TMXLayer): me.Bounds;
     /**
      * @ignore
      */
@@ -6608,116 +5476,60 @@ export class TMXHexagonalRenderer {
      */
     bottomRight(x: any, y: any, v: any): any;
     /**
-     * return the tile position corresponding to the specified pixel
-     * @ignore
-     */
-    pixelToTileCoords(x: any, y: any, v: any): any;
-    /**
-     * return the pixel position corresponding of the specified tile
-     * @ignore
-     */
-    tileToPixelCoords(x: any, y: any, v: any): any;
-    /**
      * fix the position of Objects to match
      * the way Tiled places them
      * @ignore
      */
     adjustPosition(obj: any): void;
-    /**
-     * draw the tile map
-     * @ignore
-     */
-    drawTile(renderer: any, x: any, y: any, tmxTile: any): void;
-    /**
-     * draw the tile map
-     * @ignore
-     */
-    drawTileLayer(renderer: any, layer: any, rect: any): void;
 }
 /**
  * @classdesc
  * an Isometric Map Renderder
- * @memberof me
- * @augments me.TMXRenderer
+ * @augments TMXRenderer
  */
-export class TMXIsometricRenderer {
+export class TMXIsometricRenderer extends TMXRenderer {
     /**
-     * @param {me.TMXTileMap} map the TMX map
+     * @param {TMXTileMap} map the TMX map
      */
-    constructor(map: me.TMXTileMap);
+    constructor(map: TMXTileMap);
     hTilewidth: number;
     hTileheight: number;
     originX: number;
-    /**
-     * return true if the renderer can render the specified layer
-     * @ignore
-     */
-    canRender(layer: any): any;
-    /**
-     * return the bounding rect for this map renderer
-     * @name me.TMXIsometricRenderer#getBounds
-     * @public
-     * @function
-     * @param {me.TMXLayer} [layer] calculate the bounding rect for a specific layer (will return a new bounds object)
-     * @returns {me.Bounds}
-     */
-    public getBounds(layer?: me.TMXLayer): me.Bounds;
-    /**
-     * return the tile position corresponding to the specified pixel
-     * @ignore
-     */
-    pixelToTileCoords(x: any, y: any, v: any): any;
-    /**
-     * return the pixel position corresponding of the specified tile
-     * @ignore
-     */
-    tileToPixelCoords(x: any, y: any, v: any): any;
     /**
      * fix the position of Objects to match
      * the way Tiled places them
      * @ignore
      */
     adjustPosition(obj: any): void;
-    /**
-     * draw the tile map
-     * @ignore
-     */
-    drawTile(renderer: any, x: any, y: any, tmxTile: any): void;
-    /**
-     * draw the tile map
-     * @ignore
-     */
-    drawTileLayer(renderer: any, layer: any, rect: any): void;
 }
 /**
  * @classdesc
  * a TMX Tile Layer Object
  * Tiled QT 0.7.x format
- * @augments me.Renderable
- * @memberof me
+ * @augments Renderable
  */
-export class TMXLayer {
+export class TMXLayer extends Renderable {
     /**
      * @param {object} map layer data in JSON format ({@link http://docs.mapeditor.org/en/stable/reference/tmx-map-format/#layer})
      * @param {object} data layer data in JSON format ({@link http://docs.mapeditor.org/en/stable/reference/tmx-map-format/#layer})
      * @param {number} tilewidth width of each tile in pixels
      * @param {number} tileheight height of each tile in pixels
      * @param {string} orientation "isometric" or "orthogonal"
-     * @param {me.TMXTilesetGroup} tilesets tileset as defined in Tiled
+     * @param {TMXTilesetGroup} tilesets tileset as defined in Tiled
      * @param {number} z z-index position
      */
-    constructor(map: object, data: object, tilewidth: number, tileheight: number, orientation: string, tilesets: me.TMXTilesetGroup, z: number);
+    constructor(map: object, data: object, tilewidth: number, tileheight: number, orientation: string, tilesets: TMXTilesetGroup, z: number);
     tilewidth: any;
     tileheight: any;
     orientation: string;
     /**
      * The Layer corresponding Tilesets
      * @public
-     * @type {me.TMXTilesetGroup}
-     * @name me.TMXLayer#tilesets
+     * @type {TMXTilesetGroup}
+     * @name TMXLayer#tilesets
      */
-    public tilesets: me.TMXTilesetGroup;
-    tileset: any;
+    public tilesets: TMXTilesetGroup;
+    tileset: TMXTileset;
     maxTileSize: {
         width: number;
         height: number;
@@ -6725,15 +5537,15 @@ export class TMXLayer {
     /**
      * All animated tilesets in this layer
      * @ignore
-     * @type {me.TMXTileset[]}
-     * @name me.TMXLayer#animatedTilesets
+     * @type {TMXTileset[]}
+     * @name TMXLayer#animatedTilesets
      */
-    animatedTilesets: me.TMXTileset[];
+    animatedTilesets: TMXTileset[];
     /**
      * Layer contains tileset animations
      * @public
      * @type {boolean}
-     * @name me.TMXLayer#isAnimated
+     * @name TMXLayer#isAnimated
      */
     public isAnimated: boolean;
     /**
@@ -6742,45 +5554,42 @@ export class TMXLayer {
      * @public
      * @type {string}
      * @default "right-down"
-     * @name me.TMXLayer#renderorder
+     * @name TMXLayer#renderorder
      */
     public renderorder: string;
-    name: any;
     cols: number;
     rows: number;
-    width: number;
-    height: number;
-    preRender: any;
+    preRender: boolean;
     onActivateEvent(): void;
     canvasRenderer: CanvasRenderer;
     onDeactivateEvent(): void;
     /**
      * Set the TMX renderer for this layer object
      * @name setRenderer
-     * @memberof me.TMXLayer
+     * @memberof TMXLayer
      * @public
      * @function
-     * @param {me.TMXRenderer} renderer
+     * @param {TMXRenderer} renderer
      * @example
      * // use the parent map default renderer
      * var layer = new me.TMXLayer(...);
      * layer.setRenderer(map.getRenderer());
      */
-    public setRenderer(renderer: me.TMXRenderer): void;
-    renderer: me.TMXRenderer;
+    public setRenderer(renderer: TMXRenderer): void;
+    renderer: TMXRenderer;
     /**
      * Return the layer current renderer object
      * @name getRenderer
-     * @memberof me.TMXLayer
+     * @memberof TMXLayer
      * @public
      * @function
-     * @returns {me.TMXRenderer} renderer
+     * @returns {TMXRenderer} renderer
      */
-    public getRenderer(): me.TMXRenderer;
+    public getRenderer(): TMXRenderer;
     /**
      * Return the TileId of the Tile at the specified position
      * @name getTileId
-     * @memberof me.TMXLayer
+     * @memberof TMXLayer
      * @public
      * @function
      * @param {number} x X coordinate (in world/pixels coordinates)
@@ -6791,62 +5600,62 @@ export class TMXLayer {
     /**
      * Return the Tile object at the specified position
      * @name getTile
-     * @memberof me.TMXLayer
+     * @memberof TMXLayer
      * @public
      * @function
      * @param {number} x X coordinate (in world/pixels coordinates)
      * @param {number} y Y coordinate (in world/pixels coordinates)
-     * @returns {me.Tile} corresponding tile or null if there is no defined tile at the coordinate or if outside of the layer bounds
+     * @returns {Tile} corresponding tile or null if there is no defined tile at the coordinate or if outside of the layer bounds
      * @example
      * // get the TMX Map Layer called "Front layer"
      * var layer = me.game.world.getChildByName("Front Layer")[0];
      * // get the tile object corresponding to the latest pointer position
      * var tile = layer.getTile(me.input.pointer.x, me.input.pointer.y);
      */
-    public getTile(x: number, y: number): me.Tile;
+    public getTile(x: number, y: number): Tile;
     /**
      * assign the given Tile object to the specified position
      * @name getTile
-     * @memberof me.TMXLayer
+     * @memberof TMXLayer
      * @public
      * @function
-     * @param {me.Tile} tile the tile object to be assigned
+     * @param {Tile} tile the tile object to be assigned
      * @param {number} x x coordinate (in world/pixels coordinates)
      * @param {number} y y coordinate (in world/pixels coordinates)
-     * @returns {me.Tile} the tile object
+     * @returns {Tile} the tile object
      */
-    public setTile(tile: me.Tile, x: number, y: number): me.Tile;
+    public setTile(tile: Tile, x: number, y: number): Tile;
     /**
      * return a new the Tile object corresponding to the given tile id
      * @name setTile
-     * @memberof me.TMXLayer
+     * @memberof TMXLayer
      * @public
      * @function
      * @param {number} tileId tileId
      * @param {number} x X coordinate (in world/pixels coordinates)
      * @param {number} y Y coordinate (in world/pixels coordinates)
-     * @returns {me.Tile} the tile object
+     * @returns {Tile} the tile object
      */
-    public getTileById(tileId: number, x: number, y: number): me.Tile;
+    public getTileById(tileId: number, x: number, y: number): Tile;
     /**
      * Return the Tile object at the specified tile coordinates
      * @name cellAt
-     * @memberof me.TMXLayer
+     * @memberof TMXLayer
      * @public
      * @function
      * @param {number} x x position of the tile (in Tile unit)
      * @param {number} y x position of the tile (in Tile unit)
      * @param {number} [boundsCheck=true] check first if within the layer bounds
-     * @returns {me.Tile} corresponding tile or null if there is no defined tile at the position or if outside of the layer bounds
+     * @returns {Tile} corresponding tile or null if there is no defined tile at the position or if outside of the layer bounds
      * @example
      * // return the first tile at offset 0, 0
      * var tile = layer.cellAt(0, 0);
      */
-    public cellAt(x: number, y: number, boundsCheck?: number): me.Tile;
+    public cellAt(x: number, y: number, boundsCheck?: number): Tile;
     /**
      * clear the tile at the specified position
      * @name clearTile
-     * @memberof me.TMXLayer
+     * @memberof TMXLayer
      * @public
      * @function
      * @param {number} x X coordinate (in map coordinates: row/column)
@@ -6858,64 +5667,27 @@ export class TMXLayer {
      * });
      */
     public clearTile(x: number, y: number): void;
-    /**
-     * update animations in a tileset layer
-     * @ignore
-     */
-    update(dt: any): boolean;
-    /**
-     * draw a tileset layer
-     * @ignore
-     */
-    draw(renderer: any, rect: any): void;
 }
 /**
  * @classdesc
  * an Orthogonal Map Renderder
- * @memberof me
- * @augments me.TMXRenderer
+ * @augments TMXRenderer
  */
-export class TMXOrthogonalRenderer {
+export class TMXOrthogonalRenderer extends TMXRenderer {
     /**
-     * @param {me.TMXTileMap} map the TMX map
+     * @param {TMXTileMap} map the TMX map
      */
-    constructor(map: me.TMXTileMap);
-    /**
-     * return true if the renderer can render the specified layer
-     * @ignore
-     */
-    canRender(layer: any): any;
-    /**
-     * return the tile position corresponding to the specified pixel
-     * @ignore
-     */
-    pixelToTileCoords(x: any, y: any, v: any): any;
-    /**
-     * return the pixel position corresponding of the specified tile
-     * @ignore
-     */
-    tileToPixelCoords(x: any, y: any, v: any): any;
+    constructor(map: TMXTileMap);
     /**
      * fix the position of Objects to match
      * the way Tiled places them
      * @ignore
      */
     adjustPosition(obj: any): void;
-    /**
-     * draw the tile map
-     * @ignore
-     */
-    drawTile(renderer: any, x: any, y: any, tmxTile: any): void;
-    /**
-     * draw the tile map
-     * @ignore
-     */
-    drawTileLayer(renderer: any, layer: any, rect: any): void;
 }
 /**
  * @classdesc
  * The map renderer base class
- * @memberof me
  */
 export class TMXRenderer {
     /**
@@ -6932,89 +5704,77 @@ export class TMXRenderer {
     bounds: Bounds;
     /**
      * return true if the renderer can render the specified map or layer
-     * @name me.TMXRenderer#canRender
+     * @name TMXRenderer#canRender
      * @public
      * @function
-     * @param {me.TMXTileMap|me.TMXLayer} component TMX Map or Layer
+     * @param {TMXTileMap|TMXLayer} component TMX Map or Layer
      * @returns {boolean}
      */
-    public canRender(component: me.TMXTileMap | me.TMXLayer): boolean;
+    public canRender(component: TMXTileMap | TMXLayer): boolean;
     /**
      * return the bounding rect for this map renderer
-     * @name me.TMXRenderer#getBounds
+     * @name TMXRenderer#getBounds
      * @public
      * @function
-     * @param {me.TMXLayer} [layer] calculate the bounding rect for a specific layer (will return a new bounds object)
-     * @returns {me.Bounds}
+     * @param {TMXLayer} [layer] calculate the bounding rect for a specific layer (will return a new bounds object)
+     * @returns {Bounds}
      */
-    public getBounds(layer?: me.TMXLayer): me.Bounds;
+    public getBounds(layer?: TMXLayer): Bounds;
     /**
      * return the tile position corresponding to the specified pixel
-     * @name me.TMXRenderer#pixelToTileCoords
+     * @name TMXRenderer#pixelToTileCoords
      * @public
      * @function
      * @param {number} x X coordinate
      * @param {number} y Y coordinate
-     * @param {me.Vector2d} [v] an optional vector object where to put the return values
-     * @returns {me.Vector2d}
+     * @param {Vector2d} [v] an optional vector object where to put the return values
+     * @returns {Vector2d}
      */
-    public pixelToTileCoords(x: number, y: number, v?: me.Vector2d): me.Vector2d;
+    public pixelToTileCoords(x: number, y: number, v?: Vector2d): Vector2d;
     /**
      * return the pixel position corresponding of the specified tile
-     * @name me.TMXRenderer#tileToPixelCoords
+     * @name TMXRenderer#tileToPixelCoords
      * @public
      * @function
      * @param {number} col tile horizontal position
      * @param {number} row tile vertical position
-     * @param {me.Vector2d} [v] an optional vector object where to put the return values
-     * @returns {me.Vector2d}
+     * @param {Vector2d} [v] an optional vector object where to put the return values
+     * @returns {Vector2d}
      */
-    public tileToPixelCoords(col: number, row: number, v?: me.Vector2d): me.Vector2d;
+    public tileToPixelCoords(col: number, row: number, v?: Vector2d): Vector2d;
     /**
      * draw the given tile at the specified layer
-     * @name me.TMXRenderer#drawTile
+     * @name TMXRenderer#drawTile
      * @public
      * @function
-     * @param {me.CanvasRenderer|me.WebGLRenderer} renderer a renderer object
+     * @param {CanvasRenderer|WebGLRenderer} renderer a renderer object
      * @param {number} x X coordinate where to draw the tile
      * @param {number} y Y coordinate where to draw the tile
-     * @param {me.Tile} tile the tile object to draw
+     * @param {Tile} tile the tile object to draw
      */
-    public drawTile(renderer: me.CanvasRenderer | me.WebGLRenderer, x: number, y: number, tile: me.Tile): void;
+    public drawTile(renderer: CanvasRenderer | WebGLRenderer, x: number, y: number, tile: Tile): void;
     /**
      * draw the given TMX Layer for the given area
-     * @name me.TMXRenderer#drawTileLayer
+     * @name TMXRenderer#drawTileLayer
      * @public
      * @function
-     * @param {me.CanvasRenderer|me.WebGLRenderer} renderer a renderer object
-     * @param {me.TMXLayer} layer a TMX Layer object
-     * @param {me.Rect} rect the area of the layer to draw
+     * @param {CanvasRenderer|WebGLRenderer} renderer a renderer object
+     * @param {TMXLayer} layer a TMX Layer object
+     * @param {Rect} rect the area of the layer to draw
      */
-    public drawTileLayer(renderer: me.CanvasRenderer | me.WebGLRenderer, layer: me.TMXLayer, rect: me.Rect): void;
+    public drawTileLayer(renderer: CanvasRenderer | WebGLRenderer, layer: TMXLayer, rect: Rect): void;
 }
 /**
  * @classdesc
  * a Staggered Map Renderder
- * @memberof me
- * @augments me.TMXHexagonalRenderer
+ * @augments TMXHexagonalRenderer
  */
-export class TMXStaggeredRenderer {
-    /**
-     * return true if the renderer can render the specified layer
-     * @ignore
-     */
-    canRender(layer: any): any;
-    /**
-     * return the tile position corresponding to the specified pixel
-     * @ignore
-     */
-    pixelToTileCoords(x: any, y: any, v: any): any;
+export class TMXStaggeredRenderer extends TMXHexagonalRenderer {
 }
 /**
  * @classdesc
  * a TMX Tile Map Object
  * Tiled QT +0.7.x format
- * @memberof me
  */
 export class TMXTileMap {
     /**
@@ -7036,35 +5796,35 @@ export class TMXTileMap {
      * name of the tilemap
      * @public
      * @type {string}
-     * @name me.TMXTileMap#name
+     * @name TMXTileMap#name
      */
     public name: string;
     /**
      * width of the tilemap in tiles
      * @public
      * @type {number}
-     * @name me.TMXTileMap#cols
+     * @name TMXTileMap#cols
      */
     public cols: number;
     /**
      * height of the tilemap in tiles
      * @public
      * @type {number}
-     * @name me.TMXTileMap#rows
+     * @name TMXTileMap#rows
      */
     public rows: number;
     /**
      * Tile width
      * @public
      * @type {number}
-     * @name me.TMXTileMap#tilewidth
+     * @name TMXTileMap#tilewidth
      */
     public tilewidth: number;
     /**
      * Tile height
      * @public
      * @type {number}
-     * @name me.TMXTileMap#tileheight
+     * @name TMXTileMap#tileheight
      */
     public tileheight: number;
     /**
@@ -7072,7 +5832,7 @@ export class TMXTileMap {
      * @public
      * @type {number}
      * @default 0
-     * @name me.TMXTileMap#infinite
+     * @name TMXTileMap#infinite
      */
     public infinite: number;
     /**
@@ -7080,7 +5840,7 @@ export class TMXTileMap {
      * @public
      * @type {string}
      * @default "orthogonal"
-     * @name me.TMXTileMap#orientation
+     * @name TMXTileMap#orientation
      */
     public orientation: string;
     /**
@@ -7089,21 +5849,21 @@ export class TMXTileMap {
      * @public
      * @type {string}
      * @default "right-down"
-     * @name me.TMXTileMap#renderorder
+     * @name TMXTileMap#renderorder
      */
     public renderorder: string;
     /**
      * the TMX format version
      * @public
      * @type {string}
-     * @name me.TMXTileMap#version
+     * @name TMXTileMap#version
      */
     public version: string;
     /**
      * The Tiled version used to save the file (since Tiled 1.0.1).
      * @public
      * @type {string}
-     * @name me.TMXTileMap#tiledversion
+     * @name TMXTileMap#tiledversion
      */
     public tiledversion: string;
     tilesets: TMXTilesetGroup;
@@ -7114,29 +5874,29 @@ export class TMXTileMap {
     hexsidelength: number;
     staggeraxis: any;
     staggerindex: any;
-    bounds: any;
-    width: any;
-    height: any;
+    bounds: Bounds;
+    width: number;
+    height: number;
     backgroundcolor: any;
     initialized: boolean;
     /**
      * Return the map default renderer
      * @name getRenderer
-     * @memberof me.TMXTileMap
+     * @memberof TMXTileMap
      * @public
      * @function
-     * @returns {me.TMXRenderer} a TMX renderer
+     * @returns {TMXRenderer} a TMX renderer
      */
-    public getRenderer(): me.TMXRenderer;
-    renderer: TMXOrthogonalRenderer | TMXIsometricRenderer | TMXHexagonalRenderer | TMXStaggeredRenderer;
+    public getRenderer(): TMXRenderer;
+    renderer: TMXOrthogonalRenderer | TMXIsometricRenderer | TMXHexagonalRenderer;
     /**
      * return the map bounding rect
-     * @name me.TMXRenderer#getBounds
+     * @name TMXRenderer#getBounds
      * @public
      * @function
-     * @returns {me.Bounds}
+     * @returns {Bounds}
      */
-    public getBounds(): me.Bounds;
+    public getBounds(): Bounds;
     /**
      * parse the map
      * @ignore
@@ -7145,10 +5905,10 @@ export class TMXTileMap {
     /**
      * add all the map layers and objects to the given container.
      * note : this will not automatically update the camera viewport
-     * @name me.TMXTileMap#addTo
+     * @name TMXTileMap#addTo
      * @public
      * @function
-     * @param {me.Container} container target container
+     * @param {Container} container target container
      * @param {boolean} [flatten=true] if true, flatten all objects into the given container, else a `me.Container` object will be created for each corresponding groups
      * @param {boolean} [setViewportBounds=false] if true, set the viewport bounds to the map size, this should be set to true especially if adding a level to the game world container.
      * @example
@@ -7157,28 +5917,28 @@ export class TMXTileMap {
      * // add the level to the game world container
      * level.addTo(me.game.world, true, true);
      */
-    public addTo(container: me.Container, flatten?: boolean, setViewportBounds?: boolean): void;
+    public addTo(container: Container, flatten?: boolean, setViewportBounds?: boolean): void;
     /**
      * return an Array of instantiated objects, based on the map object definition
-     * @name me.TMXTileMap#getObjects
+     * @name TMXTileMap#getObjects
      * @public
      * @function
      * @param {boolean} [flatten=true] if true, flatten all objects into the returned array.
      * when false, a `me.Container` object will be created for each corresponding groups
-     * @returns {me.Renderable[]} Array of Objects
+     * @returns {Renderable[]} Array of Objects
      */
-    public getObjects(flatten?: boolean): me.Renderable[];
+    public getObjects(flatten?: boolean): Renderable[];
     /**
      * return all the existing layers
-     * @name me.TMXTileMap#getLayers
+     * @name TMXTileMap#getLayers
      * @public
      * @function
-     * @returns {me.TMXLayer[]} Array of Layers
+     * @returns {TMXLayer[]} Array of Layers
      */
-    public getLayers(): me.TMXLayer[];
+    public getLayers(): TMXLayer[];
     /**
      * destroy function, clean all allocated objects
-     * @name me.TMXTileMap#destroy
+     * @name TMXTileMap#destroy
      * @public
      * @function
      */
@@ -7187,7 +5947,6 @@ export class TMXTileMap {
 /**
  * @classdesc
  * a TMX Tile Set Object
- * @memberof me
  */
 export class TMXTileset {
     /**
@@ -7208,28 +5967,28 @@ export class TMXTileset {
      * Tileset contains animated tiles
      * @public
      * @type {boolean}
-     * @name me.TMXTileset#isAnimated
+     * @name TMXTileset#isAnimated
      */
     public isAnimated: boolean;
     /**
      * true if the tileset is a "Collection of Image" Tileset
      * @public
      * @type {boolean}
-     * @name me.TMXTileset#isCollection
+     * @name TMXTileset#isCollection
      */
     public isCollection: boolean;
     /**
      * Tileset animations
      * @private
      * @type {Map}
-     * @name me.TMXTileset#animations
+     * @name TMXTileset#animations
      */
     private animations;
     /**
      * Remember the last update timestamp to prevent too many animation updates
      * @private
      * @type {Map}
-     * @name me.TMXTileset#_lastUpdate
+     * @name TMXTileset#_lastUpdate
      */
     private _lastUpdate;
     image: HTMLImageElement;
@@ -7237,7 +5996,7 @@ export class TMXTileset {
     atlas: any;
     /**
      * return the tile image from a "Collection of Image" tileset
-     * @name me.TMXTileset#getTileImage
+     * @name TMXTileset#getTileImage
      * @public
      * @function
      * @param {number} gid
@@ -7252,7 +6011,7 @@ export class TMXTileset {
     setTileProperty(gid: any, prop: any): void;
     /**
      * return true if the gid belongs to the tileset
-     * @name me.TMXTileset#contains
+     * @name TMXTileset#contains
      * @public
      * @function
      * @param {number} gid
@@ -7261,7 +6020,7 @@ export class TMXTileset {
     public contains(gid: number): boolean;
     /**
      * Get the view (local) tile ID from a GID, with animations applied
-     * @name me.TMXTileset#getViewTileId
+     * @name TMXTileset#getViewTileId
      * @public
      * @function
      * @param {number} gid Global tile ID
@@ -7270,7 +6029,7 @@ export class TMXTileset {
     public getViewTileId(gid: number): number;
     /**
      * return the properties of the specified tile
-     * @name me.TMXTileset#getTileProperties
+     * @name TMXTileset#getTileProperties
      * @public
      * @function
      * @param {number} tileId
@@ -7283,59 +6042,57 @@ export class TMXTileset {
 /**
  * @classdesc
  * an object containing all tileset
- * @memberof me
  */
 export class TMXTilesetGroup {
     tilesets: any[];
     length: number;
     /**
      * add a tileset to the tileset group
-     * @name me.TMXTilesetGroup#add
+     * @name TMXTilesetGroup#add
      * @public
      * @function
-     * @param  {me.TMXTileset} tileset
+     * @param {TMXTileset} tileset
      */
-    public add(tileset: me.TMXTileset): void;
+    public add(tileset: TMXTileset): void;
     /**
      * return the tileset at the specified index
-     * @name me.TMXTilesetGroup#getTilesetByIndex
+     * @name TMXTilesetGroup#getTilesetByIndex
      * @public
      * @function
      * @param {number} i
-     * @returns {me.TMXTileset} corresponding tileset
+     * @returns {TMXTileset} corresponding tileset
      */
-    public getTilesetByIndex(i: number): me.TMXTileset;
+    public getTilesetByIndex(i: number): TMXTileset;
     /**
      * return the tileset corresponding to the specified id <br>
      * will throw an exception if no matching tileset is found
-     * @name me.TMXTilesetGroup#getTilesetByGid
+     * @name TMXTilesetGroup#getTilesetByGid
      * @public
      * @function
      * @param {number} gid
-     * @returns {me.TMXTileset} corresponding tileset
+     * @returns {TMXTileset} corresponding tileset
      */
-    public getTilesetByGid(gid: number): me.TMXTileset;
+    public getTilesetByGid(gid: number): TMXTileset;
 }
 /**
  * @classdesc
  * a generic system font object.
- * @augments me.Renderable
- * @memberof me
+ * @augments Renderable
  */
-export class Text {
+export class Text extends Renderable {
     /**
      * @param {number} x position of the text object
      * @param {number} y position of the text object
      * @param {object} settings the text configuration
      * @param {string} settings.font a CSS family font name
      * @param {number|string} settings.size size, or size + suffix (px, em, pt)
-     * @param {me.Color|string} [settings.fillStyle="#000000"] a CSS color value
-     * @param {me.Color|string} [settings.strokeStyle="#000000"] a CSS color value
+     * @param {Color|string} [settings.fillStyle="#000000"] a CSS color value
+     * @param {Color|string} [settings.strokeStyle="#000000"] a CSS color value
      * @param {number} [settings.lineWidth=1] line width, in pixels, when drawing stroke
      * @param {string} [settings.textAlign="left"] horizontal text alignment
      * @param {string} [settings.textBaseline="top"] the text baseline
      * @param {number} [settings.lineHeight=1.0] line spacing height
-     * @param {me.Vector2d} [settings.anchorPoint={x:0.0, y:0.0}] anchor point to draw the text at
+     * @param {Vector2d} [settings.anchorPoint={x:0.0, y:0.0}] anchor point to draw the text at
      * @param {boolean} [settings.offScreenCanvas=false] whether to draw the font to an individual "cache" texture first
      * @param {(string|string[])} [settings.text=""] a string, or an array of strings
      * @example
@@ -7344,18 +6101,16 @@ export class Text {
     constructor(x: number, y: number, settings: {
         font: string;
         size: number | string;
-        fillStyle?: me.Color | string;
-        strokeStyle?: me.Color | string;
+        fillStyle?: Color | string;
+        strokeStyle?: Color | string;
         lineWidth?: number;
         textAlign?: string;
         textBaseline?: string;
         lineHeight?: number;
-        anchorPoint?: me.Vector2d;
+        anchorPoint?: Vector2d;
         offScreenCanvas?: boolean;
         text?: (string | string[]);
     });
-    /** @ignore */
-    onResetEvent(x: any, y: any, settings: any): void;
     fillStyle: any;
     strokeStyle: any;
     /**
@@ -7363,7 +6118,7 @@ export class Text {
      * @public
      * @type {number}
      * @default 1
-     * @name me.Text#lineWidth
+     * @name Text#lineWidth
      */
     public lineWidth: number;
     /**
@@ -7372,7 +6127,7 @@ export class Text {
      * @public
      * @type {string}
      * @default "left"
-     * @name me.Text#textAlign
+     * @name Text#textAlign
      */
     public textAlign: string;
     /**
@@ -7381,7 +6136,7 @@ export class Text {
      * @public
      * @type {string}
      * @default "top"
-     * @name me.Text#textBaseline
+     * @name Text#textBaseline
      */
     public textBaseline: string;
     /**
@@ -7390,7 +6145,7 @@ export class Text {
      * @public
      * @type {number}
      * @default 1.0
-     * @name me.Text#lineHeight
+     * @name Text#lineHeight
      */
     public lineHeight: number;
     /**
@@ -7400,7 +6155,7 @@ export class Text {
      * @public
      * @type {boolean}
      * @default false
-     * @name me.Text#offScreenCanvas
+     * @name Text#offScreenCanvas
      */
     public offScreenCanvas: boolean;
     /**
@@ -7408,7 +6163,7 @@ export class Text {
      * @private
      * @type {string[]}
      * @name _text
-     * @memberof me.Text
+     * @memberof Text
      */
     private _text;
     /**
@@ -7417,10 +6172,9 @@ export class Text {
      * @type {number}
      * @name fontSize
      * @default 10
-     * @memberof me.Text
+     * @memberof Text
      */
     public fontSize: number;
-    floating: boolean;
     canvas: any;
     context: any;
     /** @ignore */
@@ -7429,116 +6183,91 @@ export class Text {
     /**
      * make the font bold
      * @name bold
-     * @memberof me.Text.prototype
+     * @memberof Text.prototype
      * @function
-     * @returns {me.Text} this object for chaining
+     * @returns {Text} this object for chaining
      */
-    bold(): me.Text;
+    bold(): Text;
     font: any;
-    isDirty: boolean;
     /**
      * make the font italic
      * @name italic
-     * @memberof me.Text.prototype
+     * @memberof Text.prototype
      * @function
-     * @returns {me.Text} this object for chaining
+     * @returns {Text} this object for chaining
      */
-    italic(): me.Text;
+    italic(): Text;
     /**
      * set the font family and size
      * @name setFont
-     * @memberof me.Text.prototype
+     * @memberof Text.prototype
      * @function
      * @param {string} font a CSS font name
      * @param {number|string} [size=10] size in px, or size + suffix (px, em, pt)
-     * @returns {me.Text} this object for chaining
+     * @returns {Text} this object for chaining
      * @example
      * font.setFont("Arial", 20);
      * font.setFont("Arial", "1.5em");
      */
-    setFont(font: string, size?: number | string): me.Text;
-    height: number;
+    setFont(font: string, size?: number | string): Text;
     /**
      * change the text to be displayed
      * @name setText
-     * @memberof me.Text.prototype
+     * @memberof Text.prototype
      * @function
      * @param {number|string|string[]} value a string, or an array of strings
-     * @returns {me.Text} this object for chaining
+     * @returns {Text} this object for chaining
      */
-    setText(value?: number | string | string[]): me.Text;
+    setText(value?: number | string | string[]): Text;
     /**
      * measure the given text size in pixels
      * @name measureText
-     * @memberof me.Text.prototype
+     * @memberof Text.prototype
      * @function
-     * @param {me.CanvasRenderer|me.WebGLRenderer} [renderer] reference to the active renderer
+     * @param {CanvasRenderer|WebGLRenderer} [renderer] reference to the active renderer
      * @param {string} [text] the text to be measured
-     * @param {me.Rect|me.Bounds} [ret] a object in which to store the text metrics
+     * @param {Rect|Bounds} [ret] a object in which to store the text metrics
      * @returns {TextMetrics} a TextMetrics object with two properties: `width` and `height`, defining the output dimensions
      */
-    measureText(renderer?: me.CanvasRenderer | me.WebGLRenderer, text?: string, ret?: me.Rect | me.Bounds): TextMetrics;
-    width: any;
-    /**
-     * @ignore
-     */
-    update(): boolean;
-    /**
-     * draw a text at the specified coord
-     * @name draw
-     * @memberof me.Text.prototype
-     * @function
-     * @param {me.CanvasRenderer|me.WebGLRenderer} renderer Reference to the destination renderer instance
-     * @param {string} [text]
-     * @param {number} [x]
-     * @param {number} [y]
-     * @param {boolean} [stroke=false] draw stroke the the text if true
-     */
-    draw(renderer: me.CanvasRenderer | me.WebGLRenderer, text?: string, x?: number, y?: number, stroke?: boolean): void;
+    measureText(renderer?: CanvasRenderer | WebGLRenderer, text?: string, ret?: Rect | Bounds): TextMetrics;
     /**
      * draw a stroke text at the specified coord, as defined <br>
      * by the `lineWidth` and `fillStroke` properties. <br>
      * Note : using drawStroke is not recommended for performance reasons
      * @name drawStroke
-     * @memberof me.Text.prototype
+     * @memberof Text.prototype
      * @function
-     * @param {me.CanvasRenderer|me.WebGLRenderer} renderer Reference to the destination renderer instance
+     * @param {CanvasRenderer|WebGLRenderer} renderer Reference to the destination renderer instance
      * @param {string} text
      * @param {number} x
      * @param {number} y
      */
-    drawStroke(renderer: me.CanvasRenderer | me.WebGLRenderer, text: string, x: number, y: number): void;
+    drawStroke(renderer: CanvasRenderer | WebGLRenderer, text: string, x: number, y: number): void;
     /**
      * @ignore
      */
-    _drawFont(context: any, text: any, x: any, y: any, stroke?: boolean): any;
-    /**
-     * Destroy function
-     * @ignore
-     */
-    destroy(): void;
+    _drawFont(context: any, text: any, x: any, y: any, stroke?: boolean): Bounds;
 }
 /**
  * @classdesc
  * a basic tile object
- * @augments me.Bounds
- * @memberof me
+ * @augments Bounds
  */
-export class Tile {
+export class Tile extends Bounds {
     /**
      * @param {number} x x index of the Tile in the map
      * @param {number} y y index of the Tile in the map
      * @param {number} gid tile gid
-     * @param {me.TMXTileset} tileset the corresponding tileset object
+     * @param {TMXTileset} tileset the corresponding tileset object
      */
-    constructor(x: number, y: number, gid: number, tileset: me.TMXTileset);
+    constructor(x: number, y: number, gid: number, tileset: TMXTileset);
     /**
      * tileset
      * @public
-     * @type {me.TMXTileset}
-     * @name me.Tile#tileset
+     * @type {TMXTileset}
+     * @name Tile#tileset
      */
-    public tileset: me.TMXTileset;
+    public tileset: TMXTileset;
     /**
      * the tile transformation matrix (if defined)
      * @ignore
@@ -7550,35 +6279,35 @@ export class Tile {
      * tileId
      * @public
      * @type {number}
-     * @name me.Tile#tileId
+     * @name Tile#tileId
      */
     public tileId: number;
     /**
      * True if the tile is flipped horizontally<br>
      * @public
      * @type {boolean}
-     * @name me.Tile#flipX
+     * @name Tile#flipX
      */
     public flippedX: boolean;
     /**
      * True if the tile is flipped vertically<br>
      * @public
      * @type {boolean}
-     * @name me.Tile#flippedY
+     * @name Tile#flippedY
      */
     public flippedY: boolean;
     /**
      * True if the tile is flipped anti-diagonally<br>
      * @public
      * @type {boolean}
-     * @name me.Tile#flippedAD
+     * @name Tile#flippedAD
      */
     public flippedAD: boolean;
     /**
      * Global flag that indicates if the tile is flipped<br>
      * @public
      * @type {boolean}
-     * @name me.Tile#flipped
+     * @name Tile#flipped
      */
     public flipped: boolean;
     /**
@@ -7588,35 +6317,34 @@ export class Tile {
     setTileTransform(transform: any): void;
     /**
      * return a renderable object for this Tile object
-     * @name me.Tile#getRenderable
+     * @name Tile#getRenderable
      * @public
      * @function
-     * @param {object} [settings] see {@link me.Sprite}
-     * @returns {me.Renderable} a me.Sprite object
+     * @param {object} [settings] see {@link Sprite}
+     * @returns {Renderable} a me.Sprite object
      */
-    public getRenderable(settings?: object): me.Renderable;
+    public getRenderable(settings?: object): Renderable;
 }
 /**
  * @classdesc
  * trigger an event when colliding with another object
- * @augments me.Renderable
- * @memberof me
+ * @augments Renderable
  */
-export class Trigger {
+export class Trigger extends Renderable {
     /**
      * @param {number} x the x coordinates of the trigger area
      * @param {number} y the y coordinates of the trigger area
      * @param {number} [settings.width] width of the trigger area
      * @param {number} [settings.height] height of the trigger area
-     * @param {me.Rect[]|me.Polygon[]|me.Line[]|me.Ellipse[]} [settings.shapes] collision shape(s) that will trigger the event
+     * @param {Rect[]|Polygon[]|Line[]|Ellipse[]} [settings.shapes] collision shape(s) that will trigger the event
      * @param {string} [settings.duration] Fade duration (in ms)
-     * @param {string|me.Color} [settings.color] Fade color
+     * @param {string|Color} [settings.color] Fade color
      * @param {string} [settings.event="level"] the type of event to trigger (only "level" supported for now)
      * @param {string} [settings.to] level to load if level trigger
-     * @param {string|me.Container} [settings.container] Target container. See {@link me.level.load}
-     * @param {Function} [settings.onLoaded] Level loaded callback. See {@link me.level.load}
-     * @param {boolean} [settings.flatten] Flatten all objects into the target container. See {@link me.level.load}
-     * @param {boolean} [settings.setViewportBounds] Resize the viewport to match the level. See {@link me.level.load}
+     * @param {string|Container} [settings.container] Target container. See {@link level.load}
+     * @param {Function} [settings.onLoaded] Level loaded callback. See {@link level.load}
+     * @param {boolean} [settings.flatten] Flatten all objects into the target container. See {@link level.load}
+     * @param {boolean} [settings.setViewportBounds] Resize the viewport to match the level. See {@link level.load}
      * @example
      * me.game.world.addChild(new me.Trigger(
      *     x, y, {
@@ -7631,14 +6359,12 @@ export class Trigger {
     fade: any;
     duration: any;
     fading: boolean;
-    name: string;
     type: any;
     id: any;
     gotolevel: any;
     triggerSettings: {
         event: string;
     };
-    body: Body;
     /**
      * @ignore
      */
@@ -7652,13 +6378,11 @@ export class Trigger {
     /**
      * trigger this event
      * @name triggerEvent
-     * @memberof me.Trigger
+     * @memberof Trigger
      * @function
      * @protected
      */
     protected triggerEvent(): void;
-    /** @ignore */
-    onCollision(): boolean;
 }
 /**
  * Tween.js - Licensed under the MIT license
@@ -7677,7 +6401,6 @@ export class Trigger {
  * author Paul Lewis / http://www.aerotwist.com/<br>
  * author lechecacharro<br>
  * author Josh Faul / http://jocafa.com/
- * @memberof me
  */
 export class Tween {
     static get Easing(): any;
@@ -7743,139 +6466,138 @@ export class Tween {
     /**
      * object properties to be updated and duration
      * @name to
-     * @memberof me.Tween
+     * @memberof Tween
      * @public
      * @function
      * @param {object} properties hash of properties
      * @param {object|number} [options] object of tween properties, or a duration if a numeric value is passed
      * @param {number} [options.duration] tween duration
-     * @param {me.Tween.Easing} [options.easing] easing function
+     * @param {Tween.Easing} [options.easing] easing function
      * @param {number} [options.delay] delay amount expressed in milliseconds
      * @param {boolean} [options.yoyo] allows the tween to bounce back to their original value when finished. To be used together with repeat to create endless loops.
      * @param {number} [options.repeat] amount of times the tween should be repeated
-     * @param {me.Tween.Interpolation} [options.interpolation] interpolation function
+     * @param {Tween.Interpolation} [options.interpolation] interpolation function
      * @param {boolean} [options.autoStart] allow this tween to start automatically. Otherwise call me.Tween.start().
-     * @returns {me.Tween} this instance for object chaining
+     * @returns {Tween} this instance for object chaining
      */
-    public to(properties: object, options?: object | number): me.Tween;
+    public to(properties: object, options?: object | number): Tween;
     /**
      * start the tween
      * @name start
-     * @memberof me.Tween
+     * @memberof Tween
      * @public
      * @function
      * @param {number} [time] the current time when the tween was started
-     * @returns {me.Tween} this instance for object chaining
+     * @returns {Tween} this instance for object chaining
      */
-    public start(time?: number): me.Tween;
+    public start(time?: number): Tween;
     /**
      * stop the tween
      * @name stop
-     * @memberof me.Tween
+     * @memberof Tween
      * @public
      * @function
-     * @returns {me.Tween} this instance for object chaining
+     * @returns {Tween} this instance for object chaining
      */
-    public stop(): me.Tween;
+    public stop(): Tween;
     /**
      * delay the tween
      * @name delay
-     * @memberof me.Tween
+     * @memberof Tween
      * @public
      * @function
      * @param {number} amount delay amount expressed in milliseconds
-     * @returns {me.Tween} this instance for object chaining
+     * @returns {Tween} this instance for object chaining
      */
-    public delay(amount: number): me.Tween;
+    public delay(amount: number): Tween;
     /**
      * Repeat the tween
      * @name repeat
-     * @memberof me.Tween
+     * @memberof Tween
      * @public
      * @function
      * @param {number} times amount of times the tween should be repeated
-     * @returns {me.Tween} this instance for object chaining
+     * @returns {Tween} this instance for object chaining
      */
-    public repeat(times: number): me.Tween;
+    public repeat(times: number): Tween;
     /**
      * Allows the tween to bounce back to their original value when finished.
      * To be used together with repeat to create endless loops.
      * @name yoyo
-     * @memberof me.Tween
+     * @memberof Tween
      * @public
      * @function
-     * @see me.Tween#repeat
+     * @see Tween#repeat
      * @param {boolean} yoyo
-     * @returns {me.Tween} this instance for object chaining
+     * @returns {Tween} this instance for object chaining
      */
-    public yoyo(yoyo: boolean): me.Tween;
+    public yoyo(yoyo: boolean): Tween;
     /**
      * set the easing function
      * @name easing
-     * @memberof me.Tween
+     * @memberof Tween
      * @public
      * @function
-     * @param {me.Tween.Easing} easing easing function
-     * @returns {me.Tween} this instance for object chaining
+     * @param {Tween.Easing} easing easing function
+     * @returns {Tween} this instance for object chaining
      */
-    public easing(easing: me.Tween.Easing): me.Tween;
+    public easing(easing: any): Tween;
     /**
      * set the interpolation function
      * @name interpolation
-     * @memberof me.Tween
+     * @memberof Tween
      * @public
      * @function
-     * @param {me.Tween.Interpolation} interpolation interpolation function
-     * @returns {me.Tween} this instance for object chaining
+     * @param {Tween.Interpolation} interpolation interpolation function
+     * @returns {Tween} this instance for object chaining
      */
-    public interpolation(interpolation: me.Tween.Interpolation): me.Tween;
+    public interpolation(interpolation: any): Tween;
     /**
      * chain the tween
      * @name chain
-     * @memberof me.Tween
+     * @memberof Tween
      * @public
      * @function
-     * @param {...me.Tween} chainedTween Tween(s) to be chained
-     * @returns {me.Tween} this instance for object chaining
+     * @param {...Tween} chainedTween Tween(s) to be chained
+     * @returns {Tween} this instance for object chaining
      */
-    public chain(...args: me.Tween[]): me.Tween;
+    public chain(...args: Tween[]): Tween;
     /**
      * onStart callback
      * @name onStart
-     * @memberof me.Tween
+     * @memberof Tween
      * @public
      * @function
      * @param {Function} onStartCallback callback
-     * @returns {me.Tween} this instance for object chaining
+     * @returns {Tween} this instance for object chaining
      */
-    public onStart(onStartCallback: Function): me.Tween;
+    public onStart(onStartCallback: Function): Tween;
     /**
      * onUpdate callback
      * @name onUpdate
-     * @memberof me.Tween
+     * @memberof Tween
      * @public
      * @function
      * @param {Function} onUpdateCallback callback
-     * @returns {me.Tween} this instance for object chaining
+     * @returns {Tween} this instance for object chaining
      */
-    public onUpdate(onUpdateCallback: Function): me.Tween;
+    public onUpdate(onUpdateCallback: Function): Tween;
     /**
      * onComplete callback
      * @name onComplete
-     * @memberof me.Tween
+     * @memberof Tween
      * @public
      * @function
      * @param {Function} onCompleteCallback callback
-     * @returns {me.Tween} this instance for object chaining
+     * @returns {Tween} this instance for object chaining
      */
-    public onComplete(onCompleteCallback: Function): me.Tween;
+    public onComplete(onCompleteCallback: Function): Tween;
     /** @ignore */
     update(dt: any): boolean;
 }
 /**
  * @classdesc
  * a generic 2D Vector Object
- * @memberof me
  */
 export class Vector2d {
     /**
@@ -7896,207 +6618,207 @@ export class Vector2d {
     /**
      * set the Vector x and y properties to the given values<br>
      * @name set
-     * @memberof me.Vector2d
+     * @memberof Vector2d
      * @function
      * @param {number} x
      * @param {number} y
-     * @returns {me.Vector2d} Reference to this object for method chaining
+     * @returns {Vector2d} Reference to this object for method chaining
      */
-    set(x: number, y: number): me.Vector2d;
+    set(x: number, y: number): Vector2d;
     /**
      * set the Vector x and y properties to 0
      * @name setZero
-     * @memberof me.Vector2d
+     * @memberof Vector2d
      * @function
-     * @returns {me.Vector2d} Reference to this object for method chaining
+     * @returns {Vector2d} Reference to this object for method chaining
      */
-    setZero(): me.Vector2d;
+    setZero(): Vector2d;
     /**
      * set the Vector x and y properties using the passed vector
      * @name setV
-     * @memberof me.Vector2d
+     * @memberof Vector2d
      * @function
-     * @param {me.Vector2d} v
-     * @returns {me.Vector2d} Reference to this object for method chaining
+     * @param {Vector2d} v
+     * @returns {Vector2d} Reference to this object for method chaining
      */
-    setV(v: me.Vector2d): me.Vector2d;
+    setV(v: Vector2d): Vector2d;
     /**
      * Add the passed vector to this vector
      * @name add
-     * @memberof me.Vector2d
+     * @memberof Vector2d
      * @function
-     * @param {me.Vector2d} v
-     * @returns {me.Vector2d} Reference to this object for method chaining
+     * @param {Vector2d} v
+     * @returns {Vector2d} Reference to this object for method chaining
      */
-    add(v: me.Vector2d): me.Vector2d;
+    add(v: Vector2d): Vector2d;
     /**
      * Substract the passed vector to this vector
      * @name sub
-     * @memberof me.Vector2d
+     * @memberof Vector2d
      * @function
-     * @param {me.Vector2d} v
-     * @returns {me.Vector2d} Reference to this object for method chaining
+     * @param {Vector2d} v
+     * @returns {Vector2d} Reference to this object for method chaining
      */
-    sub(v: me.Vector2d): me.Vector2d;
+    sub(v: Vector2d): Vector2d;
     /**
      * Multiply this vector values by the given scalar
      * @name scale
-     * @memberof me.Vector2d
+     * @memberof Vector2d
      * @function
      * @param {number} x
      * @param {number} [y=x]
-     * @returns {me.Vector2d} Reference to this object for method chaining
+     * @returns {Vector2d} Reference to this object for method chaining
      */
-    scale(x: number, y?: number): me.Vector2d;
+    scale(x: number, y?: number): Vector2d;
     /**
      * Convert this vector into isometric coordinate space
      * @name toIso
-     * @memberof me.Vector2d
+     * @memberof Vector2d
      * @function
-     * @returns {me.Vector2d} Reference to this object for method chaining
+     * @returns {Vector2d} Reference to this object for method chaining
      */
-    toIso(): me.Vector2d;
+    toIso(): Vector2d;
     /**
      * Convert this vector into 2d coordinate space
      * @name to2d
-     * @memberof me.Vector2d
+     * @memberof Vector2d
      * @function
-     * @returns {me.Vector2d} Reference to this object for method chaining
+     * @returns {Vector2d} Reference to this object for method chaining
      */
-    to2d(): me.Vector2d;
+    to2d(): Vector2d;
     /**
      * Multiply this vector values by the passed vector
      * @name scaleV
-     * @memberof me.Vector2d
+     * @memberof Vector2d
      * @function
-     * @param {me.Vector2d} v
-     * @returns {me.Vector2d} Reference to this object for method chaining
+     * @param {Vector2d} v
+     * @returns {Vector2d} Reference to this object for method chaining
      */
-    scaleV(v: me.Vector2d): me.Vector2d;
+    scaleV(v: Vector2d): Vector2d;
     /**
      * Divide this vector values by the passed value
      * @name div
-     * @memberof me.Vector2d
+     * @memberof Vector2d
      * @function
      * @param {number} n the value to divide the vector by
-     * @returns {me.Vector2d} Reference to this object for method chaining
+     * @returns {Vector2d} Reference to this object for method chaining
      */
-    div(n: number): me.Vector2d;
+    div(n: number): Vector2d;
     /**
      * Update this vector values to absolute values
      * @name abs
-     * @memberof me.Vector2d
+     * @memberof Vector2d
      * @function
-     * @returns {me.Vector2d} Reference to this object for method chaining
+     * @returns {Vector2d} Reference to this object for method chaining
      */
-    abs(): me.Vector2d;
+    abs(): Vector2d;
     /**
      * Clamp the vector value within the specified value range
      * @name clamp
-     * @memberof me.Vector2d
+     * @memberof Vector2d
      * @function
      * @param {number} low
      * @param {number} high
-     * @returns {me.Vector2d} new me.Vector2d
+     * @returns {Vector2d} new me.Vector2d
      */
-    clamp(low: number, high: number): me.Vector2d;
+    clamp(low: number, high: number): Vector2d;
     /**
      * Clamp this vector value within the specified value range
      * @name clampSelf
-     * @memberof me.Vector2d
+     * @memberof Vector2d
      * @function
      * @param {number} low
      * @param {number} high
-     * @returns {me.Vector2d} Reference to this object for method chaining
+     * @returns {Vector2d} Reference to this object for method chaining
      */
-    clampSelf(low: number, high: number): me.Vector2d;
+    clampSelf(low: number, high: number): Vector2d;
     /**
      * Update this vector with the minimum value between this and the passed vector
      * @name minV
-     * @memberof me.Vector2d
+     * @memberof Vector2d
      * @function
-     * @param {me.Vector2d} v
-     * @returns {me.Vector2d} Reference to this object for method chaining
+     * @param {Vector2d} v
+     * @returns {Vector2d} Reference to this object for method chaining
      */
-    minV(v: me.Vector2d): me.Vector2d;
+    minV(v: Vector2d): Vector2d;
     /**
      * Update this vector with the maximum value between this and the passed vector
      * @name maxV
-     * @memberof me.Vector2d
+     * @memberof Vector2d
      * @function
-     * @param {me.Vector2d} v
-     * @returns {me.Vector2d} Reference to this object for method chaining
+     * @param {Vector2d} v
+     * @returns {Vector2d} Reference to this object for method chaining
      */
-    maxV(v: me.Vector2d): me.Vector2d;
+    maxV(v: Vector2d): Vector2d;
     /**
      * Floor the vector values
      * @name floor
-     * @memberof me.Vector2d
+     * @memberof Vector2d
      * @function
-     * @returns {me.Vector2d} new me.Vector2d
+     * @returns {Vector2d} new me.Vector2d
      */
-    floor(): me.Vector2d;
+    floor(): Vector2d;
     /**
      * Floor this vector values
      * @name floorSelf
-     * @memberof me.Vector2d
+     * @memberof Vector2d
      * @function
-     * @returns {me.Vector2d} Reference to this object for method chaining
+     * @returns {Vector2d} Reference to this object for method chaining
      */
-    floorSelf(): me.Vector2d;
+    floorSelf(): Vector2d;
     /**
      * Ceil the vector values
      * @name ceil
-     * @memberof me.Vector2d
+     * @memberof Vector2d
      * @function
-     * @returns {me.Vector2d} new me.Vector2d
+     * @returns {Vector2d} new me.Vector2d
      */
-    ceil(): me.Vector2d;
+    ceil(): Vector2d;
     /**
      * Ceil this vector values
      * @name ceilSelf
-     * @memberof me.Vector2d
+     * @memberof Vector2d
      * @function
-     * @returns {me.Vector2d} Reference to this object for method chaining
+     * @returns {Vector2d} Reference to this object for method chaining
      */
-    ceilSelf(): me.Vector2d;
+    ceilSelf(): Vector2d;
     /**
      * Negate the vector values
      * @name negate
-     * @memberof me.Vector2d
+     * @memberof Vector2d
      * @function
-     * @returns {me.Vector2d} new me.Vector2d
+     * @returns {Vector2d} new me.Vector2d
      */
-    negate(): me.Vector2d;
+    negate(): Vector2d;
     /**
      * Negate this vector values
      * @name negateSelf
-     * @memberof me.Vector2d
+     * @memberof Vector2d
      * @function
-     * @returns {me.Vector2d} Reference to this object for method chaining
+     * @returns {Vector2d} Reference to this object for method chaining
      */
-    negateSelf(): me.Vector2d;
+    negateSelf(): Vector2d;
     /**
      * Copy the x,y values of the passed vector to this one
      * @name copy
-     * @memberof me.Vector2d
+     * @memberof Vector2d
      * @function
-     * @param {me.Vector2d} v
-     * @returns {me.Vector2d} Reference to this object for method chaining
+     * @param {Vector2d} v
+     * @returns {Vector2d} Reference to this object for method chaining
      */
-    copy(v: me.Vector2d): me.Vector2d;
+    copy(v: Vector2d): Vector2d;
     /**
      * return true if the two vectors are the same
      * @name equals
-     * @memberof me.Vector2d
+     * @memberof Vector2d
      * @function
-     * @param {me.Vector2d} v
+     * @param {Vector2d} v
      * @returns {boolean}
      */
     /**
      * return true if this vector is equal to the given values
      * @name equals
-     * @memberof me.Vector2d
+     * @memberof Vector2d
      * @function
      * @param {number} x
      * @param {number} y
@@ -8106,52 +6828,52 @@ export class Vector2d {
     /**
      * normalize this vector (scale the vector so that its magnitude is 1)
      * @name normalize
-     * @memberof me.Vector2d
+     * @memberof Vector2d
      * @function
-     * @returns {me.Vector2d} Reference to this object for method chaining
+     * @returns {Vector2d} Reference to this object for method chaining
      */
-    normalize(): me.Vector2d;
+    normalize(): Vector2d;
     /**
      * change this vector to be perpendicular to what it was before.<br>
      * (Effectively rotates it 90 degrees in a clockwise direction)
      * @name perp
-     * @memberof me.Vector2d
+     * @memberof Vector2d
      * @function
-     * @returns {me.Vector2d} Reference to this object for method chaining
+     * @returns {Vector2d} Reference to this object for method chaining
      */
-    perp(): me.Vector2d;
+    perp(): Vector2d;
     /**
      * Rotate this vector (counter-clockwise) by the specified angle (in radians).
      * @name rotate
-     * @memberof me.Vector2d
+     * @memberof Vector2d
      * @function
      * @param {number} angle The angle to rotate (in radians)
-     * @param {me.Vector2d|me.ObservableVector2d} [v] an optional point to rotate around
-     * @returns {me.Vector2d} Reference to this object for method chaining
+     * @param {Vector2d|ObservableVector2d} [v] an optional point to rotate around
+     * @returns {Vector2d} Reference to this object for method chaining
      */
-    rotate(angle: number, v?: me.Vector2d | me.ObservableVector2d): me.Vector2d;
+    rotate(angle: number, v?: Vector2d | ObservableVector2d): Vector2d;
     /**
      * return the dot product of this vector and the passed one
      * @name dot
-     * @memberof me.Vector2d
+     * @memberof Vector2d
      * @function
-     * @param {me.Vector2d} v
+     * @param {Vector2d} v
      * @returns {number} The dot product.
      */
-    dot(v: me.Vector2d): number;
+    dot(v: Vector2d): number;
     /**
      * return the cross product of this vector and the passed one
      * @name cross
-     * @memberof me.Vector2d
+     * @memberof Vector2d
      * @function
-     * @param {me.Vector2d} v
+     * @param {Vector2d} v
      * @returns {number} The cross product.
      */
-    cross(v: me.Vector2d): number;
+    cross(v: Vector2d): number;
     /**
      * return the square length of this vector
      * @name length2
-     * @memberof me.Vector2d
+     * @memberof Vector2d
      * @function
      * @returns {number} The length^2 of this vector.
      */
@@ -8159,7 +6881,7 @@ export class Vector2d {
     /**
      * return the length (magnitude) of this vector
      * @name length
-     * @memberof me.Vector2d
+     * @memberof Vector2d
      * @function
      * @returns {number} the length of this vector
      */
@@ -8167,62 +6889,62 @@ export class Vector2d {
     /**
      * Linearly interpolate between this vector and the given one.
      * @name lerp
-     * @memberof me.Vector2d
+     * @memberof Vector2d
      * @function
-     * @param {me.Vector2d} v
+     * @param {Vector2d} v
      * @param {number} alpha distance along the line (alpha = 0 will be this vector, and alpha = 1 will be the given one).
-     * @returns {me.Vector2d} Reference to this object for method chaining
+     * @returns {Vector2d} Reference to this object for method chaining
      */
-    lerp(v: me.Vector2d, alpha: number): me.Vector2d;
+    lerp(v: Vector2d, alpha: number): Vector2d;
     /**
      * return the distance between this vector and the passed one
      * @name distance
-     * @memberof me.Vector2d
+     * @memberof Vector2d
      * @function
-     * @param {me.Vector2d} v
+     * @param {Vector2d} v
      * @returns {number}
      */
-    distance(v: me.Vector2d): number;
+    distance(v: Vector2d): number;
     /**
      * return the angle between this vector and the passed one
      * @name angle
-     * @memberof me.Vector2d
+     * @memberof Vector2d
      * @function
-     * @param {me.Vector2d} v
+     * @param {Vector2d} v
      * @returns {number} angle in radians
      */
-    angle(v: me.Vector2d): number;
+    angle(v: Vector2d): number;
     /**
      * project this vector on to another vector.
      * @name project
-     * @memberof me.Vector2d
+     * @memberof Vector2d
      * @function
-     * @param {me.Vector2d} v The vector to project onto.
-     * @returns {me.Vector2d} Reference to this object for method chaining
+     * @param {Vector2d} v The vector to project onto.
+     * @returns {Vector2d} Reference to this object for method chaining
      */
-    project(v: me.Vector2d): me.Vector2d;
+    project(v: Vector2d): Vector2d;
     /**
      * Project this vector onto a vector of unit length.<br>
      * This is slightly more efficient than `project` when dealing with unit vectors.
      * @name projectN
-     * @memberof me.Vector2d
+     * @memberof Vector2d
      * @function
-     * @param {me.Vector2d} v The unit vector to project onto.
-     * @returns {me.Vector2d} Reference to this object for method chaining
+     * @param {Vector2d} v The unit vector to project onto.
+     * @returns {Vector2d} Reference to this object for method chaining
      */
-    projectN(v: me.Vector2d): me.Vector2d;
+    projectN(v: Vector2d): Vector2d;
     /**
      * return a clone copy of this vector
      * @name clone
-     * @memberof me.Vector2d
+     * @memberof Vector2d
      * @function
-     * @returns {me.Vector2d} new me.Vector2d
+     * @returns {Vector2d} new me.Vector2d
      */
-    clone(): me.Vector2d;
+    clone(): Vector2d;
     /**
      * convert the object to a string representation
      * @name toString
-     * @memberof me.Vector2d
+     * @memberof Vector2d
      * @function
      * @returns {string}
      */
@@ -8231,7 +6953,6 @@ export class Vector2d {
 /**
  * @classdesc
  * a generic 3D Vector Object
- * @memberof me
  */
 export class Vector3d {
     /**
@@ -8254,209 +6975,209 @@ export class Vector3d {
     /**
      * set the Vector x and y properties to the given values<br>
      * @name set
-     * @memberof me.Vector3d
+     * @memberof Vector3d
      * @function
      * @param {number} x
      * @param {number} y
      * @param {number} [z=0]
-     * @returns {me.Vector3d} Reference to this object for method chaining
+     * @returns {Vector3d} Reference to this object for method chaining
      */
-    set(x: number, y: number, z?: number): me.Vector3d;
+    set(x: number, y: number, z?: number): Vector3d;
     /**
      * set the Vector x and y properties to 0
      * @name setZero
-     * @memberof me.Vector3d
+     * @memberof Vector3d
      * @function
-     * @returns {me.Vector3d} Reference to this object for method chaining
+     * @returns {Vector3d} Reference to this object for method chaining
      */
-    setZero(): me.Vector3d;
+    setZero(): Vector3d;
     /**
      * set the Vector x and y properties using the passed vector
      * @name setV
-     * @memberof me.Vector3d
+     * @memberof Vector3d
      * @function
-     * @param {me.Vector2d|me.Vector3d} v
-     * @returns {me.Vector3d} Reference to this object for method chaining
+     * @param {Vector2d|Vector3d} v
+     * @returns {Vector3d} Reference to this object for method chaining
      */
-    setV(v: me.Vector2d | me.Vector3d): me.Vector3d;
+    setV(v: Vector2d | Vector3d): Vector3d;
     /**
      * Add the passed vector to this vector
      * @name add
-     * @memberof me.Vector3d
+     * @memberof Vector3d
      * @function
-     * @param {me.Vector2d|me.Vector3d} v
-     * @returns {me.Vector3d} Reference to this object for method chaining
+     * @param {Vector2d|Vector3d} v
+     * @returns {Vector3d} Reference to this object for method chaining
      */
-    add(v: me.Vector2d | me.Vector3d): me.Vector3d;
+    add(v: Vector2d | Vector3d): Vector3d;
     /**
      * Substract the passed vector to this vector
      * @name sub
-     * @memberof me.Vector3d
+     * @memberof Vector3d
      * @function
-     * @param {me.Vector2d|me.Vector3d} v
-     * @returns {me.Vector3d} Reference to this object for method chaining
+     * @param {Vector2d|Vector3d} v
+     * @returns {Vector3d} Reference to this object for method chaining
      */
-    sub(v: me.Vector2d | me.Vector3d): me.Vector3d;
+    sub(v: Vector2d | Vector3d): Vector3d;
     /**
      * Multiply this vector values by the given scalar
      * @name scale
-     * @memberof me.Vector3d
+     * @memberof Vector3d
      * @function
      * @param {number} x
      * @param {number} [y=x]
      * @param {number} [z=1]
-     * @returns {me.Vector3d} Reference to this object for method chaining
+     * @returns {Vector3d} Reference to this object for method chaining
      */
-    scale(x: number, y?: number, z?: number): me.Vector3d;
+    scale(x: number, y?: number, z?: number): Vector3d;
     /**
      * Multiply this vector values by the passed vector
      * @name scaleV
-     * @memberof me.Vector3d
+     * @memberof Vector3d
      * @function
-     * @param {me.Vector2d|me.Vector3d} v
-     * @returns {me.Vector3d} Reference to this object for method chaining
+     * @param {Vector2d|Vector3d} v
+     * @returns {Vector3d} Reference to this object for method chaining
      */
-    scaleV(v: me.Vector2d | me.Vector3d): me.Vector3d;
+    scaleV(v: Vector2d | Vector3d): Vector3d;
     /**
      * Convert this vector into isometric coordinate space
      * @name toIso
-     * @memberof me.Vector3d
+     * @memberof Vector3d
      * @function
-     * @returns {me.Vector3d} Reference to this object for method chaining
+     * @returns {Vector3d} Reference to this object for method chaining
      */
-    toIso(): me.Vector3d;
+    toIso(): Vector3d;
     /**
      * Convert this vector into 2d coordinate space
      * @name to2d
-     * @memberof me.Vector3d
+     * @memberof Vector3d
      * @function
-     * @returns {me.Vector3d} Reference to this object for method chaining
+     * @returns {Vector3d} Reference to this object for method chaining
      */
-    to2d(): me.Vector3d;
+    to2d(): Vector3d;
     /**
      * Divide this vector values by the passed value
      * @name div
-     * @memberof me.Vector3d
+     * @memberof Vector3d
      * @function
      * @param {number} n the value to divide the vector by
-     * @returns {me.Vector3d} Reference to this object for method chaining
+     * @returns {Vector3d} Reference to this object for method chaining
      */
-    div(n: number): me.Vector3d;
+    div(n: number): Vector3d;
     /**
      * Update this vector values to absolute values
      * @name abs
-     * @memberof me.Vector3d
+     * @memberof Vector3d
      * @function
-     * @returns {me.Vector3d} Reference to this object for method chaining
+     * @returns {Vector3d} Reference to this object for method chaining
      */
-    abs(): me.Vector3d;
+    abs(): Vector3d;
     /**
      * Clamp the vector value within the specified value range
      * @name clamp
-     * @memberof me.Vector3d
+     * @memberof Vector3d
      * @function
      * @param {number} low
      * @param {number} high
-     * @returns {me.Vector3d} new me.Vector3d
+     * @returns {Vector3d} new me.Vector3d
      */
-    clamp(low: number, high: number): me.Vector3d;
+    clamp(low: number, high: number): Vector3d;
     /**
      * Clamp this vector value within the specified value range
      * @name clampSelf
-     * @memberof me.Vector3d
+     * @memberof Vector3d
      * @function
      * @param {number} low
      * @param {number} high
-     * @returns {me.Vector3d} Reference to this object for method chaining
+     * @returns {Vector3d} Reference to this object for method chaining
      */
-    clampSelf(low: number, high: number): me.Vector3d;
+    clampSelf(low: number, high: number): Vector3d;
     /**
      * Update this vector with the minimum value between this and the passed vector
      * @name minV
-     * @memberof me.Vector3d
+     * @memberof Vector3d
      * @function
-     * @param {me.Vector2d|me.Vector3d} v
-     * @returns {me.Vector3d} Reference to this object for method chaining
+     * @param {Vector2d|Vector3d} v
+     * @returns {Vector3d} Reference to this object for method chaining
      */
-    minV(v: me.Vector2d | me.Vector3d): me.Vector3d;
+    minV(v: Vector2d | Vector3d): Vector3d;
     /**
      * Update this vector with the maximum value between this and the passed vector
      * @name maxV
-     * @memberof me.Vector3d
+     * @memberof Vector3d
      * @function
-     * @param {me.Vector2d|me.Vector3d} v
-     * @returns {me.Vector3d} Reference to this object for method chaining
+     * @param {Vector2d|Vector3d} v
+     * @returns {Vector3d} Reference to this object for method chaining
      */
-    maxV(v: me.Vector2d | me.Vector3d): me.Vector3d;
+    maxV(v: Vector2d | Vector3d): Vector3d;
     /**
      * Floor the vector values
      * @name floor
-     * @memberof me.Vector3d
+     * @memberof Vector3d
      * @function
-     * @returns {me.Vector3d} new me.Vector3d
+     * @returns {Vector3d} new me.Vector3d
      */
-    floor(): me.Vector3d;
+    floor(): Vector3d;
     /**
      * Floor this vector values
      * @name floorSelf
-     * @memberof me.Vector3d
+     * @memberof Vector3d
      * @function
-     * @returns {me.Vector3d} Reference to this object for method chaining
+     * @returns {Vector3d} Reference to this object for method chaining
      */
-    floorSelf(): me.Vector3d;
+    floorSelf(): Vector3d;
     /**
      * Ceil the vector values
      * @name ceil
-     * @memberof me.Vector3d
+     * @memberof Vector3d
      * @function
-     * @returns {me.Vector3d} new me.Vector3d
+     * @returns {Vector3d} new me.Vector3d
      */
-    ceil(): me.Vector3d;
+    ceil(): Vector3d;
     /**
      * Ceil this vector values
      * @name ceilSelf
-     * @memberof me.Vector3d
+     * @memberof Vector3d
      * @function
-     * @returns {me.Vector3d} Reference to this object for method chaining
+     * @returns {Vector3d} Reference to this object for method chaining
      */
-    ceilSelf(): me.Vector3d;
+    ceilSelf(): Vector3d;
     /**
      * Negate the vector values
      * @name negate
-     * @memberof me.Vector3d
+     * @memberof Vector3d
      * @function
-     * @returns {me.Vector3d} new me.Vector3d
+     * @returns {Vector3d} new me.Vector3d
      */
-    negate(): me.Vector3d;
+    negate(): Vector3d;
     /**
      * Negate this vector values
      * @name negateSelf
-     * @memberof me.Vector3d
+     * @memberof Vector3d
      * @function
-     * @returns {me.Vector3d} Reference to this object for method chaining
+     * @returns {Vector3d} Reference to this object for method chaining
      */
-    negateSelf(): me.Vector3d;
+    negateSelf(): Vector3d;
     /**
      * Copy the components of the given vector into this one
      * @name copy
-     * @memberof me.Vector3d
+     * @memberof Vector3d
      * @function
-     * @param {me.Vector2d|me.Vector3d} v
-     * @returns {me.Vector3d} Reference to this object for method chaining
+     * @param {Vector2d|Vector3d} v
+     * @returns {Vector3d} Reference to this object for method chaining
      */
-    copy(v: me.Vector2d | me.Vector3d): me.Vector3d;
+    copy(v: Vector2d | Vector3d): Vector3d;
     /**
      * return true if the two vectors are the same
      * @name equals
-     * @memberof me.Vector3d
+     * @memberof Vector3d
      * @function
-     * @param {me.Vector2d|me.Vector3d} v
+     * @param {Vector2d|Vector3d} v
      * @returns {boolean}
      */
     /**
      * return true if this vector is equal to the given values
      * @name equals
-     * @memberof me.Vector3d
+     * @memberof Vector3d
      * @function
      * @param {number} x
      * @param {number} y
@@ -8467,52 +7188,52 @@ export class Vector3d {
     /**
      * normalize this vector (scale the vector so that its magnitude is 1)
      * @name normalize
-     * @memberof me.Vector3d
+     * @memberof Vector3d
      * @function
-     * @returns {me.Vector3d} Reference to this object for method chaining
+     * @returns {Vector3d} Reference to this object for method chaining
      */
-    normalize(): me.Vector3d;
+    normalize(): Vector3d;
     /**
      * change this vector to be perpendicular to what it was before.<br>
      * (Effectively rotates it 90 degrees in a clockwise direction around the z axis)
      * @name perp
-     * @memberof me.Vector3d
+     * @memberof Vector3d
      * @function
-     * @returns {me.Vector3d} Reference to this object for method chaining
+     * @returns {Vector3d} Reference to this object for method chaining
      */
-    perp(): me.Vector3d;
+    perp(): Vector3d;
     /**
      * Rotate this vector (counter-clockwise) by the specified angle (in radians) around the z axis
      * @name rotate
-     * @memberof me.Vector3d
+     * @memberof Vector3d
      * @function
      * @param {number} angle The angle to rotate (in radians)
-     * @param {me.Vector2d|me.ObservableVector2d} [v] an optional point to rotate around (on the same z axis)
-     * @returns {me.Vector3d} Reference to this object for method chaining
+     * @param {Vector2d|ObservableVector2d} [v] an optional point to rotate around (on the same z axis)
+     * @returns {Vector3d} Reference to this object for method chaining
      */
-    rotate(angle: number, v?: me.Vector2d | me.ObservableVector2d): me.Vector3d;
+    rotate(angle: number, v?: Vector2d | ObservableVector2d): Vector3d;
     /**
      * return the dot product of this vector and the passed one
      * @name dot
-     * @memberof me.Vector3d
+     * @memberof Vector3d
      * @function
-     * @param {me.Vector2d|me.Vector3d} v
+     * @param {Vector2d|Vector3d} v
      * @returns {number} The dot product.
      */
-    dot(v: me.Vector2d | me.Vector3d): number;
+    dot(v: Vector2d | Vector3d): number;
     /**
      * calculate the cross product of this vector and the passed one
      * @name cross
-     * @memberof me.Vector3d
+     * @memberof Vector3d
      * @function
-     * @param {me.Vector3d} v
-     * @returns {me.Vector3d} Reference to this object for method chaining
+     * @param {Vector3d} v
+     * @returns {Vector3d} Reference to this object for method chaining
      */
-    cross(v: me.Vector3d): me.Vector3d;
+    cross(v: Vector3d): Vector3d;
     /**
      * return the square length of this vector
      * @name length2
-     * @memberof me.Vector3d
+     * @memberof Vector3d
      * @function
      * @returns {number} The length^2 of this vector.
      */
@@ -8520,7 +7241,7 @@ export class Vector3d {
     /**
      * return the length (magnitude) of this vector
      * @name length
-     * @memberof me.Vector3d
+     * @memberof Vector3d
      * @function
      * @returns {number} the length of this vector
      */
@@ -8528,62 +7249,62 @@ export class Vector3d {
     /**
      * Linearly interpolate between this vector and the given one.
      * @name lerp
-     * @memberof me.Vector3d
+     * @memberof Vector3d
      * @function
-     * @param {me.Vector3d} v
+     * @param {Vector3d} v
      * @param {number} alpha distance along the line (alpha = 0 will be this vector, and alpha = 1 will be the given one).
-     * @returns {me.Vector3d} Reference to this object for method chaining
+     * @returns {Vector3d} Reference to this object for method chaining
      */
-    lerp(v: me.Vector3d, alpha: number): me.Vector3d;
+    lerp(v: Vector3d, alpha: number): Vector3d;
     /**
      * return the distance between this vector and the passed one
      * @name distance
-     * @memberof me.Vector3d
+     * @memberof Vector3d
      * @function
-     * @param {me.Vector2d|me.Vector3d} v
+     * @param {Vector2d|Vector3d} v
      * @returns {number}
      */
-    distance(v: me.Vector2d | me.Vector3d): number;
+    distance(v: Vector2d | Vector3d): number;
     /**
      * return the angle between this vector and the passed one
      * @name angle
-     * @memberof me.Vector3d
+     * @memberof Vector3d
      * @function
-     * @param {me.Vector2d|me.Vector3d} v
+     * @param {Vector2d|Vector3d} v
      * @returns {number} angle in radians
      */
-    angle(v: me.Vector2d | me.Vector3d): number;
+    angle(v: Vector2d | Vector3d): number;
     /**
      * project this vector on to another vector.
      * @name project
-     * @memberof me.Vector3d
+     * @memberof Vector3d
      * @function
-     * @param {me.Vector2d|me.Vector3d} v The vector to project onto.
-     * @returns {me.Vector3d} Reference to this object for method chaining
+     * @param {Vector2d|Vector3d} v The vector to project onto.
+     * @returns {Vector3d} Reference to this object for method chaining
      */
-    project(v: me.Vector2d | me.Vector3d): me.Vector3d;
+    project(v: Vector2d | Vector3d): Vector3d;
     /**
      * Project this vector onto a vector of unit length.<br>
      * This is slightly more efficient than `project` when dealing with unit vectors.
      * @name projectN
-     * @memberof me.Vector3d
+     * @memberof Vector3d
      * @function
-     * @param {me.Vector2d|me.Vector3d} v The unit vector to project onto.
-     * @returns {me.Vector3d} Reference to this object for method chaining
+     * @param {Vector2d|Vector3d} v The unit vector to project onto.
+     * @returns {Vector3d} Reference to this object for method chaining
      */
-    projectN(v: me.Vector2d | me.Vector3d): me.Vector3d;
+    projectN(v: Vector2d | Vector3d): Vector3d;
     /**
      * return a clone copy of this vector
      * @name clone
-     * @memberof me.Vector3d
+     * @memberof Vector3d
      * @function
-     * @returns {me.Vector3d} new me.Vector3d
+     * @returns {Vector3d} new me.Vector3d
      */
-    clone(): me.Vector3d;
+    clone(): Vector3d;
     /**
      * convert the object to a string representation
      * @name toString
-     * @memberof me.Vector3d
+     * @memberof Vector3d
      * @function
      * @returns {string}
      */
@@ -8593,13 +7314,12 @@ export class Vector3d {
  * @classdesc
  * A WebGL Compositor object. This class handles all of the WebGL state<br>
  * Pushes texture regions or shape geometry into WebGL buffers, automatically flushes to GPU
- * @memberof me
  */
 export class WebGLCompositor {
     /**
-     * @param {me.WebGLRenderer} renderer the current WebGL renderer session
+     * @param {WebGLRenderer} renderer the current WebGL renderer session
      */
-    constructor(renderer: me.WebGLRenderer);
+    constructor(renderer: WebGLRenderer);
     /**
      * Initialize the compositor
      * @ignore
@@ -8614,39 +7334,39 @@ export class WebGLCompositor {
     /**
      * a reference to the active WebGL shader
      * @name activeShader
-     * @memberof me.WebGLCompositor
-     * @type {me.GLShader}
+     * @memberof WebGLCompositor
+     * @type {GLShader}
      */
-    activeShader: me.GLShader;
+    activeShader: GLShader;
     /**
      * primitive type to render (gl.POINTS, gl.LINE_STRIP, gl.LINE_LOOP, gl.LINES, gl.TRIANGLE_STRIP, gl.TRIANGLE_FAN, gl.TRIANGLES)
      * @name mode
-     * @see me.WebGLCompositor
-     * @memberof me.WebGLCompositor
+     * @see WebGLCompositor
+     * @memberof WebGLCompositor
      * @default gl.TRIANGLES
      */
     mode: any;
     /**
      * an array of vertex attribute properties
      * @name attributes
-     * @see me.WebGLCompositor.addAttribute
-     * @memberof me.WebGLCompositor
+     * @see WebGLCompositor.addAttribute
+     * @memberof WebGLCompositor
      */
     attributes: any[];
     /**
      * the size of a single vertex in bytes
      * (will automatically be calculated as attributes definitions are added)
      * @name vertexByteSize
-     * @see me.WebGLCompositor.addAttribute
-     * @memberof me.WebGLCompositor
+     * @see WebGLCompositor.addAttribute
+     * @memberof WebGLCompositor
      */
     vertexByteSize: number;
     /**
      * the size of a single vertex in floats
      * (will automatically be calculated as attributes definitions are added)
      * @name vertexSize
-     * @see me.WebGLCompositor.addAttribute
-     * @memberof me.WebGLCompositor
+     * @see WebGLCompositor.addAttribute
+     * @memberof WebGLCompositor
      */
     vertexSize: number;
     primitiveShader: GLShader;
@@ -8660,7 +7380,7 @@ export class WebGLCompositor {
     /**
      * add vertex attribute property definition to the compositor
      * @name addAttribute
-     * @memberof me.WebGLCompositor
+     * @memberof WebGLCompositor
      * @function
      * @param {string} name name of the attribute in the vertex shader
      * @param {number} size number of components per vertex attribute. Must be 1, 2, 3, or 4.
@@ -8672,7 +7392,7 @@ export class WebGLCompositor {
     /**
      * Sets the viewport
      * @name setViewport
-     * @memberof me.WebGLCompositor
+     * @memberof WebGLCompositor
      * @function
      * @param {number} x x position of viewport
      * @param {number} y y position of viewport
@@ -8683,12 +7403,12 @@ export class WebGLCompositor {
     /**
      * Create a WebGL texture from an image
      * @name createTexture2D
-     * @memberof me.WebGLCompositor
+     * @memberof WebGLCompositor
      * @function
      * @param {number} unit Destination texture unit
      * @param {Image|HTMLCanvasElement|ImageData|Uint8Array[]|Float32Array[]} image Source image
      * @param {number} filter gl.LINEAR or gl.NEAREST
-     * @param {string} [repeat="no-repeat"] Image repeat behavior (see {@link me.ImageLayer#repeat})
+     * @param {string} [repeat="no-repeat"] Image repeat behavior (see {@link ImageLayer#repeat})
      * @param {number} [w] Source image width (Only use with UInt8Array[] or Float32Array[] source image)
      * @param {number} [h] Source image height (Only use with UInt8Array[] or Float32Array[] source image)
      * @param {number} [b] Source image border (Only use with UInt8Array[] or Float32Array[] source image)
@@ -8700,7 +7420,7 @@ export class WebGLCompositor {
     /**
      * delete the given WebGL texture
      * @name bindTexture2D
-     * @memberof me.WebGLCompositor
+     * @memberof WebGLCompositor
      * @function
      * @param {WebGLTexture} [texture] a WebGL texture to delete
      * @param {number} [unit] Texture unit to delete
@@ -8709,7 +7429,7 @@ export class WebGLCompositor {
     /**
      * returns the WebGL texture associated to the given texture unit
      * @name bindTexture2D
-     * @memberof me.WebGLCompositor
+     * @memberof WebGLCompositor
      * @function
      * @param {number} unit Texture unit to which a texture is bound
      * @returns {WebGLTexture} texture a WebGL texture
@@ -8718,7 +7438,7 @@ export class WebGLCompositor {
     /**
      * assign the given WebGL texture to the current batch
      * @name bindTexture2D
-     * @memberof me.WebGLCompositor
+     * @memberof WebGLCompositor
      * @function
      * @param {WebGLTexture} texture a WebGL texture
      * @param {number} unit Texture unit to which the given texture is bound
@@ -8727,7 +7447,7 @@ export class WebGLCompositor {
     /**
      * unbind the given WebGL texture, forcing it to be reuploaded
      * @name unbindTexture2D
-     * @memberof me.WebGLCompositor
+     * @memberof WebGLCompositor
      * @function
      * @param {WebGLTexture} [texture] a WebGL texture
      * @param {number} [unit] a WebGL texture
@@ -8741,18 +7461,18 @@ export class WebGLCompositor {
     /**
      * Select the shader to use for compositing
      * @name useShader
-     * @see me.GLShader
-     * @memberof me.WebGLCompositor
+     * @see GLShader
+     * @memberof WebGLCompositor
      * @function
-     * @param {me.GLShader} shader a reference to a GLShader instance
+     * @param {GLShader} shader a reference to a GLShader instance
      */
-    useShader(shader: me.GLShader): void;
+    useShader(shader: GLShader): void;
     /**
      * Add a textured quad
      * @name addQuad
-     * @memberof me.WebGLCompositor
+     * @memberof WebGLCompositor
      * @function
-     * @param {me.Renderer.Texture} texture Source texture
+     * @param {Renderer.Texture} texture Source texture
      * @param {number} x Destination x-coordinate
      * @param {number} y Destination y-coordinate
      * @param {number} w Destination width
@@ -8763,28 +7483,28 @@ export class WebGLCompositor {
      * @param {number} v1 Texture UV (v1) value.
      * @param {number} tint tint color to be applied to the texture in UINT32 (argb) format
      */
-    addQuad(texture: me.Renderer.Texture, x: number, y: number, w: number, h: number, u0: number, v0: number, u1: number, v1: number, tint: number): void;
+    addQuad(texture: Renderer.Texture, x: number, y: number, w: number, h: number, u0: number, v0: number, u1: number, v1: number, tint: number): void;
     /**
      * Flush batched texture operations to the GPU
      * @param {number} [mode=gl.TRIANGLES] the GL drawing mode
-     * @memberof me.WebGLCompositor
+     * @memberof WebGLCompositor
      * @function
      */
     flush(mode?: number): void;
     /**
      * Draw an array of vertices
      * @name drawVertices
-     * @memberof me.WebGLCompositor
+     * @memberof WebGLCompositor
      * @function
      * @param {GLenum} mode primitive type to render (gl.POINTS, gl.LINE_STRIP, gl.LINE_LOOP, gl.LINES, gl.TRIANGLE_STRIP, gl.TRIANGLE_FAN, gl.TRIANGLES)
-     * @param {me.Vector2d[]} verts vertices
+     * @param {Vector2d[]} verts vertices
      * @param {number} [vertexCount=verts.length] amount of points defined in the points array
      */
-    drawVertices(mode: GLenum, verts: me.Vector2d[], vertexCount?: number): void;
+    drawVertices(mode: GLenum, verts: Vector2d[], vertexCount?: number): void;
     /**
      * Specify the color values used when clearing color buffers. The values are clamped between 0 and 1.
      * @name clearColor
-     * @memberof me.WebGLCompositor
+     * @memberof WebGLCompositor
      * @function
      * @param {number} [r=0] - the red color value used when the color buffers are cleared
      * @param {number} [g=0] - the green color value used when the color buffers are cleared
@@ -8795,7 +7515,7 @@ export class WebGLCompositor {
     /**
      * Clear the frame buffer
      * @name clear
-     * @memberof me.WebGLCompositor
+     * @memberof WebGLCompositor
      * @function
      */
     clear(): void;
@@ -8803,10 +7523,9 @@ export class WebGLCompositor {
 /**
  * @classdesc
  * a WebGL renderer object
- * @augments me.Renderer
- * @memberof me
+ * @augments Renderer
  */
-export class WebGLRenderer {
+export class WebGLRenderer extends Renderer {
     /**
      * @param {object} options The renderer parameters
      * @param {number} options.width The width of the canvas without scaling
@@ -8821,7 +7540,7 @@ export class WebGLRenderer {
      * @param {string} [options.powerPreference="default"] a hint to the user agent indicating what configuration of GPU is suitable for the WebGL context ("default", "high-performance", "low-power"). To be noted that Safari and Chrome (since version 80) both default to "low-power" to save battery life and improve the user experience on these dual-GPU machines.
      * @param {number} [options.zoomX=width] The actual width of the canvas with scaling applied
      * @param {number} [options.zoomY=height] The actual height of the canvas with scaling applied
-     * @param {me.WebGLCompositor} [options.compositor] A class that implements the compositor API
+     * @param {WebGLCompositor} [options.compositor] A class that implements the compositor API
      */
     constructor(options: {
         width: number;
@@ -8836,12 +7555,12 @@ export class WebGLRenderer {
         powerPreference?: string;
         zoomX?: number;
         zoomY?: number;
-        compositor?: me.WebGLCompositor;
+        compositor?: WebGLCompositor;
     });
     /**
      * The WebGL version used by this renderer (1 or 2)
      * @name WebGLVersion
-     * @memberof me.WebGLRenderer
+     * @memberof WebGLRenderer
      * @type {number}
      * @default 1
      * @readonly
@@ -8850,7 +7569,7 @@ export class WebGLRenderer {
     /**
      * The vendor string of the underlying graphics driver.
      * @name GPUVendor
-     * @memberof me.WebGLRenderer
+     * @memberof WebGLRenderer
      * @type {string}
      * @default null
      * @readonly
@@ -8859,24 +7578,17 @@ export class WebGLRenderer {
     /**
      * The renderer string of the underlying graphics driver.
      * @name GPURenderer
-     * @memberof me.WebGLRenderer
+     * @memberof WebGLRenderer
      * @type {string}
      * @default null
      * @readonly
      */
     readonly GPURenderer: string;
-    /**
-     * The WebGL context
-     * @name gl
-     * @memberof me.WebGLRenderer
-     * type {WebGLRenderingContext}
-     */
-    context: WebGLRenderingContext;
     gl: WebGLRenderingContext;
     /**
      * Maximum number of texture unit supported under the current context
      * @name maxTextures
-     * @memberof me.WebGLRenderer
+     * @memberof WebGLRenderer
      * @type {number}
      * @readonly
      */
@@ -8900,46 +7612,38 @@ export class WebGLRenderer {
     /**
      * The current transformation matrix used for transformations on the overall scene
      * @name currentTransform
-     * @type {me.Matrix2d}
-     * @memberof me.WebGLRenderer#
+     * @type {Matrix2d}
+     * @memberof WebGLRenderer#
      */
-    currentTransform: me.Matrix2d;
+    currentTransform: Matrix2d;
     /**
      * The current compositor used by the renderer
      * @name currentCompositor
-     * @type {me.WebGLCompositor}
-     * @memberof me.WebGLRenderer#
+     * @type {WebGLCompositor}
+     * @memberof WebGLRenderer#
      */
-    currentCompositor: me.WebGLCompositor;
+    currentCompositor: WebGLCompositor;
     /**
      * The list of active compositors
      * @name compositors
      * @type {Map}
-     * @memberof me.WebGLRenderer#
+     * @memberof WebGLRenderer#
      */
     compositors: Map<any, any>;
     cache: TextureCache;
-    isContextValid: boolean;
-    /**
-     * Reset context state
-     * @name reset
-     * @memberof me.WebGLRenderer.prototype
-     * @function
-     */
-    reset(): void;
     /**
      * set the active compositor for this renderer
      * @name setCompositor
      * @function
-     * @param {me.WebGLCompositor|string} compositor a compositor name or instance
-     * @memberof me.WebGLRenderer.prototype
+     * @param {WebGLCompositor|string} compositor a compositor name or instance
+     * @memberof WebGLRenderer.prototype
      * @function
      */
-    setCompositor(compositor?: me.WebGLCompositor | string): void;
+    setCompositor(compositor?: WebGLCompositor | string): void;
     /**
      * Reset the gl transform to identity
      * @name resetTransform
-     * @memberof me.WebGLRenderer.prototype
+     * @memberof WebGLRenderer.prototype
      * @function
      */
     resetTransform(): void;
@@ -8950,7 +7654,7 @@ export class WebGLRenderer {
     /**
      * @ignore
      */
-    fontContext2D: any;
+    fontContext2D: CanvasRenderingContext2D;
     /**
      * @ignore
      */
@@ -8958,39 +7662,39 @@ export class WebGLRenderer {
     /**
      * Create a pattern with the specified repetition
      * @name createPattern
-     * @memberof me.WebGLRenderer.prototype
+     * @memberof WebGLRenderer.prototype
      * @function
      * @param {Image} image Source image
      * @param {string} repeat Define how the pattern should be repeated
-     * @returns {me.Renderer.Texture}
-     * @see me.ImageLayer#repeat
+     * @returns {Renderer.Texture}
+     * @see ImageLayer#repeat
      * @example
      * var tileable   = renderer.createPattern(image, "repeat");
      * var horizontal = renderer.createPattern(image, "repeat-x");
      * var vertical   = renderer.createPattern(image, "repeat-y");
      * var basic      = renderer.createPattern(image, "no-repeat");
      */
-    createPattern(image: new (width?: number, height?: number) => HTMLImageElement, repeat: string): me.Renderer.Texture;
+    createPattern(image: new (width?: number, height?: number) => HTMLImageElement, repeat: string): Renderer.Texture;
     /**
      * Flush the compositor to the frame buffer
      * @name flush
-     * @memberof me.WebGLRenderer.prototype
+     * @memberof WebGLRenderer.prototype
      * @function
      */
     flush(): void;
     /**
      * Clears the gl context with the given color.
      * @name clearColor
-     * @memberof me.WebGLRenderer.prototype
+     * @memberof WebGLRenderer.prototype
      * @function
-     * @param {me.Color|string} [color="#000000"] CSS color.
+     * @param {Color|string} [color="#000000"] CSS color.
      * @param {boolean} [opaque=false] Allow transparency [default] or clear the surface completely [true]
      */
-    clearColor(color?: me.Color | string, opaque?: boolean): void;
+    clearColor(color?: Color | string, opaque?: boolean): void;
     /**
      * Erase the pixels in the given rectangular area by setting them to transparent black (rgba(0,0,0,0)).
      * @name clearRect
-     * @memberof me.WebGLRenderer.prototype
+     * @memberof WebGLRenderer.prototype
      * @function
      * @param {number} x x axis of the coordinate for the rectangle starting point.
      * @param {number} y y axis of the coordinate for the rectangle starting point.
@@ -8999,13 +7703,9 @@ export class WebGLRenderer {
      */
     clearRect(x: number, y: number, width: number, height: number): void;
     /**
-     * @ignore
-     */
-    drawFont(bounds: any): void;
-    /**
      * Draw an image to the gl context
      * @name drawImage
-     * @memberof me.WebGLRenderer.prototype
+     * @memberof WebGLRenderer.prototype
      * @function
      * @param {Image} image An element to draw into the context. The specification permits any canvas image source (CanvasImageSource), specifically, a CSSImageValue, an HTMLImageElement, an SVGImageElement, an HTMLVideoElement, an HTMLCanvasElement, an ImageBitmap, or an OffscreenCanvas.
      * @param {number} sx The X coordinate of the top left corner of the sub-rectangle of the source image to draw into the destination context.
@@ -9028,28 +7728,20 @@ export class WebGLRenderer {
     /**
      * Draw a pattern within the given rectangle.
      * @name drawPattern
-     * @memberof me.WebGLRenderer.prototype
+     * @memberof WebGLRenderer.prototype
      * @function
-     * @param {me.Renderer.Texture} pattern Pattern object
+     * @param {Renderer.Texture} pattern Pattern object
      * @param {number} x
      * @param {number} y
      * @param {number} width
      * @param {number} height
-     * @see me.WebGLRenderer#createPattern
+     * @see WebGLRenderer#createPattern
      */
-    drawPattern(pattern: me.Renderer.Texture, x: number, y: number, width: number, height: number): void;
-    /**
-     * return a reference to the screen canvas corresponding WebGL Context
-     * @name getScreenContext
-     * @memberof me.WebGLRenderer.prototype
-     * @function
-     * @returns {WebGLRenderingContext}
-     */
-    getScreenContext(): WebGLRenderingContext;
+    drawPattern(pattern: Renderer.Texture, x: number, y: number, width: number, height: number): void;
     /**
      * Returns the WebGL Context object of the given Canvas
      * @name getContextGL
-     * @memberof me.WebGLRenderer.prototype
+     * @memberof WebGLRenderer.prototype
      * @function
      * @param {HTMLCanvasElement} canvas
      * @param {boolean} [transparent=true] use false to disable transparency
@@ -9060,7 +7752,7 @@ export class WebGLRenderer {
      * Returns the WebGLContext instance for the renderer
      * return a reference to the system 2d Context
      * @name getContext
-     * @memberof me.WebGLRenderer.prototype
+     * @memberof WebGLRenderer.prototype
      * @function
      * @returns {WebGLRenderingContext}
      */
@@ -9068,36 +7760,35 @@ export class WebGLRenderer {
     /**
      * set a blend mode for the given context
      * @name setBlendMode
-     * @memberof me.WebGLRenderer.prototype
+     * @memberof WebGLRenderer.prototype
      * @function
      * @param {string} [mode="normal"] blend mode : "normal", "multiply"
      * @param {WebGLRenderingContext} [gl]
      */
     setBlendMode(mode?: string, gl?: WebGLRenderingContext): void;
-    currentBlendMode: string;
     /**
      * return a reference to the font 2d Context
      * @ignore
      */
-    getFontContext(): any;
+    getFontContext(): CanvasRenderingContext2D;
     /**
      * restores the canvas context
      * @name restore
-     * @memberof me.WebGLRenderer.prototype
+     * @memberof WebGLRenderer.prototype
      * @function
      */
     restore(): void;
     /**
      * saves the canvas context
      * @name save
-     * @memberof me.WebGLRenderer.prototype
+     * @memberof WebGLRenderer.prototype
      * @function
      */
     save(): void;
     /**
      * rotates the uniform matrix
      * @name rotate
-     * @memberof me.WebGLRenderer.prototype
+     * @memberof WebGLRenderer.prototype
      * @function
      * @param {number} angle in radians
      */
@@ -9105,21 +7796,16 @@ export class WebGLRenderer {
     /**
      * scales the uniform matrix
      * @name scale
-     * @memberof me.WebGLRenderer.prototype
+     * @memberof WebGLRenderer.prototype
      * @function
      * @param {number} x
      * @param {number} y
      */
     scale(x: number, y: number): void;
     /**
-     * not used by this renderer?
-     * @ignore
-     */
-    setAntiAlias(context: any, enable: any): void;
-    /**
      * Set the global alpha
      * @name setGlobalAlpha
-     * @memberof me.WebGLRenderer.prototype
+     * @memberof WebGLRenderer.prototype
      * @function
      * @param {number} alpha 0.0 to 1.0 values accepted.
      */
@@ -9128,15 +7814,15 @@ export class WebGLRenderer {
      * Set the current fill & stroke style color.
      * By default, or upon reset, the value is set to #000000.
      * @name setColor
-     * @memberof me.WebGLRenderer.prototype
+     * @memberof WebGLRenderer.prototype
      * @function
-     * @param {me.Color|string} color css color string.
+     * @param {Color|string} color css color string.
      */
-    setColor(color: me.Color | string): void;
+    setColor(color: Color | string): void;
     /**
      * Set the line width
      * @name setLineWidth
-     * @memberof me.WebGLRenderer.prototype
+     * @memberof WebGLRenderer.prototype
      * @function
      * @param {number} width Line width
      */
@@ -9144,7 +7830,7 @@ export class WebGLRenderer {
     /**
      * Stroke an arc at the specified coordinates with given radius, start and end points
      * @name strokeArc
-     * @memberof me.WebGLRenderer.prototype
+     * @memberof WebGLRenderer.prototype
      * @function
      * @param {number} x arc center point x-axis
      * @param {number} y arc center point y-axis
@@ -9158,7 +7844,7 @@ export class WebGLRenderer {
     /**
      * Fill an arc at the specified coordinates with given radius, start and end points
      * @name fillArc
-     * @memberof me.WebGLRenderer.prototype
+     * @memberof WebGLRenderer.prototype
      * @function
      * @param {number} x arc center point x-axis
      * @param {number} y arc center point y-axis
@@ -9171,7 +7857,7 @@ export class WebGLRenderer {
     /**
      * Stroke an ellipse at the specified coordinates with given radius
      * @name strokeEllipse
-     * @memberof me.WebGLRenderer.prototype
+     * @memberof WebGLRenderer.prototype
      * @function
      * @param {number} x ellipse center point x-axis
      * @param {number} y ellipse center point y-axis
@@ -9183,7 +7869,7 @@ export class WebGLRenderer {
     /**
      * Fill an ellipse at the specified coordinates with given radius
      * @name fillEllipse
-     * @memberof me.WebGLRenderer.prototype
+     * @memberof WebGLRenderer.prototype
      * @function
      * @param {number} x ellipse center point x-axis
      * @param {number} y ellipse center point y-axis
@@ -9194,7 +7880,7 @@ export class WebGLRenderer {
     /**
      * Stroke a line of the given two points
      * @name strokeLine
-     * @memberof me.WebGLRenderer.prototype
+     * @memberof WebGLRenderer.prototype
      * @function
      * @param {number} startX the start x coordinate
      * @param {number} startY the start y coordinate
@@ -9205,7 +7891,7 @@ export class WebGLRenderer {
     /**
      * Fill a line of the given two points
      * @name fillLine
-     * @memberof me.WebGLRenderer.prototype
+     * @memberof WebGLRenderer.prototype
      * @function
      * @param {number} startX the start x coordinate
      * @param {number} startY the start y coordinate
@@ -9216,24 +7902,24 @@ export class WebGLRenderer {
     /**
      * Stroke a me.Polygon on the screen with a specified color
      * @name strokePolygon
-     * @memberof me.WebGLRenderer.prototype
+     * @memberof WebGLRenderer.prototype
      * @function
-     * @param {me.Polygon} poly the shape to draw
+     * @param {Polygon} poly the shape to draw
      * @param {boolean} [fill=false] also fill the shape with the current color if true
      */
-    strokePolygon(poly: me.Polygon, fill?: boolean): void;
+    strokePolygon(poly: Polygon, fill?: boolean): void;
     /**
      * Fill a me.Polygon on the screen
      * @name fillPolygon
-     * @memberof me.WebGLRenderer.prototype
+     * @memberof WebGLRenderer.prototype
      * @function
-     * @param {me.Polygon} poly the shape to draw
+     * @param {Polygon} poly the shape to draw
      */
-    fillPolygon(poly: me.Polygon): void;
+    fillPolygon(poly: Polygon): void;
     /**
      * Draw a stroke rectangle at the specified coordinates
      * @name strokeRect
-     * @memberof me.WebGLRenderer.prototype
+     * @memberof WebGLRenderer.prototype
      * @function
      * @param {number} x
      * @param {number} y
@@ -9245,7 +7931,7 @@ export class WebGLRenderer {
     /**
      * Draw a filled rectangle at the specified coordinates
      * @name fillRect
-     * @memberof me.WebGLRenderer.prototype
+     * @memberof WebGLRenderer.prototype
      * @function
      * @param {number} x
      * @param {number} y
@@ -9257,23 +7943,23 @@ export class WebGLRenderer {
      * Reset (overrides) the renderer transformation matrix to the
      * identity one, and then apply the given transformation matrix.
      * @name setTransform
-     * @memberof me.WebGLRenderer.prototype
+     * @memberof WebGLRenderer.prototype
      * @function
-     * @param {me.Matrix2d} mat2d Matrix to transform by
+     * @param {Matrix2d} mat2d Matrix to transform by
      */
-    setTransform(mat2d: me.Matrix2d): void;
+    setTransform(mat2d: Matrix2d): void;
     /**
      * Multiply given matrix into the renderer tranformation matrix
      * @name transform
-     * @memberof me.WebGLRenderer.prototype
+     * @memberof WebGLRenderer.prototype
      * @function
-     * @param {me.Matrix2d} mat2d Matrix to transform by
+     * @param {Matrix2d} mat2d Matrix to transform by
      */
-    transform(mat2d: me.Matrix2d): void;
+    transform(mat2d: Matrix2d): void;
     /**
      * Translates the uniform matrix by the given coordinates
      * @name translate
-     * @memberof me.WebGLRenderer.prototype
+     * @memberof WebGLRenderer.prototype
      * @function
      * @param {number} x
      * @param {number} y
@@ -9286,7 +7972,7 @@ export class WebGLRenderer {
      * and restore it (with the restore() method) any time in the future.
      * (<u>this is an experimental feature !</u>)
      * @name clipRect
-     * @memberof me.WebGLRenderer.prototype
+     * @memberof WebGLRenderer.prototype
      * @function
      * @param {number} x
      * @param {number} y
@@ -9294,60 +7980,40 @@ export class WebGLRenderer {
      * @param {number} height
      */
     clipRect(x: number, y: number, width: number, height: number): void;
-    /**
-     * A mask limits rendering elements to the shape and position of the given mask object.
-     * So, if the renderable is larger than the mask, only the intersecting part of the renderable will be visible.
-     * Mask are not preserved through renderer context save and restore.
-     * @name setMask
-     * @memberof me.WebGLRenderer.prototype
-     * @function
-     * @param {me.Rect|me.Polygon|me.Line|me.Ellipse} [mask] the shape defining the mask to be applied
-     */
-    setMask(mask?: me.Rect | me.Polygon | me.Line | me.Ellipse): void;
-    /**
-     * disable (remove) the rendering mask set through setMask.
-     * @name clearMask
-     * @see me.WebGLRenderer#setMask
-     * @memberof me.WebGLRenderer.prototype
-     * @function
-     */
-    clearMask(): void;
 }
 /**
  * @classdesc
  * an object representing the physic world, and responsible for managing and updating all childs and physics
- * @augments me.Container
- * @memberof me
+ * @augments Container
  */
-export class World {
+export class World extends Container {
     /**
      * @param {number} [x=0] position of the container (accessible via the inherited pos.x property)
      * @param {number} [y=0] position of the container (accessible via the inherited pos.y property)
-     * @param {number} [w=me.game.viewport.width] width of the container
-     * @param {number} [h=me.game.viewport.height] height of the container
+     * @param {number} [w=game.viewport.width] width of the container
+     * @param {number} [h=game.viewport.height] height of the container
      */
     constructor(x?: number, y?: number, width?: number, height?: number);
-    name: string;
     /**
      * the rate at which the game world is updated,
      * may be greater than or lower than the display fps
      * @public
-     * @type {me.Vector2d}
+     * @type {Vector2d}
      * @default 60
      * @name fps
-     * @memberof me.World
-     * @see me.timer.maxfps
+     * @memberof World
+     * @see timer.maxfps
      */
-    public fps: me.Vector2d;
+    public fps: Vector2d;
     /**
      * world gravity
      * @public
-     * @type {me.Vector2d}
+     * @type {Vector2d}
      * @default <0,0.98>
      * @name gravity
-     * @memberof me.World
+     * @memberof World
      */
-    public gravity: me.Vector2d;
+    public gravity: Vector2d;
     /**
      * Specify the rendering method for tile layers. <br>
      * if false visible part of the layers are rendered dynamically,<br>
@@ -9358,13 +8024,13 @@ export class World {
      * property to your layer (in Tiled).
      * @type {boolean}
      * @default false
-     * @memberof me.World
+     * @memberof World
      */
     preRender: boolean;
     /**
      * the active physic bodies in this simulation
      * @name bodies
-     * @memberof me.World
+     * @memberof World
      * @public
      * @type {Set}
      */
@@ -9372,47 +8038,31 @@ export class World {
     /**
      * the instance of the game world quadtree used for broadphase
      * @name broadphase
-     * @memberof me.World
+     * @memberof World
      * @public
-     * @type {me.QuadTree}
+     * @type {QuadTree}
      */
-    public broadphase: me.QuadTree;
-    /**
-     * reset the game world
-     * @name reset
-     * @memberof me.World
-     * @function
-     */
-    reset(): void;
+    public broadphase: QuadTree;
     /**
      * Add a physic body to the game world
      * @name addBody
-     * @memberof me.World
-     * @see me.Container.addChild
+     * @memberof World
+     * @see Container.addChild
      * @function
-     * @param {me.Body} body
-     * @returns {me.World} this game world
+     * @param {Body} body
+     * @returns {World} this game world
      */
-    addBody(body: me.Body): me.World;
+    addBody(body: Body): World;
     /**
      * Remove a physic body from the game world
      * @name removeBody
-     * @memberof me.World
-     * @see me.Container.removeChild
+     * @memberof World
+     * @see Container.removeChild
      * @function
-     * @param {me.Body} body
-     * @returns {me.World} this game world
+     * @param {Body} body
+     * @returns {World} this game world
      */
-    removeBody(body: me.Body): me.World;
-    /**
-     * update the game world
-     * @name reset
-     * @memberof me.World
-     * @function
-     * @param {number} dt the time passed since the last frame update
-     * @returns {boolean} true if the word is dirty
-     */
-    update(dt: number): boolean;
+    removeBody(body: Body): World;
 }
 export var audio: Readonly<{
     __proto__: any;
@@ -9450,85 +8100,17 @@ export var audio: Readonly<{
  * this is automatically called unless me.skipAutoInit is set to true,
  * to allow asynchronous loaders to work.
  * @name boot
- * @memberof me
- * @see me.skipAutoInit
+ * @see skipAutoInit
  * @public
  * @function
  */
 export function boot(): void;
-export namespace collision {
-    export const maxChildren: number;
-    export const maxDepth: number;
-    export namespace types {
-        const NO_OBJECT: number;
-        const PLAYER_OBJECT: number;
-        const NPC_OBJECT: number;
-        const ENEMY_OBJECT: number;
-        const COLLECTABLE_OBJECT: number;
-        const ACTION_OBJECT: number;
-        const PROJECTILE_OBJECT: number;
-        const WORLD_SHAPE: number;
-        const USER: number;
-        const ALL_OBJECT: number;
-    }
-    export { globalResponse as response };
-    /**
-     * Checks for object colliding with the given line
-     * @name rayCast
-     * @memberof me.collision
-     * @public
-     * @function
-     * @param {me.Line} line line to be tested for collision
-     * @param {Array.<me.Renderable>} [result] a user defined array that will be populated with intersecting physic objects.
-     * @returns {Array.<me.Renderable>} an array of intersecting physic objects
-     * @example
-     *    // define a line accross the viewport
-     *    var ray = new me.Line(
-     *        // absolute position of the line
-     *        0, 0, [
-     *        // starting point relative to the initial position
-     *        new me.Vector2d(0, 0),
-     *        // ending point
-     *        new me.Vector2d(me.game.viewport.width, me.game.viewport.height)
-     *    ]);
-     *
-     *    // check for collition
-     *    result = me.collision.rayCast(ray);
-     *
-     *    if (result.length > 0) {
-     *        // ...
-     *    }
-     */
-    export function rayCast(line: me.Line, result?: me.Renderable[]): me.Renderable[];
-    /**
-     * Checks for object colliding with the given line
-     * @name rayCast
-     * @memberof me.collision
-     * @public
-     * @function
-     * @param {me.Line} line line to be tested for collision
-     * @param {Array.<me.Renderable>} [result] a user defined array that will be populated with intersecting physic objects.
-     * @returns {Array.<me.Renderable>} an array of intersecting physic objects
-     * @example
-     *    // define a line accross the viewport
-     *    var ray = new me.Line(
-     *        // absolute position of the line
-     *        0, 0, [
-     *        // starting point relative to the initial position
-     *        new me.Vector2d(0, 0),
-     *        // ending point
-     *        new me.Vector2d(me.game.viewport.width, me.game.viewport.height)
-     *    ]);
-     *
-     *    // check for collition
-     *    result = me.collision.rayCast(ray);
-     *
-     *    if (result.length > 0) {
-     *        // ...
-     *    }
-     */
-    export function rayCast(line: me.Line, result?: me.Renderable[]): me.Renderable[];
-}
+/**
+ * Collision detection (and projection-based collision response) of 2D shapes.<br>
+ * Based on the Separating Axis Theorem and supports detecting collisions between simple Axis-Aligned Boxes, convex polygons and circles based shapes.
+ * @namespace collision
+ */
+export var collision: any;
 export var deprecated: Readonly<{
     __proto__: any;
     warning: typeof warning;
@@ -9579,8 +8161,8 @@ export var event: Readonly<{
 }>;
 export var game: Readonly<{
     __proto__: any;
-    readonly viewport: me.Camera2d;
-    readonly world: me.World;
+    readonly viewport: Camera2d;
+    readonly world: World;
     mergeGroup: boolean;
     sortOn: string;
     readonly lastUpdate: number;
@@ -9597,14 +8179,13 @@ export var game: Readonly<{
  * @type {boolean}
  * @default false
  * @readonly
- * @memberof me
  */
 export var initialized: boolean;
 export var input: Readonly<{
     __proto__: any;
     preventDefault: boolean;
     readonly pointerEventTarget: EventTarget;
-    pointer: me.Rect;
+    pointer: Rect;
     readonly locked: boolean;
     readonly throttlingInterval: number;
     globalToLocal: typeof globalToLocal;
@@ -9618,203 +8199,203 @@ export var input: Readonly<{
     exitPointerLock: typeof exitPointerLock;
     readonly keyBoardEventTarget: EventTarget;
     KEY: {
-        /** @memberof me.input.KEY */
+        /** @memberof input.KEY */
         BACKSPACE: number;
-        /** @memberof me.input.KEY */
+        /** @memberof input.KEY */
         TAB: number;
-        /** @memberof me.input.KEY */
+        /** @memberof input.KEY */
         ENTER: number;
-        /** @memberof me.input.KEY */
+        /** @memberof input.KEY */
         SHIFT: number;
-        /** @memberof me.input.KEY */
+        /** @memberof input.KEY */
         CTRL: number;
-        /** @memberof me.input.KEY */
+        /** @memberof input.KEY */
         ALT: number;
-        /** @memberof me.input.KEY */
+        /** @memberof input.KEY */
         PAUSE: number;
-        /** @memberof me.input.KEY */
+        /** @memberof input.KEY */
         CAPS_LOCK: number;
-        /** @memberof me.input.KEY */
+        /** @memberof input.KEY */
         ESC: number;
-        /** @memberof me.input.KEY */
+        /** @memberof input.KEY */
         SPACE: number;
-        /** @memberof me.input.KEY */
+        /** @memberof input.KEY */
         PAGE_UP: number;
-        /** @memberof me.input.KEY */
+        /** @memberof input.KEY */
         PAGE_DOWN: number;
-        /** @memberof me.input.KEY */
+        /** @memberof input.KEY */
         END: number;
-        /** @memberof me.input.KEY */
+        /** @memberof input.KEY */
         HOME: number;
-        /** @memberof me.input.KEY */
+        /** @memberof input.KEY */
         LEFT: number;
-        /** @memberof me.input.KEY */
+        /** @memberof input.KEY */
         UP: number;
-        /** @memberof me.input.KEY */
+        /** @memberof input.KEY */
         RIGHT: number;
-        /** @memberof me.input.KEY */
+        /** @memberof input.KEY */
         DOWN: number;
-        /** @memberof me.input.KEY */
+        /** @memberof input.KEY */
         PRINT_SCREEN: number;
-        /** @memberof me.input.KEY */
+        /** @memberof input.KEY */
         INSERT: number;
-        /** @memberof me.input.KEY */
+        /** @memberof input.KEY */
         DELETE: number;
-        /** @memberof me.input.KEY */
+        /** @memberof input.KEY */
         NUM0: number;
-        /** @memberof me.input.KEY */
+        /** @memberof input.KEY */
         NUM1: number;
-        /** @memberof me.input.KEY */
+        /** @memberof input.KEY */
         NUM2: number;
-        /** @memberof me.input.KEY */
+        /** @memberof input.KEY */
         NUM3: number;
-        /** @memberof me.input.KEY */
+        /** @memberof input.KEY */
         NUM4: number;
-        /** @memberof me.input.KEY */
+        /** @memberof input.KEY */
         NUM5: number;
-        /** @memberof me.input.KEY */
+        /** @memberof input.KEY */
         NUM6: number;
-        /** @memberof me.input.KEY */
+        /** @memberof input.KEY */
         NUM7: number;
-        /** @memberof me.input.KEY */
+        /** @memberof input.KEY */
         NUM8: number;
-        /** @memberof me.input.KEY */
+        /** @memberof input.KEY */
         NUM9: number;
-        /** @memberof me.input.KEY */
+        /** @memberof input.KEY */
         A: number;
-        /** @memberof me.input.KEY */
+        /** @memberof input.KEY */
         B: number;
-        /** @memberof me.input.KEY */
+        /** @memberof input.KEY */
         C: number;
-        /** @memberof me.input.KEY */
+        /** @memberof input.KEY */
         D: number;
-        /** @memberof me.input.KEY */
+        /** @memberof input.KEY */
         E: number;
-        /** @memberof me.input.KEY */
+        /** @memberof input.KEY */
         F: number;
-        /** @memberof me.input.KEY */
+        /** @memberof input.KEY */
         G: number;
-        /** @memberof me.input.KEY */
+        /** @memberof input.KEY */
         H: number;
-        /** @memberof me.input.KEY */
+        /** @memberof input.KEY */
         I: number;
-        /** @memberof me.input.KEY */
+        /** @memberof input.KEY */
         J: number;
-        /** @memberof me.input.KEY */
+        /** @memberof input.KEY */
         K: number;
-        /** @memberof me.input.KEY */
+        /** @memberof input.KEY */
         L: number;
-        /** @memberof me.input.KEY */
+        /** @memberof input.KEY */
         M: number;
-        /** @memberof me.input.KEY */
+        /** @memberof input.KEY */
         N: number;
-        /** @memberof me.input.KEY */
+        /** @memberof input.KEY */
         O: number;
-        /** @memberof me.input.KEY */
+        /** @memberof input.KEY */
         P: number;
-        /** @memberof me.input.KEY */
+        /** @memberof input.KEY */
         Q: number;
-        /** @memberof me.input.KEY */
+        /** @memberof input.KEY */
         R: number;
-        /** @memberof me.input.KEY */
+        /** @memberof input.KEY */
         S: number;
-        /** @memberof me.input.KEY */
+        /** @memberof input.KEY */
         T: number;
-        /** @memberof me.input.KEY */
+        /** @memberof input.KEY */
         U: number;
-        /** @memberof me.input.KEY */
+        /** @memberof input.KEY */
         V: number;
-        /** @memberof me.input.KEY */
+        /** @memberof input.KEY */
         W: number;
-        /** @memberof me.input.KEY */
+        /** @memberof input.KEY */
         X: number;
-        /** @memberof me.input.KEY */
+        /** @memberof input.KEY */
         Y: number;
-        /** @memberof me.input.KEY */
+        /** @memberof input.KEY */
         Z: number;
-        /** @memberof me.input.KEY */
+        /** @memberof input.KEY */
         WINDOW_KEY: number;
-        /** @memberof me.input.KEY */
+        /** @memberof input.KEY */
         NUMPAD0: number;
-        /** @memberof me.input.KEY */
+        /** @memberof input.KEY */
         NUMPAD1: number;
-        /** @memberof me.input.KEY */
+        /** @memberof input.KEY */
         NUMPAD2: number;
-        /** @memberof me.input.KEY */
+        /** @memberof input.KEY */
         NUMPAD3: number;
-        /** @memberof me.input.KEY */
+        /** @memberof input.KEY */
         NUMPAD4: number;
-        /** @memberof me.input.KEY */
+        /** @memberof input.KEY */
         NUMPAD5: number;
-        /** @memberof me.input.KEY */
+        /** @memberof input.KEY */
         NUMPAD6: number;
-        /** @memberof me.input.KEY */
+        /** @memberof input.KEY */
         NUMPAD7: number;
-        /** @memberof me.input.KEY */
+        /** @memberof input.KEY */
         NUMPAD8: number;
-        /** @memberof me.input.KEY */
+        /** @memberof input.KEY */
         NUMPAD9: number;
-        /** @memberof me.input.KEY */
+        /** @memberof input.KEY */
         MULTIPLY: number;
-        /** @memberof me.input.KEY */
+        /** @memberof input.KEY */
         ADD: number;
-        /** @memberof me.input.KEY */
+        /** @memberof input.KEY */
         SUBSTRACT: number;
-        /** @memberof me.input.KEY */
+        /** @memberof input.KEY */
         DECIMAL: number;
-        /** @memberof me.input.KEY */
+        /** @memberof input.KEY */
         DIVIDE: number;
-        /** @memberof me.input.KEY */
+        /** @memberof input.KEY */
         F1: number;
-        /** @memberof me.input.KEY */
+        /** @memberof input.KEY */
         F2: number;
-        /** @memberof me.input.KEY */
+        /** @memberof input.KEY */
         F3: number;
-        /** @memberof me.input.KEY */
+        /** @memberof input.KEY */
         F4: number;
-        /** @memberof me.input.KEY */
+        /** @memberof input.KEY */
         F5: number;
-        /** @memberof me.input.KEY */
+        /** @memberof input.KEY */
         F6: number;
-        /** @memberof me.input.KEY */
+        /** @memberof input.KEY */
         F7: number;
-        /** @memberof me.input.KEY */
+        /** @memberof input.KEY */
         F8: number;
-        /** @memberof me.input.KEY */
+        /** @memberof input.KEY */
         F9: number;
-        /** @memberof me.input.KEY */
+        /** @memberof input.KEY */
         F10: number;
-        /** @memberof me.input.KEY */
+        /** @memberof input.KEY */
         F11: number;
-        /** @memberof me.input.KEY */
+        /** @memberof input.KEY */
         F12: number;
-        /** @memberof me.input.KEY */
+        /** @memberof input.KEY */
         TILDE: number;
-        /** @memberof me.input.KEY */
+        /** @memberof input.KEY */
         NUM_LOCK: number;
-        /** @memberof me.input.KEY */
+        /** @memberof input.KEY */
         SCROLL_LOCK: number;
-        /** @memberof me.input.KEY */
+        /** @memberof input.KEY */
         SEMICOLON: number;
-        /** @memberof me.input.KEY */
+        /** @memberof input.KEY */
         PLUS: number;
-        /** @memberof me.input.KEY */
+        /** @memberof input.KEY */
         COMMA: number;
-        /** @memberof me.input.KEY */
+        /** @memberof input.KEY */
         MINUS: number;
-        /** @memberof me.input.KEY */
+        /** @memberof input.KEY */
         PERIOD: number;
-        /** @memberof me.input.KEY */
+        /** @memberof input.KEY */
         FORWAND_SLASH: number;
-        /** @memberof me.input.KEY */
+        /** @memberof input.KEY */
         GRAVE_ACCENT: number;
-        /** @memberof me.input.KEY */
+        /** @memberof input.KEY */
         OPEN_BRACKET: number;
-        /** @memberof me.input.KEY */
+        /** @memberof input.KEY */
         BACK_SLASH: number;
-        /** @memberof me.input.KEY */
+        /** @memberof input.KEY */
         CLOSE_BRACKET: number;
-        /** @memberof me.input.KEY */
+        /** @memberof input.KEY */
         SINGLE_QUOTE: number;
     };
     initKeyboardEvent: typeof initKeyboardEvent;
@@ -9836,7 +8417,7 @@ export var input: Readonly<{
          * @public
          * @name AXES
          * @enum {number}
-         * @memberof me.input.GAMEPAD
+         * @memberof input.GAMEPAD
          * @see https://w3c.github.io/gamepad/#remapping
          */
         AXES: {
@@ -9862,7 +8443,7 @@ export var input: Readonly<{
          * @public
          * @name BUTTONS
          * @enum {number}
-         * @memberof me.input.GAMEPAD
+         * @memberof input.GAMEPAD
          * @see https://w3c.github.io/gamepad/#remapping
          */
         BUTTONS: {
@@ -9900,7 +8481,7 @@ export namespace level {
     /**
      * add a level into the game manager (usually called by the preloader)
      * @name add
-     * @memberof me.level
+     * @memberof level
      * @public
      * @function
      * @param {string} format level format (only "tmx" supported)
@@ -9912,7 +8493,7 @@ export namespace level {
     /**
      * add a level into the game manager (usually called by the preloader)
      * @name add
-     * @memberof me.level
+     * @memberof level
      * @public
      * @function
      * @param {string} format level format (only "tmx" supported)
@@ -9925,14 +8506,14 @@ export namespace level {
      * load a level into the game manager<br>
      * (will also create all level defined entities, etc..)
      * @name load
-     * @memberof me.level
+     * @memberof level
      * @public
      * @function
      * @param {string} levelId level id
      * @param {object} [options] additional optional parameters
-     * @param {me.Container} [options.container=me.game.world] container in which to load the specified level
-     * @param {Function} [options.onLoaded=me.game.onLevelLoaded] callback for when the level is fully loaded
-     * @param {boolean} [options.flatten=me.game.mergeGroup] if true, flatten all objects into the given container
+     * @param {Container} [options.container=game.world] container in which to load the specified level
+     * @param {Function} [options.onLoaded=ame.onLevelLoaded] callback for when the level is fully loaded
+     * @param {boolean} [options.flatten=game.mergeGroup] if true, flatten all objects into the given container
      * @param {boolean} [options.setViewportBounds=true] if true, set the viewport bounds to the map size
      * @returns {boolean} true if the level was successfully loaded
      * @example
@@ -9962,7 +8543,7 @@ export namespace level {
      * me.game.world.addChild(levelContainer);
      */
     function load(levelId: string, options?: {
-        container?: me.Container;
+        container?: Container;
         onLoaded?: Function;
         flatten?: boolean;
         setViewportBounds?: boolean;
@@ -9971,14 +8552,14 @@ export namespace level {
      * load a level into the game manager<br>
      * (will also create all level defined entities, etc..)
      * @name load
-     * @memberof me.level
+     * @memberof level
      * @public
      * @function
      * @param {string} levelId level id
      * @param {object} [options] additional optional parameters
-     * @param {me.Container} [options.container=me.game.world] container in which to load the specified level
-     * @param {Function} [options.onLoaded=me.game.onLevelLoaded] callback for when the level is fully loaded
-     * @param {boolean} [options.flatten=me.game.mergeGroup] if true, flatten all objects into the given container
+     * @param {Container} [options.container=game.world] container in which to load the specified level
+     * @param {Function} [options.onLoaded=ame.onLevelLoaded] callback for when the level is fully loaded
+     * @param {boolean} [options.flatten=game.mergeGroup] if true, flatten all objects into the given container
      * @param {boolean} [options.setViewportBounds=true] if true, set the viewport bounds to the map size
      * @returns {boolean} true if the level was successfully loaded
      * @example
@@ -10008,7 +8589,7 @@ export namespace level {
      * me.game.world.addChild(levelContainer);
      */
     function load(levelId: string, options?: {
-        container?: me.Container;
+        container?: Container;
         onLoaded?: Function;
         flatten?: boolean;
         setViewportBounds?: boolean;
@@ -10016,7 +8597,7 @@ export namespace level {
     /**
      * return the current level id<br>
      * @name getCurrentLevelId
-     * @memberof me.level
+     * @memberof level
      * @public
      * @function
      * @returns {string}
@@ -10025,7 +8606,7 @@ export namespace level {
     /**
      * return the current level id<br>
      * @name getCurrentLevelId
-     * @memberof me.level
+     * @memberof level
      * @public
      * @function
      * @returns {string}
@@ -10036,129 +8617,129 @@ export namespace level {
      * for a reference to the live instantiated level,
      * rather use the container in which it was loaded (e.g. me.game.world)
      * @name getCurrentLevel
-     * @memberof me.level
+     * @memberof level
      * @public
      * @function
-     * @returns {me.TMXTileMap}
+     * @returns {TMXTileMap}
      */
-    function getCurrentLevel(): me.TMXTileMap;
+    function getCurrentLevel(): TMXTileMap;
     /**
      * return the current level definition.
      * for a reference to the live instantiated level,
      * rather use the container in which it was loaded (e.g. me.game.world)
      * @name getCurrentLevel
-     * @memberof me.level
+     * @memberof level
      * @public
      * @function
-     * @returns {me.TMXTileMap}
+     * @returns {TMXTileMap}
      */
-    function getCurrentLevel(): me.TMXTileMap;
+    function getCurrentLevel(): TMXTileMap;
     /**
      * reload the current level
      * @name reload
-     * @memberof me.level
+     * @memberof level
      * @public
      * @function
      * @param {object} [options] additional optional parameters
-     * @param {me.Container} [options.container=me.game.world] container in which to load the specified level
-     * @param {Function} [options.onLoaded=me.game.onLevelLoaded] callback for when the level is fully loaded
-     * @param {boolean} [options.flatten=me.game.mergeGroup] if true, flatten all objects into the given container
+     * @param {Container} [options.container=game.world] container in which to load the specified level
+     * @param {Function} [options.onLoaded=game.onLevelLoaded] callback for when the level is fully loaded
+     * @param {boolean} [options.flatten=game.mergeGroup] if true, flatten all objects into the given container
      * @returns {object} the current level
      */
     function reload(options?: {
-        container?: me.Container;
+        container?: Container;
         onLoaded?: Function;
         flatten?: boolean;
     }): any;
     /**
      * reload the current level
      * @name reload
-     * @memberof me.level
+     * @memberof level
      * @public
      * @function
      * @param {object} [options] additional optional parameters
-     * @param {me.Container} [options.container=me.game.world] container in which to load the specified level
-     * @param {Function} [options.onLoaded=me.game.onLevelLoaded] callback for when the level is fully loaded
-     * @param {boolean} [options.flatten=me.game.mergeGroup] if true, flatten all objects into the given container
+     * @param {Container} [options.container=game.world] container in which to load the specified level
+     * @param {Function} [options.onLoaded=game.onLevelLoaded] callback for when the level is fully loaded
+     * @param {boolean} [options.flatten=game.mergeGroup] if true, flatten all objects into the given container
      * @returns {object} the current level
      */
     function reload(options?: {
-        container?: me.Container;
+        container?: Container;
         onLoaded?: Function;
         flatten?: boolean;
     }): any;
     /**
      * load the next level
      * @name next
-     * @memberof me.level
+     * @memberof level
      * @public
      * @function
      * @param {object} [options] additional optional parameters
-     * @param {me.Container} [options.container=me.game.world] container in which to load the specified level
-     * @param {Function} [options.onLoaded=me.game.onLevelLoaded] callback for when the level is fully loaded
-     * @param {boolean} [options.flatten=me.game.mergeGroup] if true, flatten all objects into the given container
+     * @param {Container} [options.container=game.world] container in which to load the specified level
+     * @param {Function} [options.onLoaded=game.onLevelLoaded] callback for when the level is fully loaded
+     * @param {boolean} [options.flatten=game.mergeGroup] if true, flatten all objects into the given container
      * @returns {boolean} true if the next level was successfully loaded
      */
     function next(options?: {
-        container?: me.Container;
+        container?: Container;
         onLoaded?: Function;
         flatten?: boolean;
     }): boolean;
     /**
      * load the next level
      * @name next
-     * @memberof me.level
+     * @memberof level
      * @public
      * @function
      * @param {object} [options] additional optional parameters
-     * @param {me.Container} [options.container=me.game.world] container in which to load the specified level
-     * @param {Function} [options.onLoaded=me.game.onLevelLoaded] callback for when the level is fully loaded
-     * @param {boolean} [options.flatten=me.game.mergeGroup] if true, flatten all objects into the given container
+     * @param {Container} [options.container=game.world] container in which to load the specified level
+     * @param {Function} [options.onLoaded=game.onLevelLoaded] callback for when the level is fully loaded
+     * @param {boolean} [options.flatten=game.mergeGroup] if true, flatten all objects into the given container
      * @returns {boolean} true if the next level was successfully loaded
      */
     function next(options?: {
-        container?: me.Container;
+        container?: Container;
         onLoaded?: Function;
         flatten?: boolean;
     }): boolean;
     /**
      * load the previous level<br>
      * @name previous
-     * @memberof me.level
+     * @memberof level
      * @public
      * @function
      * @param {object} [options] additional optional parameters
-     * @param {me.Container} [options.container=me.game.world] container in which to load the specified level
-     * @param {Function} [options.onLoaded=me.game.onLevelLoaded] callback for when the level is fully loaded
-     * @param {boolean} [options.flatten=me.game.mergeGroup] if true, flatten all objects into the given container
+     * @param {Container} [options.container=game.world] container in which to load the specified level
+     * @param {Function} [options.onLoaded=game.onLevelLoaded] callback for when the level is fully loaded
+     * @param {boolean} [options.flatten=game.mergeGroup] if true, flatten all objects into the given container
      * @returns {boolean} true if the previous level was successfully loaded
      */
     function previous(options?: {
-        container?: me.Container;
+        container?: Container;
         onLoaded?: Function;
         flatten?: boolean;
     }): boolean;
     /**
      * load the previous level<br>
      * @name previous
-     * @memberof me.level
+     * @memberof level
      * @public
      * @function
      * @param {object} [options] additional optional parameters
-     * @param {me.Container} [options.container=me.game.world] container in which to load the specified level
-     * @param {Function} [options.onLoaded=me.game.onLevelLoaded] callback for when the level is fully loaded
-     * @param {boolean} [options.flatten=me.game.mergeGroup] if true, flatten all objects into the given container
+     * @param {Container} [options.container=game.world] container in which to load the specified level
+     * @param {Function} [options.onLoaded=game.onLevelLoaded] callback for when the level is fully loaded
+     * @param {boolean} [options.flatten=game.mergeGroup] if true, flatten all objects into the given container
      * @returns {boolean} true if the previous level was successfully loaded
      */
     function previous(options?: {
-        container?: me.Container;
+        container?: Container;
         onLoaded?: Function;
         flatten?: boolean;
     }): boolean;
     /**
      * return the amount of level preloaded
      * @name levelCount
-     * @memberof me.level
+     * @memberof level
      * @public
      * @function
      * @returns {number} the amount of level preloaded
@@ -10167,7 +8748,7 @@ export namespace level {
     /**
      * return the amount of level preloaded
      * @name levelCount
-     * @memberof me.level
+     * @memberof level
      * @public
      * @function
      * @returns {number} the amount of level preloaded
@@ -10214,7 +8795,7 @@ export namespace loader {
      * change the default baseURL for the given asset type.<br>
      * (this will prepend the asset URL and must finish with a '/')
      * @name setBaseURL
-     * @memberof me.loader
+     * @memberof loader
      * @public
      * @function
      * @param {string} type  "*", "audio", binary", "image", "json", "js", "tmx", "tsx"
@@ -10230,7 +8811,7 @@ export namespace loader {
      * change the default baseURL for the given asset type.<br>
      * (this will prepend the asset URL and must finish with a '/')
      * @name setBaseURL
-     * @memberof me.loader
+     * @memberof loader
      * @public
      * @function
      * @param {string} type  "*", "audio", binary", "image", "json", "js", "tmx", "tsx"
@@ -10245,7 +8826,7 @@ export namespace loader {
     /**
      * set all the specified game resources to be preloaded.
      * @name preload
-     * @memberof me.loader
+     * @memberof loader
      * @public
      * @function
      * @param {object[]} res
@@ -10253,7 +8834,7 @@ export namespace loader {
      * @param {string} res.type  "audio", binary", "image", "json","js", "tmx", "tsx", "fontface"
      * @param {string} res.src  path and/or file name of the resource (for audio assets only the path is required)
      * @param {boolean} [res.stream] Set to true to force HTML5 Audio, which allows not to wait for large file to be downloaded before playing.
-     * @param {Function} [onload=me.loader.onload] function to be called when all resources are loaded
+     * @param {Function} [onload=loader.onload] function to be called when all resources are loaded
      * @param {boolean} [switchToLoadState=true] automatically switch to the loading screen
      * @example
      * game_resources = [
@@ -10293,7 +8874,7 @@ export namespace loader {
     /**
      * set all the specified game resources to be preloaded.
      * @name preload
-     * @memberof me.loader
+     * @memberof loader
      * @public
      * @function
      * @param {object[]} res
@@ -10301,7 +8882,7 @@ export namespace loader {
      * @param {string} res.type  "audio", binary", "image", "json","js", "tmx", "tsx", "fontface"
      * @param {string} res.src  path and/or file name of the resource (for audio assets only the path is required)
      * @param {boolean} [res.stream] Set to true to force HTML5 Audio, which allows not to wait for large file to be downloaded before playing.
-     * @param {Function} [onload=me.loader.onload] function to be called when all resources are loaded
+     * @param {Function} [onload=loader.onload] function to be called when all resources are loaded
      * @param {boolean} [switchToLoadState=true] automatically switch to the loading screen
      * @example
      * game_resources = [
@@ -10341,7 +8922,7 @@ export namespace loader {
     /**
      * Load a single resource (to be used if you need to load additional resource during the game)
      * @name load
-     * @memberof me.loader
+     * @memberof loader
      * @public
      * @function
      * @param {object} res
@@ -10374,7 +8955,7 @@ export namespace loader {
     /**
      * Load a single resource (to be used if you need to load additional resource during the game)
      * @name load
-     * @memberof me.loader
+     * @memberof loader
      * @public
      * @function
      * @param {object} res
@@ -10407,7 +8988,7 @@ export namespace loader {
     /**
      * unload specified resource to free memory
      * @name unload
-     * @memberof me.loader
+     * @memberof loader
      * @public
      * @function
      * @param {object} res
@@ -10423,7 +9004,7 @@ export namespace loader {
     /**
      * unload specified resource to free memory
      * @name unload
-     * @memberof me.loader
+     * @memberof loader
      * @public
      * @function
      * @param {object} res
@@ -10439,7 +9020,7 @@ export namespace loader {
     /**
      * unload all resources to free memory
      * @name unloadAll
-     * @memberof me.loader
+     * @memberof loader
      * @public
      * @function
      * @example me.loader.unloadAll();
@@ -10448,7 +9029,7 @@ export namespace loader {
     /**
      * unload all resources to free memory
      * @name unloadAll
-     * @memberof me.loader
+     * @memberof loader
      * @public
      * @function
      * @example me.loader.unloadAll();
@@ -10457,7 +9038,7 @@ export namespace loader {
     /**
      * return the specified TMX/TSX object
      * @name getTMX
-     * @memberof me.loader
+     * @memberof loader
      * @public
      * @function
      * @param {string} elt name of the tmx/tsx element ("map1");
@@ -10467,7 +9048,7 @@ export namespace loader {
     /**
      * return the specified TMX/TSX object
      * @name getTMX
-     * @memberof me.loader
+     * @memberof loader
      * @public
      * @function
      * @param {string} elt name of the tmx/tsx element ("map1");
@@ -10477,7 +9058,7 @@ export namespace loader {
     /**
      * return the specified Binary object
      * @name getBinary
-     * @memberof me.loader
+     * @memberof loader
      * @public
      * @function
      * @param {string} elt name of the binary object ("ymTrack");
@@ -10487,7 +9068,7 @@ export namespace loader {
     /**
      * return the specified Binary object
      * @name getBinary
-     * @memberof me.loader
+     * @memberof loader
      * @public
      * @function
      * @param {string} elt name of the binary object ("ymTrack");
@@ -10497,7 +9078,7 @@ export namespace loader {
     /**
      * return the specified Image Object
      * @name getImage
-     * @memberof me.loader
+     * @memberof loader
      * @public
      * @function
      * @param {string} image name of the Image element ("tileset-platformer");
@@ -10507,7 +9088,7 @@ export namespace loader {
     /**
      * return the specified Image Object
      * @name getImage
-     * @memberof me.loader
+     * @memberof loader
      * @public
      * @function
      * @param {string} image name of the Image element ("tileset-platformer");
@@ -10517,7 +9098,7 @@ export namespace loader {
     /**
      * return the specified JSON Object
      * @name getJSON
-     * @memberof me.loader
+     * @memberof loader
      * @public
      * @function
      * @param {string} elt name of the json file to load
@@ -10527,7 +9108,7 @@ export namespace loader {
     /**
      * return the specified JSON Object
      * @name getJSON
-     * @memberof me.loader
+     * @memberof loader
      * @public
      * @function
      * @param {string} elt name of the json file to load
@@ -10535,16 +9116,14 @@ export namespace loader {
      */
     function getJSON(elt: string): any;
 }
-export namespace plugin {
-    export { BasePlugin as Base };
-    export function patch(proto: any, name: string, fn: Function): void;
-    export function register(pluginObj: me.plugin.Base, name: string, ...args: any[]): void;
-}
+/**
+ * @namespace plugin
+ */
+export var plugin: any;
 /**
  * This namespace is a container for all registered plugins.
- * @see me.plugin.register
- * @namespace me.plugins
- * @memberof me
+ * @see plugin.register
+ * @namespace plugins
  */
 export var plugins: {};
 export namespace pool {
@@ -10552,7 +9131,7 @@ export namespace pool {
      * register an object to the pool. <br>
      * Pooling must be set to true if more than one such objects will be created. <br>
      * (Note: for an object to be poolable, it must implements a `onResetEvent` method)
-     * @function me.pool.register
+     * @function pool.register
      * @param {string} className as defined in the Name field of the Object Properties (in Tiled)
      * @param {object} classObj corresponding Class to be instantiated
      * @param {boolean} [recycling=false] enables object recycling for the specified class
@@ -10572,7 +9151,7 @@ export namespace pool {
      * register an object to the pool. <br>
      * Pooling must be set to true if more than one such objects will be created. <br>
      * (Note: for an object to be poolable, it must implements a `onResetEvent` method)
-     * @function me.pool.register
+     * @function pool.register
      * @param {string} className as defined in the Name field of the Object Properties (in Tiled)
      * @param {object} classObj corresponding Class to be instantiated
      * @param {boolean} [recycling=false] enables object recycling for the specified class
@@ -10590,8 +9169,8 @@ export namespace pool {
     function register(className: string, classObj: any, recycling?: boolean): void;
     /**
      * Pull a new instance of the requested object (if added into the object pool)
-     * @function me.pool.pull
-     * @param {string} name as used in {@link me.pool.register}
+     * @function pool.pull
+     * @param {string} name as used in {@link pool.register}
      * @param {object} [...arguments] arguments to be passed when instantiating/reinitializing the object
      * @returns {object} the instance of the requested object
      * @example
@@ -10613,8 +9192,8 @@ export namespace pool {
     function pull(name: string, ...args: any[]): any;
     /**
      * Pull a new instance of the requested object (if added into the object pool)
-     * @function me.pool.pull
-     * @param {string} name as used in {@link me.pool.register}
+     * @function pool.pull
+     * @param {string} name as used in {@link pool.register}
      * @param {object} [...arguments] arguments to be passed when instantiating/reinitializing the object
      * @returns {object} the instance of the requested object
      * @example
@@ -10638,22 +9217,22 @@ export namespace pool {
      * purge the object pool from any inactive object <br>
      * Object pooling must be enabled for this function to work<br>
      * note: this will trigger the garbage collector
-     * @function me.pool.purge
+     * @function pool.purge
      */
     function purge(): void;
     /**
      * purge the object pool from any inactive object <br>
      * Object pooling must be enabled for this function to work<br>
      * note: this will trigger the garbage collector
-     * @function me.pool.purge
+     * @function pool.purge
      */
     function purge(): void;
     /**
      * Push back an object instance into the object pool <br>
      * Object pooling for the object class must be enabled,
-     * and object must have been instantiated using {@link me.pool#pull},
+     * and object must have been instantiated using {@link pool#pull},
      * otherwise this function won't work
-     * @function me.pool.push
+     * @function pool.push
      * @throws will throw an error if the object cannot be recycled
      * @param {object} obj instance to be recycled
      * @param {boolean} [throwOnError=true] throw an exception if the object cannot be recycled
@@ -10663,9 +9242,9 @@ export namespace pool {
     /**
      * Push back an object instance into the object pool <br>
      * Object pooling for the object class must be enabled,
-     * and object must have been instantiated using {@link me.pool#pull},
+     * and object must have been instantiated using {@link pool#pull},
      * otherwise this function won't work
-     * @function me.pool.push
+     * @function pool.push
      * @throws will throw an error if the object cannot be recycled
      * @param {object} obj instance to be recycled
      * @param {boolean} [throwOnError=true] throw an exception if the object cannot be recycled
@@ -10674,14 +9253,14 @@ export namespace pool {
     function push(obj: any, throwOnError?: boolean): boolean;
     /**
      * Check if an object with the provided name is registered
-     * @function me.pool.exists
+     * @function pool.exists
      * @param {string} name of the registered object class
      * @returns {boolean} true if the classname is registered
      */
     function exists(name: string): boolean;
     /**
      * Check if an object with the provided name is registered
-     * @function me.pool.exists
+     * @function pool.exists
      * @param {string} name of the registered object class
      * @returns {boolean} true if the classname is registered
      */
@@ -10689,8 +9268,8 @@ export namespace pool {
     /**
      * Check if an object is poolable
      * (was properly registered with the recycling feature enable)
-     * @function me.pool.poolable
-     * @see me.pool.register
+     * @function pool.poolable
+     * @see pool.register
      * @param {object} obj object to be checked
      * @returns {boolean} true if the object is poolable
      * @example
@@ -10702,8 +9281,8 @@ export namespace pool {
     /**
      * Check if an object is poolable
      * (was properly registered with the recycling feature enable)
-     * @function me.pool.poolable
-     * @see me.pool.register
+     * @function pool.poolable
+     * @see pool.register
      * @param {object} obj object to be checked
      * @returns {boolean} true if the object is poolable
      * @example
@@ -10714,13 +9293,13 @@ export namespace pool {
     function poolable(obj: any): boolean;
     /**
      * returns the amount of object instance currently in the pool
-     * @function me.pool.getInstanceCount
+     * @function pool.getInstanceCount
      * @returns {number} amount of object instance
      */
     function getInstanceCount(): number;
     /**
      * returns the amount of object instance currently in the pool
-     * @function me.pool.getInstanceCount
+     * @function pool.getInstanceCount
      * @returns {number} amount of object instance
      */
     function getInstanceCount(): number;
@@ -10729,7 +9308,7 @@ export namespace save {
     /**
      * Add new keys to localStorage and set them to the given default values if they do not exist
      * @name add
-     * @memberof me.save
+     * @memberof save
      * @function
      * @param {object} props key and corresponding values
      * @example
@@ -10742,7 +9321,7 @@ export namespace save {
     /**
      * Add new keys to localStorage and set them to the given default values if they do not exist
      * @name add
-     * @memberof me.save
+     * @memberof save
      * @function
      * @param {object} props key and corresponding values
      * @example
@@ -10755,7 +9334,7 @@ export namespace save {
     /**
      * Remove a key from localStorage
      * @name remove
-     * @memberof me.save
+     * @memberof save
      * @function
      * @param {string} key key to be removed
      * @example
@@ -10766,7 +9345,7 @@ export namespace save {
     /**
      * Remove a key from localStorage
      * @name remove
-     * @memberof me.save
+     * @memberof save
      * @function
      * @param {string} key key to be removed
      * @example
@@ -10779,139 +9358,137 @@ export namespace save {
  * disable melonJS auto-initialization
  * @type {boolean}
  * @default false
- * @see me.boot
- * @memberof me
+ * @see boot
  */
 export var skipAutoInit: boolean;
 export namespace state {
-    export const LOADING: number;
-    export const MENU: number;
-    export const READY: number;
-    export const PLAY: number;
-    export const GAMEOVER: number;
-    export const GAME_END: number;
-    export const SCORE: number;
-    export const CREDITS: number;
-    export const SETTINGS: number;
-    export const DEFAULT: number;
-    const USER_1: number;
-    export { USER_1 as USER };
+    const LOADING: number;
+    const MENU: number;
+    const READY: number;
+    const PLAY: number;
+    const GAMEOVER: number;
+    const GAME_END: number;
+    const SCORE: number;
+    const CREDITS: number;
+    const SETTINGS: number;
+    const DEFAULT: number;
+    const USER: number;
     /**
      * Stop the current screen object.
      * @name stop
-     * @memberof me.state
+     * @memberof state
      * @public
      * @function
      * @param {boolean} [pauseTrack=false] pause current track on screen stop.
      */
-    export function stop(pauseTrack?: boolean): void;
+    function stop(pauseTrack?: boolean): void;
     /**
      * Stop the current screen object.
      * @name stop
-     * @memberof me.state
+     * @memberof state
      * @public
      * @function
      * @param {boolean} [pauseTrack=false] pause current track on screen stop.
      */
-    export function stop(pauseTrack?: boolean): void;
+    function stop(pauseTrack?: boolean): void;
     /**
      * pause the current screen object
      * @name pause
-     * @memberof me.state
+     * @memberof state
      * @public
      * @function
      * @param {boolean} [music=false] pause current music track on screen pause
      */
-    export function pause(music?: boolean): void;
+    function pause(music?: boolean): void;
     /**
      * pause the current screen object
      * @name pause
-     * @memberof me.state
+     * @memberof state
      * @public
      * @function
      * @param {boolean} [music=false] pause current music track on screen pause
      */
-    export function pause(music?: boolean): void;
+    function pause(music?: boolean): void;
     /**
      * Restart the screen object from a full stop.
      * @name restart
-     * @memberof me.state
+     * @memberof state
      * @public
      * @function
      * @param {boolean} [music=false] resume current music track on screen resume
      */
-    export function restart(music?: boolean): void;
+    function restart(music?: boolean): void;
     /**
      * Restart the screen object from a full stop.
      * @name restart
-     * @memberof me.state
+     * @memberof state
      * @public
      * @function
      * @param {boolean} [music=false] resume current music track on screen resume
      */
-    export function restart(music?: boolean): void;
+    function restart(music?: boolean): void;
     /**
      * resume the screen object
      * @name resume
-     * @memberof me.state
+     * @memberof state
      * @public
      * @function
      * @param {boolean} [music=false] resume current music track on screen resume
      */
-    export function resume(music?: boolean): void;
+    function resume(music?: boolean): void;
     /**
      * resume the screen object
      * @name resume
-     * @memberof me.state
+     * @memberof state
      * @public
      * @function
      * @param {boolean} [music=false] resume current music track on screen resume
      */
-    export function resume(music?: boolean): void;
+    function resume(music?: boolean): void;
     /**
      * return the running state of the state manager
      * @name isRunning
-     * @memberof me.state
+     * @memberof state
      * @public
      * @function
      * @returns {boolean} true if a "process is running"
      */
-    export function isRunning(): boolean;
+    function isRunning(): boolean;
     /**
      * return the running state of the state manager
      * @name isRunning
-     * @memberof me.state
+     * @memberof state
      * @public
      * @function
      * @returns {boolean} true if a "process is running"
      */
-    export function isRunning(): boolean;
+    function isRunning(): boolean;
     /**
      * Return the pause state of the state manager
      * @name isPaused
-     * @memberof me.state
+     * @memberof state
      * @public
      * @function
      * @returns {boolean} true if the game is paused
      */
-    export function isPaused(): boolean;
+    function isPaused(): boolean;
     /**
      * Return the pause state of the state manager
      * @name isPaused
-     * @memberof me.state
+     * @memberof state
      * @public
      * @function
      * @returns {boolean} true if the game is paused
      */
-    export function isPaused(): boolean;
+    function isPaused(): boolean;
     /**
      * associate the specified state with a Stage
      * @name set
-     * @memberof me.state
+     * @memberof state
      * @public
      * @function
      * @param {number} state State ID (see constants)
-     * @param {me.Stage} stage Instantiated Stage to associate with state ID
+     * @param {Stage} stage Instantiated Stage to associate with state ID
      * @param {boolean} [start = false] if true the state will be changed immediately after adding it.
      * @example
      * class MenuButton extends me.GUI_Object {
@@ -10950,15 +9527,15 @@ export namespace state {
      *
      * me.state.set(me.state.MENU, new MenuScreen());
      */
-    export function set(state: number, stage: me.Stage, start?: boolean): void;
+    function set(state: number, stage: Stage, start?: boolean): void;
     /**
      * associate the specified state with a Stage
      * @name set
-     * @memberof me.state
+     * @memberof state
      * @public
      * @function
      * @param {number} state State ID (see constants)
-     * @param {me.Stage} stage Instantiated Stage to associate with state ID
+     * @param {Stage} stage Instantiated Stage to associate with state ID
      * @param {boolean} [start = false] if true the state will be changed immediately after adding it.
      * @example
      * class MenuButton extends me.GUI_Object {
@@ -10997,73 +9574,73 @@ export namespace state {
      *
      * me.state.set(me.state.MENU, new MenuScreen());
      */
-    export function set(state: number, stage: me.Stage, start?: boolean): void;
+    function set(state: number, stage: Stage, start?: boolean): void;
     /**
      * return a reference to the current screen object<br>
      * useful to call a object specific method
      * @name current
-     * @memberof me.state
+     * @memberof state
      * @public
      * @function
-     * @returns {me.Stage}
+     * @returns {Stage}
      */
-    export function current(): me.Stage;
+    function current(): Stage;
     /**
      * return a reference to the current screen object<br>
      * useful to call a object specific method
      * @name current
-     * @memberof me.state
+     * @memberof state
      * @public
      * @function
-     * @returns {me.Stage}
+     * @returns {Stage}
      */
-    export function current(): me.Stage;
+    function current(): Stage;
     /**
      * specify a global transition effect
      * @name transition
-     * @memberof me.state
+     * @memberof state
      * @public
      * @function
      * @param {string} effect (only "fade" is supported for now)
-     * @param {me.Color|string} color a CSS color value
+     * @param {Color|string} color a CSS color value
      * @param {number} [duration=1000] expressed in milliseconds
      */
-    export function transition(effect: string, color: any, duration?: number): void;
+    function transition(effect: string, color: string | Color, duration?: number): void;
     /**
      * specify a global transition effect
      * @name transition
-     * @memberof me.state
+     * @memberof state
      * @public
      * @function
      * @param {string} effect (only "fade" is supported for now)
-     * @param {me.Color|string} color a CSS color value
+     * @param {Color|string} color a CSS color value
      * @param {number} [duration=1000] expressed in milliseconds
      */
-    export function transition(effect: string, color: any, duration?: number): void;
+    function transition(effect: string, color: string | Color, duration?: number): void;
     /**
      * enable/disable transition for a specific state (by default enabled for all)
      * @name setTransition
-     * @memberof me.state
+     * @memberof state
      * @public
      * @function
      * @param {number} state State ID (see constants)
      * @param {boolean} enable
      */
-    export function setTransition(state: number, enable: boolean): void;
+    function setTransition(state: number, enable: boolean): void;
     /**
      * enable/disable transition for a specific state (by default enabled for all)
      * @name setTransition
-     * @memberof me.state
+     * @memberof state
      * @public
      * @function
      * @param {number} state State ID (see constants)
      * @param {boolean} enable
      */
-    export function setTransition(state: number, enable: boolean): void;
+    function setTransition(state: number, enable: boolean): void;
     /**
      * change the game/app state
      * @name change
-     * @memberof me.state
+     * @memberof state
      * @public
      * @function
      * @param {number} state State ID (see constants)
@@ -11074,11 +9651,11 @@ export namespace state {
      * // "level_1" and the number 3
      * me.state.change(me.state.PLAY, "level_1", 3);
      */
-    export function change(state: number, forceChange: boolean, ...args: any[]): void;
+    function change(state: number, forceChange: boolean, ...args: any[]): void;
     /**
      * change the game/app state
      * @name change
-     * @memberof me.state
+     * @memberof state
      * @public
      * @function
      * @param {number} state State ID (see constants)
@@ -11089,27 +9666,27 @@ export namespace state {
      * // "level_1" and the number 3
      * me.state.change(me.state.PLAY, "level_1", 3);
      */
-    export function change(state: number, forceChange: boolean, ...args: any[]): void;
+    function change(state: number, forceChange: boolean, ...args: any[]): void;
     /**
      * return true if the specified state is the current one
      * @name isCurrent
-     * @memberof me.state
+     * @memberof state
      * @public
      * @function
      * @param {number} state State ID (see constants)
      * @returns {boolean} true if the specified state is the current one
      */
-    export function isCurrent(state: number): boolean;
+    function isCurrent(state: number): boolean;
     /**
      * return true if the specified state is the current one
      * @name isCurrent
-     * @memberof me.state
+     * @memberof state
      * @public
      * @function
      * @param {number} state State ID (see constants)
      * @returns {boolean} true if the specified state is the current one
      */
-    export function isCurrent(state: number): boolean;
+    function isCurrent(state: number): boolean;
 }
 declare namespace timer$1 {
     const tick: number;
@@ -11119,7 +9696,7 @@ declare namespace timer$1 {
     /**
      * reset time (e.g. usefull in case of pause)
      * @name reset
-     * @memberof me.timer
+     * @memberof timer
      * @ignore
      * @function
      */
@@ -11127,7 +9704,7 @@ declare namespace timer$1 {
     /**
      * reset time (e.g. usefull in case of pause)
      * @name reset
-     * @memberof me.timer
+     * @memberof timer
      * @ignore
      * @function
      */
@@ -11135,7 +9712,7 @@ declare namespace timer$1 {
     /**
      * Calls a function once after a specified delay. See me.timer.setInterval to repeativly call a function.
      * @name setTimeout
-     * @memberof me.timer
+     * @memberof timer
      * @param {Function} fn the function you want to execute after delay milliseconds.
      * @param {number} delay the number of milliseconds (thousandths of a second) that the function call should be delayed by.
      * @param {boolean} [pauseable=true] respects the pause state of the engine.
@@ -11152,7 +9729,7 @@ declare namespace timer$1 {
     /**
      * Calls a function once after a specified delay. See me.timer.setInterval to repeativly call a function.
      * @name setTimeout
-     * @memberof me.timer
+     * @memberof timer
      * @param {Function} fn the function you want to execute after delay milliseconds.
      * @param {number} delay the number of milliseconds (thousandths of a second) that the function call should be delayed by.
      * @param {boolean} [pauseable=true] respects the pause state of the engine.
@@ -11169,7 +9746,7 @@ declare namespace timer$1 {
     /**
      * Calls a function continously at the specified interval.  See setTimeout to call function a single time.
      * @name setInterval
-     * @memberof me.timer
+     * @memberof timer
      * @param {Function} fn the function to execute
      * @param {number} delay the number of milliseconds (thousandths of a second) on how often to execute the function
      * @param {boolean} [pauseable=true] respects the pause state of the engine.
@@ -11186,7 +9763,7 @@ declare namespace timer$1 {
     /**
      * Calls a function continously at the specified interval.  See setTimeout to call function a single time.
      * @name setInterval
-     * @memberof me.timer
+     * @memberof timer
      * @param {Function} fn the function to execute
      * @param {number} delay the number of milliseconds (thousandths of a second) on how often to execute the function
      * @param {boolean} [pauseable=true] respects the pause state of the engine.
@@ -11203,7 +9780,7 @@ declare namespace timer$1 {
     /**
      * Clears the delay set by me.timer.setTimeout().
      * @name clearTimeout
-     * @memberof me.timer
+     * @memberof timer
      * @function
      * @param {number} timeoutID ID of the timeout to be cleared
      */
@@ -11211,7 +9788,7 @@ declare namespace timer$1 {
     /**
      * Clears the delay set by me.timer.setTimeout().
      * @name clearTimeout
-     * @memberof me.timer
+     * @memberof timer
      * @function
      * @param {number} timeoutID ID of the timeout to be cleared
      */
@@ -11219,7 +9796,7 @@ declare namespace timer$1 {
     /**
      * Clears the Interval set by me.timer.setInterval().
      * @name clearInterval
-     * @memberof me.timer
+     * @memberof timer
      * @function
      * @param {number} intervalID ID of the interval to be cleared
      */
@@ -11227,7 +9804,7 @@ declare namespace timer$1 {
     /**
      * Clears the Interval set by me.timer.setInterval().
      * @name clearInterval
-     * @memberof me.timer
+     * @memberof timer
      * @function
      * @param {number} intervalID ID of the interval to be cleared
      */
@@ -11236,7 +9813,7 @@ declare namespace timer$1 {
      * Return the current timestamp in milliseconds <br>
      * since the game has started or since linux epoch (based on browser support for High Resolution Timer)
      * @name getTime
-     * @memberof me.timer
+     * @memberof timer
      * @returns {number}
      * @function
      */
@@ -11245,7 +9822,7 @@ declare namespace timer$1 {
      * Return the current timestamp in milliseconds <br>
      * since the game has started or since linux epoch (based on browser support for High Resolution Timer)
      * @name getTime
-     * @memberof me.timer
+     * @memberof timer
      * @returns {number}
      * @function
      */
@@ -11253,7 +9830,7 @@ declare namespace timer$1 {
     /**
      * Return elapsed time in milliseconds since the last update
      * @name getDelta
-     * @memberof me.timer
+     * @memberof timer
      * @returns {number}
      * @function
      */
@@ -11261,7 +9838,7 @@ declare namespace timer$1 {
     /**
      * Return elapsed time in milliseconds since the last update
      * @name getDelta
-     * @memberof me.timer
+     * @memberof timer
      * @returns {number}
      * @function
      */
@@ -11270,7 +9847,7 @@ declare namespace timer$1 {
      * compute the actual frame time and fps rate
      * @name computeFPS
      * @ignore
-     * @memberof me.timer
+     * @memberof timer
      * @function
      */
     function countFPS(): void;
@@ -11278,7 +9855,7 @@ declare namespace timer$1 {
      * compute the actual frame time and fps rate
      * @name computeFPS
      * @ignore
-     * @memberof me.timer
+     * @memberof timer
      * @function
      */
     function countFPS(): void;
@@ -11296,15 +9873,9 @@ export namespace utils {
     export function createGUID(index?: number): string;
 }
 /**
- * (<b>m</b>)elonJS (<b>e</b>)ngine : All melonJS functions are defined inside this namespace.
- * You generally should not add new properties to this namespace as it may be overwritten in future versions.
- * @namespace me
- */
-/**
  * current melonJS version
  * @static
  * @constant
- * @memberof me
  * @name version
  * @type {string}
  */
@@ -11315,13 +9886,276 @@ export var video: Readonly<{
     WEBGL: number;
     AUTO: number;
     readonly parent: HTMLElement;
-    scaleRatio: me.Vector2d;
-    readonly renderer: any;
+    scaleRatio: Vector2d;
+    readonly renderer: CanvasRenderer | WebGLRenderer;
     init: typeof init;
     createCanvas: typeof createCanvas;
     getParent: typeof getParent;
     scale: typeof scale;
 }>;
+/**
+ * @classdesc
+ * a bound object contains methods for creating and manipulating axis-aligned bounding boxes (AABB).
+ */
+declare class Bounds {
+    /**
+     * @param {Vector2d[]} [vertices] an array of me.Vector2d points
+     */
+    constructor(vertices?: Vector2d[]);
+    /**
+     * @ignore
+     */
+    onResetEvent(vertices: any): void;
+    min: {
+        x: number;
+        y: number;
+    };
+    max: {
+        x: number;
+        y: number;
+    };
+    _center: Vector2d;
+    /**
+     * reset the bound
+     * @name clear
+     * @memberof Bounds
+     * @function
+     */
+    clear(): void;
+    /**
+     * sets the bounds to the given min and max value
+     * @name setMinMax
+     * @memberof Bounds
+     * @function
+     * @param {number} minX
+     * @param {number} minY
+     * @param {number} maxX
+     * @param {number} maxY
+     */
+    setMinMax(minX: number, minY: number, maxX: number, maxY: number): void;
+    public set x(arg: number);
+    /**
+     * x position of the bound
+     * @public
+     * @type {number}
+     * @name x
+     * @memberof Bounds
+     */
+    public get x(): number;
+    public set y(arg: number);
+    /**
+     * y position of the bounds
+     * @public
+     * @type {number}
+     * @name y
+     * @memberof Bounds
+     */
+    public get y(): number;
+    public set width(arg: number);
+    /**
+     * width of the bounds
+     * @public
+     * @type {number}
+     * @name width
+     * @memberof Bounds
+     */
+    public get width(): number;
+    public set height(arg: number);
+    /**
+     * width of the bounds
+     * @public
+     * @type {number}
+     * @name width
+     * @memberof Bounds
+     */
+    public get height(): number;
+    /**
+     * left coordinate of the bound
+     * @public
+     * @type {number}
+     * @name left
+     * @memberof Bounds
+     */
+    public get left(): number;
+    /**
+     * right coordinate of the bound
+     * @public
+     * @type {number}
+     * @name right
+     * @memberof Bounds
+     */
+    public get right(): number;
+    /**
+     * top coordinate of the bound
+     * @public
+     * @type {number}
+     * @name top
+     * @memberof Bounds
+     */
+    public get top(): number;
+    /**
+     * bottom coordinate of the bound
+     * @public
+     * @type {number}
+     * @name bottom
+     * @memberof Bounds
+     */
+    public get bottom(): number;
+    /**
+     * center position of the bound on the x axis
+     * @public
+     * @type {number}
+     * @name centerX
+     * @memberof Bounds
+     */
+    public get centerX(): number;
+    /**
+     * center position of the bound on the y axis
+     * @public
+     * @type {number}
+     * @name centerY
+     * @memberof Bounds
+     */
+    public get centerY(): number;
+    /**
+     * return the center position of the bound
+     * @public
+     * @type {Vector2d}
+     * @name center
+     * @memberof Bounds
+     */
+    public get center(): Vector2d;
+    /**
+     * Updates bounds using the given vertices
+     * @name update
+     * @memberof Bounds
+     * @function
+     * @param {Vector2d[]} vertices an array of me.Vector2d points
+     */
+    update(vertices: Vector2d[]): void;
+    /**
+     * add the given vertices to the bounds definition.
+     * @name add
+     * @memberof Bounds
+     * @function
+     * @param {Vector2d[]} vertices an array of me.Vector2d points
+     * @param {boolean} [clear=false] either to reset the bounds before adding the new vertices
+     */
+    add(vertices: Vector2d[], clear?: boolean): void;
+    /**
+     * add the given bounds to the bounds definition.
+     * @name addBounds
+     * @memberof Bounds
+     * @function
+     * @param {Bounds} bounds
+     * @param {boolean} [clear=false] either to reset the bounds before adding the new vertices
+     */
+    addBounds(bounds: Bounds, clear?: boolean): void;
+    /**
+     * add the given point to the bounds definition.
+     * @name addPoint
+     * @memberof Bounds
+     * @function
+     * @param {Vector2d} v
+     * @param {Matrix2d} [m] an optional transform to apply to the given point
+     */
+    addPoint(v: Vector2d, m?: Matrix2d): void;
+    /**
+     * add the given quad coordinates to this bound definition, multiplied by the given matrix
+     * @name addFrame
+     * @memberof Bounds
+     * @function
+     * @param {number} x0 - left X coordinates of the quad
+     * @param {number} y0 - top Y coordinates of the quad
+     * @param {number} x1 - right X coordinates of the quad
+     * @param {number} y1 - bottom y coordinates of the quad
+     * @param {Matrix2d} [m] an optional transform to apply to the given frame coordinates
+     */
+    addFrame(x0: number, y0: number, x1: number, y1: number, m?: Matrix2d): void;
+    /**
+     * Returns true if the bounds contains the given point.
+     * @name contains
+     * @memberof Bounds
+     * @function
+     * @param {Vector2d} point
+     * @returns {boolean} True if the bounds contain the point, otherwise false
+     */
+    /**
+     * Returns true if the bounds contains the given point.
+     * @name contains
+     * @memberof Bounds
+     * @function
+     * @param {number} x
+     * @param {number} y
+     * @returns {boolean} True if the bounds contain the point, otherwise false
+     */
+    contains(...args: any[]): boolean;
+    /**
+     * Returns true if the two bounds intersect.
+     * @name overlaps
+     * @memberof Bounds
+     * @function
+     * @param {Bounds|Rect} bounds
+     * @returns {boolean} True if the bounds overlap, otherwise false
+     */
+    overlaps(bounds: Bounds | Rect): boolean;
+    /**
+     * determines whether all coordinates of this bounds are finite numbers.
+     * @name isFinite
+     * @memberof Bounds
+     * @function
+     * @returns {boolean} false if all coordinates are positive or negative Infinity or NaN; otherwise, true.
+     */
+    isFinite(): boolean;
+    /**
+     * Translates the bounds by the given vector.
+     * @name translate
+     * @memberof Bounds
+     * @function
+     * @param {Vector2d} vector
+     */
+    /**
+     * Translates the bounds by x on the x axis, and y on the y axis
+     * @name translate
+     * @memberof Bounds
+     * @function
+     * @param {number} x
+     * @param {number} y
+     */
+    translate(...args: any[]): void;
+    /**
+     * Shifts the bounds to the given position vector.
+     * @name shift
+     * @memberof Bounds
+     * @function
+     * @param {Vector2d} position
+     */
+    /**
+     * Shifts the bounds to the given x, y position.
+     * @name shift
+     * @memberof Bounds
+     * @function
+     * @param {number} x
+     * @param {number} y
+     */
+    shift(...args: any[]): void;
+    /**
+     * clone this bounds
+     * @name clone
+     * @memberof Bounds
+     * @function
+     * @returns {Bounds}
+     */
+    clone(): Bounds;
+    /**
+     * Returns a polygon whose edges are the same as this bounds.
+     * @name toPolygon
+     * @memberof Bounds
+     * @function
+     * @returns {Polygon} a new Polygon that represents this bounds.
+     */
+    toPolygon(): Polygon;
+}
 /**
  * a basic texture cache object
  * @ignore
@@ -11368,10 +10202,10 @@ declare class TextureCache {
 /**
  * allows registration of event listeners on the object target. <br>
  * melonJS will pass a me.Pointer object to the defined callback.
- * @see me.Pointer
+ * @see Pointer
  * @see {@link http://www.w3.org/TR/pointerevents/#list-of-pointer-events|W3C Pointer Event list}
  * @name registerPointerEvent
- * @memberof me.input
+ * @memberof input
  * @public
  * @function
  * @param {string} eventType The event type for which the object is registering <br>
@@ -11386,7 +10220,7 @@ declare class TextureCache {
  *   <li><code>"pointercancel"</code></li>
  *   <li><code>"wheel"</code></li>
  * </ul>
- * @param {me.Rect|me.Polygon|me.Line|me.Ellipse} region a shape representing the region to register on
+ * @param {Rect|Polygon|Line|Ellipse} region a shape representing the region to register on
  * @param {Function} callback methods to be called when the event occurs.
  * Returning `false` from the defined callback will prevent the event to be propagated to other objects
  * @example
@@ -11404,27 +10238,27 @@ declare class TextureCache {
  *    return false;
  *  },
  */
-declare function registerPointerEvent(eventType: string, region: me.Rect | me.Polygon | me.Line | me.Ellipse, callback: Function): void;
+declare function registerPointerEvent(eventType: string, region: Rect | Polygon | Line | Ellipse, callback: Function): void;
 /**
  * allows the removal of event listeners from the object target.
  * @see {@link http://www.w3.org/TR/pointerevents/#list-of-pointer-events|W3C Pointer Event list}
  * @name releasePointerEvent
- * @memberof me.input
+ * @memberof input
  * @public
  * @function
- * @param {string} eventType The event type for which the object was registered. See {@link me.input.registerPointerEvent}
- * @param {me.Rect|me.Polygon|me.Line|me.Ellipse} region the registered region to release for this event
+ * @param {string} eventType The event type for which the object was registered. See {@link input.registerPointerEvent}
+ * @param {Rect|Polygon|Line|Ellipse} region the registered region to release for this event
  * @param {Function} [callback="all"] if specified unregister the event only for the specific callback
  * @example
  * // release the registered region on the 'pointerdown' event
  * me.input.releasePointerEvent('pointerdown', this);
  */
-declare function releasePointerEvent(eventType: string, region: me.Rect | me.Polygon | me.Line | me.Ellipse, callback?: Function): void;
+declare function releasePointerEvent(eventType: string, region: Rect | Polygon | Line | Ellipse, callback?: Function): void;
 /**
  * returns true if the given value is a power of two
  * @public
  * @function
- * @memberof me.Math
+ * @memberof Math
  * @name isPowerOfTwo
  * @param {number} val
  * @returns {boolean}
@@ -11434,7 +10268,7 @@ declare function isPowerOfTwo(val: number): boolean;
  * returns the next power of two for the given value
  * @public
  * @function
- * @memberof me.Math
+ * @memberof Math
  * @name nextPowerOfTwo
  * @param {number} val
  * @returns {boolean}
@@ -11444,7 +10278,7 @@ declare function nextPowerOfTwo(val: number): boolean;
  * Converts an angle in degrees to an angle in radians
  * @public
  * @function
- * @memberof me.Math
+ * @memberof Math
  * @name degToRad
  * @param {number} angle angle in degrees
  * @returns {number} corresponding angle in radians
@@ -11457,7 +10291,7 @@ declare function degToRad(angle: number): number;
  * Converts an angle in radians to an angle in degrees.
  * @public
  * @function
- * @memberof me.Math
+ * @memberof Math
  * @name radToDeg
  * @param {number} radians angle in radians
  * @returns {number} corresponding angle in degrees
@@ -11470,7 +10304,7 @@ declare function radToDeg(radians: number): number;
  * clamp the given value
  * @public
  * @function
- * @memberof me.Math
+ * @memberof Math
  * @name clamp
  * @param {number} val the value to clamp
  * @param {number} low lower limit
@@ -11482,7 +10316,7 @@ declare function clamp(val: number, low: number, high: number): number;
  * return a random integer between min (included) and max (excluded)
  * @public
  * @function
- * @memberof me.Math
+ * @memberof Math
  * @name random
  * @param {number} min minimum value.
  * @param {number} max maximum value.
@@ -11496,7 +10330,7 @@ declare function random$1(min: number, max: number): number;
  * return a random float between min, max (exclusive)
  * @public
  * @function
- * @memberof me.Math
+ * @memberof Math
  * @name randomFloat
  * @param {number} min minimum value.
  * @param {number} max maximum value.
@@ -11510,7 +10344,7 @@ declare function randomFloat(min: number, max: number): number;
  * return a weighted random between min, max (exclusive)
  * @public
  * @function
- * @memberof me.Math
+ * @memberof Math
  * @name weightedRandom
  * @param {number} min minimum value.
  * @param {number} max maximum value.
@@ -11524,7 +10358,7 @@ declare function weightedRandom$1(min: number, max: number): number;
  * round a value to the specified number of digit
  * @public
  * @function
- * @memberof me.Math
+ * @memberof Math
  * @name round
  * @param {number} num value to be rounded.
  * @param {number} [dec=0] number of decimal digit to be rounded to.
@@ -11538,7 +10372,7 @@ declare function round(num: number, dec?: number): number;
  * check if the given value is close to the expected one
  * @public
  * @function
- * @memberof me.Math
+ * @memberof Math
  * @name toBeCloseTo
  * @param {number} expected value to be compared with.
  * @param {number} actual actual value to compare
@@ -11555,29 +10389,17 @@ declare function toBeCloseTo(expected: number, actual: number, precision?: numbe
  * @classdesc
  * Particle Container Object.
  * @class ParticleContainer
- * @augments me.Container
- * @memberof me
- * @param {me.ParticleEmitter} emitter the emitter which owns this container
+ * @augments Container
+ * @param {ParticleEmitter} emitter the emitter which owns this container
  */
-declare class ParticleContainer {
+declare class ParticleContainer extends Container {
     /**
      * @ignore
      */
     constructor(emitter: any);
-    autoSort: boolean;
     _updateCount: number;
     _dt: number;
     _emitter: any;
-    autoTransform: boolean;
-    isKinematic: boolean;
-    /**
-     * @ignore
-     */
-    update(dt: any): boolean;
-    /**
-     * @ignore
-     */
-    draw(renderer: any, rect: any): void;
 }
 declare var pixel: any;
 /**
@@ -11589,8 +10411,8 @@ declare var pixel: any;
  * - [Free Texture Packer]{@link http://free-tex-packer.com/app/} : through JSON export (standard and multipack texture atlas) <br>
  * - Standard (fixed cell size) spritesheet : through a {framewidth:xx, frameheight:xx, anchorPoint:me.Vector2d} object
  * @class Texture
- * @memberof me.Renderer
- * @param {object|object[]} atlases atlas information. See {@link me.loader.getJSON}
+ * @memberof Renderer
+ * @param {object|object[]} atlases atlas information. See {@link loader.getJSON}
  * @param {HTMLImageElement|HTMLCanvasElement|string|HTMLImageElement[]|HTMLCanvasElement[]|string[]} [src=atlas.meta.image] Image source
  * @param {boolean} [cache=false] Use true to skip caching this Texture
  * @example
@@ -11657,7 +10479,7 @@ declare class Texture {
     /**
      * return the default or specified atlas dictionnary
      * @name getAtlas
-     * @memberof me.Renderer.Texture
+     * @memberof Renderer.Texture
      * @function
      * @param {string} [name] atlas name in case of multipack textures
      * @returns {object}
@@ -11666,7 +10488,7 @@ declare class Texture {
     /**
      * return the format of the atlas dictionnary
      * @name getFormat
-     * @memberof me.Renderer.Texture
+     * @memberof Renderer.Texture
      * @function
      * @returns {string} will return "texturepacker", or "ShoeBox", or "melonJS", or "Spritesheet (fixed cell size)"
      */
@@ -11674,7 +10496,7 @@ declare class Texture {
     /**
      * return the source texture for the given region (or default one if none specified)
      * @name getTexture
-     * @memberof me.Renderer.Texture
+     * @memberof Renderer.Texture
      * @function
      * @param {object} [region] region name in case of multipack textures
      * @returns {HTMLImageElement|HTMLCanvasElement}
@@ -11683,7 +10505,7 @@ declare class Texture {
     /**
      * return a normalized region (or frame) information for the specified sprite name
      * @name getRegion
-     * @memberof me.Renderer.Texture
+     * @memberof Renderer.Texture
      * @function
      * @param {string} name name of the sprite
      * @param {string} [atlas] name of a specific atlas where to search for the region
@@ -11693,7 +10515,7 @@ declare class Texture {
     /**
      * return the uvs mapping for the given region
      * @name getUVs
-     * @memberof me.Renderer.Texture
+     * @memberof Renderer.Texture
      * @function
      * @param {object} name region (or frame) name
      * @returns {Float32Array} region Uvs
@@ -11702,12 +10524,12 @@ declare class Texture {
     /**
      * Create a sprite object using the first region found using the specified name
      * @name createSpriteFromName
-     * @memberof me.Renderer.Texture
+     * @memberof Renderer.Texture
      * @function
      * @param {string} name name of the sprite
-     * @param {object} [settings] Additional settings passed to the {@link me.Sprite} contructor
+     * @param {object} [settings] Additional settings passed to the {@link Sprite} contructor
      * @param {boolean} [nineSlice=false] if true returns a 9-slice sprite
-     * @returns {me.Sprite|me.NineSliceSprite}
+     * @returns {Sprite|NineSliceSprite}
      * @example
      * // create a new texture object under the `game` namespace
      * game.texture = new me.video.renderer.Texture(
@@ -11730,16 +10552,16 @@ declare class Texture {
      *    true
      * );
      */
-    createSpriteFromName(name: string, settings?: object, nineSlice?: boolean): me.Sprite | me.NineSliceSprite;
+    createSpriteFromName(name: string, settings?: object, nineSlice?: boolean): Sprite | NineSliceSprite;
     /**
      * Create an animation object using the first region found using all specified names
      * @name createAnimationFromName
-     * @memberof me.Renderer.Texture
+     * @memberof Renderer.Texture
      * @function
      * @param {string[]|number[]} names list of names for each sprite
      * (when manually creating a Texture out of a spritesheet, only numeric values are authorized)
-     * @param {object} [settings] Additional settings passed to the {@link me.Sprite} contructor
-     * @returns {me.Sprite}
+     * @param {object} [settings] Additional settings passed to the {@link Sprite} contructor
+     * @returns {Sprite}
      * @example
      * // create a new texture object under the `game` namespace
      * game.texture = new me.video.renderer.Texture(
@@ -11764,271 +10586,7 @@ declare class Texture {
      * // set the renderable position to bottom center
      * sprite.anchorPoint.set(0.5, 1.0);
      */
-    createAnimationFromName(names: string[] | number[], settings?: object): me.Sprite;
-}
-/**
- * @classdesc
- * a bound object contains methods for creating and manipulating axis-aligned bounding boxes (AABB).
- * @memberof me
- */
-declare class Bounds {
-    /**
-     * @param {me.Vector2d[]} [vertices] an array of me.Vector2d points
-     */
-    constructor(vertices?: me.Vector2d[]);
-    /**
-     * @ignore
-     */
-    onResetEvent(vertices: any): void;
-    min: {
-        x: number;
-        y: number;
-    };
-    max: {
-        x: number;
-        y: number;
-    };
-    _center: Vector2d;
-    /**
-     * reset the bound
-     * @name clear
-     * @memberof me.Bounds
-     * @function
-     */
-    clear(): void;
-    /**
-     * sets the bounds to the given min and max value
-     * @name setMinMax
-     * @memberof me.Bounds
-     * @function
-     * @param {number} minX
-     * @param {number} minY
-     * @param {number} maxX
-     * @param {number} maxY
-     */
-    setMinMax(minX: number, minY: number, maxX: number, maxY: number): void;
-    public set x(arg: number);
-    /**
-     * x position of the bound
-     * @public
-     * @type {number}
-     * @name x
-     * @memberof me.Bounds
-     */
-    public get x(): number;
-    public set y(arg: number);
-    /**
-     * y position of the bounds
-     * @public
-     * @type {number}
-     * @name y
-     * @memberof me.Bounds
-     */
-    public get y(): number;
-    public set width(arg: number);
-    /**
-     * width of the bounds
-     * @public
-     * @type {number}
-     * @name width
-     * @memberof me.Bounds
-     */
-    public get width(): number;
-    public set height(arg: number);
-    /**
-     * width of the bounds
-     * @public
-     * @type {number}
-     * @name width
-     * @memberof me.Bounds
-     */
-    public get height(): number;
-    /**
-     * left coordinate of the bound
-     * @public
-     * @type {number}
-     * @name left
-     * @memberof me.Bounds
-     */
-    public get left(): number;
-    /**
-     * right coordinate of the bound
-     * @public
-     * @type {number}
-     * @name right
-     * @memberof me.Bounds
-     */
-    public get right(): number;
-    /**
-     * top coordinate of the bound
-     * @public
-     * @type {number}
-     * @name top
-     * @memberof me.Bounds
-     */
-    public get top(): number;
-    /**
-     * bottom coordinate of the bound
-     * @public
-     * @type {number}
-     * @name bottom
-     * @memberof me.Bounds
-     */
-    public get bottom(): number;
-    /**
-     * center position of the bound on the x axis
-     * @public
-     * @type {number}
-     * @name centerX
-     * @memberof me.Bounds
-     */
-    public get centerX(): number;
-    /**
-     * center position of the bound on the y axis
-     * @public
-     * @type {number}
-     * @name centerY
-     * @memberof me.Bounds
-     */
-    public get centerY(): number;
-    /**
-     * return the center position of the bound
-     * @public
-     * @type {me.Vector2d}
-     * @name center
-     * @memberof me.Bounds
-     */
-    public get center(): me.Vector2d;
-    /**
-     * Updates bounds using the given vertices
-     * @name update
-     * @memberof me.Bounds
-     * @function
-     * @param {me.Vector2d[]} vertices an array of me.Vector2d points
-     */
-    update(vertices: me.Vector2d[]): void;
-    /**
-     * add the given vertices to the bounds definition.
-     * @name add
-     * @memberof me.Bounds
-     * @function
-     * @param {me.Vector2d[]} vertices an array of me.Vector2d points
-     * @param {boolean} [clear=false] either to reset the bounds before adding the new vertices
-     */
-    add(vertices: me.Vector2d[], clear?: boolean): void;
-    /**
-     * add the given bounds to the bounds definition.
-     * @name addBounds
-     * @memberof me.Bounds
-     * @function
-     * @param {me.Bounds} bounds
-     * @param {boolean} [clear=false] either to reset the bounds before adding the new vertices
-     */
-    addBounds(bounds: me.Bounds, clear?: boolean): void;
-    /**
-     * add the given point to the bounds definition.
-     * @name addPoint
-     * @memberof me.Bounds
-     * @function
-     * @param {me.Vector2d} v
-     * @param {me.Matrix2d} [m] an optional transform to apply to the given point
-     */
-    addPoint(v: me.Vector2d, m?: me.Matrix2d): void;
-    /**
-     * add the given quad coordinates to this bound definition, multiplied by the given matrix
-     * @name addFrame
-     * @memberof me.Bounds
-     * @function
-     * @param {number} x0 - left X coordinates of the quad
-     * @param {number} y0 - top Y coordinates of the quad
-     * @param {number} x1 - right X coordinates of the quad
-     * @param {number} y1 - bottom y coordinates of the quad
-     * @param {me.Matrix2d} [m] an optional transform to apply to the given frame coordinates
-     */
-    addFrame(x0: number, y0: number, x1: number, y1: number, m?: me.Matrix2d): void;
-    /**
-     * Returns true if the bounds contains the given point.
-     * @name contains
-     * @memberof me.Bounds
-     * @function
-     * @param {me.Vector2d} point
-     * @returns {boolean} True if the bounds contain the point, otherwise false
-     */
-    /**
-     * Returns true if the bounds contains the given point.
-     * @name contains
-     * @memberof me.Bounds
-     * @function
-     * @param {number} x
-     * @param {number} y
-     * @returns {boolean} True if the bounds contain the point, otherwise false
-     */
-    contains(...args: any[]): boolean;
-    /**
-     * Returns true if the two bounds intersect.
-     * @name overlaps
-     * @memberof me.Bounds
-     * @function
-     * @param {me.Bounds|me.Rect} bounds
-     * @returns {boolean} True if the bounds overlap, otherwise false
-     */
-    overlaps(bounds: me.Bounds | me.Rect): boolean;
-    /**
-     * determines whether all coordinates of this bounds are finite numbers.
-     * @name isFinite
-     * @memberof me.Bounds
-     * @function
-     * @returns {boolean} false if all coordinates are positive or negative Infinity or NaN; otherwise, true.
-     */
-    isFinite(): boolean;
-    /**
-     * Translates the bounds by the given vector.
-     * @name translate
-     * @memberof me.Bounds
-     * @function
-     * @param {me.Vector2d} vector
-     */
-    /**
-     * Translates the bounds by x on the x axis, and y on the y axis
-     * @name translate
-     * @memberof me.Bounds
-     * @function
-     * @param {number} x
-     * @param {number} y
-     */
-    translate(...args: any[]): void;
-    /**
-     * Shifts the bounds to the given position vector.
-     * @name shift
-     * @memberof me.Bounds
-     * @function
-     * @param {me.Vector2d} position
-     */
-    /**
-     * Shifts the bounds to the given x, y position.
-     * @name shift
-     * @memberof me.Bounds
-     * @function
-     * @param {number} x
-     * @param {number} y
-     */
-    shift(...args: any[]): void;
-    /**
-     * clone this bounds
-     * @name clone
-     * @memberof me.Bounds
-     * @function
-     * @returns {me.Bounds}
-     */
-    clone(): me.Bounds;
-    /**
-     * Returns a polygon whose edges are the same as this bounds.
-     * @name toPolygon
-     * @memberof me.Bounds
-     * @function
-     * @returns {me.Polygon} a new Polygon that represents this bounds.
-     */
-    toPolygon(): me.Polygon;
+    createAnimationFromName(names: string[] | number[], settings?: object): Sprite;
 }
 /**
  * @classdesc
@@ -12095,7 +10653,7 @@ declare class VertexArrayBuffer {
  * webm has nearly full browser coverage with a great combination of compression and quality, and mp3 will fallback gracefully for other browsers.
  * It is important to remember that melonJS selects the first compatible sound based on the list of extensions and given order passed here.
  * So if you want webm to be used before mp3, you need to put the audio format in that order.
- * @function me.audio.init
+ * @function audio.init
  * @param {string} [format="mp3"] audio format to prioritize
  * @returns {boolean} Indicates whether audio initialization was successful
  * @example
@@ -12108,27 +10666,27 @@ declare class VertexArrayBuffer {
 declare function init$1(format?: string): boolean;
 /**
  * check if the given audio format is supported
- * @function me.audio.hasFormat
+ * @function audio.hasFormat
  * @param {string} codec audio format : "mp3", "mpeg", opus", "ogg", "oga", "wav", "aac", "caf", "m4a", "m4b", "mp4", "weba", "webm", "dolby", "flac"
  * @returns {boolean} return true if the given audio format is supported
  */
 declare function hasFormat(codec: string): boolean;
 /**
  * check if audio (HTML5 or WebAudio) is supported
- * @function me.audio.hasAudio
+ * @function audio.hasAudio
  * @returns {boolean} return true if audio (HTML5 or WebAudio) is supported
  */
 declare function hasAudio(): boolean;
 /**
  * enable audio output <br>
  * only useful if audio supported and previously disabled through
- * @function me.audio.enable
- * @see me.audio#disable
+ * @function audio.enable
+ * @see audio#disable
  */
 declare function enable(): void;
 /**
  * disable audio output
- * @function me.audio.disable
+ * @function audio.disable
  */
 declare function disable(): void;
 /**
@@ -12142,7 +10700,7 @@ declare function disable(): void;
 declare function load(sound: any, html5: any, onload_cb: any, onerror_cb: any): number;
 /**
  * play the specified sound
- * @function me.audio.play
+ * @function audio.play
  * @param {string} sound_name audio clip name - case sensitive
  * @param {boolean} [loop=false] loop audio
  * @param {Function} [onend] Function to call when sound instance ends playing.
@@ -12161,7 +10719,7 @@ declare function load(sound: any, html5: any, onload_cb: any, onerror_cb: any): 
 declare function play(sound_name: string, loop?: boolean, onend?: Function, volume?: number): number;
 /**
  * Fade a currently playing sound between two volumee.
- * @function me.audio.fade
+ * @function audio.fade
  * @param {string} sound_name audio clip name - case sensitive
  * @param {number} from Volume to fade from (0.0 to 1.0).
  * @param {number} to Volume to fade to (0.0 to 1.0).
@@ -12171,7 +10729,7 @@ declare function play(sound_name: string, loop?: boolean, onend?: Function, volu
 declare function fade(sound_name: string, from: number, to: number, duration: number, id?: number): void;
 /**
  * get/set the position of playback for a sound.
- * @function me.audio.seek
+ * @function audio.seek
  * @param {string} sound_name audio clip name - case sensitive
  * @param {number} [seek] the position to move current playback to (in seconds).
  * @param {number} [id] the sound instance ID. If none is passed, all sounds in group will changed.
@@ -12185,7 +10743,7 @@ declare function fade(sound_name: string, from: number, to: number, duration: nu
 declare function seek(sound_name: string, ...args: any[]): number;
 /**
  * get or set the rate of playback for a sound.
- * @function me.audio.rate
+ * @function audio.rate
  * @param {string} sound_name audio clip name - case sensitive
  * @param {number} [rate] playback rate : 0.5 to 4.0, with 1.0 being normal speed.
  * @param {number} [id] the sound instance ID. If none is passed, all sounds in group will be changed.
@@ -12199,7 +10757,7 @@ declare function seek(sound_name: string, ...args: any[]): number;
 declare function rate(sound_name: string, ...args: any[]): number;
 /**
  * stop the specified sound on all channels
- * @function me.audio.stop
+ * @function audio.stop
  * @param {string} [sound_name] audio clip name (case sensitive). If none is passed, all sounds are stopped.
  * @param {number} [id] the sound instance ID. If none is passed, all sounds in group will stop.
  * @example
@@ -12209,7 +10767,7 @@ declare function stop(sound_name?: string, id?: number): void;
 /**
  * pause the specified sound on all channels<br>
  * this function does not reset the currentTime property
- * @function me.audio.pause
+ * @function audio.pause
  * @param {string} sound_name audio clip name - case sensitive
  * @param {number} [id] the sound instance ID. If none is passed, all sounds in group will pause.
  * @example
@@ -12218,7 +10776,7 @@ declare function stop(sound_name?: string, id?: number): void;
 declare function pause(sound_name: string, id?: number): void;
 /**
  * resume the specified sound on all channels<br>
- * @function me.audio.resume
+ * @function audio.resume
  * @param {string} sound_name audio clip name - case sensitive
  * @param {number} [id] the sound instance ID. If none is passed, all sounds in group will resume.
  * @example
@@ -12236,7 +10794,7 @@ declare function resume(sound_name: string, id?: number): void;
  * play the specified audio track<br>
  * this function automatically set the loop property to true<br>
  * and keep track of the current sound being played.
- * @function me.audio.playTrack
+ * @function audio.playTrack
  * @param {string} sound_name audio track name - case sensitive
  * @param {number} [volume=default] Float specifying volume (0.0 - 1.0 values accepted).
  * @returns {number} the sound instance ID.
@@ -12246,8 +10804,8 @@ declare function resume(sound_name: string, id?: number): void;
 declare function playTrack(sound_name: string, volume?: number): number;
 /**
  * stop the current audio track
- * @function me.audio.stopTrack
- * @see me.audio#playTrack
+ * @function audio.stopTrack
+ * @see audio#playTrack
  * @example
  * // play a awesome music
  * me.audio.playTrack("awesome_music");
@@ -12257,14 +10815,14 @@ declare function playTrack(sound_name: string, volume?: number): number;
 declare function stopTrack(): void;
 /**
  * pause the current audio track
- * @function me.audio.pauseTrack
+ * @function audio.pauseTrack
  * @example
  * me.audio.pauseTrack();
  */
 declare function pauseTrack(): void;
 /**
  * resume the previously paused audio track
- * @function me.audio.resumeTrack
+ * @function audio.resumeTrack
  * @example
  * // play an awesome music
  * me.audio.playTrack("awesome_music");
@@ -12276,25 +10834,25 @@ declare function pauseTrack(): void;
 declare function resumeTrack(): void;
 /**
  * returns the current track Id
- * @function me.audio.getCurrentTrack
+ * @function audio.getCurrentTrack
  * @returns {string} audio track name
  */
 declare function getCurrentTrack(): string;
 /**
  * set the default global volume
- * @function me.audio.setVolume
+ * @function audio.setVolume
  * @param {number} volume Float specifying volume (0.0 - 1.0 values accepted).
  */
 declare function setVolume(volume: number): void;
 /**
  * get the default global volume
- * @function me.audio.getVolume
+ * @function audio.getVolume
  * @returns {number} current volume value in Float [0.0 - 1.0] .
  */
 declare function getVolume(): number;
 /**
  * mute or unmute the specified sound, but does not pause the playback.
- * @function me.audio.mute
+ * @function audio.mute
  * @param {string} sound_name audio clip name - case sensitive
  * @param {number} [id] the sound instance ID. If none is passed, all sounds in group will mute.
  * @param {boolean} [mute=true] True to mute and false to unmute
@@ -12305,30 +10863,30 @@ declare function getVolume(): number;
 declare function mute(sound_name: string, id?: number, mute?: boolean): void;
 /**
  * unmute the specified sound
- * @function me.audio.unmute
+ * @function audio.unmute
  * @param {string} sound_name audio clip name
  * @param {number} [id] the sound instance ID. If none is passed, all sounds in group will unmute.
  */
 declare function unmute(sound_name: string, id?: number): void;
 /**
  * mute all audio
- * @function me.audio.muteAll
+ * @function audio.muteAll
  */
 declare function muteAll(): void;
 /**
  * unmute all audio
- * @function me.audio.unmuteAll
+ * @function audio.unmuteAll
  */
 declare function unmuteAll(): void;
 /**
  * Returns true if audio is muted globally.
- * @function me.audio.muted
+ * @function audio.muted
  * @returns {boolean} true if audio is muted globally
  */
 declare function muted(): boolean;
 /**
  * unload specified audio track to free memory
- * @function me.audio.unload
+ * @function audio.unload
  * @param {string} sound_name audio track name - case sensitive
  * @returns {boolean} true if unloaded
  * @example
@@ -12337,13 +10895,12 @@ declare function muted(): boolean;
 declare function unload(sound_name: string): boolean;
 /**
  * unload all audio to free memory
- * @function me.audio.unloadAll
+ * @function audio.unloadAll
  * @function
  * @example
  * me.audio.unloadAll();
  */
 declare function unloadAll(): void;
-declare var globalResponse: ResponseObject;
 /**
  * placeholder for all deprecated classes and corresponding alias for backward compatibility
  */
@@ -12357,7 +10914,7 @@ declare var globalResponse: ResponseObject;
 declare function warning(deprecated: string, replacement: string, version: string): void;
 /**
  * calls each of the listeners registered for a given event.
- * @function me.event.emit
+ * @function event.emit
  * @param {string|symbol} eventName The event name.
  * @param {object} [...arguments] arguments to be passed to all listeners
  * @returns {boolean} true if the event had listeners, false otherwise.
@@ -12367,7 +10924,7 @@ declare function warning(deprecated: string, replacement: string, version: strin
 declare function emit(eventName: string | symbol, ...args: any[]): boolean;
 /**
  * Add a listener for a given event.
- * @function me.event.on
+ * @function event.on
  * @param {string|symbol} eventName The event name.
  * @param {Function} listener The listener function.
  * @param {*} [context=this] The context to invoke the listener with.
@@ -12379,7 +10936,7 @@ declare function emit(eventName: string | symbol, ...args: any[]): boolean;
 declare function on(eventName: string | symbol, listener: Function, context?: any): {};
 /**
  * Add a one-time listener for a given event.
- * @function me.event.once
+ * @function event.once
  * @param {string|symbol} eventName The event name.
  * @param {Function} listener The listener function.
  * @param {*} [context=this] The context to invoke the listener with.
@@ -12391,7 +10948,7 @@ declare function on(eventName: string | symbol, listener: Function, context?: an
 declare function once(eventName: string | symbol, listener: Function, context?: any): {};
 /**
  * remove the given listener for a given event.
- * @function me.event.off
+ * @function event.off
  * @param {string|symbol} eventName The event name.
  * @param {Function} listener The listener function.
  * @returns {EventEmitter} `this`.
@@ -12403,7 +10960,7 @@ declare function off(eventName: string | symbol, listener: Function): {};
 /**
  * Fired when a level is fully loaded and all entities instantiated. <br>
  * Additionnaly the level id will also be passed to the called function.
- * @function me.game.onLevelLoaded
+ * @function game.onLevelLoaded
  * @example
  * // call myFunction () everytime a level is loaded
  * me.game.onLevelLoaded = this.myFunction.bind(this);
@@ -12412,54 +10969,54 @@ declare function onLevelLoaded(): void;
 /**
  * reset the game Object manager<br>
  * destroy all current objects
- * @function me.game.reset
+ * @function game.reset
  */
 declare function reset(): void;
 /**
  * Update the renderer framerate using the system config variables.
- * @function me.game.updateFrameRate
- * @see me.timer.maxfps
- * @see me.World.fps
+ * @function game.updateFrameRate
+ * @see timer.maxfps
+ * @see World.fps
  */
 declare function updateFrameRate(): void;
 /**
  * Returns the parent container of the specified Child in the game world
- * @function me.game.getParentContainer
- * @param {me.Renderable} child
- * @returns {me.Container}
+ * @function game.getParentContainer
+ * @param {Renderable} child
+ * @returns {Container}
  */
-declare function getParentContainer(child: me.Renderable): me.Container;
+declare function getParentContainer(child: Renderable): Container;
 /**
  * force the redraw (not update) of all objects
- * @function me.game.repaint
+ * @function game.repaint
  */
 declare function repaint(): void;
 /**
  * update all objects of the game manager
  * @ignore
- * @function me.game.update
+ * @function game.update
  * @param {number} time current timestamp as provided by the RAF callback
- * @param {me.Stage} stage the current stage
+ * @param {Stage} stage the current stage
  */
-declare function update$1(time: number, stage: me.Stage): void;
+declare function update$1(time: number, stage: Stage): void;
 /**
  * draw the current scene/stage
- * @function me.game.draw
+ * @function game.draw
  * @ignore
- * @param {me.Stage} stage the current stage
+ * @param {Stage} stage the current stage
  */
-declare function draw(stage: me.Stage): void;
+declare function draw(stage: Stage): void;
 /**
  * Translate the specified x and y values from the global (absolute)
  * coordinate to local (viewport) relative coordinate.
  * @name globalToLocal
- * @memberof me.input
+ * @memberof input
  * @public
  * @function
  * @param {number} x the global x coordinate to be translated.
  * @param {number} y the global y coordinate to be translated.
- * @param {me.Vector2d} [v] an optional vector object where to set the translated coordinates
- * @returns {me.Vector2d} A vector object with the corresponding translated coordinates
+ * @param {Vector2d} [v] an optional vector object where to set the translated coordinates
+ * @returns {Vector2d} A vector object with the corresponding translated coordinates
  * @example
  * onMouseEvent : function (pointer) {
  *    // convert the given into local (viewport) relative coordinates
@@ -12467,12 +11024,12 @@ declare function draw(stage: me.Stage): void;
  *    // do something with pos !
  * };
  */
-declare function globalToLocal(x: number, y: number, v?: me.Vector2d): me.Vector2d;
+declare function globalToLocal(x: number, y: number, v?: Vector2d): Vector2d;
 /**
  * enable/disable all gestures on the given element.<br>
  * by default melonJS will disable browser handling of all panning and zooming gestures.
  * @name setTouchAction
- * @memberof me.input
+ * @memberof input
  * @see https://developer.mozilla.org/en-US/docs/Web/CSS/touch-action
  * @public
  * @function
@@ -12486,11 +11043,11 @@ declare function setTouchAction(element: HTMLCanvasElement, value?: string): voi
  * Middle button – 1
  * Right button – 2
  * @name bindPointer
- * @memberof me.input
+ * @memberof input
  * @public
  * @function
- * @param {number} [button=me.input.pointer.LEFT] (accordingly to W3C values : 0,1,2 for left, middle and right buttons)
- * @param {me.input.KEY} keyCode
+ * @param {number} [button=input.pointer.LEFT] (accordingly to W3C values : 0,1,2 for left, middle and right buttons)
+ * @param {input.KEY} keyCode
  * @example
  * // enable the keyboard
  * me.input.bindKey(me.input.KEY.X, "shoot");
@@ -12503,10 +11060,10 @@ declare function bindPointer(...args: any[]): void;
 /**
  * unbind the defined keycode
  * @name unbindPointer
- * @memberof me.input
+ * @memberof input
  * @public
  * @function
- * @param {number} [button=me.input.pointer.LEFT] (accordingly to W3C values : 0,1,2 for left, middle and right buttons)
+ * @param {number} [button=input.pointer.LEFT] (accordingly to W3C values : 0,1,2 for left, middle and right buttons)
  * @example
  * me.input.unbindPointer(me.input.pointer.LEFT);
  */
@@ -12514,20 +11071,20 @@ declare function unbindPointer(button?: number): void;
 /**
  * allows the removal of all registered event listeners from the object target.
  * @name releaseAllPointerEvents
- * @memberof me.input
+ * @memberof input
  * @public
  * @function
- * @param {me.Rect|me.Polygon|me.Line|me.Ellipse} region the registered region to release event from
+ * @param {Rect|Polygon|Line|Ellipse} region the registered region to release event from
  * @example
  * // release all registered event on the
  * me.input.releaseAllPointerEvents(this);
  */
-declare function releaseAllPointerEvents(region: me.Rect | me.Polygon | me.Line | me.Ellipse): void;
+declare function releaseAllPointerEvents(region: Rect | Polygon | Line | Ellipse): void;
 /**
  * request for the pointer to be locked on the parent DOM element.
  * (Must be called in a click event or an event that requires user interaction)
  * @name requestPointerLock
- * @memberof me.input
+ * @memberof input
  * @public
  * @function
  * @param {Function} [success] callback if the request is successful
@@ -12544,7 +11101,7 @@ declare function requestPointerLock(): boolean;
 /**
  * Initiates an exit from pointer lock state
  * @name exitPointerLock
- * @memberof me.input
+ * @memberof input
  * @public
  * @function
  * @returns {boolean} return true if the request was successfully submitted
@@ -12558,7 +11115,7 @@ declare function initKeyboardEvent(): void;
 /**
  * return the key press status of the specified action
  * @name isKeyPressed
- * @memberof me.input
+ * @memberof input
  * @public
  * @function
  * @param {string} action user defined corresponding action
@@ -12575,7 +11132,7 @@ declare function isKeyPressed(action: string): boolean;
 /**
  * return the key status of the specified action
  * @name keyStatus
- * @memberof me.input
+ * @memberof input
  * @public
  * @function
  * @param {string} action user defined corresponding action
@@ -12585,27 +11142,27 @@ declare function keyStatus(action: string): boolean;
 /**
  * trigger the specified key (simulated) event <br>
  * @name triggerKeyEvent
- * @memberof me.input
+ * @memberof input
  * @public
  * @function
- * @param {me.input.KEY} keycode
+ * @param {input.KEY} keycode
  * @param {boolean} [status=false] true to trigger a key down event, or false for key up event
  * @param {number} [mouseButton] the mouse button to trigger
  * @example
  * // trigger a key press
  * me.input.triggerKeyEvent(me.input.KEY.LEFT, true);
  */
-declare function triggerKeyEvent(keycode: me.input.KEY, status?: boolean, mouseButton?: number): void;
+declare function triggerKeyEvent(keycode: input.KEY, status?: boolean, mouseButton?: number): void;
 /**
  * associate a user defined action to a keycode
  * @name bindKey
- * @memberof me.input
+ * @memberof input
  * @public
  * @function
- * @param {me.input.KEY} keycode
+ * @param {input.KEY} keycode
  * @param {string} action user defined corresponding action
  * @param {boolean} [lock=false] cancel the keypress event once read
- * @param {boolean} [preventDefault=me.input.preventDefault] prevent default browser action
+ * @param {boolean} [preventDefault=input.preventDefault] prevent default browser action
  * @example
  * // enable the keyboard
  * me.input.bindKey(me.input.KEY.LEFT,  "left");
@@ -12613,21 +11170,21 @@ declare function triggerKeyEvent(keycode: me.input.KEY, status?: boolean, mouseB
  * me.input.bindKey(me.input.KEY.X,     "jump", true);
  * me.input.bindKey(me.input.KEY.F1,    "options", true, true);
  */
-declare function bindKey(keycode: me.input.KEY, action: string, lock?: boolean, preventDefault$1?: boolean): void;
+declare function bindKey(keycode: input.KEY, action: string, lock?: boolean, preventDefault$1?: boolean): void;
 /**
  * return the action associated with the given keycode
  * @name getBindingKey
- * @memberof me.input
+ * @memberof input
  * @public
  * @function
- * @param {me.input.KEY} keycode
+ * @param {input.KEY} keycode
  * @returns {string} user defined associated action
  */
-declare function getBindingKey(keycode: me.input.KEY): string;
+declare function getBindingKey(keycode: input.KEY): string;
 /**
  * unlock a key manually
  * @name unlockKey
- * @memberof me.input
+ * @memberof input
  * @public
  * @function
  * @param {string} action user defined corresponding action
@@ -12641,26 +11198,26 @@ declare function unlockKey(action: string): void;
 /**
  * unbind the defined keycode
  * @name unbindKey
- * @memberof me.input
+ * @memberof input
  * @public
  * @function
- * @param {me.input.KEY} keycode
+ * @param {input.KEY} keycode
  * @example
  * me.input.unbindKey(me.input.KEY.LEFT);
  */
-declare function unbindKey(keycode: me.input.KEY): void;
+declare function unbindKey(keycode: input.KEY): void;
 /**
  * Associate a gamepad event to a keycode
  * @name bindGamepad
- * @memberof me.input
+ * @memberof input
  * @public
  * @function
  * @param {number} index Gamepad index
  * @param {object} button Button/Axis definition
  * @param {string} button.type "buttons" or "axes"
- * @param {me.input.GAMEPAD.BUTTONS|me.input.GAMEPAD.AXES} button.code button or axis code id
+ * @param {input.GAMEPAD.BUTTONS|input.GAMEPAD.AXES} button.code button or axis code id
  * @param {number} [button.threshold=1] value indicating when the axis should trigger the keycode (e.g. -0.5 or 0.5)
- * @param {me.input.KEY} keyCode
+ * @param {input.KEY} keyCode
  * @example
  * // enable the keyboard
  * me.input.bindKey(me.input.KEY.X, "shoot");
@@ -12672,26 +11229,26 @@ declare function unbindKey(keycode: me.input.KEY): void;
  */
 declare function bindGamepad(index: number, button: {
     type: string;
-    code: me.input.GAMEPAD.BUTTONS | me.input.GAMEPAD.AXES;
+    code: input.GAMEPAD.BUTTONS | input.GAMEPAD.AXES;
     threshold?: number;
-}, keyCode: me.input.KEY): void;
+}, keyCode: input.KEY): void;
 /**
  * unbind the defined keycode
  * @name unbindGamepad
- * @memberof me.input
+ * @memberof input
  * @public
  * @function
  * @param {number} index Gamepad index
- * @param {me.input.GAMEPAD.BUTTONS} button
+ * @param {input.GAMEPAD.BUTTONS} button
  * @example
  * me.input.unbindGamepad(0, me.input.GAMEPAD.BUTTONS.FACE_1);
  */
-declare function unbindGamepad(index: number, button: me.input.GAMEPAD.BUTTONS): void;
+declare function unbindGamepad(index: number, button: input.GAMEPAD.BUTTONS): void;
 /**
  * Set deadzone for analog gamepad inputs<br>
  * The default deadzone is 0.1 (10%) Analog values less than this will be ignored
  * @name setGamepadDeadzone
- * @memberof me.input
+ * @memberof input
  * @public
  * @function
  * @param {number} value Deadzone value
@@ -12706,17 +11263,6 @@ declare function setGamepadDeadzone(value: number): void;
  * @ignore
  */
 declare function addMapping(id: any, mapping: any): void;
-declare class BasePlugin {
-    /**
-     * define the minimum required version of melonJS<br>
-     * this can be overridden by the plugin
-     * @public
-     * @type {string}
-     * @default "10.4.0"
-     * @name me.plugin.Base#version
-     */
-    public version: string;
-}
 declare var agentUtils: Readonly<{
     __proto__: any;
     prefixed: typeof prefixed;
@@ -12764,12 +11310,12 @@ declare var fnUtils: Readonly<{
  * <center><img src="images/scale-flex-height.png"/></center><br>
  *  - <i><b>`stretch`</b></i> : Canvas is resized to fit; content is scaled to screen aspect ratio
  * <center><img src="images/scale-stretch.png"/></center><br>
- * @function me.video.init
+ * @function video.init
  * @param {number} width The width of the canvas viewport
  * @param {number} height The height of the canvas viewport
  * @param {object} [options] The optional video/renderer parameters.<br> (see Renderer(s) documentation for further specific options)
  * @param {string|HTMLElement} [options.parent=document.body] the DOM parent element to hold the canvas in the HTML file
- * @param {number} [options.renderer=me.video.AUTO] renderer to use (me.video.CANVAS, me.video.WEBGL, me.video.AUTO)
+ * @param {number} [options.renderer=video.AUTO] renderer to use (me.video.CANVAS, me.video.WEBGL, me.video.AUTO)
  * @param {boolean} [options.doubleBuffering=false] enable/disable double buffering
  * @param {number|string} [options.scale=1.0] enable scaling of the canvas ('auto' for automatic scaling)
  * @param {string} [options.scaleMethod="fit"] screen scaling modes ('fit','fill-min','fill-max','flex','flex-width','flex-height','stretch')
@@ -12803,7 +11349,7 @@ declare function init(width: number, height: number, options?: {
 }): boolean;
 /**
  * Create and return a new Canvas element
- * @function me.video.createCanvas
+ * @function video.createCanvas
  * @param {number} width width
  * @param {number} height height
  * @param {boolean} [offscreen=false] will returns an OffscreenCanvas if supported
@@ -12812,7 +11358,7 @@ declare function init(width: number, height: number, options?: {
 declare function createCanvas(width: number, height: number, offscreen?: boolean): HTMLCanvasElement | OffscreenCanvas;
 /**
  * return a reference to the parent DOM element holding the main canvas
- * @function me.video.getParent
+ * @function video.getParent
  * @returns {HTMLElement}
  */
 declare function getParent(): HTMLElement;
@@ -12820,51 +11366,12 @@ declare function getParent(): HTMLElement;
  * scale the "displayed" canvas by the given scalar.
  * this will modify the size of canvas element directly.
  * Only use this if you are not using the automatic scaling feature.
- * @function me.video.scale
- * @see me.video.init
+ * @function video.scale
+ * @see video.init
  * @param {number} x x scaling multiplier
  * @param {number} y y scaling multiplier
  */
 declare function scale(x: number, y: number): void;
-/**
- * @classdesc
- * An object representing the result of an intersection.
- * @property {me.Renderable} a The first object participating in the intersection
- * @property {me.Renderable} b The second object participating in the intersection
- * @property {number} overlap Magnitude of the overlap on the shortest colliding axis
- * @property {me.Vector2d} overlapV The overlap vector (i.e. `overlapN.scale(overlap, overlap)`). If this vector is subtracted from the position of a, a and b will no longer be colliding
- * @property {me.Vector2d} overlapN The shortest colliding axis (unit-vector)
- * @property {boolean} aInB Whether the first object is entirely inside the second
- * @property {boolean} bInA Whether the second object is entirely inside the first
- * @property {number} indexShapeA The index of the colliding shape for the object a body
- * @property {number} indexShapeB The index of the colliding shape for the object b body
- * @name ResponseObject
- * @memberof me.collision
- * @public
- */
-declare class ResponseObject {
-    a: any;
-    b: any;
-    overlapN: Vector2d;
-    overlapV: Vector2d;
-    aInB: boolean;
-    bInA: boolean;
-    indexShapeA: number;
-    indexShapeB: number;
-    overlap: number;
-    /**
-     * Set some values of the response back to their defaults. <br>
-     * Call this between tests if you are going to reuse a single <br>
-     * Response object for multiple intersection tests <br>
-     * (recommended as it will avoid allocating extra memory) <br>
-     * @name clear
-     * @memberof me.collision.ResponseObject
-     * @public
-     * @function
-     * @returns {object} this object for chaining
-     */
-    public clear(): object;
-}
 /**
  * Get a vendor-prefixed property
  * @public
@@ -12873,7 +11380,7 @@ declare class ResponseObject {
  * @param {string} name Property name
  * @param {object} [obj=window] Object or element reference to access
  * @returns {string} Value of property
- * @memberof me.utils.agent
+ * @memberof utils.agent
  */
 declare function prefixed(name: string, obj?: object): string;
 /**
@@ -12885,19 +11392,18 @@ declare function prefixed(name: string, obj?: object): string;
  * @param {string} value Property value
  * @param {object} [obj=window] Object or element reference to access
  * @returns {boolean} true if one of the vendor-prefixed property was found
- * @memberof me.utils.agent
+ * @memberof utils.agent
  */
 declare function setPrefixed(name: string, value: string, obj?: object): boolean;
 /**
  * a collection of array utility functions
- * @namespace me.utils.array
- * @memberof me
+ * @namespace utils.array
  */
 /**
  * Remove the specified object from the given Array
  * @public
  * @function
- * @memberof me.utils.array
+ * @memberof utils.array
  * @name remove
  * @param {Array} arr array from which to remove an object
  * @param {object} obj to be removed
@@ -12911,7 +11417,7 @@ declare function remove(arr: any[], obj: object): any[];
  * return a random array element
  * @public
  * @function
- * @memberof me.utils.array
+ * @memberof utils.array
  * @name random
  * @param {Array} arr array to pick a element
  * @returns {any} random member of array
@@ -12925,7 +11431,7 @@ declare function random(arr: any[]): any;
  * return a weighted random array element, favoring the earlier entries
  * @public
  * @function
- * @memberof me.utils.array
+ * @memberof utils.array
  * @name weightedRandom
  * @param {Array} arr array to pick a element
  * @returns {any} random member of array
@@ -12935,7 +11441,7 @@ declare function weightedRandom(arr: any[]): any;
  * return the base name of the file without path info
  * @public
  * @function
- * @memberof me.utils.file
+ * @memberof utils.file
  * @name getBasename
  * @param  {string} path path containing the filename
  * @returns {string} the base name without path information.
@@ -12945,7 +11451,7 @@ declare function getBasename(path: string): string;
  * return the extension of the file in the given path
  * @public
  * @function
- * @memberof me.utils.file
+ * @memberof utils.file
  * @name getExtension
  * @param  {string} path path containing the filename
  * @returns {string} filename extension.
@@ -12953,14 +11459,13 @@ declare function getBasename(path: string): string;
 declare function getExtension(path: string): string;
 /**
  * a collection of string utility functions
- * @namespace me.utils.string
- * @memberof me
+ * @namespace utils.string
  */
 /**
  * converts the first character of the given string to uppercase
  * @public
  * @function
- * @memberof me.utils.string
+ * @memberof utils.string
  * @name capitalize
  * @param {string} str the string to be capitalized
  * @returns {string} the capitalized string
@@ -12970,7 +11475,7 @@ declare function capitalize(str: string): string;
  * returns the string stripped of whitespace from the left.
  * @public
  * @function
- * @memberof me.utils.string
+ * @memberof utils.string
  * @name trimLeft
  * @param {string} str the string to be trimmed
  * @returns {string} trimmed string
@@ -12980,7 +11485,7 @@ declare function trimLeft(str: string): string;
  * returns the string stripped of whitespace from the right.
  * @public
  * @function
- * @memberof me.utils.string
+ * @memberof utils.string
  * @name trimRight
  * @param {string} str the string to be trimmed
  * @returns {string} trimmed string
@@ -12990,7 +11495,7 @@ declare function trimRight(str: string): string;
  * returns true if the given string contains a numeric integer or float value
  * @public
  * @function
- * @memberof me.utils.string
+ * @memberof utils.string
  * @name isNumeric
  * @param {string} str the string to be tested
  * @returns {boolean} true if string contains only digits
@@ -13000,7 +11505,7 @@ declare function isNumeric(str: string): boolean;
  * returns true if the given string contains a true or false
  * @public
  * @function
- * @memberof me.utils.string
+ * @memberof utils.string
  * @name isBoolean
  * @param {string} str the string to be tested
  * @returns {boolean} true if the string is either true or false
@@ -13010,7 +11515,7 @@ declare function isBoolean(str: string): boolean;
  * convert a string to the corresponding hexadecimal value
  * @public
  * @function
- * @memberof me.utils.string
+ * @memberof utils.string
  * @name toHex
  * @param {string} str the string to be converted
  * @returns {string} the converted hexadecimal value
@@ -13018,14 +11523,13 @@ declare function isBoolean(str: string): boolean;
 declare function toHex$1(str: string): string;
 /**
  * a collection of utility functions
- * @namespace me.utils.function
- * @memberof me
+ * @namespace utils.function
  */
 /**
  * Executes a function as soon as the interpreter is idle (stack empty).
  * @public
  * @function
- * @memberof me.utils.function
+ * @memberof utils.function
  * @name defer
  * @param {Function} func The function to be deferred.
  * @param {object} thisArg The value to be passed as the this parameter to the target function when the deferred function is called
@@ -13043,7 +11547,7 @@ declare function defer(func: Function, thisArg: object, ...args?: any[]): number
  * once during a given window of time
  * @public
  * @function
- * @memberof me.utils.function
+ * @memberof utils.function
  * @name throttle
  * @param {Function} fn the function to be throttled.
  * @param {number} delay The delay in ms

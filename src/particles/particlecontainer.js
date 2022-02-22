@@ -5,9 +5,8 @@ import { viewport } from "./../game.js";
  * @classdesc
  * Particle Container Object.
  * @class ParticleContainer
- * @augments me.Container
- * @memberof me
- * @param {me.ParticleEmitter} emitter the emitter which owns this container
+ * @augments Container
+ * @param {ParticleEmitter} emitter the emitter which owns this container
  */
 
 class ParticleContainer extends Container {

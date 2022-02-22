@@ -9,15 +9,14 @@ import state from "./../state/state.js";
 /**
  * @classdesc
  * an object representing the physic world, and responsible for managing and updating all childs and physics
- * @augments me.Container
- * @memberof me
+ * @augments Container
  */
 class World extends Container {
     /**
      * @param {number} [x=0] position of the container (accessible via the inherited pos.x property)
      * @param {number} [y=0] position of the container (accessible via the inherited pos.y property)
-     * @param {number} [w=me.game.viewport.width] width of the container
-     * @param {number} [h=me.game.viewport.height] height of the container
+     * @param {number} [w=game.viewport.width] width of the container
+     * @param {number} [h=game.viewport.height] height of the container
      */
     constructor(x = 0, y = 0, width = Infinity, height = Infinity) {
 
@@ -34,21 +33,21 @@ class World extends Container {
          * the rate at which the game world is updated,
          * may be greater than or lower than the display fps
          * @public
-         * @type {me.Vector2d}
+         * @type {Vector2d}
          * @default 60
          * @name fps
-         * @memberof me.World
-         * @see me.timer.maxfps
+         * @memberof World
+         * @see timer.maxfps
          */
         this.fps = 60;
 
         /**
          * world gravity
          * @public
-         * @type {me.Vector2d}
+         * @type {Vector2d}
          * @default <0,0.98>
          * @name gravity
-         * @memberof me.World
+         * @memberof World
          */
         this.gravity = new Vector2d(0, 0.98);
 
@@ -62,14 +61,14 @@ class World extends Container {
          * property to your layer (in Tiled).
          * @type {boolean}
          * @default false
-         * @memberof me.World
+         * @memberof World
          */
         this.preRender = false;
 
         /**
          * the active physic bodies in this simulation
          * @name bodies
-         * @memberof me.World
+         * @memberof World
          * @public
          * @type {Set}
          */
@@ -78,9 +77,9 @@ class World extends Container {
         /**
          * the instance of the game world quadtree used for broadphase
          * @name broadphase
-         * @memberof me.World
+         * @memberof World
          * @public
-         * @type {me.QuadTree}
+         * @type {QuadTree}
          */
         this.broadphase = new QuadTree(this.getBounds().clone(), collision.maxChildren, collision.maxDepth);
 
@@ -97,7 +96,7 @@ class World extends Container {
     /**
      * reset the game world
      * @name reset
-     * @memberof me.World
+     * @memberof World
      * @function
      */
     reset() {
@@ -118,11 +117,11 @@ class World extends Container {
     /**
      * Add a physic body to the game world
      * @name addBody
-     * @memberof me.World
-     * @see me.Container.addChild
+     * @memberof World
+     * @see Container.addChild
      * @function
-     * @param {me.Body} body
-     * @returns {me.World} this game world
+     * @param {Body} body
+     * @returns {World} this game world
      */
     addBody(body) {
         //add it to the list of active body
@@ -133,11 +132,11 @@ class World extends Container {
     /**
      * Remove a physic body from the game world
      * @name removeBody
-     * @memberof me.World
-     * @see me.Container.removeChild
+     * @memberof World
+     * @see Container.removeChild
      * @function
-     * @param {me.Body} body
-     * @returns {me.World} this game world
+     * @param {Body} body
+     * @returns {World} this game world
      */
     removeBody(body) {
         //remove from the list of active body
@@ -148,7 +147,7 @@ class World extends Container {
     /**
      * update the game world
      * @name reset
-     * @memberof me.World
+     * @memberof World
      * @function
      * @param {number} dt the time passed since the last frame update
      * @returns {boolean} true if the word is dirty

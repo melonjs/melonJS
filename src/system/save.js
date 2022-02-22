@@ -29,8 +29,7 @@ import * as event from "./../system/event.js";
  *
  * // Remove "lives" from localStorage
  * me.save.remove("lives");
- * @namespace me.save
- * @memberof me
+ * @namespace save
  */
 
  // Variable to hold the object data
@@ -65,7 +64,7 @@ var save = {
     /**
      * Add new keys to localStorage and set them to the given default values if they do not exist
      * @name add
-     * @memberof me.save
+     * @memberof save
      * @function
      * @param {object} props key and corresponding values
      * @example
@@ -119,7 +118,7 @@ var save = {
     /**
      * Remove a key from localStorage
      * @name remove
-     * @memberof me.save
+     * @memberof save
      * @function
      * @param {string} key key to be removed
      * @example

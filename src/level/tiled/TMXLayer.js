@@ -66,8 +66,7 @@ function preRenderLayer(layer, renderer) {
  * @classdesc
  * a TMX Tile Layer Object
  * Tiled QT 0.7.x format
- * @augments me.Renderable
- * @memberof me
+ * @augments Renderable
  */
 class TMXLayer extends Renderable {
     /**
@@ -76,7 +75,7 @@ class TMXLayer extends Renderable {
      * @param {number} tilewidth width of each tile in pixels
      * @param {number} tileheight height of each tile in pixels
      * @param {string} orientation "isometric" or "orthogonal"
-     * @param {me.TMXTilesetGroup} tilesets tileset as defined in Tiled
+     * @param {TMXTilesetGroup} tilesets tileset as defined in Tiled
      * @param {number} z z-index position
      */
     constructor(map, data, tilewidth, tileheight, orientation, tilesets, z) {
@@ -93,8 +92,8 @@ class TMXLayer extends Renderable {
         /**
          * The Layer corresponding Tilesets
          * @public
-         * @type {me.TMXTilesetGroup}
-         * @name me.TMXLayer#tilesets
+         * @type {TMXTilesetGroup}
+         * @name TMXLayer#tilesets
          */
         this.tilesets = tilesets;
 
@@ -116,8 +115,8 @@ class TMXLayer extends Renderable {
         /**
          * All animated tilesets in this layer
          * @ignore
-         * @type {me.TMXTileset[]}
-         * @name me.TMXLayer#animatedTilesets
+         * @type {TMXTileset[]}
+         * @name TMXLayer#animatedTilesets
          */
         this.animatedTilesets = [];
 
@@ -125,7 +124,7 @@ class TMXLayer extends Renderable {
          * Layer contains tileset animations
          * @public
          * @type {boolean}
-         * @name me.TMXLayer#isAnimated
+         * @name TMXLayer#isAnimated
          */
         this.isAnimated = false;
 
@@ -135,7 +134,7 @@ class TMXLayer extends Renderable {
          * @public
          * @type {string}
          * @default "right-down"
-         * @name me.TMXLayer#renderorder
+         * @name TMXLayer#renderorder
          */
         this.renderorder = data.renderorder || "right-down";
 
@@ -241,10 +240,10 @@ class TMXLayer extends Renderable {
     /**
      * Set the TMX renderer for this layer object
      * @name setRenderer
-     * @memberof me.TMXLayer
+     * @memberof TMXLayer
      * @public
      * @function
-     * @param {me.TMXRenderer} renderer
+     * @param {TMXRenderer} renderer
      * @example
      * // use the parent map default renderer
      * var layer = new me.TMXLayer(...);
@@ -257,10 +256,10 @@ class TMXLayer extends Renderable {
     /**
      * Return the layer current renderer object
      * @name getRenderer
-     * @memberof me.TMXLayer
+     * @memberof TMXLayer
      * @public
      * @function
-     * @returns {me.TMXRenderer} renderer
+     * @returns {TMXRenderer} renderer
      */
     getRenderer() {
         return this.renderer;
@@ -270,7 +269,7 @@ class TMXLayer extends Renderable {
     /**
      * Return the TileId of the Tile at the specified position
      * @name getTileId
-     * @memberof me.TMXLayer
+     * @memberof TMXLayer
      * @public
      * @function
      * @param {number} x X coordinate (in world/pixels coordinates)
@@ -285,12 +284,12 @@ class TMXLayer extends Renderable {
     /**
      * Return the Tile object at the specified position
      * @name getTile
-     * @memberof me.TMXLayer
+     * @memberof TMXLayer
      * @public
      * @function
      * @param {number} x X coordinate (in world/pixels coordinates)
      * @param {number} y Y coordinate (in world/pixels coordinates)
-     * @returns {me.Tile} corresponding tile or null if there is no defined tile at the coordinate or if outside of the layer bounds
+     * @returns {Tile} corresponding tile or null if there is no defined tile at the coordinate or if outside of the layer bounds
      * @example
      * // get the TMX Map Layer called "Front layer"
      * var layer = me.game.world.getChildByName("Front Layer")[0];
@@ -311,13 +310,13 @@ class TMXLayer extends Renderable {
     /**
      * assign the given Tile object to the specified position
      * @name getTile
-     * @memberof me.TMXLayer
+     * @memberof TMXLayer
      * @public
      * @function
-     * @param {me.Tile} tile the tile object to be assigned
+     * @param {Tile} tile the tile object to be assigned
      * @param {number} x x coordinate (in world/pixels coordinates)
      * @param {number} y y coordinate (in world/pixels coordinates)
-     * @returns {me.Tile} the tile object
+     * @returns {Tile} the tile object
      */
     setTile(tile, x, y) {
         this.layerData[x][y] = tile;
@@ -327,13 +326,13 @@ class TMXLayer extends Renderable {
     /**
      * return a new the Tile object corresponding to the given tile id
      * @name setTile
-     * @memberof me.TMXLayer
+     * @memberof TMXLayer
      * @public
      * @function
      * @param {number} tileId tileId
      * @param {number} x X coordinate (in world/pixels coordinates)
      * @param {number} y Y coordinate (in world/pixels coordinates)
-     * @returns {me.Tile} the tile object
+     * @returns {Tile} the tile object
      */
     getTileById(tileId, x, y) {
         if (!this.tileset.contains(tileId)) {
@@ -346,13 +345,13 @@ class TMXLayer extends Renderable {
     /**
      * Return the Tile object at the specified tile coordinates
      * @name cellAt
-     * @memberof me.TMXLayer
+     * @memberof TMXLayer
      * @public
      * @function
      * @param {number} x x position of the tile (in Tile unit)
      * @param {number} y x position of the tile (in Tile unit)
      * @param {number} [boundsCheck=true] check first if within the layer bounds
-     * @returns {me.Tile} corresponding tile or null if there is no defined tile at the position or if outside of the layer bounds
+     * @returns {Tile} corresponding tile or null if there is no defined tile at the position or if outside of the layer bounds
      * @example
      * // return the first tile at offset 0, 0
      * var tile = layer.cellAt(0, 0);
@@ -373,7 +372,7 @@ class TMXLayer extends Renderable {
     /**
      * clear the tile at the specified position
      * @name clearTile
-     * @memberof me.TMXLayer
+     * @memberof TMXLayer
      * @public
      * @function
      * @param {number} x X coordinate (in map coordinates: row/column)
