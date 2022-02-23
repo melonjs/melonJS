@@ -15,7 +15,7 @@ class Sprite extends Renderable {
      * @param {number} x the x coordinates of the sprite object
      * @param {number} y the y coordinates of the sprite object
      * @param {object} settings Configuration parameters for the Sprite object
-     * @param {Renderer.Texture|HTMLImageElement|HTMLCanvasElement|string} settings.image reference to a texture, spritesheet image or to a texture atlas
+     * @param {HTMLImageElement|HTMLCanvasElement|object|string} settings.image reference to spritesheet image, a texture (see {@link Renderer.Texture}) or to a texture atlas
      * @param {string} [settings.name=""] name of this object
      * @param {string} [settings.region] region name of a specific region to use when using a texture atlas, see {@link Renderer.Texture}
      * @param {number} [settings.framewidth] Width of a single frame within the spritesheet
@@ -79,7 +79,7 @@ class Sprite extends Renderable {
         /**
          * The source texture object this sprite object is using
          * @public
-         * @type {Renderer.Texture}
+         * @type {object} see {@link Renderer.Texture}
          * @name source
          * @memberof Sprite#
          */

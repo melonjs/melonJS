@@ -395,7 +395,7 @@ class WebGLCompositor {
      * @name addQuad
      * @memberof WebGLCompositor
      * @function
-     * @param {Renderer.Texture} texture Source texture
+     * @param {object} texture Source texture (see {@link Renderer.Texture})
      * @param {number} x Destination x-coordinate
      * @param {number} y Destination y-coordinate
      * @param {number} w Destination width

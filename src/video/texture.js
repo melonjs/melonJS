@@ -34,36 +34,36 @@ export function createAtlas(width, height, name = "default", repeat = "no-repeat
  * melonJS setting [file]{@link https://github.com/melonjs/melonJS/raw/master/media/shoebox_JSON_export.sbx} <br>
  * - [Free Texture Packer]{@link http://free-tex-packer.com/app/} : through JSON export (standard and multipack texture atlas) <br>
  * - Standard (fixed cell size) spritesheet : through a {framewidth:xx, frameheight:xx, anchorPoint:me.Vector2d} object
- * @class Texture
  * @memberof Renderer
- * @param {object|object[]} atlases atlas information. See {@link loader.getJSON}
- * @param {HTMLImageElement|HTMLCanvasElement|string|HTMLImageElement[]|HTMLCanvasElement[]|string[]} [src=atlas.meta.image] Image source
- * @param {boolean} [cache=false] Use true to skip caching this Texture
- * @example
- * // create a texture atlas from a JSON Object
- * game.texture = new me.video.renderer.Texture(
- *     me.loader.getJSON("texture")
- * );
- *
- * // create a texture atlas from a multipack JSON Object
- * game.texture = new me.video.renderer.Texture([
- *     me.loader.getJSON("texture-0"),
- *     me.loader.getJSON("texture-1"),
- *     me.loader.getJSON("texture-2")
- * ]);
- *
- * // create a texture atlas for a spritesheet with an anchorPoint in the center of each frame
- * game.texture = new me.video.renderer.Texture(
- *     {
- *         framewidth : 32,
- *         frameheight : 32,
- *         anchorPoint : new me.Vector2d(0.5, 0.5)
- *     },
- *     me.loader.getImage("spritesheet")
  * );
  */
 export class Texture {
-
+    /**
+     * @param {object|object[]} atlases atlas information. See {@link loader.getJSON}
+     * @param {HTMLImageElement|HTMLCanvasElement|string|HTMLImageElement[]|HTMLCanvasElement[]|string[]} [src=atlas.meta.image] Image source
+     * @param {boolean} [cache=false] Use true to skip caching this Texture
+     * @example
+     * // create a texture atlas from a JSON Object
+     * game.texture = new me.video.renderer.Texture(
+     *     me.loader.getJSON("texture")
+     * );
+     *
+     * // create a texture atlas from a multipack JSON Object
+     * game.texture = new me.video.renderer.Texture([
+     *     me.loader.getJSON("texture-0"),
+     *     me.loader.getJSON("texture-1"),
+     *     me.loader.getJSON("texture-2")
+     * ]);
+     *
+     * // create a texture atlas for a spritesheet with an anchorPoint in the center of each frame
+     * game.texture = new me.video.renderer.Texture(
+     *     {
+     *         framewidth : 32,
+     *         frameheight : 32,
+     *         anchorPoint : new me.Vector2d(0.5, 0.5)
+     *     },
+     *     me.loader.getImage("spritesheet")
+     */
     constructor (atlases, src, cache) {
         /**
          * to identify the atlas format (e.g. texture packer)
