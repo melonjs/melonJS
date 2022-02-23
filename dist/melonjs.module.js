@@ -531,7 +531,7 @@ var fileUtils = /*#__PURE__*/Object.freeze({
  * @name defer
  * @param {Function} func The function to be deferred.
  * @param {object} thisArg The value to be passed as the this parameter to the target function when the deferred function is called
- * @param {...*} [args] Optional additional arguments to carry for the function.
+ * @param {...*} args Optional additional arguments to carry for the function.
  * @returns {number} id that can be used to clear the deferred function using
  * clearTimeout
  * @example
@@ -1914,7 +1914,7 @@ class Color {
  */
 class Matrix3d {
     /**
-     * @param {...(Matrix3d|number)} [args] An instance of me.Matrix3d to copy from, or individual Matrix components. See {@link Matrix3d.setTransform}
+     * @param {(Matrix3d|...number)} args An instance of me.Matrix3d to copy from, or individual Matrix components (See {@link Matrix3d.setTransform}). If not arguments are given, the matrix will be set to Identity.
      */
     constructor(...args) {
         this.onResetEvent(...args);
@@ -2604,7 +2604,7 @@ class Matrix3d {
  */
 class Matrix2d {
     /**
-     * @param {...(Matrix2d|Matrix3d|number)} [args] an instance of me.Matrix2d or me.Matrix3d to copy from, or individual matrix components. See {@link Matrix2d.setTransform}
+     * @param {(Matrix2d|Matrix3d|...number)} args an instance of me.Matrix2d or me.Matrix3d to copy from, or individual matrix components (See {@link Matrix2d.setTransform}). If not arguments are given, the matrix will be set to Identity. 
      */
     constructor(...args) {
         this.onResetEvent(...args);
@@ -31220,7 +31220,7 @@ var timer = {
          * @param {Function} fn the function you want to execute after delay milliseconds.
          * @param {number} delay the number of milliseconds (thousandths of a second) that the function call should be delayed by.
          * @param {boolean} [pauseable=true] respects the pause state of the engine.
-         * @param {object} [args] optional parameters which are passed through to the function specified by fn once the timer expires.
+         * @param {...*} args optional parameters which are passed through to the function specified by fn once the timer expires.
          * @returns {number} The numerical ID of the timer, which can be used later with me.timer.clearTimeout().
          * @function
          * @example
@@ -31249,7 +31249,7 @@ var timer = {
          * @param {Function} fn the function to execute
          * @param {number} delay the number of milliseconds (thousandths of a second) on how often to execute the function
          * @param {boolean} [pauseable=true] respects the pause state of the engine.
-         * @param {object} [args] optional parameters which are passed through to the function specified by fn once the timer expires.
+         * @param {...*} args optional parameters which are passed through to the function specified by fn once the timer expires.
          * @returns {number} The numerical ID of the timer, which can be used later with me.timer.clearInterval().
          * @function
          * @example

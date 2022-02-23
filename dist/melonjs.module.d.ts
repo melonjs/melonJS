@@ -2770,9 +2770,9 @@ declare var math: Readonly<{
  */
 export class Matrix2d {
     /**
-     * @param {...(Matrix2d|Matrix3d|number)} [args] an instance of me.Matrix2d or me.Matrix3d to copy from, or individual matrix components. See {@link Matrix2d.setTransform}
+     * @param {(Matrix2d|Matrix3d|...number)} args an instance of me.Matrix2d or me.Matrix3d to copy from, or individual matrix components (See {@link Matrix2d.setTransform}). If not arguments are given, the matrix will be set to Identity.
      */
-    constructor(...args?: (Matrix2d | Matrix3d | number)[]);
+    constructor(...args: any[]);
     /**
      * @ignore
      */
@@ -2996,9 +2996,9 @@ export class Matrix2d {
  */
 export class Matrix3d {
     /**
-     * @param {...(Matrix3d|number)} [args] An instance of me.Matrix3d to copy from, or individual Matrix components. See {@link Matrix3d.setTransform}
+     * @param {(Matrix3d|...number)} args An instance of me.Matrix3d to copy from, or individual Matrix components (See {@link Matrix3d.setTransform}). If not arguments are given, the matrix will be set to Identity.
      */
-    constructor(...args?: (Matrix3d | number)[]);
+    constructor(...args: any[]);
     /**
      * @ignore
      */
@@ -9688,7 +9688,7 @@ declare namespace timer$1 {
      * @param {Function} fn the function you want to execute after delay milliseconds.
      * @param {number} delay the number of milliseconds (thousandths of a second) that the function call should be delayed by.
      * @param {boolean} [pauseable=true] respects the pause state of the engine.
-     * @param {object} [args] optional parameters which are passed through to the function specified by fn once the timer expires.
+     * @param {...*} args optional parameters which are passed through to the function specified by fn once the timer expires.
      * @returns {number} The numerical ID of the timer, which can be used later with me.timer.clearTimeout().
      * @function
      * @example
@@ -9697,7 +9697,7 @@ declare namespace timer$1 {
      * // set a timer to call "myFunction" after 1000ms (respecting the pause state) and passing param1 and param2
      * me.timer.setTimeout(myFunction, 1000, true, param1, param2);
      */
-    function setTimeout(fn: Function, delay: number, pauseable?: boolean, ...args?: any): number;
+    function setTimeout(fn: Function, delay: number, pauseable?: boolean, ...args: any[]): number;
     /**
      * Calls a function once after a specified delay. See me.timer.setInterval to repeativly call a function.
      * @name setTimeout
@@ -9705,7 +9705,7 @@ declare namespace timer$1 {
      * @param {Function} fn the function you want to execute after delay milliseconds.
      * @param {number} delay the number of milliseconds (thousandths of a second) that the function call should be delayed by.
      * @param {boolean} [pauseable=true] respects the pause state of the engine.
-     * @param {object} [args] optional parameters which are passed through to the function specified by fn once the timer expires.
+     * @param {...*} args optional parameters which are passed through to the function specified by fn once the timer expires.
      * @returns {number} The numerical ID of the timer, which can be used later with me.timer.clearTimeout().
      * @function
      * @example
@@ -9714,7 +9714,7 @@ declare namespace timer$1 {
      * // set a timer to call "myFunction" after 1000ms (respecting the pause state) and passing param1 and param2
      * me.timer.setTimeout(myFunction, 1000, true, param1, param2);
      */
-    function setTimeout(fn: Function, delay: number, pauseable?: boolean, ...args?: any): number;
+    function setTimeout(fn: Function, delay: number, pauseable?: boolean, ...args: any[]): number;
     /**
      * Calls a function continously at the specified interval.  See setTimeout to call function a single time.
      * @name setInterval
@@ -9722,7 +9722,7 @@ declare namespace timer$1 {
      * @param {Function} fn the function to execute
      * @param {number} delay the number of milliseconds (thousandths of a second) on how often to execute the function
      * @param {boolean} [pauseable=true] respects the pause state of the engine.
-     * @param {object} [args] optional parameters which are passed through to the function specified by fn once the timer expires.
+     * @param {...*} args optional parameters which are passed through to the function specified by fn once the timer expires.
      * @returns {number} The numerical ID of the timer, which can be used later with me.timer.clearInterval().
      * @function
      * @example
@@ -9731,7 +9731,7 @@ declare namespace timer$1 {
      * // set a timer to call "myFunction" every 1000ms (respecting the pause state) and passing param1 and param2
      * me.timer.setInterval(myFunction, 1000, true, param1, param2);
      */
-    function setInterval(fn: Function, delay: number, pauseable?: boolean, ...args?: any): number;
+    function setInterval(fn: Function, delay: number, pauseable?: boolean, ...args: any[]): number;
     /**
      * Calls a function continously at the specified interval.  See setTimeout to call function a single time.
      * @name setInterval
@@ -9739,7 +9739,7 @@ declare namespace timer$1 {
      * @param {Function} fn the function to execute
      * @param {number} delay the number of milliseconds (thousandths of a second) on how often to execute the function
      * @param {boolean} [pauseable=true] respects the pause state of the engine.
-     * @param {object} [args] optional parameters which are passed through to the function specified by fn once the timer expires.
+     * @param {...*} args optional parameters which are passed through to the function specified by fn once the timer expires.
      * @returns {number} The numerical ID of the timer, which can be used later with me.timer.clearInterval().
      * @function
      * @example
@@ -9748,7 +9748,7 @@ declare namespace timer$1 {
      * // set a timer to call "myFunction" every 1000ms (respecting the pause state) and passing param1 and param2
      * me.timer.setInterval(myFunction, 1000, true, param1, param2);
      */
-    function setInterval(fn: Function, delay: number, pauseable?: boolean, ...args?: any): number;
+    function setInterval(fn: Function, delay: number, pauseable?: boolean, ...args: any[]): number;
     /**
      * Clears the delay set by me.timer.setTimeout().
      * @name clearTimeout
@@ -11505,7 +11505,7 @@ declare function toHex$1(str: string): string;
  * @name defer
  * @param {Function} func The function to be deferred.
  * @param {object} thisArg The value to be passed as the this parameter to the target function when the deferred function is called
- * @param {...*} [args] Optional additional arguments to carry for the function.
+ * @param {...*} args Optional additional arguments to carry for the function.
  * @returns {number} id that can be used to clear the deferred function using
  * clearTimeout
  * @example
@@ -11513,7 +11513,7 @@ declare function toHex$1(str: string): string;
  * // with the current context and [1, 2, 3] as parameter
  * me.utils.function.defer(myFunc, this, 1, 2, 3);
  */
-declare function defer(func: Function, thisArg: object, ...args?: any[]): number;
+declare function defer(func: Function, thisArg: object, ...args: any[]): number;
 /**
  * returns a function that, when invoked will only be triggered at most
  * once during a given window of time

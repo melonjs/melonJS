@@ -7,7 +7,7 @@ import { EPSILON } from "./math.js";
  */
 class Matrix3d {
     /**
-     * @param {...(Matrix3d|number)} [args] An instance of me.Matrix3d to copy from, or individual Matrix components. See {@link Matrix3d.setTransform}
+     * @param {(Matrix3d|...number)} args An instance of me.Matrix3d to copy from, or individual Matrix components (See {@link Matrix3d.setTransform}). If not arguments are given, the matrix will be set to Identity.
      */
     constructor(...args) {
         this.onResetEvent(...args);

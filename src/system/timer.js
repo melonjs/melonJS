@@ -162,7 +162,7 @@ var timer = {
          * @param {Function} fn the function you want to execute after delay milliseconds.
          * @param {number} delay the number of milliseconds (thousandths of a second) that the function call should be delayed by.
          * @param {boolean} [pauseable=true] respects the pause state of the engine.
-         * @param {object} [args] optional parameters which are passed through to the function specified by fn once the timer expires.
+         * @param {...*} args optional parameters which are passed through to the function specified by fn once the timer expires.
          * @returns {number} The numerical ID of the timer, which can be used later with me.timer.clearTimeout().
          * @function
          * @example
@@ -191,7 +191,7 @@ var timer = {
          * @param {Function} fn the function to execute
          * @param {number} delay the number of milliseconds (thousandths of a second) on how often to execute the function
          * @param {boolean} [pauseable=true] respects the pause state of the engine.
-         * @param {object} [args] optional parameters which are passed through to the function specified by fn once the timer expires.
+         * @param {...*} args optional parameters which are passed through to the function specified by fn once the timer expires.
          * @returns {number} The numerical ID of the timer, which can be used later with me.timer.clearInterval().
          * @function
          * @example

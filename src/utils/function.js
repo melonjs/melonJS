@@ -11,7 +11,7 @@
  * @name defer
  * @param {Function} func The function to be deferred.
  * @param {object} thisArg The value to be passed as the this parameter to the target function when the deferred function is called
- * @param {...*} [args] Optional additional arguments to carry for the function.
+ * @param {...*} args Optional additional arguments to carry for the function.
  * @returns {number} id that can be used to clear the deferred function using
  * clearTimeout
  * @example
