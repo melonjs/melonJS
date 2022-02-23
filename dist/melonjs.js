@@ -17566,13 +17566,12 @@
 
             /**
              * Axis definition
+             * @enum {number}
              * @property {number} NONE no axis
              * @property {number} HORIZONTAL horizontal axis only
              * @property {number} VERTICAL vertical axis only
              * @property {number} BOTH both axis
-             * @public
-             * @constant
-             * @enum {number}
+             * @readonly
              * @name AXIS
              * @memberof Camera2d
              */
@@ -17862,7 +17861,7 @@
          * @memberof Camera2d
          * @function
          * @param {Renderable|Vector2d} target renderable or position vector to follow
-         * @param {Camera2d.AXIS} [axis=this.AXIS.BOTH] Which axis to follow
+         * @param {number} [axis=me.game.viewport.AXIS.BOTH] Which axis to follow (see {@link Camera2d.AXIS})
          * @param {number} [damping=1] default damping value
          * @example
          * // set the camera to follow this renderable on both axis, and enable damping
@@ -18054,8 +18053,7 @@
          * @param {number} intensity maximum offset that the screen can be moved
          * while shaking
          * @param {number} duration expressed in milliseconds
-         * @param {Camera2d.AXIS} [axis=this.AXIS.BOTH] specify on which axis you
-         *   want the shake effect
+         * @param {number} [axis=me.game.viewport.AXIS.BOTH] specify on which axis to apply the shake effect (see {@link Camera2d.AXIS})
          * @param {Function} [onComplete] callback once shaking effect is over
          * @param {boolean} [force] if true this will override the current effect
          * @example

@@ -745,17 +745,16 @@ declare class Bounds$1 {
 export class Camera2d extends Renderable {
     /**
      * Axis definition
+     * @enum {number}
      * @property {number} NONE no axis
      * @property {number} HORIZONTAL horizontal axis only
      * @property {number} VERTICAL vertical axis only
      * @property {number} BOTH both axis
-     * @public
-     * @constant
-     * @enum {number}
+     * @readonly
      * @name AXIS
      * @memberof Camera2d
      */
-    public AXIS: {
+    readonly AXIS: {
         NONE: number;
         HORIZONTAL: number;
         VERTICAL: number;
@@ -888,13 +887,13 @@ export class Camera2d extends Renderable {
      * @memberof Camera2d
      * @function
      * @param {Renderable|Vector2d} target renderable or position vector to follow
-     * @param {Camera2d.AXIS} [axis=this.AXIS.BOTH] Which axis to follow
+     * @param {number} [axis=me.game.viewport.AXIS.BOTH] Which axis to follow (see {@link Camera2d.AXIS})
      * @param {number} [damping=1] default damping value
      * @example
      * // set the camera to follow this renderable on both axis, and enable damping
      * me.game.viewport.follow(this, me.game.viewport.AXIS.BOTH, 0.1);
      */
-    follow(target: Renderable | Vector2d, axis?: Camera2d.AXIS, damping?: number): void;
+    follow(target: Renderable | Vector2d, axis?: number, damping?: number): void;
     /**
      * unfollow the current target
      * @name unfollow
@@ -935,15 +934,14 @@ export class Camera2d extends Renderable {
      * @param {number} intensity maximum offset that the screen can be moved
      * while shaking
      * @param {number} duration expressed in milliseconds
-     * @param {Camera2d.AXIS} [axis=this.AXIS.BOTH] specify on which axis you
-     *   want the shake effect
+     * @param {number} [axis=me.game.viewport.AXIS.BOTH] specify on which axis to apply the shake effect (see {@link Camera2d.AXIS})
      * @param {Function} [onComplete] callback once shaking effect is over
      * @param {boolean} [force] if true this will override the current effect
      * @example
      * // shake it baby !
      * me.game.viewport.shake(10, 500, me.game.viewport.AXIS.BOTH);
      */
-    shake(intensity: number, duration: number, axis?: Camera2d.AXIS, onComplete?: Function, force?: boolean): void;
+    shake(intensity: number, duration: number, axis?: number, onComplete?: Function, force?: boolean): void;
     /**
      * fadeOut(flash) effect<p>
      * screen is filled with the specified color and slowly goes back to normal
