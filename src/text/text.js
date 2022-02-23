@@ -156,9 +156,6 @@ class Text extends Renderable {
         /**
          * the text to be displayed
          * @private
-         * @type {string[]}
-         * @name _text
-         * @memberof Text
          */
         this._text = [];
 

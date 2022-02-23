@@ -25,9 +25,6 @@ class Ellipse {
         /**
          * The bounding rectangle for this shape
          * @private
-         * @type {Bounds}
-         * @name _bounds
-         * @memberof Ellipse#
          */
         this._bounds = undefined;
 

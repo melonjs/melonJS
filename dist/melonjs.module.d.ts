@@ -77,33 +77,21 @@ export class BitmapText extends Renderable {
     /**
      * the text to be displayed
      * @private
-     * @type {string[]}
-     * @name _text
-     * @memberof BitmapText
      */
     private _text;
     /**
      * scaled font size
      * @private
-     * @type {Vector2d}
-     * @name fontScale
-     * @memberof BitmapText
      */
     private fontScale;
     /**
      * font image
      * @private
-     * @type {HTMLImageElement}
-     * @name fontImage
-     * @memberof BitmapText
      */
     private fontImage;
     /**
      * font data
      * @private
-     * @type {BitmapTextData}
-     * @name fontData
-     * @memberof BitmapText
      */
     private fontData;
     /**
@@ -769,13 +757,9 @@ export class Camera2d extends Renderable {
      */
     public bounds: Bounds;
     /**
-     * [IMTERNAL] enable or disable damping
+     * enable or disable damping
      * @private
-     * @type {boolean}
-     * @name smoothFollow
-     * @see Camera2d.damping
      * @default true
-     * @memberof Camera2d
      */
     private smoothFollow;
     /**
@@ -2166,9 +2150,6 @@ export class Ellipse {
     /**
      * The bounding rectangle for this shape
      * @private
-     * @type {Bounds}
-     * @name _bounds
-     * @memberof Ellipse#
      */
     private _bounds;
     /**
@@ -5978,15 +5959,11 @@ export class TMXTileset {
     /**
      * Tileset animations
      * @private
-     * @type {Map}
-     * @name TMXTileset#animations
      */
     private animations;
     /**
      * Remember the last update timestamp to prevent too many animation updates
      * @private
-     * @type {Map}
-     * @name TMXTileset#_lastUpdate
      */
     private _lastUpdate;
     image: HTMLImageElement;
@@ -6159,9 +6136,6 @@ export class Text extends Renderable {
     /**
      * the text to be displayed
      * @private
-     * @type {string[]}
-     * @name _text
-     * @memberof Text
      */
     private _text;
     /**

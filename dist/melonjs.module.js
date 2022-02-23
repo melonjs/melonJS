@@ -13864,9 +13864,6 @@ class Ellipse {
         /**
          * The bounding rectangle for this shape
          * @private
-         * @type {Bounds}
-         * @name _bounds
-         * @memberof Ellipse#
          */
         this._bounds = undefined;
 
@@ -17485,13 +17482,9 @@ class Camera2d extends Renderable {
         this.bounds = pool.pull("Bounds");
 
         /**
-         * [IMTERNAL] enable or disable damping
+         * enable or disable damping
          * @private
-         * @type {boolean}
-         * @name smoothFollow
-         * @see Camera2d.damping
          * @default true
-         * @memberof Camera2d
          */
         this.smoothFollow = true;
 
@@ -24131,16 +24124,12 @@ class TMXTileset {
         /**
          * Tileset animations
          * @private
-         * @type {Map}
-         * @name TMXTileset#animations
          */
         this.animations = new Map();
 
         /**
          * Remember the last update timestamp to prevent too many animation updates
          * @private
-         * @type {Map}
-         * @name TMXTileset#_lastUpdate
          */
         this._lastUpdate = 0;
 
@@ -32575,9 +32564,6 @@ class Text extends Renderable {
         /**
          * the text to be displayed
          * @private
-         * @type {string[]}
-         * @name _text
-         * @memberof Text
          */
         this._text = [];
 
@@ -33031,27 +33017,18 @@ class BitmapText extends Renderable {
         /**
          * the text to be displayed
          * @private
-         * @type {string[]}
-         * @name _text
-         * @memberof BitmapText
          */
         this._text = [];
 
         /**
          * scaled font size
          * @private
-         * @type {Vector2d}
-         * @name fontScale
-         * @memberof BitmapText
          */
         this.fontScale = pool.pull("Vector2d", 1.0, 1.0);
 
         /**
          * font image
          * @private
-         * @type {HTMLImageElement}
-         * @name fontImage
-         * @memberof BitmapText
          */
         this.fontImage = (typeof settings.font === "object") ? settings.font : loader.getImage(settings.font);
 
@@ -33059,9 +33036,6 @@ class BitmapText extends Renderable {
             /**
              * font data
              * @private
-             * @type {BitmapTextData}
-             * @name fontData
-             * @memberof BitmapText
              */
             // use settings.font to retreive the data from the loader
             this.fontData = pool.pull("BitmapTextData", loader.getBinary(settings.font));

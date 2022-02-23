@@ -65,16 +65,12 @@ class TMXTileset {
         /**
          * Tileset animations
          * @private
-         * @type {Map}
-         * @name TMXTileset#animations
          */
         this.animations = new Map();
 
         /**
          * Remember the last update timestamp to prevent too many animation updates
          * @private
-         * @type {Map}
-         * @name TMXTileset#_lastUpdate
          */
         this._lastUpdate = 0;
 

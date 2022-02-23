@@ -61,13 +61,9 @@ class Camera2d extends Renderable {
         this.bounds = pool.pull("Bounds");
 
         /**
-         * [IMTERNAL] enable or disable damping
+         * enable or disable damping
          * @private
-         * @type {boolean}
-         * @name smoothFollow
-         * @see Camera2d.damping
          * @default true
-         * @memberof Camera2d
          */
         this.smoothFollow = true;
 
