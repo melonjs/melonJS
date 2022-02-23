@@ -6147,8 +6147,8 @@ export class Text extends Renderable {
      * @memberof Text
      */
     public fontSize: number;
-    canvas: any;
-    context: any;
+    canvas: HTMLCanvasElement | OffscreenCanvas;
+    context: CanvasRenderingContext2D | OffscreenCanvasRenderingContext2D;
     /** @ignore */
     onDeactivateEvent(): void;
     glTextureUnit: any;
@@ -10373,7 +10373,7 @@ declare class ParticleContainer extends Container {
     _dt: number;
     _emitter: any;
 }
-declare var pixel: any;
+declare var pixel: HTMLCanvasElement | OffscreenCanvas;
 /**
  * @classdesc
  * A Texture atlas object, currently supports : <br>
