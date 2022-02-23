@@ -383,7 +383,7 @@ export function init(width, height, options) {
  * @param {number} width width
  * @param {number} height height
  * @param {boolean} [offscreen=false] will returns an OffscreenCanvas if supported
- * @returns {HTMLCanvasElement}
+ * @returns {HTMLCanvasElement|OffscreenCanvas}
  */
 export function createCanvas(width, height, offscreen = false) {
     var _canvas;
