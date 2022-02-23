@@ -1539,9 +1539,9 @@ export class Color {
      * @memberof Color
      * @function
      * @param {number} [alpha=1.0] alpha value [0.0 .. 1.0]
-     * @returns {Uint32}
+     * @returns {number}
      */
-    toUint32(alpha?: number): Uint32;
+    toUint32(alpha?: number): number;
     /**
      * return an array representation of this object
      * @name toArray

@@ -1819,7 +1819,7 @@ class Color {
      * @memberof Color
      * @function
      * @param {number} [alpha=1.0] alpha value [0.0 .. 1.0]
-     * @returns {Uint32}
+     * @returns {number}
      */
     toUint32(alpha = this.alpha) {
         var ur = this.r & 0xff;

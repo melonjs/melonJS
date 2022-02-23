@@ -1850,7 +1850,7 @@
      * @memberof Color
      * @function
      * @param {number} [alpha=1.0] alpha value [0.0 .. 1.0]
-     * @returns {Uint32}
+     * @returns {number}
      */
     Color.prototype.toUint32 = function toUint32 (alpha) {
             if ( alpha === void 0 ) alpha = this.alpha;
