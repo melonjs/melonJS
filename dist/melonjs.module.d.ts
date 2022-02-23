@@ -11117,21 +11117,21 @@ declare function keyStatus(action: string): boolean;
  * @memberof input
  * @public
  * @function
- * @param {input.KEY} keycode
+ * @param {number} keycode (See {@link input.KEY})
  * @param {boolean} [status=false] true to trigger a key down event, or false for key up event
  * @param {number} [mouseButton] the mouse button to trigger
  * @example
  * // trigger a key press
  * me.input.triggerKeyEvent(me.input.KEY.LEFT, true);
  */
-declare function triggerKeyEvent(keycode: input.KEY, status?: boolean, mouseButton?: number): void;
+declare function triggerKeyEvent(keycode: number, status?: boolean, mouseButton?: number): void;
 /**
  * associate a user defined action to a keycode
  * @name bindKey
  * @memberof input
  * @public
  * @function
- * @param {input.KEY} keycode
+ * @param {number} keycode (See {@link input.KEY})
  * @param {string} action user defined corresponding action
  * @param {boolean} [lock=false] cancel the keypress event once read
  * @param {boolean} [preventDefault=input.preventDefault] prevent default browser action
@@ -11142,17 +11142,17 @@ declare function triggerKeyEvent(keycode: input.KEY, status?: boolean, mouseButt
  * me.input.bindKey(me.input.KEY.X,     "jump", true);
  * me.input.bindKey(me.input.KEY.F1,    "options", true, true);
  */
-declare function bindKey(keycode: input.KEY, action: string, lock?: boolean, preventDefault$1?: boolean): void;
+declare function bindKey(keycode: number, action: string, lock?: boolean, preventDefault$1?: boolean): void;
 /**
  * return the action associated with the given keycode
  * @name getBindingKey
  * @memberof input
  * @public
  * @function
- * @param {input.KEY} keycode
+ * @param {number} keycode (See {@link input.KEY})
  * @returns {string} user defined associated action
  */
-declare function getBindingKey(keycode: input.KEY): string;
+declare function getBindingKey(keycode: number): string;
 /**
  * unlock a key manually
  * @name unlockKey
@@ -11173,11 +11173,11 @@ declare function unlockKey(action: string): void;
  * @memberof input
  * @public
  * @function
- * @param {input.KEY} keycode
+ * @param {number} keycode (See {@link input.KEY})
  * @example
  * me.input.unbindKey(me.input.KEY.LEFT);
  */
-declare function unbindKey(keycode: input.KEY): void;
+declare function unbindKey(keycode: number): void;
 /**
  * Associate a gamepad event to a keycode
  * @name bindGamepad
@@ -11187,9 +11187,9 @@ declare function unbindKey(keycode: input.KEY): void;
  * @param {number} index Gamepad index
  * @param {object} button Button/Axis definition
  * @param {string} button.type "buttons" or "axes"
- * @param {input.GAMEPAD.BUTTONS|input.GAMEPAD.AXES} button.code button or axis code id
+ * @param {number} button.code button or axis code id (See {@link input.GAMEPAD.BUTTONS}, {@link input.GAMEPAD.AXES})
  * @param {number} [button.threshold=1] value indicating when the axis should trigger the keycode (e.g. -0.5 or 0.5)
- * @param {input.KEY} keyCode
+ * @param {number} keyCode (See {@link input.KEY})
  * @example
  * // enable the keyboard
  * me.input.bindKey(me.input.KEY.X, "shoot");
@@ -11201,9 +11201,9 @@ declare function unbindKey(keycode: input.KEY): void;
  */
 declare function bindGamepad(index: number, button: {
     type: string;
-    code: input.GAMEPAD.BUTTONS | input.GAMEPAD.AXES;
+    code: number;
     threshold?: number;
-}, keyCode: input.KEY): void;
+}, keyCode: number): void;
 /**
  * unbind the defined keycode
  * @name unbindGamepad
@@ -11211,11 +11211,11 @@ declare function bindGamepad(index: number, button: {
  * @public
  * @function
  * @param {number} index Gamepad index
- * @param {input.GAMEPAD.BUTTONS} button
+ * @param {number} button (See {@link input.GAMEPAD.BUTTONS})
  * @example
  * me.input.unbindGamepad(0, me.input.GAMEPAD.BUTTONS.FACE_1);
  */
-declare function unbindGamepad(index: number, button: input.GAMEPAD.BUTTONS): void;
+declare function unbindGamepad(index: number, button: number): void;
 /**
  * Set deadzone for analog gamepad inputs<br>
  * The default deadzone is 0.1 (10%) Analog values less than this will be ignored

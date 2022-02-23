@@ -364,9 +364,9 @@ export var GAMEPAD = {
  * @param {number} index Gamepad index
  * @param {object} button Button/Axis definition
  * @param {string} button.type "buttons" or "axes"
- * @param {input.GAMEPAD.BUTTONS|input.GAMEPAD.AXES} button.code button or axis code id
+ * @param {number} button.code button or axis code id (See {@link input.GAMEPAD.BUTTONS}, {@link input.GAMEPAD.AXES})
  * @param {number} [button.threshold=1] value indicating when the axis should trigger the keycode (e.g. -0.5 or 0.5)
- * @param {input.KEY} keyCode
+ * @param {number} keyCode (See {@link input.KEY})
  * @example
  * // enable the keyboard
  * me.input.bindKey(me.input.KEY.X, "shoot");
@@ -437,7 +437,7 @@ export function bindGamepad(index, button, keyCode) {
  * @public
  * @function
  * @param {number} index Gamepad index
- * @param {input.GAMEPAD.BUTTONS} button
+ * @param {number} button (See {@link input.GAMEPAD.BUTTONS})
  * @example
  * me.input.unbindGamepad(0, me.input.GAMEPAD.BUTTONS.FACE_1);
  */

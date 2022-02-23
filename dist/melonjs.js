@@ -10785,7 +10785,7 @@
      * @memberof input
      * @public
      * @function
-     * @param {input.KEY} keycode
+     * @param {number} keycode (See {@link input.KEY})
      * @param {boolean} [status=false] true to trigger a key down event, or false for key up event
      * @param {number} [mouseButton] the mouse button to trigger
      * @example
@@ -10807,7 +10807,7 @@
      * @memberof input
      * @public
      * @function
-     * @param {input.KEY} keycode
+     * @param {number} keycode (See {@link input.KEY})
      * @param {string} action user defined corresponding action
      * @param {boolean} [lock=false] cancel the keypress event once read
      * @param {boolean} [preventDefault=input.preventDefault] prevent default browser action
@@ -10835,7 +10835,7 @@
      * @memberof input
      * @public
      * @function
-     * @param {input.KEY} keycode
+     * @param {number} keycode (See {@link input.KEY})
      * @returns {string} user defined associated action
      */
     function getBindingKey(keycode) {
@@ -10863,7 +10863,7 @@
      * @memberof input
      * @public
      * @function
-     * @param {input.KEY} keycode
+     * @param {number} keycode (See {@link input.KEY})
      * @example
      * me.input.unbindKey(me.input.KEY.LEFT);
      */
@@ -12891,9 +12891,9 @@
      * @param {number} index Gamepad index
      * @param {object} button Button/Axis definition
      * @param {string} button.type "buttons" or "axes"
-     * @param {input.GAMEPAD.BUTTONS|input.GAMEPAD.AXES} button.code button or axis code id
+     * @param {number} button.code button or axis code id (See {@link input.GAMEPAD.BUTTONS}, {@link input.GAMEPAD.AXES})
      * @param {number} [button.threshold=1] value indicating when the axis should trigger the keycode (e.g. -0.5 or 0.5)
-     * @param {input.KEY} keyCode
+     * @param {number} keyCode (See {@link input.KEY})
      * @example
      * // enable the keyboard
      * me.input.bindKey(me.input.KEY.X, "shoot");
@@ -12963,7 +12963,7 @@
      * @public
      * @function
      * @param {number} index Gamepad index
-     * @param {input.GAMEPAD.BUTTONS} button
+     * @param {number} button (See {@link input.GAMEPAD.BUTTONS})
      * @example
      * me.input.unbindGamepad(0, me.input.GAMEPAD.BUTTONS.FACE_1);
      */

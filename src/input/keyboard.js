@@ -371,7 +371,7 @@ export function keyStatus(action) {
  * @memberof input
  * @public
  * @function
- * @param {input.KEY} keycode
+ * @param {number} keycode (See {@link input.KEY})
  * @param {boolean} [status=false] true to trigger a key down event, or false for key up event
  * @param {number} [mouseButton] the mouse button to trigger
  * @example
@@ -394,7 +394,7 @@ export function triggerKeyEvent(keycode, status, mouseButton) {
  * @memberof input
  * @public
  * @function
- * @param {input.KEY} keycode
+ * @param {number} keycode (See {@link input.KEY})
  * @param {string} action user defined corresponding action
  * @param {boolean} [lock=false] cancel the keypress event once read
  * @param {boolean} [preventDefault=input.preventDefault] prevent default browser action
@@ -421,7 +421,7 @@ export function bindKey(keycode, action, lock, preventDefault = preventDefaultAc
  * @memberof input
  * @public
  * @function
- * @param {input.KEY} keycode
+ * @param {number} keycode (See {@link input.KEY})
  * @returns {string} user defined associated action
  */
 export function getBindingKey(keycode) {
@@ -451,7 +451,7 @@ export function unlockKey(action) {
  * @memberof input
  * @public
  * @function
- * @param {input.KEY} keycode
+ * @param {number} keycode (See {@link input.KEY})
  * @example
  * me.input.unbindKey(me.input.KEY.LEFT);
  */
