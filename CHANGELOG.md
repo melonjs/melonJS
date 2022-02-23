@@ -6,7 +6,7 @@
 - Renderable : containers now define a `backgroundColor` property allowing to defined a background color for a specific container
 
 ### Fixed
-- TypeScript : further documentation improvements with correct typing of constructor arguments
+- TypeScript : fix all typings and other issues with the typescript definition file (now with 0 warnings and linting errors)
 
 ## [10.3.0] (melonJS 2) - _2022-02-02_
 
