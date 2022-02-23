@@ -21294,10 +21294,10 @@ class Renderer {
      * @name tint
      * @memberof Renderer.prototype
      * @function
-     * @param {HTMLImageElement|HTMLCanvasElement|OffscreenCanvas} src the source image to be tinted
+     * @param {HTMLImageElement|HTMLCanvasElement} src the source image to be tinted
      * @param {Color|string} color the color that will be used to tint the image
      * @param {string} [mode="multiply"] the composition mode used to tint the image
-     * @returns {HTMLCanvasElement|OffscreenCanvas} a new canvas element representing the tinted image
+     * @returns {HTMLCanvasElement} a new canvas element representing the tinted image
      */
     tint(src, color, mode) {
         var canvas = createCanvas(src.width, src.height, true);
@@ -30833,7 +30833,7 @@ function init(width, height, options) {
  * @param {number} width width
  * @param {number} height height
  * @param {boolean} [offscreen=false] will returns an OffscreenCanvas if supported
- * @returns {HTMLCanvasElement|OffscreenCanvas}
+ * @returns {HTMLCanvasElement}
  */
 function createCanvas(width, height, offscreen = false) {
     var _canvas;

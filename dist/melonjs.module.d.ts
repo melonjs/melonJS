@@ -5000,12 +5000,12 @@ export class Renderer {
      * @name tint
      * @memberof Renderer.prototype
      * @function
-     * @param {HTMLImageElement|HTMLCanvasElement|OffscreenCanvas} src the source image to be tinted
+     * @param {HTMLImageElement|HTMLCanvasElement} src the source image to be tinted
      * @param {Color|string} color the color that will be used to tint the image
      * @param {string} [mode="multiply"] the composition mode used to tint the image
-     * @returns {HTMLCanvasElement|OffscreenCanvas} a new canvas element representing the tinted image
+     * @returns {HTMLCanvasElement} a new canvas element representing the tinted image
      */
-    tint(src: HTMLImageElement | HTMLCanvasElement | OffscreenCanvas, color: Color | string, mode?: string): HTMLCanvasElement | OffscreenCanvas;
+    tint(src: HTMLImageElement | HTMLCanvasElement, color: Color | string, mode?: string): HTMLCanvasElement;
     /**
      * fill the given shape
      * @name fill
@@ -6147,8 +6147,8 @@ export class Text extends Renderable {
      * @memberof Text
      */
     public fontSize: number;
-    canvas: any;
-    context: any;
+    canvas: HTMLCanvasElement;
+    context: CanvasRenderingContext2D;
     /** @ignore */
     onDeactivateEvent(): void;
     glTextureUnit: any;
@@ -10373,7 +10373,7 @@ declare class ParticleContainer extends Container {
     _dt: number;
     _emitter: any;
 }
-declare var pixel: any;
+declare var pixel: HTMLCanvasElement;
 /**
  * @classdesc
  * A Texture atlas object, currently supports : <br>
@@ -11325,9 +11325,9 @@ declare function init(width: number, height: number, options?: {
  * @param {number} width width
  * @param {number} height height
  * @param {boolean} [offscreen=false] will returns an OffscreenCanvas if supported
- * @returns {HTMLCanvasElement|OffscreenCanvas}
+ * @returns {HTMLCanvasElement}
  */
-declare function createCanvas(width: number, height: number, offscreen?: boolean): HTMLCanvasElement | OffscreenCanvas;
+declare function createCanvas(width: number, height: number, offscreen?: boolean): HTMLCanvasElement;
 /**
  * return a reference to the parent DOM element holding the main canvas
  * @function video.getParent
