@@ -19800,7 +19800,7 @@
                      height    : s.h,
                      angle     : (frame.rotated === true) ? -ETA : 0
                  };
-                 this$1$1.addUvsMap(atlas, frame.filename, data.meta.size.w, data.meta.size.h);
+                 this$1$1.addUVs(atlas, frame.filename, data.meta.size.w, data.meta.size.h);
              }
          });
          return atlas;
@@ -19860,64 +19860,12 @@
                  height   : data.frameheight,
                  angle    : 0
              };
-             this.addUvsMap(atlas, name, width, height);
+             this.addUVs(atlas, name, width, height);
          }
 
          pool.push(spritecount);
 
          return atlas;
-     };
-
-     /**
-      * @ignore
-      */
-     TextureAtlas.prototype.addUvsMap = function addUvsMap (atlas, frame, w, h) {
-         // ignore if using the Canvas Renderer
-         if (renderer instanceof WebGLRenderer) {
-             // Source coordinates
-             var s = atlas[frame].offset;
-             var sw = atlas[frame].width;
-             var sh = atlas[frame].height;
-
-             atlas[frame].uvs = new Float32Array([
-                 s.x / w,     // u0 (left)
-                 s.y / h,     // v0 (top)
-                 (s.x + sw) / w, // u1 (right)
-                 (s.y + sh) / h  // v1 (bottom)
-             ]);
-             // Cache source coordinates
-             // TODO: Remove this when the Batcher only accepts a region name
-             var key = s.x + "," + s.y + "," + w + "," + h;
-             atlas[key] = atlas[frame];
-         }
-         return atlas[frame];
-     };
-
-     /**
-      * @ignore
-      */
-     TextureAtlas.prototype.addQuadRegion = function addQuadRegion (name, x, y, w, h) {
-         // TODO: Require proper atlas regions instead of caching arbitrary region keys
-         if (renderer.settings.verbose === true) {
-             console.warn("Adding texture region", name, "for texture", this);
-         }
-
-         var source = this.getTexture();
-         var atlas = this.getAtlas();
-         var dw = source.width;
-         var dh = source.height;
-
-         atlas[name] = {
-             name : name,
-             offset  : new Vector2d(x, y),
-             width: w,
-             height  : h,
-             angle: 0
-         };
-
-         this.addUvsMap(atlas, name, dw, dh);
-
-         return atlas[name];
      };
 
      /**
@@ -19952,6 +19900,39 @@
          } else {
              return this.sources.values().next().value;
          }
+     };
+
+     /**
+      * add a region to the atlas
+      * @param {string} name region mame
+      * @param {number} x x origin of the region
+      * @param {number} y y origin of the region
+      * @param {number} w width of the region
+      * @param {number} h height of the region
+      * @returns {object} the created region
+      */
+     TextureAtlas.prototype.addRegion = function addRegion (name, x, y, w, h) {
+         // TODO: Require proper atlas regions instead of caching arbitrary region keys
+         if (renderer.settings.verbose === true) {
+             console.warn("Adding texture region", name, "for texture", this);
+         }
+
+         var source = this.getTexture();
+         var atlas = this.getAtlas();
+         var dw = source.width;
+         var dh = source.height;
+
+         atlas[name] = {
+             name : name,
+             offset  : new Vector2d(x, y),
+             width: w,
+             height  : h,
+             angle: 0
+         };
+
+         this.addUVs(atlas, name, dw, dh);
+
+         return atlas[name];
      };
 
      /**
@@ -19992,9 +19973,37 @@
                  sy = +keys[1],
                  sw = +keys[2],
                  sh = +keys[3];
-             region = this.addQuadRegion(name, sx, sy, sw, sh);
+             region = this.addRegion(name, sx, sy, sw, sh);
          }
          return region.uvs;
+     };
+
+     /**
+      * add uvs mapping for the given region
+      * @param {object} atlas the atlas dictionnary where the region is define
+      * @param {object} name region (or frame) name
+      * @returns {Float32Array} the created region UVs
+      */
+     TextureAtlas.prototype.addUVs = function addUVs (atlas, name, w, h) {
+         // ignore if using the Canvas Renderer
+         if (renderer instanceof WebGLRenderer) {
+             // Source coordinates
+             var s = atlas[name].offset;
+             var sw = atlas[name].width;
+             var sh = atlas[name].height;
+
+             atlas[name].uvs = new Float32Array([
+                 s.x / w,     // u0 (left)
+                 s.y / h,     // v0 (top)
+                 (s.x + sw) / w, // u1 (right)
+                 (s.y + sh) / h  // v1 (bottom)
+             ]);
+             // Cache source coordinates
+             // TODO: Remove this when the Batcher only accepts a region name
+             var key = s.x + "," + s.y + "," + w + "," + h;
+             atlas[key] = atlas[name];
+         }
+         return atlas[name].uvs;
      };
 
      /**

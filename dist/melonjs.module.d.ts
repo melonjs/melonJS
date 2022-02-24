@@ -6287,14 +6287,6 @@ export class TextureAtlas {
      */
     parseFromSpriteSheet(data: any): {};
     /**
-     * @ignore
-     */
-    addUvsMap(atlas: any, frame: any, w: any, h: any): any;
-    /**
-     * @ignore
-     */
-    addQuadRegion(name: any, x: any, y: any, w: any, h: any): any;
-    /**
      * return the default or specified atlas dictionnary
      * @param {string} [name] atlas name in case of multipack textures
      * @returns {object}
@@ -6312,6 +6304,16 @@ export class TextureAtlas {
      */
     getTexture(region?: object): HTMLImageElement | HTMLCanvasElement;
     /**
+     * add a region to the atlas
+     * @param {string} name region mame
+     * @param {number} x x origin of the region
+     * @param {number} y y origin of the region
+     * @param {number} w width of the region
+     * @param {number} h height of the region
+     * @returns {object} the created region
+     */
+    addRegion(name: string, x: number, y: number, w: number, h: number): object;
+    /**
      * return a normalized region (or frame) information for the specified sprite name
      * @param {string} name name of the sprite
      * @param {string} [atlas] name of a specific atlas where to search for the region
@@ -6324,6 +6326,13 @@ export class TextureAtlas {
      * @returns {Float32Array} region Uvs
      */
     getUVs(name: object): Float32Array;
+    /**
+     * add uvs mapping for the given region
+     * @param {object} atlas the atlas dictionnary where the region is define
+     * @param {object} name region (or frame) name
+     * @returns {Float32Array} the created region UVs
+     */
+    addUVs(atlas: object, name: object, w: any, h: any): Float32Array;
     /**
      * Create a sprite object using the first region found using the specified name
      * @param {string} name name of the sprite
