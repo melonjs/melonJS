@@ -1,5 +1,7 @@
 import device from "./../system/device.js";
 import { requestPointerLock, exitPointerLock } from "./../input/input.js";
+import { TextureAtlas } from "./../video/texture.js";
+import Renderer from "./../video/renderer.js";
 
 /**
  * placeholder for all deprecated classes and corresponding alias for backward compatibility
@@ -67,3 +69,20 @@ device.turnOffPointerLock = function () {
     warning("device.turnOffPointerLock()", "input.exitPointerLock()", "10.3.0");
     return exitPointerLock();
 };
+
+/**
+ * @public
+ * @name Texture
+ * @memberof Renderer
+ * @deprecated since 10.4.0
+ * @see TextureAtlas
+ */
+Object.defineProperty(Renderer.prototype, "Texture", {
+    /**
+     * @ignore
+     */
+    get : function () {
+        warning("me.video.renderer.Texture", "me.TextureAtlas", "10.4.0");
+        return TextureAtlas;
+    }
+});

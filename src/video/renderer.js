@@ -4,7 +4,6 @@ import { createCanvas, renderer } from "./video.js";
 import * as event from "./../system/event.js";
 import device from "./../system/device.js";
 import { setPrefixed } from "./../utils/agent.js";
-import { Texture } from "./texture.js";
 import Rect from "./../geometries/rectangle.js";
 import Ellipse from "./../geometries/ellipse.js";
 import Polygon from "./../geometries/poly.js";
@@ -88,8 +87,6 @@ class Renderer {
 
         // default uvOffset
         this.uvOffset = 0;
-
-        this.Texture = Texture;
 
         // reset the instantiated renderer on game reset
         event.on(event.GAME_RESET, () => {

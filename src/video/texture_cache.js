@@ -1,6 +1,6 @@
 import { renderer } from "./video.js";
 import * as fileUtil from "./../utils/file.js";
-import { Texture, createAtlas } from "./texture.js";
+import { TextureAtlas, createAtlas } from "./texture.js";
 import { isPowerOfTwo} from "./../math/math.js";
 
 
@@ -52,7 +52,7 @@ class TextureCache {
             if (!atlas) {
                 atlas = createAtlas(image.width, image.height, image.src ? fileUtil.getBasename(image.src) : undefined);
             }
-            this.set(image, new Texture(atlas, image, false));
+            this.set(image, new TextureAtlas(atlas, image, false));
         }
         return this.cache.get(image);
     }

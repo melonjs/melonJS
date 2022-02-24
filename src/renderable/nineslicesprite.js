@@ -15,9 +15,9 @@ class NineSliceSprite extends Sprite {
      * @param {object} settings Configuration parameters for the Sprite object
      * @param {number} settings.width the width of the Renderable over which the sprite needs to be stretched
      * @param {number} settings.height the height of the Renderable over which the sprite needs to be stretched
-     * @param {HTMLImageElement|HTMLCanvasElement|object|string} settings.image reference to spritesheet image, a texture (see {@link Renderer.Texture}) or to a texture atlas
+     * @param {HTMLImageElement|HTMLCanvasElement|TextureAtlas|string} settings.image reference to spritesheet image, a texture atlas or to a texture atlas
      * @param {string} [settings.name=""] name of this object
-     * @param {string} [settings.region] region name of a specific region to use when using a texture atlas, see {@link Renderer.Texture}
+     * @param {string} [settings.region] region name of a specific region to use when using a texture atlas, see {@link TextureAtlas}
      * @param {number} [settings.framewidth] Width of a single frame within the spritesheet
      * @param {number} [settings.frameheight] Height of a single frame within the spritesheet
      * @param {string|Color} [settings.tint] a tint to be applied to this sprite

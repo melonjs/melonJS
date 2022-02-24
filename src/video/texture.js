@@ -28,35 +28,34 @@ export function createAtlas(width, height, name = "default", repeat = "no-repeat
 
 /**
  * @classdesc
- * A Texture atlas object, currently supports : <br>
+ * A Texture atlas class, currently supports : <br>
  * - [TexturePacker]{@link http://www.codeandweb.com/texturepacker/} : through JSON export (standard and multipack texture atlas) <br>
  * - [ShoeBox]{@link http://renderhjs.net/shoebox/} : through JSON export using the
  * melonJS setting [file]{@link https://github.com/melonjs/melonJS/raw/master/media/shoebox_JSON_export.sbx} <br>
  * - [Free Texture Packer]{@link http://free-tex-packer.com/app/} : through JSON export (standard and multipack texture atlas) <br>
  * - Standard (fixed cell size) spritesheet : through a {framewidth:xx, frameheight:xx, anchorPoint:me.Vector2d} object
- * @memberof Renderer
  * );
  */
-export class Texture {
+export class TextureAtlas {
     /**
      * @param {object|object[]} atlases atlas information. See {@link loader.getJSON}
      * @param {HTMLImageElement|HTMLCanvasElement|string|HTMLImageElement[]|HTMLCanvasElement[]|string[]} [src=atlas.meta.image] Image source
      * @param {boolean} [cache=false] Use true to skip caching this Texture
      * @example
      * // create a texture atlas from a JSON Object
-     * game.texture = new me.video.renderer.Texture(
+     * game.texture = new me.TextureAtlas(
      *     me.loader.getJSON("texture")
      * );
      *
      * // create a texture atlas from a multipack JSON Object
-     * game.texture = new me.video.renderer.Texture([
+     * game.texture = new me.TextureAtlas([
      *     me.loader.getJSON("texture-0"),
      *     me.loader.getJSON("texture-1"),
      *     me.loader.getJSON("texture-2")
      * ]);
      *
      * // create a texture atlas for a spritesheet with an anchorPoint in the center of each frame
-     * game.texture = new me.video.renderer.Texture(
+     * game.texture = new me.TextureAtlas(
      *     {
      *         framewidth : 32,
      *         frameheight : 32,
@@ -322,9 +321,6 @@ export class Texture {
 
     /**
      * return the default or specified atlas dictionnary
-     * @name getAtlas
-     * @memberof Renderer.Texture
-     * @function
      * @param {string} [name] atlas name in case of multipack textures
      * @returns {object}
      */
@@ -338,9 +334,6 @@ export class Texture {
 
     /**
      * return the format of the atlas dictionnary
-     * @name getFormat
-     * @memberof Renderer.Texture
-     * @function
      * @returns {string} will return "texturepacker", or "ShoeBox", or "melonJS", or "Spritesheet (fixed cell size)"
      */
     getFormat() {
@@ -349,9 +342,6 @@ export class Texture {
 
     /**
      * return the source texture for the given region (or default one if none specified)
-     * @name getTexture
-     * @memberof Renderer.Texture
-     * @function
      * @param {object} [region] region name in case of multipack textures
      * @returns {HTMLImageElement|HTMLCanvasElement}
      */
@@ -365,9 +355,6 @@ export class Texture {
 
     /**
      * return a normalized region (or frame) information for the specified sprite name
-     * @name getRegion
-     * @memberof Renderer.Texture
-     * @function
      * @param {string} name name of the sprite
      * @param {string} [atlas] name of a specific atlas where to search for the region
      * @returns {object}
@@ -390,9 +377,6 @@ export class Texture {
 
     /**
      * return the uvs mapping for the given region
-     * @name getUVs
-     * @memberof Renderer.Texture
-     * @function
      * @param {object} name region (or frame) name
      * @returns {Float32Array} region Uvs
      */
@@ -414,16 +398,13 @@ export class Texture {
 
     /**
      * Create a sprite object using the first region found using the specified name
-     * @name createSpriteFromName
-     * @memberof Renderer.Texture
-     * @function
      * @param {string} name name of the sprite
      * @param {object} [settings] Additional settings passed to the {@link Sprite} contructor
      * @param {boolean} [nineSlice=false] if true returns a 9-slice sprite
      * @returns {Sprite|NineSliceSprite}
      * @example
      * // create a new texture object under the `game` namespace
-     * game.texture = new me.video.renderer.Texture(
+     * game.texture = new me.TextureAtlas(
      *    me.loader.getJSON("texture"),
      *    me.loader.getImage("texture")
      * );
@@ -457,16 +438,13 @@ export class Texture {
 
     /**
      * Create an animation object using the first region found using all specified names
-     * @name createAnimationFromName
-     * @memberof Renderer.Texture
-     * @function
      * @param {string[]|number[]} names list of names for each sprite
      * (when manually creating a Texture out of a spritesheet, only numeric values are authorized)
      * @param {object} [settings] Additional settings passed to the {@link Sprite} contructor
      * @returns {Sprite}
      * @example
      * // create a new texture object under the `game` namespace
-     * game.texture = new me.video.renderer.Texture(
+     * game.texture = new me.TextureAtlas(
      *     me.loader.getJSON("texture"),
      *     me.loader.getImage("texture")
      * );

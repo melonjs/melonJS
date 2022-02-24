@@ -5,6 +5,9 @@
 ### Added
 - Renderable : containers now define a `backgroundColor` property allowing to defined a background color for a specific container
 
+### Changed
+- Renderer: the video.renderer.Texture class is now directly exported (and available) as TextureAtlas
+
 ### Fixed
 - TypeScript : fix all typings and other issues with the typescript definition file (now with 0 warnings and linting errors)
 

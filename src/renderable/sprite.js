@@ -2,7 +2,7 @@ import Vector2d from "./../math/vector2.js";
 import { renderer } from "./../video/video.js";
 import pool from "./../system/pooling.js";
 import loader from "./../loader/loader.js";
-import {Texture } from "./../video/texture.js";
+import { TextureAtlas } from "./../video/texture.js";
 import Renderable from "./renderable.js";
 
 /**
@@ -15,9 +15,9 @@ class Sprite extends Renderable {
      * @param {number} x the x coordinates of the sprite object
      * @param {number} y the y coordinates of the sprite object
      * @param {object} settings Configuration parameters for the Sprite object
-     * @param {HTMLImageElement|HTMLCanvasElement|object|string} settings.image reference to spritesheet image, a texture (see {@link Renderer.Texture}) or to a texture atlas
+     * @param {HTMLImageElement|HTMLCanvasElement|TextureAtlas|string} settings.image reference to spritesheet image, a texture atlas or to a texture atlas
      * @param {string} [settings.name=""] name of this object
-     * @param {string} [settings.region] region name of a specific region to use when using a texture atlas, see {@link Renderer.Texture}
+     * @param {string} [settings.region] region name of a specific region to use when using a texture atlas, see {@link TextureAtlas}
      * @param {number} [settings.framewidth] Width of a single frame within the spritesheet
      * @param {number} [settings.frameheight] Height of a single frame within the spritesheet
      * @param {string|Color} [settings.tint] a tint to be applied to this sprite
@@ -34,7 +34,7 @@ class Sprite extends Renderable {
      * });
      *
      * // create a single sprite from a packed texture
-     * game.texture = new me.video.renderer.Texture(
+     * game.texture = new me.TextureAtlas(
      *     me.loader.getJSON("texture"),
      *     me.loader.getImage("texture")
      * );
@@ -79,7 +79,7 @@ class Sprite extends Renderable {
         /**
          * The source texture object this sprite object is using
          * @public
-         * @type {object} see {@link Renderer.Texture}
+         * @type {TextureAtlas}
          * @name source
          * @memberof Sprite#
          */
@@ -121,7 +121,7 @@ class Sprite extends Renderable {
         };
 
         // set the proper image/texture to use
-        if (settings.image instanceof Texture) {
+        if (settings.image instanceof TextureAtlas) {
             this.source = settings.image;
             this.image = this.source.getTexture();
             this.textureAtlas = settings.image;

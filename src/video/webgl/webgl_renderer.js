@@ -4,7 +4,7 @@ import Matrix2d from "./../../math/matrix2.js";
 import WebGLCompositor from "./webgl_compositor.js";
 import Renderer from "./../renderer.js";
 import TextureCache from "./../texture_cache.js";
-import {Texture, createAtlas } from "./../texture.js";
+import { TextureAtlas, createAtlas } from "./../texture.js";
 import { createCanvas, renderer } from "./../video.js";
 import * as event from "./../../system/event.js";
 import pool from "./../../system/pooling.js";
@@ -267,7 +267,7 @@ class WebGLRenderer extends Renderer {
             /**
              * @ignore
              */
-            this.fontTexture = new Texture(createAtlas(canvas.width, canvas.height, "fontTexture"), image, cache);
+            this.fontTexture = new TextureAtlas(createAtlas(canvas.width, canvas.height, "fontTexture"), image, cache);
             this.currentCompositor.uploadTexture(this.fontTexture, 0, 0, 0);
 
         } else {
@@ -283,7 +283,7 @@ class WebGLRenderer extends Renderer {
      * @function
      * @param {Image} image Source image
      * @param {string} repeat Define how the pattern should be repeated
-     * @returns {object} see {@link Renderer.Texture}
+     * @returns {TextureAtlas}
      * @see ImageLayer#repeat
      * @example
      * var tileable   = renderer.createPattern(image, "repeat");
@@ -301,7 +301,7 @@ class WebGLRenderer extends Renderer {
             );
         }
 
-        var texture = new Texture(createAtlas(image.width, image.height, "pattern", repeat), image);
+        var texture = new TextureAtlas(createAtlas(image.width, image.height, "pattern", repeat), image);
 
         // FIXME: Remove old cache entry and texture when changing the repeat mode
         this.currentCompositor.uploadTexture(texture);
@@ -455,7 +455,7 @@ class WebGLRenderer extends Renderer {
      * @name drawPattern
      * @memberof WebGLRenderer.prototype
      * @function
-     * @param {object} pattern Pattern object (see {@link Renderer.Texture})
+     * @param {TextureAtlas} pattern Pattern object
      * @param {number} x
      * @param {number} y
      * @param {number} width

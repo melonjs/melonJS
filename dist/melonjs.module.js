@@ -19437,7 +19437,7 @@ class TextureCache {
             if (!atlas) {
                 atlas = createAtlas(image.width, image.height, image.src ? getBasename(image.src) : undefined);
             }
-            this.set(image, new Texture(atlas, image, false));
+            this.set(image, new TextureAtlas(atlas, image, false));
         }
         return this.cache.get(image);
     }
@@ -19520,35 +19520,34 @@ function createAtlas(width, height, name = "default", repeat = "no-repeat") {
 
 /**
  * @classdesc
- * A Texture atlas object, currently supports : <br>
+ * A Texture atlas class, currently supports : <br>
  * - [TexturePacker]{@link http://www.codeandweb.com/texturepacker/} : through JSON export (standard and multipack texture atlas) <br>
  * - [ShoeBox]{@link http://renderhjs.net/shoebox/} : through JSON export using the
  * melonJS setting [file]{@link https://github.com/melonjs/melonJS/raw/master/media/shoebox_JSON_export.sbx} <br>
  * - [Free Texture Packer]{@link http://free-tex-packer.com/app/} : through JSON export (standard and multipack texture atlas) <br>
  * - Standard (fixed cell size) spritesheet : through a {framewidth:xx, frameheight:xx, anchorPoint:me.Vector2d} object
- * @memberof Renderer
  * );
  */
-class Texture {
+class TextureAtlas {
     /**
      * @param {object|object[]} atlases atlas information. See {@link loader.getJSON}
      * @param {HTMLImageElement|HTMLCanvasElement|string|HTMLImageElement[]|HTMLCanvasElement[]|string[]} [src=atlas.meta.image] Image source
      * @param {boolean} [cache=false] Use true to skip caching this Texture
      * @example
      * // create a texture atlas from a JSON Object
-     * game.texture = new me.video.renderer.Texture(
+     * game.texture = new me.TextureAtlas(
      *     me.loader.getJSON("texture")
      * );
      *
      * // create a texture atlas from a multipack JSON Object
-     * game.texture = new me.video.renderer.Texture([
+     * game.texture = new me.TextureAtlas([
      *     me.loader.getJSON("texture-0"),
      *     me.loader.getJSON("texture-1"),
      *     me.loader.getJSON("texture-2")
      * ]);
      *
      * // create a texture atlas for a spritesheet with an anchorPoint in the center of each frame
-     * game.texture = new me.video.renderer.Texture(
+     * game.texture = new me.TextureAtlas(
      *     {
      *         framewidth : 32,
      *         frameheight : 32,
@@ -19814,9 +19813,6 @@ class Texture {
 
     /**
      * return the default or specified atlas dictionnary
-     * @name getAtlas
-     * @memberof Renderer.Texture
-     * @function
      * @param {string} [name] atlas name in case of multipack textures
      * @returns {object}
      */
@@ -19830,9 +19826,6 @@ class Texture {
 
     /**
      * return the format of the atlas dictionnary
-     * @name getFormat
-     * @memberof Renderer.Texture
-     * @function
      * @returns {string} will return "texturepacker", or "ShoeBox", or "melonJS", or "Spritesheet (fixed cell size)"
      */
     getFormat() {
@@ -19841,9 +19834,6 @@ class Texture {
 
     /**
      * return the source texture for the given region (or default one if none specified)
-     * @name getTexture
-     * @memberof Renderer.Texture
-     * @function
      * @param {object} [region] region name in case of multipack textures
      * @returns {HTMLImageElement|HTMLCanvasElement}
      */
@@ -19857,9 +19847,6 @@ class Texture {
 
     /**
      * return a normalized region (or frame) information for the specified sprite name
-     * @name getRegion
-     * @memberof Renderer.Texture
-     * @function
      * @param {string} name name of the sprite
      * @param {string} [atlas] name of a specific atlas where to search for the region
      * @returns {object}
@@ -19882,9 +19869,6 @@ class Texture {
 
     /**
      * return the uvs mapping for the given region
-     * @name getUVs
-     * @memberof Renderer.Texture
-     * @function
      * @param {object} name region (or frame) name
      * @returns {Float32Array} region Uvs
      */
@@ -19906,16 +19890,13 @@ class Texture {
 
     /**
      * Create a sprite object using the first region found using the specified name
-     * @name createSpriteFromName
-     * @memberof Renderer.Texture
-     * @function
      * @param {string} name name of the sprite
      * @param {object} [settings] Additional settings passed to the {@link Sprite} contructor
      * @param {boolean} [nineSlice=false] if true returns a 9-slice sprite
      * @returns {Sprite|NineSliceSprite}
      * @example
      * // create a new texture object under the `game` namespace
-     * game.texture = new me.video.renderer.Texture(
+     * game.texture = new me.TextureAtlas(
      *    me.loader.getJSON("texture"),
      *    me.loader.getImage("texture")
      * );
@@ -19949,16 +19930,13 @@ class Texture {
 
     /**
      * Create an animation object using the first region found using all specified names
-     * @name createAnimationFromName
-     * @memberof Renderer.Texture
-     * @function
      * @param {string[]|number[]} names list of names for each sprite
      * (when manually creating a Texture out of a spritesheet, only numeric values are authorized)
      * @param {object} [settings] Additional settings passed to the {@link Sprite} contructor
      * @returns {Sprite}
      * @example
      * // create a new texture object under the `game` namespace
-     * game.texture = new me.video.renderer.Texture(
+     * game.texture = new me.TextureAtlas(
      *     me.loader.getJSON("texture"),
      *     me.loader.getImage("texture")
      * );
@@ -20022,9 +20000,9 @@ class Sprite extends Renderable {
      * @param {number} x the x coordinates of the sprite object
      * @param {number} y the y coordinates of the sprite object
      * @param {object} settings Configuration parameters for the Sprite object
-     * @param {HTMLImageElement|HTMLCanvasElement|object|string} settings.image reference to spritesheet image, a texture (see {@link Renderer.Texture}) or to a texture atlas
+     * @param {HTMLImageElement|HTMLCanvasElement|TextureAtlas|string} settings.image reference to spritesheet image, a texture atlas or to a texture atlas
      * @param {string} [settings.name=""] name of this object
-     * @param {string} [settings.region] region name of a specific region to use when using a texture atlas, see {@link Renderer.Texture}
+     * @param {string} [settings.region] region name of a specific region to use when using a texture atlas, see {@link TextureAtlas}
      * @param {number} [settings.framewidth] Width of a single frame within the spritesheet
      * @param {number} [settings.frameheight] Height of a single frame within the spritesheet
      * @param {string|Color} [settings.tint] a tint to be applied to this sprite
@@ -20041,7 +20019,7 @@ class Sprite extends Renderable {
      * });
      *
      * // create a single sprite from a packed texture
-     * game.texture = new me.video.renderer.Texture(
+     * game.texture = new me.TextureAtlas(
      *     me.loader.getJSON("texture"),
      *     me.loader.getImage("texture")
      * );
@@ -20086,7 +20064,7 @@ class Sprite extends Renderable {
         /**
          * The source texture object this sprite object is using
          * @public
-         * @type {object} see {@link Renderer.Texture}
+         * @type {TextureAtlas}
          * @name source
          * @memberof Sprite#
          */
@@ -20128,7 +20106,7 @@ class Sprite extends Renderable {
         };
 
         // set the proper image/texture to use
-        if (settings.image instanceof Texture) {
+        if (settings.image instanceof TextureAtlas) {
             this.source = settings.image;
             this.image = this.source.getTexture();
             this.textureAtlas = settings.image;
@@ -21022,8 +21000,6 @@ class Renderer {
 
         // default uvOffset
         this.uvOffset = 0;
-
-        this.Texture = Texture;
 
         // reset the instantiated renderer on game reset
         on(GAME_RESET, () => {
@@ -29181,7 +29157,7 @@ class WebGLCompositor {
      * @name addQuad
      * @memberof WebGLCompositor
      * @function
-     * @param {object} texture Source texture (see {@link Renderer.Texture})
+     * @param {TextureAtlas} texture Source texture atlas
      * @param {number} x Destination x-coordinate
      * @param {number} y Destination y-coordinate
      * @param {number} w Destination width
@@ -29572,7 +29548,7 @@ class WebGLRenderer extends Renderer {
             /**
              * @ignore
              */
-            this.fontTexture = new Texture(createAtlas(canvas.width, canvas.height, "fontTexture"), image, cache);
+            this.fontTexture = new TextureAtlas(createAtlas(canvas.width, canvas.height, "fontTexture"), image, cache);
             this.currentCompositor.uploadTexture(this.fontTexture, 0, 0, 0);
 
         } else {
@@ -29588,7 +29564,7 @@ class WebGLRenderer extends Renderer {
      * @function
      * @param {Image} image Source image
      * @param {string} repeat Define how the pattern should be repeated
-     * @returns {object} see {@link Renderer.Texture}
+     * @returns {TextureAtlas}
      * @see ImageLayer#repeat
      * @example
      * var tileable   = renderer.createPattern(image, "repeat");
@@ -29606,7 +29582,7 @@ class WebGLRenderer extends Renderer {
             );
         }
 
-        var texture = new Texture(createAtlas(image.width, image.height, "pattern", repeat), image);
+        var texture = new TextureAtlas(createAtlas(image.width, image.height, "pattern", repeat), image);
 
         // FIXME: Remove old cache entry and texture when changing the repeat mode
         this.currentCompositor.uploadTexture(texture);
@@ -29760,7 +29736,7 @@ class WebGLRenderer extends Renderer {
      * @name drawPattern
      * @memberof WebGLRenderer.prototype
      * @function
-     * @param {object} pattern Pattern object (see {@link Renderer.Texture})
+     * @param {TextureAtlas} pattern Pattern object
      * @param {number} x
      * @param {number} y
      * @param {number} width
@@ -33933,9 +33909,9 @@ class NineSliceSprite extends Sprite {
      * @param {object} settings Configuration parameters for the Sprite object
      * @param {number} settings.width the width of the Renderable over which the sprite needs to be stretched
      * @param {number} settings.height the height of the Renderable over which the sprite needs to be stretched
-     * @param {HTMLImageElement|HTMLCanvasElement|object|string} settings.image reference to spritesheet image, a texture (see {@link Renderer.Texture}) or to a texture atlas
+     * @param {HTMLImageElement|HTMLCanvasElement|TextureAtlas|string} settings.image reference to spritesheet image, a texture atlas or to a texture atlas
      * @param {string} [settings.name=""] name of this object
-     * @param {string} [settings.region] region name of a specific region to use when using a texture atlas, see {@link Renderer.Texture}
+     * @param {string} [settings.region] region name of a specific region to use when using a texture atlas, see {@link TextureAtlas}
      * @param {number} [settings.framewidth] Width of a single frame within the spritesheet
      * @param {number} [settings.frameheight] Height of a single frame within the spritesheet
      * @param {string|Color} [settings.tint] a tint to be applied to this sprite
@@ -35868,6 +35844,23 @@ device$1.turnOffPointerLock = function () {
     return exitPointerLock();
 };
 
+/**
+ * @public
+ * @name Texture
+ * @memberof Renderer
+ * @deprecated since 10.4.0
+ * @see TextureAtlas
+ */
+Object.defineProperty(Renderer.prototype, "Texture", {
+    /**
+     * @ignore
+     */
+    get : function () {
+        warning("me.video.renderer.Texture", "me.TextureAtlas", "10.4.0");
+        return TextureAtlas;
+    }
+});
+
 var deprecated = /*#__PURE__*/Object.freeze({
     __proto__: null,
     warning: warning
@@ -35989,4 +35982,4 @@ device$1.onReady(function () {
     }
 });
 
-export { BitmapText, BitmapTextData, Body, Bounds$1 as Bounds, Camera2d, CanvasRenderer, Collectable, Color, ColorLayer, Container, DraggableEntity, DroptargetEntity, Ellipse, Entity, GLShader, GUI_Object, ImageLayer, Line, math as Math, Matrix2d, Matrix3d, NineSliceSprite, ObservableVector2d, ObservableVector3d, Particle, ParticleEmitter, ParticleEmitterSettings, Pointer, Polygon, QuadTree, Rect, Renderable, Renderer, Sprite, Stage, TMXHexagonalRenderer, TMXIsometricRenderer, TMXLayer, TMXOrthogonalRenderer, TMXRenderer, TMXStaggeredRenderer, TMXTileMap, TMXTileset, TMXTilesetGroup, Text, Tile, Trigger, Tween, Vector2d, Vector3d, WebGLCompositor, WebGLRenderer, World, audio, boot, collision, deprecated, device$1 as device, event, game, initialized, input, level, loader, plugin, plugins, pool, save, skipAutoInit, state, timer$1 as timer, utils, version, video };
+export { BitmapText, BitmapTextData, Body, Bounds$1 as Bounds, Camera2d, CanvasRenderer, Collectable, Color, ColorLayer, Container, DraggableEntity, DroptargetEntity, Ellipse, Entity, GLShader, GUI_Object, ImageLayer, Line, math as Math, Matrix2d, Matrix3d, NineSliceSprite, ObservableVector2d, ObservableVector3d, Particle, ParticleEmitter, ParticleEmitterSettings, Pointer, Polygon, QuadTree, Rect, Renderable, Renderer, Sprite, Stage, TMXHexagonalRenderer, TMXIsometricRenderer, TMXLayer, TMXOrthogonalRenderer, TMXRenderer, TMXStaggeredRenderer, TMXTileMap, TMXTileset, TMXTilesetGroup, Text, TextureAtlas, Tile, Trigger, Tween, Vector2d, Vector3d, WebGLCompositor, WebGLRenderer, World, audio, boot, collision, deprecated, device$1 as device, event, game, initialized, input, level, loader, plugin, plugins, pool, save, skipAutoInit, state, timer$1 as timer, utils, version, video };
