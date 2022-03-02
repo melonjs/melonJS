@@ -10,6 +10,7 @@
 
 ### Fixed
 - TypeScript : fix all typings and other issues with the typescript definition file (now with 0 warnings and linting errors)
+- Input : fix a regression (undefined error) with the `releasePointerEvent` method (thanks @siauderman)
 
 ## [10.3.0] (melonJS 2) - _2022-02-02_
 
