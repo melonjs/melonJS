@@ -124,6 +124,15 @@ export class BitmapText extends Renderable {
      */
     public get fillStyle(): Color;
     /**
+     * change the font display size
+     * @name resize
+     * @memberof BitmapText.prototype
+     * @function
+     * @param {number} scale ratio
+     * @returns {BitmapText} this object for chaining
+     */
+    resize(scale: number): BitmapText;
+    /**
      * measure the given text size in pixels
      * @name measureText
      * @memberof BitmapText.prototype
@@ -133,6 +142,22 @@ export class BitmapText extends Renderable {
      * @returns {TextMetrics} a TextMetrics object with two properties: `width` and `height`, defining the output dimensions
      */
     measureText(text?: string, ret?: Rect): TextMetrics;
+    /**
+     * draw the bitmap font
+     * @name draw
+     * @memberof BitmapText.prototype
+     * @function
+     * @param {CanvasRenderer|WebGLRenderer} renderer Reference to the destination renderer instance
+     * @param {string} [text]
+     * @param {number} [x]
+     * @param {number} [y]
+     */
+    draw(renderer: CanvasRenderer | WebGLRenderer, text?: string, x?: number, y?: number): void;
+    /**
+     * Destroy function
+     * @ignore
+     */
+    destroy(): void;
 }
 /**
  * Class for storing relevant data from the font file.
@@ -853,6 +878,16 @@ export class Camera2d extends Renderable {
     setDeadzone(w: number, h: number): void;
     deadzone: Rect;
     /**
+     * resize the camera
+     * @name resize
+     * @memberof Camera2d
+     * @function
+     * @param {number} w new width of the camera
+     * @param {number} h new height of the camera
+     * @returns {Camera2d} this camera
+     */
+    resize(w: number, h: number): Camera2d;
+    /**
      * set the camera boundaries (set to the world limit by default).
      * the camera is bound to the given coordinates and cannot move/be scrolled outside of it.
      * @name setBounds
@@ -910,6 +945,8 @@ export class Camera2d extends Renderable {
     moveTo(x: number, y: number): void;
     /** @ignore */
     updateTarget(): boolean;
+    /** @ignore */
+    update(dt: any): boolean;
     /**
      * shake the camera
      * @name shake
@@ -1005,6 +1042,11 @@ export class Camera2d extends Renderable {
      * @ignore
      */
     drawFX(renderer: any): void;
+    /**
+     * draw all object visibile in this viewport
+     * @ignore
+     */
+    draw(renderer: any, container: any): void;
 }
 /**
  * @classdesc
@@ -1037,6 +1079,8 @@ export class CanvasRenderer extends Renderer {
         zoomX?: number;
         zoomY?: number;
     });
+    context: CanvasRenderingContext2D;
+    backBufferCanvas: HTMLCanvasElement | OffscreenCanvas;
     backBufferContext2D: CanvasRenderingContext2D;
     cache: TextureCache;
     /**
@@ -1369,8 +1413,10 @@ export class Collectable extends Sprite {
      * @param {object} settings See {@link Sprite}
      */
     constructor(x: number, y: number, settings: object);
+    name: any;
     type: any;
     id: any;
+    body: any;
 }
 /**
  * @classdesc
@@ -1603,6 +1649,17 @@ export class ColorLayer extends Renderable {
      * @memberof ColorLayer#
      */
     public color: Color;
+    onResetEvent(name: any, color: any, z?: number): void;
+    /**
+     * draw the color layer
+     * @ignore
+     */
+    draw(renderer: any, rect: any): void;
+    /**
+     * Destroy function
+     * @ignore
+     */
+    destroy(): void;
 }
 /**
  * @classdesc
@@ -1882,6 +1939,15 @@ export class Container extends Renderable {
      */
     public getChildren(): Renderable[];
     /**
+     * update the bounding box for this shape.
+     * @ignore
+     * @name updateBounds
+     * @memberof Renderable.prototype
+     * @function
+     * @returns {Bounds} this shape bounding box Rectangle object
+     */
+    updateBounds(forceUpdateChildBounds?: boolean): Bounds;
+    /**
      * Checks if this container is root or if it's attached to the root container.
      * @private
      * @name isAttachedToRoot
@@ -1890,6 +1956,14 @@ export class Container extends Renderable {
      * @returns {boolean}
      */
     private isAttachedToRoot;
+    /**
+     * update the cointainer's bounding rect (private)
+     * @ignore
+     * @name updateBoundsPos
+     * @memberof Container.prototype
+     * @function
+     */
+    updateBoundsPos(newX: any, newY: any): Bounds;
     /**
      * @ignore
      */
@@ -1990,6 +2064,28 @@ export class Container extends Renderable {
      * @ignore
      */
     _sortY(a: any, b: any): number;
+    /**
+     * container update function. <br>
+     * automatically called by the game manager {@link game}
+     * @name update
+     * @memberof Container.prototype
+     * @function
+     * @protected
+     * @param {number} dt time since the last update in milliseconds.
+     * @returns {boolean} true if the Container is dirty
+     */
+    protected update(dt: number): boolean;
+    /**
+     * draw the container. <br>
+     * automatically called by the game manager {@link game}
+     * @name draw
+     * @memberof Container.prototype
+     * @function
+     * @protected
+     * @param {CanvasRenderer|WebGLRenderer} renderer a renderer object
+     * @param {Rect|Bounds} [rect] the area or viewport to (re)draw
+     */
+    protected draw(renderer: CanvasRenderer | WebGLRenderer, rect?: Rect | Bounds): void;
 }
 /**
  * @classdesc
@@ -2061,6 +2157,13 @@ export class DraggableEntity extends Entity {
      * @returns {boolean} false if the object stopped being dragged
      */
     dragEnd(): boolean;
+    /**
+     * Destructor
+     * @name destroy
+     * @memberof DraggableEntity
+     * @function
+     */
+    destroy(): void;
 }
 /**
  * @classdesc
@@ -2126,6 +2229,13 @@ export class DroptargetEntity extends Entity {
      * @param {object} draggableEntity the draggable entity that is dropped
      */
     drop(): void;
+    /**
+     * Destructor
+     * @name destroy
+     * @memberof DroptargetEntity
+     * @function
+     */
+    destroy(): void;
 }
 /**
  * @classdesc
@@ -2366,6 +2476,9 @@ export class Entity extends Renderable {
      * @memberof Entity
      */
     public alive: boolean;
+    body: any;
+    /** @ignore */
+    update(dt: any): boolean;
     /**
      * update the bounds position when the body is modified
      * @ignore
@@ -2375,6 +2488,19 @@ export class Entity extends Renderable {
      * @param {Body} body the body whose bounds to update
      */
     onBodyUpdate(body: Body): void;
+    preDraw(renderer: any): void;
+    /**
+     * object draw<br>
+     * not to be called by the end user<br>
+     * called by the game manager on each game loop
+     * @name draw
+     * @memberof Entity
+     * @function
+     * @protected
+     * @param {CanvasRenderer|WebGLRenderer} renderer a renderer object
+     * @param {Rect} rect region to draw
+     */
+    protected draw(renderer: CanvasRenderer | WebGLRenderer, rect: Rect): void;
     /**
      * onDeactivateEvent Notification function<br>
      * Called by engine before deleting the object
@@ -2720,6 +2846,15 @@ export class ImageLayer extends Renderable {
     repeatY: boolean;
     onActivateEvent(): void;
     /**
+     * resize the Image Layer to match the given size
+     * @name resize
+     * @memberof ImageLayer.prototype
+     * @function
+     * @param {number} w new width
+     * @param {number} h new height
+     */
+    resize(w: number, h: number): void;
+    /**
      * createPattern function
      * @ignore
      * @function
@@ -2732,7 +2867,28 @@ export class ImageLayer extends Renderable {
      * @function
      */
     updateLayer(vpos: any): void;
+    /**
+     * override the default predraw function
+     * as repeat and anchor are managed directly in the draw method
+     * @ignore
+     */
+    preDraw(renderer: any): void;
+    /**
+     * draw the ImageLayer. <br>
+     * automatically called by the game manager {@link game}
+     * @name draw
+     * @memberof ImageLayer.prototype
+     * @function
+     * @protected
+     * @param {CanvasRenderer|WebGLRenderer} renderer a renderer object
+     */
+    protected draw(renderer: CanvasRenderer | WebGLRenderer): void;
     onDeactivateEvent(): void;
+    /**
+     * Destroy function<br>
+     * @ignore
+     */
+    destroy(): void;
 }
 /**
  * @classdesc
@@ -3292,6 +3448,10 @@ export class NineSliceSprite extends Sprite {
         flipY?: number;
         anchorPoint?: Vector2d;
     });
+    /**
+     * @ignore
+     */
+    draw(renderer: any): void;
 }
 /**
  * @classdesc
@@ -3310,8 +3470,32 @@ export class ObservableVector2d extends Vector2d {
         onUpdate: Function;
         scope?: Function;
     });
+    /**
+     * @ignore
+     */
+    onResetEvent(x: number, y: number, settings: any): ObservableVector2d;
+    public set x(arg: number);
+    /**
+     * x value of the vector
+     * @public
+     * @type {number}
+     * @name x
+     * @memberof ObservableVector2d
+     */
+    public get x(): number;
     _x: any;
+    public set y(arg: number);
+    /**
+     * y value of the vector
+     * @public
+     * @type {number}
+     * @name y
+     * @memberof ObservableVector2d
+     */
+    public get y(): number;
     _y: any;
+    /** @ignore */
+    _set(x: any, y: any): ObservableVector2d;
     /**
      * set the vector value without triggering the callback
      * @name setMuted
@@ -3334,6 +3518,228 @@ export class ObservableVector2d extends Vector2d {
     setCallback(fn: Function, scope?: Function): ObservableVector2d;
     onUpdate: Function;
     scope: Function;
+    /**
+     * Add the passed vector to this vector
+     * @name add
+     * @memberof ObservableVector2d
+     * @function
+     * @param {ObservableVector2d} v
+     * @returns {ObservableVector2d} Reference to this object for method chaining
+     */
+    add(v: ObservableVector2d): ObservableVector2d;
+    /**
+     * Substract the passed vector to this vector
+     * @name sub
+     * @memberof ObservableVector2d
+     * @function
+     * @param {ObservableVector2d} v
+     * @returns {ObservableVector2d} Reference to this object for method chaining
+     */
+    sub(v: ObservableVector2d): ObservableVector2d;
+    /**
+     * Multiply this vector values by the given scalar
+     * @name scale
+     * @memberof ObservableVector2d
+     * @function
+     * @param {number} x
+     * @param {number} [y=x]
+     * @returns {ObservableVector2d} Reference to this object for method chaining
+     */
+    scale(x: number, y?: number): ObservableVector2d;
+    /**
+     * Multiply this vector values by the passed vector
+     * @name scaleV
+     * @memberof ObservableVector2d
+     * @function
+     * @param {ObservableVector2d} v
+     * @returns {ObservableVector2d} Reference to this object for method chaining
+     */
+    scaleV(v: ObservableVector2d): ObservableVector2d;
+    /**
+     * Divide this vector values by the passed value
+     * @name div
+     * @memberof ObservableVector2d
+     * @function
+     * @param {number} n the value to divide the vector by
+     * @returns {ObservableVector2d} Reference to this object for method chaining
+     */
+    div(n: number): ObservableVector2d;
+    /**
+     * Update this vector values to absolute values
+     * @name abs
+     * @memberof ObservableVector2d
+     * @function
+     * @returns {ObservableVector2d} Reference to this object for method chaining
+     */
+    abs(): ObservableVector2d;
+    /**
+     * Clamp the vector value within the specified value range
+     * @name clamp
+     * @memberof ObservableVector2d
+     * @function
+     * @param {number} low
+     * @param {number} high
+     * @returns {ObservableVector2d} new me.ObservableVector2d
+     */
+    clamp(low: number, high: number): ObservableVector2d;
+    /**
+     * Clamp this vector value within the specified value range
+     * @name clampSelf
+     * @memberof ObservableVector2d
+     * @function
+     * @param {number} low
+     * @param {number} high
+     * @returns {ObservableVector2d} Reference to this object for method chaining
+     */
+    clampSelf(low: number, high: number): ObservableVector2d;
+    /**
+     * Update this vector with the minimum value between this and the passed vector
+     * @name minV
+     * @memberof ObservableVector2d
+     * @function
+     * @param {ObservableVector2d} v
+     * @returns {ObservableVector2d} Reference to this object for method chaining
+     */
+    minV(v: ObservableVector2d): ObservableVector2d;
+    /**
+     * Update this vector with the maximum value between this and the passed vector
+     * @name maxV
+     * @memberof ObservableVector2d
+     * @function
+     * @param {ObservableVector2d} v
+     * @returns {ObservableVector2d} Reference to this object for method chaining
+     */
+    maxV(v: ObservableVector2d): ObservableVector2d;
+    /**
+     * Floor the vector values
+     * @name floor
+     * @memberof ObservableVector2d
+     * @function
+     * @returns {ObservableVector2d} new me.ObservableVector2d
+     */
+    floor(): ObservableVector2d;
+    /**
+     * Floor this vector values
+     * @name floorSelf
+     * @memberof ObservableVector2d
+     * @function
+     * @returns {ObservableVector2d} Reference to this object for method chaining
+     */
+    floorSelf(): ObservableVector2d;
+    /**
+     * Ceil the vector values
+     * @name ceil
+     * @memberof ObservableVector2d
+     * @function
+     * @returns {ObservableVector2d} new me.ObservableVector2d
+     */
+    ceil(): ObservableVector2d;
+    /**
+     * Ceil this vector values
+     * @name ceilSelf
+     * @memberof ObservableVector2d
+     * @function
+     * @returns {ObservableVector2d} Reference to this object for method chaining
+     */
+    ceilSelf(): ObservableVector2d;
+    /**
+     * Negate the vector values
+     * @name negate
+     * @memberof ObservableVector2d
+     * @function
+     * @returns {ObservableVector2d} new me.ObservableVector2d
+     */
+    negate(): ObservableVector2d;
+    /**
+     * Negate this vector values
+     * @name negateSelf
+     * @memberof ObservableVector2d
+     * @function
+     * @returns {ObservableVector2d} Reference to this object for method chaining
+     */
+    negateSelf(): ObservableVector2d;
+    /**
+     * Copy the x,y values of the passed vector to this one
+     * @name copy
+     * @memberof ObservableVector2d
+     * @function
+     * @param {ObservableVector2d} v
+     * @returns {ObservableVector2d} Reference to this object for method chaining
+     */
+    copy(v: ObservableVector2d): ObservableVector2d;
+    /**
+     * return true if the two vectors are the same
+     * @name equals
+     * @memberof ObservableVector2d
+     * @function
+     * @param {ObservableVector2d} v
+     * @returns {boolean}
+     */
+    equals(v: ObservableVector2d): boolean;
+    /**
+     * change this vector to be perpendicular to what it was before.<br>
+     * (Effectively rotates it 90 degrees in a clockwise direction)
+     * @name perp
+     * @memberof ObservableVector2d
+     * @function
+     * @returns {ObservableVector2d} Reference to this object for method chaining
+     */
+    perp(): ObservableVector2d;
+    /**
+     * Rotate this vector (counter-clockwise) by the specified angle (in radians).
+     * @name rotate
+     * @memberof ObservableVector2d
+     * @function
+     * @param {number} angle The angle to rotate (in radians)
+     * @param {Vector2d|ObservableVector2d} [v] an optional point to rotate around
+     * @returns {ObservableVector2d} Reference to this object for method chaining
+     */
+    rotate(angle: number, v?: Vector2d | ObservableVector2d): ObservableVector2d;
+    /**
+     * return the dot product of this vector and the passed one
+     * @name dot
+     * @memberof ObservableVector2d
+     * @function
+     * @param {Vector2d|ObservableVector2d} v
+     * @returns {number} The dot product.
+     */
+    dot(v: Vector2d | ObservableVector2d): number;
+    /**
+     * return the cross product of this vector and the passed one
+     * @name cross
+     * @memberof ObservableVector2d
+     * @function
+     * @param {Vector2d|ObservableVector2d} v
+     * @returns {number} The cross product.
+     */
+    cross(v: Vector2d | ObservableVector2d): number;
+    /**
+     * Linearly interpolate between this vector and the given one.
+     * @name lerp
+     * @memberof ObservableVector2d
+     * @function
+     * @param {Vector2d|ObservableVector2d} v
+     * @param {number} alpha distance along the line (alpha = 0 will be this vector, and alpha = 1 will be the given one).
+     * @returns {ObservableVector2d} Reference to this object for method chaining
+     */
+    lerp(v: Vector2d | ObservableVector2d, alpha: number): ObservableVector2d;
+    /**
+     * return the distance between this vector and the passed one
+     * @name distance
+     * @memberof ObservableVector2d
+     * @function
+     * @param {ObservableVector2d} v
+     * @returns {number}
+     */
+    distance(v: ObservableVector2d): number;
+    /**
+     * return a clone copy of this vector
+     * @name clone
+     * @memberof ObservableVector2d
+     * @function
+     * @returns {ObservableVector2d} new me.ObservableVector2d
+     */
+    clone(): ObservableVector2d;
     /**
      * return a `me.Vector2d` copy of this `me.ObservableVector2d` object
      * @name toVector2d
@@ -3361,9 +3767,44 @@ export class ObservableVector3d extends Vector3d {
         onUpdate: Function;
         scope?: object;
     });
+    /**
+     * @ignore
+     */
+    onResetEvent(x: number, y: number, z: number, settings: any): ObservableVector3d;
+    public set x(arg: number);
+    /**
+     * x value of the vector
+     * @public
+     * @type {number}
+     * @name x
+     * @memberof ObservableVector3d
+     */
+    public get x(): number;
     _x: any;
+    public set y(arg: number);
+    /**
+     * y value of the vector
+     * @public
+     * @type {number}
+     * @name y
+     * @memberof ObservableVector3d
+     */
+    public get y(): number;
     _y: any;
+    public set z(arg: number);
+    /**
+     * z value of the vector
+     * @public
+     * @type {number}
+     * @name z
+     * @memberof ObservableVector3d
+     */
+    public get z(): number;
     _z: any;
+    /**
+     * @ignore
+     */
+    _set(x: any, y: any, z: any): ObservableVector3d;
     /**
      * set the vector value without triggering the callback
      * @name setMuted
@@ -3388,6 +3829,229 @@ export class ObservableVector3d extends Vector3d {
     onUpdate: Function;
     scope: Function;
     /**
+     * Add the passed vector to this vector
+     * @name add
+     * @memberof ObservableVector3d
+     * @function
+     * @param {Vector2d|Vector3d|ObservableVector2d|ObservableVector3d} v
+     * @returns {ObservableVector3d} Reference to this object for method chaining
+     */
+    add(v: Vector2d | Vector3d | ObservableVector2d | ObservableVector3d): ObservableVector3d;
+    /**
+     * Substract the passed vector to this vector
+     * @name sub
+     * @memberof ObservableVector3d
+     * @function
+     * @param {Vector2d|Vector3d|ObservableVector2d|ObservableVector3d} v
+     * @returns {ObservableVector3d} Reference to this object for method chaining
+     */
+    sub(v: Vector2d | Vector3d | ObservableVector2d | ObservableVector3d): ObservableVector3d;
+    /**
+     * Multiply this vector values by the given scalar
+     * @name scale
+     * @memberof ObservableVector3d
+     * @function
+     * @param {number} x
+     * @param {number} [y=x]
+     * @param {number} [z=1]
+     * @returns {ObservableVector3d} Reference to this object for method chaining
+     */
+    scale(x: number, y?: number, z?: number): ObservableVector3d;
+    /**
+     * Multiply this vector values by the passed vector
+     * @name scaleV
+     * @memberof ObservableVector3d
+     * @function
+     * @param {Vector2d|Vector3d|ObservableVector2d|ObservableVector3d} v
+     * @returns {ObservableVector3d} Reference to this object for method chaining
+     */
+    scaleV(v: Vector2d | Vector3d | ObservableVector2d | ObservableVector3d): ObservableVector3d;
+    /**
+     * Divide this vector values by the passed value
+     * @name div
+     * @memberof ObservableVector3d
+     * @function
+     * @param {number} n the value to divide the vector by
+     * @returns {ObservableVector3d} Reference to this object for method chaining
+     */
+    div(n: number): ObservableVector3d;
+    /**
+     * Update this vector values to absolute values
+     * @name abs
+     * @memberof ObservableVector3d
+     * @function
+     * @returns {ObservableVector3d} Reference to this object for method chaining
+     */
+    abs(): ObservableVector3d;
+    /**
+     * Clamp the vector value within the specified value range
+     * @name clamp
+     * @memberof ObservableVector3d
+     * @function
+     * @param {number} low
+     * @param {number} high
+     * @returns {ObservableVector3d} new me.ObservableVector3d
+     */
+    clamp(low: number, high: number): ObservableVector3d;
+    /**
+     * Clamp this vector value within the specified value range
+     * @name clampSelf
+     * @memberof ObservableVector3d
+     * @function
+     * @param {number} low
+     * @param {number} high
+     * @returns {ObservableVector3d} Reference to this object for method chaining
+     */
+    clampSelf(low: number, high: number): ObservableVector3d;
+    /**
+     * Update this vector with the minimum value between this and the passed vector
+     * @name minV
+     * @memberof ObservableVector3d
+     * @function
+     * @param {Vector2d|Vector3d|ObservableVector2d|ObservableVector3d} v
+     * @returns {ObservableVector3d} Reference to this object for method chaining
+     */
+    minV(v: Vector2d | Vector3d | ObservableVector2d | ObservableVector3d): ObservableVector3d;
+    /**
+     * Update this vector with the maximum value between this and the passed vector
+     * @name maxV
+     * @memberof ObservableVector3d
+     * @function
+     * @param {Vector2d|Vector3d|ObservableVector2d|ObservableVector3d} v
+     * @returns {ObservableVector3d} Reference to this object for method chaining
+     */
+    maxV(v: Vector2d | Vector3d | ObservableVector2d | ObservableVector3d): ObservableVector3d;
+    /**
+     * Floor the vector values
+     * @name floor
+     * @memberof ObservableVector3d
+     * @function
+     * @returns {ObservableVector3d} new me.ObservableVector3d
+     */
+    floor(): ObservableVector3d;
+    /**
+     * Floor this vector values
+     * @name floorSelf
+     * @memberof ObservableVector3d
+     * @function
+     * @returns {ObservableVector3d} Reference to this object for method chaining
+     */
+    floorSelf(): ObservableVector3d;
+    /**
+     * Ceil the vector values
+     * @name ceil
+     * @memberof ObservableVector3d
+     * @function
+     * @returns {ObservableVector3d} new me.ObservableVector3d
+     */
+    ceil(): ObservableVector3d;
+    /**
+     * Ceil this vector values
+     * @name ceilSelf
+     * @memberof ObservableVector3d
+     * @function
+     * @returns {ObservableVector3d} Reference to this object for method chaining
+     */
+    ceilSelf(): ObservableVector3d;
+    /**
+     * Negate the vector values
+     * @name negate
+     * @memberof ObservableVector3d
+     * @function
+     * @returns {ObservableVector3d} new me.ObservableVector3d
+     */
+    negate(): ObservableVector3d;
+    /**
+     * Negate this vector values
+     * @name negateSelf
+     * @memberof ObservableVector3d
+     * @function
+     * @returns {ObservableVector3d} Reference to this object for method chaining
+     */
+    negateSelf(): ObservableVector3d;
+    /**
+     * Copy the components of the given vector into this one
+     * @name copy
+     * @memberof ObservableVector3d
+     * @function
+     * @param {Vector2d|Vector3d|ObservableVector2d|ObservableVector3d} v
+     * @returns {ObservableVector3d} Reference to this object for method chaining
+     */
+    copy(v: Vector2d | Vector3d | ObservableVector2d | ObservableVector3d): ObservableVector3d;
+    /**
+     * return true if the two vectors are the same
+     * @name equals
+     * @memberof ObservableVector3d
+     * @function
+     * @param {Vector2d|Vector3d|ObservableVector2d|ObservableVector3d} v
+     * @returns {boolean}
+     */
+    equals(v: Vector2d | Vector3d | ObservableVector2d | ObservableVector3d): boolean;
+    /**
+     * change this vector to be perpendicular to what it was before.<br>
+     * (Effectively rotates it 90 degrees in a clockwise direction)
+     * @name perp
+     * @memberof ObservableVector3d
+     * @function
+     * @returns {ObservableVector3d} Reference to this object for method chaining
+     */
+    perp(): ObservableVector3d;
+    /**
+     * Rotate this vector (counter-clockwise) by the specified angle (in radians).
+     * @name rotate
+     * @memberof ObservableVector3d
+     * @function
+     * @param {number} angle The angle to rotate (in radians)
+     * @param {Vector2d|ObservableVector2d} [v] an optional point to rotate around (on the same z axis)
+     * @returns {ObservableVector3d} Reference to this object for method chaining
+     */
+    rotate(angle: number, v?: Vector2d | ObservableVector2d): ObservableVector3d;
+    /**
+     * return the dot product of this vector and the passed one
+     * @name dot
+     * @memberof ObservableVector3d
+     * @function
+     * @param {Vector2d|Vector3d|ObservableVector2d|ObservableVector3d} v
+     * @returns {number} The dot product.
+     */
+    dot(v: Vector2d | Vector3d | ObservableVector2d | ObservableVector3d): number;
+    /**
+     * calculate the cross product of this vector and the passed one
+     * @name cross
+     * @memberof ObservableVector3d
+     * @function
+     * @param {Vector3d|ObservableVector3d} v
+     * @returns {ObservableVector3d} Reference to this object for method chaining
+     */
+    cross(v: Vector3d | ObservableVector3d): ObservableVector3d;
+    /**
+     * Linearly interpolate between this vector and the given one.
+     * @name lerp
+     * @memberof ObservableVector3d
+     * @function
+     * @param {Vector3d|ObservableVector3d} v
+     * @param {number} alpha distance along the line (alpha = 0 will be this vector, and alpha = 1 will be the given one).
+     * @returns {ObservableVector3d} Reference to this object for method chaining
+     */
+    lerp(v: Vector3d | ObservableVector3d, alpha: number): ObservableVector3d;
+    /**
+     * return the distance between this vector and the passed one
+     * @name distance
+     * @memberof ObservableVector3d
+     * @function
+     * @param {Vector2d|Vector3d|ObservableVector2d|ObservableVector3d} v
+     * @returns {number}
+     */
+    distance(v: Vector2d | Vector3d | ObservableVector2d | ObservableVector3d): number;
+    /**
+     * return a clone copy of this vector
+     * @name clone
+     * @memberof ObservableVector3d
+     * @function
+     * @returns {ObservableVector3d} new me.ObservableVector3d
+     */
+    clone(): ObservableVector3d;
+    /**
      * return a `me.Vector3d` copy of this `me.ObservableVector3d` object
      * @name toVector3d
      * @memberof ObservableVector3d
@@ -3409,6 +4073,7 @@ export class Particle extends Renderable {
      */
     constructor(emitter: any);
     vel: Vector2d;
+    onResetEvent(emitter: any, newInstance?: boolean): void;
     image: any;
     life: any;
     startLife: any;
@@ -3420,6 +4085,24 @@ export class Particle extends Renderable {
     onlyInViewport: any;
     _deltaInv: number;
     angle: number;
+    /**
+     * Update the Particle <br>
+     * This is automatically called by the game manager {@link game}
+     * @name update
+     * @memberof Particle
+     * @function
+     * @ignore
+     * @param {number} dt time since the last update in milliseconds
+     */
+    update(dt: number): boolean;
+    /**
+     * @ignore
+     */
+    preDraw(renderer: any): void;
+    /**
+     * @ignore
+     */
+    draw(renderer: any): void;
 }
 /**
  * Particle Emitter Object.
@@ -4198,6 +4881,20 @@ export class Rect extends Polygon {
      * @param {number} h height of the rectangle
      */
     constructor(x: number, y: number, w: number, h: number);
+    /** @ignore */
+    onResetEvent(x: any, y: any, w: any, h: any): void;
+    /**
+     * set new value to the rectangle shape
+     * @name setShape
+     * @memberof Rect.prototype
+     * @function
+     * @param {number} x position of the Rectangle
+     * @param {number} y position of the Rectangle
+     * @param {number|Vector2d[]} w width of the rectangle, or an array of vector defining the rectangle
+     * @param {number} [h] height of the rectangle, if a numeral width parameter is specified
+     * @returns {Rect} this rectangle
+     */
+    setShape(x: number, y: number, w: number | Vector2d[], h?: number, ...args: any[]): Rect;
     /**
      * left coordinate of the Rectangle
      * @public
@@ -4276,6 +4973,24 @@ export class Rect extends Polygon {
      * @returns {Rect} this rectangle
      */
     resize(w: number, h: number): Rect;
+    /**
+     * scale the rectangle
+     * @name scale
+     * @memberof Rect.prototype
+     * @function
+     * @param {number} x a number representing the abscissa of the scaling vector.
+     * @param {number} [y=x] a number representing the ordinate of the scaling vector.
+     * @returns {Rect} this rectangle
+     */
+    scale(x: number, y?: number): Rect;
+    /**
+     * clone this rectangle
+     * @name clone
+     * @memberof Rect.prototype
+     * @function
+     * @returns {Rect} new rectangle
+     */
+    clone(): Rect;
     /**
      * copy the position and size of the given rectangle into this one
      * @name copy
@@ -4563,6 +5278,14 @@ export class Renderable extends Rect {
      */
     public name: string;
     /**
+     * Position of the Renderable relative to its parent container
+     * @public
+     * @type {ObservableVector3d}
+     * @name pos
+     * @memberof Renderable#
+     */
+    public pos: ObservableVector3d;
+    /**
      * when true the renderable will be redrawn during the next update cycle
      * @type {boolean}
      * @name isDirty
@@ -4649,6 +5372,16 @@ export class Renderable extends Rect {
      */
     flipY(flip?: boolean): Renderable;
     /**
+     * multiply the renderable currentTransform with the given matrix
+     * @name transform
+     * @memberof Renderable.prototype
+     * @see Renderable#currentTransform
+     * @function
+     * @param {Matrix2d} m the transformation matrix
+     * @returns {Renderable} Reference to this object for method chaining
+     */
+    transform(m: Matrix2d): Renderable;
+    /**
      * return the angle to the specified target
      * @name angleTo
      * @memberof Renderable
@@ -4675,6 +5408,39 @@ export class Renderable extends Rect {
      * @returns {Renderable} Reference to this object for method chaining
      */
     lookAt(target: Renderable | Vector2d | Vector3d): Renderable;
+    /**
+     * Rotate this renderable by the specified angle (in radians).
+     * @name rotate
+     * @memberof Renderable.prototype
+     * @function
+     * @param {number} angle The angle to rotate (in radians)
+     * @param {Vector2d|ObservableVector2d} [v] an optional point to rotate around
+     * @returns {Renderable} Reference to this object for method chaining
+     */
+    rotate(angle: number, v?: Vector2d | ObservableVector2d): Renderable;
+    /**
+     * scale the renderable around his anchor point.  Scaling actually applies changes
+     * to the currentTransform member wich is used by the renderer to scale the object
+     * when rendering.  It does not scale the object itself.  For example if the renderable
+     * is an image, the image.width and image.height properties are unaltered but the currentTransform
+     * member will be changed.
+     * @name scale
+     * @memberof Renderable.prototype
+     * @function
+     * @param {number} x a number representing the abscissa of the scaling vector.
+     * @param {number} [y=x] a number representing the ordinate of the scaling vector.
+     * @returns {Renderable} Reference to this object for method chaining
+     */
+    scale(x: number, y?: number): Renderable;
+    /**
+     * scale the renderable around his anchor point
+     * @name scaleV
+     * @memberof Renderable.prototype
+     * @function
+     * @param {Vector2d} v scaling vector
+     * @returns {Renderable} Reference to this object for method chaining
+     */
+    scaleV(v: Vector2d): Renderable;
     /**
      * update function. <br>
      * automatically called by the game manager {@link game}
@@ -5154,7 +5920,7 @@ export class Sprite extends Renderable {
         callback: any;
         state: boolean;
     };
-    image: HTMLImageElement | HTMLCanvasElement;
+    image: HTMLCanvasElement | HTMLImageElement;
     textureAtlas: any;
     atlasIndices: any;
     /**
@@ -5323,6 +6089,32 @@ export class Sprite extends Renderable {
      * @returns {number} if using number indices. Returns {object} containing frame data if using texture atlas
      */
     getAnimationFrameObjectByIndex(id: number): number;
+    /**
+     * update function. <br>
+     * automatically called by the game manager {@link game}
+     * @name update
+     * @memberof Sprite.prototype
+     * @function
+     * @protected
+     * @param {number} dt time since the last update in milliseconds.
+     * @returns {boolean} true if the Sprite is dirty
+     */
+    protected update(dt: number): boolean;
+    /**
+     * Destroy function<br>
+     * @ignore
+     */
+    destroy(): void;
+    /**
+     * sprite draw. <br>
+     * automatically called by the game manager {@link game}
+     * @name draw
+     * @memberof Sprite.prototype
+     * @function
+     * @protected
+     * @param {CanvasRenderer|WebGLRenderer} renderer a renderer object
+     */
+    protected draw(renderer: CanvasRenderer | WebGLRenderer): void;
 }
 /**
  * @classdesc
@@ -5431,6 +6223,11 @@ export class TMXHexagonalRenderer extends TMXRenderer {
     rowheight: number;
     centers: Vector2d[];
     /**
+     * return true if the renderer can render the specified layer
+     * @ignore
+     */
+    canRender(layer: any): boolean;
+    /**
      * @ignore
      */
     doStaggerX(x: any): number;
@@ -5455,11 +6252,31 @@ export class TMXHexagonalRenderer extends TMXRenderer {
      */
     bottomRight(x: any, y: any, v: any): any;
     /**
+     * return the tile position corresponding to the specified pixel
+     * @ignore
+     */
+    pixelToTileCoords(x: any, y: any, v: any): any;
+    /**
+     * return the pixel position corresponding of the specified tile
+     * @ignore
+     */
+    tileToPixelCoords(x: any, y: any, v: any): any;
+    /**
      * fix the position of Objects to match
      * the way Tiled places them
      * @ignore
      */
     adjustPosition(obj: any): void;
+    /**
+     * draw the tile map
+     * @ignore
+     */
+    drawTile(renderer: any, x: any, y: any, tmxTile: any): void;
+    /**
+     * draw the tile map
+     * @ignore
+     */
+    drawTileLayer(renderer: any, layer: any, rect: any): void;
 }
 /**
  * @classdesc
@@ -5475,11 +6292,36 @@ export class TMXIsometricRenderer extends TMXRenderer {
     hTileheight: number;
     originX: number;
     /**
+     * return true if the renderer can render the specified layer
+     * @ignore
+     */
+    canRender(layer: any): boolean;
+    /**
+     * return the tile position corresponding to the specified pixel
+     * @ignore
+     */
+    pixelToTileCoords(x: any, y: any, v: any): any;
+    /**
+     * return the pixel position corresponding of the specified tile
+     * @ignore
+     */
+    tileToPixelCoords(x: any, y: any, v: any): any;
+    /**
      * fix the position of Objects to match
      * the way Tiled places them
      * @ignore
      */
     adjustPosition(obj: any): void;
+    /**
+     * draw the tile map
+     * @ignore
+     */
+    drawTile(renderer: any, x: any, y: any, tmxTile: any): void;
+    /**
+     * draw the tile map
+     * @ignore
+     */
+    drawTileLayer(renderer: any, layer: any, rect: any): void;
 }
 /**
  * @classdesc
@@ -5536,6 +6378,7 @@ export class TMXLayer extends Renderable {
      * @name TMXLayer#renderorder
      */
     public renderorder: string;
+    name: any;
     cols: number;
     rows: number;
     preRender: boolean;
@@ -5646,6 +6489,16 @@ export class TMXLayer extends Renderable {
      * });
      */
     public clearTile(x: number, y: number): void;
+    /**
+     * update animations in a tileset layer
+     * @ignore
+     */
+    update(dt: any): boolean;
+    /**
+     * draw a tileset layer
+     * @ignore
+     */
+    draw(renderer: any, rect: any): void;
 }
 /**
  * @classdesc
@@ -5658,11 +6511,36 @@ export class TMXOrthogonalRenderer extends TMXRenderer {
      */
     constructor(map: TMXTileMap);
     /**
+     * return true if the renderer can render the specified layer
+     * @ignore
+     */
+    canRender(layer: any): boolean;
+    /**
+     * return the tile position corresponding to the specified pixel
+     * @ignore
+     */
+    pixelToTileCoords(x: any, y: any, v: any): any;
+    /**
+     * return the pixel position corresponding of the specified tile
+     * @ignore
+     */
+    tileToPixelCoords(x: any, y: any, v: any): any;
+    /**
      * fix the position of Objects to match
      * the way Tiled places them
      * @ignore
      */
     adjustPosition(obj: any): void;
+    /**
+     * draw the tile map
+     * @ignore
+     */
+    drawTile(renderer: any, x: any, y: any, tmxTile: any): void;
+    /**
+     * draw the tile map
+     * @ignore
+     */
+    drawTileLayer(renderer: any, layer: any, rect: any): void;
 }
 /**
  * @classdesc
@@ -6086,6 +6964,8 @@ export class Text extends Renderable {
         offScreenCanvas?: boolean;
         text?: (string | string[]);
     });
+    /** @ignore */
+    onResetEvent(x: any, y: any, settings: any): void;
     fillStyle: any;
     strokeStyle: any;
     /**
@@ -6203,6 +7083,18 @@ export class Text extends Renderable {
      */
     measureText(renderer?: CanvasRenderer | WebGLRenderer, text?: string, ret?: Rect | Bounds): TextMetrics;
     /**
+     * draw a text at the specified coord
+     * @name draw
+     * @memberof Text.prototype
+     * @function
+     * @param {CanvasRenderer|WebGLRenderer} renderer Reference to the destination renderer instance
+     * @param {string} [text]
+     * @param {number} [x]
+     * @param {number} [y]
+     * @param {boolean} [stroke=false] draw stroke the the text if true
+     */
+    draw(renderer: CanvasRenderer | WebGLRenderer, text?: string, x?: number, y?: number, stroke?: boolean): void;
+    /**
      * draw a stroke text at the specified coord, as defined <br>
      * by the `lineWidth` and `fillStroke` properties. <br>
      * Note : using drawStroke is not recommended for performance reasons
@@ -6219,6 +7111,11 @@ export class Text extends Renderable {
      * @ignore
      */
     _drawFont(context: any, text: any, x: any, y: any, stroke?: boolean): Bounds;
+    /**
+     * Destroy function
+     * @ignore
+     */
+    destroy(): void;
 }
 /**
  * @classdesc
@@ -6511,6 +7408,7 @@ export class Trigger extends Renderable {
     triggerSettings: {
         event: string;
     };
+    body: any;
     /**
      * @ignore
      */
@@ -7730,6 +8628,13 @@ export class WebGLRenderer extends Renderer {
      * @readonly
      */
     readonly GPURenderer: string;
+    /**
+     * The WebGL context
+     * @name gl
+     * @memberof WebGLRenderer
+     * type {WebGLRenderingContext}
+     */
+    context: WebGLRenderingContext;
     gl: WebGLRenderingContext;
     /**
      * Maximum number of texture unit supported under the current context
@@ -7849,6 +8754,10 @@ export class WebGLRenderer extends Renderer {
      */
     clearRect(x: number, y: number, width: number, height: number): void;
     /**
+     * @ignore
+     */
+    drawFont(bounds: any): void;
+    /**
      * Draw an image to the gl context
      * @name drawImage
      * @memberof WebGLRenderer.prototype
@@ -7884,6 +8793,14 @@ export class WebGLRenderer extends Renderer {
      * @see WebGLRenderer#createPattern
      */
     drawPattern(pattern: TextureAtlas, x: number, y: number, width: number, height: number): void;
+    /**
+     * return a reference to the screen canvas corresponding WebGL Context
+     * @name getScreenContext
+     * @memberof WebGLRenderer.prototype
+     * @function
+     * @returns {WebGLRenderingContext}
+     */
+    getScreenContext(): WebGLRenderingContext;
     /**
      * Returns the WebGL Context object of the given Canvas
      * @name getContextGL
@@ -7948,6 +8865,11 @@ export class WebGLRenderer extends Renderer {
      * @param {number} y
      */
     scale(x: number, y: number): void;
+    /**
+     * not used by this renderer?
+     * @ignore
+     */
+    setAntiAlias(context: any, enable: any): void;
     /**
      * Set the global alpha
      * @name setGlobalAlpha
@@ -10012,7 +10934,7 @@ export namespace utils {
     export { fileUtils as file };
     export { stringUtils as string };
     export { fnUtils as function };
-    export function getPixels(image: HTMLImageElement | HTMLCanvasElement): ImageData;
+    export function getPixels(image: HTMLCanvasElement | HTMLImageElement): ImageData;
     export function checkVersion(first: string, second?: string): number;
     export function getUriFragment(url?: string): any;
     export function resetGUID(base: any, index?: number): void;
@@ -10546,6 +11468,14 @@ declare class ParticleContainer extends Container {
     _updateCount: number;
     _dt: number;
     _emitter: any;
+    /**
+     * @ignore
+     */
+    update(dt: any): boolean;
+    /**
+     * @ignore
+     */
+    draw(renderer: any, rect: any): void;
 }
 declare var pixel: HTMLCanvasElement | OffscreenCanvas;
 /**
