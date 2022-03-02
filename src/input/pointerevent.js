@@ -771,7 +771,7 @@ export function releasePointerEvent(eventType, region, callback) {
 export function releaseAllPointerEvents(region) {
     if (eventHandlers.has(region)) {
         for (var i = 0; i < pointerEventList.length; i++) {
-            this.releasePointerEvent(pointerEventList[i], region);
+            releasePointerEvent(pointerEventList[i], region);
         }
     };
 };
