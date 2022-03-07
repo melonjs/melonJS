@@ -7,6 +7,7 @@
 
 ### Changed
 - Renderer: the video.renderer.Texture class is now directly exported (and available) as TextureAtlas
+- Renderable : new `inset[x/y]` property setting allowing to define the size of a corner for NineSliceSprite (thanks @dynamo-foundation)
 
 ### Fixed
 - TypeScript : fix all typings and other issues with the typescript definition file (now with 0 warnings and linting errors)
