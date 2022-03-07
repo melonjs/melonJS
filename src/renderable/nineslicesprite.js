@@ -44,8 +44,8 @@ class NineSliceSprite extends Sprite {
         }
 
         // nine slice sprite specific local variables
-        this.nss_width = settings.width;
-        this.nss_height = settings.height;
+        this.nss_width = Math.floor(settings.width);
+        this.nss_height = Math.floor(settings.height);
 
         this.insetx = settings.insetx;
         this.insety = settings.insety;
