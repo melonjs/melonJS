@@ -15,11 +15,10 @@ class World extends Container {
     /**
      * @param {number} [x=0] position of the container (accessible via the inherited pos.x property)
      * @param {number} [y=0] position of the container (accessible via the inherited pos.y property)
-     * @param {number} [w=game.viewport.width] width of the container
-     * @param {number} [h=game.viewport.height] height of the container
+     * @param {number} [width=game.viewport.width] width of the container
+     * @param {number} [height=game.viewport.height] height of the container
      */
     constructor(x = 0, y = 0, width = Infinity, height = Infinity) {
-
         // call the super constructor
         super(x, y, width, height, true);
 
