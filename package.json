@@ -86,7 +86,7 @@
     "build": "npm run lint && rollup -c --silent",
     "dist": " npm run build && npm run minify && mkdirp dist && cp -f build/*.js dist/ && npm run types",
     "minify": "terser build/melonjs.js --compress --mangle --comments  '/(?:^!|@(?:license|preserve|cc_on))/' --output build/melonjs.min.js",
-    "lint": "eslint --config .eslintrc.json src rollup.config.js",
+    "lint": "eslint src rollup.config.js",
     "test": "npm run build && karma start tests/karma.conf.js",
     "doc": "mkdirp docs && jsdoc -c jsdoc_conf.json",
     "release": "npm run dist && npm publish --access public",
