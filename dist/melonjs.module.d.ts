@@ -3418,6 +3418,8 @@ export class NineSliceSprite extends Sprite {
      * @param {object} settings Configuration parameters for the Sprite object
      * @param {number} settings.width the width of the Renderable over which the sprite needs to be stretched
      * @param {number} settings.height the height of the Renderable over which the sprite needs to be stretched
+     * @param {number} [settings.insetx] the width of a corner over which the sprite is unscaled (default is a quarter of the sprite width)
+     * @param {number} [settings.insety] the height of a corner over which the sprite is unscaled (default is a quarter of the sprite height)
      * @param {HTMLImageElement|HTMLCanvasElement|TextureAtlas|string} settings.image reference to spritesheet image, a texture atlas or to a texture atlas
      * @param {string} [settings.name=""] name of this object
      * @param {string} [settings.region] region name of a specific region to use when using a texture atlas, see {@link TextureAtlas}
@@ -3438,6 +3440,8 @@ export class NineSliceSprite extends Sprite {
     constructor(x: number, y: number, settings: {
         width: number;
         height: number;
+        insetx?: number;
+        insety?: number;
         image: HTMLImageElement | HTMLCanvasElement | TextureAtlas | string;
         name?: string;
         region?: string;
@@ -3448,6 +3452,10 @@ export class NineSliceSprite extends Sprite {
         flipY?: number;
         anchorPoint?: Vector2d;
     });
+    nss_width: number;
+    nss_height: number;
+    insetx: number;
+    insety: number;
     /**
      * @ignore
      */
@@ -9058,8 +9066,8 @@ export class World extends Container {
     /**
      * @param {number} [x=0] position of the container (accessible via the inherited pos.x property)
      * @param {number} [y=0] position of the container (accessible via the inherited pos.y property)
-     * @param {number} [w=game.viewport.width] width of the container
-     * @param {number} [h=game.viewport.height] height of the container
+     * @param {number} [width=game.viewport.width] width of the container
+     * @param {number} [height=game.viewport.height] height of the container
      */
     constructor(x?: number, y?: number, width?: number, height?: number);
     /**

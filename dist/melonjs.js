@@ -17128,7 +17128,6 @@
             if ( width === void 0 ) width = Infinity;
             if ( height === void 0 ) height = Infinity;
 
-
             // call the super constructor
             Container.call(this, x, y, width, height, true);
 
@@ -33925,10 +33924,13 @@
                 throw new Error("height and width properties are mandatory");
             }
 
-            // override the renderable sprite with the given one
-            // resize based on the active frame
-            this.width = settings.width;
-            this.height = settings.height;
+            // nine slice sprite specific local variables
+            this.nss_width = Math.floor(settings.width);
+            this.nss_height = Math.floor(settings.height);
+
+            this.insetx = settings.insetx;
+            this.insety = settings.insety;
+
         }
 
         if ( Sprite ) NineSliceSprite.__proto__ = Sprite;
@@ -33967,8 +33969,8 @@
                 sy = g_offset.y + frame_offset.y;
 
             // should this be configurable ?
-            var corner_width = frame.width / 4,
-                corner_height = frame.height / 4;
+            var corner_width = this.insetx || w / 4,
+                corner_height = this.insety || h / 4;
 
             // OPTIMIZE ME !
 
@@ -33990,7 +33992,7 @@
                 sx + w - corner_width,          // sx
                 sy,                             // sy
                 corner_width, corner_height,    // sw,sh
-                dx + this.width - corner_width, // dx
+                dx + this.nss_width - corner_width, // dx
                 dy,                             // dy
                 corner_width, corner_height     // dw,dh
             );
@@ -34001,7 +34003,7 @@
                 sy + h - corner_height,             // sy
                 corner_width, corner_height,        // sw,sh
                 dx,                                 // dx
-                dy + this.height - corner_height,   // dy
+                dy + this.nss_height - corner_height,   // dy
                 corner_width, corner_height         // dw,dh
             );
             // Bottom Right
@@ -34010,8 +34012,8 @@
                 sx + w - corner_width,              // sx
                 sy + h - corner_height,             // sy
                 corner_width, corner_height,        // sw,sh
-                dx + this.width - corner_width,     //dx
-                dy + this.height - corner_height,   // dy
+                dx + this.nss_width - corner_width,     //dx
+                dy + this.nss_height - corner_height,   // dy
                 corner_width, corner_height         // dw,dh
             );
 
@@ -34020,8 +34022,8 @@
             var image_center_width = w - (corner_width << 1);
             var image_center_height = h - (corner_height << 1);
 
-            var target_center_width = this.width - (corner_width << 1);
-            var target_center_height = this.height - (corner_height << 1);
+            var target_center_width = this.nss_width - (corner_width << 1);
+            var target_center_height = this.nss_height - (corner_height << 1);
 
             //Top center
             renderer.drawImage(
@@ -34044,7 +34046,7 @@
                 image_center_width,                 // sw
                 corner_height,                      // sh
                 dx + corner_width,                  // dx
-                dy + this.height - corner_height,   // dx
+                dy + this.nss_height - corner_height,   // dx
                 target_center_width,                // dw
                 corner_height                       // dh
             );
@@ -34069,7 +34071,7 @@
                 sy + corner_height,             // sy
                 corner_width,                   // sw
                 image_center_height,            // sh
-                dx + this.width - corner_width, // dx
+                dx + this.nss_width - corner_width, // dx
                 dy + corner_height,             // dy
                 corner_width,                   // dw
                 target_center_height            // dh

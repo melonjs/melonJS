@@ -17016,11 +17016,10 @@ class World extends Container {
     /**
      * @param {number} [x=0] position of the container (accessible via the inherited pos.x property)
      * @param {number} [y=0] position of the container (accessible via the inherited pos.y property)
-     * @param {number} [w=game.viewport.width] width of the container
-     * @param {number} [h=game.viewport.height] height of the container
+     * @param {number} [width=game.viewport.width] width of the container
+     * @param {number} [height=game.viewport.height] height of the container
      */
     constructor(x = 0, y = 0, width = Infinity, height = Infinity) {
-
         // call the super constructor
         super(x, y, width, height, true);
 
@@ -33918,6 +33917,8 @@ class NineSliceSprite extends Sprite {
      * @param {object} settings Configuration parameters for the Sprite object
      * @param {number} settings.width the width of the Renderable over which the sprite needs to be stretched
      * @param {number} settings.height the height of the Renderable over which the sprite needs to be stretched
+     * @param {number} [settings.insetx] the width of a corner over which the sprite is unscaled (default is a quarter of the sprite width)
+     * @param {number} [settings.insety] the height of a corner over which the sprite is unscaled (default is a quarter of the sprite height)
      * @param {HTMLImageElement|HTMLCanvasElement|TextureAtlas|string} settings.image reference to spritesheet image, a texture atlas or to a texture atlas
      * @param {string} [settings.name=""] name of this object
      * @param {string} [settings.region] region name of a specific region to use when using a texture atlas, see {@link TextureAtlas}
@@ -33944,10 +33945,13 @@ class NineSliceSprite extends Sprite {
             throw new Error("height and width properties are mandatory");
         }
 
-        // override the renderable sprite with the given one
-        // resize based on the active frame
-        this.width = settings.width;
-        this.height = settings.height;
+        // nine slice sprite specific local variables
+        this.nss_width = Math.floor(settings.width);
+        this.nss_height = Math.floor(settings.height);
+
+        this.insetx = settings.insetx;
+        this.insety = settings.insety;
+
     }
 
     /**
@@ -33982,8 +33986,8 @@ class NineSliceSprite extends Sprite {
             sy = g_offset.y + frame_offset.y;
 
         // should this be configurable ?
-        var corner_width = frame.width / 4,
-            corner_height = frame.height / 4;
+        var corner_width = this.insetx || w / 4,
+            corner_height = this.insety || h / 4;
 
         // OPTIMIZE ME !
 
@@ -34005,7 +34009,7 @@ class NineSliceSprite extends Sprite {
             sx + w - corner_width,          // sx
             sy,                             // sy
             corner_width, corner_height,    // sw,sh
-            dx + this.width - corner_width, // dx
+            dx + this.nss_width - corner_width, // dx
             dy,                             // dy
             corner_width, corner_height     // dw,dh
         );
@@ -34016,7 +34020,7 @@ class NineSliceSprite extends Sprite {
             sy + h - corner_height,             // sy
             corner_width, corner_height,        // sw,sh
             dx,                                 // dx
-            dy + this.height - corner_height,   // dy
+            dy + this.nss_height - corner_height,   // dy
             corner_width, corner_height         // dw,dh
         );
         // Bottom Right
@@ -34025,8 +34029,8 @@ class NineSliceSprite extends Sprite {
             sx + w - corner_width,              // sx
             sy + h - corner_height,             // sy
             corner_width, corner_height,        // sw,sh
-            dx + this.width - corner_width,     //dx
-            dy + this.height - corner_height,   // dy
+            dx + this.nss_width - corner_width,     //dx
+            dy + this.nss_height - corner_height,   // dy
             corner_width, corner_height         // dw,dh
         );
 
@@ -34035,8 +34039,8 @@ class NineSliceSprite extends Sprite {
         var image_center_width = w - (corner_width << 1);
         var image_center_height = h - (corner_height << 1);
 
-        var target_center_width = this.width - (corner_width << 1);
-        var target_center_height = this.height - (corner_height << 1);
+        var target_center_width = this.nss_width - (corner_width << 1);
+        var target_center_height = this.nss_height - (corner_height << 1);
 
         //Top center
         renderer.drawImage(
@@ -34059,7 +34063,7 @@ class NineSliceSprite extends Sprite {
             image_center_width,                 // sw
             corner_height,                      // sh
             dx + corner_width,                  // dx
-            dy + this.height - corner_height,   // dx
+            dy + this.nss_height - corner_height,   // dx
             target_center_width,                // dw
             corner_height                       // dh
         );
@@ -34084,7 +34088,7 @@ class NineSliceSprite extends Sprite {
             sy + corner_height,             // sy
             corner_width,                   // sw
             image_center_height,            // sh
-            dx + this.width - corner_width, // dx
+            dx + this.nss_width - corner_width, // dx
             dy + corner_height,             // dy
             corner_width,                   // dw
             target_center_height            // dh
