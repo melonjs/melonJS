@@ -48,13 +48,27 @@ class TextureCache {
      * @ignore
      */
     get(image, atlas) {
-        if (!this.cache.has(image)) {
+        var entry;
+        this.cache.forEach((value, key) => {
+            if (key === image) {
+                if (typeof atlas !== "undefined") {
+                    var _atlas = value.getAtlas();
+                    if (_atlas[0].width === atlas.framewidth && _atlas[0].height === atlas.frameheight ) {
+                        entry = value;
+                    }
+                } else {
+                    entry = value;
+                }
+            }
+        });
+        if (typeof entry === "undefined") {
             if (!atlas) {
                 atlas = createAtlas(image.width, image.height, image.src ? fileUtil.getBasename(image.src) : undefined);
             }
-            this.set(image, new TextureAtlas(atlas, image, false));
+            entry = new TextureAtlas(atlas, image, false);
+            this.set(image, entry);
         }
-        return this.cache.get(image);
+        return entry;
     }
 
     /**
@@ -99,7 +113,7 @@ class TextureCache {
                 "(" + width + "x" + height + ")"
             );
         }
-        this.cache.set(image, texture);
+        return this.cache.set(image, texture);
     }
 
     /**
