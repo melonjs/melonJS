@@ -7,7 +7,7 @@
 
 ### Fixed
 - Physic: fix improper behavior for static bodies responding to collisions (thanks @dynamo-foundation)
-- Physic: properly filter out collision detection and response between two close or overlapping static bodies
+- Physic: static bodies are now properly filtered out if within the same node or overlapping
 
 ## [10.4.0] (melonJS 2) - _2022-03-08_
 
