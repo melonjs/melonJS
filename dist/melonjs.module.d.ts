@@ -266,7 +266,8 @@ export class Body {
     public mass: number;
     maxVel: Vector2d;
     /**
-     * either this body is a static body or not
+     * Either this body is a static body or not.
+     * A static body is completely fixed and can never change position or angle.
      * @readonly
      * @public
      * @type {boolean}

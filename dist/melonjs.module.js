@@ -1,5 +1,5 @@
 /*!
- * melonJS Game Engine - v10.4.0
+ * melonJS Game Engine - v10.4.1
  * http://www.melonjs.org
  * melonjs is licensed under the MIT License.
  * http://www.opensource.org/licenses/mit-license
@@ -14619,7 +14619,8 @@ var dummyObj = {
 function shouldCollide(a, b) {
     return (
         a.isKinematic !== true && b.isKinematic !== true &&
-        a.body && b.body &&
+        typeof a.body === "object" && typeof b.body === "object" &&
+        !(a.body.isStatic === true && b.body.isStatic === true) &&
         (a.body.collisionMask & b.body.collisionType) !== 0 &&
         (a.body.collisionType & b.body.collisionMask) !== 0
     );
@@ -14732,10 +14733,10 @@ function collisionCheck(objA, response = globalResponse) {
                         response.indexShapeB = indexB;
 
                         // execute the onCollision callback
-                        if (objA.onCollision && objA.onCollision(response, objB) !== false) {
+                        if (objA.onCollision && objA.onCollision(response, objB) !== false && objA.body.isStatic === false) {
                             objA.body.respondToCollision.call(objA.body, response);
                         }
-                        if (objB.onCollision && objB.onCollision(response, objA) !== false) {
+                        if (objB.onCollision && objB.onCollision(response, objA) !== false && objB.body.isStatic === false) {
                             objB.body.respondToCollision.call(objB.body, response);
                         }
                     }
@@ -15099,7 +15100,8 @@ class Body {
 
 
         /**
-         * either this body is a static body or not
+         * Either this body is a static body or not.
+         * A static body is completely fixed and can never change position or angle.
          * @readonly
          * @public
          * @type {boolean}
@@ -25381,6 +25383,8 @@ class TMXTileMap {
                 if (isCollisionGroup && !settings.name && obj.body) {
                     // configure the body accordingly
                     obj.body.collisionType = collision.types.WORLD_SHAPE;
+                    // mark collision shapes as static
+                    obj.body.isStatic = true;
                 }
 
                 //apply group opacity value to the child objects if group are merged
@@ -31374,10 +31378,10 @@ class BasePlugin {
          * this can be overridden by the plugin
          * @public
          * @type {string}
-         * @default "10.4.0"
+         * @default "10.4.1"
          * @name plugin.Base#version
          */
-        this.version = "10.4.0";
+        this.version = "10.4.1";
     }
 }
 
@@ -35888,7 +35892,7 @@ var deprecated = /*#__PURE__*/Object.freeze({
  * @name version
  * @type {string}
  */
-const version = "10.4.0";
+const version = "10.4.1";
 
 
 /**

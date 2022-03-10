@@ -1,5 +1,5 @@
 /*!
- * melonJS Game Engine - v10.4.0
+ * melonJS Game Engine - v10.4.1
  * http://www.melonjs.org
  * melonjs is licensed under the MIT License.
  * http://www.opensource.org/licenses/mit-license
@@ -14707,7 +14707,8 @@
     function shouldCollide(a, b) {
         return (
             a.isKinematic !== true && b.isKinematic !== true &&
-            a.body && b.body &&
+            typeof a.body === "object" && typeof b.body === "object" &&
+            !(a.body.isStatic === true && b.body.isStatic === true) &&
             (a.body.collisionMask & b.body.collisionType) !== 0 &&
             (a.body.collisionType & b.body.collisionMask) !== 0
         );
@@ -14820,10 +14821,10 @@
                             response.indexShapeB = indexB;
 
                             // execute the onCollision callback
-                            if (objA.onCollision && objA.onCollision(response, objB) !== false) {
+                            if (objA.onCollision && objA.onCollision(response, objB) !== false && objA.body.isStatic === false) {
                                 objA.body.respondToCollision.call(objA.body, response);
                             }
-                            if (objB.onCollision && objB.onCollision(response, objA) !== false) {
+                            if (objB.onCollision && objB.onCollision(response, objA) !== false && objB.body.isStatic === false) {
                                 objB.body.respondToCollision.call(objB.body, response);
                             }
                         }
@@ -15183,7 +15184,8 @@
 
 
         /**
-         * either this body is a static body or not
+         * Either this body is a static body or not.
+         * A static body is completely fixed and can never change position or angle.
          * @readonly
          * @public
          * @type {boolean}
@@ -25425,6 +25427,8 @@
                 if (isCollisionGroup && !settings.name && obj.body) {
                     // configure the body accordingly
                     obj.body.collisionType = collision.types.WORLD_SHAPE;
+                    // mark collision shapes as static
+                    obj.body.isStatic = true;
                 }
 
                 //apply group opacity value to the child objects if group are merged
@@ -31430,10 +31434,10 @@
          * this can be overridden by the plugin
          * @public
          * @type {string}
-         * @default "10.4.0"
+         * @default "10.4.1"
          * @name plugin.Base#version
          */
-        this.version = "10.4.0";
+        this.version = "10.4.1";
     };
 
     /**
@@ -35836,7 +35840,7 @@
      * @name version
      * @type {string}
      */
-    var version = "10.4.0";
+    var version = "10.4.1";
 
 
     /**
