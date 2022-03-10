@@ -8,7 +8,7 @@
 ### Fixed
 - Physic: fix improper behavior for static bodies responding to collisions (thanks @dynamo-foundation)
 - Physic: static bodies are now properly filtered out if within the same node or overlapping
-- Renderable : fix me.Sprite bug when reusing the same image/texture with different frame width/height (thanks @dynamo-foundation)
+- Renderable : fix a me.Sprite bug when reusing the same image/texture with different frame width/height (thanks @dynamo-foundation)
 
 ## [10.4.0] (melonJS 2) - _2022-03-08_
 
