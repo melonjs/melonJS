@@ -27,7 +27,8 @@ var dummyObj = {
 function shouldCollide(a, b) {
     return (
         a.isKinematic !== true && b.isKinematic !== true &&
-        a.body && b.body &&
+        typeof a.body === "object" && typeof b.body === "object" &&
+        !(a.body.isStatic === true && b.body.isStatic === true) &&
         (a.body.collisionMask & b.body.collisionType) !== 0 &&
         (a.body.collisionType & b.body.collisionMask) !== 0
     );
@@ -141,10 +142,10 @@ export function collisionCheck(objA, response = globalResponse) {
                         response.indexShapeB = indexB;
 
                         // execute the onCollision callback
-                        if (objA.onCollision && objA.onCollision(response, objB) !== false) {
+                        if (objA.onCollision && objA.onCollision(response, objB) !== false && objA.body.isStatic === false) {
                             objA.body.respondToCollision.call(objA.body, response);
                         }
-                        if (objB.onCollision && objB.onCollision(response, objA) !== false) {
+                        if (objB.onCollision && objB.onCollision(response, objA) !== false && objB.body.isStatic === false) {
                             objB.body.respondToCollision.call(objB.body, response);
                         }
                     }

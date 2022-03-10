@@ -1,5 +1,14 @@
 # Changelog
 
+## [10.4.1] (melonJS 2) - _2022-03-XX_
+
+### Changed
+- Physic: set collision shapes as static by default (those should be fixed anyway)
+
+### Fixed
+- Physic: fix improper behavior for static bodies responding to collisions (thanks @dynamo-foundation)
+- Physic: properly filter out collision detection and response between two close or overlapping static bodies
+
 ## [10.4.0] (melonJS 2) - _2022-03-08_
 
 ### Added

@@ -542,6 +542,8 @@ class TMXTileMap {
                 if (isCollisionGroup && !settings.name && obj.body) {
                     // configure the body accordingly
                     obj.body.collisionType = collision.types.WORLD_SHAPE;
+                    // mark collision shapes as static
+                    obj.body.isStatic = true;
                 }
 
                 //apply group opacity value to the child objects if group are merged

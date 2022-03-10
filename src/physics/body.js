@@ -154,7 +154,8 @@ class Body {
 
 
         /**
-         * either this body is a static body or not
+         * Either this body is a static body or not.
+         * A static body is completely fixed and can never change position or angle.
          * @readonly
          * @public
          * @type {boolean}
