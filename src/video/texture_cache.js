@@ -2,6 +2,7 @@ import { renderer } from "./video.js";
 import * as fileUtil from "./../utils/file.js";
 import { TextureAtlas, createAtlas } from "./texture.js";
 import { isPowerOfTwo} from "./../math/math.js";
+import {ArrayMultimap} from "@teppeis/multimaps";
 
 
 /**
@@ -14,7 +15,8 @@ class TextureCache {
      * @ignore
      */
     constructor(max_size) {
-        this.cache = new Map();
+        // cache uses an array to allow for duplicated key
+        this.cache = new ArrayMultimap();
         this.tinted = new Map();
         this.units = new Map();
         this.max_size = max_size || Infinity;
@@ -49,18 +51,19 @@ class TextureCache {
      */
     get(image, atlas) {
         var entry;
-        this.cache.forEach((value, key) => {
-            if (key === image) {
-                if (typeof atlas !== "undefined") {
-                    var _atlas = value.getAtlas();
-                    if (_atlas[0].width === atlas.framewidth && _atlas[0].height === atlas.frameheight ) {
-                        entry = value;
-                    }
-                } else {
+
+        if (typeof atlas === "undefined") {
+            entry = this.cache.get(image)[0];
+        } else {
+            // manage cases where a specific atlas is specified
+            this.cache.forEach((value, key) => {
+                var _atlas = value.getAtlas();
+                if (key === image && _atlas[0].width === atlas.framewidth && _atlas[0].height === atlas.frameheight) {
                     entry = value;
                 }
-            }
-        });
+            });
+        }
+
         if (typeof entry === "undefined") {
             if (!atlas) {
                 atlas = createAtlas(image.width, image.height, image.src ? fileUtil.getBasename(image.src) : undefined);
@@ -68,6 +71,7 @@ class TextureCache {
             entry = new TextureAtlas(atlas, image, false);
             this.set(image, entry);
         }
+
         return entry;
     }
 
@@ -113,7 +117,7 @@ class TextureCache {
                 "(" + width + "x" + height + ")"
             );
         }
-        return this.cache.set(image, texture);
+        return this.cache.put(image, texture);
     }
 
     /**
