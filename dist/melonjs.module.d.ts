@@ -11242,7 +11242,7 @@ declare class TextureCache {
      * @ignore
      */
     constructor(max_size: any);
-    cache: Map<any, any>;
+    cache: any;
     tinted: Map<any, any>;
     units: Map<any, any>;
     max_size: any;
@@ -11270,7 +11270,7 @@ declare class TextureCache {
     /**
      * @ignore
      */
-    set(image: any, texture: any): void;
+    set(image: any, texture: any): any;
     /**
      * @ignore
      */
