@@ -124,6 +124,8 @@
 - Renderer: fix the stencil masking feature on renderable components (for both WebGL and Canvas mode)
 - Loader: fix a graphic glitch in the default preloading screen
 
+-------------------------------------------------------------------------------
+
 ## [9.1.2] - _2021-10-03_
 
 ### Fixed
