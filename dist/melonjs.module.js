@@ -1,5 +1,5 @@
 /*!
- * melonJS Game Engine - v10.4.1
+ * melonJS Game Engine - v10.5.0
  * http://www.melonjs.org
  * melonjs is licensed under the MIT License.
  * http://www.opensource.org/licenses/mit-license
@@ -31844,10 +31844,10 @@ class BasePlugin {
          * this can be overridden by the plugin
          * @public
          * @type {string}
-         * @default "10.4.1"
+         * @default "10.5.0"
          * @name plugin.Base#version
          */
-        this.version = "10.4.1";
+        this.version = "10.5.0";
     }
 }
 
@@ -34989,6 +34989,225 @@ class Trigger extends Renderable {
 
 /**
  * @classdesc
+ * A Draggable base object
+ * @see DropTarget
+ * @augments Renderable
+ */
+class Draggable extends Renderable {
+    /**
+     * @param {number} x the x coordinates of the draggable object
+     * @param {number} y the y coordinates of the draggable object
+     * @param {number} width draggable object width
+     * @param {number} height draggable object height
+     */
+    constructor(x, y, width, height) {
+        super(x, y, width, height);
+        this.isKinematic = false;
+        this.dragging = false;
+        this.dragId = null;
+        this.grabOffset = new Vector2d(0, 0);
+        this.initEvents();
+    }
+
+    /**
+     * Initializes the events the modules needs to listen to
+     * It translates the pointer events to me.events
+     * in order to make them pass through the system and to make
+     * this module testable. Then we subscribe this module to the
+     * transformed events.
+     * @name initEvents
+     * @memberof Draggable
+     * @function
+     * @private
+     */
+    initEvents() {
+        registerPointerEvent("pointerdown", this, (e) => { emit(DRAGSTART, e, this); });
+        registerPointerEvent("pointerup", this,  (e) => { emit(DRAGEND, e, this); });
+        registerPointerEvent("pointercancel", this, (e) => { emit(DRAGEND, e, this); });
+        on(POINTERMOVE, this.dragMove.bind(this));
+        on(DRAGSTART, (e, draggable) => {
+            if (draggable === this) {
+                this.dragStart(e);
+            }
+        });
+        on(DRAGEND, (e, draggable) => {
+            if (draggable === this) {
+                this.dragEnd(e);
+            }
+        });
+    }
+
+    /**
+     * Gets called when the user starts dragging the entity
+     * @name dragStart
+     * @memberof Draggable
+     * @function
+     * @param {object} e the pointer event
+     * @returns {boolean} false if the object is being dragged
+     */
+    dragStart(e) {
+        if (this.dragging === false) {
+            this.dragging = true;
+            this.grabOffset.set(e.gameX, e.gameY);
+            this.grabOffset.sub(this.pos);
+            return false;
+        }
+    }
+
+    /**
+     * Gets called when the user drags this entity around
+     * @name dragMove
+     * @memberof Draggable
+     * @function
+     * @param {object} e the pointer event
+     */
+    dragMove(e) {
+        if (this.dragging === true) {
+            this.pos.set(e.gameX, e.gameY, this.pos.z); //TODO : z ?
+            this.pos.sub(this.grabOffset);
+        }
+    }
+
+    /**
+     * Gets called when the user stops dragging the entity
+     * @name dragEnd
+     * @memberof Draggable
+     * @function
+     * @returns {boolean} false if the object stopped being dragged
+     */
+    dragEnd() {
+        if (this.dragging === true) {
+            this.dragging = false;
+            return false;
+        }
+    }
+
+    /**
+     * Destructor
+     * @name destroy
+     * @memberof Draggable
+     * @function
+     * @private
+     */
+    destroy() {
+        off(POINTERMOVE, this.dragMove);
+        off(DRAGSTART, this.dragStart);
+        off(DRAGEND, this.dragEnd);
+        releasePointerEvent("pointerdown", this);
+        releasePointerEvent("pointerup", this);
+        releasePointerEvent("pointercancel", this);
+        super.destroy();
+    }
+}
+/**
+ * @classdesc
+ * a base drop target object
+ * @see Draggable
+ * @augments Renderable
+ */
+class DropTarget extends Renderable {
+    /**
+     * @param {number} x the x coordinates of the drop target
+     * @param {number} y the y coordinates of the drop target
+     * @param {number} width drop target width
+     * @param {number} height drop target height
+     */
+    constructor(x, y, width, height) {
+        super(x, y, width, height);
+
+        this.isKinematic = false;
+
+        /**
+         * constant for the overlaps method
+         * @public
+         * @constant
+         * @type {string}
+         * @name CHECKMETHOD_OVERLAP
+         * @memberof DropTarget
+         */
+        this.CHECKMETHOD_OVERLAP = "overlaps";
+
+        /**
+         * constant for the contains method
+         * @public
+         * @constant
+         * @type {string}
+         * @name CHECKMETHOD_CONTAINS
+         * @memberof DropTarget
+         */
+        this.CHECKMETHOD_CONTAINS = "contains";
+
+        /**
+         * the checkmethod we want to use
+         * @public
+         * @constant
+         * @type {string}
+         * @name checkMethod
+         * @default "overlaps"
+         * @memberof DropTarget
+         */
+        this.checkMethod = this.CHECKMETHOD_OVERLAP;
+
+        on(DRAGEND, this.checkOnMe, this);
+
+    }
+
+    /**
+     * Sets the collision method which is going to be used to check a valid drop
+     * @name setCheckMethod
+     * @memberof DropTarget
+     * @function
+     * @param {string} checkMethod the checkmethod (defaults to CHECKMETHOD_OVERLAP)
+     */
+    setCheckMethod(checkMethod) {
+        //  We can improve this check,
+        //  because now you can use every method in theory
+        if (typeof(this.getBounds()[this.checkMethod]) === "function") {
+            this.checkMethod = checkMethod;
+        }
+    }
+
+    /**
+     * Checks if a dropped entity is dropped on the current entity
+     * @name checkOnMe
+     * @memberof DropTarget
+     * @function
+     * @param {object} e the triggering event
+     * @param {Draggable} draggable the draggable object that is dropped
+     */
+    checkOnMe(e, draggable) {
+        if (draggable && this.getBounds()[this.checkMethod](draggable.getBounds())) {
+            // call the drop method on the current entity
+            this.drop(draggable);
+        }
+    }
+
+    /**
+     * Gets called when a draggable entity is dropped on the current entity
+     * @name drop
+     * @memberof DropTarget
+     * @function
+     * @param {Draggable} draggable the draggable object that is dropped
+     */
+    drop() {
+
+    }
+
+    /**
+     * Destructor
+     * @name destroy
+     * @memberof DropTarget
+     * @function
+     * @private
+     */
+    destroy() {
+        off(DRAGEND, this.checkOnMe);
+        super.destroy();
+    }
+}
+
+/**
+ * @classdesc
  * Particle Container Object.
  * @class ParticleContainer
  * @augments Container
@@ -36042,226 +36261,6 @@ class Entity extends Renderable {
 }
 
 /**
- * @classdesc
- * Used to make a game entity draggable
- * @augments Entity
- */
-class DraggableEntity extends Entity {
-    /**
-     * @param {number} x the x coordinates of the entity object
-     * @param {number} y the y coordinates of the entity object
-     * @param {object} settings Entity properties (see {@link Entity})
-     */
-    constructor(x, y, settings) {
-        super(x, y, settings);
-        this.dragging = false;
-        this.dragId = null;
-        this.grabOffset = new Vector2d(0, 0);
-        this.onPointerEvent = registerPointerEvent;
-        this.removePointerEvent = releasePointerEvent;
-        this.initEvents();
-    }
-
-    /**
-     * Initializes the events the modules needs to listen to
-     * It translates the pointer events to me.events
-     * in order to make them pass through the system and to make
-     * this module testable. Then we subscribe this module to the
-     * transformed events.
-     * @name initEvents
-     * @memberof DraggableEntity
-     * @function
-     */
-    initEvents() {
-        /**
-         * @ignore
-         */
-        this.mouseDown = function (e) {
-            this.translatePointerEvent(e, DRAGSTART);
-        };
-        /**
-         * @ignore
-         */
-        this.mouseUp = function (e) {
-            this.translatePointerEvent(e, DRAGEND);
-        };
-        this.onPointerEvent("pointerdown", this, this.mouseDown.bind(this));
-        this.onPointerEvent("pointerup", this, this.mouseUp.bind(this));
-        this.onPointerEvent("pointercancel", this, this.mouseUp.bind(this));
-        on(POINTERMOVE, this.dragMove, this);
-        on(DRAGSTART, this.dragStart, this);
-        on(DRAGEND, this.dragEnd, this);
-    }
-
-    /**
-     * Translates a pointer event to a me.event
-     * @name translatePointerEvent
-     * @memberof DraggableEntity
-     * @function
-     * @param {object} e the pointer event you want to translate
-     * @param {string} translation the me.event you want to translate the event to
-     */
-    translatePointerEvent(e, translation) {
-        emit(translation, e);
-    }
-
-    /**
-     * Gets called when the user starts dragging the entity
-     * @name dragStart
-     * @memberof DraggableEntity
-     * @function
-     * @param {object} e the pointer event
-     * @returns {boolean} false if the object is being dragged
-     */
-    dragStart(e) {
-        if (this.dragging === false) {
-            this.dragging = true;
-            this.grabOffset.set(e.gameX, e.gameY);
-            this.grabOffset.sub(this.pos);
-            return false;
-        }
-    }
-
-    /**
-     * Gets called when the user drags this entity around
-     * @name dragMove
-     * @memberof DraggableEntity
-     * @function
-     * @param {object} e the pointer event
-     */
-    dragMove(e) {
-        if (this.dragging === true) {
-            this.pos.set(e.gameX, e.gameY, this.pos.z); //TODO : z ?
-            this.pos.sub(this.grabOffset);
-        }
-    }
-
-    /**
-     * Gets called when the user stops dragging the entity
-     * @name dragEnd
-     * @memberof DraggableEntity
-     * @function
-     * @returns {boolean} false if the object stopped being dragged
-     */
-    dragEnd() {
-        if (this.dragging === true) {
-            this.dragging = false;
-            return false;
-        }
-    }
-
-    /**
-     * Destructor
-     * @name destroy
-     * @memberof DraggableEntity
-     * @function
-     */
-    destroy() {
-        off(POINTERMOVE, this.dragMove);
-        off(DRAGSTART, this.dragStart);
-        off(DRAGEND, this.dragEnd);
-        this.removePointerEvent("pointerdown", this);
-        this.removePointerEvent("pointerup", this);
-    }
-}
-
-/**
- * @classdesc
- * Used to make a game entity a droptarget
- * @augments Entity
- */
-class DroptargetEntity extends Entity {
-    /**
-     * @param {number} x the x coordinates of the entity object
-     * @param {number} y the y coordinates of the entity object
-     * @param {object} settings Entity properties (see {@link Entity})
-     */
-    constructor(x, y, settings) {
-        super(x, y, settings);
-        /**
-         * constant for the overlaps method
-         * @public
-         * @constant
-         * @type {string}
-         * @name CHECKMETHOD_OVERLAP
-         * @memberof DroptargetEntity
-         */
-        this.CHECKMETHOD_OVERLAP = "overlaps";
-        /**
-         * constant for the contains method
-         * @public
-         * @constant
-         * @type {string}
-         * @name CHECKMETHOD_CONTAINS
-         * @memberof DroptargetEntity
-         */
-        this.CHECKMETHOD_CONTAINS = "contains";
-        /**
-         * the checkmethod we want to use
-         * @public
-         * @constant
-         * @type {string}
-         * @name checkMethod
-         * @memberof DroptargetEntity
-         */
-        this.checkMethod = null;
-        on(DRAGEND, this.checkOnMe, this);
-        this.checkMethod = this[this.CHECKMETHOD_OVERLAP];
-    }
-
-    /**
-     * Sets the collision method which is going to be used to check a valid drop
-     * @name setCheckMethod
-     * @memberof DroptargetEntity
-     * @function
-     * @param {string} checkMethod the checkmethod (defaults to CHECKMETHOD_OVERLAP)
-     */
-    setCheckMethod(checkMethod) {
-        //  We can improve this check,
-        //  because now you can use every method in theory
-        if (typeof(this[checkMethod]) !== "undefined") {
-            this.checkMethod = this[checkMethod];
-        }
-    }
-
-    /**
-     * Checks if a dropped entity is dropped on the current entity
-     * @name checkOnMe
-     * @memberof DroptargetEntity
-     * @function
-     * @param {object} e the triggering event
-     * @param {object} draggableEntity the draggable entity that is dropped
-     */
-    checkOnMe(e, draggableEntity) {
-        if (draggableEntity && this.checkMethod(draggableEntity.getBounds())) {
-            // call the drop method on the current entity
-            this.drop(draggableEntity);
-        }
-    }
-
-    /**
-     * Gets called when a draggable entity is dropped on the current entity
-     * @name drop
-     * @memberof DroptargetEntity
-     * @function
-     * @param {object} draggableEntity the draggable entity that is dropped
-     */
-    drop() {
-
-    }
-
-    /**
-     * Destructor
-     * @name destroy
-     * @memberof DroptargetEntity
-     * @function
-     */
-    destroy() {
-        off(DRAGEND, this.checkOnMe);
-    }
-}
-
-/**
  * placeholder for all deprecated classes and corresponding alias for backward compatibility
  */
 
@@ -36344,12 +36343,47 @@ Object.defineProperty(Renderer.prototype, "Texture", {
     }
 });
 
-var deprecated = /*#__PURE__*/Object.freeze({
-    __proto__: null,
-    warning: warning
-});
+
+/**
+ * @classdesc
+ * Used to make a game entity draggable
+ * @augments Entity
+ * @deprecated since 10.5.0
+ * @see Draggable
+ */
+class DraggableEntity extends Draggable {
+    /**
+     * @param {number} x the x coordinates of the draggable object
+     * @param {number} y the y coordinates of the draggable object
+     * @param {object} settings Entity properties (see {@link Entity})
+     */
+    constructor(x, y, settings) {
+        warning("DraggableEntity", "Draggable", "10.5.0");
+        super(x, y, settings.width, settings.height);
+    }
+}
+
+/**
+ * @classdesc
+ * Used to make a game entity a droptarget
+ * @augments Entity
+ * @deprecated since 10.5.0
+ * @see DropTarget
+ */
+class DroptargetEntity extends DropTarget {
+    /**
+     * @param {number} x the x coordinates of the draggable object
+     * @param {number} y the y coordinates of the draggable object
+     * @param {object} settings Entity properties (see {@link Entity})
+     */
+    constructor(x, y, settings) {
+        warning("DroptargetEntity", "DropTarget", "10.5.0");
+        super(x, y, settings.width, settings.height);
+    }
+}
 
 // ES5 polyfills
+
 
 /**
  * current melonJS version
@@ -36358,7 +36392,7 @@ var deprecated = /*#__PURE__*/Object.freeze({
  * @name version
  * @type {string}
  */
-const version = "10.4.1";
+const version = "10.5.0";
 
 
 /**
@@ -36465,4 +36499,4 @@ device$1.onReady(function () {
     }
 });
 
-export { BitmapText, BitmapTextData, Body, Bounds$1 as Bounds, Camera2d, CanvasRenderer, Collectable, Color, ColorLayer, Container, DraggableEntity, DroptargetEntity, Ellipse, Entity, GLShader, GUI_Object, ImageLayer, Line, math as Math, Matrix2d, Matrix3d, NineSliceSprite, ObservableVector2d, ObservableVector3d, Particle, ParticleEmitter, ParticleEmitterSettings, Pointer, Polygon, QuadTree, Rect, Renderable, Renderer, Sprite, Stage, TMXHexagonalRenderer, TMXIsometricRenderer, TMXLayer, TMXOrthogonalRenderer, TMXRenderer, TMXStaggeredRenderer, TMXTileMap, TMXTileset, TMXTilesetGroup, Text, TextureAtlas, Tile, Trigger, Tween, Vector2d, Vector3d, WebGLCompositor, WebGLRenderer, World, audio, boot, collision, deprecated, device$1 as device, event, game, initialized, input, level, loader, plugin, plugins, pool, save, skipAutoInit, state, timer$1 as timer, utils, version, video };
+export { BitmapText, BitmapTextData, Body, Bounds$1 as Bounds, Camera2d, CanvasRenderer, Collectable, Color, ColorLayer, Container, Draggable, DraggableEntity, DropTarget, DroptargetEntity, Ellipse, Entity, GLShader, GUI_Object, ImageLayer, Line, math as Math, Matrix2d, Matrix3d, NineSliceSprite, ObservableVector2d, ObservableVector3d, Particle, ParticleEmitter, ParticleEmitterSettings, Pointer, Polygon, QuadTree, Rect, Renderable, Renderer, Sprite, Stage, TMXHexagonalRenderer, TMXIsometricRenderer, TMXLayer, TMXOrthogonalRenderer, TMXRenderer, TMXStaggeredRenderer, TMXTileMap, TMXTileset, TMXTilesetGroup, Text, TextureAtlas, Tile, Trigger, Tween, Vector2d, Vector3d, WebGLCompositor, WebGLRenderer, World, audio, boot, collision, device$1 as device, event, game, initialized, input, level, loader, plugin, plugins, pool, save, skipAutoInit, state, timer$1 as timer, utils, version, video, warning };

@@ -2090,21 +2090,14 @@ export class Container extends Renderable {
 }
 /**
  * @classdesc
- * Used to make a game entity draggable
- * @augments Entity
+ * A Draggable base object
+ * @see DropTarget
+ * @augments Renderable
  */
-export class DraggableEntity extends Entity {
-    /**
-     * @param {number} x the x coordinates of the entity object
-     * @param {number} y the y coordinates of the entity object
-     * @param {object} settings Entity properties (see {@link Entity})
-     */
-    constructor(x: number, y: number, settings: object);
+export class Draggable extends Renderable {
     dragging: boolean;
     dragId: any;
     grabOffset: Vector2d;
-    onPointerEvent: typeof registerPointerEvent;
-    removePointerEvent: typeof releasePointerEvent;
     /**
      * Initializes the events the modules needs to listen to
      * It translates the pointer events to me.events
@@ -2112,31 +2105,15 @@ export class DraggableEntity extends Entity {
      * this module testable. Then we subscribe this module to the
      * transformed events.
      * @name initEvents
-     * @memberof DraggableEntity
+     * @memberof Draggable
      * @function
+     * @private
      */
-    initEvents(): void;
-    /**
-     * @ignore
-     */
-    mouseDown: (e: any) => void;
-    /**
-     * @ignore
-     */
-    mouseUp: (e: any) => void;
-    /**
-     * Translates a pointer event to a me.event
-     * @name translatePointerEvent
-     * @memberof DraggableEntity
-     * @function
-     * @param {object} e the pointer event you want to translate
-     * @param {string} translation the me.event you want to translate the event to
-     */
-    translatePointerEvent(e: object, translation: string): void;
+    private initEvents;
     /**
      * Gets called when the user starts dragging the entity
      * @name dragStart
-     * @memberof DraggableEntity
+     * @memberof Draggable
      * @function
      * @param {object} e the pointer event
      * @returns {boolean} false if the object is being dragged
@@ -2145,7 +2122,7 @@ export class DraggableEntity extends Entity {
     /**
      * Gets called when the user drags this entity around
      * @name dragMove
-     * @memberof DraggableEntity
+     * @memberof Draggable
      * @function
      * @param {object} e the pointer event
      */
@@ -2153,7 +2130,7 @@ export class DraggableEntity extends Entity {
     /**
      * Gets called when the user stops dragging the entity
      * @name dragEnd
-     * @memberof DraggableEntity
+     * @memberof Draggable
      * @function
      * @returns {boolean} false if the object stopped being dragged
      */
@@ -2161,30 +2138,41 @@ export class DraggableEntity extends Entity {
     /**
      * Destructor
      * @name destroy
-     * @memberof DraggableEntity
+     * @memberof Draggable
      * @function
+     * @private
      */
-    destroy(): void;
+    private destroy;
 }
 /**
  * @classdesc
- * Used to make a game entity a droptarget
+ * Used to make a game entity draggable
  * @augments Entity
+ * @deprecated since 10.5.0
+ * @see Draggable
  */
-export class DroptargetEntity extends Entity {
+export class DraggableEntity extends Entity {
     /**
-     * @param {number} x the x coordinates of the entity object
-     * @param {number} y the y coordinates of the entity object
+     * @param {number} x the x coordinates of the draggable object
+     * @param {number} y the y coordinates of the draggable object
      * @param {object} settings Entity properties (see {@link Entity})
      */
     constructor(x: number, y: number, settings: object);
+}
+/**
+ * @classdesc
+ * a base drop target object
+ * @see Draggable
+ * @augments Renderable
+ */
+export class DropTarget extends Renderable {
     /**
      * constant for the overlaps method
      * @public
      * @constant
      * @type {string}
      * @name CHECKMETHOD_OVERLAP
-     * @memberof DroptargetEntity
+     * @memberof DropTarget
      */
     public CHECKMETHOD_OVERLAP: string;
     /**
@@ -2193,7 +2181,7 @@ export class DroptargetEntity extends Entity {
      * @constant
      * @type {string}
      * @name CHECKMETHOD_CONTAINS
-     * @memberof DroptargetEntity
+     * @memberof DropTarget
      */
     public CHECKMETHOD_CONTAINS: string;
     /**
@@ -2202,13 +2190,14 @@ export class DroptargetEntity extends Entity {
      * @constant
      * @type {string}
      * @name checkMethod
-     * @memberof DroptargetEntity
+     * @default "overlaps"
+     * @memberof DropTarget
      */
     public checkMethod: string;
     /**
      * Sets the collision method which is going to be used to check a valid drop
      * @name setCheckMethod
-     * @memberof DroptargetEntity
+     * @memberof DropTarget
      * @function
      * @param {string} checkMethod the checkmethod (defaults to CHECKMETHOD_OVERLAP)
      */
@@ -2216,27 +2205,43 @@ export class DroptargetEntity extends Entity {
     /**
      * Checks if a dropped entity is dropped on the current entity
      * @name checkOnMe
-     * @memberof DroptargetEntity
+     * @memberof DropTarget
      * @function
      * @param {object} e the triggering event
-     * @param {object} draggableEntity the draggable entity that is dropped
+     * @param {Draggable} draggable the draggable object that is dropped
      */
-    checkOnMe(e: object, draggableEntity: object): void;
+    checkOnMe(e: object, draggable: Draggable): void;
     /**
      * Gets called when a draggable entity is dropped on the current entity
      * @name drop
-     * @memberof DroptargetEntity
+     * @memberof DropTarget
      * @function
-     * @param {object} draggableEntity the draggable entity that is dropped
+     * @param {Draggable} draggable the draggable object that is dropped
      */
     drop(): void;
     /**
      * Destructor
      * @name destroy
-     * @memberof DroptargetEntity
+     * @memberof DropTarget
      * @function
+     * @private
      */
-    destroy(): void;
+    private destroy;
+}
+/**
+ * @classdesc
+ * Used to make a game entity a droptarget
+ * @augments Entity
+ * @deprecated since 10.5.0
+ * @see DropTarget
+ */
+export class DroptargetEntity extends Entity {
+    /**
+     * @param {number} x the x coordinates of the draggable object
+     * @param {number} y the y coordinates of the draggable object
+     * @param {object} settings Entity properties (see {@link Entity})
+     */
+    constructor(x: number, y: number, settings: object);
 }
 /**
  * @classdesc
@@ -9188,10 +9193,6 @@ export function boot(): void;
  * @namespace collision
  */
 export var collision: any;
-export var deprecated: Readonly<{
-    __proto__: any;
-    warning: typeof warning;
-}>;
 declare namespace device$1 {
     namespace turnOnPointerLock { }
     namespace turnOffPointerLock { }
@@ -10971,6 +10972,17 @@ export var video: Readonly<{
     scale: typeof scale;
 }>;
 /**
+ * placeholder for all deprecated classes and corresponding alias for backward compatibility
+ */
+/**
+ * display a deprecation warning in the console
+ * @ignore
+ * @param {string} deprecated deprecated class,function or property name
+ * @param {string} replacement the replacement class, function, or property name
+ * @param {string} version the version since when the lass,function or property is deprecated
+ */
+export function warning(deprecated: string, replacement: string, version: string): void;
+/**
  * @classdesc
  * a bound object contains methods for creating and manipulating axis-aligned bounding boxes (AABB).
  */
@@ -11276,61 +11288,6 @@ declare class TextureCache {
      */
     getUnit(texture: any): any;
 }
-/**
- * allows registration of event listeners on the object target. <br>
- * melonJS will pass a me.Pointer object to the defined callback.
- * @see Pointer
- * @see {@link http://www.w3.org/TR/pointerevents/#list-of-pointer-events|W3C Pointer Event list}
- * @name registerPointerEvent
- * @memberof input
- * @public
- * @function
- * @param {string} eventType The event type for which the object is registering <br>
- * melonJS currently supports: <br>
- * <ul>
- *   <li><code>"pointermove"</code></li>
- *   <li><code>"pointerdown"</code></li>
- *   <li><code>"pointerup"</code></li>
- *   <li><code>"pointerenter"</code></li>
- *   <li><code>"pointerover"</code></li>
- *   <li><code>"pointerleave"</code></li>
- *   <li><code>"pointercancel"</code></li>
- *   <li><code>"wheel"</code></li>
- * </ul>
- * @param {Rect|Polygon|Line|Ellipse} region a shape representing the region to register on
- * @param {Function} callback methods to be called when the event occurs.
- * Returning `false` from the defined callback will prevent the event to be propagated to other objects
- * @example
- *  // onActivate function
- *  onActivateEvent: function () {
- *     // register on the 'pointerdown' event
- *     me.input.registerPointerEvent('pointerdown', this, this.pointerDown.bind(this));
- *  },
- *
- *  // pointerDown event callback
- *  pointerDown: function (pointer) {
- *    // do something
- *    ....
- *    // don"t propagate the event to other objects
- *    return false;
- *  },
- */
-declare function registerPointerEvent(eventType: string, region: Rect | Polygon | Line | Ellipse, callback: Function): void;
-/**
- * allows the removal of event listeners from the object target.
- * @see {@link http://www.w3.org/TR/pointerevents/#list-of-pointer-events|W3C Pointer Event list}
- * @name releasePointerEvent
- * @memberof input
- * @public
- * @function
- * @param {string} eventType The event type for which the object was registered. See {@link input.registerPointerEvent}
- * @param {Rect|Polygon|Line|Ellipse} region the registered region to release for this event
- * @param {Function} [callback="all"] if specified unregister the event only for the specific callback
- * @example
- * // release the registered region on the 'pointerdown' event
- * me.input.releasePointerEvent('pointerdown', this);
- */
-declare function releasePointerEvent(eventType: string, region: Rect | Polygon | Line | Ellipse, callback?: Function): void;
 /**
  * returns true if the given value is a power of two
  * @public
@@ -11801,17 +11758,6 @@ declare function unload(sound_name: string): boolean;
  */
 declare function unloadAll(): void;
 /**
- * placeholder for all deprecated classes and corresponding alias for backward compatibility
- */
-/**
- * display a deprecation warning in the console
- * @ignore
- * @param {string} deprecated deprecated class,function or property name
- * @param {string} replacement the replacement class, function, or property name
- * @param {string} version the version since when the lass,function or property is deprecated
- */
-declare function warning(deprecated: string, replacement: string, version: string): void;
-/**
  * calls each of the listeners registered for a given event.
  * @function event.emit
  * @param {string|symbol} eventName The event name.
@@ -11967,6 +11913,61 @@ declare function bindPointer(...args: any[]): void;
  * me.input.unbindPointer(me.input.pointer.LEFT);
  */
 declare function unbindPointer(button?: number): void;
+/**
+ * allows registration of event listeners on the object target. <br>
+ * melonJS will pass a me.Pointer object to the defined callback.
+ * @see Pointer
+ * @see {@link http://www.w3.org/TR/pointerevents/#list-of-pointer-events|W3C Pointer Event list}
+ * @name registerPointerEvent
+ * @memberof input
+ * @public
+ * @function
+ * @param {string} eventType The event type for which the object is registering <br>
+ * melonJS currently supports: <br>
+ * <ul>
+ *   <li><code>"pointermove"</code></li>
+ *   <li><code>"pointerdown"</code></li>
+ *   <li><code>"pointerup"</code></li>
+ *   <li><code>"pointerenter"</code></li>
+ *   <li><code>"pointerover"</code></li>
+ *   <li><code>"pointerleave"</code></li>
+ *   <li><code>"pointercancel"</code></li>
+ *   <li><code>"wheel"</code></li>
+ * </ul>
+ * @param {Rect|Polygon|Line|Ellipse} region a shape representing the region to register on
+ * @param {Function} callback methods to be called when the event occurs.
+ * Returning `false` from the defined callback will prevent the event to be propagated to other objects
+ * @example
+ *  // onActivate function
+ *  onActivateEvent: function () {
+ *     // register on the 'pointerdown' event
+ *     me.input.registerPointerEvent('pointerdown', this, this.pointerDown.bind(this));
+ *  },
+ *
+ *  // pointerDown event callback
+ *  pointerDown: function (pointer) {
+ *    // do something
+ *    ....
+ *    // don"t propagate the event to other objects
+ *    return false;
+ *  },
+ */
+declare function registerPointerEvent(eventType: string, region: Rect | Polygon | Line | Ellipse, callback: Function): void;
+/**
+ * allows the removal of event listeners from the object target.
+ * @see {@link http://www.w3.org/TR/pointerevents/#list-of-pointer-events|W3C Pointer Event list}
+ * @name releasePointerEvent
+ * @memberof input
+ * @public
+ * @function
+ * @param {string} eventType The event type for which the object was registered. See {@link input.registerPointerEvent}
+ * @param {Rect|Polygon|Line|Ellipse} region the registered region to release for this event
+ * @param {Function} [callback="all"] if specified unregister the event only for the specific callback
+ * @example
+ * // release the registered region on the 'pointerdown' event
+ * me.input.releasePointerEvent('pointerdown', this);
+ */
+declare function releasePointerEvent(eventType: string, region: Rect | Polygon | Line | Ellipse, callback?: Function): void;
 /**
  * allows the removal of all registered event listeners from the object target.
  * @name releaseAllPointerEvents
