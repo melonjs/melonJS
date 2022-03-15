@@ -1,6 +1,6 @@
 # Changelog
 
-## [10.5.0] (melonJS 2) - _2022-03-XX_
+## [10.5.0] (melonJS 2) - _2022-03-15_
 
 ### Changed
 - Physic: set collision shapes as static by default (those should be fixed anyway)
@@ -1096,6 +1096,7 @@
 - first public version with alex4 !
 - www.melonjs.org is live :)
 
+[10.5.0]: https://github.com/melonjs/melonJS/compare/10.4.0...10.5.0
 [10.4.0]: https://github.com/melonjs/melonJS/compare/10.3.0...10.4.0
 [10.3.0]: https://github.com/melonjs/melonJS/compare/10.2.3...10.3.0
 [10.2.3]: https://github.com/melonjs/melonJS/compare/10.2.2...10.2.3
