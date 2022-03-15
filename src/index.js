@@ -53,6 +53,7 @@ import NineSliceSprite from "./renderable/nineslicesprite.js";
 import GUI_Object from "./renderable/GUI.js";
 import Collectable from "./renderable/collectable.js";
 import Trigger from "./renderable/trigger.js";
+import { Draggable, DropTarget } from "./renderable/dragndrop.js";
 import TMXRenderer from "./level/tiled/renderer/TMXRenderer.js";
 import TMXOrthogonalRenderer from "./level/tiled/renderer/TMXOrthogonalRenderer.js";
 import TMXIsometricRenderer from "./level/tiled/renderer/TMXIsometricRenderer.js";
@@ -71,13 +72,7 @@ import World from "./physics/world.js";
 import { ParticleEmitterSettings, ParticleEmitter } from "./particles/emitter.js";
 import Particle from "./particles/particle.js";
 import Entity from "./entity/entity.js";
-import DraggableEntity from "./entity/draggable.js";
-import DroptargetEntity from "./entity/droptarget.js";
 
-
-
-// alias and wrapper for deprecated API
-import * as deprecated from "./lang/deprecated.js";
 
 /**
  * current melonJS version
@@ -143,6 +138,8 @@ export {
     GUI_Object,
     Collectable,
     Trigger,
+    Draggable,
+    DropTarget,
     TMXRenderer,
     TMXOrthogonalRenderer,
     TMXIsometricRenderer,
@@ -161,15 +158,11 @@ export {
     ParticleEmitter,
     ParticleEmitterSettings,
     Particle,
-    Entity,
-    DraggableEntity,
-    DroptargetEntity
+    Entity
 };
 
 // Backward compatibility for deprecated method or properties
-export {
-    deprecated
-};
+export * from "./lang/deprecated.js";
 
 
 /**

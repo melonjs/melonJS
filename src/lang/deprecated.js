@@ -2,6 +2,7 @@ import device from "./../system/device.js";
 import { requestPointerLock, exitPointerLock } from "./../input/input.js";
 import { TextureAtlas } from "./../video/texture.js";
 import Renderer from "./../video/renderer.js";
+import { Draggable, DropTarget } from "./../renderable/dragndrop.js";
 
 /**
  * placeholder for all deprecated classes and corresponding alias for backward compatibility
@@ -86,3 +87,42 @@ Object.defineProperty(Renderer.prototype, "Texture", {
         return TextureAtlas;
     }
 });
+
+
+/**
+ * @classdesc
+ * Used to make a game entity draggable
+ * @augments Entity
+ * @deprecated since 10.5.0
+ * @see Draggable
+ */
+export class DraggableEntity extends Draggable {
+    /**
+     * @param {number} x the x coordinates of the draggable object
+     * @param {number} y the y coordinates of the draggable object
+     * @param {object} settings Entity properties (see {@link Entity})
+     */
+    constructor(x, y, settings) {
+        warning("DraggableEntity", "Draggable", "10.5.0");
+        super(x, y, settings.width, settings.height);
+    }
+}
+
+/**
+ * @classdesc
+ * Used to make a game entity a droptarget
+ * @augments Entity
+ * @deprecated since 10.5.0
+ * @see DropTarget
+ */
+export class DroptargetEntity extends DropTarget {
+    /**
+     * @param {number} x the x coordinates of the draggable object
+     * @param {number} y the y coordinates of the draggable object
+     * @param {object} settings Entity properties (see {@link Entity})
+     */
+    constructor(x, y, settings) {
+        warning("DroptargetEntity", "DropTarget", "10.5.0");
+        super(x, y, settings.width, settings.height);
+    }
+}

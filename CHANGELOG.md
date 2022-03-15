@@ -1,9 +1,10 @@
 # Changelog
 
-## [10.4.1] (melonJS 2) - _2022-03-XX_
+## [10.5.0] (melonJS 2) - _2022-03-XX_
 
 ### Changed
 - Physic: set collision shapes as static by default (those should be fixed anyway)
+- Renderable : refactor of Draggable and DropTarget base objects
 
 ### Fixed
 - Physic: fix improper behavior for static bodies responding to collisions (thanks @dynamo-foundation)
