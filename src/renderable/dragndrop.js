@@ -103,7 +103,7 @@ export class Draggable extends Renderable {
      * @name destroy
      * @memberof Draggable
      * @function
-     * @private
+     * @ignore
      */
     destroy() {
         event.off(event.POINTERMOVE, this.dragMove);
@@ -215,7 +215,7 @@ export class DropTarget extends Renderable {
      * @name destroy
      * @memberof DropTarget
      * @function
-     * @private
+     * @ignore
      */
     destroy() {
         event.off(event.DRAGEND, this.checkOnMe);
