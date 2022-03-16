@@ -595,7 +595,7 @@ class Renderable extends Rect {
      * @param {number} dt time since the last update in milliseconds.
      * @returns {boolean} true if the renderable is dirty
      */
-    update(/* dt */) {
+    update(dt) { // eslint-disable-line no-unused-vars
         return this.isDirty;
     }
 
@@ -743,7 +743,7 @@ class Renderable extends Rect {
      * @protected
      * @param {CanvasRenderer|WebGLRenderer} renderer a renderer object
      */
-    draw(/*renderer*/) {
+    draw(renderer) {  // eslint-disable-line no-unused-vars
         // empty one !
     }
 
@@ -757,7 +757,6 @@ class Renderable extends Rect {
      * @param {CanvasRenderer|WebGLRenderer} renderer a renderer object
      */
     postDraw(renderer) {
-
         // remove the previously applied tint
         renderer.clearTint();
 
