@@ -273,7 +273,7 @@ export function init(width, height, options) {
 
     // default scaled size value
     settings.zoomX = width * scaleRatio.x;
-    settings.zoomY = width * scaleRatio.y;
+    settings.zoomY = height * scaleRatio.y;
 
     //add a channel for the onresize/onorientationchange event
     window.addEventListener(
