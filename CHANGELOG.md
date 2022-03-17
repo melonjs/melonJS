@@ -4,6 +4,7 @@
 
 ### Fixed
 - Renderer: fix a regression when zooming the canvas in WebGL rendering mode
+- TypeScript : fix definition of the base Renderable class
 
 ## [10.5.0] (melonJS 2) - _2022-03-15_
 
