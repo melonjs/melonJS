@@ -320,6 +320,18 @@ class WebGLRenderer extends Renderer {
     }
 
     /**
+     * set/change the current projection matrix (WebGL only)
+     * @name setProjection
+     * @memberof WebGLRenderer.prototype
+     * @function
+     * @param {Matrix3d} matrix
+     */
+    setProjection(matrix) {
+        super.setProjection(matrix);
+        this.currentCompositor.setProjection(matrix);
+    }
+
+    /**
      * Clears the gl context with the given color.
      * @name clearColor
      * @memberof WebGLRenderer.prototype

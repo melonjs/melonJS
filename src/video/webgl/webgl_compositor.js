@@ -360,6 +360,17 @@ class WebGLCompositor {
     }
 
     /**
+     * set/change the current projection matrix
+     * @name setProjection
+     * @memberof WebGLCompositor
+     * @function
+     * @param {Matrix3d} matrix
+     */
+    setProjection(matrix) {
+        this.activeShader.setUniform("uProjectionMatrix", matrix);
+    }
+
+    /**
      * Select the shader to use for compositing
      * @name useShader
      * @see GLShader

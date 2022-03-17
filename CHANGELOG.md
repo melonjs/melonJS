@@ -1,5 +1,10 @@
 # Changelog
 
+## [10.5.2] (melonJS 2) - _2022-03-17_
+
+### Fixed
+- WebGL: fix shader attribute for the projection matrix not being properly updated when using the flex scaling mode
+
 ## [10.5.1] (melonJS 2) - _2022-03-17_
 
 ### Fixed
