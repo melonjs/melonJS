@@ -8473,6 +8473,14 @@ export class WebGLCompositor {
      */
     uploadTexture(texture: any, w: any, h: any, b: any, force?: boolean): any;
     /**
+     * set/change the current projection matrix
+     * @name setProjection
+     * @memberof WebGLCompositor
+     * @function
+     * @param {Matrix3d} matrix
+     */
+    setProjection(matrix: Matrix3d): void;
+    /**
      * Select the shader to use for compositing
      * @name useShader
      * @see GLShader

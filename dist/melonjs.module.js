@@ -29599,6 +29599,17 @@ class WebGLCompositor {
     }
 
     /**
+     * set/change the current projection matrix
+     * @name setProjection
+     * @memberof WebGLCompositor
+     * @function
+     * @param {Matrix3d} matrix
+     */
+    setProjection(matrix) {
+        this.activeShader.setUniform("uProjectionMatrix", matrix);
+    }
+
+    /**
      * Select the shader to use for compositing
      * @name useShader
      * @see GLShader
@@ -30075,6 +30086,18 @@ class WebGLRenderer extends Renderer {
      */
     flush() {
         this.currentCompositor.flush();
+    }
+
+    /**
+     * set/change the current projection matrix (WebGL only)
+     * @name setProjection
+     * @memberof WebGLRenderer.prototype
+     * @function
+     * @param {Matrix3d} matrix
+     */
+    setProjection(matrix) {
+        super.setProjection(matrix);
+        this.currentCompositor.setProjection(matrix);
     }
 
     /**
