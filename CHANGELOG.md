@@ -1,6 +1,6 @@
 # Changelog
 
-## [10.5.1] (melonJS 2) - _2021-03-17_
+## [10.5.1] (melonJS 2) - _2022-03-17_
 
 ### Fixed
 - Renderer: fix a regression when zooming the canvas in WebGL rendering mode
