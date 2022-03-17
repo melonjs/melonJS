@@ -143,6 +143,10 @@ export class BitmapText extends Renderable {
      */
     measureText(text?: string, ret?: Rect): TextMetrics;
     /**
+     * @ignore
+     */
+    update(): boolean;
+    /**
      * draw the bitmap font
      * @name draw
      * @memberof BitmapText.prototype
@@ -2066,17 +2070,6 @@ export class Container extends Renderable {
      */
     _sortY(a: any, b: any): number;
     /**
-     * container update function. <br>
-     * automatically called by the game manager {@link game}
-     * @name update
-     * @memberof Container.prototype
-     * @function
-     * @protected
-     * @param {number} dt time since the last update in milliseconds.
-     * @returns {boolean} true if the Container is dirty
-     */
-    protected update(dt: number): boolean;
-    /**
      * draw the container. <br>
      * automatically called by the game manager {@link game}
      * @name draw
@@ -2140,9 +2133,9 @@ export class Draggable extends Renderable {
      * @name destroy
      * @memberof Draggable
      * @function
-     * @private
+     * @ignore
      */
-    private destroy;
+    destroy(): void;
 }
 /**
  * @classdesc
@@ -2224,9 +2217,9 @@ export class DropTarget extends Renderable {
      * @name destroy
      * @memberof DropTarget
      * @function
-     * @private
+     * @ignore
      */
-    private destroy;
+    destroy(): void;
 }
 /**
  * @classdesc
@@ -2879,16 +2872,6 @@ export class ImageLayer extends Renderable {
      * @ignore
      */
     preDraw(renderer: any): void;
-    /**
-     * draw the ImageLayer. <br>
-     * automatically called by the game manager {@link game}
-     * @name draw
-     * @memberof ImageLayer.prototype
-     * @function
-     * @protected
-     * @param {CanvasRenderer|WebGLRenderer} renderer a renderer object
-     */
-    protected draw(renderer: CanvasRenderer | WebGLRenderer): void;
     onDeactivateEvent(): void;
     /**
      * Destroy function<br>
@@ -4099,16 +4082,6 @@ export class Particle extends Renderable {
     onlyInViewport: any;
     _deltaInv: number;
     angle: number;
-    /**
-     * Update the Particle <br>
-     * This is automatically called by the game manager {@link game}
-     * @name update
-     * @memberof Particle
-     * @function
-     * @ignore
-     * @param {number} dt time since the last update in milliseconds
-     */
-    update(dt: number): boolean;
     /**
      * @ignore
      */
@@ -5465,7 +5438,7 @@ export class Renderable extends Rect {
      * @param {number} dt time since the last update in milliseconds.
      * @returns {boolean} true if the renderable is dirty
      */
-    protected update(): boolean;
+    protected update(dt: number): boolean;
     /**
      * update the renderable's bounding rect (private)
      * @ignore
@@ -5513,7 +5486,7 @@ export class Renderable extends Rect {
      * @protected
      * @param {CanvasRenderer|WebGLRenderer} renderer a renderer object
      */
-    protected draw(): void;
+    protected draw(renderer: CanvasRenderer | WebGLRenderer): void;
     /**
      * restore the rendering context after drawing. <br>
      * automatically called by the game manager {@link game}
@@ -6104,31 +6077,10 @@ export class Sprite extends Renderable {
      */
     getAnimationFrameObjectByIndex(id: number): number;
     /**
-     * update function. <br>
-     * automatically called by the game manager {@link game}
-     * @name update
-     * @memberof Sprite.prototype
-     * @function
-     * @protected
-     * @param {number} dt time since the last update in milliseconds.
-     * @returns {boolean} true if the Sprite is dirty
-     */
-    protected update(dt: number): boolean;
-    /**
      * Destroy function<br>
      * @ignore
      */
     destroy(): void;
-    /**
-     * sprite draw. <br>
-     * automatically called by the game manager {@link game}
-     * @name draw
-     * @memberof Sprite.prototype
-     * @function
-     * @protected
-     * @param {CanvasRenderer|WebGLRenderer} renderer a renderer object
-     */
-    protected draw(renderer: CanvasRenderer | WebGLRenderer): void;
 }
 /**
  * @classdesc
@@ -7096,6 +7048,10 @@ export class Text extends Renderable {
      * @returns {TextMetrics} a TextMetrics object with two properties: `width` and `height`, defining the output dimensions
      */
     measureText(renderer?: CanvasRenderer | WebGLRenderer, text?: string, ret?: Rect | Bounds): TextMetrics;
+    /**
+     * @ignore
+     */
+    update(): boolean;
     /**
      * draw a text at the specified coord
      * @name draw

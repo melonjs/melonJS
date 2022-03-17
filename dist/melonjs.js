@@ -1,5 +1,5 @@
 /*!
- * melonJS Game Engine - v10.5.0
+ * melonJS Game Engine - v10.5.1
  * http://www.melonjs.org
  * melonjs is licensed under the MIT License.
  * http://www.opensource.org/licenses/mit-license
@@ -13665,7 +13665,7 @@
          * @param {number} dt time since the last update in milliseconds.
          * @returns {boolean} true if the renderable is dirty
          */
-        Renderable.prototype.update = function update (/* dt */) {
+        Renderable.prototype.update = function update (dt) { // eslint-disable-line no-unused-vars
             return this.isDirty;
         };
 
@@ -13813,7 +13813,7 @@
          * @protected
          * @param {CanvasRenderer|WebGLRenderer} renderer a renderer object
          */
-        Renderable.prototype.draw = function draw (/*renderer*/) {
+        Renderable.prototype.draw = function draw (renderer) {  // eslint-disable-line no-unused-vars
             // empty one !
         };
 
@@ -13827,7 +13827,6 @@
          * @param {CanvasRenderer|WebGLRenderer} renderer a renderer object
          */
         Renderable.prototype.postDraw = function postDraw (renderer) {
-
             // remove the previously applied tint
             renderer.clearTint();
 
@@ -31222,7 +31221,7 @@
 
         // default scaled size value
         settings.zoomX = width * scaleRatio.x;
-        settings.zoomY = width * scaleRatio.y;
+        settings.zoomY = height * scaleRatio.y;
 
         //add a channel for the onresize/onorientationchange event
         window.addEventListener(
@@ -31900,10 +31899,10 @@
          * this can be overridden by the plugin
          * @public
          * @type {string}
-         * @default "10.5.0"
+         * @default "10.5.1"
          * @name plugin.Base#version
          */
-        this.version = "10.5.0";
+        this.version = "10.5.1";
     };
 
     /**
@@ -35029,7 +35028,7 @@
          * @name destroy
          * @memberof Draggable
          * @function
-         * @private
+         * @ignore
          */
         Draggable.prototype.destroy = function destroy () {
             off(POINTERMOVE, this.dragMove);
@@ -35140,7 +35139,7 @@
          * @name destroy
          * @memberof DropTarget
          * @function
-         * @private
+         * @ignore
          */
         DropTarget.prototype.destroy = function destroy () {
             off(DRAGEND, this.checkOnMe);
@@ -36342,7 +36341,7 @@
      * @name version
      * @type {string}
      */
-    var version = "10.5.0";
+    var version = "10.5.1";
 
 
     /**

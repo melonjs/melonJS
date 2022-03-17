@@ -1,5 +1,5 @@
 /*!
- * melonJS Game Engine - v10.5.0
+ * melonJS Game Engine - v10.5.1
  * http://www.melonjs.org
  * melonjs is licensed under the MIT License.
  * http://www.opensource.org/licenses/mit-license
@@ -13572,7 +13572,7 @@ class Renderable extends Rect {
      * @param {number} dt time since the last update in milliseconds.
      * @returns {boolean} true if the renderable is dirty
      */
-    update(/* dt */) {
+    update(dt) { // eslint-disable-line no-unused-vars
         return this.isDirty;
     }
 
@@ -13720,7 +13720,7 @@ class Renderable extends Rect {
      * @protected
      * @param {CanvasRenderer|WebGLRenderer} renderer a renderer object
      */
-    draw(/*renderer*/) {
+    draw(renderer) {  // eslint-disable-line no-unused-vars
         // empty one !
     }
 
@@ -13734,7 +13734,6 @@ class Renderable extends Rect {
      * @param {CanvasRenderer|WebGLRenderer} renderer a renderer object
      */
     postDraw(renderer) {
-
         // remove the previously applied tint
         renderer.clearTint();
 
@@ -31178,7 +31177,7 @@ function init(width, height, options) {
 
     // default scaled size value
     settings.zoomX = width * scaleRatio.x;
-    settings.zoomY = width * scaleRatio.y;
+    settings.zoomY = height * scaleRatio.y;
 
     //add a channel for the onresize/onorientationchange event
     window.addEventListener(
@@ -31844,10 +31843,10 @@ class BasePlugin {
          * this can be overridden by the plugin
          * @public
          * @type {string}
-         * @default "10.5.0"
+         * @default "10.5.1"
          * @name plugin.Base#version
          */
-        this.version = "10.5.0";
+        this.version = "10.5.1";
     }
 }
 
@@ -35087,7 +35086,7 @@ class Draggable extends Renderable {
      * @name destroy
      * @memberof Draggable
      * @function
-     * @private
+     * @ignore
      */
     destroy() {
         off(POINTERMOVE, this.dragMove);
@@ -35198,7 +35197,7 @@ class DropTarget extends Renderable {
      * @name destroy
      * @memberof DropTarget
      * @function
-     * @private
+     * @ignore
      */
     destroy() {
         off(DRAGEND, this.checkOnMe);
@@ -36392,7 +36391,7 @@ class DroptargetEntity extends DropTarget {
  * @name version
  * @type {string}
  */
-const version = "10.5.0";
+const version = "10.5.1";
 
 
 /**
