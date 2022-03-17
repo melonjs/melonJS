@@ -1,5 +1,5 @@
 /*!
- * melonJS Game Engine - v10.5.1
+ * melonJS Game Engine - v10.5.2
  * http://www.melonjs.org
  * melonjs is licensed under the MIT License.
  * http://www.opensource.org/licenses/mit-license
@@ -31922,10 +31922,10 @@
          * this can be overridden by the plugin
          * @public
          * @type {string}
-         * @default "10.5.1"
+         * @default "10.5.2"
          * @name plugin.Base#version
          */
-        this.version = "10.5.1";
+        this.version = "10.5.2";
     };
 
     /**
@@ -36364,7 +36364,7 @@
      * @name version
      * @type {string}
      */
-    var version = "10.5.1";
+    var version = "10.5.2";
 
 
     /**
