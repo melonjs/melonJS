@@ -1,6 +1,6 @@
 # Changelog
 
-## [10.5.1] (melonJS 2) - _2021-03-XX_
+## [10.5.1] (melonJS 2) - _2021-03-17_
 
 ### Fixed
 - Renderer: fix a regression when zooming the canvas in WebGL rendering mode
@@ -1101,6 +1101,7 @@
 - first public version with alex4 !
 - www.melonjs.org is live :)
 
+[10.5.1]: https://github.com/melonjs/melonJS/compare/10.5.0...10.5.1
 [10.5.0]: https://github.com/melonjs/melonJS/compare/10.4.0...10.5.0
 [10.4.0]: https://github.com/melonjs/melonJS/compare/10.3.0...10.4.0
 [10.3.0]: https://github.com/melonjs/melonJS/compare/10.2.3...10.3.0
