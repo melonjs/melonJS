@@ -12,11 +12,16 @@
     "sourceType": "module"
   },
   "plugins": [
-      "jsdoc"
+    "jsdoc"
   ],
   "extends": "eslint:recommended",
   "extends": ["plugin:jsdoc/recommended"],
 
+  "settings": {
+    "jsdoc": {
+      "mode": "typescript"
+    }
+  },
   "rules": {
     // http://eslint.org/docs/rules/
     "accessor-pairs": "error",
@@ -77,7 +82,7 @@
     "no-tabs": "error",
     "no-template-curly-in-string": "off",
     "no-throw-literal": "off",
-    "no-trailing-spaces": "off",
+    "no-trailing-spaces": "error",
     "no-undef-init": "error",
     "no-unmodified-loop-condition": "error",
     "no-unneeded-ternary": ["off", { "defaultAssignment": false }],
