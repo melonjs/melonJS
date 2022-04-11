@@ -5,6 +5,8 @@ import * as stringUtil from "./../utils/string.js";
 import pool from "./../system/pooling.js";
 import Renderable from "./../renderable/renderable.js";
 import { nextPowerOfTwo } from "./../math/math.js";
+import setContextStyle from "./textstyle.js";
+import TextMetrics from "./textmetrics.js";
 
 
 /*
@@ -18,21 +20,6 @@ import { nextPowerOfTwo } from "./../math/math.js";
 
 var runits = ["ex", "em", "pt", "px"];
 var toPX = [12, 24, 0.75, 1];
-
-/**
- * apply the current font style to the given context
- * @ignore
- */
-var setContextStyle = function(context, font, stroke = false) {
-    context.font = font.font;
-    context.fillStyle = font.fillStyle.toRGBA();
-    if (stroke === true) {
-        context.strokeStyle = font.strokeStyle.toRGBA();
-        context.lineWidth = font.lineWidth;
-    }
-    context.textAlign = font.textAlign;
-    context.textBaseline = font.textBaseline;
-};
 
 /**
  * @classdesc
@@ -72,7 +59,6 @@ class Text extends Renderable {
          * @public
          * @type {Color}
          * @default black
-         * @name Text#fillStyle
          */
         if (typeof settings.fillStyle !== "undefined") {
             if (settings.fillStyle instanceof Color) {
@@ -90,7 +76,6 @@ class Text extends Renderable {
          * @public
          * @type {Color}
          * @default black
-         * @name Text#strokeStyle
          */
          if (typeof settings.strokeStyle !== "undefined") {
              if (settings.strokeStyle instanceof Color) {
@@ -108,7 +93,6 @@ class Text extends Renderable {
          * @public
          * @type {number}
          * @default 1
-         * @name Text#lineWidth
          */
         this.lineWidth = settings.lineWidth || 1;
 
@@ -118,7 +102,6 @@ class Text extends Renderable {
          * @public
          * @type {string}
          * @default "left"
-         * @name Text#textAlign
          */
         this.textAlign = settings.textAlign || "left";
 
@@ -128,7 +111,6 @@ class Text extends Renderable {
          * @public
          * @type {string}
          * @default "top"
-         * @name Text#textBaseline
          */
         this.textBaseline = settings.textBaseline || "top";
 
@@ -138,7 +120,6 @@ class Text extends Renderable {
          * @public
          * @type {number}
          * @default 1.0
-         * @name Text#lineHeight
          */
         this.lineHeight = settings.lineHeight || 1.0;
 
@@ -149,7 +130,6 @@ class Text extends Renderable {
          * @public
          * @type {boolean}
          * @default false
-         * @name Text#offScreenCanvas
          */
         this.offScreenCanvas = false;
 
@@ -163,9 +143,7 @@ class Text extends Renderable {
          * the font size (in px)
          * @public
          * @type {number}
-         * @name fontSize
          * @default 10
-         * @memberof Text
          */
         this.fontSize = 10;
 
@@ -201,6 +179,10 @@ class Text extends Renderable {
         // set the text
         this.setText(settings.text);
 
+        // instance to text metrics functions
+        this.metrics = new TextMetrics(this);
+
+
         // force update bounds on object creation
         this.update(0);
     }
@@ -220,9 +202,6 @@ class Text extends Renderable {
 
     /**
      * make the font bold
-     * @name bold
-     * @memberof Text.prototype
-     * @function
      * @returns {Text} this object for chaining
      */
     bold() {
@@ -233,9 +212,6 @@ class Text extends Renderable {
 
     /**
      * make the font italic
-     * @name italic
-     * @memberof Text.prototype
-     * @function
      * @returns {Text} this object for chaining
      */
     italic() {
@@ -246,9 +222,6 @@ class Text extends Renderable {
 
     /**
      * set the font family and size
-     * @name setFont
-     * @memberof Text.prototype
-     * @function
      * @param {string} font a CSS font name
      * @param {number|string} [size=10] size in px, or size + suffix (px, em, pt)
      * @returns {Text} this object for chaining
@@ -290,9 +263,6 @@ class Text extends Renderable {
 
     /**
      * change the text to be displayed
-     * @name setText
-     * @memberof Text.prototype
-     * @function
      * @param {number|string|string[]} value a string, or an array of strings
      * @returns {Text} this object for chaining
      */
@@ -311,54 +281,12 @@ class Text extends Renderable {
 
     /**
      * measure the given text size in pixels
-     * @name measureText
-     * @memberof Text.prototype
-     * @function
      * @param {CanvasRenderer|WebGLRenderer} [renderer] reference to the active renderer
      * @param {string} [text] the text to be measured
-     * @param {Rect|Bounds} [ret] a object in which to store the text metrics
-     * @returns {TextMetrics} a TextMetrics object with two properties: `width` and `height`, defining the output dimensions
+     * @returns {TextMetrics} a TextMetrics object defining the dimensions of the given piece of text
      */
-    measureText(renderer, text, ret) {
-        var context;
-        var textMetrics = ret || this.getBounds();
-        var lineHeight = this.fontSize * this.lineHeight;
-        var strings = typeof text !== "undefined" ? ("" + (text)).split("\n") : this._text;
-
-        if (this.offScreenCanvas === true) {
-            context = this.context;
-        } else {
-            context = renderer.getFontContext();
-        }
-
-        // save the previous context
-        context.save();
-
-        // apply the style font
-        setContextStyle(context, this);
-
-        // compute the bounding box size
-        this.height = this.width = 0;
-        for (var i = 0; i < strings.length; i++) {
-            this.width = Math.max(context.measureText(stringUtil.trimRight(""+strings[i])).width, this.width);
-            this.height += lineHeight;
-        }
-        textMetrics.width = Math.ceil(this.width);
-        textMetrics.height = Math.ceil(this.height);
-
-        // compute the bounding box position
-        textMetrics.x = Math.floor((this.textAlign === "right" ? this.pos.x - this.width : (
-            this.textAlign === "center" ? this.pos.x - (this.width / 2) : this.pos.x
-        )));
-        textMetrics.y = Math.floor((this.textBaseline.search(/^(top|hanging)$/) === 0) ? this.pos.y : (
-            this.textBaseline === "middle" ? this.pos.y - (textMetrics.height / 2) : this.pos.y - textMetrics.height
-        ));
-
-        // restore the context
-        context.restore();
-
-        // returns the Font bounds me.Rect by default
-        return textMetrics;
+    measureText(renderer, text = this._text) {
+        return this.metrics.measureText(renderer, text);
     }
 
     /**
@@ -366,7 +294,8 @@ class Text extends Renderable {
      */
     update(/* dt */) {
         if (this.isDirty === true) {
-            var bounds = this.measureText(renderer);
+            var bounds = this.getBounds();
+            bounds.addBounds(this.metrics.measureText(renderer, this._text), true);
             if (this.offScreenCanvas === true) {
                 var width = Math.round(bounds.width),
                     height = Math.round(bounds.height);
@@ -400,9 +329,6 @@ class Text extends Renderable {
 
     /**
      * draw a text at the specified coord
-     * @name draw
-     * @memberof Text.prototype
-     * @function
      * @param {CanvasRenderer|WebGLRenderer} renderer Reference to the destination renderer instance
      * @param {string} [text]
      * @param {number} [x]
@@ -466,9 +392,6 @@ class Text extends Renderable {
      * draw a stroke text at the specified coord, as defined <br>
      * by the `lineWidth` and `fillStroke` properties. <br>
      * Note : using drawStroke is not recommended for performance reasons
-     * @name drawStroke
-     * @memberof Text.prototype
-     * @function
      * @param {CanvasRenderer|WebGLRenderer} renderer Reference to the destination renderer instance
      * @param {string} text
      * @param {number} x
@@ -484,13 +407,12 @@ class Text extends Renderable {
     _drawFont(context, text, x, y, stroke = false) {
         setContextStyle(context, this, stroke);
 
-        var lineHeight = this.fontSize * this.lineHeight;
         for (var i = 0; i < text.length; i++) {
             var string = stringUtil.trimRight(""+text[i]);
             // draw the string
             context[stroke ? "strokeText" : "fillText"](string, x, y);
             // add leading space
-            y += lineHeight;
+            y += this.metrics.lineHeight();
         }
         return this.getBounds();
     }
@@ -503,6 +425,7 @@ class Text extends Renderable {
         pool.push(this.fillStyle);
         pool.push(this.strokeStyle);
         this.fillStyle = this.strokeStyle = undefined;
+        this.metrics = undefined;
         this._text.length = 0;
         super.destroy();
     }

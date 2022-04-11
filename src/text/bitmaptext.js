@@ -3,33 +3,7 @@ import * as stringUtil from "./../utils/string.js";
 import pool from "./../system/pooling.js";
 import loader from "./../loader/loader.js";
 import Renderable from "./../renderable/renderable.js";
-
-/**
- * Measures the width of a single line of text, does not account for \n
- * @ignore
- */
-var measureTextWidth = function(font, text) {
-    var characters = text.split("");
-    var width = 0;
-    var lastGlyph = null;
-    for (var i = 0; i < characters.length; i++) {
-        var ch = characters[i].charCodeAt(0);
-        var glyph = font.fontData.glyphs[ch];
-        var kerning = (lastGlyph && lastGlyph.kerning) ? lastGlyph.getKerning(ch) : 0;
-        width += (glyph.xadvance + kerning) * font.fontScale.x;
-        lastGlyph = glyph;
-    }
-
-    return width;
-};
-
-/**
- * Measures the height of a single line of text, does not account for \n
- * @ignore
- */
-var measureTextHeight = function(font) {
-    return font.fontData.capHeight * font.lineHeight * font.fontScale.y;
-};
+import TextMetrics from "./textmetrics.js";
 
 /**
  * @classdesc
@@ -75,8 +49,6 @@ class BitmapText extends Renderable {
          * @public
          * @type {string}
          * @default "left"
-         * @name textAlign
-         * @memberof BitmapText
          */
         this.textAlign = settings.textAlign || "left";
 
@@ -86,8 +58,6 @@ class BitmapText extends Renderable {
          * @public
          * @type {string}
          * @default "top"
-         * @name textBaseline
-         * @memberof BitmapText
          */
         this.textBaseline = settings.textBaseline || "top";
 
@@ -97,8 +67,6 @@ class BitmapText extends Renderable {
          * @public
          * @type {number}
          * @default 1.0
-         * @name lineHeight
-         * @memberof BitmapText
          */
         this.lineHeight = settings.lineHeight || 1.0;
 
@@ -163,13 +131,14 @@ class BitmapText extends Renderable {
 
         // set the text
         this.setText(settings.text);
+
+        // instance to text metrics functions
+        this.metrics = new TextMetrics(this);
+
     }
 
     /**
      * change the font settings
-     * @name set
-     * @memberof BitmapText.prototype
-     * @function
      * @param {string} textAlign ("left", "center", "right")
      * @param {number} [scale]
      * @returns {BitmapText} this object for chaining
@@ -187,9 +156,6 @@ class BitmapText extends Renderable {
 
     /**
      * change the text to be displayed
-     * @name setText
-     * @memberof BitmapText.prototype
-     * @function
      * @param {number|string|string[]} value a string, or an array of strings
      * @returns {BitmapText} this object for chaining
      */
@@ -214,9 +180,7 @@ class BitmapText extends Renderable {
      * defines the color used to tint the bitmap text
      * @public
      * @type {Color}
-     * @name fillStyle
      * @see Renderable#tint
-     * @memberof BitmapText
      */
     get fillStyle() {
         return this.tint;
@@ -227,9 +191,6 @@ class BitmapText extends Renderable {
 
     /**
      * change the font display size
-     * @name resize
-     * @memberof BitmapText.prototype
-     * @function
      * @param {number} scale ratio
      * @returns {BitmapText} this object for chaining
      */
@@ -243,9 +204,6 @@ class BitmapText extends Renderable {
 
     /**
      * measure the given text size in pixels
-     * @name measureText
-     * @memberof BitmapText.prototype
-     * @function
      * @param {string} [text]
      * @param {Rect} [ret] a object in which to store the text metrics
      * @returns {TextMetrics} a TextMetrics object with two properties: `width` and `height`, defining the output dimensions
@@ -253,14 +211,14 @@ class BitmapText extends Renderable {
     measureText(text, ret) {
         text = text || this._text;
 
-        var stringHeight = measureTextHeight(this);
+        var stringHeight = this.metrics.lineHeight();
         var textMetrics = ret || this.getBounds();
         var strings = typeof text === "string" ? ("" + (text)).split("\n") : text;
 
         textMetrics.height = textMetrics.width = 0;
 
         for (var i = 0; i < strings.length; i++) {
-            textMetrics.width = Math.max(measureTextWidth(this, strings[i]), textMetrics.width);
+            textMetrics.width = Math.max(this.metrics.lineWidth(strings[i]), textMetrics.width);
             textMetrics.height += stringHeight;
         }
         return textMetrics;
@@ -278,9 +236,6 @@ class BitmapText extends Renderable {
 
     /**
      * draw the bitmap font
-     * @name draw
-     * @memberof BitmapText.prototype
-     * @function
      * @param {CanvasRenderer|WebGLRenderer} renderer Reference to the destination renderer instance
      * @param {string} [text]
      * @param {number} [x]
@@ -305,14 +260,14 @@ class BitmapText extends Renderable {
         }
 
         var lX = x;
-        var stringHeight = measureTextHeight(this);
+        var stringHeight = this.metrics.lineHeight();
         var maxWidth = 0;
 
         for (var i = 0; i < this._text.length; i++) {
             x = lX;
             var string = stringUtil.trimRight(this._text[i]);
             // adjust x pos based on alignment value
-            var stringWidth = measureTextWidth(this, string);
+            var stringWidth = this.metrics.lineWidth(string);
             switch (this.textAlign) {
                 case "right":
                     x -= stringWidth;
@@ -403,6 +358,7 @@ class BitmapText extends Renderable {
         pool.push(this.fontData);
         this.fontData = undefined;
         this._text.length = 0;
+        this.metrics = undefined;
         super.destroy();
     }
 
