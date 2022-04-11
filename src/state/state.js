@@ -64,7 +64,7 @@ function _resumeRunLoop() {
 }
 
 /**
- * Pause the loop for most screen objects.
+ * Pause the loop for most stage objects.
  * @ignore
  */
 function _pauseRunLoop() {
@@ -249,7 +249,7 @@ var state = {
     USER : 100,
 
     /**
-     * Stop the current screen object.
+     * Stop the current stage.
      * @name stop
      * @memberof state
      * @public
@@ -276,7 +276,7 @@ var state = {
     },
 
     /**
-     * pause the current screen object
+     * pause the current stage
      * @name pause
      * @memberof state
      * @public
@@ -302,7 +302,7 @@ var state = {
     },
 
     /**
-     * Restart the screen object from a full stop.
+     * Restart the current stage from a full stop.
      * @name restart
      * @memberof state
      * @public
@@ -330,7 +330,7 @@ var state = {
     },
 
     /**
-     * resume the screen object
+     * resume the current stage
      * @name resume
      * @memberof state
      * @public
@@ -438,7 +438,7 @@ var state = {
     },
 
     /**
-     * return a reference to the current screen object<br>
+     * return a reference to the current stage<br>
      * useful to call a object specific method
      * @name current
      * @memberof state
