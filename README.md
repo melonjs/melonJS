@@ -226,12 +226,10 @@ bucket.
 Questions, need help ?
 -------------------------------------------------------------------------------
 If you need technical support, you can contact us through the following channels :
-* [melonJS developer forum](http://www.html5gamedevs.com/forum/32-melonjs/)
-* [gitter web chat](https://gitter.im/melonjs/public)
-* [melonJS wikipage](https://github.com/melonjs/melonJS/wiki)
-* [Discord](https://discord.gg/aur7JMk)
+* Forums: with melonJS 2 we moved to a new discourse [forum](https://melonjs.discourse.group), but we can still also find the previous one [here](http://www.html5gamedevs.com/forum/32-melonjs/)
+* Chat: come and chat with us on [discord](https://discord.gg/aur7JMk), or [gitter](https://gitter.im/melonjs/public)
+* we tried to keep our [wikipage](https://github.com/melonjs/melonJS/wiki) up-to-date with useful links, tutorials, and anything related melonJS.
 
-For any other non technical related questions, feel free to also send us an [email](mailto:contact@melonjs.org)
 
 Sponsors
 -------------------------------------------------------------------------------
