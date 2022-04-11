@@ -265,6 +265,16 @@ class Renderable extends Rect {
         this.tint = pool.pull("Color", 255, 255, 255, 1.0);
 
         /**
+         * the blend mode to be applied to this renderable (blend mode : "normal", "multiply")
+         * @public
+         * @type {string}
+         * @name blendMode
+         * @default "normal"
+         * @memberof Renderable#
+         */
+        this.blendMode = "normal";
+
+        /**
          * The name of the renderable
          * @public
          * @type {string}
@@ -732,6 +742,11 @@ class Renderable extends Rect {
 
         // apply the current tint and opacity
         renderer.setTint(this.tint, this.getOpacity());
+
+        // apply blending if different from "normal"
+        if (this.blendMode !== "normal") {
+            renderer.setBlendMode(this.blendMode);
+        }
     }
 
     /**
