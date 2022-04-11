@@ -1,5 +1,7 @@
 # Changelog
 
+## [10.6.0] (melonJS 2) - _2022-xx-xx_
+
 ## [10.5.2] (melonJS 2) - _2022-03-17_
 
 ### Fixed
