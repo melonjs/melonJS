@@ -5,6 +5,9 @@
 ### Changed
 - Renderable : refactor of Text and BitmapText to isolate metrics related features/functions to standardize the api between the 2 classes
 
+### Fixed
+- Renderer: fix blend mode in WebGL rendering mode
+
 ## [10.5.2] (melonJS 2) - _2022-03-17_
 
 ### Fixed

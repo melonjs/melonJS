@@ -103,6 +103,11 @@ class WebGLRenderer extends Renderer {
         /**
          * @ignore
          */
+        this._blendStack = [];
+
+        /**
+         * @ignore
+         */
         this._glPoints = [
             new Vector2d(),
             new Vector2d(),
@@ -568,21 +573,22 @@ class WebGLRenderer extends Renderer {
      * @param {string} [mode="normal"] blend mode : "normal", "multiply"
      * @param {WebGLRenderingContext} [gl]
      */
-    setBlendMode(mode, gl) {
-        gl = gl || this.gl;
+    setBlendMode(mode, gl = this.gl) {
 
+        if (this.currentBlendMode !== mode) {
+            this.flush();
+            gl.enable(gl.BLEND);
+            switch (mode) {
+                case "multiply" :
+                    gl.blendFunc(gl.DST_COLOR, gl.ONE_MINUS_SRC_ALPHA);
+                    this.currentBlendMode = mode;
+                    break;
 
-        gl.enable(gl.BLEND);
-        switch (mode) {
-            case "multiply" :
-                gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
-                this.currentBlendMode = mode;
-                break;
-
-            default :
-                gl.blendFunc(gl.ONE, gl.ONE_MINUS_SRC_ALPHA);
-                this.currentBlendMode = "normal";
-                break;
+                default :
+                    gl.blendFunc(gl.ONE, gl.ONE_MINUS_SRC_ALPHA);
+                    this.currentBlendMode = "normal";
+                    break;
+            }
         }
     }
 
@@ -616,6 +622,8 @@ class WebGLRenderer extends Renderer {
             this.currentColor.copy(color);
             this.currentTransform.copy(matrix);
 
+            this.setBlendMode(this._blendStack.pop());
+
             // recycle objects
             pool.push(color);
             pool.push(matrix);
@@ -648,6 +656,8 @@ class WebGLRenderer extends Renderer {
             // FIXME avoid slice and object realloc
             this._scissorStack.push(this.currentScissor.slice());
         }
+
+        this._blendStack.push(this.blendMode);
     }
 
     /**
