@@ -746,7 +746,7 @@ class Renderable extends Rect {
         renderer.setTint(this.tint, this.getOpacity());
 
         // apply blending if different from "normal"
-        if (this.blendMode !== "normal") {
+        if (this.blendMode !== renderer.getBlendMode()) {
             renderer.setBlendMode(this.blendMode);
         }
     }
