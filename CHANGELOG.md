@@ -3,7 +3,8 @@
 ## [10.6.0] (melonJS 2) - _2022-xx-xx_
 
 ### Added
-- Renderable : add the possibility to specify a blend mode per renderable (still limited to normal or multiply)
+- Renderable : added the possibility to specify a blend mode per renderable
+- Renderer: added missing compatible/supported blend mode across the canvas and WebGL renderer ("normal", "multiply", "lighter, "screen")
 
 ### Changed
 - Renderable : refactor of Text and BitmapText to isolate metrics related features/functions to standardize the api between the 2 classes

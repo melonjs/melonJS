@@ -566,19 +566,39 @@ class WebGLRenderer extends Renderer {
     }
 
     /**
-     * set a blend mode for the given context
+     * set a blend mode for the given context. <br>
+     * Supported blend mode between Canvas and WebGL remderer : <br>
+     * - "normal" : this is the default mode and draws new content on top of the existing content <br>
+     * <img src="images/normal-blendmode.png" width="510"/> <br>
+     * - "multiply" : the pixels of the top layer are multiplied with the corresponding pixel of the bottom layer. A darker picture is the result. <br>
+     * <img src="images/multiply-blendmode.png" width="510"/> <br>
+     * - "lighter" : where both content overlap the color is determined by adding color values. <br>
+     * <img src="images/lighter-blendmode.png" width="510"/> <br>
+     * - "screen" : The pixels are inverted, multiplied, and inverted again. A lighter picture is the result (opposite of multiply) <br>
+     * <img src="images/screen-blendmode.png" width="510"/> <br>
      * @name setBlendMode
+     * @see https://developer.mozilla.org/en-US/docs/Web/API/CanvasRenderingContext2D/globalCompositeOperation
      * @memberof WebGLRenderer.prototype
      * @function
-     * @param {string} [mode="normal"] blend mode : "normal", "multiply"
+     * @param {string} [mode="normal"] blend mode : "normal", "multiply", "lighter", "screen"
      * @param {WebGLRenderingContext} [gl]
      */
-    setBlendMode(mode, gl = this.gl) {
+    setBlendMode(mode = "normal", gl = this.gl) {
 
         if (this.currentBlendMode !== mode) {
             this.flush();
             gl.enable(gl.BLEND);
             switch (mode) {
+                case "screen" :
+                    gl.blendFunc(gl.ONE, gl.ONE_MINUS_SRC_COLOR);
+                    this.currentBlendMode = mode;
+                    break;
+
+                case "lighter" :
+                    gl.blendFunc(gl.ONE, gl.ONE);
+                    this.currentBlendMode = mode;
+                    break;
+
                 case "multiply" :
                     gl.blendFunc(gl.DST_COLOR, gl.ONE_MINUS_SRC_ALPHA);
                     this.currentBlendMode = mode;
