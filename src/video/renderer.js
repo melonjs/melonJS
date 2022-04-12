@@ -57,7 +57,7 @@ class Renderer {
         /**
          * @ignore
          */
-        this.currentBlendMode = "normal";
+        this.currentBlendMode = "none";
 
         // create the main screen canvas
         if (device.ejecta === true) {

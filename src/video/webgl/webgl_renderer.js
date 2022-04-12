@@ -588,20 +588,19 @@ class WebGLRenderer extends Renderer {
         if (this.currentBlendMode !== mode) {
             this.flush();
             gl.enable(gl.BLEND);
+            this.currentBlendMode = mode;
+
             switch (mode) {
                 case "screen" :
                     gl.blendFunc(gl.ONE, gl.ONE_MINUS_SRC_COLOR);
-                    this.currentBlendMode = mode;
                     break;
 
                 case "lighter" :
                     gl.blendFunc(gl.ONE, gl.ONE);
-                    this.currentBlendMode = mode;
                     break;
 
                 case "multiply" :
                     gl.blendFunc(gl.DST_COLOR, gl.ONE_MINUS_SRC_ALPHA);
-                    this.currentBlendMode = mode;
                     break;
 
                 default :
@@ -677,7 +676,7 @@ class WebGLRenderer extends Renderer {
             this._scissorStack.push(this.currentScissor.slice());
         }
 
-        this._blendStack.push(this.blendMode);
+        this._blendStack.push(this.getBlendMode());
     }
 
     /**
