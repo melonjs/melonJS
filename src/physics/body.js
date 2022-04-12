@@ -67,7 +67,7 @@ class Body {
          * @see collision.types
          * @example
          * // set the body collision type
-         * myEntity.body.collisionType = me.collision.types.PLAYER_OBJECT;
+         * body.collisionType = me.collision.types.PLAYER_OBJECT;
          */
         this.collisionType = collision.types.ENEMY_OBJECT;
 
@@ -404,17 +404,17 @@ class Body {
     }
 
     /**
-     * By default all entities are able to collide with all other entities, <br>
+     * By default all physic bodies are able to collide with all other bodies, <br>
      * but it's also possible to specify 'collision filters' to provide a finer <br>
-     * control over which entities can collide with each other.
+     * control over which body can collide with each other.
      * @see collision.types
      * @param {number} [bitmask = collision.types.ALL_OBJECT] the collision mask
      * @example
      * // filter collision detection with collision shapes, enemies and collectables
-     * myEntity.body.setCollisionMask(me.collision.types.WORLD_SHAPE | me.collision.types.ENEMY_OBJECT | me.collision.types.COLLECTABLE_OBJECT);
+     * body.setCollisionMask(me.collision.types.WORLD_SHAPE | me.collision.types.ENEMY_OBJECT | me.collision.types.COLLECTABLE_OBJECT);
      * ...
      * // disable collision detection with all other objects
-     * myEntity.body.setCollisionMask(me.collision.types.NO_OBJECT);
+     * body.setCollisionMask(me.collision.types.NO_OBJECT);
      */
     setCollisionMask(bitmask = collision.types.ALL_OBJECT) {
         this.collisionMask = bitmask;
@@ -426,7 +426,7 @@ class Body {
      * @param {number} type the collision type
      * @example
      * // set the body collision type
-     * myEntity.body.collisionType = me.collision.types.PLAYER_OBJECT;
+     * body.collisionType = me.collision.types.PLAYER_OBJECT;
      */
     setCollisionType(type) {
         if (typeof type !== "undefined") {
@@ -657,7 +657,7 @@ class Body {
      * Updates the parent's position as well as computes the new body's velocity based
      * on the values of force/friction/gravity.  Velocity chages are proportional to the
      * me.timer.tick value (which can be used to scale velocities).  The approach to moving the
-     * parent Entity is to compute new values of the Body.vel property then add them to
+     * parent renderable is to compute new values of the Body.vel property then add them to
      * the parent.pos value thus changing the postion the amount of Body.vel each time the
      * update call is made. <br>
      * Updates to Body.vel are bounded by maxVel (which defaults to viewport size if not set) <br>
