@@ -7,7 +7,8 @@ describe("Font : me.Text", function () {
             font:"Arial",
             size:8,
             fillStyle:"white",
-            text:"test"
+            text:"test",
+            offScreenCanvas:true
         });
     });
 
