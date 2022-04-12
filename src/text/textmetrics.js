@@ -69,24 +69,17 @@ class TextMetrics extends Bounds {
 
     /**
      * measure the given text size in CSS pixels
-     * @param {CanvasRenderer|WebGLRenderer} [renderer] reference to the active renderer
      * @param {string} text the text to be measured
+     * @param {CanvasRenderingContext2D} [context] reference to an active 2d context for canvas rendering
      * @returns {TextMetrics} this
      */
-    measureText(renderer, text) {
-        var context;
+    measureText(text, context) {
         var strings;
 
         if (!Array.isArray(text)) {
             strings = ("" + text).split("\n");
         } else {
             strings = text;
-        }
-
-        if (this.ancestor.offScreenCanvas === true) {
-            context = this.ancestor.context;
-        } else {
-            context = renderer.getFontContext();
         }
 
         // save the previous context

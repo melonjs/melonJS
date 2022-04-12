@@ -1,6 +1,6 @@
 import Color from "./../math/color.js";
 import WebGLRenderer from "./../video/webgl/webgl_renderer.js";
-import { renderer, createCanvas } from "./../video/video.js";
+import { renderer as globalRenderer, createCanvas } from "./../video/video.js";
 import * as stringUtil from "./../utils/string.js";
 import pool from "./../system/pooling.js";
 import Renderable from "./../renderable/renderable.js";
@@ -191,8 +191,8 @@ class Text extends Renderable {
     onDeactivateEvent() {
         // free the canvas and potential corresponding texture when deactivated
         if (this.offScreenCanvas === true) {
-            renderer.currentCompositor.deleteTexture2D(renderer.currentCompositor.getTexture2D(this.glTextureUnit));
-            renderer.cache.delete(this.canvas);
+            globalRenderer.currentCompositor.deleteTexture2D(globalRenderer.currentCompositor.getTexture2D(this.glTextureUnit));
+            globalRenderer.cache.delete(this.canvas);
             this.canvas.width = this.canvas.height = 0;
             this.context = undefined;
             this.canvas = undefined;
@@ -285,8 +285,16 @@ class Text extends Renderable {
      * @param {string} [text] the text to be measured
      * @returns {TextMetrics} a TextMetrics object defining the dimensions of the given piece of text
      */
-    measureText(renderer, text = this._text) {
-        return this.metrics.measureText(renderer, text);
+    measureText(renderer = globalRenderer, text = this._text) {
+        var context;
+
+        if (this.offScreenCanvas === true) {
+            context = this.context;
+        } else {
+            context = renderer.getFontContext();
+        }
+
+        return this.metrics.measureText(text, context);
     }
 
     /**
@@ -295,17 +303,17 @@ class Text extends Renderable {
     update(/* dt */) {
         if (this.isDirty === true) {
             var bounds = this.getBounds();
-            bounds.addBounds(this.metrics.measureText(renderer, this._text), true);
+            bounds.addBounds(this.measureText(globalRenderer, this._text), true);
             if (this.offScreenCanvas === true) {
                 var width = Math.round(bounds.width),
                     height = Math.round(bounds.height);
 
-                if (renderer instanceof WebGLRenderer) {
+                if (globalRenderer instanceof WebGLRenderer) {
                     // invalidate the previous corresponding texture so that it can reuploaded once changed
-                    this.glTextureUnit = renderer.cache.getUnit(renderer.cache.get(this.canvas));
-                    renderer.currentCompositor.unbindTexture2D(null, this.glTextureUnit);
+                    this.glTextureUnit = globalRenderer.cache.getUnit(globalRenderer.cache.get(this.canvas));
+                    globalRenderer.currentCompositor.unbindTexture2D(null, this.glTextureUnit);
 
-                    if (renderer.WebGLVersion === 1) {
+                    if (globalRenderer.WebGLVersion === 1) {
                         // round size to next Pow2
                         width = nextPowerOfTwo(bounds.width);
                         height = nextPowerOfTwo(bounds.height);
