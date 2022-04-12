@@ -265,11 +265,13 @@ class Renderable extends Rect {
         this.tint = pool.pull("Color", 255, 255, 255, 1.0);
 
         /**
-         * the blend mode to be applied to this renderable (blend mode : "normal", "multiply")
+         * the blend mode to be applied to this renderable (see renderer setBlendMode for available blend mode)
          * @public
          * @type {string}
          * @name blendMode
          * @default "normal"
+         * @see CanvasRenderer#setBlendMode
+         * @see WebGLRenderer#setBlendMode
          * @memberof Renderable#
          */
         this.blendMode = "normal";
