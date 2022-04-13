@@ -369,6 +369,8 @@ class Container extends Renderable {
             // swap the positions..
             this.getChildren()[index] = child2;
             this.getChildren()[index2] = child;
+            // mark the container as dirty
+            this.isDirty = true;
         }
         else {
             throw new Error(child + " Both the supplied childs must be a child of the caller " + this);
@@ -748,6 +750,8 @@ class Container extends Renderable {
         if (childIndex - 1 >= 0) {
             // note : we use an inverted loop
             this.swapChildren(child, this.getChildAt(childIndex - 1));
+            // mark the container as dirty
+            this.isDirty = true;
         }
     }
 
@@ -763,6 +767,8 @@ class Container extends Renderable {
         if (childIndex >= 0 && (childIndex + 1) < this.getChildren().length) {
             // note : we use an inverted loop
             this.swapChildren(child, this.getChildAt(childIndex + 1));
+            // mark the container as dirty
+            this.isDirty = true;
         }
     }
 
@@ -781,6 +787,8 @@ class Container extends Renderable {
             children.splice(0, 0, children.splice(childIndex, 1)[0]);
             // increment our child z value based on the previous child depth
             child.pos.z = children[1].pos.z + 1;
+            // mark the container as dirty
+            this.isDirty = true;
         }
     }
 
@@ -799,6 +807,8 @@ class Container extends Renderable {
             children.splice((children.length - 1), 0, children.splice(childIndex, 1)[0]);
             // increment our child z value based on the next child depth
             child.pos.z = children[(children.length - 2)].pos.z - 1;
+            // mark the container as dirty
+            this.isDirty = true;
         }
     }
 
