@@ -213,23 +213,10 @@ class BitmapText extends Renderable {
     /**
      * measure the given text size in pixels
      * @param {string} [text]
-     * @param {Rect} [ret] a object in which to store the text metrics
      * @returns {TextMetrics} a TextMetrics object with two properties: `width` and `height`, defining the output dimensions
      */
-    measureText(text, ret) {
-        text = text || this._text;
-
-        var stringHeight = this.metrics.lineHeight();
-        var textMetrics = ret || this.getBounds();
-        var strings = typeof text === "string" ? ("" + (text)).split("\n") : text;
-
-        textMetrics.height = textMetrics.width = 0;
-
-        for (var i = 0; i < strings.length; i++) {
-            textMetrics.width = Math.max(this.metrics.lineWidth(strings[i]), textMetrics.width);
-            textMetrics.height += stringHeight;
-        }
-        return textMetrics;
+    measureText(text = this._text) {
+        return this.metrics.measureText(text);
     }
 
     /**
@@ -237,7 +224,7 @@ class BitmapText extends Renderable {
      */
     update(/* dt */) {
         if (this.isDirty === true) {
-            this.measureText();
+            this.getBounds().addBounds(this.measureText(), true);
         }
         return this.isDirty;
     }
@@ -371,6 +358,5 @@ class BitmapText extends Renderable {
     }
 
 };
-
 
 export default BitmapText;

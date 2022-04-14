@@ -82,11 +82,13 @@ class TextMetrics extends Bounds {
             strings = text;
         }
 
-        // save the previous context
-        context.save();
+        if (typeof context !== "undefined") {
+            // save the previous context
+            context.save();
 
-        // apply the style font
-        setContextStyle(context, this.ancestor);
+            // apply the style font
+            setContextStyle(context, this.ancestor);
+        }
 
         // compute the bounding box size
         this.width = this.height = 0;
@@ -106,8 +108,10 @@ class TextMetrics extends Bounds {
             this.ancestor.textBaseline === "middle" ? this.ancestor.pos.y - (this.height / 2) : this.ancestor.pos.y - this.height
         ));
 
-        // restore the context
-        context.restore();
+        if (typeof context !== "undefined") {
+            // restore the context
+            context.restore();
+        }
 
         return this;
     }
