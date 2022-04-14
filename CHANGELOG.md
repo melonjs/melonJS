@@ -5,6 +5,7 @@
 ### Added
 - Renderable : added the possibility to specify a blend mode per renderable
 - Renderer: added missing compatible/supported blend mode across the canvas and WebGL renderer ("normal", "multiply", "lighter, "screen")
+- Renderable : new (simple) word wrapping feature for Text and BitmapText classes
 
 ### Changed
 - Renderable : refactor of Text and BitmapText to isolate metrics related features/functions to standardize the api between the 2 classes

@@ -111,5 +111,41 @@ class TextMetrics extends Bounds {
 
         return this;
     }
+
+    /**
+     * wrap the given text based on the given width
+     * @param {string|string[]} text the text to be wrapped
+     * @param {number} width maximum width of one segment of text in css pixel
+     * @param {CanvasRenderingContext2D} [context] reference to an active 2d context for canvas rendering
+     * @returns {string[]} an array of string representing wrapped text
+     */
+    wordWrap(text, width, context) {
+        var words;
+        var currentLine = "";
+        var output = [];
+
+        if (Array.isArray(text)) {
+            // join into a single string
+            text = text.join(" ");
+        }
+        // word splitting to be improved as it replaces \n by space if present
+        words = text.replace(/[\r\n]+/g, " ").split(" ");
+
+        for (let i = 0; i < words.length; i++) {
+            var word = words[i];
+            var lineWidth = this.lineWidth(currentLine + word + " ", context);
+            if (lineWidth < width) {
+                // add the word to the current line
+                currentLine += word + " ";
+            } else {
+                output.push(currentLine + "\n");
+                currentLine = word + " ";
+            }
+        }
+        // last line
+        output.push(currentLine);
+
+        return output;
+    }
 }
 export default TextMetrics;

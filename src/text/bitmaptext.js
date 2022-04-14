@@ -24,6 +24,7 @@ class BitmapText extends Renderable {
      * @param {string} [settings.textBaseline="top"] the text baseline
      * @param {number} [settings.lineHeight=1.0] line spacing height
      * @param {Vector2d} [settings.anchorPoint={x:0.0, y:0.0}] anchor point to draw the text at
+     * @param {number} [settings.wordWrapWidth] the maximum length in CSS pixel for a single segment of text
      * @param {(string|string[])} [settings.text] a string, or an array of strings
      * @example
      * // Use me.loader.preload or me.loader.load to load assets
@@ -69,6 +70,15 @@ class BitmapText extends Renderable {
          * @default 1.0
          */
         this.lineHeight = settings.lineHeight || 1.0;
+
+        /**
+         * the maximum length in CSS pixel for a single segment of text.
+         * (use -1 to disable word wrapping)
+         * @public
+         * @type {number}
+         * @default -1
+         */
+        this.wordWrapWidth = settings.wordWrapWidth || -1;
 
         /**
          * the text to be displayed
@@ -129,12 +139,11 @@ class BitmapText extends Renderable {
             this.anchorPoint.set(0, 0);
         }
 
-        // set the text
-        this.setText(settings.text);
-
         // instance to text metrics functions
         this.metrics = new TextMetrics(this);
 
+        // set the text
+        this.setText(settings.text);
     }
 
     /**
@@ -159,11 +168,10 @@ class BitmapText extends Renderable {
      * @param {number|string|string[]} value a string, or an array of strings
      * @returns {BitmapText} this object for chaining
      */
-    setText(value) {
-        if (typeof value === "undefined") {
-            value = "";
+    setText(value = "") {
+        if (value.length > 0 && this.wordWrapWidth > -1) {
+            value = this.metrics.wordWrap(value.toString(), this.wordWrapWidth, globalRenderer.getFontContext());
         }
-
         if (this._text.toString() !== value.toString()) {
             if (!Array.isArray(value)) {
                 this._text = ("" + value).split("\n");

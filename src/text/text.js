@@ -41,6 +41,7 @@ class Text extends Renderable {
      * @param {number} [settings.lineHeight=1.0] line spacing height
      * @param {Vector2d} [settings.anchorPoint={x:0.0, y:0.0}] anchor point to draw the text at
      * @param {boolean} [settings.offScreenCanvas=false] whether to draw the font to an individual "cache" texture first
+     * @param {number} [settings.wordWrapWidth] the maximum length in CSS pixel for a single segment of text
      * @param {(string|string[])} [settings.text=""] a string, or an array of strings
      * @example
      * var font = new me.Text(0, 0, {font: "Arial", size: 8, fillStyle: this.color});
@@ -134,6 +135,15 @@ class Text extends Renderable {
         this.offScreenCanvas = false;
 
         /**
+         * the maximum length in CSS pixel for a single segment of text.
+         * (use -1 to disable word wrapping)
+         * @public
+         * @type {number}
+         * @default -1
+         */
+        this.wordWrapWidth = settings.wordWrapWidth || -1;
+
+        /**
          * the text to be displayed
          * @private
          */
@@ -176,12 +186,11 @@ class Text extends Renderable {
             this.context = this.canvas.getContext("2d");
         }
 
-        // set the text
-        this.setText(settings.text);
-
         // instance to text metrics functions
         this.metrics = new TextMetrics(this);
 
+        // set the text
+        this.setText(settings.text);
 
         // force update bounds on object creation
         this.update(0);
@@ -267,6 +276,9 @@ class Text extends Renderable {
      * @returns {Text} this object for chaining
      */
     setText(value = "") {
+        if (value.length > 0 && this.wordWrapWidth > -1) {
+            value = this.metrics.wordWrap(value.toString(), this.wordWrapWidth, globalRenderer.getFontContext());
+        }
         if (this._text.toString() !== value.toString()) {
             if (!Array.isArray(value)) {
                 this._text = ("" + value).split("\n");
