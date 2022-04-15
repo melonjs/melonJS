@@ -12,6 +12,7 @@
 
 ### Fixed
 - Container: mark a container as dirty when changing own child(s) order using `MoveTo[Top/Bottom]`, `move[Up/Down]` and `swapChildren`
+- Renderable : fix NineSliceSprite bounding box not being properly scaled up
 - Renderer: fix blend mode in WebGL rendering mode
 
 ## [10.5.2] (melonJS 2) - _2022-03-17_

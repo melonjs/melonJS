@@ -43,13 +43,16 @@ class NineSliceSprite extends Sprite {
             throw new Error("height and width properties are mandatory");
         }
 
+        // adjust the nss sprite size accordingly to the target "expanded" size
+        this.width = Math.floor(settings.width);
+        this.height = Math.floor(settings.height);
+
         // nine slice sprite specific local variables
-        this.nss_width = Math.floor(settings.width);
-        this.nss_height = Math.floor(settings.height);
+        this.nss_width = this.width;
+        this.nss_height = this.height;
 
         this.insetx = settings.insetx;
         this.insety = settings.insety;
-
     }
 
     /**
