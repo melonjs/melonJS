@@ -105,7 +105,7 @@ class TextMetrics extends Bounds {
             this.ancestor.textAlign === "center" ? this.ancestor.pos.x - (this.width / 2) : this.ancestor.pos.x
         )));
         this.y = Math.floor((this.ancestor.textBaseline.search(/^(top|hanging)$/) === 0) ? this.ancestor.pos.y : (
-            this.ancestor.textBaseline === "middle" ? this.ancestor.pos.y - (this.height / 2) : this.ancestor.pos.y - this.height
+            this.ancestor.textBaseline === "middle" ? this.ancestor.pos.y - (this.lineHeight() / 2) : this.ancestor.pos.y - this.lineHeight()
         ));
 
         if (typeof context !== "undefined") {
