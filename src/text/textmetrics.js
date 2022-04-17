@@ -1,5 +1,5 @@
 import Bounds from "./../physics/bounds.js";
-import * as stringUtil from "./../utils/string.js";
+import { trimRight } from "./../utils/string.js";
 import Text from "./text.js";
 //import BitmapText from "./bitmaptext.js";
 import setContextStyle from "./textstyle.js";
@@ -51,7 +51,7 @@ class TextMetrics extends Bounds {
      */
     lineWidth(text, context) {
         if (this.ancestor instanceof Text) {
-            return context.measureText(stringUtil.trimRight(""+text)).width;
+            return context.measureText(text).width;
         } else { // it's a BitmapText
             var characters = text.split("");
             var width = 0;
@@ -94,7 +94,7 @@ class TextMetrics extends Bounds {
         this.width = this.height = 0;
 
         for (var i = 0; i < strings.length; i++) {
-            this.width = Math.max(this.lineWidth(strings[i], context), this.width);
+            this.width = Math.max(this.lineWidth(trimRight(strings[i]), context), this.width);
             this.height += this.lineHeight();
         }
         this.width = Math.ceil(this.width);
