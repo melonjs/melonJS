@@ -42,4 +42,12 @@ describe("Font : me.Text", function () {
             expect(font.height).toEqual(18 * 0.75);
         });
     });
+
+    describe("word wrapping", function () {
+        it("word wrap a single string", function () {
+            font.wordWrapWidth = 150;
+            font.setText("Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.");
+            expect(font.measureText().width).toBeLessThanOrEqual(font.wordWrapWidth);
+        });
+    });
 });
