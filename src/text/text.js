@@ -1,13 +1,12 @@
 import Color from "./../math/color.js";
 import WebGLRenderer from "./../video/webgl/webgl_renderer.js";
 import { renderer as globalRenderer, createCanvas } from "./../video/video.js";
-import * as stringUtil from "./../utils/string.js";
+import { trimRight } from "./../utils/string.js";
 import pool from "./../system/pooling.js";
 import Renderable from "./../renderable/renderable.js";
 import { nextPowerOfTwo } from "./../math/math.js";
 import setContextStyle from "./textstyle.js";
 import TextMetrics from "./textmetrics.js";
-
 
 /*
 * ASCII Table
@@ -20,6 +19,15 @@ import TextMetrics from "./textmetrics.js";
 
 var runits = ["ex", "em", "pt", "px"];
 var toPX = [12, 24, 0.75, 1];
+
+// return a valid 2d context for Text rendering/styling
+var getContext2d = function (renderer, text) {
+    if (text.offScreenCanvas === true) {
+        return text.context;
+    } else {
+        return renderer.getFontContext();
+    }
+};
 
 /**
  * @classdesc
@@ -191,9 +199,6 @@ class Text extends Renderable {
 
         // set the text
         this.setText(settings.text);
-
-        // force update bounds on object creation
-        this.update(0);
     }
 
     /** @ignore */
@@ -238,7 +243,7 @@ class Text extends Renderable {
      * font.setFont("Arial", 20);
      * font.setFont("Arial", "1.5em");
      */
-    setFont(font, size) {
+    setFont(font, size = 10) {
         // font name and type
         var font_names = font.split(",").map(function (value) {
             value = value.trim();
@@ -276,17 +281,54 @@ class Text extends Renderable {
      * @returns {Text} this object for chaining
      */
     setText(value = "") {
-        if (value.length > 0 && this.wordWrapWidth > -1) {
-            value = this.metrics.wordWrap(value.toString(), this.wordWrapWidth, globalRenderer.getFontContext());
-        }
+        var bounds = this.getBounds();
+
+        // set the next text
         if (this._text.toString() !== value.toString()) {
             if (!Array.isArray(value)) {
                 this._text = ("" + value).split("\n");
             } else {
                 this._text = value;
             }
-            this.isDirty = true;
         }
+
+        // word wrap if necessary
+        if (this._text.length > 0 && this.wordWrapWidth > 0) {
+            this._text = this.metrics.wordWrap(this._text, this.wordWrapWidth, getContext2d(globalRenderer, this));
+        }
+
+        // calculcate the text size and update the bounds accordingly
+        bounds.addBounds(this.metrics.measureText(this._text, getContext2d(globalRenderer, this), true));
+
+        // update the offScreenCanvas texture if required
+        if (this.offScreenCanvas === true) {
+            var width = Math.round(bounds.width),
+                height = Math.round(bounds.height);
+
+            if (globalRenderer instanceof WebGLRenderer) {
+                // invalidate the previous corresponding texture so that it can reuploaded once changed
+                this.glTextureUnit = globalRenderer.cache.getUnit(globalRenderer.cache.get(this.canvas));
+                globalRenderer.currentCompositor.unbindTexture2D(null, this.glTextureUnit);
+
+                if (globalRenderer.WebGLVersion === 1) {
+                    // round size to next Pow2
+                    width = nextPowerOfTwo(bounds.width);
+                    height = nextPowerOfTwo(bounds.height);
+                }
+            }
+
+            // resize the cache canvas if necessary
+            if (this.canvas.width < width || this.canvas.height < height) {
+                this.canvas.width = width;
+                this.canvas.height = height;
+                // resizing the canvas will automatically clear its content
+            } else {
+                this.context.clearRect(0, 0, this.canvas.width, this.canvas.height);
+            }
+            this._drawFont(this.context, this._text,  this.pos.x - bounds.x, this.pos.y - bounds.y, false);
+        }
+
+        this.isDirty = true;
 
         return this;
     }
@@ -298,54 +340,9 @@ class Text extends Renderable {
      * @returns {TextMetrics} a TextMetrics object defining the dimensions of the given piece of text
      */
     measureText(renderer = globalRenderer, text = this._text) {
-        var context;
-
-        if (this.offScreenCanvas === true) {
-            context = this.context;
-        } else {
-            context = renderer.getFontContext();
-        }
-
-        return this.metrics.measureText(text, context);
+        return this.metrics.measureText(text, getContext2d(renderer, this));
     }
 
-    /**
-     * @ignore
-     */
-    update(/* dt */) {
-        if (this.isDirty === true) {
-            var bounds = this.getBounds();
-            bounds.addBounds(this.measureText(globalRenderer, this._text), true);
-            if (this.offScreenCanvas === true) {
-                var width = Math.round(bounds.width),
-                    height = Math.round(bounds.height);
-
-                if (globalRenderer instanceof WebGLRenderer) {
-                    // invalidate the previous corresponding texture so that it can reuploaded once changed
-                    this.glTextureUnit = globalRenderer.cache.getUnit(globalRenderer.cache.get(this.canvas));
-                    globalRenderer.currentCompositor.unbindTexture2D(null, this.glTextureUnit);
-
-                    if (globalRenderer.WebGLVersion === 1) {
-                        // round size to next Pow2
-                        width = nextPowerOfTwo(bounds.width);
-                        height = nextPowerOfTwo(bounds.height);
-                    }
-                }
-
-                // resize the cache canvas if necessary
-                if (this.canvas.width < width || this.canvas.height < height) {
-                    this.canvas.width = width;
-                    this.canvas.height = height;
-                    // resizing the canvas will automatically clear its content
-                } else {
-                    this.context.clearRect(0, 0, this.canvas.width, this.canvas.height);
-                }
-                this._drawFont(this.context, this._text,  this.pos.x - bounds.x, this.pos.y - bounds.y, false);
-
-            }
-        }
-        return this.isDirty;
-    }
 
     /**
      * draw a text at the specified coord
@@ -358,8 +355,6 @@ class Text extends Renderable {
     draw(renderer, text, x, y, stroke) {
         // "hacky patch" for backward compatibilty
         if (typeof this.ancestor === "undefined") {
-            // update text cache
-            this.setText(text);
 
             // update position if changed
             if (this.pos.x !== x || this.pos.y !== y) {
@@ -368,8 +363,11 @@ class Text extends Renderable {
                 this.isDirty = true;
             }
 
-            // force update bounds
-            this.update(0);
+            // update text cache
+            this.setText(text);
+
+            x = this.metrics.x;
+            y = this.metrics.y;
 
             // save the previous context
             renderer.save();
@@ -378,20 +376,20 @@ class Text extends Renderable {
             renderer.setGlobalAlpha(renderer.globalAlpha() * this.getOpacity());
 
         } else {
-            // added directly to an object container
+             // added directly to an object container
             x = this.pos.x;
             y = this.pos.y;
         }
 
+        // clamp to pixel grid if required
         if (renderer.settings.subPixel === false) {
-            // clamp to pixel grid if required
             x = ~~x;
             y = ~~y;
         }
 
         // draw the text
         if (this.offScreenCanvas === true) {
-            renderer.drawImage(this.canvas, this.getBounds().x, this.getBounds().y);
+            renderer.drawImage(this.canvas, x, y);
         } else {
             renderer.drawFont(this._drawFont(renderer.getFontContext(), this._text, x, y, stroke));
         }
@@ -402,10 +400,6 @@ class Text extends Renderable {
             // restore previous context
             renderer.restore();
         }
-
-        // clear the dirty flag here for
-        // backward compatibility
-        this.isDirty = false;
     }
 
     /**
@@ -428,13 +422,13 @@ class Text extends Renderable {
         setContextStyle(context, this, stroke);
 
         for (var i = 0; i < text.length; i++) {
-            var string = stringUtil.trimRight(""+text[i]);
+            var string = trimRight(text[i]);
             // draw the string
             context[stroke ? "strokeText" : "fillText"](string, x, y);
             // add leading space
             y += this.metrics.lineHeight();
         }
-        return this.getBounds();
+        return this.metrics;
     }
 
     /**
