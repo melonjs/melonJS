@@ -135,6 +135,14 @@ class TextMetrics extends Bounds {
         // word splitting to be improved as it replaces \n by space if present
         words = text.replace(/[\r\n]+/g, " ").split(" ");
 
+        if (typeof context !== "undefined") {
+            // save the previous context
+            context.save();
+
+            // apply the style font
+            setContextStyle(context, this.ancestor);
+        }
+
         for (let i = 0; i < words.length; i++) {
             var word = words[i];
             var lineWidth = this.lineWidth(currentLine + word + " ", context);
@@ -148,6 +156,11 @@ class TextMetrics extends Bounds {
         }
         // last line
         output.push(currentLine);
+
+        if (typeof context !== "undefined") {
+            // restore the context
+            context.restore();
+        }
 
         return output;
     }
