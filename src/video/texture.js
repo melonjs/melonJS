@@ -3,7 +3,7 @@ import WebGLRenderer from "./webgl/webgl_renderer.js";
 import TextureCache from "./texture_cache.js";
 import Sprite from "./../renderable/sprite.js";
 import { renderer } from "./video.js";
-import pool from "./../system/pooling.js";
+import * as pool from "./../system/pooling.js";
 import loader from "./../loader/loader.js";
 import { ETA } from "./../math/math.js";
 

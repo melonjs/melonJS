@@ -1,5 +1,5 @@
 import {clamp} from "./math.js";
-import pool from "./../system/pooling.js";
+import * as pool from "./../system/pooling.js";
 
 /**
  * @classdesc

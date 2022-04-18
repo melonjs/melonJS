@@ -7,7 +7,7 @@ import Matrix3d from "./../math/matrix3.js";
 import Rect from "./../geometries/rectangle.js";
 import { renderer } from "./../video/video.js";
 import * as event from "./../system/event.js";
-import pool from "./../system/pooling.js";
+import * as pool from "./../system/pooling.js";
 import Renderable from "./../renderable/renderable.js";
 import {clamp, toBeCloseTo} from "./../math/math.js";
 import { world } from "./../game.js";

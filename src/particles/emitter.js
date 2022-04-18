@@ -1,5 +1,5 @@
 import { createCanvas } from "./../video/video.js";
-import pool from "./../system/pooling.js";
+import * as pool from "./../system/pooling.js";
 import Renderable from "./../renderable/renderable.js";
 import ParticleContainer from "./particlecontainer.js";
 import { randomFloat } from "./../math/math.js";

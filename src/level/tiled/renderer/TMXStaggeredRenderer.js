@@ -1,5 +1,5 @@
 import Vector2d from "./../../../math/vector2.js";
-import pool from "./../../../system/pooling.js";
+import * as pool from "./../../../system/pooling.js";
 import TMXHexagonalRenderer from "./TMXHexagonalRenderer.js";
 import { degToRad } from "./../../../math/math.js";
 

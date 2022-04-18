@@ -16,7 +16,7 @@ import { plugin, plugins } from "./plugin/plugin.js";
 import * as video from "./video/video.js";
 import save from "./system/save.js";
 import timer from "./system/timer.js";
-import pool from "./system/pooling.js";
+import * as pool from "./system/pooling.js";
 import state from "./state/state.js";
 import level from "./level/level.js";
 

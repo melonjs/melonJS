@@ -1,4 +1,4 @@
-import pool from "./../system/pooling.js";
+import * as pool from "./../system/pooling.js";
 import { EPSILON } from "./math.js";
 
 /**

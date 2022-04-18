@@ -1,4 +1,4 @@
-import pool from "./../system/pooling.js";
+import * as pool from "./../system/pooling.js";
 import { viewport } from "./../game.js";
 import Renderable from "./renderable.js";
 

@@ -1,6 +1,6 @@
 import Color from "./../math/color.js";
 import * as stringUtil from "./../utils/string.js";
-import pool from "./../system/pooling.js";
+import * as pool from "./../system/pooling.js";
 import loader from "./../loader/loader.js";
 import Renderable from "./../renderable/renderable.js";
 import TextMetrics from "./textmetrics.js";

@@ -1,5 +1,5 @@
 import { createCanvas } from "./../../video/video.js";
-import pool from "./../../system/pooling.js";
+import * as pool from "./../../system/pooling.js";
 import * as TMXUtils from "./TMXUtils.js";
 import Tile from "./TMXTile.js";
 import Renderable from "./../../renderable/renderable.js";
