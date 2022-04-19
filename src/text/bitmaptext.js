@@ -169,9 +169,6 @@ class BitmapText extends Renderable {
      * @returns {BitmapText} this object for chaining
      */
     setText(value = "") {
-        if (value.length > 0 && this.wordWrapWidth > -1) {
-            value = this.metrics.wordWrap(value.toString(), this.wordWrapWidth);
-        }
         if (this._text.toString() !== value.toString()) {
             if (!Array.isArray(value)) {
                 this._text = ("" + value).split("\n");
@@ -180,6 +177,12 @@ class BitmapText extends Renderable {
             }
             this.isDirty = true;
         }
+
+        if (this._text.length > 0 && this.wordWrapWidth > 0) {
+            this._text = this.metrics.wordWrap(this._text, this.wordWrapWidth);
+        }
+
+        this.getBounds().addBounds(this.measureText(), true);
 
         return this;
     }
@@ -204,6 +207,9 @@ class BitmapText extends Renderable {
      */
     resize(scale) {
         this.fontScale.set(scale, scale);
+
+        this.getBounds().addBounds(this.measureText(), true);
+
         // clear the cache text to recalculate bounds
         this.isDirty = true;
 
@@ -217,16 +223,6 @@ class BitmapText extends Renderable {
      */
     measureText(text = this._text) {
         return this.metrics.measureText(text);
-    }
-
-    /**
-     * @ignore
-     */
-    update(/* dt */) {
-        if (this.isDirty === true) {
-            this.getBounds().addBounds(this.measureText(), true);
-        }
-        return this.isDirty;
     }
 
     /**
@@ -245,8 +241,6 @@ class BitmapText extends Renderable {
         if (typeof this.ancestor === "undefined") {
             // update cache
             this.setText(text);
-            // force update bounds
-            this.update(0);
             renderer.setGlobalAlpha(_alpha * this.getOpacity());
         } else {
             // added directly to an object container
