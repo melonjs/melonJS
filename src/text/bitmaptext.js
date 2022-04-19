@@ -170,7 +170,7 @@ class BitmapText extends Renderable {
      */
     setText(value = "") {
         if (value.length > 0 && this.wordWrapWidth > -1) {
-            value = this.metrics.wordWrap(value.toString(), this.wordWrapWidth, globalRenderer.getFontContext());
+            value = this.metrics.wordWrap(value.toString(), this.wordWrapWidth);
         }
         if (this._text.toString() !== value.toString()) {
             if (!Array.isArray(value)) {
