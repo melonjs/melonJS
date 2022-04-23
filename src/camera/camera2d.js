@@ -408,7 +408,7 @@ class Camera2d extends Renderable {
 
         //publish the VIEWPORT_ONCHANGE event if necessary
         if (_x !== this.pos.x || _y !== this.pos.y) {
-            event.emit(event.VIEWPORT_ONCHANGE, this.pos);
+            this.isDirty = true;
         }
     }
 
@@ -447,22 +447,22 @@ class Camera2d extends Renderable {
                     if (toBeCloseTo(targetV.x, this.pos.x, 2) &&
                         toBeCloseTo(targetV.y, this.pos.y, 2)) {
                         this.pos.setV(targetV);
-                        return false;
+                        return;
                     } else {
                         this.pos.lerp(targetV, this.damping);
                     }
                 } else {
                     this.pos.setV(targetV);
                 }
-                return true;
+                this.isDirty = true;
             }
         }
-        return false;
     }
 
     /** @ignore */
     update(dt) {
-        var updated = this.updateTarget(dt);
+        // update the camera position
+        this.updateTarget(dt);
 
         if (this._shake.duration > 0) {
             this._shake.duration -= dt;
@@ -484,17 +484,17 @@ class Camera2d extends Renderable {
                 }
             }
             // updated!
-            updated = true;
+            this.isDirty = true;
         }
 
-        if (updated === true) {
+        if (this.isDirty === true) {
             //publish the corresponding message
             event.emit(event.VIEWPORT_ONCHANGE, this.pos);
         }
 
         // check for fade/flash effect
         if ((this._fadeIn.tween != null) || (this._fadeOut.tween != null)) {
-            updated = true;
+            this.isDirty = true;
         }
 
         if (!this.currentTransform.isIdentity()) {
@@ -503,7 +503,8 @@ class Camera2d extends Renderable {
             // reset to default
             this.invCurrentTransform.identity();
         }
-        return updated;
+
+        return super.update(dt);
     }
 
     /**
