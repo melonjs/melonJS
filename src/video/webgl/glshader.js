@@ -285,8 +285,6 @@ class GLShader {
 
         // destroy the shader on context lost (will be recreated on context restore)
         event.on(event.WEBGL_ONCONTEXT_LOST, this.destroy, this);
-
-        return this;
     }
 
     /**

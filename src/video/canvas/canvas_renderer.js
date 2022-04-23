@@ -54,8 +54,6 @@ class CanvasRenderer extends Renderer {
             // enable the tile texture seam fix with the canvas renderer
             this.uvOffset = 1;
         }
-
-        return this;
     }
 
     /**

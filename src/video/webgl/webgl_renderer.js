@@ -177,8 +177,6 @@ class WebGLRenderer extends Renderer {
             this.isContextValid = true;
             event.emit(event.WEBGL_ONCONTEXT_RESTORED, this);
         }, false );
-
-        return this;
     }
 
     /**

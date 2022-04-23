@@ -92,8 +92,6 @@ class Renderer {
         event.on(event.GAME_RESET, () => {
             renderer.reset();
         });
-
-        return this;
     }
 
     /**

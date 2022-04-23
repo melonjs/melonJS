@@ -22,9 +22,6 @@ class VertexArrayBuffer {
         // Float32 and Uint32 view of the vertex data array buffer
         this.bufferF32 = new Float32Array(this.buffer);
         this.bufferU32 = new Uint32Array(this.buffer);
-
-
-        return this;
     }
 
     /**
