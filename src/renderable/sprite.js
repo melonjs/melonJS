@@ -584,7 +584,7 @@ class Sprite extends Renderable {
             this.isDirty = true;
         }
 
-        return this.isDirty;
+        return super.update(dt);
     }
 
     /**
