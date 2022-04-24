@@ -116,7 +116,7 @@ me.device.onReady(function () {
     }));
 });
 ```
-> Simple hello world using melonJS 9.x or higher
+> Simple hello world using melonJS 2 (version 10.x or higher)
 
 Documentation :
 
