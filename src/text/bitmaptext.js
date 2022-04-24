@@ -182,7 +182,7 @@ class BitmapText extends Renderable {
             this._text = this.metrics.wordWrap(this._text, this.wordWrapWidth);
         }
 
-        this.getBounds().addBounds(this.measureText(), true);
+        this.getBounds().addBounds(this.metrics.measureText(this._text), true);
 
         return this;
     }
@@ -208,7 +208,7 @@ class BitmapText extends Renderable {
     resize(scale) {
         this.fontScale.set(scale, scale);
 
-        this.getBounds().addBounds(this.measureText(), true);
+        this.getBounds().addBounds(this.metrics.measureText(this._text), true);
 
         // clear the cache text to recalculate bounds
         this.isDirty = true;
