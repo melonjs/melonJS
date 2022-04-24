@@ -17,6 +17,7 @@ export class BitmapText extends Renderable {
      * @param {string} [settings.textBaseline="top"] the text baseline
      * @param {number} [settings.lineHeight=1.0] line spacing height
      * @param {Vector2d} [settings.anchorPoint={x:0.0, y:0.0}] anchor point to draw the text at
+     * @param {number} [settings.wordWrapWidth] the maximum length in CSS pixel for a single segment of text
      * @param {(string|string[])} [settings.text] a string, or an array of strings
      * @example
      * // Use me.loader.preload or me.loader.load to load assets
@@ -42,6 +43,7 @@ export class BitmapText extends Renderable {
         textBaseline?: string;
         lineHeight?: number;
         anchorPoint?: Vector2d;
+        wordWrapWidth?: number;
         text?: (string | string[]);
     });
     /**
@@ -50,8 +52,6 @@ export class BitmapText extends Renderable {
      * @public
      * @type {string}
      * @default "left"
-     * @name textAlign
-     * @memberof BitmapText
      */
     public textAlign: string;
     /**
@@ -60,8 +60,6 @@ export class BitmapText extends Renderable {
      * @public
      * @type {string}
      * @default "top"
-     * @name textBaseline
-     * @memberof BitmapText
      */
     public textBaseline: string;
     /**
@@ -70,10 +68,16 @@ export class BitmapText extends Renderable {
      * @public
      * @type {number}
      * @default 1.0
-     * @name lineHeight
-     * @memberof BitmapText
      */
     public lineHeight: number;
+    /**
+     * the maximum length in CSS pixel for a single segment of text.
+     * (use -1 to disable word wrapping)
+     * @public
+     * @type {number}
+     * @default -1
+     */
+    public wordWrapWidth: number;
     /**
      * the text to be displayed
      * @private
@@ -94,11 +98,9 @@ export class BitmapText extends Renderable {
      * @private
      */
     private fontData;
+    metrics: TextMetrics;
     /**
      * change the font settings
-     * @name set
-     * @memberof BitmapText.prototype
-     * @function
      * @param {string} textAlign ("left", "center", "right")
      * @param {number} [scale]
      * @returns {BitmapText} this object for chaining
@@ -106,51 +108,32 @@ export class BitmapText extends Renderable {
     set(textAlign: string, scale?: number): BitmapText;
     /**
      * change the text to be displayed
-     * @name setText
-     * @memberof BitmapText.prototype
-     * @function
      * @param {number|string|string[]} value a string, or an array of strings
      * @returns {BitmapText} this object for chaining
      */
-    setText(value: number | string | string[]): BitmapText;
+    setText(value?: number | string | string[]): BitmapText;
     public set fillStyle(arg: Color);
     /**
      * defines the color used to tint the bitmap text
      * @public
      * @type {Color}
-     * @name fillStyle
      * @see Renderable#tint
-     * @memberof BitmapText
      */
     public get fillStyle(): Color;
     /**
      * change the font display size
-     * @name resize
-     * @memberof BitmapText.prototype
-     * @function
      * @param {number} scale ratio
      * @returns {BitmapText} this object for chaining
      */
     resize(scale: number): BitmapText;
     /**
      * measure the given text size in pixels
-     * @name measureText
-     * @memberof BitmapText.prototype
-     * @function
      * @param {string} [text]
-     * @param {Rect} [ret] a object in which to store the text metrics
      * @returns {TextMetrics} a TextMetrics object with two properties: `width` and `height`, defining the output dimensions
      */
-    measureText(text?: string, ret?: Rect): TextMetrics;
-    /**
-     * @ignore
-     */
-    update(): boolean;
+    measureText(text?: string): TextMetrics;
     /**
      * draw the bitmap font
-     * @name draw
-     * @memberof BitmapText.prototype
-     * @function
      * @param {CanvasRenderer|WebGLRenderer} renderer Reference to the destination renderer instance
      * @param {string} [text]
      * @param {number} [x]
@@ -247,7 +230,7 @@ export class Body {
      * @see collision.types
      * @example
      * // set the body collision type
-     * myEntity.body.collisionType = me.collision.types.PLAYER_OBJECT;
+     * body.collisionType = me.collision.types.PLAYER_OBJECT;
      */
     public collisionType: number;
     vel: Vector2d;
@@ -384,17 +367,17 @@ export class Body {
      */
     removeShapeAt(index: number): number;
     /**
-     * By default all entities are able to collide with all other entities, <br>
+     * By default all physic bodies are able to collide with all other bodies, <br>
      * but it's also possible to specify 'collision filters' to provide a finer <br>
-     * control over which entities can collide with each other.
+     * control over which body can collide with each other.
      * @see collision.types
      * @param {number} [bitmask = collision.types.ALL_OBJECT] the collision mask
      * @example
      * // filter collision detection with collision shapes, enemies and collectables
-     * myEntity.body.setCollisionMask(me.collision.types.WORLD_SHAPE | me.collision.types.ENEMY_OBJECT | me.collision.types.COLLECTABLE_OBJECT);
+     * body.setCollisionMask(me.collision.types.WORLD_SHAPE | me.collision.types.ENEMY_OBJECT | me.collision.types.COLLECTABLE_OBJECT);
      * ...
      * // disable collision detection with all other objects
-     * myEntity.body.setCollisionMask(me.collision.types.NO_OBJECT);
+     * body.setCollisionMask(me.collision.types.NO_OBJECT);
      */
     setCollisionMask(bitmask?: number): void;
     /**
@@ -403,7 +386,7 @@ export class Body {
      * @param {number} type the collision type
      * @example
      * // set the body collision type
-     * myEntity.body.collisionType = me.collision.types.PLAYER_OBJECT;
+     * body.collisionType = me.collision.types.PLAYER_OBJECT;
      */
     setCollisionType(type: number): void;
     /**
@@ -472,7 +455,7 @@ export class Body {
      * Updates the parent's position as well as computes the new body's velocity based
      * on the values of force/friction/gravity.  Velocity chages are proportional to the
      * me.timer.tick value (which can be used to scale velocities).  The approach to moving the
-     * parent Entity is to compute new values of the Body.vel property then add them to
+     * parent renderable is to compute new values of the Body.vel property then add them to
      * the parent.pos value thus changing the postion the amount of Body.vel each time the
      * update call is made. <br>
      * Updates to Body.vel are bounded by maxVel (which defaults to viewport size if not set) <br>
@@ -949,7 +932,7 @@ export class Camera2d extends Renderable {
      */
     moveTo(x: number, y: number): void;
     /** @ignore */
-    updateTarget(): boolean;
+    updateTarget(): void;
     /** @ignore */
     update(dt: any): boolean;
     /**
@@ -1096,11 +1079,21 @@ export class CanvasRenderer extends Renderer {
      */
     resetTransform(): void;
     /**
-     * Set a blend mode for the given context
+     * set a blend mode for the given context. <br>
+     * Supported blend mode between Canvas and WebGL remderer : <br>
+     * - "normal" : this is the default mode and draws new content on top of the existing content <br>
+     * <img src="images/normal-blendmode.png" width="510"/> <br>
+     * - "multiply" : the pixels of the top layer are multiplied with the corresponding pixel of the bottom layer. A darker picture is the result. <br>
+     * <img src="images/multiply-blendmode.png" width="510"/> <br>
+     * - "lighter" : where both content overlap the color is determined by adding color values. <br>
+     * <img src="images/lighter-blendmode.png" width="510"/> <br>
+     * - "screen" : The pixels are inverted, multiplied, and inverted again. A lighter picture is the result (opposite of multiply) <br>
+     * <img src="images/screen-blendmode.png" width="510"/> <br>
      * @name setBlendMode
+     * @see https://developer.mozilla.org/en-US/docs/Web/API/CanvasRenderingContext2D/globalCompositeOperation
      * @memberof CanvasRenderer.prototype
      * @function
-     * @param {string} [mode="normal"] blend mode : "normal", "multiply"
+     * @param {string} [mode="normal"] blend mode : "normal", "multiply", "lighter, "screen"
      * @param {CanvasRenderingContext2D} [context]
      */
     setBlendMode(mode?: string, context?: CanvasRenderingContext2D): void;
@@ -5256,6 +5249,17 @@ export class Renderable extends Rect {
      */
     public tint: Color;
     /**
+     * the blend mode to be applied to this renderable (see renderer setBlendMode for available blend mode)
+     * @public
+     * @type {string}
+     * @name blendMode
+     * @default "normal"
+     * @see CanvasRenderer#setBlendMode
+     * @see WebGLRenderer#setBlendMode
+     * @memberof Renderable#
+     */
+    public blendMode: string;
+    /**
      * The name of the renderable
      * @public
      * @type {string}
@@ -6913,6 +6917,7 @@ export class Text extends Renderable {
      * @param {number} [settings.lineHeight=1.0] line spacing height
      * @param {Vector2d} [settings.anchorPoint={x:0.0, y:0.0}] anchor point to draw the text at
      * @param {boolean} [settings.offScreenCanvas=false] whether to draw the font to an individual "cache" texture first
+     * @param {number} [settings.wordWrapWidth] the maximum length in CSS pixel for a single segment of text
      * @param {(string|string[])} [settings.text=""] a string, or an array of strings
      * @example
      * var font = new me.Text(0, 0, {font: "Arial", size: 8, fillStyle: this.color});
@@ -6928,6 +6933,7 @@ export class Text extends Renderable {
         lineHeight?: number;
         anchorPoint?: Vector2d;
         offScreenCanvas?: boolean;
+        wordWrapWidth?: number;
         text?: (string | string[]);
     });
     /** @ignore */
@@ -6939,7 +6945,6 @@ export class Text extends Renderable {
      * @public
      * @type {number}
      * @default 1
-     * @name Text#lineWidth
      */
     public lineWidth: number;
     /**
@@ -6948,7 +6953,6 @@ export class Text extends Renderable {
      * @public
      * @type {string}
      * @default "left"
-     * @name Text#textAlign
      */
     public textAlign: string;
     /**
@@ -6957,7 +6961,6 @@ export class Text extends Renderable {
      * @public
      * @type {string}
      * @default "top"
-     * @name Text#textBaseline
      */
     public textBaseline: string;
     /**
@@ -6966,7 +6969,6 @@ export class Text extends Renderable {
      * @public
      * @type {number}
      * @default 1.0
-     * @name Text#lineHeight
      */
     public lineHeight: number;
     /**
@@ -6976,9 +6978,16 @@ export class Text extends Renderable {
      * @public
      * @type {boolean}
      * @default false
-     * @name Text#offScreenCanvas
      */
     public offScreenCanvas: boolean;
+    /**
+     * the maximum length in CSS pixel for a single segment of text.
+     * (use -1 to disable word wrapping)
+     * @public
+     * @type {number}
+     * @default -1
+     */
+    public wordWrapWidth: number;
     /**
      * the text to be displayed
      * @private
@@ -6988,38 +6997,28 @@ export class Text extends Renderable {
      * the font size (in px)
      * @public
      * @type {number}
-     * @name fontSize
      * @default 10
-     * @memberof Text
      */
     public fontSize: number;
     canvas: HTMLCanvasElement | OffscreenCanvas;
     context: CanvasRenderingContext2D | OffscreenCanvasRenderingContext2D;
+    metrics: TextMetrics;
     /** @ignore */
     onDeactivateEvent(): void;
     glTextureUnit: any;
     /**
      * make the font bold
-     * @name bold
-     * @memberof Text.prototype
-     * @function
      * @returns {Text} this object for chaining
      */
     bold(): Text;
     font: any;
     /**
      * make the font italic
-     * @name italic
-     * @memberof Text.prototype
-     * @function
      * @returns {Text} this object for chaining
      */
     italic(): Text;
     /**
      * set the font family and size
-     * @name setFont
-     * @memberof Text.prototype
-     * @function
      * @param {string} font a CSS font name
      * @param {number|string} [size=10] size in px, or size + suffix (px, em, pt)
      * @returns {Text} this object for chaining
@@ -7030,33 +7029,19 @@ export class Text extends Renderable {
     setFont(font: string, size?: number | string): Text;
     /**
      * change the text to be displayed
-     * @name setText
-     * @memberof Text.prototype
-     * @function
      * @param {number|string|string[]} value a string, or an array of strings
      * @returns {Text} this object for chaining
      */
     setText(value?: number | string | string[]): Text;
     /**
      * measure the given text size in pixels
-     * @name measureText
-     * @memberof Text.prototype
-     * @function
      * @param {CanvasRenderer|WebGLRenderer} [renderer] reference to the active renderer
      * @param {string} [text] the text to be measured
-     * @param {Rect|Bounds} [ret] a object in which to store the text metrics
-     * @returns {TextMetrics} a TextMetrics object with two properties: `width` and `height`, defining the output dimensions
+     * @returns {TextMetrics} a TextMetrics object defining the dimensions of the given piece of text
      */
-    measureText(renderer?: CanvasRenderer | WebGLRenderer, text?: string, ret?: Rect | Bounds): TextMetrics;
-    /**
-     * @ignore
-     */
-    update(): boolean;
+    measureText(renderer$1?: CanvasRenderer | WebGLRenderer, text?: string): TextMetrics;
     /**
      * draw a text at the specified coord
-     * @name draw
-     * @memberof Text.prototype
-     * @function
      * @param {CanvasRenderer|WebGLRenderer} renderer Reference to the destination renderer instance
      * @param {string} [text]
      * @param {number} [x]
@@ -7068,9 +7053,6 @@ export class Text extends Renderable {
      * draw a stroke text at the specified coord, as defined <br>
      * by the `lineWidth` and `fillStroke` properties. <br>
      * Note : using drawStroke is not recommended for performance reasons
-     * @name drawStroke
-     * @memberof Text.prototype
-     * @function
      * @param {CanvasRenderer|WebGLRenderer} renderer Reference to the destination renderer instance
      * @param {string} text
      * @param {number} x
@@ -7080,7 +7062,7 @@ export class Text extends Renderable {
     /**
      * @ignore
      */
-    _drawFont(context: any, text: any, x: any, y: any, stroke?: boolean): Bounds;
+    _drawFont(context: any, text: any, x: any, y: any, stroke?: boolean): TextMetrics;
     /**
      * Destroy function
      * @ignore
@@ -8637,6 +8619,10 @@ export class WebGLRenderer extends Renderer {
     /**
      * @ignore
      */
+    _blendStack: any[];
+    /**
+     * @ignore
+     */
     _glPoints: Vector2d[];
     /**
      * The current transformation matrix used for transformations on the overall scene
@@ -8799,14 +8785,25 @@ export class WebGLRenderer extends Renderer {
      */
     getContext(): WebGLRenderingContext;
     /**
-     * set a blend mode for the given context
+     * set a blend mode for the given context. <br>
+     * Supported blend mode between Canvas and WebGL remderer : <br>
+     * - "normal" : this is the default mode and draws new content on top of the existing content <br>
+     * <img src="images/normal-blendmode.png" width="510"/> <br>
+     * - "multiply" : the pixels of the top layer are multiplied with the corresponding pixel of the bottom layer. A darker picture is the result. <br>
+     * <img src="images/multiply-blendmode.png" width="510"/> <br>
+     * - "lighter" : where both content overlap the color is determined by adding color values. <br>
+     * <img src="images/lighter-blendmode.png" width="510"/> <br>
+     * - "screen" : The pixels are inverted, multiplied, and inverted again. A lighter picture is the result (opposite of multiply) <br>
+     * <img src="images/screen-blendmode.png" width="510"/> <br>
      * @name setBlendMode
+     * @see https://developer.mozilla.org/en-US/docs/Web/API/CanvasRenderingContext2D/globalCompositeOperation
      * @memberof WebGLRenderer.prototype
      * @function
-     * @param {string} [mode="normal"] blend mode : "normal", "multiply"
+     * @param {string} [mode="normal"] blend mode : "normal", "multiply", "lighter", "screen"
      * @param {WebGLRenderingContext} [gl]
      */
     setBlendMode(mode?: string, gl?: WebGLRenderingContext): void;
+    currentBlendMode: any;
     /**
      * return a reference to the font 2d Context
      * @ignore
@@ -10168,184 +10165,16 @@ export var plugin: any;
  * @namespace plugins
  */
 export var plugins: {};
-export namespace pool {
-    /**
-     * register an object to the pool. <br>
-     * Pooling must be set to true if more than one such objects will be created. <br>
-     * (Note: for an object to be poolable, it must implements a `onResetEvent` method)
-     * @function pool.register
-     * @param {string} className as defined in the Name field of the Object Properties (in Tiled)
-     * @param {object} classObj corresponding Class to be instantiated
-     * @param {boolean} [recycling=false] enables object recycling for the specified class
-     * @example
-     * // implement CherryEntity
-     * class CherryEntity extends Spritesheet {
-     *    onResetEvent() {
-     *        // reset object mutable properties
-     *        this.lifeBar = 100;
-     *    }
-     * };
-     * // add our users defined entities in the object pool and enable object recycling
-     * me.pool.register("cherryentity", CherryEntity, true);
-     */
-    function register(className: string, classObj: any, recycling?: boolean): void;
-    /**
-     * register an object to the pool. <br>
-     * Pooling must be set to true if more than one such objects will be created. <br>
-     * (Note: for an object to be poolable, it must implements a `onResetEvent` method)
-     * @function pool.register
-     * @param {string} className as defined in the Name field of the Object Properties (in Tiled)
-     * @param {object} classObj corresponding Class to be instantiated
-     * @param {boolean} [recycling=false] enables object recycling for the specified class
-     * @example
-     * // implement CherryEntity
-     * class CherryEntity extends Spritesheet {
-     *    onResetEvent() {
-     *        // reset object mutable properties
-     *        this.lifeBar = 100;
-     *    }
-     * };
-     * // add our users defined entities in the object pool and enable object recycling
-     * me.pool.register("cherryentity", CherryEntity, true);
-     */
-    function register(className: string, classObj: any, recycling?: boolean): void;
-    /**
-     * Pull a new instance of the requested object (if added into the object pool)
-     * @function pool.pull
-     * @param {string} name as used in {@link pool.register}
-     * @param {object} [...arguments] arguments to be passed when instantiating/reinitializing the object
-     * @returns {object} the instance of the requested object
-     * @example
-     * me.pool.register("bullet", BulletEntity, true);
-     * me.pool.register("enemy", EnemyEntity, true);
-     * // ...
-     * // when we need to manually create a new bullet:
-     * var bullet = me.pool.pull("bullet", x, y, direction);
-     * // ...
-     * // params aren't a fixed number
-     * // when we need new enemy we can add more params, that the object construct requires:
-     * var enemy = me.pool.pull("enemy", x, y, direction, speed, power, life);
-     * // ...
-     * // when we want to destroy existing object, the remove
-     * // function will ensure the object can then be reallocated later
-     * me.game.world.removeChild(enemy);
-     * me.game.world.removeChild(bullet);
-     */
-    function pull(name: string, ...args: any[]): any;
-    /**
-     * Pull a new instance of the requested object (if added into the object pool)
-     * @function pool.pull
-     * @param {string} name as used in {@link pool.register}
-     * @param {object} [...arguments] arguments to be passed when instantiating/reinitializing the object
-     * @returns {object} the instance of the requested object
-     * @example
-     * me.pool.register("bullet", BulletEntity, true);
-     * me.pool.register("enemy", EnemyEntity, true);
-     * // ...
-     * // when we need to manually create a new bullet:
-     * var bullet = me.pool.pull("bullet", x, y, direction);
-     * // ...
-     * // params aren't a fixed number
-     * // when we need new enemy we can add more params, that the object construct requires:
-     * var enemy = me.pool.pull("enemy", x, y, direction, speed, power, life);
-     * // ...
-     * // when we want to destroy existing object, the remove
-     * // function will ensure the object can then be reallocated later
-     * me.game.world.removeChild(enemy);
-     * me.game.world.removeChild(bullet);
-     */
-    function pull(name: string, ...args: any[]): any;
-    /**
-     * purge the object pool from any inactive object <br>
-     * Object pooling must be enabled for this function to work<br>
-     * note: this will trigger the garbage collector
-     * @function pool.purge
-     */
-    function purge(): void;
-    /**
-     * purge the object pool from any inactive object <br>
-     * Object pooling must be enabled for this function to work<br>
-     * note: this will trigger the garbage collector
-     * @function pool.purge
-     */
-    function purge(): void;
-    /**
-     * Push back an object instance into the object pool <br>
-     * Object pooling for the object class must be enabled,
-     * and object must have been instantiated using {@link pool#pull},
-     * otherwise this function won't work
-     * @function pool.push
-     * @throws will throw an error if the object cannot be recycled
-     * @param {object} obj instance to be recycled
-     * @param {boolean} [throwOnError=true] throw an exception if the object cannot be recycled
-     * @returns {boolean} true if the object was successfully recycled in the object pool
-     */
-    function push(obj: any, throwOnError?: boolean): boolean;
-    /**
-     * Push back an object instance into the object pool <br>
-     * Object pooling for the object class must be enabled,
-     * and object must have been instantiated using {@link pool#pull},
-     * otherwise this function won't work
-     * @function pool.push
-     * @throws will throw an error if the object cannot be recycled
-     * @param {object} obj instance to be recycled
-     * @param {boolean} [throwOnError=true] throw an exception if the object cannot be recycled
-     * @returns {boolean} true if the object was successfully recycled in the object pool
-     */
-    function push(obj: any, throwOnError?: boolean): boolean;
-    /**
-     * Check if an object with the provided name is registered
-     * @function pool.exists
-     * @param {string} name of the registered object class
-     * @returns {boolean} true if the classname is registered
-     */
-    function exists(name: string): boolean;
-    /**
-     * Check if an object with the provided name is registered
-     * @function pool.exists
-     * @param {string} name of the registered object class
-     * @returns {boolean} true if the classname is registered
-     */
-    function exists(name: string): boolean;
-    /**
-     * Check if an object is poolable
-     * (was properly registered with the recycling feature enable)
-     * @function pool.poolable
-     * @see pool.register
-     * @param {object} obj object to be checked
-     * @returns {boolean} true if the object is poolable
-     * @example
-     * if (!me.pool.poolable(myCherryEntity)) {
-     *     // object was not properly registered
-     * }
-     */
-    function poolable(obj: any): boolean;
-    /**
-     * Check if an object is poolable
-     * (was properly registered with the recycling feature enable)
-     * @function pool.poolable
-     * @see pool.register
-     * @param {object} obj object to be checked
-     * @returns {boolean} true if the object is poolable
-     * @example
-     * if (!me.pool.poolable(myCherryEntity)) {
-     *     // object was not properly registered
-     * }
-     */
-    function poolable(obj: any): boolean;
-    /**
-     * returns the amount of object instance currently in the pool
-     * @function pool.getInstanceCount
-     * @returns {number} amount of object instance
-     */
-    function getInstanceCount(): number;
-    /**
-     * returns the amount of object instance currently in the pool
-     * @function pool.getInstanceCount
-     * @returns {number} amount of object instance
-     */
-    function getInstanceCount(): number;
-}
+declare var pooling: Readonly<{
+    __proto__: any;
+    register: typeof register;
+    pull: typeof pull;
+    purge: typeof purge;
+    push: typeof push;
+    exists: typeof exists;
+    poolable: typeof poolable;
+    getInstanceCount: typeof getInstanceCount;
+}>;
 export namespace save {
     /**
      * Add new keys to localStorage and set them to the given default values if they do not exist
@@ -10416,7 +10245,7 @@ export namespace state {
     const DEFAULT: number;
     const USER: number;
     /**
-     * Stop the current screen object.
+     * Stop the current stage.
      * @name stop
      * @memberof state
      * @public
@@ -10425,7 +10254,7 @@ export namespace state {
      */
     function stop(pauseTrack?: boolean): void;
     /**
-     * Stop the current screen object.
+     * Stop the current stage.
      * @name stop
      * @memberof state
      * @public
@@ -10434,7 +10263,7 @@ export namespace state {
      */
     function stop(pauseTrack?: boolean): void;
     /**
-     * pause the current screen object
+     * pause the current stage
      * @name pause
      * @memberof state
      * @public
@@ -10443,7 +10272,7 @@ export namespace state {
      */
     function pause(music?: boolean): void;
     /**
-     * pause the current screen object
+     * pause the current stage
      * @name pause
      * @memberof state
      * @public
@@ -10452,7 +10281,7 @@ export namespace state {
      */
     function pause(music?: boolean): void;
     /**
-     * Restart the screen object from a full stop.
+     * Restart the current stage from a full stop.
      * @name restart
      * @memberof state
      * @public
@@ -10461,7 +10290,7 @@ export namespace state {
      */
     function restart(music?: boolean): void;
     /**
-     * Restart the screen object from a full stop.
+     * Restart the current stage from a full stop.
      * @name restart
      * @memberof state
      * @public
@@ -10470,7 +10299,7 @@ export namespace state {
      */
     function restart(music?: boolean): void;
     /**
-     * resume the screen object
+     * resume the current stage
      * @name resume
      * @memberof state
      * @public
@@ -10479,7 +10308,7 @@ export namespace state {
      */
     function resume(music?: boolean): void;
     /**
-     * resume the screen object
+     * resume the current stage
      * @name resume
      * @memberof state
      * @public
@@ -10618,7 +10447,7 @@ export namespace state {
      */
     function set(state: number, stage: Stage, start?: boolean): void;
     /**
-     * return a reference to the current screen object<br>
+     * return a reference to the current stage<br>
      * useful to call a object specific method
      * @name current
      * @memberof state
@@ -10628,7 +10457,7 @@ export namespace state {
      */
     function current(): Stage;
     /**
-     * return a reference to the current screen object<br>
+     * return a reference to the current stage<br>
      * useful to call a object specific method
      * @name current
      * @memberof state
@@ -10946,6 +10775,51 @@ export var video: Readonly<{
  * @param {string} version the version since when the lass,function or property is deprecated
  */
 export function warning(deprecated: string, replacement: string, version: string): void;
+/**
+ * @classdesc
+ * a Text Metrics object that contains helper for text manipulation
+ * @augments Bounds
+ */
+declare class TextMetrics extends Bounds {
+    /**
+     * @param {Text|BitmapText} ancestor the parent object that contains this TextMetrics object
+     */
+    constructor(ancestor: Text | BitmapText);
+    /**
+     * a reference to the parent object that contains this TextMetrics object
+     * @public
+     * @type {Renderable}
+     * @default undefined
+     */
+    public ancestor: Renderable;
+    /**
+     * Returns the height of a segment of inline text in CSS pixels.
+     * @returns {number} the height of a segment of inline text in CSS pixels.
+     */
+    lineHeight(): number;
+    /**
+     * Returns the width of the given segment of inline text in CSS pixels.
+     * @param {string} text the text to be measured
+     * @param {CanvasRenderingContext2D} [context] reference to an active 2d context for canvas rendering
+     * @returns {number} the width of the given segment of inline text in CSS pixels.
+     */
+    lineWidth(text: string, context?: CanvasRenderingContext2D): number;
+    /**
+     * measure the given text size in CSS pixels
+     * @param {string} text the text to be measured
+     * @param {CanvasRenderingContext2D} [context] reference to an active 2d context for canvas rendering
+     * @returns {TextMetrics} this
+     */
+    measureText(text: string, context?: CanvasRenderingContext2D): TextMetrics;
+    /**
+     * wrap the given text based on the given width
+     * @param {string|string[]} text the text to be wrapped
+     * @param {number} width maximum width of one segment of text in css pixel
+     * @param {CanvasRenderingContext2D} [context] reference to an active 2d context for canvas rendering
+     * @returns {string[]} an array of string representing wrapped text
+     */
+    wordWrap(text: string | string[], width: number, context?: CanvasRenderingContext2D): string[];
+}
 /**
  * @classdesc
  * a bound object contains methods for creating and manipulating axis-aligned bounding boxes (AABB).
@@ -12127,6 +12001,107 @@ declare function setGamepadDeadzone(value: number): void;
  * @ignore
  */
 declare function addMapping(id: any, mapping: any): void;
+/**
+ * This object is used for object pooling - a technique that might speed up your game if used properly.<br>
+ * If some of your classes will be instantiated and removed a lot at a time, it is a
+ * good idea to add the class to this object pool. A separate pool for that class
+ * will be created, which will reuse objects of the class. That way they won't be instantiated
+ * each time you need a new one (slowing your game), but stored into that pool and taking one
+ * already instantiated when you need it.<br><br>
+ * This object is also used by the engine to instantiate objects defined in the map,
+ * which means, that on level loading the engine will try to instantiate every object
+ * found in the map, based on the user defined name in each Object Properties<br>
+ * <img src="images/object_properties.png"/><br>
+ * @namespace pool
+ */
+/**
+ * register an object to the pool. <br>
+ * Pooling must be set to true if more than one such objects will be created. <br>
+ * (Note: for an object to be poolable, it must implements a `onResetEvent` method)
+ * @function pool.register
+ * @param {string} className as defined in the Name field of the Object Properties (in Tiled)
+ * @param {object} classObj corresponding Class to be instantiated
+ * @param {boolean} [recycling=false] enables object recycling for the specified class
+ * @example
+ * // implement CherryEntity
+ * class CherryEntity extends Spritesheet {
+ *    onResetEvent() {
+ *        // reset object mutable properties
+ *        this.lifeBar = 100;
+ *    }
+ * };
+ * // add our users defined entities in the object pool and enable object recycling
+ * me.pool.register("cherryentity", CherryEntity, true);
+ */
+declare function register(className: string, classObj: object, recycling?: boolean): void;
+/**
+ * Pull a new instance of the requested object (if added into the object pool)
+ * @function pool.pull
+ * @param {string} name as used in {@link pool.register}
+ * @param {object} [...arguments] arguments to be passed when instantiating/reinitializing the object
+ * @returns {object} the instance of the requested object
+ * @example
+ * me.pool.register("bullet", BulletEntity, true);
+ * me.pool.register("enemy", EnemyEntity, true);
+ * // ...
+ * // when we need to manually create a new bullet:
+ * var bullet = me.pool.pull("bullet", x, y, direction);
+ * // ...
+ * // params aren't a fixed number
+ * // when we need new enemy we can add more params, that the object construct requires:
+ * var enemy = me.pool.pull("enemy", x, y, direction, speed, power, life);
+ * // ...
+ * // when we want to destroy existing object, the remove
+ * // function will ensure the object can then be reallocated later
+ * me.game.world.removeChild(enemy);
+ * me.game.world.removeChild(bullet);
+ */
+declare function pull(name: string, ...args: any[]): object;
+/**
+ * purge the object pool from any inactive object <br>
+ * Object pooling must be enabled for this function to work<br>
+ * note: this will trigger the garbage collector
+ * @function pool.purge
+ */
+declare function purge(): void;
+/**
+ * Push back an object instance into the object pool <br>
+ * Object pooling for the object class must be enabled,
+ * and object must have been instantiated using {@link pool#pull},
+ * otherwise this function won't work
+ * @function pool.push
+ * @throws will throw an error if the object cannot be recycled
+ * @param {object} obj instance to be recycled
+ * @param {boolean} [throwOnError=true] throw an exception if the object cannot be recycled
+ * @returns {boolean} true if the object was successfully recycled in the object pool
+ */
+declare function push(obj: object, throwOnError?: boolean): boolean;
+/**
+ * Check if an object with the provided name is registered
+ * @function pool.exists
+ * @param {string} name of the registered object class
+ * @returns {boolean} true if the classname is registered
+ */
+declare function exists(name: string): boolean;
+/**
+ * Check if an object is poolable
+ * (was properly registered with the recycling feature enable)
+ * @function pool.poolable
+ * @see pool.register
+ * @param {object} obj object to be checked
+ * @returns {boolean} true if the object is poolable
+ * @example
+ * if (!me.pool.poolable(myCherryEntity)) {
+ *     // object was not properly registered
+ * }
+ */
+declare function poolable(obj: object): boolean;
+/**
+ * returns the amount of object instance currently in the pool
+ * @function pool.getInstanceCount
+ * @returns {number} amount of object instance
+ */
+declare function getInstanceCount(): number;
 declare var agentUtils: Readonly<{
     __proto__: any;
     prefixed: typeof prefixed;
@@ -12419,4 +12394,4 @@ declare function defer(func: Function, thisArg: object, ...args: any[]): number;
  * @returns {Function} the function that will be throttled
  */
 declare function throttle(fn: Function, delay: number, no_trailing: any): Function;
-export { Bounds$1 as Bounds, math as Math, device$1 as device, timer$1 as timer };
+export { Bounds$1 as Bounds, math as Math, device$1 as device, pooling as pool, timer$1 as timer };
