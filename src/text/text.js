@@ -298,7 +298,7 @@ class Text extends Renderable {
         }
 
         // calculcate the text size and update the bounds accordingly
-        bounds.addBounds(this.metrics.measureText(this._text, getContext2d(globalRenderer, this), true));
+        bounds.addBounds(this.metrics.measureText(this._text, getContext2d(globalRenderer, this)), true);
 
         // update the offScreenCanvas texture if required
         if (this.offScreenCanvas === true) {
