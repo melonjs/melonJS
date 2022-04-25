@@ -1,6 +1,6 @@
 # Changelog
 
-## [10.6.0] (melonJS 2) - _2022-xx-xx_
+## [10.6.0] (melonJS 2) - _2022-04-25_
 
 ### Added
 - Renderable : added the possibility to specify a blend mode per renderable
