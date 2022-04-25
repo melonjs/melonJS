@@ -1,5 +1,10 @@
 # Changelog
 
+## [10.6.1] (melonJS 2) - _2022-04-25_
+
+### Fixed
+- Renderable: fix a regression in BitmapText when specifying a scaling size through the constructor
+
 ## [10.6.0] (melonJS 2) - _2022-04-25_
 
 ### Added

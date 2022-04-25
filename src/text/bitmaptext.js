@@ -117,11 +117,6 @@ class BitmapText extends Renderable {
             this.floating = !!settings.floating;
         }
 
-        // resize if necessary
-        if (typeof settings.size === "number" && settings.size !== 1.0) {
-            this.resize(settings.size);
-        }
-
         // apply given fillstyle
         if (typeof settings.fillStyle !== "undefined") {
             if (settings.fillStyle instanceof Color) {
@@ -141,6 +136,11 @@ class BitmapText extends Renderable {
 
         // instance to text metrics functions
         this.metrics = new TextMetrics(this);
+
+        // resize if necessary
+        if (typeof settings.size === "number" && settings.size !== 1.0) {
+            this.resize(settings.size);
+        }
 
         // set the text
         this.setText(settings.text);
