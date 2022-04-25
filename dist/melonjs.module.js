@@ -33425,8 +33425,8 @@ class Text extends Renderable {
 
         // update the offScreenCanvas texture if required
         if (this.offScreenCanvas === true) {
-            var width = Math.round(bounds.width),
-                height = Math.round(bounds.height);
+            var width = Math.ceil(this.metrics.width),
+                height = Math.ceil(this.metrics.height);
 
             if (renderer instanceof WebGLRenderer) {
                 // invalidate the previous corresponding texture so that it can reuploaded once changed
@@ -33435,8 +33435,8 @@ class Text extends Renderable {
 
                 if (renderer.WebGLVersion === 1) {
                     // round size to next Pow2
-                    width = nextPowerOfTwo(bounds.width);
-                    height = nextPowerOfTwo(bounds.height);
+                    width = nextPowerOfTwo(this.metrics.width);
+                    height = nextPowerOfTwo(this.metrics.height);
                 }
             }
 
@@ -33448,7 +33448,7 @@ class Text extends Renderable {
             } else {
                 this.context.clearRect(0, 0, this.canvas.width, this.canvas.height);
             }
-            this._drawFont(this.context, this._text,  this.pos.x - bounds.x, this.pos.y - bounds.y, false);
+            this._drawFont(this.context, this._text,  this.pos.x - this.metrics.x, this.pos.y - this.metrics.y, false);
         }
 
         this.isDirty = true;
@@ -33744,7 +33744,7 @@ class BitmapText extends Renderable {
             this._text = this.metrics.wordWrap(this._text, this.wordWrapWidth);
         }
 
-        this.getBounds().addBounds(this.measureText(), true);
+        this.getBounds().addBounds(this.metrics.measureText(this._text), true);
 
         return this;
     }
@@ -33770,7 +33770,7 @@ class BitmapText extends Renderable {
     resize(scale) {
         this.fontScale.set(scale, scale);
 
-        this.getBounds().addBounds(this.measureText(), true);
+        this.getBounds().addBounds(this.metrics.measureText(this._text), true);
 
         // clear the cache text to recalculate bounds
         this.isDirty = true;
