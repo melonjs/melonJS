@@ -1,5 +1,5 @@
 /*!
- * melonJS Game Engine - v10.6.0
+ * melonJS Game Engine - v10.6.1
  * http://www.melonjs.org
  * melonjs is licensed under the MIT License.
  * http://www.opensource.org/licenses/mit-license
@@ -31991,10 +31991,10 @@
          * this can be overridden by the plugin
          * @public
          * @type {string}
-         * @default "10.6.0"
+         * @default "10.6.1"
          * @name plugin.Base#version
          */
-        this.version = "10.6.0";
+        this.version = "10.6.1";
     };
 
     /**
@@ -33699,11 +33699,6 @@
                 this.floating = !!settings.floating;
             }
 
-            // resize if necessary
-            if (typeof settings.size === "number" && settings.size !== 1.0) {
-                this.resize(settings.size);
-            }
-
             // apply given fillstyle
             if (typeof settings.fillStyle !== "undefined") {
                 if (settings.fillStyle instanceof Color) {
@@ -33723,6 +33718,11 @@
 
             // instance to text metrics functions
             this.metrics = new TextMetrics(this);
+
+            // resize if necessary
+            if (typeof settings.size === "number" && settings.size !== 1.0) {
+                this.resize(settings.size);
+            }
 
             // set the text
             this.setText(settings.text);
@@ -36501,7 +36501,7 @@
      * @name version
      * @type {string}
      */
-    var version = "10.6.0";
+    var version = "10.6.1";
 
 
     /**
