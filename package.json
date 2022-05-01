@@ -68,7 +68,7 @@
     "cheerio": "^1.0.0-rc.10",
     "del-cli": "^4.0.1",
     "eslint": "^8.14.0",
-    "eslint-plugin-jsdoc": "^39.2.8",
+    "eslint-plugin-jsdoc": "^39.2.9",
     "jasmine-core": "^4.1.0",
     "jsdoc": "^3.6.10",
     "karma": "^6.3.19",
@@ -78,11 +78,11 @@
     "karma-jasmine": "^5.0.0",
     "karma-nyan-reporter": "0.2.5",
     "qs": "^6.10.3",
-    "rollup": "^2.70.2",
+    "rollup": "^2.71.1",
     "rollup-plugin-bundle-size": "^1.0.3",
     "rollup-plugin-string": "^3.0.0",
-    "terser": "^5.12.1",
-    "typescript": "^4.6.3"
+    "terser": "^5.13.1",
+    "typescript": "^4.6.4"
   },
   "scripts": {
     "build": "npm run lint && rollup -c --silent",
