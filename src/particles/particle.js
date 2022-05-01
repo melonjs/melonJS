@@ -1,7 +1,19 @@
+import { createCanvas } from "./../video/video.js";
 import Vector2d from "./../math/vector2.js";
 import timer from "./../system/timer.js";
 import { randomFloat, clamp } from "./../math/math.js";
 import Renderable from "./../renderable/renderable.js";
+
+/**
+ * @ignore
+ */
+function createDefaultParticleTexture(w, h) {
+    var canvas = createCanvas(w, h);
+    var context = canvas.getContext("2d");
+    context.fillStyle = "#fff";
+    context.fillRect(0, 0, w, h);
+    return canvas;
+};
 
 
 /**
@@ -43,7 +55,11 @@ class Particle extends Renderable {
         this.alwaysUpdate = true;
 
         // Cache the image reference
+        if (typeof emitter.image === "undefined") {
+            emitter.image = createDefaultParticleTexture(emitter.image.width, emitter.image.height);
+        }
         this.image = emitter.image;
+
 
         // Set the start particle Angle and Speed as defined in emitter
         var angle = emitter.angle + ((emitter.angleVariation > 0) ? (randomFloat(0, 2) - 1) * emitter.angleVariation : 0);

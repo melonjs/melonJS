@@ -1,19 +1,7 @@
-import { createCanvas } from "./../video/video.js";
 import * as pool from "./../system/pooling.js";
 import Renderable from "./../renderable/renderable.js";
 import ParticleContainer from "./particlecontainer.js";
 import { randomFloat } from "./../math/math.js";
-
-
-
-// generate a default image for the particles
-var pixel = (function () {
-    var canvas = createCanvas(1, 1);
-    var context = canvas.getContext("2d");
-    context.fillStyle = "#fff";
-    context.fillRect(0, 0, 1, 1);
-    return canvas;
-})();
 
 /**
  * me.ParticleEmitterSettings contains the default settings for me.ParticleEmitter
@@ -21,16 +9,16 @@ var pixel = (function () {
  * @class
  * @see ParticleEmitter
  */
-var ParticleEmitterSettings = {
+let ParticleEmitterSettings = {
     /**
      * Width of the particle spawn area.<br>
      * @public
      * @type {number}
      * @name width
      * @memberof ParticleEmitterSettings
-     * @default 0
+     * @default 1
      */
-    width : 0,
+    width : 1,
 
     /**
      * Height of the particle spawn area
@@ -38,20 +26,20 @@ var ParticleEmitterSettings = {
      * @type {number}
      * @name height
      * @memberof ParticleEmitterSettings
-     * @default 0
+     * @default 1
      */
-    height : 0,
+    height : 1,
 
     /**
-     * Image used for particles
+     * default image used for particles.
+     * (by default melonJS will create an white texture image)
      * @public
-     * @type {CanvasImageSource}
+     * @type {HTMLCanvasElement}
      * @name image
      * @memberof ParticleEmitterSettings
-     * @default 1x1 white pixel
-     * @see http://www.whatwg.org/specs/web-apps/current-work/multipage/the-canvas-element.html#canvasimagesource
+     * @default undefined
      */
-    image : pixel,
+    image : undefined,
 
     /**
      * Total number of particles in the emitter
