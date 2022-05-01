@@ -1,17 +1,977 @@
 /*!
- * melonJS Game Engine - v10.6.1
+ * melonJS Game Engine - v10.7.0
  * http://www.melonjs.org
  * melonjs is licensed under the MIT License.
  * http://www.opensource.org/licenses/mit-license
  * @copyright (C) 2011 - 2022 Olivier Biot
  */
-if (typeof window !== "undefined") {
-    if (typeof window.console === "undefined") {
-        window.console = {};
-        window.console.log = function() {};
-        window.console.assert = function() {};
-        window.console.warn = function() {};
-        window.console.error = function() {
+var commonjsGlobal = typeof globalThis !== 'undefined' ? globalThis : typeof window !== 'undefined' ? window : typeof global !== 'undefined' ? global : typeof self !== 'undefined' ? self : {};
+
+var check = function (it) {
+  return it && it.Math == Math && it;
+};
+
+// https://github.com/zloirock/core-js/issues/86#issuecomment-115759028
+var global$m =
+  // eslint-disable-next-line es-x/no-global-this -- safe
+  check(typeof globalThis == 'object' && globalThis) ||
+  check(typeof window == 'object' && window) ||
+  // eslint-disable-next-line no-restricted-globals -- safe
+  check(typeof self == 'object' && self) ||
+  check(typeof commonjsGlobal == 'object' && commonjsGlobal) ||
+  // eslint-disable-next-line no-new-func -- fallback
+  (function () { return this; })() || Function('return this')();
+
+var objectGetOwnPropertyDescriptor = {};
+
+var fails$7 = function (exec) {
+  try {
+    return !!exec();
+  } catch (error) {
+    return true;
+  }
+};
+
+var fails$6 = fails$7;
+
+// Detect IE8's incomplete defineProperty implementation
+var descriptors = !fails$6(function () {
+  // eslint-disable-next-line es-x/no-object-defineproperty -- required for testing
+  return Object.defineProperty({}, 1, { get: function () { return 7; } })[1] != 7;
+});
+
+var fails$5 = fails$7;
+
+var functionBindNative = !fails$5(function () {
+  // eslint-disable-next-line es-x/no-function-prototype-bind -- safe
+  var test = (function () { /* empty */ }).bind();
+  // eslint-disable-next-line no-prototype-builtins -- safe
+  return typeof test != 'function' || test.hasOwnProperty('prototype');
+});
+
+var NATIVE_BIND$1 = functionBindNative;
+
+var call$4 = Function.prototype.call;
+
+var functionCall = NATIVE_BIND$1 ? call$4.bind(call$4) : function () {
+  return call$4.apply(call$4, arguments);
+};
+
+var objectPropertyIsEnumerable = {};
+
+var $propertyIsEnumerable = {}.propertyIsEnumerable;
+// eslint-disable-next-line es-x/no-object-getownpropertydescriptor -- safe
+var getOwnPropertyDescriptor$1 = Object.getOwnPropertyDescriptor;
+
+// Nashorn ~ JDK8 bug
+var NASHORN_BUG = getOwnPropertyDescriptor$1 && !$propertyIsEnumerable.call({ 1: 2 }, 1);
+
+// `Object.prototype.propertyIsEnumerable` method implementation
+// https://tc39.es/ecma262/#sec-object.prototype.propertyisenumerable
+objectPropertyIsEnumerable.f = NASHORN_BUG ? function propertyIsEnumerable(V) {
+  var descriptor = getOwnPropertyDescriptor$1(this, V);
+  return !!descriptor && descriptor.enumerable;
+} : $propertyIsEnumerable;
+
+var createPropertyDescriptor$2 = function (bitmap, value) {
+  return {
+    enumerable: !(bitmap & 1),
+    configurable: !(bitmap & 2),
+    writable: !(bitmap & 4),
+    value: value
+  };
+};
+
+var NATIVE_BIND = functionBindNative;
+
+var FunctionPrototype$1 = Function.prototype;
+var bind = FunctionPrototype$1.bind;
+var call$3 = FunctionPrototype$1.call;
+var uncurryThis$9 = NATIVE_BIND && bind.bind(call$3, call$3);
+
+var functionUncurryThis = NATIVE_BIND ? function (fn) {
+  return fn && uncurryThis$9(fn);
+} : function (fn) {
+  return fn && function () {
+    return call$3.apply(fn, arguments);
+  };
+};
+
+var uncurryThis$8 = functionUncurryThis;
+
+var toString$2 = uncurryThis$8({}.toString);
+var stringSlice = uncurryThis$8(''.slice);
+
+var classofRaw = function (it) {
+  return stringSlice(toString$2(it), 8, -1);
+};
+
+var global$l = global$m;
+var uncurryThis$7 = functionUncurryThis;
+var fails$4 = fails$7;
+var classof = classofRaw;
+
+var Object$3 = global$l.Object;
+var split = uncurryThis$7(''.split);
+
+// fallback for non-array-like ES3 and non-enumerable old V8 strings
+var indexedObject = fails$4(function () {
+  // throws an error in rhino, see https://github.com/mozilla/rhino/issues/346
+  // eslint-disable-next-line no-prototype-builtins -- safe
+  return !Object$3('z').propertyIsEnumerable(0);
+}) ? function (it) {
+  return classof(it) == 'String' ? split(it, '') : Object$3(it);
+} : Object$3;
+
+var global$k = global$m;
+
+var TypeError$7 = global$k.TypeError;
+
+// `RequireObjectCoercible` abstract operation
+// https://tc39.es/ecma262/#sec-requireobjectcoercible
+var requireObjectCoercible$2 = function (it) {
+  if (it == undefined) throw TypeError$7("Can't call method on " + it);
+  return it;
+};
+
+// toObject with fallback for non-array-like ES3 strings
+var IndexedObject = indexedObject;
+var requireObjectCoercible$1 = requireObjectCoercible$2;
+
+var toIndexedObject$3 = function (it) {
+  return IndexedObject(requireObjectCoercible$1(it));
+};
+
+// `IsCallable` abstract operation
+// https://tc39.es/ecma262/#sec-iscallable
+var isCallable$9 = function (argument) {
+  return typeof argument == 'function';
+};
+
+var isCallable$8 = isCallable$9;
+
+var isObject$5 = function (it) {
+  return typeof it == 'object' ? it !== null : isCallable$8(it);
+};
+
+var global$j = global$m;
+var isCallable$7 = isCallable$9;
+
+var aFunction = function (argument) {
+  return isCallable$7(argument) ? argument : undefined;
+};
+
+var getBuiltIn$3 = function (namespace, method) {
+  return arguments.length < 2 ? aFunction(global$j[namespace]) : global$j[namespace] && global$j[namespace][method];
+};
+
+var uncurryThis$6 = functionUncurryThis;
+
+var objectIsPrototypeOf = uncurryThis$6({}.isPrototypeOf);
+
+var getBuiltIn$2 = getBuiltIn$3;
+
+var engineUserAgent = getBuiltIn$2('navigator', 'userAgent') || '';
+
+var global$i = global$m;
+var userAgent = engineUserAgent;
+
+var process = global$i.process;
+var Deno = global$i.Deno;
+var versions = process && process.versions || Deno && Deno.version;
+var v8 = versions && versions.v8;
+var match, version$1;
+
+if (v8) {
+  match = v8.split('.');
+  // in old Chrome, versions of V8 isn't V8 = Chrome / 10
+  // but their correct versions are not interesting for us
+  version$1 = match[0] > 0 && match[0] < 4 ? 1 : +(match[0] + match[1]);
+}
+
+// BrowserFS NodeJS `process` polyfill incorrectly set `.v8` to `0.0`
+// so check `userAgent` even if `.v8` exists, but 0
+if (!version$1 && userAgent) {
+  match = userAgent.match(/Edge\/(\d+)/);
+  if (!match || match[1] >= 74) {
+    match = userAgent.match(/Chrome\/(\d+)/);
+    if (match) version$1 = +match[1];
+  }
+}
+
+var engineV8Version = version$1;
+
+/* eslint-disable es-x/no-symbol -- required for testing */
+
+var V8_VERSION = engineV8Version;
+var fails$3 = fails$7;
+
+// eslint-disable-next-line es-x/no-object-getownpropertysymbols -- required for testing
+var nativeSymbol = !!Object.getOwnPropertySymbols && !fails$3(function () {
+  var symbol = Symbol();
+  // Chrome 38 Symbol has incorrect toString conversion
+  // `get-own-property-symbols` polyfill symbols converted to object are not Symbol instances
+  return !String(symbol) || !(Object(symbol) instanceof Symbol) ||
+    // Chrome 38-40 symbols are not inherited from DOM collections prototypes to instances
+    !Symbol.sham && V8_VERSION && V8_VERSION < 41;
+});
+
+/* eslint-disable es-x/no-symbol -- required for testing */
+
+var NATIVE_SYMBOL$1 = nativeSymbol;
+
+var useSymbolAsUid = NATIVE_SYMBOL$1
+  && !Symbol.sham
+  && typeof Symbol.iterator == 'symbol';
+
+var global$h = global$m;
+var getBuiltIn$1 = getBuiltIn$3;
+var isCallable$6 = isCallable$9;
+var isPrototypeOf = objectIsPrototypeOf;
+var USE_SYMBOL_AS_UID$1 = useSymbolAsUid;
+
+var Object$2 = global$h.Object;
+
+var isSymbol$2 = USE_SYMBOL_AS_UID$1 ? function (it) {
+  return typeof it == 'symbol';
+} : function (it) {
+  var $Symbol = getBuiltIn$1('Symbol');
+  return isCallable$6($Symbol) && isPrototypeOf($Symbol.prototype, Object$2(it));
+};
+
+var global$g = global$m;
+
+var String$2 = global$g.String;
+
+var tryToString$1 = function (argument) {
+  try {
+    return String$2(argument);
+  } catch (error) {
+    return 'Object';
+  }
+};
+
+var global$f = global$m;
+var isCallable$5 = isCallable$9;
+var tryToString = tryToString$1;
+
+var TypeError$6 = global$f.TypeError;
+
+// `Assert: IsCallable(argument) is true`
+var aCallable$1 = function (argument) {
+  if (isCallable$5(argument)) return argument;
+  throw TypeError$6(tryToString(argument) + ' is not a function');
+};
+
+var aCallable = aCallable$1;
+
+// `GetMethod` abstract operation
+// https://tc39.es/ecma262/#sec-getmethod
+var getMethod$1 = function (V, P) {
+  var func = V[P];
+  return func == null ? undefined : aCallable(func);
+};
+
+var global$e = global$m;
+var call$2 = functionCall;
+var isCallable$4 = isCallable$9;
+var isObject$4 = isObject$5;
+
+var TypeError$5 = global$e.TypeError;
+
+// `OrdinaryToPrimitive` abstract operation
+// https://tc39.es/ecma262/#sec-ordinarytoprimitive
+var ordinaryToPrimitive$1 = function (input, pref) {
+  var fn, val;
+  if (pref === 'string' && isCallable$4(fn = input.toString) && !isObject$4(val = call$2(fn, input))) return val;
+  if (isCallable$4(fn = input.valueOf) && !isObject$4(val = call$2(fn, input))) return val;
+  if (pref !== 'string' && isCallable$4(fn = input.toString) && !isObject$4(val = call$2(fn, input))) return val;
+  throw TypeError$5("Can't convert object to primitive value");
+};
+
+var shared$3 = {exports: {}};
+
+var global$d = global$m;
+
+// eslint-disable-next-line es-x/no-object-defineproperty -- safe
+var defineProperty = Object.defineProperty;
+
+var setGlobal$3 = function (key, value) {
+  try {
+    defineProperty(global$d, key, { value: value, configurable: true, writable: true });
+  } catch (error) {
+    global$d[key] = value;
+  } return value;
+};
+
+var global$c = global$m;
+var setGlobal$2 = setGlobal$3;
+
+var SHARED = '__core-js_shared__';
+var store$3 = global$c[SHARED] || setGlobal$2(SHARED, {});
+
+var sharedStore = store$3;
+
+var store$2 = sharedStore;
+
+(shared$3.exports = function (key, value) {
+  return store$2[key] || (store$2[key] = value !== undefined ? value : {});
+})('versions', []).push({
+  version: '3.22.3',
+  mode: 'global',
+  copyright: '© 2014-2022 Denis Pushkarev (zloirock.ru)',
+  license: 'https://github.com/zloirock/core-js/blob/v3.22.3/LICENSE',
+  source: 'https://github.com/zloirock/core-js'
+});
+
+var global$b = global$m;
+var requireObjectCoercible = requireObjectCoercible$2;
+
+var Object$1 = global$b.Object;
+
+// `ToObject` abstract operation
+// https://tc39.es/ecma262/#sec-toobject
+var toObject$1 = function (argument) {
+  return Object$1(requireObjectCoercible(argument));
+};
+
+var uncurryThis$5 = functionUncurryThis;
+var toObject = toObject$1;
+
+var hasOwnProperty = uncurryThis$5({}.hasOwnProperty);
+
+// `HasOwnProperty` abstract operation
+// https://tc39.es/ecma262/#sec-hasownproperty
+// eslint-disable-next-line es-x/no-object-hasown -- safe
+var hasOwnProperty_1 = Object.hasOwn || function hasOwn(it, key) {
+  return hasOwnProperty(toObject(it), key);
+};
+
+var uncurryThis$4 = functionUncurryThis;
+
+var id = 0;
+var postfix = Math.random();
+var toString$1 = uncurryThis$4(1.0.toString);
+
+var uid$2 = function (key) {
+  return 'Symbol(' + (key === undefined ? '' : key) + ')_' + toString$1(++id + postfix, 36);
+};
+
+var global$a = global$m;
+var shared$2 = shared$3.exports;
+var hasOwn$6 = hasOwnProperty_1;
+var uid$1 = uid$2;
+var NATIVE_SYMBOL = nativeSymbol;
+var USE_SYMBOL_AS_UID = useSymbolAsUid;
+
+var WellKnownSymbolsStore = shared$2('wks');
+var Symbol$1 = global$a.Symbol;
+var symbolFor = Symbol$1 && Symbol$1['for'];
+var createWellKnownSymbol = USE_SYMBOL_AS_UID ? Symbol$1 : Symbol$1 && Symbol$1.withoutSetter || uid$1;
+
+var wellKnownSymbol$1 = function (name) {
+  if (!hasOwn$6(WellKnownSymbolsStore, name) || !(NATIVE_SYMBOL || typeof WellKnownSymbolsStore[name] == 'string')) {
+    var description = 'Symbol.' + name;
+    if (NATIVE_SYMBOL && hasOwn$6(Symbol$1, name)) {
+      WellKnownSymbolsStore[name] = Symbol$1[name];
+    } else if (USE_SYMBOL_AS_UID && symbolFor) {
+      WellKnownSymbolsStore[name] = symbolFor(description);
+    } else {
+      WellKnownSymbolsStore[name] = createWellKnownSymbol(description);
+    }
+  } return WellKnownSymbolsStore[name];
+};
+
+var global$9 = global$m;
+var call$1 = functionCall;
+var isObject$3 = isObject$5;
+var isSymbol$1 = isSymbol$2;
+var getMethod = getMethod$1;
+var ordinaryToPrimitive = ordinaryToPrimitive$1;
+var wellKnownSymbol = wellKnownSymbol$1;
+
+var TypeError$4 = global$9.TypeError;
+var TO_PRIMITIVE = wellKnownSymbol('toPrimitive');
+
+// `ToPrimitive` abstract operation
+// https://tc39.es/ecma262/#sec-toprimitive
+var toPrimitive$1 = function (input, pref) {
+  if (!isObject$3(input) || isSymbol$1(input)) return input;
+  var exoticToPrim = getMethod(input, TO_PRIMITIVE);
+  var result;
+  if (exoticToPrim) {
+    if (pref === undefined) pref = 'default';
+    result = call$1(exoticToPrim, input, pref);
+    if (!isObject$3(result) || isSymbol$1(result)) return result;
+    throw TypeError$4("Can't convert object to primitive value");
+  }
+  if (pref === undefined) pref = 'number';
+  return ordinaryToPrimitive(input, pref);
+};
+
+var toPrimitive = toPrimitive$1;
+var isSymbol = isSymbol$2;
+
+// `ToPropertyKey` abstract operation
+// https://tc39.es/ecma262/#sec-topropertykey
+var toPropertyKey$2 = function (argument) {
+  var key = toPrimitive(argument, 'string');
+  return isSymbol(key) ? key : key + '';
+};
+
+var global$8 = global$m;
+var isObject$2 = isObject$5;
+
+var document$1 = global$8.document;
+// typeof document.createElement is 'object' in old IE
+var EXISTS$1 = isObject$2(document$1) && isObject$2(document$1.createElement);
+
+var documentCreateElement = function (it) {
+  return EXISTS$1 ? document$1.createElement(it) : {};
+};
+
+var DESCRIPTORS$5 = descriptors;
+var fails$2 = fails$7;
+var createElement = documentCreateElement;
+
+// Thanks to IE8 for its funny defineProperty
+var ie8DomDefine = !DESCRIPTORS$5 && !fails$2(function () {
+  // eslint-disable-next-line es-x/no-object-defineproperty -- required for testing
+  return Object.defineProperty(createElement('div'), 'a', {
+    get: function () { return 7; }
+  }).a != 7;
+});
+
+var DESCRIPTORS$4 = descriptors;
+var call = functionCall;
+var propertyIsEnumerableModule = objectPropertyIsEnumerable;
+var createPropertyDescriptor$1 = createPropertyDescriptor$2;
+var toIndexedObject$2 = toIndexedObject$3;
+var toPropertyKey$1 = toPropertyKey$2;
+var hasOwn$5 = hasOwnProperty_1;
+var IE8_DOM_DEFINE$1 = ie8DomDefine;
+
+// eslint-disable-next-line es-x/no-object-getownpropertydescriptor -- safe
+var $getOwnPropertyDescriptor$1 = Object.getOwnPropertyDescriptor;
+
+// `Object.getOwnPropertyDescriptor` method
+// https://tc39.es/ecma262/#sec-object.getownpropertydescriptor
+objectGetOwnPropertyDescriptor.f = DESCRIPTORS$4 ? $getOwnPropertyDescriptor$1 : function getOwnPropertyDescriptor(O, P) {
+  O = toIndexedObject$2(O);
+  P = toPropertyKey$1(P);
+  if (IE8_DOM_DEFINE$1) try {
+    return $getOwnPropertyDescriptor$1(O, P);
+  } catch (error) { /* empty */ }
+  if (hasOwn$5(O, P)) return createPropertyDescriptor$1(!call(propertyIsEnumerableModule.f, O, P), O[P]);
+};
+
+var objectDefineProperty = {};
+
+var DESCRIPTORS$3 = descriptors;
+var fails$1 = fails$7;
+
+// V8 ~ Chrome 36-
+// https://bugs.chromium.org/p/v8/issues/detail?id=3334
+var v8PrototypeDefineBug = DESCRIPTORS$3 && fails$1(function () {
+  // eslint-disable-next-line es-x/no-object-defineproperty -- required for testing
+  return Object.defineProperty(function () { /* empty */ }, 'prototype', {
+    value: 42,
+    writable: false
+  }).prototype != 42;
+});
+
+var global$7 = global$m;
+var isObject$1 = isObject$5;
+
+var String$1 = global$7.String;
+var TypeError$3 = global$7.TypeError;
+
+// `Assert: Type(argument) is Object`
+var anObject$2 = function (argument) {
+  if (isObject$1(argument)) return argument;
+  throw TypeError$3(String$1(argument) + ' is not an object');
+};
+
+var global$6 = global$m;
+var DESCRIPTORS$2 = descriptors;
+var IE8_DOM_DEFINE = ie8DomDefine;
+var V8_PROTOTYPE_DEFINE_BUG = v8PrototypeDefineBug;
+var anObject$1 = anObject$2;
+var toPropertyKey = toPropertyKey$2;
+
+var TypeError$2 = global$6.TypeError;
+// eslint-disable-next-line es-x/no-object-defineproperty -- safe
+var $defineProperty = Object.defineProperty;
+// eslint-disable-next-line es-x/no-object-getownpropertydescriptor -- safe
+var $getOwnPropertyDescriptor = Object.getOwnPropertyDescriptor;
+var ENUMERABLE = 'enumerable';
+var CONFIGURABLE$1 = 'configurable';
+var WRITABLE = 'writable';
+
+// `Object.defineProperty` method
+// https://tc39.es/ecma262/#sec-object.defineproperty
+objectDefineProperty.f = DESCRIPTORS$2 ? V8_PROTOTYPE_DEFINE_BUG ? function defineProperty(O, P, Attributes) {
+  anObject$1(O);
+  P = toPropertyKey(P);
+  anObject$1(Attributes);
+  if (typeof O === 'function' && P === 'prototype' && 'value' in Attributes && WRITABLE in Attributes && !Attributes[WRITABLE]) {
+    var current = $getOwnPropertyDescriptor(O, P);
+    if (current && current[WRITABLE]) {
+      O[P] = Attributes.value;
+      Attributes = {
+        configurable: CONFIGURABLE$1 in Attributes ? Attributes[CONFIGURABLE$1] : current[CONFIGURABLE$1],
+        enumerable: ENUMERABLE in Attributes ? Attributes[ENUMERABLE] : current[ENUMERABLE],
+        writable: false
+      };
+    }
+  } return $defineProperty(O, P, Attributes);
+} : $defineProperty : function defineProperty(O, P, Attributes) {
+  anObject$1(O);
+  P = toPropertyKey(P);
+  anObject$1(Attributes);
+  if (IE8_DOM_DEFINE) try {
+    return $defineProperty(O, P, Attributes);
+  } catch (error) { /* empty */ }
+  if ('get' in Attributes || 'set' in Attributes) throw TypeError$2('Accessors not supported');
+  if ('value' in Attributes) O[P] = Attributes.value;
+  return O;
+};
+
+var DESCRIPTORS$1 = descriptors;
+var definePropertyModule$1 = objectDefineProperty;
+var createPropertyDescriptor = createPropertyDescriptor$2;
+
+var createNonEnumerableProperty$3 = DESCRIPTORS$1 ? function (object, key, value) {
+  return definePropertyModule$1.f(object, key, createPropertyDescriptor(1, value));
+} : function (object, key, value) {
+  object[key] = value;
+  return object;
+};
+
+var redefine$1 = {exports: {}};
+
+var uncurryThis$3 = functionUncurryThis;
+var isCallable$3 = isCallable$9;
+var store$1 = sharedStore;
+
+var functionToString = uncurryThis$3(Function.toString);
+
+// this helper broken in `core-js@3.4.1-3.4.4`, so we can't use `shared` helper
+if (!isCallable$3(store$1.inspectSource)) {
+  store$1.inspectSource = function (it) {
+    return functionToString(it);
+  };
+}
+
+var inspectSource$2 = store$1.inspectSource;
+
+var global$5 = global$m;
+var isCallable$2 = isCallable$9;
+var inspectSource$1 = inspectSource$2;
+
+var WeakMap$1 = global$5.WeakMap;
+
+var nativeWeakMap = isCallable$2(WeakMap$1) && /native code/.test(inspectSource$1(WeakMap$1));
+
+var shared$1 = shared$3.exports;
+var uid = uid$2;
+
+var keys = shared$1('keys');
+
+var sharedKey$1 = function (key) {
+  return keys[key] || (keys[key] = uid(key));
+};
+
+var hiddenKeys$3 = {};
+
+var NATIVE_WEAK_MAP = nativeWeakMap;
+var global$4 = global$m;
+var uncurryThis$2 = functionUncurryThis;
+var isObject = isObject$5;
+var createNonEnumerableProperty$2 = createNonEnumerableProperty$3;
+var hasOwn$4 = hasOwnProperty_1;
+var shared = sharedStore;
+var sharedKey = sharedKey$1;
+var hiddenKeys$2 = hiddenKeys$3;
+
+var OBJECT_ALREADY_INITIALIZED = 'Object already initialized';
+var TypeError$1 = global$4.TypeError;
+var WeakMap = global$4.WeakMap;
+var set, get, has;
+
+var enforce = function (it) {
+  return has(it) ? get(it) : set(it, {});
+};
+
+var getterFor = function (TYPE) {
+  return function (it) {
+    var state;
+    if (!isObject(it) || (state = get(it)).type !== TYPE) {
+      throw TypeError$1('Incompatible receiver, ' + TYPE + ' required');
+    } return state;
+  };
+};
+
+if (NATIVE_WEAK_MAP || shared.state) {
+  var store = shared.state || (shared.state = new WeakMap());
+  var wmget = uncurryThis$2(store.get);
+  var wmhas = uncurryThis$2(store.has);
+  var wmset = uncurryThis$2(store.set);
+  set = function (it, metadata) {
+    if (wmhas(store, it)) throw new TypeError$1(OBJECT_ALREADY_INITIALIZED);
+    metadata.facade = it;
+    wmset(store, it, metadata);
+    return metadata;
+  };
+  get = function (it) {
+    return wmget(store, it) || {};
+  };
+  has = function (it) {
+    return wmhas(store, it);
+  };
+} else {
+  var STATE = sharedKey('state');
+  hiddenKeys$2[STATE] = true;
+  set = function (it, metadata) {
+    if (hasOwn$4(it, STATE)) throw new TypeError$1(OBJECT_ALREADY_INITIALIZED);
+    metadata.facade = it;
+    createNonEnumerableProperty$2(it, STATE, metadata);
+    return metadata;
+  };
+  get = function (it) {
+    return hasOwn$4(it, STATE) ? it[STATE] : {};
+  };
+  has = function (it) {
+    return hasOwn$4(it, STATE);
+  };
+}
+
+var internalState = {
+  set: set,
+  get: get,
+  has: has,
+  enforce: enforce,
+  getterFor: getterFor
+};
+
+var DESCRIPTORS = descriptors;
+var hasOwn$3 = hasOwnProperty_1;
+
+var FunctionPrototype = Function.prototype;
+// eslint-disable-next-line es-x/no-object-getownpropertydescriptor -- safe
+var getDescriptor = DESCRIPTORS && Object.getOwnPropertyDescriptor;
+
+var EXISTS = hasOwn$3(FunctionPrototype, 'name');
+// additional protection from minified / mangled / dropped function names
+var PROPER = EXISTS && (function something() { /* empty */ }).name === 'something';
+var CONFIGURABLE = EXISTS && (!DESCRIPTORS || (DESCRIPTORS && getDescriptor(FunctionPrototype, 'name').configurable));
+
+var functionName = {
+  EXISTS: EXISTS,
+  PROPER: PROPER,
+  CONFIGURABLE: CONFIGURABLE
+};
+
+var global$3 = global$m;
+var isCallable$1 = isCallable$9;
+var hasOwn$2 = hasOwnProperty_1;
+var createNonEnumerableProperty$1 = createNonEnumerableProperty$3;
+var setGlobal$1 = setGlobal$3;
+var inspectSource = inspectSource$2;
+var InternalStateModule = internalState;
+var CONFIGURABLE_FUNCTION_NAME = functionName.CONFIGURABLE;
+
+var getInternalState = InternalStateModule.get;
+var enforceInternalState = InternalStateModule.enforce;
+var TEMPLATE = String(String).split('String');
+
+(redefine$1.exports = function (O, key, value, options) {
+  var unsafe = options ? !!options.unsafe : false;
+  var simple = options ? !!options.enumerable : false;
+  var noTargetGet = options ? !!options.noTargetGet : false;
+  var name = options && options.name !== undefined ? options.name : key;
+  var state;
+  if (isCallable$1(value)) {
+    if (String(name).slice(0, 7) === 'Symbol(') {
+      name = '[' + String(name).replace(/^Symbol\(([^)]*)\)/, '$1') + ']';
+    }
+    if (!hasOwn$2(value, 'name') || (CONFIGURABLE_FUNCTION_NAME && value.name !== name)) {
+      createNonEnumerableProperty$1(value, 'name', name);
+    }
+    state = enforceInternalState(value);
+    if (!state.source) {
+      state.source = TEMPLATE.join(typeof name == 'string' ? name : '');
+    }
+  }
+  if (O === global$3) {
+    if (simple) O[key] = value;
+    else setGlobal$1(key, value);
+    return;
+  } else if (!unsafe) {
+    delete O[key];
+  } else if (!noTargetGet && O[key]) {
+    simple = true;
+  }
+  if (simple) O[key] = value;
+  else createNonEnumerableProperty$1(O, key, value);
+// add fake Function#toString for correct work wrapped methods / constructors with methods like LoDash isNative
+})(Function.prototype, 'toString', function toString() {
+  return isCallable$1(this) && getInternalState(this).source || inspectSource(this);
+});
+
+var objectGetOwnPropertyNames = {};
+
+var ceil = Math.ceil;
+var floor = Math.floor;
+
+// `ToIntegerOrInfinity` abstract operation
+// https://tc39.es/ecma262/#sec-tointegerorinfinity
+var toIntegerOrInfinity$2 = function (argument) {
+  var number = +argument;
+  // eslint-disable-next-line no-self-compare -- safe
+  return number !== number || number === 0 ? 0 : (number > 0 ? floor : ceil)(number);
+};
+
+var toIntegerOrInfinity$1 = toIntegerOrInfinity$2;
+
+var max = Math.max;
+var min$1 = Math.min;
+
+// Helper for a popular repeating case of the spec:
+// Let integer be ? ToInteger(index).
+// If integer < 0, let result be max((length + integer), 0); else let result be min(integer, length).
+var toAbsoluteIndex$1 = function (index, length) {
+  var integer = toIntegerOrInfinity$1(index);
+  return integer < 0 ? max(integer + length, 0) : min$1(integer, length);
+};
+
+var toIntegerOrInfinity = toIntegerOrInfinity$2;
+
+var min = Math.min;
+
+// `ToLength` abstract operation
+// https://tc39.es/ecma262/#sec-tolength
+var toLength$1 = function (argument) {
+  return argument > 0 ? min(toIntegerOrInfinity(argument), 0x1FFFFFFFFFFFFF) : 0; // 2 ** 53 - 1 == 9007199254740991
+};
+
+var toLength = toLength$1;
+
+// `LengthOfArrayLike` abstract operation
+// https://tc39.es/ecma262/#sec-lengthofarraylike
+var lengthOfArrayLike$1 = function (obj) {
+  return toLength(obj.length);
+};
+
+var toIndexedObject$1 = toIndexedObject$3;
+var toAbsoluteIndex = toAbsoluteIndex$1;
+var lengthOfArrayLike = lengthOfArrayLike$1;
+
+// `Array.prototype.{ indexOf, includes }` methods implementation
+var createMethod = function (IS_INCLUDES) {
+  return function ($this, el, fromIndex) {
+    var O = toIndexedObject$1($this);
+    var length = lengthOfArrayLike(O);
+    var index = toAbsoluteIndex(fromIndex, length);
+    var value;
+    // Array#includes uses SameValueZero equality algorithm
+    // eslint-disable-next-line no-self-compare -- NaN check
+    if (IS_INCLUDES && el != el) while (length > index) {
+      value = O[index++];
+      // eslint-disable-next-line no-self-compare -- NaN check
+      if (value != value) return true;
+    // Array#indexOf ignores holes, Array#includes - not
+    } else for (;length > index; index++) {
+      if ((IS_INCLUDES || index in O) && O[index] === el) return IS_INCLUDES || index || 0;
+    } return !IS_INCLUDES && -1;
+  };
+};
+
+var arrayIncludes = {
+  // `Array.prototype.includes` method
+  // https://tc39.es/ecma262/#sec-array.prototype.includes
+  includes: createMethod(true),
+  // `Array.prototype.indexOf` method
+  // https://tc39.es/ecma262/#sec-array.prototype.indexof
+  indexOf: createMethod(false)
+};
+
+var uncurryThis$1 = functionUncurryThis;
+var hasOwn$1 = hasOwnProperty_1;
+var toIndexedObject = toIndexedObject$3;
+var indexOf = arrayIncludes.indexOf;
+var hiddenKeys$1 = hiddenKeys$3;
+
+var push$1 = uncurryThis$1([].push);
+
+var objectKeysInternal = function (object, names) {
+  var O = toIndexedObject(object);
+  var i = 0;
+  var result = [];
+  var key;
+  for (key in O) !hasOwn$1(hiddenKeys$1, key) && hasOwn$1(O, key) && push$1(result, key);
+  // Don't enum bug & hidden keys
+  while (names.length > i) if (hasOwn$1(O, key = names[i++])) {
+    ~indexOf(result, key) || push$1(result, key);
+  }
+  return result;
+};
+
+// IE8- don't enum bug keys
+var enumBugKeys$1 = [
+  'constructor',
+  'hasOwnProperty',
+  'isPrototypeOf',
+  'propertyIsEnumerable',
+  'toLocaleString',
+  'toString',
+  'valueOf'
+];
+
+var internalObjectKeys = objectKeysInternal;
+var enumBugKeys = enumBugKeys$1;
+
+var hiddenKeys = enumBugKeys.concat('length', 'prototype');
+
+// `Object.getOwnPropertyNames` method
+// https://tc39.es/ecma262/#sec-object.getownpropertynames
+// eslint-disable-next-line es-x/no-object-getownpropertynames -- safe
+objectGetOwnPropertyNames.f = Object.getOwnPropertyNames || function getOwnPropertyNames(O) {
+  return internalObjectKeys(O, hiddenKeys);
+};
+
+var objectGetOwnPropertySymbols = {};
+
+// eslint-disable-next-line es-x/no-object-getownpropertysymbols -- safe
+objectGetOwnPropertySymbols.f = Object.getOwnPropertySymbols;
+
+var getBuiltIn = getBuiltIn$3;
+var uncurryThis = functionUncurryThis;
+var getOwnPropertyNamesModule = objectGetOwnPropertyNames;
+var getOwnPropertySymbolsModule = objectGetOwnPropertySymbols;
+var anObject = anObject$2;
+
+var concat = uncurryThis([].concat);
+
+// all object keys, includes non-enumerable and symbols
+var ownKeys$1 = getBuiltIn('Reflect', 'ownKeys') || function ownKeys(it) {
+  var keys = getOwnPropertyNamesModule.f(anObject(it));
+  var getOwnPropertySymbols = getOwnPropertySymbolsModule.f;
+  return getOwnPropertySymbols ? concat(keys, getOwnPropertySymbols(it)) : keys;
+};
+
+var hasOwn = hasOwnProperty_1;
+var ownKeys = ownKeys$1;
+var getOwnPropertyDescriptorModule = objectGetOwnPropertyDescriptor;
+var definePropertyModule = objectDefineProperty;
+
+var copyConstructorProperties$1 = function (target, source, exceptions) {
+  var keys = ownKeys(source);
+  var defineProperty = definePropertyModule.f;
+  var getOwnPropertyDescriptor = getOwnPropertyDescriptorModule.f;
+  for (var i = 0; i < keys.length; i++) {
+    var key = keys[i];
+    if (!hasOwn(target, key) && !(exceptions && hasOwn(exceptions, key))) {
+      defineProperty(target, key, getOwnPropertyDescriptor(source, key));
+    }
+  }
+};
+
+var fails = fails$7;
+var isCallable = isCallable$9;
+
+var replacement = /#|\.prototype\./;
+
+var isForced$1 = function (feature, detection) {
+  var value = data$1[normalize$1(feature)];
+  return value == POLYFILL ? true
+    : value == NATIVE ? false
+    : isCallable(detection) ? fails(detection)
+    : !!detection;
+};
+
+var normalize$1 = isForced$1.normalize = function (string) {
+  return String(string).replace(replacement, '.').toLowerCase();
+};
+
+var data$1 = isForced$1.data = {};
+var NATIVE = isForced$1.NATIVE = 'N';
+var POLYFILL = isForced$1.POLYFILL = 'P';
+
+var isForced_1 = isForced$1;
+
+var global$2 = global$m;
+var getOwnPropertyDescriptor = objectGetOwnPropertyDescriptor.f;
+var createNonEnumerableProperty = createNonEnumerableProperty$3;
+var redefine = redefine$1.exports;
+var setGlobal = setGlobal$3;
+var copyConstructorProperties = copyConstructorProperties$1;
+var isForced = isForced_1;
+
+/*
+  options.target      - name of the target object
+  options.global      - target is the global object
+  options.stat        - export as static methods of target
+  options.proto       - export as prototype methods of target
+  options.real        - real prototype method for the `pure` version
+  options.forced      - export even if the native feature is available
+  options.bind        - bind methods to the target, required for the `pure` version
+  options.wrap        - wrap constructors to preventing global pollution, required for the `pure` version
+  options.unsafe      - use the simple assignment of property instead of delete + defineProperty
+  options.sham        - add a flag to not completely full polyfills
+  options.enumerable  - export as enumerable property
+  options.noTargetGet - prevent calling a getter on target
+  options.name        - the .name of the function if it does not match the key
+*/
+var _export = function (options, source) {
+  var TARGET = options.target;
+  var GLOBAL = options.global;
+  var STATIC = options.stat;
+  var FORCED, target, key, targetProperty, sourceProperty, descriptor;
+  if (GLOBAL) {
+    target = global$2;
+  } else if (STATIC) {
+    target = global$2[TARGET] || setGlobal(TARGET, {});
+  } else {
+    target = (global$2[TARGET] || {}).prototype;
+  }
+  if (target) for (key in source) {
+    sourceProperty = source[key];
+    if (options.noTargetGet) {
+      descriptor = getOwnPropertyDescriptor(target, key);
+      targetProperty = descriptor && descriptor.value;
+    } else targetProperty = target[key];
+    FORCED = isForced(GLOBAL ? key : TARGET + (STATIC ? '.' : '#') + key, options.forced);
+    // contained in target
+    if (!FORCED && targetProperty !== undefined) {
+      if (typeof sourceProperty == typeof targetProperty) continue;
+      copyConstructorProperties(sourceProperty, targetProperty);
+    }
+    // add a flag to not completely full polyfills
+    if (options.sham || (targetProperty && targetProperty.sham)) {
+      createNonEnumerableProperty(sourceProperty, 'sham', true);
+    }
+    // extend global
+    redefine(target, key, sourceProperty, options);
+  }
+};
+
+var $ = _export;
+var global$1 = global$m;
+
+// `globalThis` object
+// https://tc39.es/ecma262/#sec-globalthis
+$({ global: true }, {
+  globalThis: global$1
+});
+
+if (typeof globalThis !== "undefined") {
+    if (typeof globalThis.console === "undefined") {
+        globalThis.console = {};
+        globalThis.console.log = function() {};
+        globalThis.console.assert = function() {};
+        globalThis.console.warn = function() {};
+        globalThis.console.error = function() {
             alert(Array.prototype.slice.call(arguments).join(", "));
         };
     }
@@ -104,13 +1064,13 @@ function toHex$1(str) {
 }
 
 var stringUtils = /*#__PURE__*/Object.freeze({
-    __proto__: null,
-    capitalize: capitalize,
-    trimLeft: trimLeft,
-    trimRight: trimRight,
-    isNumeric: isNumeric,
-    isBoolean: isBoolean,
-    toHex: toHex$1
+	__proto__: null,
+	capitalize: capitalize,
+	trimLeft: trimLeft,
+	trimRight: trimRight,
+	isNumeric: isNumeric,
+	isBoolean: isBoolean,
+	toHex: toHex$1
 });
 
 /**
@@ -130,12 +1090,12 @@ var vendors$1 = [ "ms", "MS", "moz", "webkit", "o" ];
  * @name prefixed
  * @function
  * @param {string} name Property name
- * @param {object} [obj=window] Object or element reference to access
+ * @param {object} [obj=globalThis] Object or element reference to access
  * @returns {string} Value of property
  * @memberof utils.agent
  */
 function prefixed(name, obj) {
-    obj = obj || window;
+    obj = obj || globalThis;
     if (name in obj) {
         return obj[name];
     }
@@ -156,12 +1116,12 @@ function prefixed(name, obj) {
  * @function
  * @param {string} name Property name
  * @param {string} value Property value
- * @param {object} [obj=window] Object or element reference to access
+ * @param {object} [obj=globalThis] Object or element reference to access
  * @returns {boolean} true if one of the vendor-prefixed property was found
  * @memberof utils.agent
  */
 function setPrefixed(name, value, obj) {
-    obj = obj || window;
+    obj = obj || globalThis;
     if (name in obj) {
         obj[name] = value;
         return;
@@ -181,9 +1141,9 @@ function setPrefixed(name, value, obj) {
 }
 
 var agentUtils = /*#__PURE__*/Object.freeze({
-    __proto__: null,
-    prefixed: prefixed,
-    setPrefixed: setPrefixed
+	__proto__: null,
+	prefixed: prefixed,
+	setPrefixed: setPrefixed
 });
 
 /**
@@ -398,22 +1358,22 @@ function toBeCloseTo(expected, actual, precision = 2) {
 }
 
 var math = /*#__PURE__*/Object.freeze({
-    __proto__: null,
-    DEG_TO_RAD: DEG_TO_RAD,
-    RAD_TO_DEG: RAD_TO_DEG,
-    TAU: TAU,
-    ETA: ETA,
-    EPSILON: EPSILON,
-    isPowerOfTwo: isPowerOfTwo,
-    nextPowerOfTwo: nextPowerOfTwo,
-    degToRad: degToRad,
-    radToDeg: radToDeg,
-    clamp: clamp,
-    random: random$1,
-    randomFloat: randomFloat,
-    weightedRandom: weightedRandom$1,
-    round: round,
-    toBeCloseTo: toBeCloseTo
+	__proto__: null,
+	DEG_TO_RAD: DEG_TO_RAD,
+	RAD_TO_DEG: RAD_TO_DEG,
+	TAU: TAU,
+	ETA: ETA,
+	EPSILON: EPSILON,
+	isPowerOfTwo: isPowerOfTwo,
+	nextPowerOfTwo: nextPowerOfTwo,
+	degToRad: degToRad,
+	radToDeg: radToDeg,
+	clamp: clamp,
+	random: random$1,
+	randomFloat: randomFloat,
+	weightedRandom: weightedRandom$1,
+	round: round,
+	toBeCloseTo: toBeCloseTo
 });
 
 /**
@@ -471,10 +1431,10 @@ function weightedRandom(arr) {
 }
 
 var arrayUtils = /*#__PURE__*/Object.freeze({
-    __proto__: null,
-    remove: remove,
-    random: random,
-    weightedRandom: weightedRandom
+	__proto__: null,
+	remove: remove,
+	random: random,
+	weightedRandom: weightedRandom
 });
 
 /**
@@ -513,9 +1473,9 @@ function getExtension(path) {
 }
 
 var fileUtils = /*#__PURE__*/Object.freeze({
-    __proto__: null,
-    getBasename: getBasename,
-    getExtension: getExtension
+	__proto__: null,
+	getBasename: getBasename,
+	getExtension: getExtension
 });
 
 /**
@@ -555,13 +1515,13 @@ function defer(func, thisArg, ...args) {
  * @returns {Function} the function that will be throttled
  */
 function throttle(fn, delay, no_trailing) {
-    var last = window.performance.now(), deferTimer;
+    var last = globalThis.performance.now(), deferTimer;
     // `no_trailing` defaults to false.
     if (typeof no_trailing !== "boolean") {
         no_trailing = false;
     }
     return function () {
-        var now = window.performance.now();
+        var now = globalThis.performance.now();
         var elasped = now - last;
         var args = arguments;
         if (elasped < delay) {
@@ -582,9 +1542,9 @@ function throttle(fn, delay, no_trailing) {
 }
 
 var fnUtils = /*#__PURE__*/Object.freeze({
-    __proto__: null,
-    defer: defer,
-    throttle: throttle
+	__proto__: null,
+	defer: defer,
+	throttle: throttle
 });
 
 var objectClass = {};
@@ -766,14 +1726,14 @@ function getInstanceCount() {
 }
 
 var pooling = /*#__PURE__*/Object.freeze({
-    __proto__: null,
-    register: register,
-    pull: pull,
-    purge: purge,
-    push: push,
-    exists: exists,
-    poolable: poolable,
-    getInstanceCount: getInstanceCount
+	__proto__: null,
+	register: register,
+	pull: pull,
+	purge: purge,
+	push: push,
+	exists: exists,
+	poolable: poolable,
+	getInstanceCount: getInstanceCount
 });
 
 /**
@@ -3103,8 +4063,6 @@ class Matrix2d {
     }
 }
 
-var commonjsGlobal = typeof globalThis !== 'undefined' ? globalThis : typeof window !== 'undefined' ? window : typeof global !== 'undefined' ? global : typeof self !== 'undefined' ? self : {};
-
 var eventemitter3 = {exports: {}};
 
 (function (module) {
@@ -3804,7 +4762,7 @@ const DRAGEND = "me.game.dragend";
  * @memberof event
  * @see event.on
  */
-const WINDOW_ONRESIZE = "window.onresize";
+const WINDOW_ONRESIZE = "globalThis.onresize";
 
 /**
  * Event for when the canvas is resized <br>
@@ -3844,7 +4802,7 @@ const VIEWPORT_ONRESIZE = "viewport.onresize";
  * @memberof event
  * @see event.on
  */
-const WINDOW_ONORIENTATION_CHANGE = "window.orientationchange";
+const WINDOW_ONORIENTATION_CHANGE = "globalThis.orientationchange";
 
 /**
  * Event for when the (browser) window is scrolled <br>
@@ -3856,7 +4814,7 @@ const WINDOW_ONORIENTATION_CHANGE = "window.orientationchange";
  * @memberof event
  * @see event.on
  */
-const WINDOW_ONSCROLL = "window.onscroll";
+const WINDOW_ONSCROLL = "globalThis.onscroll";
 
 /**
  * Event for when the viewport position is updated <br>
@@ -3949,44 +4907,44 @@ function off(eventName, listener) {
 }
 
 var event = /*#__PURE__*/Object.freeze({
-    __proto__: null,
-    BOOT: BOOT,
-    STATE_PAUSE: STATE_PAUSE,
-    STATE_RESUME: STATE_RESUME,
-    STATE_STOP: STATE_STOP,
-    STATE_RESTART: STATE_RESTART,
-    VIDEO_INIT: VIDEO_INIT,
-    GAME_INIT: GAME_INIT,
-    GAME_RESET: GAME_RESET,
-    GAME_BEFORE_UPDATE: GAME_BEFORE_UPDATE,
-    GAME_AFTER_UPDATE: GAME_AFTER_UPDATE,
-    GAME_UPDATE: GAME_UPDATE,
-    GAME_BEFORE_DRAW: GAME_BEFORE_DRAW,
-    GAME_AFTER_DRAW: GAME_AFTER_DRAW,
-    LEVEL_LOADED: LEVEL_LOADED,
-    LOADER_COMPLETE: LOADER_COMPLETE,
-    LOADER_PROGRESS: LOADER_PROGRESS,
-    KEYDOWN: KEYDOWN,
-    KEYUP: KEYUP,
-    GAMEPAD_CONNECTED: GAMEPAD_CONNECTED,
-    GAMEPAD_DISCONNECTED: GAMEPAD_DISCONNECTED,
-    GAMEPAD_UPDATE: GAMEPAD_UPDATE,
-    POINTERMOVE: POINTERMOVE,
-    POINTERLOCKCHANGE: POINTERLOCKCHANGE,
-    DRAGSTART: DRAGSTART,
-    DRAGEND: DRAGEND,
-    WINDOW_ONRESIZE: WINDOW_ONRESIZE,
-    CANVAS_ONRESIZE: CANVAS_ONRESIZE,
-    VIEWPORT_ONRESIZE: VIEWPORT_ONRESIZE,
-    WINDOW_ONORIENTATION_CHANGE: WINDOW_ONORIENTATION_CHANGE,
-    WINDOW_ONSCROLL: WINDOW_ONSCROLL,
-    VIEWPORT_ONCHANGE: VIEWPORT_ONCHANGE,
-    WEBGL_ONCONTEXT_LOST: WEBGL_ONCONTEXT_LOST,
-    WEBGL_ONCONTEXT_RESTORED: WEBGL_ONCONTEXT_RESTORED,
-    emit: emit,
-    on: on,
-    once: once,
-    off: off
+	__proto__: null,
+	BOOT: BOOT,
+	STATE_PAUSE: STATE_PAUSE,
+	STATE_RESUME: STATE_RESUME,
+	STATE_STOP: STATE_STOP,
+	STATE_RESTART: STATE_RESTART,
+	VIDEO_INIT: VIDEO_INIT,
+	GAME_INIT: GAME_INIT,
+	GAME_RESET: GAME_RESET,
+	GAME_BEFORE_UPDATE: GAME_BEFORE_UPDATE,
+	GAME_AFTER_UPDATE: GAME_AFTER_UPDATE,
+	GAME_UPDATE: GAME_UPDATE,
+	GAME_BEFORE_DRAW: GAME_BEFORE_DRAW,
+	GAME_AFTER_DRAW: GAME_AFTER_DRAW,
+	LEVEL_LOADED: LEVEL_LOADED,
+	LOADER_COMPLETE: LOADER_COMPLETE,
+	LOADER_PROGRESS: LOADER_PROGRESS,
+	KEYDOWN: KEYDOWN,
+	KEYUP: KEYUP,
+	GAMEPAD_CONNECTED: GAMEPAD_CONNECTED,
+	GAMEPAD_DISCONNECTED: GAMEPAD_DISCONNECTED,
+	GAMEPAD_UPDATE: GAMEPAD_UPDATE,
+	POINTERMOVE: POINTERMOVE,
+	POINTERLOCKCHANGE: POINTERLOCKCHANGE,
+	DRAGSTART: DRAGSTART,
+	DRAGEND: DRAGEND,
+	WINDOW_ONRESIZE: WINDOW_ONRESIZE,
+	CANVAS_ONRESIZE: CANVAS_ONRESIZE,
+	VIEWPORT_ONRESIZE: VIEWPORT_ONRESIZE,
+	WINDOW_ONORIENTATION_CHANGE: WINDOW_ONORIENTATION_CHANGE,
+	WINDOW_ONSCROLL: WINDOW_ONSCROLL,
+	VIEWPORT_ONCHANGE: VIEWPORT_ONCHANGE,
+	WEBGL_ONCONTEXT_LOST: WEBGL_ONCONTEXT_LOST,
+	WEBGL_ONCONTEXT_RESTORED: WEBGL_ONCONTEXT_RESTORED,
+	emit: emit,
+	on: on,
+	once: once,
+	off: off
 });
 
 var howler = {};
@@ -10664,7 +11622,7 @@ var KEY = {
 function initKeyboardEvent() {
     // make sure the keyboard is enable
     if (keyBoardEventTarget === null && device$1.isMobile === false) {
-        keyBoardEventTarget = window;
+        keyBoardEventTarget = globalThis;
         keyBoardEventTarget.addEventListener("keydown", keyDownEvent, false);
         keyBoardEventTarget.addEventListener("keyup", keyUpEvent, false);
     }
@@ -11591,7 +12549,7 @@ class Pointer extends Bounds$1 {
         this.gameScreenY = this.y = tmpVec.y;
 
         // true if not originally a pointer event
-        this.isNormalized = !device$1.PointerEvent || (device$1.PointerEvent && !(event instanceof window.PointerEvent));
+        this.isNormalized = !device$1.PointerEvent || (device$1.PointerEvent && !(event instanceof globalThis.PointerEvent));
 
         this.locked = locked;
         this.movementX = event.movementX || 0;
@@ -12189,8 +13147,8 @@ function globalToLocal(x, y, v) {
     v = v || pull("Vector2d");
     var rect = device$1.getElementBounds(renderer.getScreenCanvas());
     var pixelRatio = device$1.devicePixelRatio;
-    x -= rect.left + (window.pageXOffset || 0);
-    y -= rect.top + (window.pageYOffset || 0);
+    x -= rect.left + (globalThis.pageXOffset || 0);
+    y -= rect.top + (globalThis.pageYOffset || 0);
     var scale = scaleRatio;
     if (scale.x !== 1.0 || scale.y !== 1.0) {
         x /= scale.x;
@@ -12703,7 +13661,7 @@ var updateGamepads = function () {
  * gamepad connected callback
  * @ignore
  */
-window.addEventListener("gamepadconnected", function (e) {
+globalThis.addEventListener("gamepadconnected", function (e) {
     emit(GAMEPAD_CONNECTED, e.gamepad);
 }, false);
 
@@ -12711,7 +13669,7 @@ window.addEventListener("gamepadconnected", function (e) {
  * gamepad disconnected callback
  * @ignore
  */
-window.addEventListener("gamepaddisconnected", function (e) {
+globalThis.addEventListener("gamepaddisconnected", function (e) {
     emit(GAMEPAD_DISCONNECTED, e.gamepad);
 }, false);
 
@@ -12951,36 +13909,36 @@ var setGamepadMapping = addMapping;
 var preventDefault = true;
 
 var input = /*#__PURE__*/Object.freeze({
-    __proto__: null,
-    preventDefault: preventDefault,
-    get pointerEventTarget () { return pointerEventTarget; },
-    pointer: pointer,
-    get locked () { return locked; },
-    get throttlingInterval () { return throttlingInterval; },
-    globalToLocal: globalToLocal,
-    setTouchAction: setTouchAction,
-    bindPointer: bindPointer,
-    unbindPointer: unbindPointer,
-    registerPointerEvent: registerPointerEvent,
-    releasePointerEvent: releasePointerEvent,
-    releaseAllPointerEvents: releaseAllPointerEvents,
-    requestPointerLock: requestPointerLock,
-    exitPointerLock: exitPointerLock,
-    get keyBoardEventTarget () { return keyBoardEventTarget; },
-    KEY: KEY,
-    initKeyboardEvent: initKeyboardEvent,
-    isKeyPressed: isKeyPressed,
-    keyStatus: keyStatus,
-    triggerKeyEvent: triggerKeyEvent,
-    bindKey: bindKey,
-    getBindingKey: getBindingKey,
-    unlockKey: unlockKey,
-    unbindKey: unbindKey,
-    GAMEPAD: GAMEPAD,
-    bindGamepad: bindGamepad,
-    unbindGamepad: unbindGamepad,
-    setGamepadDeadzone: setGamepadDeadzone,
-    setGamepadMapping: setGamepadMapping
+	__proto__: null,
+	preventDefault: preventDefault,
+	get pointerEventTarget () { return pointerEventTarget; },
+	pointer: pointer,
+	get locked () { return locked; },
+	get throttlingInterval () { return throttlingInterval; },
+	globalToLocal: globalToLocal,
+	setTouchAction: setTouchAction,
+	bindPointer: bindPointer,
+	unbindPointer: unbindPointer,
+	registerPointerEvent: registerPointerEvent,
+	releasePointerEvent: releasePointerEvent,
+	releaseAllPointerEvents: releaseAllPointerEvents,
+	requestPointerLock: requestPointerLock,
+	exitPointerLock: exitPointerLock,
+	get keyBoardEventTarget () { return keyBoardEventTarget; },
+	KEY: KEY,
+	initKeyboardEvent: initKeyboardEvent,
+	isKeyPressed: isKeyPressed,
+	keyStatus: keyStatus,
+	triggerKeyEvent: triggerKeyEvent,
+	bindKey: bindKey,
+	getBindingKey: getBindingKey,
+	unlockKey: unlockKey,
+	unbindKey: unbindKey,
+	GAMEPAD: GAMEPAD,
+	bindGamepad: bindGamepad,
+	unbindGamepad: unbindGamepad,
+	setGamepadDeadzone: setGamepadDeadzone,
+	setGamepadMapping: setGamepadMapping
 });
 
 /**
@@ -14603,11 +15561,11 @@ function testEllipsePolygon(a, ellipseA, b, polyB, response) {
 }
 
 var SAT = /*#__PURE__*/Object.freeze({
-    __proto__: null,
-    testPolygonPolygon: testPolygonPolygon,
-    testEllipseEllipse: testEllipseEllipse,
-    testPolygonEllipse: testPolygonEllipse,
-    testEllipsePolygon: testEllipsePolygon
+	__proto__: null,
+	testPolygonPolygon: testPolygonPolygon,
+	testEllipseEllipse: testEllipseEllipse,
+	testPolygonEllipse: testPolygonEllipse,
+	testEllipsePolygon: testEllipsePolygon
 });
 
 // a dummy object when using Line for raycasting
@@ -17302,7 +18260,7 @@ let sortOn = "z";
  * @name lastUpdate
  * @memberof game
  */
-let lastUpdate = window.performance.now();
+let lastUpdate = globalThis.performance.now();
 
 /**
  * Fired when a level is fully loaded and all entities instantiated. <br>
@@ -17392,7 +18350,7 @@ function update$1(time, stage) {
         accumulatorUpdateDelta = (timer$1.interpolation) ? updateDelta : Math.max(updateDelta, updateAverageDelta);
 
         while (accumulator >= accumulatorUpdateDelta || timer$1.interpolation) {
-            lastUpdateStart = window.performance.now();
+            lastUpdateStart = globalThis.performance.now();
 
             // game update event
             if (state.isPaused() !== true) {
@@ -17402,7 +18360,7 @@ function update$1(time, stage) {
             // update all objects (and pass the elapsed time since last frame)
             isDirty = stage.update(updateDelta) || isDirty;
 
-            lastUpdate = window.performance.now();
+            lastUpdate = globalThis.performance.now();
             updateAverageDelta = lastUpdate - lastUpdateStart;
 
             accumulator -= accumulatorUpdateDelta;
@@ -17426,7 +18384,7 @@ function draw(stage) {
 
     if (renderer.isContextValid === true && (isDirty || isAlwaysDirty)) {
         // publish notification
-        emit(GAME_BEFORE_DRAW, window.performance.now());
+        emit(GAME_BEFORE_DRAW, globalThis.performance.now());
 
         // prepare renderer to draw a new frame
         renderer.clear();
@@ -17441,24 +18399,24 @@ function draw(stage) {
         renderer.flush();
 
         // publish notification
-        emit(GAME_AFTER_DRAW, window.performance.now());
+        emit(GAME_AFTER_DRAW, globalThis.performance.now());
     }
 }
 
 var game = /*#__PURE__*/Object.freeze({
-    __proto__: null,
-    get viewport () { return viewport; },
-    get world () { return world; },
-    mergeGroup: mergeGroup,
-    sortOn: sortOn,
-    get lastUpdate () { return lastUpdate; },
-    onLevelLoaded: onLevelLoaded,
-    reset: reset,
-    updateFrameRate: updateFrameRate,
-    getParentContainer: getParentContainer,
-    repaint: repaint,
-    update: update$1,
-    draw: draw
+	__proto__: null,
+	get viewport () { return viewport; },
+	get world () { return world; },
+	mergeGroup: mergeGroup,
+	sortOn: sortOn,
+	get lastUpdate () { return lastUpdate; },
+	onLevelLoaded: onLevelLoaded,
+	reset: reset,
+	updateFrameRate: updateFrameRate,
+	getParentContainer: getParentContainer,
+	repaint: repaint,
+	update: update$1,
+	draw: draw
 });
 
 // some ref shortcut
@@ -18556,7 +19514,7 @@ function _startRunLoop() {
         timer$1.reset();
 
         // start the main loop
-        _animFrameId = window.requestAnimationFrame(_renderFrame);
+        _animFrameId = globalThis.requestAnimationFrame(_renderFrame);
     }
 }
 
@@ -18596,7 +19554,7 @@ function _renderFrame(time) {
     draw(stage);
     // schedule the next frame update
     if (_animFrameId !== -1) {
-        _animFrameId = window.requestAnimationFrame(_renderFrame);
+        _animFrameId = globalThis.requestAnimationFrame(_renderFrame);
     }
 }
 
@@ -18606,7 +19564,7 @@ function _renderFrame(time) {
  */
 function _stopRunLoop() {
     // cancel any previous animationRequestFrame
-    window.cancelAnimationFrame(_animFrameId);
+    globalThis.cancelAnimationFrame(_animFrameId);
     _animFrameId = -1;
 }
 
@@ -18779,7 +19737,7 @@ var state = {
             }
 
             // store time when stopped
-            _pauseTime = window.performance.now();
+            _pauseTime = globalThis.performance.now();
 
             // publish the stop notification
             emit(STATE_STOP);
@@ -18805,7 +19763,7 @@ var state = {
             }
 
             // store time when paused
-            _pauseTime = window.performance.now();
+            _pauseTime = globalThis.performance.now();
 
             // publish the pause event
             emit(STATE_PAUSE);
@@ -18830,7 +19788,7 @@ var state = {
             }
 
             // calculate the elpased time
-            _pauseTime = window.performance.now() - _pauseTime;
+            _pauseTime = globalThis.performance.now() - _pauseTime;
 
             // force repaint
             repaint();
@@ -18858,7 +19816,7 @@ var state = {
             }
 
             // calculate the elpased time
-            _pauseTime = window.performance.now() - _pauseTime;
+            _pauseTime = globalThis.performance.now() - _pauseTime;
 
             // publish the resume event
             emit(STATE_RESUME, _pauseTime);
@@ -19199,7 +20157,7 @@ function decodeBase64AsArray(input, bytes) {
     bytes = bytes || 1;
 
     var i, j, len;
-    var dec = window.atob(input.replace(/[^A-Za-z0-9\+\/\=]/g, ""));
+    var dec = globalThis.atob(input.replace(/[^A-Za-z0-9\+\/\=]/g, ""));
     var ar = new Uint32Array(dec.length / bytes);
 
     for (i = 0, len = dec.length / bytes; i < len; i++) {
@@ -21479,9 +22437,9 @@ class Renderer {
         if (device$1.ejecta === true) {
             // a main canvas is already automatically created by Ejecta
             this.canvas = document.getElementById("canvas");
-        } else if (typeof window.canvas !== "undefined") {
+        } else if (typeof globalThis.canvas !== "undefined") {
             // a global canvas is available, e.g. webapp adapter for wechat
-            this.canvas = window.canvas;
+            this.canvas = globalThis.canvas;
         } else if (typeof this.settings.canvas !== "undefined") {
             this.canvas = this.settings.canvas;
         } else {
@@ -26384,7 +27342,7 @@ function preloadTMX(tmxData, onload, onerror) {
                     case "tsx":
                         // ie9 does not fully implement the responseXML
                         if (device$1.ua.match(/msie/i) || !xmlhttp.responseXML) {
-                            if (window.DOMParser) {
+                            if (globalThis.DOMParser) {
                                 // manually create the XML DOM
                                 result = (new DOMParser()).parseFromString(xmlhttp.responseText, "text/xml");
                             } else {
@@ -27484,35 +28442,35 @@ function unloadAll() {
 }
 
 var audio = /*#__PURE__*/Object.freeze({
-    __proto__: null,
-    stopOnAudioError: stopOnAudioError,
-    init: init$1,
-    hasFormat: hasFormat,
-    hasAudio: hasAudio,
-    enable: enable,
-    disable: disable,
-    load: load,
-    play: play,
-    fade: fade,
-    seek: seek,
-    rate: rate,
-    stop: stop,
-    pause: pause,
-    resume: resume,
-    playTrack: playTrack,
-    stopTrack: stopTrack,
-    pauseTrack: pauseTrack,
-    resumeTrack: resumeTrack,
-    getCurrentTrack: getCurrentTrack,
-    setVolume: setVolume,
-    getVolume: getVolume,
-    mute: mute,
-    unmute: unmute,
-    muteAll: muteAll,
-    unmuteAll: unmuteAll,
-    muted: muted,
-    unload: unload,
-    unloadAll: unloadAll
+	__proto__: null,
+	stopOnAudioError: stopOnAudioError,
+	init: init$1,
+	hasFormat: hasFormat,
+	hasAudio: hasAudio,
+	enable: enable,
+	disable: disable,
+	load: load,
+	play: play,
+	fade: fade,
+	seek: seek,
+	rate: rate,
+	stop: stop,
+	pause: pause,
+	resume: resume,
+	playTrack: playTrack,
+	stopTrack: stopTrack,
+	pauseTrack: pauseTrack,
+	resumeTrack: resumeTrack,
+	getCurrentTrack: getCurrentTrack,
+	setVolume: setVolume,
+	getVolume: getVolume,
+	mute: mute,
+	unmute: unmute,
+	muteAll: muteAll,
+	unmuteAll: unmuteAll,
+	muted: muted,
+	unload: unload,
+	unloadAll: unloadAll
 });
 
 /**
@@ -27669,8 +28627,8 @@ let swipeEnabled = true;
  */
 function _disableSwipeFn(e) {
     e.preventDefault();
-    if (typeof window.scroll === "function") {
-        window.scroll(0, 0);
+    if (typeof globalThis.scroll === "function") {
+        globalThis.scroll(0, 0);
     }
     return false;
 }
@@ -27697,8 +28655,8 @@ function _domReady() {
                 false
             );
         }
-        // remove the event on window.onload (always added in `onReady`)
-        window.removeEventListener("load", _domReady, false);
+        // remove the event on globalThis.onload (always added in `onReady`)
+        globalThis.removeEventListener("load", _domReady, false);
 
         // execute all callbacks
         while (readyList.length) {
@@ -27740,7 +28698,7 @@ function _detectDevice() {
                          device.BlackBerry ||
                          device.Kindle || false;
     // ejecta
-    device.ejecta = (typeof window.ejecta !== "undefined");
+    device.ejecta = (typeof globalThis.ejecta !== "undefined");
     // Wechat
     device.isWeixin = /MicroMessenger/i.test(device.ua);
 }
@@ -27760,9 +28718,9 @@ function _checkCapabilities() {
     }
 
     // Touch/Gesture Event feature detection
-    device.TouchEvent = !!("ontouchstart" in window);
-    device.PointerEvent = !!window.PointerEvent;
-    window.gesture = prefixed("gesture");
+    device.TouchEvent = !!("ontouchstart" in globalThis);
+    device.PointerEvent = !!globalThis.PointerEvent;
+    globalThis.gesture = prefixed("gesture");
 
     // detect touch capabilities
     device.touch = device.TouchEvent || device.PointerEvent;
@@ -27778,8 +28736,8 @@ function _checkCapabilities() {
     device.hasPointerLockSupport = typeof document.pointerLockElement !== "undefined";
 
     // device orientation and motion detection
-    device.hasDeviceOrientation = !!window.DeviceOrientationEvent;
-    device.hasAccelerometer = !!window.DeviceMotionEvent;
+    device.hasDeviceOrientation = !!globalThis.DeviceOrientationEvent;
+    device.hasAccelerometer = !!globalThis.DeviceMotionEvent;
 
     // support the ScreenOrientation API
     device.ScreenOrientation = (typeof screen !== "undefined") &&
@@ -27796,10 +28754,10 @@ function _checkCapabilities() {
     navigator.vibrate = prefixed("vibrate", navigator);
 
     // web Audio detection
-    device.hasWebAudio = !!(window.AudioContext || window.webkitAudioContext);
+    device.hasWebAudio = !!(globalThis.AudioContext || globalThis.webkitAudioContext);
 
     try {
-        device.localStorage = !!window.localStorage;
+        device.localStorage = !!globalThis.localStorage;
     } catch (e) {
         // the above generates an exception when cookies are blocked
         device.localStorage = false;
@@ -27809,14 +28767,14 @@ function _checkCapabilities() {
         // some browser (e.g. Safari) implements WebGL1 and WebGL2 contexts only
         // https://bugzilla.mozilla.org/show_bug.cgi?id=801176
         device.OffscreenCanvas =
-            (typeof window.OffscreenCanvas !== "undefined") &&
+            (typeof globalThis.OffscreenCanvas !== "undefined") &&
             ((new OffscreenCanvas(0, 0).getContext( "2d" )) !== null);
     } catch (e) {
         device.OffscreenCanvas = false;
     }
 
     // set pause/stop action on losing focus
-    window.addEventListener("blur", function () {
+    globalThis.addEventListener("blur", function () {
         if (device.stopOnBlur) {
             state.stop(true);
         }
@@ -27825,7 +28783,7 @@ function _checkCapabilities() {
         }
     }, false);
     // set restart/resume action on gaining focus
-    window.addEventListener("focus", function () {
+    globalThis.addEventListener("focus", function () {
         if (device.stopOnBlur) {
             state.restart(true);
         }
@@ -27971,7 +28929,7 @@ let device = {
      * @name nativeBase64
      * @memberof device
      */
-    nativeBase64 : (typeof(window.atob) === "function"),
+    nativeBase64 : (typeof(globalThis.atob) === "function"),
 
     /**
      * Return the maximum number of simultaneous touch contact points are supported by the current device.
@@ -28274,7 +29232,7 @@ let device = {
         // If the DOM is already ready
         if (isReady) {
             // Execute the function immediately
-            fn.call(window, []);
+            fn.call(globalThis, []);
         }
         else {
             // Add the function to the wait list
@@ -28285,15 +29243,15 @@ let device = {
                 // directly call domReady if document is already "ready"
                 if (document.readyState === "complete") {
                     // defer the fn call to ensure our script is fully loaded
-                    window.setTimeout(_domReady, 0);
+                    globalThis.setTimeout(_domReady, 0);
                 }
                 else {
                     if (document.addEventListener) {
                         // Use the handy event callback
                         document.addEventListener("DOMContentLoaded", _domReady, false);
                     }
-                    // A fallback to window.onload, that will always work
-                    window.addEventListener("load", _domReady, false);
+                    // A fallback to globalThis.onload, that will always work
+                    globalThis.addEventListener("load", _domReady, false);
                 }
                 readyBound = true;
             }
@@ -28308,11 +29266,11 @@ let device = {
     enableSwipe(enable) {
         if (enable !== false) {
             if (swipeEnabled === false) {
-                window.document.removeEventListener("touchmove", _disableSwipeFn, false);
+                globalThis.document.removeEventListener("touchmove", _disableSwipeFn, false);
                 swipeEnabled = true;
             }
         } else if (swipeEnabled === true) {
-            window.document.addEventListener("touchmove", _disableSwipeFn, false);
+            globalThis.document.addEventListener("touchmove", _disableSwipeFn, false);
             swipeEnabled = false;
         }
     },
@@ -28366,7 +29324,7 @@ let device = {
         var PORTRAIT = "portrait";
         var LANDSCAPE = "landscape";
 
-        var screen = window.screen;
+        var screen = globalThis.screen;
 
         // first try using "standard" values
         if (this.ScreenOrientation === true) {
@@ -28381,12 +29339,12 @@ let device = {
         }
 
         // check using the deprecated API
-        if (typeof window.orientation === "number") {
-            return (Math.abs(window.orientation) === 90) ? LANDSCAPE : PORTRAIT;
+        if (typeof globalThis.orientation === "number") {
+            return (Math.abs(globalThis.orientation) === 90) ? LANDSCAPE : PORTRAIT;
         }
 
         // fallback to window size check
-        return (window.outerWidth > window.outerHeight) ? LANDSCAPE : PORTRAIT;
+        return (globalThis.outerWidth > globalThis.outerHeight) ? LANDSCAPE : PORTRAIT;
     },
 
     /**
@@ -28398,7 +29356,7 @@ let device = {
      * @returns {boolean} true if the orientation was unsuccessfully locked
      */
     lockOrientation(orientation) {
-        var screen = window.screen;
+        var screen = globalThis.screen;
         if (typeof screen !== "undefined") {
             var _lockOrientation = prefixed("lockOrientation", screen);
             if (typeof _lockOrientation !== "undefined") {
@@ -28416,7 +29374,7 @@ let device = {
      * @returns {boolean} true if the orientation was unsuccessfully unlocked
      */
     unlockOrientation() {
-        var screen = window.screen;
+        var screen = globalThis.screen;
         if (typeof screen !== "undefined") {
             var _unlockOrientation = prefixed("unlockOrientation", screen);
             if (typeof _unlockOrientation !== "undefined") {
@@ -28515,8 +29473,8 @@ let device = {
         if (typeof element === "object" && element !== document.body && typeof element.getBoundingClientRect !== "undefined") {
             return element.getBoundingClientRect();
         } else {
-            _domRect.width = _domRect.right = window.innerWidth;
-            _domRect.height = _domRect.bottom = window.innerHeight;
+            _domRect.width = _domRect.right = globalThis.innerWidth;
+            _domRect.height = _domRect.bottom = globalThis.innerHeight;
             return _domRect;
         }    },
 
@@ -28547,7 +29505,7 @@ let device = {
                 stencil: true,
                 failIfMajorPerformanceCaveat : options.failIfMajorPerformanceCaveat
             };
-            _supported = !! (window.WebGLRenderingContext && (canvas.getContext("webgl", ctxOptions) || canvas.getContext("experimental-webgl", ctxOptions)));
+            _supported = !! (globalThis.WebGLRenderingContext && (canvas.getContext("webgl", ctxOptions) || canvas.getContext("experimental-webgl", ctxOptions)));
         } catch (e) {
             _supported = false;
         }
@@ -28582,8 +29540,8 @@ let device = {
      *  }
      */
     focus() {
-        if (typeof (window.focus) === "function") {
-            window.focus();
+        if (typeof (globalThis.focus) === "function") {
+            globalThis.focus();
         }
     },
 
@@ -28637,13 +29595,13 @@ let device = {
                     .then(response => {
                         if (response === "granted") {
                             // add a listener for the devicemotion event
-                            window.addEventListener("devicemotion", this.onDeviceMotion, false);
+                            globalThis.addEventListener("devicemotion", this.onDeviceMotion, false);
                             accelInitialized = true;
                         }
                     }).catch(console.error);
             } else {
                 // add a listener for the devicemotion event
-                window.addEventListener("devicemotion", this.onDeviceMotion, false);
+                globalThis.addEventListener("devicemotion", this.onDeviceMotion, false);
                 accelInitialized = true;
             }
         }
@@ -28657,7 +29615,7 @@ let device = {
     unwatchAccelerometer() {
         if (accelInitialized) {
             // remove the listener for the devicemotion event
-            window.removeEventListener("devicemotion", this.onDeviceMotion, false);
+            globalThis.removeEventListener("devicemotion", this.onDeviceMotion, false);
             accelInitialized = false;
         }
     },
@@ -28687,12 +29645,12 @@ let device = {
                 DeviceOrientationEvent.requestPermission()
                     .then(response => {
                         if (response === "granted") {
-                            window.addEventListener("deviceorientation", this.onDeviceRotate, false);
+                            globalThis.addEventListener("deviceorientation", this.onDeviceRotate, false);
                             deviceOrientationInitialized = true;
                         }
                     }).catch(console.error);
             } else {
-                window.addEventListener("deviceorientation", this.onDeviceRotate, false);
+                globalThis.addEventListener("deviceorientation", this.onDeviceRotate, false);
                 deviceOrientationInitialized = true;
             }
         }
@@ -28705,7 +29663,7 @@ let device = {
      */
     unwatchDeviceOrientation() {
         if (deviceOrientationInitialized) {
-            window.removeEventListener("deviceorientation", this.onDeviceRotate, false);
+            globalThis.removeEventListener("deviceorientation", this.onDeviceRotate, false);
             deviceOrientationInitialized = false;
         }
     },
@@ -28749,7 +29707,7 @@ Object.defineProperty(device, "devicePixelRatio", {
      * @ignore
      */
     get: function () {
-        return (window.devicePixelRatio || 1);
+        return (globalThis.devicePixelRatio || 1);
     }
 });
 
@@ -31056,8 +32014,8 @@ function onresize() {
         var canvasMaxWidth = Infinity;
         var canvasMaxHeight = Infinity;
 
-        if (window.getComputedStyle) {
-            var style = window.getComputedStyle(renderer.getScreenCanvas(), null);
+        if (globalThis.getComputedStyle) {
+            var style = globalThis.getComputedStyle(renderer.getScreenCanvas(), null);
             canvasMaxWidth = parseInt(style.maxWidth, 10) || Infinity;
             canvasMaxHeight = parseInt(style.maxHeight, 10) || Infinity;
         }
@@ -31267,7 +32225,7 @@ function init(width, height, options) {
     settings.zoomY = height * scaleRatio.y;
 
     //add a channel for the onresize/onorientationchange event
-    window.addEventListener(
+    globalThis.addEventListener(
         "resize",
         utils.function.throttle(
             function (e) {
@@ -31277,7 +32235,7 @@ function init(width, height, options) {
     );
 
     // Screen Orientation API
-    window.addEventListener(
+    globalThis.addEventListener(
         "orientationchange",
         function (e) {
             emit(WINDOW_ONORIENTATION_CHANGE, e);
@@ -31285,7 +32243,7 @@ function init(width, height, options) {
         false
     );
     // pre-fixed implementation on mozzila
-    window.addEventListener(
+    globalThis.addEventListener(
         "onmozorientationchange",
         function (e) {
             emit(WINDOW_ONORIENTATION_CHANGE, e);
@@ -31294,13 +32252,13 @@ function init(width, height, options) {
     );
 
     if (device$1.ScreenOrientation === true) {
-        window.screen.orientation.onchange = function (e) {
+        globalThis.screen.orientation.onchange = function (e) {
             emit(WINDOW_ONORIENTATION_CHANGE, e);
         };
     }
 
     // Automatically update relative canvas position on scroll
-    window.addEventListener("scroll", utils.function.throttle(
+    globalThis.addEventListener("scroll", utils.function.throttle(
         function (e) {
             emit(WINDOW_ONSCROLL, e);
         }, 100
@@ -31334,7 +32292,7 @@ function init(width, height, options) {
     onresize();
 
     // add an observer to detect when the dom tree is modified
-    if ("MutationObserver" in window) {
+    if ("MutationObserver" in globalThis) {
         // Create an observer instance linked to the callback function
         var observer = new MutationObserver(onresize.bind(this));
 
@@ -31440,17 +32398,17 @@ function scale(x, y) {
 }
 
 var video = /*#__PURE__*/Object.freeze({
-    __proto__: null,
-    CANVAS: CANVAS,
-    WEBGL: WEBGL,
-    AUTO: AUTO,
-    get parent () { return parent; },
-    scaleRatio: scaleRatio,
-    get renderer () { return renderer; },
-    init: init,
-    createCanvas: createCanvas,
-    getParent: getParent,
-    scale: scale
+	__proto__: null,
+	CANVAS: CANVAS,
+	WEBGL: WEBGL,
+	AUTO: AUTO,
+	get parent () { return parent; },
+	scaleRatio: scaleRatio,
+	get renderer () { return renderer; },
+	init: init,
+	createCanvas: createCanvas,
+	getParent: getParent,
+	scale: scale
 });
 
 /**
@@ -31743,7 +32701,7 @@ var timer = {
          */
         reset() {
             // set to "now"
-            last = now = window.performance.now();
+            last = now = globalThis.performance.now();
             delta = 0;
             // reset delta counting variables
             framedelta = 0;
@@ -31882,23 +32840,23 @@ var x;
 
 // standardized functions
 // https://developer.mozilla.org/fr/docs/Web/API/Window/requestAnimationFrame
-var requestAnimationFrame = window.requestAnimationFrame;
-var cancelAnimationFrame = window.cancelAnimationFrame;
+var requestAnimationFrame = globalThis.requestAnimationFrame;
+var cancelAnimationFrame = globalThis.cancelAnimationFrame;
 
 // get prefixed rAF and cAF is standard one not supported
 for (x = 0; x < vendors.length && !requestAnimationFrame; ++x) {
-    requestAnimationFrame = window[vendors[x] + "RequestAnimationFrame"];
+    requestAnimationFrame = globalThis[vendors[x] + "RequestAnimationFrame"];
 }
 for (x = 0; x < vendors.length && !cancelAnimationFrame; ++x) {
-    cancelAnimationFrame = window[vendors[x] + "CancelAnimationFrame"] ||
-                           window[vendors[x] + "CancelRequestAnimationFrame"];
+    cancelAnimationFrame = globalThis[vendors[x] + "CancelAnimationFrame"] ||
+                           globalThis[vendors[x] + "CancelRequestAnimationFrame"];
 }
 
 if (!requestAnimationFrame || !cancelAnimationFrame) {
     requestAnimationFrame = function (callback) {
-        var currTime = window.performance.now();
+        var currTime = globalThis.performance.now();
         var timeToCall = Math.max(0, (1000 / timer$1.maxfps) - (currTime - lastTime));
-        var id = window.setTimeout(function () {
+        var id = globalThis.setTimeout(function () {
             callback(currTime + timeToCall);
         }, timeToCall);
         lastTime = currTime + timeToCall;
@@ -31906,12 +32864,12 @@ if (!requestAnimationFrame || !cancelAnimationFrame) {
     };
 
     cancelAnimationFrame = function (id) {
-        window.clearTimeout(id);
+        globalThis.clearTimeout(id);
     };
 
     // put back in global namespace
-    window.requestAnimationFrame = requestAnimationFrame;
-    window.cancelAnimationFrame = cancelAnimationFrame;
+    globalThis.requestAnimationFrame = requestAnimationFrame;
+    globalThis.cancelAnimationFrame = cancelAnimationFrame;
 }
 
 /**
@@ -31930,10 +32888,10 @@ class BasePlugin {
          * this can be overridden by the plugin
          * @public
          * @type {string}
-         * @default "10.6.1"
+         * @default "10.7.0"
          * @name plugin.Base#version
          */
-        this.version = "10.6.1";
+        this.version = "10.7.0";
     }
 }
 
@@ -36527,7 +37485,7 @@ class DroptargetEntity extends DropTarget {
     }
 }
 
-// ES5 polyfills
+// ES5/ES6 polyfills
 
 
 /**
@@ -36537,7 +37495,7 @@ class DroptargetEntity extends DropTarget {
  * @name version
  * @type {string}
  */
-const version = "10.6.1";
+const version = "10.7.0";
 
 
 /**

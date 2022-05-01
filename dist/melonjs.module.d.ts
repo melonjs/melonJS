@@ -12217,7 +12217,7 @@ declare function scale(x: number, y: number): void;
  * @name prefixed
  * @function
  * @param {string} name Property name
- * @param {object} [obj=window] Object or element reference to access
+ * @param {object} [obj=globalThis] Object or element reference to access
  * @returns {string} Value of property
  * @memberof utils.agent
  */
@@ -12229,7 +12229,7 @@ declare function prefixed(name: string, obj?: object): string;
  * @function
  * @param {string} name Property name
  * @param {string} value Property value
- * @param {object} [obj=window] Object or element reference to access
+ * @param {object} [obj=globalThis] Object or element reference to access
  * @returns {boolean} true if one of the vendor-prefixed property was found
  * @memberof utils.agent
  */
