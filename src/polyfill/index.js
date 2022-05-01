@@ -3,4 +3,5 @@ import "core-js/proposals/global-this";
 
 // "built-in" polyfills
 import "./console.js";
+import "./performance.js";
 import "./requestAnimationFrame.js";
