@@ -5,6 +5,9 @@
 ### Added
 - Core : new `device.nodeJS` to detect if running under node.js
 
+### Fixed
+- Particle Emitter: fix a regression in `ParticleEmitter` causing a crash, after es6 class reformatting
+
 ### Changed
 - Core : replace internal use of global window object by `globalThis`
 

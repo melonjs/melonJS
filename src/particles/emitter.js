@@ -369,11 +369,13 @@ class ParticleEmitter extends Renderable {
      * @memberof ParticleEmitter
      */
     get floating() {
-        return this.container.floating;
+        return typeof this.container !== "undefined" && this.container.floating;
     }
 
     set floating(value) {
-        this.container.floating = value;
+        if (typeof this.container !== "undefined") {
+            this.container.floating = value;
+        }
     }
 
     /**
