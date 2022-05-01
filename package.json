@@ -38,7 +38,8 @@
   "engines": {
     "node": ">= 12"
   },
-  "main": "dist/melonjs.js",
+  "main": "dist/melonjs.module.js",
+  "type": "module",
   "module": "dist/melonjs.module.js",
   "files": [
     "dist/melonjs.js",
