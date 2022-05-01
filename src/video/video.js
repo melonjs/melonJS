@@ -18,7 +18,7 @@ var designHeight = 0;
 
 // default video settings
 var settings = {
-    parent : document.body,
+    parent : undefined,
     renderer : 2, // AUTO
     doubleBuffering : false,
     autoScale : false,
@@ -336,7 +336,7 @@ export function init(width, height, options) {
     }
 
     // add our canvas (default to document.body if settings.parent is undefined)
-    parent = device.getElement(settings.parent);
+    parent = device.getElement(typeof settings.parent !== "undefined" ? settings.parent : document.body);
     parent.appendChild(renderer.getScreenCanvas());
 
     // trigger an initial resize();
