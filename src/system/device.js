@@ -126,7 +126,7 @@ function _checkCapabilities() {
     device.touch = device.TouchEvent || device.PointerEvent;
 
     // max amount of touch points ; always at least return 1 (e.g. headless chrome will return 0)
-    device.maxTouchPoints = device.touch ? (device.PointerEvent ? navigator.maxTouchPoints || 1 : 10) : 1;
+    device.maxTouchPoints = device.touch ? (device.PointerEvent ? globalThis.navigator.maxTouchPoints || 1 : 10) : 1;
 
     // detect wheel event support
     // Modern browsers support "wheel", Webkit and IE support at least "mousewheel
@@ -149,9 +149,6 @@ function _checkCapabilities() {
 
     document.exitFullscreen = prefixed("cancelFullScreen", document) ||
                               prefixed("exitFullscreen", document);
-
-    // vibration API poyfill
-    navigator.vibrate = prefixed("vibrate", navigator);
 
     // web Audio detection
     device.hasWebAudio = !!(globalThis.AudioContext || globalThis.webkitAudioContext);
@@ -256,7 +253,7 @@ let device = {
      * @name ua
      * @memberof device
      */
-    ua : navigator.userAgent,
+    ua : typeof globalThis.navigator !== "undefined" ? globalThis.navigator.userAgent : "",
 
     /**
      * Browser Local Storage capabilities <br>
@@ -550,7 +547,7 @@ let device = {
      * @name language
      * @memberof device
      */
-    language : navigator.language || navigator.browserLanguage || navigator.userLanguage || "en",
+    language : typeof globalThis.navigator !== "undefined" ? globalThis.navigator.language || globalThis.navigator.browserLanguage || globalThis.navigator.userLanguage || "en" : "en",
 
     /**
      * Specify whether to pause the game when losing focus
@@ -1097,8 +1094,8 @@ let device = {
      * me.device.vibrate(0);
      */
     vibrate(pattern) {
-        if (navigator.vibrate) {
-            navigator.vibrate(pattern);
+        if (typeof globalThis.navigator !== "undefined" && typeof globalThis.navigator.vibrate === "function") {
+            globalThis.navigator.vibrate(pattern);
         }
     }
 
