@@ -362,7 +362,7 @@ export function init(width, height, options) {
             renderType + " renderer" + gpu_renderer + " | " +
             audioType + " | " +
             "pixel ratio " + device.devicePixelRatio + " | " +
-            (device.isMobile ? "mobile" : "desktop") + " | " +
+            (device.nodeJS ? "node.js" : device.isMobile ? "mobile" : "desktop") + " | " +
             device.getScreenOrientation() + " | " +
             device.language
         );

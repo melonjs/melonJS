@@ -98,6 +98,8 @@ function _detectDevice() {
     device.ejecta = (typeof globalThis.ejecta !== "undefined");
     // Wechat
     device.isWeixin = /MicroMessenger/i.test(device.ua);
+    // node.js
+    device.nodeJS = (typeof process !== "undefined") && (process.release.name === "node");
 };
 
 /**
@@ -407,24 +409,33 @@ let device = {
      */
     linux : false,
 
-   /**
-    * equals to true if the game is running under Ejecta.
-    * @type {boolean}
-    * @readonly
-    * @see http://impactjs.com/ejecta
-    * @name ejecta
-    * @memberof device
-    */
+    /**
+     * equals to true if the game is running under Ejecta.
+     * @type {boolean}
+     * @readonly
+     * @see http://impactjs.com/ejecta
+     * @name ejecta
+     * @memberof device
+     */
     ejecta : false,
 
     /**
-     * equals to true if the game is running under Wechat.
+     * equals to true if the  is running under Wechat.
      * @type {boolean}
      * @readonly
      * @name isWeixin
      * @memberof device
      */
-     isWeixin : false,
+    isWeixin : false,
+
+    /**
+     * equals to true if running under node.js
+     * @type {boolean}
+     * @readonly
+     * @name nodeJS
+     * @memberof device
+     */
+    nodeJS : false,
 
     /**
      * equals to true if the device is running on ChromeOS.

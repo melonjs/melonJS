@@ -2,6 +2,9 @@
 
 ## [10.7.0] (melonJS 2) - _2022-XX-XX
 
+### Added
+- Core : new `device.nodeJS` to detect if running under node.js
+
 ### Changed
 - Core : replace internal use of global window object by `globalThis`
 
