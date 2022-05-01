@@ -265,7 +265,7 @@ var updateGamepads = function () {
  * gamepad connected callback
  * @ignore
  */
-window.addEventListener("gamepadconnected", function (e) {
+globalThis.addEventListener("gamepadconnected", function (e) {
     event.emit(event.GAMEPAD_CONNECTED, e.gamepad);
 }, false);
 
@@ -273,7 +273,7 @@ window.addEventListener("gamepadconnected", function (e) {
  * gamepad disconnected callback
  * @ignore
  */
-window.addEventListener("gamepaddisconnected", function (e) {
+globalThis.addEventListener("gamepaddisconnected", function (e) {
     event.emit(event.GAMEPAD_DISCONNECTED, e.gamepad);
 }, false);
 

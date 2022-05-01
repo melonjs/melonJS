@@ -22,8 +22,8 @@ let swipeEnabled = true;
  */
 function _disableSwipeFn(e) {
     e.preventDefault();
-    if (typeof window.scroll === "function") {
-        window.scroll(0, 0);
+    if (typeof globalThis.scroll === "function") {
+        globalThis.scroll(0, 0);
     }
     return false;
 };
@@ -51,8 +51,8 @@ function _domReady() {
                 false
             );
         }
-        // remove the event on window.onload (always added in `onReady`)
-        window.removeEventListener("load", _domReady, false);
+        // remove the event on globalThis.onload (always added in `onReady`)
+        globalThis.removeEventListener("load", _domReady, false);
 
         // execute all callbacks
         while (readyList.length) {
@@ -95,7 +95,7 @@ function _detectDevice() {
                          device.BlackBerry ||
                          device.Kindle || false;
     // ejecta
-    device.ejecta = (typeof window.ejecta !== "undefined");
+    device.ejecta = (typeof globalThis.ejecta !== "undefined");
     // Wechat
     device.isWeixin = /MicroMessenger/i.test(device.ua);
 };
@@ -116,9 +116,9 @@ function _checkCapabilities() {
     }
 
     // Touch/Gesture Event feature detection
-    device.TouchEvent = !!("ontouchstart" in window);
-    device.PointerEvent = !!window.PointerEvent;
-    window.gesture = prefixed("gesture");
+    device.TouchEvent = !!("ontouchstart" in globalThis);
+    device.PointerEvent = !!globalThis.PointerEvent;
+    globalThis.gesture = prefixed("gesture");
 
     // detect touch capabilities
     device.touch = device.TouchEvent || device.PointerEvent;
@@ -134,8 +134,8 @@ function _checkCapabilities() {
     device.hasPointerLockSupport = typeof document.pointerLockElement !== "undefined";
 
     // device orientation and motion detection
-    device.hasDeviceOrientation = !!window.DeviceOrientationEvent;
-    device.hasAccelerometer = !!window.DeviceMotionEvent;
+    device.hasDeviceOrientation = !!globalThis.DeviceOrientationEvent;
+    device.hasAccelerometer = !!globalThis.DeviceMotionEvent;
 
     // support the ScreenOrientation API
     device.ScreenOrientation = (typeof screen !== "undefined") &&
@@ -152,10 +152,10 @@ function _checkCapabilities() {
     navigator.vibrate = prefixed("vibrate", navigator);
 
     // web Audio detection
-    device.hasWebAudio = !!(window.AudioContext || window.webkitAudioContext);
+    device.hasWebAudio = !!(globalThis.AudioContext || globalThis.webkitAudioContext);
 
     try {
-        device.localStorage = !!window.localStorage;
+        device.localStorage = !!globalThis.localStorage;
     } catch (e) {
         // the above generates an exception when cookies are blocked
         device.localStorage = false;
@@ -165,14 +165,14 @@ function _checkCapabilities() {
         // some browser (e.g. Safari) implements WebGL1 and WebGL2 contexts only
         // https://bugzilla.mozilla.org/show_bug.cgi?id=801176
         device.OffscreenCanvas =
-            (typeof window.OffscreenCanvas !== "undefined") &&
+            (typeof globalThis.OffscreenCanvas !== "undefined") &&
             ((new OffscreenCanvas(0, 0).getContext( "2d" )) !== null);
     } catch (e) {
         device.OffscreenCanvas = false;
     }
 
     // set pause/stop action on losing focus
-    window.addEventListener("blur", function () {
+    globalThis.addEventListener("blur", function () {
         if (device.stopOnBlur) {
             state.stop(true);
         }
@@ -181,7 +181,7 @@ function _checkCapabilities() {
         }
     }, false);
     // set restart/resume action on gaining focus
-    window.addEventListener("focus", function () {
+    globalThis.addEventListener("focus", function () {
         if (device.stopOnBlur) {
             state.restart(true);
         }
@@ -328,7 +328,7 @@ let device = {
      * @name nativeBase64
      * @memberof device
      */
-    nativeBase64 : (typeof(window.atob) === "function"),
+    nativeBase64 : (typeof(globalThis.atob) === "function"),
 
     /**
      * Return the maximum number of simultaneous touch contact points are supported by the current device.
@@ -631,7 +631,7 @@ let device = {
         // If the DOM is already ready
         if (isReady) {
             // Execute the function immediately
-            fn.call(window, []);
+            fn.call(globalThis, []);
         }
         else {
             // Add the function to the wait list
@@ -642,15 +642,15 @@ let device = {
                 // directly call domReady if document is already "ready"
                 if (document.readyState === "complete") {
                     // defer the fn call to ensure our script is fully loaded
-                    window.setTimeout(_domReady, 0);
+                    globalThis.setTimeout(_domReady, 0);
                 }
                 else {
                     if (document.addEventListener) {
                         // Use the handy event callback
                         document.addEventListener("DOMContentLoaded", _domReady, false);
                     }
-                    // A fallback to window.onload, that will always work
-                    window.addEventListener("load", _domReady, false);
+                    // A fallback to globalThis.onload, that will always work
+                    globalThis.addEventListener("load", _domReady, false);
                 }
                 readyBound = true;
             }
@@ -665,11 +665,11 @@ let device = {
     enableSwipe(enable) {
         if (enable !== false) {
             if (swipeEnabled === false) {
-                window.document.removeEventListener("touchmove", _disableSwipeFn, false);
+                globalThis.document.removeEventListener("touchmove", _disableSwipeFn, false);
                 swipeEnabled = true;
             }
         } else if (swipeEnabled === true) {
-            window.document.addEventListener("touchmove", _disableSwipeFn, false);
+            globalThis.document.addEventListener("touchmove", _disableSwipeFn, false);
             swipeEnabled = false;
         }
     },
@@ -723,7 +723,7 @@ let device = {
         var PORTRAIT = "portrait";
         var LANDSCAPE = "landscape";
 
-        var screen = window.screen;
+        var screen = globalThis.screen;
 
         // first try using "standard" values
         if (this.ScreenOrientation === true) {
@@ -738,12 +738,12 @@ let device = {
         }
 
         // check using the deprecated API
-        if (typeof window.orientation === "number") {
-            return (Math.abs(window.orientation) === 90) ? LANDSCAPE : PORTRAIT;
+        if (typeof globalThis.orientation === "number") {
+            return (Math.abs(globalThis.orientation) === 90) ? LANDSCAPE : PORTRAIT;
         }
 
         // fallback to window size check
-        return (window.outerWidth > window.outerHeight) ? LANDSCAPE : PORTRAIT;
+        return (globalThis.outerWidth > globalThis.outerHeight) ? LANDSCAPE : PORTRAIT;
     },
 
     /**
@@ -755,7 +755,7 @@ let device = {
      * @returns {boolean} true if the orientation was unsuccessfully locked
      */
     lockOrientation(orientation) {
-        var screen = window.screen;
+        var screen = globalThis.screen;
         if (typeof screen !== "undefined") {
             var _lockOrientation = prefixed("lockOrientation", screen);
             if (typeof _lockOrientation !== "undefined") {
@@ -773,7 +773,7 @@ let device = {
      * @returns {boolean} true if the orientation was unsuccessfully unlocked
      */
     unlockOrientation() {
-        var screen = window.screen;
+        var screen = globalThis.screen;
         if (typeof screen !== "undefined") {
             var _unlockOrientation = prefixed("unlockOrientation", screen);
             if (typeof _unlockOrientation !== "undefined") {
@@ -872,8 +872,8 @@ let device = {
         if (typeof element === "object" && element !== document.body && typeof element.getBoundingClientRect !== "undefined") {
             return element.getBoundingClientRect();
         } else {
-            _domRect.width = _domRect.right = window.innerWidth;
-            _domRect.height = _domRect.bottom = window.innerHeight;
+            _domRect.width = _domRect.right = globalThis.innerWidth;
+            _domRect.height = _domRect.bottom = globalThis.innerHeight;
             return _domRect;
         };
     },
@@ -905,7 +905,7 @@ let device = {
                 stencil: true,
                 failIfMajorPerformanceCaveat : options.failIfMajorPerformanceCaveat
             };
-            _supported = !! (window.WebGLRenderingContext && (canvas.getContext("webgl", ctxOptions) || canvas.getContext("experimental-webgl", ctxOptions)));
+            _supported = !! (globalThis.WebGLRenderingContext && (canvas.getContext("webgl", ctxOptions) || canvas.getContext("experimental-webgl", ctxOptions)));
         } catch (e) {
             _supported = false;
         }
@@ -940,8 +940,8 @@ let device = {
      *  }
      */
     focus() {
-        if (typeof (window.focus) === "function") {
-            window.focus();
+        if (typeof (globalThis.focus) === "function") {
+            globalThis.focus();
         }
     },
 
@@ -995,13 +995,13 @@ let device = {
                     .then(response => {
                         if (response === "granted") {
                             // add a listener for the devicemotion event
-                            window.addEventListener("devicemotion", this.onDeviceMotion, false);
+                            globalThis.addEventListener("devicemotion", this.onDeviceMotion, false);
                             accelInitialized = true;
                         }
                     }).catch(console.error);
             } else {
                 // add a listener for the devicemotion event
-                window.addEventListener("devicemotion", this.onDeviceMotion, false);
+                globalThis.addEventListener("devicemotion", this.onDeviceMotion, false);
                 accelInitialized = true;
             }
         }
@@ -1015,7 +1015,7 @@ let device = {
     unwatchAccelerometer() {
         if (accelInitialized) {
             // remove the listener for the devicemotion event
-            window.removeEventListener("devicemotion", this.onDeviceMotion, false);
+            globalThis.removeEventListener("devicemotion", this.onDeviceMotion, false);
             accelInitialized = false;
         }
     },
@@ -1045,12 +1045,12 @@ let device = {
                 DeviceOrientationEvent.requestPermission()
                     .then(response => {
                         if (response === "granted") {
-                            window.addEventListener("deviceorientation", this.onDeviceRotate, false);
+                            globalThis.addEventListener("deviceorientation", this.onDeviceRotate, false);
                             deviceOrientationInitialized = true;
                         }
                     }).catch(console.error);
             } else {
-                window.addEventListener("deviceorientation", this.onDeviceRotate, false);
+                globalThis.addEventListener("deviceorientation", this.onDeviceRotate, false);
                 deviceOrientationInitialized = true;
             }
         }
@@ -1063,7 +1063,7 @@ let device = {
      */
     unwatchDeviceOrientation() {
         if (deviceOrientationInitialized) {
-            window.removeEventListener("deviceorientation", this.onDeviceRotate, false);
+            globalThis.removeEventListener("deviceorientation", this.onDeviceRotate, false);
             deviceOrientationInitialized = false;
         }
     },
@@ -1107,7 +1107,7 @@ Object.defineProperty(device, "devicePixelRatio", {
      * @ignore
      */
     get: function () {
-        return (window.devicePixelRatio || 1);
+        return (globalThis.devicePixelRatio || 1);
     }
 });
 

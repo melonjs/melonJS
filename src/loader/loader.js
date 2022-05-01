@@ -154,7 +154,7 @@ function preloadTMX(tmxData, onload, onerror) {
                     case "tsx":
                         // ie9 does not fully implement the responseXML
                         if (device.ua.match(/msie/i) || !xmlhttp.responseXML) {
-                            if (window.DOMParser) {
+                            if (globalThis.DOMParser) {
                                 // manually create the XML DOM
                                 result = (new DOMParser()).parseFromString(xmlhttp.responseText, "text/xml");
                             } else {

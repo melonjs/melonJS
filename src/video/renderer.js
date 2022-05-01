@@ -63,9 +63,9 @@ class Renderer {
         if (device.ejecta === true) {
             // a main canvas is already automatically created by Ejecta
             this.canvas = document.getElementById("canvas");
-        } else if (typeof window.canvas !== "undefined") {
+        } else if (typeof globalThis.canvas !== "undefined") {
             // a global canvas is available, e.g. webapp adapter for wechat
-            this.canvas = window.canvas;
+            this.canvas = globalThis.canvas;
         } else if (typeof this.settings.canvas !== "undefined") {
             this.canvas = this.settings.canvas;
         } else {

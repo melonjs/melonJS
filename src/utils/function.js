@@ -36,13 +36,13 @@ export function defer(func, thisArg, ...args) {
  * @returns {Function} the function that will be throttled
  */
 export function throttle(fn, delay, no_trailing) {
-    var last = window.performance.now(), deferTimer;
+    var last = globalThis.performance.now(), deferTimer;
     // `no_trailing` defaults to false.
     if (typeof no_trailing !== "boolean") {
         no_trailing = false;
     }
     return function () {
-        var now = window.performance.now();
+        var now = globalThis.performance.now();
         var elasped = now - last;
         var args = arguments;
         if (elasped < delay) {

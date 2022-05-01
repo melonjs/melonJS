@@ -145,7 +145,7 @@ var timer = {
          */
         reset() {
             // set to "now"
-            last = now = window.performance.now();
+            last = now = globalThis.performance.now();
             delta = 0;
             // reset delta counting variables
             framedelta = 0;

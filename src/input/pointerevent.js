@@ -559,8 +559,8 @@ export function globalToLocal(x, y, v) {
     v = v || pool.pull("Vector2d");
     var rect = device.getElementBounds(renderer.getScreenCanvas());
     var pixelRatio = device.devicePixelRatio;
-    x -= rect.left + (window.pageXOffset || 0);
-    y -= rect.top + (window.pageYOffset || 0);
+    x -= rect.left + (globalThis.pageXOffset || 0);
+    y -= rect.top + (globalThis.pageYOffset || 0);
     var scale = scaleRatio;
     if (scale.x !== 1.0 || scale.y !== 1.0) {
         x /= scale.x;

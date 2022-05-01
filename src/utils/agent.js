@@ -17,12 +17,12 @@ var vendors = [ "ms", "MS", "moz", "webkit", "o" ];
  * @name prefixed
  * @function
  * @param {string} name Property name
- * @param {object} [obj=window] Object or element reference to access
+ * @param {object} [obj=globalThis] Object or element reference to access
  * @returns {string} Value of property
  * @memberof utils.agent
  */
 export function prefixed(name, obj) {
-    obj = obj || window;
+    obj = obj || globalThis;
     if (name in obj) {
         return obj[name];
     }
@@ -44,12 +44,12 @@ export function prefixed(name, obj) {
  * @function
  * @param {string} name Property name
  * @param {string} value Property value
- * @param {object} [obj=window] Object or element reference to access
+ * @param {object} [obj=globalThis] Object or element reference to access
  * @returns {boolean} true if one of the vendor-prefixed property was found
  * @memberof utils.agent
  */
 export function setPrefixed(name, value, obj) {
-    obj = obj || window;
+    obj = obj || globalThis;
     if (name in obj) {
         obj[name] = value;
         return;

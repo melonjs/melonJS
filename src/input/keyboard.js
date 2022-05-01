@@ -319,7 +319,7 @@ export var KEY = {
 export function initKeyboardEvent() {
     // make sure the keyboard is enable
     if (keyBoardEventTarget === null && device.isMobile === false) {
-        keyBoardEventTarget = window;
+        keyBoardEventTarget = globalThis;
         keyBoardEventTarget.addEventListener("keydown", keyDownEvent, false);
         keyBoardEventTarget.addEventListener("keyup", keyUpEvent, false);
     }

@@ -45,7 +45,7 @@ function _startRunLoop() {
         timer.reset();
 
         // start the main loop
-        _animFrameId = window.requestAnimationFrame(_renderFrame);
+        _animFrameId = globalThis.requestAnimationFrame(_renderFrame);
     }
 }
 
@@ -85,7 +85,7 @@ function _renderFrame(time) {
     game.draw(stage);
     // schedule the next frame update
     if (_animFrameId !== -1) {
-        _animFrameId = window.requestAnimationFrame(_renderFrame);
+        _animFrameId = globalThis.requestAnimationFrame(_renderFrame);
     }
 }
 
@@ -95,7 +95,7 @@ function _renderFrame(time) {
  */
 function _stopRunLoop() {
     // cancel any previous animationRequestFrame
-    window.cancelAnimationFrame(_animFrameId);
+    globalThis.cancelAnimationFrame(_animFrameId);
     _animFrameId = -1;
 }
 
@@ -268,7 +268,7 @@ var state = {
             }
 
             // store time when stopped
-            _pauseTime = window.performance.now();
+            _pauseTime = globalThis.performance.now();
 
             // publish the stop notification
             event.emit(event.STATE_STOP);
@@ -294,7 +294,7 @@ var state = {
             }
 
             // store time when paused
-            _pauseTime = window.performance.now();
+            _pauseTime = globalThis.performance.now();
 
             // publish the pause event
             event.emit(event.STATE_PAUSE);
@@ -319,7 +319,7 @@ var state = {
             }
 
             // calculate the elpased time
-            _pauseTime = window.performance.now() - _pauseTime;
+            _pauseTime = globalThis.performance.now() - _pauseTime;
 
             // force repaint
             game.repaint();
@@ -347,7 +347,7 @@ var state = {
             }
 
             // calculate the elpased time
-            _pauseTime = window.performance.now() - _pauseTime;
+            _pauseTime = globalThis.performance.now() - _pauseTime;
 
             // publish the resume event
             event.emit(event.STATE_RESUME, _pauseTime);

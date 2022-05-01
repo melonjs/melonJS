@@ -1,5 +1,10 @@
 # Changelog
 
+## [10.7.0] (melonJS 2) - _2022-XX-XX
+
+### Changed
+- Core : replace internal use of global window object by `globalThis`
+
 ## [10.6.1] (melonJS 2) - _2022-04-25_
 
 ### Fixed
@@ -1127,6 +1132,7 @@
 - first public version with alex4 !
 - www.melonjs.org is live :)
 
+[10.7.0]: https://github.com/melonjs/melonJS/compare/10.6.1...10.7.0
 [10.6.1]: https://github.com/melonjs/melonJS/compare/10.6.0...10.6.1
 [10.6.0]: https://github.com/melonjs/melonJS/compare/10.5.2...10.6.0
 [10.5.2]: https://github.com/melonjs/melonJS/compare/10.5.1...10.5.2

@@ -1,6 +1,5 @@
-// ES5 polyfills
-import "./polyfill/console.js";
-import "./polyfill/requestAnimationFrame.js";
+// ES5/ES6 polyfills
+import "./polyfill/index.js";
 
 // utility classes
 import * as audio from "./audio/audio.js";

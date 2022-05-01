@@ -94,7 +94,7 @@ export let sortOn = "z";
  * @name lastUpdate
  * @memberof game
  */
-export let lastUpdate = window.performance.now();
+export let lastUpdate = globalThis.performance.now();
 
 /**
  * Fired when a level is fully loaded and all entities instantiated. <br>
@@ -188,7 +188,7 @@ export function update(time, stage) {
         accumulatorUpdateDelta = (timer.interpolation) ? updateDelta : Math.max(updateDelta, updateAverageDelta);
 
         while (accumulator >= accumulatorUpdateDelta || timer.interpolation) {
-            lastUpdateStart = window.performance.now();
+            lastUpdateStart = globalThis.performance.now();
 
             // game update event
             if (state.isPaused() !== true) {
@@ -198,7 +198,7 @@ export function update(time, stage) {
             // update all objects (and pass the elapsed time since last frame)
             isDirty = stage.update(updateDelta) || isDirty;
 
-            lastUpdate = window.performance.now();
+            lastUpdate = globalThis.performance.now();
             updateAverageDelta = lastUpdate - lastUpdateStart;
 
             accumulator -= accumulatorUpdateDelta;
@@ -223,7 +223,7 @@ export function draw(stage) {
 
     if (renderer.isContextValid === true && (isDirty || isAlwaysDirty)) {
         // publish notification
-        event.emit(event.GAME_BEFORE_DRAW, window.performance.now());
+        event.emit(event.GAME_BEFORE_DRAW, globalThis.performance.now());
 
         // prepare renderer to draw a new frame
         renderer.clear();
@@ -238,6 +238,6 @@ export function draw(stage) {
         renderer.flush();
 
         // publish notification
-        event.emit(event.GAME_AFTER_DRAW, window.performance.now());
+        event.emit(event.GAME_AFTER_DRAW, globalThis.performance.now());
     }
 };

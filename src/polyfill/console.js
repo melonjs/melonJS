@@ -1,10 +1,10 @@
-if (typeof window !== "undefined") {
-    if (typeof window.console === "undefined") {
-        window.console = {};
-        window.console.log = function() {};
-        window.console.assert = function() {};
-        window.console.warn = function() {};
-        window.console.error = function() {
+if (typeof globalThis !== "undefined") {
+    if (typeof globalThis.console === "undefined") {
+        globalThis.console = {};
+        globalThis.console.log = function() {};
+        globalThis.console.assert = function() {};
+        globalThis.console.warn = function() {};
+        globalThis.console.error = function() {
             alert(Array.prototype.slice.call(arguments).join(", "));
         };
     }

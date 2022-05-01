@@ -357,7 +357,7 @@ export const DRAGEND = "me.game.dragend";
  * @memberof event
  * @see event.on
  */
-export const WINDOW_ONRESIZE = "window.onresize";
+export const WINDOW_ONRESIZE = "globalThis.onresize";
 
 /**
  * Event for when the canvas is resized <br>
@@ -397,7 +397,7 @@ export const VIEWPORT_ONRESIZE = "viewport.onresize";
  * @memberof event
  * @see event.on
  */
-export const WINDOW_ONORIENTATION_CHANGE = "window.orientationchange";
+export const WINDOW_ONORIENTATION_CHANGE = "globalThis.orientationchange";
 
 /**
  * Event for when the (browser) window is scrolled <br>
@@ -409,7 +409,7 @@ export const WINDOW_ONORIENTATION_CHANGE = "window.orientationchange";
  * @memberof event
  * @see event.on
  */
-export const WINDOW_ONSCROLL = "window.onscroll";
+export const WINDOW_ONSCROLL = "globalThis.onscroll";
 
 /**
  * Event for when the viewport position is updated <br>

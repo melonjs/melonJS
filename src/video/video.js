@@ -64,8 +64,8 @@ function onresize() {
         var canvasMaxWidth = Infinity;
         var canvasMaxHeight = Infinity;
 
-        if (window.getComputedStyle) {
-            var style = window.getComputedStyle(renderer.getScreenCanvas(), null);
+        if (globalThis.getComputedStyle) {
+            var style = globalThis.getComputedStyle(renderer.getScreenCanvas(), null);
             canvasMaxWidth = parseInt(style.maxWidth, 10) || Infinity;
             canvasMaxHeight = parseInt(style.maxHeight, 10) || Infinity;
         }
@@ -276,7 +276,7 @@ export function init(width, height, options) {
     settings.zoomY = height * scaleRatio.y;
 
     //add a channel for the onresize/onorientationchange event
-    window.addEventListener(
+    globalThis.addEventListener(
         "resize",
         utils.function.throttle(
             function (e) {
@@ -286,7 +286,7 @@ export function init(width, height, options) {
     );
 
     // Screen Orientation API
-    window.addEventListener(
+    globalThis.addEventListener(
         "orientationchange",
         function (e) {
             event.emit(event.WINDOW_ONORIENTATION_CHANGE, e);
@@ -294,7 +294,7 @@ export function init(width, height, options) {
         false
     );
     // pre-fixed implementation on mozzila
-    window.addEventListener(
+    globalThis.addEventListener(
         "onmozorientationchange",
         function (e) {
             event.emit(event.WINDOW_ONORIENTATION_CHANGE, e);
@@ -303,13 +303,13 @@ export function init(width, height, options) {
     );
 
     if (device.ScreenOrientation === true) {
-        window.screen.orientation.onchange = function (e) {
+        globalThis.screen.orientation.onchange = function (e) {
             event.emit(event.WINDOW_ONORIENTATION_CHANGE, e);
         };
     }
 
     // Automatically update relative canvas position on scroll
-    window.addEventListener("scroll", utils.function.throttle(
+    globalThis.addEventListener("scroll", utils.function.throttle(
         function (e) {
             event.emit(event.WINDOW_ONSCROLL, e);
         }, 100
@@ -343,7 +343,7 @@ export function init(width, height, options) {
     onresize();
 
     // add an observer to detect when the dom tree is modified
-    if ("MutationObserver" in window) {
+    if ("MutationObserver" in globalThis) {
         // Create an observer instance linked to the callback function
         var observer = new MutationObserver(onresize.bind(this));
 

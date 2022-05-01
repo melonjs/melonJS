@@ -138,7 +138,7 @@ export function decodeBase64AsArray(input, bytes) {
     bytes = bytes || 1;
 
     var i, j, len;
-    var dec = window.atob(input.replace(/[^A-Za-z0-9\+\/\=]/g, ""));
+    var dec = globalThis.atob(input.replace(/[^A-Za-z0-9\+\/\=]/g, ""));
     var ar = new Uint32Array(dec.length / bytes);
 
     for (i = 0, len = dec.length / bytes; i < len; i++) {

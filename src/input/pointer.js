@@ -334,7 +334,7 @@ class Pointer extends Bounds {
         this.gameScreenY = this.y = tmpVec.y;
 
         // true if not originally a pointer event
-        this.isNormalized = !device.PointerEvent || (device.PointerEvent && !(event instanceof window.PointerEvent));
+        this.isNormalized = !device.PointerEvent || (device.PointerEvent && !(event instanceof globalThis.PointerEvent));
 
         this.locked = locked;
         this.movementX = event.movementX || 0;
