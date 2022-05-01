@@ -265,17 +265,19 @@ var updateGamepads = function () {
  * gamepad connected callback
  * @ignore
  */
-globalThis.addEventListener("gamepadconnected", function (e) {
-    event.emit(event.GAMEPAD_CONNECTED, e.gamepad);
-}, false);
+if (globalThis.navigator && typeof globalThis.navigator.getGamepads === "function") {
+    globalThis.addEventListener("gamepadconnected", function (e) {
+        event.emit(event.GAMEPAD_CONNECTED, e.gamepad);
+    }, false);
 
-/**
- * gamepad disconnected callback
- * @ignore
- */
-globalThis.addEventListener("gamepaddisconnected", function (e) {
-    event.emit(event.GAMEPAD_DISCONNECTED, e.gamepad);
-}, false);
+    /**
+     * gamepad disconnected callback
+     * @ignore
+     */
+    globalThis.addEventListener("gamepaddisconnected", function (e) {
+        event.emit(event.GAMEPAD_DISCONNECTED, e.gamepad);
+    }, false);
+}
 
 /*
  * PUBLIC STUFF
