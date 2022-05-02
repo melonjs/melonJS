@@ -35,6 +35,16 @@ const ParticleEmitterSettings = {
     image : undefined,
 
     /**
+     * tint to be applied to particles
+     * @public
+     * @type {string}
+     * @name tint
+     * @memberof ParticleEmitterSettings
+     * @default "#fff"
+     */
+    tint : "#fff",
+
+    /**
      * Total number of particles in the emitter
      * @public
      * @type {number}

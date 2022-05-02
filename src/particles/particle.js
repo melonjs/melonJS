@@ -1,19 +1,7 @@
-import { createCanvas } from "./../video/video.js";
 import Vector2d from "./../math/vector2.js";
 import timer from "./../system/timer.js";
 import { randomFloat, clamp } from "./../math/math.js";
 import Renderable from "./../renderable/renderable.js";
-
-/**
- * @ignore
- */
-function createDefaultParticleTexture(w, h) {
-    var canvas = createCanvas(w, h);
-    var context = canvas.getContext("2d");
-    context.fillStyle = "#fff";
-    context.fillRect(0, 0, w, h);
-    return canvas;
-};
 
 
 /**
@@ -52,15 +40,14 @@ class Particle extends Renderable {
             );
         }
 
+        this.image = emitter.image;
+
         // Particle will always update
         this.alwaysUpdate = true;
 
-        // Cache the image reference
-        if (typeof emitter.image === "undefined") {
-            emitter.image = createDefaultParticleTexture(emitter.width, emitter.height);
+        if (typeof emitter.tint === "string") {
+            this.tint.parseCSS(emitter.tint);
         }
-        this.image = emitter.image;
-
 
         // Set the start particle Angle and Speed as defined in emitter
         var angle = emitter.angle + ((emitter.angleVariation > 0) ? (randomFloat(0, 2) - 1) * emitter.angleVariation : 0);
@@ -164,7 +151,6 @@ class Particle extends Renderable {
      * @ignore
      */
     preDraw(renderer) {
-
         // restore is called in postDraw
         renderer.save();
 
@@ -173,6 +159,9 @@ class Particle extends Renderable {
 
         // translate to the defined anchor point and scale it
         renderer.transform(this.currentTransform);
+
+        // apply the current tint and opacity
+        renderer.setTint(this.tint, this.getOpacity());
     }
 
     /**

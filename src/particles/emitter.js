@@ -1,7 +1,20 @@
+import { createCanvas } from "./../video/video.js";
 import * as pool from "./../system/pooling.js";
 import Renderable from "./../renderable/renderable.js";
 import ParticleContainer from "./particlecontainer.js";
+import ParticleEmitterSettings from "./settings.js";
 import { randomFloat } from "./../math/math.js";
+
+/**
+ * @ignore
+ */
+function createDefaultParticleTexture(w, h) {
+    var canvas = createCanvas(w, h);
+    var context = canvas.getContext("2d");
+    context.fillStyle = "#fff";
+    context.fillRect(0, 0, w, h);
+    return canvas;
+};
 
 /**
  * @classdesc
@@ -155,6 +168,11 @@ class ParticleEmitter extends Renderable {
         this.resize(width, height);
 
         Object.assign(this, defaults, settings);
+
+        // Cache the image reference
+        if (typeof this.image === "undefined") {
+            this.image = createDefaultParticleTexture(width, height);
+        }
 
         // reset particle container values
         this.container.reset();

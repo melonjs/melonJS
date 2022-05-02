@@ -4,6 +4,7 @@
 
 ### Added
 - Core : new `device.nodeJS` to detect if running under node.js
+- Particle Emitter: added the possibility to define a tint for particles
 
 ### Changed
 - Core : replace internal use of global window object by `globalThis`
