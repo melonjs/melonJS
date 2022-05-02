@@ -39,24 +39,27 @@ function _domReady() {
     // Make sure that the DOM is not already loaded
     if (!isReady) {
         // be sure document.body is there
-        if (!document.body) {
+        if (!device.nodeJS && !document.body) {
             return setTimeout(_domReady, 13);
         }
 
         // clean up loading event
-        if (document.removeEventListener) {
-            document.removeEventListener(
+        if (typeof globalThis.document !== "undefined" && typeof globalThis.document.removeEventListener === "function") {
+            globalThis.document.removeEventListener(
                 "DOMContentLoaded",
                 this._domReady,
                 false
             );
         }
-        // remove the event on globalThis.onload (always added in `onReady`)
-        globalThis.removeEventListener("load", _domReady, false);
+
+        if (typeof globalThis.removeEventListener === "function") {
+            // remove the event on globalThis.onload (always added in `onReady`)
+            globalThis.removeEventListener("load", _domReady, false);
+        }
 
         // execute all callbacks
         while (readyList.length) {
-            readyList.shift().call(window, []);
+            readyList.shift().call(globalThis, []);
         }
 
         // Remember that the DOM is ready
@@ -98,8 +101,6 @@ function _detectDevice() {
     device.ejecta = (typeof globalThis.ejecta !== "undefined");
     // Wechat
     device.isWeixin = /MicroMessenger/i.test(device.ua);
-    // node.js
-    device.nodeJS = (typeof process !== "undefined") && (process.release.name === "node");
 };
 
 /**
@@ -130,10 +131,10 @@ function _checkCapabilities() {
 
     // detect wheel event support
     // Modern browsers support "wheel", Webkit and IE support at least "mousewheel
-    device.wheel = ("onwheel" in document.createElement("div"));
+    device.wheel = typeof globalThis.document !== "undefined" && "onwheel" in globalThis.document.createElement("div");
 
     // pointerlock detection (pointerLockElement can be null when the feature is supported)
-    device.hasPointerLockSupport = typeof document.pointerLockElement !== "undefined";
+    device.hasPointerLockSupport = typeof globalThis.document !== "undefined" && typeof globalThis.document.pointerLockElement !== "undefined";
 
     // device orientation and motion detection
     device.hasDeviceOrientation = !!globalThis.DeviceOrientationEvent;
@@ -144,11 +145,12 @@ function _checkCapabilities() {
                                (typeof screen.orientation !== "undefined");
 
     // fullscreen api detection & polyfill when possible
-    device.hasFullscreenSupport = prefixed("fullscreenEnabled", document) ||
-                                document.mozFullScreenEnabled;
+    device.hasFullscreenSupport = typeof globalThis.document !== "undefined" && (prefixed("fullscreenEnabled", globalThis.document) || globalThis.document.mozFullScreenEnabled);
 
-    document.exitFullscreen = prefixed("cancelFullScreen", document) ||
-                              prefixed("exitFullscreen", document);
+    if (device.hasFullscreenSupport === true) {
+        globalThis.document.exitFullscreen = typeof globalThis.document !== "undefined" && (prefixed("cancelFullScreen", globalThis.document) || prefixed("exitFullscreen", globalThis.document));
+    }
+
 
     // web Audio detection
     device.hasWebAudio = !!(globalThis.AudioContext || globalThis.webkitAudioContext);
@@ -170,69 +172,72 @@ function _checkCapabilities() {
         device.OffscreenCanvas = false;
     }
 
-    // set pause/stop action on losing focus
-    globalThis.addEventListener("blur", function () {
-        if (device.stopOnBlur) {
-            state.stop(true);
-        }
-        if (device.pauseOnBlur) {
-            state.pause(true);
-        }
-    }, false);
-    // set restart/resume action on gaining focus
-    globalThis.addEventListener("focus", function () {
-        if (device.stopOnBlur) {
-            state.restart(true);
-        }
-        if (device.resumeOnFocus) {
-            state.resume(true);
-        }
-        // force focus if autofocus is on
-        if (device.autoFocus) {
-            device.focus();
-        }
-    }, false);
-
-
-    // Set the name of the hidden property and the change event for visibility
-    var hidden, visibilityChange;
-    if (typeof document.hidden !== "undefined") {
-        // Opera 12.10 and Firefox 18 and later support
-        hidden = "hidden";
-        visibilityChange = "visibilitychange";
-    } else if (typeof document.mozHidden !== "undefined") {
-        hidden = "mozHidden";
-        visibilityChange = "mozvisibilitychange";
-    } else if (typeof document.msHidden !== "undefined") {
-        hidden = "msHidden";
-        visibilityChange = "msvisibilitychange";
-    } else if (typeof document.webkitHidden !== "undefined") {
-        hidden = "webkitHidden";
-        visibilityChange = "webkitvisibilitychange";
+    if (typeof globalThis.addEventListener === "function") {
+        // set pause/stop action on losing focus
+        globalThis.addEventListener("blur", function () {
+            if (device.stopOnBlur) {
+                state.stop(true);
+            }
+            if (device.pauseOnBlur) {
+                state.pause(true);
+            }
+        }, false);
+        // set restart/resume action on gaining focus
+        globalThis.addEventListener("focus", function () {
+            if (device.stopOnBlur) {
+                state.restart(true);
+            }
+            if (device.resumeOnFocus) {
+                state.resume(true);
+            }
+            // force focus if autofocus is on
+            if (device.autoFocus) {
+                device.focus();
+            }
+        }, false);
     }
 
-    // register on the event if supported
-    if (typeof (visibilityChange) === "string") {
-        // add the corresponding event listener
-        document.addEventListener(visibilityChange,
-            function () {
-                if (document[hidden]) {
-                    if (device.stopOnBlur) {
-                        state.stop(true);
+    if (typeof globalThis.document !== "undefined") {
+        // Set the name of the hidden property and the change event for visibility
+        var hidden, visibilityChange;
+        if (typeof globalThis.document.hidden !== "undefined") {
+            // Opera 12.10 and Firefox 18 and later support
+            hidden = "hidden";
+            visibilityChange = "visibilitychange";
+        } else if (typeof globalThis.document.mozHidden !== "undefined") {
+            hidden = "mozHidden";
+            visibilityChange = "mozvisibilitychange";
+        } else if (typeof globalThis.document.msHidden !== "undefined") {
+            hidden = "msHidden";
+            visibilityChange = "msvisibilitychange";
+        } else if (typeof globalThis.document.webkitHidden !== "undefined") {
+            hidden = "webkitHidden";
+            visibilityChange = "webkitvisibilitychange";
+        }
+
+        // register on the event if supported
+        if (typeof (visibilityChange) === "string") {
+            // add the corresponding event listener
+            globalThis.document.addEventListener(visibilityChange,
+                function () {
+                    if (globalThis.document[hidden]) {
+                        if (device.stopOnBlur) {
+                            state.stop(true);
+                        }
+                        if (device.pauseOnBlur) {
+                            state.pause(true);
+                        }
+                    } else {
+                        if (device.stopOnBlur) {
+                            state.restart(true);
+                        }
+                        if (device.resumeOnFocus) {
+                            state.resume(true);
+                        }
                     }
-                    if (device.pauseOnBlur) {
-                        state.pause(true);
-                    }
-                } else {
-                    if (device.stopOnBlur) {
-                        state.restart(true);
-                    }
-                    if (device.resumeOnFocus) {
-                        state.resume(true);
-                    }
-                }
-            }, false
-        );
+                }, false
+            );
+        }
     }
 };
 
@@ -432,7 +437,7 @@ let device = {
      * @name nodeJS
      * @memberof device
      */
-    nodeJS : false,
+    nodeJS : (typeof process !== "undefined") && (process.release.name === "node"),
 
     /**
      * equals to true if the device is running on ChromeOS.
@@ -648,14 +653,14 @@ let device = {
             // attach listeners if not yet done
             if (!readyBound) {
                 // directly call domReady if document is already "ready"
-                if (document.readyState === "complete") {
+                if (device.nodeJS === true || (typeof globalThis.document !== "undefined" && globalThis.document.readyState === "complete")) {
                     // defer the fn call to ensure our script is fully loaded
                     globalThis.setTimeout(_domReady, 0);
                 }
                 else {
-                    if (document.addEventListener) {
+                    if (typeof globalThis.document !== "undefined" && typeof globalThis.document.addEventListener === "function") {
                         // Use the handy event callback
-                        document.addEventListener("DOMContentLoaded", _domReady, false);
+                        globalThis.document.addEventListener("DOMContentLoaded", _domReady, false);
                     }
                     // A fallback to globalThis.onload, that will always work
                     globalThis.addEventListener("load", _domReady, false);
