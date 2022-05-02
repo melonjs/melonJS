@@ -5,11 +5,13 @@
 ### Added
 - Core : new `device.nodeJS` to detect if running under node.js
 
+### Changed
+- Core : replace internal use of global window object by `globalThis`
+- Core : refactor the boot process, and device/feature detection/initialisation to better work within node.js (will still require jsdom and node-canvas)
+
 ### Fixed
 - Particle Emitter: fix a regression in `ParticleEmitter` causing a crash, after es6 class reformatting
 
-### Changed
-- Core : replace internal use of global window object by `globalThis`
 
 ## [10.6.1] (melonJS 2) - _2022-04-25_
 
