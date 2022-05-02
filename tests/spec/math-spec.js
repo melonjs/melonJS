@@ -31,11 +31,11 @@ describe("me.Math", function () {
         var a = me.Math.random(1, 10);
 
         it("should be >= 1", function () {
-            expect(a).not.toBeLessThan(1);
+            expect(a).toBeGreaterThanOrEqual(1);
         });
 
         it("should be < 10", function () {
-            expect(a).toBeLessThan(10);
+            expect(a).toBeLessThanOrEqual(10);
         });
 
         it("should be a whole number", function () {
@@ -47,11 +47,11 @@ describe("me.Math", function () {
         var a = me.Math.randomFloat(1, 10);
 
         it("should be >= 1", function () {
-            expect(a).not.toBeLessThan(1);
+            expect(a).toBeGreaterThanOrEqual(1);
         });
 
         it("should be < 10", function () {
-            expect(a).toBeLessThan(10);
+            expect(a).toBeLessThanOrEqual(10);
         });
     });
 
@@ -59,11 +59,11 @@ describe("me.Math", function () {
         var a = me.Math.weightedRandom(1, 10);
 
         it("should be >= 1", function () {
-            expect(a).not.toBeLessThan(1);
+            expect(a).toBeGreaterThanOrEqual(1);
         });
 
         it("should be < 10", function () {
-            expect(a).toBeLessThan(10);
+            expect(a).toBeLessThanOrEqual(10);
         });
 
         it("should be a whole number", function () {
