@@ -32,8 +32,8 @@ class Particle extends Renderable {
         super(
             emitter.getRandomPointX(),
             emitter.getRandomPointY(),
-            emitter.image.width,
-            emitter.image.height
+            emitter.image ? emitter.image.width : emitter.width || 1,
+            emitter.image ? emitter.image.height : emitter.height || 1
         );
 
         // particle velocity
@@ -46,8 +46,8 @@ class Particle extends Renderable {
             super.onResetEvent(
                 emitter.getRandomPointX(),
                 emitter.getRandomPointY(),
-                emitter.image.width,
-                emitter.image.height
+                emitter.image ? emitter.image.width : emitter.width || 1,
+                emitter.image ? emitter.image.height : emitter.height || 1
             );
         }
 
@@ -56,7 +56,7 @@ class Particle extends Renderable {
 
         // Cache the image reference
         if (typeof emitter.image === "undefined") {
-            emitter.image = createDefaultParticleTexture(emitter.image.width, emitter.image.height);
+            emitter.image = createDefaultParticleTexture(emitter.width, emitter.height);
         }
         this.image = emitter.image;
 
