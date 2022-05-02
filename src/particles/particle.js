@@ -19,13 +19,11 @@ function createDefaultParticleTexture(w, h) {
 /**
  * @classdesc
  * Single Particle Object.
- * @class Particle
  * @augments Renderable
- * @param {ParticleEmitter} particle emitter
  */
 class Particle extends Renderable {
     /**
-     * @ignore
+     * @param {ParticleEmitter} particle emitter
      */
     constructor(emitter) {
         // Call the super constructor
@@ -41,6 +39,9 @@ class Particle extends Renderable {
         this.onResetEvent(emitter, true);
     }
 
+    /**
+     * @ignore
+     */
     onResetEvent(emitter, newInstance = false) {
         if (newInstance === false) {
             super.onResetEvent(
@@ -111,9 +112,6 @@ class Particle extends Renderable {
     /**
      * Update the Particle <br>
      * This is automatically called by the game manager {@link game}
-     * @name update
-     * @memberof Particle
-     * @function
      * @ignore
      * @param {number} dt time since the last update in milliseconds
      */

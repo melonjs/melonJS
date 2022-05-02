@@ -68,7 +68,8 @@ import Stage from "./state/stage.js";
 import Camera2d from "./camera/camera2d.js";
 import Container from "./renderable/container.js";
 import World from "./physics/world.js";
-import { ParticleEmitterSettings, ParticleEmitter } from "./particles/emitter.js";
+import ParticleEmitterSettings from "./particles/settings.js";
+import ParticleEmitter from "./particles/emitter.js";
 import Particle from "./particles/particle.js";
 import Entity from "./entity/entity.js";
 
