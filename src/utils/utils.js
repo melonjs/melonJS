@@ -103,12 +103,17 @@ var utils = {
         var hash = {};
 
         if (typeof url === "undefined") {
-            var location = document.location;
+            if (typeof globalThis.document !== "undefined") {
+                var location = globalThis.document.location;
 
-            if (location && location.hash) {
-                url = location.hash;
+                if (location && location.hash) {
+                    url = location.hash;
+                } else {
+                    // No "document.location" exist for Wechat mini game platform.
+                    return hash;
+                }
             } else {
-                // No "document.location" exist for Wechat mini game platform.
+                // "document" undefined on node.js
                 return hash;
             }
         } else {
