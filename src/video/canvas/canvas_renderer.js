@@ -84,7 +84,7 @@ class CanvasRenderer extends Renderer {
      * <img src="images/normal-blendmode.png" width="510"/> <br>
      * - "multiply" : the pixels of the top layer are multiplied with the corresponding pixel of the bottom layer. A darker picture is the result. <br>
      * <img src="images/multiply-blendmode.png" width="510"/> <br>
-     * - "lighter" : where both content overlap the color is determined by adding color values. <br>
+     * - "additive or lighter" : where both content overlap the color is determined by adding color values. <br>
      * <img src="images/lighter-blendmode.png" width="510"/> <br>
      * - "screen" : The pixels are inverted, multiplied, and inverted again. A lighter picture is the result (opposite of multiply) <br>
      * <img src="images/screen-blendmode.png" width="510"/> <br>
@@ -92,7 +92,7 @@ class CanvasRenderer extends Renderer {
      * @see https://developer.mozilla.org/en-US/docs/Web/API/CanvasRenderingContext2D/globalCompositeOperation
      * @memberof CanvasRenderer.prototype
      * @function
-     * @param {string} [mode="normal"] blend mode : "normal", "multiply", "lighter, "screen"
+     * @param {string} [mode="normal"] blend mode : "normal", "multiply", "lighter, "additive", "screen"
      * @param {CanvasRenderingContext2D} [context]
      */
     setBlendMode(mode = "normal", context) {
@@ -104,6 +104,7 @@ class CanvasRenderer extends Renderer {
                 break;
 
             case "lighter" :
+            case "additive" :
                 context.globalCompositeOperation = "lighter";
                 break;
 
