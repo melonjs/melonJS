@@ -320,8 +320,10 @@ export function initKeyboardEvent() {
     // make sure the keyboard is enable
     if (keyBoardEventTarget === null && device.isMobile === false) {
         keyBoardEventTarget = globalThis;
-        keyBoardEventTarget.addEventListener("keydown", keyDownEvent, false);
-        keyBoardEventTarget.addEventListener("keyup", keyUpEvent, false);
+        if (typeof keyBoardEventTarget.addEventListener === "function") {
+            keyBoardEventTarget.addEventListener("keydown", keyDownEvent, false);
+            keyBoardEventTarget.addEventListener("keyup", keyUpEvent, false);
+        }
     }
 };
 
