@@ -37,6 +37,12 @@ class ParticleContainer extends Container {
         this.anchorPoint.set(0, 0);
 
         this.isKinematic = true;
+
+        if (this._emitter.textureAdditive) {
+            this.blendMode = "additive";
+        } else {
+            this.blendMode = "normal";
+        }
     }
 
     /**
@@ -67,26 +73,5 @@ class ParticleContainer extends Container {
         return true;
     }
 
-    /**
-     * @ignore
-     */
-    draw(renderer, rect) {
-        if (this.children.length > 0) {
-            var context = renderer.getContext(),
-                gco;
-            // Check for additive draw
-            if (this._emitter.textureAdditive) {
-                gco = context.globalCompositeOperation;
-                context.globalCompositeOperation = "lighter";
-            }
-
-            super.draw(renderer, rect);
-
-            // Restore globalCompositeOperation
-            if (this._emitter.textureAdditive) {
-                context.globalCompositeOperation = gco;
-            }
-        }
-    }
 };
 export default ParticleContainer;
