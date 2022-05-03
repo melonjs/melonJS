@@ -173,6 +173,21 @@ class Rect extends Polygon {
     }
 
     /**
+     * center the rectangle position around the given coordinates
+     * @name centerOn
+     * @memberof Rect.prototype
+     * @function
+     * @param {number} x the x coordinate around which to center this rectangle
+     * @param {number} x the y coordinate around which to center this rectangle
+     * @returns {Rect} this rectangle
+     */
+    centerOn(x, y) {
+        this.centerX = x;
+        this.centerY = y;
+        return this;
+    }
+
+    /**
      * resize the rectangle
      * @name resize
      * @memberof Rect.prototype

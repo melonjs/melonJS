@@ -5,8 +5,8 @@
 ### Added
 - Core : new `device.nodeJS` to detect if running under node.js
 - Particle Emitter: added the possibility to define a tint for particles
+- Renderable: new `centerOn` method to center a renderable around given coordinates
 - Renderer: added "additive" as an alias for the "lighter" blend mode
-
 
 ### Changed
 - Core : replace internal use of global window object by `globalThis`
@@ -15,7 +15,6 @@
 ### Fixed
 - Particle Emitter: fix a regression in `ParticleEmitter` causing a crash, after es6 class reformatting
 - Particle Emitter: fix particle additive blend mode in WebGL
-
 
 ## [10.6.1] (melonJS 2) - _2022-04-25_
 
