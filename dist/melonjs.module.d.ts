@@ -4057,14 +4057,14 @@ export class ObservableVector3d extends Vector3d {
  */
 export class Particle extends Renderable {
     /**
-     * @param {ParticleEmitter} particle emitter
+     * @param {ParticleEmitter} emitter the particle emitter
      */
-    constructor(emitter: any);
-    vel: Vector2d;
+    constructor(emitter: ParticleEmitter);
     /**
      * @ignore
      */
     onResetEvent(emitter: any, newInstance?: boolean): void;
+    vel: Vector2d;
     image: any;
     life: any;
     startLife: any;
@@ -4079,19 +4079,291 @@ export class Particle extends Renderable {
     /**
      * @ignore
      */
-    preDraw(renderer: any): void;
-    /**
-     * @ignore
-     */
     draw(renderer: any): void;
 }
 /**
  * @classdesc
  * Particle Emitter Object.
- * @augments Rect
+ * @augments Container
  */
-export class ParticleEmitter extends Rect {
-    constructor(x: any, y: any, settings: any);
+export class ParticleEmitter extends Container {
+    /**
+     * @param {number} x x position of the particle emitter
+     * @param {number} y y position of the particle emitter
+     * @param {ParticleEmitterSettings} [settings=ParticleEmitterSettings] the settings for the particle emitter.
+     * @example
+     * // Create a basic emitter at position 100, 100
+     * var emitter = new ParticleEmitter(100, 100);
+     *
+     * // Adjust the emitter properties
+     * emitter.totalParticles = 200;
+     * emitter.minLife = 1000;
+     * emitter.maxLife = 3000;
+     * emitter.z = 10;
+     *
+     * // Add the emitter to the game world
+     * me.game.world.addChild(emitter);
+     *
+     * // Launch all particles one time and stop, like a explosion
+     * emitter.burstParticles();
+     *
+     * // Launch constantly the particles, like a fountain
+     * emitter.streamParticles();
+     *
+     * // At the end, remove emitter from the game world
+     * // call this in onDestroyEvent function
+     * me.game.world.removeChild(emitter);
+     */
+    constructor(x: number, y: number, settings?: {
+        /**
+         * Width of the particle spawn area.
+         * @type {number}
+         * @name width
+         * @memberof ParticleEmitterSettings
+         * @default 1
+         */
+        width: number;
+        /**
+         * Height of the particle spawn area
+         * @public
+         * @type {number}
+         * @name height
+         * @memberof ParticleEmitterSettings
+         * @default 1
+         */
+        height: number;
+        /**
+         * default image used for particles.
+         * (by default melonJS will create an white texture image)
+         * @public
+         * @type {HTMLCanvasElement}
+         * @name image
+         * @memberof ParticleEmitterSettings
+         * @default undefined
+         */
+        image: HTMLCanvasElement;
+        /**
+         * tint to be applied to particles
+         * @public
+         * @type {string}
+         * @name tint
+         * @memberof ParticleEmitterSettings
+         * @default "#fff"
+         */
+        tint: string;
+        /**
+         * Total number of particles in the emitter
+         * @public
+         * @type {number}
+         * @name totalParticles
+         * @default 50
+         * @memberof ParticleEmitterSettings
+         */
+        totalParticles: number;
+        /**
+         * Start angle for particle launch in Radians
+         * @public
+         * @type {number}
+         * @name angle
+         * @default Math.PI / 2
+         * @memberof ParticleEmitterSettings
+         */
+        angle: number;
+        /**
+         * Variation in the start angle for particle launch in Radians.
+         * @public
+         * @type {number}
+         * @name angleVariation
+         * @default 0
+         * @memberof ParticleEmitterSettings
+         */
+        angleVariation: number;
+        /**
+         * Minimum time each particle lives once it is emitted in ms.
+         * @public
+         * @type {number}
+         * @name minLife
+         * @default 1000
+         * @memberof ParticleEmitterSettings
+         */
+        minLife: number;
+        /**
+         * Maximum time each particle lives once it is emitted in ms.
+         * @public
+         * @type {number}
+         * @name maxLife
+         * @default 3000
+         * @memberof ParticleEmitterSettings
+         */
+        maxLife: number;
+        /**
+         * Start speed of particles.<br>
+         * @public
+         * @type {number}
+         * @name speed
+         * @default 2
+         * @memberof ParticleEmitterSettings
+         */
+        speed: number;
+        /**
+         * Variation in the start speed of particles
+         * @public
+         * @type {number}
+         * @name speedVariation
+         * @default 1
+         * @memberof ParticleEmitterSettings
+         */
+        speedVariation: number;
+        /**
+         * Minimum start rotation for particles sprites in Radians
+         * @public
+         * @type {number}
+         * @name minRotation
+         * @default 0
+         * @memberof ParticleEmitterSettings
+         */
+        minRotation: number;
+        /**
+         * Maximum start rotation for particles sprites in Radians
+         * @public
+         * @type {number}
+         * @name maxRotation
+         * @default 0
+         * @memberof ParticleEmitterSettings
+         */
+        maxRotation: number;
+        /**
+         * Minimum start scale ratio for particles (1 = no scaling)
+         * @public
+         * @type {number}
+         * @name minStartScale
+         * @default 1
+         * @memberof ParticleEmitterSettings
+         */
+        minStartScale: number;
+        /**
+         * Maximum start scale ratio for particles (1 = no scaling)
+         * @public
+         * @type {number}
+         * @name maxStartScale
+         * @default 1
+         * @memberof ParticleEmitterSettings
+         */
+        maxStartScale: number;
+        /**
+         * Minimum end scale ratio for particles
+         * @public
+         * @type {number}
+         * @name minEndScale
+         * @default 0
+         * @memberof ParticleEmitterSettings
+         */
+        minEndScale: number;
+        /**
+         * Maximum end scale ratio for particles
+         * @public
+         * @type {number}
+         * @name maxEndScale
+         * @default 0
+         * @memberof ParticleEmitterSettings
+         */
+        maxEndScale: number;
+        /**
+         * Vertical force (Gravity) for each particle
+         * @public
+         * @type {number}
+         * @name gravity
+         * @default 0
+         * @memberof ParticleEmitterSettings
+         * @see game.world.gravity
+         */
+        gravity: number;
+        /**
+         * Horizontal force (like a Wind) for each particle
+         * @public
+         * @type {number}
+         * @name wind
+         * @default 0
+         * @memberof ParticleEmitterSettings
+         */
+        wind: number;
+        /**
+         * Update the rotation of particle in accordance the particle trajectory.<br>
+         * The particle sprite should aim at zero angle (draw from left to right).<br>
+         * Override the particle minRotation and maxRotation.<br>
+         * @public
+         * @type {boolean}
+         * @name followTrajectory
+         * @default false
+         * @memberof ParticleEmitterSettings
+         */
+        followTrajectory: boolean;
+        /**
+         * Enable the Texture Additive by composite operation.
+         * @public
+         * @type {boolean}
+         * @name textureAdditive
+         * @default false
+         * @memberof ParticleEmitterSettings
+         */
+        textureAdditive: boolean;
+        /**
+         * Update particles only in the viewport, remove it when out of viewport.
+         * @public
+         * @type {boolean}
+         * @name onlyInViewport
+         * @default true
+         * @memberof ParticleEmitterSettings
+         */
+        onlyInViewport: boolean;
+        /**
+         * Render particles in screen space.
+         * @public
+         * @type {boolean}
+         * @name floating
+         * @default false
+         * @memberof ParticleEmitterSettings
+         */
+        floating: boolean;
+        /**
+         * Maximum number of particles launched each time in this emitter (used only if emitter is Stream).
+         * @public
+         * @type {number}
+         * @name maxParticles
+         * @default 10
+         * @memberof ParticleEmitterSettings
+         */
+        maxParticles: number;
+        /**
+         * How often a particle is emitted in ms (used only if emitter is a Stream).
+         * @public
+         * @type {number}
+         * @name frequency
+         * @default 100
+         * @memberof ParticleEmitterSettings
+         */
+        frequency: number;
+        /**
+         * Duration that the emitter releases particles in ms (used only if emitter is Stream).
+         * After this period, the emitter stop the launch of particles.
+         * @public
+         * @type {number}
+         * @name duration
+         * @default Infinity
+         * @memberof ParticleEmitterSettings
+         */
+        duration: number;
+        /**
+         * Skip n frames after updating the particle system once.
+         * This can be used to reduce the performance impact of emitters with many particles.
+         * @public
+         * @type {number}
+         * @name framesToSkip
+         * @default 0
+         * @memberof ParticleEmitterSettings
+         */
+        framesToSkip: number;
+    });
     /** @ignore */
     _stream: boolean;
     /** @ignore */
@@ -4100,51 +4372,24 @@ export class ParticleEmitter extends Rect {
     _durationTimer: number;
     /** @ignore */
     _enabled: boolean;
-    alwaysUpdate: boolean;
-    autoSort: boolean;
-    container: ParticleContainer;
+    _updateCount: number;
+    settings: {};
+    _dt: number;
     /**
-     * @ignore
+     * Reset the emitter with particle emitter settings.
+     * @param {object} settings [optional] object with emitter settings. See {@link ParticleEmitterSettings}
      */
-    set z(arg: number);
+    reset(settings?: object): void;
     /**
-     * @ignore
-     */
-    get z(): number;
-    set floating(arg: boolean);
-    /**
-     * Floating property for particles, value is forwarded to the particle container <br>
-     * @type {boolean}
-     */
-    get floating(): boolean;
-    /**
-     * @ignore
-     */
-    onActivateEvent(): void;
-    /**
-     * @ignore
-     */
-    onDeactivateEvent(): void;
-    /**
-     * @ignore
-     */
-    destroy(): void;
-    /**
-     * returns a random point inside the bounds x axis of this emitter
+     * returns a random point on the x axis within the bounds of this emitter
      * @returns {number}
      */
     getRandomPointX(): number;
     /**
-     * returns a random point inside the bounds y axis of this emitter
+     * returns a random point on the y axis within the bounds this emitter
      * @returns {number}
      */
     getRandomPointY(): number;
-    /**
-     * Reset the emitter with default values.<br>
-     * @param {object} settings [optional] object with emitter settings. See {@link ParticleEmitterSettings}
-     */
-    reset(settings: object): void;
-    image: HTMLCanvasElement | OffscreenCanvas;
     /** @ignore */
     addParticles(count: any): void;
     /**
@@ -4157,7 +4402,6 @@ export class ParticleEmitter extends Rect {
      * @param {number} duration [optional] time that the emitter releases particles in ms
      */
     streamParticles(duration: number): void;
-    frequency: any;
     /**
      * Stop the emitter from generating new particles (used only if emitter is Stream)
      */
@@ -4893,6 +5137,16 @@ export class Rect extends Polygon {
      * @memberof Rect
      */
     public get centerY(): number;
+    /**
+     * center the rectangle position around the given coordinates
+     * @name centerOn
+     * @memberof Rect.prototype
+     * @function
+     * @param {number} x the x coordinate around which to center this rectangle
+     * @param {number} x the y coordinate around which to center this rectangle
+     * @returns {Rect} this rectangle
+     */
+    centerOn(x: number, y: any): Rect;
     /**
      * resize the rectangle
      * @name resize
@@ -11207,24 +11461,6 @@ declare function round(num: number, dec?: number): number;
  * }
  */
 declare function toBeCloseTo(expected: number, actual: number, precision?: number): boolean;
-/**
- * @classdesc
- * Particle Container Object.
- * @augments Container
- */
-declare class ParticleContainer extends Container {
-    /**
-     * @param {ParticleEmitter} emitter the emitter which owns this container
-     */
-    constructor(emitter: ParticleEmitter);
-    _updateCount: number;
-    _dt: number;
-    _emitter: ParticleEmitter;
-    /**
-     * @ignore
-     */
-    update(dt: any): boolean;
-}
 /**
  * @classdesc
  * a Vertex Buffer object

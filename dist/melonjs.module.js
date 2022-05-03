@@ -11157,6 +11157,21 @@ class Rect extends Polygon {
     }
 
     /**
+     * center the rectangle position around the given coordinates
+     * @name centerOn
+     * @memberof Rect.prototype
+     * @function
+     * @param {number} x the x coordinate around which to center this rectangle
+     * @param {number} x the y coordinate around which to center this rectangle
+     * @returns {Rect} this rectangle
+     */
+    centerOn(x, y) {
+        this.centerX = x;
+        this.centerY = y;
+        return this;
+    }
+
+    /**
      * resize the rectangle
      * @name resize
      * @memberof Rect.prototype
@@ -36380,7 +36395,7 @@ class DropTarget extends Renderable {
  */
 const ParticleEmitterSettings = {
     /**
-     * Width of the particle spawn area.<br>
+     * Width of the particle spawn area.
      * @type {number}
      * @name width
      * @memberof ParticleEmitterSettings
@@ -36440,7 +36455,7 @@ const ParticleEmitterSettings = {
     angle : Math.PI / 2,
 
     /**
-     * Variation in the start angle for particle launch in Radians
+     * Variation in the start angle for particle launch in Radians.
      * @public
      * @type {number}
      * @name angleVariation
@@ -36450,7 +36465,7 @@ const ParticleEmitterSettings = {
     angleVariation : 0,
 
     /**
-     * Minimum time each particle lives once it is emitted in ms
+     * Minimum time each particle lives once it is emitted in ms.
      * @public
      * @type {number}
      * @name minLife
@@ -36460,7 +36475,7 @@ const ParticleEmitterSettings = {
     minLife : 1000,
 
     /**
-     * Maximum time each particle lives once it is emitted in ms
+     * Maximum time each particle lives once it is emitted in ms.
      * @public
      * @type {number}
      * @name maxLife
@@ -36583,8 +36598,7 @@ const ParticleEmitterSettings = {
     followTrajectory : false,
 
     /**
-     * Enable the Texture Additive by canvas composite operation (lighter).<br>
-     * WARNING: Composite Operation may decreases performance!.<br>
+     * Enable the Texture Additive by composite operation.
      * @public
      * @type {boolean}
      * @name textureAdditive
@@ -36594,7 +36608,7 @@ const ParticleEmitterSettings = {
     textureAdditive : false,
 
     /**
-     * Update particles only in the viewport, remove it when out of viewport.<br>
+     * Update particles only in the viewport, remove it when out of viewport.
      * @public
      * @type {boolean}
      * @name onlyInViewport
@@ -36604,7 +36618,7 @@ const ParticleEmitterSettings = {
     onlyInViewport : true,
 
     /**
-     * Render particles in screen space. <br>
+     * Render particles in screen space.
      * @public
      * @type {boolean}
      * @name floating
@@ -36614,7 +36628,7 @@ const ParticleEmitterSettings = {
     floating : false,
 
     /**
-     * Maximum number of particles launched each time in this emitter (used only if emitter is Stream).<br>
+     * Maximum number of particles launched each time in this emitter (used only if emitter is Stream).
      * @public
      * @type {number}
      * @name maxParticles
@@ -36624,8 +36638,7 @@ const ParticleEmitterSettings = {
     maxParticles : 10,
 
     /**
-     * How often a particle is emitted in ms (used only if emitter is Stream).<br>
-     * Necessary that value is greater than zero.<br>
+     * How often a particle is emitted in ms (used only if emitter is a Stream).
      * @public
      * @type {number}
      * @name frequency
@@ -36635,8 +36648,8 @@ const ParticleEmitterSettings = {
     frequency : 100,
 
     /**
-     * Duration that the emitter releases particles in ms (used only if emitter is Stream).<br>
-     * After this period, the emitter stop the launch of particles.<br>
+     * Duration that the emitter releases particles in ms (used only if emitter is Stream).
+     * After this period, the emitter stop the launch of particles.
      * @public
      * @type {number}
      * @name duration
@@ -36646,8 +36659,8 @@ const ParticleEmitterSettings = {
     duration : Infinity,
 
     /**
-     * Skip n frames after updating the particle system once. <br>
-     * This can be used to reduce the performance impact of emitters with many particles.<br>
+     * Skip n frames after updating the particle system once.
+     * This can be used to reduce the performance impact of emitters with many particles.
      * @public
      * @type {number}
      * @name framesToSkip
@@ -36656,80 +36669,6 @@ const ParticleEmitterSettings = {
      */
     framesToSkip : 0
 };
-
-/**
- * @classdesc
- * Particle Container Object.
- * @augments Container
- */
-
-class ParticleContainer extends Container {
-    /**
-     * @param {ParticleEmitter} emitter the emitter which owns this container
-     */
-    constructor(emitter) {
-        // call the super constructor
-        super(
-            viewport.pos.x,
-            viewport.pos.y,
-            viewport.width,
-            viewport.height
-        );
-
-        // don't sort the particles by z-index
-        this.autoSort = false;
-
-        // count the updates
-        this._updateCount = 0;
-
-        // internally store how much time was skipped when frames are skipped
-        this._dt = 0;
-
-        // cache the emitter for later use
-        this._emitter = emitter;
-
-        this.autoTransform = false;
-
-        this.anchorPoint.set(0, 0);
-
-        this.isKinematic = true;
-
-        if (this._emitter.textureAdditive) {
-            this.blendMode = "additive";
-        } else {
-            this.blendMode = "normal";
-        }
-    }
-
-    /**
-     * @ignore
-     */
-    update(dt) {
-        // skip frames if necessary
-        if (++this._updateCount > this._emitter.framesToSkip) {
-            this._updateCount = 0;
-        }
-        if (this._updateCount > 0) {
-            this._dt += dt;
-            return false;
-        }
-
-        // apply skipped delta time
-        dt += this._dt;
-        this._dt = 0;
-
-        // Update particles and remove them if they are dead
-        for (var i = this.children.length - 1; i >= 0; --i) {
-            var particle = this.children[i];
-            particle.inViewport = viewport.isVisible(particle, this.floating);
-            if (!particle.update(dt)) {
-                this.removeChildNow(particle);
-            }
-        }
-        return true;
-    }
-
-}
 
 /**
  * @ignore
@@ -36744,16 +36683,16 @@ function createDefaultParticleTexture(w, h) {
 /**
  * @classdesc
  * Particle Emitter Object.
- * @augments Rect
+ * @augments Container
  */
-class ParticleEmitter extends Renderable {
-    /*
-     * @param {number} x x-position of the particle emitter
-     * @param {number} y y-position of the particle emitter
-     * @param {object} settings An object containing the settings for the particle emitter. See {@link ParticleEmitterSettings}
+class ParticleEmitter extends Container {
+    /**
+     * @param {number} x x position of the particle emitter
+     * @param {number} y y position of the particle emitter
+     * @param {ParticleEmitterSettings} [settings=ParticleEmitterSettings] the settings for the particle emitter.
      * @example
      * // Create a basic emitter at position 100, 100
-     * var emitter = new me.ParticleEmitter(100, 100);
+     * var emitter = new ParticleEmitter(100, 100);
      *
      * // Adjust the emitter properties
      * emitter.totalParticles = 200;
@@ -36774,9 +36713,16 @@ class ParticleEmitter extends Renderable {
      * // call this in onDestroyEvent function
      * me.game.world.removeChild(emitter);
      */
-    constructor(x, y, settings) {
+    constructor(x, y, settings = {}) {
         // call the super constructor
-        super(x, y, Infinity, Infinity);
+        super(
+            x, y,
+            settings.width | 1,
+            settings.height | 1
+        );
+
+        // center the emitter around the given coordinates
+        this.centerOn(x, y);
 
         // Emitter is Stream, launch particles constantly
         /** @ignore */
@@ -36802,105 +36748,52 @@ class ParticleEmitter extends Renderable {
         // don't sort the particles by z-index
         this.autoSort = false;
 
-        this.container = new ParticleContainer(this);
+        // count the updates
+        this._updateCount = 0;
+
+        // the emitter settings
+        this.settings = {};
+
+        // internally store how much time was skipped when frames are skipped
+        this._dt = 0;
+
+        //this.anchorPoint.set(0, 0);
 
         // Reset the emitter to defaults
         this.reset(settings);
     }
 
     /**
-     * @ignore
+     * Reset the emitter with particle emitter settings.
+     * @param {object} settings [optional] object with emitter settings. See {@link ParticleEmitterSettings}
      */
-    get z() {
-        return this.container.pos.z;
-    }
+    reset(settings = {}) {
+        Object.assign(this.settings, ParticleEmitterSettings, settings);
 
-    /**
-     * @ignore
-     */
-    set z(value) {
-        this.container.pos.z = value;
-    }
-
-    /**
-     * Floating property for particles, value is forwarded to the particle container <br>
-     * @type {boolean}
-     */
-    get floating() {
-        return typeof this.container !== "undefined" && this.container.floating;
-    }
-
-    set floating(value) {
-        if (typeof this.container !== "undefined") {
-            this.container.floating = value;
+        // Cache the image reference
+        if (typeof this.settings.image === "undefined") {
+            this.settings.image = createDefaultParticleTexture(this.width, this.height);
         }
+
+        this.floating = this.settings.floating;
+
+        this.isDirty = true;
     }
 
     /**
-     * @ignore
-     */
-    onActivateEvent() {
-        this.ancestor.addChild(this.container);
-        this.container.pos.z = this.pos.z;
-        if (!this.ancestor.autoSort) {
-            this.ancestor.sort();
-        }
-    }
-
-    /**
-     * @ignore
-     */
-    onDeactivateEvent() {
-        if (this.ancestor.hasChild(this.container)) {
-            this.ancestor.removeChildNow(this.container);
-        }
-    }
-
-    /**
-     * @ignore
-     */
-    destroy() {
-        this.reset();
-    }
-
-    /**
-     * returns a random point inside the bounds x axis of this emitter
+     * returns a random point on the x axis within the bounds of this emitter
      * @returns {number}
      */
     getRandomPointX() {
-        return this.pos.x + randomFloat(0, this.width);
+        return randomFloat(0, this.getBounds().width);
     }
 
     /**
-     * returns a random point inside the bounds y axis of this emitter
+     * returns a random point on the y axis within the bounds this emitter
      * @returns {number}
      */
     getRandomPointY() {
-        return this.pos.y + randomFloat(0, this.height);
-    }
-
-    /**
-     * Reset the emitter with default values.<br>
-     * @param {object} settings [optional] object with emitter settings. See {@link ParticleEmitterSettings}
-     */
-    reset(settings) {
-        // check if settings exists and create a dummy object if necessary
-        settings = settings || {};
-        var defaults = ParticleEmitterSettings;
-
-        var width = (typeof settings.width === "number") ? settings.width : defaults.width;
-        var height = (typeof settings.height === "number") ? settings.height : defaults.height;
-        this.resize(width, height);
-
-        Object.assign(this, defaults, settings);
-
-        // Cache the image reference
-        if (typeof this.image === "undefined") {
-            this.image = createDefaultParticleTexture(width, height);
-        }
-
-        // reset particle container values
-        this.container.reset();
+        return randomFloat(0, this.getBounds().height);
     }
 
     // Add count particles in the game world
@@ -36908,9 +36801,9 @@ class ParticleEmitter extends Renderable {
     addParticles(count) {
         for (var i = 0; i < ~~count; i++) {
             // Add particle to the container
-            var particle = pull("Particle", this);
-            this.container.addChild(particle);
+            this.addChild(pull("Particle", this), this.pos.z);
         }
+        this.isDirty = true;
     }
 
     /**
@@ -36928,8 +36821,8 @@ class ParticleEmitter extends Renderable {
     streamParticles(duration) {
         this._enabled = true;
         this._stream = true;
-        this.frequency = Math.max(this.frequency, 1);
-        this._durationTimer = (typeof duration === "number") ? duration : this.duration;
+        this.settings.frequency = Math.max(1, this.settings.frequency);
+        this._durationTimer = (typeof duration === "number") ? duration : this.settings.duration;
     }
 
     /**
@@ -36946,7 +36839,7 @@ class ParticleEmitter extends Renderable {
     burstParticles(total) {
         this._enabled = true;
         this._stream = false;
-        this.addParticles((typeof total === "number") ? total : this.totalParticles);
+        this.addParticles((typeof total === "number") ? total : this.settings.totalParticles);
         this._enabled = false;
     }
 
@@ -36954,6 +36847,22 @@ class ParticleEmitter extends Renderable {
      * @ignore
      */
     update(dt) {
+        // skip frames if necessary
+        if (++this._updateCount > this.settings.framesToSkip) {
+            this._updateCount = 0;
+        }
+        if (this._updateCount > 0) {
+            this._dt += dt;
+            return this.isDirty;
+        }
+
+        // apply skipped delta time
+        dt += this._dt;
+        this._dt = 0;
+
+        // Update particles
+        this.isDirty |= super.update(dt);
+
         // Launch new particles, if emitter is Stream
         if ((this._enabled) && (this._stream)) {
             // Check if the emitter has duration set
@@ -36962,7 +36871,7 @@ class ParticleEmitter extends Renderable {
 
                 if (this._durationTimer <= 0) {
                     this.stopStream();
-                    return false;
+                    return this.isDirty;
                 }
             }
 
@@ -36970,19 +36879,19 @@ class ParticleEmitter extends Renderable {
             this._frequencyTimer += dt;
 
             // Check for new particles launch
-            var particlesCount = this.container.children.length;
-            if ((particlesCount < this.totalParticles) && (this._frequencyTimer >= this.frequency)) {
-                if ((particlesCount + this.maxParticles) <= this.totalParticles) {
-                    this.addParticles(this.maxParticles);
+            var particlesCount = this.children.length;
+            if ((particlesCount < this.settings.totalParticles) && (this._frequencyTimer >= this.settings.frequency)) {
+                if ((particlesCount + this.settings.maxParticles) <= this.settings.totalParticles) {
+                    this.addParticles(this.settings.maxParticles);
                 }
                 else {
-                    this.addParticles(this.totalParticles - particlesCount);
+                    this.addParticles(this.settings.totalParticles - particlesCount);
                 }
-
                 this._frequencyTimer = 0;
+                this.isDirty = true;
             }
         }
-        return true;
+        return this.isDirty;
     }
 }
 
@@ -36993,19 +36902,16 @@ class ParticleEmitter extends Renderable {
  */
 class Particle extends Renderable {
     /**
-     * @param {ParticleEmitter} particle emitter
+     * @param {ParticleEmitter} emitter the particle emitter
      */
     constructor(emitter) {
         // Call the super constructor
         super(
             emitter.getRandomPointX(),
             emitter.getRandomPointY(),
-            emitter.image ? emitter.image.width : emitter.width || 1,
-            emitter.image ? emitter.image.height : emitter.height || 1
+            emitter.settings.image ? emitter.settings.image.width : emitter.width || 1,
+            emitter.settings.image ? emitter.settings.image.height : emitter.height || 1
         );
-
-        // particle velocity
-        this.vel = new Vector2d();
         this.onResetEvent(emitter, true);
     }
 
@@ -37019,64 +36925,70 @@ class Particle extends Renderable {
                 emitter.getRandomPointY()
             );
             this.resize(
-                emitter.image ? emitter.image.width : emitter.width || 1,
-                emitter.image ? emitter.image.height : emitter.height || 1
+                emitter.settings.image ? emitter.settings.image.width : emitter.width || 1,
+                emitter.settings.image ? emitter.settings.image.height : emitter.height || 1
             );
+        } else {
+            // particle velocity
+            this.vel = new Vector2d();
         }
 
-        this.image = emitter.image;
+        this.image = emitter.settings.image;
 
         // Particle will always update
         this.alwaysUpdate = true;
 
-        if (typeof emitter.tint === "string") {
-            this.tint.parseCSS(emitter.tint);
+        if (typeof emitter.settings.tint === "string") {
+            this.tint.parseCSS(emitter.settings.tint);
+        }
+
+        if (emitter.settings.textureAdditive) {
+            this.blendMode = "additive";
+        } else {
+            this.blendMode = "normal";
         }
 
         // Set the start particle Angle and Speed as defined in emitter
-        var angle = emitter.angle + ((emitter.angleVariation > 0) ? (randomFloat(0, 2) - 1) * emitter.angleVariation : 0);
-        var speed = emitter.speed + ((emitter.speedVariation > 0) ? (randomFloat(0, 2) - 1) * emitter.speedVariation : 0);
+        var angle = emitter.settings.angle + ((emitter.settings.angleVariation > 0) ? (randomFloat(0, 2) - 1) * emitter.settings.angleVariation : 0);
+        var speed = emitter.settings.speed + ((emitter.settings.speedVariation > 0) ? (randomFloat(0, 2) - 1) * emitter.settings.speedVariation : 0);
 
         // Set the start particle Velocity
         this.vel.set(speed * Math.cos(angle), -speed * Math.sin(angle));
 
         // Set the start particle Time of Life as defined in emitter
-        this.life = randomFloat(emitter.minLife, emitter.maxLife);
+        this.life = randomFloat(emitter.settings.minLife, emitter.settings.maxLife);
         this.startLife = this.life;
 
         // Set the start and end particle Scale as defined in emitter
         // clamp the values as minimum and maximum scales range
         this.startScale = clamp(
-            randomFloat(emitter.minStartScale, emitter.maxStartScale),
-            emitter.minStartScale,
-            emitter.maxStartScale
+            randomFloat(emitter.settings.minStartScale, emitter.settings.maxStartScale),
+            emitter.settings.minStartScale,
+            emitter.settings.maxStartScale
         );
         this.endScale = clamp(
-            randomFloat(emitter.minEndScale, emitter.maxEndScale),
-            emitter.minEndScale,
-            emitter.maxEndScale
+            randomFloat(emitter.settings.minEndScale, emitter.settings.maxEndScale),
+            emitter.settings.minEndScale,
+            emitter.settings.maxEndScale
         );
 
         // Set the particle Gravity and Wind (horizontal gravity) as defined in emitter
-        this.gravity = emitter.gravity;
-        this.wind = emitter.wind;
+        this.gravity = emitter.settings.gravity;
+        this.wind = emitter.settings.wind;
 
         // Set if the particle update the rotation in accordance the trajectory
-        this.followTrajectory = emitter.followTrajectory;
+        this.followTrajectory = emitter.settings.followTrajectory;
 
         // Set if the particle update only in Viewport
-        this.onlyInViewport = emitter.onlyInViewport;
-
-        // Set the particle Z Order
-        this.pos.z = emitter.z;
+        this.onlyInViewport = emitter.settings.onlyInViewport;
 
         // cache inverse of the expected delta time
         this._deltaInv = timer$1.maxfps / 1000;
 
         // Set the start particle rotation as defined in emitter
         // if the particle not follow trajectory
-        if (!emitter.followTrajectory) {
-            this.angle = randomFloat(emitter.minRotation, emitter.maxRotation);
+        if (!emitter.settings.followTrajectory) {
+            this.angle = randomFloat(emitter.settings.minRotation, emitter.settings.maxRotation);
         }
     }
 
@@ -37092,6 +37004,11 @@ class Particle extends Renderable {
 
         // Decrease particle life
         this.life = this.life > dt ? this.life - dt : 0;
+
+        if (this.life <= 0) {
+            this.ancestor.removeChild(this);
+            return false;
+        }
 
         // Calculate the particle Age Ratio
         var ageRatio = this.life / this.startLife;
@@ -37127,25 +37044,10 @@ class Particle extends Renderable {
             this.pos.x, this.pos.y, 1
         ).rotate(angle);
 
-        // Return true if the particle is not dead yet
-        return (this.inViewport || !this.onlyInViewport) && (this.life > 0);
-    }
+        // mark as dirty if the particle is not dead yet
+        this.isDirty = this.inViewport || !this.onlyInViewport;
 
-    /**
-     * @ignore
-     */
-    preDraw(renderer) {
-        // restore is called in postDraw
-        renderer.save();
-
-        // particle alpha value
-        renderer.setGlobalAlpha(renderer.globalAlpha() * this.alpha);
-
-        // translate to the defined anchor point and scale it
-        renderer.transform(this.currentTransform);
-
-        // apply the current tint and opacity
-        renderer.setTint(this.tint, this.getOpacity());
+        return super.update(dt);
     }
 
     /**
