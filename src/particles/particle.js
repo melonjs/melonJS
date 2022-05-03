@@ -11,7 +11,7 @@ import Renderable from "./../renderable/renderable.js";
  */
 class Particle extends Renderable {
     /**
-     * @param {ParticleEmitter} particle emitter
+     * @param {ParticleEmitter} emitter the particle emitter
      */
     constructor(emitter) {
         // Call the super constructor

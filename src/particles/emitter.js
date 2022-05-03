@@ -19,16 +19,16 @@ function createDefaultParticleTexture(w, h) {
 /**
  * @classdesc
  * Particle Emitter Object.
- * @augments Rect
+ * @augments Renderable
  */
 class ParticleEmitter extends Renderable {
-    /*
-     * @param {number} x x-position of the particle emitter
-     * @param {number} y y-position of the particle emitter
-     * @param {object} settings An object containing the settings for the particle emitter. See {@link ParticleEmitterSettings}
+    /**
+     * @param {number} x x position of the particle emitter
+     * @param {number} y y position of the particle emitter
+     * @param {ParticleEmitterSettings} [settings=ParticleEmitterSettings] the settings for the particle emitter.
      * @example
      * // Create a basic emitter at position 100, 100
-     * var emitter = new me.ParticleEmitter(100, 100);
+     * var emitter = new ParticleEmitter(100, 100);
      *
      * // Adjust the emitter properties
      * emitter.totalParticles = 200;

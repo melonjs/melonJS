@@ -2,11 +2,8 @@ import Container from "./../renderable/container.js";
 import { viewport } from "./../game.js";
 
 /**
- * @classdesc
- * Particle Container Object.
- * @augments Container
+ * @ignore
  */
-
 class ParticleContainer extends Container {
     /**
      * @param {ParticleEmitter} emitter the emitter which owns this container
