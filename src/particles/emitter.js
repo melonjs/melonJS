@@ -8,7 +8,7 @@ import Container from "./../renderable/container.js";
  * @ignore
  */
 function createDefaultParticleTexture(w, h) {
-    var canvas = createCanvas(w, h);
+    var canvas = createCanvas(w, h, true);
     var context = canvas.getContext("2d");
     context.fillStyle = "#fff";
     context.fillRect(0, 0, w, h);
