@@ -32,9 +32,11 @@ class Particle extends Renderable {
      */
     onResetEvent(emitter, newInstance = false) {
         if (newInstance === false) {
-            super.onResetEvent(
+            this.pos.set(
                 emitter.getRandomPointX(),
-                emitter.getRandomPointY(),
+                emitter.getRandomPointY()
+            );
+            this.resize(
                 emitter.image ? emitter.image.width : emitter.width || 1,
                 emitter.image ? emitter.image.height : emitter.height || 1
             );
