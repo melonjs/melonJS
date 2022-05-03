@@ -21,9 +21,6 @@ class Particle extends Renderable {
             emitter.image ? emitter.image.width : emitter.width || 1,
             emitter.image ? emitter.image.height : emitter.height || 1
         );
-
-        // particle velocity
-        this.vel = new Vector2d();
         this.onResetEvent(emitter, true);
     }
 
@@ -40,6 +37,9 @@ class Particle extends Renderable {
                 emitter.image ? emitter.image.width : emitter.width || 1,
                 emitter.image ? emitter.image.height : emitter.height || 1
             );
+        } else {
+            // particle velocity
+            this.vel = new Vector2d();
         }
 
         this.image = emitter.image;
