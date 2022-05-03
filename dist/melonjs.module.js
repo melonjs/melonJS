@@ -24,7 +24,7 @@ var global$m =
 
 var objectGetOwnPropertyDescriptor = {};
 
-var fails$7 = function (exec) {
+var fails$8 = function (exec) {
   try {
     return !!exec();
   } catch (error) {
@@ -32,17 +32,17 @@ var fails$7 = function (exec) {
   }
 };
 
-var fails$6 = fails$7;
+var fails$7 = fails$8;
 
 // Detect IE8's incomplete defineProperty implementation
-var descriptors = !fails$6(function () {
+var descriptors = !fails$7(function () {
   // eslint-disable-next-line es-x/no-object-defineproperty -- required for testing
   return Object.defineProperty({}, 1, { get: function () { return 7; } })[1] != 7;
 });
 
-var fails$5 = fails$7;
+var fails$6 = fails$8;
 
-var functionBindNative = !fails$5(function () {
+var functionBindNative = !fails$6(function () {
   // eslint-disable-next-line es-x/no-function-prototype-bind -- safe
   var test = (function () { /* empty */ }).bind();
   // eslint-disable-next-line no-prototype-builtins -- safe
@@ -108,14 +108,14 @@ var classofRaw = function (it) {
 
 var global$l = global$m;
 var uncurryThis$7 = functionUncurryThis;
-var fails$4 = fails$7;
+var fails$5 = fails$8;
 var classof = classofRaw;
 
 var Object$3 = global$l.Object;
 var split = uncurryThis$7(''.split);
 
 // fallback for non-array-like ES3 and non-enumerable old V8 strings
-var indexedObject = fails$4(function () {
+var indexedObject = fails$5(function () {
   // throws an error in rhino, see https://github.com/mozilla/rhino/issues/346
   // eslint-disable-next-line no-prototype-builtins -- safe
   return !Object$3('z').propertyIsEnumerable(0);
@@ -144,21 +144,21 @@ var toIndexedObject$3 = function (it) {
 
 // `IsCallable` abstract operation
 // https://tc39.es/ecma262/#sec-iscallable
-var isCallable$9 = function (argument) {
+var isCallable$a = function (argument) {
   return typeof argument == 'function';
 };
 
-var isCallable$8 = isCallable$9;
+var isCallable$9 = isCallable$a;
 
 var isObject$5 = function (it) {
-  return typeof it == 'object' ? it !== null : isCallable$8(it);
+  return typeof it == 'object' ? it !== null : isCallable$9(it);
 };
 
 var global$j = global$m;
-var isCallable$7 = isCallable$9;
+var isCallable$8 = isCallable$a;
 
 var aFunction = function (argument) {
-  return isCallable$7(argument) ? argument : undefined;
+  return isCallable$8(argument) ? argument : undefined;
 };
 
 var getBuiltIn$3 = function (namespace, method) {
@@ -176,9 +176,9 @@ var engineUserAgent = getBuiltIn$2('navigator', 'userAgent') || '';
 var global$i = global$m;
 var userAgent = engineUserAgent;
 
-var process = global$i.process;
+var process$1 = global$i.process;
 var Deno = global$i.Deno;
-var versions = process && process.versions || Deno && Deno.version;
+var versions = process$1 && process$1.versions || Deno && Deno.version;
 var v8 = versions && versions.v8;
 var match, version$1;
 
@@ -204,10 +204,10 @@ var engineV8Version = version$1;
 /* eslint-disable es-x/no-symbol -- required for testing */
 
 var V8_VERSION = engineV8Version;
-var fails$3 = fails$7;
+var fails$4 = fails$8;
 
 // eslint-disable-next-line es-x/no-object-getownpropertysymbols -- required for testing
-var nativeSymbol = !!Object.getOwnPropertySymbols && !fails$3(function () {
+var nativeSymbol = !!Object.getOwnPropertySymbols && !fails$4(function () {
   var symbol = Symbol();
   // Chrome 38 Symbol has incorrect toString conversion
   // `get-own-property-symbols` polyfill symbols converted to object are not Symbol instances
@@ -226,7 +226,7 @@ var useSymbolAsUid = NATIVE_SYMBOL$1
 
 var global$h = global$m;
 var getBuiltIn$1 = getBuiltIn$3;
-var isCallable$6 = isCallable$9;
+var isCallable$7 = isCallable$a;
 var isPrototypeOf = objectIsPrototypeOf;
 var USE_SYMBOL_AS_UID$1 = useSymbolAsUid;
 
@@ -236,7 +236,7 @@ var isSymbol$2 = USE_SYMBOL_AS_UID$1 ? function (it) {
   return typeof it == 'symbol';
 } : function (it) {
   var $Symbol = getBuiltIn$1('Symbol');
-  return isCallable$6($Symbol) && isPrototypeOf($Symbol.prototype, Object$2(it));
+  return isCallable$7($Symbol) && isPrototypeOf($Symbol.prototype, Object$2(it));
 };
 
 var global$g = global$m;
@@ -252,14 +252,14 @@ var tryToString$1 = function (argument) {
 };
 
 var global$f = global$m;
-var isCallable$5 = isCallable$9;
+var isCallable$6 = isCallable$a;
 var tryToString = tryToString$1;
 
 var TypeError$6 = global$f.TypeError;
 
 // `Assert: IsCallable(argument) is true`
 var aCallable$1 = function (argument) {
-  if (isCallable$5(argument)) return argument;
+  if (isCallable$6(argument)) return argument;
   throw TypeError$6(tryToString(argument) + ' is not a function');
 };
 
@@ -274,7 +274,7 @@ var getMethod$1 = function (V, P) {
 
 var global$e = global$m;
 var call$2 = functionCall;
-var isCallable$4 = isCallable$9;
+var isCallable$5 = isCallable$a;
 var isObject$4 = isObject$5;
 
 var TypeError$5 = global$e.TypeError;
@@ -283,9 +283,9 @@ var TypeError$5 = global$e.TypeError;
 // https://tc39.es/ecma262/#sec-ordinarytoprimitive
 var ordinaryToPrimitive$1 = function (input, pref) {
   var fn, val;
-  if (pref === 'string' && isCallable$4(fn = input.toString) && !isObject$4(val = call$2(fn, input))) return val;
-  if (isCallable$4(fn = input.valueOf) && !isObject$4(val = call$2(fn, input))) return val;
-  if (pref !== 'string' && isCallable$4(fn = input.toString) && !isObject$4(val = call$2(fn, input))) return val;
+  if (pref === 'string' && isCallable$5(fn = input.toString) && !isObject$4(val = call$2(fn, input))) return val;
+  if (isCallable$5(fn = input.valueOf) && !isObject$4(val = call$2(fn, input))) return val;
+  if (pref !== 'string' && isCallable$5(fn = input.toString) && !isObject$4(val = call$2(fn, input))) return val;
   throw TypeError$5("Can't convert object to primitive value");
 };
 
@@ -294,11 +294,11 @@ var shared$3 = {exports: {}};
 var global$d = global$m;
 
 // eslint-disable-next-line es-x/no-object-defineproperty -- safe
-var defineProperty = Object.defineProperty;
+var defineProperty$1 = Object.defineProperty;
 
 var setGlobal$3 = function (key, value) {
   try {
-    defineProperty(global$d, key, { value: value, configurable: true, writable: true });
+    defineProperty$1(global$d, key, { value: value, configurable: true, writable: true });
   } catch (error) {
     global$d[key] = value;
   } return value;
@@ -317,10 +317,10 @@ var store$2 = sharedStore;
 (shared$3.exports = function (key, value) {
   return store$2[key] || (store$2[key] = value !== undefined ? value : {});
 })('versions', []).push({
-  version: '3.22.3',
+  version: '3.22.4',
   mode: 'global',
   copyright: '© 2014-2022 Denis Pushkarev (zloirock.ru)',
-  license: 'https://github.com/zloirock/core-js/blob/v3.22.3/LICENSE',
+  license: 'https://github.com/zloirock/core-js/blob/v3.22.4/LICENSE',
   source: 'https://github.com/zloirock/core-js'
 });
 
@@ -431,11 +431,11 @@ var documentCreateElement = function (it) {
 };
 
 var DESCRIPTORS$5 = descriptors;
-var fails$2 = fails$7;
+var fails$3 = fails$8;
 var createElement = documentCreateElement;
 
 // Thanks to IE8 for its funny defineProperty
-var ie8DomDefine = !DESCRIPTORS$5 && !fails$2(function () {
+var ie8DomDefine = !DESCRIPTORS$5 && !fails$3(function () {
   // eslint-disable-next-line es-x/no-object-defineproperty -- required for testing
   return Object.defineProperty(createElement('div'), 'a', {
     get: function () { return 7; }
@@ -468,11 +468,11 @@ objectGetOwnPropertyDescriptor.f = DESCRIPTORS$4 ? $getOwnPropertyDescriptor$1 :
 var objectDefineProperty = {};
 
 var DESCRIPTORS$3 = descriptors;
-var fails$1 = fails$7;
+var fails$2 = fails$8;
 
 // V8 ~ Chrome 36-
 // https://bugs.chromium.org/p/v8/issues/detail?id=3334
-var v8PrototypeDefineBug = DESCRIPTORS$3 && fails$1(function () {
+var v8PrototypeDefineBug = DESCRIPTORS$3 && fails$2(function () {
   // eslint-disable-next-line es-x/no-object-defineproperty -- required for testing
   return Object.defineProperty(function () { /* empty */ }, 'prototype', {
     value: 42,
@@ -548,16 +548,34 @@ var createNonEnumerableProperty$3 = DESCRIPTORS$1 ? function (object, key, value
   return object;
 };
 
-var redefine$1 = {exports: {}};
+var makeBuiltIn$2 = {exports: {}};
+
+var DESCRIPTORS = descriptors;
+var hasOwn$4 = hasOwnProperty_1;
+
+var FunctionPrototype = Function.prototype;
+// eslint-disable-next-line es-x/no-object-getownpropertydescriptor -- safe
+var getDescriptor = DESCRIPTORS && Object.getOwnPropertyDescriptor;
+
+var EXISTS = hasOwn$4(FunctionPrototype, 'name');
+// additional protection from minified / mangled / dropped function names
+var PROPER = EXISTS && (function something() { /* empty */ }).name === 'something';
+var CONFIGURABLE = EXISTS && (!DESCRIPTORS || (DESCRIPTORS && getDescriptor(FunctionPrototype, 'name').configurable));
+
+var functionName = {
+  EXISTS: EXISTS,
+  PROPER: PROPER,
+  CONFIGURABLE: CONFIGURABLE
+};
 
 var uncurryThis$3 = functionUncurryThis;
-var isCallable$3 = isCallable$9;
+var isCallable$4 = isCallable$a;
 var store$1 = sharedStore;
 
 var functionToString = uncurryThis$3(Function.toString);
 
 // this helper broken in `core-js@3.4.1-3.4.4`, so we can't use `shared` helper
-if (!isCallable$3(store$1.inspectSource)) {
+if (!isCallable$4(store$1.inspectSource)) {
   store$1.inspectSource = function (it) {
     return functionToString(it);
   };
@@ -566,12 +584,12 @@ if (!isCallable$3(store$1.inspectSource)) {
 var inspectSource$2 = store$1.inspectSource;
 
 var global$5 = global$m;
-var isCallable$2 = isCallable$9;
+var isCallable$3 = isCallable$a;
 var inspectSource$1 = inspectSource$2;
 
 var WeakMap$1 = global$5.WeakMap;
 
-var nativeWeakMap = isCallable$2(WeakMap$1) && /native code/.test(inspectSource$1(WeakMap$1));
+var nativeWeakMap = isCallable$3(WeakMap$1) && /native code/.test(inspectSource$1(WeakMap$1));
 
 var shared$1 = shared$3.exports;
 var uid = uid$2;
@@ -589,7 +607,7 @@ var global$4 = global$m;
 var uncurryThis$2 = functionUncurryThis;
 var isObject = isObject$5;
 var createNonEnumerableProperty$2 = createNonEnumerableProperty$3;
-var hasOwn$4 = hasOwnProperty_1;
+var hasOwn$3 = hasOwnProperty_1;
 var shared = sharedStore;
 var sharedKey = sharedKey$1;
 var hiddenKeys$2 = hiddenKeys$3;
@@ -633,16 +651,16 @@ if (NATIVE_WEAK_MAP || shared.state) {
   var STATE = sharedKey('state');
   hiddenKeys$2[STATE] = true;
   set = function (it, metadata) {
-    if (hasOwn$4(it, STATE)) throw new TypeError$1(OBJECT_ALREADY_INITIALIZED);
+    if (hasOwn$3(it, STATE)) throw new TypeError$1(OBJECT_ALREADY_INITIALIZED);
     metadata.facade = it;
     createNonEnumerableProperty$2(it, STATE, metadata);
     return metadata;
   };
   get = function (it) {
-    return hasOwn$4(it, STATE) ? it[STATE] : {};
+    return hasOwn$3(it, STATE) ? it[STATE] : {};
   };
   has = function (it) {
-    return hasOwn$4(it, STATE);
+    return hasOwn$3(it, STATE);
   };
 }
 
@@ -654,59 +672,63 @@ var internalState = {
   getterFor: getterFor
 };
 
-var DESCRIPTORS = descriptors;
-var hasOwn$3 = hasOwnProperty_1;
-
-var FunctionPrototype = Function.prototype;
-// eslint-disable-next-line es-x/no-object-getownpropertydescriptor -- safe
-var getDescriptor = DESCRIPTORS && Object.getOwnPropertyDescriptor;
-
-var EXISTS = hasOwn$3(FunctionPrototype, 'name');
-// additional protection from minified / mangled / dropped function names
-var PROPER = EXISTS && (function something() { /* empty */ }).name === 'something';
-var CONFIGURABLE = EXISTS && (!DESCRIPTORS || (DESCRIPTORS && getDescriptor(FunctionPrototype, 'name').configurable));
-
-var functionName = {
-  EXISTS: EXISTS,
-  PROPER: PROPER,
-  CONFIGURABLE: CONFIGURABLE
-};
-
-var global$3 = global$m;
-var isCallable$1 = isCallable$9;
+var fails$1 = fails$8;
+var isCallable$2 = isCallable$a;
 var hasOwn$2 = hasOwnProperty_1;
-var createNonEnumerableProperty$1 = createNonEnumerableProperty$3;
-var setGlobal$1 = setGlobal$3;
+var defineProperty = objectDefineProperty.f;
+var CONFIGURABLE_FUNCTION_NAME = functionName.CONFIGURABLE;
 var inspectSource = inspectSource$2;
 var InternalStateModule = internalState;
-var CONFIGURABLE_FUNCTION_NAME = functionName.CONFIGURABLE;
 
-var getInternalState = InternalStateModule.get;
 var enforceInternalState = InternalStateModule.enforce;
+var getInternalState = InternalStateModule.get;
+
+var CONFIGURABLE_LENGTH = !fails$1(function () {
+  return defineProperty(function () { /* empty */ }, 'length', { value: 8 }).length !== 8;
+});
+
 var TEMPLATE = String(String).split('String');
 
-(redefine$1.exports = function (O, key, value, options) {
+var makeBuiltIn$1 = makeBuiltIn$2.exports = function (value, name, options) {
+  if (String(name).slice(0, 7) === 'Symbol(') {
+    name = '[' + String(name).replace(/^Symbol\(([^)]*)\)/, '$1') + ']';
+  }
+  if (options && options.getter) name = 'get ' + name;
+  if (options && options.setter) name = 'set ' + name;
+  if (!hasOwn$2(value, 'name') || (CONFIGURABLE_FUNCTION_NAME && value.name !== name)) {
+    defineProperty(value, 'name', { value: name, configurable: true });
+  }
+  if (CONFIGURABLE_LENGTH && options && hasOwn$2(options, 'arity') && value.length !== options.arity) {
+    defineProperty(value, 'length', { value: options.arity });
+  }
+  var state = enforceInternalState(value);
+  if (!hasOwn$2(state, 'source')) {
+    state.source = TEMPLATE.join(typeof name == 'string' ? name : '');
+  } return value;
+};
+
+// add fake Function#toString for correct work wrapped methods / constructors with methods like LoDash isNative
+// eslint-disable-next-line no-extend-native -- required
+Function.prototype.toString = makeBuiltIn$1(function toString() {
+  return isCallable$2(this) && getInternalState(this).source || inspectSource(this);
+}, 'toString');
+
+var global$3 = global$m;
+var isCallable$1 = isCallable$a;
+var createNonEnumerableProperty$1 = createNonEnumerableProperty$3;
+var makeBuiltIn = makeBuiltIn$2.exports;
+var setGlobal$1 = setGlobal$3;
+
+var defineBuiltIn$1 = function (O, key, value, options) {
   var unsafe = options ? !!options.unsafe : false;
   var simple = options ? !!options.enumerable : false;
   var noTargetGet = options ? !!options.noTargetGet : false;
   var name = options && options.name !== undefined ? options.name : key;
-  var state;
-  if (isCallable$1(value)) {
-    if (String(name).slice(0, 7) === 'Symbol(') {
-      name = '[' + String(name).replace(/^Symbol\(([^)]*)\)/, '$1') + ']';
-    }
-    if (!hasOwn$2(value, 'name') || (CONFIGURABLE_FUNCTION_NAME && value.name !== name)) {
-      createNonEnumerableProperty$1(value, 'name', name);
-    }
-    state = enforceInternalState(value);
-    if (!state.source) {
-      state.source = TEMPLATE.join(typeof name == 'string' ? name : '');
-    }
-  }
+  if (isCallable$1(value)) makeBuiltIn(value, name, options);
   if (O === global$3) {
     if (simple) O[key] = value;
     else setGlobal$1(key, value);
-    return;
+    return O;
   } else if (!unsafe) {
     delete O[key];
   } else if (!noTargetGet && O[key]) {
@@ -714,10 +736,8 @@ var TEMPLATE = String(String).split('String');
   }
   if (simple) O[key] = value;
   else createNonEnumerableProperty$1(O, key, value);
-// add fake Function#toString for correct work wrapped methods / constructors with methods like LoDash isNative
-})(Function.prototype, 'toString', function toString() {
-  return isCallable$1(this) && getInternalState(this).source || inspectSource(this);
-});
+  return O;
+};
 
 var objectGetOwnPropertyNames = {};
 
@@ -877,8 +897,8 @@ var copyConstructorProperties$1 = function (target, source, exceptions) {
   }
 };
 
-var fails = fails$7;
-var isCallable = isCallable$9;
+var fails = fails$8;
+var isCallable = isCallable$a;
 
 var replacement = /#|\.prototype\./;
 
@@ -903,7 +923,7 @@ var isForced_1 = isForced$1;
 var global$2 = global$m;
 var getOwnPropertyDescriptor = objectGetOwnPropertyDescriptor.f;
 var createNonEnumerableProperty = createNonEnumerableProperty$3;
-var redefine = redefine$1.exports;
+var defineBuiltIn = defineBuiltIn$1;
 var setGlobal = setGlobal$3;
 var copyConstructorProperties = copyConstructorProperties$1;
 var isForced = isForced_1;
@@ -951,8 +971,7 @@ var _export = function (options, source) {
     if (options.sham || (targetProperty && targetProperty.sham)) {
       createNonEnumerableProperty(sourceProperty, 'sham', true);
     }
-    // extend global
-    redefine(target, key, sourceProperty, options);
+    defineBuiltIn(target, key, sourceProperty, options);
   }
 };
 
@@ -975,6 +994,27 @@ if (typeof globalThis !== "undefined") {
             alert(Array.prototype.slice.call(arguments).join(", "));
         };
     }
+}
+
+if ("performance" in globalThis === false) {
+    globalThis.performance = {};
+}
+
+Date.now = (Date.now || function () {  // thanks IE8
+    return new Date().getTime();
+});
+
+if ("now" in globalThis.performance === false) {
+
+    var nowOffset = Date.now();
+
+    if (performance.timing && performance.timing.navigationStart) {
+      nowOffset = performance.timing.navigationStart;
+    }
+
+    globalThis.performance.now = function now() {
+      return Date.now() - nowOffset;
+  };
 }
 
 /**
@@ -11623,8 +11663,10 @@ function initKeyboardEvent() {
     // make sure the keyboard is enable
     if (keyBoardEventTarget === null && device$1.isMobile === false) {
         keyBoardEventTarget = globalThis;
-        keyBoardEventTarget.addEventListener("keydown", keyDownEvent, false);
-        keyBoardEventTarget.addEventListener("keyup", keyUpEvent, false);
+        if (typeof keyBoardEventTarget.addEventListener === "function") {
+            keyBoardEventTarget.addEventListener("keydown", keyDownEvent, false);
+            keyBoardEventTarget.addEventListener("keyup", keyUpEvent, false);
+        }
     }
 }
 /**
@@ -13661,17 +13703,19 @@ var updateGamepads = function () {
  * gamepad connected callback
  * @ignore
  */
-globalThis.addEventListener("gamepadconnected", function (e) {
-    emit(GAMEPAD_CONNECTED, e.gamepad);
-}, false);
+if (globalThis.navigator && typeof globalThis.navigator.getGamepads === "function") {
+    globalThis.addEventListener("gamepadconnected", function (e) {
+        emit(GAMEPAD_CONNECTED, e.gamepad);
+    }, false);
 
-/**
- * gamepad disconnected callback
- * @ignore
- */
-globalThis.addEventListener("gamepaddisconnected", function (e) {
-    emit(GAMEPAD_DISCONNECTED, e.gamepad);
-}, false);
+    /**
+     * gamepad disconnected callback
+     * @ignore
+     */
+    globalThis.addEventListener("gamepaddisconnected", function (e) {
+        emit(GAMEPAD_DISCONNECTED, e.gamepad);
+    }, false);
+}
 
 /*
  * PUBLIC STUFF
@@ -22896,7 +22940,7 @@ class CanvasRenderer extends Renderer {
      * <img src="images/normal-blendmode.png" width="510"/> <br>
      * - "multiply" : the pixels of the top layer are multiplied with the corresponding pixel of the bottom layer. A darker picture is the result. <br>
      * <img src="images/multiply-blendmode.png" width="510"/> <br>
-     * - "lighter" : where both content overlap the color is determined by adding color values. <br>
+     * - "additive or lighter" : where both content overlap the color is determined by adding color values. <br>
      * <img src="images/lighter-blendmode.png" width="510"/> <br>
      * - "screen" : The pixels are inverted, multiplied, and inverted again. A lighter picture is the result (opposite of multiply) <br>
      * <img src="images/screen-blendmode.png" width="510"/> <br>
@@ -22904,7 +22948,7 @@ class CanvasRenderer extends Renderer {
      * @see https://developer.mozilla.org/en-US/docs/Web/API/CanvasRenderingContext2D/globalCompositeOperation
      * @memberof CanvasRenderer.prototype
      * @function
-     * @param {string} [mode="normal"] blend mode : "normal", "multiply", "lighter, "screen"
+     * @param {string} [mode="normal"] blend mode : "normal", "multiply", "lighter, "additive", "screen"
      * @param {CanvasRenderingContext2D} [context]
      */
     setBlendMode(mode = "normal", context) {
@@ -22916,6 +22960,7 @@ class CanvasRenderer extends Renderer {
                 break;
 
             case "lighter" :
+            case "additive" :
                 context.globalCompositeOperation = "lighter";
                 break;
 
@@ -28643,24 +28688,27 @@ function _domReady() {
     // Make sure that the DOM is not already loaded
     if (!isReady) {
         // be sure document.body is there
-        if (!document.body) {
+        if (!device.nodeJS && !document.body) {
             return setTimeout(_domReady, 13);
         }
 
         // clean up loading event
-        if (document.removeEventListener) {
-            document.removeEventListener(
+        if (typeof globalThis.document !== "undefined" && typeof globalThis.document.removeEventListener === "function") {
+            globalThis.document.removeEventListener(
                 "DOMContentLoaded",
                 this._domReady,
                 false
             );
         }
-        // remove the event on globalThis.onload (always added in `onReady`)
-        globalThis.removeEventListener("load", _domReady, false);
+
+        if (typeof globalThis.removeEventListener === "function") {
+            // remove the event on globalThis.onload (always added in `onReady`)
+            globalThis.removeEventListener("load", _domReady, false);
+        }
 
         // execute all callbacks
         while (readyList.length) {
-            readyList.shift().call(window, []);
+            readyList.shift().call(globalThis, []);
         }
 
         // Remember that the DOM is ready
@@ -28726,14 +28774,14 @@ function _checkCapabilities() {
     device.touch = device.TouchEvent || device.PointerEvent;
 
     // max amount of touch points ; always at least return 1 (e.g. headless chrome will return 0)
-    device.maxTouchPoints = device.touch ? (device.PointerEvent ? navigator.maxTouchPoints || 1 : 10) : 1;
+    device.maxTouchPoints = device.touch ? (device.PointerEvent ? globalThis.navigator.maxTouchPoints || 1 : 10) : 1;
 
     // detect wheel event support
     // Modern browsers support "wheel", Webkit and IE support at least "mousewheel
-    device.wheel = ("onwheel" in document.createElement("div"));
+    device.wheel = typeof globalThis.document !== "undefined" && "onwheel" in globalThis.document.createElement("div");
 
     // pointerlock detection (pointerLockElement can be null when the feature is supported)
-    device.hasPointerLockSupport = typeof document.pointerLockElement !== "undefined";
+    device.hasPointerLockSupport = typeof globalThis.document !== "undefined" && typeof globalThis.document.pointerLockElement !== "undefined";
 
     // device orientation and motion detection
     device.hasDeviceOrientation = !!globalThis.DeviceOrientationEvent;
@@ -28744,14 +28792,12 @@ function _checkCapabilities() {
                                (typeof screen.orientation !== "undefined");
 
     // fullscreen api detection & polyfill when possible
-    device.hasFullscreenSupport = prefixed("fullscreenEnabled", document) ||
-                                document.mozFullScreenEnabled;
+    device.hasFullscreenSupport = typeof globalThis.document !== "undefined" && (prefixed("fullscreenEnabled", globalThis.document) || globalThis.document.mozFullScreenEnabled);
 
-    document.exitFullscreen = prefixed("cancelFullScreen", document) ||
-                              prefixed("exitFullscreen", document);
+    if (device.hasFullscreenSupport === true) {
+        globalThis.document.exitFullscreen = typeof globalThis.document !== "undefined" && (prefixed("cancelFullScreen", globalThis.document) || prefixed("exitFullscreen", globalThis.document));
+    }
 
-    // vibration API poyfill
-    navigator.vibrate = prefixed("vibrate", navigator);
 
     // web Audio detection
     device.hasWebAudio = !!(globalThis.AudioContext || globalThis.webkitAudioContext);
@@ -28773,69 +28819,72 @@ function _checkCapabilities() {
         device.OffscreenCanvas = false;
     }
 
-    // set pause/stop action on losing focus
-    globalThis.addEventListener("blur", function () {
-        if (device.stopOnBlur) {
-            state.stop(true);
-        }
-        if (device.pauseOnBlur) {
-            state.pause(true);
-        }
-    }, false);
-    // set restart/resume action on gaining focus
-    globalThis.addEventListener("focus", function () {
-        if (device.stopOnBlur) {
-            state.restart(true);
-        }
-        if (device.resumeOnFocus) {
-            state.resume(true);
-        }
-        // force focus if autofocus is on
-        if (device.autoFocus) {
-            device.focus();
-        }
-    }, false);
-
-
-    // Set the name of the hidden property and the change event for visibility
-    var hidden, visibilityChange;
-    if (typeof document.hidden !== "undefined") {
-        // Opera 12.10 and Firefox 18 and later support
-        hidden = "hidden";
-        visibilityChange = "visibilitychange";
-    } else if (typeof document.mozHidden !== "undefined") {
-        hidden = "mozHidden";
-        visibilityChange = "mozvisibilitychange";
-    } else if (typeof document.msHidden !== "undefined") {
-        hidden = "msHidden";
-        visibilityChange = "msvisibilitychange";
-    } else if (typeof document.webkitHidden !== "undefined") {
-        hidden = "webkitHidden";
-        visibilityChange = "webkitvisibilitychange";
+    if (typeof globalThis.addEventListener === "function") {
+        // set pause/stop action on losing focus
+        globalThis.addEventListener("blur", function () {
+            if (device.stopOnBlur) {
+                state.stop(true);
+            }
+            if (device.pauseOnBlur) {
+                state.pause(true);
+            }
+        }, false);
+        // set restart/resume action on gaining focus
+        globalThis.addEventListener("focus", function () {
+            if (device.stopOnBlur) {
+                state.restart(true);
+            }
+            if (device.resumeOnFocus) {
+                state.resume(true);
+            }
+            // force focus if autofocus is on
+            if (device.autoFocus) {
+                device.focus();
+            }
+        }, false);
     }
 
-    // register on the event if supported
-    if (typeof (visibilityChange) === "string") {
-        // add the corresponding event listener
-        document.addEventListener(visibilityChange,
-            function () {
-                if (document[hidden]) {
-                    if (device.stopOnBlur) {
-                        state.stop(true);
+    if (typeof globalThis.document !== "undefined") {
+        // Set the name of the hidden property and the change event for visibility
+        var hidden, visibilityChange;
+        if (typeof globalThis.document.hidden !== "undefined") {
+            // Opera 12.10 and Firefox 18 and later support
+            hidden = "hidden";
+            visibilityChange = "visibilitychange";
+        } else if (typeof globalThis.document.mozHidden !== "undefined") {
+            hidden = "mozHidden";
+            visibilityChange = "mozvisibilitychange";
+        } else if (typeof globalThis.document.msHidden !== "undefined") {
+            hidden = "msHidden";
+            visibilityChange = "msvisibilitychange";
+        } else if (typeof globalThis.document.webkitHidden !== "undefined") {
+            hidden = "webkitHidden";
+            visibilityChange = "webkitvisibilitychange";
+        }
+
+        // register on the event if supported
+        if (typeof (visibilityChange) === "string") {
+            // add the corresponding event listener
+            globalThis.document.addEventListener(visibilityChange,
+                function () {
+                    if (globalThis.document[hidden]) {
+                        if (device.stopOnBlur) {
+                            state.stop(true);
+                        }
+                        if (device.pauseOnBlur) {
+                            state.pause(true);
+                        }
+                    } else {
+                        if (device.stopOnBlur) {
+                            state.restart(true);
+                        }
+                        if (device.resumeOnFocus) {
+                            state.resume(true);
+                        }
                     }
-                    if (device.pauseOnBlur) {
-                        state.pause(true);
-                    }
-                } else {
-                    if (device.stopOnBlur) {
-                        state.restart(true);
-                    }
-                    if (device.resumeOnFocus) {
-                        state.resume(true);
-                    }
-                }
-            }, false
-        );
+                }, false
+            );
+        }
     }
 }
 
@@ -28855,7 +28904,7 @@ let device = {
      * @name ua
      * @memberof device
      */
-    ua : navigator.userAgent,
+    ua : typeof globalThis.navigator !== "undefined" ? globalThis.navigator.userAgent : "",
 
     /**
      * Browser Local Storage capabilities <br>
@@ -29008,24 +29057,33 @@ let device = {
      */
     linux : false,
 
-   /**
-    * equals to true if the game is running under Ejecta.
-    * @type {boolean}
-    * @readonly
-    * @see http://impactjs.com/ejecta
-    * @name ejecta
-    * @memberof device
-    */
+    /**
+     * equals to true if the game is running under Ejecta.
+     * @type {boolean}
+     * @readonly
+     * @see http://impactjs.com/ejecta
+     * @name ejecta
+     * @memberof device
+     */
     ejecta : false,
 
     /**
-     * equals to true if the game is running under Wechat.
+     * equals to true if the  is running under Wechat.
      * @type {boolean}
      * @readonly
      * @name isWeixin
      * @memberof device
      */
-     isWeixin : false,
+    isWeixin : false,
+
+    /**
+     * equals to true if running under node.js
+     * @type {boolean}
+     * @readonly
+     * @name nodeJS
+     * @memberof device
+     */
+    nodeJS : (typeof process !== "undefined") && (process.release.name === "node"),
 
     /**
      * equals to true if the device is running on ChromeOS.
@@ -29140,7 +29198,7 @@ let device = {
      * @name language
      * @memberof device
      */
-    language : navigator.language || navigator.browserLanguage || navigator.userLanguage || "en",
+    language : typeof globalThis.navigator !== "undefined" ? globalThis.navigator.language || globalThis.navigator.browserLanguage || globalThis.navigator.userLanguage || "en" : "en",
 
     /**
      * Specify whether to pause the game when losing focus
@@ -29241,14 +29299,14 @@ let device = {
             // attach listeners if not yet done
             if (!readyBound) {
                 // directly call domReady if document is already "ready"
-                if (document.readyState === "complete") {
+                if (device.nodeJS === true || (typeof globalThis.document !== "undefined" && globalThis.document.readyState === "complete")) {
                     // defer the fn call to ensure our script is fully loaded
                     globalThis.setTimeout(_domReady, 0);
                 }
                 else {
-                    if (document.addEventListener) {
+                    if (typeof globalThis.document !== "undefined" && typeof globalThis.document.addEventListener === "function") {
                         // Use the handy event callback
-                        document.addEventListener("DOMContentLoaded", _domReady, false);
+                        globalThis.document.addEventListener("DOMContentLoaded", _domReady, false);
                     }
                     // A fallback to globalThis.onload, that will always work
                     globalThis.addEventListener("load", _domReady, false);
@@ -29686,8 +29744,8 @@ let device = {
      * me.device.vibrate(0);
      */
     vibrate(pattern) {
-        if (navigator.vibrate) {
-            navigator.vibrate(pattern);
+        if (typeof globalThis.navigator !== "undefined" && typeof globalThis.navigator.vibrate === "function") {
+            globalThis.navigator.vibrate(pattern);
         }
     }
 
@@ -31334,7 +31392,7 @@ class WebGLRenderer extends Renderer {
      * <img src="images/normal-blendmode.png" width="510"/> <br>
      * - "multiply" : the pixels of the top layer are multiplied with the corresponding pixel of the bottom layer. A darker picture is the result. <br>
      * <img src="images/multiply-blendmode.png" width="510"/> <br>
-     * - "lighter" : where both content overlap the color is determined by adding color values. <br>
+     * - "additive or lighter" : where both content overlap the color is determined by adding color values. <br>
      * <img src="images/lighter-blendmode.png" width="510"/> <br>
      * - "screen" : The pixels are inverted, multiplied, and inverted again. A lighter picture is the result (opposite of multiply) <br>
      * <img src="images/screen-blendmode.png" width="510"/> <br>
@@ -31342,7 +31400,7 @@ class WebGLRenderer extends Renderer {
      * @see https://developer.mozilla.org/en-US/docs/Web/API/CanvasRenderingContext2D/globalCompositeOperation
      * @memberof WebGLRenderer.prototype
      * @function
-     * @param {string} [mode="normal"] blend mode : "normal", "multiply", "lighter", "screen"
+     * @param {string} [mode="normal"] blend mode : "normal", "multiply", "lighter", "additive", "screen"
      * @param {WebGLRenderingContext} [gl]
      */
     setBlendMode(mode = "normal", gl = this.gl) {
@@ -31358,6 +31416,7 @@ class WebGLRenderer extends Renderer {
                     break;
 
                 case "lighter" :
+                case "additive" :
                     gl.blendFunc(gl.ONE, gl.ONE);
                     break;
 
@@ -31969,7 +32028,7 @@ var designHeight = 0;
 
 // default video settings
 var settings = {
-    parent : document.body,
+    parent : undefined,
     renderer : 2, // AUTO
     doubleBuffering : false,
     autoScale : false,
@@ -32285,7 +32344,7 @@ function init(width, height, options) {
     }
 
     // add our canvas (default to document.body if settings.parent is undefined)
-    parent = device$1.getElement(settings.parent);
+    parent = device$1.getElement(typeof settings.parent !== "undefined" ? settings.parent : document.body);
     parent.appendChild(renderer.getScreenCanvas());
 
     // trigger an initial resize();
@@ -32311,7 +32370,7 @@ function init(width, height, options) {
             renderType + " renderer" + gpu_renderer + " | " +
             audioType + " | " +
             "pixel ratio " + device$1.devicePixelRatio + " | " +
-            (device$1.isMobile ? "mobile" : "desktop") + " | " +
+            (device$1.nodeJS ? "node.js" : device$1.isMobile ? "mobile" : "desktop") + " | " +
             device$1.getScreenOrientation() + " | " +
             device$1.language
         );
@@ -32507,12 +32566,17 @@ var utils = {
         var hash = {};
 
         if (typeof url === "undefined") {
-            var location = document.location;
+            if (typeof globalThis.document !== "undefined") {
+                var location = globalThis.document.location;
 
-            if (location && location.hash) {
-                url = location.hash;
+                if (location && location.hash) {
+                    url = location.hash;
+                } else {
+                    // No "document.location" exist for Wechat mini game platform.
+                    return hash;
+                }
             } else {
-                // No "document.location" exist for Wechat mini game platform.
+                // "document" undefined on node.js
                 return hash;
             }
         } else {
@@ -36310,122 +36374,19 @@ class DropTarget extends Renderable {
 }
 
 /**
- * @classdesc
- * Particle Container Object.
- * @class ParticleContainer
- * @augments Container
- * @param {ParticleEmitter} emitter the emitter which owns this container
- */
-
-class ParticleContainer extends Container {
-
-    /**
-     * @ignore
-     */
-    constructor(emitter) {
-        // call the super constructor
-        super(
-            viewport.pos.x,
-            viewport.pos.y,
-            viewport.width,
-            viewport.height
-        );
-
-        // don't sort the particles by z-index
-        this.autoSort = false;
-
-        // count the updates
-        this._updateCount = 0;
-
-        // internally store how much time was skipped when frames are skipped
-        this._dt = 0;
-
-        // cache the emitter for later use
-        this._emitter = emitter;
-
-        this.autoTransform = false;
-
-        this.anchorPoint.set(0, 0);
-
-        this.isKinematic = true;
-    }
-
-    /**
-     * @ignore
-     */
-    update(dt) {
-        // skip frames if necessary
-        if (++this._updateCount > this._emitter.framesToSkip) {
-            this._updateCount = 0;
-        }
-        if (this._updateCount > 0) {
-            this._dt += dt;
-            return false;
-        }
-
-        // apply skipped delta time
-        dt += this._dt;
-        this._dt = 0;
-
-        // Update particles and remove them if they are dead
-        for (var i = this.children.length - 1; i >= 0; --i) {
-            var particle = this.children[i];
-            particle.inViewport = viewport.isVisible(particle, this.floating);
-            if (!particle.update(dt)) {
-                this.removeChildNow(particle);
-            }
-        }
-        return true;
-    }
-
-    /**
-     * @ignore
-     */
-    draw(renderer, rect) {
-        if (this.children.length > 0) {
-            var context = renderer.getContext(),
-                gco;
-            // Check for additive draw
-            if (this._emitter.textureAdditive) {
-                gco = context.globalCompositeOperation;
-                context.globalCompositeOperation = "lighter";
-            }
-
-            super.draw(renderer, rect);
-
-            // Restore globalCompositeOperation
-            if (this._emitter.textureAdditive) {
-                context.globalCompositeOperation = gco;
-            }
-        }
-    }
-}
-
-// generate a default image for the particles
-var pixel = (function () {
-    var canvas = createCanvas(1, 1);
-    var context = canvas.getContext("2d");
-    context.fillStyle = "#fff";
-    context.fillRect(0, 0, 1, 1);
-    return canvas;
-})();
-
-/**
- * me.ParticleEmitterSettings contains the default settings for me.ParticleEmitter
- * @ignore
- * @class
+ * ParticleEmitterSettings contains the default settings for ParticleEmitter
  * @see ParticleEmitter
+ * @namespace ParticleEmitterSettings
  */
-var ParticleEmitterSettings = {
+const ParticleEmitterSettings = {
     /**
      * Width of the particle spawn area.<br>
-     * @public
      * @type {number}
      * @name width
      * @memberof ParticleEmitterSettings
-     * @default 0
+     * @default 1
      */
-    width : 0,
+    width : 1,
 
     /**
      * Height of the particle spawn area
@@ -36433,20 +36394,30 @@ var ParticleEmitterSettings = {
      * @type {number}
      * @name height
      * @memberof ParticleEmitterSettings
-     * @default 0
+     * @default 1
      */
-    height : 0,
+    height : 1,
 
     /**
-     * Image used for particles
+     * default image used for particles.
+     * (by default melonJS will create an white texture image)
      * @public
-     * @type {CanvasImageSource}
+     * @type {HTMLCanvasElement}
      * @name image
      * @memberof ParticleEmitterSettings
-     * @default 1x1 white pixel
-     * @see http://www.whatwg.org/specs/web-apps/current-work/multipage/the-canvas-element.html#canvasimagesource
+     * @default undefined
      */
-    image : pixel,
+    image : undefined,
+
+    /**
+     * tint to be applied to particles
+     * @public
+     * @type {string}
+     * @name tint
+     * @memberof ParticleEmitterSettings
+     * @default "#fff"
+     */
+    tint : "#fff",
 
     /**
      * Total number of particles in the emitter
@@ -36687,39 +36658,121 @@ var ParticleEmitterSettings = {
 };
 
 /**
- * Particle Emitter Object.
- * @class
- * @augments Rect
- * @param {number} x x-position of the particle emitter
- * @param {number} y y-position of the particle emitter
- * @param {object} settings An object containing the settings for the particle emitter. See {@link ParticleEmitterSettings}
- * @example
- * // Create a basic emitter at position 100, 100
- * var emitter = new me.ParticleEmitter(100, 100);
- *
- * // Adjust the emitter properties
- * emitter.totalParticles = 200;
- * emitter.minLife = 1000;
- * emitter.maxLife = 3000;
- * emitter.z = 10;
- *
- * // Add the emitter to the game world
- * me.game.world.addChild(emitter);
- *
- * // Launch all particles one time and stop, like a explosion
- * emitter.burstParticles();
- *
- * // Launch constantly the particles, like a fountain
- * emitter.streamParticles();
- *
- * // At the end, remove emitter from the game world
- * // call this in onDestroyEvent function
- * me.game.world.removeChild(emitter);
+ * @classdesc
+ * Particle Container Object.
+ * @augments Container
  */
-class ParticleEmitter extends Renderable {
+
+class ParticleContainer extends Container {
+    /**
+     * @param {ParticleEmitter} emitter the emitter which owns this container
+     */
+    constructor(emitter) {
+        // call the super constructor
+        super(
+            viewport.pos.x,
+            viewport.pos.y,
+            viewport.width,
+            viewport.height
+        );
+
+        // don't sort the particles by z-index
+        this.autoSort = false;
+
+        // count the updates
+        this._updateCount = 0;
+
+        // internally store how much time was skipped when frames are skipped
+        this._dt = 0;
+
+        // cache the emitter for later use
+        this._emitter = emitter;
+
+        this.autoTransform = false;
+
+        this.anchorPoint.set(0, 0);
+
+        this.isKinematic = true;
+
+        if (this._emitter.textureAdditive) {
+            this.blendMode = "additive";
+        } else {
+            this.blendMode = "normal";
+        }
+    }
 
     /**
      * @ignore
+     */
+    update(dt) {
+        // skip frames if necessary
+        if (++this._updateCount > this._emitter.framesToSkip) {
+            this._updateCount = 0;
+        }
+        if (this._updateCount > 0) {
+            this._dt += dt;
+            return false;
+        }
+
+        // apply skipped delta time
+        dt += this._dt;
+        this._dt = 0;
+
+        // Update particles and remove them if they are dead
+        for (var i = this.children.length - 1; i >= 0; --i) {
+            var particle = this.children[i];
+            particle.inViewport = viewport.isVisible(particle, this.floating);
+            if (!particle.update(dt)) {
+                this.removeChildNow(particle);
+            }
+        }
+        return true;
+    }
+
+}
+
+/**
+ * @ignore
+ */
+function createDefaultParticleTexture(w, h) {
+    var canvas = createCanvas(w, h);
+    var context = canvas.getContext("2d");
+    context.fillStyle = "#fff";
+    context.fillRect(0, 0, w, h);
+    return canvas;
+}
+/**
+ * @classdesc
+ * Particle Emitter Object.
+ * @augments Rect
+ */
+class ParticleEmitter extends Renderable {
+    /*
+     * @param {number} x x-position of the particle emitter
+     * @param {number} y y-position of the particle emitter
+     * @param {object} settings An object containing the settings for the particle emitter. See {@link ParticleEmitterSettings}
+     * @example
+     * // Create a basic emitter at position 100, 100
+     * var emitter = new me.ParticleEmitter(100, 100);
+     *
+     * // Adjust the emitter properties
+     * emitter.totalParticles = 200;
+     * emitter.minLife = 1000;
+     * emitter.maxLife = 3000;
+     * emitter.z = 10;
+     *
+     * // Add the emitter to the game world
+     * me.game.world.addChild(emitter);
+     *
+     * // Launch all particles one time and stop, like a explosion
+     * emitter.burstParticles();
+     *
+     * // Launch constantly the particles, like a fountain
+     * emitter.streamParticles();
+     *
+     * // At the end, remove emitter from the game world
+     * // call this in onDestroyEvent function
+     * me.game.world.removeChild(emitter);
      */
     constructor(x, y, settings) {
         // call the super constructor
@@ -36772,15 +36825,15 @@ class ParticleEmitter extends Renderable {
     /**
      * Floating property for particles, value is forwarded to the particle container <br>
      * @type {boolean}
-     * @name floating
-     * @memberof ParticleEmitter
      */
     get floating() {
-        return this.container.floating;
+        return typeof this.container !== "undefined" && this.container.floating;
     }
 
     set floating(value) {
-        this.container.floating = value;
+        if (typeof this.container !== "undefined") {
+            this.container.floating = value;
+        }
     }
 
     /**
@@ -36812,9 +36865,6 @@ class ParticleEmitter extends Renderable {
 
     /**
      * returns a random point inside the bounds x axis of this emitter
-     * @name getRandomPointX
-     * @memberof ParticleEmitter
-     * @function
      * @returns {number}
      */
     getRandomPointX() {
@@ -36823,9 +36873,6 @@ class ParticleEmitter extends Renderable {
 
     /**
      * returns a random point inside the bounds y axis of this emitter
-     * @name getRandomPointY
-     * @memberof ParticleEmitter
-     * @function
      * @returns {number}
      */
     getRandomPointY() {
@@ -36834,10 +36881,7 @@ class ParticleEmitter extends Renderable {
 
     /**
      * Reset the emitter with default values.<br>
-     * @function
      * @param {object} settings [optional] object with emitter settings. See {@link ParticleEmitterSettings}
-     * @name reset
-     * @memberof ParticleEmitter
      */
     reset(settings) {
         // check if settings exists and create a dummy object if necessary
@@ -36849,6 +36893,11 @@ class ParticleEmitter extends Renderable {
         this.resize(width, height);
 
         Object.assign(this, defaults, settings);
+
+        // Cache the image reference
+        if (typeof this.image === "undefined") {
+            this.image = createDefaultParticleTexture(width, height);
+        }
 
         // reset particle container values
         this.container.reset();
@@ -36865,23 +36914,16 @@ class ParticleEmitter extends Renderable {
     }
 
     /**
-     * Emitter is of type stream and is launching particles <br>
-     * @function
+     * Emitter is of type stream and is launching particles
      * @returns {boolean} Emitter is Stream and is launching particles
-     * @name isRunning
-     * @memberof ParticleEmitter
      */
     isRunning() {
         return this._enabled && this._stream;
     }
 
     /**
-     * Launch particles from emitter constantly <br>
-     * Particles example: Fountains
+     * Launch particles from emitter constantly (e.g. for stream)
      * @param {number} duration [optional] time that the emitter releases particles in ms
-     * @function
-     * @name streamParticles
-     * @memberof ParticleEmitter
      */
     streamParticles(duration) {
         this._enabled = true;
@@ -36891,22 +36933,15 @@ class ParticleEmitter extends Renderable {
     }
 
     /**
-     * Stop the emitter from generating new particles (used only if emitter is Stream) <br>
-     * @function
-     * @name stopStream
-     * @memberof ParticleEmitter
+     * Stop the emitter from generating new particles (used only if emitter is Stream)
      */
     stopStream() {
         this._enabled = false;
     }
 
     /**
-     * Launch all particles from emitter and stop <br>
-     * Particles example: Explosions <br>
+     * Launch all particles from emitter and stop (e.g. for explosion)
      * @param {number} total [optional] number of particles to launch
-     * @function
-     * @name burstParticles
-     * @memberof ParticleEmitter
      */
     burstParticles(total) {
         this._enabled = true;
@@ -36949,27 +36984,24 @@ class ParticleEmitter extends Renderable {
         }
         return true;
     }
-
 }
 
 /**
  * @classdesc
  * Single Particle Object.
- * @class Particle
  * @augments Renderable
- * @param {ParticleEmitter} particle emitter
  */
 class Particle extends Renderable {
     /**
-     * @ignore
+     * @param {ParticleEmitter} particle emitter
      */
     constructor(emitter) {
         // Call the super constructor
         super(
             emitter.getRandomPointX(),
             emitter.getRandomPointY(),
-            emitter.image.width,
-            emitter.image.height
+            emitter.image ? emitter.image.width : emitter.width || 1,
+            emitter.image ? emitter.image.height : emitter.height || 1
         );
 
         // particle velocity
@@ -36977,21 +37009,29 @@ class Particle extends Renderable {
         this.onResetEvent(emitter, true);
     }
 
+    /**
+     * @ignore
+     */
     onResetEvent(emitter, newInstance = false) {
         if (newInstance === false) {
-            super.onResetEvent(
+            this.pos.set(
                 emitter.getRandomPointX(),
-                emitter.getRandomPointY(),
-                emitter.image.width,
-                emitter.image.height
+                emitter.getRandomPointY()
+            );
+            this.resize(
+                emitter.image ? emitter.image.width : emitter.width || 1,
+                emitter.image ? emitter.image.height : emitter.height || 1
             );
         }
+
+        this.image = emitter.image;
 
         // Particle will always update
         this.alwaysUpdate = true;
 
-        // Cache the image reference
-        this.image = emitter.image;
+        if (typeof emitter.tint === "string") {
+            this.tint.parseCSS(emitter.tint);
+        }
 
         // Set the start particle Angle and Speed as defined in emitter
         var angle = emitter.angle + ((emitter.angleVariation > 0) ? (randomFloat(0, 2) - 1) * emitter.angleVariation : 0);
@@ -37043,9 +37083,6 @@ class Particle extends Renderable {
     /**
      * Update the Particle <br>
      * This is automatically called by the game manager {@link game}
-     * @name update
-     * @memberof Particle
-     * @function
      * @ignore
      * @param {number} dt time since the last update in milliseconds
      */
@@ -37098,7 +37135,6 @@ class Particle extends Renderable {
      * @ignore
      */
     preDraw(renderer) {
-
         // restore is called in postDraw
         renderer.save();
 
@@ -37107,6 +37143,9 @@ class Particle extends Renderable {
 
         // translate to the defined anchor point and scale it
         renderer.transform(this.currentTransform);
+
+        // apply the current tint and opacity
+        renderer.setTint(this.tint, this.getOpacity());
     }
 
     /**

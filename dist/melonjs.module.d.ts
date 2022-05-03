@@ -1085,7 +1085,7 @@ export class CanvasRenderer extends Renderer {
      * <img src="images/normal-blendmode.png" width="510"/> <br>
      * - "multiply" : the pixels of the top layer are multiplied with the corresponding pixel of the bottom layer. A darker picture is the result. <br>
      * <img src="images/multiply-blendmode.png" width="510"/> <br>
-     * - "lighter" : where both content overlap the color is determined by adding color values. <br>
+     * - "additive or lighter" : where both content overlap the color is determined by adding color values. <br>
      * <img src="images/lighter-blendmode.png" width="510"/> <br>
      * - "screen" : The pixels are inverted, multiplied, and inverted again. A lighter picture is the result (opposite of multiply) <br>
      * <img src="images/screen-blendmode.png" width="510"/> <br>
@@ -1093,7 +1093,7 @@ export class CanvasRenderer extends Renderer {
      * @see https://developer.mozilla.org/en-US/docs/Web/API/CanvasRenderingContext2D/globalCompositeOperation
      * @memberof CanvasRenderer.prototype
      * @function
-     * @param {string} [mode="normal"] blend mode : "normal", "multiply", "lighter, "screen"
+     * @param {string} [mode="normal"] blend mode : "normal", "multiply", "lighter, "additive", "screen"
      * @param {CanvasRenderingContext2D} [context]
      */
     setBlendMode(mode?: string, context?: CanvasRenderingContext2D): void;
@@ -4053,16 +4053,17 @@ export class ObservableVector3d extends Vector3d {
 /**
  * @classdesc
  * Single Particle Object.
- * @class Particle
  * @augments Renderable
- * @param {ParticleEmitter} particle emitter
  */
 export class Particle extends Renderable {
     /**
-     * @ignore
+     * @param {ParticleEmitter} particle emitter
      */
     constructor(emitter: any);
     vel: Vector2d;
+    /**
+     * @ignore
+     */
     onResetEvent(emitter: any, newInstance?: boolean): void;
     image: any;
     life: any;
@@ -4085,39 +4086,11 @@ export class Particle extends Renderable {
     draw(renderer: any): void;
 }
 /**
+ * @classdesc
  * Particle Emitter Object.
- * @class
  * @augments Rect
- * @param {number} x x-position of the particle emitter
- * @param {number} y y-position of the particle emitter
- * @param {object} settings An object containing the settings for the particle emitter. See {@link ParticleEmitterSettings}
- * @example
- * // Create a basic emitter at position 100, 100
- * var emitter = new me.ParticleEmitter(100, 100);
- *
- * // Adjust the emitter properties
- * emitter.totalParticles = 200;
- * emitter.minLife = 1000;
- * emitter.maxLife = 3000;
- * emitter.z = 10;
- *
- * // Add the emitter to the game world
- * me.game.world.addChild(emitter);
- *
- * // Launch all particles one time and stop, like a explosion
- * emitter.burstParticles();
- *
- * // Launch constantly the particles, like a fountain
- * emitter.streamParticles();
- *
- * // At the end, remove emitter from the game world
- * // call this in onDestroyEvent function
- * me.game.world.removeChild(emitter);
  */
 export class ParticleEmitter extends Rect {
-    /**
-     * @ignore
-     */
     constructor(x: any, y: any, settings: any);
     /** @ignore */
     _stream: boolean;
@@ -4142,8 +4115,6 @@ export class ParticleEmitter extends Rect {
     /**
      * Floating property for particles, value is forwarded to the particle container <br>
      * @type {boolean}
-     * @name floating
-     * @memberof ParticleEmitter
      */
     get floating(): boolean;
     /**
@@ -4160,62 +4131,40 @@ export class ParticleEmitter extends Rect {
     destroy(): void;
     /**
      * returns a random point inside the bounds x axis of this emitter
-     * @name getRandomPointX
-     * @memberof ParticleEmitter
-     * @function
      * @returns {number}
      */
     getRandomPointX(): number;
     /**
      * returns a random point inside the bounds y axis of this emitter
-     * @name getRandomPointY
-     * @memberof ParticleEmitter
-     * @function
      * @returns {number}
      */
     getRandomPointY(): number;
     /**
      * Reset the emitter with default values.<br>
-     * @function
      * @param {object} settings [optional] object with emitter settings. See {@link ParticleEmitterSettings}
-     * @name reset
-     * @memberof ParticleEmitter
      */
     reset(settings: object): void;
+    image: HTMLCanvasElement | OffscreenCanvas;
     /** @ignore */
     addParticles(count: any): void;
     /**
-     * Emitter is of type stream and is launching particles <br>
-     * @function
+     * Emitter is of type stream and is launching particles
      * @returns {boolean} Emitter is Stream and is launching particles
-     * @name isRunning
-     * @memberof ParticleEmitter
      */
     isRunning(): boolean;
     /**
-     * Launch particles from emitter constantly <br>
-     * Particles example: Fountains
+     * Launch particles from emitter constantly (e.g. for stream)
      * @param {number} duration [optional] time that the emitter releases particles in ms
-     * @function
-     * @name streamParticles
-     * @memberof ParticleEmitter
      */
     streamParticles(duration: number): void;
     frequency: any;
     /**
-     * Stop the emitter from generating new particles (used only if emitter is Stream) <br>
-     * @function
-     * @name stopStream
-     * @memberof ParticleEmitter
+     * Stop the emitter from generating new particles (used only if emitter is Stream)
      */
     stopStream(): void;
     /**
-     * Launch all particles from emitter and stop <br>
-     * Particles example: Explosions <br>
+     * Launch all particles from emitter and stop (e.g. for explosion)
      * @param {number} total [optional] number of particles to launch
-     * @function
-     * @name burstParticles
-     * @memberof ParticleEmitter
      */
     burstParticles(total: number): void;
     /**
@@ -4224,32 +4173,33 @@ export class ParticleEmitter extends Rect {
     update(dt: any): boolean;
 }
 export namespace ParticleEmitterSettings {
-    export const width: number;
-    export const height: number;
-    export { pixel as image };
-    export const totalParticles: number;
-    export const angle: number;
-    export const angleVariation: number;
-    export const minLife: number;
-    export const maxLife: number;
-    export const speed: number;
-    export const speedVariation: number;
-    export const minRotation: number;
-    export const maxRotation: number;
-    export const minStartScale: number;
-    export const maxStartScale: number;
-    export const minEndScale: number;
-    export const maxEndScale: number;
-    export const gravity: number;
-    export const wind: number;
-    export const followTrajectory: boolean;
-    export const textureAdditive: boolean;
-    export const onlyInViewport: boolean;
-    export const floating: boolean;
-    export const maxParticles: number;
-    export const frequency: number;
-    export const duration: number;
-    export const framesToSkip: number;
+    const width: number;
+    const height: number;
+    const image: HTMLCanvasElement;
+    const tint: string;
+    const totalParticles: number;
+    const angle: number;
+    const angleVariation: number;
+    const minLife: number;
+    const maxLife: number;
+    const speed: number;
+    const speedVariation: number;
+    const minRotation: number;
+    const maxRotation: number;
+    const minStartScale: number;
+    const maxStartScale: number;
+    const minEndScale: number;
+    const maxEndScale: number;
+    const gravity: number;
+    const wind: number;
+    const followTrajectory: boolean;
+    const textureAdditive: boolean;
+    const onlyInViewport: boolean;
+    const floating: boolean;
+    const maxParticles: number;
+    const frequency: number;
+    const duration: number;
+    const framesToSkip: number;
 }
 /**
  * @classdesc
@@ -8791,7 +8741,7 @@ export class WebGLRenderer extends Renderer {
      * <img src="images/normal-blendmode.png" width="510"/> <br>
      * - "multiply" : the pixels of the top layer are multiplied with the corresponding pixel of the bottom layer. A darker picture is the result. <br>
      * <img src="images/multiply-blendmode.png" width="510"/> <br>
-     * - "lighter" : where both content overlap the color is determined by adding color values. <br>
+     * - "additive or lighter" : where both content overlap the color is determined by adding color values. <br>
      * <img src="images/lighter-blendmode.png" width="510"/> <br>
      * - "screen" : The pixels are inverted, multiplied, and inverted again. A lighter picture is the result (opposite of multiply) <br>
      * <img src="images/screen-blendmode.png" width="510"/> <br>
@@ -8799,7 +8749,7 @@ export class WebGLRenderer extends Renderer {
      * @see https://developer.mozilla.org/en-US/docs/Web/API/CanvasRenderingContext2D/globalCompositeOperation
      * @memberof WebGLRenderer.prototype
      * @function
-     * @param {string} [mode="normal"] blend mode : "normal", "multiply", "lighter", "screen"
+     * @param {string} [mode="normal"] blend mode : "normal", "multiply", "lighter", "additive", "screen"
      * @param {WebGLRenderingContext} [gl]
      */
     setBlendMode(mode?: string, gl?: WebGLRenderingContext): void;
@@ -11260,28 +11210,21 @@ declare function toBeCloseTo(expected: number, actual: number, precision?: numbe
 /**
  * @classdesc
  * Particle Container Object.
- * @class ParticleContainer
  * @augments Container
- * @param {ParticleEmitter} emitter the emitter which owns this container
  */
 declare class ParticleContainer extends Container {
     /**
-     * @ignore
+     * @param {ParticleEmitter} emitter the emitter which owns this container
      */
-    constructor(emitter: any);
+    constructor(emitter: ParticleEmitter);
     _updateCount: number;
     _dt: number;
-    _emitter: any;
+    _emitter: ParticleEmitter;
     /**
      * @ignore
      */
     update(dt: any): boolean;
-    /**
-     * @ignore
-     */
-    draw(renderer: any, rect: any): void;
 }
-declare var pixel: HTMLCanvasElement | OffscreenCanvas;
 /**
  * @classdesc
  * a Vertex Buffer object
