@@ -5,7 +5,7 @@
  */
 const ParticleEmitterSettings = {
     /**
-     * Width of the particle spawn area.<br>
+     * Width of the particle spawn area.
      * @type {number}
      * @name width
      * @memberof ParticleEmitterSettings
@@ -65,7 +65,7 @@ const ParticleEmitterSettings = {
     angle : Math.PI / 2,
 
     /**
-     * Variation in the start angle for particle launch in Radians
+     * Variation in the start angle for particle launch in Radians.
      * @public
      * @type {number}
      * @name angleVariation
@@ -75,7 +75,7 @@ const ParticleEmitterSettings = {
     angleVariation : 0,
 
     /**
-     * Minimum time each particle lives once it is emitted in ms
+     * Minimum time each particle lives once it is emitted in ms.
      * @public
      * @type {number}
      * @name minLife
@@ -85,7 +85,7 @@ const ParticleEmitterSettings = {
     minLife : 1000,
 
     /**
-     * Maximum time each particle lives once it is emitted in ms
+     * Maximum time each particle lives once it is emitted in ms.
      * @public
      * @type {number}
      * @name maxLife
@@ -208,8 +208,7 @@ const ParticleEmitterSettings = {
     followTrajectory : false,
 
     /**
-     * Enable the Texture Additive by canvas composite operation (lighter).<br>
-     * WARNING: Composite Operation may decreases performance!.<br>
+     * Enable the Texture Additive by composite operation.
      * @public
      * @type {boolean}
      * @name textureAdditive
@@ -219,7 +218,7 @@ const ParticleEmitterSettings = {
     textureAdditive : false,
 
     /**
-     * Update particles only in the viewport, remove it when out of viewport.<br>
+     * Update particles only in the viewport, remove it when out of viewport.
      * @public
      * @type {boolean}
      * @name onlyInViewport
@@ -229,7 +228,7 @@ const ParticleEmitterSettings = {
     onlyInViewport : true,
 
     /**
-     * Render particles in screen space. <br>
+     * Render particles in screen space.
      * @public
      * @type {boolean}
      * @name floating
@@ -239,7 +238,7 @@ const ParticleEmitterSettings = {
     floating : false,
 
     /**
-     * Maximum number of particles launched each time in this emitter (used only if emitter is Stream).<br>
+     * Maximum number of particles launched each time in this emitter (used only if emitter is Stream).
      * @public
      * @type {number}
      * @name maxParticles
@@ -249,8 +248,7 @@ const ParticleEmitterSettings = {
     maxParticles : 10,
 
     /**
-     * How often a particle is emitted in ms (used only if emitter is Stream).<br>
-     * Necessary that value is greater than zero.<br>
+     * How often a particle is emitted in ms (used only if emitter is a Stream).
      * @public
      * @type {number}
      * @name frequency
@@ -260,8 +258,8 @@ const ParticleEmitterSettings = {
     frequency : 100,
 
     /**
-     * Duration that the emitter releases particles in ms (used only if emitter is Stream).<br>
-     * After this period, the emitter stop the launch of particles.<br>
+     * Duration that the emitter releases particles in ms (used only if emitter is Stream).
+     * After this period, the emitter stop the launch of particles.
      * @public
      * @type {number}
      * @name duration
@@ -271,8 +269,8 @@ const ParticleEmitterSettings = {
     duration : Infinity,
 
     /**
-     * Skip n frames after updating the particle system once. <br>
-     * This can be used to reduce the performance impact of emitters with many particles.<br>
+     * Skip n frames after updating the particle system once.
+     * This can be used to reduce the performance impact of emitters with many particles.
      * @public
      * @type {number}
      * @name framesToSkip
