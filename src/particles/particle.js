@@ -17,8 +17,8 @@ class Particle extends Renderable {
         super(
             emitter.getRandomPointX(),
             emitter.getRandomPointY(),
-            emitter.settings.image ? emitter.settings.image.width : emitter.width || 1,
-            emitter.settings.image ? emitter.settings.image.height : emitter.height || 1
+            emitter.settings.image.width,
+            emitter.settings.image.height
         );
         this.onResetEvent(emitter, true);
     }
@@ -33,8 +33,8 @@ class Particle extends Renderable {
                 emitter.getRandomPointY()
             );
             this.resize(
-                emitter.settings.image ? emitter.settings.image.width : emitter.width || 1,
-                emitter.settings.image ? emitter.settings.image.height : emitter.height || 1
+                emitter.settings.image.width,
+                emitter.settings.image.height
             );
         } else {
             // particle velocity

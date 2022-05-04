@@ -24,15 +24,28 @@ const ParticleEmitterSettings = {
     height : 1,
 
     /**
-     * default image used for particles.
-     * (by default melonJS will create an white texture image)
+     * image used for particles texture
+     * (by default melonJS will create an white 8x8 texture image)
      * @public
      * @type {HTMLCanvasElement}
      * @name image
      * @memberof ParticleEmitterSettings
      * @default undefined
+     * @see ParticleEmitterSettings.textureSize
      */
     image : undefined,
+
+    /**
+     * default texture size used for particles if no image is specified
+     * (by default melonJS will create an white 8x8 texture image)
+     * @public
+     * @type {number}
+     * @name textureSize
+     * @memberof ParticleEmitterSettings
+     * @default 8
+     * @see ParticleEmitterSettings.image
+     */
+    textureSize : 8,
 
     /**
      * tint to be applied to particles

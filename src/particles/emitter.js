@@ -11,7 +11,7 @@ let defaultParticleTexture;
 /**
  * @ignore
  */
-function createDefaultParticleTexture(w, h) {
+function createDefaultParticleTexture(w = 8, h = 8) {
     if (typeof defaultParticleTexture === "undefined") {
         defaultParticleTexture = createCanvas(w, h, true);
         var context = defaultParticleTexture.getContext("2d");
@@ -113,7 +113,7 @@ class ParticleEmitter extends Container {
 
         // Cache the image reference
         if (typeof this.settings.image === "undefined") {
-            this.settings.image = createDefaultParticleTexture(this.width, this.height);
+            this.settings.image = createDefaultParticleTexture(settings.textureSize, settings.textureSize);
         }
 
         this.floating = this.settings.floating;
