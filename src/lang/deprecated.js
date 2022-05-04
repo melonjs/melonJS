@@ -127,15 +127,3 @@ export class DroptargetEntity extends DropTarget {
         super(x, y, settings.width, settings.height);
     }
 }
-
-// deprecated event
-event.on(event.WEBGL_ONCONTEXT_LOST, function(...args) {
-    warning("event.WEBGL_ONCONTEXT_LOST", "event.ONCONTEXT_LOST", "10.7.0");
-    event.emit(event.ONCONTEXT_LOST, ...args);
-});
-
-// deprecated event
-event.on(event.WEBGL_ONCONTEXT_RESTORED, function(...args) {
-    warning("event.WEBGL_ONCONTEXT_RESTORED", "event.ONCONTEXT_RESTORED", "10.7.0");
-    event.emit(event.ONCONTEXT_RESTORED, ...args);
-});

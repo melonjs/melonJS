@@ -424,34 +424,6 @@ export const WINDOW_ONSCROLL = "globalThis.onscroll";
 export const VIEWPORT_ONCHANGE = "viewport.onchange";
 
 /**
- * Event for when WebGL context is lost <br>
- * Data passed : {me.WebGLRenderer} the current webgl renderer instance
- * @public
- * @constant
- * @type {string}
- * @name WEBGL_ONCONTEXT_LOST
- * @memberof event
- * @deprecated
- * @see event.ONCONTEXT_LOST
- */
-export const WEBGL_ONCONTEXT_LOST = "renderer.webglcontextlost";
-
-
-/**
- * Event for when WebGL context is restored <br>
- * Data passed : {me.WebGLRenderer} the current webgl renderer instance
- * @public
- * @constant
- * @type {string}
- * @name WEBGL_ONCONTEXT_RESTORED
- * @memberof event
- * @deprecated
- * @see event.ONCONTEXT_RESTORED
- */
-export const WEBGL_ONCONTEXT_RESTORED = "renderer.webglcontextrestored";
-
-
-/**
  * Event for when the current context is lost <br>
  * Data passed : {me.Renderer} the current renderer instance
  * @public
