@@ -425,7 +425,35 @@ export const VIEWPORT_ONCHANGE = "viewport.onchange";
 
 /**
  * Event for when WebGL context is lost <br>
- * Data passed : {me.WebGLRenderer} the current webgl renderer instance`
+ * Data passed : {me.WebGLRenderer} the current webgl renderer instance
+ * @public
+ * @constant
+ * @type {string}
+ * @name WEBGL_ONCONTEXT_LOST
+ * @memberof event
+ * @deprecated
+ * @see event.ONCONTEXT_LOST
+ */
+export const WEBGL_ONCONTEXT_LOST = "renderer.webglcontextlost";
+
+
+/**
+ * Event for when WebGL context is restored <br>
+ * Data passed : {me.WebGLRenderer} the current webgl renderer instance
+ * @public
+ * @constant
+ * @type {string}
+ * @name WEBGL_ONCONTEXT_RESTORED
+ * @memberof event
+ * @deprecated
+ * @see event.ONCONTEXT_RESTORED
+ */
+export const WEBGL_ONCONTEXT_RESTORED = "renderer.webglcontextrestored";
+
+
+/**
+ * Event for when the current context is lost <br>
+ * Data passed : {me.Renderer} the current renderer instance
  * @public
  * @constant
  * @type {string}
@@ -433,19 +461,19 @@ export const VIEWPORT_ONCHANGE = "viewport.onchange";
  * @memberof event
  * @see event.on
  */
-export const WEBGL_ONCONTEXT_LOST = "renderer.webglcontextlost";
+export const ONCONTEXT_LOST = "renderer.contextlost";
 
 /**
- * Event for when WebGL context is restored <br>
- * Data passed : {me.WebGLRenderer} the current webgl renderer instance`
+ * Event for when the current context is restored <br>
+ * Data passed : {me.Renderer} the current renderer instance`
  * @public
  * @constant
  * @type {string}
- * @name WEBGL_ONCONTEXT_RESTORED
+ * @name ONCONTEXT_RESTORED
  * @memberof event
  * @see event.on
  */
-export const WEBGL_ONCONTEXT_RESTORED = "renderer.webglcontextrestored";
+export const ONCONTEXT_RESTORED = "renderer.contextrestored";
 
 /**
  * calls each of the listeners registered for a given event.

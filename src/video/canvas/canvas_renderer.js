@@ -54,6 +54,19 @@ class CanvasRenderer extends Renderer {
             // enable the tile texture seam fix with the canvas renderer
             this.uvOffset = 1;
         }
+
+        // context lost & restore event for canvas
+        this.getScreenCanvas().addEventListener("contextlost", (e) => {
+            e.preventDefault();
+            this.isContextValid = false;
+            event.emit(event.ONCONTEXT_LOST, this);
+        }, false );
+        // ctx.restoreContext()
+        this.getScreenCanvas().addEventListener("contextrestored", () => {
+            this.isContextValid = true;
+            event.emit(event.ONCONTEXT_RESTORED, this);
+            me.game.repaint();
+        }, false );
     }
 
     /**

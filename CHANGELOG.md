@@ -7,6 +7,7 @@
 - Particle Emitter: added the possibility to define a specific tint and blend mode for particles
 - Renderable: new `centerOn` method to center a renderable around given coordinates
 - Renderer: added "additive" as an alias for the "lighter" blend mode
+- Renderer: listen to `contextlost` & `contextrestored` events in Canvas rendering mode (@see https://developer.chrome.com/blog/canvas2d/#context-loss)
 
 ### Changed
 - Core : replace internal use of global window object by `globalThis`

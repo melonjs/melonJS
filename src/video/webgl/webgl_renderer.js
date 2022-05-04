@@ -163,19 +163,19 @@ class WebGLRenderer extends Renderer {
         // Create a texture cache
         this.cache = new TextureCache(this.maxTextures);
 
-        // to simulate context lost and restore :
+        // to simulate context lost and restore in WebGL:
         // var ctx = me.video.renderer.context.getExtension('WEBGL_lose_context');
         // ctx.loseContext()
         this.getScreenCanvas().addEventListener("webglcontextlost", (e) => {
             e.preventDefault();
             this.isContextValid = false;
-            event.emit(event.WEBGL_ONCONTEXT_LOST, this);
+            event.emit(event.ONCONTEXT_LOST, this);
         }, false );
         // ctx.restoreContext()
         this.getScreenCanvas().addEventListener("webglcontextrestored", () => {
             this.reset();
             this.isContextValid = true;
-            event.emit(event.WEBGL_ONCONTEXT_RESTORED, this);
+            event.emit(event.ONCONTEXT_RESTORED, this);
         }, false );
     }
 

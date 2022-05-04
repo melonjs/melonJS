@@ -3,6 +3,7 @@ import { requestPointerLock, exitPointerLock } from "./../input/input.js";
 import { TextureAtlas } from "./../video/texture.js";
 import Renderer from "./../video/renderer.js";
 import { Draggable, DropTarget } from "./../renderable/dragndrop.js";
+import * as event from "./../system/event.js";
 
 /**
  * placeholder for all deprecated classes and corresponding alias for backward compatibility
@@ -126,3 +127,15 @@ export class DroptargetEntity extends DropTarget {
         super(x, y, settings.width, settings.height);
     }
 }
+
+// deprecated event
+event.on(event.WEBGL_ONCONTEXT_LOST, function(...args) {
+    warning("event.WEBGL_ONCONTEXT_LOST", "event.ONCONTEXT_LOST", "10.7.0");
+    event.emit(event.ONCONTEXT_LOST, ...args);
+});
+
+// deprecated event
+event.on(event.WEBGL_ONCONTEXT_RESTORED, function(...args) {
+    warning("event.WEBGL_ONCONTEXT_RESTORED", "event.ONCONTEXT_RESTORED", "10.7.0");
+    event.emit(event.ONCONTEXT_RESTORED, ...args);
+});
