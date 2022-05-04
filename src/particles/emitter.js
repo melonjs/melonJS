@@ -4,15 +4,21 @@ import ParticleEmitterSettings from "./settings.js";
 import { randomFloat } from "./../math/math.js";
 import Container from "./../renderable/container.js";
 
+
+// default texture used when no sprite is defined
+let defaultParticleTexture;
+
 /**
  * @ignore
  */
 function createDefaultParticleTexture(w, h) {
-    var canvas = createCanvas(w, h, true);
-    var context = canvas.getContext("2d");
-    context.fillStyle = "#fff";
-    context.fillRect(0, 0, w, h);
-    return canvas;
+    if (typeof defaultParticleTexture === "undefined") {
+        defaultParticleTexture = createCanvas(w, h, true);
+        var context = defaultParticleTexture.getContext("2d");
+        context.fillStyle = "#fff";
+        context.fillRect(0, 0, w, h);
+    }
+    return defaultParticleTexture;
 };
 
 /**
@@ -227,6 +233,18 @@ class ParticleEmitter extends Container {
             }
         }
         return this.isDirty;
+    }
+
+    /**
+     * Destroy function
+     * @ignore
+     */
+    destroy() {
+        // call the parent destroy method
+        super.destroy(arguments);
+        // clean emitter specific Properties
+        this.settings.image = undefined;
+        this.settings = undefined;
     }
 };
 
