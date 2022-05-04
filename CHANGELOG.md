@@ -4,7 +4,7 @@
 
 ### Added
 - Core : new `device.nodeJS` to detect if running under node.js
-- Particle Emitter: added the possibility to define a tint for particles
+- Particle Emitter: added the possibility to define a specific tint and blend mode for particles
 - Renderable: new `centerOn` method to center a renderable around given coordinates
 - Renderer: added "additive" as an alias for the "lighter" blend mode
 

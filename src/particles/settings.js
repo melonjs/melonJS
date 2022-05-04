@@ -221,14 +221,28 @@ const ParticleEmitterSettings = {
     followTrajectory : false,
 
     /**
-     * Enable the Texture Additive by composite operation.
+     * Enable the Texture Additive by composite operation ("additive" blendMode)
      * @public
      * @type {boolean}
      * @name textureAdditive
      * @default false
      * @memberof ParticleEmitterSettings
+     * @see ParticleEmitterSettings.blendMode
      */
     textureAdditive : false,
+
+    /**
+     * the blend mode to be applied when rendering particles.
+     * (note: this will superseed the `textureAdditive` setting if different than "normal")
+     * @public
+     * @type {string}
+     * @name blendMode
+     * @default normal
+     * @memberof ParticleEmitterSettings
+     * @see CanvasRenderer#setBlendMode
+     * @see WebGLRenderer#setBlendMode
+     */
+    blendMode : "normal",
 
     /**
      * Update particles only in the viewport, remove it when out of viewport.

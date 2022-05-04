@@ -50,10 +50,12 @@ class Particle extends Renderable {
             this.tint.parseCSS(emitter.settings.tint);
         }
 
-        if (emitter.settings.textureAdditive) {
+        if (emitter.settings.textureAdditive === true) {
             this.blendMode = "additive";
-        } else {
-            this.blendMode = "normal";
+        }
+
+        if (emitter.settings.blendMode !== "normal") {
+            this.blendMode = emitter.settings.blendMode;
         }
 
         // Set the start particle Angle and Speed as defined in emitter
