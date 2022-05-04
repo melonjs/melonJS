@@ -4133,15 +4133,27 @@ export class ParticleEmitter extends Container {
          */
         height: number;
         /**
-         * default image used for particles.
-         * (by default melonJS will create an white texture image)
+         * image used for particles texture
+         * (by default melonJS will create an white 8x8 texture image)
          * @public
          * @type {HTMLCanvasElement}
          * @name image
          * @memberof ParticleEmitterSettings
          * @default undefined
+         * @see ParticleEmitterSettings.textureSize
          */
         image: HTMLCanvasElement;
+        /**
+         * default texture size used for particles if no image is specified
+         * (by default melonJS will create an white 8x8 texture image)
+         * @public
+         * @type {number}
+         * @name textureSize
+         * @memberof ParticleEmitterSettings
+         * @default 8
+         * @see ParticleEmitterSettings.image
+         */
+        textureSize: number;
         /**
          * tint to be applied to particles
          * @public
@@ -4299,14 +4311,27 @@ export class ParticleEmitter extends Container {
          */
         followTrajectory: boolean;
         /**
-         * Enable the Texture Additive by composite operation.
+         * Enable the Texture Additive by composite operation ("additive" blendMode)
          * @public
          * @type {boolean}
          * @name textureAdditive
          * @default false
          * @memberof ParticleEmitterSettings
+         * @see ParticleEmitterSettings.blendMode
          */
         textureAdditive: boolean;
+        /**
+         * the blend mode to be applied when rendering particles.
+         * (note: this will superseed the `textureAdditive` setting if different than "normal")
+         * @public
+         * @type {string}
+         * @name blendMode
+         * @default normal
+         * @memberof ParticleEmitterSettings
+         * @see CanvasRenderer#setBlendMode
+         * @see WebGLRenderer#setBlendMode
+         */
+        blendMode: string;
         /**
          * Update particles only in the viewport, remove it when out of viewport.
          * @public
@@ -4420,6 +4445,7 @@ export namespace ParticleEmitterSettings {
     const width: number;
     const height: number;
     const image: HTMLCanvasElement;
+    const textureSize: number;
     const tint: string;
     const totalParticles: number;
     const angle: number;
@@ -4438,6 +4464,7 @@ export namespace ParticleEmitterSettings {
     const wind: number;
     const followTrajectory: boolean;
     const textureAdditive: boolean;
+    const blendMode: string;
     const onlyInViewport: boolean;
     const floating: boolean;
     const maxParticles: number;
@@ -9362,7 +9389,7 @@ declare namespace device$1 {
     namespace turnOnPointerLock { }
     namespace turnOffPointerLock { }
 }
-export var event: Readonly<{
+declare var event$1: Readonly<{
     __proto__: any;
     BOOT: string;
     STATE_PAUSE: string;
@@ -9395,8 +9422,8 @@ export var event: Readonly<{
     WINDOW_ONORIENTATION_CHANGE: string;
     WINDOW_ONSCROLL: string;
     VIEWPORT_ONCHANGE: string;
-    WEBGL_ONCONTEXT_LOST: string;
-    WEBGL_ONCONTEXT_RESTORED: string;
+    ONCONTEXT_LOST: string;
+    ONCONTEXT_RESTORED: string;
     emit: typeof emit;
     on: typeof on;
     once: typeof once;
@@ -12004,7 +12031,6 @@ declare function releaseAllPointerEvents(region: Rect | Polygon | Line | Ellipse
  * @memberof input
  * @public
  * @function
- * @param {Function} [success] callback if the request is successful
  * @returns {boolean} return true if the request was successfully submitted
  * @example
  * // register on the pointer lock change event
@@ -12573,4 +12599,4 @@ declare function defer(func: Function, thisArg: object, ...args: any[]): number;
  * @returns {Function} the function that will be throttled
  */
 declare function throttle(fn: Function, delay: number, no_trailing: any): Function;
-export { Bounds$1 as Bounds, math as Math, device$1 as device, pooling as pool, timer$1 as timer };
+export { Bounds$1 as Bounds, math as Math, device$1 as device, event$1 as event, pooling as pool, timer$1 as timer };

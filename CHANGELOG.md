@@ -1,6 +1,6 @@
 # Changelog
 
-## [10.7.0] (melonJS 2) - _2022-XX-XX
+## [10.7.0] (melonJS 2) - _2022-05-04
 
 ### Added
 - Core : new `device.nodeJS` to detect if running under node.js

@@ -3420,72 +3420,73 @@
 	 * @returns {Matrix3d} Reference to this object for method chaining
 	 */
 	Matrix3d.prototype.rotate = function rotate (angle, v) {
-	    var a = this.val,
-	        x = v.x,
-	        y = v.y,
-	        z = v.z;
+	    if (angle !== 0) {
+	        var a = this.val,
+	            x = v.x,
+	            y = v.y,
+	            z = v.z;
 
-	    var len = Math.sqrt(x * x + y * y + z * z);
+	        var len = Math.sqrt(x * x + y * y + z * z);
 
-	    var s, c, t;
-	    var a00, a01, a02, a03;
-	    var a10, a11, a12, a13;
-	    var a20, a21, a22, a23;
-	    var b00, b01, b02;
-	    var b10, b11, b12;
-	    var b20, b21, b22;
+	        var s, c, t;
+	        var a00, a01, a02, a03;
+	        var a10, a11, a12, a13;
+	        var a20, a21, a22, a23;
+	        var b00, b01, b02;
+	        var b10, b11, b12;
+	        var b20, b21, b22;
 
-	    if (len < EPSILON) {
-	        return null;
+	        if (len < EPSILON) {
+	            return null;
+	        }
+
+	        len = 1 / len;
+	        x *= len;
+	        y *= len;
+	        z *= len;
+
+	        s = Math.sin(angle);
+	        c = Math.cos(angle);
+	        t = 1 - c;
+
+	        a00 = a[0];
+	        a01 = a[1];
+	        a02 = a[2];
+	        a03 = a[3];
+	        a10 = a[4];
+	        a11 = a[5];
+	        a12 = a[6];
+	        a13 = a[7];
+	        a20 = a[8];
+	        a21 = a[9];
+	        a22 = a[10];
+	        a23 = a[11];
+
+	        // Construct the elements of the rotation matrix
+	        b00 = x * x * t + c;
+	        b01 = y * x * t + z * s;
+	        b02 = z * x * t - y * s;
+	        b10 = x * y * t - z * s;
+	        b11 = y * y * t + c;
+	        b12 = z * y * t + x * s;
+	        b20 = x * z * t + y * s;
+	        b21 = y * z * t - x * s;
+	        b22 = z * z * t + c;
+
+	        // Perform rotation-specific matrix multiplication
+	        a[0] = a00 * b00 + a10 * b01 + a20 * b02;
+	        a[1] = a01 * b00 + a11 * b01 + a21 * b02;
+	        a[2] = a02 * b00 + a12 * b01 + a22 * b02;
+	        a[3] = a03 * b00 + a13 * b01 + a23 * b02;
+	        a[4] = a00 * b10 + a10 * b11 + a20 * b12;
+	        a[5] = a01 * b10 + a11 * b11 + a21 * b12;
+	        a[6] = a02 * b10 + a12 * b11 + a22 * b12;
+	        a[7] = a03 * b10 + a13 * b11 + a23 * b12;
+	        a[8] = a00 * b20 + a10 * b21 + a20 * b22;
+	        a[9] = a01 * b20 + a11 * b21 + a21 * b22;
+	        a[10] = a02 * b20 + a12 * b21 + a22 * b22;
+	        a[11] = a03 * b20 + a13 * b21 + a23 * b22;
 	    }
-
-	    len = 1 / len;
-	    x *= len;
-	    y *= len;
-	    z *= len;
-
-	    s = Math.sin(angle);
-	    c = Math.cos(angle);
-	    t = 1 - c;
-
-	    a00 = a[0];
-	    a01 = a[1];
-	    a02 = a[2];
-	    a03 = a[3];
-	    a10 = a[4];
-	    a11 = a[5];
-	    a12 = a[6];
-	    a13 = a[7];
-	    a20 = a[8];
-	    a21 = a[9];
-	    a22 = a[10];
-	    a23 = a[11];
-
-	    // Construct the elements of the rotation matrix
-	    b00 = x * x * t + c;
-	    b01 = y * x * t + z * s;
-	    b02 = z * x * t - y * s;
-	    b10 = x * y * t - z * s;
-	    b11 = y * y * t + c;
-	    b12 = z * y * t + x * s;
-	    b20 = x * z * t + y * s;
-	    b21 = y * z * t - x * s;
-	    b22 = z * z * t + c;
-
-	    // Perform rotation-specific matrix multiplication
-	    a[0] = a00 * b00 + a10 * b01 + a20 * b02;
-	    a[1] = a01 * b00 + a11 * b01 + a21 * b02;
-	    a[2] = a02 * b00 + a12 * b01 + a22 * b02;
-	    a[3] = a03 * b00 + a13 * b01 + a23 * b02;
-	    a[4] = a00 * b10 + a10 * b11 + a20 * b12;
-	    a[5] = a01 * b10 + a11 * b11 + a21 * b12;
-	    a[6] = a02 * b10 + a12 * b11 + a22 * b12;
-	    a[7] = a03 * b10 + a13 * b11 + a23 * b12;
-	    a[8] = a00 * b20 + a10 * b21 + a20 * b22;
-	    a[9] = a01 * b20 + a11 * b21 + a21 * b22;
-	    a[10] = a02 * b20 + a12 * b21 + a22 * b22;
-	    a[11] = a03 * b20 + a13 * b21 + a23 * b22;
-
 	    return this;
 	};
 
@@ -4911,8 +4912,8 @@
 	var VIEWPORT_ONCHANGE = "viewport.onchange";
 
 	/**
-	 * Event for when WebGL context is lost <br>
-	 * Data passed : {me.WebGLRenderer} the current webgl renderer instance`
+	 * Event for when the current context is lost <br>
+	 * Data passed : {me.Renderer} the current renderer instance
 	 * @public
 	 * @constant
 	 * @type {string}
@@ -4920,19 +4921,19 @@
 	 * @memberof event
 	 * @see event.on
 	 */
-	var WEBGL_ONCONTEXT_LOST = "renderer.webglcontextlost";
+	var ONCONTEXT_LOST = "renderer.contextlost";
 
 	/**
-	 * Event for when WebGL context is restored <br>
-	 * Data passed : {me.WebGLRenderer} the current webgl renderer instance`
+	 * Event for when the current context is restored <br>
+	 * Data passed : {me.Renderer} the current renderer instance`
 	 * @public
 	 * @constant
 	 * @type {string}
-	 * @name WEBGL_ONCONTEXT_RESTORED
+	 * @name ONCONTEXT_RESTORED
 	 * @memberof event
 	 * @see event.on
 	 */
-	var WEBGL_ONCONTEXT_RESTORED = "renderer.webglcontextrestored";
+	var ONCONTEXT_RESTORED = "renderer.contextrestored";
 
 	/**
 	 * calls each of the listeners registered for a given event.
@@ -4991,7 +4992,7 @@
 	    return eventEmitter.off(eventName, listener);
 	}
 
-	var event = /*#__PURE__*/Object.freeze({
+	var event$1 = /*#__PURE__*/Object.freeze({
 		__proto__: null,
 		BOOT: BOOT,
 		STATE_PAUSE: STATE_PAUSE,
@@ -5024,8 +5025,8 @@
 		WINDOW_ONORIENTATION_CHANGE: WINDOW_ONORIENTATION_CHANGE,
 		WINDOW_ONSCROLL: WINDOW_ONSCROLL,
 		VIEWPORT_ONCHANGE: VIEWPORT_ONCHANGE,
-		WEBGL_ONCONTEXT_LOST: WEBGL_ONCONTEXT_LOST,
-		WEBGL_ONCONTEXT_RESTORED: WEBGL_ONCONTEXT_RESTORED,
+		ONCONTEXT_LOST: ONCONTEXT_LOST,
+		ONCONTEXT_RESTORED: ONCONTEXT_RESTORED,
 		emit: emit,
 		on: on,
 		once: once,
@@ -13509,7 +13510,6 @@
 	 * @memberof input
 	 * @public
 	 * @function
-	 * @param {Function} [success] callback if the request is successful
 	 * @returns {boolean} return true if the request was successfully submitted
 	 * @example
 	 * // register on the pointer lock change event
@@ -22942,6 +22942,8 @@
 	 */
 	var CanvasRenderer = /*@__PURE__*/(function (Renderer) {
 	    function CanvasRenderer(options) {
+	        var this$1$1 = this;
+
 	        // parent constructor
 	        Renderer.call(this, options);
 
@@ -22970,6 +22972,19 @@
 	            // enable the tile texture seam fix with the canvas renderer
 	            this.uvOffset = 1;
 	        }
+
+	        // context lost & restore event for canvas
+	        this.getScreenCanvas().addEventListener("contextlost", function (e) {
+	            e.preventDefault();
+	            this$1$1.isContextValid = false;
+	            event.emit(event.ONCONTEXT_LOST, this$1$1);
+	        }, false );
+	        // ctx.restoreContext()
+	        this.getScreenCanvas().addEventListener("contextrestored", function () {
+	            this$1$1.isContextValid = true;
+	            event.emit(event.ONCONTEXT_RESTORED, this$1$1);
+	            me.game.repaint();
+	        }, false );
 	    }
 
 	    if ( Renderer ) CanvasRenderer.__proto__ = Renderer;
@@ -30139,7 +30154,7 @@
 	    this.uniforms = extractUniforms(this.gl, this);
 
 	    // destroy the shader on context lost (will be recreated on context restore)
-	    on(WEBGL_ONCONTEXT_LOST, this.destroy, this);
+	    on(ONCONTEXT_LOST, this.destroy, this);
 	};
 
 	/**
@@ -31025,19 +31040,19 @@
 	        // Create a texture cache
 	        this.cache = new TextureCache(this.maxTextures);
 
-	        // to simulate context lost and restore :
+	        // to simulate context lost and restore in WebGL:
 	        // var ctx = me.video.renderer.context.getExtension('WEBGL_lose_context');
 	        // ctx.loseContext()
 	        this.getScreenCanvas().addEventListener("webglcontextlost", function (e) {
 	            e.preventDefault();
 	            this$1$1.isContextValid = false;
-	            emit(WEBGL_ONCONTEXT_LOST, this$1$1);
+	            emit(ONCONTEXT_LOST, this$1$1);
 	        }, false );
 	        // ctx.restoreContext()
 	        this.getScreenCanvas().addEventListener("webglcontextrestored", function () {
 	            this$1$1.reset();
 	            this$1$1.isContextValid = true;
-	            emit(WEBGL_ONCONTEXT_RESTORED, this$1$1);
+	            emit(ONCONTEXT_RESTORED, this$1$1);
 	        }, false );
 	    }
 
@@ -35351,7 +35366,7 @@
 	        this.repeat = settings.repeat || "repeat";
 
 	        // on context lost, all previous textures are destroyed
-	        on(WEBGL_ONCONTEXT_RESTORED, this.createPattern, this);
+	        on(ONCONTEXT_RESTORED, this.createPattern, this);
 	    }
 
 	   if ( Sprite ) ImageLayer.__proto__ = Sprite;
@@ -35560,7 +35575,7 @@
 	    ImageLayer.prototype.destroy = function destroy () {
 	        push(this.ratio);
 	        this.ratio = undefined;
-	        off(WEBGL_ONCONTEXT_RESTORED, this.createPattern);
+	        off(ONCONTEXT_RESTORED, this.createPattern);
 	        Sprite.prototype.destroy.call(this);
 	    };
 
@@ -36372,15 +36387,28 @@
 	    height : 1,
 
 	    /**
-	     * default image used for particles.
-	     * (by default melonJS will create an white texture image)
+	     * image used for particles texture
+	     * (by default melonJS will create an white 8x8 texture image)
 	     * @public
 	     * @type {HTMLCanvasElement}
 	     * @name image
 	     * @memberof ParticleEmitterSettings
 	     * @default undefined
+	     * @see ParticleEmitterSettings.textureSize
 	     */
 	    image : undefined,
+
+	    /**
+	     * default texture size used for particles if no image is specified
+	     * (by default melonJS will create an white 8x8 texture image)
+	     * @public
+	     * @type {number}
+	     * @name textureSize
+	     * @memberof ParticleEmitterSettings
+	     * @default 8
+	     * @see ParticleEmitterSettings.image
+	     */
+	    textureSize : 8,
 
 	    /**
 	     * tint to be applied to particles
@@ -36556,14 +36584,28 @@
 	    followTrajectory : false,
 
 	    /**
-	     * Enable the Texture Additive by composite operation.
+	     * Enable the Texture Additive by composite operation ("additive" blendMode)
 	     * @public
 	     * @type {boolean}
 	     * @name textureAdditive
 	     * @default false
 	     * @memberof ParticleEmitterSettings
+	     * @see ParticleEmitterSettings.blendMode
 	     */
 	    textureAdditive : false,
+
+	    /**
+	     * the blend mode to be applied when rendering particles.
+	     * (note: this will superseed the `textureAdditive` setting if different than "normal")
+	     * @public
+	     * @type {string}
+	     * @name blendMode
+	     * @default normal
+	     * @memberof ParticleEmitterSettings
+	     * @see CanvasRenderer#setBlendMode
+	     * @see WebGLRenderer#setBlendMode
+	     */
+	    blendMode : "normal",
 
 	    /**
 	     * Update particles only in the viewport, remove it when out of viewport.
@@ -36628,15 +36670,23 @@
 	    framesToSkip : 0
 	};
 
+	// default texture used when no sprite is defined
+	var defaultParticleTexture;
+
 	/**
 	 * @ignore
 	 */
 	function createDefaultParticleTexture(w, h) {
-	    var canvas = createCanvas(w, h);
-	    var context = canvas.getContext("2d");
-	    context.fillStyle = "#fff";
-	    context.fillRect(0, 0, w, h);
-	    return canvas;
+	    if ( w === void 0 ) w = 8;
+	    if ( h === void 0 ) h = 8;
+
+	    if (typeof defaultParticleTexture === "undefined") {
+	        defaultParticleTexture = createCanvas(w, h, true);
+	        var context = defaultParticleTexture.getContext("2d");
+	        context.fillStyle = "#fff";
+	        context.fillRect(0, 0, w, h);
+	    }
+	    return defaultParticleTexture;
 	}
 	/**
 	 * @classdesc
@@ -36711,7 +36761,7 @@
 
 	        // Cache the image reference
 	        if (typeof this.settings.image === "undefined") {
-	            this.settings.image = createDefaultParticleTexture(this.width, this.height);
+	            this.settings.image = createDefaultParticleTexture(settings.textureSize, settings.textureSize);
 	        }
 
 	        this.floating = this.settings.floating;
@@ -36833,6 +36883,18 @@
 	        return this.isDirty;
 	    };
 
+	    /**
+	     * Destroy function
+	     * @ignore
+	     */
+	    ParticleEmitter.prototype.destroy = function destroy () {
+	        // call the parent destroy method
+	        Container.prototype.destroy.call(this, arguments);
+	        // clean emitter specific Properties
+	        this.settings.image = undefined;
+	        this.settings = undefined;
+	    };
+
 	    return ParticleEmitter;
 	}(Container));
 
@@ -36847,8 +36909,8 @@
 	        Renderable.call(
 	            this, emitter.getRandomPointX(),
 	            emitter.getRandomPointY(),
-	            emitter.settings.image ? emitter.settings.image.width : emitter.width || 1,
-	            emitter.settings.image ? emitter.settings.image.height : emitter.height || 1
+	            emitter.settings.image.width,
+	            emitter.settings.image.height
 	        );
 	        this.onResetEvent(emitter, true);
 	    }
@@ -36869,8 +36931,8 @@
 	                emitter.getRandomPointY()
 	            );
 	            this.resize(
-	                emitter.settings.image ? emitter.settings.image.width : emitter.width || 1,
-	                emitter.settings.image ? emitter.settings.image.height : emitter.height || 1
+	                emitter.settings.image.width,
+	                emitter.settings.image.height
 	            );
 	        } else {
 	            // particle velocity
@@ -36886,10 +36948,12 @@
 	            this.tint.parseCSS(emitter.settings.tint);
 	        }
 
-	        if (emitter.settings.textureAdditive) {
+	        if (emitter.settings.textureAdditive === true) {
 	            this.blendMode = "additive";
-	        } else {
-	            this.blendMode = "normal";
+	        }
+
+	        if (emitter.settings.blendMode !== "normal") {
+	            this.blendMode = emitter.settings.blendMode;
 	        }
 
 	        // Set the start particle Angle and Speed as defined in emitter
@@ -37543,7 +37607,7 @@
 	exports.boot = boot;
 	exports.collision = collision;
 	exports.device = device$1;
-	exports.event = event;
+	exports.event = event$1;
 	exports.game = game;
 	exports.input = input;
 	exports.level = level;
