@@ -783,7 +783,6 @@ export function releaseAllPointerEvents(region) {
  * @memberof input
  * @public
  * @function
- * @param {Function} [success] callback if the request is successful
  * @returns {boolean} return true if the request was successfully submitted
  * @example
  * // register on the pointer lock change event
