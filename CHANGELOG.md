@@ -1,5 +1,10 @@
 # Changelog
 
+## [10.7.1] (melonJS 2) - _2022-XX-XX
+
+### Fixed
+- Renderer: fix a crash on context restore when using the canvas renderer
+
 ## [10.7.0] (melonJS 2) - _2022-05-04
 
 ### Added

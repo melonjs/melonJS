@@ -65,7 +65,6 @@ class CanvasRenderer extends Renderer {
         this.getScreenCanvas().addEventListener("contextrestored", () => {
             this.isContextValid = true;
             event.emit(event.ONCONTEXT_RESTORED, this);
-            me.game.repaint();
         }, false );
     }
 
