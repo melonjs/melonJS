@@ -11,6 +11,7 @@
 ### Changed
 - Core : replace internal use of global window object by `globalThis`
 - Core : refactor the boot process, and device/feature detection/initialisation to better work within node.js (will still require jsdom and node-canvas)
+- Particle Emitter: refactoring of the Emitter class to directly extend `Container` instead of `Renderable`
 
 ### Fixed
 - Particle Emitter: fix a regression in `ParticleEmitter` causing a crash, after es6 class reformatting
