@@ -3,7 +3,6 @@ import { requestPointerLock, exitPointerLock } from "./../input/input.js";
 import { TextureAtlas } from "./../video/texture.js";
 import Renderer from "./../video/renderer.js";
 import { Draggable, DropTarget } from "./../renderable/dragndrop.js";
-import * as event from "./../system/event.js";
 
 /**
  * placeholder for all deprecated classes and corresponding alias for backward compatibility
