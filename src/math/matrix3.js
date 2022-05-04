@@ -475,72 +475,73 @@ class Matrix3d {
      * @returns {Matrix3d} Reference to this object for method chaining
      */
     rotate(angle, v) {
-        var a = this.val,
-            x = v.x,
-            y = v.y,
-            z = v.z;
+        if (angle !== 0) {
+            var a = this.val,
+                x = v.x,
+                y = v.y,
+                z = v.z;
 
-        var len = Math.sqrt(x * x + y * y + z * z);
+            var len = Math.sqrt(x * x + y * y + z * z);
 
-        var s, c, t;
-        var a00, a01, a02, a03;
-        var a10, a11, a12, a13;
-        var a20, a21, a22, a23;
-        var b00, b01, b02;
-        var b10, b11, b12;
-        var b20, b21, b22;
+            var s, c, t;
+            var a00, a01, a02, a03;
+            var a10, a11, a12, a13;
+            var a20, a21, a22, a23;
+            var b00, b01, b02;
+            var b10, b11, b12;
+            var b20, b21, b22;
 
-        if (len < EPSILON) {
-            return null;
+            if (len < EPSILON) {
+                return null;
+            }
+
+            len = 1 / len;
+            x *= len;
+            y *= len;
+            z *= len;
+
+            s = Math.sin(angle);
+            c = Math.cos(angle);
+            t = 1 - c;
+
+            a00 = a[0];
+            a01 = a[1];
+            a02 = a[2];
+            a03 = a[3];
+            a10 = a[4];
+            a11 = a[5];
+            a12 = a[6];
+            a13 = a[7];
+            a20 = a[8];
+            a21 = a[9];
+            a22 = a[10];
+            a23 = a[11];
+
+            // Construct the elements of the rotation matrix
+            b00 = x * x * t + c;
+            b01 = y * x * t + z * s;
+            b02 = z * x * t - y * s;
+            b10 = x * y * t - z * s;
+            b11 = y * y * t + c;
+            b12 = z * y * t + x * s;
+            b20 = x * z * t + y * s;
+            b21 = y * z * t - x * s;
+            b22 = z * z * t + c;
+
+            // Perform rotation-specific matrix multiplication
+            a[0] = a00 * b00 + a10 * b01 + a20 * b02;
+            a[1] = a01 * b00 + a11 * b01 + a21 * b02;
+            a[2] = a02 * b00 + a12 * b01 + a22 * b02;
+            a[3] = a03 * b00 + a13 * b01 + a23 * b02;
+            a[4] = a00 * b10 + a10 * b11 + a20 * b12;
+            a[5] = a01 * b10 + a11 * b11 + a21 * b12;
+            a[6] = a02 * b10 + a12 * b11 + a22 * b12;
+            a[7] = a03 * b10 + a13 * b11 + a23 * b12;
+            a[8] = a00 * b20 + a10 * b21 + a20 * b22;
+            a[9] = a01 * b20 + a11 * b21 + a21 * b22;
+            a[10] = a02 * b20 + a12 * b21 + a22 * b22;
+            a[11] = a03 * b20 + a13 * b21 + a23 * b22;
         }
-
-        len = 1 / len;
-        x *= len;
-        y *= len;
-        z *= len;
-
-        s = Math.sin(angle);
-        c = Math.cos(angle);
-        t = 1 - c;
-
-        a00 = a[0];
-        a01 = a[1];
-        a02 = a[2];
-        a03 = a[3];
-        a10 = a[4];
-        a11 = a[5];
-        a12 = a[6];
-        a13 = a[7];
-        a20 = a[8];
-        a21 = a[9];
-        a22 = a[10];
-        a23 = a[11];
-
-        // Construct the elements of the rotation matrix
-        b00 = x * x * t + c;
-        b01 = y * x * t + z * s;
-        b02 = z * x * t - y * s;
-        b10 = x * y * t - z * s;
-        b11 = y * y * t + c;
-        b12 = z * y * t + x * s;
-        b20 = x * z * t + y * s;
-        b21 = y * z * t - x * s;
-        b22 = z * z * t + c;
-
-        // Perform rotation-specific matrix multiplication
-        a[0] = a00 * b00 + a10 * b01 + a20 * b02;
-        a[1] = a01 * b00 + a11 * b01 + a21 * b02;
-        a[2] = a02 * b00 + a12 * b01 + a22 * b02;
-        a[3] = a03 * b00 + a13 * b01 + a23 * b02;
-        a[4] = a00 * b10 + a10 * b11 + a20 * b12;
-        a[5] = a01 * b10 + a11 * b11 + a21 * b12;
-        a[6] = a02 * b10 + a12 * b11 + a22 * b12;
-        a[7] = a03 * b10 + a13 * b11 + a23 * b12;
-        a[8] = a00 * b20 + a10 * b21 + a20 * b22;
-        a[9] = a01 * b20 + a11 * b21 + a21 * b22;
-        a[10] = a02 * b20 + a12 * b21 + a22 * b22;
-        a[11] = a03 * b20 + a13 * b21 + a23 * b22;
-
         return this;
     }
 
