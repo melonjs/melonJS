@@ -32,14 +32,17 @@ class ParticleEmitter extends Container {
      * @param {number} y y position of the particle emitter
      * @param {ParticleEmitterSettings} [settings=ParticleEmitterSettings] the settings for the particle emitter.
      * @example
-     * // Create a basic emitter at position 100, 100
-     * var emitter = new ParticleEmitter(100, 100);
-     *
-     * // Adjust the emitter properties
-     * emitter.totalParticles = 200;
-     * emitter.minLife = 1000;
-     * emitter.maxLife = 3000;
-     * emitter.z = 10;
+     * // Create a particle emitter at position 100, 100
+     * var emitter = new ParticleEmitter(100, 100, {
+     *     width: 16,
+     *     height : 16,
+     *     tint: "#f00",
+     *     totalParticles: 32,
+     *     angle: 0,
+     *     angleVariation: 6.283185307179586,
+     *     maxLife: 5,
+     *     speed: 3
+     * });
      *
      * // Add the emitter to the game world
      * me.game.world.addChild(emitter);
@@ -61,6 +64,15 @@ class ParticleEmitter extends Container {
             settings.width | 1,
             settings.height | 1
         );
+
+        /**
+         * the current (active) emitter settings
+         * @public
+         * @type {ParticleEmitterSettings}
+         * @name settings
+         * @memberof ParticleEmitter
+         */
+        this.settings = {};
 
         // center the emitter around the given coordinates
         this.centerOn(x, y);
@@ -92,9 +104,6 @@ class ParticleEmitter extends Container {
         // count the updates
         this._updateCount = 0;
 
-        // the emitter settings
-        this.settings = {};
-
         // internally store how much time was skipped when frames are skipped
         this._dt = 0;
 
@@ -106,7 +115,7 @@ class ParticleEmitter extends Container {
 
     /**
      * Reset the emitter with particle emitter settings.
-     * @param {object} settings [optional] object with emitter settings. See {@link ParticleEmitterSettings}
+     * @param {ParticleEmitterSettings} settings [optional] object with emitter settings. See {@link ParticleEmitterSettings}
      */
     reset(settings = {}) {
         Object.assign(this.settings, ParticleEmitterSettings, settings);
