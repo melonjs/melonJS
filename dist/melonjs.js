@@ -1,5 +1,5 @@
 /*!
- * melonJS Game Engine - v10.7.0
+ * melonJS Game Engine - v10.7.1
  * http://www.melonjs.org
  * melonjs is licensed under the MIT License.
  * http://www.opensource.org/licenses/mit-license
@@ -22983,7 +22983,6 @@
 	        this.getScreenCanvas().addEventListener("contextrestored", function () {
 	            this$1$1.isContextValid = true;
 	            event.emit(event.ONCONTEXT_RESTORED, this$1$1);
-	            me.game.repaint();
 	        }, false );
 	    }
 
@@ -33043,10 +33042,10 @@
 	     * this can be overridden by the plugin
 	     * @public
 	     * @type {string}
-	     * @default "10.7.0"
+	     * @default "10.7.1"
 	     * @name plugin.Base#version
 	     */
-	    this.version = "10.7.0";
+	    this.version = "10.7.1";
 	};
 
 	/**
@@ -37440,7 +37439,7 @@
 	 * @name version
 	 * @type {string}
 	 */
-	var version = "10.7.0";
+	var version = "10.7.1";
 
 
 	/**
