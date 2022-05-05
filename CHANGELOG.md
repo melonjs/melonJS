@@ -1,6 +1,6 @@
 # Changelog
 
-## [10.7.1] (melonJS 2) - _2022-XX-XX
+## [10.7.1] (melonJS 2) - _2022-05-05
 
 ### Fixed
 - Renderer: fix a crash on context restore when using the canvas renderer
@@ -1150,6 +1150,7 @@
 - first public version with alex4 !
 - www.melonjs.org is live :)
 
+[10.7.1]: https://github.com/melonjs/melonJS/compare/10.7.0...10.7.1
 [10.7.0]: https://github.com/melonjs/melonJS/compare/10.6.1...10.7.0
 [10.6.1]: https://github.com/melonjs/melonJS/compare/10.6.0...10.6.1
 [10.6.0]: https://github.com/melonjs/melonJS/compare/10.5.2...10.6.0
