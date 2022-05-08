@@ -31,6 +31,7 @@ import Polygon from "./geometries/poly.js";
 import Line from "./geometries/line.js";
 import Ellipse from "./geometries/ellipse.js";
 import Rect from "./geometries/rectangle.js";
+import RoundRect from "./geometries/roundrect.js";
 import QuadTree from "./physics/quadtree.js";
 import Body from "./physics/body.js";
 import Bounds from "./physics/bounds.js";
@@ -117,6 +118,7 @@ export {
     Line,
     Ellipse,
     Rect,
+    RoundRect,
     Tween,
     QuadTree,
     GLShader,

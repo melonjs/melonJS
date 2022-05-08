@@ -1,5 +1,10 @@
 # Changelog
 
+## [10.8.0] (melonJS 2) - _2022-XX-XX
+
+### Added
+- Geometry : new RoundRect geometry object (only properly draw/render in CANVAS mode for now)
+
 ## [10.7.1] (melonJS 2) - _2022-05-05
 
 ### Fixed

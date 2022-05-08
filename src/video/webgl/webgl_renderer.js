@@ -1049,6 +1049,41 @@ class WebGLRenderer extends Renderer {
     }
 
     /**
+     * Stroke a rounded rectangle at the specified coordinates
+     * @name strokeRoundRect
+     * @memberof WebGLRenderer.prototype
+     * @function
+     * @param {number} x
+     * @param {number} y
+     * @param {number} width
+     * @param {number} height
+     * @param {number} radius
+     * @param {boolean} [fill=false] also fill the shape with the current color if true
+     */
+    strokeRoundRect(x, y, width, height, radius, fill = false) {
+        if (fill === true) {
+            this.fillRoundRect(x, y, width, height, radius);
+        } else {
+            this.strokeRect(x, y, width, height, fill, radius);
+        }
+    }
+
+    /**
+     * Draw a rounded filled rectangle at the specified coordinates
+     * @name fillRoundRect
+     * @memberof WebGLRenderer.prototype
+     * @function
+     * @param {number} x
+     * @param {number} y
+     * @param {number} width
+     * @param {number} height
+     * @param {number} radius
+     */
+    fillRoundRect(x, y, width, height, radius) {
+        this.fillRect(x, y, width, height, radius);
+    }
+
+    /**
      * Reset (overrides) the renderer transformation matrix to the
      * identity one, and then apply the given transformation matrix.
      * @name setTransform

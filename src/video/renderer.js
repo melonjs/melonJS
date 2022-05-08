@@ -5,6 +5,7 @@ import * as event from "./../system/event.js";
 import device from "./../system/device.js";
 import { setPrefixed } from "./../utils/agent.js";
 import Rect from "./../geometries/rectangle.js";
+import RoundRect from "./../geometries/roundrect.js";
 import Ellipse from "./../geometries/ellipse.js";
 import Polygon from "./../geometries/poly.js";
 import Line from "./../geometries/line.js";
@@ -331,11 +332,13 @@ class Renderer {
      * @name stroke
      * @memberof Renderer.prototype
      * @function
-     * @param {Rect|Polygon|Line|Ellipse} shape a shape object to stroke
+     * @param {Rect|RoundRect|Polygon|Line|Ellipse} shape a shape object to stroke
      * @param {boolean} [fill=false] fill the shape with the current color if true
      */
     stroke(shape, fill) {
-        if (shape instanceof Rect || shape instanceof Bounds) {
+        if (shape instanceof RoundRect) {
+            this.strokeRoundRect(shape.left, shape.top, shape.width, shape.height, shape.radius, fill);
+        } else if (shape instanceof Rect || shape instanceof Bounds) {
             this.strokeRect(shape.left, shape.top, shape.width, shape.height, fill);
         } else if (shape instanceof Line || shape instanceof Polygon) {
             this.strokePolygon(shape, fill);
@@ -348,6 +351,17 @@ class Renderer {
                 fill
             );
         }
+    }
+
+    /**
+     * fill the given shape
+     * @name fill
+     * @memberof Renderer.prototype
+     * @function
+     * @param {Rect|Polygon|Line|Ellipse} shape a shape object to fill
+     */
+    fill(shape) {
+        this.stroke(shape, true);
     }
 
     /**
@@ -377,17 +391,6 @@ class Renderer {
         context.restore();
 
         return canvas;
-    }
-
-    /**
-     * fill the given shape
-     * @name fill
-     * @memberof Renderer.prototype
-     * @function
-     * @param {Rect|Polygon|Line|Ellipse} shape a shape object to fill
-     */
-    fill(shape) {
-        this.stroke(shape, true);
     }
 
     /**

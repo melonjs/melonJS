@@ -488,15 +488,12 @@ class CanvasRenderer extends Renderer {
      * @param {boolean} [fill=false] also fill the shape with the current color if true
      */
     strokeRect(x, y, width, height, fill = false) {
-        if (fill === true ) {
-            this.fillRect(x, y, width, height);
-        } else {
-            if (this.backBufferContext2D.globalAlpha < 1 / 255) {
-                // Fast path: don't draw fully transparent
-                return;
-            }
-            this.backBufferContext2D.strokeRect(x, y, width, height);
+        var context = this.backBufferContext2D;
+        if (context.globalAlpha < 1 / 255) {
+            // Fast path: don't draw fully transparent
+            return;
         }
+        context[fill === true ? "fillRect" : "strokeRect"](x, y, width, height);
     }
 
     /**
@@ -510,11 +507,60 @@ class CanvasRenderer extends Renderer {
      * @param {number} height
      */
     fillRect(x, y, width, height) {
-        if (this.backBufferContext2D.globalAlpha < 1 / 255) {
+        this.strokeRect(x, y, width, height, true);
+    }
+
+    /**
+     * Stroke a rounded rectangle at the specified coordinates
+     * @name strokeRoundRect
+     * @memberof CanvasRenderer.prototype
+     * @function
+     * @param {number} x
+     * @param {number} y
+     * @param {number} width
+     * @param {number} height
+     * @param {number} radius
+     * @param {boolean} [fill=false] also fill the shape with the current color if true
+     */
+    strokeRoundRect(x, y, width, height, radius, fill = false) {
+        var context = this.backBufferContext2D;
+
+        if (context.globalAlpha < 1 / 255) {
             // Fast path: don't draw fully transparent
             return;
         }
-        this.backBufferContext2D.fillRect(x, y, width, height);
+
+        context.beginPath();
+        if (typeof context.roundRect === "function") {
+            //https://developer.chrome.com/blog/canvas2d/#round-rect
+            context.roundRect(x, y, width, height, radius);
+        } else {
+            context.moveTo(x + radius, y);
+            context.lineTo(x + width - radius, y);
+            context.arcTo(x + width, y, x + width, y + radius, radius);
+            context.lineTo(x + width, y + height - radius);
+            context.arcTo(x + width, y + height, x + width - radius, y + height, radius);
+            context.lineTo(x + radius, y + height);
+            context.arcTo(x, y + height, x, y + height - radius, radius);
+            context.lineTo(x, y + radius);
+            context.arcTo(x, y, x + radius, y, radius);
+        }
+        context[fill === true ? "fill" : "stroke"]();
+    }
+
+    /**
+     * Draw a rounded filled rectangle at the specified coordinates
+     * @name fillRoundRect
+     * @memberof CanvasRenderer.prototype
+     * @function
+     * @param {number} x
+     * @param {number} y
+     * @param {number} width
+     * @param {number} height
+     * @param {number} radius
+     */
+    fillRoundRect(x, y, width, height, radius) {
+        this.strokeRoundRect(x, y, width, height, radius, true);
     }
 
 
