@@ -112,12 +112,6 @@ function _checkCapabilities() {
     // detect device type/platform
     _detectDevice();
 
-    // Mobile browser hacks
-    if (device.isMobile) {
-        // Prevent the webview from moving on a swipe
-        device.enableSwipe(false);
-    }
-
     // Touch/Gesture Event feature detection
     device.TouchEvent = !!("ontouchstart" in globalThis);
     device.PointerEvent = !!globalThis.PointerEvent;
@@ -239,6 +233,13 @@ function _checkCapabilities() {
             );
         }
     }
+
+    // Mobile browser hacks
+    if (device.isMobile) {
+        // Prevent the webview from moving on a swipe
+        device.enableSwipe(false);
+    }
+
 };
 
 
@@ -676,13 +677,14 @@ let device = {
      * @param {boolean} [enable=true] enable or disable swipe.
      */
     enableSwipe(enable) {
+        var moveEvent = device.PointerEvent ? "pointermove" : (device.TouchEvent ? "touchmove" : "mousemove");
         if (enable !== false) {
             if (swipeEnabled === false) {
-                globalThis.document.removeEventListener("touchmove", _disableSwipeFn, false);
+                globalThis.document.removeEventListener(moveEvent, _disableSwipeFn);
                 swipeEnabled = true;
             }
         } else if (swipeEnabled === true) {
-            globalThis.document.addEventListener("touchmove", _disableSwipeFn, false);
+            globalThis.document.addEventListener(moveEvent, _disableSwipeFn, { passive: false });
             swipeEnabled = false;
         }
     },
