@@ -69,7 +69,7 @@ class World extends Container {
          * @name bodies
          * @memberof World
          * @public
-         * @type {Set}
+         * @type {Set<Body>}
          */
         this.bodies = new Set();
 
