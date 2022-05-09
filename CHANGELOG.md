@@ -1,6 +1,6 @@
 # Changelog
 
-## [10.8.0] (melonJS 2) - _2022-XX-XX
+## [10.8.0] (melonJS 2) - _2022-XX-XX_
 
 ### Added
 - Geometry : new RoundRect geometry object
@@ -12,12 +12,12 @@
 ### Fixed
 - Input: fix a warning on using passive target disabling swipe on a WebView (thanks @zngb)
 
-## [10.7.1] (melonJS 2) - _2022-05-05
+## [10.7.1] (melonJS 2) - _2022-05-05_
 
 ### Fixed
 - Renderer: fix a crash on context restore when using the canvas renderer
 
-## [10.7.0] (melonJS 2) - _2022-05-04
+## [10.7.0] (melonJS 2) - _2022-05-04_
 
 ### Added
 - Core : new `device.nodeJS` to detect if running under node.js
@@ -1162,6 +1162,7 @@
 - first public version with alex4 !
 - www.melonjs.org is live :)
 
+[10.8.0]: https://github.com/melonjs/melonJS/compare/10.7.1...10.8.0
 [10.7.1]: https://github.com/melonjs/melonJS/compare/10.7.0...10.7.1
 [10.7.0]: https://github.com/melonjs/melonJS/compare/10.6.1...10.7.0
 [10.6.1]: https://github.com/melonjs/melonJS/compare/10.6.0...10.6.1
