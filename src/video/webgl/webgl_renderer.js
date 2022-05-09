@@ -132,7 +132,7 @@ class WebGLRenderer extends Renderer {
         /**
          * The list of active compositors
          * @name compositors
-         * @type {Map}
+         * @type {Map<WebGLCompositor>}
          * @memberof WebGLRenderer#
          */
         this.compositors = new Map();

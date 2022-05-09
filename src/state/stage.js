@@ -31,7 +31,7 @@ class Stage {
          * Cameras will be renderered based on this order defined in this list.
          * Only the "default" camera will be resized when the window or canvas is resized.
          * @public
-         * @type {Map}
+         * @type {Map<Camera2d>}
          * @name cameras
          * @memberof Stage
          */
