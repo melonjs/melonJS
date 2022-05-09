@@ -1,6 +1,6 @@
 import Color from "./../../math/color.js";
-import Vector2d from "./../../math/vector2.js";
 import Matrix2d from "./../../math/matrix2.js";
+import Path2d from "./../../geometries/path2d.js";
 import WebGLCompositor from "./webgl_compositor.js";
 import Renderer from "./../renderer.js";
 import TextureCache from "./../texture_cache.js";
@@ -8,7 +8,7 @@ import { TextureAtlas, createAtlas } from "./../texture.js";
 import { createCanvas, renderer } from "./../video.js";
 import * as event from "./../../system/event.js";
 import * as pool from "./../../system/pooling.js";
-import { isPowerOfTwo, nextPowerOfTwo, TAU } from "./../../math/math.js";
+import { isPowerOfTwo, nextPowerOfTwo } from "./../../math/math.js";
 
 
 /**
@@ -108,12 +108,7 @@ class WebGLRenderer extends Renderer {
         /**
          * @ignore
          */
-        this._glPoints = [
-            new Vector2d(),
-            new Vector2d(),
-            new Vector2d(),
-            new Vector2d()
-        ];
+        this.path2D = new Path2d();
 
         /**
          * The current transformation matrix used for transformations on the overall scene
@@ -759,34 +754,14 @@ class WebGLRenderer extends Renderer {
      * @param {boolean} [antiClockwise=false] draw arc anti-clockwise
      * @param {boolean} [fill=false]
      */
-    strokeArc(x, y, radius, start, end, antiClockwise = false, fill) {
-        if (fill === true ) {
-            this.fillArc(x, y, radius, start, end, antiClockwise);
+    strokeArc(x, y, radius, start, end, antiClockwise = false, fill = false) {
+        this.path2D.beginPath();
+        this.path2D.arc(x, y, radius, start, end, antiClockwise);
+        if (fill === false) {
+            this.currentCompositor.drawVertices(this.gl.LINE_STRIP, this.path2D.points);
         } else {
-            // XXX to be optimzed using a specific shader
-            var points = this._glPoints;
-            var i, len = Math.floor(24 * Math.sqrt(radius * 2));
-            var theta = (end - start) / (len * 2);
-            var theta2 = theta * 2;
-            var cos_theta = Math.cos(theta);
-            var sin_theta = Math.sin(theta);
-
-            // Grow internal points buffer if necessary
-            for (i = points.length; i < len + 1; i++) {
-                points.push(new Vector2d());
-            }
-
-            // calculate and draw all segments
-            for (i = 0; i < len; i++) {
-                var angle = ((theta) + start + (theta2 * i));
-                var cos = Math.cos(angle);
-                var sin = -Math.sin(angle);
-
-                points[i].x = x + (((cos_theta * cos) + (sin_theta * sin)) * radius);
-                points[i].y = y + (((cos_theta * -sin) + (sin_theta * cos)) * radius);
-            }
-            // batch draw all lines
-            this.currentCompositor.drawVertices(this.gl.LINE_STRIP, points, len);
+            this.path2D.closePath();
+            this.currentCompositor.drawVertices(this.gl.TRIANGLES, this.path2D.triangulatePath());
         }
     }
 
@@ -802,35 +777,8 @@ class WebGLRenderer extends Renderer {
      * @param {number} end end angle in radians
      * @param {boolean} [antiClockwise=false] draw arc anti-clockwise
      */
-    fillArc(x, y, radius, start, end /*, antiClockwise = false*/) {
-        // XXX to be optimzed using a specific shader
-        var points = this._glPoints;
-        var i, index = 0;
-        var len = Math.floor(24 * Math.sqrt(radius * 2));
-        var theta = (end - start) / (len * 2);
-        var theta2 = theta * 2;
-        var cos_theta = Math.cos(theta);
-        var sin_theta = Math.sin(theta);
-
-        // Grow internal points buffer if necessary
-        for (i = points.length; i < len * 2; i++) {
-            points.push(new Vector2d());
-        }
-
-        // calculate and draw all segments
-        for (i = 0; i < len - 1; i++) {
-            var angle = ((theta) + start + (theta2 * i));
-            var cos = Math.cos(angle);
-            var sin = -Math.sin(angle);
-
-            points[index++].set(x, y);
-            points[index++].set(
-                x - (((cos_theta * cos) + (sin_theta * sin)) * radius),
-                y - (((cos_theta * -sin) + (sin_theta * cos)) * radius)
-            );
-        }
-        // batch draw all triangles
-        this.currentCompositor.drawVertices(this.gl.TRIANGLE_STRIP, points, index);
+    fillArc(x, y, radius, start, end, antiClockwise = false) {
+        this.strokeArc(x, y, radius, start, end, antiClockwise, true);
     }
 
     /**
@@ -845,28 +793,13 @@ class WebGLRenderer extends Renderer {
      * @param {boolean} [fill=false] also fill the shape with the current color if true
      */
     strokeEllipse(x, y, w, h, fill = false) {
-        if (fill === true ) {
-            this.fillEllipse(x, y, w, h);
+        this.path2D.beginPath();
+        this.path2D.ellipse(x, y, w, h, 0, 0, 360);
+        this.path2D.closePath();
+        if (fill === false) {
+            this.currentCompositor.drawVertices(this.gl.LINE_LOOP, this.path2D.points);
         } else {
-            // XXX to be optimzed using a specific shader
-            var len = Math.floor(24 * Math.sqrt(w)) ||
-                      Math.floor(12 * Math.sqrt(w + h));
-            var segment = (TAU) / len;
-            var points = this._glPoints,
-                i;
-
-            // Grow internal points buffer if necessary
-            for (i = points.length; i < len; i++) {
-                points.push(new Vector2d());
-            }
-
-            // calculate and draw all segments
-            for (i = 0; i < len; i++) {
-                points[i].x = x + (Math.sin(segment * -i) * w);
-                points[i].y = y + (Math.cos(segment * -i) * h);
-            }
-            // batch draw all lines
-            this.currentCompositor.drawVertices(this.gl.LINE_LOOP, points, len);
+            this.currentCompositor.drawVertices(this.gl.TRIANGLES, this.path2D.triangulatePath());
         }
     }
 
@@ -881,28 +814,7 @@ class WebGLRenderer extends Renderer {
      * @param {number} h vertical radius of the ellipse
      */
     fillEllipse(x, y, w, h) {
-        // XXX to be optimzed using a specific shader
-        var len = Math.floor(24 * Math.sqrt(w)) ||
-                  Math.floor(12 * Math.sqrt(w + h));
-        var segment = (TAU) / len;
-        var points = this._glPoints;
-        var index = 0, i;
-
-        // Grow internal points buffer if necessary
-        for (i = points.length; i < (len + 1) * 2; i++) {
-            points.push(new Vector2d());
-        }
-
-        // draw all vertices vertex coordinates
-        for (i = 0; i < len + 1; i++) {
-            points[index++].set(x, y);
-            points[index++].set(
-                x + (Math.sin(segment * i) * w),
-                y + (Math.cos(segment * i) * h)
-            );
-        }
-        // batch draw all triangles
-        this.currentCompositor.drawVertices(this.gl.TRIANGLE_STRIP, points, index);
+        this.strokeEllipse(x, y, w, h, false);
     }
 
     /**
@@ -916,12 +828,10 @@ class WebGLRenderer extends Renderer {
      * @param {number} endY the end y coordinate
      */
     strokeLine(startX, startY, endX, endY) {
-        var points = this._glPoints;
-        points[0].x = startX;
-        points[0].y = startY;
-        points[1].x = endX;
-        points[1].y = endY;
-        this.currentCompositor.drawVertices(this.gl.LINE_STRIP, points, 2);
+        this.path2D.beginPath();
+        this.path2D.moveTo(startX, startY);
+        this.path2D.lineTo(endX, endY);
+        this.currentCompositor.drawVertices(this.gl.LINE_STRIP, this.path2D.points);
     }
 
 
@@ -948,25 +858,23 @@ class WebGLRenderer extends Renderer {
      * @param {boolean} [fill=false] also fill the shape with the current color if true
      */
     strokePolygon(poly, fill = false) {
-        if (fill === true ) {
-            this.fillPolygon(poly);
-        } else {
-            var len = poly.points.length,
-                points = this._glPoints,
-                i;
-
-            // Grow internal points buffer if necessary
-            for (i = points.length; i < len; i++) {
-                points.push(new Vector2d());
-            }
-
-            // calculate and draw all segments
-            for (i = 0; i < len; i++) {
-                points[i].x = poly.pos.x + poly.points[i].x;
-                points[i].y = poly.pos.y + poly.points[i].y;
-            }
-            this.currentCompositor.drawVertices(this.gl.LINE_LOOP, points, len);
+        this.translate(poly.pos.x, poly.pos.y);
+        this.path2D.beginPath();
+        this.path2D.moveTo(poly.points[0].x, poly.points[0].y);
+        var point;
+        for (var i = 1; i < poly.points.length; i++) {
+            point = poly.points[i];
+            this.path2D.lineTo(point.x, point.y);
         }
+        this.path2D.lineTo(poly.points[0].x, poly.points[0].y);
+        this.path2D.closePath();
+        if (fill === false) {
+            this.currentCompositor.drawVertices(this.gl.LINE_LOOP, this.path2D.points);
+        } else {
+            // draw all triangles
+            this.currentCompositor.drawVertices(this.gl.TRIANGLES, this.path2D.triangulatePath());
+        }
+        this.translate(-poly.pos.x, -poly.pos.y);
     }
 
     /**
@@ -977,24 +885,7 @@ class WebGLRenderer extends Renderer {
      * @param {Polygon} poly the shape to draw
      */
     fillPolygon(poly) {
-        var points = poly.points;
-        var glPoints = this._glPoints;
-        var indices = poly.getIndices();
-        var x = poly.pos.x, y = poly.pos.y;
-        var i;
-
-        // Grow internal points buffer if necessary
-        for (i = glPoints.length; i < indices.length; i++) {
-            glPoints.push(new Vector2d());
-        }
-
-        // calculate all vertices
-        for (i = 0; i < indices.length; i++ ) {
-            glPoints[i].set(x + points[indices[i]].x, y + points[indices[i]].y);
-        }
-
-        // draw all triangle
-        this.currentCompositor.drawVertices(this.gl.TRIANGLES, glPoints, indices.length);
+        this.strokePolygon(poly, true);
     }
 
     /**
@@ -1009,19 +900,13 @@ class WebGLRenderer extends Renderer {
      * @param {boolean} [fill=false] also fill the shape with the current color if true
      */
     strokeRect(x, y, width, height, fill = false) {
-        if (fill === true ) {
-            this.fillRect(x, y, width, height);
+        this.path2D.beginPath();
+        this.path2D.rect(x, y, width, height);
+        if (fill === false) {
+            this.currentCompositor.drawVertices(this.gl.LINE_LOOP, this.path2D.points);
         } else {
-            var points = this._glPoints;
-            points[0].x = x;
-            points[0].y = y;
-            points[1].x = x + width;
-            points[1].y = y;
-            points[2].x = x + width;
-            points[2].y = y + height;
-            points[3].x = x;
-            points[3].y = y + height;
-            this.currentCompositor.drawVertices(this.gl.LINE_LOOP, points, 4);
+            this.path2D.closePath();
+            this.currentCompositor.drawVertices(this.gl.TRIANGLES, this.path2D.triangulatePath());
         }
     }
 
@@ -1036,16 +921,7 @@ class WebGLRenderer extends Renderer {
      * @param {number} height
      */
     fillRect(x, y, width, height) {
-        var glPoints = this._glPoints;
-        glPoints[0].x = x + width;
-        glPoints[0].y = y;
-        glPoints[1].x = x;
-        glPoints[1].y = y;
-        glPoints[2].x = x + width;
-        glPoints[2].y = y + height;
-        glPoints[3].x = x;
-        glPoints[3].y = y + height;
-        this.currentCompositor.drawVertices(this.gl.TRIANGLE_STRIP, glPoints, 4);
+        this.strokeRect(x, y, width, height, true);
     }
 
     /**
@@ -1061,10 +937,13 @@ class WebGLRenderer extends Renderer {
      * @param {boolean} [fill=false] also fill the shape with the current color if true
      */
     strokeRoundRect(x, y, width, height, radius, fill = false) {
-        if (fill === true) {
-            this.fillRoundRect(x, y, width, height, radius);
+        this.path2D.beginPath();
+        this.path2D.roundRect(x, y, width, height, radius);
+        if (fill === false) {
+            this.currentCompositor.drawVertices(this.gl.LINE_LOOP, this.path2D.points);
         } else {
-            this.strokeRect(x, y, width, height, fill, radius);
+            this.path2D.closePath();
+            this.currentCompositor.drawVertices(this.gl.TRIANGLES, this.path2D.triangulatePath());
         }
     }
 
@@ -1080,7 +959,7 @@ class WebGLRenderer extends Renderer {
      * @param {number} radius
      */
     fillRoundRect(x, y, width, height, radius) {
-        this.fillRect(x, y, width, height, radius);
+        this.strokeRoundRect(x, y, width, height, radius, true);
     }
 
     /**

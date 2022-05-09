@@ -3,8 +3,11 @@
 ## [10.8.0] (melonJS 2) - _2022-XX-XX
 
 ### Added
-- Geometry : new RoundRect geometry object (only properly draw/render in CANVAS mode for now)
+- Geometry : new RoundRect geometry object
 - Geometry : new Path2D API to provide better abstraction when drawing primitives in WebGL
+
+### changed
+- Renderer: refactored the WebGL renderer to use the new Path2D API for primitive drawing
 
 ### Fixed
 - Input: fix a warning on using passive target disabling swipe on a WebView (thanks @zngb)
