@@ -189,7 +189,7 @@ class CanvasRenderer extends Renderer {
      * @param {number} height The rectangle's height.
      */
     clearRect(x, y, width, height) {
-        this.backBufferContext2D.clearRect(x, y, width, height);
+        this.getContext().clearRect(x, y, width, height);
     }
 
     /**
@@ -208,7 +208,7 @@ class CanvasRenderer extends Renderer {
      * var basic      = renderer.createPattern(image, "no-repeat");
      */
     createPattern(image, repeat) {
-        return this.backBufferContext2D.createPattern(image, repeat);
+        return this.getContext().createPattern(image, repeat);
     }
 
     /**
@@ -234,10 +234,11 @@ class CanvasRenderer extends Renderer {
      * renderer.drawImage(image, sx, sy, sWidth, sHeight, dx, dy, dWidth, dHeight);
      */
     drawImage(image, sx, sy, sw, sh, dx, dy, dw, dh) {
-        if (this.backBufferContext2D.globalAlpha < 1 / 255) {
+        if (this.getGlobalAlpha() < 1 / 255) {
             // Fast path: don't draw fully transparent
             return;
         }
+        var context = this.getContext();
 
         if (typeof sw === "undefined") {
             sw = dw = image.width;
@@ -271,7 +272,7 @@ class CanvasRenderer extends Renderer {
             // get a tinted version of this image from the texture cache
             source = this.cache.tint(image, this.currentTint.toRGB());
         }
-        this.backBufferContext2D.drawImage(source, sx, sy, sw, sh, dx, dy, dw, dh);
+        context.drawImage(source, sx, sy, sw, sh, dx, dy, dw, dh);
     }
 
     /**
@@ -287,14 +288,15 @@ class CanvasRenderer extends Renderer {
      * @see CanvasRenderer#createPattern
      */
     drawPattern(pattern, x, y, width, height) {
-        if (this.backBufferContext2D.globalAlpha < 1 / 255) {
+        if (this.getGlobalAlpha() < 1 / 255) {
             // Fast path: don't draw fully transparent
             return;
         }
-        var fillStyle = this.backBufferContext2D.fillStyle;
-        this.backBufferContext2D.fillStyle = pattern;
-        this.backBufferContext2D.fillRect(x, y, width, height);
-        this.backBufferContext2D.fillStyle = fillStyle;
+        var context = this.getContext();
+        var fillStyle = context.fillStyle;
+        context.fillStyle = pattern;
+        context.fillRect(x, y, width, height);
+        context.fillStyle = fillStyle;
     }
 
     /**
@@ -311,12 +313,12 @@ class CanvasRenderer extends Renderer {
      * @param {boolean} [fill=false] also fill the shape with the current color if true
      */
     strokeArc(x, y, radius, start, end, antiClockwise, fill = false) {
-        var context = this.backBufferContext2D;
-
-        if (context.globalAlpha < 1 / 255) {
+        if (this.getGlobalAlpha() < 1 / 255) {
             // Fast path: don't draw fully transparent
             return;
         }
+        var context = this.getContext();
+
         context.translate(x, y);
         context.beginPath();
         context.arc(0, 0, radius, start, end, antiClockwise || false);
@@ -352,12 +354,11 @@ class CanvasRenderer extends Renderer {
      * @param {boolean} [fill=false] also fill the shape with the current color if true
      */
     strokeEllipse(x, y, w, h, fill = false) {
-        var context = this.backBufferContext2D;
-
-        if (context.globalAlpha < 1 / 255) {
+        if (this.getGlobalAlpha() < 1 / 255) {
             // Fast path: don't draw fully transparent
             return;
         }
+        var context = this.getContext();
 
         var hw = w,
             hh = h,
@@ -408,9 +409,7 @@ class CanvasRenderer extends Renderer {
      * @param {number} endY the end y coordinate
      */
     strokeLine(startX, startY, endX, endY) {
-        var context = this.backBufferContext2D;
-
-        if (context < 1 / 255) {
+        if (this.getGlobalAlpha() < 1 / 255) {
             // Fast path: don't draw fully transparent
             return;
         }
@@ -444,12 +443,11 @@ class CanvasRenderer extends Renderer {
      * @param {boolean} [fill=false] also fill the shape with the current color if true
      */
     strokePolygon(poly, fill = false) {
-        var context = this.backBufferContext2D;
-
-        if (context.globalAlpha < 1 / 255) {
+        if (this.getGlobalAlpha() < 1 / 255) {
             // Fast path: don't draw fully transparent
             return;
         }
+        var context = this.getContext();
 
         this.translate(poly.pos.x, poly.pos.y);
         context.beginPath();
@@ -488,11 +486,12 @@ class CanvasRenderer extends Renderer {
      * @param {boolean} [fill=false] also fill the shape with the current color if true
      */
     strokeRect(x, y, width, height, fill = false) {
-        var context = this.backBufferContext2D;
-        if (context.globalAlpha < 1 / 255) {
+        if (this.getGlobalAlpha() < 1 / 255) {
             // Fast path: don't draw fully transparent
             return;
         }
+        var context = this.getContext();
+
         context[fill === true ? "fillRect" : "strokeRect"](x, y, width, height);
     }
 
@@ -523,12 +522,11 @@ class CanvasRenderer extends Renderer {
      * @param {boolean} [fill=false] also fill the shape with the current color if true
      */
     strokeRoundRect(x, y, width, height, radius, fill = false) {
-        var context = this.backBufferContext2D;
-
-        if (context.globalAlpha < 1 / 255) {
+        if (this.getGlobalAlpha() < 1 / 255) {
             // Fast path: don't draw fully transparent
             return;
         }
+        var context = this.getContext();
 
         context.beginPath();
         if (typeof context.roundRect === "function") {
@@ -602,7 +600,7 @@ class CanvasRenderer extends Renderer {
      */
     restore() {
         this.backBufferContext2D.restore();
-        this.currentColor.glArray[3] = this.backBufferContext2D.globalAlpha;
+        this.currentColor.glArray[3] = this.getGlobalAlpha();
         this.currentScissor[0] = 0;
         this.currentScissor[1] = 0;
         this.currentScissor[2] = this.backBufferCanvas.width;
@@ -650,7 +648,7 @@ class CanvasRenderer extends Renderer {
     }
 
     /**
-     * Set the global alpha on the canvas context
+     * Set the global alpha
      * @name setGlobalAlpha
      * @memberof CanvasRenderer.prototype
      * @function
@@ -658,6 +656,17 @@ class CanvasRenderer extends Renderer {
      */
     setGlobalAlpha(alpha) {
         this.backBufferContext2D.globalAlpha = this.currentColor.glArray[3] = alpha;
+    }
+
+    /**
+     * Return the global alpha
+     * @name getGlobalAlpha
+     * @memberof CanvasRenderer.prototype
+     * @function
+     * @returns {number} global alpha value
+     */
+    getGlobalAlpha() {
+        return this.backBufferContext2D.globalAlpha;
     }
 
     /**
@@ -769,7 +778,7 @@ class CanvasRenderer extends Renderer {
      * @param {Rect|Polygon|Line|Ellipse} [mask] the shape defining the mask to be applied
      */
     setMask(mask) {
-        var context = this.backBufferContext2D;
+        var context = this.getContext();
         var _x = mask.pos.x, _y = mask.pos.y;
 
         context.save();

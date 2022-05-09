@@ -717,6 +717,17 @@ class WebGLRenderer extends Renderer {
     }
 
     /**
+     * Return the global alpha
+     * @name getGlobalAlpha
+     * @memberof WebGLRenderer.prototype
+     * @function
+     * @returns {number} global alpha value
+     */
+    getGlobalAlpha() {
+        return this.currentColor.alpha;
+    }
+
+    /**
      * Set the current fill & stroke style color.
      * By default, or upon reset, the value is set to #000000.
      * @name setColor
@@ -755,6 +766,10 @@ class WebGLRenderer extends Renderer {
      * @param {boolean} [fill=false]
      */
     strokeArc(x, y, radius, start, end, antiClockwise = false, fill = false) {
+        if (this.getGlobalAlpha() < 1 / 255) {
+            // Fast path: don't draw fully transparent
+            return;
+        }
         this.path2D.beginPath();
         this.path2D.arc(x, y, radius, start, end, antiClockwise);
         if (fill === false) {
@@ -793,6 +808,10 @@ class WebGLRenderer extends Renderer {
      * @param {boolean} [fill=false] also fill the shape with the current color if true
      */
     strokeEllipse(x, y, w, h, fill = false) {
+        if (this.getGlobalAlpha() < 1 / 255) {
+            // Fast path: don't draw fully transparent
+            return;
+        }
         this.path2D.beginPath();
         this.path2D.ellipse(x, y, w, h, 0, 0, 360);
         this.path2D.closePath();
@@ -828,6 +847,10 @@ class WebGLRenderer extends Renderer {
      * @param {number} endY the end y coordinate
      */
     strokeLine(startX, startY, endX, endY) {
+        if (this.getGlobalAlpha() < 1 / 255) {
+            // Fast path: don't draw fully transparent
+            return;
+        }
         this.path2D.beginPath();
         this.path2D.moveTo(startX, startY);
         this.path2D.lineTo(endX, endY);
@@ -858,6 +881,10 @@ class WebGLRenderer extends Renderer {
      * @param {boolean} [fill=false] also fill the shape with the current color if true
      */
     strokePolygon(poly, fill = false) {
+        if (this.getGlobalAlpha() < 1 / 255) {
+            // Fast path: don't draw fully transparent
+            return;
+        }
         this.translate(poly.pos.x, poly.pos.y);
         this.path2D.beginPath();
         this.path2D.moveTo(poly.points[0].x, poly.points[0].y);
@@ -900,6 +927,10 @@ class WebGLRenderer extends Renderer {
      * @param {boolean} [fill=false] also fill the shape with the current color if true
      */
     strokeRect(x, y, width, height, fill = false) {
+        if (this.getGlobalAlpha() < 1 / 255) {
+            // Fast path: don't draw fully transparent
+            return;
+        }
         this.path2D.beginPath();
         this.path2D.rect(x, y, width, height);
         if (fill === false) {
@@ -937,6 +968,10 @@ class WebGLRenderer extends Renderer {
      * @param {boolean} [fill=false] also fill the shape with the current color if true
      */
     strokeRoundRect(x, y, width, height, radius, fill = false) {
+        if (this.getGlobalAlpha() < 1 / 255) {
+            // Fast path: don't draw fully transparent
+            return;
+        }
         this.path2D.beginPath();
         this.path2D.roundRect(x, y, width, height, radius);
         if (fill === false) {
