@@ -1,6 +1,6 @@
 import Color from "./../../math/color.js";
 import Matrix2d from "./../../math/matrix2.js";
-import Path2d from "./../../geometries/path2d.js";
+import Path2D from "./../../geometries/path2d.js";
 import WebGLCompositor from "./webgl_compositor.js";
 import Renderer from "./../renderer.js";
 import TextureCache from "./../texture_cache.js";
@@ -106,9 +106,12 @@ class WebGLRenderer extends Renderer {
         this._blendStack = [];
 
         /**
-         * @ignore
+         * The Path2D instance used by the WebGL renderer to draw primitives
+         * @name path2D
+         * @type {Path2D}
+         * @memberof WebGLRenderer#
          */
-        this.path2D = new Path2d();
+        this.path2D = new Path2D();
 
         /**
          * The current transformation matrix used for transformations on the overall scene
