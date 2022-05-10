@@ -939,7 +939,6 @@ class WebGLRenderer extends Renderer {
         if (fill === false) {
             this.currentCompositor.drawVertices(this.gl.LINE_LOOP, this.path2D.points);
         } else {
-            this.path2D.closePath();
             this.currentCompositor.drawVertices(this.gl.TRIANGLES, this.path2D.triangulatePath());
         }
     }

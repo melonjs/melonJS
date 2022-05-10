@@ -1,5 +1,4 @@
 import * as pool from "./../system/pooling.js";
-import Vector2d from "./../math/vector2.js";
 import { TAU } from "./../math/math.js";
 import earcut from "earcut";
 
@@ -29,7 +28,7 @@ class Path2D {
         this.arcResolution = 5;
 
         /* @ignore */
-        this.triangles = [];
+        this.vertices = [];
     }
 
     /**
@@ -40,9 +39,9 @@ class Path2D {
      */
     beginPath() {
         // empty the cache and recycle all vectors
-        for (var i = this.points.length; i < length; i++) {
-            pool.push(this.points[i]);
-        }
+        this.points.forEach((point) => {
+            pool.push(point);
+        });
         this.points.length = 0;
     }
 
@@ -72,20 +71,20 @@ class Path2D {
     triangulatePath() {
         var i = 0;
         var points = this.points;
-        var triangles = this.triangles;
+        var vertices = this.vertices;
         var indices = earcut(points.flatMap(p => [p.x, p.y]));
 
-        // Grow cache buffer if necessary
-        for (i = triangles.length; i < indices.length; i++) {
-            triangles.push(new Vector2d());
-        }
         // calculate all vertices
         for (i = 0; i < indices.length; i++ ) {
-            triangles[i].set(points[indices[i]].x, points[indices[i]].y);
+            if (typeof vertices[i] === "undefined") {
+                // increase cache buffer if necessary
+                vertices[i] = pool.pull("Vector2d");
+            }
+            vertices[i].set(points[indices[i]].x, points[indices[i]].y);
         }
-        triangles.length = indices.length;
+        vertices.length = indices.length;
 
-        return triangles;
+        return vertices;
     }
 
     /**
