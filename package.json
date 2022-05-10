@@ -55,7 +55,7 @@
   ],
   "dependencies": {
     "@teppeis/multimaps": "^2.0.0",
-    "core-js": "^3.22.4",
+    "core-js": "^3.22.5",
     "earcut": "2.2.3",
     "eventemitter3": "^4.0.7",
     "howler": "2.2.3"
@@ -70,7 +70,7 @@
     "del-cli": "^4.0.1",
     "eslint": "^8.15.0",
     "eslint-plugin-jsdoc": "^39.2.9",
-    "jasmine-core": "^4.1.0",
+    "jasmine-core": "^4.1.1",
     "jsdoc": "^3.6.10",
     "karma": "^6.3.19",
     "karma-chrome-launcher": "^3.1.1",
