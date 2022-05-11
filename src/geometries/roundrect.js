@@ -23,6 +23,13 @@ class RoundRect extends Rect {
         this.radius = radius;
     }
 
+    /** @ignore */
+    onResetEvent(x, y, w, h, radius) {
+        super.setShape(x, y, w, h);
+        this.radius = radius;
+    }
+
+
     /**
      * the radius of the rounded corner
      * @public
@@ -43,6 +50,17 @@ class RoundRect extends Rect {
             value = this.height / 2;
         }
         this._radius = value;
+    }
+
+    /**
+     * clone this RoundRect
+     * @name clone
+     * @memberof RoundRect.prototype
+     * @function
+     * @returns {RoundRect} new RoundRect
+     */
+    clone() {
+        return new RoundRect(this.pos.x, this.pos.y, this.width, this.height, this.radius);
     }
 };
 

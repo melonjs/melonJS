@@ -220,6 +220,7 @@ export function boot() {
     pool.register("me.Matrix2d", Matrix2d, true);
     pool.register("me.Matrix3d", Matrix3d, true);
     pool.register("me.Rect", Rect, true);
+    pool.register("me.RoundRect", RoundRect, true);
     pool.register("me.Polygon", Polygon, true);
     pool.register("me.Line", Line, true);
     pool.register("me.Ellipse", Ellipse, true);
@@ -247,6 +248,7 @@ export function boot() {
     pool.register("Matrix2d", Matrix2d, true);
     pool.register("Matrix3d", Matrix3d, true);
     pool.register("Rect", Rect, true);
+    pool.register("RoundRect", RoundRect, true);
     pool.register("Polygon", Polygon, true);
     pool.register("Line", Line, true);
     pool.register("Ellipse", Ellipse, true);
