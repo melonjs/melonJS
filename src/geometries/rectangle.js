@@ -308,11 +308,6 @@ class Rect extends Polygon {
      */
     contains() {
         var arg0 = arguments[0];
-
-        if (arg0 instanceof Rect || arg0 instanceof RoundRect) {
-            // bail out
-            return super.contains(arg0);
-        }
         var _x1, _x2, _y1, _y2;
         if (arguments.length === 2) {
              // x, y
