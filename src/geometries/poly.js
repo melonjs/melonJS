@@ -25,7 +25,7 @@ class Polygon {
          * @public
          * @type {Vector2d}
          * @name pos
-         * @memberof Polygon#
+         * @memberof Polygon.prototype
          */
         this.pos = new Vector2d();
 
@@ -34,7 +34,7 @@ class Polygon {
          * @ignore
          * @type {Bounds}
          * @name _bounds
-         * @memberof Polygon#
+         * @memberof Polygon.prototype
          */
         this._bounds;
 
@@ -44,7 +44,7 @@ class Polygon {
          * @public
          * @type {Vector2d[]}
          * @name points
-         * @memberof Polygon#
+         * @memberof Polygon.prototype
          */
         this.points = [];
 
@@ -379,14 +379,14 @@ class Polygon {
     /**
      * Shifts the Polygon to the given position vector.
      * @name shift
-     * @memberof Polygon
+     * @memberof Polygon.prototype
      * @function
      * @param {Vector2d} position
      */
     /**
      * Shifts the Polygon to the given x, y position.
      * @name shift
-     * @memberof Polygon
+     * @memberof Polygon.prototype
      * @function
      * @param {number} x
      * @param {number} y

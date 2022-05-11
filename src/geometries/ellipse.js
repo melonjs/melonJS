@@ -18,7 +18,7 @@ class Ellipse {
          * @public
          * @type {Vector2d}
          * @name pos
-         * @memberof Ellipse#
+         * @memberof Ellipse.prototype
          */
         this.pos = new Vector2d();
 
@@ -33,7 +33,7 @@ class Ellipse {
          * @public
          * @type {number}
          * @name radius
-         * @memberof Ellipse
+         * @memberof Ellipse.prototype
          */
         this.radius = NaN;
 
@@ -42,7 +42,7 @@ class Ellipse {
          * @public
          * @type {Vector2d}
          * @name radiusV
-         * @memberof Ellipse#
+         * @memberof Ellipse.prototype
          */
         this.radiusV = new Vector2d();
 
@@ -51,7 +51,7 @@ class Ellipse {
          * @public
          * @type {Vector2d}
          * @name radiusSq
-         * @memberof Ellipse#
+         * @memberof Ellipse.prototype
          */
         this.radiusSq = new Vector2d();
 
@@ -60,7 +60,7 @@ class Ellipse {
          * @public
          * @type {Vector2d}
          * @name ratio
-         * @memberof Ellipse#
+         * @memberof Ellipse.prototype
          */
         this.ratio = new Vector2d();
 

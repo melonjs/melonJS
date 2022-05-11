@@ -63,7 +63,7 @@ class Rect extends Polygon {
      * @public
      * @type {number}
      * @name left
-     * @memberof Rect
+     * @memberof Rect.prototype
      */
     get left() {
         return this.pos.x;
@@ -74,7 +74,7 @@ class Rect extends Polygon {
      * @public
      * @type {number}
      * @name right
-     * @memberof Rect
+     * @memberof Rect.prototype
      */
     get right() {
         var w = this.width;
@@ -86,7 +86,7 @@ class Rect extends Polygon {
      * @public
      * @type {number}
      * @name top
-     * @memberof Rect
+     * @memberof Rect.prototype
      */
     get top() {
         return this.pos.y;
@@ -97,7 +97,7 @@ class Rect extends Polygon {
      * @public
      * @type {number}
      * @name bottom
-     * @memberof Rect
+     * @memberof Rect.prototype
      */
     get bottom() {
         var h = this.height;
@@ -109,7 +109,7 @@ class Rect extends Polygon {
      * @public
      * @type {number}
      * @name width
-     * @memberof Rect
+     * @memberof Rect.prototype
      */
     get width() {
         return this.points[2].x;
@@ -125,7 +125,7 @@ class Rect extends Polygon {
      * @public
      * @type {number}
      * @name height
-     * @memberof Rect
+     * @memberof Rect.prototype
      */
     get height() {
         return this.points[2].y;
@@ -141,7 +141,7 @@ class Rect extends Polygon {
      * @public
      * @type {number}
      * @name centerX
-     * @memberof Rect
+     * @memberof Rect.prototype
      */
     get centerX() {
         if (isFinite(this.width)) {
@@ -159,7 +159,7 @@ class Rect extends Polygon {
      * @public
      * @type {number}
      * @name centerY
-     * @memberof Rect
+     * @memberof Rect.prototype
      */
     get centerY() {
         if (isFinite(this.height)) {
@@ -301,13 +301,18 @@ class Rect extends Polygon {
     /**
      * Returns true if the rectangle contains the given point
      * @name contains
-     * @memberof Rect
+     * @memberof Rect.prototype
      * @function
      * @param {Vector2d} point
      * @returns {boolean} true if contains
      */
     contains() {
         var arg0 = arguments[0];
+
+        if (arg0 instanceof Rect || arg0 instanceof RoundRect) {
+            // bail out
+            return super.contains(arg0);
+        }
         var _x1, _x2, _y1, _y2;
         if (arguments.length === 2) {
              // x, y
