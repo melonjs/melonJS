@@ -36,7 +36,7 @@ class RoundRect extends Rect {
      * @type {number}
      * @default 20
      * @name radius
-     * @memberof RoundRect
+     * @memberof RoundRect.prototype
      */
     get radius() {
         return this._radius;
