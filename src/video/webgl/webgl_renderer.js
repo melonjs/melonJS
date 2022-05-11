@@ -1,6 +1,5 @@
 import Color from "./../../math/color.js";
 import Matrix2d from "./../../math/matrix2.js";
-import Path2D from "./../../geometries/path2d.js";
 import WebGLCompositor from "./webgl_compositor.js";
 import Renderer from "./../renderer.js";
 import TextureCache from "./../texture_cache.js";
@@ -41,7 +40,7 @@ class WebGLRenderer extends Renderer {
         /**
          * The WebGL version used by this renderer (1 or 2)
          * @name WebGLVersion
-         * @memberof WebGLRenderer
+         * @memberof WebGLRenderer#
          * @type {number}
          * @default 1
          * @readonly
@@ -51,7 +50,7 @@ class WebGLRenderer extends Renderer {
         /**
          * The vendor string of the underlying graphics driver.
          * @name GPUVendor
-         * @memberof WebGLRenderer
+         * @memberof WebGLRenderer#
          * @type {string}
          * @default null
          * @readonly
@@ -61,7 +60,7 @@ class WebGLRenderer extends Renderer {
         /**
          * The renderer string of the underlying graphics driver.
          * @name GPURenderer
-         * @memberof WebGLRenderer
+         * @memberof WebGLRenderer#
          * @type {string}
          * @default null
          * @readonly
@@ -71,7 +70,7 @@ class WebGLRenderer extends Renderer {
         /**
          * The WebGL context
          * @name gl
-         * @memberof WebGLRenderer
+         * @memberof WebGLRenderer#
          * type {WebGLRenderingContext}
          */
         this.context = this.gl = this.getContextGL(this.getScreenCanvas(), options.transparent);
@@ -79,7 +78,7 @@ class WebGLRenderer extends Renderer {
         /**
          * Maximum number of texture unit supported under the current context
          * @name maxTextures
-         * @memberof WebGLRenderer
+         * @memberof WebGLRenderer#
          * @type {number}
          * @readonly
          */
@@ -104,14 +103,6 @@ class WebGLRenderer extends Renderer {
          * @ignore
          */
         this._blendStack = [];
-
-        /**
-         * The Path2D instance used by the WebGL renderer to draw primitives
-         * @name path2D
-         * @type {Path2D}
-         * @memberof WebGLRenderer#
-         */
-        this.path2D = new Path2D();
 
         /**
          * The current transformation matrix used for transformations on the overall scene

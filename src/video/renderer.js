@@ -10,6 +10,7 @@ import Ellipse from "./../geometries/ellipse.js";
 import Polygon from "./../geometries/poly.js";
 import Line from "./../geometries/line.js";
 import Bounds from "./../physics/bounds.js";
+import Path2D from "./../geometries/path2d.js";
 
 /**
  * @classdesc
@@ -44,11 +45,19 @@ class Renderer {
         /**
          * true if the current rendering context is valid
          * @name isContextValid
-         * @memberof Renderer
+         * @memberof Renderer#
          * @default true
          * type {boolean}
          */
         this.isContextValid = true;
+
+        /**
+         * The Path2D instance used by the renderer to draw primitives
+         * @name path2D
+         * @type {Path2D}
+         * @memberof Renderer#
+         */
+        this.path2D = new Path2D();
 
         /**
          * @ignore

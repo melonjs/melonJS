@@ -74,7 +74,7 @@ device.turnOffPointerLock = function () {
 /**
  * @public
  * @name Texture
- * @memberof Renderer
+ * @memberof Renderer#
  * @deprecated since 10.4.0
  * @see TextureAtlas
  */
