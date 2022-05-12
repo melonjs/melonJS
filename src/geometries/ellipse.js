@@ -1,4 +1,3 @@
-import Vector2d from "./../math/vector2.js";
 import * as pool from "./../system/pooling.js";
 
 /**
@@ -20,7 +19,7 @@ class Ellipse {
          * @name pos
          * @memberof Ellipse.prototype
          */
-        this.pos = new Vector2d();
+        this.pos = pool.pull("Vector2d");
 
         /**
          * The bounding rectangle for this shape
@@ -44,7 +43,7 @@ class Ellipse {
          * @name radiusV
          * @memberof Ellipse.prototype
          */
-        this.radiusV = new Vector2d();
+        this.radiusV = pool.pull("Vector2d");
 
         /**
          * Radius squared, for pythagorean theorom
@@ -53,7 +52,7 @@ class Ellipse {
          * @name radiusSq
          * @memberof Ellipse.prototype
          */
-        this.radiusSq = new Vector2d();
+        this.radiusSq = pool.pull("Vector2d");
 
         /**
          * x/y scaling ratio for ellipse
@@ -62,7 +61,7 @@ class Ellipse {
          * @name ratio
          * @memberof Ellipse.prototype
          */
-        this.ratio = new Vector2d();
+        this.ratio = pool.pull("Vector2d");
 
         // the shape type
         this.shapeType = "Ellipse";

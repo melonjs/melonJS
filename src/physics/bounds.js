@@ -1,3 +1,4 @@
+import * as pool from "./../system/pooling.js";
 import Vector2d from "./../math/vector2.js";
 import Polygon from "./../geometries/poly.js";
 
@@ -451,10 +452,10 @@ class Bounds {
      */
     toPolygon () {
         return new Polygon(this.x, this.y, [
-            new Vector2d(0,          0),
-            new Vector2d(this.width, 0),
-            new Vector2d(this.width, this.height),
-            new Vector2d(0,          this.height)
+            pool.pull("Vector2d", 0,          0),
+            pool.pull("Vector2d", this.width, 0),
+            pool.pull("Vector2d", this.width, this.height),
+            pool.pull("Vector2d", 0,          this.height)
         ]);
     }
 
