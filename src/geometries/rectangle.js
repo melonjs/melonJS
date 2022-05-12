@@ -1,4 +1,4 @@
-import * as pool from "./../system/pooling.js";
+import Vector2d from "./../math/vector2.js";
 import Polygon from "./poly.js";
 
 /**
@@ -16,10 +16,10 @@ class Rect extends Polygon {
     constructor(x, y, w, h) {
         // parent constructor
         super(x, y, [
-            pool.pull("Vector2d", 0, 0), // 0, 0
-            pool.pull("Vector2d", w, 0), // 1, 0
-            pool.pull("Vector2d", w, h), // 1, 1
-            pool.pull("Vector2d", 0, h)  // 0, 1
+            new Vector2d(0, 0), // 0, 0
+            new Vector2d(w, 0), // 1, 0
+            new Vector2d(w, h), // 1, 1
+            new Vector2d(0, h)  // 0, 1
         ]);
         this.shapeType = "Rectangle";
     }

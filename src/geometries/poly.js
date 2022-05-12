@@ -27,7 +27,7 @@ class Polygon {
          * @name pos
          * @memberof Polygon.prototype
          */
-        this.pos = pool.pull("Vector2d");
+        this.pos = new Vector2d();
 
         /**
          * The bounding rectangle for this shape
@@ -117,13 +117,13 @@ class Polygon {
             if (typeof vertices[0] === "object") {
                 // array of {x,y} object
                 vertices.forEach((vertice) => {
-                   this.points.push(pool.pull("Vector2d", vertice.x, vertice.y));
+                   this.points.push(new Vector2d(vertice.x, vertice.y));
                 });
 
             } else {
                 // it's a flat array
                 for (var p = 0; p < vertices.length; p += 2) {
-                    this.points.push(pool.pull("Vector2d", vertices[p], vertices[p + 1]));
+                    this.points.push(new Vector2d(vertices[p], vertices[p + 1]));
                 }
             }
         } else {

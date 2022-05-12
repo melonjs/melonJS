@@ -60,6 +60,7 @@ class Path2D {
         }
     }
 
+
     /**
      * triangulate the shape defined by this path into an array of triangles
      * @name triangulatePath
@@ -81,12 +82,7 @@ class Path2D {
             }
             vertices[i].set(points[indices[i]].x, points[indices[i]].y);
         }
-
-        // recycle overhead from a previous triangulation
-        while (vertices.length > indices.length) {
-            pool.push(vertices[vertices.length-1]);
-            vertices.length -= 1;
-        }
+        vertices.length = indices.length;
 
         return vertices;
     }

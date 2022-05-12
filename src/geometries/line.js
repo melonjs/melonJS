@@ -1,4 +1,4 @@
-import * as pool from "./../system/pooling.js";
+import Vector2d from "./../math/vector2.js";
 import Polygon from "./poly.js";
 
 /**
@@ -76,11 +76,11 @@ class Line extends Polygon {
 
         // Calculate the edges/normals
         if (edges[0] === undefined) {
-            edges[0] = pool.pull("Vector2d");
+            edges[0] = new Vector2d();
         }
         edges[0].copy(points[1]).sub(points[0]);
         if (normals[0] === undefined) {
-            normals[0] = pool.pull("Vector2d");
+            normals[0] = new Vector2d();
         }
         normals[0].copy(edges[0]).perp().normalize();
 

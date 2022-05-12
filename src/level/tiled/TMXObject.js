@@ -1,4 +1,4 @@
-import * as pool from "./../../system/pooling.js";
+import Vector2d from "./../../math/vector2.js";
 import { applyTMXProperties } from "./TMXUtils.js";
 import Tile from "./TMXTile.js";
 import Ellipse from "./../../geometries/ellipse.js";
@@ -286,8 +286,8 @@ export default class TMXObject {
                 for (i = 0; i < segments; i++) {
                     // clone the value before, as [i + 1]
                     // is reused later by the next segment
-                    p1 = pool.pull("Vector2d", p[i].x, p[i].y);
-                    p2 = pool.pull("Vector2d", p[i + 1].x, p[i + 1].y);
+                    p1 = new Vector2d(p[i].x, p[i].y);
+                    p2 = new Vector2d(p[i + 1].x, p[i + 1].y);
                     if (this.rotation !== 0) {
                         p1 = p1.rotate(this.rotation);
                         p2 = p2.rotate(this.rotation);
@@ -300,8 +300,8 @@ export default class TMXObject {
             else {
                 shapes.push((new Polygon(
                     0, 0, [
-                        pool.pull("Vector2d"),  pool.pull("Vector2d", this.width, 0),
-                        pool.pull("Vector2d", this.width, this.height), pool.pull("Vector2d", 0, this.height)
+                        new Vector2d(), new Vector2d(this.width, 0),
+                        new Vector2d(this.width, this.height), new Vector2d(0, this.height)
                     ]
                 )).rotate(this.rotation));
             }
