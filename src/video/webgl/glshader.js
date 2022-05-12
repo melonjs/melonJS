@@ -150,6 +150,30 @@ class GLShader {
     }
 
     /**
+     * activate the given vertex attribute for this shader
+     * @name setVertexAttributes
+     * @memberof GLShader
+     * @function
+     * @param {WebGLRenderingContext} gl the current WebGL rendering context
+     * @param {[]} attributes an array of vertex attributes
+     * @param {number} vertexByteSize the size of a single vertex in bytes
+     */
+    setVertexAttributes(gl, attributes, vertexByteSize) {
+        // set the vertex attributes
+        for (var index = 0; index < attributes.length; ++index) {
+            var element = attributes[index];
+            var location = this.getAttribLocation(element.name);
+
+            if (location !== -1) {
+                gl.enableVertexAttribArray(location);
+                gl.vertexAttribPointer(location, element.size, element.type, element.normalized, vertexByteSize, element.offset);
+            } else {
+                gl.disableVertexAttribArray(index);
+            }
+        }
+    }
+
+    /**
      * destroy this shader objects resources (program, attributes, uniforms)
      * @name destroy
      * @memberof GLShader

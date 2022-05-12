@@ -384,20 +384,7 @@ class WebGLCompositor {
             this.activeShader = shader;
             this.activeShader.bind();
             this.activeShader.setUniform("uProjectionMatrix", this.renderer.projectionMatrix);
-
-            // set the vertex attributes
-            for (var index = 0; index < this.attributes.length; ++index) {
-                var gl = this.gl;
-                var element = this.attributes[index];
-                var location = this.activeShader.getAttribLocation(element.name);
-
-                if (location !== -1) {
-                    gl.enableVertexAttribArray(location);
-                    gl.vertexAttribPointer(location, element.size, element.type, element.normalized, this.vertexByteSize, element.offset);
-                } else {
-                    gl.disableVertexAttribArray(index);
-                }
-            }
+            this.activeShader.setVertexAttributes(this.gl, this.attributes, this.vertexByteSize);
         }
     }
 
