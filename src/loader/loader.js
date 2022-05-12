@@ -46,7 +46,7 @@ function checkLoadStatus(onload) {
         }
     }
     else {
-        timerId = setTimeout(function() {
+        timerId = setTimeout(() => {
             checkLoadStatus(onload);
         }, 100);
     }
@@ -85,7 +85,7 @@ function preloadImage(img, onload, onerror) {
 function preloadFontFace(data, onload, onerror) {
     var font = new FontFace(data.name, data.src);
     // loading promise
-    font.load().then(function() {
+    font.load().then(() => {
         // apply the font after the font has finished downloading
         document.fonts.add(font);
         document.body.style.fontFamily = data.name;
@@ -278,12 +278,12 @@ function preloadJavascript(data, onload, onerror) {
     }
     script.defer = true;
 
-    script.onload = function() {
+    script.onload = () => {
         // callback
         onload();
     };
 
-    script.onerror = function() {
+    script.onerror = () => {
         // callback
         onerror(data.name);
     };

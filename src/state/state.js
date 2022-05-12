@@ -512,7 +512,7 @@ var state = {
             // if fading effect
             if (_fade.duration && _stages[state].transition) {
                 /** @ignore */
-                _onSwitchComplete = function() {
+                _onSwitchComplete = () => {
                     game.viewport.fadeOut(_fade.color, _fade.duration);
                 };
                 game.viewport.fadeIn(
