@@ -1,4 +1,4 @@
-import * as pool from "./../system/pooling.js";
+import pool from "./../system/pooling.js";
 import Matrix3d from "./matrix3.js";
 
 /**

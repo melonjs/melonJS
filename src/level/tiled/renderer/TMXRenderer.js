@@ -1,6 +1,6 @@
 /* eslint-disable no-unused-vars */
 
-import * as pool from "./../../../system/pooling.js";
+import pool from "./../../../system/pooling.js";
 import TMXLayer from "./../TMXLayer.js";
 import Bounds from "./../../../physics/Bounds.js";
 

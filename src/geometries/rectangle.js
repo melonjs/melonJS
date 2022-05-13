@@ -1,4 +1,4 @@
-import * as pool from "./../system/pooling.js";
+import pool from "./../system/pooling.js";
 import Polygon from "./poly.js";
 
 /**

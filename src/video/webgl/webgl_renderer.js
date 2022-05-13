@@ -6,7 +6,7 @@ import TextureCache from "./../texture_cache.js";
 import { TextureAtlas, createAtlas } from "./../texture.js";
 import { createCanvas, renderer } from "./../video.js";
 import * as event from "./../../system/event.js";
-import * as pool from "./../../system/pooling.js";
+import pool from "./../../system/pooling.js";
 import { isPowerOfTwo, nextPowerOfTwo } from "./../../math/math.js";
 
 

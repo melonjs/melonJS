@@ -2,7 +2,7 @@ import Color from "./../math/color.js";
 import WebGLRenderer from "./../video/webgl/webgl_renderer.js";
 import { renderer as globalRenderer, createCanvas } from "./../video/video.js";
 import { trimRight } from "./../utils/string.js";
-import * as pool from "./../system/pooling.js";
+import pool from "./../system/pooling.js";
 import Renderable from "./../renderable/renderable.js";
 import { nextPowerOfTwo } from "./../math/math.js";
 import setContextStyle from "./textstyle.js";

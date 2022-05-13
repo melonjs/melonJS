@@ -1,4 +1,4 @@
-import * as pool from "./../../system/pooling.js";
+import pool from "./../../system/pooling.js";
 import { applyTMXProperties } from "./TMXUtils.js";
 import Tile from "./TMXTile.js";
 import Ellipse from "./../../geometries/ellipse.js";

@@ -5,7 +5,7 @@ import { throttle } from "./../utils/function.js";
 import { remove } from "./../utils/array.js";
 import * as event from "./../system/event.js";
 import timer from "./../system/timer.js";
-import * as pool from "./../system/pooling.js";
+import pool from "./../system/pooling.js";
 import device from "./../system/device.js";
 import Pointer from "./pointer.js";
 import Rect from "./../geometries/rectangle.js";

@@ -1,4 +1,4 @@
-import * as pool from "./../system/pooling.js";
+import pool from "./../system/pooling.js";
 import Vector2d from "./../math/vector2.js";
 import Polygon from "./../geometries/poly.js";
 

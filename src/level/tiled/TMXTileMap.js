@@ -1,4 +1,4 @@
-import * as pool from "./../../system/pooling.js";
+import pool from "./../../system/pooling.js";
 import * as event from "./../../system/event.js";
 import { viewport } from "./../../game.js";
 import collision from "./../../physics/collision.js";

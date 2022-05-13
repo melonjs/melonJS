@@ -1,6 +1,6 @@
 import Vector2d from "./../math/vector2.js";
 import { renderer } from "./../video/video.js";
-import * as pool from "./../system/pooling.js";
+import pool from "./../system/pooling.js";
 import loader from "./../loader/loader.js";
 import { TextureAtlas } from "./../video/texture.js";
 import Renderable from "./renderable.js";

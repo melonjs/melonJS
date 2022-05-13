@@ -2,7 +2,7 @@ import { world, viewport } from "./../game.js";
 import { createCanvas, renderer } from "./../video/video.js";
 import * as event from "./../system/event.js";
 import {nextPowerOfTwo} from "./../math/math.js";
-import * as pool from "./../system/pooling.js";
+import pool from "./../system/pooling.js";
 import Renderable from "./../renderable/renderable.js";
 import Stage from "./../state/stage.js";
 

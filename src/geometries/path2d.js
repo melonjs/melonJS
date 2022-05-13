@@ -1,4 +1,4 @@
-import * as pool from "./../system/pooling.js";
+import pool from "./../system/pooling.js";
 import { TAU } from "./../math/math.js";
 import earcut from "earcut";
 

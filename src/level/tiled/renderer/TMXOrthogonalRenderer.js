@@ -1,5 +1,5 @@
 import Vector2d from "./../../../math/vector2.js";
-import * as pool from "./../../../system/pooling.js";
+import pool from "./../../../system/pooling.js";
 import TMXRenderer from "./TMXRenderer.js";
 
 /**

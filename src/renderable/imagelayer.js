@@ -1,6 +1,6 @@
 import { renderer } from "./../video/video.js";
 import * as event from "./../system/event.js";
-import * as pool from "./../system/pooling.js";
+import pool from "./../system/pooling.js";
 import { viewport } from "./../game.js";
 import Sprite from "./sprite.js";
 import * as stringUtil from "./../utils/string.js";
