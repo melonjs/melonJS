@@ -155,7 +155,7 @@ class GLShader {
      * @memberof GLShader
      * @function
      * @param {WebGLRenderingContext} gl the current WebGL rendering context
-     * @param {Object[]} attributes an array of vertex attributes
+     * @param {object[]} attributes an array of vertex attributes
      * @param {number} vertexByteSize the size of a single vertex in bytes
      */
     setVertexAttributes(gl, attributes, vertexByteSize) {
