@@ -1,4 +1,3 @@
-import Vector2d from "./../math/vector2.js";
 import { renderer } from "./../video/video.js";
 import pool from "./../system/pooling.js";
 import loader from "./../loader/loader.js";
@@ -99,7 +98,7 @@ class Sprite extends Renderable {
             // length of the current animation name
             length : 0,
             //current frame texture offset
-            offset : new Vector2d(),
+            offset : pool.pull("Vector2d"),
             // current frame size
             width : 0,
             height : 0,

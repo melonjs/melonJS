@@ -258,12 +258,12 @@ class Polygon {
         // Calculate the edges/normals
         for (i = 0; i < len; i++) {
             if (edges[i] === undefined) {
-                edges[i] = new Vector2d();
+                edges[i] = pool.pull("Vector2d");
             }
             edges[i].copy(points[(i + 1) % len]).sub(points[i]);
 
             if (normals[i] === undefined) {
-                normals[i] = new Vector2d();
+                normals[i] = pool.pull("Vector2d");
             }
             normals[i].copy(edges[i]).perp().normalize();
         }

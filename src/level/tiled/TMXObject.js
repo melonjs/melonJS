@@ -1,9 +1,6 @@
 import pool from "./../../system/pooling.js";
 import { applyTMXProperties } from "./TMXUtils.js";
 import Tile from "./TMXTile.js";
-import Ellipse from "./../../geometries/ellipse.js";
-import Polygon from "./../../geometries/poly.js";
-import Line from "./../../geometries/line.js";
 import { degToRad } from "./../../math/math.js";
 
 /**
@@ -260,7 +257,7 @@ export default class TMXObject {
         // add an ellipse shape
         if (this.isEllipse === true) {
             // ellipse coordinates are the center position, so set default to the corresonding radius
-            shapes.push((new Ellipse(
+            shapes.push((pool.pull("Ellipse",
                 this.width / 2,
                 this.height / 2,
                 this.width,
@@ -270,7 +267,7 @@ export default class TMXObject {
 
             // add a polygon
             if (this.isPolygon === true) {
-                var _polygon = new Polygon(0, 0, this.points);
+                var _polygon = pool.pull("Polygon", 0, 0, this.points);
                 // make sure it's a convex polygon
                 if (_polygon.isConvex() === false ) {
                     throw new Error("collision polygones in Tiled should be defined as Convex");
@@ -292,13 +289,13 @@ export default class TMXObject {
                         p1 = p1.rotate(this.rotation);
                         p2 = p2.rotate(this.rotation);
                     }
-                    shapes.push(new Line(0, 0, [ p1, p2 ]));
+                    shapes.push(pool.pull("Line", 0, 0, [ p1, p2 ]));
                 }
             }
 
             // it's a rectangle, returns a polygon object anyway
             else {
-                shapes.push((new Polygon(
+                shapes.push((pool.pull("Polygon",
                     0, 0, [
                         pool.pull("Vector2d"),  pool.pull("Vector2d", this.width, 0),
                         pool.pull("Vector2d", this.width, this.height), pool.pull("Vector2d", 0, this.height)

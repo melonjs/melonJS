@@ -1,6 +1,5 @@
 import pool from "./../system/pooling.js";
 import Vector2d from "./../math/vector2.js";
-import Polygon from "./../geometries/poly.js";
 
 /**
  * @classdesc
@@ -11,6 +10,8 @@ class Bounds {
      * @param {Vector2d[]} [vertices] an array of me.Vector2d points
      */
     constructor(vertices) {
+        // @ignore
+        this._center = new Vector2d();
         this.onResetEvent(vertices);
     }
 
@@ -27,9 +28,6 @@ class Bounds {
         if (typeof vertices !== "undefined") {
             this.update(vertices);
         }
-
-        // @ignore
-        this._center = new Vector2d();
     }
 
     /**
@@ -451,7 +449,7 @@ class Bounds {
      * @returns {Polygon} a new Polygon that represents this bounds.
      */
     toPolygon () {
-        return new Polygon(this.x, this.y, [
+        return pool.pull("Polygon", this.x, this.y, [
             pool.pull("Vector2d", 0,          0),
             pool.pull("Vector2d", this.width, 0),
             pool.pull("Vector2d", this.width, this.height),

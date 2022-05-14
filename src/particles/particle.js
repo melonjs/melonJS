@@ -1,4 +1,4 @@
-import Vector2d from "./../math/vector2.js";
+import pool from "./../system/pooling.js";
 import timer from "./../system/timer.js";
 import { randomFloat, clamp } from "./../math/math.js";
 import Renderable from "./../renderable/renderable.js";
@@ -36,9 +36,10 @@ class Particle extends Renderable {
                 emitter.settings.image.width,
                 emitter.settings.image.height
             );
+            this.currentTransform.identity();
         } else {
             // particle velocity
-            this.vel = new Vector2d();
+            this.vel = pool.pull("Vector2d");
         }
 
         this.image = emitter.settings.image;

@@ -370,7 +370,7 @@ class Rect extends Polygon {
      * @returns {Polygon} a new Polygon that represents this rectangle.
      */
     toPolygon() {
-        return new Polygon(
+        return pool.pull("Polygon",
             this.pos.x, this.pos.y, this.points
         );
     }

@@ -1,8 +1,7 @@
-import Vector2d from "./../math/vector2.js";
+import pool from "./../system/pooling.js";
 import Renderable from "./../renderable/renderable.js";
 import Sprite from "./../renderable/sprite.js";
 import Body from "./../physics/body.js";
-import Polygon from "./../geometries/poly.js";
 
 
 /**
@@ -102,11 +101,11 @@ class Entity extends Renderable {
          */
         // initialize the default body
         if (typeof settings.shapes === "undefined") {
-            settings.shapes = new Polygon(0, 0, [
-                new Vector2d(0,          0),
-                new Vector2d(this.width, 0),
-                new Vector2d(this.width, this.height),
-                new Vector2d(0,          this.height)
+            settings.shapes = pool.pull("Polygon", 0, 0, [
+                pool.pull("Vector2d", 0,          0),
+                pool.pull("Vector2d", this.width, 0),
+                pool.pull("Vector2d", this.width, this.height),
+                pool.pull("Vector2d", 0,          this.height)
             ]);
         }
         this.body = new Body(this, settings.shapes, this.onBodyUpdate.bind(this));

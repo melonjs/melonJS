@@ -1,6 +1,5 @@
 import Sprite from "./sprite.js";
 import Body from "./../physics/body.js";
-import Rect from "./../geometries/rectangle.js";
 import collision from "./../physics/collision.js";
 
 /**
@@ -24,7 +23,15 @@ class Collectable extends Sprite {
         this.id = settings.id;
 
         // add and configure the physic body
-        this.body = new Body(this, settings.shapes || new Rect(0, 0, this.width, this.height));
+        var shape = settings.shapes;
+        if (typeof shape === "undefined") {
+            shape = pool.pull("Polygon", 0, 0, [
+                pool.pull("Vector2d", 0,          0),
+                pool.pull("Vector2d", this.width, 0),
+                pool.pull("Vector2d", this.width, this.height)
+            ]);
+        }
+        this.body = new Body(this, shape);
         this.body.collisionType = collision.types.COLLECTABLE_OBJECT;
         // by default only collides with PLAYER_OBJECT
         this.body.setCollisionMask(collision.types.PLAYER_OBJECT);

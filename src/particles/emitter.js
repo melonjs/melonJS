@@ -149,7 +149,7 @@ class ParticleEmitter extends Container {
     // Add count particles in the game world
     /** @ignore */
     addParticles(count) {
-        for (var i = 0; i < ~~count; i++) {
+        for (var i = 0; i < count; i++) {
             // Add particle to the container
             this.addChild(pool.pull("Particle", this), this.pos.z);
         }

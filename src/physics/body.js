@@ -1,8 +1,8 @@
-import Vector2d from "./../math/vector2.js";
 import Rect from "./../geometries/rectangle.js";
 import Ellipse from "./../geometries/ellipse.js";
 import Polygon from "./../geometries/poly.js";
 import Bounds from "./bounds.js";
+import pool from "./../system/pooling.js";
 import collision from "./collision.js";
 import * as arrayUtil from "./../utils/array.js";
 import timer from "./../system/timer.js";
@@ -37,7 +37,7 @@ class Body {
              * @public
              * @type {Bounds}
              */
-            this.bounds = new Bounds();
+            this.bounds = pool.pull("Bounds");
         }
 
         if (typeof this.shapes === "undefined") {
@@ -78,7 +78,7 @@ class Body {
          * @default <0,0>
          */
         if (typeof this.vel === "undefined") {
-            this.vel = new Vector2d();
+            this.vel = pool.pull("Vector2d");
         }
         this.vel.set(0, 0);
 
@@ -107,7 +107,7 @@ class Body {
          * }
          */
         if (typeof this.force === "undefined") {
-            this.force = new Vector2d();
+            this.force = pool.pull("Vector2d");
         }
         this.force.set(0, 0);
 
@@ -119,7 +119,7 @@ class Body {
          * @default <0,0>
          */
         if (typeof this.friction === "undefined") {
-            this.friction = new Vector2d();
+            this.friction = pool.pull("Vector2d");
         }
         this.friction.set(0, 0);
 
@@ -147,7 +147,7 @@ class Body {
          * @default <490,490>
          */
         if (typeof this.maxVel === "undefined") {
-            this.maxVel = new Vector2d();
+            this.maxVel = pool.pull("Vector2d");
         }
         // cap by default to half the default gravity force
         this.maxVel.set(490, 490);
@@ -297,7 +297,7 @@ class Body {
             polygon.setShape(0, 0, vertices);
         } else {
             // this will replace any other non polygon shape type if defined
-            this.shapes[index] = new Polygon(0, 0, vertices);
+            this.shapes[index] = pool.pull("Polygon", 0, 0, vertices);
         }
 
         // update the body bounds to take in account the new vertices
@@ -686,11 +686,28 @@ class Body {
      * @ignore
      */
     destroy() {
+        // push back instance into object pool
+        pool.push(this.bounds);
+        pool.push(this.vel);
+        pool.push(this.force);
+        pool.push(this.friction);
+        pool.push(this.maxVel);
+        this.shapes.forEach((shape) => {
+            pool.push(shape);
+        });
+
+        // set to undefined
         this.onBodyUpdate = undefined;
         this.ancestor = undefined;
         this.bounds = undefined;
-        this.setStatic(false);
+        this.vel = undefined;
+        this.force = undefined;
+        this.friction = undefined;
+        this.maxVel = undefined;
         this.shapes.length = 0;
+
+        // reset some variable to default
+        this.setStatic(false);
     }
 };
 

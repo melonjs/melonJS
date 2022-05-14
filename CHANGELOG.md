@@ -10,6 +10,7 @@
 - Renderer: refactored the WebGL renderer to use the new Path2D API for primitive drawing
 
 ### Fixed
+- Core: improve internal object recycling, to fix instance leaking or hoarding by the pool system
 - Input: fix a warning on using passive target disabling swipe on a WebView (thanks @zngb)
 
 ## [10.7.1] (melonJS 2) - _2022-05-05_

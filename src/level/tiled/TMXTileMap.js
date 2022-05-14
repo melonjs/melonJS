@@ -14,7 +14,6 @@ import TMXLayer from "./TMXLayer.js";
 import { applyTMXProperties } from "./TMXUtils.js";
 import Renderable from "./../../renderable/renderable.js";
 import Container from "./../../renderable/container.js";
-import Rect from "./../../geometries/rectangle.js";
 
 // constant to identify the collision object layer
 var COLLISION_GROUP = "collision";
@@ -474,6 +473,8 @@ class TMXTileMap {
                 var settings = group.objects[o];
                 // reference to the instantiated object
                 var obj;
+                // a reference to the default shape
+                var shape;
 
                 // Tiled uses 0,0 by default
                 if (typeof (settings.anchorPoint) === "undefined") {
@@ -506,9 +507,18 @@ class TMXTileMap {
                     // set the obj z order
                     obj.pos.z = settings.z;
                 } else if (typeof settings.tile === "object") {
+                    // create a default shape if none is specified
+                    shape = settings.shapes;
+                    if (typeof shape === "undefined") {
+                        shape = pool.pull("Polygon", 0, 0, [
+                            pool.pull("Vector2d", 0,          0),
+                            pool.pull("Vector2d", this.width, 0),
+                            pool.pull("Vector2d", this.width, this.height)
+                        ]);
+                    }
                     // check if a me.Tile object is embedded
                     obj = settings.tile.getRenderable(settings);
-                    obj.body = new Body(obj, settings.shapes || new Rect(0, 0, this.width, this.height));
+                    obj.body = new Body(obj, shape);
                     obj.body.setStatic(true);
                     // set the obj z order
                     obj.pos.setMuted(settings.x, settings.y, settings.z);
@@ -527,11 +537,20 @@ class TMXTileMap {
                             settings.x, settings.y,
                             settings.width, settings.height
                         );
+                        // create a default shape if none is specified
+                        shape = settings.shapes;
+                        if (typeof shape === "undefined") {
+                            shape = pool.pull("Polygon", 0, 0, [
+                                pool.pull("Vector2d", 0,          0),
+                                pool.pull("Vector2d", this.width, 0),
+                                pool.pull("Vector2d", this.width, this.height)
+                            ]);
+                        }
                         obj.anchorPoint.set(0, 0);
                         obj.name = settings.name;
                         obj.type = settings.type;
                         obj.id = settings.id;
-                        obj.body = new Body(obj, settings.shapes || new Rect(0, 0, obj.width, obj.height));
+                        obj.body = new Body(obj, shape);
                         obj.body.setStatic(true);
                         obj.resize(obj.body.getBounds().width, obj.body.getBounds().height);
                     }
