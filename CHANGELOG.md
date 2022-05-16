@@ -1,6 +1,6 @@
 # Changelog
 
-## [10.8.0] (melonJS 2) - _2022-XX-XX_
+## [10.8.0] (melonJS 2) - _2022-05-16_
 
 ### Added
 - Geometry : new RoundRect geometry object

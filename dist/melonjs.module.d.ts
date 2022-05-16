@@ -233,9 +233,45 @@ export class Body {
      * body.collisionType = me.collision.types.PLAYER_OBJECT;
      */
     public collisionType: number;
-    vel: Vector2d;
-    force: Vector2d;
-    friction: Vector2d;
+    /**
+     * body velocity
+     * @public
+     * @type {Vector2d}
+     * @default <0,0>
+     */
+    public vel: Vector2d;
+    /**
+     * body force or acceleration (automatically) applied to the body.
+     * when defining a force, user should also define a max velocity
+     * @public
+     * @type {Vector2d}
+     * @default <0,0>
+     * @see Body.setMaxVelocity
+     * @example
+     * // define a default maximum acceleration, initial force and friction
+     * this.body.force.set(0, 0);
+     * this.body.friction.set(0.4, 0);
+     * this.body.setMaxVelocity(3, 15);
+     *
+     * // apply a postive or negative force when pressing left of right key
+     * update(dt) {
+     *     if (me.input.isKeyPressed("left"))    {
+     *          this.body.force.x = -this.body.maxVel.x;
+     *      } else if (me.input.isKeyPressed("right")) {
+     *         this.body.force.x = this.body.maxVel.x;
+     *     } else {
+     *         this.body.force.x = 0;
+     *     }
+     * }
+     */
+    public force: Vector2d;
+    /**
+     * body friction
+     * @public
+     * @type {Vector2d}
+     * @default <0,0>
+     */
+    public friction: Vector2d;
     /**
      * the body bouciness level when colliding with other solid bodies :
      * a value of 0 will not bounce, a value of 1 will fully rebound.
@@ -251,7 +287,13 @@ export class Body {
      * @default 1
      */
     public mass: number;
-    maxVel: Vector2d;
+    /**
+     * max velocity (to limit body velocity)
+     * @public
+     * @type {Vector2d}
+     * @default <490,490>
+     */
+    public maxVel: Vector2d;
     /**
      * Either this body is a static body or not.
      * A static body is completely fixed and can never change position or angle.
@@ -484,6 +526,7 @@ declare class Bounds$1 {
      * @param {Vector2d[]} [vertices] an array of me.Vector2d points
      */
     constructor(vertices?: Vector2d[]);
+    _center: Vector2d;
     /**
      * @ignore
      */
@@ -496,7 +539,6 @@ declare class Bounds$1 {
         x: number;
         y: number;
     };
-    _center: Vector2d;
     /**
      * reset the bound
      * @name clear
@@ -1289,6 +1331,31 @@ export class CanvasRenderer extends Renderer {
      */
     fillRect(x: number, y: number, width: number, height: number): void;
     /**
+     * Stroke a rounded rectangle at the specified coordinates
+     * @name strokeRoundRect
+     * @memberof CanvasRenderer.prototype
+     * @function
+     * @param {number} x
+     * @param {number} y
+     * @param {number} width
+     * @param {number} height
+     * @param {number} radius
+     * @param {boolean} [fill=false] also fill the shape with the current color if true
+     */
+    strokeRoundRect(x: number, y: number, width: number, height: number, radius: number, fill?: boolean): void;
+    /**
+     * Draw a rounded filled rectangle at the specified coordinates
+     * @name fillRoundRect
+     * @memberof CanvasRenderer.prototype
+     * @function
+     * @param {number} x
+     * @param {number} y
+     * @param {number} width
+     * @param {number} height
+     * @param {number} radius
+     */
+    fillRoundRect(x: number, y: number, width: number, height: number, radius: number): void;
+    /**
      * return a reference to the system 2d Context
      * @name getContext
      * @memberof CanvasRenderer.prototype
@@ -1342,13 +1409,21 @@ export class CanvasRenderer extends Renderer {
      */
     setColor(color: Color | string): void;
     /**
-     * Set the global alpha on the canvas context
+     * Set the global alpha
      * @name setGlobalAlpha
      * @memberof CanvasRenderer.prototype
      * @function
      * @param {number} alpha 0.0 to 1.0 values accepted.
      */
     setGlobalAlpha(alpha: number): void;
+    /**
+     * Return the global alpha
+     * @name getGlobalAlpha
+     * @memberof CanvasRenderer.prototype
+     * @function
+     * @returns {number} global alpha value
+     */
+    getGlobalAlpha(): number;
     /**
      * Set the line width on the context
      * @name setLineWidth
@@ -2246,7 +2321,7 @@ export class Ellipse {
      * @public
      * @type {Vector2d}
      * @name pos
-     * @memberof Ellipse#
+     * @memberof Ellipse.prototype
      */
     public pos: Vector2d;
     /**
@@ -2259,7 +2334,7 @@ export class Ellipse {
      * @public
      * @type {number}
      * @name radius
-     * @memberof Ellipse
+     * @memberof Ellipse.prototype
      */
     public radius: number;
     /**
@@ -2267,7 +2342,7 @@ export class Ellipse {
      * @public
      * @type {Vector2d}
      * @name radiusV
-     * @memberof Ellipse#
+     * @memberof Ellipse.prototype
      */
     public radiusV: Vector2d;
     /**
@@ -2275,7 +2350,7 @@ export class Ellipse {
      * @public
      * @type {Vector2d}
      * @name radiusSq
-     * @memberof Ellipse#
+     * @memberof Ellipse.prototype
      */
     public radiusSq: Vector2d;
     /**
@@ -2283,7 +2358,7 @@ export class Ellipse {
      * @public
      * @type {Vector2d}
      * @name ratio
-     * @memberof Ellipse#
+     * @memberof Ellipse.prototype
      */
     public ratio: Vector2d;
     shapeType: string;
@@ -2610,6 +2685,16 @@ export class GLShader {
      * myShader.setUniform("uProjectionMatrix", this.projectionMatrix);
      */
     setUniform(name: string, value: object | Float32Array): void;
+    /**
+     * activate the given vertex attribute for this shader
+     * @name setVertexAttributes
+     * @memberof GLShader
+     * @function
+     * @param {WebGLRenderingContext} gl the current WebGL rendering context
+     * @param {object[]} attributes an array of vertex attributes
+     * @param {number} vertexByteSize the size of a single vertex in bytes
+     */
+    setVertexAttributes(gl: WebGLRenderingContext, attributes: object[], vertexByteSize: number): void;
     /**
      * destroy this shader objects resources (program, attributes, uniforms)
      * @name destroy
@@ -4064,7 +4149,7 @@ export class Particle extends Renderable {
      * @ignore
      */
     onResetEvent(emitter: any, newInstance?: boolean): void;
-    vel: Vector2d;
+    vel: any;
     image: any;
     life: any;
     startLife: any;
@@ -4092,14 +4177,17 @@ export class ParticleEmitter extends Container {
      * @param {number} y y position of the particle emitter
      * @param {ParticleEmitterSettings} [settings=ParticleEmitterSettings] the settings for the particle emitter.
      * @example
-     * // Create a basic emitter at position 100, 100
-     * var emitter = new ParticleEmitter(100, 100);
-     *
-     * // Adjust the emitter properties
-     * emitter.totalParticles = 200;
-     * emitter.minLife = 1000;
-     * emitter.maxLife = 3000;
-     * emitter.z = 10;
+     * // Create a particle emitter at position 100, 100
+     * var emitter = new ParticleEmitter(100, 100, {
+     *     width: 16,
+     *     height : 16,
+     *     tint: "#f00",
+     *     totalParticles: 32,
+     *     angle: 0,
+     *     angleVariation: 6.283185307179586,
+     *     maxLife: 5,
+     *     speed: 3
+     * });
      *
      * // Add the emitter to the game world
      * me.game.world.addChild(emitter);
@@ -4389,6 +4477,288 @@ export class ParticleEmitter extends Container {
          */
         framesToSkip: number;
     });
+    /**
+     * the current (active) emitter settings
+     * @public
+     * @type {ParticleEmitterSettings}
+     * @name settings
+     * @memberof ParticleEmitter
+     */
+    public settings: {
+        /**
+         * Width of the particle spawn area.
+         * @type {number}
+         * @name width
+         * @memberof ParticleEmitterSettings
+         * @default 1
+         */
+        width: number;
+        /**
+         * Height of the particle spawn area
+         * @public
+         * @type {number}
+         * @name height
+         * @memberof ParticleEmitterSettings
+         * @default 1
+         */
+        height: number;
+        /**
+         * image used for particles texture
+         * (by default melonJS will create an white 8x8 texture image)
+         * @public
+         * @type {HTMLCanvasElement}
+         * @name image
+         * @memberof ParticleEmitterSettings
+         * @default undefined
+         * @see ParticleEmitterSettings.textureSize
+         */
+        image: HTMLCanvasElement;
+        /**
+         * default texture size used for particles if no image is specified
+         * (by default melonJS will create an white 8x8 texture image)
+         * @public
+         * @type {number}
+         * @name textureSize
+         * @memberof ParticleEmitterSettings
+         * @default 8
+         * @see ParticleEmitterSettings.image
+         */
+        textureSize: number;
+        /**
+         * tint to be applied to particles
+         * @public
+         * @type {string}
+         * @name tint
+         * @memberof ParticleEmitterSettings
+         * @default "#fff"
+         */
+        tint: string;
+        /**
+         * Total number of particles in the emitter
+         * @public
+         * @type {number}
+         * @name totalParticles
+         * @default 50
+         * @memberof ParticleEmitterSettings
+         */
+        totalParticles: number;
+        /**
+         * Start angle for particle launch in Radians
+         * @public
+         * @type {number}
+         * @name angle
+         * @default Math.PI / 2
+         * @memberof ParticleEmitterSettings
+         */
+        angle: number;
+        /**
+         * Variation in the start angle for particle launch in Radians.
+         * @public
+         * @type {number}
+         * @name angleVariation
+         * @default 0
+         * @memberof ParticleEmitterSettings
+         */
+        angleVariation: number;
+        /**
+         * Minimum time each particle lives once it is emitted in ms.
+         * @public
+         * @type {number}
+         * @name minLife
+         * @default 1000
+         * @memberof ParticleEmitterSettings
+         */
+        minLife: number;
+        /**
+         * Maximum time each particle lives once it is emitted in ms.
+         * @public
+         * @type {number}
+         * @name maxLife
+         * @default 3000
+         * @memberof ParticleEmitterSettings
+         */
+        maxLife: number;
+        /**
+         * Start speed of particles.<br>
+         * @public
+         * @type {number}
+         * @name speed
+         * @default 2
+         * @memberof ParticleEmitterSettings
+         */
+        speed: number;
+        /**
+         * Variation in the start speed of particles
+         * @public
+         * @type {number}
+         * @name speedVariation
+         * @default 1
+         * @memberof ParticleEmitterSettings
+         */
+        speedVariation: number;
+        /**
+         * Minimum start rotation for particles sprites in Radians
+         * @public
+         * @type {number}
+         * @name minRotation
+         * @default 0
+         * @memberof ParticleEmitterSettings
+         */
+        minRotation: number;
+        /**
+         * Maximum start rotation for particles sprites in Radians
+         * @public
+         * @type {number}
+         * @name maxRotation
+         * @default 0
+         * @memberof ParticleEmitterSettings
+         */
+        maxRotation: number;
+        /**
+         * Minimum start scale ratio for particles (1 = no scaling)
+         * @public
+         * @type {number}
+         * @name minStartScale
+         * @default 1
+         * @memberof ParticleEmitterSettings
+         */
+        minStartScale: number;
+        /**
+         * Maximum start scale ratio for particles (1 = no scaling)
+         * @public
+         * @type {number}
+         * @name maxStartScale
+         * @default 1
+         * @memberof ParticleEmitterSettings
+         */
+        maxStartScale: number;
+        /**
+         * Minimum end scale ratio for particles
+         * @public
+         * @type {number}
+         * @name minEndScale
+         * @default 0
+         * @memberof ParticleEmitterSettings
+         */
+        minEndScale: number;
+        /**
+         * Maximum end scale ratio for particles
+         * @public
+         * @type {number}
+         * @name maxEndScale
+         * @default 0
+         * @memberof ParticleEmitterSettings
+         */
+        maxEndScale: number;
+        /**
+         * Vertical force (Gravity) for each particle
+         * @public
+         * @type {number}
+         * @name gravity
+         * @default 0
+         * @memberof ParticleEmitterSettings
+         * @see game.world.gravity
+         */
+        gravity: number;
+        /**
+         * Horizontal force (like a Wind) for each particle
+         * @public
+         * @type {number}
+         * @name wind
+         * @default 0
+         * @memberof ParticleEmitterSettings
+         */
+        wind: number;
+        /**
+         * Update the rotation of particle in accordance the particle trajectory.<br>
+         * The particle sprite should aim at zero angle (draw from left to right).<br>
+         * Override the particle minRotation and maxRotation.<br>
+         * @public
+         * @type {boolean}
+         * @name followTrajectory
+         * @default false
+         * @memberof ParticleEmitterSettings
+         */
+        followTrajectory: boolean;
+        /**
+         * Enable the Texture Additive by composite operation ("additive" blendMode)
+         * @public
+         * @type {boolean}
+         * @name textureAdditive
+         * @default false
+         * @memberof ParticleEmitterSettings
+         * @see ParticleEmitterSettings.blendMode
+         */
+        textureAdditive: boolean;
+        /**
+         * the blend mode to be applied when rendering particles.
+         * (note: this will superseed the `textureAdditive` setting if different than "normal")
+         * @public
+         * @type {string}
+         * @name blendMode
+         * @default normal
+         * @memberof ParticleEmitterSettings
+         * @see CanvasRenderer#setBlendMode
+         * @see WebGLRenderer#setBlendMode
+         */
+        blendMode: string;
+        /**
+         * Update particles only in the viewport, remove it when out of viewport.
+         * @public
+         * @type {boolean}
+         * @name onlyInViewport
+         * @default true
+         * @memberof ParticleEmitterSettings
+         */
+        onlyInViewport: boolean;
+        /**
+         * Render particles in screen space.
+         * @public
+         * @type {boolean}
+         * @name floating
+         * @default false
+         * @memberof ParticleEmitterSettings
+         */
+        floating: boolean;
+        /**
+         * Maximum number of particles launched each time in this emitter (used only if emitter is Stream).
+         * @public
+         * @type {number}
+         * @name maxParticles
+         * @default 10
+         * @memberof ParticleEmitterSettings
+         */
+        maxParticles: number;
+        /**
+         * How often a particle is emitted in ms (used only if emitter is a Stream).
+         * @public
+         * @type {number}
+         * @name frequency
+         * @default 100
+         * @memberof ParticleEmitterSettings
+         */
+        frequency: number;
+        /**
+         * Duration that the emitter releases particles in ms (used only if emitter is Stream).
+         * After this period, the emitter stop the launch of particles.
+         * @public
+         * @type {number}
+         * @name duration
+         * @default Infinity
+         * @memberof ParticleEmitterSettings
+         */
+        duration: number;
+        /**
+         * Skip n frames after updating the particle system once.
+         * This can be used to reduce the performance impact of emitters with many particles.
+         * @public
+         * @type {number}
+         * @name framesToSkip
+         * @default 0
+         * @memberof ParticleEmitterSettings
+         */
+        framesToSkip: number;
+    };
     /** @ignore */
     _stream: boolean;
     /** @ignore */
@@ -4398,13 +4768,286 @@ export class ParticleEmitter extends Container {
     /** @ignore */
     _enabled: boolean;
     _updateCount: number;
-    settings: {};
     _dt: number;
     /**
      * Reset the emitter with particle emitter settings.
-     * @param {object} settings [optional] object with emitter settings. See {@link ParticleEmitterSettings}
+     * @param {ParticleEmitterSettings} settings [optional] object with emitter settings. See {@link ParticleEmitterSettings}
      */
-    reset(settings?: object): void;
+    reset(settings?: {
+        /**
+         * Width of the particle spawn area.
+         * @type {number}
+         * @name width
+         * @memberof ParticleEmitterSettings
+         * @default 1
+         */
+        width: number;
+        /**
+         * Height of the particle spawn area
+         * @public
+         * @type {number}
+         * @name height
+         * @memberof ParticleEmitterSettings
+         * @default 1
+         */
+        height: number;
+        /**
+         * image used for particles texture
+         * (by default melonJS will create an white 8x8 texture image)
+         * @public
+         * @type {HTMLCanvasElement}
+         * @name image
+         * @memberof ParticleEmitterSettings
+         * @default undefined
+         * @see ParticleEmitterSettings.textureSize
+         */
+        image: HTMLCanvasElement;
+        /**
+         * default texture size used for particles if no image is specified
+         * (by default melonJS will create an white 8x8 texture image)
+         * @public
+         * @type {number}
+         * @name textureSize
+         * @memberof ParticleEmitterSettings
+         * @default 8
+         * @see ParticleEmitterSettings.image
+         */
+        textureSize: number;
+        /**
+         * tint to be applied to particles
+         * @public
+         * @type {string}
+         * @name tint
+         * @memberof ParticleEmitterSettings
+         * @default "#fff"
+         */
+        tint: string;
+        /**
+         * Total number of particles in the emitter
+         * @public
+         * @type {number}
+         * @name totalParticles
+         * @default 50
+         * @memberof ParticleEmitterSettings
+         */
+        totalParticles: number;
+        /**
+         * Start angle for particle launch in Radians
+         * @public
+         * @type {number}
+         * @name angle
+         * @default Math.PI / 2
+         * @memberof ParticleEmitterSettings
+         */
+        angle: number;
+        /**
+         * Variation in the start angle for particle launch in Radians.
+         * @public
+         * @type {number}
+         * @name angleVariation
+         * @default 0
+         * @memberof ParticleEmitterSettings
+         */
+        angleVariation: number;
+        /**
+         * Minimum time each particle lives once it is emitted in ms.
+         * @public
+         * @type {number}
+         * @name minLife
+         * @default 1000
+         * @memberof ParticleEmitterSettings
+         */
+        minLife: number;
+        /**
+         * Maximum time each particle lives once it is emitted in ms.
+         * @public
+         * @type {number}
+         * @name maxLife
+         * @default 3000
+         * @memberof ParticleEmitterSettings
+         */
+        maxLife: number;
+        /**
+         * Start speed of particles.<br>
+         * @public
+         * @type {number}
+         * @name speed
+         * @default 2
+         * @memberof ParticleEmitterSettings
+         */
+        speed: number;
+        /**
+         * Variation in the start speed of particles
+         * @public
+         * @type {number}
+         * @name speedVariation
+         * @default 1
+         * @memberof ParticleEmitterSettings
+         */
+        speedVariation: number;
+        /**
+         * Minimum start rotation for particles sprites in Radians
+         * @public
+         * @type {number}
+         * @name minRotation
+         * @default 0
+         * @memberof ParticleEmitterSettings
+         */
+        minRotation: number;
+        /**
+         * Maximum start rotation for particles sprites in Radians
+         * @public
+         * @type {number}
+         * @name maxRotation
+         * @default 0
+         * @memberof ParticleEmitterSettings
+         */
+        maxRotation: number;
+        /**
+         * Minimum start scale ratio for particles (1 = no scaling)
+         * @public
+         * @type {number}
+         * @name minStartScale
+         * @default 1
+         * @memberof ParticleEmitterSettings
+         */
+        minStartScale: number;
+        /**
+         * Maximum start scale ratio for particles (1 = no scaling)
+         * @public
+         * @type {number}
+         * @name maxStartScale
+         * @default 1
+         * @memberof ParticleEmitterSettings
+         */
+        maxStartScale: number;
+        /**
+         * Minimum end scale ratio for particles
+         * @public
+         * @type {number}
+         * @name minEndScale
+         * @default 0
+         * @memberof ParticleEmitterSettings
+         */
+        minEndScale: number;
+        /**
+         * Maximum end scale ratio for particles
+         * @public
+         * @type {number}
+         * @name maxEndScale
+         * @default 0
+         * @memberof ParticleEmitterSettings
+         */
+        maxEndScale: number;
+        /**
+         * Vertical force (Gravity) for each particle
+         * @public
+         * @type {number}
+         * @name gravity
+         * @default 0
+         * @memberof ParticleEmitterSettings
+         * @see game.world.gravity
+         */
+        gravity: number;
+        /**
+         * Horizontal force (like a Wind) for each particle
+         * @public
+         * @type {number}
+         * @name wind
+         * @default 0
+         * @memberof ParticleEmitterSettings
+         */
+        wind: number;
+        /**
+         * Update the rotation of particle in accordance the particle trajectory.<br>
+         * The particle sprite should aim at zero angle (draw from left to right).<br>
+         * Override the particle minRotation and maxRotation.<br>
+         * @public
+         * @type {boolean}
+         * @name followTrajectory
+         * @default false
+         * @memberof ParticleEmitterSettings
+         */
+        followTrajectory: boolean;
+        /**
+         * Enable the Texture Additive by composite operation ("additive" blendMode)
+         * @public
+         * @type {boolean}
+         * @name textureAdditive
+         * @default false
+         * @memberof ParticleEmitterSettings
+         * @see ParticleEmitterSettings.blendMode
+         */
+        textureAdditive: boolean;
+        /**
+         * the blend mode to be applied when rendering particles.
+         * (note: this will superseed the `textureAdditive` setting if different than "normal")
+         * @public
+         * @type {string}
+         * @name blendMode
+         * @default normal
+         * @memberof ParticleEmitterSettings
+         * @see CanvasRenderer#setBlendMode
+         * @see WebGLRenderer#setBlendMode
+         */
+        blendMode: string;
+        /**
+         * Update particles only in the viewport, remove it when out of viewport.
+         * @public
+         * @type {boolean}
+         * @name onlyInViewport
+         * @default true
+         * @memberof ParticleEmitterSettings
+         */
+        onlyInViewport: boolean;
+        /**
+         * Render particles in screen space.
+         * @public
+         * @type {boolean}
+         * @name floating
+         * @default false
+         * @memberof ParticleEmitterSettings
+         */
+        floating: boolean;
+        /**
+         * Maximum number of particles launched each time in this emitter (used only if emitter is Stream).
+         * @public
+         * @type {number}
+         * @name maxParticles
+         * @default 10
+         * @memberof ParticleEmitterSettings
+         */
+        maxParticles: number;
+        /**
+         * How often a particle is emitted in ms (used only if emitter is a Stream).
+         * @public
+         * @type {number}
+         * @name frequency
+         * @default 100
+         * @memberof ParticleEmitterSettings
+         */
+        frequency: number;
+        /**
+         * Duration that the emitter releases particles in ms (used only if emitter is Stream).
+         * After this period, the emitter stop the launch of particles.
+         * @public
+         * @type {number}
+         * @name duration
+         * @default Infinity
+         * @memberof ParticleEmitterSettings
+         */
+        duration: number;
+        /**
+         * Skip n frames after updating the particle system once.
+         * This can be used to reduce the performance impact of emitters with many particles.
+         * @public
+         * @type {number}
+         * @name framesToSkip
+         * @default 0
+         * @memberof ParticleEmitterSettings
+         */
+        framesToSkip: number;
+    }): void;
     /**
      * returns a random point on the x axis within the bounds of this emitter
      * @returns {number}
@@ -4762,7 +5405,7 @@ export class Polygon {
      * @public
      * @type {Vector2d}
      * @name pos
-     * @memberof Polygon#
+     * @memberof Polygon.prototype
      */
     public pos: Vector2d;
     /**
@@ -4770,7 +5413,7 @@ export class Polygon {
      * @ignore
      * @type {Bounds}
      * @name _bounds
-     * @memberof Polygon#
+     * @memberof Polygon.prototype
      */
     _bounds: Bounds;
     /**
@@ -4779,7 +5422,7 @@ export class Polygon {
      * @public
      * @type {Vector2d[]}
      * @name points
-     * @memberof Polygon#
+     * @memberof Polygon.prototype
      */
     public points: Vector2d[];
     /**
@@ -4924,14 +5567,14 @@ export class Polygon {
     /**
      * Shifts the Polygon to the given position vector.
      * @name shift
-     * @memberof Polygon
+     * @memberof Polygon.prototype
      * @function
      * @param {Vector2d} position
      */
     /**
      * Shifts the Polygon to the given x, y position.
      * @name shift
-     * @memberof Polygon
+     * @memberof Polygon.prototype
      * @function
      * @param {number} x
      * @param {number} y
@@ -5101,7 +5744,7 @@ export class Rect extends Polygon {
      * @public
      * @type {number}
      * @name left
-     * @memberof Rect
+     * @memberof Rect.prototype
      */
     public get left(): number;
     /**
@@ -5109,7 +5752,7 @@ export class Rect extends Polygon {
      * @public
      * @type {number}
      * @name right
-     * @memberof Rect
+     * @memberof Rect.prototype
      */
     public get right(): number;
     /**
@@ -5117,7 +5760,7 @@ export class Rect extends Polygon {
      * @public
      * @type {number}
      * @name top
-     * @memberof Rect
+     * @memberof Rect.prototype
      */
     public get top(): number;
     /**
@@ -5125,7 +5768,7 @@ export class Rect extends Polygon {
      * @public
      * @type {number}
      * @name bottom
-     * @memberof Rect
+     * @memberof Rect.prototype
      */
     public get bottom(): number;
     public set width(arg: number);
@@ -5134,7 +5777,7 @@ export class Rect extends Polygon {
      * @public
      * @type {number}
      * @name width
-     * @memberof Rect
+     * @memberof Rect.prototype
      */
     public get width(): number;
     public set height(arg: number);
@@ -5143,7 +5786,7 @@ export class Rect extends Polygon {
      * @public
      * @type {number}
      * @name height
-     * @memberof Rect
+     * @memberof Rect.prototype
      */
     public get height(): number;
     public set centerX(arg: number);
@@ -5152,7 +5795,7 @@ export class Rect extends Polygon {
      * @public
      * @type {number}
      * @name centerX
-     * @memberof Rect
+     * @memberof Rect.prototype
      */
     public get centerX(): number;
     public set centerY(arg: number);
@@ -5161,7 +5804,7 @@ export class Rect extends Polygon {
      * @public
      * @type {number}
      * @name centerY
-     * @memberof Rect
+     * @memberof Rect.prototype
      */
     public get centerY(): number;
     /**
@@ -5828,11 +6471,18 @@ export class Renderer {
     /**
      * true if the current rendering context is valid
      * @name isContextValid
-     * @memberof Renderer
+     * @memberof Renderer#
      * @default true
      * type {boolean}
      */
     isContextValid: boolean;
+    /**
+     * The Path2D instance used by the renderer to draw primitives
+     * @name path2D
+     * @type {Path2D}
+     * @memberof Renderer#
+     */
+    path2D: Path2D;
     /**
      * @ignore
      */
@@ -5978,10 +6628,18 @@ export class Renderer {
      * @name stroke
      * @memberof Renderer.prototype
      * @function
-     * @param {Rect|Polygon|Line|Ellipse} shape a shape object to stroke
+     * @param {Rect|RoundRect|Polygon|Line|Ellipse} shape a shape object to stroke
      * @param {boolean} [fill=false] fill the shape with the current color if true
      */
-    stroke(shape: Rect | Polygon | Line | Ellipse, fill?: boolean): void;
+    stroke(shape: Rect | RoundRect | Polygon | Line | Ellipse, fill?: boolean): void;
+    /**
+     * fill the given shape
+     * @name fill
+     * @memberof Renderer.prototype
+     * @function
+     * @param {Rect|Polygon|Line|Ellipse} shape a shape object to fill
+     */
+    fill(shape: Rect | Polygon | Line | Ellipse): void;
     /**
      * tint the given image or canvas using the given color
      * @name tint
@@ -5993,14 +6651,6 @@ export class Renderer {
      * @returns {HTMLCanvasElement|OffscreenCanvas} a new canvas element representing the tinted image
      */
     tint(src: HTMLImageElement | HTMLCanvasElement | OffscreenCanvas, color: Color | string, mode?: string): HTMLCanvasElement | OffscreenCanvas;
-    /**
-     * fill the given shape
-     * @name fill
-     * @memberof Renderer.prototype
-     * @function
-     * @param {Rect|Polygon|Line|Ellipse} shape a shape object to fill
-     */
-    fill(shape: Rect | Polygon | Line | Ellipse): void;
     /**
      * A mask limits rendering elements to the shape and position of the given mask object.
      * So, if the renderable is larger than the mask, only the intersecting part of the renderable will be visible.
@@ -6041,6 +6691,42 @@ export class Renderer {
      */
     drawFont(): void;
     get Texture(): typeof TextureAtlas;
+}
+/**
+ * @classdesc
+ * a rectangle object with rounded corners
+ * @augments Rect
+ */
+export class RoundRect extends Rect {
+    /**
+     * @param {number} x position of the rounded rectangle
+     * @param {number} y position of the rounded rectangle
+     * @param {number} width the rectangle width
+     * @param {number} height the rectangle height
+     * @param {number} [radius=20] the radius of the rounded corner
+     */
+    constructor(x: number, y: number, width: number, height: number, radius?: number);
+    public set radius(arg: number);
+    /**
+     * the radius of the rounded corner
+     * @public
+     * @type {number}
+     * @default 20
+     * @name radius
+     * @memberof RoundRect.prototype
+     */
+    public get radius(): number;
+    /** @ignore */
+    onResetEvent(x: any, y: any, w: any, h: any, radius: any): void;
+    _radius: number;
+    /**
+     * clone this RoundRect
+     * @name clone
+     * @memberof RoundRect.prototype
+     * @function
+     * @returns {RoundRect} new RoundRect
+     */
+    clone(): RoundRect;
 }
 /**
  * @classdesc
@@ -6129,7 +6815,7 @@ export class Sprite extends Renderable {
     current: {
         name: string;
         length: number;
-        offset: Vector2d;
+        offset: any;
         width: number;
         height: number;
         angle: number;
@@ -6341,11 +7027,11 @@ export class Stage {
      * Cameras will be renderered based on this order defined in this list.
      * Only the "default" camera will be resized when the window or canvas is resized.
      * @public
-     * @type {Map}
+     * @type {Map<Camera2d>}
      * @name cameras
      * @memberof Stage
      */
-    public cameras: Map<any, any>;
+    public cameras: Map<Camera2d, any>;
     /**
      * The given constructor options
      * @public
@@ -8795,7 +9481,7 @@ export class WebGLRenderer extends Renderer {
     /**
      * The WebGL version used by this renderer (1 or 2)
      * @name WebGLVersion
-     * @memberof WebGLRenderer
+     * @memberof WebGLRenderer#
      * @type {number}
      * @default 1
      * @readonly
@@ -8804,7 +9490,7 @@ export class WebGLRenderer extends Renderer {
     /**
      * The vendor string of the underlying graphics driver.
      * @name GPUVendor
-     * @memberof WebGLRenderer
+     * @memberof WebGLRenderer#
      * @type {string}
      * @default null
      * @readonly
@@ -8813,7 +9499,7 @@ export class WebGLRenderer extends Renderer {
     /**
      * The renderer string of the underlying graphics driver.
      * @name GPURenderer
-     * @memberof WebGLRenderer
+     * @memberof WebGLRenderer#
      * @type {string}
      * @default null
      * @readonly
@@ -8822,7 +9508,7 @@ export class WebGLRenderer extends Renderer {
     /**
      * The WebGL context
      * @name gl
-     * @memberof WebGLRenderer
+     * @memberof WebGLRenderer#
      * type {WebGLRenderingContext}
      */
     context: WebGLRenderingContext;
@@ -8830,7 +9516,7 @@ export class WebGLRenderer extends Renderer {
     /**
      * Maximum number of texture unit supported under the current context
      * @name maxTextures
-     * @memberof WebGLRenderer
+     * @memberof WebGLRenderer#
      * @type {number}
      * @readonly
      */
@@ -8852,10 +9538,6 @@ export class WebGLRenderer extends Renderer {
      */
     _blendStack: any[];
     /**
-     * @ignore
-     */
-    _glPoints: Vector2d[];
-    /**
      * The current transformation matrix used for transformations on the overall scene
      * @name currentTransform
      * @type {Matrix2d}
@@ -8872,10 +9554,10 @@ export class WebGLRenderer extends Renderer {
     /**
      * The list of active compositors
      * @name compositors
-     * @type {Map}
+     * @type {Map<WebGLCompositor>}
      * @memberof WebGLRenderer#
      */
-    compositors: Map<any, any>;
+    compositors: Map<WebGLCompositor, any>;
     cache: TextureCache;
     /**
      * set the active compositor for this renderer
@@ -9085,6 +9767,14 @@ export class WebGLRenderer extends Renderer {
      */
     setGlobalAlpha(alpha: number): void;
     /**
+     * Return the global alpha
+     * @name getGlobalAlpha
+     * @memberof WebGLRenderer.prototype
+     * @function
+     * @returns {number} global alpha value
+     */
+    getGlobalAlpha(): number;
+    /**
      * Set the current fill & stroke style color.
      * By default, or upon reset, the value is set to #000000.
      * @name setColor
@@ -9127,7 +9817,7 @@ export class WebGLRenderer extends Renderer {
      * @param {number} end end angle in radians
      * @param {boolean} [antiClockwise=false] draw arc anti-clockwise
      */
-    fillArc(x: number, y: number, radius: number, start: number, end: number): void;
+    fillArc(x: number, y: number, radius: number, start: number, end: number, antiClockwise?: boolean): void;
     /**
      * Stroke an ellipse at the specified coordinates with given radius
      * @name strokeEllipse
@@ -9213,6 +9903,31 @@ export class WebGLRenderer extends Renderer {
      * @param {number} height
      */
     fillRect(x: number, y: number, width: number, height: number): void;
+    /**
+     * Stroke a rounded rectangle at the specified coordinates
+     * @name strokeRoundRect
+     * @memberof WebGLRenderer.prototype
+     * @function
+     * @param {number} x
+     * @param {number} y
+     * @param {number} width
+     * @param {number} height
+     * @param {number} radius
+     * @param {boolean} [fill=false] also fill the shape with the current color if true
+     */
+    strokeRoundRect(x: number, y: number, width: number, height: number, radius: number, fill?: boolean): void;
+    /**
+     * Draw a rounded filled rectangle at the specified coordinates
+     * @name fillRoundRect
+     * @memberof WebGLRenderer.prototype
+     * @function
+     * @param {number} x
+     * @param {number} y
+     * @param {number} width
+     * @param {number} height
+     * @param {number} radius
+     */
+    fillRoundRect(x: number, y: number, width: number, height: number, radius: number): void;
     /**
      * Reset (overrides) the renderer transformation matrix to the
      * identity one, and then apply the given transformation matrix.
@@ -9306,9 +10021,9 @@ export class World extends Container {
      * @name bodies
      * @memberof World
      * @public
-     * @type {Set}
+     * @type {Set<Body>}
      */
-    public bodies: Set<any>;
+    public bodies: Set<Body>;
     /**
      * the instance of the game world quadtree used for broadphase
      * @name broadphase
@@ -10396,16 +11111,12 @@ export var plugin: any;
  * @namespace plugins
  */
 export var plugins: {};
-declare var pooling: Readonly<{
-    __proto__: any;
-    register: typeof register;
-    pull: typeof pull;
-    purge: typeof purge;
-    push: typeof push;
-    exists: typeof exists;
-    poolable: typeof poolable;
-    getInstanceCount: typeof getInstanceCount;
-}>;
+/**
+ * a default global object pool instance
+ * @public
+ * @type {ObjectPool}
+ */
+declare var pool$1: ObjectPool;
 export namespace save {
     /**
      * Add new keys to localStorage and set them to the given default values if they do not exist
@@ -11060,6 +11771,7 @@ declare class Bounds {
      * @param {Vector2d[]} [vertices] an array of me.Vector2d points
      */
     constructor(vertices?: Vector2d[]);
+    _center: Vector2d;
     /**
      * @ignore
      */
@@ -11072,7 +11784,6 @@ declare class Bounds {
         x: number;
         y: number;
     };
-    _center: Vector2d;
     /**
      * reset the bound
      * @name clear
@@ -11488,6 +12199,137 @@ declare function round(num: number, dec?: number): number;
  * }
  */
 declare function toBeCloseTo(expected: number, actual: number, precision?: number): boolean;
+/**
+ * @classdesc
+ * a simplified path2d implementation, supporting only one path
+ */
+declare class Path2D {
+    /**
+     * the points defining the current path
+     * @public
+     * @type {Vector2d[]}
+     * @name points
+     * @memberof Path2D#
+     */
+    public points: Vector2d[];
+    /**
+     * space between interpolated points for quadratic and bezier curve approx. in pixels.
+     * @public
+     * @type {number}
+     * @name arcResolution
+     * @default 5
+     * @memberof Path2D#
+     */
+    public arcResolution: number;
+    vertices: any[];
+    /**
+     * begin a new path
+     * @name beginPath
+     * @memberof Path2D.prototype
+     * @function
+     */
+    beginPath(): void;
+    /**
+     * causes the point of the pen to move back to the start of the current path.
+     * It tries to draw a straight line from the current point to the start.
+     * If the shape has already been closed or has only one point, this function does nothing.
+     * @name closePath
+     * @memberof Path2D.prototype
+     * @function
+     */
+    closePath(): void;
+    /**
+     * triangulate the shape defined by this path into an array of triangles
+     * @name triangulatePath
+     * @memberof Path2D.prototype
+     * @function
+     * @returns {Vector2d[]}
+     */
+    triangulatePath(): Vector2d[];
+    /**
+     * moves the starting point of the current path to the (x, y) coordinates.
+     * @name moveTo
+     * @memberof Path2D.prototype
+     * @function
+     * @param {number} x the x-axis (horizontal) coordinate of the point.
+     * @param {number} y the y-axis (vertical) coordinate of the point.
+     */
+    moveTo(x: number, y: number): void;
+    /**
+     * connects the last point in the current patch to the (x, y) coordinates with a straight line.
+     * @name lineTo
+     * @memberof Path2D.prototype
+     * @function
+     * @param {number} x the x-axis coordinate of the line's end point.
+     * @param {number} y the y-axis coordinate of the line's end point.
+     */
+    lineTo(x: number, y: number): void;
+    /**
+     * adds an arc to the current path which is centered at (x, y) position with the given radius,
+     * starting at startAngle and ending at endAngle going in the given direction by counterclockwise (defaulting to clockwise).
+     * @name arc
+     * @memberof Path2D.prototype
+     * @function
+     * @param {number} x the horizontal coordinate of the arc's center.
+     * @param {number} y the vertical coordinate of the arc's center.
+     * @param {number} radius the arc's radius. Must be positive.
+     * @param {number} startAngle the angle at which the arc starts in radians, measured from the positive x-axis.
+     * @param {number} endAngle the angle at which the arc ends in radians, measured from the positive x-axis.
+     * @param {boolean} [anticlockwise=false] an optional boolean value. If true, draws the arc counter-clockwise between the start and end angles.
+     */
+    arc(x: number, y: number, radius: number, startAngle: number, endAngle: number, anticlockwise?: boolean): void;
+    /**
+     * adds a circular arc to the path with the given control points and radius, connected to the previous point by a straight line.
+     * @name arcTo
+     * @memberof Path2D.prototype
+     * @function
+     * @param {number} x the x-axis coordinate of the first control point.
+     * @param {number} y the y-axis coordinate of the first control point.
+     * @param {number} x the x-axis coordinate of the second control point.
+     * @param {number} y the y-axis coordinate of the second control point.
+     * @param {number} radius the arc's radius. Must be positive.
+     */
+    arcTo(x1: any, y1: any, x2: any, y2: any, radius: number): void;
+    /**
+     * adds an elliptical arc to the path which is centered at (x, y) position with the radii radiusX and radiusY
+     * starting at startAngle and ending at endAngle going in the given direction by counterclockwise.
+     * @name ellipse
+     * @memberof Path2D.prototype
+     * @function
+     * @param {number} x the x-axis (horizontal) coordinate of the ellipse's center.
+     * @param {number} y the  y-axis (vertical) coordinate of the ellipse's center.
+     * @param {number} radiusX the ellipse's major-axis radius. Must be non-negative.
+     * @param {number} radiusY the ellipse's minor-axis radius. Must be non-negative.
+     * @param {number} rotation the rotation of the ellipse, expressed in radians.
+     * @param {number} startAngle the angle at which the ellipse starts, measured clockwise from the positive x-axis and expressed in radians.
+     * @param {number} endAngle the angle at which the ellipse ends, measured clockwise from the positive x-axis and expressed in radians.
+     * @param {boolean} [anticlockwise=false] an optional boolean value which, if true, draws the ellipse counterclockwise (anticlockwise).
+     */
+    ellipse(x: number, y: number, radiusX: number, radiusY: number, rotation: number, startAngle: number, endAngle: number, anticlockwise?: boolean): void;
+    /**
+     * creates a path for a rectangle at position (x, y) with a size that is determined by width and height.
+     * @name rect
+     * @memberof Path2D.prototype
+     * @function
+     * @param {number} x the x-axis coordinate of the rectangle's starting point.
+     * @param {number} y the y-axis coordinate of the rectangle's starting point.
+     * @param {number} width the rectangle's width. Positive values are to the right, and negative to the left.
+     * @param {number} height the rectangle's height. Positive values are down, and negative are up.
+     */
+    rect(x: number, y: number, width: number, height: number): void;
+    /**
+     * adds an rounded rectangle to the current path.
+     * @name roundRect
+     * @memberof Path2D.prototype
+     * @function
+     * @param {number} x the x-axis coordinate of the rectangle's starting point.
+     * @param {number} y the y-axis coordinate of the rectangle's starting point.
+     * @param {number} width the rectangle's width. Positive values are to the right, and negative to the left.
+     * @param {number} height the rectangle's height. Positive values are down, and negative are up.
+     * @param {number} radius the arc's radius to draw the borders. Must be positive.
+     */
+    roundRect(x: number, y: number, width: number, height: number, radius: number): void;
+}
 /**
  * @classdesc
  * a Vertex Buffer object
@@ -12207,6 +13049,7 @@ declare function setGamepadDeadzone(value: number): void;
  */
 declare function addMapping(id: any, mapping: any): void;
 /**
+ * @classdesc
  * This object is used for object pooling - a technique that might speed up your game if used properly.<br>
  * If some of your classes will be instantiated and removed a lot at a time, it is a
  * good idea to add the class to this object pool. A separate pool for that class
@@ -12217,96 +13060,93 @@ declare function addMapping(id: any, mapping: any): void;
  * which means, that on level loading the engine will try to instantiate every object
  * found in the map, based on the user defined name in each Object Properties<br>
  * <img src="images/object_properties.png"/><br>
- * @namespace pool
+ * @see {@link pool} a default global instance of ObjectPool
  */
-/**
- * register an object to the pool. <br>
- * Pooling must be set to true if more than one such objects will be created. <br>
- * (Note: for an object to be poolable, it must implements a `onResetEvent` method)
- * @function pool.register
- * @param {string} className as defined in the Name field of the Object Properties (in Tiled)
- * @param {object} classObj corresponding Class to be instantiated
- * @param {boolean} [recycling=false] enables object recycling for the specified class
- * @example
- * // implement CherryEntity
- * class CherryEntity extends Spritesheet {
- *    onResetEvent() {
- *        // reset object mutable properties
- *        this.lifeBar = 100;
- *    }
- * };
- * // add our users defined entities in the object pool and enable object recycling
- * me.pool.register("cherryentity", CherryEntity, true);
- */
-declare function register(className: string, classObj: object, recycling?: boolean): void;
-/**
- * Pull a new instance of the requested object (if added into the object pool)
- * @function pool.pull
- * @param {string} name as used in {@link pool.register}
- * @param {object} [...arguments] arguments to be passed when instantiating/reinitializing the object
- * @returns {object} the instance of the requested object
- * @example
- * me.pool.register("bullet", BulletEntity, true);
- * me.pool.register("enemy", EnemyEntity, true);
- * // ...
- * // when we need to manually create a new bullet:
- * var bullet = me.pool.pull("bullet", x, y, direction);
- * // ...
- * // params aren't a fixed number
- * // when we need new enemy we can add more params, that the object construct requires:
- * var enemy = me.pool.pull("enemy", x, y, direction, speed, power, life);
- * // ...
- * // when we want to destroy existing object, the remove
- * // function will ensure the object can then be reallocated later
- * me.game.world.removeChild(enemy);
- * me.game.world.removeChild(bullet);
- */
-declare function pull(name: string, ...args: any[]): object;
-/**
- * purge the object pool from any inactive object <br>
- * Object pooling must be enabled for this function to work<br>
- * note: this will trigger the garbage collector
- * @function pool.purge
- */
-declare function purge(): void;
-/**
- * Push back an object instance into the object pool <br>
- * Object pooling for the object class must be enabled,
- * and object must have been instantiated using {@link pool#pull},
- * otherwise this function won't work
- * @function pool.push
- * @throws will throw an error if the object cannot be recycled
- * @param {object} obj instance to be recycled
- * @param {boolean} [throwOnError=true] throw an exception if the object cannot be recycled
- * @returns {boolean} true if the object was successfully recycled in the object pool
- */
-declare function push(obj: object, throwOnError?: boolean): boolean;
-/**
- * Check if an object with the provided name is registered
- * @function pool.exists
- * @param {string} name of the registered object class
- * @returns {boolean} true if the classname is registered
- */
-declare function exists(name: string): boolean;
-/**
- * Check if an object is poolable
- * (was properly registered with the recycling feature enable)
- * @function pool.poolable
- * @see pool.register
- * @param {object} obj object to be checked
- * @returns {boolean} true if the object is poolable
- * @example
- * if (!me.pool.poolable(myCherryEntity)) {
- *     // object was not properly registered
- * }
- */
-declare function poolable(obj: object): boolean;
-/**
- * returns the amount of object instance currently in the pool
- * @function pool.getInstanceCount
- * @returns {number} amount of object instance
- */
-declare function getInstanceCount(): number;
+declare class ObjectPool {
+    objectClass: {};
+    instance_counter: number;
+    /**
+     * register an object to the pool. <br>
+     * Pooling must be set to true if more than one such objects will be created. <br>
+     * (Note: for an object to be poolable, it must implements a `onResetEvent` method)
+     * @param {string} className as defined in the Name field of the Object Properties (in Tiled)
+     * @param {object} classObj corresponding Class to be instantiated
+     * @param {boolean} [recycling=false] enables object recycling for the specified class
+     * @example
+     * // implement CherryEntity
+     * class CherryEntity extends Spritesheet {
+     *    onResetEvent() {
+     *        // reset object mutable properties
+     *        this.lifeBar = 100;
+     *    }
+     * };
+     * // add our users defined entities in the object pool and enable object recycling
+     * me.pool.register("cherryentity", CherryEntity, true);
+     */
+    register(className: string, classObj: object, recycling?: boolean): void;
+    /**
+     * Pull a new instance of the requested object (if added into the object pool)
+     * @param {string} name as used in {@link pool.register}
+     * @param {object} [...arguments] arguments to be passed when instantiating/reinitializing the object
+     * @returns {object} the instance of the requested object
+     * @example
+     * me.pool.register("bullet", BulletEntity, true);
+     * me.pool.register("enemy", EnemyEntity, true);
+     * // ...
+     * // when we need to manually create a new bullet:
+     * var bullet = me.pool.pull("bullet", x, y, direction);
+     * // ...
+     * // params aren't a fixed number
+     * // when we need new enemy we can add more params, that the object construct requires:
+     * var enemy = me.pool.pull("enemy", x, y, direction, speed, power, life);
+     * // ...
+     * // when we want to destroy existing object, the remove
+     * // function will ensure the object can then be reallocated later
+     * me.game.world.removeChild(enemy);
+     * me.game.world.removeChild(bullet);
+     */
+    pull(name: string, ...args: any[]): object;
+    /**
+     * purge the object pool from any inactive object <br>
+     * Object pooling must be enabled for this function to work<br>
+     * note: this will trigger the garbage collector
+     */
+    purge(): void;
+    /**
+     * Push back an object instance into the object pool <br>
+     * Object pooling for the object class must be enabled,
+     * and object must have been instantiated using {@link pool#pull},
+     * otherwise this function won't work
+     * @throws will throw an error if the object cannot be recycled
+     * @param {object} obj instance to be recycled
+     * @param {boolean} [throwOnError=true] throw an exception if the object cannot be recycled
+     * @returns {boolean} true if the object was successfully recycled in the object pool
+     */
+    push(obj: object, throwOnError?: boolean): boolean;
+    /**
+     * Check if an object with the provided name is registered
+     * @param {string} name of the registered object class
+     * @returns {boolean} true if the classname is registered
+     */
+    exists(name: string): boolean;
+    /**
+     * Check if an object is poolable
+     * (was properly registered with the recycling feature enable)
+     * @see register
+     * @param {object} obj object to be checked
+     * @returns {boolean} true if the object is poolable
+     * @example
+     * if (!me.pool.poolable(myCherryEntity)) {
+     *     // object was not properly registered
+     * }
+     */
+    poolable(obj: object): boolean;
+    /**
+     * returns the amount of object instance currently in the pool
+     * @returns {number} amount of object instance
+     */
+    getInstanceCount(): number;
+}
 declare var agentUtils: Readonly<{
     __proto__: any;
     prefixed: typeof prefixed;
@@ -12599,4 +13439,4 @@ declare function defer(func: Function, thisArg: object, ...args: any[]): number;
  * @returns {Function} the function that will be throttled
  */
 declare function throttle(fn: Function, delay: number, no_trailing: any): Function;
-export { Bounds$1 as Bounds, math as Math, device$1 as device, event$1 as event, pooling as pool, timer$1 as timer };
+export { Bounds$1 as Bounds, math as Math, device$1 as device, event$1 as event, pool$1 as pool, timer$1 as timer };
