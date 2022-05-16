@@ -71,54 +71,53 @@ class Body {
          */
         this.collisionType = collision.types.ENEMY_OBJECT;
 
-        /**
-         * body velocity
-         * @public
-         * @type {Vector2d}
-         * @default <0,0>
-         */
         if (typeof this.vel === "undefined") {
+            /**
+             * body velocity
+             * @public
+             * @type {Vector2d}
+             * @default <0,0>
+             */
             this.vel = pool.pull("Vector2d");
         }
         this.vel.set(0, 0);
 
-        /**
-         * body force or acceleration (automatically) applied to the body.
-         * when defining a force, user should also define a max velocity
-         * @public
-         * @type {Vector2d}
-         * @default <0,0>
-         * @see Body.setMaxVelocity
-         * @example
-         * // define a default maximum acceleration, initial force and friction
-         * this.body.force.set(0, 0);
-         * this.body.friction.set(0.4, 0);
-         * this.body.setMaxVelocity(3, 15);
-         *
-         * // apply a postive or negative force when pressing left of right key
-         * update(dt) {
-         *     if (me.input.isKeyPressed("left"))    {
-         *          this.body.force.x = -this.body.maxVel.x;
-         *      } else if (me.input.isKeyPressed("right")) {
-         *         this.body.force.x = this.body.maxVel.x;
-         *     } else {
-         *         this.body.force.x = 0;
-         *     }
-         * }
-         */
         if (typeof this.force === "undefined") {
+            /**
+             * body force or acceleration (automatically) applied to the body.
+             * when defining a force, user should also define a max velocity
+             * @public
+             * @type {Vector2d}
+             * @default <0,0>
+             * @see Body.setMaxVelocity
+             * @example
+             * // define a default maximum acceleration, initial force and friction
+             * this.body.force.set(0, 0);
+             * this.body.friction.set(0.4, 0);
+             * this.body.setMaxVelocity(3, 15);
+             *
+             * // apply a postive or negative force when pressing left of right key
+             * update(dt) {
+             *     if (me.input.isKeyPressed("left"))    {
+             *          this.body.force.x = -this.body.maxVel.x;
+             *      } else if (me.input.isKeyPressed("right")) {
+             *         this.body.force.x = this.body.maxVel.x;
+             *     } else {
+             *         this.body.force.x = 0;
+             *     }
+             * }
+             */
             this.force = pool.pull("Vector2d");
         }
         this.force.set(0, 0);
 
-
-        /**
-         * body friction
-         * @public
-         * @type {Vector2d}
-         * @default <0,0>
-         */
         if (typeof this.friction === "undefined") {
+            /**
+             * body friction
+             * @public
+             * @type {Vector2d}
+             * @default <0,0>
+             */
             this.friction = pool.pull("Vector2d");
         }
         this.friction.set(0, 0);
@@ -140,13 +139,13 @@ class Body {
          */
         this.mass = 1;
 
-        /**
-         * max velocity (to limit body velocity)
-         * @public
-         * @type {Vector2d}
-         * @default <490,490>
-         */
         if (typeof this.maxVel === "undefined") {
+            /**
+             * max velocity (to limit body velocity)
+             * @public
+             * @type {Vector2d}
+             * @default <490,490>
+             */
             this.maxVel = pool.pull("Vector2d");
         }
         // cap by default to half the default gravity force
