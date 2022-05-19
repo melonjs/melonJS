@@ -530,20 +530,7 @@ class CanvasRenderer extends Renderer {
         var context = this.getContext();
 
         context.beginPath();
-        if (typeof context.roundRect === "function") {
-            //https://developer.chrome.com/blog/canvas2d/#round-rect
-            context.roundRect(x, y, width, height, radius);
-        } else {
-            context.moveTo(x + radius, y);
-            context.lineTo(x + width - radius, y);
-            context.arcTo(x + width, y, x + width, y + radius, radius);
-            context.lineTo(x + width, y + height - radius);
-            context.arcTo(x + width, y + height, x + width - radius, y + height, radius);
-            context.lineTo(x + radius, y + height);
-            context.arcTo(x, y + height, x, y + height - radius, radius);
-            context.lineTo(x, y + radius);
-            context.arcTo(x, y, x + radius, y, radius);
-        }
+        context.roundRect(x, y, width, height, radius);
         context[fill === true ? "fill" : "stroke"]();
     }
 
@@ -808,23 +795,7 @@ class CanvasRenderer extends Renderer {
             context.bezierCurveTo(xmin, by, lx, ymax, lx, _y);
             context.bezierCurveTo(lx, ymin, xmin, ty, _x, ty);
         } else if (mask instanceof RoundRect) {
-            var width = mask.width,
-                height = mask.height,
-                radius = mask.radius;
-            // TODO: use the new Path2D API
-            if (typeof context.roundRect === "function") {
-                context.roundRect(_x, _y, width, height, radius);
-            } else {
-                context.moveTo(_x + radius, _y);
-                context.lineTo(_x + width - radius, _y);
-                context.arcTo(_x + width, _y, _x + width, _y + radius, radius);
-                context.lineTo(_x + width, _y + height - radius);
-                context.arcTo(_x + width, _y + height, _x + width - radius, _y + height, radius);
-                context.lineTo(_x + radius, _y + height);
-                context.arcTo(_x, _y + height, _x, _y + height - radius, radius);
-                context.lineTo(_x, _y + radius);
-                context.arcTo(_x, _y, _x + radius, _y, radius);
-            }
+            context.roundRect(_x, _y, mask.width, mask.height, mask.radius);
         } else {
             context.moveTo(_x + mask.points[0].x, _y + mask.points[0].y);
             var point;

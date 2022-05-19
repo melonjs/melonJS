@@ -5,3 +5,4 @@ import "core-js/proposals/global-this";
 import "./console.js";
 import "./performance.js";
 import "./requestAnimationFrame.js";
+import "./roundrect.js";
