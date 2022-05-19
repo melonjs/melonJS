@@ -5,6 +5,9 @@
 ### Added
 - Geometry : add a proper `contains` and other utility methods to RoundRect
 
+### Fixed
+- Renderer: fix clipping of RoundRect mask with the Canvas Renderer
+
 ## [10.8.0] (melonJS 2) - _2022-05-16_
 
 ### Added
@@ -1168,6 +1171,7 @@
 - first public version with alex4 !
 - www.melonjs.org is live :)
 
+[10.9.0]: https://github.com/melonjs/melonJS/compare/10.8.0...10.9.0
 [10.8.0]: https://github.com/melonjs/melonJS/compare/10.7.1...10.8.0
 [10.7.1]: https://github.com/melonjs/melonJS/compare/10.7.0...10.7.1
 [10.7.0]: https://github.com/melonjs/melonJS/compare/10.6.1...10.7.0

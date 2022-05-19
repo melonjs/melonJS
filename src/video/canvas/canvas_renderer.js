@@ -2,6 +2,7 @@ import Color from "./../../math/color.js";
 import Renderer from "./../renderer.js";
 import TextureCache from "./../texture_cache.js";
 import Ellipse from "./../../geometries/ellipse.js";
+import RoundRect from "./../../geometries/roundrect.js";
 import { createCanvas } from "./../video.js";
 
 
@@ -783,6 +784,8 @@ class CanvasRenderer extends Renderer {
 
         context.save();
 
+        context.beginPath();
+
         // https://github.com/melonjs/melonJS/issues/648
         if (mask instanceof Ellipse) {
             var hw = mask.radiusV.x,
@@ -799,14 +802,30 @@ class CanvasRenderer extends Renderer {
                 ymin = _y - ymagic,
                 ymax = _y + ymagic;
 
-            context.beginPath();
             context.moveTo(_x, ty);
             context.bezierCurveTo(xmax, ty, rx, ymin, rx, _y);
             context.bezierCurveTo(rx, ymax, xmax, by, _x, by);
             context.bezierCurveTo(xmin, by, lx, ymax, lx, _y);
             context.bezierCurveTo(lx, ymin, xmin, ty, _x, ty);
+        } else if (mask instanceof RoundRect) {
+            var width = mask.width,
+                height = mask.height,
+                radius = mask.radius;
+            // TODO: use the new Path2D API
+            if (typeof context.roundRect === "function") {
+                context.roundRect(_x, _y, width, height, radius);
+            } else {
+                context.moveTo(_x + radius, _y);
+                context.lineTo(_x + width - radius, _y);
+                context.arcTo(_x + width, _y, _x + width, _y + radius, radius);
+                context.lineTo(_x + width, _y + height - radius);
+                context.arcTo(_x + width, _y + height, _x + width - radius, _y + height, radius);
+                context.lineTo(_x + radius, _y + height);
+                context.arcTo(_x, _y + height, _x, _y + height - radius, radius);
+                context.lineTo(_x, _y + radius);
+                context.arcTo(_x, _y, _x + radius, _y, radius);
+            }
         } else {
-            context.beginPath();
             context.moveTo(_x + mask.points[0].x, _y + mask.points[0].y);
             var point;
             for (var i = 1; i < mask.points.length; i++) {
@@ -826,7 +845,7 @@ class CanvasRenderer extends Renderer {
      * @function
      */
     clearMask() {
-        this.backBufferContext2D.restore();
+        this.getContext().restore();
     }
 
 };
