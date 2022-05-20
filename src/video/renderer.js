@@ -367,7 +367,7 @@ class Renderer {
      * @name fill
      * @memberof Renderer.prototype
      * @function
-     * @param {Rect|Polygon|Line|Ellipse} shape a shape object to fill
+     * @param {Rect|RoundRect|Polygon|Line|Ellipse} shape a shape object to fill
      */
     fill(shape) {
         this.stroke(shape, true);
@@ -409,7 +409,7 @@ class Renderer {
      * @name setMask
      * @memberof Renderer.prototype
      * @function
-     * @param {Rect|Polygon|Line|Ellipse} [mask] the shape defining the mask to be applied
+     * @param {Rect|RoundRect|Polygon|Line|Ellipse} [mask] the shape defining the mask to be applied
      */
     // eslint-disable-next-line no-unused-vars
     setMask(mask) {}

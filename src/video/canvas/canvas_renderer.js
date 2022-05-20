@@ -763,7 +763,7 @@ class CanvasRenderer extends Renderer {
      * @name setMask
      * @memberof CanvasRenderer.prototype
      * @function
-     * @param {Rect|Polygon|Line|Ellipse} [mask] the shape defining the mask to be applied
+     * @param {Rect|RoundRect|Polygon|Line|Ellipse} [mask] the shape defining the mask to be applied
      */
     setMask(mask) {
         var context = this.getContext();

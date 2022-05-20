@@ -1097,7 +1097,7 @@ class WebGLRenderer extends Renderer {
      * @name setMask
      * @memberof WebGLRenderer.prototype
      * @function
-     * @param {Rect|Polygon|Line|Ellipse} [mask] the shape defining the mask to be applied
+     * @param {Rect|RoundRect|Polygon|Line|Ellipse} [mask] the shape defining the mask to be applied
      */
     setMask(mask) {
         var gl = this.gl;
