@@ -345,13 +345,19 @@ class Renderer {
      * @param {boolean} [fill=false] fill the shape with the current color if true
      */
     stroke(shape, fill) {
+        if (shape instanceof Rect || shape instanceof Bounds) {
+            this.strokeRect(shape.left, shape.top, shape.width, shape.height, fill);
+            return;
+        }
+        if (shape instanceof Line || shape instanceof Polygon) {
+            this.strokePolygon(shape, fill);
+            return;
+        }
         if (shape instanceof RoundRect) {
             this.strokeRoundRect(shape.left, shape.top, shape.width, shape.height, shape.radius, fill);
-        } else if (shape instanceof Rect || shape instanceof Bounds) {
-            this.strokeRect(shape.left, shape.top, shape.width, shape.height, fill);
-        } else if (shape instanceof Line || shape instanceof Polygon) {
-            this.strokePolygon(shape, fill);
-        } else if (shape instanceof Ellipse) {
+            return;
+        }
+        if (shape instanceof Ellipse) {
             this.strokeEllipse(
                 shape.pos.x,
                 shape.pos.y,
@@ -359,7 +365,9 @@ class Renderer {
                 shape.radiusV.y,
                 fill
             );
+            return;
         }
+        throw new Error("Invalid geometry for fill/stroke");
     }
 
     /**
