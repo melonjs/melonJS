@@ -57,8 +57,8 @@ var leadingZeroRE = /^0+/;
 function addMapping(id, mapping) {
     var expanded_id = id.replace(vendorProductRE, function (_, a, b) {
         return (
-            "000".substr(a.length - 1) + a + "-" +
-            "000".substr(b.length - 1) + b + "-"
+            "000".slice(a.length - 1) + a + "-" +
+            "000".slice(b.length - 1) + b + "-"
         );
     });
     var sparse_id = id.replace(vendorProductRE, function (_, a, b) {

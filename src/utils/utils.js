@@ -120,14 +120,14 @@ var utils = {
             // never cache if a url is passed as parameter
             var index = url.indexOf("#");
             if (index !== -1) {
-                url = url.substr(index, url.length);
+                url = url.slice(index, url.length);
             } else {
                 return hash;
             }
         }
 
         // parse the url
-        url.substr(1).split("&").filter(function (value) {
+        url.slice(1).split("&").filter(function (value) {
             return (value !== "");
         }).forEach(function (value) {
             var kv = value.split("=");
