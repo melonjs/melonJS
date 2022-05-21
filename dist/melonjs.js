@@ -1,5 +1,5 @@
 /*!
- * melonJS Game Engine - v10.8.0
+ * melonJS Game Engine - v10.9.0
  * http://www.melonjs.org
  * melonjs is licensed under the MIT License.
  * http://www.opensource.org/licenses/mit-license
@@ -13600,8 +13600,8 @@
 	function addMapping(id, mapping) {
 	    var expanded_id = id.replace(vendorProductRE, function (_, a, b) {
 	        return (
-	            "000".substr(a.length - 1) + a + "-" +
-	            "000".substr(b.length - 1) + b + "-"
+	            "000".slice(a.length - 1) + a + "-" +
+	            "000".slice(b.length - 1) + b + "-"
 	        );
 	    });
 	    var sparse_id = id.replace(vendorProductRE, function (_, a, b) {
@@ -22491,6 +22491,103 @@
 	    };
 
 	    /**
+	     * copy the position, size and radius of the given rounded rectangle into this one
+	     * @name copy
+	     * @memberof RoundRect.prototype
+	     * @function
+	     * @param {RoundRect} rrect source rounded rectangle
+	     * @returns {RoundRect} new rectangle
+	     */
+	    RoundRect.prototype.copy = function copy (rrect) {
+	        Rect.prototype.setShape.call(this, rrect.pos.x, rrect.pos.y, rrect.width, rrect.height);
+	        this.radius = rrect.radius;
+	        return this;
+	    };
+
+	    /**
+	     * Returns true if the rounded rectangle contains the given point
+	     * @name contains
+	     * @memberof RoundRect.prototype
+	     * @function
+	     * @param  {number} x x coordinate
+	     * @param  {number} y y coordinate
+	     * @returns {boolean} true if contains
+	     */
+
+	    /**
+	     * Returns true if the rounded rectangle contains the given point
+	     * @name contains
+	     * @memberof RoundRect.prototype
+	     * @function
+	     * @param {Vector2d} point
+	     * @returns {boolean} true if contains
+	     */
+	    RoundRect.prototype.contains = function contains () {
+	        var arg0 = arguments[0];
+	        var _x, _y;
+	        if (arguments.length === 2) {
+	             // x, y
+	             _x = arg0;
+	             _y = arguments[1];
+	         } else {
+	             if (arg0 instanceof Rect) {
+	                 // good enough
+	                 return Rect.prototype.contains.call(this, arg0);
+	             } else {
+	                 // vector
+	                _x = arg0.x;
+	                _y = arg0.y;
+	             }
+	        }
+
+	        // check whether point is outside the bounding box
+	        if (_x < this.left || _x >= this.right || _y < this.top || _y >= this.bottom) {
+	            return false; // outside bounding box
+	        }
+
+	        // check whether point is within the bounding box minus radius
+	        if ((_x >= this.left + this.radius && _x <= this.right - this.radius) || (_y >= this.top + this.radius && _y <= this.bottom - this.radius)) {
+	            return true;
+	        }
+
+	        // check whether point is in one of the rounded corner areas
+	        var tx, ty;
+	        var radiusX =  Math.max(0, Math.min(this.radius, this.width / 2));
+	        var radiusY =  Math.max(0, Math.min(this.radius, this.height / 2));
+
+	        if (_x < this.left + radiusX && _y < this.top + radiusY) {
+	            tx = _x - this.left - radiusX;
+	            ty = _y - this.top - radiusY;
+	        } else if (_x > this.right - radiusX && _y < this.top + radiusY) {
+	            tx = _x - this.right + radiusX;
+	            ty = _y - this.top - radiusY;
+	        } else if (_x > this.right - radiusX && _y > this.bottom - radiusY) {
+	            tx = _x - this.right + radiusX;
+	            ty = _y - this.bottom + radiusY;
+	        } else if (_x < this.left + radiusX && _y > this.bottom - radiusY) {
+	            tx = _x - this.left - radiusX;
+	            ty = _y - this.bottom + radiusY;
+	        } else {
+	            return false; // inside and not within the rounded corner area
+	        }
+
+	        // Pythagorean theorem.
+	        return ((tx * tx) + (ty * ty) <= (radiusX * radiusY));
+	    };
+
+	    /**
+	     * check if this RoundRect is identical to the specified one
+	     * @name equals
+	     * @memberof RoundRect.prototype
+	     * @function
+	     * @param {RoundRect} rrect
+	     * @returns {boolean} true if equals
+	     */
+	    RoundRect.prototype.equals = function equals (rrect) {
+	        return Rect.prototype.equals.call(this, rrect) && this.radius === rrect.radius;
+	    };
+
+	    /**
 	     * clone this RoundRect
 	     * @name clone
 	     * @memberof RoundRect.prototype
@@ -22498,7 +22595,7 @@
 	     * @returns {RoundRect} new RoundRect
 	     */
 	    RoundRect.prototype.clone = function clone () {
-	        return new RoundRect(this.pos.x, this.pos.y, this.width, this.height, this.radius);
+	        return new RoundRect(this.pos.x, this.pos.y, this.width, this.height, radius);
 	    };
 
 	    Object.defineProperties( RoundRect.prototype, prototypeAccessors );
@@ -22607,7 +22704,7 @@
 	 * @classdesc
 	 * a simplified path2d implementation, supporting only one path
 	 */
-	var Path2D = function Path2D() {
+	var Path2D$1 = function Path2D() {
 	    /**
 	     * the points defining the current path
 	     * @public
@@ -22637,7 +22734,7 @@
 	 * @memberof Path2D.prototype
 	 * @function
 	 */
-	Path2D.prototype.beginPath = function beginPath () {
+	Path2D$1.prototype.beginPath = function beginPath () {
 	    // empty the cache and recycle all vectors
 	    this.points.forEach(function (point) {
 	        pool$1.push(point);
@@ -22653,7 +22750,7 @@
 	 * @memberof Path2D.prototype
 	 * @function
 	 */
-	Path2D.prototype.closePath = function closePath () {
+	Path2D$1.prototype.closePath = function closePath () {
 	    var points = this.points;
 	    if (points.length > 1 && !points[points.length-1].equals(points[0])) {
 	        points.push(pool$1.pull("Vector2d", points[0].x, points[0].y));
@@ -22667,7 +22764,7 @@
 	 * @function
 	 * @returns {Vector2d[]}
 	 */
-	Path2D.prototype.triangulatePath = function triangulatePath () {
+	Path2D$1.prototype.triangulatePath = function triangulatePath () {
 	    var i = 0;
 	    var points = this.points;
 	    var vertices = this.vertices;
@@ -22699,7 +22796,7 @@
 	 * @param {number} x the x-axis (horizontal) coordinate of the point.
 	 * @param {number} y the y-axis (vertical) coordinate of the point.
 	 */
-	Path2D.prototype.moveTo = function moveTo (x, y) {
+	Path2D$1.prototype.moveTo = function moveTo (x, y) {
 	  this.points.push(pool$1.pull("Vector2d", x, y));
 	};
 
@@ -22711,7 +22808,7 @@
 	 * @param {number} x the x-axis coordinate of the line's end point.
 	 * @param {number} y the y-axis coordinate of the line's end point.
 	 */
-	Path2D.prototype.lineTo = function lineTo (x, y) {
+	Path2D$1.prototype.lineTo = function lineTo (x, y) {
 	    this.points.push(pool$1.pull("Vector2d", x, y));
 	};
 
@@ -22728,7 +22825,7 @@
 	 * @param {number} endAngle the angle at which the arc ends in radians, measured from the positive x-axis.
 	 * @param {boolean} [anticlockwise=false] an optional boolean value. If true, draws the arc counter-clockwise between the start and end angles.
 	 */
-	Path2D.prototype.arc = function arc (x, y, radius, startAngle, endAngle, anticlockwise) {
+	Path2D$1.prototype.arc = function arc (x, y, radius, startAngle, endAngle, anticlockwise) {
 	        if ( anticlockwise === void 0 ) anticlockwise = false;
 
 	    var points = this.points;
@@ -22779,7 +22876,7 @@
 	 * @param {number} y the y-axis coordinate of the second control point.
 	 * @param {number} radius the arc's radius. Must be positive.
 	 */
-	Path2D.prototype.arcTo = function arcTo (x1, y1, x2, y2, radius) {
+	Path2D$1.prototype.arcTo = function arcTo (x1, y1, x2, y2, radius) {
 	    var points = this.points;
 	    // based on from https://github.com/karellodewijk/canvas-webgl/blob/master/canvas-webgl.js
 	    var x0 = points[points.length-1].x, y0 = points[points.length-1].y;
@@ -22831,7 +22928,7 @@
 	 * @param {number} endAngle the angle at which the ellipse ends, measured clockwise from the positive x-axis and expressed in radians.
 	 * @param {boolean} [anticlockwise=false] an optional boolean value which, if true, draws the ellipse counterclockwise (anticlockwise).
 	 */
-	Path2D.prototype.ellipse = function ellipse (x, y, radiusX, radiusY, rotation, startAngle, endAngle, anticlockwise) {
+	Path2D$1.prototype.ellipse = function ellipse (x, y, radiusX, radiusY, rotation, startAngle, endAngle, anticlockwise) {
 	        if ( anticlockwise === void 0 ) anticlockwise = false;
 
 	    var points = this.points;
@@ -22889,7 +22986,7 @@
 	 * @param {number} width the rectangle's width. Positive values are to the right, and negative to the left.
 	 * @param {number} height the rectangle's height. Positive values are down, and negative are up.
 	 */
-	Path2D.prototype.rect = function rect (x, y, width, height) {
+	Path2D$1.prototype.rect = function rect (x, y, width, height) {
 	    this.moveTo(x, y);
 	    this.lineTo(x + width, y);
 	    this.lineTo(x + width, y + height);
@@ -22908,7 +23005,7 @@
 	 * @param {number} height the rectangle's height. Positive values are down, and negative are up.
 	 * @param {number} radius the arc's radius to draw the borders. Must be positive.
 	 */
-	 Path2D.prototype.roundRect = function roundRect (x, y, width, height, radius) {
+	 Path2D$1.prototype.roundRect = function roundRect (x, y, width, height, radius) {
 	    this.moveTo(x + radius, y);
 	    this.lineTo(x + width - radius, y);
 	    this.arcTo(x + width, y, x + width, y + radius, radius);
@@ -22949,7 +23046,7 @@
 	     * @type {Path2D}
 	     * @memberof Renderer#
 	     */
-	    this.path2D = new Path2D();
+	    this.path2D = new Path2D$1();
 
 	    /**
 	     * @ignore
@@ -23237,13 +23334,19 @@
 	 * @param {boolean} [fill=false] fill the shape with the current color if true
 	 */
 	Renderer.prototype.stroke = function stroke (shape, fill) {
+	    if (shape instanceof Rect || shape instanceof Bounds$1) {
+	        this.strokeRect(shape.left, shape.top, shape.width, shape.height, fill);
+	        return;
+	    }
+	    if (shape instanceof Line || shape instanceof Polygon) {
+	        this.strokePolygon(shape, fill);
+	        return;
+	    }
 	    if (shape instanceof RoundRect) {
 	        this.strokeRoundRect(shape.left, shape.top, shape.width, shape.height, shape.radius, fill);
-	    } else if (shape instanceof Rect || shape instanceof Bounds$1) {
-	        this.strokeRect(shape.left, shape.top, shape.width, shape.height, fill);
-	    } else if (shape instanceof Line || shape instanceof Polygon) {
-	        this.strokePolygon(shape, fill);
-	    } else if (shape instanceof Ellipse) {
+	        return;
+	    }
+	    if (shape instanceof Ellipse) {
 	        this.strokeEllipse(
 	            shape.pos.x,
 	            shape.pos.y,
@@ -23251,7 +23354,9 @@
 	            shape.radiusV.y,
 	            fill
 	        );
+	        return;
 	    }
+	    throw new Error("Invalid geometry for fill/stroke");
 	};
 
 	/**
@@ -23259,7 +23364,7 @@
 	 * @name fill
 	 * @memberof Renderer.prototype
 	 * @function
-	 * @param {Rect|Polygon|Line|Ellipse} shape a shape object to fill
+	 * @param {Rect|RoundRect|Polygon|Line|Ellipse} shape a shape object to fill
 	 */
 	Renderer.prototype.fill = function fill (shape) {
 	    this.stroke(shape, true);
@@ -23301,7 +23406,7 @@
 	 * @name setMask
 	 * @memberof Renderer.prototype
 	 * @function
-	 * @param {Rect|Polygon|Line|Ellipse} [mask] the shape defining the mask to be applied
+	 * @param {Rect|RoundRect|Polygon|Line|Ellipse} [mask] the shape defining the mask to be applied
 	 */
 	// eslint-disable-next-line no-unused-vars
 	Renderer.prototype.setMask = function setMask (mask) {};
@@ -23878,20 +23983,7 @@
 	        var context = this.getContext();
 
 	        context.beginPath();
-	        if (typeof context.roundRect === "function") {
-	            //https://developer.chrome.com/blog/canvas2d/#round-rect
-	            context.roundRect(x, y, width, height, radius);
-	        } else {
-	            context.moveTo(x + radius, y);
-	            context.lineTo(x + width - radius, y);
-	            context.arcTo(x + width, y, x + width, y + radius, radius);
-	            context.lineTo(x + width, y + height - radius);
-	            context.arcTo(x + width, y + height, x + width - radius, y + height, radius);
-	            context.lineTo(x + radius, y + height);
-	            context.arcTo(x, y + height, x, y + height - radius, radius);
-	            context.lineTo(x, y + radius);
-	            context.arcTo(x, y, x + radius, y, radius);
-	        }
+	        context.roundRect(x, y, width, height, radius);
 	        context[fill === true ? "fill" : "stroke"]();
 	    };
 
@@ -24124,13 +24216,15 @@
 	     * @name setMask
 	     * @memberof CanvasRenderer.prototype
 	     * @function
-	     * @param {Rect|Polygon|Line|Ellipse} [mask] the shape defining the mask to be applied
+	     * @param {Rect|RoundRect|Polygon|Line|Ellipse} [mask] the shape defining the mask to be applied
 	     */
 	    CanvasRenderer.prototype.setMask = function setMask (mask) {
 	        var context = this.getContext();
 	        var _x = mask.pos.x, _y = mask.pos.y;
 
 	        context.save();
+
+	        context.beginPath();
 
 	        // https://github.com/melonjs/melonJS/issues/648
 	        if (mask instanceof Ellipse) {
@@ -24148,14 +24242,14 @@
 	                ymin = _y - ymagic,
 	                ymax = _y + ymagic;
 
-	            context.beginPath();
 	            context.moveTo(_x, ty);
 	            context.bezierCurveTo(xmax, ty, rx, ymin, rx, _y);
 	            context.bezierCurveTo(rx, ymax, xmax, by, _x, by);
 	            context.bezierCurveTo(xmin, by, lx, ymax, lx, _y);
 	            context.bezierCurveTo(lx, ymin, xmin, ty, _x, ty);
+	        } else if (mask instanceof RoundRect) {
+	            context.roundRect(_x, _y, mask.width, mask.height, mask.radius);
 	        } else {
-	            context.beginPath();
 	            context.moveTo(_x + mask.points[0].x, _y + mask.points[0].y);
 	            var point;
 	            for (var i = 1; i < mask.points.length; i++) {
@@ -24175,7 +24269,7 @@
 	     * @function
 	     */
 	    CanvasRenderer.prototype.clearMask = function clearMask () {
-	        this.backBufferContext2D.restore();
+	        this.getContext().restore();
 	    };
 
 	    return CanvasRenderer;
@@ -30468,7 +30562,7 @@
 	                     */
 	                    return function (val) {
 	                        var fnv = fn;
-	                        if (val.length && fn.substr(-1) !== "v") {
+	                        if (val.length && fn.slice(-1) !== "v") {
 	                            fnv += "v";
 	                        }
 	                        gl[fnv](locations[name], val);
@@ -32507,7 +32601,7 @@
 	     * @name setMask
 	     * @memberof WebGLRenderer.prototype
 	     * @function
-	     * @param {Rect|Polygon|Line|Ellipse} [mask] the shape defining the mask to be applied
+	     * @param {Rect|RoundRect|Polygon|Line|Ellipse} [mask] the shape defining the mask to be applied
 	     */
 	    WebGLRenderer.prototype.setMask = function setMask (mask) {
 	        var gl = this.gl;
@@ -33119,14 +33213,14 @@
 	            // never cache if a url is passed as parameter
 	            var index = url.indexOf("#");
 	            if (index !== -1) {
-	                url = url.substr(index, url.length);
+	                url = url.slice(index, url.length);
 	            } else {
 	                return hash;
 	            }
 	        }
 
 	        // parse the url
-	        url.substr(1).split("&").filter(function (value) {
+	        url.slice(1).split("&").filter(function (value) {
 	            return (value !== "");
 	        }).forEach(function (value) {
 	            var kv = value.split("=");
@@ -33482,6 +33576,256 @@
 	    globalThis.cancelAnimationFrame = cancelAnimationFrame;
 	}
 
+	/*
+	 * based on https://www.npmjs.com/package/canvas-roundrect-polyfill
+	 * @version 0.0.1
+	 */
+	(function () {
+
+	  /** @ignore */
+	  function roundRect(x, y, w, h, radii) {
+
+	    if (!([x, y, w, h].every(function (input) { return Number.isFinite(input); }))) {
+
+	      return;
+
+	    }
+
+	    radii = parseRadiiArgument(radii);
+
+	    var upperLeft, upperRight, lowerRight, lowerLeft;
+
+	    if (radii.length === 4) {
+
+	      upperLeft = toCornerPoint(radii[0]);
+	      upperRight = toCornerPoint(radii[1]);
+	      lowerRight = toCornerPoint(radii[2]);
+	      lowerLeft = toCornerPoint(radii[3]);
+
+	    } else if (radii.length === 3) {
+
+	      upperLeft = toCornerPoint(radii[0]);
+	      upperRight = toCornerPoint(radii[1]);
+	      lowerLeft = toCornerPoint(radii[1]);
+	      lowerRight = toCornerPoint(radii[2]);
+
+	    } else if (radii.length === 2) {
+
+	      upperLeft = toCornerPoint(radii[0]);
+	      lowerRight = toCornerPoint(radii[0]);
+	      upperRight = toCornerPoint(radii[1]);
+	      lowerLeft = toCornerPoint(radii[1]);
+
+	    } else if (radii.length === 1) {
+
+	      upperLeft = toCornerPoint(radii[0]);
+	      upperRight = toCornerPoint(radii[0]);
+	      lowerRight = toCornerPoint(radii[0]);
+	      lowerLeft = toCornerPoint(radii[0]);
+
+	    } else {
+
+	      throw new Error(radii.length + " is not a valid size for radii sequence.");
+
+	    }
+
+	    var corners = [upperLeft, upperRight, lowerRight, lowerLeft];
+	    var negativeCorner = corners.find(function (ref) {
+	      var x = ref.x;
+	      var y = ref.y;
+
+	      return x < 0 || y < 0;
+	    });
+	    //const negativeValue = negativeCorner?.x < 0 ? negativeCorner.x : negativeCorner?.y
+
+	    if (corners.some(function (ref) {
+	      var x = ref.x;
+	      var y = ref.y;
+
+	      return !Number.isFinite(x) || !Number.isFinite(y);
+	    })) {
+
+	      return;
+
+	    }
+
+	    if (negativeCorner) {
+
+	      throw new Error("Radius value " + negativeCorner + " is negative.");
+
+	    }
+
+	    fixOverlappingCorners(corners);
+
+	    if (w < 0 && h < 0) {
+
+	      this.moveTo(x - upperLeft.x, y);
+	      this.ellipse(x + w + upperRight.x, y - upperRight.y, upperRight.x, upperRight.y, 0, -Math.PI * 1.5, -Math.PI);
+	      this.ellipse(x + w + lowerRight.x, y + h + lowerRight.y, lowerRight.x, lowerRight.y, 0, -Math.PI, -Math.PI / 2);
+	      this.ellipse(x - lowerLeft.x, y + h + lowerLeft.y, lowerLeft.x, lowerLeft.y, 0, -Math.PI / 2, 0);
+	      this.ellipse(x - upperLeft.x, y - upperLeft.y, upperLeft.x, upperLeft.y, 0, 0, -Math.PI / 2);
+
+	    } else if (w < 0) {
+
+	      this.moveTo(x - upperLeft.x, y);
+	      this.ellipse(x + w + upperRight.x, y + upperRight.y, upperRight.x, upperRight.y, 0, -Math.PI / 2, -Math.PI, 1);
+	      this.ellipse(x + w + lowerRight.x, y + h - lowerRight.y, lowerRight.x, lowerRight.y, 0, -Math.PI, -Math.PI * 1.5, 1);
+	      this.ellipse(x - lowerLeft.x, y + h - lowerLeft.y, lowerLeft.x, lowerLeft.y, 0, Math.PI / 2, 0, 1);
+	      this.ellipse(x - upperLeft.x, y + upperLeft.y, upperLeft.x, upperLeft.y, 0, 0, -Math.PI / 2, 1);
+
+	    } else if (h < 0) {
+
+	      this.moveTo(x + upperLeft.x, y);
+	      this.ellipse(x + w - upperRight.x, y - upperRight.y, upperRight.x, upperRight.y, 0, Math.PI / 2, 0, 1);
+	      this.ellipse(x + w - lowerRight.x, y + h + lowerRight.y, lowerRight.x, lowerRight.y, 0, 0, -Math.PI / 2, 1);
+	      this.ellipse(x + lowerLeft.x, y + h + lowerLeft.y, lowerLeft.x, lowerLeft.y, 0, -Math.PI / 2, -Math.PI, 1);
+	      this.ellipse(x + upperLeft.x, y - upperLeft.y, upperLeft.x, upperLeft.y, 0, -Math.PI, -Math.PI * 1.5, 1);
+
+	    } else {
+
+	      this.moveTo(x + upperLeft.x, y);
+	      this.ellipse(x + w - upperRight.x, y + upperRight.y, upperRight.x, upperRight.y, 0, -Math.PI / 2, 0);
+	      this.ellipse(x + w - lowerRight.x, y + h - lowerRight.y, lowerRight.x, lowerRight.y, 0, 0, Math.PI / 2);
+	      this.ellipse(x + lowerLeft.x, y + h - lowerLeft.y, lowerLeft.x, lowerLeft.y, 0, Math.PI / 2, Math.PI);
+	      this.ellipse(x + upperLeft.x, y + upperLeft.y, upperLeft.x, upperLeft.y, 0, Math.PI, Math.PI * 1.5);
+
+	    }
+
+	    this.closePath();
+	    this.moveTo(x, y);
+
+	    /** @ignore */
+	    function toDOMPointInit(value) {
+
+	      var x = value.x;
+	      var y = value.y;
+	      var z = value.z;
+	      var w = value.w;
+	      return {x: x, y: y, z: z, w: w};
+
+	    }
+
+	    /** @ignore */
+	    function parseRadiiArgument(value) {
+
+	      // https://webidl.spec.whatwg.org/#es-union
+	      // with 'optional (unrestricted double or DOMPointInit
+	      //   or sequence<(unrestricted double or DOMPointInit)>) radii = 0'
+	      var type = typeof value;
+
+	      if (type === "undefined" || value === null) {
+
+	        return [0];
+
+	      }
+	      if (type === "function") {
+
+	        return [NaN];
+
+	      }
+	      if (type === "object") {
+
+	        if (typeof value[Symbol.iterator] === "function") {
+
+	          return [].concat( value ).map(function (elem) {
+	            // https://webidl.spec.whatwg.org/#es-union
+	            // with '(unrestricted double or DOMPointInit)'
+	            var elemType = typeof elem;
+	            if (elemType === "undefined" || elem === null) {
+	              return 0;
+	            }
+	            if (elemType === "function") {
+	              return NaN;
+	            }
+	            if (elemType === "object") {
+	              return toDOMPointInit(elem);
+	            }
+	            return toUnrestrictedNumber(elem);
+	          });
+
+	        }
+
+	        return [toDOMPointInit(value)];
+
+	      }
+
+	      return [toUnrestrictedNumber(value)];
+
+	    }
+
+	    /** @ignore */
+	    function toUnrestrictedNumber(value) {
+
+	      return +value;
+
+	    }
+
+	    /** @ignore */
+	    function toCornerPoint(value) {
+
+	      var asNumber = toUnrestrictedNumber(value);
+	      if (Number.isFinite(asNumber)) {
+
+	        return {
+	          x: asNumber,
+	          y: asNumber
+	        };
+
+	      }
+	      if (Object(value) === value) {
+
+	        return {
+	          x: toUnrestrictedNumber(value.x || 0),
+	          y: toUnrestrictedNumber(value.y || 0)
+	        };
+
+	      }
+
+	      return {
+	        x: NaN,
+	        y: NaN
+	      };
+
+	    }
+
+	    /** @ignore */
+	    function fixOverlappingCorners(corners) {
+	      var upperLeft = corners[0];
+	      var upperRight = corners[1];
+	      var lowerRight = corners[2];
+	      var lowerLeft = corners[3];
+	      var factors = [
+	        Math.abs(w) / (upperLeft.x + upperRight.x),
+	        Math.abs(h) / (upperRight.y + lowerRight.y),
+	        Math.abs(w) / (lowerRight.x + lowerLeft.x),
+	        Math.abs(h) / (upperLeft.y + lowerLeft.y)
+	      ];
+	      var minFactor = Math.min.apply(Math, factors);
+	      if (minFactor <= 1) {
+	        corners.forEach(function (radii) {
+	            radii.x *= minFactor;
+	            radii.y *= minFactor;
+	        });
+	      }
+	    }
+	  }
+
+	  if (typeof Path2D.prototype.roundRect === "undefined") {
+	      Path2D.prototype.roundRect = roundRect;
+	  }
+	  if (globalThis.CanvasRenderingContext2D) {
+	    if (typeof globalThis.CanvasRenderingContext2D.prototype.roundRect === "undefined") {
+	        globalThis.CanvasRenderingContext2D.prototype.roundRect = roundRect;
+	    }
+	  }
+	  if (globalThis.OffscreenCanvasRenderingContext2D) {
+	    if (typeof globalThis.OffscreenCanvasRenderingContext2D.prototype.roundRect === "undefined") {
+	        globalThis.OffscreenCanvasRenderingContext2D.prototype.roundRect = roundRect;
+	    }
+	  }
+
+	})();
+
 	/**
 	 * This namespace is a container for all registered plugins.
 	 * @see plugin.register
@@ -33496,10 +33840,10 @@
 	     * this can be overridden by the plugin
 	     * @public
 	     * @type {string}
-	     * @default "10.8.0"
+	     * @default "10.9.0"
 	     * @name plugin.Base#version
 	     */
-	    this.version = "10.8.0";
+	    this.version = "10.9.0";
 	};
 
 	/**
@@ -37915,7 +38259,7 @@
 	 * @name version
 	 * @type {string}
 	 */
-	var version = "10.8.0";
+	var version = "10.9.0";
 
 
 	/**

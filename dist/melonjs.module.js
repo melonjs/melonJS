@@ -1,5 +1,5 @@
 /*!
- * melonJS Game Engine - v10.8.0
+ * melonJS Game Engine - v10.9.0
  * http://www.melonjs.org
  * melonjs is licensed under the MIT License.
  * http://www.opensource.org/licenses/mit-license
@@ -13515,8 +13515,8 @@ var leadingZeroRE = /^0+/;
 function addMapping(id, mapping) {
     var expanded_id = id.replace(vendorProductRE, function (_, a, b) {
         return (
-            "000".substr(a.length - 1) + a + "-" +
-            "000".substr(b.length - 1) + b + "-"
+            "000".slice(a.length - 1) + a + "-" +
+            "000".slice(b.length - 1) + b + "-"
         );
     });
     var sparse_id = id.replace(vendorProductRE, function (_, a, b) {
@@ -22410,6 +22410,103 @@ class RoundRect extends Rect {
     }
 
     /**
+     * copy the position, size and radius of the given rounded rectangle into this one
+     * @name copy
+     * @memberof RoundRect.prototype
+     * @function
+     * @param {RoundRect} rrect source rounded rectangle
+     * @returns {RoundRect} new rectangle
+     */
+    copy(rrect) {
+        super.setShape(rrect.pos.x, rrect.pos.y, rrect.width, rrect.height);
+        this.radius = rrect.radius;
+        return this;
+    }
+
+    /**
+     * Returns true if the rounded rectangle contains the given point
+     * @name contains
+     * @memberof RoundRect.prototype
+     * @function
+     * @param  {number} x x coordinate
+     * @param  {number} y y coordinate
+     * @returns {boolean} true if contains
+     */
+
+    /**
+     * Returns true if the rounded rectangle contains the given point
+     * @name contains
+     * @memberof RoundRect.prototype
+     * @function
+     * @param {Vector2d} point
+     * @returns {boolean} true if contains
+     */
+    contains() {
+        var arg0 = arguments[0];
+        var _x, _y;
+        if (arguments.length === 2) {
+             // x, y
+             _x = arg0;
+             _y = arguments[1];
+         } else {
+             if (arg0 instanceof Rect) {
+                 // good enough
+                 return super.contains(arg0);
+             } else {
+                 // vector
+                _x = arg0.x;
+                _y = arg0.y;
+             }
+        }
+
+        // check whether point is outside the bounding box
+        if (_x < this.left || _x >= this.right || _y < this.top || _y >= this.bottom) {
+            return false; // outside bounding box
+        }
+
+        // check whether point is within the bounding box minus radius
+        if ((_x >= this.left + this.radius && _x <= this.right - this.radius) || (_y >= this.top + this.radius && _y <= this.bottom - this.radius)) {
+            return true;
+        }
+
+        // check whether point is in one of the rounded corner areas
+        var tx, ty;
+        var radiusX =  Math.max(0, Math.min(this.radius, this.width / 2));
+        var radiusY =  Math.max(0, Math.min(this.radius, this.height / 2));
+
+        if (_x < this.left + radiusX && _y < this.top + radiusY) {
+            tx = _x - this.left - radiusX;
+            ty = _y - this.top - radiusY;
+        } else if (_x > this.right - radiusX && _y < this.top + radiusY) {
+            tx = _x - this.right + radiusX;
+            ty = _y - this.top - radiusY;
+        } else if (_x > this.right - radiusX && _y > this.bottom - radiusY) {
+            tx = _x - this.right + radiusX;
+            ty = _y - this.bottom + radiusY;
+        } else if (_x < this.left + radiusX && _y > this.bottom - radiusY) {
+            tx = _x - this.left - radiusX;
+            ty = _y - this.bottom + radiusY;
+        } else {
+            return false; // inside and not within the rounded corner area
+        }
+
+        // Pythagorean theorem.
+        return ((tx * tx) + (ty * ty) <= (radiusX * radiusY));
+    }
+
+    /**
+     * check if this RoundRect is identical to the specified one
+     * @name equals
+     * @memberof RoundRect.prototype
+     * @function
+     * @param {RoundRect} rrect
+     * @returns {boolean} true if equals
+     */
+    equals(rrect) {
+        return super.equals(rrect) && this.radius === rrect.radius;
+    }
+
+    /**
      * clone this RoundRect
      * @name clone
      * @memberof RoundRect.prototype
@@ -22417,7 +22514,7 @@ class RoundRect extends Rect {
      * @returns {RoundRect} new RoundRect
      */
     clone() {
-        return new RoundRect(this.pos.x, this.pos.y, this.width, this.height, this.radius);
+        return new RoundRect(this.pos.x, this.pos.y, this.width, this.height, radius);
     }
 }
 
@@ -22532,7 +22629,7 @@ class Line extends Polygon {
  * @classdesc
  * a simplified path2d implementation, supporting only one path
  */
-class Path2D {
+class Path2D$1 {
     constructor() {
         /**
          * the points defining the current path
@@ -22888,7 +22985,7 @@ class Renderer {
          * @type {Path2D}
          * @memberof Renderer#
          */
-        this.path2D = new Path2D();
+        this.path2D = new Path2D$1();
 
         /**
          * @ignore
@@ -23176,13 +23273,19 @@ class Renderer {
      * @param {boolean} [fill=false] fill the shape with the current color if true
      */
     stroke(shape, fill) {
+        if (shape instanceof Rect || shape instanceof Bounds$1) {
+            this.strokeRect(shape.left, shape.top, shape.width, shape.height, fill);
+            return;
+        }
+        if (shape instanceof Line || shape instanceof Polygon) {
+            this.strokePolygon(shape, fill);
+            return;
+        }
         if (shape instanceof RoundRect) {
             this.strokeRoundRect(shape.left, shape.top, shape.width, shape.height, shape.radius, fill);
-        } else if (shape instanceof Rect || shape instanceof Bounds$1) {
-            this.strokeRect(shape.left, shape.top, shape.width, shape.height, fill);
-        } else if (shape instanceof Line || shape instanceof Polygon) {
-            this.strokePolygon(shape, fill);
-        } else if (shape instanceof Ellipse) {
+            return;
+        }
+        if (shape instanceof Ellipse) {
             this.strokeEllipse(
                 shape.pos.x,
                 shape.pos.y,
@@ -23190,7 +23293,9 @@ class Renderer {
                 shape.radiusV.y,
                 fill
             );
+            return;
         }
+        throw new Error("Invalid geometry for fill/stroke");
     }
 
     /**
@@ -23198,7 +23303,7 @@ class Renderer {
      * @name fill
      * @memberof Renderer.prototype
      * @function
-     * @param {Rect|Polygon|Line|Ellipse} shape a shape object to fill
+     * @param {Rect|RoundRect|Polygon|Line|Ellipse} shape a shape object to fill
      */
     fill(shape) {
         this.stroke(shape, true);
@@ -23240,7 +23345,7 @@ class Renderer {
      * @name setMask
      * @memberof Renderer.prototype
      * @function
-     * @param {Rect|Polygon|Line|Ellipse} [mask] the shape defining the mask to be applied
+     * @param {Rect|RoundRect|Polygon|Line|Ellipse} [mask] the shape defining the mask to be applied
      */
     // eslint-disable-next-line no-unused-vars
     setMask(mask) {}
@@ -23810,20 +23915,7 @@ class CanvasRenderer extends Renderer {
         var context = this.getContext();
 
         context.beginPath();
-        if (typeof context.roundRect === "function") {
-            //https://developer.chrome.com/blog/canvas2d/#round-rect
-            context.roundRect(x, y, width, height, radius);
-        } else {
-            context.moveTo(x + radius, y);
-            context.lineTo(x + width - radius, y);
-            context.arcTo(x + width, y, x + width, y + radius, radius);
-            context.lineTo(x + width, y + height - radius);
-            context.arcTo(x + width, y + height, x + width - radius, y + height, radius);
-            context.lineTo(x + radius, y + height);
-            context.arcTo(x, y + height, x, y + height - radius, radius);
-            context.lineTo(x, y + radius);
-            context.arcTo(x, y, x + radius, y, radius);
-        }
+        context.roundRect(x, y, width, height, radius);
         context[fill === true ? "fill" : "stroke"]();
     }
 
@@ -24056,13 +24148,15 @@ class CanvasRenderer extends Renderer {
      * @name setMask
      * @memberof CanvasRenderer.prototype
      * @function
-     * @param {Rect|Polygon|Line|Ellipse} [mask] the shape defining the mask to be applied
+     * @param {Rect|RoundRect|Polygon|Line|Ellipse} [mask] the shape defining the mask to be applied
      */
     setMask(mask) {
         var context = this.getContext();
         var _x = mask.pos.x, _y = mask.pos.y;
 
         context.save();
+
+        context.beginPath();
 
         // https://github.com/melonjs/melonJS/issues/648
         if (mask instanceof Ellipse) {
@@ -24080,14 +24174,14 @@ class CanvasRenderer extends Renderer {
                 ymin = _y - ymagic,
                 ymax = _y + ymagic;
 
-            context.beginPath();
             context.moveTo(_x, ty);
             context.bezierCurveTo(xmax, ty, rx, ymin, rx, _y);
             context.bezierCurveTo(rx, ymax, xmax, by, _x, by);
             context.bezierCurveTo(xmin, by, lx, ymax, lx, _y);
             context.bezierCurveTo(lx, ymin, xmin, ty, _x, ty);
+        } else if (mask instanceof RoundRect) {
+            context.roundRect(_x, _y, mask.width, mask.height, mask.radius);
         } else {
-            context.beginPath();
             context.moveTo(_x + mask.points[0].x, _y + mask.points[0].y);
             var point;
             for (var i = 1; i < mask.points.length; i++) {
@@ -24107,7 +24201,7 @@ class CanvasRenderer extends Renderer {
      * @function
      */
     clearMask() {
-        this.backBufferContext2D.restore();
+        this.getContext().restore();
     }
 
 }
@@ -30398,7 +30492,7 @@ function extractUniforms(gl, shader) {
                      */
                     return function (val) {
                         var fnv = fn;
-                        if (val.length && fn.substr(-1) !== "v") {
+                        if (val.length && fn.slice(-1) !== "v") {
                             fnv += "v";
                         }
                         gl[fnv](locations[name], val);
@@ -32448,7 +32542,7 @@ class WebGLRenderer extends Renderer {
      * @name setMask
      * @memberof WebGLRenderer.prototype
      * @function
-     * @param {Rect|Polygon|Line|Ellipse} [mask] the shape defining the mask to be applied
+     * @param {Rect|RoundRect|Polygon|Line|Ellipse} [mask] the shape defining the mask to be applied
      */
     setMask(mask) {
         var gl = this.gl;
@@ -33054,14 +33148,14 @@ var utils = {
             // never cache if a url is passed as parameter
             var index = url.indexOf("#");
             if (index !== -1) {
-                url = url.substr(index, url.length);
+                url = url.slice(index, url.length);
             } else {
                 return hash;
             }
         }
 
         // parse the url
-        url.substr(1).split("&").filter(function (value) {
+        url.slice(1).split("&").filter(function (value) {
             return (value !== "");
         }).forEach(function (value) {
             var kv = value.split("=");
@@ -33407,6 +33501,240 @@ if (!requestAnimationFrame || !cancelAnimationFrame) {
     globalThis.cancelAnimationFrame = cancelAnimationFrame;
 }
 
+/*
+ * based on https://www.npmjs.com/package/canvas-roundrect-polyfill
+ * @version 0.0.1
+ */
+(() => {
+
+  /** @ignore */
+  function roundRect(x, y, w, h, radii) {
+
+    if (!([x, y, w, h].every((input) => Number.isFinite(input)))) {
+
+      return;
+
+    }
+
+    radii = parseRadiiArgument(radii);
+
+    let upperLeft, upperRight, lowerRight, lowerLeft;
+
+    if (radii.length === 4) {
+
+      upperLeft = toCornerPoint(radii[0]);
+      upperRight = toCornerPoint(radii[1]);
+      lowerRight = toCornerPoint(radii[2]);
+      lowerLeft = toCornerPoint(radii[3]);
+
+    } else if (radii.length === 3) {
+
+      upperLeft = toCornerPoint(radii[0]);
+      upperRight = toCornerPoint(radii[1]);
+      lowerLeft = toCornerPoint(radii[1]);
+      lowerRight = toCornerPoint(radii[2]);
+
+    } else if (radii.length === 2) {
+
+      upperLeft = toCornerPoint(radii[0]);
+      lowerRight = toCornerPoint(radii[0]);
+      upperRight = toCornerPoint(radii[1]);
+      lowerLeft = toCornerPoint(radii[1]);
+
+    } else if (radii.length === 1) {
+
+      upperLeft = toCornerPoint(radii[0]);
+      upperRight = toCornerPoint(radii[0]);
+      lowerRight = toCornerPoint(radii[0]);
+      lowerLeft = toCornerPoint(radii[0]);
+
+    } else {
+
+      throw new Error(radii.length + " is not a valid size for radii sequence.");
+
+    }
+
+    const corners = [upperLeft, upperRight, lowerRight, lowerLeft];
+    const negativeCorner = corners.find(({x, y}) => x < 0 || y < 0);
+    //const negativeValue = negativeCorner?.x < 0 ? negativeCorner.x : negativeCorner?.y
+
+    if (corners.some(({x, y}) => !Number.isFinite(x) || !Number.isFinite(y))) {
+
+      return;
+
+    }
+
+    if (negativeCorner) {
+
+      throw new Error("Radius value " + negativeCorner + " is negative.");
+
+    }
+
+    fixOverlappingCorners(corners);
+
+    if (w < 0 && h < 0) {
+
+      this.moveTo(x - upperLeft.x, y);
+      this.ellipse(x + w + upperRight.x, y - upperRight.y, upperRight.x, upperRight.y, 0, -Math.PI * 1.5, -Math.PI);
+      this.ellipse(x + w + lowerRight.x, y + h + lowerRight.y, lowerRight.x, lowerRight.y, 0, -Math.PI, -Math.PI / 2);
+      this.ellipse(x - lowerLeft.x, y + h + lowerLeft.y, lowerLeft.x, lowerLeft.y, 0, -Math.PI / 2, 0);
+      this.ellipse(x - upperLeft.x, y - upperLeft.y, upperLeft.x, upperLeft.y, 0, 0, -Math.PI / 2);
+
+    } else if (w < 0) {
+
+      this.moveTo(x - upperLeft.x, y);
+      this.ellipse(x + w + upperRight.x, y + upperRight.y, upperRight.x, upperRight.y, 0, -Math.PI / 2, -Math.PI, 1);
+      this.ellipse(x + w + lowerRight.x, y + h - lowerRight.y, lowerRight.x, lowerRight.y, 0, -Math.PI, -Math.PI * 1.5, 1);
+      this.ellipse(x - lowerLeft.x, y + h - lowerLeft.y, lowerLeft.x, lowerLeft.y, 0, Math.PI / 2, 0, 1);
+      this.ellipse(x - upperLeft.x, y + upperLeft.y, upperLeft.x, upperLeft.y, 0, 0, -Math.PI / 2, 1);
+
+    } else if (h < 0) {
+
+      this.moveTo(x + upperLeft.x, y);
+      this.ellipse(x + w - upperRight.x, y - upperRight.y, upperRight.x, upperRight.y, 0, Math.PI / 2, 0, 1);
+      this.ellipse(x + w - lowerRight.x, y + h + lowerRight.y, lowerRight.x, lowerRight.y, 0, 0, -Math.PI / 2, 1);
+      this.ellipse(x + lowerLeft.x, y + h + lowerLeft.y, lowerLeft.x, lowerLeft.y, 0, -Math.PI / 2, -Math.PI, 1);
+      this.ellipse(x + upperLeft.x, y - upperLeft.y, upperLeft.x, upperLeft.y, 0, -Math.PI, -Math.PI * 1.5, 1);
+
+    } else {
+
+      this.moveTo(x + upperLeft.x, y);
+      this.ellipse(x + w - upperRight.x, y + upperRight.y, upperRight.x, upperRight.y, 0, -Math.PI / 2, 0);
+      this.ellipse(x + w - lowerRight.x, y + h - lowerRight.y, lowerRight.x, lowerRight.y, 0, 0, Math.PI / 2);
+      this.ellipse(x + lowerLeft.x, y + h - lowerLeft.y, lowerLeft.x, lowerLeft.y, 0, Math.PI / 2, Math.PI);
+      this.ellipse(x + upperLeft.x, y + upperLeft.y, upperLeft.x, upperLeft.y, 0, Math.PI, Math.PI * 1.5);
+
+    }
+
+    this.closePath();
+    this.moveTo(x, y);
+
+    /** @ignore */
+    function toDOMPointInit(value) {
+
+      const {x, y, z, w} = value;
+      return {x, y, z, w};
+
+    }
+
+    /** @ignore */
+    function parseRadiiArgument(value) {
+
+      // https://webidl.spec.whatwg.org/#es-union
+      // with 'optional (unrestricted double or DOMPointInit
+      //   or sequence<(unrestricted double or DOMPointInit)>) radii = 0'
+      const type = typeof value;
+
+      if (type === "undefined" || value === null) {
+
+        return [0];
+
+      }
+      if (type === "function") {
+
+        return [NaN];
+
+      }
+      if (type === "object") {
+
+        if (typeof value[Symbol.iterator] === "function") {
+
+          return [...value].map((elem) => {
+            // https://webidl.spec.whatwg.org/#es-union
+            // with '(unrestricted double or DOMPointInit)'
+            const elemType = typeof elem;
+            if (elemType === "undefined" || elem === null) {
+              return 0;
+            }
+            if (elemType === "function") {
+              return NaN;
+            }
+            if (elemType === "object") {
+              return toDOMPointInit(elem);
+            }
+            return toUnrestrictedNumber(elem);
+          });
+
+        }
+
+        return [toDOMPointInit(value)];
+
+      }
+
+      return [toUnrestrictedNumber(value)];
+
+    }
+
+    /** @ignore */
+    function toUnrestrictedNumber(value) {
+
+      return +value;
+
+    }
+
+    /** @ignore */
+    function toCornerPoint(value) {
+
+      const asNumber = toUnrestrictedNumber(value);
+      if (Number.isFinite(asNumber)) {
+
+        return {
+          x: asNumber,
+          y: asNumber
+        };
+
+      }
+      if (Object(value) === value) {
+
+        return {
+          x: toUnrestrictedNumber(value.x || 0),
+          y: toUnrestrictedNumber(value.y || 0)
+        };
+
+      }
+
+      return {
+        x: NaN,
+        y: NaN
+      };
+
+    }
+
+    /** @ignore */
+    function fixOverlappingCorners(corners) {
+      const [upperLeft, upperRight, lowerRight, lowerLeft] = corners;
+      const factors = [
+        Math.abs(w) / (upperLeft.x + upperRight.x),
+        Math.abs(h) / (upperRight.y + lowerRight.y),
+        Math.abs(w) / (lowerRight.x + lowerLeft.x),
+        Math.abs(h) / (upperLeft.y + lowerLeft.y)
+      ];
+      const minFactor = Math.min(...factors);
+      if (minFactor <= 1) {
+        corners.forEach((radii) => {
+            radii.x *= minFactor;
+            radii.y *= minFactor;
+        });
+      }
+    }
+  }
+
+  if (typeof Path2D.prototype.roundRect === "undefined") {
+      Path2D.prototype.roundRect = roundRect;
+  }
+  if (globalThis.CanvasRenderingContext2D) {
+    if (typeof globalThis.CanvasRenderingContext2D.prototype.roundRect === "undefined") {
+        globalThis.CanvasRenderingContext2D.prototype.roundRect = roundRect;
+    }
+  }
+  if (globalThis.OffscreenCanvasRenderingContext2D) {
+    if (typeof globalThis.OffscreenCanvasRenderingContext2D.prototype.roundRect === "undefined") {
+        globalThis.OffscreenCanvasRenderingContext2D.prototype.roundRect = roundRect;
+    }
+  }
+
+})();
+
 /**
  * This namespace is a container for all registered plugins.
  * @see plugin.register
@@ -33423,10 +33751,10 @@ class BasePlugin {
          * this can be overridden by the plugin
          * @public
          * @type {string}
-         * @default "10.8.0"
+         * @default "10.9.0"
          * @name plugin.Base#version
          */
-        this.version = "10.8.0";
+        this.version = "10.9.0";
     }
 }
 
@@ -37963,7 +38291,7 @@ class DroptargetEntity extends DropTarget {
  * @name version
  * @type {string}
  */
-const version = "10.8.0";
+const version = "10.9.0";
 
 
 /**
