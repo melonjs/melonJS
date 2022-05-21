@@ -227,7 +227,7 @@ class Renderable extends Rect {
          * A mask limits rendering elements to the shape and position of the given mask object.
          * So, if the renderable is larger than the mask, only the intersecting part of the renderable will be visible.
          * @public
-         * @type {Rect|Polygon|Line|Ellipse}
+         * @type {Rect|RoundRect|Polygon|Line|Ellipse}
          * @name mask
          * @default undefined
          * @memberof Renderable#
