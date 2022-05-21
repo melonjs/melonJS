@@ -1,6 +1,6 @@
 # Changelog
 
-## [10.9.0] (melonJS 2) - _2022-05-XX_
+## [10.9.0] (melonJS 2) - _2022-05-21_
 
 ### Added
 - Geometry : add a proper `contains` and other utility methods to RoundRect
