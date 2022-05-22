@@ -41,7 +41,7 @@ import WebGLCompositor from "./video/webgl/webgl_compositor.js";
 import Renderer from "./video/renderer.js";
 import WebGLRenderer from "./video/webgl/webgl_renderer.js";
 import CanvasRenderer from "./video/canvas/canvas_renderer.js";
-import { TextureAtlas } from "./video/texture.js";
+import { TextureAtlas } from "./video/texture/atlas.js";
 import Renderable from "./renderable/renderable.js";
 import Text from "./text/text.js";
 import BitmapText from "./text/bitmaptext.js";

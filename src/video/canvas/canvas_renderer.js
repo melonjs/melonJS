@@ -1,6 +1,6 @@
 import Color from "./../../math/color.js";
 import Renderer from "./../renderer.js";
-import TextureCache from "./../texture_cache.js";
+import TextureCache from "./../texture/cache.js";
 import Ellipse from "./../../geometries/ellipse.js";
 import RoundRect from "./../../geometries/roundrect.js";
 import { createCanvas } from "./../video.js";

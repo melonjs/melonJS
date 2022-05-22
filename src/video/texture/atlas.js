@@ -1,11 +1,11 @@
-import Vector2d from "./../math/vector2.js";
-import WebGLRenderer from "./webgl/webgl_renderer.js";
-import TextureCache from "./texture_cache.js";
-import Sprite from "./../renderable/sprite.js";
-import { renderer } from "./video.js";
-import pool from "./../system/pooling.js";
-import loader from "./../loader/loader.js";
-import { ETA } from "./../math/math.js";
+import Vector2d from "./../../math/vector2.js";
+import WebGLRenderer from "./../webgl/webgl_renderer.js";
+import TextureCache from "./../texture/cache.js";
+import Sprite from "./../../renderable/sprite.js";
+import { renderer } from "./../video.js";
+import pool from "./../../system/pooling.js";
+import loader from "./../../loader/loader.js";
+import { ETA } from "./../../math/math.js";
 
 /**
  * create a simple 1 frame texture atlas based on the given parameters

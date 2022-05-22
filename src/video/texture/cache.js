@@ -1,7 +1,7 @@
-import { renderer } from "./video.js";
-import * as fileUtil from "./../utils/file.js";
-import { TextureAtlas, createAtlas } from "./texture.js";
-import { isPowerOfTwo} from "./../math/math.js";
+import { renderer } from "./../video.js";
+import * as fileUtil from "./../../utils/file.js";
+import { TextureAtlas, createAtlas } from "./atlas.js";
+import { isPowerOfTwo} from "./../../math/math.js";
 import {ArrayMultimap} from "@teppeis/multimaps";
 
 

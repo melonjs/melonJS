@@ -1,6 +1,6 @@
 import device from "./../system/device.js";
 import { requestPointerLock, exitPointerLock } from "./../input/input.js";
-import { TextureAtlas } from "./../video/texture.js";
+import { TextureAtlas } from "./../video/texture/atlas.js";
 import Renderer from "./../video/renderer.js";
 import { Draggable, DropTarget } from "./../renderable/dragndrop.js";
 

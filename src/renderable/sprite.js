@@ -1,7 +1,7 @@
 import { renderer } from "./../video/video.js";
 import pool from "./../system/pooling.js";
 import loader from "./../loader/loader.js";
-import { TextureAtlas } from "./../video/texture.js";
+import { TextureAtlas } from "./../video/texture/atlas.js";
 import Renderable from "./renderable.js";
 
 /**
