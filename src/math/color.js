@@ -561,11 +561,11 @@ class Color {
      * @function
      * @returns {string}
      */
-    toHex8() {
+    toHex8(alpha = this.alpha) {
         // TODO : Memoize this function by caching its result until any of
         // the r,g,b,a values are changed
 
-        return "#" + toHex(this.r) + toHex(this.g) + toHex(this.b) + toHex(this.alpha * 255);
+        return "#" + toHex(this.r) + toHex(this.g) + toHex(this.b) + toHex(alpha * 255);
     }
 
     /**
@@ -591,9 +591,10 @@ class Color {
      * @name toRGBA
      * @memberof Color
      * @function
+     * @param {number} [alpha=1.0] alpha value [0.0 .. 1.0]
      * @returns {string}
      */
-    toRGBA() {
+    toRGBA(alpha = this.alpha) {
         // TODO : Memoize this function by caching its result until any of
         // the r,g,b,a values are changed
 
@@ -601,7 +602,7 @@ class Color {
             this.r + "," +
             this.g + "," +
             this.b + "," +
-            this.alpha +
+            alpha +
         ")";
     }
 };

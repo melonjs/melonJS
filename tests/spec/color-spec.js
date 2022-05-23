@@ -27,6 +27,11 @@ describe("me.Color", function () {
         it("#0000FF80 value is rgba(0, 0, 255, 0.5)", function () {
             expect(blue_color.parseHex("#0000FF80").toRGBA()).toEqual("rgba(0,0,255,0.5)");
         });
+
+        // override the alpha with a specific value
+        it("#0000FF80 value is rgba(0, 0, 255, 0.5)", function () {
+            expect(blue_color.parseHex("#0000FF80").toRGBA(1.0)).toEqual("rgba(0,0,255,1)");
+        });
     });
 
     describe("red_color", function () {
