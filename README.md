@@ -87,10 +87,34 @@ Tools integration
 Tools integration and usage with melonJS is documented in our [Wiki](https://github.com/melonjs/melonJS/wiki#third-party-tools-usage).
 
 
-Using melonJS
+# Using melonJS
+
+### For your first time using melonJS, use either of these tutorials for setting up the engine.  These are where you start.
+
+- [Platformer](http://melonjs.github.io/tutorial-platformer/) Step by Step Tutorial.
+- [Space Invaders](http://melonjs.github.io/tutorial-space-invaders/) Step by Step Tutorial.
+
+You may find it useful to skim the overview found at the wiki [Details & Usage](https://github.com/melonjs/melonJS/wiki#details--usage)
+
+When starting your own projects, checkout our [es6 boilerplate](https://github.com/melonjs/es6-boilerplate)
+
+Demos
 -------------------------------------------------------------------------------
 
-Basic [Hello World](https://jsfiddle.net/obiot/4o9f02tc/) Example
+A few demos of melonJS capabilities :
+
+* [Platformer Demo](https://melonjs.github.io/examples/platformer/)
+* [Isometric Demo](https://melonjs.github.io/examples/isometric_rpg/)
+* [Sprite Demo](https://melonjs.github.io/examples/sprite/)
+* [Masking Demo](https://melonjs.github.io/examples/masking/)
+* [Primitive Drawing Demo](https://melonjs.github.io/examples/graphics/)
+* [UI Demo](https://melonjs.github.io/examples/UI/)
+
+   More examples are available [here](https://melonjs.github.io/examples/)
+
+-------------------------------------------------------------------------------
+
+### Basic [Hello World](https://jsfiddle.net/obiot/4o9f02tc/) Example
 
 ```JavaScript
 import * as me from "https://esm.run/melonjs";
@@ -122,28 +146,7 @@ Documentation :
 
 * [Online API](http://melonjs.github.io/melonJS/docs/) ([offline](https://github.com/melonjs/melonJS/archive/gh-pages.zip) version under the `docs` directory)
 
-For your first time using melonJS, follow these tutorials :
 
-- [Platformer](http://melonjs.github.io/tutorial-platformer/) Step by Step Tutorial.
-- [Space Invaders](http://melonjs.github.io/tutorial-space-invaders/) Step by Step Tutorial.
-
-You may find it useful to skim the overview found at the wiki [Details & Usage](https://github.com/melonjs/melonJS/wiki#details--usage)
-
-When starting your own projects, checkout our [es6 boilerplate](https://github.com/melonjs/es6-boilerplate)
-
-Demos
--------------------------------------------------------------------------------
-
-A few demos of melonJS capabilities :
-
-* [Platformer Demo](https://melonjs.github.io/examples/platformer/)
-* [Isometric Demo](https://melonjs.github.io/examples/isometric_rpg/)
-* [Sprite Demo](https://melonjs.github.io/examples/sprite/)
-* [Masking Demo](https://melonjs.github.io/examples/masking/)
-* [Primitive Drawing Demo](https://melonjs.github.io/examples/graphics/)
-* [UI Demo](https://melonjs.github.io/examples/UI/)
-
-More examples are available [here](https://melonjs.github.io/examples/)
 
 Download melonJS
 -------------------------------------------------------------------------------
