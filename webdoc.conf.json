@@ -8,7 +8,8 @@
     ],
     "opts": {
         "encoding"      : "utf8",
-        "destination"   : "dist/docs"
+        "destination"   : "dist/docs",
+        "export"        : "dist/docs/melonjs.api.json"
     },
     "template": {
         "repository": "@webdoc/default-template",
