@@ -1,5 +1,5 @@
 import { world, viewport } from "./../game.js";
-import { createCanvas, renderer } from "./../video/video.js";
+import { renderer } from "./../video/video.js";
 import * as event from "./../system/event.js";
 import {nextPowerOfTwo} from "./../math/math.js";
 import pool from "./../system/pooling.js";
@@ -69,13 +69,13 @@ class IconLogo extends Renderable {
     constructor(x, y) {
         super(x, y, 100, 85);
 
-        this.iconCanvas = createCanvas(
+        this.iconTexture = pool.pull("CanvasTexture",
             renderer.WebGLVersion > 1 ? this.width : nextPowerOfTwo(this.width),
             renderer.WebGLVersion > 1 ? this.height : nextPowerOfTwo(this.height),
-            false
+            true
         );
 
-        var context = renderer.getContext2d(this.iconCanvas);
+        var context = this.iconTexture.context;
 
         context.beginPath();
         context.moveTo(0.7, 48.9);
@@ -110,7 +110,17 @@ class IconLogo extends Renderable {
      * @ignore
      */
     draw(renderer) {
-        renderer.drawImage(this.iconCanvas, renderer.getWidth() / 2, this.pos.y);
+        renderer.drawImage(this.iconTexture.canvas, renderer.getWidth() / 2, this.pos.y);
+    }
+
+    /**
+     * Destroy function
+     * @ignore
+     */
+    destroy() {
+        // call the parent destroy method
+        super.destroy(arguments);
+        pool.push(this.iconTexture);
     }
 };
 
