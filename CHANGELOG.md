@@ -3,6 +3,7 @@
 ## [10.10.0] (melonJS 2) - _2022-05-21_
 
 ### Added
+- Core: new `CanvasTexture` object to allow recycling canvas through the engine (text caching, default particles, effect, etc..)
 - Color : allow overriding the alpha component with a specific value when calling `toRGBA` or `toHex8`
 
 ## [10.9.0] (melonJS 2) - _2022-05-21_

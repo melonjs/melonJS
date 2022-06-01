@@ -1,6 +1,6 @@
 import Color from "./../math/color.js";
 import WebGLRenderer from "./../video/webgl/webgl_renderer.js";
-import { renderer as globalRenderer, createCanvas } from "./../video/video.js";
+import { renderer as globalRenderer } from "./../video/video.js";
 import { trimRight } from "./../utils/string.js";
 import pool from "./../system/pooling.js";
 import Renderable from "./../renderable/renderable.js";
@@ -23,7 +23,7 @@ var toPX = [12, 24, 0.75, 1];
 // return a valid 2d context for Text rendering/styling
 var getContext2d = function (renderer, text) {
     if (text.offScreenCanvas === true) {
-        return text.context;
+        return text.canvasTexture.context;
     } else {
         return renderer.getFontContext();
     }
@@ -190,8 +190,7 @@ class Text extends Renderable {
 
         if (settings.offScreenCanvas === true) {
             this.offScreenCanvas = true;
-            this.canvas = createCanvas(2, 2, true);
-            this.context = this.canvas.getContext("2d");
+            this.canvasTexture = pool.pull("CanvasTexture", 2, 2, true);
         }
 
         // instance to text metrics functions
@@ -206,10 +205,9 @@ class Text extends Renderable {
         // free the canvas and potential corresponding texture when deactivated
         if (this.offScreenCanvas === true) {
             globalRenderer.currentCompositor.deleteTexture2D(globalRenderer.currentCompositor.getTexture2D(this.glTextureUnit));
-            globalRenderer.cache.delete(this.canvas);
-            this.canvas.width = this.canvas.height = 0;
-            this.context = undefined;
-            this.canvas = undefined;
+            globalRenderer.cache.delete(this.canvasTexture.canvas);
+            pool.push(this.canvasTexture);
+            this.canvasTexture = undefined;
             this.glTextureUnit = undefined;
         }
     }
@@ -307,7 +305,7 @@ class Text extends Renderable {
 
             if (globalRenderer instanceof WebGLRenderer) {
                 // invalidate the previous corresponding texture so that it can reuploaded once changed
-                this.glTextureUnit = globalRenderer.cache.getUnit(globalRenderer.cache.get(this.canvas));
+                this.glTextureUnit = globalRenderer.cache.getUnit(globalRenderer.cache.get(this.canvasTexture.canvas));
                 globalRenderer.currentCompositor.unbindTexture2D(null, this.glTextureUnit);
 
                 if (globalRenderer.WebGLVersion === 1) {
@@ -318,14 +316,12 @@ class Text extends Renderable {
             }
 
             // resize the cache canvas if necessary
-            if (this.canvas.width < width || this.canvas.height < height) {
-                this.canvas.width = width;
-                this.canvas.height = height;
-                // resizing the canvas will automatically clear its content
-            } else {
-                this.context.clearRect(0, 0, this.canvas.width, this.canvas.height);
+            if (this.canvasTexture.width < width || this.canvasTexture.height < height) {
+                this.canvasTexture.resize(width, height);
             }
-            this._drawFont(this.context, this._text,  this.pos.x - this.metrics.x, this.pos.y - this.metrics.y, false);
+
+            this.canvasTexture.clear();
+            this._drawFont(this.canvasTexture.context, this._text,  this.pos.x - this.metrics.x, this.pos.y - this.metrics.y, false);
         }
 
         this.isDirty = true;
@@ -389,7 +385,7 @@ class Text extends Renderable {
 
         // draw the text
         if (this.offScreenCanvas === true) {
-            renderer.drawImage(this.canvas, x, y);
+            renderer.drawImage(this.canvasTexture.canvas, x, y);
         } else {
             renderer.drawFont(this._drawFont(renderer.getFontContext(), this._text, x, y, stroke));
         }

@@ -41,6 +41,7 @@ import WebGLCompositor from "./video/webgl/webgl_compositor.js";
 import Renderer from "./video/renderer.js";
 import WebGLRenderer from "./video/webgl/webgl_renderer.js";
 import CanvasRenderer from "./video/canvas/canvas_renderer.js";
+import CanvasTexture from "./video/texture/canvas_texture.js";
 import { TextureAtlas } from "./video/texture/atlas.js";
 import Renderable from "./renderable/renderable.js";
 import Text from "./text/text.js";
@@ -253,6 +254,7 @@ export function boot() {
     pool.register("Line", Line, true);
     pool.register("Ellipse", Ellipse, true);
     pool.register("Bounds", Bounds, true);
+    pool.register("CanvasTexture", CanvasTexture, true);
 
     // publish Boot notification
     event.emit(event.BOOT);

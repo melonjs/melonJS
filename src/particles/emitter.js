@@ -1,23 +1,18 @@
-import { createCanvas } from "./../video/video.js";
 import pool from "./../system/pooling.js";
 import ParticleEmitterSettings from "./settings.js";
 import { randomFloat } from "./../math/math.js";
 import Container from "./../renderable/container.js";
 
 
-// default texture used when no sprite is defined
-let defaultParticleTexture;
-
 /**
  * @ignore
  */
 function createDefaultParticleTexture(w = 8, h = 8) {
-    if (typeof defaultParticleTexture === "undefined") {
-        defaultParticleTexture = createCanvas(w, h, true);
-        var context = defaultParticleTexture.getContext("2d");
-        context.fillStyle = "#fff";
-        context.fillRect(0, 0, w, h);
-    }
+    var defaultParticleTexture = pool.pull("CanvasTexture", w, h, true);
+
+    defaultParticleTexture.context.fillStyle = "#fff";
+    defaultParticleTexture.context.fillRect(0, 0, w, h);
+
     return defaultParticleTexture;
 };
 
@@ -120,9 +115,9 @@ class ParticleEmitter extends Container {
     reset(settings = {}) {
         Object.assign(this.settings, ParticleEmitterSettings, settings);
 
-        // Cache the image reference
         if (typeof this.settings.image === "undefined") {
-            this.settings.image = createDefaultParticleTexture(settings.textureSize, settings.textureSize);
+            this._defaultParticle = createDefaultParticleTexture(settings.textureSize, settings.textureSize);
+            this.settings.image = this._defaultParticle.canvas;
         }
 
         this.floating = this.settings.floating;
@@ -252,6 +247,10 @@ class ParticleEmitter extends Container {
         // call the parent destroy method
         super.destroy(arguments);
         // clean emitter specific Properties
+        if (typeof this._defaultParticle !== "undefined") {
+            pool.push(this._defaultParticle);
+            this._defaultParticle = undefined;
+        }
         this.settings.image = undefined;
         this.settings = undefined;
     }
