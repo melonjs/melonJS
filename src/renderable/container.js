@@ -18,7 +18,7 @@ var globalFloatingCounter = 0;
 
 /**
  * @classdesc
- * me.Container represents a collection of child objects
+ * Container represents a collection of child objects
  * @augments Renderable
  */
 class Container extends Renderable {

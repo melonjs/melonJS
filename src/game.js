@@ -5,9 +5,9 @@ import state from "./state/state.js";
 import World from "./physics/world.js";
 
 /**
- * me.game represents your current game, it contains all the objects,
+ * game represents your current game, it contains all the objects,
  * tilemap layers, current viewport, collision map, etc...<br>
- * me.game is also responsible for updating (each frame) the object status and draw them.
+ * game is also responsible for updating (each frame) the object status and draw them.
  * @namespace game
  */
 
