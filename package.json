@@ -55,7 +55,7 @@
   ],
   "dependencies": {
     "@teppeis/multimaps": "^2.0.0",
-    "core-js": "^3.22.6",
+    "core-js": "^3.22.7",
     "earcut": "2.2.3",
     "eventemitter3": "^4.0.7",
     "howler": "2.2.3"
@@ -65,11 +65,11 @@
     "@rollup/plugin-commonjs": "^22.0.0",
     "@rollup/plugin-node-resolve": "^13.3.0",
     "@rollup/plugin-replace": "^4.0.0",
-    "@types/offscreencanvas": "^2019.6.4",
+    "@types/offscreencanvas": "^2019.7.0",
     "cheerio": "^1.0.0-rc.11",
     "del-cli": "^4.0.1",
     "eslint": "^8.16.0",
-    "eslint-plugin-jsdoc": "^39.3.0",
+    "eslint-plugin-jsdoc": "^39.3.2",
     "jasmine-core": "^4.1.1",
     "jsdoc": "^3.6.10",
     "karma": "^6.3.20",
@@ -79,11 +79,11 @@
     "karma-jasmine": "^5.0.1",
     "karma-nyan-reporter": "0.2.5",
     "qs": "^6.10.3",
-    "rollup": "^2.74.1",
+    "rollup": "^2.75.4",
     "rollup-plugin-bundle-size": "^1.0.3",
     "rollup-plugin-string": "^3.0.0",
-    "terser": "^5.13.1",
-    "typescript": "^4.6.4"
+    "terser": "^5.14.0",
+    "typescript": "^4.7.2"
   },
   "scripts": {
     "build": "npm run lint && rollup -c --silent",
