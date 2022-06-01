@@ -47,9 +47,9 @@ export function warning(deprecated, replacement, version) {
 
 /**
  * @public
- * @type {Function}
  * @name turnOnPointerLock
- * @memberof device
+ * @function
+ * @memberof device#
  * @deprecated since 10.3.0
  * @see input.requestPointerLock
  */
@@ -60,9 +60,9 @@ device.turnOnPointerLock = function () {
 
 /**
  * @public
- * @type {Function}
  * @name turnOffPointerLock
- * @memberof device
+ * @function
+ * @memberof device#
  * @deprecated since 10.3.0
  * @see input.exitPointerLock
  */
