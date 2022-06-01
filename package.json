@@ -66,6 +66,7 @@
     "@rollup/plugin-node-resolve": "^13.3.0",
     "@rollup/plugin-replace": "^4.0.0",
     "@types/offscreencanvas": "^2019.7.0",
+    "@webdoc/cli": "^1.5.7",
     "cheerio": "^1.0.0-rc.11",
     "del-cli": "^4.0.1",
     "eslint": "^8.16.0",
@@ -92,6 +93,7 @@
     "lint": "eslint src rollup.config.js",
     "test": "npm run build && karma start tests/karma.conf.cjs",
     "doc": "mkdirp docs && jsdoc -c jsdoc_conf.json",
+    "webdoc": "mkdirp dist && webdoc -R README.md",
     "release": "npm run dist && npm publish --access public",
     "clean": "del-cli --force build/*.js dist/*.js dist/*.d.ts docs src/**/*.d.ts",
     "types": "tsc dist/melonjs.module.js --declaration --allowJs --emitDeclarationOnly"

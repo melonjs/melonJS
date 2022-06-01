@@ -1,0 +1,19 @@
+{
+    "source": {
+        "include": "src/**/*.js",
+        "excludePattern": "(node_modules|lib|test)"
+    },
+    "plugins": [
+        "plugins/markdown"
+    ],
+    "opts": {
+        "encoding"      : "utf8",
+        "destination"   : "dist/docs"
+    },
+    "template": {
+        "repository": "@webdoc/default-template",
+        "outputSourceFiles": false,
+        "readme": "./README.md",
+        "repository": "https://github.com/melonjs/melonJS/"
+    }
+}
