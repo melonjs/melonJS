@@ -1097,29 +1097,42 @@ class WebGLRenderer extends Renderer {
      * @name setMask
      * @memberof WebGLRenderer.prototype
      * @function
-     * @param {Rect|RoundRect|Polygon|Line|Ellipse} [mask] the shape defining the mask to be applied
+     * @param {Rect|RoundRect|Polygon|Line|Ellipse} [mask] a shape defining the mask to be applied
+     * @param {boolean} [invert=false] either the given shape should define what is visible (default) or the opposite
      */
-    setMask(mask) {
+    setMask(mask, invert = false) {
         var gl = this.gl;
 
         // flush the compositor
         this.flush();
 
-        // Enable and setup GL state to write to stencil buffer
-        gl.enable(gl.STENCIL_TEST);
-        gl.clear(gl.STENCIL_BUFFER_BIT);
+        if (this.maskLevel === 0) {
+            // Enable and setup GL state to write to stencil buffer
+            gl.enable(gl.STENCIL_TEST);
+            gl.clear(gl.STENCIL_BUFFER_BIT);
+
+            this.maskLevel++;
+        }
+
         gl.colorMask(false, false, false, false);
-        gl.stencilFunc(gl.NOTEQUAL, 1, 1);
+        gl.stencilFunc(gl.EQUAL, this.maskLevel, 1);
         gl.stencilOp(gl.REPLACE, gl.REPLACE, gl.REPLACE);
 
+
+        // fill the given mask shape
         this.fill(mask);
 
         // flush the compositor
         this.flush();
 
-        // Use stencil buffer to affect next rendering object
         gl.colorMask(true, true, true, true);
-        gl.stencilFunc(gl.EQUAL, 1, 1);
+
+        // Use stencil buffer to affect next rendering object
+        if (invert === true) {
+            gl.stencilFunc(gl.EQUAL, this.maskLevel + 1, 1);
+        } else {
+            gl.stencilFunc(gl.NOTEQUAL, this.maskLevel + 1, 1);
+        }
         gl.stencilOp(gl.KEEP, gl.KEEP, gl.KEEP);
     }
 
@@ -1131,9 +1144,12 @@ class WebGLRenderer extends Renderer {
      * @function
      */
     clearMask() {
-        // flush the compositor
-        this.flush();
-        this.gl.disable(this.gl.STENCIL_TEST);
+        if (this.maskLevel > 0) {
+            // flush the compositor
+            this.flush();
+            this.maskLevel = 0;
+            this.gl.disable(this.gl.STENCIL_TEST);
+        }
     }
 };
 

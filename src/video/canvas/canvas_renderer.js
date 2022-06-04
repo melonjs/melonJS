@@ -3,6 +3,7 @@ import Renderer from "./../renderer.js";
 import TextureCache from "./../texture/cache.js";
 import Ellipse from "./../../geometries/ellipse.js";
 import RoundRect from "./../../geometries/roundrect.js";
+import Bounds from "./../../physics/bounds.js";
 import { createCanvas } from "./../video.js";
 
 
@@ -764,18 +765,25 @@ class CanvasRenderer extends Renderer {
      * @memberof CanvasRenderer.prototype
      * @function
      * @param {Rect|RoundRect|Polygon|Line|Ellipse} [mask] the shape defining the mask to be applied
+     * @param {boolean} [invert=false] either the given shape should define what is visible (default) or the opposite
      */
-    setMask(mask) {
+    setMask(mask, invert = false) {
         var context = this.getContext();
-        var _x = mask.pos.x, _y = mask.pos.y;
 
-        context.save();
-
-        context.beginPath();
+        if (this.maskLevel === 0) {
+            // only save context on the first mask
+            context.save();
+            context.beginPath();
+        }
 
         // https://github.com/melonjs/melonJS/issues/648
-        if (mask instanceof Ellipse) {
-            var hw = mask.radiusV.x,
+        else if (mask instanceof RoundRect) {
+            context.roundRect(mask.top, mask.left, mask.width, mask.height, mask.radius);
+        } else if (mask instanceof Rect || mask instanceof Bounds) {
+            context.rect(mask.top, mask.left, mask.width, mask.height);
+        }  else if (mask instanceof Ellipse) {
+            const _x = mask.pos.x, _y = mask.pos.y,
+                hw = mask.radiusV.x,
                 hh = mask.radiusV.y,
                 lx = _x - hw,
                 rx = _x + hw,
@@ -794,18 +802,26 @@ class CanvasRenderer extends Renderer {
             context.bezierCurveTo(rx, ymax, xmax, by, _x, by);
             context.bezierCurveTo(xmin, by, lx, ymax, lx, _y);
             context.bezierCurveTo(lx, ymin, xmin, ty, _x, ty);
-        } else if (mask instanceof RoundRect) {
-            context.roundRect(_x, _y, mask.width, mask.height, mask.radius);
         } else {
-            context.moveTo(_x + mask.points[0].x, _y + mask.points[0].y);
+            const _x = mask.pos.x, _y = mask.pos.y;
             var point;
+
+            context.moveTo(_x + mask.points[0].x, _y + mask.points[0].y);
             for (var i = 1; i < mask.points.length; i++) {
                 point = mask.points[i];
                 context.lineTo(_x + point.x, _y + point.y);
             }
         }
 
-        context.clip();
+        this.maskLevel++;
+
+        if (invert === true) {
+            context.closePath();
+            context.globalCompositeOperation = "destination-atop";
+            context.fill();
+        } else {
+            context.clip();
+        }
     }
 
     /**
@@ -816,9 +832,11 @@ class CanvasRenderer extends Renderer {
      * @function
      */
     clearMask() {
-        this.getContext().restore();
+        if (this.maskLevel > 0) {
+            this.maskLevel = 0;
+            this.getContext().restore();
+        }
     }
-
 };
 
 export default CanvasRenderer;

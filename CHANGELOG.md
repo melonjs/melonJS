@@ -5,6 +5,8 @@
 ### Added
 - Core: new `CanvasTexture` object to allow recycling canvas through the engine (text caching, default particles, effect, etc..)
 - Color : allow overriding the alpha component with a specific value when calling `toRGBA` or `toHex8`
+- Renderer: support reverse clipping when applying geometry masks (alpha component of the masked area ignore in legacy Canvas rendering mode)
+- Renderer: added multiple clipping region for masks (only works with overlapping region in legacy Canvas rendering mode)
 
 ## [10.9.0] (melonJS 2) - _2022-05-21_
 

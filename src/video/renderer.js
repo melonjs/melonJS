@@ -67,6 +67,11 @@ class Renderer {
         /**
          * @ignore
          */
+        this.maskLevel = 0;
+
+        /**
+         * @ignore
+         */
         this.currentBlendMode = "none";
 
         // create the main screen canvas
@@ -128,6 +133,7 @@ class Renderer {
         this.currentScissor[1] = 0;
         this.currentScissor[2] = this.backBufferCanvas.width;
         this.currentScissor[3] = this.backBufferCanvas.height;
+        this.clearMask();
     }
 
     /**
@@ -418,6 +424,7 @@ class Renderer {
      * @memberof Renderer.prototype
      * @function
      * @param {Rect|RoundRect|Polygon|Line|Ellipse} [mask] the shape defining the mask to be applied
+     * @param {boolean} [invert=false] either the given shape should define what is visible (default) or the opposite
      */
     // eslint-disable-next-line no-unused-vars
     setMask(mask) {}
