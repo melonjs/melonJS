@@ -655,7 +655,8 @@ class Renderable extends Rect {
          if (this.ancestor instanceof Container && this.floating !== true) {
              bounds.translate(this.ancestor.getAbsolutePosition());
          }
-         //return bounds;
+
+         this.isDirty = true;
      }
 
      /**
