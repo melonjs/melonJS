@@ -351,16 +351,16 @@ class Renderer {
      * @param {boolean} [fill=false] fill the shape with the current color if true
      */
     stroke(shape, fill) {
+        if (shape instanceof RoundRect) {
+            this.strokeRoundRect(shape.left, shape.top, shape.width, shape.height, shape.radius, fill);
+            return;
+        }
         if (shape instanceof Rect || shape instanceof Bounds) {
             this.strokeRect(shape.left, shape.top, shape.width, shape.height, fill);
             return;
         }
         if (shape instanceof Line || shape instanceof Polygon) {
             this.strokePolygon(shape, fill);
-            return;
-        }
-        if (shape instanceof RoundRect) {
-            this.strokeRoundRect(shape.left, shape.top, shape.width, shape.height, shape.radius, fill);
             return;
         }
         if (shape instanceof Ellipse) {
