@@ -121,6 +121,7 @@ class IconLogo extends Renderable {
         // call the parent destroy method
         super.destroy(arguments);
         pool.push(this.iconTexture);
+        this.iconTexture = undefined;
     }
 };
 
