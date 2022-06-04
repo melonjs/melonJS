@@ -1111,8 +1111,10 @@ class WebGLRenderer extends Renderer {
             gl.enable(gl.STENCIL_TEST);
             gl.clear(gl.STENCIL_BUFFER_BIT);
 
-            this.maskLevel++;
+
         }
+
+        this.maskLevel++;
 
         gl.colorMask(false, false, false, false);
         gl.stencilFunc(gl.EQUAL, this.maskLevel, 1);
