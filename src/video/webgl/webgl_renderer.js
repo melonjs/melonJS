@@ -70,8 +70,8 @@ class WebGLRenderer extends Renderer {
         /**
          * The WebGL context
          * @name gl
-         * @memberof WebGLRenderer#
-         * type {WebGLRenderingContext}
+         * @memberof WebGLRenderer
+         * @type {WebGLRenderingContext}
          */
         this.context = this.gl = this.getContextGL(this.getScreenCanvas(), options.transparent);
 
