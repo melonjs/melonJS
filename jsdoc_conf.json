@@ -1,7 +1,7 @@
 {
     "templates": {
         "systemName": "melonJS",
-        "copyright": "Copyright &copy; 2011 - 2021 Olivier Biot",
+        "copyright": "Copyright &copy; 2011 - 2022 Olivier Biot",
         "cleverLinks": true,
         "monospaceLinks": false,
         "default" : {
@@ -39,6 +39,6 @@
         "recurse"       : true,
         "lenient"       : false,
         "destination"   : "docs",
-        "template"      : "tasks/jsdoc-template"
+        "template"      : "./node_modules/@melonjs/jsdoc-template"
     }
 }
