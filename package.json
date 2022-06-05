@@ -35,6 +35,7 @@
     "name": "Olivier Biot",
     "email": "contact@melonjs.org"
   },
+  "funding": "https://github.com/sponsors/melonjs",
   "engines": {
     "node": ">= 12"
   },
