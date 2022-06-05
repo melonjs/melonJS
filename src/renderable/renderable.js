@@ -380,7 +380,7 @@ class Renderable extends Rect {
     /**
      * returns the bounding box for this renderable
      * @name getBounds
-     * @memberof Renderable.prototype
+     * @memberof Renderable
      * @function
      * @returns {Bounds} bounding box Rectangle object
      */
@@ -401,7 +401,7 @@ class Renderable extends Rect {
     /**
      * get the renderable alpha channel value<br>
      * @name getOpacity
-     * @memberof Renderable.prototype
+     * @memberof Renderable
      * @function
      * @returns {number} current opacity value between 0 and 1
      */
@@ -412,7 +412,7 @@ class Renderable extends Rect {
     /**
      * set the renderable alpha channel value<br>
      * @name setOpacity
-     * @memberof Renderable.prototype
+     * @memberof Renderable
      * @function
      * @param {number} alpha opacity value between 0.0 and 1.0
      */
@@ -431,7 +431,7 @@ class Renderable extends Rect {
      * flip the renderable on the horizontal axis (around the center of the renderable)
      * @see Matrix2d#scaleX
      * @name flipX
-     * @memberof Renderable.prototype
+     * @memberof Renderable
      * @function
      * @param {boolean} [flip=true] `true` to flip this renderable.
      * @returns {Renderable} Reference to this object for method chaining
@@ -446,7 +446,7 @@ class Renderable extends Rect {
      * flip the renderable on the vertical axis (around the center of the renderable)
      * @see Matrix2d#scaleY
      * @name flipY
-     * @memberof Renderable.prototype
+     * @memberof Renderable
      * @function
      * @param {boolean} [flip=true] `true` to flip this renderable.
      * @returns {Renderable} Reference to this object for method chaining
@@ -460,7 +460,7 @@ class Renderable extends Rect {
     /**
      * multiply the renderable currentTransform with the given matrix
      * @name transform
-     * @memberof Renderable.prototype
+     * @memberof Renderable
      * @see Renderable#currentTransform
      * @function
      * @param {Matrix2d} m the transformation matrix
@@ -525,7 +525,7 @@ class Renderable extends Rect {
     /**
      * Rotate this renderable towards the given target.
      * @name lookAt
-     * @memberof Renderable.prototype
+     * @memberof Renderable
      * @function
      * @param {Renderable|Vector2d|Vector3d} target the renderable or position to look at
      * @returns {Renderable} Reference to this object for method chaining
@@ -549,7 +549,7 @@ class Renderable extends Rect {
     /**
      * Rotate this renderable by the specified angle (in radians).
      * @name rotate
-     * @memberof Renderable.prototype
+     * @memberof Renderable
      * @function
      * @param {number} angle The angle to rotate (in radians)
      * @param {Vector2d|ObservableVector2d} [v] an optional point to rotate around
@@ -571,7 +571,7 @@ class Renderable extends Rect {
      * is an image, the image.width and image.height properties are unaltered but the currentTransform
      * member will be changed.
      * @name scale
-     * @memberof Renderable.prototype
+     * @memberof Renderable
      * @function
      * @param {number} x a number representing the abscissa of the scaling vector.
      * @param {number} [y=x] a number representing the ordinate of the scaling vector.
@@ -587,7 +587,7 @@ class Renderable extends Rect {
     /**
      * scale the renderable around his anchor point
      * @name scaleV
-     * @memberof Renderable.prototype
+     * @memberof Renderable
      * @function
      * @param {Vector2d} v scaling vector
      * @returns {Renderable} Reference to this object for method chaining
@@ -601,7 +601,7 @@ class Renderable extends Rect {
      * update function. <br>
      * automatically called by the game manager {@link game}
      * @name update
-     * @memberof Renderable.prototype
+     * @memberof Renderable
      * @function
      * @protected
      * @param {number} dt time since the last update in milliseconds.
@@ -615,7 +615,7 @@ class Renderable extends Rect {
      * update the bounding box for this shape.
      * @ignore
      * @name updateBounds
-     * @memberof Renderable.prototype
+     * @memberof Renderable
      * @function
      * @returns {Bounds} this shape bounding box Rectangle object
      */
@@ -629,7 +629,7 @@ class Renderable extends Rect {
      * update the renderable's bounding rect (private)
      * @ignore
      * @name updateBoundsPos
-     * @memberof Renderable.prototype
+     * @memberof Renderable
      * @function
      */
      updateBoundsPos(newX, newY) {
@@ -662,7 +662,7 @@ class Renderable extends Rect {
      /**
       * return the renderable absolute position in the game world
       * @name getAbsolutePosition
-      * @memberof Renderable.prototype
+      * @memberof Renderable
       * @function
       * @returns {Vector2d}
       */
@@ -682,7 +682,7 @@ class Renderable extends Rect {
      * called when the anchor point value is changed
      * @private
      * @name onAnchorUpdate
-     * @memberof Renderable.prototype
+     * @memberof Renderable
      * @function
      * @param {number} x the new X value to be set for the anchor
      * @param {number} y the new Y value to be set for the anchor
@@ -700,7 +700,7 @@ class Renderable extends Rect {
      * (apply defined transforms, anchor point). <br>
      * automatically called by the game manager {@link game}
      * @name preDraw
-     * @memberof Renderable.prototype
+     * @memberof Renderable
      * @function
      * @protected
      * @param {CanvasRenderer|WebGLRenderer} renderer a renderer object
@@ -756,7 +756,7 @@ class Renderable extends Rect {
      * object draw. <br>
      * automatically called by the game manager {@link game}
      * @name draw
-     * @memberof Renderable.prototype
+     * @memberof Renderable
      * @function
      * @protected
      * @param {CanvasRenderer|WebGLRenderer} renderer a renderer object
@@ -769,7 +769,7 @@ class Renderable extends Rect {
      * restore the rendering context after drawing. <br>
      * automatically called by the game manager {@link game}
      * @name postDraw
-     * @memberof Renderable.prototype
+     * @memberof Renderable
      * @function
      * @protected
      * @param {CanvasRenderer|WebGLRenderer} renderer a renderer object
@@ -794,7 +794,7 @@ class Renderable extends Rect {
      * onCollision callback, triggered in case of collision,
      * when this renderable body is colliding with another one
      * @name onCollision
-     * @memberof Renderable.prototype
+     * @memberof Renderable
      * @function
      * @param {collision.ResponseObject} response the collision response object
      * @param {Renderable} other the other renderable touching this one (a reference to response.a or response.b)

@@ -15,7 +15,7 @@ class Line extends Polygon {
     /**
      * Returns true if the Line contains the given point
      * @name contains
-     * @memberof Line.prototype
+     * @memberof Line
      * @function
      * @param {Vector2d} point
      * @returns {boolean} true if contains
@@ -24,7 +24,7 @@ class Line extends Polygon {
     /**
      * Returns true if the Line contains the given point
      * @name contains
-     * @memberof Line.prototype
+     * @memberof Line
      * @function
      * @param  {number} x x coordinate
      * @param  {number} y y coordinate
@@ -58,7 +58,7 @@ class Line extends Polygon {
      * Computes the calculated collision edges and normals.
      * This **must** be called if the `points` array, `angle`, or `offset` is modified manually.
      * @name recalc
-     * @memberof Line.prototype
+     * @memberof Line
      * @function
      * @returns {Line} this instance for objecf chaining
      */
@@ -94,7 +94,7 @@ class Line extends Polygon {
     /**
      * clone this line segment
      * @name clone
-     * @memberof Line.prototype
+     * @memberof Line
      * @function
      * @returns {Line} new Line
      */

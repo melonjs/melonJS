@@ -192,7 +192,7 @@ class Container extends Renderable {
      * orginal container.  Then when the me.game.world.reset() is called the renderable
      * will not be in any container.
      * @name addChild
-     * @memberof Container.prototype
+     * @memberof Container
      * @function
      * @param {Renderable} child
      * @param {number} [z] forces the z index of the child to the specified value
@@ -256,7 +256,7 @@ class Container extends Renderable {
      * Add a child to the container at the specified index<br>
      * (the list won't be sorted after insertion)
      * @name addChildAt
-     * @memberof Container.prototype
+     * @memberof Container
      * @function
      * @param {Renderable} child
      * @param {number} index
@@ -315,7 +315,7 @@ class Container extends Renderable {
      *    - The index of element in the array. <br>
      *    - The array forEach() was called upon. <br>
      * @name forEach
-     * @memberof Container.prototype
+     * @memberof Container
      * @function
      * @param {Function} callback fnction to execute on each element
      * @param {object} [thisArg] value to use as this(i.e reference Object) when executing callback.
@@ -352,7 +352,7 @@ class Container extends Renderable {
     /**
      * Swaps the position (z-index) of 2 children
      * @name swapChildren
-     * @memberof Container.prototype
+     * @memberof Container
      * @function
      * @param {Renderable} child
      * @param {Renderable} child2
@@ -380,7 +380,7 @@ class Container extends Renderable {
     /**
      * Returns the Child at the specified index
      * @name getChildAt
-     * @memberof Container.prototype
+     * @memberof Container
      * @function
      * @param {number} index
      * @returns {Renderable} the child at the specified index
@@ -397,7 +397,7 @@ class Container extends Renderable {
     /**
      * Returns the index of the given Child
      * @name getChildIndex
-     * @memberof Container.prototype
+     * @memberof Container
      * @function
      * @param {Renderable} child
      * @returns {number} index
@@ -425,7 +425,7 @@ class Container extends Renderable {
     /**
      * Returns true if contains the specified Child
      * @name hasChild
-     * @memberof Container.prototype
+     * @memberof Container
      * @function
      * @param {Renderable} child
      * @returns {boolean}
@@ -439,7 +439,7 @@ class Container extends Renderable {
      * note : avoid calling this function every frame since
      * it parses the whole object tree each time
      * @name getChildByProp
-     * @memberof Container.prototype
+     * @memberof Container
      * @public
      * @function
      * @param {string} prop Property name
@@ -491,7 +491,7 @@ class Container extends Renderable {
     /**
      * returns the list of childs with the specified class type
      * @name getChildByType
-     * @memberof Container.prototype
+     * @memberof Container
      * @public
      * @function
      * @param {object} classType
@@ -518,7 +518,7 @@ class Container extends Renderable {
      * note : avoid calling this function every frame since
      * it parses the whole object list each time
      * @name getChildByName
-     * @memberof Container.prototype
+     * @memberof Container
      * @public
      * @function
      * @param {string|RegExp|number|boolean} name child name
@@ -533,7 +533,7 @@ class Container extends Renderable {
      * note : avoid calling this function every frame since
      * it parses the whole object list each time
      * @name getChildByGUID
-     * @memberof Container.prototype
+     * @memberof Container
      * @public
      * @function
      * @param {string|RegExp|number|boolean} guid child GUID
@@ -547,7 +547,7 @@ class Container extends Renderable {
     /**
      * return all child in this container
      * @name getChildren
-     * @memberof Container.prototype
+     * @memberof Container
      * @public
      * @function
      * @returns {Renderable[]} an array of renderable object
@@ -563,7 +563,7 @@ class Container extends Renderable {
      * update the bounding box for this shape.
      * @ignore
      * @name updateBounds
-     * @memberof Renderable.prototype
+     * @memberof Renderable
      * @function
      * @returns {Bounds} this shape bounding box Rectangle object
      */
@@ -592,7 +592,7 @@ class Container extends Renderable {
      * Checks if this container is root or if it's attached to the root container.
      * @private
      * @name isAttachedToRoot
-     * @memberof Container.prototype
+     * @memberof Container
      * @function
      * @returns {boolean}
      */
@@ -615,7 +615,7 @@ class Container extends Renderable {
      * update the cointainer's bounding rect (private)
      * @ignore
      * @name updateBoundsPos
-     * @memberof Container.prototype
+     * @memberof Container
      * @function
      */
     updateBoundsPos(newX, newY) {
@@ -650,7 +650,7 @@ class Container extends Renderable {
     /**
      * Invokes the removeChildNow in a defer, to ensure the child is removed safely after the update & draw stack has completed
      * @name removeChild
-     * @memberof Container.prototype
+     * @memberof Container
      * @public
      * @function
      * @param {Renderable} child
@@ -670,7 +670,7 @@ class Container extends Renderable {
      * (removal is immediate and unconditional)<br>
      * Never use keepalive=true with objects from {@link pool}. Doing so will create a memory leak.
      * @name removeChildNow
-     * @memberof Container.prototype
+     * @memberof Container
      * @function
      * @param {Renderable} child
      * @param {boolean} [keepalive=False] True to prevent calling child.destroy()
@@ -723,7 +723,7 @@ class Container extends Renderable {
     /**
      * Automatically set the specified property of all childs to the given value
      * @name setChildsProperty
-     * @memberof Container.prototype
+     * @memberof Container
      * @function
      * @param {string} prop property name
      * @param {object} value property value
@@ -741,7 +741,7 @@ class Container extends Renderable {
     /**
      * Move the child in the group one step forward (z depth).
      * @name moveUp
-     * @memberof Container.prototype
+     * @memberof Container
      * @function
      * @param {Renderable} child
      */
@@ -758,7 +758,7 @@ class Container extends Renderable {
     /**
      * Move the child in the group one step backward (z depth).
      * @name moveDown
-     * @memberof Container.prototype
+     * @memberof Container
      * @function
      * @param {Renderable} child
      */
@@ -775,7 +775,7 @@ class Container extends Renderable {
     /**
      * Move the specified child to the top(z depth).
      * @name moveToTop
-     * @memberof Container.prototype
+     * @memberof Container
      * @function
      * @param {Renderable} child
      */
@@ -795,7 +795,7 @@ class Container extends Renderable {
     /**
      * Move the specified child the bottom (z depth).
      * @name moveToBottom
-     * @memberof Container.prototype
+     * @memberof Container
      * @function
      * @param {Renderable} child
      */
@@ -815,7 +815,7 @@ class Container extends Renderable {
     /**
      * Manually trigger the sort of all the childs in the container</p>
      * @name sort
-     * @memberof Container.prototype
+     * @memberof Container
      * @public
      * @function
      * @param {boolean} [recursive=false] recursively sort all containers if true
@@ -910,7 +910,7 @@ class Container extends Renderable {
      * container update function. <br>
      * automatically called by the game manager {@link game}
      * @name update
-     * @memberof Container.prototype
+     * @memberof Container
      * @function
      * @protected
      * @param {number} dt time since the last update in milliseconds.
@@ -963,7 +963,7 @@ class Container extends Renderable {
      * draw the container. <br>
      * automatically called by the game manager {@link game}
      * @name draw
-     * @memberof Container.prototype
+     * @memberof Container
      * @function
      * @protected
      * @param {CanvasRenderer|WebGLRenderer} renderer a renderer object

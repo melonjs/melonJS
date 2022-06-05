@@ -73,7 +73,7 @@ class CanvasRenderer extends Renderer {
     /**
      * Reset context state
      * @name reset
-     * @memberof CanvasRenderer.prototype
+     * @memberof CanvasRenderer
      * @function
      */
     reset() {
@@ -84,7 +84,7 @@ class CanvasRenderer extends Renderer {
     /**
      * Reset the canvas transform to identity
      * @name resetTransform
-     * @memberof CanvasRenderer.prototype
+     * @memberof CanvasRenderer
      * @function
      */
     resetTransform() {
@@ -104,7 +104,7 @@ class CanvasRenderer extends Renderer {
      * <img src="images/screen-blendmode.png" width="510"/> <br>
      * @name setBlendMode
      * @see https://developer.mozilla.org/en-US/docs/Web/API/CanvasRenderingContext2D/globalCompositeOperation
-     * @memberof CanvasRenderer.prototype
+     * @memberof CanvasRenderer
      * @function
      * @param {string} [mode="normal"] blend mode : "normal", "multiply", "lighter, "additive", "screen"
      * @param {CanvasRenderingContext2D} [context]
@@ -142,7 +142,7 @@ class CanvasRenderer extends Renderer {
     /**
      * prepare the framebuffer for drawing a new frame
      * @name clear
-     * @memberof CanvasRenderer.prototype
+     * @memberof CanvasRenderer
      * @function
      */
     clear() {
@@ -154,7 +154,7 @@ class CanvasRenderer extends Renderer {
     /**
      * render the main framebuffer on screen
      * @name flush
-     * @memberof CanvasRenderer.prototype
+     * @memberof CanvasRenderer
      * @function
      */
     flush() {
@@ -166,7 +166,7 @@ class CanvasRenderer extends Renderer {
     /**
      * Clears the main framebuffer with the given color
      * @name clearColor
-     * @memberof CanvasRenderer.prototype
+     * @memberof CanvasRenderer
      * @function
      * @param {Color|string} [color="#000000"] CSS color.
      * @param {boolean} [opaque=false] Allow transparency [default] or clear the surface completely [true]
@@ -183,7 +183,7 @@ class CanvasRenderer extends Renderer {
     /**
      * Erase the pixels in the given rectangular area by setting them to transparent black (rgba(0,0,0,0)).
      * @name clearRect
-     * @memberof CanvasRenderer.prototype
+     * @memberof CanvasRenderer
      * @function
      * @param {number} x x axis of the coordinate for the rectangle starting point.
      * @param {number} y y axis of the coordinate for the rectangle starting point.
@@ -197,7 +197,7 @@ class CanvasRenderer extends Renderer {
     /**
      * Create a pattern with the specified repetition
      * @name createPattern
-     * @memberof CanvasRenderer.prototype
+     * @memberof CanvasRenderer
      * @function
      * @param {Image} image Source image
      * @param {string} repeat Define how the pattern should be repeated
@@ -216,7 +216,7 @@ class CanvasRenderer extends Renderer {
     /**
      * Draw an image onto the main using the canvas api
      * @name drawImage
-     * @memberof CanvasRenderer.prototype
+     * @memberof CanvasRenderer
      * @function
      * @param {Image} image An element to draw into the context. The specification permits any canvas image source (CanvasImageSource), specifically, a CSSImageValue, an HTMLImageElement, an SVGImageElement, an HTMLVideoElement, an HTMLCanvasElement, an ImageBitmap, or an OffscreenCanvas.
      * @param {number} sx The X coordinate of the top left corner of the sub-rectangle of the source image to draw into the destination context.
@@ -280,7 +280,7 @@ class CanvasRenderer extends Renderer {
     /**
      * Draw a pattern within the given rectangle.
      * @name drawPattern
-     * @memberof CanvasRenderer.prototype
+     * @memberof CanvasRenderer
      * @function
      * @param {CanvasPattern} pattern Pattern object
      * @param {number} x
@@ -304,7 +304,7 @@ class CanvasRenderer extends Renderer {
     /**
      * Stroke an arc at the specified coordinates with given radius, start and end points
      * @name strokeArc
-     * @memberof CanvasRenderer.prototype
+     * @memberof CanvasRenderer
      * @function
      * @param {number} x arc center point x-axis
      * @param {number} y arc center point y-axis
@@ -331,7 +331,7 @@ class CanvasRenderer extends Renderer {
     /**
      * Fill an arc at the specified coordinates with given radius, start and end points
      * @name fillArc
-     * @memberof CanvasRenderer.prototype
+     * @memberof CanvasRenderer
      * @function
      * @param {number} x arc center point x-axis
      * @param {number} y arc center point y-axis
@@ -347,7 +347,7 @@ class CanvasRenderer extends Renderer {
     /**
      * Stroke an ellipse at the specified coordinates with given radius
      * @name strokeEllipse
-     * @memberof CanvasRenderer.prototype
+     * @memberof CanvasRenderer
      * @function
      * @param {number} x ellipse center point x-axis
      * @param {number} y ellipse center point y-axis
@@ -389,7 +389,7 @@ class CanvasRenderer extends Renderer {
     /**
      * Fill an ellipse at the specified coordinates with given radius
      * @name fillEllipse
-     * @memberof CanvasRenderer.prototype
+     * @memberof CanvasRenderer
      * @function
      * @param {number} x ellipse center point x-axis
      * @param {number} y ellipse center point y-axis
@@ -403,7 +403,7 @@ class CanvasRenderer extends Renderer {
     /**
      * Stroke a line of the given two points
      * @name strokeLine
-     * @memberof CanvasRenderer.prototype
+     * @memberof CanvasRenderer
      * @function
      * @param {number} startX the start x coordinate
      * @param {number} startY the start y coordinate
@@ -425,7 +425,7 @@ class CanvasRenderer extends Renderer {
     /**
      * Fill a line of the given two points
      * @name fillLine
-     * @memberof CanvasRenderer.prototype
+     * @memberof CanvasRenderer
      * @function
      * @param {number} startX the start x coordinate
      * @param {number} startY the start y coordinate
@@ -439,7 +439,7 @@ class CanvasRenderer extends Renderer {
     /**
      * Stroke the given me.Polygon on the screen
      * @name strokePolygon
-     * @memberof CanvasRenderer.prototype
+     * @memberof CanvasRenderer
      * @function
      * @param {Polygon} poly the shape to draw
      * @param {boolean} [fill=false] also fill the shape with the current color if true
@@ -468,7 +468,7 @@ class CanvasRenderer extends Renderer {
     /**
      * Fill the given me.Polygon on the screen
      * @name fillPolygon
-     * @memberof CanvasRenderer.prototype
+     * @memberof CanvasRenderer
      * @function
      * @param {Polygon} poly the shape to draw
      */
@@ -479,7 +479,7 @@ class CanvasRenderer extends Renderer {
     /**
      * Stroke a rectangle at the specified coordinates
      * @name strokeRect
-     * @memberof CanvasRenderer.prototype
+     * @memberof CanvasRenderer
      * @function
      * @param {number} x
      * @param {number} y
@@ -500,7 +500,7 @@ class CanvasRenderer extends Renderer {
     /**
      * Draw a filled rectangle at the specified coordinates
      * @name fillRect
-     * @memberof CanvasRenderer.prototype
+     * @memberof CanvasRenderer
      * @function
      * @param {number} x
      * @param {number} y
@@ -514,7 +514,7 @@ class CanvasRenderer extends Renderer {
     /**
      * Stroke a rounded rectangle at the specified coordinates
      * @name strokeRoundRect
-     * @memberof CanvasRenderer.prototype
+     * @memberof CanvasRenderer
      * @function
      * @param {number} x
      * @param {number} y
@@ -538,7 +538,7 @@ class CanvasRenderer extends Renderer {
     /**
      * Draw a rounded filled rectangle at the specified coordinates
      * @name fillRoundRect
-     * @memberof CanvasRenderer.prototype
+     * @memberof CanvasRenderer
      * @function
      * @param {number} x
      * @param {number} y
@@ -554,7 +554,7 @@ class CanvasRenderer extends Renderer {
     /**
      * return a reference to the system 2d Context
      * @name getContext
-     * @memberof CanvasRenderer.prototype
+     * @memberof CanvasRenderer
      * @function
      * @returns {CanvasRenderingContext2D}
      */
@@ -574,7 +574,7 @@ class CanvasRenderer extends Renderer {
     /**
      * save the canvas context
      * @name save
-     * @memberof CanvasRenderer.prototype
+     * @memberof CanvasRenderer
      * @function
      */
     save() {
@@ -584,7 +584,7 @@ class CanvasRenderer extends Renderer {
     /**
      * restores the canvas context
      * @name restore
-     * @memberof CanvasRenderer.prototype
+     * @memberof CanvasRenderer
      * @function
      */
     restore() {
@@ -599,7 +599,7 @@ class CanvasRenderer extends Renderer {
     /**
      * rotates the canvas context
      * @name rotate
-     * @memberof CanvasRenderer.prototype
+     * @memberof CanvasRenderer
      * @function
      * @param {number} angle in radians
      */
@@ -610,7 +610,7 @@ class CanvasRenderer extends Renderer {
     /**
      * scales the canvas context
      * @name scale
-     * @memberof CanvasRenderer.prototype
+     * @memberof CanvasRenderer
      * @function
      * @param {number} x
      * @param {number} y
@@ -623,7 +623,7 @@ class CanvasRenderer extends Renderer {
      * Set the current fill & stroke style color.
      * By default, or upon reset, the value is set to #000000.
      * @name setColor
-     * @memberof CanvasRenderer.prototype
+     * @memberof CanvasRenderer
      * @function
      * @param {Color|string} color css color value
      */
@@ -639,7 +639,7 @@ class CanvasRenderer extends Renderer {
     /**
      * Set the global alpha
      * @name setGlobalAlpha
-     * @memberof CanvasRenderer.prototype
+     * @memberof CanvasRenderer
      * @function
      * @param {number} alpha 0.0 to 1.0 values accepted.
      */
@@ -650,7 +650,7 @@ class CanvasRenderer extends Renderer {
     /**
      * Return the global alpha
      * @name getGlobalAlpha
-     * @memberof CanvasRenderer.prototype
+     * @memberof CanvasRenderer
      * @function
      * @returns {number} global alpha value
      */
@@ -661,7 +661,7 @@ class CanvasRenderer extends Renderer {
     /**
      * Set the line width on the context
      * @name setLineWidth
-     * @memberof CanvasRenderer.prototype
+     * @memberof CanvasRenderer
      * @function
      * @param {number} width Line width
      */
@@ -673,7 +673,7 @@ class CanvasRenderer extends Renderer {
      * Reset (overrides) the renderer transformation matrix to the
      * identity one, and then apply the given transformation matrix.
      * @name setTransform
-     * @memberof CanvasRenderer.prototype
+     * @memberof CanvasRenderer
      * @function
      * @param {Matrix2d} mat2d Matrix to transform by
      */
@@ -685,7 +685,7 @@ class CanvasRenderer extends Renderer {
     /**
      * Multiply given matrix into the renderer tranformation matrix
      * @name transform
-     * @memberof CanvasRenderer.prototype
+     * @memberof CanvasRenderer
      * @function
      * @param {Matrix2d} mat2d Matrix to transform by
      */
@@ -709,7 +709,7 @@ class CanvasRenderer extends Renderer {
     /**
      * Translates the context to the given position
      * @name translate
-     * @memberof CanvasRenderer.prototype
+     * @memberof CanvasRenderer
      * @function
      * @param {number} x
      * @param {number} y
@@ -729,7 +729,7 @@ class CanvasRenderer extends Renderer {
      * and restore it (with the restore() method) any time in the future.
      * (<u>this is an experimental feature !</u>)
      * @name clipRect
-     * @memberof CanvasRenderer.prototype
+     * @memberof CanvasRenderer
      * @function
      * @param {number} x
      * @param {number} y
@@ -762,7 +762,7 @@ class CanvasRenderer extends Renderer {
      * So, if the renderable is larger than the mask, only the intersecting part of the renderable will be visible.
      * Mask are not preserved through renderer context save and restore.
      * @name setMask
-     * @memberof CanvasRenderer.prototype
+     * @memberof CanvasRenderer
      * @function
      * @param {Rect|RoundRect|Polygon|Line|Ellipse} [mask] the shape defining the mask to be applied
      * @param {boolean} [invert=false] either the given shape should define what is visible (default) or the opposite
@@ -828,7 +828,7 @@ class CanvasRenderer extends Renderer {
      * disable (remove) the rendering mask set through setMask.
      * @name clearMask
      * @see CanvasRenderer#setMask
-     * @memberof CanvasRenderer.prototype
+     * @memberof CanvasRenderer
      * @function
      */
     clearMask() {

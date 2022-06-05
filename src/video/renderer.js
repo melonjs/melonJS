@@ -112,7 +112,7 @@ class Renderer {
     /**
      * prepare the framebuffer for drawing a new frame
      * @name clear
-     * @memberof Renderer.prototype
+     * @memberof Renderer
      * @function
      */
     clear() {}
@@ -120,7 +120,7 @@ class Renderer {
     /**
      * Reset context state
      * @name reset
-     * @memberof Renderer.prototype
+     * @memberof Renderer
      * @function
      */
     reset() {
@@ -139,7 +139,7 @@ class Renderer {
     /**
      * return a reference to the system canvas
      * @name getCanvas
-     * @memberof Renderer.prototype
+     * @memberof Renderer
      * @function
      * @returns {HTMLCanvasElement}
      */
@@ -150,7 +150,7 @@ class Renderer {
     /**
      * return a reference to the screen canvas
      * @name getScreenCanvas
-     * @memberof Renderer.prototype
+     * @memberof Renderer
      * @function
      * @returns {HTMLCanvasElement}
      */
@@ -162,7 +162,7 @@ class Renderer {
      * return a reference to the screen canvas corresponding 2d Context<br>
      * (will return buffered context if double buffering is enabled, or a reference to the Screen Context)
      * @name getScreenContext
-     * @memberof Renderer.prototype
+     * @memberof Renderer
      * @function
      * @returns {CanvasRenderingContext2D}
      */
@@ -173,7 +173,7 @@ class Renderer {
     /**
      * returns the current blend mode for this renderer
      * @name getBlendMode
-     * @memberof Renderer.prototype
+     * @memberof Renderer
      * @function
      * @returns {string} blend mode
      */
@@ -185,7 +185,7 @@ class Renderer {
      * Returns the 2D Context object of the given Canvas<br>
      * Also configures anti-aliasing and blend modes based on constructor options.
      * @name getContext2d
-     * @memberof Renderer.prototype
+     * @memberof Renderer
      * @function
      * @param {HTMLCanvasElement} canvas
      * @param {boolean} [transparent=true] use false to disable transparency
@@ -223,7 +223,7 @@ class Renderer {
     /**
      * return the width of the system Canvas
      * @name getWidth
-     * @memberof Renderer.prototype
+     * @memberof Renderer
      * @function
      * @returns {number}
      */
@@ -234,7 +234,7 @@ class Renderer {
     /**
      * return the height of the system Canvas
      * @name getHeight
-     * @memberof Renderer.prototype
+     * @memberof Renderer
      * @function
      * @returns {number} height of the system Canvas
      */
@@ -245,7 +245,7 @@ class Renderer {
     /**
      * get the current fill & stroke style color.
      * @name getColor
-     * @memberof Renderer.prototype
+     * @memberof Renderer
      * @function
      * @returns {Color} current global color
      */
@@ -256,7 +256,7 @@ class Renderer {
     /**
      * return the current global alpha
      * @name globalAlpha
-     * @memberof Renderer.prototype
+     * @memberof Renderer
      * @function
      * @returns {number}
      */
@@ -267,7 +267,7 @@ class Renderer {
     /**
      * check if the given rect or bounds overlaps with the renderer screen coordinates
      * @name overlaps
-     * @memberof Renderer.prototype
+     * @memberof Renderer
      * @function
      * @param {Rect|Bounds} bounds
      * @returns {boolean} true if overlaps
@@ -283,7 +283,7 @@ class Renderer {
     /**
      * resizes the system canvas
      * @name resize
-     * @memberof Renderer.prototype
+     * @memberof Renderer
      * @function
      * @param {number} width new width of the canvas
      * @param {number} height new height of the canvas
@@ -304,7 +304,7 @@ class Renderer {
     /**
      * enable/disable image smoothing (scaling interpolation) for the given context
      * @name setAntiAlias
-     * @memberof Renderer.prototype
+     * @memberof Renderer
      * @function
      * @param {CanvasRenderingContext2D} context
      * @param {boolean} [enable=false]
@@ -334,7 +334,7 @@ class Renderer {
     /**
      * set/change the current projection matrix (WebGL only)
      * @name setProjection
-     * @memberof Renderer.prototype
+     * @memberof Renderer
      * @function
      * @param {Matrix3d} matrix
      */
@@ -345,7 +345,7 @@ class Renderer {
     /**
      * stroke the given shape
      * @name stroke
-     * @memberof Renderer.prototype
+     * @memberof Renderer
      * @function
      * @param {Rect|RoundRect|Polygon|Line|Ellipse} shape a shape object to stroke
      * @param {boolean} [fill=false] fill the shape with the current color if true
@@ -379,7 +379,7 @@ class Renderer {
     /**
      * fill the given shape
      * @name fill
-     * @memberof Renderer.prototype
+     * @memberof Renderer
      * @function
      * @param {Rect|RoundRect|Polygon|Line|Ellipse} shape a shape object to fill
      */
@@ -390,7 +390,7 @@ class Renderer {
     /**
      * tint the given image or canvas using the given color
      * @name tint
-     * @memberof Renderer.prototype
+     * @memberof Renderer
      * @function
      * @param {HTMLImageElement|HTMLCanvasElement|OffscreenCanvas} src the source image to be tinted
      * @param {Color|string} color the color that will be used to tint the image
@@ -421,7 +421,7 @@ class Renderer {
      * So, if the renderable is larger than the mask, only the intersecting part of the renderable will be visible.
      * Mask are not preserved through renderer context save and restore.
      * @name setMask
-     * @memberof Renderer.prototype
+     * @memberof Renderer
      * @function
      * @param {Rect|RoundRect|Polygon|Line|Ellipse} [mask] the shape defining the mask to be applied
      * @param {boolean} [invert=false] either the given shape should define what is visible (default) or the opposite
@@ -433,7 +433,7 @@ class Renderer {
      * disable (remove) the rendering mask set through setMask.
      * @name clearMask
      * @see Renderer#setMask
-     * @memberof Renderer.prototype
+     * @memberof Renderer
      * @function
      */
     clearMask() {}
@@ -441,7 +441,7 @@ class Renderer {
     /**
      * set a coloring tint for sprite based renderables
      * @name setTint
-     * @memberof Renderer.prototype
+     * @memberof Renderer
      * @function
      * @param {Color} tint the tint color
      * @param {number} [alpha] an alpha value to be applied to the tint
@@ -456,7 +456,7 @@ class Renderer {
      * clear the rendering tint set through setTint.
      * @name clearTint
      * @see Renderer#setTint
-     * @memberof Renderer.prototype
+     * @memberof Renderer
      * @function
      */
     clearTint() {

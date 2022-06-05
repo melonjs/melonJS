@@ -17,7 +17,7 @@ class Ellipse {
          * @public
          * @type {Vector2d}
          * @name pos
-         * @memberof Ellipse.prototype
+         * @memberof Ellipse
          */
         this.pos = pool.pull("Vector2d");
 
@@ -32,7 +32,7 @@ class Ellipse {
          * @public
          * @type {number}
          * @name radius
-         * @memberof Ellipse.prototype
+         * @memberof Ellipse
          */
         this.radius = NaN;
 
@@ -41,7 +41,7 @@ class Ellipse {
          * @public
          * @type {Vector2d}
          * @name radiusV
-         * @memberof Ellipse.prototype
+         * @memberof Ellipse
          */
         this.radiusV = pool.pull("Vector2d");
 
@@ -50,7 +50,7 @@ class Ellipse {
          * @public
          * @type {Vector2d}
          * @name radiusSq
-         * @memberof Ellipse.prototype
+         * @memberof Ellipse
          */
         this.radiusSq = pool.pull("Vector2d");
 
@@ -59,7 +59,7 @@ class Ellipse {
          * @public
          * @type {Vector2d}
          * @name ratio
-         * @memberof Ellipse.prototype
+         * @memberof Ellipse
          */
         this.ratio = pool.pull("Vector2d");
 
@@ -76,7 +76,7 @@ class Ellipse {
     /**
      * set new value to the Ellipse shape
      * @name setShape
-     * @memberof Ellipse.prototype
+     * @memberof Ellipse
      * @function
      * @param {number} x the center x coordinate of the ellipse
      * @param {number} y the center y coordinate of the ellipse
@@ -106,7 +106,7 @@ class Ellipse {
     /**
      * Rotate this Ellipse (counter-clockwise) by the specified angle (in radians).
      * @name rotate
-     * @memberof Ellipse.prototype
+     * @memberof Ellipse
      * @function
      * @param {number} angle The angle to rotate (in radians)
      * @param {Vector2d|ObservableVector2d} [v] an optional point to rotate around
@@ -123,7 +123,7 @@ class Ellipse {
     /**
      * Scale this Ellipse by the specified scalar.
      * @name scale
-     * @memberof Ellipse.prototype
+     * @memberof Ellipse
      * @function
      * @param {number} x
      * @param {number} [y=x]
@@ -142,7 +142,7 @@ class Ellipse {
     /**
      * Scale this Ellipse by the specified vector.
      * @name scale
-     * @memberof Ellipse.prototype
+     * @memberof Ellipse
      * @function
      * @param {Vector2d} v
      * @returns {Ellipse} Reference to this object for method chaining
@@ -154,7 +154,7 @@ class Ellipse {
     /**
      * apply the given transformation matrix to this ellipse
      * @name transform
-     * @memberof Ellipse.prototype
+     * @memberof Ellipse
      * @function
      * @param {Matrix2d} matrix the transformation matrix
      * @returns {Polygon} Reference to this object for method chaining
@@ -167,7 +167,7 @@ class Ellipse {
     /**
      * translate the circle/ellipse by the specified offset
      * @name translate
-     * @memberof Ellipse.prototype
+     * @memberof Ellipse
      * @function
      * @param {number} x x offset
      * @param {number} y y offset
@@ -176,7 +176,7 @@ class Ellipse {
     /**
      * translate the circle/ellipse by the specified vector
      * @name translate
-     * @memberof Ellipse.prototype
+     * @memberof Ellipse
      * @function
      * @param {Vector2d} v vector offset
      * @returns {Ellipse} this ellipse
@@ -204,7 +204,7 @@ class Ellipse {
     /**
      * check if this circle/ellipse contains the specified point
      * @name contains
-     * @memberof Ellipse.prototype
+     * @memberof Ellipse
      * @function
      * @param {Vector2d} point
      * @returns {boolean} true if contains
@@ -213,7 +213,7 @@ class Ellipse {
     /**
      * check if this circle/ellipse contains the specified point
      * @name contains
-     * @memberof Ellipse.prototype
+     * @memberof Ellipse
      * @function
      * @param  {number} x x coordinate
      * @param  {number} y y coordinate
@@ -245,7 +245,7 @@ class Ellipse {
     /**
      * returns the bounding box for this shape, the smallest Rectangle object completely containing this shape.
      * @name getBounds
-     * @memberof Ellipse.prototype
+     * @memberof Ellipse
      * @function
      * @returns {Bounds} this shape bounding box Rectangle object
      */
@@ -259,7 +259,7 @@ class Ellipse {
     /**
      * clone this Ellipse
      * @name clone
-     * @memberof Ellipse.prototype
+     * @memberof Ellipse
      * @function
      * @returns {Ellipse} new Ellipse
      */

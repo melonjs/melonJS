@@ -159,7 +159,7 @@ class ImageLayer extends Sprite {
     /**
      * resize the Image Layer to match the given size
      * @name resize
-     * @memberof ImageLayer.prototype
+     * @memberof ImageLayer
      * @function
      * @param {number} w new width
      * @param {number} h new height
@@ -249,7 +249,7 @@ class ImageLayer extends Sprite {
      * draw the ImageLayer. <br>
      * automatically called by the game manager {@link game}
      * @name draw
-     * @memberof ImageLayer.prototype
+     * @memberof ImageLayer
      * @function
      * @protected
      * @param {CanvasRenderer|WebGLRenderer} renderer a renderer object
