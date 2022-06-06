@@ -11,6 +11,9 @@
 ### Changed
 - TMX: replaced use of `eval()` by `Function()` when parsing map including executable code
 
+### Fixed
+- Renderable: mark renderable(s as dirty when their pos or bounds are updated
+
 ## [10.9.0] (melonJS 2) - _2022-05-21_
 
 ### Added
