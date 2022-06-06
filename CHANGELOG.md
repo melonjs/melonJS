@@ -9,10 +9,12 @@
 - Renderer: added multiple clipping region for masks (only works with overlapping region in legacy Canvas rendering mode)
 
 ### Changed
-- TMX: replaced use of `eval()` by `Function()` when parsing map including executable code
+- TMX: replace use of `eval()` by `Function()` when parsing map including executable code
+- Core: replace internal calls to deprecated `substr` function with `slice`
 
 ### Fixed
-- Renderable: mark renderable(s as dirty when their pos or bounds are updated
+- Renderable: mark renderable(s) as dirty when their pos or bounds are updated
+- Geometry: fix a regression with roundRect shape drawing
 
 ## [10.9.0] (melonJS 2) - _2022-05-21_
 
