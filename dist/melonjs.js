@@ -1,5 +1,5 @@
 /*!
- * melonJS Game Engine - v10.9.0
+ * melonJS Game Engine - v10.10.0
  * http://www.melonjs.org
  * melonjs is licensed under the MIT License.
  * http://www.opensource.org/licenses/mit-license
@@ -18,7 +18,7 @@
 	};
 
 	// https://github.com/zloirock/core-js/issues/86#issuecomment-115759028
-	var global$m =
+	var global$b =
 	  // eslint-disable-next-line es-x/no-global-this -- safe
 	  check(typeof globalThis == 'object' && globalThis) ||
 	  check(typeof window == 'object' && window) ||
@@ -112,31 +112,28 @@
 	  return stringSlice(toString$2(it), 8, -1);
 	};
 
-	var global$l = global$m;
 	var uncurryThis$7 = functionUncurryThis;
 	var fails$5 = fails$8;
 	var classof = classofRaw;
 
-	var Object$3 = global$l.Object;
+	var $Object$2 = Object;
 	var split = uncurryThis$7(''.split);
 
 	// fallback for non-array-like ES3 and non-enumerable old V8 strings
 	var indexedObject = fails$5(function () {
 	  // throws an error in rhino, see https://github.com/mozilla/rhino/issues/346
 	  // eslint-disable-next-line no-prototype-builtins -- safe
-	  return !Object$3('z').propertyIsEnumerable(0);
+	  return !$Object$2('z').propertyIsEnumerable(0);
 	}) ? function (it) {
-	  return classof(it) == 'String' ? split(it, '') : Object$3(it);
-	} : Object$3;
+	  return classof(it) == 'String' ? split(it, '') : $Object$2(it);
+	} : $Object$2;
 
-	var global$k = global$m;
-
-	var TypeError$7 = global$k.TypeError;
+	var $TypeError$5 = TypeError;
 
 	// `RequireObjectCoercible` abstract operation
 	// https://tc39.es/ecma262/#sec-requireobjectcoercible
 	var requireObjectCoercible$2 = function (it) {
-	  if (it == undefined) { throw TypeError$7("Can't call method on " + it); }
+	  if (it == undefined) { throw $TypeError$5("Can't call method on " + it); }
 	  return it;
 	};
 
@@ -160,7 +157,7 @@
 	  return typeof it == 'object' ? it !== null : isCallable$9(it);
 	};
 
-	var global$j = global$m;
+	var global$a = global$b;
 	var isCallable$8 = isCallable$a;
 
 	var aFunction = function (argument) {
@@ -168,7 +165,7 @@
 	};
 
 	var getBuiltIn$3 = function (namespace, method) {
-	  return arguments.length < 2 ? aFunction(global$j[namespace]) : global$j[namespace] && global$j[namespace][method];
+	  return arguments.length < 2 ? aFunction(global$a[namespace]) : global$a[namespace] && global$a[namespace][method];
 	};
 
 	var uncurryThis$6 = functionUncurryThis;
@@ -179,11 +176,11 @@
 
 	var engineUserAgent = getBuiltIn$2('navigator', 'userAgent') || '';
 
-	var global$i = global$m;
+	var global$9 = global$b;
 	var userAgent = engineUserAgent;
 
-	var process$1 = global$i.process;
-	var Deno = global$i.Deno;
+	var process$1 = global$9.process;
+	var Deno = global$9.Deno;
 	var versions = process$1 && process$1.versions || Deno && Deno.version;
 	var v8 = versions && versions.v8;
 	var match, version$1;
@@ -230,43 +227,39 @@
 	  && !Symbol.sham
 	  && typeof Symbol.iterator == 'symbol';
 
-	var global$h = global$m;
 	var getBuiltIn$1 = getBuiltIn$3;
 	var isCallable$7 = isCallable$a;
 	var isPrototypeOf = objectIsPrototypeOf;
 	var USE_SYMBOL_AS_UID$1 = useSymbolAsUid;
 
-	var Object$2 = global$h.Object;
+	var $Object$1 = Object;
 
 	var isSymbol$2 = USE_SYMBOL_AS_UID$1 ? function (it) {
 	  return typeof it == 'symbol';
 	} : function (it) {
 	  var $Symbol = getBuiltIn$1('Symbol');
-	  return isCallable$7($Symbol) && isPrototypeOf($Symbol.prototype, Object$2(it));
+	  return isCallable$7($Symbol) && isPrototypeOf($Symbol.prototype, $Object$1(it));
 	};
 
-	var global$g = global$m;
-
-	var String$2 = global$g.String;
+	var $String$1 = String;
 
 	var tryToString$1 = function (argument) {
 	  try {
-	    return String$2(argument);
+	    return $String$1(argument);
 	  } catch (error) {
 	    return 'Object';
 	  }
 	};
 
-	var global$f = global$m;
 	var isCallable$6 = isCallable$a;
 	var tryToString = tryToString$1;
 
-	var TypeError$6 = global$f.TypeError;
+	var $TypeError$4 = TypeError;
 
 	// `Assert: IsCallable(argument) is true`
 	var aCallable$1 = function (argument) {
 	  if (isCallable$6(argument)) { return argument; }
-	  throw TypeError$6(tryToString(argument) + ' is not a function');
+	  throw $TypeError$4(tryToString(argument) + ' is not a function');
 	};
 
 	var aCallable = aCallable$1;
@@ -278,12 +271,11 @@
 	  return func == null ? undefined : aCallable(func);
 	};
 
-	var global$e = global$m;
 	var call$2 = functionCall;
 	var isCallable$5 = isCallable$a;
 	var isObject$4 = isObject$5;
 
-	var TypeError$5 = global$e.TypeError;
+	var $TypeError$3 = TypeError;
 
 	// `OrdinaryToPrimitive` abstract operation
 	// https://tc39.es/ecma262/#sec-ordinarytoprimitive
@@ -292,29 +284,29 @@
 	  if (pref === 'string' && isCallable$5(fn = input.toString) && !isObject$4(val = call$2(fn, input))) { return val; }
 	  if (isCallable$5(fn = input.valueOf) && !isObject$4(val = call$2(fn, input))) { return val; }
 	  if (pref !== 'string' && isCallable$5(fn = input.toString) && !isObject$4(val = call$2(fn, input))) { return val; }
-	  throw TypeError$5("Can't convert object to primitive value");
+	  throw $TypeError$3("Can't convert object to primitive value");
 	};
 
 	var shared$3 = {exports: {}};
 
-	var global$d = global$m;
+	var global$8 = global$b;
 
 	// eslint-disable-next-line es-x/no-object-defineproperty -- safe
 	var defineProperty$1 = Object.defineProperty;
 
-	var setGlobal$3 = function (key, value) {
+	var defineGlobalProperty$3 = function (key, value) {
 	  try {
-	    defineProperty$1(global$d, key, { value: value, configurable: true, writable: true });
+	    defineProperty$1(global$8, key, { value: value, configurable: true, writable: true });
 	  } catch (error) {
-	    global$d[key] = value;
+	    global$8[key] = value;
 	  } return value;
 	};
 
-	var global$c = global$m;
-	var setGlobal$2 = setGlobal$3;
+	var global$7 = global$b;
+	var defineGlobalProperty$2 = defineGlobalProperty$3;
 
 	var SHARED = '__core-js_shared__';
-	var store$3 = global$c[SHARED] || setGlobal$2(SHARED, {});
+	var store$3 = global$7[SHARED] || defineGlobalProperty$2(SHARED, {});
 
 	var sharedStore = store$3;
 
@@ -323,22 +315,21 @@
 	(shared$3.exports = function (key, value) {
 	  return store$2[key] || (store$2[key] = value !== undefined ? value : {});
 	})('versions', []).push({
-	  version: '3.22.5',
+	  version: '3.22.8',
 	  mode: 'global',
 	  copyright: '© 2014-2022 Denis Pushkarev (zloirock.ru)',
-	  license: 'https://github.com/zloirock/core-js/blob/v3.22.5/LICENSE',
+	  license: 'https://github.com/zloirock/core-js/blob/v3.22.8/LICENSE',
 	  source: 'https://github.com/zloirock/core-js'
 	});
 
-	var global$b = global$m;
 	var requireObjectCoercible = requireObjectCoercible$2;
 
-	var Object$1 = global$b.Object;
+	var $Object = Object;
 
 	// `ToObject` abstract operation
 	// https://tc39.es/ecma262/#sec-toobject
 	var toObject$1 = function (argument) {
-	  return Object$1(requireObjectCoercible(argument));
+	  return $Object(requireObjectCoercible(argument));
 	};
 
 	var uncurryThis$5 = functionUncurryThis;
@@ -363,7 +354,7 @@
 	  return 'Symbol(' + (key === undefined ? '' : key) + ')_' + toString$1(++id + postfix, 36);
 	};
 
-	var global$a = global$m;
+	var global$6 = global$b;
 	var shared$2 = shared$3.exports;
 	var hasOwn$6 = hasOwnProperty_1;
 	var uid$1 = uid$2;
@@ -371,7 +362,7 @@
 	var USE_SYMBOL_AS_UID = useSymbolAsUid;
 
 	var WellKnownSymbolsStore = shared$2('wks');
-	var Symbol$1 = global$a.Symbol;
+	var Symbol$1 = global$6.Symbol;
 	var symbolFor = Symbol$1 && Symbol$1['for'];
 	var createWellKnownSymbol = USE_SYMBOL_AS_UID ? Symbol$1 : Symbol$1 && Symbol$1.withoutSetter || uid$1;
 
@@ -388,7 +379,6 @@
 	  } return WellKnownSymbolsStore[name];
 	};
 
-	var global$9 = global$m;
 	var call$1 = functionCall;
 	var isObject$3 = isObject$5;
 	var isSymbol$1 = isSymbol$2;
@@ -396,7 +386,7 @@
 	var ordinaryToPrimitive = ordinaryToPrimitive$1;
 	var wellKnownSymbol = wellKnownSymbol$1;
 
-	var TypeError$4 = global$9.TypeError;
+	var $TypeError$2 = TypeError;
 	var TO_PRIMITIVE = wellKnownSymbol('toPrimitive');
 
 	// `ToPrimitive` abstract operation
@@ -409,7 +399,7 @@
 	    if (pref === undefined) { pref = 'default'; }
 	    result = call$1(exoticToPrim, input, pref);
 	    if (!isObject$3(result) || isSymbol$1(result)) { return result; }
-	    throw TypeError$4("Can't convert object to primitive value");
+	    throw $TypeError$2("Can't convert object to primitive value");
 	  }
 	  if (pref === undefined) { pref = 'number'; }
 	  return ordinaryToPrimitive(input, pref);
@@ -425,10 +415,10 @@
 	  return isSymbol(key) ? key : key + '';
 	};
 
-	var global$8 = global$m;
+	var global$5 = global$b;
 	var isObject$2 = isObject$5;
 
-	var document$1 = global$8.document;
+	var document$1 = global$5.document;
 	// typeof document.createElement is 'object' in old IE
 	var EXISTS$1 = isObject$2(document$1) && isObject$2(document$1.createElement);
 
@@ -486,26 +476,24 @@
 	  }).prototype != 42;
 	});
 
-	var global$7 = global$m;
 	var isObject$1 = isObject$5;
 
-	var String$1 = global$7.String;
-	var TypeError$3 = global$7.TypeError;
+	var $String = String;
+	var $TypeError$1 = TypeError;
 
 	// `Assert: Type(argument) is Object`
 	var anObject$2 = function (argument) {
 	  if (isObject$1(argument)) { return argument; }
-	  throw TypeError$3(String$1(argument) + ' is not an object');
+	  throw $TypeError$1($String(argument) + ' is not an object');
 	};
 
-	var global$6 = global$m;
 	var DESCRIPTORS$3 = descriptors;
 	var IE8_DOM_DEFINE = ie8DomDefine;
 	var V8_PROTOTYPE_DEFINE_BUG = v8PrototypeDefineBug;
 	var anObject$1 = anObject$2;
 	var toPropertyKey = toPropertyKey$2;
 
-	var TypeError$2 = global$6.TypeError;
+	var $TypeError = TypeError;
 	// eslint-disable-next-line es-x/no-object-defineproperty -- safe
 	var $defineProperty = Object.defineProperty;
 	// eslint-disable-next-line es-x/no-object-getownpropertydescriptor -- safe
@@ -538,7 +526,7 @@
 	  if (IE8_DOM_DEFINE) { try {
 	    return $defineProperty(O, P, Attributes);
 	  } catch (error) { /* empty */ } }
-	  if ('get' in Attributes || 'set' in Attributes) { throw TypeError$2('Accessors not supported'); }
+	  if ('get' in Attributes || 'set' in Attributes) { throw $TypeError('Accessors not supported'); }
 	  if ('value' in Attributes) { O[P] = Attributes.value; }
 	  return O;
 	};
@@ -589,11 +577,11 @@
 
 	var inspectSource$2 = store$1.inspectSource;
 
-	var global$5 = global$m;
+	var global$4 = global$b;
 	var isCallable$3 = isCallable$a;
 	var inspectSource$1 = inspectSource$2;
 
-	var WeakMap$1 = global$5.WeakMap;
+	var WeakMap$1 = global$4.WeakMap;
 
 	var nativeWeakMap = isCallable$3(WeakMap$1) && /native code/.test(inspectSource$1(WeakMap$1));
 
@@ -609,7 +597,7 @@
 	var hiddenKeys$3 = {};
 
 	var NATIVE_WEAK_MAP = nativeWeakMap;
-	var global$4 = global$m;
+	var global$3 = global$b;
 	var uncurryThis$2 = functionUncurryThis;
 	var isObject = isObject$5;
 	var createNonEnumerableProperty$2 = createNonEnumerableProperty$3;
@@ -619,8 +607,8 @@
 	var hiddenKeys$2 = hiddenKeys$3;
 
 	var OBJECT_ALREADY_INITIALIZED = 'Object already initialized';
-	var TypeError$1 = global$4.TypeError;
-	var WeakMap = global$4.WeakMap;
+	var TypeError$1 = global$3.TypeError;
+	var WeakMap = global$3.WeakMap;
 	var set, get, has;
 
 	var enforce = function (it) {
@@ -709,11 +697,12 @@
 	  if (CONFIGURABLE_LENGTH && options && hasOwn$2(options, 'arity') && value.length !== options.arity) {
 	    defineProperty(value, 'length', { value: options.arity });
 	  }
-	  if (options && hasOwn$2(options, 'constructor') && options.constructor) {
-	    if (DESCRIPTORS) { try {
-	      defineProperty(value, 'prototype', { writable: false });
-	    } catch (error) { /* empty */ } }
-	  } else { value.prototype = undefined; }
+	  try {
+	    if (options && hasOwn$2(options, 'constructor') && options.constructor) {
+	      if (DESCRIPTORS) { defineProperty(value, 'prototype', { writable: false }); }
+	    // in V8 ~ Chrome 53, prototypes of some methods, like `Array.prototype.values`, are non-writable
+	    } else if (value.prototype) { value.prototype = undefined; }
+	  } catch (error) { /* empty */ }
 	  var state = enforceInternalState(value);
 	  if (!hasOwn$2(state, 'source')) {
 	    state.source = TEMPLATE.join(typeof name == 'string' ? name : '');
@@ -726,30 +715,25 @@
 	  return isCallable$2(this) && getInternalState(this).source || inspectSource(this);
 	}, 'toString');
 
-	var global$3 = global$m;
 	var isCallable$1 = isCallable$a;
 	var createNonEnumerableProperty$1 = createNonEnumerableProperty$3;
 	var makeBuiltIn = makeBuiltIn$2.exports;
-	var setGlobal$1 = setGlobal$3;
+	var defineGlobalProperty$1 = defineGlobalProperty$3;
 
 	var defineBuiltIn$1 = function (O, key, value, options) {
-	  var unsafe = options ? !!options.unsafe : false;
-	  var simple = options ? !!options.enumerable : false;
-	  var noTargetGet = options ? !!options.noTargetGet : false;
-	  var name = options && options.name !== undefined ? options.name : key;
+	  if (!options) { options = {}; }
+	  var simple = options.enumerable;
+	  var name = options.name !== undefined ? options.name : key;
 	  if (isCallable$1(value)) { makeBuiltIn(value, name, options); }
-	  if (O === global$3) {
+	  if (options.global) {
 	    if (simple) { O[key] = value; }
-	    else { setGlobal$1(key, value); }
-	    return O;
-	  } else if (!unsafe) {
-	    delete O[key];
-	  } else if (!noTargetGet && O[key]) {
-	    simple = true;
-	  }
-	  if (simple) { O[key] = value; }
-	  else { createNonEnumerableProperty$1(O, key, value); }
-	  return O;
+	    else { defineGlobalProperty$1(key, value); }
+	  } else {
+	    if (!options.unsafe) { delete O[key]; }
+	    else if (O[key]) { simple = true; }
+	    if (simple) { O[key] = value; }
+	    else { createNonEnumerableProperty$1(O, key, value); }
+	  } return O;
 	};
 
 	var objectGetOwnPropertyNames = {};
@@ -757,12 +741,22 @@
 	var ceil = Math.ceil;
 	var floor = Math.floor;
 
+	// `Math.trunc` method
+	// https://tc39.es/ecma262/#sec-math.trunc
+	// eslint-disable-next-line es-x/no-math-trunc -- safe
+	var mathTrunc = Math.trunc || function trunc(x) {
+	  var n = +x;
+	  return (n > 0 ? floor : ceil)(n);
+	};
+
+	var trunc = mathTrunc;
+
 	// `ToIntegerOrInfinity` abstract operation
 	// https://tc39.es/ecma262/#sec-tointegerorinfinity
 	var toIntegerOrInfinity$2 = function (argument) {
 	  var number = +argument;
-	  // eslint-disable-next-line no-self-compare -- safe
-	  return number !== number || number === 0 ? 0 : (number > 0 ? floor : ceil)(number);
+	  // eslint-disable-next-line no-self-compare -- NaN check
+	  return number !== number || number === 0 ? 0 : trunc(number);
 	};
 
 	var toIntegerOrInfinity$1 = toIntegerOrInfinity$2;
@@ -933,28 +927,28 @@
 
 	var isForced_1 = isForced$1;
 
-	var global$2 = global$m;
+	var global$2 = global$b;
 	var getOwnPropertyDescriptor = objectGetOwnPropertyDescriptor.f;
 	var createNonEnumerableProperty = createNonEnumerableProperty$3;
 	var defineBuiltIn = defineBuiltIn$1;
-	var setGlobal = setGlobal$3;
+	var defineGlobalProperty = defineGlobalProperty$3;
 	var copyConstructorProperties = copyConstructorProperties$1;
 	var isForced = isForced_1;
 
 	/*
-	  options.target      - name of the target object
-	  options.global      - target is the global object
-	  options.stat        - export as static methods of target
-	  options.proto       - export as prototype methods of target
-	  options.real        - real prototype method for the `pure` version
-	  options.forced      - export even if the native feature is available
-	  options.bind        - bind methods to the target, required for the `pure` version
-	  options.wrap        - wrap constructors to preventing global pollution, required for the `pure` version
-	  options.unsafe      - use the simple assignment of property instead of delete + defineProperty
-	  options.sham        - add a flag to not completely full polyfills
-	  options.enumerable  - export as enumerable property
-	  options.noTargetGet - prevent calling a getter on target
-	  options.name        - the .name of the function if it does not match the key
+	  options.target         - name of the target object
+	  options.global         - target is the global object
+	  options.stat           - export as static methods of target
+	  options.proto          - export as prototype methods of target
+	  options.real           - real prototype method for the `pure` version
+	  options.forced         - export even if the native feature is available
+	  options.bind           - bind methods to the target, required for the `pure` version
+	  options.wrap           - wrap constructors to preventing global pollution, required for the `pure` version
+	  options.unsafe         - use the simple assignment of property instead of delete + defineProperty
+	  options.sham           - add a flag to not completely full polyfills
+	  options.enumerable     - export as enumerable property
+	  options.dontCallGetSet - prevent calling a getter on target
+	  options.name           - the .name of the function if it does not match the key
 	*/
 	var _export = function (options, source) {
 	  var TARGET = options.target;
@@ -964,13 +958,13 @@
 	  if (GLOBAL) {
 	    target = global$2;
 	  } else if (STATIC) {
-	    target = global$2[TARGET] || setGlobal(TARGET, {});
+	    target = global$2[TARGET] || defineGlobalProperty(TARGET, {});
 	  } else {
 	    target = (global$2[TARGET] || {}).prototype;
 	  }
 	  if (target) { for (key in source) {
 	    sourceProperty = source[key];
-	    if (options.noTargetGet) {
+	    if (options.dontCallGetSet) {
 	      descriptor = getOwnPropertyDescriptor(target, key);
 	      targetProperty = descriptor && descriptor.value;
 	    } else { targetProperty = target[key]; }
@@ -989,7 +983,7 @@
 	};
 
 	var $ = _export;
-	var global$1 = global$m;
+	var global$1 = global$b;
 
 	// `globalThis` object
 	// https://tc39.es/ecma262/#sec-globalthis
@@ -2507,7 +2501,7 @@
 	    this.onResetEvent(r, g, b, alpha);
 	};
 
-	var prototypeAccessors$4 = { r: { configurable: true },g: { configurable: true },b: { configurable: true },alpha: { configurable: true } };
+	var prototypeAccessors$5 = { r: { configurable: true },g: { configurable: true },b: { configurable: true },alpha: { configurable: true } };
 
 	/**
 	 * @ignore
@@ -2534,11 +2528,11 @@
 	 * @type {number}
 	 * @memberof Color
 	 */
-	prototypeAccessors$4.r.get = function () {
+	prototypeAccessors$5.r.get = function () {
 	    return ~~(this.glArray[0] * 255);
 	};
 
-	prototypeAccessors$4.r.set = function (value) {
+	prototypeAccessors$5.r.set = function (value) {
 	    this.glArray[0] = clamp(~~value || 0, 0, 255) / 255.0;
 	};
 
@@ -2548,11 +2542,11 @@
 	 * @type {number}
 	 * @memberof Color
 	 */
-	prototypeAccessors$4.g.get = function () {
+	prototypeAccessors$5.g.get = function () {
 	    return ~~(this.glArray[1] * 255);
 	};
 
-	prototypeAccessors$4.g.set = function (value) {
+	prototypeAccessors$5.g.set = function (value) {
 	    this.glArray[1] = clamp(~~value || 0, 0, 255) / 255.0;
 	};
 
@@ -2562,10 +2556,10 @@
 	 * @type {number}
 	 * @memberof Color
 	 */
-	prototypeAccessors$4.b.get = function () {
+	prototypeAccessors$5.b.get = function () {
 	    return ~~(this.glArray[2] * 255);
 	};
-	prototypeAccessors$4.b.set = function (value) {
+	prototypeAccessors$5.b.set = function (value) {
 	    this.glArray[2] = clamp(~~value || 0, 0, 255) / 255.0;
 	};
 
@@ -2574,11 +2568,11 @@
 	 * @type {number}
 	 * @memberof Color
 	 */
-	prototypeAccessors$4.alpha.get = function () {
+	prototypeAccessors$5.alpha.get = function () {
 	    return this.glArray[3];
 	};
 
-	prototypeAccessors$4.alpha.set = function (value) {
+	prototypeAccessors$5.alpha.set = function (value) {
 	    this.glArray[3] = typeof(value) === "undefined" ? 1.0 : clamp(+value, 0, 1.0);
 	};
 
@@ -2900,11 +2894,13 @@
 	 * @function
 	 * @returns {string}
 	 */
-	Color.prototype.toHex8 = function toHex8 () {
+	Color.prototype.toHex8 = function toHex8 (alpha) {
+	        if ( alpha === void 0 ) alpha = this.alpha;
+
 	    // TODO : Memoize this function by caching its result until any of
 	    // the r,g,b,a values are changed
 
-	    return "#" + toHex(this.r) + toHex(this.g) + toHex(this.b) + toHex(this.alpha * 255);
+	    return "#" + toHex(this.r) + toHex(this.g) + toHex(this.b) + toHex(alpha * 255);
 	};
 
 	/**
@@ -2930,9 +2926,12 @@
 	 * @name toRGBA
 	 * @memberof Color
 	 * @function
+	 * @param {number} [alpha=1.0] alpha value [0.0 .. 1.0]
 	 * @returns {string}
 	 */
-	Color.prototype.toRGBA = function toRGBA () {
+	Color.prototype.toRGBA = function toRGBA (alpha) {
+	        if ( alpha === void 0 ) alpha = this.alpha;
+
 	    // TODO : Memoize this function by caching its result until any of
 	    // the r,g,b,a values are changed
 
@@ -2940,11 +2939,11 @@
 	        this.r + "," +
 	        this.g + "," +
 	        this.b + "," +
-	        this.alpha +
+	        alpha +
 	    ")";
 	};
 
-	Object.defineProperties( Color.prototype, prototypeAccessors$4 );
+	Object.defineProperties( Color.prototype, prototypeAccessors$5 );
 
 	/**
 	 * @classdesc
@@ -2958,7 +2957,7 @@
 	    (ref = this).onResetEvent.apply(ref, args);
 	};
 
-	var prototypeAccessors$3 = { tx: { configurable: true },ty: { configurable: true },tz: { configurable: true } };
+	var prototypeAccessors$4 = { tx: { configurable: true },ty: { configurable: true },tz: { configurable: true } };
 
 	/**
 	 * @ignore
@@ -2986,7 +2985,7 @@
 	 * @name tx
 	 * @memberof Matrix3d
 	 */
-	prototypeAccessors$3.tx.get = function () {
+	prototypeAccessors$4.tx.get = function () {
 	    return this.val[12];
 	};
 
@@ -2997,7 +2996,7 @@
 	 * @name ty
 	 * @memberof Matrix3d
 	 */
-	prototypeAccessors$3.ty.get = function () {
+	prototypeAccessors$4.ty.get = function () {
 	    return this.val[13];
 	};
 
@@ -3008,7 +3007,7 @@
 	 * @name tz
 	 * @memberof Matrix3d
 	 */
-	prototypeAccessors$3.tz.get = function () {
+	prototypeAccessors$4.tz.get = function () {
 	    return this.val[14];
 	};
 
@@ -3636,7 +3635,7 @@
 	    ")";
 	};
 
-	Object.defineProperties( Matrix3d.prototype, prototypeAccessors$3 );
+	Object.defineProperties( Matrix3d.prototype, prototypeAccessors$4 );
 
 	/**
 	 * @classdesc
@@ -3652,7 +3651,7 @@
 	     (ref = this).onResetEvent.apply(ref, args);
 	 };
 
-	var prototypeAccessors$2 = { tx: { configurable: true },ty: { configurable: true } };
+	var prototypeAccessors$3 = { tx: { configurable: true },ty: { configurable: true } };
 
 	 /**
 	  * @ignore
@@ -3685,7 +3684,7 @@
 	  * @name tx
 	  * @memberof Matrix2d
 	  */
-	 prototypeAccessors$2.tx.get = function () {
+	 prototypeAccessors$3.tx.get = function () {
 	     return this.val[6];
 	 };
 
@@ -3697,7 +3696,7 @@
 	  * @name ty
 	  * @memberof Matrix2d
 	  */
-	 prototypeAccessors$2.ty.get = function () {
+	 prototypeAccessors$3.ty.get = function () {
 	     return this.val[7];
 	 };
 
@@ -4144,7 +4143,7 @@
 	     ")";
 	 };
 
-	Object.defineProperties( Matrix2d.prototype, prototypeAccessors$2 );
+	Object.defineProperties( Matrix2d.prototype, prototypeAccessors$3 );
 
 	var eventemitter3 = {exports: {}};
 
@@ -6022,7 +6021,7 @@
 
 		          var listener = function() {
 		            self._state = 'loaded';
-
+		            
 		            // Begin playback.
 		            playHtml5();
 
@@ -7615,7 +7614,7 @@
 
 		/*!
 		 *  Spatial Plugin - Adds support for stereo and 3D audio where Web Audio is supported.
-		 *
+		 *  
 		 *  howler.js v2.2.3
 		 *  howlerjs.com
 		 *
@@ -11060,7 +11059,7 @@
 	 * a rectangle Object
 	 * @augments Polygon
 	 */
-	var Rect = /*@__PURE__*/(function (Polygon) {
+	var Rect$1 = /*@__PURE__*/(function (Polygon) {
 	    function Rect(x, y, w, h) {
 	        // parent constructor
 	        Polygon.call(this, x, y, [
@@ -11906,7 +11905,7 @@
 	    this.onResetEvent(vertices);
 	};
 
-	var prototypeAccessors$1 = { x: { configurable: true },y: { configurable: true },width: { configurable: true },height: { configurable: true },left: { configurable: true },right: { configurable: true },top: { configurable: true },bottom: { configurable: true },centerX: { configurable: true },centerY: { configurable: true },center: { configurable: true } };
+	var prototypeAccessors$2 = { x: { configurable: true },y: { configurable: true },width: { configurable: true },height: { configurable: true },left: { configurable: true },right: { configurable: true },top: { configurable: true },bottom: { configurable: true },centerX: { configurable: true },centerY: { configurable: true },center: { configurable: true } };
 
 	/**
 	 * @ignore
@@ -11959,11 +11958,11 @@
 	 * @name x
 	 * @memberof Bounds
 	 */
-	prototypeAccessors$1.x.get = function () {
+	prototypeAccessors$2.x.get = function () {
 	    return this.min.x;
 	};
 
-	prototypeAccessors$1.x.set = function (value) {
+	prototypeAccessors$2.x.set = function (value) {
 	    var deltaX = this.max.x - this.min.x;
 	    this.min.x = value;
 	    this.max.x = value + deltaX;
@@ -11976,11 +11975,11 @@
 	 * @name y
 	 * @memberof Bounds
 	 */
-	prototypeAccessors$1.y.get = function () {
+	prototypeAccessors$2.y.get = function () {
 	    return this.min.y;
 	};
 
-	prototypeAccessors$1.y.set = function (value) {
+	prototypeAccessors$2.y.set = function (value) {
 	    var deltaY = this.max.y - this.min.y;
 
 	    this.min.y = value;
@@ -11994,11 +11993,11 @@
 	 * @name width
 	 * @memberof Bounds
 	 */
-	prototypeAccessors$1.width.get = function () {
+	prototypeAccessors$2.width.get = function () {
 	    return this.max.x - this.min.x;
 	};
 
-	prototypeAccessors$1.width.set = function (value) {
+	prototypeAccessors$2.width.set = function (value) {
 	    this.max.x = this.min.x + value;
 	};
 
@@ -12009,11 +12008,11 @@
 	 * @name width
 	 * @memberof Bounds
 	 */
-	prototypeAccessors$1.height.get = function () {
+	prototypeAccessors$2.height.get = function () {
 	    return this.max.y - this.min.y;
 	};
 
-	prototypeAccessors$1.height.set = function (value) {
+	prototypeAccessors$2.height.set = function (value) {
 	    this.max.y = this.min.y + value;
 	};
 
@@ -12024,7 +12023,7 @@
 	 * @name left
 	 * @memberof Bounds
 	 */
-	prototypeAccessors$1.left.get = function () {
+	prototypeAccessors$2.left.get = function () {
 	    return this.min.x;
 	};
 
@@ -12035,7 +12034,7 @@
 	 * @name right
 	 * @memberof Bounds
 	 */
-	prototypeAccessors$1.right.get = function () {
+	prototypeAccessors$2.right.get = function () {
 	    return this.max.x;
 	};
 
@@ -12046,7 +12045,7 @@
 	 * @name top
 	 * @memberof Bounds
 	 */
-	prototypeAccessors$1.top.get = function () {
+	prototypeAccessors$2.top.get = function () {
 	    return this.min.y;
 	};
 
@@ -12057,7 +12056,7 @@
 	 * @name bottom
 	 * @memberof Bounds
 	 */
-	prototypeAccessors$1.bottom.get = function () {
+	prototypeAccessors$2.bottom.get = function () {
 	    return this.max.y;
 	};
 
@@ -12068,7 +12067,7 @@
 	 * @name centerX
 	 * @memberof Bounds
 	 */
-	prototypeAccessors$1.centerX.get = function () {
+	prototypeAccessors$2.centerX.get = function () {
 	    return this.min.x + (this.width / 2);
 	};
 
@@ -12079,7 +12078,7 @@
 	 * @name centerY
 	 * @memberof Bounds
 	 */
-	prototypeAccessors$1.centerY.get = function () {
+	prototypeAccessors$2.centerY.get = function () {
 	    return this.min.y + (this.height / 2);
 	};
 
@@ -12090,7 +12089,7 @@
 	 * @name center
 	 * @memberof Bounds
 	 */
-	prototypeAccessors$1.center.get = function () {
+	prototypeAccessors$2.center.get = function () {
 	    return this._center.set(this.centerX, this.centerY);
 	};
 
@@ -12354,7 +12353,7 @@
 	    ]);
 	};
 
-	Object.defineProperties( Bounds$1.prototype, prototypeAccessors$1 );
+	Object.defineProperties( Bounds$1.prototype, prototypeAccessors$2 );
 
 	/**
 	 * a temporary vector object
@@ -12852,7 +12851,7 @@
 	    if (!pointerInitialized) {
 
 	        // the current pointer area
-	        currentPointer = new Rect(0, 0, 1, 1);
+	        currentPointer = new Rect$1(0, 0, 1, 1);
 
 	        // instantiate a pool of pointer catched
 	        for (var v = 0; v < device$1.maxTouchPoints; v++) {
@@ -14305,7 +14304,7 @@
 	         * A mask limits rendering elements to the shape and position of the given mask object.
 	         * So, if the renderable is larger than the mask, only the intersecting part of the renderable will be visible.
 	         * @public
-	         * @type {Rect|Polygon|Line|Ellipse}
+	         * @type {Rect|RoundRect|Polygon|Line|Ellipse}
 	         * @name mask
 	         * @default undefined
 	         * @memberof Renderable#
@@ -14743,7 +14742,8 @@
 	         if (this.ancestor instanceof Container && this.floating !== true) {
 	             bounds.translate(this.ancestor.getAbsolutePosition());
 	         }
-	         //return bounds;
+
+	         this.isDirty = true;
 	     };
 
 	     /**
@@ -14968,7 +14968,7 @@
 	    Object.defineProperties( Renderable.prototype, prototypeAccessors );
 
 	    return Renderable;
-	}(Rect));
+	}(Rect$1));
 
 	/**
 	 * @classdesc
@@ -16311,7 +16311,7 @@
 	 * this.body.addShape(me.loader.getJSON("shapesdef").banana);
 	 */
 	Body.prototype.addShape = function addShape (shape) {
-	    if (shape instanceof Rect || shape instanceof Bounds$1) {
+	    if (shape instanceof Rect$1 || shape instanceof Bounds$1) {
 	        var poly = shape.toPolygon();
 	        this.shapes.push(poly);
 	        // update the body bounds
@@ -16799,7 +16799,7 @@
 
 	/**
 	 * @classdesc
-	 * me.Container represents a collection of child objects
+	 * Container represents a collection of child objects
 	 * @augments Renderable
 	 */
 	var Container = /*@__PURE__*/(function (Renderable) {
@@ -18360,9 +18360,9 @@
 	}(Container));
 
 	/**
-	 * me.game represents your current game, it contains all the objects,
+	 * game represents your current game, it contains all the objects,
 	 * tilemap layers, current viewport, collision map, etc...<br>
-	 * me.game is also responsible for updating (each frame) the object status and draw them.
+	 * game is also responsible for updating (each frame) the object status and draw them.
 	 * @namespace game
 	 */
 
@@ -18840,7 +18840,7 @@
 	     */
 	    Camera2d.prototype.setDeadzone = function setDeadzone (w, h) {
 	        if (typeof(this.deadzone) === "undefined") {
-	            this.deadzone = new Rect(0, 0, 0, 0);
+	            this.deadzone = new Rect$1(0, 0, 0, 0);
 	        }
 
 	        // reusing the old code for now...
@@ -19368,6 +19368,40 @@
 	    this.cameras = new Map();
 
 	    /**
+	     * The list of active lights in this stage.
+	     * (Note: Canvas Renderering mode will only properly support one light per stage)
+	     * @public
+	     * @type {Map<Light2d>}
+	     * @name lights
+	     * @memberof Stage
+	     * @see Light2d
+	     * @see Stage.ambientLight
+	     * @example
+	     * // create a white spot light
+	     * var whiteLight = new me.Light2d(0, 0, 140, "#fff", 0.7);
+	     * // and add the light to this current stage
+	     * this.lights.set("whiteLight", whiteLight);
+	     * // set a dark ambient light
+	     * this.ambientLight.parseCSS("#1117");
+	     * // make the light follow the mouse
+	     * me.input.registerPointerEvent("pointermove", me.game.viewport, (event) => {
+	     *whiteLight.centerOn(event.gameX, event.gameY);
+	     * });
+	     */
+	    this.lights = new Map();
+
+	    /**
+	     * an ambient light that will be added to the stage rendering
+	     * @public
+	     * @type {Color}
+	     * @name ambientLight
+	     * @memberof Stage
+	     * @default "#000000"
+	     * @see Light2d
+	     */
+	    this.ambientLight = new Color(0, 0, 0, 0);
+
+	    /**
 	     * The given constructor options
 	     * @public
 	     * @name settings
@@ -19424,7 +19458,13 @@
 	    // update the camera/viewport
 	    // iterate through all cameras
 	    this.cameras.forEach(function(camera) {
-	        if (camera.update(dt)) {
+	        if (camera.update(dt) === true) {
+	            isDirty = true;
+	        }    });
+
+	    // update all lights
+	    this.lights.forEach(function (light) {
+	        if (light.update(dt) === true) {
 	            isDirty = true;
 	        }    });
 
@@ -19440,10 +19480,35 @@
 	 * @param {CanvasRenderer|WebGLRenderer} renderer a renderer object
 	 */
 	Stage.prototype.draw = function draw (renderer) {
+	        var this$1$1 = this;
+
 	    // iterate through all cameras
-	    this.cameras.forEach(function(camera) {
+	    this.cameras.forEach(function (camera) {
 	        // render the root container
 	        camera.draw(renderer, world);
+
+	        // render the ambient light
+	        if (this$1$1.ambientLight.alpha !== 0) {
+	            renderer.save();
+	            // iterate through all lights
+	            this$1$1.lights.forEach(function (light) {
+	                // cut out all lights visible areas
+	                renderer.setMask(light.getVisibleArea(), true);
+	            });
+	            // fill the screen with the ambient color
+	            renderer.setColor(this$1$1.ambientLight);
+	            renderer.fillRect(0, 0, camera.width, camera.height);
+	            // clear all masks
+	            renderer.clearMask();
+	            renderer.restore();
+	        }
+
+	        // render all lights
+	        this$1$1.lights.forEach(function (light) {
+	            light.preDraw(renderer, world);
+	            light.draw(renderer, world);
+	            light.postDraw(renderer, world);
+	        });
 	    });
 	};
 
@@ -19454,6 +19519,11 @@
 	Stage.prototype.destroy = function destroy () {
 	    // clear all cameras
 	    this.cameras.clear();
+	    // clear all lights
+	    this.lights.forEach(function (light) {
+	        light.destroy();
+	    });
+	    this.lights.clear();
 	    // notify the object
 	    this.onDestroyEvent.apply(this, arguments);
 	};
@@ -19550,13 +19620,13 @@
 	    function IconLogo(x, y) {
 	        Renderable.call(this, x, y, 100, 85);
 
-	        this.iconCanvas = createCanvas(
+	        this.iconTexture = pool$1.pull("CanvasTexture",
 	            renderer.WebGLVersion > 1 ? this.width : nextPowerOfTwo(this.width),
 	            renderer.WebGLVersion > 1 ? this.height : nextPowerOfTwo(this.height),
-	            false
+	            true
 	        );
 
-	        var context = renderer.getContext2d(this.iconCanvas);
+	        var context = this.iconTexture.context;
 
 	        context.beginPath();
 	        context.moveTo(0.7, 48.9);
@@ -19595,7 +19665,18 @@
 	     * @ignore
 	     */
 	    IconLogo.prototype.draw = function draw (renderer) {
-	        renderer.drawImage(this.iconCanvas, renderer.getWidth() / 2, this.pos.y);
+	        renderer.drawImage(this.iconTexture.canvas, renderer.getWidth() / 2, this.pos.y);
+	    };
+
+	    /**
+	     * Destroy function
+	     * @ignore
+	     */
+	    IconLogo.prototype.destroy = function destroy () {
+	        // call the parent destroy method
+	        Renderable.prototype.destroy.call(this, arguments);
+	        pool$1.push(this.iconTexture);
+	        this.iconTexture = undefined;
 	    };
 
 	    return IconLogo;
@@ -20280,7 +20361,7 @@
 	                match = value.split(/^eval:/i)[1];
 	                try {
 	                    // eslint-disable-next-line
-	                    value = eval(match);
+	                    value = Function("'use strict';return (" + match + ")")();
 	                }
 	                catch (e$1) {
 	                    throw new Error("Unable to evaluate: " + match);
@@ -22601,7 +22682,7 @@
 	    Object.defineProperties( RoundRect.prototype, prototypeAccessors );
 
 	    return RoundRect;
-	}(Rect));
+	}(Rect$1));
 
 	/**
 	 * @classdesc
@@ -23056,6 +23137,11 @@
 	    /**
 	     * @ignore
 	     */
+	    this.maskLevel = 0;
+
+	    /**
+	     * @ignore
+	     */
 	    this.currentBlendMode = "none";
 
 	    // create the main screen canvas
@@ -23117,6 +23203,7 @@
 	    this.currentScissor[1] = 0;
 	    this.currentScissor[2] = this.backBufferCanvas.width;
 	    this.currentScissor[3] = this.backBufferCanvas.height;
+	    this.clearMask();
 	};
 
 	/**
@@ -23334,16 +23421,16 @@
 	 * @param {boolean} [fill=false] fill the shape with the current color if true
 	 */
 	Renderer.prototype.stroke = function stroke (shape, fill) {
-	    if (shape instanceof Rect || shape instanceof Bounds$1) {
+	    if (shape instanceof RoundRect) {
+	        this.strokeRoundRect(shape.left, shape.top, shape.width, shape.height, shape.radius, fill);
+	        return;
+	    }
+	    if (shape instanceof Rect$1 || shape instanceof Bounds$1) {
 	        this.strokeRect(shape.left, shape.top, shape.width, shape.height, fill);
 	        return;
 	    }
 	    if (shape instanceof Line || shape instanceof Polygon) {
 	        this.strokePolygon(shape, fill);
-	        return;
-	    }
-	    if (shape instanceof RoundRect) {
-	        this.strokeRoundRect(shape.left, shape.top, shape.width, shape.height, shape.radius, fill);
 	        return;
 	    }
 	    if (shape instanceof Ellipse) {
@@ -23407,6 +23494,7 @@
 	 * @memberof Renderer
 	 * @function
 	 * @param {Rect|RoundRect|Polygon|Line|Ellipse} [mask] the shape defining the mask to be applied
+	 * @param {boolean} [invert=false] either the given shape should define what is visible (default) or the opposite
 	 */
 	// eslint-disable-next-line no-unused-vars
 	Renderer.prototype.setMask = function setMask (mask) {};
@@ -24217,18 +24305,27 @@
 	     * @memberof CanvasRenderer
 	     * @function
 	     * @param {Rect|RoundRect|Polygon|Line|Ellipse} [mask] the shape defining the mask to be applied
+	     * @param {boolean} [invert=false] either the given shape should define what is visible (default) or the opposite
 	     */
-	    CanvasRenderer.prototype.setMask = function setMask (mask) {
+	    CanvasRenderer.prototype.setMask = function setMask (mask, invert) {
+	        if ( invert === void 0 ) invert = false;
+
 	        var context = this.getContext();
-	        var _x = mask.pos.x, _y = mask.pos.y;
 
-	        context.save();
-
-	        context.beginPath();
+	        if (this.maskLevel === 0) {
+	            // only save context on the first mask
+	            context.save();
+	            context.beginPath();
+	        }
 
 	        // https://github.com/melonjs/melonJS/issues/648
-	        if (mask instanceof Ellipse) {
-	            var hw = mask.radiusV.x,
+	        else if (mask instanceof RoundRect) {
+	            context.roundRect(mask.top, mask.left, mask.width, mask.height, mask.radius);
+	        } else if (mask instanceof Rect || mask instanceof Bounds$1) {
+	            context.rect(mask.top, mask.left, mask.width, mask.height);
+	        }  else if (mask instanceof Ellipse) {
+	            var _x = mask.pos.x, _y = mask.pos.y,
+	                hw = mask.radiusV.x,
 	                hh = mask.radiusV.y,
 	                lx = _x - hw,
 	                rx = _x + hw,
@@ -24247,18 +24344,26 @@
 	            context.bezierCurveTo(rx, ymax, xmax, by, _x, by);
 	            context.bezierCurveTo(xmin, by, lx, ymax, lx, _y);
 	            context.bezierCurveTo(lx, ymin, xmin, ty, _x, ty);
-	        } else if (mask instanceof RoundRect) {
-	            context.roundRect(_x, _y, mask.width, mask.height, mask.radius);
 	        } else {
-	            context.moveTo(_x + mask.points[0].x, _y + mask.points[0].y);
+	            var _x$1 = mask.pos.x, _y$1 = mask.pos.y;
 	            var point;
+
+	            context.moveTo(_x$1 + mask.points[0].x, _y$1 + mask.points[0].y);
 	            for (var i = 1; i < mask.points.length; i++) {
 	                point = mask.points[i];
-	                context.lineTo(_x + point.x, _y + point.y);
+	                context.lineTo(_x$1 + point.x, _y$1 + point.y);
 	            }
 	        }
 
-	        context.clip();
+	        this.maskLevel++;
+
+	        if (invert === true) {
+	            context.closePath();
+	            context.globalCompositeOperation = "destination-atop";
+	            context.fill();
+	        } else {
+	            context.clip();
+	        }
 	    };
 
 	    /**
@@ -24269,7 +24374,10 @@
 	     * @function
 	     */
 	    CanvasRenderer.prototype.clearMask = function clearMask () {
-	        this.getContext().restore();
+	        if (this.maskLevel > 0) {
+	            this.maskLevel = 0;
+	            this.getContext().restore();
+	        }
 	    };
 
 	    return CanvasRenderer;
@@ -24711,7 +24819,7 @@
 	    this.onResetEvent(vertices);
 	};
 
-	var prototypeAccessors = { x: { configurable: true },y: { configurable: true },width: { configurable: true },height: { configurable: true },left: { configurable: true },right: { configurable: true },top: { configurable: true },bottom: { configurable: true },centerX: { configurable: true },centerY: { configurable: true },center: { configurable: true } };
+	var prototypeAccessors$1 = { x: { configurable: true },y: { configurable: true },width: { configurable: true },height: { configurable: true },left: { configurable: true },right: { configurable: true },top: { configurable: true },bottom: { configurable: true },centerX: { configurable: true },centerY: { configurable: true },center: { configurable: true } };
 
 	/**
 	 * @ignore
@@ -24764,11 +24872,11 @@
 	 * @name x
 	 * @memberof Bounds
 	 */
-	prototypeAccessors.x.get = function () {
+	prototypeAccessors$1.x.get = function () {
 	    return this.min.x;
 	};
 
-	prototypeAccessors.x.set = function (value) {
+	prototypeAccessors$1.x.set = function (value) {
 	    var deltaX = this.max.x - this.min.x;
 	    this.min.x = value;
 	    this.max.x = value + deltaX;
@@ -24781,11 +24889,11 @@
 	 * @name y
 	 * @memberof Bounds
 	 */
-	prototypeAccessors.y.get = function () {
+	prototypeAccessors$1.y.get = function () {
 	    return this.min.y;
 	};
 
-	prototypeAccessors.y.set = function (value) {
+	prototypeAccessors$1.y.set = function (value) {
 	    var deltaY = this.max.y - this.min.y;
 
 	    this.min.y = value;
@@ -24799,11 +24907,11 @@
 	 * @name width
 	 * @memberof Bounds
 	 */
-	prototypeAccessors.width.get = function () {
+	prototypeAccessors$1.width.get = function () {
 	    return this.max.x - this.min.x;
 	};
 
-	prototypeAccessors.width.set = function (value) {
+	prototypeAccessors$1.width.set = function (value) {
 	    this.max.x = this.min.x + value;
 	};
 
@@ -24814,11 +24922,11 @@
 	 * @name width
 	 * @memberof Bounds
 	 */
-	prototypeAccessors.height.get = function () {
+	prototypeAccessors$1.height.get = function () {
 	    return this.max.y - this.min.y;
 	};
 
-	prototypeAccessors.height.set = function (value) {
+	prototypeAccessors$1.height.set = function (value) {
 	    this.max.y = this.min.y + value;
 	};
 
@@ -24829,7 +24937,7 @@
 	 * @name left
 	 * @memberof Bounds
 	 */
-	prototypeAccessors.left.get = function () {
+	prototypeAccessors$1.left.get = function () {
 	    return this.min.x;
 	};
 
@@ -24840,7 +24948,7 @@
 	 * @name right
 	 * @memberof Bounds
 	 */
-	prototypeAccessors.right.get = function () {
+	prototypeAccessors$1.right.get = function () {
 	    return this.max.x;
 	};
 
@@ -24851,7 +24959,7 @@
 	 * @name top
 	 * @memberof Bounds
 	 */
-	prototypeAccessors.top.get = function () {
+	prototypeAccessors$1.top.get = function () {
 	    return this.min.y;
 	};
 
@@ -24862,7 +24970,7 @@
 	 * @name bottom
 	 * @memberof Bounds
 	 */
-	prototypeAccessors.bottom.get = function () {
+	prototypeAccessors$1.bottom.get = function () {
 	    return this.max.y;
 	};
 
@@ -24873,7 +24981,7 @@
 	 * @name centerX
 	 * @memberof Bounds
 	 */
-	prototypeAccessors.centerX.get = function () {
+	prototypeAccessors$1.centerX.get = function () {
 	    return this.min.x + (this.width / 2);
 	};
 
@@ -24884,7 +24992,7 @@
 	 * @name centerY
 	 * @memberof Bounds
 	 */
-	prototypeAccessors.centerY.get = function () {
+	prototypeAccessors$1.centerY.get = function () {
 	    return this.min.y + (this.height / 2);
 	};
 
@@ -24895,7 +25003,7 @@
 	 * @name center
 	 * @memberof Bounds
 	 */
-	prototypeAccessors.center.get = function () {
+	prototypeAccessors$1.center.get = function () {
 	    return this._center.set(this.centerX, this.centerY);
 	};
 
@@ -25159,7 +25267,7 @@
 	    ]);
 	};
 
-	Object.defineProperties( Bounds.prototype, prototypeAccessors );
+	Object.defineProperties( Bounds.prototype, prototypeAccessors$1 );
 
 	/* eslint-disable no-unused-vars */
 
@@ -31547,8 +31655,8 @@
 	        /**
 	         * The WebGL context
 	         * @name gl
-	         * @memberof WebGLRenderer#
-	         * type {WebGLRenderingContext}
+	         * @memberof WebGLRenderer
+	         * @type {WebGLRenderingContext}
 	         */
 	        this.context = this.gl = this.getContextGL(this.getScreenCanvas(), options.transparent);
 
@@ -32601,29 +32709,46 @@
 	     * @name setMask
 	     * @memberof WebGLRenderer
 	     * @function
-	     * @param {Rect|RoundRect|Polygon|Line|Ellipse} [mask] the shape defining the mask to be applied
+	     * @param {Rect|RoundRect|Polygon|Line|Ellipse} [mask] a shape defining the mask to be applied
+	     * @param {boolean} [invert=false] either the given shape should define what is visible (default) or the opposite
 	     */
-	    WebGLRenderer.prototype.setMask = function setMask (mask) {
+	    WebGLRenderer.prototype.setMask = function setMask (mask, invert) {
+	        if ( invert === void 0 ) invert = false;
+
 	        var gl = this.gl;
 
 	        // flush the compositor
 	        this.flush();
 
-	        // Enable and setup GL state to write to stencil buffer
-	        gl.enable(gl.STENCIL_TEST);
-	        gl.clear(gl.STENCIL_BUFFER_BIT);
+	        if (this.maskLevel === 0) {
+	            // Enable and setup GL state to write to stencil buffer
+	            gl.enable(gl.STENCIL_TEST);
+	            gl.clear(gl.STENCIL_BUFFER_BIT);
+
+
+	        }
+
+	        this.maskLevel++;
+
 	        gl.colorMask(false, false, false, false);
-	        gl.stencilFunc(gl.NOTEQUAL, 1, 1);
+	        gl.stencilFunc(gl.EQUAL, this.maskLevel, 1);
 	        gl.stencilOp(gl.REPLACE, gl.REPLACE, gl.REPLACE);
 
+
+	        // fill the given mask shape
 	        this.fill(mask);
 
 	        // flush the compositor
 	        this.flush();
 
-	        // Use stencil buffer to affect next rendering object
 	        gl.colorMask(true, true, true, true);
-	        gl.stencilFunc(gl.EQUAL, 1, 1);
+
+	        // Use stencil buffer to affect next rendering object
+	        if (invert === true) {
+	            gl.stencilFunc(gl.EQUAL, this.maskLevel + 1, 1);
+	        } else {
+	            gl.stencilFunc(gl.NOTEQUAL, this.maskLevel + 1, 1);
+	        }
 	        gl.stencilOp(gl.KEEP, gl.KEEP, gl.KEEP);
 	    };
 
@@ -32635,9 +32760,12 @@
 	     * @function
 	     */
 	    WebGLRenderer.prototype.clearMask = function clearMask () {
-	        // flush the compositor
-	        this.flush();
-	        this.gl.disable(this.gl.STENCIL_TEST);
+	        if (this.maskLevel > 0) {
+	            // flush the compositor
+	            this.flush();
+	            this.maskLevel = 0;
+	            this.gl.disable(this.gl.STENCIL_TEST);
+	        }
 	    };
 
 	    return WebGLRenderer;
@@ -33840,10 +33968,10 @@
 	     * this can be overridden by the plugin
 	     * @public
 	     * @type {string}
-	     * @default "10.9.0"
+	     * @default "10.10.0"
 	     * @name plugin.Base#version
 	     */
-	    this.version = "10.9.0";
+	    this.version = "10.10.0";
 	};
 
 	/**
@@ -34854,6 +34982,89 @@
 	Object.defineProperties( Tween, staticAccessors );
 
 	/**
+	 * Creates a Canvas Texture of the given size
+	 */
+	var CanvasTexture = function CanvasTexture(width, height, offscreenCanvas) {
+	    if ( offscreenCanvas === void 0 ) offscreenCanvas = true;
+
+	    /**
+	     * the canvas created for this CanvasTexture
+	     * @type {HTMLCanvasElement|OffscreenCanvas}
+	     */
+	    this.canvas = createCanvas(width, height, offscreenCanvas);
+
+	    /**
+	     * the rendering context of this CanvasTexture
+	     * @type {CanvasRenderingContext2D}
+	     */
+	    this.context = this.canvas.getContext("2d");
+	};
+
+	var prototypeAccessors = { width: { configurable: true },height: { configurable: true } };
+
+	/**
+	 * @ignore
+	 */
+	CanvasTexture.prototype.onResetEvent = function onResetEvent (width, height) {
+	    this.clear();
+	    this.resize(width, height);
+	};
+
+	/**
+	 * Clears the content of the canvas texture
+	 */
+	CanvasTexture.prototype.clear = function clear () {
+	    this.context.setTransform(1, 0, 0, 1, 0, 0);
+	    this.context.clearRect(0, 0, this.canvas.width, this.canvas.height);
+	};
+
+	/**
+	 * Resizes the canvas texture to the given width and height.
+	 * @param {number} width the desired width
+	 * @param {number} height the desired height
+	 */
+	CanvasTexture.prototype.resize = function resize (width, height) {
+	    this.canvas.width = Math.round(width);
+	    this.canvas.height = Math.round(height);
+	};
+
+	/**
+	 * @ignore
+	 */
+	CanvasTexture.prototype.destroy = function destroy () {
+	    this.context = undefined;
+	    this.canvas = undefined;
+	};
+
+	/**
+	 * The width of this canvas texture in pixels
+	 * @public
+	 * @type {number}
+	 */
+	prototypeAccessors.width.get = function () {
+	    return this.canvas.width;
+	};
+
+	prototypeAccessors.width.set = function (val) {
+	    this.canvas.width = Math.round(val);
+	};
+
+	/**
+	 * The height of this canvas texture in pixels
+	 * @public
+	 * @type {number}
+	 */
+	prototypeAccessors.height.get = function () {
+	    return this.canvas.height;
+	};
+
+	prototypeAccessors.height.set = function (val) {
+	    this.canvas.height = Math.round(val);
+	};
+
+	Object.defineProperties( CanvasTexture.prototype, prototypeAccessors );
+
+	/**
 	 * apply the current text style to the given context
 	 * @ignore
 	 */
@@ -35048,7 +35259,7 @@
 	// return a valid 2d context for Text rendering/styling
 	var getContext2d = function (renderer, text) {
 	    if (text.offScreenCanvas === true) {
-	        return text.context;
+	        return text.canvasTexture.context;
 	    } else {
 	        return renderer.getFontContext();
 	    }
@@ -35200,8 +35411,7 @@
 
 	        if (settings.offScreenCanvas === true) {
 	            this.offScreenCanvas = true;
-	            this.canvas = createCanvas(2, 2, true);
-	            this.context = this.canvas.getContext("2d");
+	            this.canvasTexture = pool$1.pull("CanvasTexture", 2, 2, true);
 	        }
 
 	        // instance to text metrics functions
@@ -35216,10 +35426,9 @@
 	        // free the canvas and potential corresponding texture when deactivated
 	        if (this.offScreenCanvas === true) {
 	            renderer.currentCompositor.deleteTexture2D(renderer.currentCompositor.getTexture2D(this.glTextureUnit));
-	            renderer.cache.delete(this.canvas);
-	            this.canvas.width = this.canvas.height = 0;
-	            this.context = undefined;
-	            this.canvas = undefined;
+	            renderer.cache.delete(this.canvasTexture.canvas);
+	            pool$1.push(this.canvasTexture);
+	            this.canvasTexture = undefined;
 	            this.glTextureUnit = undefined;
 	        }
 	    };
@@ -35321,7 +35530,7 @@
 
 	            if (renderer instanceof WebGLRenderer) {
 	                // invalidate the previous corresponding texture so that it can reuploaded once changed
-	                this.glTextureUnit = renderer.cache.getUnit(renderer.cache.get(this.canvas));
+	                this.glTextureUnit = renderer.cache.getUnit(renderer.cache.get(this.canvasTexture.canvas));
 	                renderer.currentCompositor.unbindTexture2D(null, this.glTextureUnit);
 
 	                if (renderer.WebGLVersion === 1) {
@@ -35332,14 +35541,12 @@
 	            }
 
 	            // resize the cache canvas if necessary
-	            if (this.canvas.width < width || this.canvas.height < height) {
-	                this.canvas.width = width;
-	                this.canvas.height = height;
-	                // resizing the canvas will automatically clear its content
-	            } else {
-	                this.context.clearRect(0, 0, this.canvas.width, this.canvas.height);
+	            if (this.canvasTexture.width < width || this.canvasTexture.height < height) {
+	                this.canvasTexture.resize(width, height);
 	            }
-	            this._drawFont(this.context, this._text,  this.pos.x - this.metrics.x, this.pos.y - this.metrics.y, false);
+
+	            this.canvasTexture.clear();
+	            this._drawFont(this.canvasTexture.context, this._text,  this.pos.x - this.metrics.x, this.pos.y - this.metrics.y, false);
 	        }
 
 	        this.isDirty = true;
@@ -35406,7 +35613,7 @@
 
 	        // draw the text
 	        if (this.offScreenCanvas === true) {
-	            renderer.drawImage(this.canvas, x, y);
+	            renderer.drawImage(this.canvasTexture.canvas, x, y);
 	        } else {
 	            renderer.drawFont(this._drawFont(renderer.getFontContext(), this._text, x, y, stroke));
 	        }
@@ -36952,6 +37159,120 @@
 	    return Trigger;
 	}(Renderable));
 
+	/** @ignore */
+	function createGradient(light) {
+	    var context = light.texture.context;
+	    var x1 = light.texture.width / 2;
+	    var y1 = light.texture.height / 2;
+	    var gradient = context.createRadialGradient(x1, y1, 0, x1, y1, light.radius);
+
+	    light.texture.clear();
+
+	    gradient.addColorStop( 0, light.color.toRGBA(light.intensity));
+	    gradient.addColorStop( 1, light.color.toRGBA(0.0));
+
+	    context.beginPath();
+	    context.fillStyle = gradient;
+	    context.arc(x1, y1, light.radius, 0, Math.PI * 2, false);
+	    context.fill();
+	}
+
+	/**
+	 * @classdesc
+	 * A 2D point light.
+	 * Note: this is a very experimental and work in progress feature, that provides a simple spot light effect.
+	 * The light effect is best rendered in WebGL, as they are few limitations when using the Canvas Renderer
+	 * (multiple lights are not supported, alpha component of the ambient light is ignored)
+	 * @see stage.lights
+	 */
+	var Light2d = /*@__PURE__*/(function (Renderable) {
+	   function Light2d(x, y, radius, color, intensity) {
+	        if ( color === void 0 ) color = "#FFF";
+	        if ( intensity === void 0 ) intensity = 0.7;
+
+	        // call the parent constructor
+	        Renderable.call(this, x, y, radius * 2, radius * 2);
+
+	        /**
+	         * the color of the light
+	         * @type {Color}
+	         * @default "#FFF"
+	         */
+	        this.color = pool$1.pull("Color").parseCSS(color);
+
+	        /**
+	         * The radius of the light
+	         * @type {number}
+	         */
+	        this.radius = radius;
+
+	        /**
+	         * The intensity of the light
+	         * @type {number}
+	         * @default 0.7
+	         */
+	        this.intensity = intensity;
+
+	        /**
+	         * the default blend mode to be applied when rendering this light
+	         * @type {string}
+	         * @default "lighter"
+	         * @see CanvasRenderer#setBlendMode
+	         * @see WebGLRenderer#setBlendMode
+	         */
+	        this.blendMode = "lighter";
+
+	        /** @ignore */
+	        this.visibleArea = pool$1.pull("Ellipse", this.centerX, this.centerY, this.width, this.height);
+
+	        /** @ignore */
+	        this.texture = pool$1.pull("CanvasTexture", this.width, this.height, false);
+
+	        this.anchorPoint.set(0, 0);
+
+	        createGradient(this);
+	    }
+
+	   if ( Renderable ) Light2d.__proto__ = Renderable;
+	   Light2d.prototype = Object.create( Renderable && Renderable.prototype );
+	   Light2d.prototype.constructor = Light2d;
+
+	    /**
+	     * returns a geometry representing the visible area of this light
+	     * @name getVisibleArea
+	     * @memberof Light2d
+	     * @function
+	     * @returns {Ellipse} the light visible mask
+	     */
+	    Light2d.prototype.getVisibleArea = function getVisibleArea () {
+	        return this.visibleArea.setShape(this.getBounds().centerX, this.getBounds().centerY, this.width, this.height);
+	    };
+
+	    /**
+	     * object draw (Called internally by the engine).
+	     * @ignore
+	     */
+	    Light2d.prototype.draw = function draw (renderer) {
+	        renderer.drawImage(this.texture.canvas, this.getBounds().x, this.getBounds().y);
+	    };
+
+	    /**
+	     * Destroy function<br>
+	     * @ignore
+	     */
+	    Light2d.prototype.destroy = function destroy () {
+	        pool$1.push(this.color);
+	        this.color = undefined;
+	        pool$1.push(this.texture);
+	        this.texture = undefined;
+	        pool$1.push(this.visibleArea);
+	        this.visibleArea = undefined;
+	        Renderable.prototype.destroy.call(this);
+	    };
+
+	   return Light2d;
+	}(Renderable));
+
 	/**
 	 * @classdesc
 	 * A Draggable base object
@@ -37482,9 +37803,6 @@
 	    framesToSkip : 0
 	};
 
-	// default texture used when no sprite is defined
-	var defaultParticleTexture;
-
 	/**
 	 * @ignore
 	 */
@@ -37492,12 +37810,11 @@
 	    if ( w === void 0 ) w = 8;
 	    if ( h === void 0 ) h = 8;
 
-	    if (typeof defaultParticleTexture === "undefined") {
-	        defaultParticleTexture = createCanvas(w, h, true);
-	        var context = defaultParticleTexture.getContext("2d");
-	        context.fillStyle = "#fff";
-	        context.fillRect(0, 0, w, h);
-	    }
+	    var defaultParticleTexture = pool$1.pull("CanvasTexture", w, h, true);
+
+	    defaultParticleTexture.context.fillStyle = "#fff";
+	    defaultParticleTexture.context.fillRect(0, 0, w, h);
+
 	    return defaultParticleTexture;
 	}
 	/**
@@ -37577,9 +37894,9 @@
 
 	        Object.assign(this.settings, ParticleEmitterSettings, settings);
 
-	        // Cache the image reference
 	        if (typeof this.settings.image === "undefined") {
-	            this.settings.image = createDefaultParticleTexture(settings.textureSize, settings.textureSize);
+	            this._defaultParticle = createDefaultParticleTexture(settings.textureSize, settings.textureSize);
+	            this.settings.image = this._defaultParticle.canvas;
 	        }
 
 	        this.floating = this.settings.floating;
@@ -37709,6 +38026,10 @@
 	        // call the parent destroy method
 	        Container.prototype.destroy.call(this, arguments);
 	        // clean emitter specific Properties
+	        if (typeof this._defaultParticle !== "undefined") {
+	            pool$1.push(this._defaultParticle);
+	            this._defaultParticle = undefined;
+	        }
 	        this.settings.image = undefined;
 	        this.settings = undefined;
 	    };
@@ -38167,9 +38488,10 @@
 	}
 	/**
 	 * @public
-	 * @type {Function}
 	 * @name turnOnPointerLock
-	 * @memberof device
+	 * @function
+	 * @returns {boolean} return true if the request was successfully submitted
+	 * @memberof device#
 	 * @deprecated since 10.3.0
 	 * @see input.requestPointerLock
 	 */
@@ -38180,9 +38502,10 @@
 
 	/**
 	 * @public
-	 * @type {Function}
 	 * @name turnOffPointerLock
-	 * @memberof device
+	 * @function
+	 * @returns {boolean} return true if the request was successfully submitted
+	 * @memberof device#
 	 * @deprecated since 10.3.0
 	 * @see input.exitPointerLock
 	 */
@@ -38259,7 +38582,7 @@
 	 * @name version
 	 * @type {string}
 	 */
-	var version = "10.9.0";
+	var version = "10.10.0";
 
 
 	/**
@@ -38297,6 +38620,7 @@
 	    pool$1.register("me.Entity", Entity);
 	    pool$1.register("me.Collectable", Collectable);
 	    pool$1.register("me.Trigger", Trigger);
+	    pool$1.register("me.Light2d", Light2d);
 	    pool$1.register("me.Tween", Tween, true);
 	    pool$1.register("me.Color", Color, true);
 	    pool$1.register("me.Particle", Particle, true);
@@ -38314,7 +38638,7 @@
 	    pool$1.register("me.ObservableVector3d", ObservableVector3d, true);
 	    pool$1.register("me.Matrix2d", Matrix2d, true);
 	    pool$1.register("me.Matrix3d", Matrix3d, true);
-	    pool$1.register("me.Rect", Rect, true);
+	    pool$1.register("me.Rect", Rect$1, true);
 	    pool$1.register("me.RoundRect", RoundRect, true);
 	    pool$1.register("me.Polygon", Polygon, true);
 	    pool$1.register("me.Line", Line, true);
@@ -38325,6 +38649,7 @@
 	    pool$1.register("Entity", Entity);
 	    pool$1.register("Collectable", Collectable);
 	    pool$1.register("Trigger", Trigger);
+	    pool$1.register("Light2d", Light2d);
 	    pool$1.register("Tween", Tween, true);
 	    pool$1.register("Color", Color, true);
 	    pool$1.register("Particle", Particle, true);
@@ -38342,12 +38667,13 @@
 	    pool$1.register("ObservableVector3d", ObservableVector3d, true);
 	    pool$1.register("Matrix2d", Matrix2d, true);
 	    pool$1.register("Matrix3d", Matrix3d, true);
-	    pool$1.register("Rect", Rect, true);
+	    pool$1.register("Rect", Rect$1, true);
 	    pool$1.register("RoundRect", RoundRect, true);
 	    pool$1.register("Polygon", Polygon, true);
 	    pool$1.register("Line", Line, true);
 	    pool$1.register("Ellipse", Ellipse, true);
 	    pool$1.register("Bounds", Bounds$1, true);
+	    pool$1.register("CanvasTexture", CanvasTexture, true);
 
 	    // publish Boot notification
 	    emit(BOOT);
@@ -38387,6 +38713,7 @@
 	exports.GLShader = GLShader;
 	exports.GUI_Object = GUI_Object;
 	exports.ImageLayer = ImageLayer;
+	exports.Light2d = Light2d;
 	exports.Line = Line;
 	exports.Math = math;
 	exports.Matrix2d = Matrix2d;
@@ -38400,7 +38727,7 @@
 	exports.Pointer = Pointer;
 	exports.Polygon = Polygon;
 	exports.QuadTree = QuadTree;
-	exports.Rect = Rect;
+	exports.Rect = Rect$1;
 	exports.Renderable = Renderable;
 	exports.Renderer = Renderer;
 	exports.RoundRect = RoundRect;

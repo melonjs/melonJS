@@ -906,7 +906,7 @@ export class Camera2d extends Renderable {
      * @param {number} h deadzone height
      */
     setDeadzone(w: number, h: number): void;
-    deadzone: Rect;
+    deadzone: Rect$1;
     /**
      * resize the camera
      * @name resize
@@ -1473,6 +1473,17 @@ export class CanvasRenderer extends Renderer {
      * @param {number} height
      */
     clipRect(x: number, y: number, width: number, height: number): void;
+    /**
+     * A mask limits rendering elements to the shape and position of the given mask object.
+     * So, if the renderable is larger than the mask, only the intersecting part of the renderable will be visible.
+     * Mask are not preserved through renderer context save and restore.
+     * @name setMask
+     * @memberof CanvasRenderer
+     * @function
+     * @param {Rect|RoundRect|Polygon|Line|Ellipse} [mask] the shape defining the mask to be applied
+     * @param {boolean} [invert=false] either the given shape should define what is visible (default) or the opposite
+     */
+    setMask(mask?: Rect | RoundRect | Polygon | Line | Ellipse, invert?: boolean): void;
 }
 /**
  * @classdesc
@@ -1684,7 +1695,7 @@ export class Color {
      * @function
      * @returns {string}
      */
-    toHex8(): string;
+    toHex8(alpha?: number): string;
     /**
      * Get the color in "rgb(R,G,B)" format
      * @name toRGB
@@ -1698,9 +1709,10 @@ export class Color {
      * @name toRGBA
      * @memberof Color
      * @function
+     * @param {number} [alpha=1.0] alpha value [0.0 .. 1.0]
      * @returns {string}
      */
-    toRGBA(): string;
+    toRGBA(alpha?: number): string;
 }
 /**
  * @classdesc
@@ -1736,7 +1748,7 @@ export class ColorLayer extends Renderable {
 }
 /**
  * @classdesc
- * me.Container represents a collection of child objects
+ * Container represents a collection of child objects
  * @augments Renderable
  */
 export class Container extends Renderable {
@@ -2951,6 +2963,63 @@ export class ImageLayer extends Renderable {
      */
     preDraw(renderer: any): void;
     onDeactivateEvent(): void;
+    /**
+     * Destroy function<br>
+     * @ignore
+     */
+    destroy(): void;
+}
+/**
+ * @classdesc
+ * A 2D point light.
+ * Note: this is a very experimental and work in progress feature, that provides a simple spot light effect.
+ * The light effect is best rendered in WebGL, as they are few limitations when using the Canvas Renderer
+ * (multiple lights are not supported, alpha component of the ambient light is ignored)
+ * @see stage.lights
+ */
+export class Light2d extends Renderable {
+    /**
+     * @param {number} x - The horizontal position of the light.
+     * @param {number} y - The vertical position of the light.
+     * @param {number} radius - The radius of the light.
+     * @param {Color|string} [color="#FFF"] the color of the light
+     * @param {number} [intensity=0.7] - The intensity of the light.
+     */
+    constructor(x: number, y: number, radius: number, color?: Color | string, intensity?: number);
+    /**
+     * the color of the light
+     * @type {Color}
+     * @default "#FFF"
+     */
+    color: Color;
+    /**
+     * The radius of the light
+     * @type {number}
+     */
+    radius: number;
+    /**
+     * The intensity of the light
+     * @type {number}
+     * @default 0.7
+     */
+    intensity: number;
+    /** @ignore */
+    visibleArea: any;
+    /** @ignore */
+    texture: any;
+    /**
+     * returns a geometry representing the visible area of this light
+     * @name getVisibleArea
+     * @memberof Light2d
+     * @function
+     * @returns {Ellipse} the light visible mask
+     */
+    getVisibleArea(): Ellipse;
+    /**
+     * object draw (Called internally by the engine).
+     * @ignore
+     */
+    draw(renderer: any): void;
     /**
      * Destroy function<br>
      * @ignore
@@ -5048,6 +5117,7 @@ export class ParticleEmitter extends Container {
          */
         framesToSkip: number;
     }): void;
+    _defaultParticle: any;
     /**
      * returns a random point on the x axis within the bounds of this emitter
      * @returns {number}
@@ -5717,7 +5787,7 @@ export class QuadTree {
  * a rectangle Object
  * @augments Polygon
  */
-export class Rect extends Polygon {
+declare class Rect$1 extends Polygon {
     /**
      * @param {number} x position of the Rectangle
      * @param {number} y position of the Rectangle
@@ -5903,7 +5973,14 @@ export class Rect extends Polygon {
  * A base class for renderable objects.
  * @augments Rect
  */
-export class Renderable extends Rect {
+export class Renderable {
+    /**
+     * @param {number} x position of the renderable object (accessible through inherited pos.x property)
+     * @param {number} y position of the renderable object (accessible through inherited pos.y property)
+     * @param {number} width object width
+     * @param {number} height object height
+     */
+    constructor(x: number, y: number, width: number, height: number);
     /**
      * to identify the object as a renderable object
      * @ignore
@@ -6087,7 +6164,7 @@ export class Renderable extends Rect {
      * A mask limits rendering elements to the shape and position of the given mask object.
      * So, if the renderable is larger than the mask, only the intersecting part of the renderable will be visible.
      * @public
-     * @type {Rect|Polygon|Line|Ellipse}
+     * @type {Rect|RoundRect|Polygon|Line|Ellipse}
      * @name mask
      * @default undefined
      * @memberof Renderable#
@@ -6107,7 +6184,7 @@ export class Renderable extends Rect {
      *    {x: -14, y: 30}
      * ]);
      */
-    public mask: Rect | Polygon | Line | Ellipse;
+    public mask: Rect | RoundRect | Polygon | Line | Ellipse;
     /**
      * define a tint for this renderable. a (255, 255, 255) r, g, b value will remove the tint effect.
      * @public
@@ -6200,6 +6277,14 @@ export class Renderable extends Rect {
      * @memberof Renderable
      */
     public get isFlippedY(): boolean;
+    /**
+     * returns the bounding box for this renderable
+     * @name getBounds
+     * @memberof Renderable
+     * @function
+     * @returns {Bounds} bounding box Rectangle object
+     */
+    getBounds(): Bounds;
     /**
      * get the renderable alpha channel value<br>
      * @name getOpacity
@@ -6318,6 +6403,15 @@ export class Renderable extends Rect {
      */
     protected update(dt: number): boolean;
     /**
+     * update the bounding box for this shape.
+     * @ignore
+     * @name updateBounds
+     * @memberof Renderable
+     * @function
+     * @returns {Bounds} this shape bounding box Rectangle object
+     */
+    updateBounds(): Bounds;
+    /**
      * update the renderable's bounding rect (private)
      * @ignore
      * @name updateBoundsPos
@@ -6404,6 +6498,7 @@ export class Renderable extends Rect {
      * @ignore
      */
     destroy(...args: any[]): void;
+    _bounds: any;
     /**
      * OnDestroy Notification function<br>
      * Called by engine before deleting the object
@@ -6487,6 +6582,10 @@ export class Renderer {
      * @ignore
      */
     currentScissor: Int32Array;
+    /**
+     * @ignore
+     */
+    maskLevel: number;
     /**
      * @ignore
      */
@@ -6659,6 +6758,7 @@ export class Renderer {
      * @memberof Renderer
      * @function
      * @param {Rect|RoundRect|Polygon|Line|Ellipse} [mask] the shape defining the mask to be applied
+     * @param {boolean} [invert=false] either the given shape should define what is visible (default) or the opposite
      */
     setMask(mask?: Rect | RoundRect | Polygon | Line | Ellipse): void;
     /**
@@ -6697,7 +6797,7 @@ export class Renderer {
  * a rectangle object with rounded corners
  * @augments Rect
  */
-export class RoundRect extends Rect {
+export class RoundRect {
     /**
      * @param {number} x position of the rounded rectangle
      * @param {number} y position of the rounded rectangle
@@ -6728,6 +6828,24 @@ export class RoundRect extends Rect {
      * @returns {RoundRect} new rectangle
      */
     copy(rrect: RoundRect): RoundRect;
+    /**
+     * Returns true if the rounded rectangle contains the given point
+     * @name contains
+     * @memberof RoundRect
+     * @function
+     * @param  {number} x x coordinate
+     * @param  {number} y y coordinate
+     * @returns {boolean} true if contains
+     */
+    /**
+     * Returns true if the rounded rectangle contains the given point
+     * @name contains
+     * @memberof RoundRect
+     * @function
+     * @param {Vector2d} point
+     * @returns {boolean} true if contains
+     */
+    contains(...args: any[]): boolean;
     /**
      * check if this RoundRect is identical to the specified one
      * @name equals
@@ -6849,6 +6967,8 @@ export class Sprite extends Renderable {
     image: HTMLCanvasElement | HTMLImageElement;
     textureAtlas: any;
     atlasIndices: any;
+    width: number;
+    height: number;
     /**
      * return the flickering state of the object
      * @name isFlickering
@@ -7050,6 +7170,38 @@ export class Stage {
      * @memberof Stage
      */
     public cameras: Map<Camera2d, any>;
+    /**
+     * The list of active lights in this stage.
+     * (Note: Canvas Renderering mode will only properly support one light per stage)
+     * @public
+     * @type {Map<Light2d>}
+     * @name lights
+     * @memberof Stage
+     * @see Light2d
+     * @see Stage.ambientLight
+     * @example
+     * // create a white spot light
+     * var whiteLight = new me.Light2d(0, 0, 140, "#fff", 0.7);
+     * // and add the light to this current stage
+     * this.lights.set("whiteLight", whiteLight);
+     * // set a dark ambient light
+     * this.ambientLight.parseCSS("#1117");
+     * // make the light follow the mouse
+     * me.input.registerPointerEvent("pointermove", me.game.viewport, (event) => {
+     *    whiteLight.centerOn(event.gameX, event.gameY);
+     * });
+     */
+    public lights: Map<Light2d, any>;
+    /**
+     * an ambient light that will be added to the stage rendering
+     * @public
+     * @type {Color}
+     * @name ambientLight
+     * @memberof Stage
+     * @default "#000000"
+     * @see Light2d
+     */
+    public ambientLight: Color;
     /**
      * The given constructor options
      * @public
@@ -7286,6 +7438,8 @@ export class TMXLayer extends Renderable {
     name: any;
     cols: number;
     rows: number;
+    width: number;
+    height: number;
     preRender: boolean;
     onActivateEvent(): void;
     canvasRenderer: CanvasRenderer;
@@ -7935,8 +8089,7 @@ export class Text extends Renderable {
      * @default 10
      */
     public fontSize: number;
-    canvas: HTMLCanvasElement | OffscreenCanvas;
-    context: CanvasRenderingContext2D | OffscreenCanvasRenderingContext2D;
+    canvasTexture: any;
     metrics: TextMetrics;
     /** @ignore */
     onDeactivateEvent(): void;
@@ -7962,6 +8115,7 @@ export class Text extends Renderable {
      * font.setFont("Arial", "1.5em");
      */
     setFont(font: string, size?: number | string): Text;
+    height: number;
     /**
      * change the text to be displayed
      * @param {number|string|string[]} value a string, or an array of strings
@@ -9526,8 +9680,8 @@ export class WebGLRenderer extends Renderer {
     /**
      * The WebGL context
      * @name gl
-     * @memberof WebGLRenderer#
-     * type {WebGLRenderingContext}
+     * @memberof WebGLRenderer
+     * @type {WebGLRenderingContext}
      */
     context: WebGLRenderingContext;
     gl: WebGLRenderingContext;
@@ -9987,6 +10141,17 @@ export class WebGLRenderer extends Renderer {
      * @param {number} height
      */
     clipRect(x: number, y: number, width: number, height: number): void;
+    /**
+     * A mask limits rendering elements to the shape and position of the given mask object.
+     * So, if the renderable is larger than the mask, only the intersecting part of the renderable will be visible.
+     * Mask are not preserved through renderer context save and restore.
+     * @name setMask
+     * @memberof WebGLRenderer
+     * @function
+     * @param {Rect|RoundRect|Polygon|Line|Ellipse} [mask] a shape defining the mask to be applied
+     * @param {boolean} [invert=false] either the given shape should define what is visible (default) or the opposite
+     */
+    setMask(mask?: Rect | RoundRect | Polygon | Line | Ellipse, invert?: boolean): void;
 }
 /**
  * @classdesc
@@ -10073,7 +10238,7 @@ export class World extends Container {
 }
 export var audio: Readonly<{
     __proto__: any;
-    stopOnAudioError: boolean;
+    stopOnAudioError: true;
     init: typeof init$1;
     hasFormat: typeof hasFormat;
     hasAudio: typeof hasAudio;
@@ -10119,8 +10284,26 @@ export function boot(): void;
  */
 export var collision: any;
 declare namespace device$1 {
-    namespace turnOnPointerLock { }
-    namespace turnOffPointerLock { }
+    /**
+     * @public
+     * @name turnOnPointerLock
+     * @function
+     * @returns {boolean} return true if the request was successfully submitted
+     * @memberof device#
+     * @deprecated since 10.3.0
+     * @see input.requestPointerLock
+     */
+    function turnOnPointerLock(): boolean;
+    /**
+     * @public
+     * @name turnOffPointerLock
+     * @function
+     * @returns {boolean} return true if the request was successfully submitted
+     * @memberof device#
+     * @deprecated since 10.3.0
+     * @see input.exitPointerLock
+     */
+    function turnOffPointerLock(): boolean;
 }
 declare var event$1: Readonly<{
     __proto__: any;
@@ -10166,7 +10349,7 @@ export var game: Readonly<{
     __proto__: any;
     readonly viewport: Camera2d;
     readonly world: World;
-    mergeGroup: boolean;
+    mergeGroup: true;
     sortOn: string;
     readonly lastUpdate: number;
     onLevelLoaded: typeof onLevelLoaded;
@@ -10186,7 +10369,7 @@ export var game: Readonly<{
 export var initialized: boolean;
 export var input: Readonly<{
     __proto__: any;
-    preventDefault: boolean;
+    preventDefault: true;
     readonly pointerEventTarget: EventTarget;
     pointer: Rect;
     readonly locked: boolean;
@@ -11713,9 +11896,9 @@ export namespace utils {
 export const version: string;
 export var video: Readonly<{
     __proto__: any;
-    CANVAS: number;
-    WEBGL: number;
-    AUTO: number;
+    CANVAS: 0;
+    WEBGL: 1;
+    AUTO: 2;
     readonly parent: HTMLElement;
     scaleRatio: Vector2d;
     readonly renderer: CanvasRenderer | WebGLRenderer;
@@ -13326,4 +13509,4 @@ declare function defer(func: Function, thisArg: object, ...args: any[]): number;
  * @returns {Function} the function that will be throttled
  */
 declare function throttle(fn: Function, delay: number, no_trailing: any): Function;
-export { Bounds$1 as Bounds, math as Math, device$1 as device, event$1 as event, pool$1 as pool, timer$1 as timer };
+export { Bounds$1 as Bounds, math as Math, Rect$1 as Rect, device$1 as device, event$1 as event, pool$1 as pool, timer$1 as timer };
