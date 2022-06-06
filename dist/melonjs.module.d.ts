@@ -1116,7 +1116,7 @@ export class CanvasRenderer extends Renderer {
     /**
      * Reset the canvas transform to identity
      * @name resetTransform
-     * @memberof CanvasRenderer.prototype
+     * @memberof CanvasRenderer
      * @function
      */
     resetTransform(): void;
@@ -1133,7 +1133,7 @@ export class CanvasRenderer extends Renderer {
      * <img src="images/screen-blendmode.png" width="510"/> <br>
      * @name setBlendMode
      * @see https://developer.mozilla.org/en-US/docs/Web/API/CanvasRenderingContext2D/globalCompositeOperation
-     * @memberof CanvasRenderer.prototype
+     * @memberof CanvasRenderer
      * @function
      * @param {string} [mode="normal"] blend mode : "normal", "multiply", "lighter, "additive", "screen"
      * @param {CanvasRenderingContext2D} [context]
@@ -1142,14 +1142,14 @@ export class CanvasRenderer extends Renderer {
     /**
      * render the main framebuffer on screen
      * @name flush
-     * @memberof CanvasRenderer.prototype
+     * @memberof CanvasRenderer
      * @function
      */
     flush(): void;
     /**
      * Clears the main framebuffer with the given color
      * @name clearColor
-     * @memberof CanvasRenderer.prototype
+     * @memberof CanvasRenderer
      * @function
      * @param {Color|string} [color="#000000"] CSS color.
      * @param {boolean} [opaque=false] Allow transparency [default] or clear the surface completely [true]
@@ -1158,7 +1158,7 @@ export class CanvasRenderer extends Renderer {
     /**
      * Erase the pixels in the given rectangular area by setting them to transparent black (rgba(0,0,0,0)).
      * @name clearRect
-     * @memberof CanvasRenderer.prototype
+     * @memberof CanvasRenderer
      * @function
      * @param {number} x x axis of the coordinate for the rectangle starting point.
      * @param {number} y y axis of the coordinate for the rectangle starting point.
@@ -1169,7 +1169,7 @@ export class CanvasRenderer extends Renderer {
     /**
      * Create a pattern with the specified repetition
      * @name createPattern
-     * @memberof CanvasRenderer.prototype
+     * @memberof CanvasRenderer
      * @function
      * @param {Image} image Source image
      * @param {string} repeat Define how the pattern should be repeated
@@ -1185,7 +1185,7 @@ export class CanvasRenderer extends Renderer {
     /**
      * Draw an image onto the main using the canvas api
      * @name drawImage
-     * @memberof CanvasRenderer.prototype
+     * @memberof CanvasRenderer
      * @function
      * @param {Image} image An element to draw into the context. The specification permits any canvas image source (CanvasImageSource), specifically, a CSSImageValue, an HTMLImageElement, an SVGImageElement, an HTMLVideoElement, an HTMLCanvasElement, an ImageBitmap, or an OffscreenCanvas.
      * @param {number} sx The X coordinate of the top left corner of the sub-rectangle of the source image to draw into the destination context.
@@ -1208,7 +1208,7 @@ export class CanvasRenderer extends Renderer {
     /**
      * Draw a pattern within the given rectangle.
      * @name drawPattern
-     * @memberof CanvasRenderer.prototype
+     * @memberof CanvasRenderer
      * @function
      * @param {CanvasPattern} pattern Pattern object
      * @param {number} x
@@ -1221,7 +1221,7 @@ export class CanvasRenderer extends Renderer {
     /**
      * Stroke an arc at the specified coordinates with given radius, start and end points
      * @name strokeArc
-     * @memberof CanvasRenderer.prototype
+     * @memberof CanvasRenderer
      * @function
      * @param {number} x arc center point x-axis
      * @param {number} y arc center point y-axis
@@ -1235,7 +1235,7 @@ export class CanvasRenderer extends Renderer {
     /**
      * Fill an arc at the specified coordinates with given radius, start and end points
      * @name fillArc
-     * @memberof CanvasRenderer.prototype
+     * @memberof CanvasRenderer
      * @function
      * @param {number} x arc center point x-axis
      * @param {number} y arc center point y-axis
@@ -1248,7 +1248,7 @@ export class CanvasRenderer extends Renderer {
     /**
      * Stroke an ellipse at the specified coordinates with given radius
      * @name strokeEllipse
-     * @memberof CanvasRenderer.prototype
+     * @memberof CanvasRenderer
      * @function
      * @param {number} x ellipse center point x-axis
      * @param {number} y ellipse center point y-axis
@@ -1260,7 +1260,7 @@ export class CanvasRenderer extends Renderer {
     /**
      * Fill an ellipse at the specified coordinates with given radius
      * @name fillEllipse
-     * @memberof CanvasRenderer.prototype
+     * @memberof CanvasRenderer
      * @function
      * @param {number} x ellipse center point x-axis
      * @param {number} y ellipse center point y-axis
@@ -1271,7 +1271,7 @@ export class CanvasRenderer extends Renderer {
     /**
      * Stroke a line of the given two points
      * @name strokeLine
-     * @memberof CanvasRenderer.prototype
+     * @memberof CanvasRenderer
      * @function
      * @param {number} startX the start x coordinate
      * @param {number} startY the start y coordinate
@@ -1282,7 +1282,7 @@ export class CanvasRenderer extends Renderer {
     /**
      * Fill a line of the given two points
      * @name fillLine
-     * @memberof CanvasRenderer.prototype
+     * @memberof CanvasRenderer
      * @function
      * @param {number} startX the start x coordinate
      * @param {number} startY the start y coordinate
@@ -1293,7 +1293,7 @@ export class CanvasRenderer extends Renderer {
     /**
      * Stroke the given me.Polygon on the screen
      * @name strokePolygon
-     * @memberof CanvasRenderer.prototype
+     * @memberof CanvasRenderer
      * @function
      * @param {Polygon} poly the shape to draw
      * @param {boolean} [fill=false] also fill the shape with the current color if true
@@ -1302,7 +1302,7 @@ export class CanvasRenderer extends Renderer {
     /**
      * Fill the given me.Polygon on the screen
      * @name fillPolygon
-     * @memberof CanvasRenderer.prototype
+     * @memberof CanvasRenderer
      * @function
      * @param {Polygon} poly the shape to draw
      */
@@ -1310,7 +1310,7 @@ export class CanvasRenderer extends Renderer {
     /**
      * Stroke a rectangle at the specified coordinates
      * @name strokeRect
-     * @memberof CanvasRenderer.prototype
+     * @memberof CanvasRenderer
      * @function
      * @param {number} x
      * @param {number} y
@@ -1322,7 +1322,7 @@ export class CanvasRenderer extends Renderer {
     /**
      * Draw a filled rectangle at the specified coordinates
      * @name fillRect
-     * @memberof CanvasRenderer.prototype
+     * @memberof CanvasRenderer
      * @function
      * @param {number} x
      * @param {number} y
@@ -1333,7 +1333,7 @@ export class CanvasRenderer extends Renderer {
     /**
      * Stroke a rounded rectangle at the specified coordinates
      * @name strokeRoundRect
-     * @memberof CanvasRenderer.prototype
+     * @memberof CanvasRenderer
      * @function
      * @param {number} x
      * @param {number} y
@@ -1346,7 +1346,7 @@ export class CanvasRenderer extends Renderer {
     /**
      * Draw a rounded filled rectangle at the specified coordinates
      * @name fillRoundRect
-     * @memberof CanvasRenderer.prototype
+     * @memberof CanvasRenderer
      * @function
      * @param {number} x
      * @param {number} y
@@ -1358,7 +1358,7 @@ export class CanvasRenderer extends Renderer {
     /**
      * return a reference to the system 2d Context
      * @name getContext
-     * @memberof CanvasRenderer.prototype
+     * @memberof CanvasRenderer
      * @function
      * @returns {CanvasRenderingContext2D}
      */
@@ -1371,21 +1371,21 @@ export class CanvasRenderer extends Renderer {
     /**
      * save the canvas context
      * @name save
-     * @memberof CanvasRenderer.prototype
+     * @memberof CanvasRenderer
      * @function
      */
     save(): void;
     /**
      * restores the canvas context
      * @name restore
-     * @memberof CanvasRenderer.prototype
+     * @memberof CanvasRenderer
      * @function
      */
     restore(): void;
     /**
      * rotates the canvas context
      * @name rotate
-     * @memberof CanvasRenderer.prototype
+     * @memberof CanvasRenderer
      * @function
      * @param {number} angle in radians
      */
@@ -1393,7 +1393,7 @@ export class CanvasRenderer extends Renderer {
     /**
      * scales the canvas context
      * @name scale
-     * @memberof CanvasRenderer.prototype
+     * @memberof CanvasRenderer
      * @function
      * @param {number} x
      * @param {number} y
@@ -1403,7 +1403,7 @@ export class CanvasRenderer extends Renderer {
      * Set the current fill & stroke style color.
      * By default, or upon reset, the value is set to #000000.
      * @name setColor
-     * @memberof CanvasRenderer.prototype
+     * @memberof CanvasRenderer
      * @function
      * @param {Color|string} color css color value
      */
@@ -1411,7 +1411,7 @@ export class CanvasRenderer extends Renderer {
     /**
      * Set the global alpha
      * @name setGlobalAlpha
-     * @memberof CanvasRenderer.prototype
+     * @memberof CanvasRenderer
      * @function
      * @param {number} alpha 0.0 to 1.0 values accepted.
      */
@@ -1419,7 +1419,7 @@ export class CanvasRenderer extends Renderer {
     /**
      * Return the global alpha
      * @name getGlobalAlpha
-     * @memberof CanvasRenderer.prototype
+     * @memberof CanvasRenderer
      * @function
      * @returns {number} global alpha value
      */
@@ -1427,7 +1427,7 @@ export class CanvasRenderer extends Renderer {
     /**
      * Set the line width on the context
      * @name setLineWidth
-     * @memberof CanvasRenderer.prototype
+     * @memberof CanvasRenderer
      * @function
      * @param {number} width Line width
      */
@@ -1436,7 +1436,7 @@ export class CanvasRenderer extends Renderer {
      * Reset (overrides) the renderer transformation matrix to the
      * identity one, and then apply the given transformation matrix.
      * @name setTransform
-     * @memberof CanvasRenderer.prototype
+     * @memberof CanvasRenderer
      * @function
      * @param {Matrix2d} mat2d Matrix to transform by
      */
@@ -1444,7 +1444,7 @@ export class CanvasRenderer extends Renderer {
     /**
      * Multiply given matrix into the renderer tranformation matrix
      * @name transform
-     * @memberof CanvasRenderer.prototype
+     * @memberof CanvasRenderer
      * @function
      * @param {Matrix2d} mat2d Matrix to transform by
      */
@@ -1452,7 +1452,7 @@ export class CanvasRenderer extends Renderer {
     /**
      * Translates the context to the given position
      * @name translate
-     * @memberof CanvasRenderer.prototype
+     * @memberof CanvasRenderer
      * @function
      * @param {number} x
      * @param {number} y
@@ -1465,7 +1465,7 @@ export class CanvasRenderer extends Renderer {
      * and restore it (with the restore() method) any time in the future.
      * (<u>this is an experimental feature !</u>)
      * @name clipRect
-     * @memberof CanvasRenderer.prototype
+     * @memberof CanvasRenderer
      * @function
      * @param {number} x
      * @param {number} y
@@ -1855,7 +1855,7 @@ export class Container extends Renderable {
      * orginal container.  Then when the me.game.world.reset() is called the renderable
      * will not be in any container.
      * @name addChild
-     * @memberof Container.prototype
+     * @memberof Container
      * @function
      * @param {Renderable} child
      * @param {number} [z] forces the z index of the child to the specified value
@@ -1866,7 +1866,7 @@ export class Container extends Renderable {
      * Add a child to the container at the specified index<br>
      * (the list won't be sorted after insertion)
      * @name addChildAt
-     * @memberof Container.prototype
+     * @memberof Container
      * @function
      * @param {Renderable} child
      * @param {number} index
@@ -1880,7 +1880,7 @@ export class Container extends Renderable {
      *    - The index of element in the array. <br>
      *    - The array forEach() was called upon. <br>
      * @name forEach
-     * @memberof Container.prototype
+     * @memberof Container
      * @function
      * @param {Function} callback fnction to execute on each element
      * @param {object} [thisArg] value to use as this(i.e reference Object) when executing callback.
@@ -1898,7 +1898,7 @@ export class Container extends Renderable {
     /**
      * Swaps the position (z-index) of 2 children
      * @name swapChildren
-     * @memberof Container.prototype
+     * @memberof Container
      * @function
      * @param {Renderable} child
      * @param {Renderable} child2
@@ -1907,7 +1907,7 @@ export class Container extends Renderable {
     /**
      * Returns the Child at the specified index
      * @name getChildAt
-     * @memberof Container.prototype
+     * @memberof Container
      * @function
      * @param {number} index
      * @returns {Renderable} the child at the specified index
@@ -1916,7 +1916,7 @@ export class Container extends Renderable {
     /**
      * Returns the index of the given Child
      * @name getChildIndex
-     * @memberof Container.prototype
+     * @memberof Container
      * @function
      * @param {Renderable} child
      * @returns {number} index
@@ -1934,7 +1934,7 @@ export class Container extends Renderable {
     /**
      * Returns true if contains the specified Child
      * @name hasChild
-     * @memberof Container.prototype
+     * @memberof Container
      * @function
      * @param {Renderable} child
      * @returns {boolean}
@@ -1945,7 +1945,7 @@ export class Container extends Renderable {
      * note : avoid calling this function every frame since
      * it parses the whole object tree each time
      * @name getChildByProp
-     * @memberof Container.prototype
+     * @memberof Container
      * @public
      * @function
      * @param {string} prop Property name
@@ -1970,7 +1970,7 @@ export class Container extends Renderable {
     /**
      * returns the list of childs with the specified class type
      * @name getChildByType
-     * @memberof Container.prototype
+     * @memberof Container
      * @public
      * @function
      * @param {object} classType
@@ -1983,7 +1983,7 @@ export class Container extends Renderable {
      * note : avoid calling this function every frame since
      * it parses the whole object list each time
      * @name getChildByName
-     * @memberof Container.prototype
+     * @memberof Container
      * @public
      * @function
      * @param {string|RegExp|number|boolean} name child name
@@ -1995,7 +1995,7 @@ export class Container extends Renderable {
      * note : avoid calling this function every frame since
      * it parses the whole object list each time
      * @name getChildByGUID
-     * @memberof Container.prototype
+     * @memberof Container
      * @public
      * @function
      * @param {string|RegExp|number|boolean} guid child GUID
@@ -2005,7 +2005,7 @@ export class Container extends Renderable {
     /**
      * return all child in this container
      * @name getChildren
-     * @memberof Container.prototype
+     * @memberof Container
      * @public
      * @function
      * @returns {Renderable[]} an array of renderable object
@@ -2015,7 +2015,7 @@ export class Container extends Renderable {
      * update the bounding box for this shape.
      * @ignore
      * @name updateBounds
-     * @memberof Renderable.prototype
+     * @memberof Renderable
      * @function
      * @returns {Bounds} this shape bounding box Rectangle object
      */
@@ -2024,7 +2024,7 @@ export class Container extends Renderable {
      * Checks if this container is root or if it's attached to the root container.
      * @private
      * @name isAttachedToRoot
-     * @memberof Container.prototype
+     * @memberof Container
      * @function
      * @returns {boolean}
      */
@@ -2033,7 +2033,7 @@ export class Container extends Renderable {
      * update the cointainer's bounding rect (private)
      * @ignore
      * @name updateBoundsPos
-     * @memberof Container.prototype
+     * @memberof Container
      * @function
      */
     updateBoundsPos(newX: any, newY: any): Bounds;
@@ -2044,7 +2044,7 @@ export class Container extends Renderable {
     /**
      * Invokes the removeChildNow in a defer, to ensure the child is removed safely after the update & draw stack has completed
      * @name removeChild
-     * @memberof Container.prototype
+     * @memberof Container
      * @public
      * @function
      * @param {Renderable} child
@@ -2056,7 +2056,7 @@ export class Container extends Renderable {
      * (removal is immediate and unconditional)<br>
      * Never use keepalive=true with objects from {@link pool}. Doing so will create a memory leak.
      * @name removeChildNow
-     * @memberof Container.prototype
+     * @memberof Container
      * @function
      * @param {Renderable} child
      * @param {boolean} [keepalive=False] True to prevent calling child.destroy()
@@ -2065,7 +2065,7 @@ export class Container extends Renderable {
     /**
      * Automatically set the specified property of all childs to the given value
      * @name setChildsProperty
-     * @memberof Container.prototype
+     * @memberof Container
      * @function
      * @param {string} prop property name
      * @param {object} value property value
@@ -2075,7 +2075,7 @@ export class Container extends Renderable {
     /**
      * Move the child in the group one step forward (z depth).
      * @name moveUp
-     * @memberof Container.prototype
+     * @memberof Container
      * @function
      * @param {Renderable} child
      */
@@ -2083,7 +2083,7 @@ export class Container extends Renderable {
     /**
      * Move the child in the group one step backward (z depth).
      * @name moveDown
-     * @memberof Container.prototype
+     * @memberof Container
      * @function
      * @param {Renderable} child
      */
@@ -2091,7 +2091,7 @@ export class Container extends Renderable {
     /**
      * Move the specified child to the top(z depth).
      * @name moveToTop
-     * @memberof Container.prototype
+     * @memberof Container
      * @function
      * @param {Renderable} child
      */
@@ -2099,7 +2099,7 @@ export class Container extends Renderable {
     /**
      * Move the specified child the bottom (z depth).
      * @name moveToBottom
-     * @memberof Container.prototype
+     * @memberof Container
      * @function
      * @param {Renderable} child
      */
@@ -2107,7 +2107,7 @@ export class Container extends Renderable {
     /**
      * Manually trigger the sort of all the childs in the container</p>
      * @name sort
-     * @memberof Container.prototype
+     * @memberof Container
      * @public
      * @function
      * @param {boolean} [recursive=false] recursively sort all containers if true
@@ -2141,7 +2141,7 @@ export class Container extends Renderable {
      * draw the container. <br>
      * automatically called by the game manager {@link game}
      * @name draw
-     * @memberof Container.prototype
+     * @memberof Container
      * @function
      * @protected
      * @param {CanvasRenderer|WebGLRenderer} renderer a renderer object
@@ -2321,7 +2321,7 @@ export class Ellipse {
      * @public
      * @type {Vector2d}
      * @name pos
-     * @memberof Ellipse.prototype
+     * @memberof Ellipse
      */
     public pos: Vector2d;
     /**
@@ -2334,7 +2334,7 @@ export class Ellipse {
      * @public
      * @type {number}
      * @name radius
-     * @memberof Ellipse.prototype
+     * @memberof Ellipse
      */
     public radius: number;
     /**
@@ -2342,7 +2342,7 @@ export class Ellipse {
      * @public
      * @type {Vector2d}
      * @name radiusV
-     * @memberof Ellipse.prototype
+     * @memberof Ellipse
      */
     public radiusV: Vector2d;
     /**
@@ -2350,7 +2350,7 @@ export class Ellipse {
      * @public
      * @type {Vector2d}
      * @name radiusSq
-     * @memberof Ellipse.prototype
+     * @memberof Ellipse
      */
     public radiusSq: Vector2d;
     /**
@@ -2358,7 +2358,7 @@ export class Ellipse {
      * @public
      * @type {Vector2d}
      * @name ratio
-     * @memberof Ellipse.prototype
+     * @memberof Ellipse
      */
     public ratio: Vector2d;
     shapeType: string;
@@ -2367,7 +2367,7 @@ export class Ellipse {
     /**
      * set new value to the Ellipse shape
      * @name setShape
-     * @memberof Ellipse.prototype
+     * @memberof Ellipse
      * @function
      * @param {number} x the center x coordinate of the ellipse
      * @param {number} y the center y coordinate of the ellipse
@@ -2379,7 +2379,7 @@ export class Ellipse {
     /**
      * Rotate this Ellipse (counter-clockwise) by the specified angle (in radians).
      * @name rotate
-     * @memberof Ellipse.prototype
+     * @memberof Ellipse
      * @function
      * @param {number} angle The angle to rotate (in radians)
      * @param {Vector2d|ObservableVector2d} [v] an optional point to rotate around
@@ -2389,7 +2389,7 @@ export class Ellipse {
     /**
      * Scale this Ellipse by the specified scalar.
      * @name scale
-     * @memberof Ellipse.prototype
+     * @memberof Ellipse
      * @function
      * @param {number} x
      * @param {number} [y=x]
@@ -2399,7 +2399,7 @@ export class Ellipse {
     /**
      * Scale this Ellipse by the specified vector.
      * @name scale
-     * @memberof Ellipse.prototype
+     * @memberof Ellipse
      * @function
      * @param {Vector2d} v
      * @returns {Ellipse} Reference to this object for method chaining
@@ -2408,7 +2408,7 @@ export class Ellipse {
     /**
      * apply the given transformation matrix to this ellipse
      * @name transform
-     * @memberof Ellipse.prototype
+     * @memberof Ellipse
      * @function
      * @param {Matrix2d} matrix the transformation matrix
      * @returns {Polygon} Reference to this object for method chaining
@@ -2417,7 +2417,7 @@ export class Ellipse {
     /**
      * translate the circle/ellipse by the specified offset
      * @name translate
-     * @memberof Ellipse.prototype
+     * @memberof Ellipse
      * @function
      * @param {number} x x offset
      * @param {number} y y offset
@@ -2426,7 +2426,7 @@ export class Ellipse {
     /**
      * translate the circle/ellipse by the specified vector
      * @name translate
-     * @memberof Ellipse.prototype
+     * @memberof Ellipse
      * @function
      * @param {Vector2d} v vector offset
      * @returns {Ellipse} this ellipse
@@ -2435,7 +2435,7 @@ export class Ellipse {
     /**
      * check if this circle/ellipse contains the specified point
      * @name contains
-     * @memberof Ellipse.prototype
+     * @memberof Ellipse
      * @function
      * @param {Vector2d} point
      * @returns {boolean} true if contains
@@ -2443,7 +2443,7 @@ export class Ellipse {
     /**
      * check if this circle/ellipse contains the specified point
      * @name contains
-     * @memberof Ellipse.prototype
+     * @memberof Ellipse
      * @function
      * @param  {number} x x coordinate
      * @param  {number} y y coordinate
@@ -2453,7 +2453,7 @@ export class Ellipse {
     /**
      * returns the bounding box for this shape, the smallest Rectangle object completely containing this shape.
      * @name getBounds
-     * @memberof Ellipse.prototype
+     * @memberof Ellipse
      * @function
      * @returns {Bounds} this shape bounding box Rectangle object
      */
@@ -2461,7 +2461,7 @@ export class Ellipse {
     /**
      * clone this Ellipse
      * @name clone
-     * @memberof Ellipse.prototype
+     * @memberof Ellipse
      * @function
      * @returns {Ellipse} new Ellipse
      */
@@ -2785,7 +2785,7 @@ export class GUI_Object extends Sprite {
     /**
      * function called when the object is pressed (to be extended)
      * @name onClick
-     * @memberof GUI_Object.prototype
+     * @memberof GUI_Object
      * @public
      * @function
      * @param {Pointer} event the event object
@@ -2800,7 +2800,7 @@ export class GUI_Object extends Sprite {
     /**
      * function called when the pointer is over the object
      * @name onOver
-     * @memberof GUI_Object.prototype
+     * @memberof GUI_Object
      * @public
      * @function
      * @param {Pointer} event the event object
@@ -2814,7 +2814,7 @@ export class GUI_Object extends Sprite {
     /**
      * function called when the pointer is leaving the object area
      * @name onOut
-     * @memberof GUI_Object.prototype
+     * @memberof GUI_Object
      * @public
      * @function
      * @param {Pointer} event the event object
@@ -2828,7 +2828,7 @@ export class GUI_Object extends Sprite {
     /**
      * function called when the object is pressed and released (to be extended)
      * @name onRelease
-     * @memberof GUI_Object.prototype
+     * @memberof GUI_Object
      * @public
      * @function
      * @returns {boolean} return false if we need to stop propagating the event
@@ -2843,7 +2843,7 @@ export class GUI_Object extends Sprite {
      * function called when the object is pressed and held<br>
      * to be extended <br>
      * @name onHold
-     * @memberof GUI_Object.prototype
+     * @memberof GUI_Object
      * @public
      * @function
      */
@@ -2925,7 +2925,7 @@ export class ImageLayer extends Renderable {
     /**
      * resize the Image Layer to match the given size
      * @name resize
-     * @memberof ImageLayer.prototype
+     * @memberof ImageLayer
      * @function
      * @param {number} w new width
      * @param {number} h new height
@@ -5405,7 +5405,7 @@ export class Polygon {
      * @public
      * @type {Vector2d}
      * @name pos
-     * @memberof Polygon.prototype
+     * @memberof Polygon
      */
     public pos: Vector2d;
     /**
@@ -5413,7 +5413,7 @@ export class Polygon {
      * @ignore
      * @type {Bounds}
      * @name _bounds
-     * @memberof Polygon.prototype
+     * @memberof Polygon
      */
     _bounds: Bounds;
     /**
@@ -5422,7 +5422,7 @@ export class Polygon {
      * @public
      * @type {Vector2d[]}
      * @name points
-     * @memberof Polygon.prototype
+     * @memberof Polygon
      */
     public points: Vector2d[];
     /**
@@ -5450,7 +5450,7 @@ export class Polygon {
     /**
      * set new value to the Polygon
      * @name setShape
-     * @memberof Polygon.prototype
+     * @memberof Polygon
      * @function
      * @param {number} x position of the Polygon
      * @param {number} y position of the Polygon
@@ -5461,7 +5461,7 @@ export class Polygon {
     /**
      * set the vertices defining this Polygon
      * @name setVertices
-     * @memberof Polygon.prototype
+     * @memberof Polygon
      * @function
      * @param {Vector2d[]} vertices array of vector or vertice defining the Polygon
      * @returns {Polygon} this instance for objecf chaining
@@ -5470,7 +5470,7 @@ export class Polygon {
     /**
      * apply the given transformation matrix to this Polygon
      * @name transform
-     * @memberof Polygon.prototype
+     * @memberof Polygon
      * @function
      * @param {Matrix2d} m the transformation matrix
      * @returns {Polygon} Reference to this object for method chaining
@@ -5479,7 +5479,7 @@ export class Polygon {
     /**
      * apply an isometric projection to this shape
      * @name toIso
-     * @memberof Polygon.prototype
+     * @memberof Polygon
      * @function
      * @returns {Polygon} Reference to this object for method chaining
      */
@@ -5487,7 +5487,7 @@ export class Polygon {
     /**
      * apply a 2d projection to this shape
      * @name to2d
-     * @memberof Polygon.prototype
+     * @memberof Polygon
      * @function
      * @returns {Polygon} Reference to this object for method chaining
      */
@@ -5495,7 +5495,7 @@ export class Polygon {
     /**
      * Rotate this Polygon (counter-clockwise) by the specified angle (in radians).
      * @name rotate
-     * @memberof Polygon.prototype
+     * @memberof Polygon
      * @function
      * @param {number} angle The angle to rotate (in radians)
      * @param {Vector2d|ObservableVector2d} [v] an optional point to rotate around
@@ -5505,7 +5505,7 @@ export class Polygon {
     /**
      * Scale this Polygon by the given scalar.
      * @name scale
-     * @memberof Polygon.prototype
+     * @memberof Polygon
      * @function
      * @param {number} x
      * @param {number} [y=x]
@@ -5515,7 +5515,7 @@ export class Polygon {
     /**
      * Scale this Polygon by the given vector
      * @name scaleV
-     * @memberof Polygon.prototype
+     * @memberof Polygon
      * @function
      * @param {Vector2d} v
      * @returns {Polygon} Reference to this object for method chaining
@@ -5525,7 +5525,7 @@ export class Polygon {
      * Computes the calculated collision polygon.
      * This **must** be called if the `points` array, `angle`, or `offset` is modified manually.
      * @name recalc
-     * @memberof Polygon.prototype
+     * @memberof Polygon
      * @function
      * @returns {Polygon} Reference to this object for method chaining
      */
@@ -5533,7 +5533,7 @@ export class Polygon {
     /**
      * returns a list of indices for all triangles defined in this polygon
      * @name getIndices
-     * @memberof Polygon.prototype
+     * @memberof Polygon
      * @function
      * @returns {Array} an array of vertex indices for all triangles forming this polygon.
      */
@@ -5541,7 +5541,7 @@ export class Polygon {
     /**
      * Returns true if the vertices composing this polygon form a convex shape (vertices must be in clockwise order).
      * @name isConvex
-     * @memberof Polygon.prototype
+     * @memberof Polygon
      * @function
      * @returns {boolean} true if the vertices are convex, false if not, null if not computable
      */
@@ -5549,7 +5549,7 @@ export class Polygon {
     /**
      * translate the Polygon by the specified offset
      * @name translate
-     * @memberof Polygon.prototype
+     * @memberof Polygon
      * @function
      * @param {number} x x offset
      * @param {number} y y offset
@@ -5558,7 +5558,7 @@ export class Polygon {
     /**
      * translate the Polygon by the specified vector
      * @name translate
-     * @memberof Polygon.prototype
+     * @memberof Polygon
      * @function
      * @param {Vector2d} v vector offset
      * @returns {Polygon} Reference to this object for method chaining
@@ -5567,14 +5567,14 @@ export class Polygon {
     /**
      * Shifts the Polygon to the given position vector.
      * @name shift
-     * @memberof Polygon.prototype
+     * @memberof Polygon
      * @function
      * @param {Vector2d} position
      */
     /**
      * Shifts the Polygon to the given x, y position.
      * @name shift
-     * @memberof Polygon.prototype
+     * @memberof Polygon
      * @function
      * @param {number} x
      * @param {number} y
@@ -5585,7 +5585,7 @@ export class Polygon {
      * (Note: it is highly recommended to first do a hit test on the corresponding <br>
      *  bounding rect, as the function can be highly consuming with complex shapes)
      * @name contains
-     * @memberof Polygon.prototype
+     * @memberof Polygon
      * @function
      * @param {Vector2d} point
      * @returns {boolean} true if contains
@@ -5595,7 +5595,7 @@ export class Polygon {
      * (Note: it is highly recommended to first do a hit test on the corresponding <br>
      *  bounding rect, as the function can be highly consuming with complex shapes)
      * @name contains
-     * @memberof Polygon.prototype
+     * @memberof Polygon
      * @function
      * @param  {number} x x coordinate
      * @param  {number} y y coordinate
@@ -5605,7 +5605,7 @@ export class Polygon {
     /**
      * returns the bounding box for this shape, the smallest Rectangle object completely containing this shape.
      * @name getBounds
-     * @memberof Polygon.prototype
+     * @memberof Polygon
      * @function
      * @returns {Bounds} this shape bounding box Rectangle object
      */
@@ -5614,7 +5614,7 @@ export class Polygon {
      * update the bounding box for this shape.
      * @ignore
      * @name updateBounds
-     * @memberof Polygon.prototype
+     * @memberof Polygon
      * @function
      * @returns {Bounds} this shape bounding box Rectangle object
      */
@@ -5622,7 +5622,7 @@ export class Polygon {
     /**
      * clone this Polygon
      * @name clone
-     * @memberof Polygon.prototype
+     * @memberof Polygon
      * @function
      * @returns {Polygon} new Polygon
      */
@@ -5730,7 +5730,7 @@ export class Rect extends Polygon {
     /**
      * set new value to the rectangle shape
      * @name setShape
-     * @memberof Rect.prototype
+     * @memberof Rect
      * @function
      * @param {number} x position of the Rectangle
      * @param {number} y position of the Rectangle
@@ -5744,7 +5744,7 @@ export class Rect extends Polygon {
      * @public
      * @type {number}
      * @name left
-     * @memberof Rect.prototype
+     * @memberof Rect
      */
     public get left(): number;
     /**
@@ -5752,7 +5752,7 @@ export class Rect extends Polygon {
      * @public
      * @type {number}
      * @name right
-     * @memberof Rect.prototype
+     * @memberof Rect
      */
     public get right(): number;
     /**
@@ -5760,7 +5760,7 @@ export class Rect extends Polygon {
      * @public
      * @type {number}
      * @name top
-     * @memberof Rect.prototype
+     * @memberof Rect
      */
     public get top(): number;
     /**
@@ -5768,7 +5768,7 @@ export class Rect extends Polygon {
      * @public
      * @type {number}
      * @name bottom
-     * @memberof Rect.prototype
+     * @memberof Rect
      */
     public get bottom(): number;
     public set width(arg: number);
@@ -5777,7 +5777,7 @@ export class Rect extends Polygon {
      * @public
      * @type {number}
      * @name width
-     * @memberof Rect.prototype
+     * @memberof Rect
      */
     public get width(): number;
     public set height(arg: number);
@@ -5786,7 +5786,7 @@ export class Rect extends Polygon {
      * @public
      * @type {number}
      * @name height
-     * @memberof Rect.prototype
+     * @memberof Rect
      */
     public get height(): number;
     public set centerX(arg: number);
@@ -5795,7 +5795,7 @@ export class Rect extends Polygon {
      * @public
      * @type {number}
      * @name centerX
-     * @memberof Rect.prototype
+     * @memberof Rect
      */
     public get centerX(): number;
     public set centerY(arg: number);
@@ -5804,13 +5804,13 @@ export class Rect extends Polygon {
      * @public
      * @type {number}
      * @name centerY
-     * @memberof Rect.prototype
+     * @memberof Rect
      */
     public get centerY(): number;
     /**
      * center the rectangle position around the given coordinates
      * @name centerOn
-     * @memberof Rect.prototype
+     * @memberof Rect
      * @function
      * @param {number} x the x coordinate around which to center this rectangle
      * @param {number} x the y coordinate around which to center this rectangle
@@ -5820,7 +5820,7 @@ export class Rect extends Polygon {
     /**
      * resize the rectangle
      * @name resize
-     * @memberof Rect.prototype
+     * @memberof Rect
      * @function
      * @param {number} w new width of the rectangle
      * @param {number} h new height of the rectangle
@@ -5830,7 +5830,7 @@ export class Rect extends Polygon {
     /**
      * scale the rectangle
      * @name scale
-     * @memberof Rect.prototype
+     * @memberof Rect
      * @function
      * @param {number} x a number representing the abscissa of the scaling vector.
      * @param {number} [y=x] a number representing the ordinate of the scaling vector.
@@ -5840,7 +5840,7 @@ export class Rect extends Polygon {
     /**
      * clone this rectangle
      * @name clone
-     * @memberof Rect.prototype
+     * @memberof Rect
      * @function
      * @returns {Rect} new rectangle
      */
@@ -5848,7 +5848,7 @@ export class Rect extends Polygon {
     /**
      * copy the position and size of the given rectangle into this one
      * @name copy
-     * @memberof Rect.prototype
+     * @memberof Rect
      * @function
      * @param {Rect} rect Source rectangle
      * @returns {Rect} new rectangle
@@ -5857,7 +5857,7 @@ export class Rect extends Polygon {
     /**
      * merge this rectangle with another one
      * @name union
-     * @memberof Rect.prototype
+     * @memberof Rect
      * @function
      * @param {Rect} rect other rectangle to union with
      * @returns {Rect} the union(ed) rectangle
@@ -5866,7 +5866,7 @@ export class Rect extends Polygon {
     /**
      * check if this rectangle is intersecting with the specified one
      * @name overlaps
-     * @memberof Rect.prototype
+     * @memberof Rect
      * @function
      * @param {Rect} rect
      * @returns {boolean} true if overlaps
@@ -5875,7 +5875,7 @@ export class Rect extends Polygon {
     /**
      * check if this rectangle is identical to the specified one
      * @name equals
-     * @memberof Rect.prototype
+     * @memberof Rect
      * @function
      * @param {Rect} rect
      * @returns {boolean} true if equals
@@ -5884,7 +5884,7 @@ export class Rect extends Polygon {
     /**
      * determines whether all coordinates of this rectangle are finite numbers.
      * @name isFinite
-     * @memberof Rect.prototype
+     * @memberof Rect
      * @function
      * @returns {boolean} false if all coordinates are positive or negative Infinity or NaN; otherwise, true.
      */
@@ -5892,7 +5892,7 @@ export class Rect extends Polygon {
     /**
      * Returns a polygon whose edges are the same as this box.
      * @name toPolygon
-     * @memberof Rect.prototype
+     * @memberof Rect
      * @function
      * @returns {Polygon} a new Polygon that represents this rectangle.
      */
@@ -6203,7 +6203,7 @@ export class Renderable extends Rect {
     /**
      * get the renderable alpha channel value<br>
      * @name getOpacity
-     * @memberof Renderable.prototype
+     * @memberof Renderable
      * @function
      * @returns {number} current opacity value between 0 and 1
      */
@@ -6211,7 +6211,7 @@ export class Renderable extends Rect {
     /**
      * set the renderable alpha channel value<br>
      * @name setOpacity
-     * @memberof Renderable.prototype
+     * @memberof Renderable
      * @function
      * @param {number} alpha opacity value between 0.0 and 1.0
      */
@@ -6220,7 +6220,7 @@ export class Renderable extends Rect {
      * flip the renderable on the horizontal axis (around the center of the renderable)
      * @see Matrix2d#scaleX
      * @name flipX
-     * @memberof Renderable.prototype
+     * @memberof Renderable
      * @function
      * @param {boolean} [flip=true] `true` to flip this renderable.
      * @returns {Renderable} Reference to this object for method chaining
@@ -6230,7 +6230,7 @@ export class Renderable extends Rect {
      * flip the renderable on the vertical axis (around the center of the renderable)
      * @see Matrix2d#scaleY
      * @name flipY
-     * @memberof Renderable.prototype
+     * @memberof Renderable
      * @function
      * @param {boolean} [flip=true] `true` to flip this renderable.
      * @returns {Renderable} Reference to this object for method chaining
@@ -6239,7 +6239,7 @@ export class Renderable extends Rect {
     /**
      * multiply the renderable currentTransform with the given matrix
      * @name transform
-     * @memberof Renderable.prototype
+     * @memberof Renderable
      * @see Renderable#currentTransform
      * @function
      * @param {Matrix2d} m the transformation matrix
@@ -6267,7 +6267,7 @@ export class Renderable extends Rect {
     /**
      * Rotate this renderable towards the given target.
      * @name lookAt
-     * @memberof Renderable.prototype
+     * @memberof Renderable
      * @function
      * @param {Renderable|Vector2d|Vector3d} target the renderable or position to look at
      * @returns {Renderable} Reference to this object for method chaining
@@ -6276,7 +6276,7 @@ export class Renderable extends Rect {
     /**
      * Rotate this renderable by the specified angle (in radians).
      * @name rotate
-     * @memberof Renderable.prototype
+     * @memberof Renderable
      * @function
      * @param {number} angle The angle to rotate (in radians)
      * @param {Vector2d|ObservableVector2d} [v] an optional point to rotate around
@@ -6290,7 +6290,7 @@ export class Renderable extends Rect {
      * is an image, the image.width and image.height properties are unaltered but the currentTransform
      * member will be changed.
      * @name scale
-     * @memberof Renderable.prototype
+     * @memberof Renderable
      * @function
      * @param {number} x a number representing the abscissa of the scaling vector.
      * @param {number} [y=x] a number representing the ordinate of the scaling vector.
@@ -6300,7 +6300,7 @@ export class Renderable extends Rect {
     /**
      * scale the renderable around his anchor point
      * @name scaleV
-     * @memberof Renderable.prototype
+     * @memberof Renderable
      * @function
      * @param {Vector2d} v scaling vector
      * @returns {Renderable} Reference to this object for method chaining
@@ -6310,7 +6310,7 @@ export class Renderable extends Rect {
      * update function. <br>
      * automatically called by the game manager {@link game}
      * @name update
-     * @memberof Renderable.prototype
+     * @memberof Renderable
      * @function
      * @protected
      * @param {number} dt time since the last update in milliseconds.
@@ -6321,14 +6321,14 @@ export class Renderable extends Rect {
      * update the renderable's bounding rect (private)
      * @ignore
      * @name updateBoundsPos
-     * @memberof Renderable.prototype
+     * @memberof Renderable
      * @function
      */
     updateBoundsPos(newX: any, newY: any): void;
     /**
      * return the renderable absolute position in the game world
      * @name getAbsolutePosition
-     * @memberof Renderable.prototype
+     * @memberof Renderable
      * @function
      * @returns {Vector2d}
      */
@@ -6338,7 +6338,7 @@ export class Renderable extends Rect {
      * called when the anchor point value is changed
      * @private
      * @name onAnchorUpdate
-     * @memberof Renderable.prototype
+     * @memberof Renderable
      * @function
      * @param {number} x the new X value to be set for the anchor
      * @param {number} y the new Y value to be set for the anchor
@@ -6349,7 +6349,7 @@ export class Renderable extends Rect {
      * (apply defined transforms, anchor point). <br>
      * automatically called by the game manager {@link game}
      * @name preDraw
-     * @memberof Renderable.prototype
+     * @memberof Renderable
      * @function
      * @protected
      * @param {CanvasRenderer|WebGLRenderer} renderer a renderer object
@@ -6359,7 +6359,7 @@ export class Renderable extends Rect {
      * object draw. <br>
      * automatically called by the game manager {@link game}
      * @name draw
-     * @memberof Renderable.prototype
+     * @memberof Renderable
      * @function
      * @protected
      * @param {CanvasRenderer|WebGLRenderer} renderer a renderer object
@@ -6369,7 +6369,7 @@ export class Renderable extends Rect {
      * restore the rendering context after drawing. <br>
      * automatically called by the game manager {@link game}
      * @name postDraw
-     * @memberof Renderable.prototype
+     * @memberof Renderable
      * @function
      * @protected
      * @param {CanvasRenderer|WebGLRenderer} renderer a renderer object
@@ -6379,7 +6379,7 @@ export class Renderable extends Rect {
      * onCollision callback, triggered in case of collision,
      * when this renderable body is colliding with another one
      * @name onCollision
-     * @memberof Renderable.prototype
+     * @memberof Renderable
      * @function
      * @param {collision.ResponseObject} response the collision response object
      * @param {Renderable} other the other renderable touching this one (a reference to response.a or response.b)
@@ -6501,21 +6501,21 @@ export class Renderer {
     /**
      * prepare the framebuffer for drawing a new frame
      * @name clear
-     * @memberof Renderer.prototype
+     * @memberof Renderer
      * @function
      */
     clear(): void;
     /**
      * Reset context state
      * @name reset
-     * @memberof Renderer.prototype
+     * @memberof Renderer
      * @function
      */
     reset(): void;
     /**
      * return a reference to the system canvas
      * @name getCanvas
-     * @memberof Renderer.prototype
+     * @memberof Renderer
      * @function
      * @returns {HTMLCanvasElement}
      */
@@ -6523,7 +6523,7 @@ export class Renderer {
     /**
      * return a reference to the screen canvas
      * @name getScreenCanvas
-     * @memberof Renderer.prototype
+     * @memberof Renderer
      * @function
      * @returns {HTMLCanvasElement}
      */
@@ -6532,7 +6532,7 @@ export class Renderer {
      * return a reference to the screen canvas corresponding 2d Context<br>
      * (will return buffered context if double buffering is enabled, or a reference to the Screen Context)
      * @name getScreenContext
-     * @memberof Renderer.prototype
+     * @memberof Renderer
      * @function
      * @returns {CanvasRenderingContext2D}
      */
@@ -6540,7 +6540,7 @@ export class Renderer {
     /**
      * returns the current blend mode for this renderer
      * @name getBlendMode
-     * @memberof Renderer.prototype
+     * @memberof Renderer
      * @function
      * @returns {string} blend mode
      */
@@ -6549,7 +6549,7 @@ export class Renderer {
      * Returns the 2D Context object of the given Canvas<br>
      * Also configures anti-aliasing and blend modes based on constructor options.
      * @name getContext2d
-     * @memberof Renderer.prototype
+     * @memberof Renderer
      * @function
      * @param {HTMLCanvasElement} canvas
      * @param {boolean} [transparent=true] use false to disable transparency
@@ -6559,7 +6559,7 @@ export class Renderer {
     /**
      * return the width of the system Canvas
      * @name getWidth
-     * @memberof Renderer.prototype
+     * @memberof Renderer
      * @function
      * @returns {number}
      */
@@ -6567,7 +6567,7 @@ export class Renderer {
     /**
      * return the height of the system Canvas
      * @name getHeight
-     * @memberof Renderer.prototype
+     * @memberof Renderer
      * @function
      * @returns {number} height of the system Canvas
      */
@@ -6575,7 +6575,7 @@ export class Renderer {
     /**
      * get the current fill & stroke style color.
      * @name getColor
-     * @memberof Renderer.prototype
+     * @memberof Renderer
      * @function
      * @returns {Color} current global color
      */
@@ -6583,7 +6583,7 @@ export class Renderer {
     /**
      * return the current global alpha
      * @name globalAlpha
-     * @memberof Renderer.prototype
+     * @memberof Renderer
      * @function
      * @returns {number}
      */
@@ -6591,7 +6591,7 @@ export class Renderer {
     /**
      * check if the given rect or bounds overlaps with the renderer screen coordinates
      * @name overlaps
-     * @memberof Renderer.prototype
+     * @memberof Renderer
      * @function
      * @param {Rect|Bounds} bounds
      * @returns {boolean} true if overlaps
@@ -6600,7 +6600,7 @@ export class Renderer {
     /**
      * resizes the system canvas
      * @name resize
-     * @memberof Renderer.prototype
+     * @memberof Renderer
      * @function
      * @param {number} width new width of the canvas
      * @param {number} height new height of the canvas
@@ -6609,7 +6609,7 @@ export class Renderer {
     /**
      * enable/disable image smoothing (scaling interpolation) for the given context
      * @name setAntiAlias
-     * @memberof Renderer.prototype
+     * @memberof Renderer
      * @function
      * @param {CanvasRenderingContext2D} context
      * @param {boolean} [enable=false]
@@ -6618,7 +6618,7 @@ export class Renderer {
     /**
      * set/change the current projection matrix (WebGL only)
      * @name setProjection
-     * @memberof Renderer.prototype
+     * @memberof Renderer
      * @function
      * @param {Matrix3d} matrix
      */
@@ -6626,7 +6626,7 @@ export class Renderer {
     /**
      * stroke the given shape
      * @name stroke
-     * @memberof Renderer.prototype
+     * @memberof Renderer
      * @function
      * @param {Rect|RoundRect|Polygon|Line|Ellipse} shape a shape object to stroke
      * @param {boolean} [fill=false] fill the shape with the current color if true
@@ -6635,7 +6635,7 @@ export class Renderer {
     /**
      * fill the given shape
      * @name fill
-     * @memberof Renderer.prototype
+     * @memberof Renderer
      * @function
      * @param {Rect|RoundRect|Polygon|Line|Ellipse} shape a shape object to fill
      */
@@ -6643,7 +6643,7 @@ export class Renderer {
     /**
      * tint the given image or canvas using the given color
      * @name tint
-     * @memberof Renderer.prototype
+     * @memberof Renderer
      * @function
      * @param {HTMLImageElement|HTMLCanvasElement|OffscreenCanvas} src the source image to be tinted
      * @param {Color|string} color the color that will be used to tint the image
@@ -6656,7 +6656,7 @@ export class Renderer {
      * So, if the renderable is larger than the mask, only the intersecting part of the renderable will be visible.
      * Mask are not preserved through renderer context save and restore.
      * @name setMask
-     * @memberof Renderer.prototype
+     * @memberof Renderer
      * @function
      * @param {Rect|RoundRect|Polygon|Line|Ellipse} [mask] the shape defining the mask to be applied
      */
@@ -6665,14 +6665,14 @@ export class Renderer {
      * disable (remove) the rendering mask set through setMask.
      * @name clearMask
      * @see Renderer#setMask
-     * @memberof Renderer.prototype
+     * @memberof Renderer
      * @function
      */
     clearMask(): void;
     /**
      * set a coloring tint for sprite based renderables
      * @name setTint
-     * @memberof Renderer.prototype
+     * @memberof Renderer
      * @function
      * @param {Color} tint the tint color
      * @param {number} [alpha] an alpha value to be applied to the tint
@@ -6682,7 +6682,7 @@ export class Renderer {
      * clear the rendering tint set through setTint.
      * @name clearTint
      * @see Renderer#setTint
-     * @memberof Renderer.prototype
+     * @memberof Renderer
      * @function
      */
     clearTint(): void;
@@ -6713,7 +6713,7 @@ export class RoundRect extends Rect {
      * @type {number}
      * @default 20
      * @name radius
-     * @memberof RoundRect.prototype
+     * @memberof RoundRect
      */
     public get radius(): number;
     /** @ignore */
@@ -6722,7 +6722,7 @@ export class RoundRect extends Rect {
     /**
      * copy the position, size and radius of the given rounded rectangle into this one
      * @name copy
-     * @memberof RoundRect.prototype
+     * @memberof RoundRect
      * @function
      * @param {RoundRect} rrect source rounded rectangle
      * @returns {RoundRect} new rectangle
@@ -6731,7 +6731,7 @@ export class RoundRect extends Rect {
     /**
      * check if this RoundRect is identical to the specified one
      * @name equals
-     * @memberof RoundRect.prototype
+     * @memberof RoundRect
      * @function
      * @param {RoundRect} rrect
      * @returns {boolean} true if equals
@@ -6740,7 +6740,7 @@ export class RoundRect extends Rect {
     /**
      * clone this RoundRect
      * @name clone
-     * @memberof RoundRect.prototype
+     * @memberof RoundRect
      * @function
      * @returns {RoundRect} new RoundRect
      */
@@ -6852,7 +6852,7 @@ export class Sprite extends Renderable {
     /**
      * return the flickering state of the object
      * @name isFlickering
-     * @memberof Sprite.prototype
+     * @memberof Sprite
      * @function
      * @returns {boolean}
      */
@@ -6860,7 +6860,7 @@ export class Sprite extends Renderable {
     /**
      * make the object flicker
      * @name flicker
-     * @memberof Sprite.prototype
+     * @memberof Sprite
      * @function
      * @param {number} duration expressed in milliseconds
      * @param {Function} callback Function to call when flickering ends
@@ -6879,7 +6879,7 @@ export class Sprite extends Renderable {
      * logic as per the following example :<br>
      * <img src="images/spritesheet_grid.png"/>
      * @name addAnimation
-     * @memberof Sprite.prototype
+     * @memberof Sprite
      * @function
      * @param {string} name animation id
      * @param {number[]|string[]|object[]} index list of sprite index or name
@@ -6912,7 +6912,7 @@ export class Sprite extends Renderable {
      * set the current animation
      * this will always change the animation & set the frame to zero
      * @name setCurrentAnimation
-     * @memberof Sprite.prototype
+     * @memberof Sprite
      * @function
      * @param {string} name animation id
      * @param {string|Function} [resetAnim] animation id to switch to when complete, or callback
@@ -6952,7 +6952,7 @@ export class Sprite extends Renderable {
     /**
      * reverse the given or current animation if none is specified
      * @name reverseAnimation
-     * @memberof Sprite.prototype
+     * @memberof Sprite
      * @function
      * @param {string} [name] animation id
      * @returns {Sprite} Reference to this object for method chaining
@@ -6962,7 +6962,7 @@ export class Sprite extends Renderable {
     /**
      * return true if the specified animation is the current one.
      * @name isCurrentAnimation
-     * @memberof Sprite.prototype
+     * @memberof Sprite
      * @function
      * @param {string} name animation id
      * @returns {boolean}
@@ -6976,7 +6976,7 @@ export class Sprite extends Renderable {
      * change the current texture atlas region for this sprite
      * @see Texture.getRegion
      * @name setRegion
-     * @memberof Sprite.prototype
+     * @memberof Sprite
      * @function
      * @param {object} region typically returned through me.Texture.getRegion()
      * @returns {Sprite} Reference to this object for method chaining
@@ -6988,7 +6988,7 @@ export class Sprite extends Renderable {
     /**
      * force the current animation frame index.
      * @name setAnimationFrame
-     * @memberof Sprite.prototype
+     * @memberof Sprite
      * @function
      * @param {number} [idx=0] animation frame index
      * @returns {Sprite} Reference to this object for method chaining
@@ -7000,7 +7000,7 @@ export class Sprite extends Renderable {
     /**
      * return the current animation frame index.
      * @name getCurrentAnimationFrame
-     * @memberof Sprite.prototype
+     * @memberof Sprite
      * @function
      * @returns {number} current animation frame index
      */
@@ -7008,7 +7008,7 @@ export class Sprite extends Renderable {
     /**
      * Returns the frame object by the index.
      * @name getAnimationFrameObjectByIndex
-     * @memberof Sprite.prototype
+     * @memberof Sprite
      * @function
      * @ignore
      * @param {number} id the frame id
@@ -9582,14 +9582,14 @@ export class WebGLRenderer extends Renderer {
      * @name setCompositor
      * @function
      * @param {WebGLCompositor|string} compositor a compositor name or instance
-     * @memberof WebGLRenderer.prototype
+     * @memberof WebGLRenderer
      * @function
      */
     setCompositor(compositor?: WebGLCompositor | string): void;
     /**
      * Reset the gl transform to identity
      * @name resetTransform
-     * @memberof WebGLRenderer.prototype
+     * @memberof WebGLRenderer
      * @function
      */
     resetTransform(): void;
@@ -9608,7 +9608,7 @@ export class WebGLRenderer extends Renderer {
     /**
      * Create a pattern with the specified repetition
      * @name createPattern
-     * @memberof WebGLRenderer.prototype
+     * @memberof WebGLRenderer
      * @function
      * @param {Image} image Source image
      * @param {string} repeat Define how the pattern should be repeated
@@ -9624,14 +9624,14 @@ export class WebGLRenderer extends Renderer {
     /**
      * Flush the compositor to the frame buffer
      * @name flush
-     * @memberof WebGLRenderer.prototype
+     * @memberof WebGLRenderer
      * @function
      */
     flush(): void;
     /**
      * Clears the gl context with the given color.
      * @name clearColor
-     * @memberof WebGLRenderer.prototype
+     * @memberof WebGLRenderer
      * @function
      * @param {Color|string} [color="#000000"] CSS color.
      * @param {boolean} [opaque=false] Allow transparency [default] or clear the surface completely [true]
@@ -9640,7 +9640,7 @@ export class WebGLRenderer extends Renderer {
     /**
      * Erase the pixels in the given rectangular area by setting them to transparent black (rgba(0,0,0,0)).
      * @name clearRect
-     * @memberof WebGLRenderer.prototype
+     * @memberof WebGLRenderer
      * @function
      * @param {number} x x axis of the coordinate for the rectangle starting point.
      * @param {number} y y axis of the coordinate for the rectangle starting point.
@@ -9655,7 +9655,7 @@ export class WebGLRenderer extends Renderer {
     /**
      * Draw an image to the gl context
      * @name drawImage
-     * @memberof WebGLRenderer.prototype
+     * @memberof WebGLRenderer
      * @function
      * @param {Image} image An element to draw into the context. The specification permits any canvas image source (CanvasImageSource), specifically, a CSSImageValue, an HTMLImageElement, an SVGImageElement, an HTMLVideoElement, an HTMLCanvasElement, an ImageBitmap, or an OffscreenCanvas.
      * @param {number} sx The X coordinate of the top left corner of the sub-rectangle of the source image to draw into the destination context.
@@ -9678,7 +9678,7 @@ export class WebGLRenderer extends Renderer {
     /**
      * Draw a pattern within the given rectangle.
      * @name drawPattern
-     * @memberof WebGLRenderer.prototype
+     * @memberof WebGLRenderer
      * @function
      * @param {TextureAtlas} pattern Pattern object
      * @param {number} x
@@ -9691,7 +9691,7 @@ export class WebGLRenderer extends Renderer {
     /**
      * return a reference to the screen canvas corresponding WebGL Context
      * @name getScreenContext
-     * @memberof WebGLRenderer.prototype
+     * @memberof WebGLRenderer
      * @function
      * @returns {WebGLRenderingContext}
      */
@@ -9699,7 +9699,7 @@ export class WebGLRenderer extends Renderer {
     /**
      * Returns the WebGL Context object of the given Canvas
      * @name getContextGL
-     * @memberof WebGLRenderer.prototype
+     * @memberof WebGLRenderer
      * @function
      * @param {HTMLCanvasElement} canvas
      * @param {boolean} [transparent=true] use false to disable transparency
@@ -9710,7 +9710,7 @@ export class WebGLRenderer extends Renderer {
      * Returns the WebGLContext instance for the renderer
      * return a reference to the system 2d Context
      * @name getContext
-     * @memberof WebGLRenderer.prototype
+     * @memberof WebGLRenderer
      * @function
      * @returns {WebGLRenderingContext}
      */
@@ -9728,7 +9728,7 @@ export class WebGLRenderer extends Renderer {
      * <img src="images/screen-blendmode.png" width="510"/> <br>
      * @name setBlendMode
      * @see https://developer.mozilla.org/en-US/docs/Web/API/CanvasRenderingContext2D/globalCompositeOperation
-     * @memberof WebGLRenderer.prototype
+     * @memberof WebGLRenderer
      * @function
      * @param {string} [mode="normal"] blend mode : "normal", "multiply", "lighter", "additive", "screen"
      * @param {WebGLRenderingContext} [gl]
@@ -9743,21 +9743,21 @@ export class WebGLRenderer extends Renderer {
     /**
      * restores the canvas context
      * @name restore
-     * @memberof WebGLRenderer.prototype
+     * @memberof WebGLRenderer
      * @function
      */
     restore(): void;
     /**
      * saves the canvas context
      * @name save
-     * @memberof WebGLRenderer.prototype
+     * @memberof WebGLRenderer
      * @function
      */
     save(): void;
     /**
      * rotates the uniform matrix
      * @name rotate
-     * @memberof WebGLRenderer.prototype
+     * @memberof WebGLRenderer
      * @function
      * @param {number} angle in radians
      */
@@ -9765,7 +9765,7 @@ export class WebGLRenderer extends Renderer {
     /**
      * scales the uniform matrix
      * @name scale
-     * @memberof WebGLRenderer.prototype
+     * @memberof WebGLRenderer
      * @function
      * @param {number} x
      * @param {number} y
@@ -9779,7 +9779,7 @@ export class WebGLRenderer extends Renderer {
     /**
      * Set the global alpha
      * @name setGlobalAlpha
-     * @memberof WebGLRenderer.prototype
+     * @memberof WebGLRenderer
      * @function
      * @param {number} alpha 0.0 to 1.0 values accepted.
      */
@@ -9787,7 +9787,7 @@ export class WebGLRenderer extends Renderer {
     /**
      * Return the global alpha
      * @name getGlobalAlpha
-     * @memberof WebGLRenderer.prototype
+     * @memberof WebGLRenderer
      * @function
      * @returns {number} global alpha value
      */
@@ -9796,7 +9796,7 @@ export class WebGLRenderer extends Renderer {
      * Set the current fill & stroke style color.
      * By default, or upon reset, the value is set to #000000.
      * @name setColor
-     * @memberof WebGLRenderer.prototype
+     * @memberof WebGLRenderer
      * @function
      * @param {Color|string} color css color string.
      */
@@ -9804,7 +9804,7 @@ export class WebGLRenderer extends Renderer {
     /**
      * Set the line width
      * @name setLineWidth
-     * @memberof WebGLRenderer.prototype
+     * @memberof WebGLRenderer
      * @function
      * @param {number} width Line width
      */
@@ -9812,7 +9812,7 @@ export class WebGLRenderer extends Renderer {
     /**
      * Stroke an arc at the specified coordinates with given radius, start and end points
      * @name strokeArc
-     * @memberof WebGLRenderer.prototype
+     * @memberof WebGLRenderer
      * @function
      * @param {number} x arc center point x-axis
      * @param {number} y arc center point y-axis
@@ -9826,7 +9826,7 @@ export class WebGLRenderer extends Renderer {
     /**
      * Fill an arc at the specified coordinates with given radius, start and end points
      * @name fillArc
-     * @memberof WebGLRenderer.prototype
+     * @memberof WebGLRenderer
      * @function
      * @param {number} x arc center point x-axis
      * @param {number} y arc center point y-axis
@@ -9839,7 +9839,7 @@ export class WebGLRenderer extends Renderer {
     /**
      * Stroke an ellipse at the specified coordinates with given radius
      * @name strokeEllipse
-     * @memberof WebGLRenderer.prototype
+     * @memberof WebGLRenderer
      * @function
      * @param {number} x ellipse center point x-axis
      * @param {number} y ellipse center point y-axis
@@ -9851,7 +9851,7 @@ export class WebGLRenderer extends Renderer {
     /**
      * Fill an ellipse at the specified coordinates with given radius
      * @name fillEllipse
-     * @memberof WebGLRenderer.prototype
+     * @memberof WebGLRenderer
      * @function
      * @param {number} x ellipse center point x-axis
      * @param {number} y ellipse center point y-axis
@@ -9862,7 +9862,7 @@ export class WebGLRenderer extends Renderer {
     /**
      * Stroke a line of the given two points
      * @name strokeLine
-     * @memberof WebGLRenderer.prototype
+     * @memberof WebGLRenderer
      * @function
      * @param {number} startX the start x coordinate
      * @param {number} startY the start y coordinate
@@ -9873,7 +9873,7 @@ export class WebGLRenderer extends Renderer {
     /**
      * Fill a line of the given two points
      * @name fillLine
-     * @memberof WebGLRenderer.prototype
+     * @memberof WebGLRenderer
      * @function
      * @param {number} startX the start x coordinate
      * @param {number} startY the start y coordinate
@@ -9884,7 +9884,7 @@ export class WebGLRenderer extends Renderer {
     /**
      * Stroke a me.Polygon on the screen with a specified color
      * @name strokePolygon
-     * @memberof WebGLRenderer.prototype
+     * @memberof WebGLRenderer
      * @function
      * @param {Polygon} poly the shape to draw
      * @param {boolean} [fill=false] also fill the shape with the current color if true
@@ -9893,7 +9893,7 @@ export class WebGLRenderer extends Renderer {
     /**
      * Fill a me.Polygon on the screen
      * @name fillPolygon
-     * @memberof WebGLRenderer.prototype
+     * @memberof WebGLRenderer
      * @function
      * @param {Polygon} poly the shape to draw
      */
@@ -9901,7 +9901,7 @@ export class WebGLRenderer extends Renderer {
     /**
      * Draw a stroke rectangle at the specified coordinates
      * @name strokeRect
-     * @memberof WebGLRenderer.prototype
+     * @memberof WebGLRenderer
      * @function
      * @param {number} x
      * @param {number} y
@@ -9913,7 +9913,7 @@ export class WebGLRenderer extends Renderer {
     /**
      * Draw a filled rectangle at the specified coordinates
      * @name fillRect
-     * @memberof WebGLRenderer.prototype
+     * @memberof WebGLRenderer
      * @function
      * @param {number} x
      * @param {number} y
@@ -9924,7 +9924,7 @@ export class WebGLRenderer extends Renderer {
     /**
      * Stroke a rounded rectangle at the specified coordinates
      * @name strokeRoundRect
-     * @memberof WebGLRenderer.prototype
+     * @memberof WebGLRenderer
      * @function
      * @param {number} x
      * @param {number} y
@@ -9937,7 +9937,7 @@ export class WebGLRenderer extends Renderer {
     /**
      * Draw a rounded filled rectangle at the specified coordinates
      * @name fillRoundRect
-     * @memberof WebGLRenderer.prototype
+     * @memberof WebGLRenderer
      * @function
      * @param {number} x
      * @param {number} y
@@ -9950,7 +9950,7 @@ export class WebGLRenderer extends Renderer {
      * Reset (overrides) the renderer transformation matrix to the
      * identity one, and then apply the given transformation matrix.
      * @name setTransform
-     * @memberof WebGLRenderer.prototype
+     * @memberof WebGLRenderer
      * @function
      * @param {Matrix2d} mat2d Matrix to transform by
      */
@@ -9958,7 +9958,7 @@ export class WebGLRenderer extends Renderer {
     /**
      * Multiply given matrix into the renderer tranformation matrix
      * @name transform
-     * @memberof WebGLRenderer.prototype
+     * @memberof WebGLRenderer
      * @function
      * @param {Matrix2d} mat2d Matrix to transform by
      */
@@ -9966,7 +9966,7 @@ export class WebGLRenderer extends Renderer {
     /**
      * Translates the uniform matrix by the given coordinates
      * @name translate
-     * @memberof WebGLRenderer.prototype
+     * @memberof WebGLRenderer
      * @function
      * @param {number} x
      * @param {number} y
@@ -9979,7 +9979,7 @@ export class WebGLRenderer extends Renderer {
      * and restore it (with the restore() method) any time in the future.
      * (<u>this is an experimental feature !</u>)
      * @name clipRect
-     * @memberof WebGLRenderer.prototype
+     * @memberof WebGLRenderer
      * @function
      * @param {number} x
      * @param {number} y
