@@ -1,12 +1,15 @@
 # Changelog
 
-## [10.10.0] (melonJS 2) - _2022-05-21_
+## [10.10.0] (melonJS 2) - _2022-xx-xx_
 
 ### Added
 - Core: new `CanvasTexture` object to allow recycling canvas through the engine (text caching, default particles, effect, etc..)
 - Color : allow overriding the alpha component with a specific value when calling `toRGBA` or `toHex8`
 - Renderer: support reverse clipping when applying geometry masks (alpha component of the masked area is ignored in legacy Canvas rendering mode)
 - Renderer: added multiple clipping region for masks (only works with overlapping region in legacy Canvas rendering mode)
+
+### Changed
+- TMX: replaced use of `eval()` by `Function()` when parsing map including executable code
 
 ## [10.9.0] (melonJS 2) - _2022-05-21_
 
@@ -22,7 +25,7 @@
 - Geometry : new RoundRect geometry object
 - Geometry : new Path2D API to provide better abstraction when drawing primitives in WebGL
 
-### changed
+### Changed
 - Renderer: refactored the WebGL renderer to use the new Path2D API for primitive drawing
 
 ### Fixed
@@ -1179,6 +1182,7 @@
 - first public version with alex4 !
 - www.melonjs.org is live :)
 
+[10.10.0]: https://github.com/melonjs/melonJS/compare/10.9.0...10.10.0
 [10.9.0]: https://github.com/melonjs/melonJS/compare/10.8.0...10.9.0
 [10.8.0]: https://github.com/melonjs/melonJS/compare/10.7.1...10.8.0
 [10.7.1]: https://github.com/melonjs/melonJS/compare/10.7.0...10.7.1
