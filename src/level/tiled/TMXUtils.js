@@ -48,7 +48,7 @@ function setTMXValue(name, type, value) {
                 match = value.split(/^eval:/i)[1];
                 try {
                     // eslint-disable-next-line
-                    value = eval(match);
+                    value = Function("'use strict';return (" + match + ")")();
                 }
                 catch (e) {
                     throw new Error("Unable to evaluate: " + match);
