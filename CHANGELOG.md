@@ -4,6 +4,7 @@
 
 ### Added
 - Core: new `CanvasTexture` object to allow recycling canvas through the engine (text caching, default particles, effect, etc..)
+- Core : new experimental light effect that simply simulate a spot/point light for now (work in progress)
 - Color : allow overriding the alpha component with a specific value when calling `toRGBA` or `toHex8`
 - Renderer: support reverse clipping when applying geometry masks (alpha component of the masked area is ignored in legacy Canvas rendering mode)
 - Renderer: added multiple clipping region for masks (only works with overlapping region in legacy Canvas rendering mode)

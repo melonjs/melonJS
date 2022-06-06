@@ -54,6 +54,7 @@ import NineSliceSprite from "./renderable/nineslicesprite.js";
 import GUI_Object from "./renderable/GUI.js";
 import Collectable from "./renderable/collectable.js";
 import Trigger from "./renderable/trigger.js";
+import Light2d from "./renderable/light2d.js";
 import { Draggable, DropTarget } from "./renderable/dragndrop.js";
 import TMXRenderer from "./level/tiled/renderer/TMXRenderer.js";
 import TMXOrthogonalRenderer from "./level/tiled/renderer/TMXOrthogonalRenderer.js";
@@ -141,6 +142,7 @@ export {
     GUI_Object,
     Collectable,
     Trigger,
+    Light2d,
     Draggable,
     DropTarget,
     TMXRenderer,
@@ -203,6 +205,7 @@ export function boot() {
     pool.register("me.Entity", Entity);
     pool.register("me.Collectable", Collectable);
     pool.register("me.Trigger", Trigger);
+    pool.register("me.Light2d", Light2d);
     pool.register("me.Tween", Tween, true);
     pool.register("me.Color", Color, true);
     pool.register("me.Particle", Particle, true);
@@ -231,6 +234,7 @@ export function boot() {
     pool.register("Entity", Entity);
     pool.register("Collectable", Collectable);
     pool.register("Trigger", Trigger);
+    pool.register("Light2d", Light2d);
     pool.register("Tween", Tween, true);
     pool.register("Color", Color, true);
     pool.register("Particle", Particle, true);
