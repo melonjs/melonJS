@@ -47,7 +47,6 @@
     "dist/melonjs.min.js",
     "dist/melonjs.module.js",
     "dist/melonjs.module.d.ts",
-    "plugins/",
     "src/",
     "package.json",
     "README.md",
