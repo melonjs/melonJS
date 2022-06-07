@@ -98,7 +98,6 @@ function parseAttributes(obj, elt) {
 /**
  * decompress zlib/gzip data (NOT IMPLEMENTED)
  * @ignore
- * @function
  * @name decompress
  * @param  {number[]} data Array of bytes
  * @param  {string} format compressed data format ("gzip","zlib")
@@ -110,7 +109,6 @@ export function decompress() {
 /**
  * Decode a CSV encoded array into a binary array
  * @ignore
- * @function
  * @name decodeCSV
  * @param  {string} input CSV formatted data (only numbers, everything else will be converted to NaN)
  * @returns {number[]} Decoded data
@@ -128,7 +126,6 @@ export function decodeCSV(input) {
 /**
  * Decode a base64 encoded string into a byte array
  * @ignore
- * @function
  * @name decodeBase64AsArray
  * @param {string} input Base64 encoded data
  * @param {number} [bytes] number of bytes per array entry

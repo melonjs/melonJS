@@ -517,7 +517,6 @@ export function unload(sound_name) {
 /**
  * unload all audio to free memory
  * @function audio.unloadAll
- * @function
  * @example
  * me.audio.unloadAll();
  */

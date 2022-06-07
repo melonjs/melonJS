@@ -111,8 +111,7 @@ var keyUpEvent = function (e, keyCode, mouseButton) {
  * @namespace KEY
  * @memberof input
  */
-export var KEY = {
-    /** @memberof input.KEY */
+export const KEY = {
     "BACKSPACE" : 8,
     /** @memberof input.KEY */
     "TAB" : 9,
@@ -332,7 +331,6 @@ export function initKeyboardEvent() {
  * @name isKeyPressed
  * @memberof input
  * @public
- * @function
  * @param {string} action user defined corresponding action
  * @returns {boolean} true if pressed
  * @example
@@ -358,7 +356,6 @@ export function isKeyPressed(action) {
  * @name keyStatus
  * @memberof input
  * @public
- * @function
  * @param {string} action user defined corresponding action
  * @returns {boolean} down (true) or up(false)
  */
@@ -372,7 +369,6 @@ export function keyStatus(action) {
  * @name triggerKeyEvent
  * @memberof input
  * @public
- * @function
  * @param {number} keycode (See {@link input.KEY})
  * @param {boolean} [status=false] true to trigger a key down event, or false for key up event
  * @param {number} [mouseButton] the mouse button to trigger
@@ -395,7 +391,6 @@ export function triggerKeyEvent(keycode, status, mouseButton) {
  * @name bindKey
  * @memberof input
  * @public
- * @function
  * @param {number} keycode (See {@link input.KEY})
  * @param {string} action user defined corresponding action
  * @param {boolean} [lock=false] cancel the keypress event once read
@@ -422,7 +417,6 @@ export function bindKey(keycode, action, lock, preventDefault = preventDefaultAc
  * @name getBindingKey
  * @memberof input
  * @public
- * @function
  * @param {number} keycode (See {@link input.KEY})
  * @returns {string} user defined associated action
  */
@@ -435,7 +429,6 @@ export function getBindingKey(keycode) {
  * @name unlockKey
  * @memberof input
  * @public
- * @function
  * @param {string} action user defined corresponding action
  * @example
  * // Unlock jump when touching the ground
@@ -452,7 +445,6 @@ export function unlockKey(action) {
  * @name unbindKey
  * @memberof input
  * @public
- * @function
  * @param {number} keycode (See {@link input.KEY})
  * @example
  * me.input.unbindKey(me.input.KEY.LEFT);

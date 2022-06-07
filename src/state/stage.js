@@ -116,7 +116,6 @@ class Stage {
      * @name update
      * @memberof Stage
      * @ignore
-     * @function
      * @param {number} dt time since the last update in milliseconds.
      * @returns {boolean}
      */
@@ -147,7 +146,6 @@ class Stage {
      * @name draw
      * @memberof Stage
      * @ignore
-     * @function
      * @param {CanvasRenderer|WebGLRenderer} renderer a renderer object
      */
     draw(renderer) {
@@ -203,7 +201,6 @@ class Stage {
      * this is typically where you will load a level, add renderables, etc...
      * @name onResetEvent
      * @memberof Stage
-     * @function
      * @param {object} [...arguments] optional arguments passed when switching state
      * @see state#change
      */
@@ -220,7 +217,6 @@ class Stage {
      * called by the state manager before switching to another state
      * @name onDestroyEvent
      * @memberof Stage
-     * @function
      */
     onDestroyEvent() {
         // execute onDestroyEvent function if given through the constructor

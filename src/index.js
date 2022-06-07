@@ -193,7 +193,6 @@ export var skipAutoInit = false;
  * @name boot
  * @see skipAutoInit
  * @public
- * @function
  */
 export function boot() {
     // don't do anything if already initialized (should not happen anyway)

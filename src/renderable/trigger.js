@@ -105,7 +105,6 @@ class Trigger extends Renderable {
      * trigger this event
      * @name triggerEvent
      * @memberof Trigger
-     * @function
      * @protected
      */
     triggerEvent() {

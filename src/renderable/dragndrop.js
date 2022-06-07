@@ -33,7 +33,6 @@ export class Draggable extends Renderable {
      * transformed events.
      * @name initEvents
      * @memberof Draggable
-     * @function
      * @private
      */
     initEvents() {
@@ -57,7 +56,6 @@ export class Draggable extends Renderable {
      * Gets called when the user starts dragging the entity
      * @name dragStart
      * @memberof Draggable
-     * @function
      * @param {object} e the pointer event
      * @returns {boolean} false if the object is being dragged
      */
@@ -74,7 +72,6 @@ export class Draggable extends Renderable {
      * Gets called when the user drags this entity around
      * @name dragMove
      * @memberof Draggable
-     * @function
      * @param {object} e the pointer event
      */
     dragMove(e) {
@@ -88,7 +85,6 @@ export class Draggable extends Renderable {
      * Gets called when the user stops dragging the entity
      * @name dragEnd
      * @memberof Draggable
-     * @function
      * @returns {boolean} false if the object stopped being dragged
      */
     dragEnd() {
@@ -102,7 +98,6 @@ export class Draggable extends Renderable {
      * Destructor
      * @name destroy
      * @memberof Draggable
-     * @function
      * @ignore
      */
     destroy() {
@@ -173,7 +168,6 @@ export class DropTarget extends Renderable {
      * Sets the collision method which is going to be used to check a valid drop
      * @name setCheckMethod
      * @memberof DropTarget
-     * @function
      * @param {string} checkMethod the checkmethod (defaults to CHECKMETHOD_OVERLAP)
      */
     setCheckMethod(checkMethod) {
@@ -188,7 +182,6 @@ export class DropTarget extends Renderable {
      * Checks if a dropped entity is dropped on the current entity
      * @name checkOnMe
      * @memberof DropTarget
-     * @function
      * @param {object} e the triggering event
      * @param {Draggable} draggable the draggable object that is dropped
      */
@@ -203,7 +196,6 @@ export class DropTarget extends Renderable {
      * Gets called when a draggable entity is dropped on the current entity
      * @name drop
      * @memberof DropTarget
-     * @function
      * @param {Draggable} draggable the draggable object that is dropped
      */
     drop() {
@@ -214,7 +206,6 @@ export class DropTarget extends Renderable {
      * Destructor
      * @name destroy
      * @memberof DropTarget
-     * @function
      * @ignore
      */
     destroy() {

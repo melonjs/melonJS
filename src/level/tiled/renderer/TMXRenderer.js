@@ -27,7 +27,6 @@ class TMXRenderer {
      * return true if the renderer can render the specified map or layer
      * @name TMXRenderer#canRender
      * @public
-     * @function
      * @param {TMXTileMap|TMXLayer} component TMX Map or Layer
      * @returns {boolean}
      */
@@ -48,7 +47,6 @@ class TMXRenderer {
      * return the bounding rect for this map renderer
      * @name TMXRenderer#getBounds
      * @public
-     * @function
      * @param {TMXLayer} [layer] calculate the bounding rect for a specific layer (will return a new bounds object)
      * @returns {Bounds}
      */
@@ -66,7 +64,6 @@ class TMXRenderer {
      * return the tile position corresponding to the specified pixel
      * @name TMXRenderer#pixelToTileCoords
      * @public
-     * @function
      * @param {number} x X coordinate
      * @param {number} y Y coordinate
      * @param {Vector2d} [v] an optional vector object where to put the return values
@@ -80,7 +77,6 @@ class TMXRenderer {
      * return the pixel position corresponding of the specified tile
      * @name TMXRenderer#tileToPixelCoords
      * @public
-     * @function
      * @param {number} col tile horizontal position
      * @param {number} row tile vertical position
      * @param {Vector2d} [v] an optional vector object where to put the return values
@@ -94,7 +90,6 @@ class TMXRenderer {
      * draw the given tile at the specified layer
      * @name TMXRenderer#drawTile
      * @public
-     * @function
      * @param {CanvasRenderer|WebGLRenderer} renderer a renderer object
      * @param {number} x X coordinate where to draw the tile
      * @param {number} y Y coordinate where to draw the tile
@@ -107,7 +102,6 @@ class TMXRenderer {
      * draw the given TMX Layer for the given area
      * @name TMXRenderer#drawTileLayer
      * @public
-     * @function
      * @param {CanvasRenderer|WebGLRenderer} renderer a renderer object
      * @param {TMXLayer} layer a TMX Layer object
      * @param {Rect} rect the area of the layer to draw

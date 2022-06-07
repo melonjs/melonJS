@@ -66,7 +66,8 @@ class Text extends Renderable {
         /**
          * defines the color used to draw the font.<br>
          * @public
-         * @type {Color}
+         * @member {Color}
+         * @name Text#fillStyle
          * @default black
          */
         if (typeof settings.fillStyle !== "undefined") {

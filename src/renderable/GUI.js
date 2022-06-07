@@ -118,7 +118,6 @@ class GUI_Object extends Sprite {
      * @name onClick
      * @memberof GUI_Object
      * @public
-     * @function
      * @param {Pointer} event the event object
      * @returns {boolean} return false if we need to stop propagating the event
      */
@@ -141,7 +140,6 @@ class GUI_Object extends Sprite {
      * @name onOver
      * @memberof GUI_Object
      * @public
-     * @function
      * @param {Pointer} event the event object
      */
     onOver(/* event */) {}
@@ -162,7 +160,6 @@ class GUI_Object extends Sprite {
      * @name onOut
      * @memberof GUI_Object
      * @public
-     * @function
      * @param {Pointer} event the event object
      */
     onOut(/* event */) {
@@ -187,7 +184,6 @@ class GUI_Object extends Sprite {
      * @name onRelease
      * @memberof GUI_Object
      * @public
-     * @function
      * @returns {boolean} return false if we need to stop propagating the event
      */
     onRelease() {
@@ -212,7 +208,6 @@ class GUI_Object extends Sprite {
      * @name onHold
      * @memberof GUI_Object
      * @public
-     * @function
      */
     onHold() {}
 

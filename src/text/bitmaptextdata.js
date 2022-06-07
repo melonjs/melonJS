@@ -21,7 +21,6 @@ function getValueFromPair(string, pattern) {
  * @ignore
  * @name _getFirstGlyph
  * @memberof BitmapTextData
- * @function
  * @param {object} glyphs the map of glyphs, each key is a char code
  * @returns {Glyph}
  */
@@ -40,7 +39,6 @@ function getFirstGlyph(glyphs) {
  * @ignore
  * @name createSpaceGlyph
  * @memberof BitmapTextData
- * @function
  * @param {object} glyphs the map of glyphs, each key is a char code
  */
 function createSpaceGlyph(glyphs) {
@@ -100,7 +98,6 @@ class BitmapTextData {
      * This parses the font data text and builds a map of glyphs containing the data for each character
      * @name parse
      * @memberof BitmapTextData
-     * @function
      * @param {string} fontData
      */
     parse(fontData) {

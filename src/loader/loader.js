@@ -310,7 +310,6 @@ var loader = {
     /**
      * onload callback
      * @public
-     * @function
      * @name onload
      * @memberof loader
      * @example
@@ -324,7 +323,6 @@ var loader = {
      * each time a resource is loaded, the loader will fire the specified function,
      * giving the actual progress [0 ... 1], as argument, and an object describing the resource loaded
      * @public
-     * @function
      * @name onProgress
      * @memberof loader
      * @example
@@ -412,7 +410,6 @@ var loader = {
      * @name setBaseURL
      * @memberof loader
      * @public
-     * @function
      * @param {string} type  "*", "audio", binary", "image", "json", "js", "tmx", "tsx"
      * @param {string} [url="./"] default base URL
      * @example
@@ -443,7 +440,6 @@ var loader = {
      * @name preload
      * @memberof loader
      * @public
-     * @function
      * @param {object[]} res
      * @param {string} res.name internal name of the resource
      * @param {string} res.type  "audio", binary", "image", "json","js", "tmx", "tsx", "fontface"
@@ -508,7 +504,6 @@ var loader = {
      * @name load
      * @memberof loader
      * @public
-     * @function
      * @param {object} res
      * @param {string} res.name internal name of the resource
      * @param {string} res.type  "audio", binary", "image", "json", "tmx", "tsx"
@@ -578,7 +573,6 @@ var loader = {
      * @name unload
      * @memberof loader
      * @public
-     * @function
      * @param {object} res
      * @param {string} res.name internal name of the resource
      * @param {string} res.type  "audio", binary", "image", "json", "tmx", "tsx"
@@ -640,7 +634,6 @@ var loader = {
      * @name unloadAll
      * @memberof loader
      * @public
-     * @function
      * @example me.loader.unloadAll();
      */
     unloadAll() {
@@ -695,7 +688,6 @@ var loader = {
      * @name getTMX
      * @memberof loader
      * @public
-     * @function
      * @param {string} elt name of the tmx/tsx element ("map1");
      * @returns {object} requested element or null if not found
      */
@@ -713,7 +705,6 @@ var loader = {
      * @name getBinary
      * @memberof loader
      * @public
-     * @function
      * @param {string} elt name of the binary object ("ymTrack");
      * @returns {object} requested element or null if not found
      */
@@ -731,7 +722,6 @@ var loader = {
      * @name getImage
      * @memberof loader
      * @public
-     * @function
      * @param {string} image name of the Image element ("tileset-platformer");
      * @returns {HTMLImageElement} requested element or null if not found
      */
@@ -750,7 +740,6 @@ var loader = {
      * @name getJSON
      * @memberof loader
      * @public
-     * @function
      * @param {string} elt name of the json file to load
      * @returns {object}
      */

@@ -33,7 +33,6 @@ class Rect extends Polygon {
      * set new value to the rectangle shape
      * @name setShape
      * @memberof Rect
-     * @function
      * @param {number} x position of the Rectangle
      * @param {number} y position of the Rectangle
      * @param {number|Vector2d[]} w width of the rectangle, or an array of vector defining the rectangle
@@ -176,7 +175,6 @@ class Rect extends Polygon {
      * center the rectangle position around the given coordinates
      * @name centerOn
      * @memberof Rect
-     * @function
      * @param {number} x the x coordinate around which to center this rectangle
      * @param {number} x the y coordinate around which to center this rectangle
      * @returns {Rect} this rectangle
@@ -191,7 +189,6 @@ class Rect extends Polygon {
      * resize the rectangle
      * @name resize
      * @memberof Rect
-     * @function
      * @param {number} w new width of the rectangle
      * @param {number} h new height of the rectangle
      * @returns {Rect} this rectangle
@@ -206,7 +203,6 @@ class Rect extends Polygon {
      * scale the rectangle
      * @name scale
      * @memberof Rect
-     * @function
      * @param {number} x a number representing the abscissa of the scaling vector.
      * @param {number} [y=x] a number representing the ordinate of the scaling vector.
      * @returns {Rect} this rectangle
@@ -221,7 +217,6 @@ class Rect extends Polygon {
      * clone this rectangle
      * @name clone
      * @memberof Rect
-     * @function
      * @returns {Rect} new rectangle
      */
     clone() {
@@ -232,7 +227,6 @@ class Rect extends Polygon {
      * copy the position and size of the given rectangle into this one
      * @name copy
      * @memberof Rect
-     * @function
      * @param {Rect} rect Source rectangle
      * @returns {Rect} new rectangle
      */
@@ -244,7 +238,6 @@ class Rect extends Polygon {
      * merge this rectangle with another one
      * @name union
      * @memberof Rect
-     * @function
      * @param {Rect} rect other rectangle to union with
      * @returns {Rect} the union(ed) rectangle
      */
@@ -266,7 +259,6 @@ class Rect extends Polygon {
      * check if this rectangle is intersecting with the specified one
      * @name overlaps
      * @memberof Rect
-     * @function
      * @param {Rect} rect
      * @returns {boolean} true if overlaps
      */
@@ -283,7 +275,7 @@ class Rect extends Polygon {
      * Returns true if the rectangle contains the given rectangle
      * @name contains
      * @memberof Rect
-     * @function
+     * @method
      * @param {Rect} rect
      * @returns {boolean} true if contains
      */
@@ -292,7 +284,7 @@ class Rect extends Polygon {
      * Returns true if the rectangle contains the given point
      * @name contains
      * @memberof Rect
-     * @function
+     * @method
      * @param  {number} x x coordinate
      * @param  {number} y y coordinate
      * @returns {boolean} true if contains
@@ -302,7 +294,6 @@ class Rect extends Polygon {
      * Returns true if the rectangle contains the given point
      * @name contains
      * @memberof Rect
-     * @function
      * @param {Vector2d} point
      * @returns {boolean} true if contains
      */
@@ -338,7 +329,6 @@ class Rect extends Polygon {
      * check if this rectangle is identical to the specified one
      * @name equals
      * @memberof Rect
-     * @function
      * @param {Rect} rect
      * @returns {boolean} true if equals
      */
@@ -355,7 +345,6 @@ class Rect extends Polygon {
      * determines whether all coordinates of this rectangle are finite numbers.
      * @name isFinite
      * @memberof Rect
-     * @function
      * @returns {boolean} false if all coordinates are positive or negative Infinity or NaN; otherwise, true.
      */
     isFinite() {
@@ -366,7 +355,6 @@ class Rect extends Polygon {
      * Returns a polygon whose edges are the same as this box.
      * @name toPolygon
      * @memberof Rect
-     * @function
      * @returns {Polygon} a new Polygon that represents this rectangle.
      */
     toPolygon() {

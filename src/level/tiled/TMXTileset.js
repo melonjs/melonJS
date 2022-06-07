@@ -166,7 +166,6 @@ class TMXTileset {
      * return the tile image from a "Collection of Image" tileset
      * @name TMXTileset#getTileImage
      * @public
-     * @function
      * @param {number} gid
      * @returns {Image} corresponding image or undefined
      */
@@ -178,7 +177,6 @@ class TMXTileset {
     /**
      * set the tile properties
      * @ignore
-     * @function
      */
     setTileProperty(gid, prop) {
         // set the given tile id
@@ -189,7 +187,6 @@ class TMXTileset {
      * return true if the gid belongs to the tileset
      * @name TMXTileset#contains
      * @public
-     * @function
      * @param {number} gid
      * @returns {boolean}
      */
@@ -201,7 +198,6 @@ class TMXTileset {
      * Get the view (local) tile ID from a GID, with animations applied
      * @name TMXTileset#getViewTileId
      * @public
-     * @function
      * @param {number} gid Global tile ID
      * @returns {number} View tile ID
      */
@@ -220,7 +216,6 @@ class TMXTileset {
      * return the properties of the specified tile
      * @name TMXTileset#getTileProperties
      * @public
-     * @function
      * @param {number} tileId
      * @returns {object}
      */

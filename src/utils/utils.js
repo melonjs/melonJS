@@ -27,7 +27,6 @@ var utils = {
     /**
      * Get image pixels
      * @public
-     * @function
      * @memberof utils
      * @name getPixels
      * @param {HTMLImageElement|HTMLCanvasElement} image Image to read
@@ -50,7 +49,6 @@ var utils = {
     /**
      * Compare two version strings
      * @public
-     * @function
      * @memberof utils
      * @name checkVersion
      * @param {string} first First version string to compare
@@ -83,7 +81,6 @@ var utils = {
     /**
      * parse the fragment (hash) from a URL and returns them into
      * @public
-     * @function
      * @memberof utils
      * @name getUriFragment
      * @param {string} [url=document.location] an optional params string or URL containing fragment (hash) params to be parsed

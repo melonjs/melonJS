@@ -210,7 +210,6 @@ class Sprite extends Renderable {
      * return the flickering state of the object
      * @name isFlickering
      * @memberof Sprite
-     * @function
      * @returns {boolean}
      */
     isFlickering() {
@@ -221,7 +220,6 @@ class Sprite extends Renderable {
      * make the object flicker
      * @name flicker
      * @memberof Sprite
-     * @function
      * @param {number} duration expressed in milliseconds
      * @param {Function} callback Function to call when flickering ends
      * @returns {Sprite} Reference to this object for method chaining
@@ -252,7 +250,6 @@ class Sprite extends Renderable {
      * <img src="images/spritesheet_grid.png"/>
      * @name addAnimation
      * @memberof Sprite
-     * @function
      * @param {string} name animation id
      * @param {number[]|string[]|object[]} index list of sprite index or name
      * defining the animation. Can also use objects to specify delay for each frame, see below
@@ -352,7 +349,6 @@ class Sprite extends Renderable {
      * this will always change the animation & set the frame to zero
      * @name setCurrentAnimation
      * @memberof Sprite
-     * @function
      * @param {string} name animation id
      * @param {string|Function} [resetAnim] animation id to switch to when complete, or callback
      * @param {boolean} [preserve_dt=false] if false will reset the elapsed time counter since last frame
@@ -413,7 +409,6 @@ class Sprite extends Renderable {
      * reverse the given or current animation if none is specified
      * @name reverseAnimation
      * @memberof Sprite
-     * @function
      * @param {string} [name] animation id
      * @returns {Sprite} Reference to this object for method chaining
      * @see Sprite#animationspeed
@@ -432,7 +427,6 @@ class Sprite extends Renderable {
      * return true if the specified animation is the current one.
      * @name isCurrentAnimation
      * @memberof Sprite
-     * @function
      * @param {string} name animation id
      * @returns {boolean}
      * @example
@@ -449,7 +443,6 @@ class Sprite extends Renderable {
      * @see Texture.getRegion
      * @name setRegion
      * @memberof Sprite
-     * @function
      * @param {object} region typically returned through me.Texture.getRegion()
      * @returns {Sprite} Reference to this object for method chaining
      * @example
@@ -481,7 +474,6 @@ class Sprite extends Renderable {
      * force the current animation frame index.
      * @name setAnimationFrame
      * @memberof Sprite
-     * @function
      * @param {number} [idx=0] animation frame index
      * @returns {Sprite} Reference to this object for method chaining
      * @example
@@ -497,7 +489,6 @@ class Sprite extends Renderable {
      * return the current animation frame index.
      * @name getCurrentAnimationFrame
      * @memberof Sprite
-     * @function
      * @returns {number} current animation frame index
      */
     getCurrentAnimationFrame() {
@@ -508,7 +499,6 @@ class Sprite extends Renderable {
      * Returns the frame object by the index.
      * @name getAnimationFrameObjectByIndex
      * @memberof Sprite
-     * @function
      * @ignore
      * @param {number} id the frame id
      * @returns {number} if using number indices. Returns {object} containing frame data if using texture atlas
@@ -522,7 +512,6 @@ class Sprite extends Renderable {
      * automatically called by the game manager {@link game}
      * @name update
      * @memberof Sprite
-     * @function
      * @protected
      * @param {number} dt time since the last update in milliseconds.
      * @returns {boolean} true if the Sprite is dirty
@@ -601,7 +590,6 @@ class Sprite extends Renderable {
      * automatically called by the game manager {@link game}
      * @name draw
      * @memberof Sprite
-     * @function
      * @protected
      * @param {CanvasRenderer|WebGLRenderer} renderer a renderer object
      */

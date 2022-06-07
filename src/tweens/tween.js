@@ -121,7 +121,6 @@ class Tween {
      * @name to
      * @memberof Tween
      * @public
-     * @function
      * @param {object} properties hash of properties
      * @param {object|number} [options] object of tween properties, or a duration if a numeric value is passed
      * @param {number} [options.duration] tween duration
@@ -163,7 +162,6 @@ class Tween {
      * @name start
      * @memberof Tween
      * @public
-     * @function
      * @param {number} [time] the current time when the tween was started
      * @returns {Tween} this instance for object chaining
      */
@@ -210,7 +208,6 @@ class Tween {
      * @name stop
      * @memberof Tween
      * @public
-     * @function
      * @returns {Tween} this instance for object chaining
      */
     stop() {
@@ -224,7 +221,6 @@ class Tween {
      * @name delay
      * @memberof Tween
      * @public
-     * @function
      * @param {number} amount delay amount expressed in milliseconds
      * @returns {Tween} this instance for object chaining
      */
@@ -240,7 +236,6 @@ class Tween {
      * @name repeat
      * @memberof Tween
      * @public
-     * @function
      * @param {number} times amount of times the tween should be repeated
      * @returns {Tween} this instance for object chaining
      */
@@ -257,7 +252,6 @@ class Tween {
      * @name yoyo
      * @memberof Tween
      * @public
-     * @function
      * @see Tween#repeat
      * @param {boolean} yoyo
      * @returns {Tween} this instance for object chaining
@@ -274,7 +268,6 @@ class Tween {
      * @name easing
      * @memberof Tween
      * @public
-     * @function
      * @param {Tween.Easing} easing easing function
      * @returns {Tween} this instance for object chaining
      */
@@ -291,7 +284,6 @@ class Tween {
      * @name interpolation
      * @memberof Tween
      * @public
-     * @function
      * @param {Tween.Interpolation} interpolation interpolation function
      * @returns {Tween} this instance for object chaining
      */
@@ -305,7 +297,6 @@ class Tween {
      * @name chain
      * @memberof Tween
      * @public
-     * @function
      * @param {...Tween} chainedTween Tween(s) to be chained
      * @returns {Tween} this instance for object chaining
      */
@@ -319,7 +310,6 @@ class Tween {
      * @name onStart
      * @memberof Tween
      * @public
-     * @function
      * @param {Function} onStartCallback callback
      * @returns {Tween} this instance for object chaining
      */
@@ -333,7 +323,6 @@ class Tween {
      * @name onUpdate
      * @memberof Tween
      * @public
-     * @function
      * @param {Function} onUpdateCallback callback
      * @returns {Tween} this instance for object chaining
      */
@@ -347,7 +336,6 @@ class Tween {
      * @name onComplete
      * @memberof Tween
      * @public
-     * @function
      * @param {Function} onCompleteCallback callback
      * @returns {Tween} this instance for object chaining
      */

@@ -56,7 +56,6 @@ function safeLoadLevel(levelId, options, restart) {
  * @param {boolean} [flatten=true] if true, flatten all objects into the given container
  * @param {boolean} [setViewportBounds=false] if true, set the viewport bounds to the map size, this should be set to true especially if adding a level to the game world container.
  * @ignore
- * @function
  */
 function loadTMXLevel(levelId, container, flatten, setViewportBounds) {
     var level = levels[levelId];
@@ -85,7 +84,6 @@ var level = {
      * @name add
      * @memberof level
      * @public
-     * @function
      * @param {string} format level format (only "tmx" supported)
      * @param {string} levelId the level id (or name)
      * @param {Function} [callback] a function to be called once the level is loaded
@@ -124,7 +122,6 @@ var level = {
      * @name load
      * @memberof level
      * @public
-     * @function
      * @param {string} levelId level id
      * @param {object} [options] additional optional parameters
      * @param {Container} [options.container=game.world] container in which to load the specified level
@@ -198,7 +195,6 @@ var level = {
      * @name getCurrentLevelId
      * @memberof level
      * @public
-     * @function
      * @returns {string}
      */
     getCurrentLevelId() {
@@ -212,7 +208,6 @@ var level = {
      * @name getCurrentLevel
      * @memberof level
      * @public
-     * @function
      * @returns {TMXTileMap}
      */
     getCurrentLevel() {
@@ -224,7 +219,6 @@ var level = {
      * @name reload
      * @memberof level
      * @public
-     * @function
      * @param {object} [options] additional optional parameters
      * @param {Container} [options.container=game.world] container in which to load the specified level
      * @param {Function} [options.onLoaded=game.onLevelLoaded] callback for when the level is fully loaded
@@ -242,7 +236,6 @@ var level = {
      * @name next
      * @memberof level
      * @public
-     * @function
      * @param {object} [options] additional optional parameters
      * @param {Container} [options.container=game.world] container in which to load the specified level
      * @param {Function} [options.onLoaded=game.onLevelLoaded] callback for when the level is fully loaded
@@ -264,7 +257,6 @@ var level = {
      * @name previous
      * @memberof level
      * @public
-     * @function
      * @param {object} [options] additional optional parameters
      * @param {Container} [options.container=game.world] container in which to load the specified level
      * @param {Function} [options.onLoaded=game.onLevelLoaded] callback for when the level is fully loaded
@@ -286,7 +278,6 @@ var level = {
      * @name levelCount
      * @memberof level
      * @public
-     * @function
      * @returns {number} the amount of level preloaded
      */
     levelCount() {

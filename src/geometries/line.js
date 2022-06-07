@@ -16,7 +16,7 @@ class Line extends Polygon {
      * Returns true if the Line contains the given point
      * @name contains
      * @memberof Line
-     * @function
+     * @method
      * @param {Vector2d} point
      * @returns {boolean} true if contains
      */
@@ -25,7 +25,6 @@ class Line extends Polygon {
      * Returns true if the Line contains the given point
      * @name contains
      * @memberof Line
-     * @function
      * @param  {number} x x coordinate
      * @param  {number} y y coordinate
      * @returns {boolean} true if contains
@@ -59,7 +58,6 @@ class Line extends Polygon {
      * This **must** be called if the `points` array, `angle`, or `offset` is modified manually.
      * @name recalc
      * @memberof Line
-     * @function
      * @returns {Line} this instance for objecf chaining
      */
     recalc() {
@@ -95,7 +93,6 @@ class Line extends Polygon {
      * clone this line segment
      * @name clone
      * @memberof Line
-     * @function
      * @returns {Line} new Line
      */
     clone() {

@@ -158,7 +158,6 @@ class Entity extends Renderable {
      * @ignore
      * @name onBodyUpdate
      * @memberof Entity
-     * @function
      * @param {Body} body the body whose bounds to update
      */
     onBodyUpdate(body) {
@@ -194,7 +193,6 @@ class Entity extends Renderable {
      * called by the game manager on each game loop
      * @name draw
      * @memberof Entity
-     * @function
      * @protected
      * @param {CanvasRenderer|WebGLRenderer} renderer a renderer object
      * @param {Rect} rect region to draw
@@ -233,7 +231,6 @@ class Entity extends Renderable {
      * Called by engine before deleting the object
      * @name onDeactivateEvent
      * @memberof Entity
-     * @function
      */
     onDeactivateEvent() {
         if (this.renderable && this.renderable.onDeactivateEvent) {

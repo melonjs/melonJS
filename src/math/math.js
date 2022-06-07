@@ -51,7 +51,6 @@ export const EPSILON = 0.000001;
 /**
  * returns true if the given value is a power of two
  * @public
- * @function
  * @memberof Math
  * @name isPowerOfTwo
  * @param {number} val
@@ -64,7 +63,6 @@ export function isPowerOfTwo(val) {
 /**
  * returns the next power of two for the given value
  * @public
- * @function
  * @memberof Math
  * @name nextPowerOfTwo
  * @param {number} val
@@ -84,7 +82,6 @@ export function nextPowerOfTwo(val) {
 /**
  * Converts an angle in degrees to an angle in radians
  * @public
- * @function
  * @memberof Math
  * @name degToRad
  * @param {number} angle angle in degrees
@@ -100,7 +97,6 @@ export function degToRad(angle) {
 /**
  * Converts an angle in radians to an angle in degrees.
  * @public
- * @function
  * @memberof Math
  * @name radToDeg
  * @param {number} radians angle in radians
@@ -116,7 +112,6 @@ export function radToDeg(radians) {
 /**
  * clamp the given value
  * @public
- * @function
  * @memberof Math
  * @name clamp
  * @param {number} val the value to clamp
@@ -131,7 +126,6 @@ export function clamp(val, low, high) {
 /**
  * return a random integer between min (included) and max (excluded)
  * @public
- * @function
  * @memberof Math
  * @name random
  * @param {number} min minimum value.
@@ -148,7 +142,6 @@ export function random(min, max) {
 /**
  * return a random float between min, max (exclusive)
  * @public
- * @function
  * @memberof Math
  * @name randomFloat
  * @param {number} min minimum value.
@@ -165,7 +158,6 @@ export function randomFloat(min, max) {
 /**
  * return a weighted random between min, max (exclusive)
  * @public
- * @function
  * @memberof Math
  * @name weightedRandom
  * @param {number} min minimum value.
@@ -182,7 +174,6 @@ export function weightedRandom(min, max) {
 /**
  * round a value to the specified number of digit
  * @public
- * @function
  * @memberof Math
  * @name round
  * @param {number} num value to be rounded.
@@ -201,7 +192,6 @@ export function round(num, dec = 0) {
 /**
  * check if the given value is close to the expected one
  * @public
- * @function
  * @memberof Math
  * @name toBeCloseTo
  * @param {number} expected value to be compared with.

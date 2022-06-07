@@ -41,7 +41,6 @@ class TMXIsometricRenderer extends TMXRenderer {
      * return the bounding rect for this map renderer
      * @name TMXIsometricRenderer#getBounds
      * @public
-     * @function
      * @param {TMXLayer} [layer] calculate the bounding rect for a specific layer (will return a new bounds object)
      * @returns {Bounds}
      */
