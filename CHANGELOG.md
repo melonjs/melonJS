@@ -1,6 +1,6 @@
 # Changelog
 
-## [10.10.0] (melonJS 2) - _2022-xx-xx_
+## [10.10.0] (melonJS 2) - _2022-06-07_
 
 ### Added
 - Core: new `CanvasTexture` object to allow recycling canvas through the engine (text caching, default particles, effect, etc..)
