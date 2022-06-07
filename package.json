@@ -95,7 +95,7 @@
     "test": "karma start tests/karma.conf.cjs",
     "doc": "mkdirp docs && jsdoc -c jsdoc_conf.json",
     "webdoc": "mkdirp dist && webdoc --quiet -R README.md",
-    "prepublish": "npm run dist && npm run test",
+    "prepublishOnly": "npm run dist && npm run test",
     "clean": "del-cli --force build/*.js dist/*.js dist/*.d.ts docs src/**/*.d.ts",
     "types": "tsc dist/melonjs.module.js --declaration --allowJs --emitDeclarationOnly"
   }
