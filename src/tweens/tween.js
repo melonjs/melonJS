@@ -4,7 +4,7 @@ import { world, lastUpdate } from "./../game.js";
 import { Easing } from "./easing.js";
 import { Interpolation } from "./interpolation.js";
 
-/**
+/*
  * Tween.js - Licensed under the MIT license
  * https://github.com/tweenjs/tween.js
  */

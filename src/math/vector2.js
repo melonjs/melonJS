@@ -51,7 +51,7 @@ class Vector2d {
         /**
          * x value of the vector
          * @public
-         * @type {number}
+         * @member {number}
          * @name x
          * @memberof Vector2d
          */
@@ -60,7 +60,7 @@ class Vector2d {
         /**
          * y value of the vector
          * @public
-         * @type {number}
+         * @member {number}
          * @name y
          * @memberof Vector2d
          */
@@ -297,6 +297,7 @@ class Vector2d {
      * return true if the two vectors are the same
      * @name equals
      * @memberof Vector2d
+     * @method
      * @param {Vector2d} v
      * @returns {boolean}
      */

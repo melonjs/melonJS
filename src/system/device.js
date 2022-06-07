@@ -5,11 +5,6 @@ import { prefixed } from "./../utils/agent.js";
 import state from "./../state/state.js";
 import * as event from "./../system/event.js";
 
-/**
- * The device capabilities and specific events
- * @namespace device
- */
-
 // private properties
 let accelInitialized = false;
 let deviceOrientationInitialized = false;
@@ -250,6 +245,11 @@ event.on(event.BOOT, () => {
 
 
 // public export
+/**
+ * The device capabilities and specific events
+ *
+ * @namespace
+ */
 let device = {
 
     /**
@@ -257,7 +257,6 @@ let device = {
      * @type {string}
      * @readonly
      * @name ua
-     * @memberof device
      */
     ua : typeof globalThis.navigator !== "undefined" ? globalThis.navigator.userAgent : "",
 
@@ -267,7 +266,6 @@ let device = {
      * @type {boolean}
      * @readonly
      * @name localStorage
-     * @memberof device
      */
     localStorage : false,
 
@@ -276,7 +274,6 @@ let device = {
      * @type {boolean}
      * @readonly
      * @name hasAccelerometer
-     * @memberof device
      */
     hasAccelerometer : false,
 
@@ -285,7 +282,6 @@ let device = {
      * @type {boolean}
      * @readonly
      * @name hasDeviceOrientation
-     * @memberof device
      */
     hasDeviceOrientation : false,
 
@@ -295,7 +291,6 @@ let device = {
      * @type {boolean}
      * @readonly
      * @name ScreenOrientation
-     * @memberof device
      */
     ScreenOrientation : false,
 
@@ -304,7 +299,6 @@ let device = {
      * @type {boolean}
      * @readonly
      * @name hasFullscreenSupport
-     * @memberof device
      */
     hasFullscreenSupport : false,
 
@@ -313,7 +307,6 @@ let device = {
      * @type {boolean}
      * @readonly
      * @name hasPointerLockSupport
-     * @memberof device
      */
     hasPointerLockSupport : false,
 
@@ -322,7 +315,6 @@ let device = {
      * @type {boolean}
      * @readonly
      * @name hasWebAudio
-     * @memberof device
      */
     hasWebAudio : false,
 
@@ -331,7 +323,6 @@ let device = {
      * @type {boolean}
      * @readonly
      * @name nativeBase64
-     * @memberof device
      */
     nativeBase64 : (typeof(globalThis.atob) === "function"),
 
@@ -340,7 +331,6 @@ let device = {
      * @type {number}
      * @readonly
      * @name maxTouchPoints
-     * @memberof device
      * @example
      * if (me.device.maxTouchPoints > 1) {
      *     // device supports multi-touch
@@ -353,7 +343,6 @@ let device = {
      * @type {boolean}
      * @readonly
      * @name touch
-     * @memberof device
      */
     touch : false,
 
@@ -362,7 +351,6 @@ let device = {
      * @type {boolean}
      * @readonly
      * @name wheel
-     * @memberof device
      */
     wheel : false,
 
@@ -372,7 +360,6 @@ let device = {
      * @type {boolean}
      * @readonly
      * @name isMobile
-     * @memberof device
      */
     isMobile : false,
 
@@ -381,7 +368,6 @@ let device = {
      * @type {boolean}
      * @readonly
      * @name iOS
-     * @memberof device
      */
     iOS : false,
 
@@ -390,7 +376,6 @@ let device = {
      * @type {boolean}
      * @readonly
      * @name android
-     * @memberof device
      */
     android : false,
 
@@ -399,7 +384,6 @@ let device = {
      * @type {boolean}
      * @readonly
      * @name android2
-     * @memberof device
      */
     android2 : false,
 
@@ -408,7 +392,6 @@ let device = {
      * @type {boolean}
      * @readonly
      * @name linux
-     * @memberof device
      */
     linux : false,
 
@@ -418,7 +401,6 @@ let device = {
      * @readonly
      * @see http://impactjs.com/ejecta
      * @name ejecta
-     * @memberof device
      */
     ejecta : false,
 
@@ -427,7 +409,6 @@ let device = {
      * @type {boolean}
      * @readonly
      * @name isWeixin
-     * @memberof device
      */
     isWeixin : false,
 
@@ -436,7 +417,6 @@ let device = {
      * @type {boolean}
      * @readonly
      * @name nodeJS
-     * @memberof device
      */
     nodeJS : (typeof process !== "undefined") && (process.release.name === "node"),
 
@@ -445,7 +425,6 @@ let device = {
      * @type {boolean}
      * @readonly
      * @name chromeOS
-     * @memberof device
      */
     chromeOS : false,
 
@@ -454,7 +433,6 @@ let device = {
      * @type {boolean}
      * @readonly
      * @name wp
-     * @memberof device
      */
     wp : false,
 
@@ -463,7 +441,6 @@ let device = {
      * @type {boolean}
      * @readonly
      * @name BlackBerry
-     * @memberof device
      */
     BlackBerry : false,
 
@@ -472,7 +449,6 @@ let device = {
      * @type {boolean}
      * @readonly
      * @name Kindle
-     * @memberof device
      */
     Kindle : false,
 
@@ -483,7 +459,6 @@ let device = {
      * @readonly
      * @name accelerationX
      * @see device.watchAccelerometer
-     * @memberof device
      */
     accelerationX : 0,
 
@@ -494,7 +469,6 @@ let device = {
      * @readonly
      * @name accelerationY
      * @see device.watchAccelerometer
-     * @memberof device
      */
     accelerationY : 0,
 
@@ -505,7 +479,6 @@ let device = {
      * @readonly
      * @name accelerationZ
      * @see device.watchAccelerometer
-     * @memberof device
      */
     accelerationZ : 0,
 
@@ -516,7 +489,6 @@ let device = {
      * @readonly
      * @name gamma
      * @see device.watchDeviceOrientation
-     * @memberof device
      */
     gamma : 0,
 
@@ -527,7 +499,6 @@ let device = {
      * @readonly
      * @name beta
      * @see device.watchDeviceOrientation
-     * @memberof device
      */
     beta: 0,
 
@@ -539,7 +510,6 @@ let device = {
      * @readonly
      * @name alpha
      * @see device.watchDeviceOrientation
-     * @memberof device
      */
     alpha : 0,
 
@@ -551,7 +521,6 @@ let device = {
      * @readonly
      * @see http://www.w3schools.com/tags/ref_language_codes.asp
      * @name language
-     * @memberof device
      */
     language : typeof globalThis.navigator !== "undefined" ? globalThis.navigator.language || globalThis.navigator.browserLanguage || globalThis.navigator.userLanguage || "en" : "en",
 
@@ -559,7 +528,6 @@ let device = {
      * Specify whether to pause the game when losing focus
      * @type {boolean}
      * @default true
-     * @memberof device
      */
     pauseOnBlur : true,
 
@@ -567,7 +535,6 @@ let device = {
      * Specify whether to unpause the game when gaining focus
      * @type {boolean}
      * @default true
-     * @memberof device
      */
     resumeOnFocus : true,
 
@@ -575,7 +542,6 @@ let device = {
      * Specify whether to automatically bring the window to the front
      * @type {boolean}
      * @default true
-     * @memberof device
      */
     autoFocus : true,
 
@@ -584,7 +550,6 @@ let device = {
      * The engine restarts on focus if this is enabled.
      * @type {boolean}
      * @default false
-     * @memberof device
      */
     stopOnBlur : false,
 
@@ -593,7 +558,6 @@ let device = {
      * @type {boolean}
      * @readonly
      * @name OffScreenCanvas
-     * @memberof device
      */
     OffscreenCanvas : false,
 
@@ -1110,10 +1074,9 @@ let device = {
 
 /**
  * Ratio of the resolution in physical pixels to the resolution in CSS pixels for the current display device.
- * @name devicePixelRatio
- * @memberof device
+ * @name device.devicePixelRatio
  * @public
- * @type {number}
+ * @member {number}
  * @readonly
  * @returns {number}
  */
@@ -1128,10 +1091,9 @@ Object.defineProperty(device, "devicePixelRatio", {
 
 /**
  * Returns true if the browser/device is in full screen mode.
- * @name isFullscreen
- * @memberof device
+ * @name device.isFullscreen
  * @public
- * @type {boolean}
+ * @member {boolean}
  * @readonly
  * @returns {boolean}
  */
@@ -1151,10 +1113,9 @@ Object.defineProperty(device, "isFullscreen", {
 
 /**
  * Returns true if the browser/device has audio capabilities.
- * @name sound
- * @memberof device
+ * @name device.sound
  * @public
- * @type {boolean}
+ * @member {boolean}
  * @readonly
  * @returns {boolean}
  */

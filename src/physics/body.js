@@ -509,6 +509,7 @@ class Body {
 
     /**
      * Returns true if the any of the shape composing the body contains the given point.
+     * @method Body#contains
      * @param {Vector2d} point
      * @returns {boolean} true if contains
      */

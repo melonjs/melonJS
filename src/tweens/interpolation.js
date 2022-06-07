@@ -1,4 +1,4 @@
-/**
+/*
  * Tween.js - Licensed under the MIT license
  * https://github.com/tweenjs/tween.js
  */
@@ -76,7 +76,7 @@ export let Interpolation = {
             return fc( n ) / fc( i ) / fc( n - i );
 
         },
-        /** @ignore */
+        /* @ignore */
         Factorial: ( function () {
 
             var a = [ 1 ];

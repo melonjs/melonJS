@@ -55,7 +55,7 @@ class Vector3d {
         /**
          * x value of the vector
          * @public
-         * @type {number}
+         * @member {number}
          * @name x
          * @memberof Vector3d
          */
@@ -64,7 +64,7 @@ class Vector3d {
         /**
          * y value of the vector
          * @public
-         * @type {number}
+         * @member {number}
          * @name y
          * @memberof Vector3d
          */
@@ -73,7 +73,7 @@ class Vector3d {
         /**
          * z value of the vector
          * @public
-         * @type {number}
+         * @member {number}
          * @name z
          * @memberof Vector3d
          */
@@ -314,6 +314,7 @@ class Vector3d {
      * return true if the two vectors are the same
      * @name equals
      * @memberof Vector3d
+     * @method
      * @param {Vector2d|Vector3d} v
      * @returns {boolean}
      */

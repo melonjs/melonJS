@@ -84,7 +84,8 @@ class Text extends Renderable {
         /**
          * defines the color used to draw the font stroke.<br>
          * @public
-         * @type {Color}
+         * @member {Color}
+         * @name strokeStyle
          * @default black
          */
          if (typeof settings.strokeStyle !== "undefined") {

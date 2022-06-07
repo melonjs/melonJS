@@ -95,7 +95,7 @@ class Entity extends Renderable {
         /**
          * the entity body object
          * @public
-         * @type {Body}
+         * @member {Body}
          * @name body
          * @memberof Entity
          */

@@ -47,9 +47,8 @@ export function extractUniforms(gl, shader) {
 
         descriptor[name] = {
             "get" : (function (name) {
-                /**
+                /*
                  * A getter for the uniform location
-                 * @ignore
                  */
                 return function () {
                     return locations[name];
@@ -57,18 +56,16 @@ export function extractUniforms(gl, shader) {
             })(name),
             "set" : (function (name, type, fn) {
                 if (type.indexOf("mat") === 0) {
-                    /**
+                    /*
                      * A generic setter for uniform matrices
-                     * @ignore
                      */
                     return function (val) {
                         gl[fn](locations[name], false, val);
                     };
                 }
                 else {
-                    /**
+                    /*
                      * A generic setter for uniform vectors
-                     * @ignore
                      */
                     return function (val) {
                         var fnv = fn;
