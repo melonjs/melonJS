@@ -202,6 +202,7 @@ The generated library will be available under the `build` directory :
 - `melonjs.js` : plain ES5 UMD bundle
 - `melonjs.min.js` : minified ES5 UMD bundle
 - `melonjs.module.js` : plain ES6 module
+- `melonjs.module.d.ts` : typescript declaration for the ES6 Module
 
 To run the melonJS test suite simply use the following:
 
@@ -211,6 +212,8 @@ This will run the jasmine spec tests with the output displayed on the shell. Do
 note that the latest Chrome version is required, as the test unit will run the
 Browser in a headless mode (in case of failed tests, upgrade your browser).
 
+Last but not least, if you really want to contribute, but not sure how, you can
+always check our [discussions](https://github.com/melonjs/melonJS/discussions/categories/ideas) list to get some idea on where to start.
 
 Building the documentation
 -------------------------------------------------------------------------------
