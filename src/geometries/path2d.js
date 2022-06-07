@@ -35,7 +35,6 @@ class Path2D {
      * begin a new path
      * @name beginPath
      * @memberof Path2D
-     * @function
      */
     beginPath() {
         // empty the cache and recycle all vectors
@@ -51,7 +50,6 @@ class Path2D {
      * If the shape has already been closed or has only one point, this function does nothing.
      * @name closePath
      * @memberof Path2D
-     * @function
      */
     closePath() {
         var points = this.points;
@@ -64,7 +62,6 @@ class Path2D {
      * triangulate the shape defined by this path into an array of triangles
      * @name triangulatePath
      * @memberof Path2D
-     * @function
      * @returns {Vector2d[]}
      */
     triangulatePath() {
@@ -95,7 +92,6 @@ class Path2D {
      * moves the starting point of the current path to the (x, y) coordinates.
      * @name moveTo
      * @memberof Path2D
-     * @function
      * @param {number} x the x-axis (horizontal) coordinate of the point.
      * @param {number} y the y-axis (vertical) coordinate of the point.
      */
@@ -107,7 +103,6 @@ class Path2D {
      * connects the last point in the current patch to the (x, y) coordinates with a straight line.
      * @name lineTo
      * @memberof Path2D
-     * @function
      * @param {number} x the x-axis coordinate of the line's end point.
      * @param {number} y the y-axis coordinate of the line's end point.
      */
@@ -120,7 +115,6 @@ class Path2D {
      * starting at startAngle and ending at endAngle going in the given direction by counterclockwise (defaulting to clockwise).
      * @name arc
      * @memberof Path2D
-     * @function
      * @param {number} x the horizontal coordinate of the arc's center.
      * @param {number} y the vertical coordinate of the arc's center.
      * @param {number} radius the arc's radius. Must be positive.
@@ -170,7 +164,6 @@ class Path2D {
      * adds a circular arc to the path with the given control points and radius, connected to the previous point by a straight line.
      * @name arcTo
      * @memberof Path2D
-     * @function
      * @param {number} x the x-axis coordinate of the first control point.
      * @param {number} y the y-axis coordinate of the first control point.
      * @param {number} x the x-axis coordinate of the second control point.
@@ -219,7 +212,6 @@ class Path2D {
      * starting at startAngle and ending at endAngle going in the given direction by counterclockwise.
      * @name ellipse
      * @memberof Path2D
-     * @function
      * @param {number} x the x-axis (horizontal) coordinate of the ellipse's center.
      * @param {number} y the  y-axis (vertical) coordinate of the ellipse's center.
      * @param {number} radiusX the ellipse's major-axis radius. Must be non-negative.
@@ -279,7 +271,6 @@ class Path2D {
      * creates a path for a rectangle at position (x, y) with a size that is determined by width and height.
      * @name rect
      * @memberof Path2D
-     * @function
      * @param {number} x the x-axis coordinate of the rectangle's starting point.
      * @param {number} y the y-axis coordinate of the rectangle's starting point.
      * @param {number} width the rectangle's width. Positive values are to the right, and negative to the left.
@@ -297,7 +288,6 @@ class Path2D {
      * adds an rounded rectangle to the current path.
      * @name roundRect
      * @memberof Path2D
-     * @function
      * @param {number} x the x-axis coordinate of the rectangle's starting point.
      * @param {number} y the y-axis coordinate of the rectangle's starting point.
      * @param {number} width the rectangle's width. Positive values are to the right, and negative to the left.

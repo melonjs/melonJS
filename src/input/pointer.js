@@ -311,7 +311,6 @@ class Pointer extends Bounds {
      * initialize the Pointer object using the given Event Object
      * @name Pointer#set
      * @private
-     * @function
      * @param {Event} event the original Event object
      * @param {number} [pageX=0] the horizontal coordinate at which the event occurred, relative to the left edge of the entire document
      * @param {number} [pageY=0] the vertical coordinate at which the event occurred, relative to the left edge of the entire document

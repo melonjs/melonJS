@@ -132,7 +132,6 @@ class Tile extends Bounds {
      * return a renderable object for this Tile object
      * @name Tile#getRenderable
      * @public
-     * @function
      * @param {object} [settings] see {@link Sprite}
      * @returns {Renderable} a me.Sprite object
      */

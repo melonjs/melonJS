@@ -207,7 +207,6 @@ class Camera2d extends Renderable {
      * reset the camera position to specified coordinates
      * @name reset
      * @memberof Camera2d
-     * @function
      * @param {number} [x=0]
      * @param {number} [y=0]
      */
@@ -238,7 +237,6 @@ class Camera2d extends Renderable {
      * @name setDeadzone
      * @see Camera2d.follow
      * @memberof Camera2d
-     * @function
      * @param {number} w deadzone width
      * @param {number} h deadzone height
      */
@@ -266,7 +264,6 @@ class Camera2d extends Renderable {
      * resize the camera
      * @name resize
      * @memberof Camera2d
-     * @function
      * @param {number} w new width of the camera
      * @param {number} h new height of the camera
      * @returns {Camera2d} this camera
@@ -298,7 +295,6 @@ class Camera2d extends Renderable {
      * the camera is bound to the given coordinates and cannot move/be scrolled outside of it.
      * @name setBounds
      * @memberof Camera2d
-     * @function
      * @param {number} x world left limit
      * @param {number} y world top limit
      * @param {number} w world width limit
@@ -317,7 +313,6 @@ class Camera2d extends Renderable {
      * (this will put the camera center around the given target)
      * @name follow
      * @memberof Camera2d
-     * @function
      * @param {Renderable|Vector2d} target renderable or position vector to follow
      * @param {number} [axis=me.game.viewport.AXIS.BOTH] Which axis to follow (see {@link Camera2d.AXIS})
      * @param {number} [damping=1] default damping value
@@ -359,7 +354,6 @@ class Camera2d extends Renderable {
      * unfollow the current target
      * @name unfollow
      * @memberof Camera2d
-     * @function
      */
     unfollow() {
         this.target = null;
@@ -371,7 +365,6 @@ class Camera2d extends Renderable {
      * @name move
      * @memberof Camera2d
      * @see Camera2d.focusOn
-     * @function
      * @param {number} x
      * @param {number} y
      * @example
@@ -387,7 +380,6 @@ class Camera2d extends Renderable {
      * @name moveTo
      * @memberof Camera2d
      * @see Camera2d.focusOn
-     * @function
      * @param {number} x
      * @param {number} y
      */
@@ -511,7 +503,6 @@ class Camera2d extends Renderable {
      * shake the camera
      * @name shake
      * @memberof Camera2d
-     * @function
      * @param {number} intensity maximum offset that the screen can be moved
      * while shaking
      * @param {number} duration expressed in milliseconds
@@ -536,7 +527,6 @@ class Camera2d extends Renderable {
      * screen is filled with the specified color and slowly goes back to normal
      * @name fadeOut
      * @memberof Camera2d
-     * @function
      * @param {Color|string} color a CSS color value
      * @param {number} [duration=1000] expressed in milliseconds
      * @param {Function} [onComplete] callback once effect is over
@@ -562,7 +552,6 @@ class Camera2d extends Renderable {
      * fade to the specified color
      * @name fadeIn
      * @memberof Camera2d
-     * @function
      * @param {Color|string} color a CSS color value
      * @param {number} [duration=1000] expressed in milliseconds
      * @param {Function} [onComplete] callback once effect is over
@@ -585,7 +574,6 @@ class Camera2d extends Renderable {
      * set the camera position around the specified object
      * @name focusOn
      * @memberof Camera2d
-     * @function
      * @param {Renderable} target the renderable to focus the camera on
      */
     focusOn(target) {
@@ -600,7 +588,6 @@ class Camera2d extends Renderable {
      * check if the specified renderable is in the camera
      * @name isVisible
      * @memberof Camera2d
-     * @function
      * @param {Renderable} obj to be checked against
      * @param {boolean} [floating = obj.floating] if visibility check should be done against screen coordinates
      * @returns {boolean}
@@ -619,7 +606,6 @@ class Camera2d extends Renderable {
      * convert the given "local" (screen) coordinates into world coordinates
      * @name localToWorld
      * @memberof Camera2d
-     * @function
      * @param {number} x
      * @param {number} y
      * @param {number} [v] an optional vector object where to set the
@@ -640,7 +626,6 @@ class Camera2d extends Renderable {
      * convert the given world coordinates into "local" (screen) coordinates
      * @name worldToLocal
      * @memberof Camera2d
-     * @function
      * @param {number} x
      * @param {number} y
      * @param {number} [v] an optional vector object where to set the

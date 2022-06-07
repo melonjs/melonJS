@@ -103,7 +103,6 @@ class GLShader {
      * Installs this shader program as part of current rendering state
      * @name bind
      * @memberof GLShader
-     * @function
      */
     bind() {
         this.gl.useProgram(this.program);
@@ -113,7 +112,6 @@ class GLShader {
      * returns the location of an attribute variable in this shader program
      * @name getAttribLocation
      * @memberof GLShader
-     * @function
      * @param {string} name the name of the attribute variable whose location to get.
      * @returns {GLint} number indicating the location of the variable name if found. Returns -1 otherwise
      */
@@ -130,7 +128,6 @@ class GLShader {
      * Set the uniform to the given value
      * @name setUniform
      * @memberof GLShader
-     * @function
      * @param {string} name the uniform name
      * @param {object|Float32Array} value the value to assign to that uniform
      * @example
@@ -153,7 +150,6 @@ class GLShader {
      * activate the given vertex attribute for this shader
      * @name setVertexAttributes
      * @memberof GLShader
-     * @function
      * @param {WebGLRenderingContext} gl the current WebGL rendering context
      * @param {object[]} attributes an array of vertex attributes
      * @param {number} vertexByteSize the size of a single vertex in bytes
@@ -177,7 +173,6 @@ class GLShader {
      * destroy this shader objects resources (program, attributes, uniforms)
      * @name destroy
      * @memberof GLShader
-     * @function
      */
     destroy() {
         this.uniforms = null;

@@ -17,7 +17,6 @@ class TMXTilesetGroup {
      * add a tileset to the tileset group
      * @name TMXTilesetGroup#add
      * @public
-     * @function
      * @param {TMXTileset} tileset
      */
     add(tileset) {
@@ -29,7 +28,6 @@ class TMXTilesetGroup {
      * return the tileset at the specified index
      * @name TMXTilesetGroup#getTilesetByIndex
      * @public
-     * @function
      * @param {number} i
      * @returns {TMXTileset} corresponding tileset
      */
@@ -42,7 +40,6 @@ class TMXTilesetGroup {
      * will throw an exception if no matching tileset is found
      * @name TMXTilesetGroup#getTilesetByGid
      * @public
-     * @function
      * @param {number} gid
      * @returns {TMXTileset} corresponding tileset
      */

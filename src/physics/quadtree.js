@@ -165,7 +165,6 @@ class QuadTree {
      * Insert the given object container into the node.
      * @name insertContainer
      * @memberof QuadTree
-     * @function
      * @param {Container} container group of objects to be added
      */
     insertContainer(container) {
@@ -194,7 +193,6 @@ class QuadTree {
      * objects to their corresponding subnodes.
      * @name insert
      * @memberof QuadTree
-     * @function
      * @param {object} item object to be added
      */
     insert(item) {
@@ -239,7 +237,6 @@ class QuadTree {
      * Return all objects that could collide with the given object
      * @name retrieve
      * @memberof QuadTree
-     * @function
      * @param {object} item object to be checked against
      * @param {object} [fn] a sorting function for the returned array
      * @returns {object[]} array with all detected objects
@@ -275,7 +272,6 @@ class QuadTree {
      * (this function won't recalculate the impacted node)
      * @name remove
      * @memberof QuadTree
-     * @function
      * @param {object} item object to be removed
      * @returns {boolean} true if the item was found and removed.
      */
@@ -316,7 +312,6 @@ class QuadTree {
      * return true if the node is prunable
      * @name isPrunable
      * @memberof QuadTree
-     * @function
      * @returns {boolean} true if the node is prunable
      */
     isPrunable() {
@@ -327,7 +322,6 @@ class QuadTree {
      * return true if the node has any children
      * @name hasChildren
      * @memberof QuadTree
-     * @function
      * @returns {boolean} true if the node has any children
      */
     hasChildren() {
@@ -344,7 +338,6 @@ class QuadTree {
      * clear the quadtree
      * @name clear
      * @memberof QuadTree
-     * @function
      * @param {Bounds} [bounds=this.bounds] the bounds to be cleared
      */
     clear(bounds) {

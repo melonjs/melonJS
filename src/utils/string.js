@@ -6,7 +6,6 @@
 /**
  * converts the first character of the given string to uppercase
  * @public
- * @function
  * @memberof utils.string
  * @name capitalize
  * @param {string} str the string to be capitalized
@@ -19,7 +18,6 @@ export function capitalize(str) {
 /**
  * returns the string stripped of whitespace from the left.
  * @public
- * @function
  * @memberof utils.string
  * @name trimLeft
  * @param {string} str the string to be trimmed
@@ -32,7 +30,6 @@ export function trimLeft(str) {
 /**
  * returns the string stripped of whitespace from the right.
  * @public
- * @function
  * @memberof utils.string
  * @name trimRight
  * @param {string} str the string to be trimmed
@@ -45,7 +42,6 @@ export function trimRight(str) {
 /**
  * returns true if the given string contains a numeric integer or float value
  * @public
- * @function
  * @memberof utils.string
  * @name isNumeric
  * @param {string} str the string to be tested
@@ -61,7 +57,6 @@ export function isNumeric(str) {
 /**
  * returns true if the given string contains a true or false
  * @public
- * @function
  * @memberof utils.string
  * @name isBoolean
  * @param {string} str the string to be tested
@@ -75,7 +70,6 @@ export function isBoolean(str) {
 /**
  * convert a string to the corresponding hexadecimal value
  * @public
- * @function
  * @memberof utils.string
  * @name toHex
  * @param {string} str the string to be converted

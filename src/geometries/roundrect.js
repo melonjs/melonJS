@@ -56,7 +56,6 @@ class RoundRect extends Rect {
      * copy the position, size and radius of the given rounded rectangle into this one
      * @name copy
      * @memberof RoundRect
-     * @function
      * @param {RoundRect} rrect source rounded rectangle
      * @returns {RoundRect} new rectangle
      */
@@ -70,7 +69,7 @@ class RoundRect extends Rect {
      * Returns true if the rounded rectangle contains the given point
      * @name contains
      * @memberof RoundRect
-     * @function
+     * @method
      * @param  {number} x x coordinate
      * @param  {number} y y coordinate
      * @returns {boolean} true if contains
@@ -80,7 +79,6 @@ class RoundRect extends Rect {
      * Returns true if the rounded rectangle contains the given point
      * @name contains
      * @memberof RoundRect
-     * @function
      * @param {Vector2d} point
      * @returns {boolean} true if contains
      */
@@ -141,7 +139,6 @@ class RoundRect extends Rect {
      * check if this RoundRect is identical to the specified one
      * @name equals
      * @memberof RoundRect
-     * @function
      * @param {RoundRect} rrect
      * @returns {boolean} true if equals
      */
@@ -153,7 +150,6 @@ class RoundRect extends Rect {
      * clone this RoundRect
      * @name clone
      * @memberof RoundRect
-     * @function
      * @returns {RoundRect} new RoundRect
      */
     clone() {

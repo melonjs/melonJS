@@ -160,7 +160,6 @@ class ImageLayer extends Sprite {
      * resize the Image Layer to match the given size
      * @name resize
      * @memberof ImageLayer
-     * @function
      * @param {number} w new width
      * @param {number} h new height
      */
@@ -174,7 +173,6 @@ class ImageLayer extends Sprite {
     /**
      * createPattern function
      * @ignore
-     * @function
      */
     createPattern() {
         this._pattern = renderer.createPattern(this.image, this._repeat);
@@ -183,7 +181,6 @@ class ImageLayer extends Sprite {
     /**
      * updateLayer function
      * @ignore
-     * @function
      */
     updateLayer(vpos) {
         var rx = this.ratio.x,
@@ -250,7 +247,6 @@ class ImageLayer extends Sprite {
      * automatically called by the game manager {@link game}
      * @name draw
      * @memberof ImageLayer
-     * @function
      * @protected
      * @param {CanvasRenderer|WebGLRenderer} renderer a renderer object
      */

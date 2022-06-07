@@ -226,7 +226,6 @@ export default class TMXObject {
     /**
      * set the object image (for Tiled Object)
      * @ignore
-     * @function
      */
     setTile(tilesets) {
         // get the corresponding tileset
@@ -247,7 +246,6 @@ export default class TMXObject {
      * @name parseTMXShapes
      * @memberof TMXObject
      * @private
-     * @function
      * @returns {Polygon[]|Line[]|Ellipse[]} an array of shape objects
      */
     parseTMXShapes() {
@@ -318,7 +316,6 @@ export default class TMXObject {
     /**
      * getObjectPropertyByName
      * @ignore
-     * @function
      */
     getObjectPropertyByName(name) {
         return this[name];

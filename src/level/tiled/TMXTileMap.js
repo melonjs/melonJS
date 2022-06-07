@@ -256,7 +256,6 @@ class TMXTileMap {
      * @name getRenderer
      * @memberof TMXTileMap
      * @public
-     * @function
      * @returns {TMXRenderer} a TMX renderer
      */
     getRenderer() {
@@ -270,7 +269,6 @@ class TMXTileMap {
      * return the map bounding rect
      * @name TMXRenderer#getBounds
      * @public
-     * @function
      * @returns {Bounds}
      */
     getBounds() {
@@ -353,7 +351,6 @@ class TMXTileMap {
      * note : this will not automatically update the camera viewport
      * @name TMXTileMap#addTo
      * @public
-     * @function
      * @param {Container} container target container
      * @param {boolean} [flatten=true] if true, flatten all objects into the given container, else a `me.Container` object will be created for each corresponding groups
      * @param {boolean} [setViewportBounds=false] if true, set the viewport bounds to the map size, this should be set to true especially if adding a level to the game world container.
@@ -430,7 +427,6 @@ class TMXTileMap {
      * return an Array of instantiated objects, based on the map object definition
      * @name TMXTileMap#getObjects
      * @public
-     * @function
      * @param {boolean} [flatten=true] if true, flatten all objects into the returned array.
      * when false, a `me.Container` object will be created for each corresponding groups
      * @returns {Renderable[]} Array of Objects
@@ -601,7 +597,6 @@ class TMXTileMap {
      * return all the existing layers
      * @name TMXTileMap#getLayers
      * @public
-     * @function
      * @returns {TMXLayer[]} Array of Layers
      */
     getLayers() {
@@ -614,7 +609,6 @@ class TMXTileMap {
      * destroy function, clean all allocated objects
      * @name TMXTileMap#destroy
      * @public
-     * @function
      */
     destroy() {
         this.tilesets = undefined;

@@ -242,7 +242,6 @@ class TMXLayer extends Renderable {
      * @name setRenderer
      * @memberof TMXLayer
      * @public
-     * @function
      * @param {TMXRenderer} renderer
      * @example
      * // use the parent map default renderer
@@ -258,7 +257,6 @@ class TMXLayer extends Renderable {
      * @name getRenderer
      * @memberof TMXLayer
      * @public
-     * @function
      * @returns {TMXRenderer} renderer
      */
     getRenderer() {
@@ -271,7 +269,6 @@ class TMXLayer extends Renderable {
      * @name getTileId
      * @memberof TMXLayer
      * @public
-     * @function
      * @param {number} x X coordinate (in world/pixels coordinates)
      * @param {number} y Y coordinate (in world/pixels coordinates)
      * @returns {number} TileId or null if there is no Tile at the given position
@@ -286,7 +283,6 @@ class TMXLayer extends Renderable {
      * @name getTile
      * @memberof TMXLayer
      * @public
-     * @function
      * @param {number} x X coordinate (in world/pixels coordinates)
      * @param {number} y Y coordinate (in world/pixels coordinates)
      * @returns {Tile} corresponding tile or null if there is no defined tile at the coordinate or if outside of the layer bounds
@@ -312,7 +308,6 @@ class TMXLayer extends Renderable {
      * @name getTile
      * @memberof TMXLayer
      * @public
-     * @function
      * @param {Tile} tile the tile object to be assigned
      * @param {number} x x coordinate (in world/pixels coordinates)
      * @param {number} y y coordinate (in world/pixels coordinates)
@@ -328,7 +323,6 @@ class TMXLayer extends Renderable {
      * @name setTile
      * @memberof TMXLayer
      * @public
-     * @function
      * @param {number} tileId tileId
      * @param {number} x X coordinate (in world/pixels coordinates)
      * @param {number} y Y coordinate (in world/pixels coordinates)
@@ -347,7 +341,6 @@ class TMXLayer extends Renderable {
      * @name cellAt
      * @memberof TMXLayer
      * @public
-     * @function
      * @param {number} x x position of the tile (in Tile unit)
      * @param {number} y x position of the tile (in Tile unit)
      * @param {number} [boundsCheck=true] check first if within the layer bounds
@@ -374,7 +367,6 @@ class TMXLayer extends Renderable {
      * @name clearTile
      * @memberof TMXLayer
      * @public
-     * @function
      * @param {number} x X coordinate (in map coordinates: row/column)
      * @param {number} y Y coordinate (in map coordinates: row/column)
      * @example

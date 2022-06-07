@@ -44,7 +44,6 @@ export var plugin = {
      * @name patch
      * @memberof plugin
      * @public
-     * @function
      * @param {object} proto target object
      * @param {string} name target function
      * @param {Function} fn replacement function
@@ -90,7 +89,6 @@ export var plugin = {
      * @memberof plugin
      * @see Base
      * @public
-     * @function
      * @param {plugin.Base} pluginObj Plugin object to instantiate and register
      * @param {string} name
      * @param {object} [...arguments] all extra parameters will be passed to the plugin constructor

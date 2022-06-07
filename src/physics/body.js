@@ -368,7 +368,6 @@ class Body {
 
     /**
      * returns the AABB bounding box for this body
-     * @function
      * @returns {Bounds} bounding box Rectangle object
      */
     getBounds() {

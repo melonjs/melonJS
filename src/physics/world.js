@@ -96,7 +96,6 @@ class World extends Container {
      * reset the game world
      * @name reset
      * @memberof World
-     * @function
      */
     reset() {
         // clear the quadtree
@@ -118,7 +117,6 @@ class World extends Container {
      * @name addBody
      * @memberof World
      * @see Container.addChild
-     * @function
      * @param {Body} body
      * @returns {World} this game world
      */
@@ -133,7 +131,6 @@ class World extends Container {
      * @name removeBody
      * @memberof World
      * @see Container.removeChild
-     * @function
      * @param {Body} body
      * @returns {World} this game world
      */
@@ -147,7 +144,6 @@ class World extends Container {
      * update the game world
      * @name reset
      * @memberof World
-     * @function
      * @param {number} dt the time passed since the last frame update
      * @returns {boolean} true if the word is dirty
      */

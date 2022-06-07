@@ -83,7 +83,6 @@ class Light2d extends Renderable {
      * returns a geometry representing the visible area of this light
      * @name getVisibleArea
      * @memberof Light2d
-     * @function
      * @returns {Ellipse} the light visible mask
      */
     getVisibleArea() {

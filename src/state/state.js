@@ -253,7 +253,6 @@ var state = {
      * @name stop
      * @memberof state
      * @public
-     * @function
      * @param {boolean} [pauseTrack=false] pause current track on screen stop.
      */
     stop(pauseTrack=false) {
@@ -280,7 +279,6 @@ var state = {
      * @name pause
      * @memberof state
      * @public
-     * @function
      * @param {boolean} [music=false] pause current music track on screen pause
      */
     pause(music=false) {
@@ -306,7 +304,6 @@ var state = {
      * @name restart
      * @memberof state
      * @public
-     * @function
      * @param {boolean} [music=false] resume current music track on screen resume
      */
     restart(music=false) {
@@ -334,7 +331,6 @@ var state = {
      * @name resume
      * @memberof state
      * @public
-     * @function
      * @param {boolean} [music=false] resume current music track on screen resume
      */
     resume(music=false) {
@@ -359,7 +355,6 @@ var state = {
      * @name isRunning
      * @memberof state
      * @public
-     * @function
      * @returns {boolean} true if a "process is running"
      */
     isRunning() {
@@ -371,7 +366,6 @@ var state = {
      * @name isPaused
      * @memberof state
      * @public
-     * @function
      * @returns {boolean} true if the game is paused
      */
     isPaused() {
@@ -383,7 +377,6 @@ var state = {
      * @name set
      * @memberof state
      * @public
-     * @function
      * @param {number} state State ID (see constants)
      * @param {Stage} stage Instantiated Stage to associate with state ID
      * @param {boolean} [start = false] if true the state will be changed immediately after adding it.
@@ -443,7 +436,6 @@ var state = {
      * @name current
      * @memberof state
      * @public
-     * @function
      * @returns {Stage}
      */
     current() {
@@ -457,7 +449,6 @@ var state = {
      * @name transition
      * @memberof state
      * @public
-     * @function
      * @param {string} effect (only "fade" is supported for now)
      * @param {Color|string} color a CSS color value
      * @param {number} [duration=1000] expressed in milliseconds
@@ -474,7 +465,6 @@ var state = {
      * @name setTransition
      * @memberof state
      * @public
-     * @function
      * @param {number} state State ID (see constants)
      * @param {boolean} enable
      */
@@ -487,7 +477,6 @@ var state = {
      * @name change
      * @memberof state
      * @public
-     * @function
      * @param {number} state State ID (see constants)
      * @param {boolean} forceChange if true the state will be changed immediately
      * @param {object} [...arguments] extra arguments to be passed to the reset functions
@@ -542,7 +531,6 @@ var state = {
      * @name isCurrent
      * @memberof state
      * @public
-     * @function
      * @param {number} state State ID (see constants)
      * @returns {boolean} true if the specified state is the current one
      */

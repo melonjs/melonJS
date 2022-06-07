@@ -8,7 +8,6 @@ import {random as mathRandom, weightedRandom as mathWeightedRandom} from "./../m
 /**
  * Remove the specified object from the given Array
  * @public
- * @function
  * @memberof utils.array
  * @name remove
  * @param {Array} arr array from which to remove an object
@@ -29,7 +28,6 @@ export function remove(arr, obj) {
 /**
  * return a random array element
  * @public
- * @function
  * @memberof utils.array
  * @name random
  * @param {Array} arr array to pick a element
@@ -46,7 +44,6 @@ export function random(arr) {
 /**
  * return a weighted random array element, favoring the earlier entries
  * @public
- * @function
  * @memberof utils.array
  * @name weightedRandom
  * @param {Array} arr array to pick a element

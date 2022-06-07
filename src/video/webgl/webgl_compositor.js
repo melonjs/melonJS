@@ -156,7 +156,6 @@ class WebGLCompositor {
      * add vertex attribute property definition to the compositor
      * @name addAttribute
      * @memberof WebGLCompositor
-     * @function
      * @param {string} name name of the attribute in the vertex shader
      * @param {number} size number of components per vertex attribute. Must be 1, 2, 3, or 4.
      * @param {GLenum} type data type of each component in the array
@@ -204,7 +203,6 @@ class WebGLCompositor {
      * Sets the viewport
      * @name setViewport
      * @memberof WebGLCompositor
-     * @function
      * @param {number} x x position of viewport
      * @param {number} y y position of viewport
      * @param {number} w width of viewport
@@ -218,7 +216,6 @@ class WebGLCompositor {
      * Create a WebGL texture from an image
      * @name createTexture2D
      * @memberof WebGLCompositor
-     * @function
      * @param {number} unit Destination texture unit
      * @param {Image|HTMLCanvasElement|ImageData|Uint8Array[]|Float32Array[]} image Source image
      * @param {number} filter gl.LINEAR or gl.NEAREST
@@ -263,7 +260,6 @@ class WebGLCompositor {
      * delete the given WebGL texture
      * @name bindTexture2D
      * @memberof WebGLCompositor
-     * @function
      * @param {WebGLTexture} [texture] a WebGL texture to delete
      * @param {number} [unit] Texture unit to delete
      */
@@ -276,7 +272,6 @@ class WebGLCompositor {
      * returns the WebGL texture associated to the given texture unit
      * @name bindTexture2D
      * @memberof WebGLCompositor
-     * @function
      * @param {number} unit Texture unit to which a texture is bound
      * @returns {WebGLTexture} texture a WebGL texture
      */
@@ -288,7 +283,6 @@ class WebGLCompositor {
      * assign the given WebGL texture to the current batch
      * @name bindTexture2D
      * @memberof WebGLCompositor
-     * @function
      * @param {WebGLTexture} texture a WebGL texture
      * @param {number} unit Texture unit to which the given texture is bound
      */
@@ -316,7 +310,6 @@ class WebGLCompositor {
      * unbind the given WebGL texture, forcing it to be reuploaded
      * @name unbindTexture2D
      * @memberof WebGLCompositor
-     * @function
      * @param {WebGLTexture} [texture] a WebGL texture
      * @param {number} [unit] a WebGL texture
      * @returns {number} unit the unit number that was associated with the given texture
@@ -363,7 +356,6 @@ class WebGLCompositor {
      * set/change the current projection matrix
      * @name setProjection
      * @memberof WebGLCompositor
-     * @function
      * @param {Matrix3d} matrix
      */
     setProjection(matrix) {
@@ -375,7 +367,6 @@ class WebGLCompositor {
      * @name useShader
      * @see GLShader
      * @memberof WebGLCompositor
-     * @function
      * @param {GLShader} shader a reference to a GLShader instance
      */
     useShader(shader) {
@@ -392,7 +383,6 @@ class WebGLCompositor {
      * Add a textured quad
      * @name addQuad
      * @memberof WebGLCompositor
-     * @function
      * @param {TextureAtlas} texture Source texture atlas
      * @param {number} x Destination x-coordinate
      * @param {number} y Destination y-coordinate
@@ -449,7 +439,6 @@ class WebGLCompositor {
      * Flush batched texture operations to the GPU
      * @param {number} [mode=gl.TRIANGLES] the GL drawing mode
      * @memberof WebGLCompositor
-     * @function
      */
     flush(mode = this.mode) {
         var vertex = this.vertexBuffer;
@@ -477,7 +466,6 @@ class WebGLCompositor {
      * Draw an array of vertices
      * @name drawVertices
      * @memberof WebGLCompositor
-     * @function
      * @param {GLenum} mode primitive type to render (gl.POINTS, gl.LINE_STRIP, gl.LINE_LOOP, gl.LINES, gl.TRIANGLE_STRIP, gl.TRIANGLE_FAN, gl.TRIANGLES)
      * @param {Vector2d[]} verts vertices
      * @param {number} [vertexCount=verts.length] amount of points defined in the points array
@@ -507,7 +495,6 @@ class WebGLCompositor {
      * Specify the color values used when clearing color buffers. The values are clamped between 0 and 1.
      * @name clearColor
      * @memberof WebGLCompositor
-     * @function
      * @param {number} [r=0] - the red color value used when the color buffers are cleared
      * @param {number} [g=0] - the green color value used when the color buffers are cleared
      * @param {number} [b=0] - the blue color value used when the color buffers are cleared
@@ -521,7 +508,6 @@ class WebGLCompositor {
      * Clear the frame buffer
      * @name clear
      * @memberof WebGLCompositor
-     * @function
      */
     clear() {
         this.gl.clear(this.gl.COLOR_BUFFER_BIT);

@@ -141,7 +141,6 @@ var timer = {
          * @name reset
          * @memberof timer
          * @ignore
-         * @function
          */
         reset() {
             // set to "now"
@@ -164,7 +163,6 @@ var timer = {
          * @param {boolean} [pauseable=true] respects the pause state of the engine.
          * @param {...*} args optional parameters which are passed through to the function specified by fn once the timer expires.
          * @returns {number} The numerical ID of the timer, which can be used later with me.timer.clearTimeout().
-         * @function
          * @example
          * // set a timer to call "myFunction" after 1000ms
          * me.timer.setTimeout(myFunction, 1000);
@@ -193,7 +191,6 @@ var timer = {
          * @param {boolean} [pauseable=true] respects the pause state of the engine.
          * @param {...*} args optional parameters which are passed through to the function specified by fn once the timer expires.
          * @returns {number} The numerical ID of the timer, which can be used later with me.timer.clearInterval().
-         * @function
          * @example
          * // set a timer to call "myFunction" every 1000ms
          * me.timer.setInterval(myFunction, 1000);
@@ -217,7 +214,6 @@ var timer = {
          * Clears the delay set by me.timer.setTimeout().
          * @name clearTimeout
          * @memberof timer
-         * @function
          * @param {number} timeoutID ID of the timeout to be cleared
          */
         clearTimeout(timeoutID) {
@@ -228,7 +224,6 @@ var timer = {
          * Clears the Interval set by me.timer.setInterval().
          * @name clearInterval
          * @memberof timer
-         * @function
          * @param {number} intervalID ID of the interval to be cleared
          */
         clearInterval(intervalID) {
@@ -241,7 +236,6 @@ var timer = {
          * @name getTime
          * @memberof timer
          * @returns {number}
-         * @function
          */
         getTime() {
             return now;
@@ -252,7 +246,6 @@ var timer = {
          * @name getDelta
          * @memberof timer
          * @returns {number}
-         * @function
          */
         getDelta() {
             return delta;
@@ -263,7 +256,6 @@ var timer = {
          * @name computeFPS
          * @ignore
          * @memberof timer
-         * @function
          */
         countFPS() {
             framecount++;

@@ -48,7 +48,6 @@ export function warning(deprecated, replacement, version) {
 /**
  * @public
  * @name turnOnPointerLock
- * @function
  * @returns {boolean} return true if the request was successfully submitted
  * @memberof device#
  * @deprecated since 10.3.0
@@ -62,7 +61,6 @@ device.turnOnPointerLock = function () {
 /**
  * @public
  * @name turnOffPointerLock
- * @function
  * @returns {boolean} return true if the request was successfully submitted
  * @memberof device#
  * @deprecated since 10.3.0

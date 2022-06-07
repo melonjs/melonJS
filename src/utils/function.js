@@ -6,7 +6,6 @@
 /**
  * Executes a function as soon as the interpreter is idle (stack empty).
  * @public
- * @function
  * @memberof utils.function
  * @name defer
  * @param {Function} func The function to be deferred.
@@ -27,7 +26,6 @@ export function defer(func, thisArg, ...args) {
  * returns a function that, when invoked will only be triggered at most
  * once during a given window of time
  * @public
- * @function
  * @memberof utils.function
  * @name throttle
  * @param {Function} fn the function to be throttled.

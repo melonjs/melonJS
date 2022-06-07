@@ -34,7 +34,6 @@ class Bounds {
      * reset the bound
      * @name clear
      * @memberof Bounds
-     * @function
      */
     clear() {
         this.setMinMax(Infinity, Infinity, -Infinity, -Infinity);
@@ -45,7 +44,6 @@ class Bounds {
      * sets the bounds to the given min and max value
      * @name setMinMax
      * @memberof Bounds
-     * @function
      * @param {number} minX
      * @param {number} minY
      * @param {number} maxX
@@ -205,7 +203,6 @@ class Bounds {
      * Updates bounds using the given vertices
      * @name update
      * @memberof Bounds
-     * @function
      * @param {Vector2d[]} vertices an array of me.Vector2d points
      */
     update(vertices) {
@@ -216,7 +213,6 @@ class Bounds {
      * add the given vertices to the bounds definition.
      * @name add
      * @memberof Bounds
-     * @function
      * @param {Vector2d[]} vertices an array of me.Vector2d points
      * @param {boolean} [clear=false] either to reset the bounds before adding the new vertices
      */
@@ -237,7 +233,6 @@ class Bounds {
      * add the given bounds to the bounds definition.
      * @name addBounds
      * @memberof Bounds
-     * @function
      * @param {Bounds} bounds
      * @param {boolean} [clear=false] either to reset the bounds before adding the new vertices
      */
@@ -256,7 +251,6 @@ class Bounds {
      * add the given point to the bounds definition.
      * @name addPoint
      * @memberof Bounds
-     * @function
      * @param {Vector2d} v
      * @param {Matrix2d} [m] an optional transform to apply to the given point
      */
@@ -274,7 +268,6 @@ class Bounds {
      * add the given quad coordinates to this bound definition, multiplied by the given matrix
      * @name addFrame
      * @memberof Bounds
-     * @function
      * @param {number} x0 - left X coordinates of the quad
      * @param {number} y0 - top Y coordinates of the quad
      * @param {number} x1 - right X coordinates of the quad
@@ -297,7 +290,7 @@ class Bounds {
      * Returns true if the bounds contains the given point.
      * @name contains
      * @memberof Bounds
-     * @function
+     * @method
      * @param {Vector2d} point
      * @returns {boolean} True if the bounds contain the point, otherwise false
      */
@@ -305,7 +298,6 @@ class Bounds {
      * Returns true if the bounds contains the given point.
      * @name contains
      * @memberof Bounds
-     * @function
      * @param {number} x
      * @param {number} y
      * @returns {boolean} True if the bounds contain the point, otherwise false
@@ -339,7 +331,6 @@ class Bounds {
      * Returns true if the two bounds intersect.
      * @name overlaps
      * @memberof Bounds
-     * @function
      * @param {Bounds|Rect} bounds
      * @returns {boolean} True if the bounds overlap, otherwise false
      */
@@ -352,7 +343,6 @@ class Bounds {
      * determines whether all coordinates of this bounds are finite numbers.
      * @name isFinite
      * @memberof Bounds
-     * @function
      * @returns {boolean} false if all coordinates are positive or negative Infinity or NaN; otherwise, true.
      */
     isFinite() {
@@ -363,14 +353,13 @@ class Bounds {
      * Translates the bounds by the given vector.
      * @name translate
      * @memberof Bounds
-     * @function
+     * @method
      * @param {Vector2d} vector
      */
     /**
      * Translates the bounds by x on the x axis, and y on the y axis
      * @name translate
      * @memberof Bounds
-     * @function
      * @param {number} x
      * @param {number} y
      */
@@ -395,14 +384,13 @@ class Bounds {
      * Shifts the bounds to the given position vector.
      * @name shift
      * @memberof Bounds
-     * @function
+     * @method
      * @param {Vector2d} position
      */
     /**
      * Shifts the bounds to the given x, y position.
      * @name shift
      * @memberof Bounds
-     * @function
      * @param {number} x
      * @param {number} y
      */
@@ -432,7 +420,6 @@ class Bounds {
      * clone this bounds
      * @name clone
      * @memberof Bounds
-     * @function
      * @returns {Bounds}
      */
     clone() {
@@ -445,7 +432,6 @@ class Bounds {
      * Returns a polygon whose edges are the same as this bounds.
      * @name toPolygon
      * @memberof Bounds
-     * @function
      * @returns {Polygon} a new Polygon that represents this bounds.
      */
     toPolygon () {

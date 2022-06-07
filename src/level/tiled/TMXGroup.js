@@ -98,9 +98,7 @@ export default class TMXGroup {
     /**
      * reset function
      * @ignore
-     * @function
      */
-
     destroy() {
         // clear all allocated objects
         this.objects = null;
@@ -109,7 +107,6 @@ export default class TMXGroup {
     /**
      * return the object count
      * @ignore
-     * @function
      */
     getObjectCount() {
         return this.objects.length;
@@ -118,7 +115,6 @@ export default class TMXGroup {
     /**
      * returns the object at the specified index
      * @ignore
-     * @function
      */
     getObjectByIndex(idx) {
         return this.objects[idx];

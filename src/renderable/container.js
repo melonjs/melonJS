@@ -100,7 +100,6 @@ class Container extends Renderable {
          * a callback to be extended, triggered after a child has been added or removed
          * @name onChildChange
          * @memberof Container#
-         * @function
          * @param {number} index added or removed child index
          */
         this.onChildChange = function (/* index */) {
@@ -157,7 +156,6 @@ class Container extends Renderable {
      * reset the container, removing all childrens, and reseting transforms.
      * @name reset
      * @memberof Container
-     * @function
      */
     reset() {
         // cancel any sort operation
@@ -193,7 +191,6 @@ class Container extends Renderable {
      * will not be in any container.
      * @name addChild
      * @memberof Container
-     * @function
      * @param {Renderable} child
      * @param {number} [z] forces the z index of the child to the specified value
      * @returns {Renderable} the added child
@@ -257,7 +254,6 @@ class Container extends Renderable {
      * (the list won't be sorted after insertion)
      * @name addChildAt
      * @memberof Container
-     * @function
      * @param {Renderable} child
      * @param {number} index
      * @returns {Renderable} the added child
@@ -316,7 +312,6 @@ class Container extends Renderable {
      *    - The array forEach() was called upon. <br>
      * @name forEach
      * @memberof Container
-     * @function
      * @param {Function} callback fnction to execute on each element
      * @param {object} [thisArg] value to use as this(i.e reference Object) when executing callback.
      * @example
@@ -353,7 +348,6 @@ class Container extends Renderable {
      * Swaps the position (z-index) of 2 children
      * @name swapChildren
      * @memberof Container
-     * @function
      * @param {Renderable} child
      * @param {Renderable} child2
      */
@@ -381,7 +375,6 @@ class Container extends Renderable {
      * Returns the Child at the specified index
      * @name getChildAt
      * @memberof Container
-     * @function
      * @param {number} index
      * @returns {Renderable} the child at the specified index
      */
@@ -398,7 +391,6 @@ class Container extends Renderable {
      * Returns the index of the given Child
      * @name getChildIndex
      * @memberof Container
-     * @function
      * @param {Renderable} child
      * @returns {number} index
      */
@@ -410,7 +402,6 @@ class Container extends Renderable {
      * Returns the next child within the container or undefined if none
      * @name getNextChild
      * @memberof Container
-     * @function
      * @param {Renderable} child
      * @returns {Renderable} child
      */
@@ -426,7 +417,6 @@ class Container extends Renderable {
      * Returns true if contains the specified Child
      * @name hasChild
      * @memberof Container
-     * @function
      * @param {Renderable} child
      * @returns {boolean}
      */
@@ -441,7 +431,6 @@ class Container extends Renderable {
      * @name getChildByProp
      * @memberof Container
      * @public
-     * @function
      * @param {string} prop Property name
      * @param {string|RegExp|number|boolean} value Value of the property
      * @returns {Renderable[]} Array of childs
@@ -493,7 +482,6 @@ class Container extends Renderable {
      * @name getChildByType
      * @memberof Container
      * @public
-     * @function
      * @param {object} classType
      * @returns {Renderable[]} Array of children
      */
@@ -520,7 +508,6 @@ class Container extends Renderable {
      * @name getChildByName
      * @memberof Container
      * @public
-     * @function
      * @param {string|RegExp|number|boolean} name child name
      * @returns {Renderable[]} Array of children
      */
@@ -535,7 +522,6 @@ class Container extends Renderable {
      * @name getChildByGUID
      * @memberof Container
      * @public
-     * @function
      * @param {string|RegExp|number|boolean} guid child GUID
      * @returns {Renderable} corresponding child or null
      */
@@ -549,7 +535,6 @@ class Container extends Renderable {
      * @name getChildren
      * @memberof Container
      * @public
-     * @function
      * @returns {Renderable[]} an array of renderable object
      */
     getChildren() {
@@ -564,7 +549,6 @@ class Container extends Renderable {
      * @ignore
      * @name updateBounds
      * @memberof Renderable
-     * @function
      * @returns {Bounds} this shape bounding box Rectangle object
      */
     updateBounds(forceUpdateChildBounds = false) {
@@ -593,7 +577,6 @@ class Container extends Renderable {
      * @private
      * @name isAttachedToRoot
      * @memberof Container
-     * @function
      * @returns {boolean}
      */
     isAttachedToRoot() {
@@ -616,7 +599,6 @@ class Container extends Renderable {
      * @ignore
      * @name updateBoundsPos
      * @memberof Container
-     * @function
      */
     updateBoundsPos(newX, newY) {
         // call the parent method
@@ -652,7 +634,6 @@ class Container extends Renderable {
      * @name removeChild
      * @memberof Container
      * @public
-     * @function
      * @param {Renderable} child
      * @param {boolean} [keepalive=False] True to prevent calling child.destroy()
      */
@@ -671,7 +652,6 @@ class Container extends Renderable {
      * Never use keepalive=true with objects from {@link pool}. Doing so will create a memory leak.
      * @name removeChildNow
      * @memberof Container
-     * @function
      * @param {Renderable} child
      * @param {boolean} [keepalive=False] True to prevent calling child.destroy()
      */
@@ -724,7 +704,6 @@ class Container extends Renderable {
      * Automatically set the specified property of all childs to the given value
      * @name setChildsProperty
      * @memberof Container
-     * @function
      * @param {string} prop property name
      * @param {object} value property value
      * @param {boolean} [recursive=false] recursively apply the value to child containers if true
@@ -742,7 +721,6 @@ class Container extends Renderable {
      * Move the child in the group one step forward (z depth).
      * @name moveUp
      * @memberof Container
-     * @function
      * @param {Renderable} child
      */
     moveUp(child) {
@@ -759,7 +737,6 @@ class Container extends Renderable {
      * Move the child in the group one step backward (z depth).
      * @name moveDown
      * @memberof Container
-     * @function
      * @param {Renderable} child
      */
     moveDown(child) {
@@ -776,7 +753,6 @@ class Container extends Renderable {
      * Move the specified child to the top(z depth).
      * @name moveToTop
      * @memberof Container
-     * @function
      * @param {Renderable} child
      */
     moveToTop(child) {
@@ -796,7 +772,6 @@ class Container extends Renderable {
      * Move the specified child the bottom (z depth).
      * @name moveToBottom
      * @memberof Container
-     * @function
      * @param {Renderable} child
      */
     moveToBottom(child) {
@@ -817,7 +792,6 @@ class Container extends Renderable {
      * @name sort
      * @memberof Container
      * @public
-     * @function
      * @param {boolean} [recursive=false] recursively sort all containers if true
      */
     sort(recursive) {
@@ -911,7 +885,6 @@ class Container extends Renderable {
      * automatically called by the game manager {@link game}
      * @name update
      * @memberof Container
-     * @function
      * @protected
      * @param {number} dt time since the last update in milliseconds.
      * @returns {boolean} true if the Container is dirty
@@ -964,7 +937,6 @@ class Container extends Renderable {
      * automatically called by the game manager {@link game}
      * @name draw
      * @memberof Container
-     * @function
      * @protected
      * @param {CanvasRenderer|WebGLRenderer} renderer a renderer object
      * @param {Rect|Bounds} [rect] the area or viewport to (re)draw

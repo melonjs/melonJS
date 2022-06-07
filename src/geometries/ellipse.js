@@ -77,7 +77,6 @@ class Ellipse {
      * set new value to the Ellipse shape
      * @name setShape
      * @memberof Ellipse
-     * @function
      * @param {number} x the center x coordinate of the ellipse
      * @param {number} y the center y coordinate of the ellipse
      * @param {number} w width (diameter) of the ellipse
@@ -107,7 +106,6 @@ class Ellipse {
      * Rotate this Ellipse (counter-clockwise) by the specified angle (in radians).
      * @name rotate
      * @memberof Ellipse
-     * @function
      * @param {number} angle The angle to rotate (in radians)
      * @param {Vector2d|ObservableVector2d} [v] an optional point to rotate around
      * @returns {Ellipse} Reference to this object for method chaining
@@ -124,7 +122,6 @@ class Ellipse {
      * Scale this Ellipse by the specified scalar.
      * @name scale
      * @memberof Ellipse
-     * @function
      * @param {number} x
      * @param {number} [y=x]
      * @returns {Ellipse} Reference to this object for method chaining
@@ -143,7 +140,6 @@ class Ellipse {
      * Scale this Ellipse by the specified vector.
      * @name scale
      * @memberof Ellipse
-     * @function
      * @param {Vector2d} v
      * @returns {Ellipse} Reference to this object for method chaining
      */
@@ -155,7 +151,6 @@ class Ellipse {
      * apply the given transformation matrix to this ellipse
      * @name transform
      * @memberof Ellipse
-     * @function
      * @param {Matrix2d} matrix the transformation matrix
      * @returns {Polygon} Reference to this object for method chaining
      */
@@ -168,7 +163,7 @@ class Ellipse {
      * translate the circle/ellipse by the specified offset
      * @name translate
      * @memberof Ellipse
-     * @function
+     * @method
      * @param {number} x x offset
      * @param {number} y y offset
      * @returns {Ellipse} this ellipse
@@ -177,7 +172,6 @@ class Ellipse {
      * translate the circle/ellipse by the specified vector
      * @name translate
      * @memberof Ellipse
-     * @function
      * @param {Vector2d} v vector offset
      * @returns {Ellipse} this ellipse
      */
@@ -204,8 +198,8 @@ class Ellipse {
     /**
      * check if this circle/ellipse contains the specified point
      * @name contains
+     * @method
      * @memberof Ellipse
-     * @function
      * @param {Vector2d} point
      * @returns {boolean} true if contains
      */
@@ -214,7 +208,6 @@ class Ellipse {
      * check if this circle/ellipse contains the specified point
      * @name contains
      * @memberof Ellipse
-     * @function
      * @param  {number} x x coordinate
      * @param  {number} y y coordinate
      * @returns {boolean} true if contains
@@ -246,7 +239,6 @@ class Ellipse {
      * returns the bounding box for this shape, the smallest Rectangle object completely containing this shape.
      * @name getBounds
      * @memberof Ellipse
-     * @function
      * @returns {Bounds} this shape bounding box Rectangle object
      */
     getBounds() {
@@ -260,7 +252,6 @@ class Ellipse {
      * clone this Ellipse
      * @name clone
      * @memberof Ellipse
-     * @function
      * @returns {Ellipse} new Ellipse
      */
     clone() {

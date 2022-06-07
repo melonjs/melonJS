@@ -362,7 +362,6 @@ export var GAMEPAD = {
  * @name bindGamepad
  * @memberof input
  * @public
- * @function
  * @param {number} index Gamepad index
  * @param {object} button Button/Axis definition
  * @param {string} button.type "buttons" or "axes"
@@ -437,7 +436,6 @@ export function bindGamepad(index, button, keyCode) {
  * @name unbindGamepad
  * @memberof input
  * @public
- * @function
  * @param {number} index Gamepad index
  * @param {number} button (See {@link input.GAMEPAD.BUTTONS})
  * @example
@@ -456,7 +454,6 @@ export function unbindGamepad(index, button) {
  * @name setGamepadDeadzone
  * @memberof input
  * @public
- * @function
  * @param {number} value Deadzone value
  */
 export function setGamepadDeadzone(value) {
@@ -470,7 +467,6 @@ export function setGamepadDeadzone(value) {
  * @name setGamepadMapping
  * @memberof input
  * @public
- * @function
  * @param {string} id Gamepad id string
  * @param {object} mapping A hash table
  * @param {number[]} mapping.axes Standard analog control stick axis locations
