@@ -86,10 +86,7 @@ var remap = new Map();
 
 var updateEventHandler;
 
-/**
- * Default gamepad mappings
- * @ignore
- */
+// Default gamepad mappings
 [
     // Firefox mappings
     [
@@ -261,18 +258,14 @@ var updateGamepads = function () {
     });
 };
 
-/**
- * gamepad connected callback
- * @ignore
- */
+// gamepad connected callback
 if (globalThis.navigator && typeof globalThis.navigator.getGamepads === "function") {
     globalThis.addEventListener("gamepadconnected", function (e) {
         event.emit(event.GAMEPAD_CONNECTED, e.gamepad);
     }, false);
 
-    /**
+    /*
      * gamepad disconnected callback
-     * @ignore
      */
     globalThis.addEventListener("gamepaddisconnected", function (e) {
         event.emit(event.GAMEPAD_DISCONNECTED, e.gamepad);

@@ -4,7 +4,7 @@ import { TextureAtlas } from "./../video/texture/atlas.js";
 import Renderer from "./../video/renderer.js";
 import { Draggable, DropTarget } from "./../renderable/dragndrop.js";
 
-/**
+/*
  * placeholder for all deprecated classes and corresponding alias for backward compatibility
  */
 
@@ -72,8 +72,11 @@ device.turnOffPointerLock = function () {
 };
 
 /**
+ * Alias of {@link TextureAtlas}
+ *
  * @public
  * @name Texture
+ * @class
  * @memberof Renderer#
  * @deprecated since 10.4.0
  * @see TextureAtlas

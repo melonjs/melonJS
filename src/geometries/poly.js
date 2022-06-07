@@ -32,7 +32,7 @@ class Polygon {
         /**
          * The bounding rectangle for this shape
          * @ignore
-         * @type {Bounds}
+         * @member {Bounds}
          * @name _bounds
          * @memberof Polygon
          */
