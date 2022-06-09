@@ -8,13 +8,20 @@
     ],
     "opts": {
         "encoding"      : "utf8",
-        "destination"   : "dist/docs",
-        "export"        : "dist/docs/melonjs.api.json"
+        "destination"   : "docs",
+        "export"        : "docs/melonjs.api.json"
     },
     "template": {
+        "applicationName": "melonJS",
         "repository": "@webdoc/default-template",
         "outputSourceFiles": false,
         "readme": "./README.md",
-        "repository": "https://github.com/melonjs/melonJS/"
+        "repository": "https://github.com/melonjs/melonJS/",
+        "assets": ["./node_modules/@melonjs/webdoc-theme/static"],
+        "stylesheets": [
+          "./node_modules/@melonjs/webdoc-theme/stylesheets/index.css",
+          "./node_modules/@melonjs/webdoc-theme/stylesheets/header.css",
+          "./node_modules/@melonjs/webdoc-theme/stylesheets/md.css"
+        ]
     }
 }
