@@ -2,26 +2,18 @@
   "env": {
     "es6"       : true,
     "browser"   : true,
-    "jasmine"   : true
+    "jasmine"   : true,
+    "node"      : true
 },
   "globals": {
-    "me"        : false
+    "me"        : false,
+    "globalThis": false
   },
   "parserOptions": {
     "ecmaVersion": 6,
     "sourceType": "module"
   },
-  "plugins": [
-    "jsdoc"
-  ],
   "extends": "eslint:recommended",
-  "extends": ["plugin:jsdoc/recommended"],
-
-  "settings": {
-    "jsdoc": {
-      "mode": "typescript"
-    }
-  },
   "rules": {
     // http://eslint.org/docs/rules/
     "accessor-pairs": "error",
@@ -121,15 +113,6 @@
     "unicode-bom": ["error", "never"],
     "valid-typeof": ["error", { "requireStringLiterals": true }],
     "yield-star-spacing": ["error", "both"],
-    "yoda": ["error", "never"],
-    // override default jsdoc rules
-    "jsdoc/newline-after-description" : "off",
-    "jsdoc/require-param-description" : "off",
-    "jsdoc/require-returns-description" : "off",
-    "jsdoc/check-tag-names" : "off",
-    "jsdoc/check-param-names" : "off", // error due to "function polymorphism" and "class interface"
-    "jsdoc/require-param" : "off", // error due to es6 rest parameters
-    "jsdoc/valid-types" : "off", // error in me.utils.function namepath
-    "jsdoc/no-undefined-types" : "off" // error due to WebGL types and other not being recognized by the plugin
+    "yoda": ["error", "never"]
   }
 }
