@@ -6,7 +6,6 @@
     "node"      : true
 },
   "globals": {
-    "me"        : false,
     "globalThis": false
   },
   "parserOptions": {
