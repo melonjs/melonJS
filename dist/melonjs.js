@@ -11911,7 +11911,7 @@
 	 * @param {Matrix2d} [m] an optional transform to apply to the given frame coordinates
 	 */
 	Bounds$1.prototype.addFrame = function addFrame (x0, y0, x1, y1, m) {
-	    var v = me.pool.pull("Vector2d");
+	    var v = pool.pull("Vector2d");
 
 	    // transform all points and add to the bound definition
 	    this.addPoint(v.set(x0, y0), m);
@@ -11919,7 +11919,7 @@
 	    this.addPoint(v.set(x0, y1), m);
 	    this.addPoint(v.set(x1, y1), m);
 
-	    me.pool.push(v);
+	    pool.push(v);
 	};
 
 	/**
@@ -24586,7 +24586,7 @@
 	 * @param {Matrix2d} [m] an optional transform to apply to the given frame coordinates
 	 */
 	Bounds.prototype.addFrame = function addFrame (x0, y0, x1, y1, m) {
-	    var v = me.pool.pull("Vector2d");
+	    var v = pool.pull("Vector2d");
 
 	    // transform all points and add to the bound definition
 	    this.addPoint(v.set(x0, y0), m);
@@ -24594,7 +24594,7 @@
 	    this.addPoint(v.set(x0, y1), m);
 	    this.addPoint(v.set(x1, y1), m);
 
-	    me.pool.push(v);
+	    pool.push(v);
 	};
 
 	/**
@@ -29422,8 +29422,7 @@
 
 	   /**
 	    * specify a function to execute when the Device is fully loaded and ready
-	    * @name device.onReady
-	    * @function
+	    * @function device.onReady
 	    * @param {Function} fn the function to be executed
 	    * @example
 	    * // small game skeleton
