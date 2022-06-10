@@ -1,5 +1,13 @@
 # Changelog
 
+## [10.11.0] (melonJS 2) - _2022-XX-XX_
+
+### Changed
+- Doc: replaced JSDoc by Webdoc for documentation generation (huge thanks to @ShukantPal)
+
+### Fixed
+- Input: fix PointerEvent detection on Firefox for Android mobile (thanks @kutyamutya)
+
 ## [10.10.0] (melonJS 2) - _2022-06-07_
 
 ### Added
