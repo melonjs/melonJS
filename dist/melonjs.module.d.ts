@@ -9718,7 +9718,10 @@ export function boot(): void;
  * @namespace collision
  */
 export var collision: any;
-declare namespace device$1 {
+export namespace device {
+    const devicePixelRatio: number;
+    const isFullscreen: boolean;
+    const sound: boolean;
     /**
      * @public
      * @name turnOnPointerLock
@@ -12547,4 +12550,4 @@ declare function defer(func: Function, thisArg: object, ...args: any[]): number;
  * @returns {Function} the function that will be throttled
  */
 declare function throttle(fn: Function, delay: number, no_trailing: any): Function;
-export { math as Math, device$1 as device, timer$1 as timer };
+export { math as Math, timer$1 as timer };

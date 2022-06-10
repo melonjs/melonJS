@@ -11425,7 +11425,7 @@ const KEY = {
  */
 function initKeyboardEvent() {
     // make sure the keyboard is enable
-    if (keyBoardEventTarget === null && device$1.isMobile === false) {
+    if (keyBoardEventTarget === null && device.isMobile === false) {
         keyBoardEventTarget = globalThis;
         if (typeof keyBoardEventTarget.addEventListener === "function") {
             keyBoardEventTarget.addEventListener("keydown", keyDownEvent, false);
@@ -12332,7 +12332,7 @@ class Pointer extends Bounds {
         this.gameScreenY = this.y = tmpVec.y;
 
         // true if not originally a pointer event
-        this.isNormalized = !device$1.PointerEvent || (device$1.PointerEvent && !(event instanceof globalThis.PointerEvent));
+        this.isNormalized = !device.PointerEvent || (device.PointerEvent && !(event instanceof globalThis.PointerEvent));
 
         this.locked = locked;
         this.movementX = event.movementX || 0;
@@ -12490,7 +12490,7 @@ function enablePointerEvent() {
         currentPointer = new Rect(0, 0, 1, 1);
 
         // instantiate a pool of pointer catched
-        for (var v = 0; v < device$1.maxTouchPoints; v++) {
+        for (var v = 0; v < device.maxTouchPoints; v++) {
             T_POINTERS.push(new Pointer());
         }
 
@@ -12499,14 +12499,14 @@ function enablePointerEvent() {
             pointerEventTarget = renderer.getScreenCanvas();
         }
 
-        if (device$1.PointerEvent) {
+        if (device.PointerEvent) {
             // standard Pointer Events
             activeEventList = pointerEventList;
         } else {
             // Regular Mouse events
             activeEventList = mouseEventList;
         }
-        if (device$1.touch && !device$1.PointerEvent) {
+        if (device.touch && !device.PointerEvent) {
             // touch event on mobile devices
             activeEventList = activeEventList.concat(touchEventList);
         }
@@ -12518,12 +12518,12 @@ function enablePointerEvent() {
             throttlingInterval = ~~(1000 / timer$1.maxfps);
         }
 
-        if (device$1.autoFocus === true) {
-            device$1.focus();
+        if (device.autoFocus === true) {
+            device.focus();
             pointerEventTarget.addEventListener(
                 activeEventList[2], // MOUSE/POINTER DOWN
                 function () {
-                    device$1.focus();
+                    device.focus();
                 },
                 { passive: (preventDefault === false) }
             );
@@ -12563,7 +12563,7 @@ function enablePointerEvent() {
         setTouchAction(pointerEventTarget);
 
         // set a on change listener on pointerlock if supported
-        if (device$1.hasPointerLockSupport) {
+        if (device.hasPointerLockSupport) {
             document.addEventListener("pointerlockchange", () => {
                 // change the locked status accordingly
                 locked = document.pointerLockElement === getParent();
@@ -12787,7 +12787,7 @@ function normalizeEvent(originalEvent) {
     var _pointer;
 
     // PointerEvent or standard Mouse event
-    if (device$1.TouchEvent && originalEvent.changedTouches) {
+    if (device.TouchEvent && originalEvent.changedTouches) {
         // iOS/Android Touch event
         for (var i = 0, l = originalEvent.changedTouches.length; i < l; i++) {
             var touchEvent = originalEvent.changedTouches[i];
@@ -12927,8 +12927,8 @@ var throttlingInterval;
  */
 function globalToLocal(x, y, v) {
     v = v || pool.pull("Vector2d");
-    var rect = device$1.getElementBounds(renderer.getScreenCanvas());
-    var pixelRatio = device$1.devicePixelRatio;
+    var rect = device.getElementBounds(renderer.getScreenCanvas());
+    var pixelRatio = device.devicePixelRatio;
     x -= rect.left + (globalThis.pageXOffset || 0);
     y -= rect.top + (globalThis.pageYOffset || 0);
     var scale = scaleRatio;
@@ -13148,7 +13148,7 @@ function releaseAllPointerEvents(region) {
  * me.input.requestPointerLock();
  */
 function requestPointerLock() {
-    if (device$1.hasPointerLockSupport) {
+    if (device.hasPointerLockSupport) {
         var element = getParent();
         element.requestPointerLock();
         return true;
@@ -13164,7 +13164,7 @@ function requestPointerLock() {
  * @returns {boolean} return true if the request was successfully submitted
  */
 function exitPointerLock() {
-    if (device$1.hasPointerLockSupport) {
+    if (device.hasPointerLockSupport) {
         document.exitPointerLock();
         return true;
     }
@@ -22643,7 +22643,7 @@ class Renderer {
         this.currentBlendMode = "none";
 
         // create the main screen canvas
-        if (device$1.ejecta === true) {
+        if (device.ejecta === true) {
             // a main canvas is already automatically created by Ejecta
             this.canvas = document.getElementById("canvas");
         } else if (typeof globalThis.canvas !== "undefined") {
@@ -27094,7 +27094,7 @@ function preloadTMX(tmxData, onload, onerror) {
                     case "tmx":
                     case "tsx":
                         // ie9 does not fully implement the responseXML
-                        if (device$1.ua.match(/msie/i) || !xmlhttp.responseXML) {
+                        if (device.ua.match(/msie/i) || !xmlhttp.responseXML) {
                             if (globalThis.DOMParser) {
                                 // manually create the XML DOM
                                 result = (new DOMParser()).parseFromString(xmlhttp.responseText, "text/xml");
@@ -28260,13 +28260,13 @@ var audio = /*#__PURE__*/Object.freeze({
 // Initialize me.save on Boot event
 on(BOOT, () => {
     // Load previous data if local Storage is supported
-    if (device$1.localStorage === true) {
-        var me_save_content = localStorage.getItem("me.save");
+    if (typeof globalThis.localStorage !== "undefined") {
+        var me_save_content = globalThis.localStorage.getItem("me.save");
 
         if (typeof me_save_content === "string" && me_save_content.length > 0) {
             var keys = JSON.parse(me_save_content) || [];
             keys.forEach(function (key) {
-                data[key] = JSON.parse(localStorage.getItem("me.save." + key));
+                data[key] = JSON.parse(globalThis.localStorage.getItem("me.save." + key));
             });
         }
     }
@@ -28308,8 +28308,8 @@ var save = {
                      */
                     set (value) {
                         data[prop] = value;
-                        if (device$1.localStorage === true) {
-                            localStorage.setItem("me.save." + prop, JSON.stringify(value));
+                        if (device.localStorage === true) {
+                            globalThis.localStorage.setItem("me.save." + prop, JSON.stringify(value));
                         }
                     }
                 });
@@ -28322,8 +28322,8 @@ var save = {
         });
 
         // Save keys
-        if (device$1.localStorage === true) {
-            localStorage.setItem("me.save", JSON.stringify(Object.keys(data)));
+        if (device.localStorage === true) {
+            globalThis.localStorage.setItem("me.save", JSON.stringify(Object.keys(data)));
         }
     },
 
@@ -28340,9 +28340,9 @@ var save = {
         if (!isReserved(key)) {
             if (typeof data[key] !== "undefined") {
                 delete data[key];
-                if (device$1.localStorage === true) {
-                    localStorage.removeItem("me.save." + key);
-                    localStorage.setItem("me.save", JSON.stringify(Object.keys(data)));
+                if (device.localStorage === true) {
+                    globalThis.localStorage.removeItem("me.save." + key);
+                    globalThis.localStorage.setItem("me.save", JSON.stringify(Object.keys(data)));
                 }
             }
         }
@@ -29467,8 +29467,6 @@ Object.defineProperty(device, "sound", {
     }
 });
 
-var device$1 = device;
-
 /**
  * Hash map of GLSL data types to WebGL Uniform methods
  * @ignore
@@ -29707,7 +29705,7 @@ class GLShader {
          * @name vertex
          * @memberof GLShader
          */
-        this.vertex = setPrecision(minify(vertex), precision || device$1.getMaxShaderPrecision(this.gl));
+        this.vertex = setPrecision(minify(vertex), precision || device.getMaxShaderPrecision(this.gl));
 
         /**
          * the fragment shader source code
@@ -29716,7 +29714,7 @@ class GLShader {
          * @name vertex
          * @memberof GLShader
          */
-        this.fragment = setPrecision(minify(fragment), precision || device$1.getMaxShaderPrecision(this.gl));
+        this.fragment = setPrecision(minify(fragment), precision || device.getMaxShaderPrecision(this.gl));
 
         /**
          * the location attributes of the shader
@@ -31621,7 +31619,7 @@ var settings = {
  */
 function autoDetectRenderer(options) {
     try {
-        if (device$1.isWebGLSupported(options)) {
+        if (device.isWebGLSupported(options)) {
             return new WebGLRenderer(options);
         }
     } catch (e) {
@@ -31650,7 +31648,7 @@ function onresize() {
         }
 
         // get the maximum canvas size within the parent div containing the canvas container
-        var nodeBounds = device$1.getParentBounds(getParent());
+        var nodeBounds = device.getParentBounds(getParent());
 
         var _max_width = Math.min(canvasMaxWidth, nodeBounds.width);
         var _max_height = Math.min(canvasMaxHeight, nodeBounds.height);
@@ -31880,7 +31878,7 @@ function init(width, height, options) {
         false
     );
 
-    if (device$1.ScreenOrientation === true) {
+    if (device.ScreenOrientation === true) {
         globalThis.screen.orientation.onchange = function (e) {
             emit(WINDOW_ONORIENTATION_CHANGE, e);
         };
@@ -31914,7 +31912,7 @@ function init(width, height, options) {
     }
 
     // add our canvas (default to document.body if settings.parent is undefined)
-    parent = device$1.getElement(typeof settings.parent !== "undefined" ? settings.parent : document.body);
+    parent = device.getElement(typeof settings.parent !== "undefined" ? settings.parent : document.body);
     parent.appendChild(renderer.getScreenCanvas());
 
     // trigger an initial resize();
@@ -31933,16 +31931,16 @@ function init(width, height, options) {
 
     if (settings.consoleHeader !== false) {
         var renderType = (renderer instanceof CanvasRenderer) ? "CANVAS" : "WebGL" + renderer.WebGLVersion;
-        var audioType = device$1.hasWebAudio ? "Web Audio" : "HTML5 Audio";
+        var audioType = device.hasWebAudio ? "Web Audio" : "HTML5 Audio";
         var gpu_renderer = (typeof renderer.GPURenderer === "string") ? " (" + renderer.GPURenderer + ")" : "";
         // output video information in the console
         console.log(
             renderType + " renderer" + gpu_renderer + " | " +
             audioType + " | " +
-            "pixel ratio " + device$1.devicePixelRatio + " | " +
-            (device$1.nodeJS ? "node.js" : device$1.isMobile ? "mobile" : "desktop") + " | " +
-            device$1.getScreenOrientation() + " | " +
-            device$1.language
+            "pixel ratio " + device.devicePixelRatio + " | " +
+            (device.nodeJS ? "node.js" : device.isMobile ? "mobile" : "desktop") + " | " +
+            device.getScreenOrientation() + " | " +
+            device.language
         );
         console.log( "resolution: " + "requested " + width + "x" + height +
             ", got " + renderer.getWidth() + "x" + renderer.getHeight()
@@ -31969,7 +31967,7 @@ function createCanvas(width, height, offscreen = false) {
         throw new Error("width or height was zero, Canvas could not be initialized !");
     }
 
-    if (device$1.OffscreenCanvas === true && offscreen === true) {
+    if (device.OffscreenCanvas === true && offscreen === true) {
         _canvas = new OffscreenCanvas(0, 0);
         // stubbing style for compatibility,
         // as OffscreenCanvas is detached from the DOM
@@ -32006,7 +32004,7 @@ function scale(x, y) {
     var canvas = renderer.getScreenCanvas();
     var context = renderer.getScreenContext();
     var settings = renderer.settings;
-    var pixelRatio = device$1.devicePixelRatio;
+    var pixelRatio = device.devicePixelRatio;
 
     var w = settings.zoomX = canvas.width * x * pixelRatio;
     var h = settings.zoomY = canvas.height * y * pixelRatio;
@@ -37355,7 +37353,7 @@ function warning(deprecated, replacement, version) {
  * @deprecated since 10.3.0
  * @see input.requestPointerLock
  */
-device$1.turnOnPointerLock = function () {
+device.turnOnPointerLock = function () {
     warning("device.turnOnPointerLock()", "input.requestPointerLock()", "10.3.0");
     return requestPointerLock();
 };
@@ -37368,7 +37366,7 @@ device$1.turnOnPointerLock = function () {
  * @deprecated since 10.3.0
  * @see input.exitPointerLock
  */
-device$1.turnOffPointerLock = function () {
+device.turnOffPointerLock = function () {
     warning("device.turnOffPointerLock()", "input.exitPointerLock()", "10.3.0");
     return exitPointerLock();
 };
@@ -37547,10 +37545,10 @@ function boot() {
     initialized = true;
 }
 // call the library init function when ready
-device$1.onReady(function () {
+device.onReady(function () {
     {
        boot();
     }
 });
 
-export { BitmapText, BitmapTextData, Body, Bounds, Camera2d, CanvasRenderer, Collectable, Color, ColorLayer, Container, Draggable, DraggableEntity, DropTarget, DroptargetEntity, Ellipse, Entity, GLShader, GUI_Object, ImageLayer, Light2d, Line, math as Math, Matrix2d, Matrix3d, NineSliceSprite, ObservableVector2d, ObservableVector3d, Particle, ParticleEmitter, ParticleEmitterSettings, Pointer, Polygon, QuadTree, Rect, Renderable, Renderer, RoundRect, Sprite, Stage, TMXHexagonalRenderer, TMXIsometricRenderer, TMXLayer, TMXOrthogonalRenderer, TMXRenderer, TMXStaggeredRenderer, TMXTileMap, TMXTileset, TMXTilesetGroup, Text, TextureAtlas, Tile, Trigger, Tween, Vector2d, Vector3d, WebGLCompositor, WebGLRenderer, World, audio, boot, collision, device$1 as device, event, game, initialized, input, level, loader, plugin, plugins, pool, save, skipAutoInit, state, timer$1 as timer, utils, version, video, warning };
+export { BitmapText, BitmapTextData, Body, Bounds, Camera2d, CanvasRenderer, Collectable, Color, ColorLayer, Container, Draggable, DraggableEntity, DropTarget, DroptargetEntity, Ellipse, Entity, GLShader, GUI_Object, ImageLayer, Light2d, Line, math as Math, Matrix2d, Matrix3d, NineSliceSprite, ObservableVector2d, ObservableVector3d, Particle, ParticleEmitter, ParticleEmitterSettings, Pointer, Polygon, QuadTree, Rect, Renderable, Renderer, RoundRect, Sprite, Stage, TMXHexagonalRenderer, TMXIsometricRenderer, TMXLayer, TMXOrthogonalRenderer, TMXRenderer, TMXStaggeredRenderer, TMXTileMap, TMXTileset, TMXTilesetGroup, Text, TextureAtlas, Tile, Trigger, Tween, Vector2d, Vector3d, WebGLCompositor, WebGLRenderer, World, audio, boot, collision, device, event, game, initialized, input, level, loader, plugin, plugins, pool, save, skipAutoInit, state, timer$1 as timer, utils, version, video, warning };
