@@ -4820,7 +4820,7 @@ function off(eventName, listener) {
     return eventEmitter.off(eventName, listener);
 }
 
-var event$1 = /*#__PURE__*/Object.freeze({
+var event = /*#__PURE__*/Object.freeze({
 	__proto__: null,
 	BOOT: BOOT,
 	STATE_PAUSE: STATE_PAUSE,
@@ -23070,12 +23070,12 @@ class CanvasRenderer extends Renderer {
         this.getScreenCanvas().addEventListener("contextlost", (e) => {
             e.preventDefault();
             this.isContextValid = false;
-            event.emit(event.ONCONTEXT_LOST, this);
+            emit(ONCONTEXT_LOST, this);
         }, false );
         // ctx.restoreContext()
         this.getScreenCanvas().addEventListener("contextrestored", () => {
             this.isContextValid = true;
-            event.emit(event.ONCONTEXT_RESTORED, this);
+            emit(ONCONTEXT_RESTORED, this);
         }, false );
     }
 
@@ -37553,4 +37553,4 @@ device$1.onReady(function () {
     }
 });
 
-export { BitmapText, BitmapTextData, Body, Bounds, Camera2d, CanvasRenderer, Collectable, Color, ColorLayer, Container, Draggable, DraggableEntity, DropTarget, DroptargetEntity, Ellipse, Entity, GLShader, GUI_Object, ImageLayer, Light2d, Line, math as Math, Matrix2d, Matrix3d, NineSliceSprite, ObservableVector2d, ObservableVector3d, Particle, ParticleEmitter, ParticleEmitterSettings, Pointer, Polygon, QuadTree, Rect, Renderable, Renderer, RoundRect, Sprite, Stage, TMXHexagonalRenderer, TMXIsometricRenderer, TMXLayer, TMXOrthogonalRenderer, TMXRenderer, TMXStaggeredRenderer, TMXTileMap, TMXTileset, TMXTilesetGroup, Text, TextureAtlas, Tile, Trigger, Tween, Vector2d, Vector3d, WebGLCompositor, WebGLRenderer, World, audio, boot, collision, device$1 as device, event$1 as event, game, initialized, input, level, loader, plugin, plugins, pool, save, skipAutoInit, state, timer$1 as timer, utils, version, video, warning };
+export { BitmapText, BitmapTextData, Body, Bounds, Camera2d, CanvasRenderer, Collectable, Color, ColorLayer, Container, Draggable, DraggableEntity, DropTarget, DroptargetEntity, Ellipse, Entity, GLShader, GUI_Object, ImageLayer, Light2d, Line, math as Math, Matrix2d, Matrix3d, NineSliceSprite, ObservableVector2d, ObservableVector3d, Particle, ParticleEmitter, ParticleEmitterSettings, Pointer, Polygon, QuadTree, Rect, Renderable, Renderer, RoundRect, Sprite, Stage, TMXHexagonalRenderer, TMXIsometricRenderer, TMXLayer, TMXOrthogonalRenderer, TMXRenderer, TMXStaggeredRenderer, TMXTileMap, TMXTileset, TMXTilesetGroup, Text, TextureAtlas, Tile, Trigger, Tween, Vector2d, Vector3d, WebGLCompositor, WebGLRenderer, World, audio, boot, collision, device$1 as device, event, game, initialized, input, level, loader, plugin, plugins, pool, save, skipAutoInit, state, timer$1 as timer, utils, version, video, warning };

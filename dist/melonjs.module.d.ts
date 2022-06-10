@@ -9738,7 +9738,7 @@ declare namespace device$1 {
      */
     function turnOffPointerLock(): boolean;
 }
-declare var event$1: Readonly<{
+export var event: Readonly<{
     __proto__: any;
     BOOT: string;
     STATE_PAUSE: string;
@@ -12547,4 +12547,4 @@ declare function defer(func: Function, thisArg: object, ...args: any[]): number;
  * @returns {Function} the function that will be throttled
  */
 declare function throttle(fn: Function, delay: number, no_trailing: any): Function;
-export { math as Math, device$1 as device, event$1 as event, timer$1 as timer };
+export { math as Math, device$1 as device, timer$1 as timer };

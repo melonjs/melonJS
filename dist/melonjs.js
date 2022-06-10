@@ -4865,7 +4865,7 @@
 	    return eventEmitter.off(eventName, listener);
 	}
 
-	var event$1 = /*#__PURE__*/Object.freeze({
+	var event = /*#__PURE__*/Object.freeze({
 		__proto__: null,
 		BOOT: BOOT,
 		STATE_PAUSE: STATE_PAUSE,
@@ -23127,12 +23127,12 @@
 	        this.getScreenCanvas().addEventListener("contextlost", function (e) {
 	            e.preventDefault();
 	            this$1$1.isContextValid = false;
-	            event.emit(event.ONCONTEXT_LOST, this$1$1);
+	            emit(ONCONTEXT_LOST, this$1$1);
 	        }, false );
 	        // ctx.restoreContext()
 	        this.getScreenCanvas().addEventListener("contextrestored", function () {
 	            this$1$1.isContextValid = true;
-	            event.emit(event.ONCONTEXT_RESTORED, this$1$1);
+	            emit(ONCONTEXT_RESTORED, this$1$1);
 	        }, false );
 	    }
 
@@ -37594,7 +37594,7 @@
 	exports.boot = boot;
 	exports.collision = collision;
 	exports.device = device$1;
-	exports.event = event$1;
+	exports.event = event;
 	exports.game = game;
 	exports.input = input;
 	exports.level = level;
