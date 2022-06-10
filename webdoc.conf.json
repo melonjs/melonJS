@@ -13,7 +13,6 @@
     },
     "template": {
         "applicationName": "melonJS",
-        "repository": "@webdoc/default-template",
         "outputSourceFiles": false,
         "readme": "./README.md",
         "repository": "https://github.com/melonjs/melonJS/",

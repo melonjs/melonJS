@@ -68,7 +68,7 @@
     "@rollup/plugin-node-resolve": "^13.3.0",
     "@rollup/plugin-replace": "^4.0.0",
     "@types/offscreencanvas": "^2019.7.0",
-    "@webdoc/cli": "^1.6.2",
+    "@webdoc/cli": "^1.6.3",
     "cheerio": "^1.0.0-rc.11",
     "del-cli": "^4.0.1",
     "eslint": "^8.17.0",
