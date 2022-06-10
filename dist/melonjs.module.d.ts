@@ -889,7 +889,7 @@ export class Camera2d extends Renderable {
      * @param {number} h deadzone height
      */
     setDeadzone(w: number, h: number): void;
-    deadzone: Rect$1;
+    deadzone: Rect;
     /**
      * resize the camera
      * @name resize
@@ -5515,7 +5515,7 @@ export class QuadTree {
  * a rectangle Object
  * @augments Polygon
  */
-declare class Rect$1 extends Polygon {
+export class Rect extends Polygon {
     /**
      * @param {number} x position of the Rectangle
      * @param {number} y position of the Rectangle
@@ -5690,14 +5690,7 @@ declare class Rect$1 extends Polygon {
  * A base class for renderable objects.
  * @augments Rect
  */
-export class Renderable {
-    /**
-     * @param {number} x position of the renderable object (accessible through inherited pos.x property)
-     * @param {number} y position of the renderable object (accessible through inherited pos.y property)
-     * @param {number} width object width
-     * @param {number} height object height
-     */
-    constructor(x: number, y: number, width: number, height: number);
+export class Renderable extends Rect {
     /**
      * to identify the object as a renderable object
      * @ignore
@@ -5995,13 +5988,6 @@ export class Renderable {
      */
     public get isFlippedY(): boolean;
     /**
-     * returns the bounding box for this renderable
-     * @name getBounds
-     * @memberof Renderable
-     * @returns {Bounds} bounding box Rectangle object
-     */
-    getBounds(): Bounds;
-    /**
      * get the renderable alpha channel value<br>
      * @name getOpacity
      * @memberof Renderable
@@ -6107,14 +6093,6 @@ export class Renderable {
      */
     protected update(dt: number): boolean;
     /**
-     * update the bounding box for this shape.
-     * @ignore
-     * @name updateBounds
-     * @memberof Renderable
-     * @returns {Bounds} this shape bounding box Rectangle object
-     */
-    updateBounds(): Bounds;
-    /**
      * update the renderable's bounding rect (private)
      * @ignore
      * @name updateBoundsPos
@@ -6194,7 +6172,6 @@ export class Renderable {
      * @ignore
      */
     destroy(...args: any[]): void;
-    _bounds: any;
     /**
      * OnDestroy Notification function<br>
      * Called by engine before deleting the object
@@ -6470,7 +6447,7 @@ export class Renderer {
  * a rectangle object with rounded corners
  * @augments Rect
  */
-export class RoundRect {
+export class RoundRect extends Rect {
     /**
      * @param {number} x position of the rounded rectangle
      * @param {number} y position of the rounded rectangle
@@ -6500,23 +6477,6 @@ export class RoundRect {
      * @returns {RoundRect} new rectangle
      */
     copy(rrect: RoundRect): RoundRect;
-    /**
-     * Returns true if the rounded rectangle contains the given point
-     * @name contains
-     * @memberof RoundRect
-     * @method
-     * @param  {number} x x coordinate
-     * @param  {number} y y coordinate
-     * @returns {boolean} true if contains
-     */
-    /**
-     * Returns true if the rounded rectangle contains the given point
-     * @name contains
-     * @memberof RoundRect
-     * @param {Vector2d} point
-     * @returns {boolean} true if contains
-     */
-    contains(...args: any[]): boolean;
     /**
      * check if this RoundRect is identical to the specified one
      * @name equals
@@ -6636,8 +6596,6 @@ export class Sprite extends Renderable {
     image: HTMLCanvasElement | HTMLImageElement;
     textureAtlas: any;
     atlasIndices: any;
-    width: number;
-    height: number;
     /**
      * return the flickering state of the object
      * @name isFlickering
@@ -7093,8 +7051,6 @@ export class TMXLayer extends Renderable {
     name: any;
     cols: number;
     rows: number;
-    width: number;
-    height: number;
     preRender: boolean;
     onActivateEvent(): void;
     canvasRenderer: CanvasRenderer;
@@ -7742,7 +7698,6 @@ export class Text extends Renderable {
      * font.setFont("Arial", "1.5em");
      */
     setFont(font: string, size?: number | string): Text;
-    height: number;
     /**
      * change the text to be displayed
      * @param {number|string|string[]} value a string, or an array of strings
@@ -10755,7 +10710,7 @@ export var plugin: any;
  * @namespace plugins
  */
 export var plugins: {};
-declare var pool$1: ObjectPool;
+export var pool: ObjectPool;
 export namespace save {
     /**
      * Add new keys to localStorage and set them to the given default values if they do not exist
@@ -12841,4 +12796,4 @@ declare function defer(func: Function, thisArg: object, ...args: any[]): number;
  * @returns {Function} the function that will be throttled
  */
 declare function throttle(fn: Function, delay: number, no_trailing: any): Function;
-export { Bounds$1 as Bounds, math as Math, Rect$1 as Rect, device$1 as device, event$1 as event, pool$1 as pool, timer$1 as timer };
+export { Bounds$1 as Bounds, math as Math, device$1 as device, event$1 as event, timer$1 as timer };

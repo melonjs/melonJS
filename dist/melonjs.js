@@ -1760,7 +1760,7 @@
 	    return this.instance_counter;
 	};
 
-	var pool$1 = new ObjectPool();
+	var pool = new ObjectPool();
 
 	/**
 	 * @classdesc
@@ -2241,7 +2241,7 @@
 	  * @returns {Vector2d} new me.Vector2d
 	  */
 	 Vector2d.prototype.clone = function clone () {
-	     return pool$1.pull("Vector2d", this.x, this.y);
+	     return pool.pull("Vector2d", this.x, this.y);
 	 };
 
 	 /**
@@ -2535,7 +2535,7 @@
 	 * @returns {Color} Reference to the newly cloned object
 	 */
 	Color.prototype.clone = function clone () {
-	    return pool$1.pull("Color").copy(this);
+	    return pool.pull("Color").copy(this);
 	};
 
 	/**
@@ -3195,12 +3195,12 @@
 	  */
 	 Matrix3d.prototype.applyInverse = function applyInverse (v) {
 	     // invert the current matrix
-	     var im = pool$1.pull("Matrix3d", this).invert();
+	     var im = pool.pull("Matrix3d", this).invert();
 
 	     // apply the inverted matrix
 	     im.apply(v);
 
-	     pool$1.push(im);
+	     pool.push(im);
 
 	     return v;
 	 };
@@ -3497,7 +3497,7 @@
 	 * @returns {Matrix3d}
 	 */
 	Matrix3d.prototype.clone = function clone () {
-	    return pool$1.pull("Matrix3d", this);
+	    return pool.pull("Matrix3d", this);
 	};
 
 	/**
@@ -3986,7 +3986,7 @@
 	  * @returns {Matrix2d}
 	  */
 	 Matrix2d.prototype.clone = function clone () {
-	     return pool$1.pull("Matrix2d", this);
+	     return pool.pull("Matrix2d", this);
 	 };
 
 	 /**
@@ -8557,7 +8557,7 @@
 	     * @returns {ObservableVector2d} new me.ObservableVector2d
 	     */
 	    ObservableVector2d.prototype.clone = function clone () {
-	        return pool$1.pull("ObservableVector2d", this._x, this._y, {onUpdate: this.onUpdate, scope: this.scope});
+	        return pool.pull("ObservableVector2d", this._x, this._y, {onUpdate: this.onUpdate, scope: this.scope});
 	    };
 
 	    /**
@@ -8567,7 +8567,7 @@
 	     * @returns {Vector2d} new me.Vector2d
 	     */
 	    ObservableVector2d.prototype.toVector2d = function toVector2d () {
-	        return pool$1.pull("Vector2d", this._x, this._y);
+	        return pool.pull("Vector2d", this._x, this._y);
 	    };
 
 	    /**
@@ -9105,7 +9105,7 @@
 	  * @returns {Vector3d} new me.Vector3d
 	  */
 	 Vector3d.prototype.clone = function clone () {
-	     return pool$1.pull("Vector3d", this.x, this.y, this.z);
+	     return pool.pull("Vector3d", this.x, this.y, this.z);
 	 };
 
 	 /**
@@ -9616,7 +9616,7 @@
 	     * @returns {ObservableVector3d} new me.ObservableVector3d
 	     */
 	    ObservableVector3d.prototype.clone = function clone () {
-	        return pool$1.pull("ObservableVector3d",
+	        return pool.pull("ObservableVector3d",
 	            this._x,
 	            this._y,
 	            this._z,
@@ -9631,7 +9631,7 @@
 	     * @returns {Vector3d} new me.Vector3d
 	     */
 	    ObservableVector3d.prototype.toVector3d = function toVector3d () {
-	        return pool$1.pull("Vector3d", this._x, this._y, this._z);
+	        return pool.pull("Vector3d", this._x, this._y, this._z);
 	    };
 
 	    /**
@@ -10352,7 +10352,7 @@
 	     * @name pos
 	     * @memberof Polygon
 	     */
-	    this.pos = pool$1.pull("Vector2d");
+	    this.pos = pool.pull("Vector2d");
 
 	    /**
 	     * The bounding rectangle for this shape
@@ -10442,13 +10442,13 @@
 	        if (typeof vertices[0] === "object") {
 	            // array of {x,y} object
 	            vertices.forEach(function (vertice) {
-	               this$1$1.points.push(pool$1.pull("Vector2d", vertice.x, vertice.y));
+	               this$1$1.points.push(pool.pull("Vector2d", vertice.x, vertice.y));
 	            });
 
 	        } else {
 	            // it's a flat array
 	            for (var p = 0; p < vertices.length; p += 2) {
-	                this.points.push(pool$1.pull("Vector2d", vertices[p], vertices[p + 1]));
+	                this.points.push(pool.pull("Vector2d", vertices[p], vertices[p + 1]));
 	            }
 	        }
 	    } else {
@@ -10576,12 +10576,12 @@
 	    // Calculate the edges/normals
 	    for (i = 0; i < len; i++) {
 	        if (edges[i] === undefined) {
-	            edges[i] = pool$1.pull("Vector2d");
+	            edges[i] = pool.pull("Vector2d");
 	        }
 	        edges[i].copy(points[(i + 1) % len]).sub(points[i]);
 
 	        if (normals[i] === undefined) {
-	            normals[i] = pool$1.pull("Vector2d");
+	            normals[i] = pool.pull("Vector2d");
 	        }
 	        normals[i].copy(edges[i]).perp().normalize();
 	    }
@@ -10779,7 +10779,7 @@
 	 */
 	Polygon.prototype.getBounds = function getBounds () {
 	    if (typeof this._bounds === "undefined") {
-	        this._bounds = pool$1.pull("Bounds");
+	        this._bounds = pool.pull("Bounds");
 	    }
 	    return this._bounds;
 	};
@@ -10819,14 +10819,14 @@
 	 * a rectangle Object
 	 * @augments Polygon
 	 */
-	var Rect$1 = /*@__PURE__*/(function (Polygon) {
+	var Rect = /*@__PURE__*/(function (Polygon) {
 	    function Rect(x, y, w, h) {
 	        // parent constructor
 	        Polygon.call(this, x, y, [
-	            pool$1.pull("Vector2d", 0, 0), // 0, 0
-	            pool$1.pull("Vector2d", w, 0), // 1, 0
-	            pool$1.pull("Vector2d", w, h), // 1, 1
-	            pool$1.pull("Vector2d", 0, h) ]);
+	            pool.pull("Vector2d", 0, 0), // 0, 0
+	            pool.pull("Vector2d", w, 0), // 1, 0
+	            pool.pull("Vector2d", w, h), // 1, 1
+	            pool.pull("Vector2d", 0, h) ]);
 	        this.shapeType = "Rectangle";
 	    }
 
@@ -11172,7 +11172,7 @@
 	     * @returns {Polygon} a new Polygon that represents this rectangle.
 	     */
 	    Rect.prototype.toPolygon = function toPolygon () {
-	        return pool$1.pull("Polygon",
+	        return pool.pull("Polygon",
 	            this.pos.x, this.pos.y, this.points
 	        );
 	    };
@@ -12071,11 +12071,11 @@
 	 * @returns {Polygon} a new Polygon that represents this bounds.
 	 */
 	Bounds$1.prototype.toPolygon = function toPolygon () {
-	    return pool$1.pull("Polygon", this.x, this.y, [
-	        pool$1.pull("Vector2d", 0,      0),
-	        pool$1.pull("Vector2d", this.width, 0),
-	        pool$1.pull("Vector2d", this.width, this.height),
-	        pool$1.pull("Vector2d", 0,      this.height)
+	    return pool.pull("Polygon", this.x, this.y, [
+	        pool.pull("Vector2d", 0,      0),
+	        pool.pull("Vector2d", this.width, 0),
+	        pool.pull("Vector2d", this.width, this.height),
+	        pool.pull("Vector2d", 0,      this.height)
 	    ]);
 	};
 
@@ -12576,7 +12576,7 @@
 	    if (!pointerInitialized) {
 
 	        // the current pointer area
-	        currentPointer = new Rect$1(0, 0, 1, 1);
+	        currentPointer = new Rect(0, 0, 1, 1);
 
 	        // instantiate a pool of pointer catched
 	        for (var v = 0; v < device$1.maxTouchPoints; v++) {
@@ -12724,8 +12724,8 @@
 	        // and put it back into our cache
 	        T_POINTERS.push(pointer);
 
-	        // Do not fire older events
-	        if (typeof(pointer.event.timeStamp) !== "undefined") {
+	        // Do not fire older touch events (not required for PointerEvent type)
+	        if (pointer.isNormalized === true && typeof(pointer.event.timeStamp) !== "undefined") {
 	            if (pointer.event.timeStamp < lastTimeStamp) {
 	                continue;
 	            }
@@ -12783,11 +12783,11 @@
 	                if (typeof region.currentTransform !== "undefined") {
 	                    if (!region.currentTransform.isIdentity()) {
 	                        var invV = region.currentTransform.applyInverse(
-	                            pool$1.pull("Vector2d", gameX, gameY)
+	                            pool.pull("Vector2d", gameX, gameY)
 	                        );
 	                        gameX = invV.x;
 	                        gameY = invV.y;
-	                        pool$1.push(invV);
+	                        pool.push(invV);
 	                    }
 	                }
 	                eventInBounds = bounds.contains(gameX, gameY);
@@ -13015,7 +13015,7 @@
 	 * };
 	 */
 	function globalToLocal(x, y, v) {
-	    v = v || pool$1.pull("Vector2d");
+	    v = v || pool.pull("Vector2d");
 	    var rect = device$1.getElementBounds(renderer.getScreenCanvas());
 	    var pixelRatio = device$1.devicePixelRatio;
 	    x -= rect.left + (globalThis.pageXOffset || 0);
@@ -13870,7 +13870,7 @@
 	             * @name currentTransform
 	             * @memberof Renderable#
 	             */
-	            this.currentTransform = pool$1.pull("Matrix2d");
+	            this.currentTransform = pool.pull("Matrix2d");
 	        }
 	        this.currentTransform.identity();
 
@@ -13959,7 +13959,7 @@
 	             * @name anchorPoint
 	             * @memberof Renderable#
 	             */
-	            this.anchorPoint = pool$1.pull("ObservableVector2d", 0.5, 0.5, { onUpdate: this.onAnchorUpdate, scope: this });
+	            this.anchorPoint = pool.pull("ObservableVector2d", 0.5, 0.5, { onUpdate: this.onAnchorUpdate, scope: this });
 	        }
 
 	        /**
@@ -14044,7 +14044,7 @@
 	         * // remove the tint
 	         * this.tint.setColor(255, 255, 255);
 	         */
-	        this.tint = pool$1.pull("Color", 255, 255, 255, 1.0);
+	        this.tint = pool.pull("Color", 255, 255, 255, 1.0);
 
 	        /**
 	         * the blend mode to be applied to this renderable (see renderer setBlendMode for available blend mode)
@@ -14078,7 +14078,7 @@
 	             * @name pos
 	             * @memberof Renderable#
 	             */
-	            this.pos = pool$1.pull("ObservableVector3d", x, y, 0, { onUpdate: this.updateBoundsPos, scope: this});
+	            this.pos = pool.pull("ObservableVector3d", x, y, 0, { onUpdate: this.updateBoundsPos, scope: this});
 	        }
 
 	        /**
@@ -14444,7 +14444,7 @@
 	      */
 	      Renderable.prototype.getAbsolutePosition = function getAbsolutePosition () {
 	          if (typeof this._absPos === "undefined") {
-	              this._absPos = pool$1.pull("Vector2d");
+	              this._absPos = pool.pull("Vector2d");
 	          }
 	          // XXX Cache me or something
 	          this._absPos.set(this.pos.x, this.pos.y);
@@ -14594,32 +14594,32 @@
 	     */
 	    Renderable.prototype.destroy = function destroy () {
 	        // allow recycling object properties
-	        pool$1.push(this.currentTransform);
+	        pool.push(this.currentTransform);
 	        this.currentTransform = undefined;
 
-	        pool$1.push(this.anchorPoint);
+	        pool.push(this.anchorPoint);
 	        this.anchorPoint = undefined;
 
-	        pool$1.push(this.pos);
+	        pool.push(this.pos);
 	        this.pos = undefined;
 
 	        if (typeof this._absPos !== "undefined") {
-	            pool$1.push(this._absPos);
+	            pool.push(this._absPos);
 	            this._absPos = undefined;
 	        }
 
-	        pool$1.push(this._bounds);
+	        pool.push(this._bounds);
 	        this._bounds = undefined;
 
 	        this.onVisibilityChange = undefined;
 
 	        if (typeof this.mask !== "undefined") {
-	            pool$1.push(this.mask);
+	            pool.push(this.mask);
 	            this.mask = undefined;
 	        }
 
 	        if (typeof this.tint !== "undefined") {
-	            pool$1.push(this.tint);
+	            pool.push(this.tint);
 	            this.tint = undefined;
 	        }
 
@@ -14651,7 +14651,7 @@
 	    Object.defineProperties( Renderable.prototype, prototypeAccessors );
 
 	    return Renderable;
-	}(Rect$1));
+	}(Rect));
 
 	/**
 	 * @classdesc
@@ -14665,7 +14665,7 @@
 	     * @name pos
 	     * @memberof Ellipse
 	     */
-	    this.pos = pool$1.pull("Vector2d");
+	    this.pos = pool.pull("Vector2d");
 
 	    /**
 	     * The bounding rectangle for this shape
@@ -14689,7 +14689,7 @@
 	     * @name radiusV
 	     * @memberof Ellipse
 	     */
-	    this.radiusV = pool$1.pull("Vector2d");
+	    this.radiusV = pool.pull("Vector2d");
 
 	    /**
 	     * Radius squared, for pythagorean theorom
@@ -14698,7 +14698,7 @@
 	     * @name radiusSq
 	     * @memberof Ellipse
 	     */
-	    this.radiusSq = pool$1.pull("Vector2d");
+	    this.radiusSq = pool.pull("Vector2d");
 
 	    /**
 	     * x/y scaling ratio for ellipse
@@ -14707,7 +14707,7 @@
 	     * @name ratio
 	     * @memberof Ellipse
 	     */
-	    this.ratio = pool$1.pull("Vector2d");
+	    this.ratio = pool.pull("Vector2d");
 
 	    // the shape type
 	    this.shapeType = "Ellipse";
@@ -14889,7 +14889,7 @@
 	 */
 	Ellipse.prototype.getBounds = function getBounds () {
 	    if (typeof this._bounds === "undefined") {
-	        this._bounds = pool$1.pull("Bounds");
+	        this._bounds = pool.pull("Bounds");
 	    }
 	    return this._bounds;
 	};
@@ -15770,7 +15770,7 @@
 	         * @public
 	         * @type {Bounds}
 	         */
-	        this.bounds = pool$1.pull("Bounds");
+	        this.bounds = pool.pull("Bounds");
 	    }
 
 	    if (typeof this.shapes === "undefined") {
@@ -15811,7 +15811,7 @@
 	         * @type {Vector2d}
 	         * @default <0,0>
 	         */
-	        this.vel = pool$1.pull("Vector2d");
+	        this.vel = pool.pull("Vector2d");
 	    }
 	    this.vel.set(0, 0);
 
@@ -15840,7 +15840,7 @@
 	         * }
 	         * }
 	         */
-	        this.force = pool$1.pull("Vector2d");
+	        this.force = pool.pull("Vector2d");
 	    }
 	    this.force.set(0, 0);
 
@@ -15851,7 +15851,7 @@
 	         * @type {Vector2d}
 	         * @default <0,0>
 	         */
-	        this.friction = pool$1.pull("Vector2d");
+	        this.friction = pool.pull("Vector2d");
 	    }
 	    this.friction.set(0, 0);
 
@@ -15879,7 +15879,7 @@
 	         * @type {Vector2d}
 	         * @default <490,490>
 	         */
-	        this.maxVel = pool$1.pull("Vector2d");
+	        this.maxVel = pool.pull("Vector2d");
 	    }
 	    // cap by default to half the default gravity force
 	    this.maxVel.set(490, 490);
@@ -15980,7 +15980,7 @@
 	 * this.body.addShape(me.loader.getJSON("shapesdef").banana);
 	 */
 	Body.prototype.addShape = function addShape (shape) {
-	    if (shape instanceof Rect$1 || shape instanceof Bounds$1) {
+	    if (shape instanceof Rect || shape instanceof Bounds$1) {
 	        var poly = shape.toPolygon();
 	        this.shapes.push(poly);
 	        // update the body bounds
@@ -16034,7 +16034,7 @@
 	        polygon.setShape(0, 0, vertices);
 	    } else {
 	        // this will replace any other non polygon shape type if defined
-	        this.shapes[index] = pool$1.pull("Polygon", 0, 0, vertices);
+	        this.shapes[index] = pool.pull("Polygon", 0, 0, vertices);
 	    }
 
 	    // update the body bounds to take in account the new vertices
@@ -16433,13 +16433,13 @@
 	 */
 	Body.prototype.destroy = function destroy () {
 	    // push back instance into object pool
-	    pool$1.push(this.bounds);
-	    pool$1.push(this.vel);
-	    pool$1.push(this.force);
-	    pool$1.push(this.friction);
-	    pool$1.push(this.maxVel);
+	    pool.push(this.bounds);
+	    pool.push(this.vel);
+	    pool.push(this.force);
+	    pool.push(this.friction);
+	    pool.push(this.maxVel);
 	    this.shapes.forEach(function (shape) {
-	        pool$1.push(shape);
+	        pool.push(shape);
 	    });
 
 	    // set to undefined
@@ -16579,7 +16579,7 @@
 	         * // add a red background color to this container
 	         * this.backgroundColor.setColor(255, 0, 0);
 	         */
-	        this.backgroundColor = pool$1.pull("Color", 0, 0, 0, 0.0);
+	        this.backgroundColor = pool.pull("Color", 0, 0, 0, 0.0);
 
 	        /**
 	         * Used by the debug panel plugin
@@ -17126,7 +17126,7 @@
 
 	            if (!keepalive) {
 	                // attempt at recycling the object
-	                if (pool$1.push(child, false) === false ) {
+	                if (pool.push(child, false) === false ) {
 	                    //  else just destroy it
 	                    if (typeof child.destroy === "function") {
 	                        child.destroy();
@@ -18277,7 +18277,7 @@
 	         * @name bounds
 	         * @memberof Camera2d
 	         */
-	        this.bounds = pool$1.pull("Bounds");
+	        this.bounds = pool.pull("Bounds");
 
 	        /**
 	         * enable or disable damping
@@ -18468,7 +18468,7 @@
 	     */
 	    Camera2d.prototype.setDeadzone = function setDeadzone (w, h) {
 	        if (typeof(this.deadzone) === "undefined") {
-	            this.deadzone = new Rect$1(0, 0, 0, 0);
+	            this.deadzone = new Rect(0, 0, 0, 0);
 	        }
 
 	        // reusing the old code for now...
@@ -18764,8 +18764,8 @@
 	    Camera2d.prototype.fadeOut = function fadeOut (color, duration, onComplete) {
 	        if ( duration === void 0 ) duration = 1000;
 
-	        this._fadeOut.color = pool$1.pull("Color").copy(color);
-	        this._fadeOut.tween = pool$1.pull("Tween", this._fadeOut.color)
+	        this._fadeOut.color = pool.pull("Color").copy(color);
+	        this._fadeOut.tween = pool.pull("Tween", this._fadeOut.color)
 	            .to({ alpha: 0.0 }, duration)
 	            .onComplete(onComplete || null);
 	        this._fadeOut.tween.isPersistent = true;
@@ -18787,10 +18787,10 @@
 	    Camera2d.prototype.fadeIn = function fadeIn (color, duration, onComplete) {
 	        if ( duration === void 0 ) duration = 1000;
 
-	        this._fadeIn.color = pool$1.pull("Color").copy(color);
+	        this._fadeIn.color = pool.pull("Color").copy(color);
 	        var _alpha = this._fadeIn.color.alpha;
 	        this._fadeIn.color.alpha = 0.0;
-	        this._fadeIn.tween = pool$1.pull("Tween", this._fadeIn.color)
+	        this._fadeIn.tween = pool.pull("Tween", this._fadeIn.color)
 	            .to({ alpha: _alpha }, duration)
 	            .onComplete(onComplete || null);
 	        this._fadeIn.tween.isPersistent = true;
@@ -18843,7 +18843,7 @@
 	     */
 	    Camera2d.prototype.localToWorld = function localToWorld (x, y, v) {
 	        // TODO memoization for one set of coords (multitouch)
-	        v = v || pool$1.pull("Vector2d");
+	        v = v || pool.pull("Vector2d");
 	        v.set(x, y).add(this.pos).sub(world.pos);
 	        if (!this.currentTransform.isIdentity()) {
 	            this.invCurrentTransform.apply(v);
@@ -18863,7 +18863,7 @@
 	     */
 	    Camera2d.prototype.worldToLocal = function worldToLocal (x, y, v) {
 	        // TODO memoization for one set of coords (multitouch)
-	        v = v || pool$1.pull("Vector2d");
+	        v = v || pool.pull("Vector2d");
 	        v.set(x, y);
 	        if (!this.currentTransform.isIdentity()) {
 	            this.currentTransform.apply(v);
@@ -18888,7 +18888,7 @@
 	            // remove the tween if over
 	            if (this._fadeIn.color.alpha === 1.0) {
 	                this._fadeIn.tween = null;
-	                pool$1.push(this._fadeIn.color);
+	                pool.push(this._fadeIn.color);
 	                this._fadeIn.color = null;
 	            }
 	        }
@@ -18905,7 +18905,7 @@
 	            // remove the tween if over
 	            if (this._fadeOut.color.alpha === 0.0) {
 	                this._fadeOut.tween = null;
-	                pool$1.push(this._fadeOut.color);
+	                pool.push(this._fadeOut.color);
 	                this._fadeOut.color = null;
 	            }
 	        }
@@ -19231,7 +19231,7 @@
 	    function IconLogo(x, y) {
 	        Renderable.call(this, x, y, 100, 85);
 
-	        this.iconTexture = pool$1.pull("CanvasTexture",
+	        this.iconTexture = pool.pull("CanvasTexture",
 	            renderer.WebGLVersion > 1 ? this.width : nextPowerOfTwo(this.width),
 	            renderer.WebGLVersion > 1 ? this.height : nextPowerOfTwo(this.height),
 	            true
@@ -19286,7 +19286,7 @@
 	    IconLogo.prototype.destroy = function destroy () {
 	        // call the parent destroy method
 	        Renderable.prototype.destroy.call(this, arguments);
-	        pool$1.push(this.iconTexture);
+	        pool.push(this.iconTexture);
 	        this.iconTexture = undefined;
 	    };
 
@@ -19327,7 +19327,7 @@
 
 	        ), 2);
 
-	        var logo1 = pool$1.pull("Text",
+	        var logo1 = pool.pull("Text",
 	            renderer.getWidth() / 2,
 	            (renderer.getHeight() / 2) + 16, {
 	                font: "century gothic",
@@ -19341,7 +19341,7 @@
 	        );
 	        logo1.anchorPoint.set(0, 0);
 
-	        var logo2 = pool$1.pull("Text",
+	        var logo2 = pool.pull("Text",
 	            renderer.getWidth() / 2,
 	            (renderer.getHeight() / 2) + 16, {
 	                font: "century gothic",
@@ -21024,7 +21024,7 @@
 	     var height = image.height;
 
 	     // calculate the sprite count (line, col)
-	     var spritecount = pool$1.pull("Vector2d",
+	     var spritecount = pool.pull("Vector2d",
 	         ~~((width - margin + spacing) / (data.framewidth + spacing)),
 	         ~~((height - margin + spacing) / (data.frameheight + spacing))
 	     );
@@ -21067,7 +21067,7 @@
 	         this.addUVs(atlas, name, width, height);
 	     }
 
-	     pool$1.push(spritecount);
+	     pool.push(spritecount);
 
 	     return atlas;
 	 };
@@ -21242,7 +21242,7 @@
 	        if ( nineSlice === void 0 ) nineSlice = false;
 
 	     // instantiate a new sprite object
-	     return pool$1.pull(
+	     return pool.pull(
 	         nineSlice === true ? "me.NineSliceSprite" : "me.Sprite",
 	         0, 0,
 	         Object.assign({
@@ -21350,7 +21350,7 @@
 	         * @name offset
 	         * @memberof Sprite#
 	         */
-	        this.offset = pool$1.pull("Vector2d", 0, 0);
+	        this.offset = pool.pull("Vector2d", 0, 0);
 
 	        /**
 	         * The source texture object this sprite object is using
@@ -21375,7 +21375,7 @@
 	            // length of the current animation name
 	            length : 0,
 	            //current frame texture offset
-	            offset : pool$1.pull("Vector2d"),
+	            offset : pool.pull("Vector2d"),
 	            // current frame size
 	            width : 0,
 	            height : 0,
@@ -21860,7 +21860,7 @@
 	     * @ignore
 	     */
 	    Sprite.prototype.destroy = function destroy () {
-	        pool$1.push(this.offset);
+	        pool.push(this.offset);
 	        this.offset = undefined;
 	        Renderable.prototype.destroy.call(this);
 	    };
@@ -22254,13 +22254,13 @@
 	     * @returns {RoundRect} new RoundRect
 	     */
 	    RoundRect.prototype.clone = function clone () {
-	        return new RoundRect(this.pos.x, this.pos.y, this.width, this.height, radius);
+	        return new RoundRect(this.pos.x, this.pos.y, this.width, this.height, this.radius);
 	    };
 
 	    Object.defineProperties( RoundRect.prototype, prototypeAccessors );
 
 	    return RoundRect;
-	}(Rect$1));
+	}(Rect));
 
 	/**
 	 * @classdesc
@@ -22325,11 +22325,11 @@
 
 	        // Calculate the edges/normals
 	        if (edges[0] === undefined) {
-	            edges[0] = pool$1.pull("Vector2d");
+	            edges[0] = pool.pull("Vector2d");
 	        }
 	        edges[0].copy(points[1]).sub(points[0]);
 	        if (normals[0] === undefined) {
-	            normals[0] = pool$1.pull("Vector2d");
+	            normals[0] = pool.pull("Vector2d");
 	        }
 	        normals[0].copy(edges[0]).perp().normalize();
 
@@ -22393,7 +22393,7 @@
 	Path2D$1.prototype.beginPath = function beginPath () {
 	    // empty the cache and recycle all vectors
 	    this.points.forEach(function (point) {
-	        pool$1.push(point);
+	        pool.push(point);
 	    });
 	    this.points.length = 0;
 	};
@@ -22408,7 +22408,7 @@
 	Path2D$1.prototype.closePath = function closePath () {
 	    var points = this.points;
 	    if (points.length > 1 && !points[points.length-1].equals(points[0])) {
-	        points.push(pool$1.pull("Vector2d", points[0].x, points[0].y));
+	        points.push(pool.pull("Vector2d", points[0].x, points[0].y));
 	    }
 	};
 
@@ -22428,14 +22428,14 @@
 	    for (i = 0; i < indices.length; i++ ) {
 	        if (typeof vertices[i] === "undefined") {
 	            // increase cache buffer if necessary
-	            vertices[i] = pool$1.pull("Vector2d");
+	            vertices[i] = pool.pull("Vector2d");
 	        }
 	        vertices[i].set(points[indices[i]].x, points[indices[i]].y);
 	    }
 
 	    // recycle overhead from a previous triangulation
 	    while (vertices.length > indices.length) {
-	        pool$1.push(vertices[vertices.length-1]);
+	        pool.push(vertices[vertices.length-1]);
 	        vertices.length -= 1;
 	    }
 
@@ -22450,7 +22450,7 @@
 	 * @param {number} y the y-axis (vertical) coordinate of the point.
 	 */
 	Path2D$1.prototype.moveTo = function moveTo (x, y) {
-	  this.points.push(pool$1.pull("Vector2d", x, y));
+	  this.points.push(pool.pull("Vector2d", x, y));
 	};
 
 	/**
@@ -22461,7 +22461,7 @@
 	 * @param {number} y the y-axis coordinate of the line's end point.
 	 */
 	Path2D$1.prototype.lineTo = function lineTo (x, y) {
-	    this.points.push(pool$1.pull("Vector2d", x, y));
+	    this.points.push(pool.pull("Vector2d", x, y));
 	};
 
 	/**
@@ -22510,10 +22510,10 @@
 
 	    var angle = startAngle;
 	    for (var j = 0; j < nr_of_interpolation_points; j++) {
-	        points.push(pool$1.pull("Vector2d", x + radius * Math.cos(angle), y + radius * Math.sin(angle)));
+	        points.push(pool.pull("Vector2d", x + radius * Math.cos(angle), y + radius * Math.sin(angle)));
 	        angle += direction * dangle;
 	    }
-	    points.push(pool$1.pull("Vector2d", x + radius * Math.cos(endAngle), y + radius * Math.sin(endAngle)));
+	    points.push(pool.pull("Vector2d", x + radius * Math.cos(endAngle), y + radius * Math.sin(endAngle)));
 	};
 
 	/**
@@ -22548,7 +22548,7 @@
 	    var tangent_point1 =  [x1 + a[0] * adj_l, y1 + a[1] * adj_l];
 	    var tangent_point2 =  [x1 + b[0] * adj_l, y1 + b[1] * adj_l];
 
-	    points.push(pool$1.pull("Vector2d", tangent_point1[0], tangent_point1[1]));
+	    points.push(pool.pull("Vector2d", tangent_point1[0], tangent_point1[1]));
 
 	    var bisec = [(a[0] + b[0]) / 2.0, (a[1] + b[1]) / 2.0];
 	    var bisec_l = Math.sqrt(Math.pow(bisec[0], 2) + Math.pow(bisec[1], 2));
@@ -22617,7 +22617,7 @@
 	        var _y1 = radiusY * Math.sin(angle);
 	        var _x2 = x + _x1 * cos_rotation - _y1 * sin_rotation;
 	        var _y2 = y + _x1 * sin_rotation + _y1 * cos_rotation;
-	        points.push(pool$1.pull("Vector2d", _x2, _y2));
+	        points.push(pool.pull("Vector2d", _x2, _y2));
 	        angle += direction * dangle;
 	    }
 	    //var x1 = radiusX * Math.cos(endAngle);
@@ -22975,7 +22975,7 @@
 	        this.strokeRoundRect(shape.left, shape.top, shape.width, shape.height, shape.radius, fill);
 	        return;
 	    }
-	    if (shape instanceof Rect$1 || shape instanceof Bounds$1) {
+	    if (shape instanceof Rect || shape instanceof Bounds$1) {
 	        this.strokeRect(shape.left, shape.top, shape.width, shape.height, fill);
 	        return;
 	    }
@@ -23478,6 +23478,8 @@
 	            // Fast path: don't draw fully transparent
 	            return;
 	        }
+
+	        var context = this.getContext();
 
 	        context.beginPath();
 	        context.moveTo(startX, startY);
@@ -24175,9 +24177,9 @@
 	        var tile = null;
 
 	        if (this.contains(x, y)) {
-	            var coord = this.getRenderer().pixelToTileCoords(x, y, pool$1.pull("Vector2d"));
+	            var coord = this.getRenderer().pixelToTileCoords(x, y, pool.pull("Vector2d"));
 	            tile = this.cellAt(coord.x, coord.y);
-	            pool$1.push(coord);
+	            pool.push(coord);
 	        }
 	        return tile;
 	    };
@@ -24744,11 +24746,11 @@
 	 * @returns {Polygon} a new Polygon that represents this bounds.
 	 */
 	Bounds.prototype.toPolygon = function toPolygon () {
-	    return pool$1.pull("Polygon", this.x, this.y, [
-	        pool$1.pull("Vector2d", 0,      0),
-	        pool$1.pull("Vector2d", this.width, 0),
-	        pool$1.pull("Vector2d", this.width, this.height),
-	        pool$1.pull("Vector2d", 0,      this.height)
+	    return pool.pull("Polygon", this.x, this.y, [
+	        pool.pull("Vector2d", 0,      0),
+	        pool.pull("Vector2d", this.width, 0),
+	        pool.pull("Vector2d", this.width, this.height),
+	        pool.pull("Vector2d", 0,      this.height)
 	    ]);
 	};
 
@@ -24796,7 +24798,7 @@
 	 * @returns {Bounds}
 	 */
 	TMXRenderer.prototype.getBounds = function getBounds (layer) {
-	    var bounds = layer instanceof TMXLayer ? pool$1.pull("Bounds") : this.bounds;
+	    var bounds = layer instanceof TMXLayer ? pool.pull("Bounds") : this.bounds;
 	    bounds.setMinMax(
 	        0, 0,
 	        this.cols * this.tilewidth,
@@ -24950,13 +24952,13 @@
 	        var start = this.pixelToTileCoords(
 	            Math.max(rect.pos.x - (layer.maxTileSize.width - layer.tilewidth), 0),
 	            Math.max(rect.pos.y - (layer.maxTileSize.height - layer.tileheight), 0),
-	            pool$1.pull("Vector2d")
+	            pool.pull("Vector2d")
 	        ).floorSelf();
 
 	        var end = this.pixelToTileCoords(
 	            rect.pos.x + rect.width + this.tilewidth,
 	            rect.pos.y + rect.height + this.tileheight,
-	            pool$1.pull("Vector2d")
+	            pool.pull("Vector2d")
 	        ).ceilSelf();
 
 	        //ensure we are in the valid tile range
@@ -24994,8 +24996,8 @@
 	            }
 	        }
 
-	        pool$1.push(start);
-	        pool$1.push(end);
+	        pool.push(start);
+	        pool.push(end);
 	    };
 
 	    return TMXOrthogonalRenderer;
@@ -25043,7 +25045,7 @@
 	     * @returns {Bounds}
 	     */
 	    TMXIsometricRenderer.prototype.getBounds = function getBounds (layer) {
-	        var bounds = layer instanceof TMXLayer ? pool$1.pull("Bounds") : this.bounds;
+	        var bounds = layer instanceof TMXLayer ? pool.pull("Bounds") : this.bounds;
 	        bounds.setMinMax(
 	            0, 0,
 	            (this.cols + this.rows) * (this.tilewidth / 2),
@@ -25084,14 +25086,14 @@
 	    TMXIsometricRenderer.prototype.adjustPosition = function adjustPosition (obj) {
 	        var tileX = obj.x / this.hTilewidth;
 	        var tileY = obj.y / this.tileheight;
-	        var isoPos = pool$1.pull("Vector2d");
+	        var isoPos = pool.pull("Vector2d");
 
 	        this.tileToPixelCoords(tileX, tileY, isoPos);
 
 	        obj.x = isoPos.x;
 	        obj.y = isoPos.y;
 
-	        pool$1.push(isoPos);
+	        pool.push(isoPos);
 	    };
 
 	    /**
@@ -25121,18 +25123,18 @@
 	        var rowItr = this.pixelToTileCoords(
 	            rect.pos.x - tileset.tilewidth,
 	            rect.pos.y - tileset.tileheight,
-	            pool$1.pull("Vector2d")
+	            pool.pull("Vector2d")
 	        ).floorSelf();
 	        var tileEnd = this.pixelToTileCoords(
 	            rect.pos.x + rect.width + tileset.tilewidth,
 	            rect.pos.y + rect.height + tileset.tileheight,
-	            pool$1.pull("Vector2d")
+	            pool.pull("Vector2d")
 	        ).ceilSelf();
 
-	        var rectEnd = this.tileToPixelCoords(tileEnd.x, tileEnd.y, pool$1.pull("Vector2d"));
+	        var rectEnd = this.tileToPixelCoords(tileEnd.x, tileEnd.y, pool.pull("Vector2d"));
 
 	        // Determine the tile and pixel coordinates to start at
-	        var startPos = this.tileToPixelCoords(rowItr.x, rowItr.y, pool$1.pull("Vector2d"));
+	        var startPos = this.tileToPixelCoords(rowItr.x, rowItr.y, pool.pull("Vector2d"));
 	        startPos.x -= this.hTilewidth;
 	        startPos.y += this.tileheight;
 
@@ -25199,11 +25201,11 @@
 	            }
 	        }
 
-	        pool$1.push(columnItr);
-	        pool$1.push(rowItr);
-	        pool$1.push(tileEnd);
-	        pool$1.push(rectEnd);
-	        pool$1.push(startPos);
+	        pool.push(columnItr);
+	        pool.push(rowItr);
+	        pool.push(tileEnd);
+	        pool.push(rectEnd);
+	        pool.push(startPos);
 	    };
 
 	    return TMXIsometricRenderer;
@@ -25290,7 +25292,7 @@
 	     * @returns {Bounds}
 	     */
 	    TMXHexagonalRenderer.prototype.getBounds = function getBounds (layer) {
-	        var bounds = layer instanceof TMXLayer ? pool$1.pull("Bounds") : this.bounds;
+	        var bounds = layer instanceof TMXLayer ? pool.pull("Bounds") : this.bounds;
 
 	        // The map size is the same regardless of which indexes are shifted.
 	        if (this.staggerX) {
@@ -25441,13 +25443,13 @@
 	        }
 
 	        // Start with the coordinates of a grid-aligned tile
-	        var referencePoint = pool$1.pull("Vector2d",
+	        var referencePoint = pool.pull("Vector2d",
 	            Math.floor(x / (this.columnwidth * 2)),
 	            Math.floor((y / (this.rowheight * 2)))
 	        );
 
 	        // Relative x and y position on the base square of the grid-aligned tile
-	        var rel = pool$1.pull("Vector2d",
+	        var rel = pool.pull("Vector2d",
 	            x - referencePoint.x * (this.columnwidth * 2),
 	            y - referencePoint.y * (this.rowheight * 2)
 	        );
@@ -25506,8 +25508,8 @@
 	            referencePoint.y + offsets[nearest].y
 	        );
 
-	        pool$1.push(referencePoint);
-	        pool$1.push(rel);
+	        pool.push(referencePoint);
+	        pool.push(rel);
 
 	        return ret;
 	    };
@@ -25558,7 +25560,7 @@
 	     */
 	    TMXHexagonalRenderer.prototype.drawTile = function drawTile (renderer, x, y, tmxTile) {
 	        var tileset = tmxTile.tileset;
-	        var point = this.tileToPixelCoords(x, y, pool$1.pull("Vector2d"));
+	        var point = this.tileToPixelCoords(x, y, pool.pull("Vector2d"));
 
 	        // draw the tile
 	        tileset.drawTile(
@@ -25568,7 +25570,7 @@
 	            tmxTile
 	        );
 
-	        pool$1.push(point);
+	        pool.push(point);
 	    };
 
 	    /**
@@ -25582,7 +25584,7 @@
 	        var startTile = this.pixelToTileCoords(
 	            rect.pos.x,
 	            rect.pos.y,
-	            pool$1.pull("Vector2d")
+	            pool.pull("Vector2d")
 	        );
 
 	        // Compensate for the layer position
@@ -25592,7 +25594,7 @@
 	        var startPos = this.tileToPixelCoords(
 	            startTile.x + layer.pos.x,
 	            startTile.y + layer.pos.y,
-	            pool$1.pull("Vector2d")
+	            pool.pull("Vector2d")
 	        );
 
 	        var rowTile = startTile.clone();
@@ -25655,8 +25657,8 @@
 
 	                startPos.y += this.rowheight;
 	            }
-	            pool$1.push(rowTile);
-	            pool$1.push(rowPos);
+	            pool.push(rowTile);
+	            pool.push(rowPos);
 
 	        } else {
 	            //ensure we are in the valid tile range
@@ -25692,12 +25694,12 @@
 	                }
 	                startPos.y += this.rowheight;
 	            }
-	            pool$1.push(rowTile);
-	            pool$1.push(rowPos);
+	            pool.push(rowTile);
+	            pool.push(rowPos);
 	        }
 
-	        pool$1.push(startTile);
-	        pool$1.push(startPos);
+	        pool.push(startTile);
+	        pool.push(startPos);
 	    };
 
 	    return TMXHexagonalRenderer;
@@ -25741,7 +25743,7 @@
 	        }
 
 	        // Start with the coordinates of a grid-aligned tile
-	        var referencePoint = pool$1.pull("Vector2d",
+	        var referencePoint = pool.pull("Vector2d",
 	            Math.floor(alignedX / this.tilewidth),
 	            Math.floor(alignedY / this.tileheight)
 	        );
@@ -25760,7 +25762,7 @@
 	        }
 
 	        // Relative x and y position on the base square of the grid-aligned tile
-	        var rel = pool$1.pull("Vector2d",
+	        var rel = pool.pull("Vector2d",
 	            alignedX - referencePoint.x * this.tilewidth,
 	            alignedY - referencePoint.y * this.tileheight
 	        );
@@ -25793,8 +25795,8 @@
 
 	        ret.div(this.tilewidth / Math.sqrt(2)).rotate(degToRad(-45)).add(referencePoint);
 
-	        pool$1.push(referencePoint);
-	        pool$1.push(rel);
+	        pool.push(referencePoint);
+	        pool.push(rel);
 
 	        return ret;
 	    };
@@ -26404,7 +26406,7 @@
 	    // add an ellipse shape
 	    if (this.isEllipse === true) {
 	        // ellipse coordinates are the center position, so set default to the corresonding radius
-	        shapes.push((pool$1.pull("Ellipse",
+	        shapes.push((pool.pull("Ellipse",
 	            this.width / 2,
 	            this.height / 2,
 	            this.width,
@@ -26414,7 +26416,7 @@
 
 	        // add a polygon
 	        if (this.isPolygon === true) {
-	            var _polygon = pool$1.pull("Polygon", 0, 0, this.points);
+	            var _polygon = pool.pull("Polygon", 0, 0, this.points);
 	            // make sure it's a convex polygon
 	            if (_polygon.isConvex() === false ) {
 	                throw new Error("collision polygones in Tiled should be defined as Convex");
@@ -26430,22 +26432,22 @@
 	            for (i = 0; i < segments; i++) {
 	                // clone the value before, as [i + 1]
 	                // is reused later by the next segment
-	                p1 = pool$1.pull("Vector2d", p[i].x, p[i].y);
-	                p2 = pool$1.pull("Vector2d", p[i + 1].x, p[i + 1].y);
+	                p1 = pool.pull("Vector2d", p[i].x, p[i].y);
+	                p2 = pool.pull("Vector2d", p[i + 1].x, p[i + 1].y);
 	                if (this.rotation !== 0) {
 	                    p1 = p1.rotate(this.rotation);
 	                    p2 = p2.rotate(this.rotation);
 	                }
-	                shapes.push(pool$1.pull("Line", 0, 0, [ p1, p2 ]));
+	                shapes.push(pool.pull("Line", 0, 0, [ p1, p2 ]));
 	            }
 	        }
 
 	        // it's a rectangle, returns a polygon object anyway
 	        else {
-	            shapes.push((pool$1.pull("Polygon",
+	            shapes.push((pool.pull("Polygon",
 	                0, 0, [
-	                    pool$1.pull("Vector2d"),  pool$1.pull("Vector2d", this.width, 0),
-	                    pool$1.pull("Vector2d", this.width, this.height), pool$1.pull("Vector2d", 0, this.height)
+	                    pool.pull("Vector2d"),  pool.pull("Vector2d", this.width, 0),
+	                    pool.pull("Vector2d", this.width, this.height), pool.pull("Vector2d", 0, this.height)
 	                ]
 	            )).rotate(this.rotation));
 	        }
@@ -26632,16 +26634,16 @@
 	    applyTMXProperties(data.properties, data);
 
 	    // create the layer
-	    var imageLayer = pool$1.pull("ImageLayer",
+	    var imageLayer = pool.pull("ImageLayer",
 	        // x/y is deprecated since 0.15 and replace by offsetx/y
 	        +data.offsetx || +data.x || 0,
 	        +data.offsety || +data.y || 0,
 	        Object.assign({
 	            name: data.name,
 	            image: data.image,
-	            ratio : pool$1.pull("Vector2d", +data.parallaxx || 1.0, +data.parallaxy || 1.0),
+	            ratio : pool.pull("Vector2d", +data.parallaxx || 1.0, +data.parallaxy || 1.0),
 	            // convert to melonJS color format (note: this should be done earlier when parsing data)
-	            tint : typeof (data.tintcolor) !== "undefined" ? (pool$1.pull("Color")).parseHex(data.tintcolor, true) : undefined,
+	            tint : typeof (data.tintcolor) !== "undefined" ? (pool.pull("Color")).parseHex(data.tintcolor, true) : undefined,
 	            z: z
 	        }, data.properties)
 	    );
@@ -26871,7 +26873,7 @@
 	    if (this.background_image) {
 	        // add a new image layer
 	        this.layers.push(
-	            pool$1.pull("ImageLayer",
+	            pool.pull("ImageLayer",
 	                0, 0, {
 	                    name : "background_image",
 	                    image : this.background_image,
@@ -27038,7 +27040,7 @@
 	            }
 	            // convert to melonJS renderable argument name
 	            if (typeof (settings.tintcolor) !== "undefined") {
-	                settings.tint = pool$1.pull("Color");
+	                settings.tint = pool.pull("Color");
 	                settings.tint.parseHex(settings.tintcolor, true);
 	            }
 
@@ -27056,9 +27058,9 @@
 	                    settings.text.anchorPoint = settings.anchorPoint;
 	                }
 	                if (settings.text.bitmap === true) {
-	                    obj = pool$1.pull("BitmapText", settings.x, settings.y, settings.text);
+	                    obj = pool.pull("BitmapText", settings.x, settings.y, settings.text);
 	                } else {
-	                    obj = pool$1.pull("Text", settings.x, settings.y, settings.text);
+	                    obj = pool.pull("Text", settings.x, settings.y, settings.text);
 	                }
 	                // set the obj z order
 	                obj.pos.z = settings.z;
@@ -27066,10 +27068,10 @@
 	                // create a default shape if none is specified
 	                shape = settings.shapes;
 	                if (typeof shape === "undefined") {
-	                    shape = pool$1.pull("Polygon", 0, 0, [
-	                        pool$1.pull("Vector2d", 0,      0),
-	                        pool$1.pull("Vector2d", this.width, 0),
-	                        pool$1.pull("Vector2d", this.width, this.height)
+	                    shape = pool.pull("Polygon", 0, 0, [
+	                        pool.pull("Vector2d", 0,      0),
+	                        pool.pull("Vector2d", this.width, 0),
+	                        pool.pull("Vector2d", this.width, this.height)
 	                    ]);
 	                }
 	                // check if a me.Tile object is embedded
@@ -27081,14 +27083,14 @@
 	            } else {
 	                // pull the corresponding object from the object pool
 	                if (typeof settings.name !== "undefined" && settings.name !== "") {
-	                    obj = pool$1.pull(
+	                    obj = pool.pull(
 	                        settings.name,
 	                        settings.x, settings.y,
 	                        settings
 	                    );
 	                } else {
 	                    // unnamed shape object
-	                    obj = pool$1.pull(
+	                    obj = pool.pull(
 	                        "Renderable",
 	                        settings.x, settings.y,
 	                        settings.width, settings.height
@@ -27096,10 +27098,10 @@
 	                    // create a default shape if none is specified
 	                    shape = settings.shapes;
 	                    if (typeof shape === "undefined") {
-	                        shape = pool$1.pull("Polygon", 0, 0, [
-	                            pool$1.pull("Vector2d", 0,      0),
-	                            pool$1.pull("Vector2d", this.width, 0),
-	                            pool$1.pull("Vector2d", this.width, this.height)
+	                        shape = pool.pull("Polygon", 0, 0, [
+	                            pool.pull("Vector2d", 0,      0),
+	                            pool.pull("Vector2d", this.width, 0),
+	                            pool.pull("Vector2d", this.width, this.height)
 	                        ]);
 	                    }
 	                    obj.anchorPoint.set(0, 0);
@@ -29420,7 +29422,8 @@
 
 	   /**
 	    * specify a function to execute when the Device is fully loaded and ready
-	    * @function device.onReady
+	    * @name device.onReady
+	    * @function
 	    * @param {Function} fn the function to be executed
 	    * @example
 	    * // small game skeleton
@@ -31297,10 +31300,10 @@
 	        if (color instanceof Color) {
 	            glArray = color.toArray();
 	        } else {
-	            var _color = pool$1.pull("me.Color");
+	            var _color = pool.pull("me.Color");
 	            // reuse temporary the renderer default color object
 	            glArray = _color.parseCSS(color).toArray();
-	            pool$1.push(_color);
+	            pool.push(_color);
 	        }
 	        // clear gl context with the specified color
 	        this.currentCompositor.clearColor(glArray[0], glArray[1], glArray[2], (opaque === true) ? 1.0 : glArray[3]);
@@ -31587,8 +31590,8 @@
 	            this.setBlendMode(this._blendStack.pop());
 
 	            // recycle objects
-	            pool$1.push(color);
-	            pool$1.push(matrix);
+	            pool.push(color);
+	            pool.push(matrix);
 	        }
 
 	        if (this._scissorStack.length !== 0) {
@@ -34602,10 +34605,10 @@
 	                this.fillStyle = settings.fillStyle;
 	            } else {
 	                // string (#RGB, #ARGB, #RRGGBB, #AARRGGBB)
-	                this.fillStyle = pool$1.pull("Color").parseCSS(settings.fillStyle);
+	                this.fillStyle = pool.pull("Color").parseCSS(settings.fillStyle);
 	            }
 	        } else {
-	            this.fillStyle = pool$1.pull("Color", 0, 0, 0);
+	            this.fillStyle = pool.pull("Color", 0, 0, 0);
 	        }
 
 	        /**
@@ -34620,10 +34623,10 @@
 	                 this.strokeStyle = settings.strokeStyle;
 	             } else {
 	                 // string (#RGB, #ARGB, #RRGGBB, #AARRGGBB)
-	                 this.strokeStyle = pool$1.pull("Color").parseCSS(settings.strokeStyle);
+	                 this.strokeStyle = pool.pull("Color").parseCSS(settings.strokeStyle);
 	             }
 	         } else {
-	             this.strokeStyle = pool$1.pull("Color", 0, 0, 0);
+	             this.strokeStyle = pool.pull("Color", 0, 0, 0);
 	         }
 
 	        /**
@@ -34719,7 +34722,7 @@
 
 	        if (settings.offScreenCanvas === true) {
 	            this.offScreenCanvas = true;
-	            this.canvasTexture = pool$1.pull("CanvasTexture", 2, 2, true);
+	            this.canvasTexture = pool.pull("CanvasTexture", 2, 2, true);
 	        }
 
 	        // instance to text metrics functions
@@ -34735,7 +34738,7 @@
 	        if (this.offScreenCanvas === true) {
 	            renderer.currentCompositor.deleteTexture2D(renderer.currentCompositor.getTexture2D(this.glTextureUnit));
 	            renderer.cache.delete(this.canvasTexture.canvas);
-	            pool$1.push(this.canvasTexture);
+	            pool.push(this.canvasTexture);
 	            this.canvasTexture = undefined;
 	            this.glTextureUnit = undefined;
 	        }
@@ -34970,8 +34973,8 @@
 	     * @ignore
 	     */
 	    Text.prototype.destroy = function destroy () {
-	        pool$1.push(this.fillStyle);
-	        pool$1.push(this.strokeStyle);
+	        pool.push(this.fillStyle);
+	        pool.push(this.strokeStyle);
 	        this.fillStyle = this.strokeStyle = undefined;
 	        this.metrics = undefined;
 	        this._text.length = 0;
@@ -35037,7 +35040,7 @@
 	         * scaled font size
 	         * @private
 	         */
-	        this.fontScale = pool$1.pull("Vector2d", 1.0, 1.0);
+	        this.fontScale = pool.pull("Vector2d", 1.0, 1.0);
 
 	        /**
 	         * font image
@@ -35051,9 +35054,9 @@
 	             * @private
 	             */
 	            // use settings.font to retreive the data from the loader
-	            this.fontData = pool$1.pull("BitmapTextData", loader.getBinary(settings.font));
+	            this.fontData = pool.pull("BitmapTextData", loader.getBinary(settings.font));
 	        } else {
-	            this.fontData = pool$1.pull("BitmapTextData",
+	            this.fontData = pool.pull("BitmapTextData",
 	                // if starting/includes "info face" the whole data string was passed as parameter
 	                (settings.fontData.includes("info face")) ? settings.fontData : loader.getBinary(settings.fontData)
 	            );
@@ -35292,9 +35295,9 @@
 	     * @ignore
 	     */
 	    BitmapText.prototype.destroy = function destroy () {
-	        pool$1.push(this.fontScale);
+	        pool.push(this.fontScale);
 	        this.fontScale = undefined;
-	        pool$1.push(this.fontData);
+	        pool.push(this.fontData);
 	        this.fontData = undefined;
 	        this._text.length = 0;
 	        this.metrics = undefined;
@@ -35556,7 +35559,7 @@
 	         * @name color
 	         * @memberof ColorLayer#
 	         */
-	         this.color = pool$1.pull("Color").parseCSS(color);
+	         this.color = pool.pull("Color").parseCSS(color);
 
 	         this.onResetEvent(name, color, z);
 
@@ -35597,7 +35600,7 @@
 	     * @ignore
 	     */
 	    ColorLayer.prototype.destroy = function destroy () {
-	        pool$1.push(this.color);
+	        pool.push(this.color);
 	        this.color = undefined;
 	        Renderable.prototype.destroy.call(this);
 	    };
@@ -35633,7 +35636,7 @@
 	         * @default <1.0,1.0>
 	         * @name ImageLayer#ratio
 	         */
-	        this.ratio = pool$1.pull("Vector2d", 1.0, 1.0);
+	        this.ratio = pool.pull("Vector2d", 1.0, 1.0);
 
 	        if (typeof(settings.ratio) !== "undefined") {
 	            // little hack for backward compatiblity
@@ -35878,7 +35881,7 @@
 	     * @ignore
 	     */
 	    ImageLayer.prototype.destroy = function destroy () {
-	        pool$1.push(this.ratio);
+	        pool.push(this.ratio);
 	        this.ratio = undefined;
 	        off(ONCONTEXT_RESTORED, this.createPattern);
 	        Sprite.prototype.destroy.call(this);
@@ -36493,7 +36496,7 @@
 	         * @type {Color}
 	         * @default "#FFF"
 	         */
-	        this.color = pool$1.pull("Color").parseCSS(color);
+	        this.color = pool.pull("Color").parseCSS(color);
 
 	        /**
 	         * The radius of the light
@@ -36518,10 +36521,10 @@
 	        this.blendMode = "lighter";
 
 	        /** @ignore */
-	        this.visibleArea = pool$1.pull("Ellipse", this.centerX, this.centerY, this.width, this.height);
+	        this.visibleArea = pool.pull("Ellipse", this.centerX, this.centerY, this.width, this.height);
 
 	        /** @ignore */
-	        this.texture = pool$1.pull("CanvasTexture", this.width, this.height, false);
+	        this.texture = pool.pull("CanvasTexture", this.width, this.height, false);
 
 	        this.anchorPoint.set(0, 0);
 
@@ -36555,11 +36558,11 @@
 	     * @ignore
 	     */
 	    Light2d.prototype.destroy = function destroy () {
-	        pool$1.push(this.color);
+	        pool.push(this.color);
 	        this.color = undefined;
-	        pool$1.push(this.texture);
+	        pool.push(this.texture);
 	        this.texture = undefined;
-	        pool$1.push(this.visibleArea);
+	        pool.push(this.visibleArea);
 	        this.visibleArea = undefined;
 	        Renderable.prototype.destroy.call(this);
 	    };
@@ -37095,7 +37098,7 @@
 	    if ( w === void 0 ) w = 8;
 	    if ( h === void 0 ) h = 8;
 
-	    var defaultParticleTexture = pool$1.pull("CanvasTexture", w, h, true);
+	    var defaultParticleTexture = pool.pull("CanvasTexture", w, h, true);
 
 	    defaultParticleTexture.context.fillStyle = "#fff";
 	    defaultParticleTexture.context.fillRect(0, 0, w, h);
@@ -37210,7 +37213,7 @@
 	    ParticleEmitter.prototype.addParticles = function addParticles (count) {
 	        for (var i = 0; i < count; i++) {
 	            // Add particle to the container
-	            this.addChild(pool$1.pull("Particle", this), this.pos.z);
+	            this.addChild(pool.pull("Particle", this), this.pos.z);
 	        }
 	        this.isDirty = true;
 	    };
@@ -37312,7 +37315,7 @@
 	        Container.prototype.destroy.call(this, arguments);
 	        // clean emitter specific Properties
 	        if (typeof this._defaultParticle !== "undefined") {
-	            pool$1.push(this._defaultParticle);
+	            pool.push(this._defaultParticle);
 	            this._defaultParticle = undefined;
 	        }
 	        this.settings.image = undefined;
@@ -37361,7 +37364,7 @@
 	            this.currentTransform.identity();
 	        } else {
 	            // particle velocity
-	            this.vel = pool$1.pull("Vector2d");
+	            this.vel = pool.pull("Vector2d");
 	        }
 
 	        this.image = emitter.settings.image;
@@ -37580,11 +37583,11 @@
 	         */
 	        // initialize the default body
 	        if (typeof settings.shapes === "undefined") {
-	            settings.shapes = pool$1.pull("Polygon", 0, 0, [
-	                pool$1.pull("Vector2d", 0,          0),
-	                pool$1.pull("Vector2d", this.width, 0),
-	                pool$1.pull("Vector2d", this.width, this.height),
-	                pool$1.pull("Vector2d", 0,          this.height)
+	            settings.shapes = pool.pull("Polygon", 0, 0, [
+	                pool.pull("Vector2d", 0,          0),
+	                pool.pull("Vector2d", this.width, 0),
+	                pool.pull("Vector2d", this.width, this.height),
+	                pool.pull("Vector2d", 0,          this.height)
 	            ]);
 	        }
 	        this.body = new Body(this, settings.shapes, this.onBodyUpdate.bind(this));
@@ -37899,63 +37902,63 @@
 	    }
 
 	    // register all built-ins objects into the object pool
-	    pool$1.register("me.Entity", Entity);
-	    pool$1.register("me.Collectable", Collectable);
-	    pool$1.register("me.Trigger", Trigger);
-	    pool$1.register("me.Light2d", Light2d);
-	    pool$1.register("me.Tween", Tween, true);
-	    pool$1.register("me.Color", Color, true);
-	    pool$1.register("me.Particle", Particle, true);
-	    pool$1.register("me.Sprite", Sprite);
-	    pool$1.register("me.NineSliceSprite", NineSliceSprite);
-	    pool$1.register("me.Renderable", Renderable);
-	    pool$1.register("me.Text", Text, true);
-	    pool$1.register("me.BitmapText", BitmapText);
-	    pool$1.register("me.BitmapTextData", BitmapTextData, true);
-	    pool$1.register("me.ImageLayer", ImageLayer);
-	    pool$1.register("me.ColorLayer", ColorLayer, true);
-	    pool$1.register("me.Vector2d", Vector2d, true);
-	    pool$1.register("me.Vector3d", Vector3d, true);
-	    pool$1.register("me.ObservableVector2d", ObservableVector2d, true);
-	    pool$1.register("me.ObservableVector3d", ObservableVector3d, true);
-	    pool$1.register("me.Matrix2d", Matrix2d, true);
-	    pool$1.register("me.Matrix3d", Matrix3d, true);
-	    pool$1.register("me.Rect", Rect$1, true);
-	    pool$1.register("me.RoundRect", RoundRect, true);
-	    pool$1.register("me.Polygon", Polygon, true);
-	    pool$1.register("me.Line", Line, true);
-	    pool$1.register("me.Ellipse", Ellipse, true);
-	    pool$1.register("me.Bounds", Bounds$1, true);
+	    pool.register("me.Entity", Entity);
+	    pool.register("me.Collectable", Collectable);
+	    pool.register("me.Trigger", Trigger);
+	    pool.register("me.Light2d", Light2d);
+	    pool.register("me.Tween", Tween, true);
+	    pool.register("me.Color", Color, true);
+	    pool.register("me.Particle", Particle, true);
+	    pool.register("me.Sprite", Sprite);
+	    pool.register("me.NineSliceSprite", NineSliceSprite);
+	    pool.register("me.Renderable", Renderable);
+	    pool.register("me.Text", Text, true);
+	    pool.register("me.BitmapText", BitmapText);
+	    pool.register("me.BitmapTextData", BitmapTextData, true);
+	    pool.register("me.ImageLayer", ImageLayer);
+	    pool.register("me.ColorLayer", ColorLayer, true);
+	    pool.register("me.Vector2d", Vector2d, true);
+	    pool.register("me.Vector3d", Vector3d, true);
+	    pool.register("me.ObservableVector2d", ObservableVector2d, true);
+	    pool.register("me.ObservableVector3d", ObservableVector3d, true);
+	    pool.register("me.Matrix2d", Matrix2d, true);
+	    pool.register("me.Matrix3d", Matrix3d, true);
+	    pool.register("me.Rect", Rect, true);
+	    pool.register("me.RoundRect", RoundRect, true);
+	    pool.register("me.Polygon", Polygon, true);
+	    pool.register("me.Line", Line, true);
+	    pool.register("me.Ellipse", Ellipse, true);
+	    pool.register("me.Bounds", Bounds$1, true);
 
 	    // duplicate all entries if use with no namespace (e.g. es6)
-	    pool$1.register("Entity", Entity);
-	    pool$1.register("Collectable", Collectable);
-	    pool$1.register("Trigger", Trigger);
-	    pool$1.register("Light2d", Light2d);
-	    pool$1.register("Tween", Tween, true);
-	    pool$1.register("Color", Color, true);
-	    pool$1.register("Particle", Particle, true);
-	    pool$1.register("Sprite", Sprite);
-	    pool$1.register("NineSliceSprite", NineSliceSprite);
-	    pool$1.register("Renderable", Renderable);
-	    pool$1.register("Text", Text, true);
-	    pool$1.register("BitmapText", BitmapText);
-	    pool$1.register("BitmapTextData", BitmapTextData, true);
-	    pool$1.register("ImageLayer", ImageLayer);
-	    pool$1.register("ColorLayer", ColorLayer, true);
-	    pool$1.register("Vector2d", Vector2d, true);
-	    pool$1.register("Vector3d", Vector3d, true);
-	    pool$1.register("ObservableVector2d", ObservableVector2d, true);
-	    pool$1.register("ObservableVector3d", ObservableVector3d, true);
-	    pool$1.register("Matrix2d", Matrix2d, true);
-	    pool$1.register("Matrix3d", Matrix3d, true);
-	    pool$1.register("Rect", Rect$1, true);
-	    pool$1.register("RoundRect", RoundRect, true);
-	    pool$1.register("Polygon", Polygon, true);
-	    pool$1.register("Line", Line, true);
-	    pool$1.register("Ellipse", Ellipse, true);
-	    pool$1.register("Bounds", Bounds$1, true);
-	    pool$1.register("CanvasTexture", CanvasTexture, true);
+	    pool.register("Entity", Entity);
+	    pool.register("Collectable", Collectable);
+	    pool.register("Trigger", Trigger);
+	    pool.register("Light2d", Light2d);
+	    pool.register("Tween", Tween, true);
+	    pool.register("Color", Color, true);
+	    pool.register("Particle", Particle, true);
+	    pool.register("Sprite", Sprite);
+	    pool.register("NineSliceSprite", NineSliceSprite);
+	    pool.register("Renderable", Renderable);
+	    pool.register("Text", Text, true);
+	    pool.register("BitmapText", BitmapText);
+	    pool.register("BitmapTextData", BitmapTextData, true);
+	    pool.register("ImageLayer", ImageLayer);
+	    pool.register("ColorLayer", ColorLayer, true);
+	    pool.register("Vector2d", Vector2d, true);
+	    pool.register("Vector3d", Vector3d, true);
+	    pool.register("ObservableVector2d", ObservableVector2d, true);
+	    pool.register("ObservableVector3d", ObservableVector3d, true);
+	    pool.register("Matrix2d", Matrix2d, true);
+	    pool.register("Matrix3d", Matrix3d, true);
+	    pool.register("Rect", Rect, true);
+	    pool.register("RoundRect", RoundRect, true);
+	    pool.register("Polygon", Polygon, true);
+	    pool.register("Line", Line, true);
+	    pool.register("Ellipse", Ellipse, true);
+	    pool.register("Bounds", Bounds$1, true);
+	    pool.register("CanvasTexture", CanvasTexture, true);
 
 	    // publish Boot notification
 	    emit(BOOT);
@@ -38009,7 +38012,7 @@
 	exports.Pointer = Pointer;
 	exports.Polygon = Polygon;
 	exports.QuadTree = QuadTree;
-	exports.Rect = Rect$1;
+	exports.Rect = Rect;
 	exports.Renderable = Renderable;
 	exports.Renderer = Renderer;
 	exports.RoundRect = RoundRect;
@@ -38045,7 +38048,7 @@
 	exports.loader = loader;
 	exports.plugin = plugin;
 	exports.plugins = plugins;
-	exports.pool = pool$1;
+	exports.pool = pool;
 	exports.save = save;
 	exports.skipAutoInit = skipAutoInit;
 	exports.state = state;
