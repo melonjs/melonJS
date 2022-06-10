@@ -3,6 +3,7 @@ import Renderer from "./../renderer.js";
 import TextureCache from "./../texture/cache.js";
 import Ellipse from "./../../geometries/ellipse.js";
 import RoundRect from "./../../geometries/roundrect.js";
+import Rect from "./../../geometries/rectangle.js";
 import Bounds from "./../../physics/bounds.js";
 import { createCanvas } from "./../video.js";
 
