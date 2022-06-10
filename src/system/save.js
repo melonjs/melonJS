@@ -1,5 +1,5 @@
-import device from "./../system/device.js";
-import * as event from "./../system/event.js";
+import device from "./device.js";
+import * as event from "./event.js";
 
 /**
  * allow to access and manage the device localStorage

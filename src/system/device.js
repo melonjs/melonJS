@@ -1,9 +1,9 @@
 import { hasAudio } from "./../audio/audio.js";
 import { getParent } from "./../video/video.js";
-import save from "./../system/save.js";
+import save from "./save.js";
 import { prefixed } from "./../utils/agent.js";
 import state from "./../state/state.js";
-import * as event from "./../system/event.js";
+import * as event from "./event.js";
 
 // private properties
 let accelInitialized = false;

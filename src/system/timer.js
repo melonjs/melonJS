@@ -1,5 +1,5 @@
 import utils from "./../utils/utils.js";
-import * as event from "./../system/event.js";
+import * as event from "./event.js";
 import state from "./../state/state.js";
 import { clamp } from "./../math/math.js";
 
