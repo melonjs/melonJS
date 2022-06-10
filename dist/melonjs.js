@@ -2435,7 +2435,7 @@
 	    this.onResetEvent(r, g, b, alpha);
 	};
 
-	var prototypeAccessors$5 = { r: { configurable: true },g: { configurable: true },b: { configurable: true },alpha: { configurable: true } };
+	var prototypeAccessors$4 = { r: { configurable: true },g: { configurable: true },b: { configurable: true },alpha: { configurable: true } };
 
 	/**
 	 * @ignore
@@ -2459,11 +2459,11 @@
 	 * @type {number}
 	 * @memberof Color
 	 */
-	prototypeAccessors$5.r.get = function () {
+	prototypeAccessors$4.r.get = function () {
 	    return ~~(this.glArray[0] * 255);
 	};
 
-	prototypeAccessors$5.r.set = function (value) {
+	prototypeAccessors$4.r.set = function (value) {
 	    this.glArray[0] = clamp(~~value || 0, 0, 255) / 255.0;
 	};
 
@@ -2473,11 +2473,11 @@
 	 * @type {number}
 	 * @memberof Color
 	 */
-	prototypeAccessors$5.g.get = function () {
+	prototypeAccessors$4.g.get = function () {
 	    return ~~(this.glArray[1] * 255);
 	};
 
-	prototypeAccessors$5.g.set = function (value) {
+	prototypeAccessors$4.g.set = function (value) {
 	    this.glArray[1] = clamp(~~value || 0, 0, 255) / 255.0;
 	};
 
@@ -2487,10 +2487,10 @@
 	 * @type {number}
 	 * @memberof Color
 	 */
-	prototypeAccessors$5.b.get = function () {
+	prototypeAccessors$4.b.get = function () {
 	    return ~~(this.glArray[2] * 255);
 	};
-	prototypeAccessors$5.b.set = function (value) {
+	prototypeAccessors$4.b.set = function (value) {
 	    this.glArray[2] = clamp(~~value || 0, 0, 255) / 255.0;
 	};
 
@@ -2499,11 +2499,11 @@
 	 * @type {number}
 	 * @memberof Color
 	 */
-	prototypeAccessors$5.alpha.get = function () {
+	prototypeAccessors$4.alpha.get = function () {
 	    return this.glArray[3];
 	};
 
-	prototypeAccessors$5.alpha.set = function (value) {
+	prototypeAccessors$4.alpha.set = function (value) {
 	    this.glArray[3] = typeof(value) === "undefined" ? 1.0 : clamp(+value, 0, 1.0);
 	};
 
@@ -2856,7 +2856,7 @@
 	    ")";
 	};
 
-	Object.defineProperties( Color.prototype, prototypeAccessors$5 );
+	Object.defineProperties( Color.prototype, prototypeAccessors$4 );
 
 	/**
 	 * @classdesc
@@ -2870,7 +2870,7 @@
 	    (ref = this).onResetEvent.apply(ref, args);
 	};
 
-	var prototypeAccessors$4 = { tx: { configurable: true },ty: { configurable: true },tz: { configurable: true } };
+	var prototypeAccessors$3 = { tx: { configurable: true },ty: { configurable: true },tz: { configurable: true } };
 
 	/**
 	 * @ignore
@@ -2898,7 +2898,7 @@
 	 * @name tx
 	 * @memberof Matrix3d
 	 */
-	prototypeAccessors$4.tx.get = function () {
+	prototypeAccessors$3.tx.get = function () {
 	    return this.val[12];
 	};
 
@@ -2909,7 +2909,7 @@
 	 * @name ty
 	 * @memberof Matrix3d
 	 */
-	prototypeAccessors$4.ty.get = function () {
+	prototypeAccessors$3.ty.get = function () {
 	    return this.val[13];
 	};
 
@@ -2920,7 +2920,7 @@
 	 * @name tz
 	 * @memberof Matrix3d
 	 */
-	prototypeAccessors$4.tz.get = function () {
+	prototypeAccessors$3.tz.get = function () {
 	    return this.val[14];
 	};
 
@@ -3527,7 +3527,7 @@
 	    ")";
 	};
 
-	Object.defineProperties( Matrix3d.prototype, prototypeAccessors$4 );
+	Object.defineProperties( Matrix3d.prototype, prototypeAccessors$3 );
 
 	/**
 	 * @classdesc
@@ -3543,7 +3543,7 @@
 	     (ref = this).onResetEvent.apply(ref, args);
 	 };
 
-	var prototypeAccessors$3 = { tx: { configurable: true },ty: { configurable: true } };
+	var prototypeAccessors$2 = { tx: { configurable: true },ty: { configurable: true } };
 
 	 /**
 	  * @ignore
@@ -3576,7 +3576,7 @@
 	  * @name tx
 	  * @memberof Matrix2d
 	  */
-	 prototypeAccessors$3.tx.get = function () {
+	 prototypeAccessors$2.tx.get = function () {
 	     return this.val[6];
 	 };
 
@@ -3588,7 +3588,7 @@
 	  * @name ty
 	  * @memberof Matrix2d
 	  */
-	 prototypeAccessors$3.ty.get = function () {
+	 prototypeAccessors$2.ty.get = function () {
 	     return this.val[7];
 	 };
 
@@ -4015,7 +4015,7 @@
 	     ")";
 	 };
 
-	Object.defineProperties( Matrix2d.prototype, prototypeAccessors$3 );
+	Object.defineProperties( Matrix2d.prototype, prototypeAccessors$2 );
 
 	var eventemitter3 = {exports: {}};
 
@@ -11639,18 +11639,18 @@
 	 * @classdesc
 	 * a bound object contains methods for creating and manipulating axis-aligned bounding boxes (AABB).
 	 */
-	var Bounds$1 = function Bounds(vertices) {
+	var Bounds = function Bounds(vertices) {
 	    // @ignore
 	    this._center = new Vector2d();
 	    this.onResetEvent(vertices);
 	};
 
-	var prototypeAccessors$2 = { x: { configurable: true },y: { configurable: true },width: { configurable: true },height: { configurable: true },left: { configurable: true },right: { configurable: true },top: { configurable: true },bottom: { configurable: true },centerX: { configurable: true },centerY: { configurable: true },center: { configurable: true } };
+	var prototypeAccessors$1 = { x: { configurable: true },y: { configurable: true },width: { configurable: true },height: { configurable: true },left: { configurable: true },right: { configurable: true },top: { configurable: true },bottom: { configurable: true },centerX: { configurable: true },centerY: { configurable: true },center: { configurable: true } };
 
 	/**
 	 * @ignore
 	 */
-	Bounds$1.prototype.onResetEvent = function onResetEvent (vertices) {
+	Bounds.prototype.onResetEvent = function onResetEvent (vertices) {
 	    if (typeof this.min === "undefined") {
 	        this.min = { x: Infinity,  y: Infinity };
 	        this.max = { x: -Infinity, y: -Infinity };
@@ -11667,7 +11667,7 @@
 	 * @name clear
 	 * @memberof Bounds
 	 */
-	Bounds$1.prototype.clear = function clear () {
+	Bounds.prototype.clear = function clear () {
 	    this.setMinMax(Infinity, Infinity, -Infinity, -Infinity);
 
 	};
@@ -11681,7 +11681,7 @@
 	 * @param {number} maxX
 	 * @param {number} maxY
 	 */
-	Bounds$1.prototype.setMinMax = function setMinMax (minX, minY, maxX, maxY) {
+	Bounds.prototype.setMinMax = function setMinMax (minX, minY, maxX, maxY) {
 	    this.min.x = minX;
 	    this.min.y = minY;
 
@@ -11696,11 +11696,11 @@
 	 * @name x
 	 * @memberof Bounds
 	 */
-	prototypeAccessors$2.x.get = function () {
+	prototypeAccessors$1.x.get = function () {
 	    return this.min.x;
 	};
 
-	prototypeAccessors$2.x.set = function (value) {
+	prototypeAccessors$1.x.set = function (value) {
 	    var deltaX = this.max.x - this.min.x;
 	    this.min.x = value;
 	    this.max.x = value + deltaX;
@@ -11713,11 +11713,11 @@
 	 * @name y
 	 * @memberof Bounds
 	 */
-	prototypeAccessors$2.y.get = function () {
+	prototypeAccessors$1.y.get = function () {
 	    return this.min.y;
 	};
 
-	prototypeAccessors$2.y.set = function (value) {
+	prototypeAccessors$1.y.set = function (value) {
 	    var deltaY = this.max.y - this.min.y;
 
 	    this.min.y = value;
@@ -11731,11 +11731,11 @@
 	 * @name width
 	 * @memberof Bounds
 	 */
-	prototypeAccessors$2.width.get = function () {
+	prototypeAccessors$1.width.get = function () {
 	    return this.max.x - this.min.x;
 	};
 
-	prototypeAccessors$2.width.set = function (value) {
+	prototypeAccessors$1.width.set = function (value) {
 	    this.max.x = this.min.x + value;
 	};
 
@@ -11746,11 +11746,11 @@
 	 * @name width
 	 * @memberof Bounds
 	 */
-	prototypeAccessors$2.height.get = function () {
+	prototypeAccessors$1.height.get = function () {
 	    return this.max.y - this.min.y;
 	};
 
-	prototypeAccessors$2.height.set = function (value) {
+	prototypeAccessors$1.height.set = function (value) {
 	    this.max.y = this.min.y + value;
 	};
 
@@ -11761,7 +11761,7 @@
 	 * @name left
 	 * @memberof Bounds
 	 */
-	prototypeAccessors$2.left.get = function () {
+	prototypeAccessors$1.left.get = function () {
 	    return this.min.x;
 	};
 
@@ -11772,7 +11772,7 @@
 	 * @name right
 	 * @memberof Bounds
 	 */
-	prototypeAccessors$2.right.get = function () {
+	prototypeAccessors$1.right.get = function () {
 	    return this.max.x;
 	};
 
@@ -11783,7 +11783,7 @@
 	 * @name top
 	 * @memberof Bounds
 	 */
-	prototypeAccessors$2.top.get = function () {
+	prototypeAccessors$1.top.get = function () {
 	    return this.min.y;
 	};
 
@@ -11794,7 +11794,7 @@
 	 * @name bottom
 	 * @memberof Bounds
 	 */
-	prototypeAccessors$2.bottom.get = function () {
+	prototypeAccessors$1.bottom.get = function () {
 	    return this.max.y;
 	};
 
@@ -11805,7 +11805,7 @@
 	 * @name centerX
 	 * @memberof Bounds
 	 */
-	prototypeAccessors$2.centerX.get = function () {
+	prototypeAccessors$1.centerX.get = function () {
 	    return this.min.x + (this.width / 2);
 	};
 
@@ -11816,7 +11816,7 @@
 	 * @name centerY
 	 * @memberof Bounds
 	 */
-	prototypeAccessors$2.centerY.get = function () {
+	prototypeAccessors$1.centerY.get = function () {
 	    return this.min.y + (this.height / 2);
 	};
 
@@ -11827,7 +11827,7 @@
 	 * @name center
 	 * @memberof Bounds
 	 */
-	prototypeAccessors$2.center.get = function () {
+	prototypeAccessors$1.center.get = function () {
 	    return this._center.set(this.centerX, this.centerY);
 	};
 
@@ -11837,7 +11837,7 @@
 	 * @memberof Bounds
 	 * @param {Vector2d[]} vertices an array of me.Vector2d points
 	 */
-	Bounds$1.prototype.update = function update (vertices) {
+	Bounds.prototype.update = function update (vertices) {
 	    this.add(vertices, true);
 	};
 
@@ -11848,7 +11848,7 @@
 	 * @param {Vector2d[]} vertices an array of me.Vector2d points
 	 * @param {boolean} [clear=false] either to reset the bounds before adding the new vertices
 	 */
-	Bounds$1.prototype.add = function add (vertices, clear) {
+	Bounds.prototype.add = function add (vertices, clear) {
 	        if ( clear === void 0 ) clear = false;
 
 	    if (clear === true) {
@@ -11870,7 +11870,7 @@
 	 * @param {Bounds} bounds
 	 * @param {boolean} [clear=false] either to reset the bounds before adding the new vertices
 	 */
-	Bounds$1.prototype.addBounds = function addBounds (bounds, clear) {
+	Bounds.prototype.addBounds = function addBounds (bounds, clear) {
 	        if ( clear === void 0 ) clear = false;
 
 	    if (clear === true) {
@@ -11890,7 +11890,7 @@
 	 * @param {Vector2d} v
 	 * @param {Matrix2d} [m] an optional transform to apply to the given point
 	 */
-	Bounds$1.prototype.addPoint = function addPoint (v, m) {
+	Bounds.prototype.addPoint = function addPoint (v, m) {
 	    if (typeof m !== "undefined") {
 	        v = m.apply(v);
 	    }
@@ -11910,7 +11910,7 @@
 	 * @param {number} y1 - bottom y coordinates of the quad
 	 * @param {Matrix2d} [m] an optional transform to apply to the given frame coordinates
 	 */
-	Bounds$1.prototype.addFrame = function addFrame (x0, y0, x1, y1, m) {
+	Bounds.prototype.addFrame = function addFrame (x0, y0, x1, y1, m) {
 	    var v = pool.pull("Vector2d");
 
 	    // transform all points and add to the bound definition
@@ -11938,7 +11938,7 @@
 	 * @param {number} y
 	 * @returns {boolean} True if the bounds contain the point, otherwise false
 	 */
-	Bounds$1.prototype.contains = function contains () {
+	Bounds.prototype.contains = function contains () {
 	    var arg0 = arguments[0];
 	    var _x1, _x2, _y1, _y2;
 	    if (arguments.length === 2) {
@@ -11946,7 +11946,7 @@
 	        _x1 = _x2 = arg0;
 	        _y1 = _y2 = arguments[1];
 	    } else {
-	        if (arg0 instanceof Bounds$1) {
+	        if (arg0 instanceof Bounds) {
 	            // bounds
 	            _x1 = arg0.min.x;
 	            _x2 = arg0.max.x;
@@ -11970,7 +11970,7 @@
 	 * @param {Bounds|Rect} bounds
 	 * @returns {boolean} True if the bounds overlap, otherwise false
 	 */
-	Bounds$1.prototype.overlaps = function overlaps (bounds) {
+	Bounds.prototype.overlaps = function overlaps (bounds) {
 	    return !(this.right < bounds.left || this.left > bounds.right ||
 	             this.bottom < bounds.top || this.top > bounds.bottom);
 	};
@@ -11981,7 +11981,7 @@
 	 * @memberof Bounds
 	 * @returns {boolean} false if all coordinates are positive or negative Infinity or NaN; otherwise, true.
 	 */
-	Bounds$1.prototype.isFinite = function isFinite$1 () {
+	Bounds.prototype.isFinite = function isFinite$1 () {
 	    return (isFinite(this.min.x) && isFinite(this.max.x) && isFinite(this.min.y) && isFinite(this.max.y));
 	};
 
@@ -11999,7 +11999,7 @@
 	 * @param {number} x
 	 * @param {number} y
 	 */
-	Bounds$1.prototype.translate = function translate () {
+	Bounds.prototype.translate = function translate () {
 	    var _x, _y;
 	    if (arguments.length === 2) {
 	        // x, y
@@ -12030,7 +12030,7 @@
 	 * @param {number} x
 	 * @param {number} y
 	 */
-	Bounds$1.prototype.shift = function shift () {
+	Bounds.prototype.shift = function shift () {
 	    var _x, _y;
 
 	    if (arguments.length === 2) {
@@ -12058,8 +12058,8 @@
 	 * @memberof Bounds
 	 * @returns {Bounds}
 	 */
-	Bounds$1.prototype.clone = function clone () {
-	    var bounds = new Bounds$1();
+	Bounds.prototype.clone = function clone () {
+	    var bounds = new Bounds();
 	    bounds.addBounds(this);
 	    return bounds;
 	};
@@ -12070,7 +12070,7 @@
 	 * @memberof Bounds
 	 * @returns {Polygon} a new Polygon that represents this bounds.
 	 */
-	Bounds$1.prototype.toPolygon = function toPolygon () {
+	Bounds.prototype.toPolygon = function toPolygon () {
 	    return pool.pull("Polygon", this.x, this.y, [
 	        pool.pull("Vector2d", 0,      0),
 	        pool.pull("Vector2d", this.width, 0),
@@ -12079,7 +12079,7 @@
 	    ]);
 	};
 
-	Object.defineProperties( Bounds$1.prototype, prototypeAccessors$2 );
+	Object.defineProperties( Bounds.prototype, prototypeAccessors$1 );
 
 	/**
 	 * a temporary vector object
@@ -12470,7 +12470,7 @@
 	    };
 
 	    return Pointer;
-	}(Bounds$1));
+	}(Bounds));
 
 	/**
 	 * A pool of `Pointer` objects to cache pointer/touch event coordinates.
@@ -15980,7 +15980,7 @@
 	 * this.body.addShape(me.loader.getJSON("shapesdef").banana);
 	 */
 	Body.prototype.addShape = function addShape (shape) {
-	    if (shape instanceof Rect || shape instanceof Bounds$1) {
+	    if (shape instanceof Rect || shape instanceof Bounds) {
 	        var poly = shape.toPolygon();
 	        this.shapes.push(poly);
 	        // update the body bounds
@@ -22098,7 +22098,7 @@
 	    };
 
 	    return Tile;
-	}(Bounds$1));
+	}(Bounds));
 
 	// https://developer.chrome.com/blog/canvas2d/#round-rect
 
@@ -22975,7 +22975,7 @@
 	        this.strokeRoundRect(shape.left, shape.top, shape.width, shape.height, shape.radius, fill);
 	        return;
 	    }
-	    if (shape instanceof Rect || shape instanceof Bounds$1) {
+	    if (shape instanceof Rect || shape instanceof Bounds) {
 	        this.strokeRect(shape.left, shape.top, shape.width, shape.height, fill);
 	        return;
 	    }
@@ -23831,7 +23831,7 @@
 	        // https://github.com/melonjs/melonJS/issues/648
 	        else if (mask instanceof RoundRect) {
 	            context.roundRect(mask.top, mask.left, mask.width, mask.height, mask.radius);
-	        } else if (mask instanceof Rect || mask instanceof Bounds$1) {
+	        } else if (mask instanceof Rect || mask instanceof Bounds) {
 	            context.rect(mask.top, mask.left, mask.width, mask.height);
 	        }  else if (mask instanceof Ellipse) {
 	            var _x = mask.pos.x, _y = mask.pos.y,
@@ -24309,452 +24309,6 @@
 
 	    return TMXLayer;
 	}(Renderable));
-
-	/**
-	 * @classdesc
-	 * a bound object contains methods for creating and manipulating axis-aligned bounding boxes (AABB).
-	 */
-	var Bounds = function Bounds(vertices) {
-	    // @ignore
-	    this._center = new Vector2d();
-	    this.onResetEvent(vertices);
-	};
-
-	var prototypeAccessors$1 = { x: { configurable: true },y: { configurable: true },width: { configurable: true },height: { configurable: true },left: { configurable: true },right: { configurable: true },top: { configurable: true },bottom: { configurable: true },centerX: { configurable: true },centerY: { configurable: true },center: { configurable: true } };
-
-	/**
-	 * @ignore
-	 */
-	Bounds.prototype.onResetEvent = function onResetEvent (vertices) {
-	    if (typeof this.min === "undefined") {
-	        this.min = { x: Infinity,  y: Infinity };
-	        this.max = { x: -Infinity, y: -Infinity };
-	    } else {
-	        this.clear();
-	    }
-	    if (typeof vertices !== "undefined") {
-	        this.update(vertices);
-	    }
-	};
-
-	/**
-	 * reset the bound
-	 * @name clear
-	 * @memberof Bounds
-	 */
-	Bounds.prototype.clear = function clear () {
-	    this.setMinMax(Infinity, Infinity, -Infinity, -Infinity);
-
-	};
-
-	/**
-	 * sets the bounds to the given min and max value
-	 * @name setMinMax
-	 * @memberof Bounds
-	 * @param {number} minX
-	 * @param {number} minY
-	 * @param {number} maxX
-	 * @param {number} maxY
-	 */
-	Bounds.prototype.setMinMax = function setMinMax (minX, minY, maxX, maxY) {
-	    this.min.x = minX;
-	    this.min.y = minY;
-
-	    this.max.x = maxX;
-	    this.max.y = maxY;
-	};
-
-	/**
-	 * x position of the bound
-	 * @public
-	 * @type {number}
-	 * @name x
-	 * @memberof Bounds
-	 */
-	prototypeAccessors$1.x.get = function () {
-	    return this.min.x;
-	};
-
-	prototypeAccessors$1.x.set = function (value) {
-	    var deltaX = this.max.x - this.min.x;
-	    this.min.x = value;
-	    this.max.x = value + deltaX;
-	};
-
-	/**
-	 * y position of the bounds
-	 * @public
-	 * @type {number}
-	 * @name y
-	 * @memberof Bounds
-	 */
-	prototypeAccessors$1.y.get = function () {
-	    return this.min.y;
-	};
-
-	prototypeAccessors$1.y.set = function (value) {
-	    var deltaY = this.max.y - this.min.y;
-
-	    this.min.y = value;
-	    this.max.y = value + deltaY;
-	};
-
-	/**
-	 * width of the bounds
-	 * @public
-	 * @type {number}
-	 * @name width
-	 * @memberof Bounds
-	 */
-	prototypeAccessors$1.width.get = function () {
-	    return this.max.x - this.min.x;
-	};
-
-	prototypeAccessors$1.width.set = function (value) {
-	    this.max.x = this.min.x + value;
-	};
-
-	/**
-	 * width of the bounds
-	 * @public
-	 * @type {number}
-	 * @name width
-	 * @memberof Bounds
-	 */
-	prototypeAccessors$1.height.get = function () {
-	    return this.max.y - this.min.y;
-	};
-
-	prototypeAccessors$1.height.set = function (value) {
-	    this.max.y = this.min.y + value;
-	};
-
-	/**
-	 * left coordinate of the bound
-	 * @public
-	 * @type {number}
-	 * @name left
-	 * @memberof Bounds
-	 */
-	prototypeAccessors$1.left.get = function () {
-	    return this.min.x;
-	};
-
-	/**
-	 * right coordinate of the bound
-	 * @public
-	 * @type {number}
-	 * @name right
-	 * @memberof Bounds
-	 */
-	prototypeAccessors$1.right.get = function () {
-	    return this.max.x;
-	};
-
-	/**
-	 * top coordinate of the bound
-	 * @public
-	 * @type {number}
-	 * @name top
-	 * @memberof Bounds
-	 */
-	prototypeAccessors$1.top.get = function () {
-	    return this.min.y;
-	};
-
-	/**
-	 * bottom coordinate of the bound
-	 * @public
-	 * @type {number}
-	 * @name bottom
-	 * @memberof Bounds
-	 */
-	prototypeAccessors$1.bottom.get = function () {
-	    return this.max.y;
-	};
-
-	/**
-	 * center position of the bound on the x axis
-	 * @public
-	 * @type {number}
-	 * @name centerX
-	 * @memberof Bounds
-	 */
-	prototypeAccessors$1.centerX.get = function () {
-	    return this.min.x + (this.width / 2);
-	};
-
-	/**
-	 * center position of the bound on the y axis
-	 * @public
-	 * @type {number}
-	 * @name centerY
-	 * @memberof Bounds
-	 */
-	prototypeAccessors$1.centerY.get = function () {
-	    return this.min.y + (this.height / 2);
-	};
-
-	/**
-	 * return the center position of the bound
-	 * @public
-	 * @type {Vector2d}
-	 * @name center
-	 * @memberof Bounds
-	 */
-	prototypeAccessors$1.center.get = function () {
-	    return this._center.set(this.centerX, this.centerY);
-	};
-
-	/**
-	 * Updates bounds using the given vertices
-	 * @name update
-	 * @memberof Bounds
-	 * @param {Vector2d[]} vertices an array of me.Vector2d points
-	 */
-	Bounds.prototype.update = function update (vertices) {
-	    this.add(vertices, true);
-	};
-
-	/**
-	 * add the given vertices to the bounds definition.
-	 * @name add
-	 * @memberof Bounds
-	 * @param {Vector2d[]} vertices an array of me.Vector2d points
-	 * @param {boolean} [clear=false] either to reset the bounds before adding the new vertices
-	 */
-	Bounds.prototype.add = function add (vertices, clear) {
-	        if ( clear === void 0 ) clear = false;
-
-	    if (clear === true) {
-	        this.clear();
-	    }
-	    for (var i = 0; i < vertices.length; i++) {
-	        var vertex = vertices[i];
-	        if (vertex.x > this.max.x) { this.max.x = vertex.x; }
-	        if (vertex.x < this.min.x) { this.min.x = vertex.x; }
-	        if (vertex.y > this.max.y) { this.max.y = vertex.y; }
-	        if (vertex.y < this.min.y) { this.min.y = vertex.y; }
-	    }
-	};
-
-	/**
-	 * add the given bounds to the bounds definition.
-	 * @name addBounds
-	 * @memberof Bounds
-	 * @param {Bounds} bounds
-	 * @param {boolean} [clear=false] either to reset the bounds before adding the new vertices
-	 */
-	Bounds.prototype.addBounds = function addBounds (bounds, clear) {
-	        if ( clear === void 0 ) clear = false;
-
-	    if (clear === true) {
-	        this.clear();
-	    }
-
-	    if (bounds.max.x > this.max.x) { this.max.x = bounds.max.x; }
-	    if (bounds.min.x < this.min.x) { this.min.x = bounds.min.x; }
-	    if (bounds.max.y > this.max.y) { this.max.y = bounds.max.y; }
-	    if (bounds.min.y < this.min.y) { this.min.y = bounds.min.y; }
-	};
-
-	/**
-	 * add the given point to the bounds definition.
-	 * @name addPoint
-	 * @memberof Bounds
-	 * @param {Vector2d} v
-	 * @param {Matrix2d} [m] an optional transform to apply to the given point
-	 */
-	Bounds.prototype.addPoint = function addPoint (v, m) {
-	    if (typeof m !== "undefined") {
-	        v = m.apply(v);
-	    }
-	    this.min.x = Math.min(this.min.x, v.x);
-	    this.max.x = Math.max(this.max.x, v.x);
-	    this.min.y = Math.min(this.min.y, v.y);
-	    this.max.y = Math.max(this.max.y, v.y);
-	};
-
-	/**
-	 * add the given quad coordinates to this bound definition, multiplied by the given matrix
-	 * @name addFrame
-	 * @memberof Bounds
-	 * @param {number} x0 - left X coordinates of the quad
-	 * @param {number} y0 - top Y coordinates of the quad
-	 * @param {number} x1 - right X coordinates of the quad
-	 * @param {number} y1 - bottom y coordinates of the quad
-	 * @param {Matrix2d} [m] an optional transform to apply to the given frame coordinates
-	 */
-	Bounds.prototype.addFrame = function addFrame (x0, y0, x1, y1, m) {
-	    var v = pool.pull("Vector2d");
-
-	    // transform all points and add to the bound definition
-	    this.addPoint(v.set(x0, y0), m);
-	    this.addPoint(v.set(x1, y0), m);
-	    this.addPoint(v.set(x0, y1), m);
-	    this.addPoint(v.set(x1, y1), m);
-
-	    pool.push(v);
-	};
-
-	/**
-	 * Returns true if the bounds contains the given point.
-	 * @name contains
-	 * @memberof Bounds
-	 * @method
-	 * @param {Vector2d} point
-	 * @returns {boolean} True if the bounds contain the point, otherwise false
-	 */
-	/**
-	 * Returns true if the bounds contains the given point.
-	 * @name contains
-	 * @memberof Bounds
-	 * @param {number} x
-	 * @param {number} y
-	 * @returns {boolean} True if the bounds contain the point, otherwise false
-	 */
-	Bounds.prototype.contains = function contains () {
-	    var arg0 = arguments[0];
-	    var _x1, _x2, _y1, _y2;
-	    if (arguments.length === 2) {
-	        // x, y
-	        _x1 = _x2 = arg0;
-	        _y1 = _y2 = arguments[1];
-	    } else {
-	        if (arg0 instanceof Bounds) {
-	            // bounds
-	            _x1 = arg0.min.x;
-	            _x2 = arg0.max.x;
-	            _y1 = arg0.min.y;
-	            _y2 = arg0.max.y;
-	        } else {
-	            // vector
-	            _x1 = _x2 = arg0.x;
-	            _y1 = _y2 = arg0.y;
-	        }
-	    }
-
-	    return _x1 >= this.min.x && _x2 <= this.max.x
-	        && _y1 >= this.min.y && _y2 <= this.max.y;
-	};
-
-	/**
-	 * Returns true if the two bounds intersect.
-	 * @name overlaps
-	 * @memberof Bounds
-	 * @param {Bounds|Rect} bounds
-	 * @returns {boolean} True if the bounds overlap, otherwise false
-	 */
-	Bounds.prototype.overlaps = function overlaps (bounds) {
-	    return !(this.right < bounds.left || this.left > bounds.right ||
-	             this.bottom < bounds.top || this.top > bounds.bottom);
-	};
-
-	/**
-	 * determines whether all coordinates of this bounds are finite numbers.
-	 * @name isFinite
-	 * @memberof Bounds
-	 * @returns {boolean} false if all coordinates are positive or negative Infinity or NaN; otherwise, true.
-	 */
-	Bounds.prototype.isFinite = function isFinite$1 () {
-	    return (isFinite(this.min.x) && isFinite(this.max.x) && isFinite(this.min.y) && isFinite(this.max.y));
-	};
-
-	/**
-	 * Translates the bounds by the given vector.
-	 * @name translate
-	 * @memberof Bounds
-	 * @method
-	 * @param {Vector2d} vector
-	 */
-	/**
-	 * Translates the bounds by x on the x axis, and y on the y axis
-	 * @name translate
-	 * @memberof Bounds
-	 * @param {number} x
-	 * @param {number} y
-	 */
-	Bounds.prototype.translate = function translate () {
-	    var _x, _y;
-	    if (arguments.length === 2) {
-	        // x, y
-	        _x = arguments[0];
-	        _y = arguments[1];
-	    } else {
-	        // vector
-	        _x = arguments[0].x;
-	        _y = arguments[0].y;
-	    }
-	    this.min.x += _x;
-	    this.max.x += _x;
-	    this.min.y += _y;
-	    this.max.y += _y;
-	};
-
-	/**
-	 * Shifts the bounds to the given position vector.
-	 * @name shift
-	 * @memberof Bounds
-	 * @method
-	 * @param {Vector2d} position
-	 */
-	/**
-	 * Shifts the bounds to the given x, y position.
-	 * @name shift
-	 * @memberof Bounds
-	 * @param {number} x
-	 * @param {number} y
-	 */
-	Bounds.prototype.shift = function shift () {
-	    var _x, _y;
-
-	    if (arguments.length === 2) {
-	        // x, y
-	        _x = arguments[0];
-	        _y = arguments[1];
-	    } else {
-	        // vector
-	        _x = arguments[0].x;
-	        _y = arguments[0].y;
-	    }
-
-	    var deltaX = this.max.x - this.min.x,
-	        deltaY = this.max.y - this.min.y;
-
-	    this.min.x = _x;
-	    this.max.x = _x + deltaX;
-	    this.min.y = _y;
-	    this.max.y = _y + deltaY;
-	};
-
-	/**
-	 * clone this bounds
-	 * @name clone
-	 * @memberof Bounds
-	 * @returns {Bounds}
-	 */
-	Bounds.prototype.clone = function clone () {
-	    var bounds = new Bounds();
-	    bounds.addBounds(this);
-	    return bounds;
-	};
-
-	/**
-	 * Returns a polygon whose edges are the same as this bounds.
-	 * @name toPolygon
-	 * @memberof Bounds
-	 * @returns {Polygon} a new Polygon that represents this bounds.
-	 */
-	Bounds.prototype.toPolygon = function toPolygon () {
-	    return pool.pull("Polygon", this.x, this.y, [
-	        pool.pull("Vector2d", 0,      0),
-	        pool.pull("Vector2d", this.width, 0),
-	        pool.pull("Vector2d", this.width, this.height),
-	        pool.pull("Vector2d", 0,      this.height)
-	    ]);
-	};
-
-	Object.defineProperties( Bounds.prototype, prototypeAccessors$1 );
 
 	/* eslint-disable no-unused-vars */
 
@@ -34550,7 +34104,7 @@
 	    };
 
 	    return TextMetrics;
-	}(Bounds$1));
+	}(Bounds));
 
 	/*
 	* ASCII Table
@@ -37927,7 +37481,7 @@
 	    pool.register("me.Polygon", Polygon, true);
 	    pool.register("me.Line", Line, true);
 	    pool.register("me.Ellipse", Ellipse, true);
-	    pool.register("me.Bounds", Bounds$1, true);
+	    pool.register("me.Bounds", Bounds, true);
 
 	    // duplicate all entries if use with no namespace (e.g. es6)
 	    pool.register("Entity", Entity);
@@ -37956,7 +37510,7 @@
 	    pool.register("Polygon", Polygon, true);
 	    pool.register("Line", Line, true);
 	    pool.register("Ellipse", Ellipse, true);
-	    pool.register("Bounds", Bounds$1, true);
+	    pool.register("Bounds", Bounds, true);
 	    pool.register("CanvasTexture", CanvasTexture, true);
 
 	    // publish Boot notification
@@ -37981,7 +37535,7 @@
 	exports.BitmapText = BitmapText;
 	exports.BitmapTextData = BitmapTextData;
 	exports.Body = Body;
-	exports.Bounds = Bounds$1;
+	exports.Bounds = Bounds;
 	exports.Camera2d = Camera2d;
 	exports.CanvasRenderer = CanvasRenderer;
 	exports.Collectable = Collectable;
