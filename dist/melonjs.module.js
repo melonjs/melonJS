@@ -1744,11 +1744,7 @@ class ObjectPool {
         return this.instance_counter;
     }
 }
-/**
- * a default global object pool instance
- * @public
- * @type {ObjectPool}
- */
+
 var pool$1 = new ObjectPool();
 
 /**
@@ -1801,7 +1797,7 @@ class Vector2d {
         /**
          * x value of the vector
          * @public
-         * @type {number}
+         * @member {number}
          * @name x
          * @memberof Vector2d
          */
@@ -1810,7 +1806,7 @@ class Vector2d {
         /**
          * y value of the vector
          * @public
-         * @type {number}
+         * @member {number}
          * @name y
          * @memberof Vector2d
          */
@@ -2047,6 +2043,7 @@ class Vector2d {
      * return true if the two vectors are the same
      * @name equals
      * @memberof Vector2d
+     * @method
      * @param {Vector2d} v
      * @returns {boolean}
      */
@@ -8584,7 +8581,7 @@ class Vector3d {
         /**
          * x value of the vector
          * @public
-         * @type {number}
+         * @member {number}
          * @name x
          * @memberof Vector3d
          */
@@ -8593,7 +8590,7 @@ class Vector3d {
         /**
          * y value of the vector
          * @public
-         * @type {number}
+         * @member {number}
          * @name y
          * @memberof Vector3d
          */
@@ -8602,7 +8599,7 @@ class Vector3d {
         /**
          * z value of the vector
          * @public
-         * @type {number}
+         * @member {number}
          * @name z
          * @memberof Vector3d
          */
@@ -8843,6 +8840,7 @@ class Vector3d {
      * return true if the two vectors are the same
      * @name equals
      * @memberof Vector3d
+     * @method
      * @param {Vector2d|Vector3d} v
      * @returns {boolean}
      */
@@ -10270,9 +10268,9 @@ earcut.flatten = function (data) {
  * A polygon is convex when all line segments connecting two points in the interior do not cross any edge of the polygon
  * (which means that all angles are less than 180 degrees), as described here below : <br>
  * <center><img src="images/convex_polygon.png"/></center><br>
+ *
  * A polygon's `winding` is clockwise iff its vertices (points) are declared turning to the right. The image above shows COUNTERCLOCKWISE winding.
  */
-
 class Polygon {
 
     /**
@@ -10293,7 +10291,7 @@ class Polygon {
         /**
          * The bounding rectangle for this shape
          * @ignore
-         * @type {Bounds}
+         * @member {Bounds}
          * @name _bounds
          * @memberof Polygon
          */
@@ -13257,10 +13255,7 @@ var remap = new Map();
 
 var updateEventHandler;
 
-/**
- * Default gamepad mappings
- * @ignore
- */
+// Default gamepad mappings
 [
     // Firefox mappings
     [
@@ -13432,18 +13427,14 @@ var updateGamepads = function () {
     });
 };
 
-/**
- * gamepad connected callback
- * @ignore
- */
+// gamepad connected callback
 if (globalThis.navigator && typeof globalThis.navigator.getGamepads === "function") {
     globalThis.addEventListener("gamepadconnected", function (e) {
         emit(GAMEPAD_CONNECTED, e.gamepad);
     }, false);
 
-    /**
+    /*
      * gamepad disconnected callback
-     * @ignore
      */
     globalThis.addEventListener("gamepaddisconnected", function (e) {
         emit(GAMEPAD_DISCONNECTED, e.gamepad);
@@ -16167,6 +16158,7 @@ class Body {
 
     /**
      * Returns true if the any of the shape composing the body contains the given point.
+     * @method Body#contains
      * @param {Vector2d} point
      * @returns {boolean} true if contains
      */
@@ -19743,7 +19735,6 @@ var state = {
             }
             // if fading effect
             if (_fade.duration && _stages[state].transition) {
-                /** @ignore */
                 _onSwitchComplete = () => {
                     viewport.fadeOut(_fade.color, _fade.duration);
                 };
@@ -28800,11 +28791,6 @@ var save = {
     }
 };
 
-/**
- * The device capabilities and specific events
- * @namespace device
- */
-
 // private properties
 let accelInitialized = false;
 let deviceOrientationInitialized = false;
@@ -29041,6 +29027,11 @@ on(BOOT, () => {
 
 
 // public export
+/**
+ * The device capabilities and specific events
+ *
+ * @namespace
+ */
 let device = {
 
     /**
@@ -29048,7 +29039,6 @@ let device = {
      * @type {string}
      * @readonly
      * @name ua
-     * @memberof device
      */
     ua : typeof globalThis.navigator !== "undefined" ? globalThis.navigator.userAgent : "",
 
@@ -29058,7 +29048,6 @@ let device = {
      * @type {boolean}
      * @readonly
      * @name localStorage
-     * @memberof device
      */
     localStorage : false,
 
@@ -29067,7 +29056,6 @@ let device = {
      * @type {boolean}
      * @readonly
      * @name hasAccelerometer
-     * @memberof device
      */
     hasAccelerometer : false,
 
@@ -29076,7 +29064,6 @@ let device = {
      * @type {boolean}
      * @readonly
      * @name hasDeviceOrientation
-     * @memberof device
      */
     hasDeviceOrientation : false,
 
@@ -29086,7 +29073,6 @@ let device = {
      * @type {boolean}
      * @readonly
      * @name ScreenOrientation
-     * @memberof device
      */
     ScreenOrientation : false,
 
@@ -29095,7 +29081,6 @@ let device = {
      * @type {boolean}
      * @readonly
      * @name hasFullscreenSupport
-     * @memberof device
      */
     hasFullscreenSupport : false,
 
@@ -29104,7 +29089,6 @@ let device = {
      * @type {boolean}
      * @readonly
      * @name hasPointerLockSupport
-     * @memberof device
      */
     hasPointerLockSupport : false,
 
@@ -29113,7 +29097,6 @@ let device = {
      * @type {boolean}
      * @readonly
      * @name hasWebAudio
-     * @memberof device
      */
     hasWebAudio : false,
 
@@ -29122,7 +29105,6 @@ let device = {
      * @type {boolean}
      * @readonly
      * @name nativeBase64
-     * @memberof device
      */
     nativeBase64 : (typeof(globalThis.atob) === "function"),
 
@@ -29131,7 +29113,6 @@ let device = {
      * @type {number}
      * @readonly
      * @name maxTouchPoints
-     * @memberof device
      * @example
      * if (me.device.maxTouchPoints > 1) {
      *     // device supports multi-touch
@@ -29144,7 +29125,6 @@ let device = {
      * @type {boolean}
      * @readonly
      * @name touch
-     * @memberof device
      */
     touch : false,
 
@@ -29153,7 +29133,6 @@ let device = {
      * @type {boolean}
      * @readonly
      * @name wheel
-     * @memberof device
      */
     wheel : false,
 
@@ -29163,7 +29142,6 @@ let device = {
      * @type {boolean}
      * @readonly
      * @name isMobile
-     * @memberof device
      */
     isMobile : false,
 
@@ -29172,7 +29150,6 @@ let device = {
      * @type {boolean}
      * @readonly
      * @name iOS
-     * @memberof device
      */
     iOS : false,
 
@@ -29181,7 +29158,6 @@ let device = {
      * @type {boolean}
      * @readonly
      * @name android
-     * @memberof device
      */
     android : false,
 
@@ -29190,7 +29166,6 @@ let device = {
      * @type {boolean}
      * @readonly
      * @name android2
-     * @memberof device
      */
     android2 : false,
 
@@ -29199,7 +29174,6 @@ let device = {
      * @type {boolean}
      * @readonly
      * @name linux
-     * @memberof device
      */
     linux : false,
 
@@ -29209,7 +29183,6 @@ let device = {
      * @readonly
      * @see http://impactjs.com/ejecta
      * @name ejecta
-     * @memberof device
      */
     ejecta : false,
 
@@ -29218,7 +29191,6 @@ let device = {
      * @type {boolean}
      * @readonly
      * @name isWeixin
-     * @memberof device
      */
     isWeixin : false,
 
@@ -29227,7 +29199,6 @@ let device = {
      * @type {boolean}
      * @readonly
      * @name nodeJS
-     * @memberof device
      */
     nodeJS : (typeof process !== "undefined") && (process.release.name === "node"),
 
@@ -29236,7 +29207,6 @@ let device = {
      * @type {boolean}
      * @readonly
      * @name chromeOS
-     * @memberof device
      */
     chromeOS : false,
 
@@ -29245,7 +29215,6 @@ let device = {
      * @type {boolean}
      * @readonly
      * @name wp
-     * @memberof device
      */
     wp : false,
 
@@ -29254,7 +29223,6 @@ let device = {
      * @type {boolean}
      * @readonly
      * @name BlackBerry
-     * @memberof device
      */
     BlackBerry : false,
 
@@ -29263,7 +29231,6 @@ let device = {
      * @type {boolean}
      * @readonly
      * @name Kindle
-     * @memberof device
      */
     Kindle : false,
 
@@ -29274,7 +29241,6 @@ let device = {
      * @readonly
      * @name accelerationX
      * @see device.watchAccelerometer
-     * @memberof device
      */
     accelerationX : 0,
 
@@ -29285,7 +29251,6 @@ let device = {
      * @readonly
      * @name accelerationY
      * @see device.watchAccelerometer
-     * @memberof device
      */
     accelerationY : 0,
 
@@ -29296,7 +29261,6 @@ let device = {
      * @readonly
      * @name accelerationZ
      * @see device.watchAccelerometer
-     * @memberof device
      */
     accelerationZ : 0,
 
@@ -29307,7 +29271,6 @@ let device = {
      * @readonly
      * @name gamma
      * @see device.watchDeviceOrientation
-     * @memberof device
      */
     gamma : 0,
 
@@ -29318,7 +29281,6 @@ let device = {
      * @readonly
      * @name beta
      * @see device.watchDeviceOrientation
-     * @memberof device
      */
     beta: 0,
 
@@ -29330,7 +29292,6 @@ let device = {
      * @readonly
      * @name alpha
      * @see device.watchDeviceOrientation
-     * @memberof device
      */
     alpha : 0,
 
@@ -29342,7 +29303,6 @@ let device = {
      * @readonly
      * @see http://www.w3schools.com/tags/ref_language_codes.asp
      * @name language
-     * @memberof device
      */
     language : typeof globalThis.navigator !== "undefined" ? globalThis.navigator.language || globalThis.navigator.browserLanguage || globalThis.navigator.userLanguage || "en" : "en",
 
@@ -29350,7 +29310,6 @@ let device = {
      * Specify whether to pause the game when losing focus
      * @type {boolean}
      * @default true
-     * @memberof device
      */
     pauseOnBlur : true,
 
@@ -29358,7 +29317,6 @@ let device = {
      * Specify whether to unpause the game when gaining focus
      * @type {boolean}
      * @default true
-     * @memberof device
      */
     resumeOnFocus : true,
 
@@ -29366,7 +29324,6 @@ let device = {
      * Specify whether to automatically bring the window to the front
      * @type {boolean}
      * @default true
-     * @memberof device
      */
     autoFocus : true,
 
@@ -29375,7 +29332,6 @@ let device = {
      * The engine restarts on focus if this is enabled.
      * @type {boolean}
      * @default false
-     * @memberof device
      */
     stopOnBlur : false,
 
@@ -29384,7 +29340,6 @@ let device = {
      * @type {boolean}
      * @readonly
      * @name OffScreenCanvas
-     * @memberof device
      */
     OffscreenCanvas : false,
 
@@ -29900,10 +29855,9 @@ let device = {
 
 /**
  * Ratio of the resolution in physical pixels to the resolution in CSS pixels for the current display device.
- * @name devicePixelRatio
- * @memberof device
+ * @name device.devicePixelRatio
  * @public
- * @type {number}
+ * @member {number}
  * @readonly
  * @returns {number}
  */
@@ -29918,10 +29872,9 @@ Object.defineProperty(device, "devicePixelRatio", {
 
 /**
  * Returns true if the browser/device is in full screen mode.
- * @name isFullscreen
- * @memberof device
+ * @name device.isFullscreen
  * @public
- * @type {boolean}
+ * @member {boolean}
  * @readonly
  * @returns {boolean}
  */
@@ -29941,10 +29894,9 @@ Object.defineProperty(device, "isFullscreen", {
 
 /**
  * Returns true if the browser/device has audio capabilities.
- * @name sound
- * @memberof device
+ * @name device.sound
  * @public
- * @type {boolean}
+ * @member {boolean}
  * @readonly
  * @returns {boolean}
  */
@@ -30007,9 +29959,8 @@ function extractUniforms(gl, shader) {
 
         descriptor[name] = {
             "get" : (function (name) {
-                /**
+                /*
                  * A getter for the uniform location
-                 * @ignore
                  */
                 return function () {
                     return locations[name];
@@ -30017,18 +29968,16 @@ function extractUniforms(gl, shader) {
             })(name),
             "set" : (function (name, type, fn) {
                 if (type.indexOf("mat") === 0) {
-                    /**
+                    /*
                      * A generic setter for uniform matrices
-                     * @ignore
                      */
                     return function (val) {
                         gl[fn](locations[name], false, val);
                     };
                 }
                 else {
-                    /**
+                    /*
                      * A generic setter for uniform vectors
-                     * @ignore
                      */
                     return function (val) {
                         var fnv = fn;
@@ -33352,7 +33301,7 @@ var plugin = {
     }
 };
 
-/**
+/*
  * Tween.js - Licensed under the MIT license
  * https://github.com/tweenjs/tween.js
  */
@@ -33680,7 +33629,7 @@ let Easing = {
 
 };
 
-/**
+/*
  * Tween.js - Licensed under the MIT license
  * https://github.com/tweenjs/tween.js
  */
@@ -33758,7 +33707,7 @@ let Interpolation = {
             return fc( n ) / fc( i ) / fc( n - i );
 
         },
-        /** @ignore */
+        /* @ignore */
         Factorial: ( function () {
 
             var a = [ 1 ];
@@ -33784,7 +33733,7 @@ let Interpolation = {
 
 };
 
-/**
+/*
  * Tween.js - Licensed under the MIT license
  * https://github.com/tweenjs/tween.js
  */
@@ -34585,7 +34534,8 @@ class Text extends Renderable {
         /**
          * defines the color used to draw the font stroke.<br>
          * @public
-         * @type {Color}
+         * @member {Color}
+         * @name strokeStyle
          * @default black
          */
          if (typeof settings.strokeStyle !== "undefined") {
@@ -35661,7 +35611,7 @@ class ImageLayer extends Sprite {
              * - a number, to change the value for both axis <br>
              * - a json expression like `json:{"x":0.5,"y":0.5}` if you wish to specify a different value for both x and y
              * @public
-             * @type {Vector2d}
+             * @member {Vector2d}
              * @default <0.0,0.0>
              * @name ImageLayer#anchorPoint
              */
@@ -37654,7 +37604,7 @@ class Entity extends Renderable {
         /**
          * the entity body object
          * @public
-         * @type {Body}
+         * @member {Body}
          * @name body
          * @memberof Entity
          */
@@ -37799,7 +37749,7 @@ class Entity extends Renderable {
 
 }
 
-/**
+/*
  * placeholder for all deprecated classes and corresponding alias for backward compatibility
  */
 
@@ -37866,8 +37816,11 @@ device$1.turnOffPointerLock = function () {
 };
 
 /**
+ * Alias of {@link TextureAtlas}
+ *
  * @public
  * @name Texture
+ * @class
  * @memberof Renderer#
  * @deprecated since 10.4.0
  * @see TextureAtlas

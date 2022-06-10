@@ -1759,11 +1759,7 @@
 	ObjectPool.prototype.getInstanceCount = function getInstanceCount () {
 	    return this.instance_counter;
 	};
-	/**
-	 * a default global object pool instance
-	 * @public
-	 * @type {ObjectPool}
-	 */
+
 	var pool$1 = new ObjectPool();
 
 	/**
@@ -1817,7 +1813,7 @@
 	     /**
 	      * x value of the vector
 	      * @public
-	      * @type {number}
+	      * @member {number}
 	      * @name x
 	      * @memberof Vector2d
 	      */
@@ -1826,7 +1822,7 @@
 	     /**
 	      * y value of the vector
 	      * @public
-	      * @type {number}
+	      * @member {number}
 	      * @name y
 	      * @memberof Vector2d
 	      */
@@ -2063,6 +2059,7 @@
 	  * return true if the two vectors are the same
 	  * @name equals
 	  * @memberof Vector2d
+	  * @method
 	  * @param {Vector2d} v
 	  * @returns {boolean}
 	  */
@@ -8646,7 +8643,7 @@
 	     /**
 	      * x value of the vector
 	      * @public
-	      * @type {number}
+	      * @member {number}
 	      * @name x
 	      * @memberof Vector3d
 	      */
@@ -8655,7 +8652,7 @@
 	     /**
 	      * y value of the vector
 	      * @public
-	      * @type {number}
+	      * @member {number}
 	      * @name y
 	      * @memberof Vector3d
 	      */
@@ -8664,7 +8661,7 @@
 	     /**
 	      * z value of the vector
 	      * @public
-	      * @type {number}
+	      * @member {number}
 	      * @name z
 	      * @memberof Vector3d
 	      */
@@ -8905,6 +8902,7 @@
 	  * return true if the two vectors are the same
 	  * @name equals
 	  * @memberof Vector3d
+	  * @method
 	  * @param {Vector2d|Vector3d} v
 	  * @returns {boolean}
 	  */
@@ -10343,9 +10341,9 @@
 	 * A polygon is convex when all line segments connecting two points in the interior do not cross any edge of the polygon
 	 * (which means that all angles are less than 180 degrees), as described here below : <br>
 	 * <center><img src="images/convex_polygon.png"/></center><br>
+	 *
 	 * A polygon's `winding` is clockwise iff its vertices (points) are declared turning to the right. The image above shows COUNTERCLOCKWISE winding.
 	 */
-
 	var Polygon = function Polygon(x, y, points) {
 	    /**
 	     * origin point of the Polygon
@@ -10359,7 +10357,7 @@
 	    /**
 	     * The bounding rectangle for this shape
 	     * @ignore
-	     * @type {Bounds}
+	     * @member {Bounds}
 	     * @name _bounds
 	     * @memberof Polygon
 	     */
@@ -13346,10 +13344,7 @@
 
 	var updateEventHandler;
 
-	/**
-	 * Default gamepad mappings
-	 * @ignore
-	 */
+	// Default gamepad mappings
 	[
 	    // Firefox mappings
 	    [
@@ -13521,18 +13516,14 @@
 	    });
 	};
 
-	/**
-	 * gamepad connected callback
-	 * @ignore
-	 */
+	// gamepad connected callback
 	if (globalThis.navigator && typeof globalThis.navigator.getGamepads === "function") {
 	    globalThis.addEventListener("gamepadconnected", function (e) {
 	        emit(GAMEPAD_CONNECTED, e.gamepad);
 	    }, false);
 
-	    /**
+	    /*
 	     * gamepad disconnected callback
-	     * @ignore
 	     */
 	    globalThis.addEventListener("gamepaddisconnected", function (e) {
 	        emit(GAMEPAD_DISCONNECTED, e.gamepad);
@@ -16260,6 +16251,7 @@
 
 	/**
 	 * Returns true if the any of the shape composing the body contains the given point.
+	 * @method Body#contains
 	 * @param {Vector2d} point
 	 * @returns {boolean} true if contains
 	 */
@@ -19880,7 +19872,6 @@
 	            }
 	            // if fading effect
 	            if (_fade.duration && _stages[state].transition) {
-	                /** @ignore */
 	                _onSwitchComplete = function () {
 	                    viewport.fadeOut(_fade.color, _fade.duration);
 	                };
@@ -28874,11 +28865,6 @@
 	    }
 	};
 
-	/**
-	 * The device capabilities and specific events
-	 * @namespace device
-	 */
-
 	// private properties
 	var accelInitialized = false;
 	var deviceOrientationInitialized = false;
@@ -29115,6 +29101,11 @@
 
 
 	// public export
+	/**
+	 * The device capabilities and specific events
+	 *
+	 * @namespace
+	 */
 	var device = {
 
 	    /**
@@ -29122,7 +29113,6 @@
 	     * @type {string}
 	     * @readonly
 	     * @name ua
-	     * @memberof device
 	     */
 	    ua : typeof globalThis.navigator !== "undefined" ? globalThis.navigator.userAgent : "",
 
@@ -29132,7 +29122,6 @@
 	     * @type {boolean}
 	     * @readonly
 	     * @name localStorage
-	     * @memberof device
 	     */
 	    localStorage : false,
 
@@ -29141,7 +29130,6 @@
 	     * @type {boolean}
 	     * @readonly
 	     * @name hasAccelerometer
-	     * @memberof device
 	     */
 	    hasAccelerometer : false,
 
@@ -29150,7 +29138,6 @@
 	     * @type {boolean}
 	     * @readonly
 	     * @name hasDeviceOrientation
-	     * @memberof device
 	     */
 	    hasDeviceOrientation : false,
 
@@ -29160,7 +29147,6 @@
 	     * @type {boolean}
 	     * @readonly
 	     * @name ScreenOrientation
-	     * @memberof device
 	     */
 	    ScreenOrientation : false,
 
@@ -29169,7 +29155,6 @@
 	     * @type {boolean}
 	     * @readonly
 	     * @name hasFullscreenSupport
-	     * @memberof device
 	     */
 	    hasFullscreenSupport : false,
 
@@ -29178,7 +29163,6 @@
 	     * @type {boolean}
 	     * @readonly
 	     * @name hasPointerLockSupport
-	     * @memberof device
 	     */
 	    hasPointerLockSupport : false,
 
@@ -29187,7 +29171,6 @@
 	     * @type {boolean}
 	     * @readonly
 	     * @name hasWebAudio
-	     * @memberof device
 	     */
 	    hasWebAudio : false,
 
@@ -29196,7 +29179,6 @@
 	     * @type {boolean}
 	     * @readonly
 	     * @name nativeBase64
-	     * @memberof device
 	     */
 	    nativeBase64 : (typeof(globalThis.atob) === "function"),
 
@@ -29205,7 +29187,6 @@
 	     * @type {number}
 	     * @readonly
 	     * @name maxTouchPoints
-	     * @memberof device
 	     * @example
 	     * if (me.device.maxTouchPoints > 1) {
 	     *     // device supports multi-touch
@@ -29218,7 +29199,6 @@
 	     * @type {boolean}
 	     * @readonly
 	     * @name touch
-	     * @memberof device
 	     */
 	    touch : false,
 
@@ -29227,7 +29207,6 @@
 	     * @type {boolean}
 	     * @readonly
 	     * @name wheel
-	     * @memberof device
 	     */
 	    wheel : false,
 
@@ -29237,7 +29216,6 @@
 	     * @type {boolean}
 	     * @readonly
 	     * @name isMobile
-	     * @memberof device
 	     */
 	    isMobile : false,
 
@@ -29246,7 +29224,6 @@
 	     * @type {boolean}
 	     * @readonly
 	     * @name iOS
-	     * @memberof device
 	     */
 	    iOS : false,
 
@@ -29255,7 +29232,6 @@
 	     * @type {boolean}
 	     * @readonly
 	     * @name android
-	     * @memberof device
 	     */
 	    android : false,
 
@@ -29264,7 +29240,6 @@
 	     * @type {boolean}
 	     * @readonly
 	     * @name android2
-	     * @memberof device
 	     */
 	    android2 : false,
 
@@ -29273,7 +29248,6 @@
 	     * @type {boolean}
 	     * @readonly
 	     * @name linux
-	     * @memberof device
 	     */
 	    linux : false,
 
@@ -29283,7 +29257,6 @@
 	     * @readonly
 	     * @see http://impactjs.com/ejecta
 	     * @name ejecta
-	     * @memberof device
 	     */
 	    ejecta : false,
 
@@ -29292,7 +29265,6 @@
 	     * @type {boolean}
 	     * @readonly
 	     * @name isWeixin
-	     * @memberof device
 	     */
 	    isWeixin : false,
 
@@ -29301,7 +29273,6 @@
 	     * @type {boolean}
 	     * @readonly
 	     * @name nodeJS
-	     * @memberof device
 	     */
 	    nodeJS : (typeof process !== "undefined") && (process.release.name === "node"),
 
@@ -29310,7 +29281,6 @@
 	     * @type {boolean}
 	     * @readonly
 	     * @name chromeOS
-	     * @memberof device
 	     */
 	    chromeOS : false,
 
@@ -29319,7 +29289,6 @@
 	     * @type {boolean}
 	     * @readonly
 	     * @name wp
-	     * @memberof device
 	     */
 	    wp : false,
 
@@ -29328,7 +29297,6 @@
 	     * @type {boolean}
 	     * @readonly
 	     * @name BlackBerry
-	     * @memberof device
 	     */
 	    BlackBerry : false,
 
@@ -29337,7 +29305,6 @@
 	     * @type {boolean}
 	     * @readonly
 	     * @name Kindle
-	     * @memberof device
 	     */
 	    Kindle : false,
 
@@ -29348,7 +29315,6 @@
 	     * @readonly
 	     * @name accelerationX
 	     * @see device.watchAccelerometer
-	     * @memberof device
 	     */
 	    accelerationX : 0,
 
@@ -29359,7 +29325,6 @@
 	     * @readonly
 	     * @name accelerationY
 	     * @see device.watchAccelerometer
-	     * @memberof device
 	     */
 	    accelerationY : 0,
 
@@ -29370,7 +29335,6 @@
 	     * @readonly
 	     * @name accelerationZ
 	     * @see device.watchAccelerometer
-	     * @memberof device
 	     */
 	    accelerationZ : 0,
 
@@ -29381,7 +29345,6 @@
 	     * @readonly
 	     * @name gamma
 	     * @see device.watchDeviceOrientation
-	     * @memberof device
 	     */
 	    gamma : 0,
 
@@ -29392,7 +29355,6 @@
 	     * @readonly
 	     * @name beta
 	     * @see device.watchDeviceOrientation
-	     * @memberof device
 	     */
 	    beta: 0,
 
@@ -29404,7 +29366,6 @@
 	     * @readonly
 	     * @name alpha
 	     * @see device.watchDeviceOrientation
-	     * @memberof device
 	     */
 	    alpha : 0,
 
@@ -29416,7 +29377,6 @@
 	     * @readonly
 	     * @see http://www.w3schools.com/tags/ref_language_codes.asp
 	     * @name language
-	     * @memberof device
 	     */
 	    language : typeof globalThis.navigator !== "undefined" ? globalThis.navigator.language || globalThis.navigator.browserLanguage || globalThis.navigator.userLanguage || "en" : "en",
 
@@ -29424,7 +29384,6 @@
 	     * Specify whether to pause the game when losing focus
 	     * @type {boolean}
 	     * @default true
-	     * @memberof device
 	     */
 	    pauseOnBlur : true,
 
@@ -29432,7 +29391,6 @@
 	     * Specify whether to unpause the game when gaining focus
 	     * @type {boolean}
 	     * @default true
-	     * @memberof device
 	     */
 	    resumeOnFocus : true,
 
@@ -29440,7 +29398,6 @@
 	     * Specify whether to automatically bring the window to the front
 	     * @type {boolean}
 	     * @default true
-	     * @memberof device
 	     */
 	    autoFocus : true,
 
@@ -29449,7 +29406,6 @@
 	     * The engine restarts on focus if this is enabled.
 	     * @type {boolean}
 	     * @default false
-	     * @memberof device
 	     */
 	    stopOnBlur : false,
 
@@ -29458,7 +29414,6 @@
 	     * @type {boolean}
 	     * @readonly
 	     * @name OffScreenCanvas
-	     * @memberof device
 	     */
 	    OffscreenCanvas : false,
 
@@ -29980,10 +29935,9 @@
 
 	/**
 	 * Ratio of the resolution in physical pixels to the resolution in CSS pixels for the current display device.
-	 * @name devicePixelRatio
-	 * @memberof device
+	 * @name device.devicePixelRatio
 	 * @public
-	 * @type {number}
+	 * @member {number}
 	 * @readonly
 	 * @returns {number}
 	 */
@@ -29998,10 +29952,9 @@
 
 	/**
 	 * Returns true if the browser/device is in full screen mode.
-	 * @name isFullscreen
-	 * @memberof device
+	 * @name device.isFullscreen
 	 * @public
-	 * @type {boolean}
+	 * @member {boolean}
 	 * @readonly
 	 * @returns {boolean}
 	 */
@@ -30021,10 +29974,9 @@
 
 	/**
 	 * Returns true if the browser/device has audio capabilities.
-	 * @name sound
-	 * @memberof device
+	 * @name device.sound
 	 * @public
-	 * @type {boolean}
+	 * @member {boolean}
 	 * @readonly
 	 * @returns {boolean}
 	 */
@@ -30087,9 +30039,8 @@
 
 	        descriptor[name] = {
 	            "get" : (function (name) {
-	                /**
+	                /*
 	                 * A getter for the uniform location
-	                 * @ignore
 	                 */
 	                return function () {
 	                    return locations[name];
@@ -30097,18 +30048,16 @@
 	            })(name),
 	            "set" : (function (name, type, fn) {
 	                if (type.indexOf("mat") === 0) {
-	                    /**
+	                    /*
 	                     * A generic setter for uniform matrices
-	                     * @ignore
 	                     */
 	                    return function (val) {
 	                        gl[fn](locations[name], false, val);
 	                    };
 	                }
 	                else {
-	                    /**
+	                    /*
 	                     * A generic setter for uniform vectors
-	                     * @ignore
 	                     */
 	                    return function (val) {
 	                        var fnv = fn;
@@ -33452,7 +33401,7 @@
 	    }
 	};
 
-	/**
+	/*
 	 * Tween.js - Licensed under the MIT license
 	 * https://github.com/tweenjs/tween.js
 	 */
@@ -33780,7 +33729,7 @@
 
 	};
 
-	/**
+	/*
 	 * Tween.js - Licensed under the MIT license
 	 * https://github.com/tweenjs/tween.js
 	 */
@@ -33858,7 +33807,7 @@
 	            return fc( n ) / fc( i ) / fc( n - i );
 
 	        },
-	        /** @ignore */
+	        /* @ignore */
 	        Factorial: ( function () {
 
 	            var a = [ 1 ];
@@ -33884,7 +33833,7 @@
 
 	};
 
-	/**
+	/*
 	 * Tween.js - Licensed under the MIT license
 	 * https://github.com/tweenjs/tween.js
 	 */
@@ -34662,7 +34611,8 @@
 	        /**
 	         * defines the color used to draw the font stroke.<br>
 	         * @public
-	         * @type {Color}
+	         * @member {Color}
+	         * @name strokeStyle
 	         * @default black
 	         */
 	         if (typeof settings.strokeStyle !== "undefined") {
@@ -35707,7 +35657,7 @@
 	             * - a number, to change the value for both axis <br>
 	             * - a json expression like `json:{"x":0.5,"y":0.5}` if you wish to specify a different value for both x and y
 	             * @public
-	             * @type {Vector2d}
+	             * @member {Vector2d}
 	             * @default <0.0,0.0>
 	             * @name ImageLayer#anchorPoint
 	             */
@@ -37624,7 +37574,7 @@
 	        /**
 	         * the entity body object
 	         * @public
-	         * @type {Body}
+	         * @member {Body}
 	         * @name body
 	         * @memberof Entity
 	         */
@@ -37778,7 +37728,7 @@
 	    return Entity;
 	}(Renderable));
 
-	/**
+	/*
 	 * placeholder for all deprecated classes and corresponding alias for backward compatibility
 	 */
 
@@ -37845,8 +37795,11 @@
 	};
 
 	/**
+	 * Alias of {@link TextureAtlas}
+	 *
 	 * @public
 	 * @name Texture
+	 * @class
 	 * @memberof Renderer#
 	 * @deprecated since 10.4.0
 	 * @see TextureAtlas

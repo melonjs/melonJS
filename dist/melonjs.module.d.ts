@@ -454,6 +454,7 @@ export class Body {
     forEach(callback: Function, thisArg?: object, ...args: any[]): void;
     /**
      * Returns true if the any of the shape composing the body contains the given point.
+     * @method Body#contains
      * @param {Vector2d} point
      * @returns {boolean} true if contains
      */
@@ -5218,6 +5219,7 @@ export class Pointer extends Bounds {
  * A polygon is convex when all line segments connecting two points in the interior do not cross any edge of the polygon
  * (which means that all angles are less than 180 degrees), as described here below : <br>
  * <center><img src="images/convex_polygon.png"/></center><br>
+ *
  * A polygon's `winding` is clockwise iff its vertices (points) are declared turning to the right. The image above shows COUNTERCLOCKWISE winding.
  */
 export class Polygon {
@@ -5235,14 +5237,6 @@ export class Polygon {
      * @memberof Polygon
      */
     public pos: Vector2d;
-    /**
-     * The bounding rectangle for this shape
-     * @ignore
-     * @type {Bounds}
-     * @name _bounds
-     * @memberof Polygon
-     */
-    _bounds: Bounds;
     /**
      * Array of points defining the Polygon <br>
      * Note: If you manually change `points`, you **must** call `recalc`afterwards so that the changes get applied correctly.
@@ -5422,6 +5416,7 @@ export class Polygon {
      * @returns {Bounds} this shape bounding box Rectangle object
      */
     getBounds(): Bounds;
+    _bounds: any;
     /**
      * update the bounding box for this shape.
      * @ignore
@@ -8100,10 +8095,6 @@ export class Trigger extends Renderable {
     protected triggerEvent(): void;
 }
 /**
- * Tween.js - Licensed under the MIT license
- * https://github.com/tweenjs/tween.js
- */
-/**
  * @classdesc
  * Javascript Tweening Engine<p>
  * Super simple, fast and easy to use tweening engine which incorporates optimised Robert Penner's equation<p>
@@ -8492,6 +8483,7 @@ export class Vector2d {
      * return true if the two vectors are the same
      * @name equals
      * @memberof Vector2d
+     * @method
      * @param {Vector2d} v
      * @returns {boolean}
      */
@@ -8813,6 +8805,7 @@ export class Vector3d {
      * return true if the two vectors are the same
      * @name equals
      * @memberof Vector3d
+     * @method
      * @param {Vector2d|Vector3d} v
      * @returns {boolean}
      */
@@ -10762,11 +10755,6 @@ export var plugin: any;
  * @namespace plugins
  */
 export var plugins: {};
-/**
- * a default global object pool instance
- * @public
- * @type {ObjectPool}
- */
 declare var pool$1: ObjectPool;
 export namespace save {
     /**
@@ -11313,9 +11301,6 @@ export var video: Readonly<{
     getParent: typeof getParent;
     scale: typeof scale;
 }>;
-/**
- * placeholder for all deprecated classes and corresponding alias for backward compatibility
- */
 /**
  * display a deprecation warning in the console
  * @ignore
