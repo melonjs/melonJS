@@ -401,6 +401,8 @@ class CanvasRenderer extends Renderer {
             return;
         }
 
+        var context = this.getContext();
+
         context.beginPath();
         context.moveTo(startX, startY);
         context.lineTo(endX, endY);

@@ -7,6 +7,7 @@
 
 ### Fixed
 - Input: fix PointerEvent detection on Firefox for Android mobile (thanks @kutyamutya)
+- Renderer: fix a regression with strokeLine in the CanvasRenderer
 
 ## [10.10.0] (melonJS 2) - _2022-06-07_
 
