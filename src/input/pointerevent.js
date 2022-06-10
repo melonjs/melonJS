@@ -264,8 +264,8 @@ function dispatchEvent(normalizedEvents) {
         // and put it back into our cache
         T_POINTERS.push(pointer);
 
-        // Do not fire older events
-        if (typeof(pointer.event.timeStamp) !== "undefined") {
+        // Do not fire older touch events (not required for PointerEvent type)
+        if (pointer.isNormalized === true && typeof(pointer.event.timeStamp) !== "undefined") {
             if (pointer.event.timeStamp < lastTimeStamp) {
                 continue;
             }
