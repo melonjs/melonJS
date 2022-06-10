@@ -6,10 +6,12 @@
 - Doc: replaced JSDoc by Webdoc for documentation generation (huge thanks to @ShukantPal)
 
 ### Fixed
+- Core: fix a regression when accessing `localStorage`
 - Input: fix PointerEvent detection on Firefox for Android mobile (thanks @kutyamutya)
 - Renderer: fix a regression with `strokeLine()` in the CanvasRenderer
 - Geometry: fix the RoundRect `clone()` method
 - Bounds: fix the `addFrame()` method
+
 
 ## [10.10.0] (melonJS 2) - _2022-06-07_
 

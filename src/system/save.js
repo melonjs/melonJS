@@ -47,13 +47,13 @@ import * as event from "./event.js";
 // Initialize me.save on Boot event
 event.on(event.BOOT, () => {
     // Load previous data if local Storage is supported
-    if (device.localStorage === true) {
-        var me_save_content = localStorage.getItem("me.save");
+    if (typeof globalThis.localStorage !== "undefined") {
+        var me_save_content = globalThis.localStorage.getItem("me.save");
 
         if (typeof me_save_content === "string" && me_save_content.length > 0) {
             var keys = JSON.parse(me_save_content) || [];
             keys.forEach(function (key) {
-                data[key] = JSON.parse(localStorage.getItem("me.save." + key));
+                data[key] = JSON.parse(globalThis.localStorage.getItem("me.save." + key));
             });
         }
     }
@@ -96,7 +96,7 @@ var save = {
                     set (value) {
                         data[prop] = value;
                         if (device.localStorage === true) {
-                            localStorage.setItem("me.save." + prop, JSON.stringify(value));
+                            globalThis.localStorage.setItem("me.save." + prop, JSON.stringify(value));
                         }
                     }
                 });
@@ -110,7 +110,7 @@ var save = {
 
         // Save keys
         if (device.localStorage === true) {
-            localStorage.setItem("me.save", JSON.stringify(Object.keys(data)));
+            globalThis.localStorage.setItem("me.save", JSON.stringify(Object.keys(data)));
         }
     },
 
@@ -128,8 +128,8 @@ var save = {
             if (typeof data[key] !== "undefined") {
                 delete data[key];
                 if (device.localStorage === true) {
-                    localStorage.removeItem("me.save." + key);
-                    localStorage.setItem("me.save", JSON.stringify(Object.keys(data)));
+                    globalThis.localStorage.removeItem("me.save." + key);
+                    globalThis.localStorage.setItem("me.save", JSON.stringify(Object.keys(data)));
                 }
             }
         }
