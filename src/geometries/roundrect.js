@@ -153,7 +153,7 @@ class RoundRect extends Rect {
      * @returns {RoundRect} new RoundRect
      */
     clone() {
-        return new RoundRect(this.pos.x, this.pos.y, this.width, this.height, radius);
+        return new RoundRect(this.pos.x, this.pos.y, this.width, this.height, this.radius);
     }
 };
 

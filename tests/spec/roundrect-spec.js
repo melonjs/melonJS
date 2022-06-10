@@ -1,5 +1,5 @@
 describe("Shape : me.RoundRect", function () {
-    var rrect = new me.RoundRect(50, 50, 100, 100, 20);
+    var rrect = new me.RoundRect(50, 50, 100, 100, 40);
 
     describe("RoundRect", function () {
         it("rrect has finite coordinates", function () {
@@ -9,6 +9,7 @@ describe("Shape : me.RoundRect", function () {
             expect(rrect.centerY).toEqual(100);
             expect(rrect.width).toEqual(100);
             expect(rrect.height).toEqual(100);
+            expect(rrect.radius).toEqual(40);
         });
 
         describe("contains point", function () {
@@ -40,11 +41,15 @@ describe("Shape : me.RoundRect", function () {
             });
         });
 
-        describe("copy & equality", function () {
+        describe("copy, clone & equality", function () {
             var _rect = new me.RoundRect(1, 1, 1, 1);
             _rect.copy(rrect);
             it("copy rrect size, position radius", function () {
                 expect(_rect.equals(rrect)).toEqual(true);
+            });
+            var cloneRect = _rect.clone();
+            it("clone rect and test radius", function () {
+                expect(cloneRect.radius).toEqual(40);
             });
         });
     });
