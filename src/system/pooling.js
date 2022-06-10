@@ -180,11 +180,12 @@ class ObjectPool {
     }
 };
 
-/**
- * a default global object pool instance
- * @public
- * @type {ObjectPool}
- */
+
 var pool = new ObjectPool();
 
+/**
+ * a default global ObjectPool instance
+ * @namespace pool
+ * @see ObjectPool
+ */
 export default pool;
