@@ -22361,7 +22361,7 @@
 	 * @classdesc
 	 * a simplified path2d implementation, supporting only one path
 	 */
-	var Path2D$1 = function Path2D() {
+	var Path2D = function Path2D() {
 	    /**
 	     * the points defining the current path
 	     * @public
@@ -22390,7 +22390,7 @@
 	 * @name beginPath
 	 * @memberof Path2D
 	 */
-	Path2D$1.prototype.beginPath = function beginPath () {
+	Path2D.prototype.beginPath = function beginPath () {
 	    // empty the cache and recycle all vectors
 	    this.points.forEach(function (point) {
 	        pool.push(point);
@@ -22405,7 +22405,7 @@
 	 * @name closePath
 	 * @memberof Path2D
 	 */
-	Path2D$1.prototype.closePath = function closePath () {
+	Path2D.prototype.closePath = function closePath () {
 	    var points = this.points;
 	    if (points.length > 1 && !points[points.length-1].equals(points[0])) {
 	        points.push(pool.pull("Vector2d", points[0].x, points[0].y));
@@ -22418,7 +22418,7 @@
 	 * @memberof Path2D
 	 * @returns {Vector2d[]}
 	 */
-	Path2D$1.prototype.triangulatePath = function triangulatePath () {
+	Path2D.prototype.triangulatePath = function triangulatePath () {
 	    var i = 0;
 	    var points = this.points;
 	    var vertices = this.vertices;
@@ -22449,7 +22449,7 @@
 	 * @param {number} x the x-axis (horizontal) coordinate of the point.
 	 * @param {number} y the y-axis (vertical) coordinate of the point.
 	 */
-	Path2D$1.prototype.moveTo = function moveTo (x, y) {
+	Path2D.prototype.moveTo = function moveTo (x, y) {
 	  this.points.push(pool.pull("Vector2d", x, y));
 	};
 
@@ -22460,7 +22460,7 @@
 	 * @param {number} x the x-axis coordinate of the line's end point.
 	 * @param {number} y the y-axis coordinate of the line's end point.
 	 */
-	Path2D$1.prototype.lineTo = function lineTo (x, y) {
+	Path2D.prototype.lineTo = function lineTo (x, y) {
 	    this.points.push(pool.pull("Vector2d", x, y));
 	};
 
@@ -22476,7 +22476,7 @@
 	 * @param {number} endAngle the angle at which the arc ends in radians, measured from the positive x-axis.
 	 * @param {boolean} [anticlockwise=false] an optional boolean value. If true, draws the arc counter-clockwise between the start and end angles.
 	 */
-	Path2D$1.prototype.arc = function arc (x, y, radius, startAngle, endAngle, anticlockwise) {
+	Path2D.prototype.arc = function arc (x, y, radius, startAngle, endAngle, anticlockwise) {
 	        if ( anticlockwise === void 0 ) anticlockwise = false;
 
 	    var points = this.points;
@@ -22526,7 +22526,7 @@
 	 * @param {number} y the y-axis coordinate of the second control point.
 	 * @param {number} radius the arc's radius. Must be positive.
 	 */
-	Path2D$1.prototype.arcTo = function arcTo (x1, y1, x2, y2, radius) {
+	Path2D.prototype.arcTo = function arcTo (x1, y1, x2, y2, radius) {
 	    var points = this.points;
 	    // based on from https://github.com/karellodewijk/canvas-webgl/blob/master/canvas-webgl.js
 	    var x0 = points[points.length-1].x, y0 = points[points.length-1].y;
@@ -22577,7 +22577,7 @@
 	 * @param {number} endAngle the angle at which the ellipse ends, measured clockwise from the positive x-axis and expressed in radians.
 	 * @param {boolean} [anticlockwise=false] an optional boolean value which, if true, draws the ellipse counterclockwise (anticlockwise).
 	 */
-	Path2D$1.prototype.ellipse = function ellipse (x, y, radiusX, radiusY, rotation, startAngle, endAngle, anticlockwise) {
+	Path2D.prototype.ellipse = function ellipse (x, y, radiusX, radiusY, rotation, startAngle, endAngle, anticlockwise) {
 	        if ( anticlockwise === void 0 ) anticlockwise = false;
 
 	    var points = this.points;
@@ -22634,7 +22634,7 @@
 	 * @param {number} width the rectangle's width. Positive values are to the right, and negative to the left.
 	 * @param {number} height the rectangle's height. Positive values are down, and negative are up.
 	 */
-	Path2D$1.prototype.rect = function rect (x, y, width, height) {
+	Path2D.prototype.rect = function rect (x, y, width, height) {
 	    this.moveTo(x, y);
 	    this.lineTo(x + width, y);
 	    this.lineTo(x + width, y + height);
@@ -22652,7 +22652,7 @@
 	 * @param {number} height the rectangle's height. Positive values are down, and negative are up.
 	 * @param {number} radius the arc's radius to draw the borders. Must be positive.
 	 */
-	 Path2D$1.prototype.roundRect = function roundRect (x, y, width, height, radius) {
+	 Path2D.prototype.roundRect = function roundRect (x, y, width, height, radius) {
 	    this.moveTo(x + radius, y);
 	    this.lineTo(x + width - radius, y);
 	    this.arcTo(x + width, y, x + width, y + radius, radius);
@@ -22693,7 +22693,7 @@
 	     * @type {Path2D}
 	     * @memberof Renderer#
 	     */
-	    this.path2D = new Path2D$1();
+	    this.path2D = new Path2D();
 
 	    /**
 	     * @ignore
@@ -28449,7 +28449,7 @@
 	    // Make sure that the DOM is not already loaded
 	    if (!isReady) {
 	        // be sure document.body is there
-	        if (!device.nodeJS && !document.body) {
+	        if (typeof globalThis.document !== "undefined" && !globalThis.document.body) {
 	            return setTimeout(_domReady, 13);
 	        }
 
@@ -32812,8 +32812,10 @@
 	    }
 	  }
 
-	  if (typeof Path2D.prototype.roundRect === "undefined") {
-	      Path2D.prototype.roundRect = roundRect;
+	  if (globalThis.CanvasRenderingContext2D) {
+	    if (typeof globalThis.Path2D.prototype.roundRect === "undefined") {
+	        globalThis.Path2D.prototype.roundRect = roundRect;
+	    }
 	  }
 	  if (globalThis.CanvasRenderingContext2D) {
 	    if (typeof globalThis.CanvasRenderingContext2D.prototype.roundRect === "undefined") {

@@ -22279,7 +22279,7 @@ class Line extends Polygon {
  * @classdesc
  * a simplified path2d implementation, supporting only one path
  */
-class Path2D$1 {
+class Path2D {
     constructor() {
         /**
          * the points defining the current path
@@ -22625,7 +22625,7 @@ class Renderer {
          * @type {Path2D}
          * @memberof Renderer#
          */
-        this.path2D = new Path2D$1();
+        this.path2D = new Path2D();
 
         /**
          * @ignore
@@ -28377,7 +28377,7 @@ function _domReady() {
     // Make sure that the DOM is not already loaded
     if (!isReady) {
         // be sure document.body is there
-        if (!device.nodeJS && !document.body) {
+        if (typeof globalThis.document !== "undefined" && !globalThis.document.body) {
             return setTimeout(_domReady, 13);
         }
 
@@ -32711,8 +32711,10 @@ if (!requestAnimationFrame || !cancelAnimationFrame) {
     }
   }
 
-  if (typeof Path2D.prototype.roundRect === "undefined") {
-      Path2D.prototype.roundRect = roundRect;
+  if (globalThis.CanvasRenderingContext2D) {
+    if (typeof globalThis.Path2D.prototype.roundRect === "undefined") {
+        globalThis.Path2D.prototype.roundRect = roundRect;
+    }
   }
   if (globalThis.CanvasRenderingContext2D) {
     if (typeof globalThis.CanvasRenderingContext2D.prototype.roundRect === "undefined") {
