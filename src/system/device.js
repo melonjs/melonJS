@@ -34,7 +34,7 @@ function _domReady() {
     // Make sure that the DOM is not already loaded
     if (!isReady) {
         // be sure document.body is there
-        if (!device.nodeJS && !document.body) {
+        if (typeof globalThis.document !== "undefined" && !globalThis.document.body) {
             return setTimeout(_domReady, 13);
         }
 
