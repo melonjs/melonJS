@@ -218,8 +218,10 @@
     }
   }
 
-  if (typeof Path2D.prototype.roundRect === "undefined") {
-      Path2D.prototype.roundRect = roundRect;
+  if (globalThis.CanvasRenderingContext2D) {
+    if (typeof globalThis.Path2D.prototype.roundRect === "undefined") {
+        globalThis.Path2D.prototype.roundRect = roundRect;
+    }
   }
   if (globalThis.CanvasRenderingContext2D) {
     if (typeof globalThis.CanvasRenderingContext2D.prototype.roundRect === "undefined") {
