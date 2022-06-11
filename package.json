@@ -80,7 +80,7 @@
     "rollup": "^2.75.6",
     "rollup-plugin-bundle-size": "^1.0.3",
     "rollup-plugin-string": "^3.0.0",
-    "terser": "^5.14.0",
+    "terser": "^5.14.1",
     "typescript": "^4.7.3"
   },
   "scripts": {
