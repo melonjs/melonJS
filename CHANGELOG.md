@@ -7,6 +7,7 @@
 
 ### Fixed
 - Core: fix a regression when accessing `localStorage`
+- Core: fix a regression when when running melonJS in node.js (undefined global reference in the roundRect polyfill)
 - Input: fix PointerEvent detection on Firefox for Android mobile (thanks @kutyamutya)
 - Renderer: fix a regression with `strokeLine()` in the CanvasRenderer
 - Geometry: fix the RoundRect `clone()` method
