@@ -67,7 +67,7 @@
     "@rollup/plugin-node-resolve": "^13.3.0",
     "@rollup/plugin-replace": "^4.0.0",
     "@types/offscreencanvas": "^2019.7.0",
-    "@webdoc/cli": "^1.6.4",
+    "@webdoc/cli": "^1.6.5",
     "del-cli": "^4.0.1",
     "eslint": "^8.17.0",
     "jasmine-core": "^4.2.0",
