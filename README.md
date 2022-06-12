@@ -142,10 +142,11 @@ me.device.onReady(function () {
 ```
 > Simple hello world using melonJS 2 (version 10.x or higher)
 
-Documentation :
+Documentation
+-------------------------------------------------------------------------------
 
-* [Online API](http://melonjs.github.io/melonJS/docs/) ([offline](https://github.com/melonjs/melonJS/archive/gh-pages.zip) version under the `docs` directory)
-
+* [Online API](http://melonjs.github.io/melonJS/docs/)
+* [offline](https://github.com/melonjs/melonJS/archive/gh-pages.zip) version under the `docs` directory)
 
 
 Download melonJS
