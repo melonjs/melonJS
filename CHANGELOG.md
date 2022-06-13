@@ -3,8 +3,8 @@
 ## [10.11.0] (melonJS 2) - _2022-XX-XX_
 
 ### Changed
-- Core: fix all rollup "$1" duplicated declaration and/or export
-- Core: refactored Timer into an instantiable class with `time` (namespace) now being a default instance of the Timer class
+- Core: fix all rollup "$1" related duplicated declaration and/or export
+- Core: refactored Timer into an instantiable class with `timer` (namespace) now being the default instance of the Timer class
 - Doc: replaced JSDoc by Webdoc for documentation generation (huge thanks to @ShukantPal)
 
 ### Fixed

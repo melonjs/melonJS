@@ -1578,17 +1578,17 @@
 
 	/**
 	 * @classdesc
-	 * This object is used for object pooling - a technique that might speed up your game if used properly.<br>
+	 * Object pooling - a technique that might speed up your game if used properly.<br>
 	 * If some of your classes will be instantiated and removed a lot at a time, it is a
 	 * good idea to add the class to this object pool. A separate pool for that class
 	 * will be created, which will reuse objects of the class. That way they won't be instantiated
 	 * each time you need a new one (slowing your game), but stored into that pool and taking one
 	 * already instantiated when you need it.<br><br>
-	 * This object is also used by the engine to instantiate objects defined in the map,
+	 * This technique is also used by the engine to instantiate objects defined in the map,
 	 * which means, that on level loading the engine will try to instantiate every object
 	 * found in the map, based on the user defined name in each Object Properties<br>
 	 * <img src="images/object_properties.png"/><br>
-	 * @see {@link pool} a default global instance of ObjectPool
+	 * @see {@link pool} the default global instance of ObjectPool
 	 */
 	var ObjectPool = function ObjectPool() {
 	    this.objectClass = {};
@@ -3776,19 +3776,24 @@
 	 };
 
 	/**
-	 * apply the current transform to the given 2d vector
+	 * apply the current transform to the given 2d or 3d vector
 	 * @name apply
 	 * @memberof Matrix2d
-	 * @param {Vector2d} v the vector object to be transformed
-	 * @returns {Vector2d} result vector object.
+	 * @param {Vector2d|Vector3d} v the vector object to be transformed
+	 * @returns {Vector2d|Vector3d} result vector object.
 	 */
 	 Matrix2d.prototype.apply = function apply (v) {
 	     var a = this.val,
 	         x = v.x,
-	         y = v.y;
+	         y = v.y,
+	         z = (typeof v.z !== "undefined") ? v.z : 1;
 
-	     v.x = x * a[0] + y * a[3] + a[6];
-	     v.y = x * a[1] + y * a[4] + a[7];
+	     v.x = x * a[0] + y * a[3] + z * a[6];
+	     v.y = x * a[1] + y * a[4] + z * a[7];
+
+	     if (typeof v.z !== "undefined") {
+	         v.z = x * a[2] + y * a[5] + z * a[8];
+	     }
 
 	     return v;
 	 };
@@ -19246,7 +19251,7 @@
 	        this.iconTexture = pool.pull("CanvasTexture",
 	            renderer.WebGLVersion > 1 ? this.width : nextPowerOfTwo(this.width),
 	            renderer.WebGLVersion > 1 ? this.height : nextPowerOfTwo(this.height),
-	            true
+	            { offscreenCanvas: true }
 	        );
 
 	        var context = this.iconTexture.context;
@@ -22683,7 +22688,7 @@
 	     * @public
 	     * @name settings
 	     * @memberof Renderer#
-	     * @enum {object}
+	     * @type {object}
 	     */
 	    this.settings = options;
 
@@ -32037,11 +32042,11 @@
 	 * @function video.createCanvas
 	 * @param {number} width width
 	 * @param {number} height height
-	 * @param {boolean} [offscreen=false] will returns an OffscreenCanvas if supported
+	 * @param {boolean} [offscreenCanvas=false] will return an OffscreenCanvas if supported
 	 * @returns {HTMLCanvasElement|OffscreenCanvas}
 	 */
-	function createCanvas(width, height, offscreen) {
-	    if ( offscreen === void 0 ) offscreen = false;
+	function createCanvas(width, height, offscreenCanvas) {
+	    if ( offscreenCanvas === void 0 ) offscreenCanvas = false;
 
 	    var _canvas;
 
@@ -32049,7 +32054,7 @@
 	        throw new Error("width or height was zero, Canvas could not be initialized !");
 	    }
 
-	    if (device.OffscreenCanvas === true && offscreen === true) {
+	    if (device.OffscreenCanvas === true && offscreenCanvas === true) {
 	        _canvas = new OffscreenCanvas(0, 0);
 	        // stubbing style for compatibility,
 	        // as OffscreenCanvas is detached from the DOM
@@ -32282,7 +32287,7 @@
 	/**
 	 * @classdesc
 	 * a Timer class to manage timing related function (FPS, Game Tick, Time...)
-	  * @see {@link ti,er} a default global timer instance
+	  * @see {@link timer} the default global timer instance
 	 */
 	var Timer = function Timer() {
 	      var this$1$1 = this;
@@ -32562,9 +32567,18 @@
 	      }
 	  };
 	/**
-	 * a default global Timer instance
+	 * the default global Timer instance
 	 * @namespace timer
 	 * @see Timer
+	 * @example
+	 * // set a timer to call "myFunction" after 1000ms
+	 * timer.setTimeout(myFunction, 1000);
+	 * // set a timer to call "myFunction" after 1000ms (respecting the pause state) and passing param1 and param2
+	 * timer.setTimeout(myFunction, 1000, true, param1, param2);
+	 * // set a timer to call "myFunction" every 1000ms
+	 * timer.setInterval(myFunction, 1000);
+	 * // set a timer to call "myFunction" every 1000ms (respecting the pause state) and passing param1 and param2
+	 * timer.setInterval(myFunction, 1000, true, param1, param2);
 	 */
 	var timer = new Timer();
 
@@ -33871,23 +33885,33 @@
 
 	Object.defineProperties( Tween, staticAccessors );
 
+	// default video settings
+	var defaultAttributes = {
+	    offscreenCanvas : false,
+	    willReadFrequently : false
+	};
+
 	/**
 	 * Creates a Canvas Texture of the given size
 	 */
-	var CanvasTexture = function CanvasTexture(width, height, offscreenCanvas) {
-	    if ( offscreenCanvas === void 0 ) offscreenCanvas = true;
+	var CanvasTexture = function CanvasTexture(width, height, attributes) {
+	    if ( attributes === void 0 ) attributes = defaultAttributes;
+
+
+	    // clean up the given attributes
+	    attributes = Object.assign(defaultAttributes, attributes || {});
 
 	    /**
 	     * the canvas created for this CanvasTexture
 	     * @type {HTMLCanvasElement|OffscreenCanvas}
 	     */
-	    this.canvas = createCanvas(width, height, offscreenCanvas);
+	    this.canvas = createCanvas(width, height, attributes.offscreenCanvas);
 
 	    /**
 	     * the rendering context of this CanvasTexture
 	     * @type {CanvasRenderingContext2D}
 	     */
-	    this.context = this.canvas.getContext("2d");
+	    this.context = this.canvas.getContext("2d", { willReadFrequently: attributes.willReadFrequently });
 	};
 
 	var prototypeAccessors = { width: { configurable: true },height: { configurable: true } };
@@ -34303,7 +34327,7 @@
 
 	        if (settings.offScreenCanvas === true) {
 	            this.offScreenCanvas = true;
-	            this.canvasTexture = pool.pull("CanvasTexture", 2, 2, true);
+	            this.canvasTexture = pool.pull("CanvasTexture", 2, 2, { offscreenCanvas: true });
 	        }
 
 	        // instance to text metrics functions
@@ -36105,7 +36129,7 @@
 	        this.visibleArea = pool.pull("Ellipse", this.centerX, this.centerY, this.width, this.height);
 
 	        /** @ignore */
-	        this.texture = pool.pull("CanvasTexture", this.width, this.height, false);
+	        this.texture = pool.pull("CanvasTexture", this.width, this.height, { offscreenCanvas: false });
 
 	        this.anchorPoint.set(0, 0);
 
@@ -36679,7 +36703,7 @@
 	    if ( w === void 0 ) w = 8;
 	    if ( h === void 0 ) h = 8;
 
-	    var defaultParticleTexture = pool.pull("CanvasTexture", w, h, true);
+	    var defaultParticleTexture = pool.pull("CanvasTexture", w, h, { offscreenCanvas: true });
 
 	    defaultParticleTexture.context.fillStyle = "#fff";
 	    defaultParticleTexture.context.fillRect(0, 0, w, h);

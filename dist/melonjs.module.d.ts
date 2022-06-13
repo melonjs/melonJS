@@ -3008,13 +3008,13 @@ export class Matrix2d {
      */
     invert(): Matrix2d;
     /**
-     * apply the current transform to the given 2d vector
+     * apply the current transform to the given 2d or 3d vector
      * @name apply
      * @memberof Matrix2d
-     * @param {Vector2d} v the vector object to be transformed
-     * @returns {Vector2d} result vector object.
+     * @param {Vector2d|Vector3d} v the vector object to be transformed
+     * @returns {Vector2d|Vector3d} result vector object.
      */
-    apply(v: Vector2d): Vector2d;
+    apply(v: Vector2d | Vector3d): Vector2d | Vector3d;
     /**
      * apply the inverted current transform to the given 2d vector
      * @name applyInverse
@@ -6219,22 +6219,9 @@ export class Renderer {
      * @public
      * @name settings
      * @memberof Renderer#
-     * @enum {object}
+     * @type {object}
      */
-    public settings: {
-        width: number;
-        height: number;
-        canvas?: HTMLCanvasElement;
-        doubleBuffering?: boolean;
-        antiAlias?: boolean;
-        failIfMajorPerformanceCaveat?: boolean;
-        transparent?: boolean;
-        blendMode?: boolean;
-        subPixel?: boolean;
-        verbose?: boolean;
-        zoomX?: number;
-        zoomY?: number;
-    };
+    public settings: object;
     /**
      * true if the current rendering context is valid
      * @name isContextValid
@@ -11072,9 +11059,18 @@ export namespace state {
     function isCurrent(state: number): boolean;
 }
 /**
- * a default global Timer instance
+ * the default global Timer instance
  * @namespace timer
  * @see Timer
+ * @example
+ * // set a timer to call "myFunction" after 1000ms
+ * timer.setTimeout(myFunction, 1000);
+ * // set a timer to call "myFunction" after 1000ms (respecting the pause state) and passing param1 and param2
+ * timer.setTimeout(myFunction, 1000, true, param1, param2);
+ * // set a timer to call "myFunction" every 1000ms
+ * timer.setInterval(myFunction, 1000);
+ * // set a timer to call "myFunction" every 1000ms (respecting the pause state) and passing param1 and param2
+ * timer.setInterval(myFunction, 1000, true, param1, param2);
  */
 export const timer: Timer;
 export namespace utils {
@@ -12148,17 +12144,17 @@ declare function setGamepadDeadzone(value: number): void;
 declare function addMapping(id: any, mapping: any): void;
 /**
  * @classdesc
- * This object is used for object pooling - a technique that might speed up your game if used properly.<br>
+ * Object pooling - a technique that might speed up your game if used properly.<br>
  * If some of your classes will be instantiated and removed a lot at a time, it is a
  * good idea to add the class to this object pool. A separate pool for that class
  * will be created, which will reuse objects of the class. That way they won't be instantiated
  * each time you need a new one (slowing your game), but stored into that pool and taking one
  * already instantiated when you need it.<br><br>
- * This object is also used by the engine to instantiate objects defined in the map,
+ * This technique is also used by the engine to instantiate objects defined in the map,
  * which means, that on level loading the engine will try to instantiate every object
  * found in the map, based on the user defined name in each Object Properties<br>
  * <img src="images/object_properties.png"/><br>
- * @see {@link pool} a default global instance of ObjectPool
+ * @see {@link pool} the default global instance of ObjectPool
  */
 declare class ObjectPool {
     objectClass: {};
@@ -12248,7 +12244,7 @@ declare class ObjectPool {
 /**
  * @classdesc
  * a Timer class to manage timing related function (FPS, Game Tick, Time...)
-  * @see {@link ti,er} a default global timer instance
+  * @see {@link timer} the default global timer instance
  */
 declare class Timer {
     /**
@@ -12481,10 +12477,10 @@ declare function init(width: number, height: number, options?: {
  * @function video.createCanvas
  * @param {number} width width
  * @param {number} height height
- * @param {boolean} [offscreen=false] will returns an OffscreenCanvas if supported
+ * @param {boolean} [offscreenCanvas=false] will return an OffscreenCanvas if supported
  * @returns {HTMLCanvasElement|OffscreenCanvas}
  */
-declare function createCanvas(width: number, height: number, offscreen?: boolean): HTMLCanvasElement | OffscreenCanvas;
+declare function createCanvas(width: number, height: number, offscreenCanvas?: boolean): HTMLCanvasElement | OffscreenCanvas;
 /**
  * return a reference to the parent DOM element holding the main canvas
  * @function video.getParent
