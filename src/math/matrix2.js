@@ -246,19 +246,24 @@ class Matrix2d {
     }
 
    /**
-    * apply the current transform to the given 2d vector
+    * apply the current transform to the given 2d or 3d vector
     * @name apply
     * @memberof Matrix2d
-    * @param {Vector2d} v the vector object to be transformed
-    * @returns {Vector2d} result vector object.
+    * @param {Vector2d|Vector3d} v the vector object to be transformed
+    * @returns {Vector2d|Vector3d} result vector object.
     */
     apply(v) {
         var a = this.val,
             x = v.x,
-            y = v.y;
+            y = v.y,
+            z = (typeof v.z !== "undefined") ? v.z : 1;
 
-        v.x = x * a[0] + y * a[3] + a[6];
-        v.y = x * a[1] + y * a[4] + a[7];
+        v.x = x * a[0] + y * a[3] + z * a[6];
+        v.y = x * a[1] + y * a[4] + z * a[7];
+
+        if (typeof v.z !== "undefined") {
+            v.z = x * a[2] + y * a[5] + z * a[8];
+        }
 
         return v;
     }
