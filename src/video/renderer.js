@@ -38,7 +38,7 @@ class Renderer {
          * @public
          * @name settings
          * @memberof Renderer#
-         * @enum {object}
+         * @type {object}
          */
         this.settings = options;
 
