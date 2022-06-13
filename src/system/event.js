@@ -68,6 +68,17 @@ export const STATE_STOP = "me.state.onStop";
 export const STATE_RESTART = "me.state.onRestart";
 
 /**
+ * event for when the changing to a different stage
+ * @public
+ * @constant
+ * @type {string}
+ * @name STATE_CHANGE
+ * @memberof event
+ * @see event.on
+ */
+export const STATE_CHANGE = "me.state.onChange";
+
+/**
  * event for when the video is initialized<br>
  * Data passed : none <br>
  * @public

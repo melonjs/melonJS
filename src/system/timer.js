@@ -3,94 +3,14 @@ import * as event from "./event.js";
 import state from "./../state/state.js";
 import { clamp } from "./../math/math.js";
 
-//hold element to display fps
-var framecount = 0;
-var framedelta = 0;
-
-/* fps count stuff */
-var last = 0;
-var now = 0;
-var delta = 0;
-// for timeout/interval update
-var step =0;
-var minstep = 0;
-
-// list of defined timer function
-var timers = [];
-var timerId = 0;
-
 /**
- * update
- * @ignore
- */
-function update(time) {
-    last = now;
-    now = time;
-    delta = (now - last);
-
-    // fix for negative timestamp returned by wechat or chrome on startup
-    if (delta < 0) {
-        delta = 0;
-    }
-
-    // get the game tick
-    timer.tick = (delta > minstep && timer.interpolation) ? delta / step : 1;
-
-
-    updateTimers();
-};
-
-/**
- * clear Timers
- * @ignore
- */
-function clearTimer(timerId) {
-    for (var i = 0, len = timers.length; i < len; i++) {
-        if (timers[i].timerId === timerId) {
-            timers.splice(i, 1);
-            break;
-        }
-    }
-};
-
-
-/**
- * update timers
- * @ignore
- */
-function updateTimers() {
-    for (var i = 0, len = timers.length; i < len; i++) {
-        var _timer = timers[i];
-        if (!(_timer.pauseable && state.isPaused())) {
-            _timer.elapsed += delta;
-        }
-        if (_timer.elapsed >= _timer.delay) {
-            _timer.fn.apply(null, _timer.args);
-            if (_timer.repeat === true) {
-                _timer.elapsed -= _timer.delay;
-            } else {
-                timer.clearTimeout(_timer.timerId);
-            }
-        }
-    }
-};
-
-// Initialize me.timer on Boot event
-event.on(event.BOOT, () => {
-    // reset variables to initial state
-    timer.reset();
-    now = last = 0;
-    // register to the game before update event
-    event.on(event.GAME_BEFORE_UPDATE, update);
-});
-
-
-/**
+ * @classdesc
  * a Timer class to manage timing related function (FPS, Game Tick, Time...)
- * @namespace timer
+  * @see {@link timer} the default global timer instance
  */
-var timer = {
+class Timer {
 
+    constructor() {
         /**
          * Last game tick value.<br/>
          * Use this value to scale velocities during frame drops due to slow
@@ -103,7 +23,7 @@ var timer = {
          * @name tick
          * @memberof timer
          */
-        tick : 1.0,
+        this.tick = 1.0;
 
         /**
          * Last measured fps rate.<br/>
@@ -113,7 +33,7 @@ var timer = {
          * @name fps
          * @memberof timer
          */
-        fps : 0,
+        this.fps = 0;
 
         /**
          * Set the maximum target display frame per second
@@ -124,7 +44,7 @@ var timer = {
          * @default 60
          * @memberof timer
          */
-        maxfps : 60,
+        this.maxfps = 60;
 
         /**
          * Enable/disable frame interpolation
@@ -134,138 +54,247 @@ var timer = {
          * @name interpolation
          * @memberof timer
          */
-        interpolation : false,
+        this.interpolation = false;
 
-        /**
-         * reset time (e.g. usefull in case of pause)
-         * @name reset
-         * @memberof timer
-         * @ignore
-         */
-        reset() {
-            // set to "now"
-            last = now = globalThis.performance.now();
-            delta = 0;
-            // reset delta counting variables
-            framedelta = 0;
-            framecount = 0;
-            step = Math.ceil(1000 / this.maxfps); // ROUND IT ?
-            // define some step with some margin
-            minstep = (1000 / this.maxfps) * 1.25; // IS IT NECESSARY?\
-        },
+        //hold element to display fps
+        this.framecount = 0;
+        this.framedelta = 0;
 
-        /**
-         * Calls a function once after a specified delay. See me.timer.setInterval to repeativly call a function.
-         * @name setTimeout
-         * @memberof timer
-         * @param {Function} fn the function you want to execute after delay milliseconds.
-         * @param {number} delay the number of milliseconds (thousandths of a second) that the function call should be delayed by.
-         * @param {boolean} [pauseable=true] respects the pause state of the engine.
-         * @param {...*} args optional parameters which are passed through to the function specified by fn once the timer expires.
-         * @returns {number} The numerical ID of the timer, which can be used later with me.timer.clearTimeout().
-         * @example
-         * // set a timer to call "myFunction" after 1000ms
-         * me.timer.setTimeout(myFunction, 1000);
-         * // set a timer to call "myFunction" after 1000ms (respecting the pause state) and passing param1 and param2
-         * me.timer.setTimeout(myFunction, 1000, true, param1, param2);
-         */
-        setTimeout(fn, delay, pauseable, ...args) {
-            timers.push({
-                fn : fn,
-                delay : delay,
-                elapsed : 0,
-                repeat : false,
-                timerId : ++timerId,
-                pauseable : pauseable === true || true,
-                args : args
-            });
-            return timerId;
-        },
+        /* fps count stuff */
+        this.last = 0;
+        this.now = 0;
+        this.delta = 0;
+        // for timeout/interval update
+        this.step =0;
+        this.minstep = 0;
 
-        /**
-         * Calls a function continously at the specified interval.  See setTimeout to call function a single time.
-         * @name setInterval
-         * @memberof timer
-         * @param {Function} fn the function to execute
-         * @param {number} delay the number of milliseconds (thousandths of a second) on how often to execute the function
-         * @param {boolean} [pauseable=true] respects the pause state of the engine.
-         * @param {...*} args optional parameters which are passed through to the function specified by fn once the timer expires.
-         * @returns {number} The numerical ID of the timer, which can be used later with me.timer.clearInterval().
-         * @example
-         * // set a timer to call "myFunction" every 1000ms
-         * me.timer.setInterval(myFunction, 1000);
-         * // set a timer to call "myFunction" every 1000ms (respecting the pause state) and passing param1 and param2
-         * me.timer.setInterval(myFunction, 1000, true, param1, param2);
-         */
-        setInterval(fn, delay, pauseable, ...args) {
-            timers.push({
-                fn : fn,
-                delay : delay,
-                elapsed : 0,
-                repeat : true,
-                timerId : ++timerId,
-                pauseable : pauseable === true || true,
-                args : args
-            });
-            return timerId;
-        },
+        // list of defined timer function
+        this.timers = [];
+        this.timerId = 0;
 
-        /**
-         * Clears the delay set by me.timer.setTimeout().
-         * @name clearTimeout
-         * @memberof timer
-         * @param {number} timeoutID ID of the timeout to be cleared
-         */
-        clearTimeout(timeoutID) {
-            utils.function.defer(clearTimer, this, timeoutID);
-        },
+        // Initialize mtimer on Boot event
+        event.on(event.BOOT, () => {
+            // reset variables to initial state
+            this.reset();
+            this.now = this.last = 0;
+            // register to the game before update event
+            event.on(event.GAME_BEFORE_UPDATE, this.update.bind(this));
+        });
 
-        /**
-         * Clears the Interval set by me.timer.setInterval().
-         * @name clearInterval
-         * @memberof timer
-         * @param {number} intervalID ID of the interval to be cleared
-         */
-        clearInterval(intervalID) {
-            utils.function.defer(clearTimer, this, intervalID);
-        },
+        // reset timer
+        event.on(event.STATE_RESUME, () => {
+            this.reset();
+        });
+        event.on(event.STATE_RESTART, () => {
+            this.reset();
+        });
+        event.on(event.STATE_CHANGE, () => {
+            this.reset();
+        });
+    }
 
-        /**
-         * Return the current timestamp in milliseconds <br>
-         * since the game has started or since linux epoch (based on browser support for High Resolution Timer)
-         * @name getTime
-         * @memberof timer
-         * @returns {number}
-         */
-        getTime() {
-            return now;
-        },
 
-        /**
-         * Return elapsed time in milliseconds since the last update
-         * @name getDelta
-         * @memberof timer
-         * @returns {number}
-         */
-        getDelta() {
-            return delta;
-        },
+    /**
+     * reset time (e.g. usefull in case of pause)
+     * @name reset
+     * @memberof timer
+     * @ignore
+     */
+    reset() {
+        // set to "now"
+        this.last = this.now = globalThis.performance.now();
+        this.delta = 0;
+        // reset delta counting variables
+        this.framedelta = 0;
+        this.framecount = 0;
+        this.step = Math.ceil(1000 / this.maxfps); // ROUND IT ?
+        // define some step with some margin
+        this.minstep = (1000 / this.maxfps) * 1.25; // IS IT NECESSARY?\
+    }
 
-        /**
-         * compute the actual frame time and fps rate
-         * @name computeFPS
-         * @ignore
-         * @memberof timer
-         */
-        countFPS() {
-            framecount++;
-            framedelta += delta;
-            if (framecount % 10 === 0) {
-                this.fps = clamp(Math.round((1000 * framecount) / framedelta), 0, this.maxfps);
-                framedelta = 0;
-                framecount = 0;
+    /**
+     * Calls a function once after a specified delay. See me.timer.setInterval to repeativly call a function.
+     * @name setTimeout
+     * @memberof timer
+     * @param {Function} fn the function you want to execute after delay milliseconds.
+     * @param {number} delay the number of milliseconds (thousandths of a second) that the function call should be delayed by.
+     * @param {boolean} [pauseable=true] respects the pause state of the engine.
+     * @param {...*} args optional parameters which are passed through to the function specified by fn once the timer expires.
+     * @returns {number} The numerical ID of the timer, which can be used later with me.timer.clearTimeout().
+     * @example
+     * // set a timer to call "myFunction" after 1000ms
+     * me.timer.setTimeout(myFunction, 1000);
+     * // set a timer to call "myFunction" after 1000ms (respecting the pause state) and passing param1 and param2
+     * me.timer.setTimeout(myFunction, 1000, true, param1, param2);
+     */
+    setTimeout(fn, delay, pauseable, ...args) {
+        this.timers.push({
+            fn : fn,
+            delay : delay,
+            elapsed : 0,
+            repeat : false,
+            timerId : ++this.timerId,
+            pauseable : pauseable === true || true,
+            args : args
+        });
+        return this.timerId;
+    }
+
+    /**
+     * Calls a function continously at the specified interval.  See setTimeout to call function a single time.
+     * @name setInterval
+     * @memberof timer
+     * @param {Function} fn the function to execute
+     * @param {number} delay the number of milliseconds (thousandths of a second) on how often to execute the function
+     * @param {boolean} [pauseable=true] respects the pause state of the engine.
+     * @param {...*} args optional parameters which are passed through to the function specified by fn once the timer expires.
+     * @returns {number} The numerical ID of the timer, which can be used later with me.timer.clearInterval().
+     * @example
+     * // set a timer to call "myFunction" every 1000ms
+     * me.timer.setInterval(myFunction, 1000);
+     * // set a timer to call "myFunction" every 1000ms (respecting the pause state) and passing param1 and param2
+     * me.timer.setInterval(myFunction, 1000, true, param1, param2);
+     */
+    setInterval(fn, delay, pauseable, ...args) {
+        this.timers.push({
+            fn : fn,
+            delay : delay,
+            elapsed : 0,
+            repeat : true,
+            timerId : ++this.timerId,
+            pauseable : pauseable === true || true,
+            args : args
+        });
+        return this.timerId;
+    }
+
+    /**
+     * Clears the delay set by me.timer.setTimeout().
+     * @name clearTimeout
+     * @memberof timer
+     * @param {number} timeoutID ID of the timeout to be cleared
+     */
+    clearTimeout(timeoutID) {
+        utils.function.defer(this.clearTimer.bind(this), this, timeoutID);
+    }
+
+    /**
+     * Clears the Interval set by me.timer.setInterval().
+     * @name clearInterval
+     * @memberof timer
+     * @param {number} intervalID ID of the interval to be cleared
+     */
+    clearInterval(intervalID) {
+        utils.function.defer(this.clearTimer.bind(this), this, intervalID);
+    }
+
+    /**
+     * Return the current timestamp in milliseconds <br>
+     * since the game has started or since linux epoch (based on browser support for High Resolution Timer)
+     * @name getTime
+     * @memberof timer
+     * @returns {number}
+     */
+    getTime() {
+        return this.now;
+    }
+
+    /**
+     * Return elapsed time in milliseconds since the last update
+     * @name getDelta
+     * @memberof timer
+     * @returns {number}
+     */
+    getDelta() {
+        return this.delta;
+    }
+
+    /**
+     * compute the actual frame time and fps rate
+     * @name computeFPS
+     * @ignore
+     * @memberof timer
+     */
+    countFPS() {
+        this.framecount++;
+        this.framedelta += this.delta;
+        if (this.framecount % 10 === 0) {
+            this.fps = clamp(Math.round((1000 * this.framecount) / this.framedelta), 0, this.maxfps);
+            this.framedelta = 0;
+            this.framecount = 0;
+        }
+    }
+
+    /**
+     * update
+     * @ignore
+     */
+    update(time) {
+        this.last = this.now;
+        this.now = time;
+        this.delta = (this.now - this.last);
+
+        // fix for negative timestamp returned by wechat or chrome on startup
+        if (this.delta < 0) {
+            this.delta = 0;
+        }
+
+        // get the game tick
+        this.tick = (this.delta > this.minstep && this.interpolation) ? this.delta / this.step : 1;
+
+        this.updateTimers();
+    }
+
+    /**
+     * clear Timers
+     * @ignore
+     */
+    clearTimer(timerId) {
+        for (var i = 0, len = this.timers.length; i < len; i++) {
+            if (this.timers[i].timerId === timerId) {
+                this.timers.splice(i, 1);
+                break;
             }
         }
+    }
+
+
+    /**
+     * update timers
+     * @ignore
+     */
+    updateTimers() {
+        for (var i = 0, len = this.timers.length; i < len; i++) {
+            var _timer = this.timers[i];
+            if (!(_timer.pauseable && state.isPaused())) {
+                _timer.elapsed += this.delta;
+            }
+            if (_timer.elapsed >= _timer.delay) {
+                _timer.fn.apply(null, _timer.args);
+                if (_timer.repeat === true) {
+                    _timer.elapsed -= _timer.delay;
+                } else {
+                    this.clearTimeout(_timer.timerId);
+                }
+            }
+        }
+    }
 };
+
+/**
+ * the default global Timer instance
+ * @namespace timer
+ * @see Timer
+ * @example
+ * // set a timer to call "myFunction" after 1000ms
+ * timer.setTimeout(myFunction, 1000);
+ * // set a timer to call "myFunction" after 1000ms (respecting the pause state) and passing param1 and param2
+ * timer.setTimeout(myFunction, 1000, true, param1, param2);
+ * // set a timer to call "myFunction" every 1000ms
+ * timer.setInterval(myFunction, 1000);
+ * // set a timer to call "myFunction" every 1000ms (respecting the pause state) and passing param1 and param2
+ * timer.setInterval(myFunction, 1000, true, param1, param2);
+ */
+const timer = new Timer();
 
 export default timer;

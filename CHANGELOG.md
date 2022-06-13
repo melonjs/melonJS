@@ -3,6 +3,7 @@
 ## [10.11.0] (melonJS 2) - _2022-XX-XX_
 
 ### Changed
+- Core: refactored Timer into an instantiable class with `time` (namespace) now being a default instance of the Timer class
 - Doc: replaced JSDoc by Webdoc for documentation generation (huge thanks to @ShukantPal)
 
 ### Fixed

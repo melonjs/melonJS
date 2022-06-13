@@ -1,7 +1,6 @@
 import { pauseTrack, resumeTrack } from "./../audio/audio.js";
 import * as fctUtil from "./../utils/function.js";
 import * as event from "./../system/event.js";
-import timer from "./../system/timer.js";
 import * as game from "./../game.js";
 import Stage from "./../state/stage.js";
 import DefaultLoadingScreen from "./../loader/loadingscreen.js";
@@ -41,9 +40,6 @@ var _pauseTime = 0;
 function _startRunLoop() {
     // ensure nothing is running first and in valid state
     if ((_animFrameId === -1) && (_state !== -1)) {
-        // reset the timer
-        timer.reset();
-
         // start the main loop
         _animFrameId = globalThis.requestAnimationFrame(_renderFrame);
     }
@@ -56,9 +52,6 @@ function _startRunLoop() {
 function _resumeRunLoop() {
     // ensure game is actually paused and in valid state
     if (_isPaused && (_state !== -1)) {
-        // reset the timer
-        timer.reset();
-
         _isPaused = false;
     }
 }
@@ -123,6 +116,9 @@ function _switchState(state) {
         // and start the main loop of the
         // new requested state
         _startRunLoop();
+
+        // publish the pause event
+        event.emit(event.STATE_CHANGE);
 
         // execute callback if defined
         if (_onSwitchComplete) {
