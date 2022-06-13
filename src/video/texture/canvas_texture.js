@@ -1,5 +1,11 @@
 import { createCanvas } from "./../video.js";
 
+// default video settings
+var defaultAttributes = {
+    offscreenCanvas : false,
+    willReadFrequently : false
+};
+
 /**
  * Creates a Canvas Texture of the given size
  */
@@ -7,20 +13,26 @@ class CanvasTexture {
     /**
      * @param {number} width the desired width of the canvas
      * @param {number} height the desired height of the canvas
-     * @param {number} [offscreenCanvas=true] if the the canvas should be an OffscreenCanvas
+     * @param {object} attributes The attributes to create both the canvas and 2d context
+     * @param {boolean} [attributes.offscreenCanvas=false] will create an offscreenCanvas if true instead of a standard canvas
+     * @param {boolean} [attributes.willReadFrequently=false] Indicates whether or not a lot of read-back operations are planned
      */
-    constructor(width, height, offscreenCanvas = true) {
+    constructor(width, height, attributes = defaultAttributes) {
+
+        // clean up the given attributes
+        attributes = Object.assign(defaultAttributes, attributes || {});
+
         /**
          * the canvas created for this CanvasTexture
          * @type {HTMLCanvasElement|OffscreenCanvas}
          */
-        this.canvas = createCanvas(width, height, offscreenCanvas);
+        this.canvas = createCanvas(width, height, attributes.offscreenCanvas);
 
         /**
          * the rendering context of this CanvasTexture
          * @type {CanvasRenderingContext2D}
          */
-        this.context = this.canvas.getContext("2d");
+        this.context = this.canvas.getContext("2d", { willReadFrequently: attributes.willReadFrequently });
     }
 
     /**

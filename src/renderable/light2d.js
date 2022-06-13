@@ -72,7 +72,7 @@ class Light2d extends Renderable {
         this.visibleArea = pool.pull("Ellipse", this.centerX, this.centerY, this.width, this.height);
 
         /** @ignore */
-        this.texture = pool.pull("CanvasTexture", this.width, this.height, false);
+        this.texture = pool.pull("CanvasTexture", this.width, this.height, { offscreenCanvas: false });
 
         this.anchorPoint.set(0, 0);
 

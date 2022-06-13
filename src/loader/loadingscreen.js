@@ -72,7 +72,7 @@ class IconLogo extends Renderable {
         this.iconTexture = pool.pull("CanvasTexture",
             renderer.WebGLVersion > 1 ? this.width : nextPowerOfTwo(this.width),
             renderer.WebGLVersion > 1 ? this.height : nextPowerOfTwo(this.height),
-            true
+            { offscreenCanvas: true }
         );
 
         var context = this.iconTexture.context;

@@ -382,17 +382,17 @@ export function init(width, height, options) {
  * @function video.createCanvas
  * @param {number} width width
  * @param {number} height height
- * @param {boolean} [offscreen=false] will returns an OffscreenCanvas if supported
+ * @param {boolean} [offscreenCanvas=false] will return an OffscreenCanvas if supported
  * @returns {HTMLCanvasElement|OffscreenCanvas}
  */
-export function createCanvas(width, height, offscreen = false) {
+export function createCanvas(width, height, offscreenCanvas = false) {
     var _canvas;
 
     if (width === 0 || height === 0) {
         throw new Error("width or height was zero, Canvas could not be initialized !");
     }
 
-    if (device.OffscreenCanvas === true && offscreen === true) {
+    if (device.OffscreenCanvas === true && offscreenCanvas === true) {
         _canvas = new OffscreenCanvas(0, 0);
         // stubbing style for compatibility,
         // as OffscreenCanvas is detached from the DOM

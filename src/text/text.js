@@ -192,7 +192,7 @@ class Text extends Renderable {
 
         if (settings.offScreenCanvas === true) {
             this.offScreenCanvas = true;
-            this.canvasTexture = pool.pull("CanvasTexture", 2, 2, true);
+            this.canvasTexture = pool.pull("CanvasTexture", 2, 2, { offscreenCanvas: true });
         }
 
         // instance to text metrics functions
