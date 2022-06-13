@@ -1,9 +1,7 @@
 import Bounds from "./../physics/bounds.js";
 import { trimRight } from "./../utils/string.js";
 import Text from "./text.js";
-//import BitmapText from "./bitmaptext.js";
 import setContextStyle from "./textstyle.js";
-
 
 /**
  * @classdesc

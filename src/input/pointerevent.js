@@ -35,17 +35,17 @@ var lastTimeStamp = 0;
 var activeEventList = [];
 
 // internal constants
-var WHEEL           = ["wheel"];
-var POINTER_MOVE    = ["pointermove",   "mousemove",    "touchmove"];
-var POINTER_DOWN    = ["pointerdown",   "mousedown",    "touchstart"];
-var POINTER_UP      = ["pointerup",     "mouseup",      "touchend"];
-var POINTER_CANCEL  = ["pointercancel", "mousecancel",  "touchcancel"];
-var POINTER_ENTER   = ["pointerenter",  "mouseenter",   "touchenter"];
-var POINTER_OVER    = ["pointerover",   "mouseover",    "touchover"];
-var POINTER_LEAVE   = ["pointerleave",  "mouseleave",   "touchleave"];
+const WHEEL           = ["wheel"];
+const POINTER_MOVE    = ["pointermove",   "mousemove",    "touchmove"];
+const POINTER_DOWN    = ["pointerdown",   "mousedown",    "touchstart"];
+const POINTER_UP      = ["pointerup",     "mouseup",      "touchend"];
+const POINTER_CANCEL  = ["pointercancel", "mousecancel",  "touchcancel"];
+const POINTER_ENTER   = ["pointerenter",  "mouseenter",   "touchenter"];
+const POINTER_OVER    = ["pointerover",   "mouseover",    "touchover"];
+const POINTER_LEAVE   = ["pointerleave",  "mouseleave",   "touchleave"];
 
 // list of standard pointer event type
-var pointerEventList = [
+const pointerEventList = [
     WHEEL[0],
     POINTER_MOVE[0],
     POINTER_DOWN[0],
@@ -57,7 +57,7 @@ var pointerEventList = [
 ];
 
 // legacy mouse event type
-var mouseEventList = [
+const mouseEventList = [
     WHEEL[0],
     POINTER_MOVE[1],
     POINTER_DOWN[1],
@@ -69,7 +69,7 @@ var mouseEventList = [
 ];
 
 // iOS style touch event type
-var touchEventList = [
+const touchEventList = [
     POINTER_MOVE[2],
     POINTER_DOWN[2],
     POINTER_UP[2],
@@ -79,7 +79,7 @@ var touchEventList = [
     POINTER_LEAVE[2]
 ];
 
-var pointerEventMap = {
+const pointerEventMap = {
     wheel : WHEEL,
     pointermove: POINTER_MOVE,
     pointerdown: POINTER_DOWN,

@@ -9,7 +9,7 @@ import { capitalize } from "./string.js";
  * Known agent vendors
  * @ignore
  */
-var vendors = [ "ms", "MS", "moz", "webkit", "o" ];
+const vendors = [ "ms", "MS", "moz", "webkit", "o" ];
 
 /**
  * Get a vendor-prefixed property

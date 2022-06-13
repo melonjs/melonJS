@@ -17,8 +17,8 @@ import TextMetrics from "./textmetrics.js";
 */
 
 
-var runits = ["ex", "em", "pt", "px"];
-var toPX = [12, 24, 0.75, 1];
+const runits = ["ex", "em", "pt", "px"];
+const toPX = [12, 24, 0.75, 1];
 
 // return a valid 2d context for Text rendering/styling
 var getContext2d = function (renderer, text) {

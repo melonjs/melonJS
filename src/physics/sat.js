@@ -9,19 +9,19 @@ import Vector2d from "./../math/vector2.js";
  * Constants for Vornoi regions
  * @ignore
  */
-var LEFT_VORNOI_REGION = -1;
+const LEFT_VORNOI_REGION = -1;
 
 /**
  * Constants for Vornoi regions
  * @ignore
  */
-var MIDDLE_VORNOI_REGION = 0;
+const MIDDLE_VORNOI_REGION = 0;
 
 /**
  * Constants for Vornoi regions
  * @ignore
  */
-var RIGHT_VORNOI_REGION = 1;
+const RIGHT_VORNOI_REGION = 1;
 
 
 /**

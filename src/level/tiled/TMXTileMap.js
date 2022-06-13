@@ -16,7 +16,7 @@ import Renderable from "./../../renderable/renderable.js";
 import Container from "./../../renderable/container.js";
 
 // constant to identify the collision object layer
-var COLLISION_GROUP = "collision";
+const COLLISION_GROUP = "collision";
 
 /**
  * set a compatible renderer object

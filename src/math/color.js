@@ -6,11 +6,11 @@ var toHex = function (component) {
     return "0123456789ABCDEF".charAt((component - (component % 16)) >> 4) + "0123456789ABCDEF".charAt(component % 16);
 };
 
-var rgbaRx = /^rgba?\((\d+), ?(\d+), ?(\d+)(, ?([\d\.]+))?\)$/;
-var hex3Rx = /^#([\da-fA-F])([\da-fA-F])([\da-fA-F])$/;
-var hex4Rx = /^#([\da-fA-F])([\da-fA-F])([\da-fA-F])([\da-fA-F])$/;
-var hex6Rx = /^#([\da-fA-F]{2})([\da-fA-F]{2})([\da-fA-F]{2})$/;
-var hex8Rx = /^#([\da-fA-F]{2})([\da-fA-F]{2})([\da-fA-F]{2})([\da-fA-F]{2})$/;
+const rgbaRx = /^rgba?\((\d+), ?(\d+), ?(\d+)(, ?([\d\.]+))?\)$/;
+const hex3Rx = /^#([\da-fA-F])([\da-fA-F])([\da-fA-F])$/;
+const hex4Rx = /^#([\da-fA-F])([\da-fA-F])([\da-fA-F])([\da-fA-F])$/;
+const hex6Rx = /^#([\da-fA-F]{2})([\da-fA-F]{2})([\da-fA-F]{2})$/;
+const hex8Rx = /^#([\da-fA-F]{2})([\da-fA-F]{2})([\da-fA-F]{2})([\da-fA-F]{2})$/;
 
 var cssToRGB = new Map();
 

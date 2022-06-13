@@ -1,6 +1,6 @@
 
 // bitmask constants to check for flipped & rotated tiles
-var TMX_CLEAR_BIT_MASK = ~(0x80000000 | 0x40000000 | 0x20000000);
+const TMX_CLEAR_BIT_MASK = ~(0x80000000 | 0x40000000 | 0x20000000);
 
 /**
  * @classdesc

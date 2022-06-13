@@ -1,7 +1,7 @@
 
 // bitmap constants
-var LOG2_PAGE_SIZE = 9;
-var PAGE_SIZE = 1 << LOG2_PAGE_SIZE;
+const LOG2_PAGE_SIZE = 9;
+const PAGE_SIZE = 1 << LOG2_PAGE_SIZE;
 
 /**
  * a glyph representing a single character in a font

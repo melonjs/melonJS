@@ -14,7 +14,7 @@ import { world } from "./../game.js";
 
 
 // some ref shortcut
-var MIN = Math.min, MAX = Math.max;
+const MIN = Math.min, MAX = Math.max;
 
 var targetV = new Vector2d();
 

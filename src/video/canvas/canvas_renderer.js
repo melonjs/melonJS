@@ -8,8 +8,6 @@ import Bounds from "./../../physics/bounds.js";
 import { createCanvas } from "./../video.js";
 import * as event from "./../../system/event.js";
 
-
-
 /**
  * @classdesc
  * a canvas renderer object

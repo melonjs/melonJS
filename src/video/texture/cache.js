@@ -4,7 +4,6 @@ import { TextureAtlas, createAtlas } from "./atlas.js";
 import { isPowerOfTwo} from "./../../math/math.js";
 import {ArrayMultimap} from "@teppeis/multimaps";
 
-
 /**
  * a basic texture cache object
  * @ignore

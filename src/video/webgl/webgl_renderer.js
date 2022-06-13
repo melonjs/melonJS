@@ -9,7 +9,6 @@ import * as event from "./../../system/event.js";
 import pool from "./../../system/pooling.js";
 import { isPowerOfTwo, nextPowerOfTwo } from "./../../math/math.js";
 
-
 /**
  * @classdesc
  * a WebGL renderer object

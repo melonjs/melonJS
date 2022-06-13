@@ -1117,7 +1117,7 @@ var stringUtils = /*#__PURE__*/Object.freeze({
  * Known agent vendors
  * @ignore
  */
-var vendors$1 = [ "ms", "MS", "moz", "webkit", "o" ];
+const vendors$1 = [ "ms", "MS", "moz", "webkit", "o" ];
 
 /**
  * Get a vendor-prefixed property
@@ -2244,11 +2244,11 @@ var toHex = function (component) {
     return "0123456789ABCDEF".charAt((component - (component % 16)) >> 4) + "0123456789ABCDEF".charAt(component % 16);
 };
 
-var rgbaRx = /^rgba?\((\d+), ?(\d+), ?(\d+)(, ?([\d\.]+))?\)$/;
-var hex3Rx = /^#([\da-fA-F])([\da-fA-F])([\da-fA-F])$/;
-var hex4Rx = /^#([\da-fA-F])([\da-fA-F])([\da-fA-F])([\da-fA-F])$/;
-var hex6Rx = /^#([\da-fA-F]{2})([\da-fA-F]{2})([\da-fA-F]{2})$/;
-var hex8Rx = /^#([\da-fA-F]{2})([\da-fA-F]{2})([\da-fA-F]{2})([\da-fA-F]{2})$/;
+const rgbaRx = /^rgba?\((\d+), ?(\d+), ?(\d+)(, ?([\d\.]+))?\)$/;
+const hex3Rx = /^#([\da-fA-F])([\da-fA-F])([\da-fA-F])$/;
+const hex4Rx = /^#([\da-fA-F])([\da-fA-F])([\da-fA-F])([\da-fA-F])$/;
+const hex6Rx = /^#([\da-fA-F]{2})([\da-fA-F]{2})([\da-fA-F]{2})$/;
+const hex8Rx = /^#([\da-fA-F]{2})([\da-fA-F]{2})([\da-fA-F]{2})([\da-fA-F]{2})$/;
 
 var cssToRGB = new Map();
 
@@ -12423,17 +12423,17 @@ var lastTimeStamp = 0;
 var activeEventList = [];
 
 // internal constants
-var WHEEL           = ["wheel"];
-var POINTER_MOVE    = ["pointermove",   "mousemove",    "touchmove"];
-var POINTER_DOWN    = ["pointerdown",   "mousedown",    "touchstart"];
-var POINTER_UP      = ["pointerup",     "mouseup",      "touchend"];
-var POINTER_CANCEL  = ["pointercancel", "mousecancel",  "touchcancel"];
-var POINTER_ENTER   = ["pointerenter",  "mouseenter",   "touchenter"];
-var POINTER_OVER    = ["pointerover",   "mouseover",    "touchover"];
-var POINTER_LEAVE   = ["pointerleave",  "mouseleave",   "touchleave"];
+const WHEEL           = ["wheel"];
+const POINTER_MOVE    = ["pointermove",   "mousemove",    "touchmove"];
+const POINTER_DOWN    = ["pointerdown",   "mousedown",    "touchstart"];
+const POINTER_UP      = ["pointerup",     "mouseup",      "touchend"];
+const POINTER_CANCEL  = ["pointercancel", "mousecancel",  "touchcancel"];
+const POINTER_ENTER   = ["pointerenter",  "mouseenter",   "touchenter"];
+const POINTER_OVER    = ["pointerover",   "mouseover",    "touchover"];
+const POINTER_LEAVE   = ["pointerleave",  "mouseleave",   "touchleave"];
 
 // list of standard pointer event type
-var pointerEventList = [
+const pointerEventList = [
     WHEEL[0],
     POINTER_MOVE[0],
     POINTER_DOWN[0],
@@ -12445,7 +12445,7 @@ var pointerEventList = [
 ];
 
 // legacy mouse event type
-var mouseEventList = [
+const mouseEventList = [
     WHEEL[0],
     POINTER_MOVE[1],
     POINTER_DOWN[1],
@@ -12457,7 +12457,7 @@ var mouseEventList = [
 ];
 
 // iOS style touch event type
-var touchEventList = [
+const touchEventList = [
     POINTER_MOVE[2],
     POINTER_DOWN[2],
     POINTER_UP[2],
@@ -12467,7 +12467,7 @@ var touchEventList = [
     POINTER_LEAVE[2]
 ];
 
-var pointerEventMap = {
+const pointerEventMap = {
     wheel : WHEEL,
     pointermove: POINTER_MOVE,
     pointerdown: POINTER_DOWN,
@@ -14847,19 +14847,19 @@ class Ellipse {
  * Constants for Vornoi regions
  * @ignore
  */
-var LEFT_VORNOI_REGION = -1;
+const LEFT_VORNOI_REGION = -1;
 
 /**
  * Constants for Vornoi regions
  * @ignore
  */
-var MIDDLE_VORNOI_REGION = 0;
+const MIDDLE_VORNOI_REGION = 0;
 
 /**
  * Constants for Vornoi regions
  * @ignore
  */
-var RIGHT_VORNOI_REGION = 1;
+const RIGHT_VORNOI_REGION = 1;
 
 
 /**
@@ -18143,7 +18143,7 @@ var game = /*#__PURE__*/Object.freeze({
 });
 
 // some ref shortcut
-var MIN = Math.min, MAX = Math.max;
+const MIN = Math.min, MAX = Math.max;
 
 var targetV = new Vector2d();
 
@@ -21848,10 +21848,10 @@ class Sprite extends Renderable {
 }
 
 // bitmask constants to check for flipped & rotated tiles
-var TMX_FLIP_H          = 0x80000000,
-    TMX_FLIP_V          = 0x40000000,
-    TMX_FLIP_AD         = 0x20000000,
-    TMX_CLEAR_BIT_MASK$1  = ~(0x80000000 | 0x40000000 | 0x20000000);
+const TMX_FLIP_H          = 0x80000000,
+      TMX_FLIP_V          = 0x40000000,
+      TMX_FLIP_AD         = 0x20000000,
+      TMX_CLEAR_BIT_MASK$1  = ~(0x80000000 | 0x40000000 | 0x20000000);
 
 /**
  * @classdesc
@@ -24707,13 +24707,13 @@ class TMXIsometricRenderer extends TMXRenderer {
 }
 
 // scope global var & constants
-var offsetsStaggerX = [
+const offsetsStaggerX = [
     {x:   0, y:   0},
     {x: + 1, y: - 1},
     {x: + 1, y:   0},
     {x: + 2, y:   0}
 ];
-var offsetsStaggerY = [
+const offsetsStaggerY = [
     {x:   0, y:   0},
     {x: - 1, y: + 1},
     {x:   0, y: + 1},
@@ -25579,7 +25579,7 @@ class TMXTileset {
 }
 
 // bitmask constants to check for flipped & rotated tiles
-var TMX_CLEAR_BIT_MASK = ~(0x80000000 | 0x40000000 | 0x20000000);
+const TMX_CLEAR_BIT_MASK = ~(0x80000000 | 0x40000000 | 0x20000000);
 
 /**
  * @classdesc
@@ -26089,7 +26089,7 @@ class TMXGroup {
 }
 
 // constant to identify the collision object layer
-var COLLISION_GROUP = "collision";
+const COLLISION_GROUP = "collision";
 
 /**
  * set a compatible renderer object
@@ -34080,8 +34080,8 @@ class TextMetrics extends Bounds {
 */
 
 
-var runits = ["ex", "em", "pt", "px"];
-var toPX = [12, 24, 0.75, 1];
+const runits = ["ex", "em", "pt", "px"];
+const toPX = [12, 24, 0.75, 1];
 
 // return a valid 2d context for Text rendering/styling
 var getContext2d = function (renderer, text) {
@@ -34848,8 +34848,8 @@ class BitmapText extends Renderable {
 }
 
 // bitmap constants
-var LOG2_PAGE_SIZE = 9;
-var PAGE_SIZE = 1 << LOG2_PAGE_SIZE;
+const LOG2_PAGE_SIZE = 9;
+const PAGE_SIZE = 1 << LOG2_PAGE_SIZE;
 
 /**
  * a glyph representing a single character in a font
@@ -34905,7 +34905,7 @@ class Glyph {
 }
 
 // bitmap constants
-var capChars = ["M", "N", "B", "D", "C", "E", "F", "K", "A", "G", "H", "I", "J", "L", "O", "P", "Q", "R", "S", "T", "U", "V", "W", "X", "Y", "Z"];
+const capChars = ["M", "N", "B", "D", "C", "E", "F", "K", "A", "G", "H", "I", "J", "L", "O", "P", "Q", "R", "S", "T", "U", "V", "W", "X", "Y", "Z"];
 
 /**
  * Gets the value from a string of pairs.
