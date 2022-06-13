@@ -1,16 +1,16 @@
 /**
  * @classdesc
- * This object is used for object pooling - a technique that might speed up your game if used properly.<br>
+ * Object pooling - a technique that might speed up your game if used properly.<br>
  * If some of your classes will be instantiated and removed a lot at a time, it is a
  * good idea to add the class to this object pool. A separate pool for that class
  * will be created, which will reuse objects of the class. That way they won't be instantiated
  * each time you need a new one (slowing your game), but stored into that pool and taking one
  * already instantiated when you need it.<br><br>
- * This object is also used by the engine to instantiate objects defined in the map,
+ * This technique is also used by the engine to instantiate objects defined in the map,
  * which means, that on level loading the engine will try to instantiate every object
  * found in the map, based on the user defined name in each Object Properties<br>
  * <img src="images/object_properties.png"/><br>
- * @see {@link pool} a default global instance of ObjectPool
+ * @see {@link pool} the default global instance of ObjectPool
  */
 class ObjectPool {
 
@@ -187,5 +187,15 @@ var pool = new ObjectPool();
  * a default global ObjectPool instance
  * @namespace pool
  * @see ObjectPool
+ * @example
+ * // register our bullet object into the object pool
+ * pool.register("bullet", BulletEntity, true);
+ * // ...
+ * // when we need to manually create a new bullet:
+ * var bullet = pool.pull("bullet", x, y, direction, velocity);
+ * // ...
+ * // when we want to destroy existing object, the remove
+ * // function will ensure the object can then be reallocated later
+ * game.world.removeChild(bullet);
  */
 export default pool;
