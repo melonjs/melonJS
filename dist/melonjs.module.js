@@ -4387,6 +4387,17 @@ const STATE_STOP = "me.state.onStop";
 const STATE_RESTART = "me.state.onRestart";
 
 /**
+ * event for when the changing to a different stage
+ * @public
+ * @constant
+ * @type {string}
+ * @name STATE_CHANGE
+ * @memberof event
+ * @see event.on
+ */
+const STATE_CHANGE = "me.state.onChange";
+
+/**
  * event for when the video is initialized<br>
  * Data passed : none <br>
  * @public
@@ -4827,6 +4838,7 @@ var event = /*#__PURE__*/Object.freeze({
 	STATE_RESUME: STATE_RESUME,
 	STATE_STOP: STATE_STOP,
 	STATE_RESTART: STATE_RESTART,
+	STATE_CHANGE: STATE_CHANGE,
 	VIDEO_INIT: VIDEO_INIT,
 	GAME_INIT: GAME_INIT,
 	GAME_RESET: GAME_RESET,
@@ -12515,7 +12527,7 @@ function enablePointerEvent() {
         // set the PointerMove/touchMove/MouseMove event
         if (typeof(throttlingInterval) === "undefined") {
             // set the default value
-            throttlingInterval = ~~(1000 / timer$1.maxfps);
+            throttlingInterval = ~~(1000 / timer.maxfps);
         }
 
         if (device.autoFocus === true) {
@@ -16246,7 +16258,7 @@ class Body {
     computeVelocity(/* dt */) {
         // apply timer.tick to delta time for linear interpolation (when enabled)
         // #761 add delta time in body update
-        var deltaTime = /* dt * */ timer$1.tick;
+        var deltaTime = /* dt * */ timer.tick;
 
         // apply gravity to the current velocity
         if (!this.ignoreGravity) {
@@ -18005,7 +18017,7 @@ function reset () {
 function updateFrameRate() {
     // reset the frame counter
     frameCounter = 0;
-    frameRate = ~~(0.5 + 60 / timer$1.maxfps);
+    frameRate = ~~(0.5 + 60 / timer.maxfps);
 
     // set step size based on the updatesPerSecond
     stepSize = (1000 / world.fps);
@@ -18014,7 +18026,7 @@ function updateFrameRate() {
 
     // display should always re-draw when update speed doesn't match fps
     // this means the user intends to write position prediction drawing logic
-    isAlwaysDirty = (timer$1.maxfps > world.fps);
+    isAlwaysDirty = (timer.maxfps > world.fps);
 }
 /**
  * Returns the parent container of the specified Child in the game world
@@ -18040,7 +18052,7 @@ function repaint() {
  * @param {number} time current timestamp as provided by the RAF callback
  * @param {Stage} stage the current stage
  */
-function update$1(time, stage) {
+function update(time, stage) {
     // handle frame skipping if required
     if ((++frameCounter % frameRate) === 0) {
         // reset the frame counter
@@ -18049,13 +18061,13 @@ function update$1(time, stage) {
         // publish notification
         emit(GAME_BEFORE_UPDATE, time);
 
-        accumulator += timer$1.getDelta();
+        accumulator += timer.getDelta();
         accumulator = Math.min(accumulator, accumulatorMax);
 
-        updateDelta = (timer$1.interpolation) ? timer$1.getDelta() : stepSize;
-        accumulatorUpdateDelta = (timer$1.interpolation) ? updateDelta : Math.max(updateDelta, updateAverageDelta);
+        updateDelta = (timer.interpolation) ? timer.getDelta() : stepSize;
+        accumulatorUpdateDelta = (timer.interpolation) ? updateDelta : Math.max(updateDelta, updateAverageDelta);
 
-        while (accumulator >= accumulatorUpdateDelta || timer$1.interpolation) {
+        while (accumulator >= accumulatorUpdateDelta || timer.interpolation) {
             lastUpdateStart = globalThis.performance.now();
 
             // game update event
@@ -18070,7 +18082,7 @@ function update$1(time, stage) {
             updateAverageDelta = lastUpdate - lastUpdateStart;
 
             accumulator -= accumulatorUpdateDelta;
-            if (timer$1.interpolation) {
+            if (timer.interpolation) {
                 accumulator = 0;
                 break;
             }
@@ -18121,7 +18133,7 @@ var game = /*#__PURE__*/Object.freeze({
 	updateFrameRate: updateFrameRate,
 	getParentContainer: getParentContainer,
 	repaint: repaint,
-	update: update$1,
+	update: update,
 	draw: draw
 });
 
@@ -19276,9 +19288,6 @@ var _pauseTime = 0;
 function _startRunLoop() {
     // ensure nothing is running first and in valid state
     if ((_animFrameId === -1) && (_state !== -1)) {
-        // reset the timer
-        timer$1.reset();
-
         // start the main loop
         _animFrameId = globalThis.requestAnimationFrame(_renderFrame);
     }
@@ -19291,9 +19300,6 @@ function _startRunLoop() {
 function _resumeRunLoop() {
     // ensure game is actually paused and in valid state
     if (_isPaused && (_state !== -1)) {
-        // reset the timer
-        timer$1.reset();
-
         _isPaused = false;
     }
 }
@@ -19315,7 +19321,7 @@ function _pauseRunLoop() {
 function _renderFrame(time) {
     var stage = _stages[_state].stage;
     // update all game objects
-    update$1(time, stage);
+    update(time, stage);
     // render all game objects
     draw(stage);
     // schedule the next frame update
@@ -19358,6 +19364,9 @@ function _switchState(state) {
         // and start the main loop of the
         // new requested state
         _startRunLoop();
+
+        // publish the pause event
+        emit(STATE_CHANGE);
 
         // execute callback if defined
         if (_onSwitchComplete) {
@@ -25499,7 +25508,7 @@ class TMXTileset {
     // update tile animations
     update(dt) {
         var duration = 0,
-            now = timer$1.getTime(),
+            now = timer.getTime(),
             result = false;
 
         if (this._lastUpdate !== now) {
@@ -26965,7 +26974,7 @@ var baseURL = {};
 // flag to check loading status
 var resourceCount = 0;
 var loadCount = 0;
-var timerId$1 = 0;
+var timerId = 0;
 
 /**
  * check the loading status
@@ -26976,7 +26985,7 @@ function checkLoadStatus(onload) {
         // wait 1/2s and execute callback (cheap workaround to ensure everything is loaded)
         if (onload || loader.onload) {
             // make sure we clear the timer
-            clearTimeout(timerId$1);
+            clearTimeout(timerId);
             // trigger the onload callback
             // we call either the supplied callback (which takes precedence) or the global one
             var callback = onload || loader.onload;
@@ -26990,7 +26999,7 @@ function checkLoadStatus(onload) {
         }
     }
     else {
-        timerId$1 = setTimeout(() => {
+        timerId = setTimeout(() => {
             checkLoadStatus(onload);
         }, 100);
     }
@@ -32191,91 +32200,14 @@ var utils = {
     }
 };
 
-//hold element to display fps
-var framecount = 0;
-var framedelta = 0;
-
-/* fps count stuff */
-var last = 0;
-var now = 0;
-var delta = 0;
-// for timeout/interval update
-var step =0;
-var minstep = 0;
-
-// list of defined timer function
-var timers = [];
-var timerId = 0;
-
 /**
- * update
- * @ignore
- */
-function update(time) {
-    last = now;
-    now = time;
-    delta = (now - last);
-
-    // fix for negative timestamp returned by wechat or chrome on startup
-    if (delta < 0) {
-        delta = 0;
-    }
-
-    // get the game tick
-    timer.tick = (delta > minstep && timer.interpolation) ? delta / step : 1;
-
-
-    updateTimers();
-}
-/**
- * clear Timers
- * @ignore
- */
-function clearTimer(timerId) {
-    for (var i = 0, len = timers.length; i < len; i++) {
-        if (timers[i].timerId === timerId) {
-            timers.splice(i, 1);
-            break;
-        }
-    }
-}
-
-/**
- * update timers
- * @ignore
- */
-function updateTimers() {
-    for (var i = 0, len = timers.length; i < len; i++) {
-        var _timer = timers[i];
-        if (!(_timer.pauseable && state.isPaused())) {
-            _timer.elapsed += delta;
-        }
-        if (_timer.elapsed >= _timer.delay) {
-            _timer.fn.apply(null, _timer.args);
-            if (_timer.repeat === true) {
-                _timer.elapsed -= _timer.delay;
-            } else {
-                timer.clearTimeout(_timer.timerId);
-            }
-        }
-    }
-}
-// Initialize me.timer on Boot event
-on(BOOT, () => {
-    // reset variables to initial state
-    timer.reset();
-    now = last = 0;
-    // register to the game before update event
-    on(GAME_BEFORE_UPDATE, update);
-});
-
-
-/**
+ * @classdesc
  * a Timer class to manage timing related function (FPS, Game Tick, Time...)
- * @namespace timer
+  * @see {@link ti,er} a default global timer instance
  */
-var timer = {
+class Timer {
 
+    constructor() {
         /**
          * Last game tick value.<br/>
          * Use this value to scale velocities during frame drops due to slow
@@ -32288,7 +32220,7 @@ var timer = {
          * @name tick
          * @memberof timer
          */
-        tick : 1.0,
+        this.tick = 1.0;
 
         /**
          * Last measured fps rate.<br/>
@@ -32298,7 +32230,7 @@ var timer = {
          * @name fps
          * @memberof timer
          */
-        fps : 0,
+        this.fps = 0;
 
         /**
          * Set the maximum target display frame per second
@@ -32309,7 +32241,7 @@ var timer = {
          * @default 60
          * @memberof timer
          */
-        maxfps : 60,
+        this.maxfps = 60;
 
         /**
          * Enable/disable frame interpolation
@@ -32319,141 +32251,238 @@ var timer = {
          * @name interpolation
          * @memberof timer
          */
-        interpolation : false,
+        this.interpolation = false;
 
-        /**
-         * reset time (e.g. usefull in case of pause)
-         * @name reset
-         * @memberof timer
-         * @ignore
-         */
-        reset() {
-            // set to "now"
-            last = now = globalThis.performance.now();
-            delta = 0;
-            // reset delta counting variables
-            framedelta = 0;
-            framecount = 0;
-            step = Math.ceil(1000 / this.maxfps); // ROUND IT ?
-            // define some step with some margin
-            minstep = (1000 / this.maxfps) * 1.25; // IS IT NECESSARY?\
-        },
+        //hold element to display fps
+        this.framecount = 0;
+        this.framedelta = 0;
 
-        /**
-         * Calls a function once after a specified delay. See me.timer.setInterval to repeativly call a function.
-         * @name setTimeout
-         * @memberof timer
-         * @param {Function} fn the function you want to execute after delay milliseconds.
-         * @param {number} delay the number of milliseconds (thousandths of a second) that the function call should be delayed by.
-         * @param {boolean} [pauseable=true] respects the pause state of the engine.
-         * @param {...*} args optional parameters which are passed through to the function specified by fn once the timer expires.
-         * @returns {number} The numerical ID of the timer, which can be used later with me.timer.clearTimeout().
-         * @example
-         * // set a timer to call "myFunction" after 1000ms
-         * me.timer.setTimeout(myFunction, 1000);
-         * // set a timer to call "myFunction" after 1000ms (respecting the pause state) and passing param1 and param2
-         * me.timer.setTimeout(myFunction, 1000, true, param1, param2);
-         */
-        setTimeout(fn, delay, pauseable, ...args) {
-            timers.push({
-                fn : fn,
-                delay : delay,
-                elapsed : 0,
-                repeat : false,
-                timerId : ++timerId,
-                pauseable : pauseable === true || true,
-                args : args
-            });
-            return timerId;
-        },
+        /* fps count stuff */
+        this.last = 0;
+        this.now = 0;
+        this.delta = 0;
+        // for timeout/interval update
+        this.step =0;
+        this.minstep = 0;
 
-        /**
-         * Calls a function continously at the specified interval.  See setTimeout to call function a single time.
-         * @name setInterval
-         * @memberof timer
-         * @param {Function} fn the function to execute
-         * @param {number} delay the number of milliseconds (thousandths of a second) on how often to execute the function
-         * @param {boolean} [pauseable=true] respects the pause state of the engine.
-         * @param {...*} args optional parameters which are passed through to the function specified by fn once the timer expires.
-         * @returns {number} The numerical ID of the timer, which can be used later with me.timer.clearInterval().
-         * @example
-         * // set a timer to call "myFunction" every 1000ms
-         * me.timer.setInterval(myFunction, 1000);
-         * // set a timer to call "myFunction" every 1000ms (respecting the pause state) and passing param1 and param2
-         * me.timer.setInterval(myFunction, 1000, true, param1, param2);
-         */
-        setInterval(fn, delay, pauseable, ...args) {
-            timers.push({
-                fn : fn,
-                delay : delay,
-                elapsed : 0,
-                repeat : true,
-                timerId : ++timerId,
-                pauseable : pauseable === true || true,
-                args : args
-            });
-            return timerId;
-        },
+        // list of defined timer function
+        this.timers = [];
+        this.timerId = 0;
 
-        /**
-         * Clears the delay set by me.timer.setTimeout().
-         * @name clearTimeout
-         * @memberof timer
-         * @param {number} timeoutID ID of the timeout to be cleared
-         */
-        clearTimeout(timeoutID) {
-            utils.function.defer(clearTimer, this, timeoutID);
-        },
+        // Initialize mtimer on Boot event
+        on(BOOT, () => {
+            // reset variables to initial state
+            this.reset();
+            this.now = this.last = 0;
+            // register to the game before update event
+            on(GAME_BEFORE_UPDATE, this.update.bind(this));
+        });
 
-        /**
-         * Clears the Interval set by me.timer.setInterval().
-         * @name clearInterval
-         * @memberof timer
-         * @param {number} intervalID ID of the interval to be cleared
-         */
-        clearInterval(intervalID) {
-            utils.function.defer(clearTimer, this, intervalID);
-        },
+        // reset timer
+        on(STATE_RESUME, () => {
+            this.reset();
+        });
+        on(STATE_RESTART, () => {
+            this.reset();
+        });
+        on(STATE_CHANGE, () => {
+            this.reset();
+        });
+    }
 
-        /**
-         * Return the current timestamp in milliseconds <br>
-         * since the game has started or since linux epoch (based on browser support for High Resolution Timer)
-         * @name getTime
-         * @memberof timer
-         * @returns {number}
-         */
-        getTime() {
-            return now;
-        },
 
-        /**
-         * Return elapsed time in milliseconds since the last update
-         * @name getDelta
-         * @memberof timer
-         * @returns {number}
-         */
-        getDelta() {
-            return delta;
-        },
+    /**
+     * reset time (e.g. usefull in case of pause)
+     * @name reset
+     * @memberof timer
+     * @ignore
+     */
+    reset() {
+        // set to "now"
+        this.last = this.now = globalThis.performance.now();
+        this.delta = 0;
+        // reset delta counting variables
+        this.framedelta = 0;
+        this.framecount = 0;
+        this.step = Math.ceil(1000 / this.maxfps); // ROUND IT ?
+        // define some step with some margin
+        this.minstep = (1000 / this.maxfps) * 1.25; // IS IT NECESSARY?\
+    }
 
-        /**
-         * compute the actual frame time and fps rate
-         * @name computeFPS
-         * @ignore
-         * @memberof timer
-         */
-        countFPS() {
-            framecount++;
-            framedelta += delta;
-            if (framecount % 10 === 0) {
-                this.fps = clamp(Math.round((1000 * framecount) / framedelta), 0, this.maxfps);
-                framedelta = 0;
-                framecount = 0;
+    /**
+     * Calls a function once after a specified delay. See me.timer.setInterval to repeativly call a function.
+     * @name setTimeout
+     * @memberof timer
+     * @param {Function} fn the function you want to execute after delay milliseconds.
+     * @param {number} delay the number of milliseconds (thousandths of a second) that the function call should be delayed by.
+     * @param {boolean} [pauseable=true] respects the pause state of the engine.
+     * @param {...*} args optional parameters which are passed through to the function specified by fn once the timer expires.
+     * @returns {number} The numerical ID of the timer, which can be used later with me.timer.clearTimeout().
+     * @example
+     * // set a timer to call "myFunction" after 1000ms
+     * me.timer.setTimeout(myFunction, 1000);
+     * // set a timer to call "myFunction" after 1000ms (respecting the pause state) and passing param1 and param2
+     * me.timer.setTimeout(myFunction, 1000, true, param1, param2);
+     */
+    setTimeout(fn, delay, pauseable, ...args) {
+        this.timers.push({
+            fn : fn,
+            delay : delay,
+            elapsed : 0,
+            repeat : false,
+            timerId : ++this.timerId,
+            pauseable : pauseable === true || true,
+            args : args
+        });
+        return this.timerId;
+    }
+
+    /**
+     * Calls a function continously at the specified interval.  See setTimeout to call function a single time.
+     * @name setInterval
+     * @memberof timer
+     * @param {Function} fn the function to execute
+     * @param {number} delay the number of milliseconds (thousandths of a second) on how often to execute the function
+     * @param {boolean} [pauseable=true] respects the pause state of the engine.
+     * @param {...*} args optional parameters which are passed through to the function specified by fn once the timer expires.
+     * @returns {number} The numerical ID of the timer, which can be used later with me.timer.clearInterval().
+     * @example
+     * // set a timer to call "myFunction" every 1000ms
+     * me.timer.setInterval(myFunction, 1000);
+     * // set a timer to call "myFunction" every 1000ms (respecting the pause state) and passing param1 and param2
+     * me.timer.setInterval(myFunction, 1000, true, param1, param2);
+     */
+    setInterval(fn, delay, pauseable, ...args) {
+        this.timers.push({
+            fn : fn,
+            delay : delay,
+            elapsed : 0,
+            repeat : true,
+            timerId : ++this.timerId,
+            pauseable : pauseable === true || true,
+            args : args
+        });
+        return this.timerId;
+    }
+
+    /**
+     * Clears the delay set by me.timer.setTimeout().
+     * @name clearTimeout
+     * @memberof timer
+     * @param {number} timeoutID ID of the timeout to be cleared
+     */
+    clearTimeout(timeoutID) {
+        utils.function.defer(this.clearTimer.bind(this), this, timeoutID);
+    }
+
+    /**
+     * Clears the Interval set by me.timer.setInterval().
+     * @name clearInterval
+     * @memberof timer
+     * @param {number} intervalID ID of the interval to be cleared
+     */
+    clearInterval(intervalID) {
+        utils.function.defer(this.clearTimer.bind(this), this, intervalID);
+    }
+
+    /**
+     * Return the current timestamp in milliseconds <br>
+     * since the game has started or since linux epoch (based on browser support for High Resolution Timer)
+     * @name getTime
+     * @memberof timer
+     * @returns {number}
+     */
+    getTime() {
+        return this.now;
+    }
+
+    /**
+     * Return elapsed time in milliseconds since the last update
+     * @name getDelta
+     * @memberof timer
+     * @returns {number}
+     */
+    getDelta() {
+        return this.delta;
+    }
+
+    /**
+     * compute the actual frame time and fps rate
+     * @name computeFPS
+     * @ignore
+     * @memberof timer
+     */
+    countFPS() {
+        this.framecount++;
+        this.framedelta += this.delta;
+        if (this.framecount % 10 === 0) {
+            this.fps = clamp(Math.round((1000 * this.framecount) / this.framedelta), 0, this.maxfps);
+            this.framedelta = 0;
+            this.framecount = 0;
+        }
+    }
+
+    /**
+     * update
+     * @ignore
+     */
+    update(time) {
+        this.last = this.now;
+        this.now = time;
+        this.delta = (this.now - this.last);
+
+        // fix for negative timestamp returned by wechat or chrome on startup
+        if (this.delta < 0) {
+            this.delta = 0;
+        }
+
+        // get the game tick
+        this.tick = (this.delta > this.minstep && this.interpolation) ? this.delta / this.step : 1;
+
+        this.updateTimers();
+    }
+
+    /**
+     * clear Timers
+     * @ignore
+     */
+    clearTimer(timerId) {
+        for (var i = 0, len = this.timers.length; i < len; i++) {
+            if (this.timers[i].timerId === timerId) {
+                this.timers.splice(i, 1);
+                break;
             }
         }
-};
+    }
 
-var timer$1 = timer;
+
+    /**
+     * update timers
+     * @ignore
+     */
+    updateTimers() {
+        for (var i = 0, len = this.timers.length; i < len; i++) {
+            var _timer = this.timers[i];
+            if (!(_timer.pauseable && state.isPaused())) {
+                _timer.elapsed += this.delta;
+            }
+            if (_timer.elapsed >= _timer.delay) {
+                _timer.fn.apply(null, _timer.args);
+                if (_timer.repeat === true) {
+                    _timer.elapsed -= _timer.delay;
+                } else {
+                    this.clearTimeout(_timer.timerId);
+                }
+            }
+        }
+    }
+}
+/**
+ * a default global Timer instance
+ * @namespace timer
+ * @see Timer
+ */
+const timer = new Timer();
 
 var lastTime = 0;
 var vendors = ["ms", "moz", "webkit", "o"];
@@ -32476,7 +32505,7 @@ for (x = 0; x < vendors.length && !cancelAnimationFrame; ++x) {
 if (!requestAnimationFrame || !cancelAnimationFrame) {
     requestAnimationFrame = function (callback) {
         var currTime = globalThis.performance.now();
-        var timeToCall = Math.max(0, (1000 / timer$1.maxfps) - (currTime - lastTime));
+        var timeToCall = Math.max(0, (1000 / timer.maxfps) - (currTime - lastTime));
         var id = globalThis.setTimeout(function () {
             callback(currTime + timeToCall);
         }, timeToCall);
@@ -33452,7 +33481,7 @@ class Tween {
      * @param {number} [time] the current time when the tween was started
      * @returns {Tween} this instance for object chaining
      */
-    start( time = timer$1.getTime() ) {
+    start( time = timer.getTime() ) {
 
         this._onStartCallbackFired = false;
 
@@ -35701,9 +35730,9 @@ class GUI_Object extends Sprite {
             this.released = false;
             if (this.isHoldable) {
                 if (this.holdTimeout !== null) {
-                    timer$1.clearTimeout(this.holdTimeout);
+                    timer.clearTimeout(this.holdTimeout);
                 }
-                this.holdTimeout = timer$1.setTimeout(this.hold.bind(this), this.holdThreshold, false);
+                this.holdTimeout = timer.setTimeout(this.hold.bind(this), this.holdThreshold, false);
                 this.released = false;
             }
             return this.onClick(event);
@@ -35771,7 +35800,7 @@ class GUI_Object extends Sprite {
         if (this.released === false) {
             this.released = true;
             this.dirty = true;
-            timer$1.clearTimeout(this.holdTimeout);
+            timer.clearTimeout(this.holdTimeout);
             return this.onRelease(event);
         }
     }
@@ -35792,7 +35821,7 @@ class GUI_Object extends Sprite {
      * @ignore
      */
     hold() {
-        timer$1.clearTimeout(this.holdTimeout);
+        timer.clearTimeout(this.holdTimeout);
         this.dirty = true;
         if (!this.released) {
             this.onHold();
@@ -35832,7 +35861,7 @@ class GUI_Object extends Sprite {
         releasePointerEvent("pointercancel", this);
         releasePointerEvent("pointerenter", this);
         releasePointerEvent("pointerleave", this);
-        timer$1.clearTimeout(this.holdTimeout);
+        timer.clearTimeout(this.holdTimeout);
     }
 }
 
@@ -36989,7 +37018,7 @@ class Particle extends Renderable {
         this.onlyInViewport = emitter.settings.onlyInViewport;
 
         // cache inverse of the expected delta time
-        this._deltaInv = timer$1.maxfps / 1000;
+        this._deltaInv = timer.maxfps / 1000;
 
         // Set the start particle rotation as defined in emitter
         // if the particle not follow trajectory
@@ -37553,4 +37582,4 @@ device.onReady(function () {
     }
 });
 
-export { BitmapText, BitmapTextData, Body, Bounds, Camera2d, CanvasRenderer, Collectable, Color, ColorLayer, Container, Draggable, DraggableEntity, DropTarget, DroptargetEntity, Ellipse, Entity, GLShader, GUI_Object, ImageLayer, Light2d, Line, math as Math, Matrix2d, Matrix3d, NineSliceSprite, ObservableVector2d, ObservableVector3d, Particle, ParticleEmitter, ParticleEmitterSettings, Pointer, Polygon, QuadTree, Rect, Renderable, Renderer, RoundRect, Sprite, Stage, TMXHexagonalRenderer, TMXIsometricRenderer, TMXLayer, TMXOrthogonalRenderer, TMXRenderer, TMXStaggeredRenderer, TMXTileMap, TMXTileset, TMXTilesetGroup, Text, TextureAtlas, Tile, Trigger, Tween, Vector2d, Vector3d, WebGLCompositor, WebGLRenderer, World, audio, boot, collision, device, event, game, initialized, input, level, loader, plugin, plugins, pool, save, skipAutoInit, state, timer$1 as timer, utils, version, video, warning };
+export { BitmapText, BitmapTextData, Body, Bounds, Camera2d, CanvasRenderer, Collectable, Color, ColorLayer, Container, Draggable, DraggableEntity, DropTarget, DroptargetEntity, Ellipse, Entity, GLShader, GUI_Object, ImageLayer, Light2d, Line, math as Math, Matrix2d, Matrix3d, NineSliceSprite, ObservableVector2d, ObservableVector3d, Particle, ParticleEmitter, ParticleEmitterSettings, Pointer, Polygon, QuadTree, Rect, Renderable, Renderer, RoundRect, Sprite, Stage, TMXHexagonalRenderer, TMXIsometricRenderer, TMXLayer, TMXOrthogonalRenderer, TMXRenderer, TMXStaggeredRenderer, TMXTileMap, TMXTileset, TMXTilesetGroup, Text, TextureAtlas, Tile, Trigger, Tween, Vector2d, Vector3d, WebGLCompositor, WebGLRenderer, World, audio, boot, collision, device, event, game, initialized, input, level, loader, plugin, plugins, pool, save, skipAutoInit, state, timer, utils, version, video, warning };

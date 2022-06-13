@@ -9748,6 +9748,7 @@ export var event: Readonly<{
     STATE_RESUME: string;
     STATE_STOP: string;
     STATE_RESTART: string;
+    STATE_CHANGE: string;
     VIDEO_INIT: string;
     GAME_INIT: string;
     GAME_RESET: string;
@@ -9793,7 +9794,7 @@ export var game: Readonly<{
     updateFrameRate: typeof updateFrameRate;
     getParentContainer: typeof getParentContainer;
     repaint: typeof repaint;
-    update: typeof update$1;
+    update: typeof update;
     draw: typeof draw;
 }>;
 /**
@@ -11070,162 +11071,12 @@ export namespace state {
      */
     function isCurrent(state: number): boolean;
 }
-declare namespace timer$1 {
-    const tick: number;
-    const fps: number;
-    const maxfps: number;
-    const interpolation: boolean;
-    /**
-     * reset time (e.g. usefull in case of pause)
-     * @name reset
-     * @memberof timer
-     * @ignore
-     */
-    function reset(): void;
-    /**
-     * reset time (e.g. usefull in case of pause)
-     * @name reset
-     * @memberof timer
-     * @ignore
-     */
-    function reset(): void;
-    /**
-     * Calls a function once after a specified delay. See me.timer.setInterval to repeativly call a function.
-     * @name setTimeout
-     * @memberof timer
-     * @param {Function} fn the function you want to execute after delay milliseconds.
-     * @param {number} delay the number of milliseconds (thousandths of a second) that the function call should be delayed by.
-     * @param {boolean} [pauseable=true] respects the pause state of the engine.
-     * @param {...*} args optional parameters which are passed through to the function specified by fn once the timer expires.
-     * @returns {number} The numerical ID of the timer, which can be used later with me.timer.clearTimeout().
-     * @example
-     * // set a timer to call "myFunction" after 1000ms
-     * me.timer.setTimeout(myFunction, 1000);
-     * // set a timer to call "myFunction" after 1000ms (respecting the pause state) and passing param1 and param2
-     * me.timer.setTimeout(myFunction, 1000, true, param1, param2);
-     */
-    function setTimeout(fn: Function, delay: number, pauseable?: boolean, ...args: any[]): number;
-    /**
-     * Calls a function once after a specified delay. See me.timer.setInterval to repeativly call a function.
-     * @name setTimeout
-     * @memberof timer
-     * @param {Function} fn the function you want to execute after delay milliseconds.
-     * @param {number} delay the number of milliseconds (thousandths of a second) that the function call should be delayed by.
-     * @param {boolean} [pauseable=true] respects the pause state of the engine.
-     * @param {...*} args optional parameters which are passed through to the function specified by fn once the timer expires.
-     * @returns {number} The numerical ID of the timer, which can be used later with me.timer.clearTimeout().
-     * @example
-     * // set a timer to call "myFunction" after 1000ms
-     * me.timer.setTimeout(myFunction, 1000);
-     * // set a timer to call "myFunction" after 1000ms (respecting the pause state) and passing param1 and param2
-     * me.timer.setTimeout(myFunction, 1000, true, param1, param2);
-     */
-    function setTimeout(fn: Function, delay: number, pauseable?: boolean, ...args: any[]): number;
-    /**
-     * Calls a function continously at the specified interval.  See setTimeout to call function a single time.
-     * @name setInterval
-     * @memberof timer
-     * @param {Function} fn the function to execute
-     * @param {number} delay the number of milliseconds (thousandths of a second) on how often to execute the function
-     * @param {boolean} [pauseable=true] respects the pause state of the engine.
-     * @param {...*} args optional parameters which are passed through to the function specified by fn once the timer expires.
-     * @returns {number} The numerical ID of the timer, which can be used later with me.timer.clearInterval().
-     * @example
-     * // set a timer to call "myFunction" every 1000ms
-     * me.timer.setInterval(myFunction, 1000);
-     * // set a timer to call "myFunction" every 1000ms (respecting the pause state) and passing param1 and param2
-     * me.timer.setInterval(myFunction, 1000, true, param1, param2);
-     */
-    function setInterval(fn: Function, delay: number, pauseable?: boolean, ...args: any[]): number;
-    /**
-     * Calls a function continously at the specified interval.  See setTimeout to call function a single time.
-     * @name setInterval
-     * @memberof timer
-     * @param {Function} fn the function to execute
-     * @param {number} delay the number of milliseconds (thousandths of a second) on how often to execute the function
-     * @param {boolean} [pauseable=true] respects the pause state of the engine.
-     * @param {...*} args optional parameters which are passed through to the function specified by fn once the timer expires.
-     * @returns {number} The numerical ID of the timer, which can be used later with me.timer.clearInterval().
-     * @example
-     * // set a timer to call "myFunction" every 1000ms
-     * me.timer.setInterval(myFunction, 1000);
-     * // set a timer to call "myFunction" every 1000ms (respecting the pause state) and passing param1 and param2
-     * me.timer.setInterval(myFunction, 1000, true, param1, param2);
-     */
-    function setInterval(fn: Function, delay: number, pauseable?: boolean, ...args: any[]): number;
-    /**
-     * Clears the delay set by me.timer.setTimeout().
-     * @name clearTimeout
-     * @memberof timer
-     * @param {number} timeoutID ID of the timeout to be cleared
-     */
-    function clearTimeout(timeoutID: number): void;
-    /**
-     * Clears the delay set by me.timer.setTimeout().
-     * @name clearTimeout
-     * @memberof timer
-     * @param {number} timeoutID ID of the timeout to be cleared
-     */
-    function clearTimeout(timeoutID: number): void;
-    /**
-     * Clears the Interval set by me.timer.setInterval().
-     * @name clearInterval
-     * @memberof timer
-     * @param {number} intervalID ID of the interval to be cleared
-     */
-    function clearInterval(intervalID: number): void;
-    /**
-     * Clears the Interval set by me.timer.setInterval().
-     * @name clearInterval
-     * @memberof timer
-     * @param {number} intervalID ID of the interval to be cleared
-     */
-    function clearInterval(intervalID: number): void;
-    /**
-     * Return the current timestamp in milliseconds <br>
-     * since the game has started or since linux epoch (based on browser support for High Resolution Timer)
-     * @name getTime
-     * @memberof timer
-     * @returns {number}
-     */
-    function getTime(): number;
-    /**
-     * Return the current timestamp in milliseconds <br>
-     * since the game has started or since linux epoch (based on browser support for High Resolution Timer)
-     * @name getTime
-     * @memberof timer
-     * @returns {number}
-     */
-    function getTime(): number;
-    /**
-     * Return elapsed time in milliseconds since the last update
-     * @name getDelta
-     * @memberof timer
-     * @returns {number}
-     */
-    function getDelta(): number;
-    /**
-     * Return elapsed time in milliseconds since the last update
-     * @name getDelta
-     * @memberof timer
-     * @returns {number}
-     */
-    function getDelta(): number;
-    /**
-     * compute the actual frame time and fps rate
-     * @name computeFPS
-     * @ignore
-     * @memberof timer
-     */
-    function countFPS(): void;
-    /**
-     * compute the actual frame time and fps rate
-     * @name computeFPS
-     * @ignore
-     * @memberof timer
-     */
-    function countFPS(): void;
-}
+/**
+ * a default global Timer instance
+ * @namespace timer
+ * @see Timer
+ */
+export const timer: Timer;
 export namespace utils {
     export { agentUtils as agent };
     export { arrayUtils as array };
@@ -11995,7 +11846,7 @@ declare function repaint(): void;
  * @param {number} time current timestamp as provided by the RAF callback
  * @param {Stage} stage the current stage
  */
-declare function update$1(time: number, stage: Stage): void;
+declare function update(time: number, stage: Stage): void;
 /**
  * draw the current scene/stage
  * @function game.draw
@@ -12394,6 +12245,153 @@ declare class ObjectPool {
      */
     getInstanceCount(): number;
 }
+/**
+ * @classdesc
+ * a Timer class to manage timing related function (FPS, Game Tick, Time...)
+  * @see {@link ti,er} a default global timer instance
+ */
+declare class Timer {
+    /**
+     * Last game tick value.<br/>
+     * Use this value to scale velocities during frame drops due to slow
+     * hardware or when setting an FPS limit. (See {@link timer.maxfps})
+     * This feature is disabled by default. Enable me.timer.interpolation to
+     * use it.
+     * @public
+     * @see timer.interpolation
+     * @type {number}
+     * @name tick
+     * @memberof timer
+     */
+    public tick: number;
+    /**
+     * Last measured fps rate.<br/>
+     * This feature is disabled by default, unless the debugPanel is enabled/visible
+     * @public
+     * @type {number}
+     * @name fps
+     * @memberof timer
+     */
+    public fps: number;
+    /**
+     * Set the maximum target display frame per second
+     * @public
+     * @see timer.tick
+     * @type {number}
+     * @name maxfps
+     * @default 60
+     * @memberof timer
+     */
+    public maxfps: number;
+    /**
+     * Enable/disable frame interpolation
+     * @see timer.tick
+     * @type {boolean}
+     * @default false
+     * @name interpolation
+     * @memberof timer
+     */
+    interpolation: boolean;
+    framecount: number;
+    framedelta: number;
+    last: number;
+    now: number;
+    delta: number;
+    step: number;
+    minstep: number;
+    timers: any[];
+    timerId: number;
+    /**
+     * reset time (e.g. usefull in case of pause)
+     * @name reset
+     * @memberof timer
+     * @ignore
+     */
+    reset(): void;
+    /**
+     * Calls a function once after a specified delay. See me.timer.setInterval to repeativly call a function.
+     * @name setTimeout
+     * @memberof timer
+     * @param {Function} fn the function you want to execute after delay milliseconds.
+     * @param {number} delay the number of milliseconds (thousandths of a second) that the function call should be delayed by.
+     * @param {boolean} [pauseable=true] respects the pause state of the engine.
+     * @param {...*} args optional parameters which are passed through to the function specified by fn once the timer expires.
+     * @returns {number} The numerical ID of the timer, which can be used later with me.timer.clearTimeout().
+     * @example
+     * // set a timer to call "myFunction" after 1000ms
+     * me.timer.setTimeout(myFunction, 1000);
+     * // set a timer to call "myFunction" after 1000ms (respecting the pause state) and passing param1 and param2
+     * me.timer.setTimeout(myFunction, 1000, true, param1, param2);
+     */
+    setTimeout(fn: Function, delay: number, pauseable?: boolean, ...args: any[]): number;
+    /**
+     * Calls a function continously at the specified interval.  See setTimeout to call function a single time.
+     * @name setInterval
+     * @memberof timer
+     * @param {Function} fn the function to execute
+     * @param {number} delay the number of milliseconds (thousandths of a second) on how often to execute the function
+     * @param {boolean} [pauseable=true] respects the pause state of the engine.
+     * @param {...*} args optional parameters which are passed through to the function specified by fn once the timer expires.
+     * @returns {number} The numerical ID of the timer, which can be used later with me.timer.clearInterval().
+     * @example
+     * // set a timer to call "myFunction" every 1000ms
+     * me.timer.setInterval(myFunction, 1000);
+     * // set a timer to call "myFunction" every 1000ms (respecting the pause state) and passing param1 and param2
+     * me.timer.setInterval(myFunction, 1000, true, param1, param2);
+     */
+    setInterval(fn: Function, delay: number, pauseable?: boolean, ...args: any[]): number;
+    /**
+     * Clears the delay set by me.timer.setTimeout().
+     * @name clearTimeout
+     * @memberof timer
+     * @param {number} timeoutID ID of the timeout to be cleared
+     */
+    clearTimeout(timeoutID: number): void;
+    /**
+     * Clears the Interval set by me.timer.setInterval().
+     * @name clearInterval
+     * @memberof timer
+     * @param {number} intervalID ID of the interval to be cleared
+     */
+    clearInterval(intervalID: number): void;
+    /**
+     * Return the current timestamp in milliseconds <br>
+     * since the game has started or since linux epoch (based on browser support for High Resolution Timer)
+     * @name getTime
+     * @memberof timer
+     * @returns {number}
+     */
+    getTime(): number;
+    /**
+     * Return elapsed time in milliseconds since the last update
+     * @name getDelta
+     * @memberof timer
+     * @returns {number}
+     */
+    getDelta(): number;
+    /**
+     * compute the actual frame time and fps rate
+     * @name computeFPS
+     * @ignore
+     * @memberof timer
+     */
+    countFPS(): void;
+    /**
+     * update
+     * @ignore
+     */
+    update(time: any): void;
+    /**
+     * clear Timers
+     * @ignore
+     */
+    clearTimer(timerId: any): void;
+    /**
+     * update timers
+     * @ignore
+     */
+    updateTimers(): void;
+}
 declare var agentUtils: Readonly<{
     __proto__: any;
     prefixed: typeof prefixed;
@@ -12671,4 +12669,4 @@ declare function defer(func: Function, thisArg: object, ...args: any[]): number;
  * @returns {Function} the function that will be throttled
  */
 declare function throttle(fn: Function, delay: number, no_trailing: any): Function;
-export { math as Math, timer$1 as timer };
+export { math as Math };
