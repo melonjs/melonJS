@@ -3,17 +3,17 @@
 ## [10.11.0] (melonJS 2) - _2022-XX-XX_
 
 ### Changed
+- Core: fix all rollup "$1" duplicated declaration and/or export
 - Core: refactored Timer into an instantiable class with `time` (namespace) now being a default instance of the Timer class
 - Doc: replaced JSDoc by Webdoc for documentation generation (huge thanks to @ShukantPal)
 
 ### Fixed
+- Bounds: fix the `addFrame()` method
 - Core: fix a regression when accessing `localStorage`
 - Core: fix a regression when when running melonJS in node.js (undefined global reference in the roundRect polyfill)
+- Geometry: fix the RoundRect `clone()` method
 - Input: fix PointerEvent detection on Firefox for Android mobile (thanks @kutyamutya)
 - Renderer: fix a regression with `strokeLine()` in the CanvasRenderer
-- Geometry: fix the RoundRect `clone()` method
-- Bounds: fix the `addFrame()` method
-
 
 ## [10.10.0] (melonJS 2) - _2022-06-07_
 
