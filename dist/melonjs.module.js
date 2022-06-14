@@ -309,10 +309,10 @@ var store$2 = sharedStore;
 (shared$3.exports = function (key, value) {
   return store$2[key] || (store$2[key] = value !== undefined ? value : {});
 })('versions', []).push({
-  version: '3.22.8',
+  version: '3.23.0',
   mode: 'global',
   copyright: '© 2014-2022 Denis Pushkarev (zloirock.ru)',
-  license: 'https://github.com/zloirock/core-js/blob/v3.22.8/LICENSE',
+  license: 'https://github.com/zloirock/core-js/blob/v3.23.0/LICENSE',
   source: 'https://github.com/zloirock/core-js'
 });
 
@@ -526,11 +526,11 @@ objectDefineProperty.f = DESCRIPTORS$3 ? V8_PROTOTYPE_DEFINE_BUG ? function defi
 };
 
 var DESCRIPTORS$2 = descriptors;
-var definePropertyModule$1 = objectDefineProperty;
+var definePropertyModule$2 = objectDefineProperty;
 var createPropertyDescriptor = createPropertyDescriptor$2;
 
-var createNonEnumerableProperty$3 = DESCRIPTORS$2 ? function (object, key, value) {
-  return definePropertyModule$1.f(object, key, createPropertyDescriptor(1, value));
+var createNonEnumerableProperty$2 = DESCRIPTORS$2 ? function (object, key, value) {
+  return definePropertyModule$2.f(object, key, createPropertyDescriptor(1, value));
 } : function (object, key, value) {
   object[key] = value;
   return object;
@@ -594,7 +594,7 @@ var NATIVE_WEAK_MAP = nativeWeakMap;
 var global$3 = global$b;
 var uncurryThis$2 = functionUncurryThis;
 var isObject = isObject$5;
-var createNonEnumerableProperty$2 = createNonEnumerableProperty$3;
+var createNonEnumerableProperty$1 = createNonEnumerableProperty$2;
 var hasOwn$3 = hasOwnProperty_1;
 var shared = sharedStore;
 var sharedKey = sharedKey$1;
@@ -641,7 +641,7 @@ if (NATIVE_WEAK_MAP || shared.state) {
   set = function (it, metadata) {
     if (hasOwn$3(it, STATE)) throw new TypeError$1(OBJECT_ALREADY_INITIALIZED);
     metadata.facade = it;
-    createNonEnumerableProperty$2(it, STATE, metadata);
+    createNonEnumerableProperty$1(it, STATE, metadata);
     return metadata;
   };
   get = function (it) {
@@ -710,7 +710,7 @@ Function.prototype.toString = makeBuiltIn$1(function toString() {
 }, 'toString');
 
 var isCallable$1 = isCallable$a;
-var createNonEnumerableProperty$1 = createNonEnumerableProperty$3;
+var definePropertyModule$1 = objectDefineProperty;
 var makeBuiltIn = makeBuiltIn$2.exports;
 var defineGlobalProperty$1 = defineGlobalProperty$3;
 
@@ -726,7 +726,12 @@ var defineBuiltIn$1 = function (O, key, value, options) {
     if (!options.unsafe) delete O[key];
     else if (O[key]) simple = true;
     if (simple) O[key] = value;
-    else createNonEnumerableProperty$1(O, key, value);
+    else definePropertyModule$1.f(O, key, {
+      value: value,
+      enumerable: false,
+      configurable: !options.nonConfigurable,
+      writable: !options.nonWritable
+    });
   } return O;
 };
 
@@ -923,7 +928,7 @@ var isForced_1 = isForced$1;
 
 var global$2 = global$b;
 var getOwnPropertyDescriptor = objectGetOwnPropertyDescriptor.f;
-var createNonEnumerableProperty = createNonEnumerableProperty$3;
+var createNonEnumerableProperty = createNonEnumerableProperty$2;
 var defineBuiltIn = defineBuiltIn$1;
 var defineGlobalProperty = defineGlobalProperty$3;
 var copyConstructorProperties = copyConstructorProperties$1;
