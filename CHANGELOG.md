@@ -1,6 +1,6 @@
 # Changelog
 
-## [10.11.0] (melonJS 2) - _2022-XX-XX_
+## [10.11.0] (melonJS 2) - _2022-06-14_
 
 ### Changed
 - Core: fix all rollup "$1" related duplicated declaration and/or export
