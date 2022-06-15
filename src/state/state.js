@@ -428,14 +428,20 @@ var state = {
 
     /**
      * returns the stage associated with the specified state
+     * (or the current one if none is specified)
      * @name set
      * @memberof state
      * @public
-     * @param {number} state State ID (see constants)
+     * @param {number} [state] State ID (see constants)
      * @returns {Stage}
      */
-    get(state) {
-        return _stages[state].stage;
+    get(state = _state) {
+        if (typeof _stages[state] !== "undefined") {
+            return _stages[state].stage;
+        } else {
+            return undefined;
+        }
+
     },
 
     /**
@@ -447,7 +453,7 @@ var state = {
      * @returns {Stage}
      */
     current() {
-        return this.get(_state);
+        return this.get();
     },
 
     /**
