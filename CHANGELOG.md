@@ -2,6 +2,9 @@
 
 ## [10.12.0] (melonJS 2) - _2022-06-xx_
 
+### Added
+- State: new `get(state)` function that return the instance to the Stage associated with the given state
+
 ## [10.11.0] (melonJS 2) - _2022-06-14_
 
 ### Changed
