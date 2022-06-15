@@ -13,6 +13,7 @@ import { world } from "./../game.js";
 /**
  * @classdesc
  * a Generic Physic Body Object with some physic properties and behavior functionality, to as a member of a Renderable.
+ * @see Renderable.body
  */
 class Body {
     /**
