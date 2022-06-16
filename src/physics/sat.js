@@ -458,7 +458,7 @@ export function testPolygonEllipse(a, polyA, b, ellipseB, response) {
  */
 export function testEllipsePolygon(a, ellipseA, b, polyB, response) {
     // Test the polygon against the circle.
-    var result = this.testPolygonEllipse(b, polyB, a, ellipseA, response);
+    var result = testPolygonEllipse(b, polyB, a, ellipseA, response);
     if (result && response) {
         // Swap A and B in the response.
         var resa = response.a;

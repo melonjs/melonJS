@@ -5,6 +5,9 @@
 ### Added
 - State: new `get(state)` function that return the instance to the Stage associated with the given state
 
+### Fixed
+- Physic: fix a regression with Ellipse vs Polygon SAT collision detection
+
 ## [10.11.0] (melonJS 2) - _2022-06-14_
 
 ### Changed
