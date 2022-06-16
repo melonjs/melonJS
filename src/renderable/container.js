@@ -187,8 +187,10 @@ class Container extends Renderable {
      * Adding a child to the container will automatically remove it from its other container.
      * Meaning a child can only have one parent.  This is important if you add a renderable
      * to a container then add it to the me.game.world container it will move it out of the
-     * orginal container.  Then when the me.game.world.reset() is called the renderable
-     * will not be in any container.
+     * orginal container. Then when the me.game.world.reset() is called the renderable
+     * will not be in any container. <br>
+     * if the given child implements a onActivateEvent method, that method will be called
+     * once the child is added to this container.
      * @name addChild
      * @memberof Container
      * @param {Renderable} child
@@ -630,7 +632,8 @@ class Container extends Renderable {
     }
 
     /**
-     * Invokes the removeChildNow in a defer, to ensure the child is removed safely after the update & draw stack has completed
+     * Invokes the removeChildNow in a defer, to ensure the child is removed safely after the update & draw stack has completed. <br>
+     * if the given child implements a onDeactivateEvent() method, that method will be called once the child is removed from this container.
      * @name removeChild
      * @memberof Container
      * @public
