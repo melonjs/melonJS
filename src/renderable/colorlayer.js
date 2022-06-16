@@ -41,8 +41,12 @@ class ColorLayer extends Renderable {
     }
 
     /**
-     * draw the color layer
-     * @ignore
+     * draw this color layer (automatically called by melonJS)
+     * @name draw
+     * @memberof ColorLayer
+     * @protected
+     * @param {CanvasRenderer|WebGLRenderer} renderer a renderer instance
+     * @param {Rect|Bounds} [rect] the area or viewport to (re)draw
      */
     draw(renderer, rect) {
         var vpos = viewport.pos;

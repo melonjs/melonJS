@@ -933,12 +933,11 @@ class Container extends Renderable {
     }
 
     /**
-     * draw the container. <br>
-     * automatically called by the game manager {@link game}
+      * draw this renderable (automatically called by melonJS)
      * @name draw
      * @memberof Container
      * @protected
-     * @param {CanvasRenderer|WebGLRenderer} renderer a renderer object
+     * @param {CanvasRenderer|WebGLRenderer} renderer a renderer instance
      * @param {Rect|Bounds} [rect] the area or viewport to (re)draw
      */
     draw(renderer, rect) {

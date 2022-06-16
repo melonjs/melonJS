@@ -735,14 +735,14 @@ class Renderable extends Rect {
     }
 
     /**
-     * object draw. <br>
-     * automatically called by the game manager {@link game}
+     * draw this renderable (automatically called by melonJS)
      * @name draw
      * @memberof Renderable
      * @protected
-     * @param {CanvasRenderer|WebGLRenderer} renderer a renderer object
+     * @param {CanvasRenderer|WebGLRenderer} renderer a renderer instance
+     * @param {Rect|Bounds} [rect] the area or viewport to (re)draw
      */
-    draw(renderer) {  // eslint-disable-line no-unused-vars
+    draw(renderer, rect) {  // eslint-disable-line no-unused-vars
         // empty one !
     }
 

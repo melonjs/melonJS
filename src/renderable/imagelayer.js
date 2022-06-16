@@ -243,14 +243,14 @@ class ImageLayer extends Sprite {
     }
 
     /**
-     * draw the ImageLayer. <br>
-     * automatically called by the game manager {@link game}
+     * draw this ImageLayer (automatically called by melonJS)
      * @name draw
      * @memberof ImageLayer
      * @protected
-     * @param {CanvasRenderer|WebGLRenderer} renderer a renderer object
+     * @param {CanvasRenderer|WebGLRenderer} renderer a renderer instance
+     * @param {Rect|Bounds} [rect] the area or viewport to (re)draw
      */
-    draw(renderer) {
+    draw(renderer, rect) {   // eslint-disable-line no-unused-vars
         var width = this.width,
             height = this.height,
             bw = viewport.bounds.width,
