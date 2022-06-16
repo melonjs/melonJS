@@ -75,7 +75,7 @@
     "karma-chrome-launcher": "^3.1.1",
     "karma-coverage": "^2.2.0",
     "karma-html-detailed-reporter": "^2.1.0",
-    "karma-jasmine": "^5.0.1",
+    "karma-jasmine": "^5.1.0",
     "karma-nyan-reporter": "0.2.5",
     "rollup": "^2.75.6",
     "rollup-plugin-bundle-size": "^1.0.3",
