@@ -792,7 +792,7 @@ class Renderable extends Rect {
      *     return true;
      * },
      */
-    onCollision() {
+    onCollision(response, other) { // eslint-disable-line no-unused-vars
         return false;
     }
 
