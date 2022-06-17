@@ -8,6 +8,7 @@
 ### Fixed
 - TypeScript: fix and uniform draw method signature across all renderables
 - TypeScript: fix typings for the `onCollision` method
+- TypeScript: fix `setMaxVelocity` and `setFriction` method scope
 - Physic: fix a regression with Ellipse vs Polygon SAT collision detection
 
 ## [10.11.0] (melonJS 2) - _2022-06-14_

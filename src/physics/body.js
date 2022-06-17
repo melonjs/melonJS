@@ -574,7 +574,6 @@ class Body {
      * cap the body velocity (body.maxVel property) to the specified value<br>
      * @param {number} x max velocity on x axis
      * @param {number} y max velocity on y axis
-     * @protected
      */
     setMaxVelocity(x, y) {
         this.maxVel.x = x;
@@ -585,7 +584,6 @@ class Body {
      * set the body default friction
      * @param {number} x horizontal friction
      * @param {number} y vertical friction
-     * @protected
      */
     setFriction(x = 0, y = 0) {
         this.friction.x = x;
