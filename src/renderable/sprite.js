@@ -591,9 +591,9 @@ class Sprite extends Renderable {
      * @memberof Sprite
      * @protected
      * @param {CanvasRenderer|WebGLRenderer} renderer a renderer instance
-     * @param {Rect|Bounds} [rect] the area or viewport to (re)draw
+     * @param {Camera2d} [viewport] the viewport to (re)draw
      */
-    draw(renderer, rect) {   // eslint-disable-line no-unused-vars
+    draw(renderer, viewport) {   // eslint-disable-line no-unused-vars
         // do nothing if we are flickering
         if (this._flicker.isFlickering) {
             this._flicker.state = !this._flicker.state;

@@ -941,9 +941,9 @@ class Container extends Renderable {
      * @memberof Container
      * @protected
      * @param {CanvasRenderer|WebGLRenderer} renderer a renderer instance
-     * @param {Rect|Bounds} [rect] the area or viewport to (re)draw
+     * @param {Camera2d} [viewport] the viewport to (re)draw
      */
-    draw(renderer, rect) {
+    draw(renderer, viewport) {
         var isFloating = false;
         var bounds = this.getBounds();
 
@@ -985,7 +985,7 @@ class Container extends Renderable {
                     obj.preDraw(renderer);
 
                     // draw the object
-                    obj.draw(renderer, rect);
+                    obj.draw(renderer, viewport);
 
                     // postdraw (clean-up);
                     obj.postDraw(renderer);

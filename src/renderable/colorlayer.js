@@ -1,5 +1,4 @@
 import pool from "./../system/pooling.js";
-import { viewport } from "./../game.js";
 import Renderable from "./renderable.js";
 
 
@@ -46,14 +45,13 @@ class ColorLayer extends Renderable {
      * @memberof ColorLayer
      * @protected
      * @param {CanvasRenderer|WebGLRenderer} renderer a renderer instance
-     * @param {Rect|Bounds} [rect] the area or viewport to (re)draw
+     * @param {Camera2d} [viewport] the viewport to (re)draw
      */
-    draw(renderer, rect) {
-        var vpos = viewport.pos;
+    draw(renderer, viewport) {
         renderer.save();
         renderer.clipRect(
-            rect.left - vpos.x, rect.top - vpos.y,
-            rect.width, rect.height
+            0, 0,
+            viewport.width, viewport.height
         );
         renderer.clearColor(this.color);
         renderer.restore();

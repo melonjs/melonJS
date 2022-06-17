@@ -90,10 +90,14 @@ class Light2d extends Renderable {
     }
 
     /**
-     * object draw (Called internally by the engine).
-     * @ignore
+     * draw this Light2d (automatically called by melonJS)
+     * @name draw
+     * @memberof Light2d
+     * @protected
+     * @param {CanvasRenderer|WebGLRenderer} renderer a renderer instance
+     * @param {Camera2d} [viewport] the viewport to (re)draw
      */
-    draw(renderer) {
+    draw(renderer, viewport) {   // eslint-disable-line no-unused-vars
         renderer.drawImage(this.texture.canvas, this.getBounds().x, this.getBounds().y);
     }
 

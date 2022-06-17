@@ -6,7 +6,7 @@
 - State: new `get(state)` function that return the instance to the Stage associated with the given state
 
 ### Fixed
-- TypeScript: uniform draw method signature across all renderables
+- TypeScript: fix and uniform draw method signature across all renderables
 - Physic: fix a regression with Ellipse vs Polygon SAT collision detection
 
 ## [10.11.0] (melonJS 2) - _2022-06-14_
