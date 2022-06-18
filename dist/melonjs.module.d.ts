@@ -184,6 +184,7 @@ export class BitmapTextData {
 /**
  * @classdesc
  * a Generic Physic Body Object with some physic properties and behavior functionality, to as a member of a Renderable.
+ * @see Renderable.body
  */
 export class Body {
     /**
@@ -477,16 +478,14 @@ export class Body {
      * cap the body velocity (body.maxVel property) to the specified value<br>
      * @param {number} x max velocity on x axis
      * @param {number} y max velocity on y axis
-     * @protected
      */
-    protected setMaxVelocity(x: number, y: number): void;
+    setMaxVelocity(x: number, y: number): void;
     /**
      * set the body default friction
      * @param {number} x horizontal friction
      * @param {number} y vertical friction
-     * @protected
      */
-    protected setFriction(x?: number, y?: number): void;
+    setFriction(x?: number, y?: number): void;
     /**
      * compute the new velocity value
      * @ignore
@@ -1654,11 +1653,6 @@ export class ColorLayer extends Renderable {
     public color: Color;
     onResetEvent(name: any, color: any, z?: number): void;
     /**
-     * draw the color layer
-     * @ignore
-     */
-    draw(renderer: any, rect: any): void;
-    /**
      * Destroy function
      * @ignore
      */
@@ -1739,7 +1733,7 @@ export class Container extends Renderable {
      * @memberof Container#
      * @param {number} index added or removed child index
      */
-    onChildChange: () => void;
+    onChildChange: (index: number) => void;
     /**
      * Specify if the container bounds should automatically take in account
      * all child bounds when updated (this is expensive and disabled by default,
@@ -1780,8 +1774,10 @@ export class Container extends Renderable {
      * Adding a child to the container will automatically remove it from its other container.
      * Meaning a child can only have one parent.  This is important if you add a renderable
      * to a container then add it to the me.game.world container it will move it out of the
-     * orginal container.  Then when the me.game.world.reset() is called the renderable
-     * will not be in any container.
+     * orginal container. Then when the me.game.world.reset() is called the renderable
+     * will not be in any container. <br>
+     * if the given child implements a onActivateEvent method, that method will be called
+     * once the child is added to this container.
      * @name addChild
      * @memberof Container
      * @param {Renderable} child
@@ -1954,7 +1950,8 @@ export class Container extends Renderable {
      */
     onActivateEvent(): void;
     /**
-     * Invokes the removeChildNow in a defer, to ensure the child is removed safely after the update & draw stack has completed
+     * Invokes the removeChildNow in a defer, to ensure the child is removed safely after the update & draw stack has completed. <br>
+     * if the given child implements a onDeactivateEvent() method, that method will be called once the child is removed from this container.
      * @name removeChild
      * @memberof Container
      * @public
@@ -2041,16 +2038,6 @@ export class Container extends Renderable {
      * @ignore
      */
     _sortY(a: any, b: any): number;
-    /**
-     * draw the container. <br>
-     * automatically called by the game manager {@link game}
-     * @name draw
-     * @memberof Container
-     * @protected
-     * @param {CanvasRenderer|WebGLRenderer} renderer a renderer object
-     * @param {Rect|Bounds} [rect] the area or viewport to (re)draw
-     */
-    protected draw(renderer: CanvasRenderer | WebGLRenderer, rect?: Rect | Bounds): void;
 }
 /**
  * @classdesc
@@ -2174,7 +2161,7 @@ export class DropTarget extends Renderable {
      * @memberof DropTarget
      * @param {Draggable} draggable the draggable object that is dropped
      */
-    drop(): void;
+    drop(draggable: Draggable): void;
     /**
      * Destructor
      * @name destroy
@@ -2302,7 +2289,7 @@ export class Ellipse {
      * @param {Matrix2d} matrix the transformation matrix
      * @returns {Polygon} Reference to this object for method chaining
      */
-    transform(): Polygon;
+    transform(matrix: Matrix2d): Polygon;
     /**
      * translate the circle/ellipse by the specified offset
      * @name translate
@@ -2440,17 +2427,6 @@ export class Entity extends Renderable {
      */
     onBodyUpdate(body: Body): void;
     preDraw(renderer: any): void;
-    /**
-     * object draw<br>
-     * not to be called by the end user<br>
-     * called by the game manager on each game loop
-     * @name draw
-     * @memberof Entity
-     * @protected
-     * @param {CanvasRenderer|WebGLRenderer} renderer a renderer object
-     * @param {Rect} rect region to draw
-     */
-    protected draw(renderer: CanvasRenderer | WebGLRenderer, rect: Rect): void;
     /**
      * onDeactivateEvent Notification function<br>
      * Called by engine before deleting the object
@@ -2667,7 +2643,7 @@ export class GUI_Object extends Sprite {
      * @param {Pointer} event the event object
      * @returns {boolean} return false if we need to stop propagating the event
      */
-    public onClick(): boolean;
+    public onClick(event: Pointer): boolean;
     /**
      * function callback for the pointerEnter event
      * @ignore
@@ -2680,7 +2656,7 @@ export class GUI_Object extends Sprite {
      * @public
      * @param {Pointer} event the event object
      */
-    public onOver(): void;
+    public onOver(event: Pointer): void;
     /**
      * function callback for the pointerLeave event
      * @ignore
@@ -2693,7 +2669,7 @@ export class GUI_Object extends Sprite {
      * @public
      * @param {Pointer} event the event object
      */
-    public onOut(): void;
+    public onOut(event: Pointer): void;
     /**
      * function callback for the pointerup event
      * @ignore
@@ -2871,11 +2847,6 @@ export class Light2d extends Renderable {
      * @returns {Ellipse} the light visible mask
      */
     getVisibleArea(): Ellipse;
-    /**
-     * object draw (Called internally by the engine).
-     * @ignore
-     */
-    draw(renderer: any): void;
     /**
      * Destroy function<br>
      * @ignore
@@ -6127,14 +6098,14 @@ export class Renderable extends Rect {
      */
     protected preDraw(renderer: CanvasRenderer | WebGLRenderer): void;
     /**
-     * object draw. <br>
-     * automatically called by the game manager {@link game}
+     * draw this renderable (automatically called by melonJS)
      * @name draw
      * @memberof Renderable
      * @protected
-     * @param {CanvasRenderer|WebGLRenderer} renderer a renderer object
+     * @param {CanvasRenderer|WebGLRenderer} renderer a renderer instance
+     * @param {Camera2d} [viewport] the viewport to (re)draw
      */
-    protected draw(renderer: CanvasRenderer | WebGLRenderer): void;
+    protected draw(renderer: CanvasRenderer | WebGLRenderer, viewport?: Camera2d): void;
     /**
      * restore the rendering context after drawing. <br>
      * automatically called by the game manager {@link game}
@@ -6166,7 +6137,7 @@ export class Renderable extends Rect {
      *     return true;
      * },
      */
-    onCollision(): boolean;
+    onCollision(response: collision.ResponseObject, other: Renderable): boolean;
     /**
      * Destroy function<br>
      * @ignore
@@ -10955,6 +10926,26 @@ export namespace state {
      * me.state.set(me.state.MENU, new MenuScreen());
      */
     function set(state: number, stage: Stage, start?: boolean): void;
+    /**
+     * returns the stage associated with the specified state
+     * (or the current one if none is specified)
+     * @name set
+     * @memberof state
+     * @public
+     * @param {number} [state] State ID (see constants)
+     * @returns {Stage}
+     */
+    function get(state?: number): Stage;
+    /**
+     * returns the stage associated with the specified state
+     * (or the current one if none is specified)
+     * @name set
+     * @memberof state
+     * @public
+     * @param {number} [state] State ID (see constants)
+     * @returns {Stage}
+     */
+    function get(state?: number): Stage;
     /**
      * return a reference to the current stage<br>
      * useful to call a object specific method

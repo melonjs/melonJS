@@ -1,5 +1,5 @@
 /*!
- * melonJS Game Engine - v10.11.0
+ * melonJS Game Engine - v10.12.0
  * http://www.melonjs.org
  * melonjs is licensed under the MIT License.
  * http://www.opensource.org/licenses/mit-license
@@ -309,10 +309,10 @@ var store$2 = sharedStore;
 (shared$3.exports = function (key, value) {
   return store$2[key] || (store$2[key] = value !== undefined ? value : {});
 })('versions', []).push({
-  version: '3.23.0',
+  version: '3.23.1',
   mode: 'global',
   copyright: '© 2014-2022 Denis Pushkarev (zloirock.ru)',
-  license: 'https://github.com/zloirock/core-js/blob/v3.23.0/LICENSE',
+  license: 'https://github.com/zloirock/core-js/blob/v3.23.1/LICENSE',
   source: 'https://github.com/zloirock/core-js'
 });
 
@@ -14456,14 +14456,14 @@ class Renderable extends Rect {
     }
 
     /**
-     * object draw. <br>
-     * automatically called by the game manager {@link game}
+     * draw this renderable (automatically called by melonJS)
      * @name draw
      * @memberof Renderable
      * @protected
-     * @param {CanvasRenderer|WebGLRenderer} renderer a renderer object
+     * @param {CanvasRenderer|WebGLRenderer} renderer a renderer instance
+     * @param {Camera2d} [viewport] the viewport to (re)draw
      */
-    draw(renderer) {  // eslint-disable-line no-unused-vars
+    draw(renderer, viewport) {  // eslint-disable-line no-unused-vars
         // empty one !
     }
 
@@ -14513,7 +14513,7 @@ class Renderable extends Rect {
      *     return true;
      * },
      */
-    onCollision() {
+    onCollision(response, other) { // eslint-disable-line no-unused-vars
         return false;
     }
 
@@ -14733,7 +14733,7 @@ class Ellipse {
      * @param {Matrix2d} matrix the transformation matrix
      * @returns {Polygon} Reference to this object for method chaining
      */
-    transform(/* m */) {
+    transform(matrix) { // eslint-disable-line no-unused-vars
         // TODO
         return this;
     }
@@ -15301,7 +15301,7 @@ function testPolygonEllipse(a, polyA, b, ellipseB, response) {
  */
 function testEllipsePolygon(a, ellipseA, b, polyB, response) {
     // Test the polygon against the circle.
-    var result = this.testPolygonEllipse(b, polyB, a, ellipseA, response);
+    var result = testPolygonEllipse(b, polyB, a, ellipseA, response);
     if (result && response) {
         // Swap A and B in the response.
         var resa = response.a;
@@ -15684,6 +15684,7 @@ var collision = {
 /**
  * @classdesc
  * a Generic Physic Body Object with some physic properties and behavior functionality, to as a member of a Renderable.
+ * @see Renderable.body
  */
 class Body {
     /**
@@ -16243,7 +16244,6 @@ class Body {
      * cap the body velocity (body.maxVel property) to the specified value<br>
      * @param {number} x max velocity on x axis
      * @param {number} y max velocity on y axis
-     * @protected
      */
     setMaxVelocity(x, y) {
         this.maxVel.x = x;
@@ -16254,7 +16254,6 @@ class Body {
      * set the body default friction
      * @param {number} x horizontal friction
      * @param {number} y vertical friction
-     * @protected
      */
     setFriction(x = 0, y = 0) {
         this.friction.x = x;
@@ -16476,7 +16475,7 @@ class Container extends Renderable {
          * @memberof Container#
          * @param {number} index added or removed child index
          */
-        this.onChildChange = function (/* index */) {
+        this.onChildChange = function (index) {   // eslint-disable-line no-unused-vars
             // to be extended
         };
 
@@ -16560,8 +16559,10 @@ class Container extends Renderable {
      * Adding a child to the container will automatically remove it from its other container.
      * Meaning a child can only have one parent.  This is important if you add a renderable
      * to a container then add it to the me.game.world container it will move it out of the
-     * orginal container.  Then when the me.game.world.reset() is called the renderable
-     * will not be in any container.
+     * orginal container. Then when the me.game.world.reset() is called the renderable
+     * will not be in any container. <br>
+     * if the given child implements a onActivateEvent method, that method will be called
+     * once the child is added to this container.
      * @name addChild
      * @memberof Container
      * @param {Renderable} child
@@ -17003,7 +17004,8 @@ class Container extends Renderable {
     }
 
     /**
-     * Invokes the removeChildNow in a defer, to ensure the child is removed safely after the update & draw stack has completed
+     * Invokes the removeChildNow in a defer, to ensure the child is removed safely after the update & draw stack has completed. <br>
+     * if the given child implements a onDeactivateEvent() method, that method will be called once the child is removed from this container.
      * @name removeChild
      * @memberof Container
      * @public
@@ -17305,15 +17307,14 @@ class Container extends Renderable {
     }
 
     /**
-     * draw the container. <br>
-     * automatically called by the game manager {@link game}
+      * draw this renderable (automatically called by melonJS)
      * @name draw
      * @memberof Container
      * @protected
-     * @param {CanvasRenderer|WebGLRenderer} renderer a renderer object
-     * @param {Rect|Bounds} [rect] the area or viewport to (re)draw
+     * @param {CanvasRenderer|WebGLRenderer} renderer a renderer instance
+     * @param {Camera2d} [viewport] the viewport to (re)draw
      */
-    draw(renderer, rect) {
+    draw(renderer, viewport) {
         var isFloating = false;
         var bounds = this.getBounds();
 
@@ -17355,7 +17356,7 @@ class Container extends Renderable {
                     obj.preDraw(renderer);
 
                     // draw the object
-                    obj.draw(renderer, rect);
+                    obj.draw(renderer, viewport);
 
                     // postdraw (clean-up);
                     obj.postDraw(renderer);
@@ -19685,6 +19686,24 @@ var state = {
     },
 
     /**
+     * returns the stage associated with the specified state
+     * (or the current one if none is specified)
+     * @name set
+     * @memberof state
+     * @public
+     * @param {number} [state] State ID (see constants)
+     * @returns {Stage}
+     */
+    get(state = _state) {
+        if (typeof _stages[state] !== "undefined") {
+            return _stages[state].stage;
+        } else {
+            return undefined;
+        }
+
+    },
+
+    /**
      * return a reference to the current stage<br>
      * useful to call a object specific method
      * @name current
@@ -19693,9 +19712,7 @@ var state = {
      * @returns {Stage}
      */
     current() {
-        if (typeof _stages[_state] !== "undefined") {
-            return _stages[_state].stage;
-        }
+        return this.get();
     },
 
     /**
@@ -21801,14 +21818,14 @@ class Sprite extends Renderable {
     }
 
     /**
-     * sprite draw. <br>
-     * automatically called by the game manager {@link game}
+     * draw this srite (automatically called by melonJS)
      * @name draw
      * @memberof Sprite
      * @protected
-     * @param {CanvasRenderer|WebGLRenderer} renderer a renderer object
+     * @param {CanvasRenderer|WebGLRenderer} renderer a renderer instance
+     * @param {Camera2d} [viewport] the viewport to (re)draw
      */
-    draw(renderer) {
+    draw(renderer, viewport) {   // eslint-disable-line no-unused-vars
         // do nothing if we are flickering
         if (this._flicker.isFlickering) {
             this._flicker.state = !this._flicker.state;
@@ -32793,10 +32810,10 @@ class BasePlugin {
          * this can be overridden by the plugin
          * @public
          * @type {string}
-         * @default "10.11.0"
+         * @default "10.12.0"
          * @name plugin.Base#version
          */
-        this.version = "10.11.0";
+        this.version = "10.12.0";
     }
 }
 
@@ -35134,15 +35151,18 @@ class ColorLayer extends Renderable {
     }
 
     /**
-     * draw the color layer
-     * @ignore
+     * draw this color layer (automatically called by melonJS)
+     * @name draw
+     * @memberof ColorLayer
+     * @protected
+     * @param {CanvasRenderer|WebGLRenderer} renderer a renderer instance
+     * @param {Camera2d} [viewport] the viewport to (re)draw
      */
-    draw(renderer, rect) {
-        var vpos = viewport.pos;
+    draw(renderer, viewport) {
         renderer.save();
         renderer.clipRect(
-            rect.left - vpos.x, rect.top - vpos.y,
-            rect.width, rect.height
+            0, 0,
+            viewport.width, viewport.height
         );
         renderer.clearColor(this.color);
         renderer.restore();
@@ -35397,14 +35417,14 @@ class ImageLayer extends Sprite {
     }
 
     /**
-     * draw the ImageLayer. <br>
-     * automatically called by the game manager {@link game}
+     * draw this ImageLayer (automatically called by melonJS)
      * @name draw
      * @memberof ImageLayer
      * @protected
-     * @param {CanvasRenderer|WebGLRenderer} renderer a renderer object
+     * @param {CanvasRenderer|WebGLRenderer} renderer a renderer instance
+     * @param {Camera2d} [viewport] the viewport to (re)draw
      */
-    draw(renderer) {
+    draw(renderer, viewport) {
         var width = this.width,
             height = this.height,
             bw = viewport.bounds.width,
@@ -35778,7 +35798,7 @@ class GUI_Object extends Sprite {
      * @param {Pointer} event the event object
      * @returns {boolean} return false if we need to stop propagating the event
      */
-    onClick(/* event */) {
+    onClick(event) { // eslint-disable-line no-unused-vars
         return false;
     }
 
@@ -35799,7 +35819,9 @@ class GUI_Object extends Sprite {
      * @public
      * @param {Pointer} event the event object
      */
-    onOver(/* event */) {}
+    onOver(event) { // eslint-disable-line no-unused-vars
+        // to be extended
+    }
 
     /**
      * function callback for the pointerLeave event
@@ -35819,8 +35841,8 @@ class GUI_Object extends Sprite {
      * @public
      * @param {Pointer} event the event object
      */
-    onOut(/* event */) {
-
+    onOut(event) { // eslint-disable-line no-unused-vars
+        // to be extended
     }
 
     /**
@@ -36067,8 +36089,15 @@ class Trigger extends Renderable {
         }
     }
 
-    /** @ignore */
-    onCollision() {
+    /**
+     * onCollision callback, triggered in case of collision with this trigger
+     * @name onCollision
+     * @memberof Renderable
+     * @param {collision.ResponseObject} response the collision response object
+     * @param {Renderable} other the other renderable touching this one (a reference to response.a or response.b)
+     * @returns {boolean} true if the object should respond to the collision (its position and velocity will be corrected)
+     */
+    onCollision(response, other) { // eslint-disable-line no-unused-vars
         if (this.name === "Trigger") {
             this.triggerEvent.apply(this);
         }
@@ -36166,10 +36195,14 @@ class Light2d extends Renderable {
     }
 
     /**
-     * object draw (Called internally by the engine).
-     * @ignore
+     * draw this Light2d (automatically called by melonJS)
+     * @name draw
+     * @memberof Light2d
+     * @protected
+     * @param {CanvasRenderer|WebGLRenderer} renderer a renderer instance
+     * @param {Camera2d} [viewport] the viewport to (re)draw
      */
-    draw(renderer) {
+    draw(renderer, viewport) {   // eslint-disable-line no-unused-vars
         renderer.drawImage(this.texture.canvas, this.getBounds().x, this.getBounds().y);
     }
 
@@ -36382,7 +36415,7 @@ class DropTarget extends Renderable {
      * @memberof DropTarget
      * @param {Draggable} draggable the draggable object that is dropped
      */
-    drop() {
+    drop(draggable) {  // eslint-disable-line no-unused-vars
 
     }
 
@@ -37315,23 +37348,21 @@ class Entity extends Renderable {
     }
 
     /**
-     * object draw<br>
-     * not to be called by the end user<br>
-     * called by the game manager on each game loop
+     * draw this entity (automatically called by melonJS)
      * @name draw
      * @memberof Entity
      * @protected
-     * @param {CanvasRenderer|WebGLRenderer} renderer a renderer object
-     * @param {Rect} rect region to draw
+     * @param {CanvasRenderer|WebGLRenderer} renderer a renderer instance
+     * @param {Camera2d} [viewport] the viewport to (re)draw
      */
-    draw(renderer, rect) {
+    draw(renderer, viewport) {
         var renderable = this.renderable;
         if (renderable instanceof Renderable) {
             // predraw (apply transforms)
             renderable.preDraw(renderer);
 
             // draw the object
-            renderable.draw(renderer, rect);
+            renderable.draw(renderer, viewport);
 
             // postdraw (clean-up);
             renderable.postDraw(renderer);
@@ -37502,7 +37533,7 @@ class DroptargetEntity extends DropTarget {
  * @name version
  * @type {string}
  */
-const version = "10.11.0";
+const version = "10.12.0";
 
 
 /**
