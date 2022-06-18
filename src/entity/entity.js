@@ -188,23 +188,21 @@ class Entity extends Renderable {
     }
 
     /**
-     * object draw<br>
-     * not to be called by the end user<br>
-     * called by the game manager on each game loop
+     * draw this entity (automatically called by melonJS)
      * @name draw
      * @memberof Entity
      * @protected
-     * @param {CanvasRenderer|WebGLRenderer} renderer a renderer object
-     * @param {Rect} rect region to draw
+     * @param {CanvasRenderer|WebGLRenderer} renderer a renderer instance
+     * @param {Camera2d} [viewport] the viewport to (re)draw
      */
-    draw(renderer, rect) {
+    draw(renderer, viewport) {
         var renderable = this.renderable;
         if (renderable instanceof Renderable) {
             // predraw (apply transforms)
             renderable.preDraw(renderer);
 
             // draw the object
-            renderable.draw(renderer, rect);
+            renderable.draw(renderer, viewport);
 
             // postdraw (clean-up);
             renderable.postDraw(renderer);
