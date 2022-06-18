@@ -69,7 +69,7 @@
     "@types/offscreencanvas": "^2019.7.0",
     "@webdoc/cli": "^1.6.6",
     "del-cli": "^4.0.1",
-    "eslint": "^8.17.0",
+    "eslint": "^8.18.0",
     "jasmine-core": "^4.2.0",
     "karma": "^6.4.0",
     "karma-chrome-launcher": "^3.1.1",
@@ -81,7 +81,7 @@
     "rollup-plugin-bundle-size": "^1.0.3",
     "rollup-plugin-string": "^3.0.0",
     "terser": "^5.14.1",
-    "typescript": "^4.7.3"
+    "typescript": "^4.7.4"
   },
   "scripts": {
     "build": "npm run lint && rollup -c --silent",
