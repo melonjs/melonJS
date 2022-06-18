@@ -102,7 +102,7 @@ class Container extends Renderable {
          * @memberof Container#
          * @param {number} index added or removed child index
          */
-        this.onChildChange = function (/* index */) {
+        this.onChildChange = function (index) {   // eslint-disable-line no-unused-vars
             // to be extended
         };
 

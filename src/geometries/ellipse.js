@@ -154,7 +154,7 @@ class Ellipse {
      * @param {Matrix2d} matrix the transformation matrix
      * @returns {Polygon} Reference to this object for method chaining
      */
-    transform(/* m */) {
+    transform(matrix) { // eslint-disable-line no-unused-vars
         // TODO
         return this;
     }

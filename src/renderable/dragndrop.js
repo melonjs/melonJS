@@ -198,7 +198,7 @@ export class DropTarget extends Renderable {
      * @memberof DropTarget
      * @param {Draggable} draggable the draggable object that is dropped
      */
-    drop() {
+    drop(draggable) {  // eslint-disable-line no-unused-vars
 
     }
 

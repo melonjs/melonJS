@@ -121,7 +121,7 @@ class GUI_Object extends Sprite {
      * @param {Pointer} event the event object
      * @returns {boolean} return false if we need to stop propagating the event
      */
-    onClick(/* event */) {
+    onClick(event) { // eslint-disable-line no-unused-vars
         return false;
     }
 
@@ -142,7 +142,9 @@ class GUI_Object extends Sprite {
      * @public
      * @param {Pointer} event the event object
      */
-    onOver(/* event */) {}
+    onOver(event) { // eslint-disable-line no-unused-vars
+        // to be extended
+    }
 
     /**
      * function callback for the pointerLeave event
@@ -162,8 +164,8 @@ class GUI_Object extends Sprite {
      * @public
      * @param {Pointer} event the event object
      */
-    onOut(/* event */) {
-
+    onOut(event) { // eslint-disable-line no-unused-vars
+        // to be extended
     }
 
     /**
