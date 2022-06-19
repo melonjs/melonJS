@@ -11010,7 +11010,7 @@
 	     * @name centerOn
 	     * @memberof Rect
 	     * @param {number} x the x coordinate around which to center this rectangle
-	     * @param {number} x the y coordinate around which to center this rectangle
+	     * @param {number} y the y coordinate around which to center this rectangle
 	     * @returns {Rect} this rectangle
 	     */
 	    Rect.prototype.centerOn = function centerOn (x, y) {
@@ -21213,6 +21213,8 @@
 	  * add uvs mapping for the given region
 	  * @param {object} atlas the atlas dictionnary where the region is define
 	  * @param {object} name region (or frame) name
+	  * @param {number} w the width of the region
+	  * @param {number} h the height of the region
 	  * @returns {Float32Array} the created region UVs
 	  */
 	 TextureAtlas.prototype.addUVs = function addUVs (atlas, name, w, h) {
@@ -22547,10 +22549,10 @@
 	 * adds a circular arc to the path with the given control points and radius, connected to the previous point by a straight line.
 	 * @name arcTo
 	 * @memberof Path2D
-	 * @param {number} x the x-axis coordinate of the first control point.
-	 * @param {number} y the y-axis coordinate of the first control point.
-	 * @param {number} x the x-axis coordinate of the second control point.
-	 * @param {number} y the y-axis coordinate of the second control point.
+	 * @param {number} x1 the x-axis coordinate of the first control point.
+	 * @param {number} y1 the y-axis coordinate of the first control point.
+	 * @param {number} x2 the x-axis coordinate of the second control point.
+	 * @param {number} y2 the y-axis coordinate of the second control point.
 	 * @param {number} radius the arc's radius. Must be positive.
 	 */
 	Path2D.prototype.arcTo = function arcTo (x1, y1, x2, y2, radius) {
