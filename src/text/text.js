@@ -353,7 +353,7 @@ class Text extends Renderable {
      * @param {number} [y]
      * @param {boolean} [stroke=false] draw stroke the the text if true
      */
-    draw(renderer, text, x, y, stroke) {
+    draw(renderer, text, x = this.pos.x, y = this.pos.y, stroke = false) {
         // "hacky patch" for backward compatibilty
         if (typeof this.ancestor === "undefined") {
 

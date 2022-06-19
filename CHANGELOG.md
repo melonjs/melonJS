@@ -9,6 +9,7 @@
 - Physic: simplify the collision api and implementation (removed `collision.response` that serves no purpose anymore)
 
 ### Fixed
+- Text: make sure the optional `x` and `y` arguments of the draw method are set to a default value
 - TypeScript: fix and uniform draw method signature across all renderables
 - TypeScript: fix typings for the `onCollision` method
 - TypeScript: fix `setMaxVelocity` and `setFriction` method scope
