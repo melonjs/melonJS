@@ -14589,7 +14589,7 @@
 	     * when this renderable body is colliding with another one
 	     * @name onCollision
 	     * @memberof Renderable
-	     * @param {collision.ResponseObject} response the collision response object
+	     * @param {ResponseObject} response the collision response object
 	     * @param {Renderable} other the other renderable touching this one (a reference to response.a or response.b)
 	     * @returns {boolean} true if the object should respond to the collision (its position and velocity will be corrected)
 	     * @example
@@ -15412,36 +15412,6 @@
 		testEllipsePolygon: testEllipsePolygon
 	});
 
-	// a dummy object when using Line for raycasting
-	var dummyObj = {
-	    pos : new Vector2d(0, 0),
-	    ancestor : {
-	        _absPos : new Vector2d(0, 0),
-	        getAbsolutePosition : function () {
-	            return this._absPos;
-	        }
-	    }
-	};
-
-	/**
-	 * a function used to determine if two objects should collide (based on both respective objects collision mask and type).<br>
-	 * you can redefine this function if you need any specific rules over what should collide with what.
-	 * @name shouldCollide
-	 * @memberof collision
-	 * @ignore
-	 * @param {Renderable} a a reference to the object A.
-	 * @param {Renderable} b a reference to the object B.
-	 * @returns {boolean} true if they should collide, false otherwise
-	 */
-	function shouldCollide(a, b) {
-	    return (
-	        a.isKinematic !== true && b.isKinematic !== true &&
-	        typeof a.body === "object" && typeof b.body === "object" &&
-	        !(a.body.isStatic === true && b.body.isStatic === true) &&
-	        (a.body.collisionMask & b.body.collisionType) !== 0 &&
-	        (a.body.collisionType & b.body.collisionMask) !== 0
-	    );
-	}
 	/**
 	 * @classdesc
 	 * An object representing the result of an intersection.
@@ -15455,7 +15425,6 @@
 	 * @property {number} indexShapeA The index of the colliding shape for the object a body
 	 * @property {number} indexShapeB The index of the colliding shape for the object b body
 	 * @name ResponseObject
-	 * @memberof collision
 	 * @public
 	 */
 	var ResponseObject = function ResponseObject() {
@@ -15476,7 +15445,6 @@
 	 * Response object for multiple intersection tests <br>
 	 * (recommended as it will avoid allocating extra memory) <br>
 	 * @name clear
-	 * @memberof collision.ResponseObject
 	 * @public
 	 * @returns {object} this object for chaining
 	 */
@@ -15489,15 +15457,47 @@
 	    return this;
 	};
 
-	// @ignore
+	// a dummy object when using Line for raycasting
+	var dummyObj = {
+	    pos : new Vector2d(0, 0),
+	    ancestor : {
+	        _absPos : new Vector2d(0, 0),
+	        getAbsolutePosition : function () {
+	            return this._absPos;
+	        }
+	    }
+	};
+
+	// the global response object used for collisions
 	var globalResponse = new ResponseObject();
+
+	/**
+	 * a function used to determine if two objects should collide (based on both respective objects collision mask and type).<br>
+	 * you can redefine this function if you need any specific rules over what should collide with what.
+	 * @name shouldCollide
+	 * @memberof collision
+	 * @ignore
+	 * @param {Renderable} a a reference to the object A.
+	 * @param {Renderable} b a reference to the object B.
+	 * @returns {boolean} true if they should collide, false otherwise
+	 */
+	function shouldCollide(a, b) {
+	    return (
+	        a.isKinematic !== true && b.isKinematic !== true &&
+	        typeof a.body === "object" && typeof b.body === "object" &&
+	        !(a.body.isStatic === true && b.body.isStatic === true) &&
+	        (a.body.collisionMask & b.body.collisionType) !== 0 &&
+	        (a.body.collisionType & b.body.collisionMask) !== 0
+	    );
+	}
+
 
 	/**
 	 * find all the collisions for the specified object
 	 * @name collisionCheck
 	 * @ignore
 	 * @param {Renderable} objA object to be tested for collision
-	 * @param {collision.ResponseObject} [response=collision.response] a user defined response object that will be populated if they intersect.
+	 * @param {ResponseObject} [response] a user defined response object that will be populated if they intersect.
 	 * @returns {boolean} in case of collision, false otherwise
 	 */
 	function collisionCheck(objA, response) {
@@ -15730,17 +15730,6 @@
 	        USER                : 1 << 7, // user-defined types start here...
 	        ALL_OBJECT          : 0xFFFFFFFF // all objects
 	    },
-
-
-	    /**
-	     * a global instance of a response object used for collision detection <br>
-	     * this object will be reused amongst collision detection call if not user-defined response is specified
-	     * @name response
-	     * @memberof collision
-	     * @public
-	     * @type {collision.ResponseObject}
-	     */
-	    response : globalResponse,
 
 	    /**
 	     * Checks for object colliding with the given line
@@ -16203,7 +16192,7 @@
 
 	/**
 	 * the built-in function to solve the collision response
-	 * @param {object} response the collision response object (see {@link collision.ResponseObject})
+	 * @param {object} response the collision response object (see {@link ResponseObject})
 	 */
 	Body.prototype.respondToCollision = function respondToCollision (response) {
 	    // the overlap vector
@@ -36085,8 +36074,8 @@
 	    /**
 	     * onCollision callback, triggered in case of collision with this trigger
 	     * @name onCollision
-	     * @memberof Renderable
-	     * @param {collision.ResponseObject} response the collision response object
+	     * @memberof Trigger
+	     * @param {ResponseObject} response the collision response object
 	     * @param {Renderable} other the other renderable touching this one (a reference to response.a or response.b)
 	     * @returns {boolean} true if the object should respond to the collision (its position and velocity will be corrected)
 	     */

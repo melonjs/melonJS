@@ -432,7 +432,7 @@ export class Body {
     setCollisionType(type: number): void;
     /**
      * the built-in function to solve the collision response
-     * @param {object} response the collision response object (see {@link collision.ResponseObject})
+     * @param {object} response the collision response object (see {@link ResponseObject})
      */
     respondToCollision(response: object): void;
     /**
@@ -6112,7 +6112,7 @@ export class Renderable extends Rect {
      * when this renderable body is colliding with another one
      * @name onCollision
      * @memberof Renderable
-     * @param {collision.ResponseObject} response the collision response object
+     * @param {ResponseObject} response the collision response object
      * @param {Renderable} other the other renderable touching this one (a reference to response.a or response.b)
      * @returns {boolean} true if the object should respond to the collision (its position and velocity will be corrected)
      * @example
@@ -6129,7 +6129,7 @@ export class Renderable extends Rect {
      *     return true;
      * },
      */
-    onCollision(response: collision.ResponseObject, other: Renderable): boolean;
+    onCollision(response: ResponseObject, other: Renderable): boolean;
     /**
      * Destroy function<br>
      * @ignore
@@ -9662,12 +9662,76 @@ export var audio: Readonly<{
  * @public
  */
 export function boot(): void;
-/**
- * Collision detection (and projection-based collision response) of 2D shapes.<br>
- * Based on the Separating Axis Theorem and supports detecting collisions between simple Axis-Aligned Boxes, convex polygons and circles based shapes.
- * @namespace collision
- */
-export var collision: any;
+export namespace collision {
+    const maxChildren: number;
+    const maxDepth: number;
+    namespace types {
+        const NO_OBJECT: number;
+        const PLAYER_OBJECT: number;
+        const NPC_OBJECT: number;
+        const ENEMY_OBJECT: number;
+        const COLLECTABLE_OBJECT: number;
+        const ACTION_OBJECT: number;
+        const PROJECTILE_OBJECT: number;
+        const WORLD_SHAPE: number;
+        const USER: number;
+        const ALL_OBJECT: number;
+    }
+    /**
+     * Checks for object colliding with the given line
+     * @name rayCast
+     * @memberof collision
+     * @public
+     * @param {Line} line line to be tested for collision
+     * @param {Array.<Renderable>} [result] a user defined array that will be populated with intersecting physic objects.
+     * @returns {Array.<Renderable>} an array of intersecting physic objects
+     * @example
+     *    // define a line accross the viewport
+     *    var ray = new me.Line(
+     *        // absolute position of the line
+     *        0, 0, [
+     *        // starting point relative to the initial position
+     *        new me.Vector2d(0, 0),
+     *        // ending point
+     *        new me.Vector2d(me.game.viewport.width, me.game.viewport.height)
+     *    ]);
+     *
+     *    // check for collition
+     *    result = me.collision.rayCast(ray);
+     *
+     *    if (result.length > 0) {
+     *        // ...
+     *    }
+     */
+    function rayCast(line: Line, result?: Renderable[]): Renderable[];
+    /**
+     * Checks for object colliding with the given line
+     * @name rayCast
+     * @memberof collision
+     * @public
+     * @param {Line} line line to be tested for collision
+     * @param {Array.<Renderable>} [result] a user defined array that will be populated with intersecting physic objects.
+     * @returns {Array.<Renderable>} an array of intersecting physic objects
+     * @example
+     *    // define a line accross the viewport
+     *    var ray = new me.Line(
+     *        // absolute position of the line
+     *        0, 0, [
+     *        // starting point relative to the initial position
+     *        new me.Vector2d(0, 0),
+     *        // ending point
+     *        new me.Vector2d(me.game.viewport.width, me.game.viewport.height)
+     *    ]);
+     *
+     *    // check for collition
+     *    result = me.collision.rayCast(ray);
+     *
+     *    if (result.length > 0) {
+     *        // ...
+     *    }
+     */
+    function rayCast(line: Line, result?: Renderable[]): Renderable[];
+}
 export namespace device {
     const devicePixelRatio: number;
     const isFullscreen: boolean;
@@ -10719,17 +10783,18 @@ export namespace save {
  */
 export var skipAutoInit: boolean;
 export namespace state {
-    const LOADING: number;
-    const MENU: number;
-    const READY: number;
-    const PLAY: number;
-    const GAMEOVER: number;
-    const GAME_END: number;
-    const SCORE: number;
-    const CREDITS: number;
-    const SETTINGS: number;
-    const DEFAULT: number;
-    const USER: number;
+    export const LOADING: number;
+    export const MENU: number;
+    export const READY: number;
+    export const PLAY: number;
+    export const GAMEOVER: number;
+    export const GAME_END: number;
+    export const SCORE: number;
+    export const CREDITS: number;
+    export const SETTINGS: number;
+    export const DEFAULT: number;
+    const USER_1: number;
+    export { USER_1 as USER };
     /**
      * Stop the current stage.
      * @name stop
@@ -10737,7 +10802,7 @@ export namespace state {
      * @public
      * @param {boolean} [pauseTrack=false] pause current track on screen stop.
      */
-    function stop(pauseTrack?: boolean): void;
+    export function stop(pauseTrack?: boolean): void;
     /**
      * Stop the current stage.
      * @name stop
@@ -10745,7 +10810,7 @@ export namespace state {
      * @public
      * @param {boolean} [pauseTrack=false] pause current track on screen stop.
      */
-    function stop(pauseTrack?: boolean): void;
+    export function stop(pauseTrack?: boolean): void;
     /**
      * pause the current stage
      * @name pause
@@ -10753,7 +10818,7 @@ export namespace state {
      * @public
      * @param {boolean} [music=false] pause current music track on screen pause
      */
-    function pause(music?: boolean): void;
+    export function pause(music?: boolean): void;
     /**
      * pause the current stage
      * @name pause
@@ -10761,7 +10826,7 @@ export namespace state {
      * @public
      * @param {boolean} [music=false] pause current music track on screen pause
      */
-    function pause(music?: boolean): void;
+    export function pause(music?: boolean): void;
     /**
      * Restart the current stage from a full stop.
      * @name restart
@@ -10769,7 +10834,7 @@ export namespace state {
      * @public
      * @param {boolean} [music=false] resume current music track on screen resume
      */
-    function restart(music?: boolean): void;
+    export function restart(music?: boolean): void;
     /**
      * Restart the current stage from a full stop.
      * @name restart
@@ -10777,7 +10842,7 @@ export namespace state {
      * @public
      * @param {boolean} [music=false] resume current music track on screen resume
      */
-    function restart(music?: boolean): void;
+    export function restart(music?: boolean): void;
     /**
      * resume the current stage
      * @name resume
@@ -10785,7 +10850,7 @@ export namespace state {
      * @public
      * @param {boolean} [music=false] resume current music track on screen resume
      */
-    function resume(music?: boolean): void;
+    export function resume(music?: boolean): void;
     /**
      * resume the current stage
      * @name resume
@@ -10793,7 +10858,7 @@ export namespace state {
      * @public
      * @param {boolean} [music=false] resume current music track on screen resume
      */
-    function resume(music?: boolean): void;
+    export function resume(music?: boolean): void;
     /**
      * return the running state of the state manager
      * @name isRunning
@@ -10801,7 +10866,7 @@ export namespace state {
      * @public
      * @returns {boolean} true if a "process is running"
      */
-    function isRunning(): boolean;
+    export function isRunning(): boolean;
     /**
      * return the running state of the state manager
      * @name isRunning
@@ -10809,7 +10874,7 @@ export namespace state {
      * @public
      * @returns {boolean} true if a "process is running"
      */
-    function isRunning(): boolean;
+    export function isRunning(): boolean;
     /**
      * Return the pause state of the state manager
      * @name isPaused
@@ -10817,7 +10882,7 @@ export namespace state {
      * @public
      * @returns {boolean} true if the game is paused
      */
-    function isPaused(): boolean;
+    export function isPaused(): boolean;
     /**
      * Return the pause state of the state manager
      * @name isPaused
@@ -10825,7 +10890,7 @@ export namespace state {
      * @public
      * @returns {boolean} true if the game is paused
      */
-    function isPaused(): boolean;
+    export function isPaused(): boolean;
     /**
      * associate the specified state with a Stage
      * @name set
@@ -10871,7 +10936,7 @@ export namespace state {
      *
      * me.state.set(me.state.MENU, new MenuScreen());
      */
-    function set(state: number, stage: Stage, start?: boolean): void;
+    export function set(state: number, stage: Stage, start?: boolean): void;
     /**
      * associate the specified state with a Stage
      * @name set
@@ -10917,7 +10982,7 @@ export namespace state {
      *
      * me.state.set(me.state.MENU, new MenuScreen());
      */
-    function set(state: number, stage: Stage, start?: boolean): void;
+    export function set(state: number, stage: Stage, start?: boolean): void;
     /**
      * returns the stage associated with the specified state
      * (or the current one if none is specified)
@@ -10927,7 +10992,7 @@ export namespace state {
      * @param {number} [state] State ID (see constants)
      * @returns {Stage}
      */
-    function get(state?: number): Stage;
+    export function get(state?: number): Stage;
     /**
      * returns the stage associated with the specified state
      * (or the current one if none is specified)
@@ -10937,7 +11002,7 @@ export namespace state {
      * @param {number} [state] State ID (see constants)
      * @returns {Stage}
      */
-    function get(state?: number): Stage;
+    export function get(state?: number): Stage;
     /**
      * return a reference to the current stage<br>
      * useful to call a object specific method
@@ -10946,7 +11011,7 @@ export namespace state {
      * @public
      * @returns {Stage}
      */
-    function current(): Stage;
+    export function current(): Stage;
     /**
      * return a reference to the current stage<br>
      * useful to call a object specific method
@@ -10955,7 +11020,7 @@ export namespace state {
      * @public
      * @returns {Stage}
      */
-    function current(): Stage;
+    export function current(): Stage;
     /**
      * specify a global transition effect
      * @name transition
@@ -10965,7 +11030,7 @@ export namespace state {
      * @param {Color|string} color a CSS color value
      * @param {number} [duration=1000] expressed in milliseconds
      */
-    function transition(effect: string, color: string | Color, duration?: number): void;
+    export function transition(effect: string, color: string | Color, duration?: number): void;
     /**
      * specify a global transition effect
      * @name transition
@@ -10975,7 +11040,7 @@ export namespace state {
      * @param {Color|string} color a CSS color value
      * @param {number} [duration=1000] expressed in milliseconds
      */
-    function transition(effect: string, color: string | Color, duration?: number): void;
+    export function transition(effect: string, color: string | Color, duration?: number): void;
     /**
      * enable/disable transition for a specific state (by default enabled for all)
      * @name setTransition
@@ -10984,7 +11049,7 @@ export namespace state {
      * @param {number} state State ID (see constants)
      * @param {boolean} enable
      */
-    function setTransition(state: number, enable: boolean): void;
+    export function setTransition(state: number, enable: boolean): void;
     /**
      * enable/disable transition for a specific state (by default enabled for all)
      * @name setTransition
@@ -10993,7 +11058,7 @@ export namespace state {
      * @param {number} state State ID (see constants)
      * @param {boolean} enable
      */
-    function setTransition(state: number, enable: boolean): void;
+    export function setTransition(state: number, enable: boolean): void;
     /**
      * change the game/app state
      * @name change
@@ -11007,7 +11072,7 @@ export namespace state {
      * // "level_1" and the number 3
      * me.state.change(me.state.PLAY, "level_1", 3);
      */
-    function change(state: number, forceChange: boolean, ...args: any[]): void;
+    export function change(state: number, forceChange: boolean, ...args: any[]): void;
     /**
      * change the game/app state
      * @name change
@@ -11021,7 +11086,7 @@ export namespace state {
      * // "level_1" and the number 3
      * me.state.change(me.state.PLAY, "level_1", 3);
      */
-    function change(state: number, forceChange: boolean, ...args: any[]): void;
+    export function change(state: number, forceChange: boolean, ...args: any[]): void;
     /**
      * return true if the specified state is the current one
      * @name isCurrent
@@ -11030,7 +11095,7 @@ export namespace state {
      * @param {number} state State ID (see constants)
      * @returns {boolean} true if the specified state is the current one
      */
-    function isCurrent(state: number): boolean;
+    export function isCurrent(state: number): boolean;
     /**
      * return true if the specified state is the current one
      * @name isCurrent
@@ -11039,7 +11104,7 @@ export namespace state {
      * @param {number} state State ID (see constants)
      * @returns {boolean} true if the specified state is the current one
      */
-    function isCurrent(state: number): boolean;
+    export function isCurrent(state: number): boolean;
 }
 /**
  * the default global Timer instance
@@ -11306,6 +11371,42 @@ declare function round(num: number, dec?: number): number;
  * }
  */
 declare function toBeCloseTo(expected: number, actual: number, precision?: number): boolean;
+/**
+ * @classdesc
+ * An object representing the result of an intersection.
+ * @property {Renderable} a The first object participating in the intersection
+ * @property {Renderable} b The second object participating in the intersection
+ * @property {number} overlap Magnitude of the overlap on the shortest colliding axis
+ * @property {Vector2d} overlapV The overlap vector (i.e. `overlapN.scale(overlap, overlap)`). If this vector is subtracted from the position of a, a and b will no longer be colliding
+ * @property {Vector2d} overlapN The shortest colliding axis (unit-vector)
+ * @property {boolean} aInB Whether the first object is entirely inside the second
+ * @property {boolean} bInA Whether the second object is entirely inside the first
+ * @property {number} indexShapeA The index of the colliding shape for the object a body
+ * @property {number} indexShapeB The index of the colliding shape for the object b body
+ * @name ResponseObject
+ * @public
+ */
+declare class ResponseObject {
+    a: any;
+    b: any;
+    overlapN: Vector2d;
+    overlapV: Vector2d;
+    aInB: boolean;
+    bInA: boolean;
+    indexShapeA: number;
+    indexShapeB: number;
+    overlap: number;
+    /**
+     * Set some values of the response back to their defaults. <br>
+     * Call this between tests if you are going to reuse a single <br>
+     * Response object for multiple intersection tests <br>
+     * (recommended as it will avoid allocating extra memory) <br>
+     * @name clear
+     * @public
+     * @returns {object} this object for chaining
+     */
+    public clear(): object;
+}
 /**
  * @classdesc
  * a simplified path2d implementation, supporting only one path
