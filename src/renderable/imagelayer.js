@@ -164,7 +164,7 @@ class ImageLayer extends Sprite {
      * @param {number} h new height
      */
     resize(w, h) {
-        super.resize(
+        return super.resize(
             this.repeatX ? Infinity : w,
             this.repeatY ? Infinity : h
         );

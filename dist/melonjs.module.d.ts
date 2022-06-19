@@ -2771,14 +2771,6 @@ export class ImageLayer extends Renderable {
     repeatY: boolean;
     onActivateEvent(): void;
     /**
-     * resize the Image Layer to match the given size
-     * @name resize
-     * @memberof ImageLayer
-     * @param {number} w new width
-     * @param {number} h new height
-     */
-    resize(w: number, h: number): void;
-    /**
      * createPattern function
      * @ignore
      */

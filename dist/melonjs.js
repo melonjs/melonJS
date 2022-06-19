@@ -35391,7 +35391,7 @@
 	     * @param {number} h new height
 	     */
 	    ImageLayer.prototype.resize = function resize (w, h) {
-	        Sprite.prototype.resize.call(
+	        return Sprite.prototype.resize.call(
 	            this, this.repeatX ? Infinity : w,
 	            this.repeatY ? Infinity : h
 	        );
