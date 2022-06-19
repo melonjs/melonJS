@@ -3,7 +3,7 @@ import Vector2d from "./../math/vector2.js";
 import { world } from "./../game.js";
 
 // a dummy object when using Line for raycasting
-var dummyObj = {
+let dummyObj = {
     pos : new Vector2d(0, 0),
     ancestor : {
         _absPos : new Vector2d(0, 0),
@@ -68,7 +68,7 @@ class ResponseObject {
      * Response object for multiple intersection tests <br>
      * (recommended as it will avoid allocating extra memory) <br>
      * @name clear
-     * @memberof collision.ResponseObject
+     * @memberof ResponseObject
      * @public
      * @returns {object} this object for chaining
      */
@@ -83,14 +83,14 @@ class ResponseObject {
 }
 
 // @ignore
-export var globalResponse = new ResponseObject();
+let globalResponse = new ResponseObject();
 
 /**
  * find all the collisions for the specified object
  * @name collisionCheck
  * @ignore
  * @param {Renderable} objA object to be tested for collision
- * @param {collision.ResponseObject} [response=collision.response] a user defined response object that will be populated if they intersect.
+ * @param {ResponseObject} [response] a user defined response object that will be populated if they intersect.
  * @returns {boolean} in case of collision, false otherwise
  */
 export function collisionCheck(objA, response = globalResponse) {

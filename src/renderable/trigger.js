@@ -133,7 +133,7 @@ class Trigger extends Renderable {
      * onCollision callback, triggered in case of collision with this trigger
      * @name onCollision
      * @memberof Renderable
-     * @param {collision.ResponseObject} response the collision response object
+     * @param {ResponseObject} response the collision response object
      * @param {Renderable} other the other renderable touching this one (a reference to response.a or response.b)
      * @returns {boolean} true if the object should respond to the collision (its position and velocity will be corrected)
      */

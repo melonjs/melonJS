@@ -5,6 +5,9 @@
 ### Added
 - State: new `get(state)` function that return the instance to the Stage associated with the given state
 
+### Changed
+- Physic: simplify the collision api and implementation (removed `collision.response` that serves no purpose anymore)
+
 ### Fixed
 - TypeScript: fix and uniform draw method signature across all renderables
 - TypeScript: fix typings for the `onCollision` method

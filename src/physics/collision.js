@@ -1,4 +1,4 @@
-import { rayCast, globalResponse } from "./detector.js";
+import { rayCast } from "./detector.js";
 
 /**
  * Collision detection (and projection-based collision response) of 2D shapes.<br>
@@ -90,17 +90,6 @@ var collision = {
         USER                : 1 << 7, // user-defined types start here...
         ALL_OBJECT          : 0xFFFFFFFF // all objects
     },
-
-
-    /**
-     * a global instance of a response object used for collision detection <br>
-     * this object will be reused amongst collision detection call if not user-defined response is specified
-     * @name response
-     * @memberof collision
-     * @public
-     * @type {collision.ResponseObject}
-     */
-    response : globalResponse,
 
     /**
      * Checks for object colliding with the given line

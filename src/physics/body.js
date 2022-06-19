@@ -439,7 +439,7 @@ class Body {
 
     /**
      * the built-in function to solve the collision response
-     * @param {object} response the collision response object (see {@link collision.ResponseObject})
+     * @param {object} response the collision response object (see {@link ResponseObject})
      */
     respondToCollision(response) {
         // the overlap vector
