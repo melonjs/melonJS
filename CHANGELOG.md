@@ -12,9 +12,7 @@
 - TypeScript: fix and uniform draw method signature across all renderables
 - TypeScript: fix typings for the `onCollision` method
 - TypeScript: fix `setMaxVelocity` and `setFriction` method scope
-- Webdoc: fix Path2D arcTo argument names
-- Webdoc: fix Rect.centerOn argument names
-- Webdoc: fix missing AdduVs arguments
+- Webdoc: fix wrong or missing  argument names (`Path2D.arcTo`, `Rect.centerOn`, `Texture.AdduVs`)
 - Physic: fix a regression with Ellipse vs Polygon SAT collision detection
 
 ## [10.11.0] (melonJS 2) - _2022-06-14_
