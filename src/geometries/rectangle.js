@@ -176,7 +176,7 @@ class Rect extends Polygon {
      * @name centerOn
      * @memberof Rect
      * @param {number} x the x coordinate around which to center this rectangle
-     * @param {number} x the y coordinate around which to center this rectangle
+     * @param {number} y the y coordinate around which to center this rectangle
      * @returns {Rect} this rectangle
      */
     centerOn(x, y) {

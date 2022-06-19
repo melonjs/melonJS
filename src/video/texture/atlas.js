@@ -381,6 +381,8 @@ export class TextureAtlas {
      * add uvs mapping for the given region
      * @param {object} atlas the atlas dictionnary where the region is define
      * @param {object} name region (or frame) name
+     * @param {number} w the width of the region
+     * @param {number} h the height of the region
      * @returns {Float32Array} the created region UVs
      */
     addUVs(atlas, name, w, h) {
