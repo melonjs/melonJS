@@ -25,6 +25,9 @@ var getContext2d = function (renderer, text) {
     if (text.offScreenCanvas === true) {
         return text.canvasTexture.context;
     } else {
+        if (typeof renderer === "undefined") {
+            renderer = globalRenderer;
+        }
         return renderer.getFontContext();
     }
 };
@@ -333,11 +336,11 @@ class Text extends Renderable {
 
     /**
      * measure the given text size in pixels
-     * @param {CanvasRenderer|WebGLRenderer} [renderer] reference to the active renderer
+     * @param {CanvasRenderer|WebGLRenderer} renderer reference to the active renderer
      * @param {string} [text] the text to be measured
      * @returns {TextMetrics} a TextMetrics object defining the dimensions of the given piece of text
      */
-    measureText(renderer = globalRenderer, text = this._text) {
+    measureText(renderer, text = this._text) {
         return this.metrics.measureText(text, getContext2d(renderer, this));
     }
 

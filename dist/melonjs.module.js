@@ -34106,11 +34106,14 @@ const runits = ["ex", "em", "pt", "px"];
 const toPX = [12, 24, 0.75, 1];
 
 // return a valid 2d context for Text rendering/styling
-var getContext2d = function (renderer, text) {
+var getContext2d = function (renderer$1, text) {
     if (text.offScreenCanvas === true) {
         return text.canvasTexture.context;
     } else {
-        return renderer.getFontContext();
+        if (typeof renderer$1 === "undefined") {
+            renderer$1 = renderer;
+        }
+        return renderer$1.getFontContext();
     }
 };
 
@@ -34418,12 +34421,12 @@ class Text extends Renderable {
 
     /**
      * measure the given text size in pixels
-     * @param {CanvasRenderer|WebGLRenderer} [renderer] reference to the active renderer
+     * @param {CanvasRenderer|WebGLRenderer} renderer reference to the active renderer
      * @param {string} [text] the text to be measured
      * @returns {TextMetrics} a TextMetrics object defining the dimensions of the given piece of text
      */
-    measureText(renderer$1 = renderer, text = this._text) {
-        return this.metrics.measureText(text, getContext2d(renderer$1, this));
+    measureText(renderer, text = this._text) {
+        return this.metrics.measureText(text, getContext2d(renderer, this));
     }
 
 

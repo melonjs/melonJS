@@ -34195,11 +34195,14 @@
 	var toPX = [12, 24, 0.75, 1];
 
 	// return a valid 2d context for Text rendering/styling
-	var getContext2d = function (renderer, text) {
+	var getContext2d = function (renderer$1, text) {
 	    if (text.offScreenCanvas === true) {
 	        return text.canvasTexture.context;
 	    } else {
-	        return renderer.getFontContext();
+	        if (typeof renderer$1 === "undefined") {
+	            renderer$1 = renderer;
+	        }
+	        return renderer$1.getFontContext();
 	    }
 	};
 
@@ -34496,15 +34499,14 @@
 
 	    /**
 	     * measure the given text size in pixels
-	     * @param {CanvasRenderer|WebGLRenderer} [renderer] reference to the active renderer
+	     * @param {CanvasRenderer|WebGLRenderer} renderer reference to the active renderer
 	     * @param {string} [text] the text to be measured
 	     * @returns {TextMetrics} a TextMetrics object defining the dimensions of the given piece of text
 	     */
-	    Text.prototype.measureText = function measureText (renderer$1, text) {
-	        if ( renderer$1 === void 0 ) renderer$1 = renderer;
+	    Text.prototype.measureText = function measureText (renderer, text) {
 	        if ( text === void 0 ) text = this._text;
 
-	        return this.metrics.measureText(text, getContext2d(renderer$1, this));
+	        return this.metrics.measureText(text, getContext2d(renderer, this));
 	    };
 
 

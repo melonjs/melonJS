@@ -7664,11 +7664,11 @@ export class Text extends Renderable {
     setText(value?: number | string | string[]): Text;
     /**
      * measure the given text size in pixels
-     * @param {CanvasRenderer|WebGLRenderer} [renderer] reference to the active renderer
+     * @param {CanvasRenderer|WebGLRenderer} renderer reference to the active renderer
      * @param {string} [text] the text to be measured
      * @returns {TextMetrics} a TextMetrics object defining the dimensions of the given piece of text
      */
-    measureText(renderer$1?: CanvasRenderer | WebGLRenderer, text?: string): TextMetrics;
+    measureText(renderer: CanvasRenderer | WebGLRenderer, text?: string): TextMetrics;
     /**
      * draw a text at the specified coord
      * @param {CanvasRenderer|WebGLRenderer} renderer Reference to the destination renderer instance
