@@ -5183,7 +5183,7 @@ export class Pointer extends Bounds {
  * (which means that all angles are less than 180 degrees), as described here below : <br>
  * <center><img src="images/convex_polygon.png"/></center><br>
  *
- * A polygon's `winding` is clockwise iff its vertices (points) are declared turning to the right. The image above shows COUNTERCLOCKWISE winding.
+ * A polygon's `winding` is clockwise if its vertices (points) are declared turning to the right. The image above shows COUNTERCLOCKWISE winding.
  */
 export class Polygon {
     /**

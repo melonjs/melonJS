@@ -1753,7 +1753,7 @@
 	    return (typeof className !== "undefined") &&
 	            (typeof obj.onResetEvent === "function") &&
 	            (className in this.objectClass) &&
-	            (this.objectClass[className].pool !== "undefined");
+	            (typeof this.objectClass[className].pool !== "undefined");
 
 	};
 
@@ -10364,7 +10364,7 @@
 	 * (which means that all angles are less than 180 degrees), as described here below : <br>
 	 * <center><img src="images/convex_polygon.png"/></center><br>
 	 *
-	 * A polygon's `winding` is clockwise iff its vertices (points) are declared turning to the right. The image above shows COUNTERCLOCKWISE winding.
+	 * A polygon's `winding` is clockwise if its vertices (points) are declared turning to the right. The image above shows COUNTERCLOCKWISE winding.
 	 */
 	var Polygon = function Polygon(x, y, points) {
 	    /**
@@ -16449,7 +16449,7 @@
 	    pool.push(this.friction);
 	    pool.push(this.maxVel);
 	    this.shapes.forEach(function (shape) {
-	        pool.push(shape);
+	        pool.push(shape, false);
 	    });
 
 	    // set to undefined
@@ -34510,6 +34510,10 @@
 	     * @param {boolean} [stroke=false] draw stroke the the text if true
 	     */
 	    Text.prototype.draw = function draw (renderer, text, x, y, stroke) {
+	        if ( x === void 0 ) x = this.pos.x;
+	        if ( y === void 0 ) y = this.pos.y;
+	        if ( stroke === void 0 ) stroke = false;
+
 	        // "hacky patch" for backward compatibilty
 	        if (typeof this.ancestor === "undefined") {
 

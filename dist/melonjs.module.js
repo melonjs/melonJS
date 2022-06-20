@@ -1737,7 +1737,7 @@ class ObjectPool {
         return (typeof className !== "undefined") &&
                 (typeof obj.onResetEvent === "function") &&
                 (className in this.objectClass) &&
-                (this.objectClass[className].pool !== "undefined");
+                (typeof this.objectClass[className].pool !== "undefined");
 
     }
 
@@ -10291,10 +10291,9 @@ earcut.flatten = function (data) {
  * (which means that all angles are less than 180 degrees), as described here below : <br>
  * <center><img src="images/convex_polygon.png"/></center><br>
  *
- * A polygon's `winding` is clockwise iff its vertices (points) are declared turning to the right. The image above shows COUNTERCLOCKWISE winding.
+ * A polygon's `winding` is clockwise if its vertices (points) are declared turning to the right. The image above shows COUNTERCLOCKWISE winding.
  */
 class Polygon {
-
     /**
      * @param {number} x origin point of the Polygon
      * @param {number} y origin point of the Polygon
@@ -16350,7 +16349,7 @@ class Body {
         pool.push(this.friction);
         pool.push(this.maxVel);
         this.shapes.forEach((shape) => {
-            pool.push(shape);
+            pool.push(shape, false);
         });
 
         // set to undefined
@@ -34429,7 +34428,7 @@ class Text extends Renderable {
      * @param {number} [y]
      * @param {boolean} [stroke=false] draw stroke the the text if true
      */
-    draw(renderer, text, x, y, stroke) {
+    draw(renderer, text, x = this.pos.x, y = this.pos.y, stroke = false) {
         // "hacky patch" for backward compatibilty
         if (typeof this.ancestor === "undefined") {
 
