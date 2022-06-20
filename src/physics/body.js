@@ -691,7 +691,7 @@ class Body {
         pool.push(this.friction);
         pool.push(this.maxVel);
         this.shapes.forEach((shape) => {
-            pool.push(shape);
+            pool.push(shape, false);
         });
 
         // set to undefined

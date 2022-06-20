@@ -7,6 +7,7 @@
 
 ### Changed
 - Physic: simplify the collision api and implementation (removed `collision.response` that serves no purpose anymore)
+- Pooling: silently fail if internally failing at recycling body physic shapes
 
 ### Fixed
 - Text: make sure the optional `x` and `y` arguments of the draw method are set to a default value
@@ -15,6 +16,7 @@
 - TypeScript: fix `setMaxVelocity` and `setFriction` method scope
 - Webdoc: fix wrong or missing  argument names (`Path2D.arcTo`, `Rect.centerOn`, `Texture.AdduVs`)
 - Physic: fix a regression with Ellipse vs Polygon SAT collision detection
+
 
 ## [10.11.0] (melonJS 2) - _2022-06-14_
 

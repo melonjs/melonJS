@@ -167,7 +167,7 @@ class ObjectPool {
         return (typeof className !== "undefined") &&
                 (typeof obj.onResetEvent === "function") &&
                 (className in this.objectClass) &&
-                (this.objectClass[className].pool !== "undefined");
+                (typeof this.objectClass[className].pool !== "undefined");
 
     }
 
