@@ -1,6 +1,6 @@
 # Changelog
 
-## [10.12.0] (melonJS 2) - _2022-06-xx_
+## [10.12.0] (melonJS 2) - _2022-06-20_
 
 ### Added
 - State: new `get(state)` function that return the instance to the Stage associated with the given state
@@ -10,12 +10,12 @@
 - Pooling: silently fail if internally failing at recycling body physic shapes
 
 ### Fixed
+- Physic: fix a regression with Ellipse vs Polygon SAT collision detection
 - Text: make sure the optional `x` and `y` arguments of the draw method are set to a default value
 - TypeScript: fix and uniform draw method signature across all renderables
 - TypeScript: fix typings for the `onCollision` method
 - TypeScript: fix `setMaxVelocity` and `setFriction` method scope
 - Webdoc: fix wrong or missing  argument names (`Path2D.arcTo`, `Rect.centerOn`, `Texture.AdduVs`)
-- Physic: fix a regression with Ellipse vs Polygon SAT collision detection
 
 
 ## [10.11.0] (melonJS 2) - _2022-06-14_
