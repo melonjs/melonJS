@@ -55,7 +55,7 @@
   ],
   "dependencies": {
     "@teppeis/multimaps": "^2.0.0",
-    "core-js": "^3.23.1",
+    "core-js": "^3.23.2",
     "earcut": "2.2.3",
     "eventemitter3": "^4.0.7",
     "howler": "2.2.3"
@@ -77,7 +77,7 @@
     "karma-html-detailed-reporter": "^2.1.0",
     "karma-jasmine": "^5.1.0",
     "karma-nyan-reporter": "0.2.5",
-    "rollup": "^2.75.6",
+    "rollup": "^2.75.7",
     "rollup-plugin-bundle-size": "^1.0.3",
     "rollup-plugin-string": "^3.0.0",
     "terser": "^5.14.1",
