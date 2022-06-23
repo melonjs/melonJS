@@ -9,6 +9,17 @@ import EventEmitter from "eventemitter3";
 var eventEmitter = new EventEmitter();
 
 /**
+ * event when the DOM is Ready is booting
+ * @public
+ * @constant
+ * @type {string}
+ * @name DOM_READY
+ * @memberof event
+ * @see event.on
+ */
+export const DOM_READY = "dom_ready";
+
+/**
  * event when the system is booting
  * @public
  * @constant

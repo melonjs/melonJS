@@ -2,6 +2,9 @@
 
 ## [11.0.0] (melonJS 2) - _2022-xx-xx_
 
+### Added
+- Event: new `DOM_READY` event triggered when the DOM is loaded and ready (now used internally to trigger the `onReady()` function)
+
 ### Changed
 - Renderable: update the Light2d constructor to allow creating elliptical shaped lights
 
