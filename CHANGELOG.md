@@ -8,6 +8,9 @@
 ### Changed
 - Renderable: update the Light2d constructor to allow creating elliptical shaped lights
 
+### Fixed
+Core: fix an uncaught exception when using parcel (thanks @8Observer8)
+
 ## [10.12.0] (melonJS 2) - _2022-06-20_
 
 ### Added
