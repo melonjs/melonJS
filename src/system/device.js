@@ -380,7 +380,7 @@ let device = {
      * @readonly
      * @name nodeJS
      */
-    nodeJS : (typeof process !== "undefined") && (process.release.name === "node"),
+    nodeJS : (typeof globalThis.process !== "undefined") && (typeof globalThis.process.release !== "undefined") && (globalThis.process.release.name === "node"),
 
     /**
      * equals to true if the device is running on ChromeOS.
