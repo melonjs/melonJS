@@ -1,5 +1,10 @@
 # Changelog
 
+## [11.0.0] (melonJS 2) - _2022-xx-xx_
+
+### Changed
+- Renderable: update the Light2d constructor to allow creating elliptical shaped lights
+
 ## [10.12.0] (melonJS 2) - _2022-06-20_
 
 ### Added
@@ -1221,6 +1226,7 @@
 - first public version with alex4 !
 - www.melonjs.org is live :)
 
+[11.0.0]: https://github.com/melonjs/melonJS/compare/10.12.0...11.0.0
 [10.12.0]: https://github.com/melonjs/melonJS/compare/10.11.0...10.12.0
 [10.11.0]: https://github.com/melonjs/melonJS/compare/10.10.0...10.11.0
 [10.10.0]: https://github.com/melonjs/melonJS/compare/10.9.0...10.10.0
