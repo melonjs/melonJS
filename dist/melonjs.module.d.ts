@@ -2806,11 +2806,12 @@ export class Light2d extends Renderable {
     /**
      * @param {number} x - The horizontal position of the light.
      * @param {number} y - The vertical position of the light.
-     * @param {number} radius - The radius of the light.
+     * @param {number} radiusX - The horizontal radius of the light.
+     * @param {number} [radiusY=radiusX] - The vertical radius of the light.
      * @param {Color|string} [color="#FFF"] the color of the light
      * @param {number} [intensity=0.7] - The intensity of the light.
      */
-    constructor(x: number, y: number, radius: number, color?: Color | string, intensity?: number);
+    constructor(x: number, y: number, radiusX: number, radiusY?: number, color?: Color | string, intensity?: number);
     /**
      * the color of the light
      * @type {Color}
@@ -2818,10 +2819,15 @@ export class Light2d extends Renderable {
      */
     color: Color;
     /**
-     * The radius of the light
+     * The horizontal radius of the light
      * @type {number}
      */
-    radius: number;
+    radiusX: number;
+    /**
+     * The vertical radius of the light
+     * @type {number}
+     */
+    radiusY: number;
     /**
      * The intensity of the light
      * @type {number}

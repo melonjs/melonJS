@@ -1,5 +1,5 @@
 /*!
- * melonJS Game Engine - v10.12.0
+ * melonJS Game Engine - v11.0.0
  * http://www.melonjs.org
  * melonjs is licensed under the MIT License.
  * http://www.opensource.org/licenses/mit-license
@@ -315,10 +315,10 @@
 	(shared$3.exports = function (key, value) {
 	  return store$2[key] || (store$2[key] = value !== undefined ? value : {});
 	})('versions', []).push({
-	  version: '3.23.1',
+	  version: '3.23.2',
 	  mode: 'global',
 	  copyright: '© 2014-2022 Denis Pushkarev (zloirock.ru)',
-	  license: 'https://github.com/zloirock/core-js/blob/v3.23.1/LICENSE',
+	  license: 'https://github.com/zloirock/core-js/blob/v3.23.2/LICENSE',
 	  source: 'https://github.com/zloirock/core-js'
 	});
 
@@ -32901,10 +32901,10 @@
 	     * this can be overridden by the plugin
 	     * @public
 	     * @type {string}
-	     * @default "10.12.0"
+	     * @default "11.0.0"
 	     * @name plugin.Base#version
 	     */
-	    this.version = "10.12.0";
+	    this.version = "11.0.0";
 	};
 
 	/**
@@ -36098,19 +36098,41 @@
 	/** @ignore */
 	function createGradient(light) {
 	    var context = light.texture.context;
-	    var x1 = light.texture.width / 2;
-	    var y1 = light.texture.height / 2;
-	    var gradient = context.createRadialGradient(x1, y1, 0, x1, y1, light.radius);
+
+	    var x1 = light.texture.width / 2,
+	        y1 = light.texture.height / 2;
+
+	    var radiusX = light.radiusX,
+	        radiusY = light.radiusY;
+
+	    var scaleX, scaleY, invScaleX, invScaleY;
+	    var gradient;
+
 
 	    light.texture.clear();
+
+	    if (radiusX >= radiusY) {
+	        scaleX = 1;
+	        invScaleX = 1;
+	        scaleY = radiusY/radiusX;
+	        invScaleY = radiusX/radiusY;
+	        gradient = context.createRadialGradient(x1, y1 * invScaleY, 0, x1, radiusY * invScaleY, radiusX);
+	    }
+	    else {
+	        scaleY = 1;
+	        invScaleY = 1;
+	        scaleX = radiusX/radiusY;
+	        invScaleX = radiusY/radiusX;
+	        gradient = context.createRadialGradient(x1 * invScaleX, y1, 0, x1 * invScaleX, y1, radiusY);
+	    }
 
 	    gradient.addColorStop( 0, light.color.toRGBA(light.intensity));
 	    gradient.addColorStop( 1, light.color.toRGBA(0.0));
 
-	    context.beginPath();
 	    context.fillStyle = gradient;
-	    context.arc(x1, y1, light.radius, 0, Math.PI * 2, false);
-	    context.fill();
+
+	    context.setTransform(scaleX, 0, 0, scaleY, 0, 0);
+	    context.fillRect(0, 0, light.texture.width * invScaleX, light.texture.height * invScaleY);
 	}
 
 	/**
@@ -36122,12 +36144,13 @@
 	 * @see stage.lights
 	 */
 	var Light2d = /*@__PURE__*/(function (Renderable) {
-	   function Light2d(x, y, radius, color, intensity) {
+	   function Light2d(x, y, radiusX, radiusY, color, intensity) {
+	        if ( radiusY === void 0 ) radiusY = radiusX;
 	        if ( color === void 0 ) color = "#FFF";
 	        if ( intensity === void 0 ) intensity = 0.7;
 
 	        // call the parent constructor
-	        Renderable.call(this, x, y, radius * 2, radius * 2);
+	        Renderable.call(this, x, y, radiusX * 2, radiusY * 2);
 
 	        /**
 	         * the color of the light
@@ -36137,10 +36160,16 @@
 	        this.color = pool.pull("Color").parseCSS(color);
 
 	        /**
-	         * The radius of the light
+	         * The horizontal radius of the light
 	         * @type {number}
 	         */
-	        this.radius = radius;
+	        this.radiusX = radiusX;
+
+	        /**
+	         * The vertical radius of the light
+	         * @type {number}
+	         */
+	        this.radiusY = radiusY;
 
 	        /**
 	         * The intensity of the light
@@ -37508,7 +37537,7 @@
 	 * @name version
 	 * @type {string}
 	 */
-	var version = "10.12.0";
+	var version = "11.0.0";
 
 
 	/**
