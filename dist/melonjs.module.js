@@ -4338,6 +4338,17 @@ var EventEmitter = eventemitter3.exports;
 var eventEmitter = new EventEmitter();
 
 /**
+ * event when the DOM is Ready is booting
+ * @public
+ * @constant
+ * @type {string}
+ * @name DOM_READY
+ * @memberof event
+ * @see event.on
+ */
+const DOM_READY = "dom_ready";
+
+/**
  * event when the system is booting
  * @public
  * @constant
@@ -4843,6 +4854,7 @@ function off(eventName, listener) {
 
 var event = /*#__PURE__*/Object.freeze({
 	__proto__: null,
+	DOM_READY: DOM_READY,
 	BOOT: BOOT,
 	STATE_PAUSE: STATE_PAUSE,
 	STATE_RESUME: STATE_RESUME,
@@ -28375,6 +28387,73 @@ var save = {
     }
 };
 
+// track if DOMContentLoaded was called already
+let readyBound = false;
+
+// is the DOM ready ?
+let isDOMReady = false;
+
+// check if the dom is ready
+function _domReady() {
+
+    // Make sure that the DOM is not already loaded
+    if (!isDOMReady) {
+        // be sure document.body is there
+        if (typeof globalThis.document !== "undefined" && !globalThis.document.body) {
+            return setTimeout(_domReady, 13);
+        }
+
+        // clean up loading event
+        if (typeof globalThis.document !== "undefined" && typeof globalThis.document.removeEventListener === "function") {
+            globalThis.document.removeEventListener(
+                "DOMContentLoaded",
+                _domReady,
+                false
+            );
+        }
+
+        if (typeof globalThis.removeEventListener === "function") {
+            // remove the event on globalThis.onload (always added in `onReady`)
+            globalThis.removeEventListener("load", _domReady, false);
+        }
+
+        // execute all callbacks
+        emit(DOM_READY);
+
+        // Remember that the DOM is ready
+        isDOMReady = true;
+    }
+}
+// https://developer.mozilla.org/en-US/docs/Web/API/Window/DOMContentLoaded_event
+function DOMContentLoaded(fn) {
+    // If the DOM is already ready
+    if (isDOMReady) {
+        // Execute the function immediately
+        fn.call(globalThis, []);
+    }
+    else {
+        // else add the function to the DOM_READY event
+        once(DOM_READY, fn, globalThis);
+        // bind dom load event if not done yet
+        if (!readyBound) {
+            // directly call domReady if document is already "ready"
+            if (((typeof process !== "undefined") && (process.release.name === "node")) || (typeof globalThis.document !== "undefined" && globalThis.document.readyState === "complete")) {
+                // defer the fn call to ensure our script is fully loaded
+                globalThis.setTimeout(_domReady, 0);
+            }
+            else {
+                if (typeof globalThis.document !== "undefined" && typeof globalThis.document.addEventListener === "function") {
+                    // Use the handy event callback
+                    globalThis.document.addEventListener("DOMContentLoaded", _domReady, false);
+                }
+                // A fallback to globalThis.onload, that will always work
+                globalThis.addEventListener("load", _domReady, false);
+            }
+            readyBound = true;
+        }
+    }
+}
+
 // private properties
 let accelInitialized = false;
 let deviceOrientationInitialized = false;
@@ -28391,44 +28470,6 @@ function _disableSwipeFn(e) {
         globalThis.scroll(0, 0);
     }
     return false;
-}
-// DOM loading stuff
-let readyBound = false, isReady = false, readyList = [];
-
-/**
- * // called to check if the device is ready
- * @ignore
- */
-function _domReady() {
-    // Make sure that the DOM is not already loaded
-    if (!isReady) {
-        // be sure document.body is there
-        if (typeof globalThis.document !== "undefined" && !globalThis.document.body) {
-            return setTimeout(_domReady, 13);
-        }
-
-        // clean up loading event
-        if (typeof globalThis.document !== "undefined" && typeof globalThis.document.removeEventListener === "function") {
-            globalThis.document.removeEventListener(
-                "DOMContentLoaded",
-                this._domReady,
-                false
-            );
-        }
-
-        if (typeof globalThis.removeEventListener === "function") {
-            // remove the event on globalThis.onload (always added in `onReady`)
-            globalThis.removeEventListener("load", _domReady, false);
-        }
-
-        // execute all callbacks
-        while (readyList.length) {
-            readyList.shift().call(globalThis, []);
-        }
-
-        // Remember that the DOM is ready
-        isReady = true;
-    }
 }
 // a cache DOMRect object
 let _domRect = {left: 0, top: 0, x: 0, y: 0, width: 0, height: 0, right: 0, bottom: 0};
@@ -28784,7 +28825,7 @@ let device = {
      * @readonly
      * @name nodeJS
      */
-    nodeJS : (typeof process !== "undefined") && (process.release.name === "node"),
+    nodeJS : (typeof globalThis.process !== "undefined") && (typeof globalThis.process.release !== "undefined") && (globalThis.process.release.name === "node"),
 
     /**
      * equals to true if the device is running on ChromeOS.
@@ -28972,33 +29013,7 @@ let device = {
     * });
     */
     onReady(fn) {
-        // If the DOM is already ready
-        if (isReady) {
-            // Execute the function immediately
-            fn.call(globalThis, []);
-        }
-        else {
-            // Add the function to the wait list
-            readyList.push(fn);
-
-            // attach listeners if not yet done
-            if (!readyBound) {
-                // directly call domReady if document is already "ready"
-                if (device.nodeJS === true || (typeof globalThis.document !== "undefined" && globalThis.document.readyState === "complete")) {
-                    // defer the fn call to ensure our script is fully loaded
-                    globalThis.setTimeout(_domReady, 0);
-                }
-                else {
-                    if (typeof globalThis.document !== "undefined" && typeof globalThis.document.addEventListener === "function") {
-                        // Use the handy event callback
-                        globalThis.document.addEventListener("DOMContentLoaded", _domReady, false);
-                    }
-                    // A fallback to globalThis.onload, that will always work
-                    globalThis.addEventListener("load", _domReady, false);
-                }
-                readyBound = true;
-            }
-        }
+        DOMContentLoaded(fn);
     },
 
     /**

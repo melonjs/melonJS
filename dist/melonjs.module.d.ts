@@ -9765,6 +9765,7 @@ export namespace device {
 }
 export var event: Readonly<{
     __proto__: any;
+    DOM_READY: string;
     BOOT: string;
     STATE_PAUSE: string;
     STATE_RESUME: string;
