@@ -4,19 +4,41 @@ import Renderable from "./renderable.js";
 /** @ignore */
 function createGradient(light) {
     var context = light.texture.context;
-    var x1 = light.texture.width / 2;
-    var y1 = light.texture.height / 2;
-    var gradient = context.createRadialGradient(x1, y1, 0, x1, y1, light.radius);
+
+    var x1 = light.texture.width / 2,
+        y1 = light.texture.height / 2;
+
+    var radiusX = light.radiusX,
+        radiusY = light.radiusY;
+
+    var scaleX, scaleY, invScaleX, invScaleY;
+    var gradient;
+
 
     light.texture.clear();
+
+    if (radiusX >= radiusY) {
+        scaleX = 1;
+        invScaleX = 1;
+        scaleY = radiusY/radiusX;
+        invScaleY = radiusX/radiusY;
+        gradient = context.createRadialGradient(x1, y1 * invScaleY, 0, x1, radiusY * invScaleY, radiusX);
+    }
+    else {
+        scaleY = 1;
+        invScaleY = 1;
+        scaleX = radiusX/radiusY;
+        invScaleX = radiusY/radiusX;
+        gradient = context.createRadialGradient(x1 * invScaleX, y1, 0, x1 * invScaleX, y1, radiusY);
+    }
 
     gradient.addColorStop( 0, light.color.toRGBA(light.intensity));
     gradient.addColorStop( 1, light.color.toRGBA(0.0));
 
-    context.beginPath();
     context.fillStyle = gradient;
-    context.arc(x1, y1, light.radius, 0, Math.PI * 2, false);
-    context.fill();
+
+    context.setTransform(scaleX, 0, 0, scaleY, 0, 0);
+    context.fillRect(0, 0, light.texture.width * invScaleX, light.texture.height * invScaleY);
 }
 
 /**
@@ -31,13 +53,14 @@ class Light2d extends Renderable {
    /**
     * @param {number} x - The horizontal position of the light.
     * @param {number} y - The vertical position of the light.
-    * @param {number} radius - The radius of the light.
+    * @param {number} radiusX - The horizontal radius of the light.
+    * @param {number} [radiusY=radiusX] - The vertical radius of the light.
     * @param {Color|string} [color="#FFF"] the color of the light
     * @param {number} [intensity=0.7] - The intensity of the light.
     */
-    constructor(x, y, radius, color = "#FFF", intensity = 0.7) {
+    constructor(x, y, radiusX, radiusY = radiusX, color = "#FFF", intensity = 0.7) {
         // call the parent constructor
-        super(x, y, radius * 2, radius * 2);
+        super(x, y, radiusX * 2, radiusY * 2);
 
         /**
          * the color of the light
@@ -47,10 +70,16 @@ class Light2d extends Renderable {
         this.color = pool.pull("Color").parseCSS(color);
 
         /**
-         * The radius of the light
+         * The horizontal radius of the light
          * @type {number}
          */
-        this.radius = radius;
+        this.radiusX = radiusX;
+
+        /**
+         * The vertical radius of the light
+         * @type {number}
+         */
+        this.radiusY = radiusY;
 
         /**
          * The intensity of the light
