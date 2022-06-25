@@ -16,30 +16,6 @@ export function capitalize(str) {
 };
 
 /**
- * returns the string stripped of whitespace from the left.
- * @public
- * @memberof utils.string
- * @name trimLeft
- * @param {string} str the string to be trimmed
- * @returns {string} trimmed string
- */
-export function trimLeft(str) {
-    return str.replace(/^\s+/, "");
-};
-
-/**
- * returns the string stripped of whitespace from the right.
- * @public
- * @memberof utils.string
- * @name trimRight
- * @param {string} str the string to be trimmed
- * @returns {string} trimmed string
- */
-export function trimRight(str) {
-    return str.replace(/\s+$/, "");
-};
-
-/**
  * returns true if the given string contains a numeric integer or float value
  * @public
  * @memberof utils.string

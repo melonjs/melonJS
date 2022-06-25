@@ -1,7 +1,6 @@
 import Color from "./../math/color.js";
 import WebGLRenderer from "./../video/webgl/webgl_renderer.js";
 import { renderer as globalRenderer } from "./../video/video.js";
-import { trimRight } from "./../utils/string.js";
 import pool from "./../system/pooling.js";
 import Renderable from "./../renderable/renderable.js";
 import { nextPowerOfTwo } from "./../math/math.js";
@@ -423,7 +422,7 @@ class Text extends Renderable {
         setContextStyle(context, this, stroke);
 
         for (var i = 0; i < text.length; i++) {
-            var string = trimRight(text[i]);
+            var string = text[i].trimRight();
             // draw the string
             context[stroke ? "strokeText" : "fillText"](string, x, y);
             // add leading space

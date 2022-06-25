@@ -1,5 +1,4 @@
 import Bounds from "./../physics/bounds.js";
-import { trimRight } from "./../utils/string.js";
 import Text from "./text.js";
 import setContextStyle from "./textstyle.js";
 
@@ -92,7 +91,7 @@ class TextMetrics extends Bounds {
         this.width = this.height = 0;
 
         for (var i = 0; i < strings.length; i++) {
-            this.width = Math.max(this.lineWidth(trimRight(strings[i]), context), this.width);
+            this.width = Math.max(this.lineWidth(strings[i].trimRight(), context), this.width);
             this.height += this.lineHeight();
         }
         this.width = Math.ceil(this.width);

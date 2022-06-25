@@ -1,5 +1,10 @@
 # Changelog
 
+## [11.1.0] (melonJS 2) - _2022-xx-xx_
+
+### Changed
+- String: replaced own `trim[left/right]` functions with native es10 equivalent (with polyfill)
+
 ## [11.0.0] (melonJS 2) - _2022-06-23_
 
 ### Added

@@ -55,11 +55,11 @@ describe("utils", function () {
         var untrimmed_str = " start and end with white space ";
 
         it("trim left side", function () {
-            expect(me.utils.string.trimLeft(untrimmed_str)).toEqual("start and end with white space ");
+            expect(untrimmed_str.trimLeft()).toEqual("start and end with white space ");
         });
 
         it("trim right side", function () {
-            expect(me.utils.string.trimRight(untrimmed_str)).toEqual(" start and end with white space");
+            expect(untrimmed_str.trimRight()).toEqual(" start and end with white space");
         });
 
         it("capitalize", function () {
