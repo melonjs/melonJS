@@ -1,8 +1,9 @@
 # Changelog
 
-## [11.1.0] (melonJS 2) - _2022-xx-xx_
+## [12.0.0] (melonJS 2) - _2022-xx-xx_
 
 ### Changed
+- Loader: the default loading screen has been updated with the new melonjs logo
 - String: replaced own `trim[left/right]` functions with native es10 equivalent (with polyfill)
 
 ## [11.0.0] (melonJS 2) - _2022-06-23_
@@ -1237,6 +1238,7 @@
 - first public version with alex4 !
 - www.melonjs.org is live :)
 
+[12.0.0]: https://github.com/melonjs/melonJS/compare/12.0.0...11.0.0
 [11.0.0]: https://github.com/melonjs/melonJS/compare/10.12.0...11.0.0
 [10.12.0]: https://github.com/melonjs/melonJS/compare/10.11.0...10.12.0
 [10.11.0]: https://github.com/melonjs/melonJS/compare/10.10.0...10.11.0
