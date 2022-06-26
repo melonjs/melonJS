@@ -1,6 +1,7 @@
 import buble from "@rollup/plugin-buble";
 import { string } from "rollup-plugin-string";
 import replace from "@rollup/plugin-replace";
+import image from "@rollup/plugin-image";
 import bundleSize from "rollup-plugin-bundle-size";
 import commonjs from "@rollup/plugin-commonjs";
 import resolve from "@rollup/plugin-node-resolve";
@@ -44,6 +45,7 @@ export default [
                     "**/*.vert"
                 ]
             }),
+            image(),
             buble(),
             bundleSize()
         ],
@@ -79,6 +81,7 @@ export default [
                     "**/*.vert"
                 ]
             }),
+            image(),
             bundleSize()
         ],
         output: {

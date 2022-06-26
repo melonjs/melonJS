@@ -1,10 +1,10 @@
 import { world, viewport } from "./../game.js";
 import { renderer } from "./../video/video.js";
 import * as event from "./../system/event.js";
-import {nextPowerOfTwo} from "./../math/math.js";
-import pool from "./../system/pooling.js";
 import Renderable from "./../renderable/renderable.js";
+import Sprite from "./../renderable/sprite.js";
 import Stage from "./../state/stage.js";
+import melonjs_logo from "./melonjs_logo.png";
 
 
 // a basic progress bar object
@@ -61,70 +61,22 @@ class ProgressBar extends Renderable {
 
 };
 
-// the melonJS Logo
-class IconLogo extends Renderable {
-    /**
-     * @ignore
-     */
+/**
+ * the melonJS Logo
+ * @ignore
+ */
+class IconLogo extends Sprite {
     constructor(x, y) {
-        super(x, y, 100, 85);
-
-        this.iconTexture = pool.pull("CanvasTexture",
-            renderer.WebGLVersion > 1 ? this.width : nextPowerOfTwo(this.width),
-            renderer.WebGLVersion > 1 ? this.height : nextPowerOfTwo(this.height),
-            { offscreenCanvas: true }
-        );
-
-        var context = this.iconTexture.context;
-
-        context.beginPath();
-        context.moveTo(0.7, 48.9);
-        context.bezierCurveTo(10.8, 68.9, 38.4, 75.8, 62.2, 64.5);
-        context.bezierCurveTo(86.1, 53.1, 97.2, 27.7, 87.0, 7.7);
-        context.lineTo(87.0, 7.7);
-        context.bezierCurveTo(89.9, 15.4, 73.9, 30.2, 50.5, 41.4);
-        context.bezierCurveTo(27.1, 52.5, 5.2, 55.8, 0.7, 48.9);
-        context.lineTo(0.7, 48.9);
-        context.closePath();
-        context.fillStyle = "rgb(255, 255, 255)";
-        context.fill();
-
-        context.beginPath();
-        context.moveTo(84.0, 7.0);
-        context.bezierCurveTo(87.6, 14.7, 72.5, 30.2, 50.2, 41.6);
-        context.bezierCurveTo(27.9, 53.0, 6.9, 55.9, 3.2, 48.2);
-        context.bezierCurveTo(-0.5, 40.4, 14.6, 24.9, 36.9, 13.5);
-        context.bezierCurveTo(59.2, 2.2, 80.3, -0.8, 84.0, 7.0);
-        context.lineTo(84.0, 7.0);
-        context.closePath();
-        context.lineWidth = 5.3;
-        context.strokeStyle = "rgb(255, 255, 255)";
-        context.lineJoin = "miter";
-        context.miterLimit = 4.0;
-        context.stroke();
-
-        this.anchorPoint.set(0.5, 0.5);
+        // TODO: create a sprite or texture from a Base64 encoded image
+        var image = new Image();
+        image.src = melonjs_logo;
+        super(x, y, {
+            image : image,
+            framewidth : 256,
+            frameheight : 256
+        });
     }
-
-    /**
-     * @ignore
-     */
-    draw(renderer) {
-        renderer.drawImage(this.iconTexture.canvas, renderer.getWidth() / 2, this.pos.y);
-    }
-
-    /**
-     * Destroy function
-     * @ignore
-     */
-    destroy() {
-        // call the parent destroy method
-        super.destroy(arguments);
-        pool.push(this.iconTexture);
-        this.iconTexture = undefined;
-    }
-};
-
+}
 
 /**
  * a default loading screen
@@ -152,47 +104,9 @@ class DefaultLoadingScreen extends Stage {
         // melonJS logo
         world.addChild(new IconLogo(
             renderer.getWidth() / 2,
-            (renderer.getHeight() / 2) - (barHeight * 2) - 35
+            (renderer.getHeight() / 2)
 
         ), 2);
-
-        var logo1 = pool.pull("Text",
-            renderer.getWidth() / 2,
-            (renderer.getHeight() / 2) + 16, {
-                font: "century gothic",
-                size: 32,
-                fillStyle: "white",
-                textAlign: "left",
-                textBaseline : "top",
-                text: "melon",
-                offScreenCanvas: renderer.WebGLVersion >= 1
-            }
-        );
-        logo1.anchorPoint.set(0, 0);
-
-        var logo2 = pool.pull("Text",
-            renderer.getWidth() / 2,
-            (renderer.getHeight() / 2) + 16, {
-                font: "century gothic",
-                size: 32,
-                fillStyle: "#55aa00",
-                textAlign: "left",
-                textBaseline : "top",
-                bold: true,
-                text: "JS",
-                offScreenCanvas: renderer.WebGLVersion >= 1
-            }
-        );
-        logo2.anchorPoint.set(0, 0);
-
-        // adjust position of both text
-        var text_width = logo1.getBounds().width + logo2.getBounds().width;
-        logo1.pos.x = renderer.getWidth() / 2 - text_width / 2;
-        logo2.pos.x = logo1.pos.x + logo1.getBounds().width;
-
-        // melonJS text
-        world.addChild(logo1, 2);
-        world.addChild(logo2, 2);
     }
 };
 
