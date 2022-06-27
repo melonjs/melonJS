@@ -1,5 +1,5 @@
 /*!
- * melonJS Game Engine - v11.0.0
+ * melonJS Game Engine - v12.0.0
  * http://www.melonjs.org
  * melonjs is licensed under the MIT License.
  * http://www.opensource.org/licenses/mit-license
@@ -18,7 +18,7 @@
 	};
 
 	// https://github.com/zloirock/core-js/issues/86#issuecomment-115759028
-	var global$b =
+	var global$c =
 	  // eslint-disable-next-line es-x/no-global-this -- safe
 	  check(typeof globalThis == 'object' && globalThis) ||
 	  check(typeof window == 'object' && window) ||
@@ -30,7 +30,7 @@
 
 	var objectGetOwnPropertyDescriptor = {};
 
-	var fails$8 = function (exec) {
+	var fails$9 = function (exec) {
 	  try {
 	    return !!exec();
 	  } catch (error) {
@@ -38,17 +38,17 @@
 	  }
 	};
 
-	var fails$7 = fails$8;
+	var fails$8 = fails$9;
 
 	// Detect IE8's incomplete defineProperty implementation
-	var descriptors = !fails$7(function () {
+	var descriptors = !fails$8(function () {
 	  // eslint-disable-next-line es-x/no-object-defineproperty -- required for testing
 	  return Object.defineProperty({}, 1, { get: function () { return 7; } })[1] != 7;
 	});
 
-	var fails$6 = fails$8;
+	var fails$7 = fails$9;
 
-	var functionBindNative = !fails$6(function () {
+	var functionBindNative = !fails$7(function () {
 	  // eslint-disable-next-line es-x/no-function-prototype-bind -- safe
 	  var test = (function () { /* empty */ }).bind();
 	  // eslint-disable-next-line no-prototype-builtins -- safe
@@ -93,94 +93,94 @@
 	var FunctionPrototype$1 = Function.prototype;
 	var bind = FunctionPrototype$1.bind;
 	var call$3 = FunctionPrototype$1.call;
-	var uncurryThis$9 = NATIVE_BIND && bind.bind(call$3, call$3);
+	var uncurryThis$b = NATIVE_BIND && bind.bind(call$3, call$3);
 
 	var functionUncurryThis = NATIVE_BIND ? function (fn) {
-	  return fn && uncurryThis$9(fn);
+	  return fn && uncurryThis$b(fn);
 	} : function (fn) {
 	  return fn && function () {
 	    return call$3.apply(fn, arguments);
 	  };
 	};
 
-	var uncurryThis$8 = functionUncurryThis;
+	var uncurryThis$a = functionUncurryThis;
 
-	var toString$2 = uncurryThis$8({}.toString);
-	var stringSlice = uncurryThis$8(''.slice);
+	var toString$4 = uncurryThis$a({}.toString);
+	var stringSlice = uncurryThis$a(''.slice);
 
-	var classofRaw = function (it) {
-	  return stringSlice(toString$2(it), 8, -1);
+	var classofRaw$1 = function (it) {
+	  return stringSlice(toString$4(it), 8, -1);
 	};
 
-	var uncurryThis$7 = functionUncurryThis;
-	var fails$5 = fails$8;
-	var classof = classofRaw;
+	var uncurryThis$9 = functionUncurryThis;
+	var fails$6 = fails$9;
+	var classof$2 = classofRaw$1;
 
-	var $Object$2 = Object;
-	var split = uncurryThis$7(''.split);
+	var $Object$3 = Object;
+	var split = uncurryThis$9(''.split);
 
 	// fallback for non-array-like ES3 and non-enumerable old V8 strings
-	var indexedObject = fails$5(function () {
+	var indexedObject = fails$6(function () {
 	  // throws an error in rhino, see https://github.com/mozilla/rhino/issues/346
 	  // eslint-disable-next-line no-prototype-builtins -- safe
-	  return !$Object$2('z').propertyIsEnumerable(0);
+	  return !$Object$3('z').propertyIsEnumerable(0);
 	}) ? function (it) {
-	  return classof(it) == 'String' ? split(it, '') : $Object$2(it);
-	} : $Object$2;
+	  return classof$2(it) == 'String' ? split(it, '') : $Object$3(it);
+	} : $Object$3;
 
 	var $TypeError$5 = TypeError;
 
 	// `RequireObjectCoercible` abstract operation
 	// https://tc39.es/ecma262/#sec-requireobjectcoercible
-	var requireObjectCoercible$2 = function (it) {
+	var requireObjectCoercible$3 = function (it) {
 	  if (it == undefined) { throw $TypeError$5("Can't call method on " + it); }
 	  return it;
 	};
 
 	// toObject with fallback for non-array-like ES3 strings
 	var IndexedObject = indexedObject;
-	var requireObjectCoercible$1 = requireObjectCoercible$2;
+	var requireObjectCoercible$2 = requireObjectCoercible$3;
 
 	var toIndexedObject$3 = function (it) {
-	  return IndexedObject(requireObjectCoercible$1(it));
+	  return IndexedObject(requireObjectCoercible$2(it));
 	};
 
 	// `IsCallable` abstract operation
 	// https://tc39.es/ecma262/#sec-iscallable
-	var isCallable$a = function (argument) {
+	var isCallable$b = function (argument) {
 	  return typeof argument == 'function';
 	};
 
-	var isCallable$9 = isCallable$a;
+	var isCallable$a = isCallable$b;
 
 	var isObject$5 = function (it) {
-	  return typeof it == 'object' ? it !== null : isCallable$9(it);
+	  return typeof it == 'object' ? it !== null : isCallable$a(it);
 	};
 
-	var global$a = global$b;
-	var isCallable$8 = isCallable$a;
+	var global$b = global$c;
+	var isCallable$9 = isCallable$b;
 
 	var aFunction = function (argument) {
-	  return isCallable$8(argument) ? argument : undefined;
+	  return isCallable$9(argument) ? argument : undefined;
 	};
 
 	var getBuiltIn$3 = function (namespace, method) {
-	  return arguments.length < 2 ? aFunction(global$a[namespace]) : global$a[namespace] && global$a[namespace][method];
+	  return arguments.length < 2 ? aFunction(global$b[namespace]) : global$b[namespace] && global$b[namespace][method];
 	};
 
-	var uncurryThis$6 = functionUncurryThis;
+	var uncurryThis$8 = functionUncurryThis;
 
-	var objectIsPrototypeOf = uncurryThis$6({}.isPrototypeOf);
+	var objectIsPrototypeOf = uncurryThis$8({}.isPrototypeOf);
 
 	var getBuiltIn$2 = getBuiltIn$3;
 
 	var engineUserAgent = getBuiltIn$2('navigator', 'userAgent') || '';
 
-	var global$9 = global$b;
+	var global$a = global$c;
 	var userAgent = engineUserAgent;
 
-	var process$1 = global$9.process;
-	var Deno = global$9.Deno;
+	var process$1 = global$a.process;
+	var Deno = global$a.Deno;
 	var versions = process$1 && process$1.versions || Deno && Deno.version;
 	var v8 = versions && versions.v8;
 	var match, version$1;
@@ -207,10 +207,10 @@
 	/* eslint-disable es-x/no-symbol -- required for testing */
 
 	var V8_VERSION = engineV8Version;
-	var fails$4 = fails$8;
+	var fails$5 = fails$9;
 
 	// eslint-disable-next-line es-x/no-object-getownpropertysymbols -- required for testing
-	var nativeSymbol = !!Object.getOwnPropertySymbols && !fails$4(function () {
+	var nativeSymbol = !!Object.getOwnPropertySymbols && !fails$5(function () {
 	  var symbol = Symbol();
 	  // Chrome 38 Symbol has incorrect toString conversion
 	  // `get-own-property-symbols` polyfill symbols converted to object are not Symbol instances
@@ -228,37 +228,37 @@
 	  && typeof Symbol.iterator == 'symbol';
 
 	var getBuiltIn$1 = getBuiltIn$3;
-	var isCallable$7 = isCallable$a;
+	var isCallable$8 = isCallable$b;
 	var isPrototypeOf = objectIsPrototypeOf;
 	var USE_SYMBOL_AS_UID$1 = useSymbolAsUid;
 
-	var $Object$1 = Object;
+	var $Object$2 = Object;
 
 	var isSymbol$2 = USE_SYMBOL_AS_UID$1 ? function (it) {
 	  return typeof it == 'symbol';
 	} : function (it) {
 	  var $Symbol = getBuiltIn$1('Symbol');
-	  return isCallable$7($Symbol) && isPrototypeOf($Symbol.prototype, $Object$1(it));
+	  return isCallable$8($Symbol) && isPrototypeOf($Symbol.prototype, $Object$2(it));
 	};
 
-	var $String$1 = String;
+	var $String$2 = String;
 
 	var tryToString$1 = function (argument) {
 	  try {
-	    return $String$1(argument);
+	    return $String$2(argument);
 	  } catch (error) {
 	    return 'Object';
 	  }
 	};
 
-	var isCallable$6 = isCallable$a;
+	var isCallable$7 = isCallable$b;
 	var tryToString = tryToString$1;
 
 	var $TypeError$4 = TypeError;
 
 	// `Assert: IsCallable(argument) is true`
 	var aCallable$1 = function (argument) {
-	  if (isCallable$6(argument)) { return argument; }
+	  if (isCallable$7(argument)) { return argument; }
 	  throw $TypeError$4(tryToString(argument) + ' is not a function');
 	};
 
@@ -272,7 +272,7 @@
 	};
 
 	var call$2 = functionCall;
-	var isCallable$5 = isCallable$a;
+	var isCallable$6 = isCallable$b;
 	var isObject$4 = isObject$5;
 
 	var $TypeError$3 = TypeError;
@@ -281,32 +281,32 @@
 	// https://tc39.es/ecma262/#sec-ordinarytoprimitive
 	var ordinaryToPrimitive$1 = function (input, pref) {
 	  var fn, val;
-	  if (pref === 'string' && isCallable$5(fn = input.toString) && !isObject$4(val = call$2(fn, input))) { return val; }
-	  if (isCallable$5(fn = input.valueOf) && !isObject$4(val = call$2(fn, input))) { return val; }
-	  if (pref !== 'string' && isCallable$5(fn = input.toString) && !isObject$4(val = call$2(fn, input))) { return val; }
+	  if (pref === 'string' && isCallable$6(fn = input.toString) && !isObject$4(val = call$2(fn, input))) { return val; }
+	  if (isCallable$6(fn = input.valueOf) && !isObject$4(val = call$2(fn, input))) { return val; }
+	  if (pref !== 'string' && isCallable$6(fn = input.toString) && !isObject$4(val = call$2(fn, input))) { return val; }
 	  throw $TypeError$3("Can't convert object to primitive value");
 	};
 
 	var shared$3 = {exports: {}};
 
-	var global$8 = global$b;
+	var global$9 = global$c;
 
 	// eslint-disable-next-line es-x/no-object-defineproperty -- safe
 	var defineProperty$1 = Object.defineProperty;
 
 	var defineGlobalProperty$3 = function (key, value) {
 	  try {
-	    defineProperty$1(global$8, key, { value: value, configurable: true, writable: true });
+	    defineProperty$1(global$9, key, { value: value, configurable: true, writable: true });
 	  } catch (error) {
-	    global$8[key] = value;
+	    global$9[key] = value;
 	  } return value;
 	};
 
-	var global$7 = global$b;
+	var global$8 = global$c;
 	var defineGlobalProperty$2 = defineGlobalProperty$3;
 
 	var SHARED = '__core-js_shared__';
-	var store$3 = global$7[SHARED] || defineGlobalProperty$2(SHARED, {});
+	var store$3 = global$8[SHARED] || defineGlobalProperty$2(SHARED, {});
 
 	var sharedStore = store$3;
 
@@ -322,20 +322,20 @@
 	  source: 'https://github.com/zloirock/core-js'
 	});
 
-	var requireObjectCoercible = requireObjectCoercible$2;
+	var requireObjectCoercible$1 = requireObjectCoercible$3;
 
-	var $Object = Object;
+	var $Object$1 = Object;
 
 	// `ToObject` abstract operation
 	// https://tc39.es/ecma262/#sec-toobject
 	var toObject$1 = function (argument) {
-	  return $Object(requireObjectCoercible(argument));
+	  return $Object$1(requireObjectCoercible$1(argument));
 	};
 
-	var uncurryThis$5 = functionUncurryThis;
+	var uncurryThis$7 = functionUncurryThis;
 	var toObject = toObject$1;
 
-	var hasOwnProperty = uncurryThis$5({}.hasOwnProperty);
+	var hasOwnProperty = uncurryThis$7({}.hasOwnProperty);
 
 	// `HasOwnProperty` abstract operation
 	// https://tc39.es/ecma262/#sec-hasownproperty
@@ -344,17 +344,17 @@
 	  return hasOwnProperty(toObject(it), key);
 	};
 
-	var uncurryThis$4 = functionUncurryThis;
+	var uncurryThis$6 = functionUncurryThis;
 
 	var id = 0;
 	var postfix = Math.random();
-	var toString$1 = uncurryThis$4(1.0.toString);
+	var toString$3 = uncurryThis$6(1.0.toString);
 
 	var uid$2 = function (key) {
-	  return 'Symbol(' + (key === undefined ? '' : key) + ')_' + toString$1(++id + postfix, 36);
+	  return 'Symbol(' + (key === undefined ? '' : key) + ')_' + toString$3(++id + postfix, 36);
 	};
 
-	var global$6 = global$b;
+	var global$7 = global$c;
 	var shared$2 = shared$3.exports;
 	var hasOwn$6 = hasOwnProperty_1;
 	var uid$1 = uid$2;
@@ -362,11 +362,11 @@
 	var USE_SYMBOL_AS_UID = useSymbolAsUid;
 
 	var WellKnownSymbolsStore = shared$2('wks');
-	var Symbol$1 = global$6.Symbol;
+	var Symbol$1 = global$7.Symbol;
 	var symbolFor = Symbol$1 && Symbol$1['for'];
 	var createWellKnownSymbol = USE_SYMBOL_AS_UID ? Symbol$1 : Symbol$1 && Symbol$1.withoutSetter || uid$1;
 
-	var wellKnownSymbol$1 = function (name) {
+	var wellKnownSymbol$3 = function (name) {
 	  if (!hasOwn$6(WellKnownSymbolsStore, name) || !(NATIVE_SYMBOL || typeof WellKnownSymbolsStore[name] == 'string')) {
 	    var description = 'Symbol.' + name;
 	    if (NATIVE_SYMBOL && hasOwn$6(Symbol$1, name)) {
@@ -384,10 +384,10 @@
 	var isSymbol$1 = isSymbol$2;
 	var getMethod = getMethod$1;
 	var ordinaryToPrimitive = ordinaryToPrimitive$1;
-	var wellKnownSymbol = wellKnownSymbol$1;
+	var wellKnownSymbol$2 = wellKnownSymbol$3;
 
 	var $TypeError$2 = TypeError;
-	var TO_PRIMITIVE = wellKnownSymbol('toPrimitive');
+	var TO_PRIMITIVE = wellKnownSymbol$2('toPrimitive');
 
 	// `ToPrimitive` abstract operation
 	// https://tc39.es/ecma262/#sec-toprimitive
@@ -415,10 +415,10 @@
 	  return isSymbol(key) ? key : key + '';
 	};
 
-	var global$5 = global$b;
+	var global$6 = global$c;
 	var isObject$2 = isObject$5;
 
-	var document$1 = global$5.document;
+	var document$1 = global$6.document;
 	// typeof document.createElement is 'object' in old IE
 	var EXISTS$1 = isObject$2(document$1) && isObject$2(document$1.createElement);
 
@@ -427,11 +427,11 @@
 	};
 
 	var DESCRIPTORS$6 = descriptors;
-	var fails$3 = fails$8;
+	var fails$4 = fails$9;
 	var createElement = documentCreateElement;
 
 	// Thanks to IE8 for its funny defineProperty
-	var ie8DomDefine = !DESCRIPTORS$6 && !fails$3(function () {
+	var ie8DomDefine = !DESCRIPTORS$6 && !fails$4(function () {
 	  // eslint-disable-next-line es-x/no-object-defineproperty -- required for testing
 	  return Object.defineProperty(createElement('div'), 'a', {
 	    get: function () { return 7; }
@@ -464,11 +464,11 @@
 	var objectDefineProperty = {};
 
 	var DESCRIPTORS$4 = descriptors;
-	var fails$2 = fails$8;
+	var fails$3 = fails$9;
 
 	// V8 ~ Chrome 36-
 	// https://bugs.chromium.org/p/v8/issues/detail?id=3334
-	var v8PrototypeDefineBug = DESCRIPTORS$4 && fails$2(function () {
+	var v8PrototypeDefineBug = DESCRIPTORS$4 && fails$3(function () {
 	  // eslint-disable-next-line es-x/no-object-defineproperty -- required for testing
 	  return Object.defineProperty(function () { /* empty */ }, 'prototype', {
 	    value: 42,
@@ -478,13 +478,13 @@
 
 	var isObject$1 = isObject$5;
 
-	var $String = String;
+	var $String$1 = String;
 	var $TypeError$1 = TypeError;
 
 	// `Assert: Type(argument) is Object`
 	var anObject$2 = function (argument) {
 	  if (isObject$1(argument)) { return argument; }
-	  throw $TypeError$1($String(argument) + ' is not an object');
+	  throw $TypeError$1($String$1(argument) + ' is not an object');
 	};
 
 	var DESCRIPTORS$3 = descriptors;
@@ -562,14 +562,14 @@
 	  CONFIGURABLE: CONFIGURABLE
 	};
 
-	var uncurryThis$3 = functionUncurryThis;
-	var isCallable$4 = isCallable$a;
+	var uncurryThis$5 = functionUncurryThis;
+	var isCallable$5 = isCallable$b;
 	var store$1 = sharedStore;
 
-	var functionToString = uncurryThis$3(Function.toString);
+	var functionToString = uncurryThis$5(Function.toString);
 
 	// this helper broken in `core-js@3.4.1-3.4.4`, so we can't use `shared` helper
-	if (!isCallable$4(store$1.inspectSource)) {
+	if (!isCallable$5(store$1.inspectSource)) {
 	  store$1.inspectSource = function (it) {
 	    return functionToString(it);
 	  };
@@ -577,13 +577,13 @@
 
 	var inspectSource$2 = store$1.inspectSource;
 
-	var global$4 = global$b;
-	var isCallable$3 = isCallable$a;
+	var global$5 = global$c;
+	var isCallable$4 = isCallable$b;
 	var inspectSource$1 = inspectSource$2;
 
-	var WeakMap$1 = global$4.WeakMap;
+	var WeakMap$1 = global$5.WeakMap;
 
-	var nativeWeakMap = isCallable$3(WeakMap$1) && /native code/.test(inspectSource$1(WeakMap$1));
+	var nativeWeakMap = isCallable$4(WeakMap$1) && /native code/.test(inspectSource$1(WeakMap$1));
 
 	var shared$1 = shared$3.exports;
 	var uid = uid$2;
@@ -597,8 +597,8 @@
 	var hiddenKeys$3 = {};
 
 	var NATIVE_WEAK_MAP = nativeWeakMap;
-	var global$3 = global$b;
-	var uncurryThis$2 = functionUncurryThis;
+	var global$4 = global$c;
+	var uncurryThis$4 = functionUncurryThis;
 	var isObject = isObject$5;
 	var createNonEnumerableProperty$1 = createNonEnumerableProperty$2;
 	var hasOwn$3 = hasOwnProperty_1;
@@ -607,8 +607,8 @@
 	var hiddenKeys$2 = hiddenKeys$3;
 
 	var OBJECT_ALREADY_INITIALIZED = 'Object already initialized';
-	var TypeError$1 = global$3.TypeError;
-	var WeakMap = global$3.WeakMap;
+	var TypeError$1 = global$4.TypeError;
+	var WeakMap = global$4.WeakMap;
 	var set, get, has;
 
 	var enforce = function (it) {
@@ -626,9 +626,9 @@
 
 	if (NATIVE_WEAK_MAP || shared.state) {
 	  var store = shared.state || (shared.state = new WeakMap());
-	  var wmget = uncurryThis$2(store.get);
-	  var wmhas = uncurryThis$2(store.has);
-	  var wmset = uncurryThis$2(store.set);
+	  var wmget = uncurryThis$4(store.get);
+	  var wmhas = uncurryThis$4(store.has);
+	  var wmset = uncurryThis$4(store.set);
 	  set = function (it, metadata) {
 	    if (wmhas(store, it)) { throw new TypeError$1(OBJECT_ALREADY_INITIALIZED); }
 	    metadata.facade = it;
@@ -666,8 +666,8 @@
 	  getterFor: getterFor
 	};
 
-	var fails$1 = fails$8;
-	var isCallable$2 = isCallable$a;
+	var fails$2 = fails$9;
+	var isCallable$3 = isCallable$b;
 	var hasOwn$2 = hasOwnProperty_1;
 	var DESCRIPTORS = descriptors;
 	var CONFIGURABLE_FUNCTION_NAME = functionName.CONFIGURABLE;
@@ -679,7 +679,7 @@
 	// eslint-disable-next-line es-x/no-object-defineproperty -- safe
 	var defineProperty = Object.defineProperty;
 
-	var CONFIGURABLE_LENGTH = DESCRIPTORS && !fails$1(function () {
+	var CONFIGURABLE_LENGTH = DESCRIPTORS && !fails$2(function () {
 	  return defineProperty(function () { /* empty */ }, 'length', { value: 8 }).length !== 8;
 	});
 
@@ -712,10 +712,10 @@
 	// add fake Function#toString for correct work wrapped methods / constructors with methods like LoDash isNative
 	// eslint-disable-next-line no-extend-native -- required
 	Function.prototype.toString = makeBuiltIn$1(function toString() {
-	  return isCallable$2(this) && getInternalState(this).source || inspectSource(this);
+	  return isCallable$3(this) && getInternalState(this).source || inspectSource(this);
 	}, 'toString');
 
-	var isCallable$1 = isCallable$a;
+	var isCallable$2 = isCallable$b;
 	var definePropertyModule$1 = objectDefineProperty;
 	var makeBuiltIn = makeBuiltIn$2.exports;
 	var defineGlobalProperty$1 = defineGlobalProperty$3;
@@ -724,7 +724,7 @@
 	  if (!options) { options = {}; }
 	  var simple = options.enumerable;
 	  var name = options.name !== undefined ? options.name : key;
-	  if (isCallable$1(value)) { makeBuiltIn(value, name, options); }
+	  if (isCallable$2(value)) { makeBuiltIn(value, name, options); }
 	  if (options.global) {
 	    if (simple) { O[key] = value; }
 	    else { defineGlobalProperty$1(key, value); }
@@ -800,7 +800,7 @@
 	var lengthOfArrayLike = lengthOfArrayLike$1;
 
 	// `Array.prototype.{ indexOf, includes }` methods implementation
-	var createMethod = function (IS_INCLUDES) {
+	var createMethod$1 = function (IS_INCLUDES) {
 	  return function ($this, el, fromIndex) {
 	    var O = toIndexedObject$1($this);
 	    var length = lengthOfArrayLike(O);
@@ -822,19 +822,19 @@
 	var arrayIncludes = {
 	  // `Array.prototype.includes` method
 	  // https://tc39.es/ecma262/#sec-array.prototype.includes
-	  includes: createMethod(true),
+	  includes: createMethod$1(true),
 	  // `Array.prototype.indexOf` method
 	  // https://tc39.es/ecma262/#sec-array.prototype.indexof
-	  indexOf: createMethod(false)
+	  indexOf: createMethod$1(false)
 	};
 
-	var uncurryThis$1 = functionUncurryThis;
+	var uncurryThis$3 = functionUncurryThis;
 	var hasOwn$1 = hasOwnProperty_1;
 	var toIndexedObject = toIndexedObject$3;
 	var indexOf = arrayIncludes.indexOf;
 	var hiddenKeys$1 = hiddenKeys$3;
 
-	var push = uncurryThis$1([].push);
+	var push = uncurryThis$3([].push);
 
 	var objectKeysInternal = function (object, names) {
 	  var O = toIndexedObject(object);
@@ -878,12 +878,12 @@
 	objectGetOwnPropertySymbols.f = Object.getOwnPropertySymbols;
 
 	var getBuiltIn = getBuiltIn$3;
-	var uncurryThis = functionUncurryThis;
+	var uncurryThis$2 = functionUncurryThis;
 	var getOwnPropertyNamesModule = objectGetOwnPropertyNames;
 	var getOwnPropertySymbolsModule = objectGetOwnPropertySymbols;
 	var anObject = anObject$2;
 
-	var concat = uncurryThis([].concat);
+	var concat = uncurryThis$2([].concat);
 
 	// all object keys, includes non-enumerable and symbols
 	var ownKeys$1 = getBuiltIn('Reflect', 'ownKeys') || function ownKeys(it) {
@@ -909,8 +909,8 @@
 	  }
 	};
 
-	var fails = fails$8;
-	var isCallable = isCallable$a;
+	var fails$1 = fails$9;
+	var isCallable$1 = isCallable$b;
 
 	var replacement = /#|\.prototype\./;
 
@@ -918,7 +918,7 @@
 	  var value = data$1[normalize$1(feature)];
 	  return value == POLYFILL ? true
 	    : value == NATIVE ? false
-	    : isCallable(detection) ? fails(detection)
+	    : isCallable$1(detection) ? fails$1(detection)
 	    : !!detection;
 	};
 
@@ -932,7 +932,7 @@
 
 	var isForced_1 = isForced$1;
 
-	var global$2 = global$b;
+	var global$3 = global$c;
 	var getOwnPropertyDescriptor = objectGetOwnPropertyDescriptor.f;
 	var createNonEnumerableProperty = createNonEnumerableProperty$2;
 	var defineBuiltIn = defineBuiltIn$1;
@@ -961,11 +961,11 @@
 	  var STATIC = options.stat;
 	  var FORCED, target, key, targetProperty, sourceProperty, descriptor;
 	  if (GLOBAL) {
-	    target = global$2;
+	    target = global$3;
 	  } else if (STATIC) {
-	    target = global$2[TARGET] || defineGlobalProperty(TARGET, {});
+	    target = global$3[TARGET] || defineGlobalProperty(TARGET, {});
 	  } else {
-	    target = (global$2[TARGET] || {}).prototype;
+	    target = (global$3[TARGET] || {}).prototype;
 	  }
 	  if (target) { for (key in source) {
 	    sourceProperty = source[key];
@@ -987,14 +987,195 @@
 	  } }
 	};
 
-	var $ = _export;
-	var global$1 = global$b;
+	var $$4 = _export;
+	var global$2 = global$c;
 
 	// `globalThis` object
 	// https://tc39.es/ecma262/#sec-globalthis
-	$({ global: true }, {
-	  globalThis: global$1
+	$$4({ global: true }, {
+	  globalThis: global$2
 	});
+
+	var wellKnownSymbol$1 = wellKnownSymbol$3;
+
+	var TO_STRING_TAG$1 = wellKnownSymbol$1('toStringTag');
+	var test = {};
+
+	test[TO_STRING_TAG$1] = 'z';
+
+	var toStringTagSupport = String(test) === '[object z]';
+
+	var TO_STRING_TAG_SUPPORT = toStringTagSupport;
+	var isCallable = isCallable$b;
+	var classofRaw = classofRaw$1;
+	var wellKnownSymbol = wellKnownSymbol$3;
+
+	var TO_STRING_TAG = wellKnownSymbol('toStringTag');
+	var $Object = Object;
+
+	// ES3 wrong here
+	var CORRECT_ARGUMENTS = classofRaw(function () { return arguments; }()) == 'Arguments';
+
+	// fallback for IE11 Script Access Denied error
+	var tryGet = function (it, key) {
+	  try {
+	    return it[key];
+	  } catch (error) { /* empty */ }
+	};
+
+	// getting tag from ES6+ `Object.prototype.toString`
+	var classof$1 = TO_STRING_TAG_SUPPORT ? classofRaw : function (it) {
+	  var O, tag, result;
+	  return it === undefined ? 'Undefined' : it === null ? 'Null'
+	    // @@toStringTag case
+	    : typeof (tag = tryGet(O = $Object(it), TO_STRING_TAG)) == 'string' ? tag
+	    // builtinTag case
+	    : CORRECT_ARGUMENTS ? classofRaw(O)
+	    // ES3 arguments fallback
+	    : (result = classofRaw(O)) == 'Object' && isCallable(O.callee) ? 'Arguments' : result;
+	};
+
+	var classof = classof$1;
+
+	var $String = String;
+
+	var toString$2 = function (argument) {
+	  if (classof(argument) === 'Symbol') { throw TypeError('Cannot convert a Symbol value to a string'); }
+	  return $String(argument);
+	};
+
+	// a string of all valid unicode whitespaces
+	var whitespaces$2 = '\u0009\u000A\u000B\u000C\u000D\u0020\u00A0\u1680\u2000\u2001\u2002' +
+	  '\u2003\u2004\u2005\u2006\u2007\u2008\u2009\u200A\u202F\u205F\u3000\u2028\u2029\uFEFF';
+
+	var uncurryThis$1 = functionUncurryThis;
+	var requireObjectCoercible = requireObjectCoercible$3;
+	var toString$1 = toString$2;
+	var whitespaces$1 = whitespaces$2;
+
+	var replace = uncurryThis$1(''.replace);
+	var whitespace = '[' + whitespaces$1 + ']';
+	var ltrim = RegExp('^' + whitespace + whitespace + '*');
+	var rtrim = RegExp(whitespace + whitespace + '*$');
+
+	// `String.prototype.{ trim, trimStart, trimEnd, trimLeft, trimRight }` methods implementation
+	var createMethod = function (TYPE) {
+	  return function ($this) {
+	    var string = toString$1(requireObjectCoercible($this));
+	    if (TYPE & 1) { string = replace(string, ltrim, ''); }
+	    if (TYPE & 2) { string = replace(string, rtrim, ''); }
+	    return string;
+	  };
+	};
+
+	var stringTrim = {
+	  // `String.prototype.{ trimLeft, trimStart }` methods
+	  // https://tc39.es/ecma262/#sec-string.prototype.trimstart
+	  start: createMethod(1),
+	  // `String.prototype.{ trimRight, trimEnd }` methods
+	  // https://tc39.es/ecma262/#sec-string.prototype.trimend
+	  end: createMethod(2),
+	  // `String.prototype.trim` method
+	  // https://tc39.es/ecma262/#sec-string.prototype.trim
+	  trim: createMethod(3)
+	};
+
+	var PROPER_FUNCTION_NAME = functionName.PROPER;
+	var fails = fails$9;
+	var whitespaces = whitespaces$2;
+
+	var non = '\u200B\u0085\u180E';
+
+	// check that a method works with the correct list
+	// of whitespaces and has a correct name
+	var stringTrimForced = function (METHOD_NAME) {
+	  return fails(function () {
+	    return !!whitespaces[METHOD_NAME]()
+	      || non[METHOD_NAME]() !== non
+	      || (PROPER_FUNCTION_NAME && whitespaces[METHOD_NAME].name !== METHOD_NAME);
+	  });
+	};
+
+	var $trimStart = stringTrim.start;
+	var forcedStringTrimMethod$1 = stringTrimForced;
+
+	// `String.prototype.{ trimStart, trimLeft }` method
+	// https://tc39.es/ecma262/#sec-string.prototype.trimstart
+	// https://tc39.es/ecma262/#String.prototype.trimleft
+	var stringTrimStart = forcedStringTrimMethod$1('trimStart') ? function trimStart() {
+	  return $trimStart(this);
+	// eslint-disable-next-line es-x/no-string-prototype-trimstart-trimend -- safe
+	} : ''.trimStart;
+
+	var $$3 = _export;
+	var trimStart$1 = stringTrimStart;
+
+	// `String.prototype.trimLeft` method
+	// https://tc39.es/ecma262/#sec-string.prototype.trimleft
+	// eslint-disable-next-line es-x/no-string-prototype-trimleft-trimright -- safe
+	$$3({ target: 'String', proto: true, name: 'trimStart', forced: ''.trimLeft !== trimStart$1 }, {
+	  trimLeft: trimStart$1
+	});
+
+	// TODO: Remove this line from `core-js@4`
+
+	var $$2 = _export;
+	var trimStart = stringTrimStart;
+
+	// `String.prototype.trimStart` method
+	// https://tc39.es/ecma262/#sec-string.prototype.trimstart
+	// eslint-disable-next-line es-x/no-string-prototype-trimstart-trimend -- safe
+	$$2({ target: 'String', proto: true, name: 'trimStart', forced: ''.trimStart !== trimStart }, {
+	  trimStart: trimStart
+	});
+
+	var global$1 = global$c;
+	var uncurryThis = functionUncurryThis;
+
+	var entryUnbind$2 = function (CONSTRUCTOR, METHOD) {
+	  return uncurryThis(global$1[CONSTRUCTOR].prototype[METHOD]);
+	};
+
+	var entryUnbind$1 = entryUnbind$2;
+
+	entryUnbind$1('String', 'trimLeft');
+
+	var $trimEnd = stringTrim.end;
+	var forcedStringTrimMethod = stringTrimForced;
+
+	// `String.prototype.{ trimEnd, trimRight }` method
+	// https://tc39.es/ecma262/#sec-string.prototype.trimend
+	// https://tc39.es/ecma262/#String.prototype.trimright
+	var stringTrimEnd = forcedStringTrimMethod('trimEnd') ? function trimEnd() {
+	  return $trimEnd(this);
+	// eslint-disable-next-line es-x/no-string-prototype-trimstart-trimend -- safe
+	} : ''.trimEnd;
+
+	var $$1 = _export;
+	var trimEnd$1 = stringTrimEnd;
+
+	// `String.prototype.trimRight` method
+	// https://tc39.es/ecma262/#sec-string.prototype.trimend
+	// eslint-disable-next-line es-x/no-string-prototype-trimleft-trimright -- safe
+	$$1({ target: 'String', proto: true, name: 'trimEnd', forced: ''.trimRight !== trimEnd$1 }, {
+	  trimRight: trimEnd$1
+	});
+
+	// TODO: Remove this line from `core-js@4`
+
+	var $ = _export;
+	var trimEnd = stringTrimEnd;
+
+	// `String.prototype.trimEnd` method
+	// https://tc39.es/ecma262/#sec-string.prototype.trimend
+	// eslint-disable-next-line es-x/no-string-prototype-trimstart-trimend -- safe
+	$({ target: 'String', proto: true, name: 'trimEnd', forced: ''.trimEnd !== trimEnd }, {
+	  trimEnd: trimEnd
+	});
+
+	var entryUnbind = entryUnbind$2;
+
+	entryUnbind('String', 'trimRight');
 
 	if (typeof globalThis !== "undefined") {
 	    if (typeof globalThis.console === "undefined") {
@@ -1046,28 +1227,6 @@
 	    return str.charAt(0).toUpperCase() + str.slice(1);
 	}
 	/**
-	 * returns the string stripped of whitespace from the left.
-	 * @public
-	 * @memberof utils.string
-	 * @name trimLeft
-	 * @param {string} str the string to be trimmed
-	 * @returns {string} trimmed string
-	 */
-	function trimLeft(str) {
-	    return str.replace(/^\s+/, "");
-	}
-	/**
-	 * returns the string stripped of whitespace from the right.
-	 * @public
-	 * @memberof utils.string
-	 * @name trimRight
-	 * @param {string} str the string to be trimmed
-	 * @returns {string} trimmed string
-	 */
-	function trimRight(str) {
-	    return str.replace(/\s+$/, "");
-	}
-	/**
 	 * returns true if the given string contains a numeric integer or float value
 	 * @public
 	 * @memberof utils.string
@@ -1112,8 +1271,6 @@
 	var stringUtils = /*#__PURE__*/Object.freeze({
 		__proto__: null,
 		capitalize: capitalize,
-		trimLeft: trimLeft,
-		trimRight: trimRight,
 		isNumeric: isNumeric,
 		isBoolean: isBoolean,
 		toHex: toHex$1
@@ -19195,1112 +19352,6 @@
 	    }
 	};
 
-	// a basic progress bar object
-	var ProgressBar = /*@__PURE__*/(function (Renderable) {
-	    function ProgressBar(x, y, w, h) {
-	        Renderable.call(this, x, y, w, h);
-
-	        this.barHeight = h;
-	        this.anchorPoint.set(0, 0);
-
-	        on(LOADER_PROGRESS, this.onProgressUpdate, this);
-	        on(VIEWPORT_ONRESIZE, this.resize, this);
-
-	        this.anchorPoint.set(0, 0);
-
-	        // store current progress
-	        this.progress = 0;
-	    }
-
-	    if ( Renderable ) ProgressBar.__proto__ = Renderable;
-	    ProgressBar.prototype = Object.create( Renderable && Renderable.prototype );
-	    ProgressBar.prototype.constructor = ProgressBar;
-
-	    /**
-	     * make sure the screen is refreshed every frame
-	     * @ignore
-	     */
-	    ProgressBar.prototype.onProgressUpdate = function onProgressUpdate (progress) {
-	        this.progress = ~~(progress * this.width);
-	        this.isDirty = true;
-	    };
-
-	    /**
-	     * draw function
-	     * @ignore
-	     */
-	    ProgressBar.prototype.draw = function draw (renderer) {
-	        // draw the progress bar
-	        renderer.setColor("black");
-	        renderer.fillRect(this.pos.x, viewport.centerY, renderer.getWidth(), this.barHeight / 2);
-
-	        renderer.setColor("#55aa00");
-	        renderer.fillRect(this.pos.x, viewport.centerY, this.progress, this.barHeight / 2);
-	    };
-
-	    /**
-	     * Called by engine before deleting the object
-	     * @ignore
-	     */
-	    ProgressBar.prototype.onDestroyEvent = function onDestroyEvent () {
-	        // cancel the callback
-	        off(LOADER_PROGRESS, this.onProgressUpdate);
-	        off(VIEWPORT_ONRESIZE, this.resize);
-	    };
-
-	    return ProgressBar;
-	}(Renderable));
-	// the melonJS Logo
-	var IconLogo = /*@__PURE__*/(function (Renderable) {
-	    function IconLogo(x, y) {
-	        Renderable.call(this, x, y, 100, 85);
-
-	        this.iconTexture = pool.pull("CanvasTexture",
-	            renderer.WebGLVersion > 1 ? this.width : nextPowerOfTwo(this.width),
-	            renderer.WebGLVersion > 1 ? this.height : nextPowerOfTwo(this.height),
-	            { offscreenCanvas: true }
-	        );
-
-	        var context = this.iconTexture.context;
-
-	        context.beginPath();
-	        context.moveTo(0.7, 48.9);
-	        context.bezierCurveTo(10.8, 68.9, 38.4, 75.8, 62.2, 64.5);
-	        context.bezierCurveTo(86.1, 53.1, 97.2, 27.7, 87.0, 7.7);
-	        context.lineTo(87.0, 7.7);
-	        context.bezierCurveTo(89.9, 15.4, 73.9, 30.2, 50.5, 41.4);
-	        context.bezierCurveTo(27.1, 52.5, 5.2, 55.8, 0.7, 48.9);
-	        context.lineTo(0.7, 48.9);
-	        context.closePath();
-	        context.fillStyle = "rgb(255, 255, 255)";
-	        context.fill();
-
-	        context.beginPath();
-	        context.moveTo(84.0, 7.0);
-	        context.bezierCurveTo(87.6, 14.7, 72.5, 30.2, 50.2, 41.6);
-	        context.bezierCurveTo(27.9, 53.0, 6.9, 55.9, 3.2, 48.2);
-	        context.bezierCurveTo(-0.5, 40.4, 14.6, 24.9, 36.9, 13.5);
-	        context.bezierCurveTo(59.2, 2.2, 80.3, -0.8, 84.0, 7.0);
-	        context.lineTo(84.0, 7.0);
-	        context.closePath();
-	        context.lineWidth = 5.3;
-	        context.strokeStyle = "rgb(255, 255, 255)";
-	        context.lineJoin = "miter";
-	        context.miterLimit = 4.0;
-	        context.stroke();
-
-	        this.anchorPoint.set(0.5, 0.5);
-	    }
-
-	    if ( Renderable ) IconLogo.__proto__ = Renderable;
-	    IconLogo.prototype = Object.create( Renderable && Renderable.prototype );
-	    IconLogo.prototype.constructor = IconLogo;
-
-	    /**
-	     * @ignore
-	     */
-	    IconLogo.prototype.draw = function draw (renderer) {
-	        renderer.drawImage(this.iconTexture.canvas, renderer.getWidth() / 2, this.pos.y);
-	    };
-
-	    /**
-	     * Destroy function
-	     * @ignore
-	     */
-	    IconLogo.prototype.destroy = function destroy () {
-	        // call the parent destroy method
-	        Renderable.prototype.destroy.call(this, arguments);
-	        pool.push(this.iconTexture);
-	        this.iconTexture = undefined;
-	    };
-
-	    return IconLogo;
-	}(Renderable));
-
-	/**
-	 * a default loading screen
-	 * @ignore
-	 */
-	var DefaultLoadingScreen = /*@__PURE__*/(function (Stage) {
-	    function DefaultLoadingScreen () {
-	        Stage.apply(this, arguments);
-	    }
-
-	    if ( Stage ) DefaultLoadingScreen.__proto__ = Stage;
-	    DefaultLoadingScreen.prototype = Object.create( Stage && Stage.prototype );
-	    DefaultLoadingScreen.prototype.constructor = DefaultLoadingScreen;
-
-	    DefaultLoadingScreen.prototype.onResetEvent = function onResetEvent () {
-	        var barHeight = 8;
-
-	        // set a background color
-	        world.backgroundColor.parseCSS("#202020");
-
-	        // progress bar
-	        world.addChild(new ProgressBar(
-	            0,
-	            renderer.getHeight() / 2,
-	            renderer.getWidth(),
-	            barHeight
-	        ), 1);
-
-	        // melonJS logo
-	        world.addChild(new IconLogo(
-	            renderer.getWidth() / 2,
-	            (renderer.getHeight() / 2) - (barHeight * 2) - 35
-
-	        ), 2);
-
-	        var logo1 = pool.pull("Text",
-	            renderer.getWidth() / 2,
-	            (renderer.getHeight() / 2) + 16, {
-	                font: "century gothic",
-	                size: 32,
-	                fillStyle: "white",
-	                textAlign: "left",
-	                textBaseline : "top",
-	                text: "melon",
-	                offScreenCanvas: renderer.WebGLVersion >= 1
-	            }
-	        );
-	        logo1.anchorPoint.set(0, 0);
-
-	        var logo2 = pool.pull("Text",
-	            renderer.getWidth() / 2,
-	            (renderer.getHeight() / 2) + 16, {
-	                font: "century gothic",
-	                size: 32,
-	                fillStyle: "#55aa00",
-	                textAlign: "left",
-	                textBaseline : "top",
-	                bold: true,
-	                text: "JS",
-	                offScreenCanvas: renderer.WebGLVersion >= 1
-	            }
-	        );
-	        logo2.anchorPoint.set(0, 0);
-
-	        // adjust position of both text
-	        var text_width = logo1.getBounds().width + logo2.getBounds().width;
-	        logo1.pos.x = renderer.getWidth() / 2 - text_width / 2;
-	        logo2.pos.x = logo1.pos.x + logo1.getBounds().width;
-
-	        // melonJS text
-	        world.addChild(logo1, 2);
-	        world.addChild(logo2, 2);
-	    };
-
-	    return DefaultLoadingScreen;
-	}(Stage));
-
-	// current state
-	var _state = -1;
-
-	// requestAnimeFrame Id
-	var _animFrameId = -1;
-
-	// whether the game state is "paused"
-	var _isPaused = false;
-
-	// list of stages
-	var _stages = {};
-
-	// fading transition parameters between screen
-	var _fade = {
-	    color : "",
-	    duration : 0
-	};
-
-	// callback when state switch is done
-	/** @ignore */
-	var _onSwitchComplete = null;
-
-	// just to keep track of possible extra arguments
-	var _extraArgs = null;
-
-	// store the elapsed time during pause/stop period
-	var _pauseTime = 0;
-
-	/**
-	 * @ignore
-	 */
-	function _startRunLoop() {
-	    // ensure nothing is running first and in valid state
-	    if ((_animFrameId === -1) && (_state !== -1)) {
-	        // start the main loop
-	        _animFrameId = globalThis.requestAnimationFrame(_renderFrame);
-	    }
-	}
-
-	/**
-	 * Resume the game loop after a pause.
-	 * @ignore
-	 */
-	function _resumeRunLoop() {
-	    // ensure game is actually paused and in valid state
-	    if (_isPaused && (_state !== -1)) {
-	        _isPaused = false;
-	    }
-	}
-
-	/**
-	 * Pause the loop for most stage objects.
-	 * @ignore
-	 */
-	function _pauseRunLoop() {
-	    // Set the paused boolean to stop updates on (most) entities
-	    _isPaused = true;
-	}
-
-	/**
-	 * this is only called when using requestAnimFrame stuff
-	 * @param {number} time current timestamp in milliseconds
-	 * @ignore
-	 */
-	function _renderFrame(time) {
-	    var stage = _stages[_state].stage;
-	    // update all game objects
-	    update(time, stage);
-	    // render all game objects
-	    draw(stage);
-	    // schedule the next frame update
-	    if (_animFrameId !== -1) {
-	        _animFrameId = globalThis.requestAnimationFrame(_renderFrame);
-	    }
-	}
-
-	/**
-	 * stop the SO main loop
-	 * @ignore
-	 */
-	function _stopRunLoop() {
-	    // cancel any previous animationRequestFrame
-	    globalThis.cancelAnimationFrame(_animFrameId);
-	    _animFrameId = -1;
-	}
-
-	/**
-	 * start the SO main loop
-	 * @ignore
-	 */
-	function _switchState(state) {
-	    // clear previous interval if any
-	    _stopRunLoop();
-
-	    // call the stage destroy method
-	    if (_stages[_state]) {
-	        // just notify the object
-	        _stages[_state].stage.destroy();
-	    }
-
-	    if (_stages[state]) {
-	        // set the global variable
-	        _state = state;
-
-	        // call the reset function with _extraArgs as arguments
-	        _stages[_state].stage.reset.apply(_stages[_state].stage, _extraArgs);
-
-	        // and start the main loop of the
-	        // new requested state
-	        _startRunLoop();
-
-	        // publish the pause event
-	        emit(STATE_CHANGE);
-
-	        // execute callback if defined
-	        if (_onSwitchComplete) {
-	            _onSwitchComplete();
-	        }
-
-	        // force repaint
-	        repaint();
-	    }
-	}
-
-	// initialize me.state on system boot
-	on(BOOT, function () {
-	    // set the built-in loading stage
-	    state.set(state.LOADING, new DefaultLoadingScreen());
-	    // set and enable the default stage
-	    state.set(state.DEFAULT, new Stage());
-	    // enable by default as soon as the display is initialized
-	    on(VIDEO_INIT, function () {
-	        state.change(state.DEFAULT, true);
-	    });
-	});
-
-
-	/**
-	 * a State Manager (state machine)
-	 * @namespace state
-	 */
-
-	var state = {
-
-	    /**
-	     * default state ID for Loading Stage
-	     * @constant
-	     * @name LOADING
-	     * @memberof state
-	     */
-	    LOADING : 0,
-
-	    /**
-	     * default state ID for Menu Stage
-	     * @constant
-	     * @name MENU
-	     * @memberof state
-	     */
-	    MENU : 1,
-
-	    /**
-	     * default state ID for "Ready" Stage
-	     * @constant
-	     * @name READY
-	     * @memberof state
-	     */
-	    READY : 2,
-
-	    /**
-	     * default state ID for Play Stage
-	     * @constant
-	     * @name PLAY
-	     * @memberof state
-	     */
-	    PLAY : 3,
-
-	    /**
-	     * default state ID for Game Over Stage
-	     * @constant
-	     * @name GAMEOVER
-	     * @memberof state
-	     */
-	    GAMEOVER : 4,
-
-	    /**
-	     * default state ID for Game End Stage
-	     * @constant
-	     * @name GAME_END
-	     * @memberof state
-	     */
-	    GAME_END : 5,
-
-	    /**
-	     * default state ID for High Score Stage
-	     * @constant
-	     * @name SCORE
-	     * @memberof state
-	     */
-	    SCORE : 6,
-
-	    /**
-	     * default state ID for Credits Stage
-	     * @constant
-	     * @name CREDITS
-	     * @memberof state
-	     */
-	    CREDITS : 7,
-
-	    /**
-	     * default state ID for Settings Stage
-	     * @constant
-	     * @name SETTINGS
-	     * @memberof state
-	     */
-	    SETTINGS : 8,
-
-	    /**
-	     * default state ID for the default Stage
-	     * (the default stage is the one running as soon as melonJS is started)
-	     * @constant
-	     * @name SETTINGS
-	     * @memberof state
-	     */
-	    DEFAULT : 9,
-
-	    /**
-	     * default state ID for user defined constants<br>
-	     * @constant
-	     * @name USER
-	     * @memberof state
-	     * @example
-	     * var STATE_INFO = me.state.USER + 0;
-	     * var STATE_WARN = me.state.USER + 1;
-	     * var STATE_ERROR = me.state.USER + 2;
-	     * var STATE_CUTSCENE = me.state.USER + 3;
-	     */
-	    USER : 100,
-
-	    /**
-	     * Stop the current stage.
-	     * @name stop
-	     * @memberof state
-	     * @public
-	     * @param {boolean} [pauseTrack=false] pause current track on screen stop.
-	     */
-	    stop: function stop(pauseTrack) {
-	        if ( pauseTrack === void 0 ) pauseTrack=false;
-
-	        // only stop when we are not loading stuff
-	        if ((_state !== this.LOADING) && this.isRunning()) {
-	            // stop the main loop
-	            _stopRunLoop();
-
-	            // current music stop
-	            if (pauseTrack === true) {
-	                pauseTrack();
-	            }
-
-	            // store time when stopped
-	            _pauseTime = globalThis.performance.now();
-
-	            // publish the stop notification
-	            emit(STATE_STOP);
-	        }
-	    },
-
-	    /**
-	     * pause the current stage
-	     * @name pause
-	     * @memberof state
-	     * @public
-	     * @param {boolean} [music=false] pause current music track on screen pause
-	     */
-	    pause: function pause(music) {
-	        if ( music === void 0 ) music=false;
-
-	        // only pause when we are not loading stuff
-	        if ((_state !== this.LOADING) && !this.isPaused()) {
-	            // stop the main loop
-	            _pauseRunLoop();
-	            // current music stop
-	            if (music === true) {
-	                pauseTrack();
-	            }
-
-	            // store time when paused
-	            _pauseTime = globalThis.performance.now();
-
-	            // publish the pause event
-	            emit(STATE_PAUSE);
-	        }
-	    },
-
-	    /**
-	     * Restart the current stage from a full stop.
-	     * @name restart
-	     * @memberof state
-	     * @public
-	     * @param {boolean} [music=false] resume current music track on screen resume
-	     */
-	    restart: function restart(music) {
-	        if ( music === void 0 ) music=false;
-
-	        if (!this.isRunning()) {
-	            // restart the main loop
-	            _startRunLoop();
-	            // current music stop
-	            if (music === true) {
-	                resumeTrack();
-	            }
-
-	            // calculate the elpased time
-	            _pauseTime = globalThis.performance.now() - _pauseTime;
-
-	            // force repaint
-	            repaint();
-
-	            // publish the restart notification
-	            emit(STATE_RESTART, _pauseTime);
-	        }
-	    },
-
-	    /**
-	     * resume the current stage
-	     * @name resume
-	     * @memberof state
-	     * @public
-	     * @param {boolean} [music=false] resume current music track on screen resume
-	     */
-	    resume: function resume(music) {
-	        if ( music === void 0 ) music=false;
-
-	        if (this.isPaused()) {
-	            // resume the main loop
-	            _resumeRunLoop();
-	            // current music stop
-	            if (music === true) {
-	                resumeTrack();
-	            }
-
-	            // calculate the elpased time
-	            _pauseTime = globalThis.performance.now() - _pauseTime;
-
-	            // publish the resume event
-	            emit(STATE_RESUME, _pauseTime);
-	        }
-	    },
-
-	    /**
-	     * return the running state of the state manager
-	     * @name isRunning
-	     * @memberof state
-	     * @public
-	     * @returns {boolean} true if a "process is running"
-	     */
-	    isRunning: function isRunning() {
-	        return _animFrameId !== -1;
-	    },
-
-	    /**
-	     * Return the pause state of the state manager
-	     * @name isPaused
-	     * @memberof state
-	     * @public
-	     * @returns {boolean} true if the game is paused
-	     */
-	    isPaused: function isPaused() {
-	        return _isPaused;
-	    },
-
-	    /**
-	     * associate the specified state with a Stage
-	     * @name set
-	     * @memberof state
-	     * @public
-	     * @param {number} state State ID (see constants)
-	     * @param {Stage} stage Instantiated Stage to associate with state ID
-	     * @param {boolean} [start = false] if true the state will be changed immediately after adding it.
-	     * @example
-	     * class MenuButton extends me.GUI_Object {
-	     *     onClick() {
-	     *         // Change to the PLAY state when the button is clicked
-	     *         me.state.change(me.state.PLAY);
-	     *         return true;
-	     *     }
-	     * };
-	     *
-	     * class MenuScreen extends me.Stage {
-	     *     onResetEvent() {
-	     *         // Load background image
-	     *         me.game.world.addChild(
-	     *             new me.ImageLayer(0, 0, {
-	     *                 image : "bg",
-	     *                 z: 0 // z-index
-	     *             }
-	     *         );
-	     *
-	     *         // Add a button
-	     *         me.game.world.addChild(
-	     *             new MenuButton(350, 200, { "image" : "start" }),
-	     *             1 // z-index
-	     *         );
-	     *
-	     *         // Play music
-	     *         me.audio.playTrack("menu");
-	     *     }
-	     *
-	     *     onDestroyEvent() {
-	     *         // Stop music
-	     *         me.audio.stopTrack();
-	     *     }
-	     * };
-	     *
-	     * me.state.set(me.state.MENU, new MenuScreen());
-	     */
-	    set: function set(state, stage, start) {
-	        if ( start === void 0 ) start = false;
-
-	        if (!(stage instanceof Stage)) {
-	            throw new Error(stage + " is not an instance of me.Stage");
-	        }
-	        _stages[state] = {};
-	        _stages[state].stage = stage;
-	        _stages[state].transition = true;
-
-	        if (start === true) {
-	            this.change(state);
-	        }
-	    },
-
-	    /**
-	     * returns the stage associated with the specified state
-	     * (or the current one if none is specified)
-	     * @name set
-	     * @memberof state
-	     * @public
-	     * @param {number} [state] State ID (see constants)
-	     * @returns {Stage}
-	     */
-	    get: function get(state) {
-	        if ( state === void 0 ) state = _state;
-
-	        if (typeof _stages[state] !== "undefined") {
-	            return _stages[state].stage;
-	        } else {
-	            return undefined;
-	        }
-
-	    },
-
-	    /**
-	     * return a reference to the current stage<br>
-	     * useful to call a object specific method
-	     * @name current
-	     * @memberof state
-	     * @public
-	     * @returns {Stage}
-	     */
-	    current: function current() {
-	        return this.get();
-	    },
-
-	    /**
-	     * specify a global transition effect
-	     * @name transition
-	     * @memberof state
-	     * @public
-	     * @param {string} effect (only "fade" is supported for now)
-	     * @param {Color|string} color a CSS color value
-	     * @param {number} [duration=1000] expressed in milliseconds
-	     */
-	    transition: function transition(effect, color, duration) {
-	        if (effect === "fade") {
-	            _fade.color = color;
-	            _fade.duration = duration;
-	        }
-	    },
-
-	    /**
-	     * enable/disable transition for a specific state (by default enabled for all)
-	     * @name setTransition
-	     * @memberof state
-	     * @public
-	     * @param {number} state State ID (see constants)
-	     * @param {boolean} enable
-	     */
-	    setTransition: function setTransition(state, enable) {
-	        _stages[state].transition = enable;
-	    },
-
-	    /**
-	     * change the game/app state
-	     * @name change
-	     * @memberof state
-	     * @public
-	     * @param {number} state State ID (see constants)
-	     * @param {boolean} forceChange if true the state will be changed immediately
-	     * @param {object} [...arguments] extra arguments to be passed to the reset functions
-	     * @example
-	     * // The onResetEvent method on the play screen will receive two args:
-	     * // "level_1" and the number 3
-	     * me.state.change(me.state.PLAY, "level_1", 3);
-	     */
-	    change: function change(state, forceChange) {
-	        // Protect against undefined Stage
-	        if (typeof(_stages[state]) === "undefined") {
-	            throw new Error("Undefined Stage for state '" + state + "'");
-	        }
-
-	        // do nothing if already the current state
-	        if (!this.isCurrent(state)) {
-	            _extraArgs = null;
-	            if (arguments.length > 1) {
-	                // store extra arguments if any
-	                _extraArgs = Array.prototype.slice.call(arguments, 1);
-	            }
-	            // if fading effect
-	            if (_fade.duration && _stages[state].transition) {
-	                _onSwitchComplete = function () {
-	                    viewport.fadeOut(_fade.color, _fade.duration);
-	                };
-	                viewport.fadeIn(
-	                    _fade.color,
-	                    _fade.duration,
-	                    function () {
-	                        defer(_switchState, this, state);
-	                    }
-	                );
-
-	            }
-	            // else just switch without any effects
-	            else {
-	                // wait for the last frame to be
-	                // "finished" before switching
-	                if (forceChange === true) {
-	                    _switchState(state);
-	                } else {
-	                    defer(_switchState, this, state);
-	                }
-	            }
-	        }
-	    },
-
-	    /**
-	     * return true if the specified state is the current one
-	     * @name isCurrent
-	     * @memberof state
-	     * @public
-	     * @param {number} state State ID (see constants)
-	     * @returns {boolean} true if the specified state is the current one
-	     */
-	    isCurrent: function isCurrent(state) {
-	        return _state === state;
-	    }
-
-	};
-
-	/**
-	 * set and interpret a TMX property value
-	 * @ignore
-	 */
-	function setTMXValue(name, type, value) {
-	    var match;
-
-	    if (typeof(value) !== "string") {
-	        // Value is already normalized (e.g. with JSON maps)
-	        return value;
-	    }
-
-	    switch (type) {
-
-	        case "int" :
-	        case "float" :
-	            value = Number(value);
-	            break;
-
-	        case "bool" :
-	            value = (value === "true");
-	            break;
-
-	        default :
-	            // try to parse it anyway
-	            if (!value || isBoolean(value)) {
-	                // if value not defined or boolean
-	                value = value ? (value === "true") : true;
-	            }
-	            else if (isNumeric(value)) {
-	                // check if numeric
-	                value = Number(value);
-	            }
-	            else if (value.search(/^json:/i) === 0) {
-	                // try to parse it
-	                match = value.split(/^json:/i)[1];
-	                try {
-	                    value = JSON.parse(match);
-	                }
-	                catch (e) {
-	                    throw new Error("Unable to parse JSON: " + match);
-	                }
-	            }
-	            else if (value.search(/^eval:/i) === 0) {
-	                // try to evaluate it
-	                match = value.split(/^eval:/i)[1];
-	                try {
-	                    // eslint-disable-next-line
-	                    value = Function("'use strict';return (" + match + ")")();
-	                }
-	                catch (e$1) {
-	                    throw new Error("Unable to evaluate: " + match);
-	                }
-	            }
-	            else if (
-	                ((match = value.match(/^#([\da-fA-F])([\da-fA-F]{3})$/))) ||
-	                ((match = value.match(/^#([\da-fA-F]{2})([\da-fA-F]{6})$/)))
-	            ) {
-	                value = "#" + match[2] + match[1];
-	            }
-
-	            // normalize values
-	            if (name.search(/^(ratio|anchorPoint)$/) === 0) {
-	                // convert number to vector
-	                if (typeof(value) === "number") {
-	                    value = {
-	                        "x" : value,
-	                        "y" : value
-	                    };
-	                }
-	            }
-	    }
-	    // return the interpreted value
-	    return value;
-	}
-
-	/**
-	 * @ignore
-	 */
-	function parseAttributes(obj, elt) {
-	    // do attributes
-	    if (elt.attributes && elt.attributes.length > 0) {
-	        for (var j = 0; j < elt.attributes.length; j++) {
-	            var attribute = elt.attributes.item(j);
-	            if (typeof(attribute.name) !== "undefined") {
-	                // DOM4 (Attr no longer inherit from Node)
-	                obj[attribute.name] = attribute.value;
-	            } else {
-	                // else use the deprecated ones
-	                obj[attribute.nodeName] = attribute.nodeValue;
-	            }
-	        }
-	    }
-	}
-
-	/**
-	 * decompress zlib/gzip data (NOT IMPLEMENTED)
-	 * @ignore
-	 * @name decompress
-	 * @param  {number[]} data Array of bytes
-	 * @param  {string} format compressed data format ("gzip","zlib")
-	 */
-	function decompress() {
-	    throw new Error("GZIP/ZLIB compressed TMX Tile Map not supported!");
-	}
-	/**
-	 * Decode a CSV encoded array into a binary array
-	 * @ignore
-	 * @name decodeCSV
-	 * @param  {string} input CSV formatted data (only numbers, everything else will be converted to NaN)
-	 * @returns {number[]} Decoded data
-	 */
-	function decodeCSV(input) {
-	    var entries = input.replace("\n", "").trim().split(",");
-
-	    var result = [];
-	    for (var i = 0; i < entries.length; i++) {
-	        result.push(+entries[i]);
-	    }
-	    return result;
-	}
-	/**
-	 * Decode a base64 encoded string into a byte array
-	 * @ignore
-	 * @name decodeBase64AsArray
-	 * @param {string} input Base64 encoded data
-	 * @param {number} [bytes] number of bytes per array entry
-	 * @returns {Uint32Array} Decoded data
-	 */
-	function decodeBase64AsArray(input, bytes) {
-	    bytes = bytes || 1;
-
-	    var i, j, len;
-	    var dec = globalThis.atob(input.replace(/[^A-Za-z0-9\+\/\=]/g, ""));
-	    var ar = new Uint32Array(dec.length / bytes);
-
-	    for (i = 0, len = dec.length / bytes; i < len; i++) {
-	        ar[i] = 0;
-	        for (j = bytes - 1; j >= 0; --j) {
-	            ar[i] += dec.charCodeAt((i * bytes) + j) << (j << 3);
-	        }
-	    }
-	    return ar;
-	}
-	/**
-	 * Decode the given data
-	 * @ignore
-	 */
-	function decode(data, encoding, compression) {
-	    compression = compression || "none";
-	    encoding = encoding || "none";
-
-	    switch (encoding) {
-	        case "csv":
-	            return decodeCSV(data);
-
-	        case "base64":
-	            var decoded = decodeBase64AsArray(data, 4);
-	            return (
-	                (compression === "none") ?
-	                decoded :
-	                decompress()
-	            );
-
-	        case "none":
-	            return data;
-
-	        case "xml":
-	            throw new Error("XML encoding is deprecated, use base64 instead");
-
-	        default:
-	            throw new Error("Unknown layer encoding: " + encoding);
-	    }
-	}
-	/**
-	 * Normalize TMX format to Tiled JSON format
-	 * @ignore
-	 */
-	function normalize(obj, item) {
-	    var nodeName = item.nodeName;
-
-	    switch (nodeName) {
-	        case "data":
-	            var data = parse(item);
-	            // #956 Support for Infinite map
-	            // workaround to prevent the parsing code from crashing
-	            data.text = data.text || data.chunk.text;
-	            // When no encoding is given, the tiles are stored as individual XML tile elements.
-	            data.encoding = data.encoding || "xml";
-	            obj.data = decode(data.text, data.encoding, data.compression);
-	            obj.encoding = "none";
-	            break;
-
-	        case "imagelayer":
-	        case "layer":
-	        case "objectgroup":
-	        case "group":
-	            var layer = parse(item);
-	            layer.type = (nodeName === "layer" ? "tilelayer" : nodeName);
-	            if (layer.image) {
-	                layer.image = layer.image.source;
-	            }
-
-	            obj.layers = obj.layers || [];
-	            obj.layers.push(layer);
-	            break;
-
-	        case "animation":
-	            obj.animation = parse(item).frames;
-	            break;
-
-	        case "frame":
-	        case "object":
-	            var name = nodeName + "s";
-	            obj[name] = obj[name] || [];
-	            obj[name].push(parse(item));
-	            break;
-
-	        case "tile":
-	            var tile = parse(item);
-	            if (tile.image) {
-	                tile.imagewidth = tile.image.width;
-	                tile.imageheight = tile.image.height;
-	                tile.image = tile.image.source;
-	            }
-	            obj.tiles = obj.tiles || {};
-	            obj.tiles[tile.id] = tile;
-	            break;
-
-	        case "tileset":
-	            var tileset = parse(item);
-	            if (tileset.image) {
-	                tileset.imagewidth = tileset.image.width;
-	                tileset.imageheight = tileset.image.height;
-	                tileset.image = tileset.image.source;
-	            }
-
-	            obj.tilesets = obj.tilesets || [];
-	            obj.tilesets.push(tileset);
-	            break;
-
-	        case "polygon":
-	        case "polyline":
-	            obj[nodeName] = [];
-
-	            // Get a point array
-	            var points = parse(item).points.split(" ");
-
-	            // And normalize them into an array of vectors
-	            for (var i = 0, v; i < points.length; i++) {
-	                v = points[i].split(",");
-	                obj[nodeName].push({
-	                    "x" : +v[0],
-	                    "y" : +v[1]
-	                });
-	            }
-
-	            break;
-
-	        case "properties":
-	            obj.properties = parse(item);
-	            break;
-
-	        case "property":
-	            var property = parse(item);
-	            // for custom properties, text is used
-	            var value = (typeof property.value !== "undefined") ? property.value : property.text;
-
-	            obj[property.name] = setTMXValue(
-	                property.name,
-	                // in XML type is undefined for "string" values
-	                property.type || "string",
-	                value
-	            );
-	            break;
-
-	        default:
-	            obj[nodeName] = parse(item);
-	            break;
-	    }
-	}
-	/**
-	 * Parse a XML TMX object and returns the corresponding javascript object
-	 * @ignore
-	 */
-	function parse(xml) {
-	    // Create the return object
-	    var obj = {};
-
-	    var text = "";
-
-	    if (xml.nodeType === 1) {
-	        // do attributes
-	        parseAttributes(obj, xml);
-	    }
-
-	    // do children
-	    if (xml.hasChildNodes()) {
-	        for (var i = 0; i < xml.childNodes.length; i++) {
-	            var item = xml.childNodes.item(i);
-
-	            switch (item.nodeType) {
-	                case 1:
-	                    normalize(obj, item);
-	                    break;
-
-	                case 3:
-	                    text += item.nodeValue.trim();
-	                    break;
-	            }
-	        }
-	    }
-
-	    if (text) {
-	        obj.text = text;
-	    }
-
-	    return obj;
-	}
-	/**
-	 * Apply TMX Properties to the given object
-	 * @ignore
-	 */
-	function applyTMXProperties(obj, data) {
-	    var properties = data.properties;
-	    var types = data.propertytypes;
-	    if (typeof(properties) !== "undefined") {
-	        for (var property in properties) {
-	            if (properties.hasOwnProperty(property)) {
-	                var type = "string";
-	                var name = property;
-	                var value = properties[property];
-	                // proof-check for new and old JSON format
-	                if (typeof properties[property].name !== "undefined") {
-	                    name = properties[property].name;
-	                }
-	                if (typeof(types) !== "undefined") {
-	                    type = types[property];
-	                } else if (typeof properties[property].type !== "undefined") {
-	                    type = properties[property].type;
-	                }
-	                if (typeof properties[property].value !== "undefined") {
-	                    value = properties[property].value;
-	                }
-	                // set the value
-	                obj[name] = setTMXValue(name, type, value);
-	            }
-	        }
-	    }
-	}
-
 	var src = {};
 
 	var arraymultimap = {};
@@ -21959,6 +21010,1032 @@
 
 	    return Sprite;
 	}(Renderable));
+
+	var img = "data:image/png;base64,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";
+
+	// a basic progress bar object
+	var ProgressBar = /*@__PURE__*/(function (Renderable) {
+	    function ProgressBar(x, y, w, h) {
+	        Renderable.call(this, x, y, w, h);
+
+	        this.barHeight = h;
+	        this.anchorPoint.set(0, 0);
+
+	        on(LOADER_PROGRESS, this.onProgressUpdate, this);
+	        on(VIEWPORT_ONRESIZE, this.resize, this);
+
+	        this.anchorPoint.set(0, 0);
+
+	        // store current progress
+	        this.progress = 0;
+	    }
+
+	    if ( Renderable ) ProgressBar.__proto__ = Renderable;
+	    ProgressBar.prototype = Object.create( Renderable && Renderable.prototype );
+	    ProgressBar.prototype.constructor = ProgressBar;
+
+	    /**
+	     * make sure the screen is refreshed every frame
+	     * @ignore
+	     */
+	    ProgressBar.prototype.onProgressUpdate = function onProgressUpdate (progress) {
+	        this.progress = ~~(progress * this.width);
+	        this.isDirty = true;
+	    };
+
+	    /**
+	     * draw function
+	     * @ignore
+	     */
+	    ProgressBar.prototype.draw = function draw (renderer) {
+	        // draw the progress bar
+	        renderer.setColor("black");
+	        renderer.fillRect(this.pos.x, viewport.centerY, renderer.getWidth(), this.barHeight / 2);
+
+	        renderer.setColor("#55aa00");
+	        renderer.fillRect(this.pos.x, viewport.centerY, this.progress, this.barHeight / 2);
+	    };
+
+	    /**
+	     * Called by engine before deleting the object
+	     * @ignore
+	     */
+	    ProgressBar.prototype.onDestroyEvent = function onDestroyEvent () {
+	        // cancel the callback
+	        off(LOADER_PROGRESS, this.onProgressUpdate);
+	        off(VIEWPORT_ONRESIZE, this.resize);
+	    };
+
+	    return ProgressBar;
+	}(Renderable));
+	/**
+	 * the melonJS Logo
+	 * @ignore
+	 */
+	var IconLogo = /*@__PURE__*/(function (Sprite) {
+	    function IconLogo(x, y) {
+	        // TODO: create a sprite or texture from a Base64 encoded image
+	        var image = new Image();
+	        image.src = img;
+	        Sprite.call(this, x, y, {
+	            image : image,
+	            framewidth : 256,
+	            frameheight : 256
+	        });
+	    }
+
+	    if ( Sprite ) IconLogo.__proto__ = Sprite;
+	    IconLogo.prototype = Object.create( Sprite && Sprite.prototype );
+	    IconLogo.prototype.constructor = IconLogo;
+
+	    return IconLogo;
+	}(Sprite));
+
+	/**
+	 * a default loading screen
+	 * @ignore
+	 */
+	var DefaultLoadingScreen = /*@__PURE__*/(function (Stage) {
+	    function DefaultLoadingScreen () {
+	        Stage.apply(this, arguments);
+	    }
+
+	    if ( Stage ) DefaultLoadingScreen.__proto__ = Stage;
+	    DefaultLoadingScreen.prototype = Object.create( Stage && Stage.prototype );
+	    DefaultLoadingScreen.prototype.constructor = DefaultLoadingScreen;
+
+	    DefaultLoadingScreen.prototype.onResetEvent = function onResetEvent () {
+	        var barHeight = 8;
+
+	        // set a background color
+	        world.backgroundColor.parseCSS("#202020");
+
+	        // progress bar
+	        world.addChild(new ProgressBar(
+	            0,
+	            renderer.getHeight() / 2,
+	            renderer.getWidth(),
+	            barHeight
+	        ), 1);
+
+	        // melonJS logo
+	        world.addChild(new IconLogo(
+	            renderer.getWidth() / 2,
+	            (renderer.getHeight() / 2)
+
+	        ), 2);
+	    };
+
+	    return DefaultLoadingScreen;
+	}(Stage));
+
+	// current state
+	var _state = -1;
+
+	// requestAnimeFrame Id
+	var _animFrameId = -1;
+
+	// whether the game state is "paused"
+	var _isPaused = false;
+
+	// list of stages
+	var _stages = {};
+
+	// fading transition parameters between screen
+	var _fade = {
+	    color : "",
+	    duration : 0
+	};
+
+	// callback when state switch is done
+	/** @ignore */
+	var _onSwitchComplete = null;
+
+	// just to keep track of possible extra arguments
+	var _extraArgs = null;
+
+	// store the elapsed time during pause/stop period
+	var _pauseTime = 0;
+
+	/**
+	 * @ignore
+	 */
+	function _startRunLoop() {
+	    // ensure nothing is running first and in valid state
+	    if ((_animFrameId === -1) && (_state !== -1)) {
+	        // start the main loop
+	        _animFrameId = globalThis.requestAnimationFrame(_renderFrame);
+	    }
+	}
+
+	/**
+	 * Resume the game loop after a pause.
+	 * @ignore
+	 */
+	function _resumeRunLoop() {
+	    // ensure game is actually paused and in valid state
+	    if (_isPaused && (_state !== -1)) {
+	        _isPaused = false;
+	    }
+	}
+
+	/**
+	 * Pause the loop for most stage objects.
+	 * @ignore
+	 */
+	function _pauseRunLoop() {
+	    // Set the paused boolean to stop updates on (most) entities
+	    _isPaused = true;
+	}
+
+	/**
+	 * this is only called when using requestAnimFrame stuff
+	 * @param {number} time current timestamp in milliseconds
+	 * @ignore
+	 */
+	function _renderFrame(time) {
+	    var stage = _stages[_state].stage;
+	    // update all game objects
+	    update(time, stage);
+	    // render all game objects
+	    draw(stage);
+	    // schedule the next frame update
+	    if (_animFrameId !== -1) {
+	        _animFrameId = globalThis.requestAnimationFrame(_renderFrame);
+	    }
+	}
+
+	/**
+	 * stop the SO main loop
+	 * @ignore
+	 */
+	function _stopRunLoop() {
+	    // cancel any previous animationRequestFrame
+	    globalThis.cancelAnimationFrame(_animFrameId);
+	    _animFrameId = -1;
+	}
+
+	/**
+	 * start the SO main loop
+	 * @ignore
+	 */
+	function _switchState(state) {
+	    // clear previous interval if any
+	    _stopRunLoop();
+
+	    // call the stage destroy method
+	    if (_stages[_state]) {
+	        // just notify the object
+	        _stages[_state].stage.destroy();
+	    }
+
+	    if (_stages[state]) {
+	        // set the global variable
+	        _state = state;
+
+	        // call the reset function with _extraArgs as arguments
+	        _stages[_state].stage.reset.apply(_stages[_state].stage, _extraArgs);
+
+	        // and start the main loop of the
+	        // new requested state
+	        _startRunLoop();
+
+	        // publish the pause event
+	        emit(STATE_CHANGE);
+
+	        // execute callback if defined
+	        if (_onSwitchComplete) {
+	            _onSwitchComplete();
+	        }
+
+	        // force repaint
+	        repaint();
+	    }
+	}
+
+	// initialize me.state on system boot
+	on(BOOT, function () {
+	    // set the built-in loading stage
+	    state.set(state.LOADING, new DefaultLoadingScreen());
+	    // set and enable the default stage
+	    state.set(state.DEFAULT, new Stage());
+	    // enable by default as soon as the display is initialized
+	    on(VIDEO_INIT, function () {
+	        state.change(state.DEFAULT, true);
+	    });
+	});
+
+
+	/**
+	 * a State Manager (state machine)
+	 * @namespace state
+	 */
+
+	var state = {
+
+	    /**
+	     * default state ID for Loading Stage
+	     * @constant
+	     * @name LOADING
+	     * @memberof state
+	     */
+	    LOADING : 0,
+
+	    /**
+	     * default state ID for Menu Stage
+	     * @constant
+	     * @name MENU
+	     * @memberof state
+	     */
+	    MENU : 1,
+
+	    /**
+	     * default state ID for "Ready" Stage
+	     * @constant
+	     * @name READY
+	     * @memberof state
+	     */
+	    READY : 2,
+
+	    /**
+	     * default state ID for Play Stage
+	     * @constant
+	     * @name PLAY
+	     * @memberof state
+	     */
+	    PLAY : 3,
+
+	    /**
+	     * default state ID for Game Over Stage
+	     * @constant
+	     * @name GAMEOVER
+	     * @memberof state
+	     */
+	    GAMEOVER : 4,
+
+	    /**
+	     * default state ID for Game End Stage
+	     * @constant
+	     * @name GAME_END
+	     * @memberof state
+	     */
+	    GAME_END : 5,
+
+	    /**
+	     * default state ID for High Score Stage
+	     * @constant
+	     * @name SCORE
+	     * @memberof state
+	     */
+	    SCORE : 6,
+
+	    /**
+	     * default state ID for Credits Stage
+	     * @constant
+	     * @name CREDITS
+	     * @memberof state
+	     */
+	    CREDITS : 7,
+
+	    /**
+	     * default state ID for Settings Stage
+	     * @constant
+	     * @name SETTINGS
+	     * @memberof state
+	     */
+	    SETTINGS : 8,
+
+	    /**
+	     * default state ID for the default Stage
+	     * (the default stage is the one running as soon as melonJS is started)
+	     * @constant
+	     * @name SETTINGS
+	     * @memberof state
+	     */
+	    DEFAULT : 9,
+
+	    /**
+	     * default state ID for user defined constants<br>
+	     * @constant
+	     * @name USER
+	     * @memberof state
+	     * @example
+	     * var STATE_INFO = me.state.USER + 0;
+	     * var STATE_WARN = me.state.USER + 1;
+	     * var STATE_ERROR = me.state.USER + 2;
+	     * var STATE_CUTSCENE = me.state.USER + 3;
+	     */
+	    USER : 100,
+
+	    /**
+	     * Stop the current stage.
+	     * @name stop
+	     * @memberof state
+	     * @public
+	     * @param {boolean} [pauseTrack=false] pause current track on screen stop.
+	     */
+	    stop: function stop(pauseTrack) {
+	        if ( pauseTrack === void 0 ) pauseTrack=false;
+
+	        // only stop when we are not loading stuff
+	        if ((_state !== this.LOADING) && this.isRunning()) {
+	            // stop the main loop
+	            _stopRunLoop();
+
+	            // current music stop
+	            if (pauseTrack === true) {
+	                pauseTrack();
+	            }
+
+	            // store time when stopped
+	            _pauseTime = globalThis.performance.now();
+
+	            // publish the stop notification
+	            emit(STATE_STOP);
+	        }
+	    },
+
+	    /**
+	     * pause the current stage
+	     * @name pause
+	     * @memberof state
+	     * @public
+	     * @param {boolean} [music=false] pause current music track on screen pause
+	     */
+	    pause: function pause(music) {
+	        if ( music === void 0 ) music=false;
+
+	        // only pause when we are not loading stuff
+	        if ((_state !== this.LOADING) && !this.isPaused()) {
+	            // stop the main loop
+	            _pauseRunLoop();
+	            // current music stop
+	            if (music === true) {
+	                pauseTrack();
+	            }
+
+	            // store time when paused
+	            _pauseTime = globalThis.performance.now();
+
+	            // publish the pause event
+	            emit(STATE_PAUSE);
+	        }
+	    },
+
+	    /**
+	     * Restart the current stage from a full stop.
+	     * @name restart
+	     * @memberof state
+	     * @public
+	     * @param {boolean} [music=false] resume current music track on screen resume
+	     */
+	    restart: function restart(music) {
+	        if ( music === void 0 ) music=false;
+
+	        if (!this.isRunning()) {
+	            // restart the main loop
+	            _startRunLoop();
+	            // current music stop
+	            if (music === true) {
+	                resumeTrack();
+	            }
+
+	            // calculate the elpased time
+	            _pauseTime = globalThis.performance.now() - _pauseTime;
+
+	            // force repaint
+	            repaint();
+
+	            // publish the restart notification
+	            emit(STATE_RESTART, _pauseTime);
+	        }
+	    },
+
+	    /**
+	     * resume the current stage
+	     * @name resume
+	     * @memberof state
+	     * @public
+	     * @param {boolean} [music=false] resume current music track on screen resume
+	     */
+	    resume: function resume(music) {
+	        if ( music === void 0 ) music=false;
+
+	        if (this.isPaused()) {
+	            // resume the main loop
+	            _resumeRunLoop();
+	            // current music stop
+	            if (music === true) {
+	                resumeTrack();
+	            }
+
+	            // calculate the elpased time
+	            _pauseTime = globalThis.performance.now() - _pauseTime;
+
+	            // publish the resume event
+	            emit(STATE_RESUME, _pauseTime);
+	        }
+	    },
+
+	    /**
+	     * return the running state of the state manager
+	     * @name isRunning
+	     * @memberof state
+	     * @public
+	     * @returns {boolean} true if a "process is running"
+	     */
+	    isRunning: function isRunning() {
+	        return _animFrameId !== -1;
+	    },
+
+	    /**
+	     * Return the pause state of the state manager
+	     * @name isPaused
+	     * @memberof state
+	     * @public
+	     * @returns {boolean} true if the game is paused
+	     */
+	    isPaused: function isPaused() {
+	        return _isPaused;
+	    },
+
+	    /**
+	     * associate the specified state with a Stage
+	     * @name set
+	     * @memberof state
+	     * @public
+	     * @param {number} state State ID (see constants)
+	     * @param {Stage} stage Instantiated Stage to associate with state ID
+	     * @param {boolean} [start = false] if true the state will be changed immediately after adding it.
+	     * @example
+	     * class MenuButton extends me.GUI_Object {
+	     *     onClick() {
+	     *         // Change to the PLAY state when the button is clicked
+	     *         me.state.change(me.state.PLAY);
+	     *         return true;
+	     *     }
+	     * };
+	     *
+	     * class MenuScreen extends me.Stage {
+	     *     onResetEvent() {
+	     *         // Load background image
+	     *         me.game.world.addChild(
+	     *             new me.ImageLayer(0, 0, {
+	     *                 image : "bg",
+	     *                 z: 0 // z-index
+	     *             }
+	     *         );
+	     *
+	     *         // Add a button
+	     *         me.game.world.addChild(
+	     *             new MenuButton(350, 200, { "image" : "start" }),
+	     *             1 // z-index
+	     *         );
+	     *
+	     *         // Play music
+	     *         me.audio.playTrack("menu");
+	     *     }
+	     *
+	     *     onDestroyEvent() {
+	     *         // Stop music
+	     *         me.audio.stopTrack();
+	     *     }
+	     * };
+	     *
+	     * me.state.set(me.state.MENU, new MenuScreen());
+	     */
+	    set: function set(state, stage, start) {
+	        if ( start === void 0 ) start = false;
+
+	        if (!(stage instanceof Stage)) {
+	            throw new Error(stage + " is not an instance of me.Stage");
+	        }
+	        _stages[state] = {};
+	        _stages[state].stage = stage;
+	        _stages[state].transition = true;
+
+	        if (start === true) {
+	            this.change(state);
+	        }
+	    },
+
+	    /**
+	     * returns the stage associated with the specified state
+	     * (or the current one if none is specified)
+	     * @name set
+	     * @memberof state
+	     * @public
+	     * @param {number} [state] State ID (see constants)
+	     * @returns {Stage}
+	     */
+	    get: function get(state) {
+	        if ( state === void 0 ) state = _state;
+
+	        if (typeof _stages[state] !== "undefined") {
+	            return _stages[state].stage;
+	        } else {
+	            return undefined;
+	        }
+
+	    },
+
+	    /**
+	     * return a reference to the current stage<br>
+	     * useful to call a object specific method
+	     * @name current
+	     * @memberof state
+	     * @public
+	     * @returns {Stage}
+	     */
+	    current: function current() {
+	        return this.get();
+	    },
+
+	    /**
+	     * specify a global transition effect
+	     * @name transition
+	     * @memberof state
+	     * @public
+	     * @param {string} effect (only "fade" is supported for now)
+	     * @param {Color|string} color a CSS color value
+	     * @param {number} [duration=1000] expressed in milliseconds
+	     */
+	    transition: function transition(effect, color, duration) {
+	        if (effect === "fade") {
+	            _fade.color = color;
+	            _fade.duration = duration;
+	        }
+	    },
+
+	    /**
+	     * enable/disable transition for a specific state (by default enabled for all)
+	     * @name setTransition
+	     * @memberof state
+	     * @public
+	     * @param {number} state State ID (see constants)
+	     * @param {boolean} enable
+	     */
+	    setTransition: function setTransition(state, enable) {
+	        _stages[state].transition = enable;
+	    },
+
+	    /**
+	     * change the game/app state
+	     * @name change
+	     * @memberof state
+	     * @public
+	     * @param {number} state State ID (see constants)
+	     * @param {boolean} forceChange if true the state will be changed immediately
+	     * @param {object} [...arguments] extra arguments to be passed to the reset functions
+	     * @example
+	     * // The onResetEvent method on the play screen will receive two args:
+	     * // "level_1" and the number 3
+	     * me.state.change(me.state.PLAY, "level_1", 3);
+	     */
+	    change: function change(state, forceChange) {
+	        // Protect against undefined Stage
+	        if (typeof(_stages[state]) === "undefined") {
+	            throw new Error("Undefined Stage for state '" + state + "'");
+	        }
+
+	        // do nothing if already the current state
+	        if (!this.isCurrent(state)) {
+	            _extraArgs = null;
+	            if (arguments.length > 1) {
+	                // store extra arguments if any
+	                _extraArgs = Array.prototype.slice.call(arguments, 1);
+	            }
+	            // if fading effect
+	            if (_fade.duration && _stages[state].transition) {
+	                _onSwitchComplete = function () {
+	                    viewport.fadeOut(_fade.color, _fade.duration);
+	                };
+	                viewport.fadeIn(
+	                    _fade.color,
+	                    _fade.duration,
+	                    function () {
+	                        defer(_switchState, this, state);
+	                    }
+	                );
+
+	            }
+	            // else just switch without any effects
+	            else {
+	                // wait for the last frame to be
+	                // "finished" before switching
+	                if (forceChange === true) {
+	                    _switchState(state);
+	                } else {
+	                    defer(_switchState, this, state);
+	                }
+	            }
+	        }
+	    },
+
+	    /**
+	     * return true if the specified state is the current one
+	     * @name isCurrent
+	     * @memberof state
+	     * @public
+	     * @param {number} state State ID (see constants)
+	     * @returns {boolean} true if the specified state is the current one
+	     */
+	    isCurrent: function isCurrent(state) {
+	        return _state === state;
+	    }
+
+	};
+
+	/**
+	 * set and interpret a TMX property value
+	 * @ignore
+	 */
+	function setTMXValue(name, type, value) {
+	    var match;
+
+	    if (typeof(value) !== "string") {
+	        // Value is already normalized (e.g. with JSON maps)
+	        return value;
+	    }
+
+	    switch (type) {
+
+	        case "int" :
+	        case "float" :
+	            value = Number(value);
+	            break;
+
+	        case "bool" :
+	            value = (value === "true");
+	            break;
+
+	        default :
+	            // try to parse it anyway
+	            if (!value || isBoolean(value)) {
+	                // if value not defined or boolean
+	                value = value ? (value === "true") : true;
+	            }
+	            else if (isNumeric(value)) {
+	                // check if numeric
+	                value = Number(value);
+	            }
+	            else if (value.search(/^json:/i) === 0) {
+	                // try to parse it
+	                match = value.split(/^json:/i)[1];
+	                try {
+	                    value = JSON.parse(match);
+	                }
+	                catch (e) {
+	                    throw new Error("Unable to parse JSON: " + match);
+	                }
+	            }
+	            else if (value.search(/^eval:/i) === 0) {
+	                // try to evaluate it
+	                match = value.split(/^eval:/i)[1];
+	                try {
+	                    // eslint-disable-next-line
+	                    value = Function("'use strict';return (" + match + ")")();
+	                }
+	                catch (e$1) {
+	                    throw new Error("Unable to evaluate: " + match);
+	                }
+	            }
+	            else if (
+	                ((match = value.match(/^#([\da-fA-F])([\da-fA-F]{3})$/))) ||
+	                ((match = value.match(/^#([\da-fA-F]{2})([\da-fA-F]{6})$/)))
+	            ) {
+	                value = "#" + match[2] + match[1];
+	            }
+
+	            // normalize values
+	            if (name.search(/^(ratio|anchorPoint)$/) === 0) {
+	                // convert number to vector
+	                if (typeof(value) === "number") {
+	                    value = {
+	                        "x" : value,
+	                        "y" : value
+	                    };
+	                }
+	            }
+	    }
+	    // return the interpreted value
+	    return value;
+	}
+
+	/**
+	 * @ignore
+	 */
+	function parseAttributes(obj, elt) {
+	    // do attributes
+	    if (elt.attributes && elt.attributes.length > 0) {
+	        for (var j = 0; j < elt.attributes.length; j++) {
+	            var attribute = elt.attributes.item(j);
+	            if (typeof(attribute.name) !== "undefined") {
+	                // DOM4 (Attr no longer inherit from Node)
+	                obj[attribute.name] = attribute.value;
+	            } else {
+	                // else use the deprecated ones
+	                obj[attribute.nodeName] = attribute.nodeValue;
+	            }
+	        }
+	    }
+	}
+
+	/**
+	 * decompress zlib/gzip data (NOT IMPLEMENTED)
+	 * @ignore
+	 * @name decompress
+	 * @param  {number[]} data Array of bytes
+	 * @param  {string} format compressed data format ("gzip","zlib")
+	 */
+	function decompress() {
+	    throw new Error("GZIP/ZLIB compressed TMX Tile Map not supported!");
+	}
+	/**
+	 * Decode a CSV encoded array into a binary array
+	 * @ignore
+	 * @name decodeCSV
+	 * @param  {string} input CSV formatted data (only numbers, everything else will be converted to NaN)
+	 * @returns {number[]} Decoded data
+	 */
+	function decodeCSV(input) {
+	    var entries = input.replace("\n", "").trim().split(",");
+
+	    var result = [];
+	    for (var i = 0; i < entries.length; i++) {
+	        result.push(+entries[i]);
+	    }
+	    return result;
+	}
+	/**
+	 * Decode a base64 encoded string into a byte array
+	 * @ignore
+	 * @name decodeBase64AsArray
+	 * @param {string} input Base64 encoded data
+	 * @param {number} [bytes] number of bytes per array entry
+	 * @returns {Uint32Array} Decoded data
+	 */
+	function decodeBase64AsArray(input, bytes) {
+	    bytes = bytes || 1;
+
+	    var i, j, len;
+	    var dec = globalThis.atob(input.replace(/[^A-Za-z0-9\+\/\=]/g, ""));
+	    var ar = new Uint32Array(dec.length / bytes);
+
+	    for (i = 0, len = dec.length / bytes; i < len; i++) {
+	        ar[i] = 0;
+	        for (j = bytes - 1; j >= 0; --j) {
+	            ar[i] += dec.charCodeAt((i * bytes) + j) << (j << 3);
+	        }
+	    }
+	    return ar;
+	}
+	/**
+	 * Decode the given data
+	 * @ignore
+	 */
+	function decode(data, encoding, compression) {
+	    compression = compression || "none";
+	    encoding = encoding || "none";
+
+	    switch (encoding) {
+	        case "csv":
+	            return decodeCSV(data);
+
+	        case "base64":
+	            var decoded = decodeBase64AsArray(data, 4);
+	            return (
+	                (compression === "none") ?
+	                decoded :
+	                decompress()
+	            );
+
+	        case "none":
+	            return data;
+
+	        case "xml":
+	            throw new Error("XML encoding is deprecated, use base64 instead");
+
+	        default:
+	            throw new Error("Unknown layer encoding: " + encoding);
+	    }
+	}
+	/**
+	 * Normalize TMX format to Tiled JSON format
+	 * @ignore
+	 */
+	function normalize(obj, item) {
+	    var nodeName = item.nodeName;
+
+	    switch (nodeName) {
+	        case "data":
+	            var data = parse(item);
+	            // #956 Support for Infinite map
+	            // workaround to prevent the parsing code from crashing
+	            data.text = data.text || data.chunk.text;
+	            // When no encoding is given, the tiles are stored as individual XML tile elements.
+	            data.encoding = data.encoding || "xml";
+	            obj.data = decode(data.text, data.encoding, data.compression);
+	            obj.encoding = "none";
+	            break;
+
+	        case "imagelayer":
+	        case "layer":
+	        case "objectgroup":
+	        case "group":
+	            var layer = parse(item);
+	            layer.type = (nodeName === "layer" ? "tilelayer" : nodeName);
+	            if (layer.image) {
+	                layer.image = layer.image.source;
+	            }
+
+	            obj.layers = obj.layers || [];
+	            obj.layers.push(layer);
+	            break;
+
+	        case "animation":
+	            obj.animation = parse(item).frames;
+	            break;
+
+	        case "frame":
+	        case "object":
+	            var name = nodeName + "s";
+	            obj[name] = obj[name] || [];
+	            obj[name].push(parse(item));
+	            break;
+
+	        case "tile":
+	            var tile = parse(item);
+	            if (tile.image) {
+	                tile.imagewidth = tile.image.width;
+	                tile.imageheight = tile.image.height;
+	                tile.image = tile.image.source;
+	            }
+	            obj.tiles = obj.tiles || {};
+	            obj.tiles[tile.id] = tile;
+	            break;
+
+	        case "tileset":
+	            var tileset = parse(item);
+	            if (tileset.image) {
+	                tileset.imagewidth = tileset.image.width;
+	                tileset.imageheight = tileset.image.height;
+	                tileset.image = tileset.image.source;
+	            }
+
+	            obj.tilesets = obj.tilesets || [];
+	            obj.tilesets.push(tileset);
+	            break;
+
+	        case "polygon":
+	        case "polyline":
+	            obj[nodeName] = [];
+
+	            // Get a point array
+	            var points = parse(item).points.split(" ");
+
+	            // And normalize them into an array of vectors
+	            for (var i = 0, v; i < points.length; i++) {
+	                v = points[i].split(",");
+	                obj[nodeName].push({
+	                    "x" : +v[0],
+	                    "y" : +v[1]
+	                });
+	            }
+
+	            break;
+
+	        case "properties":
+	            obj.properties = parse(item);
+	            break;
+
+	        case "property":
+	            var property = parse(item);
+	            // for custom properties, text is used
+	            var value = (typeof property.value !== "undefined") ? property.value : property.text;
+
+	            obj[property.name] = setTMXValue(
+	                property.name,
+	                // in XML type is undefined for "string" values
+	                property.type || "string",
+	                value
+	            );
+	            break;
+
+	        default:
+	            obj[nodeName] = parse(item);
+	            break;
+	    }
+	}
+	/**
+	 * Parse a XML TMX object and returns the corresponding javascript object
+	 * @ignore
+	 */
+	function parse(xml) {
+	    // Create the return object
+	    var obj = {};
+
+	    var text = "";
+
+	    if (xml.nodeType === 1) {
+	        // do attributes
+	        parseAttributes(obj, xml);
+	    }
+
+	    // do children
+	    if (xml.hasChildNodes()) {
+	        for (var i = 0; i < xml.childNodes.length; i++) {
+	            var item = xml.childNodes.item(i);
+
+	            switch (item.nodeType) {
+	                case 1:
+	                    normalize(obj, item);
+	                    break;
+
+	                case 3:
+	                    text += item.nodeValue.trim();
+	                    break;
+	            }
+	        }
+	    }
+
+	    if (text) {
+	        obj.text = text;
+	    }
+
+	    return obj;
+	}
+	/**
+	 * Apply TMX Properties to the given object
+	 * @ignore
+	 */
+	function applyTMXProperties(obj, data) {
+	    var properties = data.properties;
+	    var types = data.propertytypes;
+	    if (typeof(properties) !== "undefined") {
+	        for (var property in properties) {
+	            if (properties.hasOwnProperty(property)) {
+	                var type = "string";
+	                var name = property;
+	                var value = properties[property];
+	                // proof-check for new and old JSON format
+	                if (typeof properties[property].name !== "undefined") {
+	                    name = properties[property].name;
+	                }
+	                if (typeof(types) !== "undefined") {
+	                    type = types[property];
+	                } else if (typeof properties[property].type !== "undefined") {
+	                    type = properties[property].type;
+	                }
+	                if (typeof properties[property].value !== "undefined") {
+	                    value = properties[property].value;
+	                }
+	                // set the value
+	                obj[name] = setTMXValue(name, type, value);
+	            }
+	        }
+	    }
+	}
 
 	// bitmask constants to check for flipped & rotated tiles
 	var TMX_FLIP_H          = 0x80000000,
@@ -32916,10 +32993,10 @@
 	     * this can be overridden by the plugin
 	     * @public
 	     * @type {string}
-	     * @default "11.0.0"
+	     * @default "12.0.0"
 	     * @name plugin.Base#version
 	     */
-	    this.version = "11.0.0";
+	    this.version = "12.0.0";
 	};
 
 	/**
@@ -34114,7 +34191,7 @@
 	        this.width = this.height = 0;
 
 	        for (var i = 0; i < strings.length; i++) {
-	            this.width = Math.max(this.lineWidth(trimRight(strings[i]), context), this.width);
+	            this.width = Math.max(this.lineWidth(strings[i].trimRight(), context), this.width);
 	            this.height += this.lineHeight();
 	        }
 	        this.width = Math.ceil(this.width);
@@ -34600,7 +34677,7 @@
 	        setContextStyle(context, this, stroke);
 
 	        for (var i = 0; i < text.length; i++) {
-	            var string = trimRight(text[i]);
+	            var string = text[i].trimRight();
 	            // draw the string
 	            context[stroke ? "strokeText" : "fillText"](string, x, y);
 	            // add leading space
@@ -34854,7 +34931,7 @@
 
 	        for (var i = 0; i < this._text.length; i++) {
 	            x = lX;
-	            var string = trimRight(this._text[i]);
+	            var string = this._text[i].trimRight();
 	            // adjust x pos based on alignment value
 	            var stringWidth = this.metrics.lineWidth(string);
 	            switch (this.textAlign) {
@@ -37552,7 +37629,7 @@
 	 * @name version
 	 * @type {string}
 	 */
-	var version = "11.0.0";
+	var version = "12.0.0";
 
 
 	/**

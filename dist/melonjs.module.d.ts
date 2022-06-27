@@ -12500,8 +12500,6 @@ declare var fileUtils: Readonly<{
 declare var stringUtils: Readonly<{
     __proto__: any;
     capitalize: typeof capitalize;
-    trimLeft: typeof trimLeft;
-    trimRight: typeof trimRight;
     isNumeric: typeof isNumeric;
     isBoolean: typeof isBoolean;
     toHex: typeof toHex$1;
@@ -12681,24 +12679,6 @@ declare function getExtension(path: string): string;
  * @returns {string} the capitalized string
  */
 declare function capitalize(str: string): string;
-/**
- * returns the string stripped of whitespace from the left.
- * @public
- * @memberof utils.string
- * @name trimLeft
- * @param {string} str the string to be trimmed
- * @returns {string} trimmed string
- */
-declare function trimLeft(str: string): string;
-/**
- * returns the string stripped of whitespace from the right.
- * @public
- * @memberof utils.string
- * @name trimRight
- * @param {string} str the string to be trimmed
- * @returns {string} trimmed string
- */
-declare function trimRight(str: string): string;
 /**
  * returns true if the given string contains a numeric integer or float value
  * @public
