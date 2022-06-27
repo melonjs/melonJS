@@ -27816,31 +27816,31 @@ var loader = {
  * audio channel list
  * @ignore
  */
-var audioTracks = {};
+let audioTracks = {};
 
 /**
  * current active track
  * @ignore
  */
-var current_track_id = null;
+let current_track_id = null;
 
 /**
  * error retry counter
  * @ignore
  */
-var retry_counter = 0;
+let retry_counter = 0;
 
 /**
  * list of active audio formats
  * @ignore
  */
-var audioExts = [];
+let audioExts = [];
 
 /**
  * event listener callback on load error
  * @ignore
  */
-var soundLoadError = function (sound_name, onerror_cb) {
+let soundLoadError = function (sound_name, onerror_cb) {
     // check the retry counter
     if (retry_counter++ > 3) {
         // something went wrong
