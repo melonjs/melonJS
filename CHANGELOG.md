@@ -1,6 +1,6 @@
 # Changelog
 
-## [12.0.0] (melonJS 2) - _2022-xx-xx_
+## [12.0.0] (melonJS 2) - _2022-06-27_
 
 ### Changed
 - Loader: the default loading screen has been updated with the new melonjs logo
