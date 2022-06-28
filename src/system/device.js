@@ -5,6 +5,7 @@ import { prefixed } from "./../utils/agent.js";
 import state from "./../state/state.js";
 import * as event from "./event.js";
 import { DOMContentLoaded } from "./dom.js";
+import * as platform from "./platform.js";
 
 // private properties
 let accelInitialized = false;
@@ -16,7 +17,7 @@ let swipeEnabled = true;
 /**
  * @ignore
  */
-function _disableSwipeFn(e) {
+function disableSwipeFn(e) {
     e.preventDefault();
     if (typeof globalThis.scroll === "function") {
         globalThis.scroll(0, 0);
@@ -25,54 +26,17 @@ function _disableSwipeFn(e) {
 };
 
 // a cache DOMRect object
-let _domRect = {left: 0, top: 0, x: 0, y: 0, width: 0, height: 0, right: 0, bottom: 0};
-
-/**
- * detect the device type
- * @ignore
- */
-function _detectDevice() {
-    // iOS Device ?
-    device.iOS = /iPhone|iPad|iPod/i.test(device.ua);
-    // Android Device ?
-    device.android = /Android/i.test(device.ua);
-    device.android2 = /Android 2/i.test(device.ua);
-    // Linux platform
-    device.linux = /Linux/i.test(device.ua);
-    // Chrome OS ?
-    device.chromeOS = /CrOS/.test(device.ua);
-    // Windows Device ?
-    device.wp = /Windows Phone/i.test(device.ua);
-    // Blackberry device ?
-    device.BlackBerry = /BlackBerry/i.test(device.ua);
-    // Kindle device ?
-    device.Kindle = /Kindle|Silk.*Mobile Safari/i.test(device.ua);
-    // Mobile platform
-    device.isMobile = /Mobi/i.test(device.ua) ||
-                         device.iOS ||
-                         device.android ||
-                         device.wp ||
-                         device.BlackBerry ||
-                         device.Kindle || false;
-    // ejecta
-    device.ejecta = (typeof globalThis.ejecta !== "undefined");
-    // Wechat
-    device.isWeixin = /MicroMessenger/i.test(device.ua);
-};
+let domRect = {left: 0, top: 0, x: 0, y: 0, width: 0, height: 0, right: 0, bottom: 0};
 
 /**
  * check the device capapbilities
  * @ignore
  */
-function _checkCapabilities() {
-
-    // detect device type/platform
-    _detectDevice();
+function _checkCapabilities(device) {
 
     // Touch/Gesture Event feature detection
     device.TouchEvent = !!("ontouchstart" in globalThis);
     device.PointerEvent = !!globalThis.PointerEvent;
-    globalThis.gesture = prefixed("gesture");
 
     // detect touch capabilities
     device.touch = device.TouchEvent || device.PointerEvent;
@@ -199,28 +163,25 @@ function _checkCapabilities() {
 
 };
 
-
 // Initialize me.timer on Boot event
 event.on(event.BOOT, () => {
-    _checkCapabilities();
+    _checkCapabilities(device);
 });
 
 
-// public export
 /**
  * The device capabilities and specific events
- *
- * @namespace
+ * @namespace device
  */
 let device = {
 
     /**
-     * the `ua` read-only property returns the user agent string for the current browser.
-     * @type {string}
+     * the device platform type
+     * @type {device.platform}
      * @readonly
-     * @name ua
+     * @name platform
      */
-    ua : typeof globalThis.navigator !== "undefined" ? globalThis.navigator.userAgent : "",
+    platform : platform,
 
     /**
      * Browser Local Storage capabilities <br>
@@ -317,102 +278,14 @@ let device = {
     wheel : false,
 
     /**
-     * equals to true if a mobile device <br>
+     * equals to true if a mobile device.
      * (Android | iPhone | iPad | iPod | BlackBerry | Windows Phone | Kindle)
      * @type {boolean}
      * @readonly
      * @name isMobile
+     * @memberof device#
      */
-    isMobile : false,
-
-    /**
-     * equals to true if the device is an iOS platform.
-     * @type {boolean}
-     * @readonly
-     * @name iOS
-     */
-    iOS : false,
-
-    /**
-     * equals to true if the device is an Android platform.
-     * @type {boolean}
-     * @readonly
-     * @name android
-     */
-    android : false,
-
-    /**
-     * equals to true if the device is an Android 2.x platform.
-     * @type {boolean}
-     * @readonly
-     * @name android2
-     */
-    android2 : false,
-
-    /**
-     * equals to true if the device is a Linux platform.
-     * @type {boolean}
-     * @readonly
-     * @name linux
-     */
-    linux : false,
-
-    /**
-     * equals to true if the game is running under Ejecta.
-     * @type {boolean}
-     * @readonly
-     * @see http://impactjs.com/ejecta
-     * @name ejecta
-     */
-    ejecta : false,
-
-    /**
-     * equals to true if the  is running under Wechat.
-     * @type {boolean}
-     * @readonly
-     * @name isWeixin
-     */
-    isWeixin : false,
-
-    /**
-     * equals to true if running under node.js
-     * @type {boolean}
-     * @readonly
-     * @name nodeJS
-     */
-    nodeJS : (typeof globalThis.process !== "undefined") && (typeof globalThis.process.release !== "undefined") && (globalThis.process.release.name === "node"),
-
-    /**
-     * equals to true if the device is running on ChromeOS.
-     * @type {boolean}
-     * @readonly
-     * @name chromeOS
-     */
-    chromeOS : false,
-
-    /**
-     * equals to true if the device is a Windows Phone platform.
-     * @type {boolean}
-     * @readonly
-     * @name wp
-     */
-    wp : false,
-
-    /**
-     * equals to true if the device is a BlackBerry platform.
-     * @type {boolean}
-     * @readonly
-     * @name BlackBerry
-     */
-    BlackBerry : false,
-
-    /**
-     * equals to true if the device is a Kindle platform.
-     * @type {boolean}
-     * @readonly
-     * @name Kindle
-     */
-    Kindle : false,
+    isMobile : platform.isMobile,
 
     /**
      * contains the g-force acceleration along the x-axis.
@@ -580,11 +453,11 @@ let device = {
         var moveEvent = device.PointerEvent ? "pointermove" : (device.TouchEvent ? "touchmove" : "mousemove");
         if (enable !== false) {
             if (swipeEnabled === false) {
-                globalThis.document.removeEventListener(moveEvent, _disableSwipeFn);
+                globalThis.document.removeEventListener(moveEvent, disableSwipeFn);
                 swipeEnabled = true;
             }
         } else if (swipeEnabled === true) {
-            globalThis.document.addEventListener(moveEvent, _disableSwipeFn, { passive: false });
+            globalThis.document.addEventListener(moveEvent, disableSwipeFn, { passive: false });
             swipeEnabled = false;
         }
     },
@@ -787,9 +660,9 @@ let device = {
         if (typeof element === "object" && element !== document.body && typeof element.getBoundingClientRect !== "undefined") {
             return element.getBoundingClientRect();
         } else {
-            _domRect.width = _domRect.right = globalThis.innerWidth;
-            _domRect.height = _domRect.bottom = globalThis.innerHeight;
-            return _domRect;
+            domRect.width = domRect.right = globalThis.innerWidth;
+            domRect.height = domRect.bottom = globalThis.innerHeight;
+            return domRect;
         };
     },
 
