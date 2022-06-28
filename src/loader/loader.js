@@ -1,6 +1,6 @@
 import * as fileUtil from "./../utils/file.js";
 import * as event from "./../system/event.js";
-import device from "./../system/device.js";
+import { ua } from "./../system/platform.js";
 import * as audio from "./../audio/audio.js";
 import state from "./../state/state.js";
 import level from "./../level/level.js";
@@ -153,7 +153,7 @@ function preloadTMX(tmxData, onload, onerror) {
                     case "tmx":
                     case "tsx":
                         // ie9 does not fully implement the responseXML
-                        if (device.ua.match(/msie/i) || !xmlhttp.responseXML) {
+                        if (ua.match(/msie/i) || !xmlhttp.responseXML) {
                             if (globalThis.DOMParser) {
                                 // manually create the XML DOM
                                 result = (new DOMParser()).parseFromString(xmlhttp.responseText, "text/xml");
