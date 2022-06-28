@@ -273,7 +273,7 @@ export function boot() {
 
     /// if auto init is disable and this function was called manually
     if (skipAutoInit === true) {
-        device._domReady();
+        event.emit(event.DOM_READY);
     }
 };
 
