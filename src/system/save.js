@@ -1,3 +1,4 @@
+import device from "./device.js";
 import * as event from "./event.js";
 
 /**
@@ -94,7 +95,7 @@ var save = {
                      */
                     set (value) {
                         data[prop] = value;
-                        if (globalThis.localStorage === true) {
+                        if (device.localStorage === true) {
                             globalThis.localStorage.setItem("me.save." + prop, JSON.stringify(value));
                         }
                     }
@@ -108,7 +109,7 @@ var save = {
         });
 
         // Save keys
-        if (globalThis.localStorage === true) {
+        if (device.localStorage === true) {
             globalThis.localStorage.setItem("me.save", JSON.stringify(Object.keys(data)));
         }
     },
@@ -126,7 +127,7 @@ var save = {
         if (!isReserved(key)) {
             if (typeof data[key] !== "undefined") {
                 delete data[key];
-                if (globalThis.localStorage === true) {
+                if (device.localStorage === true) {
                     globalThis.localStorage.removeItem("me.save." + key);
                     globalThis.localStorage.setItem("me.save", JSON.stringify(Object.keys(data)));
                 }
