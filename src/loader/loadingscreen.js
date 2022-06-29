@@ -1,8 +1,8 @@
 import { world, viewport } from "./../game.js";
 import { renderer } from "./../video/video.js";
 import * as event from "./../system/event.js";
-import Renderable from "./../renderable/renderable.js";
 import Sprite from "./../renderable/sprite.js";
+import Renderable from "./../renderable/renderable.js";
 import Stage from "./../state/stage.js";
 import melonjs_logo from "./melonjs_logo.png";
 
@@ -62,23 +62,6 @@ class ProgressBar extends Renderable {
 };
 
 /**
- * the melonJS Logo
- * @ignore
- */
-class IconLogo extends Sprite {
-    constructor(x, y) {
-        // TODO: create a sprite or texture from a Base64 encoded image
-        var image = new Image();
-        image.src = melonjs_logo;
-        super(x, y, {
-            image : image,
-            framewidth : 256,
-            frameheight : 256
-        });
-    }
-}
-
-/**
  * a default loading screen
  * @ignore
  */
@@ -101,12 +84,19 @@ class DefaultLoadingScreen extends Stage {
             barHeight
         ), 1);
 
-        // melonJS logo
-        world.addChild(new IconLogo(
-            renderer.getWidth() / 2,
-            (renderer.getHeight() / 2)
+        // TODO: create a sprite or texture from a Base64 encoded image
+        var image = new Image();
+        image.src = melonjs_logo;
 
-        ), 2);
+        // melonJS logo
+        world.addChild(new Sprite(
+            renderer.getWidth() / 2,
+            renderer.getHeight() / 2, {
+                image : image,
+                framewidth : 256,
+                frameheight : 256
+            }), 2
+        );
     }
 };
 
