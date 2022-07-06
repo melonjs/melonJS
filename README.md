@@ -228,9 +228,7 @@ The generated documentation will be available in the `docs` directory
 
 WIP Builds
 -------------------------------------------------------------------------------
-melonJS uses Travis-CI for automated testing and build uploads. The latest build
-artifacts can be downloaded from the [melonjs-builds](https://melonjs-builds.s3.amazonaws.com/index.html?prefix=artifacts/)
-bucket.
+latest WIP builds are available under [`dist`](dist/) in the [master](https://github.com/melonjs/melonJS/tree/master) branch.
 
 Questions, need help ?
 -------------------------------------------------------------------------------

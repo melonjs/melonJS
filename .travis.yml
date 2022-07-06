@@ -20,9 +20,6 @@ before_script:
 script:
   - npm run test
 
-after_success:
-  - "./scripts/travis-upload.sh"
-
 notifications:
   webhooks:
     urls:
