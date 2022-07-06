@@ -1,7 +1,7 @@
  /**
   * The device platform type
   * @namespace platform
-  * @memberof device#
+  * @memberof device
   * @property {string} ua the user agent string for the current device
   * @property {boolean} iOS `true` if the device is an iOS platform
   * @property {boolean} android `true` if the device is an Android platform

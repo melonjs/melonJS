@@ -1,4 +1,3 @@
-import device from "./device.js";
 import * as event from "./event.js";
 
 /**
@@ -32,22 +31,32 @@ import * as event from "./event.js";
  * @namespace save
  */
 
- // Variable to hold the object data
- var data = {};
+// Variable to hold the object data
+var data = {};
 
- /**
-  * a function to check if the given key is a reserved word
-  * @ignore
-  */
- function isReserved(key) {
-     return (key === "add" || key === "remove");
- }
+let hasLocalStorage = false;
+
+try {
+    // true if localStorage is supported
+    hasLocalStorage = typeof globalThis !== "undefined" && typeof globalThis.localStorage !== "undefined";
+} catch (e) {
+    // the above generates an exception when cookies are blocked
+    hasLocalStorage = false;
+}
+
+/**
+ * a function to check if the given key is a reserved word
+ * @ignore
+ */
+function isReserved(key) {
+    return (key === "add" || key === "remove");
+}
 
 
 // Initialize me.save on Boot event
 event.on(event.BOOT, () => {
     // Load previous data if local Storage is supported
-    if (typeof globalThis.localStorage !== "undefined") {
+    if (hasLocalStorage === true) {
         var me_save_content = globalThis.localStorage.getItem("me.save");
 
         if (typeof me_save_content === "string" && me_save_content.length > 0) {
@@ -95,7 +104,7 @@ var save = {
                      */
                     set (value) {
                         data[prop] = value;
-                        if (device.localStorage === true) {
+                        if (hasLocalStorage === true) {
                             globalThis.localStorage.setItem("me.save." + prop, JSON.stringify(value));
                         }
                     }
@@ -109,7 +118,7 @@ var save = {
         });
 
         // Save keys
-        if (device.localStorage === true) {
+        if (hasLocalStorage === true) {
             globalThis.localStorage.setItem("me.save", JSON.stringify(Object.keys(data)));
         }
     },
@@ -127,7 +136,7 @@ var save = {
         if (!isReserved(key)) {
             if (typeof data[key] !== "undefined") {
                 delete data[key];
-                if (device.localStorage === true) {
+                if (hasLocalStorage === true) {
                     globalThis.localStorage.removeItem("me.save." + key);
                     globalThis.localStorage.setItem("me.save", JSON.stringify(Object.keys(data)));
                 }

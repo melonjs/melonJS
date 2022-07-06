@@ -2,6 +2,7 @@ import { pauseTrack, resumeTrack } from "./../audio/audio.js";
 import * as fctUtil from "./../utils/function.js";
 import * as event from "./../system/event.js";
 import * as game from "./../game.js";
+import * as device from "./../system/device.js";
 import Stage from "./../state/stage.js";
 import DefaultLoadingScreen from "./../loader/loadingscreen.js";
 
@@ -140,14 +141,60 @@ event.on(event.BOOT, () => {
     event.on(event.VIDEO_INIT, () => {
         state.change(state.DEFAULT, true);
     });
-});
 
+    if (typeof globalThis.addEventListener === "function") {
+        // set pause/stop action on losing focus
+        globalThis.addEventListener("blur", () => {
+            if (device.stopOnBlur) {
+                state.stop(true);
+            }
+            if (device.pauseOnBlur) {
+                state.pause(true);
+            }
+        }, false);
+        // set restart/resume action on gaining focus
+        globalThis.addEventListener("focus", () => {
+            if (device.stopOnBlur) {
+                state.restart(true);
+            }
+            if (device.resumeOnFocus) {
+                state.resume(true);
+            }
+            // force focus if autofocus is on
+            if (device.autoFocus) {
+                device.focus();
+            }
+        }, false);
+    }
+
+    if (typeof globalThis.document !== "undefined") {
+        if (typeof globalThis.document.addEventListener === "function") {
+            // register on the visibilitychange event if supported
+            globalThis.document.addEventListener("visibilitychange", () => {
+                if (globalThis.document.visibilityState === "visible") {
+                    if (device.stopOnBlur) {
+                        state.restart(true);
+                    }
+                    if (device.resumeOnFocus) {
+                        state.resume(true);
+                    }
+                } else {
+                    if (device.stopOnBlur) {
+                        state.stop(true);
+                    }
+                    if (device.pauseOnBlur) {
+                        state.pause(true);
+                    }
+                }
+            }, false );
+        }
+    }
+});
 
 /**
  * a State Manager (state machine)
  * @namespace state
  */
-
 var state = {
 
     /**

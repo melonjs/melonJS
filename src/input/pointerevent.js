@@ -6,7 +6,7 @@ import { remove } from "./../utils/array.js";
 import * as event from "./../system/event.js";
 import timer from "./../system/timer.js";
 import pool from "./../system/pooling.js";
-import device from "./../system/device.js";
+import * as device from "./../system/device.js";
 import Pointer from "./pointer.js";
 import Rect from "./../geometries/rectangle.js";
 import Container from "./../renderable/container.js";
@@ -128,14 +128,14 @@ function enablePointerEvent() {
             pointerEventTarget = renderer.getScreenCanvas();
         }
 
-        if (device.PointerEvent) {
+        if (device.pointerEvent) {
             // standard Pointer Events
             activeEventList = pointerEventList;
         } else {
             // Regular Mouse events
             activeEventList = mouseEventList;
         }
-        if (device.touch && !device.PointerEvent) {
+        if (device.touch && !device.pointerEvent) {
             // touch event on mobile devices
             activeEventList = activeEventList.concat(touchEventList);
         }
@@ -416,7 +416,7 @@ function normalizeEvent(originalEvent) {
     var _pointer;
 
     // PointerEvent or standard Mouse event
-    if (device.TouchEvent && originalEvent.changedTouches) {
+    if (device.touchEvent && originalEvent.changedTouches) {
         // iOS/Android Touch event
         for (var i = 0, l = originalEvent.changedTouches.length; i < l; i++) {
             var touchEvent = originalEvent.changedTouches[i];
@@ -557,7 +557,7 @@ export var throttlingInterval;
 export function globalToLocal(x, y, v) {
     v = v || pool.pull("Vector2d");
     var rect = device.getElementBounds(renderer.getScreenCanvas());
-    var pixelRatio = device.devicePixelRatio;
+    var pixelRatio = globalThis.devicePixelRatio || 1;
     x -= rect.left + (globalThis.pageXOffset || 0);
     y -= rect.top + (globalThis.pageYOffset || 0);
     var scale = scaleRatio;

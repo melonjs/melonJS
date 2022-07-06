@@ -1,5 +1,3 @@
-import device from "./../system/device.js";
-import { requestPointerLock, exitPointerLock } from "./../input/input.js";
 import { TextureAtlas } from "./../video/texture/atlas.js";
 import Renderer from "./../video/renderer.js";
 import { Draggable, DropTarget } from "./../renderable/dragndrop.js";
@@ -46,34 +44,7 @@ export function warning(deprecated, replacement, version) {
 };
 
 /**
- * @public
- * @name turnOnPointerLock
- * @returns {boolean} return true if the request was successfully submitted
- * @memberof device#
- * @deprecated since 10.3.0
- * @see input.requestPointerLock
- */
-device.turnOnPointerLock = function () {
-    warning("device.turnOnPointerLock()", "input.requestPointerLock()", "10.3.0");
-    return requestPointerLock();
-};
-
-/**
- * @public
- * @name turnOffPointerLock
- * @returns {boolean} return true if the request was successfully submitted
- * @memberof device#
- * @deprecated since 10.3.0
- * @see input.exitPointerLock
- */
-device.turnOffPointerLock = function () {
-    warning("device.turnOffPointerLock()", "input.exitPointerLock()", "10.3.0");
-    return exitPointerLock();
-};
-
-/**
  * Alias of {@link TextureAtlas}
- *
  * @public
  * @name Texture
  * @class

@@ -1,5 +1,4 @@
 import Vector2d from "./../math/vector2.js";
-import device from "./../system/device.js";
 import Bounds from "./../physics/bounds.js";
 import { viewport } from "./../game.js";
 import { globalToLocal } from "./input.js";
@@ -333,7 +332,7 @@ class Pointer extends Bounds {
         this.gameScreenY = this.y = tmpVec.y;
 
         // true if not originally a pointer event
-        this.isNormalized = !device.PointerEvent || (device.PointerEvent && !(event instanceof globalThis.PointerEvent));
+        this.isNormalized = (typeof globalThis.PointerEvent !== "undefined" && !(event instanceof globalThis.PointerEvent));
 
         this.locked = locked;
         this.movementX = event.movementX || 0;

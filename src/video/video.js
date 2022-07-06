@@ -4,7 +4,7 @@ import CanvasRenderer from "./canvas/canvas_renderer.js";
 import utils from "./../utils/utils.js";
 import * as event from "./../system/event.js";
 import { repaint } from "./../game.js";
-import device from "./../system/device.js";
+import * as device from "./../system/device.js";
 import { initialized, version } from "./../index.js";
 
 /**
@@ -302,7 +302,7 @@ export function init(width, height, options) {
         false
     );
 
-    if (device.ScreenOrientation === true) {
+    if (device.screenOrientation === true) {
         globalThis.screen.orientation.onchange = function (e) {
             event.emit(event.WINDOW_ONORIENTATION_CHANGE, e);
         };
@@ -339,6 +339,12 @@ export function init(width, height, options) {
     parent = device.getElement(typeof settings.parent !== "undefined" ? settings.parent : document.body);
     parent.appendChild(renderer.getScreenCanvas());
 
+    // Mobile browser hacks
+    if (device.platform.isMobile) {
+        // Prevent the webview from moving on a swipe
+        device.enableSwipe(false);
+    }
+
     // trigger an initial resize();
     onresize();
 
@@ -362,7 +368,7 @@ export function init(width, height, options) {
             renderType + " renderer" + gpu_renderer + " | " +
             audioType + " | " +
             "pixel ratio " + device.devicePixelRatio + " | " +
-            (device.platform.nodeJS ? "node.js" : device.isMobile ? "mobile" : "desktop") + " | " +
+            (device.platform.nodeJS ? "node.js" : device.platform.isMobile ? "mobile" : "desktop") + " | " +
             device.getScreenOrientation() + " | " +
             device.language
         );
@@ -382,18 +388,18 @@ export function init(width, height, options) {
  * @function video.createCanvas
  * @param {number} width width
  * @param {number} height height
- * @param {boolean} [offscreenCanvas=false] will return an OffscreenCanvas if supported
+ * @param {boolean} [returnOffscreenCanvas=false] will return an OffscreenCanvas if supported
  * @returns {HTMLCanvasElement|OffscreenCanvas}
  */
-export function createCanvas(width, height, offscreenCanvas = false) {
+export function createCanvas(width, height, returnOffscreenCanvas = false) {
     var _canvas;
 
     if (width === 0 || height === 0) {
         throw new Error("width or height was zero, Canvas could not be initialized !");
     }
 
-    if (device.OffscreenCanvas === true && offscreenCanvas === true) {
-        _canvas = new OffscreenCanvas(0, 0);
+    if (device.offscreenCanvas === true && returnOffscreenCanvas === true) {
+        _canvas = new globalThis.OffscreenCanvas(0, 0);
         // stubbing style for compatibility,
         // as OffscreenCanvas is detached from the DOM
         if (typeof _canvas.style === "undefined") {

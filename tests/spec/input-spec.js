@@ -8,7 +8,7 @@ describe("me.input", function () {
 
         //renderable.anchorPoint.set(0, 0);
 
-        if (me.device.PointerEvent) {
+        if (me.device.pointerEvent) {
             evenType = "pointerdown";
         } else {
             evenType ="mousedown"

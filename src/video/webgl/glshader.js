@@ -1,5 +1,5 @@
 import * as event from "./../../system/event.js";
-import device from "./../../system/device.js";
+import * as device from "./../../system/device.js";
 import { extractUniforms } from "./utils/uniforms.js";
 import { extractAttributes } from "./utils/attributes.js";
 import { compileProgram } from "./utils/program.js";

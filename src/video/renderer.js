@@ -2,7 +2,7 @@ import Color from "./../math/color.js";
 import Matrix3d from "./../math/matrix3.js";
 import { createCanvas, renderer } from "./video.js";
 import * as event from "./../system/event.js";
-import device from "./../system/device.js";
+import * as device from "./../system/device.js";
 import { setPrefixed } from "./../utils/agent.js";
 import Rect from "./../geometries/rectangle.js";
 import RoundRect from "./../geometries/roundrect.js";
