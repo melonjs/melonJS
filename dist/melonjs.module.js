@@ -1,5 +1,5 @@
 /*!
- * melonJS Game Engine - v12.0.0
+ * melonJS Game Engine - v13.0.0
  * http://www.melonjs.org
  * melonjs is licensed under the MIT License.
  * http://www.opensource.org/licenses/mit-license
@@ -5055,6 +5055,5449 @@ var event = /*#__PURE__*/Object.freeze({
 	off: off
 });
 
+/**
+ * allow to access and manage the device localStorage
+ * @example
+ * // Initialize "score" and "lives" with default values
+ * // This loads the properties from localStorage if they exist, else it sets the given defaults
+ * me.save.add({ score : 0, lives : 3 });
+ *
+ * // Print all
+ * // On first load, this prints { score : 0, lives : 3 }
+ * // On further reloads, it prints { score : 31337, lives : 3, complexObject : ... }
+ * // Because the following changes will be saved to localStorage
+ * console.log(JSON.stringify(me.save));
+ *
+ * // Save score
+ * me.save.score = 31337;
+ *
+ * // Also supports complex objects thanks to the JSON backend
+ * me.save.add({ complexObject : {} })
+ * me.save.complexObject = { a : "b", c : [ 1, 2, 3, "d" ], e : { f : [{}] } };
+ *
+ * // WARNING: Do not set any child properties of complex objects directly!
+ * // Changes made that way will not save. Always set the entire object value at once.
+ * // If you cannot live with this limitation, there's a workaround:
+ * me.save.complexObject.c.push("foo"); // Modify a child property
+ * me.save.complexObject = me.save.complexObject; // Save the entire object!
+ *
+ * // Remove "lives" from localStorage
+ * me.save.remove("lives");
+ * @namespace save
+ */
+
+// Variable to hold the object data
+var data = {};
+
+let hasLocalStorage$1 = false;
+
+try {
+    // true if localStorage is supported
+    hasLocalStorage$1 = typeof globalThis !== "undefined" && typeof globalThis.localStorage !== "undefined";
+} catch (e) {
+    // the above generates an exception when cookies are blocked
+    hasLocalStorage$1 = false;
+}
+
+/**
+ * a function to check if the given key is a reserved word
+ * @ignore
+ */
+function isReserved(key) {
+    return (key === "add" || key === "remove");
+}
+
+
+// Initialize me.save on Boot event
+on(BOOT, () => {
+    // Load previous data if local Storage is supported
+    if (hasLocalStorage$1 === true) {
+        var me_save_content = globalThis.localStorage.getItem("me.save");
+
+        if (typeof me_save_content === "string" && me_save_content.length > 0) {
+            var keys = JSON.parse(me_save_content) || [];
+            keys.forEach(function (key) {
+                data[key] = JSON.parse(globalThis.localStorage.getItem("me.save." + key));
+            });
+        }
+    }
+});
+
+var save = {
+
+    /**
+     * Add new keys to localStorage and set them to the given default values if they do not exist
+     * @name add
+     * @memberof save
+     * @param {object} props key and corresponding values
+     * @example
+     * // Initialize "score" and "lives" with default values
+     * me.save.add({ score : 0, lives : 3 });
+     * // get or set the value through me.save
+     * me.save.score = 1000;
+     */
+    add(props) {
+        var obj = save;
+
+        Object.keys(props).forEach(function (key) {
+            if (isReserved(key)) {
+                return;
+            }
+
+            (function (prop) {
+                Object.defineProperty(obj, prop, {
+                    configurable : true,
+                    enumerable : true,
+                    /**
+                     * @ignore
+                     */
+                    get () {
+                        return data[prop];
+                    },
+                    /**
+                     * @ignore
+                     */
+                    set (value) {
+                        data[prop] = value;
+                        if (hasLocalStorage$1 === true) {
+                            globalThis.localStorage.setItem("me.save." + prop, JSON.stringify(value));
+                        }
+                    }
+                });
+            })(key);
+
+            // Set default value for key
+            if (!(key in data)) {
+                obj[key] = props[key];
+            }
+        });
+
+        // Save keys
+        if (hasLocalStorage$1 === true) {
+            globalThis.localStorage.setItem("me.save", JSON.stringify(Object.keys(data)));
+        }
+    },
+
+    /**
+     * Remove a key from localStorage
+     * @name remove
+     * @memberof save
+     * @param {string} key key to be removed
+     * @example
+     * // Remove the "score" key from localStorage
+     * me.save.remove("score");
+     */
+    remove (key) {
+        if (!isReserved(key)) {
+            if (typeof data[key] !== "undefined") {
+                delete data[key];
+                if (hasLocalStorage$1 === true) {
+                    globalThis.localStorage.removeItem("me.save." + key);
+                    globalThis.localStorage.setItem("me.save", JSON.stringify(Object.keys(data)));
+                }
+            }
+        }
+    }
+};
+
+// track if DOMContentLoaded was called already
+let readyBound = false;
+
+// is the DOM ready ?
+let isDOMReady = false;
+
+// check if the dom is ready
+function _domReady() {
+
+    // Make sure that the DOM is not already loaded
+    if (!isDOMReady) {
+        // be sure document.body is there
+        if (typeof globalThis.document !== "undefined" && !globalThis.document.body) {
+            return setTimeout(_domReady, 13);
+        }
+
+        // clean up loading event
+        if (typeof globalThis.document !== "undefined" && typeof globalThis.document.removeEventListener === "function") {
+            globalThis.document.removeEventListener(
+                "DOMContentLoaded",
+                _domReady,
+                false
+            );
+        }
+
+        if (typeof globalThis.removeEventListener === "function") {
+            // remove the event on globalThis.onload (always added in `onReady`)
+            globalThis.removeEventListener("load", _domReady, false);
+        }
+
+        // execute all callbacks
+        emit(DOM_READY);
+
+        // Remember that the DOM is ready
+        isDOMReady = true;
+    }
+}
+// https://developer.mozilla.org/en-US/docs/Web/API/Window/DOMContentLoaded_event
+function DOMContentLoaded(fn) {
+    // If the DOM is already ready
+    if (isDOMReady) {
+        // Execute the function immediately
+        fn.call(globalThis, []);
+    }
+    else {
+        // else add the function to the DOM_READY event
+        once(DOM_READY, fn, globalThis);
+        // bind dom load event if not done yet
+        if (!readyBound) {
+            // directly call domReady if document is already "ready"
+            if (((typeof process !== "undefined") && (process.release.name === "node")) || (typeof globalThis.document !== "undefined" && globalThis.document.readyState === "complete")) {
+                // defer the fn call to ensure our script is fully loaded
+                globalThis.setTimeout(_domReady, 0);
+            }
+            else {
+                if (typeof globalThis.document !== "undefined" && typeof globalThis.document.addEventListener === "function") {
+                    // Use the handy event callback
+                    globalThis.document.addEventListener("DOMContentLoaded", _domReady, false);
+                }
+                // A fallback to globalThis.onload, that will always work
+                globalThis.addEventListener("load", _domReady, false);
+            }
+            readyBound = true;
+        }
+    }
+}
+
+/**
+  * The device platform type
+  * @namespace platform
+  * @memberof device
+  * @property {string} ua the user agent string for the current device
+  * @property {boolean} iOS `true` if the device is an iOS platform
+  * @property {boolean} android `true` if the device is an Android platform
+  * @property {boolean} android2 `true` if the device is an Android 2.x platform
+  * @property {boolean} linux `true` if the device is a Linux platform
+  * @property {boolean} chromeOS `true` if the device is running on ChromeOS.
+  * @property {boolean} wp `true` if the device is a Windows Phone platform
+  * @property {boolean} BlackBerry`true` if the device is a BlackBerry platform
+  * @property {boolean} Kindle`true` if the device is a Kindle platform
+  * @property {boolean} ejecta `true` if running under Ejecta
+  * @property {boolean} isWeixin `true` if running under Wechat
+  * @property {boolean} nodeJS `true` if running under node.js
+  * @property {boolean} isMobile `true` if a mobile device
+  */
+
+const ua = typeof globalThis.navigator !== "undefined" ? globalThis.navigator.userAgent : "";
+const iOS = /iPhone|iPad|iPod/i.test(ua);
+const android = /Android/i.test(ua);
+const android2 = /Android 2/i.test(ua);
+const linux = /Linux/i.test(ua);
+const chromeOS = /CrOS/.test(ua);
+const wp = /Windows Phone/i.test(ua);
+const BlackBerry = /BlackBerry/i.test(ua);
+const Kindle = /Kindle|Silk.*Mobile Safari/i.test(ua);
+const ejecta = (typeof globalThis.ejecta !== "undefined");
+const isWeixin = /MicroMessenger/i.test(ua);
+const nodeJS = (typeof globalThis.process !== "undefined") && (typeof globalThis.process.release !== "undefined") && (globalThis.process.release.name === "node");
+const isMobile$1 = /Mobi/i.test(ua) || iOS || android || wp || BlackBerry || Kindle || false;
+
+var device_platform = /*#__PURE__*/Object.freeze({
+	__proto__: null,
+	ua: ua,
+	iOS: iOS,
+	android: android,
+	android2: android2,
+	linux: linux,
+	chromeOS: chromeOS,
+	wp: wp,
+	BlackBerry: BlackBerry,
+	Kindle: Kindle,
+	ejecta: ejecta,
+	isWeixin: isWeixin,
+	nodeJS: nodeJS,
+	isMobile: isMobile$1
+});
+
+/**
+ * device type and capabilities
+ * @namespace device
+ */
+
+var accelInitialized = false;
+var deviceOrientationInitialized = false;
+// swipe utility fn & flag
+var swipeEnabled = true;
+// a cache DOMRect object
+var domRect = {left: 0, top: 0, x: 0, y: 0, width: 0, height: 0, right: 0, bottom: 0};
+
+function disableSwipeFn(e) {
+    e.preventDefault();
+    if (typeof globalThis.scroll === "function") {
+        globalThis.scroll(0, 0);
+    }
+    return false;
+}
+function hasLocalStorage() {
+    try {
+        return !!globalThis.localStorage;
+    } catch (e) {
+        // the above generates an exception when cookies are blocked
+        return false;
+    }
+}
+
+function hasOffscreenCanvas() {
+    try {
+        // some browser (e.g. Safari) implements WebGL1 and WebGL2 contexts only
+        // https://bugzilla.mozilla.org/show_bug.cgi?id=801176
+        return (typeof globalThis.OffscreenCanvas !== "undefined") && ((new globalThis.OffscreenCanvas(0, 0).getContext( "2d" )) !== null);
+    } catch (e) {
+        return false;
+    }
+}
+
+/**
+ * used by [un]watchAccelerometer()
+ */
+function onDeviceMotion(e) {
+    // Accelerometer information
+    accelerationX = e.accelerationIncludingGravity.x;
+    accelerationY = e.accelerationIncludingGravity.y;
+    accelerationZ = e.accelerationIncludingGravity.z;
+}
+/**
+ * used by [un]watchDeviceOrientation()
+ */
+function onDeviceRotate(e) {
+    gamma = e.gamma;
+    beta = e.beta;
+    alpha = e.alpha;
+}
+/**
+ * the device platform type
+ * @name platform
+ * @memberof device
+ * @readonly
+ * @public
+ * @type {device.platform}
+ */
+let platform = device_platform;
+
+/**
+ * True if the browser supports Touch Events
+ * @name touchEvent
+ * @type {boolean}
+ * @readonly
+ * @public
+ */
+const touchEvent = !!("ontouchstart" in globalThis);
+
+/**
+ * True if the browser supports Pointer Events
+ * @name pointerEvent
+ * @memberof device
+ * @type {boolean}
+ * @readonly
+ * @public
+ */
+const pointerEvent = !!globalThis.PointerEvent;
+
+/**
+ * Touch capabilities (support either Touch or Pointer events)
+ * @name touch
+ * @memberof device
+ * @type {boolean}
+ * @readonly
+ * @public
+ */
+const touch = touchEvent || pointerEvent;
+
+/**
+ * the maximum number of simultaneous touch contact points are supported by the current device.
+ * @name maxTouchPoints
+ * @memberof device
+ * @type {number}
+ * @readonly
+ * @public
+ * @example
+ * if (me.device.maxTouchPoints > 1) {
+ *     // device supports multi-touch
+ * }
+ */
+const maxTouchPoints = touch ? (pointerEvent ? globalThis.navigator.maxTouchPoints || 1 : 10) : 1;
+
+/**
+ * W3C standard wheel events
+ * @name wheel
+ * @memberof device
+ * @type {boolean}
+ * @readonly
+ * @public
+ */
+const wheel = typeof globalThis.document !== "undefined" && "onwheel" in globalThis.document.createElement("div");
+
+
+/**
+ * Browser pointerlock api support
+ * @name hasPointerLockSupport
+ * @memberof device
+ * @type {boolean}
+ * @readonly
+ * @public
+ */
+const hasPointerLockSupport = typeof globalThis.document !== "undefined" && typeof globalThis.document.pointerLockElement !== "undefined";
+
+/**
+ * Browser device orientation
+ * @name hasDeviceOrientation
+ * @memberof device
+ * @readonly
+ * @public
+ * @type {boolean}
+ */
+const hasDeviceOrientation = !!globalThis.DeviceOrientationEvent;
+
+/**
+ * Supports the ScreenOrientation API
+ * @name screenOrientation
+ * @memberof device
+ * @see https://developer.mozilla.org/en-US/docs/Web/API/ScreenOrientation/onchange
+ * @type {boolean}
+ * @readonly
+ * @public
+ */
+const screenOrientation = (typeof screen !== "undefined") && (typeof screen.orientation !== "undefined");
+
+/**
+ * Browser accelerometer capabilities
+ * @name hasAccelerometer
+ * @memberof device
+ * @readonly
+ * @public
+ * @type {boolean}
+ */
+const hasAccelerometer = !!globalThis.DeviceMotionEvent;
+
+/**
+ * Browser full screen support
+ * @name hasFullscreenSupport
+ * @memberof device
+ * @type {boolean}
+ * @readonly
+ * @public
+ */
+const hasFullscreenSupport = typeof globalThis.document !== "undefined" && (prefixed("fullscreenEnabled", globalThis.document) || globalThis.document.mozFullScreenEnabled);
+
+if (hasFullscreenSupport === true) {
+    globalThis.document.exitFullscreen = prefixed("cancelFullScreen", globalThis.document) || prefixed("exitFullscreen", globalThis.document);
+}
+
+/**
+ * Device WebAudio Support
+ * @name hasWebAudio
+ * @memberof device
+ * @type {boolean}
+ * @readonly
+ * @public
+ */
+const hasWebAudio = !!(globalThis.AudioContext || globalThis.webkitAudioContext);
+
+/**
+ * Device HTML5Audio Support
+ * @name hasHTML5Audio
+ * @memberof device
+ * @type {boolean}
+ * @readonly
+ * @public
+ */
+const hasHTML5Audio = (typeof globalThis.Audio !== "undefined");
+
+/**
+ * Returns true if the browser/device has audio capabilities.
+ * @name sound
+ * @memberof device
+ * @type {boolean}
+ * @readonly
+ * @public
+ */
+const sound = hasWebAudio || hasHTML5Audio;
+
+/**
+ * Browser Local Storage capabilities <br>
+ * (this flag will be set to false if cookies are blocked)
+ * @name localStorage
+ * @memberof device
+ * @readonly
+ * @public
+ * @type {boolean}
+ */
+const localStorage = hasLocalStorage();
+
+/**
+ * equals to true if the device browser supports OffScreenCanvas.
+ * @name offscreenCanvas
+ * @memberof device
+ * @type {boolean}
+ * @readonly
+ * @public
+ */
+const offscreenCanvas = hasOffscreenCanvas();
+
+/**
+ * Browser Base64 decoding capability
+ * @name nativeBase64
+ * @memberof device
+ * @type {boolean}
+ * @readonly
+ * @public
+ */
+const nativeBase64 = (typeof(globalThis.atob) === "function");
+
+/**
+ * a string representing the preferred language of the user, usually the language of the browser UI.
+ * (will default to "en" if the information is not available)
+ * @name language
+ * @memberof device
+ * @type {string}
+ * @readonly
+ * @public
+ * @see http://www.w3schools.com/tags/ref_language_codes.asp
+ */
+const language = typeof globalThis.navigator !== "undefined" ? globalThis.navigator.language || globalThis.navigator.browserLanguage || globalThis.navigator.userLanguage || "en" : "en";
+
+/**
+ * Ratio of the resolution in physical pixels to the resolution in CSS pixels for the current display device.
+ * @name devicePixelRatio
+ * @memberof device
+ * @type {number}
+ * @readonly
+ * @public
+ */
+const devicePixelRatio = globalThis.devicePixelRatio || 1;
+
+/**
+ * equals to true if a mobile device.
+ * (Android | iPhone | iPad | iPod | BlackBerry | Windows Phone | Kindle)
+ * @name isMobile
+ * @memberof device
+ * @type {boolean}
+ * @readonly
+ * @public
+ */
+const isMobile = platform.isMobile;
+
+/**
+ * contains the g-force acceleration along the x-axis.
+ * @name accelerationX
+ * @memberof device
+ * @type {number}
+ * @readonly
+ * @public
+ * @see device.watchAccelerometer
+ */
+let accelerationX = 0;
+
+/**
+ * contains the g-force acceleration along the y-axis.
+ * @name accelerationY
+ * @memberof device
+ * @type {number}
+ * @readonly
+ * @public
+ * @see device.watchAccelerometer
+ */
+let accelerationY = 0;
+
+/**
+ * contains the g-force acceleration along the z-axis.
+ * @name accelerationZ
+ * @memberof device
+ * @type {number}
+ * @readonly
+ * @public
+ * @see device.watchAccelerometer
+ */
+let accelerationZ = 0;
+
+/**
+ * Device orientation Gamma property. Gives angle on tilting a portrait held phone left or right
+ * @name gamma
+ * @memberof device
+ * @type {number}
+ * @readonly
+ * @public
+ * @see device.watchDeviceOrientation
+ */
+let gamma = 0;
+
+/**
+ * Device orientation Beta property. Gives angle on tilting a portrait held phone forward or backward
+ * @name beta
+ * @memberof device
+ * @type {number}
+ * @readonly
+ * @public
+ * @see device.watchDeviceOrientation
+ */
+let beta = 0;
+
+/**
+ * Device orientation Alpha property. Gives angle based on the rotation of the phone around its z axis.
+ * The z-axis is perpendicular to the phone, facing out from the center of the screen.
+ * @name alpha
+ * @memberof device
+ * @type {number}
+ * @readonly
+ * @public
+ * @see device.watchDeviceOrientation
+ */
+let alpha = 0;
+
+/**
+ * Specify whether to pause the game when losing focus
+ * @name pauseOnBlur
+ * @memberof device
+ * @type {boolean}
+ * @public
+ * @default true
+ */
+let pauseOnBlur = true;
+
+/**
+ * Specify whether to unpause the game when gaining focus
+ * @name resumeOnFocus
+ * @memberof device
+ * @type {boolean}
+ * @public
+ * @default true
+ */
+let resumeOnFocus = true;
+
+/**
+ * Specify whether to automatically bring the window to the front
+ * @name autoFocus
+ * @memberof device
+ * @type {boolean}
+ * @public
+ * @default true
+ */
+let autoFocus = true;
+
+/**
+ * Specify whether to stop the game when losing focus or not.
+ * The engine restarts on focus if this is enabled.
+ * @name stopOnBlur
+ * @memberof device
+ * @type {boolean}
+ * @public
+ * @default false
+ */
+let stopOnBlur = false;
+
+/**
+* specify a function to execute when the Device is fully loaded and ready
+* @function onReady
+* @memberof device
+* @public
+* @param {Function} fn the function to be executed
+* @example
+* // small game skeleton
+* var game = {
+*    // called by the me.device.onReady function
+*    onload = function () {
+*       // init video
+*       if (!me.video.init('screen', 640, 480, true)) {
+*          alert("Sorry but your browser does not support html 5 canvas.");
+*          return;
+*       }
+*
+*       // initialize the "audio"
+*       me.audio.init("mp3,ogg");
+*
+*       // set callback for ressources loaded event
+*       me.loader.onload = this.loaded.bind(this);
+*
+*       // set all ressources to be loaded
+*       me.loader.preload(game.assets);
+*
+*       // load everything & display a loading screen
+*       me.state.change(me.state.LOADING);
+*    };
+*
+*    // callback when everything is loaded
+*    loaded = function () {
+*       // define stuff
+*       // ....
+*
+*       // change to the menu screen
+*       me.state.change(me.state.PLAY);
+*    }
+* }; // game
+*
+* // "bootstrap"
+* me.device.onReady(function () {
+*    game.onload();
+* });
+*/
+function onReady(fn) {
+    DOMContentLoaded(fn);
+}
+/**
+ * enable/disable swipe on WebView.
+ * @function enableSwipe
+ * @memberof device
+ * @public
+ * @param {boolean} [enable=true] enable or disable swipe.
+ */
+function enableSwipe(enable) {
+    var moveEvent = pointerEvent ? "pointermove" : (touchEvent ? "touchmove" : "mousemove");
+    if (enable !== false) {
+        if (swipeEnabled === false) {
+            globalThis.document.removeEventListener(moveEvent, disableSwipeFn);
+            swipeEnabled = true;
+        }
+    } else if (swipeEnabled === true) {
+        globalThis.document.addEventListener(moveEvent, disableSwipeFn, { passive: false });
+        swipeEnabled = false;
+    }
+}
+/**
+ * Returns true if the browser/device is in full screen mode.
+ * @function isFullscreen
+ * @memberof device
+ * @public
+ * @returns {boolean}
+ */
+function isFullscreen() {
+    if (hasFullscreenSupport) {
+        return !!(prefixed("fullscreenElement", document) || document.mozFullScreenElement);
+    } else {
+        return false;
+    }
+}
+/**
+ * Triggers a fullscreen request. Requires fullscreen support from the browser/device.
+ * @function requestFullscreen
+ * @memberof device
+ * @public
+ * @param {object} [element=default canvas object] the element to be set in full-screen mode.
+ * @example
+ * // add a keyboard shortcut to toggle Fullscreen mode on/off
+ * me.input.bindKey(me.input.KEY.F, "toggleFullscreen");
+ * me.event.on(me.event.KEYDOWN, function (action, keyCode, edge) {
+ *    // toggle fullscreen on/off
+ *    if (action === "toggleFullscreen") {
+ *       me.device.requestFullscreen();
+ *    } else {
+ *       me.device.exitFullscreen();
+ *    }
+ * });
+ */
+function requestFullscreen(element) {
+    if (hasFullscreenSupport && !isFullscreen()) {
+        element = element || getParent();
+        element.requestFullscreen = prefixed("requestFullscreen", element) || element.mozRequestFullScreen;
+        element.requestFullscreen();
+    }
+}
+/**
+ * Exit fullscreen mode. Requires fullscreen support from the browser/device.
+ * @function exitFullscreen
+ * @memberof device
+ * @public
+ */
+function exitFullscreen() {
+    if (hasFullscreenSupport && isFullscreen()) {
+        document.exitFullscreen();
+    }
+}
+/**
+ * Return a string representing the orientation of the device screen.
+ * It can be "any", "natural", "landscape", "portrait", "portrait-primary", "portrait-secondary", "landscape-primary", "landscape-secondary"
+ * @function getScreenOrientation
+ * @memberof device
+ * @public
+ * @see https://developer.mozilla.org/en-US/docs/Web/API/Screen/orientation
+ * @returns {string} the screen orientation
+ */
+function getScreenOrientation() {
+    var PORTRAIT = "portrait";
+    var LANDSCAPE = "landscape";
+
+    var screen = globalThis.screen;
+
+    // first try using "standard" values
+    if (screenOrientation === true) {
+        var orientation = prefixed("orientation", screen);
+        if (typeof orientation !== "undefined" && typeof orientation.type === "string") {
+            // Screen Orientation API specification
+            return orientation.type;
+        } else if (typeof orientation === "string") {
+            // moz/ms-orientation are strings
+            return orientation;
+        }
+    }
+
+    // check using the deprecated API
+    if (typeof globalThis.orientation === "number") {
+        return (Math.abs(globalThis.orientation) === 90) ? LANDSCAPE : PORTRAIT;
+    }
+
+    // fallback to window size check
+    return (globalThis.outerWidth > globalThis.outerHeight) ? LANDSCAPE : PORTRAIT;
+}
+/**
+ * locks the device screen into the specified orientation.<br>
+ * This method only works for installed Web apps or for Web pages in full-screen mode.
+ * @function lockOrientation
+ * @memberof device
+ * @public
+ * @see https://developer.mozilla.org/en-US/docs/Web/API/Screen/lockOrientation
+ * @param {string|string[]} orientation The orientation into which to lock the screen.
+ * @returns {boolean} true if the orientation was unsuccessfully locked
+ */
+function lockOrientation(orientation) {
+    var screen = globalThis.screen;
+    if (typeof screen !== "undefined") {
+        var _lockOrientation = prefixed("lockOrientation", screen);
+        if (typeof _lockOrientation !== "undefined") {
+            return _lockOrientation(orientation);
+        }
+    }
+    return false;
+}
+/**
+ * unlocks the device screen into the specified orientation.<br>
+ * This method only works for installed Web apps or for Web pages in full-screen mode.
+ * @function unlockOrientation
+ * @memberof device
+ * @public
+ * @see https://developer.mozilla.org/en-US/docs/Web/API/Screen/lockOrientation
+ * @returns {boolean} true if the orientation was unsuccessfully unlocked
+ */
+function unlockOrientation() {
+    var screen = globalThis.screen;
+    if (typeof screen !== "undefined") {
+        var _unlockOrientation = prefixed("unlockOrientation", screen);
+        if (typeof _unlockOrientation !== "undefined") {
+            return _unlockOrientation();
+        }
+    }
+    return false;
+}
+/**
+ * return true if the device screen orientation is in Portrait mode
+ * @function isPortrait
+ * @memberof device
+ * @public
+ * @returns {boolean}
+ */
+function isPortrait() {
+    return getScreenOrientation().includes("portrait");
+}
+/**
+ * return true if the device screen orientation is in Portrait mode
+ * @function isLandscape
+ * @memberof device
+ * @public
+ * @returns {boolean}
+ */
+function isLandscape() {
+    return getScreenOrientation().includes("landscape");
+}
+/**
+ * return the device storage
+ * @function getStorage
+ * @memberof device
+ * @public
+ * @see save
+ * @param {string} [type="local"]
+ * @returns {object} a reference to the device storage
+ */
+function getStorage(type = "local") {
+    switch (type) {
+        case "local" :
+            return save;
+
+        default :
+            throw new Error("storage type " + type + " not supported");
+    }
+}
+/**
+ * return the parent DOM element for the given parent name or HTMLElement object
+ * @function getParentElement
+ * @memberof device
+ * @public
+ * @param {string|HTMLElement} element the parent element name or a HTMLElement object
+ * @returns {HTMLElement} the parent Element
+ */
+function getParentElement(element) {
+    var target = getElement(element);
+
+    if (target.parentNode !== null) {
+        target = target.parentNode;
+    }
+
+    return target;
+}
+/**
+ * return the DOM element for the given element name or HTMLElement object
+ * @function getElement
+ * @memberof device
+ * @public
+ * @param {string|HTMLElement} element the parent element name or a HTMLElement object
+ * @returns {HTMLElement} the corresponding DOM Element or null if not existing
+ */
+function getElement(element) {
+    var target = null;
+
+    if (element !== "undefined") {
+        if (typeof element === "string") {
+            target = document.getElementById(element);
+        } else if (typeof element === "object" && element.nodeType === Node.ELEMENT_NODE) {
+            target = element;
+        }
+    }
+
+    // fallback, if invalid target or non HTMLElement object
+    if (!target)  {
+        //default to document.body
+        target = document.body;
+    }
+
+    return target;
+}
+/**
+ * returns the size of the given HTMLElement and its position relative to the viewport
+ * <br><img src="images/element-box-diagram.png"/>
+ * @function getElementBounds
+ * @memberof device
+ * @public
+ * @see https://developer.mozilla.org/en-US/docs/Web/API/DOMRect
+ * @param {string|HTMLElement} element an HTMLElement object
+ * @returns {DOMRect} the size and position of the element relatively to the viewport
+ */
+function getElementBounds(element) {
+    if (typeof element === "object" && element !== document.body && typeof element.getBoundingClientRect !== "undefined") {
+        return element.getBoundingClientRect();
+    } else {
+        domRect.width = domRect.right = globalThis.innerWidth;
+        domRect.height = domRect.bottom = globalThis.innerHeight;
+        return domRect;
+    }}
+/**
+ * returns the size of the given HTMLElement Parent and its position relative to the viewport
+ * <br><img src="images/element-box-diagram.png"/>
+ * @function getParentBounds
+ * @memberof device
+ * @public
+ * @see https://developer.mozilla.org/en-US/docs/Web/API/DOMRect
+ * @param {string|HTMLElement} element an HTMLElement object
+ * @returns {DOMRect} the size and position of the given element parent relative to the viewport
+ */
+function getParentBounds(element) {
+    return getElementBounds(getParentElement(element));
+}
+/**
+ * returns true if the device supports WebGL
+ * @function isWebGLSupported
+ * @memberof device
+ * @public
+ * @param {object} [options] context creation options
+ * @param {boolean} [options.failIfMajorPerformanceCaveat=true] If true, the renderer will switch to CANVAS mode if the performances of a WebGL context would be dramatically lower than that of a native application making equivalent OpenGL calls.
+ * @returns {boolean} true if WebGL is supported
+ */
+function isWebGLSupported(options) {
+    var _supported = false;
+    try {
+        var canvas = document.createElement("canvas");
+        var ctxOptions = {
+            stencil: true,
+            failIfMajorPerformanceCaveat: options.failIfMajorPerformanceCaveat
+        };
+        _supported = !! (globalThis.WebGLRenderingContext && (canvas.getContext("webgl", ctxOptions) || canvas.getContext("experimental-webgl", ctxOptions)));
+    } catch (e) {
+        _supported = false;
+    }
+
+    return _supported;
+}
+/**
+ * return the highest precision format supported by this device for GL Shaders
+ * @function getMaxShaderPrecision
+ * @memberof device
+ * @public
+ * @param {WebGLRenderingContext} gl
+ * @returns {boolean} "lowp", "mediump", or "highp"
+ */
+function getMaxShaderPrecision(gl) {
+    if (gl.getShaderPrecisionFormat(gl.VERTEX_SHADER, gl.HIGH_FLOAT ).precision > 0 &&
+        gl.getShaderPrecisionFormat(gl.FRAGMENT_SHADER, gl.HIGH_FLOAT ).precision > 0) {
+            return "highp";
+    }
+    if (gl.getShaderPrecisionFormat(gl.VERTEX_SHADER, gl.MEDIUM_FLOAT ).precision > 0 &&
+        gl.getShaderPrecisionFormat(gl.FRAGMENT_SHADER, gl.MEDIUM_FLOAT ).precision > 0) {
+            return "mediump";
+    }
+    return "lowp";
+}
+/**
+ * Makes a request to bring this device window to the front.
+ * @function focus
+ * @memberof device
+ * @public
+ * @example
+ *  if (clicked) {
+ *    me.device.focus();
+ *  }
+ */
+function focus() {
+    if (typeof (globalThis.focus) === "function") {
+        globalThis.focus();
+    }
+}
+/**
+ * Enable monitor of the device accelerator to detect the amount of physical force of acceleration the device is receiving.
+ * (one some device a first user gesture will be required before calling this function)
+ * @function watchAccelerometer
+ * @memberof device
+ * @public
+ * @see device.accelerationX
+ * @see device.accelerationY
+ * @see device.accelerationZ
+ * @link {http://www.mobilexweb.com/samples/ball.html}
+ * @link {http://www.mobilexweb.com/blog/safari-ios-accelerometer-websockets-html5}
+ * @returns {boolean} false if not supported or permission not granted by the user
+ * @example
+ * // try to enable device accelerometer event on user gesture
+ * me.input.registerPointerEvent("pointerleave", me.game.viewport, function() {
+ *     if (me.device.watchAccelerometer() === true) {
+ *         // Success
+ *         me.input.releasePointerEvent("pointerleave", me.game.viewport);
+ *     } else {
+ *         // ... fail at enabling the device accelerometer event
+ *     }
+ * });
+ */
+function watchAccelerometer() {
+    if (hasAccelerometer && !accelInitialized) {
+        if (DeviceOrientationEvent && typeof DeviceOrientationEvent.requestPermission === "function") {
+            DeviceOrientationEvent.requestPermission()
+                .then(response => {
+                    if (response === "granted") {
+                        // add a listener for the devicemotion event
+                        globalThis.addEventListener("devicemotion", onDeviceMotion, false);
+                        accelInitialized = true;
+                    }
+                }).catch(console.error);
+        } else {
+            // add a listener for the devicemotion event
+            globalThis.addEventListener("devicemotion", onDeviceMotion, false);
+            accelInitialized = true;
+        }
+    }
+    return accelInitialized;
+}
+/**
+ * unwatch Accelerometor event
+ * @function unwatchAccelerometer
+ * @memberof device
+ * @public
+ */
+function unwatchAccelerometer() {
+    if (accelInitialized) {
+        // remove the listener for the devicemotion event
+        globalThis.removeEventListener("devicemotion", onDeviceMotion, false);
+        accelInitialized = false;
+    }
+}
+/**
+ * Enable monitor of the device orientation to detect the current orientation of the device as compared to the Earth coordinate frame.
+ * (one some device a first user gesture will be required before calling this function)
+ * @function watchDeviceOrientation
+ * @memberof device
+ * @public
+ * @see device.alpha
+ * @see device.beta
+ * @see device.gamma
+ * @returns {boolean} false if not supported or permission not granted by the user
+ * @example
+ * // try to enable device orientation event on user gesture
+ * me.input.registerPointerEvent("pointerleave", me.game.viewport, function() {
+ *     if (me.device.watchDeviceOrientation() === true) {
+ *         // Success
+ *         me.input.releasePointerEvent("pointerleave", me.game.viewport);
+ *     } else {
+ *         // ... fail at enabling the device orientation event
+ *     }
+ * });
+ */
+function watchDeviceOrientation() {
+    if (hasDeviceOrientation && !deviceOrientationInitialized) {
+        if (typeof DeviceOrientationEvent.requestPermission === "function") {
+            DeviceOrientationEvent.requestPermission()
+                .then(response => {
+                    if (response === "granted") {
+                        globalThis.addEventListener("deviceorientation", onDeviceRotate, false);
+                        deviceOrientationInitialized = true;
+                    }
+                }).catch(console.error);
+        } else {
+            globalThis.addEventListener("deviceorientation", onDeviceRotate, false);
+            deviceOrientationInitialized = true;
+        }
+    }
+    return deviceOrientationInitialized;
+}
+/**
+ * unwatch Device orientation event
+ * @function unwatchDeviceOrientation
+ * @memberof device
+ * @public
+ */
+function unwatchDeviceOrientation() {
+    if (deviceOrientationInitialized) {
+        globalThis.removeEventListener("deviceorientation", onDeviceRotate, false);
+        deviceOrientationInitialized = false;
+    }
+}
+/**
+ * the vibrate method pulses the vibration hardware on the device, <br>
+ * If the device doesn't support vibration, this method has no effect. <br>
+ * If a vibration pattern is already in progress when this method is called,
+ * the previous pattern is halted and the new one begins instead.
+ * @function vibrate
+ * @memberof device
+ * @public
+ * @param {number|number[]} pattern pattern of vibration and pause intervals
+ * @example
+ * // vibrate for 1000 ms
+ * me.device.vibrate(1000);
+ * // or alternatively
+ * me.device.vibrate([1000]);
+ * // vibrate for 50 ms, be still for 100 ms, and then vibrate for 150 ms:
+ * me.device.vibrate([50, 100, 150]);
+ * // cancel any existing vibrations
+ * me.device.vibrate(0);
+ */
+function vibrate(pattern) {
+    if (typeof globalThis.navigator !== "undefined" && typeof globalThis.navigator.vibrate === "function") {
+        globalThis.navigator.vibrate(pattern);
+    }
+}
+
+var device = /*#__PURE__*/Object.freeze({
+	__proto__: null,
+	onDeviceRotate: onDeviceRotate,
+	platform: platform,
+	touchEvent: touchEvent,
+	pointerEvent: pointerEvent,
+	touch: touch,
+	maxTouchPoints: maxTouchPoints,
+	wheel: wheel,
+	hasPointerLockSupport: hasPointerLockSupport,
+	hasDeviceOrientation: hasDeviceOrientation,
+	screenOrientation: screenOrientation,
+	hasAccelerometer: hasAccelerometer,
+	hasFullscreenSupport: hasFullscreenSupport,
+	hasWebAudio: hasWebAudio,
+	hasHTML5Audio: hasHTML5Audio,
+	sound: sound,
+	localStorage: localStorage,
+	offscreenCanvas: offscreenCanvas,
+	nativeBase64: nativeBase64,
+	language: language,
+	devicePixelRatio: devicePixelRatio,
+	isMobile: isMobile,
+	get accelerationX () { return accelerationX; },
+	get accelerationY () { return accelerationY; },
+	get accelerationZ () { return accelerationZ; },
+	get gamma () { return gamma; },
+	get beta () { return beta; },
+	get alpha () { return alpha; },
+	pauseOnBlur: pauseOnBlur,
+	resumeOnFocus: resumeOnFocus,
+	autoFocus: autoFocus,
+	stopOnBlur: stopOnBlur,
+	onReady: onReady,
+	enableSwipe: enableSwipe,
+	isFullscreen: isFullscreen,
+	requestFullscreen: requestFullscreen,
+	exitFullscreen: exitFullscreen,
+	getScreenOrientation: getScreenOrientation,
+	lockOrientation: lockOrientation,
+	unlockOrientation: unlockOrientation,
+	isPortrait: isPortrait,
+	isLandscape: isLandscape,
+	getStorage: getStorage,
+	getParentElement: getParentElement,
+	getElement: getElement,
+	getElementBounds: getElementBounds,
+	getParentBounds: getParentBounds,
+	isWebGLSupported: isWebGLSupported,
+	getMaxShaderPrecision: getMaxShaderPrecision,
+	focus: focus,
+	watchAccelerometer: watchAccelerometer,
+	unwatchAccelerometer: unwatchAccelerometer,
+	watchDeviceOrientation: watchDeviceOrientation,
+	unwatchDeviceOrientation: unwatchDeviceOrientation,
+	vibrate: vibrate
+});
+
+/**
+ * Hash map of GLSL data types to WebGL Uniform methods
+ * @ignore
+ */
+const fnHash = {
+    "bool"      : "1i",
+    "int"       : "1i",
+    "float"     : "1f",
+    "vec2"      : "2fv",
+    "vec3"      : "3fv",
+    "vec4"      : "4fv",
+    "bvec2"     : "2iv",
+    "bvec3"     : "3iv",
+    "bvec4"     : "4iv",
+    "ivec2"     : "2iv",
+    "ivec3"     : "3iv",
+    "ivec4"     : "4iv",
+    "mat2"      : "Matrix2fv",
+    "mat3"      : "Matrix3fv",
+    "mat4"      : "Matrix4fv",
+    "sampler2D" : "1i"
+};
+
+/**
+ * @ignore
+ */
+function extractUniforms(gl, shader) {
+    var uniforms = {},
+        uniRx = /uniform\s+(\w+)\s+(\w+)/g,
+        uniformsData = {},
+        descriptor = {},
+        locations = {},
+        match;
+
+    // Detect all uniform names and types
+    [ shader.vertex, shader.fragment ].forEach(function (shader) {
+        while ((match = uniRx.exec(shader))) {
+            uniformsData[match[2]] = match[1];
+        }
+    });
+
+    // Get uniform references
+    Object.keys(uniformsData).forEach(function (name) {
+        var type = uniformsData[name];
+        locations[name] = gl.getUniformLocation(shader.program, name);
+
+        descriptor[name] = {
+            "get" : (function (name) {
+                /*
+                 * A getter for the uniform location
+                 */
+                return function () {
+                    return locations[name];
+                };
+            })(name),
+            "set" : (function (name, type, fn) {
+                if (type.indexOf("mat") === 0) {
+                    /*
+                     * A generic setter for uniform matrices
+                     */
+                    return function (val) {
+                        gl[fn](locations[name], false, val);
+                    };
+                }
+                else {
+                    /*
+                     * A generic setter for uniform vectors
+                     */
+                    return function (val) {
+                        var fnv = fn;
+                        if (val.length && fn.slice(-1) !== "v") {
+                            fnv += "v";
+                        }
+                        gl[fnv](locations[name], val);
+                    };
+                }
+            })(name, type, "uniform" + fnHash[type])
+        };
+    });
+    Object.defineProperties(uniforms, descriptor);
+
+    return uniforms;
+}
+
+/**
+ * @ignore
+ */
+function extractAttributes(gl, shader) {
+    var attributes = {},
+        attrRx = /attribute\s+\w+\s+(\w+)/g,
+        match,
+        i = 0;
+
+    // Detect all attribute names
+    while ((match = attrRx.exec(shader.vertex))) {
+        attributes[match[1]] = i++;
+    }
+
+    return attributes;
+}
+
+/**
+ * @ignore
+ */
+function compileShader(gl, type, source) {
+    var shader = gl.createShader(type);
+    gl.shaderSource(shader, source);
+    gl.compileShader(shader);
+
+    if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) {
+        throw new Error(gl.getShaderInfoLog(shader));
+    }
+
+    return shader;
+}
+/**
+ * Compile GLSL into a shader object
+ * @ignore
+ */
+function compileProgram(gl, vertex, fragment, attributes) {
+    var vertShader = compileShader(gl, gl.VERTEX_SHADER, vertex);
+    var fragShader = compileShader(gl, gl.FRAGMENT_SHADER, fragment);
+
+    var program = gl.createProgram();
+
+    gl.attachShader(program, vertShader);
+    gl.attachShader(program, fragShader);
+
+
+    // force vertex attributes to use location 0 as starting location to prevent
+    // browser to do complicated emulation when running on desktop OpenGL (e.g. on macOS)
+    for (var location in attributes) {
+        gl.bindAttribLocation(program, attributes[location], location);
+    }
+
+    gl.linkProgram(program);
+
+    if (!gl.getProgramParameter(program, gl.LINK_STATUS)) {
+        var error_msg =
+            "Error initializing Shader " + this + "\n" +
+            "gl.VALIDATE_STATUS: " + gl.getProgramParameter(program, gl.VALIDATE_STATUS) + "\n" +
+            "gl.getError()" + gl.getError() + "\n" +
+            "gl.getProgramInfoLog()" + gl.getProgramInfoLog(program);
+        // house cleaning
+        gl.deleteProgram(program);
+        program = null;
+        // throw the exception
+        throw new Error(error_msg);
+    }
+
+    gl.useProgram(program);
+
+    // clean-up
+    gl.deleteShader(vertShader);
+    gl.deleteShader(fragShader);
+
+    return program;
+}
+
+/**
+ * set precision for the fiven shader source
+ * won't do anything if the precision is already specified
+ * @ignore
+ */
+function setPrecision(src, precision) {
+    if (src.substring(0, 9) !== "precision") {
+        return "precision " + precision + " float;" + src;
+    }
+    return src;
+}
+
+/**
+ * clean the given source from space, comments, etc...
+ * @ignore
+ */
+function minify(src) {
+    // remove comments
+    src = src.replace(/\/\*[\s\S]*?\*\/|([^\\:]|^)\/\/.*$/gm, "$1");
+    // Remove leading and trailing whitespace from lines
+    src = src.replace(/(\\n\s+)|(\s+\\n)/g, "");
+    // Remove line breaks
+    src = src.replace(/(\\r|\\n)+/g, "");
+    // Remove unnecessary whitespace
+    src = src.replace(/\s*([;,[\](){}\\\/\-+*|^&!=<>?~%])\s*/g, "$1");
+
+    return src;
+}
+
+/**
+ * @classdesc
+ * a base GL Shader object
+ */
+class GLShader {
+    /**
+     * @param {WebGLRenderingContext} gl the current WebGL rendering context
+     * @param {string} vertex a string containing the GLSL source code to set
+     * @param {string} fragment a string containing the GLSL source code to set
+     * @param {string} [precision=auto detected] float precision ('lowp', 'mediump' or 'highp').
+     * @see https://developer.mozilla.org/en-US/docs/Games/Techniques/3D_on_the_web/GLSL_Shaders
+     * @example
+     * // create a basic shader
+     * var myShader = new me.GLShader(
+     *    // WebGL rendering context
+     *    gl,
+     *    // vertex shader
+     *    [
+     *        "void main() {",
+     *        "    gl_Position = doMathToMakeClipspaceCoordinates;",
+     *        "}"
+     *    ].join("\n"),
+     *    // fragment shader
+     *    [
+     *        "void main() {",
+     *        "    gl_FragColor = doMathToMakeAColor;",
+     *        "}"
+     *    ].join("\n")
+     *  )
+     * // use the shader
+     * myShader.bind();
+     */
+    constructor(gl, vertex, fragment, precision) {
+
+        /**
+         * the active gl rendering context
+         * @public
+         * @type {WebGLRenderingContext}
+         * @name gl
+         * @memberof GLShader
+         */
+        this.gl = gl;
+
+        /**
+         * the vertex shader source code
+         * @public
+         * @type {string}
+         * @name vertex
+         * @memberof GLShader
+         */
+        this.vertex = setPrecision(minify(vertex), precision || getMaxShaderPrecision(this.gl));
+
+        /**
+         * the fragment shader source code
+         * @public
+         * @type {string}
+         * @name vertex
+         * @memberof GLShader
+         */
+        this.fragment = setPrecision(minify(fragment), precision || getMaxShaderPrecision(this.gl));
+
+        /**
+         * the location attributes of the shader
+         * @public
+         * @type {GLint[]}
+         * @name attributes
+         * @memberof GLShader
+         */
+        this.attributes = extractAttributes(this.gl, this);
+
+
+        /**
+         * a reference to the shader program (once compiled)
+         * @public
+         * @type {WebGLProgram}
+         * @name program
+         * @memberof GLShader
+         */
+        this.program = compileProgram(this.gl, this.vertex, this.fragment, this.attributes);
+
+        /**
+         * the uniforms of the shader
+         * @public
+         * @type {object}
+         * @name uniforms
+         * @memberof GLShader
+         */
+        this.uniforms = extractUniforms(this.gl, this);
+
+        // destroy the shader on context lost (will be recreated on context restore)
+        on(ONCONTEXT_LOST, this.destroy, this);
+    }
+
+    /**
+     * Installs this shader program as part of current rendering state
+     * @name bind
+     * @memberof GLShader
+     */
+    bind() {
+        this.gl.useProgram(this.program);
+    }
+
+    /**
+     * returns the location of an attribute variable in this shader program
+     * @name getAttribLocation
+     * @memberof GLShader
+     * @param {string} name the name of the attribute variable whose location to get.
+     * @returns {GLint} number indicating the location of the variable name if found. Returns -1 otherwise
+     */
+    getAttribLocation(name) {
+        var attr = this.attributes[name];
+        if (typeof attr !== "undefined") {
+            return attr;
+        } else {
+            return -1;
+        }
+    }
+
+    /**
+     * Set the uniform to the given value
+     * @name setUniform
+     * @memberof GLShader
+     * @param {string} name the uniform name
+     * @param {object|Float32Array} value the value to assign to that uniform
+     * @example
+     * myShader.setUniform("uProjectionMatrix", this.projectionMatrix);
+     */
+    setUniform(name, value) {
+        var uniforms = this.uniforms;
+        if (typeof uniforms[name] !== "undefined") {
+            if (typeof value === "object" && typeof value.toArray === "function") {
+                uniforms[name] = value.toArray();
+            } else {
+                uniforms[name] = value;
+            }
+        } else {
+            throw new Error("undefined (" + name + ") uniform for shader " + this);
+        }
+    }
+
+    /**
+     * activate the given vertex attribute for this shader
+     * @name setVertexAttributes
+     * @memberof GLShader
+     * @param {WebGLRenderingContext} gl the current WebGL rendering context
+     * @param {object[]} attributes an array of vertex attributes
+     * @param {number} vertexByteSize the size of a single vertex in bytes
+     */
+    setVertexAttributes(gl, attributes, vertexByteSize) {
+        // set the vertex attributes
+        for (var index = 0; index < attributes.length; ++index) {
+            var element = attributes[index];
+            var location = this.getAttribLocation(element.name);
+
+            if (location !== -1) {
+                gl.enableVertexAttribArray(location);
+                gl.vertexAttribPointer(location, element.size, element.type, element.normalized, vertexByteSize, element.offset);
+            } else {
+                gl.disableVertexAttribArray(index);
+            }
+        }
+    }
+
+    /**
+     * destroy this shader objects resources (program, attributes, uniforms)
+     * @name destroy
+     * @memberof GLShader
+     */
+    destroy() {
+        this.uniforms = null;
+        this.attributes = null;
+
+        this.gl.deleteProgram(this.program);
+
+        this.vertex = null;
+        this.fragment = null;
+    }
+}
+
+/**
+ * @classdesc
+ * a Vertex Buffer object
+ * @class VertexArrayBuffer
+ * @ignore
+ */
+
+class VertexArrayBuffer {
+
+    constructor(vertex_size, vertex_per_quad) {
+        // the size of one vertex in float
+        this.vertexSize = vertex_size;
+        // size of a quad in vertex
+        this.quadSize = vertex_per_quad;
+        // the maximum number of vertices the vertex array buffer can hold
+        this.maxVertex = 256;
+        // the current number of vertices added to the vertex array buffer
+        this.vertexCount = 0;
+
+        // the actual vertex data buffer
+        this.buffer = new ArrayBuffer(this.maxVertex * this.vertexSize * this.quadSize);
+        // Float32 and Uint32 view of the vertex data array buffer
+        this.bufferF32 = new Float32Array(this.buffer);
+        this.bufferU32 = new Uint32Array(this.buffer);
+    }
+
+    /**
+     * clear the vertex array buffer
+     * @ignore
+     */
+    clear() {
+        this.vertexCount = 0;
+    }
+
+
+    /**
+     * return true if full
+     * @ignore
+     */
+    isFull(vertex = this.quadSize) {
+         return (this.vertexCount + vertex >= this.maxVertex);
+    }
+
+    /**
+     * resize the vertex buffer, retaining its original contents
+     * @ignore
+     */
+    resize() {
+        // double the vertex size
+        this.maxVertex <<= 1;
+        // save a reference to the previous data
+        var data = this.bufferF32;
+
+        // recreate ArrayBuffer and views
+        this.buffer = new ArrayBuffer(this.maxVertex * this.vertexSize * this.quadSize);
+        this.bufferF32 = new Float32Array(this.buffer);
+        this.bufferU32 = new Uint32Array(this.buffer);
+
+        // copy previous data
+        this.bufferF32.set(data);
+
+        return this;
+    }
+
+    /**
+     * push a new vertex to the buffer
+     * @ignore
+     */
+    push(x, y, u, v, tint) {
+        var offset = this.vertexCount * this.vertexSize;
+
+        if (this.vertexCount >= this.maxVertex) {
+            this.resize();
+        }
+
+        this.bufferF32[offset + 0] = x;
+        this.bufferF32[offset + 1] = y;
+
+        if (typeof u !== "undefined") {
+            this.bufferF32[offset + 2] = u;
+            this.bufferF32[offset + 3] = v;
+        }
+
+        if (typeof tint !== "undefined") {
+            this.bufferU32[offset + 4] = tint;
+        }
+
+        this.vertexCount++;
+
+        return this;
+    }
+
+    /**
+     * return a reference to the data in Float32 format
+     * @ignore
+     */
+    toFloat32(begin, end) {
+        if (typeof end !== "undefined") {
+            return this.bufferF32.subarray(begin, end);
+        } else {
+            return this.bufferF32;
+        }
+    }
+
+    /**
+     * return a reference to the data in Uint32 format
+     * @ignore
+     */
+    toUint32(begin, end) {
+        if (typeof end !== "undefined") {
+            return this.bufferU32.subarray(begin, end);
+        } else {
+            return this.bufferU32;
+        }
+    }
+
+    /**
+     * return the size of the vertex in vertex
+     * @ignore
+     */
+    length() {
+        return this.vertexCount;
+    }
+
+    /**
+     * return true if empty
+     * @ignore
+     */
+    isEmpty() {
+        return this.vertexCount === 0;
+    }
+
+}
+
+var primitiveVertex = "// Current vertex point\nattribute vec2 aVertex;\n\n// Projection matrix\nuniform mat4 uProjectionMatrix;\n\n// Vertex color\nuniform vec4 uColor;\n\n// Fragment color\nvarying vec4 vColor;\n\nvoid main(void) {\n    // Transform the vertex position by the projection matrix\n    gl_Position = uProjectionMatrix * vec4(aVertex, 0.0, 1.0);\n    // Pass the remaining attributes to the fragment shader\n    vColor = vec4(uColor.rgb * uColor.a, uColor.a);\n}\n";
+
+var primitiveFragment = "varying vec4 vColor;\n\nvoid main(void) {\n    gl_FragColor = vColor;\n}\n";
+
+var quadVertex = "attribute vec2 aVertex;\nattribute vec2 aRegion;\nattribute vec4 aColor;\n\nuniform mat4 uProjectionMatrix;\n\nvarying vec2 vRegion;\nvarying vec4 vColor;\n\nvoid main(void) {\n    // Transform the vertex position by the projection matrix\n     gl_Position = uProjectionMatrix * vec4(aVertex, 0.0, 1.0);\n    // Pass the remaining attributes to the fragment shader\n    vColor = vec4(aColor.bgr * aColor.a, aColor.a);\n    vRegion = aRegion;\n}\n";
+
+var quadFragment = "uniform sampler2D uSampler;\nvarying vec4 vColor;\nvarying vec2 vRegion;\n\nvoid main(void) {\n    gl_FragColor = texture2D(uSampler, vRegion) * vColor;\n}\n";
+
+// a pool of resuable vectors
+var V_ARRAY = [
+    new Vector2d(),
+    new Vector2d(),
+    new Vector2d(),
+    new Vector2d()
+];
+
+/**
+ * @classdesc
+ * A WebGL Compositor object. This class handles all of the WebGL state<br>
+ * Pushes texture regions or shape geometry into WebGL buffers, automatically flushes to GPU
+ */
+class WebGLCompositor {
+    /**
+     * @param {WebGLRenderer} renderer the current WebGL renderer session
+     */
+    constructor (renderer) {
+        this.init(renderer);
+    }
+
+    /**
+     * Initialize the compositor
+     * @ignore
+     */
+    init (renderer) {
+        // local reference
+        var gl = renderer.gl;
+
+        // list of active texture units
+        this.currentTextureUnit = -1;
+        this.boundTextures = [];
+
+        // the associated renderer
+        this.renderer = renderer;
+
+        // WebGL context
+        this.gl = renderer.gl;
+
+        // Global fill color
+        this.color = renderer.currentColor;
+
+        // Global transformation matrix
+        this.viewMatrix = renderer.currentTransform;
+
+        /**
+         * a reference to the active WebGL shader
+         * @name activeShader
+         * @memberof WebGLCompositor
+         * @type {GLShader}
+         */
+        this.activeShader = null;
+
+        /**
+         * primitive type to render (gl.POINTS, gl.LINE_STRIP, gl.LINE_LOOP, gl.LINES, gl.TRIANGLE_STRIP, gl.TRIANGLE_FAN, gl.TRIANGLES)
+         * @name mode
+         * @see WebGLCompositor
+         * @memberof WebGLCompositor
+         * @default gl.TRIANGLES
+         */
+        this.mode = gl.TRIANGLES;
+
+        /**
+         * an array of vertex attribute properties
+         * @name attributes
+         * @see WebGLCompositor.addAttribute
+         * @memberof WebGLCompositor
+         */
+        this.attributes = [];
+
+        /**
+         * the size of a single vertex in bytes
+         * (will automatically be calculated as attributes definitions are added)
+         * @name vertexByteSize
+         * @see WebGLCompositor.addAttribute
+         * @memberof WebGLCompositor
+         */
+        this.vertexByteSize = 0;
+
+        /**
+         * the size of a single vertex in floats
+         * (will automatically be calculated as attributes definitions are added)
+         * @name vertexSize
+         * @see WebGLCompositor.addAttribute
+         * @memberof WebGLCompositor
+         */
+        this.vertexSize = 0;
+
+        // Load and create shader programs
+        this.primitiveShader = new GLShader(this.gl, primitiveVertex, primitiveFragment);
+        this.quadShader = new GLShader(this.gl, quadVertex, quadFragment);
+
+        /// define all vertex attributes
+        this.addAttribute("aVertex", 2, gl.FLOAT, false, 0 * Float32Array.BYTES_PER_ELEMENT); // 0
+        this.addAttribute("aRegion", 2, gl.FLOAT, false, 2 * Float32Array.BYTES_PER_ELEMENT); // 1
+        this.addAttribute("aColor",  4, gl.UNSIGNED_BYTE, true, 4 * Float32Array.BYTES_PER_ELEMENT); // 2
+
+        this.vertexBuffer = new VertexArrayBuffer(this.vertexSize, 6); // 6 vertices per quad
+
+        // vertex buffer
+        gl.bindBuffer(gl.ARRAY_BUFFER, gl.createBuffer());
+        gl.bufferData(gl.ARRAY_BUFFER, this.vertexBuffer.buffer, gl.STREAM_DRAW);
+
+        // register to the CANVAS resize channel
+        on(CANVAS_ONRESIZE, (width, height) => {
+            this.flush();
+            this.setViewport(0, 0, width, height);
+        });
+    }
+
+    /**
+     * Reset compositor internal state
+     * @ignore
+     */
+    reset() {
+        // WebGL context
+        this.gl = this.renderer.gl;
+
+        this.flush();
+
+        // initial viewport size
+        this.setViewport(
+            0, 0,
+            this.renderer.getScreenCanvas().width,
+            this.renderer.getScreenCanvas().height
+        );
+
+        // Initialize clear color
+        this.clearColor(0.0, 0.0, 0.0, 0.0);
+
+        // delete all related bound texture
+        for (var i = 0; i < this.renderer.maxTextures; i++) {
+            var texture2D = this.getTexture2D(i);
+            if (typeof texture2D !== "undefined") {
+                this.deleteTexture2D(texture2D);
+            }
+        }
+        this.currentTextureUnit = -1;
+
+        // set the quad shader as the default program
+        this.useShader(this.quadShader);
+    }
+
+    /**
+     * add vertex attribute property definition to the compositor
+     * @name addAttribute
+     * @memberof WebGLCompositor
+     * @param {string} name name of the attribute in the vertex shader
+     * @param {number} size number of components per vertex attribute. Must be 1, 2, 3, or 4.
+     * @param {GLenum} type data type of each component in the array
+     * @param {boolean} normalized whether integer data values should be normalized into a certain range when being cast to a float
+     * @param {number} offset offset in bytes of the first component in the vertex attribute array
+     */
+    addAttribute(name, size, type, normalized, offset) {
+        this.attributes.push({
+            name: name,
+            size: size,
+            type: type,
+            normalized: normalized,
+            offset: offset
+        });
+
+        switch (type) {
+            case this.gl.BYTE:
+                this.vertexByteSize += size * Int8Array.BYTES_PER_ELEMENT;
+                break;
+            case this.gl.UNSIGNED_BYTE:
+                this.vertexByteSize += size * Uint8Array.BYTES_PER_ELEMENT;
+                break;
+            case this.gl.SHORT:
+                this.vertexByteSize += size * Int16Array.BYTES_PER_ELEMENT;
+                break;
+            case this.gl.UNSIGNED_SHORT:
+                this.vertexByteSize += size * Uint16Array.BYTES_PER_ELEMENT;
+                break;
+            case this.gl.INT:
+                this.vertexByteSize += size * Int32Array.BYTES_PER_ELEMENT;
+                break;
+            case this.gl.UNSIGNED_INT:
+                this.vertexByteSize += size * Uint32Array.BYTES_PER_ELEMENT;
+                break;
+            case this.gl.FLOAT:
+                this.vertexByteSize += size * Float32Array.BYTES_PER_ELEMENT;
+                break;
+            default:
+                throw new Error("Invalid GL Attribute type");
+        }
+        this.vertexSize = this.vertexByteSize / Float32Array.BYTES_PER_ELEMENT;
+    }
+
+    /**
+     * Sets the viewport
+     * @name setViewport
+     * @memberof WebGLCompositor
+     * @param {number} x x position of viewport
+     * @param {number} y y position of viewport
+     * @param {number} w width of viewport
+     * @param {number} h height of viewport
+     */
+    setViewport(x, y, w, h) {
+        this.gl.viewport(x, y, w, h);
+    }
+
+    /**
+     * Create a WebGL texture from an image
+     * @name createTexture2D
+     * @memberof WebGLCompositor
+     * @param {number} unit Destination texture unit
+     * @param {Image|HTMLCanvasElement|ImageData|Uint8Array[]|Float32Array[]} image Source image
+     * @param {number} filter gl.LINEAR or gl.NEAREST
+     * @param {string} [repeat="no-repeat"] Image repeat behavior (see {@link ImageLayer#repeat})
+     * @param {number} [w] Source image width (Only use with UInt8Array[] or Float32Array[] source image)
+     * @param {number} [h] Source image height (Only use with UInt8Array[] or Float32Array[] source image)
+     * @param {number} [b] Source image border (Only use with UInt8Array[] or Float32Array[] source image)
+     * @param {boolean} [premultipliedAlpha=true] Multiplies the alpha channel into the other color channels
+     * @param {boolean} [mipmap=true] Whether mipmap levels should be generated for this texture
+     * @returns {WebGLTexture} a WebGL texture
+     */
+    createTexture2D(unit, image, filter, repeat = "no-repeat", w, h, b, premultipliedAlpha = true, mipmap = true) {
+        var gl = this.gl;
+        var isPOT = isPowerOfTwo(w || image.width) && isPowerOfTwo(h || image.height);
+        var texture = gl.createTexture();
+        var rs = (repeat.search(/^repeat(-x)?$/) === 0) && (isPOT || this.renderer.WebGLVersion > 1) ? gl.REPEAT : gl.CLAMP_TO_EDGE;
+        var rt = (repeat.search(/^repeat(-y)?$/) === 0) && (isPOT || this.renderer.WebGLVersion > 1) ? gl.REPEAT : gl.CLAMP_TO_EDGE;
+
+        this.bindTexture2D(texture, unit);
+
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, rs);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, rt);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, filter);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, filter);
+        gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, premultipliedAlpha);
+        if (w || h || b) {
+            gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, w, h, b, gl.RGBA, gl.UNSIGNED_BYTE, image);
+        }
+        else {
+            gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, image);
+        }
+
+        // generate the sprite mimap (used when scaling) if a PowerOfTwo texture
+        if (isPOT && mipmap !== false) {
+            gl.generateMipmap(gl.TEXTURE_2D);
+        }
+
+        return texture;
+    }
+
+    /**
+     * delete the given WebGL texture
+     * @name bindTexture2D
+     * @memberof WebGLCompositor
+     * @param {WebGLTexture} [texture] a WebGL texture to delete
+     * @param {number} [unit] Texture unit to delete
+     */
+    deleteTexture2D(texture) {
+        this.gl.deleteTexture(texture);
+        this.unbindTexture2D(texture);
+    }
+
+    /**
+     * returns the WebGL texture associated to the given texture unit
+     * @name bindTexture2D
+     * @memberof WebGLCompositor
+     * @param {number} unit Texture unit to which a texture is bound
+     * @returns {WebGLTexture} texture a WebGL texture
+     */
+    getTexture2D(unit) {
+        return this.boundTextures[unit];
+    }
+
+    /**
+     * assign the given WebGL texture to the current batch
+     * @name bindTexture2D
+     * @memberof WebGLCompositor
+     * @param {WebGLTexture} texture a WebGL texture
+     * @param {number} unit Texture unit to which the given texture is bound
+     */
+    bindTexture2D(texture, unit) {
+        var gl = this.gl;
+
+        if (texture !== this.boundTextures[unit]) {
+            this.flush();
+            if (this.currentTextureUnit !== unit) {
+                this.currentTextureUnit = unit;
+                gl.activeTexture(gl.TEXTURE0 + unit);
+            }
+
+            gl.bindTexture(gl.TEXTURE_2D, texture);
+            this.boundTextures[unit] = texture;
+
+        } else if (this.currentTextureUnit !== unit) {
+            this.flush();
+            this.currentTextureUnit = unit;
+            gl.activeTexture(gl.TEXTURE0 + unit);
+        }
+    }
+
+    /**
+     * unbind the given WebGL texture, forcing it to be reuploaded
+     * @name unbindTexture2D
+     * @memberof WebGLCompositor
+     * @param {WebGLTexture} [texture] a WebGL texture
+     * @param {number} [unit] a WebGL texture
+     * @returns {number} unit the unit number that was associated with the given texture
+     */
+    unbindTexture2D(texture, unit) {
+        if (typeof unit === "undefined") {
+            unit = this.boundTextures.indexOf(texture);
+        }
+        if (unit !== -1) {
+            delete this.boundTextures[unit];
+            if (unit === this.currentTextureUnit) {
+                this.currentTextureUnit = -1;
+            }
+        }
+        return unit;
+    }
+
+    /**
+     * @ignore
+     */
+    uploadTexture(texture, w, h, b, force = false) {
+        var unit = this.renderer.cache.getUnit(texture);
+        var texture2D = this.boundTextures[unit];
+
+        if (typeof texture2D === "undefined" || force) {
+            this.createTexture2D(
+                unit,
+                texture.getTexture(),
+                this.renderer.settings.antiAlias ? this.gl.LINEAR : this.gl.NEAREST,
+                texture.repeat,
+                w,
+                h,
+                b,
+                texture.premultipliedAlpha
+            );
+        } else {
+            this.bindTexture2D(texture2D, unit);
+        }
+
+        return this.currentTextureUnit;
+    }
+
+    /**
+     * set/change the current projection matrix
+     * @name setProjection
+     * @memberof WebGLCompositor
+     * @param {Matrix3d} matrix
+     */
+    setProjection(matrix) {
+        this.activeShader.setUniform("uProjectionMatrix", matrix);
+    }
+
+    /**
+     * Select the shader to use for compositing
+     * @name useShader
+     * @see GLShader
+     * @memberof WebGLCompositor
+     * @param {GLShader} shader a reference to a GLShader instance
+     */
+    useShader(shader) {
+        if (this.activeShader !== shader) {
+            this.flush();
+            this.activeShader = shader;
+            this.activeShader.bind();
+            this.activeShader.setUniform("uProjectionMatrix", this.renderer.projectionMatrix);
+            this.activeShader.setVertexAttributes(this.gl, this.attributes, this.vertexByteSize);
+        }
+    }
+
+    /**
+     * Add a textured quad
+     * @name addQuad
+     * @memberof WebGLCompositor
+     * @param {TextureAtlas} texture Source texture atlas
+     * @param {number} x Destination x-coordinate
+     * @param {number} y Destination y-coordinate
+     * @param {number} w Destination width
+     * @param {number} h Destination height
+     * @param {number} u0 Texture UV (u0) value.
+     * @param {number} v0 Texture UV (v0) value.
+     * @param {number} u1 Texture UV (u1) value.
+     * @param {number} v1 Texture UV (v1) value.
+     * @param {number} tint tint color to be applied to the texture in UINT32 (argb) format
+     */
+    addQuad(texture, x, y, w, h, u0, v0, u1, v1, tint) {
+
+        if (this.color.alpha < 1 / 255) {
+            // Fast path: don't send fully transparent quads
+            return;
+        }
+
+        this.useShader(this.quadShader);
+
+        if (this.vertexBuffer.isFull(6)) {
+            // is the vertex buffer full if we add 6 more vertices
+            this.flush();
+        }
+
+        // upload and activate the texture if necessary
+        var unit = this.uploadTexture(texture);
+        // set fragement sampler accordingly
+        this.quadShader.setUniform("uSampler", unit);
+
+        // Transform vertices
+        var m = this.viewMatrix,
+            vec0 = V_ARRAY[0].set(x, y),
+            vec1 = V_ARRAY[1].set(x + w, y),
+            vec2 = V_ARRAY[2].set(x, y + h),
+            vec3 = V_ARRAY[3].set(x + w, y + h);
+
+        if (!m.isIdentity()) {
+            m.apply(vec0);
+            m.apply(vec1);
+            m.apply(vec2);
+            m.apply(vec3);
+        }
+
+        this.vertexBuffer.push(vec0.x, vec0.y, u0, v0, tint);
+        this.vertexBuffer.push(vec1.x, vec1.y, u1, v0, tint);
+        this.vertexBuffer.push(vec2.x, vec2.y, u0, v1, tint);
+        this.vertexBuffer.push(vec2.x, vec2.y, u0, v1, tint);
+        this.vertexBuffer.push(vec1.x, vec1.y, u1, v0, tint);
+        this.vertexBuffer.push(vec3.x, vec3.y, u1, v1, tint);
+    }
+
+    /**
+     * Flush batched texture operations to the GPU
+     * @param {number} [mode=gl.TRIANGLES] the GL drawing mode
+     * @memberof WebGLCompositor
+     */
+    flush(mode = this.mode) {
+        var vertex = this.vertexBuffer;
+        var vertexCount = vertex.vertexCount;
+
+        if (vertexCount > 0) {
+            var gl = this.gl;
+            var vertexSize = vertex.vertexSize;
+
+            // Copy data into stream buffer
+            if (this.renderer.WebGLVersion > 1) {
+                gl.bufferData(gl.ARRAY_BUFFER, vertex.toFloat32(), gl.STREAM_DRAW, 0, vertexCount * vertexSize);
+            } else {
+                gl.bufferData(gl.ARRAY_BUFFER, vertex.toFloat32(0, vertexCount * vertexSize), gl.STREAM_DRAW);
+            }
+
+            gl.drawArrays(mode, 0, vertexCount);
+
+            // clear the vertex buffer
+            vertex.clear();
+        }
+    }
+
+    /**
+     * Draw an array of vertices
+     * @name drawVertices
+     * @memberof WebGLCompositor
+     * @param {GLenum} mode primitive type to render (gl.POINTS, gl.LINE_STRIP, gl.LINE_LOOP, gl.LINES, gl.TRIANGLE_STRIP, gl.TRIANGLE_FAN, gl.TRIANGLES)
+     * @param {Vector2d[]} verts vertices
+     * @param {number} [vertexCount=verts.length] amount of points defined in the points array
+     */
+    drawVertices(mode, verts, vertexCount = verts.length) {
+        // use the primitive shader
+        this.useShader(this.primitiveShader);
+        // Set the line color
+        this.primitiveShader.setUniform("uColor", this.color);
+
+        var m = this.viewMatrix;
+        var vertex = this.vertexBuffer;
+        var m_isIdentity = m.isIdentity();
+
+        for (var i = 0; i < vertexCount; i++) {
+            if (!m_isIdentity) {
+                m.apply(verts[i]);
+            }
+            vertex.push(verts[i].x, verts[i].y);
+        }
+
+        // flush
+        this.flush(mode);
+    }
+
+    /**
+     * Specify the color values used when clearing color buffers. The values are clamped between 0 and 1.
+     * @name clearColor
+     * @memberof WebGLCompositor
+     * @param {number} [r=0] - the red color value used when the color buffers are cleared
+     * @param {number} [g=0] - the green color value used when the color buffers are cleared
+     * @param {number} [b=0] - the blue color value used when the color buffers are cleared
+     * @param {number} [a=0] - the alpha color value used when the color buffers are cleared
+     */
+    clearColor(r, g, b, a) {
+        this.gl.clearColor(r, g, b, a);
+    }
+
+    /**
+     * Clear the frame buffer
+     * @name clear
+     * @memberof WebGLCompositor
+     */
+    clear() {
+        this.gl.clear(this.gl.COLOR_BUFFER_BIT);
+    }
+}
+
+var earcut$1 = {exports: {}};
+
+earcut$1.exports = earcut;
+earcut$1.exports.default = earcut;
+
+function earcut(data, holeIndices, dim) {
+
+    dim = dim || 2;
+
+    var hasHoles = holeIndices && holeIndices.length,
+        outerLen = hasHoles ? holeIndices[0] * dim : data.length,
+        outerNode = linkedList(data, 0, outerLen, dim, true),
+        triangles = [];
+
+    if (!outerNode || outerNode.next === outerNode.prev) return triangles;
+
+    var minX, minY, maxX, maxY, x, y, invSize;
+
+    if (hasHoles) outerNode = eliminateHoles(data, holeIndices, outerNode, dim);
+
+    // if the shape is not too simple, we'll use z-order curve hash later; calculate polygon bbox
+    if (data.length > 80 * dim) {
+        minX = maxX = data[0];
+        minY = maxY = data[1];
+
+        for (var i = dim; i < outerLen; i += dim) {
+            x = data[i];
+            y = data[i + 1];
+            if (x < minX) minX = x;
+            if (y < minY) minY = y;
+            if (x > maxX) maxX = x;
+            if (y > maxY) maxY = y;
+        }
+
+        // minX, minY and invSize are later used to transform coords into integers for z-order calculation
+        invSize = Math.max(maxX - minX, maxY - minY);
+        invSize = invSize !== 0 ? 32767 / invSize : 0;
+    }
+
+    earcutLinked(outerNode, triangles, dim, minX, minY, invSize, 0);
+
+    return triangles;
+}
+
+// create a circular doubly linked list from polygon points in the specified winding order
+function linkedList(data, start, end, dim, clockwise) {
+    var i, last;
+
+    if (clockwise === (signedArea(data, start, end, dim) > 0)) {
+        for (i = start; i < end; i += dim) last = insertNode(i, data[i], data[i + 1], last);
+    } else {
+        for (i = end - dim; i >= start; i -= dim) last = insertNode(i, data[i], data[i + 1], last);
+    }
+
+    if (last && equals(last, last.next)) {
+        removeNode(last);
+        last = last.next;
+    }
+
+    return last;
+}
+
+// eliminate colinear or duplicate points
+function filterPoints(start, end) {
+    if (!start) return start;
+    if (!end) end = start;
+
+    var p = start,
+        again;
+    do {
+        again = false;
+
+        if (!p.steiner && (equals(p, p.next) || area(p.prev, p, p.next) === 0)) {
+            removeNode(p);
+            p = end = p.prev;
+            if (p === p.next) break;
+            again = true;
+
+        } else {
+            p = p.next;
+        }
+    } while (again || p !== end);
+
+    return end;
+}
+
+// main ear slicing loop which triangulates a polygon (given as a linked list)
+function earcutLinked(ear, triangles, dim, minX, minY, invSize, pass) {
+    if (!ear) return;
+
+    // interlink polygon nodes in z-order
+    if (!pass && invSize) indexCurve(ear, minX, minY, invSize);
+
+    var stop = ear,
+        prev, next;
+
+    // iterate through ears, slicing them one by one
+    while (ear.prev !== ear.next) {
+        prev = ear.prev;
+        next = ear.next;
+
+        if (invSize ? isEarHashed(ear, minX, minY, invSize) : isEar(ear)) {
+            // cut off the triangle
+            triangles.push(prev.i / dim | 0);
+            triangles.push(ear.i / dim | 0);
+            triangles.push(next.i / dim | 0);
+
+            removeNode(ear);
+
+            // skipping the next vertex leads to less sliver triangles
+            ear = next.next;
+            stop = next.next;
+
+            continue;
+        }
+
+        ear = next;
+
+        // if we looped through the whole remaining polygon and can't find any more ears
+        if (ear === stop) {
+            // try filtering points and slicing again
+            if (!pass) {
+                earcutLinked(filterPoints(ear), triangles, dim, minX, minY, invSize, 1);
+
+            // if this didn't work, try curing all small self-intersections locally
+            } else if (pass === 1) {
+                ear = cureLocalIntersections(filterPoints(ear), triangles, dim);
+                earcutLinked(ear, triangles, dim, minX, minY, invSize, 2);
+
+            // as a last resort, try splitting the remaining polygon into two
+            } else if (pass === 2) {
+                splitEarcut(ear, triangles, dim, minX, minY, invSize);
+            }
+
+            break;
+        }
+    }
+}
+
+// check whether a polygon node forms a valid ear with adjacent nodes
+function isEar(ear) {
+    var a = ear.prev,
+        b = ear,
+        c = ear.next;
+
+    if (area(a, b, c) >= 0) return false; // reflex, can't be an ear
+
+    // now make sure we don't have other points inside the potential ear
+    var ax = a.x, bx = b.x, cx = c.x, ay = a.y, by = b.y, cy = c.y;
+
+    // triangle bbox; min & max are calculated like this for speed
+    var x0 = ax < bx ? (ax < cx ? ax : cx) : (bx < cx ? bx : cx),
+        y0 = ay < by ? (ay < cy ? ay : cy) : (by < cy ? by : cy),
+        x1 = ax > bx ? (ax > cx ? ax : cx) : (bx > cx ? bx : cx),
+        y1 = ay > by ? (ay > cy ? ay : cy) : (by > cy ? by : cy);
+
+    var p = c.next;
+    while (p !== a) {
+        if (p.x >= x0 && p.x <= x1 && p.y >= y0 && p.y <= y1 &&
+            pointInTriangle(ax, ay, bx, by, cx, cy, p.x, p.y) &&
+            area(p.prev, p, p.next) >= 0) return false;
+        p = p.next;
+    }
+
+    return true;
+}
+
+function isEarHashed(ear, minX, minY, invSize) {
+    var a = ear.prev,
+        b = ear,
+        c = ear.next;
+
+    if (area(a, b, c) >= 0) return false; // reflex, can't be an ear
+
+    var ax = a.x, bx = b.x, cx = c.x, ay = a.y, by = b.y, cy = c.y;
+
+    // triangle bbox; min & max are calculated like this for speed
+    var x0 = ax < bx ? (ax < cx ? ax : cx) : (bx < cx ? bx : cx),
+        y0 = ay < by ? (ay < cy ? ay : cy) : (by < cy ? by : cy),
+        x1 = ax > bx ? (ax > cx ? ax : cx) : (bx > cx ? bx : cx),
+        y1 = ay > by ? (ay > cy ? ay : cy) : (by > cy ? by : cy);
+
+    // z-order range for the current triangle bbox;
+    var minZ = zOrder(x0, y0, minX, minY, invSize),
+        maxZ = zOrder(x1, y1, minX, minY, invSize);
+
+    var p = ear.prevZ,
+        n = ear.nextZ;
+
+    // look for points inside the triangle in both directions
+    while (p && p.z >= minZ && n && n.z <= maxZ) {
+        if (p.x >= x0 && p.x <= x1 && p.y >= y0 && p.y <= y1 && p !== a && p !== c &&
+            pointInTriangle(ax, ay, bx, by, cx, cy, p.x, p.y) && area(p.prev, p, p.next) >= 0) return false;
+        p = p.prevZ;
+
+        if (n.x >= x0 && n.x <= x1 && n.y >= y0 && n.y <= y1 && n !== a && n !== c &&
+            pointInTriangle(ax, ay, bx, by, cx, cy, n.x, n.y) && area(n.prev, n, n.next) >= 0) return false;
+        n = n.nextZ;
+    }
+
+    // look for remaining points in decreasing z-order
+    while (p && p.z >= minZ) {
+        if (p.x >= x0 && p.x <= x1 && p.y >= y0 && p.y <= y1 && p !== a && p !== c &&
+            pointInTriangle(ax, ay, bx, by, cx, cy, p.x, p.y) && area(p.prev, p, p.next) >= 0) return false;
+        p = p.prevZ;
+    }
+
+    // look for remaining points in increasing z-order
+    while (n && n.z <= maxZ) {
+        if (n.x >= x0 && n.x <= x1 && n.y >= y0 && n.y <= y1 && n !== a && n !== c &&
+            pointInTriangle(ax, ay, bx, by, cx, cy, n.x, n.y) && area(n.prev, n, n.next) >= 0) return false;
+        n = n.nextZ;
+    }
+
+    return true;
+}
+
+// go through all polygon nodes and cure small local self-intersections
+function cureLocalIntersections(start, triangles, dim) {
+    var p = start;
+    do {
+        var a = p.prev,
+            b = p.next.next;
+
+        if (!equals(a, b) && intersects(a, p, p.next, b) && locallyInside(a, b) && locallyInside(b, a)) {
+
+            triangles.push(a.i / dim | 0);
+            triangles.push(p.i / dim | 0);
+            triangles.push(b.i / dim | 0);
+
+            // remove two nodes involved
+            removeNode(p);
+            removeNode(p.next);
+
+            p = start = b;
+        }
+        p = p.next;
+    } while (p !== start);
+
+    return filterPoints(p);
+}
+
+// try splitting polygon into two and triangulate them independently
+function splitEarcut(start, triangles, dim, minX, minY, invSize) {
+    // look for a valid diagonal that divides the polygon into two
+    var a = start;
+    do {
+        var b = a.next.next;
+        while (b !== a.prev) {
+            if (a.i !== b.i && isValidDiagonal(a, b)) {
+                // split the polygon in two by the diagonal
+                var c = splitPolygon(a, b);
+
+                // filter colinear points around the cuts
+                a = filterPoints(a, a.next);
+                c = filterPoints(c, c.next);
+
+                // run earcut on each half
+                earcutLinked(a, triangles, dim, minX, minY, invSize, 0);
+                earcutLinked(c, triangles, dim, minX, minY, invSize, 0);
+                return;
+            }
+            b = b.next;
+        }
+        a = a.next;
+    } while (a !== start);
+}
+
+// link every hole into the outer loop, producing a single-ring polygon without holes
+function eliminateHoles(data, holeIndices, outerNode, dim) {
+    var queue = [],
+        i, len, start, end, list;
+
+    for (i = 0, len = holeIndices.length; i < len; i++) {
+        start = holeIndices[i] * dim;
+        end = i < len - 1 ? holeIndices[i + 1] * dim : data.length;
+        list = linkedList(data, start, end, dim, false);
+        if (list === list.next) list.steiner = true;
+        queue.push(getLeftmost(list));
+    }
+
+    queue.sort(compareX);
+
+    // process holes from left to right
+    for (i = 0; i < queue.length; i++) {
+        outerNode = eliminateHole(queue[i], outerNode);
+    }
+
+    return outerNode;
+}
+
+function compareX(a, b) {
+    return a.x - b.x;
+}
+
+// find a bridge between vertices that connects hole with an outer ring and and link it
+function eliminateHole(hole, outerNode) {
+    var bridge = findHoleBridge(hole, outerNode);
+    if (!bridge) {
+        return outerNode;
+    }
+
+    var bridgeReverse = splitPolygon(bridge, hole);
+
+    // filter collinear points around the cuts
+    filterPoints(bridgeReverse, bridgeReverse.next);
+    return filterPoints(bridge, bridge.next);
+}
+
+// David Eberly's algorithm for finding a bridge between hole and outer polygon
+function findHoleBridge(hole, outerNode) {
+    var p = outerNode,
+        hx = hole.x,
+        hy = hole.y,
+        qx = -Infinity,
+        m;
+
+    // find a segment intersected by a ray from the hole's leftmost point to the left;
+    // segment's endpoint with lesser x will be potential connection point
+    do {
+        if (hy <= p.y && hy >= p.next.y && p.next.y !== p.y) {
+            var x = p.x + (hy - p.y) * (p.next.x - p.x) / (p.next.y - p.y);
+            if (x <= hx && x > qx) {
+                qx = x;
+                m = p.x < p.next.x ? p : p.next;
+                if (x === hx) return m; // hole touches outer segment; pick leftmost endpoint
+            }
+        }
+        p = p.next;
+    } while (p !== outerNode);
+
+    if (!m) return null;
+
+    // look for points inside the triangle of hole point, segment intersection and endpoint;
+    // if there are no points found, we have a valid connection;
+    // otherwise choose the point of the minimum angle with the ray as connection point
+
+    var stop = m,
+        mx = m.x,
+        my = m.y,
+        tanMin = Infinity,
+        tan;
+
+    p = m;
+
+    do {
+        if (hx >= p.x && p.x >= mx && hx !== p.x &&
+                pointInTriangle(hy < my ? hx : qx, hy, mx, my, hy < my ? qx : hx, hy, p.x, p.y)) {
+
+            tan = Math.abs(hy - p.y) / (hx - p.x); // tangential
+
+            if (locallyInside(p, hole) &&
+                (tan < tanMin || (tan === tanMin && (p.x > m.x || (p.x === m.x && sectorContainsSector(m, p)))))) {
+                m = p;
+                tanMin = tan;
+            }
+        }
+
+        p = p.next;
+    } while (p !== stop);
+
+    return m;
+}
+
+// whether sector in vertex m contains sector in vertex p in the same coordinates
+function sectorContainsSector(m, p) {
+    return area(m.prev, m, p.prev) < 0 && area(p.next, m, m.next) < 0;
+}
+
+// interlink polygon nodes in z-order
+function indexCurve(start, minX, minY, invSize) {
+    var p = start;
+    do {
+        if (p.z === 0) p.z = zOrder(p.x, p.y, minX, minY, invSize);
+        p.prevZ = p.prev;
+        p.nextZ = p.next;
+        p = p.next;
+    } while (p !== start);
+
+    p.prevZ.nextZ = null;
+    p.prevZ = null;
+
+    sortLinked(p);
+}
+
+// Simon Tatham's linked list merge sort algorithm
+// http://www.chiark.greenend.org.uk/~sgtatham/algorithms/listsort.html
+function sortLinked(list) {
+    var i, p, q, e, tail, numMerges, pSize, qSize,
+        inSize = 1;
+
+    do {
+        p = list;
+        list = null;
+        tail = null;
+        numMerges = 0;
+
+        while (p) {
+            numMerges++;
+            q = p;
+            pSize = 0;
+            for (i = 0; i < inSize; i++) {
+                pSize++;
+                q = q.nextZ;
+                if (!q) break;
+            }
+            qSize = inSize;
+
+            while (pSize > 0 || (qSize > 0 && q)) {
+
+                if (pSize !== 0 && (qSize === 0 || !q || p.z <= q.z)) {
+                    e = p;
+                    p = p.nextZ;
+                    pSize--;
+                } else {
+                    e = q;
+                    q = q.nextZ;
+                    qSize--;
+                }
+
+                if (tail) tail.nextZ = e;
+                else list = e;
+
+                e.prevZ = tail;
+                tail = e;
+            }
+
+            p = q;
+        }
+
+        tail.nextZ = null;
+        inSize *= 2;
+
+    } while (numMerges > 1);
+
+    return list;
+}
+
+// z-order of a point given coords and inverse of the longer side of data bbox
+function zOrder(x, y, minX, minY, invSize) {
+    // coords are transformed into non-negative 15-bit integer range
+    x = (x - minX) * invSize | 0;
+    y = (y - minY) * invSize | 0;
+
+    x = (x | (x << 8)) & 0x00FF00FF;
+    x = (x | (x << 4)) & 0x0F0F0F0F;
+    x = (x | (x << 2)) & 0x33333333;
+    x = (x | (x << 1)) & 0x55555555;
+
+    y = (y | (y << 8)) & 0x00FF00FF;
+    y = (y | (y << 4)) & 0x0F0F0F0F;
+    y = (y | (y << 2)) & 0x33333333;
+    y = (y | (y << 1)) & 0x55555555;
+
+    return x | (y << 1);
+}
+
+// find the leftmost node of a polygon ring
+function getLeftmost(start) {
+    var p = start,
+        leftmost = start;
+    do {
+        if (p.x < leftmost.x || (p.x === leftmost.x && p.y < leftmost.y)) leftmost = p;
+        p = p.next;
+    } while (p !== start);
+
+    return leftmost;
+}
+
+// check if a point lies within a convex triangle
+function pointInTriangle(ax, ay, bx, by, cx, cy, px, py) {
+    return (cx - px) * (ay - py) >= (ax - px) * (cy - py) &&
+           (ax - px) * (by - py) >= (bx - px) * (ay - py) &&
+           (bx - px) * (cy - py) >= (cx - px) * (by - py);
+}
+
+// check if a diagonal between two polygon nodes is valid (lies in polygon interior)
+function isValidDiagonal(a, b) {
+    return a.next.i !== b.i && a.prev.i !== b.i && !intersectsPolygon(a, b) && // dones't intersect other edges
+           (locallyInside(a, b) && locallyInside(b, a) && middleInside(a, b) && // locally visible
+            (area(a.prev, a, b.prev) || area(a, b.prev, b)) || // does not create opposite-facing sectors
+            equals(a, b) && area(a.prev, a, a.next) > 0 && area(b.prev, b, b.next) > 0); // special zero-length case
+}
+
+// signed area of a triangle
+function area(p, q, r) {
+    return (q.y - p.y) * (r.x - q.x) - (q.x - p.x) * (r.y - q.y);
+}
+
+// check if two points are equal
+function equals(p1, p2) {
+    return p1.x === p2.x && p1.y === p2.y;
+}
+
+// check if two segments intersect
+function intersects(p1, q1, p2, q2) {
+    var o1 = sign(area(p1, q1, p2));
+    var o2 = sign(area(p1, q1, q2));
+    var o3 = sign(area(p2, q2, p1));
+    var o4 = sign(area(p2, q2, q1));
+
+    if (o1 !== o2 && o3 !== o4) return true; // general case
+
+    if (o1 === 0 && onSegment(p1, p2, q1)) return true; // p1, q1 and p2 are collinear and p2 lies on p1q1
+    if (o2 === 0 && onSegment(p1, q2, q1)) return true; // p1, q1 and q2 are collinear and q2 lies on p1q1
+    if (o3 === 0 && onSegment(p2, p1, q2)) return true; // p2, q2 and p1 are collinear and p1 lies on p2q2
+    if (o4 === 0 && onSegment(p2, q1, q2)) return true; // p2, q2 and q1 are collinear and q1 lies on p2q2
+
+    return false;
+}
+
+// for collinear points p, q, r, check if point q lies on segment pr
+function onSegment(p, q, r) {
+    return q.x <= Math.max(p.x, r.x) && q.x >= Math.min(p.x, r.x) && q.y <= Math.max(p.y, r.y) && q.y >= Math.min(p.y, r.y);
+}
+
+function sign(num) {
+    return num > 0 ? 1 : num < 0 ? -1 : 0;
+}
+
+// check if a polygon diagonal intersects any polygon segments
+function intersectsPolygon(a, b) {
+    var p = a;
+    do {
+        if (p.i !== a.i && p.next.i !== a.i && p.i !== b.i && p.next.i !== b.i &&
+                intersects(p, p.next, a, b)) return true;
+        p = p.next;
+    } while (p !== a);
+
+    return false;
+}
+
+// check if a polygon diagonal is locally inside the polygon
+function locallyInside(a, b) {
+    return area(a.prev, a, a.next) < 0 ?
+        area(a, b, a.next) >= 0 && area(a, a.prev, b) >= 0 :
+        area(a, b, a.prev) < 0 || area(a, a.next, b) < 0;
+}
+
+// check if the middle point of a polygon diagonal is inside the polygon
+function middleInside(a, b) {
+    var p = a,
+        inside = false,
+        px = (a.x + b.x) / 2,
+        py = (a.y + b.y) / 2;
+    do {
+        if (((p.y > py) !== (p.next.y > py)) && p.next.y !== p.y &&
+                (px < (p.next.x - p.x) * (py - p.y) / (p.next.y - p.y) + p.x))
+            inside = !inside;
+        p = p.next;
+    } while (p !== a);
+
+    return inside;
+}
+
+// link two polygon vertices with a bridge; if the vertices belong to the same ring, it splits polygon into two;
+// if one belongs to the outer ring and another to a hole, it merges it into a single ring
+function splitPolygon(a, b) {
+    var a2 = new Node$1(a.i, a.x, a.y),
+        b2 = new Node$1(b.i, b.x, b.y),
+        an = a.next,
+        bp = b.prev;
+
+    a.next = b;
+    b.prev = a;
+
+    a2.next = an;
+    an.prev = a2;
+
+    b2.next = a2;
+    a2.prev = b2;
+
+    bp.next = b2;
+    b2.prev = bp;
+
+    return b2;
+}
+
+// create a node and optionally link it with previous one (in a circular doubly linked list)
+function insertNode(i, x, y, last) {
+    var p = new Node$1(i, x, y);
+
+    if (!last) {
+        p.prev = p;
+        p.next = p;
+
+    } else {
+        p.next = last.next;
+        p.prev = last;
+        last.next.prev = p;
+        last.next = p;
+    }
+    return p;
+}
+
+function removeNode(p) {
+    p.next.prev = p.prev;
+    p.prev.next = p.next;
+
+    if (p.prevZ) p.prevZ.nextZ = p.nextZ;
+    if (p.nextZ) p.nextZ.prevZ = p.prevZ;
+}
+
+function Node$1(i, x, y) {
+    // vertex index in coordinates array
+    this.i = i;
+
+    // vertex coordinates
+    this.x = x;
+    this.y = y;
+
+    // previous and next vertex nodes in a polygon ring
+    this.prev = null;
+    this.next = null;
+
+    // z-order curve value
+    this.z = 0;
+
+    // previous and next nodes in z-order
+    this.prevZ = null;
+    this.nextZ = null;
+
+    // indicates whether this is a steiner point
+    this.steiner = false;
+}
+
+// return a percentage difference between the polygon area and its triangulation area;
+// used to verify correctness of triangulation
+earcut.deviation = function (data, holeIndices, dim, triangles) {
+    var hasHoles = holeIndices && holeIndices.length;
+    var outerLen = hasHoles ? holeIndices[0] * dim : data.length;
+
+    var polygonArea = Math.abs(signedArea(data, 0, outerLen, dim));
+    if (hasHoles) {
+        for (var i = 0, len = holeIndices.length; i < len; i++) {
+            var start = holeIndices[i] * dim;
+            var end = i < len - 1 ? holeIndices[i + 1] * dim : data.length;
+            polygonArea -= Math.abs(signedArea(data, start, end, dim));
+        }
+    }
+
+    var trianglesArea = 0;
+    for (i = 0; i < triangles.length; i += 3) {
+        var a = triangles[i] * dim;
+        var b = triangles[i + 1] * dim;
+        var c = triangles[i + 2] * dim;
+        trianglesArea += Math.abs(
+            (data[a] - data[c]) * (data[b + 1] - data[a + 1]) -
+            (data[a] - data[b]) * (data[c + 1] - data[a + 1]));
+    }
+
+    return polygonArea === 0 && trianglesArea === 0 ? 0 :
+        Math.abs((trianglesArea - polygonArea) / polygonArea);
+};
+
+function signedArea(data, start, end, dim) {
+    var sum = 0;
+    for (var i = start, j = end - dim; i < end; i += dim) {
+        sum += (data[j] - data[i]) * (data[i + 1] + data[j + 1]);
+        j = i;
+    }
+    return sum;
+}
+
+// turn a polygon in a multi-dimensional array form (e.g. as in GeoJSON) into a form Earcut accepts
+earcut.flatten = function (data) {
+    var dim = data[0][0].length,
+        result = {vertices: [], holes: [], dimensions: dim},
+        holeIndex = 0;
+
+    for (var i = 0; i < data.length; i++) {
+        for (var j = 0; j < data[i].length; j++) {
+            for (var d = 0; d < dim; d++) result.vertices.push(data[i][j][d]);
+        }
+        if (i > 0) {
+            holeIndex += data[i - 1].length;
+            result.holes.push(holeIndex);
+        }
+    }
+    return result;
+};
+
+/**
+ * @classdesc
+ * a polygon Object.<br>
+ * Please do note that melonJS implements a simple Axis-Aligned Boxes collision algorithm, which requires all polygons used for collision to be convex with all vertices defined with clockwise winding.
+ * A polygon is convex when all line segments connecting two points in the interior do not cross any edge of the polygon
+ * (which means that all angles are less than 180 degrees), as described here below : <br>
+ * <center><img src="images/convex_polygon.png"/></center><br>
+ *
+ * A polygon's `winding` is clockwise if its vertices (points) are declared turning to the right. The image above shows COUNTERCLOCKWISE winding.
+ */
+class Polygon {
+    /**
+     * @param {number} x origin point of the Polygon
+     * @param {number} y origin point of the Polygon
+     * @param {Vector2d[]} points array of vector defining the Polygon
+     */
+    constructor(x, y, points) {
+        /**
+         * origin point of the Polygon
+         * @public
+         * @type {Vector2d}
+         * @name pos
+         * @memberof Polygon
+         */
+        this.pos = pool.pull("Vector2d");
+
+        /**
+         * The bounding rectangle for this shape
+         * @ignore
+         * @member {Bounds}
+         * @name _bounds
+         * @memberof Polygon
+         */
+        this._bounds;
+
+        /**
+         * Array of points defining the Polygon <br>
+         * Note: If you manually change `points`, you **must** call `recalc`afterwards so that the changes get applied correctly.
+         * @public
+         * @type {Vector2d[]}
+         * @name points
+         * @memberof Polygon
+         */
+        this.points = [];
+
+        /**
+         * The edges here are the direction of the `n`th edge of the polygon, relative to
+         * the `n`th point. If you want to draw a given edge from the edge value, you must
+         * first translate to the position of the starting point.
+         * @ignore
+         */
+        this.edges = [];
+
+        /**
+         * a list of indices for all vertices composing this polygon (@see earcut)
+         * @ignore
+         */
+        this.indices = [];
+
+        /**
+         * The normals here are the direction of the normal for the `n`th edge of the polygon, relative
+         * to the position of the `n`th point. If you want to draw an edge normal, you must first
+         * translate to the position of the starting point.
+         * @ignore
+         */
+        this.normals = [];
+
+        // the shape type
+        this.shapeType = "Polygon";
+        this.setShape(x, y, points);
+    }
+
+    /** @ignore */
+    onResetEvent(x, y, points) {
+        this.setShape(x, y, points);
+    }
+
+    /**
+     * set new value to the Polygon
+     * @name setShape
+     * @memberof Polygon
+     * @param {number} x position of the Polygon
+     * @param {number} y position of the Polygon
+     * @param {Vector2d[]|number[]} points array of vector or vertice defining the Polygon
+     * @returns {Polygon} this instance for objecf chaining
+     */
+    setShape(x, y, points) {
+        this.pos.set(x, y);
+        this.setVertices(points);
+        return this;
+    }
+
+    /**
+     * set the vertices defining this Polygon
+     * @name setVertices
+     * @memberof Polygon
+     * @param {Vector2d[]} vertices array of vector or vertice defining the Polygon
+     * @returns {Polygon} this instance for objecf chaining
+     */
+    setVertices(vertices) {
+
+        if (!Array.isArray(vertices)) {
+            return this;
+        }
+
+        // convert given points to me.Vector2d if required
+        if (!(vertices[0] instanceof Vector2d)) {
+            this.points.length = 0;
+
+            if (typeof vertices[0] === "object") {
+                // array of {x,y} object
+                vertices.forEach((vertice) => {
+                   this.points.push(pool.pull("Vector2d", vertice.x, vertice.y));
+                });
+
+            } else {
+                // it's a flat array
+                for (var p = 0; p < vertices.length; p += 2) {
+                    this.points.push(pool.pull("Vector2d", vertices[p], vertices[p + 1]));
+                }
+            }
+        } else {
+            // array of me.Vector2d
+            this.points = vertices;
+        }
+
+        this.recalc();
+        this.updateBounds();
+        return this;
+    }
+
+    /**
+     * apply the given transformation matrix to this Polygon
+     * @name transform
+     * @memberof Polygon
+     * @param {Matrix2d} m the transformation matrix
+     * @returns {Polygon} Reference to this object for method chaining
+     */
+    transform(m) {
+        var points = this.points;
+        var len = points.length;
+        for (var i = 0; i < len; i++) {
+            m.apply(points[i]);
+        }
+        this.recalc();
+        this.updateBounds();
+        return this;
+    }
+
+    /**
+     * apply an isometric projection to this shape
+     * @name toIso
+     * @memberof Polygon
+     * @returns {Polygon} Reference to this object for method chaining
+     */
+    toIso() {
+        return this.rotate(Math.PI / 4).scale(Math.SQRT2, Math.SQRT1_2);
+    }
+
+    /**
+     * apply a 2d projection to this shape
+     * @name to2d
+     * @memberof Polygon
+     * @returns {Polygon} Reference to this object for method chaining
+     */
+    to2d() {
+        return this.scale(Math.SQRT1_2, Math.SQRT2).rotate(-Math.PI / 4);
+    }
+
+    /**
+     * Rotate this Polygon (counter-clockwise) by the specified angle (in radians).
+     * @name rotate
+     * @memberof Polygon
+     * @param {number} angle The angle to rotate (in radians)
+     * @param {Vector2d|ObservableVector2d} [v] an optional point to rotate around
+     * @returns {Polygon} Reference to this object for method chaining
+     */
+    rotate(angle, v) {
+        if (angle !== 0) {
+            var points = this.points;
+            var len = points.length;
+            for (var i = 0; i < len; i++) {
+                points[i].rotate(angle, v);
+            }
+            this.recalc();
+            this.updateBounds();
+        }
+        return this;
+    }
+
+    /**
+     * Scale this Polygon by the given scalar.
+     * @name scale
+     * @memberof Polygon
+     * @param {number} x
+     * @param {number} [y=x]
+     * @returns {Polygon} Reference to this object for method chaining
+     */
+    scale(x, y) {
+        y = typeof (y) !== "undefined" ? y : x;
+
+        var points = this.points;
+        var len = points.length;
+        for (var i = 0; i < len; i++) {
+            points[i].scale(x, y);
+        }
+        this.recalc();
+        this.updateBounds();
+        return this;
+    }
+
+    /**
+     * Scale this Polygon by the given vector
+     * @name scaleV
+     * @memberof Polygon
+     * @param {Vector2d} v
+     * @returns {Polygon} Reference to this object for method chaining
+     */
+    scaleV(v) {
+        return this.scale(v.x, v.y);
+    }
+
+    /**
+     * Computes the calculated collision polygon.
+     * This **must** be called if the `points` array, `angle`, or `offset` is modified manually.
+     * @name recalc
+     * @memberof Polygon
+     * @returns {Polygon} Reference to this object for method chaining
+     */
+    recalc() {
+        var i;
+        var edges = this.edges;
+        var normals = this.normals;
+        var indices = this.indices;
+
+        // Copy the original points array and apply the offset/angle
+        var points = this.points;
+        var len = points.length;
+
+        if (len < 3) {
+            throw new Error("Requires at least 3 points");
+        }
+
+        // Calculate the edges/normals
+        for (i = 0; i < len; i++) {
+            if (edges[i] === undefined) {
+                edges[i] = pool.pull("Vector2d");
+            }
+            edges[i].copy(points[(i + 1) % len]).sub(points[i]);
+
+            if (normals[i] === undefined) {
+                normals[i] = pool.pull("Vector2d");
+            }
+            normals[i].copy(edges[i]).perp().normalize();
+        }
+        // trunc array
+        edges.length = len;
+        normals.length = len;
+        // do not do anything here, indices will be computed by
+        // getIndices if array is empty upon function call
+        indices.length = 0;
+
+        return this;
+    }
+
+
+    /**
+     * returns a list of indices for all triangles defined in this polygon
+     * @name getIndices
+     * @memberof Polygon
+     * @returns {Array} an array of vertex indices for all triangles forming this polygon.
+     */
+    getIndices() {
+        if (this.indices.length === 0) {
+            this.indices = earcut$1.exports(this.points.flatMap(p => [p.x, p.y]));
+        }
+        return this.indices;
+    }
+
+    /**
+     * Returns true if the vertices composing this polygon form a convex shape (vertices must be in clockwise order).
+     * @name isConvex
+     * @memberof Polygon
+     * @returns {boolean} true if the vertices are convex, false if not, null if not computable
+     */
+    isConvex() {
+        // http://paulbourke.net/geometry/polygonmesh/
+        // Copyright (c) Paul Bourke (use permitted)
+
+        var flag = 0,
+            vertices = this.points,
+            n = vertices.length,
+            i,
+            j,
+            k,
+            z;
+
+        if (n < 3) {
+            return null;
+        }
+
+        for (i = 0; i < n; i++) {
+            j = (i + 1) % n;
+            k = (i + 2) % n;
+            z = (vertices[j].x - vertices[i].x) * (vertices[k].y - vertices[j].y);
+            z -= (vertices[j].y - vertices[i].y) * (vertices[k].x - vertices[j].x);
+
+            if (z < 0) {
+                flag |= 1;
+            } else if (z > 0) {
+                flag |= 2;
+            }
+
+            if (flag === 3) {
+                return false;
+            }
+        }
+
+        if (flag !== 0) {
+            return true;
+        } else {
+            return null;
+        }
+    }
+
+    /**
+     * translate the Polygon by the specified offset
+     * @name translate
+     * @memberof Polygon
+     * @method
+     * @param {number} x x offset
+     * @param {number} y y offset
+     * @returns {Polygon} this Polygon
+     */
+    /**
+     * translate the Polygon by the specified vector
+     * @name translate
+     * @memberof Polygon
+     * @param {Vector2d} v vector offset
+     * @returns {Polygon} Reference to this object for method chaining
+     */
+    translate() {
+        var _x, _y;
+
+        if (arguments.length === 2) {
+            // x, y
+            _x = arguments[0];
+            _y = arguments[1];
+        } else {
+            // vector
+            _x = arguments[0].x;
+            _y = arguments[0].y;
+        }
+
+        this.pos.x += _x;
+        this.pos.y += _y;
+        this.getBounds().translate(_x, _y);
+
+        return this;
+    }
+
+    /**
+     * Shifts the Polygon to the given position vector.
+     * @name shift
+     * @memberof Polygon
+     * @method
+     * @param {Vector2d} position
+     */
+    /**
+     * Shifts the Polygon to the given x, y position.
+     * @name shift
+     * @memberof Polygon
+     * @param {number} x
+     * @param {number} y
+     */
+    shift() {
+        var _x, _y;
+        if (arguments.length === 2) {
+            // x, y
+            _x = arguments[0];
+            _y = arguments[1];
+        } else {
+            // vector
+            _x = arguments[0].x;
+            _y = arguments[0].y;
+        }
+        this.pos.x = _x;
+        this.pos.y = _y;
+        this.updateBounds();
+    }
+
+    /**
+     * Returns true if the polygon contains the given point.
+     * (Note: it is highly recommended to first do a hit test on the corresponding <br>
+     *  bounding rect, as the function can be highly consuming with complex shapes)
+     * @name contains
+     * @memberof Polygon
+     * @method
+     * @param {Vector2d} point
+     * @returns {boolean} true if contains
+     */
+
+    /**
+     * Returns true if the polygon contains the given point. <br>
+     * (Note: it is highly recommended to first do a hit test on the corresponding <br>
+     *  bounding rect, as the function can be highly consuming with complex shapes)
+     * @name contains
+     * @memberof Polygon
+     * @param  {number} x x coordinate
+     * @param  {number} y y coordinate
+     * @returns {boolean} true if contains
+     */
+    contains() {
+        var _x, _y;
+
+        if (arguments.length === 2) {
+          // x, y
+          _x = arguments[0];
+          _y = arguments[1];
+        } else {
+          // vector
+          _x = arguments[0].x;
+          _y = arguments[0].y;
+        }
+
+        var intersects = false;
+        var posx = this.pos.x, posy = this.pos.y;
+        var points = this.points;
+        var len = points.length;
+
+        //http://www.ecse.rpi.edu/Homepages/wrf/Research/Short_Notes/pnpoly.html
+        for (var i = 0, j = len - 1; i < len; j = i++) {
+            var iy = points[i].y + posy, ix = points[i].x + posx,
+                jy = points[j].y + posy, jx = points[j].x + posx;
+            if (((iy > _y) !== (jy > _y)) && (_x < (jx - ix) * (_y - iy) / (jy - iy) + ix)) {
+                intersects = !intersects;
+            }
+        }
+        return intersects;
+    }
+
+    /**
+     * returns the bounding box for this shape, the smallest Rectangle object completely containing this shape.
+     * @name getBounds
+     * @memberof Polygon
+     * @returns {Bounds} this shape bounding box Rectangle object
+     */
+    getBounds() {
+        if (typeof this._bounds === "undefined") {
+            this._bounds = pool.pull("Bounds");
+        }
+        return this._bounds;
+    }
+
+    /**
+     * update the bounding box for this shape.
+     * @ignore
+     * @name updateBounds
+     * @memberof Polygon
+     * @returns {Bounds} this shape bounding box Rectangle object
+     */
+    updateBounds() {
+        var bounds = this.getBounds();
+
+        bounds.update(this.points);
+        bounds.translate(this.pos);
+
+        return bounds;
+    }
+
+    /**
+     * clone this Polygon
+     * @name clone
+     * @memberof Polygon
+     * @returns {Polygon} new Polygon
+     */
+    clone() {
+        var copy = [];
+        this.points.forEach(function (point) {
+            copy.push(point.clone());
+        });
+        return new Polygon(this.pos.x, this.pos.y, copy);
+    }
+}
+
+/**
+ * @classdesc
+ * a rectangle Object
+ * @augments Polygon
+ */
+class Rect extends Polygon {
+    /**
+     * @param {number} x position of the Rectangle
+     * @param {number} y position of the Rectangle
+     * @param {number} w width of the rectangle
+     * @param {number} h height of the rectangle
+     */
+    constructor(x, y, w, h) {
+        // parent constructor
+        super(x, y, [
+            pool.pull("Vector2d", 0, 0), // 0, 0
+            pool.pull("Vector2d", w, 0), // 1, 0
+            pool.pull("Vector2d", w, h), // 1, 1
+            pool.pull("Vector2d", 0, h)  // 0, 1
+        ]);
+        this.shapeType = "Rectangle";
+    }
+
+    /** @ignore */
+    onResetEvent(x, y, w, h) {
+        this.setShape(x, y, w, h);
+    }
+
+    /**
+     * set new value to the rectangle shape
+     * @name setShape
+     * @memberof Rect
+     * @param {number} x position of the Rectangle
+     * @param {number} y position of the Rectangle
+     * @param {number|Vector2d[]} w width of the rectangle, or an array of vector defining the rectangle
+     * @param {number} [h] height of the rectangle, if a numeral width parameter is specified
+     * @returns {Rect} this rectangle
+     */
+    setShape(x, y, w, h) {
+        var points = w; // assume w is an array by default
+
+        this.pos.set(x, y);
+
+        if (arguments.length === 4) {
+            points = this.points;
+            points[0].set(0, 0); // 0, 0
+            points[1].set(w, 0); // 1, 0
+            points[2].set(w, h); // 1, 1
+            points[3].set(0, h); // 0, 1
+        }
+
+        this.setVertices(points);
+        return this;
+    }
+
+
+    /**
+     * left coordinate of the Rectangle
+     * @public
+     * @type {number}
+     * @name left
+     * @memberof Rect
+     */
+    get left() {
+        return this.pos.x;
+    }
+
+    /**
+     * right coordinate of the Rectangle
+     * @public
+     * @type {number}
+     * @name right
+     * @memberof Rect
+     */
+    get right() {
+        var w = this.width;
+        return (this.pos.x + w) || w;
+    }
+
+    /**
+     * top coordinate of the Rectangle
+     * @public
+     * @type {number}
+     * @name top
+     * @memberof Rect
+     */
+    get top() {
+        return this.pos.y;
+    }
+
+    /**
+     * bottom coordinate of the Rectangle
+     * @public
+     * @type {number}
+     * @name bottom
+     * @memberof Rect
+     */
+    get bottom() {
+        var h = this.height;
+        return (this.pos.y + h) || h;
+    }
+
+    /**
+     * width of the Rectangle
+     * @public
+     * @type {number}
+     * @name width
+     * @memberof Rect
+     */
+    get width() {
+        return this.points[2].x;
+    }
+    set width(value) {
+        this.points[1].x = this.points[2].x = value;
+        this.recalc();
+        this.updateBounds();
+    }
+
+    /**
+     * height of the Rectangle
+     * @public
+     * @type {number}
+     * @name height
+     * @memberof Rect
+     */
+    get height() {
+        return this.points[2].y;
+    }
+    set height(value) {
+        this.points[2].y = this.points[3].y = value;
+        this.recalc();
+        this.updateBounds();
+    }
+
+    /**
+     * absolute center of this rectangle on the horizontal axis
+     * @public
+     * @type {number}
+     * @name centerX
+     * @memberof Rect
+     */
+    get centerX() {
+        if (isFinite(this.width)) {
+            return this.pos.x + (this.width / 2);
+        } else {
+            return this.width;
+        }
+    }
+    set centerX (value) {
+        this.pos.x = value - (this.width / 2);
+    }
+
+    /**
+     * absolute center of this rectangle on the vertical axis
+     * @public
+     * @type {number}
+     * @name centerY
+     * @memberof Rect
+     */
+    get centerY() {
+        if (isFinite(this.height)) {
+            return this.pos.y + (this.height / 2);
+        } else {
+            return this.height;
+        }
+    }
+    set centerY(value) {
+        this.pos.y = value - (this.height / 2);
+    }
+
+    /**
+     * center the rectangle position around the given coordinates
+     * @name centerOn
+     * @memberof Rect
+     * @param {number} x the x coordinate around which to center this rectangle
+     * @param {number} y the y coordinate around which to center this rectangle
+     * @returns {Rect} this rectangle
+     */
+    centerOn(x, y) {
+        this.centerX = x;
+        this.centerY = y;
+        return this;
+    }
+
+    /**
+     * resize the rectangle
+     * @name resize
+     * @memberof Rect
+     * @param {number} w new width of the rectangle
+     * @param {number} h new height of the rectangle
+     * @returns {Rect} this rectangle
+     */
+    resize(w, h) {
+        this.width = w;
+        this.height = h;
+        return this;
+    }
+
+    /**
+     * scale the rectangle
+     * @name scale
+     * @memberof Rect
+     * @param {number} x a number representing the abscissa of the scaling vector.
+     * @param {number} [y=x] a number representing the ordinate of the scaling vector.
+     * @returns {Rect} this rectangle
+     */
+    scale(x, y = x) {
+        this.width *= x;
+        this.height *= y;
+        return this;
+    }
+
+    /**
+     * clone this rectangle
+     * @name clone
+     * @memberof Rect
+     * @returns {Rect} new rectangle
+     */
+    clone() {
+        return new Rect(this.pos.x, this.pos.y, this.width, this.height);
+    }
+
+    /**
+     * copy the position and size of the given rectangle into this one
+     * @name copy
+     * @memberof Rect
+     * @param {Rect} rect Source rectangle
+     * @returns {Rect} new rectangle
+     */
+    copy(rect) {
+        return this.setShape(rect.pos.x, rect.pos.y, rect.width, rect.height);
+    }
+
+    /**
+     * merge this rectangle with another one
+     * @name union
+     * @memberof Rect
+     * @param {Rect} rect other rectangle to union with
+     * @returns {Rect} the union(ed) rectangle
+     */
+    union(rect) {
+        var x1 = Math.min(this.left, rect.left);
+        var y1 = Math.min(this.top, rect.top);
+
+        this.resize(
+            Math.max(this.right, rect.right) - x1,
+            Math.max(this.bottom, rect.bottom) - y1
+        );
+
+        this.pos.set(x1, y1);
+
+        return this;
+    }
+
+    /**
+     * check if this rectangle is intersecting with the specified one
+     * @name overlaps
+     * @memberof Rect
+     * @param {Rect} rect
+     * @returns {boolean} true if overlaps
+     */
+    overlaps(rect) {
+        return (
+            this.left < rect.right &&
+            rect.left < this.right &&
+            this.top < rect.bottom &&
+            rect.top < this.bottom
+        );
+    }
+
+    /**
+     * Returns true if the rectangle contains the given rectangle
+     * @name contains
+     * @memberof Rect
+     * @method
+     * @param {Rect} rect
+     * @returns {boolean} true if contains
+     */
+
+    /**
+     * Returns true if the rectangle contains the given point
+     * @name contains
+     * @memberof Rect
+     * @method
+     * @param  {number} x x coordinate
+     * @param  {number} y y coordinate
+     * @returns {boolean} true if contains
+     */
+
+    /**
+     * Returns true if the rectangle contains the given point
+     * @name contains
+     * @memberof Rect
+     * @param {Vector2d} point
+     * @returns {boolean} true if contains
+     */
+    contains() {
+        var arg0 = arguments[0];
+        var _x1, _x2, _y1, _y2;
+        if (arguments.length === 2) {
+             // x, y
+             _x1 = _x2 = arg0;
+             _y1 = _y2 = arguments[1];
+         } else {
+             if (arg0 instanceof Rect) {
+                 // me.Rect
+                 _x1 = arg0.left;
+                 _x2 = arg0.right;
+                 _y1 = arg0.top;
+                 _y2 = arg0.bottom;
+             } else {
+                 // vector
+                 _x1 = _x2 = arg0.x;
+                 _y1 = _y2 = arg0.y;
+             }
+         }
+         return (
+             _x1 >= this.left &&
+             _x2 <= this.right &&
+             _y1 >= this.top &&
+             _y2 <= this.bottom
+         );
+    }
+
+    /**
+     * check if this rectangle is identical to the specified one
+     * @name equals
+     * @memberof Rect
+     * @param {Rect} rect
+     * @returns {boolean} true if equals
+     */
+    equals(rect) {
+        return (
+            rect.left === this.left &&
+            rect.right === this.right &&
+            rect.top === this.top &&
+            rect.bottom === this.bottom
+        );
+    }
+
+    /**
+     * determines whether all coordinates of this rectangle are finite numbers.
+     * @name isFinite
+     * @memberof Rect
+     * @returns {boolean} false if all coordinates are positive or negative Infinity or NaN; otherwise, true.
+     */
+    isFinite() {
+        return (isFinite(this.pos.x) && isFinite(this.pos.y) && isFinite(this.width) && isFinite(this.height));
+    }
+
+    /**
+     * Returns a polygon whose edges are the same as this box.
+     * @name toPolygon
+     * @memberof Rect
+     * @returns {Polygon} a new Polygon that represents this rectangle.
+     */
+    toPolygon() {
+        return pool.pull("Polygon",
+            this.pos.x, this.pos.y, this.points
+        );
+    }
+}
+
+// https://developer.chrome.com/blog/canvas2d/#round-rect
+
+/**
+ * @classdesc
+ * a rectangle object with rounded corners
+ * @augments Rect
+ */
+class RoundRect extends Rect {
+    /**
+     * @param {number} x position of the rounded rectangle
+     * @param {number} y position of the rounded rectangle
+     * @param {number} width the rectangle width
+     * @param {number} height the rectangle height
+     * @param {number} [radius=20] the radius of the rounded corner
+     */
+    constructor(x, y, width, height, radius = 20) {
+        // parent constructor
+        super(x, y, width, height);
+
+        // set the corner radius
+        this.radius = radius;
+    }
+
+    /** @ignore */
+    onResetEvent(x, y, w, h, radius) {
+        super.setShape(x, y, w, h);
+        this.radius = radius;
+    }
+
+
+    /**
+     * the radius of the rounded corner
+     * @public
+     * @type {number}
+     * @default 20
+     * @name radius
+     * @memberof RoundRect
+     */
+    get radius() {
+        return this._radius;
+    }
+    set radius(value) {
+        // verify the rectangle is at least as wide and tall as the rounded corners.
+        if (this.width < 2 * value) {
+            value = this.width / 2;
+        }
+        if (this.height < 2 * value) {
+            value = this.height / 2;
+        }
+        this._radius = value;
+    }
+
+    /**
+     * copy the position, size and radius of the given rounded rectangle into this one
+     * @name copy
+     * @memberof RoundRect
+     * @param {RoundRect} rrect source rounded rectangle
+     * @returns {RoundRect} new rectangle
+     */
+    copy(rrect) {
+        super.setShape(rrect.pos.x, rrect.pos.y, rrect.width, rrect.height);
+        this.radius = rrect.radius;
+        return this;
+    }
+
+    /**
+     * Returns true if the rounded rectangle contains the given point
+     * @name contains
+     * @memberof RoundRect
+     * @method
+     * @param  {number} x x coordinate
+     * @param  {number} y y coordinate
+     * @returns {boolean} true if contains
+     */
+
+    /**
+     * Returns true if the rounded rectangle contains the given point
+     * @name contains
+     * @memberof RoundRect
+     * @param {Vector2d} point
+     * @returns {boolean} true if contains
+     */
+    contains() {
+        var arg0 = arguments[0];
+        var _x, _y;
+        if (arguments.length === 2) {
+             // x, y
+             _x = arg0;
+             _y = arguments[1];
+         } else {
+             if (arg0 instanceof Rect) {
+                 // good enough
+                 return super.contains(arg0);
+             } else {
+                 // vector
+                _x = arg0.x;
+                _y = arg0.y;
+             }
+        }
+
+        // check whether point is outside the bounding box
+        if (_x < this.left || _x >= this.right || _y < this.top || _y >= this.bottom) {
+            return false; // outside bounding box
+        }
+
+        // check whether point is within the bounding box minus radius
+        if ((_x >= this.left + this.radius && _x <= this.right - this.radius) || (_y >= this.top + this.radius && _y <= this.bottom - this.radius)) {
+            return true;
+        }
+
+        // check whether point is in one of the rounded corner areas
+        var tx, ty;
+        var radiusX =  Math.max(0, Math.min(this.radius, this.width / 2));
+        var radiusY =  Math.max(0, Math.min(this.radius, this.height / 2));
+
+        if (_x < this.left + radiusX && _y < this.top + radiusY) {
+            tx = _x - this.left - radiusX;
+            ty = _y - this.top - radiusY;
+        } else if (_x > this.right - radiusX && _y < this.top + radiusY) {
+            tx = _x - this.right + radiusX;
+            ty = _y - this.top - radiusY;
+        } else if (_x > this.right - radiusX && _y > this.bottom - radiusY) {
+            tx = _x - this.right + radiusX;
+            ty = _y - this.bottom + radiusY;
+        } else if (_x < this.left + radiusX && _y > this.bottom - radiusY) {
+            tx = _x - this.left - radiusX;
+            ty = _y - this.bottom + radiusY;
+        } else {
+            return false; // inside and not within the rounded corner area
+        }
+
+        // Pythagorean theorem.
+        return ((tx * tx) + (ty * ty) <= (radiusX * radiusY));
+    }
+
+    /**
+     * check if this RoundRect is identical to the specified one
+     * @name equals
+     * @memberof RoundRect
+     * @param {RoundRect} rrect
+     * @returns {boolean} true if equals
+     */
+    equals(rrect) {
+        return super.equals(rrect) && this.radius === rrect.radius;
+    }
+
+    /**
+     * clone this RoundRect
+     * @name clone
+     * @memberof RoundRect
+     * @returns {RoundRect} new RoundRect
+     */
+    clone() {
+        return new RoundRect(this.pos.x, this.pos.y, this.width, this.height, this.radius);
+    }
+}
+
+/**
+ * @classdesc
+ * an ellipse Object
+ */
+class Ellipse {
+    /**
+     * @param {number} x the center x coordinate of the ellipse
+     * @param {number} y the center y coordinate of the ellipse
+     * @param {number} w width (diameter) of the ellipse
+     * @param {number} h height (diameter) of the ellipse
+     */
+    constructor(x, y, w, h) {
+        /**
+         * the center coordinates of the ellipse
+         * @public
+         * @type {Vector2d}
+         * @name pos
+         * @memberof Ellipse
+         */
+        this.pos = pool.pull("Vector2d");
+
+        /**
+         * The bounding rectangle for this shape
+         * @private
+         */
+        this._bounds = undefined;
+
+        /**
+         * Maximum radius of the ellipse
+         * @public
+         * @type {number}
+         * @name radius
+         * @memberof Ellipse
+         */
+        this.radius = NaN;
+
+        /**
+         * Pre-scaled radius vector for ellipse
+         * @public
+         * @type {Vector2d}
+         * @name radiusV
+         * @memberof Ellipse
+         */
+        this.radiusV = pool.pull("Vector2d");
+
+        /**
+         * Radius squared, for pythagorean theorom
+         * @public
+         * @type {Vector2d}
+         * @name radiusSq
+         * @memberof Ellipse
+         */
+        this.radiusSq = pool.pull("Vector2d");
+
+        /**
+         * x/y scaling ratio for ellipse
+         * @public
+         * @type {Vector2d}
+         * @name ratio
+         * @memberof Ellipse
+         */
+        this.ratio = pool.pull("Vector2d");
+
+        // the shape type
+        this.shapeType = "Ellipse";
+        this.setShape(x, y, w, h);
+    }
+
+    /** @ignore */
+    onResetEvent(x, y, w, h) {
+        this.setShape(x, y, w, h);
+    }
+
+    /**
+     * set new value to the Ellipse shape
+     * @name setShape
+     * @memberof Ellipse
+     * @param {number} x the center x coordinate of the ellipse
+     * @param {number} y the center y coordinate of the ellipse
+     * @param {number} w width (diameter) of the ellipse
+     * @param {number} h height (diameter) of the ellipse
+     * @returns {Ellipse} this instance for objecf chaining
+     */
+    setShape(x, y, w, h) {
+        var hW = w / 2;
+        var hH = h / 2;
+
+        this.pos.set(x, y);
+        this.radius = Math.max(hW, hH);
+        this.ratio.set(hW / this.radius, hH / this.radius);
+        this.radiusV.set(this.radius, this.radius).scaleV(this.ratio);
+        var r = this.radius * this.radius;
+        this.radiusSq.set(r, r).scaleV(this.ratio);
+
+        // update the corresponding bounds
+        this.getBounds().setMinMax(x, y, x + w, x + h);
+        // elipse position is the center of the cirble, bounds position are top left
+        this.getBounds().translate(-this.radiusV.x, -this.radiusV.y);
+
+        return this;
+    }
+
+    /**
+     * Rotate this Ellipse (counter-clockwise) by the specified angle (in radians).
+     * @name rotate
+     * @memberof Ellipse
+     * @param {number} angle The angle to rotate (in radians)
+     * @param {Vector2d|ObservableVector2d} [v] an optional point to rotate around
+     * @returns {Ellipse} Reference to this object for method chaining
+     */
+    rotate(angle, v) {
+        // TODO : only works for circle
+        this.pos.rotate(angle, v);
+        this.getBounds().shift(this.pos);
+        this.getBounds().translate(-this.radiusV.x, -this.radiusV.y);
+        return this;
+    }
+
+    /**
+     * Scale this Ellipse by the specified scalar.
+     * @name scale
+     * @memberof Ellipse
+     * @param {number} x
+     * @param {number} [y=x]
+     * @returns {Ellipse} Reference to this object for method chaining
+     */
+    scale(x, y) {
+        y = typeof (y) !== "undefined" ? y : x;
+        return this.setShape(
+            this.pos.x,
+            this.pos.y,
+            this.radiusV.x * 2 * x,
+            this.radiusV.y * 2 * y
+        );
+    }
+
+    /**
+     * Scale this Ellipse by the specified vector.
+     * @name scale
+     * @memberof Ellipse
+     * @param {Vector2d} v
+     * @returns {Ellipse} Reference to this object for method chaining
+     */
+    scaleV(v) {
+        return this.scale(v.x, v.y);
+    }
+
+    /**
+     * apply the given transformation matrix to this ellipse
+     * @name transform
+     * @memberof Ellipse
+     * @param {Matrix2d} matrix the transformation matrix
+     * @returns {Polygon} Reference to this object for method chaining
+     */
+    transform(matrix) { // eslint-disable-line no-unused-vars
+        // TODO
+        return this;
+    }
+
+    /**
+     * translate the circle/ellipse by the specified offset
+     * @name translate
+     * @memberof Ellipse
+     * @method
+     * @param {number} x x offset
+     * @param {number} y y offset
+     * @returns {Ellipse} this ellipse
+     */
+    /**
+     * translate the circle/ellipse by the specified vector
+     * @name translate
+     * @memberof Ellipse
+     * @param {Vector2d} v vector offset
+     * @returns {Ellipse} this ellipse
+     */
+    translate() {
+        var _x, _y;
+
+        if (arguments.length === 2) {
+            // x, y
+            _x = arguments[0];
+            _y = arguments[1];
+        } else {
+            // vector
+            _x = arguments[0].x;
+            _y = arguments[0].y;
+        }
+
+        this.pos.x += _x;
+        this.pos.y += _y;
+        this.getBounds().translate(_x, _y);
+
+        return this;
+    }
+
+    /**
+     * check if this circle/ellipse contains the specified point
+     * @name contains
+     * @method
+     * @memberof Ellipse
+     * @param {Vector2d} point
+     * @returns {boolean} true if contains
+     */
+
+    /**
+     * check if this circle/ellipse contains the specified point
+     * @name contains
+     * @memberof Ellipse
+     * @param  {number} x x coordinate
+     * @param  {number} y y coordinate
+     * @returns {boolean} true if contains
+     */
+    contains() {
+        var _x, _y;
+
+        if (arguments.length === 2) {
+          // x, y
+          _x = arguments[0];
+          _y = arguments[1];
+        } else {
+          // vector
+          _x = arguments[0].x;
+          _y = arguments[0].y;
+        }
+
+        // Make position relative to object center point.
+        _x -= this.pos.x;
+        _y -= this.pos.y;
+        // Pythagorean theorem.
+        return (
+            ((_x * _x) / this.radiusSq.x) +
+            ((_y * _y) / this.radiusSq.y)
+        ) <= 1.0;
+    }
+
+    /**
+     * returns the bounding box for this shape, the smallest Rectangle object completely containing this shape.
+     * @name getBounds
+     * @memberof Ellipse
+     * @returns {Bounds} this shape bounding box Rectangle object
+     */
+    getBounds() {
+        if (typeof this._bounds === "undefined") {
+            this._bounds = pool.pull("Bounds");
+        }
+        return this._bounds;
+    }
+
+    /**
+     * clone this Ellipse
+     * @name clone
+     * @memberof Ellipse
+     * @returns {Ellipse} new Ellipse
+     */
+    clone() {
+        return new Ellipse(
+            this.pos.x,
+            this.pos.y,
+            this.radiusV.x * 2,
+            this.radiusV.y * 2
+        );
+    }
+}
+
+/**
+ * @classdesc
+ * a line segment Object
+ * @augments Polygon
+ * @param {number} x origin point of the Line
+ * @param {number} y origin point of the Line
+ * @param {Vector2d[]} points array of vectors defining the Line
+ */
+
+class Line extends Polygon {
+
+    /**
+     * Returns true if the Line contains the given point
+     * @name contains
+     * @memberof Line
+     * @method
+     * @param {Vector2d} point
+     * @returns {boolean} true if contains
+     */
+
+    /**
+     * Returns true if the Line contains the given point
+     * @name contains
+     * @memberof Line
+     * @param  {number} x x coordinate
+     * @param  {number} y y coordinate
+     * @returns {boolean} true if contains
+     */
+    contains() {
+        var _x, _y;
+
+        if (arguments.length === 2) {
+          // x, y
+          _x = arguments[0];
+          _y = arguments[1];
+        } else {
+          // vector
+          _x = arguments[0].x;
+          _y = arguments[0].y;
+        }
+
+        // translate the given coordinates,
+        // rather than creating temp translated vectors
+        _x -= this.pos.x; // Cx
+        _y -= this.pos.y; // Cy
+        var start = this.points[0]; // Ax/Ay
+        var end = this.points[1]; // Bx/By
+
+        //(Cy - Ay) * (Bx - Ax) = (By - Ay) * (Cx - Ax)
+        return (_y - start.y) * (end.x - start.x) === (end.y - start.y) * (_x - start.x);
+    }
+
+    /**
+     * Computes the calculated collision edges and normals.
+     * This **must** be called if the `points` array, `angle`, or `offset` is modified manually.
+     * @name recalc
+     * @memberof Line
+     * @returns {Line} this instance for objecf chaining
+     */
+    recalc() {
+        var edges = this.edges;
+        var normals = this.normals;
+        var indices = this.indices;
+
+        // Copy the original points array and apply the offset/angle
+        var points = this.points;
+
+        if (points.length !== 2) {
+            throw new Error("Requires exactly 2 points");
+        }
+
+        // Calculate the edges/normals
+        if (edges[0] === undefined) {
+            edges[0] = pool.pull("Vector2d");
+        }
+        edges[0].copy(points[1]).sub(points[0]);
+        if (normals[0] === undefined) {
+            normals[0] = pool.pull("Vector2d");
+        }
+        normals[0].copy(edges[0]).perp().normalize();
+
+        // do not do anything here, indices will be computed by
+        // toIndices if array is empty upon function call
+        indices.length = 0;
+
+        return this;
+    }
+
+    /**
+     * clone this line segment
+     * @name clone
+     * @memberof Line
+     * @returns {Line} new Line
+     */
+    clone() {
+        var copy = [];
+        this.points.forEach(function (point) {
+            copy.push(point.clone());
+        });
+        return new Line(this.pos.x, this.pos.y, copy);
+    }
+
+}
+
+/**
+ * @classdesc
+ * a bound object contains methods for creating and manipulating axis-aligned bounding boxes (AABB).
+ */
+class Bounds {
+    /**
+     * @param {Vector2d[]} [vertices] an array of me.Vector2d points
+     */
+    constructor(vertices) {
+        // @ignore
+        this._center = new Vector2d();
+        this.onResetEvent(vertices);
+    }
+
+    /**
+     * @ignore
+     */
+    onResetEvent(vertices) {
+        if (typeof this.min === "undefined") {
+            this.min = { x: Infinity,  y: Infinity };
+            this.max = { x: -Infinity, y: -Infinity };
+        } else {
+            this.clear();
+        }
+        if (typeof vertices !== "undefined") {
+            this.update(vertices);
+        }
+    }
+
+    /**
+     * reset the bound
+     * @name clear
+     * @memberof Bounds
+     */
+    clear() {
+        this.setMinMax(Infinity, Infinity, -Infinity, -Infinity);
+
+    }
+
+    /**
+     * sets the bounds to the given min and max value
+     * @name setMinMax
+     * @memberof Bounds
+     * @param {number} minX
+     * @param {number} minY
+     * @param {number} maxX
+     * @param {number} maxY
+     */
+    setMinMax(minX, minY, maxX, maxY) {
+        this.min.x = minX;
+        this.min.y = minY;
+
+        this.max.x = maxX;
+        this.max.y = maxY;
+    }
+
+    /**
+     * x position of the bound
+     * @public
+     * @type {number}
+     * @name x
+     * @memberof Bounds
+     */
+    get x() {
+        return this.min.x;
+    }
+
+    set x(value) {
+        var deltaX = this.max.x - this.min.x;
+        this.min.x = value;
+        this.max.x = value + deltaX;
+    }
+
+    /**
+     * y position of the bounds
+     * @public
+     * @type {number}
+     * @name y
+     * @memberof Bounds
+     */
+    get y() {
+        return this.min.y;
+    }
+
+    set y(value) {
+        var deltaY = this.max.y - this.min.y;
+
+        this.min.y = value;
+        this.max.y = value + deltaY;
+    }
+
+    /**
+     * width of the bounds
+     * @public
+     * @type {number}
+     * @name width
+     * @memberof Bounds
+     */
+    get width() {
+        return this.max.x - this.min.x;
+    }
+
+    set width(value) {
+        this.max.x = this.min.x + value;
+    }
+
+    /**
+     * width of the bounds
+     * @public
+     * @type {number}
+     * @name width
+     * @memberof Bounds
+     */
+    get height() {
+        return this.max.y - this.min.y;
+    }
+
+    set height(value) {
+        this.max.y = this.min.y + value;
+    }
+
+    /**
+     * left coordinate of the bound
+     * @public
+     * @type {number}
+     * @name left
+     * @memberof Bounds
+     */
+    get left() {
+        return this.min.x;
+    }
+
+    /**
+     * right coordinate of the bound
+     * @public
+     * @type {number}
+     * @name right
+     * @memberof Bounds
+     */
+    get right() {
+        return this.max.x;
+    }
+
+    /**
+     * top coordinate of the bound
+     * @public
+     * @type {number}
+     * @name top
+     * @memberof Bounds
+     */
+    get top() {
+        return this.min.y;
+    }
+
+    /**
+     * bottom coordinate of the bound
+     * @public
+     * @type {number}
+     * @name bottom
+     * @memberof Bounds
+     */
+    get bottom() {
+        return this.max.y;
+    }
+
+    /**
+     * center position of the bound on the x axis
+     * @public
+     * @type {number}
+     * @name centerX
+     * @memberof Bounds
+     */
+    get centerX() {
+        return this.min.x + (this.width / 2);
+    }
+
+    /**
+     * center position of the bound on the y axis
+     * @public
+     * @type {number}
+     * @name centerY
+     * @memberof Bounds
+     */
+    get centerY() {
+        return this.min.y + (this.height / 2);
+    }
+
+    /**
+     * return the center position of the bound
+     * @public
+     * @type {Vector2d}
+     * @name center
+     * @memberof Bounds
+     */
+    get center() {
+        return this._center.set(this.centerX, this.centerY);
+    }
+
+    /**
+     * Updates bounds using the given vertices
+     * @name update
+     * @memberof Bounds
+     * @param {Vector2d[]} vertices an array of me.Vector2d points
+     */
+    update(vertices) {
+        this.add(vertices, true);
+    }
+
+    /**
+     * add the given vertices to the bounds definition.
+     * @name add
+     * @memberof Bounds
+     * @param {Vector2d[]} vertices an array of me.Vector2d points
+     * @param {boolean} [clear=false] either to reset the bounds before adding the new vertices
+     */
+    add(vertices, clear = false) {
+        if (clear === true) {
+            this.clear();
+        }
+        for (var i = 0; i < vertices.length; i++) {
+            var vertex = vertices[i];
+            if (vertex.x > this.max.x) this.max.x = vertex.x;
+            if (vertex.x < this.min.x) this.min.x = vertex.x;
+            if (vertex.y > this.max.y) this.max.y = vertex.y;
+            if (vertex.y < this.min.y) this.min.y = vertex.y;
+        }
+    }
+
+    /**
+     * add the given bounds to the bounds definition.
+     * @name addBounds
+     * @memberof Bounds
+     * @param {Bounds} bounds
+     * @param {boolean} [clear=false] either to reset the bounds before adding the new vertices
+     */
+    addBounds(bounds, clear = false) {
+        if (clear === true) {
+            this.clear();
+        }
+
+        if (bounds.max.x > this.max.x) this.max.x = bounds.max.x;
+        if (bounds.min.x < this.min.x) this.min.x = bounds.min.x;
+        if (bounds.max.y > this.max.y) this.max.y = bounds.max.y;
+        if (bounds.min.y < this.min.y) this.min.y = bounds.min.y;
+    }
+
+    /**
+     * add the given point to the bounds definition.
+     * @name addPoint
+     * @memberof Bounds
+     * @param {Vector2d} v
+     * @param {Matrix2d} [m] an optional transform to apply to the given point
+     */
+    addPoint(v, m) {
+        if (typeof m !== "undefined") {
+            v = m.apply(v);
+        }
+        this.min.x = Math.min(this.min.x, v.x);
+        this.max.x = Math.max(this.max.x, v.x);
+        this.min.y = Math.min(this.min.y, v.y);
+        this.max.y = Math.max(this.max.y, v.y);
+    }
+
+    /**
+     * add the given quad coordinates to this bound definition, multiplied by the given matrix
+     * @name addFrame
+     * @memberof Bounds
+     * @param {number} x0 - left X coordinates of the quad
+     * @param {number} y0 - top Y coordinates of the quad
+     * @param {number} x1 - right X coordinates of the quad
+     * @param {number} y1 - bottom y coordinates of the quad
+     * @param {Matrix2d} [m] an optional transform to apply to the given frame coordinates
+     */
+    addFrame(x0, y0, x1, y1, m) {
+        var v = pool.pull("Vector2d");
+
+        // transform all points and add to the bound definition
+        this.addPoint(v.set(x0, y0), m);
+        this.addPoint(v.set(x1, y0), m);
+        this.addPoint(v.set(x0, y1), m);
+        this.addPoint(v.set(x1, y1), m);
+
+        pool.push(v);
+    }
+
+    /**
+     * Returns true if the bounds contains the given point.
+     * @name contains
+     * @memberof Bounds
+     * @method
+     * @param {Vector2d} point
+     * @returns {boolean} True if the bounds contain the point, otherwise false
+     */
+    /**
+     * Returns true if the bounds contains the given point.
+     * @name contains
+     * @memberof Bounds
+     * @param {number} x
+     * @param {number} y
+     * @returns {boolean} True if the bounds contain the point, otherwise false
+     */
+    contains() {
+        var arg0 = arguments[0];
+        var _x1, _x2, _y1, _y2;
+        if (arguments.length === 2) {
+            // x, y
+            _x1 = _x2 = arg0;
+            _y1 = _y2 = arguments[1];
+        } else {
+            if (arg0 instanceof Bounds) {
+                // bounds
+                _x1 = arg0.min.x;
+                _x2 = arg0.max.x;
+                _y1 = arg0.min.y;
+                _y2 = arg0.max.y;
+            } else {
+                // vector
+                _x1 = _x2 = arg0.x;
+                _y1 = _y2 = arg0.y;
+            }
+        }
+
+        return _x1 >= this.min.x && _x2 <= this.max.x
+            && _y1 >= this.min.y && _y2 <= this.max.y;
+    }
+
+    /**
+     * Returns true if the two bounds intersect.
+     * @name overlaps
+     * @memberof Bounds
+     * @param {Bounds|Rect} bounds
+     * @returns {boolean} True if the bounds overlap, otherwise false
+     */
+    overlaps(bounds) {
+        return !(this.right < bounds.left || this.left > bounds.right ||
+                 this.bottom < bounds.top || this.top > bounds.bottom);
+    }
+
+    /**
+     * determines whether all coordinates of this bounds are finite numbers.
+     * @name isFinite
+     * @memberof Bounds
+     * @returns {boolean} false if all coordinates are positive or negative Infinity or NaN; otherwise, true.
+     */
+    isFinite() {
+        return (isFinite(this.min.x) && isFinite(this.max.x) && isFinite(this.min.y) && isFinite(this.max.y));
+    }
+
+    /**
+     * Translates the bounds by the given vector.
+     * @name translate
+     * @memberof Bounds
+     * @method
+     * @param {Vector2d} vector
+     */
+    /**
+     * Translates the bounds by x on the x axis, and y on the y axis
+     * @name translate
+     * @memberof Bounds
+     * @param {number} x
+     * @param {number} y
+     */
+    translate() {
+        var _x, _y;
+        if (arguments.length === 2) {
+            // x, y
+            _x = arguments[0];
+            _y = arguments[1];
+        } else {
+            // vector
+            _x = arguments[0].x;
+            _y = arguments[0].y;
+        }
+        this.min.x += _x;
+        this.max.x += _x;
+        this.min.y += _y;
+        this.max.y += _y;
+    }
+
+    /**
+     * Shifts the bounds to the given position vector.
+     * @name shift
+     * @memberof Bounds
+     * @method
+     * @param {Vector2d} position
+     */
+    /**
+     * Shifts the bounds to the given x, y position.
+     * @name shift
+     * @memberof Bounds
+     * @param {number} x
+     * @param {number} y
+     */
+    shift() {
+        var _x, _y;
+
+        if (arguments.length === 2) {
+            // x, y
+            _x = arguments[0];
+            _y = arguments[1];
+        } else {
+            // vector
+            _x = arguments[0].x;
+            _y = arguments[0].y;
+        }
+
+        var deltaX = this.max.x - this.min.x,
+            deltaY = this.max.y - this.min.y;
+
+        this.min.x = _x;
+        this.max.x = _x + deltaX;
+        this.min.y = _y;
+        this.max.y = _y + deltaY;
+    }
+
+    /**
+     * clone this bounds
+     * @name clone
+     * @memberof Bounds
+     * @returns {Bounds}
+     */
+    clone() {
+        var bounds = new Bounds();
+        bounds.addBounds(this);
+        return bounds;
+    }
+
+    /**
+     * Returns a polygon whose edges are the same as this bounds.
+     * @name toPolygon
+     * @memberof Bounds
+     * @returns {Polygon} a new Polygon that represents this bounds.
+     */
+    toPolygon () {
+        return pool.pull("Polygon", this.x, this.y, [
+            pool.pull("Vector2d", 0,          0),
+            pool.pull("Vector2d", this.width, 0),
+            pool.pull("Vector2d", this.width, this.height),
+            pool.pull("Vector2d", 0,          this.height)
+        ]);
+    }
+
+}
+
+/**
+ * @classdesc
+ * a simplified path2d implementation, supporting only one path
+ */
+class Path2D {
+    constructor() {
+        /**
+         * the points defining the current path
+         * @public
+         * @type {Vector2d[]}
+         * @name points
+         * @memberof Path2D#
+         */
+        this.points = [];
+
+        /**
+         * space between interpolated points for quadratic and bezier curve approx. in pixels.
+         * @public
+         * @type {number}
+         * @name arcResolution
+         * @default 5
+         * @memberof Path2D#
+         */
+        this.arcResolution = 5;
+
+        /* @ignore */
+        this.vertices = [];
+    }
+
+    /**
+     * begin a new path
+     * @name beginPath
+     * @memberof Path2D
+     */
+    beginPath() {
+        // empty the cache and recycle all vectors
+        this.points.forEach((point) => {
+            pool.push(point);
+        });
+        this.points.length = 0;
+    }
+
+    /**
+     * causes the point of the pen to move back to the start of the current path.
+     * It tries to draw a straight line from the current point to the start.
+     * If the shape has already been closed or has only one point, this function does nothing.
+     * @name closePath
+     * @memberof Path2D
+     */
+    closePath() {
+        var points = this.points;
+        if (points.length > 1 && !points[points.length-1].equals(points[0])) {
+            points.push(pool.pull("Vector2d", points[0].x, points[0].y));
+        }
+    }
+
+    /**
+     * triangulate the shape defined by this path into an array of triangles
+     * @name triangulatePath
+     * @memberof Path2D
+     * @returns {Vector2d[]}
+     */
+    triangulatePath() {
+        var i = 0;
+        var points = this.points;
+        var vertices = this.vertices;
+        var indices = earcut$1.exports(points.flatMap(p => [p.x, p.y]));
+
+        // calculate all vertices
+        for (i = 0; i < indices.length; i++ ) {
+            if (typeof vertices[i] === "undefined") {
+                // increase cache buffer if necessary
+                vertices[i] = pool.pull("Vector2d");
+            }
+            vertices[i].set(points[indices[i]].x, points[indices[i]].y);
+        }
+
+        // recycle overhead from a previous triangulation
+        while (vertices.length > indices.length) {
+            pool.push(vertices[vertices.length-1]);
+            vertices.length -= 1;
+        }
+
+        return vertices;
+    }
+
+    /**
+     * moves the starting point of the current path to the (x, y) coordinates.
+     * @name moveTo
+     * @memberof Path2D
+     * @param {number} x the x-axis (horizontal) coordinate of the point.
+     * @param {number} y the y-axis (vertical) coordinate of the point.
+     */
+    moveTo(x, y) {
+      this.points.push(pool.pull("Vector2d", x, y));
+    }
+
+    /**
+     * connects the last point in the current patch to the (x, y) coordinates with a straight line.
+     * @name lineTo
+     * @memberof Path2D
+     * @param {number} x the x-axis coordinate of the line's end point.
+     * @param {number} y the y-axis coordinate of the line's end point.
+     */
+    lineTo(x, y) {
+        this.points.push(pool.pull("Vector2d", x, y));
+    }
+
+    /**
+     * adds an arc to the current path which is centered at (x, y) position with the given radius,
+     * starting at startAngle and ending at endAngle going in the given direction by counterclockwise (defaulting to clockwise).
+     * @name arc
+     * @memberof Path2D
+     * @param {number} x the horizontal coordinate of the arc's center.
+     * @param {number} y the vertical coordinate of the arc's center.
+     * @param {number} radius the arc's radius. Must be positive.
+     * @param {number} startAngle the angle at which the arc starts in radians, measured from the positive x-axis.
+     * @param {number} endAngle the angle at which the arc ends in radians, measured from the positive x-axis.
+     * @param {boolean} [anticlockwise=false] an optional boolean value. If true, draws the arc counter-clockwise between the start and end angles.
+     */
+    arc(x, y, radius, startAngle, endAngle, anticlockwise = false) {
+        var points = this.points;
+        // based on from https://github.com/karellodewijk/canvas-webgl/blob/master/canvas-webgl.js
+        //bring angles all in [0, 2*PI] range
+        if (startAngle === endAngle) return;
+        var fullCircle = anticlockwise ? Math.abs(startAngle-endAngle) >= (TAU) : Math.abs(endAngle-startAngle) >= (TAU);
+
+        startAngle = startAngle % (TAU);
+        endAngle = endAngle % (TAU);
+
+        if (startAngle < 0) startAngle += TAU;
+        if (endAngle < 0) endAngle += TAU;
+
+        if (startAngle >= endAngle) {
+            endAngle+= TAU;
+        }
+
+        var diff = endAngle - startAngle;
+        var direction = 1;
+        if (anticlockwise) {
+            direction = -1;
+            diff = TAU - diff;
+        }
+
+        if (fullCircle) diff = TAU;
+
+        var length = diff * radius;
+        var nr_of_interpolation_points = length / this.arcResolution;
+        var dangle = diff / nr_of_interpolation_points;
+
+        var angle = startAngle;
+        for (var j = 0; j < nr_of_interpolation_points; j++) {
+            points.push(pool.pull("Vector2d", x + radius * Math.cos(angle), y + radius * Math.sin(angle)));
+            angle += direction * dangle;
+        }
+        points.push(pool.pull("Vector2d", x + radius * Math.cos(endAngle), y + radius * Math.sin(endAngle)));
+    }
+
+    /**
+     * adds a circular arc to the path with the given control points and radius, connected to the previous point by a straight line.
+     * @name arcTo
+     * @memberof Path2D
+     * @param {number} x1 the x-axis coordinate of the first control point.
+     * @param {number} y1 the y-axis coordinate of the first control point.
+     * @param {number} x2 the x-axis coordinate of the second control point.
+     * @param {number} y2 the y-axis coordinate of the second control point.
+     * @param {number} radius the arc's radius. Must be positive.
+     */
+    arcTo(x1, y1, x2, y2, radius) {
+        var points = this.points;
+        // based on from https://github.com/karellodewijk/canvas-webgl/blob/master/canvas-webgl.js
+        var x0 = points[points.length-1].x, y0 = points[points.length-1].y;
+
+        //a = -incoming vector, b = outgoing vector to x1, y1
+        var a = [x0 - x1, y0 - y1];
+        var b = [x2 - x1, y2 - y1];
+
+        //normalize
+        var l_a = Math.sqrt(Math.pow(a[0], 2) + Math.pow(a[1], 2));
+        var l_b = Math.sqrt(Math.pow(b[0], 2) + Math.pow(b[1], 2));
+        a[0] /= l_a; a[1] /= l_a; b[0] /= l_b; b[1] /= l_b;
+        var angle = Math.atan2(a[1], a[0]) - Math.atan2(b[1], b[0]);
+
+        //work out tangent points using tan(θ) = opposite / adjacent; angle/2 because hypotenuse is the bisection of a,b
+        var tan_angle_div2 = Math.tan(angle/2);
+        var adj_l = (radius/tan_angle_div2);
+
+        var tangent_point1 =  [x1 + a[0] * adj_l, y1 + a[1] * adj_l];
+        var tangent_point2 =  [x1 + b[0] * adj_l, y1 + b[1] * adj_l];
+
+        points.push(pool.pull("Vector2d", tangent_point1[0], tangent_point1[1]));
+
+        var bisec = [(a[0] + b[0]) / 2.0, (a[1] + b[1]) / 2.0];
+        var bisec_l = Math.sqrt(Math.pow(bisec[0], 2) + Math.pow(bisec[1], 2));
+        bisec[0] /= bisec_l; bisec[1] /= bisec_l;
+
+        var hyp_l = Math.sqrt(Math.pow(radius, 2) + Math.pow(adj_l, 2));
+        var center = [x1 + hyp_l * bisec[0], y1 + hyp_l * bisec[1]];
+
+        var startAngle = Math.atan2(tangent_point1[1] - center[1], tangent_point1[0] - center[0]);
+        var endAngle = Math.atan2(tangent_point2[1] - center[1], tangent_point2[0] - center[0]);
+
+        this.arc(center[0], center[1], radius, startAngle, endAngle);
+    }
+
+    /**
+     * adds an elliptical arc to the path which is centered at (x, y) position with the radii radiusX and radiusY
+     * starting at startAngle and ending at endAngle going in the given direction by counterclockwise.
+     * @name ellipse
+     * @memberof Path2D
+     * @param {number} x the x-axis (horizontal) coordinate of the ellipse's center.
+     * @param {number} y the  y-axis (vertical) coordinate of the ellipse's center.
+     * @param {number} radiusX the ellipse's major-axis radius. Must be non-negative.
+     * @param {number} radiusY the ellipse's minor-axis radius. Must be non-negative.
+     * @param {number} rotation the rotation of the ellipse, expressed in radians.
+     * @param {number} startAngle the angle at which the ellipse starts, measured clockwise from the positive x-axis and expressed in radians.
+     * @param {number} endAngle the angle at which the ellipse ends, measured clockwise from the positive x-axis and expressed in radians.
+     * @param {boolean} [anticlockwise=false] an optional boolean value which, if true, draws the ellipse counterclockwise (anticlockwise).
+     */
+    ellipse(x, y, radiusX, radiusY, rotation, startAngle, endAngle, anticlockwise = false) {
+        var points = this.points;
+        // based on from https://github.com/karellodewijk/canvas-webgl/blob/master/canvas-webgl.js
+        if (startAngle === endAngle) return;
+        var fullCircle = anticlockwise ? Math.abs(startAngle-endAngle) >= (TAU) : Math.abs(endAngle-startAngle) >= (TAU);
+
+        //bring angles all in [0, 2*PI] range
+        startAngle = startAngle % (TAU);
+        endAngle = endAngle % (TAU);
+        if (startAngle < 0) startAngle += TAU;
+        if (endAngle < 0) endAngle += TAU;
+
+        if (startAngle>=endAngle) {
+            endAngle += TAU;
+        }
+
+        var diff = endAngle - startAngle;
+
+        var direction = 1;
+        if (anticlockwise) {
+            direction = -1;
+            diff = TAU - diff;
+        }
+
+        if (fullCircle) diff = TAU;
+
+        var length = (diff * radiusX + diff * radiusY) / 2;
+        var nr_of_interpolation_points = length / this.arcResolution;
+        var dangle = diff / nr_of_interpolation_points;
+
+        var angle = startAngle;
+        var cos_rotation = Math.cos(rotation);
+        var sin_rotation = Math.sin(rotation);
+        for (var j = 0; j < nr_of_interpolation_points; j++) {
+            var _x1 = radiusX * Math.cos(angle);
+            var _y1 = radiusY * Math.sin(angle);
+            var _x2 = x + _x1 * cos_rotation - _y1 * sin_rotation;
+            var _y2 = y + _x1 * sin_rotation + _y1 * cos_rotation;
+            points.push(pool.pull("Vector2d", _x2, _y2));
+            angle += direction * dangle;
+        }
+        //var x1 = radiusX * Math.cos(endAngle);
+        //var y1 = radiusY * Math.sin(endAngle);
+        //points.push(pool.pull("Vector2d", x + x1 * cos_rotation - y1 * sin_rotation, y + x1 * sin_rotation + y1 * cos_rotation));
+    }
+
+    /**
+     * creates a path for a rectangle at position (x, y) with a size that is determined by width and height.
+     * @name rect
+     * @memberof Path2D
+     * @param {number} x the x-axis coordinate of the rectangle's starting point.
+     * @param {number} y the y-axis coordinate of the rectangle's starting point.
+     * @param {number} width the rectangle's width. Positive values are to the right, and negative to the left.
+     * @param {number} height the rectangle's height. Positive values are down, and negative are up.
+     */
+    rect(x, y, width, height) {
+        this.moveTo(x, y);
+        this.lineTo(x + width, y);
+        this.lineTo(x + width, y + height);
+        this.lineTo(x, y + height);
+        this.lineTo(x, y);
+    }
+
+    /**
+     * adds an rounded rectangle to the current path.
+     * @name roundRect
+     * @memberof Path2D
+     * @param {number} x the x-axis coordinate of the rectangle's starting point.
+     * @param {number} y the y-axis coordinate of the rectangle's starting point.
+     * @param {number} width the rectangle's width. Positive values are to the right, and negative to the left.
+     * @param {number} height the rectangle's height. Positive values are down, and negative are up.
+     * @param {number} radius the arc's radius to draw the borders. Must be positive.
+     */
+     roundRect(x, y, width, height, radius) {
+        this.moveTo(x + radius, y);
+        this.lineTo(x + width - radius, y);
+        this.arcTo(x + width, y, x + width, y + radius, radius);
+        this.lineTo(x + width, y + height - radius);
+        this.arcTo(x + width, y + height, x + width - radius, y + height, radius);
+        this.lineTo(x + radius, y + height);
+        this.arcTo(x, y + height, x, y + height - radius, radius);
+        this.lineTo(x, y + radius);
+        this.arcTo(x, y, x + radius, y, radius);
+    }
+}
+
+/**
+ * @classdesc
+ * a base renderer object
+ */
+class Renderer {
+    /**
+     * @param {object} options The renderer parameters
+     * @param {number} options.width The width of the canvas without scaling
+     * @param {number} options.height The height of the canvas without scaling
+     * @param {HTMLCanvasElement} [options.canvas] The html canvas to draw to on screen
+     * @param {boolean} [options.doubleBuffering=false] Whether to enable double buffering
+     * @param {boolean} [options.antiAlias=false] Whether to enable anti-aliasing, use false (default) for a pixelated effect.
+     * @param {boolean} [options.failIfMajorPerformanceCaveat=true] If true, the renderer will switch to CANVAS mode if the performances of a WebGL context would be dramatically lower than that of a native application making equivalent OpenGL calls.
+     * @param {boolean} [options.transparent=false] Whether to enable transparency on the canvas (performance hit when enabled)
+     * @param {boolean} [options.blendMode="normal"] the default blend mode to use ("normal", "multiply")
+     * @param {boolean} [options.subPixel=false] Whether to enable subpixel rendering (performance hit when enabled)
+     * @param {boolean} [options.verbose=false] Enable the verbose mode that provides additional details as to what the renderer is doing
+     * @param {number} [options.zoomX=width] The actual width of the canvas with scaling applied
+     * @param {number} [options.zoomY=height] The actual height of the canvas with scaling applied
+     */
+    constructor(options) {
+        /**
+         * The given constructor options
+         * @public
+         * @name settings
+         * @memberof Renderer#
+         * @type {object}
+         */
+        this.settings = options;
+
+        /**
+         * true if the current rendering context is valid
+         * @name isContextValid
+         * @memberof Renderer#
+         * @default true
+         * type {boolean}
+         */
+        this.isContextValid = true;
+
+        /**
+         * The Path2D instance used by the renderer to draw primitives
+         * @name path2D
+         * @type {Path2D}
+         * @memberof Renderer#
+         */
+        this.path2D = new Path2D();
+
+        /**
+         * @ignore
+         */
+        this.currentScissor = new Int32Array([ 0, 0, this.settings.width, this.settings.height ]);
+
+        /**
+         * @ignore
+         */
+        this.maskLevel = 0;
+
+        /**
+         * @ignore
+         */
+        this.currentBlendMode = "none";
+
+        // create the main screen canvas
+        if (undefined === true) {
+            // a main canvas is already automatically created by Ejecta
+            this.canvas = document.getElementById("canvas");
+        } else if (typeof globalThis.canvas !== "undefined") {
+            // a global canvas is available, e.g. webapp adapter for wechat
+            this.canvas = globalThis.canvas;
+        } else if (typeof this.settings.canvas !== "undefined") {
+            this.canvas = this.settings.canvas;
+        } else {
+            this.canvas = createCanvas(this.settings.zoomX, this.settings.zoomY);
+        }
+
+        // canvas object and context
+        this.backBufferCanvas = this.canvas;
+        this.context = null;
+
+        // global color
+        this.currentColor = new Color(0, 0, 0, 1.0);
+
+        // global tint color
+        this.currentTint = new Color(255, 255, 255, 1.0);
+
+        // the projectionMatrix (set through setProjection)
+        this.projectionMatrix = new Matrix3d();
+
+        // default uvOffset
+        this.uvOffset = 0;
+
+        // reset the instantiated renderer on game reset
+        on(GAME_RESET, () => {
+            renderer.reset();
+        });
+    }
+
+    /**
+     * prepare the framebuffer for drawing a new frame
+     * @name clear
+     * @memberof Renderer
+     */
+    clear() {}
+
+    /**
+     * Reset context state
+     * @name reset
+     * @memberof Renderer
+     */
+    reset() {
+        this.resetTransform();
+        this.setBlendMode(this.settings.blendMode);
+        this.setColor("#000000");
+        this.clearTint();
+        this.cache.clear();
+        this.currentScissor[0] = 0;
+        this.currentScissor[1] = 0;
+        this.currentScissor[2] = this.backBufferCanvas.width;
+        this.currentScissor[3] = this.backBufferCanvas.height;
+        this.clearMask();
+    }
+
+    /**
+     * return a reference to the system canvas
+     * @name getCanvas
+     * @memberof Renderer
+     * @returns {HTMLCanvasElement}
+     */
+    getCanvas() {
+        return this.backBufferCanvas;
+    }
+
+    /**
+     * return a reference to the screen canvas
+     * @name getScreenCanvas
+     * @memberof Renderer
+     * @returns {HTMLCanvasElement}
+     */
+    getScreenCanvas() {
+        return this.canvas;
+    }
+
+    /**
+     * return a reference to the screen canvas corresponding 2d Context<br>
+     * (will return buffered context if double buffering is enabled, or a reference to the Screen Context)
+     * @name getScreenContext
+     * @memberof Renderer
+     * @returns {CanvasRenderingContext2D}
+     */
+    getScreenContext() {
+        return this.context;
+    }
+
+    /**
+     * returns the current blend mode for this renderer
+     * @name getBlendMode
+     * @memberof Renderer
+     * @returns {string} blend mode
+     */
+    getBlendMode() {
+        return this.currentBlendMode;
+    }
+
+    /**
+     * Returns the 2D Context object of the given Canvas<br>
+     * Also configures anti-aliasing and blend modes based on constructor options.
+     * @name getContext2d
+     * @memberof Renderer
+     * @param {HTMLCanvasElement} canvas
+     * @param {boolean} [transparent=true] use false to disable transparency
+     * @returns {CanvasRenderingContext2D}
+     */
+    getContext2d(canvas, transparent) {
+        if (typeof canvas === "undefined" || canvas === null) {
+            throw new Error(
+                "You must pass a canvas element in order to create " +
+                "a 2d context"
+            );
+        }
+
+        if (typeof canvas.getContext === "undefined") {
+            throw new Error(
+                "Your browser does not support HTML5 canvas."
+            );
+        }
+
+        if (typeof transparent !== "boolean") {
+            transparent = true;
+        }
+
+        var _context = canvas.getContext("2d", {
+                "alpha" : transparent
+        });
+
+        if (!_context.canvas) {
+            _context.canvas = canvas;
+        }
+        this.setAntiAlias(_context, this.settings.antiAlias);
+        return _context;
+    }
+
+    /**
+     * return the width of the system Canvas
+     * @name getWidth
+     * @memberof Renderer
+     * @returns {number}
+     */
+    getWidth() {
+        return this.backBufferCanvas.width;
+    }
+
+    /**
+     * return the height of the system Canvas
+     * @name getHeight
+     * @memberof Renderer
+     * @returns {number} height of the system Canvas
+     */
+    getHeight() {
+        return this.backBufferCanvas.height;
+    }
+
+    /**
+     * get the current fill & stroke style color.
+     * @name getColor
+     * @memberof Renderer
+     * @returns {Color} current global color
+     */
+    getColor() {
+        return this.currentColor;
+    }
+
+    /**
+     * return the current global alpha
+     * @name globalAlpha
+     * @memberof Renderer
+     * @returns {number}
+     */
+    globalAlpha() {
+        return this.currentColor.glArray[3];
+    }
+
+    /**
+     * check if the given rect or bounds overlaps with the renderer screen coordinates
+     * @name overlaps
+     * @memberof Renderer
+     * @param {Rect|Bounds} bounds
+     * @returns {boolean} true if overlaps
+     */
+    overlaps(bounds) {
+        return (
+            bounds.left <= this.getWidth() && bounds.right >= 0 &&
+            bounds.top <= this.getHeight() && bounds.bottom >= 0
+        );
+    }
+
+
+    /**
+     * resizes the system canvas
+     * @name resize
+     * @memberof Renderer
+     * @param {number} width new width of the canvas
+     * @param {number} height new height of the canvas
+     */
+    resize(width, height) {
+        if (width !== this.backBufferCanvas.width || height !== this.backBufferCanvas.height) {
+            this.canvas.width = this.backBufferCanvas.width = width;
+            this.canvas.height = this.backBufferCanvas.height = height;
+            this.currentScissor[0] = 0;
+            this.currentScissor[1] = 0;
+            this.currentScissor[2] = width;
+            this.currentScissor[3] = height;
+            // publish the corresponding event
+            emit(CANVAS_ONRESIZE, width, height);
+        }
+    }
+
+    /**
+     * enable/disable image smoothing (scaling interpolation) for the given context
+     * @name setAntiAlias
+     * @memberof Renderer
+     * @param {CanvasRenderingContext2D} context
+     * @param {boolean} [enable=false]
+     */
+    setAntiAlias(context, enable) {
+        var canvas = context.canvas;
+
+        // enable/disable antialis on the given Context2d object
+        setPrefixed("imageSmoothingEnabled", enable === true, context);
+
+        // set antialias CSS property on the main canvas
+        if (enable !== true) {
+            // https://developer.mozilla.org/en-US/docs/Web/CSS/image-rendering
+            canvas.style["image-rendering"] = "optimizeSpeed"; // legal fallback
+            canvas.style["image-rendering"] = "-moz-crisp-edges"; // Firefox
+            canvas.style["image-rendering"] = "-o-crisp-edges"; // Opera
+            canvas.style["image-rendering"] = "-webkit-optimize-contrast"; // Safari
+            canvas.style["image-rendering"] = "optimize-contrast"; // CSS 3
+            canvas.style["image-rendering"] = "crisp-edges"; // CSS 4
+            canvas.style["image-rendering"] = "pixelated"; // CSS 4
+            canvas.style.msInterpolationMode = "nearest-neighbor"; // IE8+
+        } else {
+            canvas.style["image-rendering"] = "auto";
+        }
+    }
+
+    /**
+     * set/change the current projection matrix (WebGL only)
+     * @name setProjection
+     * @memberof Renderer
+     * @param {Matrix3d} matrix
+     */
+    setProjection(matrix) {
+        this.projectionMatrix.copy(matrix);
+    }
+
+    /**
+     * stroke the given shape
+     * @name stroke
+     * @memberof Renderer
+     * @param {Rect|RoundRect|Polygon|Line|Ellipse} shape a shape object to stroke
+     * @param {boolean} [fill=false] fill the shape with the current color if true
+     */
+    stroke(shape, fill) {
+        if (shape instanceof RoundRect) {
+            this.strokeRoundRect(shape.left, shape.top, shape.width, shape.height, shape.radius, fill);
+            return;
+        }
+        if (shape instanceof Rect || shape instanceof Bounds) {
+            this.strokeRect(shape.left, shape.top, shape.width, shape.height, fill);
+            return;
+        }
+        if (shape instanceof Line || shape instanceof Polygon) {
+            this.strokePolygon(shape, fill);
+            return;
+        }
+        if (shape instanceof Ellipse) {
+            this.strokeEllipse(
+                shape.pos.x,
+                shape.pos.y,
+                shape.radiusV.x,
+                shape.radiusV.y,
+                fill
+            );
+            return;
+        }
+        throw new Error("Invalid geometry for fill/stroke");
+    }
+
+    /**
+     * fill the given shape
+     * @name fill
+     * @memberof Renderer
+     * @param {Rect|RoundRect|Polygon|Line|Ellipse} shape a shape object to fill
+     */
+    fill(shape) {
+        this.stroke(shape, true);
+    }
+
+    /**
+     * tint the given image or canvas using the given color
+     * @name tint
+     * @memberof Renderer
+     * @param {HTMLImageElement|HTMLCanvasElement|OffscreenCanvas} src the source image to be tinted
+     * @param {Color|string} color the color that will be used to tint the image
+     * @param {string} [mode="multiply"] the composition mode used to tint the image
+     * @returns {HTMLCanvasElement|OffscreenCanvas} a new canvas element representing the tinted image
+     */
+    tint(src, color, mode) {
+        var canvas = createCanvas(src.width, src.height, true);
+        var context = this.getContext2d(canvas);
+
+        context.save();
+
+        context.fillStyle = color instanceof Color ? color.toRGB() : color;
+        context.fillRect(0, 0, src.width, src.height);
+
+        context.globalCompositeOperation = mode || "multiply";
+        context.drawImage(src, 0, 0);
+        context.globalCompositeOperation = "destination-atop";
+        context.drawImage(src, 0, 0);
+
+        context.restore();
+
+        return canvas;
+    }
+
+    /**
+     * A mask limits rendering elements to the shape and position of the given mask object.
+     * So, if the renderable is larger than the mask, only the intersecting part of the renderable will be visible.
+     * Mask are not preserved through renderer context save and restore.
+     * @name setMask
+     * @memberof Renderer
+     * @param {Rect|RoundRect|Polygon|Line|Ellipse} [mask] the shape defining the mask to be applied
+     * @param {boolean} [invert=false] either the given shape should define what is visible (default) or the opposite
+     */
+    // eslint-disable-next-line no-unused-vars
+    setMask(mask) {}
+
+    /**
+     * disable (remove) the rendering mask set through setMask.
+     * @name clearMask
+     * @see Renderer#setMask
+     * @memberof Renderer
+     */
+    clearMask() {}
+
+    /**
+     * set a coloring tint for sprite based renderables
+     * @name setTint
+     * @memberof Renderer
+     * @param {Color} tint the tint color
+     * @param {number} [alpha] an alpha value to be applied to the tint
+     */
+    setTint(tint, alpha = tint.alpha) {
+        // global tint color
+        this.currentTint.copy(tint);
+        this.currentTint.alpha *= alpha;
+    }
+
+    /**
+     * clear the rendering tint set through setTint.
+     * @name clearTint
+     * @see Renderer#setTint
+     * @memberof Renderer
+     */
+    clearTint() {
+        // reset to default
+        this.currentTint.setColor(255, 255, 255, 1.0);
+    }
+
+    /**
+     * @ignore
+     */
+    drawFont(/*bounds*/) {}
+
+}
+
 var howler = {};
 
 /*!
@@ -8288,6 +13731,529 @@ var howler = {};
 	})();
 } (howler));
 
+// external import
+
+/**
+ * @namespace audio
+ */
+
+/**
+ * audio channel list
+ * @ignore
+ */
+let audioTracks = {};
+
+/**
+ * current active track
+ * @ignore
+ */
+let current_track_id = null;
+
+/**
+ * error retry counter
+ * @ignore
+ */
+let retry_counter = 0;
+
+/**
+ * list of active audio formats
+ * @ignore
+ */
+let audioExts = [];
+
+/**
+ * event listener callback on load error
+ * @ignore
+ */
+let soundLoadError = function (sound_name, onerror_cb) {
+    // check the retry counter
+    if (retry_counter++ > 3) {
+        // something went wrong
+        var errmsg = "melonJS: failed loading " + sound_name;
+        {
+            // throw an exception and stop everything !
+            throw new Error(errmsg);
+        }
+    // else try loading again !
+    }
+    else {
+        audioTracks[sound_name].load();
+    }
+};
+
+/**
+ * Specify either to stop on audio loading error or not<br>
+ * if true, melonJS will throw an exception and stop loading<br>
+ * if false, melonJS will disable sounds and output a warning message
+ * in the console<br>
+ * @name stopOnAudioError
+ * @type {boolean}
+ * @default true
+ * @memberof audio
+ */
+let stopOnAudioError = true;
+
+/**
+ * Initialize and configure the audio support.<br>
+ * melonJS supports a wide array of audio codecs that have varying browser support :
+ * <i> ("mp3", "mpeg", opus", "ogg", "oga", "wav", "aac", "caf", "m4a", "m4b", "mp4", "weba", "webm", "dolby", "flac")</i>.<br>
+ * For a maximum browser coverage the recommendation is to use at least two of them,
+ * typically default to webm and then fallback to mp3 for the best balance of small filesize and high quality,
+ * webm has nearly full browser coverage with a great combination of compression and quality, and mp3 will fallback gracefully for other browsers.
+ * It is important to remember that melonJS selects the first compatible sound based on the list of extensions and given order passed here.
+ * So if you want webm to be used before mp3, you need to put the audio format in that order.
+ * @function audio.init
+ * @param {string} [format="mp3"] audio format to prioritize
+ * @returns {boolean} Indicates whether audio initialization was successful
+ * @example
+ * // initialize the "sound engine", giving "webm" as default desired audio format, and "mp3" as a fallback
+ * if (!me.audio.init("webm,mp3")) {
+ *     alert("Sorry but your browser does not support html 5 audio !");
+ *     return;
+ * }
+ */
+ function init$1(format = "mp3") {
+    // convert it into an array
+    audioExts = format.split(",");
+
+    return !howler.Howler.noAudio;
+}
+/**
+ * check if the given audio format is supported
+ * @function audio.hasFormat
+ * @param {string} codec audio format : "mp3", "mpeg", opus", "ogg", "oga", "wav", "aac", "caf", "m4a", "m4b", "mp4", "weba", "webm", "dolby", "flac"
+ * @returns {boolean} return true if the given audio format is supported
+ */
+function hasFormat(codec) {
+    return hasAudio() && howler.Howler.codecs(codec);
+}
+/**
+ * check if audio (HTML5 or WebAudio) is supported
+ * @function audio.hasAudio
+ * @returns {boolean} return true if audio (HTML5 or WebAudio) is supported
+ */
+function hasAudio() {
+    return !howler.Howler.noAudio;
+}
+/**
+ * enable audio output <br>
+ * only useful if audio supported and previously disabled through
+ * @function audio.enable
+ * @see audio#disable
+ */
+function enable() {
+    unmuteAll();
+}
+/**
+ * disable audio output
+ * @function audio.disable
+ */
+function disable() {
+    muteAll();
+}
+/**
+ * Load an audio file.<br>
+ * <br>
+ * sound item must contain the following fields :<br>
+ * - name    : name of the sound<br>
+ * - src     : source path<br>
+ * @ignore
+ */
+function load(sound, html5, onload_cb, onerror_cb) {
+    var urls = [];
+    if (audioExts.length === 0) {
+        throw new Error("target audio extension(s) should be set through me.audio.init() before calling the preloader.");
+    }
+    for (var i = 0; i < audioExts.length; i++) {
+        urls.push(sound.src + sound.name + "." + audioExts[i] + loader.nocache);
+    }
+    audioTracks[sound.name] = new howler.Howl({
+        src : urls,
+        volume : howler.Howler.volume(),
+        html5 : html5 === true,
+        xhrWithCredentials : loader.withCredentials,
+        /**
+         * @ignore
+         */
+        onloaderror() {
+            soundLoadError.call(this, sound.name, onerror_cb);
+        },
+        /**
+         * @ignore
+         */
+        onload() {
+            retry_counter = 0;
+            if (onload_cb) {
+                onload_cb();
+            }
+        }
+    });
+
+    return 1;
+}
+/**
+ * play the specified sound
+ * @function audio.play
+ * @param {string} sound_name audio clip name - case sensitive
+ * @param {boolean} [loop=false] loop audio
+ * @param {Function} [onend] Function to call when sound instance ends playing.
+ * @param {number} [volume=default] Float specifying volume (0.0 - 1.0 values accepted).
+ * @returns {number} the sound instance ID.
+ * @example
+ * // play the "cling" audio clip
+ * me.audio.play("cling");
+ * // play & repeat the "engine" audio clip
+ * me.audio.play("engine", true);
+ * // play the "gameover_sfx" audio clip and call myFunc when finished
+ * me.audio.play("gameover_sfx", false, myFunc);
+ * // play the "gameover_sfx" audio clip with a lower volume level
+ * me.audio.play("gameover_sfx", false, null, 0.5);
+ */
+function play(sound_name, loop = false, onend, volume) {
+    var sound = audioTracks[sound_name];
+    if (sound && typeof sound !== "undefined") {
+        var id = sound.play();
+        if (typeof loop === "boolean") {
+            // arg[0] can take different types in howler 2.0
+            sound.loop(loop, id);
+        }
+        sound.volume(typeof(volume) === "number" ? clamp(volume, 0.0, 1.0) : howler.Howler.volume(), id);
+        if (typeof(onend) === "function") {
+            if (loop === true) {
+                sound.on("end", onend, id);
+            }
+            else {
+                sound.once("end", onend, id);
+            }
+        }
+        return id;
+    } else {
+        throw new Error("audio clip " + sound_name + " does not exist");
+    }
+}
+/**
+ * Fade a currently playing sound between two volumee.
+ * @function audio.fade
+ * @param {string} sound_name audio clip name - case sensitive
+ * @param {number} from Volume to fade from (0.0 to 1.0).
+ * @param {number} to Volume to fade to (0.0 to 1.0).
+ * @param {number} duration Time in milliseconds to fade.
+ * @param {number} [id] the sound instance ID. If none is passed, all sounds in group will fade.
+ */
+function fade(sound_name, from, to, duration, id) {
+    var sound = audioTracks[sound_name];
+    if (sound && typeof sound !== "undefined") {
+        sound.fade(from, to, duration, id);
+    } else {
+        throw new Error("audio clip " + sound_name + " does not exist");
+    }
+}
+/**
+ * get/set the position of playback for a sound.
+ * @function audio.seek
+ * @param {string} sound_name audio clip name - case sensitive
+ * @param {number} [seek] the position to move current playback to (in seconds).
+ * @param {number} [id] the sound instance ID. If none is passed, all sounds in group will changed.
+ * @returns {number} return the current seek position (if no extra parameters were given)
+ * @example
+ * // return the current position of the background music
+ * var current_pos = me.audio.seek("dst-gameforest");
+ * // set back the position of the background music to the beginning
+ * me.audio.seek("dst-gameforest", 0);
+ */
+function seek(sound_name, ...args) {
+    var sound = audioTracks[sound_name];
+    if (sound && typeof sound !== "undefined") {
+        return sound.seek(...args);
+    } else {
+        throw new Error("audio clip " + sound_name + " does not exist");
+    }
+}
+/**
+ * get or set the rate of playback for a sound.
+ * @function audio.rate
+ * @param {string} sound_name audio clip name - case sensitive
+ * @param {number} [rate] playback rate : 0.5 to 4.0, with 1.0 being normal speed.
+ * @param {number} [id] the sound instance ID. If none is passed, all sounds in group will be changed.
+ * @returns {number} return the current playback rate (if no extra parameters were given)
+ * @example
+ * // get the playback rate of the background music
+ * var rate = me.audio.rate("dst-gameforest");
+ * // speed up the playback of the background music
+ * me.audio.rate("dst-gameforest", 2.0);
+ */
+function rate(sound_name, ...args) {
+    var sound = audioTracks[sound_name];
+    if (sound && typeof sound !== "undefined") {
+        return sound.rate(...args);
+    } else {
+        throw new Error("audio clip " + sound_name + " does not exist");
+    }
+}
+/**
+ * stop the specified sound on all channels
+ * @function audio.stop
+ * @param {string} [sound_name] audio clip name (case sensitive). If none is passed, all sounds are stopped.
+ * @param {number} [id] the sound instance ID. If none is passed, all sounds in group will stop.
+ * @example
+ * me.audio.stop("cling");
+ */
+function stop(sound_name, id) {
+    if (typeof sound_name !== "undefined") {
+        var sound = audioTracks[sound_name];
+        if (sound && typeof sound !== "undefined") {
+            sound.stop(id);
+            // remove the defined onend callback (if any defined)
+            sound.off("end", undefined, id);
+        } else {
+            throw new Error("audio clip " + sound_name + " does not exist");
+        }
+    } else {
+        howler.Howler.stop();
+    }
+}
+/**
+ * pause the specified sound on all channels<br>
+ * this function does not reset the currentTime property
+ * @function audio.pause
+ * @param {string} sound_name audio clip name - case sensitive
+ * @param {number} [id] the sound instance ID. If none is passed, all sounds in group will pause.
+ * @example
+ * me.audio.pause("cling");
+ */
+function pause(sound_name, id) {
+    var sound = audioTracks[sound_name];
+    if (sound && typeof sound !== "undefined") {
+        sound.pause(id);
+    } else {
+        throw new Error("audio clip " + sound_name + " does not exist");
+    }
+}
+/**
+ * resume the specified sound on all channels<br>
+ * @function audio.resume
+ * @param {string} sound_name audio clip name - case sensitive
+ * @param {number} [id] the sound instance ID. If none is passed, all sounds in group will resume.
+ * @example
+ * // play a audio clip
+ * var id = me.audio.play("myClip");
+ * ...
+ * // pause it
+ * me.audio.pause("myClip", id);
+ * ...
+ * // resume
+ * me.audio.resume("myClip", id);
+ */
+function resume(sound_name, id) {
+    var sound = audioTracks[sound_name];
+    if (sound && typeof sound !== "undefined") {
+        sound.play(id);
+    } else {
+        throw new Error("audio clip " + sound_name + " does not exist");
+    }
+}
+/**
+ * play the specified audio track<br>
+ * this function automatically set the loop property to true<br>
+ * and keep track of the current sound being played.
+ * @function audio.playTrack
+ * @param {string} sound_name audio track name - case sensitive
+ * @param {number} [volume=default] Float specifying volume (0.0 - 1.0 values accepted).
+ * @returns {number} the sound instance ID.
+ * @example
+ * me.audio.playTrack("awesome_music");
+ */
+function playTrack(sound_name, volume) {
+    current_track_id = sound_name;
+    return play(
+        current_track_id,
+        true,
+        null,
+        volume
+    );
+}
+/**
+ * stop the current audio track
+ * @function audio.stopTrack
+ * @see audio#playTrack
+ * @example
+ * // play a awesome music
+ * me.audio.playTrack("awesome_music");
+ * // stop the current music
+ * me.audio.stopTrack();
+ */
+function stopTrack() {
+    if (current_track_id !== null) {
+        audioTracks[current_track_id].stop();
+        current_track_id = null;
+    }
+}
+/**
+ * pause the current audio track
+ * @function audio.pauseTrack
+ * @example
+ * me.audio.pauseTrack();
+ */
+function pauseTrack() {
+    if (current_track_id !== null) {
+        audioTracks[current_track_id].pause();
+    }
+}
+/**
+ * resume the previously paused audio track
+ * @function audio.resumeTrack
+ * @example
+ * // play an awesome music
+ * me.audio.playTrack("awesome_music");
+ * // pause the audio track
+ * me.audio.pauseTrack();
+ * // resume the music
+ * me.audio.resumeTrack();
+ */
+function resumeTrack() {
+    if (current_track_id !== null) {
+        audioTracks[current_track_id].play();
+    }
+}
+/**
+ * returns the current track Id
+ * @function audio.getCurrentTrack
+ * @returns {string} audio track name
+ */
+function getCurrentTrack() {
+    return current_track_id;
+}
+/**
+ * set the default global volume
+ * @function audio.setVolume
+ * @param {number} volume Float specifying volume (0.0 - 1.0 values accepted).
+ */
+function setVolume(volume) {
+    howler.Howler.volume(volume);
+}
+/**
+ * get the default global volume
+ * @function audio.getVolume
+ * @returns {number} current volume value in Float [0.0 - 1.0] .
+ */
+function getVolume() {
+    return howler.Howler.volume();
+}
+/**
+ * mute or unmute the specified sound, but does not pause the playback.
+ * @function audio.mute
+ * @param {string} sound_name audio clip name - case sensitive
+ * @param {number} [id] the sound instance ID. If none is passed, all sounds in group will mute.
+ * @param {boolean} [mute=true] True to mute and false to unmute
+ * @example
+ * // mute the background music
+ * me.audio.mute("awesome_music");
+ */
+function mute(sound_name, id, mute) {
+    // if not defined : true
+    mute = (typeof(mute) === "undefined" ? true : !!mute);
+    var sound = audioTracks[sound_name];
+    if (sound && typeof(sound) !== "undefined") {
+        sound.mute(mute, id);
+    } else {
+        throw new Error("audio clip " + sound_name + " does not exist");
+    }
+}
+/**
+ * unmute the specified sound
+ * @function audio.unmute
+ * @param {string} sound_name audio clip name
+ * @param {number} [id] the sound instance ID. If none is passed, all sounds in group will unmute.
+ */
+function unmute(sound_name, id) {
+    mute(sound_name, id, false);
+}
+/**
+ * mute all audio
+ * @function audio.muteAll
+ */
+function muteAll() {
+    howler.Howler.mute(true);
+}
+/**
+ * unmute all audio
+ * @function audio.unmuteAll
+ */
+function unmuteAll() {
+    howler.Howler.mute(false);
+}
+/**
+ * Returns true if audio is muted globally.
+ * @function audio.muted
+ * @returns {boolean} true if audio is muted globally
+ */
+function muted() {
+    return howler.Howler._muted;
+}
+/**
+ * unload specified audio track to free memory
+ * @function audio.unload
+ * @param {string} sound_name audio track name - case sensitive
+ * @returns {boolean} true if unloaded
+ * @example
+ * me.audio.unload("awesome_music");
+ */
+function unload(sound_name) {
+    if (!(sound_name in audioTracks)) {
+        return false;
+    }
+
+    // destroy the Howl object
+    audioTracks[sound_name].unload();
+    delete audioTracks[sound_name];
+    return true;
+}
+/**
+ * unload all audio to free memory
+ * @function audio.unloadAll
+ * @example
+ * me.audio.unloadAll();
+ */
+function unloadAll() {
+    for (var sound_name in audioTracks) {
+        if (audioTracks.hasOwnProperty(sound_name)) {
+            unload(sound_name);
+        }
+    }
+}
+
+var audio = /*#__PURE__*/Object.freeze({
+	__proto__: null,
+	stopOnAudioError: stopOnAudioError,
+	init: init$1,
+	hasFormat: hasFormat,
+	hasAudio: hasAudio,
+	enable: enable,
+	disable: disable,
+	load: load,
+	play: play,
+	fade: fade,
+	seek: seek,
+	rate: rate,
+	stop: stop,
+	pause: pause,
+	resume: resume,
+	playTrack: playTrack,
+	stopTrack: stopTrack,
+	pauseTrack: pauseTrack,
+	resumeTrack: resumeTrack,
+	getCurrentTrack: getCurrentTrack,
+	setVolume: setVolume,
+	getVolume: getVolume,
+	mute: mute,
+	unmute: unmute,
+	muteAll: muteAll,
+	unmuteAll: unmuteAll,
+	muted: muted,
+	unload: unload,
+	unloadAll: unloadAll
+});
+
 /**
  * @classdesc
  * A Vector2d object that provide notification by executing the given callback when the vector is changed.
@@ -9770,1539 +15736,6 @@ class ObservableVector3d extends Vector3d {
     }
 }
 
-var earcut$1 = {exports: {}};
-
-earcut$1.exports = earcut;
-earcut$1.exports.default = earcut;
-
-function earcut(data, holeIndices, dim) {
-
-    dim = dim || 2;
-
-    var hasHoles = holeIndices && holeIndices.length,
-        outerLen = hasHoles ? holeIndices[0] * dim : data.length,
-        outerNode = linkedList(data, 0, outerLen, dim, true),
-        triangles = [];
-
-    if (!outerNode || outerNode.next === outerNode.prev) return triangles;
-
-    var minX, minY, maxX, maxY, x, y, invSize;
-
-    if (hasHoles) outerNode = eliminateHoles(data, holeIndices, outerNode, dim);
-
-    // if the shape is not too simple, we'll use z-order curve hash later; calculate polygon bbox
-    if (data.length > 80 * dim) {
-        minX = maxX = data[0];
-        minY = maxY = data[1];
-
-        for (var i = dim; i < outerLen; i += dim) {
-            x = data[i];
-            y = data[i + 1];
-            if (x < minX) minX = x;
-            if (y < minY) minY = y;
-            if (x > maxX) maxX = x;
-            if (y > maxY) maxY = y;
-        }
-
-        // minX, minY and invSize are later used to transform coords into integers for z-order calculation
-        invSize = Math.max(maxX - minX, maxY - minY);
-        invSize = invSize !== 0 ? 1 / invSize : 0;
-    }
-
-    earcutLinked(outerNode, triangles, dim, minX, minY, invSize);
-
-    return triangles;
-}
-
-// create a circular doubly linked list from polygon points in the specified winding order
-function linkedList(data, start, end, dim, clockwise) {
-    var i, last;
-
-    if (clockwise === (signedArea(data, start, end, dim) > 0)) {
-        for (i = start; i < end; i += dim) last = insertNode(i, data[i], data[i + 1], last);
-    } else {
-        for (i = end - dim; i >= start; i -= dim) last = insertNode(i, data[i], data[i + 1], last);
-    }
-
-    if (last && equals(last, last.next)) {
-        removeNode(last);
-        last = last.next;
-    }
-
-    return last;
-}
-
-// eliminate colinear or duplicate points
-function filterPoints(start, end) {
-    if (!start) return start;
-    if (!end) end = start;
-
-    var p = start,
-        again;
-    do {
-        again = false;
-
-        if (!p.steiner && (equals(p, p.next) || area(p.prev, p, p.next) === 0)) {
-            removeNode(p);
-            p = end = p.prev;
-            if (p === p.next) break;
-            again = true;
-
-        } else {
-            p = p.next;
-        }
-    } while (again || p !== end);
-
-    return end;
-}
-
-// main ear slicing loop which triangulates a polygon (given as a linked list)
-function earcutLinked(ear, triangles, dim, minX, minY, invSize, pass) {
-    if (!ear) return;
-
-    // interlink polygon nodes in z-order
-    if (!pass && invSize) indexCurve(ear, minX, minY, invSize);
-
-    var stop = ear,
-        prev, next;
-
-    // iterate through ears, slicing them one by one
-    while (ear.prev !== ear.next) {
-        prev = ear.prev;
-        next = ear.next;
-
-        if (invSize ? isEarHashed(ear, minX, minY, invSize) : isEar(ear)) {
-            // cut off the triangle
-            triangles.push(prev.i / dim);
-            triangles.push(ear.i / dim);
-            triangles.push(next.i / dim);
-
-            removeNode(ear);
-
-            // skipping the next vertex leads to less sliver triangles
-            ear = next.next;
-            stop = next.next;
-
-            continue;
-        }
-
-        ear = next;
-
-        // if we looped through the whole remaining polygon and can't find any more ears
-        if (ear === stop) {
-            // try filtering points and slicing again
-            if (!pass) {
-                earcutLinked(filterPoints(ear), triangles, dim, minX, minY, invSize, 1);
-
-            // if this didn't work, try curing all small self-intersections locally
-            } else if (pass === 1) {
-                ear = cureLocalIntersections(filterPoints(ear), triangles, dim);
-                earcutLinked(ear, triangles, dim, minX, minY, invSize, 2);
-
-            // as a last resort, try splitting the remaining polygon into two
-            } else if (pass === 2) {
-                splitEarcut(ear, triangles, dim, minX, minY, invSize);
-            }
-
-            break;
-        }
-    }
-}
-
-// check whether a polygon node forms a valid ear with adjacent nodes
-function isEar(ear) {
-    var a = ear.prev,
-        b = ear,
-        c = ear.next;
-
-    if (area(a, b, c) >= 0) return false; // reflex, can't be an ear
-
-    // now make sure we don't have other points inside the potential ear
-    var p = ear.next.next;
-
-    while (p !== ear.prev) {
-        if (pointInTriangle(a.x, a.y, b.x, b.y, c.x, c.y, p.x, p.y) &&
-            area(p.prev, p, p.next) >= 0) return false;
-        p = p.next;
-    }
-
-    return true;
-}
-
-function isEarHashed(ear, minX, minY, invSize) {
-    var a = ear.prev,
-        b = ear,
-        c = ear.next;
-
-    if (area(a, b, c) >= 0) return false; // reflex, can't be an ear
-
-    // triangle bbox; min & max are calculated like this for speed
-    var minTX = a.x < b.x ? (a.x < c.x ? a.x : c.x) : (b.x < c.x ? b.x : c.x),
-        minTY = a.y < b.y ? (a.y < c.y ? a.y : c.y) : (b.y < c.y ? b.y : c.y),
-        maxTX = a.x > b.x ? (a.x > c.x ? a.x : c.x) : (b.x > c.x ? b.x : c.x),
-        maxTY = a.y > b.y ? (a.y > c.y ? a.y : c.y) : (b.y > c.y ? b.y : c.y);
-
-    // z-order range for the current triangle bbox;
-    var minZ = zOrder(minTX, minTY, minX, minY, invSize),
-        maxZ = zOrder(maxTX, maxTY, minX, minY, invSize);
-
-    var p = ear.prevZ,
-        n = ear.nextZ;
-
-    // look for points inside the triangle in both directions
-    while (p && p.z >= minZ && n && n.z <= maxZ) {
-        if (p !== ear.prev && p !== ear.next &&
-            pointInTriangle(a.x, a.y, b.x, b.y, c.x, c.y, p.x, p.y) &&
-            area(p.prev, p, p.next) >= 0) return false;
-        p = p.prevZ;
-
-        if (n !== ear.prev && n !== ear.next &&
-            pointInTriangle(a.x, a.y, b.x, b.y, c.x, c.y, n.x, n.y) &&
-            area(n.prev, n, n.next) >= 0) return false;
-        n = n.nextZ;
-    }
-
-    // look for remaining points in decreasing z-order
-    while (p && p.z >= minZ) {
-        if (p !== ear.prev && p !== ear.next &&
-            pointInTriangle(a.x, a.y, b.x, b.y, c.x, c.y, p.x, p.y) &&
-            area(p.prev, p, p.next) >= 0) return false;
-        p = p.prevZ;
-    }
-
-    // look for remaining points in increasing z-order
-    while (n && n.z <= maxZ) {
-        if (n !== ear.prev && n !== ear.next &&
-            pointInTriangle(a.x, a.y, b.x, b.y, c.x, c.y, n.x, n.y) &&
-            area(n.prev, n, n.next) >= 0) return false;
-        n = n.nextZ;
-    }
-
-    return true;
-}
-
-// go through all polygon nodes and cure small local self-intersections
-function cureLocalIntersections(start, triangles, dim) {
-    var p = start;
-    do {
-        var a = p.prev,
-            b = p.next.next;
-
-        if (!equals(a, b) && intersects(a, p, p.next, b) && locallyInside(a, b) && locallyInside(b, a)) {
-
-            triangles.push(a.i / dim);
-            triangles.push(p.i / dim);
-            triangles.push(b.i / dim);
-
-            // remove two nodes involved
-            removeNode(p);
-            removeNode(p.next);
-
-            p = start = b;
-        }
-        p = p.next;
-    } while (p !== start);
-
-    return filterPoints(p);
-}
-
-// try splitting polygon into two and triangulate them independently
-function splitEarcut(start, triangles, dim, minX, minY, invSize) {
-    // look for a valid diagonal that divides the polygon into two
-    var a = start;
-    do {
-        var b = a.next.next;
-        while (b !== a.prev) {
-            if (a.i !== b.i && isValidDiagonal(a, b)) {
-                // split the polygon in two by the diagonal
-                var c = splitPolygon(a, b);
-
-                // filter colinear points around the cuts
-                a = filterPoints(a, a.next);
-                c = filterPoints(c, c.next);
-
-                // run earcut on each half
-                earcutLinked(a, triangles, dim, minX, minY, invSize);
-                earcutLinked(c, triangles, dim, minX, minY, invSize);
-                return;
-            }
-            b = b.next;
-        }
-        a = a.next;
-    } while (a !== start);
-}
-
-// link every hole into the outer loop, producing a single-ring polygon without holes
-function eliminateHoles(data, holeIndices, outerNode, dim) {
-    var queue = [],
-        i, len, start, end, list;
-
-    for (i = 0, len = holeIndices.length; i < len; i++) {
-        start = holeIndices[i] * dim;
-        end = i < len - 1 ? holeIndices[i + 1] * dim : data.length;
-        list = linkedList(data, start, end, dim, false);
-        if (list === list.next) list.steiner = true;
-        queue.push(getLeftmost(list));
-    }
-
-    queue.sort(compareX);
-
-    // process holes from left to right
-    for (i = 0; i < queue.length; i++) {
-        outerNode = eliminateHole(queue[i], outerNode);
-        outerNode = filterPoints(outerNode, outerNode.next);
-    }
-
-    return outerNode;
-}
-
-function compareX(a, b) {
-    return a.x - b.x;
-}
-
-// find a bridge between vertices that connects hole with an outer ring and and link it
-function eliminateHole(hole, outerNode) {
-    var bridge = findHoleBridge(hole, outerNode);
-    if (!bridge) {
-        return outerNode;
-    }
-
-    var bridgeReverse = splitPolygon(bridge, hole);
-
-    // filter collinear points around the cuts
-    var filteredBridge = filterPoints(bridge, bridge.next);
-    filterPoints(bridgeReverse, bridgeReverse.next);
-
-    // Check if input node was removed by the filtering
-    return outerNode === bridge ? filteredBridge : outerNode;
-}
-
-// David Eberly's algorithm for finding a bridge between hole and outer polygon
-function findHoleBridge(hole, outerNode) {
-    var p = outerNode,
-        hx = hole.x,
-        hy = hole.y,
-        qx = -Infinity,
-        m;
-
-    // find a segment intersected by a ray from the hole's leftmost point to the left;
-    // segment's endpoint with lesser x will be potential connection point
-    do {
-        if (hy <= p.y && hy >= p.next.y && p.next.y !== p.y) {
-            var x = p.x + (hy - p.y) * (p.next.x - p.x) / (p.next.y - p.y);
-            if (x <= hx && x > qx) {
-                qx = x;
-                if (x === hx) {
-                    if (hy === p.y) return p;
-                    if (hy === p.next.y) return p.next;
-                }
-                m = p.x < p.next.x ? p : p.next;
-            }
-        }
-        p = p.next;
-    } while (p !== outerNode);
-
-    if (!m) return null;
-
-    if (hx === qx) return m; // hole touches outer segment; pick leftmost endpoint
-
-    // look for points inside the triangle of hole point, segment intersection and endpoint;
-    // if there are no points found, we have a valid connection;
-    // otherwise choose the point of the minimum angle with the ray as connection point
-
-    var stop = m,
-        mx = m.x,
-        my = m.y,
-        tanMin = Infinity,
-        tan;
-
-    p = m;
-
-    do {
-        if (hx >= p.x && p.x >= mx && hx !== p.x &&
-                pointInTriangle(hy < my ? hx : qx, hy, mx, my, hy < my ? qx : hx, hy, p.x, p.y)) {
-
-            tan = Math.abs(hy - p.y) / (hx - p.x); // tangential
-
-            if (locallyInside(p, hole) &&
-                (tan < tanMin || (tan === tanMin && (p.x > m.x || (p.x === m.x && sectorContainsSector(m, p)))))) {
-                m = p;
-                tanMin = tan;
-            }
-        }
-
-        p = p.next;
-    } while (p !== stop);
-
-    return m;
-}
-
-// whether sector in vertex m contains sector in vertex p in the same coordinates
-function sectorContainsSector(m, p) {
-    return area(m.prev, m, p.prev) < 0 && area(p.next, m, m.next) < 0;
-}
-
-// interlink polygon nodes in z-order
-function indexCurve(start, minX, minY, invSize) {
-    var p = start;
-    do {
-        if (p.z === null) p.z = zOrder(p.x, p.y, minX, minY, invSize);
-        p.prevZ = p.prev;
-        p.nextZ = p.next;
-        p = p.next;
-    } while (p !== start);
-
-    p.prevZ.nextZ = null;
-    p.prevZ = null;
-
-    sortLinked(p);
-}
-
-// Simon Tatham's linked list merge sort algorithm
-// http://www.chiark.greenend.org.uk/~sgtatham/algorithms/listsort.html
-function sortLinked(list) {
-    var i, p, q, e, tail, numMerges, pSize, qSize,
-        inSize = 1;
-
-    do {
-        p = list;
-        list = null;
-        tail = null;
-        numMerges = 0;
-
-        while (p) {
-            numMerges++;
-            q = p;
-            pSize = 0;
-            for (i = 0; i < inSize; i++) {
-                pSize++;
-                q = q.nextZ;
-                if (!q) break;
-            }
-            qSize = inSize;
-
-            while (pSize > 0 || (qSize > 0 && q)) {
-
-                if (pSize !== 0 && (qSize === 0 || !q || p.z <= q.z)) {
-                    e = p;
-                    p = p.nextZ;
-                    pSize--;
-                } else {
-                    e = q;
-                    q = q.nextZ;
-                    qSize--;
-                }
-
-                if (tail) tail.nextZ = e;
-                else list = e;
-
-                e.prevZ = tail;
-                tail = e;
-            }
-
-            p = q;
-        }
-
-        tail.nextZ = null;
-        inSize *= 2;
-
-    } while (numMerges > 1);
-
-    return list;
-}
-
-// z-order of a point given coords and inverse of the longer side of data bbox
-function zOrder(x, y, minX, minY, invSize) {
-    // coords are transformed into non-negative 15-bit integer range
-    x = 32767 * (x - minX) * invSize;
-    y = 32767 * (y - minY) * invSize;
-
-    x = (x | (x << 8)) & 0x00FF00FF;
-    x = (x | (x << 4)) & 0x0F0F0F0F;
-    x = (x | (x << 2)) & 0x33333333;
-    x = (x | (x << 1)) & 0x55555555;
-
-    y = (y | (y << 8)) & 0x00FF00FF;
-    y = (y | (y << 4)) & 0x0F0F0F0F;
-    y = (y | (y << 2)) & 0x33333333;
-    y = (y | (y << 1)) & 0x55555555;
-
-    return x | (y << 1);
-}
-
-// find the leftmost node of a polygon ring
-function getLeftmost(start) {
-    var p = start,
-        leftmost = start;
-    do {
-        if (p.x < leftmost.x || (p.x === leftmost.x && p.y < leftmost.y)) leftmost = p;
-        p = p.next;
-    } while (p !== start);
-
-    return leftmost;
-}
-
-// check if a point lies within a convex triangle
-function pointInTriangle(ax, ay, bx, by, cx, cy, px, py) {
-    return (cx - px) * (ay - py) - (ax - px) * (cy - py) >= 0 &&
-           (ax - px) * (by - py) - (bx - px) * (ay - py) >= 0 &&
-           (bx - px) * (cy - py) - (cx - px) * (by - py) >= 0;
-}
-
-// check if a diagonal between two polygon nodes is valid (lies in polygon interior)
-function isValidDiagonal(a, b) {
-    return a.next.i !== b.i && a.prev.i !== b.i && !intersectsPolygon(a, b) && // dones't intersect other edges
-           (locallyInside(a, b) && locallyInside(b, a) && middleInside(a, b) && // locally visible
-            (area(a.prev, a, b.prev) || area(a, b.prev, b)) || // does not create opposite-facing sectors
-            equals(a, b) && area(a.prev, a, a.next) > 0 && area(b.prev, b, b.next) > 0); // special zero-length case
-}
-
-// signed area of a triangle
-function area(p, q, r) {
-    return (q.y - p.y) * (r.x - q.x) - (q.x - p.x) * (r.y - q.y);
-}
-
-// check if two points are equal
-function equals(p1, p2) {
-    return p1.x === p2.x && p1.y === p2.y;
-}
-
-// check if two segments intersect
-function intersects(p1, q1, p2, q2) {
-    var o1 = sign(area(p1, q1, p2));
-    var o2 = sign(area(p1, q1, q2));
-    var o3 = sign(area(p2, q2, p1));
-    var o4 = sign(area(p2, q2, q1));
-
-    if (o1 !== o2 && o3 !== o4) return true; // general case
-
-    if (o1 === 0 && onSegment(p1, p2, q1)) return true; // p1, q1 and p2 are collinear and p2 lies on p1q1
-    if (o2 === 0 && onSegment(p1, q2, q1)) return true; // p1, q1 and q2 are collinear and q2 lies on p1q1
-    if (o3 === 0 && onSegment(p2, p1, q2)) return true; // p2, q2 and p1 are collinear and p1 lies on p2q2
-    if (o4 === 0 && onSegment(p2, q1, q2)) return true; // p2, q2 and q1 are collinear and q1 lies on p2q2
-
-    return false;
-}
-
-// for collinear points p, q, r, check if point q lies on segment pr
-function onSegment(p, q, r) {
-    return q.x <= Math.max(p.x, r.x) && q.x >= Math.min(p.x, r.x) && q.y <= Math.max(p.y, r.y) && q.y >= Math.min(p.y, r.y);
-}
-
-function sign(num) {
-    return num > 0 ? 1 : num < 0 ? -1 : 0;
-}
-
-// check if a polygon diagonal intersects any polygon segments
-function intersectsPolygon(a, b) {
-    var p = a;
-    do {
-        if (p.i !== a.i && p.next.i !== a.i && p.i !== b.i && p.next.i !== b.i &&
-                intersects(p, p.next, a, b)) return true;
-        p = p.next;
-    } while (p !== a);
-
-    return false;
-}
-
-// check if a polygon diagonal is locally inside the polygon
-function locallyInside(a, b) {
-    return area(a.prev, a, a.next) < 0 ?
-        area(a, b, a.next) >= 0 && area(a, a.prev, b) >= 0 :
-        area(a, b, a.prev) < 0 || area(a, a.next, b) < 0;
-}
-
-// check if the middle point of a polygon diagonal is inside the polygon
-function middleInside(a, b) {
-    var p = a,
-        inside = false,
-        px = (a.x + b.x) / 2,
-        py = (a.y + b.y) / 2;
-    do {
-        if (((p.y > py) !== (p.next.y > py)) && p.next.y !== p.y &&
-                (px < (p.next.x - p.x) * (py - p.y) / (p.next.y - p.y) + p.x))
-            inside = !inside;
-        p = p.next;
-    } while (p !== a);
-
-    return inside;
-}
-
-// link two polygon vertices with a bridge; if the vertices belong to the same ring, it splits polygon into two;
-// if one belongs to the outer ring and another to a hole, it merges it into a single ring
-function splitPolygon(a, b) {
-    var a2 = new Node$1(a.i, a.x, a.y),
-        b2 = new Node$1(b.i, b.x, b.y),
-        an = a.next,
-        bp = b.prev;
-
-    a.next = b;
-    b.prev = a;
-
-    a2.next = an;
-    an.prev = a2;
-
-    b2.next = a2;
-    a2.prev = b2;
-
-    bp.next = b2;
-    b2.prev = bp;
-
-    return b2;
-}
-
-// create a node and optionally link it with previous one (in a circular doubly linked list)
-function insertNode(i, x, y, last) {
-    var p = new Node$1(i, x, y);
-
-    if (!last) {
-        p.prev = p;
-        p.next = p;
-
-    } else {
-        p.next = last.next;
-        p.prev = last;
-        last.next.prev = p;
-        last.next = p;
-    }
-    return p;
-}
-
-function removeNode(p) {
-    p.next.prev = p.prev;
-    p.prev.next = p.next;
-
-    if (p.prevZ) p.prevZ.nextZ = p.nextZ;
-    if (p.nextZ) p.nextZ.prevZ = p.prevZ;
-}
-
-function Node$1(i, x, y) {
-    // vertex index in coordinates array
-    this.i = i;
-
-    // vertex coordinates
-    this.x = x;
-    this.y = y;
-
-    // previous and next vertex nodes in a polygon ring
-    this.prev = null;
-    this.next = null;
-
-    // z-order curve value
-    this.z = null;
-
-    // previous and next nodes in z-order
-    this.prevZ = null;
-    this.nextZ = null;
-
-    // indicates whether this is a steiner point
-    this.steiner = false;
-}
-
-// return a percentage difference between the polygon area and its triangulation area;
-// used to verify correctness of triangulation
-earcut.deviation = function (data, holeIndices, dim, triangles) {
-    var hasHoles = holeIndices && holeIndices.length;
-    var outerLen = hasHoles ? holeIndices[0] * dim : data.length;
-
-    var polygonArea = Math.abs(signedArea(data, 0, outerLen, dim));
-    if (hasHoles) {
-        for (var i = 0, len = holeIndices.length; i < len; i++) {
-            var start = holeIndices[i] * dim;
-            var end = i < len - 1 ? holeIndices[i + 1] * dim : data.length;
-            polygonArea -= Math.abs(signedArea(data, start, end, dim));
-        }
-    }
-
-    var trianglesArea = 0;
-    for (i = 0; i < triangles.length; i += 3) {
-        var a = triangles[i] * dim;
-        var b = triangles[i + 1] * dim;
-        var c = triangles[i + 2] * dim;
-        trianglesArea += Math.abs(
-            (data[a] - data[c]) * (data[b + 1] - data[a + 1]) -
-            (data[a] - data[b]) * (data[c + 1] - data[a + 1]));
-    }
-
-    return polygonArea === 0 && trianglesArea === 0 ? 0 :
-        Math.abs((trianglesArea - polygonArea) / polygonArea);
-};
-
-function signedArea(data, start, end, dim) {
-    var sum = 0;
-    for (var i = start, j = end - dim; i < end; i += dim) {
-        sum += (data[j] - data[i]) * (data[i + 1] + data[j + 1]);
-        j = i;
-    }
-    return sum;
-}
-
-// turn a polygon in a multi-dimensional array form (e.g. as in GeoJSON) into a form Earcut accepts
-earcut.flatten = function (data) {
-    var dim = data[0][0].length,
-        result = {vertices: [], holes: [], dimensions: dim},
-        holeIndex = 0;
-
-    for (var i = 0; i < data.length; i++) {
-        for (var j = 0; j < data[i].length; j++) {
-            for (var d = 0; d < dim; d++) result.vertices.push(data[i][j][d]);
-        }
-        if (i > 0) {
-            holeIndex += data[i - 1].length;
-            result.holes.push(holeIndex);
-        }
-    }
-    return result;
-};
-
-/**
- * @classdesc
- * a polygon Object.<br>
- * Please do note that melonJS implements a simple Axis-Aligned Boxes collision algorithm, which requires all polygons used for collision to be convex with all vertices defined with clockwise winding.
- * A polygon is convex when all line segments connecting two points in the interior do not cross any edge of the polygon
- * (which means that all angles are less than 180 degrees), as described here below : <br>
- * <center><img src="images/convex_polygon.png"/></center><br>
- *
- * A polygon's `winding` is clockwise if its vertices (points) are declared turning to the right. The image above shows COUNTERCLOCKWISE winding.
- */
-class Polygon {
-    /**
-     * @param {number} x origin point of the Polygon
-     * @param {number} y origin point of the Polygon
-     * @param {Vector2d[]} points array of vector defining the Polygon
-     */
-    constructor(x, y, points) {
-        /**
-         * origin point of the Polygon
-         * @public
-         * @type {Vector2d}
-         * @name pos
-         * @memberof Polygon
-         */
-        this.pos = pool.pull("Vector2d");
-
-        /**
-         * The bounding rectangle for this shape
-         * @ignore
-         * @member {Bounds}
-         * @name _bounds
-         * @memberof Polygon
-         */
-        this._bounds;
-
-        /**
-         * Array of points defining the Polygon <br>
-         * Note: If you manually change `points`, you **must** call `recalc`afterwards so that the changes get applied correctly.
-         * @public
-         * @type {Vector2d[]}
-         * @name points
-         * @memberof Polygon
-         */
-        this.points = [];
-
-        /**
-         * The edges here are the direction of the `n`th edge of the polygon, relative to
-         * the `n`th point. If you want to draw a given edge from the edge value, you must
-         * first translate to the position of the starting point.
-         * @ignore
-         */
-        this.edges = [];
-
-        /**
-         * a list of indices for all vertices composing this polygon (@see earcut)
-         * @ignore
-         */
-        this.indices = [];
-
-        /**
-         * The normals here are the direction of the normal for the `n`th edge of the polygon, relative
-         * to the position of the `n`th point. If you want to draw an edge normal, you must first
-         * translate to the position of the starting point.
-         * @ignore
-         */
-        this.normals = [];
-
-        // the shape type
-        this.shapeType = "Polygon";
-        this.setShape(x, y, points);
-    }
-
-    /** @ignore */
-    onResetEvent(x, y, points) {
-        this.setShape(x, y, points);
-    }
-
-    /**
-     * set new value to the Polygon
-     * @name setShape
-     * @memberof Polygon
-     * @param {number} x position of the Polygon
-     * @param {number} y position of the Polygon
-     * @param {Vector2d[]|number[]} points array of vector or vertice defining the Polygon
-     * @returns {Polygon} this instance for objecf chaining
-     */
-    setShape(x, y, points) {
-        this.pos.set(x, y);
-        this.setVertices(points);
-        return this;
-    }
-
-    /**
-     * set the vertices defining this Polygon
-     * @name setVertices
-     * @memberof Polygon
-     * @param {Vector2d[]} vertices array of vector or vertice defining the Polygon
-     * @returns {Polygon} this instance for objecf chaining
-     */
-    setVertices(vertices) {
-
-        if (!Array.isArray(vertices)) {
-            return this;
-        }
-
-        // convert given points to me.Vector2d if required
-        if (!(vertices[0] instanceof Vector2d)) {
-            this.points.length = 0;
-
-            if (typeof vertices[0] === "object") {
-                // array of {x,y} object
-                vertices.forEach((vertice) => {
-                   this.points.push(pool.pull("Vector2d", vertice.x, vertice.y));
-                });
-
-            } else {
-                // it's a flat array
-                for (var p = 0; p < vertices.length; p += 2) {
-                    this.points.push(pool.pull("Vector2d", vertices[p], vertices[p + 1]));
-                }
-            }
-        } else {
-            // array of me.Vector2d
-            this.points = vertices;
-        }
-
-        this.recalc();
-        this.updateBounds();
-        return this;
-    }
-
-    /**
-     * apply the given transformation matrix to this Polygon
-     * @name transform
-     * @memberof Polygon
-     * @param {Matrix2d} m the transformation matrix
-     * @returns {Polygon} Reference to this object for method chaining
-     */
-    transform(m) {
-        var points = this.points;
-        var len = points.length;
-        for (var i = 0; i < len; i++) {
-            m.apply(points[i]);
-        }
-        this.recalc();
-        this.updateBounds();
-        return this;
-    }
-
-    /**
-     * apply an isometric projection to this shape
-     * @name toIso
-     * @memberof Polygon
-     * @returns {Polygon} Reference to this object for method chaining
-     */
-    toIso() {
-        return this.rotate(Math.PI / 4).scale(Math.SQRT2, Math.SQRT1_2);
-    }
-
-    /**
-     * apply a 2d projection to this shape
-     * @name to2d
-     * @memberof Polygon
-     * @returns {Polygon} Reference to this object for method chaining
-     */
-    to2d() {
-        return this.scale(Math.SQRT1_2, Math.SQRT2).rotate(-Math.PI / 4);
-    }
-
-    /**
-     * Rotate this Polygon (counter-clockwise) by the specified angle (in radians).
-     * @name rotate
-     * @memberof Polygon
-     * @param {number} angle The angle to rotate (in radians)
-     * @param {Vector2d|ObservableVector2d} [v] an optional point to rotate around
-     * @returns {Polygon} Reference to this object for method chaining
-     */
-    rotate(angle, v) {
-        if (angle !== 0) {
-            var points = this.points;
-            var len = points.length;
-            for (var i = 0; i < len; i++) {
-                points[i].rotate(angle, v);
-            }
-            this.recalc();
-            this.updateBounds();
-        }
-        return this;
-    }
-
-    /**
-     * Scale this Polygon by the given scalar.
-     * @name scale
-     * @memberof Polygon
-     * @param {number} x
-     * @param {number} [y=x]
-     * @returns {Polygon} Reference to this object for method chaining
-     */
-    scale(x, y) {
-        y = typeof (y) !== "undefined" ? y : x;
-
-        var points = this.points;
-        var len = points.length;
-        for (var i = 0; i < len; i++) {
-            points[i].scale(x, y);
-        }
-        this.recalc();
-        this.updateBounds();
-        return this;
-    }
-
-    /**
-     * Scale this Polygon by the given vector
-     * @name scaleV
-     * @memberof Polygon
-     * @param {Vector2d} v
-     * @returns {Polygon} Reference to this object for method chaining
-     */
-    scaleV(v) {
-        return this.scale(v.x, v.y);
-    }
-
-    /**
-     * Computes the calculated collision polygon.
-     * This **must** be called if the `points` array, `angle`, or `offset` is modified manually.
-     * @name recalc
-     * @memberof Polygon
-     * @returns {Polygon} Reference to this object for method chaining
-     */
-    recalc() {
-        var i;
-        var edges = this.edges;
-        var normals = this.normals;
-        var indices = this.indices;
-
-        // Copy the original points array and apply the offset/angle
-        var points = this.points;
-        var len = points.length;
-
-        if (len < 3) {
-            throw new Error("Requires at least 3 points");
-        }
-
-        // Calculate the edges/normals
-        for (i = 0; i < len; i++) {
-            if (edges[i] === undefined) {
-                edges[i] = pool.pull("Vector2d");
-            }
-            edges[i].copy(points[(i + 1) % len]).sub(points[i]);
-
-            if (normals[i] === undefined) {
-                normals[i] = pool.pull("Vector2d");
-            }
-            normals[i].copy(edges[i]).perp().normalize();
-        }
-        // trunc array
-        edges.length = len;
-        normals.length = len;
-        // do not do anything here, indices will be computed by
-        // getIndices if array is empty upon function call
-        indices.length = 0;
-
-        return this;
-    }
-
-
-    /**
-     * returns a list of indices for all triangles defined in this polygon
-     * @name getIndices
-     * @memberof Polygon
-     * @returns {Array} an array of vertex indices for all triangles forming this polygon.
-     */
-    getIndices() {
-        if (this.indices.length === 0) {
-            this.indices = earcut$1.exports(this.points.flatMap(p => [p.x, p.y]));
-        }
-        return this.indices;
-    }
-
-    /**
-     * Returns true if the vertices composing this polygon form a convex shape (vertices must be in clockwise order).
-     * @name isConvex
-     * @memberof Polygon
-     * @returns {boolean} true if the vertices are convex, false if not, null if not computable
-     */
-    isConvex() {
-        // http://paulbourke.net/geometry/polygonmesh/
-        // Copyright (c) Paul Bourke (use permitted)
-
-        var flag = 0,
-            vertices = this.points,
-            n = vertices.length,
-            i,
-            j,
-            k,
-            z;
-
-        if (n < 3) {
-            return null;
-        }
-
-        for (i = 0; i < n; i++) {
-            j = (i + 1) % n;
-            k = (i + 2) % n;
-            z = (vertices[j].x - vertices[i].x) * (vertices[k].y - vertices[j].y);
-            z -= (vertices[j].y - vertices[i].y) * (vertices[k].x - vertices[j].x);
-
-            if (z < 0) {
-                flag |= 1;
-            } else if (z > 0) {
-                flag |= 2;
-            }
-
-            if (flag === 3) {
-                return false;
-            }
-        }
-
-        if (flag !== 0) {
-            return true;
-        } else {
-            return null;
-        }
-    }
-
-    /**
-     * translate the Polygon by the specified offset
-     * @name translate
-     * @memberof Polygon
-     * @method
-     * @param {number} x x offset
-     * @param {number} y y offset
-     * @returns {Polygon} this Polygon
-     */
-    /**
-     * translate the Polygon by the specified vector
-     * @name translate
-     * @memberof Polygon
-     * @param {Vector2d} v vector offset
-     * @returns {Polygon} Reference to this object for method chaining
-     */
-    translate() {
-        var _x, _y;
-
-        if (arguments.length === 2) {
-            // x, y
-            _x = arguments[0];
-            _y = arguments[1];
-        } else {
-            // vector
-            _x = arguments[0].x;
-            _y = arguments[0].y;
-        }
-
-        this.pos.x += _x;
-        this.pos.y += _y;
-        this.getBounds().translate(_x, _y);
-
-        return this;
-    }
-
-    /**
-     * Shifts the Polygon to the given position vector.
-     * @name shift
-     * @memberof Polygon
-     * @method
-     * @param {Vector2d} position
-     */
-    /**
-     * Shifts the Polygon to the given x, y position.
-     * @name shift
-     * @memberof Polygon
-     * @param {number} x
-     * @param {number} y
-     */
-    shift() {
-        var _x, _y;
-        if (arguments.length === 2) {
-            // x, y
-            _x = arguments[0];
-            _y = arguments[1];
-        } else {
-            // vector
-            _x = arguments[0].x;
-            _y = arguments[0].y;
-        }
-        this.pos.x = _x;
-        this.pos.y = _y;
-        this.updateBounds();
-    }
-
-    /**
-     * Returns true if the polygon contains the given point.
-     * (Note: it is highly recommended to first do a hit test on the corresponding <br>
-     *  bounding rect, as the function can be highly consuming with complex shapes)
-     * @name contains
-     * @memberof Polygon
-     * @method
-     * @param {Vector2d} point
-     * @returns {boolean} true if contains
-     */
-
-    /**
-     * Returns true if the polygon contains the given point. <br>
-     * (Note: it is highly recommended to first do a hit test on the corresponding <br>
-     *  bounding rect, as the function can be highly consuming with complex shapes)
-     * @name contains
-     * @memberof Polygon
-     * @param  {number} x x coordinate
-     * @param  {number} y y coordinate
-     * @returns {boolean} true if contains
-     */
-    contains() {
-        var _x, _y;
-
-        if (arguments.length === 2) {
-          // x, y
-          _x = arguments[0];
-          _y = arguments[1];
-        } else {
-          // vector
-          _x = arguments[0].x;
-          _y = arguments[0].y;
-        }
-
-        var intersects = false;
-        var posx = this.pos.x, posy = this.pos.y;
-        var points = this.points;
-        var len = points.length;
-
-        //http://www.ecse.rpi.edu/Homepages/wrf/Research/Short_Notes/pnpoly.html
-        for (var i = 0, j = len - 1; i < len; j = i++) {
-            var iy = points[i].y + posy, ix = points[i].x + posx,
-                jy = points[j].y + posy, jx = points[j].x + posx;
-            if (((iy > _y) !== (jy > _y)) && (_x < (jx - ix) * (_y - iy) / (jy - iy) + ix)) {
-                intersects = !intersects;
-            }
-        }
-        return intersects;
-    }
-
-    /**
-     * returns the bounding box for this shape, the smallest Rectangle object completely containing this shape.
-     * @name getBounds
-     * @memberof Polygon
-     * @returns {Bounds} this shape bounding box Rectangle object
-     */
-    getBounds() {
-        if (typeof this._bounds === "undefined") {
-            this._bounds = pool.pull("Bounds");
-        }
-        return this._bounds;
-    }
-
-    /**
-     * update the bounding box for this shape.
-     * @ignore
-     * @name updateBounds
-     * @memberof Polygon
-     * @returns {Bounds} this shape bounding box Rectangle object
-     */
-    updateBounds() {
-        var bounds = this.getBounds();
-
-        bounds.update(this.points);
-        bounds.translate(this.pos);
-
-        return bounds;
-    }
-
-    /**
-     * clone this Polygon
-     * @name clone
-     * @memberof Polygon
-     * @returns {Polygon} new Polygon
-     */
-    clone() {
-        var copy = [];
-        this.points.forEach(function (point) {
-            copy.push(point.clone());
-        });
-        return new Polygon(this.pos.x, this.pos.y, copy);
-    }
-}
-
-/**
- * @classdesc
- * a rectangle Object
- * @augments Polygon
- */
-class Rect extends Polygon {
-    /**
-     * @param {number} x position of the Rectangle
-     * @param {number} y position of the Rectangle
-     * @param {number} w width of the rectangle
-     * @param {number} h height of the rectangle
-     */
-    constructor(x, y, w, h) {
-        // parent constructor
-        super(x, y, [
-            pool.pull("Vector2d", 0, 0), // 0, 0
-            pool.pull("Vector2d", w, 0), // 1, 0
-            pool.pull("Vector2d", w, h), // 1, 1
-            pool.pull("Vector2d", 0, h)  // 0, 1
-        ]);
-        this.shapeType = "Rectangle";
-    }
-
-    /** @ignore */
-    onResetEvent(x, y, w, h) {
-        this.setShape(x, y, w, h);
-    }
-
-    /**
-     * set new value to the rectangle shape
-     * @name setShape
-     * @memberof Rect
-     * @param {number} x position of the Rectangle
-     * @param {number} y position of the Rectangle
-     * @param {number|Vector2d[]} w width of the rectangle, or an array of vector defining the rectangle
-     * @param {number} [h] height of the rectangle, if a numeral width parameter is specified
-     * @returns {Rect} this rectangle
-     */
-    setShape(x, y, w, h) {
-        var points = w; // assume w is an array by default
-
-        this.pos.set(x, y);
-
-        if (arguments.length === 4) {
-            points = this.points;
-            points[0].set(0, 0); // 0, 0
-            points[1].set(w, 0); // 1, 0
-            points[2].set(w, h); // 1, 1
-            points[3].set(0, h); // 0, 1
-        }
-
-        this.setVertices(points);
-        return this;
-    }
-
-
-    /**
-     * left coordinate of the Rectangle
-     * @public
-     * @type {number}
-     * @name left
-     * @memberof Rect
-     */
-    get left() {
-        return this.pos.x;
-    }
-
-    /**
-     * right coordinate of the Rectangle
-     * @public
-     * @type {number}
-     * @name right
-     * @memberof Rect
-     */
-    get right() {
-        var w = this.width;
-        return (this.pos.x + w) || w;
-    }
-
-    /**
-     * top coordinate of the Rectangle
-     * @public
-     * @type {number}
-     * @name top
-     * @memberof Rect
-     */
-    get top() {
-        return this.pos.y;
-    }
-
-    /**
-     * bottom coordinate of the Rectangle
-     * @public
-     * @type {number}
-     * @name bottom
-     * @memberof Rect
-     */
-    get bottom() {
-        var h = this.height;
-        return (this.pos.y + h) || h;
-    }
-
-    /**
-     * width of the Rectangle
-     * @public
-     * @type {number}
-     * @name width
-     * @memberof Rect
-     */
-    get width() {
-        return this.points[2].x;
-    }
-    set width(value) {
-        this.points[1].x = this.points[2].x = value;
-        this.recalc();
-        this.updateBounds();
-    }
-
-    /**
-     * height of the Rectangle
-     * @public
-     * @type {number}
-     * @name height
-     * @memberof Rect
-     */
-    get height() {
-        return this.points[2].y;
-    }
-    set height(value) {
-        this.points[2].y = this.points[3].y = value;
-        this.recalc();
-        this.updateBounds();
-    }
-
-    /**
-     * absolute center of this rectangle on the horizontal axis
-     * @public
-     * @type {number}
-     * @name centerX
-     * @memberof Rect
-     */
-    get centerX() {
-        if (isFinite(this.width)) {
-            return this.pos.x + (this.width / 2);
-        } else {
-            return this.width;
-        }
-    }
-    set centerX (value) {
-        this.pos.x = value - (this.width / 2);
-    }
-
-    /**
-     * absolute center of this rectangle on the vertical axis
-     * @public
-     * @type {number}
-     * @name centerY
-     * @memberof Rect
-     */
-    get centerY() {
-        if (isFinite(this.height)) {
-            return this.pos.y + (this.height / 2);
-        } else {
-            return this.height;
-        }
-    }
-    set centerY(value) {
-        this.pos.y = value - (this.height / 2);
-    }
-
-    /**
-     * center the rectangle position around the given coordinates
-     * @name centerOn
-     * @memberof Rect
-     * @param {number} x the x coordinate around which to center this rectangle
-     * @param {number} y the y coordinate around which to center this rectangle
-     * @returns {Rect} this rectangle
-     */
-    centerOn(x, y) {
-        this.centerX = x;
-        this.centerY = y;
-        return this;
-    }
-
-    /**
-     * resize the rectangle
-     * @name resize
-     * @memberof Rect
-     * @param {number} w new width of the rectangle
-     * @param {number} h new height of the rectangle
-     * @returns {Rect} this rectangle
-     */
-    resize(w, h) {
-        this.width = w;
-        this.height = h;
-        return this;
-    }
-
-    /**
-     * scale the rectangle
-     * @name scale
-     * @memberof Rect
-     * @param {number} x a number representing the abscissa of the scaling vector.
-     * @param {number} [y=x] a number representing the ordinate of the scaling vector.
-     * @returns {Rect} this rectangle
-     */
-    scale(x, y = x) {
-        this.width *= x;
-        this.height *= y;
-        return this;
-    }
-
-    /**
-     * clone this rectangle
-     * @name clone
-     * @memberof Rect
-     * @returns {Rect} new rectangle
-     */
-    clone() {
-        return new Rect(this.pos.x, this.pos.y, this.width, this.height);
-    }
-
-    /**
-     * copy the position and size of the given rectangle into this one
-     * @name copy
-     * @memberof Rect
-     * @param {Rect} rect Source rectangle
-     * @returns {Rect} new rectangle
-     */
-    copy(rect) {
-        return this.setShape(rect.pos.x, rect.pos.y, rect.width, rect.height);
-    }
-
-    /**
-     * merge this rectangle with another one
-     * @name union
-     * @memberof Rect
-     * @param {Rect} rect other rectangle to union with
-     * @returns {Rect} the union(ed) rectangle
-     */
-    union(rect) {
-        var x1 = Math.min(this.left, rect.left);
-        var y1 = Math.min(this.top, rect.top);
-
-        this.resize(
-            Math.max(this.right, rect.right) - x1,
-            Math.max(this.bottom, rect.bottom) - y1
-        );
-
-        this.pos.set(x1, y1);
-
-        return this;
-    }
-
-    /**
-     * check if this rectangle is intersecting with the specified one
-     * @name overlaps
-     * @memberof Rect
-     * @param {Rect} rect
-     * @returns {boolean} true if overlaps
-     */
-    overlaps(rect) {
-        return (
-            this.left < rect.right &&
-            rect.left < this.right &&
-            this.top < rect.bottom &&
-            rect.top < this.bottom
-        );
-    }
-
-    /**
-     * Returns true if the rectangle contains the given rectangle
-     * @name contains
-     * @memberof Rect
-     * @method
-     * @param {Rect} rect
-     * @returns {boolean} true if contains
-     */
-
-    /**
-     * Returns true if the rectangle contains the given point
-     * @name contains
-     * @memberof Rect
-     * @method
-     * @param  {number} x x coordinate
-     * @param  {number} y y coordinate
-     * @returns {boolean} true if contains
-     */
-
-    /**
-     * Returns true if the rectangle contains the given point
-     * @name contains
-     * @memberof Rect
-     * @param {Vector2d} point
-     * @returns {boolean} true if contains
-     */
-    contains() {
-        var arg0 = arguments[0];
-        var _x1, _x2, _y1, _y2;
-        if (arguments.length === 2) {
-             // x, y
-             _x1 = _x2 = arg0;
-             _y1 = _y2 = arguments[1];
-         } else {
-             if (arg0 instanceof Rect) {
-                 // me.Rect
-                 _x1 = arg0.left;
-                 _x2 = arg0.right;
-                 _y1 = arg0.top;
-                 _y2 = arg0.bottom;
-             } else {
-                 // vector
-                 _x1 = _x2 = arg0.x;
-                 _y1 = _y2 = arg0.y;
-             }
-         }
-         return (
-             _x1 >= this.left &&
-             _x2 <= this.right &&
-             _y1 >= this.top &&
-             _y2 <= this.bottom
-         );
-    }
-
-    /**
-     * check if this rectangle is identical to the specified one
-     * @name equals
-     * @memberof Rect
-     * @param {Rect} rect
-     * @returns {boolean} true if equals
-     */
-    equals(rect) {
-        return (
-            rect.left === this.left &&
-            rect.right === this.right &&
-            rect.top === this.top &&
-            rect.bottom === this.bottom
-        );
-    }
-
-    /**
-     * determines whether all coordinates of this rectangle are finite numbers.
-     * @name isFinite
-     * @memberof Rect
-     * @returns {boolean} false if all coordinates are positive or negative Infinity or NaN; otherwise, true.
-     */
-    isFinite() {
-        return (isFinite(this.pos.x) && isFinite(this.pos.y) && isFinite(this.width) && isFinite(this.height));
-    }
-
-    /**
-     * Returns a polygon whose edges are the same as this box.
-     * @name toPolygon
-     * @memberof Rect
-     * @returns {Polygon} a new Polygon that represents this rectangle.
-     */
-    toPolygon() {
-        return pool.pull("Polygon",
-            this.pos.x, this.pos.y, this.points
-        );
-    }
-}
-
 // corresponding actions
 var _keyStatus = {};
 
@@ -11618,7 +16051,7 @@ const KEY = {
  */
 function initKeyboardEvent() {
     // make sure the keyboard is enable
-    if (keyBoardEventTarget === null && device.isMobile === false) {
+    if (keyBoardEventTarget === null && isMobile$1 === false) {
         keyBoardEventTarget = globalThis;
         if (typeof keyBoardEventTarget.addEventListener === "function") {
             keyBoardEventTarget.addEventListener("keydown", keyDownEvent, false);
@@ -11752,450 +16185,6 @@ function unbindKey(keycode) {
     // remove the key binding
     _keyBindings[keycode] = null;
     _preventDefaultForKeys[keycode] = null;
-}
-
-/**
- * @classdesc
- * a bound object contains methods for creating and manipulating axis-aligned bounding boxes (AABB).
- */
-class Bounds {
-    /**
-     * @param {Vector2d[]} [vertices] an array of me.Vector2d points
-     */
-    constructor(vertices) {
-        // @ignore
-        this._center = new Vector2d();
-        this.onResetEvent(vertices);
-    }
-
-    /**
-     * @ignore
-     */
-    onResetEvent(vertices) {
-        if (typeof this.min === "undefined") {
-            this.min = { x: Infinity,  y: Infinity };
-            this.max = { x: -Infinity, y: -Infinity };
-        } else {
-            this.clear();
-        }
-        if (typeof vertices !== "undefined") {
-            this.update(vertices);
-        }
-    }
-
-    /**
-     * reset the bound
-     * @name clear
-     * @memberof Bounds
-     */
-    clear() {
-        this.setMinMax(Infinity, Infinity, -Infinity, -Infinity);
-
-    }
-
-    /**
-     * sets the bounds to the given min and max value
-     * @name setMinMax
-     * @memberof Bounds
-     * @param {number} minX
-     * @param {number} minY
-     * @param {number} maxX
-     * @param {number} maxY
-     */
-    setMinMax(minX, minY, maxX, maxY) {
-        this.min.x = minX;
-        this.min.y = minY;
-
-        this.max.x = maxX;
-        this.max.y = maxY;
-    }
-
-    /**
-     * x position of the bound
-     * @public
-     * @type {number}
-     * @name x
-     * @memberof Bounds
-     */
-    get x() {
-        return this.min.x;
-    }
-
-    set x(value) {
-        var deltaX = this.max.x - this.min.x;
-        this.min.x = value;
-        this.max.x = value + deltaX;
-    }
-
-    /**
-     * y position of the bounds
-     * @public
-     * @type {number}
-     * @name y
-     * @memberof Bounds
-     */
-    get y() {
-        return this.min.y;
-    }
-
-    set y(value) {
-        var deltaY = this.max.y - this.min.y;
-
-        this.min.y = value;
-        this.max.y = value + deltaY;
-    }
-
-    /**
-     * width of the bounds
-     * @public
-     * @type {number}
-     * @name width
-     * @memberof Bounds
-     */
-    get width() {
-        return this.max.x - this.min.x;
-    }
-
-    set width(value) {
-        this.max.x = this.min.x + value;
-    }
-
-    /**
-     * width of the bounds
-     * @public
-     * @type {number}
-     * @name width
-     * @memberof Bounds
-     */
-    get height() {
-        return this.max.y - this.min.y;
-    }
-
-    set height(value) {
-        this.max.y = this.min.y + value;
-    }
-
-    /**
-     * left coordinate of the bound
-     * @public
-     * @type {number}
-     * @name left
-     * @memberof Bounds
-     */
-    get left() {
-        return this.min.x;
-    }
-
-    /**
-     * right coordinate of the bound
-     * @public
-     * @type {number}
-     * @name right
-     * @memberof Bounds
-     */
-    get right() {
-        return this.max.x;
-    }
-
-    /**
-     * top coordinate of the bound
-     * @public
-     * @type {number}
-     * @name top
-     * @memberof Bounds
-     */
-    get top() {
-        return this.min.y;
-    }
-
-    /**
-     * bottom coordinate of the bound
-     * @public
-     * @type {number}
-     * @name bottom
-     * @memberof Bounds
-     */
-    get bottom() {
-        return this.max.y;
-    }
-
-    /**
-     * center position of the bound on the x axis
-     * @public
-     * @type {number}
-     * @name centerX
-     * @memberof Bounds
-     */
-    get centerX() {
-        return this.min.x + (this.width / 2);
-    }
-
-    /**
-     * center position of the bound on the y axis
-     * @public
-     * @type {number}
-     * @name centerY
-     * @memberof Bounds
-     */
-    get centerY() {
-        return this.min.y + (this.height / 2);
-    }
-
-    /**
-     * return the center position of the bound
-     * @public
-     * @type {Vector2d}
-     * @name center
-     * @memberof Bounds
-     */
-    get center() {
-        return this._center.set(this.centerX, this.centerY);
-    }
-
-    /**
-     * Updates bounds using the given vertices
-     * @name update
-     * @memberof Bounds
-     * @param {Vector2d[]} vertices an array of me.Vector2d points
-     */
-    update(vertices) {
-        this.add(vertices, true);
-    }
-
-    /**
-     * add the given vertices to the bounds definition.
-     * @name add
-     * @memberof Bounds
-     * @param {Vector2d[]} vertices an array of me.Vector2d points
-     * @param {boolean} [clear=false] either to reset the bounds before adding the new vertices
-     */
-    add(vertices, clear = false) {
-        if (clear === true) {
-            this.clear();
-        }
-        for (var i = 0; i < vertices.length; i++) {
-            var vertex = vertices[i];
-            if (vertex.x > this.max.x) this.max.x = vertex.x;
-            if (vertex.x < this.min.x) this.min.x = vertex.x;
-            if (vertex.y > this.max.y) this.max.y = vertex.y;
-            if (vertex.y < this.min.y) this.min.y = vertex.y;
-        }
-    }
-
-    /**
-     * add the given bounds to the bounds definition.
-     * @name addBounds
-     * @memberof Bounds
-     * @param {Bounds} bounds
-     * @param {boolean} [clear=false] either to reset the bounds before adding the new vertices
-     */
-    addBounds(bounds, clear = false) {
-        if (clear === true) {
-            this.clear();
-        }
-
-        if (bounds.max.x > this.max.x) this.max.x = bounds.max.x;
-        if (bounds.min.x < this.min.x) this.min.x = bounds.min.x;
-        if (bounds.max.y > this.max.y) this.max.y = bounds.max.y;
-        if (bounds.min.y < this.min.y) this.min.y = bounds.min.y;
-    }
-
-    /**
-     * add the given point to the bounds definition.
-     * @name addPoint
-     * @memberof Bounds
-     * @param {Vector2d} v
-     * @param {Matrix2d} [m] an optional transform to apply to the given point
-     */
-    addPoint(v, m) {
-        if (typeof m !== "undefined") {
-            v = m.apply(v);
-        }
-        this.min.x = Math.min(this.min.x, v.x);
-        this.max.x = Math.max(this.max.x, v.x);
-        this.min.y = Math.min(this.min.y, v.y);
-        this.max.y = Math.max(this.max.y, v.y);
-    }
-
-    /**
-     * add the given quad coordinates to this bound definition, multiplied by the given matrix
-     * @name addFrame
-     * @memberof Bounds
-     * @param {number} x0 - left X coordinates of the quad
-     * @param {number} y0 - top Y coordinates of the quad
-     * @param {number} x1 - right X coordinates of the quad
-     * @param {number} y1 - bottom y coordinates of the quad
-     * @param {Matrix2d} [m] an optional transform to apply to the given frame coordinates
-     */
-    addFrame(x0, y0, x1, y1, m) {
-        var v = pool.pull("Vector2d");
-
-        // transform all points and add to the bound definition
-        this.addPoint(v.set(x0, y0), m);
-        this.addPoint(v.set(x1, y0), m);
-        this.addPoint(v.set(x0, y1), m);
-        this.addPoint(v.set(x1, y1), m);
-
-        pool.push(v);
-    }
-
-    /**
-     * Returns true if the bounds contains the given point.
-     * @name contains
-     * @memberof Bounds
-     * @method
-     * @param {Vector2d} point
-     * @returns {boolean} True if the bounds contain the point, otherwise false
-     */
-    /**
-     * Returns true if the bounds contains the given point.
-     * @name contains
-     * @memberof Bounds
-     * @param {number} x
-     * @param {number} y
-     * @returns {boolean} True if the bounds contain the point, otherwise false
-     */
-    contains() {
-        var arg0 = arguments[0];
-        var _x1, _x2, _y1, _y2;
-        if (arguments.length === 2) {
-            // x, y
-            _x1 = _x2 = arg0;
-            _y1 = _y2 = arguments[1];
-        } else {
-            if (arg0 instanceof Bounds) {
-                // bounds
-                _x1 = arg0.min.x;
-                _x2 = arg0.max.x;
-                _y1 = arg0.min.y;
-                _y2 = arg0.max.y;
-            } else {
-                // vector
-                _x1 = _x2 = arg0.x;
-                _y1 = _y2 = arg0.y;
-            }
-        }
-
-        return _x1 >= this.min.x && _x2 <= this.max.x
-            && _y1 >= this.min.y && _y2 <= this.max.y;
-    }
-
-    /**
-     * Returns true if the two bounds intersect.
-     * @name overlaps
-     * @memberof Bounds
-     * @param {Bounds|Rect} bounds
-     * @returns {boolean} True if the bounds overlap, otherwise false
-     */
-    overlaps(bounds) {
-        return !(this.right < bounds.left || this.left > bounds.right ||
-                 this.bottom < bounds.top || this.top > bounds.bottom);
-    }
-
-    /**
-     * determines whether all coordinates of this bounds are finite numbers.
-     * @name isFinite
-     * @memberof Bounds
-     * @returns {boolean} false if all coordinates are positive or negative Infinity or NaN; otherwise, true.
-     */
-    isFinite() {
-        return (isFinite(this.min.x) && isFinite(this.max.x) && isFinite(this.min.y) && isFinite(this.max.y));
-    }
-
-    /**
-     * Translates the bounds by the given vector.
-     * @name translate
-     * @memberof Bounds
-     * @method
-     * @param {Vector2d} vector
-     */
-    /**
-     * Translates the bounds by x on the x axis, and y on the y axis
-     * @name translate
-     * @memberof Bounds
-     * @param {number} x
-     * @param {number} y
-     */
-    translate() {
-        var _x, _y;
-        if (arguments.length === 2) {
-            // x, y
-            _x = arguments[0];
-            _y = arguments[1];
-        } else {
-            // vector
-            _x = arguments[0].x;
-            _y = arguments[0].y;
-        }
-        this.min.x += _x;
-        this.max.x += _x;
-        this.min.y += _y;
-        this.max.y += _y;
-    }
-
-    /**
-     * Shifts the bounds to the given position vector.
-     * @name shift
-     * @memberof Bounds
-     * @method
-     * @param {Vector2d} position
-     */
-    /**
-     * Shifts the bounds to the given x, y position.
-     * @name shift
-     * @memberof Bounds
-     * @param {number} x
-     * @param {number} y
-     */
-    shift() {
-        var _x, _y;
-
-        if (arguments.length === 2) {
-            // x, y
-            _x = arguments[0];
-            _y = arguments[1];
-        } else {
-            // vector
-            _x = arguments[0].x;
-            _y = arguments[0].y;
-        }
-
-        var deltaX = this.max.x - this.min.x,
-            deltaY = this.max.y - this.min.y;
-
-        this.min.x = _x;
-        this.max.x = _x + deltaX;
-        this.min.y = _y;
-        this.max.y = _y + deltaY;
-    }
-
-    /**
-     * clone this bounds
-     * @name clone
-     * @memberof Bounds
-     * @returns {Bounds}
-     */
-    clone() {
-        var bounds = new Bounds();
-        bounds.addBounds(this);
-        return bounds;
-    }
-
-    /**
-     * Returns a polygon whose edges are the same as this bounds.
-     * @name toPolygon
-     * @memberof Bounds
-     * @returns {Polygon} a new Polygon that represents this bounds.
-     */
-    toPolygon () {
-        return pool.pull("Polygon", this.x, this.y, [
-            pool.pull("Vector2d", 0,          0),
-            pool.pull("Vector2d", this.width, 0),
-            pool.pull("Vector2d", this.width, this.height),
-            pool.pull("Vector2d", 0,          this.height)
-        ]);
-    }
-
 }
 
 /**
@@ -12525,7 +16514,7 @@ class Pointer extends Bounds {
         this.gameScreenY = this.y = tmpVec.y;
 
         // true if not originally a pointer event
-        this.isNormalized = !device.PointerEvent || (device.PointerEvent && !(event instanceof globalThis.PointerEvent));
+        this.isNormalized = (typeof globalThis.PointerEvent !== "undefined" && !(event instanceof globalThis.PointerEvent));
 
         this.locked = locked;
         this.movementX = event.movementX || 0;
@@ -12683,7 +16672,7 @@ function enablePointerEvent() {
         currentPointer = new Rect(0, 0, 1, 1);
 
         // instantiate a pool of pointer catched
-        for (var v = 0; v < device.maxTouchPoints; v++) {
+        for (var v = 0; v < maxTouchPoints; v++) {
             T_POINTERS.push(new Pointer());
         }
 
@@ -12692,14 +16681,14 @@ function enablePointerEvent() {
             pointerEventTarget = renderer.getScreenCanvas();
         }
 
-        if (device.PointerEvent) {
+        if (pointerEvent) {
             // standard Pointer Events
             activeEventList = pointerEventList;
         } else {
             // Regular Mouse events
             activeEventList = mouseEventList;
         }
-        if (device.touch && !device.PointerEvent) {
+        if (touch && !pointerEvent) {
             // touch event on mobile devices
             activeEventList = activeEventList.concat(touchEventList);
         }
@@ -12711,12 +16700,12 @@ function enablePointerEvent() {
             throttlingInterval = ~~(1000 / timer.maxfps);
         }
 
-        if (device.autoFocus === true) {
-            device.focus();
+        {
+            focus();
             pointerEventTarget.addEventListener(
                 activeEventList[2], // MOUSE/POINTER DOWN
                 function () {
-                    device.focus();
+                    focus();
                 },
                 { passive: (preventDefault === false) }
             );
@@ -12756,7 +16745,7 @@ function enablePointerEvent() {
         setTouchAction(pointerEventTarget);
 
         // set a on change listener on pointerlock if supported
-        if (device.hasPointerLockSupport) {
+        if (hasPointerLockSupport) {
             document.addEventListener("pointerlockchange", () => {
                 // change the locked status accordingly
                 locked = document.pointerLockElement === getParent();
@@ -12980,18 +16969,18 @@ function normalizeEvent(originalEvent) {
     var _pointer;
 
     // PointerEvent or standard Mouse event
-    if (device.TouchEvent && originalEvent.changedTouches) {
+    if (touchEvent && originalEvent.changedTouches) {
         // iOS/Android Touch event
         for (var i = 0, l = originalEvent.changedTouches.length; i < l; i++) {
-            var touchEvent = originalEvent.changedTouches[i];
+            var touchEvent$1 = originalEvent.changedTouches[i];
             _pointer = T_POINTERS.pop();
             _pointer.setEvent(
                 originalEvent,
-                touchEvent.pageX,
-                touchEvent.pageY,
-                touchEvent.clientX,
-                touchEvent.clientY,
-                touchEvent.identifier
+                touchEvent$1.pageX,
+                touchEvent$1.pageY,
+                touchEvent$1.clientX,
+                touchEvent$1.clientY,
+                touchEvent$1.identifier
             );
             normalizedEvents.push(_pointer);
         }
@@ -13120,8 +17109,8 @@ var throttlingInterval;
  */
 function globalToLocal(x, y, v) {
     v = v || pool.pull("Vector2d");
-    var rect = device.getElementBounds(renderer.getScreenCanvas());
-    var pixelRatio = device.devicePixelRatio;
+    var rect = getElementBounds(renderer.getScreenCanvas());
+    var pixelRatio = globalThis.devicePixelRatio || 1;
     x -= rect.left + (globalThis.pageXOffset || 0);
     y -= rect.top + (globalThis.pageYOffset || 0);
     var scale = scaleRatio;
@@ -13341,7 +17330,7 @@ function releaseAllPointerEvents(region) {
  * me.input.requestPointerLock();
  */
 function requestPointerLock() {
-    if (device.hasPointerLockSupport) {
+    if (hasPointerLockSupport) {
         var element = getParent();
         element.requestPointerLock();
         return true;
@@ -13357,7 +17346,7 @@ function requestPointerLock() {
  * @returns {boolean} return true if the request was successfully submitted
  */
 function exitPointerLock() {
-    if (device.hasPointerLockSupport) {
+    if (hasPointerLockSupport) {
         document.exitPointerLock();
         return true;
     }
@@ -14748,270 +18737,6 @@ class Renderable extends Rect {
         // to be extended !
     }
 
-}
-
-/**
- * @classdesc
- * an ellipse Object
- */
-class Ellipse {
-    /**
-     * @param {number} x the center x coordinate of the ellipse
-     * @param {number} y the center y coordinate of the ellipse
-     * @param {number} w width (diameter) of the ellipse
-     * @param {number} h height (diameter) of the ellipse
-     */
-    constructor(x, y, w, h) {
-        /**
-         * the center coordinates of the ellipse
-         * @public
-         * @type {Vector2d}
-         * @name pos
-         * @memberof Ellipse
-         */
-        this.pos = pool.pull("Vector2d");
-
-        /**
-         * The bounding rectangle for this shape
-         * @private
-         */
-        this._bounds = undefined;
-
-        /**
-         * Maximum radius of the ellipse
-         * @public
-         * @type {number}
-         * @name radius
-         * @memberof Ellipse
-         */
-        this.radius = NaN;
-
-        /**
-         * Pre-scaled radius vector for ellipse
-         * @public
-         * @type {Vector2d}
-         * @name radiusV
-         * @memberof Ellipse
-         */
-        this.radiusV = pool.pull("Vector2d");
-
-        /**
-         * Radius squared, for pythagorean theorom
-         * @public
-         * @type {Vector2d}
-         * @name radiusSq
-         * @memberof Ellipse
-         */
-        this.radiusSq = pool.pull("Vector2d");
-
-        /**
-         * x/y scaling ratio for ellipse
-         * @public
-         * @type {Vector2d}
-         * @name ratio
-         * @memberof Ellipse
-         */
-        this.ratio = pool.pull("Vector2d");
-
-        // the shape type
-        this.shapeType = "Ellipse";
-        this.setShape(x, y, w, h);
-    }
-
-    /** @ignore */
-    onResetEvent(x, y, w, h) {
-        this.setShape(x, y, w, h);
-    }
-
-    /**
-     * set new value to the Ellipse shape
-     * @name setShape
-     * @memberof Ellipse
-     * @param {number} x the center x coordinate of the ellipse
-     * @param {number} y the center y coordinate of the ellipse
-     * @param {number} w width (diameter) of the ellipse
-     * @param {number} h height (diameter) of the ellipse
-     * @returns {Ellipse} this instance for objecf chaining
-     */
-    setShape(x, y, w, h) {
-        var hW = w / 2;
-        var hH = h / 2;
-
-        this.pos.set(x, y);
-        this.radius = Math.max(hW, hH);
-        this.ratio.set(hW / this.radius, hH / this.radius);
-        this.radiusV.set(this.radius, this.radius).scaleV(this.ratio);
-        var r = this.radius * this.radius;
-        this.radiusSq.set(r, r).scaleV(this.ratio);
-
-        // update the corresponding bounds
-        this.getBounds().setMinMax(x, y, x + w, x + h);
-        // elipse position is the center of the cirble, bounds position are top left
-        this.getBounds().translate(-this.radiusV.x, -this.radiusV.y);
-
-        return this;
-    }
-
-    /**
-     * Rotate this Ellipse (counter-clockwise) by the specified angle (in radians).
-     * @name rotate
-     * @memberof Ellipse
-     * @param {number} angle The angle to rotate (in radians)
-     * @param {Vector2d|ObservableVector2d} [v] an optional point to rotate around
-     * @returns {Ellipse} Reference to this object for method chaining
-     */
-    rotate(angle, v) {
-        // TODO : only works for circle
-        this.pos.rotate(angle, v);
-        this.getBounds().shift(this.pos);
-        this.getBounds().translate(-this.radiusV.x, -this.radiusV.y);
-        return this;
-    }
-
-    /**
-     * Scale this Ellipse by the specified scalar.
-     * @name scale
-     * @memberof Ellipse
-     * @param {number} x
-     * @param {number} [y=x]
-     * @returns {Ellipse} Reference to this object for method chaining
-     */
-    scale(x, y) {
-        y = typeof (y) !== "undefined" ? y : x;
-        return this.setShape(
-            this.pos.x,
-            this.pos.y,
-            this.radiusV.x * 2 * x,
-            this.radiusV.y * 2 * y
-        );
-    }
-
-    /**
-     * Scale this Ellipse by the specified vector.
-     * @name scale
-     * @memberof Ellipse
-     * @param {Vector2d} v
-     * @returns {Ellipse} Reference to this object for method chaining
-     */
-    scaleV(v) {
-        return this.scale(v.x, v.y);
-    }
-
-    /**
-     * apply the given transformation matrix to this ellipse
-     * @name transform
-     * @memberof Ellipse
-     * @param {Matrix2d} matrix the transformation matrix
-     * @returns {Polygon} Reference to this object for method chaining
-     */
-    transform(matrix) { // eslint-disable-line no-unused-vars
-        // TODO
-        return this;
-    }
-
-    /**
-     * translate the circle/ellipse by the specified offset
-     * @name translate
-     * @memberof Ellipse
-     * @method
-     * @param {number} x x offset
-     * @param {number} y y offset
-     * @returns {Ellipse} this ellipse
-     */
-    /**
-     * translate the circle/ellipse by the specified vector
-     * @name translate
-     * @memberof Ellipse
-     * @param {Vector2d} v vector offset
-     * @returns {Ellipse} this ellipse
-     */
-    translate() {
-        var _x, _y;
-
-        if (arguments.length === 2) {
-            // x, y
-            _x = arguments[0];
-            _y = arguments[1];
-        } else {
-            // vector
-            _x = arguments[0].x;
-            _y = arguments[0].y;
-        }
-
-        this.pos.x += _x;
-        this.pos.y += _y;
-        this.getBounds().translate(_x, _y);
-
-        return this;
-    }
-
-    /**
-     * check if this circle/ellipse contains the specified point
-     * @name contains
-     * @method
-     * @memberof Ellipse
-     * @param {Vector2d} point
-     * @returns {boolean} true if contains
-     */
-
-    /**
-     * check if this circle/ellipse contains the specified point
-     * @name contains
-     * @memberof Ellipse
-     * @param  {number} x x coordinate
-     * @param  {number} y y coordinate
-     * @returns {boolean} true if contains
-     */
-    contains() {
-        var _x, _y;
-
-        if (arguments.length === 2) {
-          // x, y
-          _x = arguments[0];
-          _y = arguments[1];
-        } else {
-          // vector
-          _x = arguments[0].x;
-          _y = arguments[0].y;
-        }
-
-        // Make position relative to object center point.
-        _x -= this.pos.x;
-        _y -= this.pos.y;
-        // Pythagorean theorem.
-        return (
-            ((_x * _x) / this.radiusSq.x) +
-            ((_y * _y) / this.radiusSq.y)
-        ) <= 1.0;
-    }
-
-    /**
-     * returns the bounding box for this shape, the smallest Rectangle object completely containing this shape.
-     * @name getBounds
-     * @memberof Ellipse
-     * @returns {Bounds} this shape bounding box Rectangle object
-     */
-    getBounds() {
-        if (typeof this._bounds === "undefined") {
-            this._bounds = pool.pull("Bounds");
-        }
-        return this._bounds;
-    }
-
-    /**
-     * clone this Ellipse
-     * @name clone
-     * @memberof Ellipse
-     * @returns {Ellipse} new Ellipse
-     */
-    clone() {
-        return new Ellipse(
-            this.pos.x,
-            this.pos.y,
-            this.radiusV.x * 2,
-            this.radiusV.y * 2
-        );
-    }
 }
 
 /*
@@ -19238,1716 +22963,6 @@ class Stage {
     }
 }
 
-var src = {};
-
-var arraymultimap = {};
-
-var multimap = {};
-
-var __generator = (commonjsGlobal && commonjsGlobal.__generator) || function (thisArg, body) {
-    var _ = { label: 0, sent: function() { if (t[0] & 1) throw t[1]; return t[1]; }, trys: [], ops: [] }, f, y, t, g;
-    return g = { next: verb(0), "throw": verb(1), "return": verb(2) }, typeof Symbol === "function" && (g[Symbol.iterator] = function() { return this; }), g;
-    function verb(n) { return function (v) { return step([n, v]); }; }
-    function step(op) {
-        if (f) throw new TypeError("Generator is already executing.");
-        while (_) try {
-            if (f = 1, y && (t = op[0] & 2 ? y["return"] : op[0] ? y["throw"] || ((t = y["return"]) && t.call(y), 0) : y.next) && !(t = t.call(y, op[1])).done) return t;
-            if (y = 0, t) op = [op[0] & 2, t.value];
-            switch (op[0]) {
-                case 0: case 1: t = op; break;
-                case 4: _.label++; return { value: op[1], done: false };
-                case 5: _.label++; y = op[1]; op = [0]; continue;
-                case 7: op = _.ops.pop(); _.trys.pop(); continue;
-                default:
-                    if (!(t = _.trys, t = t.length > 0 && t[t.length - 1]) && (op[0] === 6 || op[0] === 2)) { _ = 0; continue; }
-                    if (op[0] === 3 && (!t || (op[1] > t[0] && op[1] < t[3]))) { _.label = op[1]; break; }
-                    if (op[0] === 6 && _.label < t[1]) { _.label = t[1]; t = op; break; }
-                    if (t && _.label < t[2]) { _.label = t[2]; _.ops.push(op); break; }
-                    if (t[2]) _.ops.pop();
-                    _.trys.pop(); continue;
-            }
-            op = body.call(thisArg, _);
-        } catch (e) { op = [6, e]; y = 0; } finally { f = t = 0; }
-        if (op[0] & 5) throw op[1]; return { value: op[0] ? op[1] : void 0, done: true };
-    }
-};
-var __values = (commonjsGlobal && commonjsGlobal.__values) || function(o) {
-    var s = typeof Symbol === "function" && Symbol.iterator, m = s && o[s], i = 0;
-    if (m) return m.call(o);
-    if (o && typeof o.length === "number") return {
-        next: function () {
-            if (o && i >= o.length) o = void 0;
-            return { value: o && o[i++], done: !o };
-        }
-    };
-    throw new TypeError(s ? "Object is not iterable." : "Symbol.iterator is not defined.");
-};
-var __read = (commonjsGlobal && commonjsGlobal.__read) || function (o, n) {
-    var m = typeof Symbol === "function" && o[Symbol.iterator];
-    if (!m) return o;
-    var i = m.call(o), r, ar = [], e;
-    try {
-        while ((n === void 0 || n-- > 0) && !(r = i.next()).done) ar.push(r.value);
-    }
-    catch (error) { e = { error: error }; }
-    finally {
-        try {
-            if (r && !r.done && (m = i["return"])) m.call(i);
-        }
-        finally { if (e) throw e.error; }
-    }
-    return ar;
-};
-Object.defineProperty(multimap, "__esModule", { value: true });
-multimap.Multimap = void 0;
-var Multimap = /** @class */ (function () {
-    function Multimap(operator, iterable) {
-        var e_1, _a;
-        this.size_ = 0;
-        this.map = new Map();
-        this.operator = operator;
-        if (iterable) {
-            try {
-                for (var iterable_1 = __values(iterable), iterable_1_1 = iterable_1.next(); !iterable_1_1.done; iterable_1_1 = iterable_1.next()) {
-                    var _b = __read(iterable_1_1.value, 2), key = _b[0], value = _b[1];
-                    this.put(key, value);
-                }
-            }
-            catch (e_1_1) { e_1 = { error: e_1_1 }; }
-            finally {
-                try {
-                    if (iterable_1_1 && !iterable_1_1.done && (_a = iterable_1.return)) _a.call(iterable_1);
-                }
-                finally { if (e_1) throw e_1.error; }
-            }
-        }
-        return this;
-    }
-    Object.defineProperty(Multimap.prototype, "size", {
-        get: function () {
-            return this.size_;
-        },
-        enumerable: false,
-        configurable: true
-    });
-    Multimap.prototype.get = function (key) {
-        var values = this.map.get(key);
-        if (values) {
-            return this.operator.clone(values);
-        }
-        else {
-            return this.operator.create();
-        }
-    };
-    Multimap.prototype.put = function (key, value) {
-        var values = this.map.get(key);
-        if (!values) {
-            values = this.operator.create();
-        }
-        if (!this.operator.add(value, values)) {
-            return false;
-        }
-        this.map.set(key, values);
-        this.size_++;
-        return true;
-    };
-    Multimap.prototype.putAll = function (arg1, arg2) {
-        var e_2, _a, e_3, _b;
-        var pushed = 0;
-        if (arg2) {
-            var key = arg1;
-            var values = arg2;
-            try {
-                for (var values_1 = __values(values), values_1_1 = values_1.next(); !values_1_1.done; values_1_1 = values_1.next()) {
-                    var value = values_1_1.value;
-                    this.put(key, value);
-                    pushed++;
-                }
-            }
-            catch (e_2_1) { e_2 = { error: e_2_1 }; }
-            finally {
-                try {
-                    if (values_1_1 && !values_1_1.done && (_a = values_1.return)) _a.call(values_1);
-                }
-                finally { if (e_2) throw e_2.error; }
-            }
-        }
-        else if (arg1 instanceof Multimap) {
-            try {
-                for (var _c = __values(arg1.entries()), _d = _c.next(); !_d.done; _d = _c.next()) {
-                    var _e = __read(_d.value, 2), key = _e[0], value = _e[1];
-                    this.put(key, value);
-                    pushed++;
-                }
-            }
-            catch (e_3_1) { e_3 = { error: e_3_1 }; }
-            finally {
-                try {
-                    if (_d && !_d.done && (_b = _c.return)) _b.call(_c);
-                }
-                finally { if (e_3) throw e_3.error; }
-            }
-        }
-        else {
-            throw new TypeError("unexpected arguments");
-        }
-        return pushed > 0;
-    };
-    Multimap.prototype.has = function (key) {
-        return this.map.has(key);
-    };
-    Multimap.prototype.hasEntry = function (key, value) {
-        return this.operator.has(value, this.get(key));
-    };
-    Multimap.prototype.delete = function (key) {
-        this.size_ -= this.operator.size(this.get(key));
-        return this.map.delete(key);
-    };
-    Multimap.prototype.deleteEntry = function (key, value) {
-        var current = this.get(key);
-        if (!this.operator.delete(value, current)) {
-            return false;
-        }
-        this.map.set(key, current);
-        this.size_--;
-        return true;
-    };
-    Multimap.prototype.clear = function () {
-        this.map.clear();
-        this.size_ = 0;
-    };
-    Multimap.prototype.keys = function () {
-        return this.map.keys();
-    };
-    Multimap.prototype.entries = function () {
-        var self = this;
-        function gen() {
-            var _a, _b, _c, key, values, values_2, values_2_1, value, e_4_1, e_5_1;
-            var e_5, _d, e_4, _e;
-            return __generator(this, function (_f) {
-                switch (_f.label) {
-                    case 0:
-                        _f.trys.push([0, 11, 12, 13]);
-                        _a = __values(self.map.entries()), _b = _a.next();
-                        _f.label = 1;
-                    case 1:
-                        if (!!_b.done) return [3 /*break*/, 10];
-                        _c = __read(_b.value, 2), key = _c[0], values = _c[1];
-                        _f.label = 2;
-                    case 2:
-                        _f.trys.push([2, 7, 8, 9]);
-                        values_2 = (e_4 = void 0, __values(values)), values_2_1 = values_2.next();
-                        _f.label = 3;
-                    case 3:
-                        if (!!values_2_1.done) return [3 /*break*/, 6];
-                        value = values_2_1.value;
-                        return [4 /*yield*/, [key, value]];
-                    case 4:
-                        _f.sent();
-                        _f.label = 5;
-                    case 5:
-                        values_2_1 = values_2.next();
-                        return [3 /*break*/, 3];
-                    case 6: return [3 /*break*/, 9];
-                    case 7:
-                        e_4_1 = _f.sent();
-                        e_4 = { error: e_4_1 };
-                        return [3 /*break*/, 9];
-                    case 8:
-                        try {
-                            if (values_2_1 && !values_2_1.done && (_e = values_2.return)) _e.call(values_2);
-                        }
-                        finally { if (e_4) throw e_4.error; }
-                        return [7 /*endfinally*/];
-                    case 9:
-                        _b = _a.next();
-                        return [3 /*break*/, 1];
-                    case 10: return [3 /*break*/, 13];
-                    case 11:
-                        e_5_1 = _f.sent();
-                        e_5 = { error: e_5_1 };
-                        return [3 /*break*/, 13];
-                    case 12:
-                        try {
-                            if (_b && !_b.done && (_d = _a.return)) _d.call(_a);
-                        }
-                        finally { if (e_5) throw e_5.error; }
-                        return [7 /*endfinally*/];
-                    case 13: return [2 /*return*/];
-                }
-            });
-        }
-        return gen();
-    };
-    Multimap.prototype.values = function () {
-        var self = this;
-        function gen() {
-            var _a, _b, _c, value, e_6_1;
-            var e_6, _d;
-            return __generator(this, function (_e) {
-                switch (_e.label) {
-                    case 0:
-                        _e.trys.push([0, 5, 6, 7]);
-                        _a = __values(self.entries()), _b = _a.next();
-                        _e.label = 1;
-                    case 1:
-                        if (!!_b.done) return [3 /*break*/, 4];
-                        _c = __read(_b.value, 2), value = _c[1];
-                        return [4 /*yield*/, value];
-                    case 2:
-                        _e.sent();
-                        _e.label = 3;
-                    case 3:
-                        _b = _a.next();
-                        return [3 /*break*/, 1];
-                    case 4: return [3 /*break*/, 7];
-                    case 5:
-                        e_6_1 = _e.sent();
-                        e_6 = { error: e_6_1 };
-                        return [3 /*break*/, 7];
-                    case 6:
-                        try {
-                            if (_b && !_b.done && (_d = _a.return)) _d.call(_a);
-                        }
-                        finally { if (e_6) throw e_6.error; }
-                        return [7 /*endfinally*/];
-                    case 7: return [2 /*return*/];
-                }
-            });
-        }
-        return gen();
-    };
-    Multimap.prototype.forEach = function (callback, thisArg) {
-        var e_7, _a;
-        try {
-            for (var _b = __values(this.entries()), _c = _b.next(); !_c.done; _c = _b.next()) {
-                var _d = __read(_c.value, 2), key = _d[0], value = _d[1];
-                callback.call(thisArg === undefined ? this : thisArg, value, key, this);
-            }
-        }
-        catch (e_7_1) { e_7 = { error: e_7_1 }; }
-        finally {
-            try {
-                if (_c && !_c.done && (_a = _b.return)) _a.call(_b);
-            }
-            finally { if (e_7) throw e_7.error; }
-        }
-    };
-    Multimap.prototype[Symbol.iterator] = function () {
-        return this.entries();
-    };
-    Multimap.prototype.asMap = function () {
-        var e_8, _a;
-        var ret = new Map();
-        try {
-            for (var _b = __values(this.keys()), _c = _b.next(); !_c.done; _c = _b.next()) {
-                var key = _c.value;
-                ret.set(key, this.operator.clone(this.get(key)));
-            }
-        }
-        catch (e_8_1) { e_8 = { error: e_8_1 }; }
-        finally {
-            try {
-                if (_c && !_c.done && (_a = _b.return)) _a.call(_b);
-            }
-            finally { if (e_8) throw e_8.error; }
-        }
-        return ret;
-    };
-    return Multimap;
-}());
-multimap.Multimap = Multimap;
-
-var __extends$1 = (commonjsGlobal && commonjsGlobal.__extends) || (function () {
-    var extendStatics = function (d, b) {
-        extendStatics = Object.setPrototypeOf ||
-            ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
-            function (d, b) { for (var p in b) if (Object.prototype.hasOwnProperty.call(b, p)) d[p] = b[p]; };
-        return extendStatics(d, b);
-    };
-    return function (d, b) {
-        extendStatics(d, b);
-        function __() { this.constructor = d; }
-        d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
-    };
-})();
-Object.defineProperty(arraymultimap, "__esModule", { value: true });
-arraymultimap.ArrayMultimap = void 0;
-var multimap_1$1 = multimap;
-var ArrayMultimap = /** @class */ (function (_super) {
-    __extends$1(ArrayMultimap, _super);
-    function ArrayMultimap(iterable) {
-        return _super.call(this, new ArrayOperator(), iterable) || this;
-    }
-    Object.defineProperty(ArrayMultimap.prototype, Symbol.toStringTag, {
-        get: function () {
-            return "ArrayMultimap";
-        },
-        enumerable: false,
-        configurable: true
-    });
-    return ArrayMultimap;
-}(multimap_1$1.Multimap));
-arraymultimap.ArrayMultimap = ArrayMultimap;
-var ArrayOperator = /** @class */ (function () {
-    function ArrayOperator() {
-    }
-    ArrayOperator.prototype.create = function () {
-        return [];
-    };
-    ArrayOperator.prototype.clone = function (collection) {
-        return collection.slice();
-    };
-    ArrayOperator.prototype.add = function (value, collection) {
-        collection.push(value);
-        return true;
-    };
-    ArrayOperator.prototype.size = function (collection) {
-        return collection.length;
-    };
-    ArrayOperator.prototype.delete = function (value, collection) {
-        var index = collection.indexOf(value);
-        if (index > -1) {
-            collection.splice(index, 1);
-            return true;
-        }
-        return false;
-    };
-    ArrayOperator.prototype.has = function (value, collection) {
-        return collection.includes(value);
-    };
-    return ArrayOperator;
-}());
-
-var setmultimap = {};
-
-var __extends = (commonjsGlobal && commonjsGlobal.__extends) || (function () {
-    var extendStatics = function (d, b) {
-        extendStatics = Object.setPrototypeOf ||
-            ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
-            function (d, b) { for (var p in b) if (Object.prototype.hasOwnProperty.call(b, p)) d[p] = b[p]; };
-        return extendStatics(d, b);
-    };
-    return function (d, b) {
-        extendStatics(d, b);
-        function __() { this.constructor = d; }
-        d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
-    };
-})();
-Object.defineProperty(setmultimap, "__esModule", { value: true });
-setmultimap.SetMultimap = void 0;
-var multimap_1 = multimap;
-var SetMultimap = /** @class */ (function (_super) {
-    __extends(SetMultimap, _super);
-    function SetMultimap(iterable) {
-        return _super.call(this, new SetOperator(), iterable) || this;
-    }
-    Object.defineProperty(SetMultimap.prototype, Symbol.toStringTag, {
-        get: function () {
-            return "SetMultimap";
-        },
-        enumerable: false,
-        configurable: true
-    });
-    return SetMultimap;
-}(multimap_1.Multimap));
-setmultimap.SetMultimap = SetMultimap;
-var SetOperator = /** @class */ (function () {
-    function SetOperator() {
-    }
-    SetOperator.prototype.create = function () {
-        return new Set();
-    };
-    SetOperator.prototype.clone = function (collection) {
-        return new Set(collection);
-    };
-    SetOperator.prototype.add = function (value, collection) {
-        var prev = collection.size;
-        collection.add(value);
-        return prev !== collection.size;
-    };
-    SetOperator.prototype.size = function (collection) {
-        return collection.size;
-    };
-    SetOperator.prototype.delete = function (value, collection) {
-        return collection.delete(value);
-    };
-    SetOperator.prototype.has = function (value, collection) {
-        return collection.has(value);
-    };
-    return SetOperator;
-}());
-
-(function (exports) {
-	Object.defineProperty(exports, "__esModule", { value: true });
-	exports.SetMultimap = exports.ArrayMultimap = void 0;
-	var arraymultimap_1 = arraymultimap;
-	Object.defineProperty(exports, "ArrayMultimap", { enumerable: true, get: function () { return arraymultimap_1.ArrayMultimap; } });
-	var setmultimap_1 = setmultimap;
-	Object.defineProperty(exports, "SetMultimap", { enumerable: true, get: function () { return setmultimap_1.SetMultimap; } });
-} (src));
-
-/**
- * a basic texture cache object
- * @ignore
- */
-class TextureCache {
-
-    /**
-     * @ignore
-     */
-    constructor(max_size) {
-        // cache uses an array to allow for duplicated key
-        this.cache = new src.ArrayMultimap();
-        this.tinted = new Map();
-        this.units = new Map();
-        this.max_size = max_size || Infinity;
-        this.clear();
-    }
-
-    /**
-     * @ignore
-     */
-    clear() {
-        this.cache.clear();
-        this.tinted.clear();
-        this.units.clear();
-        this.length = 0;
-    }
-
-    /**
-     * @ignore
-     */
-    validate() {
-        if (this.length >= this.max_size) {
-            // TODO: Merge textures instead of throwing an exception
-            throw new Error(
-                "Texture cache overflow: " + this.max_size +
-                " texture units available for this GPU."
-            );
-        }
-    }
-
-    /**
-     * @ignore
-     */
-    get(image, atlas) {
-        var entry;
-
-        if (typeof atlas === "undefined") {
-            entry = this.cache.get(image)[0];
-        } else {
-            // manage cases where a specific atlas is specified
-            this.cache.forEach((value, key) => {
-                var _atlas = value.getAtlas();
-                if (key === image && _atlas[0].width === atlas.framewidth && _atlas[0].height === atlas.frameheight) {
-                    entry = value;
-                }
-            });
-        }
-
-        if (typeof entry === "undefined") {
-            if (!atlas) {
-                atlas = createAtlas(image.width, image.height, image.src ? getBasename(image.src) : undefined);
-            }
-            entry = new TextureAtlas(atlas, image, false);
-            this.set(image, entry);
-        }
-
-        return entry;
-    }
-
-    /**
-     * @ignore
-     */
-    delete(image) {
-        if (!this.cache.has(image)) {
-            this.cache.delete(image);
-        }
-    }
-
-    /**
-     * @ignore
-     */
-    tint(src, color) {
-        // make sure the src is in the cache
-        var image_cache = this.tinted.get(src);
-
-        if (image_cache === undefined) {
-            image_cache = this.tinted.set(src, new Map());
-        }
-
-        if (!image_cache.has(color)) {
-            image_cache.set(color, renderer.tint(src, color, "multiply"));
-        }
-
-        return image_cache.get(color);
-    }
-
-    /**
-     * @ignore
-     */
-    set(image, texture) {
-        var width = image.width;
-        var height = image.height;
-
-        // warn if a non POT texture is added to the cache when using WebGL1
-        if (renderer.WebGLVersion === 1 && (!isPowerOfTwo(width) || !isPowerOfTwo(height))) {
-            var src = typeof image.src !== "undefined" ? image.src : image;
-            console.warn(
-                "[Texture] " + src + " is not a POT texture " +
-                "(" + width + "x" + height + ")"
-            );
-        }
-        return this.cache.put(image, texture);
-    }
-
-    /**
-     * @ignore
-     */
-    getUnit(texture) {
-        if (!this.units.has(texture)) {
-            this.validate();
-            this.units.set(texture, this.length++);
-        }
-        return this.units.get(texture);
-    }
-}
-
-/**
- * create a simple 1 frame texture atlas based on the given parameters
- * @ignore
- */
-function createAtlas(width, height, name = "default", repeat = "no-repeat") {
-   return {
-       "meta" : {
-           "app" : "melonJS",
-           "size" : { "w" : width, "h" : height },
-           "repeat" : repeat,
-           "image" : "default"
-       },
-       "frames" : [{
-           "filename" : name,
-           "frame" : { "x" : 0, "y" : 0, "w" : width, "h" : height }
-       }]
-   };
-}
-
-/**
- * @classdesc
- * A Texture atlas class, currently supports : <br>
- * - [TexturePacker]{@link http://www.codeandweb.com/texturepacker/} : through JSON export (standard and multipack texture atlas) <br>
- * - [ShoeBox]{@link http://renderhjs.net/shoebox/} : through JSON export using the
- * melonJS setting [file]{@link https://github.com/melonjs/melonJS/raw/master/media/shoebox_JSON_export.sbx} <br>
- * - [Free Texture Packer]{@link http://free-tex-packer.com/app/} : through JSON export (standard and multipack texture atlas) <br>
- * - Standard (fixed cell size) spritesheet : through a {framewidth:xx, frameheight:xx, anchorPoint:me.Vector2d} object
- * );
- */
-class TextureAtlas {
-    /**
-     * @param {object|object[]} atlases atlas information. See {@link loader.getJSON}
-     * @param {HTMLImageElement|HTMLCanvasElement|string|HTMLImageElement[]|HTMLCanvasElement[]|string[]} [src=atlas.meta.image] Image source
-     * @param {boolean} [cache=false] Use true to skip caching this Texture
-     * @example
-     * // create a texture atlas from a JSON Object
-     * game.texture = new me.TextureAtlas(
-     *     me.loader.getJSON("texture")
-     * );
-     *
-     * // create a texture atlas from a multipack JSON Object
-     * game.texture = new me.TextureAtlas([
-     *     me.loader.getJSON("texture-0"),
-     *     me.loader.getJSON("texture-1"),
-     *     me.loader.getJSON("texture-2")
-     * ]);
-     *
-     * // create a texture atlas for a spritesheet with an anchorPoint in the center of each frame
-     * game.texture = new me.TextureAtlas(
-     *     {
-     *         framewidth : 32,
-     *         frameheight : 32,
-     *         anchorPoint : new me.Vector2d(0.5, 0.5)
-     *     },
-     *     me.loader.getImage("spritesheet")
-     */
-    constructor (atlases, src, cache) {
-        /**
-         * to identify the atlas format (e.g. texture packer)
-         * @ignore
-         */
-        this.format = null;
-
-        /**
-         * the texture source(s) itself
-         * @type {Map}
-         * @ignore
-         */
-        this.sources = new Map();
-
-        /**
-         * the atlas dictionnaries
-         * @type {Map}
-         * @ignore
-         */
-        this.atlases = new Map();
-
-        // parse given atlas(es) paremeters
-        if (typeof (atlases) !== "undefined") {
-            // normalize to array to keep the following code generic
-            atlases = Array.isArray(atlases) ? atlases : [atlases];
-            for (var i in atlases) {
-                var atlas = atlases[i];
-
-                if (typeof(atlas.meta) !== "undefined") {
-                    // Texture Packer or Free Texture Packer
-                    if (atlas.meta.app.includes("texturepacker") || atlas.meta.app.includes("free-tex-packer")) {
-                        this.format = "texturepacker";
-                        // set the texture
-                        if (typeof(src) === "undefined") {
-                            // get the texture name from the atlas meta data
-                            var image = loader.getImage(atlas.meta.image);
-                            if (!image) {
-                                throw new Error(
-                                    "Atlas texture '" + image + "' not found"
-                                );
-                            }
-                            this.sources.set(atlas.meta.image, image);
-                        } else {
-                            this.sources.set(atlas.meta.image || "default", typeof src === "string" ? loader.getImage(src) : src);
-                        }
-                        this.repeat = "no-repeat";
-                    }
-                    // ShoeBox
-                    else if (atlas.meta.app.includes("ShoeBox")) {
-                        if (!atlas.meta.exporter || !atlas.meta.exporter.includes("melonJS")) {
-                            throw new Error(
-                                "ShoeBox requires the JSON exporter : " +
-                                "https://github.com/melonjs/melonJS/tree/master/media/shoebox_JSON_export.sbx"
-                            );
-                        }
-                        this.format = "ShoeBox";
-                        this.repeat = "no-repeat";
-                        this.sources.set("default", typeof src === "string" ? loader.getImage(src) : src);
-                    }
-                    // Internal texture atlas
-                    else if (atlas.meta.app.includes("melonJS")) {
-                        this.format = "melonJS";
-                        this.repeat = atlas.meta.repeat || "no-repeat";
-                        this.sources.set("default", typeof src === "string" ? loader.getImage(src) : src);
-                    }
-                    // initialize the atlas
-                    this.atlases.set(atlas.meta.image || "default", this.parse(atlas));
-
-                } else {
-                    // a regular spritesheet
-                    if (typeof(atlas.framewidth) !== "undefined" &&
-                        typeof(atlas.frameheight) !== "undefined") {
-                        this.format = "Spritesheet (fixed cell size)";
-                        this.repeat = "no-repeat";
-
-                        if (typeof(src) !== "undefined") {
-                            // overwrite if specified
-                            atlas.image = typeof src === "string" ? loader.getImage(src) : src;
-                        }
-                        // initialize the atlas
-                        this.atlases.set("default", this.parseFromSpriteSheet(atlas));
-                        this.sources.set("default", atlas.image);
-
-                    }
-                }
-            } // end forEach
-        }
-
-        // if format not recognized
-        if (this.atlases.length === 0) {
-            throw new Error("texture atlas format not supported");
-        }
-
-        // Add self to TextureCache if cache !== false
-        if (cache !== false) {
-            this.sources.forEach((source) => {
-                if (cache instanceof TextureCache) {
-                    cache.set(source, this);
-                } else {
-                    renderer.cache.set(source, this);
-                }
-            });
-        }
-    }
-
-    /**
-     * build an atlas from the given data
-     * @ignore
-     */
-    parse(data) {
-        var atlas = {};
-
-        data.frames.forEach((frame) => {
-            // fix wrongly formatted JSON (e.g. last dummy object in ShoeBox)
-            if (frame.hasOwnProperty("filename")) {
-                // Source coordinates
-                var s = frame.frame;
-
-                var originX, originY;
-                // Pixel-based offset origin from the top-left of the source frame
-                var hasTextureAnchorPoint = (frame.spriteSourceSize && frame.sourceSize && frame.pivot);
-                if (hasTextureAnchorPoint) {
-                    originX = (frame.sourceSize.w * frame.pivot.x) - ((frame.trimmed) ? frame.spriteSourceSize.x : 0);
-                    originY = (frame.sourceSize.h * frame.pivot.y) - ((frame.trimmed) ? frame.spriteSourceSize.y : 0);
-                }
-
-                atlas[frame.filename] = {
-                    name         : frame.filename, // frame name
-                    texture      : data.meta.image || "default", // the source texture
-                    offset       : new Vector2d(s.x, s.y),
-                    anchorPoint  : (hasTextureAnchorPoint) ? new Vector2d(originX / s.w, originY / s.h) : null,
-                    trimmed      : !!frame.trimmed,
-                    width        : s.w,
-                    height       : s.h,
-                    angle        : (frame.rotated === true) ? -ETA : 0
-                };
-                this.addUVs(atlas, frame.filename, data.meta.size.w, data.meta.size.h);
-            }
-        });
-        return atlas;
-    }
-
-    /**
-     * build an atlas from the given spritesheet
-     * @ignore
-     */
-    parseFromSpriteSheet(data) {
-        var atlas = {};
-        var image = data.image;
-        var spacing = data.spacing || 0;
-        var margin = data.margin || 0;
-
-        var width = image.width;
-        var height = image.height;
-
-        // calculate the sprite count (line, col)
-        var spritecount = pool.pull("Vector2d",
-            ~~((width - margin + spacing) / (data.framewidth + spacing)),
-            ~~((height - margin + spacing) / (data.frameheight + spacing))
-        );
-
-        // verifying the texture size
-        if ((width % (data.framewidth + spacing)) !== 0 ||
-            (height % (data.frameheight + spacing)) !== 0) {
-            var computed_width = spritecount.x * (data.framewidth + spacing);
-            var computed_height = spritecount.y * (data.frameheight + spacing);
-            if (computed_width - width !== spacing && computed_height - height !== spacing) {
-                // "truncate size" if delta is different from the spacing size
-                width = computed_width;
-                height = computed_height;
-                // warning message
-                console.warn(
-                    "Spritesheet Texture for image: " + image.src +
-                    " is not divisible by " + (data.framewidth + spacing) +
-                    "x" + (data.frameheight + spacing) +
-                    ", truncating effective size to " + width + "x" + height
-                );
-            }
-        }
-
-        // build the local atlas
-        for (var frame = 0, count = spritecount.x * spritecount.y; frame < count; frame++) {
-            var name = "" + frame;
-            atlas[name] = {
-                name        : name,
-                texture     : "default", // the source texture
-                offset      : new Vector2d(
-                    margin + (spacing + data.framewidth) * (frame % spritecount.x),
-                    margin + (spacing + data.frameheight) * ~~(frame / spritecount.x)
-                ),
-                anchorPoint : (data.anchorPoint || null),
-                trimmed     : false,
-                width       : data.framewidth,
-                height      : data.frameheight,
-                angle       : 0
-            };
-            this.addUVs(atlas, name, width, height);
-        }
-
-        pool.push(spritecount);
-
-        return atlas;
-    }
-
-    /**
-     * return the default or specified atlas dictionnary
-     * @param {string} [name] atlas name in case of multipack textures
-     * @returns {object}
-     */
-    getAtlas(name) {
-        if (typeof name === "string") {
-            return this.atlases.get(name);
-        } else {
-            return this.atlases.values().next().value;
-        }
-    }
-
-    /**
-     * return the format of the atlas dictionnary
-     * @returns {string} will return "texturepacker", or "ShoeBox", or "melonJS", or "Spritesheet (fixed cell size)"
-     */
-    getFormat() {
-        return this.format;
-    }
-
-    /**
-     * return the source texture for the given region (or default one if none specified)
-     * @param {object} [region] region name in case of multipack textures
-     * @returns {HTMLImageElement|HTMLCanvasElement}
-     */
-    getTexture(region) {
-        if ((typeof region === "object") && (typeof region.texture === "string")) {
-            return this.sources.get(region.texture);
-        } else {
-            return this.sources.values().next().value;
-        }
-    }
-
-    /**
-     * add a region to the atlas
-     * @param {string} name region mame
-     * @param {number} x x origin of the region
-     * @param {number} y y origin of the region
-     * @param {number} w width of the region
-     * @param {number} h height of the region
-     * @returns {object} the created region
-     */
-    addRegion(name, x, y, w, h) {
-        // TODO: Require proper atlas regions instead of caching arbitrary region keys
-        if (renderer.settings.verbose === true) {
-            console.warn("Adding texture region", name, "for texture", this);
-        }
-
-        var source = this.getTexture();
-        var atlas = this.getAtlas();
-        var dw = source.width;
-        var dh = source.height;
-
-        atlas[name] = {
-            name    : name,
-            offset  : new Vector2d(x, y),
-            width   : w,
-            height  : h,
-            angle   : 0
-        };
-
-        this.addUVs(atlas, name, dw, dh);
-
-        return atlas[name];
-    }
-
-    /**
-     * return a normalized region (or frame) information for the specified sprite name
-     * @param {string} name name of the sprite
-     * @param {string} [atlas] name of a specific atlas where to search for the region
-     * @returns {object}
-     */
-    getRegion(name, atlas) {
-        var region;
-        if (typeof atlas === "string") {
-            region = this.getAtlas(atlas)[name];
-        } else {
-            // look for the given region in each existing atlas
-            this.atlases.forEach(function (atlas) {
-                if (typeof atlas[name] !== "undefined") {
-                    // there should be only one
-                    region = atlas[name];
-                }
-            });
-        }
-        return region;
-    }
-
-    /**
-     * return the uvs mapping for the given region
-     * @param {object} name region (or frame) name
-     * @returns {Float32Array} region Uvs
-     */
-    getUVs(name) {
-        // Get the source texture region
-        var region = this.getRegion(name);
-
-        if (typeof(region) === "undefined") {
-            // TODO: Require proper atlas regions instead of caching arbitrary region keys
-            var keys = name.split(","),
-                sx = +keys[0],
-                sy = +keys[1],
-                sw = +keys[2],
-                sh = +keys[3];
-            region = this.addRegion(name, sx, sy, sw, sh);
-        }
-        return region.uvs;
-    }
-
-    /**
-     * add uvs mapping for the given region
-     * @param {object} atlas the atlas dictionnary where the region is define
-     * @param {object} name region (or frame) name
-     * @param {number} w the width of the region
-     * @param {number} h the height of the region
-     * @returns {Float32Array} the created region UVs
-     */
-    addUVs(atlas, name, w, h) {
-        // ignore if using the Canvas Renderer
-        if (renderer instanceof WebGLRenderer) {
-            // Source coordinates
-            var s = atlas[name].offset;
-            var sw = atlas[name].width;
-            var sh = atlas[name].height;
-
-            atlas[name].uvs = new Float32Array([
-                s.x / w,        // u0 (left)
-                s.y / h,        // v0 (top)
-                (s.x + sw) / w, // u1 (right)
-                (s.y + sh) / h  // v1 (bottom)
-            ]);
-            // Cache source coordinates
-            // TODO: Remove this when the Batcher only accepts a region name
-            var key = s.x + "," + s.y + "," + w + "," + h;
-            atlas[key] = atlas[name];
-        }
-        return atlas[name].uvs;
-    }
-
-    /**
-     * Create a sprite object using the first region found using the specified name
-     * @param {string} name name of the sprite
-     * @param {object} [settings] Additional settings passed to the {@link Sprite} contructor
-     * @param {boolean} [nineSlice=false] if true returns a 9-slice sprite
-     * @returns {Sprite|NineSliceSprite}
-     * @example
-     * // create a new texture object under the `game` namespace
-     * game.texture = new me.TextureAtlas(
-     *    me.loader.getJSON("texture"),
-     *    me.loader.getImage("texture")
-     * );
-     * ...
-     * ...
-     * // create a new "coin" sprite
-     * var sprite = game.texture.createSpriteFromName("coin.png");
-     * // set the renderable position to bottom center
-     * sprite.anchorPoint.set(0.5, 1.0);
-     * ...
-     * ...
-     * // create a 9-slice sprite
-     * var dialogPanel = game.texture.createSpriteFromName(
-     *    "rpg_dialo.png",
-     *    // width & height are mandatory for 9-slice sprites
-     *    { width: this.width, height: this.height },
-     *    true
-     * );
-     */
-    createSpriteFromName(name, settings, nineSlice = false) {
-        // instantiate a new sprite object
-        return pool.pull(
-            nineSlice === true ? "me.NineSliceSprite" : "me.Sprite",
-            0, 0,
-            Object.assign({
-                image: this,
-                region : name
-            }, settings || {})
-        );
-    }
-
-    /**
-     * Create an animation object using the first region found using all specified names
-     * @param {string[]|number[]} names list of names for each sprite
-     * (when manually creating a Texture out of a spritesheet, only numeric values are authorized)
-     * @param {object} [settings] Additional settings passed to the {@link Sprite} contructor
-     * @returns {Sprite}
-     * @example
-     * // create a new texture object under the `game` namespace
-     * game.texture = new me.TextureAtlas(
-     *     me.loader.getJSON("texture"),
-     *     me.loader.getImage("texture")
-     * );
-     *
-     * // create a new Animated Sprite
-     * var sprite = game.texture.createAnimationFromName([
-     *     "walk0001.png", "walk0002.png", "walk0003.png",
-     *     "walk0004.png", "walk0005.png", "walk0006.png",
-     *     "walk0007.png", "walk0008.png", "walk0009.png",
-     *     "walk0010.png", "walk0011.png"
-     * ]);
-     *
-     * // define an additional basic walking animation
-     * sprite.addAnimation ("simple_walk", [0,2,1]);
-     * // you can also use frame name to define your animation
-     * sprite.addAnimation ("speed_walk", ["walk0007.png", "walk0008.png", "walk0009.png", "walk0010.png"]);
-     * // set the default animation
-     * sprite.setCurrentAnimation("simple_walk");
-     * // set the renderable position to bottom center
-     * sprite.anchorPoint.set(0.5, 1.0);
-     */
-    createAnimationFromName(names, settings) {
-        var tpAtlas = [], indices = {};
-        var width = 0, height = 0;
-        var region;
-        // iterate through the given names
-        // and create a "normalized" atlas
-        for (var i = 0; i < names.length; ++i) {
-            region = this.getRegion(names[i]);
-            if (region == null) {
-                // throw an error
-                throw new Error("Texture - region for " + names[i] + " not found");
-            }
-            tpAtlas[i] = region;
-            // save the corresponding index
-            indices[names[i]] = i;
-            // calculate the max size of a frame
-            width = Math.max(region.width, width);
-            height = Math.max(region.height, height);
-        }
-        // instantiate a new animation sheet object
-        return new Sprite(0, 0, Object.assign({
-            image: this,
-            framewidth: width,
-            frameheight: height,
-            margin: 0,
-            spacing: 0,
-            atlas: tpAtlas,
-            atlasIndices: indices
-        }, settings || {}));
-    }
-}
-
-/**
- * @classdesc
- * An object to display a fixed or animated sprite on screen.
- * @augments Renderable
- */
-class Sprite extends Renderable {
-    /**
-     * @param {number} x the x coordinates of the sprite object
-     * @param {number} y the y coordinates of the sprite object
-     * @param {object} settings Configuration parameters for the Sprite object
-     * @param {HTMLImageElement|HTMLCanvasElement|TextureAtlas|string} settings.image reference to spritesheet image, a texture atlas or to a texture atlas
-     * @param {string} [settings.name=""] name of this object
-     * @param {string} [settings.region] region name of a specific region to use when using a texture atlas, see {@link TextureAtlas}
-     * @param {number} [settings.framewidth] Width of a single frame within the spritesheet
-     * @param {number} [settings.frameheight] Height of a single frame within the spritesheet
-     * @param {string|Color} [settings.tint] a tint to be applied to this sprite
-     * @param {number} [settings.flipX] flip the sprite on the horizontal axis
-     * @param {number} [settings.flipY] flip the sprite on the vertical axis
-     * @param {Vector2d} [settings.anchorPoint={x:0.5, y:0.5}] Anchor point to draw the frame at (defaults to the center of the frame).
-     * @example
-     * // create a single sprite from a standalone image, with anchor in the center
-     * var sprite = new me.Sprite(0, 0, {
-     *     image : "PlayerTexture",
-     *     framewidth : 64,
-     *     frameheight : 64,
-     *     anchorPoint : new me.Vector2d(0.5, 0.5)
-     * });
-     *
-     * // create a single sprite from a packed texture
-     * game.texture = new me.TextureAtlas(
-     *     me.loader.getJSON("texture"),
-     *     me.loader.getImage("texture")
-     * );
-     * var sprite = new me.Sprite(0, 0, {
-     *     image : game.texture,
-     *     region : "npc2.png",
-     * });
-     */
-    constructor(x, y, settings) {
-
-        // call the super constructor
-        super(x, y, 0, 0);
-
-        /**
-         * pause and resume animation
-         * @public
-         * @type {boolean}
-         * @default false
-         * @name Sprite#animationpause
-         */
-        this.animationpause = false;
-
-        /**
-         * animation cycling speed (delay between frame in ms)
-         * @public
-         * @type {number}
-         * @default 100
-         * @name Sprite#animationspeed
-         */
-        this.animationspeed = 100;
-
-        /**
-         * global offset for the position to draw from on the source image.
-         * @public
-         * @type {Vector2d}
-         * @default <0.0,0.0>
-         * @name offset
-         * @memberof Sprite#
-         */
-        this.offset = pool.pull("Vector2d", 0, 0);
-
-        /**
-         * The source texture object this sprite object is using
-         * @public
-         * @type {TextureAtlas}
-         * @name source
-         * @memberof Sprite#
-         */
-        this.source = null;
-
-        // hold all defined animation
-        this.anim = {};
-
-        // a flag to reset animation
-        this.resetAnim = undefined;
-
-        // current frame information
-        // (reusing current, any better/cleaner place?)
-        this.current = {
-            // the current animation name
-            name : "default",
-            // length of the current animation name
-            length : 0,
-            //current frame texture offset
-            offset : pool.pull("Vector2d"),
-            // current frame size
-            width : 0,
-            height : 0,
-            // Source rotation angle for pre-rotating the source image
-            angle : 0,
-            // current frame index
-            idx : 0
-        };
-
-        // animation frame delta
-        this.dt = 0;
-
-        // flicker settings
-        this._flicker = {
-            isFlickering : false,
-            duration : 0,
-            callback : null,
-            state : false
-        };
-
-        // set the proper image/texture to use
-        if (settings.image instanceof TextureAtlas) {
-            this.source = settings.image;
-            this.image = this.source.getTexture();
-            this.textureAtlas = settings.image;
-            // check for defined region
-            if (typeof (settings.region) !== "undefined") {
-                // use a texture atlas
-                var region = this.source.getRegion(settings.region);
-                if (region) {
-                    // set the sprite region within the texture
-                    this.setRegion(region);
-                    // update the default "current" frame size
-                    this.current.width = settings.framewidth || region.width;
-                    this.current.height = settings.frameheight || region.height;
-                } else {
-                    // throw an error
-                    throw new Error("Texture - region for " + settings.region + " not found");
-                }
-            }
-        } else {
-            // HTMLImageElement/Canvas or {string}
-            this.image = (typeof settings.image === "object") ? settings.image : loader.getImage(settings.image);
-            // throw an error if image ends up being null/undefined
-            if (!this.image) {
-                throw new Error("me.Sprite: '" + settings.image + "' image/texture not found!");
-            }
-            // update the default "current" frame size
-            this.current.width = settings.framewidth = settings.framewidth || this.image.width;
-            this.current.height = settings.frameheight = settings.frameheight || this.image.height;
-            this.source = renderer.cache.get(this.image, settings);
-            this.textureAtlas = this.source.getAtlas();
-        }
-
-        // store/reset the current atlas information if specified
-        if (typeof(settings.atlas) !== "undefined") {
-            this.textureAtlas = settings.atlas;
-            this.atlasIndices = settings.atlasIndices;
-        }
-
-        // resize based on the active frame
-        this.width = this.current.width;
-        this.height = this.current.height;
-
-        // apply flip flags if specified
-        if (typeof (settings.flipX) !== "undefined") {
-            this.flipX(!!settings.flipX);
-        }
-        if (typeof (settings.flipY) !== "undefined") {
-            this.flipY(!!settings.flipY);
-        }
-
-        // set the default rotation angle is defined in the settings
-        // * WARNING: rotating sprites decreases performance with Canvas Renderer
-        if (typeof (settings.rotation) !== "undefined") {
-            this.rotate(settings.rotation);
-        }
-
-        // update anchorPoint
-        if (settings.anchorPoint) {
-            this.anchorPoint.set(settings.anchorPoint.x, settings.anchorPoint.y);
-        }
-
-        if (typeof (settings.tint) !== "undefined") {
-            this.tint.setColor(settings.tint);
-        }
-
-        // set the sprite name if specified
-        if (typeof (settings.name) === "string") {
-            this.name = settings.name;
-        }
-
-        // displaying order
-        if (typeof settings.z !== "undefined") {
-            this.pos.z = settings.z;
-        }
-        // for sprite, addAnimation will return !=0
-        if (this.addAnimation("default", null) !== 0) {
-            // set as default
-            this.setCurrentAnimation("default");
-        }
-
-        // enable currentTransform for me.Sprite based objects
-        this.autoTransform = true;
-    }
-
-    /**
-     * return the flickering state of the object
-     * @name isFlickering
-     * @memberof Sprite
-     * @returns {boolean}
-     */
-    isFlickering() {
-        return this._flicker.isFlickering;
-    }
-
-    /**
-     * make the object flicker
-     * @name flicker
-     * @memberof Sprite
-     * @param {number} duration expressed in milliseconds
-     * @param {Function} callback Function to call when flickering ends
-     * @returns {Sprite} Reference to this object for method chaining
-     * @example
-     * // make the object flicker for 1 second
-     * // and then remove it
-     * this.flicker(1000, function () {
-     *     me.game.world.removeChild(this);
-     * });
-     */
-    flicker(duration, callback) {
-        this._flicker.duration = duration;
-        if (this._flicker.duration <= 0) {
-            this._flicker.isFlickering = false;
-            this._flicker.callback = null;
-        }
-        else if (!this._flicker.isFlickering) {
-            this._flicker.callback = callback;
-            this._flicker.isFlickering = true;
-        }
-        return this;
-    }
-
-    /**
-     * add an animation <br>
-     * For fixed-sized cell sprite sheet, the index list must follow the
-     * logic as per the following example :<br>
-     * <img src="images/spritesheet_grid.png"/>
-     * @name addAnimation
-     * @memberof Sprite
-     * @param {string} name animation id
-     * @param {number[]|string[]|object[]} index list of sprite index or name
-     * defining the animation. Can also use objects to specify delay for each frame, see below
-     * @param {number} [animationspeed] cycling speed for animation in ms
-     * @returns {number} frame amount of frame added to the animation (delay between each frame).
-     * @see Sprite#animationspeed
-     * @example
-     * // walking animation
-     * this.addAnimation("walk", [ 0, 1, 2, 3, 4, 5 ]);
-     * // standing animation
-     * this.addAnimation("stand", [ 11, 12 ]);
-     * // eating animation
-     * this.addAnimation("eat", [ 6, 6 ]);
-     * // rolling animation
-     * this.addAnimation("roll", [ 7, 8, 9, 10 ]);
-     * // slower animation
-     * this.addAnimation("roll", [ 7, 8, 9, 10 ], 200);
-     * // or get more specific with delay for each frame. Good solution instead of repeating:
-     * this.addAnimation("turn", [{ name: 0, delay: 200 }, { name: 1, delay: 100 }])
-     * // can do this with atlas values as well:
-     * this.addAnimation("turn", [{ name: "turnone", delay: 200 }, { name: "turntwo", delay: 100 }])
-     * // define an dying animation that stop on the last frame
-     * this.addAnimation("die", [{ name: 3, delay: 200 }, { name: 4, delay: 100 }, { name: 5, delay: Infinity }])
-     * // set the standing animation as default
-     * this.setCurrentAnimation("stand");
-     */
-    addAnimation(name, index, animationspeed) {
-        this.anim[name] = {
-            name : name,
-            frames : [],
-            idx : 0,
-            length : 0
-        };
-
-        // # of frames
-        var counter = 0;
-
-        if (typeof (this.textureAtlas) !== "object") {
-            return 0;
-        }
-
-
-        if (index == null) {
-            index = [];
-            // create a default animation with all frame
-            Object.keys(this.textureAtlas).forEach(function (v, i) {
-                index[i] = i;
-            });
-        }
-
-        // set each frame configuration (offset, size, etc..)
-        for (var i = 0, len = index.length; i < len; i++) {
-            var frame = index[i];
-            var frameObject;
-            if (typeof(frame) === "number" || typeof(frame) === "string") {
-                frameObject = {
-                    name: frame,
-                    delay: animationspeed || this.animationspeed
-                };
-            }
-            else {
-              frameObject = frame;
-            }
-            var frameObjectName = frameObject.name;
-            if (typeof(frameObjectName) === "number") {
-                if (typeof (this.textureAtlas[frameObjectName]) !== "undefined") {
-                    // TODO: adding the cache source coordinates add undefined entries in webGL mode
-                    this.anim[name].frames[i] = Object.assign(
-                        {},
-                        this.textureAtlas[frameObjectName],
-                        frameObject
-                    );
-                    counter++;
-                }
-            } else { // string
-                if (this.source.getFormat().includes("Spritesheet")) {
-                    throw new Error(
-                        "string parameters for addAnimation are not allowed for standard spritesheet based Texture"
-                    );
-                } else {
-                    this.anim[name].frames[i] = Object.assign(
-                        {},
-                        this.textureAtlas[this.atlasIndices[frameObjectName]],
-                        frameObject
-                    );
-                    counter++;
-                }
-            }
-        }
-        this.anim[name].length = counter;
-
-        return counter;
-    }
-
-    /**
-     * set the current animation
-     * this will always change the animation & set the frame to zero
-     * @name setCurrentAnimation
-     * @memberof Sprite
-     * @param {string} name animation id
-     * @param {string|Function} [resetAnim] animation id to switch to when complete, or callback
-     * @param {boolean} [preserve_dt=false] if false will reset the elapsed time counter since last frame
-     * @returns {Sprite} Reference to this object for method chaining
-     * @example
-     * // set "walk" animation
-     * this.setCurrentAnimation("walk");
-     *
-     * // set "walk" animation if it is not the current animation
-     * if (this.isCurrentAnimation("walk")) {
-     *     this.setCurrentAnimation("walk");
-     * }
-     *
-     * // set "eat" animation, and switch to "walk" when complete
-     * this.setCurrentAnimation("eat", "walk");
-     *
-     * // set "die" animation, and remove the object when finished
-     * this.setCurrentAnimation("die", (function () {
-     *    me.game.world.removeChild(this);
-     *    return false; // do not reset to first frame
-     * }).bind(this));
-     *
-     * // set "attack" animation, and pause for a short duration
-     * this.setCurrentAnimation("die", (function () {
-     *    this.animationpause = true;
-     *
-     *    // back to "standing" animation after 1 second
-     *    setTimeout(function () {
-     *        this.setCurrentAnimation("standing");
-     *    }, 1000);
-     *
-     *    return false; // do not reset to first frame
-     * }).bind(this));
-     */
-    setCurrentAnimation(name, resetAnim, preserve_dt) {
-        if (this.anim[name]) {
-            this.current.name = name;
-            this.current.length = this.anim[this.current.name].length;
-            if (typeof resetAnim === "string") {
-                this.resetAnim = this.setCurrentAnimation.bind(this, resetAnim, null, true);
-            } else if (typeof resetAnim === "function") {
-                this.resetAnim = resetAnim;
-            } else {
-                this.resetAnim = undefined;
-            }
-            this.setAnimationFrame(this.current.idx);
-            if (!preserve_dt) {
-                this.dt = 0;
-            }
-            this.isDirty = true;
-        } else {
-            throw new Error("animation id '" + name + "' not defined");
-        }
-        return this;
-    }
-
-    /**
-     * reverse the given or current animation if none is specified
-     * @name reverseAnimation
-     * @memberof Sprite
-     * @param {string} [name] animation id
-     * @returns {Sprite} Reference to this object for method chaining
-     * @see Sprite#animationspeed
-     */
-    reverseAnimation(name) {
-        if (typeof name !== "undefined" && typeof this.anim[name] !== "undefined") {
-            this.anim[name].frames.reverse();
-        } else {
-            this.anim[this.current.name].frames.reverse();
-        }
-        this.isDirty = true;
-        return this;
-    }
-
-    /**
-     * return true if the specified animation is the current one.
-     * @name isCurrentAnimation
-     * @memberof Sprite
-     * @param {string} name animation id
-     * @returns {boolean}
-     * @example
-     * if (!this.isCurrentAnimation("walk")) {
-     *     // do something funny...
-     * }
-     */
-    isCurrentAnimation(name) {
-        return this.current.name === name;
-    }
-
-    /**
-     * change the current texture atlas region for this sprite
-     * @see Texture.getRegion
-     * @name setRegion
-     * @memberof Sprite
-     * @param {object} region typically returned through me.Texture.getRegion()
-     * @returns {Sprite} Reference to this object for method chaining
-     * @example
-     * // change the sprite to "shadedDark13.png";
-     * mySprite.setRegion(game.texture.getRegion("shadedDark13.png"));
-     */
-    setRegion(region) {
-        // set the source texture for the given region
-        this.image = this.source.getTexture(region);
-        // set the sprite offset within the texture
-        this.current.offset.setV(region.offset);
-        // set angle if defined
-        this.current.angle = region.angle;
-        // update the default "current" size
-        this.width = this.current.width = region.width;
-        this.height = this.current.height = region.height;
-        // set global anchortPoint if defined
-        if (region.anchorPoint) {
-            this.anchorPoint.set(
-                this._flip.x && region.trimmed === true ? 1 - region.anchorPoint.x : region.anchorPoint.x,
-                this._flip.y && region.trimmed === true ? 1 - region.anchorPoint.y : region.anchorPoint.y
-            );
-        }
-        this.isDirty = true;
-        return this;
-    }
-
-    /**
-     * force the current animation frame index.
-     * @name setAnimationFrame
-     * @memberof Sprite
-     * @param {number} [idx=0] animation frame index
-     * @returns {Sprite} Reference to this object for method chaining
-     * @example
-     * // reset the current animation to the first frame
-     * this.setAnimationFrame();
-     */
-    setAnimationFrame(idx) {
-        this.current.idx = (idx || 0) % this.current.length;
-        return this.setRegion(this.getAnimationFrameObjectByIndex(this.current.idx));
-    }
-
-    /**
-     * return the current animation frame index.
-     * @name getCurrentAnimationFrame
-     * @memberof Sprite
-     * @returns {number} current animation frame index
-     */
-    getCurrentAnimationFrame() {
-        return this.current.idx;
-    }
-
-    /**
-     * Returns the frame object by the index.
-     * @name getAnimationFrameObjectByIndex
-     * @memberof Sprite
-     * @ignore
-     * @param {number} id the frame id
-     * @returns {number} if using number indices. Returns {object} containing frame data if using texture atlas
-     */
-    getAnimationFrameObjectByIndex(id) {
-        return this.anim[this.current.name].frames[id];
-    }
-
-    /**
-     * update function. <br>
-     * automatically called by the game manager {@link game}
-     * @name update
-     * @memberof Sprite
-     * @protected
-     * @param {number} dt time since the last update in milliseconds.
-     * @returns {boolean} true if the Sprite is dirty
-     */
-    update(dt) {
-        // Update animation if necessary
-        if (!this.animationpause && this.current && this.current.length > 0) {
-            var duration = this.getAnimationFrameObjectByIndex(this.current.idx).delay;
-            this.dt += dt;
-            while (this.dt >= duration) {
-                this.isDirty = true;
-                this.dt -= duration;
-
-                var nextFrame = (this.current.length > 1? this.current.idx+1: this.current.idx);
-                this.setAnimationFrame(nextFrame);
-
-                // Switch animation if we reach the end of the strip and a callback is defined
-                if (this.current.idx === 0 && typeof this.resetAnim === "function") {
-                    // Otherwise is must be callable
-                    if (this.resetAnim() === false) {
-                        // Reset to last frame
-                        this.setAnimationFrame(this.current.length - 1);
-
-                        // Bail early without skipping any more frames.
-                        this.dt %= duration;
-                        break;
-                    }
-                }
-                // Get next frame duration
-                duration = this.getAnimationFrameObjectByIndex(this.current.idx).delay;
-            }
-        }
-
-        // update the sprite bounding box
-        /*
-        if (this.isDirty === true && !this.currentTransform.isIdentity()) {
-            this.getBounds().clear();
-            this.getBounds().addFrame(
-                0,
-                0,
-                this.current.width,
-                this.current.height,
-                this.currentTransform
-            );
-            this.updateBoundsPos(this.pos.x, this.pos.y);
-        }
-        */
-
-        //update the "flickering" state if necessary
-        if (this._flicker.isFlickering) {
-            this._flicker.duration -= dt;
-            if (this._flicker.duration < 0) {
-                if (typeof (this._flicker.callback) === "function") {
-                    this._flicker.callback();
-                }
-                this.flicker(-1);
-            }
-            this.isDirty = true;
-        }
-
-        return super.update(dt);
-    }
-
-    /**
-     * Destroy function<br>
-     * @ignore
-     */
-    destroy() {
-        pool.push(this.offset);
-        this.offset = undefined;
-        super.destroy();
-    }
-
-    /**
-     * draw this srite (automatically called by melonJS)
-     * @name draw
-     * @memberof Sprite
-     * @protected
-     * @param {CanvasRenderer|WebGLRenderer} renderer a renderer instance
-     * @param {Camera2d} [viewport] the viewport to (re)draw
-     */
-    draw(renderer, viewport) {   // eslint-disable-line no-unused-vars
-        // do nothing if we are flickering
-        if (this._flicker.isFlickering) {
-            this._flicker.state = !this._flicker.state;
-            if (!this._flicker.state) {
-                return;
-            }
-        }
-
-        // the frame to draw
-        var frame = this.current;
-
-        // cache the current position and size
-        var xpos = this.pos.x,
-            ypos = this.pos.y;
-
-        var w = frame.width,
-            h = frame.height;
-
-        // frame offset in the texture/atlas
-        var frame_offset = frame.offset;
-        var g_offset = this.offset;
-
-
-        // remove image's TexturePacker/ShoeBox rotation
-        if (frame.angle !== 0) {
-            renderer.translate(-xpos, -ypos);
-            renderer.rotate(frame.angle);
-            xpos -= h;
-            w = frame.height;
-            h = frame.width;
-        }
-
-        renderer.drawImage(
-            this.image,
-            g_offset.x + frame_offset.x, // sx
-            g_offset.y + frame_offset.y, // sy
-            w, h,                        // sw,sh
-            xpos, ypos,                  // dx,dy
-            w, h                         // dw,dh
-        );
-    }
-}
-
 var img = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAQAAAAEACAMAAABrrFhUAAAA8FBMVEUgICBrqDHRZVtqpzEhJCAjKCBurTIfHyDQZFptrDEWAB8OAB7VZ1wtIiIAEhYlISDYaF4SAB4pIiEAFhkcFh8eGyBopDAMAB5noS8kKyAAGhtjmy4bEB9lni8ZBR/HYFdPeim/XFQ9XCUaCh9flS1VhCtSfyorOSEVHh4HHB1EZyatVExhmC5ajCxHbSc0SyMuQCInMiFKcSgxRSI6VSRBYiWdTUZdki09JyZ8PzpYiSs3UCRlNjK1WE9ckC1MdShbjywyJCONRkDKYliUSUNeMzBDKShXMC2kUEl1PDeEQj1OLStnNjNxOjZsODQAAAcMh1CFAAAU4UlEQVR42uyaa3fSMBjHk5EQkgClkBZKoXblNhlswIooc2N6pp7jUb//x/FpRbnt4JWwzv7eraQvfs/zby7tUEpKSkpKSkpKSkpKSkpKSkqKTsg30P8E+FIArJllqQaglMXQt6tPuhogGSlaLWFKKU2hEB33eqPRqDemRAlhRhdbVjwIBj8xogajhpBSkNH1dOJ37mYDt1mr2UCt1mwOZned7qQfjhxPVs0WovTpRIFFNkpIU42CSWfm2phnIzjHP+DLS9hutjuL4IqZUigC9yU/CWDBhBROOJkPbBxL4swKjDf/jEvBbXe4CMeiKixKEx0EAq03JbqeDJs4Ul9a7mE5AqqAazM/pJCb5JaAUmWa42nHBflYDf8y8WC4qznv9yRKZAUIRUKO+/Maz/J1+d8ugu0rK3kVoNSTVhDZr8v/WRGyQw8lC0KJMK989+/sVzXILiRNzmrACGXSC4Z2lsf2f08GN2lyHgJCLUn6bRw1/2dim+A9hIKiJMAQ6NOJu7f5a7r8B+u/7N7BAzMZBaBIkkkz0t83sfMsgDHsgN1BOybaFNvww2qblMgEUGKqi2aU/X3u2HZnHf8iuL4aO0S1PKDVQM54dBn0F50718bfq5CwOYBQIaaDVfd37MG91u5MwhER8WHQU8qC2wCEmFJefEYUrBdedGe15b4xQasAtaqXt/wh/W87W1679YNeCxQbjNCItTchBFheRErAmHEYb575ch/Qeuz9ByXpdHH2QX2wx4NuMBbSbJCfn3IJWZ4dndBvZ6Bytt949A8AbZjT6OHftQeDTHtx2VgebhFj6KfAmGisJaS46k+mj/4sELW/N+QP6UOIXf/Sqwq0p/F7okA8KU312BcAqmTf3k1/1Hx7HlgyskfsL96h7b3XMNCRcYQzz+KH9N3FSC57fxiYUTDOWLmAjgcjpBo2d9oPKxdv95Fs0UPGl5XPinWDVYqGwdBxYFQJH/Mdfc5nQUuyw77KYYXKm/ub09PzV/Xn5SNVAOJ/B/Hf0W8HwiQUHRTwf/2slM/nS6WbN/XjZIDK6534w8zv9r1In6GDUq6/y+VzMaVTdGYg7cDj38/wHX17YknQPzSGUb8p5U5icqX7ovaZkBFk+nw7/hx3epIdvPtAufIpf7Ikl39W0B0BRpToQPy32j8IZUPPW+xC8S0E4Afv6noLwGgL3WZ32u8roetbTqF4v1aA/JdKGWmEUc8ZgP/m0j+4riKKNFEoflwrQO6D1gQwKnrulj/mXUto048XgZV+/vQMaYQ5otfc8s/Wpprav5oFz5cRgHXwo85VgFHw55nN+Ld7UvMnPOP5y2elXMRJ6VzDA7DPH2e7XstBemHl+vubfAk4efGc6SsAo9542x9fVJH+D/lQgfrnF+fn9++KWv0bdHP+z3A7rFKC9MMMo1KsVIr1ssYHgFiqvemfdUemg45EuVAuFMpIH4SI4ZZ/2xEOQ8eCAUgjVHa3/G+txuN/Z/+vYE51suU/9NT/5G8GIL3uPxfsCfwf11fyrW1FgRiGTkna0vZpYHQUXRHdVZBhvCMorP7/V+3oyprgPiy2Dxk2HzA06TknpyHz19CjVfcpf9kj+6SBtqgcMPz/q/vPdPgwLP/DsCM1f2vTf7Ifap5/hYXQ/FGnX7S16LdABADc23oqVP91kYfgrU5b1GxKHSCo7tILzR/z9eJ8nliv0zqAMZ8ATEJfaP6+7jlj3CDlXpHVfsfnH+eyn4kMzMdGQRNO7fNkGEXbGTigBkDq1lZzU07BnaXzIab6LCMAuEEmdWcD8+ax9uNTckxFqyWxwKBgKXZrzerHtAbcPhFQ0R8oAExdChXADIt1Tz0KkGi9TjML1CBLqgA0YZGIFZhZqVNUtf9GCdBbF0IF4Be/vvQYz6pyxhRwH+QC4CpXoAgELvE6iKMtfwJLzv+5YU2iDasOR0MJMBdMgFsMK6ICrppGY+rELGAdhFpAYoXYgRdBRzsLUtB3L/z+7zpITFvHYhQAdorGyQudAdCuNe8qoJjVNgYAF0M+9iFbAe9tK2w4BKIIdVJ0CLASv7jeBFo7cBwCrxcgP1IAjEv5ALipwII1gmGGMR4A2uEB+blJK4x4E1kdZhQA5xYowPe58z3lwKfH199WbQRAc/LpuwPWu17k0qaFCnANAgHSvKJcZdMCxJtgOsQuKsexG2uCwMxa8O8aUa/axHZCe/OUZA42ag0Avqi5ll2nYSAaRQEbZI+NrbKwEFFYJURCiEcpqEE0aZOmBfH/f4PLQ+OEttwxLKg3jq5Or3TG9jyOJ/FjgSIGZvBRLhB1oFvi7/3X5CIDhZHodOLtfyyEXUlh0IGzyDoQM+rbGljFRNaE2ZOXj0MT3pALxGQo8v1z1ILRBb6+hTJoZgLvBoMYRjZAeALuv/v/hZCzeTxWRIu/iwEvbqQMmKcxUekwHqF/KQSo74OCVX8rCyQoC9C/QYBZENZTcYMlRkqjWFlVZfn9OWGXwcoDVFKewD+fo33v9AwQD3HGFqH5XsXHACWVA7BObfp+YyoL4BKpLvb+MuvBlVn1q03iwIONVNFy1jPUBvGyPOaGJT4GGOPAHd9v66bIuy7Pi3p5GKoTrYSdeRXaQrk7LD02P2Gbejv2FqrYdugFxgHM5ChBEFNpIn/czxaObdMJrcXP4Z94sdxZUGZmAZmA+7ws0im4a9oenFQsKg58uE8NhBgE43+LlBysa65FmvJweIppMzobsmJKWve+EFrMsUJ3+wEqGaUKPA9XkSYNhj0xUd8xYkbBsU516lnMhv+LFs1nKCX7BZYVjIUQZ8FC830PRjG6LnSqBzCSPcloP0U9IaLZhknntlynSGhOS+yV/bWuEla1EPwSONXdAc0VKYv4ZcyoWQBGEDp/2zdI/zyrYgfyR6CAL7nm18BC18pJFnlLhuUMsScgvs9CwjrXyOgCq/Q9yIQpBa0Q/DqW6+JoJSNX9AGNT4S2uezhx8B9kBvu2AZGjpQubwLRglHKLnX6Z7DodmgBQjDHkji7O3+MoFFZgITx+pLiMdiChL1G7DUL8DWQLBDPw3dGh5Yjn38YT+TuMrhuvy71HbGiGyzRAg8DVYQQzO49evYg7ArLiP7v82/7n3OcZ8u6F36+IzjfVCqivwkTetqNCHpP2nvdfS74PJTr7zH+NM9pTflPwTMbcN1YkgEwFcL7EXIddf85LQ1SrtZ8FsO6uh13w7Abt02nZ7tjbiuR1+2Xn2COYPxaCCM3+KCqQz86fnpDSgOkPQg+i/dtb8E6P/zUt8Vln+/pF4fVD7D103Gbz8B8cIbULeJlHXqLM2ZQZDHEuGMnpsF+m0Alpfk+pKmAtZdCJNf5wUGJYAervRB8eggotSH2SlAy2myBchi14VbCxKlzka+BScWCqofBUASYCbsVKAQzD65g7CbmEl9OCTQtocEm74ysiPsq6imhilLVxANyUfR2o9i0SN7YstH8DP+9db+DYcD/iFsgqnXWd02SXAc9CrLpx124yFd2w35HlQ4tEPCHxPwO9haY7oG1NbQbMnLPYPbw2YNIMYAlxeTIDlP+WP0axAUhTrGzefUXEeK+kXetvU3DUDQtqdxKSQwJG1romIbQSLWhfuChFRioG92rsP//c3AiwbErxfKxBMoFf/am5cyPc+899/hDkTOJHZ4IKMQQrC6irDZTh+YVa9VHlsbuyK6uEe7tINCdK9hVutGkUgL/S0pox5cEchPX2X9qrXVfuIQIoAcsDN2sj+yb5XuVU8JZlgkpZ+PMzMbhvG0AwKqfteh6O3VZbqL8J4tNhggAluxxBgaNEIK7A/BNWvkWC7DCV/X+3qsMU0+LkqiS75NyMUhD+LqqrjdT51TPlQeAVTZ11nXpW1nm1sDOWhA1blBBcGEincwV1crqwV7Vq6r0U8ZxiCEevONwtzaaKnGS6X3lCGRHSwaAuyzU4Uyr5tjaLv4wL6+cm3BbxwFw9pSujJsfowBY2UfAutHeyRftZGwXb4RxY2+XDQHAgQGAlblMHI382xeRABwnSicBpyDYjS/HADYILhiYFAMA6k8DUDgANCQAfue0bPy3AeC3QD48AGK2gHLOgJFwAKhDENfgvwkArkGGCH0SDcAuEeKp8MhQYcEAtFT4EU2Fn9nB0HvJAExQHEMwRIfDogFgw2GI7eGXIhkANyESlxITvQLc/2UwAO+cLILgW4BMikIg46TF01QwAGxaHOwBuoI9uQBwhRGMPbs09nouFwCo3fAlLG6GCooFAMVRrGVaXTUz5XGxAHjK44xAQioArUBiZgskYiUyUrcAKhygdDEiqT2xPACZDS6qSe2+y04hIROAFM5aSO6F2qe5pmxDAMBJivJCydFhqsiOK9SHhQLQNb/ahTHFycsglh7EFogB4IQUSyORsqT841Aay8aBxR7VqYlQHPfK33SysAUVwY/qzF/ZO5kRfKLljAkidJMfZaEPgJXVD+ubNnUZqL0yS0upwKAOWidW7ZY++UhSIRQxp79KmAvth8sIha5Q8VZJ0B6YdquFaZlBTjyl7UMQEQcXyG8fZ93TN+MHCJv75l4bzWQ3+RhlRI8A2UzGozpEdpvjgSDRYALh7TY6qS+PWpHvBcT9nmdizk+nmQHsNq+xAHoRuLkYt21k32qlQ/01D0es0gVUCIcAZUimdbG+u7z/XOP7PQgsiu395WpbNKUKaEKqNmbyeZFoNiEKOscrDHkf1bxpmz91GdZY2HWHhjWHlt3kRc6bS/I2IoijIkyadZ7nJTNZU5PpByHAAmhXvkgfGqXUACY77fOc5h2SeXRciTNQ2Gkef56oOAsNtF1KQwCRIN/9CxqFZII8E5WXFpdFiZeW2oNHyRrIhSAfGrMHUCUfrKN8yAI+oYyUkFK2HaVFW2khtR/rPzDal+UkZGjwzOMAwRSJkReScwyi5QGdEvxI2wqZSEdNeGryRNYl018dT9X/zlIzndt0eHR4MNSnVXyPgoAGR3tKYidJ8dOa4PRCTTD2eRl7CUyEmAqirIHqbuxveuOcAjIuApwAHjNFKqmC5lsZIdH8zGuuzp8mYJQCTgGo/FARix7KMSQzYzn8vAAU8gFGcPQS+DJ8AH4rndH8PqQ3S35yd2U7isNAMFHasWw/WcopQhRBIBICQsggJCIx/P9XrTMcDWbZY5YQs36Yh4EZXNXl7vJB3Hkjd7fCkCfc3/ZGbgh4zp5xwYbuBdBWGr00pF2OrT0E6p/sIH6V1uRHTANeDv1NE/j4rB1mFYMHgTYJsJtnrGORL1W9w107NA4/u+gqjL+cFXprU2+cbSvA828GxFKImwRmLpDiji6WwCdvsuDjOU1MA7iI+WzXBj4MmfFpQKuAeC7wOdss6n8afe8qjaUaqNdRWoeEPt1g4wPGpFkMUJKuIruDAaA/ahsToVmXr4NnYanq4GI4eq4waLKJZxADYF12MvFIEO3EZKPLTMxxhADo1ztK0zgtxIND3JhieKnTeKEEhacT4F9OHOB+qRkMXHZwcCOzgwxFv76IfKszMxgg4bqNDDa26cSs01hsmKMtDlj9X8La4sfAdHkvHn6vHhngtGcGAJT+EX+3RxnwDDV+GPf7rIYUQGQa/tyj3RFA063GwN4f98cAJT6f3HaIDaukO1FS8GCuMTCveGz10yhJvIWGP+rWolKSFkMtEw7LvuaGMa/yW/y208iO8GMxXEXslnRnE8LrUyEFIpqhht8edb5aRWNeawzYLJMvnxhQsMKZw16KHw2RzoC7iF+dCOJ0PGX2a/Hj0sNFA5gIPl4zDFD+KzX8dfzhoyh0zwCzP/nrREA8MQu0HtjOSHTeAcwDxcDVPt/d1iGQVygQiKx2rq1FIPh4BX7MA/G5AOEwCNZKBN3PjuJEbCLX0cZgVL90kY6SxFcW5E4EZegTq9N+ECssdszWyZ8X/DX4UYc+n+oydFx7SgR0Z4sogEzWgc684x6s9PV1GMS6DbsmguGMc9IRBUC4HM3d+w+d9jIlAxKOIi0R2A5z85HkHWRDCiQV5YIxR8PP7KWAfiblsSxyV++P6tDhQz5dBS38emLfhV9ZkKa/Q8xknKAdu04Fiw/OLfKssFCLAJf1xEH4PZpQ3ZBvMCdddcvejxLhE3hO8KnkzQ7hX8t/LfvdnwAiiz327IoCli9jwUFxQP8l9kBgLKzNvhX/Pc/zpo+JqD4M+NpBEVzlAjeaNqkYA4Hv00s8wetswJDj6/BPfQNOKlCAsN7+rIPtSMjXKy4SIH8rBGoBEPCkqGYHx8XMfx3+wUdombE9RzhfBg8ocIPDUnHAfULgr0JP1R8Vs13kovZvEq2TqfCbsC1xMkXFzsY46RxsPxuQioRWCQC/RA5AFPhUCL9cL6JW+j+Dz1rXTfuXPzaSiNEcY3XHgT3YLRvCheSeBQR5oKpdIQfLS6WQUM4mA8e9Qa/7TWPCf/FpfLwcIgU6B0zBGe6zWVklMlQ8jD2/BX0mg3pjLkUo07jcZIsWPEP0OvwgA9l78r9vBAT5jB5QcESjYDlRvpsuN01dES/lnEupfqQeVKtmtMx2+dBhJ/APmHSdaWGW+rERPyymAVKgtRMq5rYIg2g4z/P9YbFY7PN8PoyC4wuI/QH8yUokxDIu/Ofk7YVFFmllSyfhjJCxFvIXaqa99Ah+MKnF2KzBf0dBElbrAdNk8IAKbL9/txJIlK1EajT8Yzb0hTXb2pjC/7k5X55qvqzCxHT458mL4M10iDL4bsMSEuxGifDeAv5RBcBFPDsEWMq/H3vmOttlIbhFzKt8v5SBL/hquW85QBL+Xvmuk3+W/H2CfyuDccvBIrKxsP859jb0LNqvy1RweK/gYwMCiZDVKMsDdlLCr2m4vEWBD+bTTcFFCu8XfI0Dr53XjbL9yeRh/dNgo0+yo+10s1LcJW+O/ryo05IQ8ricZYt5pGg4Wr6bxo6/taP5YTprKh624AmYavn+urVgfC6F9KpSef7JYTtQ7jcInLYFyhcP8sMkW27KwudCcA/I+4f+Tgnn+a5CKCT3SVWs6ros63q1qgg9/do7vY3+L6H/0a4dqgAAg1AULYPBsjax+P//uA3TwuJAxj3RJiYf7xJ5rBVVLNzHcA8T7fkZl6iePpchSDvs8b9XBwAAAAAAqGQCc31B4/xqSwwAAAAASUVORK5CYII=";
 
 // a basic progress bar object
@@ -21004,23 +23019,6 @@ class ProgressBar extends Renderable {
 
 }
 /**
- * the melonJS Logo
- * @ignore
- */
-class IconLogo extends Sprite {
-    constructor(x, y) {
-        // TODO: create a sprite or texture from a Base64 encoded image
-        var image = new Image();
-        image.src = img;
-        super(x, y, {
-            image : image,
-            framewidth : 256,
-            frameheight : 256
-        });
-    }
-}
-
-/**
  * a default loading screen
  * @ignore
  */
@@ -21043,12 +23041,19 @@ class DefaultLoadingScreen extends Stage {
             barHeight
         ), 1);
 
-        // melonJS logo
-        world.addChild(new IconLogo(
-            renderer.getWidth() / 2,
-            (renderer.getHeight() / 2)
+        // TODO: create a sprite or texture from a Base64 encoded image
+        var image = new Image();
+        image.src = img;
 
-        ), 2);
+        // melonJS logo
+        world.addChild(new Sprite(
+            renderer.getWidth() / 2,
+            renderer.getHeight() / 2, {
+                image : image,
+                framewidth : 256,
+                frameheight : 256
+            }), 2
+        );
     }
 }
 
@@ -21186,14 +23191,48 @@ on(BOOT, () => {
     on(VIDEO_INIT, () => {
         state.change(state.DEFAULT, true);
     });
-});
 
+    if (typeof globalThis.addEventListener === "function") {
+        // set pause/stop action on losing focus
+        globalThis.addEventListener("blur", () => {
+            {
+                state.pause(true);
+            }
+        }, false);
+        // set restart/resume action on gaining focus
+        globalThis.addEventListener("focus", () => {
+            {
+                state.resume(true);
+            }
+            // force focus if autofocus is on
+            {
+                focus();
+            }
+        }, false);
+    }
+
+    if (typeof globalThis.document !== "undefined") {
+        if (typeof globalThis.document.addEventListener === "function") {
+            // register on the visibilitychange event if supported
+            globalThis.document.addEventListener("visibilitychange", () => {
+                if (globalThis.document.visibilityState === "visible") {
+                    {
+                        state.resume(true);
+                    }
+                } else {
+                    {
+                        state.pause(true);
+                    }
+                }
+            }, false );
+        }
+    }
+});
 
 /**
  * a State Manager (state machine)
  * @namespace state
  */
-
 var state = {
 
     /**
@@ -22127,1009 +24166,6 @@ class Tile extends Bounds {
 
         return renderable;
     }
-}
-
-// https://developer.chrome.com/blog/canvas2d/#round-rect
-
-/**
- * @classdesc
- * a rectangle object with rounded corners
- * @augments Rect
- */
-class RoundRect extends Rect {
-    /**
-     * @param {number} x position of the rounded rectangle
-     * @param {number} y position of the rounded rectangle
-     * @param {number} width the rectangle width
-     * @param {number} height the rectangle height
-     * @param {number} [radius=20] the radius of the rounded corner
-     */
-    constructor(x, y, width, height, radius = 20) {
-        // parent constructor
-        super(x, y, width, height);
-
-        // set the corner radius
-        this.radius = radius;
-    }
-
-    /** @ignore */
-    onResetEvent(x, y, w, h, radius) {
-        super.setShape(x, y, w, h);
-        this.radius = radius;
-    }
-
-
-    /**
-     * the radius of the rounded corner
-     * @public
-     * @type {number}
-     * @default 20
-     * @name radius
-     * @memberof RoundRect
-     */
-    get radius() {
-        return this._radius;
-    }
-    set radius(value) {
-        // verify the rectangle is at least as wide and tall as the rounded corners.
-        if (this.width < 2 * value) {
-            value = this.width / 2;
-        }
-        if (this.height < 2 * value) {
-            value = this.height / 2;
-        }
-        this._radius = value;
-    }
-
-    /**
-     * copy the position, size and radius of the given rounded rectangle into this one
-     * @name copy
-     * @memberof RoundRect
-     * @param {RoundRect} rrect source rounded rectangle
-     * @returns {RoundRect} new rectangle
-     */
-    copy(rrect) {
-        super.setShape(rrect.pos.x, rrect.pos.y, rrect.width, rrect.height);
-        this.radius = rrect.radius;
-        return this;
-    }
-
-    /**
-     * Returns true if the rounded rectangle contains the given point
-     * @name contains
-     * @memberof RoundRect
-     * @method
-     * @param  {number} x x coordinate
-     * @param  {number} y y coordinate
-     * @returns {boolean} true if contains
-     */
-
-    /**
-     * Returns true if the rounded rectangle contains the given point
-     * @name contains
-     * @memberof RoundRect
-     * @param {Vector2d} point
-     * @returns {boolean} true if contains
-     */
-    contains() {
-        var arg0 = arguments[0];
-        var _x, _y;
-        if (arguments.length === 2) {
-             // x, y
-             _x = arg0;
-             _y = arguments[1];
-         } else {
-             if (arg0 instanceof Rect) {
-                 // good enough
-                 return super.contains(arg0);
-             } else {
-                 // vector
-                _x = arg0.x;
-                _y = arg0.y;
-             }
-        }
-
-        // check whether point is outside the bounding box
-        if (_x < this.left || _x >= this.right || _y < this.top || _y >= this.bottom) {
-            return false; // outside bounding box
-        }
-
-        // check whether point is within the bounding box minus radius
-        if ((_x >= this.left + this.radius && _x <= this.right - this.radius) || (_y >= this.top + this.radius && _y <= this.bottom - this.radius)) {
-            return true;
-        }
-
-        // check whether point is in one of the rounded corner areas
-        var tx, ty;
-        var radiusX =  Math.max(0, Math.min(this.radius, this.width / 2));
-        var radiusY =  Math.max(0, Math.min(this.radius, this.height / 2));
-
-        if (_x < this.left + radiusX && _y < this.top + radiusY) {
-            tx = _x - this.left - radiusX;
-            ty = _y - this.top - radiusY;
-        } else if (_x > this.right - radiusX && _y < this.top + radiusY) {
-            tx = _x - this.right + radiusX;
-            ty = _y - this.top - radiusY;
-        } else if (_x > this.right - radiusX && _y > this.bottom - radiusY) {
-            tx = _x - this.right + radiusX;
-            ty = _y - this.bottom + radiusY;
-        } else if (_x < this.left + radiusX && _y > this.bottom - radiusY) {
-            tx = _x - this.left - radiusX;
-            ty = _y - this.bottom + radiusY;
-        } else {
-            return false; // inside and not within the rounded corner area
-        }
-
-        // Pythagorean theorem.
-        return ((tx * tx) + (ty * ty) <= (radiusX * radiusY));
-    }
-
-    /**
-     * check if this RoundRect is identical to the specified one
-     * @name equals
-     * @memberof RoundRect
-     * @param {RoundRect} rrect
-     * @returns {boolean} true if equals
-     */
-    equals(rrect) {
-        return super.equals(rrect) && this.radius === rrect.radius;
-    }
-
-    /**
-     * clone this RoundRect
-     * @name clone
-     * @memberof RoundRect
-     * @returns {RoundRect} new RoundRect
-     */
-    clone() {
-        return new RoundRect(this.pos.x, this.pos.y, this.width, this.height, this.radius);
-    }
-}
-
-/**
- * @classdesc
- * a line segment Object
- * @augments Polygon
- * @param {number} x origin point of the Line
- * @param {number} y origin point of the Line
- * @param {Vector2d[]} points array of vectors defining the Line
- */
-
-class Line extends Polygon {
-
-    /**
-     * Returns true if the Line contains the given point
-     * @name contains
-     * @memberof Line
-     * @method
-     * @param {Vector2d} point
-     * @returns {boolean} true if contains
-     */
-
-    /**
-     * Returns true if the Line contains the given point
-     * @name contains
-     * @memberof Line
-     * @param  {number} x x coordinate
-     * @param  {number} y y coordinate
-     * @returns {boolean} true if contains
-     */
-    contains() {
-        var _x, _y;
-
-        if (arguments.length === 2) {
-          // x, y
-          _x = arguments[0];
-          _y = arguments[1];
-        } else {
-          // vector
-          _x = arguments[0].x;
-          _y = arguments[0].y;
-        }
-
-        // translate the given coordinates,
-        // rather than creating temp translated vectors
-        _x -= this.pos.x; // Cx
-        _y -= this.pos.y; // Cy
-        var start = this.points[0]; // Ax/Ay
-        var end = this.points[1]; // Bx/By
-
-        //(Cy - Ay) * (Bx - Ax) = (By - Ay) * (Cx - Ax)
-        return (_y - start.y) * (end.x - start.x) === (end.y - start.y) * (_x - start.x);
-    }
-
-    /**
-     * Computes the calculated collision edges and normals.
-     * This **must** be called if the `points` array, `angle`, or `offset` is modified manually.
-     * @name recalc
-     * @memberof Line
-     * @returns {Line} this instance for objecf chaining
-     */
-    recalc() {
-        var edges = this.edges;
-        var normals = this.normals;
-        var indices = this.indices;
-
-        // Copy the original points array and apply the offset/angle
-        var points = this.points;
-
-        if (points.length !== 2) {
-            throw new Error("Requires exactly 2 points");
-        }
-
-        // Calculate the edges/normals
-        if (edges[0] === undefined) {
-            edges[0] = pool.pull("Vector2d");
-        }
-        edges[0].copy(points[1]).sub(points[0]);
-        if (normals[0] === undefined) {
-            normals[0] = pool.pull("Vector2d");
-        }
-        normals[0].copy(edges[0]).perp().normalize();
-
-        // do not do anything here, indices will be computed by
-        // toIndices if array is empty upon function call
-        indices.length = 0;
-
-        return this;
-    }
-
-    /**
-     * clone this line segment
-     * @name clone
-     * @memberof Line
-     * @returns {Line} new Line
-     */
-    clone() {
-        var copy = [];
-        this.points.forEach(function (point) {
-            copy.push(point.clone());
-        });
-        return new Line(this.pos.x, this.pos.y, copy);
-    }
-
-}
-
-/**
- * @classdesc
- * a simplified path2d implementation, supporting only one path
- */
-class Path2D {
-    constructor() {
-        /**
-         * the points defining the current path
-         * @public
-         * @type {Vector2d[]}
-         * @name points
-         * @memberof Path2D#
-         */
-        this.points = [];
-
-        /**
-         * space between interpolated points for quadratic and bezier curve approx. in pixels.
-         * @public
-         * @type {number}
-         * @name arcResolution
-         * @default 5
-         * @memberof Path2D#
-         */
-        this.arcResolution = 5;
-
-        /* @ignore */
-        this.vertices = [];
-    }
-
-    /**
-     * begin a new path
-     * @name beginPath
-     * @memberof Path2D
-     */
-    beginPath() {
-        // empty the cache and recycle all vectors
-        this.points.forEach((point) => {
-            pool.push(point);
-        });
-        this.points.length = 0;
-    }
-
-    /**
-     * causes the point of the pen to move back to the start of the current path.
-     * It tries to draw a straight line from the current point to the start.
-     * If the shape has already been closed or has only one point, this function does nothing.
-     * @name closePath
-     * @memberof Path2D
-     */
-    closePath() {
-        var points = this.points;
-        if (points.length > 1 && !points[points.length-1].equals(points[0])) {
-            points.push(pool.pull("Vector2d", points[0].x, points[0].y));
-        }
-    }
-
-    /**
-     * triangulate the shape defined by this path into an array of triangles
-     * @name triangulatePath
-     * @memberof Path2D
-     * @returns {Vector2d[]}
-     */
-    triangulatePath() {
-        var i = 0;
-        var points = this.points;
-        var vertices = this.vertices;
-        var indices = earcut$1.exports(points.flatMap(p => [p.x, p.y]));
-
-        // calculate all vertices
-        for (i = 0; i < indices.length; i++ ) {
-            if (typeof vertices[i] === "undefined") {
-                // increase cache buffer if necessary
-                vertices[i] = pool.pull("Vector2d");
-            }
-            vertices[i].set(points[indices[i]].x, points[indices[i]].y);
-        }
-
-        // recycle overhead from a previous triangulation
-        while (vertices.length > indices.length) {
-            pool.push(vertices[vertices.length-1]);
-            vertices.length -= 1;
-        }
-
-        return vertices;
-    }
-
-    /**
-     * moves the starting point of the current path to the (x, y) coordinates.
-     * @name moveTo
-     * @memberof Path2D
-     * @param {number} x the x-axis (horizontal) coordinate of the point.
-     * @param {number} y the y-axis (vertical) coordinate of the point.
-     */
-    moveTo(x, y) {
-      this.points.push(pool.pull("Vector2d", x, y));
-    }
-
-    /**
-     * connects the last point in the current patch to the (x, y) coordinates with a straight line.
-     * @name lineTo
-     * @memberof Path2D
-     * @param {number} x the x-axis coordinate of the line's end point.
-     * @param {number} y the y-axis coordinate of the line's end point.
-     */
-    lineTo(x, y) {
-        this.points.push(pool.pull("Vector2d", x, y));
-    }
-
-    /**
-     * adds an arc to the current path which is centered at (x, y) position with the given radius,
-     * starting at startAngle and ending at endAngle going in the given direction by counterclockwise (defaulting to clockwise).
-     * @name arc
-     * @memberof Path2D
-     * @param {number} x the horizontal coordinate of the arc's center.
-     * @param {number} y the vertical coordinate of the arc's center.
-     * @param {number} radius the arc's radius. Must be positive.
-     * @param {number} startAngle the angle at which the arc starts in radians, measured from the positive x-axis.
-     * @param {number} endAngle the angle at which the arc ends in radians, measured from the positive x-axis.
-     * @param {boolean} [anticlockwise=false] an optional boolean value. If true, draws the arc counter-clockwise between the start and end angles.
-     */
-    arc(x, y, radius, startAngle, endAngle, anticlockwise = false) {
-        var points = this.points;
-        // based on from https://github.com/karellodewijk/canvas-webgl/blob/master/canvas-webgl.js
-        //bring angles all in [0, 2*PI] range
-        if (startAngle === endAngle) return;
-        var fullCircle = anticlockwise ? Math.abs(startAngle-endAngle) >= (TAU) : Math.abs(endAngle-startAngle) >= (TAU);
-
-        startAngle = startAngle % (TAU);
-        endAngle = endAngle % (TAU);
-
-        if (startAngle < 0) startAngle += TAU;
-        if (endAngle < 0) endAngle += TAU;
-
-        if (startAngle >= endAngle) {
-            endAngle+= TAU;
-        }
-
-        var diff = endAngle - startAngle;
-        var direction = 1;
-        if (anticlockwise) {
-            direction = -1;
-            diff = TAU - diff;
-        }
-
-        if (fullCircle) diff = TAU;
-
-        var length = diff * radius;
-        var nr_of_interpolation_points = length / this.arcResolution;
-        var dangle = diff / nr_of_interpolation_points;
-
-        var angle = startAngle;
-        for (var j = 0; j < nr_of_interpolation_points; j++) {
-            points.push(pool.pull("Vector2d", x + radius * Math.cos(angle), y + radius * Math.sin(angle)));
-            angle += direction * dangle;
-        }
-        points.push(pool.pull("Vector2d", x + radius * Math.cos(endAngle), y + radius * Math.sin(endAngle)));
-    }
-
-    /**
-     * adds a circular arc to the path with the given control points and radius, connected to the previous point by a straight line.
-     * @name arcTo
-     * @memberof Path2D
-     * @param {number} x1 the x-axis coordinate of the first control point.
-     * @param {number} y1 the y-axis coordinate of the first control point.
-     * @param {number} x2 the x-axis coordinate of the second control point.
-     * @param {number} y2 the y-axis coordinate of the second control point.
-     * @param {number} radius the arc's radius. Must be positive.
-     */
-    arcTo(x1, y1, x2, y2, radius) {
-        var points = this.points;
-        // based on from https://github.com/karellodewijk/canvas-webgl/blob/master/canvas-webgl.js
-        var x0 = points[points.length-1].x, y0 = points[points.length-1].y;
-
-        //a = -incoming vector, b = outgoing vector to x1, y1
-        var a = [x0 - x1, y0 - y1];
-        var b = [x2 - x1, y2 - y1];
-
-        //normalize
-        var l_a = Math.sqrt(Math.pow(a[0], 2) + Math.pow(a[1], 2));
-        var l_b = Math.sqrt(Math.pow(b[0], 2) + Math.pow(b[1], 2));
-        a[0] /= l_a; a[1] /= l_a; b[0] /= l_b; b[1] /= l_b;
-        var angle = Math.atan2(a[1], a[0]) - Math.atan2(b[1], b[0]);
-
-        //work out tangent points using tan(θ) = opposite / adjacent; angle/2 because hypotenuse is the bisection of a,b
-        var tan_angle_div2 = Math.tan(angle/2);
-        var adj_l = (radius/tan_angle_div2);
-
-        var tangent_point1 =  [x1 + a[0] * adj_l, y1 + a[1] * adj_l];
-        var tangent_point2 =  [x1 + b[0] * adj_l, y1 + b[1] * adj_l];
-
-        points.push(pool.pull("Vector2d", tangent_point1[0], tangent_point1[1]));
-
-        var bisec = [(a[0] + b[0]) / 2.0, (a[1] + b[1]) / 2.0];
-        var bisec_l = Math.sqrt(Math.pow(bisec[0], 2) + Math.pow(bisec[1], 2));
-        bisec[0] /= bisec_l; bisec[1] /= bisec_l;
-
-        var hyp_l = Math.sqrt(Math.pow(radius, 2) + Math.pow(adj_l, 2));
-        var center = [x1 + hyp_l * bisec[0], y1 + hyp_l * bisec[1]];
-
-        var startAngle = Math.atan2(tangent_point1[1] - center[1], tangent_point1[0] - center[0]);
-        var endAngle = Math.atan2(tangent_point2[1] - center[1], tangent_point2[0] - center[0]);
-
-        this.arc(center[0], center[1], radius, startAngle, endAngle);
-    }
-
-    /**
-     * adds an elliptical arc to the path which is centered at (x, y) position with the radii radiusX and radiusY
-     * starting at startAngle and ending at endAngle going in the given direction by counterclockwise.
-     * @name ellipse
-     * @memberof Path2D
-     * @param {number} x the x-axis (horizontal) coordinate of the ellipse's center.
-     * @param {number} y the  y-axis (vertical) coordinate of the ellipse's center.
-     * @param {number} radiusX the ellipse's major-axis radius. Must be non-negative.
-     * @param {number} radiusY the ellipse's minor-axis radius. Must be non-negative.
-     * @param {number} rotation the rotation of the ellipse, expressed in radians.
-     * @param {number} startAngle the angle at which the ellipse starts, measured clockwise from the positive x-axis and expressed in radians.
-     * @param {number} endAngle the angle at which the ellipse ends, measured clockwise from the positive x-axis and expressed in radians.
-     * @param {boolean} [anticlockwise=false] an optional boolean value which, if true, draws the ellipse counterclockwise (anticlockwise).
-     */
-    ellipse(x, y, radiusX, radiusY, rotation, startAngle, endAngle, anticlockwise = false) {
-        var points = this.points;
-        // based on from https://github.com/karellodewijk/canvas-webgl/blob/master/canvas-webgl.js
-        if (startAngle === endAngle) return;
-        var fullCircle = anticlockwise ? Math.abs(startAngle-endAngle) >= (TAU) : Math.abs(endAngle-startAngle) >= (TAU);
-
-        //bring angles all in [0, 2*PI] range
-        startAngle = startAngle % (TAU);
-        endAngle = endAngle % (TAU);
-        if (startAngle < 0) startAngle += TAU;
-        if (endAngle < 0) endAngle += TAU;
-
-        if (startAngle>=endAngle) {
-            endAngle += TAU;
-        }
-
-        var diff = endAngle - startAngle;
-
-        var direction = 1;
-        if (anticlockwise) {
-            direction = -1;
-            diff = TAU - diff;
-        }
-
-        if (fullCircle) diff = TAU;
-
-        var length = (diff * radiusX + diff * radiusY) / 2;
-        var nr_of_interpolation_points = length / this.arcResolution;
-        var dangle = diff / nr_of_interpolation_points;
-
-        var angle = startAngle;
-        var cos_rotation = Math.cos(rotation);
-        var sin_rotation = Math.sin(rotation);
-        for (var j = 0; j < nr_of_interpolation_points; j++) {
-            var _x1 = radiusX * Math.cos(angle);
-            var _y1 = radiusY * Math.sin(angle);
-            var _x2 = x + _x1 * cos_rotation - _y1 * sin_rotation;
-            var _y2 = y + _x1 * sin_rotation + _y1 * cos_rotation;
-            points.push(pool.pull("Vector2d", _x2, _y2));
-            angle += direction * dangle;
-        }
-        //var x1 = radiusX * Math.cos(endAngle);
-        //var y1 = radiusY * Math.sin(endAngle);
-        //points.push(pool.pull("Vector2d", x + x1 * cos_rotation - y1 * sin_rotation, y + x1 * sin_rotation + y1 * cos_rotation));
-    }
-
-    /**
-     * creates a path for a rectangle at position (x, y) with a size that is determined by width and height.
-     * @name rect
-     * @memberof Path2D
-     * @param {number} x the x-axis coordinate of the rectangle's starting point.
-     * @param {number} y the y-axis coordinate of the rectangle's starting point.
-     * @param {number} width the rectangle's width. Positive values are to the right, and negative to the left.
-     * @param {number} height the rectangle's height. Positive values are down, and negative are up.
-     */
-    rect(x, y, width, height) {
-        this.moveTo(x, y);
-        this.lineTo(x + width, y);
-        this.lineTo(x + width, y + height);
-        this.lineTo(x, y + height);
-        this.lineTo(x, y);
-    }
-
-    /**
-     * adds an rounded rectangle to the current path.
-     * @name roundRect
-     * @memberof Path2D
-     * @param {number} x the x-axis coordinate of the rectangle's starting point.
-     * @param {number} y the y-axis coordinate of the rectangle's starting point.
-     * @param {number} width the rectangle's width. Positive values are to the right, and negative to the left.
-     * @param {number} height the rectangle's height. Positive values are down, and negative are up.
-     * @param {number} radius the arc's radius to draw the borders. Must be positive.
-     */
-     roundRect(x, y, width, height, radius) {
-        this.moveTo(x + radius, y);
-        this.lineTo(x + width - radius, y);
-        this.arcTo(x + width, y, x + width, y + radius, radius);
-        this.lineTo(x + width, y + height - radius);
-        this.arcTo(x + width, y + height, x + width - radius, y + height, radius);
-        this.lineTo(x + radius, y + height);
-        this.arcTo(x, y + height, x, y + height - radius, radius);
-        this.lineTo(x, y + radius);
-        this.arcTo(x, y, x + radius, y, radius);
-    }
-}
-
-/**
- * @classdesc
- * a base renderer object
- */
-class Renderer {
-    /**
-     * @param {object} options The renderer parameters
-     * @param {number} options.width The width of the canvas without scaling
-     * @param {number} options.height The height of the canvas without scaling
-     * @param {HTMLCanvasElement} [options.canvas] The html canvas to draw to on screen
-     * @param {boolean} [options.doubleBuffering=false] Whether to enable double buffering
-     * @param {boolean} [options.antiAlias=false] Whether to enable anti-aliasing, use false (default) for a pixelated effect.
-     * @param {boolean} [options.failIfMajorPerformanceCaveat=true] If true, the renderer will switch to CANVAS mode if the performances of a WebGL context would be dramatically lower than that of a native application making equivalent OpenGL calls.
-     * @param {boolean} [options.transparent=false] Whether to enable transparency on the canvas (performance hit when enabled)
-     * @param {boolean} [options.blendMode="normal"] the default blend mode to use ("normal", "multiply")
-     * @param {boolean} [options.subPixel=false] Whether to enable subpixel rendering (performance hit when enabled)
-     * @param {boolean} [options.verbose=false] Enable the verbose mode that provides additional details as to what the renderer is doing
-     * @param {number} [options.zoomX=width] The actual width of the canvas with scaling applied
-     * @param {number} [options.zoomY=height] The actual height of the canvas with scaling applied
-     */
-    constructor(options) {
-        /**
-         * The given constructor options
-         * @public
-         * @name settings
-         * @memberof Renderer#
-         * @type {object}
-         */
-        this.settings = options;
-
-        /**
-         * true if the current rendering context is valid
-         * @name isContextValid
-         * @memberof Renderer#
-         * @default true
-         * type {boolean}
-         */
-        this.isContextValid = true;
-
-        /**
-         * The Path2D instance used by the renderer to draw primitives
-         * @name path2D
-         * @type {Path2D}
-         * @memberof Renderer#
-         */
-        this.path2D = new Path2D();
-
-        /**
-         * @ignore
-         */
-        this.currentScissor = new Int32Array([ 0, 0, this.settings.width, this.settings.height ]);
-
-        /**
-         * @ignore
-         */
-        this.maskLevel = 0;
-
-        /**
-         * @ignore
-         */
-        this.currentBlendMode = "none";
-
-        // create the main screen canvas
-        if (device.ejecta === true) {
-            // a main canvas is already automatically created by Ejecta
-            this.canvas = document.getElementById("canvas");
-        } else if (typeof globalThis.canvas !== "undefined") {
-            // a global canvas is available, e.g. webapp adapter for wechat
-            this.canvas = globalThis.canvas;
-        } else if (typeof this.settings.canvas !== "undefined") {
-            this.canvas = this.settings.canvas;
-        } else {
-            this.canvas = createCanvas(this.settings.zoomX, this.settings.zoomY);
-        }
-
-        // canvas object and context
-        this.backBufferCanvas = this.canvas;
-        this.context = null;
-
-        // global color
-        this.currentColor = new Color(0, 0, 0, 1.0);
-
-        // global tint color
-        this.currentTint = new Color(255, 255, 255, 1.0);
-
-        // the projectionMatrix (set through setProjection)
-        this.projectionMatrix = new Matrix3d();
-
-        // default uvOffset
-        this.uvOffset = 0;
-
-        // reset the instantiated renderer on game reset
-        on(GAME_RESET, () => {
-            renderer.reset();
-        });
-    }
-
-    /**
-     * prepare the framebuffer for drawing a new frame
-     * @name clear
-     * @memberof Renderer
-     */
-    clear() {}
-
-    /**
-     * Reset context state
-     * @name reset
-     * @memberof Renderer
-     */
-    reset() {
-        this.resetTransform();
-        this.setBlendMode(this.settings.blendMode);
-        this.setColor("#000000");
-        this.clearTint();
-        this.cache.clear();
-        this.currentScissor[0] = 0;
-        this.currentScissor[1] = 0;
-        this.currentScissor[2] = this.backBufferCanvas.width;
-        this.currentScissor[3] = this.backBufferCanvas.height;
-        this.clearMask();
-    }
-
-    /**
-     * return a reference to the system canvas
-     * @name getCanvas
-     * @memberof Renderer
-     * @returns {HTMLCanvasElement}
-     */
-    getCanvas() {
-        return this.backBufferCanvas;
-    }
-
-    /**
-     * return a reference to the screen canvas
-     * @name getScreenCanvas
-     * @memberof Renderer
-     * @returns {HTMLCanvasElement}
-     */
-    getScreenCanvas() {
-        return this.canvas;
-    }
-
-    /**
-     * return a reference to the screen canvas corresponding 2d Context<br>
-     * (will return buffered context if double buffering is enabled, or a reference to the Screen Context)
-     * @name getScreenContext
-     * @memberof Renderer
-     * @returns {CanvasRenderingContext2D}
-     */
-    getScreenContext() {
-        return this.context;
-    }
-
-    /**
-     * returns the current blend mode for this renderer
-     * @name getBlendMode
-     * @memberof Renderer
-     * @returns {string} blend mode
-     */
-    getBlendMode() {
-        return this.currentBlendMode;
-    }
-
-    /**
-     * Returns the 2D Context object of the given Canvas<br>
-     * Also configures anti-aliasing and blend modes based on constructor options.
-     * @name getContext2d
-     * @memberof Renderer
-     * @param {HTMLCanvasElement} canvas
-     * @param {boolean} [transparent=true] use false to disable transparency
-     * @returns {CanvasRenderingContext2D}
-     */
-    getContext2d(canvas, transparent) {
-        if (typeof canvas === "undefined" || canvas === null) {
-            throw new Error(
-                "You must pass a canvas element in order to create " +
-                "a 2d context"
-            );
-        }
-
-        if (typeof canvas.getContext === "undefined") {
-            throw new Error(
-                "Your browser does not support HTML5 canvas."
-            );
-        }
-
-        if (typeof transparent !== "boolean") {
-            transparent = true;
-        }
-
-        var _context = canvas.getContext("2d", {
-                "alpha" : transparent
-        });
-
-        if (!_context.canvas) {
-            _context.canvas = canvas;
-        }
-        this.setAntiAlias(_context, this.settings.antiAlias);
-        return _context;
-    }
-
-    /**
-     * return the width of the system Canvas
-     * @name getWidth
-     * @memberof Renderer
-     * @returns {number}
-     */
-    getWidth() {
-        return this.backBufferCanvas.width;
-    }
-
-    /**
-     * return the height of the system Canvas
-     * @name getHeight
-     * @memberof Renderer
-     * @returns {number} height of the system Canvas
-     */
-    getHeight() {
-        return this.backBufferCanvas.height;
-    }
-
-    /**
-     * get the current fill & stroke style color.
-     * @name getColor
-     * @memberof Renderer
-     * @returns {Color} current global color
-     */
-    getColor() {
-        return this.currentColor;
-    }
-
-    /**
-     * return the current global alpha
-     * @name globalAlpha
-     * @memberof Renderer
-     * @returns {number}
-     */
-    globalAlpha() {
-        return this.currentColor.glArray[3];
-    }
-
-    /**
-     * check if the given rect or bounds overlaps with the renderer screen coordinates
-     * @name overlaps
-     * @memberof Renderer
-     * @param {Rect|Bounds} bounds
-     * @returns {boolean} true if overlaps
-     */
-    overlaps(bounds) {
-        return (
-            bounds.left <= this.getWidth() && bounds.right >= 0 &&
-            bounds.top <= this.getHeight() && bounds.bottom >= 0
-        );
-    }
-
-
-    /**
-     * resizes the system canvas
-     * @name resize
-     * @memberof Renderer
-     * @param {number} width new width of the canvas
-     * @param {number} height new height of the canvas
-     */
-    resize(width, height) {
-        if (width !== this.backBufferCanvas.width || height !== this.backBufferCanvas.height) {
-            this.canvas.width = this.backBufferCanvas.width = width;
-            this.canvas.height = this.backBufferCanvas.height = height;
-            this.currentScissor[0] = 0;
-            this.currentScissor[1] = 0;
-            this.currentScissor[2] = width;
-            this.currentScissor[3] = height;
-            // publish the corresponding event
-            emit(CANVAS_ONRESIZE, width, height);
-        }
-    }
-
-    /**
-     * enable/disable image smoothing (scaling interpolation) for the given context
-     * @name setAntiAlias
-     * @memberof Renderer
-     * @param {CanvasRenderingContext2D} context
-     * @param {boolean} [enable=false]
-     */
-    setAntiAlias(context, enable) {
-        var canvas = context.canvas;
-
-        // enable/disable antialis on the given Context2d object
-        setPrefixed("imageSmoothingEnabled", enable === true, context);
-
-        // set antialias CSS property on the main canvas
-        if (enable !== true) {
-            // https://developer.mozilla.org/en-US/docs/Web/CSS/image-rendering
-            canvas.style["image-rendering"] = "optimizeSpeed"; // legal fallback
-            canvas.style["image-rendering"] = "-moz-crisp-edges"; // Firefox
-            canvas.style["image-rendering"] = "-o-crisp-edges"; // Opera
-            canvas.style["image-rendering"] = "-webkit-optimize-contrast"; // Safari
-            canvas.style["image-rendering"] = "optimize-contrast"; // CSS 3
-            canvas.style["image-rendering"] = "crisp-edges"; // CSS 4
-            canvas.style["image-rendering"] = "pixelated"; // CSS 4
-            canvas.style.msInterpolationMode = "nearest-neighbor"; // IE8+
-        } else {
-            canvas.style["image-rendering"] = "auto";
-        }
-    }
-
-    /**
-     * set/change the current projection matrix (WebGL only)
-     * @name setProjection
-     * @memberof Renderer
-     * @param {Matrix3d} matrix
-     */
-    setProjection(matrix) {
-        this.projectionMatrix.copy(matrix);
-    }
-
-    /**
-     * stroke the given shape
-     * @name stroke
-     * @memberof Renderer
-     * @param {Rect|RoundRect|Polygon|Line|Ellipse} shape a shape object to stroke
-     * @param {boolean} [fill=false] fill the shape with the current color if true
-     */
-    stroke(shape, fill) {
-        if (shape instanceof RoundRect) {
-            this.strokeRoundRect(shape.left, shape.top, shape.width, shape.height, shape.radius, fill);
-            return;
-        }
-        if (shape instanceof Rect || shape instanceof Bounds) {
-            this.strokeRect(shape.left, shape.top, shape.width, shape.height, fill);
-            return;
-        }
-        if (shape instanceof Line || shape instanceof Polygon) {
-            this.strokePolygon(shape, fill);
-            return;
-        }
-        if (shape instanceof Ellipse) {
-            this.strokeEllipse(
-                shape.pos.x,
-                shape.pos.y,
-                shape.radiusV.x,
-                shape.radiusV.y,
-                fill
-            );
-            return;
-        }
-        throw new Error("Invalid geometry for fill/stroke");
-    }
-
-    /**
-     * fill the given shape
-     * @name fill
-     * @memberof Renderer
-     * @param {Rect|RoundRect|Polygon|Line|Ellipse} shape a shape object to fill
-     */
-    fill(shape) {
-        this.stroke(shape, true);
-    }
-
-    /**
-     * tint the given image or canvas using the given color
-     * @name tint
-     * @memberof Renderer
-     * @param {HTMLImageElement|HTMLCanvasElement|OffscreenCanvas} src the source image to be tinted
-     * @param {Color|string} color the color that will be used to tint the image
-     * @param {string} [mode="multiply"] the composition mode used to tint the image
-     * @returns {HTMLCanvasElement|OffscreenCanvas} a new canvas element representing the tinted image
-     */
-    tint(src, color, mode) {
-        var canvas = createCanvas(src.width, src.height, true);
-        var context = this.getContext2d(canvas);
-
-        context.save();
-
-        context.fillStyle = color instanceof Color ? color.toRGB() : color;
-        context.fillRect(0, 0, src.width, src.height);
-
-        context.globalCompositeOperation = mode || "multiply";
-        context.drawImage(src, 0, 0);
-        context.globalCompositeOperation = "destination-atop";
-        context.drawImage(src, 0, 0);
-
-        context.restore();
-
-        return canvas;
-    }
-
-    /**
-     * A mask limits rendering elements to the shape and position of the given mask object.
-     * So, if the renderable is larger than the mask, only the intersecting part of the renderable will be visible.
-     * Mask are not preserved through renderer context save and restore.
-     * @name setMask
-     * @memberof Renderer
-     * @param {Rect|RoundRect|Polygon|Line|Ellipse} [mask] the shape defining the mask to be applied
-     * @param {boolean} [invert=false] either the given shape should define what is visible (default) or the opposite
-     */
-    // eslint-disable-next-line no-unused-vars
-    setMask(mask) {}
-
-    /**
-     * disable (remove) the rendering mask set through setMask.
-     * @name clearMask
-     * @see Renderer#setMask
-     * @memberof Renderer
-     */
-    clearMask() {}
-
-    /**
-     * set a coloring tint for sprite based renderables
-     * @name setTint
-     * @memberof Renderer
-     * @param {Color} tint the tint color
-     * @param {number} [alpha] an alpha value to be applied to the tint
-     */
-    setTint(tint, alpha = tint.alpha) {
-        // global tint color
-        this.currentTint.copy(tint);
-        this.currentTint.alpha *= alpha;
-    }
-
-    /**
-     * clear the rendering tint set through setTint.
-     * @name clearTint
-     * @see Renderer#setTint
-     * @memberof Renderer
-     */
-    clearTint() {
-        // reset to default
-        this.currentTint.setColor(255, 255, 255, 1.0);
-    }
-
-    /**
-     * @ignore
-     */
-    drawFont(/*bounds*/) {}
-
 }
 
 /**
@@ -27209,7 +28245,7 @@ function preloadTMX(tmxData, onload, onerror) {
                     case "tmx":
                     case "tsx":
                         // ie9 does not fully implement the responseXML
-                        if (device.ua.match(/msie/i) || !xmlhttp.responseXML) {
+                        if (ua.match(/msie/i) || !xmlhttp.responseXML) {
                             if (globalThis.DOMParser) {
                                 // manually create the XML DOM
                                 result = (new DOMParser()).parseFromString(xmlhttp.responseText, "text/xml");
@@ -27806,2796 +28842,1713 @@ var loader = {
 
 };
 
-// external import
+/**
+ * @classdesc
+ * An object to display a fixed or animated sprite on screen.
+ * @augments Renderable
+ */
+class Sprite extends Renderable {
+    /**
+     * @param {number} x the x coordinates of the sprite object
+     * @param {number} y the y coordinates of the sprite object
+     * @param {object} settings Configuration parameters for the Sprite object
+     * @param {HTMLImageElement|HTMLCanvasElement|TextureAtlas|string} settings.image reference to spritesheet image, a texture atlas or to a texture atlas
+     * @param {string} [settings.name=""] name of this object
+     * @param {string} [settings.region] region name of a specific region to use when using a texture atlas, see {@link TextureAtlas}
+     * @param {number} [settings.framewidth] Width of a single frame within the spritesheet
+     * @param {number} [settings.frameheight] Height of a single frame within the spritesheet
+     * @param {string|Color} [settings.tint] a tint to be applied to this sprite
+     * @param {number} [settings.flipX] flip the sprite on the horizontal axis
+     * @param {number} [settings.flipY] flip the sprite on the vertical axis
+     * @param {Vector2d} [settings.anchorPoint={x:0.5, y:0.5}] Anchor point to draw the frame at (defaults to the center of the frame).
+     * @example
+     * // create a single sprite from a standalone image, with anchor in the center
+     * var sprite = new me.Sprite(0, 0, {
+     *     image : "PlayerTexture",
+     *     framewidth : 64,
+     *     frameheight : 64,
+     *     anchorPoint : new me.Vector2d(0.5, 0.5)
+     * });
+     *
+     * // create a single sprite from a packed texture
+     * game.texture = new me.TextureAtlas(
+     *     me.loader.getJSON("texture"),
+     *     me.loader.getImage("texture")
+     * );
+     * var sprite = new me.Sprite(0, 0, {
+     *     image : game.texture,
+     *     region : "npc2.png",
+     * });
+     */
+    constructor(x, y, settings) {
 
-/**
- * @namespace audio
- */
+        // call the super constructor
+        super(x, y, 0, 0);
 
-/**
- * audio channel list
- * @ignore
- */
-let audioTracks = {};
-
-/**
- * current active track
- * @ignore
- */
-let current_track_id = null;
-
-/**
- * error retry counter
- * @ignore
- */
-let retry_counter = 0;
-
-/**
- * list of active audio formats
- * @ignore
- */
-let audioExts = [];
-
-/**
- * event listener callback on load error
- * @ignore
- */
-let soundLoadError = function (sound_name, onerror_cb) {
-    // check the retry counter
-    if (retry_counter++ > 3) {
-        // something went wrong
-        var errmsg = "melonJS: failed loading " + sound_name;
-        {
-            // throw an exception and stop everything !
-            throw new Error(errmsg);
-        }
-    // else try loading again !
-    }
-    else {
-        audioTracks[sound_name].load();
-    }
-};
-
-/**
- * Specify either to stop on audio loading error or not<br>
- * if true, melonJS will throw an exception and stop loading<br>
- * if false, melonJS will disable sounds and output a warning message
- * in the console<br>
- * @name stopOnAudioError
- * @type {boolean}
- * @default true
- * @memberof audio
- */
-let stopOnAudioError = true;
-
-/**
- * Initialize and configure the audio support.<br>
- * melonJS supports a wide array of audio codecs that have varying browser support :
- * <i> ("mp3", "mpeg", opus", "ogg", "oga", "wav", "aac", "caf", "m4a", "m4b", "mp4", "weba", "webm", "dolby", "flac")</i>.<br>
- * For a maximum browser coverage the recommendation is to use at least two of them,
- * typically default to webm and then fallback to mp3 for the best balance of small filesize and high quality,
- * webm has nearly full browser coverage with a great combination of compression and quality, and mp3 will fallback gracefully for other browsers.
- * It is important to remember that melonJS selects the first compatible sound based on the list of extensions and given order passed here.
- * So if you want webm to be used before mp3, you need to put the audio format in that order.
- * @function audio.init
- * @param {string} [format="mp3"] audio format to prioritize
- * @returns {boolean} Indicates whether audio initialization was successful
- * @example
- * // initialize the "sound engine", giving "webm" as default desired audio format, and "mp3" as a fallback
- * if (!me.audio.init("webm,mp3")) {
- *     alert("Sorry but your browser does not support html 5 audio !");
- *     return;
- * }
- */
- function init$1(format = "mp3") {
-    // convert it into an array
-    audioExts = format.split(",");
-
-    return !howler.Howler.noAudio;
-}
-/**
- * check if the given audio format is supported
- * @function audio.hasFormat
- * @param {string} codec audio format : "mp3", "mpeg", opus", "ogg", "oga", "wav", "aac", "caf", "m4a", "m4b", "mp4", "weba", "webm", "dolby", "flac"
- * @returns {boolean} return true if the given audio format is supported
- */
-function hasFormat(codec) {
-    return hasAudio() && howler.Howler.codecs(codec);
-}
-/**
- * check if audio (HTML5 or WebAudio) is supported
- * @function audio.hasAudio
- * @returns {boolean} return true if audio (HTML5 or WebAudio) is supported
- */
-function hasAudio() {
-    return !howler.Howler.noAudio;
-}
-/**
- * enable audio output <br>
- * only useful if audio supported and previously disabled through
- * @function audio.enable
- * @see audio#disable
- */
-function enable() {
-    unmuteAll();
-}
-/**
- * disable audio output
- * @function audio.disable
- */
-function disable() {
-    muteAll();
-}
-/**
- * Load an audio file.<br>
- * <br>
- * sound item must contain the following fields :<br>
- * - name    : name of the sound<br>
- * - src     : source path<br>
- * @ignore
- */
-function load(sound, html5, onload_cb, onerror_cb) {
-    var urls = [];
-    if (audioExts.length === 0) {
-        throw new Error("target audio extension(s) should be set through me.audio.init() before calling the preloader.");
-    }
-    for (var i = 0; i < audioExts.length; i++) {
-        urls.push(sound.src + sound.name + "." + audioExts[i] + loader.nocache);
-    }
-    audioTracks[sound.name] = new howler.Howl({
-        src : urls,
-        volume : howler.Howler.volume(),
-        html5 : html5 === true,
-        xhrWithCredentials : loader.withCredentials,
         /**
-         * @ignore
+         * pause and resume animation
+         * @public
+         * @type {boolean}
+         * @default false
+         * @name Sprite#animationpause
          */
-        onloaderror() {
-            soundLoadError.call(this, sound.name, onerror_cb);
-        },
+        this.animationpause = false;
+
         /**
-         * @ignore
+         * animation cycling speed (delay between frame in ms)
+         * @public
+         * @type {number}
+         * @default 100
+         * @name Sprite#animationspeed
          */
-        onload() {
-            retry_counter = 0;
-            if (onload_cb) {
-                onload_cb();
+        this.animationspeed = 100;
+
+        /**
+         * global offset for the position to draw from on the source image.
+         * @public
+         * @type {Vector2d}
+         * @default <0.0,0.0>
+         * @name offset
+         * @memberof Sprite#
+         */
+        this.offset = pool.pull("Vector2d", 0, 0);
+
+        /**
+         * The source texture object this sprite object is using
+         * @public
+         * @type {TextureAtlas}
+         * @name source
+         * @memberof Sprite#
+         */
+        this.source = null;
+
+        // hold all defined animation
+        this.anim = {};
+
+        // a flag to reset animation
+        this.resetAnim = undefined;
+
+        // current frame information
+        // (reusing current, any better/cleaner place?)
+        this.current = {
+            // the current animation name
+            name : "default",
+            // length of the current animation name
+            length : 0,
+            //current frame texture offset
+            offset : pool.pull("Vector2d"),
+            // current frame size
+            width : 0,
+            height : 0,
+            // Source rotation angle for pre-rotating the source image
+            angle : 0,
+            // current frame index
+            idx : 0
+        };
+
+        // animation frame delta
+        this.dt = 0;
+
+        // flicker settings
+        this._flicker = {
+            isFlickering : false,
+            duration : 0,
+            callback : null,
+            state : false
+        };
+
+        // set the proper image/texture to use
+        if (settings.image instanceof TextureAtlas) {
+            this.source = settings.image;
+            this.image = this.source.getTexture();
+            this.textureAtlas = settings.image;
+            // check for defined region
+            if (typeof (settings.region) !== "undefined") {
+                // use a texture atlas
+                var region = this.source.getRegion(settings.region);
+                if (region) {
+                    // set the sprite region within the texture
+                    this.setRegion(region);
+                    // update the default "current" frame size
+                    this.current.width = settings.framewidth || region.width;
+                    this.current.height = settings.frameheight || region.height;
+                } else {
+                    // throw an error
+                    throw new Error("Texture - region for " + settings.region + " not found");
+                }
             }
+        } else {
+            // HTMLImageElement/Canvas or {string}
+            this.image = (typeof settings.image === "object") ? settings.image : loader.getImage(settings.image);
+            // throw an error if image ends up being null/undefined
+            if (!this.image) {
+                throw new Error("me.Sprite: '" + settings.image + "' image/texture not found!");
+            }
+            // update the default "current" frame size
+            this.current.width = settings.framewidth = settings.framewidth || this.image.width;
+            this.current.height = settings.frameheight = settings.frameheight || this.image.height;
+            this.source = renderer.cache.get(this.image, settings);
+            this.textureAtlas = this.source.getAtlas();
         }
-    });
 
-    return 1;
-}
-/**
- * play the specified sound
- * @function audio.play
- * @param {string} sound_name audio clip name - case sensitive
- * @param {boolean} [loop=false] loop audio
- * @param {Function} [onend] Function to call when sound instance ends playing.
- * @param {number} [volume=default] Float specifying volume (0.0 - 1.0 values accepted).
- * @returns {number} the sound instance ID.
- * @example
- * // play the "cling" audio clip
- * me.audio.play("cling");
- * // play & repeat the "engine" audio clip
- * me.audio.play("engine", true);
- * // play the "gameover_sfx" audio clip and call myFunc when finished
- * me.audio.play("gameover_sfx", false, myFunc);
- * // play the "gameover_sfx" audio clip with a lower volume level
- * me.audio.play("gameover_sfx", false, null, 0.5);
- */
-function play(sound_name, loop = false, onend, volume) {
-    var sound = audioTracks[sound_name];
-    if (sound && typeof sound !== "undefined") {
-        var id = sound.play();
-        if (typeof loop === "boolean") {
-            // arg[0] can take different types in howler 2.0
-            sound.loop(loop, id);
+        // store/reset the current atlas information if specified
+        if (typeof(settings.atlas) !== "undefined") {
+            this.textureAtlas = settings.atlas;
+            this.atlasIndices = settings.atlasIndices;
         }
-        sound.volume(typeof(volume) === "number" ? clamp(volume, 0.0, 1.0) : howler.Howler.volume(), id);
-        if (typeof(onend) === "function") {
-            if (loop === true) {
-                sound.on("end", onend, id);
+
+        // resize based on the active frame
+        this.width = this.current.width;
+        this.height = this.current.height;
+
+        // apply flip flags if specified
+        if (typeof (settings.flipX) !== "undefined") {
+            this.flipX(!!settings.flipX);
+        }
+        if (typeof (settings.flipY) !== "undefined") {
+            this.flipY(!!settings.flipY);
+        }
+
+        // set the default rotation angle is defined in the settings
+        // * WARNING: rotating sprites decreases performance with Canvas Renderer
+        if (typeof (settings.rotation) !== "undefined") {
+            this.rotate(settings.rotation);
+        }
+
+        // update anchorPoint
+        if (settings.anchorPoint) {
+            this.anchorPoint.set(settings.anchorPoint.x, settings.anchorPoint.y);
+        }
+
+        if (typeof (settings.tint) !== "undefined") {
+            this.tint.setColor(settings.tint);
+        }
+
+        // set the sprite name if specified
+        if (typeof (settings.name) === "string") {
+            this.name = settings.name;
+        }
+
+        // displaying order
+        if (typeof settings.z !== "undefined") {
+            this.pos.z = settings.z;
+        }
+        // for sprite, addAnimation will return !=0
+        if (this.addAnimation("default", null) !== 0) {
+            // set as default
+            this.setCurrentAnimation("default");
+        }
+
+        // enable currentTransform for me.Sprite based objects
+        this.autoTransform = true;
+    }
+
+    /**
+     * return the flickering state of the object
+     * @name isFlickering
+     * @memberof Sprite
+     * @returns {boolean}
+     */
+    isFlickering() {
+        return this._flicker.isFlickering;
+    }
+
+    /**
+     * make the object flicker
+     * @name flicker
+     * @memberof Sprite
+     * @param {number} duration expressed in milliseconds
+     * @param {Function} callback Function to call when flickering ends
+     * @returns {Sprite} Reference to this object for method chaining
+     * @example
+     * // make the object flicker for 1 second
+     * // and then remove it
+     * this.flicker(1000, function () {
+     *     me.game.world.removeChild(this);
+     * });
+     */
+    flicker(duration, callback) {
+        this._flicker.duration = duration;
+        if (this._flicker.duration <= 0) {
+            this._flicker.isFlickering = false;
+            this._flicker.callback = null;
+        }
+        else if (!this._flicker.isFlickering) {
+            this._flicker.callback = callback;
+            this._flicker.isFlickering = true;
+        }
+        return this;
+    }
+
+    /**
+     * add an animation <br>
+     * For fixed-sized cell sprite sheet, the index list must follow the
+     * logic as per the following example :<br>
+     * <img src="images/spritesheet_grid.png"/>
+     * @name addAnimation
+     * @memberof Sprite
+     * @param {string} name animation id
+     * @param {number[]|string[]|object[]} index list of sprite index or name
+     * defining the animation. Can also use objects to specify delay for each frame, see below
+     * @param {number} [animationspeed] cycling speed for animation in ms
+     * @returns {number} frame amount of frame added to the animation (delay between each frame).
+     * @see Sprite#animationspeed
+     * @example
+     * // walking animation
+     * this.addAnimation("walk", [ 0, 1, 2, 3, 4, 5 ]);
+     * // standing animation
+     * this.addAnimation("stand", [ 11, 12 ]);
+     * // eating animation
+     * this.addAnimation("eat", [ 6, 6 ]);
+     * // rolling animation
+     * this.addAnimation("roll", [ 7, 8, 9, 10 ]);
+     * // slower animation
+     * this.addAnimation("roll", [ 7, 8, 9, 10 ], 200);
+     * // or get more specific with delay for each frame. Good solution instead of repeating:
+     * this.addAnimation("turn", [{ name: 0, delay: 200 }, { name: 1, delay: 100 }])
+     * // can do this with atlas values as well:
+     * this.addAnimation("turn", [{ name: "turnone", delay: 200 }, { name: "turntwo", delay: 100 }])
+     * // define an dying animation that stop on the last frame
+     * this.addAnimation("die", [{ name: 3, delay: 200 }, { name: 4, delay: 100 }, { name: 5, delay: Infinity }])
+     * // set the standing animation as default
+     * this.setCurrentAnimation("stand");
+     */
+    addAnimation(name, index, animationspeed) {
+        this.anim[name] = {
+            name : name,
+            frames : [],
+            idx : 0,
+            length : 0
+        };
+
+        // # of frames
+        var counter = 0;
+
+        if (typeof (this.textureAtlas) !== "object") {
+            return 0;
+        }
+
+
+        if (index == null) {
+            index = [];
+            // create a default animation with all frame
+            Object.keys(this.textureAtlas).forEach(function (v, i) {
+                index[i] = i;
+            });
+        }
+
+        // set each frame configuration (offset, size, etc..)
+        for (var i = 0, len = index.length; i < len; i++) {
+            var frame = index[i];
+            var frameObject;
+            if (typeof(frame) === "number" || typeof(frame) === "string") {
+                frameObject = {
+                    name: frame,
+                    delay: animationspeed || this.animationspeed
+                };
             }
             else {
-                sound.once("end", onend, id);
+              frameObject = frame;
+            }
+            var frameObjectName = frameObject.name;
+            if (typeof(frameObjectName) === "number") {
+                if (typeof (this.textureAtlas[frameObjectName]) !== "undefined") {
+                    // TODO: adding the cache source coordinates add undefined entries in webGL mode
+                    this.anim[name].frames[i] = Object.assign(
+                        {},
+                        this.textureAtlas[frameObjectName],
+                        frameObject
+                    );
+                    counter++;
+                }
+            } else { // string
+                if (this.source.getFormat().includes("Spritesheet")) {
+                    throw new Error(
+                        "string parameters for addAnimation are not allowed for standard spritesheet based Texture"
+                    );
+                } else {
+                    this.anim[name].frames[i] = Object.assign(
+                        {},
+                        this.textureAtlas[this.atlasIndices[frameObjectName]],
+                        frameObject
+                    );
+                    counter++;
+                }
             }
         }
-        return id;
-    } else {
-        throw new Error("audio clip " + sound_name + " does not exist");
+        this.anim[name].length = counter;
+
+        return counter;
     }
-}
-/**
- * Fade a currently playing sound between two volumee.
- * @function audio.fade
- * @param {string} sound_name audio clip name - case sensitive
- * @param {number} from Volume to fade from (0.0 to 1.0).
- * @param {number} to Volume to fade to (0.0 to 1.0).
- * @param {number} duration Time in milliseconds to fade.
- * @param {number} [id] the sound instance ID. If none is passed, all sounds in group will fade.
- */
-function fade(sound_name, from, to, duration, id) {
-    var sound = audioTracks[sound_name];
-    if (sound && typeof sound !== "undefined") {
-        sound.fade(from, to, duration, id);
-    } else {
-        throw new Error("audio clip " + sound_name + " does not exist");
-    }
-}
-/**
- * get/set the position of playback for a sound.
- * @function audio.seek
- * @param {string} sound_name audio clip name - case sensitive
- * @param {number} [seek] the position to move current playback to (in seconds).
- * @param {number} [id] the sound instance ID. If none is passed, all sounds in group will changed.
- * @returns {number} return the current seek position (if no extra parameters were given)
- * @example
- * // return the current position of the background music
- * var current_pos = me.audio.seek("dst-gameforest");
- * // set back the position of the background music to the beginning
- * me.audio.seek("dst-gameforest", 0);
- */
-function seek(sound_name, ...args) {
-    var sound = audioTracks[sound_name];
-    if (sound && typeof sound !== "undefined") {
-        return sound.seek(...args);
-    } else {
-        throw new Error("audio clip " + sound_name + " does not exist");
-    }
-}
-/**
- * get or set the rate of playback for a sound.
- * @function audio.rate
- * @param {string} sound_name audio clip name - case sensitive
- * @param {number} [rate] playback rate : 0.5 to 4.0, with 1.0 being normal speed.
- * @param {number} [id] the sound instance ID. If none is passed, all sounds in group will be changed.
- * @returns {number} return the current playback rate (if no extra parameters were given)
- * @example
- * // get the playback rate of the background music
- * var rate = me.audio.rate("dst-gameforest");
- * // speed up the playback of the background music
- * me.audio.rate("dst-gameforest", 2.0);
- */
-function rate(sound_name, ...args) {
-    var sound = audioTracks[sound_name];
-    if (sound && typeof sound !== "undefined") {
-        return sound.rate(...args);
-    } else {
-        throw new Error("audio clip " + sound_name + " does not exist");
-    }
-}
-/**
- * stop the specified sound on all channels
- * @function audio.stop
- * @param {string} [sound_name] audio clip name (case sensitive). If none is passed, all sounds are stopped.
- * @param {number} [id] the sound instance ID. If none is passed, all sounds in group will stop.
- * @example
- * me.audio.stop("cling");
- */
-function stop(sound_name, id) {
-    if (typeof sound_name !== "undefined") {
-        var sound = audioTracks[sound_name];
-        if (sound && typeof sound !== "undefined") {
-            sound.stop(id);
-            // remove the defined onend callback (if any defined)
-            sound.off("end", undefined, id);
+
+    /**
+     * set the current animation
+     * this will always change the animation & set the frame to zero
+     * @name setCurrentAnimation
+     * @memberof Sprite
+     * @param {string} name animation id
+     * @param {string|Function} [resetAnim] animation id to switch to when complete, or callback
+     * @param {boolean} [preserve_dt=false] if false will reset the elapsed time counter since last frame
+     * @returns {Sprite} Reference to this object for method chaining
+     * @example
+     * // set "walk" animation
+     * this.setCurrentAnimation("walk");
+     *
+     * // set "walk" animation if it is not the current animation
+     * if (this.isCurrentAnimation("walk")) {
+     *     this.setCurrentAnimation("walk");
+     * }
+     *
+     * // set "eat" animation, and switch to "walk" when complete
+     * this.setCurrentAnimation("eat", "walk");
+     *
+     * // set "die" animation, and remove the object when finished
+     * this.setCurrentAnimation("die", (function () {
+     *    me.game.world.removeChild(this);
+     *    return false; // do not reset to first frame
+     * }).bind(this));
+     *
+     * // set "attack" animation, and pause for a short duration
+     * this.setCurrentAnimation("die", (function () {
+     *    this.animationpause = true;
+     *
+     *    // back to "standing" animation after 1 second
+     *    setTimeout(function () {
+     *        this.setCurrentAnimation("standing");
+     *    }, 1000);
+     *
+     *    return false; // do not reset to first frame
+     * }).bind(this));
+     */
+    setCurrentAnimation(name, resetAnim, preserve_dt) {
+        if (this.anim[name]) {
+            this.current.name = name;
+            this.current.length = this.anim[this.current.name].length;
+            if (typeof resetAnim === "string") {
+                this.resetAnim = this.setCurrentAnimation.bind(this, resetAnim, null, true);
+            } else if (typeof resetAnim === "function") {
+                this.resetAnim = resetAnim;
+            } else {
+                this.resetAnim = undefined;
+            }
+            this.setAnimationFrame(this.current.idx);
+            if (!preserve_dt) {
+                this.dt = 0;
+            }
+            this.isDirty = true;
         } else {
-            throw new Error("audio clip " + sound_name + " does not exist");
+            throw new Error("animation id '" + name + "' not defined");
         }
-    } else {
-        howler.Howler.stop();
-    }
-}
-/**
- * pause the specified sound on all channels<br>
- * this function does not reset the currentTime property
- * @function audio.pause
- * @param {string} sound_name audio clip name - case sensitive
- * @param {number} [id] the sound instance ID. If none is passed, all sounds in group will pause.
- * @example
- * me.audio.pause("cling");
- */
-function pause(sound_name, id) {
-    var sound = audioTracks[sound_name];
-    if (sound && typeof sound !== "undefined") {
-        sound.pause(id);
-    } else {
-        throw new Error("audio clip " + sound_name + " does not exist");
-    }
-}
-/**
- * resume the specified sound on all channels<br>
- * @function audio.resume
- * @param {string} sound_name audio clip name - case sensitive
- * @param {number} [id] the sound instance ID. If none is passed, all sounds in group will resume.
- * @example
- * // play a audio clip
- * var id = me.audio.play("myClip");
- * ...
- * // pause it
- * me.audio.pause("myClip", id);
- * ...
- * // resume
- * me.audio.resume("myClip", id);
- */
-function resume(sound_name, id) {
-    var sound = audioTracks[sound_name];
-    if (sound && typeof sound !== "undefined") {
-        sound.play(id);
-    } else {
-        throw new Error("audio clip " + sound_name + " does not exist");
-    }
-}
-/**
- * play the specified audio track<br>
- * this function automatically set the loop property to true<br>
- * and keep track of the current sound being played.
- * @function audio.playTrack
- * @param {string} sound_name audio track name - case sensitive
- * @param {number} [volume=default] Float specifying volume (0.0 - 1.0 values accepted).
- * @returns {number} the sound instance ID.
- * @example
- * me.audio.playTrack("awesome_music");
- */
-function playTrack(sound_name, volume) {
-    current_track_id = sound_name;
-    return play(
-        current_track_id,
-        true,
-        null,
-        volume
-    );
-}
-/**
- * stop the current audio track
- * @function audio.stopTrack
- * @see audio#playTrack
- * @example
- * // play a awesome music
- * me.audio.playTrack("awesome_music");
- * // stop the current music
- * me.audio.stopTrack();
- */
-function stopTrack() {
-    if (current_track_id !== null) {
-        audioTracks[current_track_id].stop();
-        current_track_id = null;
-    }
-}
-/**
- * pause the current audio track
- * @function audio.pauseTrack
- * @example
- * me.audio.pauseTrack();
- */
-function pauseTrack() {
-    if (current_track_id !== null) {
-        audioTracks[current_track_id].pause();
-    }
-}
-/**
- * resume the previously paused audio track
- * @function audio.resumeTrack
- * @example
- * // play an awesome music
- * me.audio.playTrack("awesome_music");
- * // pause the audio track
- * me.audio.pauseTrack();
- * // resume the music
- * me.audio.resumeTrack();
- */
-function resumeTrack() {
-    if (current_track_id !== null) {
-        audioTracks[current_track_id].play();
-    }
-}
-/**
- * returns the current track Id
- * @function audio.getCurrentTrack
- * @returns {string} audio track name
- */
-function getCurrentTrack() {
-    return current_track_id;
-}
-/**
- * set the default global volume
- * @function audio.setVolume
- * @param {number} volume Float specifying volume (0.0 - 1.0 values accepted).
- */
-function setVolume(volume) {
-    howler.Howler.volume(volume);
-}
-/**
- * get the default global volume
- * @function audio.getVolume
- * @returns {number} current volume value in Float [0.0 - 1.0] .
- */
-function getVolume() {
-    return howler.Howler.volume();
-}
-/**
- * mute or unmute the specified sound, but does not pause the playback.
- * @function audio.mute
- * @param {string} sound_name audio clip name - case sensitive
- * @param {number} [id] the sound instance ID. If none is passed, all sounds in group will mute.
- * @param {boolean} [mute=true] True to mute and false to unmute
- * @example
- * // mute the background music
- * me.audio.mute("awesome_music");
- */
-function mute(sound_name, id, mute) {
-    // if not defined : true
-    mute = (typeof(mute) === "undefined" ? true : !!mute);
-    var sound = audioTracks[sound_name];
-    if (sound && typeof(sound) !== "undefined") {
-        sound.mute(mute, id);
-    } else {
-        throw new Error("audio clip " + sound_name + " does not exist");
-    }
-}
-/**
- * unmute the specified sound
- * @function audio.unmute
- * @param {string} sound_name audio clip name
- * @param {number} [id] the sound instance ID. If none is passed, all sounds in group will unmute.
- */
-function unmute(sound_name, id) {
-    mute(sound_name, id, false);
-}
-/**
- * mute all audio
- * @function audio.muteAll
- */
-function muteAll() {
-    howler.Howler.mute(true);
-}
-/**
- * unmute all audio
- * @function audio.unmuteAll
- */
-function unmuteAll() {
-    howler.Howler.mute(false);
-}
-/**
- * Returns true if audio is muted globally.
- * @function audio.muted
- * @returns {boolean} true if audio is muted globally
- */
-function muted() {
-    return howler.Howler._muted;
-}
-/**
- * unload specified audio track to free memory
- * @function audio.unload
- * @param {string} sound_name audio track name - case sensitive
- * @returns {boolean} true if unloaded
- * @example
- * me.audio.unload("awesome_music");
- */
-function unload(sound_name) {
-    if (!(sound_name in audioTracks)) {
-        return false;
+        return this;
     }
 
-    // destroy the Howl object
-    audioTracks[sound_name].unload();
-    delete audioTracks[sound_name];
-    return true;
-}
-/**
- * unload all audio to free memory
- * @function audio.unloadAll
- * @example
- * me.audio.unloadAll();
- */
-function unloadAll() {
-    for (var sound_name in audioTracks) {
-        if (audioTracks.hasOwnProperty(sound_name)) {
-            unload(sound_name);
+    /**
+     * reverse the given or current animation if none is specified
+     * @name reverseAnimation
+     * @memberof Sprite
+     * @param {string} [name] animation id
+     * @returns {Sprite} Reference to this object for method chaining
+     * @see Sprite#animationspeed
+     */
+    reverseAnimation(name) {
+        if (typeof name !== "undefined" && typeof this.anim[name] !== "undefined") {
+            this.anim[name].frames.reverse();
+        } else {
+            this.anim[this.current.name].frames.reverse();
         }
+        this.isDirty = true;
+        return this;
+    }
+
+    /**
+     * return true if the specified animation is the current one.
+     * @name isCurrentAnimation
+     * @memberof Sprite
+     * @param {string} name animation id
+     * @returns {boolean}
+     * @example
+     * if (!this.isCurrentAnimation("walk")) {
+     *     // do something funny...
+     * }
+     */
+    isCurrentAnimation(name) {
+        return this.current.name === name;
+    }
+
+    /**
+     * change the current texture atlas region for this sprite
+     * @see Texture.getRegion
+     * @name setRegion
+     * @memberof Sprite
+     * @param {object} region typically returned through me.Texture.getRegion()
+     * @returns {Sprite} Reference to this object for method chaining
+     * @example
+     * // change the sprite to "shadedDark13.png";
+     * mySprite.setRegion(game.texture.getRegion("shadedDark13.png"));
+     */
+    setRegion(region) {
+        // set the source texture for the given region
+        this.image = this.source.getTexture(region);
+        // set the sprite offset within the texture
+        this.current.offset.setV(region.offset);
+        // set angle if defined
+        this.current.angle = region.angle;
+        // update the default "current" size
+        this.width = this.current.width = region.width;
+        this.height = this.current.height = region.height;
+        // set global anchortPoint if defined
+        if (region.anchorPoint) {
+            this.anchorPoint.set(
+                this._flip.x && region.trimmed === true ? 1 - region.anchorPoint.x : region.anchorPoint.x,
+                this._flip.y && region.trimmed === true ? 1 - region.anchorPoint.y : region.anchorPoint.y
+            );
+        }
+        this.isDirty = true;
+        return this;
+    }
+
+    /**
+     * force the current animation frame index.
+     * @name setAnimationFrame
+     * @memberof Sprite
+     * @param {number} [idx=0] animation frame index
+     * @returns {Sprite} Reference to this object for method chaining
+     * @example
+     * // reset the current animation to the first frame
+     * this.setAnimationFrame();
+     */
+    setAnimationFrame(idx) {
+        this.current.idx = (idx || 0) % this.current.length;
+        return this.setRegion(this.getAnimationFrameObjectByIndex(this.current.idx));
+    }
+
+    /**
+     * return the current animation frame index.
+     * @name getCurrentAnimationFrame
+     * @memberof Sprite
+     * @returns {number} current animation frame index
+     */
+    getCurrentAnimationFrame() {
+        return this.current.idx;
+    }
+
+    /**
+     * Returns the frame object by the index.
+     * @name getAnimationFrameObjectByIndex
+     * @memberof Sprite
+     * @ignore
+     * @param {number} id the frame id
+     * @returns {number} if using number indices. Returns {object} containing frame data if using texture atlas
+     */
+    getAnimationFrameObjectByIndex(id) {
+        return this.anim[this.current.name].frames[id];
+    }
+
+    /**
+     * update function. <br>
+     * automatically called by the game manager {@link game}
+     * @name update
+     * @memberof Sprite
+     * @protected
+     * @param {number} dt time since the last update in milliseconds.
+     * @returns {boolean} true if the Sprite is dirty
+     */
+    update(dt) {
+        // Update animation if necessary
+        if (!this.animationpause && this.current && this.current.length > 0) {
+            var duration = this.getAnimationFrameObjectByIndex(this.current.idx).delay;
+            this.dt += dt;
+            while (this.dt >= duration) {
+                this.isDirty = true;
+                this.dt -= duration;
+
+                var nextFrame = (this.current.length > 1? this.current.idx+1: this.current.idx);
+                this.setAnimationFrame(nextFrame);
+
+                // Switch animation if we reach the end of the strip and a callback is defined
+                if (this.current.idx === 0 && typeof this.resetAnim === "function") {
+                    // Otherwise is must be callable
+                    if (this.resetAnim() === false) {
+                        // Reset to last frame
+                        this.setAnimationFrame(this.current.length - 1);
+
+                        // Bail early without skipping any more frames.
+                        this.dt %= duration;
+                        break;
+                    }
+                }
+                // Get next frame duration
+                duration = this.getAnimationFrameObjectByIndex(this.current.idx).delay;
+            }
+        }
+
+        // update the sprite bounding box
+        /*
+        if (this.isDirty === true && !this.currentTransform.isIdentity()) {
+            this.getBounds().clear();
+            this.getBounds().addFrame(
+                0,
+                0,
+                this.current.width,
+                this.current.height,
+                this.currentTransform
+            );
+            this.updateBoundsPos(this.pos.x, this.pos.y);
+        }
+        */
+
+        //update the "flickering" state if necessary
+        if (this._flicker.isFlickering) {
+            this._flicker.duration -= dt;
+            if (this._flicker.duration < 0) {
+                if (typeof (this._flicker.callback) === "function") {
+                    this._flicker.callback();
+                }
+                this.flicker(-1);
+            }
+            this.isDirty = true;
+        }
+
+        return super.update(dt);
+    }
+
+    /**
+     * Destroy function<br>
+     * @ignore
+     */
+    destroy() {
+        pool.push(this.offset);
+        this.offset = undefined;
+        super.destroy();
+    }
+
+    /**
+     * draw this srite (automatically called by melonJS)
+     * @name draw
+     * @memberof Sprite
+     * @protected
+     * @param {CanvasRenderer|WebGLRenderer} renderer a renderer instance
+     * @param {Camera2d} [viewport] the viewport to (re)draw
+     */
+    draw(renderer, viewport) {   // eslint-disable-line no-unused-vars
+        // do nothing if we are flickering
+        if (this._flicker.isFlickering) {
+            this._flicker.state = !this._flicker.state;
+            if (!this._flicker.state) {
+                return;
+            }
+        }
+
+        // the frame to draw
+        var frame = this.current;
+
+        // cache the current position and size
+        var xpos = this.pos.x,
+            ypos = this.pos.y;
+
+        var w = frame.width,
+            h = frame.height;
+
+        // frame offset in the texture/atlas
+        var frame_offset = frame.offset;
+        var g_offset = this.offset;
+
+
+        // remove image's TexturePacker/ShoeBox rotation
+        if (frame.angle !== 0) {
+            renderer.translate(-xpos, -ypos);
+            renderer.rotate(frame.angle);
+            xpos -= h;
+            w = frame.height;
+            h = frame.width;
+        }
+
+        renderer.drawImage(
+            this.image,
+            g_offset.x + frame_offset.x, // sx
+            g_offset.y + frame_offset.y, // sy
+            w, h,                        // sw,sh
+            xpos, ypos,                  // dx,dy
+            w, h                         // dw,dh
+        );
     }
 }
 
-var audio = /*#__PURE__*/Object.freeze({
-	__proto__: null,
-	stopOnAudioError: stopOnAudioError,
-	init: init$1,
-	hasFormat: hasFormat,
-	hasAudio: hasAudio,
-	enable: enable,
-	disable: disable,
-	load: load,
-	play: play,
-	fade: fade,
-	seek: seek,
-	rate: rate,
-	stop: stop,
-	pause: pause,
-	resume: resume,
-	playTrack: playTrack,
-	stopTrack: stopTrack,
-	pauseTrack: pauseTrack,
-	resumeTrack: resumeTrack,
-	getCurrentTrack: getCurrentTrack,
-	setVolume: setVolume,
-	getVolume: getVolume,
-	mute: mute,
-	unmute: unmute,
-	muteAll: muteAll,
-	unmuteAll: unmuteAll,
-	muted: muted,
-	unload: unload,
-	unloadAll: unloadAll
-});
+/**
+ * create a simple 1 frame texture atlas based on the given parameters
+ * @ignore
+ */
+function createAtlas(width, height, name = "default", repeat = "no-repeat") {
+   return {
+       "meta" : {
+           "app" : "melonJS",
+           "size" : { "w" : width, "h" : height },
+           "repeat" : repeat,
+           "image" : "default"
+       },
+       "frames" : [{
+           "filename" : name,
+           "frame" : { "x" : 0, "y" : 0, "w" : width, "h" : height }
+       }]
+   };
+}
 
 /**
- * allow to access and manage the device localStorage
- * @example
- * // Initialize "score" and "lives" with default values
- * // This loads the properties from localStorage if they exist, else it sets the given defaults
- * me.save.add({ score : 0, lives : 3 });
- *
- * // Print all
- * // On first load, this prints { score : 0, lives : 3 }
- * // On further reloads, it prints { score : 31337, lives : 3, complexObject : ... }
- * // Because the following changes will be saved to localStorage
- * console.log(JSON.stringify(me.save));
- *
- * // Save score
- * me.save.score = 31337;
- *
- * // Also supports complex objects thanks to the JSON backend
- * me.save.add({ complexObject : {} })
- * me.save.complexObject = { a : "b", c : [ 1, 2, 3, "d" ], e : { f : [{}] } };
- *
- * // WARNING: Do not set any child properties of complex objects directly!
- * // Changes made that way will not save. Always set the entire object value at once.
- * // If you cannot live with this limitation, there's a workaround:
- * me.save.complexObject.c.push("foo"); // Modify a child property
- * me.save.complexObject = me.save.complexObject; // Save the entire object!
- *
- * // Remove "lives" from localStorage
- * me.save.remove("lives");
- * @namespace save
+ * @classdesc
+ * A Texture atlas class, currently supports : <br>
+ * - [TexturePacker]{@link http://www.codeandweb.com/texturepacker/} : through JSON export (standard and multipack texture atlas) <br>
+ * - [ShoeBox]{@link http://renderhjs.net/shoebox/} : through JSON export using the
+ * melonJS setting [file]{@link https://github.com/melonjs/melonJS/raw/master/media/shoebox_JSON_export.sbx} <br>
+ * - [Free Texture Packer]{@link http://free-tex-packer.com/app/} : through JSON export (standard and multipack texture atlas) <br>
+ * - Standard (fixed cell size) spritesheet : through a {framewidth:xx, frameheight:xx, anchorPoint:me.Vector2d} object
+ * );
  */
+class TextureAtlas {
+    /**
+     * @param {object|object[]} atlases atlas information. See {@link loader.getJSON}
+     * @param {HTMLImageElement|HTMLCanvasElement|string|HTMLImageElement[]|HTMLCanvasElement[]|string[]} [src=atlas.meta.image] Image source
+     * @param {boolean} [cache=false] Use true to skip caching this Texture
+     * @example
+     * // create a texture atlas from a JSON Object
+     * game.texture = new me.TextureAtlas(
+     *     me.loader.getJSON("texture")
+     * );
+     *
+     * // create a texture atlas from a multipack JSON Object
+     * game.texture = new me.TextureAtlas([
+     *     me.loader.getJSON("texture-0"),
+     *     me.loader.getJSON("texture-1"),
+     *     me.loader.getJSON("texture-2")
+     * ]);
+     *
+     * // create a texture atlas for a spritesheet with an anchorPoint in the center of each frame
+     * game.texture = new me.TextureAtlas(
+     *     {
+     *         framewidth : 32,
+     *         frameheight : 32,
+     *         anchorPoint : new me.Vector2d(0.5, 0.5)
+     *     },
+     *     me.loader.getImage("spritesheet")
+     */
+    constructor (atlases, src, cache) {
+        /**
+         * to identify the atlas format (e.g. texture packer)
+         * @ignore
+         */
+        this.format = null;
 
- // Variable to hold the object data
- var data = {};
+        /**
+         * the texture source(s) itself
+         * @type {Map}
+         * @ignore
+         */
+        this.sources = new Map();
 
- /**
-  * a function to check if the given key is a reserved word
-  * @ignore
-  */
- function isReserved(key) {
-     return (key === "add" || key === "remove");
- }
+        /**
+         * the atlas dictionnaries
+         * @type {Map}
+         * @ignore
+         */
+        this.atlases = new Map();
 
+        // parse given atlas(es) paremeters
+        if (typeof (atlases) !== "undefined") {
+            // normalize to array to keep the following code generic
+            atlases = Array.isArray(atlases) ? atlases : [atlases];
+            for (var i in atlases) {
+                var atlas = atlases[i];
 
-// Initialize me.save on Boot event
-on(BOOT, () => {
-    // Load previous data if local Storage is supported
-    if (typeof globalThis.localStorage !== "undefined") {
-        var me_save_content = globalThis.localStorage.getItem("me.save");
+                if (typeof(atlas.meta) !== "undefined") {
+                    // Texture Packer or Free Texture Packer
+                    if (atlas.meta.app.includes("texturepacker") || atlas.meta.app.includes("free-tex-packer")) {
+                        this.format = "texturepacker";
+                        // set the texture
+                        if (typeof(src) === "undefined") {
+                            // get the texture name from the atlas meta data
+                            var image = loader.getImage(atlas.meta.image);
+                            if (!image) {
+                                throw new Error(
+                                    "Atlas texture '" + image + "' not found"
+                                );
+                            }
+                            this.sources.set(atlas.meta.image, image);
+                        } else {
+                            this.sources.set(atlas.meta.image || "default", typeof src === "string" ? loader.getImage(src) : src);
+                        }
+                        this.repeat = "no-repeat";
+                    }
+                    // ShoeBox
+                    else if (atlas.meta.app.includes("ShoeBox")) {
+                        if (!atlas.meta.exporter || !atlas.meta.exporter.includes("melonJS")) {
+                            throw new Error(
+                                "ShoeBox requires the JSON exporter : " +
+                                "https://github.com/melonjs/melonJS/tree/master/media/shoebox_JSON_export.sbx"
+                            );
+                        }
+                        this.format = "ShoeBox";
+                        this.repeat = "no-repeat";
+                        this.sources.set("default", typeof src === "string" ? loader.getImage(src) : src);
+                    }
+                    // Internal texture atlas
+                    else if (atlas.meta.app.includes("melonJS")) {
+                        this.format = "melonJS";
+                        this.repeat = atlas.meta.repeat || "no-repeat";
+                        this.sources.set("default", typeof src === "string" ? loader.getImage(src) : src);
+                    }
+                    // initialize the atlas
+                    this.atlases.set(atlas.meta.image || "default", this.parse(atlas));
 
-        if (typeof me_save_content === "string" && me_save_content.length > 0) {
-            var keys = JSON.parse(me_save_content) || [];
-            keys.forEach(function (key) {
-                data[key] = JSON.parse(globalThis.localStorage.getItem("me.save." + key));
+                } else {
+                    // a regular spritesheet
+                    if (typeof(atlas.framewidth) !== "undefined" &&
+                        typeof(atlas.frameheight) !== "undefined") {
+                        this.format = "Spritesheet (fixed cell size)";
+                        this.repeat = "no-repeat";
+
+                        if (typeof(src) !== "undefined") {
+                            // overwrite if specified
+                            atlas.image = typeof src === "string" ? loader.getImage(src) : src;
+                        }
+                        // initialize the atlas
+                        this.atlases.set("default", this.parseFromSpriteSheet(atlas));
+                        this.sources.set("default", atlas.image);
+
+                    }
+                }
+            } // end forEach
+        }
+
+        // if format not recognized
+        if (this.atlases.length === 0) {
+            throw new Error("texture atlas format not supported");
+        }
+
+        // Add self to TextureCache if cache !== false
+        if (cache !== false) {
+            this.sources.forEach((source) => {
+                if (cache instanceof TextureCache) {
+                    cache.set(source, this);
+                } else {
+                    renderer.cache.set(source, this);
+                }
             });
         }
     }
-});
-
-var save = {
 
     /**
-     * Add new keys to localStorage and set them to the given default values if they do not exist
-     * @name add
-     * @memberof save
-     * @param {object} props key and corresponding values
-     * @example
-     * // Initialize "score" and "lives" with default values
-     * me.save.add({ score : 0, lives : 3 });
-     * // get or set the value through me.save
-     * me.save.score = 1000;
+     * build an atlas from the given data
+     * @ignore
      */
-    add(props) {
-        var obj = save;
+    parse(data) {
+        var atlas = {};
 
-        Object.keys(props).forEach(function (key) {
-            if (isReserved(key)) {
-                return;
-            }
+        data.frames.forEach((frame) => {
+            // fix wrongly formatted JSON (e.g. last dummy object in ShoeBox)
+            if (frame.hasOwnProperty("filename")) {
+                // Source coordinates
+                var s = frame.frame;
 
-            (function (prop) {
-                Object.defineProperty(obj, prop, {
-                    configurable : true,
-                    enumerable : true,
-                    /**
-                     * @ignore
-                     */
-                    get () {
-                        return data[prop];
-                    },
-                    /**
-                     * @ignore
-                     */
-                    set (value) {
-                        data[prop] = value;
-                        if (device.localStorage === true) {
-                            globalThis.localStorage.setItem("me.save." + prop, JSON.stringify(value));
-                        }
-                    }
-                });
-            })(key);
-
-            // Set default value for key
-            if (!(key in data)) {
-                obj[key] = props[key];
-            }
-        });
-
-        // Save keys
-        if (device.localStorage === true) {
-            globalThis.localStorage.setItem("me.save", JSON.stringify(Object.keys(data)));
-        }
-    },
-
-    /**
-     * Remove a key from localStorage
-     * @name remove
-     * @memberof save
-     * @param {string} key key to be removed
-     * @example
-     * // Remove the "score" key from localStorage
-     * me.save.remove("score");
-     */
-    remove (key) {
-        if (!isReserved(key)) {
-            if (typeof data[key] !== "undefined") {
-                delete data[key];
-                if (device.localStorage === true) {
-                    globalThis.localStorage.removeItem("me.save." + key);
-                    globalThis.localStorage.setItem("me.save", JSON.stringify(Object.keys(data)));
+                var originX, originY;
+                // Pixel-based offset origin from the top-left of the source frame
+                var hasTextureAnchorPoint = (frame.spriteSourceSize && frame.sourceSize && frame.pivot);
+                if (hasTextureAnchorPoint) {
+                    originX = (frame.sourceSize.w * frame.pivot.x) - ((frame.trimmed) ? frame.spriteSourceSize.x : 0);
+                    originY = (frame.sourceSize.h * frame.pivot.y) - ((frame.trimmed) ? frame.spriteSourceSize.y : 0);
                 }
-            }
-        }
-    }
-};
 
-// track if DOMContentLoaded was called already
-let readyBound = false;
-
-// is the DOM ready ?
-let isDOMReady = false;
-
-// check if the dom is ready
-function _domReady() {
-
-    // Make sure that the DOM is not already loaded
-    if (!isDOMReady) {
-        // be sure document.body is there
-        if (typeof globalThis.document !== "undefined" && !globalThis.document.body) {
-            return setTimeout(_domReady, 13);
-        }
-
-        // clean up loading event
-        if (typeof globalThis.document !== "undefined" && typeof globalThis.document.removeEventListener === "function") {
-            globalThis.document.removeEventListener(
-                "DOMContentLoaded",
-                _domReady,
-                false
-            );
-        }
-
-        if (typeof globalThis.removeEventListener === "function") {
-            // remove the event on globalThis.onload (always added in `onReady`)
-            globalThis.removeEventListener("load", _domReady, false);
-        }
-
-        // execute all callbacks
-        emit(DOM_READY);
-
-        // Remember that the DOM is ready
-        isDOMReady = true;
-    }
-}
-// https://developer.mozilla.org/en-US/docs/Web/API/Window/DOMContentLoaded_event
-function DOMContentLoaded(fn) {
-    // If the DOM is already ready
-    if (isDOMReady) {
-        // Execute the function immediately
-        fn.call(globalThis, []);
-    }
-    else {
-        // else add the function to the DOM_READY event
-        once(DOM_READY, fn, globalThis);
-        // bind dom load event if not done yet
-        if (!readyBound) {
-            // directly call domReady if document is already "ready"
-            if (((typeof process !== "undefined") && (process.release.name === "node")) || (typeof globalThis.document !== "undefined" && globalThis.document.readyState === "complete")) {
-                // defer the fn call to ensure our script is fully loaded
-                globalThis.setTimeout(_domReady, 0);
-            }
-            else {
-                if (typeof globalThis.document !== "undefined" && typeof globalThis.document.addEventListener === "function") {
-                    // Use the handy event callback
-                    globalThis.document.addEventListener("DOMContentLoaded", _domReady, false);
-                }
-                // A fallback to globalThis.onload, that will always work
-                globalThis.addEventListener("load", _domReady, false);
-            }
-            readyBound = true;
-        }
-    }
-}
-
-// private properties
-let accelInitialized = false;
-let deviceOrientationInitialized = false;
-
-// swipe utility fn & flag
-let swipeEnabled = true;
-
-/**
- * @ignore
- */
-function _disableSwipeFn(e) {
-    e.preventDefault();
-    if (typeof globalThis.scroll === "function") {
-        globalThis.scroll(0, 0);
-    }
-    return false;
-}
-// a cache DOMRect object
-let _domRect = {left: 0, top: 0, x: 0, y: 0, width: 0, height: 0, right: 0, bottom: 0};
-
-/**
- * detect the device type
- * @ignore
- */
-function _detectDevice() {
-    // iOS Device ?
-    device.iOS = /iPhone|iPad|iPod/i.test(device.ua);
-    // Android Device ?
-    device.android = /Android/i.test(device.ua);
-    device.android2 = /Android 2/i.test(device.ua);
-    // Linux platform
-    device.linux = /Linux/i.test(device.ua);
-    // Chrome OS ?
-    device.chromeOS = /CrOS/.test(device.ua);
-    // Windows Device ?
-    device.wp = /Windows Phone/i.test(device.ua);
-    // Blackberry device ?
-    device.BlackBerry = /BlackBerry/i.test(device.ua);
-    // Kindle device ?
-    device.Kindle = /Kindle|Silk.*Mobile Safari/i.test(device.ua);
-    // Mobile platform
-    device.isMobile = /Mobi/i.test(device.ua) ||
-                         device.iOS ||
-                         device.android ||
-                         device.wp ||
-                         device.BlackBerry ||
-                         device.Kindle || false;
-    // ejecta
-    device.ejecta = (typeof globalThis.ejecta !== "undefined");
-    // Wechat
-    device.isWeixin = /MicroMessenger/i.test(device.ua);
-}
-/**
- * check the device capapbilities
- * @ignore
- */
-function _checkCapabilities() {
-
-    // detect device type/platform
-    _detectDevice();
-
-    // Touch/Gesture Event feature detection
-    device.TouchEvent = !!("ontouchstart" in globalThis);
-    device.PointerEvent = !!globalThis.PointerEvent;
-    globalThis.gesture = prefixed("gesture");
-
-    // detect touch capabilities
-    device.touch = device.TouchEvent || device.PointerEvent;
-
-    // max amount of touch points ; always at least return 1 (e.g. headless chrome will return 0)
-    device.maxTouchPoints = device.touch ? (device.PointerEvent ? globalThis.navigator.maxTouchPoints || 1 : 10) : 1;
-
-    // detect wheel event support
-    // Modern browsers support "wheel", Webkit and IE support at least "mousewheel
-    device.wheel = typeof globalThis.document !== "undefined" && "onwheel" in globalThis.document.createElement("div");
-
-    // pointerlock detection (pointerLockElement can be null when the feature is supported)
-    device.hasPointerLockSupport = typeof globalThis.document !== "undefined" && typeof globalThis.document.pointerLockElement !== "undefined";
-
-    // device orientation and motion detection
-    device.hasDeviceOrientation = !!globalThis.DeviceOrientationEvent;
-    device.hasAccelerometer = !!globalThis.DeviceMotionEvent;
-
-    // support the ScreenOrientation API
-    device.ScreenOrientation = (typeof screen !== "undefined") &&
-                               (typeof screen.orientation !== "undefined");
-
-    // fullscreen api detection & polyfill when possible
-    device.hasFullscreenSupport = typeof globalThis.document !== "undefined" && (prefixed("fullscreenEnabled", globalThis.document) || globalThis.document.mozFullScreenEnabled);
-
-    if (device.hasFullscreenSupport === true) {
-        globalThis.document.exitFullscreen = typeof globalThis.document !== "undefined" && (prefixed("cancelFullScreen", globalThis.document) || prefixed("exitFullscreen", globalThis.document));
-    }
-
-
-    // web Audio detection
-    device.hasWebAudio = !!(globalThis.AudioContext || globalThis.webkitAudioContext);
-
-    try {
-        device.localStorage = !!globalThis.localStorage;
-    } catch (e) {
-        // the above generates an exception when cookies are blocked
-        device.localStorage = false;
-    }
-
-    try {
-        // some browser (e.g. Safari) implements WebGL1 and WebGL2 contexts only
-        // https://bugzilla.mozilla.org/show_bug.cgi?id=801176
-        device.OffscreenCanvas =
-            (typeof globalThis.OffscreenCanvas !== "undefined") &&
-            ((new OffscreenCanvas(0, 0).getContext( "2d" )) !== null);
-    } catch (e) {
-        device.OffscreenCanvas = false;
-    }
-
-    if (typeof globalThis.addEventListener === "function") {
-        // set pause/stop action on losing focus
-        globalThis.addEventListener("blur", function () {
-            if (device.stopOnBlur) {
-                state.stop(true);
-            }
-            if (device.pauseOnBlur) {
-                state.pause(true);
-            }
-        }, false);
-        // set restart/resume action on gaining focus
-        globalThis.addEventListener("focus", function () {
-            if (device.stopOnBlur) {
-                state.restart(true);
-            }
-            if (device.resumeOnFocus) {
-                state.resume(true);
-            }
-            // force focus if autofocus is on
-            if (device.autoFocus) {
-                device.focus();
-            }
-        }, false);
-    }
-
-    if (typeof globalThis.document !== "undefined") {
-        // Set the name of the hidden property and the change event for visibility
-        var hidden, visibilityChange;
-        if (typeof globalThis.document.hidden !== "undefined") {
-            // Opera 12.10 and Firefox 18 and later support
-            hidden = "hidden";
-            visibilityChange = "visibilitychange";
-        } else if (typeof globalThis.document.mozHidden !== "undefined") {
-            hidden = "mozHidden";
-            visibilityChange = "mozvisibilitychange";
-        } else if (typeof globalThis.document.msHidden !== "undefined") {
-            hidden = "msHidden";
-            visibilityChange = "msvisibilitychange";
-        } else if (typeof globalThis.document.webkitHidden !== "undefined") {
-            hidden = "webkitHidden";
-            visibilityChange = "webkitvisibilitychange";
-        }
-
-        // register on the event if supported
-        if (typeof (visibilityChange) === "string") {
-            // add the corresponding event listener
-            globalThis.document.addEventListener(visibilityChange,
-                function () {
-                    if (globalThis.document[hidden]) {
-                        if (device.stopOnBlur) {
-                            state.stop(true);
-                        }
-                        if (device.pauseOnBlur) {
-                            state.pause(true);
-                        }
-                    } else {
-                        if (device.stopOnBlur) {
-                            state.restart(true);
-                        }
-                        if (device.resumeOnFocus) {
-                            state.resume(true);
-                        }
-                    }
-                }, false
-            );
-        }
-    }
-
-    // Mobile browser hacks
-    if (device.isMobile) {
-        // Prevent the webview from moving on a swipe
-        device.enableSwipe(false);
-    }
-
-}
-
-// Initialize me.timer on Boot event
-on(BOOT, () => {
-    _checkCapabilities();
-});
-
-
-// public export
-/**
- * The device capabilities and specific events
- *
- * @namespace
- */
-let device = {
-
-    /**
-     * the `ua` read-only property returns the user agent string for the current browser.
-     * @type {string}
-     * @readonly
-     * @name ua
-     */
-    ua : typeof globalThis.navigator !== "undefined" ? globalThis.navigator.userAgent : "",
-
-    /**
-     * Browser Local Storage capabilities <br>
-     * (this flag will be set to false if cookies are blocked)
-     * @type {boolean}
-     * @readonly
-     * @name localStorage
-     */
-    localStorage : false,
-
-    /**
-     * Browser accelerometer capabilities
-     * @type {boolean}
-     * @readonly
-     * @name hasAccelerometer
-     */
-    hasAccelerometer : false,
-
-    /**
-     * Browser device orientation
-     * @type {boolean}
-     * @readonly
-     * @name hasDeviceOrientation
-     */
-    hasDeviceOrientation : false,
-
-    /**
-     * Supports the ScreenOrientation API
-     * @see https://developer.mozilla.org/en-US/docs/Web/API/ScreenOrientation/onchange
-     * @type {boolean}
-     * @readonly
-     * @name ScreenOrientation
-     */
-    ScreenOrientation : false,
-
-    /**
-     * Browser full screen support
-     * @type {boolean}
-     * @readonly
-     * @name hasFullscreenSupport
-     */
-    hasFullscreenSupport : false,
-
-    /**
-     * Browser pointerlock api support
-     * @type {boolean}
-     * @readonly
-     * @name hasPointerLockSupport
-     */
-    hasPointerLockSupport : false,
-
-    /**
-     * Device WebAudio Support
-     * @type {boolean}
-     * @readonly
-     * @name hasWebAudio
-     */
-    hasWebAudio : false,
-
-    /**
-     * Browser Base64 decoding capability
-     * @type {boolean}
-     * @readonly
-     * @name nativeBase64
-     */
-    nativeBase64 : (typeof(globalThis.atob) === "function"),
-
-    /**
-     * Return the maximum number of simultaneous touch contact points are supported by the current device.
-     * @type {number}
-     * @readonly
-     * @name maxTouchPoints
-     * @example
-     * if (me.device.maxTouchPoints > 1) {
-     *     // device supports multi-touch
-     * }
-     */
-    maxTouchPoints : 1,
-
-    /**
-     * Touch capabilities
-     * @type {boolean}
-     * @readonly
-     * @name touch
-     */
-    touch : false,
-
-    /**
-     * W3C standard wheel events
-     * @type {boolean}
-     * @readonly
-     * @name wheel
-     */
-    wheel : false,
-
-    /**
-     * equals to true if a mobile device <br>
-     * (Android | iPhone | iPad | iPod | BlackBerry | Windows Phone | Kindle)
-     * @type {boolean}
-     * @readonly
-     * @name isMobile
-     */
-    isMobile : false,
-
-    /**
-     * equals to true if the device is an iOS platform.
-     * @type {boolean}
-     * @readonly
-     * @name iOS
-     */
-    iOS : false,
-
-    /**
-     * equals to true if the device is an Android platform.
-     * @type {boolean}
-     * @readonly
-     * @name android
-     */
-    android : false,
-
-    /**
-     * equals to true if the device is an Android 2.x platform.
-     * @type {boolean}
-     * @readonly
-     * @name android2
-     */
-    android2 : false,
-
-    /**
-     * equals to true if the device is a Linux platform.
-     * @type {boolean}
-     * @readonly
-     * @name linux
-     */
-    linux : false,
-
-    /**
-     * equals to true if the game is running under Ejecta.
-     * @type {boolean}
-     * @readonly
-     * @see http://impactjs.com/ejecta
-     * @name ejecta
-     */
-    ejecta : false,
-
-    /**
-     * equals to true if the  is running under Wechat.
-     * @type {boolean}
-     * @readonly
-     * @name isWeixin
-     */
-    isWeixin : false,
-
-    /**
-     * equals to true if running under node.js
-     * @type {boolean}
-     * @readonly
-     * @name nodeJS
-     */
-    nodeJS : (typeof globalThis.process !== "undefined") && (typeof globalThis.process.release !== "undefined") && (globalThis.process.release.name === "node"),
-
-    /**
-     * equals to true if the device is running on ChromeOS.
-     * @type {boolean}
-     * @readonly
-     * @name chromeOS
-     */
-    chromeOS : false,
-
-    /**
-     * equals to true if the device is a Windows Phone platform.
-     * @type {boolean}
-     * @readonly
-     * @name wp
-     */
-    wp : false,
-
-    /**
-     * equals to true if the device is a BlackBerry platform.
-     * @type {boolean}
-     * @readonly
-     * @name BlackBerry
-     */
-    BlackBerry : false,
-
-    /**
-     * equals to true if the device is a Kindle platform.
-     * @type {boolean}
-     * @readonly
-     * @name Kindle
-     */
-    Kindle : false,
-
-    /**
-     * contains the g-force acceleration along the x-axis.
-     * @public
-     * @type {number}
-     * @readonly
-     * @name accelerationX
-     * @see device.watchAccelerometer
-     */
-    accelerationX : 0,
-
-    /**
-     * contains the g-force acceleration along the y-axis.
-     * @public
-     * @type {number}
-     * @readonly
-     * @name accelerationY
-     * @see device.watchAccelerometer
-     */
-    accelerationY : 0,
-
-    /**
-     * contains the g-force acceleration along the z-axis.
-     * @public
-     * @type {number}
-     * @readonly
-     * @name accelerationZ
-     * @see device.watchAccelerometer
-     */
-    accelerationZ : 0,
-
-    /**
-     * Device orientation Gamma property. Gives angle on tilting a portrait held phone left or right
-     * @public
-     * @type {number}
-     * @readonly
-     * @name gamma
-     * @see device.watchDeviceOrientation
-     */
-    gamma : 0,
-
-    /**
-     * Device orientation Beta property. Gives angle on tilting a portrait held phone forward or backward
-     * @public
-     * @type {number}
-     * @readonly
-     * @name beta
-     * @see device.watchDeviceOrientation
-     */
-    beta: 0,
-
-    /**
-     * Device orientation Alpha property. Gives angle based on the rotation of the phone around its z axis.
-     * The z-axis is perpendicular to the phone, facing out from the center of the screen.
-     * @public
-     * @type {number}
-     * @readonly
-     * @name alpha
-     * @see device.watchDeviceOrientation
-     */
-    alpha : 0,
-
-    /**
-     * a string representing the preferred language of the user, usually the language of the browser UI.
-     * (will default to "en" if the information is not available)
-     * @public
-     * @type {string}
-     * @readonly
-     * @see http://www.w3schools.com/tags/ref_language_codes.asp
-     * @name language
-     */
-    language : typeof globalThis.navigator !== "undefined" ? globalThis.navigator.language || globalThis.navigator.browserLanguage || globalThis.navigator.userLanguage || "en" : "en",
-
-    /**
-     * Specify whether to pause the game when losing focus
-     * @type {boolean}
-     * @default true
-     */
-    pauseOnBlur : true,
-
-    /**
-     * Specify whether to unpause the game when gaining focus
-     * @type {boolean}
-     * @default true
-     */
-    resumeOnFocus : true,
-
-    /**
-     * Specify whether to automatically bring the window to the front
-     * @type {boolean}
-     * @default true
-     */
-    autoFocus : true,
-
-    /**
-     * Specify whether to stop the game when losing focus or not.
-     * The engine restarts on focus if this is enabled.
-     * @type {boolean}
-     * @default false
-     */
-    stopOnBlur : false,
-
-    /**
-     * equals to true if the device browser supports OffScreenCanvas.
-     * @type {boolean}
-     * @readonly
-     * @name OffScreenCanvas
-     */
-    OffscreenCanvas : false,
-
-
-   /**
-    * specify a function to execute when the Device is fully loaded and ready
-    * @function device.onReady
-    * @param {Function} fn the function to be executed
-    * @example
-    * // small game skeleton
-    * var game = {
-    *    // called by the me.device.onReady function
-    *    onload : function () {
-    *       // init video
-    *       if (!me.video.init('screen', 640, 480, true)) {
-    *          alert("Sorry but your browser does not support html 5 canvas.");
-    *          return;
-    *       }
-    *
-    *       // initialize the "audio"
-    *       me.audio.init("mp3,ogg");
-    *
-    *       // set callback for ressources loaded event
-    *       me.loader.onload = this.loaded.bind(this);
-    *
-    *       // set all ressources to be loaded
-    *       me.loader.preload(game.assets);
-    *
-    *       // load everything & display a loading screen
-    *       me.state.change(me.state.LOADING);
-    *    },
-    *
-    *    // callback when everything is loaded
-    *    loaded : function () {
-    *       // define stuff
-    *       // ....
-    *
-    *       // change to the menu screen
-    *       me.state.change(me.state.PLAY);
-    *    }
-    * }, // game
-    *
-    * // "bootstrap"
-    * me.device.onReady(function () {
-    *    game.onload();
-    * });
-    */
-    onReady(fn) {
-        DOMContentLoaded(fn);
-    },
-
-    /**
-     * enable/disable swipe on WebView.
-     * @function device.enableSwipe
-     * @param {boolean} [enable=true] enable or disable swipe.
-     */
-    enableSwipe(enable) {
-        var moveEvent = device.PointerEvent ? "pointermove" : (device.TouchEvent ? "touchmove" : "mousemove");
-        if (enable !== false) {
-            if (swipeEnabled === false) {
-                globalThis.document.removeEventListener(moveEvent, _disableSwipeFn);
-                swipeEnabled = true;
-            }
-        } else if (swipeEnabled === true) {
-            globalThis.document.addEventListener(moveEvent, _disableSwipeFn, { passive: false });
-            swipeEnabled = false;
-        }
-    },
-
-    /**
-     * Triggers a fullscreen request. Requires fullscreen support from the browser/device.
-     * @function device.requestFullscreen
-     * @param {object} [element=default canvas object] the element to be set in full-screen mode.
-     * @example
-     * // add a keyboard shortcut to toggle Fullscreen mode on/off
-     * me.input.bindKey(me.input.KEY.F, "toggleFullscreen");
-     * me.event.on(me.event.KEYDOWN, function (action, keyCode, edge) {
-     *    // toggle fullscreen on/off
-     *    if (action === "toggleFullscreen") {
-     *       if (!me.device.isFullscreen) {
-     *          me.device.requestFullscreen();
-     *       } else {
-     *          me.device.exitFullscreen();
-     *       }
-     *    }
-     * });
-     */
-    requestFullscreen(element) {
-        if (this.hasFullscreenSupport) {
-            element = element || getParent();
-            element.requestFullscreen = prefixed("requestFullscreen", element) ||
-                                        element.mozRequestFullScreen;
-
-            element.requestFullscreen();
-        }
-    },
-
-    /**
-     * Exit fullscreen mode. Requires fullscreen support from the browser/device.
-     * @function device.exitFullscreen
-     */
-    exitFullscreen() {
-        if (this.hasFullscreenSupport) {
-            document.exitFullscreen();
-        }
-    },
-
-    /**
-     * Return a string representing the orientation of the device screen.
-     * It can be "any", "natural", "landscape", "portrait", "portrait-primary", "portrait-secondary", "landscape-primary", "landscape-secondary"
-     * @function device.getScreenOrientation
-     * @see https://developer.mozilla.org/en-US/docs/Web/API/Screen/orientation
-     * @returns {string} the screen orientation
-     */
-    getScreenOrientation() {
-        var PORTRAIT = "portrait";
-        var LANDSCAPE = "landscape";
-
-        var screen = globalThis.screen;
-
-        // first try using "standard" values
-        if (this.ScreenOrientation === true) {
-            var orientation = prefixed("orientation", screen);
-            if (typeof orientation !== "undefined" && typeof orientation.type === "string") {
-                // Screen Orientation API specification
-                return orientation.type;
-            } else if (typeof orientation === "string") {
-                // moz/ms-orientation are strings
-                return orientation;
-            }
-        }
-
-        // check using the deprecated API
-        if (typeof globalThis.orientation === "number") {
-            return (Math.abs(globalThis.orientation) === 90) ? LANDSCAPE : PORTRAIT;
-        }
-
-        // fallback to window size check
-        return (globalThis.outerWidth > globalThis.outerHeight) ? LANDSCAPE : PORTRAIT;
-    },
-
-    /**
-     * locks the device screen into the specified orientation.<br>
-     * This method only works for installed Web apps or for Web pages in full-screen mode.
-     * @function device.lockOrientation
-     * @see https://developer.mozilla.org/en-US/docs/Web/API/Screen/lockOrientation
-     * @param {string|string[]} orientation The orientation into which to lock the screen.
-     * @returns {boolean} true if the orientation was unsuccessfully locked
-     */
-    lockOrientation(orientation) {
-        var screen = globalThis.screen;
-        if (typeof screen !== "undefined") {
-            var _lockOrientation = prefixed("lockOrientation", screen);
-            if (typeof _lockOrientation !== "undefined") {
-                return _lockOrientation(orientation);
-            }
-        }
-        return false;
-    },
-
-    /**
-     * unlocks the device screen into the specified orientation.<br>
-     * This method only works for installed Web apps or for Web pages in full-screen mode.
-     * @function device.unlockOrientation
-     * @see https://developer.mozilla.org/en-US/docs/Web/API/Screen/lockOrientation
-     * @returns {boolean} true if the orientation was unsuccessfully unlocked
-     */
-    unlockOrientation() {
-        var screen = globalThis.screen;
-        if (typeof screen !== "undefined") {
-            var _unlockOrientation = prefixed("unlockOrientation", screen);
-            if (typeof _unlockOrientation !== "undefined") {
-                return _unlockOrientation();
-            }
-        }
-        return false;
-    },
-
-    /**
-     * return true if the device screen orientation is in Portrait mode
-     * @function device.isPortrait
-     * @returns {boolean}
-     */
-    isPortrait() {
-        return this.getScreenOrientation().includes("portrait");
-    },
-
-    /**
-     * return true if the device screen orientation is in Portrait mode
-     * @function device.isLandscape
-     * @returns {boolean}
-     */
-    isLandscape() {
-        return this.getScreenOrientation().includes("landscape");
-    },
-
-    /**
-     * return the device storage
-     * @function device.getStorage
-     * @see save
-     * @param {string} [type="local"]
-     * @returns {object} a reference to the device storage
-     */
-    getStorage(type = "local") {
-        switch (type) {
-            case "local" :
-                return save;
-
-            default :
-                throw new Error("storage type " + type + " not supported");
-        }
-    },
-
-    /**
-     * return the parent DOM element for the given parent name or HTMLElement object
-     * @function device.getParentElement
-     * @param {string|HTMLElement} element the parent element name or a HTMLElement object
-     * @returns {HTMLElement} the parent Element
-     */
-    getParentElement(element) {
-        var target = this.getElement(element);
-
-        if (target.parentNode !== null) {
-            target = target.parentNode;
-        }
-
-        return target;
-    },
-
-    /**
-     * return the DOM element for the given element name or HTMLElement object
-     * @function device.getElement
-     * @param {string|HTMLElement} element the parent element name or a HTMLElement object
-     * @returns {HTMLElement} the corresponding DOM Element or null if not existing
-     */
-    getElement(element) {
-        var target = null;
-
-        if (element !== "undefined") {
-            if (typeof element === "string") {
-                target = document.getElementById(element);
-            } else if (typeof element === "object" && element.nodeType === Node.ELEMENT_NODE) {
-                target = element;
-            }
-        }
-
-        // fallback, if invalid target or non HTMLElement object
-        if (!target)  {
-            //default to document.body
-            target = document.body;
-        }
-
-        return target;
-    },
-
-    /**
-     * returns the size of the given HTMLElement and its position relative to the viewport
-     * <br><img src="images/element-box-diagram.png"/>
-     * @see https://developer.mozilla.org/en-US/docs/Web/API/DOMRect
-     * @function device.getElementBounds
-     * @param {string|HTMLElement} element an HTMLElement object
-     * @returns {DOMRect} the size and position of the element relatively to the viewport
-     */
-    getElementBounds(element) {
-        if (typeof element === "object" && element !== document.body && typeof element.getBoundingClientRect !== "undefined") {
-            return element.getBoundingClientRect();
-        } else {
-            _domRect.width = _domRect.right = globalThis.innerWidth;
-            _domRect.height = _domRect.bottom = globalThis.innerHeight;
-            return _domRect;
-        }    },
-
-    /**
-     * returns the size of the given HTMLElement Parent and its position relative to the viewport
-     * <br><img src="images/element-box-diagram.png"/>
-     * @see https://developer.mozilla.org/en-US/docs/Web/API/DOMRect
-     * @function device.getParentBounds
-     * @param {string|HTMLElement} element an HTMLElement object
-     * @returns {DOMRect} the size and position of the given element parent relative to the viewport
-     */
-    getParentBounds(element) {
-        return this.getElementBounds(this.getParentElement(element));
-    },
-
-    /**
-     * returns true if the device supports WebGL
-     * @function device.isWebGLSupported
-     * @param {object} [options] context creation options
-     * @param {boolean} [options.failIfMajorPerformanceCaveat=true] If true, the renderer will switch to CANVAS mode if the performances of a WebGL context would be dramatically lower than that of a native application making equivalent OpenGL calls.
-     * @returns {boolean} true if WebGL is supported
-     */
-    isWebGLSupported(options) {
-        var _supported = false;
-        try {
-            var canvas = document.createElement("canvas");
-            var ctxOptions = {
-                stencil: true,
-                failIfMajorPerformanceCaveat : options.failIfMajorPerformanceCaveat
-            };
-            _supported = !! (globalThis.WebGLRenderingContext && (canvas.getContext("webgl", ctxOptions) || canvas.getContext("experimental-webgl", ctxOptions)));
-        } catch (e) {
-            _supported = false;
-        }
-
-        return _supported;
-    },
-
-    /**
-     * return the highest precision format supported by this device for GL Shaders
-     * @function device.getMaxShaderPrecision
-     * @param {WebGLRenderingContext} gl
-     * @returns {boolean} "lowp", "mediump", or "highp"
-     */
-    getMaxShaderPrecision(gl) {
-        if (gl.getShaderPrecisionFormat(gl.VERTEX_SHADER, gl.HIGH_FLOAT ).precision > 0 &&
-            gl.getShaderPrecisionFormat(gl.FRAGMENT_SHADER, gl.HIGH_FLOAT ).precision > 0) {
-                return "highp";
-        }
-        if (gl.getShaderPrecisionFormat(gl.VERTEX_SHADER, gl.MEDIUM_FLOAT ).precision > 0 &&
-            gl.getShaderPrecisionFormat(gl.FRAGMENT_SHADER, gl.MEDIUM_FLOAT ).precision > 0) {
-                return "mediump";
-        }
-        return "lowp";
-    },
-
-    /**
-     * Makes a request to bring this device window to the front.
-     * @function device.focus
-     * @example
-     *  if (clicked) {
-     *    me.device.focus();
-     *  }
-     */
-    focus() {
-        if (typeof (globalThis.focus) === "function") {
-            globalThis.focus();
-        }
-    },
-
-
-    /**
-     * event management (Accelerometer)
-     * http://www.mobilexweb.com/samples/ball.html
-     * http://www.mobilexweb.com/blog/safari-ios-accelerometer-websockets-html5
-     * @ignore
-     */
-    onDeviceMotion(e) {
-        // Accelerometer information
-        this.accelerationX = e.accelerationIncludingGravity.x;
-        this.accelerationY = e.accelerationIncludingGravity.y;
-        this.accelerationZ = e.accelerationIncludingGravity.z;
-    },
-
-    /**
-     * event management (Accelerometer)
-     * @ignore
-     */
-    onDeviceRotate(e) {
-        this.gamma = e.gamma;
-        this.beta = e.beta;
-        this.alpha = e.alpha;
-    },
-
-    /**
-     * Enable monitor of the device accelerator to detect the amount of physical force of acceleration the device is receiving.
-     * (one some device a first user gesture will be required before calling this function)
-     * @function device.watchAccelerometer
-     * @see device.accelerationX
-     * @see device.accelerationY
-     * @see device.accelerationZ
-     * @returns {boolean} false if not supported or permission not granted by the user
-     * @example
-     * // try to enable device accelerometer event on user gesture
-     * me.input.registerPointerEvent("pointerleave", me.game.viewport, function() {
-     *     if (me.device.watchAccelerometer() === true) {
-     *         // Success
-     *         me.input.releasePointerEvent("pointerleave", me.game.viewport);
-     *     } else {
-     *         // ... fail at enabling the device accelerometer event
-     *     }
-     * });
-     */
-    watchAccelerometer() {
-        if (this.hasAccelerometer && !accelInitialized) {
-            if (DeviceOrientationEvent && typeof DeviceOrientationEvent.requestPermission === "function") {
-                DeviceOrientationEvent.requestPermission()
-                    .then(response => {
-                        if (response === "granted") {
-                            // add a listener for the devicemotion event
-                            globalThis.addEventListener("devicemotion", this.onDeviceMotion, false);
-                            accelInitialized = true;
-                        }
-                    }).catch(console.error);
-            } else {
-                // add a listener for the devicemotion event
-                globalThis.addEventListener("devicemotion", this.onDeviceMotion, false);
-                accelInitialized = true;
-            }
-        }
-        return accelInitialized;
-    },
-
-    /**
-     * unwatch Accelerometor event
-     * @function device.unwatchAccelerometer
-     */
-    unwatchAccelerometer() {
-        if (accelInitialized) {
-            // remove the listener for the devicemotion event
-            globalThis.removeEventListener("devicemotion", this.onDeviceMotion, false);
-            accelInitialized = false;
-        }
-    },
-
-    /**
-     * Enable monitor of the device orientation to detect the current orientation of the device as compared to the Earth coordinate frame.
-     * (one some device a first user gesture will be required before calling this function)
-     * @function device.watchDeviceOrientation
-     * @see device.alpha
-     * @see device.beta
-     * @see device.gamma
-     * @returns {boolean} false if not supported or permission not granted by the user
-     * @example
-     * // try to enable device orientation event on user gesture
-     * me.input.registerPointerEvent("pointerleave", me.game.viewport, function() {
-     *     if (me.device.watchDeviceOrientation() === true) {
-     *         // Success
-     *         me.input.releasePointerEvent("pointerleave", me.game.viewport);
-     *     } else {
-     *         // ... fail at enabling the device orientation event
-     *     }
-     * });
-     */
-    watchDeviceOrientation() {
-        if (this.hasDeviceOrientation && !deviceOrientationInitialized) {
-            if (typeof DeviceOrientationEvent.requestPermission === "function") {
-                DeviceOrientationEvent.requestPermission()
-                    .then(response => {
-                        if (response === "granted") {
-                            globalThis.addEventListener("deviceorientation", this.onDeviceRotate, false);
-                            deviceOrientationInitialized = true;
-                        }
-                    }).catch(console.error);
-            } else {
-                globalThis.addEventListener("deviceorientation", this.onDeviceRotate, false);
-                deviceOrientationInitialized = true;
-            }
-        }
-        return deviceOrientationInitialized;
-    },
-
-    /**
-     * unwatch Device orientation event
-     * @function device.unwatchDeviceOrientation
-     */
-    unwatchDeviceOrientation() {
-        if (deviceOrientationInitialized) {
-            globalThis.removeEventListener("deviceorientation", this.onDeviceRotate, false);
-            deviceOrientationInitialized = false;
-        }
-    },
-
-    /**
-     * the vibrate method pulses the vibration hardware on the device, <br>
-     * If the device doesn't support vibration, this method has no effect. <br>
-     * If a vibration pattern is already in progress when this method is called,
-     * the previous pattern is halted and the new one begins instead.
-     * @function device.vibrate
-     * @param {number|number[]} pattern pattern of vibration and pause intervals
-     * @example
-     * // vibrate for 1000 ms
-     * me.device.vibrate(1000);
-     * // or alternatively
-     * me.device.vibrate([1000]);
-     * // vibrate for 50 ms, be still for 100 ms, and then vibrate for 150 ms:
-     * me.device.vibrate([50, 100, 150]);
-     * // cancel any existing vibrations
-     * me.device.vibrate(0);
-     */
-    vibrate(pattern) {
-        if (typeof globalThis.navigator !== "undefined" && typeof globalThis.navigator.vibrate === "function") {
-            globalThis.navigator.vibrate(pattern);
-        }
-    }
-
-};
-
-/**
- * Ratio of the resolution in physical pixels to the resolution in CSS pixels for the current display device.
- * @name device.devicePixelRatio
- * @public
- * @member {number}
- * @readonly
- * @returns {number}
- */
-Object.defineProperty(device, "devicePixelRatio", {
-    /**
-     * @ignore
-     */
-    get: function () {
-        return (globalThis.devicePixelRatio || 1);
-    }
-});
-
-/**
- * Returns true if the browser/device is in full screen mode.
- * @name device.isFullscreen
- * @public
- * @member {boolean}
- * @readonly
- * @returns {boolean}
- */
-Object.defineProperty(device, "isFullscreen", {
-    /**
-     * @ignore
-     */
-    get: function () {
-        if (this.hasFullscreenSupport) {
-            return !!(prefixed("fullscreenElement", document) ||
-                document.mozFullScreenElement);
-        } else {
-            return false;
-        }
-    }
-});
-
-/**
- * Returns true if the browser/device has audio capabilities.
- * @name device.sound
- * @public
- * @member {boolean}
- * @readonly
- * @returns {boolean}
- */
-Object.defineProperty(device, "sound", {
-    /**
-     * @ignore
-     */
-    get: function () {
-        return hasAudio();
-    }
-});
-
-/**
- * Hash map of GLSL data types to WebGL Uniform methods
- * @ignore
- */
-const fnHash = {
-    "bool"      : "1i",
-    "int"       : "1i",
-    "float"     : "1f",
-    "vec2"      : "2fv",
-    "vec3"      : "3fv",
-    "vec4"      : "4fv",
-    "bvec2"     : "2iv",
-    "bvec3"     : "3iv",
-    "bvec4"     : "4iv",
-    "ivec2"     : "2iv",
-    "ivec3"     : "3iv",
-    "ivec4"     : "4iv",
-    "mat2"      : "Matrix2fv",
-    "mat3"      : "Matrix3fv",
-    "mat4"      : "Matrix4fv",
-    "sampler2D" : "1i"
-};
-
-/**
- * @ignore
- */
-function extractUniforms(gl, shader) {
-    var uniforms = {},
-        uniRx = /uniform\s+(\w+)\s+(\w+)/g,
-        uniformsData = {},
-        descriptor = {},
-        locations = {},
-        match;
-
-    // Detect all uniform names and types
-    [ shader.vertex, shader.fragment ].forEach(function (shader) {
-        while ((match = uniRx.exec(shader))) {
-            uniformsData[match[2]] = match[1];
-        }
-    });
-
-    // Get uniform references
-    Object.keys(uniformsData).forEach(function (name) {
-        var type = uniformsData[name];
-        locations[name] = gl.getUniformLocation(shader.program, name);
-
-        descriptor[name] = {
-            "get" : (function (name) {
-                /*
-                 * A getter for the uniform location
-                 */
-                return function () {
-                    return locations[name];
+                atlas[frame.filename] = {
+                    name         : frame.filename, // frame name
+                    texture      : data.meta.image || "default", // the source texture
+                    offset       : new Vector2d(s.x, s.y),
+                    anchorPoint  : (hasTextureAnchorPoint) ? new Vector2d(originX / s.w, originY / s.h) : null,
+                    trimmed      : !!frame.trimmed,
+                    width        : s.w,
+                    height       : s.h,
+                    angle        : (frame.rotated === true) ? -ETA : 0
                 };
-            })(name),
-            "set" : (function (name, type, fn) {
-                if (type.indexOf("mat") === 0) {
-                    /*
-                     * A generic setter for uniform matrices
-                     */
-                    return function (val) {
-                        gl[fn](locations[name], false, val);
-                    };
-                }
-                else {
-                    /*
-                     * A generic setter for uniform vectors
-                     */
-                    return function (val) {
-                        var fnv = fn;
-                        if (val.length && fn.slice(-1) !== "v") {
-                            fnv += "v";
-                        }
-                        gl[fnv](locations[name], val);
-                    };
-                }
-            })(name, type, "uniform" + fnHash[type])
-        };
-    });
-    Object.defineProperties(uniforms, descriptor);
-
-    return uniforms;
-}
-
-/**
- * @ignore
- */
-function extractAttributes(gl, shader) {
-    var attributes = {},
-        attrRx = /attribute\s+\w+\s+(\w+)/g,
-        match,
-        i = 0;
-
-    // Detect all attribute names
-    while ((match = attrRx.exec(shader.vertex))) {
-        attributes[match[1]] = i++;
-    }
-
-    return attributes;
-}
-
-/**
- * @ignore
- */
-function compileShader(gl, type, source) {
-    var shader = gl.createShader(type);
-    gl.shaderSource(shader, source);
-    gl.compileShader(shader);
-
-    if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) {
-        throw new Error(gl.getShaderInfoLog(shader));
-    }
-
-    return shader;
-}
-/**
- * Compile GLSL into a shader object
- * @ignore
- */
-function compileProgram(gl, vertex, fragment, attributes) {
-    var vertShader = compileShader(gl, gl.VERTEX_SHADER, vertex);
-    var fragShader = compileShader(gl, gl.FRAGMENT_SHADER, fragment);
-
-    var program = gl.createProgram();
-
-    gl.attachShader(program, vertShader);
-    gl.attachShader(program, fragShader);
-
-
-    // force vertex attributes to use location 0 as starting location to prevent
-    // browser to do complicated emulation when running on desktop OpenGL (e.g. on macOS)
-    for (var location in attributes) {
-        gl.bindAttribLocation(program, attributes[location], location);
-    }
-
-    gl.linkProgram(program);
-
-    if (!gl.getProgramParameter(program, gl.LINK_STATUS)) {
-        var error_msg =
-            "Error initializing Shader " + this + "\n" +
-            "gl.VALIDATE_STATUS: " + gl.getProgramParameter(program, gl.VALIDATE_STATUS) + "\n" +
-            "gl.getError()" + gl.getError() + "\n" +
-            "gl.getProgramInfoLog()" + gl.getProgramInfoLog(program);
-        // house cleaning
-        gl.deleteProgram(program);
-        program = null;
-        // throw the exception
-        throw new Error(error_msg);
-    }
-
-    gl.useProgram(program);
-
-    // clean-up
-    gl.deleteShader(vertShader);
-    gl.deleteShader(fragShader);
-
-    return program;
-}
-
-/**
- * set precision for the fiven shader source
- * won't do anything if the precision is already specified
- * @ignore
- */
-function setPrecision(src, precision) {
-    if (src.substring(0, 9) !== "precision") {
-        return "precision " + precision + " float;" + src;
-    }
-    return src;
-}
-
-/**
- * clean the given source from space, comments, etc...
- * @ignore
- */
-function minify(src) {
-    // remove comments
-    src = src.replace(/\/\*[\s\S]*?\*\/|([^\\:]|^)\/\/.*$/gm, "$1");
-    // Remove leading and trailing whitespace from lines
-    src = src.replace(/(\\n\s+)|(\s+\\n)/g, "");
-    // Remove line breaks
-    src = src.replace(/(\\r|\\n)+/g, "");
-    // Remove unnecessary whitespace
-    src = src.replace(/\s*([;,[\](){}\\\/\-+*|^&!=<>?~%])\s*/g, "$1");
-
-    return src;
-}
-
-/**
- * @classdesc
- * a base GL Shader object
- */
-class GLShader {
-    /**
-     * @param {WebGLRenderingContext} gl the current WebGL rendering context
-     * @param {string} vertex a string containing the GLSL source code to set
-     * @param {string} fragment a string containing the GLSL source code to set
-     * @param {string} [precision=auto detected] float precision ('lowp', 'mediump' or 'highp').
-     * @see https://developer.mozilla.org/en-US/docs/Games/Techniques/3D_on_the_web/GLSL_Shaders
-     * @example
-     * // create a basic shader
-     * var myShader = new me.GLShader(
-     *    // WebGL rendering context
-     *    gl,
-     *    // vertex shader
-     *    [
-     *        "void main() {",
-     *        "    gl_Position = doMathToMakeClipspaceCoordinates;",
-     *        "}"
-     *    ].join("\n"),
-     *    // fragment shader
-     *    [
-     *        "void main() {",
-     *        "    gl_FragColor = doMathToMakeAColor;",
-     *        "}"
-     *    ].join("\n")
-     *  )
-     * // use the shader
-     * myShader.bind();
-     */
-    constructor(gl, vertex, fragment, precision) {
-
-        /**
-         * the active gl rendering context
-         * @public
-         * @type {WebGLRenderingContext}
-         * @name gl
-         * @memberof GLShader
-         */
-        this.gl = gl;
-
-        /**
-         * the vertex shader source code
-         * @public
-         * @type {string}
-         * @name vertex
-         * @memberof GLShader
-         */
-        this.vertex = setPrecision(minify(vertex), precision || device.getMaxShaderPrecision(this.gl));
-
-        /**
-         * the fragment shader source code
-         * @public
-         * @type {string}
-         * @name vertex
-         * @memberof GLShader
-         */
-        this.fragment = setPrecision(minify(fragment), precision || device.getMaxShaderPrecision(this.gl));
-
-        /**
-         * the location attributes of the shader
-         * @public
-         * @type {GLint[]}
-         * @name attributes
-         * @memberof GLShader
-         */
-        this.attributes = extractAttributes(this.gl, this);
-
-
-        /**
-         * a reference to the shader program (once compiled)
-         * @public
-         * @type {WebGLProgram}
-         * @name program
-         * @memberof GLShader
-         */
-        this.program = compileProgram(this.gl, this.vertex, this.fragment, this.attributes);
-
-        /**
-         * the uniforms of the shader
-         * @public
-         * @type {object}
-         * @name uniforms
-         * @memberof GLShader
-         */
-        this.uniforms = extractUniforms(this.gl, this);
-
-        // destroy the shader on context lost (will be recreated on context restore)
-        on(ONCONTEXT_LOST, this.destroy, this);
-    }
-
-    /**
-     * Installs this shader program as part of current rendering state
-     * @name bind
-     * @memberof GLShader
-     */
-    bind() {
-        this.gl.useProgram(this.program);
-    }
-
-    /**
-     * returns the location of an attribute variable in this shader program
-     * @name getAttribLocation
-     * @memberof GLShader
-     * @param {string} name the name of the attribute variable whose location to get.
-     * @returns {GLint} number indicating the location of the variable name if found. Returns -1 otherwise
-     */
-    getAttribLocation(name) {
-        var attr = this.attributes[name];
-        if (typeof attr !== "undefined") {
-            return attr;
-        } else {
-            return -1;
-        }
-    }
-
-    /**
-     * Set the uniform to the given value
-     * @name setUniform
-     * @memberof GLShader
-     * @param {string} name the uniform name
-     * @param {object|Float32Array} value the value to assign to that uniform
-     * @example
-     * myShader.setUniform("uProjectionMatrix", this.projectionMatrix);
-     */
-    setUniform(name, value) {
-        var uniforms = this.uniforms;
-        if (typeof uniforms[name] !== "undefined") {
-            if (typeof value === "object" && typeof value.toArray === "function") {
-                uniforms[name] = value.toArray();
-            } else {
-                uniforms[name] = value;
+                this.addUVs(atlas, frame.filename, data.meta.size.w, data.meta.size.h);
             }
-        } else {
-            throw new Error("undefined (" + name + ") uniform for shader " + this);
-        }
-    }
-
-    /**
-     * activate the given vertex attribute for this shader
-     * @name setVertexAttributes
-     * @memberof GLShader
-     * @param {WebGLRenderingContext} gl the current WebGL rendering context
-     * @param {object[]} attributes an array of vertex attributes
-     * @param {number} vertexByteSize the size of a single vertex in bytes
-     */
-    setVertexAttributes(gl, attributes, vertexByteSize) {
-        // set the vertex attributes
-        for (var index = 0; index < attributes.length; ++index) {
-            var element = attributes[index];
-            var location = this.getAttribLocation(element.name);
-
-            if (location !== -1) {
-                gl.enableVertexAttribArray(location);
-                gl.vertexAttribPointer(location, element.size, element.type, element.normalized, vertexByteSize, element.offset);
-            } else {
-                gl.disableVertexAttribArray(index);
-            }
-        }
-    }
-
-    /**
-     * destroy this shader objects resources (program, attributes, uniforms)
-     * @name destroy
-     * @memberof GLShader
-     */
-    destroy() {
-        this.uniforms = null;
-        this.attributes = null;
-
-        this.gl.deleteProgram(this.program);
-
-        this.vertex = null;
-        this.fragment = null;
-    }
-}
-
-/**
- * @classdesc
- * a Vertex Buffer object
- * @class VertexArrayBuffer
- * @ignore
- */
-
-class VertexArrayBuffer {
-
-    constructor(vertex_size, vertex_per_quad) {
-        // the size of one vertex in float
-        this.vertexSize = vertex_size;
-        // size of a quad in vertex
-        this.quadSize = vertex_per_quad;
-        // the maximum number of vertices the vertex array buffer can hold
-        this.maxVertex = 256;
-        // the current number of vertices added to the vertex array buffer
-        this.vertexCount = 0;
-
-        // the actual vertex data buffer
-        this.buffer = new ArrayBuffer(this.maxVertex * this.vertexSize * this.quadSize);
-        // Float32 and Uint32 view of the vertex data array buffer
-        this.bufferF32 = new Float32Array(this.buffer);
-        this.bufferU32 = new Uint32Array(this.buffer);
-    }
-
-    /**
-     * clear the vertex array buffer
-     * @ignore
-     */
-    clear() {
-        this.vertexCount = 0;
-    }
-
-
-    /**
-     * return true if full
-     * @ignore
-     */
-    isFull(vertex = this.quadSize) {
-         return (this.vertexCount + vertex >= this.maxVertex);
-    }
-
-    /**
-     * resize the vertex buffer, retaining its original contents
-     * @ignore
-     */
-    resize() {
-        // double the vertex size
-        this.maxVertex <<= 1;
-        // save a reference to the previous data
-        var data = this.bufferF32;
-
-        // recreate ArrayBuffer and views
-        this.buffer = new ArrayBuffer(this.maxVertex * this.vertexSize * this.quadSize);
-        this.bufferF32 = new Float32Array(this.buffer);
-        this.bufferU32 = new Uint32Array(this.buffer);
-
-        // copy previous data
-        this.bufferF32.set(data);
-
-        return this;
-    }
-
-    /**
-     * push a new vertex to the buffer
-     * @ignore
-     */
-    push(x, y, u, v, tint) {
-        var offset = this.vertexCount * this.vertexSize;
-
-        if (this.vertexCount >= this.maxVertex) {
-            this.resize();
-        }
-
-        this.bufferF32[offset + 0] = x;
-        this.bufferF32[offset + 1] = y;
-
-        if (typeof u !== "undefined") {
-            this.bufferF32[offset + 2] = u;
-            this.bufferF32[offset + 3] = v;
-        }
-
-        if (typeof tint !== "undefined") {
-            this.bufferU32[offset + 4] = tint;
-        }
-
-        this.vertexCount++;
-
-        return this;
-    }
-
-    /**
-     * return a reference to the data in Float32 format
-     * @ignore
-     */
-    toFloat32(begin, end) {
-        if (typeof end !== "undefined") {
-            return this.bufferF32.subarray(begin, end);
-        } else {
-            return this.bufferF32;
-        }
-    }
-
-    /**
-     * return a reference to the data in Uint32 format
-     * @ignore
-     */
-    toUint32(begin, end) {
-        if (typeof end !== "undefined") {
-            return this.bufferU32.subarray(begin, end);
-        } else {
-            return this.bufferU32;
-        }
-    }
-
-    /**
-     * return the size of the vertex in vertex
-     * @ignore
-     */
-    length() {
-        return this.vertexCount;
-    }
-
-    /**
-     * return true if empty
-     * @ignore
-     */
-    isEmpty() {
-        return this.vertexCount === 0;
-    }
-
-}
-
-var primitiveVertex = "// Current vertex point\nattribute vec2 aVertex;\n\n// Projection matrix\nuniform mat4 uProjectionMatrix;\n\n// Vertex color\nuniform vec4 uColor;\n\n// Fragment color\nvarying vec4 vColor;\n\nvoid main(void) {\n    // Transform the vertex position by the projection matrix\n    gl_Position = uProjectionMatrix * vec4(aVertex, 0.0, 1.0);\n    // Pass the remaining attributes to the fragment shader\n    vColor = vec4(uColor.rgb * uColor.a, uColor.a);\n}\n";
-
-var primitiveFragment = "varying vec4 vColor;\n\nvoid main(void) {\n    gl_FragColor = vColor;\n}\n";
-
-var quadVertex = "attribute vec2 aVertex;\nattribute vec2 aRegion;\nattribute vec4 aColor;\n\nuniform mat4 uProjectionMatrix;\n\nvarying vec2 vRegion;\nvarying vec4 vColor;\n\nvoid main(void) {\n    // Transform the vertex position by the projection matrix\n     gl_Position = uProjectionMatrix * vec4(aVertex, 0.0, 1.0);\n    // Pass the remaining attributes to the fragment shader\n    vColor = vec4(aColor.bgr * aColor.a, aColor.a);\n    vRegion = aRegion;\n}\n";
-
-var quadFragment = "uniform sampler2D uSampler;\nvarying vec4 vColor;\nvarying vec2 vRegion;\n\nvoid main(void) {\n    gl_FragColor = texture2D(uSampler, vRegion) * vColor;\n}\n";
-
-// a pool of resuable vectors
-var V_ARRAY = [
-    new Vector2d(),
-    new Vector2d(),
-    new Vector2d(),
-    new Vector2d()
-];
-
-/**
- * @classdesc
- * A WebGL Compositor object. This class handles all of the WebGL state<br>
- * Pushes texture regions or shape geometry into WebGL buffers, automatically flushes to GPU
- */
-class WebGLCompositor {
-    /**
-     * @param {WebGLRenderer} renderer the current WebGL renderer session
-     */
-    constructor (renderer) {
-        this.init(renderer);
-    }
-
-    /**
-     * Initialize the compositor
-     * @ignore
-     */
-    init (renderer) {
-        // local reference
-        var gl = renderer.gl;
-
-        // list of active texture units
-        this.currentTextureUnit = -1;
-        this.boundTextures = [];
-
-        // the associated renderer
-        this.renderer = renderer;
-
-        // WebGL context
-        this.gl = renderer.gl;
-
-        // Global fill color
-        this.color = renderer.currentColor;
-
-        // Global transformation matrix
-        this.viewMatrix = renderer.currentTransform;
-
-        /**
-         * a reference to the active WebGL shader
-         * @name activeShader
-         * @memberof WebGLCompositor
-         * @type {GLShader}
-         */
-        this.activeShader = null;
-
-        /**
-         * primitive type to render (gl.POINTS, gl.LINE_STRIP, gl.LINE_LOOP, gl.LINES, gl.TRIANGLE_STRIP, gl.TRIANGLE_FAN, gl.TRIANGLES)
-         * @name mode
-         * @see WebGLCompositor
-         * @memberof WebGLCompositor
-         * @default gl.TRIANGLES
-         */
-        this.mode = gl.TRIANGLES;
-
-        /**
-         * an array of vertex attribute properties
-         * @name attributes
-         * @see WebGLCompositor.addAttribute
-         * @memberof WebGLCompositor
-         */
-        this.attributes = [];
-
-        /**
-         * the size of a single vertex in bytes
-         * (will automatically be calculated as attributes definitions are added)
-         * @name vertexByteSize
-         * @see WebGLCompositor.addAttribute
-         * @memberof WebGLCompositor
-         */
-        this.vertexByteSize = 0;
-
-        /**
-         * the size of a single vertex in floats
-         * (will automatically be calculated as attributes definitions are added)
-         * @name vertexSize
-         * @see WebGLCompositor.addAttribute
-         * @memberof WebGLCompositor
-         */
-        this.vertexSize = 0;
-
-        // Load and create shader programs
-        this.primitiveShader = new GLShader(this.gl, primitiveVertex, primitiveFragment);
-        this.quadShader = new GLShader(this.gl, quadVertex, quadFragment);
-
-        /// define all vertex attributes
-        this.addAttribute("aVertex", 2, gl.FLOAT, false, 0 * Float32Array.BYTES_PER_ELEMENT); // 0
-        this.addAttribute("aRegion", 2, gl.FLOAT, false, 2 * Float32Array.BYTES_PER_ELEMENT); // 1
-        this.addAttribute("aColor",  4, gl.UNSIGNED_BYTE, true, 4 * Float32Array.BYTES_PER_ELEMENT); // 2
-
-        this.vertexBuffer = new VertexArrayBuffer(this.vertexSize, 6); // 6 vertices per quad
-
-        // vertex buffer
-        gl.bindBuffer(gl.ARRAY_BUFFER, gl.createBuffer());
-        gl.bufferData(gl.ARRAY_BUFFER, this.vertexBuffer.buffer, gl.STREAM_DRAW);
-
-        // register to the CANVAS resize channel
-        on(CANVAS_ONRESIZE, (width, height) => {
-            this.flush();
-            this.setViewport(0, 0, width, height);
         });
+        return atlas;
     }
 
     /**
-     * Reset compositor internal state
+     * build an atlas from the given spritesheet
      * @ignore
      */
-    reset() {
-        // WebGL context
-        this.gl = this.renderer.gl;
+    parseFromSpriteSheet(data) {
+        var atlas = {};
+        var image = data.image;
+        var spacing = data.spacing || 0;
+        var margin = data.margin || 0;
 
-        this.flush();
+        var width = image.width;
+        var height = image.height;
 
-        // initial viewport size
-        this.setViewport(
-            0, 0,
-            this.renderer.getScreenCanvas().width,
-            this.renderer.getScreenCanvas().height
+        // calculate the sprite count (line, col)
+        var spritecount = pool.pull("Vector2d",
+            ~~((width - margin + spacing) / (data.framewidth + spacing)),
+            ~~((height - margin + spacing) / (data.frameheight + spacing))
         );
 
-        // Initialize clear color
-        this.clearColor(0.0, 0.0, 0.0, 0.0);
-
-        // delete all related bound texture
-        for (var i = 0; i < this.renderer.maxTextures; i++) {
-            var texture2D = this.getTexture2D(i);
-            if (typeof texture2D !== "undefined") {
-                this.deleteTexture2D(texture2D);
+        // verifying the texture size
+        if ((width % (data.framewidth + spacing)) !== 0 ||
+            (height % (data.frameheight + spacing)) !== 0) {
+            var computed_width = spritecount.x * (data.framewidth + spacing);
+            var computed_height = spritecount.y * (data.frameheight + spacing);
+            if (computed_width - width !== spacing && computed_height - height !== spacing) {
+                // "truncate size" if delta is different from the spacing size
+                width = computed_width;
+                height = computed_height;
+                // warning message
+                console.warn(
+                    "Spritesheet Texture for image: " + image.src +
+                    " is not divisible by " + (data.framewidth + spacing) +
+                    "x" + (data.frameheight + spacing) +
+                    ", truncating effective size to " + width + "x" + height
+                );
             }
         }
-        this.currentTextureUnit = -1;
 
-        // set the quad shader as the default program
-        this.useShader(this.quadShader);
-    }
-
-    /**
-     * add vertex attribute property definition to the compositor
-     * @name addAttribute
-     * @memberof WebGLCompositor
-     * @param {string} name name of the attribute in the vertex shader
-     * @param {number} size number of components per vertex attribute. Must be 1, 2, 3, or 4.
-     * @param {GLenum} type data type of each component in the array
-     * @param {boolean} normalized whether integer data values should be normalized into a certain range when being cast to a float
-     * @param {number} offset offset in bytes of the first component in the vertex attribute array
-     */
-    addAttribute(name, size, type, normalized, offset) {
-        this.attributes.push({
-            name: name,
-            size: size,
-            type: type,
-            normalized: normalized,
-            offset: offset
-        });
-
-        switch (type) {
-            case this.gl.BYTE:
-                this.vertexByteSize += size * Int8Array.BYTES_PER_ELEMENT;
-                break;
-            case this.gl.UNSIGNED_BYTE:
-                this.vertexByteSize += size * Uint8Array.BYTES_PER_ELEMENT;
-                break;
-            case this.gl.SHORT:
-                this.vertexByteSize += size * Int16Array.BYTES_PER_ELEMENT;
-                break;
-            case this.gl.UNSIGNED_SHORT:
-                this.vertexByteSize += size * Uint16Array.BYTES_PER_ELEMENT;
-                break;
-            case this.gl.INT:
-                this.vertexByteSize += size * Int32Array.BYTES_PER_ELEMENT;
-                break;
-            case this.gl.UNSIGNED_INT:
-                this.vertexByteSize += size * Uint32Array.BYTES_PER_ELEMENT;
-                break;
-            case this.gl.FLOAT:
-                this.vertexByteSize += size * Float32Array.BYTES_PER_ELEMENT;
-                break;
-            default:
-                throw new Error("Invalid GL Attribute type");
+        // build the local atlas
+        for (var frame = 0, count = spritecount.x * spritecount.y; frame < count; frame++) {
+            var name = "" + frame;
+            atlas[name] = {
+                name        : name,
+                texture     : "default", // the source texture
+                offset      : new Vector2d(
+                    margin + (spacing + data.framewidth) * (frame % spritecount.x),
+                    margin + (spacing + data.frameheight) * ~~(frame / spritecount.x)
+                ),
+                anchorPoint : (data.anchorPoint || null),
+                trimmed     : false,
+                width       : data.framewidth,
+                height      : data.frameheight,
+                angle       : 0
+            };
+            this.addUVs(atlas, name, width, height);
         }
-        this.vertexSize = this.vertexByteSize / Float32Array.BYTES_PER_ELEMENT;
+
+        pool.push(spritecount);
+
+        return atlas;
     }
 
     /**
-     * Sets the viewport
-     * @name setViewport
-     * @memberof WebGLCompositor
-     * @param {number} x x position of viewport
-     * @param {number} y y position of viewport
-     * @param {number} w width of viewport
-     * @param {number} h height of viewport
+     * return the default or specified atlas dictionnary
+     * @param {string} [name] atlas name in case of multipack textures
+     * @returns {object}
      */
-    setViewport(x, y, w, h) {
-        this.gl.viewport(x, y, w, h);
+    getAtlas(name) {
+        if (typeof name === "string") {
+            return this.atlases.get(name);
+        } else {
+            return this.atlases.values().next().value;
+        }
     }
 
     /**
-     * Create a WebGL texture from an image
-     * @name createTexture2D
-     * @memberof WebGLCompositor
-     * @param {number} unit Destination texture unit
-     * @param {Image|HTMLCanvasElement|ImageData|Uint8Array[]|Float32Array[]} image Source image
-     * @param {number} filter gl.LINEAR or gl.NEAREST
-     * @param {string} [repeat="no-repeat"] Image repeat behavior (see {@link ImageLayer#repeat})
-     * @param {number} [w] Source image width (Only use with UInt8Array[] or Float32Array[] source image)
-     * @param {number} [h] Source image height (Only use with UInt8Array[] or Float32Array[] source image)
-     * @param {number} [b] Source image border (Only use with UInt8Array[] or Float32Array[] source image)
-     * @param {boolean} [premultipliedAlpha=true] Multiplies the alpha channel into the other color channels
-     * @param {boolean} [mipmap=true] Whether mipmap levels should be generated for this texture
-     * @returns {WebGLTexture} a WebGL texture
+     * return the format of the atlas dictionnary
+     * @returns {string} will return "texturepacker", or "ShoeBox", or "melonJS", or "Spritesheet (fixed cell size)"
      */
-    createTexture2D(unit, image, filter, repeat = "no-repeat", w, h, b, premultipliedAlpha = true, mipmap = true) {
-        var gl = this.gl;
-        var isPOT = isPowerOfTwo(w || image.width) && isPowerOfTwo(h || image.height);
-        var texture = gl.createTexture();
-        var rs = (repeat.search(/^repeat(-x)?$/) === 0) && (isPOT || this.renderer.WebGLVersion > 1) ? gl.REPEAT : gl.CLAMP_TO_EDGE;
-        var rt = (repeat.search(/^repeat(-y)?$/) === 0) && (isPOT || this.renderer.WebGLVersion > 1) ? gl.REPEAT : gl.CLAMP_TO_EDGE;
+    getFormat() {
+        return this.format;
+    }
 
-        this.bindTexture2D(texture, unit);
+    /**
+     * return the source texture for the given region (or default one if none specified)
+     * @param {object} [region] region name in case of multipack textures
+     * @returns {HTMLImageElement|HTMLCanvasElement}
+     */
+    getTexture(region) {
+        if ((typeof region === "object") && (typeof region.texture === "string")) {
+            return this.sources.get(region.texture);
+        } else {
+            return this.sources.values().next().value;
+        }
+    }
 
-        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, rs);
-        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, rt);
-        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, filter);
-        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, filter);
-        gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, premultipliedAlpha);
-        if (w || h || b) {
-            gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, w, h, b, gl.RGBA, gl.UNSIGNED_BYTE, image);
+    /**
+     * add a region to the atlas
+     * @param {string} name region mame
+     * @param {number} x x origin of the region
+     * @param {number} y y origin of the region
+     * @param {number} w width of the region
+     * @param {number} h height of the region
+     * @returns {object} the created region
+     */
+    addRegion(name, x, y, w, h) {
+        // TODO: Require proper atlas regions instead of caching arbitrary region keys
+        if (renderer.settings.verbose === true) {
+            console.warn("Adding texture region", name, "for texture", this);
+        }
+
+        var source = this.getTexture();
+        var atlas = this.getAtlas();
+        var dw = source.width;
+        var dh = source.height;
+
+        atlas[name] = {
+            name    : name,
+            offset  : new Vector2d(x, y),
+            width   : w,
+            height  : h,
+            angle   : 0
+        };
+
+        this.addUVs(atlas, name, dw, dh);
+
+        return atlas[name];
+    }
+
+    /**
+     * return a normalized region (or frame) information for the specified sprite name
+     * @param {string} name name of the sprite
+     * @param {string} [atlas] name of a specific atlas where to search for the region
+     * @returns {object}
+     */
+    getRegion(name, atlas) {
+        var region;
+        if (typeof atlas === "string") {
+            region = this.getAtlas(atlas)[name];
+        } else {
+            // look for the given region in each existing atlas
+            this.atlases.forEach(function (atlas) {
+                if (typeof atlas[name] !== "undefined") {
+                    // there should be only one
+                    region = atlas[name];
+                }
+            });
+        }
+        return region;
+    }
+
+    /**
+     * return the uvs mapping for the given region
+     * @param {object} name region (or frame) name
+     * @returns {Float32Array} region Uvs
+     */
+    getUVs(name) {
+        // Get the source texture region
+        var region = this.getRegion(name);
+
+        if (typeof(region) === "undefined") {
+            // TODO: Require proper atlas regions instead of caching arbitrary region keys
+            var keys = name.split(","),
+                sx = +keys[0],
+                sy = +keys[1],
+                sw = +keys[2],
+                sh = +keys[3];
+            region = this.addRegion(name, sx, sy, sw, sh);
+        }
+        return region.uvs;
+    }
+
+    /**
+     * add uvs mapping for the given region
+     * @param {object} atlas the atlas dictionnary where the region is define
+     * @param {object} name region (or frame) name
+     * @param {number} w the width of the region
+     * @param {number} h the height of the region
+     * @returns {Float32Array} the created region UVs
+     */
+    addUVs(atlas, name, w, h) {
+        // ignore if using the Canvas Renderer
+        if (renderer instanceof WebGLRenderer) {
+            // Source coordinates
+            var s = atlas[name].offset;
+            var sw = atlas[name].width;
+            var sh = atlas[name].height;
+
+            atlas[name].uvs = new Float32Array([
+                s.x / w,        // u0 (left)
+                s.y / h,        // v0 (top)
+                (s.x + sw) / w, // u1 (right)
+                (s.y + sh) / h  // v1 (bottom)
+            ]);
+            // Cache source coordinates
+            // TODO: Remove this when the Batcher only accepts a region name
+            var key = s.x + "," + s.y + "," + w + "," + h;
+            atlas[key] = atlas[name];
+        }
+        return atlas[name].uvs;
+    }
+
+    /**
+     * Create a sprite object using the first region found using the specified name
+     * @param {string} name name of the sprite
+     * @param {object} [settings] Additional settings passed to the {@link Sprite} contructor
+     * @param {boolean} [nineSlice=false] if true returns a 9-slice sprite
+     * @returns {Sprite|NineSliceSprite}
+     * @example
+     * // create a new texture object under the `game` namespace
+     * game.texture = new me.TextureAtlas(
+     *    me.loader.getJSON("texture"),
+     *    me.loader.getImage("texture")
+     * );
+     * ...
+     * ...
+     * // create a new "coin" sprite
+     * var sprite = game.texture.createSpriteFromName("coin.png");
+     * // set the renderable position to bottom center
+     * sprite.anchorPoint.set(0.5, 1.0);
+     * ...
+     * ...
+     * // create a 9-slice sprite
+     * var dialogPanel = game.texture.createSpriteFromName(
+     *    "rpg_dialo.png",
+     *    // width & height are mandatory for 9-slice sprites
+     *    { width: this.width, height: this.height },
+     *    true
+     * );
+     */
+    createSpriteFromName(name, settings, nineSlice = false) {
+        // instantiate a new sprite object
+        return pool.pull(
+            nineSlice === true ? "me.NineSliceSprite" : "me.Sprite",
+            0, 0,
+            Object.assign({
+                image: this,
+                region : name
+            }, settings || {})
+        );
+    }
+
+    /**
+     * Create an animation object using the first region found using all specified names
+     * @param {string[]|number[]} names list of names for each sprite
+     * (when manually creating a Texture out of a spritesheet, only numeric values are authorized)
+     * @param {object} [settings] Additional settings passed to the {@link Sprite} contructor
+     * @returns {Sprite}
+     * @example
+     * // create a new texture object under the `game` namespace
+     * game.texture = new me.TextureAtlas(
+     *     me.loader.getJSON("texture"),
+     *     me.loader.getImage("texture")
+     * );
+     *
+     * // create a new Animated Sprite
+     * var sprite = game.texture.createAnimationFromName([
+     *     "walk0001.png", "walk0002.png", "walk0003.png",
+     *     "walk0004.png", "walk0005.png", "walk0006.png",
+     *     "walk0007.png", "walk0008.png", "walk0009.png",
+     *     "walk0010.png", "walk0011.png"
+     * ]);
+     *
+     * // define an additional basic walking animation
+     * sprite.addAnimation ("simple_walk", [0,2,1]);
+     * // you can also use frame name to define your animation
+     * sprite.addAnimation ("speed_walk", ["walk0007.png", "walk0008.png", "walk0009.png", "walk0010.png"]);
+     * // set the default animation
+     * sprite.setCurrentAnimation("simple_walk");
+     * // set the renderable position to bottom center
+     * sprite.anchorPoint.set(0.5, 1.0);
+     */
+    createAnimationFromName(names, settings) {
+        var tpAtlas = [], indices = {};
+        var width = 0, height = 0;
+        var region;
+        // iterate through the given names
+        // and create a "normalized" atlas
+        for (var i = 0; i < names.length; ++i) {
+            region = this.getRegion(names[i]);
+            if (region == null) {
+                // throw an error
+                throw new Error("Texture - region for " + names[i] + " not found");
+            }
+            tpAtlas[i] = region;
+            // save the corresponding index
+            indices[names[i]] = i;
+            // calculate the max size of a frame
+            width = Math.max(region.width, width);
+            height = Math.max(region.height, height);
+        }
+        // instantiate a new animation sheet object
+        return new Sprite(0, 0, Object.assign({
+            image: this,
+            framewidth: width,
+            frameheight: height,
+            margin: 0,
+            spacing: 0,
+            atlas: tpAtlas,
+            atlasIndices: indices
+        }, settings || {}));
+    }
+}
+
+var src = {};
+
+var arraymultimap = {};
+
+var multimap = {};
+
+var __generator = (commonjsGlobal && commonjsGlobal.__generator) || function (thisArg, body) {
+    var _ = { label: 0, sent: function() { if (t[0] & 1) throw t[1]; return t[1]; }, trys: [], ops: [] }, f, y, t, g;
+    return g = { next: verb(0), "throw": verb(1), "return": verb(2) }, typeof Symbol === "function" && (g[Symbol.iterator] = function() { return this; }), g;
+    function verb(n) { return function (v) { return step([n, v]); }; }
+    function step(op) {
+        if (f) throw new TypeError("Generator is already executing.");
+        while (_) try {
+            if (f = 1, y && (t = op[0] & 2 ? y["return"] : op[0] ? y["throw"] || ((t = y["return"]) && t.call(y), 0) : y.next) && !(t = t.call(y, op[1])).done) return t;
+            if (y = 0, t) op = [op[0] & 2, t.value];
+            switch (op[0]) {
+                case 0: case 1: t = op; break;
+                case 4: _.label++; return { value: op[1], done: false };
+                case 5: _.label++; y = op[1]; op = [0]; continue;
+                case 7: op = _.ops.pop(); _.trys.pop(); continue;
+                default:
+                    if (!(t = _.trys, t = t.length > 0 && t[t.length - 1]) && (op[0] === 6 || op[0] === 2)) { _ = 0; continue; }
+                    if (op[0] === 3 && (!t || (op[1] > t[0] && op[1] < t[3]))) { _.label = op[1]; break; }
+                    if (op[0] === 6 && _.label < t[1]) { _.label = t[1]; t = op; break; }
+                    if (t && _.label < t[2]) { _.label = t[2]; _.ops.push(op); break; }
+                    if (t[2]) _.ops.pop();
+                    _.trys.pop(); continue;
+            }
+            op = body.call(thisArg, _);
+        } catch (e) { op = [6, e]; y = 0; } finally { f = t = 0; }
+        if (op[0] & 5) throw op[1]; return { value: op[0] ? op[1] : void 0, done: true };
+    }
+};
+var __values = (commonjsGlobal && commonjsGlobal.__values) || function(o) {
+    var s = typeof Symbol === "function" && Symbol.iterator, m = s && o[s], i = 0;
+    if (m) return m.call(o);
+    if (o && typeof o.length === "number") return {
+        next: function () {
+            if (o && i >= o.length) o = void 0;
+            return { value: o && o[i++], done: !o };
+        }
+    };
+    throw new TypeError(s ? "Object is not iterable." : "Symbol.iterator is not defined.");
+};
+var __read = (commonjsGlobal && commonjsGlobal.__read) || function (o, n) {
+    var m = typeof Symbol === "function" && o[Symbol.iterator];
+    if (!m) return o;
+    var i = m.call(o), r, ar = [], e;
+    try {
+        while ((n === void 0 || n-- > 0) && !(r = i.next()).done) ar.push(r.value);
+    }
+    catch (error) { e = { error: error }; }
+    finally {
+        try {
+            if (r && !r.done && (m = i["return"])) m.call(i);
+        }
+        finally { if (e) throw e.error; }
+    }
+    return ar;
+};
+Object.defineProperty(multimap, "__esModule", { value: true });
+multimap.Multimap = void 0;
+var Multimap = /** @class */ (function () {
+    function Multimap(operator, iterable) {
+        var e_1, _a;
+        this.size_ = 0;
+        this.map = new Map();
+        this.operator = operator;
+        if (iterable) {
+            try {
+                for (var iterable_1 = __values(iterable), iterable_1_1 = iterable_1.next(); !iterable_1_1.done; iterable_1_1 = iterable_1.next()) {
+                    var _b = __read(iterable_1_1.value, 2), key = _b[0], value = _b[1];
+                    this.put(key, value);
+                }
+            }
+            catch (e_1_1) { e_1 = { error: e_1_1 }; }
+            finally {
+                try {
+                    if (iterable_1_1 && !iterable_1_1.done && (_a = iterable_1.return)) _a.call(iterable_1);
+                }
+                finally { if (e_1) throw e_1.error; }
+            }
+        }
+        return this;
+    }
+    Object.defineProperty(Multimap.prototype, "size", {
+        get: function () {
+            return this.size_;
+        },
+        enumerable: false,
+        configurable: true
+    });
+    Multimap.prototype.get = function (key) {
+        var values = this.map.get(key);
+        if (values) {
+            return this.operator.clone(values);
         }
         else {
-            gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, image);
+            return this.operator.create();
         }
-
-        // generate the sprite mimap (used when scaling) if a PowerOfTwo texture
-        if (isPOT && mipmap !== false) {
-            gl.generateMipmap(gl.TEXTURE_2D);
+    };
+    Multimap.prototype.put = function (key, value) {
+        var values = this.map.get(key);
+        if (!values) {
+            values = this.operator.create();
         }
-
-        return texture;
-    }
-
-    /**
-     * delete the given WebGL texture
-     * @name bindTexture2D
-     * @memberof WebGLCompositor
-     * @param {WebGLTexture} [texture] a WebGL texture to delete
-     * @param {number} [unit] Texture unit to delete
-     */
-    deleteTexture2D(texture) {
-        this.gl.deleteTexture(texture);
-        this.unbindTexture2D(texture);
-    }
-
-    /**
-     * returns the WebGL texture associated to the given texture unit
-     * @name bindTexture2D
-     * @memberof WebGLCompositor
-     * @param {number} unit Texture unit to which a texture is bound
-     * @returns {WebGLTexture} texture a WebGL texture
-     */
-    getTexture2D(unit) {
-        return this.boundTextures[unit];
-    }
-
-    /**
-     * assign the given WebGL texture to the current batch
-     * @name bindTexture2D
-     * @memberof WebGLCompositor
-     * @param {WebGLTexture} texture a WebGL texture
-     * @param {number} unit Texture unit to which the given texture is bound
-     */
-    bindTexture2D(texture, unit) {
-        var gl = this.gl;
-
-        if (texture !== this.boundTextures[unit]) {
-            this.flush();
-            if (this.currentTextureUnit !== unit) {
-                this.currentTextureUnit = unit;
-                gl.activeTexture(gl.TEXTURE0 + unit);
+        if (!this.operator.add(value, values)) {
+            return false;
+        }
+        this.map.set(key, values);
+        this.size_++;
+        return true;
+    };
+    Multimap.prototype.putAll = function (arg1, arg2) {
+        var e_2, _a, e_3, _b;
+        var pushed = 0;
+        if (arg2) {
+            var key = arg1;
+            var values = arg2;
+            try {
+                for (var values_1 = __values(values), values_1_1 = values_1.next(); !values_1_1.done; values_1_1 = values_1.next()) {
+                    var value = values_1_1.value;
+                    this.put(key, value);
+                    pushed++;
+                }
             }
-
-            gl.bindTexture(gl.TEXTURE_2D, texture);
-            this.boundTextures[unit] = texture;
-
-        } else if (this.currentTextureUnit !== unit) {
-            this.flush();
-            this.currentTextureUnit = unit;
-            gl.activeTexture(gl.TEXTURE0 + unit);
-        }
-    }
-
-    /**
-     * unbind the given WebGL texture, forcing it to be reuploaded
-     * @name unbindTexture2D
-     * @memberof WebGLCompositor
-     * @param {WebGLTexture} [texture] a WebGL texture
-     * @param {number} [unit] a WebGL texture
-     * @returns {number} unit the unit number that was associated with the given texture
-     */
-    unbindTexture2D(texture, unit) {
-        if (typeof unit === "undefined") {
-            unit = this.boundTextures.indexOf(texture);
-        }
-        if (unit !== -1) {
-            delete this.boundTextures[unit];
-            if (unit === this.currentTextureUnit) {
-                this.currentTextureUnit = -1;
+            catch (e_2_1) { e_2 = { error: e_2_1 }; }
+            finally {
+                try {
+                    if (values_1_1 && !values_1_1.done && (_a = values_1.return)) _a.call(values_1);
+                }
+                finally { if (e_2) throw e_2.error; }
             }
         }
-        return unit;
+        else if (arg1 instanceof Multimap) {
+            try {
+                for (var _c = __values(arg1.entries()), _d = _c.next(); !_d.done; _d = _c.next()) {
+                    var _e = __read(_d.value, 2), key = _e[0], value = _e[1];
+                    this.put(key, value);
+                    pushed++;
+                }
+            }
+            catch (e_3_1) { e_3 = { error: e_3_1 }; }
+            finally {
+                try {
+                    if (_d && !_d.done && (_b = _c.return)) _b.call(_c);
+                }
+                finally { if (e_3) throw e_3.error; }
+            }
+        }
+        else {
+            throw new TypeError("unexpected arguments");
+        }
+        return pushed > 0;
+    };
+    Multimap.prototype.has = function (key) {
+        return this.map.has(key);
+    };
+    Multimap.prototype.hasEntry = function (key, value) {
+        return this.operator.has(value, this.get(key));
+    };
+    Multimap.prototype.delete = function (key) {
+        this.size_ -= this.operator.size(this.get(key));
+        return this.map.delete(key);
+    };
+    Multimap.prototype.deleteEntry = function (key, value) {
+        var current = this.get(key);
+        if (!this.operator.delete(value, current)) {
+            return false;
+        }
+        this.map.set(key, current);
+        this.size_--;
+        return true;
+    };
+    Multimap.prototype.clear = function () {
+        this.map.clear();
+        this.size_ = 0;
+    };
+    Multimap.prototype.keys = function () {
+        return this.map.keys();
+    };
+    Multimap.prototype.entries = function () {
+        var self = this;
+        function gen() {
+            var _a, _b, _c, key, values, values_2, values_2_1, value, e_4_1, e_5_1;
+            var e_5, _d, e_4, _e;
+            return __generator(this, function (_f) {
+                switch (_f.label) {
+                    case 0:
+                        _f.trys.push([0, 11, 12, 13]);
+                        _a = __values(self.map.entries()), _b = _a.next();
+                        _f.label = 1;
+                    case 1:
+                        if (!!_b.done) return [3 /*break*/, 10];
+                        _c = __read(_b.value, 2), key = _c[0], values = _c[1];
+                        _f.label = 2;
+                    case 2:
+                        _f.trys.push([2, 7, 8, 9]);
+                        values_2 = (e_4 = void 0, __values(values)), values_2_1 = values_2.next();
+                        _f.label = 3;
+                    case 3:
+                        if (!!values_2_1.done) return [3 /*break*/, 6];
+                        value = values_2_1.value;
+                        return [4 /*yield*/, [key, value]];
+                    case 4:
+                        _f.sent();
+                        _f.label = 5;
+                    case 5:
+                        values_2_1 = values_2.next();
+                        return [3 /*break*/, 3];
+                    case 6: return [3 /*break*/, 9];
+                    case 7:
+                        e_4_1 = _f.sent();
+                        e_4 = { error: e_4_1 };
+                        return [3 /*break*/, 9];
+                    case 8:
+                        try {
+                            if (values_2_1 && !values_2_1.done && (_e = values_2.return)) _e.call(values_2);
+                        }
+                        finally { if (e_4) throw e_4.error; }
+                        return [7 /*endfinally*/];
+                    case 9:
+                        _b = _a.next();
+                        return [3 /*break*/, 1];
+                    case 10: return [3 /*break*/, 13];
+                    case 11:
+                        e_5_1 = _f.sent();
+                        e_5 = { error: e_5_1 };
+                        return [3 /*break*/, 13];
+                    case 12:
+                        try {
+                            if (_b && !_b.done && (_d = _a.return)) _d.call(_a);
+                        }
+                        finally { if (e_5) throw e_5.error; }
+                        return [7 /*endfinally*/];
+                    case 13: return [2 /*return*/];
+                }
+            });
+        }
+        return gen();
+    };
+    Multimap.prototype.values = function () {
+        var self = this;
+        function gen() {
+            var _a, _b, _c, value, e_6_1;
+            var e_6, _d;
+            return __generator(this, function (_e) {
+                switch (_e.label) {
+                    case 0:
+                        _e.trys.push([0, 5, 6, 7]);
+                        _a = __values(self.entries()), _b = _a.next();
+                        _e.label = 1;
+                    case 1:
+                        if (!!_b.done) return [3 /*break*/, 4];
+                        _c = __read(_b.value, 2), value = _c[1];
+                        return [4 /*yield*/, value];
+                    case 2:
+                        _e.sent();
+                        _e.label = 3;
+                    case 3:
+                        _b = _a.next();
+                        return [3 /*break*/, 1];
+                    case 4: return [3 /*break*/, 7];
+                    case 5:
+                        e_6_1 = _e.sent();
+                        e_6 = { error: e_6_1 };
+                        return [3 /*break*/, 7];
+                    case 6:
+                        try {
+                            if (_b && !_b.done && (_d = _a.return)) _d.call(_a);
+                        }
+                        finally { if (e_6) throw e_6.error; }
+                        return [7 /*endfinally*/];
+                    case 7: return [2 /*return*/];
+                }
+            });
+        }
+        return gen();
+    };
+    Multimap.prototype.forEach = function (callback, thisArg) {
+        var e_7, _a;
+        try {
+            for (var _b = __values(this.entries()), _c = _b.next(); !_c.done; _c = _b.next()) {
+                var _d = __read(_c.value, 2), key = _d[0], value = _d[1];
+                callback.call(thisArg === undefined ? this : thisArg, value, key, this);
+            }
+        }
+        catch (e_7_1) { e_7 = { error: e_7_1 }; }
+        finally {
+            try {
+                if (_c && !_c.done && (_a = _b.return)) _a.call(_b);
+            }
+            finally { if (e_7) throw e_7.error; }
+        }
+    };
+    Multimap.prototype[Symbol.iterator] = function () {
+        return this.entries();
+    };
+    Multimap.prototype.asMap = function () {
+        var e_8, _a;
+        var ret = new Map();
+        try {
+            for (var _b = __values(this.keys()), _c = _b.next(); !_c.done; _c = _b.next()) {
+                var key = _c.value;
+                ret.set(key, this.operator.clone(this.get(key)));
+            }
+        }
+        catch (e_8_1) { e_8 = { error: e_8_1 }; }
+        finally {
+            try {
+                if (_c && !_c.done && (_a = _b.return)) _a.call(_b);
+            }
+            finally { if (e_8) throw e_8.error; }
+        }
+        return ret;
+    };
+    return Multimap;
+}());
+multimap.Multimap = Multimap;
+
+var __extends$1 = (commonjsGlobal && commonjsGlobal.__extends) || (function () {
+    var extendStatics = function (d, b) {
+        extendStatics = Object.setPrototypeOf ||
+            ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
+            function (d, b) { for (var p in b) if (Object.prototype.hasOwnProperty.call(b, p)) d[p] = b[p]; };
+        return extendStatics(d, b);
+    };
+    return function (d, b) {
+        extendStatics(d, b);
+        function __() { this.constructor = d; }
+        d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+    };
+})();
+Object.defineProperty(arraymultimap, "__esModule", { value: true });
+arraymultimap.ArrayMultimap = void 0;
+var multimap_1$1 = multimap;
+var ArrayMultimap = /** @class */ (function (_super) {
+    __extends$1(ArrayMultimap, _super);
+    function ArrayMultimap(iterable) {
+        return _super.call(this, new ArrayOperator(), iterable) || this;
+    }
+    Object.defineProperty(ArrayMultimap.prototype, Symbol.toStringTag, {
+        get: function () {
+            return "ArrayMultimap";
+        },
+        enumerable: false,
+        configurable: true
+    });
+    return ArrayMultimap;
+}(multimap_1$1.Multimap));
+arraymultimap.ArrayMultimap = ArrayMultimap;
+var ArrayOperator = /** @class */ (function () {
+    function ArrayOperator() {
+    }
+    ArrayOperator.prototype.create = function () {
+        return [];
+    };
+    ArrayOperator.prototype.clone = function (collection) {
+        return collection.slice();
+    };
+    ArrayOperator.prototype.add = function (value, collection) {
+        collection.push(value);
+        return true;
+    };
+    ArrayOperator.prototype.size = function (collection) {
+        return collection.length;
+    };
+    ArrayOperator.prototype.delete = function (value, collection) {
+        var index = collection.indexOf(value);
+        if (index > -1) {
+            collection.splice(index, 1);
+            return true;
+        }
+        return false;
+    };
+    ArrayOperator.prototype.has = function (value, collection) {
+        return collection.includes(value);
+    };
+    return ArrayOperator;
+}());
+
+var setmultimap = {};
+
+var __extends = (commonjsGlobal && commonjsGlobal.__extends) || (function () {
+    var extendStatics = function (d, b) {
+        extendStatics = Object.setPrototypeOf ||
+            ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
+            function (d, b) { for (var p in b) if (Object.prototype.hasOwnProperty.call(b, p)) d[p] = b[p]; };
+        return extendStatics(d, b);
+    };
+    return function (d, b) {
+        extendStatics(d, b);
+        function __() { this.constructor = d; }
+        d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+    };
+})();
+Object.defineProperty(setmultimap, "__esModule", { value: true });
+setmultimap.SetMultimap = void 0;
+var multimap_1 = multimap;
+var SetMultimap = /** @class */ (function (_super) {
+    __extends(SetMultimap, _super);
+    function SetMultimap(iterable) {
+        return _super.call(this, new SetOperator(), iterable) || this;
+    }
+    Object.defineProperty(SetMultimap.prototype, Symbol.toStringTag, {
+        get: function () {
+            return "SetMultimap";
+        },
+        enumerable: false,
+        configurable: true
+    });
+    return SetMultimap;
+}(multimap_1.Multimap));
+setmultimap.SetMultimap = SetMultimap;
+var SetOperator = /** @class */ (function () {
+    function SetOperator() {
+    }
+    SetOperator.prototype.create = function () {
+        return new Set();
+    };
+    SetOperator.prototype.clone = function (collection) {
+        return new Set(collection);
+    };
+    SetOperator.prototype.add = function (value, collection) {
+        var prev = collection.size;
+        collection.add(value);
+        return prev !== collection.size;
+    };
+    SetOperator.prototype.size = function (collection) {
+        return collection.size;
+    };
+    SetOperator.prototype.delete = function (value, collection) {
+        return collection.delete(value);
+    };
+    SetOperator.prototype.has = function (value, collection) {
+        return collection.has(value);
+    };
+    return SetOperator;
+}());
+
+(function (exports) {
+	Object.defineProperty(exports, "__esModule", { value: true });
+	exports.SetMultimap = exports.ArrayMultimap = void 0;
+	var arraymultimap_1 = arraymultimap;
+	Object.defineProperty(exports, "ArrayMultimap", { enumerable: true, get: function () { return arraymultimap_1.ArrayMultimap; } });
+	var setmultimap_1 = setmultimap;
+	Object.defineProperty(exports, "SetMultimap", { enumerable: true, get: function () { return setmultimap_1.SetMultimap; } });
+} (src));
+
+/**
+ * a basic texture cache object
+ * @ignore
+ */
+class TextureCache {
+
+    /**
+     * @ignore
+     */
+    constructor(max_size) {
+        // cache uses an array to allow for duplicated key
+        this.cache = new src.ArrayMultimap();
+        this.tinted = new Map();
+        this.units = new Map();
+        this.max_size = max_size || Infinity;
+        this.clear();
     }
 
     /**
      * @ignore
      */
-    uploadTexture(texture, w, h, b, force = false) {
-        var unit = this.renderer.cache.getUnit(texture);
-        var texture2D = this.boundTextures[unit];
-
-        if (typeof texture2D === "undefined" || force) {
-            this.createTexture2D(
-                unit,
-                texture.getTexture(),
-                this.renderer.settings.antiAlias ? this.gl.LINEAR : this.gl.NEAREST,
-                texture.repeat,
-                w,
-                h,
-                b,
-                texture.premultipliedAlpha
-            );
-        } else {
-            this.bindTexture2D(texture2D, unit);
-        }
-
-        return this.currentTextureUnit;
-    }
-
-    /**
-     * set/change the current projection matrix
-     * @name setProjection
-     * @memberof WebGLCompositor
-     * @param {Matrix3d} matrix
-     */
-    setProjection(matrix) {
-        this.activeShader.setUniform("uProjectionMatrix", matrix);
-    }
-
-    /**
-     * Select the shader to use for compositing
-     * @name useShader
-     * @see GLShader
-     * @memberof WebGLCompositor
-     * @param {GLShader} shader a reference to a GLShader instance
-     */
-    useShader(shader) {
-        if (this.activeShader !== shader) {
-            this.flush();
-            this.activeShader = shader;
-            this.activeShader.bind();
-            this.activeShader.setUniform("uProjectionMatrix", this.renderer.projectionMatrix);
-            this.activeShader.setVertexAttributes(this.gl, this.attributes, this.vertexByteSize);
-        }
-    }
-
-    /**
-     * Add a textured quad
-     * @name addQuad
-     * @memberof WebGLCompositor
-     * @param {TextureAtlas} texture Source texture atlas
-     * @param {number} x Destination x-coordinate
-     * @param {number} y Destination y-coordinate
-     * @param {number} w Destination width
-     * @param {number} h Destination height
-     * @param {number} u0 Texture UV (u0) value.
-     * @param {number} v0 Texture UV (v0) value.
-     * @param {number} u1 Texture UV (u1) value.
-     * @param {number} v1 Texture UV (v1) value.
-     * @param {number} tint tint color to be applied to the texture in UINT32 (argb) format
-     */
-    addQuad(texture, x, y, w, h, u0, v0, u1, v1, tint) {
-
-        if (this.color.alpha < 1 / 255) {
-            // Fast path: don't send fully transparent quads
-            return;
-        }
-
-        this.useShader(this.quadShader);
-
-        if (this.vertexBuffer.isFull(6)) {
-            // is the vertex buffer full if we add 6 more vertices
-            this.flush();
-        }
-
-        // upload and activate the texture if necessary
-        var unit = this.uploadTexture(texture);
-        // set fragement sampler accordingly
-        this.quadShader.setUniform("uSampler", unit);
-
-        // Transform vertices
-        var m = this.viewMatrix,
-            vec0 = V_ARRAY[0].set(x, y),
-            vec1 = V_ARRAY[1].set(x + w, y),
-            vec2 = V_ARRAY[2].set(x, y + h),
-            vec3 = V_ARRAY[3].set(x + w, y + h);
-
-        if (!m.isIdentity()) {
-            m.apply(vec0);
-            m.apply(vec1);
-            m.apply(vec2);
-            m.apply(vec3);
-        }
-
-        this.vertexBuffer.push(vec0.x, vec0.y, u0, v0, tint);
-        this.vertexBuffer.push(vec1.x, vec1.y, u1, v0, tint);
-        this.vertexBuffer.push(vec2.x, vec2.y, u0, v1, tint);
-        this.vertexBuffer.push(vec2.x, vec2.y, u0, v1, tint);
-        this.vertexBuffer.push(vec1.x, vec1.y, u1, v0, tint);
-        this.vertexBuffer.push(vec3.x, vec3.y, u1, v1, tint);
-    }
-
-    /**
-     * Flush batched texture operations to the GPU
-     * @param {number} [mode=gl.TRIANGLES] the GL drawing mode
-     * @memberof WebGLCompositor
-     */
-    flush(mode = this.mode) {
-        var vertex = this.vertexBuffer;
-        var vertexCount = vertex.vertexCount;
-
-        if (vertexCount > 0) {
-            var gl = this.gl;
-            var vertexSize = vertex.vertexSize;
-
-            // Copy data into stream buffer
-            if (this.renderer.WebGLVersion > 1) {
-                gl.bufferData(gl.ARRAY_BUFFER, vertex.toFloat32(), gl.STREAM_DRAW, 0, vertexCount * vertexSize);
-            } else {
-                gl.bufferData(gl.ARRAY_BUFFER, vertex.toFloat32(0, vertexCount * vertexSize), gl.STREAM_DRAW);
-            }
-
-            gl.drawArrays(mode, 0, vertexCount);
-
-            // clear the vertex buffer
-            vertex.clear();
-        }
-    }
-
-    /**
-     * Draw an array of vertices
-     * @name drawVertices
-     * @memberof WebGLCompositor
-     * @param {GLenum} mode primitive type to render (gl.POINTS, gl.LINE_STRIP, gl.LINE_LOOP, gl.LINES, gl.TRIANGLE_STRIP, gl.TRIANGLE_FAN, gl.TRIANGLES)
-     * @param {Vector2d[]} verts vertices
-     * @param {number} [vertexCount=verts.length] amount of points defined in the points array
-     */
-    drawVertices(mode, verts, vertexCount = verts.length) {
-        // use the primitive shader
-        this.useShader(this.primitiveShader);
-        // Set the line color
-        this.primitiveShader.setUniform("uColor", this.color);
-
-        var m = this.viewMatrix;
-        var vertex = this.vertexBuffer;
-        var m_isIdentity = m.isIdentity();
-
-        for (var i = 0; i < vertexCount; i++) {
-            if (!m_isIdentity) {
-                m.apply(verts[i]);
-            }
-            vertex.push(verts[i].x, verts[i].y);
-        }
-
-        // flush
-        this.flush(mode);
-    }
-
-    /**
-     * Specify the color values used when clearing color buffers. The values are clamped between 0 and 1.
-     * @name clearColor
-     * @memberof WebGLCompositor
-     * @param {number} [r=0] - the red color value used when the color buffers are cleared
-     * @param {number} [g=0] - the green color value used when the color buffers are cleared
-     * @param {number} [b=0] - the blue color value used when the color buffers are cleared
-     * @param {number} [a=0] - the alpha color value used when the color buffers are cleared
-     */
-    clearColor(r, g, b, a) {
-        this.gl.clearColor(r, g, b, a);
-    }
-
-    /**
-     * Clear the frame buffer
-     * @name clear
-     * @memberof WebGLCompositor
-     */
     clear() {
-        this.gl.clear(this.gl.COLOR_BUFFER_BIT);
+        this.cache.clear();
+        this.tinted.clear();
+        this.units.clear();
+        this.length = 0;
+    }
+
+    /**
+     * @ignore
+     */
+    validate() {
+        if (this.length >= this.max_size) {
+            // TODO: Merge textures instead of throwing an exception
+            throw new Error(
+                "Texture cache overflow: " + this.max_size +
+                " texture units available for this GPU."
+            );
+        }
+    }
+
+    /**
+     * @ignore
+     */
+    get(image, atlas) {
+        var entry;
+
+        if (typeof atlas === "undefined") {
+            entry = this.cache.get(image)[0];
+        } else {
+            // manage cases where a specific atlas is specified
+            this.cache.forEach((value, key) => {
+                var _atlas = value.getAtlas();
+                if (key === image && _atlas[0].width === atlas.framewidth && _atlas[0].height === atlas.frameheight) {
+                    entry = value;
+                }
+            });
+        }
+
+        if (typeof entry === "undefined") {
+            if (!atlas) {
+                atlas = createAtlas(image.width, image.height, image.src ? getBasename(image.src) : undefined);
+            }
+            entry = new TextureAtlas(atlas, image, false);
+            this.set(image, entry);
+        }
+
+        return entry;
+    }
+
+    /**
+     * @ignore
+     */
+    delete(image) {
+        if (!this.cache.has(image)) {
+            this.cache.delete(image);
+        }
+    }
+
+    /**
+     * @ignore
+     */
+    tint(src, color) {
+        // make sure the src is in the cache
+        var image_cache = this.tinted.get(src);
+
+        if (image_cache === undefined) {
+            image_cache = this.tinted.set(src, new Map());
+        }
+
+        if (!image_cache.has(color)) {
+            image_cache.set(color, renderer.tint(src, color, "multiply"));
+        }
+
+        return image_cache.get(color);
+    }
+
+    /**
+     * @ignore
+     */
+    set(image, texture) {
+        var width = image.width;
+        var height = image.height;
+
+        // warn if a non POT texture is added to the cache when using WebGL1
+        if (renderer.WebGLVersion === 1 && (!isPowerOfTwo(width) || !isPowerOfTwo(height))) {
+            var src = typeof image.src !== "undefined" ? image.src : image;
+            console.warn(
+                "[Texture] " + src + " is not a POT texture " +
+                "(" + width + "x" + height + ")"
+            );
+        }
+        return this.cache.put(image, texture);
+    }
+
+    /**
+     * @ignore
+     */
+    getUnit(texture) {
+        if (!this.units.has(texture)) {
+            this.validate();
+            this.units.set(texture, this.length++);
+        }
+        return this.units.get(texture);
     }
 }
 
@@ -31737,7 +31690,7 @@ var settings = {
  */
 function autoDetectRenderer(options) {
     try {
-        if (device.isWebGLSupported(options)) {
+        if (isWebGLSupported(options)) {
             return new WebGLRenderer(options);
         }
     } catch (e) {
@@ -31766,7 +31719,7 @@ function onresize() {
         }
 
         // get the maximum canvas size within the parent div containing the canvas container
-        var nodeBounds = device.getParentBounds(getParent());
+        var nodeBounds = getParentBounds(getParent());
 
         var _max_width = Math.min(canvasMaxWidth, nodeBounds.width);
         var _max_height = Math.min(canvasMaxHeight, nodeBounds.height);
@@ -31996,7 +31949,7 @@ function init(width, height, options) {
         false
     );
 
-    if (device.ScreenOrientation === true) {
+    if (screenOrientation === true) {
         globalThis.screen.orientation.onchange = function (e) {
             emit(WINDOW_ONORIENTATION_CHANGE, e);
         };
@@ -32030,8 +31983,14 @@ function init(width, height, options) {
     }
 
     // add our canvas (default to document.body if settings.parent is undefined)
-    parent = device.getElement(typeof settings.parent !== "undefined" ? settings.parent : document.body);
+    parent = getElement(typeof settings.parent !== "undefined" ? settings.parent : document.body);
     parent.appendChild(renderer.getScreenCanvas());
+
+    // Mobile browser hacks
+    if (platform.isMobile) {
+        // Prevent the webview from moving on a swipe
+        enableSwipe(false);
+    }
 
     // trigger an initial resize();
     onresize();
@@ -32049,16 +32008,16 @@ function init(width, height, options) {
 
     if (settings.consoleHeader !== false) {
         var renderType = (renderer instanceof CanvasRenderer) ? "CANVAS" : "WebGL" + renderer.WebGLVersion;
-        var audioType = device.hasWebAudio ? "Web Audio" : "HTML5 Audio";
+        var audioType = hasWebAudio ? "Web Audio" : "HTML5 Audio";
         var gpu_renderer = (typeof renderer.GPURenderer === "string") ? " (" + renderer.GPURenderer + ")" : "";
         // output video information in the console
         console.log(
             renderType + " renderer" + gpu_renderer + " | " +
             audioType + " | " +
-            "pixel ratio " + device.devicePixelRatio + " | " +
-            (device.nodeJS ? "node.js" : device.isMobile ? "mobile" : "desktop") + " | " +
-            device.getScreenOrientation() + " | " +
-            device.language
+            "pixel ratio " + devicePixelRatio + " | " +
+            (platform.nodeJS ? "node.js" : platform.isMobile ? "mobile" : "desktop") + " | " +
+            getScreenOrientation() + " | " +
+            language
         );
         console.log( "resolution: " + "requested " + width + "x" + height +
             ", got " + renderer.getWidth() + "x" + renderer.getHeight()
@@ -32075,18 +32034,18 @@ function init(width, height, options) {
  * @function video.createCanvas
  * @param {number} width width
  * @param {number} height height
- * @param {boolean} [offscreenCanvas=false] will return an OffscreenCanvas if supported
+ * @param {boolean} [returnOffscreenCanvas=false] will return an OffscreenCanvas if supported
  * @returns {HTMLCanvasElement|OffscreenCanvas}
  */
-function createCanvas(width, height, offscreenCanvas = false) {
+function createCanvas(width, height, returnOffscreenCanvas = false) {
     var _canvas;
 
     if (width === 0 || height === 0) {
         throw new Error("width or height was zero, Canvas could not be initialized !");
     }
 
-    if (device.OffscreenCanvas === true && offscreenCanvas === true) {
-        _canvas = new OffscreenCanvas(0, 0);
+    if (offscreenCanvas === true && returnOffscreenCanvas === true) {
+        _canvas = new globalThis.OffscreenCanvas(0, 0);
         // stubbing style for compatibility,
         // as OffscreenCanvas is detached from the DOM
         if (typeof _canvas.style === "undefined") {
@@ -32122,7 +32081,7 @@ function scale(x, y) {
     var canvas = renderer.getScreenCanvas();
     var context = renderer.getScreenContext();
     var settings = renderer.settings;
-    var pixelRatio = device.devicePixelRatio;
+    var pixelRatio = devicePixelRatio;
 
     var w = settings.zoomX = canvas.width * x * pixelRatio;
     var h = settings.zoomY = canvas.height * y * pixelRatio;
@@ -32892,10 +32851,10 @@ class BasePlugin {
          * this can be overridden by the plugin
          * @public
          * @type {string}
-         * @default "12.0.0"
+         * @default "13.0.0"
          * @name plugin.Base#version
          */
-        this.version = "12.0.0";
+        this.version = "13.0.0";
     }
 }
 
@@ -37553,34 +37512,7 @@ function warning(deprecated, replacement, version) {
     }
 }
 /**
- * @public
- * @name turnOnPointerLock
- * @returns {boolean} return true if the request was successfully submitted
- * @memberof device#
- * @deprecated since 10.3.0
- * @see input.requestPointerLock
- */
-device.turnOnPointerLock = function () {
-    warning("device.turnOnPointerLock()", "input.requestPointerLock()", "10.3.0");
-    return requestPointerLock();
-};
-
-/**
- * @public
- * @name turnOffPointerLock
- * @returns {boolean} return true if the request was successfully submitted
- * @memberof device#
- * @deprecated since 10.3.0
- * @see input.exitPointerLock
- */
-device.turnOffPointerLock = function () {
-    warning("device.turnOffPointerLock()", "input.exitPointerLock()", "10.3.0");
-    return exitPointerLock();
-};
-
-/**
  * Alias of {@link TextureAtlas}
- *
  * @public
  * @name Texture
  * @class
@@ -37647,7 +37579,7 @@ class DroptargetEntity extends DropTarget {
  * @name version
  * @type {string}
  */
-const version = "12.0.0";
+const version = "13.0.0";
 
 
 /**
@@ -37752,7 +37684,7 @@ function boot() {
     initialized = true;
 }
 // call the library init function when ready
-device.onReady(function () {
+onReady(function () {
     {
        boot();
     }

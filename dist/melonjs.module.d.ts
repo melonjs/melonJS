@@ -9740,29 +9740,7 @@ export namespace collision {
      */
     function rayCast(line: Line, result?: Renderable[]): Renderable[];
 }
-export namespace device {
-    const devicePixelRatio: number;
-    const isFullscreen: boolean;
-    const sound: boolean;
-    /**
-     * @public
-     * @name turnOnPointerLock
-     * @returns {boolean} return true if the request was successfully submitted
-     * @memberof device#
-     * @deprecated since 10.3.0
-     * @see input.requestPointerLock
-     */
-    function turnOnPointerLock(): boolean;
-    /**
-     * @public
-     * @name turnOffPointerLock
-     * @returns {boolean} return true if the request was successfully submitted
-     * @memberof device#
-     * @deprecated since 10.3.0
-     * @see input.exitPointerLock
-     */
-    function turnOffPointerLock(): boolean;
-}
+export var device: any;
 export var event: Readonly<{
     __proto__: any;
     DOM_READY: string;
@@ -11157,7 +11135,7 @@ export var video: Readonly<{
     AUTO: 2;
     readonly parent: HTMLElement;
     scaleRatio: Vector2d;
-    readonly renderer: CanvasRenderer | WebGLRenderer;
+    readonly renderer: WebGLRenderer | CanvasRenderer;
     init: typeof init;
     createCanvas: typeof createCanvas;
     getParent: typeof getParent;
@@ -12568,10 +12546,10 @@ declare function init(width: number, height: number, options?: {
  * @function video.createCanvas
  * @param {number} width width
  * @param {number} height height
- * @param {boolean} [offscreenCanvas=false] will return an OffscreenCanvas if supported
+ * @param {boolean} [returnOffscreenCanvas=false] will return an OffscreenCanvas if supported
  * @returns {HTMLCanvasElement|OffscreenCanvas}
  */
-declare function createCanvas(width: number, height: number, offscreenCanvas?: boolean): HTMLCanvasElement | OffscreenCanvas;
+declare function createCanvas(width: number, height: number, returnOffscreenCanvas?: boolean): HTMLCanvasElement | OffscreenCanvas;
 /**
  * return a reference to the parent DOM element holding the main canvas
  * @function video.getParent
