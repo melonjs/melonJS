@@ -75,6 +75,7 @@ export let platform = device_platform;
 /**
  * True if the browser supports Touch Events
  * @name touchEvent
+ * @memberof device
  * @type {boolean}
  * @readonly
  * @public
