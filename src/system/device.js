@@ -9,12 +9,12 @@ import * as device_platform from "./platform.js"; // export * as name1 from …;
  * @namespace device
  */
 
-var accelInitialized = false;
-var deviceOrientationInitialized = false;
+let accelInitialized = false;
+let deviceOrientationInitialized = false;
 // swipe utility fn & flag
-var swipeEnabled = true;
+let swipeEnabled = true;
 // a cache DOMRect object
-var domRect = {left: 0, top: 0, x: 0, y: 0, width: 0, height: 0, right: 0, bottom: 0};
+let domRect = {left: 0, top: 0, x: 0, y: 0, width: 0, height: 0, right: 0, bottom: 0};
 
 function disableSwipeFn(e) {
     e.preventDefault();
@@ -441,7 +441,7 @@ export function onReady(fn) {
  * @param {boolean} [enable=true] enable or disable swipe.
  */
 export function enableSwipe(enable) {
-    var moveEvent = pointerEvent ? "pointermove" : (touchEvent ? "touchmove" : "mousemove");
+    let moveEvent = pointerEvent ? "pointermove" : (touchEvent ? "touchmove" : "mousemove");
     if (enable !== false) {
         if (swipeEnabled === false) {
             globalThis.document.removeEventListener(moveEvent, disableSwipeFn);
@@ -516,14 +516,14 @@ export function exitFullscreen() {
  * @returns {string} the screen orientation
  */
 export function getScreenOrientation() {
-    var PORTRAIT = "portrait";
-    var LANDSCAPE = "landscape";
+    const PORTRAIT = "portrait";
+    const LANDSCAPE = "landscape";
 
-    var screen = globalThis.screen;
+    let screen = globalThis.screen;
 
     // first try using "standard" values
     if (screenOrientation === true) {
-        var orientation = prefixed("orientation", screen);
+        let orientation = prefixed("orientation", screen);
         if (typeof orientation !== "undefined" && typeof orientation.type === "string") {
             // Screen Orientation API specification
             return orientation.type;
@@ -553,9 +553,9 @@ export function getScreenOrientation() {
  * @returns {boolean} true if the orientation was unsuccessfully locked
  */
 export function lockOrientation(orientation) {
-    var screen = globalThis.screen;
+    let screen = globalThis.screen;
     if (typeof screen !== "undefined") {
-        var _lockOrientation = prefixed("lockOrientation", screen);
+        let _lockOrientation = prefixed("lockOrientation", screen);
         if (typeof _lockOrientation !== "undefined") {
             return _lockOrientation(orientation);
         }
@@ -573,9 +573,9 @@ export function lockOrientation(orientation) {
  * @returns {boolean} true if the orientation was unsuccessfully unlocked
  */
 export function unlockOrientation() {
-    var screen = globalThis.screen;
+    let screen = globalThis.screen;
     if (typeof screen !== "undefined") {
-        var _unlockOrientation = prefixed("unlockOrientation", screen);
+        let _unlockOrientation = prefixed("unlockOrientation", screen);
         if (typeof _unlockOrientation !== "undefined") {
             return _unlockOrientation();
         }
@@ -633,7 +633,7 @@ export function getStorage(type = "local") {
  * @returns {HTMLElement} the parent Element
  */
 export function getParentElement(element) {
-    var target = getElement(element);
+    let target = getElement(element);
 
     if (target.parentNode !== null) {
         target = target.parentNode;
@@ -651,7 +651,7 @@ export function getParentElement(element) {
  * @returns {HTMLElement} the corresponding DOM Element or null if not existing
  */
 export function getElement(element) {
-    var target = null;
+    let target = null;
 
     if (element !== "undefined") {
         if (typeof element === "string") {
@@ -714,10 +714,10 @@ export function getParentBounds(element) {
  * @returns {boolean} true if WebGL is supported
  */
 export function isWebGLSupported(options) {
-    var _supported = false;
+    let _supported = false;
     try {
-        var canvas = document.createElement("canvas");
-        var ctxOptions = {
+        let canvas = document.createElement("canvas");
+        let ctxOptions = {
             stencil: true,
             failIfMajorPerformanceCaveat: options.failIfMajorPerformanceCaveat
         };
