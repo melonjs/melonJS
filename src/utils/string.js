@@ -58,3 +58,16 @@ export function toHex(str) {
     }
     return res;
 };
+
+/**
+ * returns true if the given string is a data url in the `data:[<mediatype>][;base64],<data>` format.
+ * (this will not test the validity of the Data or Base64 encoding)
+ * @public
+ * @memberof utils.string
+ * @name isDataUrl
+ * @param {string} str the string (url) to be tested
+ * @returns {boolean} true if the string is a data url
+ */
+export function isDataUrl(str) {
+    return /^data:(.+);base64,(.+)$/.test(str);
+};

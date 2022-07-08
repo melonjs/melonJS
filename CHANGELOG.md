@@ -4,14 +4,14 @@
 
 ### added
 - Tests: added base64 encoded data testing for image and audio assets
+- Utils: new `isDataUrl()` helper returning true if the given url is in the `data:[<mediatype>][;base64],<data>` format.
 
 ### Changed
 - Core: full ES6 refactoring of `me.device`, and API clean-up (@see https://github.com/melonjs/melonJS/wiki/Upgrade-Guide#120x-to-130x-stable)
 - Loader: `onload` and `onerror` callbacks are now optionals when directly loading assets (easier with base64 encoded assets)
 
 ### Fixed
-- Loader: fix loading/preloading of base64 audio assets
-- Loader: fix loading/preloading of base64 encoded FontFace when the given string is not formatted as "url(data:application/...)"
+- Loader: fix loading/preloading of base64 audio assets, and base64 encoded FontFace
 
 ## [12.0.0] (melonJS 2) - _2022-06-27_
 

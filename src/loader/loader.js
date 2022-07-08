@@ -5,6 +5,7 @@ import * as audio from "./../audio/audio.js";
 import state from "./../state/state.js";
 import level from "./../level/level.js";
 import * as TMXUtils from "./../level/tiled/TMXUtils.js";
+import { isDataUrl } from "./../utils/string.js";
 
 
 // contains all the images loaded
@@ -88,7 +89,8 @@ function preloadImage(img, onload, onerror) {
  */
 function preloadFontFace(data, onload, onerror) {
 
-    if (data.src.match(/^data:(.+);base64,(.+)$/)) {
+    if (isDataUrl(data.src) === true) {
+        // make sure it in the `url(data:[<mediatype>][;base64],<data>)` format as expected by FontFace
         if (!data.src.startsWith("url(")) {
             data.src = "url(" + data.src + ")";
         }

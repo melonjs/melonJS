@@ -82,6 +82,17 @@ describe("utils", function () {
             expect(me.utils.string.isNumeric("-123")).toEqual(true);
             expect(me.utils.string.isNumeric("+123")).toEqual(true);
         });
+
+        it("isDataUrl", function () {
+            // valid urls
+            expect(me.utils.string.isDataUrl("data:application/font-woff2;charset=utf-8;base64,d09GMgABAAAAAByYABAAAAAAixgAAB")).toEqual(true);
+            expect(me.utils.string.isDataUrl("data:audio/mpeg;base64,//PAxAAAAAAAAAAAAEluZm8AAAAPAAAAEwAAIKYADQ0ND")).toEqual(true);
+            expect(me.utils.string.isDataUrl("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAQAAAAEACAMAAABrrFhUAAAA8FBMVEUgICBrqDHRZVtqp")).toEqual(true);
+            // invalid urls
+            expect(me.utils.string.isDataUrl("data:image/png;iVBORw0KGgoAAAANSUhEUgAAAQAAAAEACAMAAABrrFhUAAAA8FBMVEUgICBrqDHRZVtqp")).toEqual(false);
+            expect(me.utils.string.isDataUrl("data:iVBORw0KGgoAAAANSUhEUgAAAQAAAAEACAMAAABrrFhUAAAA8FBMVEUgICBrqDHRZVtqp")).toEqual(false);
+            expect(me.utils.string.isDataUrl("iVBORw0KGgoAAAANSUhEUgAAAQAAAAEACAMAAABrrFhUAAAA8FBMVEUgICBrqDHRZVtqp")).toEqual(false);
+        });
     });
 
     describe("UriFragment", function () {

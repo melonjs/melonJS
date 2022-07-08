@@ -2,6 +2,7 @@
 import {Howl, Howler} from "howler";
 import {clamp} from "./../math/math.js";
 import loader from "./../loader/loader.js";
+import { isDataUrl } from "./../utils/string.js";
 
 /**
  * @namespace audio
@@ -149,7 +150,7 @@ export function load(sound, html5, onload_cb, onerror_cb) {
     if (audioExts.length === 0) {
         throw new Error("target audio extension(s) should be set through me.audio.init() before calling the preloader.");
     }
-    if (/^data:[^;]+;base64,/.test(sound.src)) {
+    if (isDataUrl(sound.src) === true) {
         urls.push(sound.src);
     } else {
         for (var i = 0; i < audioExts.length; i++) {
