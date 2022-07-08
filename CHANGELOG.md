@@ -6,6 +6,7 @@
 - Tests: added base64 encoded data testing for image and audio assets
 
 ### Changed
+- Core: full ES6 refactoring of `me.device`, and API clean-up (@see https://github.com/melonjs/melonJS/wiki/Upgrade-Guide#120x-to-130x-stable)
 - Loader: `onload` and `onerror` callbacks are now optionals when directly loading assets (easier with base64 encoded assets)
 
 ### Fixed
