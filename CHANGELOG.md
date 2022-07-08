@@ -11,6 +11,7 @@
 
 ### Fixed
 - Loader: fix loading/preloading of base64 audio assets
+- Loader: fix loading/preloading of base64 encoded FontFace when the given string is not formatted as "url(data:application/...)"
 
 ## [12.0.0] (melonJS 2) - _2022-06-27_
 

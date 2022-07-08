@@ -87,7 +87,15 @@ function preloadImage(img, onload, onerror) {
  * @ignore
  */
 function preloadFontFace(data, onload, onerror) {
+
+    if (data.src.match(/^data:(.+);base64,(.+)$/)) {
+        if (!data.src.startsWith("url(")) {
+            data.src = "url(" + data.src + ")";
+        }
+    }
+
     var font = new FontFace(data.name, data.src);
+
     // loading promise
     font.load().then(() => {
         // apply the font after the font has finished downloading
