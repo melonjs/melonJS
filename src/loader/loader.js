@@ -30,7 +30,7 @@ var timerId = 0;
 function checkLoadStatus(onload) {
     if (loadCount === resourceCount) {
         // wait 1/2s and execute callback (cheap workaround to ensure everything is loaded)
-        if (onload || loader.onload) {
+        if (typeof onload === "function" || loader.onload) {
             // make sure we clear the timer
             clearTimeout(timerId);
             // trigger the onload callback
@@ -66,8 +66,12 @@ function checkLoadStatus(onload) {
 function preloadImage(img, onload, onerror) {
     // create new Image object and add to list
     imgList[img.name] = new Image();
-    imgList[img.name].onload = onload;
-    imgList[img.name].onerror = onerror;
+    if (typeof onload === "function") {
+        imgList[img.name].onload = onload;
+    }
+    if (typeof onerror === "function") {
+        imgList[img.name].onerror = onerror;
+    }
     if (typeof (loader.crossOrigin) === "string") {
         imgList[img.name].crossOrigin = loader.crossOrigin;
     }
@@ -89,11 +93,15 @@ function preloadFontFace(data, onload, onerror) {
         // apply the font after the font has finished downloading
         document.fonts.add(font);
         document.body.style.fontFamily = data.name;
-        // onloaded callback
-        onload();
+        if (typeof onload === "function") {
+            // onloaded callback
+            onload();
+        }
     }, function () {
-        // rejected
-        onerror(data.name);
+        if (typeof onerror === "function") {
+            // rejected
+            onerror(data.name);
+        }
     });
 };
 
@@ -119,7 +127,9 @@ function preloadTMX(tmxData, onload, onerror) {
     //if the data is in the tmxData object, don't get it via a XMLHTTPRequest
     if (tmxData.data) {
         addToTMXList(tmxData.data);
-        onload();
+        if (typeof onload === "function") {
+            onload();
+        }
         return;
     }
 
@@ -190,9 +200,11 @@ function preloadTMX(tmxData, onload, onerror) {
                 addToTMXList(result);
 
                 // fire the callback
-                onload();
+                if (typeof onload === "function") {
+                    onload();
+                }
             }
-            else {
+            else if (typeof onerror === "function") {
                 onerror(tmxData.name);
             }
         }
@@ -224,10 +236,12 @@ function preloadJSON(data, onload, onerror) {
             if ((xmlhttp.status === 200) || ((xmlhttp.status === 0) && xmlhttp.responseText)) {
                 // get the Texture Packer Atlas content
                 jsonList[data.name] = JSON.parse(xmlhttp.responseText);
-                // fire the callback
-                onload();
+                if (typeof onload === "function") {
+                    // fire the callback
+                    onload();
+                }
             }
-            else {
+            else if (typeof onerror === "function") {
                 onerror(data.name);
             }
         }
@@ -257,8 +271,11 @@ function preloadBinary(data, onload, onerror) {
                 buffer[i] = String.fromCharCode(byteArray[i]);
             }
             binList[data.name] = buffer.join("");
-            // callback
-            onload();
+            if (typeof onload === "function") {
+                // callback
+                onload();
+            }
+
         }
     };
     httpReq.send();
@@ -278,15 +295,19 @@ function preloadJavascript(data, onload, onerror) {
     }
     script.defer = true;
 
-    script.onload = () => {
-        // callback
-        onload();
-    };
+    if (typeof onload === "function") {
+        script.onload = () => {
+            // callback
+            onload();
+        };
+    }
 
-    script.onerror = () => {
-        // callback
-        onerror(data.name);
-    };
+    if (typeof onerror === "function") {
+        script.onerror = () => {
+            // callback
+            onerror(data.name);
+        };
+    }
 
     document.getElementsByTagName("body")[0].appendChild(script);
 };
@@ -453,6 +474,8 @@ var loader = {
      *   {name: "tileset-platformer", type: "image",  src: "data/map/tileset.png"},
      *   // PNG packed texture
      *   {name: "texture", type:"image", src: "data/gfx/texture.png"}
+     *   // PNG base64 encoded image
+     *   {name: "texture", type:"image", src: "data:image/png;base64,iVBORw0KAAAQAAAAEACA..."}
      *   // TSX file
      *   {name: "meta_tiles", type: "tsx", src: "data/map/meta_tiles.tsx"},
      *   // TMX level (XML & JSON)
@@ -463,6 +486,8 @@ var loader = {
      *   // audio resources
      *   {name: "bgmusic", type: "audio",  src: "data/audio/"},
      *   {name: "cling",   type: "audio",  src: "data/audio/"},
+     *   // base64 encoded audio resources
+     *   {name: "band",   type: "audio",  src: "data:audio/wav;base64,..."},
      *   // binary file
      *   {name: "ymTrack", type: "binary", src: "data/audio/main.ym"},
      *   // JSON file (used for texturePacker)
@@ -509,13 +534,14 @@ var loader = {
      * @param {string} res.type  "audio", binary", "image", "json", "tmx", "tsx"
      * @param {string} res.src  path and/or file name of the resource (for audio assets only the path is required)
      * @param {boolean} [res.stream] Set to true to force HTML5 Audio, which allows not to wait for large file to be downloaded before playing.
-     * @param {Function} onload function to be called when the resource is loaded
-     * @param {Function} onerror function to be called in case of error
+     * @param {Function} [onload] function to be called when the resource is loaded
+     * @param {Function} [onerror] function to be called in case of error
      * @returns {number} the amount of corresponding resource to be preloaded
      * @example
      * // load an image asset
      * me.loader.load({name: "avatar",  type:"image",  src: "data/avatar.png"}, this.onload.bind(this), this.onerror.bind(this));
-     *
+     * // load a base64 image asset
+     *  me.loader.load({name: "avatar", type:"image", src: "data:image/png;base64,iVBORw0KAAAQAAAAEACA..."};
      * // start loading music
      * me.loader.load({
      *     name   : "bgmusic",

@@ -107,7 +107,7 @@ describe("me.Sprite", function () {
         expect(sprite.isCurrentAnimation("yoyo")).toEqual(false);
         expect(sprite.isCurrentAnimation("test")).toEqual(true);
     });
-    
+
     it("me.Sprite onComplete of setCurrentAnimation shall be called when sprite array of addAnimation is > 0", function () {
 
         var randomSpriteLength = Math.floor(Math.random() * Math.floor(100))

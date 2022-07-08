@@ -4,7 +4,8 @@ import * as event from "./../system/event.js";
 import Sprite from "./../renderable/sprite.js";
 import Renderable from "./../renderable/renderable.js";
 import Stage from "./../state/stage.js";
-import melonjs_logo from "./melonjs_logo.png";
+import loader from "./loader.js";
+import logo_url from "./melonjs_logo.png";
 
 
 // a basic progress bar object
@@ -84,19 +85,27 @@ class DefaultLoadingScreen extends Stage {
             barHeight
         ), 1);
 
-        // TODO: create a sprite or texture from a Base64 encoded image
-        var image = new Image();
-        image.src = melonjs_logo;
+        // load the melonJS logo
+        loader.load({name: "melonjs_logo", type: "image", src: logo_url});
 
         // melonJS logo
         world.addChild(new Sprite(
             renderer.getWidth() / 2,
             renderer.getHeight() / 2, {
-                image : image,
+                image : "melonjs_logo",
                 framewidth : 256,
                 frameheight : 256
             }), 2
         );
+    }
+
+    /**
+     * Called by engine before deleting the object
+     * @ignore
+     */
+    onDestroyEvent() {
+        // cancel the callback
+        loader.unload({name: "melonjs_logo", type:"image"});
     }
 };
 

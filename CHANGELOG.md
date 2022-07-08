@@ -1,5 +1,16 @@
 # Changelog
 
+## [13.0.0] (melonJS 2) - _2022-xx-xx_
+
+### added
+- Tests: added base64 encoded data testing for image and audio assets
+
+### Changed
+- Loader: `onload` and `onerror` callbacks are now optionals when directly loading assets (easier with base64 encoded assets)
+
+### Fixed
+- Loader: fix loading/preloading of base64 audio assets
+
 ## [12.0.0] (melonJS 2) - _2022-06-27_
 
 ### Changed

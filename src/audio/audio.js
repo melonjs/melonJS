@@ -149,9 +149,14 @@ export function load(sound, html5, onload_cb, onerror_cb) {
     if (audioExts.length === 0) {
         throw new Error("target audio extension(s) should be set through me.audio.init() before calling the preloader.");
     }
-    for (var i = 0; i < audioExts.length; i++) {
-        urls.push(sound.src + sound.name + "." + audioExts[i] + loader.nocache);
+    if (/^data:[^;]+;base64,/.test(sound.src)) {
+        urls.push(sound.src);
+    } else {
+        for (var i = 0; i < audioExts.length; i++) {
+            urls.push(sound.src + sound.name + "." + audioExts[i] + loader.nocache);
+        }
     }
+
     audioTracks[sound.name] = new Howl({
         src : urls,
         volume : Howler.volume(),
