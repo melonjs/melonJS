@@ -31,10 +31,7 @@
     "url": "https://github.com/melonjs/melonJS/issues"
   },
   "license": "MIT",
-  "author": {
-    "name": "Olivier Biot",
-    "email": "contact@melonjs.org"
-  },
+  "author": "Olivier Biot (AltByte Pte Ltd)",
   "funding": "https://github.com/sponsors/melonjs",
   "engines": {
     "node": ">= 12"

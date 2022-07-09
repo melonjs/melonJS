@@ -16,7 +16,7 @@ const license = [
     " * http://www.melonjs.org",
     " * " + pkg.name + " is licensed under the MIT License.",
     " * http://www.opensource.org/licenses/mit-license",
-    " * @copyright (C) 2011 - " + (new Date()).getFullYear() + " " + pkg.author.name,
+    " * @copyright (C) 2011 - " + (new Date()).getFullYear() + " " + pkg.author,
     " */"
 ].join("\n");
 
