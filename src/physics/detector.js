@@ -1,7 +1,7 @@
 import * as SAT from "./sat.js";
 import ResponseObject from "./response.js";
 import Vector2d from "./../math/vector2.js";
-import { world } from "./../game.js";
+import game from "./../game.js";
 
 // a dummy object when using Line for raycasting
 let dummyObj = {
@@ -50,7 +50,7 @@ function shouldCollide(a, b) {
 export function collisionCheck(objA, response = globalResponse) {
     var collisionCounter = 0;
     // retreive a list of potential colliding objects from the game world
-    var candidates = world.broadphase.retrieve(objA);
+    var candidates = game.world.broadphase.retrieve(objA);
 
     for (var i = candidates.length, objB; i--, (objB = candidates[i]);) {
 
@@ -139,7 +139,7 @@ export function rayCast(line, result = []) {
     var collisionCounter = 0;
 
     // retrieve a list of potential colliding objects from the game world
-    var candidates = world.broadphase.retrieve(line);
+    var candidates = game.world.broadphase.retrieve(line);
 
     for (var i = candidates.length, objB; i--, (objB = candidates[i]);) {
 

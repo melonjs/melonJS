@@ -1,6 +1,6 @@
 import timer from "./../system/timer.js";
 import * as event from "./../system/event.js";
-import { world, lastUpdate } from "./../game.js";
+import game from "./../game.js";
 import { Easing } from "./easing.js";
 import { Interpolation } from "./interpolation.js";
 
@@ -72,7 +72,7 @@ class Tween {
         this._onUpdateCallback = null;
         this._onCompleteCallback = null;
         // tweens are synchronized with the game update loop
-        this._tweenTimeTracker = lastUpdate;
+        this._tweenTimeTracker = game.lastUpdate;
 
         // reset flags to default value
         this.isPersistent = false;
@@ -170,7 +170,7 @@ class Tween {
         this._onStartCallbackFired = false;
 
         // add the tween to the object pool on start
-        world.addChild(this);
+        game.world.addChild(this);
 
         this._startTime =  time + this._delayTime;
 
@@ -212,7 +212,7 @@ class Tween {
      */
     stop() {
         // remove the tween from the world container
-        world.removeChildNow(this);
+        game.world.removeChildNow(this);
         return this;
     }
 
@@ -349,7 +349,7 @@ class Tween {
 
         // the original Tween implementation expect
         // a timestamp and not a time delta
-        this._tweenTimeTracker = (lastUpdate > this._tweenTimeTracker) ? lastUpdate : this._tweenTimeTracker + dt;
+        this._tweenTimeTracker = (game.lastUpdate > this._tweenTimeTracker) ? game.lastUpdate : this._tweenTimeTracker + dt;
         var time = this._tweenTimeTracker;
 
         var property;
@@ -442,7 +442,7 @@ class Tween {
 
             } else {
                 // remove the tween from the world container
-                world.removeChildNow(this);
+                game.world.removeChildNow(this);
 
                 if ( this._onCompleteCallback !== null ) {
 

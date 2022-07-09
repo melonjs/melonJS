@@ -1,7 +1,7 @@
 import Vector2d from "./../math/vector2.js";
 import Container from "./../renderable/container.js";
 import * as arrayUtil from "./../utils/array.js";
-import { viewport } from "./../game.js";
+import game from "./../game.js";
 
 /*
  * A QuadTree implementation in JavaScript, a 2d spatial subdivision algorithm.
@@ -125,7 +125,7 @@ class QuadTree {
 
         // use game world coordinates for floating items
         if (item.isFloating === true) {
-            pos = viewport.localToWorld(bounds.left, bounds.top, QT_VECTOR);
+            pos = game.viewport.localToWorld(bounds.left, bounds.top, QT_VECTOR);
         } else {
             pos = QT_VECTOR.set(item.left, item.top);
         }

@@ -1,7 +1,7 @@
 import { renderer } from "./../video/video.js";
 import * as event from "./../system/event.js";
 import pool from "./../system/pooling.js";
-import { viewport } from "./../game.js";
+import game from "./../game.js";
 import Sprite from "./sprite.js";
 import * as stringUtil from "./../utils/string.js";
 
@@ -134,7 +134,7 @@ class ImageLayer extends Sprite {
                 this.repeatY = true;
                 break;
         }
-        this.resize(viewport.width, viewport.height);
+        this.resize(game.viewport.width, game.viewport.height);
         this.createPattern();
     }
 
@@ -146,13 +146,13 @@ class ImageLayer extends Sprite {
         event.on(event.VIEWPORT_ONRESIZE, this.resize, this);
         // force a first refresh when the level is loaded
         event.once(event.LEVEL_LOADED, () => {
-            this.updateLayer(viewport.pos);
+            this.updateLayer(game.viewport.pos);
         });
         // in case the level is not added to the root container,
         // the onActivateEvent call happens after the LEVEL_LOADED event
         // so we need to force a first update
         if (this.ancestor.root !== true) {
-            this.updateLayer(viewport.pos);
+            this.updateLayer(game.viewport.pos);
         }
     }
 
@@ -193,8 +193,8 @@ class ImageLayer extends Sprite {
 
         var width = this.width,
             height = this.height,
-            bw = viewport.bounds.width,
-            bh = viewport.bounds.height,
+            bw = game.viewport.bounds.width,
+            bh = game.viewport.bounds.height,
             ax = this.anchorPoint.x,
             ay = this.anchorPoint.y,
 
@@ -204,8 +204,8 @@ class ImageLayer extends Sprite {
              * See https://github.com/melonjs/melonJS/issues/741#issuecomment-138431532
              * for a thorough description of how this works.
              */
-            x = ax * (rx - 1) * (bw - viewport.width) + this.offset.x - rx * vpos.x,
-            y = ay * (ry - 1) * (bh - viewport.height) + this.offset.y - ry * vpos.y;
+            x = ax * (rx - 1) * (bw - game.viewport.width) + this.offset.x - rx * vpos.x,
+            y = ay * (ry - 1) * (bh - game.viewport.height) + this.offset.y - ry * vpos.y;
 
 
         // Repeat horizontally; start drawing from left boundary

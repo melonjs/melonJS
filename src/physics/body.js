@@ -7,7 +7,7 @@ import collision from "./collision.js";
 import * as arrayUtil from "./../utils/array.js";
 import timer from "./../system/timer.js";
 import { clamp } from "./../math/math.js";
-import { world } from "./../game.js";
+import game from "./../game.js";
 
 
 /**
@@ -464,7 +464,7 @@ class Body {
             }
 
             // cancel the falling an jumping flags if necessary
-            var dir = Math.sign(world.gravity.y * this.gravityScale) || 1;
+            var dir = Math.sign(game.world.gravity.y * this.gravityScale) || 1;
             this.falling = overlap.y >= dir;
             this.jumping = overlap.y <= -dir;
         }
@@ -601,7 +601,7 @@ class Body {
 
         // apply gravity to the current velocity
         if (!this.ignoreGravity) {
-            var worldGravity = world.gravity;
+            var worldGravity = game.world.gravity;
 
             // apply gravity if defined
             this.vel.x += worldGravity.x * this.gravityScale * deltaTime;

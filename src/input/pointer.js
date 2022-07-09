@@ -1,6 +1,6 @@
 import Vector2d from "./../math/vector2.js";
 import Bounds from "./../physics/bounds.js";
-import { viewport } from "./../game.js";
+import game from "./../game.js";
 import { globalToLocal } from "./input.js";
 import { locked } from "./pointerevent.js";
 
@@ -360,8 +360,8 @@ class Pointer extends Bounds {
         this.type = event.type;
 
         // get the current screen to game world offset
-        if (typeof viewport !== "undefined") {
-            viewport.localToWorld(this.gameScreenX, this.gameScreenY, tmpVec);
+        if (typeof game.viewport !== "undefined") {
+            game.viewport.localToWorld(this.gameScreenX, this.gameScreenY, tmpVec);
         }
 
         /* Initialize the two coordinate space properties. */

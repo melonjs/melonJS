@@ -10,7 +10,7 @@ import * as event from "./../system/event.js";
 import pool from "./../system/pooling.js";
 import Renderable from "./../renderable/renderable.js";
 import {clamp, toBeCloseTo} from "./../math/math.js";
-import { world } from "./../game.js";
+import game from "./../game.js";
 
 
 // some ref shortcut
@@ -615,7 +615,7 @@ class Camera2d extends Renderable {
     localToWorld(x, y, v) {
         // TODO memoization for one set of coords (multitouch)
         v = v || pool.pull("Vector2d");
-        v.set(x, y).add(this.pos).sub(world.pos);
+        v.set(x, y).add(this.pos).sub(game.world.pos);
         if (!this.currentTransform.isIdentity()) {
             this.invCurrentTransform.apply(v);
         }
@@ -639,7 +639,7 @@ class Camera2d extends Renderable {
         if (!this.currentTransform.isIdentity()) {
             this.currentTransform.apply(v);
         }
-        return v.sub(this.pos).add(world.pos);
+        return v.sub(this.pos).add(game.world.pos);
     }
 
     /**
@@ -706,7 +706,7 @@ class Camera2d extends Renderable {
 
         this.preDraw(renderer);
 
-        container.preDraw(renderer);
+        container.preDraw(renderer, this);
 
         // draw all objects,
         // specifying the viewport as the rectangle area to redraw
@@ -715,7 +715,7 @@ class Camera2d extends Renderable {
         // draw the viewport/camera effects
         this.drawFX(renderer);
 
-        container.postDraw(renderer);
+        container.postDraw(renderer, this);
 
         this.postDraw(renderer);
 

@@ -1,6 +1,6 @@
 import pool from "./../../system/pooling.js";
 import * as event from "./../../system/event.js";
-import { viewport } from "./../../game.js";
+import game from "./../../game.js";
 import collision from "./../../physics/collision.js";
 import Body from "./../../physics/body.js";
 import TMXOrthogonalRenderer from "./renderer/TMXOrthogonalRenderer.js";
@@ -396,7 +396,7 @@ class TMXTileMap {
          */
         function _setBounds(width, height) {
             // adjust the viewport bounds if level is smaller
-            viewport.setBounds(
+            game.viewport.setBounds(
                 0, 0,
                 Math.max(levelBounds.width, width),
                 Math.max(levelBounds.height, height)
@@ -413,7 +413,7 @@ class TMXTileMap {
         if (setViewportBounds === true) {
             event.off(event.VIEWPORT_ONRESIZE, _setBounds);
             // force viewport bounds update
-            _setBounds(viewport.width, viewport.height);
+            _setBounds(game.viewport.width, game.viewport.height);
             // Replace the resize handler
             event.on(event.VIEWPORT_ONRESIZE, _setBounds, this);
         }

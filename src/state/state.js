@@ -1,7 +1,7 @@
 import { pauseTrack, resumeTrack } from "./../audio/audio.js";
 import * as fctUtil from "./../utils/function.js";
 import * as event from "./../system/event.js";
-import * as game from "./../game.js";
+import game from "./../game.js";
 import * as device from "./../system/device.js";
 import Stage from "./../state/stage.js";
 import DefaultLoadingScreen from "./../loader/loadingscreen.js";

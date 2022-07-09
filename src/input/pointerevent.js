@@ -10,7 +10,7 @@ import * as device from "./../system/device.js";
 import Pointer from "./pointer.js";
 import Rect from "./../geometries/rectangle.js";
 import Container from "./../renderable/container.js";
-import { world, viewport } from "./../game.js";
+import game from "./../game.js";
 
 /**
  * A pool of `Pointer` objects to cache pointer/touch event coordinates.
@@ -287,10 +287,10 @@ function dispatchEvent(normalizedEvents) {
         }
 
         // fetch valid candiates from the game world container
-        var candidates = world.broadphase.retrieve(currentPointer, Container.prototype._sortReverseZ);
+        var candidates = game.world.broadphase.retrieve(currentPointer, Container.prototype._sortReverseZ);
 
         // add the main game viewport to the list of candidates
-        candidates = candidates.concat([ viewport ]);
+        candidates = candidates.concat([ game.viewport ]);
 
         for (var c = candidates.length, candidate; c--, (candidate = candidates[c]);) {
             if (eventHandlers.has(candidate) && (candidate.isKinematic !== true)) {

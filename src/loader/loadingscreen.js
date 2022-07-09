@@ -1,4 +1,4 @@
-import { world, viewport } from "./../game.js";
+import game from "./../game.js";
 import { renderer } from "./../video/video.js";
 import * as event from "./../system/event.js";
 import Sprite from "./../renderable/sprite.js";
@@ -41,7 +41,7 @@ class ProgressBar extends Renderable {
      * draw function
      * @ignore
      */
-    draw (renderer) {
+    draw(renderer, viewport) {
         // draw the progress bar
         renderer.setColor("black");
         renderer.fillRect(this.pos.x, viewport.centerY, renderer.getWidth(), this.barHeight / 2);
@@ -75,10 +75,10 @@ class DefaultLoadingScreen extends Stage {
         var barHeight = 8;
 
         // set a background color
-        world.backgroundColor.parseCSS("#202020");
+        game.world.backgroundColor.parseCSS("#202020");
 
         // progress bar
-        world.addChild(new ProgressBar(
+        game.world.addChild(new ProgressBar(
             0,
             renderer.getHeight() / 2,
             renderer.getWidth(),
@@ -89,7 +89,7 @@ class DefaultLoadingScreen extends Stage {
         loader.load({name: "melonjs_logo", type: "image", src: logo_url});
 
         // melonJS logo
-        world.addChild(new Sprite(
+        game.world.addChild(new Sprite(
             renderer.getWidth() / 2,
             renderer.getHeight() / 2, {
                 image : "melonjs_logo",

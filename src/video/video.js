@@ -3,7 +3,7 @@ import WebGLRenderer from "./webgl/webgl_renderer.js";
 import CanvasRenderer from "./canvas/canvas_renderer.js";
 import utils from "./../utils/utils.js";
 import * as event from "./../system/event.js";
-import { repaint } from "./../game.js";
+import game from "./../game.js";
 import * as device from "./../system/device.js";
 import { initialized, version } from "./../index.js";
 
@@ -454,5 +454,5 @@ export function scale(x, y) {
     renderer.setBlendMode(settings.blendMode, context);
 
     // force repaint
-    repaint();
+    game.repaint();
 };

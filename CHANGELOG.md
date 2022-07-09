@@ -9,6 +9,7 @@
 ### Changed
 - Core: full ES6 refactoring of `me.device`, and API clean-up (@see https://github.com/melonjs/melonJS/wiki/Upgrade-Guide#120x-to-130x-stable)
 - Loader: `onload` and `onerror` callbacks are now optionals when directly loading assets (easier with base64 encoded assets)
+- Game: refactoring of`game` into an Instantiable `Application` object, with `game` now being the default instance of it (#1091)
 
 ### Fixed
 - Loader: fix loading/preloading of base64 audio assets, and base64 encoded FontFace

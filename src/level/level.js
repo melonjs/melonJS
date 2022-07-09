@@ -2,7 +2,7 @@ import utils from "./../utils/utils.js";
 import * as event from "./../system/event.js";
 import state from "./../state/state.js";
 import loader from "./../loader/loader.js";
-import * as game from "./../game.js";
+import game from "./../game.js";
 import TMXTileMap from "./tiled/TMXTileMap.js";
 
 
@@ -125,7 +125,7 @@ var level = {
      * @param {string} levelId level id
      * @param {object} [options] additional optional parameters
      * @param {Container} [options.container=game.world] container in which to load the specified level
-     * @param {Function} [options.onLoaded=ame.onLevelLoaded] callback for when the level is fully loaded
+     * @param {Function} [options.onLoaded=game.onLevelLoaded] callback for when the level is fully loaded
      * @param {boolean} [options.flatten=game.mergeGroup] if true, flatten all objects into the given container
      * @param {boolean} [options.setViewportBounds=true] if true, set the viewport bounds to the map size
      * @returns {boolean} true if the level was successfully loaded
