@@ -3,7 +3,7 @@
  * http://www.melonjs.org
  * melonjs is licensed under the MIT License.
  * http://www.opensource.org/licenses/mit-license
- * @copyright (C) 2011 - 2022 Olivier Biot
+ * @copyright (C) 2011 - 2022 Olivier Biot (AltByte Pte Ltd)
  */
 var commonjsGlobal = typeof globalThis !== 'undefined' ? globalThis : typeof window !== 'undefined' ? window : typeof global !== 'undefined' ? global : typeof self !== 'undefined' ? self : {};
 
@@ -1264,13 +1264,26 @@ function toHex$1(str) {
     }
     return res;
 }
+/**
+ * returns true if the given string is a data url in the `data:[<mediatype>][;base64],<data>` format.
+ * (this will not test the validity of the Data or Base64 encoding)
+ * @public
+ * @memberof utils.string
+ * @name isDataUrl
+ * @param {string} str the string (url) to be tested
+ * @returns {boolean} true if the string is a data url
+ */
+function isDataUrl(str) {
+    return /^data:(.+);base64,(.+)$/.test(str);
+}
 
 var stringUtils = /*#__PURE__*/Object.freeze({
 	__proto__: null,
 	capitalize: capitalize,
 	isNumeric: isNumeric,
 	isBoolean: isBoolean,
-	toHex: toHex$1
+	toHex: toHex$1,
+	isDataUrl: isDataUrl
 });
 
 /**
@@ -5322,12 +5335,12 @@ var device_platform = /*#__PURE__*/Object.freeze({
  * @namespace device
  */
 
-var accelInitialized = false;
-var deviceOrientationInitialized = false;
+let accelInitialized = false;
+let deviceOrientationInitialized = false;
 // swipe utility fn & flag
-var swipeEnabled = true;
+let swipeEnabled = true;
 // a cache DOMRect object
-var domRect = {left: 0, top: 0, x: 0, y: 0, width: 0, height: 0, right: 0, bottom: 0};
+let domRect = {left: 0, top: 0, x: 0, y: 0, width: 0, height: 0, right: 0, bottom: 0};
 
 function disableSwipeFn(e) {
     e.preventDefault();
@@ -5385,6 +5398,7 @@ let platform = device_platform;
 /**
  * True if the browser supports Touch Events
  * @name touchEvent
+ * @memberof device
  * @type {boolean}
  * @readonly
  * @public
@@ -5749,7 +5763,7 @@ function onReady(fn) {
  * @param {boolean} [enable=true] enable or disable swipe.
  */
 function enableSwipe(enable) {
-    var moveEvent = pointerEvent ? "pointermove" : (touchEvent ? "touchmove" : "mousemove");
+    let moveEvent = pointerEvent ? "pointermove" : (touchEvent ? "touchmove" : "mousemove");
     if (enable !== false) {
         if (swipeEnabled === false) {
             globalThis.document.removeEventListener(moveEvent, disableSwipeFn);
@@ -5820,14 +5834,14 @@ function exitFullscreen() {
  * @returns {string} the screen orientation
  */
 function getScreenOrientation() {
-    var PORTRAIT = "portrait";
-    var LANDSCAPE = "landscape";
+    const PORTRAIT = "portrait";
+    const LANDSCAPE = "landscape";
 
-    var screen = globalThis.screen;
+    let screen = globalThis.screen;
 
     // first try using "standard" values
     if (screenOrientation === true) {
-        var orientation = prefixed("orientation", screen);
+        let orientation = prefixed("orientation", screen);
         if (typeof orientation !== "undefined" && typeof orientation.type === "string") {
             // Screen Orientation API specification
             return orientation.type;
@@ -5856,9 +5870,9 @@ function getScreenOrientation() {
  * @returns {boolean} true if the orientation was unsuccessfully locked
  */
 function lockOrientation(orientation) {
-    var screen = globalThis.screen;
+    let screen = globalThis.screen;
     if (typeof screen !== "undefined") {
-        var _lockOrientation = prefixed("lockOrientation", screen);
+        let _lockOrientation = prefixed("lockOrientation", screen);
         if (typeof _lockOrientation !== "undefined") {
             return _lockOrientation(orientation);
         }
@@ -5875,9 +5889,9 @@ function lockOrientation(orientation) {
  * @returns {boolean} true if the orientation was unsuccessfully unlocked
  */
 function unlockOrientation() {
-    var screen = globalThis.screen;
+    let screen = globalThis.screen;
     if (typeof screen !== "undefined") {
-        var _unlockOrientation = prefixed("unlockOrientation", screen);
+        let _unlockOrientation = prefixed("unlockOrientation", screen);
         if (typeof _unlockOrientation !== "undefined") {
             return _unlockOrientation();
         }
@@ -5931,7 +5945,7 @@ function getStorage(type = "local") {
  * @returns {HTMLElement} the parent Element
  */
 function getParentElement(element) {
-    var target = getElement(element);
+    let target = getElement(element);
 
     if (target.parentNode !== null) {
         target = target.parentNode;
@@ -5948,7 +5962,7 @@ function getParentElement(element) {
  * @returns {HTMLElement} the corresponding DOM Element or null if not existing
  */
 function getElement(element) {
-    var target = null;
+    let target = null;
 
     if (element !== "undefined") {
         if (typeof element === "string") {
@@ -6007,10 +6021,10 @@ function getParentBounds(element) {
  * @returns {boolean} true if WebGL is supported
  */
 function isWebGLSupported(options) {
-    var _supported = false;
+    let _supported = false;
     try {
-        var canvas = document.createElement("canvas");
-        var ctxOptions = {
+        let canvas = document.createElement("canvas");
+        let ctxOptions = {
             stencil: true,
             failIfMajorPerformanceCaveat: options.failIfMajorPerformanceCaveat
         };
@@ -13864,9 +13878,14 @@ function load(sound, html5, onload_cb, onerror_cb) {
     if (audioExts.length === 0) {
         throw new Error("target audio extension(s) should be set through me.audio.init() before calling the preloader.");
     }
-    for (var i = 0; i < audioExts.length; i++) {
-        urls.push(sound.src + sound.name + "." + audioExts[i] + loader.nocache);
+    if (isDataUrl(sound.src) === true) {
+        urls.push(sound.src);
+    } else {
+        for (var i = 0; i < audioExts.length; i++) {
+            urls.push(sound.src + sound.name + "." + audioExts[i] + loader.nocache);
+        }
     }
+
     audioTracks[sound.name] = new howler.Howl({
         src : urls,
         volume : howler.Howler.volume(),
@@ -23041,19 +23060,27 @@ class DefaultLoadingScreen extends Stage {
             barHeight
         ), 1);
 
-        // TODO: create a sprite or texture from a Base64 encoded image
-        var image = new Image();
-        image.src = img;
+        // load the melonJS logo
+        loader.load({name: "melonjs_logo", type: "image", src: img});
 
         // melonJS logo
         world.addChild(new Sprite(
             renderer.getWidth() / 2,
             renderer.getHeight() / 2, {
-                image : image,
+                image : "melonjs_logo",
                 framewidth : 256,
                 frameheight : 256
             }), 2
         );
+    }
+
+    /**
+     * Called by engine before deleting the object
+     * @ignore
+     */
+    onDestroyEvent() {
+        // cancel the callback
+        loader.unload({name: "melonjs_logo", type:"image"});
     }
 }
 
@@ -28125,7 +28152,7 @@ var timerId = 0;
 function checkLoadStatus(onload) {
     if (loadCount === resourceCount) {
         // wait 1/2s and execute callback (cheap workaround to ensure everything is loaded)
-        if (onload || loader.onload) {
+        if (typeof onload === "function" || loader.onload) {
             // make sure we clear the timer
             clearTimeout(timerId);
             // trigger the onload callback
@@ -28160,8 +28187,12 @@ function checkLoadStatus(onload) {
 function preloadImage(img, onload, onerror) {
     // create new Image object and add to list
     imgList[img.name] = new Image();
-    imgList[img.name].onload = onload;
-    imgList[img.name].onerror = onerror;
+    if (typeof onload === "function") {
+        imgList[img.name].onload = onload;
+    }
+    if (typeof onerror === "function") {
+        imgList[img.name].onerror = onerror;
+    }
     if (typeof (loader.crossOrigin) === "string") {
         imgList[img.name].crossOrigin = loader.crossOrigin;
     }
@@ -28176,17 +28207,30 @@ function preloadImage(img, onload, onerror) {
  * @ignore
  */
 function preloadFontFace(data, onload, onerror) {
+
+    if (isDataUrl(data.src) === true) {
+        // make sure it in the `url(data:[<mediatype>][;base64],<data>)` format as expected by FontFace
+        if (!data.src.startsWith("url(")) {
+            data.src = "url(" + data.src + ")";
+        }
+    }
+
     var font = new FontFace(data.name, data.src);
+
     // loading promise
     font.load().then(() => {
         // apply the font after the font has finished downloading
         document.fonts.add(font);
         document.body.style.fontFamily = data.name;
-        // onloaded callback
-        onload();
+        if (typeof onload === "function") {
+            // onloaded callback
+            onload();
+        }
     }, function () {
-        // rejected
-        onerror(data.name);
+        if (typeof onerror === "function") {
+            // rejected
+            onerror(data.name);
+        }
     });
 }
 /**
@@ -28211,7 +28255,9 @@ function preloadTMX(tmxData, onload, onerror) {
     //if the data is in the tmxData object, don't get it via a XMLHTTPRequest
     if (tmxData.data) {
         addToTMXList(tmxData.data);
-        onload();
+        if (typeof onload === "function") {
+            onload();
+        }
         return;
     }
 
@@ -28282,9 +28328,11 @@ function preloadTMX(tmxData, onload, onerror) {
                 addToTMXList(result);
 
                 // fire the callback
-                onload();
+                if (typeof onload === "function") {
+                    onload();
+                }
             }
-            else {
+            else if (typeof onerror === "function") {
                 onerror(tmxData.name);
             }
         }
@@ -28315,10 +28363,12 @@ function preloadJSON(data, onload, onerror) {
             if ((xmlhttp.status === 200) || ((xmlhttp.status === 0) && xmlhttp.responseText)) {
                 // get the Texture Packer Atlas content
                 jsonList[data.name] = JSON.parse(xmlhttp.responseText);
-                // fire the callback
-                onload();
+                if (typeof onload === "function") {
+                    // fire the callback
+                    onload();
+                }
             }
-            else {
+            else if (typeof onerror === "function") {
                 onerror(data.name);
             }
         }
@@ -28347,8 +28397,11 @@ function preloadBinary(data, onload, onerror) {
                 buffer[i] = String.fromCharCode(byteArray[i]);
             }
             binList[data.name] = buffer.join("");
-            // callback
-            onload();
+            if (typeof onload === "function") {
+                // callback
+                onload();
+            }
+
         }
     };
     httpReq.send();
@@ -28367,15 +28420,19 @@ function preloadJavascript(data, onload, onerror) {
     }
     script.defer = true;
 
-    script.onload = () => {
-        // callback
-        onload();
-    };
+    if (typeof onload === "function") {
+        script.onload = () => {
+            // callback
+            onload();
+        };
+    }
 
-    script.onerror = () => {
-        // callback
-        onerror(data.name);
-    };
+    if (typeof onerror === "function") {
+        script.onerror = () => {
+            // callback
+            onerror(data.name);
+        };
+    }
 
     document.getElementsByTagName("body")[0].appendChild(script);
 }
@@ -28541,6 +28598,8 @@ var loader = {
      *   {name: "tileset-platformer", type: "image",  src: "data/map/tileset.png"},
      *   // PNG packed texture
      *   {name: "texture", type:"image", src: "data/gfx/texture.png"}
+     *   // PNG base64 encoded image
+     *   {name: "texture", type:"image", src: "data:image/png;base64,iVBORw0KAAAQAAAAEACA..."}
      *   // TSX file
      *   {name: "meta_tiles", type: "tsx", src: "data/map/meta_tiles.tsx"},
      *   // TMX level (XML & JSON)
@@ -28551,6 +28610,8 @@ var loader = {
      *   // audio resources
      *   {name: "bgmusic", type: "audio",  src: "data/audio/"},
      *   {name: "cling",   type: "audio",  src: "data/audio/"},
+     *   // base64 encoded audio resources
+     *   {name: "band",   type: "audio",  src: "data:audio/wav;base64,..."},
      *   // binary file
      *   {name: "ymTrack", type: "binary", src: "data/audio/main.ym"},
      *   // JSON file (used for texturePacker)
@@ -28597,13 +28658,14 @@ var loader = {
      * @param {string} res.type  "audio", binary", "image", "json", "tmx", "tsx"
      * @param {string} res.src  path and/or file name of the resource (for audio assets only the path is required)
      * @param {boolean} [res.stream] Set to true to force HTML5 Audio, which allows not to wait for large file to be downloaded before playing.
-     * @param {Function} onload function to be called when the resource is loaded
-     * @param {Function} onerror function to be called in case of error
+     * @param {Function} [onload] function to be called when the resource is loaded
+     * @param {Function} [onerror] function to be called in case of error
      * @returns {number} the amount of corresponding resource to be preloaded
      * @example
      * // load an image asset
      * me.loader.load({name: "avatar",  type:"image",  src: "data/avatar.png"}, this.onload.bind(this), this.onerror.bind(this));
-     *
+     * // load a base64 image asset
+     *  me.loader.load({name: "avatar", type:"image", src: "data:image/png;base64,iVBORw0KAAAQAAAAEACA..."};
      * // start loading music
      * me.loader.load({
      *     name   : "bgmusic",

@@ -10446,6 +10446,8 @@ export namespace loader {
      *   {name: "tileset-platformer", type: "image",  src: "data/map/tileset.png"},
      *   // PNG packed texture
      *   {name: "texture", type:"image", src: "data/gfx/texture.png"}
+     *   // PNG base64 encoded image
+     *   {name: "texture", type:"image", src: "data:image/png;base64,iVBORw0KAAAQAAAAEACA..."}
      *   // TSX file
      *   {name: "meta_tiles", type: "tsx", src: "data/map/meta_tiles.tsx"},
      *   // TMX level (XML & JSON)
@@ -10456,6 +10458,8 @@ export namespace loader {
      *   // audio resources
      *   {name: "bgmusic", type: "audio",  src: "data/audio/"},
      *   {name: "cling",   type: "audio",  src: "data/audio/"},
+     *   // base64 encoded audio resources
+     *   {name: "band",   type: "audio",  src: "data:audio/wav;base64,..."},
      *   // binary file
      *   {name: "ymTrack", type: "binary", src: "data/audio/main.ym"},
      *   // JSON file (used for texturePacker)
@@ -10493,6 +10497,8 @@ export namespace loader {
      *   {name: "tileset-platformer", type: "image",  src: "data/map/tileset.png"},
      *   // PNG packed texture
      *   {name: "texture", type:"image", src: "data/gfx/texture.png"}
+     *   // PNG base64 encoded image
+     *   {name: "texture", type:"image", src: "data:image/png;base64,iVBORw0KAAAQAAAAEACA..."}
      *   // TSX file
      *   {name: "meta_tiles", type: "tsx", src: "data/map/meta_tiles.tsx"},
      *   // TMX level (XML & JSON)
@@ -10503,6 +10509,8 @@ export namespace loader {
      *   // audio resources
      *   {name: "bgmusic", type: "audio",  src: "data/audio/"},
      *   {name: "cling",   type: "audio",  src: "data/audio/"},
+     *   // base64 encoded audio resources
+     *   {name: "band",   type: "audio",  src: "data:audio/wav;base64,..."},
      *   // binary file
      *   {name: "ymTrack", type: "binary", src: "data/audio/main.ym"},
      *   // JSON file (used for texturePacker)
@@ -10532,13 +10540,14 @@ export namespace loader {
      * @param {string} res.type  "audio", binary", "image", "json", "tmx", "tsx"
      * @param {string} res.src  path and/or file name of the resource (for audio assets only the path is required)
      * @param {boolean} [res.stream] Set to true to force HTML5 Audio, which allows not to wait for large file to be downloaded before playing.
-     * @param {Function} onload function to be called when the resource is loaded
-     * @param {Function} onerror function to be called in case of error
+     * @param {Function} [onload] function to be called when the resource is loaded
+     * @param {Function} [onerror] function to be called in case of error
      * @returns {number} the amount of corresponding resource to be preloaded
      * @example
      * // load an image asset
      * me.loader.load({name: "avatar",  type:"image",  src: "data/avatar.png"}, this.onload.bind(this), this.onerror.bind(this));
-     *
+     * // load a base64 image asset
+     *  me.loader.load({name: "avatar", type:"image", src: "data:image/png;base64,iVBORw0KAAAQAAAAEACA..."};
      * // start loading music
      * me.loader.load({
      *     name   : "bgmusic",
@@ -10553,7 +10562,7 @@ export namespace loader {
         type: string;
         src: string;
         stream?: boolean;
-    }, onload: Function, onerror: Function): number;
+    }, onload?: Function, onerror?: Function): number;
     /**
      * Load a single resource (to be used if you need to load additional resource during the game)
      * @name load
@@ -10564,13 +10573,14 @@ export namespace loader {
      * @param {string} res.type  "audio", binary", "image", "json", "tmx", "tsx"
      * @param {string} res.src  path and/or file name of the resource (for audio assets only the path is required)
      * @param {boolean} [res.stream] Set to true to force HTML5 Audio, which allows not to wait for large file to be downloaded before playing.
-     * @param {Function} onload function to be called when the resource is loaded
-     * @param {Function} onerror function to be called in case of error
+     * @param {Function} [onload] function to be called when the resource is loaded
+     * @param {Function} [onerror] function to be called in case of error
      * @returns {number} the amount of corresponding resource to be preloaded
      * @example
      * // load an image asset
      * me.loader.load({name: "avatar",  type:"image",  src: "data/avatar.png"}, this.onload.bind(this), this.onerror.bind(this));
-     *
+     * // load a base64 image asset
+     *  me.loader.load({name: "avatar", type:"image", src: "data:image/png;base64,iVBORw0KAAAQAAAAEACA..."};
      * // start loading music
      * me.loader.load({
      *     name   : "bgmusic",
@@ -10585,7 +10595,7 @@ export namespace loader {
         type: string;
         src: string;
         stream?: boolean;
-    }, onload: Function, onerror: Function): number;
+    }, onload?: Function, onerror?: Function): number;
     /**
      * unload specified resource to free memory
      * @name unload
@@ -12481,6 +12491,7 @@ declare var stringUtils: Readonly<{
     isNumeric: typeof isNumeric;
     isBoolean: typeof isBoolean;
     toHex: typeof toHex$1;
+    isDataUrl: typeof isDataUrl;
 }>;
 declare var fnUtils: Readonly<{
     __proto__: any;
@@ -12684,6 +12695,16 @@ declare function isBoolean(str: string): boolean;
  * @returns {string} the converted hexadecimal value
  */
 declare function toHex$1(str: string): string;
+/**
+ * returns true if the given string is a data url in the `data:[<mediatype>][;base64],<data>` format.
+ * (this will not test the validity of the Data or Base64 encoding)
+ * @public
+ * @memberof utils.string
+ * @name isDataUrl
+ * @param {string} str the string (url) to be tested
+ * @returns {boolean} true if the string is a data url
+ */
+declare function isDataUrl(str: string): boolean;
 /**
  * a collection of utility functions
  * @namespace utils.function
