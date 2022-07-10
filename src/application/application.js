@@ -95,7 +95,7 @@ class Application {
      */
     reset() {
         // point to the current active stage "default" camera
-        var current = state.current();
+        var current = state.get();
         if (typeof current !== "undefined") {
             this.viewport = current.cameras.get("default");
         }
