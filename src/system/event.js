@@ -399,7 +399,8 @@ export const CANVAS_ONRESIZE = "canvas.onresize";
  * Event for when the viewport is resized <br>
  * (this usually follows a WINDOW_ONRESIZE event, when using the `flex` scaling mode is used and after the viewport was updated).<br>
  * Data passed : {number} viewport width <br>
- * Data passed : {number} viewport height
+ * Data passed : {number} viewport height <br>
+ * Data passed : {Camera2d} a reference to the camera viewport being resized
  * @public
  * @constant
  * @type {string}

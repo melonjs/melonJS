@@ -285,7 +285,7 @@ class Camera2d extends Renderable {
         this._updateProjectionMatrix();
 
         // publish the viewport resize event
-        event.emit(event.VIEWPORT_ONRESIZE, this.width, this.height);
+        event.emit(event.VIEWPORT_ONRESIZE, this.width, this.height, this);
 
         return this;
     }
