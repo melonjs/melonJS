@@ -6,7 +6,7 @@ import { clamp } from "./../math/math.js";
 /**
  * @classdesc
  * a Timer class to manage timing related function (FPS, Game Tick, Time...)
-  * @see {@link timer} the default global timer instance
+ * @see {@link timer} the default global timer instance
  */
 class Timer {
 
@@ -14,14 +14,12 @@ class Timer {
         /**
          * Last game tick value.<br/>
          * Use this value to scale velocities during frame drops due to slow
-         * hardware or when setting an FPS limit. (See {@link timer.maxfps})
-         * This feature is disabled by default. Enable me.timer.interpolation to
-         * use it.
+         * hardware or when setting an FPS limit. (See {@link Timer#maxfps})
+         * This feature is disabled by default. Enable timer.interpolation to use it.
          * @public
-         * @see timer.interpolation
+         * @see interpolation
          * @type {number}
          * @name tick
-         * @memberof timer
          */
         this.tick = 1.0;
 
@@ -31,28 +29,23 @@ class Timer {
          * @public
          * @type {number}
          * @name fps
-         * @memberof timer
          */
         this.fps = 0;
 
         /**
          * Set the maximum target display frame per second
          * @public
-         * @see timer.tick
+         * @see tick
          * @type {number}
-         * @name maxfps
          * @default 60
-         * @memberof timer
          */
         this.maxfps = 60;
 
         /**
          * Enable/disable frame interpolation
-         * @see timer.tick
+         * @see tick
          * @type {boolean}
          * @default false
-         * @name interpolation
-         * @memberof timer
          */
         this.interpolation = false;
 
@@ -96,8 +89,6 @@ class Timer {
 
     /**
      * reset time (e.g. usefull in case of pause)
-     * @name reset
-     * @memberof timer
      * @ignore
      */
     reset() {
@@ -114,8 +105,6 @@ class Timer {
 
     /**
      * Calls a function once after a specified delay. See me.timer.setInterval to repeativly call a function.
-     * @name setTimeout
-     * @memberof timer
      * @param {Function} fn the function you want to execute after delay milliseconds.
      * @param {number} delay the number of milliseconds (thousandths of a second) that the function call should be delayed by.
      * @param {boolean} [pauseable=true] respects the pause state of the engine.
@@ -142,8 +131,6 @@ class Timer {
 
     /**
      * Calls a function continously at the specified interval.  See setTimeout to call function a single time.
-     * @name setInterval
-     * @memberof timer
      * @param {Function} fn the function to execute
      * @param {number} delay the number of milliseconds (thousandths of a second) on how often to execute the function
      * @param {boolean} [pauseable=true] respects the pause state of the engine.
@@ -170,8 +157,6 @@ class Timer {
 
     /**
      * Clears the delay set by me.timer.setTimeout().
-     * @name clearTimeout
-     * @memberof timer
      * @param {number} timeoutID ID of the timeout to be cleared
      */
     clearTimeout(timeoutID) {
@@ -180,8 +165,6 @@ class Timer {
 
     /**
      * Clears the Interval set by me.timer.setInterval().
-     * @name clearInterval
-     * @memberof timer
      * @param {number} intervalID ID of the interval to be cleared
      */
     clearInterval(intervalID) {
@@ -191,8 +174,6 @@ class Timer {
     /**
      * Return the current timestamp in milliseconds <br>
      * since the game has started or since linux epoch (based on browser support for High Resolution Timer)
-     * @name getTime
-     * @memberof timer
      * @returns {number}
      */
     getTime() {
@@ -201,8 +182,6 @@ class Timer {
 
     /**
      * Return elapsed time in milliseconds since the last update
-     * @name getDelta
-     * @memberof timer
      * @returns {number}
      */
     getDelta() {
@@ -211,9 +190,7 @@ class Timer {
 
     /**
      * compute the actual frame time and fps rate
-     * @name computeFPS
      * @ignore
-     * @memberof timer
      */
     countFPS() {
         this.framecount++;
@@ -281,6 +258,8 @@ class Timer {
     }
 };
 
+const timer = new Timer();
+
 /**
  * the default global Timer instance
  * @namespace timer
@@ -295,6 +274,4 @@ class Timer {
  * // set a timer to call "myFunction" every 1000ms (respecting the pause state) and passing param1 and param2
  * timer.setInterval(myFunction, 1000, true, param1, param2);
  */
-const timer = new Timer();
-
 export default timer;
