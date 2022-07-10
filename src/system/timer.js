@@ -12,20 +12,20 @@ class Timer {
 
     constructor() {
         /**
-         * Last game tick value.<br/>
-         * Use this value to scale velocities during frame drops due to slow
-         * hardware or when setting an FPS limit. (See {@link Timer#maxfps})
-         * This feature is disabled by default. Enable timer.interpolation to use it.
+         * Last game tick value. <br>
+         * Use this value to scale velocities during frame drops due to slow hardware or when setting an FPS limit.
+         * This feature is disabled by default (Enable interpolation to use it).
          * @public
          * @see interpolation
+         * @See maxfps
          * @type {number}
          * @name tick
          */
         this.tick = 1.0;
 
         /**
-         * Last measured fps rate.<br/>
-         * This feature is disabled by default, unless the debugPanel is enabled/visible
+         * Last measured fps rate.<br>
+         * This feature is disabled by default, unless the debugPanel is enabled/visible.
          * @public
          * @type {number}
          * @name fps
