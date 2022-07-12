@@ -9634,7 +9634,6 @@ export class World extends Container {
      * @memberof World
      * @private
      * @param {Body} body
-     * @param {number} dt the time passed since the last frame update
      */
     private bodyApplyGravity;
 }
