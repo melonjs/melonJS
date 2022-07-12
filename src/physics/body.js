@@ -7,8 +7,6 @@ import collision from "./collision.js";
 import * as arrayUtil from "./../utils/array.js";
 import timer from "./../system/timer.js";
 import { clamp } from "./../math/math.js";
-import game from "./../game.js";
-
 
 /**
  * @classdesc
@@ -463,10 +461,12 @@ class Body {
                 this.vel.y *= -this.bounce;
             }
 
-            // cancel the falling an jumping flags if necessary
-            var dir = Math.sign(game.world.gravity.y * this.gravityScale) || 1;
-            this.falling = overlap.y >= dir;
-            this.jumping = overlap.y <= -dir;
+            if (!this.ignoreGravity) {
+                // cancel the falling an jumping flags if necessary
+                var dir = this.falling === true ? 1 : this.jumping === true ? -1 : 0;
+                this.falling = overlap.y >= dir;
+                this.jumping = overlap.y <= -dir;
+            }
         }
     }
 
@@ -507,14 +507,12 @@ class Body {
         }
     }
 
-
     /**
      * Returns true if the any of the shape composing the body contains the given point.
      * @method Body#contains
      * @param {Vector2d} point
      * @returns {boolean} true if contains
      */
-
     /**
      * Returns true if the any of the shape composing the body contains the given point.
      * @param  {number} x x coordinate
@@ -591,26 +589,22 @@ class Body {
     }
 
     /**
-     * compute the new velocity value
-     * @ignore
+     * Updates the parent's position as well as computes the new body's velocity based
+     * on the values of force/friction.  Velocity chages are proportional to the
+     * me.timer.tick value (which can be used to scale velocities).  The approach to moving the
+     * parent renderable is to compute new values of the Body.vel property then add them to
+     * the parent.pos value thus changing the postion the amount of Body.vel each time the
+     * update call is made. <br>
+     * Updates to Body.vel are bounded by maxVel (which defaults to viewport size if not set) <br>
+     * At this time a call to Body.Update does not call the onBodyUpdate callback that is listed in the constructor arguments.
+     * @protected
+     * @param {number} dt time since the last update in milliseconds.
+     * @returns {boolean} true if resulting velocity is different than 0
      */
-    computeVelocity(/* dt */) {
+    update(dt) { // eslint-disable-line no-unused-vars
         // apply timer.tick to delta time for linear interpolation (when enabled)
         // #761 add delta time in body update
         var deltaTime = /* dt * */ timer.tick;
-
-        // apply gravity to the current velocity
-        if (!this.ignoreGravity) {
-            var worldGravity = game.world.gravity;
-
-            // apply gravity if defined
-            this.vel.x += worldGravity.x * this.gravityScale * deltaTime;
-            this.vel.y += worldGravity.y * this.gravityScale * deltaTime;
-
-            // check if falling / jumping
-            this.falling = (this.vel.y * Math.sign(worldGravity.y * this.gravityScale)) > 0;
-            this.jumping = (this.falling ? false : this.jumping);
-        }
 
         // apply force if defined
         if (this.force.x !== 0) {
@@ -649,28 +643,6 @@ class Body {
         if (this.vel.x !== 0) {
             this.vel.x = clamp(this.vel.x, -this.maxVel.x, this.maxVel.x);
         }
-    }
-
-    /**
-     * Updates the parent's position as well as computes the new body's velocity based
-     * on the values of force/friction/gravity.  Velocity chages are proportional to the
-     * me.timer.tick value (which can be used to scale velocities).  The approach to moving the
-     * parent renderable is to compute new values of the Body.vel property then add them to
-     * the parent.pos value thus changing the postion the amount of Body.vel each time the
-     * update call is made. <br>
-     * Updates to Body.vel are bounded by maxVel (which defaults to viewport size if not set) <br>
-     *
-     * In addition, when the gravity calcuation is made, if the Body.vel.y > 0 then the Body.falling
-     * property is set to true and Body.jumping is set to !Body.falling.
-     *
-     * At this time a call to Body.Update does not call the onBodyUpdate callback that is listed in the constructor arguments.
-     * @protected
-     * @param {number} dt time since the last update in milliseconds.
-     * @returns {boolean} true if resulting velocity is different than 0
-     */
-    update(dt) {
-        // update the velocity
-        this.computeVelocity(dt);
 
         // update the body ancestor position
         this.ancestor.pos.add(this.vel);

@@ -84,7 +84,10 @@ class Application {
      * init the game instance (create a physic world, update starting time, etc..)
      */
     init() {
+        // create a new physic world
         this.world = new World();
+        // set the reference to this application instance
+        this.world.app = this;
         this.lastUpdate = globalThis.performance.now();
         event.emit(event.GAME_INIT, this);
     }

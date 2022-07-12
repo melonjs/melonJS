@@ -1,7 +1,6 @@
 import Vector2d from "./../math/vector2.js";
 import Container from "./../renderable/container.js";
 import * as arrayUtil from "./../utils/array.js";
-import game from "./../game.js";
 
 /*
  * A QuadTree implementation in JavaScript, a 2d spatial subdivision algorithm.
@@ -21,16 +20,17 @@ var QT_ARRAY = [];
  * or create a new one if the array is empty
  * @ignore
  */
-function QT_ARRAY_POP(bounds, max_objects = 4, max_levels = 4, level = 0) {
+function QT_ARRAY_POP(world, bounds, max_objects = 4, max_levels = 4, level = 0) {
     if (QT_ARRAY.length > 0) {
         var _qt =  QT_ARRAY.pop();
+        _qt.world = world;
         _qt.bounds = bounds;
         _qt.max_objects = max_objects;
         _qt.max_levels  = max_levels;
         _qt.level = level;
         return _qt;
     } else {
-        return new QuadTree(bounds, max_objects, max_levels, level);
+        return new QuadTree(world, bounds, max_objects, max_levels, level);
     }
 };
 
@@ -55,12 +55,17 @@ var QT_VECTOR = new Vector2d();
  */
 class QuadTree {
     /**
+     * @param {World} world the physic world this QuadTree belongs to
      * @param {Bounds} bounds bounds of the node
      * @param {number} [max_objects=4] max objects a node can hold before splitting into 4 subnodes
      * @param {number} [max_levels=4] total max levels inside root Quadtree
      * @param {number} [level] deepth level, required for subnodes
      */
-    constructor(bounds, max_objects = 4, max_levels = 4, level = 0) {
+    constructor(world, bounds, max_objects = 4, max_levels = 4, level = 0) {
+
+        this.world = world;
+        this.bounds = bounds;
+
         this.max_objects = max_objects;
         this.max_levels  = max_levels;
 
@@ -82,36 +87,60 @@ class QuadTree {
             top = this.bounds.top;
 
          //top right node
-        this.nodes[0] = QT_ARRAY_POP({
-            left : left + subWidth,
-            top : top,
-            width : subWidth,
-            height : subHeight
-        }, this.max_objects, this.max_levels, nextLevel);
+        this.nodes[0] = QT_ARRAY_POP(
+            this.world,
+            this.bounds, {
+                left : left + subWidth,
+                top : top,
+                width : subWidth,
+                height : subHeight
+            },
+            this.max_objects,
+            this.max_levels,
+            nextLevel
+        );
 
         //top left node
-        this.nodes[1] = QT_ARRAY_POP({
-            left : left,
-            top: top,
-            width : subWidth,
-            height : subHeight
-        }, this.max_objects, this.max_levels, nextLevel);
+        this.nodes[1] = QT_ARRAY_POP(
+            this.world,
+            this.bounds, {
+                left : left,
+                top: top,
+                width : subWidth,
+                height : subHeight
+            },
+            this.max_objects,
+            this.max_levels,
+            nextLevel
+        );
 
         //bottom left node
-        this.nodes[2] = QT_ARRAY_POP({
-            left : left,
-            top : top + subHeight,
-            width : subWidth,
-            height : subHeight
-        }, this.max_objects, this.max_levels, nextLevel);
+        this.nodes[2] = QT_ARRAY_POP(
+            this.world,
+            this.bounds, {
+                left : left,
+                top : top + subHeight,
+                width : subWidth,
+                height : subHeight
+            },
+            this.max_objects,
+            this.max_levels,
+            nextLevel
+        );
 
         //bottom right node
-        this.nodes[3] = QT_ARRAY_POP({
-            left : left + subWidth,
-            top : top + subHeight,
-            width : subWidth,
-            height : subHeight
-        }, this.max_objects, this.max_levels, nextLevel);
+        this.nodes[3] = QT_ARRAY_POP(
+            this.world,
+            this.bounds, {
+                left : left + subWidth,
+                top : top + subHeight,
+                width : subWidth,
+                height : subHeight
+            },
+            this.max_objects,
+            this.max_levels,
+            nextLevel
+        );
     }
 
     /*
@@ -125,7 +154,7 @@ class QuadTree {
 
         // use game world coordinates for floating items
         if (item.isFloating === true) {
-            pos = game.viewport.localToWorld(bounds.left, bounds.top, QT_VECTOR);
+            pos = this.world.app.viewport.localToWorld(bounds.left, bounds.top, QT_VECTOR);
         } else {
             pos = QT_VECTOR.set(item.left, item.top);
         }

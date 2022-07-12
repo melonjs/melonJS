@@ -5,6 +5,7 @@ import Container from "./../renderable/container.js";
 import collision from "./collision.js";
 import { collisionCheck } from "./detector.js";
 import state from "./../state/state.js";
+import timer from "./../system/timer.js";
 
 /**
  * @classdesc
@@ -27,6 +28,13 @@ class World extends Container {
 
         // to mimic the previous behavior
         this.anchorPoint.set(0, 0);
+
+        /**
+         * the application (game) this physic world belong to
+         * @public
+         * @type {Application}
+         */
+        this.app = null;
 
         /**
          * the rate at which the game world is updated,
@@ -80,7 +88,7 @@ class World extends Container {
          * @public
          * @type {QuadTree}
          */
-        this.broadphase = new QuadTree(this.getBounds().clone(), collision.maxChildren, collision.maxDepth);
+        this.broadphase = new QuadTree(this, this.getBounds().clone(), collision.maxChildren, collision.maxDepth);
 
         // reset the world container on the game reset signal
         event.on(event.GAME_RESET, this.reset, this);
@@ -141,13 +149,40 @@ class World extends Container {
     }
 
     /**
+     * Apply gravity to the given body
+     * @name bodyApplyVelocity
+     * @memberof World
+     * @private
+     * @param {Body} body
+     * @param {number} dt the time passed since the last frame update
+     */
+    bodyApplyGravity(body, dt) { // eslint-disable-line no-unused-vars
+        // apply timer.tick to delta time for linear interpolation (when enabled)
+        // #761 add delta time in body update
+        var deltaTime = /*dt * */ timer.tick;
+
+        // apply gravity to the current velocity
+        if (!body.ignoreGravity) {
+            var worldGravity = this.gravity;
+
+            // apply gravity if defined
+            body.vel.x += worldGravity.x * body.gravityScale * deltaTime;
+            body.vel.y += worldGravity.y * body.gravityScale * deltaTime;
+
+            // check if falling / jumping
+            body.falling = (body.vel.y * Math.sign(worldGravity.y * body.gravityScale)) > 0;
+            body.jumping = (body.falling ? false : body.jumping);
+        }
+    }
+
+    /**
      * update the game world
      * @name reset
      * @memberof World
      * @param {number} dt the time passed since the last frame update
      * @returns {boolean} true if the word is dirty
      */
-    update (dt) {
+    update(dt) {
         var isPaused = state.isPaused();
 
         // clear the quadtree
@@ -163,7 +198,9 @@ class World extends Container {
                 // if the game is not paused, and ancestor can be updated
                 if (!(isPaused && (!ancestor.updateWhenPaused)) &&
                    (ancestor.inViewport || ancestor.alwaysUpdate)) {
-                    // apply physics to the body (this moves it)
+                    // apply gravity to this body
+                    this.bodyApplyGravity(body, dt);
+                    // body update function (this moves it)
                     if (body.update(dt) === true) {
                         // mark ancestor as dirty
                         ancestor.isDirty = true;
