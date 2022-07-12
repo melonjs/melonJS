@@ -644,6 +644,10 @@ class Body {
             this.vel.x = clamp(this.vel.x, -this.maxVel.x, this.maxVel.x);
         }
 
+        // check if falling / jumping
+        this.falling = (this.vel.y * Math.sign(this.force.y)) > 0;
+        this.jumping = (this.falling ? false : this.jumping);
+
         // update the body ancestor position
         this.ancestor.pos.add(this.vel);
 

@@ -5,7 +5,6 @@ import Container from "./../renderable/container.js";
 import collision from "./collision.js";
 import { collisionCheck } from "./detector.js";
 import state from "./../state/state.js";
-import timer from "./../system/timer.js";
 
 /**
  * @classdesc
@@ -154,24 +153,15 @@ class World extends Container {
      * @memberof World
      * @private
      * @param {Body} body
-     * @param {number} dt the time passed since the last frame update
      */
-    bodyApplyGravity(body, dt) { // eslint-disable-line no-unused-vars
-        // apply timer.tick to delta time for linear interpolation (when enabled)
-        // #761 add delta time in body update
-        var deltaTime = /*dt * */ timer.tick;
-
+    bodyApplyGravity(body) {
         // apply gravity to the current velocity
-        if (!body.ignoreGravity) {
-            var worldGravity = this.gravity;
+        if (!body.ignoreGravity && body.gravityScale !== 0) {
+            var gravity = this.gravity;
 
             // apply gravity if defined
-            body.vel.x += worldGravity.x * body.gravityScale * deltaTime;
-            body.vel.y += worldGravity.y * body.gravityScale * deltaTime;
-
-            // check if falling / jumping
-            body.falling = (body.vel.y * Math.sign(worldGravity.y * body.gravityScale)) > 0;
-            body.jumping = (body.falling ? false : body.jumping);
+            body.force.x += (body.mass * gravity.x) * body.gravityScale;
+            body.force.y += (body.mass * gravity.y) * body.gravityScale;
         }
     }
 
@@ -199,7 +189,7 @@ class World extends Container {
                 if (!(isPaused && (!ancestor.updateWhenPaused)) &&
                    (ancestor.inViewport || ancestor.alwaysUpdate)) {
                     // apply gravity to this body
-                    this.bodyApplyGravity(body, dt);
+                    this.bodyApplyGravity(body);
                     // body update function (this moves it)
                     if (body.update(dt) === true) {
                         // mark ancestor as dirty
@@ -207,6 +197,8 @@ class World extends Container {
                     };
                     // handle collisions against other objects
                     collisionCheck(ancestor);
+                    // clear body force
+                    body.force.set(0, 0);
                 }
             }
         });

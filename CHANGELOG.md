@@ -12,6 +12,9 @@
 - Loader: `onload` and `onerror` callbacks are now optionals when directly loading assets (easier with base64 encoded assets)
 - Game: refactoring of the global `game` into an instantiable `Application` object, with `game` now being the default instance of it (@see #1091)
 - Physic: World physic implementation is now properly tight to its corresponding parent application/game (@see #1091)
+- Physic: Gravity is now properly applied as a force, instead of directly modifying a body velocity
+- Physic: Gravity now properly takes in account the body mass
+- Physic: resulting force is now properly cancelled at the end of an update cycle (not required anymore to manually set it to 0 in user code)
 
 ### Fixed
 - Loader: fix loading/preloading of base64 audio assets, and base64 encoded FontFace
