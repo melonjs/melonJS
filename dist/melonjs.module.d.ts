@@ -487,22 +487,13 @@ export class Body {
      */
     setFriction(x?: number, y?: number): void;
     /**
-     * compute the new velocity value
-     * @ignore
-     */
-    computeVelocity(): void;
-    /**
      * Updates the parent's position as well as computes the new body's velocity based
-     * on the values of force/friction/gravity.  Velocity chages are proportional to the
+     * on the values of force/friction.  Velocity chages are proportional to the
      * me.timer.tick value (which can be used to scale velocities).  The approach to moving the
      * parent renderable is to compute new values of the Body.vel property then add them to
      * the parent.pos value thus changing the postion the amount of Body.vel each time the
      * update call is made. <br>
      * Updates to Body.vel are bounded by maxVel (which defaults to viewport size if not set) <br>
-     *
-     * In addition, when the gravity calcuation is made, if the Body.vel.y > 0 then the Body.falling
-     * property is set to true and Body.jumping is set to !Body.falling.
-     *
      * At this time a call to Body.Update does not call the onBodyUpdate callback that is listed in the constructor arguments.
      * @protected
      * @param {number} dt time since the last update in milliseconds.
@@ -5409,16 +5400,18 @@ export class Polygon {
  */
 export class QuadTree {
     /**
+     * @param {World} world the physic world this QuadTree belongs to
      * @param {Bounds} bounds bounds of the node
      * @param {number} [max_objects=4] max objects a node can hold before splitting into 4 subnodes
      * @param {number} [max_levels=4] total max levels inside root Quadtree
      * @param {number} [level] deepth level, required for subnodes
      */
-    constructor(bounds: Bounds, max_objects?: number, max_levels?: number, level?: number);
+    constructor(world: World, bounds: Bounds, max_objects?: number, max_levels?: number, level?: number);
+    world: World;
+    bounds: Bounds;
     max_objects: number;
     max_levels: number;
     level: number;
-    bounds: Bounds;
     objects: any[];
     nodes: any[];
     split(): void;
@@ -9563,6 +9556,12 @@ export class World extends Container {
      */
     constructor(x?: number, y?: number, width?: number, height?: number);
     /**
+     * the application (game) this physic world belong to
+     * @public
+     * @type {Application}
+     */
+    public app: Application;
+    /**
      * the rate at which the game world is updated,
      * may be greater than or lower than the display fps
      * @public
@@ -9629,6 +9628,15 @@ export class World extends Container {
      * @returns {World} this game world
      */
     removeBody(body: Body): World;
+    /**
+     * Apply gravity to the given body
+     * @name bodyApplyVelocity
+     * @memberof World
+     * @private
+     * @param {Body} body
+     * @param {number} dt the time passed since the last frame update
+     */
+    private bodyApplyGravity;
 }
 export var audio: Readonly<{
     __proto__: any;
@@ -9783,21 +9791,13 @@ export var event: Readonly<{
     once: typeof once;
     off: typeof off;
 }>;
-export var game: Readonly<{
-    __proto__: any;
-    readonly viewport: Camera2d;
-    readonly world: World;
-    mergeGroup: true;
-    sortOn: string;
-    readonly lastUpdate: number;
-    onLevelLoaded: typeof onLevelLoaded;
-    reset: typeof reset;
-    updateFrameRate: typeof updateFrameRate;
-    getParentContainer: typeof getParentContainer;
-    repaint: typeof repaint;
-    update: typeof update;
-    draw: typeof draw;
-}>;
+/**
+ * game is a default instance of a melonJS Application and represents your current game,
+ * it contains all the objects, tilemap layers, current viewport, collision map, etc...<br>
+ * @namespace game
+ * @see Application
+ */
+export let game: Application;
 /**
  * a flag indicating that melonJS is fully initialized
  * @type {boolean}
@@ -10132,7 +10132,7 @@ export namespace level {
      * @param {string} levelId level id
      * @param {object} [options] additional optional parameters
      * @param {Container} [options.container=game.world] container in which to load the specified level
-     * @param {Function} [options.onLoaded=ame.onLevelLoaded] callback for when the level is fully loaded
+     * @param {Function} [options.onLoaded=game.onLevelLoaded] callback for when the level is fully loaded
      * @param {boolean} [options.flatten=game.mergeGroup] if true, flatten all objects into the given container
      * @param {boolean} [options.setViewportBounds=true] if true, set the viewport bounds to the map size
      * @returns {boolean} true if the level was successfully loaded
@@ -10177,7 +10177,7 @@ export namespace level {
      * @param {string} levelId level id
      * @param {object} [options] additional optional parameters
      * @param {Container} [options.container=game.world] container in which to load the specified level
-     * @param {Function} [options.onLoaded=ame.onLevelLoaded] callback for when the level is fully loaded
+     * @param {Function} [options.onLoaded=game.onLevelLoaded] callback for when the level is fully loaded
      * @param {boolean} [options.flatten=game.mergeGroup] if true, flatten all objects into the given container
      * @param {boolean} [options.setViewportBounds=true] if true, set the viewport bounds to the map size
      * @returns {boolean} true if the level was successfully loaded
@@ -11103,20 +11103,6 @@ export namespace state {
      */
     export function isCurrent(state: number): boolean;
 }
-/**
- * the default global Timer instance
- * @namespace timer
- * @see Timer
- * @example
- * // set a timer to call "myFunction" after 1000ms
- * timer.setTimeout(myFunction, 1000);
- * // set a timer to call "myFunction" after 1000ms (respecting the pause state) and passing param1 and param2
- * timer.setTimeout(myFunction, 1000, true, param1, param2);
- * // set a timer to call "myFunction" every 1000ms
- * timer.setInterval(myFunction, 1000);
- * // set a timer to call "myFunction" every 1000ms (respecting the pause state) and passing param1 and param2
- * timer.setInterval(myFunction, 1000, true, param1, param2);
- */
 export const timer: Timer;
 export namespace utils {
     export { agentUtils as agent };
@@ -11582,6 +11568,109 @@ declare class VertexArrayBuffer {
     isEmpty(): boolean;
 }
 /**
+ * @classdesc
+ * An Application represents a single melonJS game.
+ * An Application is responsible for updating (each frame) all the related object status and draw them.
+ * @see game
+ */
+declare class Application {
+    /**
+     * a reference to the current active stage "default" camera
+     * @public
+     * @type {Camera2d}
+     */
+    public viewport: Camera2d;
+    /**
+     * a reference to the game world, <br>
+     * a world is a virtual environment containing all the game objects
+     * @public
+     * @type {World}
+     */
+    public world: World;
+    /**
+     * when true, all objects will be added under the root world container.<br>
+     * When false, a `me.Container` object will be created for each corresponding groups
+     * @public
+     * @type {boolean}
+     * @default true
+     */
+    public mergeGroup: boolean;
+    /**
+     * Specify the property to be used when sorting renderables.
+     * Accepted values : "x", "y", "z"
+     * @public
+     * @type {string}
+     * @default "z"
+     */
+    public sortOn: string;
+    /**
+     * Last time the game update loop was executed. <br>
+     * Use this value to implement frame prediction in drawing events,
+     * for creating smooth motion while running game update logic at
+     * a lower fps.
+     * @public
+     * @type {DOMHighResTimeStamp}
+     * @name lastUpdate
+     * @memberof Application
+     */
+    public lastUpdate: DOMHighResTimeStamp;
+    isDirty: boolean;
+    isAlwaysDirty: boolean;
+    frameCounter: number;
+    frameRate: number;
+    accumulator: number;
+    accumulatorMax: number;
+    accumulatorUpdateDelta: number;
+    stepSize: number;
+    updateDelta: number;
+    lastUpdateStart: number;
+    updateAverageDelta: number;
+    /**
+     * init the game instance (create a physic world, update starting time, etc..)
+     */
+    init(): void;
+    /**
+     * reset the game Object manager
+     * destroy all current objects
+     */
+    reset(): void;
+    /**
+     * Fired when a level is fully loaded and all renderable instantiated. <br>
+     * Additionnaly the level id will also be passed to the called function.
+     * @example
+     * // call myFunction () everytime a level is loaded
+     * me.game.onLevelLoaded = this.myFunction.bind(this);
+     */
+    onLevelLoaded(): void;
+    /**
+     * Update the renderer framerate using the system config variables.
+     * @see timer.maxfps
+     * @see World.fps
+     */
+    updateFrameRate(): void;
+    /**
+     * Returns the parent container of the specified Child in the game world
+     * @param {Renderable} child
+     * @returns {Container}
+     */
+    getParentContainer(child: Renderable): Container;
+    /**
+     * force the redraw (not update) of all objects
+     */
+    repaint(): void;
+    /**
+     * update all objects related to this game active scene/stage
+     * @param {number} time current timestamp as provided by the RAF callback
+     * @param {Stage} stage the current stage
+     */
+    update(time: number, stage: Stage): void;
+    /**
+     * draw the active scene/stage associated to this game
+     * @param {Stage} stage the current stage
+     */
+    draw(stage: Stage): void;
+}
+/**
  * Initialize and configure the audio support.<br>
  * melonJS supports a wide array of audio codecs that have varying browser support :
  * <i> ("mp3", "mpeg", opus", "ogg", "oga", "wav", "aac", "caf", "m4a", "m4b", "mp4", "weba", "webm", "dolby", "flac")</i>.<br>
@@ -11882,55 +11971,6 @@ declare function once(eventName: string | symbol, listener: Function, context?: 
  * me.event.off("event-name", myFunction);
  */
 declare function off(eventName: string | symbol, listener: Function): {};
-/**
- * Fired when a level is fully loaded and all entities instantiated. <br>
- * Additionnaly the level id will also be passed to the called function.
- * @function game.onLevelLoaded
- * @example
- * // call myFunction () everytime a level is loaded
- * me.game.onLevelLoaded = this.myFunction.bind(this);
- */
-declare function onLevelLoaded(): void;
-/**
- * reset the game Object manager<br>
- * destroy all current objects
- * @function game.reset
- */
-declare function reset(): void;
-/**
- * Update the renderer framerate using the system config variables.
- * @function game.updateFrameRate
- * @see timer.maxfps
- * @see World.fps
- */
-declare function updateFrameRate(): void;
-/**
- * Returns the parent container of the specified Child in the game world
- * @function game.getParentContainer
- * @param {Renderable} child
- * @returns {Container}
- */
-declare function getParentContainer(child: Renderable): Container;
-/**
- * force the redraw (not update) of all objects
- * @function game.repaint
- */
-declare function repaint(): void;
-/**
- * update all objects of the game manager
- * @ignore
- * @function game.update
- * @param {number} time current timestamp as provided by the RAF callback
- * @param {Stage} stage the current stage
- */
-declare function update(time: number, stage: Stage): void;
-/**
- * draw the current scene/stage
- * @function game.draw
- * @ignore
- * @param {Stage} stage the current stage
- */
-declare function draw(stage: Stage): void;
 /**
  * Translate the specified x and y values from the global (absolute)
  * coordinate to local (viewport) relative coordinate.
@@ -12325,48 +12365,41 @@ declare class ObjectPool {
 /**
  * @classdesc
  * a Timer class to manage timing related function (FPS, Game Tick, Time...)
-  * @see {@link timer} the default global timer instance
+ * @see {@link timer} the default global timer instance
  */
 declare class Timer {
     /**
-     * Last game tick value.<br/>
-     * Use this value to scale velocities during frame drops due to slow
-     * hardware or when setting an FPS limit. (See {@link timer.maxfps})
-     * This feature is disabled by default. Enable me.timer.interpolation to
-     * use it.
+     * Last game tick value. <br>
+     * Use this value to scale velocities during frame drops due to slow hardware or when setting an FPS limit.
+     * This feature is disabled by default (Enable interpolation to use it).
      * @public
-     * @see timer.interpolation
+     * @see interpolation
+     * @See maxfps
      * @type {number}
      * @name tick
-     * @memberof timer
      */
     public tick: number;
     /**
-     * Last measured fps rate.<br/>
-     * This feature is disabled by default, unless the debugPanel is enabled/visible
+     * Last measured fps rate.<br>
+     * This feature is disabled by default, unless the debugPanel is enabled/visible.
      * @public
      * @type {number}
      * @name fps
-     * @memberof timer
      */
     public fps: number;
     /**
      * Set the maximum target display frame per second
      * @public
-     * @see timer.tick
+     * @see tick
      * @type {number}
-     * @name maxfps
      * @default 60
-     * @memberof timer
      */
     public maxfps: number;
     /**
      * Enable/disable frame interpolation
-     * @see timer.tick
+     * @see tick
      * @type {boolean}
      * @default false
-     * @name interpolation
-     * @memberof timer
      */
     interpolation: boolean;
     framecount: number;
@@ -12380,15 +12413,11 @@ declare class Timer {
     timerId: number;
     /**
      * reset time (e.g. usefull in case of pause)
-     * @name reset
-     * @memberof timer
      * @ignore
      */
     reset(): void;
     /**
      * Calls a function once after a specified delay. See me.timer.setInterval to repeativly call a function.
-     * @name setTimeout
-     * @memberof timer
      * @param {Function} fn the function you want to execute after delay milliseconds.
      * @param {number} delay the number of milliseconds (thousandths of a second) that the function call should be delayed by.
      * @param {boolean} [pauseable=true] respects the pause state of the engine.
@@ -12403,8 +12432,6 @@ declare class Timer {
     setTimeout(fn: Function, delay: number, pauseable?: boolean, ...args: any[]): number;
     /**
      * Calls a function continously at the specified interval.  See setTimeout to call function a single time.
-     * @name setInterval
-     * @memberof timer
      * @param {Function} fn the function to execute
      * @param {number} delay the number of milliseconds (thousandths of a second) on how often to execute the function
      * @param {boolean} [pauseable=true] respects the pause state of the engine.
@@ -12419,38 +12446,28 @@ declare class Timer {
     setInterval(fn: Function, delay: number, pauseable?: boolean, ...args: any[]): number;
     /**
      * Clears the delay set by me.timer.setTimeout().
-     * @name clearTimeout
-     * @memberof timer
      * @param {number} timeoutID ID of the timeout to be cleared
      */
     clearTimeout(timeoutID: number): void;
     /**
      * Clears the Interval set by me.timer.setInterval().
-     * @name clearInterval
-     * @memberof timer
      * @param {number} intervalID ID of the interval to be cleared
      */
     clearInterval(intervalID: number): void;
     /**
      * Return the current timestamp in milliseconds <br>
      * since the game has started or since linux epoch (based on browser support for High Resolution Timer)
-     * @name getTime
-     * @memberof timer
      * @returns {number}
      */
     getTime(): number;
     /**
      * Return elapsed time in milliseconds since the last update
-     * @name getDelta
-     * @memberof timer
      * @returns {number}
      */
     getDelta(): number;
     /**
      * compute the actual frame time and fps rate
-     * @name computeFPS
      * @ignore
-     * @memberof timer
      */
     countFPS(): void;
     /**

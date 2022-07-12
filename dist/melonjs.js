@@ -315,10 +315,10 @@
 	(shared$3.exports = function (key, value) {
 	  return store$2[key] || (store$2[key] = value !== undefined ? value : {});
 	})('versions', []).push({
-	  version: '3.23.3',
+	  version: '3.23.4',
 	  mode: 'global',
 	  copyright: '© 2014-2022 Denis Pushkarev (zloirock.ru)',
-	  license: 'https://github.com/zloirock/core-js/blob/v3.23.3/LICENSE',
+	  license: 'https://github.com/zloirock/core-js/blob/v3.23.4/LICENSE',
 	  source: 'https://github.com/zloirock/core-js'
 	});
 
@@ -4943,7 +4943,8 @@
 	 * Event for when the viewport is resized <br>
 	 * (this usually follows a WINDOW_ONRESIZE event, when using the `flex` scaling mode is used and after the viewport was updated).<br>
 	 * Data passed : {number} viewport width <br>
-	 * Data passed : {number} viewport height
+	 * Data passed : {number} viewport height <br>
+	 * Data passed : {Camera2d} a reference to the camera viewport being resized
 	 * @public
 	 * @constant
 	 * @type {string}
@@ -16611,8 +16612,8 @@
 	        this.type = event.type;
 
 	        // get the current screen to game world offset
-	        if (typeof viewport !== "undefined") {
-	            viewport.localToWorld(this.gameScreenX, this.gameScreenY, tmpVec);
+	        if (typeof game.viewport !== "undefined") {
+	            game.viewport.localToWorld(this.gameScreenX, this.gameScreenY, tmpVec);
 	        }
 
 	        /* Initialize the two coordinate space properties. */
@@ -16911,10 +16912,10 @@
 	        }
 
 	        // fetch valid candiates from the game world container
-	        var candidates = world.broadphase.retrieve(currentPointer, Container.prototype._sortReverseZ);
+	        var candidates = game.world.broadphase.retrieve(currentPointer, Container.prototype._sortReverseZ);
 
 	        // add the main game viewport to the list of candidates
-	        candidates = candidates.concat([ viewport ]);
+	        candidates = candidates.concat([ game.viewport ]);
 
 	        for (var c = candidates.length, candidate; c--, (candidate = candidates[c]);) {
 	            if (eventHandlers.has(candidate) && (candidate.isKinematic !== true)) {
@@ -19391,7 +19392,7 @@
 
 	    var collisionCounter = 0;
 	    // retreive a list of potential colliding objects from the game world
-	    var candidates = world.broadphase.retrieve(objA);
+	    var candidates = game.world.broadphase.retrieve(objA);
 
 	    for (var i = candidates.length, objB; i--, (objB = candidates[i]);) {
 
@@ -19481,7 +19482,7 @@
 	    var collisionCounter = 0;
 
 	    // retrieve a list of potential colliding objects from the game world
-	    var candidates = world.broadphase.retrieve(line);
+	    var candidates = game.world.broadphase.retrieve(line);
 
 	    for (var i = candidates.length, objB; i--, (objB = candidates[i]);) {
 
@@ -20102,10 +20103,12 @@
 	            this.vel.y *= -this.bounce;
 	        }
 
-	        // cancel the falling an jumping flags if necessary
-	        var dir = Math.sign(world.gravity.y * this.gravityScale) || 1;
-	        this.falling = overlap.y >= dir;
-	        this.jumping = overlap.y <= -dir;
+	        if (!this.ignoreGravity) {
+	            // cancel the falling an jumping flags if necessary
+	            var dir = this.falling === true ? 1 : this.jumping === true ? -1 : 0;
+	            this.falling = overlap.y >= dir;
+	            this.jumping = overlap.y <= -dir;
+	        }
 	    }
 	};
 
@@ -20146,14 +20149,12 @@
 	    }
 	};
 
-
 	/**
 	 * Returns true if the any of the shape composing the body contains the given point.
 	 * @method Body#contains
 	 * @param {Vector2d} point
 	 * @returns {boolean} true if contains
 	 */
-
 	/**
 	 * Returns true if the any of the shape composing the body contains the given point.
 	 * @param  {number} x x coordinate
@@ -20235,26 +20236,22 @@
 	};
 
 	/**
-	 * compute the new velocity value
-	 * @ignore
+	 * Updates the parent's position as well as computes the new body's velocity based
+	 * on the values of force/friction.  Velocity chages are proportional to the
+	 * me.timer.tick value (which can be used to scale velocities).  The approach to moving the
+	 * parent renderable is to compute new values of the Body.vel property then add them to
+	 * the parent.pos value thus changing the postion the amount of Body.vel each time the
+	 * update call is made. <br>
+	 * Updates to Body.vel are bounded by maxVel (which defaults to viewport size if not set) <br>
+	 * At this time a call to Body.Update does not call the onBodyUpdate callback that is listed in the constructor arguments.
+	 * @protected
+	 * @param {number} dt time since the last update in milliseconds.
+	 * @returns {boolean} true if resulting velocity is different than 0
 	 */
-	Body.prototype.computeVelocity = function computeVelocity (/* dt */) {
+	Body.prototype.update = function update (dt) { // eslint-disable-line no-unused-vars
 	    // apply timer.tick to delta time for linear interpolation (when enabled)
 	    // #761 add delta time in body update
 	    var deltaTime = /* dt * */ timer.tick;
-
-	    // apply gravity to the current velocity
-	    if (!this.ignoreGravity) {
-	        var worldGravity = world.gravity;
-
-	        // apply gravity if defined
-	        this.vel.x += worldGravity.x * this.gravityScale * deltaTime;
-	        this.vel.y += worldGravity.y * this.gravityScale * deltaTime;
-
-	        // check if falling / jumping
-	        this.falling = (this.vel.y * Math.sign(worldGravity.y * this.gravityScale)) > 0;
-	        this.jumping = (this.falling ? false : this.jumping);
-	    }
 
 	    // apply force if defined
 	    if (this.force.x !== 0) {
@@ -20293,28 +20290,6 @@
 	    if (this.vel.x !== 0) {
 	        this.vel.x = clamp(this.vel.x, -this.maxVel.x, this.maxVel.x);
 	    }
-	};
-
-	/**
-	 * Updates the parent's position as well as computes the new body's velocity based
-	 * on the values of force/friction/gravity.  Velocity chages are proportional to the
-	 * me.timer.tick value (which can be used to scale velocities).  The approach to moving the
-	 * parent renderable is to compute new values of the Body.vel property then add them to
-	 * the parent.pos value thus changing the postion the amount of Body.vel each time the
-	 * update call is made. <br>
-	 * Updates to Body.vel are bounded by maxVel (which defaults to viewport size if not set) <br>
-	 *
-	 * In addition, when the gravity calcuation is made, if the Body.vel.y > 0 then the Body.falling
-	 * property is set to true and Body.jumping is set to !Body.falling.
-	 *
-	 * At this time a call to Body.Update does not call the onBodyUpdate callback that is listed in the constructor arguments.
-	 * @protected
-	 * @param {number} dt time since the last update in milliseconds.
-	 * @returns {boolean} true if resulting velocity is different than 0
-	 */
-	Body.prototype.update = function update (dt) {
-	    // update the velocity
-	    this.computeVelocity(dt);
 
 	    // update the body ancestor position
 	    this.ancestor.pos.add(this.vel);
@@ -20371,8 +20346,8 @@
 	    function Container(x, y, width, height, root) {
 	        if ( x === void 0 ) x = 0;
 	        if ( y === void 0 ) y = 0;
-	        if ( width === void 0 ) width = viewport.width;
-	        if ( height === void 0 ) height = viewport.height;
+	        if ( width === void 0 ) width = game.viewport.width;
+	        if ( height === void 0 ) height = game.viewport.height;
 	        if ( root === void 0 ) root = false;
 
 
@@ -20410,7 +20385,7 @@
 	         * @name sortOn
 	         * @memberof Container
 	         */
-	        this.sortOn = sortOn;
+	        this.sortOn = game.sortOn;
 
 	        /**
 	         * Specify if the children list should be automatically sorted when adding a new child
@@ -20581,7 +20556,7 @@
 
 	        // force repaint in case this is a static non-animated object
 	        if (this.isAttachedToRoot() === true) {
-	            repaint();
+	            game.repaint();
 	        }
 
 	        // force bounds update if required
@@ -20591,7 +20566,7 @@
 
 	        // if a physic body is defined, add it to the game world
 	        if (child.body instanceof Body) {
-	            world.addBody(child.body);
+	            game.world.addBody(child.body);
 	        }
 
 	        // triggered callback if defined
@@ -20632,7 +20607,7 @@
 
 	            // force repaint in case this is a static non-animated object
 	            if (this.isAttachedToRoot() === true) {
-	                repaint();
+	                game.repaint();
 	            }
 
 	            // force bounds update if required
@@ -20642,7 +20617,7 @@
 
 	            // if a physic body is defined, add it to the game world
 	            if (child.body instanceof Body) {
-	                world.addBody(child.body);
+	                game.world.addBody(child.body);
 	            }
 
 	            // triggered callback if defined
@@ -21020,7 +20995,7 @@
 	            // remove the body first to avoid a condition where a body can be detached
 	            // from its parent, before the body is removed from the game world
 	            if (child.body instanceof Body) {
-	                world.removeBody(child.body);
+	                game.world.removeBody(child.body);
 	            }
 
 	            if (!keepalive) {
@@ -21043,7 +21018,7 @@
 
 	            // force repaint in case this is a static non-animated object
 	            if (this.isAttachedToRoot() === true) {
-	                repaint();
+	                game.repaint();
 	            }
 
 	            // force bounds update if required
@@ -21169,7 +21144,7 @@
 	                // clear the defer id
 	                this.pendingSort = null;
 	                // make sure we redraw everything
-	                repaint();
+	                game.repaint();
 	            }, this);
 	        }
 	    };
@@ -21374,20 +21349,21 @@
 	 * or create a new one if the array is empty
 	 * @ignore
 	 */
-	function QT_ARRAY_POP(bounds, max_objects, max_levels, level) {
+	function QT_ARRAY_POP(world, bounds, max_objects, max_levels, level) {
 	    if ( max_objects === void 0 ) max_objects = 4;
 	    if ( max_levels === void 0 ) max_levels = 4;
 	    if ( level === void 0 ) level = 0;
 
 	    if (QT_ARRAY.length > 0) {
 	        var _qt =  QT_ARRAY.pop();
+	        _qt.world = world;
 	        _qt.bounds = bounds;
 	        _qt.max_objects = max_objects;
 	        _qt.max_levels  = max_levels;
 	        _qt.level = level;
 	        return _qt;
 	    } else {
-	        return new QuadTree(bounds, max_objects, max_levels, level);
+	        return new QuadTree(world, bounds, max_objects, max_levels, level);
 	    }
 	}
 	/**
@@ -21408,10 +21384,14 @@
 	 * a QuadTree implementation in JavaScript, a 2d spatial subdivision algorithm.
 	 * @see game.world.broadphase
 	 */
-	var QuadTree = function QuadTree(bounds, max_objects, max_levels, level) {
+	var QuadTree = function QuadTree(world, bounds, max_objects, max_levels, level) {
 	    if ( max_objects === void 0 ) max_objects = 4;
 	    if ( max_levels === void 0 ) max_levels = 4;
 	    if ( level === void 0 ) level = 0;
+
+
+	    this.world = world;
+	    this.bounds = bounds;
 
 	    this.max_objects = max_objects;
 	    this.max_levels  = max_levels;
@@ -21427,43 +21407,59 @@
 	 * Split the node into 4 subnodes
 	 */
 	QuadTree.prototype.split = function split () {
-	    var nextLevel = this.level + 1,
-	        subWidth  = this.bounds.width / 2,
+	    this.level + 1;
+	        var subWidth  = this.bounds.width / 2,
 	        subHeight = this.bounds.height / 2,
 	        left = this.bounds.left,
 	        top = this.bounds.top;
 
 	     //top right node
-	    this.nodes[0] = QT_ARRAY_POP({
-	        left : left + subWidth,
-	        top : top,
-	        width : subWidth,
-	        height : subHeight
-	    }, this.max_objects, this.max_levels, nextLevel);
+	    this.nodes[0] = QT_ARRAY_POP(
+	        this.world,
+	        this.bounds, {
+	            left : left + subWidth,
+	            top : top,
+	            width : subWidth,
+	            height : subHeight
+	        },
+	        this.max_objects,
+	        this.max_levels);
 
 	    //top left node
-	    this.nodes[1] = QT_ARRAY_POP({
-	        left : left,
-	        top: top,
-	        width : subWidth,
-	        height : subHeight
-	    }, this.max_objects, this.max_levels, nextLevel);
+	    this.nodes[1] = QT_ARRAY_POP(
+	        this.world,
+	        this.bounds, {
+	            left : left,
+	            top: top,
+	            width : subWidth,
+	            height : subHeight
+	        },
+	        this.max_objects,
+	        this.max_levels);
 
 	    //bottom left node
-	    this.nodes[2] = QT_ARRAY_POP({
-	        left : left,
-	        top : top + subHeight,
-	        width : subWidth,
-	        height : subHeight
-	    }, this.max_objects, this.max_levels, nextLevel);
+	    this.nodes[2] = QT_ARRAY_POP(
+	        this.world,
+	        this.bounds, {
+	            left : left,
+	            top : top + subHeight,
+	            width : subWidth,
+	            height : subHeight
+	        },
+	        this.max_objects,
+	        this.max_levels);
 
 	    //bottom right node
-	    this.nodes[3] = QT_ARRAY_POP({
-	        left : left + subWidth,
-	        top : top + subHeight,
-	        width : subWidth,
-	        height : subHeight
-	    }, this.max_objects, this.max_levels, nextLevel);
+	    this.nodes[3] = QT_ARRAY_POP(
+	        this.world,
+	        this.bounds, {
+	            left : left + subWidth,
+	            top : top + subHeight,
+	            width : subWidth,
+	            height : subHeight
+	        },
+	        this.max_objects,
+	        this.max_levels);
 	};
 
 	/*
@@ -21477,7 +21473,7 @@
 
 	    // use game world coordinates for floating items
 	    if (item.isFloating === true) {
-	        pos = viewport.localToWorld(bounds.left, bounds.top, QT_VECTOR);
+	        pos = this.world.app.viewport.localToWorld(bounds.left, bounds.top, QT_VECTOR);
 	    } else {
 	        pos = QT_VECTOR.set(item.left, item.top);
 	    }
@@ -21732,6 +21728,13 @@
 	        this.anchorPoint.set(0, 0);
 
 	        /**
+	         * the application (game) this physic world belong to
+	         * @public
+	         * @type {Application}
+	         */
+	        this.app = null;
+
+	        /**
 	         * the rate at which the game world is updated,
 	         * may be greater than or lower than the display fps
 	         * @public
@@ -21783,7 +21786,7 @@
 	         * @public
 	         * @type {QuadTree}
 	         */
-	        this.broadphase = new QuadTree(this.getBounds().clone(), collision.maxChildren, collision.maxDepth);
+	        this.broadphase = new QuadTree(this, this.getBounds().clone(), collision.maxChildren, collision.maxDepth);
 
 	        // reset the world container on the game reset signal
 	        on(GAME_RESET, this.reset, this);
@@ -21848,6 +21851,33 @@
 	    };
 
 	    /**
+	     * Apply gravity to the given body
+	     * @name bodyApplyVelocity
+	     * @memberof World
+	     * @private
+	     * @param {Body} body
+	     * @param {number} dt the time passed since the last frame update
+	     */
+	    World.prototype.bodyApplyGravity = function bodyApplyGravity (body, dt) { // eslint-disable-line no-unused-vars
+	        // apply timer.tick to delta time for linear interpolation (when enabled)
+	        // #761 add delta time in body update
+	        var deltaTime = /*dt * */ timer.tick;
+
+	        // apply gravity to the current velocity
+	        if (!body.ignoreGravity) {
+	            var worldGravity = this.gravity;
+
+	            // apply gravity if defined
+	            body.vel.x += worldGravity.x * body.gravityScale * deltaTime;
+	            body.vel.y += worldGravity.y * body.gravityScale * deltaTime;
+
+	            // check if falling / jumping
+	            body.falling = (body.vel.y * Math.sign(worldGravity.y * body.gravityScale)) > 0;
+	            body.jumping = (body.falling ? false : body.jumping);
+	        }
+	    };
+
+	    /**
 	     * update the game world
 	     * @name reset
 	     * @memberof World
@@ -21855,6 +21885,8 @@
 	     * @returns {boolean} true if the word is dirty
 	     */
 	    World.prototype.update = function update (dt) {
+	        var this$1$1 = this;
+
 	        var isPaused = state.isPaused();
 
 	        // clear the quadtree
@@ -21870,7 +21902,9 @@
 	                // if the game is not paused, and ancestor can be updated
 	                if (!(isPaused && (!ancestor.updateWhenPaused)) &&
 	                   (ancestor.inViewport || ancestor.alwaysUpdate)) {
-	                    // apply physics to the body (this moves it)
+	                    // apply gravity to this body
+	                    this$1$1.bodyApplyGravity(body, dt);
+	                    // body update function (this moves it)
 	                    if (body.update(dt) === true) {
 	                        // mark ancestor as dirty
 	                        ancestor.isDirty = true;
@@ -21888,186 +21922,176 @@
 	}(Container));
 
 	/**
-	 * game represents your current game, it contains all the objects,
-	 * tilemap layers, current viewport, collision map, etc...<br>
-	 * game is also responsible for updating (each frame) the object status and draw them.
-	 * @namespace game
+	 * @classdesc
+	 * An Application represents a single melonJS game.
+	 * An Application is responsible for updating (each frame) all the related object status and draw them.
+	 * @see game
 	 */
+	var Application = function Application() {
+	    /**
+	     * a reference to the current active stage "default" camera
+	     * @public
+	     * @type {Camera2d}
+	     */
+	    this.viewport = null;
 
-	// to know when we have to refresh the display
-	var isDirty = true;
+	    /**
+	     * a reference to the game world, <br>
+	     * a world is a virtual environment containing all the game objects
+	     * @public
+	     * @type {World}
+	     */
+	    this.world = null;
 
-	// always refresh the display when updatesPerSecond are lower than fps
-	var isAlwaysDirty = false;
+	    /**
+	     * when true, all objects will be added under the root world container.<br>
+	     * When false, a `me.Container` object will be created for each corresponding groups
+	     * @public
+	     * @type {boolean}
+	     * @default true
+	     */
+	    this.mergeGroup = true;
 
-	// frame counter for frameSkipping
-	// reset the frame counter
-	var frameCounter = 0;
-	var frameRate = 1;
+	    /**
+	     * Specify the property to be used when sorting renderables.
+	     * Accepted values : "x", "y", "z"
+	     * @public
+	     * @type {string}
+	     * @default "z"
+	     */
+	    this.sortOn = "z";
 
-	// time accumulation for multiple update calls
-	var accumulator = 0.0;
-	var accumulatorMax = 0.0;
-	var accumulatorUpdateDelta = 0;
+	    /**
+	     * Last time the game update loop was executed. <br>
+	     * Use this value to implement frame prediction in drawing events,
+	     * for creating smooth motion while running game update logic at
+	     * a lower fps.
+	     * @public
+	     * @type {DOMHighResTimeStamp}
+	     * @name lastUpdate
+	     * @memberof Application
+	     */
+	    this.lastUpdate = 0;
 
-	// min update step size
-	var stepSize = 1000 / 60;
-	var updateDelta = 0;
-	var lastUpdateStart = null;
-	var updateAverageDelta = 0;
+	    // to know when we have to refresh the display
+	    this.isDirty = true;
 
+	    // always refresh the display when updatesPerSecond are lower than fps
+	    this.isAlwaysDirty = false;
 
-	 // initialize the game manager on system boot
-	on(BOOT, function () {
-	    // the root object of our world is an entity container
-	    world = new World();
-	    // publish init notification
-	    emit(GAME_INIT);
-	});
+	    // frame counter for frameSkipping
+	    // reset the frame counter
+	    this.frameCounter = 0;
+	    this.frameRate = 1;
 
+	    // time accumulation for multiple update calls
+	    this.accumulator = 0.0;
+	    this.accumulatorMax = 0.0;
+	    this.accumulatorUpdateDelta = 0;
+
+	    // min update step size
+	    this.stepSize = 1000 / 60;
+	    this.updateDelta = 0;
+	    this.lastUpdateStart = null;
+	    this.updateAverageDelta = 0;
+	};
 
 	/**
-	 * a reference to the current active stage "default" camera
-	 * @public
-	 * @type {Camera2d}
-	 * @name viewport
-	 * @memberof game
+	 * init the game instance (create a physic world, update starting time, etc..)
 	 */
-	var viewport;
+	Application.prototype.init = function init () {
+	    // create a new physic world
+	    this.world = new World();
+	    // set the reference to this application instance
+	    this.world.app = this;
+	    this.lastUpdate = globalThis.performance.now();
+	    emit(GAME_INIT, this);
+	};
 
 	/**
-	 * a reference to the game world, <br>
-	 * a world is a virtual environment containing all the game objects
-	 * @public
-	 * @type {World}
-	 * @name world
-	 * @memberof game
-	 */
-	var world;
-
-	/**
-	 * when true, all objects will be added under the root world container.<br>
-	 * When false, a `me.Container` object will be created for each corresponding groups
-	 * @public
-	 * @type {boolean}
-	 * @default true
-	 * @name mergeGroup
-	 * @memberof game
-	 */
-	var mergeGroup = true;
-
-	/**
-	 * Specify the property to be used when sorting entities.
-	 * Accepted values : "x", "y", "z"
-	 * @public
-	 * @type {string}
-	 * @default "z"
-	 * @name sortOn
-	 * @memberof game
-	 */
-	var sortOn = "z";
-
-	/**
-	 * Last time the game update loop was executed. <br>
-	 * Use this value to implement frame prediction in drawing events,
-	 * for creating smooth motion while running game update logic at
-	 * a lower fps.
-	 * @public
-	 * @type {DOMHighResTimeStamp}
-	 * @name lastUpdate
-	 * @memberof game
-	 */
-	var lastUpdate = globalThis.performance.now();
-
-	/**
-	 * Fired when a level is fully loaded and all entities instantiated. <br>
-	 * Additionnaly the level id will also be passed to the called function.
-	 * @function game.onLevelLoaded
-	 * @example
-	 * // call myFunction () everytime a level is loaded
-	 * me.game.onLevelLoaded = this.myFunction.bind(this);
-	 */
-	function onLevelLoaded() {}
-	/**
-	 * reset the game Object manager<br>
+	 * reset the game Object manager
 	 * destroy all current objects
-	 * @function game.reset
 	 */
-	function reset () {
+	Application.prototype.reset = function reset () {
 	    // point to the current active stage "default" camera
-	    var current = state.current();
+	    var current = state.get();
 	    if (typeof current !== "undefined") {
-	        viewport = current.cameras.get("default");
+	        this.viewport = current.cameras.get("default");
 	    }
 
 	    // publish reset notification
 	    emit(GAME_RESET);
 
 	    // Refresh internal variables for framerate  limiting
-	    updateFrameRate();
-	}
+	    this.updateFrameRate();
+	};
 
 	/**
+	 * Fired when a level is fully loaded and all renderable instantiated. <br>
+	 * Additionnaly the level id will also be passed to the called function.
+	 * @example
+	 * // call myFunction () everytime a level is loaded
+	 * me.game.onLevelLoaded = this.myFunction.bind(this);
+	 */
+	Application.prototype.onLevelLoaded = function onLevelLoaded () {};
+	/**
 	 * Update the renderer framerate using the system config variables.
-	 * @function game.updateFrameRate
 	 * @see timer.maxfps
 	 * @see World.fps
 	 */
-	function updateFrameRate() {
+	Application.prototype.updateFrameRate = function updateFrameRate () {
 	    // reset the frame counter
-	    frameCounter = 0;
-	    frameRate = ~~(0.5 + 60 / timer.maxfps);
+	    this.frameCounter = 0;
+	    this.frameRate = ~~(0.5 + 60 / timer.maxfps);
 
 	    // set step size based on the updatesPerSecond
-	    stepSize = (1000 / world.fps);
-	    accumulator = 0.0;
-	    accumulatorMax = stepSize * 10;
+	    this.stepSize = (1000 / this.world.fps);
+	    this.accumulator = 0.0;
+	    this.accumulatorMax = this.stepSize * 10;
 
 	    // display should always re-draw when update speed doesn't match fps
 	    // this means the user intends to write position prediction drawing logic
-	    isAlwaysDirty = (timer.maxfps > world.fps);
-	}
+	    this.isAlwaysDirty = (timer.maxfps > this.world.fps);
+	};
+
 	/**
 	 * Returns the parent container of the specified Child in the game world
-	 * @function game.getParentContainer
 	 * @param {Renderable} child
 	 * @returns {Container}
 	 */
-	function getParentContainer(child) {
+	Application.prototype.getParentContainer = function getParentContainer (child) {
 	    return child.ancestor;
-	}
-	/**
-	 * force the redraw (not update) of all objects
-	 * @function game.repaint
-	 */
-	function repaint() {
-	    isDirty = true;
-	}
+	};
 
 	/**
-	 * update all objects of the game manager
-	 * @ignore
-	 * @function game.update
+	 * force the redraw (not update) of all objects
+	 */
+	Application.prototype.repaint = function repaint () {
+	    this.isDirty = true;
+	};
+
+	/**
+	 * update all objects related to this game active scene/stage
 	 * @param {number} time current timestamp as provided by the RAF callback
 	 * @param {Stage} stage the current stage
 	 */
-	function update(time, stage) {
+	Application.prototype.update = function update (time, stage) {
 	    // handle frame skipping if required
-	    if ((++frameCounter % frameRate) === 0) {
+	    if ((++this.frameCounter % this.frameRate) === 0) {
 	        // reset the frame counter
-	        frameCounter = 0;
+	        this.frameCounter = 0;
 
 	        // publish notification
 	        emit(GAME_BEFORE_UPDATE, time);
 
-	        accumulator += timer.getDelta();
-	        accumulator = Math.min(accumulator, accumulatorMax);
+	        this.accumulator += timer.getDelta();
+	        this.accumulator = Math.min(this.accumulator, this.accumulatorMax);
 
-	        updateDelta = (timer.interpolation) ? timer.getDelta() : stepSize;
-	        accumulatorUpdateDelta = (timer.interpolation) ? updateDelta : Math.max(updateDelta, updateAverageDelta);
+	        this.updateDelta = (timer.interpolation) ? timer.getDelta() : this.stepSize;
+	        this.accumulatorUpdateDelta = (timer.interpolation) ? this.updateDelta : Math.max(this.updateDelta, this.updateAverageDelta);
 
-	        while (accumulator >= accumulatorUpdateDelta || timer.interpolation) {
-	            lastUpdateStart = globalThis.performance.now();
+	        while (this.accumulator >= this.accumulatorUpdateDelta || timer.interpolation) {
+	            this.lastUpdateStart = globalThis.performance.now();
 
 	            // game update event
 	            if (state.isPaused() !== true) {
@@ -22075,31 +22099,29 @@
 	            }
 
 	            // update all objects (and pass the elapsed time since last frame)
-	            isDirty = stage.update(updateDelta) || isDirty;
+	            this.isDirty = stage.update(this.updateDelta) || this.isDirty;
 
-	            lastUpdate = globalThis.performance.now();
-	            updateAverageDelta = lastUpdate - lastUpdateStart;
+	            this.lastUpdate = globalThis.performance.now();
+	            this.updateAverageDelta = this.lastUpdate - this.lastUpdateStart;
 
-	            accumulator -= accumulatorUpdateDelta;
+	            this.accumulator -= this.accumulatorUpdateDelta;
 	            if (timer.interpolation) {
-	                accumulator = 0;
+	                this.accumulator = 0;
 	                break;
 	            }
 	        }
 
 	        // publish notification
-	        emit(GAME_AFTER_UPDATE, lastUpdate);
+	        emit(GAME_AFTER_UPDATE, this.lastUpdate);
 	    }
-	}
+	};
+
 	/**
-	 * draw the current scene/stage
-	 * @function game.draw
-	 * @ignore
+	 * draw the active scene/stage associated to this game
 	 * @param {Stage} stage the current stage
 	 */
-	function draw(stage) {
-
-	    if (renderer.isContextValid === true && (isDirty || isAlwaysDirty)) {
+	Application.prototype.draw = function draw (stage) {
+	    if (renderer.isContextValid === true && (this.isDirty || this.isAlwaysDirty)) {
 	        // publish notification
 	        emit(GAME_BEFORE_DRAW, globalThis.performance.now());
 
@@ -22110,7 +22132,7 @@
 	        stage.draw(renderer);
 
 	        // set back to flag
-	        isDirty = false;
+	        this.isDirty = false;
 
 	        // flush/render our frame
 	        renderer.flush();
@@ -22118,22 +22140,22 @@
 	        // publish notification
 	        emit(GAME_AFTER_DRAW, globalThis.performance.now());
 	    }
-	}
+	};
 
-	var game = /*#__PURE__*/Object.freeze({
-		__proto__: null,
-		get viewport () { return viewport; },
-		get world () { return world; },
-		mergeGroup: mergeGroup,
-		sortOn: sortOn,
-		get lastUpdate () { return lastUpdate; },
-		onLevelLoaded: onLevelLoaded,
-		reset: reset,
-		updateFrameRate: updateFrameRate,
-		getParentContainer: getParentContainer,
-		repaint: repaint,
-		update: update,
-		draw: draw
+	/**
+	 * game is a default instance of a melonJS Application and represents your current game,
+	 * it contains all the objects, tilemap layers, current viewport, collision map, etc...<br>
+	 * @namespace game
+	 * @see Application
+	 */
+
+	// create a default melonJS application instance
+	var game = new Application();
+
+	 // initialize the game manager on system boot
+	on(BOOT, function () {
+	    // initialize the default game instance
+	    game.init();
 	});
 
 	// some ref shortcut
@@ -22409,7 +22431,7 @@
 	        this._updateProjectionMatrix();
 
 	        // publish the viewport resize event
-	        emit(VIEWPORT_ONRESIZE, this.width, this.height);
+	        emit(VIEWPORT_ONRESIZE, this.width, this.height, this);
 
 	        return this;
 	    };
@@ -22742,7 +22764,7 @@
 	    Camera2d.prototype.localToWorld = function localToWorld (x, y, v) {
 	        // TODO memoization for one set of coords (multitouch)
 	        v = v || pool.pull("Vector2d");
-	        v.set(x, y).add(this.pos).sub(world.pos);
+	        v.set(x, y).add(this.pos).sub(game.world.pos);
 	        if (!this.currentTransform.isIdentity()) {
 	            this.invCurrentTransform.apply(v);
 	        }
@@ -22766,7 +22788,7 @@
 	        if (!this.currentTransform.isIdentity()) {
 	            this.currentTransform.apply(v);
 	        }
-	        return v.sub(this.pos).add(world.pos);
+	        return v.sub(this.pos).add(game.world.pos);
 	    };
 
 	    /**
@@ -22833,7 +22855,7 @@
 
 	        this.preDraw(renderer);
 
-	        container.preDraw(renderer);
+	        container.preDraw(renderer, this);
 
 	        // draw all objects,
 	        // specifying the viewport as the rectangle area to redraw
@@ -22842,7 +22864,7 @@
 	        // draw the viewport/camera effects
 	        this.drawFX(renderer);
 
-	        container.postDraw(renderer);
+	        container.postDraw(renderer, this);
 
 	        this.postDraw(renderer);
 
@@ -22928,7 +22950,7 @@
 	 * Object reset function
 	 * @ignore
 	 */
-	Stage.prototype.reset = function reset$1 () {
+	Stage.prototype.reset = function reset () {
 	        var this$1$1 = this;
 
 
@@ -22949,7 +22971,7 @@
 	    }
 
 	    // reset the game
-	    reset();
+	    game.reset();
 
 	    // call the onReset Function
 	    this.onResetEvent.apply(this, arguments);
@@ -22965,7 +22987,7 @@
 	 */
 	Stage.prototype.update = function update (dt) {
 	    // update all objects (and pass the elapsed time since last frame)
-	    var isDirty = world.update(dt);
+	    var isDirty = game.world.update(dt);
 
 	    // update the camera/viewport
 	    // iterate through all cameras
@@ -22996,7 +23018,7 @@
 	    // iterate through all cameras
 	    this.cameras.forEach(function (camera) {
 	        // render the root container
-	        camera.draw(renderer, world);
+	        camera.draw(renderer, game.world);
 
 	        // render the ambient light
 	        if (this$1$1.ambientLight.alpha !== 0) {
@@ -23016,9 +23038,9 @@
 
 	        // render all lights
 	        this$1$1.lights.forEach(function (light) {
-	            light.preDraw(renderer, world);
-	            light.draw(renderer, world);
-	            light.postDraw(renderer, world);
+	            light.preDraw(renderer, game.world);
+	            light.draw(renderer, game.world);
+	            light.postDraw(renderer, game.world);
 	        });
 	    });
 	};
@@ -23105,7 +23127,7 @@
 	     * draw function
 	     * @ignore
 	     */
-	    ProgressBar.prototype.draw = function draw (renderer) {
+	    ProgressBar.prototype.draw = function draw (renderer, viewport) {
 	        // draw the progress bar
 	        renderer.setColor("black");
 	        renderer.fillRect(this.pos.x, viewport.centerY, renderer.getWidth(), this.barHeight / 2);
@@ -23143,10 +23165,10 @@
 	        var barHeight = 8;
 
 	        // set a background color
-	        world.backgroundColor.parseCSS("#202020");
+	        game.world.backgroundColor.parseCSS("#202020");
 
 	        // progress bar
-	        world.addChild(new ProgressBar(
+	        game.world.addChild(new ProgressBar(
 	            0,
 	            renderer.getHeight() / 2,
 	            renderer.getWidth(),
@@ -23157,7 +23179,7 @@
 	        loader.load({name: "melonjs_logo", type: "image", src: img});
 
 	        // melonJS logo
-	        world.addChild(new Sprite(
+	        game.world.addChild(new Sprite(
 	            renderer.getWidth() / 2,
 	            renderer.getHeight() / 2, {
 	                image : "melonjs_logo",
@@ -23246,9 +23268,9 @@
 	function _renderFrame(time) {
 	    var stage = _stages[_state].stage;
 	    // update all game objects
-	    update(time, stage);
+	    game.update(time, stage);
 	    // render all game objects
-	    draw(stage);
+	    game.draw(stage);
 	    // schedule the next frame update
 	    if (_animFrameId !== -1) {
 	        _animFrameId = globalThis.requestAnimationFrame(_renderFrame);
@@ -23299,7 +23321,7 @@
 	        }
 
 	        // force repaint
-	        repaint();
+	        game.repaint();
 	    }
 	}
 
@@ -23528,7 +23550,7 @@
 	            _pauseTime = globalThis.performance.now() - _pauseTime;
 
 	            // force repaint
-	            repaint();
+	            game.repaint();
 
 	            // publish the restart notification
 	            emit(STATE_RESTART, _pauseTime);
@@ -23732,9 +23754,9 @@
 	            // if fading effect
 	            if (_fade.duration && _stages[state].transition) {
 	                _onSwitchComplete = function () {
-	                    viewport.fadeOut(_fade.color, _fade.duration);
+	                    game.viewport.fadeOut(_fade.color, _fade.duration);
 	                };
-	                viewport.fadeIn(
+	                game.viewport.fadeIn(
 	                    _fade.color,
 	                    _fade.duration,
 	                    function () {
@@ -25267,7 +25289,7 @@
 
 	        // check for the correct rendering method
 	        if (typeof (this.preRender) === "undefined") {
-	            this.preRender = world.preRender;
+	            this.preRender = game.world.preRender;
 	        }
 
 	        // set a renderer
@@ -27729,7 +27751,7 @@
 	     */
 	    function _setBounds(width, height) {
 	        // adjust the viewport bounds if level is smaller
-	        viewport.setBounds(
+	        game.viewport.setBounds(
 	            0, 0,
 	            Math.max(levelBounds.width, width),
 	            Math.max(levelBounds.height, height)
@@ -27746,7 +27768,7 @@
 	    if (setViewportBounds === true) {
 	        off(VIEWPORT_ONRESIZE, _setBounds);
 	        // force viewport bounds update
-	        _setBounds(viewport.width, viewport.height);
+	        _setBounds(game.viewport.width, game.viewport.height);
 	        // Replace the resize handler
 	        on(VIEWPORT_ONRESIZE, _setBounds, this);
 	    }
@@ -27965,7 +27987,7 @@
 	    options.container.reset();
 
 	    // reset the renderer
-	    reset();
+	    game.reset();
 
 	    // clean the current (previous) level
 	    if (levels[level.getCurrentLevelId()]) {
@@ -28067,7 +28089,7 @@
 	     * @param {string} levelId level id
 	     * @param {object} [options] additional optional parameters
 	     * @param {Container} [options.container=game.world] container in which to load the specified level
-	     * @param {Function} [options.onLoaded=ame.onLevelLoaded] callback for when the level is fully loaded
+	     * @param {Function} [options.onLoaded=game.onLevelLoaded] callback for when the level is fully loaded
 	     * @param {boolean} [options.flatten=game.mergeGroup] if true, flatten all objects into the given container
 	     * @param {boolean} [options.setViewportBounds=true] if true, set the viewport bounds to the map size
 	     * @returns {boolean} true if the level was successfully loaded
@@ -28099,9 +28121,9 @@
 	     */
 	    load: function load(levelId, options) {
 	        options = Object.assign({
-	            "container"         : world,
-	            "onLoaded"          : onLevelLoaded,
-	            "flatten"           : mergeGroup,
+	            "container"         : game.world,
+	            "onLoaded"          : game.onLevelLoaded,
+	            "flatten"           : game.mergeGroup,
 	            "setViewportBounds" : true
 	        }, options || {});
 
@@ -32229,7 +32251,7 @@
 	    renderer.setBlendMode(settings.blendMode, context);
 
 	    // force repaint
-	    repaint();
+	    game.repaint();
 	}
 
 	var video = /*#__PURE__*/Object.freeze({
@@ -32408,299 +32430,262 @@
 	/**
 	 * @classdesc
 	 * a Timer class to manage timing related function (FPS, Game Tick, Time...)
-	  * @see {@link timer} the default global timer instance
+	 * @see {@link timer} the default global timer instance
 	 */
 	var Timer = function Timer() {
-	      var this$1$1 = this;
+	    var this$1$1 = this;
 
-	      /**
-	       * Last game tick value.<br/>
-	       * Use this value to scale velocities during frame drops due to slow
-	       * hardware or when setting an FPS limit. (See {@link timer.maxfps})
-	       * This feature is disabled by default. Enable me.timer.interpolation to
-	       * use it.
-	       * @public
-	       * @see timer.interpolation
-	       * @type {number}
-	       * @name tick
-	       * @memberof timer
-	       */
-	      this.tick = 1.0;
+	    /**
+	     * Last game tick value. <br>
+	     * Use this value to scale velocities during frame drops due to slow hardware or when setting an FPS limit.
+	     * This feature is disabled by default (Enable interpolation to use it).
+	     * @public
+	     * @see interpolation
+	     * @See maxfps
+	     * @type {number}
+	     * @name tick
+	     */
+	    this.tick = 1.0;
 
-	      /**
-	       * Last measured fps rate.<br/>
-	       * This feature is disabled by default, unless the debugPanel is enabled/visible
-	       * @public
-	       * @type {number}
-	       * @name fps
-	       * @memberof timer
-	       */
-	      this.fps = 0;
+	    /**
+	     * Last measured fps rate.<br>
+	     * This feature is disabled by default, unless the debugPanel is enabled/visible.
+	     * @public
+	     * @type {number}
+	     * @name fps
+	     */
+	    this.fps = 0;
 
-	      /**
-	       * Set the maximum target display frame per second
-	       * @public
-	       * @see timer.tick
-	       * @type {number}
-	       * @name maxfps
-	       * @default 60
-	       * @memberof timer
-	       */
-	      this.maxfps = 60;
+	    /**
+	     * Set the maximum target display frame per second
+	     * @public
+	     * @see tick
+	     * @type {number}
+	     * @default 60
+	     */
+	    this.maxfps = 60;
 
-	      /**
-	       * Enable/disable frame interpolation
-	       * @see timer.tick
-	       * @type {boolean}
-	       * @default false
-	       * @name interpolation
-	       * @memberof timer
-	       */
-	      this.interpolation = false;
+	    /**
+	     * Enable/disable frame interpolation
+	     * @see tick
+	     * @type {boolean}
+	     * @default false
+	     */
+	    this.interpolation = false;
 
-	      //hold element to display fps
-	      this.framecount = 0;
-	      this.framedelta = 0;
+	    //hold element to display fps
+	    this.framecount = 0;
+	    this.framedelta = 0;
 
-	      /* fps count stuff */
-	      this.last = 0;
-	      this.now = 0;
-	      this.delta = 0;
-	      // for timeout/interval update
-	      this.step =0;
-	      this.minstep = 0;
+	    /* fps count stuff */
+	    this.last = 0;
+	    this.now = 0;
+	    this.delta = 0;
+	    // for timeout/interval update
+	    this.step =0;
+	    this.minstep = 0;
 
-	      // list of defined timer function
-	      this.timers = [];
-	      this.timerId = 0;
+	    // list of defined timer function
+	    this.timers = [];
+	    this.timerId = 0;
 
-	      // Initialize mtimer on Boot event
-	      on(BOOT, function () {
-	          // reset variables to initial state
-	          this$1$1.reset();
-	          this$1$1.now = this$1$1.last = 0;
-	          // register to the game before update event
-	          on(GAME_BEFORE_UPDATE, this$1$1.update.bind(this$1$1));
-	      });
+	    // Initialize mtimer on Boot event
+	    on(BOOT, function () {
+	        // reset variables to initial state
+	        this$1$1.reset();
+	        this$1$1.now = this$1$1.last = 0;
+	        // register to the game before update event
+	        on(GAME_BEFORE_UPDATE, this$1$1.update.bind(this$1$1));
+	    });
 
-	      // reset timer
-	      on(STATE_RESUME, function () {
-	          this$1$1.reset();
-	      });
-	      on(STATE_RESTART, function () {
-	          this$1$1.reset();
-	      });
-	      on(STATE_CHANGE, function () {
-	          this$1$1.reset();
-	      });
-	  };
+	    // reset timer
+	    on(STATE_RESUME, function () {
+	        this$1$1.reset();
+	    });
+	    on(STATE_RESTART, function () {
+	        this$1$1.reset();
+	    });
+	    on(STATE_CHANGE, function () {
+	        this$1$1.reset();
+	    });
+	};
 
 
-	  /**
-	   * reset time (e.g. usefull in case of pause)
-	   * @name reset
-	   * @memberof timer
-	   * @ignore
-	   */
-	  Timer.prototype.reset = function reset () {
-	      // set to "now"
-	      this.last = this.now = globalThis.performance.now();
-	      this.delta = 0;
-	      // reset delta counting variables
-	      this.framedelta = 0;
-	      this.framecount = 0;
-	      this.step = Math.ceil(1000 / this.maxfps); // ROUND IT ?
-	      // define some step with some margin
-	      this.minstep = (1000 / this.maxfps) * 1.25; // IS IT NECESSARY?\
-	  };
-
-	  /**
-	   * Calls a function once after a specified delay. See me.timer.setInterval to repeativly call a function.
-	   * @name setTimeout
-	   * @memberof timer
-	   * @param {Function} fn the function you want to execute after delay milliseconds.
-	   * @param {number} delay the number of milliseconds (thousandths of a second) that the function call should be delayed by.
-	   * @param {boolean} [pauseable=true] respects the pause state of the engine.
-	   * @param {...*} args optional parameters which are passed through to the function specified by fn once the timer expires.
-	   * @returns {number} The numerical ID of the timer, which can be used later with me.timer.clearTimeout().
-	   * @example
-	   * // set a timer to call "myFunction" after 1000ms
-	   * me.timer.setTimeout(myFunction, 1000);
-	   * // set a timer to call "myFunction" after 1000ms (respecting the pause state) and passing param1 and param2
-	   * me.timer.setTimeout(myFunction, 1000, true, param1, param2);
-	   */
-	  Timer.prototype.setTimeout = function setTimeout (fn, delay, pauseable) {
-	        var args = [], len = arguments.length - 3;
-	        while ( len-- > 0 ) args[ len ] = arguments[ len + 3 ];
-
-	      this.timers.push({
-	          fn : fn,
-	          delay : delay,
-	          elapsed : 0,
-	          repeat : false,
-	          timerId : ++this.timerId,
-	          pauseable : pauseable === true || true,
-	          args : args
-	      });
-	      return this.timerId;
-	  };
-
-	  /**
-	   * Calls a function continously at the specified interval.See setTimeout to call function a single time.
-	   * @name setInterval
-	   * @memberof timer
-	   * @param {Function} fn the function to execute
-	   * @param {number} delay the number of milliseconds (thousandths of a second) on how often to execute the function
-	   * @param {boolean} [pauseable=true] respects the pause state of the engine.
-	   * @param {...*} args optional parameters which are passed through to the function specified by fn once the timer expires.
-	   * @returns {number} The numerical ID of the timer, which can be used later with me.timer.clearInterval().
-	   * @example
-	   * // set a timer to call "myFunction" every 1000ms
-	   * me.timer.setInterval(myFunction, 1000);
-	   * // set a timer to call "myFunction" every 1000ms (respecting the pause state) and passing param1 and param2
-	   * me.timer.setInterval(myFunction, 1000, true, param1, param2);
-	   */
-	  Timer.prototype.setInterval = function setInterval (fn, delay, pauseable) {
-	        var args = [], len = arguments.length - 3;
-	        while ( len-- > 0 ) args[ len ] = arguments[ len + 3 ];
-
-	      this.timers.push({
-	          fn : fn,
-	          delay : delay,
-	          elapsed : 0,
-	          repeat : true,
-	          timerId : ++this.timerId,
-	          pauseable : pauseable === true || true,
-	          args : args
-	      });
-	      return this.timerId;
-	  };
-
-	  /**
-	   * Clears the delay set by me.timer.setTimeout().
-	   * @name clearTimeout
-	   * @memberof timer
-	   * @param {number} timeoutID ID of the timeout to be cleared
-	   */
-	  Timer.prototype.clearTimeout = function clearTimeout (timeoutID) {
-	      utils.function.defer(this.clearTimer.bind(this), this, timeoutID);
-	  };
-
-	  /**
-	   * Clears the Interval set by me.timer.setInterval().
-	   * @name clearInterval
-	   * @memberof timer
-	   * @param {number} intervalID ID of the interval to be cleared
-	   */
-	  Timer.prototype.clearInterval = function clearInterval (intervalID) {
-	      utils.function.defer(this.clearTimer.bind(this), this, intervalID);
-	  };
-
-	  /**
-	   * Return the current timestamp in milliseconds <br>
-	   * since the game has started or since linux epoch (based on browser support for High Resolution Timer)
-	   * @name getTime
-	   * @memberof timer
-	   * @returns {number}
-	   */
-	  Timer.prototype.getTime = function getTime () {
-	      return this.now;
-	  };
-
-	  /**
-	   * Return elapsed time in milliseconds since the last update
-	   * @name getDelta
-	   * @memberof timer
-	   * @returns {number}
-	   */
-	  Timer.prototype.getDelta = function getDelta () {
-	      return this.delta;
-	  };
-
-	  /**
-	   * compute the actual frame time and fps rate
-	   * @name computeFPS
-	   * @ignore
-	   * @memberof timer
-	   */
-	  Timer.prototype.countFPS = function countFPS () {
-	      this.framecount++;
-	      this.framedelta += this.delta;
-	      if (this.framecount % 10 === 0) {
-	          this.fps = clamp(Math.round((1000 * this.framecount) / this.framedelta), 0, this.maxfps);
-	          this.framedelta = 0;
-	          this.framecount = 0;
-	      }
-	  };
-
-	  /**
-	   * update
-	   * @ignore
-	   */
-	  Timer.prototype.update = function update (time) {
-	      this.last = this.now;
-	      this.now = time;
-	      this.delta = (this.now - this.last);
-
-	      // fix for negative timestamp returned by wechat or chrome on startup
-	      if (this.delta < 0) {
-	          this.delta = 0;
-	      }
-
-	      // get the game tick
-	      this.tick = (this.delta > this.minstep && this.interpolation) ? this.delta / this.step : 1;
-
-	      this.updateTimers();
-	  };
-
-	  /**
-	   * clear Timers
-	   * @ignore
-	   */
-	  Timer.prototype.clearTimer = function clearTimer (timerId) {
-	      for (var i = 0, len = this.timers.length; i < len; i++) {
-	          if (this.timers[i].timerId === timerId) {
-	              this.timers.splice(i, 1);
-	              break;
-	          }
-	      }
-	  };
-
-
-	  /**
-	   * update timers
-	   * @ignore
-	   */
-	  Timer.prototype.updateTimers = function updateTimers () {
-	      for (var i = 0, len = this.timers.length; i < len; i++) {
-	          var _timer = this.timers[i];
-	          if (!(_timer.pauseable && state.isPaused())) {
-	              _timer.elapsed += this.delta;
-	          }
-	          if (_timer.elapsed >= _timer.delay) {
-	              _timer.fn.apply(null, _timer.args);
-	              if (_timer.repeat === true) {
-	                  _timer.elapsed -= _timer.delay;
-	              } else {
-	                  this.clearTimeout(_timer.timerId);
-	              }
-	          }
-	      }
-	  };
 	/**
-	 * the default global Timer instance
-	 * @namespace timer
-	 * @see Timer
+	 * reset time (e.g. usefull in case of pause)
+	 * @ignore
+	 */
+	Timer.prototype.reset = function reset () {
+	    // set to "now"
+	    this.last = this.now = globalThis.performance.now();
+	    this.delta = 0;
+	    // reset delta counting variables
+	    this.framedelta = 0;
+	    this.framecount = 0;
+	    this.step = Math.ceil(1000 / this.maxfps); // ROUND IT ?
+	    // define some step with some margin
+	    this.minstep = (1000 / this.maxfps) * 1.25; // IS IT NECESSARY?\
+	};
+
+	/**
+	 * Calls a function once after a specified delay. See me.timer.setInterval to repeativly call a function.
+	 * @param {Function} fn the function you want to execute after delay milliseconds.
+	 * @param {number} delay the number of milliseconds (thousandths of a second) that the function call should be delayed by.
+	 * @param {boolean} [pauseable=true] respects the pause state of the engine.
+	 * @param {...*} args optional parameters which are passed through to the function specified by fn once the timer expires.
+	 * @returns {number} The numerical ID of the timer, which can be used later with me.timer.clearTimeout().
 	 * @example
 	 * // set a timer to call "myFunction" after 1000ms
-	 * timer.setTimeout(myFunction, 1000);
+	 * me.timer.setTimeout(myFunction, 1000);
 	 * // set a timer to call "myFunction" after 1000ms (respecting the pause state) and passing param1 and param2
-	 * timer.setTimeout(myFunction, 1000, true, param1, param2);
-	 * // set a timer to call "myFunction" every 1000ms
-	 * timer.setInterval(myFunction, 1000);
-	 * // set a timer to call "myFunction" every 1000ms (respecting the pause state) and passing param1 and param2
-	 * timer.setInterval(myFunction, 1000, true, param1, param2);
+	 * me.timer.setTimeout(myFunction, 1000, true, param1, param2);
 	 */
+	Timer.prototype.setTimeout = function setTimeout (fn, delay, pauseable) {
+	        var args = [], len = arguments.length - 3;
+	        while ( len-- > 0 ) args[ len ] = arguments[ len + 3 ];
+
+	    this.timers.push({
+	        fn : fn,
+	        delay : delay,
+	        elapsed : 0,
+	        repeat : false,
+	        timerId : ++this.timerId,
+	        pauseable : pauseable === true || true,
+	        args : args
+	    });
+	    return this.timerId;
+	};
+
+	/**
+	 * Calls a function continously at the specified interval.  See setTimeout to call function a single time.
+	 * @param {Function} fn the function to execute
+	 * @param {number} delay the number of milliseconds (thousandths of a second) on how often to execute the function
+	 * @param {boolean} [pauseable=true] respects the pause state of the engine.
+	 * @param {...*} args optional parameters which are passed through to the function specified by fn once the timer expires.
+	 * @returns {number} The numerical ID of the timer, which can be used later with me.timer.clearInterval().
+	 * @example
+	 * // set a timer to call "myFunction" every 1000ms
+	 * me.timer.setInterval(myFunction, 1000);
+	 * // set a timer to call "myFunction" every 1000ms (respecting the pause state) and passing param1 and param2
+	 * me.timer.setInterval(myFunction, 1000, true, param1, param2);
+	 */
+	Timer.prototype.setInterval = function setInterval (fn, delay, pauseable) {
+	        var args = [], len = arguments.length - 3;
+	        while ( len-- > 0 ) args[ len ] = arguments[ len + 3 ];
+
+	    this.timers.push({
+	        fn : fn,
+	        delay : delay,
+	        elapsed : 0,
+	        repeat : true,
+	        timerId : ++this.timerId,
+	        pauseable : pauseable === true || true,
+	        args : args
+	    });
+	    return this.timerId;
+	};
+
+	/**
+	 * Clears the delay set by me.timer.setTimeout().
+	 * @param {number} timeoutID ID of the timeout to be cleared
+	 */
+	Timer.prototype.clearTimeout = function clearTimeout (timeoutID) {
+	    utils.function.defer(this.clearTimer.bind(this), this, timeoutID);
+	};
+
+	/**
+	 * Clears the Interval set by me.timer.setInterval().
+	 * @param {number} intervalID ID of the interval to be cleared
+	 */
+	Timer.prototype.clearInterval = function clearInterval (intervalID) {
+	    utils.function.defer(this.clearTimer.bind(this), this, intervalID);
+	};
+
+	/**
+	 * Return the current timestamp in milliseconds <br>
+	 * since the game has started or since linux epoch (based on browser support for High Resolution Timer)
+	 * @returns {number}
+	 */
+	Timer.prototype.getTime = function getTime () {
+	    return this.now;
+	};
+
+	/**
+	 * Return elapsed time in milliseconds since the last update
+	 * @returns {number}
+	 */
+	Timer.prototype.getDelta = function getDelta () {
+	    return this.delta;
+	};
+
+	/**
+	 * compute the actual frame time and fps rate
+	 * @ignore
+	 */
+	Timer.prototype.countFPS = function countFPS () {
+	    this.framecount++;
+	    this.framedelta += this.delta;
+	    if (this.framecount % 10 === 0) {
+	        this.fps = clamp(Math.round((1000 * this.framecount) / this.framedelta), 0, this.maxfps);
+	        this.framedelta = 0;
+	        this.framecount = 0;
+	    }
+	};
+
+	/**
+	 * update
+	 * @ignore
+	 */
+	Timer.prototype.update = function update (time) {
+	    this.last = this.now;
+	    this.now = time;
+	    this.delta = (this.now - this.last);
+
+	    // fix for negative timestamp returned by wechat or chrome on startup
+	    if (this.delta < 0) {
+	        this.delta = 0;
+	    }
+
+	    // get the game tick
+	    this.tick = (this.delta > this.minstep && this.interpolation) ? this.delta / this.step : 1;
+
+	    this.updateTimers();
+	};
+
+	/**
+	 * clear Timers
+	 * @ignore
+	 */
+	Timer.prototype.clearTimer = function clearTimer (timerId) {
+	    for (var i = 0, len = this.timers.length; i < len; i++) {
+	        if (this.timers[i].timerId === timerId) {
+	            this.timers.splice(i, 1);
+	            break;
+	        }
+	    }
+	};
+
+
+	/**
+	 * update timers
+	 * @ignore
+	 */
+	Timer.prototype.updateTimers = function updateTimers () {
+	    for (var i = 0, len = this.timers.length; i < len; i++) {
+	        var _timer = this.timers[i];
+	        if (!(_timer.pauseable && state.isPaused())) {
+	            _timer.elapsed += this.delta;
+	        }
+	        if (_timer.elapsed >= _timer.delay) {
+	            _timer.fn.apply(null, _timer.args);
+	            if (_timer.repeat === true) {
+	                _timer.elapsed -= _timer.delay;
+	            } else {
+	                this.clearTimeout(_timer.timerId);
+	            }
+	        }
+	    }
+	};
 	var timer = new Timer();
 
 	var lastTime = 0;
@@ -33607,7 +33592,7 @@
 	    this._onUpdateCallback = null;
 	    this._onCompleteCallback = null;
 	    // tweens are synchronized with the game update loop
-	    this._tweenTimeTracker = lastUpdate;
+	    this._tweenTimeTracker = game.lastUpdate;
 
 	    // reset flags to default value
 	    this.isPersistent = false;
@@ -33707,7 +33692,7 @@
 	    this._onStartCallbackFired = false;
 
 	    // add the tween to the object pool on start
-	    world.addChild(this);
+	    game.world.addChild(this);
 
 	    this._startTime =  time + this._delayTime;
 
@@ -33749,7 +33734,7 @@
 	 */
 	Tween.prototype.stop = function stop () {
 	    // remove the tween from the world container
-	    world.removeChildNow(this);
+	    game.world.removeChildNow(this);
 	    return this;
 	};
 
@@ -33885,7 +33870,7 @@
 
 	    // the original Tween implementation expect
 	    // a timestamp and not a time delta
-	    this._tweenTimeTracker = (lastUpdate > this._tweenTimeTracker) ? lastUpdate : this._tweenTimeTracker + dt;
+	    this._tweenTimeTracker = (game.lastUpdate > this._tweenTimeTracker) ? game.lastUpdate : this._tweenTimeTracker + dt;
 	    var time = this._tweenTimeTracker;
 
 	    var property;
@@ -33978,7 +33963,7 @@
 
 	        } else {
 	            // remove the tween from the world container
-	            world.removeChildNow(this);
+	            game.world.removeChildNow(this);
 
 	            if ( this._onCompleteCallback !== null ) {
 
@@ -35460,7 +35445,7 @@
 	                this.repeatY = true;
 	                break;
 	        }
-	        this.resize(viewport.width, viewport.height);
+	        this.resize(game.viewport.width, game.viewport.height);
 	        this.createPattern();
 	    };
 
@@ -35474,13 +35459,13 @@
 	        on(VIEWPORT_ONRESIZE, this.resize, this);
 	        // force a first refresh when the level is loaded
 	        once(LEVEL_LOADED, function () {
-	            this$1$1.updateLayer(viewport.pos);
+	            this$1$1.updateLayer(game.viewport.pos);
 	        });
 	        // in case the level is not added to the root container,
 	        // the onActivateEvent call happens after the LEVEL_LOADED event
 	        // so we need to force a first update
 	        if (this.ancestor.root !== true) {
-	            this.updateLayer(viewport.pos);
+	            this.updateLayer(game.viewport.pos);
 	        }
 	    };
 
@@ -35521,8 +35506,8 @@
 
 	        var width = this.width,
 	            height = this.height,
-	            bw = viewport.bounds.width,
-	            bh = viewport.bounds.height,
+	            bw = game.viewport.bounds.width,
+	            bh = game.viewport.bounds.height,
 	            ax = this.anchorPoint.x,
 	            ay = this.anchorPoint.y,
 
@@ -35532,8 +35517,8 @@
 	             * See https://github.com/melonjs/melonJS/issues/741#issuecomment-138431532
 	             * for a thorough description of how this works.
 	             */
-	            x = ax * (rx - 1) * (bw - viewport.width) + this.offset.x - rx * vpos.x,
-	            y = ay * (ry - 1) * (bh - viewport.height) + this.offset.y - ry * vpos.y;
+	            x = ax * (rx - 1) * (bw - game.viewport.width) + this.offset.x - rx * vpos.x,
+	            y = ay * (ry - 1) * (bh - game.viewport.height) + this.offset.y - ry * vpos.y;
 
 
 	        // Repeat horizontally; start drawing from left boundary
@@ -36143,7 +36128,7 @@
 	     Trigger.prototype.getTriggerSettings = function getTriggerSettings () {
 	         // Lookup for the container instance
 	         if (typeof(this.triggerSettings.container) === "string") {
-	             this.triggerSettings.container = world.getChildByName(this.triggerSettings.container)[0];
+	             this.triggerSettings.container = game.world.getChildByName(this.triggerSettings.container)[0];
 	         }
 	         return this.triggerSettings;
 	     };
@@ -36153,7 +36138,7 @@
 	     */
 	    Trigger.prototype.onFadeComplete = function onFadeComplete () {
 	        level.load(this.gotolevel, this.getTriggerSettings());
-	        viewport.fadeOut(this.fade, this.duration);
+	        game.viewport.fadeOut(this.fade, this.duration);
 	    };
 
 	    /**
@@ -36172,7 +36157,7 @@
 	            if (this.fade && this.duration) {
 	                if (!this.fading) {
 	                    this.fading = true;
-	                    viewport.fadeIn(this.fade, this.duration,
+	                    game.viewport.fadeIn(this.fade, this.duration,
 	                            this.onFadeComplete.bind(this));
 	                }
 	            } else {
