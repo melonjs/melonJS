@@ -18,12 +18,12 @@ melonJS 2 is a modern version of the melonJS game engine. It has been rebuilt al
 
 >Note: migrating an existing project to melonJS 2 (version 10.0 and higher) will definitely break your game (ES6 semantic, no more Jay inheritance, nodeJS event emitter, and no backward compatibility with deprecated legacy APIs), and you might want to read first this small step by step guide on [upgrading to melonJS 2](https://github.com/melonjs/melonJS/wiki/Upgrading-to-melonJS-2). If you are looking at the legacy version (9.x and lower) of melonJS, you can find it [here](https://github.com/melonjs/melonJS/tree/legacy) under the _legacy_ branch.
 
-[melonJS](http://melonjs.org/) is open-source, licensed under the [MIT License](LICENSE.md), and actively developed and maintained with the help of a small team of enthusiasts at AltByte in Singapore.
+[melonJS](https://melonjs.org/) is open-source, licensed under the [MIT License](LICENSE.md), and actively developed and maintained with the help of a small team of enthusiasts at AltByte in Singapore.
 
 About melonJS
 -------------------------------------------------------------------------------
 
-[melonJS](http://melonjs.org/) is a fully featured game engine :
+[melonJS](https://melonjs.org/) is a fully featured game engine :
 
 Compatibility
 - Standalone library (does not rely on anything else, except a HTML5 capable browser)
