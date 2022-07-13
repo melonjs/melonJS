@@ -72,7 +72,9 @@ class Body {
 
         if (typeof this.vel === "undefined") {
             /**
-             * body velocity
+             * The current velocity of the body.
+             * See to apply a force if you need to modify a body velocity
+             * @see Body.force
              * @public
              * @type {Vector2d}
              * @default <0,0>
@@ -83,15 +85,15 @@ class Body {
 
         if (typeof this.force === "undefined") {
             /**
-             * body force or acceleration (automatically) applied to the body.
-             * when defining a force, user should also define a max velocity
+             * body force to apply to this the body in the current step.
+             * (any positive or negative force will be cancelled after every world/body update cycle)
              * @public
              * @type {Vector2d}
              * @default <0,0>
              * @see Body.setMaxVelocity
              * @example
              * // define a default maximum acceleration, initial force and friction
-             * this.body.force.set(0, 0);
+             * this.body.force.set(1, 0);
              * this.body.friction.set(0.4, 0);
              * this.body.setMaxVelocity(3, 15);
              *
@@ -101,8 +103,6 @@ class Body {
              *          this.body.force.x = -this.body.maxVel.x;
              *      } else if (me.input.isKeyPressed("right")) {
              *         this.body.force.x = this.body.maxVel.x;
-             *     } else {
-             *         this.body.force.x = 0;
              *     }
              * }
              */
