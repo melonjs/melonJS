@@ -12,7 +12,7 @@ melonJS 2
 
 A fresh, _modern_ & lightweight HTML5 game engine
 -------------------------------------------------------------------------------
-![melonJS](http://melonjs.org/media/alex4-github.png)
+![melonJS](https://melonjs.org/img/alex4-github.png)
 
 melonJS 2 is a modern version of the melonJS game engine. It has been rebuilt almost entirely using ES6 class, inheritance and semantic, and is bundled using Rollup to provide modern features such as transpiling and tree-shaking.
 
