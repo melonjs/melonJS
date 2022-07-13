@@ -34,7 +34,7 @@
   "author": "Olivier Biot (AltByte Pte Ltd)",
   "funding": "https://github.com/sponsors/melonjs",
   "engines": {
-    "node": ">= 12"
+    "node": ">= 16"
   },
   "main": "dist/melonjs.module.js",
   "type": "module",
