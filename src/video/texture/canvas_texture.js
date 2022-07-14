@@ -1,4 +1,5 @@
 import { createCanvas } from "./../video.js";
+import { setPrefixed } from "./../../utils/agent.js";
 
 // default video settings
 var defaultAttributes = {
@@ -16,6 +17,7 @@ class CanvasTexture {
      * @param {object} attributes The attributes to create both the canvas and 2d context
      * @param {boolean} [attributes.offscreenCanvas=false] will create an offscreenCanvas if true instead of a standard canvas
      * @param {boolean} [attributes.willReadFrequently=false] Indicates whether or not a lot of read-back operations are planned
+     * @param {boolean} [attributes.antiAlias=false] Whether to enable anti-aliasing, use false (default) for a pixelated effect.
      */
     constructor(width, height, attributes = defaultAttributes) {
 
@@ -33,6 +35,11 @@ class CanvasTexture {
          * @type {CanvasRenderingContext2D}
          */
         this.context = this.canvas.getContext("2d", { willReadFrequently: attributes.willReadFrequently });
+
+        // enable or disable antiAlias if specified
+        if (typeof this.settings.antiAlias !== "undefined") {
+            this.setAntiAlias(this.settings.antiAlias);
+        }
     }
 
     /**
@@ -49,6 +56,34 @@ class CanvasTexture {
     clear() {
         this.context.setTransform(1, 0, 0, 1, 0, 0);
         this.context.clearRect(0, 0, this.canvas.width, this.canvas.height);
+    }
+
+    /**
+     * enable/disable image smoothing (scaling interpolation)
+     * @param {boolean} [enable=false]
+     */
+    setAntiAlias(enable = false) {
+        var canvas = this.canvas;
+
+        // enable/disable antialias on the given Context2d object
+        setPrefixed("imageSmoothingEnabled", enable === true, this.context);
+
+        // set antialias CSS property on the main canvas
+        if (typeof canvas.style !== "undefined") {
+            if (enable !== true) {
+                // https://developer.mozilla.org/en-US/docs/Web/CSS/image-rendering
+                canvas.style["image-rendering"] = "optimizeSpeed"; // legal fallback
+                canvas.style["image-rendering"] = "-moz-crisp-edges"; // Firefox
+                canvas.style["image-rendering"] = "-o-crisp-edges"; // Opera
+                canvas.style["image-rendering"] = "-webkit-optimize-contrast"; // Safari
+                canvas.style["image-rendering"] = "optimize-contrast"; // CSS 3
+                canvas.style["image-rendering"] = "crisp-edges"; // CSS 4
+                canvas.style["image-rendering"] = "pixelated"; // CSS 4
+                canvas.style.msInterpolationMode = "nearest-neighbor"; // IE8+
+            } else {
+                canvas.style["image-rendering"] = "auto";
+            }
+        }
     }
 
     /**
