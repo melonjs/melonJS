@@ -86,17 +86,17 @@ class DefaultLoadingScreen extends Stage {
         ), 1);
 
         // load the melonJS logo
-        loader.load({name: "melonjs_logo", type: "image", src: logo_url});
-
-        // melonJS logo
-        game.world.addChild(new Sprite(
-            renderer.getWidth() / 2,
-            renderer.getHeight() / 2, {
-                image : "melonjs_logo",
-                framewidth : 256,
-                frameheight : 256
-            }), 2
-        );
+        loader.load({name: "melonjs_logo", type: "image", src: logo_url}, () => {
+            // melonJS logo
+            game.world.addChild(new Sprite(
+                renderer.getWidth() / 2,
+                renderer.getHeight() / 2, {
+                    image : "melonjs_logo",
+                    framewidth : 256,
+                    frameheight : 256
+                }), 2
+            );
+        });
     }
 
     /**
