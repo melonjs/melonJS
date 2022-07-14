@@ -638,7 +638,7 @@ class Container extends Renderable {
      * @memberof Container
      * @public
      * @param {Renderable} child
-     * @param {boolean} [keepalive=False] True to prevent calling child.destroy()
+     * @param {boolean} [keepalive=false] true to prevent calling child.destroy()
      */
     removeChild(child, keepalive) {
         if (this.hasChild(child)) {

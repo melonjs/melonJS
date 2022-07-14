@@ -18,6 +18,7 @@
 
 ### Fixed
 - Loader: fix loading/preloading of base64 audio assets, and base64 encoded FontFace
+- Text: fix an uncaught exception when removing Text object from the game world that use offScreenCanvas texture caching (thanks @wpernath)
 
 ## [12.0.0] (melonJS 2) - _2022-06-27_
 

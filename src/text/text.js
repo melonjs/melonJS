@@ -204,18 +204,6 @@ class Text extends Renderable {
         this.setText(settings.text);
     }
 
-    /** @ignore */
-    onDeactivateEvent() {
-        // free the canvas and potential corresponding texture when deactivated
-        if (this.offScreenCanvas === true) {
-            globalRenderer.currentCompositor.deleteTexture2D(globalRenderer.currentCompositor.getTexture2D(this.glTextureUnit));
-            globalRenderer.cache.delete(this.canvasTexture.canvas);
-            pool.push(this.canvasTexture);
-            this.canvasTexture = undefined;
-            this.glTextureUnit = undefined;
-        }
-    }
-
     /**
      * make the font bold
      * @returns {Text} this object for chaining
@@ -436,6 +424,15 @@ class Text extends Renderable {
      * @ignore
      */
     destroy() {
+        if (this.offScreenCanvas === true) {
+            if (globalRenderer instanceof WebGLRenderer) {
+                globalRenderer.currentCompositor.deleteTexture2D(globalRenderer.currentCompositor.getTexture2D(this.glTextureUnit));
+                this.glTextureUnit = undefined;
+            }
+            globalRenderer.cache.delete(this.canvasTexture.canvas);
+            pool.push(this.canvasTexture);
+            this.canvasTexture = undefined;
+        }
         pool.push(this.fillStyle);
         pool.push(this.strokeStyle);
         this.fillStyle = this.strokeStyle = undefined;
