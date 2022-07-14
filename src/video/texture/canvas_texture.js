@@ -1,10 +1,11 @@
 import { createCanvas } from "./../video.js";
 import { setPrefixed } from "./../../utils/agent.js";
 
-// default video settings
+// default canvas settings
 var defaultAttributes = {
     offscreenCanvas : false,
-    willReadFrequently : false
+    willReadFrequently : false,
+    antiAlias : false
 };
 
 /**
@@ -37,9 +38,7 @@ class CanvasTexture {
         this.context = this.canvas.getContext("2d", { willReadFrequently: attributes.willReadFrequently });
 
         // enable or disable antiAlias if specified
-        if (typeof this.settings.antiAlias !== "undefined") {
-            this.setAntiAlias(this.settings.antiAlias);
-        }
+        this.setAntiAlias(attributes.antiAlias);
     }
 
     /**
@@ -66,7 +65,7 @@ class CanvasTexture {
         var canvas = this.canvas;
 
         // enable/disable antialias on the given Context2d object
-        setPrefixed("imageSmoothingEnabled", enable === true, this.context);
+        setPrefixed("imageSmoothingEnabled", enable, this.context);
 
         // set antialias CSS property on the main canvas
         if (typeof canvas.style !== "undefined") {
