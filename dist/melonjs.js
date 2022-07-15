@@ -19705,7 +19705,9 @@
 
 	    if (typeof this.vel === "undefined") {
 	        /**
-	         * body velocity
+	         * The current velocity of the body.
+	         * See to apply a force if you need to modify a body velocity
+	         * @see Body.force
 	         * @public
 	         * @type {Vector2d}
 	         * @default <0,0>
@@ -19716,15 +19718,15 @@
 
 	    if (typeof this.force === "undefined") {
 	        /**
-	         * body force or acceleration (automatically) applied to the body.
-	         * when defining a force, user should also define a max velocity
+	         * body force to apply to this the body in the current step.
+	         * (any positive or negative force will be cancelled after every world/body update cycle)
 	         * @public
 	         * @type {Vector2d}
 	         * @default <0,0>
 	         * @see Body.setMaxVelocity
 	         * @example
 	         * // define a default maximum acceleration, initial force and friction
-	         * this.body.force.set(0, 0);
+	         * this.body.force.set(1, 0);
 	         * this.body.friction.set(0.4, 0);
 	         * this.body.setMaxVelocity(3, 15);
 	         *
@@ -19734,8 +19736,6 @@
 	         *      this.body.force.x = -this.body.maxVel.x;
 	         *  } else if (me.input.isKeyPressed("right")) {
 	         *     this.body.force.x = this.body.maxVel.x;
-	         * } else {
-	         *     this.body.force.x = 0;
 	         * }
 	         * }
 	         */
@@ -20970,7 +20970,7 @@
 	     * @memberof Container
 	     * @public
 	     * @param {Renderable} child
-	     * @param {boolean} [keepalive=False] True to prevent calling child.destroy()
+	     * @param {boolean} [keepalive=false] true to prevent calling child.destroy()
 	     */
 	    Container.prototype.removeChild = function removeChild (child, keepalive) {
 	        if (this.hasChild(child)) {
@@ -23173,17 +23173,17 @@
 	        ), 1);
 
 	        // load the melonJS logo
-	        loader.load({name: "melonjs_logo", type: "image", src: img});
-
-	        // melonJS logo
-	        game.world.addChild(new Sprite(
-	            renderer.getWidth() / 2,
-	            renderer.getHeight() / 2, {
-	                image : "melonjs_logo",
-	                framewidth : 256,
-	                frameheight : 256
-	            }), 2
-	        );
+	        loader.load({name: "melonjs_logo", type: "image", src: img}, function () {
+	            // melonJS logo
+	            game.world.addChild(new Sprite(
+	                renderer.getWidth() / 2,
+	                renderer.getHeight() / 2, {
+	                    image : "melonjs_logo",
+	                    framewidth : 256,
+	                    frameheight : 256
+	                }), 2
+	            );
+	        });
 	    };
 
 	    /**
@@ -33988,10 +33988,11 @@
 
 	Object.defineProperties( Tween, staticAccessors );
 
-	// default video settings
+	// default canvas settings
 	var defaultAttributes = {
 	    offscreenCanvas : false,
-	    willReadFrequently : false
+	    willReadFrequently : false,
+	    antiAlias : false
 	};
 
 	/**
@@ -34015,6 +34016,9 @@
 	     * @type {CanvasRenderingContext2D}
 	     */
 	    this.context = this.canvas.getContext("2d", { willReadFrequently: attributes.willReadFrequently });
+
+	    // enable or disable antiAlias if specified
+	    this.setAntiAlias(attributes.antiAlias);
 	};
 
 	var prototypeAccessors = { width: { configurable: true },height: { configurable: true } };
@@ -34033,6 +34037,36 @@
 	CanvasTexture.prototype.clear = function clear () {
 	    this.context.setTransform(1, 0, 0, 1, 0, 0);
 	    this.context.clearRect(0, 0, this.canvas.width, this.canvas.height);
+	};
+
+	/**
+	 * enable/disable image smoothing (scaling interpolation)
+	 * @param {boolean} [enable=false]
+	 */
+	CanvasTexture.prototype.setAntiAlias = function setAntiAlias (enable) {
+	        if ( enable === void 0 ) enable = false;
+
+	    var canvas = this.canvas;
+
+	    // enable/disable antialias on the given Context2d object
+	    setPrefixed("imageSmoothingEnabled", enable, this.context);
+
+	    // set antialias CSS property on the main canvas
+	    if (typeof canvas.style !== "undefined") {
+	        if (enable !== true) {
+	            // https://developer.mozilla.org/en-US/docs/Web/CSS/image-rendering
+	            canvas.style["image-rendering"] = "optimizeSpeed"; // legal fallback
+	            canvas.style["image-rendering"] = "-moz-crisp-edges"; // Firefox
+	            canvas.style["image-rendering"] = "-o-crisp-edges"; // Opera
+	            canvas.style["image-rendering"] = "-webkit-optimize-contrast"; // Safari
+	            canvas.style["image-rendering"] = "optimize-contrast"; // CSS 3
+	            canvas.style["image-rendering"] = "crisp-edges"; // CSS 4
+	            canvas.style["image-rendering"] = "pixelated"; // CSS 4
+	            canvas.style.msInterpolationMode = "nearest-neighbor"; // IE8+
+	        } else {
+	            canvas.style["image-rendering"] = "auto";
+	        }
+	    }
 	};
 
 	/**
@@ -34443,18 +34477,6 @@
 	        this.setText(settings.text);
 	    };
 
-	    /** @ignore */
-	    Text.prototype.onDeactivateEvent = function onDeactivateEvent () {
-	        // free the canvas and potential corresponding texture when deactivated
-	        if (this.offScreenCanvas === true) {
-	            renderer.currentCompositor.deleteTexture2D(renderer.currentCompositor.getTexture2D(this.glTextureUnit));
-	            renderer.cache.delete(this.canvasTexture.canvas);
-	            pool.push(this.canvasTexture);
-	            this.canvasTexture = undefined;
-	            this.glTextureUnit = undefined;
-	        }
-	    };
-
 	    /**
 	     * make the font bold
 	     * @returns {Text} this object for chaining
@@ -34687,6 +34709,15 @@
 	     * @ignore
 	     */
 	    Text.prototype.destroy = function destroy () {
+	        if (this.offScreenCanvas === true) {
+	            if (renderer instanceof WebGLRenderer) {
+	                renderer.currentCompositor.deleteTexture2D(renderer.currentCompositor.getTexture2D(this.glTextureUnit));
+	                this.glTextureUnit = undefined;
+	            }
+	            renderer.cache.delete(this.canvasTexture.canvas);
+	            pool.push(this.canvasTexture);
+	            this.canvasTexture = undefined;
+	        }
 	        pool.push(this.fillStyle);
 	        pool.push(this.strokeStyle);
 	        this.fillStyle = this.strokeStyle = undefined;

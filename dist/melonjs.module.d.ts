@@ -234,22 +234,24 @@ export class Body {
      */
     public collisionType: number;
     /**
-     * body velocity
+     * The current velocity of the body.
+     * See to apply a force if you need to modify a body velocity
+     * @see Body.force
      * @public
      * @type {Vector2d}
      * @default <0,0>
      */
     public vel: Vector2d;
     /**
-     * body force or acceleration (automatically) applied to the body.
-     * when defining a force, user should also define a max velocity
+     * body force to apply to this the body in the current step.
+     * (any positive or negative force will be cancelled after every world/body update cycle)
      * @public
      * @type {Vector2d}
      * @default <0,0>
      * @see Body.setMaxVelocity
      * @example
      * // define a default maximum acceleration, initial force and friction
-     * this.body.force.set(0, 0);
+     * this.body.force.set(1, 0);
      * this.body.friction.set(0.4, 0);
      * this.body.setMaxVelocity(3, 15);
      *
@@ -259,8 +261,6 @@ export class Body {
      *          this.body.force.x = -this.body.maxVel.x;
      *      } else if (me.input.isKeyPressed("right")) {
      *         this.body.force.x = this.body.maxVel.x;
-     *     } else {
-     *         this.body.force.x = 0;
      *     }
      * }
      */
@@ -1947,7 +1947,7 @@ export class Container extends Renderable {
      * @memberof Container
      * @public
      * @param {Renderable} child
-     * @param {boolean} [keepalive=False] True to prevent calling child.destroy()
+     * @param {boolean} [keepalive=false] true to prevent calling child.destroy()
      */
     public removeChild(child: Renderable, keepalive?: boolean): void;
     /**
@@ -6152,7 +6152,7 @@ export class Renderer {
      * @param {number} options.width The width of the canvas without scaling
      * @param {number} options.height The height of the canvas without scaling
      * @param {HTMLCanvasElement} [options.canvas] The html canvas to draw to on screen
-     * @param {boolean} [options.doubleBuffering=false] Whether to enable double buffering
+     * @param {boolean} [options.doubleBuffering=false] Whether to enable double buffering (not applicable when using the WebGL Renderer)
      * @param {boolean} [options.antiAlias=false] Whether to enable anti-aliasing, use false (default) for a pixelated effect.
      * @param {boolean} [options.failIfMajorPerformanceCaveat=true] If true, the renderer will switch to CANVAS mode if the performances of a WebGL context would be dramatically lower than that of a native application making equivalent OpenGL calls.
      * @param {boolean} [options.transparent=false] Whether to enable transparency on the canvas (performance hit when enabled)
@@ -7623,9 +7623,6 @@ export class Text extends Renderable {
     public fontSize: number;
     canvasTexture: any;
     metrics: TextMetrics;
-    /** @ignore */
-    onDeactivateEvent(): void;
-    glTextureUnit: any;
     /**
      * make the font bold
      * @returns {Text} this object for chaining
@@ -7653,6 +7650,7 @@ export class Text extends Renderable {
      * @returns {Text} this object for chaining
      */
     setText(value?: number | string | string[]): Text;
+    glTextureUnit: any;
     /**
      * measure the given text size in pixels
      * @param {CanvasRenderer|WebGLRenderer} renderer reference to the active renderer
@@ -9051,7 +9049,7 @@ export class WebGLRenderer extends Renderer {
      * @param {number} options.width The width of the canvas without scaling
      * @param {number} options.height The height of the canvas without scaling
      * @param {HTMLCanvasElement} [options.canvas] The html canvas to draw to on screen
-     * @param {boolean} [options.doubleBuffering=false] Whether to enable double buffering
+     * @param {boolean} [options.doubleBuffering=false] Whether to enable double buffering (not applicable when using the WebGL Renderer)
      * @param {boolean} [options.antiAlias=false] Whether to enable anti-aliasing
      * @param {boolean} [options.failIfMajorPerformanceCaveat=true] If true, the renderer will switch to CANVAS mode if the performances of a WebGL context would be dramatically lower than that of a native application making equivalent OpenGL calls.
      * @param {boolean} [options.transparent=false] Whether to enable transparency on the canvas (performance hit when enabled)

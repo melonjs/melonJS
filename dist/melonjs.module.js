@@ -10086,7 +10086,7 @@ class Renderer {
      * @param {number} options.width The width of the canvas without scaling
      * @param {number} options.height The height of the canvas without scaling
      * @param {HTMLCanvasElement} [options.canvas] The html canvas to draw to on screen
-     * @param {boolean} [options.doubleBuffering=false] Whether to enable double buffering
+     * @param {boolean} [options.doubleBuffering=false] Whether to enable double buffering (not applicable when using the WebGL Renderer)
      * @param {boolean} [options.antiAlias=false] Whether to enable anti-aliasing, use false (default) for a pixelated effect.
      * @param {boolean} [options.failIfMajorPerformanceCaveat=true] If true, the renderer will switch to CANVAS mode if the performances of a WebGL context would be dramatically lower than that of a native application making equivalent OpenGL calls.
      * @param {boolean} [options.transparent=false] Whether to enable transparency on the canvas (performance hit when enabled)
@@ -19650,7 +19650,9 @@ class Body {
 
         if (typeof this.vel === "undefined") {
             /**
-             * body velocity
+             * The current velocity of the body.
+             * See to apply a force if you need to modify a body velocity
+             * @see Body.force
              * @public
              * @type {Vector2d}
              * @default <0,0>
@@ -19661,15 +19663,15 @@ class Body {
 
         if (typeof this.force === "undefined") {
             /**
-             * body force or acceleration (automatically) applied to the body.
-             * when defining a force, user should also define a max velocity
+             * body force to apply to this the body in the current step.
+             * (any positive or negative force will be cancelled after every world/body update cycle)
              * @public
              * @type {Vector2d}
              * @default <0,0>
              * @see Body.setMaxVelocity
              * @example
              * // define a default maximum acceleration, initial force and friction
-             * this.body.force.set(0, 0);
+             * this.body.force.set(1, 0);
              * this.body.friction.set(0.4, 0);
              * this.body.setMaxVelocity(3, 15);
              *
@@ -19679,8 +19681,6 @@ class Body {
              *          this.body.force.x = -this.body.maxVel.x;
              *      } else if (me.input.isKeyPressed("right")) {
              *         this.body.force.x = this.body.maxVel.x;
-             *     } else {
-             *         this.body.force.x = 0;
              *     }
              * }
              */
@@ -20893,7 +20893,7 @@ class Container extends Renderable {
      * @memberof Container
      * @public
      * @param {Renderable} child
-     * @param {boolean} [keepalive=False] True to prevent calling child.destroy()
+     * @param {boolean} [keepalive=false] true to prevent calling child.destroy()
      */
     removeChild(child, keepalive) {
         if (this.hasChild(child)) {
@@ -23082,17 +23082,17 @@ class DefaultLoadingScreen extends Stage {
         ), 1);
 
         // load the melonJS logo
-        loader.load({name: "melonjs_logo", type: "image", src: img});
-
-        // melonJS logo
-        game.world.addChild(new Sprite(
-            renderer.getWidth() / 2,
-            renderer.getHeight() / 2, {
-                image : "melonjs_logo",
-                framewidth : 256,
-                frameheight : 256
-            }), 2
-        );
+        loader.load({name: "melonjs_logo", type: "image", src: img}, () => {
+            // melonJS logo
+            game.world.addChild(new Sprite(
+                renderer.getWidth() / 2,
+                renderer.getHeight() / 2, {
+                    image : "melonjs_logo",
+                    framewidth : 256,
+                    frameheight : 256
+                }), 2
+            );
+        });
     }
 
     /**
@@ -30646,7 +30646,7 @@ class WebGLRenderer extends Renderer {
      * @param {number} options.width The width of the canvas without scaling
      * @param {number} options.height The height of the canvas without scaling
      * @param {HTMLCanvasElement} [options.canvas] The html canvas to draw to on screen
-     * @param {boolean} [options.doubleBuffering=false] Whether to enable double buffering
+     * @param {boolean} [options.doubleBuffering=false] Whether to enable double buffering (not applicable when using the WebGL Renderer)
      * @param {boolean} [options.antiAlias=false] Whether to enable anti-aliasing
      * @param {boolean} [options.failIfMajorPerformanceCaveat=true] If true, the renderer will switch to CANVAS mode if the performances of a WebGL context would be dramatically lower than that of a native application making equivalent OpenGL calls.
      * @param {boolean} [options.transparent=false] Whether to enable transparency on the canvas (performance hit when enabled)
@@ -33908,10 +33908,11 @@ class Tween {
     static get Interpolation() { return Interpolation; }
 }
 
-// default video settings
+// default canvas settings
 var defaultAttributes = {
     offscreenCanvas : false,
-    willReadFrequently : false
+    willReadFrequently : false,
+    antiAlias : false
 };
 
 /**
@@ -33924,6 +33925,7 @@ class CanvasTexture {
      * @param {object} attributes The attributes to create both the canvas and 2d context
      * @param {boolean} [attributes.offscreenCanvas=false] will create an offscreenCanvas if true instead of a standard canvas
      * @param {boolean} [attributes.willReadFrequently=false] Indicates whether or not a lot of read-back operations are planned
+     * @param {boolean} [attributes.antiAlias=false] Whether to enable anti-aliasing, use false (default) for a pixelated effect.
      */
     constructor(width, height, attributes = defaultAttributes) {
 
@@ -33941,6 +33943,9 @@ class CanvasTexture {
          * @type {CanvasRenderingContext2D}
          */
         this.context = this.canvas.getContext("2d", { willReadFrequently: attributes.willReadFrequently });
+
+        // enable or disable antiAlias if specified
+        this.setAntiAlias(attributes.antiAlias);
     }
 
     /**
@@ -33957,6 +33962,34 @@ class CanvasTexture {
     clear() {
         this.context.setTransform(1, 0, 0, 1, 0, 0);
         this.context.clearRect(0, 0, this.canvas.width, this.canvas.height);
+    }
+
+    /**
+     * enable/disable image smoothing (scaling interpolation)
+     * @param {boolean} [enable=false]
+     */
+    setAntiAlias(enable = false) {
+        var canvas = this.canvas;
+
+        // enable/disable antialias on the given Context2d object
+        setPrefixed("imageSmoothingEnabled", enable, this.context);
+
+        // set antialias CSS property on the main canvas
+        if (typeof canvas.style !== "undefined") {
+            if (enable !== true) {
+                // https://developer.mozilla.org/en-US/docs/Web/CSS/image-rendering
+                canvas.style["image-rendering"] = "optimizeSpeed"; // legal fallback
+                canvas.style["image-rendering"] = "-moz-crisp-edges"; // Firefox
+                canvas.style["image-rendering"] = "-o-crisp-edges"; // Opera
+                canvas.style["image-rendering"] = "-webkit-optimize-contrast"; // Safari
+                canvas.style["image-rendering"] = "optimize-contrast"; // CSS 3
+                canvas.style["image-rendering"] = "crisp-edges"; // CSS 4
+                canvas.style["image-rendering"] = "pixelated"; // CSS 4
+                canvas.style.msInterpolationMode = "nearest-neighbor"; // IE8+
+            } else {
+                canvas.style["image-rendering"] = "auto";
+            }
+        }
     }
 
     /**
@@ -34377,18 +34410,6 @@ class Text extends Renderable {
         this.setText(settings.text);
     }
 
-    /** @ignore */
-    onDeactivateEvent() {
-        // free the canvas and potential corresponding texture when deactivated
-        if (this.offScreenCanvas === true) {
-            renderer.currentCompositor.deleteTexture2D(renderer.currentCompositor.getTexture2D(this.glTextureUnit));
-            renderer.cache.delete(this.canvasTexture.canvas);
-            pool.push(this.canvasTexture);
-            this.canvasTexture = undefined;
-            this.glTextureUnit = undefined;
-        }
-    }
-
     /**
      * make the font bold
      * @returns {Text} this object for chaining
@@ -34609,6 +34630,15 @@ class Text extends Renderable {
      * @ignore
      */
     destroy() {
+        if (this.offScreenCanvas === true) {
+            if (renderer instanceof WebGLRenderer) {
+                renderer.currentCompositor.deleteTexture2D(renderer.currentCompositor.getTexture2D(this.glTextureUnit));
+                this.glTextureUnit = undefined;
+            }
+            renderer.cache.delete(this.canvasTexture.canvas);
+            pool.push(this.canvasTexture);
+            this.canvasTexture = undefined;
+        }
         pool.push(this.fillStyle);
         pool.push(this.strokeStyle);
         this.fillStyle = this.strokeStyle = undefined;
