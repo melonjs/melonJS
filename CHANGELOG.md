@@ -17,6 +17,7 @@
 - Physic: resulting force is now properly cancelled at the end of an update cycle (not required anymore to manually set it to 0 in user code)
 
 ### Fixed
+- Doc: fix missing `Timer` documentation following previous refactoring
 - Loader: fix loading/preloading of base64 audio assets, and base64 encoded FontFace
 - Text: fix an uncaught exception when removing Text object from the game world that use offScreenCanvas texture caching (thanks @wpernath)
 
