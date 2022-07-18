@@ -2,6 +2,9 @@
 
 ## [13.1.0] (melonJS 2) - _2022-xx-xx_
 
+### Added
+- Renderer: Canvas rendering mode can now be forced by adding `[#/&]canvas` to the URL (similarly with WebGL1/2 already)
+
 ### Changed
 - Renderer: the double-buffering option for the Canvas Renderer is now deprecated, this to better align both renderer and enable further improvements
 
