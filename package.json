@@ -52,7 +52,7 @@
   ],
   "dependencies": {
     "@teppeis/multimaps": "^2.0.0",
-    "core-js": "^3.23.4",
+    "core-js": "^3.23.5",
     "earcut": "2.2.4",
     "eventemitter3": "^4.0.7",
     "howler": "2.2.3"
