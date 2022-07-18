@@ -1,16 +1,16 @@
 # Changelog
 
-## [13.0.0] (melonJS 2) - _2022-xx-xx_
+## [13.0.0] (melonJS 2) - _2022-07-18_
 
 ### added
-- Tests: added base64 encoded data preload testing for image and audio assets
-- Utils: new `isDataUrl()` helper returning true if the given url is in the `data:[<mediatype>][;base64],<data>` format.
 - Event: also provide a reference to the camera viewport being resized when emitting `VIEWPORT_ONRESIZE`
+- Unit Test: added base64 encoded data preload testing for image and audio assets
+- Utils: new `isDataUrl()` helper returning true if the given url is in the `data:[<mediatype>][;base64],<data>` format.
 
 ### Changed
 - Core: full ES6 refactoring of `me.device`, and API clean-up (@see https://github.com/melonjs/melonJS/wiki/Upgrade-Guide#120x-to-130x-stable)
-- Loader: `onload` and `onerror` callbacks are now optionals when directly loading assets (easier with base64 encoded assets)
 - Game: refactoring of the global `game` into an instantiable `Application` object, with `game` now being the default instance of it (@see #1091)
+- Loader: `onload` and `onerror` callbacks are now optionals when directly loading assets (easier with base64 encoded assets)
 - Physic: World physic implementation is now properly tight to its corresponding parent application/game (@see #1091)
 - Physic: Gravity is now properly applied as a force, instead of directly modifying a body velocity
 - Physic: Gravity now properly takes in account the body mass
@@ -19,8 +19,8 @@
 ### Fixed
 - Doc: fix missing `Timer` documentation following previous refactoring
 - Loader: fix loading/preloading of base64 audio assets, and base64 encoded FontFace
-- Text: fix an uncaught exception when removing Text object from the game world that use offScreenCanvas texture caching (thanks @wpernath)
 - Renderer: fix a regression with the masking features in the Canvas Rendering mode
+- Text: fix an uncaught exception when removing Text object from the game world that use offScreenCanvas texture caching (thanks @wpernath)
 
 ## [12.0.0] (melonJS 2) - _2022-06-27_
 
@@ -1260,6 +1260,7 @@
 - first public version with alex4 !
 - www.melonjs.org is live :)
 
+[13.0.0]: https://github.com/melonjs/melonJS/compare/13.0.0...12.0.0
 [12.0.0]: https://github.com/melonjs/melonJS/compare/12.0.0...11.0.0
 [11.0.0]: https://github.com/melonjs/melonJS/compare/10.12.0...11.0.0
 [10.12.0]: https://github.com/melonjs/melonJS/compare/10.11.0...10.12.0
