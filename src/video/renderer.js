@@ -22,7 +22,6 @@ class Renderer {
      * @param {number} options.width The width of the canvas without scaling
      * @param {number} options.height The height of the canvas without scaling
      * @param {HTMLCanvasElement} [options.canvas] The html canvas to draw to on screen
-     * @param {boolean} [options.doubleBuffering=false] Whether to enable double buffering (not applicable when using the WebGL Renderer)
      * @param {boolean} [options.antiAlias=false] Whether to enable anti-aliasing, use false (default) for a pixelated effect.
      * @param {boolean} [options.failIfMajorPerformanceCaveat=true] If true, the renderer will switch to CANVAS mode if the performances of a WebGL context would be dramatically lower than that of a native application making equivalent OpenGL calls.
      * @param {boolean} [options.transparent=false] Whether to enable transparency on the canvas (performance hit when enabled)
@@ -87,10 +86,6 @@ class Renderer {
             this.canvas = createCanvas(this.settings.zoomX, this.settings.zoomY);
         }
 
-        // canvas object and context
-        this.backBufferCanvas = this.canvas;
-        this.context = null;
-
         // global color
         this.currentColor = new Color(0, 0, 0, 1.0);
 
@@ -129,39 +124,29 @@ class Renderer {
         this.cache.clear();
         this.currentScissor[0] = 0;
         this.currentScissor[1] = 0;
-        this.currentScissor[2] = this.backBufferCanvas.width;
-        this.currentScissor[3] = this.backBufferCanvas.height;
+        this.currentScissor[2] = this.getCanvas().width;
+        this.currentScissor[3] = this.getCanvas().height;
         this.clearMask();
     }
 
     /**
-     * return a reference to the system canvas
+     * return a reference to the canvas which this renderer draws to
      * @name getCanvas
      * @memberof Renderer
      * @returns {HTMLCanvasElement}
      */
     getCanvas() {
-        return this.backBufferCanvas;
-    }
-
-    /**
-     * return a reference to the screen canvas
-     * @name getScreenCanvas
-     * @memberof Renderer
-     * @returns {HTMLCanvasElement}
-     */
-    getScreenCanvas() {
         return this.canvas;
     }
 
+
     /**
-     * return a reference to the screen canvas corresponding 2d Context<br>
-     * (will return buffered context if double buffering is enabled, or a reference to the Screen Context)
-     * @name getScreenContext
+     * return a reference to this renderer canvas corresponding Context
+     * @name getContext
      * @memberof Renderer
-     * @returns {CanvasRenderingContext2D}
+     * @returns {CanvasRenderingContext2D|WebGLRenderingContext}
      */
-    getScreenContext() {
+    getContext() {
         return this.context;
     }
 
@@ -220,7 +205,7 @@ class Renderer {
      * @returns {number}
      */
     getWidth() {
-        return this.backBufferCanvas.width;
+        return this.canvas.width;
     }
 
     /**
@@ -230,7 +215,7 @@ class Renderer {
      * @returns {number} height of the system Canvas
      */
     getHeight() {
-        return this.backBufferCanvas.height;
+        return this.canvas.height;
     }
 
     /**
@@ -276,9 +261,10 @@ class Renderer {
      * @param {number} height new height of the canvas
      */
     resize(width, height) {
-        if (width !== this.backBufferCanvas.width || height !== this.backBufferCanvas.height) {
-            this.canvas.width = this.backBufferCanvas.width = width;
-            this.canvas.height = this.backBufferCanvas.height = height;
+        var canvas = this.getCanvas();
+        if (width !== canvas.width || height !== canvas.height) {
+            canvas.width = width;
+            canvas.height = height;
             this.currentScissor[0] = 0;
             this.currentScissor[1] = 0;
             this.currentScissor[2] = width;

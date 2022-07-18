@@ -5,7 +5,6 @@ import Ellipse from "./../../geometries/ellipse.js";
 import RoundRect from "./../../geometries/roundrect.js";
 import Rect from "./../../geometries/rectangle.js";
 import Bounds from "./../../physics/bounds.js";
-import { createCanvas } from "./../video.js";
 import * as event from "./../../system/event.js";
 
 /**
@@ -32,17 +31,7 @@ class CanvasRenderer extends Renderer {
         super(options);
 
         // defined the 2d context
-        this.context = this.getContext2d(this.getScreenCanvas(), this.settings.transparent);
-
-        // create the back buffer if we use double buffering
-        if (this.settings.doubleBuffering) {
-            this.backBufferCanvas = createCanvas(this.settings.width, this.settings.height, true);
-            this.backBufferContext2D = this.getContext2d(this.backBufferCanvas);
-        }
-        else {
-            this.backBufferCanvas = this.getScreenCanvas();
-            this.backBufferContext2D = this.context;
-        }
+        this.context = this.getContext2d(this.getCanvas(), this.settings.transparent);
 
         this.setBlendMode(this.settings.blendMode);
 
@@ -58,13 +47,13 @@ class CanvasRenderer extends Renderer {
         }
 
         // context lost & restore event for canvas
-        this.getScreenCanvas().addEventListener("contextlost", (e) => {
+        this.getCanvas().addEventListener("contextlost", (e) => {
             e.preventDefault();
             this.isContextValid = false;
             event.emit(event.ONCONTEXT_LOST, this);
         }, false );
         // ctx.restoreContext()
-        this.getScreenCanvas().addEventListener("contextrestored", () => {
+        this.getCanvas().addEventListener("contextrestored", () => {
             this.isContextValid = true;
             event.emit(event.ONCONTEXT_RESTORED, this);
         }, false );
@@ -86,7 +75,7 @@ class CanvasRenderer extends Renderer {
      * @memberof CanvasRenderer
      */
     resetTransform() {
-        this.backBufferContext2D.setTransform(1, 0, 0, 1, 0, 0);
+        this.getContext().setTransform(1, 0, 0, 1, 0, 0);
     }
 
     /**
@@ -154,7 +143,7 @@ class CanvasRenderer extends Renderer {
      */
     flush() {
         if (this.settings.doubleBuffering) {
-            this.context.drawImage(this.backBufferCanvas, 0, 0);
+            this.context.drawImage(this.getCanvas(), 0, 0);
         }
     }
 
@@ -166,11 +155,14 @@ class CanvasRenderer extends Renderer {
      * @param {boolean} [opaque=false] Allow transparency [default] or clear the surface completely [true]
      */
     clearColor(color = "#000000", opaque) {
+        var canvas = this.getCanvas();
+        var context = this.getContext();
+
         this.save();
         this.resetTransform();
-        this.backBufferContext2D.globalCompositeOperation = opaque ? "copy" : "source-over";
-        this.backBufferContext2D.fillStyle = (color instanceof Color) ? color.toRGBA() : color;
-        this.fillRect(0, 0, this.backBufferCanvas.width, this.backBufferCanvas.height);
+        context.globalCompositeOperation = opaque ? "copy" : "source-over";
+        context.fillStyle = (color instanceof Color) ? color.toRGBA() : color;
+        this.fillRect(0, 0, canvas.width, canvas.height);
         this.restore();
     }
 
@@ -530,17 +522,6 @@ class CanvasRenderer extends Renderer {
         this.strokeRoundRect(x, y, width, height, radius, true);
     }
 
-
-    /**
-     * return a reference to the system 2d Context
-     * @name getContext
-     * @memberof CanvasRenderer
-     * @returns {CanvasRenderingContext2D}
-     */
-    getContext() {
-        return this.backBufferContext2D;
-    }
-
     /**
      * return a reference to the font 2d Context
      * @ignore
@@ -556,7 +537,7 @@ class CanvasRenderer extends Renderer {
      * @memberof CanvasRenderer
      */
     save() {
-        this.backBufferContext2D.save();
+        this.getContext().save();
     }
 
     /**
@@ -565,12 +546,12 @@ class CanvasRenderer extends Renderer {
      * @memberof CanvasRenderer
      */
     restore() {
-        this.backBufferContext2D.restore();
+        this.getContext().restore();
         this.currentColor.glArray[3] = this.getGlobalAlpha();
         this.currentScissor[0] = 0;
         this.currentScissor[1] = 0;
-        this.currentScissor[2] = this.backBufferCanvas.width;
-        this.currentScissor[3] = this.backBufferCanvas.height;
+        this.currentScissor[2] = this.getCanvas().width;
+        this.currentScissor[3] = this.getCanvas().height;
     }
 
     /**
@@ -580,7 +561,7 @@ class CanvasRenderer extends Renderer {
      * @param {number} angle in radians
      */
     rotate(angle) {
-        this.backBufferContext2D.rotate(angle);
+        this.getContext().rotate(angle);
     }
 
     /**
@@ -591,7 +572,7 @@ class CanvasRenderer extends Renderer {
      * @param {number} y
      */
     scale(x, y) {
-        this.backBufferContext2D.scale(x, y);
+        this.getContext().scale(x, y);
     }
 
     /**
@@ -602,8 +583,9 @@ class CanvasRenderer extends Renderer {
      * @param {Color|string} color css color value
      */
     setColor(color) {
-        this.backBufferContext2D.strokeStyle =
-        this.backBufferContext2D.fillStyle = (
+        var context = this.getContext();
+        context.strokeStyle =
+        context.fillStyle = (
             color instanceof Color ?
             color.toRGBA() :
             color
@@ -617,7 +599,7 @@ class CanvasRenderer extends Renderer {
      * @param {number} alpha 0.0 to 1.0 values accepted.
      */
     setGlobalAlpha(alpha) {
-        this.backBufferContext2D.globalAlpha = this.currentColor.glArray[3] = alpha;
+        this.getContext().globalAlpha = this.currentColor.glArray[3] = alpha;
     }
 
     /**
@@ -627,7 +609,7 @@ class CanvasRenderer extends Renderer {
      * @returns {number} global alpha value
      */
     getGlobalAlpha() {
-        return this.backBufferContext2D.globalAlpha;
+        return this.getContext().globalAlpha;
     }
 
     /**
@@ -637,7 +619,7 @@ class CanvasRenderer extends Renderer {
      * @param {number} width Line width
      */
     setLineWidth(width) {
-        this.backBufferContext2D.lineWidth = width;
+        this.getContext().lineWidth = width;
     }
 
     /**
@@ -672,7 +654,7 @@ class CanvasRenderer extends Renderer {
             f |= 0;
         }
 
-        this.backBufferContext2D.transform(a, b, c, d, e, f);
+        this.getContext().transform(a, b, c, d, e, f);
     }
 
     /**
@@ -684,9 +666,9 @@ class CanvasRenderer extends Renderer {
      */
     translate(x, y) {
         if (this.settings.subPixel === false) {
-            this.backBufferContext2D.translate(~~x, ~~y);
+            this.getContext().translate(~~x, ~~y);
         } else {
-            this.backBufferContext2D.translate(x, y);
+            this.getContext().translate(x, y);
         }
     }
 
@@ -704,14 +686,14 @@ class CanvasRenderer extends Renderer {
      * @param {number} height
      */
     clipRect(x, y, width, height) {
-        var canvas = this.backBufferCanvas;
+        var canvas = this.getCanvas();
         // if requested box is different from the current canvas size;
         if (x !== 0 || y !== 0 || width !== canvas.width || height !== canvas.height) {
             var currentScissor = this.currentScissor;
             // if different from the current scissor box
             if (currentScissor[0] !== x || currentScissor[1] !== y ||
                 currentScissor[2] !== width || currentScissor[3] !== height) {
-                var context = this.backBufferContext2D;
+                var context = this.getContext();
                 context.beginPath();
                 context.rect(x, y, width, height);
                 context.clip();

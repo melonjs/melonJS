@@ -132,8 +132,8 @@ class WebGLCompositor {
         // initial viewport size
         this.setViewport(
             0, 0,
-            this.renderer.getScreenCanvas().width,
-            this.renderer.getScreenCanvas().height
+            this.renderer.getCanvas().width,
+            this.renderer.getCanvas().height
         );
 
         // Initialize clear color

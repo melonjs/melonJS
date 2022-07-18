@@ -125,7 +125,7 @@ function enablePointerEvent() {
 
         if (pointerEventTarget === null) {
             // default pointer event target
-            pointerEventTarget = renderer.getScreenCanvas();
+            pointerEventTarget = renderer.getCanvas();
         }
 
         if (device.pointerEvent) {
@@ -556,7 +556,7 @@ export var throttlingInterval;
  */
 export function globalToLocal(x, y, v) {
     v = v || pool.pull("Vector2d");
-    var rect = device.getElementBounds(renderer.getScreenCanvas());
+    var rect = device.getElementBounds(renderer.getCanvas());
     var pixelRatio = globalThis.devicePixelRatio || 1;
     x -= rect.left + (globalThis.pageXOffset || 0);
     y -= rect.top + (globalThis.pageYOffset || 0);

@@ -65,7 +65,7 @@ function onresize() {
         var canvasMaxHeight = Infinity;
 
         if (globalThis.getComputedStyle) {
-            var style = globalThis.getComputedStyle(renderer.getScreenCanvas(), null);
+            var style = globalThis.getComputedStyle(renderer.getCanvas(), null);
             canvasMaxWidth = parseInt(style.maxWidth, 10) || Infinity;
             canvasMaxHeight = parseInt(style.maxHeight, 10) || Infinity;
         }
@@ -248,13 +248,15 @@ export function init(width, height, options) {
         console.log("melonJS 2 (v" + version + ") | http://melonjs.org" );
     }
 
-    // override renderer settings if &webgl is defined in the URL
+    // override renderer settings if &webgl or &canvas is defined in the URL
     var uriFragment = utils.getUriFragment();
     if (uriFragment.webgl === true || uriFragment.webgl1 === true || uriFragment.webgl2 === true) {
         settings.renderer = WEBGL;
         if (uriFragment.webgl1 === true) {
             settings.preferWebGL1 = true;
         }
+    } else if (uriFragment.canvas === true) {
+        settings.renderer = CANVAS;
     }
 
     // normalize scale
@@ -337,7 +339,7 @@ export function init(width, height, options) {
 
     // add our canvas (default to document.body if settings.parent is undefined)
     parent = device.getElement(typeof settings.parent !== "undefined" ? settings.parent : document.body);
-    parent.appendChild(renderer.getScreenCanvas());
+    parent.appendChild(renderer.getCanvas());
 
     // Mobile browser hacks
     if (device.platform.isMobile) {
@@ -434,8 +436,8 @@ export function getParent() {
  * @param {number} y y scaling multiplier
  */
 export function scale(x, y) {
-    var canvas = renderer.getScreenCanvas();
-    var context = renderer.getScreenContext();
+    var canvas = renderer.getCanvas();
+    var context = renderer.getContext();
     var settings = renderer.settings;
     var pixelRatio = device.devicePixelRatio;
 
