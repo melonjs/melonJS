@@ -62,7 +62,6 @@ Object.defineProperty(Renderer.prototype, "Texture", {
     }
 });
 
-
 /**
  * @classdesc
  * Used to make a game entity draggable
@@ -100,3 +99,30 @@ export class DroptargetEntity extends DropTarget {
         super(x, y, settings.width, settings.height);
     }
 }
+
+/**
+ * return a reference to the screen canvas
+ * @name getScreenCanvas
+ * @memberof Renderer
+ * @returns {HTMLCanvasElement}
+ * @deprecated since 13.1.0
+ * @see getCanvas();
+ */
+Renderer.prototype.getScreenCanvas = function() {
+    warning("getScreenCanvas", "getCanvas", "13.1.0");
+    return this.getCanvas();
+};
+
+/**
+ * return a reference to the screen canvas corresponding 2d Context<br>
+ * (will return buffered context if double buffering is enabled, or a reference to the Screen Context)
+ * @name getScreenContext
+ * @memberof Renderer
+ * @returns {CanvasRenderingContext2D}
+ * @deprecated since 13.1.0
+ * @see getContext();
+ */
+Renderer.prototype.getScreenContext = function()  {
+    warning("getScreenContext", "getContext", "13.1.0");
+    return this.getContext();
+};

@@ -2,6 +2,9 @@
 
 ## [13.1.0] (melonJS 2) - _2022-xx-xx_
 
+### Changed
+- Renderer: the double-buffering option for the Canvas Renderer is now deprecated, this to better align both renderer and enable further improvements
+
 ## [13.0.0] (melonJS 2) - _2022-07-18_
 
 ### added
