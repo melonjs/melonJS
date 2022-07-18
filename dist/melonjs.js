@@ -315,10 +315,10 @@
 	(shared$3.exports = function (key, value) {
 	  return store$2[key] || (store$2[key] = value !== undefined ? value : {});
 	})('versions', []).push({
-	  version: '3.23.4',
+	  version: '3.23.5',
 	  mode: 'global',
 	  copyright: '© 2014-2022 Denis Pushkarev (zloirock.ru)',
-	  license: 'https://github.com/zloirock/core-js/blob/v3.23.4/LICENSE',
+	  license: 'https://github.com/zloirock/core-js/blob/v3.23.5/LICENSE',
 	  source: 'https://github.com/zloirock/core-js'
 	});
 
@@ -25065,11 +25065,11 @@
 	        }
 
 	        // https://github.com/melonjs/melonJS/issues/648
-	        else if (mask instanceof RoundRect) {
+	        if (mask instanceof RoundRect) {
 	            context.roundRect(mask.top, mask.left, mask.width, mask.height, mask.radius);
 	        } else if (mask instanceof Rect || mask instanceof Bounds) {
 	            context.rect(mask.top, mask.left, mask.width, mask.height);
-	        }  else if (mask instanceof Ellipse) {
+	        } else if (mask instanceof Ellipse) {
 	            var _x = mask.pos.x, _y = mask.pos.y,
 	                hw = mask.radiusV.x,
 	                hh = mask.radiusV.y,
@@ -25091,6 +25091,7 @@
 	            context.bezierCurveTo(xmin, by, lx, ymax, lx, _y);
 	            context.bezierCurveTo(lx, ymin, xmin, ty, _x, ty);
 	        } else {
+	            // polygon
 	            var _x$1 = mask.pos.x, _y$1 = mask.pos.y;
 	            var point;
 
