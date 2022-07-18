@@ -743,11 +743,11 @@ class CanvasRenderer extends Renderer {
         }
 
         // https://github.com/melonjs/melonJS/issues/648
-        else if (mask instanceof RoundRect) {
+        if (mask instanceof RoundRect) {
             context.roundRect(mask.top, mask.left, mask.width, mask.height, mask.radius);
         } else if (mask instanceof Rect || mask instanceof Bounds) {
             context.rect(mask.top, mask.left, mask.width, mask.height);
-        }  else if (mask instanceof Ellipse) {
+        } else if (mask instanceof Ellipse) {
             const _x = mask.pos.x, _y = mask.pos.y,
                 hw = mask.radiusV.x,
                 hh = mask.radiusV.y,
@@ -769,6 +769,7 @@ class CanvasRenderer extends Renderer {
             context.bezierCurveTo(xmin, by, lx, ymax, lx, _y);
             context.bezierCurveTo(lx, ymin, xmin, ty, _x, ty);
         } else {
+            // polygon
             const _x = mask.pos.x, _y = mask.pos.y;
             var point;
 
