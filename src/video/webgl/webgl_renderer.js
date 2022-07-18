@@ -20,7 +20,6 @@ class WebGLRenderer extends Renderer {
      * @param {number} options.width The width of the canvas without scaling
      * @param {number} options.height The height of the canvas without scaling
      * @param {HTMLCanvasElement} [options.canvas] The html canvas to draw to on screen
-     * @param {boolean} [options.doubleBuffering=false] Whether to enable double buffering (not applicable when using the WebGL Renderer)
      * @param {boolean} [options.antiAlias=false] Whether to enable anti-aliasing
      * @param {boolean} [options.failIfMajorPerformanceCaveat=true] If true, the renderer will switch to CANVAS mode if the performances of a WebGL context would be dramatically lower than that of a native application making equivalent OpenGL calls.
      * @param {boolean} [options.transparent=false] Whether to enable transparency on the canvas (performance hit when enabled)
@@ -72,7 +71,7 @@ class WebGLRenderer extends Renderer {
          * @memberof WebGLRenderer
          * @type {WebGLRenderingContext}
          */
-        this.context = this.gl = this.getContextGL(this.getScreenCanvas(), options.transparent);
+        this.context = this.gl = this.getContextGL(this.getCanvas(), options.transparent);
 
         /**
          * Maximum number of texture unit supported under the current context
@@ -154,13 +153,13 @@ class WebGLRenderer extends Renderer {
         // to simulate context lost and restore in WebGL:
         // var ctx = me.video.renderer.context.getExtension('WEBGL_lose_context');
         // ctx.loseContext()
-        this.getScreenCanvas().addEventListener("webglcontextlost", (e) => {
+        this.getCanvas().addEventListener("webglcontextlost", (e) => {
             e.preventDefault();
             this.isContextValid = false;
             event.emit(event.ONCONTEXT_LOST, this);
         }, false );
         // ctx.restoreContext()
-        this.getScreenCanvas().addEventListener("webglcontextrestored", () => {
+        this.getCanvas().addEventListener("webglcontextrestored", () => {
             this.reset();
             this.isContextValid = true;
             event.emit(event.ONCONTEXT_RESTORED, this);
@@ -231,7 +230,7 @@ class WebGLRenderer extends Renderer {
      */
     createFontTexture(cache) {
         if (typeof this.fontTexture === "undefined") {
-            var canvas = this.backBufferCanvas;
+            var canvas = this.getCanvas();
             var width = canvas.width;
             var height = canvas.height;
 
@@ -459,17 +458,6 @@ class WebGLRenderer extends Renderer {
         this.currentCompositor.addQuad(pattern, x, y, width, height, uvs[0], uvs[1], uvs[2], uvs[3], this.currentTint.toUint32());
     }
 
-
-    /**
-     * return a reference to the screen canvas corresponding WebGL Context
-     * @name getScreenContext
-     * @memberof WebGLRenderer
-     * @returns {WebGLRenderingContext}
-     */
-    getScreenContext() {
-        return this.gl;
-    }
-
     /**
      * Returns the WebGL Context object of the given Canvas
      * @name getContextGL
@@ -627,8 +615,8 @@ class WebGLRenderer extends Renderer {
             this.gl.disable(this.gl.SCISSOR_TEST);
             this.currentScissor[0] = 0;
             this.currentScissor[1] = 0;
-            this.currentScissor[2] = this.backBufferCanvas.width;
-            this.currentScissor[3] = this.backBufferCanvas.height;
+            this.currentScissor[2] = this.getCanvas().width;
+            this.currentScissor[3] = this.getCanvas().height;
         }
     }
 
@@ -719,7 +707,7 @@ class WebGLRenderer extends Renderer {
      * @param {number} width Line width
      */
     setLineWidth(width) {
-        this.getScreenContext().lineWidth(width);
+        this.getContext().lineWidth(width);
     }
 
     /**
@@ -1015,7 +1003,7 @@ class WebGLRenderer extends Renderer {
      * @param {number} height
      */
     clipRect(x, y, width, height) {
-        var canvas = this.backBufferCanvas;
+        var canvas = this.getCanvas();
         var gl = this.gl;
         // if requested box is different from the current canvas size
         if (x !== 0 || y !== 0 || width !== canvas.width || height !== canvas.height) {
