@@ -18,7 +18,6 @@ class CanvasRenderer extends Renderer {
      * @param {number} options.width The width of the canvas without scaling
      * @param {number} options.height The height of the canvas without scaling
      * @param {HTMLCanvasElement} [options.canvas] The html canvas to draw to on screen
-     * @param {boolean} [options.doubleBuffering=false] Whether to enable double buffering
      * @param {boolean} [options.antiAlias=false] Whether to enable anti-aliasing
      * @param {boolean} [options.transparent=false] Whether to enable transparency on the canvas (performance hit when enabled)
      * @param {boolean} [options.subPixel=false] Whether to enable subpixel renderering (performance hit when enabled)
@@ -117,12 +116,6 @@ class CanvasRenderer extends Renderer {
                 this.currentBlendMode = "normal";
                 break;
         }
-
-        // transparent setting will override the given blendmode for this.context
-        if (this.settings.doubleBuffering && this.settings.transparent) {
-            // Clears the front buffer for each frame blit
-            this.context.globalCompositeOperation = "copy";
-        }
     }
 
     /**
@@ -133,17 +126,6 @@ class CanvasRenderer extends Renderer {
     clear() {
         if (this.settings.transparent) {
             this.clearColor("rgba(0,0,0,0)", true);
-        }
-    }
-
-    /**
-     * render the main framebuffer on screen
-     * @name flush
-     * @memberof CanvasRenderer
-     */
-    flush() {
-        if (this.settings.doubleBuffering) {
-            this.context.drawImage(this.getCanvas(), 0, 0);
         }
     }
 

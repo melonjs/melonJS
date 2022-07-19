@@ -83,7 +83,7 @@ class Renderer {
         } else if (typeof this.settings.canvas !== "undefined") {
             this.canvas = this.settings.canvas;
         } else {
-            this.canvas = createCanvas(this.settings.zoomX, this.settings.zoomY);
+            this.canvas = createCanvas(this.settings.width, this.settings.height);
         }
 
         // global color
@@ -110,6 +110,13 @@ class Renderer {
      * @memberof Renderer
      */
     clear() {}
+
+    /**
+     * render the main framebuffer on screen
+     * @name flush
+     * @memberof Renderer
+     */
+    flush() {}
 
     /**
      * Reset context state
@@ -205,7 +212,7 @@ class Renderer {
      * @returns {number}
      */
     getWidth() {
-        return this.canvas.width;
+        return this.getCanvas().width;
     }
 
     /**
@@ -215,7 +222,7 @@ class Renderer {
      * @returns {number} height of the system Canvas
      */
     getHeight() {
-        return this.canvas.height;
+        return this.getCanvas().height;
     }
 
     /**

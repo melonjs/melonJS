@@ -53,7 +53,7 @@ describe("me.input", function () {
             event.timeStamp = undefined;
 
             // dispatch the event
-            me.video.renderer.getScreenCanvas().dispatchEvent(event);
+            me.video.renderer.getCanvas().dispatchEvent(event);
         });
     });
 });
