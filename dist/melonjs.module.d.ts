@@ -1049,7 +1049,6 @@ export class CanvasRenderer extends Renderer {
      * @param {number} options.width The width of the canvas without scaling
      * @param {number} options.height The height of the canvas without scaling
      * @param {HTMLCanvasElement} [options.canvas] The html canvas to draw to on screen
-     * @param {boolean} [options.doubleBuffering=false] Whether to enable double buffering
      * @param {boolean} [options.antiAlias=false] Whether to enable anti-aliasing
      * @param {boolean} [options.transparent=false] Whether to enable transparency on the canvas (performance hit when enabled)
      * @param {boolean} [options.subPixel=false] Whether to enable subpixel renderering (performance hit when enabled)
@@ -1061,7 +1060,6 @@ export class CanvasRenderer extends Renderer {
         width: number;
         height: number;
         canvas?: HTMLCanvasElement;
-        doubleBuffering?: boolean;
         antiAlias?: boolean;
         transparent?: boolean;
         subPixel?: boolean;
@@ -1070,8 +1068,6 @@ export class CanvasRenderer extends Renderer {
         zoomY?: number;
     });
     context: CanvasRenderingContext2D;
-    backBufferCanvas: HTMLCanvasElement | OffscreenCanvas;
-    backBufferContext2D: CanvasRenderingContext2D;
     cache: TextureCache;
     /**
      * Reset the canvas transform to identity
@@ -1097,12 +1093,6 @@ export class CanvasRenderer extends Renderer {
      * @param {CanvasRenderingContext2D} [context]
      */
     setBlendMode(mode?: string, context?: CanvasRenderingContext2D): void;
-    /**
-     * render the main framebuffer on screen
-     * @name flush
-     * @memberof CanvasRenderer
-     */
-    flush(): void;
     /**
      * Clears the main framebuffer with the given color
      * @name clearColor
@@ -1296,17 +1286,10 @@ export class CanvasRenderer extends Renderer {
      */
     fillRoundRect(x: number, y: number, width: number, height: number, radius: number): void;
     /**
-     * return a reference to the system 2d Context
-     * @name getContext
-     * @memberof CanvasRenderer
-     * @returns {CanvasRenderingContext2D}
-     */
-    getContext(): CanvasRenderingContext2D;
-    /**
      * return a reference to the font 2d Context
      * @ignore
      */
-    getFontContext(): CanvasRenderingContext2D;
+    getFontContext(): CanvasRenderingContext2D | WebGLRenderingContext;
     /**
      * save the canvas context
      * @name save
@@ -6152,7 +6135,6 @@ export class Renderer {
      * @param {number} options.width The width of the canvas without scaling
      * @param {number} options.height The height of the canvas without scaling
      * @param {HTMLCanvasElement} [options.canvas] The html canvas to draw to on screen
-     * @param {boolean} [options.doubleBuffering=false] Whether to enable double buffering (not applicable when using the WebGL Renderer)
      * @param {boolean} [options.antiAlias=false] Whether to enable anti-aliasing, use false (default) for a pixelated effect.
      * @param {boolean} [options.failIfMajorPerformanceCaveat=true] If true, the renderer will switch to CANVAS mode if the performances of a WebGL context would be dramatically lower than that of a native application making equivalent OpenGL calls.
      * @param {boolean} [options.transparent=false] Whether to enable transparency on the canvas (performance hit when enabled)
@@ -6166,7 +6148,6 @@ export class Renderer {
         width: number;
         height: number;
         canvas?: HTMLCanvasElement;
-        doubleBuffering?: boolean;
         antiAlias?: boolean;
         failIfMajorPerformanceCaveat?: boolean;
         transparent?: boolean;
@@ -6212,8 +6193,6 @@ export class Renderer {
      */
     currentBlendMode: string;
     canvas: any;
-    backBufferCanvas: any;
-    context: any;
     currentColor: Color;
     currentTint: Color;
     projectionMatrix: Matrix3d;
@@ -6225,33 +6204,31 @@ export class Renderer {
      */
     clear(): void;
     /**
+     * render the main framebuffer on screen
+     * @name flush
+     * @memberof Renderer
+     */
+    flush(): void;
+    /**
      * Reset context state
      * @name reset
      * @memberof Renderer
      */
     reset(): void;
     /**
-     * return a reference to the system canvas
+     * return a reference to the canvas which this renderer draws to
      * @name getCanvas
      * @memberof Renderer
      * @returns {HTMLCanvasElement}
      */
     getCanvas(): HTMLCanvasElement;
     /**
-     * return a reference to the screen canvas
-     * @name getScreenCanvas
+     * return a reference to this renderer canvas corresponding Context
+     * @name getContext
      * @memberof Renderer
-     * @returns {HTMLCanvasElement}
+     * @returns {CanvasRenderingContext2D|WebGLRenderingContext}
      */
-    getScreenCanvas(): HTMLCanvasElement;
-    /**
-     * return a reference to the screen canvas corresponding 2d Context<br>
-     * (will return buffered context if double buffering is enabled, or a reference to the Screen Context)
-     * @name getScreenContext
-     * @memberof Renderer
-     * @returns {CanvasRenderingContext2D}
-     */
-    getScreenContext(): CanvasRenderingContext2D;
+    getContext(): CanvasRenderingContext2D | WebGLRenderingContext;
     /**
      * returns the current blend mode for this renderer
      * @name getBlendMode
@@ -6390,6 +6367,25 @@ export class Renderer {
      */
     drawFont(): void;
     get Texture(): typeof TextureAtlas;
+    /**
+     * return a reference to the screen canvas
+     * @name getScreenCanvas
+     * @memberof Renderer
+     * @returns {HTMLCanvasElement}
+     * @deprecated since 13.1.0
+     * @see getCanvas();
+     */
+    getScreenCanvas(): HTMLCanvasElement;
+    /**
+     * return a reference to the screen canvas corresponding 2d Context<br>
+     * (will return buffered context if double buffering is enabled, or a reference to the Screen Context)
+     * @name getScreenContext
+     * @memberof Renderer
+     * @returns {CanvasRenderingContext2D}
+     * @deprecated since 13.1.0
+     * @see getContext();
+     */
+    getScreenContext(): CanvasRenderingContext2D;
 }
 /**
  * @classdesc
@@ -9049,7 +9045,6 @@ export class WebGLRenderer extends Renderer {
      * @param {number} options.width The width of the canvas without scaling
      * @param {number} options.height The height of the canvas without scaling
      * @param {HTMLCanvasElement} [options.canvas] The html canvas to draw to on screen
-     * @param {boolean} [options.doubleBuffering=false] Whether to enable double buffering (not applicable when using the WebGL Renderer)
      * @param {boolean} [options.antiAlias=false] Whether to enable anti-aliasing
      * @param {boolean} [options.failIfMajorPerformanceCaveat=true] If true, the renderer will switch to CANVAS mode if the performances of a WebGL context would be dramatically lower than that of a native application making equivalent OpenGL calls.
      * @param {boolean} [options.transparent=false] Whether to enable transparency on the canvas (performance hit when enabled)
@@ -9064,7 +9059,6 @@ export class WebGLRenderer extends Renderer {
         width: number;
         height: number;
         canvas?: HTMLCanvasElement;
-        doubleBuffering?: boolean;
         antiAlias?: boolean;
         failIfMajorPerformanceCaveat?: boolean;
         transparent?: boolean;
@@ -9197,12 +9191,6 @@ export class WebGLRenderer extends Renderer {
      */
     createPattern(image: new (width?: number, height?: number) => HTMLImageElement, repeat: string): TextureAtlas;
     /**
-     * Flush the compositor to the frame buffer
-     * @name flush
-     * @memberof WebGLRenderer
-     */
-    flush(): void;
-    /**
      * Clears the gl context with the given color.
      * @name clearColor
      * @memberof WebGLRenderer
@@ -9258,13 +9246,6 @@ export class WebGLRenderer extends Renderer {
      * @see WebGLRenderer#createPattern
      */
     drawPattern(pattern: TextureAtlas, x: number, y: number, width: number, height: number): void;
-    /**
-     * return a reference to the screen canvas corresponding WebGL Context
-     * @name getScreenContext
-     * @memberof WebGLRenderer
-     * @returns {WebGLRenderingContext}
-     */
-    getScreenContext(): WebGLRenderingContext;
     /**
      * Returns the WebGL Context object of the given Canvas
      * @name getContextGL

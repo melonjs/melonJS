@@ -1,5 +1,5 @@
 /*!
- * melonJS Game Engine - v13.0.0
+ * melonJS Game Engine - v13.1.0
  * http://www.melonjs.org
  * melonjs is licensed under the MIT License.
  * http://www.opensource.org/licenses/mit-license
@@ -315,10 +315,10 @@
 	(shared$3.exports = function (key, value) {
 	  return store$2[key] || (store$2[key] = value !== undefined ? value : {});
 	})('versions', []).push({
-	  version: '3.23.5',
+	  version: '3.24.0',
 	  mode: 'global',
 	  copyright: '© 2014-2022 Denis Pushkarev (zloirock.ru)',
-	  license: 'https://github.com/zloirock/core-js/blob/v3.23.5/LICENSE',
+	  license: 'https://github.com/zloirock/core-js/blob/v3.24.0/LICENSE',
 	  source: 'https://github.com/zloirock/core-js'
 	});
 
@@ -6904,8 +6904,8 @@
 	    // initial viewport size
 	    this.setViewport(
 	        0, 0,
-	        this.renderer.getScreenCanvas().width,
-	        this.renderer.getScreenCanvas().height
+	        this.renderer.getCanvas().width,
+	        this.renderer.getCanvas().height
 	    );
 
 	    // Initialize clear color
@@ -10147,12 +10147,8 @@
 	    } else if (typeof this.settings.canvas !== "undefined") {
 	        this.canvas = this.settings.canvas;
 	    } else {
-	        this.canvas = createCanvas(this.settings.zoomX, this.settings.zoomY);
+	        this.canvas = createCanvas(this.settings.width, this.settings.height);
 	    }
-
-	    // canvas object and context
-	    this.backBufferCanvas = this.canvas;
-	    this.context = null;
 
 	    // global color
 	    this.currentColor = new Color(0, 0, 0, 1.0);
@@ -10180,6 +10176,13 @@
 	Renderer.prototype.clear = function clear () {};
 
 	/**
+	 * render the main framebuffer on screen
+	 * @name flush
+	 * @memberof Renderer
+	 */
+	Renderer.prototype.flush = function flush () {};
+
+	/**
 	 * Reset context state
 	 * @name reset
 	 * @memberof Renderer
@@ -10192,39 +10195,29 @@
 	    this.cache.clear();
 	    this.currentScissor[0] = 0;
 	    this.currentScissor[1] = 0;
-	    this.currentScissor[2] = this.backBufferCanvas.width;
-	    this.currentScissor[3] = this.backBufferCanvas.height;
+	    this.currentScissor[2] = this.getCanvas().width;
+	    this.currentScissor[3] = this.getCanvas().height;
 	    this.clearMask();
 	};
 
 	/**
-	 * return a reference to the system canvas
+	 * return a reference to the canvas which this renderer draws to
 	 * @name getCanvas
 	 * @memberof Renderer
 	 * @returns {HTMLCanvasElement}
 	 */
 	Renderer.prototype.getCanvas = function getCanvas () {
-	    return this.backBufferCanvas;
-	};
-
-	/**
-	 * return a reference to the screen canvas
-	 * @name getScreenCanvas
-	 * @memberof Renderer
-	 * @returns {HTMLCanvasElement}
-	 */
-	Renderer.prototype.getScreenCanvas = function getScreenCanvas () {
 	    return this.canvas;
 	};
 
+
 	/**
-	 * return a reference to the screen canvas corresponding 2d Context<br>
-	 * (will return buffered context if double buffering is enabled, or a reference to the Screen Context)
-	 * @name getScreenContext
+	 * return a reference to this renderer canvas corresponding Context
+	 * @name getContext
 	 * @memberof Renderer
-	 * @returns {CanvasRenderingContext2D}
+	 * @returns {CanvasRenderingContext2D|WebGLRenderingContext}
 	 */
-	Renderer.prototype.getScreenContext = function getScreenContext () {
+	Renderer.prototype.getContext = function getContext () {
 	    return this.context;
 	};
 
@@ -10283,7 +10276,7 @@
 	 * @returns {number}
 	 */
 	Renderer.prototype.getWidth = function getWidth () {
-	    return this.backBufferCanvas.width;
+	    return this.getCanvas().width;
 	};
 
 	/**
@@ -10293,7 +10286,7 @@
 	 * @returns {number} height of the system Canvas
 	 */
 	Renderer.prototype.getHeight = function getHeight () {
-	    return this.backBufferCanvas.height;
+	    return this.getCanvas().height;
 	};
 
 	/**
@@ -10339,9 +10332,10 @@
 	 * @param {number} height new height of the canvas
 	 */
 	Renderer.prototype.resize = function resize (width, height) {
-	    if (width !== this.backBufferCanvas.width || height !== this.backBufferCanvas.height) {
-	        this.canvas.width = this.backBufferCanvas.width = width;
-	        this.canvas.height = this.backBufferCanvas.height = height;
+	    var canvas = this.getCanvas();
+	    if (width !== canvas.width || height !== canvas.height) {
+	        canvas.width = width;
+	        canvas.height = height;
 	        this.currentScissor[0] = 0;
 	        this.currentScissor[1] = 0;
 	        this.currentScissor[2] = width;
@@ -16750,7 +16744,7 @@
 
 	        if (pointerEventTarget === null) {
 	            // default pointer event target
-	            pointerEventTarget = renderer.getScreenCanvas();
+	            pointerEventTarget = renderer.getCanvas();
 	        }
 
 	        if (pointerEvent) {
@@ -17181,7 +17175,7 @@
 	 */
 	function globalToLocal(x, y, v) {
 	    v = v || pool.pull("Vector2d");
-	    var rect = getElementBounds(renderer.getScreenCanvas());
+	    var rect = getElementBounds(renderer.getCanvas());
 	    var pixelRatio = globalThis.devicePixelRatio || 1;
 	    x -= rect.left + (globalThis.pageXOffset || 0);
 	    y -= rect.top + (globalThis.pageYOffset || 0);
@@ -24334,17 +24328,7 @@
 	        Renderer.call(this, options);
 
 	        // defined the 2d context
-	        this.context = this.getContext2d(this.getScreenCanvas(), this.settings.transparent);
-
-	        // create the back buffer if we use double buffering
-	        if (this.settings.doubleBuffering) {
-	            this.backBufferCanvas = createCanvas(this.settings.width, this.settings.height, true);
-	            this.backBufferContext2D = this.getContext2d(this.backBufferCanvas);
-	        }
-	        else {
-	            this.backBufferCanvas = this.getScreenCanvas();
-	            this.backBufferContext2D = this.context;
-	        }
+	        this.context = this.getContext2d(this.getCanvas(), this.settings.transparent);
 
 	        this.setBlendMode(this.settings.blendMode);
 
@@ -24360,13 +24344,13 @@
 	        }
 
 	        // context lost & restore event for canvas
-	        this.getScreenCanvas().addEventListener("contextlost", function (e) {
+	        this.getCanvas().addEventListener("contextlost", function (e) {
 	            e.preventDefault();
 	            this$1$1.isContextValid = false;
 	            emit(ONCONTEXT_LOST, this$1$1);
 	        }, false );
 	        // ctx.restoreContext()
-	        this.getScreenCanvas().addEventListener("contextrestored", function () {
+	        this.getCanvas().addEventListener("contextrestored", function () {
 	            this$1$1.isContextValid = true;
 	            emit(ONCONTEXT_RESTORED, this$1$1);
 	        }, false );
@@ -24392,7 +24376,7 @@
 	     * @memberof CanvasRenderer
 	     */
 	    CanvasRenderer.prototype.resetTransform = function resetTransform () {
-	        this.backBufferContext2D.setTransform(1, 0, 0, 1, 0, 0);
+	        this.getContext().setTransform(1, 0, 0, 1, 0, 0);
 	    };
 
 	    /**
@@ -24436,12 +24420,6 @@
 	                this.currentBlendMode = "normal";
 	                break;
 	        }
-
-	        // transparent setting will override the given blendmode for this.context
-	        if (this.settings.doubleBuffering && this.settings.transparent) {
-	            // Clears the front buffer for each frame blit
-	            this.context.globalCompositeOperation = "copy";
-	        }
 	    };
 
 	    /**
@@ -24456,17 +24434,6 @@
 	    };
 
 	    /**
-	     * render the main framebuffer on screen
-	     * @name flush
-	     * @memberof CanvasRenderer
-	     */
-	    CanvasRenderer.prototype.flush = function flush () {
-	        if (this.settings.doubleBuffering) {
-	            this.context.drawImage(this.backBufferCanvas, 0, 0);
-	        }
-	    };
-
-	    /**
 	     * Clears the main framebuffer with the given color
 	     * @name clearColor
 	     * @memberof CanvasRenderer
@@ -24476,11 +24443,14 @@
 	    CanvasRenderer.prototype.clearColor = function clearColor (color, opaque) {
 	        if ( color === void 0 ) color = "#000000";
 
+	        var canvas = this.getCanvas();
+	        var context = this.getContext();
+
 	        this.save();
 	        this.resetTransform();
-	        this.backBufferContext2D.globalCompositeOperation = opaque ? "copy" : "source-over";
-	        this.backBufferContext2D.fillStyle = (color instanceof Color) ? color.toRGBA() : color;
-	        this.fillRect(0, 0, this.backBufferCanvas.width, this.backBufferCanvas.height);
+	        context.globalCompositeOperation = opaque ? "copy" : "source-over";
+	        context.fillStyle = (color instanceof Color) ? color.toRGBA() : color;
+	        this.fillRect(0, 0, canvas.width, canvas.height);
 	        this.restore();
 	    };
 
@@ -24850,17 +24820,6 @@
 	        this.strokeRoundRect(x, y, width, height, radius, true);
 	    };
 
-
-	    /**
-	     * return a reference to the system 2d Context
-	     * @name getContext
-	     * @memberof CanvasRenderer
-	     * @returns {CanvasRenderingContext2D}
-	     */
-	    CanvasRenderer.prototype.getContext = function getContext () {
-	        return this.backBufferContext2D;
-	    };
-
 	    /**
 	     * return a reference to the font 2d Context
 	     * @ignore
@@ -24876,7 +24835,7 @@
 	     * @memberof CanvasRenderer
 	     */
 	    CanvasRenderer.prototype.save = function save () {
-	        this.backBufferContext2D.save();
+	        this.getContext().save();
 	    };
 
 	    /**
@@ -24885,12 +24844,12 @@
 	     * @memberof CanvasRenderer
 	     */
 	    CanvasRenderer.prototype.restore = function restore () {
-	        this.backBufferContext2D.restore();
+	        this.getContext().restore();
 	        this.currentColor.glArray[3] = this.getGlobalAlpha();
 	        this.currentScissor[0] = 0;
 	        this.currentScissor[1] = 0;
-	        this.currentScissor[2] = this.backBufferCanvas.width;
-	        this.currentScissor[3] = this.backBufferCanvas.height;
+	        this.currentScissor[2] = this.getCanvas().width;
+	        this.currentScissor[3] = this.getCanvas().height;
 	    };
 
 	    /**
@@ -24900,7 +24859,7 @@
 	     * @param {number} angle in radians
 	     */
 	    CanvasRenderer.prototype.rotate = function rotate (angle) {
-	        this.backBufferContext2D.rotate(angle);
+	        this.getContext().rotate(angle);
 	    };
 
 	    /**
@@ -24911,7 +24870,7 @@
 	     * @param {number} y
 	     */
 	    CanvasRenderer.prototype.scale = function scale (x, y) {
-	        this.backBufferContext2D.scale(x, y);
+	        this.getContext().scale(x, y);
 	    };
 
 	    /**
@@ -24922,8 +24881,9 @@
 	     * @param {Color|string} color css color value
 	     */
 	    CanvasRenderer.prototype.setColor = function setColor (color) {
-	        this.backBufferContext2D.strokeStyle =
-	        this.backBufferContext2D.fillStyle = (
+	        var context = this.getContext();
+	        context.strokeStyle =
+	        context.fillStyle = (
 	            color instanceof Color ?
 	            color.toRGBA() :
 	            color
@@ -24937,7 +24897,7 @@
 	     * @param {number} alpha 0.0 to 1.0 values accepted.
 	     */
 	    CanvasRenderer.prototype.setGlobalAlpha = function setGlobalAlpha (alpha) {
-	        this.backBufferContext2D.globalAlpha = this.currentColor.glArray[3] = alpha;
+	        this.getContext().globalAlpha = this.currentColor.glArray[3] = alpha;
 	    };
 
 	    /**
@@ -24947,7 +24907,7 @@
 	     * @returns {number} global alpha value
 	     */
 	    CanvasRenderer.prototype.getGlobalAlpha = function getGlobalAlpha () {
-	        return this.backBufferContext2D.globalAlpha;
+	        return this.getContext().globalAlpha;
 	    };
 
 	    /**
@@ -24957,7 +24917,7 @@
 	     * @param {number} width Line width
 	     */
 	    CanvasRenderer.prototype.setLineWidth = function setLineWidth (width) {
-	        this.backBufferContext2D.lineWidth = width;
+	        this.getContext().lineWidth = width;
 	    };
 
 	    /**
@@ -24992,7 +24952,7 @@
 	            f |= 0;
 	        }
 
-	        this.backBufferContext2D.transform(a, b, c, d, e, f);
+	        this.getContext().transform(a, b, c, d, e, f);
 	    };
 
 	    /**
@@ -25004,9 +24964,9 @@
 	     */
 	    CanvasRenderer.prototype.translate = function translate (x, y) {
 	        if (this.settings.subPixel === false) {
-	            this.backBufferContext2D.translate(~~x, ~~y);
+	            this.getContext().translate(~~x, ~~y);
 	        } else {
-	            this.backBufferContext2D.translate(x, y);
+	            this.getContext().translate(x, y);
 	        }
 	    };
 
@@ -25024,14 +24984,14 @@
 	     * @param {number} height
 	     */
 	    CanvasRenderer.prototype.clipRect = function clipRect (x, y, width, height) {
-	        var canvas = this.backBufferCanvas;
+	        var canvas = this.getCanvas();
 	        // if requested box is different from the current canvas size;
 	        if (x !== 0 || y !== 0 || width !== canvas.width || height !== canvas.height) {
 	            var currentScissor = this.currentScissor;
 	            // if different from the current scissor box
 	            if (currentScissor[0] !== x || currentScissor[1] !== y ||
 	                currentScissor[2] !== width || currentScissor[3] !== height) {
-	                var context = this.backBufferContext2D;
+	                var context = this.getContext();
 	                context.beginPath();
 	                context.rect(x, y, width, height);
 	                context.clip();
@@ -30733,7 +30693,7 @@
 	         * @memberof WebGLRenderer
 	         * @type {WebGLRenderingContext}
 	         */
-	        this.context = this.gl = this.getContextGL(this.getScreenCanvas(), options.transparent);
+	        this.context = this.gl = this.getContextGL(this.getCanvas(), options.transparent);
 
 	        /**
 	         * Maximum number of texture unit supported under the current context
@@ -30815,13 +30775,13 @@
 	        // to simulate context lost and restore in WebGL:
 	        // var ctx = me.video.renderer.context.getExtension('WEBGL_lose_context');
 	        // ctx.loseContext()
-	        this.getScreenCanvas().addEventListener("webglcontextlost", function (e) {
+	        this.getCanvas().addEventListener("webglcontextlost", function (e) {
 	            e.preventDefault();
 	            this$1$1.isContextValid = false;
 	            emit(ONCONTEXT_LOST, this$1$1);
 	        }, false );
 	        // ctx.restoreContext()
-	        this.getScreenCanvas().addEventListener("webglcontextrestored", function () {
+	        this.getCanvas().addEventListener("webglcontextrestored", function () {
 	            this$1$1.reset();
 	            this$1$1.isContextValid = true;
 	            emit(ONCONTEXT_RESTORED, this$1$1);
@@ -30900,7 +30860,7 @@
 	     */
 	    WebGLRenderer.prototype.createFontTexture = function createFontTexture (cache) {
 	        if (typeof this.fontTexture === "undefined") {
-	            var canvas = this.backBufferCanvas;
+	            var canvas = this.getCanvas();
 	            var width = canvas.width;
 	            var height = canvas.height;
 
@@ -31131,17 +31091,6 @@
 	        this.currentCompositor.addQuad(pattern, x, y, width, height, uvs[0], uvs[1], uvs[2], uvs[3], this.currentTint.toUint32());
 	    };
 
-
-	    /**
-	     * return a reference to the screen canvas corresponding WebGL Context
-	     * @name getScreenContext
-	     * @memberof WebGLRenderer
-	     * @returns {WebGLRenderingContext}
-	     */
-	    WebGLRenderer.prototype.getScreenContext = function getScreenContext () {
-	        return this.gl;
-	    };
-
 	    /**
 	     * Returns the WebGL Context object of the given Canvas
 	     * @name getContextGL
@@ -31302,8 +31251,8 @@
 	            this.gl.disable(this.gl.SCISSOR_TEST);
 	            this.currentScissor[0] = 0;
 	            this.currentScissor[1] = 0;
-	            this.currentScissor[2] = this.backBufferCanvas.width;
-	            this.currentScissor[3] = this.backBufferCanvas.height;
+	            this.currentScissor[2] = this.getCanvas().width;
+	            this.currentScissor[3] = this.getCanvas().height;
 	        }
 	    };
 
@@ -31394,7 +31343,7 @@
 	     * @param {number} width Line width
 	     */
 	    WebGLRenderer.prototype.setLineWidth = function setLineWidth (width) {
-	        this.getScreenContext().lineWidth(width);
+	        this.getContext().lineWidth(width);
 	    };
 
 	    /**
@@ -31703,7 +31652,7 @@
 	     * @param {number} height
 	     */
 	    WebGLRenderer.prototype.clipRect = function clipRect (x, y, width, height) {
-	        var canvas = this.backBufferCanvas;
+	        var canvas = this.getCanvas();
 	        var gl = this.gl;
 	        // if requested box is different from the current canvas size
 	        if (x !== 0 || y !== 0 || width !== canvas.width || height !== canvas.height) {
@@ -31862,7 +31811,7 @@
 	        var canvasMaxHeight = Infinity;
 
 	        if (globalThis.getComputedStyle) {
-	            var style = globalThis.getComputedStyle(renderer.getScreenCanvas(), null);
+	            var style = globalThis.getComputedStyle(renderer.getCanvas(), null);
 	            canvasMaxWidth = parseInt(style.maxWidth, 10) || Infinity;
 	            canvasMaxHeight = parseInt(style.maxHeight, 10) || Infinity;
 	        }
@@ -32044,13 +31993,15 @@
 	        console.log("melonJS 2 (v" + version + ") | http://melonjs.org" );
 	    }
 
-	    // override renderer settings if &webgl is defined in the URL
+	    // override renderer settings if &webgl or &canvas is defined in the URL
 	    var uriFragment = utils.getUriFragment();
 	    if (uriFragment.webgl === true || uriFragment.webgl1 === true || uriFragment.webgl2 === true) {
 	        settings.renderer = WEBGL;
 	        if (uriFragment.webgl1 === true) {
 	            settings.preferWebGL1 = true;
 	        }
+	    } else if (uriFragment.canvas === true) {
+	        settings.renderer = CANVAS;
 	    }
 
 	    // normalize scale
@@ -32133,7 +32084,7 @@
 
 	    // add our canvas (default to document.body if settings.parent is undefined)
 	    parent = getElement(typeof settings.parent !== "undefined" ? settings.parent : document.body);
-	    parent.appendChild(renderer.getScreenCanvas());
+	    parent.appendChild(renderer.getCanvas());
 
 	    // Mobile browser hacks
 	    if (platform.isMobile) {
@@ -32229,8 +32180,8 @@
 	 * @param {number} y y scaling multiplier
 	 */
 	function scale(x, y) {
-	    var canvas = renderer.getScreenCanvas();
-	    var context = renderer.getScreenContext();
+	    var canvas = renderer.getCanvas();
+	    var context = renderer.getContext();
 	    var settings = renderer.settings;
 	    var pixelRatio = devicePixelRatio;
 
@@ -32990,10 +32941,10 @@
 	     * this can be overridden by the plugin
 	     * @public
 	     * @type {string}
-	     * @default "13.0.0"
+	     * @default "13.1.0"
 	     * @name plugin.Base#version
 	     */
-	    this.version = "13.0.0";
+	    this.version = "13.1.0";
 	};
 
 	/**
@@ -33993,7 +33944,8 @@
 	var defaultAttributes = {
 	    offscreenCanvas : false,
 	    willReadFrequently : false,
-	    antiAlias : false
+	    antiAlias : false,
+	    context: "2d"
 	};
 
 	/**
@@ -37579,7 +37531,6 @@
 	    }
 	});
 
-
 	/**
 	 * @classdesc
 	 * Used to make a game entity draggable
@@ -37620,6 +37571,33 @@
 	    return DroptargetEntity;
 	}(DropTarget));
 
+	/**
+	 * return a reference to the screen canvas
+	 * @name getScreenCanvas
+	 * @memberof Renderer
+	 * @returns {HTMLCanvasElement}
+	 * @deprecated since 13.1.0
+	 * @see getCanvas();
+	 */
+	Renderer.prototype.getScreenCanvas = function() {
+	    warning("getScreenCanvas", "getCanvas", "13.1.0");
+	    return this.getCanvas();
+	};
+
+	/**
+	 * return a reference to the screen canvas corresponding 2d Context<br>
+	 * (will return buffered context if double buffering is enabled, or a reference to the Screen Context)
+	 * @name getScreenContext
+	 * @memberof Renderer
+	 * @returns {CanvasRenderingContext2D}
+	 * @deprecated since 13.1.0
+	 * @see getContext();
+	 */
+	Renderer.prototype.getScreenContext = function()  {
+	    warning("getScreenContext", "getContext", "13.1.0");
+	    return this.getContext();
+	};
+
 	// ES5/ES6 polyfills
 
 
@@ -37630,7 +37608,7 @@
 	 * @name version
 	 * @type {string}
 	 */
-	var version = "13.0.0";
+	var version = "13.1.0";
 
 
 	/**
