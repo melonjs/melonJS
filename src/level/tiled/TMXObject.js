@@ -109,10 +109,10 @@ export default class TMXObject {
          * @public
          * @type {object}
          * @see http://docs.mapeditor.org/en/stable/reference/tmx-map-format/#text
-         * @name type
+         * @name text
          * @memberof TMXObject
          */
-        this.type = settings.type;
+        this.text = undefined;
 
         /**
          * The rotation of the object in radians clockwise (defaults to 0)
