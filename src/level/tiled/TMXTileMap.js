@@ -204,6 +204,16 @@ class TMXTileMap {
          */
         this.tiledversion = data.tiledversion;
 
+
+        /**
+         * The map class.
+         * @public
+         * @type {string}
+         * @name TMXTileMap#class
+         */
+         this.class = data.class;
+
+
         // tilesets for this map
         this.tilesets = null;
 
@@ -545,6 +555,8 @@ class TMXTileMap {
                         obj.anchorPoint.set(0, 0);
                         obj.name = settings.name;
                         obj.type = settings.type;
+                        // for backward compatibility
+                        obj.class = settings.class || settings.type;
                         obj.id = settings.id;
                         obj.body = new Body(obj, shape);
                         obj.body.setStatic(true);

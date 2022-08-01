@@ -3,6 +3,12 @@
 ## [13.1.0] (melonJS 2) - _2022-xx-xx_
 
 ### Added
+- Tiled: add support for the new `class` property (note: melonJS will still set the deprecated `type` one for backward compatibility)
+
+### Fixed
+- Tiled: fix missing text property in TMX Object documentation
+
+### Added
 - Renderer: Canvas rendering mode can now be forced by adding `[#/&]canvas` to the URL (similarly with WebGL1/2 already)
 
 ### Changed

@@ -63,6 +63,14 @@ class TMXTileset {
         this.isCollection = false;
 
         /**
+         * the tileset class
+         * @public
+         * @type {boolean}
+         * @name TMXTileset#class
+         */
+        this.class = tileset.class;
+
+        /**
          * Tileset animations
          * @private
          */

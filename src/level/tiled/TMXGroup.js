@@ -49,6 +49,16 @@ export default class TMXGroup {
          */
         this.tintcolor = data.tintcolor;
 
+
+        /**
+         * the group class
+         * @public
+         * @type {string}
+         * @name class
+         * @memberof TMXGroup
+         */
+        this.class = data.class;
+
         /**
          * group z order
          * @public

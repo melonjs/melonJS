@@ -138,6 +138,15 @@ class TMXLayer extends Renderable {
          */
         this.renderorder = data.renderorder || "right-down";
 
+        /**
+         * the layer class
+         * @public
+         * @type {string}
+         * @name class
+         * @name TMXLayer#class
+         */
+        this.class = data.class;
+
         // for displaying order
         this.pos.z = z;
 

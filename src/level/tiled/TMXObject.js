@@ -99,10 +99,21 @@ export default class TMXObject {
          * object type
          * @public
          * @type {string}
+         * @deprecated since Tiled 1.9
+         * @see https://docs.mapeditor.org/en/stable/reference/tmx-changelog/#tiled-1-9
          * @name type
          * @memberof TMXObject
          */
         this.type = settings.type;
+
+        /**
+         * the åobject class
+         * @public
+         * @type {string}
+         * @name class
+         * @memberof TMXObject
+         */
+        this.class = typeof settings.class !== "undefined" ? settings.class : settings.type;
 
         /**
          * object text
