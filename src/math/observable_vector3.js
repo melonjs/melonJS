@@ -465,10 +465,38 @@ class ObservableVector3d extends Vector3d {
      * @returns {ObservableVector3d} Reference to this object for method chaining
      */
     lerp(v, alpha) {
-        this._x += ( v.x - this._x ) * alpha;
-        this._y += ( v.y - this._y ) * alpha;
-        this._z += ( v.z - this._z ) * alpha;
-        return this;
+        return this._set(
+            this._x + ( v.x - this._x ) * alpha,
+            this._y + ( v.y - this._y ) * alpha,
+            this._z + ( v.z - this._z ) * alpha
+        );
+    }
+
+    /**
+     * interpolate the position of this vector on the x and y axis towards the given one while ensure that the distance never exceeds the given step.
+     * @name moveTowards
+     * @memberof ObservableVector3d
+     * @param {Vector2d|ObservableVector2d|Vector3d|ObservableVector3d} target
+     * @param {number} step the maximum step per iteration (Negative values will push the vector away from the target)
+     * @returns {ObservableVector3d} Reference to this object for method chaining
+     */
+    moveTowards(target, step) {
+        var angle = Math.atan2(target.y - this._y, target.x - this._x);
+
+        var dx = this._x - target.x;
+        var dy = this._y - target.y;
+
+        var distance = Math.sqrt(dx * dx + dy * dy);
+
+        if (distance === 0 || (step >= 0 && distance <= step * step)) {
+            return target;
+        }
+
+        return this._set(
+            this._x + Math.cos(angle) * step,
+            this._y + Math.sin(angle) * step,
+            this._z
+        );
     }
 
     /**

@@ -427,6 +427,29 @@ class Vector2d {
     }
 
     /**
+     * interpolate the position of this vector towards the given one by the given maximum step.
+     * @name moveTowards
+     * @memberof Vector2d
+     * @param {Vector2d} target
+     * @param {number} step the maximum step per iteration (Negative values will push the vector away from the target)
+     * @returns {Vector2d} Reference to this object for method chaining
+     */
+     moveTowards(target, step) {
+        var angle = Math.atan2(target.y - this.y, target.x - this.x);
+
+        var distance = this.distance(target);
+
+        if (distance === 0 || (step >= 0 && distance <= step * step)) {
+            return target;
+        }
+
+        this.x += Math.cos(angle) * step;
+        this.y += Math.sin(angle) * step;
+
+        return this;
+    }
+
+    /**
      * return the distance between this vector and the passed one
      * @name distance
      * @memberof Vector2d

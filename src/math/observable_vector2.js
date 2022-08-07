@@ -388,8 +388,32 @@ class ObservableVector2d extends Vector2d {
      * @returns {ObservableVector2d} Reference to this object for method chaining
      */
     lerp(v, alpha) {
-        this._x += ( v.x - this._x ) * alpha;
-        this._y += ( v.y - this._y ) * alpha;
+        return this._set(
+            this._x + ( v.x - this._x ) * alpha,
+            this._y + ( v.y - this._y ) * alpha
+        );
+    }
+
+    /**
+     * interpolate the position of this vector towards the given one while nsure that the distance never exceeds the given step.
+     * @name moveTowards
+     * @memberof ObservableVector2d
+     * @param {Vector2d|ObservableVector2d} target
+     * @param {number} step the maximum step per iteration (Negative values will push the vector away from the target)
+     * @returns {ObservableVector2d} Reference to this object for method chaining
+     */
+     moveTowards(target, step) {
+        var angle = Math.atan2(target.y - this._y, target.x - this._x);
+
+        var distance = this.distance(target);
+
+        if (distance === 0 || (step >= 0 && distance <= step * step)) {
+            return target;
+        }
+
+        this._x += Math.cos(angle) * step;
+        this._y += Math.sin(angle) * step;
+
         return this;
     }
 

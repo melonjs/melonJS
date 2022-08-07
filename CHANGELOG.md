@@ -4,9 +4,11 @@
 
 ### Added
 - Tiled: add support for the new `class` property (note: melonJS will still set the deprecated `type` one for backward compatibility)
+- Vector: new `moveTowards()` method for `[Observable]Vector2d/3d` objects (limited to x and y axis for 3d vectors)
 
 ### Fixed
 - Tiled: fix missing text property in TMX Object documentation
+- Vector: fix `lerp()` not triggering the callback in `ObservableVector2/3d` objects.
 
 ### Added
 - Renderer: Canvas rendering mode can now be forced by adding `[#/&]canvas` to the URL (similarly with WebGL1/2 already)
