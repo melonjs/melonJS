@@ -20,10 +20,9 @@ var designHeight = 0;
 var settings = {
     parent : undefined,
     renderer : 2, // AUTO
-    doubleBuffering : false,
     autoScale : false,
     scale : 1.0,
-    scaleMethod : "fit",
+    scaleMethod : "manual",
     transparent : false,
     blendMode : "normal",
     antiAlias : false,
@@ -119,6 +118,9 @@ function onresize() {
 
         // adjust scaling ratio based on the new scaling ratio
         scale(scaleX, scaleY);
+    } else {
+        // adjust scaling ratio based on the given settings
+        scale(settings.scale, settings.scale);
     }
 };
 
@@ -196,7 +198,6 @@ export let renderer = null;
  * @param {object} [options] The optional video/renderer parameters.<br> (see Renderer(s) documentation for further specific options)
  * @param {string|HTMLElement} [options.parent=document.body] the DOM parent element to hold the canvas in the HTML file
  * @param {number} [options.renderer=video.AUTO] renderer to use (me.video.CANVAS, me.video.WEBGL, me.video.AUTO)
- * @param {boolean} [options.doubleBuffering=false] enable/disable double buffering
  * @param {number|string} [options.scale=1.0] enable scaling of the canvas ('auto' for automatic scaling)
  * @param {string} [options.scaleMethod="fit"] screen scaling modes ('fit','fill-min','fill-max','flex','flex-width','flex-height','stretch')
  * @param {boolean} [options.preferWebGL1=false] if true the renderer will only use WebGL 1
@@ -211,8 +212,7 @@ export let renderer = null;
  *     parent : "screen",
  *     renderer : me.video.AUTO,
  *     scale : "auto",
- *     scaleMethod : "fit",
- *     doubleBuffering : true
+ *     scaleMethod : "fit"
  * });
  */
 export function init(width, height, options) {
@@ -228,7 +228,6 @@ export function init(width, height, options) {
     // sanitize potential given parameters
     settings.width = width;
     settings.height = height;
-    settings.doubleBuffering = !!(settings.doubleBuffering);
     settings.transparent = !!(settings.transparent);
     settings.antiAlias = !!(settings.antiAlias);
     settings.failIfMajorPerformanceCaveat = !!(settings.failIfMajorPerformanceCaveat);
@@ -262,11 +261,6 @@ export function init(width, height, options) {
     // normalize scale
     settings.scale = (settings.autoScale) ? 1.0 : (+settings.scale || 1.0);
     scaleRatio.set(settings.scale, settings.scale);
-
-    // force double buffering if scaling is required
-    if (settings.autoScale || (settings.scale !== 1.0)) {
-        settings.doubleBuffering = true;
-    }
 
     // hold the requested video size ratio
     designRatio = width / height;
