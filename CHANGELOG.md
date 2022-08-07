@@ -8,7 +8,8 @@
 
 ### Fixed
 - Tiled: fix missing text property in TMX Object documentation
-- Vector: fix `lerp()` not triggering the callback in `ObservableVector2/3d` objects.
+- Vector: fix `lerp()` not triggering the callback in `ObservableVector2/3d` objects
+- Renderer: fix the manual canvas scaling option (thanks @NemoStein)
 
 ### Added
 - Renderer: Canvas rendering mode can now be forced by adding `[#/&]canvas` to the URL (similarly with WebGL1/2 already)
