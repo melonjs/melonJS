@@ -34,6 +34,39 @@ describe("me.Color", function () {
         });
     });
 
+
+    describe("parseHSV Function", function () {
+        // reuse blue_color to test the HSV2RGB functions
+        it("(0, 0, 0) value is rgb(0, 0, 0)", function () {
+            expect(blue_color.setHSV(0, 0, 0).toRGB()).toEqual("rgb(0,0,0)");
+        });
+        it("(0, 0, 1) value is rgb(255,255,255)", function () {
+            expect(blue_color.setHSV(0, 0, 1).toRGB()).toEqual("rgb(255,255,255)");
+        });
+        it("(0.5, 1, 1) value is rgb(0,255,255)", function () {
+            expect(blue_color.setHSV(0.5, 1, 1).toRGB()).toEqual("rgb(0,255,255)");
+        });
+        it("(0, 0, .75) value is rgb(0,255,255)", function () {
+            expect(blue_color.setHSV(0, 0, .75).toRGB()).toEqual("rgb(191,191,191)");
+        });
+    });
+
+    describe("parseHSL Function", function () {
+        // reuse blue_color to test the HSL2RGB functions
+        it("(0, 0, 0) value is rgb(0, 0, 0)", function () {
+            expect(blue_color.setHSL(0, 0, 0).toRGB()).toEqual("rgb(0,0,0)");
+        });
+        it("(0, 0, 1) value is rgb(255,255,255)", function () {
+            expect(blue_color.setHSL(0, 0, 1).toRGB()).toEqual("rgb(255,255,255)");
+        });
+        it("(0.5, 1, 0.25) value is rgb(0,255,255)", function () {
+            expect(blue_color.setHSL(0.5, 1, 0.25).toRGB()).toEqual("rgb(0,127,127)");
+        });
+        it("(0, 0, .75) value is rgb(0,255,255)", function () {
+            expect(blue_color.setHSL(0, 0, .75).toRGB()).toEqual("rgb(191,191,191)");
+        });
+    });
+
     describe("red_color", function () {
         it("is an instance of me.Color", function () {
             expect(red_color).toBeInstanceOf(me.Color);
@@ -106,6 +139,7 @@ describe("me.Color", function () {
 
     describe("blue_color", function () {
         it("blue_color hex value is #0000FF", function () {
+            blue_color.parseHex("#0000FF80");
             expect(blue_color.toHex()).toEqual("#0000FF");
         });
 
