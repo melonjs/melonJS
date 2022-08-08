@@ -3601,6 +3601,15 @@ export class ObservableVector2d extends Vector2d {
      */
     lerp(v: Vector2d | ObservableVector2d, alpha: number): ObservableVector2d;
     /**
+     * interpolate the position of this vector towards the given one while nsure that the distance never exceeds the given step.
+     * @name moveTowards
+     * @memberof ObservableVector2d
+     * @param {Vector2d|ObservableVector2d} target
+     * @param {number} step the maximum step per iteration (Negative values will push the vector away from the target)
+     * @returns {ObservableVector2d} Reference to this object for method chaining
+     */
+    moveTowards(target: Vector2d | ObservableVector2d, step: number): ObservableVector2d;
+    /**
      * return the distance between this vector and the passed one
      * @name distance
      * @memberof ObservableVector2d
@@ -3883,6 +3892,15 @@ export class ObservableVector3d extends Vector3d {
      * @returns {ObservableVector3d} Reference to this object for method chaining
      */
     lerp(v: Vector3d | ObservableVector3d, alpha: number): ObservableVector3d;
+    /**
+     * interpolate the position of this vector on the x and y axis towards the given one while ensure that the distance never exceeds the given step.
+     * @name moveTowards
+     * @memberof ObservableVector3d
+     * @param {Vector2d|ObservableVector2d|Vector3d|ObservableVector3d} target
+     * @param {number} step the maximum step per iteration (Negative values will push the vector away from the target)
+     * @returns {ObservableVector3d} Reference to this object for method chaining
+     */
+    moveTowards(target: Vector2d | ObservableVector2d | Vector3d | ObservableVector3d, step: number): ObservableVector3d;
     /**
      * return the distance between this vector and the passed one
      * @name distance
@@ -6993,6 +7011,14 @@ export class TMXLayer extends Renderable {
      * @name TMXLayer#renderorder
      */
     public renderorder: string;
+    /**
+     * the layer class
+     * @public
+     * @type {string}
+     * @name class
+     * @name TMXLayer#class
+     */
+    public class: string;
     name: any;
     cols: number;
     rows: number;
@@ -7324,6 +7350,13 @@ export class TMXTileMap {
      * @name TMXTileMap#tiledversion
      */
     public tiledversion: string;
+    /**
+     * The map class.
+     * @public
+     * @type {string}
+     * @name TMXTileMap#class
+     */
+    public class: string;
     tilesets: TMXTilesetGroup;
     layers: any[];
     objectGroups: any[];
@@ -7429,6 +7462,13 @@ export class TMXTileset {
      * @name TMXTileset#isCollection
      */
     public isCollection: boolean;
+    /**
+     * the tileset class
+     * @public
+     * @type {boolean}
+     * @name TMXTileset#class
+     */
+    public class: boolean;
     /**
      * Tileset animations
      * @private
@@ -8460,6 +8500,15 @@ export class Vector2d {
      */
     lerp(v: Vector2d, alpha: number): Vector2d;
     /**
+     * interpolate the position of this vector towards the given one by the given maximum step.
+     * @name moveTowards
+     * @memberof Vector2d
+     * @param {Vector2d} target
+     * @param {number} step the maximum step per iteration (Negative values will push the vector away from the target)
+     * @returns {Vector2d} Reference to this object for method chaining
+     */
+    moveTowards(target: Vector2d, step: number): Vector2d;
+    /**
      * return the distance between this vector and the passed one
      * @name distance
      * @memberof Vector2d
@@ -8782,6 +8831,15 @@ export class Vector3d {
      * @returns {Vector3d} Reference to this object for method chaining
      */
     lerp(v: Vector3d, alpha: number): Vector3d;
+    /**
+     * interpolate the position of this vector on the x and y axis towards the given one by the given maximum step.
+     * @name moveTowards
+     * @memberof Vector3d
+     * @param {Vector2d|Vector3d} target
+     * @param {number} step the maximum step per iteration (Negative values will push the vector away from the target)
+     * @returns {Vector3d} Reference to this object for method chaining
+     */
+    moveTowards(target: Vector2d | Vector3d, step: number): Vector3d;
     /**
      * return the distance between this vector and the passed one
      * @name distance
@@ -12516,7 +12574,6 @@ declare var fnUtils: Readonly<{
  * @param {object} [options] The optional video/renderer parameters.<br> (see Renderer(s) documentation for further specific options)
  * @param {string|HTMLElement} [options.parent=document.body] the DOM parent element to hold the canvas in the HTML file
  * @param {number} [options.renderer=video.AUTO] renderer to use (me.video.CANVAS, me.video.WEBGL, me.video.AUTO)
- * @param {boolean} [options.doubleBuffering=false] enable/disable double buffering
  * @param {number|string} [options.scale=1.0] enable scaling of the canvas ('auto' for automatic scaling)
  * @param {string} [options.scaleMethod="fit"] screen scaling modes ('fit','fill-min','fill-max','flex','flex-width','flex-height','stretch')
  * @param {boolean} [options.preferWebGL1=false] if true the renderer will only use WebGL 1
@@ -12531,14 +12588,12 @@ declare var fnUtils: Readonly<{
  *     parent : "screen",
  *     renderer : me.video.AUTO,
  *     scale : "auto",
- *     scaleMethod : "fit",
- *     doubleBuffering : true
+ *     scaleMethod : "fit"
  * });
  */
 declare function init(width: number, height: number, options?: {
     parent?: string | HTMLElement;
     renderer?: number;
-    doubleBuffering?: boolean;
     scale?: number | string;
     scaleMethod?: string;
     preferWebGL1?: boolean;

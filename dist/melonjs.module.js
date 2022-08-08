@@ -309,10 +309,10 @@ var store$2 = sharedStore;
 (shared$3.exports = function (key, value) {
   return store$2[key] || (store$2[key] = value !== undefined ? value : {});
 })('versions', []).push({
-  version: '3.24.0',
+  version: '3.24.1',
   mode: 'global',
   copyright: '© 2014-2022 Denis Pushkarev (zloirock.ru)',
-  license: 'https://github.com/zloirock/core-js/blob/v3.24.0/LICENSE',
+  license: 'https://github.com/zloirock/core-js/blob/v3.24.1/LICENSE',
   source: 'https://github.com/zloirock/core-js'
 });
 
@@ -2347,6 +2347,29 @@ class Vector2d {
     lerp(v, alpha) {
         this.x += ( v.x - this.x ) * alpha;
         this.y += ( v.y - this.y ) * alpha;
+        return this;
+    }
+
+    /**
+     * interpolate the position of this vector towards the given one by the given maximum step.
+     * @name moveTowards
+     * @memberof Vector2d
+     * @param {Vector2d} target
+     * @param {number} step the maximum step per iteration (Negative values will push the vector away from the target)
+     * @returns {Vector2d} Reference to this object for method chaining
+     */
+     moveTowards(target, step) {
+        var angle = Math.atan2(target.y - this.y, target.x - this.x);
+
+        var distance = this.distance(target);
+
+        if (distance === 0 || (step >= 0 && distance <= step * step)) {
+            return target;
+        }
+
+        this.x += Math.cos(angle) * step;
+        this.y += Math.sin(angle) * step;
+
         return this;
     }
 
@@ -14653,8 +14676,32 @@ class ObservableVector2d extends Vector2d {
      * @returns {ObservableVector2d} Reference to this object for method chaining
      */
     lerp(v, alpha) {
-        this._x += ( v.x - this._x ) * alpha;
-        this._y += ( v.y - this._y ) * alpha;
+        return this._set(
+            this._x + ( v.x - this._x ) * alpha,
+            this._y + ( v.y - this._y ) * alpha
+        );
+    }
+
+    /**
+     * interpolate the position of this vector towards the given one while nsure that the distance never exceeds the given step.
+     * @name moveTowards
+     * @memberof ObservableVector2d
+     * @param {Vector2d|ObservableVector2d} target
+     * @param {number} step the maximum step per iteration (Negative values will push the vector away from the target)
+     * @returns {ObservableVector2d} Reference to this object for method chaining
+     */
+     moveTowards(target, step) {
+        var angle = Math.atan2(target.y - this._y, target.x - this._x);
+
+        var distance = this.distance(target);
+
+        if (distance === 0 || (step >= 0 && distance <= step * step)) {
+            return target;
+        }
+
+        this._x += Math.cos(angle) * step;
+        this._y += Math.sin(angle) * step;
+
         return this;
     }
 
@@ -15156,6 +15203,32 @@ class Vector3d {
         this.x += ( v.x - this.x ) * alpha;
         this.y += ( v.y - this.y ) * alpha;
         this.z += ( v.z - this.z ) * alpha;
+        return this;
+    }
+
+    /**
+     * interpolate the position of this vector on the x and y axis towards the given one by the given maximum step.
+     * @name moveTowards
+     * @memberof Vector3d
+     * @param {Vector2d|Vector3d} target
+     * @param {number} step the maximum step per iteration (Negative values will push the vector away from the target)
+     * @returns {Vector3d} Reference to this object for method chaining
+     */
+    moveTowards(target, step) {
+        var angle = Math.atan2(target.y - this.y, target.x - this.x);
+
+        var dx = this.x - target.x;
+        var dy = this.y - target.y;
+
+        var distance = Math.sqrt(dx * dx + dy * dy);
+
+        if (distance === 0 || (step >= 0 && distance <= step * step)) {
+            return target;
+        }
+
+        this.x += Math.cos(angle) * step;
+        this.y += Math.sin(angle) * step;
+
         return this;
     }
 
@@ -15693,10 +15766,38 @@ class ObservableVector3d extends Vector3d {
      * @returns {ObservableVector3d} Reference to this object for method chaining
      */
     lerp(v, alpha) {
-        this._x += ( v.x - this._x ) * alpha;
-        this._y += ( v.y - this._y ) * alpha;
-        this._z += ( v.z - this._z ) * alpha;
-        return this;
+        return this._set(
+            this._x + ( v.x - this._x ) * alpha,
+            this._y + ( v.y - this._y ) * alpha,
+            this._z + ( v.z - this._z ) * alpha
+        );
+    }
+
+    /**
+     * interpolate the position of this vector on the x and y axis towards the given one while ensure that the distance never exceeds the given step.
+     * @name moveTowards
+     * @memberof ObservableVector3d
+     * @param {Vector2d|ObservableVector2d|Vector3d|ObservableVector3d} target
+     * @param {number} step the maximum step per iteration (Negative values will push the vector away from the target)
+     * @returns {ObservableVector3d} Reference to this object for method chaining
+     */
+    moveTowards(target, step) {
+        var angle = Math.atan2(target.y - this._y, target.x - this._x);
+
+        var dx = this._x - target.x;
+        var dy = this._y - target.y;
+
+        var distance = Math.sqrt(dx * dx + dy * dy);
+
+        if (distance === 0 || (step >= 0 && distance <= step * step)) {
+            return target;
+        }
+
+        return this._set(
+            this._x + Math.cos(angle) * step,
+            this._y + Math.sin(angle) * step,
+            this._z
+        );
     }
 
     /**
@@ -25103,6 +25204,15 @@ class TMXLayer extends Renderable {
          */
         this.renderorder = data.renderorder || "right-down";
 
+        /**
+         * the layer class
+         * @public
+         * @type {string}
+         * @name class
+         * @name TMXLayer#class
+         */
+        this.class = data.class;
+
         // for displaying order
         this.pos.z = z;
 
@@ -26494,6 +26604,14 @@ class TMXTileset {
         this.isCollection = false;
 
         /**
+         * the tileset class
+         * @public
+         * @type {boolean}
+         * @name TMXTileset#class
+         */
+        this.class = tileset.class;
+
+        /**
          * Tileset animations
          * @private
          */
@@ -26891,20 +27009,31 @@ class TMXObject {
          * object type
          * @public
          * @type {string}
+         * @deprecated since Tiled 1.9
+         * @see https://docs.mapeditor.org/en/stable/reference/tmx-changelog/#tiled-1-9
          * @name type
          * @memberof TMXObject
          */
         this.type = settings.type;
 
         /**
+         * the åobject class
+         * @public
+         * @type {string}
+         * @name class
+         * @memberof TMXObject
+         */
+        this.class = typeof settings.class !== "undefined" ? settings.class : settings.type;
+
+        /**
          * object text
          * @public
          * @type {object}
          * @see http://docs.mapeditor.org/en/stable/reference/tmx-map-format/#text
-         * @name type
+         * @name text
          * @memberof TMXObject
          */
-        this.type = settings.type;
+        this.text = undefined;
 
         /**
          * The rotation of the object in radians clockwise (defaults to 0)
@@ -27159,6 +27288,16 @@ class TMXGroup {
          * @memberof TMXGroup
          */
         this.tintcolor = data.tintcolor;
+
+
+        /**
+         * the group class
+         * @public
+         * @type {string}
+         * @name class
+         * @memberof TMXGroup
+         */
+        this.class = data.class;
 
         /**
          * group z order
@@ -27420,6 +27559,16 @@ class TMXTileMap {
          * @name TMXTileMap#tiledversion
          */
         this.tiledversion = data.tiledversion;
+
+
+        /**
+         * The map class.
+         * @public
+         * @type {string}
+         * @name TMXTileMap#class
+         */
+         this.class = data.class;
+
 
         // tilesets for this map
         this.tilesets = null;
@@ -27758,6 +27907,8 @@ class TMXTileMap {
                         obj.anchorPoint.set(0, 0);
                         obj.name = settings.name;
                         obj.type = settings.type;
+                        // for backward compatibility
+                        obj.class = settings.class || settings.type;
                         obj.id = settings.id;
                         obj.body = new Body(obj, shape);
                         obj.body.setStatic(true);
@@ -31699,10 +31850,9 @@ var designHeight = 0;
 var settings = {
     parent : undefined,
     renderer : 2, // AUTO
-    doubleBuffering : false,
     autoScale : false,
     scale : 1.0,
-    scaleMethod : "fit",
+    scaleMethod : "manual",
     transparent : false,
     blendMode : "normal",
     antiAlias : false,
@@ -31797,6 +31947,9 @@ function onresize() {
 
         // adjust scaling ratio based on the new scaling ratio
         scale(scaleX, scaleY);
+    } else {
+        // adjust scaling ratio based on the given settings
+        scale(settings.scale, settings.scale);
     }
 }
 /**
@@ -31873,7 +32026,6 @@ let renderer = null;
  * @param {object} [options] The optional video/renderer parameters.<br> (see Renderer(s) documentation for further specific options)
  * @param {string|HTMLElement} [options.parent=document.body] the DOM parent element to hold the canvas in the HTML file
  * @param {number} [options.renderer=video.AUTO] renderer to use (me.video.CANVAS, me.video.WEBGL, me.video.AUTO)
- * @param {boolean} [options.doubleBuffering=false] enable/disable double buffering
  * @param {number|string} [options.scale=1.0] enable scaling of the canvas ('auto' for automatic scaling)
  * @param {string} [options.scaleMethod="fit"] screen scaling modes ('fit','fill-min','fill-max','flex','flex-width','flex-height','stretch')
  * @param {boolean} [options.preferWebGL1=false] if true the renderer will only use WebGL 1
@@ -31888,8 +32040,7 @@ let renderer = null;
  *     parent : "screen",
  *     renderer : me.video.AUTO,
  *     scale : "auto",
- *     scaleMethod : "fit",
- *     doubleBuffering : true
+ *     scaleMethod : "fit"
  * });
  */
 function init(width, height, options) {
@@ -31905,7 +32056,6 @@ function init(width, height, options) {
     // sanitize potential given parameters
     settings.width = width;
     settings.height = height;
-    settings.doubleBuffering = !!(settings.doubleBuffering);
     settings.transparent = !!(settings.transparent);
     settings.antiAlias = !!(settings.antiAlias);
     settings.failIfMajorPerformanceCaveat = !!(settings.failIfMajorPerformanceCaveat);
@@ -31939,11 +32089,6 @@ function init(width, height, options) {
     // normalize scale
     settings.scale = (settings.autoScale) ? 1.0 : (+settings.scale || 1.0);
     scaleRatio.set(settings.scale, settings.scale);
-
-    // force double buffering if scaling is required
-    if (settings.autoScale || (settings.scale !== 1.0)) {
-        settings.doubleBuffering = true;
-    }
 
     // hold the requested video size ratio
     designRatio = width / height;
