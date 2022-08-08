@@ -47,12 +47,38 @@ class NineSliceSprite extends Sprite {
         this.width = Math.floor(settings.width);
         this.height = Math.floor(settings.height);
 
-        // nine slice sprite specific local variables
+        // nine slice sprite specific internal variables
         this.nss_width = this.width;
         this.nss_height = this.height;
 
         this.insetx = settings.insetx;
         this.insety = settings.insety;
+    }
+
+    /**
+     * width of the NineSliceSprite
+     * @public
+     * @type {number}
+     * @name width
+     */
+    get width() {
+        return super.width;
+    }
+    set width(value) {
+        super.width = this.nss_width = value;
+    }
+
+    /**
+     * height of the NineSliceSprite
+     * @public
+     * @type {number}
+     * @name height
+     */
+    get height() {
+        return super.height;
+    }
+    set height(value) {
+        super.height = this.nss_height = value;
     }
 
     /**
