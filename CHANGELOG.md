@@ -5,19 +5,17 @@
 ### Added
 - Color: added a `setHSL(h, s, l)` and `setHSV(h, s, v)` method to the Color class
 - Tiled: add support for the new `class` property (note: melonJS will still set the deprecated `type` one for backward compatibility)
+- Renderer: Canvas rendering mode can now be forced by adding `[#/&]canvas` to the URL (similarly with WebGL1/2 already)
 - Vector: new `moveTowards()` method for `[Observable]Vector2d/3d` objects (limited to x and y axis for 3d vectors)
+
+### Changed
+- Renderer: the double-buffering option for the Canvas Renderer is now deprecated, this to better align both renderer and enable further improvements
 
 ### Fixed
 - 9-Slice Sprite: fix resizing of a 9-slice sprite (thanks @NemoStein)
 - Tiled: fix missing text property in TMX Object documentation
 - Vector: fix `lerp()` not triggering the callback in `ObservableVector2/3d` objects
 - Renderer: fix the manual canvas scaling option (thanks @NemoStein)
-
-### Added
-- Renderer: Canvas rendering mode can now be forced by adding `[#/&]canvas` to the URL (similarly with WebGL1/2 already)
-
-### Changed
-- Renderer: the double-buffering option for the Canvas Renderer is now deprecated, this to better align both renderer and enable further improvements
 
 ## [13.0.0] (melonJS 2) - _2022-07-18_
 
