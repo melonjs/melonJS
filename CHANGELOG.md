@@ -3,10 +3,12 @@
 ## [13.1.0] (melonJS 2) - _2022-xx-xx_
 
 ### Added
+- Color: added a `setHSL(h, s, l)` and `setHSV(h, s, v)` method to the Color class
 - Tiled: add support for the new `class` property (note: melonJS will still set the deprecated `type` one for backward compatibility)
 - Vector: new `moveTowards()` method for `[Observable]Vector2d/3d` objects (limited to x and y axis for 3d vectors)
 
 ### Fixed
+- 9-Slice Sprite: fix resizing of a 9-slice sprite (thanks @NemoStein)
 - Tiled: fix missing text property in TMX Object documentation
 - Vector: fix `lerp()` not triggering the callback in `ObservableVector2/3d` objects
 - Renderer: fix the manual canvas scaling option (thanks @NemoStein)
