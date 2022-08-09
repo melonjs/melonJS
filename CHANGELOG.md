@@ -1,6 +1,11 @@
 # Changelog
 
-## [13.1.0] (melonJS 2) - _2022-xx-xx_
+## [13.1.1] (melonJS 2) - _2022-08-10_
+
+### Fixed
+- Release date and version/change tracking
+
+## [13.1.0] (melonJS 2) - _2022-08-10_
 
 ### Added
 - Color: added a `setHSL(h, s, l)` and `setHSV(h, s, v)` method to the Color class
@@ -1277,6 +1282,8 @@
 - first public version with alex4 !
 - www.melonjs.org is live :)
 
+[13.1.1]: https://github.com/melonjs/melonJS/compare/13.1.1...13.1.0
+[13.1.0]: https://github.com/melonjs/melonJS/compare/13.1.0...13.0.0
 [13.0.0]: https://github.com/melonjs/melonJS/compare/13.0.0...12.0.0
 [12.0.0]: https://github.com/melonjs/melonJS/compare/12.0.0...11.0.0
 [11.0.0]: https://github.com/melonjs/melonJS/compare/10.12.0...11.0.0
