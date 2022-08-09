@@ -1432,34 +1432,28 @@ export class Color {
     /**
      * Color Red Component [0 .. 255]
      * @type {number}
-     * @memberof Color
      */
     get r(): number;
     set g(arg: number);
     /**
      * Color Green Component [0 .. 255]
      * @type {number}
-     * @memberof Color
      */
     get g(): number;
     set b(arg: number);
     /**
      * Color Blue Component [0 .. 255]
      * @type {number}
-     * @memberof Color
      */
     get b(): number;
     set alpha(arg: number);
     /**
      * Color Alpha Component [0.0 .. 1.0]
      * @type {number}
-     * @memberof Color
      */
     get alpha(): number;
     /**
      * Set this color to the specified value.
-     * @name setColor
-     * @memberof Color
      * @param {number} r red component [0 .. 255]
      * @param {number} g green component [0 .. 255]
      * @param {number} b blue component [0 .. 255]
@@ -1468,40 +1462,46 @@ export class Color {
      */
     setColor(r: number, g: number, b: number, alpha?: number): Color;
     /**
+     * set this color to the specified HSV value
+     * @param {number} h hue (a value from 0 to 1)
+     * @param {number} s saturation (a value from 0 to 1)
+     * @param {number} v value (a value from 0 to 1)
+     * @returns {Color} Reference to this object for method chaining
+     */
+    setHSV(h: number, s: number, v: number): Color;
+    /**
+     * set this color to the specified HSL value
+     * @param {number} h hue (a value from 0 to 1)
+     * @param {number} s saturation (a value from 0 to 1)
+     * @param {number} l lightness (a value from 0 to 1)
+     * @returns {Color} Reference to this object for method chaining
+     */
+    setHSL(h: number, s: number, l: number): Color;
+    /**
      * Create a new copy of this color object.
-     * @name clone
-     * @memberof Color
      * @returns {Color} Reference to the newly cloned object
      */
     clone(): Color;
     /**
      * Copy a color object or CSS color into this one.
-     * @name copy
-     * @memberof Color
      * @param {Color|string} color
      * @returns {Color} Reference to this object for method chaining
      */
     copy(color: Color | string): Color;
     /**
      * Blend this color with the given one using addition.
-     * @name add
-     * @memberof Color
      * @param {Color} color
      * @returns {Color} Reference to this object for method chaining
      */
     add(color: Color): Color;
     /**
      * Darken this color value by 0..1
-     * @name darken
-     * @memberof Color
      * @param {number} scale
      * @returns {Color} Reference to this object for method chaining
      */
     darken(scale: number): Color;
     /**
      * Linearly interpolate between this color and the given one.
-     * @name lerp
-     * @memberof Color
      * @param {Color} color
      * @param {number} alpha with alpha = 0 being this color, and alpha = 1 being the given one.
      * @returns {Color} Reference to this object for method chaining
@@ -1509,16 +1509,12 @@ export class Color {
     lerp(color: Color, alpha: number): Color;
     /**
      * Lighten this color value by 0..1
-     * @name lighten
-     * @memberof Color
      * @param {number} scale
      * @returns {Color} Reference to this object for method chaining
      */
     lighten(scale: number): Color;
     /**
      * Generate random r,g,b values for this color object
-     * @name random
-     * @memberof Color
      * @param {number} [min=0] minimum value for the random range
      * @param {number} [max=255] maxmium value for the random range
      * @returns {Color} Reference to this object for method chaining
@@ -1527,8 +1523,6 @@ export class Color {
     /**
      * Return true if the r,g,b,a values of this color are equal with the
      * given one.
-     * @name equals
-     * @memberof Color
      * @param {Color} color
      * @returns {boolean}
      */
@@ -1536,16 +1530,12 @@ export class Color {
     /**
      * Parse a CSS color string and set this color to the corresponding
      * r,g,b values
-     * @name parseCSS
-     * @memberof Color
      * @param {string} cssColor
      * @returns {Color} Reference to this object for method chaining
      */
     parseCSS(cssColor: string): Color;
     /**
      * Parse an RGB or RGBA CSS color string
-     * @name parseRGB
-     * @memberof Color
      * @param {string} rgbColor
      * @returns {Color} Reference to this object for method chaining
      */
@@ -1553,8 +1543,6 @@ export class Color {
     /**
      * Parse a Hex color ("#RGB", "#RGBA" or "#RRGGBB", "#RRGGBBAA" format) and set this color to
      * the corresponding r,g,b,a values
-     * @name parseHex
-     * @memberof Color
      * @param {string} hexColor
      * @param {boolean} [argb = false] true if format is #ARGB, or #AARRGGBB (as opposed to #RGBA or #RGGBBAA)
      * @returns {Color} Reference to this object for method chaining
@@ -1562,44 +1550,32 @@ export class Color {
     parseHex(hexColor: string, argb?: boolean): Color;
     /**
      * Pack this color into a Uint32 ARGB representation
-     * @name toUint32
-     * @memberof Color
      * @param {number} [alpha=1.0] alpha value [0.0 .. 1.0]
      * @returns {number}
      */
     toUint32(alpha?: number): number;
     /**
      * return an array representation of this object
-     * @name toArray
-     * @memberof Color
      * @returns {Float32Array}
      */
     toArray(): Float32Array;
     /**
-     * Get the color in "#RRGGBB" format
-     * @name toHex
-     * @memberof Color
+     * return the color in "#RRGGBB" format
      * @returns {string}
      */
     toHex(): string;
     /**
      * Get the color in "#RRGGBBAA" format
-     * @name toHex8
-     * @memberof Color
      * @returns {string}
      */
     toHex8(alpha?: number): string;
     /**
      * Get the color in "rgb(R,G,B)" format
-     * @name toRGB
-     * @memberof Color
      * @returns {string}
      */
     toRGB(): string;
     /**
      * Get the color in "rgba(R,G,B,A)" format
-     * @name toRGBA
-     * @memberof Color
      * @param {number} [alpha=1.0] alpha value [0.0 .. 1.0]
      * @returns {string}
      */

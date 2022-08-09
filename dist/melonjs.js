@@ -2456,9 +2456,17 @@
 	 };
 
 	// convert a give color component to it hexadecimal value
-	var toHex = function (component) {
+	function toHex(component) {
 	    return "0123456789ABCDEF".charAt((component - (component % 16)) >> 4) + "0123456789ABCDEF".charAt(component % 16);
-	};
+	}
+	function hue2rgb(p, q, t) {
+	    if (t < 0) { t += 1; }
+	    if (t > 1) { t -= 1; }
+	    if (t < 1/6) { return p + (q - p) * 6 * t; }
+	    if (t < 1/2) { return q; }
+	    if (t < 2/3) { return p + (q - p) * (2/3 - t) * 6; }
+	    return p;
+	}
 
 	var rgbaRx = /^rgba?\((\d+), ?(\d+), ?(\d+)(, ?([\d\.]+))?\)$/;
 	var hex3Rx = /^#([\da-fA-F])([\da-fA-F])([\da-fA-F])$/;
@@ -2658,7 +2666,6 @@
 	/**
 	 * Color Red Component [0 .. 255]
 	 * @type {number}
-	 * @memberof Color
 	 */
 	prototypeAccessors$4.r.get = function () {
 	    return ~~(this.glArray[0] * 255);
@@ -2672,7 +2679,6 @@
 	/**
 	 * Color Green Component [0 .. 255]
 	 * @type {number}
-	 * @memberof Color
 	 */
 	prototypeAccessors$4.g.get = function () {
 	    return ~~(this.glArray[1] * 255);
@@ -2686,7 +2692,6 @@
 	/**
 	 * Color Blue Component [0 .. 255]
 	 * @type {number}
-	 * @memberof Color
 	 */
 	prototypeAccessors$4.b.get = function () {
 	    return ~~(this.glArray[2] * 255);
@@ -2698,7 +2703,6 @@
 	/**
 	 * Color Alpha Component [0.0 .. 1.0]
 	 * @type {number}
-	 * @memberof Color
 	 */
 	prototypeAccessors$4.alpha.get = function () {
 	    return this.glArray[3];
@@ -2711,8 +2715,6 @@
 
 	/**
 	 * Set this color to the specified value.
-	 * @name setColor
-	 * @memberof Color
 	 * @param {number} r red component [0 .. 255]
 	 * @param {number} g green component [0 .. 255]
 	 * @param {number} b blue component [0 .. 255]
@@ -2730,9 +2732,58 @@
 	};
 
 	/**
+	 * set this color to the specified HSV value
+	 * @param {number} h hue (a value from 0 to 1)
+	 * @param {number} s saturation (a value from 0 to 1)
+	 * @param {number} v value (a value from 0 to 1)
+	 * @returns {Color} Reference to this object for method chaining
+	 */
+	Color.prototype.setHSV = function setHSV (h, s, v) {
+	    var r, g, b;
+
+	    var i = Math.floor(h * 6);
+	    var f = h * 6 - i;
+	    var p = v * (1 - s);
+	    var q = v * (1 - f * s);
+	    var t = v * (1 - (1 - f) * s);
+
+	    switch (i % 6) {
+	        case 0: r = v, g = t, b = p; break;
+	        case 1: r = q, g = v, b = p; break;
+	        case 2: r = p, g = v, b = t; break;
+	        case 3: r = p, g = q, b = v; break;
+	        case 4: r = t, g = p, b = v; break;
+	        case 5: r = v, g = p, b = q; break;
+	    }
+	    return this.setColor(r * 255, g * 255, b * 255);
+	};
+
+	/**
+	 * set this color to the specified HSL value
+	 * @param {number} h hue (a value from 0 to 1)
+	 * @param {number} s saturation (a value from 0 to 1)
+	 * @param {number} l lightness (a value from 0 to 1)
+	 * @returns {Color} Reference to this object for method chaining
+	 */
+	Color.prototype.setHSL = function setHSL (h, s, l) {
+	    var r, g, b;
+
+	    if (s === 0) {
+	        r = g = b = l; // achromatic
+	    } else {
+	        var q = l < 0.5 ? l * (1 + s) : l + s - l * s;
+	        var p = 2 * l - q;
+
+	        r = hue2rgb(p, q, h + 1/3);
+	        g = hue2rgb(p, q, h);
+	        b = hue2rgb(p, q, h - 1/3);
+	    }
+
+	    return this.setColor(r * 255, g * 255, b * 255);
+	};
+
+	/**
 	 * Create a new copy of this color object.
-	 * @name clone
-	 * @memberof Color
 	 * @returns {Color} Reference to the newly cloned object
 	 */
 	Color.prototype.clone = function clone () {
@@ -2741,8 +2792,6 @@
 
 	/**
 	 * Copy a color object or CSS color into this one.
-	 * @name copy
-	 * @memberof Color
 	 * @param {Color|string} color
 	 * @returns {Color} Reference to this object for method chaining
 	 */
@@ -2757,8 +2806,6 @@
 
 	/**
 	 * Blend this color with the given one using addition.
-	 * @name add
-	 * @memberof Color
 	 * @param {Color} color
 	 * @returns {Color} Reference to this object for method chaining
 	 */
@@ -2773,8 +2820,6 @@
 
 	/**
 	 * Darken this color value by 0..1
-	 * @name darken
-	 * @memberof Color
 	 * @param {number} scale
 	 * @returns {Color} Reference to this object for method chaining
 	 */
@@ -2789,8 +2834,6 @@
 
 	/**
 	 * Linearly interpolate between this color and the given one.
-	 * @name lerp
-	 * @memberof Color
 	 * @param {Color} color
 	 * @param {number} alpha with alpha = 0 being this color, and alpha = 1 being the given one.
 	 * @returns {Color} Reference to this object for method chaining
@@ -2806,8 +2849,6 @@
 
 	/**
 	 * Lighten this color value by 0..1
-	 * @name lighten
-	 * @memberof Color
 	 * @param {number} scale
 	 * @returns {Color} Reference to this object for method chaining
 	 */
@@ -2822,8 +2863,6 @@
 
 	/**
 	 * Generate random r,g,b values for this color object
-	 * @name random
-	 * @memberof Color
 	 * @param {number} [min=0] minimum value for the random range
 	 * @param {number} [max=255] maxmium value for the random range
 	 * @returns {Color} Reference to this object for method chaining
@@ -2850,8 +2889,6 @@
 	/**
 	 * Return true if the r,g,b,a values of this color are equal with the
 	 * given one.
-	 * @name equals
-	 * @memberof Color
 	 * @param {Color} color
 	 * @returns {boolean}
 	 */
@@ -2867,8 +2904,6 @@
 	/**
 	 * Parse a CSS color string and set this color to the corresponding
 	 * r,g,b values
-	 * @name parseCSS
-	 * @memberof Color
 	 * @param {string} cssColor
 	 * @returns {Color} Reference to this object for method chaining
 	 */
@@ -2884,8 +2919,6 @@
 
 	/**
 	 * Parse an RGB or RGBA CSS color string
-	 * @name parseRGB
-	 * @memberof Color
 	 * @param {string} rgbColor
 	 * @returns {Color} Reference to this object for method chaining
 	 */
@@ -2903,8 +2936,6 @@
 	/**
 	 * Parse a Hex color ("#RGB", "#RGBA" or "#RRGGBB", "#RRGGBBAA" format) and set this color to
 	 * the corresponding r,g,b,a values
-	 * @name parseHex
-	 * @memberof Color
 	 * @param {string} hexColor
 	 * @param {boolean} [argb = false] true if format is #ARGB, or #AARRGGBB (as opposed to #RGBA or #RGGBBAA)
 	 * @returns {Color} Reference to this object for method chaining
@@ -2964,8 +2995,6 @@
 
 	/**
 	 * Pack this color into a Uint32 ARGB representation
-	 * @name toUint32
-	 * @memberof Color
 	 * @param {number} [alpha=1.0] alpha value [0.0 .. 1.0]
 	 * @returns {number}
 	 */
@@ -2982,8 +3011,6 @@
 
 	/**
 	 * return an array representation of this object
-	 * @name toArray
-	 * @memberof Color
 	 * @returns {Float32Array}
 	 */
 	Color.prototype.toArray = function toArray () {
@@ -2992,9 +3019,7 @@
 
 
 	/**
-	 * Get the color in "#RRGGBB" format
-	 * @name toHex
-	 * @memberof Color
+	 * return the color in "#RRGGBB" format
 	 * @returns {string}
 	 */
 	Color.prototype.toHex = function toHex$1 () {
@@ -3006,8 +3031,6 @@
 
 	/**
 	 * Get the color in "#RRGGBBAA" format
-	 * @name toHex8
-	 * @memberof Color
 	 * @returns {string}
 	 */
 	Color.prototype.toHex8 = function toHex8 (alpha) {
@@ -3021,8 +3044,6 @@
 
 	/**
 	 * Get the color in "rgb(R,G,B)" format
-	 * @name toRGB
-	 * @memberof Color
 	 * @returns {string}
 	 */
 	Color.prototype.toRGB = function toRGB () {
@@ -3038,8 +3059,6 @@
 
 	/**
 	 * Get the color in "rgba(R,G,B,A)" format
-	 * @name toRGBA
-	 * @memberof Color
 	 * @param {number} [alpha=1.0] alpha value [0.0 .. 1.0]
 	 * @returns {string}
 	 */
@@ -35760,7 +35779,7 @@
 	        this.width = Math.floor(settings.width);
 	        this.height = Math.floor(settings.height);
 
-	        // nine slice sprite specific local variables
+	        // nine slice sprite specific internal variables
 	        this.nss_width = this.width;
 	        this.nss_height = this.height;
 
@@ -35771,6 +35790,34 @@
 	    if ( Sprite ) NineSliceSprite.__proto__ = Sprite;
 	    NineSliceSprite.prototype = Object.create( Sprite && Sprite.prototype );
 	    NineSliceSprite.prototype.constructor = NineSliceSprite;
+
+	    var prototypeAccessors = { width: { configurable: true },height: { configurable: true } };
+
+	    /**
+	     * width of the NineSliceSprite
+	     * @public
+	     * @type {number}
+	     * @name width
+	     */
+	    prototypeAccessors.width.get = function () {
+	        return Sprite.prototype.width;
+	    };
+	    prototypeAccessors.width.set = function (value) {
+	        Sprite.prototype.width = this.nss_width = value;
+	    };
+
+	    /**
+	     * height of the NineSliceSprite
+	     * @public
+	     * @type {number}
+	     * @name height
+	     */
+	    prototypeAccessors.height.get = function () {
+	        return Sprite.prototype.height;
+	    };
+	    prototypeAccessors.height.set = function (value) {
+	        Sprite.prototype.height = this.nss_height = value;
+	    };
 
 	    /**
 	     * @ignore
@@ -35925,6 +35972,8 @@
 	            target_center_height  // dh
 	        );
 	    };
+
+	    Object.defineProperties( NineSliceSprite.prototype, prototypeAccessors );
 
 	    return NineSliceSprite;
 	}(Sprite));

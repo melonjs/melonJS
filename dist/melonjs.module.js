@@ -2441,9 +2441,17 @@ class Vector2d {
 }
 
 // convert a give color component to it hexadecimal value
-var toHex = function (component) {
+function toHex(component) {
     return "0123456789ABCDEF".charAt((component - (component % 16)) >> 4) + "0123456789ABCDEF".charAt(component % 16);
-};
+}
+function hue2rgb(p, q, t) {
+    if (t < 0) t += 1;
+    if (t > 1) t -= 1;
+    if (t < 1/6) return p + (q - p) * 6 * t;
+    if (t < 1/2) return q;
+    if (t < 2/3) return p + (q - p) * (2/3 - t) * 6;
+    return p;
+}
 
 const rgbaRx = /^rgba?\((\d+), ?(\d+), ?(\d+)(, ?([\d\.]+))?\)$/;
 const hex3Rx = /^#([\da-fA-F])([\da-fA-F])([\da-fA-F])$/;
@@ -2638,7 +2646,6 @@ class Color {
     /**
      * Color Red Component [0 .. 255]
      * @type {number}
-     * @memberof Color
      */
     get r() {
         return ~~(this.glArray[0] * 255);
@@ -2652,7 +2659,6 @@ class Color {
     /**
      * Color Green Component [0 .. 255]
      * @type {number}
-     * @memberof Color
      */
     get g() {
         return ~~(this.glArray[1] * 255);
@@ -2666,7 +2672,6 @@ class Color {
     /**
      * Color Blue Component [0 .. 255]
      * @type {number}
-     * @memberof Color
      */
     get b() {
         return ~~(this.glArray[2] * 255);
@@ -2678,7 +2683,6 @@ class Color {
     /**
      * Color Alpha Component [0.0 .. 1.0]
      * @type {number}
-     * @memberof Color
      */
     get alpha() {
         return this.glArray[3];
@@ -2691,8 +2695,6 @@ class Color {
 
     /**
      * Set this color to the specified value.
-     * @name setColor
-     * @memberof Color
      * @param {number} r red component [0 .. 255]
      * @param {number} g green component [0 .. 255]
      * @param {number} b blue component [0 .. 255]
@@ -2708,9 +2710,58 @@ class Color {
     }
 
     /**
+     * set this color to the specified HSV value
+     * @param {number} h hue (a value from 0 to 1)
+     * @param {number} s saturation (a value from 0 to 1)
+     * @param {number} v value (a value from 0 to 1)
+     * @returns {Color} Reference to this object for method chaining
+     */
+    setHSV(h, s, v) {
+        var r, g, b;
+
+        var i = Math.floor(h * 6);
+        var f = h * 6 - i;
+        var p = v * (1 - s);
+        var q = v * (1 - f * s);
+        var t = v * (1 - (1 - f) * s);
+
+        switch (i % 6) {
+            case 0: r = v, g = t, b = p; break;
+            case 1: r = q, g = v, b = p; break;
+            case 2: r = p, g = v, b = t; break;
+            case 3: r = p, g = q, b = v; break;
+            case 4: r = t, g = p, b = v; break;
+            case 5: r = v, g = p, b = q; break;
+        }
+        return this.setColor(r * 255, g * 255, b * 255);
+    }
+
+    /**
+     * set this color to the specified HSL value
+     * @param {number} h hue (a value from 0 to 1)
+     * @param {number} s saturation (a value from 0 to 1)
+     * @param {number} l lightness (a value from 0 to 1)
+     * @returns {Color} Reference to this object for method chaining
+     */
+    setHSL(h, s, l) {
+        var r, g, b;
+
+        if (s === 0) {
+            r = g = b = l; // achromatic
+        } else {
+            var q = l < 0.5 ? l * (1 + s) : l + s - l * s;
+            var p = 2 * l - q;
+
+            r = hue2rgb(p, q, h + 1/3);
+            g = hue2rgb(p, q, h);
+            b = hue2rgb(p, q, h - 1/3);
+        }
+
+        return this.setColor(r * 255, g * 255, b * 255);
+    }
+
+    /**
      * Create a new copy of this color object.
-     * @name clone
-     * @memberof Color
      * @returns {Color} Reference to the newly cloned object
      */
     clone() {
@@ -2719,8 +2770,6 @@ class Color {
 
     /**
      * Copy a color object or CSS color into this one.
-     * @name copy
-     * @memberof Color
      * @param {Color|string} color
      * @returns {Color} Reference to this object for method chaining
      */
@@ -2735,8 +2784,6 @@ class Color {
 
     /**
      * Blend this color with the given one using addition.
-     * @name add
-     * @memberof Color
      * @param {Color} color
      * @returns {Color} Reference to this object for method chaining
      */
@@ -2751,8 +2798,6 @@ class Color {
 
     /**
      * Darken this color value by 0..1
-     * @name darken
-     * @memberof Color
      * @param {number} scale
      * @returns {Color} Reference to this object for method chaining
      */
@@ -2767,8 +2812,6 @@ class Color {
 
     /**
      * Linearly interpolate between this color and the given one.
-     * @name lerp
-     * @memberof Color
      * @param {Color} color
      * @param {number} alpha with alpha = 0 being this color, and alpha = 1 being the given one.
      * @returns {Color} Reference to this object for method chaining
@@ -2784,8 +2827,6 @@ class Color {
 
     /**
      * Lighten this color value by 0..1
-     * @name lighten
-     * @memberof Color
      * @param {number} scale
      * @returns {Color} Reference to this object for method chaining
      */
@@ -2800,8 +2841,6 @@ class Color {
 
     /**
      * Generate random r,g,b values for this color object
-     * @name random
-     * @memberof Color
      * @param {number} [min=0] minimum value for the random range
      * @param {number} [max=255] maxmium value for the random range
      * @returns {Color} Reference to this object for method chaining
@@ -2825,8 +2864,6 @@ class Color {
     /**
      * Return true if the r,g,b,a values of this color are equal with the
      * given one.
-     * @name equals
-     * @memberof Color
      * @param {Color} color
      * @returns {boolean}
      */
@@ -2842,8 +2879,6 @@ class Color {
     /**
      * Parse a CSS color string and set this color to the corresponding
      * r,g,b values
-     * @name parseCSS
-     * @memberof Color
      * @param {string} cssColor
      * @returns {Color} Reference to this object for method chaining
      */
@@ -2859,8 +2894,6 @@ class Color {
 
     /**
      * Parse an RGB or RGBA CSS color string
-     * @name parseRGB
-     * @memberof Color
      * @param {string} rgbColor
      * @returns {Color} Reference to this object for method chaining
      */
@@ -2878,8 +2911,6 @@ class Color {
     /**
      * Parse a Hex color ("#RGB", "#RGBA" or "#RRGGBB", "#RRGGBBAA" format) and set this color to
      * the corresponding r,g,b,a values
-     * @name parseHex
-     * @memberof Color
      * @param {string} hexColor
      * @param {boolean} [argb = false] true if format is #ARGB, or #AARRGGBB (as opposed to #RGBA or #RGGBBAA)
      * @returns {Color} Reference to this object for method chaining
@@ -2937,8 +2968,6 @@ class Color {
 
     /**
      * Pack this color into a Uint32 ARGB representation
-     * @name toUint32
-     * @memberof Color
      * @param {number} [alpha=1.0] alpha value [0.0 .. 1.0]
      * @returns {number}
      */
@@ -2953,8 +2982,6 @@ class Color {
 
     /**
      * return an array representation of this object
-     * @name toArray
-     * @memberof Color
      * @returns {Float32Array}
      */
     toArray() {
@@ -2963,9 +2990,7 @@ class Color {
 
 
     /**
-     * Get the color in "#RRGGBB" format
-     * @name toHex
-     * @memberof Color
+     * return the color in "#RRGGBB" format
      * @returns {string}
      */
     toHex() {
@@ -2977,8 +3002,6 @@ class Color {
 
     /**
      * Get the color in "#RRGGBBAA" format
-     * @name toHex8
-     * @memberof Color
      * @returns {string}
      */
     toHex8(alpha = this.alpha) {
@@ -2990,8 +3013,6 @@ class Color {
 
     /**
      * Get the color in "rgb(R,G,B)" format
-     * @name toRGB
-     * @memberof Color
      * @returns {string}
      */
     toRGB() {
@@ -3007,8 +3028,6 @@ class Color {
 
     /**
      * Get the color in "rgba(R,G,B,A)" format
-     * @name toRGBA
-     * @memberof Color
      * @param {number} [alpha=1.0] alpha value [0.0 .. 1.0]
      * @returns {string}
      */
@@ -35733,12 +35752,38 @@ class NineSliceSprite extends Sprite {
         this.width = Math.floor(settings.width);
         this.height = Math.floor(settings.height);
 
-        // nine slice sprite specific local variables
+        // nine slice sprite specific internal variables
         this.nss_width = this.width;
         this.nss_height = this.height;
 
         this.insetx = settings.insetx;
         this.insety = settings.insety;
+    }
+
+    /**
+     * width of the NineSliceSprite
+     * @public
+     * @type {number}
+     * @name width
+     */
+    get width() {
+        return super.width;
+    }
+    set width(value) {
+        super.width = this.nss_width = value;
+    }
+
+    /**
+     * height of the NineSliceSprite
+     * @public
+     * @type {number}
+     * @name height
+     */
+    get height() {
+        return super.height;
+    }
+    set height(value) {
+        super.height = this.nss_height = value;
     }
 
     /**
