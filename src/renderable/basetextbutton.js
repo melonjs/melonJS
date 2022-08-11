@@ -12,6 +12,9 @@ import BaseClickableContainer from "./baseclickablecontainer";
 export default class BaseTextButton extends BaseClickableContainer {
     /**
      * A Text Button with an outlined background border, filled with background color.
+     * It uses a RoundRect as background and changes the background color on hovering over.
+     * The background will be drawn with 0.5 opacity, so that the background of the button is
+     * slightly shining through.
      *
      * @param {number} x x pos of the button
      * @param {number} y y pos of the button
@@ -27,11 +30,12 @@ export default class BaseTextButton extends BaseClickableContainer {
      * @param {number} [settings.borderWidth] Width of the button
      * @param {number} [settings.borderHeight] Height of the button
      * // Create a new Button
-     * class MyButton extends BaseTextButton {
+     * class PlayButton extends BaseTextButton {
      *      constructor(x,y) {
      *          super(x,y, {
      *              font: 'my-font',
      *              text: 'Play',
+     *              // if you omit the next two, size is calculated by the size of the text
      *              borderWidth: 200,
      *              borderHeight: 20,
      *          });
@@ -41,6 +45,8 @@ export default class BaseTextButton extends BaseClickableContainer {
      *          state.change(state.PLAY);
      *      }
      * }
+     *
+     * game.world.addChild(new PlayButton(15,200));
      */
     constructor(x, y, settings) {
         super(x, y);
