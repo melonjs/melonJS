@@ -100,8 +100,7 @@ export default class BaseClickableContainer extends Container {
      * @param {Pointer} event the event object
      * @returns {boolean} return false if we need to stop propagating the event
      */
-    onClick(event) {
-        // eslint-disable-line no-unused-vars
+    onClick(event) { // eslint-disable-line no-unused-vars
         return false;
     }
 
@@ -122,8 +121,7 @@ export default class BaseClickableContainer extends Container {
      * @public
      * @param {Pointer} event the event object
      */
-    onOver(event) {
-        // eslint-disable-line no-unused-vars
+    onOver(event) { // eslint-disable-line no-unused-vars
         // to be extended
     }
 
@@ -145,8 +143,7 @@ export default class BaseClickableContainer extends Container {
      * @public
      * @param {Pointer} event the event object
      */
-    onOut(event) {
-        // eslint-disable-line no-unused-vars
+    onOut(event) { // eslint-disable-line no-unused-vars
         // to be extended
     }
 

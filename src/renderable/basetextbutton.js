@@ -37,7 +37,7 @@ export default class BaseTextButton extends BaseClickableContainer {
      *          });
      *      }
      *
-     *      onClick() {
+     *      onClick(){
      *          state.change(state.PLAY);
      *      }
      * }
