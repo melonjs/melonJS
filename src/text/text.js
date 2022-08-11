@@ -410,7 +410,7 @@ class Text extends Renderable {
         setContextStyle(context, this, stroke);
 
         for (var i = 0; i < text.length; i++) {
-            var string = text[i].trimRight();
+            var string = text[i].trimEnd();
             // draw the string
             context[stroke ? "strokeText" : "fillText"](string, x, y);
             // add leading space

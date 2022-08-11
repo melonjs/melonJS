@@ -2,6 +2,9 @@
 
 ## [13.2.0] (melonJS 2) - _2022-xx-xx_
 
+### Changed
+- Core : replaced internal reference to the deprecated `trim[Left/Right]` methods by their `trim[Start/End]` equivalents
+
 ## [13.1.1] (melonJS 2) - _2022-08-10_
 
 ### Fixed
