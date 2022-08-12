@@ -30,6 +30,7 @@ import Matrix3d from "./math/matrix3.js";
 import Polygon from "./geometries/poly.js";
 import Line from "./geometries/line.js";
 import Ellipse from "./geometries/ellipse.js";
+import Point from "./geometries/point.js";
 import Rect from "./geometries/rectangle.js";
 import RoundRect from "./geometries/roundrect.js";
 import QuadTree from "./physics/quadtree.js";
@@ -119,6 +120,7 @@ export {
     Polygon,
     Line,
     Ellipse,
+    Point,
     Rect,
     RoundRect,
     Tween,
@@ -226,6 +228,7 @@ export function boot() {
     pool.register("me.RoundRect", RoundRect, true);
     pool.register("me.Polygon", Polygon, true);
     pool.register("me.Line", Line, true);
+    pool.register("me.Point", Point, true);
     pool.register("me.Ellipse", Ellipse, true);
     pool.register("me.Bounds", Bounds, true);
 
@@ -255,6 +258,7 @@ export function boot() {
     pool.register("RoundRect", RoundRect, true);
     pool.register("Polygon", Polygon, true);
     pool.register("Line", Line, true);
+    pool.register("Point", Point, true);
     pool.register("Ellipse", Ellipse, true);
     pool.register("Bounds", Bounds, true);
     pool.register("CanvasTexture", CanvasTexture, true);
