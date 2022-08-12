@@ -107,7 +107,7 @@ export default class TMXObject {
         this.type = settings.type;
 
         /**
-         * the åobject class
+         * the object class
          * @public
          * @type {string}
          * @name class
@@ -171,6 +171,15 @@ export default class TMXObject {
         this.isEllipse = false;
 
         /**
+         * if true, the object is a Point
+         * @public
+         * @type {boolean}
+         * @name isPoint
+         * @memberof TMXObject
+         */
+        this.isPoint = false;
+
+        /**
          * if true, the object is a Polygon
          * @public
          * @type {boolean}
@@ -193,12 +202,14 @@ export default class TMXObject {
             this.setTile(map.tilesets);
         }
         else {
-            if (typeof(settings.ellipse) !== "undefined") {
+            if (typeof settings.ellipse !== "undefined") {
                 this.isEllipse = true;
-            } else if (typeof(settings.polygon) !== "undefined") {
+            } else if (typeof settings.point !== "undefined") {
+                this.isPoint = true;
+            } else if (typeof settings.polygon !== "undefined") {
                 this.points = settings.polygon;
                 this.isPolygon = true;
-            } else if (typeof(settings.polyline) !== "undefined") {
+            } else if (typeof settings.polyline !== "undefined") {
                 this.points = settings.polyline;
                 this.isPolyLine = true;
             }
@@ -272,8 +283,10 @@ export default class TMXObject {
                 this.width,
                 this.height
             )).rotate(this.rotation));
+        } else if (this.isPoint === true) {
+            shapes.push(pool.pull("Point", this.x, this.y));
+            console.log( this.x, this.y);
         } else {
-
             // add a polygon
             if (this.isPolygon === true) {
                 var _polygon = pool.pull("Polygon", 0, 0, this.points);
@@ -282,10 +295,8 @@ export default class TMXObject {
                     throw new Error("collision polygones in Tiled should be defined as Convex");
                 }
                 shapes.push(_polygon.rotate(this.rotation));
-            }
 
-            // add a polyline
-            else if (this.isPolyLine === true) {
+            } else if (this.isPolyLine === true) {
                 var p = this.points;
                 var p1, p2;
                 var segments = p.length - 1;
@@ -317,7 +328,9 @@ export default class TMXObject {
         // Apply isometric projection
         if (this.orientation === "isometric") {
             for (i = 0; i < shapes.length; i++) {
-                shapes[i].toIso();
+                if (typeof shapes[i].toIso === "function") {
+                    shapes[i].toIso();
+                }
             }
         }
 
