@@ -943,6 +943,30 @@ class WebGLRenderer extends Renderer {
     }
 
     /**
+     * Stroke a Point at the specified coordinates
+     * @name strokePoint
+     * @memberof WebGLRenderer
+     * @param {number} x
+     * @param {number} y
+     */
+    strokePoint(x, y) {
+        this.strokeLine(x, y, x + 1, y + 1);
+    }
+
+    /**
+     * Draw a a point at the specified coordinates
+     * @name fillPoint
+     * @memberof WebGLRenderer
+     * @param {number} x
+     * @param {number} y
+     * @param {number} width
+     * @param {number} height
+     */
+    fillPoint(x, y) {
+        this.strokePoint(x, y);
+    }
+
+    /**
      * Reset (overrides) the renderer transformation matrix to the
      * identity one, and then apply the given transformation matrix.
      * @name setTransform

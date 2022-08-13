@@ -505,6 +505,30 @@ class CanvasRenderer extends Renderer {
     }
 
     /**
+     * Stroke a Point at the specified coordinates
+     * @name strokePoint
+     * @memberof CanvasRenderer
+     * @param {number} x
+     * @param {number} y
+     */
+    strokePoint(x, y) {
+        this.strokeLine(x, y, x + 1, y + 1);
+    }
+
+    /**
+     * Draw a a point at the specified coordinates
+     * @name fillPoint
+     * @memberof CanvasRenderer
+     * @param {number} x
+     * @param {number} y
+     * @param {number} width
+     * @param {number} height
+     */
+    fillPoint(x, y) {
+        this.strokePoint(x, y);
+    }
+
+    /**
      * return a reference to the font 2d Context
      * @ignore
      */
