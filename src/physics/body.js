@@ -7,6 +7,7 @@ import collision from "./collision.js";
 import * as arrayUtil from "./../utils/array.js";
 import timer from "./../system/timer.js";
 import { clamp } from "./../math/math.js";
+import Point from "../geometries/point.js";
 
 /**
  * @classdesc
@@ -16,7 +17,7 @@ import { clamp } from "./../math/math.js";
 class Body {
     /**
      * @param {Renderable} ancestor the parent object this body is attached to
-     * @param {Rect|Rect[]|Polygon|Polygon[]|Line|Line[]|Ellipse|Ellipse[]|Bounds|Bounds[]|object} [shapes] a initial shape, list of shapes, or JSON object defining the body
+     * @param {Rect|Rect[]|Polygon|Polygon[]|Line|Line[]|Ellipse|Ellipse[]|Point|Point[]|Bounds|Bounds[]|object} [shapes] a initial shape, list of shapes, or JSON object defining the body
      * @param {Function} [onBodyUpdate] callback for when the body is updated (e.g. add/remove shapes)
      */
     constructor(ancestor, shapes, onBodyUpdate) {
@@ -43,7 +44,7 @@ class Body {
             /**
              * The collision shapes of the body
              * @ignore
-             * @type {Polygon[]|Line[]|Ellipse[]}
+             * @type {Polygon[]|Line[]|Ellipse[]|Point|Point[]}
              */
             this.shapes = [];
         }
@@ -235,7 +236,7 @@ class Body {
     /**
      * add a collision shape to this body <br>
      * (note: me.Rect objects will be converted to me.Polygon before being added)
-     * @param {Rect|Polygon|Line|Ellipse|Bounds|object} shape a shape or JSON object
+     * @param {Rect|Polygon|Line|Ellipse||Point|Point[]|Bounds|object} shape a shape or JSON object
      * @returns {number} the shape array length
      * @example
      * // add a rectangle shape
@@ -270,6 +271,12 @@ class Body {
             // update the body bounds
             this.bounds.add(shape.points);
             this.bounds.translate(shape.pos);
+        } else if (shape instanceof Point) {
+            if (!this.shapes.includes(shape)) {
+                // see removeShape
+                this.shapes.push(shape);
+            }
+            this.bounds.addPoint(shape);
         } else {
             // JSON object
             this.fromJSON(shape);
