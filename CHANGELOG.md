@@ -4,6 +4,7 @@
 
 ### Added
 - Geometry: new base Point geometry object
+- Tiled: now properly support Point geometry if defined in a map
 
 ### Changed
 - Core : replaced internal reference to the deprecated `trim[Left/Right]` methods by their `trim[Start/End]` equivalents
