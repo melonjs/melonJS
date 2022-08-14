@@ -251,17 +251,18 @@ class Bounds {
      * add the given point to the bounds definition.
      * @name addPoint
      * @memberof Bounds
-     * @param {Vector2d} v
-     * @param {Matrix2d} [m] an optional transform to apply to the given point
+     * @param {Vector2d|Point} point the point to be added to the bounds
+     * @param {Matrix2d} [m] an optional transform to apply to the given point (only if the given point is a vector)
      */
-    addPoint(v, m) {
-        if (typeof m !== "undefined") {
-            v = m.apply(v);
+    addPoint(point, m) {
+        if ((typeof m !== "undefined") && (typeof point.rotate === "function")) {
+            // only Vectors object have a rotate function
+            point = m.apply(point);
         }
-        this.min.x = Math.min(this.min.x, v.x);
-        this.max.x = Math.max(this.max.x, v.x);
-        this.min.y = Math.min(this.min.y, v.y);
-        this.max.y = Math.max(this.max.y, v.y);
+        this.min.x = Math.min(this.min.x, point.x);
+        this.max.x = Math.max(this.max.x, point.x);
+        this.min.y = Math.min(this.min.y, point.y);
+        this.max.y = Math.max(this.max.y, point.y);
     }
 
     /**

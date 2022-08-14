@@ -11,6 +11,7 @@ import Polygon from "./../geometries/poly.js";
 import Line from "./../geometries/line.js";
 import Bounds from "./../physics/bounds.js";
 import Path2D from "./../geometries/path2d.js";
+import Point from "../geometries/point.js";
 
 /**
  * @classdesc
@@ -348,6 +349,10 @@ class Renderer {
                 shape.radiusV.y,
                 fill
             );
+            return;
+        }
+        if (shape instanceof Point) {
+            this.strokePoint(shape.x, shape.y);
             return;
         }
         throw new Error("Invalid geometry for fill/stroke");

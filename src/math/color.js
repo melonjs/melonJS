@@ -533,7 +533,7 @@ class Color {
      * @param {number} [alpha=1.0] alpha value [0.0 .. 1.0]
      * @returns {number}
      */
-    toUint32(alpha = this.alpha) {
+    toUint32(alpha = 1.0) {
         var ur = this.r & 0xff;
         var ug = this.g & 0xff;
         var ub = this.b & 0xff;
