@@ -1,7 +1,8 @@
 import Vector2d from "../math/vector2";
 import BitmapText from "../text/bitmaptext";
 import RoundRect from "../geometries/roundrect";
-import BaseClickableContainer from "./baseclickablecontainer";
+import UIBaseElement from "./uibaseelement";
+
 
 /**
  * @classdesc
@@ -9,7 +10,7 @@ import BaseClickableContainer from "./baseclickablecontainer";
  *
  * @augments BaseClickableContainer
  */
-export default class BaseTextButton extends BaseClickableContainer {
+export default class UITextButton extends UIBaseElement {
     /**
      * A Text Button with an outlined background border, filled with background color.
      * It uses a RoundRect as background and changes the background color on hovering over.
@@ -110,6 +111,9 @@ export default class BaseTextButton extends BaseClickableContainer {
         renderer.setGlobalAlpha(1);
         renderer.setColor(this.settings.borderStrokeColor);
         renderer.stroke(this.border);
+
+        // fix: supporting tint
+        renderer.setTint(this.font.tint, this.font.getOpacity());
         this.font.draw(
             renderer,
             this.settings.text,

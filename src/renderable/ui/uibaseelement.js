@@ -12,7 +12,7 @@ import input  from "../input/input";
  * @augments Container
 
  */
-export default class BaseClickableContainer extends Container {
+export default class UIBaseElement extends Container {
     /**
      *
      * @param {number} x The x position of the container
