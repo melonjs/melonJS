@@ -7,7 +7,10 @@
 - Tiled: now properly support Point geometry if defined in a map
 
 ### Changed
-- Core : replaced internal reference to the deprecated `trim[Left/Right]` methods by their `trim[Start/End]` equivalents
+- Core: replaced internal reference to the deprecated `trim[Left/Right]` methods by their `trim[Start/End]` equivalents
+
+### Fixed
+- WebGL: fix a regression with global opacity not being properly cascaded to texture in WebGL mode (thanks @wpernath)
 
 ## [13.1.1] (melonJS 2) - _2022-08-10_
 

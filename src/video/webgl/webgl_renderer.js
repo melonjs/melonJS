@@ -378,7 +378,7 @@ class WebGLRenderer extends Renderer {
             uvs[1],
             uvs[2],
             uvs[3],
-            this.currentTint.toUint32()
+            this.currentTint.toUint32(this.getGlobalAlpha())
         );
 
         // Clear font context2D
@@ -439,7 +439,7 @@ class WebGLRenderer extends Renderer {
 
         var texture = this.cache.get(image);
         var uvs = texture.getUVs(sx + "," + sy + "," + sw + "," + sh);
-        this.currentCompositor.addQuad(texture, dx, dy, dw, dh, uvs[0], uvs[1], uvs[2], uvs[3], this.currentTint.toUint32());
+        this.currentCompositor.addQuad(texture, dx, dy, dw, dh, uvs[0], uvs[1], uvs[2], uvs[3], this.currentTint.toUint32(this.getGlobalAlpha()));
     }
 
     /**
@@ -455,7 +455,7 @@ class WebGLRenderer extends Renderer {
      */
     drawPattern(pattern, x, y, width, height) {
         var uvs = pattern.getUVs("0,0," + width + "," + height);
-        this.currentCompositor.addQuad(pattern, x, y, width, height, uvs[0], uvs[1], uvs[2], uvs[3], this.currentTint.toUint32());
+        this.currentCompositor.addQuad(pattern, x, y, width, height, uvs[0], uvs[1], uvs[2], uvs[3], this.currentTint.toUint32(this.getGlobalAlpha()));
     }
 
     /**
