@@ -510,10 +510,8 @@ class WebGLCompositor {
      * @memberof WebGLCompositor
      */
     clear() {
-        if (this.settings.transparent === false) {
-            var gl = this.gl;
-            gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT | gl.STENCIL_BUFFER_BIT);
-        }
+        var gl = this.gl;
+        gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT | gl.STENCIL_BUFFER_BIT);
     }
 };
 
