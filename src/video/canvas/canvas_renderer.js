@@ -124,8 +124,10 @@ class CanvasRenderer extends Renderer {
      * @memberof CanvasRenderer
      */
     clear() {
-        if (this.settings.transparent) {
-            this.clearColor("rgba(0,0,0,0)", true);
+        if (this.settings.transparent === false) {
+            var canvas = this.getCanvas();
+            var context = this.getContext();
+            context.clearRect(0, 0, canvas.width, canvas.height);
         }
     }
 
@@ -136,13 +138,14 @@ class CanvasRenderer extends Renderer {
      * @param {Color|string} [color="#000000"] CSS color.
      * @param {boolean} [opaque=false] Allow transparency [default] or clear the surface completely [true]
      */
-    clearColor(color = "#000000", opaque) {
+    clearColor(color = "#000000", opaque = false) {
         var canvas = this.getCanvas();
         var context = this.getContext();
 
         this.save();
         this.resetTransform();
-        context.globalCompositeOperation = opaque ? "copy" : "source-over";
+        context.globalAlpha = 1;
+        context.globalCompositeOperation = opaque === true ? "copy" : "source-over";
         context.fillStyle = (color instanceof Color) ? color.toRGBA() : color;
         this.fillRect(0, 0, canvas.width, canvas.height);
         this.restore();

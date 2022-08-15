@@ -24,6 +24,7 @@ var settings = {
     scale : 1.0,
     scaleMethod : "manual",
     transparent : false,
+    premultipliedAlpha: true,
     blendMode : "normal",
     antiAlias : false,
     failIfMajorPerformanceCaveat : true,

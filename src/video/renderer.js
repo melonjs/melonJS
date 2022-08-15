@@ -25,7 +25,8 @@ class Renderer {
      * @param {HTMLCanvasElement} [options.canvas] The html canvas to draw to on screen
      * @param {boolean} [options.antiAlias=false] Whether to enable anti-aliasing, use false (default) for a pixelated effect.
      * @param {boolean} [options.failIfMajorPerformanceCaveat=true] If true, the renderer will switch to CANVAS mode if the performances of a WebGL context would be dramatically lower than that of a native application making equivalent OpenGL calls.
-     * @param {boolean} [options.transparent=false] Whether to enable transparency on the canvas (performance hit when enabled)
+     * @param {boolean} [options.transparent=false] Whether to enable transparency on the canvas
+     * @param {boolean} [options.premultipliedAlpha=true] in WebGL, whether the renderer will assume that colors have premultiplied alpha
      * @param {boolean} [options.blendMode="normal"] the default blend mode to use ("normal", "multiply")
      * @param {boolean} [options.subPixel=false] Whether to enable subpixel rendering (performance hit when enabled)
      * @param {boolean} [options.verbose=false] Enable the verbose mode that provides additional details as to what the renderer is doing
@@ -110,7 +111,8 @@ class Renderer {
      * @name clear
      * @memberof Renderer
      */
-    clear() {}
+    clear() {
+    }
 
     /**
      * render the main framebuffer on screen

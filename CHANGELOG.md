@@ -8,9 +8,11 @@
 
 ### Changed
 - Core: replaced internal reference to the deprecated `trim[Left/Right]` methods by their `trim[Start/End]` equivalents
+- WebGL: dissociate the `preMultipliedAlpha` setting from the `transparent` one since those are 2 different things
 
 ### Fixed
 - WebGL: fix a regression with global opacity not being properly cascaded to texture in WebGL mode (thanks @wpernath)
+- Canvas: fix default "non transparent" mode with the canvas renderer
 
 ## [13.1.1] (melonJS 2) - _2022-08-10_
 
