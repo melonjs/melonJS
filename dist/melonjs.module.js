@@ -1,5 +1,5 @@
 /*!
- * melonJS Game Engine - v13.1.1
+ * melonJS Game Engine - v13.2.0
  * http://www.melonjs.org
  * melonjs is licensed under the MIT License.
  * http://www.opensource.org/licenses/mit-license
@@ -2971,7 +2971,7 @@ class Color {
      * @param {number} [alpha=1.0] alpha value [0.0 .. 1.0]
      * @returns {number}
      */
-    toUint32(alpha = this.alpha) {
+    toUint32(alpha = 1.0) {
         var ur = this.r & 0xff;
         var ug = this.g & 0xff;
         var ub = this.b & 0xff;
@@ -7310,7 +7310,8 @@ class WebGLCompositor {
      * @memberof WebGLCompositor
      */
     clear() {
-        this.gl.clear(this.gl.COLOR_BUFFER_BIT);
+        var gl = this.gl;
+        gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT | gl.STENCIL_BUFFER_BIT);
     }
 }
 
@@ -9619,17 +9620,18 @@ class Bounds {
      * add the given point to the bounds definition.
      * @name addPoint
      * @memberof Bounds
-     * @param {Vector2d} v
-     * @param {Matrix2d} [m] an optional transform to apply to the given point
+     * @param {Vector2d|Point} point the point to be added to the bounds
+     * @param {Matrix2d} [m] an optional transform to apply to the given point (only if the given point is a vector)
      */
-    addPoint(v, m) {
-        if (typeof m !== "undefined") {
-            v = m.apply(v);
+    addPoint(point, m) {
+        if ((typeof m !== "undefined") && (typeof point.rotate === "function")) {
+            // only Vectors object have a rotate function
+            point = m.apply(point);
         }
-        this.min.x = Math.min(this.min.x, v.x);
-        this.max.x = Math.max(this.max.x, v.x);
-        this.min.y = Math.min(this.min.y, v.y);
-        this.max.y = Math.max(this.max.y, v.y);
+        this.min.x = Math.min(this.min.x, point.x);
+        this.max.x = Math.max(this.max.x, point.x);
+        this.min.y = Math.min(this.min.y, point.y);
+        this.max.y = Math.max(this.max.y, point.y);
     }
 
     /**
@@ -10120,6 +10122,45 @@ class Path2D {
 
 /**
  * @classdesc
+ * represents a point in a 2d space
+ */
+class Point {
+    constructor(x = 0, y = 0) {
+        /**
+         * the position of the point on the horizontal axis
+         * @public
+         * @type {Number}
+         * @default 0
+         */
+        this.x = x;
+
+        /**
+         * the position of the point on the vertical axis
+         * @public
+         * @type {Number}
+         * @default 0
+         */
+        this.y = y;
+    }
+
+    /** @ignore */
+    onResetEvent(x = 0, y = 0) {
+       this.x = x;
+       this.y = y;
+    }
+
+    /**
+     * clone this Point
+     * @name clone
+     * @returns {Point} new Point
+     */
+    clone() {
+        return new Point(this.x, this.y);
+    }
+}
+
+/**
+ * @classdesc
  * a base renderer object
  */
 class Renderer {
@@ -10130,7 +10171,8 @@ class Renderer {
      * @param {HTMLCanvasElement} [options.canvas] The html canvas to draw to on screen
      * @param {boolean} [options.antiAlias=false] Whether to enable anti-aliasing, use false (default) for a pixelated effect.
      * @param {boolean} [options.failIfMajorPerformanceCaveat=true] If true, the renderer will switch to CANVAS mode if the performances of a WebGL context would be dramatically lower than that of a native application making equivalent OpenGL calls.
-     * @param {boolean} [options.transparent=false] Whether to enable transparency on the canvas (performance hit when enabled)
+     * @param {boolean} [options.transparent=false] Whether to enable transparency on the canvas
+     * @param {boolean} [options.premultipliedAlpha=true] in WebGL, whether the renderer will assume that colors have premultiplied alpha
      * @param {boolean} [options.blendMode="normal"] the default blend mode to use ("normal", "multiply")
      * @param {boolean} [options.subPixel=false] Whether to enable subpixel rendering (performance hit when enabled)
      * @param {boolean} [options.verbose=false] Enable the verbose mode that provides additional details as to what the renderer is doing
@@ -10215,7 +10257,8 @@ class Renderer {
      * @name clear
      * @memberof Renderer
      */
-    clear() {}
+    clear() {
+    }
 
     /**
      * render the main framebuffer on screen
@@ -10454,6 +10497,10 @@ class Renderer {
                 shape.radiusV.y,
                 fill
             );
+            return;
+        }
+        if (shape instanceof Point) {
+            this.strokePoint(shape.x, shape.y);
             return;
         }
         throw new Error("Invalid geometry for fill/stroke");
@@ -19707,7 +19754,7 @@ var collision = {
 class Body {
     /**
      * @param {Renderable} ancestor the parent object this body is attached to
-     * @param {Rect|Rect[]|Polygon|Polygon[]|Line|Line[]|Ellipse|Ellipse[]|Bounds|Bounds[]|object} [shapes] a initial shape, list of shapes, or JSON object defining the body
+     * @param {Rect|Rect[]|Polygon|Polygon[]|Line|Line[]|Ellipse|Ellipse[]|Point|Point[]|Bounds|Bounds[]|object} [shapes] a initial shape, list of shapes, or JSON object defining the body
      * @param {Function} [onBodyUpdate] callback for when the body is updated (e.g. add/remove shapes)
      */
     constructor(ancestor, shapes, onBodyUpdate) {
@@ -19734,7 +19781,7 @@ class Body {
             /**
              * The collision shapes of the body
              * @ignore
-             * @type {Polygon[]|Line[]|Ellipse[]}
+             * @type {Polygon[]|Line[]|Ellipse[]|Point|Point[]}
              */
             this.shapes = [];
         }
@@ -19926,7 +19973,7 @@ class Body {
     /**
      * add a collision shape to this body <br>
      * (note: me.Rect objects will be converted to me.Polygon before being added)
-     * @param {Rect|Polygon|Line|Ellipse|Bounds|object} shape a shape or JSON object
+     * @param {Rect|Polygon|Line|Ellipse||Point|Point[]|Bounds|object} shape a shape or JSON object
      * @returns {number} the shape array length
      * @example
      * // add a rectangle shape
@@ -19961,6 +20008,12 @@ class Body {
             // update the body bounds
             this.bounds.add(shape.points);
             this.bounds.translate(shape.pos);
+        } else if (shape instanceof Point) {
+            if (!this.shapes.includes(shape)) {
+                // see removeShape
+                this.shapes.push(shape);
+            }
+            this.bounds.addPoint(shape);
         } else {
             // JSON object
             this.fromJSON(shape);
@@ -24446,8 +24499,10 @@ class CanvasRenderer extends Renderer {
      * @memberof CanvasRenderer
      */
     clear() {
-        if (this.settings.transparent) {
-            this.clearColor("rgba(0,0,0,0)", true);
+        if (this.settings.transparent === false) {
+            var canvas = this.getCanvas();
+            var context = this.getContext();
+            context.clearRect(0, 0, canvas.width, canvas.height);
         }
     }
 
@@ -24458,13 +24513,14 @@ class CanvasRenderer extends Renderer {
      * @param {Color|string} [color="#000000"] CSS color.
      * @param {boolean} [opaque=false] Allow transparency [default] or clear the surface completely [true]
      */
-    clearColor(color = "#000000", opaque) {
+    clearColor(color = "#000000", opaque = false) {
         var canvas = this.getCanvas();
         var context = this.getContext();
 
         this.save();
         this.resetTransform();
-        context.globalCompositeOperation = opaque ? "copy" : "source-over";
+        context.globalAlpha = 1;
+        context.globalCompositeOperation = opaque === true ? "copy" : "source-over";
         context.fillStyle = (color instanceof Color) ? color.toRGBA() : color;
         this.fillRect(0, 0, canvas.width, canvas.height);
         this.restore();
@@ -24824,6 +24880,30 @@ class CanvasRenderer extends Renderer {
      */
     fillRoundRect(x, y, width, height, radius) {
         this.strokeRoundRect(x, y, width, height, radius, true);
+    }
+
+    /**
+     * Stroke a Point at the specified coordinates
+     * @name strokePoint
+     * @memberof CanvasRenderer
+     * @param {number} x
+     * @param {number} y
+     */
+    strokePoint(x, y) {
+        this.strokeLine(x, y, x + 1, y + 1);
+    }
+
+    /**
+     * Draw a a point at the specified coordinates
+     * @name fillPoint
+     * @memberof CanvasRenderer
+     * @param {number} x
+     * @param {number} y
+     * @param {number} width
+     * @param {number} height
+     */
+    fillPoint(x, y) {
+        this.strokePoint(x, y);
     }
 
     /**
@@ -27036,7 +27116,7 @@ class TMXObject {
         this.type = settings.type;
 
         /**
-         * the åobject class
+         * the object class
          * @public
          * @type {string}
          * @name class
@@ -27100,6 +27180,15 @@ class TMXObject {
         this.isEllipse = false;
 
         /**
+         * if true, the object is a Point
+         * @public
+         * @type {boolean}
+         * @name isPoint
+         * @memberof TMXObject
+         */
+        this.isPoint = false;
+
+        /**
          * if true, the object is a Polygon
          * @public
          * @type {boolean}
@@ -27122,12 +27211,14 @@ class TMXObject {
             this.setTile(map.tilesets);
         }
         else {
-            if (typeof(settings.ellipse) !== "undefined") {
+            if (typeof settings.ellipse !== "undefined") {
                 this.isEllipse = true;
-            } else if (typeof(settings.polygon) !== "undefined") {
+            } else if (typeof settings.point !== "undefined") {
+                this.isPoint = true;
+            } else if (typeof settings.polygon !== "undefined") {
                 this.points = settings.polygon;
                 this.isPolygon = true;
-            } else if (typeof(settings.polyline) !== "undefined") {
+            } else if (typeof settings.polyline !== "undefined") {
                 this.points = settings.polyline;
                 this.isPolyLine = true;
             }
@@ -27201,8 +27292,10 @@ class TMXObject {
                 this.width,
                 this.height
             )).rotate(this.rotation));
+        } else if (this.isPoint === true) {
+            shapes.push(pool.pull("Point", this.x, this.y));
+            console.log( this.x, this.y);
         } else {
-
             // add a polygon
             if (this.isPolygon === true) {
                 var _polygon = pool.pull("Polygon", 0, 0, this.points);
@@ -27211,10 +27304,8 @@ class TMXObject {
                     throw new Error("collision polygones in Tiled should be defined as Convex");
                 }
                 shapes.push(_polygon.rotate(this.rotation));
-            }
 
-            // add a polyline
-            else if (this.isPolyLine === true) {
+            } else if (this.isPolyLine === true) {
                 var p = this.points;
                 var p1, p2;
                 var segments = p.length - 1;
@@ -27246,7 +27337,9 @@ class TMXObject {
         // Apply isometric projection
         if (this.orientation === "isometric") {
             for (i = 0; i < shapes.length; i++) {
-                shapes[i].toIso();
+                if (typeof shapes[i].toIso === "function") {
+                    shapes[i].toIso();
+                }
             }
         }
 
@@ -30777,7 +30870,8 @@ class WebGLRenderer extends Renderer {
      * @param {HTMLCanvasElement} [options.canvas] The html canvas to draw to on screen
      * @param {boolean} [options.antiAlias=false] Whether to enable anti-aliasing
      * @param {boolean} [options.failIfMajorPerformanceCaveat=true] If true, the renderer will switch to CANVAS mode if the performances of a WebGL context would be dramatically lower than that of a native application making equivalent OpenGL calls.
-     * @param {boolean} [options.transparent=false] Whether to enable transparency on the canvas (performance hit when enabled)
+     * @param {boolean} [options.transparent=false] Whether to enable transparency on the canvas
+     * @param {boolean} [options.premultipliedAlpha=true] in WebGL, whether the renderer will assume that colors have premultiplied alp
      * @param {boolean} [options.subPixel=false] Whether to enable subpixel renderering (performance hit when enabled)
      * @param {boolean} [options.preferWebGL1=false] if true the renderer will only use WebGL 1
      * @param {string} [options.powerPreference="default"] a hint to the user agent indicating what configuration of GPU is suitable for the WebGL context ("default", "high-performance", "low-power"). To be noted that Safari and Chrome (since version 80) both default to "low-power" to save battery life and improve the user experience on these dual-GPU machines.
@@ -31133,7 +31227,7 @@ class WebGLRenderer extends Renderer {
             uvs[1],
             uvs[2],
             uvs[3],
-            this.currentTint.toUint32()
+            this.currentTint.toUint32(this.getGlobalAlpha())
         );
 
         // Clear font context2D
@@ -31194,7 +31288,7 @@ class WebGLRenderer extends Renderer {
 
         var texture = this.cache.get(image);
         var uvs = texture.getUVs(sx + "," + sy + "," + sw + "," + sh);
-        this.currentCompositor.addQuad(texture, dx, dy, dw, dh, uvs[0], uvs[1], uvs[2], uvs[3], this.currentTint.toUint32());
+        this.currentCompositor.addQuad(texture, dx, dy, dw, dh, uvs[0], uvs[1], uvs[2], uvs[3], this.currentTint.toUint32(this.getGlobalAlpha()));
     }
 
     /**
@@ -31210,7 +31304,7 @@ class WebGLRenderer extends Renderer {
      */
     drawPattern(pattern, x, y, width, height) {
         var uvs = pattern.getUVs("0,0," + width + "," + height);
-        this.currentCompositor.addQuad(pattern, x, y, width, height, uvs[0], uvs[1], uvs[2], uvs[3], this.currentTint.toUint32());
+        this.currentCompositor.addQuad(pattern, x, y, width, height, uvs[0], uvs[1], uvs[2], uvs[3], this.currentTint.toUint32(this.getGlobalAlpha()));
     }
 
     /**
@@ -31221,16 +31315,12 @@ class WebGLRenderer extends Renderer {
      * @param {boolean} [transparent=true] use false to disable transparency
      * @returns {WebGLRenderingContext}
      */
-    getContextGL(canvas, transparent) {
+    getContextGL(canvas, transparent = true) {
         if (typeof canvas === "undefined" || canvas === null) {
             throw new Error(
                 "You must pass a canvas element in order to create " +
                 "a GL context"
             );
-        }
-
-        if (typeof transparent !== "boolean") {
-            transparent = true;
         }
 
         var attr = {
@@ -31239,7 +31329,7 @@ class WebGLRenderer extends Renderer {
             depth : false,
             stencil: true,
             preserveDrawingBuffer : false,
-            premultipliedAlpha: transparent,
+            premultipliedAlpha: this.settings.premultipliedAlpha,
             powerPreference: this.settings.powerPreference,
             failIfMajorPerformanceCaveat : this.settings.failIfMajorPerformanceCaveat
         };
@@ -31698,6 +31788,30 @@ class WebGLRenderer extends Renderer {
     }
 
     /**
+     * Stroke a Point at the specified coordinates
+     * @name strokePoint
+     * @memberof WebGLRenderer
+     * @param {number} x
+     * @param {number} y
+     */
+    strokePoint(x, y) {
+        this.strokeLine(x, y, x + 1, y + 1);
+    }
+
+    /**
+     * Draw a a point at the specified coordinates
+     * @name fillPoint
+     * @memberof WebGLRenderer
+     * @param {number} x
+     * @param {number} y
+     * @param {number} width
+     * @param {number} height
+     */
+    fillPoint(x, y) {
+        this.strokePoint(x, y);
+    }
+
+    /**
      * Reset (overrides) the renderer transformation matrix to the
      * identity one, and then apply the given transformation matrix.
      * @name setTransform
@@ -31873,6 +31987,7 @@ var settings = {
     scale : 1.0,
     scaleMethod : "manual",
     transparent : false,
+    premultipliedAlpha: true,
     blendMode : "normal",
     antiAlias : false,
     failIfMajorPerformanceCaveat : true,
@@ -33010,10 +33125,10 @@ class BasePlugin {
          * this can be overridden by the plugin
          * @public
          * @type {string}
-         * @default "13.1.1"
+         * @default "13.2.0"
          * @name plugin.Base#version
          */
-        this.version = "13.1.1";
+        this.version = "13.2.0";
     }
 }
 
@@ -34256,7 +34371,7 @@ class TextMetrics extends Bounds {
         this.width = this.height = 0;
 
         for (var i = 0; i < strings.length; i++) {
-            this.width = Math.max(this.lineWidth(strings[i].trimRight(), context), this.width);
+            this.width = Math.max(this.lineWidth(strings[i].trimEnd(), context), this.width);
             this.height += this.lineHeight();
         }
         this.width = Math.ceil(this.width);
@@ -34731,7 +34846,7 @@ class Text extends Renderable {
         setContextStyle(context, this, stroke);
 
         for (var i = 0; i < text.length; i++) {
-            var string = text[i].trimRight();
+            var string = text[i].trimEnd();
             // draw the string
             context[stroke ? "strokeText" : "fillText"](string, x, y);
             // add leading space
@@ -35011,7 +35126,7 @@ class BitmapText extends Renderable {
 
         for (var i = 0; i < this._text.length; i++) {
             x = lX;
-            var string = this._text[i].trimRight();
+            var string = this._text[i].trimEnd();
             // adjust x pos based on alignment value
             var stringWidth = this.metrics.lineWidth(string);
             switch (this.textAlign) {
@@ -37822,7 +37937,7 @@ Renderer.prototype.getScreenContext = function()  {
  * @name version
  * @type {string}
  */
-const version = "13.1.1";
+const version = "13.2.0";
 
 
 /**
@@ -37881,6 +37996,7 @@ function boot() {
     pool.register("me.RoundRect", RoundRect, true);
     pool.register("me.Polygon", Polygon, true);
     pool.register("me.Line", Line, true);
+    pool.register("me.Point", Point, true);
     pool.register("me.Ellipse", Ellipse, true);
     pool.register("me.Bounds", Bounds, true);
 
@@ -37910,6 +38026,7 @@ function boot() {
     pool.register("RoundRect", RoundRect, true);
     pool.register("Polygon", Polygon, true);
     pool.register("Line", Line, true);
+    pool.register("Point", Point, true);
     pool.register("Ellipse", Ellipse, true);
     pool.register("Bounds", Bounds, true);
     pool.register("CanvasTexture", CanvasTexture, true);
@@ -37933,4 +38050,4 @@ onReady(function () {
     }
 });
 
-export { BitmapText, BitmapTextData, Body, Bounds, Camera2d, CanvasRenderer, Collectable, Color, ColorLayer, Container, Draggable, DraggableEntity, DropTarget, DroptargetEntity, Ellipse, Entity, GLShader, GUI_Object, ImageLayer, Light2d, Line, math as Math, Matrix2d, Matrix3d, NineSliceSprite, ObservableVector2d, ObservableVector3d, Particle, ParticleEmitter, ParticleEmitterSettings, Pointer, Polygon, QuadTree, Rect, Renderable, Renderer, RoundRect, Sprite, Stage, TMXHexagonalRenderer, TMXIsometricRenderer, TMXLayer, TMXOrthogonalRenderer, TMXRenderer, TMXStaggeredRenderer, TMXTileMap, TMXTileset, TMXTilesetGroup, Text, TextureAtlas, Tile, Trigger, Tween, Vector2d, Vector3d, WebGLCompositor, WebGLRenderer, World, audio, boot, collision, device, event, game, initialized, input, level, loader, plugin, plugins, pool, save, skipAutoInit, state, timer, utils, version, video, warning };
+export { BitmapText, BitmapTextData, Body, Bounds, Camera2d, CanvasRenderer, Collectable, Color, ColorLayer, Container, Draggable, DraggableEntity, DropTarget, DroptargetEntity, Ellipse, Entity, GLShader, GUI_Object, ImageLayer, Light2d, Line, math as Math, Matrix2d, Matrix3d, NineSliceSprite, ObservableVector2d, ObservableVector3d, Particle, ParticleEmitter, ParticleEmitterSettings, Point, Pointer, Polygon, QuadTree, Rect, Renderable, Renderer, RoundRect, Sprite, Stage, TMXHexagonalRenderer, TMXIsometricRenderer, TMXLayer, TMXOrthogonalRenderer, TMXRenderer, TMXStaggeredRenderer, TMXTileMap, TMXTileset, TMXTilesetGroup, Text, TextureAtlas, Tile, Trigger, Tween, Vector2d, Vector3d, WebGLCompositor, WebGLRenderer, World, audio, boot, collision, device, event, game, initialized, input, level, loader, plugin, plugins, pool, save, skipAutoInit, state, timer, utils, version, video, warning };

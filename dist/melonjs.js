@@ -1,5 +1,5 @@
 /*!
- * melonJS Game Engine - v13.1.1
+ * melonJS Game Engine - v13.2.0
  * http://www.melonjs.org
  * melonjs is licensed under the MIT License.
  * http://www.opensource.org/licenses/mit-license
@@ -2999,7 +2999,7 @@
 	 * @returns {number}
 	 */
 	Color.prototype.toUint32 = function toUint32 (alpha) {
-	        if ( alpha === void 0 ) alpha = this.alpha;
+	        if ( alpha === void 0 ) alpha = 1.0;
 
 	    var ur = this.r & 0xff;
 	    var ug = this.g & 0xff;
@@ -7334,7 +7334,8 @@
 	 * @memberof WebGLCompositor
 	 */
 	WebGLCompositor.prototype.clear = function clear () {
-	    this.gl.clear(this.gl.COLOR_BUFFER_BIT);
+	    var gl = this.gl;
+	    gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT | gl.STENCIL_BUFFER_BIT);
 	};
 
 	var earcut$1 = {exports: {}};
@@ -9632,17 +9633,18 @@
 	 * add the given point to the bounds definition.
 	 * @name addPoint
 	 * @memberof Bounds
-	 * @param {Vector2d} v
-	 * @param {Matrix2d} [m] an optional transform to apply to the given point
+	 * @param {Vector2d|Point} point the point to be added to the bounds
+	 * @param {Matrix2d} [m] an optional transform to apply to the given point (only if the given point is a vector)
 	 */
-	Bounds.prototype.addPoint = function addPoint (v, m) {
-	    if (typeof m !== "undefined") {
-	        v = m.apply(v);
+	Bounds.prototype.addPoint = function addPoint (point, m) {
+	    if ((typeof m !== "undefined") && (typeof point.rotate === "function")) {
+	        // only Vectors object have a rotate function
+	        point = m.apply(point);
 	    }
-	    this.min.x = Math.min(this.min.x, v.x);
-	    this.max.x = Math.max(this.max.x, v.x);
-	    this.min.y = Math.min(this.min.y, v.y);
-	    this.max.y = Math.max(this.max.y, v.y);
+	    this.min.x = Math.min(this.min.x, point.x);
+	    this.max.x = Math.max(this.max.x, point.x);
+	    this.min.y = Math.min(this.min.y, point.y);
+	    this.max.y = Math.max(this.max.y, point.y);
 	};
 
 	/**
@@ -10135,6 +10137,49 @@
 
 	/**
 	 * @classdesc
+	 * represents a point in a 2d space
+	 */
+	var Point = function Point(x, y) {
+	    if ( x === void 0 ) x = 0;
+	    if ( y === void 0 ) y = 0;
+
+	    /**
+	     * the position of the point on the horizontal axis
+	     * @public
+	     * @type {Number}
+	     * @default 0
+	     */
+	    this.x = x;
+
+	    /**
+	     * the position of the point on the vertical axis
+	     * @public
+	     * @type {Number}
+	     * @default 0
+	     */
+	    this.y = y;
+	};
+
+	/** @ignore */
+	Point.prototype.onResetEvent = function onResetEvent (x, y) {
+	       if ( x === void 0 ) x = 0;
+	       if ( y === void 0 ) y = 0;
+
+	   this.x = x;
+	   this.y = y;
+	};
+
+	/**
+	 * clone this Point
+	 * @name clone
+	 * @returns {Point} new Point
+	 */
+	Point.prototype.clone = function clone () {
+	    return new Point(this.x, this.y);
+	};
+
+	/**
+	 * @classdesc
 	 * a base renderer object
 	 */
 	var Renderer = function Renderer(options) {
@@ -10215,7 +10260,8 @@
 	 * @name clear
 	 * @memberof Renderer
 	 */
-	Renderer.prototype.clear = function clear () {};
+	Renderer.prototype.clear = function clear () {
+	};
 
 	/**
 	 * render the main framebuffer on screen
@@ -10454,6 +10500,10 @@
 	            shape.radiusV.y,
 	            fill
 	        );
+	        return;
+	    }
+	    if (shape instanceof Point) {
+	        this.strokePoint(shape.x, shape.y);
 	        return;
 	    }
 	    throw new Error("Invalid geometry for fill/stroke");
@@ -19790,7 +19840,7 @@
 	        /**
 	         * The collision shapes of the body
 	         * @ignore
-	         * @type {Polygon[]|Line[]|Ellipse[]}
+	         * @type {Polygon[]|Line[]|Ellipse[]|Point|Point[]}
 	         */
 	        this.shapes = [];
 	    }
@@ -19984,7 +20034,7 @@
 	/**
 	 * add a collision shape to this body <br>
 	 * (note: me.Rect objects will be converted to me.Polygon before being added)
-	 * @param {Rect|Polygon|Line|Ellipse|Bounds|object} shape a shape or JSON object
+	 * @param {Rect|Polygon|Line|Ellipse||Point|Point[]|Bounds|object} shape a shape or JSON object
 	 * @returns {number} the shape array length
 	 * @example
 	 * // add a rectangle shape
@@ -20019,6 +20069,12 @@
 	        // update the body bounds
 	        this.bounds.add(shape.points);
 	        this.bounds.translate(shape.pos);
+	    } else if (shape instanceof Point) {
+	        if (!this.shapes.includes(shape)) {
+	            // see removeShape
+	            this.shapes.push(shape);
+	        }
+	        this.bounds.addPoint(shape);
 	    } else {
 	        // JSON object
 	        this.fromJSON(shape);
@@ -24548,8 +24604,10 @@
 	     * @memberof CanvasRenderer
 	     */
 	    CanvasRenderer.prototype.clear = function clear () {
-	        if (this.settings.transparent) {
-	            this.clearColor("rgba(0,0,0,0)", true);
+	        if (this.settings.transparent === false) {
+	            var canvas = this.getCanvas();
+	            var context = this.getContext();
+	            context.clearRect(0, 0, canvas.width, canvas.height);
 	        }
 	    };
 
@@ -24562,13 +24620,15 @@
 	     */
 	    CanvasRenderer.prototype.clearColor = function clearColor (color, opaque) {
 	        if ( color === void 0 ) color = "#000000";
+	        if ( opaque === void 0 ) opaque = false;
 
 	        var canvas = this.getCanvas();
 	        var context = this.getContext();
 
 	        this.save();
 	        this.resetTransform();
-	        context.globalCompositeOperation = opaque ? "copy" : "source-over";
+	        context.globalAlpha = 1;
+	        context.globalCompositeOperation = opaque === true ? "copy" : "source-over";
 	        context.fillStyle = (color instanceof Color) ? color.toRGBA() : color;
 	        this.fillRect(0, 0, canvas.width, canvas.height);
 	        this.restore();
@@ -24938,6 +24998,30 @@
 	     */
 	    CanvasRenderer.prototype.fillRoundRect = function fillRoundRect (x, y, width, height, radius) {
 	        this.strokeRoundRect(x, y, width, height, radius, true);
+	    };
+
+	    /**
+	     * Stroke a Point at the specified coordinates
+	     * @name strokePoint
+	     * @memberof CanvasRenderer
+	     * @param {number} x
+	     * @param {number} y
+	     */
+	    CanvasRenderer.prototype.strokePoint = function strokePoint (x, y) {
+	        this.strokeLine(x, y, x + 1, y + 1);
+	    };
+
+	    /**
+	     * Draw a a point at the specified coordinates
+	     * @name fillPoint
+	     * @memberof CanvasRenderer
+	     * @param {number} x
+	     * @param {number} y
+	     * @param {number} width
+	     * @param {number} height
+	     */
+	    CanvasRenderer.prototype.fillPoint = function fillPoint (x, y) {
+	        this.strokePoint(x, y);
 	    };
 
 	    /**
@@ -27146,7 +27230,7 @@
 	    this.type = settings.type;
 
 	    /**
-	     * the åobject class
+	     * the object class
 	     * @public
 	     * @type {string}
 	     * @name class
@@ -27210,6 +27294,15 @@
 	    this.isEllipse = false;
 
 	    /**
+	     * if true, the object is a Point
+	     * @public
+	     * @type {boolean}
+	     * @name isPoint
+	     * @memberof TMXObject
+	     */
+	    this.isPoint = false;
+
+	    /**
 	     * if true, the object is a Polygon
 	     * @public
 	     * @type {boolean}
@@ -27232,12 +27325,14 @@
 	        this.setTile(map.tilesets);
 	    }
 	    else {
-	        if (typeof(settings.ellipse) !== "undefined") {
+	        if (typeof settings.ellipse !== "undefined") {
 	            this.isEllipse = true;
-	        } else if (typeof(settings.polygon) !== "undefined") {
+	        } else if (typeof settings.point !== "undefined") {
+	            this.isPoint = true;
+	        } else if (typeof settings.polygon !== "undefined") {
 	            this.points = settings.polygon;
 	            this.isPolygon = true;
-	        } else if (typeof(settings.polyline) !== "undefined") {
+	        } else if (typeof settings.polyline !== "undefined") {
 	            this.points = settings.polyline;
 	            this.isPolyLine = true;
 	        }
@@ -27311,8 +27406,10 @@
 	            this.width,
 	            this.height
 	        )).rotate(this.rotation));
+	    } else if (this.isPoint === true) {
+	        shapes.push(pool.pull("Point", this.x, this.y));
+	        console.log( this.x, this.y);
 	    } else {
-
 	        // add a polygon
 	        if (this.isPolygon === true) {
 	            var _polygon = pool.pull("Polygon", 0, 0, this.points);
@@ -27321,10 +27418,8 @@
 	                throw new Error("collision polygones in Tiled should be defined as Convex");
 	            }
 	            shapes.push(_polygon.rotate(this.rotation));
-	        }
 
-	        // add a polyline
-	        else if (this.isPolyLine === true) {
+	        } else if (this.isPolyLine === true) {
 	            var p = this.points;
 	            var p1, p2;
 	            var segments = p.length - 1;
@@ -27356,7 +27451,9 @@
 	    // Apply isometric projection
 	    if (this.orientation === "isometric") {
 	        for (i = 0; i < shapes.length; i++) {
-	            shapes[i].toIso();
+	            if (typeof shapes[i].toIso === "function") {
+	                shapes[i].toIso();
+	            }
 	        }
 	    }
 
@@ -31181,7 +31278,7 @@
 	            uvs[1],
 	            uvs[2],
 	            uvs[3],
-	            this.currentTint.toUint32()
+	            this.currentTint.toUint32(this.getGlobalAlpha())
 	        );
 
 	        // Clear font context2D
@@ -31242,7 +31339,7 @@
 
 	        var texture = this.cache.get(image);
 	        var uvs = texture.getUVs(sx + "," + sy + "," + sw + "," + sh);
-	        this.currentCompositor.addQuad(texture, dx, dy, dw, dh, uvs[0], uvs[1], uvs[2], uvs[3], this.currentTint.toUint32());
+	        this.currentCompositor.addQuad(texture, dx, dy, dw, dh, uvs[0], uvs[1], uvs[2], uvs[3], this.currentTint.toUint32(this.getGlobalAlpha()));
 	    };
 
 	    /**
@@ -31258,7 +31355,7 @@
 	     */
 	    WebGLRenderer.prototype.drawPattern = function drawPattern (pattern, x, y, width, height) {
 	        var uvs = pattern.getUVs("0,0," + width + "," + height);
-	        this.currentCompositor.addQuad(pattern, x, y, width, height, uvs[0], uvs[1], uvs[2], uvs[3], this.currentTint.toUint32());
+	        this.currentCompositor.addQuad(pattern, x, y, width, height, uvs[0], uvs[1], uvs[2], uvs[3], this.currentTint.toUint32(this.getGlobalAlpha()));
 	    };
 
 	    /**
@@ -31270,15 +31367,13 @@
 	     * @returns {WebGLRenderingContext}
 	     */
 	    WebGLRenderer.prototype.getContextGL = function getContextGL (canvas, transparent) {
+	        if ( transparent === void 0 ) transparent = true;
+
 	        if (typeof canvas === "undefined" || canvas === null) {
 	            throw new Error(
 	                "You must pass a canvas element in order to create " +
 	                "a GL context"
 	            );
-	        }
-
-	        if (typeof transparent !== "boolean") {
-	            transparent = true;
 	        }
 
 	        var attr = {
@@ -31287,7 +31382,7 @@
 	            depth : false,
 	            stencil: true,
 	            preserveDrawingBuffer : false,
-	            premultipliedAlpha: transparent,
+	            premultipliedAlpha: this.settings.premultipliedAlpha,
 	            powerPreference: this.settings.powerPreference,
 	            failIfMajorPerformanceCaveat : this.settings.failIfMajorPerformanceCaveat
 	        };
@@ -31762,6 +31857,30 @@
 	    };
 
 	    /**
+	     * Stroke a Point at the specified coordinates
+	     * @name strokePoint
+	     * @memberof WebGLRenderer
+	     * @param {number} x
+	     * @param {number} y
+	     */
+	    WebGLRenderer.prototype.strokePoint = function strokePoint (x, y) {
+	        this.strokeLine(x, y, x + 1, y + 1);
+	    };
+
+	    /**
+	     * Draw a a point at the specified coordinates
+	     * @name fillPoint
+	     * @memberof WebGLRenderer
+	     * @param {number} x
+	     * @param {number} y
+	     * @param {number} width
+	     * @param {number} height
+	     */
+	    WebGLRenderer.prototype.fillPoint = function fillPoint (x, y) {
+	        this.strokePoint(x, y);
+	    };
+
+	    /**
 	     * Reset (overrides) the renderer transformation matrix to the
 	     * identity one, and then apply the given transformation matrix.
 	     * @name setTransform
@@ -31941,6 +32060,7 @@
 	    scale : 1.0,
 	    scaleMethod : "manual",
 	    transparent : false,
+	    premultipliedAlpha: true,
 	    blendMode : "normal",
 	    antiAlias : false,
 	    failIfMajorPerformanceCaveat : true,
@@ -33105,10 +33225,10 @@
 	     * this can be overridden by the plugin
 	     * @public
 	     * @type {string}
-	     * @default "13.1.1"
+	     * @default "13.2.0"
 	     * @name plugin.Base#version
 	     */
-	    this.version = "13.1.1";
+	    this.version = "13.2.0";
 	};
 
 	/**
@@ -34338,7 +34458,7 @@
 	        this.width = this.height = 0;
 
 	        for (var i = 0; i < strings.length; i++) {
-	            this.width = Math.max(this.lineWidth(strings[i].trimRight(), context), this.width);
+	            this.width = Math.max(this.lineWidth(strings[i].trimEnd(), context), this.width);
 	            this.height += this.lineHeight();
 	        }
 	        this.width = Math.ceil(this.width);
@@ -34812,7 +34932,7 @@
 	        setContextStyle(context, this, stroke);
 
 	        for (var i = 0; i < text.length; i++) {
-	            var string = text[i].trimRight();
+	            var string = text[i].trimEnd();
 	            // draw the string
 	            context[stroke ? "strokeText" : "fillText"](string, x, y);
 	            // add leading space
@@ -35075,7 +35195,7 @@
 
 	        for (var i = 0; i < this._text.length; i++) {
 	            x = lX;
-	            var string = this._text[i].trimRight();
+	            var string = this._text[i].trimEnd();
 	            // adjust x pos based on alignment value
 	            var stringWidth = this.metrics.lineWidth(string);
 	            switch (this.textAlign) {
@@ -37802,7 +37922,7 @@
 	 * @name version
 	 * @type {string}
 	 */
-	var version = "13.1.1";
+	var version = "13.2.0";
 
 
 	/**
@@ -37861,6 +37981,7 @@
 	    pool.register("me.RoundRect", RoundRect, true);
 	    pool.register("me.Polygon", Polygon, true);
 	    pool.register("me.Line", Line, true);
+	    pool.register("me.Point", Point, true);
 	    pool.register("me.Ellipse", Ellipse, true);
 	    pool.register("me.Bounds", Bounds, true);
 
@@ -37890,6 +38011,7 @@
 	    pool.register("RoundRect", RoundRect, true);
 	    pool.register("Polygon", Polygon, true);
 	    pool.register("Line", Line, true);
+	    pool.register("Point", Point, true);
 	    pool.register("Ellipse", Ellipse, true);
 	    pool.register("Bounds", Bounds, true);
 	    pool.register("CanvasTexture", CanvasTexture, true);
@@ -37943,6 +38065,7 @@
 	exports.Particle = Particle;
 	exports.ParticleEmitter = ParticleEmitter;
 	exports.ParticleEmitterSettings = ParticleEmitterSettings;
+	exports.Point = Point;
 	exports.Pointer = Pointer;
 	exports.Polygon = Polygon;
 	exports.QuadTree = QuadTree;

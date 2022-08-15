@@ -189,10 +189,10 @@ export class BitmapTextData {
 export class Body {
     /**
      * @param {Renderable} ancestor the parent object this body is attached to
-     * @param {Rect|Rect[]|Polygon|Polygon[]|Line|Line[]|Ellipse|Ellipse[]|Bounds|Bounds[]|object} [shapes] a initial shape, list of shapes, or JSON object defining the body
+     * @param {Rect|Rect[]|Polygon|Polygon[]|Line|Line[]|Ellipse|Ellipse[]|Point|Point[]|Bounds|Bounds[]|object} [shapes] a initial shape, list of shapes, or JSON object defining the body
      * @param {Function} [onBodyUpdate] callback for when the body is updated (e.g. add/remove shapes)
      */
-    constructor(ancestor: Renderable, shapes?: Rect | Rect[] | Polygon | Polygon[] | Line | Line[] | Ellipse | Ellipse[] | Bounds | Bounds[] | object, onBodyUpdate?: Function);
+    constructor(ancestor: Renderable, shapes?: Rect | Rect[] | Polygon | Polygon[] | Line | Line[] | Ellipse | Ellipse[] | Point | Point[] | Bounds | Bounds[] | object, onBodyUpdate?: Function);
     /**
      * a reference to the parent object that contains this body,
      * or undefined if it has not been added to one.
@@ -210,9 +210,9 @@ export class Body {
     /**
      * The collision shapes of the body
      * @ignore
-     * @type {Polygon[]|Line[]|Ellipse[]}
+     * @type {Polygon[]|Line[]|Ellipse[]|Point|Point[]}
      */
-    shapes: Polygon[] | Line[] | Ellipse[];
+    shapes: Polygon[] | Line[] | Ellipse[] | Point | Point[];
     /**
      * The body collision mask, that defines what should collide with what.<br>
      * (by default will collide with all entities)
@@ -348,7 +348,7 @@ export class Body {
     /**
      * add a collision shape to this body <br>
      * (note: me.Rect objects will be converted to me.Polygon before being added)
-     * @param {Rect|Polygon|Line|Ellipse|Bounds|object} shape a shape or JSON object
+     * @param {Rect|Polygon|Line|Ellipse||Point|Point[]|Bounds|object} shape a shape or JSON object
      * @returns {number} the shape array length
      * @example
      * // add a rectangle shape
@@ -356,7 +356,7 @@ export class Body {
      * // add a shape from a JSON object
      * this.body.addShape(me.loader.getJSON("shapesdef").banana);
      */
-    addShape(shape: Rect | Polygon | Line | Ellipse | Bounds | object): number;
+    addShape(shape: any): number;
     /**
      * set the body vertices to the given one
      * @param {Vector2d[]} vertices an array of me.Vector2d points defining a convex hull
@@ -663,10 +663,10 @@ export class Bounds {
      * add the given point to the bounds definition.
      * @name addPoint
      * @memberof Bounds
-     * @param {Vector2d} v
-     * @param {Matrix2d} [m] an optional transform to apply to the given point
+     * @param {Vector2d|Point} point the point to be added to the bounds
+     * @param {Matrix2d} [m] an optional transform to apply to the given point (only if the given point is a vector)
      */
-    addPoint(v: Vector2d, m?: Matrix2d): void;
+    addPoint(point: Vector2d | Point, m?: Matrix2d): void;
     /**
      * add the given quad coordinates to this bound definition, multiplied by the given matrix
      * @name addFrame
@@ -1285,6 +1285,24 @@ export class CanvasRenderer extends Renderer {
      * @param {number} radius
      */
     fillRoundRect(x: number, y: number, width: number, height: number, radius: number): void;
+    /**
+     * Stroke a Point at the specified coordinates
+     * @name strokePoint
+     * @memberof CanvasRenderer
+     * @param {number} x
+     * @param {number} y
+     */
+    strokePoint(x: number, y: number): void;
+    /**
+     * Draw a a point at the specified coordinates
+     * @name fillPoint
+     * @memberof CanvasRenderer
+     * @param {number} x
+     * @param {number} y
+     * @param {number} width
+     * @param {number} height
+     */
+    fillPoint(x: number, y: number): void;
     /**
      * return a reference to the font 2d Context
      * @ignore
@@ -4883,6 +4901,35 @@ export namespace ParticleEmitterSettings {
 }
 /**
  * @classdesc
+ * represents a point in a 2d space
+ */
+export class Point {
+    constructor(x?: number, y?: number);
+    /**
+     * the position of the point on the horizontal axis
+     * @public
+     * @type {Number}
+     * @default 0
+     */
+    public x: number;
+    /**
+     * the position of the point on the vertical axis
+     * @public
+     * @type {Number}
+     * @default 0
+     */
+    public y: number;
+    /** @ignore */
+    onResetEvent(x?: number, y?: number): void;
+    /**
+     * clone this Point
+     * @name clone
+     * @returns {Point} new Point
+     */
+    clone(): Point;
+}
+/**
+ * @classdesc
  * a pointer object, representing a single finger on a touch enabled device.
  * @class Pointer
  * @augments Bounds
@@ -6131,7 +6178,8 @@ export class Renderer {
      * @param {HTMLCanvasElement} [options.canvas] The html canvas to draw to on screen
      * @param {boolean} [options.antiAlias=false] Whether to enable anti-aliasing, use false (default) for a pixelated effect.
      * @param {boolean} [options.failIfMajorPerformanceCaveat=true] If true, the renderer will switch to CANVAS mode if the performances of a WebGL context would be dramatically lower than that of a native application making equivalent OpenGL calls.
-     * @param {boolean} [options.transparent=false] Whether to enable transparency on the canvas (performance hit when enabled)
+     * @param {boolean} [options.transparent=false] Whether to enable transparency on the canvas
+     * @param {boolean} [options.premultipliedAlpha=true] in WebGL, whether the renderer will assume that colors have premultiplied alpha
      * @param {boolean} [options.blendMode="normal"] the default blend mode to use ("normal", "multiply")
      * @param {boolean} [options.subPixel=false] Whether to enable subpixel rendering (performance hit when enabled)
      * @param {boolean} [options.verbose=false] Enable the verbose mode that provides additional details as to what the renderer is doing
@@ -6145,6 +6193,7 @@ export class Renderer {
         antiAlias?: boolean;
         failIfMajorPerformanceCaveat?: boolean;
         transparent?: boolean;
+        premultipliedAlpha?: boolean;
         blendMode?: boolean;
         subPixel?: boolean;
         verbose?: boolean;
@@ -9081,7 +9130,8 @@ export class WebGLRenderer extends Renderer {
      * @param {HTMLCanvasElement} [options.canvas] The html canvas to draw to on screen
      * @param {boolean} [options.antiAlias=false] Whether to enable anti-aliasing
      * @param {boolean} [options.failIfMajorPerformanceCaveat=true] If true, the renderer will switch to CANVAS mode if the performances of a WebGL context would be dramatically lower than that of a native application making equivalent OpenGL calls.
-     * @param {boolean} [options.transparent=false] Whether to enable transparency on the canvas (performance hit when enabled)
+     * @param {boolean} [options.transparent=false] Whether to enable transparency on the canvas
+     * @param {boolean} [options.premultipliedAlpha=true] in WebGL, whether the renderer will assume that colors have premultiplied alp
      * @param {boolean} [options.subPixel=false] Whether to enable subpixel renderering (performance hit when enabled)
      * @param {boolean} [options.preferWebGL1=false] if true the renderer will only use WebGL 1
      * @param {string} [options.powerPreference="default"] a hint to the user agent indicating what configuration of GPU is suitable for the WebGL context ("default", "high-performance", "low-power"). To be noted that Safari and Chrome (since version 80) both default to "low-power" to save battery life and improve the user experience on these dual-GPU machines.
@@ -9096,6 +9146,7 @@ export class WebGLRenderer extends Renderer {
         antiAlias?: boolean;
         failIfMajorPerformanceCaveat?: boolean;
         transparent?: boolean;
+        premultipliedAlpha?: boolean;
         subPixel?: boolean;
         preferWebGL1?: boolean;
         powerPreference?: string;
@@ -9507,6 +9558,24 @@ export class WebGLRenderer extends Renderer {
      * @param {number} radius
      */
     fillRoundRect(x: number, y: number, width: number, height: number, radius: number): void;
+    /**
+     * Stroke a Point at the specified coordinates
+     * @name strokePoint
+     * @memberof WebGLRenderer
+     * @param {number} x
+     * @param {number} y
+     */
+    strokePoint(x: number, y: number): void;
+    /**
+     * Draw a a point at the specified coordinates
+     * @name fillPoint
+     * @memberof WebGLRenderer
+     * @param {number} x
+     * @param {number} y
+     * @param {number} width
+     * @param {number} height
+     */
+    fillPoint(x: number, y: number): void;
     /**
      * Reset (overrides) the renderer transformation matrix to the
      * identity one, and then apply the given transformation matrix.
