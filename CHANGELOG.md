@@ -12,7 +12,7 @@
 
 ### Fixed
 - WebGL: fix a regression with global opacity not being properly cascaded to texture in WebGL mode (thanks @wpernath)
-- Canvas: fix default "non transparent" mode with the canvas renderer
+- Canvas: fix the "transparent" canvas mode with the canvas renderer (thanks @wpernath)
 
 ## [13.1.1] (melonJS 2) - _2022-08-10_
 
