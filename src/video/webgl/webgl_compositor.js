@@ -500,7 +500,6 @@ class WebGLCompositor {
     clear(alpha = 0) {
         var gl = this.gl;
         gl.clearColor(0, 0, 0, alpha);
-        console.log(alpha);
         gl.clear(gl.COLOR_BUFFER_BIT | gl.STENCIL_BUFFER_BIT);
     }
 
