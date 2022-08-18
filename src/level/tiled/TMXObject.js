@@ -285,7 +285,6 @@ export default class TMXObject {
             )).rotate(this.rotation));
         } else if (this.isPoint === true) {
             shapes.push(pool.pull("Point", this.x, this.y));
-            console.log( this.x, this.y);
         } else {
             // add a polygon
             if (this.isPolygon === true) {
