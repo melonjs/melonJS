@@ -316,6 +316,15 @@ class WebGLRenderer extends Renderer {
     }
 
     /**
+     * prepare the framebuffer for drawing a new frame
+     * @name clear
+     * @memberof WebGLRenderer
+     */
+    clear() {
+        this.currentCompositor.clear(this.settings.transparent ? 0.0 : 1.0);
+    }
+
+    /**
      * Clears the gl context with the given color.
      * @name clearColor
      * @memberof WebGLRenderer
@@ -1073,8 +1082,6 @@ class WebGLRenderer extends Renderer {
             // Enable and setup GL state to write to stencil buffer
             gl.enable(gl.STENCIL_TEST);
             gl.clear(gl.STENCIL_BUFFER_BIT);
-
-
         }
 
         this.maskLevel++;

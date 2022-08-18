@@ -495,10 +495,12 @@ class WebGLCompositor {
      * Clear the frame buffer
      * @name clear
      * @memberof WebGLCompositor
+     * @param {number} [alpha = 0.0] - the alpha value used when clearing the framebuffer
      */
-    clear() {
+    clear(alpha = 0) {
         var gl = this.gl;
-        gl.clearColor(0, 0, 0, 0);
+        gl.clearColor(0, 0, 0, alpha);
+        console.log(alpha);
         gl.clear(gl.COLOR_BUFFER_BIT | gl.STENCIL_BUFFER_BIT);
     }
 
@@ -506,12 +508,12 @@ class WebGLCompositor {
      * Specify the color values used when clearing color buffers. The values are clamped between 0 and 1.
      * @name clearColor
      * @memberof WebGLCompositor
-     * @param {number} [r = 0.0] - the red color value used when the color buffers are cleared
-     * @param {number} [g = 0.0] - the green color value used when the color buffers are cleared
-     * @param {number} [b = 0.0] - the blue color value used when the color buffers are cleared
-     * @param {number} [a = 0.0] - the alpha color value used when the color buffers are cleared
+     * @param {number} [r = 0] - the red color value used when the color buffers are cleared
+     * @param {number} [g = 0] - the green color value used when the color buffers are cleared
+     * @param {number} [b = 0] - the blue color value used when the color buffers are cleared
+     * @param {number} [a = 0] - the alpha color value used when the color buffers are cleared
      */
-    clearColor(r = 0.0, g = 0.0, b = 0.0, a = 0.0) {
+    clearColor(r = 0, g = 0, b = 0, a = 0) {
         var gl = this.gl;
         gl.clearColor(r, g, b, a);
         gl.clear(gl.COLOR_BUFFER_BIT);
