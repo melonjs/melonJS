@@ -23,7 +23,7 @@ class WebGLRenderer extends Renderer {
      * @param {boolean} [options.antiAlias=false] Whether to enable anti-aliasing
      * @param {boolean} [options.failIfMajorPerformanceCaveat=true] If true, the renderer will switch to CANVAS mode if the performances of a WebGL context would be dramatically lower than that of a native application making equivalent OpenGL calls.
      * @param {boolean} [options.transparent=false] Whether to enable transparency on the canvas
-     * @param {boolean} [options.premultipliedAlpha=true] in WebGL, whether the renderer will assume that colors have premultiplied alp
+     * @param {boolean} [options.premultipliedAlpha=true] in WebGL, whether the renderer will assume that colors have premultiplied alpha when canvas transparency is enabled
      * @param {boolean} [options.subPixel=false] Whether to enable subpixel renderering (performance hit when enabled)
      * @param {boolean} [options.preferWebGL1=false] if true the renderer will only use WebGL 1
      * @param {string} [options.powerPreference="default"] a hint to the user agent indicating what configuration of GPU is suitable for the WebGL context ("default", "high-performance", "low-power"). To be noted that Safari and Chrome (since version 80) both default to "low-power" to save battery life and improve the user experience on these dual-GPU machines.
@@ -476,7 +476,7 @@ class WebGLRenderer extends Renderer {
             depth : false,
             stencil: true,
             preserveDrawingBuffer : false,
-            premultipliedAlpha: this.settings.premultipliedAlpha,
+            premultipliedAlpha: transparent ? this.settings.premultipliedAlpha : false,
             powerPreference: this.settings.powerPreference,
             failIfMajorPerformanceCaveat : this.settings.failIfMajorPerformanceCaveat
         };
