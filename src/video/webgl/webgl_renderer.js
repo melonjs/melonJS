@@ -335,11 +335,6 @@ class WebGLRenderer extends Renderer {
         }
         // clear gl context with the specified color
         this.currentCompositor.clearColor(glArray[0], glArray[1], glArray[2], (opaque === true) ? 1.0 : glArray[3]);
-        this.currentCompositor.clear();
-
-        // restore default clear Color black
-        this.currentCompositor.clearColor(0.0, 0.0, 0.0, 0.0);
-
     }
 
     /**
