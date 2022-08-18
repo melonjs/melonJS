@@ -455,14 +455,14 @@ class WebGLRenderer extends Renderer {
     }
 
     /**
-     * Returns the WebGL Context object of the given Canvas
+     * Returns the WebGL Context object of the given canvas element
      * @name getContextGL
      * @memberof WebGLRenderer
      * @param {HTMLCanvasElement} canvas
-     * @param {boolean} [transparent=true] use false to disable transparency
+     * @param {boolean} [transparent=false] use true to enable transparency
      * @returns {WebGLRenderingContext}
      */
-    getContextGL(canvas, transparent = true) {
+    getContextGL(canvas, transparent = false) {
         if (typeof canvas === "undefined" || canvas === null) {
             throw new Error(
                 "You must pass a canvas element in order to create " +
