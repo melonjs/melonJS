@@ -42,56 +42,38 @@ class GLShader {
 
         /**
          * the active gl rendering context
-         * @public
          * @type {WebGLRenderingContext}
-         * @name gl
-         * @memberof GLShader
          */
         this.gl = gl;
 
         /**
          * the vertex shader source code
-         * @public
          * @type {string}
-         * @name vertex
-         * @memberof GLShader
          */
         this.vertex = setPrecision(minify(vertex), precision || device.getMaxShaderPrecision(this.gl));
 
         /**
          * the fragment shader source code
-         * @public
          * @type {string}
-         * @name vertex
-         * @memberof GLShader
          */
         this.fragment = setPrecision(minify(fragment), precision || device.getMaxShaderPrecision(this.gl));
 
         /**
          * the location attributes of the shader
-         * @public
          * @type {GLint[]}
-         * @name attributes
-         * @memberof GLShader
          */
         this.attributes = extractAttributes(this.gl, this);
 
 
         /**
          * a reference to the shader program (once compiled)
-         * @public
          * @type {WebGLProgram}
-         * @name program
-         * @memberof GLShader
          */
         this.program = compileProgram(this.gl, this.vertex, this.fragment, this.attributes);
 
         /**
          * the uniforms of the shader
-         * @public
          * @type {object}
-         * @name uniforms
-         * @memberof GLShader
          */
         this.uniforms = extractUniforms(this.gl, this);
 
@@ -101,8 +83,6 @@ class GLShader {
 
     /**
      * Installs this shader program as part of current rendering state
-     * @name bind
-     * @memberof GLShader
      */
     bind() {
         this.gl.useProgram(this.program);
@@ -110,8 +90,6 @@ class GLShader {
 
     /**
      * returns the location of an attribute variable in this shader program
-     * @name getAttribLocation
-     * @memberof GLShader
      * @param {string} name the name of the attribute variable whose location to get.
      * @returns {GLint} number indicating the location of the variable name if found. Returns -1 otherwise
      */
@@ -126,8 +104,6 @@ class GLShader {
 
     /**
      * Set the uniform to the given value
-     * @name setUniform
-     * @memberof GLShader
      * @param {string} name the uniform name
      * @param {object|Float32Array} value the value to assign to that uniform
      * @example
@@ -148,8 +124,6 @@ class GLShader {
 
     /**
      * activate the given vertex attribute for this shader
-     * @name setVertexAttributes
-     * @memberof GLShader
      * @param {WebGLRenderingContext} gl the current WebGL rendering context
      * @param {object[]} attributes an array of vertex attributes
      * @param {number} vertexByteSize the size of a single vertex in bytes
@@ -171,8 +145,6 @@ class GLShader {
 
     /**
      * destroy this shader objects resources (program, attributes, uniforms)
-     * @name destroy
-     * @memberof GLShader
      */
     destroy() {
         this.uniforms = null;

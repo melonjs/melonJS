@@ -37,26 +37,20 @@ class Renderer {
         /**
          * The given constructor options
          * @public
-         * @name settings
-         * @memberof Renderer#
          * @type {object}
          */
         this.settings = options;
 
         /**
          * true if the current rendering context is valid
-         * @name isContextValid
-         * @memberof Renderer#
          * @default true
-         * type {boolean}
+         * @type {boolean}
          */
         this.isContextValid = true;
 
         /**
          * The Path2D instance used by the renderer to draw primitives
-         * @name path2D
          * @type {Path2D}
-         * @memberof Renderer#
          */
         this.path2D = new Path2D();
 
@@ -108,23 +102,16 @@ class Renderer {
 
     /**
      * prepare the framebuffer for drawing a new frame
-     * @name clear
-     * @memberof Renderer
      */
-    clear() {
-    }
+    clear() {}
 
     /**
      * render the main framebuffer on screen
-     * @name flush
-     * @memberof Renderer
      */
     flush() {}
 
     /**
      * Reset context state
-     * @name reset
-     * @memberof Renderer
      */
     reset() {
         this.resetTransform();
@@ -141,8 +128,6 @@ class Renderer {
 
     /**
      * return a reference to the canvas which this renderer draws to
-     * @name getCanvas
-     * @memberof Renderer
      * @returns {HTMLCanvasElement}
      */
     getCanvas() {
@@ -152,8 +137,6 @@ class Renderer {
 
     /**
      * return a reference to this renderer canvas corresponding Context
-     * @name getContext
-     * @memberof Renderer
      * @returns {CanvasRenderingContext2D|WebGLRenderingContext}
      */
     getContext() {
@@ -162,8 +145,6 @@ class Renderer {
 
     /**
      * returns the current blend mode for this renderer
-     * @name getBlendMode
-     * @memberof Renderer
      * @returns {string} blend mode
      */
     getBlendMode() {
@@ -173,8 +154,6 @@ class Renderer {
     /**
      * Returns the 2D Context object of the given Canvas<br>
      * Also configures anti-aliasing and blend modes based on constructor options.
-     * @name getContext2d
-     * @memberof Renderer
      * @param {HTMLCanvasElement} canvas
      * @param {boolean} [transparent=true] use false to disable transparency
      * @returns {CanvasRenderingContext2D}
@@ -210,8 +189,6 @@ class Renderer {
 
     /**
      * return the width of the system Canvas
-     * @name getWidth
-     * @memberof Renderer
      * @returns {number}
      */
     getWidth() {
@@ -220,8 +197,6 @@ class Renderer {
 
     /**
      * return the height of the system Canvas
-     * @name getHeight
-     * @memberof Renderer
      * @returns {number} height of the system Canvas
      */
     getHeight() {
@@ -230,8 +205,6 @@ class Renderer {
 
     /**
      * get the current fill & stroke style color.
-     * @name getColor
-     * @memberof Renderer
      * @returns {Color} current global color
      */
     getColor() {
@@ -240,8 +213,6 @@ class Renderer {
 
     /**
      * return the current global alpha
-     * @name globalAlpha
-     * @memberof Renderer
      * @returns {number}
      */
     globalAlpha() {
@@ -250,8 +221,6 @@ class Renderer {
 
     /**
      * check if the given rect or bounds overlaps with the renderer screen coordinates
-     * @name overlaps
-     * @memberof Renderer
      * @param {Rect|Bounds} bounds
      * @returns {boolean} true if overlaps
      */
@@ -265,8 +234,6 @@ class Renderer {
 
     /**
      * resizes the system canvas
-     * @name resize
-     * @memberof Renderer
      * @param {number} width new width of the canvas
      * @param {number} height new height of the canvas
      */
@@ -286,8 +253,6 @@ class Renderer {
 
     /**
      * enable/disable image smoothing (scaling interpolation) for the given context
-     * @name setAntiAlias
-     * @memberof Renderer
      * @param {CanvasRenderingContext2D} context
      * @param {boolean} [enable=false]
      */
@@ -315,8 +280,6 @@ class Renderer {
 
     /**
      * set/change the current projection matrix (WebGL only)
-     * @name setProjection
-     * @memberof Renderer
      * @param {Matrix3d} matrix
      */
     setProjection(matrix) {
@@ -325,8 +288,6 @@ class Renderer {
 
     /**
      * stroke the given shape
-     * @name stroke
-     * @memberof Renderer
      * @param {Rect|RoundRect|Polygon|Line|Ellipse} shape a shape object to stroke
      * @param {boolean} [fill=false] fill the shape with the current color if true
      */
@@ -372,8 +333,6 @@ class Renderer {
 
     /**
      * tint the given image or canvas using the given color
-     * @name tint
-     * @memberof Renderer
      * @param {HTMLImageElement|HTMLCanvasElement|OffscreenCanvas} src the source image to be tinted
      * @param {Color|string} color the color that will be used to tint the image
      * @param {string} [mode="multiply"] the composition mode used to tint the image
@@ -402,8 +361,6 @@ class Renderer {
      * A mask limits rendering elements to the shape and position of the given mask object.
      * So, if the renderable is larger than the mask, only the intersecting part of the renderable will be visible.
      * Mask are not preserved through renderer context save and restore.
-     * @name setMask
-     * @memberof Renderer
      * @param {Rect|RoundRect|Polygon|Line|Ellipse} [mask] the shape defining the mask to be applied
      * @param {boolean} [invert=false] either the given shape should define what is visible (default) or the opposite
      */
@@ -412,16 +369,12 @@ class Renderer {
 
     /**
      * disable (remove) the rendering mask set through setMask.
-     * @name clearMask
      * @see Renderer#setMask
-     * @memberof Renderer
      */
     clearMask() {}
 
     /**
      * set a coloring tint for sprite based renderables
-     * @name setTint
-     * @memberof Renderer
      * @param {Color} tint the tint color
      * @param {number} [alpha] an alpha value to be applied to the tint
      */
@@ -433,9 +386,7 @@ class Renderer {
 
     /**
      * clear the rendering tint set through setTint.
-     * @name clearTint
      * @see Renderer#setTint
-     * @memberof Renderer
      */
     clearTint() {
         // reset to default
