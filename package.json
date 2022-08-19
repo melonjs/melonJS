@@ -75,7 +75,7 @@
     "karma-html-detailed-reporter": "^2.1.0",
     "karma-jasmine": "^5.1.0",
     "karma-nyan-reporter": "0.2.5",
-    "rollup": "^2.78.0",
+    "rollup": "^2.78.1",
     "rollup-plugin-bundle-size": "^1.0.3",
     "rollup-plugin-string": "^3.0.0",
     "terser": "^5.14.2",
