@@ -6543,56 +6543,38 @@
 
 	    /**
 	     * the active gl rendering context
-	     * @public
 	     * @type {WebGLRenderingContext}
-	     * @name gl
-	     * @memberof GLShader
 	     */
 	    this.gl = gl;
 
 	    /**
 	     * the vertex shader source code
-	     * @public
 	     * @type {string}
-	     * @name vertex
-	     * @memberof GLShader
 	     */
 	    this.vertex = setPrecision(minify(vertex), precision || getMaxShaderPrecision(this.gl));
 
 	    /**
 	     * the fragment shader source code
-	     * @public
 	     * @type {string}
-	     * @name vertex
-	     * @memberof GLShader
 	     */
 	    this.fragment = setPrecision(minify(fragment), precision || getMaxShaderPrecision(this.gl));
 
 	    /**
 	     * the location attributes of the shader
-	     * @public
 	     * @type {GLint[]}
-	     * @name attributes
-	     * @memberof GLShader
 	     */
 	    this.attributes = extractAttributes(this.gl, this);
 
 
 	    /**
 	     * a reference to the shader program (once compiled)
-	     * @public
 	     * @type {WebGLProgram}
-	     * @name program
-	     * @memberof GLShader
 	     */
 	    this.program = compileProgram(this.gl, this.vertex, this.fragment, this.attributes);
 
 	    /**
 	     * the uniforms of the shader
-	     * @public
 	     * @type {object}
-	     * @name uniforms
-	     * @memberof GLShader
 	     */
 	    this.uniforms = extractUniforms(this.gl, this);
 
@@ -6602,8 +6584,6 @@
 
 	/**
 	 * Installs this shader program as part of current rendering state
-	 * @name bind
-	 * @memberof GLShader
 	 */
 	GLShader.prototype.bind = function bind () {
 	    this.gl.useProgram(this.program);
@@ -6611,8 +6591,6 @@
 
 	/**
 	 * returns the location of an attribute variable in this shader program
-	 * @name getAttribLocation
-	 * @memberof GLShader
 	 * @param {string} name the name of the attribute variable whose location to get.
 	 * @returns {GLint} number indicating the location of the variable name if found. Returns -1 otherwise
 	 */
@@ -6627,8 +6605,6 @@
 
 	/**
 	 * Set the uniform to the given value
-	 * @name setUniform
-	 * @memberof GLShader
 	 * @param {string} name the uniform name
 	 * @param {object|Float32Array} value the value to assign to that uniform
 	 * @example
@@ -6649,8 +6625,6 @@
 
 	/**
 	 * activate the given vertex attribute for this shader
-	 * @name setVertexAttributes
-	 * @memberof GLShader
 	 * @param {WebGLRenderingContext} gl the current WebGL rendering context
 	 * @param {object[]} attributes an array of vertex attributes
 	 * @param {number} vertexByteSize the size of a single vertex in bytes
@@ -6672,8 +6646,6 @@
 
 	/**
 	 * destroy this shader objects resources (program, attributes, uniforms)
-	 * @name destroy
-	 * @memberof GLShader
 	 */
 	GLShader.prototype.destroy = function destroy () {
 	    this.uniforms = null;
@@ -6870,44 +6842,37 @@
 
 	    /**
 	     * a reference to the active WebGL shader
-	     * @name activeShader
-	     * @memberof WebGLCompositor
 	     * @type {GLShader}
 	     */
 	    this.activeShader = null;
 
 	    /**
 	     * primitive type to render (gl.POINTS, gl.LINE_STRIP, gl.LINE_LOOP, gl.LINES, gl.TRIANGLE_STRIP, gl.TRIANGLE_FAN, gl.TRIANGLES)
-	     * @name mode
-	     * @see WebGLCompositor
-	     * @memberof WebGLCompositor
+	     * @type {number}
 	     * @default gl.TRIANGLES
 	     */
 	    this.mode = gl.TRIANGLES;
 
 	    /**
 	     * an array of vertex attribute properties
-	     * @name attributes
 	     * @see WebGLCompositor.addAttribute
-	     * @memberof WebGLCompositor
+	     * @type {Array}
 	     */
 	    this.attributes = [];
 
 	    /**
 	     * the size of a single vertex in bytes
 	     * (will automatically be calculated as attributes definitions are added)
-	     * @name vertexByteSize
 	     * @see WebGLCompositor.addAttribute
-	     * @memberof WebGLCompositor
+	     * @type {number}
 	     */
 	    this.vertexByteSize = 0;
 
 	    /**
 	     * the size of a single vertex in floats
 	     * (will automatically be calculated as attributes definitions are added)
-	     * @name vertexSize
 	     * @see WebGLCompositor.addAttribute
-	     * @memberof WebGLCompositor
+	     * @type {number}
 	     */
 	    this.vertexSize = 0;
 
@@ -6968,8 +6933,6 @@
 
 	/**
 	 * add vertex attribute property definition to the compositor
-	 * @name addAttribute
-	 * @memberof WebGLCompositor
 	 * @param {string} name name of the attribute in the vertex shader
 	 * @param {number} size number of components per vertex attribute. Must be 1, 2, 3, or 4.
 	 * @param {GLenum} type data type of each component in the array
@@ -7015,8 +6978,6 @@
 
 	/**
 	 * Sets the viewport
-	 * @name setViewport
-	 * @memberof WebGLCompositor
 	 * @param {number} x x position of viewport
 	 * @param {number} y y position of viewport
 	 * @param {number} w width of viewport
@@ -7028,8 +6989,6 @@
 
 	/**
 	 * Create a WebGL texture from an image
-	 * @name createTexture2D
-	 * @memberof WebGLCompositor
 	 * @param {number} unit Destination texture unit
 	 * @param {Image|HTMLCanvasElement|ImageData|Uint8Array[]|Float32Array[]} image Source image
 	 * @param {number} filter gl.LINEAR or gl.NEAREST
@@ -7076,8 +7035,6 @@
 
 	/**
 	 * delete the given WebGL texture
-	 * @name bindTexture2D
-	 * @memberof WebGLCompositor
 	 * @param {WebGLTexture} [texture] a WebGL texture to delete
 	 * @param {number} [unit] Texture unit to delete
 	 */
@@ -7088,8 +7045,6 @@
 
 	/**
 	 * returns the WebGL texture associated to the given texture unit
-	 * @name bindTexture2D
-	 * @memberof WebGLCompositor
 	 * @param {number} unit Texture unit to which a texture is bound
 	 * @returns {WebGLTexture} texture a WebGL texture
 	 */
@@ -7099,8 +7054,6 @@
 
 	/**
 	 * assign the given WebGL texture to the current batch
-	 * @name bindTexture2D
-	 * @memberof WebGLCompositor
 	 * @param {WebGLTexture} texture a WebGL texture
 	 * @param {number} unit Texture unit to which the given texture is bound
 	 */
@@ -7126,8 +7079,6 @@
 
 	/**
 	 * unbind the given WebGL texture, forcing it to be reuploaded
-	 * @name unbindTexture2D
-	 * @memberof WebGLCompositor
 	 * @param {WebGLTexture} [texture] a WebGL texture
 	 * @param {number} [unit] a WebGL texture
 	 * @returns {number} unit the unit number that was associated with the given texture
@@ -7174,8 +7125,6 @@
 
 	/**
 	 * set/change the current projection matrix
-	 * @name setProjection
-	 * @memberof WebGLCompositor
 	 * @param {Matrix3d} matrix
 	 */
 	WebGLCompositor.prototype.setProjection = function setProjection (matrix) {
@@ -7184,9 +7133,7 @@
 
 	/**
 	 * Select the shader to use for compositing
-	 * @name useShader
 	 * @see GLShader
-	 * @memberof WebGLCompositor
 	 * @param {GLShader} shader a reference to a GLShader instance
 	 */
 	WebGLCompositor.prototype.useShader = function useShader (shader) {
@@ -7201,8 +7148,6 @@
 
 	/**
 	 * Add a textured quad
-	 * @name addQuad
-	 * @memberof WebGLCompositor
 	 * @param {TextureAtlas} texture Source texture atlas
 	 * @param {number} x Destination x-coordinate
 	 * @param {number} y Destination y-coordinate
@@ -7258,7 +7203,6 @@
 	/**
 	 * Flush batched texture operations to the GPU
 	 * @param {number} [mode=gl.TRIANGLES] the GL drawing mode
-	 * @memberof WebGLCompositor
 	 */
 	WebGLCompositor.prototype.flush = function flush (mode) {
 	        if ( mode === void 0 ) mode = this.mode;
@@ -7286,8 +7230,6 @@
 
 	/**
 	 * Draw an array of vertices
-	 * @name drawVertices
-	 * @memberof WebGLCompositor
 	 * @param {GLenum} mode primitive type to render (gl.POINTS, gl.LINE_STRIP, gl.LINE_LOOP, gl.LINES, gl.TRIANGLE_STRIP, gl.TRIANGLE_FAN, gl.TRIANGLES)
 	 * @param {Vector2d[]} verts vertices
 	 * @param {number} [vertexCount=verts.length] amount of points defined in the points array
@@ -7316,26 +7258,33 @@
 	};
 
 	/**
-	 * Specify the color values used when clearing color buffers. The values are clamped between 0 and 1.
-	 * @name clearColor
-	 * @memberof WebGLCompositor
-	 * @param {number} [r=0] - the red color value used when the color buffers are cleared
-	 * @param {number} [g=0] - the green color value used when the color buffers are cleared
-	 * @param {number} [b=0] - the blue color value used when the color buffers are cleared
-	 * @param {number} [a=0] - the alpha color value used when the color buffers are cleared
+	 * Clear the frame buffer
+	 * @param {number} [alpha = 0.0] - the alpha value used when clearing the framebuffer
 	 */
-	WebGLCompositor.prototype.clearColor = function clearColor (r, g, b, a) {
-	    this.gl.clearColor(r, g, b, a);
+	WebGLCompositor.prototype.clear = function clear (alpha) {
+	        if ( alpha === void 0 ) alpha = 0;
+
+	    var gl = this.gl;
+	    gl.clearColor(0, 0, 0, alpha);
+	    gl.clear(gl.COLOR_BUFFER_BIT | gl.STENCIL_BUFFER_BIT);
 	};
 
 	/**
-	 * Clear the frame buffer
-	 * @name clear
-	 * @memberof WebGLCompositor
+	 * Specify the color values used when clearing color buffers. The values are clamped between 0 and 1.
+	 * @param {number} [r = 0] - the red color value used when the color buffers are cleared
+	 * @param {number} [g = 0] - the green color value used when the color buffers are cleared
+	 * @param {number} [b = 0] - the blue color value used when the color buffers are cleared
+	 * @param {number} [a = 0] - the alpha color value used when the color buffers are cleared
 	 */
-	WebGLCompositor.prototype.clear = function clear () {
+	WebGLCompositor.prototype.clearColor = function clearColor (r, g, b, a) {
+	        if ( r === void 0 ) r = 0;
+	        if ( g === void 0 ) g = 0;
+	        if ( b === void 0 ) b = 0;
+	        if ( a === void 0 ) a = 0;
+
 	    var gl = this.gl;
-	    gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT | gl.STENCIL_BUFFER_BIT);
+	    gl.clearColor(r, g, b, a);
+	    gl.clear(gl.COLOR_BUFFER_BIT);
 	};
 
 	var earcut$1 = {exports: {}};
@@ -10186,26 +10135,20 @@
 	    /**
 	     * The given constructor options
 	     * @public
-	     * @name settings
-	     * @memberof Renderer#
 	     * @type {object}
 	     */
 	    this.settings = options;
 
 	    /**
 	     * true if the current rendering context is valid
-	     * @name isContextValid
-	     * @memberof Renderer#
 	     * @default true
-	     * type {boolean}
+	     * @type {boolean}
 	     */
 	    this.isContextValid = true;
 
 	    /**
 	     * The Path2D instance used by the renderer to draw primitives
-	     * @name path2D
 	     * @type {Path2D}
-	     * @memberof Renderer#
 	     */
 	    this.path2D = new Path2D();
 
@@ -10257,23 +10200,16 @@
 
 	/**
 	 * prepare the framebuffer for drawing a new frame
-	 * @name clear
-	 * @memberof Renderer
 	 */
-	Renderer.prototype.clear = function clear () {
-	};
+	Renderer.prototype.clear = function clear () {};
 
 	/**
 	 * render the main framebuffer on screen
-	 * @name flush
-	 * @memberof Renderer
 	 */
 	Renderer.prototype.flush = function flush () {};
 
 	/**
 	 * Reset context state
-	 * @name reset
-	 * @memberof Renderer
 	 */
 	Renderer.prototype.reset = function reset () {
 	    this.resetTransform();
@@ -10290,8 +10226,6 @@
 
 	/**
 	 * return a reference to the canvas which this renderer draws to
-	 * @name getCanvas
-	 * @memberof Renderer
 	 * @returns {HTMLCanvasElement}
 	 */
 	Renderer.prototype.getCanvas = function getCanvas () {
@@ -10301,8 +10235,6 @@
 
 	/**
 	 * return a reference to this renderer canvas corresponding Context
-	 * @name getContext
-	 * @memberof Renderer
 	 * @returns {CanvasRenderingContext2D|WebGLRenderingContext}
 	 */
 	Renderer.prototype.getContext = function getContext () {
@@ -10311,8 +10243,6 @@
 
 	/**
 	 * returns the current blend mode for this renderer
-	 * @name getBlendMode
-	 * @memberof Renderer
 	 * @returns {string} blend mode
 	 */
 	Renderer.prototype.getBlendMode = function getBlendMode () {
@@ -10322,8 +10252,6 @@
 	/**
 	 * Returns the 2D Context object of the given Canvas<br>
 	 * Also configures anti-aliasing and blend modes based on constructor options.
-	 * @name getContext2d
-	 * @memberof Renderer
 	 * @param {HTMLCanvasElement} canvas
 	 * @param {boolean} [transparent=true] use false to disable transparency
 	 * @returns {CanvasRenderingContext2D}
@@ -10359,8 +10287,6 @@
 
 	/**
 	 * return the width of the system Canvas
-	 * @name getWidth
-	 * @memberof Renderer
 	 * @returns {number}
 	 */
 	Renderer.prototype.getWidth = function getWidth () {
@@ -10369,8 +10295,6 @@
 
 	/**
 	 * return the height of the system Canvas
-	 * @name getHeight
-	 * @memberof Renderer
 	 * @returns {number} height of the system Canvas
 	 */
 	Renderer.prototype.getHeight = function getHeight () {
@@ -10379,8 +10303,6 @@
 
 	/**
 	 * get the current fill & stroke style color.
-	 * @name getColor
-	 * @memberof Renderer
 	 * @returns {Color} current global color
 	 */
 	Renderer.prototype.getColor = function getColor () {
@@ -10389,8 +10311,6 @@
 
 	/**
 	 * return the current global alpha
-	 * @name globalAlpha
-	 * @memberof Renderer
 	 * @returns {number}
 	 */
 	Renderer.prototype.globalAlpha = function globalAlpha () {
@@ -10399,8 +10319,6 @@
 
 	/**
 	 * check if the given rect or bounds overlaps with the renderer screen coordinates
-	 * @name overlaps
-	 * @memberof Renderer
 	 * @param {Rect|Bounds} bounds
 	 * @returns {boolean} true if overlaps
 	 */
@@ -10414,8 +10332,6 @@
 
 	/**
 	 * resizes the system canvas
-	 * @name resize
-	 * @memberof Renderer
 	 * @param {number} width new width of the canvas
 	 * @param {number} height new height of the canvas
 	 */
@@ -10435,8 +10351,6 @@
 
 	/**
 	 * enable/disable image smoothing (scaling interpolation) for the given context
-	 * @name setAntiAlias
-	 * @memberof Renderer
 	 * @param {CanvasRenderingContext2D} context
 	 * @param {boolean} [enable=false]
 	 */
@@ -10464,8 +10378,6 @@
 
 	/**
 	 * set/change the current projection matrix (WebGL only)
-	 * @name setProjection
-	 * @memberof Renderer
 	 * @param {Matrix3d} matrix
 	 */
 	Renderer.prototype.setProjection = function setProjection (matrix) {
@@ -10474,8 +10386,6 @@
 
 	/**
 	 * stroke the given shape
-	 * @name stroke
-	 * @memberof Renderer
 	 * @param {Rect|RoundRect|Polygon|Line|Ellipse} shape a shape object to stroke
 	 * @param {boolean} [fill=false] fill the shape with the current color if true
 	 */
@@ -10521,8 +10431,6 @@
 
 	/**
 	 * tint the given image or canvas using the given color
-	 * @name tint
-	 * @memberof Renderer
 	 * @param {HTMLImageElement|HTMLCanvasElement|OffscreenCanvas} src the source image to be tinted
 	 * @param {Color|string} color the color that will be used to tint the image
 	 * @param {string} [mode="multiply"] the composition mode used to tint the image
@@ -10551,8 +10459,6 @@
 	 * A mask limits rendering elements to the shape and position of the given mask object.
 	 * So, if the renderable is larger than the mask, only the intersecting part of the renderable will be visible.
 	 * Mask are not preserved through renderer context save and restore.
-	 * @name setMask
-	 * @memberof Renderer
 	 * @param {Rect|RoundRect|Polygon|Line|Ellipse} [mask] the shape defining the mask to be applied
 	 * @param {boolean} [invert=false] either the given shape should define what is visible (default) or the opposite
 	 */
@@ -10561,16 +10467,12 @@
 
 	/**
 	 * disable (remove) the rendering mask set through setMask.
-	 * @name clearMask
 	 * @see Renderer#setMask
-	 * @memberof Renderer
 	 */
 	Renderer.prototype.clearMask = function clearMask () {};
 
 	/**
 	 * set a coloring tint for sprite based renderables
-	 * @name setTint
-	 * @memberof Renderer
 	 * @param {Color} tint the tint color
 	 * @param {number} [alpha] an alpha value to be applied to the tint
 	 */
@@ -10584,9 +10486,7 @@
 
 	/**
 	 * clear the rendering tint set through setTint.
-	 * @name clearTint
 	 * @see Renderer#setTint
-	 * @memberof Renderer
 	 */
 	Renderer.prototype.clearTint = function clearTint () {
 	    // reset to default
@@ -18142,21 +18042,14 @@
 
 	        /**
 	         * If true then physic collision and input events will not impact this renderable
-	         * @public
 	         * @type {boolean}
 	         * @default true
-	         * @name isKinematic
-	         * @memberof Renderable
 	         */
 	        this.isKinematic = true;
 
 	        /**
 	         * the renderable physic body
-	         * @public
 	         * @type {Body}
-	         * @see Body
-	         * @name body
-	         * @memberof Renderable#
 	         * @example
 	         *  // define a new Player Class
 	         *  class PlayerEntity extends me.Sprite {
@@ -18194,10 +18087,7 @@
 	        if (typeof this.currentTransform === "undefined") {
 	            /**
 	             * the renderable default transformation matrix
-	             * @public
 	             * @type {Matrix2d}
-	             * @name currentTransform
-	             * @memberof Renderable#
 	             */
 	            this.currentTransform = pool.pull("Matrix2d");
 	        }
@@ -18207,20 +18097,14 @@
 	        * (G)ame (U)nique (Id)entifier" <br>
 	        * a GUID will be allocated for any renderable object added <br>
 	        * to an object container (including the `me.game.world` container)
-	        * @public
 	        * @type {string}
-	        * @name GUID
-	        * @memberof Renderable
 	        */
 	        this.GUID = undefined;
 
 	        /**
 	         * an event handler that is called when the renderable leave or enter a camera viewport
-	         * @public
 	         * @type {Function}
 	         * @default undefined
-	         * @name onVisibilityChange
-	         * @memberof Renderable#
 	         * @example
 	         * this.onVisibilityChange = function(inViewport) {
 	         *     if (inViewport === true) {
@@ -18232,42 +18116,30 @@
 
 	        /**
 	         * Whether the renderable object will always update, even when outside of the viewport<br>
-	         * @public
 	         * @type {boolean}
 	         * @default false
-	         * @name alwaysUpdate
-	         * @memberof Renderable
 	         */
 	        this.alwaysUpdate = false;
 
 	        /**
 	         * Whether to update this object when the game is paused.
-	         * @public
 	         * @type {boolean}
 	         * @default false
-	         * @name updateWhenPaused
-	         * @memberof Renderable
 	         */
 	        this.updateWhenPaused = false;
 
 	        /**
 	         * make the renderable object persistent over level changes<br>
-	         * @public
 	         * @type {boolean}
 	         * @default false
-	         * @name isPersistent
-	         * @memberof Renderable
 	         */
 	        this.isPersistent = false;
 
 	        /**
 	         * If true, this renderable will be rendered using screen coordinates,
 	         * as opposed to world coordinates. Use this, for example, to define UI elements.
-	         * @public
 	         * @type {boolean}
 	         * @default false
-	         * @name floating
-	         * @memberof Renderable
 	         */
 	        this.floating = false;
 
@@ -18282,11 +18154,8 @@
 	             * <br>
 	             * <i><b>Note:</b> Object created through Tiled will have their anchorPoint set to (0, 0) to match Tiled Level editor implementation.
 	             * To specify a value through Tiled, use a json expression like `json:{"x":0.5,"y":0.5}`. </i>
-	             * @public
 	             * @type {ObservableVector2d}
 	             * @default <0.5,0.5>
-	             * @name anchorPoint
-	             * @memberof Renderable#
 	             */
 	            this.anchorPoint = pool.pull("ObservableVector2d", 0.5, 0.5, { onUpdate: this.onAnchorUpdate, scope: this });
 	        }
@@ -18294,11 +18163,8 @@
 	        /**
 	         * When enabled, an object container will automatically apply
 	         * any defined transformation before calling the child draw method.
-	         * @public
 	         * @type {boolean}
 	         * @default true
-	         * @name autoTransform
-	         * @memberof Renderable
 	         * @example
 	         * // enable "automatic" transformation when the object is activated
 	         * onActivateEvent: function () {
@@ -18318,30 +18184,23 @@
 	         * Set to zero if you do not wish an object to be drawn
 	         * @see Renderable#setOpacity
 	         * @see Renderable#getOpacity
-	         * @public
 	         * @type {number}
 	         * @default 1.0
-	         * @name Renderable#alpha
 	         */
 	        this.alpha = 1.0;
 
 	        /**
 	         * a reference to the parent object that contains this renderable
-	         * @public
 	         * @type {Container|Entity}
 	         * @default undefined
-	         * @name Renderable#ancestor
 	         */
 	        this.ancestor = undefined;
 
 	        /**
 	         * A mask limits rendering elements to the shape and position of the given mask object.
 	         * So, if the renderable is larger than the mask, only the intersecting part of the renderable will be visible.
-	         * @public
 	         * @type {Rect|RoundRect|Polygon|Line|Ellipse}
-	         * @name mask
 	         * @default undefined
-	         * @memberof Renderable#
 	         * @example
 	         * // apply a mask in the shape of a Star
 	         * myNPCSprite.mask = new me.Polygon(myNPCSprite.width / 2, 0, [
@@ -18362,11 +18221,8 @@
 
 	        /**
 	         * define a tint for this renderable. a (255, 255, 255) r, g, b value will remove the tint effect.
-	         * @public
 	         * @type {Color}
-	         * @name tint
 	         * @default (255, 255, 255)
-	         * @memberof Renderable#
 	         * @example
 	         * // add a red tint to this renderable
 	         * this.tint.setColor(255, 128, 128);
@@ -18377,23 +18233,17 @@
 
 	        /**
 	         * the blend mode to be applied to this renderable (see renderer setBlendMode for available blend mode)
-	         * @public
 	         * @type {string}
-	         * @name blendMode
 	         * @default "normal"
 	         * @see CanvasRenderer#setBlendMode
 	         * @see WebGLRenderer#setBlendMode
-	         * @memberof Renderable#
 	         */
 	        this.blendMode = "normal";
 
 	        /**
 	         * The name of the renderable
-	         * @public
 	         * @type {string}
-	         * @name name
 	         * @default ""
-	         * @memberof Renderable
 	         */
 	        this.name = "";
 
@@ -18404,8 +18254,6 @@
 	             * Position of the Renderable relative to its parent container
 	             * @public
 	             * @type {ObservableVector3d}
-	             * @name pos
-	             * @memberof Renderable#
 	             */
 	            this.pos = pool.pull("ObservableVector3d", x, y, 0, { onUpdate: this.updateBoundsPos, scope: this});
 	        }
@@ -18413,9 +18261,7 @@
 	        /**
 	         * when true the renderable will be redrawn during the next update cycle
 	         * @type {boolean}
-	         * @name isDirty
 	         * @default false
-	         * @memberof Renderable#
 	         */
 	        this.isDirty = false;
 
@@ -18440,11 +18286,8 @@
 
 	    /**
 	     * Whether the renderable object is floating, or contained in a floating container
-	     * @public
 	     * @see Renderable#floating
 	     * @type {boolean}
-	     * @name isFloating
-	     * @memberof Renderable
 	     */
 	    prototypeAccessors.isFloating.get = function () {
 	        return this.floating === true || (typeof this.ancestor !== "undefined" && this.ancestor.floating === true);
@@ -18452,11 +18295,8 @@
 
 	    /**
 	     * Whether the renderable object is visible and within the viewport
-	     * @public
 	     * @type {boolean}
 	     * @default false
-	     * @name inViewport
-	     * @memberof Renderable
 	     */
 	    prototypeAccessors.inViewport.get = function () {
 	        return this._inViewport;
@@ -18475,8 +18315,6 @@
 	     * @public
 	     * @see Renderable#flipX
 	     * @type {boolean}
-	     * @name isFlippedX
-	     * @memberof Renderable
 	     */
 	    prototypeAccessors.isFlippedX.get = function () {
 	        return this._flip.x === true;
@@ -18487,8 +18325,6 @@
 	     * @public
 	     * @see Renderable#flipY
 	     * @type {boolean}
-	     * @name isFlippedY
-	     * @memberof Renderable
 	     */
 	    prototypeAccessors.isFlippedY.get = function () {
 	        return this._flip.y === true;
@@ -18496,8 +18332,6 @@
 
 	    /**
 	     * returns the bounding box for this renderable
-	     * @name getBounds
-	     * @memberof Renderable
 	     * @returns {Bounds} bounding box Rectangle object
 	     */
 	    Renderable.prototype.getBounds = function getBounds () {
@@ -18516,8 +18350,6 @@
 
 	    /**
 	     * get the renderable alpha channel value<br>
-	     * @name getOpacity
-	     * @memberof Renderable
 	     * @returns {number} current opacity value between 0 and 1
 	     */
 	    Renderable.prototype.getOpacity = function getOpacity () {
@@ -18526,8 +18358,6 @@
 
 	    /**
 	     * set the renderable alpha channel value<br>
-	     * @name setOpacity
-	     * @memberof Renderable
 	     * @param {number} alpha opacity value between 0.0 and 1.0
 	     */
 	    Renderable.prototype.setOpacity = function setOpacity (alpha) {
@@ -18544,8 +18374,6 @@
 	    /**
 	     * flip the renderable on the horizontal axis (around the center of the renderable)
 	     * @see Matrix2d#scaleX
-	     * @name flipX
-	     * @memberof Renderable
 	     * @param {boolean} [flip=true] `true` to flip this renderable.
 	     * @returns {Renderable} Reference to this object for method chaining
 	     */
@@ -18560,8 +18388,6 @@
 	    /**
 	     * flip the renderable on the vertical axis (around the center of the renderable)
 	     * @see Matrix2d#scaleY
-	     * @name flipY
-	     * @memberof Renderable
 	     * @param {boolean} [flip=true] `true` to flip this renderable.
 	     * @returns {Renderable} Reference to this object for method chaining
 	     */
@@ -18575,8 +18401,6 @@
 
 	    /**
 	     * multiply the renderable currentTransform with the given matrix
-	     * @name transform
-	     * @memberof Renderable
 	     * @see Renderable#currentTransform
 	     * @param {Matrix2d} m the transformation matrix
 	     * @returns {Renderable} Reference to this object for method chaining
@@ -18591,8 +18415,6 @@
 
 	    /**
 	     * return the angle to the specified target
-	     * @name angleTo
-	     * @memberof Renderable
 	     * @param {Renderable|Vector2d|Vector3d} target
 	     * @returns {number} angle in radians
 	     */
@@ -18614,8 +18436,6 @@
 
 	    /**
 	     * return the distance to the specified target
-	     * @name distanceTo
-	     * @memberof Renderable
 	     * @param {Renderable|Vector2d|Vector3d} target
 	     * @returns {number} distance
 	     */
@@ -18637,8 +18457,6 @@
 
 	    /**
 	     * Rotate this renderable towards the given target.
-	     * @name lookAt
-	     * @memberof Renderable
 	     * @param {Renderable|Vector2d|Vector3d} target the renderable or position to look at
 	     * @returns {Renderable} Reference to this object for method chaining
 	     */
@@ -18660,8 +18478,6 @@
 
 	    /**
 	     * Rotate this renderable by the specified angle (in radians).
-	     * @name rotate
-	     * @memberof Renderable
 	     * @param {number} angle The angle to rotate (in radians)
 	     * @param {Vector2d|ObservableVector2d} [v] an optional point to rotate around
 	     * @returns {Renderable} Reference to this object for method chaining
@@ -18681,8 +18497,6 @@
 	     * when rendering.  It does not scale the object itself.  For example if the renderable
 	     * is an image, the image.width and image.height properties are unaltered but the currentTransform
 	     * member will be changed.
-	     * @name scale
-	     * @memberof Renderable
 	     * @param {number} x a number representing the abscissa of the scaling vector.
 	     * @param {number} [y=x] a number representing the ordinate of the scaling vector.
 	     * @returns {Renderable} Reference to this object for method chaining
@@ -18696,8 +18510,6 @@
 
 	    /**
 	     * scale the renderable around his anchor point
-	     * @name scaleV
-	     * @memberof Renderable
 	     * @param {Vector2d} v scaling vector
 	     * @returns {Renderable} Reference to this object for method chaining
 	     */
@@ -18707,11 +18519,7 @@
 	    };
 
 	    /**
-	     * update function. <br>
-	     * automatically called by the game manager {@link game}
-	     * @name update
-	     * @memberof Renderable
-	     * @protected
+	     * update function (automatically called by melonJS).
 	     * @param {number} dt time since the last update in milliseconds.
 	     * @returns {boolean} true if the renderable is dirty
 	     */
@@ -18722,8 +18530,6 @@
 	    /**
 	     * update the bounding box for this shape.
 	     * @ignore
-	     * @name updateBounds
-	     * @memberof Renderable
 	     * @returns {Bounds} this shape bounding box Rectangle object
 	     */
 	    Renderable.prototype.updateBounds = function updateBounds () {
@@ -18735,8 +18541,6 @@
 	    /**
 	     * update the renderable's bounding rect (private)
 	     * @ignore
-	     * @name updateBoundsPos
-	     * @memberof Renderable
 	     */
 	     Renderable.prototype.updateBoundsPos = function updateBoundsPos (newX, newY) {
 	         var bounds = this.getBounds();
@@ -18767,8 +18571,6 @@
 
 	     /**
 	      * return the renderable absolute position in the game world
-	      * @name getAbsolutePosition
-	      * @memberof Renderable
 	      * @returns {Vector2d}
 	      */
 	      Renderable.prototype.getAbsolutePosition = function getAbsolutePosition () {
@@ -18786,8 +18588,6 @@
 	    /**
 	     * called when the anchor point value is changed
 	     * @private
-	     * @name onAnchorUpdate
-	     * @memberof Renderable
 	     * @param {number} x the new X value to be set for the anchor
 	     * @param {number} y the new Y value to be set for the anchor
 	     */
@@ -18800,12 +18600,10 @@
 	     };
 
 	    /**
-	     * prepare the rendering context before drawing
-	     * (apply defined transforms, anchor point). <br>
-	     * automatically called by the game manager {@link game}
-	     * @name preDraw
-	     * @memberof Renderable
-	     * @protected
+	     * Prepare the rendering context before drawing (automatically called by melonJS).
+	     * This will apply any defined transforms, anchor point, tint or blend mode and translate the context accordingly to this renderable position.
+	     * @see Renderable#draw
+	     * @see Renderable#postDraw
 	     * @param {CanvasRenderer|WebGLRenderer} renderer a renderer object
 	     */
 	    Renderable.prototype.preDraw = function preDraw (renderer) {
@@ -18856,10 +18654,15 @@
 	    };
 
 	    /**
-	     * draw this renderable (automatically called by melonJS)
-	     * @name draw
-	     * @memberof Renderable
-	     * @protected
+	     * Draw this renderable (automatically called by melonJS).
+	     * All draw operations for renderable are made respectively
+	     * to the position or transforms set or applied by the preDraw method.
+	     * The main draw loop will first call preDraw() to prepare the context for drawing the renderable,
+	     * then draw() to draw the renderable, and finally postDraw() to clear the context.
+	     * If you override this method, be mindful about the drawing logic; for example if you draw a shape
+	     * from the draw method, you should make sure that your draw it at the 0, 0 coordinates.
+	     * @see Renderable#preDraw
+	     * @see Renderable#postDraw
 	     * @param {CanvasRenderer|WebGLRenderer} renderer a renderer instance
 	     * @param {Camera2d} [viewport] the viewport to (re)draw
 	     */
@@ -18868,11 +18671,9 @@
 	    };
 
 	    /**
-	     * restore the rendering context after drawing. <br>
-	     * automatically called by the game manager {@link game}
-	     * @name postDraw
-	     * @memberof Renderable
-	     * @protected
+	     * restore the rendering context after drawing (automatically called by melonJS).
+	     * @see Renderable#preDraw
+	     * @see Renderable#draw
 	     * @param {CanvasRenderer|WebGLRenderer} renderer a renderer object
 	     */
 	    Renderable.prototype.postDraw = function postDraw (renderer) {
@@ -18894,8 +18695,6 @@
 	    /**
 	     * onCollision callback, triggered in case of collision,
 	     * when this renderable body is colliding with another one
-	     * @name onCollision
-	     * @memberof Renderable
 	     * @param {ResponseObject} response the collision response object
 	     * @param {Renderable} other the other renderable touching this one (a reference to response.a or response.b)
 	     * @returns {boolean} true if the object should respond to the collision (its position and velocity will be corrected)
@@ -18970,8 +18769,6 @@
 	    /**
 	     * OnDestroy Notification function<br>
 	     * Called by engine before deleting the object
-	     * @name onDestroyEvent
-	     * @memberof Renderable
 	     */
 	    Renderable.prototype.onDestroyEvent = function onDestroyEvent () {
 	        // to be extended !
@@ -20034,7 +19831,7 @@
 	/**
 	 * add a collision shape to this body <br>
 	 * (note: me.Rect objects will be converted to me.Polygon before being added)
-	 * @param {Rect|Polygon|Line|Ellipse||Point|Point[]|Bounds|object} shape a shape or JSON object
+	 * @param {Rect|Polygon|Line|Ellipse|Point|Point[]|Bounds|object} shape a shape or JSON object
 	 * @returns {number} the shape array length
 	 * @example
 	 * // add a rectangle shape
@@ -27408,7 +27205,6 @@
 	        )).rotate(this.rotation));
 	    } else if (this.isPoint === true) {
 	        shapes.push(pool.pull("Point", this.x, this.y));
-	        console.log( this.x, this.y);
 	    } else {
 	        // add a polygon
 	        if (this.isPolygon === true) {
@@ -30926,8 +30722,6 @@
 
 	        /**
 	         * The WebGL version used by this renderer (1 or 2)
-	         * @name WebGLVersion
-	         * @memberof WebGLRenderer#
 	         * @type {number}
 	         * @default 1
 	         * @readonly
@@ -30936,8 +30730,6 @@
 
 	        /**
 	         * The vendor string of the underlying graphics driver.
-	         * @name GPUVendor
-	         * @memberof WebGLRenderer#
 	         * @type {string}
 	         * @default null
 	         * @readonly
@@ -30946,8 +30738,6 @@
 
 	        /**
 	         * The renderer string of the underlying graphics driver.
-	         * @name GPURenderer
-	         * @memberof WebGLRenderer#
 	         * @type {string}
 	         * @default null
 	         * @readonly
@@ -30957,15 +30747,12 @@
 	        /**
 	         * The WebGL context
 	         * @name gl
-	         * @memberof WebGLRenderer
 	         * @type {WebGLRenderingContext}
 	         */
 	        this.context = this.gl = this.getContextGL(this.getCanvas(), options.transparent);
 
 	        /**
 	         * Maximum number of texture unit supported under the current context
-	         * @name maxTextures
-	         * @memberof WebGLRenderer#
 	         * @type {number}
 	         * @readonly
 	         */
@@ -30993,25 +30780,19 @@
 
 	        /**
 	         * The current transformation matrix used for transformations on the overall scene
-	         * @name currentTransform
 	         * @type {Matrix2d}
-	         * @memberof WebGLRenderer#
 	         */
 	        this.currentTransform = new Matrix2d();
 
 	        /**
 	         * The current compositor used by the renderer
-	         * @name currentCompositor
 	         * @type {WebGLCompositor}
-	         * @memberof WebGLRenderer#
 	         */
 	        this.currentCompositor = null;
 
 	        /**
 	         * The list of active compositors
-	         * @name compositors
 	         * @type {Map<WebGLCompositor>}
-	         * @memberof WebGLRenderer#
 	         */
 	        this.compositors = new Map();
 
@@ -31061,8 +30842,6 @@
 
 	    /**
 	     * Reset context state
-	     * @name reset
-	     * @memberof WebGLRenderer
 	     */
 	    WebGLRenderer.prototype.reset = function reset () {
 	        var this$1$1 = this;
@@ -31087,9 +30866,7 @@
 
 	    /**
 	     * set the active compositor for this renderer
-	     * @name setCompositor
 	     * @param {WebGLCompositor|string} compositor a compositor name or instance
-	     * @memberof WebGLRenderer
 	     */
 	    WebGLRenderer.prototype.setCompositor = function setCompositor (compositor) {
 	        if ( compositor === void 0 ) compositor = "default";
@@ -31115,8 +30892,6 @@
 
 	    /**
 	     * Reset the gl transform to identity
-	     * @name resetTransform
-	     * @memberof WebGLRenderer
 	     */
 	    WebGLRenderer.prototype.resetTransform = function resetTransform () {
 	        this.currentTransform.identity();
@@ -31161,8 +30936,6 @@
 
 	    /**
 	     * Create a pattern with the specified repetition
-	     * @name createPattern
-	     * @memberof WebGLRenderer
 	     * @param {Image} image Source image
 	     * @param {string} repeat Define how the pattern should be repeated
 	     * @returns {TextureAtlas}
@@ -31193,8 +30966,6 @@
 
 	    /**
 	     * Flush the compositor to the frame buffer
-	     * @name flush
-	     * @memberof WebGLRenderer
 	     */
 	    WebGLRenderer.prototype.flush = function flush () {
 	        this.currentCompositor.flush();
@@ -31202,8 +30973,6 @@
 
 	    /**
 	     * set/change the current projection matrix (WebGL only)
-	     * @name setProjection
-	     * @memberof WebGLRenderer
 	     * @param {Matrix3d} matrix
 	     */
 	    WebGLRenderer.prototype.setProjection = function setProjection (matrix) {
@@ -31212,9 +30981,14 @@
 	    };
 
 	    /**
+	     * prepare the framebuffer for drawing a new frame
+	     */
+	    WebGLRenderer.prototype.clear = function clear () {
+	        this.currentCompositor.clear(this.settings.transparent ? 0.0 : 1.0);
+	    };
+
+	    /**
 	     * Clears the gl context with the given color.
-	     * @name clearColor
-	     * @memberof WebGLRenderer
 	     * @param {Color|string} [color="#000000"] CSS color.
 	     * @param {boolean} [opaque=false] Allow transparency [default] or clear the surface completely [true]
 	     */
@@ -31234,17 +31008,10 @@
 	        }
 	        // clear gl context with the specified color
 	        this.currentCompositor.clearColor(glArray[0], glArray[1], glArray[2], (opaque === true) ? 1.0 : glArray[3]);
-	        this.currentCompositor.clear();
-
-	        // restore default clear Color black
-	        this.currentCompositor.clearColor(0.0, 0.0, 0.0, 0.0);
-
 	    };
 
 	    /**
 	     * Erase the pixels in the given rectangular area by setting them to transparent black (rgba(0,0,0,0)).
-	     * @name clearRect
-	     * @memberof WebGLRenderer
 	     * @param {number} x x axis of the coordinate for the rectangle starting point.
 	     * @param {number} y y axis of the coordinate for the rectangle starting point.
 	     * @param {number} width The rectangle's width.
@@ -31292,8 +31059,6 @@
 
 	    /**
 	     * Draw an image to the gl context
-	     * @name drawImage
-	     * @memberof WebGLRenderer
 	     * @param {Image} image An element to draw into the context. The specification permits any canvas image source (CanvasImageSource), specifically, a CSSImageValue, an HTMLImageElement, an SVGImageElement, an HTMLVideoElement, an HTMLCanvasElement, an ImageBitmap, or an OffscreenCanvas.
 	     * @param {number} sx The X coordinate of the top left corner of the sub-rectangle of the source image to draw into the destination context.
 	     * @param {number} sy The Y coordinate of the top left corner of the sub-rectangle of the source image to draw into the destination context.
@@ -31344,8 +31109,6 @@
 
 	    /**
 	     * Draw a pattern within the given rectangle.
-	     * @name drawPattern
-	     * @memberof WebGLRenderer
 	     * @param {TextureAtlas} pattern Pattern object
 	     * @param {number} x
 	     * @param {number} y
@@ -31359,15 +31122,13 @@
 	    };
 
 	    /**
-	     * Returns the WebGL Context object of the given Canvas
-	     * @name getContextGL
-	     * @memberof WebGLRenderer
+	     * Returns the WebGL Context object of the given canvas element
 	     * @param {HTMLCanvasElement} canvas
-	     * @param {boolean} [transparent=true] use false to disable transparency
+	     * @param {boolean} [transparent=false] use true to enable transparency
 	     * @returns {WebGLRenderingContext}
 	     */
 	    WebGLRenderer.prototype.getContextGL = function getContextGL (canvas, transparent) {
-	        if ( transparent === void 0 ) transparent = true;
+	        if ( transparent === void 0 ) transparent = false;
 
 	        if (typeof canvas === "undefined" || canvas === null) {
 	            throw new Error(
@@ -31382,7 +31143,7 @@
 	            depth : false,
 	            stencil: true,
 	            preserveDrawingBuffer : false,
-	            premultipliedAlpha: this.settings.premultipliedAlpha,
+	            premultipliedAlpha: transparent ? this.settings.premultipliedAlpha : false,
 	            powerPreference: this.settings.powerPreference,
 	            failIfMajorPerformanceCaveat : this.settings.failIfMajorPerformanceCaveat
 	        };
@@ -31415,8 +31176,6 @@
 	    /**
 	     * Returns the WebGLContext instance for the renderer
 	     * return a reference to the system 2d Context
-	     * @name getContext
-	     * @memberof WebGLRenderer
 	     * @returns {WebGLRenderingContext}
 	     */
 	    WebGLRenderer.prototype.getContext = function getContext () {
@@ -31434,9 +31193,7 @@
 	     * <img src="images/lighter-blendmode.png" width="510"/> <br>
 	     * - "screen" : The pixels are inverted, multiplied, and inverted again. A lighter picture is the result (opposite of multiply) <br>
 	     * <img src="images/screen-blendmode.png" width="510"/> <br>
-	     * @name setBlendMode
 	     * @see https://developer.mozilla.org/en-US/docs/Web/API/CanvasRenderingContext2D/globalCompositeOperation
-	     * @memberof WebGLRenderer
 	     * @param {string} [mode="normal"] blend mode : "normal", "multiply", "lighter", "additive", "screen"
 	     * @param {WebGLRenderingContext} [gl]
 	     */
@@ -31488,8 +31245,6 @@
 
 	    /**
 	     * restores the canvas context
-	     * @name restore
-	     * @memberof WebGLRenderer
 	     */
 	    WebGLRenderer.prototype.restore = function restore () {
 	        // do nothing if there is no saved states
@@ -31523,8 +31278,6 @@
 
 	    /**
 	     * saves the canvas context
-	     * @name save
-	     * @memberof WebGLRenderer
 	     */
 	    WebGLRenderer.prototype.save = function save () {
 	        this._colorStack.push(this.currentColor.clone());
@@ -31540,8 +31293,6 @@
 
 	    /**
 	     * rotates the uniform matrix
-	     * @name rotate
-	     * @memberof WebGLRenderer
 	     * @param {number} angle in radians
 	     */
 	    WebGLRenderer.prototype.rotate = function rotate (angle) {
@@ -31550,8 +31301,6 @@
 
 	    /**
 	     * scales the uniform matrix
-	     * @name scale
-	     * @memberof WebGLRenderer
 	     * @param {number} x
 	     * @param {number} y
 	     */
@@ -31570,8 +31319,6 @@
 
 	    /**
 	     * Set the global alpha
-	     * @name setGlobalAlpha
-	     * @memberof WebGLRenderer
 	     * @param {number} alpha 0.0 to 1.0 values accepted.
 	     */
 	    WebGLRenderer.prototype.setGlobalAlpha = function setGlobalAlpha (alpha) {
@@ -31580,8 +31327,6 @@
 
 	    /**
 	     * Return the global alpha
-	     * @name getGlobalAlpha
-	     * @memberof WebGLRenderer
 	     * @returns {number} global alpha value
 	     */
 	    WebGLRenderer.prototype.getGlobalAlpha = function getGlobalAlpha () {
@@ -31591,8 +31336,6 @@
 	    /**
 	     * Set the current fill & stroke style color.
 	     * By default, or upon reset, the value is set to #000000.
-	     * @name setColor
-	     * @memberof WebGLRenderer
 	     * @param {Color|string} color css color string.
 	     */
 	    WebGLRenderer.prototype.setColor = function setColor (color) {
@@ -31603,8 +31346,6 @@
 
 	    /**
 	     * Set the line width
-	     * @name setLineWidth
-	     * @memberof WebGLRenderer
 	     * @param {number} width Line width
 	     */
 	    WebGLRenderer.prototype.setLineWidth = function setLineWidth (width) {
@@ -31613,8 +31354,6 @@
 
 	    /**
 	     * Stroke an arc at the specified coordinates with given radius, start and end points
-	     * @name strokeArc
-	     * @memberof WebGLRenderer
 	     * @param {number} x arc center point x-axis
 	     * @param {number} y arc center point y-axis
 	     * @param {number} radius
@@ -31643,8 +31382,6 @@
 
 	    /**
 	     * Fill an arc at the specified coordinates with given radius, start and end points
-	     * @name fillArc
-	     * @memberof WebGLRenderer
 	     * @param {number} x arc center point x-axis
 	     * @param {number} y arc center point y-axis
 	     * @param {number} radius
@@ -31660,8 +31397,6 @@
 
 	    /**
 	     * Stroke an ellipse at the specified coordinates with given radius
-	     * @name strokeEllipse
-	     * @memberof WebGLRenderer
 	     * @param {number} x ellipse center point x-axis
 	     * @param {number} y ellipse center point y-axis
 	     * @param {number} w horizontal radius of the ellipse
@@ -31687,8 +31422,6 @@
 
 	    /**
 	     * Fill an ellipse at the specified coordinates with given radius
-	     * @name fillEllipse
-	     * @memberof WebGLRenderer
 	     * @param {number} x ellipse center point x-axis
 	     * @param {number} y ellipse center point y-axis
 	     * @param {number} w horizontal radius of the ellipse
@@ -31700,8 +31433,6 @@
 
 	    /**
 	     * Stroke a line of the given two points
-	     * @name strokeLine
-	     * @memberof WebGLRenderer
 	     * @param {number} startX the start x coordinate
 	     * @param {number} startY the start y coordinate
 	     * @param {number} endX the end x coordinate
@@ -31721,8 +31452,6 @@
 
 	    /**
 	     * Fill a line of the given two points
-	     * @name fillLine
-	     * @memberof WebGLRenderer
 	     * @param {number} startX the start x coordinate
 	     * @param {number} startY the start y coordinate
 	     * @param {number} endX the end x coordinate
@@ -31734,8 +31463,6 @@
 
 	    /**
 	     * Stroke a me.Polygon on the screen with a specified color
-	     * @name strokePolygon
-	     * @memberof WebGLRenderer
 	     * @param {Polygon} poly the shape to draw
 	     * @param {boolean} [fill=false] also fill the shape with the current color if true
 	     */
@@ -31767,8 +31494,6 @@
 
 	    /**
 	     * Fill a me.Polygon on the screen
-	     * @name fillPolygon
-	     * @memberof WebGLRenderer
 	     * @param {Polygon} poly the shape to draw
 	     */
 	    WebGLRenderer.prototype.fillPolygon = function fillPolygon (poly) {
@@ -31777,8 +31502,6 @@
 
 	    /**
 	     * Draw a stroke rectangle at the specified coordinates
-	     * @name strokeRect
-	     * @memberof WebGLRenderer
 	     * @param {number} x
 	     * @param {number} y
 	     * @param {number} width
@@ -31803,8 +31526,6 @@
 
 	    /**
 	     * Draw a filled rectangle at the specified coordinates
-	     * @name fillRect
-	     * @memberof WebGLRenderer
 	     * @param {number} x
 	     * @param {number} y
 	     * @param {number} width
@@ -31816,8 +31537,6 @@
 
 	    /**
 	     * Stroke a rounded rectangle at the specified coordinates
-	     * @name strokeRoundRect
-	     * @memberof WebGLRenderer
 	     * @param {number} x
 	     * @param {number} y
 	     * @param {number} width
@@ -31844,8 +31563,6 @@
 
 	    /**
 	     * Draw a rounded filled rectangle at the specified coordinates
-	     * @name fillRoundRect
-	     * @memberof WebGLRenderer
 	     * @param {number} x
 	     * @param {number} y
 	     * @param {number} width
@@ -31858,8 +31575,6 @@
 
 	    /**
 	     * Stroke a Point at the specified coordinates
-	     * @name strokePoint
-	     * @memberof WebGLRenderer
 	     * @param {number} x
 	     * @param {number} y
 	     */
@@ -31869,8 +31584,6 @@
 
 	    /**
 	     * Draw a a point at the specified coordinates
-	     * @name fillPoint
-	     * @memberof WebGLRenderer
 	     * @param {number} x
 	     * @param {number} y
 	     * @param {number} width
@@ -31883,8 +31596,6 @@
 	    /**
 	     * Reset (overrides) the renderer transformation matrix to the
 	     * identity one, and then apply the given transformation matrix.
-	     * @name setTransform
-	     * @memberof WebGLRenderer
 	     * @param {Matrix2d} mat2d Matrix to transform by
 	     */
 	    WebGLRenderer.prototype.setTransform = function setTransform (mat2d) {
@@ -31894,8 +31605,6 @@
 
 	    /**
 	     * Multiply given matrix into the renderer tranformation matrix
-	     * @name transform
-	     * @memberof WebGLRenderer
 	     * @param {Matrix2d} mat2d Matrix to transform by
 	     */
 	    WebGLRenderer.prototype.transform = function transform (mat2d) {
@@ -31911,8 +31620,6 @@
 
 	    /**
 	     * Translates the uniform matrix by the given coordinates
-	     * @name translate
-	     * @memberof WebGLRenderer
 	     * @param {number} x
 	     * @param {number} y
 	     */
@@ -31933,8 +31640,6 @@
 	     * You can however save the current region using the save(),
 	     * and restore it (with the restore() method) any time in the future.
 	     * (<u>this is an experimental feature !</u>)
-	     * @name clipRect
-	     * @memberof WebGLRenderer
 	     * @param {number} x
 	     * @param {number} y
 	     * @param {number} width
@@ -31980,8 +31685,6 @@
 	     * A mask limits rendering elements to the shape and position of the given mask object.
 	     * So, if the renderable is larger than the mask, only the intersecting part of the renderable will be visible.
 	     * Mask are not preserved through renderer context save and restore.
-	     * @name setMask
-	     * @memberof WebGLRenderer
 	     * @param {Rect|RoundRect|Polygon|Line|Ellipse} [mask] a shape defining the mask to be applied
 	     * @param {boolean} [invert=false] either the given shape should define what is visible (default) or the opposite
 	     */
@@ -31997,8 +31700,6 @@
 	            // Enable and setup GL state to write to stencil buffer
 	            gl.enable(gl.STENCIL_TEST);
 	            gl.clear(gl.STENCIL_BUFFER_BIT);
-
-
 	        }
 
 	        this.maskLevel++;
@@ -32027,9 +31728,7 @@
 
 	    /**
 	     * disable (remove) the rendering mask set through setMask.
-	     * @name clearMask
 	     * @see WebGLRenderer#setMask
-	     * @memberof WebGLRenderer
 	     */
 	    WebGLRenderer.prototype.clearMask = function clearMask () {
 	        if (this.maskLevel > 0) {
