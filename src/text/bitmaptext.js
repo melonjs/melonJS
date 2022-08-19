@@ -118,12 +118,7 @@ class BitmapText extends Renderable {
 
         // apply given fillstyle
         if (typeof settings.fillStyle !== "undefined") {
-            if (settings.fillStyle instanceof Color) {
-                this.fillStyle.setColor(settings.fillStyle);
-            } else {
-                // string (#RGB, #ARGB, #RRGGBB, #AARRGGBB)
-                this.fillStyle.parseCSS(settings.fillStyle);
-            }
+            this.fillStyle = settings.fillStyle;
         }
 
         // update anchorPoint if provided
@@ -196,7 +191,12 @@ class BitmapText extends Renderable {
         return this.tint;
     }
     set fillStyle(value) {
-        this.tint = value;
+        if (value instanceof Color) {
+            this.tint.copy(value);
+        } else {
+            // string (#RGB, #ARGB, #RRGGBB, #AARRGGBB)
+            this.tint.parseCSS(value);
+        }
     }
 
     /**
