@@ -634,9 +634,9 @@ class Renderable extends Rect {
 
     /**
      * Draw this renderable (automatically called by melonJS).
-     * All draw operations for renderable are made respectively 
+     * All draw operations for renderable are made respectively
      * to the position or transforms set or applied by the preDraw method.
-     * The main draw loop will first call preDraw() to prepare the context for drawing the renderable, 
+     * The main draw loop will first call preDraw() to prepare the context for drawing the renderable,
      * then draw() to draw the renderable, and finally postDraw() to clear the context.
      * If you override this method, be mindful about the drawing logic; for example if you draw a shape
      * from the draw method, you should make sure that your draw it at the 0, 0 coordinates.
