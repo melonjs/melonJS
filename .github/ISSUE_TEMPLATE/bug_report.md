@@ -20,13 +20,13 @@ Steps to reproduce the behavior:
 **Expected behavior**
 A clear and concise description of what you expected to happen.
 
+**Live Example**
+please do provide a live example using either of the below melonjs sandbox example :
+* [codepen.io](https://codepen.io/obiot/pen/zYWeOjj)
+* [jsfiddle](https://jsfiddle.net/obiot/4o9f02tc/6/)
+
 **Screenshots**
 If applicable, add screenshots to help explain your problem.
-
-**Live Example**
-please do provide a live example using either of the below sandbox :
-* https://codepen.io/obiot/pen/zYWeOjj
-https://jsfiddle.net/obiot/4o9f02tc/6/
 
 **Desktop (please complete the following information):**
  - OS: [e.g. iOS]
