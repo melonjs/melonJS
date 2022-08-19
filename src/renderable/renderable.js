@@ -31,21 +31,14 @@ class Renderable extends Rect {
 
         /**
          * If true then physic collision and input events will not impact this renderable
-         * @public
          * @type {boolean}
          * @default true
-         * @name isKinematic
-         * @memberof Renderable
          */
         this.isKinematic = true;
 
         /**
          * the renderable physic body
-         * @public
          * @type {Body}
-         * @see Body
-         * @name body
-         * @memberof Renderable#
          * @example
          *  // define a new Player Class
          *  class PlayerEntity extends me.Sprite {
@@ -83,10 +76,7 @@ class Renderable extends Rect {
         if (typeof this.currentTransform === "undefined") {
             /**
              * the renderable default transformation matrix
-             * @public
              * @type {Matrix2d}
-             * @name currentTransform
-             * @memberof Renderable#
              */
             this.currentTransform = pool.pull("Matrix2d");
         }
@@ -96,20 +86,14 @@ class Renderable extends Rect {
         * (G)ame (U)nique (Id)entifier" <br>
         * a GUID will be allocated for any renderable object added <br>
         * to an object container (including the `me.game.world` container)
-        * @public
         * @type {string}
-        * @name GUID
-        * @memberof Renderable
         */
         this.GUID = undefined;
 
         /**
          * an event handler that is called when the renderable leave or enter a camera viewport
-         * @public
          * @type {Function}
          * @default undefined
-         * @name onVisibilityChange
-         * @memberof Renderable#
          * @example
          * this.onVisibilityChange = function(inViewport) {
          *     if (inViewport === true) {
@@ -121,42 +105,30 @@ class Renderable extends Rect {
 
         /**
          * Whether the renderable object will always update, even when outside of the viewport<br>
-         * @public
          * @type {boolean}
          * @default false
-         * @name alwaysUpdate
-         * @memberof Renderable
          */
         this.alwaysUpdate = false;
 
         /**
          * Whether to update this object when the game is paused.
-         * @public
          * @type {boolean}
          * @default false
-         * @name updateWhenPaused
-         * @memberof Renderable
          */
         this.updateWhenPaused = false;
 
         /**
          * make the renderable object persistent over level changes<br>
-         * @public
          * @type {boolean}
          * @default false
-         * @name isPersistent
-         * @memberof Renderable
          */
         this.isPersistent = false;
 
         /**
          * If true, this renderable will be rendered using screen coordinates,
          * as opposed to world coordinates. Use this, for example, to define UI elements.
-         * @public
          * @type {boolean}
          * @default false
-         * @name floating
-         * @memberof Renderable
          */
         this.floating = false;
 
@@ -171,11 +143,8 @@ class Renderable extends Rect {
              * <br>
              * <i><b>Note:</b> Object created through Tiled will have their anchorPoint set to (0, 0) to match Tiled Level editor implementation.
              * To specify a value through Tiled, use a json expression like `json:{"x":0.5,"y":0.5}`. </i>
-             * @public
              * @type {ObservableVector2d}
              * @default <0.5,0.5>
-             * @name anchorPoint
-             * @memberof Renderable#
              */
             this.anchorPoint = pool.pull("ObservableVector2d", 0.5, 0.5, { onUpdate: this.onAnchorUpdate, scope: this });
         }
@@ -183,11 +152,8 @@ class Renderable extends Rect {
         /**
          * When enabled, an object container will automatically apply
          * any defined transformation before calling the child draw method.
-         * @public
          * @type {boolean}
          * @default true
-         * @name autoTransform
-         * @memberof Renderable
          * @example
          * // enable "automatic" transformation when the object is activated
          * onActivateEvent: function () {
@@ -207,30 +173,23 @@ class Renderable extends Rect {
          * Set to zero if you do not wish an object to be drawn
          * @see Renderable#setOpacity
          * @see Renderable#getOpacity
-         * @public
          * @type {number}
          * @default 1.0
-         * @name Renderable#alpha
          */
         this.alpha = 1.0;
 
         /**
          * a reference to the parent object that contains this renderable
-         * @public
          * @type {Container|Entity}
          * @default undefined
-         * @name Renderable#ancestor
          */
         this.ancestor = undefined;
 
         /**
          * A mask limits rendering elements to the shape and position of the given mask object.
          * So, if the renderable is larger than the mask, only the intersecting part of the renderable will be visible.
-         * @public
          * @type {Rect|RoundRect|Polygon|Line|Ellipse}
-         * @name mask
          * @default undefined
-         * @memberof Renderable#
          * @example
          * // apply a mask in the shape of a Star
          * myNPCSprite.mask = new me.Polygon(myNPCSprite.width / 2, 0, [
@@ -251,11 +210,8 @@ class Renderable extends Rect {
 
         /**
          * define a tint for this renderable. a (255, 255, 255) r, g, b value will remove the tint effect.
-         * @public
          * @type {Color}
-         * @name tint
          * @default (255, 255, 255)
-         * @memberof Renderable#
          * @example
          * // add a red tint to this renderable
          * this.tint.setColor(255, 128, 128);
@@ -266,23 +222,17 @@ class Renderable extends Rect {
 
         /**
          * the blend mode to be applied to this renderable (see renderer setBlendMode for available blend mode)
-         * @public
          * @type {string}
-         * @name blendMode
          * @default "normal"
          * @see CanvasRenderer#setBlendMode
          * @see WebGLRenderer#setBlendMode
-         * @memberof Renderable#
          */
         this.blendMode = "normal";
 
         /**
          * The name of the renderable
-         * @public
          * @type {string}
-         * @name name
          * @default ""
-         * @memberof Renderable
          */
         this.name = "";
 
@@ -293,8 +243,6 @@ class Renderable extends Rect {
              * Position of the Renderable relative to its parent container
              * @public
              * @type {ObservableVector3d}
-             * @name pos
-             * @memberof Renderable#
              */
             this.pos = pool.pull("ObservableVector3d", x, y, 0, { onUpdate: this.updateBoundsPos, scope: this});
         }
@@ -302,9 +250,7 @@ class Renderable extends Rect {
         /**
          * when true the renderable will be redrawn during the next update cycle
          * @type {boolean}
-         * @name isDirty
          * @default false
-         * @memberof Renderable#
          */
         this.isDirty = false;
 
@@ -323,11 +269,8 @@ class Renderable extends Rect {
 
     /**
      * Whether the renderable object is floating, or contained in a floating container
-     * @public
      * @see Renderable#floating
      * @type {boolean}
-     * @name isFloating
-     * @memberof Renderable
      */
     get isFloating() {
         return this.floating === true || (typeof this.ancestor !== "undefined" && this.ancestor.floating === true);
@@ -335,11 +278,8 @@ class Renderable extends Rect {
 
     /**
      * Whether the renderable object is visible and within the viewport
-     * @public
      * @type {boolean}
      * @default false
-     * @name inViewport
-     * @memberof Renderable
      */
     get inViewport() {
         return this._inViewport;
@@ -358,8 +298,6 @@ class Renderable extends Rect {
      * @public
      * @see Renderable#flipX
      * @type {boolean}
-     * @name isFlippedX
-     * @memberof Renderable
      */
     get isFlippedX() {
         return this._flip.x === true;
@@ -370,8 +308,6 @@ class Renderable extends Rect {
      * @public
      * @see Renderable#flipY
      * @type {boolean}
-     * @name isFlippedY
-     * @memberof Renderable
      */
     get isFlippedY() {
         return this._flip.y === true;
@@ -379,8 +315,6 @@ class Renderable extends Rect {
 
     /**
      * returns the bounding box for this renderable
-     * @name getBounds
-     * @memberof Renderable
      * @returns {Bounds} bounding box Rectangle object
      */
     getBounds() {
@@ -399,8 +333,6 @@ class Renderable extends Rect {
 
     /**
      * get the renderable alpha channel value<br>
-     * @name getOpacity
-     * @memberof Renderable
      * @returns {number} current opacity value between 0 and 1
      */
     getOpacity() {
@@ -409,8 +341,6 @@ class Renderable extends Rect {
 
     /**
      * set the renderable alpha channel value<br>
-     * @name setOpacity
-     * @memberof Renderable
      * @param {number} alpha opacity value between 0.0 and 1.0
      */
     setOpacity(alpha) {
@@ -427,8 +357,6 @@ class Renderable extends Rect {
     /**
      * flip the renderable on the horizontal axis (around the center of the renderable)
      * @see Matrix2d#scaleX
-     * @name flipX
-     * @memberof Renderable
      * @param {boolean} [flip=true] `true` to flip this renderable.
      * @returns {Renderable} Reference to this object for method chaining
      */
@@ -441,8 +369,6 @@ class Renderable extends Rect {
     /**
      * flip the renderable on the vertical axis (around the center of the renderable)
      * @see Matrix2d#scaleY
-     * @name flipY
-     * @memberof Renderable
      * @param {boolean} [flip=true] `true` to flip this renderable.
      * @returns {Renderable} Reference to this object for method chaining
      */
@@ -454,8 +380,6 @@ class Renderable extends Rect {
 
     /**
      * multiply the renderable currentTransform with the given matrix
-     * @name transform
-     * @memberof Renderable
      * @see Renderable#currentTransform
      * @param {Matrix2d} m the transformation matrix
      * @returns {Renderable} Reference to this object for method chaining
@@ -470,8 +394,6 @@ class Renderable extends Rect {
 
     /**
      * return the angle to the specified target
-     * @name angleTo
-     * @memberof Renderable
      * @param {Renderable|Vector2d|Vector3d} target
      * @returns {number} angle in radians
      */
@@ -493,8 +415,6 @@ class Renderable extends Rect {
 
     /**
      * return the distance to the specified target
-     * @name distanceTo
-     * @memberof Renderable
      * @param {Renderable|Vector2d|Vector3d} target
      * @returns {number} distance
      */
@@ -516,8 +436,6 @@ class Renderable extends Rect {
 
     /**
      * Rotate this renderable towards the given target.
-     * @name lookAt
-     * @memberof Renderable
      * @param {Renderable|Vector2d|Vector3d} target the renderable or position to look at
      * @returns {Renderable} Reference to this object for method chaining
      */
@@ -539,8 +457,6 @@ class Renderable extends Rect {
 
     /**
      * Rotate this renderable by the specified angle (in radians).
-     * @name rotate
-     * @memberof Renderable
      * @param {number} angle The angle to rotate (in radians)
      * @param {Vector2d|ObservableVector2d} [v] an optional point to rotate around
      * @returns {Renderable} Reference to this object for method chaining
@@ -560,8 +476,6 @@ class Renderable extends Rect {
      * when rendering.  It does not scale the object itself.  For example if the renderable
      * is an image, the image.width and image.height properties are unaltered but the currentTransform
      * member will be changed.
-     * @name scale
-     * @memberof Renderable
      * @param {number} x a number representing the abscissa of the scaling vector.
      * @param {number} [y=x] a number representing the ordinate of the scaling vector.
      * @returns {Renderable} Reference to this object for method chaining
@@ -575,8 +489,6 @@ class Renderable extends Rect {
 
     /**
      * scale the renderable around his anchor point
-     * @name scaleV
-     * @memberof Renderable
      * @param {Vector2d} v scaling vector
      * @returns {Renderable} Reference to this object for method chaining
      */
@@ -586,11 +498,7 @@ class Renderable extends Rect {
     }
 
     /**
-     * update function. <br>
-     * automatically called by the game manager {@link game}
-     * @name update
-     * @memberof Renderable
-     * @protected
+     * update function (automatically called by melonJS).
      * @param {number} dt time since the last update in milliseconds.
      * @returns {boolean} true if the renderable is dirty
      */
@@ -601,8 +509,6 @@ class Renderable extends Rect {
     /**
      * update the bounding box for this shape.
      * @ignore
-     * @name updateBounds
-     * @memberof Renderable
      * @returns {Bounds} this shape bounding box Rectangle object
      */
     updateBounds() {
@@ -614,8 +520,6 @@ class Renderable extends Rect {
     /**
      * update the renderable's bounding rect (private)
      * @ignore
-     * @name updateBoundsPos
-     * @memberof Renderable
      */
      updateBoundsPos(newX, newY) {
          var bounds = this.getBounds();
@@ -646,8 +550,6 @@ class Renderable extends Rect {
 
      /**
       * return the renderable absolute position in the game world
-      * @name getAbsolutePosition
-      * @memberof Renderable
       * @returns {Vector2d}
       */
       getAbsolutePosition() {
@@ -665,8 +567,6 @@ class Renderable extends Rect {
     /**
      * called when the anchor point value is changed
      * @private
-     * @name onAnchorUpdate
-     * @memberof Renderable
      * @param {number} x the new X value to be set for the anchor
      * @param {number} y the new Y value to be set for the anchor
      */
@@ -679,12 +579,10 @@ class Renderable extends Rect {
      }
 
     /**
-     * prepare the rendering context before drawing
-     * (apply defined transforms, anchor point). <br>
-     * automatically called by the game manager {@link game}
-     * @name preDraw
-     * @memberof Renderable
-     * @protected
+     * Prepare the rendering context before drawing (automatically called by melonJS).
+     * This will apply any defined transforms, anchor point, tint or blend mode and translate the context accordingly to this renderable position.
+     * @see Renderable#draw
+     * @see Renderable#postDraw
      * @param {CanvasRenderer|WebGLRenderer} renderer a renderer object
      */
     preDraw(renderer) {
@@ -735,10 +633,15 @@ class Renderable extends Rect {
     }
 
     /**
-     * draw this renderable (automatically called by melonJS)
-     * @name draw
-     * @memberof Renderable
-     * @protected
+     * Draw this renderable (automatically called by melonJS).
+     * All draw operations for renderable are made respectively 
+     * to the position or transforms set or applied by the preDraw method.
+     * The main draw loop will first call preDraw() to prepare the context for drawing the renderable, 
+     * then draw() to draw the renderable, and finally postDraw() to clear the context.
+     * If you override this method, be mindful about the drawing logic; for example if you draw a shape
+     * from the draw method, you should make sure that your draw it at the 0, 0 coordinates.
+     * @see Renderable#preDraw
+     * @see Renderable#postDraw
      * @param {CanvasRenderer|WebGLRenderer} renderer a renderer instance
      * @param {Camera2d} [viewport] the viewport to (re)draw
      */
@@ -747,11 +650,9 @@ class Renderable extends Rect {
     }
 
     /**
-     * restore the rendering context after drawing. <br>
-     * automatically called by the game manager {@link game}
-     * @name postDraw
-     * @memberof Renderable
-     * @protected
+     * restore the rendering context after drawing (automatically called by melonJS).
+     * @see Renderable#preDraw
+     * @see Renderable#draw
      * @param {CanvasRenderer|WebGLRenderer} renderer a renderer object
      */
     postDraw(renderer) {
@@ -773,8 +674,6 @@ class Renderable extends Rect {
     /**
      * onCollision callback, triggered in case of collision,
      * when this renderable body is colliding with another one
-     * @name onCollision
-     * @memberof Renderable
      * @param {ResponseObject} response the collision response object
      * @param {Renderable} other the other renderable touching this one (a reference to response.a or response.b)
      * @returns {boolean} true if the object should respond to the collision (its position and velocity will be corrected)
@@ -849,8 +748,6 @@ class Renderable extends Rect {
     /**
      * OnDestroy Notification function<br>
      * Called by engine before deleting the object
-     * @name onDestroyEvent
-     * @memberof Renderable
      */
     onDestroyEvent() {
         // to be extended !
