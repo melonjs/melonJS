@@ -8,7 +8,7 @@ assignees: ''
 ---
 
 **Describe the bug**
-A clear and concise description of what the bug is.
+- A clear and concise description of what the bug is.
 
 **To Reproduce**
 Steps to reproduce the behavior:
@@ -18,16 +18,15 @@ Steps to reproduce the behavior:
 4. See error
 
 **Expected behavior**
-A clear and concise description of what you expected to happen.
-
-
-**Live Example**
-please do provide a live example using either of the below melonjs sandbox example :
-* [codepen.io](https://codepen.io/obiot/pen/zYWeOjj)
-* [jsfiddle](https://jsfiddle.net/obiot/4o9f02tc/6/)
+- A clear and concise description of what you expected to happen.
 
 **Screenshots**
-If applicable, add screenshots to help explain your problem.
+- If applicable, add screenshots to help explain your problem.
+
+**Live Example**
+- please do provide a live example using either of the below melonjs sandbox example :
+  * [codepen.io](https://codepen.io/obiot/pen/zYWeOjj)
+  * [jsfiddle](https://jsfiddle.net/obiot/4o9f02tc/6/)
 
 **Desktop (please complete the following information):**
  - OS: [e.g. iOS]
@@ -41,4 +40,4 @@ If applicable, add screenshots to help explain your problem.
  - melonJS Version [e.g. 13.1]
 
 **Additional context**
-Add any other context about the problem here.
+- Add any other context about the problem here.
