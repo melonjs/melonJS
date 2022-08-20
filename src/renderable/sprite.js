@@ -3,6 +3,7 @@ import pool from "./../system/pooling.js";
 import loader from "./../loader/loader.js";
 import { TextureAtlas } from "./../video/texture/atlas.js";
 import Renderable from "./renderable.js";
+import Color from "../math/color.js";
 
 /**
  * @classdesc
@@ -183,7 +184,12 @@ class Sprite extends Renderable {
         }
 
         if (typeof (settings.tint) !== "undefined") {
-            this.tint.setColor(settings.tint);
+            if (settings.tint instanceof Color) {
+                this.tint.copy(settings.tint);
+            } else {
+                // string (#RGB, #ARGB, #RRGGBB, #AARRGGBB)
+                this.tint.parseCSS(settings.tint);
+            }
         }
 
         // set the sprite name if specified
