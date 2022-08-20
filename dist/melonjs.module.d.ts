@@ -98,6 +98,14 @@ export class BitmapText extends Renderable {
      * @private
      */
     private fontData;
+    public set fillStyle(arg: Color);
+    /**
+     * defines the color used to tint the bitmap text
+     * @public
+     * @type {Color}
+     * @see Renderable#tint
+     */
+    public get fillStyle(): Color;
     metrics: TextMetrics;
     /**
      * change the font settings
@@ -112,14 +120,6 @@ export class BitmapText extends Renderable {
      * @returns {BitmapText} this object for chaining
      */
     setText(value?: number | string | string[]): BitmapText;
-    public set fillStyle(arg: Color);
-    /**
-     * defines the color used to tint the bitmap text
-     * @public
-     * @type {Color}
-     * @see Renderable#tint
-     */
-    public get fillStyle(): Color;
     /**
      * change the font display size
      * @param {number} scale ratio
