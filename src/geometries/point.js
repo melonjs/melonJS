@@ -23,8 +23,49 @@ class Point {
 
     /** @ignore */
     onResetEvent(x = 0, y = 0) {
-       this.x = x;
-       this.y = y;
+        this.set(x, y);
+    }
+
+    /**
+     * set the Point x and y properties to the given values
+     * @param {number} x
+     * @param {number} y
+     * @returns {Point} Reference to this object for method chaining
+     */
+    set(x = 0, y = 0) {
+        this.x = x;
+        this.y = y;
+        return this;
+    }
+
+    /**
+     * return true if the two points are the same
+     * @name equals
+     * @memberof Point
+     * @method
+     * @param {Point} point
+     * @returns {boolean}
+     */
+    /**
+     * return true if this point is equal to the given values
+     * @name equals
+     * @memberof Point
+     * @param {number} x
+     * @param {number} y
+     * @returns {boolean}
+     */
+     equals() {
+        var _x, _y;
+        if (arguments.length === 2) {
+            // x, y
+            _x = arguments[0];
+            _y = arguments[1];
+        } else {
+            // point
+            _x = arguments[0].x;
+            _y = arguments[0].y;
+        }
+        return ((this.x === _x) && (this.y === _y));
     }
 
     /**
