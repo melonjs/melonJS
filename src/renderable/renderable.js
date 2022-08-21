@@ -5,6 +5,7 @@ import Container from "./container.js";
 import pool from "./../system/pooling.js";
 import { releaseAllPointerEvents } from "./../input/input.js";
 import { clamp } from "./../math/math.js";
+import Color from "./../math/color.js";
 
 /**
  * @classdesc
@@ -209,18 +210,6 @@ class Renderable extends Rect {
         this.mask = undefined;
 
         /**
-         * define a tint for this renderable. a (255, 255, 255) r, g, b value will remove the tint effect.
-         * @type {Color}
-         * @default (255, 255, 255)
-         * @example
-         * // add a red tint to this renderable
-         * this.tint.setColor(255, 128, 128);
-         * // remove the tint
-         * this.tint.setColor(255, 255, 255);
-         */
-        this.tint = pool.pull("Color", 255, 255, 255, 1.0);
-
-        /**
          * the blend mode to be applied to this renderable (see renderer setBlendMode for available blend mode)
          * @type {string}
          * @default "normal"
@@ -274,6 +263,34 @@ class Renderable extends Rect {
      */
     get isFloating() {
         return this.floating === true || (typeof this.ancestor !== "undefined" && this.ancestor.floating === true);
+    }
+
+    /**
+     * define a tint for this renderable. a (255, 255, 255) r, g, b value will remove the tint effect.
+     * @type {Color}
+     * @default (255, 255, 255)
+     * @example
+     * // add a red tint to this renderable
+     * this.tint.setColor(255, 128, 128);
+     * // remove the tint
+     * this.tint.setColor(255, 255, 255);
+     */
+    get tint() {
+        if (typeof this._tint === "undefined") {
+            this._tint = pool.pull("Color", 255, 255, 255, 1.0);
+        }
+        return this._tint;
+    }
+    set tint(value) {
+        if (typeof this._tint === "undefined") {
+            this._tint = pool.pull("Color", 255, 255, 255, 1.0);
+        }
+        if (value instanceof Color) {
+            this._tint.copy(value);
+        } else {
+            // string (#RGB, #ARGB, #RRGGBB, #AARRGGBB)
+            this._tint.parseCSS(value);
+        }
     }
 
     /**
@@ -725,9 +742,9 @@ class Renderable extends Rect {
             this.mask = undefined;
         }
 
-        if (typeof this.tint !== "undefined") {
-            pool.push(this.tint);
-            this.tint = undefined;
+        if (typeof this._tint !== "undefined") {
+            pool.push(this._tint);
+            this._tint = undefined;
         }
 
         this.ancestor = undefined;
