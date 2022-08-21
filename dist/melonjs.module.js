@@ -10087,8 +10087,49 @@ class Point {
 
     /** @ignore */
     onResetEvent(x = 0, y = 0) {
-       this.x = x;
-       this.y = y;
+        this.set(x, y);
+    }
+
+    /**
+     * set the Point x and y properties to the given values
+     * @param {number} x
+     * @param {number} y
+     * @returns {Point} Reference to this object for method chaining
+     */
+    set(x = 0, y = 0) {
+        this.x = x;
+        this.y = y;
+        return this;
+    }
+
+    /**
+     * return true if the two points are the same
+     * @name equals
+     * @memberof Point
+     * @method
+     * @param {Point} point
+     * @returns {boolean}
+     */
+    /**
+     * return true if this point is equal to the given values
+     * @name equals
+     * @memberof Point
+     * @param {number} x
+     * @param {number} y
+     * @returns {boolean}
+     */
+     equals() {
+        var _x, _y;
+        if (arguments.length === 2) {
+            // x, y
+            _x = arguments[0];
+            _y = arguments[1];
+        } else {
+            // point
+            _x = arguments[0].x;
+            _y = arguments[0].y;
+        }
+        return ((this.x === _x) && (this.y === _y));
     }
 
     /**
@@ -18163,18 +18204,6 @@ class Renderable extends Rect {
         this.mask = undefined;
 
         /**
-         * define a tint for this renderable. a (255, 255, 255) r, g, b value will remove the tint effect.
-         * @type {Color}
-         * @default (255, 255, 255)
-         * @example
-         * // add a red tint to this renderable
-         * this.tint.setColor(255, 128, 128);
-         * // remove the tint
-         * this.tint.setColor(255, 255, 255);
-         */
-        this.tint = pool.pull("Color", 255, 255, 255, 1.0);
-
-        /**
          * the blend mode to be applied to this renderable (see renderer setBlendMode for available blend mode)
          * @type {string}
          * @default "normal"
@@ -18228,6 +18257,34 @@ class Renderable extends Rect {
      */
     get isFloating() {
         return this.floating === true || (typeof this.ancestor !== "undefined" && this.ancestor.floating === true);
+    }
+
+    /**
+     * define a tint for this renderable. a (255, 255, 255) r, g, b value will remove the tint effect.
+     * @type {Color}
+     * @default (255, 255, 255)
+     * @example
+     * // add a red tint to this renderable
+     * this.tint.setColor(255, 128, 128);
+     * // remove the tint
+     * this.tint.setColor(255, 255, 255);
+     */
+    get tint() {
+        if (typeof this._tint === "undefined") {
+            this._tint = pool.pull("Color", 255, 255, 255, 1.0);
+        }
+        return this._tint;
+    }
+    set tint(value) {
+        if (typeof this._tint === "undefined") {
+            this._tint = pool.pull("Color", 255, 255, 255, 1.0);
+        }
+        if (value instanceof Color) {
+            this._tint.copy(value);
+        } else {
+            // string (#RGB, #ARGB, #RRGGBB, #AARRGGBB)
+            this._tint.parseCSS(value);
+        }
     }
 
     /**
@@ -18679,9 +18736,9 @@ class Renderable extends Rect {
             this.mask = undefined;
         }
 
-        if (typeof this.tint !== "undefined") {
-            pool.push(this.tint);
-            this.tint = undefined;
+        if (typeof this._tint !== "undefined") {
+            pool.push(this._tint);
+            this._tint = undefined;
         }
 
         this.ancestor = undefined;
@@ -29115,7 +29172,12 @@ class Sprite extends Renderable {
         }
 
         if (typeof (settings.tint) !== "undefined") {
-            this.tint.setColor(settings.tint);
+            if (settings.tint instanceof Color) {
+                this.tint.copy(settings.tint);
+            } else {
+                // string (#RGB, #ARGB, #RRGGBB, #AARRGGBB)
+                this.tint.parseCSS(settings.tint);
+            }
         }
 
         // set the sprite name if specified

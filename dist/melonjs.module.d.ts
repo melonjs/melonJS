@@ -4894,6 +4894,30 @@ export class Point {
     /** @ignore */
     onResetEvent(x?: number, y?: number): void;
     /**
+     * set the Point x and y properties to the given values
+     * @param {number} x
+     * @param {number} y
+     * @returns {Point} Reference to this object for method chaining
+     */
+    set(x?: number, y?: number): Point;
+    /**
+     * return true if the two points are the same
+     * @name equals
+     * @memberof Point
+     * @method
+     * @param {Point} point
+     * @returns {boolean}
+     */
+    /**
+     * return true if this point is equal to the given values
+     * @name equals
+     * @memberof Point
+     * @param {number} x
+     * @param {number} y
+     * @returns {boolean}
+     */
+    equals(...args: any[]): boolean;
+    /**
      * clone this Point
      * @name clone
      * @returns {Point} new Point
@@ -5813,17 +5837,6 @@ export class Renderable extends Rect {
      */
     mask: Rect | RoundRect | Polygon | Line | Ellipse;
     /**
-     * define a tint for this renderable. a (255, 255, 255) r, g, b value will remove the tint effect.
-     * @type {Color}
-     * @default (255, 255, 255)
-     * @example
-     * // add a red tint to this renderable
-     * this.tint.setColor(255, 128, 128);
-     * // remove the tint
-     * this.tint.setColor(255, 255, 255);
-     */
-    tint: Color;
-    /**
      * the blend mode to be applied to this renderable (see renderer setBlendMode for available blend mode)
      * @type {string}
      * @default "normal"
@@ -5860,6 +5873,19 @@ export class Renderable extends Rect {
      * @type {boolean}
      */
     get isFloating(): boolean;
+    set tint(arg: Color);
+    /**
+     * define a tint for this renderable. a (255, 255, 255) r, g, b value will remove the tint effect.
+     * @type {Color}
+     * @default (255, 255, 255)
+     * @example
+     * // add a red tint to this renderable
+     * this.tint.setColor(255, 128, 128);
+     * // remove the tint
+     * this.tint.setColor(255, 255, 255);
+     */
+    get tint(): Color;
+    _tint: any;
     set inViewport(arg: boolean);
     /**
      * Whether the renderable object is visible and within the viewport
