@@ -1,5 +1,5 @@
 /*!
- * melonJS Game Engine - v13.2.0
+ * melonJS Game Engine - v13.2.1
  * http://www.melonjs.org
  * melonjs is licensed under the MIT License.
  * http://www.opensource.org/licenses/mit-license
@@ -32879,10 +32879,10 @@ class BasePlugin {
          * this can be overridden by the plugin
          * @public
          * @type {string}
-         * @default "13.2.0"
+         * @default "13.2.1"
          * @name plugin.Base#version
          */
-        this.version = "13.2.0";
+        this.version = "13.2.1";
     }
 }
 
@@ -37691,7 +37691,7 @@ Renderer.prototype.getScreenContext = function()  {
  * @name version
  * @type {string}
  */
-const version = "13.2.0";
+const version = "13.2.1";
 
 
 /**
