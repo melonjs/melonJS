@@ -91,8 +91,11 @@ Tools integration and usage with melonJS is documented in our [Wiki](https://git
 
 # Using melonJS
 
-### For your first time using melonJS, use either of these tutorials for setting up the engine.  These are where you start.
+### For your first time using melonJS, this is where you start
 
+- [melonJS: Hacking a Platformer Game](https://melonjs.org/tutorial/)
+
+You can find the archived tutorials here:
 - [Platformer](http://melonjs.github.io/tutorial-platformer/) Step by Step Tutorial.
 - [Space Invaders](http://melonjs.github.io/tutorial-space-invaders/) Step by Step Tutorial.
 
