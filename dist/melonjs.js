@@ -1,5 +1,5 @@
 /*!
- * melonJS Game Engine - v13.2.1
+ * melonJS Game Engine - v13.3.0
  * http://www.melonjs.org
  * melonjs is licensed under the MIT License.
  * http://www.opensource.org/licenses/mit-license
@@ -128,12 +128,20 @@
 	  return classof$2(it) == 'String' ? split(it, '') : $Object$3(it);
 	} : $Object$3;
 
+	// we can't use just `it == null` since of `document.all` special case
+	// https://tc39.es/ecma262/#sec-IsHTMLDDA-internal-slot-aec
+	var isNullOrUndefined$2 = function (it) {
+	  return it === null || it === undefined;
+	};
+
+	var isNullOrUndefined$1 = isNullOrUndefined$2;
+
 	var $TypeError$5 = TypeError;
 
 	// `RequireObjectCoercible` abstract operation
 	// https://tc39.es/ecma262/#sec-requireobjectcoercible
 	var requireObjectCoercible$3 = function (it) {
-	  if (it == undefined) { throw $TypeError$5("Can't call method on " + it); }
+	  if (isNullOrUndefined$1(it)) { throw $TypeError$5("Can't call method on " + it); }
 	  return it;
 	};
 
@@ -153,7 +161,14 @@
 
 	var isCallable$a = isCallable$b;
 
-	var isObject$5 = function (it) {
+	var documentAll = typeof document == 'object' && document.all;
+
+	// https://tc39.es/ecma262/#sec-IsHTMLDDA-internal-slot
+	var SPECIAL_DOCUMENT_ALL = typeof documentAll == 'undefined' && documentAll !== undefined;
+
+	var isObject$5 = SPECIAL_DOCUMENT_ALL ? function (it) {
+	  return typeof it == 'object' ? it !== null : isCallable$a(it) || it === documentAll;
+	} : function (it) {
 	  return typeof it == 'object' ? it !== null : isCallable$a(it);
 	};
 
@@ -210,7 +225,7 @@
 	var fails$5 = fails$9;
 
 	// eslint-disable-next-line es-x/no-object-getownpropertysymbols -- required for testing
-	var nativeSymbol = !!Object.getOwnPropertySymbols && !fails$5(function () {
+	var symbolConstructorDetection = !!Object.getOwnPropertySymbols && !fails$5(function () {
 	  var symbol = Symbol();
 	  // Chrome 38 Symbol has incorrect toString conversion
 	  // `get-own-property-symbols` polyfill symbols converted to object are not Symbol instances
@@ -221,7 +236,7 @@
 
 	/* eslint-disable es-x/no-symbol -- required for testing */
 
-	var NATIVE_SYMBOL$1 = nativeSymbol;
+	var NATIVE_SYMBOL$1 = symbolConstructorDetection;
 
 	var useSymbolAsUid = NATIVE_SYMBOL$1
 	  && !Symbol.sham
@@ -263,12 +278,13 @@
 	};
 
 	var aCallable = aCallable$1;
+	var isNullOrUndefined = isNullOrUndefined$2;
 
 	// `GetMethod` abstract operation
 	// https://tc39.es/ecma262/#sec-getmethod
 	var getMethod$1 = function (V, P) {
 	  var func = V[P];
-	  return func == null ? undefined : aCallable(func);
+	  return isNullOrUndefined(func) ? undefined : aCallable(func);
 	};
 
 	var call$2 = functionCall;
@@ -315,10 +331,10 @@
 	(shared$3.exports = function (key, value) {
 	  return store$2[key] || (store$2[key] = value !== undefined ? value : {});
 	})('versions', []).push({
-	  version: '3.24.1',
+	  version: '3.25.0',
 	  mode: 'global',
 	  copyright: '© 2014-2022 Denis Pushkarev (zloirock.ru)',
-	  license: 'https://github.com/zloirock/core-js/blob/v3.24.1/LICENSE',
+	  license: 'https://github.com/zloirock/core-js/blob/v3.25.0/LICENSE',
 	  source: 'https://github.com/zloirock/core-js'
 	});
 
@@ -358,7 +374,7 @@
 	var shared$2 = shared$3.exports;
 	var hasOwn$6 = hasOwnProperty_1;
 	var uid$1 = uid$2;
-	var NATIVE_SYMBOL = nativeSymbol;
+	var NATIVE_SYMBOL = symbolConstructorDetection;
 	var USE_SYMBOL_AS_UID = useSymbolAsUid;
 
 	var WellKnownSymbolsStore = shared$2('wks');
@@ -575,15 +591,14 @@
 	  };
 	}
 
-	var inspectSource$2 = store$1.inspectSource;
+	var inspectSource$1 = store$1.inspectSource;
 
 	var global$5 = global$c;
 	var isCallable$4 = isCallable$b;
-	var inspectSource$1 = inspectSource$2;
 
 	var WeakMap$1 = global$5.WeakMap;
 
-	var nativeWeakMap = isCallable$4(WeakMap$1) && /native code/.test(inspectSource$1(WeakMap$1));
+	var weakMapBasicDetection = isCallable$4(WeakMap$1) && /native code/.test(String(WeakMap$1));
 
 	var shared$1 = shared$3.exports;
 	var uid = uid$2;
@@ -596,7 +611,7 @@
 
 	var hiddenKeys$3 = {};
 
-	var NATIVE_WEAK_MAP = nativeWeakMap;
+	var NATIVE_WEAK_MAP = weakMapBasicDetection;
 	var global$4 = global$c;
 	var uncurryThis$4 = functionUncurryThis;
 	var isObject = isObject$5;
@@ -630,7 +645,7 @@
 	  var wmhas = uncurryThis$4(store.has);
 	  var wmset = uncurryThis$4(store.set);
 	  set = function (it, metadata) {
-	    if (wmhas(store, it)) { throw new TypeError$1(OBJECT_ALREADY_INITIALIZED); }
+	    if (wmhas(store, it)) { throw TypeError$1(OBJECT_ALREADY_INITIALIZED); }
 	    metadata.facade = it;
 	    wmset(store, it, metadata);
 	    return metadata;
@@ -645,7 +660,7 @@
 	  var STATE = sharedKey('state');
 	  hiddenKeys$2[STATE] = true;
 	  set = function (it, metadata) {
-	    if (hasOwn$3(it, STATE)) { throw new TypeError$1(OBJECT_ALREADY_INITIALIZED); }
+	    if (hasOwn$3(it, STATE)) { throw TypeError$1(OBJECT_ALREADY_INITIALIZED); }
 	    metadata.facade = it;
 	    createNonEnumerableProperty$1(it, STATE, metadata);
 	    return metadata;
@@ -671,7 +686,7 @@
 	var hasOwn$2 = hasOwnProperty_1;
 	var DESCRIPTORS = descriptors;
 	var CONFIGURABLE_FUNCTION_NAME = functionName.CONFIGURABLE;
-	var inspectSource = inspectSource$2;
+	var inspectSource = inspectSource$1;
 	var InternalStateModule = internalState;
 
 	var enforceInternalState = InternalStateModule.enforce;
@@ -32989,10 +33004,10 @@
 	     * this can be overridden by the plugin
 	     * @public
 	     * @type {string}
-	     * @default "13.2.1"
+	     * @default "13.3.0"
 	     * @name plugin.Base#version
 	     */
-	    this.version = "13.2.1";
+	    this.version = "13.3.0";
 	};
 
 	/**
@@ -37686,7 +37701,7 @@
 	 * @name version
 	 * @type {string}
 	 */
-	var version = "13.2.1";
+	var version = "13.3.0";
 
 
 	/**
