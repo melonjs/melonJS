@@ -95,10 +95,6 @@ Tools integration and usage with melonJS is documented in our [Wiki](https://git
 
 - [melonJS: Hacking a Platformer Game](https://melonjs.org/tutorial/)
 
-You can find the archived tutorials here:
-- [Platformer](http://melonjs.github.io/tutorial-platformer/) Step by Step Tutorial.
-- [Space Invaders](http://melonjs.github.io/tutorial-space-invaders/) Step by Step Tutorial.
-
 You may find it useful to skim the overview found at the wiki [Details & Usage](https://github.com/melonjs/melonJS/wiki#details--usage)
 
 When starting your own projects, checkout our [es6 boilerplate](https://github.com/melonjs/es6-boilerplate)
