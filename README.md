@@ -149,7 +149,7 @@ Documentation
 * [Online API](http://melonjs.github.io/melonJS/docs/)
 
 To enable an offline version of the documentation, navigate to the settings page and enable `offline storage`:
-![](https://user-images.githubusercontent.com/22450567/186643536-854af31e-9c94-412e-a764-4bb7f93f15c3.png)
+<img width="297" alt="186643536-854af31e-9c94-412e-a764-4bb7f93f15c3" src="https://user-images.githubusercontent.com/4033090/187061867-cf8c4c8a-437b-4f76-9138-610adda0ca23.png">
 
 Download melonJS
 -------------------------------------------------------------------------------
