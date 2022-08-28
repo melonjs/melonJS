@@ -111,7 +111,7 @@ A few demos of melonJS capabilities :
 * [Primitive Drawing Demo](https://melonjs.github.io/examples/graphics/)
 * [UI Demo](https://melonjs.github.io/examples/UI/)
 
-   More examples are available [here](https://melonjs.github.io/examples/)
+More examples are available [here](https://melonjs.github.io/examples/)
 
 -------------------------------------------------------------------------------
 
@@ -147,8 +147,9 @@ Documentation
 -------------------------------------------------------------------------------
 
 * [Online API](http://melonjs.github.io/melonJS/docs/)
-* [offline](https://github.com/melonjs/melonJS/archive/gh-pages.zip) version under the `docs` directory)
 
+To enable an offline version of the documentation, navigate to the settings page and enable `offline storage`:
+![](https://user-images.githubusercontent.com/22450567/186643536-854af31e-9c94-412e-a764-4bb7f93f15c3.png)
 
 Download melonJS
 -------------------------------------------------------------------------------
