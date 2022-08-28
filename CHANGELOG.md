@@ -1,6 +1,6 @@
 # Changelog
 
-## [13.3.0] (melonJS 2) - _2022-xx-xx_
+## [13.3.0] (melonJS 2) - _2022-08-28_
 
 ### Added
 - Documentation: enable offline documentation access with the latest webdoc 2.1 version
