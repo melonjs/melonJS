@@ -1,5 +1,7 @@
 # Changelog
 
+## [13.4.0] (melonJS 2) - _2022-xx-xx_
+
 ## [13.3.0] (melonJS 2) - _2022-08-28_
 
 ### Added
@@ -1311,6 +1313,7 @@
 - first public version with alex4 !
 - www.melonjs.org is live :)
 
+[13.4.0]: https://github.com/melonjs/melonJS/compare/13.4.0...13.3.0
 [13.3.0]: https://github.com/melonjs/melonJS/compare/13.3.0...13.2.1
 [13.2.1]: https://github.com/melonjs/melonJS/compare/13.2.1...13.2.0
 [13.2.0]: https://github.com/melonjs/melonJS/compare/13.2.0...13.1.1
