@@ -2,6 +2,9 @@
 
 ## [13.4.0] (melonJS 2) - _2022-xx-xx_
 
+### Fixed
+- BitmapText: fix kerning when scaling BitmapText objects (thanks @SiLiKhon)
+
 ## [13.3.0] (melonJS 2) - _2022-08-28_
 
 ### Added

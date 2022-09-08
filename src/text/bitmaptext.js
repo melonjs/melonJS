@@ -312,7 +312,7 @@ class BitmapText extends Renderable {
                     renderer.drawImage(this.fontImage,
                         glyph.x, glyph.y,
                         glyphWidth, glyphHeight,
-                        x + glyph.xoffset,
+                        x + glyph.xoffset * this.fontScale.x,
                         y + glyph.yoffset * this.fontScale.y,
                         glyphWidth * this.fontScale.x, glyphHeight * this.fontScale.y
                     );
