@@ -52,7 +52,7 @@
   ],
   "dependencies": {
     "@teppeis/multimaps": "^2.0.0",
-    "core-js": "^3.25.0",
+    "core-js": "^3.25.1",
     "earcut": "2.2.4",
     "eventemitter3": "^4.0.7",
     "howler": "2.2.3"
@@ -62,7 +62,7 @@
     "@rollup/plugin-buble": "^0.21.3",
     "@rollup/plugin-commonjs": "^22.0.2",
     "@rollup/plugin-image": "^2.1.1",
-    "@rollup/plugin-node-resolve": "^13.3.0",
+    "@rollup/plugin-node-resolve": "^14.0.0",
     "@rollup/plugin-replace": "^4.0.0",
     "@types/offscreencanvas": "^2019.7.0",
     "@webdoc/cli": "^2.1.2",
