@@ -2,6 +2,9 @@
 
 ## [13.4.0] (melonJS 2) - _2022-xx-xx_
 
+### Added
+- BitmapText: melonJS will now throw a warning message in the console, instead of failing silently, if a Glyph is not defined for a given character (thanks @wpernath)
+
 ### Fixed
 - BitmapText: fix kerning when scaling BitmapText objects (thanks @SiLiKhon)
 

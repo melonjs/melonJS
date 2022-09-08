@@ -302,25 +302,32 @@ class BitmapText extends Renderable {
                 // calculate the char index
                 var ch = string.charCodeAt(c);
                 var glyph = this.fontData.glyphs[ch];
-                var glyphWidth = glyph.width;
-                var glyphHeight = glyph.height;
-                var kerning = (lastGlyph && lastGlyph.kerning) ? lastGlyph.getKerning(ch) : 0;
 
-                // draw it
-                if (glyphWidth !== 0 && glyphHeight !== 0) {
-                    // some browser throw an exception when drawing a 0 width or height image
-                    renderer.drawImage(this.fontImage,
-                        glyph.x, glyph.y,
-                        glyphWidth, glyphHeight,
-                        x + glyph.xoffset * this.fontScale.x,
-                        y + glyph.yoffset * this.fontScale.y,
-                        glyphWidth * this.fontScale.x, glyphHeight * this.fontScale.y
-                    );
+                if (typeof glyph !== "undefined") {
+                    var glyphWidth = glyph.width;
+                    var glyphHeight = glyph.height;
+                    var kerning = (lastGlyph && lastGlyph.kerning) ? lastGlyph.getKerning(ch) : 0;
+                    var scaleX = this.fontScale.x;
+                    var scaleY = this.fontScale.y;
+
+                    // draw it
+                    if (glyphWidth !== 0 && glyphHeight !== 0) {
+                        // some browser throw an exception when drawing a 0 width or height image
+                        renderer.drawImage(this.fontImage,
+                            glyph.x, glyph.y,
+                            glyphWidth, glyphHeight,
+                            x + glyph.xoffset * scaleX,
+                            y + glyph.yoffset * scaleY,
+                            glyphWidth * scaleX, glyphHeight * scaleY
+                        );
+                    }
+
+                    // increment position
+                    x += (glyph.xadvance + kerning) * scaleX;
+                    lastGlyph = glyph;
+                } else {
+                    console.warn("BitmapText: no defined Glyph in for " + String.fromCharCode(ch));
                 }
-
-                // increment position
-                x += (glyph.xadvance + kerning) * this.fontScale.x;
-                lastGlyph = glyph;
             }
             // increment line
             y += stringHeight;

@@ -56,9 +56,11 @@ class TextMetrics extends Bounds {
             for (var i = 0; i < characters.length; i++) {
                 var ch = characters[i].charCodeAt(0);
                 var glyph = this.ancestor.fontData.glyphs[ch];
-                var kerning = (lastGlyph && lastGlyph.kerning) ? lastGlyph.getKerning(ch) : 0;
-                width += (glyph.xadvance + kerning) * this.ancestor.fontScale.x;
-                lastGlyph = glyph;
+                if (typeof glyph !== "undefined") {
+                    var kerning = (lastGlyph && lastGlyph.kerning) ? lastGlyph.getKerning(ch) : 0;
+                    width += (glyph.xadvance + kerning) * this.ancestor.fontScale.x;
+                    lastGlyph = glyph;
+                }
             }
             return width;
         }
