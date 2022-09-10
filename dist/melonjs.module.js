@@ -1,5 +1,5 @@
 /*!
- * melonJS Game Engine - v13.3.0
+ * melonJS Game Engine - v13.4.0
  * http://www.melonjs.org
  * melonjs is licensed under the MIT License.
  * http://www.opensource.org/licenses/mit-license
@@ -325,10 +325,10 @@ var store$2 = sharedStore;
 (shared$3.exports = function (key, value) {
   return store$2[key] || (store$2[key] = value !== undefined ? value : {});
 })('versions', []).push({
-  version: '3.25.0',
+  version: '3.25.1',
   mode: 'global',
   copyright: '© 2014-2022 Denis Pushkarev (zloirock.ru)',
-  license: 'https://github.com/zloirock/core-js/blob/v3.25.0/LICENSE',
+  license: 'https://github.com/zloirock/core-js/blob/v3.25.1/LICENSE',
   source: 'https://github.com/zloirock/core-js'
 });
 
@@ -1004,7 +1004,7 @@ var global$2 = global$c;
 
 // `globalThis` object
 // https://tc39.es/ecma262/#sec-globalthis
-$$4({ global: true }, {
+$$4({ global: true, forced: global$2.globalThis !== global$2 }, {
   globalThis: global$2
 });
 
@@ -32894,10 +32894,10 @@ class BasePlugin {
          * this can be overridden by the plugin
          * @public
          * @type {string}
-         * @default "13.3.0"
+         * @default "13.4.0"
          * @name plugin.Base#version
          */
-        this.version = "13.3.0";
+        this.version = "13.4.0";
     }
 }
 
@@ -34105,9 +34105,11 @@ class TextMetrics extends Bounds {
             for (var i = 0; i < characters.length; i++) {
                 var ch = characters[i].charCodeAt(0);
                 var glyph = this.ancestor.fontData.glyphs[ch];
-                var kerning = (lastGlyph && lastGlyph.kerning) ? lastGlyph.getKerning(ch) : 0;
-                width += (glyph.xadvance + kerning) * this.ancestor.fontScale.x;
-                lastGlyph = glyph;
+                if (typeof glyph !== "undefined") {
+                    var kerning = (lastGlyph && lastGlyph.kerning) ? lastGlyph.getKerning(ch) : 0;
+                    width += (glyph.xadvance + kerning) * this.ancestor.fontScale.x;
+                    lastGlyph = glyph;
+                }
             }
             return width;
         }
@@ -34938,25 +34940,32 @@ class BitmapText extends Renderable {
                 // calculate the char index
                 var ch = string.charCodeAt(c);
                 var glyph = this.fontData.glyphs[ch];
-                var glyphWidth = glyph.width;
-                var glyphHeight = glyph.height;
-                var kerning = (lastGlyph && lastGlyph.kerning) ? lastGlyph.getKerning(ch) : 0;
 
-                // draw it
-                if (glyphWidth !== 0 && glyphHeight !== 0) {
-                    // some browser throw an exception when drawing a 0 width or height image
-                    renderer.drawImage(this.fontImage,
-                        glyph.x, glyph.y,
-                        glyphWidth, glyphHeight,
-                        x + glyph.xoffset,
-                        y + glyph.yoffset * this.fontScale.y,
-                        glyphWidth * this.fontScale.x, glyphHeight * this.fontScale.y
-                    );
+                if (typeof glyph !== "undefined") {
+                    var glyphWidth = glyph.width;
+                    var glyphHeight = glyph.height;
+                    var kerning = (lastGlyph && lastGlyph.kerning) ? lastGlyph.getKerning(ch) : 0;
+                    var scaleX = this.fontScale.x;
+                    var scaleY = this.fontScale.y;
+
+                    // draw it
+                    if (glyphWidth !== 0 && glyphHeight !== 0) {
+                        // some browser throw an exception when drawing a 0 width or height image
+                        renderer.drawImage(this.fontImage,
+                            glyph.x, glyph.y,
+                            glyphWidth, glyphHeight,
+                            x + glyph.xoffset * scaleX,
+                            y + glyph.yoffset * scaleY,
+                            glyphWidth * scaleX, glyphHeight * scaleY
+                        );
+                    }
+
+                    // increment position
+                    x += (glyph.xadvance + kerning) * scaleX;
+                    lastGlyph = glyph;
+                } else {
+                    console.warn("BitmapText: no defined Glyph in for " + String.fromCharCode(ch));
                 }
-
-                // increment position
-                x += (glyph.xadvance + kerning) * this.fontScale.x;
-                lastGlyph = glyph;
             }
             // increment line
             y += stringHeight;
@@ -37706,7 +37715,7 @@ Renderer.prototype.getScreenContext = function()  {
  * @name version
  * @type {string}
  */
-const version = "13.3.0";
+const version = "13.4.0";
 
 
 /**
