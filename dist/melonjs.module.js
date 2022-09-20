@@ -147,20 +147,34 @@ var toIndexedObject$3 = function (it) {
   return IndexedObject(requireObjectCoercible$2(it));
 };
 
+var documentAll$2 = typeof document == 'object' && document.all;
+
+// https://tc39.es/ecma262/#sec-IsHTMLDDA-internal-slot
+var IS_HTMLDDA = typeof documentAll$2 == 'undefined' && documentAll$2 !== undefined;
+
+var documentAll_1 = {
+  all: documentAll$2,
+  IS_HTMLDDA: IS_HTMLDDA
+};
+
+var $documentAll$1 = documentAll_1;
+
+var documentAll$1 = $documentAll$1.all;
+
 // `IsCallable` abstract operation
 // https://tc39.es/ecma262/#sec-iscallable
-var isCallable$b = function (argument) {
+var isCallable$b = $documentAll$1.IS_HTMLDDA ? function (argument) {
+  return typeof argument == 'function' || argument === documentAll$1;
+} : function (argument) {
   return typeof argument == 'function';
 };
 
 var isCallable$a = isCallable$b;
+var $documentAll = documentAll_1;
 
-var documentAll = typeof document == 'object' && document.all;
+var documentAll = $documentAll.all;
 
-// https://tc39.es/ecma262/#sec-IsHTMLDDA-internal-slot
-var SPECIAL_DOCUMENT_ALL = typeof documentAll == 'undefined' && documentAll !== undefined;
-
-var isObject$5 = SPECIAL_DOCUMENT_ALL ? function (it) {
+var isObject$5 = $documentAll.IS_HTMLDDA ? function (it) {
   return typeof it == 'object' ? it !== null : isCallable$a(it) || it === documentAll;
 } : function (it) {
   return typeof it == 'object' ? it !== null : isCallable$a(it);
@@ -325,10 +339,10 @@ var store$2 = sharedStore;
 (shared$3.exports = function (key, value) {
   return store$2[key] || (store$2[key] = value !== undefined ? value : {});
 })('versions', []).push({
-  version: '3.25.1',
+  version: '3.25.2',
   mode: 'global',
   copyright: '© 2014-2022 Denis Pushkarev (zloirock.ru)',
-  license: 'https://github.com/zloirock/core-js/blob/v3.25.1/LICENSE',
+  license: 'https://github.com/zloirock/core-js/blob/v3.25.2/LICENSE',
   source: 'https://github.com/zloirock/core-js'
 });
 
