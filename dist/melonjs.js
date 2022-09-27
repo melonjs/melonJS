@@ -19,7 +19,7 @@
 
 	// https://github.com/zloirock/core-js/issues/86#issuecomment-115759028
 	var global$c =
-	  // eslint-disable-next-line es-x/no-global-this -- safe
+	  // eslint-disable-next-line es/no-global-this -- safe
 	  check(typeof globalThis == 'object' && globalThis) ||
 	  check(typeof window == 'object' && window) ||
 	  // eslint-disable-next-line no-restricted-globals -- safe
@@ -42,14 +42,14 @@
 
 	// Detect IE8's incomplete defineProperty implementation
 	var descriptors = !fails$8(function () {
-	  // eslint-disable-next-line es-x/no-object-defineproperty -- required for testing
+	  // eslint-disable-next-line es/no-object-defineproperty -- required for testing
 	  return Object.defineProperty({}, 1, { get: function () { return 7; } })[1] != 7;
 	});
 
 	var fails$7 = fails$9;
 
 	var functionBindNative = !fails$7(function () {
-	  // eslint-disable-next-line es-x/no-function-prototype-bind -- safe
+	  // eslint-disable-next-line es/no-function-prototype-bind -- safe
 	  var test = (function () { /* empty */ }).bind();
 	  // eslint-disable-next-line no-prototype-builtins -- safe
 	  return typeof test != 'function' || test.hasOwnProperty('prototype');
@@ -66,7 +66,7 @@
 	var objectPropertyIsEnumerable = {};
 
 	var $propertyIsEnumerable = {}.propertyIsEnumerable;
-	// eslint-disable-next-line es-x/no-object-getownpropertydescriptor -- safe
+	// eslint-disable-next-line es/no-object-getownpropertydescriptor -- safe
 	var getOwnPropertyDescriptor$1 = Object.getOwnPropertyDescriptor;
 
 	// Nashorn ~ JDK8 bug
@@ -233,12 +233,12 @@
 
 	var engineV8Version = version$1;
 
-	/* eslint-disable es-x/no-symbol -- required for testing */
+	/* eslint-disable es/no-symbol -- required for testing */
 
 	var V8_VERSION = engineV8Version;
 	var fails$5 = fails$9;
 
-	// eslint-disable-next-line es-x/no-object-getownpropertysymbols -- required for testing
+	// eslint-disable-next-line es/no-object-getownpropertysymbols -- required for testing
 	var symbolConstructorDetection = !!Object.getOwnPropertySymbols && !fails$5(function () {
 	  var symbol = Symbol();
 	  // Chrome 38 Symbol has incorrect toString conversion
@@ -248,7 +248,7 @@
 	    !Symbol.sham && V8_VERSION && V8_VERSION < 41;
 	});
 
-	/* eslint-disable es-x/no-symbol -- required for testing */
+	/* eslint-disable es/no-symbol -- required for testing */
 
 	var NATIVE_SYMBOL$1 = symbolConstructorDetection;
 
@@ -321,7 +321,7 @@
 
 	var global$9 = global$c;
 
-	// eslint-disable-next-line es-x/no-object-defineproperty -- safe
+	// eslint-disable-next-line es/no-object-defineproperty -- safe
 	var defineProperty$1 = Object.defineProperty;
 
 	var defineGlobalProperty$3 = function (key, value) {
@@ -345,10 +345,10 @@
 	(shared$3.exports = function (key, value) {
 	  return store$2[key] || (store$2[key] = value !== undefined ? value : {});
 	})('versions', []).push({
-	  version: '3.25.2',
+	  version: '3.25.3',
 	  mode: 'global',
 	  copyright: '© 2014-2022 Denis Pushkarev (zloirock.ru)',
-	  license: 'https://github.com/zloirock/core-js/blob/v3.25.2/LICENSE',
+	  license: 'https://github.com/zloirock/core-js/blob/v3.25.3/LICENSE',
 	  source: 'https://github.com/zloirock/core-js'
 	});
 
@@ -369,7 +369,7 @@
 
 	// `HasOwnProperty` abstract operation
 	// https://tc39.es/ecma262/#sec-hasownproperty
-	// eslint-disable-next-line es-x/no-object-hasown -- safe
+	// eslint-disable-next-line es/no-object-hasown -- safe
 	var hasOwnProperty_1 = Object.hasOwn || function hasOwn(it, key) {
 	  return hasOwnProperty(toObject(it), key);
 	};
@@ -462,7 +462,7 @@
 
 	// Thanks to IE8 for its funny defineProperty
 	var ie8DomDefine = !DESCRIPTORS$6 && !fails$4(function () {
-	  // eslint-disable-next-line es-x/no-object-defineproperty -- required for testing
+	  // eslint-disable-next-line es/no-object-defineproperty -- required for testing
 	  return Object.defineProperty(createElement('div'), 'a', {
 	    get: function () { return 7; }
 	  }).a != 7;
@@ -477,7 +477,7 @@
 	var hasOwn$5 = hasOwnProperty_1;
 	var IE8_DOM_DEFINE$1 = ie8DomDefine;
 
-	// eslint-disable-next-line es-x/no-object-getownpropertydescriptor -- safe
+	// eslint-disable-next-line es/no-object-getownpropertydescriptor -- safe
 	var $getOwnPropertyDescriptor$1 = Object.getOwnPropertyDescriptor;
 
 	// `Object.getOwnPropertyDescriptor` method
@@ -499,7 +499,7 @@
 	// V8 ~ Chrome 36-
 	// https://bugs.chromium.org/p/v8/issues/detail?id=3334
 	var v8PrototypeDefineBug = DESCRIPTORS$4 && fails$3(function () {
-	  // eslint-disable-next-line es-x/no-object-defineproperty -- required for testing
+	  // eslint-disable-next-line es/no-object-defineproperty -- required for testing
 	  return Object.defineProperty(function () { /* empty */ }, 'prototype', {
 	    value: 42,
 	    writable: false
@@ -524,9 +524,9 @@
 	var toPropertyKey = toPropertyKey$2;
 
 	var $TypeError = TypeError;
-	// eslint-disable-next-line es-x/no-object-defineproperty -- safe
+	// eslint-disable-next-line es/no-object-defineproperty -- safe
 	var $defineProperty = Object.defineProperty;
-	// eslint-disable-next-line es-x/no-object-getownpropertydescriptor -- safe
+	// eslint-disable-next-line es/no-object-getownpropertydescriptor -- safe
 	var $getOwnPropertyDescriptor = Object.getOwnPropertyDescriptor;
 	var ENUMERABLE = 'enumerable';
 	var CONFIGURABLE$1 = 'configurable';
@@ -578,7 +578,7 @@
 	var hasOwn$4 = hasOwnProperty_1;
 
 	var FunctionPrototype = Function.prototype;
-	// eslint-disable-next-line es-x/no-object-getownpropertydescriptor -- safe
+	// eslint-disable-next-line es/no-object-getownpropertydescriptor -- safe
 	var getDescriptor = DESCRIPTORS$1 && Object.getOwnPropertyDescriptor;
 
 	var EXISTS = hasOwn$4(FunctionPrototype, 'name');
@@ -705,7 +705,7 @@
 
 	var enforceInternalState = InternalStateModule.enforce;
 	var getInternalState = InternalStateModule.get;
-	// eslint-disable-next-line es-x/no-object-defineproperty -- safe
+	// eslint-disable-next-line es/no-object-defineproperty -- safe
 	var defineProperty = Object.defineProperty;
 
 	var CONFIGURABLE_LENGTH = DESCRIPTORS && !fails$2(function () {
@@ -780,7 +780,7 @@
 
 	// `Math.trunc` method
 	// https://tc39.es/ecma262/#sec-math.trunc
-	// eslint-disable-next-line es-x/no-math-trunc -- safe
+	// eslint-disable-next-line es/no-math-trunc -- safe
 	var mathTrunc = Math.trunc || function trunc(x) {
 	  var n = +x;
 	  return (n > 0 ? floor : ceil)(n);
@@ -899,14 +899,14 @@
 
 	// `Object.getOwnPropertyNames` method
 	// https://tc39.es/ecma262/#sec-object.getownpropertynames
-	// eslint-disable-next-line es-x/no-object-getownpropertynames -- safe
+	// eslint-disable-next-line es/no-object-getownpropertynames -- safe
 	objectGetOwnPropertyNames.f = Object.getOwnPropertyNames || function getOwnPropertyNames(O) {
 	  return internalObjectKeys(O, hiddenKeys);
 	};
 
 	var objectGetOwnPropertySymbols = {};
 
-	// eslint-disable-next-line es-x/no-object-getownpropertysymbols -- safe
+	// eslint-disable-next-line es/no-object-getownpropertysymbols -- safe
 	objectGetOwnPropertySymbols.f = Object.getOwnPropertySymbols;
 
 	var getBuiltIn = getBuiltIn$3;
@@ -1136,7 +1136,7 @@
 	// https://tc39.es/ecma262/#String.prototype.trimleft
 	var stringTrimStart = forcedStringTrimMethod$1('trimStart') ? function trimStart() {
 	  return $trimStart(this);
-	// eslint-disable-next-line es-x/no-string-prototype-trimstart-trimend -- safe
+	// eslint-disable-next-line es/no-string-prototype-trimstart-trimend -- safe
 	} : ''.trimStart;
 
 	var $$3 = _export;
@@ -1144,7 +1144,7 @@
 
 	// `String.prototype.trimLeft` method
 	// https://tc39.es/ecma262/#sec-string.prototype.trimleft
-	// eslint-disable-next-line es-x/no-string-prototype-trimleft-trimright -- safe
+	// eslint-disable-next-line es/no-string-prototype-trimleft-trimright -- safe
 	$$3({ target: 'String', proto: true, name: 'trimStart', forced: ''.trimLeft !== trimStart$1 }, {
 	  trimLeft: trimStart$1
 	});
@@ -1156,7 +1156,7 @@
 
 	// `String.prototype.trimStart` method
 	// https://tc39.es/ecma262/#sec-string.prototype.trimstart
-	// eslint-disable-next-line es-x/no-string-prototype-trimstart-trimend -- safe
+	// eslint-disable-next-line es/no-string-prototype-trimstart-trimend -- safe
 	$$2({ target: 'String', proto: true, name: 'trimStart', forced: ''.trimStart !== trimStart }, {
 	  trimStart: trimStart
 	});
@@ -1180,7 +1180,7 @@
 	// https://tc39.es/ecma262/#String.prototype.trimright
 	var stringTrimEnd = forcedStringTrimMethod('trimEnd') ? function trimEnd() {
 	  return $trimEnd(this);
-	// eslint-disable-next-line es-x/no-string-prototype-trimstart-trimend -- safe
+	// eslint-disable-next-line es/no-string-prototype-trimstart-trimend -- safe
 	} : ''.trimEnd;
 
 	var $$1 = _export;
@@ -1188,7 +1188,7 @@
 
 	// `String.prototype.trimRight` method
 	// https://tc39.es/ecma262/#sec-string.prototype.trimend
-	// eslint-disable-next-line es-x/no-string-prototype-trimleft-trimright -- safe
+	// eslint-disable-next-line es/no-string-prototype-trimleft-trimright -- safe
 	$$1({ target: 'String', proto: true, name: 'trimEnd', forced: ''.trimRight !== trimEnd$1 }, {
 	  trimRight: trimEnd$1
 	});
@@ -1200,7 +1200,7 @@
 
 	// `String.prototype.trimEnd` method
 	// https://tc39.es/ecma262/#sec-string.prototype.trimend
-	// eslint-disable-next-line es-x/no-string-prototype-trimstart-trimend -- safe
+	// eslint-disable-next-line es/no-string-prototype-trimstart-trimend -- safe
 	$({ target: 'String', proto: true, name: 'trimEnd', forced: ''.trimEnd !== trimEnd }, {
 	  trimEnd: trimEnd
 	});
