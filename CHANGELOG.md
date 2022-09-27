@@ -1,6 +1,6 @@
 # Changelog
 
-## [13.4.0] (melonJS 2) - _2022-xx-xx_
+## [13.4.0] (melonJS 2) - _2022-09-27_
 
 ### Added
 - BitmapText: melonJS will now throw a warning message in the console, instead of failing silently, if a Glyph is not defined for a given character (thanks @wpernath)
