@@ -1,5 +1,6 @@
-describe("Shape : me.Rect", function () {
+import * as me from "melonjs";
 
+describe("Shape : me.Rect", function () {
     // test fail without this
     me.pool.register("Bounds", me.Bounds, true);
 
@@ -16,7 +17,6 @@ describe("Shape : me.Rect", function () {
     var rect6 = new me.Rect(-Infinity, -Infinity, Infinity, Infinity);
 
     describe("rect1", function () {
-
         it("rect 1 has finite coordinates", function () {
             expect(rect1.isFinite()).toEqual(true);
         });
@@ -44,7 +44,6 @@ describe("Shape : me.Rect", function () {
             expect(rect1.pos.x).toEqual(0);
             expect(rect1.pos.y).toEqual(0);
         });
-
 
         it("scale rect1", function () {
             rect1.scale(4, 2);
@@ -97,7 +96,6 @@ describe("Shape : me.Rect", function () {
     });
 
     describe("rect2", function () {
-
         it("rect 2 center is set", function () {
             expect(rect2.centerX).toEqual(100);
             expect(rect2.centerY).toEqual(100);
@@ -140,7 +138,7 @@ describe("Shape : me.Rect", function () {
         });
 
         it("rect 5 pos is (50,50)", function () {
-            expect(rect5.pos.equals({x: 50, y: 50})).toEqual(true);
+            expect(rect5.pos.equals({ x: 50, y: 50 })).toEqual(true);
         });
 
         it("rect 5 overlaps rect1", function () {
@@ -166,7 +164,6 @@ describe("Shape : me.Rect", function () {
         it("a cloned rect 5 equal rect5", function () {
             expect(rect5.clone().equals(rect5)).toEqual(true);
         });
-
     });
 
     describe("rect6", function () {
@@ -174,5 +171,4 @@ describe("Shape : me.Rect", function () {
             expect(rect6.isFinite()).toEqual(false);
         });
     });
-
 });

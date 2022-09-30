@@ -12,6 +12,7 @@
      });
 
  */
+import * as me from "melonjs";
 
 beforeAll(function (done) {
     console.log("Initializing melonJS");
@@ -19,7 +20,7 @@ beforeAll(function (done) {
     me.boot();
 
     // Initialize video
-    if (!me.video.init(1024, 768, {parent: "screen"})) {
+    if (!me.video.init(1024, 768, { parent: "screen" })) {
         throw "me.video.init failed";
     }
 

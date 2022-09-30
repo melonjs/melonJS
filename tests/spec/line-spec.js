@@ -1,29 +1,27 @@
+import * as me from "melonjs";
+
 describe("Shape : me.Line", function () {
-
     describe("Line", function () {
-
         var line, bounds;
 
         beforeAll(function () {
             line = new me.Line(0, 0, [
-                {x: 0, y: 0},
-                {x: 28, y: 60}
+                { x: 0, y: 0 },
+                { x: 28, y: 60 },
             ]);
             bounds = line.getBounds();
         });
 
         it("requires exactly 2 points", function () {
             function badLine1() {
-                return new me.Line(0, 0, [
-                    {x: 0, y: 0}
-                ]);
+                return new me.Line(0, 0, [{ x: 0, y: 0 }]);
             }
 
             function badLine2() {
                 return new me.Line(0, 0, [
-                    {x: 0, y: 0},
-                    {x: 0, y: 0},
-                    {x: 28, y: 60}
+                    { x: 0, y: 0 },
+                    { x: 0, y: 0 },
+                    { x: 28, y: 60 },
                 ]);
             }
 
@@ -80,5 +78,4 @@ describe("Shape : me.Line", function () {
             expect(bounds.y).toEqual(0);
         });
     });
-
 });

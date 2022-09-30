@@ -1,3 +1,5 @@
+import * as me from "melonjs";
+
 describe("me.Container", function () {
     var container;
 
@@ -23,9 +25,8 @@ describe("me.Container", function () {
     });
 
     describe("object absolute position in containers", function () {
-
         it("should return 50,50 for renderable container", function () {
-            var renderable = new me.Renderable(50, 50, 100, 100)
+            var renderable = new me.Renderable(50, 50, 100, 100);
 
             expect(container.getAbsolutePosition().x).toEqual(0);
             expect(container.getAbsolutePosition().y).toEqual(0);
@@ -34,13 +35,12 @@ describe("me.Container", function () {
 
             expect(renderable.getAbsolutePosition().x).toEqual(50);
             expect(renderable.getAbsolutePosition().y).toEqual(50);
-
         });
 
         it("should return proper value for object in nested containers", function () {
             var secondContainer = new me.Container(10, 10, 100, 100);
             var thirdContainer = new me.Container(10, 10, 100, 100);
-            var renderable = new me.Renderable(50, 50, 100, 100)
+            var renderable = new me.Renderable(50, 50, 100, 100);
 
             secondContainer.addChild(thirdContainer);
             container.addChild(secondContainer);
@@ -51,7 +51,6 @@ describe("me.Container", function () {
             expect(absPos.x).toEqual(70);
             expect(absPos.y).toEqual(70);
         });
-
     });
 
     describe("Container bounds test", function () {
@@ -71,8 +70,8 @@ describe("me.Container", function () {
             var bounds = container.getBounds();
             expect(bounds.x).toEqual(0); // because of default 0.5 anchor point
             expect(bounds.y).toEqual(0); // because of default 0.5 anchor point
-            expect(bounds.width).toEqual(150);  // because of default 0.5 anchor point
-            expect(bounds.height).toEqual(150);  // because of default 0.5 anchor point
+            expect(bounds.width).toEqual(150); // because of default 0.5 anchor point
+            expect(bounds.height).toEqual(150); // because of default 0.5 anchor point
         });
     });
 
@@ -81,7 +80,7 @@ describe("me.Container", function () {
             var counter = 0;
             container.addChild(new me.Renderable(50, 50, 100, 100));
             container.addChild(new me.Renderable(100, 100, 100, 100));
-            container.forEach(function(child) {
+            container.forEach(function (child) {
                 if (child.ancestor === container) {
                     counter++;
                 }
@@ -92,7 +91,7 @@ describe("me.Container", function () {
             var counter = 0;
             container.onChildChange = function (index) {
                 // just count how many times this one is called
-                counter ++;
+                counter++;
             };
             container.addChild(new me.Renderable(50, 50, 100, 100));
             container.addChild(new me.Renderable(100, 100, 100, 100));

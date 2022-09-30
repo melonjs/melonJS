@@ -1,11 +1,16 @@
-describe("Physics : me.Bounds", function () {
+import * as me from "melonjs";
 
-    var bound1 = new me.Bounds([{x:0, y:0}, {x:50, y:0}, {x:50, y:100}, {x:0, y:100}]);
+describe("Physics : me.Bounds", function () {
+    var bound1 = new me.Bounds([
+        { x: 0, y: 0 },
+        { x: 50, y: 0 },
+        { x: 50, y: 100 },
+        { x: 0, y: 100 },
+    ]);
     var bound2 = bound1.clone();
     var bound3 = bound2.clone();
 
     describe("bound coordinates", function () {
-
         it("bound1 has finite coordinates", function () {
             expect(bound1.isFinite()).toEqual(true);
         });
@@ -61,7 +66,12 @@ describe("Physics : me.Bounds", function () {
         });
 
         it("union with another bound", function () {
-            var bound2 = new me.Bounds([{x:0, y:0}, {x:200, y:0}, {x:200, y:150}, {x:0, y:150}]);
+            var bound2 = new me.Bounds([
+                { x: 0, y: 0 },
+                { x: 200, y: 0 },
+                { x: 200, y: 150 },
+                { x: 0, y: 150 },
+            ]);
             bound1.addBounds(bound2);
             expect(bound1.left).toEqual(0);
             expect(bound1.top).toEqual(0);
@@ -72,11 +82,9 @@ describe("Physics : me.Bounds", function () {
             expect(bound1.contains(0, 0)).toEqual(true);
             expect(bound1.contains(125, 150)).toEqual(true);
         });
-
     });
 
     describe("bound translate and shifting", function () {
-
         it("bound2 pos is (0,0)", function () {
             expect(bound2.x).toEqual(0);
             expect(bound2.y).toEqual(0);
@@ -105,23 +113,22 @@ describe("Physics : me.Bounds", function () {
             expect(bound2.overlaps(bound1)).toEqual(true);
             expect(bound2.contains(bound1)).toEqual(false);
         });
-
     });
 
     describe("bound with complex vertices", function () {
         // define a polygon object (star from the the shape example)
         var star = [
             // draw a star
-            {x: 0, y: 0},
-            {x: 28, y: 60},
-            {x: 94, y: 70},
-            {x: 46, y: 114},
-            {x: 88, y: 180},
-            {x: 0, y: 125},
-            {x: -88, y: 180},
-            {x: -46, y: 114},
-            {x: -94, y: 70},
-            {x: -28, y: 60}
+            { x: 0, y: 0 },
+            { x: 28, y: 60 },
+            { x: 94, y: 70 },
+            { x: 46, y: 114 },
+            { x: 88, y: 180 },
+            { x: 0, y: 125 },
+            { x: -88, y: 180 },
+            { x: -46, y: 114 },
+            { x: -94, y: 70 },
+            { x: -28, y: 60 },
         ];
 
         it("update bound3 from Polygon", function () {
@@ -142,5 +149,4 @@ describe("Physics : me.Bounds", function () {
             expect(bound3.y).toEqual(0);
         });
     });
-
 });

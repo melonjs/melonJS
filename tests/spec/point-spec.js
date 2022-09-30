@@ -1,7 +1,7 @@
+import * as me from "melonjs";
+
 describe("Shape : me.Point", function () {
-
     describe("Point", function () {
-
         var point;
 
         beforeAll(function () {
@@ -17,10 +17,9 @@ describe("Shape : me.Point", function () {
             var point2 = new me.Point(1, 2);
             expect(point.equals(point2)).toEqual(true);
             expect(point.equals(point2.x, point2.y)).toEqual(true);
-            point2.set(3,4);
+            point2.set(3, 4);
             expect(point.equals(point2)).toEqual(false);
             expect(point.equals(point2.x, point2.y)).toEqual(false);
         });
     });
-
 });

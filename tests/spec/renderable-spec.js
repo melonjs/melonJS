@@ -1,3 +1,5 @@
+import * as me from "melonjs";
+
 describe("me.Renderable", function () {
     describe("bounds updates", function () {
         var renderable;
@@ -13,7 +15,6 @@ describe("me.Renderable", function () {
             expect(renderable.getBounds().y).toEqual(120);
         });
 
-
         it("resizing the renderable changes its bounds width", function () {
             renderable.resize(20, 20);
             expect(renderable.getBounds().width).toEqual(20);
@@ -26,7 +27,6 @@ describe("me.Renderable", function () {
     });
 
     describe("getAbsoluteBounds returns the correct value", function () {
-
         var rootContainer;
         var childContainer;
         var renderable;

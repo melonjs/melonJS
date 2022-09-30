@@ -1,5 +1,6 @@
-describe("me.plugin", function () {
+import * as me from "melonjs";
 
+describe("me.plugin", function () {
     describe("patch", function () {
         class BaseObject {
             constructor() {
@@ -9,7 +10,7 @@ describe("me.plugin", function () {
             setType(t) {
                 this.type = t;
             }
-        };
+        }
 
         me.plugin.patch(BaseObject, "setType", function (t) {
             this._patched(t);
@@ -37,7 +38,7 @@ describe("me.plugin", function () {
                 super();
                 this.name = "myPlugin";
             }
-        };
+        }
 
         me.plugin.register(Plugin, "ExamplePlugin");
 
@@ -49,5 +50,4 @@ describe("me.plugin", function () {
             expect(me.plugin.ExamplePlugin).not.toBeDefined();
         });
     });
-
 });

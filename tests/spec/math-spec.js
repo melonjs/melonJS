@@ -1,3 +1,5 @@
+import * as me from "melonjs";
+
 describe("me.Math", function () {
     describe("degToRad", function () {
         it("0 should be 0", function () {
@@ -25,7 +27,7 @@ describe("me.Math", function () {
         it("should not clamp", function () {
             expect(me.Math.clamp(Math.PI, 1, 10)).toEqual(Math.PI);
         });
-    })
+    });
 
     describe("random", function () {
         var a = me.Math.random(1, 10);
@@ -96,7 +98,6 @@ describe("me.Math", function () {
     });
 
     describe("toBeCloseTo", function () {
-
         it("4.3546731 is closed to 4.3547", function () {
             var value = 4.3546731;
             expect(me.Math.toBeCloseTo(4.3547, value, 0)).toEqual(true);
@@ -114,5 +115,4 @@ describe("me.Math", function () {
             expect(me.Math.toBeCloseTo(4, value, 0)).toEqual(false);
         });
     });
-
 });

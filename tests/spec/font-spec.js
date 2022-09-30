@@ -1,14 +1,15 @@
-describe("Font : me.Text", function () {
+import * as me from "melonjs";
 
+describe("Font : me.Text", function () {
     // define a font object
     var font;
     beforeAll(function () {
         font = new me.Text(0, 0, {
-            font:"Arial",
-            size:8,
-            fillStyle:"white",
-            text:"test",
-            offScreenCanvas:true
+            font: "Arial",
+            size: 8,
+            fillStyle: "white",
+            text: "test",
+            offScreenCanvas: true,
         });
     });
 
@@ -46,8 +47,12 @@ describe("Font : me.Text", function () {
     describe("word wrapping", function () {
         it("word wrap a single string", function () {
             font.wordWrapWidth = 150;
-            font.setText("Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.");
-            expect(font.measureText().width).toBeLessThanOrEqual(font.wordWrapWidth);
+            font.setText(
+                "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua."
+            );
+            expect(font.measureText().width).toBeLessThanOrEqual(
+                font.wordWrapWidth
+            );
         });
     });
 });
