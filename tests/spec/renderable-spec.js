@@ -30,7 +30,7 @@ describe("me.Renderable", function () {
         var rootContainer;
         var childContainer;
         var renderable;
-        beforeAll(function () {
+        before(function () {
             rootContainer = new me.Container(0, 0, 1000, 1000, true);
             childContainer = new me.Container(100, 100, 500, 500);
             renderable = new me.Renderable(50, 50, 50, 50);

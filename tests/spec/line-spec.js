@@ -4,7 +4,7 @@ describe("Shape : me.Line", function () {
     describe("Line", function () {
         var line, bounds;
 
-        beforeAll(function () {
+        before(function () {
             line = new me.Line(0, 0, [
                 { x: 0, y: 0 },
                 { x: 28, y: 60 },

@@ -4,7 +4,7 @@ describe("Shape : me.Polygon", function () {
     describe("Polygon", function () {
         var stars, bounds;
 
-        beforeAll(function () {
+        before(function () {
             // define a polygon object (star from the the shape example)
             stars = new me.Polygon(0, 0, [
                 // draw a star
@@ -86,7 +86,7 @@ describe("Shape : me.Polygon", function () {
     describe("Polygon transformation", function () {
         var rect;
 
-        beforeAll(function () {
+        before(function () {
             // a "rectangle" polygon object
             rect = new me.Polygon(0, 0, [
                 // draw a square
@@ -108,7 +108,7 @@ describe("Shape : me.Polygon", function () {
     describe("Isometric transformation", function () {
         var shape;
 
-        beforeAll(function () {
+        before(function () {
             shape = new me.Polygon(0, 0, [
                 // draw a square
                 new me.Vector2d(0, 0),

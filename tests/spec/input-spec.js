@@ -3,7 +3,7 @@ import * as me from "melonjs";
 describe("me.input", function () {
     var renderable;
     var evenType;
-    beforeAll(function () {
+    before(function () {
         renderable = new me.Renderable(0, 0, 32, 32);
 
         renderable.isKinematic = false;

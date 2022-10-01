@@ -3,7 +3,7 @@ import * as me from "melonjs";
 describe("Font : me.Text", function () {
     // define a font object
     var font;
-    beforeAll(function () {
+    before(function () {
         font = new me.Text(0, 0, {
             font: "Arial",
             size: 8,

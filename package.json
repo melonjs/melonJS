@@ -59,7 +59,6 @@
     "howler": "2.2.3"
   },
   "devDependencies": {
-    "@babel/preset-env": "^7.19.3",
     "@melonjs/webdoc-theme": "^1.1.1",
     "@rollup/plugin-buble": "^0.21.3",
     "@rollup/plugin-commonjs": "^22.0.2",
@@ -71,7 +70,6 @@
     "del-cli": "^5.0.0",
     "eslint": "^8.24.0",
     "jasmine-core": "^4.4.0",
-    "jest": "^29.1.2",
     "karma": "^6.4.1",
     "karma-chrome-launcher": "^3.1.1",
     "karma-coverage": "^2.2.0",

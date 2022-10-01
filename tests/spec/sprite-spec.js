@@ -5,7 +5,7 @@ describe("me.Sprite", function () {
     var sprite;
     var setCurrentAnimationCallback = {};
 
-    beforeAll(function () {
+    before(function () {
         container = new me.Container(50, 50, 150, 150);
         sprite = new me.Sprite(0, 0, {
             framewidth: 32,

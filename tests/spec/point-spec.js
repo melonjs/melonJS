@@ -4,7 +4,7 @@ describe("Shape : me.Point", function () {
     describe("Point", function () {
         var point;
 
-        beforeAll(function () {
+        before(function () {
             point = new me.Point(1, 2);
         });
 

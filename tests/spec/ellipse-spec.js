@@ -7,7 +7,7 @@ describe("Shape : me.Ellipse", function () {
         var circleA;
         var circleB;
 
-        beforeAll(function () {
+        before(function () {
             circle = new me.Ellipse(50, 50, 100, 100);
             circleA = new me.Ellipse(0, 0, 100, 100);
             circleB = new me.Ellipse(0, 50, 100, 100);
@@ -64,7 +64,7 @@ describe("Shape : me.Ellipse", function () {
     describe("Ellipse Bounding Rect", function () {
         var circle, boundsl;
 
-        beforeAll(function () {
+        before(function () {
             circle = new me.Ellipse(50, 50, 100, 100);
             // get the bounding rect
             bounds = circle.getBounds();
