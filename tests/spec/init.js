@@ -13,8 +13,12 @@
 
  */
 import * as me from "melonjs";
+import mock from "mock-browser";
 
 before(function (done) {
+    //    var MockBrowser = require("mock-browser").mocks.MockBrowser;
+    const mockBrowser = new mock.mocks.MockBrowser();
+    Object.assign(global, mockBrowser);
     console.log("Initializing melonJS");
 
     me.boot();
