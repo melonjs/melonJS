@@ -1,5 +1,4 @@
 import "chromedriver";
-import puppeteer from "puppeteer";
 import { expect } from "expect";
 
 describe("can load the library", () => {
