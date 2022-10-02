@@ -26,3 +26,8 @@ after(() => {
     server.close();
     process.exit(0);
 });
+
+process.on("uncaughtException", function (err) {
+    console.error(err);
+    process.exit(1);
+});
