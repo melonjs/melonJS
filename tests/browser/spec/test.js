@@ -3,10 +3,13 @@ import puppeteer from "puppeteer";
 import { expect } from "expect";
 
 describe("can load the library", () => {
-    it("loads", async () => {
+    it("loads", async function () {
         const page = await browser.newPage();
         await browser.newPage();
         await page.goto("http://localhost:8042/test.html");
-        expect(true).toBe(true);
+        const screenshot = await page.screenshot();
+        expect(screenshot).toMatchImageSnapshot(this, {
+            dumpDiffToConsole: true,
+        });
     });
 });
