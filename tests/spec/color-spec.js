@@ -1,10 +1,9 @@
 describe("me.Color", function () {
-
     var red_color;
     var green_color;
     var blue_color;
     //ToDo changing this to 'beforeEach' shows that currently tests leak their state into other tests, which is not good
-    beforeAll(function () {
+    before(function () {
         red_color = new me.Color(255, 0, 0, 0.5);
         green_color = new me.Color().parseCSS("green");
         blue_color = new me.Color().parseHex("#0000FF");
@@ -13,27 +12,36 @@ describe("me.Color", function () {
     describe("parseHex Function", function () {
         // #RGB
         it("#00F value is rgb(0, 0, 255)", function () {
-            expect(blue_color.parseHex("#0000FF").toRGB()).toEqual("rgb(0,0,255)");
+            expect(blue_color.parseHex("#0000FF").toRGB()).toEqual(
+                "rgb(0,0,255)"
+            );
         });
         // #RGBA
         it("#0F08 value is rgba(0, 255, 0, 0.5)", function () {
-            expect(blue_color.parseHex("#0F08").toRGBA()).toEqual("rgba(0,255,0,0.5)");
+            expect(blue_color.parseHex("#0F08").toRGBA()).toEqual(
+                "rgba(0,255,0,0.5)"
+            );
         });
         // #RRGGBB
         it("#FF00FF value is rgba(255, 0, 255, 1)", function () {
-            expect(blue_color.parseHex("#FF00FF").toRGBA()).toEqual("rgba(255,0,255,1)");
+            expect(blue_color.parseHex("#FF00FF").toRGBA()).toEqual(
+                "rgba(255,0,255,1)"
+            );
         });
         // #RRGGBBAA (finish with the blue color so that the test below passes)
         it("#0000FF80 value is rgba(0, 0, 255, 0.5)", function () {
-            expect(blue_color.parseHex("#0000FF80").toRGBA()).toEqual("rgba(0,0,255,0.5)");
+            expect(blue_color.parseHex("#0000FF80").toRGBA()).toEqual(
+                "rgba(0,0,255,0.5)"
+            );
         });
 
         // override the alpha with a specific value
         it("#0000FF80 value is rgba(0, 0, 255, 0.5)", function () {
-            expect(blue_color.parseHex("#0000FF80").toRGBA(1.0)).toEqual("rgba(0,0,255,1)");
+            expect(blue_color.parseHex("#0000FF80").toRGBA(1.0)).toEqual(
+                "rgba(0,0,255,1)"
+            );
         });
     });
-
 
     describe("parseHSV Function", function () {
         // reuse blue_color to test the HSV2RGB functions
@@ -41,13 +49,19 @@ describe("me.Color", function () {
             expect(blue_color.setHSV(0, 0, 0).toRGB()).toEqual("rgb(0,0,0)");
         });
         it("(0, 0, 1) value is rgb(255,255,255)", function () {
-            expect(blue_color.setHSV(0, 0, 1).toRGB()).toEqual("rgb(255,255,255)");
+            expect(blue_color.setHSV(0, 0, 1).toRGB()).toEqual(
+                "rgb(255,255,255)"
+            );
         });
         it("(0.5, 1, 1) value is rgb(0,255,255)", function () {
-            expect(blue_color.setHSV(0.5, 1, 1).toRGB()).toEqual("rgb(0,255,255)");
+            expect(blue_color.setHSV(0.5, 1, 1).toRGB()).toEqual(
+                "rgb(0,255,255)"
+            );
         });
         it("(0, 0, .75) value is rgb(0,255,255)", function () {
-            expect(blue_color.setHSV(0, 0, .75).toRGB()).toEqual("rgb(191,191,191)");
+            expect(blue_color.setHSV(0, 0, 0.75).toRGB()).toEqual(
+                "rgb(191,191,191)"
+            );
         });
     });
 
@@ -57,13 +71,19 @@ describe("me.Color", function () {
             expect(blue_color.setHSL(0, 0, 0).toRGB()).toEqual("rgb(0,0,0)");
         });
         it("(0, 0, 1) value is rgb(255,255,255)", function () {
-            expect(blue_color.setHSL(0, 0, 1).toRGB()).toEqual("rgb(255,255,255)");
+            expect(blue_color.setHSL(0, 0, 1).toRGB()).toEqual(
+                "rgb(255,255,255)"
+            );
         });
         it("(0.5, 1, 0.25) value is rgb(0,255,255)", function () {
-            expect(blue_color.setHSL(0.5, 1, 0.25).toRGB()).toEqual("rgb(0,127,127)");
+            expect(blue_color.setHSL(0.5, 1, 0.25).toRGB()).toEqual(
+                "rgb(0,127,127)"
+            );
         });
         it("(0, 0, .75) value is rgb(0,255,255)", function () {
-            expect(blue_color.setHSL(0, 0, .75).toRGB()).toEqual("rgb(191,191,191)");
+            expect(blue_color.setHSL(0, 0, 0.75).toRGB()).toEqual(
+                "rgb(191,191,191)"
+            );
         });
     });
 
@@ -99,7 +119,6 @@ describe("me.Color", function () {
         it("red_color rgba value is rgba(255,0,0,0.5)", function () {
             expect(red_color.toRGBA()).toEqual("rgba(255,0,0,0.5)");
         });
-
     });
 
     describe("green_color", function () {
@@ -134,7 +153,6 @@ describe("me.Color", function () {
         it("final red_color rgba value is rgba(127,64,0,0.75)", function () {
             expect(red_color.toRGBA()).toEqual("rgba(127,64,0,0.75)");
         });
-
     });
 
     describe("blue_color", function () {

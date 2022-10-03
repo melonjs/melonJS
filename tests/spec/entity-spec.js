@@ -2,26 +2,28 @@ describe("Entity", function () {
     var entity;
 
     it("can load the image", function (done) {
-        me.loader.load({
-            "name"  : "rect",
-            "type"  : "image",
-            "src"   : "tests/data/img/rect.png"
-        },
-        function () {
-            expect(true).toBe(true);
-            done();
-        },
-        function () {
-            throw new Error("Failed to load `rect.png`");
-        });
+        me.loader.load(
+            {
+                name: "rect",
+                type: "image",
+                src: "tests/data/img/rect.png",
+            },
+            function () {
+                expect(true).toBe(true);
+                done();
+            },
+            function () {
+                throw new Error("Failed to load `rect.png`");
+            }
+        );
     });
 
     it("can be created", function () {
         entity = new me.Entity(100, 100, {
-            "width" : 32,
-            "height" : 64,
-            "image" : "rect",
-            "shapes" : []
+            width: 32,
+            height: 64,
+            image: "rect",
+            shapes: [],
         });
         expect(entity).toBeInstanceOf(me.Entity);
     });

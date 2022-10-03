@@ -1,8 +1,7 @@
 describe("local Storage", function () {
-
     it("add and retrieve keys", function () {
         if (me.device.localStorage === true) {
-            me.save.add({ testKey1 : 1, testKey2 : 2 });
+            me.save.add({ testKey1: 1, testKey2: 2 });
             expect(me.save.testKey1).toBe(1);
             expect(me.device.getStorage().testKey2).toBe(2);
         } else {
@@ -27,5 +26,4 @@ describe("local Storage", function () {
             expect(true).toBe(true);
         }
     });
-
 });

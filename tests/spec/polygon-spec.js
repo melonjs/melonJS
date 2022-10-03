@@ -1,23 +1,21 @@
 describe("Shape : me.Polygon", function () {
-
     describe("Polygon", function () {
-
         var stars, bounds;
 
-        beforeAll(function () {
+        before(function () {
             // define a polygon object (star from the the shape example)
             stars = new me.Polygon(0, 0, [
                 // draw a star
-                {x: 0, y: 0},
-                {x: 28, y: 60},
-                {x: 94, y: 70},
-                {x: 46, y: 114},
-                {x: 88, y: 180},
-                {x: 0, y: 125},
-                {x: -88, y: 180},
-                {x: -46, y: 114},
-                {x: -94, y: 70},
-                {x: -28, y: 60}
+                { x: 0, y: 0 },
+                { x: 28, y: 60 },
+                { x: 94, y: 70 },
+                { x: 46, y: 114 },
+                { x: 88, y: 180 },
+                { x: 0, y: 125 },
+                { x: -88, y: 180 },
+                { x: -46, y: 114 },
+                { x: -94, y: 70 },
+                { x: -28, y: 60 },
             ]);
 
             // get the polygon bounding rect
@@ -54,8 +52,8 @@ describe("Shape : me.Polygon", function () {
         it("requires at least 3 points", function () {
             function badPolygon() {
                 return new me.Polygon(0, 0, [
-                    {x: 0, y: 0},
-                    {x: 28, y: 60}
+                    { x: 0, y: 0 },
+                    { x: 28, y: 60 },
                 ]);
             }
             expect(badPolygon).toThrow();
@@ -84,39 +82,37 @@ describe("Shape : me.Polygon", function () {
     });
 
     describe("Polygon transformation", function () {
-
         var rect;
 
-        beforeAll(function () {
+        before(function () {
             // a "rectangle" polygon object
             rect = new me.Polygon(0, 0, [
                 // draw a square
-                {x: 0, y: 0},
-                {x: 32, y: 0},
-                {x: 32, y: 32},
-                {x: 0, y: 32}
+                { x: 0, y: 0 },
+                { x: 32, y: 0 },
+                { x: 32, y: 32 },
+                { x: 0, y: 32 },
             ]);
         });
 
         it("Bounds should be updated when scaled or rotated", function () {
             // scale the polygon and rotate it by 45deg
-            rect.scale(2.0).rotate(Math.PI/4);
+            rect.scale(2.0).rotate(Math.PI / 4);
             expect(Math.floor(rect.getBounds().width)).toEqual(90);
             expect(Math.floor(rect.getBounds().height)).toEqual(90);
         });
     });
 
     describe("Isometric transformation", function () {
-
         var shape;
 
-        beforeAll(function () {
+        before(function () {
             shape = new me.Polygon(0, 0, [
                 // draw a square
                 new me.Vector2d(0, 0),
                 new me.Vector2d(32, 0),
                 new me.Vector2d(32, 32),
-                new me.Vector2d(0, 32)
+                new me.Vector2d(0, 32),
             ]);
         });
 

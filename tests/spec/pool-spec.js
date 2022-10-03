@@ -1,7 +1,5 @@
 describe("pool", function () {
-
     describe("poolable object", function () {
-
         me.pool.register("Vector2d", me.Vector2d, true);
         var vec2 = me.pool.pull("Vector2d");
 
@@ -48,11 +46,10 @@ describe("pool", function () {
         it("object is not recycled when pushed and pulled back again", function () {
             function nonPoolableObject() {
                 me.pool.push(obj);
-            };
+            }
 
             // pushing it into the object pool should throw an exception
             expect(nonPoolableObject).toThrow();
         });
     });
-
 });

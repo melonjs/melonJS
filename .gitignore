@@ -1,3 +1,6 @@
+# Custom
+/tests/browser/public/melon/
+
 # Eclipse files
 .project
 .settings

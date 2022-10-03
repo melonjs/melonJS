@@ -1,24 +1,25 @@
 describe("Shape : me.Ellipse", function () {
-
     // define a ellipse object
     describe("Ellipse ", function () {
-
         var circle;
         var circleA;
         var circleB;
 
-        beforeAll(function () {
+        before(function () {
             circle = new me.Ellipse(50, 50, 100, 100);
             circleA = new me.Ellipse(0, 0, 100, 100);
             circleB = new me.Ellipse(0, 50, 100, 100);
 
             // mock ancestor
-            circle.ancestor = circleA.ancestor = circleB.ancestor =  {
-                "_absPos" : {
-                    "x" : 0,
-                    "y" : 0
-                }
-            };
+            circle.ancestor =
+                circleA.ancestor =
+                circleB.ancestor =
+                    {
+                        _absPos: {
+                            x: 0,
+                            y: 0,
+                        },
+                    };
         });
 
         it("Ellipse max radius is 50", function () {
@@ -59,10 +60,9 @@ describe("Shape : me.Ellipse", function () {
     });
 
     describe("Ellipse Bounding Rect", function () {
+        var circle, boundsl;
 
-        var circle, boundsl
-
-        beforeAll(function () {
+        before(function () {
             circle = new me.Ellipse(50, 50, 100, 100);
             // get the bounding rect
             bounds = circle.getBounds();
@@ -81,5 +81,4 @@ describe("Shape : me.Ellipse", function () {
             expect(bounds.y).toEqual(0);
         });
     });
-
 });

@@ -1,5 +1,4 @@
 describe("utils", function () {
-
     /*
     describe("TMX Parsing", function () {
 
@@ -30,10 +29,12 @@ describe("utils", function () {
     */
 
     describe("Array", function () {
-        var arr = [ "foo", "bar", "baz" ];
+        var arr = ["foo", "bar", "baz"];
 
         it("base", function () {
-            expect(me.utils.array.remove(arr, "foo").includes("foo")).toEqual(false);
+            expect(me.utils.array.remove(arr, "foo").includes("foo")).toEqual(
+                false
+            );
         });
     });
 
@@ -47,23 +48,27 @@ describe("utils", function () {
         it("file extension", function () {
             expect(me.utils.file.getExtension(filename)).toEqual("baz");
         });
-
     });
-
 
     describe("String", function () {
         var untrimmed_str = " start and end with white space ";
 
         it("trim left side", function () {
-            expect(untrimmed_str.trimLeft()).toEqual("start and end with white space ");
+            expect(untrimmed_str.trimLeft()).toEqual(
+                "start and end with white space "
+            );
         });
 
         it("trim right side", function () {
-            expect(untrimmed_str.trimRight()).toEqual(" start and end with white space");
+            expect(untrimmed_str.trimRight()).toEqual(
+                " start and end with white space"
+            );
         });
 
         it("capitalize", function () {
-            expect(me.utils.string.capitalize("capitalize")).toEqual("Capitalize");
+            expect(me.utils.string.capitalize("capitalize")).toEqual(
+                "Capitalize"
+            );
         });
 
         it("isNumeric", function () {
@@ -85,19 +90,44 @@ describe("utils", function () {
 
         it("isDataUrl", function () {
             // valid urls
-            expect(me.utils.string.isDataUrl("data:application/font-woff2;charset=utf-8;base64,d09GMgABAAAAAByYABAAAAAAixgAAB")).toEqual(true);
-            expect(me.utils.string.isDataUrl("data:audio/mpeg;base64,//PAxAAAAAAAAAAAAEluZm8AAAAPAAAAEwAAIKYADQ0ND")).toEqual(true);
-            expect(me.utils.string.isDataUrl("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAQAAAAEACAMAAABrrFhUAAAA8FBMVEUgICBrqDHRZVtqp")).toEqual(true);
+            expect(
+                me.utils.string.isDataUrl(
+                    "data:application/font-woff2;charset=utf-8;base64,d09GMgABAAAAAByYABAAAAAAixgAAB"
+                )
+            ).toEqual(true);
+            expect(
+                me.utils.string.isDataUrl(
+                    "data:audio/mpeg;base64,//PAxAAAAAAAAAAAAEluZm8AAAAPAAAAEwAAIKYADQ0ND"
+                )
+            ).toEqual(true);
+            expect(
+                me.utils.string.isDataUrl(
+                    "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAQAAAAEACAMAAABrrFhUAAAA8FBMVEUgICBrqDHRZVtqp"
+                )
+            ).toEqual(true);
             // invalid urls
-            expect(me.utils.string.isDataUrl("data:image/png;iVBORw0KGgoAAAANSUhEUgAAAQAAAAEACAMAAABrrFhUAAAA8FBMVEUgICBrqDHRZVtqp")).toEqual(false);
-            expect(me.utils.string.isDataUrl("data:iVBORw0KGgoAAAANSUhEUgAAAQAAAAEACAMAAABrrFhUAAAA8FBMVEUgICBrqDHRZVtqp")).toEqual(false);
-            expect(me.utils.string.isDataUrl("iVBORw0KGgoAAAANSUhEUgAAAQAAAAEACAMAAABrrFhUAAAA8FBMVEUgICBrqDHRZVtqp")).toEqual(false);
+            expect(
+                me.utils.string.isDataUrl(
+                    "data:image/png;iVBORw0KGgoAAAANSUhEUgAAAQAAAAEACAMAAABrrFhUAAAA8FBMVEUgICBrqDHRZVtqp"
+                )
+            ).toEqual(false);
+            expect(
+                me.utils.string.isDataUrl(
+                    "data:iVBORw0KGgoAAAANSUhEUgAAAQAAAAEACAMAAABrrFhUAAAA8FBMVEUgICBrqDHRZVtqp"
+                )
+            ).toEqual(false);
+            expect(
+                me.utils.string.isDataUrl(
+                    "iVBORw0KGgoAAAANSUhEUgAAAQAAAAEACAMAAABrrFhUAAAA8FBMVEUgICBrqDHRZVtqp"
+                )
+            ).toEqual(false);
         });
     });
 
     describe("UriFragment", function () {
         var url1 = "http://www.example.com/index.html";
-        var url2 = "http://www.example.com/index.html#debug&hitbox=true&mytag=value";
+        var url2 =
+            "http://www.example.com/index.html#debug&hitbox=true&mytag=value";
 
         it("empty arguments", function () {
             var params = me.utils.getUriFragment(url1);

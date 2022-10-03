@@ -13,7 +13,6 @@ describe("me.Renderable", function () {
             expect(renderable.getBounds().y).toEqual(120);
         });
 
-
         it("resizing the renderable changes its bounds width", function () {
             renderable.resize(20, 20);
             expect(renderable.getBounds().width).toEqual(20);
@@ -26,11 +25,10 @@ describe("me.Renderable", function () {
     });
 
     describe("getAbsoluteBounds returns the correct value", function () {
-
         var rootContainer;
         var childContainer;
         var renderable;
-        beforeAll(function () {
+        before(function () {
             rootContainer = new me.Container(0, 0, 1000, 1000, true);
             childContainer = new me.Container(100, 100, 500, 500);
             renderable = new me.Renderable(50, 50, 50, 50);

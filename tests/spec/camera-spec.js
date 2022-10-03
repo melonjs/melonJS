@@ -1,5 +1,4 @@
 describe("me.Camera2d", function () {
-
     it("convert between local and World coords without transforms", function () {
         // default camera
         var camera = new me.Camera2d(0, 0, 1000, 1000);
@@ -12,8 +11,8 @@ describe("me.Camera2d", function () {
         // convert back to local coordinates
         camera.worldToLocal(result.x, result.y, result);
 
-        expect( result.x ).toBeCloseTo(250);
-        expect( result.y ).toBeCloseTo(150);
+        expect(result.x).toBeCloseTo(250);
+        expect(result.y).toBeCloseTo(150);
     });
 
     it("convert between local and World coords with transforms", function () {
@@ -32,20 +31,25 @@ describe("me.Camera2d", function () {
         // convert back to local coordinates
         camera.worldToLocal(result.x, result.y, result);
 
-        expect( result.x ).toBeCloseTo(250);
-        expect( result.y ).toBeCloseTo(150);
+        expect(result.x).toBeCloseTo(250);
+        expect(result.y).toBeCloseTo(150);
     });
 
     it("isVisible function test", function () {
         // default camera
         var camera = new me.Camera2d(0, 0, 1000, 1000);
-        var infiniteCamera = new me.Camera2d(-Infinity, -Infinity, Infinity, Infinity);
+        var infiniteCamera = new me.Camera2d(
+            -Infinity,
+            -Infinity,
+            Infinity,
+            Infinity
+        );
 
         // object to test for visibility
         var obj = new me.Renderable(0, 0, 10, 10);
 
         // make it easier by setting anchor point to 0, 0
-        obj.anchorPoint.set(0 ,0);
+        obj.anchorPoint.set(0, 0);
 
         // check if obj is visible
         expect(camera.isVisible(obj)).toEqual(true);
@@ -68,6 +72,5 @@ describe("me.Camera2d", function () {
         // should always be visible if camera size is Infinite
         obj.floating = true;
         expect(infiniteCamera.isVisible(obj)).toEqual(true);
-
     });
 });
