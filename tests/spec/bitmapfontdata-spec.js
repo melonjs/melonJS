@@ -1,5 +1,3 @@
-import * as me from "melonjs";
-
 var bitmapTextDataFixture =
     'info face="Arial" size=18 bold=0 italic=0 charset="" unicode=0 stretchH=100 smooth=1 aa=1 padding=0,0,0,0 spacing=0,0\n' +
     "common lineHeight=22 base=19 scaleW=256 scaleH=256 pages=1 packed=0\n" +

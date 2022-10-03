@@ -1,5 +1,3 @@
-import * as me from "melonjs";
-
 describe("me.Camera2d", function () {
     it("convert between local and World coords without transforms", function () {
         // default camera

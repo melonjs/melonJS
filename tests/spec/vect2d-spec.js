@@ -1,5 +1,3 @@
-import * as me from "melonjs";
-
 describe("me.Vector2d", function () {
     var x = 1,
         y = 2;

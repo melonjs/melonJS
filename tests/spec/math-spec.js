@@ -1,5 +1,3 @@
-import * as me from "melonjs";
-
 describe("me.Math", function () {
     describe("degToRad", function () {
         it("0 should be 0", function () {

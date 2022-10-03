@@ -1,5 +1,3 @@
-import * as me from "melonjs";
-
 describe("pool", function () {
     describe("poolable object", function () {
         me.pool.register("Vector2d", me.Vector2d, true);

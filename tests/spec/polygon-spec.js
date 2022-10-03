@@ -1,5 +1,3 @@
-import * as me from "melonjs";
-
 describe("Shape : me.Polygon", function () {
     describe("Polygon", function () {
         var stars, bounds;

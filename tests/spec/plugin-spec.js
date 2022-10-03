@@ -1,5 +1,3 @@
-import * as me from "melonjs";
-
 describe("me.plugin", function () {
     describe("patch", function () {
         class BaseObject {

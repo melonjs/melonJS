@@ -1,5 +1,3 @@
-import * as me from "melonjs";
-
 describe("me.Color", function () {
     var red_color;
     var green_color;

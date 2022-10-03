@@ -1,5 +1,3 @@
-import * as me from "melonjs";
-
 describe("Shape : me.Ellipse", function () {
     // define a ellipse object
     describe("Ellipse ", function () {

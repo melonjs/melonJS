@@ -1,5 +1,3 @@
-import * as me from "melonjs";
-
 describe("Shape : me.Rect", function () {
     // test fail without this
     me.pool.register("Bounds", me.Bounds, true);

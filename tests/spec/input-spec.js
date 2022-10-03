@@ -1,5 +1,3 @@
-import * as me from "melonjs";
-
 describe("me.input", function () {
     var renderable;
     var evenType;

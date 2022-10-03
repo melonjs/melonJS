@@ -1,5 +1,3 @@
-import * as me from "melonjs";
-
 describe("Shape : me.Line", function () {
     describe("Line", function () {
         var line, bounds;

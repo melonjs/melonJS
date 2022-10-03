@@ -1,5 +1,3 @@
-import * as me from "melonjs";
-
 describe("utils", function () {
     /*
     describe("TMX Parsing", function () {

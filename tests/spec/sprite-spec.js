@@ -1,5 +1,3 @@
-import * as me from "melonjs";
-
 describe("me.Sprite", function () {
     var container;
     var sprite;

@@ -1,5 +1,3 @@
-import * as me from "melonjs";
-
 describe("Shape : me.Point", function () {
     describe("Point", function () {
         var point;

@@ -1,5 +1,3 @@
-import * as me from "melonjs";
-
 describe("me.Matrix3d", function () {
     it("should be initialized to a 4x4 identity matrix", function () {
         var matA = new me.Matrix3d();

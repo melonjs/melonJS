@@ -1,5 +1,3 @@
-import * as me from "melonjs";
-
 describe("Shape : me.RoundRect", function () {
     var rrect = new me.RoundRect(50, 50, 100, 100, 40);
 

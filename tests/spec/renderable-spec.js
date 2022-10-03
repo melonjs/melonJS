@@ -1,5 +1,3 @@
-import * as me from "melonjs";
-
 describe("me.Renderable", function () {
     describe("bounds updates", function () {
         var renderable;

@@ -11,7 +11,7 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
 let server;
-before(async () => {
+async () => {
     global.browser = await puppeteer.launch({
         //        headless: false,// Enable this to see what's going on in the browser
     });
@@ -20,7 +20,7 @@ before(async () => {
         root: join(__dirname, "..", "public"),
     });
     await server.listen({ port: 8042 });
-});
+};
 
 after(() => {
     server.close();

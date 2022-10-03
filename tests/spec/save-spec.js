@@ -1,5 +1,3 @@
-import * as me from "melonjs";
-
 describe("local Storage", function () {
     it("add and retrieve keys", function () {
         if (me.device.localStorage === true) {
