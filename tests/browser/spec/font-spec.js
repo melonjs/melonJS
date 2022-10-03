@@ -49,15 +49,19 @@ describe("Font : me.Text", function () {
         });
     });
 
-    // describe("word wrapping", function () {
-    //     it("word wrap a single string", function () {
-    //         font.wordWrapWidth = 150;
-    //         font.setText(
-    //             "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua."
-    //         );
-    //         expect(font.measureText().width).toBeLessThanOrEqual(
-    //             font.wordWrapWidth
-    //         );
-    //     });
-    // });
+    describe("word wrapping", function () {
+        it("word wrap a single string", async function () {
+            await page.evaluate(() => {
+                font.wordWrapWidth = 150;
+                font.setText(
+                    "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua."
+                );
+            });
+            expect(
+                await page.evaluate(() => font.measureText().width)
+            ).toBeLessThanOrEqual(
+                await page.evaluate(() => font.wordWrapWidth)
+            );
+        });
+    });
 });
