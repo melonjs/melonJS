@@ -11,7 +11,7 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
 let server;
-async () => {
+before(async () => {
     global.browser = await puppeteer.launch({
         //        headless: false,// Enable this to see what's going on in the browser
     });
@@ -20,14 +20,14 @@ async () => {
         root: join(__dirname, "..", "public"),
     });
     await server.listen({ port: 8042 });
-};
+});
 
 after(() => {
-    server.close();
+    server?.close();
     process.exit(0);
 });
 
-process.on("uncaughtException", function (err) {
-    console.error(err);
-    process.exit(1);
-});
+// process.on("uncaughtException", function (err) {
+//     console.error(err);
+//     process.exit(1);
+// });
