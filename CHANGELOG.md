@@ -2,6 +2,9 @@
 
 ## [14.0.0] (melonJS 2) - _2022-xx-xx_
 
+### Fixed
+- Container: fix Container class initialization when no viewport are yet defined
+
 ## [13.4.0] (melonJS 2) - _2022-09-27_
 
 ### Added

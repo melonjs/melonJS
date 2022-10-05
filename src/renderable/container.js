@@ -28,10 +28,14 @@ class Container extends Renderable {
      * @param {number} [width=game.viewport.width] width of the container
      * @param {number} [height=game.viewport.height] height of the container
      */
-    constructor(x = 0, y = 0, width = game.viewport.width, height = game.viewport.height, root = false) {
+    constructor(x = 0, y = 0, width = Infinity, height = Infinity, root = false) {
 
         // call the super constructor
-        super(x, y, width, height);
+        super(
+            x, y,
+            typeof game.viewport !== "undefined" ? game.viewport.width : width,
+            typeof game.viewport !== "undefined" ? game.viewport.height : height
+        );
 
         /**
          * keep track of pending sort

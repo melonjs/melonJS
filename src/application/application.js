@@ -17,7 +17,7 @@ class Application {
          * @public
          * @type {Camera2d}
          */
-        this.viewport = null;
+        this.viewport = undefined;
 
         /**
          * a reference to the game world, <br>
@@ -25,7 +25,7 @@ class Application {
          * @public
          * @type {World}
          */
-        this.world = null;
+        this.world = undefined;
 
         /**
          * when true, all objects will be added under the root world container.<br>
