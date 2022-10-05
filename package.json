@@ -52,7 +52,6 @@
   ],
   "dependencies": {
     "@teppeis/multimaps": "^2.0.0",
-    "babel-jest": "^29.1.2",
     "core-js": "^3.25.3",
     "earcut": "2.2.4",
     "eventemitter3": "^4.0.7",
