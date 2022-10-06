@@ -83,7 +83,7 @@
     "karma-nyan-reporter": "0.2.5",
     "mocha": "^10.0.0",
     "npm-self-link": "^1.1.7",
-    "puppeteer": "^18.0.5",
+    "puppeteer": "^18.1.0",
     "rollup": "^2.79.1",
     "rollup-plugin-bundle-size": "^1.0.3",
     "rollup-plugin-string": "^3.0.0",
