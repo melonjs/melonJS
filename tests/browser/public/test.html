@@ -8,8 +8,18 @@
     <div id="screen"></div>
     <script type="module">
       import * as me from './melon/melonjs.module.js';
+
       me.boot();
       me.video.init(800, 600, {parent : "screen", scale : "auto", renderer : me.video.AUTO});
+
+      // a Text object
+      globalThis.font = new me.Text(0, 0, {
+          font: "Arial",
+          size: 8,
+          fillStyle: "white",
+          text: "test",
+          offScreenCanvas: false
+      });
   </script>
 </body>
 </html>
