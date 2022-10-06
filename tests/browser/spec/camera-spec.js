@@ -1,9 +1,28 @@
-describe("me.Camera2d", function () {
-    it("convert between local and World coords without transforms", function () {
-        // default camera
-        var camera = new me.Camera2d(0, 0, 1000, 1000);
-        var result = new me.Vector2d();
+import { expect } from "expect";
+import { boot, video, Camera2d, Vector2d, Renderable } from "./../public/melon/melonjs.module.js";
 
+describe("me.Camera2d", function () {
+    var page;
+    var camera;
+    var result;
+
+    before(async () => {
+        page = await browser.newPage();
+        await page.goto("http://localhost:8042/test.html");
+        
+        await page.on('load', () => {
+            boot();
+            video.init(800, 600, {parent : "screen", scale : "auto", renderer : video.AUTO});
+        });
+    });
+
+
+    beforeEach(function () {
+        camera = new Camera2d(0, 0, 1000, 1000);
+        result = new Vector2d();
+    });
+
+    it("convert between local and World coords without transforms", function () {
         // update position so that it's not just 0
         camera.move(100, 100);
         // convert to word coordinates
@@ -16,10 +35,6 @@ describe("me.Camera2d", function () {
     });
 
     it("convert between local and World coords with transforms", function () {
-        // default camera
-        var camera = new me.Camera2d(0, 0, 1000, 1000);
-        var result = new me.Vector2d();
-
         // update position so that it's not just 0
         camera.move(100, 100);
         // rotate the viewport
@@ -36,9 +51,7 @@ describe("me.Camera2d", function () {
     });
 
     it("isVisible function test", function () {
-        // default camera
-        var camera = new me.Camera2d(0, 0, 1000, 1000);
-        var infiniteCamera = new me.Camera2d(
+        var infiniteCamera = new Camera2d(
             -Infinity,
             -Infinity,
             Infinity,
@@ -46,7 +59,7 @@ describe("me.Camera2d", function () {
         );
 
         // object to test for visibility
-        var obj = new me.Renderable(0, 0, 10, 10);
+        var obj = new Renderable(0, 0, 10, 10);
 
         // make it easier by setting anchor point to 0, 0
         obj.anchorPoint.set(0, 0);

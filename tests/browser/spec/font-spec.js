@@ -1,26 +1,46 @@
 import { expect } from "expect";
+//import { boot, video, Text } from "./../public/melon/melonjs.module.js";
 
 describe("Font : me.Text", () => {
     // define a font object
-    let page;
+    var page;
+    var font;
+    
     before(async () => {
         page = await browser.newPage();
         await page.goto("http://localhost:8042/test.html");
+
+        /*
+        await page.addScriptTag({
+            path: "./melon/melonjs.module.js",
+            type: 'module'
+        });
+        
+        await page.on('load', async () => {
+            boot();
+            video.init(800, 600, {parent : "screen", scale : "auto", renderer : video.CANVAS});
+        });
+        */
+    });
+
+    beforeEach(async () => {
         await page.evaluate(() => {
-            window.font = new me.Text(0, 0, {
+            font = new me.Text(0, 0, {
                 font: "Arial",
                 size: 8,
                 fillStyle: "white",
                 text: "test",
-                offScreenCanvas: true,
+                offScreenCanvas: false
             });
         });
+        done();
     });
+    
 
-    describe("font set Size", () => {
-        it("default font size is 8", async () => {
-            const height = await page.evaluate(() => font.height);
-            expect(height).toBe(8);
+    describe("font set Size", async () => {
+
+        it("default font size is '8'", async () => {
+            expect(await page.evaluate(() => font.height)).toEqual(8);
         });
 
         it("default font size is '10'", async () => {

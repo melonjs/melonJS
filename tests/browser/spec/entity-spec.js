@@ -1,3 +1,6 @@
+import { expect } from "expect";
+import * as me from "../public/melon/melonjs.module.js";
+
 describe("Entity", function () {
     var entity;
 

@@ -1,3 +1,6 @@
+import { expect } from "expect";
+import * as me from "../public/melon/melonjs.module.js";
+
 describe("pool", function () {
     describe("poolable object", function () {
         me.pool.register("Vector2d", me.Vector2d, true);

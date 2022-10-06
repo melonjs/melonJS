@@ -1,3 +1,6 @@
+import { expect } from "expect";
+import * as me from "../public/melon/melonjs.module.js";
+
 describe("Shape : me.Line", function () {
     describe("Line", function () {
         var line, bounds;

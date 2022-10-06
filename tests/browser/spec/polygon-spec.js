@@ -1,3 +1,6 @@
+import { expect } from "expect";
+import * as me from "../public/melon/melonjs.module.js";
+
 describe("Shape : me.Polygon", function () {
     describe("Polygon", function () {
         var stars, bounds;

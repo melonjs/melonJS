@@ -1,3 +1,6 @@
+import { expect } from "expect";
+import * as me from "../public/melon/melonjs.module.js";
+
 describe("Shape : me.Rect", function () {
     // test fail without this
     me.pool.register("Bounds", me.Bounds, true);

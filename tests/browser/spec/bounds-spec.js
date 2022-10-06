@@ -1,4 +1,5 @@
-import * as me from "melonjs";
+import { expect } from "expect";
+import * as me from "../public/melon/melonjs.module.js";
 
 describe("Physics : me.Bounds", function () {
     var bound1 = new me.Bounds([

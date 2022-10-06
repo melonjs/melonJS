@@ -1,3 +1,6 @@
+import { expect } from "expect";
+import * as me from "../public/melon/melonjs.module.js";
+
 describe("Shape : me.Ellipse", function () {
     // define a ellipse object
     describe("Ellipse ", function () {
@@ -60,7 +63,7 @@ describe("Shape : me.Ellipse", function () {
     });
 
     describe("Ellipse Bounding Rect", function () {
-        var circle, boundsl;
+        var circle, bounds;
 
         before(function () {
             circle = new me.Ellipse(50, 50, 100, 100);

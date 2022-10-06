@@ -1,3 +1,6 @@
+import { expect } from "expect";
+import * as me from "../public/melon/melonjs.module.js";
+
 describe("me.Renderable", function () {
     describe("bounds updates", function () {
         var renderable;
