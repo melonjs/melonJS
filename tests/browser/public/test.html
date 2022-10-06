@@ -20,6 +20,15 @@
           text: "test",
           offScreenCanvas: false
       });
+
+      // a camera instance
+      globalThis.camera = new me.Camera2d(0, 0, 1000, 1000);
+      // am infinite camera
+      globalThis.infiniteCamera = new me.Camera2d(-Infinity, -Infinity, Infinity, Infinity);
+      // a vector instance
+      globalThis.result = new me.Vector2d();
+      // a 10x10 renderable
+      globalThis.renderable10x10 = new me.Renderable(0, 0, 10, 10);
   </script>
 </body>
 </html>
