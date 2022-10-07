@@ -3,6 +3,7 @@
 ## [14.0.0] (melonJS 2) - _2022-xx-xx_
 
 ### Changed
+- Distribution: Build process will now only output a ES6 Bundle and the TS Declaration, ES5 is now fully deprecated
 - Test Units: replaced the "old" ES5 based Jasmine+Karma framework by a modern ES6 based Mocha+Puppeteer one (thanks @L1lith)
 
 ### Fixed
