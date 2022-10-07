@@ -2,6 +2,9 @@
 
 ## [14.0.0] (melonJS 2) - _2022-xx-xx_
 
+### Changed
+- Test Units: replaced the "old" ES5 based Jasmine+Karma framework by a modern ES6 based Mocha+Puppeteer one (thanks @L1lith)
+
 ### Fixed
 - Container: fix Container class initialization when no viewport are yet defined
 
