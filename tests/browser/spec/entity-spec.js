@@ -6,7 +6,7 @@ describe("Entity", function () {
 
     before(async () => {
         page = await browser.newPage();
-        await page.goto("http://localhost:8042/test.html");
+        await page.goto("http://localhost:8042/entity_test.html", {'waitUntil':'load'});
     });
 
     it("has an empty set of shapes", async () => {

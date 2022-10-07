@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Puppeteer Mocha</title>
+</head>
+<body>
+    <!-- Canvas placeholder -->
+    <div id="screen"></div>
+    <script type="module">
+      import * as me from './lib/melonjs.module.js';
+
+      me.boot();
+      me.video.init(800, 600, {parent : "screen", scale : "auto", renderer : me.video.AUTO});
+
+      // a camera instance
+      globalThis.camera = new me.Camera2d(0, 0, 1000, 1000);
+      // am infinite camera
+      globalThis.infiniteCamera = new me.Camera2d(-Infinity, -Infinity, Infinity, Infinity);
+      // a vector instance
+      globalThis.result = new me.Vector2d();
+      // a 10x10 renderable
+      globalThis.renderable10x10 = new me.Renderable(0, 0, 10, 10);
+  </script>
+</body>
+</html>

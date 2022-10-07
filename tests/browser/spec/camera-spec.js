@@ -5,7 +5,7 @@ describe("me.Camera2d", function () {
 
     before(async () => {
         page = await browser.newPage();
-        await page.goto("http://localhost:8042/test.html");
+        await page.goto("http://localhost:8042/camera_test.html", {'waitUntil':'load'});
     });
 
     it("convert between local and World coords without transforms", async () => {

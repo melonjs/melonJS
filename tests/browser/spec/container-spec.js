@@ -1,5 +1,5 @@
 import { expect } from "expect";
-import { Container, Renderable } from "./../public/melon/melonjs.module.js";
+import { Container, Renderable } from "./../public/lib/melonjs.module.js";
 
 describe("me.Container", function () {
     var container;

@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Puppeteer Mocha</title>
+</head>
+<body>
+    <!-- Canvas placeholder -->
+    <div id="screen"></div>
+    <script type="module">
+      import * as me from './lib/melonjs.module.js';
+
+      me.boot();
+      me.video.init(800, 600, {parent : "screen", scale : "auto", renderer : me.video.AUTO});
+      me.audio.init("mp3,ogg");
+  </script>
+</body>
+</html>

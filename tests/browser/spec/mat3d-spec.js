@@ -1,5 +1,5 @@
 import { expect } from "expect";
-import * as me from "../public/melon/melonjs.module.js";
+import * as me from "./../public/lib/melonjs.module.js";
 
 describe("me.Matrix3d", function () {
     it("should be initialized to a 4x4 identity matrix", function () {

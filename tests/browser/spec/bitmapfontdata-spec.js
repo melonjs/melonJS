@@ -1,5 +1,5 @@
 import { expect } from "expect";
-import * as me from "../public/melon/melonjs.module.js";
+import * as me from "./../public/lib/melonjs.module.js";
 
 var bitmapTextDataFixture =
     'info face="Arial" size=18 bold=0 italic=0 charset="" unicode=0 stretchH=100 smooth=1 aa=1 padding=0,0,0,0 spacing=0,0\n' +

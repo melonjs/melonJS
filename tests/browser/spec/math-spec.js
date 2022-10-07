@@ -1,5 +1,5 @@
 import { expect } from "expect";
-import * as me from "../public/melon/melonjs.module.js";
+import * as me from "./../public/lib/melonjs.module.js";
 
 describe("me.Math", function () {
     describe("degToRad", function () {

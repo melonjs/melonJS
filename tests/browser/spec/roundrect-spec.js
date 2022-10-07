@@ -1,5 +1,5 @@
 import { expect } from "expect";
-import * as me from "../public/melon/melonjs.module.js";
+import * as me from "./../public/lib/melonjs.module.js";
 
 describe("Shape : me.RoundRect", function () {
     var rrect = new me.RoundRect(50, 50, 100, 100, 40);

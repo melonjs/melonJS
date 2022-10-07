@@ -5,7 +5,7 @@ describe("Font : me.Text", () => {
     
     before(async () => {
         page = await browser.newPage();
-        await page.goto("http://localhost:8042/test.html", {'waitUntil':'load'});
+        await page.goto("http://localhost:8042/font_test.html", {'waitUntil':'load'});
     });
 
     describe("font set Size", async () => {

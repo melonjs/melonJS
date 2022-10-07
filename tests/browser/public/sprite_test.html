@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Puppeteer Mocha</title>
+</head>
+<body>
+    <!-- Canvas placeholder -->
+    <div id="screen"></div>
+    <script type="module">
+      import * as me from './lib/melonjs.module.js';
+
+      me.boot();
+      me.video.init(800, 600, {parent : "screen", scale : "auto", renderer : me.video.AUTO});
+
+      globalThis.container = new me.Container(50, 50, 150, 150);
+      globalThis.sprite = new me.Sprite(0, 0, {
+          framewidth: 32,
+          frameheight: 32,
+          image: me.video.createCanvas(64, 64),
+          anchorPoint: { x: 0, y: 0 }
+      });
+
+      // add to a parent container
+      globalThis.container.addChild(globalThis.sprite);
+  </script>
+</body>
+</html>
