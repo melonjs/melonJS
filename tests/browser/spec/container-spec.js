@@ -1,19 +1,8 @@
 import { expect } from "expect";
-import { boot, Container, Renderable, video } from "./../public/melon/melonjs.module.js";
+import { Container, Renderable } from "./../public/melon/melonjs.module.js";
 
 describe("me.Container", function () {
     var container;
-    var page;
-
-    before(async () => {
-        page = await browser.newPage();
-        await page.goto("http://localhost:8042/test.html");
-        
-        await page.on('load', () => {
-            boot();
-            video.init(800, 600, {parent : "screen", scale : "auto", renderer : video.AUTO});
-        });
-    });
 
     beforeEach(function () {
         container = new Container(0, 0, 100, 100, true);
