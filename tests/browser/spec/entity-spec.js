@@ -1,176 +1,152 @@
 import { expect } from "expect";
-import * as me from "../public/melon/melonjs.module.js";
 
 describe("Entity", function () {
     var entity;
+    var page;
 
-    it("can load the image", function (done) {
-        me.loader.load(
-            {
-                name: "rect",
-                type: "image",
-                src: "tests/data/img/rect.png",
-            },
-            function () {
-                expect(true).toBe(true);
-                done();
-            },
-            function () {
-                throw new Error("Failed to load `rect.png`");
-            }
-        );
+    before(async () => {
+        page = await browser.newPage();
+        await page.goto("http://localhost:8042/test.html");
     });
 
-    it("can be created", function () {
-        entity = new me.Entity(100, 100, {
-            width: 32,
-            height: 64,
-            image: "rect",
-            shapes: [],
+    it("has an empty set of shapes", async () => {
+        expect(await page.evaluate(() => entity.body.shapes.length)).toEqual(0);
+    });
+
+    it("has a first shape", async () => {
+        await page.evaluate(() => {
+            entity.body.addShape(defaultRectShape);
         });
-        expect(entity).toBeInstanceOf(me.Entity);
+        expect(await page.evaluate(() => entity.body.shapes.length)).toEqual(1);
     });
 
-    it("has an empty set of shapes", function () {
-        expect(entity.body.shapes.length).toEqual(0);
+    it("has the correct body bounds: A", async () => {
+        expect(await page.evaluate(() => {
+            var bounds = entity.body.getBounds();
+            return (bounds.x === 10 && bounds.y === 10 && bounds.width === 32 && bounds.height === 64);
+        })).toEqual(true);
     });
 
-    it("has a first shape", function () {
-        expect(entity.body.addShape(new me.Rect(10, 10, 32, 64))).toEqual(1);
+    it("has the correct renderable bounds: A", async () => {
+        expect(await page.evaluate(() => {
+            var renderable = entity.renderable
+            return (renderable.pos.x === 0 && renderable.pos.y === 0 && renderable.width === 32 && renderable.height === 64);
+        })).toEqual(true);
     });
 
-    it("has the correct body bounds: A", function () {
-        var bounds = entity.body.getBounds();
-        expect(bounds.x).toEqual(10);
-        expect(bounds.y).toEqual(10);
-        expect(bounds.width).toEqual(32);
-        expect(bounds.height).toEqual(64);
-    });
-
-    it("has the correct renderable bounds: A", function () {
-        expect(entity.renderable.pos.x).toEqual(0);
-        expect(entity.renderable.pos.y).toEqual(0);
-        expect(entity.renderable.width).toEqual(32);
-        expect(entity.renderable.height).toEqual(64);
-    });
-
-    it("has the correct entity bounds: A", function () {
-        var bounds = entity.getBounds();
-        expect(bounds.x).toEqual(100);
-        expect(bounds.y).toEqual(100);
-        expect(bounds.width).toEqual(32);
-        expect(bounds.height).toEqual(64);
+    it("has the correct entity bounds: A", async () => {
+        expect(await page.evaluate(() => {
+            var bounds = entity.getBounds();
+            return (bounds.x === 100 && bounds.y === 100 && bounds.width === 32 && bounds.height === 64);
+        })).toEqual(true);
     });
 
     /*
      * XXX: Disabled until #580 is fixed:
      * https://github.com/melonjs/melonJS/issues/580
      */
-    xit("has the correct entity geometry: A", function () {
-        expect(entity.pos.x).toEqual(100);
-        expect(entity.pos.y).toEqual(100);
-        expect(entity.width).toEqual(42);
-        expect(entity.height).toEqual(74);
+    xit("has the correct entity geometry: A", async () => {
+        expect(await page.evaluate(() => {
+            return (entity.pos.x === 100 && entity.pos.y === 100 && entity.width === 42 && entity.height === 74);
+        })).toEqual(true);
     });
 
-    it("has a second shape", function () {
-        expect(entity.body.addShape(new me.Rect(-10, -10, 32, 64))).toEqual(2);
+    it("has a second shape", async () => {
+        await page.evaluate(() => {
+            entity.body.addShape(defaultRectShape.clone().setShape(-10, -10, 32, 64));
+        });
+        expect(await page.evaluate(() => entity.body.shapes.length)).toEqual(2);
     });
 
-    it("has the correct body bounds: B", function () {
-        var bounds = entity.body.getBounds();
-        expect(bounds.x).toEqual(-10);
-        expect(bounds.y).toEqual(-10);
-        expect(bounds.width).toEqual(42);
-        expect(bounds.height).toEqual(74);
+    it("has the correct body bounds: B", async () => {
+        expect(await page.evaluate(() => {
+            var bounds = entity.body.getBounds();
+            return (bounds.x === -10 && bounds.y === -10 && bounds.width === 42 && bounds.height === 74);
+        })).toEqual(true);
     });
 
-    it("has the correct renderable bounds: B", function () {
-        expect(entity.renderable.pos.x).toEqual(0);
-        expect(entity.renderable.pos.y).toEqual(0);
-        expect(entity.renderable.width).toEqual(32);
-        expect(entity.renderable.height).toEqual(64);
+    it("has the correct renderable bounds: B", async () => {
+        expect(await page.evaluate(() => {
+            var renderable = entity.renderable
+            return (renderable.pos.x === 0 && renderable.pos.y === 0 && renderable.width === 32 && renderable.height === 64);
+        })).toEqual(true);
     });
 
-    it("has the correct entity bounds: B", function () {
-        var bounds = entity.getBounds();
-        expect(bounds.x).toEqual(100);
-        expect(bounds.y).toEqual(100);
-        expect(bounds.width).toEqual(42);
-        expect(bounds.height).toEqual(74);
+    it("has the correct entity bounds: B", async () => {
+        expect(await page.evaluate(() => {
+            var bounds = entity.getBounds();
+            return (bounds.x === 100 && bounds.y === 100 && bounds.width === 42 && bounds.height === 74);
+        })).toEqual(true);
     });
 
     /*
      * XXX: Disabled until #580 is fixed:
      * https://github.com/melonjs/melonJS/issues/580
      */
-    xit("has the correct entity geometry: B", function () {
-        expect(entity.pos.x).toEqual(90);
-        expect(entity.pos.y).toEqual(90);
-        expect(entity.width).toEqual(42);
-        expect(entity.height).toEqual(74);
+    xit("has the correct entity geometry: B", async () => {
+        expect(await page.evaluate(() => {
+            return (entity.pos.x === 90 && entity.pos.y === 90 && entity.width === 42 && entity.height === 74);
+        })).toEqual(true);
     });
 
-    it("removes the second shape", function () {
-        expect(entity.body.removeShapeAt(1)).toEqual(1);
+    it("removes the second shape", async () => {
+        expect(await page.evaluate(() => {
+            return entity.body.removeShapeAt(1);
+        })).toEqual(1);
     });
 
-    it("has the correct body bounds: C", function () {
-        var bounds = entity.body.getBounds();
-        expect(bounds.x).toEqual(10);
-        expect(bounds.y).toEqual(10);
-        expect(bounds.width).toEqual(32);
-        expect(bounds.height).toEqual(64);
+    it("has the correct body bounds: C", async () => {
+        expect(await page.evaluate(() => {
+            var bounds = entity.body.getBounds();
+            return (bounds.x === 10 && bounds.y === 10 && bounds.width === 32 && bounds.height === 64);
+        })).toEqual(true);
     });
 
-    it("has the correct renderable bounds: C", function () {
-        expect(entity.renderable.pos.x).toEqual(0);
-        expect(entity.renderable.pos.y).toEqual(0);
-        expect(entity.renderable.width).toEqual(32);
-        expect(entity.renderable.height).toEqual(64);
+    it("has the correct renderable bounds: C", async () => {
+        expect(await page.evaluate(() => {
+            var renderable = entity.renderable
+            return (renderable.pos.x === 0 && renderable.pos.y === 0 && renderable.width === 32 && renderable.height === 64);
+        })).toEqual(true);
     });
 
-    it("has the correct entity bounds: C", function () {
-        var bounds = entity.getBounds();
-        expect(bounds.x).toEqual(100);
-        expect(bounds.y).toEqual(100);
-        expect(bounds.width).toEqual(32);
-        expect(bounds.height).toEqual(64);
+    it("has the correct entity bounds: C", async () => {
+        expect(await page.evaluate(() => {
+            var bounds = entity.getBounds();
+            return (bounds.x === 100 && bounds.y === 100 && bounds.width === 32 && bounds.height === 64);
+        })).toEqual(true);
     });
 
-    xit("has the correct entity geometry: C", function () {
-        expect(entity.pos.x).toEqual(100);
-        expect(entity.pos.y).toEqual(100);
-        expect(entity.width).toEqual(42);
-        expect(entity.height).toEqual(74);
+    xit("has the correct entity geometry: C", async () => {
+        expect(await page.evaluate(() => {
+            return (entity.pos.x === 90 && entity.pos.y === 90 && entity.width === 42 && entity.height === 74);
+        })).toEqual(true);
     });
 
-    it("moves properly", function () {
-        entity.pos.set(120, 150, 0);
-        expect(entity.pos.x).toEqual(120);
-        expect(entity.pos.y).toEqual(150);
+    it("moves properly", async () => {
+        expect(await page.evaluate(() => {
+            entity.pos.set(120, 150, 0);
+            return (entity.pos.x === 120 && entity.pos.y === 150);
+        })).toEqual(true);
     });
 
-    it("has the correct body bounds: D", function () {
-        var bounds = entity.body.getBounds();
-        expect(bounds.x).toEqual(10);
-        expect(bounds.y).toEqual(10);
-        expect(bounds.width).toEqual(32);
-        expect(bounds.height).toEqual(64);
+    it("has the correct body bounds: D", async () => {
+        expect(await page.evaluate(() => {
+            var bounds = entity.body.getBounds();
+            return (bounds.x === 10 && bounds.y === 10 && bounds.width === 32 && bounds.height === 64);
+        })).toEqual(true);
     });
 
-    it("has the correct renderable bounds: D", function () {
-        expect(entity.renderable.pos.x).toEqual(0);
-        expect(entity.renderable.pos.y).toEqual(0);
-        expect(entity.renderable.width).toEqual(32);
-        expect(entity.renderable.height).toEqual(64);
+    it("has the correct renderable bounds: D", async () => {
+        expect(await page.evaluate(() => {
+            var renderable = entity.renderable
+            return (renderable.pos.x === 0 && renderable.pos.y === 0 && renderable.width === 32 && renderable.height === 64);
+        })).toEqual(true);
     });
 
-    it("has the correct entity bounds: D", function () {
-        var bounds = entity.getBounds();
-        expect(bounds.x).toEqual(120);
-        expect(bounds.y).toEqual(150);
-        expect(bounds.width).toEqual(32);
-        expect(bounds.height).toEqual(64);
+    it("has the correct entity bounds: D", async () => {
+        expect(await page.evaluate(() => {
+            var bounds = entity.getBounds();
+            return (bounds.x === 120 && bounds.y === 150 && bounds.width === 32 && bounds.height === 64);
+        })).toEqual(true);
     });
 });

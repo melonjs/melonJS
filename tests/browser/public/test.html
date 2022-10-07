@@ -12,6 +12,18 @@
       me.boot();
       me.video.init(800, 600, {parent : "screen", scale : "auto", renderer : me.video.AUTO});
 
+      // load test assets
+      me.loader.load(
+      {
+          name: "rect",
+          type: "image",
+          src: "./data/img/rect.png",
+      },
+      null,
+      function () {
+          throw new Error("Failed to load `rect.png`");
+      });
+
       // a Text object
       globalThis.font = new me.Text(0, 0, {
           font: "Arial",
@@ -29,6 +41,17 @@
       globalThis.result = new me.Vector2d();
       // a 10x10 renderable
       globalThis.renderable10x10 = new me.Renderable(0, 0, 10, 10);
+
+      // a test entity object
+      globalThis.entity = new me.Entity(100, 100, {
+          width: 32,
+          height: 64,
+          image: "rect",
+          shapes: [],
+      });
+
+      // a default rect shape
+      globalThis.defaultRectShape = new me.Rect(10, 10, 32, 64);
   </script>
 </body>
 </html>
