@@ -40,8 +40,6 @@
   "main": "dist/melonjs.module.js",
   "module": "dist/melonjs.module.js",
   "files": [
-    "dist/melonjs.js",
-    "dist/melonjs.min.js",
     "dist/melonjs.module.js",
     "dist/melonjs.module.d.ts",
     "src/",
@@ -60,7 +58,6 @@
   "devDependencies": {
     "@fastify/static": "^6.5.0",
     "@melonjs/webdoc-theme": "^1.1.1",
-    "@rollup/plugin-buble": "^0.21.3",
     "@rollup/plugin-commonjs": "^22.0.2",
     "@rollup/plugin-image": "^2.1.1",
     "@rollup/plugin-node-resolve": "^14.1.0",
@@ -85,10 +82,9 @@
   },
   "scripts": {
     "build": "npm run lint && rollup -c --silent",
-    "dist": " npm run build && npm run minify && mkdirp dist && cp -f build/*.js dist/ && npm run types",
-    "minify": "terser build/melonjs.js --compress --mangle --comments  '/(?:^!|@(?:license|preserve|cc_on))/' --output build/melonjs.min.js",
+    "dist": " npm run build && mkdirp dist && cp -f build/*.js dist/ && npm run types",
     "lint": "eslint src rollup.config.js",
-    "pretest": "cp -R ./build/melonjs.module.js ./tests/browser/public/melon",
+    "pretest": "cp -f ./build/melonjs.module.js ./tests/browser/public/melon",
     "test": "mocha ./tests/browser/spec/*.js --reporter spec --diff --bail --timeout 10000",
     "test-node": "node build/melonjs.module.js",
     "doc-prod": "mkdirp docs && webdoc --quiet --site-root melonJS/docs -R README.md",

@@ -1,4 +1,3 @@
-import buble from "@rollup/plugin-buble";
 import { string } from "rollup-plugin-string";
 import replace from "@rollup/plugin-replace";
 import image from "@rollup/plugin-image";
@@ -21,42 +20,6 @@ const license = [
 ].join("\n");
 
 export default [
-    {
-        input: "src/index.js",
-        plugins: [
-            resolve({
-                mainFields: ["main"],
-                browser: true,
-                preferBuiltins: false
-            }),
-            commonjs({
-                include: "node_modules/**",
-                sourceMap: false
-            }),
-            replace({
-                values: {
-                    __VERSION__: pkg.version
-                },
-                preventAssignment: true
-            }),
-            string({
-                include: [
-                    "**/*.frag",
-                    "**/*.vert"
-                ]
-            }),
-            image(),
-            buble(),
-            bundleSize()
-        ],
-        output: {
-          file: "build/melonjs.js",
-          banner: license,
-          name : "me",
-          format: "umd",
-          generatedCode: "es5"
-        }
-    },
     {
         input: "src/index.js",
         plugins: [

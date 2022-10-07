@@ -1,5 +1,5 @@
 /*!
- * melonJS Game Engine - v13.4.0
+ * melonJS Game Engine - v14.0.0
  * http://www.melonjs.org
  * melonjs is licensed under the MIT License.
  * http://www.opensource.org/licenses/mit-license
@@ -85,33 +85,40 @@ var createPropertyDescriptor$2 = function (bitmap, value) {
 var NATIVE_BIND = functionBindNative;
 
 var FunctionPrototype$1 = Function.prototype;
-var bind = FunctionPrototype$1.bind;
 var call$3 = FunctionPrototype$1.call;
-var uncurryThis$b = NATIVE_BIND && bind.bind(call$3, call$3);
+var uncurryThisWithBind = NATIVE_BIND && FunctionPrototype$1.bind.bind(call$3, call$3);
 
-var functionUncurryThis = NATIVE_BIND ? function (fn) {
-  return fn && uncurryThis$b(fn);
-} : function (fn) {
-  return fn && function () {
+var functionUncurryThisRaw = function (fn) {
+  return NATIVE_BIND ? uncurryThisWithBind(fn) : function () {
     return call$3.apply(fn, arguments);
   };
 };
 
-var uncurryThis$a = functionUncurryThis;
+var uncurryThisRaw$1 = functionUncurryThisRaw;
 
-var toString$4 = uncurryThis$a({}.toString);
-var stringSlice = uncurryThis$a(''.slice);
+var toString$4 = uncurryThisRaw$1({}.toString);
+var stringSlice = uncurryThisRaw$1(''.slice);
 
-var classofRaw$1 = function (it) {
+var classofRaw$2 = function (it) {
   return stringSlice(toString$4(it), 8, -1);
 };
 
-var uncurryThis$9 = functionUncurryThis;
+var classofRaw$1 = classofRaw$2;
+var uncurryThisRaw = functionUncurryThisRaw;
+
+var functionUncurryThis = function (fn) {
+  // Nashorn bug:
+  //   https://github.com/zloirock/core-js/issues/1128
+  //   https://github.com/zloirock/core-js/issues/1130
+  if (classofRaw$1(fn) === 'Function') return uncurryThisRaw(fn);
+};
+
+var uncurryThis$8 = functionUncurryThis;
 var fails$6 = fails$9;
-var classof$2 = classofRaw$1;
+var classof$2 = classofRaw$2;
 
 var $Object$3 = Object;
-var split = uncurryThis$9(''.split);
+var split = uncurryThis$8(''.split);
 
 // fallback for non-array-like ES3 and non-enumerable old V8 strings
 var indexedObject = fails$6(function () {
@@ -191,9 +198,9 @@ var getBuiltIn$3 = function (namespace, method) {
   return arguments.length < 2 ? aFunction(global$b[namespace]) : global$b[namespace] && global$b[namespace][method];
 };
 
-var uncurryThis$8 = functionUncurryThis;
+var uncurryThis$7 = functionUncurryThis;
 
-var objectIsPrototypeOf = uncurryThis$8({}.isPrototypeOf);
+var objectIsPrototypeOf = uncurryThis$7({}.isPrototypeOf);
 
 var getBuiltIn$2 = getBuiltIn$3;
 
@@ -339,10 +346,10 @@ var store$2 = sharedStore;
 (shared$3.exports = function (key, value) {
   return store$2[key] || (store$2[key] = value !== undefined ? value : {});
 })('versions', []).push({
-  version: '3.25.3',
+  version: '3.25.5',
   mode: 'global',
   copyright: '© 2014-2022 Denis Pushkarev (zloirock.ru)',
-  license: 'https://github.com/zloirock/core-js/blob/v3.25.3/LICENSE',
+  license: 'https://github.com/zloirock/core-js/blob/v3.25.5/LICENSE',
   source: 'https://github.com/zloirock/core-js'
 });
 
@@ -356,10 +363,10 @@ var toObject$1 = function (argument) {
   return $Object$1(requireObjectCoercible$1(argument));
 };
 
-var uncurryThis$7 = functionUncurryThis;
+var uncurryThis$6 = functionUncurryThis;
 var toObject = toObject$1;
 
-var hasOwnProperty = uncurryThis$7({}.hasOwnProperty);
+var hasOwnProperty = uncurryThis$6({}.hasOwnProperty);
 
 // `HasOwnProperty` abstract operation
 // https://tc39.es/ecma262/#sec-hasownproperty
@@ -368,11 +375,11 @@ var hasOwnProperty_1 = Object.hasOwn || function hasOwn(it, key) {
   return hasOwnProperty(toObject(it), key);
 };
 
-var uncurryThis$6 = functionUncurryThis;
+var uncurryThis$5 = functionUncurryThis;
 
 var id = 0;
 var postfix = Math.random();
-var toString$3 = uncurryThis$6(1.0.toString);
+var toString$3 = uncurryThis$5(1.0.toString);
 
 var uid$2 = function (key) {
   return 'Symbol(' + (key === undefined ? '' : key) + ')_' + toString$3(++id + postfix, 36);
@@ -586,11 +593,11 @@ var functionName = {
   CONFIGURABLE: CONFIGURABLE
 };
 
-var uncurryThis$5 = functionUncurryThis;
+var uncurryThis$4 = functionUncurryThis;
 var isCallable$5 = isCallable$b;
 var store$1 = sharedStore;
 
-var functionToString = uncurryThis$5(Function.toString);
+var functionToString = uncurryThis$4(Function.toString);
 
 // this helper broken in `core-js@3.4.1-3.4.4`, so we can't use `shared` helper
 if (!isCallable$5(store$1.inspectSource)) {
@@ -621,7 +628,6 @@ var hiddenKeys$3 = {};
 
 var NATIVE_WEAK_MAP = weakMapBasicDetection;
 var global$4 = global$c;
-var uncurryThis$4 = functionUncurryThis;
 var isObject = isObject$5;
 var createNonEnumerableProperty$1 = createNonEnumerableProperty$2;
 var hasOwn$3 = hasOwnProperty_1;
@@ -649,20 +655,22 @@ var getterFor = function (TYPE) {
 
 if (NATIVE_WEAK_MAP || shared.state) {
   var store = shared.state || (shared.state = new WeakMap());
-  var wmget = uncurryThis$4(store.get);
-  var wmhas = uncurryThis$4(store.has);
-  var wmset = uncurryThis$4(store.set);
+  /* eslint-disable no-self-assign -- prototype methods protection */
+  store.get = store.get;
+  store.has = store.has;
+  store.set = store.set;
+  /* eslint-enable no-self-assign -- prototype methods protection */
   set = function (it, metadata) {
-    if (wmhas(store, it)) throw TypeError$1(OBJECT_ALREADY_INITIALIZED);
+    if (store.has(it)) throw TypeError$1(OBJECT_ALREADY_INITIALIZED);
     metadata.facade = it;
-    wmset(store, it, metadata);
+    store.set(it, metadata);
     return metadata;
   };
   get = function (it) {
-    return wmget(store, it) || {};
+    return store.get(it) || {};
   };
   has = function (it) {
-    return wmhas(store, it);
+    return store.has(it);
   };
 } else {
   var STATE = sharedKey('state');
@@ -1033,7 +1041,7 @@ var toStringTagSupport = String(test) === '[object z]';
 
 var TO_STRING_TAG_SUPPORT = toStringTagSupport;
 var isCallable = isCallable$b;
-var classofRaw = classofRaw$1;
+var classofRaw = classofRaw$2;
 var wellKnownSymbol = wellKnownSymbol$3;
 
 var TO_STRING_TAG = wellKnownSymbol('toStringTag');
@@ -20326,10 +20334,14 @@ class Container extends Renderable {
      * @param {number} [width=game.viewport.width] width of the container
      * @param {number} [height=game.viewport.height] height of the container
      */
-    constructor(x = 0, y = 0, width = game.viewport.width, height = game.viewport.height, root = false) {
+    constructor(x = 0, y = 0, width = Infinity, height = Infinity, root = false) {
 
         // call the super constructor
-        super(x, y, width, height);
+        super(
+            x, y,
+            typeof game.viewport !== "undefined" ? game.viewport.width : width,
+            typeof game.viewport !== "undefined" ? game.viewport.height : height
+        );
 
         /**
          * keep track of pending sort
@@ -21888,7 +21900,7 @@ class Application {
          * @public
          * @type {Camera2d}
          */
-        this.viewport = null;
+        this.viewport = undefined;
 
         /**
          * a reference to the game world, <br>
@@ -21896,7 +21908,7 @@ class Application {
          * @public
          * @type {World}
          */
-        this.world = null;
+        this.world = undefined;
 
         /**
          * when true, all objects will be added under the root world container.<br>
@@ -32908,10 +32920,10 @@ class BasePlugin {
          * this can be overridden by the plugin
          * @public
          * @type {string}
-         * @default "13.4.0"
+         * @default "14.0.0"
          * @name plugin.Base#version
          */
-        this.version = "13.4.0";
+        this.version = "14.0.0";
     }
 }
 
@@ -37729,7 +37741,7 @@ Renderer.prototype.getScreenContext = function()  {
  * @name version
  * @type {string}
  */
-const version = "13.4.0";
+const version = "14.0.0";
 
 
 /**
