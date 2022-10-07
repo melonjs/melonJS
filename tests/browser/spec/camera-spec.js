@@ -1,5 +1,4 @@
 import { expect } from "expect";
-import {Camera2d, Vector2d, Renderable } from "./../public/melon/melonjs.module.js";
 
 describe("me.Camera2d", function () {
     var page;
