@@ -44,7 +44,7 @@ function safeLoadLevel(levelId, options, restart) {
         // resume the game loop if it was previously running
         state.restart();
     }
-};
+}
 
 /**
  * Load a TMX level
@@ -69,7 +69,7 @@ function loadTMXLevel(levelId, container, flatten, setViewportBounds) {
 
     // add all level elements to the target container
     level.addTo(container, flatten, setViewportBounds);
-};
+}
 
 
 /**

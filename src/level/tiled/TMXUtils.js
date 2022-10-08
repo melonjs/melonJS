@@ -104,7 +104,7 @@ function parseAttributes(obj, elt) {
  */
 export function decompress() {
     throw new Error("GZIP/ZLIB compressed TMX Tile Map not supported!");
-};
+}
 
 /**
  * Decode a CSV encoded array into a binary array
@@ -121,7 +121,7 @@ export function decodeCSV(input) {
         result.push(+entries[i]);
     }
     return result;
-};
+}
 
 /**
  * Decode a base64 encoded string into a byte array
@@ -145,7 +145,7 @@ export function decodeBase64AsArray(input, bytes) {
         }
     }
     return ar;
-};
+}
 
 /**
  * Decode the given data
@@ -176,7 +176,7 @@ export function decode(data, encoding, compression) {
         default:
             throw new Error("Unknown layer encoding: " + encoding);
     }
-};
+}
 
 /**
  * Normalize TMX format to Tiled JSON format
@@ -284,7 +284,7 @@ export function normalize(obj, item) {
             obj[nodeName] = parse(item);
             break;
     }
-};
+}
 
 /**
  * Parse a XML TMX object and returns the corresponding javascript object
@@ -323,7 +323,7 @@ export function parse(xml) {
     }
 
     return obj;
-};
+}
 
 /**
  * Apply TMX Properties to the given object
@@ -355,4 +355,4 @@ export function applyTMXProperties(obj, data) {
             }
         }
     }
-};
+}

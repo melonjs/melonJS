@@ -207,6 +207,6 @@ class TMXIsometricRenderer extends TMXRenderer {
         pool.push(rectEnd);
         pool.push(startPos);
     }
-};
+}
 
 export default TMXIsometricRenderer;

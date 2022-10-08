@@ -271,7 +271,7 @@ class TMXTileMap {
     getRenderer() {
         if ((typeof(this.renderer) === "undefined") || (!this.renderer.canRender(this))) {
             this.renderer = getNewDefaultRenderer(this);
-        };
+        }
         return this.renderer;
     }
 
@@ -628,6 +628,6 @@ class TMXTileMap {
         this.objectGroups.length = 0;
         this.initialized = false;
     }
-};
+}
 
 export default TMXTileMap;

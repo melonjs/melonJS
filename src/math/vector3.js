@@ -555,6 +555,6 @@ class Vector3d {
     toString() {
         return "x:" + this.x + ",y:" + this.y + ",z:" + this.z;
     }
-};
+}
 
 export default Vector3d;

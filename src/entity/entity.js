@@ -236,6 +236,5 @@ class Entity extends Renderable {
         }
     }
 
-};
-
+}
 export default Entity;

@@ -35,7 +35,7 @@ function shouldCollide(a, b) {
         (a.body.collisionMask & b.body.collisionType) !== 0 &&
         (a.body.collisionType & b.body.collisionMask) !== 0
     );
-};
+}
 
 
 
@@ -108,7 +108,7 @@ export function collisionCheck(objA, response = globalResponse) {
     }
     // we could return the amount of objects we collided with ?
     return collisionCounter > 0;
-};
+}
 
 /**
  * Checks for object colliding with the given line
@@ -182,4 +182,4 @@ export function rayCast(line, result = []) {
 
     // return the list of colliding objects
     return result;
-};
+}

@@ -81,4 +81,4 @@ export function extractUniforms(gl, shader) {
     Object.defineProperties(uniforms, descriptor);
 
     return uniforms;
-};
+}

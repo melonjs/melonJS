@@ -398,6 +398,5 @@ class Renderer {
      */
     drawFont(/*bounds*/) {}
 
-};
-
+}
 export default Renderer;

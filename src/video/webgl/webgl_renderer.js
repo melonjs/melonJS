@@ -1023,6 +1023,5 @@ class WebGLRenderer extends Renderer {
             this.gl.disable(this.gl.STENCIL_TEST);
         }
     }
-};
-
+}
 export default WebGLRenderer;

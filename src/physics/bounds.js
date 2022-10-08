@@ -444,5 +444,5 @@ class Bounds {
         ]);
     }
 
-};
+}
 export default Bounds;

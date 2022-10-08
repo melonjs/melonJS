@@ -481,7 +481,7 @@ export const ONCONTEXT_RESTORED = "renderer.contextrestored";
  */
 export function emit(eventName, ...args) {
     return eventEmitter.emit(eventName, ...args);
-};
+}
 
 /**
  * Add a listener for a given event.
@@ -496,7 +496,7 @@ export function emit(eventName, ...args) {
  */
 export function on(eventName, listener, context) {
     return eventEmitter.on(eventName, listener, context);
-};
+}
 
 /**
  * Add a one-time listener for a given event.
@@ -511,7 +511,7 @@ export function on(eventName, listener, context) {
  */
 export function once(eventName, listener, context) {
     return eventEmitter.once(eventName, listener, context);
-};
+}
 
 /**
  * remove the given listener for a given event.
@@ -525,4 +525,4 @@ export function once(eventName, listener, context) {
  */
 export function off(eventName, listener) {
     return eventEmitter.off(eventName, listener);
-};
+}

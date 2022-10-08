@@ -109,7 +109,7 @@ class BitmapText extends Renderable {
                 // if starting/includes "info face" the whole data string was passed as parameter
                 (settings.fontData.includes("info face")) ? settings.fontData : loader.getBinary(settings.fontData)
             );
-        };
+        }
 
         // if floating was specified through settings
         if (typeof settings.floating !== "undefined") {
@@ -357,6 +357,5 @@ class BitmapText extends Renderable {
         super.destroy();
     }
 
-};
-
+}
 export default BitmapText;

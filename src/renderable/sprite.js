@@ -200,7 +200,7 @@ class Sprite extends Renderable {
         // displaying order
         if (typeof settings.z !== "undefined") {
             this.pos.z = settings.z;
-        };
+        }
 
         // for sprite, addAnimation will return !=0
         if (this.addAnimation("default", null) !== 0) {
@@ -641,6 +641,5 @@ class Sprite extends Renderable {
             w, h                         // dw,dh
         );
     }
-};
-
+}
 export default Sprite;

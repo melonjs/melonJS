@@ -22,7 +22,7 @@ function disableSwipeFn(e) {
         globalThis.scroll(0, 0);
     }
     return false;
-};
+}
 
 function hasLocalStorage() {
     try {
@@ -51,7 +51,7 @@ function onDeviceMotion(e) {
     accelerationX = e.accelerationIncludingGravity.x;
     accelerationY = e.accelerationIncludingGravity.y;
     accelerationZ = e.accelerationIncludingGravity.z;
-};
+}
 
 /**
  * used by [un]watchDeviceOrientation()
@@ -60,7 +60,7 @@ export function onDeviceRotate(e) {
     gamma = e.gamma;
     beta = e.beta;
     alpha = e.alpha;
-};
+}
 
 /**
  * the device platform type
@@ -431,7 +431,7 @@ export let stopOnBlur = false;
 */
 export function onReady(fn) {
     DOMContentLoaded(fn);
-};
+}
 
 /**
  * enable/disable swipe on WebView.
@@ -451,7 +451,7 @@ export function enableSwipe(enable) {
         globalThis.document.addEventListener(moveEvent, disableSwipeFn, { passive: false });
         swipeEnabled = false;
     }
-};
+}
 
 /**
  * Returns true if the browser/device is in full screen mode.
@@ -466,7 +466,7 @@ export function isFullscreen() {
     } else {
         return false;
     }
-};
+}
 
 /**
  * Triggers a fullscreen request. Requires fullscreen support from the browser/device.
@@ -492,7 +492,7 @@ export function requestFullscreen(element) {
         element.requestFullscreen = prefixed("requestFullscreen", element) || element.mozRequestFullScreen;
         element.requestFullscreen();
     }
-};
+}
 
 /**
  * Exit fullscreen mode. Requires fullscreen support from the browser/device.
@@ -504,7 +504,7 @@ export function exitFullscreen() {
     if (hasFullscreenSupport && isFullscreen()) {
         document.exitFullscreen();
     }
-};
+}
 
 /**
  * Return a string representing the orientation of the device screen.
@@ -540,7 +540,7 @@ export function getScreenOrientation() {
 
     // fallback to window size check
     return (globalThis.outerWidth > globalThis.outerHeight) ? LANDSCAPE : PORTRAIT;
-};
+}
 
 /**
  * locks the device screen into the specified orientation.<br>
@@ -561,7 +561,7 @@ export function lockOrientation(orientation) {
         }
     }
     return false;
-};
+}
 
 /**
  * unlocks the device screen into the specified orientation.<br>
@@ -581,7 +581,7 @@ export function unlockOrientation() {
         }
     }
     return false;
-};
+}
 
 /**
  * return true if the device screen orientation is in Portrait mode
@@ -592,7 +592,7 @@ export function unlockOrientation() {
  */
 export function isPortrait() {
     return getScreenOrientation().includes("portrait");
-};
+}
 
 /**
  * return true if the device screen orientation is in Portrait mode
@@ -603,7 +603,7 @@ export function isPortrait() {
  */
 export function isLandscape() {
     return getScreenOrientation().includes("landscape");
-};
+}
 
 /**
  * return the device storage
@@ -622,7 +622,7 @@ export function getStorage(type = "local") {
         default :
             throw new Error("storage type " + type + " not supported");
     }
-};
+}
 
 /**
  * return the parent DOM element for the given parent name or HTMLElement object
@@ -640,7 +640,7 @@ export function getParentElement(element) {
     }
 
     return target;
-};
+}
 
 /**
  * return the DOM element for the given element name or HTMLElement object
@@ -668,7 +668,7 @@ export function getElement(element) {
     }
 
     return target;
-};
+}
 
 /**
  * returns the size of the given HTMLElement and its position relative to the viewport
@@ -687,8 +687,8 @@ export function getElementBounds(element) {
         domRect.width = domRect.right = globalThis.innerWidth;
         domRect.height = domRect.bottom = globalThis.innerHeight;
         return domRect;
-    };
-};
+    }
+}
 
 /**
  * returns the size of the given HTMLElement Parent and its position relative to the viewport
@@ -702,7 +702,7 @@ export function getElementBounds(element) {
  */
 export function getParentBounds(element) {
     return getElementBounds(getParentElement(element));
-};
+}
 
 /**
  * returns true if the device supports WebGL
@@ -727,7 +727,7 @@ export function isWebGLSupported(options) {
     }
 
     return _supported;
-};
+}
 
 /**
  * return the highest precision format supported by this device for GL Shaders
@@ -747,7 +747,7 @@ export function getMaxShaderPrecision(gl) {
             return "mediump";
     }
     return "lowp";
-};
+}
 
 /**
  * Makes a request to bring this device window to the front.
@@ -763,7 +763,7 @@ export function focus() {
     if (typeof (globalThis.focus) === "function") {
         globalThis.focus();
     }
-};
+}
 
 /**
  * Enable monitor of the device accelerator to detect the amount of physical force of acceleration the device is receiving.
@@ -806,7 +806,7 @@ export function watchAccelerometer() {
         }
     }
     return accelInitialized;
-};
+}
 
 /**
  * unwatch Accelerometor event
@@ -820,7 +820,7 @@ export function unwatchAccelerometer() {
         globalThis.removeEventListener("devicemotion", onDeviceMotion, false);
         accelInitialized = false;
     }
-};
+}
 
 /**
  * Enable monitor of the device orientation to detect the current orientation of the device as compared to the Earth coordinate frame.
@@ -859,7 +859,7 @@ export function watchDeviceOrientation() {
         }
     }
     return deviceOrientationInitialized;
-};
+}
 
 /**
  * unwatch Device orientation event
@@ -872,7 +872,7 @@ export function unwatchDeviceOrientation() {
         globalThis.removeEventListener("deviceorientation", onDeviceRotate, false);
         deviceOrientationInitialized = false;
     }
-};
+}
 
 /**
  * the vibrate method pulses the vibration hardware on the device, <br>
@@ -897,4 +897,4 @@ export function vibrate(pattern) {
     if (typeof globalThis.navigator !== "undefined" && typeof globalThis.navigator.vibrate === "function") {
         globalThis.navigator.vibrate(pattern);
     }
-};
+}

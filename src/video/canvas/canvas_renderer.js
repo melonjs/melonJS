@@ -794,6 +794,5 @@ class CanvasRenderer extends Renderer {
             this.getContext().restore();
         }
     }
-};
-
+}
 export default CanvasRenderer;

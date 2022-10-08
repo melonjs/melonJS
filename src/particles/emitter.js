@@ -14,7 +14,7 @@ function createDefaultParticleTexture(w = 8, h = 8) {
     defaultParticleTexture.context.fillRect(0, 0, w, h);
 
     return defaultParticleTexture;
-};
+}
 
 /**
  * @classdesc
@@ -254,6 +254,6 @@ class ParticleEmitter extends Container {
         this.settings.image = undefined;
         this.settings = undefined;
     }
-};
+}
 
 export default ParticleEmitter;

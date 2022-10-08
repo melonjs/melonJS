@@ -494,6 +494,6 @@ class TMXHexagonalRenderer extends TMXRenderer {
         pool.push(startTile);
         pool.push(startPos);
     }
-};
+}
 
 export default TMXHexagonalRenderer;

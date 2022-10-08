@@ -67,6 +67,6 @@ class ColorLayer extends Renderable {
         super.destroy();
     }
 
-};
+}
 
 export default ColorLayer;

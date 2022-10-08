@@ -11,7 +11,7 @@ function compileShader(gl, type, source) {
     }
 
     return shader;
-};
+}
 
 /**
  * Compile GLSL into a shader object
@@ -55,4 +55,4 @@ export function compileProgram(gl, vertex, fragment, attributes) {
     gl.deleteShader(fragShader);
 
     return program;
-};
+}

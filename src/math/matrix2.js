@@ -489,6 +489,6 @@ class Matrix2d {
             a[6] + ", " + a[7] + ", " + a[8] +
         ")";
     }
-};
+}
 
 export default Matrix2d;

@@ -13,4 +13,4 @@ export function minify(src) {
     src = src.replace(/\s*([;,[\](){}\\\/\-+*|^&!=<>?~%])\s*/g, "$1");
 
     return src;
-};
+}

@@ -60,7 +60,7 @@ class ProgressBar extends Renderable {
         event.off(event.VIEWPORT_ONRESIZE, this.resize);
     }
 
-};
+}
 
 /**
  * a default loading screen
@@ -107,6 +107,6 @@ class DefaultLoadingScreen extends Stage {
         // cancel the callback
         loader.unload({name: "melonjs_logo", type:"image"});
     }
-};
+}
 
 export default DefaultLoadingScreen;

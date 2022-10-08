@@ -234,6 +234,5 @@ class NineSliceSprite extends Sprite {
             target_center_height  // dh
         );
     }
-};
-
+}
 export default NineSliceSprite;

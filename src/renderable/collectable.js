@@ -48,6 +48,6 @@ class Collectable extends Sprite {
 
     }
 
-};
+}
 
 export default Collectable;

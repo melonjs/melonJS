@@ -381,6 +381,6 @@ class Pointer extends Bounds {
             this.width = this.height = 1;
         }
     }
-};
+}
 
 export default Pointer;

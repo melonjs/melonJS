@@ -174,6 +174,6 @@ class Particle extends Renderable {
             w, h
         );
     }
-};
+}
 
 export default Particle;

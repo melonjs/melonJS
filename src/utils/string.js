@@ -13,7 +13,7 @@
  */
 export function capitalize(str) {
     return str.charAt(0).toUpperCase() + str.slice(1);
-};
+}
 
 /**
  * returns true if the given string contains a numeric integer or float value
@@ -28,7 +28,7 @@ export function isNumeric(str) {
         str = str.trim();
     }
     return !isNaN(str) && /[+-]?([0-9]*[.])?[0-9]+/.test(str);
-};
+}
 
 /**
  * returns true if the given string contains a true or false
@@ -41,7 +41,7 @@ export function isNumeric(str) {
 export function isBoolean(str) {
     var trimmed = str.trim();
     return (trimmed === "true") || (trimmed === "false");
-};
+}
 
 /**
  * convert a string to the corresponding hexadecimal value
@@ -57,7 +57,7 @@ export function toHex(str) {
         res += str.charCodeAt(c++).toString(16);
     }
     return res;
-};
+}
 
 /**
  * returns true if the given string is a data url in the `data:[<mediatype>][;base64],<data>` format.
@@ -70,4 +70,4 @@ export function toHex(str) {
  */
 export function isDataUrl(str) {
     return /^data:(.+);base64,(.+)$/.test(str);
-};
+}

@@ -144,6 +144,5 @@ class Trigger extends Renderable {
         return false;
     }
 
-};
-
+}
 export default Trigger;

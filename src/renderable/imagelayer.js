@@ -294,6 +294,5 @@ class ImageLayer extends Sprite {
         super.destroy();
     }
 
-};
-
+}
 export default ImageLayer;

@@ -175,7 +175,7 @@ class Container extends Renderable {
             if (child && child.isPersistent !== true) {
                 this.removeChildNow(child);
             }
-        };
+        }
 
         if (typeof this.currentTransform !== "undefined") {
             // just reset some variables
@@ -919,7 +919,7 @@ class Container extends Renderable {
                 state.current().cameras.forEach((camera) => {
                     if (camera.isVisible(obj, isFloating)) {
                         obj.inViewport = true;
-                    };
+                    }
                 });
 
                 // update our object
@@ -1004,6 +1004,6 @@ class Container extends Renderable {
             }
         }
     }
-};
+}
 
 export default Container;

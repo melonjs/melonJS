@@ -13,4 +13,4 @@ export function extractAttributes(gl, shader) {
     }
 
     return attributes;
-};
+}

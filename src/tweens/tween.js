@@ -342,7 +342,7 @@ class Tween {
     onComplete( onCompleteCallback ) {
         this._onCompleteCallback = onCompleteCallback;
         return this;
-    };
+    }
 
     /** @ignore */
     update( dt ) {
@@ -467,6 +467,5 @@ class Tween {
     // export easing function as static class property
     static get Easing() { return Easing; }
     static get Interpolation() { return Interpolation; }
-};
-
+}
 export default Tween;

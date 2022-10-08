@@ -130,6 +130,5 @@ class VertexArrayBuffer {
         return this.vertexCount === 0;
     }
 
-};
-
+}
 export default VertexArrayBuffer;

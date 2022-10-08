@@ -434,6 +434,6 @@ class TMXLayer extends Renderable {
             this.getRenderer().drawTileLayer(renderer, this, rect);
         }
     }
-};
+}
 
 export default TMXLayer;

@@ -8,4 +8,4 @@ export function setPrecision(src, precision) {
         return "precision " + precision + " float;" + src;
     }
     return src;
-};
+}

@@ -194,7 +194,7 @@ class World extends Container {
                     if (body.update(dt) === true) {
                         // mark ancestor as dirty
                         ancestor.isDirty = true;
-                    };
+                    }
                     // handle collisions against other objects
                     collisionCheck(ancestor);
                     // clear body force
@@ -207,6 +207,6 @@ class World extends Container {
         return super.update(dt);
     }
 
-};
+}
 
 export default World;

@@ -4,7 +4,7 @@ import pool from "./../system/pooling.js";
 // convert a give color component to it hexadecimal value
 function toHex(component) {
     return "0123456789ABCDEF".charAt((component - (component % 16)) >> 4) + "0123456789ABCDEF".charAt(component % 16);
-};
+}
 
 function hue2rgb(p, q, t) {
     if (t < 0) t += 1;
@@ -604,6 +604,6 @@ class Color {
             alpha +
         ")";
     }
-};
+}
 
 export default Color;

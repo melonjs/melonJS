@@ -20,7 +20,7 @@
  */
 export function defer(func, thisArg, ...args) {
     return setTimeout(func.bind(thisArg), 0.01, ...args);
-};
+}
 
 /**
  * returns a function that, when invoked will only be triggered at most
@@ -58,4 +58,4 @@ export function throttle(fn, delay, no_trailing) {
             return fn.apply(null, args);
         }
     };
-};
+}

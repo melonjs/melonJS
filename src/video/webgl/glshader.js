@@ -155,6 +155,5 @@ class GLShader {
         this.vertex = null;
         this.fragment = null;
     }
-};
-
+}
 export default GLShader;

@@ -58,7 +58,7 @@ export const EPSILON = 0.000001;
  */
 export function isPowerOfTwo(val) {
     return (val & (val - 1)) === 0;
-};
+}
 
 /**
  * returns the next power of two for the given value
@@ -77,7 +77,7 @@ export function nextPowerOfTwo(val) {
     val |= val >> 16;
     val ++;
     return val;
-};
+}
 
 /**
  * Converts an angle in degrees to an angle in radians
@@ -92,7 +92,7 @@ export function nextPowerOfTwo(val) {
  */
 export function degToRad(angle) {
     return angle * DEG_TO_RAD;
-};
+}
 
 /**
  * Converts an angle in radians to an angle in degrees.
@@ -107,7 +107,7 @@ export function degToRad(angle) {
  */
 export function radToDeg(radians) {
     return radians * RAD_TO_DEG;
-};
+}
 
 /**
  * clamp the given value
@@ -121,7 +121,7 @@ export function radToDeg(radians) {
  */
 export function clamp(val, low, high) {
     return val < low ? low : val > high ? high : +val;
-};
+}
 
 /**
  * return a random integer between min (included) and max (excluded)
@@ -137,7 +137,7 @@ export function clamp(val, low, high) {
  */
 export function random(min, max) {
     return (~~(Math.random() * (max - min)) + min);
-};
+}
 
 /**
  * return a random float between min, max (exclusive)
@@ -153,7 +153,7 @@ export function random(min, max) {
  */
 export function randomFloat(min, max) {
     return (Math.random() * (max - min)) + min;
-};
+}
 
 /**
  * return a weighted random between min, max (exclusive)
@@ -169,7 +169,7 @@ export function randomFloat(min, max) {
  */
 export function weightedRandom(min, max) {
     return (~~(Math.pow(Math.random(), 2) * (max - min)) + min);
-};
+}
 
 /**
  * round a value to the specified number of digit
@@ -187,7 +187,7 @@ export function round(num, dec = 0) {
     // if only one argument use the object value
     var powres = Math.pow(10, dec);
     return (~~(0.5 + num * powres) / powres);
-};
+}
 
 /**
  * check if the given value is close to the expected one
@@ -206,4 +206,4 @@ export function round(num, dec = 0) {
  */
 export function toBeCloseTo(expected, actual, precision = 2) {
     return Math.abs(expected - actual) < (Math.pow(10, -precision) / 2);
-};
+}

@@ -770,7 +770,5 @@ class Renderable extends Rect {
         // to be extended !
     }
 
-};
-
-
+}
 export default Renderable;

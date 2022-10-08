@@ -485,6 +485,6 @@ class Polygon {
         });
         return new Polygon(this.pos.x, this.pos.y, copy);
     }
-};
+}
 
 export default Polygon;

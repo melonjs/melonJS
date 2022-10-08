@@ -14,7 +14,7 @@ function getValueFromPair(string, pattern) {
     }
 
     return value[0].split("=")[1];
-};
+}
 
 /**
  * Gets the first glyph in the map that is not a space character
@@ -32,7 +32,7 @@ function getFirstGlyph(glyphs) {
         }
     }
     return null;
-};
+}
 
 /**
  * Creates a glyph to use for the space character
@@ -50,9 +50,7 @@ function createSpaceGlyph(glyphs) {
         glyph.xadvance = getFirstGlyph(glyphs).xadvance;
         glyphs[spaceCharCode] = glyph;
     }
-};
-
-
+}
 
 /**
  * Class for storing relevant data from the font file.
@@ -188,6 +186,5 @@ class BitmapTextData {
         }
         this.capHeight -= padY;
     }
-};
-
+}
 export default BitmapTextData;

@@ -262,6 +262,5 @@ class Ellipse {
             this.radiusV.y * 2
         );
     }
-};
-
+}
 export default Ellipse;

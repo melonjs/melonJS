@@ -566,7 +566,7 @@ export function globalToLocal(x, y, v) {
         y /= scale.y;
     }
     return v.set(x * pixelRatio, y * pixelRatio);
-};
+}
 
 /**
  * enable/disable all gestures on the given element.<br>
@@ -580,7 +580,7 @@ export function globalToLocal(x, y, v) {
  */
 export function setTouchAction(element, value) {
     element.style["touch-action"] = value || "none";
-};
+}
 
 /**
  * Associate a pointer event to a keycode<br>
@@ -613,7 +613,7 @@ export function bindPointer() {
     }
     // map the mouse button to the keycode
     pointer.bind[button] = keyCode;
-};
+}
 
 /**
  * unbind the defined keycode
@@ -630,7 +630,7 @@ export function unbindPointer(button) {
         typeof(button) === "undefined" ?
         pointer.LEFT : button
     ] = null;
-};
+}
 
 
 /**
@@ -704,7 +704,7 @@ export function registerPointerEvent(eventType, region, callback) {
             handlers.callbacks[eventType] = [callback];
         }
     }
-};
+}
 
 /**
  * allows the removal of event listeners from the object target.
@@ -749,7 +749,7 @@ export function releasePointerEvent(eventType, region, callback) {
             eventHandlers.delete(region);
         }
     }
-};
+}
 
 /**
  * allows the removal of all registered event listeners from the object target.
@@ -766,8 +766,8 @@ export function releaseAllPointerEvents(region) {
         for (var i = 0; i < pointerEventList.length; i++) {
             releasePointerEvent(pointerEventList[i], region);
         }
-    };
-};
+    }
+}
 
 /**
  * request for the pointer to be locked on the parent DOM element.

@@ -667,6 +667,6 @@ class Matrix3d {
             a[12] + ", " + a[13] + ", " + a[14] + ", " + a[15] +
         ")";
     }
-};
+}
 
 export default Matrix3d;

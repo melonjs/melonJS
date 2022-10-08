@@ -239,6 +239,6 @@ class GUI_Object extends Sprite {
         releasePointerEvent("pointerleave", this);
         timer.clearTimeout(this.holdTimeout);
     }
-};
+}
 
 export default GUI_Object;

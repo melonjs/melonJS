@@ -129,6 +129,5 @@ class TextureCache {
         }
         return this.units.get(texture);
     }
-};
-
+}
 export default TextureCache;

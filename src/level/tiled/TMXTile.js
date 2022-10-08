@@ -181,5 +181,5 @@ class Tile extends Bounds {
 
         return renderable;
     }
-};
+}
 export default Tile;

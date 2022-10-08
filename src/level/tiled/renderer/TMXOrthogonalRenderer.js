@@ -145,6 +145,6 @@ class TMXOrthogonalRenderer extends TMXRenderer {
         pool.push(start);
         pool.push(end);
     }
-};
+}
 
 export default TMXOrthogonalRenderer;

@@ -547,6 +547,6 @@ class ObservableVector3d extends Vector3d {
     toString() {
         return "x:" + this._x + ",y:" + this._y + ",z:" + this._z;
     }
-};
+}
 
 export default ObservableVector3d;

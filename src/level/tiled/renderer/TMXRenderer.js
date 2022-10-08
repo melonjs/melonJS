@@ -109,7 +109,7 @@ class TMXRenderer {
     drawTileLayer(renderer, layer, rect) {
     }
 
-};
+}
 
 export default TMXRenderer;
 

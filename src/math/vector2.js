@@ -514,6 +514,6 @@ class Vector2d {
     toString() {
         return "x:" + this.x + ",y:" + this.y;
     }
-};
+}
 
 export default Vector2d;

@@ -41,7 +41,7 @@ export function warning(deprecated, replacement, version) {
     if (console.groupCollapsed) {
         console.groupEnd();
     }
-};
+}
 
 /**
  * Alias of {@link TextureAtlas}

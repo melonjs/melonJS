@@ -23,7 +23,7 @@ export function remove(arr, obj) {
         Array.prototype.splice.call(arr, i, 1);
     }
     return arr;
-};
+}
 
 /**
  * return a random array element
@@ -39,7 +39,7 @@ export function remove(arr, obj) {
  */
 export function random(arr) {
     return arr[mathRandom(0, arr.length)];
-};
+}
 
 /**
  * return a weighted random array element, favoring the earlier entries
@@ -51,4 +51,4 @@ export function random(arr) {
  */
 export function weightedRandom(arr) {
     return arr[mathWeightedRandom(0, arr.length)];
-};
+}

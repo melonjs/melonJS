@@ -129,4 +129,4 @@ export default class TMXGroup {
     getObjectByIndex(idx) {
         return this.objects[idx];
     }
-};
+}

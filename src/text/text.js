@@ -440,6 +440,5 @@ class Text extends Renderable {
         this._text.length = 0;
         super.destroy();
     }
-};
-
+}
 export default Text;

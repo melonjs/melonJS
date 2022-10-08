@@ -723,6 +723,5 @@ class Camera2d extends Renderable {
         container.currentTransform.translate(translateX, translateY);
     }
 
-};
-
+}
 export default Camera2d;

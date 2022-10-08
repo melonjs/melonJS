@@ -48,7 +48,7 @@ function autoDetectRenderer(options) {
         console.log("Error creating WebGL renderer :" + e.message);
     }
     return new CanvasRenderer(options);
-};
+}
 
 /**
  * callback for window resize event
@@ -123,7 +123,7 @@ function onresize() {
         // adjust scaling ratio based on the given settings
         scale(settings.scale, settings.scale);
     }
-};
+}
 
 /**
  * Select the HTML5 Canvas renderer
@@ -376,7 +376,7 @@ export function init(width, height, options) {
     event.emit(event.VIDEO_INIT);
 
     return true;
-};
+}
 
 /**
  * Create and return a new Canvas element
@@ -408,7 +408,7 @@ export function createCanvas(width, height, returnOffscreenCanvas = false) {
     _canvas.height = height;
 
     return _canvas;
-};
+}
 
 /**
  * return a reference to the parent DOM element holding the main canvas
@@ -417,7 +417,7 @@ export function createCanvas(width, height, returnOffscreenCanvas = false) {
  */
 export function getParent() {
     return parent;
-};
+}
 
 /**
  * scale the "displayed" canvas by the given scalar.
@@ -450,4 +450,4 @@ export function scale(x, y) {
 
     // force repaint
     game.repaint();
-};
+}

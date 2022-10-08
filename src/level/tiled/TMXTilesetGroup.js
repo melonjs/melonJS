@@ -70,6 +70,6 @@ class TMXTilesetGroup {
             throw new Error("no matching tileset found for gid " + gid);
         }
     }
-};
+}
 
 export default TMXTilesetGroup;

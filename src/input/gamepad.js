@@ -422,7 +422,7 @@ export function bindGamepad(index, button, keyCode) {
             };
         }
     }
-};
+}
 
 /**
  * unbind the defined keycode
@@ -439,7 +439,7 @@ export function unbindGamepad(index, button) {
         throw new Error("no bindings for gamepad " + index);
     }
     bindings[index].buttons[button] = {};
-};
+}
 
 /**
  * Set deadzone for analog gamepad inputs<br>
@@ -451,7 +451,7 @@ export function unbindGamepad(index, button) {
  */
 export function setGamepadDeadzone(value) {
     deadzone = value;
-};
+}
 
 /**
  * specify a custom mapping for a specific gamepad id<br>

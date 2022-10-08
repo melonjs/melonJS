@@ -155,6 +155,5 @@ class RoundRect extends Rect {
     clone() {
         return new RoundRect(this.pos.x, this.pos.y, this.width, this.height, this.radius);
     }
-};
-
+}
 export default RoundRect;

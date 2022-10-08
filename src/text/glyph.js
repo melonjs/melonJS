@@ -54,6 +54,5 @@ class Glyph {
         }
         page[ch & PAGE_SIZE - 1] = value;
     }
-};
-
+}
 export default Glyph;

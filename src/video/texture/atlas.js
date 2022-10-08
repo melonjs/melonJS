@@ -507,4 +507,4 @@ export class TextureAtlas {
             atlasIndices: indices
         }, settings || {}));
     }
-};
+}

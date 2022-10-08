@@ -96,6 +96,6 @@ class TMXStaggeredRenderer extends TMXHexagonalRenderer {
 
         return ret;
     }
-};
+}
 
 export default TMXStaggeredRenderer;

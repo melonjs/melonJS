@@ -297,6 +297,6 @@ class TMXTileset {
             renderer.restore();
         }
     }
-};
+}
 
 export default TMXTileset;

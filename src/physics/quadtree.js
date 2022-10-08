@@ -32,7 +32,7 @@ function QT_ARRAY_POP(world, bounds, max_objects = 4, max_levels = 4, level = 0)
     } else {
         return new QuadTree(world, bounds, max_objects, max_levels, level);
     }
-};
+}
 
 /**
  * Push back a quadtree back into the array
@@ -40,7 +40,7 @@ function QT_ARRAY_POP(world, bounds, max_objects = 4, max_levels = 4, level = 0)
  */
 function QT_ARRAY_PUSH(qt) {
     QT_ARRAY.push(qt);
-};
+}
 
 /**
  * a temporary vector object to be reused

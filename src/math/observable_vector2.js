@@ -457,6 +457,6 @@ class ObservableVector2d extends Vector2d {
     toString() {
         return "x:" + this._x + ",y:" + this._y;
     }
-};
+}
 
 export default ObservableVector2d;

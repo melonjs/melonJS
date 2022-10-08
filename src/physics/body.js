@@ -545,7 +545,7 @@ class Body {
                 if (shape.contains(_x, _y)) {
                     return true;
                 }
-            };
+            }
         }
         return false;
     }
@@ -690,6 +690,6 @@ class Body {
         // reset some variable to default
         this.setStatic(false);
     }
-};
+}
 
 export default Body;

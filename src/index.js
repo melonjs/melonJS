@@ -279,7 +279,7 @@ export function boot() {
     if (skipAutoInit === true) {
         event.emit(event.DOM_READY);
     }
-};
+}
 
 // call the library init function when ready
 device.onReady(() => {

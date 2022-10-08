@@ -11,4 +11,4 @@ export default function setContextStyle(context, style, stroke = false) {
     }
     context.textAlign = style.textAlign;
     context.textBaseline = style.textBaseline;
-};
+}

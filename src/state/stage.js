@@ -128,14 +128,14 @@ class Stage {
         this.cameras.forEach((camera) => {
             if (camera.update(dt) === true) {
                 isDirty = true;
-            };
+            }
         });
 
         // update all lights
         this.lights.forEach((light) => {
             if (light.update(dt) === true) {
                 isDirty = true;
-            };
+            }
         });
 
         return isDirty;
@@ -224,6 +224,5 @@ class Stage {
             this.settings.onDestroyEvent.apply(this, arguments);
         }
     }
-};
-
+}
 export default Stage;

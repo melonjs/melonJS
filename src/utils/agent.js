@@ -34,7 +34,7 @@ export function prefixed(name, obj) {
         return (result = (name in obj) ? obj[name] : undefined);
     });
     return result;
-};
+}
 
 /**
  * Set a vendor-prefixed property
@@ -64,4 +64,4 @@ export function setPrefixed(name, value, obj) {
     });
 
     return false;
-};
+}

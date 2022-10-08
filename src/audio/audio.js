@@ -98,7 +98,7 @@ export let stopOnAudioError = true;
     audioExts = format.split(",");
 
     return !Howler.noAudio;
-};
+}
 
 /**
  * check if the given audio format is supported
@@ -108,7 +108,7 @@ export let stopOnAudioError = true;
  */
 export function hasFormat(codec) {
     return hasAudio() && Howler.codecs(codec);
-};
+}
 
 /**
  * check if audio (HTML5 or WebAudio) is supported
@@ -117,7 +117,7 @@ export function hasFormat(codec) {
  */
 export function hasAudio() {
     return !Howler.noAudio;
-};
+}
 
 /**
  * enable audio output <br>
@@ -127,7 +127,7 @@ export function hasAudio() {
  */
 export function enable() {
     unmuteAll();
-};
+}
 
 /**
  * disable audio output
@@ -135,7 +135,7 @@ export function enable() {
  */
 export function disable() {
     muteAll();
-};
+}
 
 /**
  * Load an audio file.<br>
@@ -181,7 +181,7 @@ export function load(sound, html5, onload_cb, onerror_cb) {
     });
 
     return 1;
-};
+}
 
 /**
  * play the specified sound
@@ -222,7 +222,7 @@ export function play(sound_name, loop = false, onend, volume) {
     } else {
         throw new Error("audio clip " + sound_name + " does not exist");
     }
-};
+}
 
 /**
  * Fade a currently playing sound between two volumee.
@@ -240,7 +240,7 @@ export function fade(sound_name, from, to, duration, id) {
     } else {
         throw new Error("audio clip " + sound_name + " does not exist");
     }
-};
+}
 
 /**
  * get/set the position of playback for a sound.
@@ -262,7 +262,7 @@ export function seek(sound_name, ...args) {
     } else {
         throw new Error("audio clip " + sound_name + " does not exist");
     }
-};
+}
 
 /**
  * get or set the rate of playback for a sound.
@@ -284,7 +284,7 @@ export function rate(sound_name, ...args) {
     } else {
         throw new Error("audio clip " + sound_name + " does not exist");
     }
-};
+}
 
 /**
  * stop the specified sound on all channels
@@ -307,7 +307,7 @@ export function stop(sound_name, id) {
     } else {
         Howler.stop();
     }
-};
+}
 
 /**
  * pause the specified sound on all channels<br>
@@ -325,7 +325,7 @@ export function pause(sound_name, id) {
     } else {
         throw new Error("audio clip " + sound_name + " does not exist");
     }
-};
+}
 
 /**
  * resume the specified sound on all channels<br>
@@ -349,7 +349,7 @@ export function resume(sound_name, id) {
     } else {
         throw new Error("audio clip " + sound_name + " does not exist");
     }
-};
+}
 
 /**
  * play the specified audio track<br>
@@ -370,7 +370,7 @@ export function playTrack(sound_name, volume) {
         null,
         volume
     );
-};
+}
 
 /**
  * stop the current audio track
@@ -387,7 +387,7 @@ export function stopTrack() {
         audioTracks[current_track_id].stop();
         current_track_id = null;
     }
-};
+}
 
 /**
  * pause the current audio track
@@ -399,7 +399,7 @@ export function pauseTrack() {
     if (current_track_id !== null) {
         audioTracks[current_track_id].pause();
     }
-};
+}
 
 /**
  * resume the previously paused audio track
@@ -416,7 +416,7 @@ export function resumeTrack() {
     if (current_track_id !== null) {
         audioTracks[current_track_id].play();
     }
-};
+}
 
 /**
  * returns the current track Id
@@ -425,7 +425,7 @@ export function resumeTrack() {
  */
 export function getCurrentTrack() {
     return current_track_id;
-};
+}
 
 /**
  * set the default global volume
@@ -434,7 +434,7 @@ export function getCurrentTrack() {
  */
 export function setVolume(volume) {
     Howler.volume(volume);
-};
+}
 
 /**
  * get the default global volume
@@ -443,7 +443,7 @@ export function setVolume(volume) {
  */
 export function getVolume() {
     return Howler.volume();
-};
+}
 
 /**
  * mute or unmute the specified sound, but does not pause the playback.
@@ -464,7 +464,7 @@ export function mute(sound_name, id, mute) {
     } else {
         throw new Error("audio clip " + sound_name + " does not exist");
     }
-};
+}
 
 /**
  * unmute the specified sound
@@ -474,7 +474,7 @@ export function mute(sound_name, id, mute) {
  */
 export function unmute(sound_name, id) {
     mute(sound_name, id, false);
-};
+}
 
 /**
  * mute all audio
@@ -482,7 +482,7 @@ export function unmute(sound_name, id) {
  */
 export function muteAll() {
     Howler.mute(true);
-};
+}
 
 /**
  * unmute all audio
@@ -490,7 +490,7 @@ export function muteAll() {
  */
 export function unmuteAll() {
     Howler.mute(false);
-};
+}
 
 /**
  * Returns true if audio is muted globally.
@@ -499,7 +499,7 @@ export function unmuteAll() {
  */
 export function muted() {
     return Howler._muted;
-};
+}
 
 /**
  * unload specified audio track to free memory
@@ -518,7 +518,7 @@ export function unload(sound_name) {
     audioTracks[sound_name].unload();
     delete audioTracks[sound_name];
     return true;
-};
+}
 
 /**
  * unload all audio to free memory
@@ -532,4 +532,4 @@ export function unloadAll() {
             unload(sound_name);
         }
     }
-};
+}

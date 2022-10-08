@@ -103,6 +103,5 @@ class Line extends Polygon {
         return new Line(this.pos.x, this.pos.y, copy);
     }
 
-};
-
+}
 export default Line;

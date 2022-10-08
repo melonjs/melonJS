@@ -51,7 +51,7 @@ function checkLoadStatus(onload) {
             checkLoadStatus(onload);
         }, 100);
     }
-};
+}
 
 /**
  * load Images
@@ -77,7 +77,7 @@ function preloadImage(img, onload, onerror) {
         imgList[img.name].crossOrigin = loader.crossOrigin;
     }
     imgList[img.name].src = img.src + loader.nocache;
-};
+}
 
 /**
  * load a font face
@@ -113,7 +113,7 @@ function preloadFontFace(data, onload, onerror) {
             onerror(data.name);
         }
     });
-};
+}
 
 /**
  * preload TMX files
@@ -221,7 +221,7 @@ function preloadTMX(tmxData, onload, onerror) {
     };
     // send the request
     xmlhttp.send();
-};
+}
 
 /**
  * preload JSON files
@@ -258,7 +258,7 @@ function preloadJSON(data, onload, onerror) {
     };
     // send the request
     xmlhttp.send();
-};
+}
 
 /**
  * preload Binary files
@@ -289,7 +289,7 @@ function preloadBinary(data, onload, onerror) {
         }
     };
     httpReq.send();
-};
+}
 
 /**
  * preload Binary files
@@ -320,7 +320,7 @@ function preloadJavascript(data, onload, onerror) {
     }
 
     document.getElementsByTagName("body")[0].appendChild(script);
-};
+}
 
 /**
  * a small class to manage loading of stuff and manage resources

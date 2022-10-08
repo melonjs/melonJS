@@ -324,7 +324,7 @@ export function initKeyboardEvent() {
             keyBoardEventTarget.addEventListener("keyup", keyUpEvent, false);
         }
     }
-};
+}
 
 /**
  * return the key press status of the specified action
@@ -349,7 +349,7 @@ export function isKeyPressed(action) {
         return true;
     }
     return false;
-};
+}
 
 /**
  * return the key status of the specified action
@@ -361,7 +361,7 @@ export function isKeyPressed(action) {
  */
 export function keyStatus(action) {
     return (_keyStatus[action] > 0);
-};
+}
 
 
 /**
@@ -383,7 +383,7 @@ export function triggerKeyEvent(keycode, status, mouseButton) {
     else {
         keyUpEvent({}, keycode, mouseButton);
     }
-};
+}
 
 
 /**
@@ -410,7 +410,7 @@ export function bindKey(keycode, action, lock, preventDefault = preventDefaultAc
     _keyLock[action] = lock ? lock : false;
     _keyLocked[action] = false;
     _keyRefs[action] = {};
-};
+}
 
 /**
  * return the action associated with the given keycode
@@ -422,7 +422,7 @@ export function bindKey(keycode, action, lock, preventDefault = preventDefaultAc
  */
 export function getBindingKey(keycode) {
     return _keyBindings[keycode];
-};
+}
 
 /**
  * unlock a key manually
@@ -438,7 +438,7 @@ export function getBindingKey(keycode) {
  */
 export function unlockKey(action) {
     _keyLocked[action] = false;
-};
+}
 
 /**
  * unbind the defined keycode
@@ -458,4 +458,4 @@ export function unbindKey(keycode) {
     // remove the key binding
     _keyBindings[keycode] = null;
     _preventDefaultForKeys[keycode] = null;
-};
+}

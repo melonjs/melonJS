@@ -109,7 +109,7 @@ export class Draggable extends Renderable {
         input.releasePointerEvent("pointercancel", this);
         super.destroy();
     }
-};
+}
 
 /**
  * @classdesc
@@ -212,4 +212,4 @@ export class DropTarget extends Renderable {
         event.off(event.DRAGEND, this.checkOnMe);
         super.destroy();
     }
-};
+}

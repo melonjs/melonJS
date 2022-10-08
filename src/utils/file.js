@@ -19,7 +19,7 @@ const REMOVE_EXT = /\.[^\.]*$/;
  */
 export function getBasename(path) {
     return path.replace(REMOVE_PATH, "").replace(REMOVE_EXT, "");
-};
+}
 
 /**
  * return the extension of the file in the given path
@@ -31,4 +31,4 @@ export function getBasename(path) {
  */
 export function getExtension(path) {
     return path.substring(path.lastIndexOf(".") + 1, path.length);
-};
+}

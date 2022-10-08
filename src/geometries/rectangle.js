@@ -362,7 +362,5 @@ class Rect extends Polygon {
             this.pos.x, this.pos.y, this.points
         );
     }
-};
-
-
+}
 export default Rect;

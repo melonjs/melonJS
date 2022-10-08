@@ -149,7 +149,7 @@ class ObjectPool {
      */
     exists(name) {
         return name in this.objectClass;
-    };
+    }
 
     /**
      * Check if an object is poolable
@@ -178,8 +178,7 @@ class ObjectPool {
     getInstanceCount() {
         return this.instance_counter;
     }
-};
-
+}
 
 var pool = new ObjectPool();
 

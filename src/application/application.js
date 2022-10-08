@@ -117,7 +117,7 @@ class Application {
      * // call myFunction () everytime a level is loaded
      * me.game.onLevelLoaded = this.myFunction.bind(this);
      */
-    onLevelLoaded() {};
+    onLevelLoaded() {}
 
     /**
      * Update the renderer framerate using the system config variables.

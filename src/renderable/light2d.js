@@ -143,5 +143,5 @@ class Light2d extends Renderable {
         this.visibleArea = undefined;
         super.destroy();
     }
-};
+}
 export default Light2d;

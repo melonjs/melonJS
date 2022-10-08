@@ -36,7 +36,7 @@ function _domReady() {
         // Remember that the DOM is ready
         isDOMReady = true;
     }
-};
+}
 
 // https://developer.mozilla.org/en-US/docs/Web/API/Window/DOMContentLoaded_event
 export function DOMContentLoaded(fn) {
