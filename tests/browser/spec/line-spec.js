@@ -78,5 +78,13 @@ describe("Shape : me.Line", function () {
             expect(bounds.x).toEqual(0);
             expect(bounds.y).toEqual(0);
         });
+        
+        it("Line cloning", function () {
+            var clone = line.clone();
+            var cloneBounds = clone.getBounds();
+            expect(line.pos.equals(clone.pos)).toEqual(true);
+            expect(bounds.width).toEqual(cloneBounds.width);
+            expect(bounds.height).toEqual(cloneBounds.height);
+        });
     });
 });
