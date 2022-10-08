@@ -30,7 +30,7 @@
     "eqeqeq": ["error", "allow-null"],
     "func-call-spacing": ["error", "never"],
     "handle-callback-err": ["error", "^(err|error)$" ],
-    "indent": ["off", "error", { "SwitchCase": "warn" }],
+    "indent": ["off", 4],
     "key-spacing": ["off", { "beforeColon": false, "afterColon": true }],
     "keyword-spacing": ["error", { "before": true, "after": true }],
     "new-cap": ["error", { "newIsCap": true, "capIsNew": false }],
