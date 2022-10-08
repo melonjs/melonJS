@@ -480,7 +480,7 @@ class Polygon {
      */
     clone() {
         var copy = [];
-        this.points.forEach(function (point) {
+        this.points.forEach((point) => {
             copy.push(point.clone());
         });
         return new Polygon(this.pos.x, this.pos.y, copy);

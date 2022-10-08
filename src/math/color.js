@@ -174,7 +174,7 @@ var cssToRGB = new Map();
     [ "wheat",                  [ 245, 222, 179 ] ],
     [ "whitesmoke",             [ 245, 245, 245 ] ],
     [ "yellowgreen",            [ 154, 205,  50 ] ]
-].forEach(function (value) {
+].forEach((value) => {
     cssToRGB.set(value[0], value[1]);
 });
 

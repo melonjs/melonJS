@@ -22,7 +22,7 @@ if (!requestAnimationFrame || !cancelAnimationFrame) {
     requestAnimationFrame = function (callback) {
         var currTime = globalThis.performance.now();
         var timeToCall = Math.max(0, (1000 / timer.maxfps) - (currTime - lastTime));
-        var id = globalThis.setTimeout(function () {
+        var id = globalThis.setTimeout(() => {
             callback(currTime + timeToCall);
         }, timeToCall);
         lastTime = currTime + timeToCall;

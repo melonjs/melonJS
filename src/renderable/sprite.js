@@ -301,7 +301,7 @@ class Sprite extends Renderable {
         if (index == null) {
             index = [];
             // create a default animation with all frame
-            Object.keys(this.textureAtlas).forEach(function (v, i) {
+            Object.keys(this.textureAtlas).forEach((v, i) => {
                 index[i] = i;
             });
         }

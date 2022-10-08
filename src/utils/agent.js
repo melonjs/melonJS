@@ -29,7 +29,7 @@ export function prefixed(name, obj) {
     var uc_name = capitalize(name);
 
     var result;
-    vendors.some(function (vendor) {
+    vendors.some((vendor) => {
         var name = vendor + uc_name;
         return (result = (name in obj) ? obj[name] : undefined);
     });
@@ -55,7 +55,7 @@ export function setPrefixed(name, value, obj) {
 
     var uc_name = capitalize(name);
 
-    vendors.some(function (vendor) {
+    vendors.some((vendor) => {
         var name = vendor + uc_name;
         if (name in obj) {
             obj[name] = value;

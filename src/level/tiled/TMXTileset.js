@@ -240,7 +240,7 @@ class TMXTileset {
         if (this._lastUpdate !== now) {
             this._lastUpdate = now;
 
-            this.animations.forEach(function (anim) {
+            this.animations.forEach((anim) => {
                 anim.dt += dt;
                 duration = anim.cur.duration;
                 while (anim.dt >= duration) {

@@ -55,13 +55,13 @@ var leadingZeroRE = /^0+/;
  * @ignore
  */
 function addMapping(id, mapping) {
-    var expanded_id = id.replace(vendorProductRE, function (_, a, b) {
+    var expanded_id = id.replace(vendorProductRE, (_, a, b) => {
         return (
             "000".slice(a.length - 1) + a + "-" +
             "000".slice(b.length - 1) + b + "-"
         );
     });
-    var sparse_id = id.replace(vendorProductRE, function (_, a, b) {
+    var sparse_id = id.replace(vendorProductRE, (_, a, b) => {
         return (
             a.replace(leadingZeroRE, "") + "-" +
             b.replace(leadingZeroRE, "") + "-"
@@ -69,7 +69,7 @@ function addMapping(id, mapping) {
     });
 
     // Normalize optional parameters
-    mapping.analog = mapping.analog || mapping.buttons.map(function () {
+    mapping.analog = mapping.analog || mapping.buttons.map(() => {
         return -1;
     });
     mapping.normalize_fn = mapping.normalize_fn || function (value) { return value; };
@@ -132,7 +132,7 @@ var updateEventHandler;
             "normalize_fn" : ouyaNormalizeFn
         }
     ]
-].forEach(function (value) {
+].forEach((value) => {
     addMapping(value[0], value[1]);
 });
 
@@ -144,7 +144,7 @@ var updateGamepads = function () {
     var gamepads = navigator.getGamepads();
 
     // Trigger button bindings
-    Object.keys(bindings).forEach(function (index) {
+    Object.keys(bindings).forEach((index) => {
         var gamepad = gamepads[index];
         if (!gamepad) {
             return;
@@ -158,7 +158,7 @@ var updateGamepads = function () {
         var binding = bindings[index];
 
         // Iterate all buttons that have active bindings
-        Object.keys(binding.buttons).forEach(function (button) {
+        Object.keys(binding.buttons).forEach((button) => {
             var last = binding.buttons[button];
             var mapped_button = button;
             var mapped_axis = -1;
@@ -205,7 +205,7 @@ var updateGamepads = function () {
         });
 
         // Iterate all axes that have active bindings
-        Object.keys(binding.axes).forEach(function (axis) {
+        Object.keys(binding.axes).forEach((axis) => {
             var last = binding.axes[axis];
             var mapped_axis = axis;
 
@@ -260,14 +260,14 @@ var updateGamepads = function () {
 
 // gamepad connected callback
 if (globalThis.navigator && typeof globalThis.navigator.getGamepads === "function") {
-    globalThis.addEventListener("gamepadconnected", function (e) {
+    globalThis.addEventListener("gamepadconnected", (e) => {
         event.emit(event.GAMEPAD_CONNECTED, e.gamepad);
     }, false);
 
     /*
      * gamepad disconnected callback
      */
-    globalThis.addEventListener("gamepaddisconnected", function (e) {
+    globalThis.addEventListener("gamepaddisconnected", (e) => {
         event.emit(event.GAMEPAD_DISCONNECTED, e.gamepad);
     }, false);
 }

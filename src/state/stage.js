@@ -125,7 +125,7 @@ class Stage {
 
         // update the camera/viewport
         // iterate through all cameras
-        this.cameras.forEach(function(camera) {
+        this.cameras.forEach((camera) => {
             if (camera.update(dt) === true) {
                 isDirty = true;
             };

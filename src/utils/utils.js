@@ -124,9 +124,9 @@ var utils = {
         }
 
         // parse the url
-        url.slice(1).split("&").filter(function (value) {
+        url.slice(1).split("&").filter((value) => {
             return (value !== "");
-        }).forEach(function (value) {
+        }).forEach((value) => {
             var kv = value.split("=");
             var k = kv.shift();
             var v = kv.join("=");

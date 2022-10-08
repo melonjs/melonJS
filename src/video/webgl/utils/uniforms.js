@@ -34,14 +34,14 @@ export function extractUniforms(gl, shader) {
         match;
 
     // Detect all uniform names and types
-    [ shader.vertex, shader.fragment ].forEach(function (shader) {
+    [ shader.vertex, shader.fragment ].forEach((shader) => {
         while ((match = uniRx.exec(shader))) {
             uniformsData[match[2]] = match[1];
         }
     });
 
     // Get uniform references
-    Object.keys(uniformsData).forEach(function (name) {
+    Object.keys(uniformsData).forEach((name) => {
         var type = uniformsData[name];
         locations[name] = gl.getUniformLocation(shader.program, name);
 

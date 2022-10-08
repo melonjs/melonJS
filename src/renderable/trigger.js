@@ -60,11 +60,11 @@ class Trigger extends Renderable {
             event: "level"
         };
 
-        [ "type", "container", "onLoaded", "flatten", "setViewportBounds", "to" ].forEach(function(property) {
+        [ "type", "container", "onLoaded", "flatten", "setViewportBounds", "to" ].forEach((property) => {
             if (typeof settings[property] !== "undefined") {
                 this.triggerSettings[property] = settings[property];
             }
-        }.bind(this));
+        });
 
         // add and configure the physic body
         var shape = settings.shapes;

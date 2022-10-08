@@ -385,12 +385,12 @@ class TMXTileMap {
         }
 
         // add all layers instances
-        this.getLayers().forEach(function (layer) {
+        this.getLayers().forEach((layer) => {
             container.addChild(layer);
         });
 
         // add all Object instances
-        this.getObjects(flatten).forEach(function (object) {
+        this.getObjects(flatten).forEach((object) => {
             container.addChild(object);
         });
 

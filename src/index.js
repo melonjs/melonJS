@@ -282,7 +282,7 @@ export function boot() {
 };
 
 // call the library init function when ready
-device.onReady(function () {
+device.onReady(() => {
     if (skipAutoInit === false) {
        boot();
     }

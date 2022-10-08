@@ -142,7 +142,7 @@ class Tile extends Bounds {
         if (tileset.animations.has(this.tileId)) {
             var frames = [];
             var frameId = [];
-            (tileset.animations.get(this.tileId).frames).forEach(function (frame) {
+            (tileset.animations.get(this.tileId).frames).forEach((frame) => {
                 frameId.push(frame.tileid);
                 frames.push({
                     name : "" + frame.tileid,

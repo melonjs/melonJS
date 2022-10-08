@@ -276,7 +276,7 @@ export function init(width, height, options) {
     globalThis.addEventListener(
         "resize",
         utils.function.throttle(
-            function (e) {
+            (e) => {
                 event.emit(event.WINDOW_ONRESIZE, e);
             }, 100
         ), false
@@ -285,7 +285,7 @@ export function init(width, height, options) {
     // Screen Orientation API
     globalThis.addEventListener(
         "orientationchange",
-        function (e) {
+        (e) => {
             event.emit(event.WINDOW_ONORIENTATION_CHANGE, e);
         },
         false
@@ -293,7 +293,7 @@ export function init(width, height, options) {
     // pre-fixed implementation on mozzila
     globalThis.addEventListener(
         "onmozorientationchange",
-        function (e) {
+        (e) => {
             event.emit(event.WINDOW_ONORIENTATION_CHANGE, e);
         },
         false
@@ -306,11 +306,9 @@ export function init(width, height, options) {
     }
 
     // Automatically update relative canvas position on scroll
-    globalThis.addEventListener("scroll", utils.function.throttle(
-        function (e) {
-            event.emit(event.WINDOW_ONSCROLL, e);
-        }, 100
-    ), false);
+    globalThis.addEventListener("scroll", utils.function.throttle((e) => {
+        event.emit(event.WINDOW_ONSCROLL, e);
+    }, 100), false);
 
     // register to the channel
     event.on(event.WINDOW_ONRESIZE, onresize, this);

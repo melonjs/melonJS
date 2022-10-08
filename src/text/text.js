@@ -235,7 +235,7 @@ class Text extends Renderable {
      */
     setFont(font, size = 10) {
         // font name and type
-        var font_names = font.split(",").map(function (value) {
+        var font_names = font.split(",").map((value) => {
             value = value.trim();
             return (
                 !/(^".*"$)|(^'.*'$)/.test(value)

@@ -61,7 +61,7 @@ event.on(event.BOOT, () => {
 
         if (typeof me_save_content === "string" && me_save_content.length > 0) {
             var keys = JSON.parse(me_save_content) || [];
-            keys.forEach(function (key) {
+            keys.forEach((key) => {
                 data[key] = JSON.parse(globalThis.localStorage.getItem("me.save." + key));
             });
         }
@@ -84,7 +84,7 @@ var save = {
     add(props) {
         var obj = save;
 
-        Object.keys(props).forEach(function (key) {
+        Object.keys(props).forEach((key) => {
             if (isReserved(key)) {
                 return;
             }

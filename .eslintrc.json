@@ -2,7 +2,6 @@
   "env": {
     "es6"       : true,
     "browser"   : true,
-    "jasmine"   : true,
     "node"      : true
 },
   "globals": {
@@ -16,7 +15,6 @@
   "rules": {
     // http://eslint.org/docs/rules/
     "accessor-pairs": "error",
-    "block-scoped-var": "error",
     "arrow-spacing": ["error", { "before": true, "after": true }],
     "block-spacing": ["error", "always"],
     "block-scoped-var": "error",
@@ -98,6 +96,7 @@
     "one-var": ["off", { "initialized": "never" }],
     "operator-linebreak": ["off", "after", { "overrides": { "?": "before", ":": "before" } }],
     "padded-blocks": ["off", "never"],
+    "prefer-arrow-callback" : "error",
     "quotes": ["error", "double", { "avoidEscape": true, "allowTemplateLiterals": true }],
     "rest-spread-spacing": ["error", "never"],
     "semi": ["error", "always"],

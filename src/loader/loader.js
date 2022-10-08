@@ -37,7 +37,7 @@ function checkLoadStatus(onload) {
             // trigger the onload callback
             // we call either the supplied callback (which takes precedence) or the global one
             var callback = onload || loader.onload;
-            setTimeout(function () {
+            setTimeout(() => {
                 callback();
                 event.emit(event.LOADER_COMPLETE);
             }, 300);
@@ -107,7 +107,7 @@ function preloadFontFace(data, onload, onerror) {
             // onloaded callback
             onload();
         }
-    }, function () {
+    }, () => {
         if (typeof onerror === "function") {
             // rejected
             onerror(data.name);

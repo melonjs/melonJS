@@ -67,7 +67,7 @@
     "chromedriver": "^106.0.1",
     "cross-env": "^7.0.3",
     "del-cli": "^5.0.0",
-    "eslint": "^8.24.0",
+    "eslint": "^8.25.0",
     "expect": "^29.1.2",
     "expect-mocha-image-snapshot": "^2.0.14",
     "fastify": "^4.7.0",

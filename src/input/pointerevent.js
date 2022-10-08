@@ -151,7 +151,7 @@ function enablePointerEvent() {
             device.focus();
             pointerEventTarget.addEventListener(
                 activeEventList[2], // MOUSE/POINTER DOWN
-                function () {
+                () => {
                     device.focus();
                 },
                 { passive: (preventDefault === false) }

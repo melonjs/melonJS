@@ -916,7 +916,7 @@ class Container extends Renderable {
                 // check if object is in any active cameras
                 obj.inViewport = false;
                 // iterate through all cameras
-                state.current().cameras.forEach(function(camera) {
+                state.current().cameras.forEach((camera) => {
                     if (camera.isVisible(obj, isFloating)) {
                         obj.inViewport = true;
                     };

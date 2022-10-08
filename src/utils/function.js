@@ -47,7 +47,7 @@ export function throttle(fn, delay, no_trailing) {
             if (no_trailing === false) {
                 // hold on to it
                 clearTimeout(deferTimer);
-                deferTimer = setTimeout(function () {
+                deferTimer = setTimeout(() => {
                     last = now;
                     return fn.apply(null, args);
                 }, elasped);
